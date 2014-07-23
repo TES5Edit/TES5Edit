@@ -10074,7 +10074,7 @@ begin
   UniqueString(t);
   p := Pointer(t);
   Pointer(t) := nil;
-  PostMessage(Handle, WM_USER, Integer(p), 0);
+  PostMessage(Handle, WM_USER, Cardinal(p), 0);
 end;
 
 procedure TfrmMain.PostPluggyChange(aFormID, aBaseFormID, aInventoryFormID, aEnchantmentFormID, aSpellFormID: Cardinal);
@@ -10351,7 +10351,7 @@ begin
               FileStream := TFileStream.Create(wbDataPath + s, fmCreate);
               try
                 PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
-                _File.WriteToStream(FileStream);
+                _File.WriteToStream(FileStream, False);
                 SavedAny := True;
               finally
                 FileStream.Free;

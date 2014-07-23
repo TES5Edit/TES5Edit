@@ -366,7 +366,8 @@ type
     esDeciding,
     esNotSuitableToAddTo,
     esDummy, {Used in wbScriptAdapter as a default value}
-    esConstructionComplete
+    esConstructionComplete,
+    esDestroying
   );
 
   TwbElementStates = set of TwbElementState;
@@ -473,7 +474,7 @@ type
     property IsHidden: Boolean
       read GetIsHidden;
 
-    procedure WriteToStream(aStream: TStream);
+    procedure WriteToStream(aStream: TStream; aResetModified: Boolean);
 
     function CopyInto(const aFile: IwbFile; AsNew, DeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 
@@ -584,6 +585,7 @@ type
     csInitOnce,
     csInitDone,
     csInitializing,
+    csReseting,
     csRefsBuild,
     csAsCreatedEmpty
   );
@@ -9098,7 +9100,7 @@ begin
       i := FlagDef.FlagIndex;
       Result := SameStr(FlagsDef.Flags[i], GetFlag(i));
     end;
-  end else // should not be possible, but avoids a warning 9103
+  end else
     Result := false;
 end;
 
@@ -9975,6 +9977,10 @@ end;
 
 { TwbFloatDef }
 
+const
+  SingleNaN : Single = 0.0/0.0;
+  DoubleNaN : Double = 0.0/0.0;
+
 function TwbFloatDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   FloatDef: IwbFloatDef;
@@ -10023,14 +10029,22 @@ var
   Value: Extended;
 begin
   aElement.RequestStorageChange(aBasePtr, aEndPtr, 4);
-  if aValue = '' then
-    PSingle(aBasePtr)^ := 0.0
-  else if SameText(aValue, 'Default') then
-  if fdDouble then
-    PInt64(aBasePtr)^ := $7FEFFFFFFFFFFFFF
-  else
-    PCardinal(aBasePtr)^ := $7F7FFFFF
-  else begin
+  if aValue = '' then begin
+    if fdDouble then
+      PDouble(aBasePtr)^ := 0.0
+    else
+      PSingle(aBasePtr)^ := 0.0;
+  end else if SameText(aValue, 'NaN') then begin
+    if fdDouble then
+      PDouble(aBasePtr)^ := DoubleNaN
+    else
+      PSingle(aBasePtr)^ := SingleNaN;
+  end else if SameText(aValue, 'Default') then begin
+    if fdDouble then
+      PInt64(aBasePtr)^ := $7FEFFFFFFFFFFFFF
+    else
+      PCardinal(aBasePtr)^ := $7F7FFFFF;
+  end else begin
     Value := RoundToEx(StrToFloat(aValue), -fdDigits);
     Value := Value / fdScale;
     if Assigned(fdNormalizer) then
@@ -10044,17 +10058,28 @@ end;
 
 procedure TwbFloatDef.FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant);
 var
+  Clear : Boolean;
   Value : Extended;
   Size  : Integer;
 begin
-  Value := aValue;
+  Clear := VarIsClear(aValue);
+  if not Clear then
+    Value := aValue
+  else
+    Value := 0;
+
   if fdDouble then
     Size := SizeOf(Double)+Ord(noTerminator)
   else
     Size := SizeOf(Single)+Ord(noTerminator);
   aElement.RequestStorageChange(aBasePtr, aEndPtr, Size);
   if Assigned(aBasePtr) then begin
-    if fdDouble and (SameValue(Value, MaxDouble) or (Value > MaxDouble)) then
+    if Clear then begin
+      if fdDouble then
+        PDouble(aBasePtr)^ := DoubleNaN
+      else
+        PSingle(aBasePtr)^ := SingleNaN;
+    end else if fdDouble and (SameValue(Value, MaxDouble) or (Value > MaxDouble)) then
       PInt64(aBasePtr)^ := $7FEFFFFFFFFFFFFF
     else if not fdDouble and (SameValue(Value, MaxSingle) or (Value > MaxSingle)) then
       PCardinal(aBasePtr)^ := $7F7FFFFF
@@ -10173,7 +10198,7 @@ var
 begin
   Value := ToValue(aBasePtr, aEndPtr, aElement);
   if IsNaN(Value) then
-    Result := ''
+    Result := 'NaN'
   else if (Value = maxDouble) or (Value = maxSingle) then
     Result := 'Default'
   else
@@ -10229,7 +10254,9 @@ begin
       Result := Format('<Error: Expected %d bytes of data, found %d>', [GetDefaultSize(aBasePtr, aEndPtr, aElement), Len])
   end else begin
     Value := ToValue(aBasePtr, aEndPtr, aElement);
-    if IsNan(Value) or (Value=maxDouble) or (Value=maxSingle)  then
+    if IsNan(Value) then
+      Result := 'NaN'
+    else if (Value=maxDouble) or (Value=maxSingle) then
       Result := 'Default'
     else
       Result := FloatToStrF(Value, ffFixed, 99, fdDigits);
