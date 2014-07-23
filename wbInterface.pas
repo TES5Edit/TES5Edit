@@ -121,7 +121,9 @@ type
   TwbLoggingArea = (
     laAddIfMissing,
     laElementAssign,
-    laElementCanAssign
+    laElementCanAssign,
+    laElementWriteToStream,
+    laElementMergeStorage
   );
   TwbLoggingAreas = set of TwbLoggingArea;
 
@@ -129,7 +131,9 @@ var
   wbLoggingAreas : TwbLoggingAreas = [
     //laAddIfMissing,
     laElementAssign,
-    laElementCanAssign
+    //laElementCanAssign,
+    laElementWriteToStream,
+    laElementMergeStorage
   ];
 
 function wbCodeSiteLoggingEnabled: Boolean;
@@ -367,7 +371,9 @@ type
     esNotSuitableToAddTo,
     esDummy, {Used in wbScriptAdapter as a default value}
     esConstructionComplete,
-    esDestroying
+    esDestroying,
+    esChangeNotified,
+    esModifiedUpdated
   );
 
   TwbElementStates = set of TwbElementState;
