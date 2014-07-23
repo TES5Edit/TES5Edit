@@ -8685,7 +8685,7 @@ begin
       else
         Element := aElement;
 
-      Size := arElement.Size[aBasePtr, aEndPtr, Element];
+      Size := arElement.Size[BasePtr, aEndPtr, Element];
       if Size = High(Integer) then begin
         Result := High(Integer);
         Exit;
@@ -8882,7 +8882,8 @@ begin
     Result := 0; // assuming we would have called GetDefaultSize otherwise... GetDefaultSize(aBasePtr, aEndPtr, aElement);
   end else begin
     BasePtr := aBasePtr;
-    if GetIsVariableSize and Supports(aElement, IwbContainerElementRef, Container) and Equals(Container.ValueDef) and (Container.ElementCount > 0) then begin
+    if GetIsVariableSize and Supports(aElement, IwbContainerElementRef, Container) and Equals(Container.ValueDef) and
+        (Container.ElementCount > 0) then begin
       for i := 0 to Pred(Container.ElementCount) do begin
         Element := Container.Elements[i];
         Size := Element.ValueDef.Size[BasePtr, aEndPtr, Element];
@@ -9097,7 +9098,8 @@ begin
       i := FlagDef.FlagIndex;
       Result := SameStr(FlagsDef.Flags[i], GetFlag(i));
     end;
-  end;
+  end else // should not be possible, but avoids a warning 9103
+    Result := false;
 end;
 
 function TwbFlagsDef.CanContainFormIDs: Boolean;
@@ -13860,7 +13862,7 @@ end;
 
 function TwbFlagDef.GetDontShow(const aElement: IwbElement): Boolean;
 begin
-  GetFlagsDef.FlagDontShow[aElement, GetFlagIndex];
+  Result := GetFlagsDef.FlagDontShow[aElement, GetFlagIndex];
 end;
 
 function TwbFlagDef.GetFlagIndex: Integer;
@@ -13875,7 +13877,7 @@ end;
 
 function TwbFlagDef.GetHasDontShow: Boolean;
 begin
-  GetFlagsDef.FlagHasDontShow[GetFlagIndex];
+  Result := GetFlagsDef.FlagHasDontShow[GetFlagIndex];
 end;
 
 function TwbFlagDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;

@@ -95,16 +95,18 @@ begin
   Name := aElement.DisplayName;
   Value := aElement.Value;
 
-  if (Name <> '') and (Name <> 'Unused') and not wbReportMode then
-    Write(aIndent, Name);
-  if ((Name <> '') and (Name <> 'Unused')) or (Value <> '') then
-    aIndent := aIndent + '  ';
-  if (Value <> '') and (Pos('Hidden: ', Name)<>1) then begin
-    if not wbReportMode then
-      WriteLn(': ', Value);
-  end else begin
-    if (Name <> '') and (Name <> 'Unused') and not wbReportMode then
-      WriteLn;
+  if (aElement.Name <> 'Unused') and (Name <> 'Unused') then begin
+    if (Name <> '') and not wbReportMode then
+      Write(aIndent, Name);
+    if (Name <> '') or (Value <> '') then
+      aIndent := aIndent + '  ';
+    if (Value <> '') and (Pos('Hidden: ', Name)<>1) then begin
+      if not wbReportMode then
+        WriteLn(': ', Value);
+    end else begin
+      if (Name <> '') and not wbReportMode then
+        WriteLn;
+    end;
   end;
 
   if Supports(aElement, IwbContainer, Container) and (Pos('Hidden: ', Name)<>1) then
@@ -284,6 +286,7 @@ begin
   wbAllowInternalEdit := False;
   wbMoreInfoForUnknown := False;
   wbSimpleRecords := False;
+  wbHideUnused := False;
   StartTime := Now;
 
   try
