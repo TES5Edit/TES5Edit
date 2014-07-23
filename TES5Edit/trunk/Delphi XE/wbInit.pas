@@ -24,7 +24,6 @@ uses
 var
   wbApplicationTitle   : string;
   wbTheGameIniFileName : String;
-  wbProgramPath        : string;
   wbScriptsPath        : string;
   wbBackupPath         : string;
   wbTempPath           : string;
@@ -234,7 +233,6 @@ const
 var
   s : String;
 begin
-  wbProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
   wbModGroupFileName := ChangeFileExt(ParamStr(0), '.modgroups');
   wbModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
 
