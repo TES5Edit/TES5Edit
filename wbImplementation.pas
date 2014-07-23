@@ -6078,7 +6078,7 @@ end;
 
 function TwbMainRecord.GetAddList: TDynStrings;
 var
-  i, j, k   : Integer;
+  i, j {, k}   : Integer;
   RecordDef : PwbRecordDef;
 begin
   Result := nil;
@@ -7129,7 +7129,7 @@ end;
 
 procedure TwbMainRecord.InitDataPtr;
 var
-  i         : Integer;
+//  i         : Integer;
   RecordDef : PwbRecordDef;
 begin
   if Assigned(dcEndPtr) then begin
@@ -9130,7 +9130,7 @@ constructor TwbSubRecord.Create(const aContainer: IwbContainer; const aSubRecord
 var
   BasePtr : Pointer;
   EndPtr  : Pointer;
-  i       : TwbContainerState;
+//  i       : TwbContainerState;
 begin
   cntStates := [];
   srDef := aSubRecordDef;
@@ -9520,7 +9520,7 @@ end;
 function TwbSubRecord.GetValueDef: IwbValueDef;
 var
   SelfRef : IwbContainerElementRef;
-  BasePtr : Pointer;
+//  BasePtr : Pointer;
 begin
   if not Assigned(srValueDef) or ((srsIsUnion in srStates) and not (csInit in cntStates)) then begin
     SelfRef := Self as IwbContainerElementRef;
@@ -10483,7 +10483,7 @@ end;
 
 function TwbGroupRecord.GetAddList: TDynStrings;
 var
-  i, j, k: Integer;
+  i, j {, k} : Integer;
   RecordDef : PwbRecordDef;
 begin
   Result := nil;
@@ -10625,7 +10625,7 @@ end;
 
 function TwbGroupRecord.GetShortName: string;
 var
-  i         : Integer;
+//  i         : Integer;
   RecordDef : PwbRecordDef;
 begin
   case grStruct.grsGroupType of
@@ -11631,7 +11631,7 @@ end;
 function TwbElement.GetConflictPriorityCanChange: Boolean;
 var
   Def        : IwbDef;
-  MainRecord : IwbMainRecord;
+//  MainRecord : IwbMainRecord;
 begin
   Result := False;
 
