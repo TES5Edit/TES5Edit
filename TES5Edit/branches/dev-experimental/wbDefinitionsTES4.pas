@@ -14,6 +14,8 @@
 
 unit wbDefinitionsTES4;
 
+{$I wbDefines.inc}
+
 interface
 
 procedure DefineTES4;

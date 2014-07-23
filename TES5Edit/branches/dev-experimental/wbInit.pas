@@ -14,6 +14,8 @@
 
 unit wbInit;
 
+{$I wbDefines.inc}
+
 interface
 
 uses
@@ -38,6 +40,7 @@ var
   wbDontBackup         : Boolean = False;
   wbRemoveTempPath     : Boolean = True;
   wbQuickShowConflicts : Boolean;
+  wbQuickClean         : Boolean;
 
   wbParamIndex         : integer = 1;     // First unused parameter
   wbPluginsToUse       : TStringList;
@@ -510,6 +513,12 @@ begin
   if FindCmdLineSwitch('quickshowconflicts') then
     wbQuickShowConflicts := True;
 
+  if FindCmdLineSwitch('IKnowWhatImDoing') then
+    wbIKnowWhatImDoing := True;
+
+  if FindCmdLineSwitch('quickclean') then
+    wbQuickClean := wbIKnowWhatImDoing;
+
   if FindCmdLineSwitch('TrackAllEditorID') then
     wbTrackAllEditorID := True;
 
@@ -557,8 +566,6 @@ begin
 
   if FindCmdLineSwitch('fixuppgrd') then
     wbFixupPGRD := True;
-  if FindCmdLineSwitch('IKnowWhatImDoing') then
-    wbIKnowWhatImDoing := True;
 end;
 
 initialization

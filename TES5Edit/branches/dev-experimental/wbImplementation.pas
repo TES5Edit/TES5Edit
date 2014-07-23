@@ -11,7 +11,10 @@
      under the License.
 
 *******************************************************************************}
+
 unit wbImplementation;
+
+{$I wbDefines.inc}
 
 {$DEFINE DBGSUBREC}
 
@@ -25,6 +28,9 @@ uses
   Contnrs,
   Math,
   wbInterface,
+  {$IFDEF USE_CODESITE}
+  CodeSiteLogging,
+  {$ENDIF}
   Zlibex;
 
 const
@@ -52,6 +58,9 @@ function wbFindWinningMainRecordByEditorID(const aSignature: TwbSignature; const
 function wbFormListToArray(const aFormList: IwbMainRecord; const aSignatures: string): TDynMainRecords;
 
 function wbCreateKeepAliveRoot: IwbKeepAliveRoot;
+
+function wbBeginKeepAlive: Integer;
+function wbEndKeepAlive: Integer;
 
 implementation
 
@@ -86,7 +95,26 @@ begin
 end;
 
 threadvar
-  wbKeepAliveContext: PwbKeepAliveContext;
+  wbKeepAliveContext : PwbKeepAliveContext;
+
+  wbKeepAliveCount   : Integer;
+  wbKeepAliveRoot    : IwbKeepAliveRoot;
+
+function wbBeginKeepAlive: Integer;
+begin
+  Result := Succ(wbKeepAliveCount);
+  wbKeepAliveCount := Result;
+  if (Result > 0) and not Assigned(wbKeepAliveRoot) then
+    wbKeepAliveRoot := wbCreateKeepAliveRoot;
+end;
+
+function wbEndKeepAlive: Integer;
+begin
+  Result := Pred(wbKeepAliveCount);
+  wbKeepAliveCount := Result;
+  if Result = 0 then
+    wbKeepAliveRoot := nil;
+end;
 
 const
   TheEmptyPlugin = 'EmptyPlugin.esp';
@@ -303,7 +331,8 @@ type
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); virtual;
     procedure Remove; virtual;
     function CanContainFormIDs: Boolean; virtual;
-    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; virtual;
+    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; virtual;
     procedure ResetConflict; virtual;
     procedure ResetReachable; virtual;
     function RemoveInjected(aCanRemove: Boolean): Boolean; virtual;
@@ -312,8 +341,10 @@ type
     function GetDontShow: Boolean; virtual;
     procedure SetToDefault; virtual;
 
-    function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; virtual;
-    function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; virtual;
+    function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
+    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; virtual;
+    function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
+    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; virtual;
 
     procedure WriteToStream(aStream: TStream); virtual;
     function GetLinksTo: IwbElement; virtual;
@@ -410,8 +441,8 @@ type
     procedure BuildRef; override;
     procedure MarkModifiedRecursive; override;
 
-    function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
-    function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
+    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
+    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
     function GetIsInSK(aIndex: Integer): Boolean; virtual;
 
     procedure SetToDefault; override;
@@ -557,7 +588,7 @@ type
 
     procedure WriteToStream(aStream: TStream); override;
 
-    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
 
     function NewFormID: Cardinal;
 
@@ -574,6 +605,7 @@ type
     function GetFileStates: TwbFileStates;
     function GetRecord(aIndex: Integer): IwbMainRecord;
     function GetRecordCount: Integer;
+    function GetHeader: IwbMainRecord;
 
     function GetLoadOrder: Integer;
     procedure SetLoadOrder(aValue: Integer);
@@ -875,9 +907,9 @@ type
 
     function FindReferencedBy(const aMainRecord: IwbMainRecord; var Index: Integer): Boolean;
 
-    function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
-    function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
-    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
+    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
+    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
 
     function GetAddList: TDynStrings; override;
     function Add(const aName: string; aSilent: Boolean): IwbElement; override;
@@ -1017,15 +1049,22 @@ type
     procedure SetDef(const aDef: IwbSubRecordDef);
   end;
 
+  TwbSubRecordState = (
+    srsIsArray,
+    srsIsFlags,
+    srsIsUnion,
+    srsSorted,
+    srsSortInvalid
+  );
+
+  TwbSubRecordStates = set of TwbSubRecordState;
+
   TwbSubRecord = class(TwbRecord, IwbSubRecord, IwbSubRecordInternal, IwbSortableContainer)
   protected {private}
     srDef                : IwbSubRecordDef;
-    srIsArray            : Boolean;
-    srArraySizePrefix    : Integer;
-    srIsFlags            : Boolean;
     srValueDef           : IwbValueDef;
-    srSorted             : Boolean;
-    srSortInvalid        : Boolean;
+    srStates             : TwbSubRecordStates;
+    srArraySizePrefix    : Integer;
   protected
     constructor Create(const aContainer : IwbContainer;
                        const aSubRecordDef: IwbSubRecordDef); overload;
@@ -1076,9 +1115,9 @@ type
 
     procedure WriteToStream(aStream: TStream); override;
 
-    function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
-    function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
-    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
+    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
+    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
     function GetIsInSK(aIndex: Integer): Boolean; override;
     function DoCheckSizeAfterWrite: Boolean; override;
 
@@ -1161,9 +1200,9 @@ type
     procedure SetModified(aValue: Boolean); override;
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
 
-    function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
-    function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
-    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
+    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
+    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
 
     procedure PrepareSave; override;
     procedure CheckTerminator;
@@ -1231,7 +1270,7 @@ type
     function IsElementEditable(const aElement: IwbElement): Boolean; override;
     function GetIsEditable: Boolean; override;
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
-    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
   end;
 
   TwbValue = class(TwbValueBase, IwbSortableContainer)
@@ -1243,7 +1282,7 @@ type
     procedure MasterCountUpdated(aOld, aNew: Byte); override;
     procedure MasterIndicesUpdated(const aOld, aNew: TBytes); override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
-    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
 
     function IsFlags: Boolean; override;
 
@@ -1292,8 +1331,8 @@ type
     procedure WriteToStream(aStream: TStream); override;
     procedure MergeStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
-    function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
-    function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
+    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
+    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
   end;
 
   IwbFlag = interface(IwbElement)
@@ -1324,6 +1363,8 @@ type
                              aIndex      : Integer);
 
     function GetName: string; override;
+    function GetDef: IwbNamedDef; override;
+    function GetValueDef: IwbValueDef; override;
 
     function GetValue: string; override;
     function GetSortKey(aExtended: Boolean): string; override;
@@ -1413,7 +1454,7 @@ type
     procedure MasterIndicesUpdated(const aOld, aNew: TBytes); override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
 
-    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
 
     procedure MakeHeaderWriteable;
 
@@ -1465,9 +1506,9 @@ type
     function CanElementReset: Boolean; override;
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
 
-    function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
-    function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
-    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
+    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
+    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
 
     function CanMoveElement: Boolean; override;
 
@@ -1499,9 +1540,9 @@ type
     function CanElementReset: Boolean; override;
     function RemoveInjected(aCanRemove: Boolean): Boolean; override;
 
-    function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
-    function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
-    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
+    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
+    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
     function GetIsInSK(aIndex: Integer): Boolean; override;
 
     {--- IwbHasSignature ---}
@@ -1688,7 +1729,7 @@ begin
     wbMergeSort(@cntElements[1], High(cntElements), CompareSortOrder);
 end;
 
-function TwbFile.AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
+function TwbFile.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 var
   GroupRecord : IwbGroupRecord;
   Dummy       : Integer;
@@ -2429,15 +2470,6 @@ begin
           if Find(TwbSignature(GroupRecord.GroupLabel), j) then
             Delete(j);
 
-//    if Find('CELL', j) then
-//      Delete(j);
-//    if Find('WRLD', j) then
-//      Delete(j);
-//    if Find('DIAL', j) then
-//      Delete(j);
-//    if Find('SCPT', j) then
-//      Delete(j);
-
     Sorted := False;
 
     for i := Pred(Count) downto 0 do
@@ -2496,6 +2528,21 @@ begin
       Exit;
 
   Result := nil;
+end;
+
+function TwbFile.GetHeader: IwbMainRecord;
+var
+  SelfRef : IwbContainerElementRef;
+begin
+  SelfRef := Self;
+  DoInit;
+
+  if (Length(cntElements) > 0) and
+     (Supports(cntElements[0], IwbMainRecord, Result)) and
+     (Result.Signature = wbHeaderSignature) then begin
+    {Result already set}
+  end else
+    Result := nil;
 end;
 
 function TwbFile.GetIsEditable: Boolean;
@@ -3475,16 +3522,17 @@ begin
   end;
 end;
 
-function TwbContainer.Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
+function TwbContainer.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
 var
   Container  : IwbContainer;
-  uContainer : IwbContainer;
+  uContainer : IwbContainerElementRef;
   sElement   : IwbElement;
   BasePtr    : Pointer;
-  i          : Integer;
+  i, j       : Integer;
   SelfRef    : IwbContainerElementRef;
   ValueDef   : IwbValueDef;
   UnionDef   : IwbUnionDef;
+  HasMap     : Boolean;
 begin
   Result := nil;
 
@@ -3499,8 +3547,8 @@ begin
 
   DoInit;
 
-  if inherited CanAssign(aIndex, aElement, False) then
-    Result := inherited Assign(aIndex, aElement, aOnlySK);
+  if inherited CanAssignInternal(aIndex, aElement, False) then
+    Result := inherited AssignInternal(aIndex, aElement, aOnlySK);
 
   if Length(cntElements) > 0 then begin
 
@@ -3513,24 +3561,38 @@ begin
             ValueDef.Equals(aElement.ValueDef) or
             ValueDef.CanAssign(Self, aIndex, aElement.ValueDef)
           )
-        ) then
-          for i := Low(cntElements) to High(cntElements) do begin
-            // if we have a union, we cannot progress until the union has been resolved and its cntElements is populated
-            sElement := Container.Elements[i];
-            if (sElement.ElementType = etUnion) and
-               Supports(cntElements[i], IwbContainer, uContainer) and
-               Supports(uContainer.GetValueDef, IwbUnionDef, UnionDef) then begin
-              if (uContainer.ElementCount = 1) then begin // At this point it is usually the default choice set by default
-                uContainer.RemoveElement(0);
-              end;
-              if (uContainer.ElementCount = 0) then begin
-                BasePtr := nil;
-                UnionDoInit(UnionDef, uContainer, BasePtr, nil);
-              end;
+        ) then begin
+            HasMap := Length(cntElementsMap) > 0;
+            if HasMap then begin
+              Assert(Length(cntElements) = Length(cntElementsMap));
+              //if the elements haven't got their space allocated yet, we need
+              //to make sure they are first written to in the "on disk" order
+              //before copying in the mapped order below
+              SetToDefault;
             end;
-            if (not aOnlySK or GetIsInSK(cntElements[i].SortOrder)) and cntElements[i].CanAssign(Low(Integer), sElement, False) then
-              cntElements[i].Assign(Low(Integer), sElement, aOnlySK);
-          end;
+            for i := Low(cntElements) to High(cntElements) do begin
+              if HasMap then
+                j := cntElementsMap[i]
+              else
+                j := i;
+
+              // if we have a union, we cannot progress until the union has been resolved and its cntElements is populated
+              sElement := Container.Elements[i];
+              if (sElement.ElementType = etUnion) and
+                 Supports(cntElements[j], IwbContainerElementRef, uContainer) and
+                 Supports(uContainer.GetValueDef, IwbUnionDef, UnionDef) then begin
+                if (uContainer.ElementCount = 1) then begin // At this point it is usually the default choice set by default
+                  uContainer.RemoveElement(0);
+                end;
+                if (uContainer.ElementCount = 0) then begin
+                  BasePtr := nil;
+                  UnionDoInit(UnionDef, uContainer as IwbContainer, BasePtr, nil);
+                end;
+              end;
+              if (not aOnlySK or GetIsInSK(cntElements[j].SortOrder)) and cntElements[j].CanAssign(Low(Integer), sElement, False) then
+                cntElements[j].Assign(Low(Integer), sElement, aOnlySK);
+            end;
+        end;
     end;
 
   end;
@@ -3564,7 +3626,7 @@ begin
       cntElements[i].BuildRef;
 end;
 
-function TwbContainer.CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
+function TwbContainer.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 var
   Container : IwbContainer;
   i         : Integer;
@@ -3584,7 +3646,7 @@ begin
 
   SelfRef := Self as IwbContainerElementRef;
 
-  Result := inherited CanAssign(aIndex, aElement, aCheckDontShow);
+  Result := inherited CanAssignInternal(aIndex, aElement, aCheckDontShow);
 
   DoInit;
 
@@ -3708,14 +3770,12 @@ procedure TwbContainer.DoInit;
 var
   i        : Integer;
   ValueDef : IwbValueDef;
-  SelfRef  : IwbContainerElementRef;
   KAC      : PwbKeepAliveContext;
 begin
   if csInit in cntStates then
     Exit;
   Include(cntStates, csInitializing);
   try
-    SelfRef := Self as IwbContainerElementRef;
     cntElementsMap := nil;
     Include(cntStates, csInit);
     Include(cntStates, csInitOnce);
@@ -3732,7 +3792,7 @@ begin
           KAC := wbKeepAliveContext;
           if Assigned(KAC) then begin
             cntKeepAliveNext := KAC.kacHead;
-            KAC.kacHead := SelfRef;
+            KAC.kacHead := Self as IwbContainerElementRef;
           end;
         end;
   finally
@@ -5000,7 +5060,7 @@ begin
   end;
 end;
 
-function TwbMainRecord.AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
+function TwbMainRecord.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 var
   SelfRef   : IwbContainerElementRef;
 begin
@@ -5082,7 +5142,7 @@ begin
   mrTmpRefFormIDs[mrTmpRefFormIDHigh] := aFormID;
 end;
 
-function TwbMainRecord.Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
+function TwbMainRecord.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
 var
   MainRecord    : IwbMainRecord;
   Member        : IwbRecordMemberDef;
@@ -5107,124 +5167,129 @@ begin
 
   if Assigned(mrDef) then begin
 
-    SelfRef := Self as IwbContainerElementRef;
-    DoInit;
+    //wbBeginKeepAlive;
+    try
+      SelfRef := Self as IwbContainerElementRef;
+      DoInit;
 
-    if aIndex = Low(Integer) then begin
+      if aIndex = Low(Integer) then begin
 
-      NeedUpdate := CheckChildOfCell;
+        NeedUpdate := CheckChildOfCell;
 
-      SetModified(True);
-      InvalidateStorage;
-      ReleaseElements;
+        SetModified(True);
+        InvalidateStorage;
+        ReleaseElements;
 
-      if Assigned(aElement) then begin
-        Container := aElement as IwbContainerElementRef;
+        if Assigned(aElement) then begin
+          Container := aElement as IwbContainerElementRef;
 
-        if Supports(aElement, IwbMainRecord, MainRecord) then begin
-          MakeHeaderWriteable;
-          with TwbMainRecord(MainRecord.ElementID) do begin
-            Self.mrStruct.mrsFlags := mrStruct.mrsFlags;
-            Self.mrStruct.mrsVCS1 := DefaultVCS1;
-            if wbGameMode in [gmFO3, gmFNV, gmTES5] then begin
-              Self.mrStruct.mrsVersion := mrStruct.mrsVersion;
-              Self.mrStruct.mrsVCS2 := DefaultVCS2; //mrStruct.mrsVCS2;
+          if Supports(aElement, IwbMainRecord, MainRecord) then begin
+            MakeHeaderWriteable;
+            with TwbMainRecord(MainRecord.ElementID) do begin
+              Self.mrStruct.mrsFlags := mrStruct.mrsFlags;
+              Self.mrStruct.mrsVCS1 := DefaultVCS1;
+              if wbGameMode in [gmFO3, gmFNV, gmTES5] then begin
+                Self.mrStruct.mrsVersion := mrStruct.mrsVersion;
+                Self.mrStruct.mrsVCS2 := DefaultVCS2; //mrStruct.mrsVCS2;
+              end;
             end;
           end;
         end;
-      end;
 
-      if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-        if GroupRecord.GroupType in [1, 4..10] then
-          with TwbContainedInElement.Create(Self) do begin
-            _AddRef; _Release;
-          end;
-      GroupRecord := nil;
+        if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
+          if GroupRecord.GroupType in [1, 4..10] then
+            with TwbContainedInElement.Create(Self) do begin
+              _AddRef; _Release;
+            end;
+        GroupRecord := nil;
 
-      BasePtr := dcBasePtr;
-      with TwbRecordHeaderStruct.Create(Self, BasePtr, Pointer( Cardinal(BasePtr) + wbSizeOfMainRecordStruct), mrDef.RecordHeaderStruct, '') do begin
-        Include(dcFlags, dcfDontSave);
-        SetSortOrder(-1);
-        SetMemoryOrder(Low(Integer));
-        _AddRef; _Release;
-      end;
-
-      if Assigned(aElement) then begin
-        for i := 0 to Pred(Container.ElementCount) do begin
-          Element := Container.Elements[i];
-          Assign(Element.SortOrder, Element, aOnlySK);
+        BasePtr := dcBasePtr;
+        with TwbRecordHeaderStruct.Create(Self, BasePtr, Pointer( Cardinal(BasePtr) + wbSizeOfMainRecordStruct), mrDef.RecordHeaderStruct, '') do begin
+          Include(dcFlags, dcfDontSave);
+          SetSortOrder(-1);
+          SetMemoryOrder(Low(Integer));
+          _AddRef; _Release;
         end;
+
+        if Assigned(aElement) then begin
+          for i := 0 to Pred(Container.ElementCount) do begin
+            Element := Container.Elements[i];
+            Assign(Element.SortOrder, Element, aOnlySK);
+          end;
+        end else begin
+          for i := 0 to Pred(mrDef.MemberCount) do
+            if mrDef.Members[i].Required then
+              Assign(i, nil, False);
+        end;
+
+        if NeedUpdate then
+          UpdateCellChildGroup;
+
       end else begin
-        for i := 0 to Pred(mrDef.MemberCount) do
-          if mrDef.Members[i].Required then
-            Assign(i, nil, False);
-      end;
-
-      if NeedUpdate then
-        UpdateCellChildGroup;
-
-    end else begin
-      if (aIndex >= 0) and (aIndex < mrDef.MemberCount) then begin
-        Member := mrDef.Members[aIndex];
-        IsAdd := not Assigned(aElement) or Member.CanAssign(Self, Low(Integer), aElement.Def);
-        IsAddChild := not IsAdd and Assigned(aElement) and Member.CanAssign(Self, High(Integer), aElement.Def);
-        if IsAdd or IsAddChild then begin
-          Element := GetElementBySortOrder(aIndex + GetAdditionalElementCount);
-          if Assigned(Element) then begin
-            if IsAdd and Assigned(aElement) then
-              Element.Assign(Low(Integer), aElement, aOnlySK)
-            else if IsAddChild then
-              Element.Assign(High(Integer), aElement, aOnlySK);
-          end else begin
-
-            if Member.DefType = dtSubRecordUnion then begin
-              if Assigned(aElement) then begin
-                Supports(aElement, IwbDataContainer, DataContainer);
-                Member := (Member as IwbRecordDef).GetMemberFor((aElement as IwbHasSignature).Signature, DataContainer);
-              end else
-                Member := (Member as IwbRecordDef).Members[0];
-              Assert(Assigned(Member));
-            end;
-
-            case Member.DefType of
-              dtSubRecord:
-                Element := TwbSubRecord.Create(Self, Member as IwbSubRecordDef);
-              dtSubRecordArray:
-                Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), Member as IwbSubRecordArrayDef);
-              dtSubRecordStruct:
-                Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), Member as IwbSubRecordStructDef);
-            else
-              Assert(False);
-            end;
-
-            if Assigned(Element) then try
-              Element.SortOrder := aIndex;
-              Element.MemoryOrder := aIndex;
+        if (aIndex >= 0) and (aIndex < mrDef.MemberCount) then begin
+          Member := mrDef.Members[aIndex];
+          IsAdd := not Assigned(aElement) or Member.CanAssign(Self, Low(Integer), aElement.Def);
+          IsAddChild := not IsAdd and Assigned(aElement) and Member.CanAssign(Self, High(Integer), aElement.Def);
+          if IsAdd or IsAddChild then begin
+            Element := GetElementBySortOrder(aIndex + GetAdditionalElementCount);
+            if Assigned(Element) then begin
               if IsAdd and Assigned(aElement) then
                 Element.Assign(Low(Integer), aElement, aOnlySK)
               else if IsAddChild then
                 Element.Assign(High(Integer), aElement, aOnlySK);
-            except
-              Element.Container.RemoveElement(Element);
-              raise;
-            end;
+            end else begin
 
+              if Member.DefType = dtSubRecordUnion then begin
+                if Assigned(aElement) then begin
+                  Supports(aElement, IwbDataContainer, DataContainer);
+                  Member := (Member as IwbRecordDef).GetMemberFor((aElement as IwbHasSignature).Signature, DataContainer);
+                end else
+                  Member := (Member as IwbRecordDef).Members[0];
+                Assert(Assigned(Member));
+              end;
+
+              case Member.DefType of
+                dtSubRecord:
+                  Element := TwbSubRecord.Create(Self, Member as IwbSubRecordDef);
+                dtSubRecordArray:
+                  Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), Member as IwbSubRecordArrayDef);
+                dtSubRecordStruct:
+                  Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), Member as IwbSubRecordStructDef);
+              else
+                Assert(False);
+              end;
+
+              if Assigned(Element) then try
+                Element.SortOrder := aIndex;
+                Element.MemoryOrder := aIndex;
+                if IsAdd and Assigned(aElement) then
+                  Element.Assign(Low(Integer), aElement, aOnlySK)
+                else if IsAddChild then
+                  Element.Assign(High(Integer), aElement, aOnlySK);
+              except
+                Element.Container.RemoveElement(Element);
+                raise;
+              end;
+
+            end;
+            Result := Element;
           end;
+        end else if (aIndex = -2) then begin
+          Element := GetElementBySortOrder(aIndex + GetAdditionalElementCount);
+          if Assigned(Element) then
+            Element.Assign(Low(Integer), aElement, False);
           Result := Element;
         end;
-      end else if (aIndex = -2) then begin
-        Element := GetElementBySortOrder(aIndex + GetAdditionalElementCount);
-        if Assigned(Element) then
-          Element.Assign(Low(Integer), aElement, False);
-        Result := Element;
       end;
+    finally
+    //  wbEndKeepAlive;
     end;
 
     if wbSortSubRecords and (Length(cntElements) > 1) then
       wbMergeSort(@cntElements[0], Length(cntElements), CompareSubRecords);
 
   end else
-    Result := inherited Assign(aIndex, aElement, aOnlySK);
+    Result := inherited AssignInternal(aIndex, aElement, aOnlySK);
 end;
 
 procedure TwbMainRecord.BuildRef;
@@ -5351,37 +5416,42 @@ begin
 end;
 
 procedure TwbMainRecord.ElementChanged(const aElement: IwbElement; aContainer: Pointer);
+const
+  EDID = $44494445;
+  FULL = $4C4C5546;
+  NAME = $454D414E;
 var
   SubRecord: IwbSubRecord;
 begin
-  if Supports(aElement, IwbSubRecord, SubRecord) then begin
-    if SubRecord.Signature = 'EDID' then
-      mrEditorID := SubRecord.Value
-    else if SubRecord.Signature = 'FULL' then
-      mrFullName := SubRecord.Value
-    else if SubRecord.Signature = 'NAME' then
-      Exclude(mrStates, mrsBaseRecordChecked);
-  end;
+  if Supports(aElement, IwbSubRecord, SubRecord) then
+    case Cardinal(SubRecord.Signature) of
+      EDID: mrEditorID := SubRecord.Value;
+      FULL: mrFullName := SubRecord.Value;
+      NAME: Exclude(mrStates, mrsBaseRecordChecked);
+    end;
   inherited;
   if not (mrsNoUpdateRefs in mrStates) then
     UpdateRefs;
 end;
 
 function TwbMainRecord.EnsureChildGroup: IwbGroupRecord;
+const
+  WRLD = $444C5257;
+  CELL = $4C4C4543;
+  DIAL = $4C414944;
 var
-  SearchForGroup: Integer;
-  ContainingGroup: IwbGroupRecord;
+  SearchForGroup  : Integer;
+  ContainingGroup : IwbGroupRecord;
 begin
   Result := GetChildGroup;
   if not Assigned(Result) then begin
-    SearchForGroup := 0;
-    if GetSignature = 'WRLD' then
-      SearchForGroup := 1
-    else if GetSignature = 'CELL' then
-      SearchForGroup := 6
-    else if GetSignature = 'DIAL' then
-      SearchForGroup := 7;
-
+    case Cardinal(GetSignature) of
+      WRLD: SearchForGroup := 1;
+      CELL: SearchForGroup := 6;
+      DIAL: SearchForGroup := 7;
+    else
+      SearchForGroup := 0;
+    end;
     if (SearchForGroup > 0) and Supports(GetContainer, IwbGroupRecord, ContainingGroup) then begin
       mrGroup := ContainingGroup.FindChildGroup(SearchForGroup, Self);
       if not Assigned(mrGroup) and ContainingGroup.IsElementEditable(nil) then begin
@@ -5393,7 +5463,7 @@ begin
   Assert(Assigned(Result));
 end;
 
-function TwbMainRecord.CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
+function TwbMainRecord.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 begin
   Result := False;
   if not wbEditAllowed then
@@ -8697,7 +8767,7 @@ end;
 
 { TwbSubRecord }
 
-function TwbSubRecord.AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
+function TwbSubRecord.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 var
   SelfRef    : IwbContainerElementRef;
   i          : Integer;
@@ -8722,8 +8792,8 @@ begin
 
         ArrayDef := srValueDef as IwbArrayDef;
 
-        if srSorted then begin
-          Assert(not srSortInvalid);
+        if srsSorted in srStates  then begin
+          Assert(not (srsSortInvalid in srStates));
           if FindBySortKey(aElement.SortKey[False], False, i) then begin
             Result := cntElements[i];
             if aDeepCopy then
@@ -8732,7 +8802,7 @@ begin
           end;
         end;
 
-        if srSorted then
+        if srsSorted in srStates then
           s := ''
         else
           s := '#' + IntToStr(Length(cntElements));
@@ -8781,20 +8851,20 @@ begin
         Result.Assign(Low(Integer), aElement, not aDeepCopy);
       end;
       dtUnion: begin
-        inherited AddIfMissing(aElement, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix);
+        inherited AddIfMissingInternal(aElement, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix);
       end;
     else
-      inherited AddIfMissing(aElement, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix);
+      inherited AddIfMissingInternal(aElement, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix);
     end;
 
   end else
-    inherited AddIfMissing(aElement, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix);
+    inherited AddIfMissingInternal(aElement, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix);
 end;
 
 const
   EmptyPtr: AnsiChar = #0;
 
-function TwbSubRecord.Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
+function TwbSubRecord.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
 var
   Element   : IwbElement;
   ArrayDef  : IwbArrayDef;
@@ -8853,7 +8923,7 @@ begin
           if (aIndex >= 0) and (ArrayDef.ElementCount <= 0) and ((aIndex = High(Integer)) or ArrayDef.Element.CanAssign(Self, Low(Integer), aElement.ValueDef)) then begin
             {add one entry}
 
-            if srSorted then
+            if srsSorted in srStates then
               s := ''
             else
               s := '#' + IntToStr(Length(cntElements));
@@ -8889,12 +8959,12 @@ begin
         CheckTerminator;
       end;
     else
-      Result := inherited Assign(aIndex, aElement, aOnlySK);
+      Result := inherited AssignInternal(aIndex, aElement, aOnlySK);
     end;
 
   end else
-    if inherited CanAssign(aIndex, aElement, False) then
-      Result := inherited Assign(aIndex, aElement, aOnlySK);
+    if inherited CanAssignInternal(aIndex, aElement, False) then
+      Result := inherited AssignInternal(aIndex, aElement, aOnlySK);
 end;
 
 procedure TwbSubRecord.BuildRef;
@@ -8913,7 +8983,7 @@ begin
   inherited;
 end;
 
-function TwbSubRecord.CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
+function TwbSubRecord.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 var
   ArrayDef: IwbArrayDef;
 begin
@@ -8928,7 +8998,7 @@ begin
   if aCheckDontShow and GetDontShow then
     Exit;
 
-  if srIsArray then begin
+  if srsIsArray in srStates then begin
     ArrayDef := srValueDef as IwbArrayDef;
     if not Assigned(aElement) then begin
       if aIndex = High(Integer) then
@@ -8942,7 +9012,7 @@ begin
     if not Assigned(aElement) then
       Exit;
 
-    Result := inherited CanAssign(aIndex, aElement, aCheckDontShow);
+    Result := inherited CanAssignInternal(aIndex, aElement, aCheckDontShow);
     if not Result and Assigned(srDef) then
       Result := srDef.CanAssign(Self, aIndex, aElement.Def);
   end;
@@ -8955,7 +9025,7 @@ end;
 
 function TwbSubRecord.CanMoveElement: Boolean;
 begin
-  Result := srIsArray and not srSorted;
+  Result := srStates * [srsIsArray, srsSorted] = [srsIsArray];
 end;
 
 function TwbSubRecord.CanElementReset: Boolean;
@@ -9009,8 +9079,8 @@ begin
   SetModified(True);
   InvalidateStorage;
   TwbStringListTerminator.Create(Self);
-  if srSorted then
-    srSortInvalid := True;
+  if srsSorted in srStates then
+    Include(srStates, srsSortInvalid);
 end;
 
 function Resolve(const aValueDef: IwbValueDef; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef;
@@ -9060,11 +9130,9 @@ constructor TwbSubRecord.Create(const aContainer: IwbContainer; const aSubRecord
 var
   BasePtr : Pointer;
   EndPtr  : Pointer;
-  i       : TwbContainerState;
+//  i       : TwbContainerState;
 begin
   cntStates := [];
-  for i := Low(TwbContainerState) to High(TwbContainerState) do
-    Exclude(cntStates, i);
   srDef := aSubRecordDef;
   BasePtr := nil;
   Create(aContainer, BasePtr, nil, nil);
@@ -9092,17 +9160,17 @@ end;
 procedure TwbSubRecord.DoInit;
 begin
   inherited;
-  if srSorted and srSortInvalid then begin
+  if srStates * [srsSorted, srsSortInvalid] = [srsSorted, srsSortInvalid] then begin
     if Length(cntElements) > 1 then
       wbMergeSort(@cntElements[0], Length(cntElements), CompareSortKeys);
-    srSortInvalid := False;
+    Exclude(srStates, srsSortInvalid);
   end;
 end;
 
 procedure TwbSubRecord.ElementChanged(const aElement: IwbElement; aContainer: Pointer);
 begin
-  if srSorted then
-    srSortInvalid := True;
+  if srsSorted in srStates then
+    Include(srStates, srsSortInvalid);
   inherited;
 end;
 
@@ -9151,29 +9219,34 @@ begin
     srValueDef := ValueDef;
     case ValueDef.DefType of
       dtArray: begin
-        srIsArray := True;
-        srSorted := ArrayDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, srArraySizePrefix);
+        Include(srStates, srsIsArray);
+        if ArrayDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, srArraySizePrefix) then
+          Include(srStates, srsSorted);
       end;
       dtStruct, dtStructChapter: StructDoInit(ValueDef, Self, BasePtr, dcDataEndPtr);
       dtUnion:  begin
+        Include(srStates, srsIsUnion);
         case UnionDoInit(ValueDef, Self, BasePtr, dcDataEndPtr) of
-          ufArray: srIsArray := True;
+          ufArray: Include(srStates, srsIsArray);
           ufSortedArray: begin
-            srIsArray := True;
-            srSorted := True;
+            Include(srStates, srsIsArray);
+            Include(srStates, srsSorted);
           end;
           ufFlags: begin
-            srIsFlags := True;
-            srSorted := True;
+            Include(srStates, srsIsFlags);
+            Include(srStates, srsSorted);
           end;
         end;
       end;
     else
-      srIsFlags := ValueDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, Self);
-      srSorted := srIsFlags;
+      if ValueDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, Self) then begin
+        Include(srStates, srsIsFlags);
+        Include(srStates, srsSorted);
+      end;
     end;
     // flags are already created in the right sort order
-    srSortInvalid := srSorted and not srIsFlags;
+    if srStates * [srsSorted, srsIsFlags] = [srsSorted] then
+      Include(srStates, srsSortInvalid);
   end else
     case ValueDef.DefType of
       dtArray: Element := TwbArray.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
@@ -9386,7 +9459,8 @@ begin
   if not Assigned(srValueDef) then
     DoInit;
 
-  Result := srSorted or (Supports(Resolve(srValueDef, GetDataBasePtr, GetDataEndPtr, Self), IwbEmptyDef, EmptyDef) and EmptyDef.Sorted);
+  Result := (srsSorted in srStates) or
+    (Supports(Resolve(srValueDef, GetDataBasePtr, GetDataEndPtr, Self), IwbEmptyDef, EmptyDef) and EmptyDef.Sorted);
 end;
 
 function TwbSubRecord.GetSortKeyInternal(aExtended: Boolean): string;
@@ -9446,15 +9520,13 @@ end;
 function TwbSubRecord.GetValueDef: IwbValueDef;
 var
   SelfRef : IwbContainerElementRef;
-  BasePtr : Pointer;
+//  BasePtr : Pointer;
 begin
-  Result := srValueDef;
-  if not Assigned(Result) and not (csInitializing in cntStates) then begin
+  if not Assigned(srValueDef) or ((srsIsUnion in srStates) and not (csInit in cntStates)) then begin
     SelfRef := Self as IwbContainerElementRef;
-
-    BasePtr := GetDataBasePtr;
-    srValueDef := Resolve(srDef.Value, BasePtr, dcDataEndPtr, Self);
+    DoInit;
   end;
+  Result := srValueDef;
 end;
 
 procedure TwbSubRecord.InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
@@ -9517,12 +9589,15 @@ end;
 
 function TwbSubRecord.IsElementRemoveable(const aElement: IwbElement): Boolean;
 begin
-  Result := IsElementEditable(aElement) and srIsArray and Assigned(srValueDef) and ((srValueDef as IwbArrayDef).ElementCount <= 0) and (Length(cntElements)>1);
+  Result := IsElementEditable(aElement)
+    and (srsIsArray in srStates)
+    and Assigned(srValueDef)
+    and ((srValueDef as IwbArrayDef).ElementCount <= 0) and (Length(cntElements)>1);
 end;
 
 function TwbSubRecord.IsFlags: Boolean;
 begin
-  Result := srIsFlags;
+  Result := srsIsFlags in srStates;
 end;
 
 procedure TwbSubRecord.MasterCountUpdated(aOld, aNew: Byte);
@@ -9634,10 +9709,7 @@ procedure TwbSubRecord.Reset;
 begin
   ReleaseElements;
   srValueDef := nil;
-  srIsArray := False;
-  srIsFlags := False;
-  srSorted := False;
-  srSortInvalid := False;
+  srStates := srStates - [srsIsArray, srsIsFlags, srsSorted, srsSortInvalid];
   inherited;
 end;
 
@@ -9677,7 +9749,7 @@ begin
       DoAfterSet(OldValue, NewValue);
     end else
       raise Exception.Create(GetName + ' can not be edited');
-    if srIsFlags and (csInit in cntStates) then begin
+    if (srsIsFlags in srStates) and (csInit in cntStates) then begin
       Reset;
       Init;
     end;
@@ -9688,8 +9760,8 @@ end;
 procedure TwbSubRecord.SetModified(aValue: Boolean);
 begin
   inherited;
-  if aValue and srSorted then
-    srSortInvalid := True;
+  if aValue and (srsSorted in srStates) then
+    Include(srStates, srsSortInvalid);
 end;
 
 procedure TwbSubRecord.SetNativeValue(const aValue: Variant);
@@ -9713,7 +9785,7 @@ begin
     DoAfterSet(OldValue, NewValue);
   end else
     raise Exception.Create(GetName + ' can not be edited');
-  if srIsFlags and (csInit in cntStates) then begin
+  if (srsIsFlags in srStates) and (csInit in cntStates) then begin
     Reset;
     Init;
   end;
@@ -9905,7 +9977,7 @@ begin
     inherited;
 end;
 
-function TwbGroupRecord.AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
+function TwbGroupRecord.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 var
   MainRecord   : IwbMainRecord;
   MainRecord2  : IwbMainRecord;
@@ -9928,7 +10000,7 @@ begin
           if not Assigned(MainRecord) then
             raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
           MainRecord := MainRecord.HighestOverrideOrSelf[GetFile.LoadOrder];
-          MainRecord := AddIfMissing(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix) as IwbMainRecord;
+          MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix) as IwbMainRecord;
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
           if not Assigned(Result) then
@@ -9972,7 +10044,7 @@ begin
           if not Assigned(MainRecord) then
             raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
           MainRecord := MainRecord.HighestOverrideOrSelf[GetFile.LoadOrder];
-          MainRecord := AddIfMissing(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix) as IwbMainRecord;
+          MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix) as IwbMainRecord;
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
           if not Assigned(Result) then
@@ -10047,7 +10119,7 @@ begin
           if not Assigned(MainRecord) then
             raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
           MainRecord := MainRecord.HighestOverrideOrSelf[GetFile.LoadOrder];
-          MainRecord := AddIfMissing(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix) as IwbMainRecord;
+          MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix) as IwbMainRecord;
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
           if not Assigned(Result) then
@@ -10124,7 +10196,7 @@ begin
           if not Assigned(MainRecord) then
             raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
           MainRecord := MainRecord.HighestOverrideOrSelf[GetFile.LoadOrder];
-          MainRecord := AddIfMissing(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix) as IwbMainRecord;
+          MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix) as IwbMainRecord;
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
           if not Assigned(Result) then
@@ -10275,7 +10347,7 @@ begin
         Result.BuildRef;
     end;
   else
-    raise Exception.Create(ClassName + '.AddIfMissing is not implemented for GroupType ' + IntToStr(grStruct.grsGroupType));
+    raise Exception.Create(ClassName + '.AddIfMissingInternal is not implemented for GroupType ' + IntToStr(grStruct.grsGroupType));
   end;
 end;
 
@@ -11150,8 +11222,52 @@ end;
 { TwbElement }
 
 function TwbElement.AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
+{$IFDEF USE_CODESITE}
+var
+  Log: Boolean;
+{$ENDIF}
 begin
-  raise Exception.Create(ClassName + '.AddIfMissing is not implemented');
+  if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount) then begin
+    wbProgressCallback('');
+    wbCurrentTick := GetTickCount;
+  end;
+
+  {$IFDEF USE_CODESITE}
+  Log := (laAddIfMissing in wbLoggingAreas) and wbCodeSiteLoggingEnabled;
+  if Log then begin
+    CodeSite.EnterMethod(Self, 'AddIfMissing');
+    CodeSite.Send('Self.Name', Self.GetName);
+    CodeSite.Send('Self.Path', Self.GetPath);
+    CodeSite.Send('Self.Value', Self.GetValue);
+    if Assigned(aElement) then begin
+      CodeSite.Send('aElement.Name', aElement.Name);
+      CodeSite.Send('aElement.Path', aElement.Path);
+      CodeSite.Send('aElement.Value', aElement.Value);
+    end else
+        CodeSite.Send('aElement', 'nil');
+  end;
+  try
+  {$ENDIF}
+    Result := AddIfMissingInternal(aElement, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix);
+  {$IFDEF USE_CODESITE}
+  finally
+    if Log then begin
+      CodeSite.Send('Self.Value', Self.GetValue);
+      if Assigned(Result) then begin
+        CodeSite.Send('Result.Name', Result.Name);
+        CodeSite.Send('Result.Path', Result.Path);
+        CodeSite.Send('Result.Value', Result.Value);
+      end else
+        CodeSite.Send('Result', 'nil');
+      CodeSite.ExitMethod(Self, 'AddIfMissing');
+    end;
+  end;
+  {$ENDIF}
+end;
+
+function TwbElement.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
+begin
+  raise Exception.Create(ClassName + '.AddIfMissingInternal is not implemented');
 end;
 
 procedure TwbElement.AddReferencedFromID(aFormID: Cardinal);
@@ -11175,16 +11291,61 @@ begin
   end;
   eContainerRef := nil;
 Skip:
+  Include(eStates, esConstructionComplete);
 end;
 
 function TwbElement.Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
+{$IFDEF USE_CODESITE}
+var
+  Log: Boolean;
+{$ENDIF}
 begin
-  Result := nil;
+  if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount) then begin
+    wbProgressCallback('');
+    wbCurrentTick := GetTickCount;
+  end;
 
+  {$IFDEF USE_CODESITE}
+  Log := (laElementAssign in wbLoggingAreas) and wbCodeSiteLoggingEnabled;
+  if Log then begin
+    CodeSite.EnterMethod(Self, 'Assign');
+    CodeSite.Send('Self.Name', Self.GetName);
+    CodeSite.Send('Self.Path', Self.GetPath);
+    CodeSite.Send('Self.Value', Self.GetValue);
+    CodeSite.Send('aIndex', aIndex);
+    if Assigned(aElement) then begin
+      CodeSite.Send('aElement.Name', aElement.Name);
+      CodeSite.Send('aElement.Path', aElement.Path);
+      CodeSite.Send('aElement.Value', aElement.Value);
+    end else
+      CodeSite.Send('aElement', 'nil');
+    CodeSite.Send('aOnlySK', aOnlySK);
+  end;
+  try
+  {$ENDIF}
+    Result := AssignInternal(aIndex, aElement, aOnlySK);
+  {$IFDEF USE_CODESITE}
+  finally
+    if Log then begin
+      CodeSite.Send('Self.Value', Self.GetValue);
+      if Assigned(Result) then begin
+        CodeSite.Send('Result.Name', Result.Name);
+        CodeSite.Send('Result.Path', Result.Path);
+        CodeSite.Send('Result.Value', Result.Value);
+      end else
+        CodeSite.Send('Result', 'nil');
+      CodeSite.ExitMethod(Self, 'Assign');
+    end;
+  end;
+  {$ENDIF}
+end;
+
+function TwbElement.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
+begin
   if not wbEditAllowed then
     raise Exception.Create(GetName + ' can not be assigned.');
 
-  SetEditValue(aElement.EditValue);
+  Result := GetDef.Assign(Self, aIndex, aElement, aOnlySK);
 end;
 
 procedure TwbElement.BeforeDestruction;
@@ -11212,6 +11373,44 @@ begin
 end;
 
 function TwbElement.CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
+{$IFDEF USE_CODESITE}
+var
+  Log: Boolean;
+{$ENDIF}
+begin
+  {$IFDEF USE_CODESITE}
+  Log := (laElementCanAssign in wbLoggingAreas) and wbCodeSiteLoggingEnabled;
+  if Log then begin
+    CodeSite.EnterMethod(Self, 'CanAssign');
+    CodeSite.Send('Self.Name', Self.GetName);
+    CodeSite.Send('Self.Path', Self.GetPath);
+    CodeSite.Send('Self.Value', Self.GetValue);
+    CodeSite.Send('aIndex', aIndex);
+    if Assigned(aElement) then begin
+      CodeSite.Send('aElement.Name', aElement.Name);
+      CodeSite.Send('aElement.Path', aElement.Path);
+      CodeSite.Send('aElement.Value', aElement.Value);
+    end else
+      CodeSite.Send('aElement', 'nil');
+    CodeSite.Send('aCheckDontShow', aCheckDontShow);
+  end;
+  try
+  {$ENDIF}
+    Result := CanAssignInternal(aIndex, aElement, aCheckDontShow);
+  {$IFDEF USE_CODESITE}
+  finally
+    if Log then begin
+      CodeSite.Send('Result', Result);
+      CodeSite.ExitMethod(Self, 'CanAssign');
+    end;
+  end;
+  {$ENDIF}
+end;
+
+function TwbElement.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
+var
+  TargetValueDef: IwbValueDef;
+  SourceValueDef: IwbValueDef;
 begin
   Result := wbIsInternalEdit;
   if Result then
@@ -11226,13 +11425,15 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if GetValueDef = nil then
+  TargetValueDef := GetValueDef;
+  if TargetValueDef = nil then
     Exit;
 
-  if aElement.ValueDef = nil then
+  SourceValueDef := aElement.ValueDef;
+  if SourceValueDef = nil then
     Exit;
 
-  Result := GetValueDef.CanAssign(Self, aIndex, aElement.ValueDef);
+  Result := TargetValueDef.CanAssign(Self, aIndex, SourceValueDef);
 
   if Result and aCheckDontShow and GetDontShow then
     Result := False;
@@ -11785,6 +11986,7 @@ function TwbElement.InternalRelease: Integer;
 begin
   Result := inherited _Release;
 end;
+{$D+}
 
 procedure TwbElement.InvalidateParentStorage;
 begin
@@ -11806,8 +12008,6 @@ function TwbElement.LinksToParent: Boolean;
 begin
   Result := False;
 end;
-
-{$D+}
 
 procedure TwbElement.MarkModifiedRecursive;
 begin
@@ -12105,7 +12305,7 @@ end;
 
 { TwbSubRecordArray }
 
-function TwbSubRecordArray.AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
+function TwbSubRecordArray.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 var
   SelfRef   : IwbContainerElementRef;
   i         : Integer;
@@ -12155,7 +12355,7 @@ begin
   end;
 end;
 
-function TwbSubRecordArray.Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
+function TwbSubRecordArray.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
 var
   Element       : IwbElement;
   Container     : IwbContainer;
@@ -12240,7 +12440,7 @@ begin
   end;
 end;
 
-function TwbSubRecordArray.CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
+function TwbSubRecordArray.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 begin
   Result := False;
   if not wbEditAllowed then
@@ -12452,7 +12652,7 @@ begin
   Assert(Assigned(Result));
 end;
 
-function TwbSubRecordStruct.AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
+function TwbSubRecordStruct.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 var
   SelfRef   : IwbContainerElementRef;
 begin
@@ -12509,7 +12709,7 @@ begin
   end;
 end;
 
-function TwbSubRecordStruct.Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
+function TwbSubRecordStruct.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
 var
   Member    : IwbRecordMemberDef;
   Container : IwbContainer;
@@ -12578,7 +12778,7 @@ begin
     wbMergeSort(@cntElements[0], Length(cntElements), CompareSubRecords);
 end;
 
-function TwbSubRecordStruct.CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
+function TwbSubRecordStruct.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 begin
   Result := False;
   if not wbEditAllowed then
@@ -12928,7 +13128,7 @@ begin
   arrSortInvalid := arrSorted;
 end;
 
-function TwbArray.AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
+function TwbArray.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 var
   SelfRef   : IwbContainerElementRef;
   i         : Integer;
@@ -12973,7 +13173,7 @@ begin
   CheckTerminator;
 end;
 
-function TwbArray.Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
+function TwbArray.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
 var
   Element       : IwbElement;
   sElement      : IwbElement;
@@ -13066,7 +13266,7 @@ begin
   CheckTerminator;
 end;
 
-function TwbArray.CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
+function TwbArray.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 var
   ArrayDef: IwbArrayDef;
 begin
@@ -13448,7 +13648,7 @@ end;
 
 { TwbValue }
 
-function TwbValue.AddIfMissing(const aElement      :  IwbElement;
+function TwbValue.AddIfMissingInternal(const aElement      :  IwbElement;
                                      aAsNew        :  Boolean;
                                      aDeepCopy     :  Boolean;
                                const aPrefixRemove : string;
@@ -13474,7 +13674,7 @@ begin
           end;
         end;
 
-  Result := inherited AddIfMissing(aElement, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix)
+  Result := inherited AddIfMissingInternal(aElement, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix)
 end;
 
 function TwbValue.CompareExchangeFormID(aOldFormID, aNewFormID: Cardinal): Boolean;
@@ -13911,6 +14111,11 @@ begin
   Result := 0;
 end;
 
+function TwbFlag.GetDef: IwbNamedDef;
+begin
+  Result := GetFlagsDef.FlagDef[fIndex];
+end;
+
 function TwbFlag.GetDontShow: Boolean;
 begin
   Result := GetFlagsDef.FlagDontShow[Self, fIndex];
@@ -14031,6 +14236,11 @@ begin
   else
     Result := '';
 }
+end;
+
+function TwbFlag.GetValueDef: IwbValueDef;
+begin
+  Result := GetFlagsDef.FlagDef[fIndex];
 end;
 
 procedure TwbFlag.InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
@@ -14766,7 +14976,7 @@ end;
 
 { TwbRecordHeaderStruct }
 
-function TwbRecordHeaderStruct.AddIfMissing(const aElement      : IwbElement;
+function TwbRecordHeaderStruct.AddIfMissingInternal(const aElement      : IwbElement;
                                                   aAsNew        : Boolean;
                                                   aDeepCopy     : Boolean;
                                             const aPrefixRemove : string;
@@ -14893,12 +15103,12 @@ end;
 
 { TwbStringListTerminator }
 
-function TwbStringListTerminator.Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
+function TwbStringListTerminator.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
 begin
   Result := nil;
 end;
 
-function TwbStringListTerminator.CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
+function TwbStringListTerminator.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 begin
   Result := False;
   if Assigned(eContainer) then

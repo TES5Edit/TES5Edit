@@ -14,6 +14,8 @@
 
 unit wbHelpers;
 
+{$I wbDefines.inc}
+
 interface
 
 uses

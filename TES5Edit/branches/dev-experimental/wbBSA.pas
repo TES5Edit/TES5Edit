@@ -11,7 +11,10 @@
      under the License.
 
 *******************************************************************************}
+
 unit wbBSA;
+
+{$I wbDefines.inc}
 
 interface
 
