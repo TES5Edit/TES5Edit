@@ -124,17 +124,20 @@ type
     laElementAssign,
     laElementCanAssign,
     laElementWriteToStream,
-    laElementMergeStorage
+    laElementMergeStorage,
+
+    laDummy
   );
   TwbLoggingAreas = set of TwbLoggingArea;
 
 var
   wbLoggingAreas : TwbLoggingAreas = [
-    //laAddIfMissing,
+    laAddIfMissing,
     laElementAssign,
     //laElementCanAssign,
-    laElementWriteToStream,
-    laElementMergeStorage
+    //laElementWriteToStream,
+    //laElementMergeStorage
+    laDummy
   ];
 
 function wbCodeSiteLoggingEnabled: Boolean;
@@ -3401,6 +3404,7 @@ type
 
     {--- IwbDefInternal ---}
     function SetParent(const aParent: TwbDef; aForceDuplicate: Boolean): IwbDef; virtual;
+    procedure ParentSet; virtual;
 
     function Duplicate: TwbDef;
   end;
@@ -3412,6 +3416,7 @@ type
     noAfterSet   : TwbAfterSetCallback;
     noDontShow   : TwbDontShowCallback;
     noTerminator : Boolean;
+    noUnused     : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority   : TwbConflictPriority;
@@ -3427,7 +3432,7 @@ type
     function GetHasDontShow: Boolean; override;
 
     {--- IwbDefInternal ---}
-    function SetParent(const aParent: TwbDef; aForceDuplicate: Boolean): IwbDef; override;
+    procedure ParentSet; override;
 
     {---IwbNamedDef---}
     function GetName: string;
@@ -6546,6 +6551,11 @@ begin
   defNotRequired := True;
 end;
 
+procedure TwbDef.ParentSet;
+begin
+  {can be overriden}
+end;
+
 procedure TwbDef.PossiblyRequired;
 begin
   defPossiblyRequired := True;
@@ -6594,6 +6604,7 @@ begin
   else begin
     Result := Self;
     defParent := aParent;
+    ParentSet;
   end;
 end;
 
@@ -6668,9 +6679,11 @@ begin
   noAfterLoad := aAfterLoad;
   noAfterSet := aAfterSet;
   noTerminator := aTerminator;
-  if aPriority = cpNormal then
-    if aName = 'Unused' then
-      aPriority := cpIgnore;
+  if aName = 'Unused' then begin
+    noUnused := True;
+    if aPriority = cpNormal then
+        aPriority := cpIgnore;
+  end;
   inherited Create(aPriority, aRequired, aGetCP);
 
   if Pos('unknown', LowerCase(aName)) > 0 then
@@ -6682,12 +6695,12 @@ begin
   if Assigned(noDontShow) then
     Result := noDontShow(aElement)
   else
-    Result := False;
+    Result := wbHideUnused and noUnused;
 end;
 
 function TwbNamedDef.GetHasDontShow: Boolean;
 begin
-  Result := Assigned(noDontShow);
+  Result := Assigned(noDontShow) or (wbHideUnused and noUnused);
 end;
 
 function TwbNamedDef.GetName: string;
@@ -6711,14 +6724,15 @@ begin
   end;
 end;
 
-function TwbNamedDef.SetParent(const aParent: TwbDef; aForceDuplicate: Boolean): IwbDef;
+procedure TwbNamedDef.ParentSet;
 var
   Parent: IwbNamedDef;
 begin
-  Result := inherited SetParent(aParent, aForceDuplicate);
-
-  if not IsUnknown and (noName = '') and Supports(defParent, IwbNamedDef, Parent) then
-    IsUnknown := Pos('unknown', LowerCase(Parent.Name)) > 0;
+  inherited;
+  if not (IsUnknown or noUnused) and (noName = '') and Supports(defParent, IwbNamedDef, Parent) then begin
+    IsUnknown := IsUnknown or (Pos('unknown', LowerCase(Parent.Name)) > 0);
+    noUnused := noUnused or (Parent.Name = 'Unused');
+  end;
 end;
 
 { TwbSignatureDef }
