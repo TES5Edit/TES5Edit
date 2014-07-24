@@ -123,6 +123,7 @@ type
     laAddIfMissing,
     laElementAssign,
     laElementCanAssign,
+    laElementSetToDefault,
     laElementWriteToStream,
     laElementMergeStorage,
 
@@ -134,9 +135,11 @@ var
   wbLoggingAreas : TwbLoggingAreas = [
     laAddIfMissing,
     laElementAssign,
-    //laElementCanAssign,
+    laElementCanAssign,
+    laElementSetToDefault,
     //laElementWriteToStream,
-    //laElementMergeStorage
+    //laElementMergeStorage,
+
     laDummy
   ];
 
@@ -8728,7 +8731,10 @@ end;
 
 function TwbArrayDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  if ((arCount = 0) and not Assigned(arCountCallback)) then Result := GetSize(aBasePtr, aEndPtr, aElement) else Result := 0;
+  if ((arCount = 0) and not Assigned(arCountCallback)) then
+    Result := 0
+  else
+    Result := GetSize(aBasePtr, aEndPtr, aElement);
 end;
 
 function TwbArrayDef.GetSorted: Boolean;

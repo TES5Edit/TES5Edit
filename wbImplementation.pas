@@ -343,7 +343,8 @@ type
     function GetEditType: TwbEditType; virtual;
     function GetEditInfo: string; virtual;
     function GetDontShow: Boolean; virtual;
-    procedure SetToDefault; virtual;
+    procedure SetToDefault;
+    procedure SetToDefaultInternal; virtual;
 
     function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; virtual;
@@ -454,7 +455,7 @@ type
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
     function GetIsInSK(aIndex: Integer): Boolean; virtual;
 
-    procedure SetToDefault; override;
+    procedure SetToDefaultInternal; override;
 
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); override;
 
@@ -706,7 +707,7 @@ type
     procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     function DoCheckSizeAfterWrite: Boolean; virtual;
-    procedure SetToDefault; override;
+    procedure SetToDefaultInternal; override;
     function IsFlags: Boolean; virtual;
 
     function GetEditType: TwbEditType; override;
@@ -1182,7 +1183,7 @@ type
     function GetDataSize: Integer; override;
     function DoCheckSizeAfterWrite: Boolean; override;
 
-    procedure SetToDefault; override;
+    procedure SetToDefaultInternal; override;
 
     function GetIsInSK(aIndex: Integer): Boolean; override;
   public
@@ -4844,7 +4845,7 @@ begin
     Container.ElementNativeValues[Name] := aValue;
 end;
 
-procedure TwbContainer.SetToDefault;
+procedure TwbContainer.SetToDefaultInternal;
 var
   i         : Integer;
   SelfRef   : IwbContainerElementRef;
@@ -12419,6 +12420,37 @@ begin
 end;
 
 procedure TwbElement.SetToDefault;
+{$IFDEF USE_CODESITE}
+var
+  Log: Boolean;
+{$ENDIF}
+begin
+  {$IFDEF USE_CODESITE}
+  Log := (laElementSetToDefault in wbLoggingAreas) and wbCodeSiteLoggingEnabled;
+  if Log then begin
+    CodeSite.EnterMethod(Self, 'SetToDefault');
+    CodeSite.Send('Self.Name', Self.GetName);
+    CodeSite.Send('Self.Path', Self.GetPath);
+    CodeSite.Send('Self.DataSize', Self.GetDataSize);
+    CodeSite.Send('Self.Value', Self.GetValue);
+  end;
+  {$ENDIF}
+  BeginUpdate;
+  try
+    SetToDefaultInternal;
+  finally
+    EndUpdate;
+  {$IFDEF USE_CODESITE}
+    if Log then begin
+      CodeSite.Send('Self.Value', Self.GetValue);
+      CodeSite.Send('Self.DataSize', Self.GetDataSize);
+      CodeSite.ExitMethod(Self, 'SetToDefault');
+    end;
+  {$ENDIF}
+  end;
+end;
+
+procedure TwbElement.SetToDefaultInternal;
 begin
   { can be overriden }
 end;
@@ -14803,11 +14835,11 @@ begin
   inherited SetModified(aValue);
 end;
 
-procedure TwbDataContainer.SetToDefault;
+procedure TwbDataContainer.SetToDefaultInternal;
 var
-  SelfRef  : IwbContainerElementRef;
-  ValueDef : IwbValueDef;
-  OldValue, NewValue: Variant;
+  SelfRef            : IwbContainerElementRef;
+  ValueDef           : IwbValueDef;
+  OldValue, NewValue : Variant;
 begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit;
@@ -15199,7 +15231,7 @@ begin
   NotifyChanged(eContainer);
 end;
 
-procedure TwbValueBase.SetToDefault;
+procedure TwbValueBase.SetToDefaultInternal;
 var
   SelfRef: IwbContainerElementRef;
   BasePtr, EndPtr: Pointer;
@@ -15210,7 +15242,9 @@ begin
     DoReset(True);
   BasePtr := nil;
   EndPtr := nil;
-  RequestStorageChange(BasePtr, EndPtr, 0);
+  dcDataBasePtr := nil;
+  dcDataEndPtr := nil;
+  dcDataStorage := nil;
   DoInit;
   RequestStorageChange(BasePtr, EndPtr, vbValueDef.DefaultSize[nil, nil, Self]);
   inherited;

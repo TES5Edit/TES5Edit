@@ -233,7 +233,6 @@ const
 var
   s : String;
 begin
-  wbModGroupFileName := ChangeFileExt(ParamStr(0), '.modgroups');
   wbModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
 
   if not wbFindCmdLineParam('S', wbScriptsPath) then
