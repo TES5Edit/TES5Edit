@@ -47,6 +47,8 @@ var
 function wbFindNextValidCmdLineFileName(var startingIndex : integer; out aValue  : string; defaultPath : string = '') : Boolean;
 function wbFindNextValidCmdLinePlugin(var startingIndex : integer; out aValue  : string; defaultPath : string) : Boolean;
 
+function wbLoadMOHookFile: Boolean;
+
 implementation
 
 uses
@@ -226,6 +228,62 @@ begin
   end;
 end;
 
+{===SafeLoadLibrary============================================================}
+function TestAndClearFPUExceptions(AExceptionMask: Word): Boolean;
+asm
+      PUSH    ECX
+      MOV     CX, AX
+      FSTSW   AX
+      TEST    AX, CX
+      JNE     @@bad
+      XOR     EAX, EAX
+      INC     EAX
+      JMP     @@exit
+@@bad:
+      XOR     EAX, EAX
+@@exit:
+      POP     ECX
+      FCLEX
+      RET
+end;
+{------------------------------------------------------------------------------}
+function SafeLoadLibrary(const Filename: string; ErrorMode: UINT): HMODULE;
+var
+  OldMode: UINT;
+  FPUControlWord: Word;
+begin
+  OldMode := SetErrorMode(ErrorMode);
+  try
+    FPUControlWord := Get8087CW();
+    Result := LoadLibrary(PChar(Filename));
+    TestAndClearFPUExceptions(0);
+    Set8087CW(FPUControlWord);
+  finally
+    SetErrorMode(OldMode);
+  end;
+end;
+{==============================================================================}
+
+
+function wbLoadMOHookFile: Boolean;
+var
+  HookDll : HMODULE;
+  Init    : function(logLevel: Integer; profileName: LPCWSTR): BOOL; cdecl;
+begin
+  if not wbShouldLoadMOHookFile then
+    Exit(True);
+  Result := False;
+  if not FileExists(wbMOHookFile) then
+    Exit;
+
+  HookDll := SafeLoadLibrary(wbMOHookFile, SEM_NOOPENFILEERRORBOX);
+  if HookDll <> 0 then begin
+    Pointer(@Init) := GetProcAddress(HookDll, 'Init');
+    if Assigned(Pointer(@Init)) then
+      Result := Init(0, PWideChar(UnicodeString(wbMOProfile)));
+  end;
+end;
+
 procedure DoInitPath(const ParamIndex: Integer);
 const
   sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
@@ -273,6 +331,8 @@ begin
       wbDataPath := IncludeTrailingPathDelimiter(wbDataPath) + 'Data\';
   end else
     wbDataPath := IncludeTrailingPathDelimiter(wbDataPath);
+
+  wbMOHookFile := wbDataPath + '..\Mod Organizer\hook.dll';
 
   if not wbFindCmdLineParam('I', wbTheGameIniFileName) then begin
     wbTheGameIniFileName := GetCSIDLShellFolder(CSIDL_PERSONAL);
@@ -563,6 +623,8 @@ begin
 
   if FindCmdLineSwitch('fixuppgrd') then
     wbFixupPGRD := True;
+
+  wbShouldLoadMOHookFile := wbFindCmdLineParam('moprofile', wbMOProfile);
 end;
 
 initialization
