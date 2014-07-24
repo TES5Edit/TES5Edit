@@ -115,6 +115,10 @@ var
   wbProgramPath : string;
   wbDataPath    : string;
 
+  wbShouldLoadMOHookFile : Boolean;
+  wbMOProfile            : string;
+  wbMOHookFile           : string;
+
   wbSpeedOverMemory : Boolean = False;
 
 {$IFDEF USE_CODESITE}
