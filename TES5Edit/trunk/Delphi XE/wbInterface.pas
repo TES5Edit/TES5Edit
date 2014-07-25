@@ -3095,7 +3095,7 @@ end;
 
 function wbBeginInternalEdit(aForce: Boolean): Boolean;
 begin
-  Result := (wbAllowInternalEdit or aForce) and not _BlockInternalEdit;
+  Result := wbEditAllowed and (wbAllowInternalEdit or aForce) and not _BlockInternalEdit;
   if Result then
     Inc(_InternalEditCount);
 end;
