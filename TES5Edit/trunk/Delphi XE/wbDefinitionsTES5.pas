@@ -3773,8 +3773,8 @@ begin
       end;
     end;
 
-    // NaN (-0) water height is set to 0 when saving in CK
-    if Container.ElementEditValues['XCLW'] = 'NaN' then
+    // Min (-0 as in CK) water height is set to 0 when saving in CK
+    if Container.ElementEditValues['XCLW'] = 'Min' then
       Container.ElementEditValues['XCLW'] := '0.0';
 
 //    if Supports(Container.ElementBySignature[XCLR], IwbContainerElementRef, Container2) then begin
