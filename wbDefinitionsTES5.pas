@@ -3762,9 +3762,9 @@ begin
     if Supports(Container.ElementBySignature['DATA'] , IwbSubRecord, DataSubRec) then begin
       // expand itU8 flags to itU16
       if DataSubRec.SubRecordHeaderSize = 1 then begin
-        //Flags := DataSubRec.NativeValue;
+        Flags := PByte(DataSubRec.DataBasePtr)^;
         DataSubRec.SetToDefault;
-        //DataSubRec.NativeValue := Flags;
+        DataSubRec.NativeValue := Flags;
       end;
       // 'Default' water height for exterior cells if not set (so water height will be taken from WRLD by game)
       if (not Container.ElementExists['XCLW']) and ((Integer(DataSubRec.NativeValue) and $02) <> 0) then begin
