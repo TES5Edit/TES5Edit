@@ -10016,6 +10016,8 @@ end;
 const
   SingleNaN : Single = 0.0/0.0;
   DoubleNaN : Double = 0.0/0.0;
+  SingleInf : Single = 1.0/0.0;
+  DoubleInf : Double = 1.0/0.0;
 
 function TwbFloatDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
@@ -10075,11 +10077,21 @@ begin
       PDouble(aBasePtr)^ := DoubleNaN
     else
       PSingle(aBasePtr)^ := SingleNaN;
-  end else if SameText(aValue, 'Default') then begin
+  end else if SameText(aValue, 'Inf') then begin
+    if fdDouble then
+      PDouble(aBasePtr)^ := DoubleInf
+    else
+      PSingle(aBasePtr)^ := SingleInf;
+  end else if SameText(aValue, 'Default') or SameText(aValue, 'Max') then begin
     if fdDouble then
       PInt64(aBasePtr)^ := $7FEFFFFFFFFFFFFF
     else
       PCardinal(aBasePtr)^ := $7F7FFFFF;
+  end else if SameText(aValue, 'Min') then begin
+    if fdDouble then
+      PInt64(aBasePtr)^ := $FFEFFFFFFFFFFFFF
+    else
+      PCardinal(aBasePtr)^ := $FF7FFFFF;
   end else begin
     Value := RoundToEx(StrToFloat(aValue), -fdDigits);
     Value := Value / fdScale;
@@ -10117,8 +10129,12 @@ begin
         PSingle(aBasePtr)^ := SingleNaN;
     end else if fdDouble and (SameValue(Value, MaxDouble) or (Value > MaxDouble)) then
       PInt64(aBasePtr)^ := $7FEFFFFFFFFFFFFF
+    else if fdDouble and (SameValue(Value, -MaxDouble) or (Value < MaxDouble)) then
+      PInt64(aBasePtr)^ := $FFEFFFFFFFFFFFFF
     else if not fdDouble and (SameValue(Value, MaxSingle) or (Value > MaxSingle)) then
       PCardinal(aBasePtr)^ := $7F7FFFFF
+    else if not fdDouble and (SameValue(Value, -MaxSingle) or (Value < MaxSingle)) then
+      PCardinal(aBasePtr)^ := $FF7FFFFF
     else begin
       Value := RoundToEx(Value, -fdDigits);
       Value := Value / fdScale;
@@ -10180,6 +10196,7 @@ end;
 function TwbFloatDef.ToValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Extended;
 var
   Len   : Cardinal;
+  OrgValue : Extended;
   Value : Extended;
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
@@ -10188,40 +10205,55 @@ begin
   else if fdDouble then try
     if PInt64(aBasePtr)^ = $7FEFFFFFFFFFFFFF then
       Result := maxDouble
+    else if PInt64(aBasePtr)^ = $FFEFFFFFFFFFFFFF then
+      Result := -maxDouble
     else begin
       Value := PDouble(aBasePtr)^;
-      try
-        if Value <> 0.0 then
-          if SameValue(Value, 0.0) then
-            Value := 0.0;
-      except
-        Value := 0.0;
-      end;
+      if IsInfinite(Value) or IsNan(Value) then
+        Result := Value
+      else begin
+        try
+          if Value <> 0.0 then
+            if SameValue(Value, 0.0) then
+              Value := 0.0;
+        except
+          Value := 0.0;
+        end;
 
-      if Assigned(fdNormalizer) then
-        Value := fdNormalizer(aElement, Value);
-      Value := Value * fdScale;
-      Result := RoundToEx(Value, -fdDigits);
+        if Assigned(fdNormalizer) then
+          Value := fdNormalizer(aElement, Value);
+        Value := Value * fdScale;
+        if Abs(Value) < IntPower(10, -(Succ(fdDigits))) then
+          Result := 0.0
+        else
+          Result := RoundToEx(Value, -fdDigits);
+      end;
     end;
   except
     Result := NaN;
   end else try
     if PCardinal(aBasePtr)^ = $7F7FFFFF then
       Result := maxSingle
+    else if PCardinal(aBasePtr)^ = $FF7FFFFF then
+      Result := -maxSingle
     else begin
       Value := PSingle(aBasePtr)^;
-      try
-        if Value <> 0.0 then
-          if SingleSameValue(Value, 0.0) then
-            Value := 0.0;
-      except
-        Value := 0.0;
-      end;
+      if IsInfinite(Value) or IsNan(Value) then
+        Result := Value
+      else begin
+        try
+          if Value <> 0.0 then
+            if SingleSameValue(Value, 0.0) then
+              Value := 0.0;
+        except
+          Value := 0.0;
+        end;
 
-      if Assigned(fdNormalizer) then
-        Value := fdNormalizer(aElement, Value);
-      Value := Value * fdScale;
-      Result := RoundToEx(Value, -fdDigits);
+        if Assigned(fdNormalizer) then
+          Value := fdNormalizer(aElement, Value);
+        Value := Value * fdScale;
+        Result := RoundToEx(Value, -fdDigits);
+      end;
     end;
   except
     Result := NaN;
@@ -10235,8 +10267,12 @@ begin
   Value := ToValue(aBasePtr, aEndPtr, aElement);
   if IsNaN(Value) then
     Result := 'NaN'
+  else if IsInfinite(Value) then
+    Result := 'Inf'
   else if (Value = maxDouble) or (Value = maxSingle) then
-    Result := 'Default'
+    Result := 'Default' // 'Max' ??
+  else if (Value = -maxDouble) or (Value = -maxSingle) then
+    Result := 'Min'
   else
     Result := FloatToStrF(Value, ffFixed, 99, fdDigits);
 end;
@@ -10292,8 +10328,12 @@ begin
     Value := ToValue(aBasePtr, aEndPtr, aElement);
     if IsNan(Value) then
       Result := 'NaN'
+    else if IsInfinite(Value) then
+      Result := 'Inf'
     else if (Value=maxDouble) or (Value=maxSingle) then
-      Result := 'Default'
+      Result := 'Default' // 'Max' ??
+    else if (Value=-maxDouble) or (Value=-maxSingle) then
+      Result := 'Min'
     else
       Result := FloatToStrF(Value, ffFixed, 99, fdDigits);
     if Len > GetDefaultSize(aBasePtr, aEndPtr, aElement) then
