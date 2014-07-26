@@ -3129,7 +3129,7 @@ end;
 
 function DoSingleSameValue(const A, B: Single): Boolean;
 const
-  SingleResolution : Single = 0.00000499999999999999999999;
+  SingleResolution : Single = 0.000000499999999999999999999;
 begin
   Result := Abs(A - B) <= Max(Min(Abs(A), Abs(B)) * SingleResolution, SingleResolution)
 end;
@@ -10223,10 +10223,7 @@ begin
         if Assigned(fdNormalizer) then
           Value := fdNormalizer(aElement, Value);
         Value := Value * fdScale;
-        if Abs(Value) < IntPower(10, -(Succ(fdDigits))) then
-          Result := 0.0
-        else
-          Result := RoundToEx(Value, -fdDigits);
+        Result := RoundToEx(Value, -fdDigits);
       end;
     end;
   except
