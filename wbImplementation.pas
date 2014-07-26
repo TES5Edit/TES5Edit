@@ -67,6 +67,9 @@ implementation
 uses
   wbSort;
 
+const
+  EmptyPtr: AnsiChar = #0;
+
 type
   PwbKeepAliveContext = ^TwbKeepAliveContext;
   TwbKeepAliveContext = record
@@ -301,6 +304,7 @@ type
     function GetSkipped: Boolean; virtual;
     function GetDef: IwbNamedDef; virtual;
     function GetValueDef: IwbValueDef; virtual;
+    function GetResolvedValueDef: IwbValueDef; virtual;
     function GetElementType: TwbElementType; virtual;
     procedure DoReset(aForce: Boolean); virtual;
     function GetContainer: IwbContainer;
@@ -696,6 +700,8 @@ type
                        const aPrevMainRecord : IwbMainRecord); virtual;
     procedure InitDataPtr; virtual; abstract;
     function GetDataPrefixSize: Integer; virtual;
+
+    function GetResolvedValueDef: IwbValueDef; override;
 
     procedure InvalidateStorage; override;
     procedure SetContainer(const aContainer: IwbContainer); override;
@@ -3556,6 +3562,8 @@ var
   ValueDef   : IwbValueDef;
   UnionDef   : IwbUnionDef;
   HasMap     : Boolean;
+  StructDef  : IwbStructDef;
+  OurSize    : Integer;
 begin
   Result := nil;
 
@@ -3573,7 +3581,7 @@ begin
   if inherited CanAssignInternal(aIndex, aElement, False) then
     Result := inherited AssignInternal(aIndex, aElement, aOnlySK);
 
-  if Length(cntElements) > 0 then begin
+  if (aIndex = Low(Integer)) and (Length(cntElements) > 0) then begin
 
     if Supports(aElement, IwbContainer, Container) and (Container.ElementCount = GetElementCount) then begin
 
@@ -3612,8 +3620,41 @@ begin
                   UnionDoInit(UnionDef, uContainer as IwbContainer, BasePtr, nil);
                 end;
               end;
-              if (not aOnlySK or GetIsInSK(cntElements[j].SortOrder)) and cntElements[j].CanAssign(Low(Integer), sElement, False) then
-                cntElements[j].Assign(Low(Integer), sElement, aOnlySK);
+              if (not aOnlySK or GetIsInSK(cntElements[j].SortOrder)) then begin
+                if cntElements[j].CanAssign(Low(Integer), sElement, False) then
+                  cntElements[j].Assign(Low(Integer), sElement, aOnlySK)
+                else if Supports(sElement.ValueDef, IwbEmptyDef) then begin
+                  // this might be a case the source begin a struct
+                  // with "OptionalFromElement" empty elements at the end
+                  If Supports(Container.ResolvedValueDef, IwbStructDef, StructDef) then
+                    if StructDef.OptionalFromElement >= 0 then
+                      if StructDef.OptionalFromElement <= j then begin
+                        //yes it is
+                        Assert(not HasMap); //this would be really tricky to handle with mapped elements...
+                        Assert(Self is TwbDataContainer); //if the source is a struct and is assignable to us, this should be guaranteed
+                        OurSize := 0;
+                        for j := Low(cntElements) to Pred(i) do
+                          Inc(OurSize, cntElements[j].DataSize);
+                        if GetDataSize > OurSize then
+                          with TwbDataContainer(Self) do begin
+                            UpdateStorageFromElements;
+                            Assert(Length(dcDataStorage) >= OurSize);
+                            Assert(not (dcfStorageInvalid in dcFlags));
+                            Reset;
+                            SetLength(dcDataStorage, OurSize);
+                            if OurSize > 0 then begin
+                              dcDataBasePtr := @dcDataStorage[Low(dcDataStorage)];
+                              dcDataEndPtr := Pointer( Cardinal(dcDataBasePtr) + OurSize );
+                            end else begin
+                              dcDataBasePtr := @EmptyPtr;
+                              dcDataEndPtr := @EmptyPtr;
+                            end;
+                            Init;
+                          end;
+                        Exit;
+                      end;
+                end;
+              end;
             end;
         end;
     end;
@@ -5589,9 +5630,6 @@ begin
   mrGroup := nil;
   ReleaseElements;
 end;
-
-const
-  EmptyPtr: AnsiChar = #0;
 
 procedure TwbMainRecord.CollapseStorage;
 var
@@ -12019,6 +12057,11 @@ begin
   end;
 end;
 
+function TwbElement.GetResolvedValueDef: IwbValueDef;
+begin
+  Result := GetValueDef;
+end;
+
 function TwbElement.GetShortName: string;
 var
   Def: IwbDef;
@@ -14664,6 +14707,11 @@ begin
   Result := etDefault;
   if Supports(GetValueDef, IwbValueDef, ValueDef) then
     Result := ValueDef.EditType[GetDataBasePtr, dcDataEndPtr, Self];
+end;
+
+function TwbDataContainer.GetResolvedValueDef: IwbValueDef;
+begin
+  Result := Resolve(GetValueDef, GetDataBasePtr, dcDataEndPtr, Self);
 end;
 
 function TwbDataContainer.GetDataPrefixSize: Integer;
