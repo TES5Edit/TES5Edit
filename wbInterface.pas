@@ -137,6 +137,7 @@ type
 
 var
   wbLoggingAreas : TwbLoggingAreas = [
+
     laAddIfMissing,
     laElementAssign,
     laElementCanAssign,
@@ -419,6 +420,7 @@ type
     function GetSkipped: Boolean;
     function GetDef: IwbNamedDef;
     function GetValueDef: IwbValueDef;
+    function GetResolvedValueDef: IwbValueDef;
     function GetElementType: TwbElementType;
     function GetContainer: IwbContainer;
     function GetContainingMainRecord: IwbMainRecord;
@@ -562,6 +564,8 @@ type
       read GetDef;
     property ValueDef: IwbValueDef
       read GetValueDef;
+    property ResolvedValueDef: IwbValueDef
+      read GetResolvedValueDef;
 
     property MemoryOrder: Integer
       read GetMemoryOrder
