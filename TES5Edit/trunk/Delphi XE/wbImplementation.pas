@@ -1132,6 +1132,8 @@ type
     procedure PrepareSave; override;
     function RemoveInjected(aCanRemove: Boolean): Boolean; override;
 
+    procedure SetToDefaultInternal; override;
+
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); override;
 
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
@@ -9906,6 +9908,26 @@ begin
     Init;
   end;
   NotifyChanged(eContainer);
+end;
+
+procedure TwbSubRecord.SetToDefaultInternal;
+var
+  SelfRef: IwbContainerElementRef;
+  BasePtr, EndPtr: Pointer;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+  if csInit in cntStates then
+    DoReset(True);
+  BasePtr := nil;
+  EndPtr := nil;
+  dcDataBasePtr := nil;
+  dcDataEndPtr := nil;
+  dcDataStorage := nil;
+  DoInit;
+  if Assigned(srValueDef) then
+    RequestStorageChange(BasePtr, EndPtr, srValueDef.DefaultSize[nil, nil, Self]);
+  inherited;
 end;
 
 function TwbSubRecord.srStruct: PwbSubRecordHeaderStruct;
