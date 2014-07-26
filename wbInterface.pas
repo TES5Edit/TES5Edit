@@ -11709,7 +11709,7 @@ end;
 
 function TwbDivDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
 begin
-  Result := Trunc(StrToFloat(aValue) * ddValue);
+  Result := Round(StrToFloat(aValue) * ddValue);
 end;
 
 function TwbDivDef.GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean;
