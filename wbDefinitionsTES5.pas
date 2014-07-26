@@ -3743,6 +3743,8 @@ var
   Container    : IwbContainerElementRef;
 //  Container2   : IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
+  DataSubRec   : IwbSubrecord;
+  Flags        : Byte;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -3757,14 +3759,23 @@ begin
     if MainRecord.IsDeleted then
       Exit;
 
-    if not Container.ElementExists['DATA'] then
-      Exit;
-
-    // 'Default' water height for exterior cells if not set (so water height will be taken from WRLD by game)
-    if (not Container.ElementExists['XCLW']) and ((Integer(Container.ElementNativeValues['DATA']) and $02) <> 0) then begin
-      Container.Add('XCLW', True);
-      Container.ElementEditValues['XCLW'] := 'Default';
+    if Supports(Container.ElementBySignature['DATA'] , IwbSubRecord, DataSubRec) then begin
+      // expand itU8 flags to itU16
+      if DataSubRec.SubRecordHeaderSize = 1 then begin
+        //Flags := DataSubRec.NativeValue;
+        DataSubRec.SetToDefault;
+        //DataSubRec.NativeValue := Flags;
+      end;
+      // 'Default' water height for exterior cells if not set (so water height will be taken from WRLD by game)
+      if (not Container.ElementExists['XCLW']) and ((Integer(DataSubRec.NativeValue) and $02) <> 0) then begin
+        Container.Add('XCLW', True);
+        Container.ElementEditValues['XCLW'] := 'Default';
+      end;
     end;
+
+    // NaN (-0) water height is set to 0 when saving in CK
+    if Container.ElementEditValues['XCLW'] = 'NaN' then
+      Container.ElementEditValues['XCLW'] := '0.0';
 
 //    if Supports(Container.ElementBySignature[XCLR], IwbContainerElementRef, Container2) then begin
 //      for i := Pred(Container2.ElementCount) downto 0 do
