@@ -2301,10 +2301,10 @@ begin
     ], []);
 
   wbRecord(ALCH, 'Potion', [
-    wbString(NAME, 'NPC ID Name'),
+    wbString(NAME, 'Potion ID Name'),
     wbMODL,
     wbString(TEXT, 'Inventory Icon'),
-    wbString(FNAM, 'Item Name'),
+    wbString(FNAM, 'Potion Name'),
     wbStruct(ALDT, '', [
       wbFloat('Weight'),
       wbInteger('Value', itU32),
@@ -2584,9 +2584,9 @@ begin
   ]);
 
   wbRecord(CLOT, 'Clothing', [
-    wbString(NAME, 'NPC ID Name'),
+    wbString(NAME, 'Clothing ID Name'),
     wbMODL,
-    wbString(FNAM, 'NPC Name'),
+    wbString(FNAM, 'Clothing Name'),
     wbStruct(CTDT, '', [
       wbInteger('Biped Flags', itU32, wbEnum([
         {0} 'Pants',
