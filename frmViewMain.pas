@@ -3698,7 +3698,7 @@ begin
     Key := 0;
 
     s := Trim(edFormIDSearch.Text);
-    FormID := StrToInt64Def('$' + edFormIDSearch.Text, 0);
+    FormID := StrToInt64Def('$' + s, 0);
     FileID := FormID shr 24;
     if FormID <> 0 then begin
       _File := nil;
