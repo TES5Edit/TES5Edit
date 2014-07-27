@@ -10196,7 +10196,7 @@ end;
 function TwbFloatDef.ToValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Extended;
 var
   Len   : Cardinal;
-  OrgValue : Extended;
+//  OrgValue : Extended;
   Value : Extended;
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);

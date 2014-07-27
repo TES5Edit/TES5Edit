@@ -5364,7 +5364,7 @@ begin
         {25} wbFormIDCkNoReach('Cell', [CELL]),
         {26} wbFormIDCkNoReach('Class', [CLAS]),
         {27} wbFormIDCkNoReach('Race', [RACE]),
-        {28} wbFormIDCkNoReach('Actor Base', [NPC_, CREA, ACTI, TACT]),
+        {28} wbFormIDCkNoReach('Actor Base', [NPC_, CREA, ACTI, TACT, NULL]),
         {29} wbFormIDCkNoReach('Global', [GLOB]),
         {30} wbFormIDCkNoReach('Weather', [WTHR]),
         {31} wbFormIDCkNoReach('Package', [PACK]),
