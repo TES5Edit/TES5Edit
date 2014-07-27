@@ -3031,6 +3031,14 @@ begin
 
   AddMessage(wbApplicationTitle + ' starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
 
+  if wbShouldLoadMOHookFile then begin
+    AddMessage('Using Mod Organizer Profile: ' + wbMOProfile);
+    if not wbLoadMOHookFile then begin
+      AddMessage('Error: Failed to load Mod Organizer Profile');
+      Exit;
+    end;
+  end;
+
   AddMessage('Using '+wbGameName+' Data Path: ' + wbDataPath);
 
 
@@ -3690,7 +3698,7 @@ begin
     Key := 0;
 
     s := Trim(edFormIDSearch.Text);
-    FormID := StrToInt64Def('$' + edFormIDSearch.Text, 0);
+    FormID := StrToInt64Def('$' + s, 0);
     FileID := FormID shr 24;
     if FormID <> 0 then begin
       _File := nil;

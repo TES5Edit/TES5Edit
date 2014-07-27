@@ -67,6 +67,9 @@ implementation
 uses
   wbSort;
 
+const
+  EmptyPtr: AnsiChar = #0;
+
 type
   PwbKeepAliveContext = ^TwbKeepAliveContext;
   TwbKeepAliveContext = record
@@ -301,6 +304,7 @@ type
     function GetSkipped: Boolean; virtual;
     function GetDef: IwbNamedDef; virtual;
     function GetValueDef: IwbValueDef; virtual;
+    function GetResolvedValueDef: IwbValueDef; virtual;
     function GetElementType: TwbElementType; virtual;
     procedure DoReset(aForce: Boolean); virtual;
     function GetContainer: IwbContainer;
@@ -343,7 +347,8 @@ type
     function GetEditType: TwbEditType; virtual;
     function GetEditInfo: string; virtual;
     function GetDontShow: Boolean; virtual;
-    procedure SetToDefault; virtual;
+    procedure SetToDefault;
+    procedure SetToDefaultInternal; virtual;
 
     function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; virtual;
@@ -377,6 +382,7 @@ type
 
     function BeginUpdate: Integer;
     function EndUpdate: Integer;
+    procedure UpdatedEnded; virtual;
 
     constructor Create(const aContainer: IwbContainer);
     procedure BeforeDestruction; override;
@@ -453,7 +459,7 @@ type
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
     function GetIsInSK(aIndex: Integer): Boolean; virtual;
 
-    procedure SetToDefault; override;
+    procedure SetToDefaultInternal; override;
 
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); override;
 
@@ -695,6 +701,8 @@ type
     procedure InitDataPtr; virtual; abstract;
     function GetDataPrefixSize: Integer; virtual;
 
+    function GetResolvedValueDef: IwbValueDef; override;
+
     procedure InvalidateStorage; override;
     procedure SetContainer(const aContainer: IwbContainer); override;
 
@@ -705,7 +713,7 @@ type
     procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     function DoCheckSizeAfterWrite: Boolean; virtual;
-    procedure SetToDefault; override;
+    procedure SetToDefaultInternal; override;
     function IsFlags: Boolean; virtual;
 
     function GetEditType: TwbEditType; override;
@@ -1124,6 +1132,8 @@ type
     procedure PrepareSave; override;
     function RemoveInjected(aCanRemove: Boolean): Boolean; override;
 
+    procedure SetToDefaultInternal; override;
+
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); override;
 
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
@@ -1181,7 +1191,7 @@ type
     function GetDataSize: Integer; override;
     function DoCheckSizeAfterWrite: Boolean; override;
 
-    procedure SetToDefault; override;
+    procedure SetToDefaultInternal; override;
 
     function GetIsInSK(aIndex: Integer): Boolean; override;
   public
@@ -1423,7 +1433,8 @@ type
 
   TwbGroupState = (
     gsSorted,
-    gsSorting
+    gsSorting,
+    gsSortPostponed
   );
 
   TwbGroupStates = set of TwbGroupState;
@@ -1460,6 +1471,9 @@ type
     function GetAddList: TDynStrings; override;
     function Add(const aName: string; aSilent: Boolean): IwbElement; override;
     procedure Sort;
+
+    procedure UpdatedEnded; override;
+
 
     procedure PrepareSave; override;
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); override;
@@ -3550,6 +3564,8 @@ var
   ValueDef   : IwbValueDef;
   UnionDef   : IwbUnionDef;
   HasMap     : Boolean;
+  StructDef  : IwbStructDef;
+  OurSize    : Integer;
 begin
   Result := nil;
 
@@ -3567,7 +3583,7 @@ begin
   if inherited CanAssignInternal(aIndex, aElement, False) then
     Result := inherited AssignInternal(aIndex, aElement, aOnlySK);
 
-  if Length(cntElements) > 0 then begin
+  if (aIndex = Low(Integer)) and (Length(cntElements) > 0) then begin
 
     if Supports(aElement, IwbContainer, Container) and (Container.ElementCount = GetElementCount) then begin
 
@@ -3606,8 +3622,41 @@ begin
                   UnionDoInit(UnionDef, uContainer as IwbContainer, BasePtr, nil);
                 end;
               end;
-              if (not aOnlySK or GetIsInSK(cntElements[j].SortOrder)) and cntElements[j].CanAssign(Low(Integer), sElement, False) then
-                cntElements[j].Assign(Low(Integer), sElement, aOnlySK);
+              if (not aOnlySK or GetIsInSK(cntElements[j].SortOrder)) then begin
+                if cntElements[j].CanAssign(Low(Integer), sElement, False) then
+                  cntElements[j].Assign(Low(Integer), sElement, aOnlySK)
+                else if Supports(sElement.ValueDef, IwbEmptyDef) then begin
+                  // this might be a case the source begin a struct
+                  // with "OptionalFromElement" empty elements at the end
+                  If Supports(Container.ResolvedValueDef, IwbStructDef, StructDef) then
+                    if StructDef.OptionalFromElement >= 0 then
+                      if StructDef.OptionalFromElement <= j then begin
+                        //yes it is
+                        Assert(not HasMap); //this would be really tricky to handle with mapped elements...
+                        Assert(Self is TwbDataContainer); //if the source is a struct and is assignable to us, this should be guaranteed
+                        OurSize := 0;
+                        for j := Low(cntElements) to Pred(i) do
+                          Inc(OurSize, cntElements[j].DataSize);
+                        if GetDataSize > OurSize then
+                          with TwbDataContainer(Self) do begin
+                            UpdateStorageFromElements;
+                            Assert(Length(dcDataStorage) >= OurSize);
+                            Assert(not (dcfStorageInvalid in dcFlags));
+                            Reset;
+                            SetLength(dcDataStorage, OurSize);
+                            if OurSize > 0 then begin
+                              dcDataBasePtr := @dcDataStorage[Low(dcDataStorage)];
+                              dcDataEndPtr := Pointer( Cardinal(dcDataBasePtr) + OurSize );
+                            end else begin
+                              dcDataBasePtr := @EmptyPtr;
+                              dcDataEndPtr := @EmptyPtr;
+                            end;
+                            Init;
+                          end;
+                        Exit;
+                      end;
+                end;
+              end;
             end;
         end;
     end;
@@ -4839,7 +4888,7 @@ begin
     Container.ElementNativeValues[Name] := aValue;
 end;
 
-procedure TwbContainer.SetToDefault;
+procedure TwbContainer.SetToDefaultInternal;
 var
   i         : Integer;
   SelfRef   : IwbContainerElementRef;
@@ -5584,13 +5633,10 @@ begin
   ReleaseElements;
 end;
 
-const
-  EmptyPtr: AnsiChar = #0;
-
 procedure TwbMainRecord.CollapseStorage;
 var
   Stream  : TMemoryStream;
-//  Len     : Cardinal;
+
 begin
   if (esModified in eStates) then begin
     PrepareSave;
@@ -9864,6 +9910,26 @@ begin
   NotifyChanged(eContainer);
 end;
 
+procedure TwbSubRecord.SetToDefaultInternal;
+var
+  SelfRef: IwbContainerElementRef;
+  BasePtr, EndPtr: Pointer;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+  if csInit in cntStates then
+    DoReset(True);
+  BasePtr := nil;
+  EndPtr := nil;
+  dcDataBasePtr := nil;
+  dcDataEndPtr := nil;
+  dcDataStorage := nil;
+  DoInit;
+  if Assigned(srValueDef) then
+    RequestStorageChange(BasePtr, EndPtr, srValueDef.DefaultSize[nil, nil, Self]);
+  inherited;
+end;
+
 function TwbSubRecord.srStruct: PwbSubRecordHeaderStruct;
 begin
   Result := PwbSubRecordHeaderStruct(dcBasePtr);
@@ -11153,6 +11219,11 @@ begin
   if grStates * [gsSorted, gsSorting] <> [] then
     Exit;
 
+  if eUpdateCount > 0 then begin
+    Include(grStates, gsSortPostponed);
+    Exit;
+  end;
+
   Include(grStates, gsSorting);
   try
     ChildrenOf := GetChildrenOf;
@@ -11264,6 +11335,15 @@ begin
   end;
 end;
 
+procedure TwbGroupRecord.UpdatedEnded;
+begin
+  if gsSortPostponed in grStates then begin
+    Exclude(grStates, gsSortPostponed);
+    Sort;
+  end;
+  inherited;
+end;
+
 procedure TwbGroupRecord.WriteToStreamInternal(aStream: TStream; aResetModified: Boolean);
 var
   CurrentPosition   : Int64;
@@ -11325,11 +11405,13 @@ begin
     end else
         CodeSite.Send('aElement', 'nil');
   end;
-  try
   {$ENDIF}
+  BeginUpdate;
+  try
     Result := AddIfMissingInternal(aElement, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix);
-  {$IFDEF USE_CODESITE}
   finally
+    EndUpdate;
+  {$IFDEF USE_CODESITE}
     if Log then begin
       CodeSite.Send('Self.Value', Self.GetValue);
       if Assigned(Result) then begin
@@ -11340,8 +11422,8 @@ begin
         CodeSite.Send('Result', 'nil');
       CodeSite.ExitMethod(Self, 'AddIfMissing');
     end;
-  end;
   {$ENDIF}
+  end;
 end;
 
 function TwbElement.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
@@ -11390,11 +11472,13 @@ begin
     CodeSite.EnterMethod(Self, 'Assign');
     CodeSite.Send('Self.Name', Self.GetName);
     CodeSite.Send('Self.Path', Self.GetPath);
+    CodeSite.Send('Self.DataSize', Self.GetDataSize);
     CodeSite.Send('Self.Value', Self.GetValue);
     CodeSite.Send('aIndex', aIndex);
     if Assigned(aElement) then begin
       CodeSite.Send('aElement.Name', aElement.Name);
       CodeSite.Send('aElement.Path', aElement.Path);
+      CodeSite.Send('aElement.DataSize', aElement.GetDataSize);
       CodeSite.Send('aElement.Value', aElement.Value);
     end else
       CodeSite.Send('aElement', 'nil');
@@ -11409,9 +11493,11 @@ begin
   {$IFDEF USE_CODESITE}
     if Log then begin
       CodeSite.Send('Self.Value', Self.GetValue);
+      CodeSite.Send('Self.DataSize', Self.GetDataSize);
       if Assigned(Result) then begin
         CodeSite.Send('Result.Name', Result.Name);
         CodeSite.Send('Result.Path', Result.Path);
+        CodeSite.Send('Result.DataSize', Result.GetDataSize);
         CodeSite.Send('Result.Value', Result.Value);
       end else
         CodeSite.Send('Result', 'nil');
@@ -11660,25 +11746,11 @@ end;
 
 function TwbElement.EndUpdate: Integer;
 
-  procedure UpdateModified;
-  begin
-    (IwbContainer(eContainer) as IwbElementInternal).Modified := True;
-  end;
-
 begin
   Result := Pred(eUpdateCount);
   eUpdateCount := Result;
-  if (Result = 0) then begin
-    if esChangeNotified in eStates then begin
-      Exclude(eStates, esChangeNotified);
-      NotifyChanged(eContainer);
-    end;
-    if esModifiedUpdated in eStates then begin
-      Exclude(eStates, esModifiedUpdated);
-      if Assigned(eContainer) and (esModified in eStates) then
-        UpdateModified;
-    end;
-  end;
+  if Result = 0 then
+    UpdatedEnded;
 end;
 
 function TwbElement.Equals(const aElement: IwbElement): Boolean;
@@ -11693,7 +11765,8 @@ end;
 
 procedure TwbElement.FreeInstance;
 begin
-  Assert(FRefCount = 1);
+  if FRefCount <> 1 then
+    Assert(FRefCount = 1);
   Assert(eExternalRefs = 1);
   inherited;
 end;
@@ -12005,6 +12078,11 @@ begin
         end;
     end;
   end;
+end;
+
+function TwbElement.GetResolvedValueDef: IwbValueDef;
+begin
+  Result := GetValueDef;
 end;
 
 function TwbElement.GetShortName: string;
@@ -12408,6 +12486,37 @@ begin
 end;
 
 procedure TwbElement.SetToDefault;
+{$IFDEF USE_CODESITE}
+var
+  Log: Boolean;
+{$ENDIF}
+begin
+  {$IFDEF USE_CODESITE}
+  Log := (laElementSetToDefault in wbLoggingAreas) and wbCodeSiteLoggingEnabled;
+  if Log then begin
+    CodeSite.EnterMethod(Self, 'SetToDefault');
+    CodeSite.Send('Self.Name', Self.GetName);
+    CodeSite.Send('Self.Path', Self.GetPath);
+    CodeSite.Send('Self.DataSize', Self.GetDataSize);
+    CodeSite.Send('Self.Value', Self.GetValue);
+  end;
+  {$ENDIF}
+  BeginUpdate;
+  try
+    SetToDefaultInternal;
+  finally
+    EndUpdate;
+  {$IFDEF USE_CODESITE}
+    if Log then begin
+      CodeSite.Send('Self.Value', Self.GetValue);
+      CodeSite.Send('Self.DataSize', Self.GetDataSize);
+      CodeSite.ExitMethod(Self, 'SetToDefault');
+    end;
+  {$ENDIF}
+  end;
+end;
+
+procedure TwbElement.SetToDefaultInternal;
 begin
   { can be overriden }
 end;
@@ -12423,6 +12532,19 @@ end;
 procedure TwbElement.Tag;
 begin
   Include(eStates, esTagged);
+end;
+
+procedure TwbElement.UpdatedEnded;
+begin
+  if esChangeNotified in eStates then begin
+    Exclude(eStates, esChangeNotified);
+    NotifyChanged(eContainer);
+  end;
+  if esModifiedUpdated in eStates then begin
+    Exclude(eStates, esModifiedUpdated);
+    if Assigned(eContainer) and (esModified in eStates) then
+      (IwbContainer(eContainer) as IwbElementInternal).Modified := True;
+  end;
 end;
 
 procedure TwbElement.WriteToStream(aStream: TStream; aResetModified: Boolean);
@@ -13638,12 +13760,12 @@ begin
       Element := TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     end;
 
-    if wbHideUnused and not wbEditAllowed and (Element.GetName = 'Unused') then begin
+    {if wbHideUnused and not wbEditAllowed and (Element.GetName = 'Unused') then begin
       with aContainer do begin
         Assert((LastElement as IwbElementInternal) = Element);
         RemoveElement(Pred(ElementCount));
       end;
-    end else begin
+    end else} begin
       Element.SetSortOrder(i);
       Element.SetMemoryOrder(i);
     end;
@@ -13744,12 +13866,12 @@ begin
   end;
 
   if Assigned(Element) then
-    if wbHideUnused and not wbEditAllowed and (Element.GetName = 'Unused') then begin
+    {if wbHideUnused and not wbEditAllowed and (Element.GetName = 'Unused') then begin
       with aContainer do begin
         Assert((LastElement as IwbElementInternal) = Element);
         RemoveElement(Pred(ElementCount));
       end;
-    end else begin
+    end else} begin
       Element.SetSortOrder(0);
       Element.SetMemoryOrder(0);
     end;
@@ -14582,7 +14704,7 @@ end;
 
 function TwbDataContainer.GetDataSize: Integer;
 begin
-  if (dcfStorageInvalid in dcFlags) or not Assigned(dcDataBasePtr) then
+  if (dcfStorageInvalid in dcFlags) or not Assigned(dcDataBasePtr) or not Assigned(dcDataEndPtr) then
     Result := inherited GetDataSize + GetDataPrefixSize
   else
     Result := Cardinal( dcDataEndPtr ) - Cardinal( dcDataBasePtr );
@@ -14614,6 +14736,11 @@ begin
   Result := etDefault;
   if Supports(GetValueDef, IwbValueDef, ValueDef) then
     Result := ValueDef.EditType[GetDataBasePtr, dcDataEndPtr, Self];
+end;
+
+function TwbDataContainer.GetResolvedValueDef: IwbValueDef;
+begin
+  Result := Resolve(GetValueDef, GetDataBasePtr, dcDataEndPtr, Self);
 end;
 
 function TwbDataContainer.GetDataPrefixSize: Integer;
@@ -14785,11 +14912,11 @@ begin
   inherited SetModified(aValue);
 end;
 
-procedure TwbDataContainer.SetToDefault;
+procedure TwbDataContainer.SetToDefaultInternal;
 var
-  SelfRef  : IwbContainerElementRef;
-  ValueDef : IwbValueDef;
-  OldValue, NewValue: Variant;
+  SelfRef            : IwbContainerElementRef;
+  ValueDef           : IwbValueDef;
+  OldValue, NewValue : Variant;
 begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit;
@@ -15181,7 +15308,7 @@ begin
   NotifyChanged(eContainer);
 end;
 
-procedure TwbValueBase.SetToDefault;
+procedure TwbValueBase.SetToDefaultInternal;
 var
   SelfRef: IwbContainerElementRef;
   BasePtr, EndPtr: Pointer;
@@ -15192,7 +15319,9 @@ begin
     DoReset(True);
   BasePtr := nil;
   EndPtr := nil;
-  RequestStorageChange(BasePtr, EndPtr, 0);
+  dcDataBasePtr := nil;
+  dcDataEndPtr := nil;
+  dcDataStorage := nil;
   DoInit;
   RequestStorageChange(BasePtr, EndPtr, vbValueDef.DefaultSize[nil, nil, Self]);
   inherited;

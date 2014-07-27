@@ -115,6 +115,10 @@ var
   wbProgramPath : string;
   wbDataPath    : string;
 
+  wbShouldLoadMOHookFile : Boolean;
+  wbMOProfile            : string;
+  wbMOHookFile           : string;
+
   wbSpeedOverMemory : Boolean = False;
 
 {$IFDEF USE_CODESITE}
@@ -123,18 +127,25 @@ type
     laAddIfMissing,
     laElementAssign,
     laElementCanAssign,
+    laElementSetToDefault,
     laElementWriteToStream,
-    laElementMergeStorage
+    laElementMergeStorage,
+
+    laDummy
   );
   TwbLoggingAreas = set of TwbLoggingArea;
 
 var
   wbLoggingAreas : TwbLoggingAreas = [
-    //laAddIfMissing,
+
+    laAddIfMissing,
     laElementAssign,
-    //laElementCanAssign,
-    laElementWriteToStream,
-    laElementMergeStorage
+    laElementCanAssign,
+    laElementSetToDefault,
+    //laElementWriteToStream,
+    //laElementMergeStorage,
+
+    laDummy
   ];
 
 function wbCodeSiteLoggingEnabled: Boolean;
@@ -409,6 +420,7 @@ type
     function GetSkipped: Boolean;
     function GetDef: IwbNamedDef;
     function GetValueDef: IwbValueDef;
+    function GetResolvedValueDef: IwbValueDef;
     function GetElementType: TwbElementType;
     function GetContainer: IwbContainer;
     function GetContainingMainRecord: IwbMainRecord;
@@ -552,6 +564,8 @@ type
       read GetDef;
     property ValueDef: IwbValueDef
       read GetValueDef;
+    property ResolvedValueDef: IwbValueDef
+      read GetResolvedValueDef;
 
     property MemoryOrder: Integer
       read GetMemoryOrder
@@ -3087,7 +3101,7 @@ end;
 
 function wbBeginInternalEdit(aForce: Boolean): Boolean;
 begin
-  Result := (wbAllowInternalEdit or aForce) and not _BlockInternalEdit;
+  Result := wbEditAllowed and (wbAllowInternalEdit or aForce) and not _BlockInternalEdit;
   if Result then
     Inc(_InternalEditCount);
 end;
@@ -3117,7 +3131,7 @@ end;
 
 function DoSingleSameValue(const A, B: Single): Boolean;
 const
-  SingleResolution : Single = 0.00000499999999999999999999;
+  SingleResolution : Single = 0.000000499999999999999999999;
 begin
   Result := Abs(A - B) <= Max(Min(Abs(A), Abs(B)) * SingleResolution, SingleResolution)
 end;
@@ -3403,6 +3417,7 @@ type
 
     {--- IwbDefInternal ---}
     function SetParent(const aParent: TwbDef; aForceDuplicate: Boolean): IwbDef; virtual;
+    procedure ParentSet; virtual;
 
     function Duplicate: TwbDef;
   end;
@@ -3414,6 +3429,7 @@ type
     noAfterSet   : TwbAfterSetCallback;
     noDontShow   : TwbDontShowCallback;
     noTerminator : Boolean;
+    noUnused     : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority   : TwbConflictPriority;
@@ -3429,7 +3445,7 @@ type
     function GetHasDontShow: Boolean; override;
 
     {--- IwbDefInternal ---}
-    function SetParent(const aParent: TwbDef; aForceDuplicate: Boolean): IwbDef; override;
+    procedure ParentSet; override;
 
     {---IwbNamedDef---}
     function GetName: string;
@@ -6548,6 +6564,11 @@ begin
   defNotRequired := True;
 end;
 
+procedure TwbDef.ParentSet;
+begin
+  {can be overriden}
+end;
+
 procedure TwbDef.PossiblyRequired;
 begin
   defPossiblyRequired := True;
@@ -6596,6 +6617,7 @@ begin
   else begin
     Result := Self;
     defParent := aParent;
+    ParentSet;
   end;
 end;
 
@@ -6670,9 +6692,11 @@ begin
   noAfterLoad := aAfterLoad;
   noAfterSet := aAfterSet;
   noTerminator := aTerminator;
-  if aPriority = cpNormal then
-    if aName = 'Unused' then
-      aPriority := cpIgnore;
+  if aName = 'Unused' then begin
+    noUnused := True;
+    if aPriority = cpNormal then
+        aPriority := cpIgnore;
+  end;
   inherited Create(aPriority, aRequired, aGetCP);
 
   if Pos('unknown', LowerCase(aName)) > 0 then
@@ -6684,12 +6708,12 @@ begin
   if Assigned(noDontShow) then
     Result := noDontShow(aElement)
   else
-    Result := False;
+    Result := wbHideUnused and noUnused;
 end;
 
 function TwbNamedDef.GetHasDontShow: Boolean;
 begin
-  Result := Assigned(noDontShow);
+  Result := Assigned(noDontShow) or (wbHideUnused and noUnused);
 end;
 
 function TwbNamedDef.GetName: string;
@@ -6713,14 +6737,15 @@ begin
   end;
 end;
 
-function TwbNamedDef.SetParent(const aParent: TwbDef; aForceDuplicate: Boolean): IwbDef;
+procedure TwbNamedDef.ParentSet;
 var
   Parent: IwbNamedDef;
 begin
-  Result := inherited SetParent(aParent, aForceDuplicate);
-
-  if not IsUnknown and (noName = '') and Supports(defParent, IwbNamedDef, Parent) then
-    IsUnknown := Pos('unknown', LowerCase(Parent.Name)) > 0;
+  inherited;
+  if not (IsUnknown or noUnused) and (noName = '') and Supports(defParent, IwbNamedDef, Parent) then begin
+    IsUnknown := IsUnknown or (Pos('unknown', LowerCase(Parent.Name)) > 0);
+    noUnused := noUnused or (Parent.Name = 'Unused');
+  end;
 end;
 
 { TwbSignatureDef }
@@ -8716,7 +8741,10 @@ end;
 
 function TwbArrayDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  if ((arCount = 0) and not Assigned(arCountCallback)) then Result := GetSize(aBasePtr, aEndPtr, aElement) else Result := 0;
+  if ((arCount = 0) and not Assigned(arCountCallback)) then
+    Result := 0
+  else
+    Result := GetSize(aBasePtr, aEndPtr, aElement);
 end;
 
 function TwbArrayDef.GetSorted: Boolean;
@@ -9990,6 +10018,8 @@ end;
 const
   SingleNaN : Single = 0.0/0.0;
   DoubleNaN : Double = 0.0/0.0;
+  SingleInf : Single = 1.0/0.0;
+  DoubleInf : Double = 1.0/0.0;
 
 function TwbFloatDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
@@ -10049,11 +10079,21 @@ begin
       PDouble(aBasePtr)^ := DoubleNaN
     else
       PSingle(aBasePtr)^ := SingleNaN;
-  end else if SameText(aValue, 'Default') then begin
+  end else if SameText(aValue, 'Inf') then begin
+    if fdDouble then
+      PDouble(aBasePtr)^ := DoubleInf
+    else
+      PSingle(aBasePtr)^ := SingleInf;
+  end else if SameText(aValue, 'Default') or SameText(aValue, 'Max') then begin
     if fdDouble then
       PInt64(aBasePtr)^ := $7FEFFFFFFFFFFFFF
     else
       PCardinal(aBasePtr)^ := $7F7FFFFF;
+  end else if SameText(aValue, 'Min') then begin
+    if fdDouble then
+      PInt64(aBasePtr)^ := $FFEFFFFFFFFFFFFF
+    else
+      PCardinal(aBasePtr)^ := $FF7FFFFF;
   end else begin
     Value := RoundToEx(StrToFloat(aValue), -fdDigits);
     Value := Value / fdScale;
@@ -10091,8 +10131,12 @@ begin
         PSingle(aBasePtr)^ := SingleNaN;
     end else if fdDouble and (SameValue(Value, MaxDouble) or (Value > MaxDouble)) then
       PInt64(aBasePtr)^ := $7FEFFFFFFFFFFFFF
+    else if fdDouble and (SameValue(Value, -MaxDouble) or (Value < MaxDouble)) then
+      PInt64(aBasePtr)^ := $FFEFFFFFFFFFFFFF
     else if not fdDouble and (SameValue(Value, MaxSingle) or (Value > MaxSingle)) then
       PCardinal(aBasePtr)^ := $7F7FFFFF
+    else if not fdDouble and (SameValue(Value, -MaxSingle) or (Value < MaxSingle)) then
+      PCardinal(aBasePtr)^ := $FF7FFFFF
     else begin
       Value := RoundToEx(Value, -fdDigits);
       Value := Value / fdScale;
@@ -10154,6 +10198,7 @@ end;
 function TwbFloatDef.ToValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Extended;
 var
   Len   : Cardinal;
+//  OrgValue : Extended;
   Value : Extended;
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
@@ -10162,40 +10207,52 @@ begin
   else if fdDouble then try
     if PInt64(aBasePtr)^ = $7FEFFFFFFFFFFFFF then
       Result := maxDouble
+    else if PInt64(aBasePtr)^ = $FFEFFFFFFFFFFFFF then
+      Result := -maxDouble
     else begin
       Value := PDouble(aBasePtr)^;
-      try
-        if Value <> 0.0 then
-          if SameValue(Value, 0.0) then
-            Value := 0.0;
-      except
-        Value := 0.0;
-      end;
+      if IsInfinite(Value) or IsNan(Value) then
+        Result := Value
+      else begin
+        try
+          if Value <> 0.0 then
+            if SameValue(Value, 0.0) then
+              Value := 0.0;
+        except
+          Value := 0.0;
+        end;
 
-      if Assigned(fdNormalizer) then
-        Value := fdNormalizer(aElement, Value);
-      Value := Value * fdScale;
-      Result := RoundToEx(Value, -fdDigits);
+        if Assigned(fdNormalizer) then
+          Value := fdNormalizer(aElement, Value);
+        Value := Value * fdScale;
+        Result := RoundToEx(Value, -fdDigits);
+      end;
     end;
   except
     Result := NaN;
   end else try
     if PCardinal(aBasePtr)^ = $7F7FFFFF then
       Result := maxSingle
+    else if PCardinal(aBasePtr)^ = $FF7FFFFF then
+      Result := -maxSingle
     else begin
       Value := PSingle(aBasePtr)^;
-      try
-        if Value <> 0.0 then
-          if SingleSameValue(Value, 0.0) then
-            Value := 0.0;
-      except
-        Value := 0.0;
-      end;
+      if IsInfinite(Value) or IsNan(Value) then
+        Result := Value
+      else begin
+        try
+          if Value <> 0.0 then
+            if SingleSameValue(Value, 0.0) then
+              Value := 0.0;
+        except
+          Value := 0.0;
+        end;
 
-      if Assigned(fdNormalizer) then
-        Value := fdNormalizer(aElement, Value);
-      Value := Value * fdScale;
-      Result := RoundToEx(Value, -fdDigits);
+        if Assigned(fdNormalizer) then
+          Value := fdNormalizer(aElement, Value);
+        Value := Value * fdScale;
+        Result := RoundToEx(Value, -fdDigits);
+      end;
     end;
   except
     Result := NaN;
@@ -10209,8 +10266,12 @@ begin
   Value := ToValue(aBasePtr, aEndPtr, aElement);
   if IsNaN(Value) then
     Result := 'NaN'
+  else if IsInfinite(Value) then
+    Result := 'Inf'
   else if (Value = maxDouble) or (Value = maxSingle) then
-    Result := 'Default'
+    Result := 'Default' // 'Max' ??
+  else if (Value = -maxDouble) or (Value = -maxSingle) then
+    Result := 'Min'
   else
     Result := FloatToStrF(Value, ffFixed, 99, fdDigits);
 end;
@@ -10266,8 +10327,12 @@ begin
     Value := ToValue(aBasePtr, aEndPtr, aElement);
     if IsNan(Value) then
       Result := 'NaN'
+    else if IsInfinite(Value) then
+      Result := 'Inf'
     else if (Value=maxDouble) or (Value=maxSingle) then
-      Result := 'Default'
+      Result := 'Default' // 'Max' ??
+    else if (Value=-maxDouble) or (Value=-maxSingle) then
+      Result := 'Min'
     else
       Result := FloatToStrF(Value, ffFixed, 99, fdDigits);
     if Len > GetDefaultSize(aBasePtr, aEndPtr, aElement) then
@@ -11646,7 +11711,7 @@ end;
 
 function TwbDivDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
 begin
-  Result := Trunc(StrToFloat(aValue) * ddValue);
+  Result := Round(StrToFloat(aValue) * ddValue);
 end;
 
 function TwbDivDef.GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean;
