@@ -4730,7 +4730,11 @@ begin
 //          wbArray('Third Array 2', wbIntegerT('Unknown', itU32), 30)
 //        ]), {2),}
 //      2),
-      wbByteArray('FaceGenData', 650),
+      wbStruct('FaceGenData', [
+        wbArray('FaceGen Geometry-Symmetric',  wbFloatT('Value'), 50),
+        wbArray('FaceGen Geometry-Asymmetric', wbFloatT('Value'), 30),
+        wbArray('FaceGen Texture-Symmetric',   wbFloatT('Value'), 50)
+      ]),
       wbRefIDT('Hair'),
       wbRefIDT('Eyes'),
       wbFloatT('Hair Length'),
@@ -6197,7 +6201,8 @@ begin
             ])
         ])
       ]),
-      wbUnion('Pathing Solution', ChangedFormPackageActorMoverContentFlagsBit1Decider, [wbNull, wbStruct('Data', [
+      wbUnion('Pathing Solution', ChangedFormPackageActorMoverContentFlagsBit1Decider, [wbNull,
+        wbStruct('Data', [
           wbIntegerT('Byt040', itU8),
           wbIntegerT('Unk018', itS32),
           wbIntegerT('Unk01C', itS32),

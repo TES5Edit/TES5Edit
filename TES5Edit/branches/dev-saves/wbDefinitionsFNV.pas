@@ -14,6 +14,8 @@
 
 unit wbDefinitionsFNV;
 
+{$I wbDefines.inc}
+
 interface
 
 uses
@@ -4269,7 +4271,7 @@ begin
     {0x00100000}'Unknown 21',
     {0x00200000}'Load Started (Runtime Only)', // set when beginning to load the form from save
     {0x00400000}'Unknown 23',
-    {0x00800000}'Unknown 24',
+    {0x00800000}'Unknown 24',   // Runtime might use it for "Not dead" on non actors.
     {0x01000000}'Destructible (Runtime only)',
     {0x02000000}'Obstacle / No AI Acquire',
     {0x03000000}'NavMesh Generation - Filter',
@@ -4320,9 +4322,9 @@ begin
     wbInteger('Data Size', itU32, nil, cpIgnore),
     wbRecordFlags,
     wbFormID('FormID', cpFormID),
-    wbByteArray('Version Control Info 1', 4, cpIgnore),
+    wbInteger('Version Control Master FormID', itU32, nil, cpIgnore),
     wbInteger('Form Version', itU16, nil, cpIgnore),
-    wbByteArray('Version Control Info 2', 2, cpIgnore)
+    wbInteger('Version Control Info 2', itU16, nil, cpIgnore)  // limited to values from 0 to 0xF
   ]);
 
   wbSizeOfMainRecordStruct := 24;
@@ -5388,7 +5390,7 @@ begin
         {25} wbFormIDCkNoReach('Cell', [CELL]),
         {26} wbFormIDCkNoReach('Class', [CLAS]),
         {27} wbFormIDCkNoReach('Race', [RACE]),
-        {28} wbFormIDCkNoReach('Actor Base', [NPC_, CREA, ACTI, TACT]),
+        {28} wbFormIDCkNoReach('Actor Base', [NPC_, CREA, ACTI, TACT, NULL]),
         {29} wbFormIDCkNoReach('Global', [GLOB]),
         {30} wbFormIDCkNoReach('Weather', [WTHR]),
         {31} wbFormIDCkNoReach('Package', [PACK]),
@@ -8823,18 +8825,31 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbFaceGen := wbRStruct('FaceGen Data', [
-    wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
-    wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
-    wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
-  ], [], cpNormal, True);
+  if wbSimpleRecords then begin
+    wbFaceGen := wbRStruct('FaceGen Data', [
+      wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
+      wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
+      wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
+    ], [], cpNormal, True);
 
-  wbFaceGenNPC := wbRStruct('FaceGen Data', [  // Arrays of 4bytes elements
-    wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
-    wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
-    wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
-  ], [], cpNormal, True, wbActorTemplateUseModelAnimation);
+    wbFaceGenNPC := wbRStruct('FaceGen Data', [  // Arrays of 4bytes elements
+      wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
+      wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
+      wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
+    ], [], cpNormal, True, wbActorTemplateUseModelAnimation);
+  end else begin
+    wbFaceGen := wbRStruct('FaceGen Data', [
+      wbArray(FGGS, 'FaceGen Geometry-Symmetric',  wbFloat('Value'), [], cpNormal, True),
+      wbArray(FGGA, 'FaceGen Geometry-Asymmetric', wbFloat('Value'), [], cpNormal, True),
+      wbArray(FGTS, 'FaceGen Texture-Symmetric',   wbFloat('Value'), [], cpNormal, True)
+    ], [], cpNormal, True);
 
+    wbFaceGenNPC := wbRStruct('FaceGen Data', [
+      wbArray(FGGS, 'FaceGen Geometry-Symmetric',  wbFloat('Value'), [], cpNormal, True),
+      wbArray(FGGA, 'FaceGen Geometry-Asymmetric', wbFloat('Value'), [], cpNormal, True),
+      wbArray(FGTS, 'FaceGen Texture-Symmetric',   wbFloat('Value'), [], cpNormal, True)
+    ], [], cpNormal, True, wbActorTemplateUseModelAnimation);
+  end;
 
   wbRecord(NPC_, 'Non-Player Character', [
     wbEDIDReq,
@@ -9624,12 +9639,12 @@ begin
       wbRStruct('Male FaceGen Data', [
         wbEmpty(MNAM, 'Male Data Marker', cpNormal, True),
         wbFaceGen,
-        wbUnknown(SNAM, cpNormal, True)
+        wbInteger(SNAM, 'Unknown', itU16, nil, cpNormal, True)
       ], [], cpNormal, True),
       wbRStruct('Female FaceGen Data', [
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
         wbFaceGen,
-        wbUnknown(SNAM, cpNormal, True)
+        wbInteger(SNAM, 'Unknown', itU16, nil, cpNormal, True)	// will effectivly overwrite the SNAM from the male :)
       ], [], cpNormal, True)
     ], [], cpNormal, True)
   ]);

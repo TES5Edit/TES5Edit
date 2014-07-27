@@ -553,20 +553,21 @@ end;
 
 procedure ProfileHeader(aFormat: TExportFormat; Pass: TwbExportPass);
 var
-  R         : Integer;
-  RecordDef : IwbRecordDef;
+//  R         : Integer;
+  RecordDef : PwbRecordDef;
   Profile   : String;
 begin
   Profile := '';
   case wbToolSource of
     tsPlugins: begin
-      R := wbRecordDefMap.IndexOf(wbHeaderSignature);
-      if R >= 0 then
-        RecordDef := IwbRecordDef(Pointer(wbRecordDefMap.Objects[R]))
-      else
-        RecordDef := nil;
-      if Assigned(RecordDef) then
-        ProfileElement(aFormat, RecordDef, Profile, Pass, '');
+//      R := wbRecordDefMap.IndexOf(wbHeaderSignature);
+//      if R >= 0 then
+//        RecordDef := IwbRecordDef(Pointer(wbRecordDefMap.Objects[R]))
+//      else
+//        RecordDef := nil;
+//      if Assigned(RecordDef) then
+      if wbFindRecordDef(wbHeaderSignature, RecordDef) then
+        ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
     end;
     tsSaves: begin
       ProfileElement(aFormat, wbFileHeader, Profile, Pass, '');
@@ -577,21 +578,22 @@ end;
 procedure ProfileArray(aFormat: TExportFormat; Pass: TwbExportPass);
 var
   i         : Integer;
-  R         : Integer;
-  RecordDef : IwbRecordDef;
+//  R         : Integer;
+  RecordDef : PwbRecordDef;
   Profile   : String;
 begin
   case wbToolSource of
     tsPlugins: for i := 0 to Pred(wbGroupOrder.Count) do
       if wbGroupOrder[i]<>wbHeaderSignature then begin
         Profile := '';
-        R := wbRecordDefMap.IndexOf(wbGroupOrder[i]);
-        if R >= 0 then
-          RecordDef := IwbRecordDef(Pointer(wbRecordDefMap.Objects[R]))
-        else
-          RecordDef := nil;
-        if Assigned(RecordDef) then
-          ProfileElement(aFormat, RecordDef, Profile, Pass, '');
+//        R := wbRecordDefMap.IndexOf(wbGroupOrder[i]);
+//        if R >= 0 then
+//          RecordDef := IwbRecordDef(Pointer(wbRecordDefMap.Objects[R]))
+//        else
+//          RecordDef := nil;
+//        if Assigned(RecordDef) then
+        if wbFindRecordDef(AnsiString(wbGroupOrder[i]), RecordDef) then
+          ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
       end;
   end;
 end;
@@ -663,16 +665,18 @@ begin
   Name := aElement.DisplayName;
   Value := aElement.Value;
 
-  if (Name <> '') and (Name <> 'Unused') and not wbReportMode then
-    Write(aIndent, Name);
-  if ((Name <> '') and (Name <> 'Unused')) or (Value <> '') then
-    aIndent := aIndent + '  ';
-  if (Value <> '') and (Pos('Hidden: ', Name)<>1) then begin
-    if not wbReportMode then
-      WriteLn(': ', Value);
-  end else begin
-    if (Name <> '') and (Name <> 'Unused') and not wbReportMode then
-      WriteLn;
+  if (aElement.Name <> 'Unused') and (Name <> 'Unused') then begin
+    if (Name <> '') and not wbReportMode then
+      Write(aIndent, Name);
+    if (Name <> '') or (Value <> '') then
+      aIndent := aIndent + '  ';
+    if (Value <> '') and (Pos('Hidden: ', Name)<>1) then begin
+      if not wbReportMode then
+        WriteLn(': ', Value);
+    end else begin
+      if (Name <> '') and not wbReportMode then
+        WriteLn;
+    end;
   end;
 
   if Supports(aElement, IwbContainer, Container) and (Pos('Hidden: ', Name)<>1) then
@@ -856,6 +860,7 @@ begin
   wbAllowInternalEdit := False;
   wbMoreInfoForUnknown := False;
   wbSimpleRecords := False;
+  wbHideUnused := False;
   StartTime := Now;
 
   try

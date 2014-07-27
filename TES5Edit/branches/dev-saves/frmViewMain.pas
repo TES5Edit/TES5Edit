@@ -14,6 +14,8 @@
 
 unit frmViewMain;
 
+{$I wbDefines.inc}
+
 interface
 
 uses
@@ -287,6 +289,7 @@ type
     mniModGroups: TMenuItem;
     mniModGroupsEnabled: TMenuItem;
     mniModGroupsDisabled: TMenuItem;
+    mniNavOtherCodeSiteLogging: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -494,6 +497,7 @@ type
     procedure mniModGroupsClick(Sender: TObject);
     procedure vstSpreadSheetCreateEditor(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
+    procedure mniNavOtherCodeSiteLoggingClick(Sender: TObject);
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -838,6 +842,8 @@ uses
   {$IFNDEF VER220}
   UITypes,
   {$ENDIF VER220}
+  wbSort,
+  wbStreams,
   wbScriptAdapter,
   FilterOptionsFrm,
   FileSelectFrm,
@@ -1264,7 +1270,10 @@ var
   NodeDatas                   : TDynViewNodeDatas;
   i                           : Integer;
   Master                      : IwbMainRecord;
+  KeepAliveRoot               : IwbKeepAliveRoot;
 begin
+  KeepAliveRoot := wbCreateKeepAliveRoot;
+
   aConflictAll := aMainRecord.ConflictAll;
   aConflictThis := aMainRecord.ConflictThis;
 
@@ -1304,6 +1313,7 @@ var
   i, j                   : Integer;
   UniqueValues           : TnxFastStringListCS;
 
+  MasterPosition         : Integer;
   FirstElement           : IwbElement;
   FirstElementNotIgnored : IwbElement;
   LastElement            : IwbElement;
@@ -1320,6 +1330,7 @@ begin
 //    Priority := cpNormal;
 //  IgnoreConflicts := False;
   FoundAny := False;
+  MasterPosition := 0;
   OverallConflictThis := ctUnknown;
   case aNodeCount of
     0: Result := caUnknown;
@@ -1350,6 +1361,7 @@ begin
           Priority := Element.ConflictPriority;
           if Priority = cpNormalIgnoreEmpty then begin
             FirstElement := Element;
+            MasterPosition := i;
             for j := Pred(aNodeCount) downto i do begin
               LastElement := aNodeDatas[j].Element;
               if Assigned(LastElement) then
@@ -1400,7 +1412,7 @@ begin
           aNodeDatas[i].ConflictThis := ctIgnored
         else if aSiblingCompare then
           aNodeDatas[i].ConflictThis := ctOnlyOne
-        else if i = 0 then begin
+        else if i = MasterPosition then begin
 
           if Assigned(Element) then
             aNodeDatas[i].ConflictThis := ctMaster
@@ -1423,6 +1435,7 @@ begin
              SameAsLast and  // We are not overriden later
              not Assigned(FirstElementNotIgnored) then begin // The master did not have that element
             ThisPriority := cpBenign;
+            Priority := cpBenign;
             SameAsFirst := True;
           end;
 
@@ -1694,14 +1707,18 @@ begin
 
               for j := Low(aElements) to High(aElements) do begin
                 MainRecord := aElements[j] as IwbMainRecord;
+                wbProgressCallback('Copying ' + MainRecord.Name);
 
                 MainRecord2 := wbCopyElementToFile(MainRecord, ReferenceFile, True, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix) as IwbMainRecord;
+                wbProgressCallback('');
+
                 Assert(Assigned(MainRecord2));
                 if not Multiple then
                   MainRecord2.EditorID := EditorID;
 
                 EditorID := MainRecord.EditorID;
                 MainRecord := wbCopyElementToFile(MainRecord, ReferenceFile, False, False, '', '', '') as IwbMainRecord;
+                wbProgressCallback('');
                 Assert(Assigned(MainRecord));
                 MainRecord.Assign(Low(Integer), nil, False);
                 LeveledListEntries := MainRecord.ElementByName['Leveled List Entries'] as IwbContainerElementRef;
@@ -1714,36 +1731,47 @@ begin
                 LeveledListEntry.ElementByName['Level'].EditValue := '1';
                 MainRecord.EditorID := EditorID;
                 Result[j] := MainRecord;
+                wbProgressCallback('');
               end;
 
             end
             else if Multiple then begin
               for j := Low(aElements) to High(aElements) do
                 try
-                  if DeepCopy and Supports(aElements[j], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then
-                    Result[j] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix)
-                  else begin
+                  if DeepCopy and Supports(aElements[j], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
+                    wbProgressCallback('Copying ' + MainRecord.ChildGroup.Name);
+                    Result[j] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix);
+                    wbProgressCallback('');
+                  end else begin
+                    wbProgressCallback('Copying ' + aElements[j].Name);
                     CopiedElement := wbCopyElementToFile(aElements[j], ReferenceFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix);
+                    wbProgressCallback('');
                     if Assigned(CopiedElement) then begin
                       if Assigned(aAfterCopyCallback) then
                         aAfterCopyCallback(CopiedElement);
                     end;
                     Result[j] := CopiedElement;
+                    wbProgressCallback('');
                   end;
                 except
                   on E: Exception do
-                    AddMessage('Error while copying '+aElements[j].Name+': '+E.Message);
+                    wbProgressCallback('Error while copying '+aElements[j].Name+': '+E.Message);
                 end;
             end else begin
               MainRecord := nil;
-              if DeepCopy and Supports(aElements[0], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then
-                Result[0] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, '', '', '')
-              else begin
+              if DeepCopy and Supports(aElements[0], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
+                wbProgressCallback('Copying ' + MainRecord.ChildGroup.Name);
+                Result[0] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, '', '', '');
+                wbProgressCallback('');
+              end else begin
+                wbProgressCallback('Copying ' + aElements[0].Name);
                 CopiedElement := wbCopyElementToFile(aElements[0], ReferenceFile, AsNew, True, '', '', '');
+                wbProgressCallback('');
                 if Assigned(CopiedElement) then begin
                   if Assigned(aAfterCopyCallback) then
                     aAfterCopyCallback(CopiedElement);
                 end;
+                wbProgressCallback('');
                 Result[0] := CopiedElement;
                 if not Supports(CopiedElement, IwbMainRecord, MainRecord) then
                   MainRecord := nil;
@@ -2830,7 +2858,7 @@ begin
     end;
 
     if Length(WorldSpaces) > 1 then begin
-      QuickSort(@WorldSpaces[0], Low(WorldSpaces), High(WorldSpaces), CompareElementsFormIDAndLoadOrder);
+      wbMergeSort(@WorldSpaces[0], Length(WorldSpaces), CompareElementsFormIDAndLoadOrder);
 
       j := 0;
       for i := Succ(Low(WorldSpaces)) to High(WorldSpaces) do begin
@@ -3003,6 +3031,14 @@ begin
 
   AddMessage(wbApplicationTitle + ' starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
 
+  if wbShouldLoadMOHookFile then begin
+    AddMessage('Using Mod Organizer Profile: ' + wbMOProfile);
+    if not wbLoadMOHookFile then begin
+      AddMessage('Error: Failed to load Mod Organizer Profile');
+      Exit;
+    end;
+  end;
+
   AddMessage('Using '+wbGameName+' Data Path: ' + wbDataPath);
 
 
@@ -3102,46 +3138,47 @@ begin
 
         CheckListBox1.Items.Assign(sl);
 
-        if (wbToolMode in wbPluginModes) and (sl.Count > 1) and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5]) then begin
-            j := CheckListBox1.Items.IndexOf(wbPluginToUse);
-            if j < 0 then begin
-              ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
-              frmMain.Close;
-              Exit;
-            end else
-              CheckListBox1.Checked[j] := True;
-
-            // More plugins requested ?
-            while wbFindNextValidCmdLinePlugin(wbParamIndex, s, wbDataPath) do begin
-              j := CheckListBox1.Items.IndexOf(s);
+        if not wbQuickClean then
+          if (wbToolMode in wbPluginModes) and (sl.Count > 1) and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5]) then begin
+              j := CheckListBox1.Items.IndexOf(wbPluginToUse);
               if j < 0 then begin
-                AddMessage('Note: Selected plugin "' + s + '" does not exist');
+                ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
                 frmMain.Close;
                 Exit;
               end else
                 CheckListBox1.Checked[j] := True;
-            end;
-        end else begin
-          // check active files using the game's plugins list
-          sl.LoadFromFile(wbPluginsFileName);
-          for i := Pred(sl.Count) downto 0 do begin
-            s := Trim(sl.Strings[i]);
-            j := Pos('#', s);
-            if j > 0 then
-              System.Delete(s, j, High(Integer));
-            s := Trim(s);
-            if s = '' then begin
-              sl.Delete(i);
-              Continue;
-            end;
 
-            j := CheckListBox1.Items.IndexOf(s);
-            if j < 0 then
-              AddMessage('Note: Active plugin List contains nonexisting file "' + s + '"')
-            else
-              CheckListBox1.Checked[j] := True;
+              // More plugins requested ?
+              while wbFindNextValidCmdLinePlugin(wbParamIndex, s, wbDataPath) do begin
+                j := CheckListBox1.Items.IndexOf(s);
+                if j < 0 then begin
+                  AddMessage('Note: Selected plugin "' + s + '" does not exist');
+                  frmMain.Close;
+                  Exit;
+                end else
+                  CheckListBox1.Checked[j] := True;
+              end;
+          end else begin
+            // check active files using the game's plugins list
+            sl.LoadFromFile(wbPluginsFileName);
+            for i := Pred(sl.Count) downto 0 do begin
+              s := Trim(sl.Strings[i]);
+              j := Pos('#', s);
+              if j > 0 then
+                System.Delete(s, j, High(Integer));
+              s := Trim(s);
+              if s = '' then begin
+                sl.Delete(i);
+                Continue;
+              end;
+
+              j := CheckListBox1.Items.IndexOf(s);
+              if j < 0 then
+                AddMessage('Note: Active plugin List contains nonexisting file "' + s + '"')
+              else
+                CheckListBox1.Checked[j] := True;
+            end;
           end;
-        end;
 
         if not ((wbToolMode in wbAutoModes) or wbQuickShowConflicts) then begin
           ShowModal;
@@ -3160,6 +3197,13 @@ begin
           for i := 0 to Pred(CheckListBox1.Count) do
             if CheckListBox1.Checked[i] then
               sl.Add(CheckListBox1.Items[i]);
+
+          if wbQuickClean then
+            if sl.Count <> 1 then begin
+              MessageDlg('Exactly one plugin must be selected in QuickClean mode', mtError, [mbAbort], 0);
+              frmMain.Close;
+              Exit;
+            end;
 
           while sl.Count > 0 do begin
             sl2.Clear;
@@ -3208,12 +3252,13 @@ begin
               sl2.Duplicates := dupIgnore;
               sl2.CommaText := Settings.ReadString('RecordsToSkip', 'Selection', 'LAND,ROAD,PGRD,REGN,NAVI,NAVM,IMAD');
 
-              for i := 0 to Pred(wbRecordDefMap.Count) do
-                with IwbRecordDef(Pointer(wbRecordDefMap.Objects[i])) do begin
+              for i := Low(wbRecordDefs) to High(wbRecordDefs) do
+                with wbRecordDefs[i].rdeDef do begin
                   j := CheckListBox1.Items.Add(DefaultSignature + ' - ' + GetName);
                   if sl2.IndexOf(DefaultSignature) >= 0 then
                     CheckListBox1.Checked[j] := True;
                 end;
+              CheckListBox1.Sorted := True;
 
               ShowModal;
 
@@ -3230,121 +3275,125 @@ begin
             end;
           end;
 
-          for l := 0 to sl.Count do begin
-            if l >= sl.Count then
-              ModGroupFile := wbModGroupFileName
-            else
-              ModGroupFile := wbDataPath + ChangeFileExt(sl[l], '.modgroups');
+          if not wbQuickClean then
+            for l := 0 to sl.Count do begin
+              if l >= sl.Count then
+                ModGroupFile := wbModGroupFileName
+              else
+                ModGroupFile := wbDataPath + ChangeFileExt(sl[l], '.modgroups');
 
-            if FileExists(ModGroupFile) then
-              with TMemIniFile.Create(ModGroupFile) do try
-                ModGroupFile := ExtractFileName(ModGroupFile);
-                sl3 := TStringList.Create;
-                try
-                ReadSections(sl3);
-                for i := 0 to Pred(sl3.Count) do begin
-                  MessagePrefix := 'Ignoring ModGroup [' + sl3[i] + '] (from ' + ModGroupFile + '): ';
-                  sl2 := TStringList.Create;
+              if FileExists(ModGroupFile) then
+                with TMemIniFile.Create(ModGroupFile) do try
+                  ModGroupFile := ExtractFileName(ModGroupFile);
+                  sl3 := TStringList.Create;
                   try
-                    if ModGroups.IndexOf(sl3[i]) >= 0 then
-                      AddMessage(MessagePrefix + 'ModGroup of same name already defined')
-                    else begin
-                      MessageGiven := False;
-                      ReadSectionValues(sl3[i], sl2);
+                  ReadSections(sl3);
+                  for i := 0 to Pred(sl3.Count) do begin
+                    MessagePrefix := 'Ignoring ModGroup [' + sl3[i] + '] (from ' + ModGroupFile + '): ';
+                    sl2 := TStringList.Create;
+                    try
+                      if ModGroups.IndexOf(sl3[i]) >= 0 then
+                        AddMessage(MessagePrefix + 'ModGroup of same name already defined')
+                      else begin
+                        MessageGiven := False;
+                        ReadSectionValues(sl3[i], sl2);
 
-                      for j := Pred(sl2.Count) downto 0 do begin
-                        s := Trim(sl2[j]);
-                        k := Pos(';', s);
-                        if k > 0 then begin
-                          Delete(s, k, High(Integer));
-                          s := Trim(s);
-                        end;
-                        if Length(s) > 0 then begin
-                          IsOptional := s[1] = '+';
-                          IsRequired := s[1] = '-';
-                          if IsOptional or IsRequired then begin
-                            Delete(s, 1, 1);
-                            sl2[j] := s;
-                          end;
-                        end else begin // Only to quiet the compiler (W1036).
-                          IsOptional := False;
-                          IsRequired := False;
-                        end;
-                        ValidCRCs := nil;
-                        if Length(s) > 0 then begin
-                          k := Pos(':', s);
-                          if k > 1 then begin
-                            ValidCRCs := wbDecodeCRCList(Copy(s, Succ(k), High(Integer)));
+                        for j := Pred(sl2.Count) downto 0 do begin
+                          s := Trim(sl2[j]);
+                          k := Pos(';', s);
+                          if k > 0 then begin
                             Delete(s, k, High(Integer));
                             s := Trim(s);
                           end;
-                        end;
-                        if Length(s) > 0 then begin
-                          k := sl.IndexOf(s);
-                          if k >= 0 then begin
-                            if not ValidateCRC(s, ValidCRCs, FileCRC) then begin
-                              AddMessage(MessagePrefix + 'CRC of plugin "' + s + '" ('+IntToHex(Int64(FileCRC), 8)+') is not in the list of valid CRCs');
-                              MessageGiven := True;
-                              sl2.Clear;
-                              break;
-                            end else
-                              if IsRequired then
-                                sl2.Objects[j] := TObject(-k)
-                              else
-                                sl2.Objects[j] := TObject(k)
-                          end else begin
-                            if IsOptional then
-                              sl2.Delete(j)
-                            else begin
-                              AddMessage(MessagePrefix + 'required plugin "' + s + '" missing');
-                              MessageGiven := True;
-                              sl2.Clear;
-                              break;
-                            end
+                          if Length(s) > 0 then begin
+                            IsOptional := s[1] = '+';
+                            IsRequired := s[1] = '-';
+                            if IsOptional or IsRequired then begin
+                              Delete(s, 1, 1);
+                              sl2[j] := s;
+                            end;
+                          end else begin // Only to quiet the compiler (W1036).
+                            IsOptional := False;
+                            IsRequired := False;
                           end;
-                        end else
-                          sl2.Delete(j);
-                      end;
-
-                      if sl2.Count < 2 then begin
-                        if not MessageGiven then
-                          AddMessage(MessagePrefix + 'less then 2 plugins active');
-                      end else begin
-                        k := Abs(Integer(sl2.Objects[0]));
-                        for j := 1 to Pred(sl2.Count) do begin
-                          if Abs(Integer(sl2.Objects[j])) <= k then begin
-                            sl2.Clear;
-                            MessageGiven := True;
-                            AddMessage(MessagePrefix + 'plugins are not in the correct order');
-                            Break;
+                          ValidCRCs := nil;
+                          if Length(s) > 0 then begin
+                            k := Pos(':', s);
+                            if k > 1 then begin
+                              ValidCRCs := wbDecodeCRCList(Copy(s, Succ(k), High(Integer)));
+                              Delete(s, k, High(Integer));
+                              s := Trim(s);
+                            end;
                           end;
-                        end;
-                        for j := Pred(sl2.Count) downto 0 do
-                          if Integer(sl2.Objects[j]) < 0 then
+                          if Length(s) > 0 then begin
+                            k := sl.IndexOf(s);
+                            if k >= 0 then begin
+                              if not ValidateCRC(s, ValidCRCs, FileCRC) then begin
+                                AddMessage(MessagePrefix + 'CRC of plugin "' + s + '" ('+IntToHex(Int64(FileCRC), 8)+') is not in the list of valid CRCs');
+                                MessageGiven := True;
+                                sl2.Clear;
+                                break;
+                              end else
+                                if IsRequired then
+                                  sl2.Objects[j] := TObject(-k)
+                                else
+                                  sl2.Objects[j] := TObject(k)
+                            end else begin
+                              if IsOptional then
+                                sl2.Delete(j)
+                              else begin
+                                AddMessage(MessagePrefix + 'required plugin "' + s + '" missing');
+                                MessageGiven := True;
+                                sl2.Clear;
+                                break;
+                              end
+                            end;
+                          end else
                             sl2.Delete(j);
-                        if sl2.Count >= 2 then begin
-                          ModGroups.AddObject(sl3[i], sl2);
-                          sl2 := nil;
-                        end else
+                        end;
+
+                        if sl2.Count < 2 then begin
                           if not MessageGiven then
                             AddMessage(MessagePrefix + 'less then 2 plugins active');
+                        end else begin
+                          k := Abs(Integer(sl2.Objects[0]));
+                          for j := 1 to Pred(sl2.Count) do begin
+                            if Abs(Integer(sl2.Objects[j])) <= k then begin
+                              sl2.Clear;
+                              MessageGiven := True;
+                              AddMessage(MessagePrefix + 'plugins are not in the correct order');
+                              Break;
+                            end;
+                          end;
+                          for j := Pred(sl2.Count) downto 0 do
+                            if Integer(sl2.Objects[j]) < 0 then
+                              sl2.Delete(j);
+                          if sl2.Count >= 2 then begin
+                            ModGroups.AddObject(sl3[i], sl2);
+                            sl2 := nil;
+                          end else
+                            if not MessageGiven then
+                              AddMessage(MessagePrefix + 'less then 2 plugins active');
+                        end;
                       end;
-                    end;
 
-                  finally
-                    FreeAndNil(sl2);
+                    finally
+                      FreeAndNil(sl2);
+                    end;
                   end;
-                end;
+                  finally
+                    FreeAndNil(sl3);
+                  end;
                 finally
-                  FreeAndNil(sl3);
+                  Free;
                 end;
-              finally
-                Free;
-              end;
-          end;
+            end;
         finally
           Free;
         end;
+
+      if wbQuickClean then
+        Assert(ModGroups.Count = 0);
 
       if ModGroups.Count > 0 then begin
         with TfrmFileSelect.Create(nil) do try
@@ -3428,10 +3477,13 @@ begin
       mniModGroupsDisabled.Checked := not ModGroupsEnabled;
 
       // hold shift to skip bulding references
-      if GetKeyState(VK_SHIFT) < 0 then begin
+      if (GetKeyState(VK_SHIFT) < 0) then begin
         wbBuildRefs := False;
         AddMessage('The SHIFT key is pressed, skip building references for all plugins!');
       end;
+
+      if wbQuickClean then
+        wbBuildRefs := False;
 
       wbStartTime := Now;
       TLoaderThread.Create(sl);
@@ -3646,7 +3698,7 @@ begin
     Key := 0;
 
     s := Trim(edFormIDSearch.Text);
-    FormID := StrToInt64Def('$' + edFormIDSearch.Text, 0);
+    FormID := StrToInt64Def('$' + s, 0);
     FileID := FormID shr 24;
     if FormID <> 0 then begin
       _File := nil;
@@ -3909,20 +3961,24 @@ var
   function canUndelete: Boolean;
   begin
     Result := True;
-    with MainRecord do
-      if Signature = 'NAVM' then begin
-        Result := False;
-        Inc(DeletedNAVM);
-      end else if (wbGameMode in [gmFNV]) then begin
-        IsDeleted := True;
-        IsDeleted := False;
-        Element := MainRecord.ElementBySignature['NAME'];
-        if Assigned(Element) then
-          if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
-            Result := not LinksToRecord.Flags.HasLODtree;
-        IsDeleted := True;
-      end;
-    if not Result then Inc(notDeletedCount);
+    LinksToRecord := MainRecord.MasterOrSelf.BaseRecord;
+    // skip navmeshes
+    if MainRecord.Signature = 'NAVM' then begin
+      Result := False;
+      Inc(DeletedNAVM);
+    end
+    // skip injected or bad refs (crashes after cleaning TES4 Battlehorn DLC)
+    else if MainRecord.IsInjected or (not Assigned(LinksToRecord)) then begin
+      Result := False;
+      Inc(notDeletedCount);
+    end
+    // skip refs of TREEs with LOD in FNV
+    else if (wbGameMode in [gmFNV]) and (LinksToRecord.Signature = 'TREE') and LinksToRecord.Flags.HasLODtree then begin
+      Result := False;
+      Inc(notDeletedCount);
+    end;
+    if not Result then
+      PostAddMessage('Skipping: ' + MainRecord.Name);
   end;
 
 begin
@@ -4415,7 +4471,7 @@ var
   Cells      : array of array of PRefInfo;
   RefInfo    : PRefInfo;
   RefsInCell : array of PRefInfo;
-  CmpStream  : TwbFileStream;
+  CmpStream  : TwbWriteCachedFileStream;
   LODScale   : Single;
   LODAdd     : Single;
   F          : TSearchRec;
@@ -4471,7 +4527,7 @@ begin
         ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
       Application.ProcessMessages;
 
-      QuickSort(@REFRs[0], Low(REFRs), High(REFRs), CompareElementsFormIDAndLoadOrder);
+      wbMergeSort(@REFRs[0], Length(REFRs), CompareElementsFormIDAndLoadOrder);
 
       Caption := 'Removing duplicates: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(0) +
         ' Unique References Found: ' + IntToStr(0) +
@@ -4638,7 +4694,7 @@ begin
   end;
 
   if Rule > rClear then begin
-    CmpStream := TwbFileStream.Create(wbDataPath + 'DistantLOD\'+aWorldspace.EditorID+'.cmp', fmCreate);
+    CmpStream := TwbWriteCachedFileStream.Create(wbDataPath + 'DistantLOD\'+aWorldspace.EditorID+'.cmp');
     try
       Caption := 'Assigning References to Cells: ' + aWorldspace.Name + ' Processed References: ' + IntToStr(0) +
         ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
@@ -4687,7 +4743,7 @@ begin
               Inc(Count);
             end;
 
-            QuickSort(@RefsInCell[0], Low(RefsInCell), High(RefsInCell), CompareRefInfos);
+            wbMergeSort(@RefsInCell[0], Length(RefsInCell), CompareRefInfos);
 
             l := 0;
             for k := Succ(Low(RefsInCell)) to High(RefsInCell) do begin
@@ -4700,7 +4756,7 @@ begin
             end;
             SetLength(RefsInCell, Succ(l));
 
-            with TwbFileStream.Create(wbDataPath + 'DistantLOD\'+aWorldspace.EditorID+'_'+IntToStr(i+MinCell.x)+'_'+IntToStr(j+MinCell.y)+'.lod', fmCreate) do try
+            with TwbWriteCachedFileStream.Create(wbDataPath + 'DistantLOD\'+aWorldspace.EditorID+'_'+IntToStr(i+MinCell.x)+'_'+IntToStr(j+MinCell.y)+'.lod') do try
               WriteCardinal(Length(RefsInCell));
 
               for l := Low(RefsInCell) to High(RefsInCell) do begin
@@ -4923,7 +4979,7 @@ begin
     0: Result := nil;
     1: SetLength(Result, 1);
   else
-    QuickSort(@Result[0], 0, Pred(j), CompareElementID);
+    wbMergeSort(@Result[0], j, CompareElementID);
     k := 1;
     LastID := Result[0].ElementID;
     for i := 1 to Pred(j) do
@@ -6972,7 +7028,7 @@ begin
   end;
 
   if Length(WorldSpaces) > 1 then begin
-    QuickSort(@WorldSpaces[0], Low(WorldSpaces), High(WorldSpaces), CompareElementsFormIDAndLoadOrder);
+    wbMergeSort(@WorldSpaces[0], Length(WorldSpaces), CompareElementsFormIDAndLoadOrder);
 
     j := 0;
     for i := Succ(Low(WorldSpaces)) to High(WorldSpaces) do begin
@@ -7329,7 +7385,7 @@ begin
     SetLength(Elements, j);
 
     if Length(Elements) > 1 then begin
-      QuickSort(@Elements[0], Low(Elements), High(Elements), CompareElementsFormIDAndLoadOrder);
+      wbMergeSort(@Elements[0], Length(Elements), CompareElementsFormIDAndLoadOrder);
 
       j := 0;
       for i := Succ(Low(Elements)) to High(Elements) do begin
@@ -9482,6 +9538,20 @@ begin
   end;
 end;
 
+procedure TfrmMain.mniNavOtherCodeSiteLoggingClick(Sender: TObject);
+begin
+  {$IFDEF USE_CODESITE}
+  mniNavOtherCodeSiteLogging.Checked := not mniNavOtherCodeSiteLogging.Checked;
+  if mniNavOtherCodeSiteLogging.Checked then
+    wbBeginCodeSiteLogging
+  else
+    wbEndCodeSiteLogging;
+  {$ELSE}
+  mniNavOtherCodeSiteLogging.Visible := False;
+  mniNavOtherCodeSiteLogging.Enabled := False;
+  {$ENDIF}
+end;
+
 procedure TfrmMain.mniViewNextMemberClick(Sender: TObject);
 var
   NodeDatas                   : PViewNodeDatas;
@@ -9673,6 +9743,11 @@ var
   sl                          : TStringList;
 begin
   mniNavTest.Visible := DebugHook <> 0;
+
+  {$IFNDEF USE_CODESITE}
+  mniNavOtherCodeSiteLogging.Visible := False;
+  mniNavOtherCodeSiteLogging.Enabled := False;
+  {$ENDIF}
 
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
   if Assigned(NodeData) then
@@ -10025,7 +10100,7 @@ begin
   UniqueString(t);
   p := Pointer(t);
   Pointer(t) := nil;
-  PostMessage(Handle, WM_USER, Integer(p), 0);
+  PostMessage(Handle, WM_USER, Cardinal(p), 0);
 end;
 
 procedure TfrmMain.PostPluggyChange(aFormID, aBaseFormID, aInventoryFormID, aEnchantmentFormID, aSpellFormID: Cardinal);
@@ -10302,7 +10377,7 @@ begin
               FileStream := TFileStream.Create(wbDataPath + s, fmCreate);
               try
                 PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
-                _File.WriteToStream(FileStream);
+                _File.WriteToStream(FileStream, False);
                 SavedAny := True;
               finally
                 FileStream.Free;
@@ -13252,7 +13327,7 @@ begin
     Done := True;
   end else
   if SameText(Identifier, 'wbRecordDefMap') and (Args.Count = 0) then begin
-    Value := O2V(wbRecordDefMap);
+    Value := O2V(_wbRecordDefMap);
     Done := True;
   end else
   if (SameText(Identifier,   'ProgramPath') and (Args.Count = 0)) or
@@ -13722,6 +13797,28 @@ begin
     not wbIKnowWhatImDoing;
   if wbQuickShowConflicts then
     mniNavFilterConflicts.Click;
+
+  if wbQuickClean then begin
+    mniNavFilterForCleaning.Click;
+    JumpTo(Files[High(Files)].Header, False);
+    vstNav.ClearSelection;
+    vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+    vstNav.Selected[vstNav.FocusedNode] := True;
+    SetActiveRecord(nil);
+    pgMain.ActivePage := tbsMessages;
+    mniNavUndeleteAndDisableReferences.Click;
+    mniNavRemoveIdenticalToMaster.Click;
+
+    mniNavFilterForCleaning.Click;
+    JumpTo(Files[High(Files)].Header, False);
+    vstNav.ClearSelection;
+    vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+    vstNav.Selected[vstNav.FocusedNode] := True;
+    SetActiveRecord(nil);
+    pgMain.ActivePage := tbsMessages;
+    mniNavUndeleteAndDisableReferences.Click;
+    mniNavRemoveIdenticalToMaster.Click;
+  end;
 end;
 
 procedure TfrmMain.WMUser3(var Message: TMessage);
@@ -13837,13 +13934,12 @@ var
   s,t                         : string;
   F                           : TSearchRec;
 begin
+  wbStartTime := Now;
   LoaderProgress('starting...');
   try
     frmMain.LoaderStarted := True;
     wbProgressCallback := LoaderProgress;
     try
-      wbStartTime := Now;
-
       if not Assigned(wbContainerHandler) then begin
         wbContainerHandler := wbCreateContainerHandler;
 

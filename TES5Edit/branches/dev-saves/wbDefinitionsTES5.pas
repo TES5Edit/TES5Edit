@@ -14,6 +14,8 @@
 
 unit wbDefinitionsTES5;
 
+{$I wbDefines.inc}
+
 interface
 
 procedure DefineTES5;
@@ -2335,6 +2337,15 @@ begin
   end;
 end;
 
+procedure wbScriptPropertyTypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainerElementRef;
+begin
+  if aOldValue <> aNewValue then
+    if Supports(aElement.Container, IwbContainerElementRef, Container) then
+      Container.ElementByName['Value'].SetToDefault;
+end;
+
 {>>> For VMAD <<<}
 function wbScriptFragmentExistsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -3281,8 +3292,13 @@ begin
 end;
 
 procedure wbWRLDAfterLoad(const aElement: IwbElement);
+  function OutOfRange(aValue: Integer; aRange: Integer = 256): Boolean;
+  begin
+    Result := (aValue < -aRange) or (aValue > aRange);
+  end;
 var
   MainRecord: IwbMainRecord;
+  Container: IwbContainer;
 begin
   wbRemoveOFST(aElement);
 
@@ -3293,6 +3309,16 @@ begin
 
     if MainRecord.ElementExists['Unused RNAM'] then
       MainRecord.RemoveElement('Unused RNAM');
+
+    // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
+    // CK can occasionally set them wrong, so make a warning
+    if Supports(MainRecord.ElementByName['Object Bounds'], IwbContainer, Container) then
+      if OutOfRange(Container.ElementNativeValues['NAM0\X']) or
+         OutOfRange(Container.ElementNativeValues['NAM0\Y']) or
+         OutOfRange(Container.ElementNativeValues['NAM9\X']) or
+         OutOfRange(Container.ElementNativeValues['NAM9\Y'])
+      then
+        wbProgressCallback('<Warning: Object Bounds in ' + MainRecord.Name + ' are abnormally large and can cause performance issues in game>');
 
   finally
     wbEndInternalEdit;
@@ -3694,9 +3720,8 @@ begin
   Flags := DataRec.NativeValue;
 
   {0x0001 Is Interior Cell}
-  {0x0002 Has Water}
-  if (Flags and 3) = 1 then
-    {Interior and no Water}
+  if (Flags and 1) = 1 then
+    {Interior cells don't use water level in Skyrim at all}
     aCP := cpIgnore;
 end;
 
@@ -3718,6 +3743,8 @@ var
   Container    : IwbContainerElementRef;
 //  Container2   : IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
+  DataSubRec   : IwbSubrecord;
+  Flags        : Byte;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -3732,14 +3759,23 @@ begin
     if MainRecord.IsDeleted then
       Exit;
 
-    if not Container.ElementExists['DATA'] then
-      Exit;
-
-    // 'Default' water height for exterior cells if not set (so water height will be taken from WRLD by game)
-    if (not Container.ElementExists['XCLW']) and ((Integer(Container.ElementNativeValues['DATA']) and $02) <> 0) then begin
-      Container.Add('XCLW', True);
-      Container.ElementEditValues['XCLW'] := 'Default';
+    if Supports(Container.ElementBySignature['DATA'] , IwbSubRecord, DataSubRec) then begin
+      // expand itU8 flags to itU16
+      if DataSubRec.SubRecordHeaderSize = 1 then begin
+        Flags := PByte(DataSubRec.DataBasePtr)^;
+        DataSubRec.SetToDefault;
+        DataSubRec.NativeValue := Flags;
+      end;
+      // 'Default' water height for exterior cells if not set (so water height will be taken from WRLD by game)
+      if (not Container.ElementExists['XCLW']) and ((Integer(DataSubRec.NativeValue) and $02) <> 0) then begin
+        Container.Add('XCLW', True);
+        Container.ElementEditValues['XCLW'] := 'Default';
+      end;
     end;
+
+    // Min (-0 as in CK) water height is set to 0 when saving in CK
+    if Container.ElementEditValues['XCLW'] = 'Min' then
+      Container.ElementEditValues['XCLW'] := '0.0';
 
 //    if Supports(Container.ElementBySignature[XCLR], IwbContainerElementRef, Container2) then begin
 //      for i := Pred(Container2.ElementCount) downto 0 do
@@ -4710,12 +4746,12 @@ begin
       wbInteger('Unused', itU16, nil, cpIgnore),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
       wbFormID('FormID')
-    ]),
+    ], [2, 1, 0]),
     wbStructSK([1], 'Object v1', [
       wbFormID('FormID'),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
       wbInteger('Unused', itU16, nil, cpIgnore)
-    ], [2, 1, 0])
+    ])
   ]);
 
   wbScriptEntry := wbStructSK([0], 'Script', [
@@ -4728,7 +4764,7 @@ begin
     ])),
     wbArrayS('Properties', wbStructSK([0], 'Property', [
       wbLenString('propertyName', 2),
-      wbInteger('Type', itU8, wbPropTypeEnum),
+      wbInteger('Type', itU8, wbPropTypeEnum, cpNormal, False,nil, wbScriptPropertyTypeAfterSet),
       wbInteger('Flags', itU8, wbEnum([
         {0x00} '',
         {0x01} 'Edited',
@@ -11930,7 +11966,7 @@ begin
     wbVMAD,
     wbFormIDCk(NAME, 'Base', [TREE, SNDR, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
                               MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, INGR,
-                              MSTT, TACT, TXST, FLOR, SLGM, SCRL, SOUN, APPA, SPEL], False, cpNormal, True),
+                              MSTT, TACT, TXST, FLOR, SLGM, SCRL, SOUN, APPA, SPEL, ARTO], False, cpNormal, True),
 
     {--- Bound Contents ---}
     {--- Bound Data ---}
@@ -12895,7 +12931,7 @@ begin
       wbByteArray(OFST, 'Offset Data')
     ], False, nil, cpNormal, False, wbWRLDAfterLoad)
   else
-      wbRecord(WRLD, 'Worldspace', [
+    wbRecord(WRLD, 'Worldspace', [
       wbEDID,
       {>>> BEGIN leftover from earlier CK versions <<<}
       wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False{, wbNeverShow}),
