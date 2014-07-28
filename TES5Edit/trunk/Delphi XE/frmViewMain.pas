@@ -1288,7 +1288,18 @@ begin
     aMainRecord.ConflictThis := aConflictThis;
   end else begin
     NodeDatas := NodeDatasForMainRecord(aMainRecord);
-    aConflictAll := ConflictLevelForChildNodeDatas(NodeDatas, False, (aMainRecord.MasterOrSelf.IsInjected and not (aMainRecord.Signature = 'GMST')) );
+    if Length(NodeDatas) = 1 then begin
+      aConflictAll := caOnlyOne;
+      NodeDatas[0].ConflictAll := caOnlyOne;
+      NodeDatas[0].ConflictThis := ctOnlyOne;
+    end else if wbQuickShowConflicts and (Length(NodeDatas) = 2) then begin
+      aConflictAll := caOverride;
+      NodeDatas[0].ConflictAll := caOverride;
+      NodeDatas[1].ConflictAll := caOverride;
+      NodeDatas[0].ConflictThis := ctMaster;
+      NodeDatas[1].ConflictThis := ctOverride;
+    end else
+      aConflictAll := ConflictLevelForChildNodeDatas(NodeDatas, False, (aMainRecord.MasterOrSelf.IsInjected and not (aMainRecord.Signature = 'GMST')) );
 
     for i := Low(NodeDatas) to High(NodeDatas) do
       with NodeDatas[i] do
