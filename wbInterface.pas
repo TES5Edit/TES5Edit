@@ -10129,11 +10129,11 @@ begin
         PSingle(aBasePtr)^ := SingleNaN;
     end else if fdDouble and (SameValue(Value, MaxDouble) or (Value > MaxDouble)) then
       PInt64(aBasePtr)^ := $7FEFFFFFFFFFFFFF
-    else if fdDouble and (SameValue(Value, -MaxDouble) or (Value < MaxDouble)) then
+    else if fdDouble and (SameValue(Value, -MaxDouble) or (Value < -MaxDouble)) then
       PInt64(aBasePtr)^ := $FFEFFFFFFFFFFFFF
     else if not fdDouble and (SameValue(Value, MaxSingle) or (Value > MaxSingle)) then
       PCardinal(aBasePtr)^ := $7F7FFFFF
-    else if not fdDouble and (SameValue(Value, -MaxSingle) or (Value < MaxSingle)) then
+    else if not fdDouble and (SameValue(Value, -MaxSingle) or (Value < -MaxSingle)) then
       PCardinal(aBasePtr)^ := $FF7FFFFF
     else begin
       Value := RoundToEx(Value, -fdDigits);
