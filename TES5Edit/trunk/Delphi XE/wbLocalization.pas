@@ -245,20 +245,21 @@ begin
 
   aStream.Read(scount, 4); // number of strings
   aStream.Position := aStream.Position + 4; // skip dataSize
-  for i := 0 to scount - 1 do begin
-    aStream.Read(id, 4); // string ID
-    aStream.Read(offset, 4); // offset of string relative to data (header + dirsize)
-    oldPos := aStream.Position;
-    aStream.Position := 8 + scount*8 + offset; // header + dirsize + offset
-    if fFileType = lsString then
-      s := ReadZString(aStream)
-    else
-      s := ReadLenZString(aStream);
-    fStrings.AddObject(s, pointer(id));
-    if Succ(id) > fNextID then
-      fNextID := Succ(id);
-    aStream.Position := oldPos;
-  end;
+  if scount > 0 then
+    for i := 0 to scount - 1 do begin
+      aStream.Read(id, 4); // string ID
+      aStream.Read(offset, 4); // offset of string relative to data (header + dirsize)
+      oldPos := aStream.Position;
+      aStream.Position := 8 + scount*8 + offset; // header + dirsize + offset
+      if fFileType = lsString then
+        s := ReadZString(aStream)
+      else
+        s := ReadLenZString(aStream);
+      fStrings.AddObject(s, pointer(id));
+      if Succ(id) > fNextID then
+        fNextID := Succ(id);
+      aStream.Position := oldPos;
+    end;
 end;
 
 procedure TwbLocalizationFile.WriteToStream(const aStream: TStream);
