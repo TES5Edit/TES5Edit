@@ -5805,22 +5805,30 @@ begin
 end;
 
 procedure TwbMainRecord.DecompressIfNeeded;
+var
+  UncompressedLength: Cardinal;
 begin
   InitDataPtr; // reset...
 
   if mrStruct.mrsFlags.IsCompressed then try
-    SetLength(mrDataStorage, PCardinal(dcDataBasePtr)^ );
+    UncompressedLength := PCardinal(dcDataBasePtr)^;
+    if UncompressedLength > 0 then begin
+      SetLength(mrDataStorage, UncompressedLength );
 
-    if (PCardinal(dcDataBasePtr)^ > 0) then  // This is to avoid an exception on compressed deleted record (at least in Dawnguard)
       DecompressToUserBuf(
         Pointer( Cardinal(dcDataBasePtr) + SizeOf(Cardinal) ),
         mrStruct.mrsDataSize - SizeOf(Cardinal),
         @mrDataStorage[0],
-        PCardinal(dcDataBasePtr)^
+        UncompressedLength
       );
 
-    dcDataEndPtr := Pointer( Cardinal(@mrDataStorage[0]) + PCardinal(dcDataBasePtr)^ );
-    dcDataBasePtr := @mrDataStorage[0];
+      dcDataBasePtr := @mrDataStorage[0];
+      dcDataEndPtr := Pointer( Cardinal(dcDataBasePtr) + UncompressedLength );
+    end else begin
+      mrDataStorage := nil;
+      dcDataBasePtr := @EmptyPtr;
+      dcDataEndPtr := @EmptyPtr;
+    end;
   except
     dcDataBasePtr := nil;
     dcDataEndPtr := nil;
