@@ -4466,6 +4466,7 @@ type
   TRule = (rSkip, rClear, rReplace);
 
 var
+  LODPath    : string;
   Master     : IwbMainRecord;
   REFRs      : TDynMainRecords;
   Count      : Integer;
@@ -4673,7 +4674,9 @@ begin
       Abort;
   end;
 
-  ForceDirectories(wbDataPath + 'DistantLOD\');
+  LODPath := wbOutputPath + 'DistantLOD\';
+
+  ForceDirectories(LODPath);
 
   i := 0;
   Caption := 'Deleting old .lod files: ' + aWorldspace.Name + ' Processed Files: ' + IntToStr(i) +
@@ -4684,9 +4687,9 @@ begin
   if ForceTerminate then
     Abort;
 
-  if FindFirst(wbDataPath + 'DistantLOD\'+aWorldspace.EditorID+'*.lod', faAnyFile, F) = 0 then try
+  if FindFirst(LODPath + aWorldspace.EditorID + '*.lod', faAnyFile, F) = 0 then try
     repeat
-      DeleteFile(wbDataPath + 'DistantLOD\' + F.Name);
+      DeleteFile(LODPath + F.Name);
       Inc(i);
 
       if StartTick + 500 < GetTickCount then begin
@@ -4705,7 +4708,7 @@ begin
   end;
 
   if Rule > rClear then begin
-    CmpStream := TwbWriteCachedFileStream.Create(wbDataPath + 'DistantLOD\'+aWorldspace.EditorID+'.cmp');
+    CmpStream := TwbWriteCachedFileStream.Create(LODPath + aWorldspace.EditorID + '.cmp');
     try
       Caption := 'Assigning References to Cells: ' + aWorldspace.Name + ' Processed References: ' + IntToStr(0) +
         ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
@@ -4767,7 +4770,7 @@ begin
             end;
             SetLength(RefsInCell, Succ(l));
 
-            with TwbWriteCachedFileStream.Create(wbDataPath + 'DistantLOD\'+aWorldspace.EditorID+'_'+IntToStr(i+MinCell.x)+'_'+IntToStr(j+MinCell.y)+'.lod') do try
+            with TwbWriteCachedFileStream.Create(LODPath + aWorldspace.EditorID + '_' + IntToStr(i+MinCell.x) + '_' + IntToStr(j+MinCell.y) + '.lod') do try
               WriteCardinal(Length(RefsInCell));
 
               for l := Low(RefsInCell) to High(RefsInCell) do begin

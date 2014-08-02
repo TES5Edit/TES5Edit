@@ -332,6 +332,15 @@ begin
   end else
     wbDataPath := IncludeTrailingPathDelimiter(wbDataPath);
 
+  wbOutputPath := wbDataPath;
+  if wbFindCmdLineParam('O', s) and (Length(s) > 0) then
+    if s[1] = '.' then
+      //assume relative path
+      wbOutputPath := IncludeTrailingPathDelimiter(wbOutputPath + s)
+    else
+      //assume absolute path
+      wbOutputPath := IncludeTrailingPathDelimiter(s);
+
   wbMOHookFile := wbDataPath + '..\Mod Organizer\hook.dll';
 
   if not wbFindCmdLineParam('I', wbTheGameIniFileName) then begin

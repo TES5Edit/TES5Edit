@@ -114,6 +114,7 @@ var
 
   wbProgramPath : string;
   wbDataPath    : string;
+  wbOutputPath  : string;
 
   wbShouldLoadMOHookFile : Boolean;
   wbMOProfile            : string;
