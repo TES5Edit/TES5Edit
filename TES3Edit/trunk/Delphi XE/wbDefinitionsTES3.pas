@@ -3729,12 +3729,11 @@ begin
   end;
 
   wbRecord(LIGH, 'Light', [
-    wbEDID,
-    wbMODL,
-    wbSCRI,
-    wbFULL,
-    wbICON,
-    wbStruct(DATA, '', [
+    wbString(NAME, 'Light ID Name'),
+    wbString(FNAM, 'Light Name'),
+    wbStruct(LHDT, 'Light Data', [
+      wbFloat('Weight'),
+      wbInteger('Value', itU32),
       wbInteger('Time', itS32),
       wbInteger('Radius', itU32),
       wbStruct('Color', [
@@ -3748,22 +3747,18 @@ begin
         {0x00000002} 'Can be Carried',
         {0x00000004} 'Negative',
         {0x00000008} 'Flicker',
-        {0x00000010} 'Unused',
+        {0x00000010} 'Fire',
         {0x00000020} 'Off By Default',
         {0x00000040} 'Flicker Slow',
         {0x00000080} 'Pulse',
-        {0x00000100} 'Pulse Slow',
-        {0x00000200} 'Spot Light',
-        {0x00000400} 'Spot Shadow'
-      ])),
-      wbFloat('Falloff Exponent'),
-      wbFloat('FOV'),
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
-    ], cpNormal, True, nil, 6),
-    wbFloat(FNAM, 'Fade value', cpNormal, True, 1, -1, nil, nil, 1.0),
-    wbFormIDCk(SNAM, 'Sound', [SOUN])
-  ], False, nil, cpNormal, False, wbLIGHAfterLoad);
+        {0x00000100} 'Pulse Slow'
+      ]))
+    ]),
+    wbStringScript(SCPT, 'Script Source', 0),
+    wbString(ITEX, 'Inventory icon'),
+    wbMODL,
+    wbString(SNAM, 'Sound name')
+  ]);
 
   wbRecord(LSCR, 'Load Screen', [
     wbEDID,
