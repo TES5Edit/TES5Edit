@@ -194,10 +194,11 @@ const
   PFIG : TwbSignature = 'PFIG';
   PFPC : TwbSignature = 'PFPC';
   PGAG : TwbSignature = 'PGAG';
-  PGRD : TwbSignature = 'PGRD';
+  PGRC : TwbSignature = 'PGRC'; { Morrowind }
+  PGRD : TwbSignature = 'PGRD'; { Morrowind }
   PGRI : TwbSignature = 'PGRI';
   PGRL : TwbSignature = 'PGRL';
-  PGRP : TwbSignature = 'PGRP';
+  PGRP : TwbSignature = 'PGRP'; { Morrowind }
   PGRR : TwbSignature = 'PGRR';
   PKDT : TwbSignature = 'PKDT';
   PKID : TwbSignature = 'PKID';
@@ -348,6 +349,7 @@ var
   wbCTDAs: IwbSubRecordArrayDef;
   wbSCROs: IwbSubRecordArrayDef;
   wbPGRP: IwbSubRecordDef;
+  wbPGRC: IwbSubRecordDef;
   wbResultScript: IwbSubRecordStructDef;
 //  wbResultScriptOld: IwbSubRecordStructDef;
   wbSCRI: IwbSubRecordDef;
@@ -4159,6 +4161,7 @@ begin
     wbCTDAs
   ]);
 
+  {16 bytes }
   wbPGRP :=
     wbArray(PGRP, 'Points', wbStruct('Point', [
       wbFloat('X'),
@@ -4166,7 +4169,7 @@ begin
       wbFloat('Z (Even = Red/Orange, Odd = Blue)'),
       wbInteger('Connections', itU8{, wbPGRPConnectionsCallback}),
       wbByteArray('Unused', 3)
-    ]), 0, nil, nil, cpNormal, True);
+    ]));
 
       {The Connection Count in the PGRP record specifies how many entries in this
        array belong to each point. If the first 4 points in the PGRP array have
@@ -4175,12 +4178,38 @@ begin
        the next 4 of point 3 and so on..., this can currently not be represented
        declaratively }
 
+  {8 bytes or 4 bytes , anything else does not make it come out even at the end
+  end of the array }
+  wbPGRC :=
+    wbArray(PGRP, 'Points', wbStruct('Point', [
+      wbInteger('Unknown', itS32),
+      wbInteger('Unknown', itS32)
+    ]));
+
   wbRecord(PGRD, 'Path Grid', [
-    wbInteger(DATA, 'Point Count', itU16, nil, cpNormal, True),
+    wbStruct(DATA, 'Path Grid Data', [
+      wbInteger('Unknown', itU16),
+      wbInteger('Unknown', itU16),
+      wbInteger('Unknown', itU16),
+      wbInteger('Unknown', itU16),
+      wbInteger('Unknown', itU16),
+      wbInteger('Unknown', itU16)
+    ], cpNormal, True),
+    wbString(NAME, 'Path Grid ID Name'),
+    wbByteArray(PGAG, 'Unknown'),
+    { 1680, 1872, 2800  }
+    {wbPGRP,}
+    { 1656, 1760, 4016 }
+    {wbPGRC,}
+    {wbInteger(PGRP, 'Unknown', itU16),}
+    {wbInteger(PGRC, 'Unknown', itU16),}
+    wbByteArray(PGRP, 'Points', 0),
+    wbByteArray(PGRC, 'Grids', 0)
+{    wbInteger(DATA, 'Point Count', itU16, nil, cpNormal, True),
     wbPGRP,
     wbByteArray(PGAG, 'Unknown'),
     wbArray(PGRR, 'Point-to-Point Connections',
-      wbArrayS('Point', wbInteger('Point', itU16), wbCalcPGRRSize{, cpNormal, False, wbPGRRPointAfterLoad})
+      wbArrayS('Point', wbInteger('Point', itU16), wbCalcPGRRSize, cpNormal, False, wbPGRRPointAfterLoad)
     ),
     wbArrayS(PGRI, 'Inter-Cell Connections', wbStructSK([0,2,3,4], 'Inter-Cell Connection', [
       wbInteger('Point', itU16),
@@ -4195,6 +4224,7 @@ begin
         wbArrayS('Points', wbInteger('Point', itU32))
       ])
     )
+}
   ], False, nil, cpNormal, False, wbPGRDAfterLoad);
 
   wbRecord(QUST, 'Quest', [
