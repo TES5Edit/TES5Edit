@@ -4244,6 +4244,41 @@ begin
       'Tail'
     ]));
 
+  wbRecord(BODY, 'Body Parts', [
+    wbString(NAME, 'Body Part ID Name'),
+    wbMODL,
+    wbString(FNAM, 'Body Part Name'),
+    wbStruct(BYDT, 'Body part data', [
+      wbInteger('Part', itU8, wbEnum([
+        'Head',
+        'Hair',
+        'Neck',
+        'Chest',
+        'Groin',
+        'Hand',
+        'Wrist',
+        'Forearm',
+        'Upperarm',
+        'Foot',
+        'Ankle',
+        'Knee',
+        'Upperleg',
+        'Clavicle',
+        'Tail'
+      ])),
+      wbInteger('Vampire', itU8),
+      wbInteger('Flags', itU8, wbFlags([
+        'Female',
+        'Playable'
+      ])),
+      wbInteger('PartType', itU8, wbFlags([
+        'Skin',
+        'Clothing',
+        'Armor'
+      ]))
+    ])
+  ]);
+
   wbRecord(RACE, 'Race', [
     wbEDID,
     wbFULL,
