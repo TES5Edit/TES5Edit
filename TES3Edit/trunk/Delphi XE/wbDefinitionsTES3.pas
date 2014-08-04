@@ -2074,7 +2074,7 @@ begin
   ], True, wbPlacedAddInfo);
 
   wbRecord(ACTI, 'Activator', [
-    wbString(NAME, 'Item ID Name'),
+    wbString(NAME, 'Activator ID Name'),
     wbMODL,
     wbString(FNAM, 'Activator Name'),
     wbStringScript(SCRI, 'Script Source', 0)
@@ -3056,13 +3056,13 @@ begin
   ]);
 
   wbRecord(ENCH, 'Enchantment', [
-    wbString(NAME, 'Item ID Name'),
+    wbString(NAME, 'Enchant ID Name'),
     wbStruct(ENDT, 'Enchant Data', [
       wbInteger('Type', itU32, wbEnum([
         {0} 'Cast Once',
         {1} 'Cast Strikes',
         {2} 'Cast when Used',
-        {3} 'Cast when Used'
+        {3} 'Constant Effect'
       ])),
       wbInteger('Enchant Cost', itU32),
       wbInteger('Charge Amount', itU32),
