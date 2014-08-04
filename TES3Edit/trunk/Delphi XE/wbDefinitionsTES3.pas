@@ -250,6 +250,7 @@ const
   SLSD : TwbSignature = 'SLSD';
   SNAM : TwbSignature = 'SNAM'; { Morrowind }
   SNDD : TwbSignature = 'SNDD';
+  SNDG : TwbSignature = 'SNDG'; { Morrowind }
   SNDX : TwbSignature = 'SNDX';
   SOUL : TwbSignature = 'SOUL';
   SOUN : TwbSignature = 'SOUN'; { Morrowind }
@@ -4635,6 +4636,24 @@ begin
     ], cpNormal, True),
     wbInteger(SOUL, 'Contained Soul', itU8, wbSoulGemEnum, cpNormal, True),
     wbInteger(SLCP, 'Maximum Capacity', itU8, wbSoulGemEnum, cpNormal, True)
+  ]);
+
+  wbRecord(SNDG, 'Sound Generator', [
+    wbString(NAME, 'Sound ID'),
+    wbStruct(DATA, 'Sound Data', [
+      wbInteger('Type', itU32, wbEnum([
+       {0}'Left Foot',
+       {0}'Right Foot',
+       {0}'Swim Left',
+       {0}'Swim Right',
+       {0}'Moan',
+       {0}'Roar',
+       {0}'Scream',
+       {0}'Land'
+      ]))
+    ]),
+    wbString(SNAM, 'Sound ID string'),
+    wbString(CNAM, 'Creature name')
   ]);
 
   wbRecord(SOUN, 'Sound', [
