@@ -2669,7 +2669,7 @@ begin
       wbFloat('Weight')
     ]),
     wbStruct(FLAG, 'Container Flags', [
-      wbInteger('Flags', itU8, wbFlags([
+      wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Organic',
         {0x00000002} 'Respawns, organic only',
         {0x00000004} 'Unknown3',
@@ -2680,10 +2680,12 @@ begin
         {0x00000080} 'Unknown8'
       ]))
     ]),
-    wbStruct(NPCO, 'Item Record ', [
-      wbInteger('Count', itU32),
-      wbString('Item Name', 32)
-    ])
+    wbRArray('Referenced Items',
+      wbStruct(NPCO, 'Item', [
+        wbInteger('Count', itU32),
+        wbString('Item Name', 32)
+      ])
+    )
   ]);
 
   wbCSDT := wbRStructSK([0], 'Sound Type', [
