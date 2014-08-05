@@ -3590,59 +3590,6 @@ begin
     wbArray(DATA, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [IDLE, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True)
   ]);
 
-  wbRecord(INFO, 'Dialog response', [
-    wbStruct(DATA, '', [
-      wbInteger('Type', itU8, wbEnum([
-        {0} 'Topic',
-        {1} 'Conversation',
-        {2} 'Combat',
-        {3} 'Persuasion',
-        {4} 'Detection',
-        {5} 'Service',
-        {6} 'Miscellaneous'
-      ])),
-      wbInteger('Flags', itU8, wbFlags([
-        {0x0001} 'Goodbye',
-        {0x0002} 'Random',
-        {0x0004} 'Say Once',
-        {0x0008} '',
-        {0x0010} 'Info Refusal',
-        {0x0020} 'Random End',
-        {0x0040} 'Run for Rumors'
-      ])),
-      wbByteArray('Unused', 1)
-    ], cpNormal, True),
-    wbFormIDCk(QSTI, 'Quest', [QUST], False, cpNormal, True),
-    wbFormIDCk(TPIC, 'Topic', [DIAL]),
-    wbFormIDCk(PNAM, 'Previous INFO', [INFO, NULL]),
-    wbRArray('Add topics', wbFormIDCk(NAME, 'Topic', [DIAL])),
-    wbRArray('Responses',
-      wbRStruct('Response', [
-        wbStruct(TRDT, 'Response Data', [
-          wbInteger('Emotion Type', itU32, wbEnum([
-            {0} 'Neutral',
-            {1} 'Anger',
-            {2} 'Disgust',
-            {3} 'Fear',
-            {4} 'Sad',
-            {5} 'Happy',
-            {6} 'Surprise'
-          ])),
-          wbInteger('Emotion Value', itS32),
-          wbByteArray('Unused', 4),
-          wbInteger('Response number', itU8),
-          wbByteArray('Unused', 3)
-        ]),
-        wbString(NAM1, 'Response Text', 0, cpTranslate),
-        wbString(NAM2, 'Actor notes', 0, cpTranslate)
-      ], [])
-    ),
-    wbCTDAs,
-    wbRArray('Choices', wbFormIDCk(TCLT, 'Choice', [DIAL])),
-    wbRArray('Link From', wbFormIDCk(TCLF, 'Topic', [DIAL])),
-    wbResultScript
-  ]);
-
   wbRecord(INGR, 'Ingredient', [
     wbString(NAME, 'Activator ID Name'),
     wbMODL,
