@@ -27,11 +27,7 @@ uses
   wbInterface;
 
 const
-  ACBS : TwbSignature = 'ACBS';
-  ACHR : TwbSignature = 'ACHR';
-  ACRE : TwbSignature = 'ACRE';
-  ACTI : TwbSignature = 'ACTI';
-  ACVA : TwbSignature = 'ACVA';
+  ACTI : TwbSignature = 'ACTI'; { Morrowind }
   AI_A : TwbSignature = 'AI'#$5F'A'; { Morrowind }
   AI_E : TwbSignature = 'AI'#$5F'E'; { Morrowind }
   AI_F : TwbSignature = 'AI'#$5F'F'; { Morrowind }
@@ -366,7 +362,6 @@ var
   wbENAM: IwbSubRecordDef;
   wbFGGS: IwbSubRecordDef;
   wbXLOD: IwbSubRecordDef;
-  wbXESP: IwbSubRecordDef;
   wbICON: IwbSubRecordDef;
   wbCrimeTypeEnum: IwbEnumDef;
   wbFormTypeEnum: IwbEnumDef;
@@ -383,8 +378,6 @@ var
   wbEFID: IwbSubRecordDef;
   wbEFIDOBME: IwbSubRecordDef;
   wbEFIT: IwbSubRecordDef;
-  wbEFITOBME: IwbSubRecordDef;
-  wbEFIX: IwbSubRecordDef;
   wbMagicSchoolEnum: IwbEnumDef;
   wbFunctionsEnum: IwbEnumDef;
   wbSCIT: IwbSubRecordStructDef;
@@ -1031,38 +1024,6 @@ begin
 
   if Integer(Container.ElementByName['Type'].NativeValue) and $04 <> 0 then
     Result := 1;
-end;
-
-function wbEFITOBMEParamDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  ParamInfo: Variant;
-  Container: IwbContainer;
-begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
-
-  ParamInfo := Container.ElementNativeValues['..\EFME\EFIT Param Info'];
-  if VarIsNull(ParamInfo) or VarIsEmpty(ParamInfo) then
-  else
-    Result := ParamInfo;
-end;
-
-function wbEFIXParamDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  ParamInfo: Variant;
-  Container: IwbContainer;
-begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
-
-  ParamInfo := Container.ElementNativeValues['..\EFME\EFIX Param Info'];
-  if VarIsNull(ParamInfo) or VarIsEmpty(ParamInfo) then
-  else
-    Result := ParamInfo;
 end;
 
 function wbCTDAParam1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -2055,13 +2016,6 @@ begin
   wbENAM := wbFormIDCk(ENAM, 'Enchantment', [ENCH]);
 
   wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
-  wbXESP := wbStruct(XESP, 'Enable Parent', [
-    wbFormIDCk('Reference', [PLYR, REFR, ACRE, ACHR]),
-    wbInteger('Flags', itU8, wbFlags([
-      'Set Enable State to Opposite of Parent'
-    ])),
-    wbByteArray('Unused', 3)
-  ]);
 
   wbXOWN := wbFormIDCk(XOWN, 'Owner', [FACT, NPC_]);
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
@@ -2195,33 +2149,6 @@ begin
       wbInteger('Actor Value', itS32, wbActorValueEnum)
     ], cpNormal, True, nil, -1, wbEFITAfterLoad);
 
-  wbEFITOBME :=
-    wbStructSK(EFIT, [4, 5], '', [
-      wbStringMgefCode('Magic Effect Code', 4),
-      wbInteger('Magnitude', itU32),
-      wbInteger('Area', itU32),
-      wbInteger('Duration', itU32),
-      wbInteger('Type', itU32, wbEnum(['Self', 'Touch', 'Target'])),
-      wbUnion('Param #1', wbEFITOBMEParamDecider, [
-        wbByteArray('Param #1 - Unknown Type', 4),
-        wbFormID('Param #1 - FormID'),
-        wbStringMgefCode('Param #1 - Magic Effect Code', 4),
-        wbFormIDCk('Param #1 - Actor Value', [ACVA])
-      ])
-    ], cpNormal, True, nil, -1{, wbEFITAfterLoad});
-
-  wbEFIX :=
-    wbStructSK(EFIX, [3], '', [
-      wbInteger('Override Mask', itU32, wbFlags([])),
-      wbInteger('Flags', itU32, wbFlags([])),
-      wbFloat('Base Cost'),
-      wbUnion('Param #2', wbEFIXParamDecider, [
-        wbByteArray('Param #2 - Unknown Type', 4),
-        wbFormID('Param #2 - FormID'),
-        wbStringMgefCode('Param #2 - Magic Effect Code', 4),
-        wbFormIDCk('Param #2 - Actor Value', [ACVA])
-      ])
-    ], cpNormal, True, nil, -1, wbEFITAfterLoad);
 
   wbMagicSchoolEnum :=
     wbEnum([
@@ -2283,10 +2210,8 @@ begin
             wbByteArray('Unused', $0A)
           ]),
           wbEFIDOBME,
-          wbEFITOBME,
           wbSCITOBME,
-          wbString(EFII, 'Icon'),
-          wbEFIX
+          wbString(EFII, 'Icon')
         ], []),
         wbEmpty(EFXX, 'Effects End Marker', cpNormal, True),
         wbFULLReq
@@ -3119,15 +3044,14 @@ begin
           {02} wbInteger('Integer', itS32),
           {03} wbInteger('Variable Name (INVALID)', itS32),
           {04} wbInteger('Sex', itU32, wbSexEnum),
-          {05} wbFormIDCk('Actor Value', [ACVA]),
 //          {05} wbInteger('Actor Value', itS32, wbActorValueEnum),
           {06} wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
           {07} wbInteger('Axis', itU32, wbAxisEnum),
           {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
           {09} wbInteger('Quest Stage (INVALID)', itS32),
-          {10} wbFormIDCk('Object Reference', [PLYR, REFR, ACHR, ACRE, TRGT]),
+          {10} wbFormIDCk('Object Reference', [PLYR, REFR, TRGT]),
           {12} wbFormIDCk('Inventory Object', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
-          {13} wbFormIDCk('Actor', [PLYR, ACHR, ACRE, TRGT]),
+          {13} wbFormIDCk('Actor', [PLYR, TRGT]),
           {14} wbFormIDCk('Quest', [QUST]),
           {15} wbFormIDCk('Faction', [FACT]),
           {16} wbFormIDCk('Cell', [CELL]),
@@ -3151,15 +3075,14 @@ begin
           {02} wbInteger('Integer', itS32),
           {03} wbInteger('Variable Name', itS32, wbCTDAParam2VariableNameToStr, wbCTDAParam2VariableNameToInt),
           {04} wbInteger('Sex', itU32, wbSexEnum),
-          {05} wbFormIDCk('Actor Value', [ACVA]),
 //          {05} wbInteger('Actor Value', itS32, wbActorValueEnum),
           {06} wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
           {07} wbInteger('Axis', itU32, wbAxisEnum),
           {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
           {09} wbInteger('Quest Stage', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
-          {10} wbFormIDCk('Object Reference', [PLYR, REFR, ACHR, ACRE, TRGT]),
+          {10} wbFormIDCk('Object Reference', [PLYR, REFR, TRGT]),
           {12} wbFormIDCk('Inventory Object', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
-          {13} wbFormIDCk('Actor', [PLYR, ACHR, ACRE, TRGT]),
+          {13} wbFormIDCk('Actor', [PLYR, TRGT]),
           {14} wbFormIDCk('Quest', [QUST]),
           {15} wbFormIDCk('Faction', [FACT]),
           {16} wbFormIDCk('Cell', [CELL]),
@@ -3193,15 +3116,14 @@ begin
           {02} wbInteger('Integer', itS32),
           {03} wbInteger('Variable Name (INVALID)', itS32),
           {04} wbInteger('Sex', itU32, wbSexEnum),
-          {05} wbFormIDCk('Actor Value', [ACVA]),
 //          {05} wbInteger('Actor Value', itS32, wbActorValueEnum),
           {06} wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
           {07} wbInteger('Axis', itU32, wbAxisEnum),
           {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
           {09} wbInteger('Quest Stage (INVALID)', itS32),
-          {10} wbFormIDCk('Object Reference', [PLYR, REFR, ACHR, ACRE, TRGT]),
+          {10} wbFormIDCk('Object Reference', [PLYR, REFR, TRGT]),
           {12} wbFormIDCk('Inventory Object', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
-          {13} wbFormIDCk('Actor', [PLYR, ACHR, ACRE, TRGT]),
+          {13} wbFormIDCk('Actor', [PLYR, TRGT]),
           {14} wbFormIDCk('Quest', [QUST]),
           {15} wbFormIDCk('Faction', [FACT]),
           {16} wbFormIDCk('Cell', [CELL]),
@@ -3225,15 +3147,14 @@ begin
           {02} wbInteger('Integer', itS32),
           {03} wbInteger('Variable Name', itS32, wbCTDAParam2VariableNameToStr, wbCTDAParam2VariableNameToInt),
           {04} wbInteger('Sex', itU32, wbSexEnum),
-          {05} wbFormIDCk('Actor Value', [ACVA]),
 //          {05} wbInteger('Actor Value', itS32, wbActorValueEnum),
           {06} wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
           {07} wbInteger('Axis', itU32, wbAxisEnum),
           {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
           {09} wbInteger('Quest Stage', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
-          {10} wbFormIDCk('Object Reference', [PLYR, REFR, ACHR, ACRE, TRGT]),
+          {10} wbFormIDCk('Object Reference', [PLYR, REFR, TRGT]),
           {12} wbFormIDCk('Inventory Object', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
-          {13} wbFormIDCk('Actor', [PLYR, ACHR, ACRE, TRGT]),
+          {13} wbFormIDCk('Actor', [PLYR, TRGT]),
           {14} wbFormIDCk('Quest', [QUST]),
           {15} wbFormIDCk('Faction', [FACT]),
           {16} wbFormIDCk('Cell', [CELL]),
@@ -3291,7 +3212,7 @@ begin
         wbFormIDCk(SCRO, 'Global Reference',
           [ACTI, DOOR, FLOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP,
            INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, QUST, PLYR, PACK, LVLI,
-           FACT, ACHR, REFR, ACRE, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
+           FACT, REFR, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
            LVLC, CSTY, WRLD, SCPT, BSGN, TREE, NULL]),
         wbInteger(SCRV, 'Local Variable', itU32)
       ], [])
