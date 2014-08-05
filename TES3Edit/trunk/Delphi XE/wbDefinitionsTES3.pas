@@ -2990,6 +2990,8 @@ begin
     wbString(NAME, 'Door ID Name'),
     wbMODL,
     wbString(FNAM, 'Door Name'),
+    wbStringScript(SCRI, 'Script Source', 0),
+	{Needs verification, may not have an SCIP record}
     wbStringScript(SCIP, 'Script Source', 0),
     wbString(SNAM, 'Sound name open'),
     wbString(ANAM, 'Sound name close')
