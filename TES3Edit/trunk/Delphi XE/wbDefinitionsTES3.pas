@@ -290,7 +290,7 @@ const
   WTHR : TwbSignature = 'WTHR';
   XACT : TwbSignature = 'XACT';
   XCCM : TwbSignature = 'XCCM';
-  XCHG : TwbSignature = 'XCHG';
+  XCHG : TwbSignature = 'XCHG'; { Morrowind }
   XCLC : TwbSignature = 'XCLC';
   XCLL : TwbSignature = 'XCLL';
   XCLR : TwbSignature = 'XCLR';
@@ -2094,7 +2094,7 @@ begin
     wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Activator Name'),
-    wbString(SCRI, 'ScriptID'),
+    wbString(SCRI, 'ScriptID')
   ]);
 
   wbICON := wbString(ICON, 'Icon filename');
@@ -2339,7 +2339,7 @@ begin
         wbInteger('long  Unknown4', itU32)
       ])
     ),
-    wbString(SCRI, 'ScriptID'),
+    wbString(SCRI, 'ScriptID')
   ]);
 
   wbRecord(AMMO, 'Ammunition', [
@@ -2383,7 +2383,7 @@ begin
     wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Item Name'),
-    wbString(SCRI, 'ScriptID'),,
+    wbString(SCRI, 'ScriptID'),
     wbStruct(AODT, 'Armour Data', [
       wbInteger('Armour', itU32, wbEnum([
         'Helmet',
@@ -2440,7 +2440,7 @@ begin
         wbString(CNAM, 'Female Body Part Name')
       ], [])
     ),
-    wbString(ENAM, 'Enchantment Name')
+    wbString(ENAM, 'EnchantID')
   ]);
 
   wbRecord(BOOK, 'Book', [
@@ -2458,7 +2458,7 @@ begin
       wbInteger('EnchantPts', itU32)
     ]),
     wbString(ITEX, 'Book Name'),
-    wbString(SCRI, 'ScriptID'),,
+    wbString(SCRI, 'ScriptID'),
     {quotes don't work with wbString in the book text}
     {x93Such as?x94 asked Bianki, smiling.<BR>}
     wbString(TEXT, 'Book Text')
@@ -2491,6 +2491,7 @@ begin
       wbInteger('GridX', itS32),
       wbInteger('GridY', itS32)
     ]),
+    wbInteger(INTV, 'Number of uses', itU32),
     wbString(RGNN, 'Activator ID Name'),
 
     {Exterior Cell Sub-Records}
@@ -2532,7 +2533,7 @@ begin
         wbInteger(UNAM, 'Reference Blocked', itU8),
         wbString(ANAM, 'Owner ID string'),
         wbString(BNAM, 'Global variable'),
-        wbInteger(INTV, 'Number of uses', itU32),
+        wbByteArray(XCHG, 'Unknown'),
         wbInteger(NAM9, 'Reference Blocked', itU32),
         wbString(XSOL, 'Soul Extra Data'),
         wbStruct(DATA, 'Reference Position Data', [
@@ -2649,8 +2650,8 @@ begin
         wbString(CNAM, 'Female Body Part Name')
       ], [])
     ),
-    wbString(ENAM, 'Enchantment Name'),
-    wbString(SCRI, 'ScriptID'),
+    wbString(ENAM, 'EnchantID'),
+    wbString(SCRI, 'ScriptID')
   ]);
 
   wbCNTO :=
@@ -2723,7 +2724,7 @@ begin
     wbString(MODL, 'Model Filename'),
     wbString(CNAM, 'Creatures Naming'),
     wbString(FNAM, 'Creature Name'),
-    wbString(SCRI, 'ScriptID'),,
+    wbString(SCRI, 'ScriptID'),
     wbStruct(NPDT, 'Creature Data', [
       wbInteger('Type', itU32, wbEnum([
         {0} 'Creature',
@@ -2994,7 +2995,7 @@ begin
     wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Door Name'),
-    wbString(SCRI, 'ScriptID'),,
+    wbString(SCRI, 'ScriptID'),
 	  {Needs verification, may not have an SCIP record}
     wbStringScript(SCIP, 'Script Source', 0),
     wbString(SNAM, 'Sound name open'),
@@ -3654,7 +3655,7 @@ begin
       wbInteger('AttributeID', itS32)
     ]),
     wbString(ITEX, 'Inventory icon'),
-    wbString(SCRI, 'ScriptID'),
+    wbString(SCRI, 'ScriptID')
   ]);
 
   wbRecord(KEYM, 'Key', [
@@ -3794,7 +3795,7 @@ begin
         {0x00000100} 'Pulse Slow'
       ]))
     ]),
-    wbString(SCRI, 'ScriptID'),,
+    wbString(SCRI, 'ScriptID'),
     {Need to verify if it has an SCPT record}
     wbStringScript(SCPT, 'Script Source', 0),
     wbString(SNAM, 'Sound name')
@@ -3928,7 +3929,7 @@ begin
     ]),
     wbString(SCRI, 'Script ID'),
     wbString(ITEX, 'Iventory Icon Filename'),
-    wbString(ENAM, 'Enchantment ID')
+    wbString(ENAM, 'EnchantID')
   ]);
 
   wbFaceGen := wbRStruct('FaceGen Data', [
@@ -3946,7 +3947,7 @@ begin
     wbString(ANAM, 'Faction name', 0, cpNormal, True),
     wbString(BNAM, 'Head model', 0, cpNormal, True),
     wbString(KNAM, 'Hair model', 0, cpNormal, True),
-    wbString(SCRI, 'ScriptID'),,
+    wbString(SCRI, 'ScriptID'),
     wbStruct(NPDT, 'NPC Data', [
       wbUnion('Data', wbNPCDataDecider, [
         wbStruct('Data 52', [
@@ -4875,7 +4876,7 @@ begin
     ]),
     wbString(ITEX, 'Iventory Icon Filename'),
     wbString(ENAM, 'Enchantment ID string'),
-    wbString(SCRI, 'ScriptID'),
+    wbString(SCRI, 'ScriptID')
   ]);
 
   wbRecord(WRLD, 'Worldspace', [
