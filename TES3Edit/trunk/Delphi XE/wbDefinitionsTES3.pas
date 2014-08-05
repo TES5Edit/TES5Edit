@@ -3890,11 +3890,14 @@ begin
       wbStruct('Color', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
-        wbInteger('Blue', itU8)
+        wbInteger('Blue', itU8),
+        wbByteArray('Uknown', 1)
       ]),
       wbFloat('Speed Multiplier'),
       wbFloat('Size Multiplier'),
-      wbFloat('SizeCap')
+      wbFloat('SizeCap'),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
     ]),
     wbString(ITEX, 'Effect Icon string'),
     wbString(PTEX, 'Particle texture string'),
