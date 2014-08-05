@@ -211,8 +211,10 @@ const
   QNAM : TwbSignature = 'QNAM';
   QSDT : TwbSignature = 'QSDT';
   QSTA : TwbSignature = 'QSTA';
+  QSTF : TwbSignature = 'QSTF'; { Morrowind }
   QSTI : TwbSignature = 'QSTI';
-  QSTR : TwbSignature = 'QSTR';
+  QSTN : TwbSignature = 'QSTN'; { Morrowind }
+  QSTR : TwbSignature = 'QSTR'; { Morrowind }
   QUST : TwbSignature = 'QUST';
   RACE : TwbSignature = 'RACE';
   RCLR : TwbSignature = 'RCLR';
