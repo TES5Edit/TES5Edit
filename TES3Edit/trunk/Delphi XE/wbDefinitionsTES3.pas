@@ -146,7 +146,9 @@ const
   LEVI : TwbSignature = 'LEVI'; { Morrowind }
   LHDT : TwbSignature = 'LHDT'; { Morrowind }
   LIGH : TwbSignature = 'LIGH';
+  LKDT : TwbSignature = 'LKDT'; { Morrowind }
   LNAM : TwbSignature = 'LNAM';
+  LOCK : TwbSignature = 'LOCK'; { Morrowind }
   LSCR : TwbSignature = 'LSCR';
   LTEX : TwbSignature = 'LTEX';
   LVLC : TwbSignature = 'LVLC';
@@ -4583,11 +4585,31 @@ begin
     wbString(NAME, 'NameID')
   ]);
 
-  wbRecord(REPA, 'StartScript', [
+  wbRecord(REPA, 'Repair Items', [
     wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Activator Name'),
     wbStruct(RIDT, 'Weather Type', [
+      wbInteger('Clear', itU8),
+      wbInteger('Cloudy', itU8),
+      wbInteger('Foggy', itU8),
+      wbInteger('Overcast', itU8),
+      wbInteger('Rain', itU8),
+      wbInteger('Thunder', itU8),
+      wbInteger('Ash', itU8),
+      wbInteger('Blight', itU8),
+      wbByteArray('Unknonw', 1),
+      wbByteArray('Unknonw', 1)
+    ]),
+    wbString(ITEX, 'Book Name'),
+    wbString(SCRI, 'ScriptID')
+  ]);
+
+  wbRecord(LOCK, 'Lockpicking Items', [
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(FNAM, 'Activator Name'),
+    wbStruct(LKDT, 'Weather Type', [
       wbInteger('Clear', itU8),
       wbInteger('Cloudy', itU8),
       wbInteger('Foggy', itU8),
