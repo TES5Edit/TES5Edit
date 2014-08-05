@@ -193,6 +193,7 @@ const
   OFST : TwbSignature = 'OFST';
   ONAM : TwbSignature = 'ONAM';
   PACK : TwbSignature = 'PACK';
+  PBDT : TwbSignature = 'PBDT'; { Morrowind }
   PFIG : TwbSignature = 'PFIG';
   PFPC : TwbSignature = 'PFPC';
   PGAG : TwbSignature = 'PGAG';
@@ -207,6 +208,7 @@ const
   PLDT : TwbSignature = 'PLDT';
   PLYR : TwbSignature = 'PLYR';
   PNAM : TwbSignature = 'PNAM';
+  PROB : TwbSignature = 'PROB'; { Morrowind }
   PSDT : TwbSignature = 'PSDT';
   PTDT : TwbSignature = 'PTDT';
   PTEX : TwbSignature = 'PTEX'; { Morrowind }
@@ -2061,38 +2063,8 @@ begin
     wbByteArray('Unused', 3)
   ]);
 
-  wbRecord(ACHR, 'Placed NPC', [
-    wbEDID,
-    wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
-    wbRStruct('Unused', [
-      wbFormIDCk(XPCI, 'Unused', [CELL]),
-      wbString(FULL, 'Unused')
-    ], []),
-    wbXLOD,
-    wbXESP,
-    wbFormIDCk(XMRC, 'Merchant container', [REFR], True),
-    wbFormIDCk(XHRS, 'Horse', [ACRE], True),
-    wbXRGD,
-    wbXSCL,
-    wbDATAPosRot
-  ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
-
   wbXOWN := wbFormIDCk(XOWN, 'Owner', [FACT, NPC_]);
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
-
-  wbRecord(ACRE, 'Placed Creature', [
-    wbEDID,
-    wbFormIDCk(NAME, 'Base', [CREA], False, cpNormal, True),
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32),
-      wbXGLB
-    ], []),
-    wbXESP,
-    wbXRGD,
-    wbXSCL,
-    wbDATAPosRot
-  ], True, wbPlacedAddInfo);
 
   wbRecord(ACTI, 'Activator', [
     wbString(NAME, 'NameID'),
@@ -2346,29 +2318,6 @@ begin
     wbString(SCRI, 'ScriptID')
   ]);
 
-  wbRecord(AMMO, 'Ammunition', [
-    wbEDID,
-    wbFULL,
-    wbString(MODL, 'Model Filename'),
-    wbICON,
-    wbFormIDCk(ENAM, 'Enchantment', [ENCH]),
-    wbInteger(ANAM, 'Enchantment Points', itU16),
-    wbStruct(DATA, '', [
-      wbFloat('Speed'),
-      wbInteger('Flags', itU8, wbFlags(['Ignores Normal Weapon Resistance'])),
-      wbByteArray('Unused', 3),
-      wbInteger('Value', itU32),
-      wbFloat('Weight'),
-      wbInteger('Damage', itU16)
-    ], cpNormal, True)
-  ]);
-
-  wbRecord(ANIO, 'Animated Object', [
-    wbEDID,
-    wbString(MODL, 'Model Filename'),
-    wbFormIDCk(DATA, 'IDLE animation', [IDLE], False, cpNormal, True)
-  ]);
-
   wbRecord(APPA, 'Alchemical Apparatus', [
     wbEDID,
     wbFULL,
@@ -2600,29 +2549,6 @@ begin
       wbInteger('AutoCalcFlags', its32, wbServiceFlags)
     ]),
     wbString(DESC, 'Description')
-  ]);
-
-  wbRecord(CLMT, 'Climate', [
-    wbEDID,
-    wbArrayS(WLST, 'Weather Types', wbStructSK([0], 'Weather Type', [
-      wbFormIDCk('Weather', [WTHR]),
-      wbInteger('Chance', itS32)
-    ])),
-    wbString(FNAM, 'Sun Texture'),
-    wbString(GNAM, 'Sun Glare Texture'),
-    wbString(MODL, 'Model Filename'),
-    wbStruct(TNAM, 'Timing', [
-      wbStruct('Sunrise', [
-        wbInteger('Begin', itU8, wbClmtTime),
-        wbInteger('End', itU8, wbClmtTime)
-      ]),
-      wbStruct('Sunset', [
-        wbInteger('Begin', itU8, wbClmtTime),
-        wbInteger('End', itU8, wbClmtTime)
-      ]),
-      wbInteger('Volatility', itU8),
-      wbInteger('Moons / Phase Length', itU8, wbClmtMoonsPhaseLength)
-    ], cpNormal, True)
   ]);
 
   wbRecord(CLOT, 'Clothing', [
@@ -2864,89 +2790,6 @@ begin
     wbFloat(XSCL, 'Scale')
   ]);
 
-  wbRecord(CSTY, 'Combat Style', [
-    wbEDID,
-    wbStruct(CSTD, 'Standard', [
-      {000}wbInteger('Dodge % Chance', itU8),
-      {001}wbInteger('Left/Right % Chance', itU8),
-      {002}wbByteArray('Unused', 2),
-      {004}wbFloat('Dodge L/R Timer (min)'),
-      {008}wbFloat('Dodge L/R Timer (max)'),
-      {012}wbFloat('Dodge Forward Timer (min)'),
-      {016}wbFloat('Dodge Forward Timer (max)'),
-      {020}wbFloat('Dodge Back Timer Min'),
-      {024}wbFloat('Dodge Back Timer Max'),
-      {028}wbFloat('Idle Timer min'),
-      {032}wbFloat('Idle Timer max'),
-      {036}wbInteger('Block % Chance', itU8),
-      {037}wbInteger('Attack % Chance', itU8),
-      {038}wbByteArray('Unused', 2),
-      {040}wbFloat('Recoil/Stagger Bonus to Attack'),
-      {044}wbFloat('Unconscious Bonus to Attack'),
-      {048}wbFloat('Hand-To-Hand Bonus to Attack'),
-      {052}wbInteger('Power Attack % Chance', itU8),
-      {053}wbByteArray('Unused', 3),
-      {056}wbFloat('Recoil/Stagger Bonus to Power'),
-      {060}wbFloat('Unconscious Bonus to Power Attack'),
-      {064}wbInteger('Power Attack - Normal', itU8),
-      {065}wbInteger('Power Attack - Forward', itU8),
-      {066}wbInteger('Power Attack - Back', itU8),
-      {067}wbInteger('Power Attack - Left', itU8),
-      {068}wbInteger('Power Attack - Right', itU8),
-      {069}wbByteArray('Unused', 3),
-      {072}wbFloat('Hold Timer (min)'),
-      {076}wbFloat('Hold Timer (max)'),
-      {080}wbInteger('Flags 1', itU8, wbFlags([
-             'Advanced',
-             'Choose Attack using % Chance',
-             'Ignore Allies in Area',
-             'Will Yield',
-             'Rejects Yields',
-             'Fleeing Disabled',
-             'Prefers Ranged',
-             'Melee Alert OK'
-           ])),
-      {081}wbInteger('Acrobatic Dodge % Chance', itU8),
-      {082}wbByteArray('Unused', 2),
-      {084}wbFloat('Range Mult (Optimal)'),
-      {088}wbFloat('Range Mult (Max)'),
-      {092}wbFloat('Switch Distance (Melee)'),
-      {096}wbFloat('Switch Distance (Ranged)'),
-      {100}wbFloat('Buff standoff Distance'),
-      {104}wbFloat('Ranged standoff Distance'),
-      {108}wbFloat('Group standoff Distance'),
-      {112}wbInteger('Rushing Attack % Chance', itU8),
-      {113}wbByteArray('Unused', 3),
-      {116}wbFloat('Rushing Attack Distance Mult'),
-      {120}wbInteger('Flags 2', itU32, wbFlags([
-             'Do Not Acquire'
-           ]))
-    ], cpNormal, True, nil, 31),
-    wbStruct(CSAD, 'Advanced', [
-      wbFloat('Dodge Fatigue Mod Mult'),
-      wbFloat('Dodge Fatigue Mod Base'),
-      wbFloat('Encumb. Speed Mod Base'),
-      wbFloat('Encumb. Speed Mod Mult'),
-      wbFloat('Dodge While Under Attack Mult'),
-      wbFloat('Dodge Not Under Attack Mult'),
-      wbFloat('Dodge Back While Under Attack Mult'),
-      wbFloat('Dodge Back Not Under Attack Mult'),
-      wbFloat('Dodge Forward While Attacking Mult'),
-      wbFloat('Dodge Forward Not Attacking Mult'),
-      wbFloat('Block Skill Modifier Mult'),
-      wbFloat('Block Skill Modifier Base'),
-      wbFloat('Block While Under Attack Mult'),
-      wbFloat('Block Not Under Attack Mult'),
-      wbFloat('Attack Skill Modifier Mult'),
-      wbFloat('Attack Skill Modifier Base'),
-      wbFloat('Attack While Under Attack Mult'),
-      wbFloat('Attack Not Under Attack Mult'),
-      wbFloat('Attack During Block Mult'),
-      wbFloat('Power Att. Fatigue Mod Base'),
-      wbFloat('Power Att. Fatigue Mod Mult')
-    ])
-  ]);
-
 { What follows in the ESP/ESM are all the INFO records that belong to the
 	DIAL record.  One of the few cases where order is important
 }
@@ -3041,103 +2884,6 @@ begin
     'Always Show'
   ]);
 
-  wbRecord(EFSH, 'Effect Shader', [
-    wbEDID,
-    wbString(ICON, 'Fill Texture'),
-    wbString(ICO2, 'Particle Shader Texture'),
-    wbStruct(DATA, '', [
-      wbInteger('Flags', itU8, wbFlags([
-        {0} 'No Membrane Shader',
-        {1} '',
-        {2} '',
-        {3} 'No Particle Shader',
-        {4} 'Edge Effect - Inverse',
-        {5} 'Membrane Shader - Affect Skin Only'
-      ])),
-      wbByteArray('Unused', 3),
-      wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
-      wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
-      wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
-      wbStruct('Fill/Texture Effect - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
-      wbFloat('Fill/Texture Effect - Full Alpha Time'),
-      wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
-      wbFloat('Fill/Texture Effect - Presistent Alpha Ratio'),
-      wbFloat('Fill/Texture Effect - Alpha Pulse Amplitude'),
-      wbFloat('Fill/Texture Effect - Alpha Pulse Frequency'),
-      wbFloat('Fill/Texture Effect - Texture Animation Speed (U)'),
-      wbFloat('Fill/Texture Effect - Texture Animation Speed (V)'),
-      wbFloat('Edge Effect - Fall Off'),
-      wbStruct('Edge Effect - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbFloat('Edge Effect - Alpha Fade In Time'),
-      wbFloat('Edge Effect - Full Alpha Time'),
-      wbFloat('Edge Effect - Alpha Fade Out Time'),
-      wbFloat('Edge Effect - Persistent Alpha Ratio'),
-      wbFloat('Edge Effect - Alpha Pulse Amplitude'),
-      wbFloat('Edge Effect - Alpha Pusle Frequence'),
-      wbFloat('Fill/Texture Effect - Full Alpha Ratio'),
-      wbFloat('Edge Effect - Full Alpha Ratio'),
-      wbInteger('Membrane Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
-      wbInteger('Particle Shader - Source Blend Mode', itU32, wbBlendModeEnum),
-      wbInteger('Particle Shader - Blend Operation', itU32, wbBlendOpEnum),
-      wbInteger('Particle Shader - Z Test Function', itU32, wbZTestFuncEnum),
-      wbInteger('Particle Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
-      wbFloat('Particle Shader - Particle Birth Ramp Up Time'),
-      wbFloat('Particle Shader - Full Particle Birth Time'),
-      wbFloat('Particle Shader - Particle Birth Ramp Down Time'),
-      wbFloat('Particle Shader - Full Particle Birth Ratio'),
-      wbFloat('Particle Shader - Persistant Particle Birth Ratio'),
-      wbFloat('Particle Shader - Particle Lifetime'),
-      wbFloat('Particle Shader - Particle Lifetime +/-'),
-      wbFloat('Particle Shader - Initial Speed Along Normal'),
-      wbFloat('Particle Shader - Acceleration Along Normal'),
-      wbFloat('Particle Shader - Initial Velocity #1'),
-      wbFloat('Particle Shader - Initial Velocity #2'),
-      wbFloat('Particle Shader - Initial Velocity #3'),
-      wbFloat('Particle Shader - Acceleration #1'),
-      wbFloat('Particle Shader - Acceleration #2'),
-      wbFloat('Particle Shader - Acceleration #3'),
-      wbFloat('Particle Shader - Scale Key 1'),
-      wbFloat('Particle Shader - Scale Key 2'),
-      wbFloat('Particle Shader - Scale Key 1 Time'),
-      wbFloat('Particle Shader - Scale Key 2 Time'),
-      wbStruct('Color Key 1 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbStruct('Color Key 2 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbStruct('Color Key 3 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbFloat('Color Key 1 - Color Alpha'),
-      wbFloat('Color Key 2 - Color Alpha'),
-      wbFloat('Color Key 3 - Color Alpha'),
-      wbFloat('Color Key 1 - Color Key Time'),
-      wbFloat('Color Key 2 - Color Key Time'),
-      wbFloat('Color Key 3 - Color Key Time')
-    ], cpNormal, True, nil, 25)
-  ]);
-
   wbRecord(ENCH, 'Enchantment', [
     wbString(NAME, 'NameID'),
     wbStruct(ENDT, 'Enchant Data', [
@@ -3166,13 +2912,6 @@ begin
       wbInteger('MagMin', itU32),
       wbInteger('MagMax', itU32)
     ])
-  ]);
-
-  wbRecord(EYES, 'Eyes', [
-    wbEDID,
-    wbFULL,
-    wbString(ICON, 'Texture', 0, cpNormal, True),
-    wbInteger(DATA, 'Flags', itU8, wbFlags(['Playable']), cpNormal, True)
   ]);
 
   wbXNAM :=
@@ -3255,28 +2994,6 @@ begin
     ], [])
   ]);
 
-  wbRecord(FLOR, 'Flora', [
-    wbEDID,
-    wbFULL,
-    wbString(MODL, 'Model Filename'),
-    wbSCRI,
-    wbFormIDCk(PFIG, 'Ingredient', [INGR]),
-    wbStruct(PFPC, 'Seasonal ingredient production', [
-      wbInteger('Spring', itU8),
-      wbInteger('Summer ', itU8),
-      wbInteger('Fall', itU8),
-      wbInteger('Winter', itU8)
-    ], cpNormal, True)
-  ]);
-
-  wbRecord(FURN, 'Furniture', [
-    wbEDID,
-    wbFULL,
-    wbString(MODL, 'Model Filename'),
-    wbSCRI,
-    wbByteArray(MNAM, 'Marker Flags', 0, cpNormal, True)
-  ]);
-
   wbRecord(GLOB, 'Global', [
     wbString(NAME, 'NameID'),
     wbString(FNAM, 'Type', 1),
@@ -3296,51 +3013,6 @@ begin
     ], [])
   ]);
 
-  wbRecord(GRAS, 'Grass', [
-    wbEDID,
-    wbString(MODL, 'Model Filename'),
-    wbStruct(DATA, '', [
-      wbInteger('Density', itU8),
-      wbInteger('Min Slope', itU8),
-      wbInteger('Max Slope', itU8),
-      wbByteArray('Unused', 1),
-      wbInteger('Unit from water amount', itU16),
-      wbByteArray('Unused', 2),
-      wbInteger('Unit from water type', itU32, wbEnum([
-        'Above - At Least',
-        'Above - At Most',
-        'Below - At Least',
-        'Below - At Most',
-        'Either - At Least',
-        'Either - At Most',
-        'Either - At Most Above',
-        'Either - At Most Below'
-      ])),
-      wbFloat('Position Range'),
-      wbFloat('Height Range'),
-      wbFloat('Color Range'),
-      wbFloat('Wave Period'),
-      wbInteger('Flags', itU8, wbFlags([
-        'Vertex Lighting',
-        'Uniform Scaling',
-        'Fit to Slope'
-      ])),
-      wbByteArray('Unused', 3)
-    ], cpNormal, True)
-  ]);
-
-  wbRecord(HAIR, 'Hair', [
-    wbEDID,
-    wbFULL,
-    wbString(MODL, 'Model Filename'),
-    wbString(ICON, 'Texture', 0, cpNormal, True),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      'Playable',
-      'Not Male',
-      'Not Female',
-      'Fixed'
-    ]), cpNormal, True)
-  ]);
 
   wbCrimeTypeEnum :=
     wbEnum([
@@ -3639,13 +3311,6 @@ begin
     wbSCROs
   ], []);
 }
-  wbRecord(IDLE, 'Idle Animation', [
-    wbEDID,
-    wbString(MODL, 'Model Filename'),
-    wbCTDAs,
-    wbInteger(ANAM, 'Animation Group Section', itU8, wbIdleAnam, nil, cpNormal, True),
-    wbArray(DATA, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [IDLE, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True)
-  ]);
 
   wbRecord(INGR, 'Ingredient', [
     wbString(NAME, 'NameID'),
@@ -3660,18 +3325,6 @@ begin
     ]),
     wbString(ITEX, 'Inventory icon'),
     wbString(SCRI, 'ScriptID')
-  ]);
-
-  wbRecord(KEYM, 'Key', [
-    wbEDID,
-    wbFULL,
-    wbString(MODL, 'Model Filename'),
-    wbICON,
-    wbSCRI,
-    wbStruct(DATA, '', [
-      wbInteger('Value', itS32),
-      wbFloat('Weight')
-    ], cpNormal, True)
   ]);
 
   wbQuadrantEnum := wbEnum([
@@ -3805,22 +3458,6 @@ begin
     wbString(SNAM, 'Sound name')
   ]);
 
-  wbRecord(LSCR, 'Load Screen', [
-    wbEDID,
-    wbICON,
-    wbDESC,
-    wbRArrayS('Locations', wbStructSK(LNAM, [0, 1], 'Location', [
-      wbFormIDCk('Direct', [CELL, WRLD, NULL]),
-      wbStructSK([0, 1], 'Indirect', [
-        wbFormIDCk('World', [NULL, WRLD]),
-        wbStructSK([0,1], 'Grid', [
-          wbInteger('Y', itS16),
-          wbInteger('X', itS16)
-        ])
-      ])
-    ]))
-  ]);
-
   wbRecord(LTEX, 'Landscape Texture', [
     wbString(NAME, 'NameID'),
     wbInteger(INTV, 'Landscape ID Number', itU32),
@@ -3858,25 +3495,6 @@ begin
       ], [])
     )
   ]);
-
-  wbRecord(LVSP, 'Leveled Spell', [
-    wbEDID,
-    wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
-      {0x01} 'Calculate from all levels <= player''s level',
-      {0x02} 'Calculate for each item in count',
-      {0x04} 'Use all spells'
-    ]), cpNormal, True),
-    wbRArrayS('Leveled List Entries',
-      wbStructExSK(LVLO , [0, 2], [3], 'Leveled List Entry', [
-        wbInteger('Level', itS16),
-        wbByteArray('Unused', 2),
-        wbFormIDCk('Reference', [SPEL, LVSP]),
-        wbInteger('Count', itS16),
-        wbByteArray('Unused', 2)
-      ], cpNormal, False, nil, 3),
-    cpNormal, True)
-  ], False, nil, cpNormal, False, wbLVLAfterLoad);
 
   wbRecord(MGEF, 'Magic Effect', [
     wbInteger(INDX, 'Magic Effect ID', itU32),
@@ -4137,76 +3755,6 @@ begin
           {11} 'Cast magic'
         ]);
 
-  wbRecord(PACK, 'AI Package', [
-    wbEDID,
-    wbUnion(PKDT, 'General', wbPACKPKDTDecider, [
-      wbStruct('General', [
-        wbInteger('Flags', itU16, wbPKDTFlags),
-        wbInteger('Type', itU8, wbPKDTType),
-        wbByteArray('Unused', 1)
-      ]),
-      wbStruct('General', [
-        wbInteger('Flags', itU32, wbPKDTFlags),
-        wbInteger('Type', itU8, wbPKDTType),
-        wbByteArray('Unused', 3)
-      ])
-    ]),
-    wbStruct(PLDT, 'Location', [
-      wbInteger('Type', itS32, wbEnum([
-        {0} 'Near reference',
-        {1} 'In cell',
-        {2} 'Near current location',
-        {3} 'Near editor location',
-        {4} 'Object ID',
-        {5} 'Object type'
-      ])),
-      wbUnion('Location', wbPxDTLocationDecider, [
-        wbFormIDCk('Reference', [REFR, ACHR, ACRE, PLYR], True),
-        wbFormIDCk('Cell', [CELL]),
-        wbFormIDCk('Unused', [NULL]),
-        wbFormIDCk('Unused', [NULL]),
-        wbFormIDCk('Object ID', [ACTI, DOOR, FLOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
-        wbInteger('Object type', itU32)
-      ]),
-      wbInteger('Radius', itS32)
-    ]),
-    wbStruct(PSDT, 'Schedule', [
-      wbInteger('Month', itS8),
-      wbInteger('Day of week', itS8, wbEnum([
-        'Sundas',
-        'Morndas',
-        'Tirdas',
-        'Middas',
-        'Turdas',
-        'Fredas',
-        'Loredas',
-        'Morndas to Fredas',
-        'Loredas, Sundas',
-        'Morndas, Middas, Fredas',
-        'Tirdas, Turdas'
-      ], [
-        -1, 'Any'
-      ])),
-      wbInteger('Date', itU8),
-      wbInteger('Time', itS8),
-      wbInteger('Duration', itS32)
-    ]),
-    wbStruct(PTDT, 'Target', [
-      wbInteger('Type', itS32, wbEnum([
-        {0} 'Specific reference',
-        {1} 'Object ID',
-        {2} 'Object type'
-      ])),
-      wbUnion('Target', wbPxDTLocationDecider, [
-        wbFormIDCk('Reference', [ACHR, ACRE, REFR, PLYR], True),
-        wbFormIDCk('Object ID', [ACTI, DOOR, FLOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
-        wbInteger('Object type', itU32)
-      ]),
-      wbInteger('Count', itS32)
-    ]),
-    wbCTDAs
-  ]);
-
   {16 bytes }
   wbPGRP :=
     wbArray(PGRP, 'Points', wbStruct('Point', [
@@ -4272,44 +3820,6 @@ begin
     )
 }
   ], False, nil, cpNormal, False, wbPGRDAfterLoad);
-
-  wbRecord(QUST, 'Quest', [
-    wbEDID,
-    wbSCRI,
-    wbFULL,
-    wbICON,
-    wbStruct(DATA, 'General', [
-      wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'Start game enabled',
-        {0x02} '',
-        {0x04} 'Allow repeated conversation topics',
-        {0x08} 'Allow repeated stages'
-      ])),
-      wbInteger('Priority', itU8)
-    ], cpNormal, True),
-    wbCTDAs,
-    wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
-      wbInteger(INDX, 'Stage index', itS16),
-      wbRArray('Log Entries', wbRStruct('Log Entry', [
-        wbInteger(QSDT, 'Stage Flags', itU8, wbFlags([
-          {0x01} 'Complete quest'
-        ])),
-        wbCTDAs,
-        wbString(CNAM, 'Log Entry', 0, cpTranslate),
-        wbResultScript
-      ], []))
-    ], [])),
-    wbRArray('Targets', wbRStruct('Target', [
-      wbStruct(QSTA, 'Target', [
-        wbFormIDCk('Target', [REFR, ACRE, ACHR], True),
-        wbInteger('Flags', itU8, wbFlags([
-          {0x01} 'Compass marker ignores locks'
-        ])),
-        wbByteArray('Unused', 3)
-      ]),
-      wbCTDAs
-    ], []))
-  ]);
 
   wbBodyDataIndex :=
     wbInteger(INDX, 'Index', itU32, wbEnum([
@@ -4449,83 +3959,6 @@ begin
     wbByteArray(SNAM, 'Unknown', 2, cpNormal, True)
   ], True);
 
-  wbRecord(REFR, 'Placed Object', [
-    wbEDID,
-    wbFormIDCk(NAME, 'Base', [TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS], False, cpNormal, True),
-    wbStruct(XTEL, 'Teleport Destination', [
-      wbFormIDCk('Door', [REFR], True),
-      wbPosRot
-    ]),
-    wbStruct(XLOC, 'Lock information', [
-      wbInteger('Lock Level', itU8),
-      wbByteArray('Unused', 3),
-      wbFormIDCk('Key', [KEYM, NULL]),
-      wbUnion('Unused', wbXLOCFillerDecider, [
-        wbEmpty('Unused'),
-        wbByteArray('Unused', 4)
-      ]),
-      wbInteger('Flags', itU8, wbFlags(['', '', 'Leveled Lock'])),
-      wbByteArray('Unused', 3)
-    ]),
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32),
-      wbXGLB
-    ], [XLOC]),
-    wbXESP,
-    wbFormIDCk(XTRG, 'Target', [REFR, ACHR, ACRE], True),
-    wbUnion(XSED, '', wbREFRXSEDDecider, [
-      wbInteger('SpeedTree Seed', itU8),
-      wbInteger('SpeedTree Seed (old format)', itU8{itU32 CS just cuts it off...})
-    ]),
-    wbXLOD,
-    wbFloat(XCHG, 'Charge'),
-    wbInteger(XHLT, 'Health', itS32),
-    wbRStruct('Unused', [
-      wbFormIDCk(XPCI, 'Unused', [CELL]),
-      wbString(FULL, 'Unused')
-    ], []),
-    wbInteger(XLCM, 'Level Modifier', itS32),
-    wbFormIDCk(XRTM, 'Unknown', [REFR]),
-    wbInteger(XACT, 'Action Flag', itU32, wbFlags([
-      'Use Default',
-      'Activate',
-      'Open',
-      'Open by Default'
-    ])),
-    wbInteger(XCNT, 'Count', itS32),
-    wbRStruct('Map Marker', [
-      wbEmpty(XMRK, 'Map Marker Start Marker'),
-      wbInteger(FNAM, 'Map Flags', itU8, wbFlags([
-        {0x01} 'Visible',
-        {0x02} 'Can Travel To'
-      ]), cpNormal, True),
-      wbFULLReq,
-      wbStruct(TNAM, '', [
-        wbInteger('Type', itU8, wbEnum([
-          {0x00} 'None?',
-          {0x01} 'Camp',
-          {0x02} 'Cave',
-          {0x03} 'City',
-          {0x04} 'Elven Ruin',
-          {0x05} 'Fort Ruin',
-          {0x06} 'Mine',
-          {0x07} 'Landmark',
-          {0x08} 'Tavern',
-          {0x09} 'Settlement',
-          {0x0A} 'Daedric Shrine',
-          {0x0B} 'Oblivion Gate',
-          {0x0C} 'Unknown? (door icon)'
-        ])),
-        wbByteArray('Unused', 1)
-      ], cpNormal, True)
-    ], []),
-    wbEmpty(ONAM, 'Open by Default'),
-    wbXSCL,
-    wbInteger(XSOL, 'Contained Soul', itU8, wbSoulGemEnum),
-    wbDATAPosRot
-  ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
-
   wbRecord(REGN, 'Region', [
     wbString(NAME, 'NameID'),
     wbString(FNAM, 'Sound Filename'),
@@ -4580,11 +4013,6 @@ begin
     )
   ]);
 
-  wbRecord(SSCR, 'StartScript', [
-    wbByteArray(DATA, 'Unknown', 0),
-    wbString(NAME, 'NameID')
-  ]);
-
   wbRecord(REPA, 'Repair Items', [
     wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
@@ -4625,30 +4053,26 @@ begin
     wbString(SCRI, 'ScriptID')
   ]);
 
-  wbRecord(ROAD, 'Road', [
-    wbPGRP,
-    wbArray(PGRR, 'Point-to-Point Connections (complex structure can''t be represented, see source)',
-      {The Connection Count in the PGRP record specifies how many entries in this
-       array belong to each point. If the first 4 points in the PGRP array have
-       Connection Counts 2, 5, 2, 4 then the first 2 entries are the connections
-       of point 0, then next 5 are the connections of point 1, the next 2 of point 2,
-       the next 4 of point 3 and so on..., this can currently not be represented
-       declaratively }
-      wbStruct('Point', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]), 0, nil, nil, cpNormal, True)
+  wbRecord(PROB, 'Probe Items', [
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(FNAM, 'Activator Name'),
+    wbStruct(PBDT, 'Weather Type', [
+      wbInteger('Clear', itU8),
+      wbInteger('Cloudy', itU8),
+      wbInteger('Foggy', itU8),
+      wbInteger('Overcast', itU8),
+      wbInteger('Rain', itU8),
+      wbInteger('Thunder', itU8),
+      wbInteger('Ash', itU8),
+      wbInteger('Blight', itU8),
+      wbByteArray('Unknonw', 1),
+      wbByteArray('Unknonw', 1)
+    ]),
+    wbString(ITEX, 'Book Name'),
+    wbString(SCRI, 'ScriptID')
   ]);
 
-  wbRecord(SBSP, 'Subspace', [
-    wbEDID,
-    wbStruct(DNAM, '', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ], cpNormal, True)
-  ]);
 
   wbSLSD := wbStructSK(SLSD, [0], 'Local Variable Data', [
     wbInteger('Index', itU32),
@@ -4671,29 +4095,6 @@ begin
     wbStringScript(SCTX, 'Script Source', 0, cpNormal, True)
   ]);
 
-  wbRecord(SGST, 'Sigil Stone', [
-    wbEDID,
-    wbStruct(OBME, 'Oblivion Magic Extender', [
-      wbInteger('Record Version', itU8),
-      wbStruct('OBME Version', [
-        wbInteger('Beta', itU8),
-        wbInteger('Minor', itU8),
-        wbInteger('Major', itU8)
-      ]),
-      wbByteArray('Unused', $1C)
-    ], cpNormal, False, wbOBMEDontShow),
-    wbFULL,
-    wbString(MODL, 'Model Filename'),
-    wbICON,
-    wbSCRI,
-    wbEffects,
-    wbStruct(DATA, '', [
-      wbInteger('Uses ', itU8),
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
-    ], cpNormal, True)
-  ]);
-
   wbRecord(SKIL, 'Skill', [
     wbEDID,
     wbInteger(INDX, 'Skill', itS32, wbActorValueEnum, cpNormal, True),
@@ -4709,20 +4110,6 @@ begin
     wbString(JNAM, 'Journeyman Text', 0, cpTranslate, True),
     wbString(ENAM, 'Expert Text', 0, cpTranslate, True),
     wbString(MNAM, 'Master Text', 0, cpTranslate, True)
-  ]);
-
-  wbRecord(SLGM, 'Soul Gem', [
-    wbEDID,
-    wbFULL,
-    wbString(MODL, 'Model Filename'),
-    wbICON,
-    wbSCRI,
-    wbStruct(DATA, '', [
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
-    ], cpNormal, True),
-    wbInteger(SOUL, 'Contained Soul', itU8, wbSoulGemEnum, cpNormal, True),
-    wbInteger(SLCP, 'Maximum Capacity', itU8, wbSoulGemEnum, cpNormal, True)
   ]);
 
   wbRecord(SNDG, 'Sound Generator', [
@@ -4798,88 +4185,6 @@ begin
     ], [])
   ], False, nil, cpNormal, True);
 
-  wbRecord(TREE, 'Tree', [
-    wbEDID,
-    wbString(MODL, 'Model Filename'),
-    wbICON,
-    wbArrayS(SNAM, 'SpeedTree Seeds', wbInteger('SpeedTree Seed', itU32)),
-    wbStruct(CNAM, 'Tree Data', [
-      wbFloat('Leaf Curvature'),
-      wbFloat('Minimum Leaf Angle'),
-      wbFloat('Maximum Leaf Angle'),
-      wbFloat('Branch Dimming Value'),
-      wbFloat('Leaf Dimming Value'),
-      wbInteger('Shadow Radius', itS32),
-      wbFloat('Rock Speed'),
-      wbFloat('Rustle Speed')
-    ], cpNormal, True),
-    wbStruct(BNAM, 'Billboard Dimensions', [
-      wbFloat('Width'),
-      wbFloat('Height')
-    ], cpNormal, True)
-  ]);
-
-  wbRecord(WATR, 'Water', [
-    wbEDID,
-    wbString(TNAM, 'Texture', 0, cpNormal, True),
-    wbInteger(ANAM, 'Opacity', itU8, nil, cpNormal, True),
-    wbInteger(FNAM, 'Flags', itU8, wbFlags([
-      {0}'Causes Damage',
-      {1}'Reflective'
-    ]), cpNormal, True),
-    wbString(MNAM, 'Material ID'),
-    wbFormIDCk(SNAM, 'Sound', [SOUN]),
-    wbStruct(DATA, '', [
-      wbFloat('Wind Velocity'),
-      wbFloat('Wind Direction'),
-      wbFloat('Wave Amplitude'),
-      wbFloat('Wave Frequency'),
-      wbFloat('Sun Power'),
-      wbFloat('Reflectivity Amount'),
-      wbFloat('Fresnel Amount'),
-      wbFloat('Scroll X Speed'),
-      wbFloat('Scroll Y Speed'),
-      wbFloat('Fog Distance - Near Plane'),
-      wbFloat('Fog Distance - Far Plane'),
-      wbStruct('Shallow Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbStruct('Deep Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbStruct('Reflection Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbInteger('Texture Blend', itU8),
-      wbByteArray('Unused', 3),
-      wbFloat('Rain Simulator - Force'),
-      wbFloat('Rain Simulator - Velocity'),
-      wbFloat('Rain Simulator - Falloff'),
-      wbFloat('Rain Simulator - Dampner'),
-      wbFloat('Rain Simulator - Starting Size'),
-      wbFloat('Displacement Simulator - Force'),
-      wbFloat('Displacement Simulator - Velocity'),
-      wbFloat('Displacement Simulator - Falloff'),
-      wbFloat('Displacement Simulator - Dampner'),
-      wbFloat('Displacement Simulator - Starting Size'),
-      wbInteger('Damage', itU16)
-    ], cpNormal, True, nil, 0),
-    wbStruct(GNAM, 'Related Waters', [
-      wbFormIDCk('Daytime', [WATR, NULL]),
-      wbFormIDCk('Nighttime', [WATR, NULL]),
-      wbFormIDCk('Underwater', [WATR, NULL])
-    ], cpNormal, True)
-  ]);
-
   wbRecord(WEAP, 'Weapon', [
     wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
@@ -4923,111 +4228,6 @@ begin
     wbString(SCRI, 'ScriptID')
   ]);
 
-  wbRecord(WRLD, 'Worldspace', [
-    wbEDID,
-    wbFULL,
-    wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),
-    wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbFormIDCk(NAM2, 'Water', [WATR]),
-    wbICON,
-    wbStruct(MNAM, 'Map Data', [
-      wbStruct('Uable Dimensions', [
-        wbInteger('X', itS32),
-        wbInteger('Y', itS32)
-      ]),
-      wbStruct('Cell Coordinates', [
-        wbStruct('NW Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
-        ]),
-        wbStruct('SE Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
-        ])
-      ])
-    ]),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Small world',
-      {0x02} 'Can''t fast travel',
-      {0x04} 'Oblivion worldspace',
-      {0x08} '',
-      {0x10} 'No LOD water'
-    ]), cpNormal, True),
-    wbArray(NAM0, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-    wbArray(NAM9, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-    wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
-    wbByteArray(OFST, 'Unknown')
-  ], False, nil, cpNormal, False, wbRemoveOFST);
-
-  wbRecord(WTHR, 'Weather', [
-    wbEDID,
-    wbString(CNAM, 'Texture Lower Layer'),
-    wbString(DNAM, 'Texture Upper Layer'),
-    wbString(MODL, 'Model Filename'),
-    wbArray(NAM0, 'Colors by Types/Times',
-      wbArray('Type',
-        wbStruct('Time', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
-        ]),
-        ['Sunrise', 'Day', 'Sunset', 'Night']
-      ),
-      ['Sky-Upper','Fog','Clouds-Lower','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Clouds-Upper']
-    , cpNormal, True),
-    wbStruct(FNAM, 'Fog Distance', [
-      wbFloat('Day Near'),
-      wbFloat('Day Far'),
-      wbFloat('Night Near'),
-      wbFloat('Night Far')
-    ], cpNormal, True),
-    wbStruct(HNAM, 'HDR Data', [
-      wbFloat('Eye Adapt Speed'),
-      wbFloat('Blur Radius'),
-      wbFloat('Blur Passes'),
-      wbFloat('Emissive Mult'),
-      wbFloat('Target LUM'),
-      wbFloat('Upper LUM Clamp'),
-      wbFloat('Bright Scale'),
-      wbFloat('Bright Clamp'),
-      wbFloat('LUM Ramp No Tex'),
-      wbFloat('LUM Ramp Min'),
-      wbFloat('LUM Ramp Max'),
-      wbFloat('Sunlight Dimmer'),
-      wbFloat('Grass Dimmer'),
-      wbFloat('Tree Dimmer')
-    ], cpNormal, True),
-    wbStruct(DATA, '', [
-      wbInteger('Wind Speed', itU8),
-      wbInteger('Cloud Speed (Lower)', itU8),
-      wbInteger('Cloud Speed (Upper)', itU8),
-      wbInteger('Trans Delta', itU8),
-      wbInteger('Sun Glare', itU8),
-      wbInteger('Sun Damage', itU8),
-      wbInteger('Precipitation - Begin Fade In', itU8),
-      wbInteger('Precipitation - End Fade Out', itU8),
-      wbInteger('Thunder/Lightning - Begin Fade In', itU8),
-      wbInteger('Thunder/Lightning - End Fade Out', itU8),
-      wbInteger('Thunder/Lightning - Frequency', itU8),
-      wbInteger('Weather Classification', itU8, wbWthrDataClassification),
-      wbStruct('Lightning Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8)
-      ])
-    ], cpNormal, True),
-    wbRArray('Sounds', wbStruct(SNAM, 'Sound', [
-      wbFormIDCk('Sound', [SOUN]),
-      wbInteger('Type', itU32, wbEnum([
-       {0}'Default',
-       {1}'Precip',
-       {2}'Wind',
-       {3}'Thunder'
-      ]))
-    ]))
-  ]);
-
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(GLOB);
   wbAddGroupOrder(CLAS);
@@ -5037,6 +4237,7 @@ begin
   wbAddGroupOrder(SKIL);
   wbAddGroupOrder(MGEF);
   wbAddGroupOrder(SCPT);
+  wbAddGroupOrder(REGN);
   wbAddGroupOrder(BSGN);
   wbAddGroupOrder(LTEX);
   wbAddGroupOrder(STAT);
@@ -5051,18 +4252,23 @@ begin
   wbAddGroupOrder(ENCH);
   wbAddGroupOrder(NPC_);
   wbAddGroupOrder(ARMO);
-  wbAddGroupOrder(REPA); {needs added}
   wbAddGroupOrder(CLOT);
+  wbAddGroupOrder(REPA);
   wbAddGroupOrder(ACTI);
   wbAddGroupOrder(APPA);
-  wbAddGroupOrder(BOOK);
+  wbAddGroupOrder(LOCK);
+  wbAddGroupOrder(PROB);
   wbAddGroupOrder(INGR);
+  wbAddGroupOrder(BOOK);
   wbAddGroupOrder(ALCH);
-  wbAddGroupOrder(REGN);
+  wbAddGroupOrder(LEVI);
+  wbAddGroupOrder(LEVC);
   wbAddGroupOrder(CELL);
+  wbAddGroupOrder(LAND);
+  wbAddGroupOrder(PGRD);
+  wbAddGroupOrder(SNDG);
   wbAddGroupOrder(DIAL);
-  wbAddGroupOrder(LOCK); {needs added}
-  wbAddGroupOrder(PROB); {needs added}
+  wbAddGroupOrder(INFO);
 end;
 
 initialization
