@@ -227,7 +227,9 @@ const
   RDWT : TwbSignature = 'RDWT';
   REFR : TwbSignature = 'REFR';
   REGN : TwbSignature = 'REGN'; { Morrowind }
+  REPA : TwbSignature = 'REPA'; { Morrowind }
   RGNN : TwbSignature = 'RGNN'; { Morrowind }
+  RIDT : TwbSignature = 'RIDT'; { Morrowind }
   RNAM : TwbSignature = 'RNAM'; { Morrowind }
   ROAD : TwbSignature = 'ROAD';
   RPLD : TwbSignature = 'RPLD';
@@ -4581,6 +4583,26 @@ begin
     wbString(NAME, 'NameID')
   ]);
 
+  wbRecord(REPA, 'StartScript', [
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(FNAM, 'Activator Name'),
+    wbStruct(RIDT, 'Weather Type', [
+      wbInteger('Clear', itU8),
+      wbInteger('Cloudy', itU8),
+      wbInteger('Foggy', itU8),
+      wbInteger('Overcast', itU8),
+      wbInteger('Rain', itU8),
+      wbInteger('Thunder', itU8),
+      wbInteger('Ash', itU8),
+      wbInteger('Blight', itU8),
+      wbByteArray('Unknonw', 1),
+      wbByteArray('Unknonw', 1)
+    ]),
+    wbString(ITEX, 'Book Name'),
+    wbString(SCRI, 'ScriptID')
+  ]);
+
   wbRecord(ROAD, 'Road', [
     wbPGRP,
     wbArray(PGRR, 'Point-to-Point Connections (complex structure can''t be represented, see source)',
@@ -4988,58 +5010,37 @@ begin
   wbAddGroupOrder(GLOB);
   wbAddGroupOrder(CLAS);
   wbAddGroupOrder(FACT);
-  wbAddGroupOrder(HAIR);
-  wbAddGroupOrder(EYES);
   wbAddGroupOrder(RACE);
   wbAddGroupOrder(SOUN);
   wbAddGroupOrder(SKIL);
   wbAddGroupOrder(MGEF);
   wbAddGroupOrder(SCPT);
-  wbAddGroupOrder(LTEX);
-  wbAddGroupOrder(ENCH);
-  wbAddGroupOrder(SPEL);
   wbAddGroupOrder(BSGN);
+  wbAddGroupOrder(LTEX);
+  wbAddGroupOrder(STAT);
+  wbAddGroupOrder(DOOR);
+  wbAddGroupOrder(MISC);
+  wbAddGroupOrder(WEAP);
+  wbAddGroupOrder(CONT);
+  wbAddGroupOrder(SPEL);
+  wbAddGroupOrder(CREA);
+  wbAddGroupOrder(BODY);
+  wbAddGroupOrder(LIGH);
+  wbAddGroupOrder(ENCH);
+  wbAddGroupOrder(NPC_);
+  wbAddGroupOrder(ARMO);
+  wbAddGroupOrder(REPA); {needs added}
+  wbAddGroupOrder(CLOT);
   wbAddGroupOrder(ACTI);
   wbAddGroupOrder(APPA);
-  wbAddGroupOrder(ARMO);
   wbAddGroupOrder(BOOK);
-  wbAddGroupOrder(CLOT);
-  wbAddGroupOrder(CONT);
-  wbAddGroupOrder(DOOR);
   wbAddGroupOrder(INGR);
-  wbAddGroupOrder(LIGH);
-  wbAddGroupOrder(MISC);
-  wbAddGroupOrder(STAT);
-  wbAddGroupOrder(GRAS);
-  wbAddGroupOrder(TREE);
-  wbAddGroupOrder(FLOR);
-  wbAddGroupOrder(FURN);
-  wbAddGroupOrder(WEAP);
-  wbAddGroupOrder(AMMO);
-  wbAddGroupOrder(NPC_);
-  wbAddGroupOrder(CREA);
-  wbAddGroupOrder(LVLC);
-  wbAddGroupOrder(SLGM);
-  wbAddGroupOrder(KEYM);
   wbAddGroupOrder(ALCH);
-  wbAddGroupOrder(SBSP);
-  wbAddGroupOrder(SGST);
-  wbAddGroupOrder(LVLI);
-  wbAddGroupOrder(WTHR);
-  wbAddGroupOrder(CLMT);
   wbAddGroupOrder(REGN);
   wbAddGroupOrder(CELL);
-  wbAddGroupOrder(WRLD);
   wbAddGroupOrder(DIAL);
-  wbAddGroupOrder(QUST);
-  wbAddGroupOrder(IDLE);
-  wbAddGroupOrder(PACK);
-  wbAddGroupOrder(CSTY);
-  wbAddGroupOrder(LSCR);
-  wbAddGroupOrder(LVSP);
-  wbAddGroupOrder(ANIO);
-  wbAddGroupOrder(WATR);
-  wbAddGroupOrder(EFSH);
+  wbAddGroupOrder(LOCK); {needs added}
+  wbAddGroupOrder(PROB); {needs added}
 end;
 
 initialization
