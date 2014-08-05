@@ -3921,9 +3921,9 @@ begin
       wbInteger('Value', itU32),
       wbInteger('Unknown', itS32)
     ]),
+    wbString(SCRI, 'Script ID'),
     wbString(ITEX, 'Iventory Icon Filename'),
-    wbString(ENAM, 'Enchantment ID'),
-    wbString(SCRI, 'Script ID')
+    wbString(ENAM, 'Enchantment ID')
   ]);
 
   wbFaceGen := wbRStruct('FaceGen Data', [
