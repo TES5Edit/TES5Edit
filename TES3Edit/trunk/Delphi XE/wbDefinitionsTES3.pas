@@ -3764,6 +3764,7 @@ begin
 
   wbRecord(LIGH, 'Light', [
     wbString(NAME, 'Light ID Name'),
+    wbMODL,
     wbString(FNAM, 'Light Name'),
     wbStruct(LHDT, 'Light Data', [
       wbFloat('Weight'),
