@@ -2091,7 +2091,7 @@ begin
   ], True, wbPlacedAddInfo);
 
   wbRecord(ACTI, 'Activator', [
-    wbString(NAME, 'Activator ID Name'),
+    wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Activator Name'),
     wbStringScript(SCRI, 'Script Source', 0)
@@ -2318,7 +2318,7 @@ begin
     ], []);
 
   wbRecord(ALCH, 'Potion', [
-    wbString(NAME, 'Potion ID Name'),
+    wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(TEXT, 'Inventory Icon'),
     wbString(FNAM, 'Potion Name'),
@@ -2380,7 +2380,7 @@ begin
   ]);
 
   wbRecord(ARMO, 'Armor', [
-    wbString(NAME, 'Item ID Name'),
+    wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Item Name'),
     wbStringScript(SCRI, 'Script Source', 0),
@@ -2444,7 +2444,7 @@ begin
   ]);
 
   wbRecord(BOOK, 'Book', [
-    wbString(NAME, 'Book ID Name'),
+    wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Book Name'),
     wbStruct(BKDT, 'Book Data', [
@@ -2476,7 +2476,7 @@ begin
   ]);
 
   wbRecord(CELL, 'Cell', [
-    wbString(NAME, 'Cell ID Name'),
+    wbString(NAME, 'NameID'),
     wbStruct(DATA, 'Cell Data', [
       wbInteger('Flags', itU32, wbFlags([
         {0x01} 'Is Interior Cell',
@@ -2514,7 +2514,7 @@ begin
     wbRarray('Referenced Objects',
       wbRStruct('Objects', [
         wbInteger(FRMR, 'Object Index', itS32),
-        wbString(NAME, 'Object ID string'),
+        wbString(NAME, 'NameID'),
         wbFloat(XSCL, 'Scale'),
         wbInteger(DELE, 'Object Index', itS32),
         wbStruct(DODT, 'Cell Travel Destination', [
@@ -2575,7 +2575,7 @@ begin
   wbSpecializationEnum := wbEnum(['Combat', 'Magic', 'Stealth']);
 
   wbRecord(CLAS, 'Class', [
-    wbString(NAME, 'Class ID string'),
+    wbString(NAME, 'NameID'),
     wbString(FNAM, 'Class name string'),
     wbStruct(CLDT, '', [
       wbInteger('AttributeID1', itS32),
@@ -2621,7 +2621,7 @@ begin
   ]);
 
   wbRecord(CLOT, 'Clothing', [
-    wbString(NAME, 'Clothing ID Name'),
+    wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Clothing Name'),
     wbStruct(CTDT, '', [
@@ -2662,7 +2662,7 @@ begin
   wbCNTOs := wbRArrayS('Items', wbCNTO);
 
   wbRecord(CONT, 'Container', [
-    wbString(NAME, 'Container ID Name'),
+    wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Container Name'),
     wbStruct(CNDT, 'Container Data', [
@@ -2719,7 +2719,7 @@ begin
   ]);
 
   wbRecord(CREA, 'Creature', [
-    wbString(NAME, 'Creature ID Name'),
+    wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(CNAM, 'Creatures Naming'),
     wbString(FNAM, 'Creature Name'),
@@ -2947,7 +2947,7 @@ begin
 }
 
   wbRecord(DIAL, 'Dialog Topic', [
-    wbString(NAME, 'Activator ID Name'),
+    wbString(NAME, 'NameID'),
     wbInteger(DATA, 'Type', itU8, wbEnum([
       {0} 'Regular Topic',
       {1} 'Voice?',
@@ -2979,7 +2979,7 @@ begin
     wbString(FNAM, 'Faction string'),
     wbString(ANAM, 'Cell string'),
     wbString(DNAM, 'PC Faction string'),
-    wbString(NAME, 'The info response string'),
+    wbString(NAME, 'NameID'),
     wbString(SNAM, 'Sound filename'),
     wbByteArray(QSTN, 'Journal Name', 4),
     wbByteArray(QSTF, 'Journal Finished', 4),
@@ -2991,7 +2991,7 @@ begin
   ]);
 
   wbRecord(DOOR, 'Door', [
-    wbString(NAME, 'Door ID Name'),
+    wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Door Name'),
     wbStringScript(SCRI, 'Script Source', 0),
@@ -3134,7 +3134,7 @@ begin
   ]);
 
   wbRecord(ENCH, 'Enchantment', [
-    wbString(NAME, 'Enchant ID Name'),
+    wbString(NAME, 'NameID'),
     wbStruct(ENDT, 'Enchant Data', [
       wbInteger('Type', itU32, wbEnum([
         {0} 'Cast Once',
@@ -3179,7 +3179,7 @@ begin
   wbXNAMs := wbRArrayS('Relations', wbXNAM);
 
   wbRecord(FACT, 'Faction', [
-    wbString(NAME, 'Class ID string'),
+    wbString(NAME, 'NameID'),
     wbString(FNAM, 'Class name string'),
     wbRArray('Ranks', wbStringForward(RNAM, 'Rank')),
     wbStruct(FADT, '', [
@@ -3273,7 +3273,7 @@ begin
   ]);
 
   wbRecord(GLOB, 'Global', [
-    wbString(NAME, 'Name'),
+    wbString(NAME, 'NameID'),
     wbString(FNAM, 'Type', 1),
     wbUnion(FLTV, 'Value', wbGLOBUnionDecider, [
       wbFloat('Comparison Value - Short'),
@@ -3283,7 +3283,7 @@ begin
   ]);
 
   wbRecord(GMST, 'Game Setting', [
-    wbString(NAME, 'Name'),
+    wbString(NAME, 'NameID'),
     wbRUnion('Value', [
       wbString(STRV, 'String Value'),
       wbInteger(INTV, 'Interer Value', its32),
@@ -3643,7 +3643,7 @@ begin
   ]);
 
   wbRecord(INGR, 'Ingredient', [
-    wbString(NAME, 'Activator ID Name'),
+    wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Activator Name'),
     wbStruct(IRDT, 'Ingrediant Data', [
@@ -3767,7 +3767,7 @@ begin
   end;
 
   wbRecord(LIGH, 'Light', [
-    wbString(NAME, 'Light ID Name'),
+    wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Light Name'),
     wbString(ITEX, 'Inventory icon'),
@@ -3817,13 +3817,13 @@ begin
   ]);
 
   wbRecord(LTEX, 'Landscape Texture', [
-    wbString(NAME, 'Landscape ID'),
+    wbString(NAME, 'NameID'),
     wbInteger(INTV, 'Landscape ID Number', itU32),
     wbString(DATA, 'FileName')
   ]);
 
   wbRecord(LEVC, 'Leveled Creature', [
-    wbString(NAME, 'Leveled Creature ID Name'),
+    wbString(NAME, 'NameID'),
     wbInteger(DATA, 'Flags', itU32, wbFlags([
       {0x01} 'Calculate from all levels <= player''s level',
       {0x02} 'Calculate for each item in count'
@@ -3839,7 +3839,7 @@ begin
   ]);
 
   wbRecord(LEVI, 'Leveled Item', [
-    wbString(NAME, 'Leveled Item ID Name'),
+    wbString(NAME, 'NameID'),
     wbInteger(DATA, 'Flags', itU32, wbFlags([
       {0x01} 'Calculate from all levels <= player''s level',
       {0x02} 'Calculate for each item in count'
@@ -3918,7 +3918,7 @@ begin
   ]);
 
   wbRecord(MISC, 'Misc. Item', [
-    wbString(NAME, 'Item ID Name'),
+    wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Item Name'),
     wbStruct(MCDT, '', [
@@ -3938,7 +3938,7 @@ begin
   ], [], cpNormal, True);
 
   wbRecord(NPC_, 'Non-Player Character', [
-    wbString(NAME, 'NPC ID Name'),
+    wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'NPC Name'),
     wbString(RNAM, 'Race Name', 0, cpNormal, True),
@@ -4236,7 +4236,7 @@ begin
       wbInteger('Unknown', itU16),
       wbInteger('Unknown', itU16)
     ], cpNormal, True),
-    wbString(NAME, 'Path Grid ID Name'),
+    wbString(NAME, 'NameID'),
     wbByteArray(PGAG, 'Unknown'),
     { 1680, 1872, 2800  }
     {wbPGRP,}
@@ -4316,7 +4316,7 @@ begin
     ]));
 
   wbRecord(BODY, 'Body Parts', [
-    wbString(NAME, 'Body Part ID Name'),
+    wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Body Part Name'),
     wbStruct(BYDT, 'Body part data', [
@@ -4522,7 +4522,7 @@ begin
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
   wbRecord(REGN, 'Region', [
-    wbString(NAME, 'Region ID'),
+    wbString(NAME, 'NameID'),
     wbString(FNAM, 'Sound Filename'),
     wbStruct(WEAT, 'Weather Type', [
       wbInteger('Clear', itU8),
@@ -4577,7 +4577,7 @@ begin
 
   wbRecord(SSCR, 'StartScript', [
     wbByteArray(DATA, 'Unknown', 0),
-    wbString(NAME, 'Script Name')
+    wbString(NAME, 'NameID')
   ]);
 
   wbRecord(ROAD, 'Road', [
@@ -4681,7 +4681,7 @@ begin
   ]);
 
   wbRecord(SNDG, 'Sound Generator', [
-    wbString(NAME, 'Sound ID'),
+    wbString(NAME, 'NameID'),
     wbStruct(DATA, 'Sound Data', [
       wbInteger('Type', itU32, wbEnum([
        {0}'Left Foot',
@@ -4699,7 +4699,7 @@ begin
   ]);
 
   wbRecord(SOUN, 'Sound', [
-    wbString(NAME, 'Sound ID'),
+    wbString(NAME, 'NameID'),
     wbString(FNAM, 'Sound Filename'),
     wbStruct(DATA, 'Sound Data', [
       wbInteger('Volume', itU8),
@@ -4709,7 +4709,7 @@ begin
   ]);
 
   wbRecord(SPEL, 'Spell', [
-    wbString(NAME, 'Spell ID Name'),
+    wbString(NAME, 'NameID'),
     wbString(FNAM, 'Spell Name'),
     wbStruct(SPDT, 'Spell Data', [
       wbInteger('Type', itU32, wbEnum([
@@ -4733,7 +4733,7 @@ begin
   ]);
 
   wbRecord(STAT, 'Static', [
-    wbString(NAME, 'Static ID Name'),
+    wbString(NAME, 'NameID'),
     wbMODL
   ]);
 
@@ -4836,7 +4836,7 @@ begin
   ]);
 
   wbRecord(WEAP, 'Weapon', [
-    wbString(NAME, 'Item ID'),
+    wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Item Name'),
     wbStruct(WPDT, 'Weapon Data', [
