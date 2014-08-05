@@ -2937,21 +2937,53 @@ begin
     ])
   ]);
 
+{ What follows in the ESP/ESM are all the INFO records that belong to the
+	DIAL record.  One of the few cases where order is important
+}
+
   wbRecord(DIAL, 'Dialog Topic', [
-    wbEDID,
-    wbRArrayS('Quests', wbFormIDCk(QSTI, 'Quest', [QUST], False, cpBenign)),
-    wbRArrayS('Quests?', wbFormIDCk(QSTR, 'Quest?', [QUST], False, cpBenign)),
-    wbFULL,
+    wbString(NAME, 'Activator ID Name'),
     wbInteger(DATA, 'Type', itU8, wbEnum([
-      {0} 'Topic',
-      {1} 'Conversation',
-      {2} 'Combat',
-      {3} 'Persuasion',
-      {4} 'Detection',
-      {5} 'Service',
-      {6} 'Miscellaneous'
-    ]), cpNormal, True)
-  ], True);
+      {0} 'Regular Topic',
+      {1} 'Voice?',
+      {2} 'Greeting?',
+      {3} 'Persuasion?',
+      {4} 'Journal'
+    ]))
+  ]);
+
+  wbRecord(INFO, 'Dialog response', [
+    wbString(INAM, 'Info name string'),
+    wbString(PNAM, 'Previous info ID'),
+    wbString(NNAM, 'Next info ID'),
+    wbStruct(DATA, 'Info data', [
+      wbInteger('Unknown', itU8),
+      wbInteger('Disposition', itU8),
+      wbInteger('Rank', itU8),
+      wbInteger('Gender', itU8, wbEnum([], [
+       $00, 'Male',
+       $01, 'Female',
+       $FF, 'None'
+      ])),
+      wbInteger('PCRank', itU8),
+      wbInteger('Unknown', itU8)
+    ]),
+    wbString(ONAM, 'Actor string'),
+    wbString(RNAM, 'Race string'),
+    wbString(CNAM, 'Class string'),
+    wbString(FNAM, 'Faction string'),
+    wbString(ANAM, 'Cell string'),
+    wbString(DNAM, 'PC Faction string'),
+    wbString(NAME, 'The info response string'),
+    wbString(SNAM, 'Sound filename'),
+    wbByteArray(QSTN, 'Journal Name', 4),
+    wbByteArray(QSTF, 'Journal Finished', 4),
+    wbByteArray(QSTR, 'Journal Restart', 4),
+    wbByteArray(SNAM, 'String for the function/variable', 4),
+    wbByteArray(INTV, 'Unknown', 4),
+    wbByteArray(FLTV, 'The function/variable result for the previous SCVR', 4),
+    wbByteArray(BNAM, 'Result text (not compiled)', 4)
+  ]);
 
   wbRecord(DOOR, 'Door', [
     wbString(NAME, 'Door ID Name'),
