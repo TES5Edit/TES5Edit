@@ -2721,7 +2721,9 @@ begin
   wbRecord(CREA, 'Creature', [
     wbString(NAME, 'Creature ID Name'),
     wbMODL,
+    wbString(CNAM, 'Creatures Naming'),
     wbString(FNAM, 'Creature Name'),
+    wbStringScript(SCRI, 'Script Source', 0),
     wbStruct(NPDT, 'Creature Data', [
       wbInteger('Type', itU32, wbEnum([
         {0} 'Creature',
@@ -2774,7 +2776,6 @@ begin
         {0x00008000} 'Unknown16'
       ]))
     ]),
-    wbStringScript(SCRI, 'Script Source', 0),
     wbRArray('Creature Items',
       wbStruct(NPCO, 'Item', [
         wbInteger('Count', itU32),
@@ -2823,7 +2824,7 @@ begin
       wbInteger('Duration', itU8),
       wbInteger('TimeOfDay', itU8),
       wbInteger('Idle', itU8),
-      wbByteArray('Unknown', 9)
+      wbByteArray('Unknown', 1)
     ]),
     wbStruct(AI_T, 'AI Travel', [
       wbFloat('X'),
