@@ -2776,6 +2776,7 @@ begin
         {0x00008000} 'Unknown16'
       ]))
     ]),
+    wbByteArray(XSCL, 'Unknown'),
     wbRArray('Creature Items',
       wbStruct(NPCO, 'Item', [
         wbInteger('Count', itU32),
@@ -2824,8 +2825,11 @@ begin
       wbInteger('Duration', itU8),
       wbInteger('TimeOfDay', itU8),
       wbInteger('Idle', itU8),
-      wbByteArray('Unknown', 1)
-    ]),
+      wbByteArray('Unknown' , 1),
+      wbByteArray('Unknown' , 4),
+      wbByteArray('Unknown' , 4),
+      wbByteArray('Unknown')
+    ], cpNormal, False, nil, 3),
     wbStruct(AI_T, 'AI Travel', [
       wbFloat('X'),
       wbFloat('Y'),
@@ -3766,6 +3770,7 @@ begin
     wbString(NAME, 'Light ID Name'),
     wbMODL,
     wbString(FNAM, 'Light Name'),
+    wbString(ITEX, 'Inventory icon'),
     wbStruct(LHDT, 'Light Data', [
       wbFloat('Weight'),
       wbInteger('Value', itU32),
@@ -3789,9 +3794,9 @@ begin
         {0x00000100} 'Pulse Slow'
       ]))
     ]),
+    wbStringScript(SCRI, 'Script Source', 0),
+    {Need to verify if it has an SCPT record}
     wbStringScript(SCPT, 'Script Source', 0),
-    wbString(ITEX, 'Inventory icon'),
-    wbMODL,
     wbString(SNAM, 'Sound name')
   ]);
 
