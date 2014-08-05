@@ -2092,7 +2092,7 @@ begin
 
   wbRecord(ACTI, 'Activator', [
     wbString(NAME, 'Activator ID Name'),
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Activator Name'),
     wbStringScript(SCRI, 'Script Source', 0)
   ]);
@@ -2319,7 +2319,7 @@ begin
 
   wbRecord(ALCH, 'Potion', [
     wbString(NAME, 'Potion ID Name'),
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbString(TEXT, 'Inventory Icon'),
     wbString(FNAM, 'Potion Name'),
     wbStruct(ALDT, '', [
@@ -2345,7 +2345,7 @@ begin
   wbRecord(AMMO, 'Ammunition', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbICON,
     wbFormIDCk(ENAM, 'Enchantment', [ENCH]),
     wbInteger(ANAM, 'Enchantment Points', itU16),
@@ -2361,14 +2361,14 @@ begin
 
   wbRecord(ANIO, 'Animated Object', [
     wbEDID,
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbFormIDCk(DATA, 'IDLE animation', [IDLE], False, cpNormal, True)
   ]);
 
   wbRecord(APPA, 'Alchemical Apparatus', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbICON,
     wbSCRI,
     wbStruct(DATA, '', [
@@ -2381,7 +2381,7 @@ begin
 
   wbRecord(ARMO, 'Armor', [
     wbString(NAME, 'Item ID Name'),
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Item Name'),
     wbStringScript(SCRI, 'Script Source', 0),
     wbStruct(AODT, 'Armour Data', [
@@ -2445,7 +2445,7 @@ begin
 
   wbRecord(BOOK, 'Book', [
     wbString(NAME, 'Book ID Name'),
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Book Name'),
     wbStruct(BKDT, 'Book Data', [
       wbFloat('Weight'),
@@ -2605,7 +2605,7 @@ begin
     ])),
     wbString(FNAM, 'Sun Texture'),
     wbString(GNAM, 'Sun Glare Texture'),
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbStruct(TNAM, 'Timing', [
       wbStruct('Sunrise', [
         wbInteger('Begin', itU8, wbClmtTime),
@@ -2622,7 +2622,7 @@ begin
 
   wbRecord(CLOT, 'Clothing', [
     wbString(NAME, 'Clothing ID Name'),
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Clothing Name'),
     wbStruct(CTDT, '', [
       wbInteger('Biped Flags', itU32, wbEnum([
@@ -2663,7 +2663,7 @@ begin
 
   wbRecord(CONT, 'Container', [
     wbString(NAME, 'Container ID Name'),
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Container Name'),
     wbStruct(CNDT, 'Container Data', [
       wbFloat('Weight')
@@ -2720,7 +2720,7 @@ begin
 
   wbRecord(CREA, 'Creature', [
     wbString(NAME, 'Creature ID Name'),
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbString(CNAM, 'Creatures Naming'),
     wbString(FNAM, 'Creature Name'),
     wbStringScript(SCRI, 'Script Source', 0),
@@ -2992,7 +2992,7 @@ begin
 
   wbRecord(DOOR, 'Door', [
     wbString(NAME, 'Door ID Name'),
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Door Name'),
     wbStringScript(SCRI, 'Script Source', 0),
 	  {Needs verification, may not have an SCIP record}
@@ -3253,7 +3253,7 @@ begin
   wbRecord(FLOR, 'Flora', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbSCRI,
     wbFormIDCk(PFIG, 'Ingredient', [INGR]),
     wbStruct(PFPC, 'Seasonal ingredient production', [
@@ -3267,7 +3267,7 @@ begin
   wbRecord(FURN, 'Furniture', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbSCRI,
     wbByteArray(MNAM, 'Marker Flags', 0, cpNormal, True)
   ]);
@@ -3293,7 +3293,7 @@ begin
 
   wbRecord(GRAS, 'Grass', [
     wbEDID,
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbStruct(DATA, '', [
       wbInteger('Density', itU8),
       wbInteger('Min Slope', itU8),
@@ -3327,7 +3327,7 @@ begin
   wbRecord(HAIR, 'Hair', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbString(ICON, 'Texture', 0, cpNormal, True),
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       'Playable',
@@ -3636,7 +3636,7 @@ begin
 }
   wbRecord(IDLE, 'Idle Animation', [
     wbEDID,
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbCTDAs,
     wbInteger(ANAM, 'Animation Group Section', itU8, wbIdleAnam, nil, cpNormal, True),
     wbArray(DATA, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [IDLE, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True)
@@ -3644,7 +3644,7 @@ begin
 
   wbRecord(INGR, 'Ingredient', [
     wbString(NAME, 'Activator ID Name'),
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Activator Name'),
     wbStruct(IRDT, 'Ingrediant Data', [
       wbFloat('Weight'),
@@ -3660,7 +3660,7 @@ begin
   wbRecord(KEYM, 'Key', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbICON,
     wbSCRI,
     wbStruct(DATA, '', [
@@ -3768,7 +3768,7 @@ begin
 
   wbRecord(LIGH, 'Light', [
     wbString(NAME, 'Light ID Name'),
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Light Name'),
     wbString(ITEX, 'Inventory icon'),
     wbStruct(LHDT, 'Light Data', [
@@ -3919,7 +3919,7 @@ begin
 
   wbRecord(MISC, 'Misc. Item', [
     wbString(NAME, 'Item ID Name'),
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Item Name'),
     wbStruct(MCDT, '', [
       wbFloat('Weight'),
@@ -3939,7 +3939,7 @@ begin
 
   wbRecord(NPC_, 'Non-Player Character', [
     wbString(NAME, 'NPC ID Name'),
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'NPC Name'),
     wbString(RNAM, 'Race Name', 0, cpNormal, True),
     wbString(CNAM, 'Class name'),
@@ -4317,7 +4317,7 @@ begin
 
   wbRecord(BODY, 'Body Parts', [
     wbString(NAME, 'Body Part ID Name'),
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Body Part Name'),
     wbStruct(BYDT, 'Body part data', [
       wbInteger('Part', itU8, wbEnum([
@@ -4417,14 +4417,14 @@ begin
           'Eye (Left)',
           'Eye (Right)'
         ])),
-        wbMODL,
+        wbString(MODL, 'Model Filename'),
         wbICON
       ], []))
     ], [], cpNormal, True),
     wbEmpty(NAM1, 'Body Data Marker', cpNormal, True),
     wbRStruct('Male Body Data', [
       wbEmpty(MNAM, 'Male Body Data Marker'),
-      wbMODL,
+      wbString(MODL, 'Model Filename'),
       wbRArrayS('Parts', wbRStructSK([0], 'Part', [
         wbBodyDataIndex,
         wbICON
@@ -4432,7 +4432,7 @@ begin
     ], [], cpNormal, True),
     wbRStruct('Female Body Data', [
       wbEmpty(FNAM, 'Female Body Data Marker'),
-      wbMODL,
+      wbString(MODL, 'Model Filename'),
       wbRArrayS('Parts', wbRStructSK([0], 'Part', [
         wbBodyDataIndex,
         wbICON
@@ -4638,7 +4638,7 @@ begin
       wbByteArray('Unused', $1C)
     ], cpNormal, False, wbOBMEDontShow),
     wbFULL,
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbICON,
     wbSCRI,
     wbEffects,
@@ -4669,7 +4669,7 @@ begin
   wbRecord(SLGM, 'Soul Gem', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbICON,
     wbSCRI,
     wbStruct(DATA, '', [
@@ -4755,7 +4755,7 @@ begin
 
   wbRecord(TREE, 'Tree', [
     wbEDID,
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbICON,
     wbArrayS(SNAM, 'SpeedTree Seeds', wbInteger('SpeedTree Seed', itU32)),
     wbStruct(CNAM, 'Tree Data', [
@@ -4837,7 +4837,7 @@ begin
 
   wbRecord(WEAP, 'Weapon', [
     wbString(NAME, 'Item ID'),
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Item Name'),
     wbStruct(WPDT, 'Weapon Data', [
       wbFloat('Weight'),
@@ -4918,7 +4918,7 @@ begin
     wbEDID,
     wbString(CNAM, 'Texture Lower Layer'),
     wbString(DNAM, 'Texture Upper Layer'),
-    wbMODL,
+    wbString(MODL, 'Model Filename'),
     wbArray(NAM0, 'Colors by Types/Times',
       wbArray('Type',
         wbStruct('Time', [
