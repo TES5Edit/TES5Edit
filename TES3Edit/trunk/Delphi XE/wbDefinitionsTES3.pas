@@ -4527,7 +4527,9 @@ begin
       wbInteger('Rain', itU8),
       wbInteger('Thunder', itU8),
       wbInteger('Ash', itU8),
-      wbInteger('Blight', itU8)
+      wbInteger('Blight', itU8),
+      wbByteArray('Unknonw', 1),
+      wbByteArray('Unknonw', 1)
     ]),
     wbString(BNAM, 'Sleep creature string'),
     wbStruct(CNAM, 'Map Color', [
