@@ -44,13 +44,11 @@ const
   ASND : TwbSignature = 'ASND'; { Morrowind }
   AVFX : TwbSignature = 'AVFX'; { Morrowind }
   BKDT : TwbSignature = 'BKDT'; { Morrowind }
-  BMDT : TwbSignature = 'BMDT';
   BNAM : TwbSignature = 'BNAM'; { Morrowind }
   BODY : TwbSignature = 'BODY'; { Morrowind }
-  BOOK : TwbSignature = 'BOOK';
-  BSGN : TwbSignature = 'BSGN';
+  BOOK : TwbSignature = 'BOOK'; { Morrowind }
+  BSGN : TwbSignature = 'BSGN'; { Morrowind }
   BSND : TwbSignature = 'BSND'; { Morrowind }
-  BTXT : TwbSignature = 'BTXT';
   BVFX : TwbSignature = 'BVFX'; { Morrowind }
   BYDT : TwbSignature = 'BYDT'; { Morrowind }
   CELL : TwbSignature = 'CELL';
@@ -3261,14 +3259,6 @@ begin
       wbByteArray(VCLR, 'Vertex Colours'),
 
       wbRArrayS('Layers', wbRUnion('Layer', [
-        wbRStructSK([0],'Base Layer', [
-          wbStructSK(BTXT, [1, 3], 'Base Layer Header', [
-            wbFormIDCk('Texture', [LTEX, NULL]),
-            wbInteger('Quadrant', itU8, wbQuadrantEnum),
-            wbByteArray('Unused', 1),
-            wbInteger('Layer', itS16)
-          ])
-        ], []),
         wbRStructSK([0],'Alpha Layer', [
           wbByteArray(VTXT, 'Alpha Layer Data')
         ], [])
@@ -3308,14 +3298,6 @@ begin
       ]), 33),
 
       wbRArrayS('Layers', wbRUnion('Layer', [
-        wbRStructSK([0],'Base Layer', [
-          wbStructSK(BTXT, [1, 3], 'Base Layer Header', [
-            wbFormIDCk('Texture', [LTEX, NULL]),
-            wbInteger('Quadrant', itU8, wbQuadrantEnum),
-            wbByteArray('Unused', 1),
-            wbInteger('Layer', itS16)
-          ])
-        ], []),
         wbRStructSK([0],'Alpha Layer', [
           wbArrayS(VTXT, 'Alpha Layer Data', wbStructSK([0], 'Cell', [
             wbInteger('Position', itU16, wbAtxtPosition),
