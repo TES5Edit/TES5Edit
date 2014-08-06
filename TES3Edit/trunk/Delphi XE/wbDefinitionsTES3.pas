@@ -114,36 +114,19 @@ const
   NAM5 : TwbSignature = 'NAM5'; { Morrowind }
   NAM9 : TwbSignature = 'NAM9';
   NAME : TwbSignature = 'NAME'; { Morrowind }
-  NIFT : TwbSignature = 'NIFT';
-  NIFZ : TwbSignature = 'NIFZ';
   NNAM : TwbSignature = 'NNAM'; { Morrowind }
-  NPC_ : TwbSignature = 'NPC_';
+  NPC_ : TwbSignature = 'NPC_'; { Morrowind }
   NPCO : TwbSignature = 'NPCO'; { Morrowind }
   NPCS : TwbSignature = 'NPCS'; { Morrowind }
   NPDT : TwbSignature = 'NPDT'; { Morrowind }
-  NULL : TwbSignature = 'NULL';
-  OBME : TwbSignature = 'OBME';
-  OFST : TwbSignature = 'OFST';
-  ONAM : TwbSignature = 'ONAM';
-  PACK : TwbSignature = 'PACK';
+  ONAM : TwbSignature = 'ONAM'; { Morrowind }
   PBDT : TwbSignature = 'PBDT'; { Morrowind }
-  PFIG : TwbSignature = 'PFIG';
-  PFPC : TwbSignature = 'PFPC';
-  PGAG : TwbSignature = 'PGAG';
+  PGAG : TwbSignature = 'PGAG'; { Morrowind }
   PGRC : TwbSignature = 'PGRC'; { Morrowind }
   PGRD : TwbSignature = 'PGRD'; { Morrowind }
-  PGRI : TwbSignature = 'PGRI';
-  PGRL : TwbSignature = 'PGRL';
   PGRP : TwbSignature = 'PGRP'; { Morrowind }
-  PGRR : TwbSignature = 'PGRR';
-  PKDT : TwbSignature = 'PKDT';
-  PKID : TwbSignature = 'PKID';
-  PLDT : TwbSignature = 'PLDT';
-  PLYR : TwbSignature = 'PLYR';
-  PNAM : TwbSignature = 'PNAM';
+  PNAM : TwbSignature = 'PNAM'; { Morrowind }
   PROB : TwbSignature = 'PROB'; { Morrowind }
-  PSDT : TwbSignature = 'PSDT';
-  PTDT : TwbSignature = 'PTDT';
   PTEX : TwbSignature = 'PTEX'; { Morrowind }
   QNAM : TwbSignature = 'QNAM';
   QSDT : TwbSignature = 'QSDT';
@@ -1337,18 +1320,6 @@ begin
   Result := StrToInt(s);
 end;
 
-procedure wbRemoveOFST(const aElement: IwbElement);
-var
-  Container: IwbContainer;
-  rOFST: IwbRecord;
-begin
-  if Supports(aElement, IwbContainer, Container) then begin
-    rOFST := Container.RecordBySignature[OFST];
-    if Assigned(rOFST) then
-      Container.RemoveElement(rOFST);
-  end;
-end;
-
 procedure wbCELLAfterLoad(const aElement: IwbElement);
 var
   Container    : IwbContainerElementRef;
@@ -1810,16 +1781,6 @@ begin
     Result := 3
   else if s[25] = '1' then
     Result := 4;
-end;
-
-function wbEDDXDontShow(const aElement: IwbElement): Boolean;
-var
-  MainRecord : IwbMainRecord;
-begin
-  Result := True;
-
-  if Supports(aElement.Container, IwbMainRecord, MainRecord) then
-    Result := not Assigned(MainRecord.ElementBySignature[OBME]);
 end;
 
 function wbOBMEDontShow(const aElement: IwbElement): Boolean;
@@ -2857,9 +2818,9 @@ begin
           {07} wbInteger('Axis', itU32, wbAxisEnum),
           {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
           {09} wbInteger('Quest Stage (INVALID)', itS32),
-          {10} wbFormIDCk('Object Reference', [PLYR, REFR, TRGT]),
+          {10} wbFormIDCk('Object Reference', [REFR, TRGT]),
           {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH]),
-          {13} wbFormIDCk('Actor', [PLYR, TRGT]),
+          {13} wbFormIDCk('Actor', [TRGT]),
           {14} wbFormIDCk('Quest', [QUST]),
           {15} wbFormIDCk('Faction', [FACT]),
           {16} wbFormIDCk('Cell', [CELL]),
@@ -2868,7 +2829,6 @@ begin
           {19} wbFormIDCk('Actor Base', [NPC_, CREA, ACTI]),
           {20} wbFormIDCk('Global', [GLOB]),
           {21} wbFormIDCk('Weather', [WTHR]),
-          {22} wbFormIDCk('Package', [PACK]),
           {23} wbFormIDCk('Owner', [FACT, NPC_]),
           {24} wbFormIDCk('Birthsign', [BSGN]),
           {26} wbFormIDCk('Magic Item', [SPEL]),
@@ -2887,9 +2847,9 @@ begin
           {07} wbInteger('Axis', itU32, wbAxisEnum),
           {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
           {09} wbInteger('Quest Stage', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
-          {10} wbFormIDCk('Object Reference', [PLYR, REFR, TRGT]),
+          {10} wbFormIDCk('Object Reference', [REFR, TRGT]),
           {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH]),
-          {13} wbFormIDCk('Actor', [PLYR, TRGT]),
+          {13} wbFormIDCk('Actor', [TRGT]),
           {14} wbFormIDCk('Quest', [QUST]),
           {15} wbFormIDCk('Faction', [FACT]),
           {16} wbFormIDCk('Cell', [CELL]),
@@ -2898,7 +2858,6 @@ begin
           {19} wbFormIDCk('Actor Base', [NPC_, CREA, ACTI]),
           {20} wbFormIDCk('Global', [GLOB]),
           {21} wbFormIDCk('Weather', [WTHR]),
-          {22} wbFormIDCk('Package', [PACK]),
           {23} wbFormIDCk('Owner', [FACT, NPC_]),
           {24} wbFormIDCk('Birthsign', [BSGN]),
           {26} wbFormIDCk('Magic Item', [SPEL]),
@@ -2927,9 +2886,9 @@ begin
           {07} wbInteger('Axis', itU32, wbAxisEnum),
           {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
           {09} wbInteger('Quest Stage (INVALID)', itS32),
-          {10} wbFormIDCk('Object Reference', [PLYR, REFR, TRGT]),
+          {10} wbFormIDCk('Object Reference', [REFR, TRGT]),
           {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH]),
-          {13} wbFormIDCk('Actor', [PLYR, TRGT]),
+          {13} wbFormIDCk('Actor', [TRGT]),
           {14} wbFormIDCk('Quest', [QUST]),
           {15} wbFormIDCk('Faction', [FACT]),
           {16} wbFormIDCk('Cell', [CELL]),
@@ -2938,7 +2897,6 @@ begin
           {19} wbFormIDCk('Actor Base', [NPC_, CREA, ACTI]),
           {20} wbFormIDCk('Global', [GLOB]),
           {21} wbFormIDCk('Weather', [WTHR]),
-          {22} wbFormIDCk('Package', [PACK]),
           {23} wbFormIDCk('Owner', [FACT, NPC_]),
           {24} wbFormIDCk('Birthsign', [BSGN]),
           {26} wbFormIDCk('Magic Item', [SPEL]),
@@ -2957,9 +2915,9 @@ begin
           {07} wbInteger('Axis', itU32, wbAxisEnum),
           {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
           {09} wbInteger('Quest Stage', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
-          {10} wbFormIDCk('Object Reference', [PLYR, REFR, TRGT]),
+          {10} wbFormIDCk('Object Reference', [REFR, TRGT]),
           {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH]),
-          {13} wbFormIDCk('Actor', [PLYR, TRGT]),
+          {13} wbFormIDCk('Actor', [TRGT]),
           {14} wbFormIDCk('Quest', [QUST]),
           {15} wbFormIDCk('Faction', [FACT]),
           {16} wbFormIDCk('Cell', [CELL]),
@@ -2968,7 +2926,6 @@ begin
           {19} wbFormIDCk('Actor Base', [NPC_, CREA, ACTI]),
           {20} wbFormIDCk('Global', [GLOB]),
           {21} wbFormIDCk('Weather', [WTHR]),
-          {22} wbFormIDCk('Package', [PACK]),
           {23} wbFormIDCk('Owner', [FACT, NPC_]),
           {24} wbFormIDCk('Birthsign', [BSGN]),
           {26} wbFormIDCk('Magic Item', [SPEL]),
@@ -3015,9 +2972,9 @@ begin
       wbRUnion('', [
         wbFormIDCk(SCRO, 'Global Reference',
           [ACTI, DOOR, STAT, CREA, SPEL, NPC_, CONT, ARMO, MISC, WEAP,
-           INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH, QUST, PLYR, PACK,
+           INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH, QUST,
            FACT, REFR, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, RACE,
-           WRLD, SCPT, BSGN, TREE, NULL]),
+           WRLD, SCPT, BSGN, TREE]),
         wbInteger(SCRV, 'Local Variable', itU32)
       ], [])
     );
@@ -3073,7 +3030,7 @@ begin
         ], [])
       ], [])),
 
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL]))
+      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX]))
     ]);
 
   end else begin
@@ -3116,7 +3073,7 @@ begin
         ], [])
       ], [])),
 
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL]))
+      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX]))
     ]);
 
   end;
@@ -3575,8 +3532,8 @@ begin
       ]))
     ], cpNormal, True),
     wbStruct(VNAM, 'Voice', [
-      wbFormIDCk('Male', [RACE, NULL]),
-      wbFormIDCk('Female', [RACE, NULL])
+      wbFormIDCk('Male', [RACE]),
+      wbFormIDCk('Female', [RACE])
     ]),
     wbInteger(CNAM, 'Default Hair Color', itU8, nil, cpNormal, True),
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
