@@ -128,151 +128,66 @@ const
   PNAM : TwbSignature = 'PNAM'; { Morrowind }
   PROB : TwbSignature = 'PROB'; { Morrowind }
   PTEX : TwbSignature = 'PTEX'; { Morrowind }
-  QNAM : TwbSignature = 'QNAM';
-  QSDT : TwbSignature = 'QSDT';
-  QSTA : TwbSignature = 'QSTA';
   QSTF : TwbSignature = 'QSTF'; { Morrowind }
-  QSTI : TwbSignature = 'QSTI';
   QSTN : TwbSignature = 'QSTN'; { Morrowind }
   QSTR : TwbSignature = 'QSTR'; { Morrowind }
-  QUST : TwbSignature = 'QUST';
-  RACE : TwbSignature = 'RACE';
+  RACE : TwbSignature = 'RACE'; { Morrowind }
   RADT : TwbSignature = 'RADT'; { Morrowind }
-  RCLR : TwbSignature = 'RCLR';
-  RDAT : TwbSignature = 'RDAT';
-  RDGS : TwbSignature = 'RDGS';
-  RDMD : TwbSignature = 'RDMD';
-  RDMP : TwbSignature = 'RDMP';
-  RDOT : TwbSignature = 'RDOT';
-  RDSD : TwbSignature = 'RDSD';
-  RDWT : TwbSignature = 'RDWT';
-  REFR : TwbSignature = 'REFR';
   REGN : TwbSignature = 'REGN'; { Morrowind }
   REPA : TwbSignature = 'REPA'; { Morrowind }
   RGNN : TwbSignature = 'RGNN'; { Morrowind }
   RIDT : TwbSignature = 'RIDT'; { Morrowind }
   RNAM : TwbSignature = 'RNAM'; { Morrowind }
-  ROAD : TwbSignature = 'ROAD';
-  RPLD : TwbSignature = 'RPLD';
-  RPLI : TwbSignature = 'RPLI';
-  SBSP : TwbSignature = 'SBSP';
-  SCDA : TwbSignature = 'SCDA';
   SCDT : TwbSignature = 'SCDT'; { Morrowind }
   SCHD : TwbSignature = 'SCHD'; { Morrowind }
-  SCHR : TwbSignature = 'SCHR';
   SCIP : TwbSignature = 'SCIP'; { Morrowind }
-  SCIT : TwbSignature = 'SCIT';
   SCPT : TwbSignature = 'SCPT'; { Morrowind }
   SCRI : TwbSignature = 'SCRI'; { Morrowind }
-  SCRO : TwbSignature = 'SCRO';
-  SCRV : TwbSignature = 'SCRV';
   SCTX : TwbSignature = 'SCTX'; { Morrowind }
   SCVR : TwbSignature = 'SCVR'; { Morrowind }
-  SGST : TwbSignature = 'SGST';
-  SKIL : TwbSignature = 'SKIL';
-  SLCP : TwbSignature = 'SLCP';
-  SLGM : TwbSignature = 'SLGM';
-  SLSD : TwbSignature = 'SLSD';
+  SKIL : TwbSignature = 'SKIL'; { Morrowind }
   SNAM : TwbSignature = 'SNAM'; { Morrowind }
-  SNDD : TwbSignature = 'SNDD';
   SNDG : TwbSignature = 'SNDG'; { Morrowind }
-  SNDX : TwbSignature = 'SNDX';
-  SOUL : TwbSignature = 'SOUL';
   SOUN : TwbSignature = 'SOUN'; { Morrowind }
   SPDT : TwbSignature = 'SPDT'; { Morrowind }
   SPEL : TwbSignature = 'SPEL'; { Morrowind }
-  SPIT : TwbSignature = 'SPIT';
-  SPLO : TwbSignature = 'SPLO';
   SSCR : TwbSignature = 'SSCR'; { Morrowind }
   STAT : TwbSignature = 'STAT'; { Morrowind }
   STRV : TwbSignature = 'STRV'; { Morrowind }
-  TCLF : TwbSignature = 'TCLF';
-  TCLT : TwbSignature = 'TCLT';
-  TES3 : TwbSignature = 'TES3';
+  TES3 : TwbSignature = 'TES3'; { Morrowind }
   TEXT : TwbSignature = 'TEXT'; { Morrowind }
-  TNAM : TwbSignature = 'TNAM';
-  TPIC : TwbSignature = 'TPIC';
-  TRDT : TwbSignature = 'TRDT';
-  TREE : TwbSignature = 'TREE';
-  TRGT : TwbSignature = 'TRGT';
-  UNAM : TwbSignature = 'UNAM';
-  VCLR : TwbSignature = 'VCLR';
-  VHGT : TwbSignature = 'VHGT';
-  VNAM : TwbSignature = 'VNAM';
+  TNAM : TwbSignature = 'TNAM'; { Morrowind }
+  UNAM : TwbSignature = 'UNAM'; { Morrowind }
+  VCLR : TwbSignature = 'VCLR'; { Morrowind }
+  VHGT : TwbSignature = 'VHGT'; { Morrowind }
   VNML : TwbSignature = 'VNML';
-  VTEX : TwbSignature = 'VTEX';
+  VTEX : TwbSignature = 'VTEX'; { Morrowind }
   VTXT : TwbSignature = 'VTXT';
-  WATR : TwbSignature = 'WATR';
-  WEAP : TwbSignature = 'WEAP';
+  WEAP : TwbSignature = 'WEAP'; { Morrowind }
   WEAT : TwbSignature = 'WEAT'; { Morrowind }
   WHGT : TwbSignature = 'WHGT'; { Morrowind }
-  WLST : TwbSignature = 'WLST';
-  WNAM : TwbSignature = 'WNAM';
   WPDT : TwbSignature = 'WPDT'; { Morrowind }
-  WRLD : TwbSignature = 'WRLD';
-  WTHR : TwbSignature = 'WTHR';
-  XACT : TwbSignature = 'XACT';
-  XCCM : TwbSignature = 'XCCM';
   XCHG : TwbSignature = 'XCHG'; { Morrowind }
-  XCLC : TwbSignature = 'XCLC';
-  XCLL : TwbSignature = 'XCLL';
-  XCLR : TwbSignature = 'XCLR';
-  XCLW : TwbSignature = 'XCLW';
-  XCMT : TwbSignature = 'XCMT';
-  XCNT : TwbSignature = 'XCNT';
-  XCWT : TwbSignature = 'XCWT';
-  XESP : TwbSignature = 'XESP';
-  XGLB : TwbSignature = 'XGLB';
-  XHLT : TwbSignature = 'XHLT';
-  XHRS : TwbSignature = 'XHRS';
-  XLCM : TwbSignature = 'XLCM';
-  XLOC : TwbSignature = 'XLOC';
-  XLOD : TwbSignature = 'XLOD';
-  XMRC : TwbSignature = 'XMRC';
-  XMRK : TwbSignature = 'XMRK';
-  XNAM : TwbSignature = 'XNAM';
-  XOWN : TwbSignature = 'XOWN';
-  XPCI : TwbSignature = 'XPCI';
-  XRGD : TwbSignature = 'XRGD';
-  XRNK : TwbSignature = 'XRNK';
-  XRTM : TwbSignature = 'XRTM';
   XSCL : TwbSignature = 'XSCL'; { Morrowind }
-  XSED : TwbSignature = 'XSED';
-  XSOL : TwbSignature = 'XSOL';
-  XTEL : TwbSignature = 'XTEL';
-  XTRG : TwbSignature = 'XTRG';
+  XSOL : TwbSignature = 'XSOL'; { Morrowind }
   XXXX : TwbSignature = 'XXXX';
-  ZNAM : TwbSignature = 'ZNAM';
 
 var
-  wbXOWN: IwbSubRecordDef;
-  wbXGLB: IwbSubRecordDef;
-  wbXRGD: IwbSubRecordDef;
   wbSpecializationEnum: IwbEnumDef;
   wbSoulGemEnum: IwbEnumDef;
   wbMusicEnum: IwbEnumDef;
-  wbSLSD: IwbSubRecordDef;
   wbBodyDataIndex: IwbSubRecordDef;
-  wbSPLO: IwbSubRecordDef;
-  wbSPLOs: IwbSubRecordArrayDef;
   wbCNTO: IwbSubRecordDef;
   wbCNTOs: IwbSubRecordArrayDef;
-  wbXNAM: IwbSubRecordDef;
-  wbXNAMs: IwbSubRecordArrayDef;
   wbDESC: IwbSubRecordDef;
   wbXSCL: IwbSubRecordDef;
   wbDATAPosRot : IwbSubRecordDef;
   wbPosRot : IwbStructDef;
   wbCTDA: IwbSubRecordUnionDef;
-  wbSCHR: IwbSubRecordUnionDef;
   wbCTDAs: IwbSubRecordArrayDef;
-  wbSCROs: IwbSubRecordArrayDef;
   wbPGRP: IwbSubRecordDef;
   wbPGRC: IwbSubRecordDef;
-  wbResultScript: IwbSubRecordStructDef;
-//  wbResultScriptOld: IwbSubRecordStructDef;
   wbSCRI: IwbSubRecordDef;
-  wbXLOD: IwbSubRecordDef;
   wbICON: IwbSubRecordDef;
   wbCrimeTypeEnum: IwbEnumDef;
   wbFormTypeEnum: IwbEnumDef;
@@ -625,19 +540,6 @@ begin
     Result := 1;
 end;
 
-function wbXLOCFillerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container: IwbContainer;
-begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
-
-  if Container.DataSize = 16 then
-    Result := 1;
-end;
-
 function wbPACKPKDTDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container: IwbContainer;
@@ -650,20 +552,6 @@ begin
   if Container.DataSize = 4 then
     Result := 0;
 end;
-
-function wbREFRXSEDDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container: IwbContainer;
-begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
-
-  if Container.DataSize = 4 then
-    Result := 1;
-end;
-
 
 type
   TCTDAFunctionParamType = (
@@ -1130,7 +1018,7 @@ begin
     if Supports(Script.ElementByName['Local Variables'], IwbContainerElementRef, LocalVars) then begin
       for i := 0 to Pred(LocalVars.ElementCount) do
         if Supports(LocalVars.Elements[i], IwbContainerElementRef, LocalVar) then begin
-          j := LocalVar.ElementNativeValues['SLSD\Index'];
+          j := LocalVar.ElementNativeValues['SCVR'];
           s := LocalVar.ElementNativeValues['SCVR'];
           if Assigned(Variables) then
             Variables.AddObject(s, TObject(j))
@@ -1205,7 +1093,7 @@ begin
   if Supports(Script.ElementByName['Local Variables'], IwbContainerElementRef, LocalVars) then begin
     for i := 0 to Pred(LocalVars.ElementCount) do
       if Supports(LocalVars.Elements[i], IwbContainerElementRef, LocalVar) then begin
-        j := LocalVar.ElementNativeValues['SLSD\Index'];
+        j := LocalVar.ElementNativeValues['SCVR'];
         s := LocalVar.ElementNativeValues['SCVR'];
         if SameText(s, Trim(aString)) then begin
           Result := j;
@@ -1252,13 +1140,13 @@ begin
   if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
     Exit;
 
-  if MainRecord.Signature <> QUST then begin
+{  if MainRecord.Signature <> QUST then begin
     case aType of
       ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
       ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
     end;
     Exit;
-  end;
+  end; }
 
   case aType of
     ctEditType: begin
@@ -1456,22 +1344,6 @@ begin
       Exit;
     if VarCompareValue(ActorValue, Container.ElementNativeValues['Actor Value']) <> vrEqual then
       Container.ElementNativeValues['Actor Value'] := ActorValue;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
-procedure wbREFRAfterLoad(const aElement: IwbElement);
-var
-  Container: IwbContainerElementRef;
-begin
-  if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-    if Container.ElementCount < 1 then
-      Exit;
-
-    Container.RemoveElement('XPCI');
   finally
     wbEndInternalEdit;
   end;
@@ -1849,8 +1721,6 @@ begin
 
   wbIgnoreRecords.Add(XXXX);
 
-  wbXRGD := wbByteArray(XRGD, 'Ragdoll Data');
-
   wbMusicEnum := wbEnum(['Default', 'Public', 'Dungeon']);
 
   wbDESC := wbString(DESC, 'Description', 0, cpTranslate);
@@ -1883,11 +1753,6 @@ begin
         wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
       ])
     ], cpNormal, True);
-
-  wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
-
-  wbXOWN := wbFormIDCk(XOWN, 'Owner', [FACT, NPC_]);
-  wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 
   wbRecord(ACTI, 'Activator', [
     wbString(NAME, 'NameID'),
@@ -2134,13 +1999,11 @@ begin
     wbString(TEXT, 'Book Text')
   ]);
 
-  wbSPLO := wbFormIDCk(SPLO, 'Spell', [SPEL]);
-  wbSPLOs := wbRArrayS('Spells', wbSPLO);
-
   wbRecord(BSGN, 'Birthsign', [
-    wbICON,
-    wbDESC,
-    wbSPLOs
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(FNAM, 'Activator Name'),
+    wbString(SCRI, 'ScriptID')
   ]);
 
   wbRecord(CELL, 'Cell', [
@@ -2301,7 +2164,7 @@ begin
 
   wbCNTO :=
     wbStructSK(CNTO, [0], 'Item', [
-      wbFormIDCk('Item', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH]),
+      wbFormIDCk('Item', [ARMO, MISC, WEAP, INGR, BOOK, CLOT, ALCH, APPA, LIGH]),
       wbInteger('Count', itS32)
     ]);
 
@@ -2608,14 +2471,6 @@ begin
     ])
   ]);
 
-  wbXNAM :=
-    wbStructSK(XNAM, [0], 'Relation', [
-      wbFormIDCk('Faction', [FACT, RACE]),
-      wbInteger('Modifier', itS32)
-    ]);
-
-  wbXNAMs := wbRArrayS('Relations', wbXNAM);
-
   wbRecord(FACT, 'Faction', [
     wbString(NAME, 'NameID'),
     wbString(FNAM, 'Class name string'),
@@ -2818,10 +2673,9 @@ begin
           {07} wbInteger('Axis', itU32, wbAxisEnum),
           {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
           {09} wbInteger('Quest Stage (INVALID)', itS32),
-          {10} wbFormIDCk('Object Reference', [REFR, TRGT]),
-          {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH]),
+          {10} wbFormIDCk('Object Reference', [TRGT]),
+          {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, BOOK, CLOT, ALCH, APPA, LIGH]),
           {13} wbFormIDCk('Actor', [TRGT]),
-          {14} wbFormIDCk('Quest', [QUST]),
           {15} wbFormIDCk('Faction', [FACT]),
           {16} wbFormIDCk('Cell', [CELL]),
           {17} wbFormIDCk('Class', [CLAS]),
@@ -2834,7 +2688,7 @@ begin
           {26} wbFormIDCk('Magic Item', [SPEL]),
           {27} wbFormIDCk('Magic Effect', [MGEF]),
           {28} wbFormIDCk('Worldspace', [WRLD]),
-          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SBSP, SOUN, ACTI, DOOR, STAT, CONT, ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH])
+          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SOUN, ACTI, DOOR, STAT, CONT, ARMO, MISC, WEAP, INGR, BOOK, CLOT, ALCH, APPA, LIGH])
         ]),
         wbUnion('Parameter #2', wbCTDAParam2Decider, [
           {00} wbByteArray('Unknown', 4),
@@ -2847,10 +2701,9 @@ begin
           {07} wbInteger('Axis', itU32, wbAxisEnum),
           {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
           {09} wbInteger('Quest Stage', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
-          {10} wbFormIDCk('Object Reference', [REFR, TRGT]),
-          {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH]),
+          {10} wbFormIDCk('Object Reference', [TRGT]),
+          {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, BOOK, CLOT, ALCH, APPA, LIGH]),
           {13} wbFormIDCk('Actor', [TRGT]),
-          {14} wbFormIDCk('Quest', [QUST]),
           {15} wbFormIDCk('Faction', [FACT]),
           {16} wbFormIDCk('Cell', [CELL]),
           {17} wbFormIDCk('Class', [CLAS]),
@@ -2863,7 +2716,7 @@ begin
           {26} wbFormIDCk('Magic Item', [SPEL]),
           {27} wbFormIDCk('Magic Effect', [MGEF]),
           {28} wbFormIDCk('Worldspace', [WRLD]),
-          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SBSP, SOUN, ACTI, DOOR, STAT, CONT, ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH])
+          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SOUN, ACTI, DOOR, STAT, CONT, ARMO, MISC, WEAP, INGR, BOOK, CLOT, ALCH, APPA, LIGH])
         ]),
         wbInteger('Unused', itU32, nil, cpIgnore)
       ], cpNormal, False, nil, 6),
@@ -2886,10 +2739,9 @@ begin
           {07} wbInteger('Axis', itU32, wbAxisEnum),
           {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
           {09} wbInteger('Quest Stage (INVALID)', itS32),
-          {10} wbFormIDCk('Object Reference', [REFR, TRGT]),
-          {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH]),
+          {10} wbFormIDCk('Object Reference', [TRGT]),
+          {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, BOOK, CLOT, ALCH, APPA, LIGH]),
           {13} wbFormIDCk('Actor', [TRGT]),
-          {14} wbFormIDCk('Quest', [QUST]),
           {15} wbFormIDCk('Faction', [FACT]),
           {16} wbFormIDCk('Cell', [CELL]),
           {17} wbFormIDCk('Class', [CLAS]),
@@ -2902,7 +2754,7 @@ begin
           {26} wbFormIDCk('Magic Item', [SPEL]),
           {27} wbFormIDCk('Magic Effect', [MGEF]),
           {28} wbFormIDCk('Worldspace', [WRLD]),
-          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SBSP, SOUN, ACTI, DOOR, STAT, CONT, ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH])
+          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SOUN, ACTI, DOOR, STAT, CONT, ARMO, MISC, WEAP, INGR, BOOK, CLOT, ALCH, APPA, LIGH])
         ]),
         wbUnion('Parameter #2', wbCTDAParam2Decider, [
           {00} wbByteArray('Unknown', 4),
@@ -2915,10 +2767,9 @@ begin
           {07} wbInteger('Axis', itU32, wbAxisEnum),
           {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
           {09} wbInteger('Quest Stage', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
-          {10} wbFormIDCk('Object Reference', [REFR, TRGT]),
-          {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH]),
+          {10} wbFormIDCk('Object Reference', [TRGT]),
+          {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, BOOK, CLOT, ALCH, APPA, LIGH]),
           {13} wbFormIDCk('Actor', [TRGT]),
-          {14} wbFormIDCk('Quest', [QUST]),
           {15} wbFormIDCk('Faction', [FACT]),
           {16} wbFormIDCk('Cell', [CELL]),
           {17} wbFormIDCk('Class', [CLAS]),
@@ -2931,68 +2782,13 @@ begin
           {26} wbFormIDCk('Magic Item', [SPEL]),
           {27} wbFormIDCk('Magic Effect', [MGEF]),
           {28} wbFormIDCk('Worldspace', [WRLD]),
-          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SBSP, SOUN, ACTI, DOOR, STAT, CONT, ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH])
+          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SOUN, ACTI, DOOR, STAT, CONT, ARMO, MISC, WEAP, INGR, BOOK, CLOT, ALCH, APPA, LIGH])
         ]),
         wbEmpty('Unused', cpIgnore)
       ])
     ], []);
 
   wbCTDAs := wbRArray('Conditions', wbCTDA);
-
-  wbSCHR :=
-    wbRUnion('Basic Script Data', [
-      wbStruct(SCHR, 'Basic Script Data', [
-        wbByteArray('Unused', 4),
-        wbInteger('RefCount', itU32),
-        wbInteger('CompiledSize', itU32),
-        wbInteger('VariableCount', itU32),
-        wbInteger('Type', itU32, wbEnum([
-          'Object',
-          'Quest'
-        ], [
-          $100, 'Magic Effect'
-        ]))
-      ]),
-      wbStruct(SCHD, 'Basic Script Data', [
-        wbByteArray('Unused', 4),
-        wbInteger('RefCount', itU32),
-        wbInteger('CompiledSize', itU32),
-        wbInteger('VariableCount', itU32),
-        wbInteger('Type', itU32, wbEnum([
-          'Object',
-          'Quest'
-        ], [
-          $100, 'Magic Effect'
-        ]))
-      ])
-    ], []);
-
-  wbSCROs :=
-    wbRArray('References',
-      wbRUnion('', [
-        wbFormIDCk(SCRO, 'Global Reference',
-          [ACTI, DOOR, STAT, CREA, SPEL, NPC_, CONT, ARMO, MISC, WEAP,
-           INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH, QUST,
-           FACT, REFR, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, RACE,
-           WRLD, SCPT, BSGN, TREE]),
-        wbInteger(SCRV, 'Local Variable', itU32)
-      ], [])
-    );
-
-  wbResultScript := wbRStruct('Result Script', [
-    wbSCHR,
-    wbByteArray(SCDA, 'Compiled result script'),
-    wbStringScript(SCTX, 'Result script source'),
-    wbSCROs
-  ], []);
-{
-  wbResultScriptOld := wbRStruct('Result Script (Old Format?)', [
-    wbByteArray(SCHD, 'Unknown (Script Header?)'),
-    wbByteArray(SCDA, 'Compiled result script'),
-    wbStringScript(SCTX, 'Result script source'),
-    wbSCROs
-  ], []);
-}
 
   wbRecord(INGR, 'Ingredient', [
     wbString(NAME, 'NameID'),
@@ -3515,8 +3311,6 @@ begin
 
   wbRecord(RACE, 'Race', [
     wbDESC,
-    wbSPLOs,
-    wbXNAMs,
     wbStruct(DATA, '', [
       wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
         wbInteger('Skill', itS8, wbActorValueEnum),
@@ -3712,13 +3506,6 @@ begin
     wbString(SCRI, 'ScriptID')
   ]);
 
-
-  wbSLSD := wbStructSK(SLSD, [0], 'Local Variable Data', [
-    wbInteger('Index', itU32),
-    wbByteArray('Unused', 12),
-    wbInteger('Flags', itU8, wbFlags(['IsLongOrShort']), cpCritical),
-    wbByteArray('Unused')
-  ]);
 
   wbRecord(SCPT, 'Script', [
     wbStruct(SCHD, 'Script Header', [
