@@ -107,22 +107,10 @@ const
   MEDT : TwbSignature = 'MEDT'; { Morrowind }
   MGEF : TwbSignature = 'MGEF'; { Morrowind }
   MISC : TwbSignature = 'MISC'; { Morrowind }
-  MNAM : TwbSignature = 'MNAM';
-  MO2B : TwbSignature = 'MO2B';
-  MO2T : TwbSignature = 'MO2T';
-  MO3B : TwbSignature = 'MO3B';
-  MO3T : TwbSignature = 'MO3T';
-  MO4B : TwbSignature = 'MO4B';
-  MO4T : TwbSignature = 'MO4T';
-  MOD2 : TwbSignature = 'MOD2';
-  MOD3 : TwbSignature = 'MOD3';
-  MOD4 : TwbSignature = 'MOD4';
-  MODB : TwbSignature = 'MODB';
-  MODL : TwbSignature = 'MODL';
-  MODT : TwbSignature = 'MODT';
-  NAM0 : TwbSignature = 'NAM0';
+  MNAM : TwbSignature = 'MNAM'; { Morrowind }
+  MODL : TwbSignature = 'MODL'; { Morrowind }
+  NAM0 : TwbSignature = 'NAM0'; { Morrowind }
   NAM1 : TwbSignature = 'NAM1';
-  NAM2 : TwbSignature = 'NAM2';
   NAM5 : TwbSignature = 'NAM5'; { Morrowind }
   NAM9 : TwbSignature = 'NAM9';
   NAME : TwbSignature = 'NAME'; { Morrowind }
@@ -274,12 +262,10 @@ const
   ZNAM : TwbSignature = 'ZNAM';
 
 var
-  wbEDID: IwbSubRecordDef;
   wbXOWN: IwbSubRecordDef;
   wbXGLB: IwbSubRecordDef;
   wbXRGD: IwbSubRecordDef;
   wbSpecializationEnum: IwbEnumDef;
-  wbOBMEResolutionInfo: IwbEnumDef;
   wbSoulGemEnum: IwbEnumDef;
   wbMusicEnum: IwbEnumDef;
   wbSLSD: IwbSubRecordDef;
@@ -288,15 +274,12 @@ var
   wbSPLOs: IwbSubRecordArrayDef;
   wbCNTO: IwbSubRecordDef;
   wbCNTOs: IwbSubRecordArrayDef;
-  wbFULL: IwbSubRecordDef;
-  wbFULLReq: IwbSubRecordDef;
   wbXNAM: IwbSubRecordDef;
   wbXNAMs: IwbSubRecordArrayDef;
   wbDESC: IwbSubRecordDef;
   wbXSCL: IwbSubRecordDef;
   wbDATAPosRot : IwbSubRecordDef;
   wbPosRot : IwbStructDef;
-  wbMODL: IwbSubRecordStructDef;
   wbCTDA: IwbSubRecordUnionDef;
   wbSCHR: IwbSubRecordUnionDef;
   wbCTDAs: IwbSubRecordArrayDef;
@@ -306,8 +289,6 @@ var
   wbResultScript: IwbSubRecordStructDef;
 //  wbResultScriptOld: IwbSubRecordStructDef;
   wbSCRI: IwbSubRecordDef;
-  wbENAM: IwbSubRecordDef;
-  wbFGGS: IwbSubRecordDef;
   wbXLOD: IwbSubRecordDef;
   wbICON: IwbSubRecordDef;
   wbCrimeTypeEnum: IwbEnumDef;
@@ -326,8 +307,6 @@ var
   wbEFIDOBME: IwbSubRecordDef;
   wbMagicSchoolEnum: IwbEnumDef;
   wbFunctionsEnum: IwbEnumDef;
-  wbSCIT: IwbSubRecordStructDef;
-  wbSCITOBME: IwbSubRecordStructDef;
 
 function wbClmtMoonsPhaseLength(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -1913,8 +1892,6 @@ begin
 
   wbMusicEnum := wbEnum(['Default', 'Public', 'Dungeon']);
 
-  wbFULL := wbString(FULL, 'Name', 0, cpTranslate);
-  wbFULLReq := wbString(FULL, 'Name', 0, cpNormal, True);
   wbDESC := wbString(DESC, 'Description', 0, cpTranslate);
   wbXSCL := wbFloat(XSCL, 'Scale');
 
@@ -1945,17 +1922,6 @@ begin
         wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
       ])
     ], cpNormal, True);
-
-  wbMODL :=
-    wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename'),
-      wbFloat(MODB, 'Bound Radius', cpBenign),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
-//      wbArray(MODT, 'Unknown',
-//        wbByteArray('Unknown', 24, cpBenign),
-//      0, nil, cpBenign)
-    ], []);
-
 
   wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
 
@@ -2085,33 +2051,6 @@ begin
       'Restoration'
     ]);
 
-  wbSCIT :=
-    wbRStructSK([0], 'Script effect', [
-      wbStructSK(SCIT, [0], 'Script effect data', [
-        wbFormIDCk('Script effect', [NULL, SCPT]),
-        wbInteger('Magic school', itU32, wbMagicSchoolEnum),
-        wbInteger('Visual effect name', itU32, wbChar4),
-        wbInteger('Flags', itU8, wbFlags(['Hostile'])),
-        wbByteArray('Unused', 3)
-      ], cpNormal, True, nil, 1),
-      wbFULLReq
-    ], []);
-
-  wbSCITOBME :=
-    wbRStructSK([0], 'Script effect', [
-      wbStructSK(SCIT, [0], 'Script effect data', [
-        wbFormIDCk('Script effect', [NULL, SCPT]),
-        wbInteger('Magic school', itU32, wbMagicSchoolEnum),
-        wbStringMgefCode('Visual Effect Code', 4),
-        wbInteger('Flags', itU8, wbFlags(['Hostile'])),
-        wbByteArray('Unused', 3)
-      ], cpNormal, True, nil, 1),
-      wbFULLReq
-    ], []);
-
-
-  wbOBMEResolutionInfo := wbEnum(['None', 'FormID', 'Magic Effect Code', 'Actor Value']);
-
   wbRecord(ALCH, 'Potion', [
     wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
@@ -2138,8 +2077,6 @@ begin
   ]);
 
   wbRecord(APPA, 'Alchemical Apparatus', [
-    wbEDID,
-    wbFULL,
     wbString(MODL, 'Model Filename'),
     wbICON,
     wbSCRI,
@@ -2236,12 +2173,10 @@ begin
     wbString(TEXT, 'Book Text')
   ]);
 
-  wbSPLO := wbFormIDCk(SPLO, 'Spell', [SPEL, LVSP]);
+  wbSPLO := wbFormIDCk(SPLO, 'Spell', [SPEL]);
   wbSPLOs := wbRArrayS('Spells', wbSPLO);
 
   wbRecord(BSGN, 'Birthsign', [
-    wbEDID,
-    wbFULL,
     wbICON,
     wbDESC,
     wbSPLOs
@@ -2405,7 +2340,7 @@ begin
 
   wbCNTO :=
     wbStructSK(CNTO, [0], 'Item', [
-      wbFormIDCk('Item', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, LVLI, KEYM, CLOT, ALCH, APPA, LIGH]),
+      wbFormIDCk('Item', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH]),
       wbInteger('Count', itS32)
     ]);
 
@@ -2923,7 +2858,7 @@ begin
           {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
           {09} wbInteger('Quest Stage (INVALID)', itS32),
           {10} wbFormIDCk('Object Reference', [PLYR, REFR, TRGT]),
-          {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
+          {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH]),
           {13} wbFormIDCk('Actor', [PLYR, TRGT]),
           {14} wbFormIDCk('Quest', [QUST]),
           {15} wbFormIDCk('Faction', [FACT]),
@@ -2936,11 +2871,10 @@ begin
           {22} wbFormIDCk('Package', [PACK]),
           {23} wbFormIDCk('Owner', [FACT, NPC_]),
           {24} wbFormIDCk('Birthsign', [BSGN]),
-          {25} wbFormIDCk('Furniture', [FURN]),
           {26} wbFormIDCk('Magic Item', [SPEL]),
           {27} wbFormIDCk('Magic Effect', [MGEF]),
           {28} wbFormIDCk('Worldspace', [WRLD]),
-          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS])
+          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SBSP, SOUN, ACTI, DOOR, STAT, CONT, ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH])
         ]),
         wbUnion('Parameter #2', wbCTDAParam2Decider, [
           {00} wbByteArray('Unknown', 4),
@@ -2954,7 +2888,7 @@ begin
           {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
           {09} wbInteger('Quest Stage', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
           {10} wbFormIDCk('Object Reference', [PLYR, REFR, TRGT]),
-          {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
+          {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH]),
           {13} wbFormIDCk('Actor', [PLYR, TRGT]),
           {14} wbFormIDCk('Quest', [QUST]),
           {15} wbFormIDCk('Faction', [FACT]),
@@ -2967,11 +2901,10 @@ begin
           {22} wbFormIDCk('Package', [PACK]),
           {23} wbFormIDCk('Owner', [FACT, NPC_]),
           {24} wbFormIDCk('Birthsign', [BSGN]),
-          {25} wbFormIDCk('Furniture', [FURN]),
           {26} wbFormIDCk('Magic Item', [SPEL]),
           {27} wbFormIDCk('Magic Effect', [MGEF]),
           {28} wbFormIDCk('Worldspace', [WRLD]),
-          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS])
+          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SBSP, SOUN, ACTI, DOOR, STAT, CONT, ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH])
         ]),
         wbInteger('Unused', itU32, nil, cpIgnore)
       ], cpNormal, False, nil, 6),
@@ -2995,7 +2928,7 @@ begin
           {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
           {09} wbInteger('Quest Stage (INVALID)', itS32),
           {10} wbFormIDCk('Object Reference', [PLYR, REFR, TRGT]),
-          {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
+          {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH]),
           {13} wbFormIDCk('Actor', [PLYR, TRGT]),
           {14} wbFormIDCk('Quest', [QUST]),
           {15} wbFormIDCk('Faction', [FACT]),
@@ -3008,11 +2941,10 @@ begin
           {22} wbFormIDCk('Package', [PACK]),
           {23} wbFormIDCk('Owner', [FACT, NPC_]),
           {24} wbFormIDCk('Birthsign', [BSGN]),
-          {25} wbFormIDCk('Furniture', [FURN]),
           {26} wbFormIDCk('Magic Item', [SPEL]),
           {27} wbFormIDCk('Magic Effect', [MGEF]),
           {28} wbFormIDCk('Worldspace', [WRLD]),
-          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS])
+          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SBSP, SOUN, ACTI, DOOR, STAT, CONT, ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH])
         ]),
         wbUnion('Parameter #2', wbCTDAParam2Decider, [
           {00} wbByteArray('Unknown', 4),
@@ -3026,7 +2958,7 @@ begin
           {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
           {09} wbInteger('Quest Stage', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
           {10} wbFormIDCk('Object Reference', [PLYR, REFR, TRGT]),
-          {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
+          {12} wbFormIDCk('Inventory Object', [ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH]),
           {13} wbFormIDCk('Actor', [PLYR, TRGT]),
           {14} wbFormIDCk('Quest', [QUST]),
           {15} wbFormIDCk('Faction', [FACT]),
@@ -3039,11 +2971,10 @@ begin
           {22} wbFormIDCk('Package', [PACK]),
           {23} wbFormIDCk('Owner', [FACT, NPC_]),
           {24} wbFormIDCk('Birthsign', [BSGN]),
-          {25} wbFormIDCk('Furniture', [FURN]),
           {26} wbFormIDCk('Magic Item', [SPEL]),
           {27} wbFormIDCk('Magic Effect', [MGEF]),
           {28} wbFormIDCk('Worldspace', [WRLD]),
-          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS])
+          {29} wbFormIDCk('Referenceable Object', [CREA, NPC_, TREE, SBSP, SOUN, ACTI, DOOR, STAT, CONT, ARMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH])
         ]),
         wbEmpty('Unused', cpIgnore)
       ])
@@ -3083,10 +3014,10 @@ begin
     wbRArray('References',
       wbRUnion('', [
         wbFormIDCk(SCRO, 'Global Reference',
-          [ACTI, DOOR, FLOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, MISC, WEAP,
-           INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, QUST, PLYR, PACK, LVLI,
+          [ACTI, DOOR, STAT, CREA, SPEL, NPC_, CONT, ARMO, MISC, WEAP,
+           INGR, SLGM, SGST, BOOK, CLOT, ALCH, APPA, LIGH, QUST, PLYR, PACK,
            FACT, REFR, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, RACE,
-           LVLC, WRLD, SCPT, BSGN, TREE, NULL]),
+           WRLD, SCPT, BSGN, TREE, NULL]),
         wbInteger(SCRV, 'Local Variable', itU32)
       ], [])
     );
@@ -3626,8 +3557,6 @@ begin
   ]);
 
   wbRecord(RACE, 'Race', [
-    wbEDID,
-    wbFULL,
     wbDESC,
     wbSPLOs,
     wbXNAMs,
@@ -3648,10 +3577,6 @@ begin
     wbStruct(VNAM, 'Voice', [
       wbFormIDCk('Male', [RACE, NULL]),
       wbFormIDCk('Female', [RACE, NULL])
-    ]),
-    wbStruct(DNAM, 'Default Hair', [
-      wbFormIDCk('Male', [HAIR]),
-      wbFormIDCk('Female', [HAIR])
     ]),
     wbInteger(CNAM, 'Default Hair Color', itU8, nil, cpNormal, True),
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
@@ -3853,7 +3778,6 @@ begin
   ]);
 
   wbRecord(SKIL, 'Skill', [
-    wbEDID,
     wbInteger(INDX, 'Skill', itS32, wbActorValueEnum, cpNormal, True),
     wbDESC,
     wbICON,
@@ -3922,7 +3846,7 @@ begin
 
   wbRecord(STAT, 'Static', [
     wbString(NAME, 'NameID'),
-    wbMODL
+    wbString(MODL, 'Model Filename')
   ]);
 
   wbRecord(TES3, 'Main File Header', [
