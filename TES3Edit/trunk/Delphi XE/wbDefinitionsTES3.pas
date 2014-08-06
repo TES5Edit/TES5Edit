@@ -71,74 +71,42 @@ const
   DNAM : TwbSignature = 'DNAM'; { Morrowind }
   DODT : TwbSignature = 'DODT'; { Morrowind }
   DOOR : TwbSignature = 'DOOR'; { Morrowind }
-  EFIT : TwbSignature = 'EFIT';
-  EFIX : TwbSignature = 'EFIX';
-  EFME : TwbSignature = 'EFME';
-  EFSH : TwbSignature = 'EFSH';
-  EFXX : TwbSignature = 'EFXX';
   ENAM : TwbSignature = 'ENAM'; { Morrowind }
-  ENCH : TwbSignature = 'ENCH';
+  ENCH : TwbSignature = 'ENCH'; { Morrowind }
   ENDT : TwbSignature = 'ENDT'; { Morrowind }
   ENIT : TwbSignature = 'ENIT'; { Morrowind }
-  ESCE : TwbSignature = 'ESCE';
-  EYES : TwbSignature = 'EYES';
   FACT : TwbSignature = 'FACT'; { Morrowind }
   FADT : TwbSignature = 'FADT'; { Morrowind }
-  FGGA : TwbSignature = 'FGGA';
-  FGGS : TwbSignature = 'FGGS';
-  FGTS : TwbSignature = 'FGTS';
   FLAG : TwbSignature = 'FLAG'; { Morrowind }
-  FLOR : TwbSignature = 'FLOR';
   FLTV : TwbSignature = 'FLTV'; { Morrowind }
   FNAM : TwbSignature = 'FNAM'; { Morrowind }
   FRMR : TwbSignature = 'FRMR'; { Morrowind }
-  FULL : TwbSignature = 'FULL';
-  FURN : TwbSignature = 'FURN';
   GLOB : TwbSignature = 'GLOB'; { Morrowind }
   GMST : TwbSignature = 'GMST'; { Morrowind }
-  GNAM : TwbSignature = 'GNAM';
-  GRAS : TwbSignature = 'GRAS';
-  HAIR : TwbSignature = 'HAIR';
-  HCLR : TwbSignature = 'HCLR';
-  HEDR : TwbSignature = 'HEDR';
-  HNAM : TwbSignature = 'HNAM';
+  HEDR : TwbSignature = 'HEDR'; { Morrowind }
   HSND : TwbSignature = 'HSND'; { Morrowind }
   HVFX : TwbSignature = 'HVFX'; { Morrowind }
-  ICO2 : TwbSignature = 'ICO2';
-  ICON : TwbSignature = 'ICON';
-  IDLE : TwbSignature = 'IDLE';
-  INAM : TwbSignature = 'INAM';
+  INAM : TwbSignature = 'INAM'; { Morrowind }
   INDX : TwbSignature = 'INDX'; { Morrowind }
-  INFO : TwbSignature = 'INFO';
-  INGR : TwbSignature = 'INGR';
+  INFO : TwbSignature = 'INFO'; { Morrowind }
+  INGR : TwbSignature = 'INGR'; { Morrowind }
   INTV : TwbSignature = 'INTV'; { Morrowind }
   IRDT : TwbSignature = 'IRDT'; { Morrowind }
   ITEX : TwbSignature = 'ITEX'; { Morrowind }
-  JNAM : TwbSignature = 'JNAM';
-  KEYM : TwbSignature = 'KEYM';
-  KFFZ : TwbSignature = 'KFFZ';
   KNAM : TwbSignature = 'KNAM'; { Morrowind }
-  LAND : TwbSignature = 'LAND';
+  LAND : TwbSignature = 'LAND'; { Morrowind }
   LEVC : TwbSignature = 'LEVC'; { Morrowind }
   LEVI : TwbSignature = 'LEVI'; { Morrowind }
   LHDT : TwbSignature = 'LHDT'; { Morrowind }
-  LIGH : TwbSignature = 'LIGH';
+  LIGH : TwbSignature = 'LIGH'; { Morrowind }
   LKDT : TwbSignature = 'LKDT'; { Morrowind }
-  LNAM : TwbSignature = 'LNAM';
   LOCK : TwbSignature = 'LOCK'; { Morrowind }
-  LSCR : TwbSignature = 'LSCR';
-  LTEX : TwbSignature = 'LTEX';
-  LVLC : TwbSignature = 'LVLC';
-  LVLD : TwbSignature = 'LVLD';
-  LVLF : TwbSignature = 'LVLF';
-  LVLI : TwbSignature = 'LVLI';
-  LVLO : TwbSignature = 'LVLO';
-  LVSP : TwbSignature = 'LVSP';
-  MAST : TwbSignature = 'MAST';
+  LTEX : TwbSignature = 'LTEX'; { Morrowind }
+  MAST : TwbSignature = 'MAST'; { Morrowind }
   MCDT : TwbSignature = 'MCDT'; { Morrowind }
   MEDT : TwbSignature = 'MEDT'; { Morrowind }
   MGEF : TwbSignature = 'MGEF'; { Morrowind }
-  MISC : TwbSignature = 'MISC';
+  MISC : TwbSignature = 'MISC'; { Morrowind }
   MNAM : TwbSignature = 'MNAM';
   MO2B : TwbSignature = 'MO2B';
   MO2T : TwbSignature = 'MO2T';
@@ -338,7 +306,6 @@ var
   wbResultScript: IwbSubRecordStructDef;
 //  wbResultScriptOld: IwbSubRecordStructDef;
   wbSCRI: IwbSubRecordDef;
-  wbFaceGen: IwbSubRecordStructDef;
   wbENAM: IwbSubRecordDef;
   wbFGGS: IwbSubRecordDef;
   wbXLOD: IwbSubRecordDef;
@@ -357,12 +324,10 @@ var
   wbZTestFuncEnum: IwbEnumDef;
   wbEFID: IwbSubRecordDef;
   wbEFIDOBME: IwbSubRecordDef;
-  wbEFIT: IwbSubRecordDef;
   wbMagicSchoolEnum: IwbEnumDef;
   wbFunctionsEnum: IwbEnumDef;
   wbSCIT: IwbSubRecordStructDef;
   wbSCITOBME: IwbSubRecordStructDef;
-  wbEffects: IwbSubRecordUnionDef;
 
 function wbClmtMoonsPhaseLength(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -1991,8 +1956,6 @@ begin
 //      0, nil, cpBenign)
     ], []);
 
-  wbSCRI := wbFormIDCk(SCRI, 'Script', [SCPT]);
-  wbENAM := wbFormIDCk(ENAM, 'Enchantment', [ENCH]);
 
   wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
 
@@ -2006,7 +1969,6 @@ begin
     wbString(SCRI, 'ScriptID')
   ]);
 
-  wbICON := wbString(ICON, 'Icon filename');
 
   wbActorValueEnum :=
     wbEnum([
@@ -2113,19 +2075,6 @@ begin
       -1, 'None'
     ]);
 
-
-
-  wbEFIT :=
-    wbStructSK(EFIT, [4, 5], '', [
-      wbInteger('Magic effect name', itU32, wbChar4),
-      wbInteger('Magnitude', itU32),
-      wbInteger('Area', itU32),
-      wbInteger('Duration', itU32),
-      wbInteger('Type', itU32, wbEnum(['Self', 'Touch', 'Target'])),
-      wbInteger('Actor Value', itS32, wbActorValueEnum)
-    ], cpNormal, True, nil, -1, wbEFITAfterLoad);
-
-
   wbMagicSchoolEnum :=
     wbEnum([
       'Alteration',
@@ -2162,36 +2111,6 @@ begin
 
 
   wbOBMEResolutionInfo := wbEnum(['None', 'FormID', 'Magic Effect Code', 'Actor Value']);
-
-  wbEffects :=
-    wbRUnion('Effects', [
-      wbRStruct('Effects', [
-        wbRStructs('Effects','Effect', [
-          wbEFID,
-          wbEFIT,
-          wbSCIT
-        ], [])
-      ], []),
-      wbRStruct('Effects', [
-        wbRStructs('Effects','Effect', [
-          wbStruct(EFME, 'Oblivion Magic Extender', [
-            wbInteger('Record Version', itU8),
-            wbStruct('OBME Version', [
-              wbInteger('Beta', itU8),
-              wbInteger('Minor', itU8),
-              wbInteger('Major', itU8)
-            ]),
-            wbInteger('EFIT Param Info', itU8, wbOBMEResolutionInfo),
-            wbInteger('EFIX Param Info', itU8, wbOBMEResolutionInfo),
-            wbByteArray('Unused', $0A)
-          ]),
-          wbEFIDOBME,
-          wbSCITOBME
-        ], []),
-        wbEmpty(EFXX, 'Effects End Marker', cpNormal, True),
-        wbFULLReq
-      ], [])
-    ], []);
 
   wbRecord(ALCH, 'Potion', [
     wbString(NAME, 'NameID'),
@@ -3166,7 +3085,7 @@ begin
         wbFormIDCk(SCRO, 'Global Reference',
           [ACTI, DOOR, FLOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, MISC, WEAP,
            INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, QUST, PLYR, PACK, LVLI,
-           FACT, REFR, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
+           FACT, REFR, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, RACE,
            LVLC, WRLD, SCPT, BSGN, TREE, NULL]),
         wbInteger(SCRV, 'Local Variable', itU32)
       ], [])
@@ -3400,12 +3319,6 @@ begin
     wbString(ITEX, 'Iventory Icon Filename'),
     wbString(ENAM, 'EnchantID')
   ]);
-
-  wbFaceGen := wbRStruct('FaceGen Data', [
-    wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
-    wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
-    wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
-  ], [], cpNormal, True);
 
   wbRecord(NPC_, 'Non-Player Character', [
     wbString(NAME, 'NameID'),
@@ -3800,9 +3713,6 @@ begin
         wbICON
       ], []))
     ], [], cpNormal, True),
-    wbArrayS(HNAM, 'Hairs', wbFormIDCk('Hair', [HAIR]), 0, cpNormal, True),
-    wbArrayS(ENAM, 'Eyes', wbFormIDCk('Eye', [EYES]),  0,  cpNormal, True),
-    wbFaceGen,
     wbByteArray(SNAM, 'Unknown', 2, cpNormal, True)
   ], True);
 
@@ -3954,7 +3864,6 @@ begin
       wbArray('Use Values', wbFloat('Use Value'), 2)
     ], cpNormal, True),
     wbString(ANAM, 'Apprentice Text', 0, cpTranslate, True),
-    wbString(JNAM, 'Journeyman Text', 0, cpTranslate, True),
     wbString(ENAM, 'Expert Text', 0, cpTranslate, True),
     wbString(MNAM, 'Master Text', 0, cpTranslate, True)
   ]);
