@@ -51,39 +51,26 @@ const
   BSND : TwbSignature = 'BSND'; { Morrowind }
   BVFX : TwbSignature = 'BVFX'; { Morrowind }
   BYDT : TwbSignature = 'BYDT'; { Morrowind }
-  CELL : TwbSignature = 'CELL';
+  CELL : TwbSignature = 'CELL'; { Morrowind }
   CLAS : TwbSignature = 'CLAS'; { Morrowind }
   CLDT : TwbSignature = 'CLDT'; { Morrowind }
-  CLMT : TwbSignature = 'CLMT';
-  CLOT : TwbSignature = 'CLOT';
+  CLOT : TwbSignature = 'CLOT'; { Morrowind }
   CNAM : TwbSignature = 'CNAM'; { Morrowind }
   CNDT : TwbSignature = 'CNDT'; { Morrowind }
-  CNTO : TwbSignature = 'CNTO';
-  CONT : TwbSignature = 'CONT';
-  CREA : TwbSignature = 'CREA';
-  CSAD : TwbSignature = 'CSAD';
-  CSCR : TwbSignature = 'CSCR';
-  CSDC : TwbSignature = 'CSDC';
-  CSDI : TwbSignature = 'CSDI';
-  CSDT : TwbSignature = 'CSDT';
+  CNTO : TwbSignature = 'CNTO'; { Morrowind }
+  CONT : TwbSignature = 'CONT'; { Morrowind }
+  CREA : TwbSignature = 'CREA'; { Morrowind }
   CSND : TwbSignature = 'CSND'; { Morrowind }
-  CSTD : TwbSignature = 'CSTD';
-  CSTY : TwbSignature = 'CSTY';
-  CTDA : TwbSignature = 'CTDA';
+  CTDA : TwbSignature = 'CTDA'; { Not Morrowind but keep it }
   CTDT : TwbSignature = 'CTDT'; { Morrowind }
   CVFX : TwbSignature = 'CVFX'; { Morrowind }
   DATA : TwbSignature = 'DATA'; { Morrowind }
-  DATX : TwbSignature = 'DATX';
-  DELE : TwbSignature = 'DELE';
+  DELE : TwbSignature = 'DELE'; { Morrowind }
   DESC : TwbSignature = 'DESC'; { Morrowind }
-  DIAL : TwbSignature = 'DIAL';
+  DIAL : TwbSignature = 'DIAL'; { Morrowind }
   DNAM : TwbSignature = 'DNAM'; { Morrowind }
   DODT : TwbSignature = 'DODT'; { Morrowind }
-  DOOR : TwbSignature = 'DOOR';
-  EDDX : TwbSignature = 'EDDX';
-  EDID : TwbSignature = 'EDID';
-  EFID : TwbSignature = 'EFID';
-  EFII : TwbSignature = 'EFII';
+  DOOR : TwbSignature = 'DOOR'; { Morrowind }
   EFIT : TwbSignature = 'EFIT';
   EFIX : TwbSignature = 'EFIX';
   EFME : TwbSignature = 'EFME';
@@ -333,8 +320,6 @@ var
   wbSPLOs: IwbSubRecordArrayDef;
   wbCNTO: IwbSubRecordDef;
   wbCNTOs: IwbSubRecordArrayDef;
-  wbCSDT: IwbSubRecordStructDef;
-  wbCSDTs: IwbSubRecordArrayDef;
   wbFULL: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
   wbXNAM: IwbSubRecordDef;
@@ -1963,7 +1948,6 @@ begin
 
   wbMusicEnum := wbEnum(['Default', 'Public', 'Dungeon']);
 
-  wbEDID := wbString(EDID, 'Editor ID', 0, cpBenign);
   wbFULL := wbString(FULL, 'Name', 0, cpTranslate);
   wbFULLReq := wbString(FULL, 'Name', 0, cpNormal, True);
   wbDESC := wbString(DESC, 'Description', 0, cpTranslate);
@@ -2130,9 +2114,6 @@ begin
     ]);
 
 
-  wbEFID := wbInteger(EFID, 'Magic effect name', itU32, wbChar4, cpNormal, True);
-
-  wbEFIDOBME := wbStringMgefCode(EFID, 'Magic Effect Code', 4, cpNormal, True);
 
   wbEFIT :=
     wbStructSK(EFIT, [4, 5], '', [
@@ -2205,8 +2186,7 @@ begin
             wbByteArray('Unused', $0A)
           ]),
           wbEFIDOBME,
-          wbSCITOBME,
-          wbString(EFII, 'Icon')
+          wbSCITOBME
         ], []),
         wbEmpty(EFXX, 'Effects End Marker', cpNormal, True),
         wbFULLReq
@@ -2538,27 +2518,6 @@ begin
       ])
     )
   ]);
-
-  wbCSDT := wbRStructSK([0], 'Sound Type', [
-    wbInteger(CSDT, 'Type', itU32,wbEnum([
-      {0x00} 'Left Foot',
-      {0x01} 'Right Foot',
-      {0x02} 'Left Back Foot',
-      {0x03} 'Right Back Foot',
-      {0x04} 'Idle',
-      {0x05} 'Aware',
-      {0x06} 'Attack',
-      {0x07} 'Hit',
-      {0x08} 'Death',
-      {0x09} 'Weapon'
-    ])),
-    wbRArrayS('Sounds', wbRStructSK([0], 'Sound', [
-      wbFormIDCk(CSDI, 'Sound', [SOUN], False, cpNormal, True),
-      wbInteger(CSDC, 'Sound Chance', itU8, nil, cpNormal, True)
-    ], []), cpNormal, True)
-  ], []);
-
-  wbCSDTs := wbRArrayS('Sound Types', wbCSDT);
 
   wbSoulGemEnum := wbEnum([
     {0} 'None',
@@ -3208,7 +3167,7 @@ begin
           [ACTI, DOOR, FLOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, MISC, WEAP,
            INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, QUST, PLYR, PACK, LVLI,
            FACT, REFR, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
-           LVLC, CSTY, WRLD, SCPT, BSGN, TREE, NULL]),
+           LVLC, WRLD, SCPT, BSGN, TREE, NULL]),
         wbInteger(SCRV, 'Local Variable', itU32)
       ], [])
     );
