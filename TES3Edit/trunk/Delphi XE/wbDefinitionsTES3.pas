@@ -244,6 +244,7 @@ const
   SCTX : TwbSignature = 'SCTX'; { Morrowind }
   SCVR : TwbSignature = 'SCVR'; { Morrowind }
   SGST : TwbSignature = 'SGST';
+  SKDT : TwbSignature = 'SKDT'; { Morrowind }
   SKIL : TwbSignature = 'SKIL'; { Morrowind }
   SLCP : TwbSignature = 'SLCP';
   SLGM : TwbSignature = 'SLGM';
@@ -379,6 +380,7 @@ var
   wbSCIT: IwbSubRecordStructDef;
   wbSCITOBME: IwbSubRecordStructDef;
   wbEffects: IwbSubRecordUnionDef;
+  wbAttributeEnum: IwbEnumDef;
 
 function wbClmtMoonsPhaseLength(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -4009,21 +4011,34 @@ begin
     wbStringScript(SCTX, 'Script Source', 0, cpNormal, True)
   ]);
 
+
+  wbAttributeEnum :=
+    wbEnum([
+      'Strength',
+      'Intelligence',
+      'Willpower',
+      'Agility',
+      'Speed',
+      'Endurance',
+      'Personality',
+      'Luck'
+      ]);
+
   wbRecord(SKIL, 'Skill', [
-    wbEDID,
-    wbInteger(INDX, 'Skill', itS32, wbActorValueEnum, cpNormal, True),
-    wbDESC,
-    wbICON,
-    wbStruct(DATA, 'Skill Data', [
-      wbInteger('Action', itS32, wbActorValueEnum),
-      wbInteger('Attribute', itS32, wbActorValueEnum),
-      wbInteger('Specialization', itU32, wbSpecializationEnum),
-      wbArray('Use Values', wbFloat('Use Value'), 2)
-    ], cpNormal, True),
-    wbString(ANAM, 'Apprentice Text', 0, cpTranslate, True),
-    wbString(JNAM, 'Journeyman Text', 0, cpTranslate, True),
-    wbString(ENAM, 'Expert Text', 0, cpTranslate, True),
-    wbString(MNAM, 'Master Text', 0, cpTranslate, True)
+    wbInteger(INDX, 'Skill', itS32, wbSkillEnum),
+    wbStruct(SKDT, 'Skill Data', [
+      wbInteger('Attribute', itS32, wbAttributeEnum),
+      wbInteger('Type', itU32, wbEnum([
+       {0}'Combat',
+       {1}'Magic',
+       {2}'Stealth'
+      ])),
+      wbFloat('Action One'),
+      wbFloat('Action Two'),
+      wbFloat('Action Three'),
+      wbFloat('Action Four')
+    ]),
+    wbString(DESC, 'Description')
   ]);
 
   wbRecord(SNDG, 'Sound Generator', [
@@ -4078,9 +4093,10 @@ begin
     )
   ]);
 
+  {Done}
   wbRecord(STAT, 'Static', [
     wbString(NAME, 'NameID'),
-    wbMODL
+    wbString(MODL, 'Model Filename')
   ]);
 
   wbRecord(TES3, 'Main File Header', [
