@@ -2106,27 +2106,33 @@ begin
 
   wbSkillEnum :=
     wbEnum([
-      'Armorer',
-      'Athletics',
-      'Blade',
       'Block',
-      'Blunt',
-      'Hand To Hand',
+      'Armorer',
+      'Medium Armor',
       'Heavy Armor',
-      'Alchemy',
-      'Alteration',
-      'Conjuration',
+      'Blunt Weapon',
+      'Long Blade',
+      'Axe',
+      'Spear',
+      'Athletics',
+      'Enchant',
       'Destruction',
+      'Alteration',
       'Illusion',
+      'Conjuration',
       'Mysticism',
       'Restoration',
-      'Acrobatics',
-      'Light Armor',
-      'Marksman',
-      'Mercantile',
+      'Alchemy',
+      'Unarmored',
       'Security',
       'Sneak',
-      'Speechcraft'
+      'Acrobatics',
+      'Light Armor',
+      'Short Blade',
+      'Marksman',
+      'Mercantile',
+      'Speechcraft',
+      'Hand-To-Hand'
     ], [
       -1, 'None'
     ]);
@@ -2325,6 +2331,7 @@ begin
     wbString(ENAM, 'EnchantID')
   ]);
 
+  {Done}
   wbRecord(BOOK, 'Book', [
     wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
@@ -2332,29 +2339,35 @@ begin
     wbStruct(BKDT, 'Book Data', [
       wbFloat('Weight'),
       wbInteger('Value', itU32),
+      { Not sure this might be a Flag, it's 0 when it's not a scroll
+      and 01 when it is a scroll }
       wbInteger('Scroll', itU32, wbEnum([
         'Not A Scroll',
         'Scroll'
       ])),
-      wbInteger('SkillID', itU32, wbSkillEnum),
+      wbInteger('SkillID', itS32, wbSkillEnum),
       wbInteger('EnchantPts', itU32)
     ]),
-    wbString(ITEX, 'Book Name'),
     wbString(SCRI, 'ScriptID'),
+    wbString(ITEX, 'Icon Filename'),
     {quotes don't work with wbString in the book text}
     {x93Such as?x94 asked Bianki, smiling.<BR>}
-    wbString(TEXT, 'Book Text')
+    wbString(TEXT, 'Book Text'),
+    wbString(ENAM, 'EnchantID')
   ]);
 
   wbSPLO := wbFormIDCk(SPLO, 'Spell', [SPEL, LVSP]);
   wbSPLOs := wbRArrayS('Spells', wbSPLO);
 
+  {Done}
   wbRecord(BSGN, 'Birthsign', [
-    wbEDID,
-    wbFULL,
-    wbICON,
-    wbDESC,
-    wbSPLOs
+    wbString(NAME, 'NameID'),
+    wbString(FNAM, 'Book Name'),
+    wbString(TNAM, 'Texture filename'),
+    wbString(DESC, 'Description'),
+    wbRArray('Spells',
+      wbStringForward(NPCS, 'SpellID', 32)
+    )
   ]);
 
   wbRecord(CELL, 'Cell', [
