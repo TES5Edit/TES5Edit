@@ -2016,6 +2016,7 @@ begin
   wbXOWN := wbFormIDCk(XOWN, 'Owner', [FACT, NPC_]);
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 
+  {Done}
   wbRecord(ACTI, 'Activator', [
     wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
@@ -2239,6 +2240,7 @@ begin
     wbString(SCRI, 'ScriptID')
   ]);
 
+  {Done}
   wbRecord(APPA, 'Alchemical Apparatus', [
     wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
@@ -2254,10 +2256,11 @@ begin
       wbFloat('Quality'),
       wbFloat('Weight'),
       wbInteger('Value', itU32)
-    ], cpNormal, True)
-    wbString(ITEX, 'Icon Filename'),
+    ], cpNormal, True),
+    wbString(ITEX, 'Icon Filename')
   ]);
 
+  {Done}
   wbRecord(ARMO, 'Armor', [
     wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
@@ -3724,11 +3727,12 @@ begin
       'Tail'
     ]));
 
+  {Done}
   wbRecord(BODY, 'Body Parts', [
     wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
-    wbString(FNAM, 'Body Part Name'),
-    wbStruct(BYDT, 'Body part data', [
+    wbString(FNAM, 'Racial Skin Type'),
+    wbStruct(BYDT, 'Body Part Data', [
       wbInteger('Part', itU8, wbEnum([
         'Head',
         'Hair',
@@ -3746,12 +3750,15 @@ begin
         'Clavicle',
         'Tail'
       ])),
-      wbInteger('Vampire', itU8),
+      wbInteger('Skin Type', itU8, wbEnum([
+        'None',
+        'Vampire'
+      ])),
       wbInteger('Flags', itU8, wbFlags([
         'Female',
-        'Playable'
+        'Not Playable'
       ])),
-      wbInteger('PartType', itU8, wbFlags([
+      wbInteger('Body Part Type', itU8, wbEnum([
         'Skin',
         'Clothing',
         'Armor'
