@@ -24,7 +24,6 @@ uses
 var
   wbApplicationTitle   : string;
   wbTheGameIniFileName : String;
-  wbProgramPath        : string;
   wbScriptsPath        : string;
   wbBackupPath         : string;
   wbTempPath           : string;
@@ -34,7 +33,6 @@ var
   wbModGroupFileName   : string;
   wbPluginToUse        : string;  // Passed a specific plugin as parameter
   wbLogFile            : string;  // Optional log file for this session
-  wbOutputBaseFileName : string;  // Optional root result file name for splitting xDump result into separate files. TBD
 
   wbMasterUpdateDone   : Boolean;
   wbMasterUpdateOK     : Boolean;
@@ -341,6 +339,15 @@ begin
   end else
     wbDataPath := IncludeTrailingPathDelimiter(wbDataPath);
 
+  wbOutputPath := wbDataPath;
+  if wbFindCmdLineParam('O', s) and (Length(s) > 0) then
+    if s[1] = '.' then
+      //assume relative path
+      wbOutputPath := IncludeTrailingPathDelimiter(wbOutputPath + s)
+    else
+      //assume absolute path
+      wbOutputPath := IncludeTrailingPathDelimiter(s);
+
   wbMOHookFile := wbDataPath + '..\Mod Organizer\hook.dll';
 
   if not wbFindCmdLineParam('I', wbTheGameIniFileName) then begin
@@ -379,7 +386,6 @@ begin
         wbBackupPath := wbDataPath;
   end;
   wbFindCmdLineParam('L', wbLogFile);
-  wbFindCmdLineParam('O', wbOutputBaseFileName);
 end;
 
 function isMode(aMode: String): Boolean;

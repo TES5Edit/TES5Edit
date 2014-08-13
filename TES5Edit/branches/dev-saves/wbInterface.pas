@@ -114,6 +114,7 @@ var
 
   wbProgramPath : string;
   wbDataPath    : string;
+  wbOutputPath  : string;
 
   wbShouldLoadMOHookFile : Boolean;
   wbMOProfile            : string;
@@ -414,6 +415,7 @@ type
     function GetBaseName: string;
     function GetDisplayName: string;
     function GetShortName: string;
+    function GetPermanentName: string;
     function GetPath: string;
     function GetFullPath: string;
     function GetPathName: string;
@@ -523,6 +525,8 @@ type
       read GetDisplayName;
     property ShortName: string
       read GetShortName;
+    property PermanentName: string
+      read GetpermanentName;
     property Path: string
       read GetPath;
     property FullPath: string
@@ -10131,11 +10135,11 @@ begin
         PSingle(aBasePtr)^ := SingleNaN;
     end else if fdDouble and (SameValue(Value, MaxDouble) or (Value > MaxDouble)) then
       PInt64(aBasePtr)^ := $7FEFFFFFFFFFFFFF
-    else if fdDouble and (SameValue(Value, -MaxDouble) or (Value < MaxDouble)) then
+    else if fdDouble and (SameValue(Value, -MaxDouble) or (Value < -MaxDouble)) then
       PInt64(aBasePtr)^ := $FFEFFFFFFFFFFFFF
     else if not fdDouble and (SameValue(Value, MaxSingle) or (Value > MaxSingle)) then
       PCardinal(aBasePtr)^ := $7F7FFFFF
-    else if not fdDouble and (SameValue(Value, -MaxSingle) or (Value < MaxSingle)) then
+    else if not fdDouble and (SameValue(Value, -MaxSingle) or (Value < -MaxSingle)) then
       PCardinal(aBasePtr)^ := $FF7FFFFF
     else begin
       Value := RoundToEx(Value, -fdDigits);
@@ -10198,7 +10202,6 @@ end;
 function TwbFloatDef.ToValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Extended;
 var
   Len   : Cardinal;
-//  OrgValue : Extended;
   Value : Extended;
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);

@@ -298,6 +298,7 @@ type
     function GetBaseName: string; virtual;
     function GetDisplayName: string; virtual;
     function GetShortName: string; virtual;
+    function GetPermanentName: string; virtual;
     function GetPath: string; virtual;
     function GetFullPath: string; virtual;
     function GetPathName: string; virtual;
@@ -582,6 +583,7 @@ type
     function GetReferenceFile: IwbFile; override;
     function GetName: string; override;
     function GetBaseName: string; override;
+    function GetPermanentName: string; override;
     procedure PrepareSave; override;
     procedure SetModified(aValue: Boolean); override;
 
@@ -1054,6 +1056,7 @@ type
 
     function GetName: string; override;
     function GetShortName: string; override;
+    function GetPermanentName: string; override;
     function GetDisplayName: string; override;
   end;
 
@@ -1462,6 +1465,7 @@ type
 
     function GetName: string; override;
     function GetShortName: string; override;
+    function GetPermanentName: string; override;
     function GetElementType: TwbElementType; override;
     function GetSortKeyInternal(aExtended: Boolean): string; override;
     function IsElementRemoveable(const aElement: IwbElement): Boolean; override;
@@ -2667,6 +2671,13 @@ begin
     Result := wbGameName + '.exe';
   if flLoadOrder >= 0 then
     Result := '['+IntToHex64(flLoadOrder, 2)+'] ' + Result;
+end;
+
+function TwbFile.GetPermanentName: string;
+begin
+  Result := GetFileName;
+  if fsIsHardcoded in flStates then
+    Result := wbGameName + '.exe';
 end;
 
 function TwbFile.GetRecord(aIndex: Integer): IwbMainRecord;
@@ -5805,22 +5816,30 @@ begin
 end;
 
 procedure TwbMainRecord.DecompressIfNeeded;
+var
+  UncompressedLength: Cardinal;
 begin
   InitDataPtr; // reset...
 
   if mrStruct.mrsFlags.IsCompressed then try
-    SetLength(mrDataStorage, PCardinal(dcDataBasePtr)^ );
+    UncompressedLength := PCardinal(dcDataBasePtr)^;
+    if UncompressedLength > 0 then begin
+      SetLength(mrDataStorage, UncompressedLength );
 
-    if (PCardinal(dcDataBasePtr)^ > 0) then  // This is to avoid an exception on compressed deleted record (at least in Dawnguard)
       DecompressToUserBuf(
         Pointer( Cardinal(dcDataBasePtr) + SizeOf(Cardinal) ),
         mrStruct.mrsDataSize - SizeOf(Cardinal),
         @mrDataStorage[0],
-        PCardinal(dcDataBasePtr)^
+        UncompressedLength
       );
 
-    dcDataEndPtr := Pointer( Cardinal(@mrDataStorage[0]) + PCardinal(dcDataBasePtr)^ );
-    dcDataBasePtr := @mrDataStorage[0];
+      dcDataBasePtr := @mrDataStorage[0];
+      dcDataEndPtr := Pointer( Cardinal(dcDataBasePtr) + UncompressedLength );
+    end else begin
+      mrDataStorage := nil;
+      dcDataBasePtr := @EmptyPtr;
+      dcDataEndPtr := @EmptyPtr;
+    end;
   except
     dcDataBasePtr := nil;
     dcDataEndPtr := nil;
@@ -7055,6 +7074,11 @@ end;
 function TwbMainRecord.GetPath: string;
 begin
   Result := mrStruct.mrsSignature;
+end;
+
+function TwbMainRecord.GetPermanentName: string;
+begin
+  Result := '[' + GetMasterOrSelf.GetFile.GetPermanentName + ':' + IntToHex64($00FFFFFF and GetLoadOrderFormID, 8) + ']'
 end;
 
 function TwbMainRecord.GetCountedRecordCount: Cardinal;
@@ -10760,6 +10784,32 @@ begin
     Result := Result + wbFormID.ToString(grStruct.grsLabel, Self);
 end;
 
+function TwbGroupRecord.GetPermanentName: string;
+var
+  aRecord : IwbMainrecord;
+begin
+  case grStruct.grsGroupType of
+    0: Result := PwbSignature(@grStruct.grsLabel)^;
+    //1: Result := 'World Children';
+    1, 6, 7: begin
+        aRecord := GetFile.GetRecordByFormID(grStruct.grsLabel, True);
+        if Assigned(aRecord) then
+          Result := 'Children of ' + aRecord.PermanentName
+        else
+        Result := 'Children of ' + IntToHex(grStruct.grsLabel, 8);
+    end;
+    2: Result := 'Block ' + IntToStr(grStruct.grsLabel);
+    3: Result := 'Sub-Block ' + IntToStr(grStruct.grsLabel);
+    4: Result := 'Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo);
+    5: Result := 'Sub-Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo);
+    8: Result := 'Persistent';
+    9: Result := 'Temporary';
+    10: Result := 'Visible when Distant';
+  else
+    Result := Result + ' Unknown type: ' + IntToStr(grStruct.grsGroupType);
+  end;
+end;
+
 function TwbGroupRecord.GetCountedRecordCount: Cardinal;
 begin
   Result := Succ(inherited GetCountedRecordCount);
@@ -11929,9 +11979,21 @@ begin
     Result := IwbElement(eContainer).PathName
   else
     Result := '';
-  Result := Result + '\';
+  Result := Result + ' \ ';
+  Result := Result + GetPermanentName;
+end;
+
+function TwbElement.GetPermanentName: string;
+var
+  aElement  : IwbElement;
+begin
+  Result := '';
   if Assigned(eContainer) then
-    Result := Result + '['+IntToStr(IwbContainer(eContainer).IndexOf(Self))+'] ';
+    aElement := IwbContainer(eContainer)
+  else
+    aElement := nil;
+  if Assigned(aElement) and (aElement.ElementType = etArray) or (aElement.ElementType = etSubRecordArray) then
+    Result := '['+IntToStr(IwbContainer(eContainer).IndexOf(Self))+'] ';
   Result := Result + GetShortName;
 end;
 
@@ -15459,7 +15521,7 @@ end;
 function TwbRecordHeaderStruct.IsElementEditable(const aElement: IwbElement): Boolean;
 begin
   Result := Assigned(aElement) and Assigned(aElement.ValueDef) and
-    (SameText(aElement.ValueDef.Name, 'Record Flags') or SameText(aElement.Def.Name, 'Version Control Master FormID'));
+    SameText(aElement.ValueDef.Name, 'Record Flags');
   if Result and Assigned(eContainer) then
     Result := IwbContainer(eContainer).IsElementEditable(Self);
 end;
@@ -15909,6 +15971,9 @@ var
   Container   : IwbContainer;
   SelfRef     : IwbContainerElementRef;
   fPath       : String;
+  modOffset   : Cardinal;
+  modPtr      : Pointer;
+  mods        : TwbArray;
 
 begin
   SelfRef := Self as IwbContainerElementRef;
@@ -15929,7 +15994,14 @@ begin
   if fsOnlyHeader in flStates then
     Exit;
 
-  MasterFiles := Header.ElementByName[wbFilePlugins] as IwbContainerElementRef;
+  if Pos('Absolute:', wbFilePlugins)=1 then begin
+    modOffset := Cardinal(flView)+StrToInt(Copy(wbFilePlugins, 10, Length(wbFilePlugins)));
+    modPtr := Pointer(modOffset);
+    mods := TwbArray.Create(nil, modPtr, flEndPtr, wbArray('Modules', wbLenString('PluginName', 2), -4), '', False);
+    Supports(mods, IwbContainerElementRef, MasterFiles);
+  end else
+    MasterFiles := Header.ElementByName[wbFilePlugins] as IwbContainerElementRef;
+
   if Assigned(MasterFiles) then
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
       fPath := wbDataPath + MasterFiles[i].Value;

@@ -71,6 +71,28 @@ const
 //    Value := Element.Name;
 //end;
 
+function VarToCardinal(v: Variant): Cardinal;
+var
+  i64: Int64;
+begin
+  case VarType(v) and VarTypeMask of
+    varSmallInt, varShortInt, varInteger, varByte, varWord, varLongWord:
+      Result := v;
+    varSingle, varDouble:
+      Result := Round(v);
+    varInt64, varUInt64:
+      begin
+        i64 := v;
+        Result := Int64Rec(i64).Lo;
+      end;
+    varString, varUString:
+      Result := StrToInt(v);
+    else
+      // will most likely cause an exception
+      Result := v;
+  end;
+end;
+
 procedure _Assigned(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := Assigned(V2O(Args.Values[0]));
@@ -818,7 +840,7 @@ var
   MainRecord: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
-    MainRecord.LoadOrderFormID := Cardinal(Args.Values[1]);
+    MainRecord.LoadOrderFormID := VarToCardinal(Args.Values[1]);
 end;
 
 procedure IwbMainRecord_GetIsDeleted(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1025,7 +1047,7 @@ var
   MainRecord: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
-    Value := MainRecord.CompareExchangeFormID(Cardinal(Args.Values[1]), Cardinal(Args.Values[2]));
+    Value := MainRecord.CompareExchangeFormID(VarToCardinal(Args.Values[1]), VarToCardinal(Args.Values[2]));
 end;
 
 procedure IwbMainRecord_ChangeFormSignature(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1235,7 +1257,7 @@ var
   _File: IwbFile;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    Value := _File.RecordByFormID[Cardinal(Args.Values[1]), Args.Values[2]];
+    Value := _File.RecordByFormID[VarToCardinal(Args.Values[1]), Args.Values[2]];
 end;
 
 procedure IwbFile_RecordByEditorID(var Value: Variant; Args: TJvInterpreterArgs);

@@ -17,6 +17,7 @@ unit wbDefinitionsFNVSaves;
 interface
 
 procedure DefineFNVSaves;
+procedure SwitchToFNVCoSave;
 
 implementation
 
@@ -36,7 +37,11 @@ var
   wbActorValueLabels : array of string;
 
 var // forward type directives
-  wbChangeTypes : IwbEnumDef;
+  wbChangeTypes  : IwbEnumDef;
+  wbSaveChapters : IwbStructDef;
+  wbNVSEChapters : IwbStructDef;
+  wbSaveHeader   : IwbStructDef;
+  wbNVSEHeader   : IwbStructDef;
 
 procedure DefineFNVSavesA;
 var
@@ -1807,6 +1812,121 @@ begin
   end;
 end;
 
+function NVSEChapterOtherCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Chunk', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Length'];
+    if Assigned(Element) then
+      Result := Element.NativeValue;
+  end;
+end;
+
+function NVSEPluginCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+  aFile     : IwbFile;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  aFile := aElement.GetFile;
+  if not Assigned(aFile) then Exit;
+  Element := aFile.ElementByName['CoSave File Header'];
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Plugins count'];
+    if Assigned(Element) then
+      Result := Element.NativeValue;
+  end;
+end;
+
+function NVSEChunkCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Plugin', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Chunks count'];
+    if Assigned(Element) then
+      Result := Element.NativeValue;
+  end;
+end;
+
+function NVSEChaptersDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Chunk', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Type'];
+    if Assigned(Element) then
+           if Element.Value ='SDOM' then Result := 1
+      else if Element.Value ='SVTS' then Result := 2
+      else if Element.Value ='RVTS' then Result := 3
+      else if Element.Value ='EVTS' then Result := 4
+      else if Element.Value ='SVRA' then Result := 5
+      else if Element.Value ='RVRA' then Result := 6
+      else if Element.Value ='EVRA' then Result := 7
+      else Result := 8;
+  end;
+end;
+
+function NVSEArrayKeyElementDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Array', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Key Type'];
+    if Assigned(Element) then
+      case Element.NativeValue of
+        1: Result := 1;
+      else
+        Result := 2;
+      end;
+  end;
+end;
+
+function NVSEArrayDataElementDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := FindElement('Element', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Data Type'];
+    if Assigned(Element) then
+      case Element.NativeValue of
+        1: Result := 1;   // Numeric
+        2: Result := 2;   // Form
+        3: Result := 3;   // String
+        4: Result := 4;   // Array
+      end;
+  end;
+end;
+
 function ToBeDeterminedDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := 0;
@@ -2005,6 +2125,8 @@ var
   wbUnionCHANGE_FORM_LIST_ADDED_FORM : IwbUnionDef;
 
   wbUnionCHANGE_PACKAGE_CREATED : IwbUnionDef;
+
+  wbNVSEArrayType : IwbEnumDef;
 
 begin
   wbNull := wbByteArray('Unused', -255);
@@ -6765,7 +6887,7 @@ begin
     wbByteArray('Unused', $6e - 9*4)
   ]);
 
-  wbFileHeader := wbStruct('Save File Header', [
+  wbSaveHeader := wbStruct('Save File Header', [
      wbString('Magic', 11)
     ,wbInteger('Header Size', itU32)
     ,wbHeader
@@ -6776,7 +6898,7 @@ begin
     ,wbFileLocationTable
   ]);
 
-  wbFileChapters := wbStruct('Save File Chapters', [
+  wbSaveChapters := wbStruct('Save File Chapters', [
      wbArray('Global Data 1', wbGlobalData, [], GlobalData1Counter)
     ,wbArray('Changed Forms', wbChangedForm, [], ChangedFormsCounter)
     ,wbArray('Global Data 2', wbGlobalData, [], GlobalData2Counter)
@@ -6786,19 +6908,101 @@ begin
 //    ,wbByteArray('Unused', SkipCounter) // Lets you skip an arbitrary number of byte, Setable from CommandLine -bts:n
 //    ,wbArray('Remaining',  WbByteArray('Unknown', wbBytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
   ]);
+
+  wbNVSEHeader := wbStruct('CoSave File Header', [
+     wbString('Magic', 4)
+    ,wbInteger('Version', itU32)
+    ,wbInteger('NVSE Version', itU16)
+    ,wbInteger('NVSE Minor Version', itU16)
+    ,wbInteger('Fallout Version', itU32)
+    ,wbInteger('Plugins count', itU32)
+  ]);
+
+  wbNVSEArrayType := wbEnum([
+    'Invalid',
+    'Numeric',
+    'Form',
+    'String',
+    'Array'
+  ]);
+
+  wbNVSEChapters := wbStruct('CoSave File Chapters', [
+     wbArray('Plugins', wbStruct('Plugin', [
+       wbInteger('Opcode Base', itU32),
+       wbInteger('Chunks count', itU32),
+       wbInteger('Length', itU32),
+       wbArray('Chunks',
+         wbStruct('Chunk', [
+           wbString('Type', 4),
+           wbInteger('Version', itU32),
+           wbInteger('Length', itU32),
+           wbUnion('Data', NVSEChaptersDecider, [
+             wbNull,
+             wbArray('Modules', wbLenString('PluginName', 2), -4),
+             wbNull,  // STVS String Var Map Start
+             wbStruct('String', [
+               wbInteger('Owning Module Index', itU8),
+               wbInteger('ID', itU32),
+               wbLenString('Value', 2)
+             ]),
+             wbNull,  // STVE String Var Map End
+             wbNull,  // ARVS Array Var Map Start
+             wbStruct('Array', [
+               wbInteger('Owning Module Index', itU8),
+               wbInteger('ID', itU32),
+               wbInteger('Key Type', itU8, wbNVSEArrayType),
+               wbInteger('Packed', itU8),
+               wbArray('Refs', wbInteger('Ref', itU8), -1),
+               wbArray('Elements', wbStruct('Element', [
+                 wbUnion('Key', NVSEArrayKeyElementDecider, [
+                   wbNull,
+                   wbDouble('Numeric Key'),
+                   wbLenString('String Key', 2)
+                 ]),
+                 wbInteger('Data Type', itU8, wbNVSEArrayType),
+                 wbUnion('Data', NVSEArrayDataElementDecider, [
+                   wbNull,
+                   wbDouble('Numeric Data'),
+                   wbFormID('Form Data'),
+                   wbLenString('String Data', 2),
+                   wbInteger('Array Data', itU32)
+                 ])
+               ]), -1)
+             ]),
+             wbNull,  // ARVE Array Var Map End
+             wbByteArray('Others', NVSEChapterOtherCounter)
+           ])
+         ]), NVSEChunkCounter)
+       ]), NVSEPluginCounter)
+//    ,wbByteArray('Unused', SkipCounter) // Lets you skip an arbitrary number of byte, Setable from CommandLine -bts:n
+//    ,wbArray('Remaining',  WbByteArray('Unknown', wbBytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
+  ]);
+
+  wbFileChapters := wbSaveChapters;
+  wbFileHeader := wbSaveHeader;
 end;
 
 var
-  ExtractInfo: TByteSet = [3, 4]; // SaveFileChapters that should be initialized before dumping to get more information
+  ExtractInfoSave:   TByteSet = [3, 4]; // SaveFileChapters that should be initialized before dumping to get more information
+  ExtractInfoCoSave: TByteSet = [];     // CoSaveFileChapters that should be initialized before dumping to get more information
 
 procedure DefineFNVSaves;
 begin
   wbFileMagic := 'FO3SAVEGAME';
-  wbExtractInfo := @ExtractInfo;
+  wbExtractInfo := @ExtractInfoSave;
   wbFilePlugins := 'Plugins';
   DefineFNV;
   DefineFNVSavesA;
   DefineFNVSavesS;
+end;
+
+procedure SwitchToFNVCoSave;
+begin
+  wbFileMagic := 'NVSE';
+  wbExtractInfo := @ExtractInfoCoSave;
+  wbFilePlugins := 'Absolute:44';
+  wbFileChapters := wbNVSEChapters;
+  wbFileHeader := wbNVSEHeader;
 end;
 
 initialization

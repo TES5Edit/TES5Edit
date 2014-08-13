@@ -1099,6 +1099,12 @@ begin
       WriteLn;
       NeedsSyntaxInfo := True;
     end;
+    if wbToolSource = tsSaves then
+      case wbGameMode of
+        gmFNV:  if SameText(ExtractFileExt(s), '.nvse') then SwitchToFNVCoSave;
+        gmTES5: if SameText(ExtractFileExt(s), '.skse') then
+          WriteLn(ErrOutput, 'CoSave for Skyrim are not supported yet "',s,'". Please check the command line parameters.');
+      end;
 
     if NeedsSyntaxInfo or (ParamCount < 1) or FindCmdLineSwitch('?') or FindCmdLineSwitch('help') then begin
       WriteLn(ErrOutput, 'Syntax:  '+wbAppName+'Dump [options] inputfile');
