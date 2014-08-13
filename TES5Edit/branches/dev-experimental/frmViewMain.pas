@@ -1288,7 +1288,18 @@ begin
     aMainRecord.ConflictThis := aConflictThis;
   end else begin
     NodeDatas := NodeDatasForMainRecord(aMainRecord);
-    aConflictAll := ConflictLevelForChildNodeDatas(NodeDatas, False, (aMainRecord.MasterOrSelf.IsInjected and not (aMainRecord.Signature = 'GMST')) );
+    if Length(NodeDatas) = 1 then begin
+      aConflictAll := caOnlyOne;
+      NodeDatas[0].ConflictAll := caOnlyOne;
+      NodeDatas[0].ConflictThis := ctOnlyOne;
+    end else if wbQuickShowConflicts and (Length(NodeDatas) = 2) then begin
+      aConflictAll := caOverride;
+      NodeDatas[0].ConflictAll := caOverride;
+      NodeDatas[1].ConflictAll := caOverride;
+      NodeDatas[0].ConflictThis := ctMaster;
+      NodeDatas[1].ConflictThis := ctOverride;
+    end else
+      aConflictAll := ConflictLevelForChildNodeDatas(NodeDatas, False, (aMainRecord.MasterOrSelf.IsInjected and not (aMainRecord.Signature = 'GMST')) );
 
     for i := Low(NodeDatas) to High(NodeDatas) do
       with NodeDatas[i] do
@@ -4455,6 +4466,7 @@ type
   TRule = (rSkip, rClear, rReplace);
 
 var
+  LODPath    : string;
   Master     : IwbMainRecord;
   REFRs      : TDynMainRecords;
   Count      : Integer;
@@ -4662,7 +4674,9 @@ begin
       Abort;
   end;
 
-  ForceDirectories(wbDataPath + 'DistantLOD\');
+  LODPath := wbOutputPath + 'DistantLOD\';
+
+  ForceDirectories(LODPath);
 
   i := 0;
   Caption := 'Deleting old .lod files: ' + aWorldspace.Name + ' Processed Files: ' + IntToStr(i) +
@@ -4673,9 +4687,9 @@ begin
   if ForceTerminate then
     Abort;
 
-  if FindFirst(wbDataPath + 'DistantLOD\'+aWorldspace.EditorID+'*.lod', faAnyFile, F) = 0 then try
+  if FindFirst(LODPath + aWorldspace.EditorID + '*.lod', faAnyFile, F) = 0 then try
     repeat
-      DeleteFile(wbDataPath + 'DistantLOD\' + F.Name);
+      DeleteFile(LODPath + F.Name);
       Inc(i);
 
       if StartTick + 500 < GetTickCount then begin
@@ -4694,7 +4708,7 @@ begin
   end;
 
   if Rule > rClear then begin
-    CmpStream := TwbWriteCachedFileStream.Create(wbDataPath + 'DistantLOD\'+aWorldspace.EditorID+'.cmp');
+    CmpStream := TwbWriteCachedFileStream.Create(LODPath + aWorldspace.EditorID + '.cmp');
     try
       Caption := 'Assigning References to Cells: ' + aWorldspace.Name + ' Processed References: ' + IntToStr(0) +
         ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
@@ -4756,7 +4770,7 @@ begin
             end;
             SetLength(RefsInCell, Succ(l));
 
-            with TwbWriteCachedFileStream.Create(wbDataPath + 'DistantLOD\'+aWorldspace.EditorID+'_'+IntToStr(i+MinCell.x)+'_'+IntToStr(j+MinCell.y)+'.lod') do try
+            with TwbWriteCachedFileStream.Create(LODPath + aWorldspace.EditorID + '_' + IntToStr(i+MinCell.x) + '_' + IntToStr(j+MinCell.y) + '.lod') do try
               WriteCardinal(Length(RefsInCell));
 
               for l := Low(RefsInCell) to High(RefsInCell) do begin

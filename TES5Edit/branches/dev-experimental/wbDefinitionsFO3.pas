@@ -5424,6 +5424,7 @@ begin
     wbString(ICO2, 'Female icon filename'),
     wbString(MIC2, 'Female mico filename'),
     wbString(BMCT, 'Ragdoll Constraint Template'),
+    wbDEST,
     wbREPL,
     wbBIPL,
     wbETYPReq,
