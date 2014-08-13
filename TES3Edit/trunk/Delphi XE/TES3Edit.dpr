@@ -53,7 +53,9 @@ uses
   frmLogAnalyzerForm in 'frmLogAnalyzerForm.pas' {frmLogAnalyzer},
   wbScriptAdapterMisc in 'wbScriptAdapterMisc.pas',
   wbNifScanner in 'wbNifScanner.pas',
-  wbDDS in 'wbDDS.pas';
+  wbDDS in 'wbDDS.pas',
+  wbStreams in 'wbStreams.pas',
+  wbSort in 'wbSort.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

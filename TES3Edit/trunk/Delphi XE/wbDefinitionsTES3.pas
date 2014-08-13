@@ -4093,6 +4093,11 @@ begin
     )
   ]);
 
+  wbRecord(SSCR, 'Start Script', [
+    wbString(NAME, 'NameID'),
+    wbString(DATA, 'Digits')
+  ]);
+
   {Done}
   wbRecord(STAT, 'Static', [
     wbString(NAME, 'NameID'),
@@ -4168,6 +4173,7 @@ begin
   wbAddGroupOrder(MGEF);
   wbAddGroupOrder(SCPT);
   wbAddGroupOrder(REGN);
+  wbAddGroupOrder(SSCR);  // To be confirmed
   wbAddGroupOrder(BSGN);
   wbAddGroupOrder(LTEX);
   wbAddGroupOrder(STAT);

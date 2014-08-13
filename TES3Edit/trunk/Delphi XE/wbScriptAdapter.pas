@@ -1,4 +1,20 @@
+{*******************************************************************************
+
+     The contents of this file are subject to the Mozilla Public License
+     Version 1.1 (the "License"); you may not use this file except in
+     compliance with the License. You may obtain a copy of the License at
+     http://www.mozilla.org/MPL/
+
+     Software distributed under the License is distributed on an "AS IS"
+     basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+     License for the specific language governing rights and limitations
+     under the License.
+
+*******************************************************************************}
+
 unit wbScriptAdapter;
+
+{$I wbDefines.inc}
 
 interface
 
@@ -55,6 +71,28 @@ const
 //    Value := Element.Name;
 //end;
 
+function VarToCardinal(v: Variant): Cardinal;
+var
+  i64: Int64;
+begin
+  case VarType(v) and VarTypeMask of
+    varSmallInt, varShortInt, varInteger, varByte, varWord, varLongWord:
+      Result := v;
+    varSingle, varDouble:
+      Result := Round(v);
+    varInt64, varUInt64:
+      begin
+        i64 := v;
+        Result := Int64Rec(i64).Lo;
+      end;
+    varString, varUString:
+      Result := StrToInt(v);
+    else
+      // will most likely cause an exception
+      Result := v;
+  end;
+end;
+
 procedure _Assigned(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := Assigned(V2O(Args.Values[0]));
@@ -89,8 +127,8 @@ begin
   if not Assigned(sl) then
     Exit;
 
-  for i := 0 to Pred(wbRecordDefMap.Count) do
-    with IwbRecordDef(Pointer(wbRecordDefMap.Objects[i])) do
+  for i := Low(wbRecordDefs) to High(wbRecordDefs) do
+    with wbRecordDefs[i].rdeDef do
       sl.Add(DefaultSignature + ' - ' + GetName);
 end;
 
@@ -802,7 +840,7 @@ var
   MainRecord: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
-    MainRecord.LoadOrderFormID := Cardinal(Args.Values[1]);
+    MainRecord.LoadOrderFormID := VarToCardinal(Args.Values[1]);
 end;
 
 procedure IwbMainRecord_GetIsDeleted(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1009,7 +1047,7 @@ var
   MainRecord: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
-    Value := MainRecord.CompareExchangeFormID(Cardinal(Args.Values[1]), Cardinal(Args.Values[2]));
+    Value := MainRecord.CompareExchangeFormID(VarToCardinal(Args.Values[1]), VarToCardinal(Args.Values[2]));
 end;
 
 procedure IwbMainRecord_ChangeFormSignature(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1219,7 +1257,7 @@ var
   _File: IwbFile;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    Value := _File.RecordByFormID[Cardinal(Args.Values[1]), Args.Values[2]];
+    Value := _File.RecordByFormID[VarToCardinal(Args.Values[1]), Args.Values[2]];
 end;
 
 procedure IwbFile_RecordByEditorID(var Value: Variant; Args: TJvInterpreterArgs);

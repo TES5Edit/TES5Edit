@@ -14,6 +14,8 @@
 
 unit wbDefinitionsFO3;
 
+{$I wbDefines.inc}
+
 interface
 
 procedure DefineFO3;
@@ -21,8 +23,13 @@ procedure DefineFO3;
 implementation
 
 uses
-  Types, Classes, SysUtils, Math, Variants,
-  wbInterface;
+  Types,
+  Classes,
+  SysUtils,
+  Math,
+  Variants,
+  wbInterface,
+  wbHelpers;
 
 const
   _00_IAD: TwbSignature = #$00'IAD';
@@ -1760,6 +1767,16 @@ begin
   else
     Container.ElementNativeValues['..\Actor Value'] := -1;
   end;
+end;
+
+procedure wbCounterEffectsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterByPathAfterSet('DATA - Data\Counter effect count', aElement);
+end;
+
+procedure wbMGEFAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerByPathAfterSet('DATA - Data\Counter effect count', 'Counter Effects', aElement);
 end;
 
 function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -5355,6 +5372,7 @@ begin
     wbString(ICO2, 'Female icon filename'),
     wbString(MIC2, 'Female mico filename'),
     wbString(BMCT, 'Ragdoll Constraint Template'),
+    wbDEST,
     wbREPL,
     wbBIPL,
     wbETYPReq,
@@ -8247,7 +8265,7 @@ begin
         -1, 'None'
       ])),
       {16} wbInteger('Resistance Type', itS32, wbActorValueEnum),
-      {20} wbInteger('Unknown', itU16),
+      {20} wbInteger('Counter effect count', itU16),
       {22} wbByteArray('Unused', 2),
       {24} wbFormIDCk('Light', [LIGH, NULL]),
       {28} wbFloat('Projectile speed'),
@@ -8297,8 +8315,9 @@ begin
              {34} 'Value And Parts'
            ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet),
       {68} wbActorValue
-    ], cpNormal, True)
-  ], False, nil, cpNormal, False, wbMGEFAfterLoad);
+    ], cpNormal, True),
+    wbRArrayS('Counter Effects', wbFormIDCk(ESCE, 'Effect', [MGEF]), cpNormal, False, nil, wbCounterEffectsAfterSet)
+  ], False, nil, cpNormal, False, wbMGEFAfterLoad, wbMGEFAfterSet);
 
   wbRecord(MISC, 'Misc. Item', [
     wbEDIDReq,

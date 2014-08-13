@@ -14,6 +14,8 @@
 
 unit wbNifScanner;
 
+{$I wbDefines.inc}
+
 interface
 
 uses

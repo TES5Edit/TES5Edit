@@ -14,6 +14,8 @@
 
 unit frmWaitForm;
 
+{$I wbDefines.inc}
+
 interface
 
 uses
