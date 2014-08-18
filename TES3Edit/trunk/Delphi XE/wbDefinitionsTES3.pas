@@ -4024,6 +4024,7 @@ begin
       'Luck'
       ]);
 
+  {Done}
   wbRecord(SKIL, 'Skill', [
     wbInteger(INDX, 'Skill', itS32, wbSkillEnum),
     wbStruct(SKDT, 'Skill Data', [
@@ -4094,8 +4095,8 @@ begin
   ]);
 
   wbRecord(SSCR, 'Start Script', [
-    wbString(NAME, 'NameID'),
-    wbString(DATA, 'Digits')
+    wbString(DATA, 'Digits'),
+    wbString(NAME, 'NameID')
   ]);
 
   {Done}
