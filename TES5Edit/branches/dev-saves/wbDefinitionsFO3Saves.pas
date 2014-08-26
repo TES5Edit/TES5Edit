@@ -12,12 +12,12 @@
 
 *******************************************************************************}
 
-unit wbDefinitionsFNVSaves;
+unit wbDefinitionsFO3Saves;
 
 interface
 
-procedure DefineFNVSaves;
-procedure SwitchToFNVCoSave;
+procedure DefineFO3Saves;
+procedure SwitchToFO3CoSave;
 
 implementation
 
@@ -31,7 +31,7 @@ uses
   wbSaveInterface,
   wbImplementation,
   wbLocalization,
-  wbDefinitionsFNV;
+  wbDefinitionsFO3;
 
 var
   wbActorValueLabels : array of string;
@@ -39,11 +39,11 @@ var
 var // forward type directives
   wbChangeTypes  : IwbEnumDef;
   wbSaveChapters : IwbStructDef;
-  wbNVSEChapters : IwbStructDef;
+  wbFOSEChapters : IwbStructDef;
   wbSaveHeader   : IwbStructDef;
-  wbNVSEHeader   : IwbStructDef;
+  wbFOSEHeader   : IwbStructDef;
 
-procedure DefineFNVSavesA;
+procedure DefineFO3SavesA;
 var
   i: Integer;
 begin
@@ -52,7 +52,7 @@ begin
     wbActorValueLabels[i] := wbActorValueEnum.Names[i];
 end;
 
-{ FNVsaves }
+{ FO3saves }
 
 function SaveFormVersionDecider(aMinimum: Integer; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -539,7 +539,7 @@ begin
 
   if (Result>=0) and Supports(Element, IwbDataContainer, Container) then begin
     Result := 1 + Result;
-    if (Result > 55) then
+    if (Result > 42) then
       Result := 0;
     if Assigned(ChaptersToSkip) and ChaptersToSkip.Find(IntToStr(wbChangedFormOffset+Result), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
       Result := 0;
@@ -557,7 +557,7 @@ begin
 
   if (Result>=0) and Supports(Element, IwbDataContainer, Container) then begin
     Result := 1 + Result;
-    if (Result > 55) then
+    if (Result > 42) then
       Result := 0;
   end else
     Result := 0;
@@ -1779,7 +1779,7 @@ begin
   end;
 end;
 
-function NVSEChaptersDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function FOSEChaptersDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element : IwbElement;
   Container: IwbDataContainer;
@@ -1792,13 +1792,7 @@ begin
     Element := Container.ElementByName['Type'];
     if Assigned(Element) then
            if Element.Value ='MODS' then Result := 1
-      else if Element.Value ='STVS' then Result := 2
-      else if Element.Value ='STVR' then Result := 3
-      else if Element.Value ='STVE' then Result := 4
-      else if Element.Value ='ARVS' then Result := 5
-      else if Element.Value ='ARVR' then Result := 6
-      else if Element.Value ='ARVE' then Result := 7
-      else Result := 8;
+      else Result := 2;
   end;
 end;
 
@@ -1807,7 +1801,7 @@ begin
   Result := wbArrayT(aName, wbFloat('Coord'), 3, ['X', 'Y', 'Z'], nil);
 end;
 
-procedure DefineFNVSavesS;  // This is all based on the Runtime
+procedure DefineFO3SavesS;  // This is all based on the Runtime
 var
   wbHeader                   : IwbStructDef;
   wbFileLocationTable        : IwbStructDef;
@@ -1868,19 +1862,7 @@ var
   wbChangeFlags039        : IwbIntegerDef;
   wbChangeFlags040        : IwbIntegerDef;
   wbChangeFlags041        : IwbIntegerDef;
-  wbChangeFlags042        : IwbIntegerDef;
-  wbChangeFlags043        : IwbIntegerDef;
-  wbChangeFlags044        : IwbIntegerDef;
-  wbChangeFlags045        : IwbIntegerDef;
-  wbChangeFlags046        : IwbIntegerDef;
-  wbChangeFlags047        : IwbIntegerDef;
-  wbChangeFlags048        : IwbIntegerDef;
-  wbChangeFlags049        : IwbIntegerDef;
-  wbChangeFlags050        : IwbIntegerDef;
-  wbChangeFlags051        : IwbIntegerDef;
-  wbChangeFlags052        : IwbIntegerDef;
-  wbChangeFlags053        : IwbIntegerDef;
-  wbChangeFlags054        : IwbIntegerDef;
+
   wbChangedActorBase      : IwbStructDef;
   wbChangedCREA           : IwbStructDef;
   wbChangedNPC            : IwbStructDef;
@@ -1931,7 +1913,6 @@ var
 // included in Extra...      wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN : IwbUnionDef;
 // identical to wbUnionCHANGE_REFR_INVENTORY  wbUnionCHANGE_REFR_LEVELED_INVENTORY : IwbUnionDef;
   wbUnionCHANGE_REFR_ANIMATION : IwbUnionDef;
-  wbUnionCHANGE_REFR_ANIMATION_Actor : IwbUnionDef;
 // included in Extra...      wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE : IwbUnionDef;
   wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY : IwbUnionDef;
 // included in Extra...      wbUnionCHANGE_REFR_EXTRA_GAME_ONLY : IwbUnionDef;
@@ -1973,18 +1954,22 @@ var
   wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
   wbUnionCHANGE_TALKING_ACTIVATOR_SPEAKER : IwbUnionDef;
   wbUnionCHANGE_BOOK_TEACHES_SKILL : IwbUnionDef;
-// no actual data    wbUnionCHANGE_NOTE_READ : IwbUnionDef;
+
   wbUnionCHANGE_ENCOUNTER_ZONE_FLAGS : IwbUnionDef;
   wbUnionCHANGE_ENCOUNTER_ZONE_GAME_DATA : IwbUnionDef;
   wbUnionCHANGE_CLASS_TAG_SKILLS : IwbUnionDef;
   wbUnionCHANGE_FACTION_FLAGS : IwbUnionDef;
   wbUnionCHANGE_FACTION_REACTIONS : IwbUnionDef;
   wbUnionCHANGE_FACTION_CRIME_COUNTS : IwbUnionDef;
+
 // no actual data  wbUnionCHANGE_PACKAGE_WAITING : IwbUnionDef;
 // no actual data  wbUnionCHANGE_PACKAGE_NEVER_RUN : IwbUnionDef;
-  wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT : IwbUnionDef;
-  wbUnionCHANGE_WATER_REMAPPED : IwbUnionDef;
+
   wbUnionCHANGE_FORM_LIST_ADDED_FORM : IwbUnionDef;
+
+  wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT : IwbUnionDef;
+
+  wbUnionCHANGE_WATER_REMAPPED : IwbUnionDef;
 
   wbUnionCHANGE_PACKAGE_CREATED : IwbUnionDef;
 
@@ -2375,20 +2360,7 @@ begin
     '38 (02C : LVLC)',
     '39 (02D : LVLN)',
     '40 (034 : LVLI)',
-    '41 (04E : WATR)',
-    '42 (067 : IMOD)',
-    '43 (068 : REPU)',
-    '44 (069 : PCBE)',
-    '45 (06A : RCPE)',
-    '46 (06B : RCCT)',
-    '47 (06C : CHIP)',
-    '48 (06D : CSNO)',
-    '49 (06E : LSCT)',
-    '50 (071 : CHAL)',
-    '51 (072 : AMEF)',
-    '52 (073 : CCRD)',
-    '53 (074 : CMNY)',
-    '54 (075 : CDCK)'
+    '41 (04E : WATR)'
   ]);
 
   // changeType: 000 = formType: 058 : REFR
@@ -3904,474 +3876,6 @@ begin
     {31} 'CHANGE_WATER_REMAPPED' // Remapped
   ]));
 
-  // changeType: 042 = formType: 103 : IMOD
-  wbChangeFlags042 := wbInteger('Change Flags', itU32 , wbFlags([
-    {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
-    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
-    {03} 'UnnamedFlag03',
-    {04} 'UnnamedFlag04',
-    {05} 'UnnamedFlag05',
-    {06} 'UnnamedFlag06',
-    {07} 'UnnamedFlag07',
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
-    {10} 'UnnamedFlag10',
-    {11} 'UnnamedFlag11',
-    {12} 'UnnamedFlag12',
-    {13} 'UnnamedFlag13',
-    {14} 'UnnamedFlag14',
-    {15} 'UnnamedFlag15',
-    {16} 'UnnamedFlag16',
-    {17} 'UnnamedFlag17',
-    {18} 'UnnamedFlag18',
-    {19} 'UnnamedFlag19',
-    {20} 'UnnamedFlag20',
-    {21} 'UnnamedFlag21',
-    {22} 'UnnamedFlag22',
-    {23} 'UnnamedFlag23',
-    {24} 'UnnamedFlag24',
-    {25} 'UnnamedFlag25',
-    {26} 'UnnamedFlag26',
-    {27} 'UnnamedFlag27',
-    {28} 'UnnamedFlag28',
-    {29} 'UnnamedFlag29',
-    {30} 'UnnamedFlag30',
-    {31} 'UnnamedFlag31'
-  ]));
-
-  // changeType: 043 = formType: 104 : REPU
-  wbChangeFlags043 := wbInteger('Change Flags', itU32 , wbFlags([
-    {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
-    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
-    {03} 'UnnamedFlag03',
-    {04} 'UnnamedFlag04',
-    {05} 'UnnamedFlag05',
-    {06} 'UnnamedFlag06',
-    {07} 'UnnamedFlag07',
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
-    {10} 'UnnamedFlag10',
-    {11} 'UnnamedFlag11',
-    {12} 'UnnamedFlag12',
-    {13} 'UnnamedFlag13',
-    {14} 'UnnamedFlag14',
-    {15} 'UnnamedFlag15',
-    {16} 'UnnamedFlag16',
-    {17} 'UnnamedFlag17',
-    {18} 'UnnamedFlag18',
-    {19} 'UnnamedFlag19',
-    {20} 'UnnamedFlag20',
-    {21} 'UnnamedFlag21',
-    {22} 'UnnamedFlag22',
-    {23} 'UnnamedFlag23',
-    {24} 'UnnamedFlag24',
-    {25} 'UnnamedFlag25',
-    {26} 'UnnamedFlag26',
-    {27} 'UnnamedFlag27',
-    {28} 'UnnamedFlag28',
-    {29} 'UnnamedFlag29',
-    {30} 'UnnamedFlag30',
-    {31} 'UnnamedFlag31'
-  ]));
-
-  // changeType: 044 = formType: 105 : PCBE
-  wbChangeFlags044 := wbInteger('Change Flags', itU32 , wbFlags([
-    {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'CHANGE_REFR_MOVE', // Moved
-    {02} 'CHANGE_REFR_HAVOK_MOVE', // Havok Moved
-    {03} 'CHANGE_REFR_CELL_CHANGED', // Cell Changed
-    {04} 'CHANGE_REFR_SCALE', // Scale
-    {05} 'CHANGE_REFR_INVENTORY', // Inventory
-    {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
-    {07} 'UnnamedFlag07',
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
-    {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
-    {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
-    {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
-    {13} 'UnnamedFlag13',
-    {14} 'UnnamedFlag14',
-    {15} 'UnnamedFlag15',
-    {16} 'UnnamedFlag16',
-    {17} 'UnnamedFlag17',
-    {18} 'UnnamedFlag18',
-    {19} 'UnnamedFlag19',
-    {20} 'UnnamedFlag20',
-    {21} 'UnnamedFlag21',
-    {22} 'CHANGE_OBJECT_OPEN_DEFAULT_STATE', // Open Default State
-    {23} 'CHANGE_OBJECT_OPEN_STATE', // Open State
-    {24} 'UnnamedFlag24',
-    {25} 'UnnamedFlag25',
-    {26} 'CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN', // Activating Children
-    {27} 'CHANGE_REFR_LEVELED_INVENTORY', // Leveled Inventory
-    {28} 'CHANGE_REFR_ANIMATION', // Animation
-    {29} 'CHANGE_REFR_EXTRA_ENCOUNTER_ZONE', // Enc Zone Extra
-    {30} 'CHANGE_REFR_EXTRA_CREATED_ONLY', // Created Only Extra
-    {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
-  ]));
-
-  // changeType: 045 = formType: 106 : RCPE
-  wbChangeFlags045 := wbInteger('Change Flags', itU32 , wbFlags([
-    {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
-    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
-    {03} 'UnnamedFlag03',
-    {04} 'UnnamedFlag04',
-    {05} 'UnnamedFlag05',
-    {06} 'UnnamedFlag06',
-    {07} 'UnnamedFlag07',
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
-    {10} 'UnnamedFlag10',
-    {11} 'UnnamedFlag11',
-    {12} 'UnnamedFlag12',
-    {13} 'UnnamedFlag13',
-    {14} 'UnnamedFlag14',
-    {15} 'UnnamedFlag15',
-    {16} 'UnnamedFlag16',
-    {17} 'UnnamedFlag17',
-    {18} 'UnnamedFlag18',
-    {19} 'UnnamedFlag19',
-    {20} 'UnnamedFlag20',
-    {21} 'UnnamedFlag21',
-    {22} 'UnnamedFlag22',
-    {23} 'UnnamedFlag23',
-    {24} 'UnnamedFlag24',
-    {25} 'UnnamedFlag25',
-    {26} 'UnnamedFlag26',
-    {27} 'UnnamedFlag27',
-    {28} 'UnnamedFlag28',
-    {29} 'UnnamedFlag29',
-    {30} 'UnnamedFlag30',
-    {31} 'UnnamedFlag31'
-  ]));
-
-  // changeType: 046 = formType: 107 : RCCT
-  wbChangeFlags046 := wbInteger('Change Flags', itU32 , wbFlags([
-    {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
-    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
-    {03} 'UnnamedFlag03',
-    {04} 'UnnamedFlag04',
-    {05} 'UnnamedFlag05',
-    {06} 'UnnamedFlag06',
-    {07} 'UnnamedFlag07',
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
-    {10} 'UnnamedFlag10',
-    {11} 'UnnamedFlag11',
-    {12} 'UnnamedFlag12',
-    {13} 'UnnamedFlag13',
-    {14} 'UnnamedFlag14',
-    {15} 'UnnamedFlag15',
-    {16} 'UnnamedFlag16',
-    {17} 'UnnamedFlag17',
-    {18} 'UnnamedFlag18',
-    {19} 'UnnamedFlag19',
-    {20} 'UnnamedFlag20',
-    {21} 'UnnamedFlag21',
-    {22} 'UnnamedFlag22',
-    {23} 'UnnamedFlag23',
-    {24} 'UnnamedFlag24',
-    {25} 'UnnamedFlag25',
-    {26} 'UnnamedFlag26',
-    {27} 'UnnamedFlag27',
-    {28} 'UnnamedFlag28',
-    {29} 'UnnamedFlag29',
-    {30} 'UnnamedFlag30',
-    {31} 'UnnamedFlag31'
-  ]));
-
-  // changeType: 047 = formType: 108 : CHIP
-  wbChangeFlags047 := wbInteger('Change Flags', itU32 , wbFlags([
-    {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
-    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
-    {03} 'UnnamedFlag03',
-    {04} 'UnnamedFlag04',
-    {05} 'UnnamedFlag05',
-    {06} 'UnnamedFlag06',
-    {07} 'UnnamedFlag07',
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
-    {10} 'UnnamedFlag10',
-    {11} 'UnnamedFlag11',
-    {12} 'UnnamedFlag12',
-    {13} 'UnnamedFlag13',
-    {14} 'UnnamedFlag14',
-    {15} 'UnnamedFlag15',
-    {16} 'UnnamedFlag16',
-    {17} 'UnnamedFlag17',
-    {18} 'UnnamedFlag18',
-    {19} 'UnnamedFlag19',
-    {20} 'UnnamedFlag20',
-    {21} 'UnnamedFlag21',
-    {22} 'UnnamedFlag22',
-    {23} 'UnnamedFlag23',
-    {24} 'UnnamedFlag24',
-    {25} 'UnnamedFlag25',
-    {26} 'UnnamedFlag26',
-    {27} 'UnnamedFlag27',
-    {28} 'UnnamedFlag28',
-    {29} 'UnnamedFlag29',
-    {30} 'UnnamedFlag30',
-    {31} 'UnnamedFlag31'
-  ]));
-
-  // changeType: 048 = formType: 109 : CSNO
-  wbChangeFlags048 := wbInteger('Change Flags', itU32 , wbFlags([
-    {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
-    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
-    {03} 'UnnamedFlag03',
-    {04} 'UnnamedFlag04',
-    {05} 'UnnamedFlag05',
-    {06} 'UnnamedFlag06',
-    {07} 'UnnamedFlag07',
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
-    {10} 'UnnamedFlag10',
-    {11} 'UnnamedFlag11',
-    {12} 'UnnamedFlag12',
-    {13} 'UnnamedFlag13',
-    {14} 'UnnamedFlag14',
-    {15} 'UnnamedFlag15',
-    {16} 'UnnamedFlag16',
-    {17} 'UnnamedFlag17',
-    {18} 'UnnamedFlag18',
-    {19} 'UnnamedFlag19',
-    {20} 'UnnamedFlag20',
-    {21} 'UnnamedFlag21',
-    {22} 'UnnamedFlag22',
-    {23} 'UnnamedFlag23',
-    {24} 'UnnamedFlag24',
-    {25} 'UnnamedFlag25',
-    {26} 'UnnamedFlag26',
-    {27} 'UnnamedFlag27',
-    {28} 'UnnamedFlag28',
-    {29} 'UnnamedFlag29',
-    {30} 'UnnamedFlag30',
-    {31} 'UnnamedFlag31'
-  ]));
-
-  // changeType: 049 = formType: 110 : LSCT
-  wbChangeFlags049 := wbInteger('Change Flags', itU32 , wbFlags([
-    {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
-    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
-    {03} 'UnnamedFlag03',
-    {04} 'UnnamedFlag04',
-    {05} 'UnnamedFlag05',
-    {06} 'UnnamedFlag06',
-    {07} 'UnnamedFlag07',
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
-    {10} 'UnnamedFlag10',
-    {11} 'UnnamedFlag11',
-    {12} 'UnnamedFlag12',
-    {13} 'UnnamedFlag13',
-    {14} 'UnnamedFlag14',
-    {15} 'UnnamedFlag15',
-    {16} 'UnnamedFlag16',
-    {17} 'UnnamedFlag17',
-    {18} 'UnnamedFlag18',
-    {19} 'UnnamedFlag19',
-    {20} 'UnnamedFlag20',
-    {21} 'UnnamedFlag21',
-    {22} 'UnnamedFlag22',
-    {23} 'UnnamedFlag23',
-    {24} 'UnnamedFlag24',
-    {25} 'UnnamedFlag25',
-    {26} 'UnnamedFlag26',
-    {27} 'UnnamedFlag27',
-    {28} 'UnnamedFlag28',
-    {29} 'UnnamedFlag29',
-    {30} 'UnnamedFlag30',
-    {31} 'UnnamedFlag31'
-  ]));
-
-  // changeType: 050 = formType: 113 : CHAL
-  wbChangeFlags050 := wbInteger('Change Flags', itU32 , wbFlags([
-    {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
-    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
-    {03} 'UnnamedFlag03',
-    {04} 'UnnamedFlag04',
-    {05} 'UnnamedFlag05',
-    {06} 'UnnamedFlag06',
-    {07} 'UnnamedFlag07',
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
-    {10} 'UnnamedFlag10',
-    {11} 'UnnamedFlag11',
-    {12} 'UnnamedFlag12',
-    {13} 'UnnamedFlag13',
-    {14} 'UnnamedFlag14',
-    {15} 'UnnamedFlag15',
-    {16} 'UnnamedFlag16',
-    {17} 'UnnamedFlag17',
-    {18} 'UnnamedFlag18',
-    {19} 'UnnamedFlag19',
-    {20} 'UnnamedFlag20',
-    {21} 'UnnamedFlag21',
-    {22} 'UnnamedFlag22',
-    {23} 'UnnamedFlag23',
-    {24} 'UnnamedFlag24',
-    {25} 'UnnamedFlag25',
-    {26} 'UnnamedFlag26',
-    {27} 'UnnamedFlag27',
-    {28} 'UnnamedFlag28',
-    {29} 'UnnamedFlag29',
-    {30} 'UnnamedFlag30',
-    {31} 'UnnamedFlag31'
-  ]));
-
-  // changeType: 051 = formType: 114 : AMEF
-  wbChangeFlags051 := wbInteger('Change Flags', itU32 , wbFlags([
-    {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
-    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
-    {03} 'UnnamedFlag03',
-    {04} 'UnnamedFlag04',
-    {05} 'UnnamedFlag05',
-    {06} 'UnnamedFlag06',
-    {07} 'UnnamedFlag07',
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
-    {10} 'UnnamedFlag10',
-    {11} 'UnnamedFlag11',
-    {12} 'UnnamedFlag12',
-    {13} 'UnnamedFlag13',
-    {14} 'UnnamedFlag14',
-    {15} 'UnnamedFlag15',
-    {16} 'UnnamedFlag16',
-    {17} 'UnnamedFlag17',
-    {18} 'UnnamedFlag18',
-    {19} 'UnnamedFlag19',
-    {20} 'UnnamedFlag20',
-    {21} 'UnnamedFlag21',
-    {22} 'UnnamedFlag22',
-    {23} 'UnnamedFlag23',
-    {24} 'UnnamedFlag24',
-    {25} 'UnnamedFlag25',
-    {26} 'UnnamedFlag26',
-    {27} 'UnnamedFlag27',
-    {28} 'UnnamedFlag28',
-    {29} 'UnnamedFlag29',
-    {30} 'UnnamedFlag30',
-    {31} 'UnnamedFlag31'
-  ]));
-
-  // changeType: 052 = formType: 115 : CCRD
-  wbChangeFlags052 := wbInteger('Change Flags', itU32 , wbFlags([
-    {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
-    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
-    {03} 'UnnamedFlag03',
-    {04} 'UnnamedFlag04',
-    {05} 'UnnamedFlag05',
-    {06} 'UnnamedFlag06',
-    {07} 'UnnamedFlag07',
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
-    {10} 'UnnamedFlag10',
-    {11} 'UnnamedFlag11',
-    {12} 'UnnamedFlag12',
-    {13} 'UnnamedFlag13',
-    {14} 'UnnamedFlag14',
-    {15} 'UnnamedFlag15',
-    {16} 'UnnamedFlag16',
-    {17} 'UnnamedFlag17',
-    {18} 'UnnamedFlag18',
-    {19} 'UnnamedFlag19',
-    {20} 'UnnamedFlag20',
-    {21} 'UnnamedFlag21',
-    {22} 'UnnamedFlag22',
-    {23} 'UnnamedFlag23',
-    {24} 'UnnamedFlag24',
-    {25} 'UnnamedFlag25',
-    {26} 'UnnamedFlag26',
-    {27} 'UnnamedFlag27',
-    {28} 'UnnamedFlag28',
-    {29} 'UnnamedFlag29',
-    {30} 'UnnamedFlag30',
-    {31} 'UnnamedFlag31'
-  ]));
-
-  // changeType: 053 = formType: 116 : CMNY
-  wbChangeFlags053 := wbInteger('Change Flags', itU32 , wbFlags([
-    {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
-    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
-    {03} 'UnnamedFlag03',
-    {04} 'UnnamedFlag04',
-    {05} 'UnnamedFlag05',
-    {06} 'UnnamedFlag06',
-    {07} 'UnnamedFlag07',
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
-    {10} 'UnnamedFlag10',
-    {11} 'UnnamedFlag11',
-    {12} 'UnnamedFlag12',
-    {13} 'UnnamedFlag13',
-    {14} 'UnnamedFlag14',
-    {15} 'UnnamedFlag15',
-    {16} 'UnnamedFlag16',
-    {17} 'UnnamedFlag17',
-    {18} 'UnnamedFlag18',
-    {19} 'UnnamedFlag19',
-    {20} 'UnnamedFlag20',
-    {21} 'UnnamedFlag21',
-    {22} 'UnnamedFlag22',
-    {23} 'UnnamedFlag23',
-    {24} 'UnnamedFlag24',
-    {25} 'UnnamedFlag25',
-    {26} 'UnnamedFlag26',
-    {27} 'UnnamedFlag27',
-    {28} 'UnnamedFlag28',
-    {29} 'UnnamedFlag29',
-    {30} 'UnnamedFlag30',
-    {31} 'UnnamedFlag31'
-  ]));
-
-  // changeType: 054 = formType: 117 : CDCK
-  wbChangeFlags054 := wbInteger('Change Flags', itU32 , wbFlags([
-    {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
-    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
-    {03} 'UnnamedFlag03',
-    {04} 'UnnamedFlag04',
-    {05} 'UnnamedFlag05',
-    {06} 'UnnamedFlag06',
-    {07} 'UnnamedFlag07',
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
-    {10} 'UnnamedFlag10',
-    {11} 'UnnamedFlag11',
-    {12} 'UnnamedFlag12',
-    {13} 'UnnamedFlag13',
-    {14} 'UnnamedFlag14',
-    {15} 'UnnamedFlag15',
-    {16} 'UnnamedFlag16',
-    {17} 'UnnamedFlag17',
-    {18} 'UnnamedFlag18',
-    {19} 'UnnamedFlag19',
-    {20} 'UnnamedFlag20',
-    {21} 'UnnamedFlag21',
-    {22} 'UnnamedFlag22',
-    {23} 'UnnamedFlag23',
-    {24} 'UnnamedFlag24',
-    {25} 'UnnamedFlag25',
-    {26} 'UnnamedFlag26',
-    {27} 'UnnamedFlag27',
-    {28} 'UnnamedFlag28',
-    {29} 'UnnamedFlag29',
-    {30} 'UnnamedFlag30',
-    {31} 'UnnamedFlag31'
-  ]));
-
   wbChangeFlags := wbUnion('Change Flags', ChangedFormFlagsDecider, [
     wbNull,
     wbChangeFlags000,
@@ -4415,20 +3919,7 @@ begin
     wbChangeFlags038,
     wbChangeFlags039,
     wbChangeFlags040,
-    wbChangeFlags041,
-    wbChangeFlags042,
-    wbChangeFlags043,
-    wbChangeFlags044,
-    wbChangeFlags045,
-    wbChangeFlags046,
-    wbChangeFlags047,
-    wbChangeFlags048,
-    wbChangeFlags049,
-    wbChangeFlags050,
-    wbChangeFlags051,
-    wbChangeFlags052,
-    wbChangeFlags053,
-    wbChangeFlags054
+    wbChangeFlags041
   ]);
 
   wbChangeScriptEventList := wbStruct('Script Event List', [
@@ -4470,12 +3961,6 @@ begin
   wbUnionCHANGE_REFR_ANIMATION := wbUnion('Animation', ChangedFlag28NotActorDecider, [wbNull, wbStruct('Animation SubBuffer', [
     wbIntegerT('Length', itU6to30),
     wbByteArray('Data', ChangedFormAnimationSubBufferCounter)
-  ])]);
-
-  wbUnionCHANGE_REFR_ANIMATION_Actor := wbUnion('Animation', ChangedFlag28ActorDecider, [wbNull, wbStruct('Animation SubBuffer', [
-    wbIntegerT('Length', itU6to30),
-    wbByteArray('Data', ChangedFormAnimationSubBufferCounter)
-//    wbArrayPT('Data', wbInteger('Unknown', itU8), -254)
   ])]);
 
 // included in Extra...      wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE := wbUnion('Enc Zone Extra', ChangedFlag29Decider, [wbNull, wbNull]);           // CHANGE_REFR_EXTRAS
@@ -4763,8 +4248,8 @@ begin
   ]);
 
   wbUnionCHANGE_FACTION_CRIME_COUNTS := wbUnion('Faction Crime Counts', ChangedFlag31Decider, [wbNull, wbStruct('Crime Counts', [
-    wbIntegerT('crimeCount44', itU32),
-    wbIntegerT('crimeCount48', itU32)
+    wbIntegerT('crimeCount40', itU32),
+    wbIntegerT('crimeCount40', itU32)
   ])]);
 
 // no actual data  wbUnionCHANGE_PACKAGE_WAITING := wbUnion('Waiting Flag', ChangedFlag30Decider, [wbNull, wbNull]);
@@ -4773,17 +4258,23 @@ begin
   wbPackageLocationData := wbStruct('Location', [
     wbIntegerT('Type', itU8),
     wbIntegerT('Radius', itU32),
-    wbUnion('ObjectType', ChangedFormPackageLocationTypeDecider, [ wbNull, wbRefIDT('Object'), wbIntegerT('Type', itU32)])
+    wbUnion('ObjectType', ChangedFormPackageLocationTypeDecider, [ wbNull,
+      wbRefIDT('Object'),
+      wbIntegerT('Type', itU32)
+    ])
   ]);
 
   wbPackageTargetData := wbStruct('Target', [
         wbIntegerT('Type', itU8),
         wbIntegerT('Count or Distance', itU32),
         wbFloatT('Unk0C'),
-        wbUnion('ObjectType', ChangedFormPackageTargetTypeDecider, [ wbNull, wbRefIDT('Object'), wbIntegerT('Type', itU32)])
+        wbUnion('ObjectType', ChangedFormPackageTargetTypeDecider, [ wbNull,
+          wbRefIDT('Object'),
+          wbIntegerT('Type', itU32)
+        ])
       ]);
 
-  wbCreatedPackageDataType := wbUnion('Specific Data', ChangedFormPackageCreatedPackageDataTypeDecider, [
+  wbCreatedPackageDataType := wbUnion('Specific Data', ChangedFormPackageCreatedPackageDataTypeDecider, [   // unverified for FO3
     wbNull,
     wbStruct('Follow/Escort', [
       wbIntegerT('Unknown', itU32),
@@ -5848,7 +5339,7 @@ begin
             wbIntegerT('Unknown', itU32),
             wbArrayPT('List0C8', wbRefIDT('Unknown'), -254),
             wbPackageStruct,
-            wbUnionCHANGE_REFR_ANIMATION_Actor,
+//FNV            wbUnionCHANGE_REFR_ANIMATION_Actor,
             wbNonActorMagicTarget,
             wbRefIDT('Unk164'),
             wbRefIDT('Unk160'),
@@ -6294,7 +5785,7 @@ begin
      ])])
     ,wbChangedCharacter
     ,wbUnion('Player specific', IsActorPlayerDecider, [wbNull, wbStruct('Player data', [
-       wbUnionCHANGE_REFR_ANIMATION_Actor, // There really are two animation subBuffer for the player
+//FNV           wbUnionCHANGE_REFR_ANIMATION_Actor, // There really are two animation subBuffer for the player
        wbIntegerT('Byt64A', itU8),
        wbIntegerT('Byt64D', itU8),
        wbIntegerT('Byt651', itU8),
@@ -6435,7 +5926,7 @@ begin
 
   wbChangedACTI := wbStruct('Change ACTI Data', [ {015}
      wbUnionCHANGE_FORM_FLAGS
-    ,wbUnionCHANGE_BASE_OBJECT_VALUE
+    ,wbUnionCHANGE_BASE_OBJECT_VALUE    // listed but not checked !
     ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
   ]);
 
@@ -6463,9 +5954,12 @@ begin
       ,wbStruct('Change CELL Data', [ {039}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_CELL_FLAGS
-        ,wbUnionCHANGE_CELL_SEENDATA
         ,wbUnionCHANGE_CELL_FULLNAME
         ,wbUnionCHANGE_CELL_OWNERSHIP
+        ,wbUnionCHANGE_CELL_EXTERIOR_SHORT
+        ,wbUnionCHANGE_CELL_EXTERIOR_CHAR
+        ,wbUnionCHANGE_CELL_DETACHTIME
+        ,wbUnionCHANGE_CELL_SEENDATA
        ])
       ,wbStruct('Change INFO Data', [ {046}
          wbUnionCHANGE_FORM_FLAGS
@@ -6475,9 +5969,9 @@ begin
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_QUEST_FLAGS
         ,wbUnionCHANGE_QUEST_SCRIPT_DELAY
-        ,wbUnionCHANGE_QUEST_STAGES
-        ,wbUnionCHANGE_QUEST_SCRIPT
         ,wbUnionCHANGE_QUEST_OBJECTIVES
+        ,wbUnionCHANGE_QUEST_SCRIPT
+        ,wbUnionCHANGE_QUEST_STAGES
        ])
       ,wbChangedNPC                   {02A}
       ,wbChangedCREA                  {02B}
@@ -6488,53 +5982,52 @@ begin
        ])
       ,wbStruct('Change TERM Data', [ {017}
          wbChangedACTI
-        // There seem to be a bit 31 ! Related to form version < 13, there was an extra byte.
        ])
       ,wbStruct('Change ARMO Data', [ {018}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME    // listed but not checked !
        ])
       ,wbStruct('Change BOOK Data', [ {019}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME    // listed but not checked !
         ,wbUnionCHANGE_BOOK_TEACHES_SKILL
        ])
-      ,wbStruct('Change CLOT Data', [ {01A}
+      ,wbStruct('Change CLOT Data', [ {01A}   // loaded using the same procedure as ARMO
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
       ,wbStruct('Change CONT Data', [ {01B}
          wbUnionCHANGE_FORM_FLAGS
-        ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE       // listed but not checked !
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME    // listed but not checked !
        ])
       ,wbStruct('Change DOOR Data', [ {01C}
          wbUnionCHANGE_FORM_FLAGS
-        ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE       // listed but not checked !
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME    // listed but not checked !
        ])
       ,wbStruct('Change INGR Data', [ {01D}
          wbUnionCHANGE_FORM_FLAGS
-        ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE       // listed but not checked !
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME    // listed but not checked !
        ])
       ,wbStruct('Change LIGH Data', [ {01E}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME    // listed but not checked !
        ])
       ,wbStruct('Change MISC Data', [ {01F}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME    // listed but not checked !
        ])
       ,wbStruct('Change STAT Data', [ {020}
          wbUnionCHANGE_FORM_FLAGS
-        ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE       // listed but not checked !
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME    // listed but not checked !
        ])
       ,wbStruct('Change MSTT Data', [ {022}
          wbUnionCHANGE_FORM_FLAGS
@@ -6589,8 +6082,8 @@ begin
         ,wbUnionCHANGE_FACTION_CRIME_COUNTS
        ])
       ,wbStruct('Change PACK Data', [ {049}
-// no actual data        wbUnionCHANGE_PACKAGE_NEVER_RUN,
 // no actual data        wbUnionCHANGE_PACKAGE_WAITING
+// no actual data        wbUnionCHANGE_PACKAGE_NEVER_RUN,
         wbUnionCHANGE_PACKAGE_CREATED
        ])
       ,wbStruct('Change NAVM Data', [ {043}
@@ -6617,69 +6110,6 @@ begin
       ,wbStruct('Change WATR Data', [ {04E}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_WATER_REMAPPED
-       ])
-      ,wbStruct('Change IMOD Data', [ {067}
-         wbUnionCHANGE_FORM_FLAGS
-        ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
-       ])
-      ,wbStruct('Change REPU Data', [ {068}
-         wbUnionCHANGE_FORM_FLAGS
-        ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
-       ])
-      ,wbStruct('Change PCBE Data', [ {069}
-         wbChangedREFR
-       ])
-      ,wbStruct('Change RCPE Data', [ {06A}
-         wbUnionCHANGE_FORM_FLAGS
-        ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
-       ])
-      ,wbStruct('Change RCCT Data', [ {06B}
-         wbUnionCHANGE_FORM_FLAGS
-        ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
-       ])
-      ,wbStruct('Change CHIP Data', [ {06C}
-         wbUnionCHANGE_FORM_FLAGS
-        ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
-       ])
-      ,wbStruct('Change CSNO Data', [ {06D}
-         wbUnionCHANGE_FORM_FLAGS
-        ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
-       ])
-      ,wbStruct('Change LSCT Data', [ {06E}
-         wbUnionCHANGE_FORM_FLAGS
-        ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
-       ])
-      ,wbStruct('Change CHAL Data', [ {071}
-         wbUnionCHANGE_FORM_FLAGS
-        ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
-       ])
-      ,wbStruct('Change AMEF Data', [ {072}
-         wbUnionCHANGE_FORM_FLAGS
-        ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
-       ])
-      ,wbStruct('Change CCRD Data', [ {073}
-         wbUnionCHANGE_FORM_FLAGS
-        ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
-       ])
-      ,wbStruct('Change CMNY Data', [ {074}
-         wbUnionCHANGE_FORM_FLAGS
-        ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
-       ])
-      ,wbStruct('Change CDCK Data', [ {075}
-         wbUnionCHANGE_FORM_FLAGS
-        ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
     ]),
     wbByteArray('Undecoded Data', ChangedFormRemainingDataCounter)
@@ -6762,16 +6192,16 @@ begin
 //    ,wbArray('Remaining',  WbByteArray('Unknown', wbBytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
   ]);
 
-  wbNVSEHeader := wbStruct('CoSave File Header', [
+  wbFOSEHeader := wbStruct('CoSave File Header', [
      wbString('Magic', 4)
     ,wbInteger('Version', itU32)
-    ,wbInteger('NVSE Version', itU16)
-    ,wbInteger('NVSE Minor Version', itU16)
+    ,wbInteger('FOSE Version', itU16)
+    ,wbInteger('FOSE Minor Version', itU16)
     ,wbInteger('Fallout Version', itU32)
     ,wbInteger('Plugins count', itU32)
   ]);
 
-  wbNVSEChapters := wbStruct('CoSave File Chapters', [
+  wbFOSEChapters := wbStruct('CoSave File Chapters', [
      wbArray('Plugins', wbStruct('Plugin', [
        wbInteger('Opcode Base', itU32),
        wbInteger('Chunks count', itU32),
@@ -6781,7 +6211,7 @@ begin
            wbInteger('Type', itU32, wbStr4),
            wbInteger('Version', itU32),
            wbInteger('Length', itU32),
-           wbUnion('Data', NVSEChaptersDecider, [
+           wbUnion('Data', FOSEChaptersDecider, [
              wbNull,
              wbArray('Modules', wbLenString('PluginName', 2), -4),
              wbNull,  // STVS String Var Map Start
@@ -6831,23 +6261,23 @@ var
   ExtractInfoSave:   TByteSet = [3, 4]; // SaveFileChapters that should be initialized before dumping to get more information
   ExtractInfoCoSave: TByteSet = [];     // CoSaveFileChapters that should be initialized before dumping to get more information
 
-procedure DefineFNVSaves;
+procedure DefineFO3Saves;
 begin
   wbFileMagic := 'FO3SAVEGAME';
   wbExtractInfo := @ExtractInfoSave;
   wbFilePlugins := 'Plugins';
-  DefineFNV;
-  DefineFNVSavesA;
-  DefineFNVSavesS;
+  DefineFO3;
+  DefineFO3SavesA;
+  DefineFO3SavesS;
 end;
 
-procedure SwitchToFNVCoSave;
+procedure SwitchToFO3CoSave;
 begin
-  wbFileMagic := 'NVSE';
+  wbFileMagic := 'FOSE';
   wbExtractInfo := @ExtractInfoCoSave;
   wbFilePlugins := 'Absolute:44';
-  wbFileChapters := wbNVSEChapters;
-  wbFileHeader := wbNVSEHeader;
+  wbFileChapters := wbFOSEChapters;
+  wbFileHeader := wbFOSEHeader;
 end;
 
 initialization

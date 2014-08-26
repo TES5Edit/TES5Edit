@@ -28,6 +28,25 @@ function GetSaveRefID(aIndex: Cardinal): Cardinal;
 
 function QueryCountForVMArrayHandle(anArrayHandle: Int64): Int64;
 
+function wbFindSaveElement(aName: String; aElement: IwbElement): IwbElement;
+
+// CoSave shared data
+
+var
+  wbXXSEArrayType : IwbEnumDef;
+
+function wbXXSEChapterOtherCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbXXSEPluginCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbXXSEChunkCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbXXSEArrayKeyElementDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbXXSEArrayDataElementDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+
+// Place holder during decoding...
+
+function ToBeDeterminedDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function ToBeDeterminedCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function ToBeDeterminedCountCallback(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+
 implementation
 
 { wbVMType }
@@ -251,5 +270,156 @@ function wbSaveWorldspaceIndex : IwbIntegerDefFormater;
 begin
   Result := wbCallback(@TwbSaveWorldspaceIndexFormaterToString, nil);
 end;
+
+function wbFindSaveElement(aName: String; aElement: IwbElement): IwbElement;
+var
+  Container : IwbContainer;
+
+  function FindOurself(aName: String; aContainer: IwbContainer; var aElement: IwbElement): Boolean;
+  var
+    i          : Integer;
+    tContainer : IwbContainer;
+  begin
+    Result := False;
+    for i := 0 to Pred(aContainer.ElementCount) do
+      if SameText(aContainer.Elements[i].BaseName, aName) then begin
+        aElement := aContainer.Elements[i];
+        Result := True;
+        break;
+      end else if Supports(aContainer.Elements[i], IwbContainer, tContainer) then
+        if FindOurself(aName, tContainer, aElement) then begin
+          Result := True;
+          break;
+        end;
+  end;
+
+begin
+  Result := aElement;
+  while (not SameText(aName, Result.BaseName)) and Assigned(Result.Container) do
+    Result := Result.Container;
+  if (not SameText(aName, Result.BaseName)) then begin // try again in reverse
+    Result := aElement;
+    if Supports(Result, IwbContainer, Container) then
+      FindOurself(aName, Container, Result);
+  end;
+end;
+
+function wbXXSEChapterOtherCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := wbFindSaveElement('Chunk', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Length'];
+    if Assigned(Element) then
+      Result := Element.NativeValue;
+  end;
+end;
+
+function wbXXSEPluginCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+  aFile     : IwbFile;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  aFile := aElement.GetFile;
+  if not Assigned(aFile) then Exit;
+  Element := aFile.ElementByName['CoSave File Header'];
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Plugins count'];
+    if Assigned(Element) then
+      Result := Element.NativeValue;
+  end;
+end;
+
+function wbXXSEChunkCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := wbFindSaveElement('Plugin', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Chunks count'];
+    if Assigned(Element) then
+      Result := Element.NativeValue;
+  end;
+end;
+
+function wbXXSEArrayKeyElementDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := wbFindSaveElement('Array', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Key Type'];
+    if Assigned(Element) then
+      case Element.NativeValue of
+        1: Result := 1;
+      else
+        Result := 2;
+      end;
+  end;
+end;
+
+function wbXXSEArrayDataElementDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := wbFindSaveElement('Element', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Data Type'];
+    if Assigned(Element) then
+      case Element.NativeValue of
+        1: Result := 1;   // Numeric
+        2: Result := 2;   // Form
+        3: Result := 3;   // String
+        4: Result := 4;   // Array
+      end;
+  end;
+end;
+
+function ToBeDeterminedDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 0;
+end;
+
+function ToBeDeterminedCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 0;
+end;
+
+function ToBeDeterminedCountCallback(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 0;
+end;
+
+initialization
+
+  wbXXSEArrayType := wbEnum([
+    'Invalid',
+    'Numeric',
+    'Form',
+    'String',
+    'Array'
+  ]);
+
 
 end.

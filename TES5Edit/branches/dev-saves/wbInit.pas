@@ -27,12 +27,14 @@ var
   wbScriptsPath        : string;
   wbBackupPath         : string;
   wbTempPath           : string;
+  wbSavePath           : string;
   wbMyGamesTheGamePath : string;
   wbPluginsFileName    : String;
   wbSettingsFileName   : string;
   wbModGroupFileName   : string;
   wbPluginToUse        : string;  // Passed a specific plugin as parameter
   wbLogFile            : string;  // Optional log file for this session
+  wbMyRegName          : string;
 
   wbMasterUpdateDone   : Boolean;
   wbMasterUpdateOK     : Boolean;
@@ -297,6 +299,7 @@ const
   sBethRegKey64           = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
 var
   s : String;
+  IniFile: TIniFile;
 begin
   wbModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
 
@@ -351,17 +354,34 @@ begin
   wbMOHookFile := wbDataPath + '..\Mod Organizer\hook.dll';
 
   if not wbFindCmdLineParam('I', wbTheGameIniFileName) then begin
-    wbTheGameIniFileName := GetCSIDLShellFolder(CSIDL_PERSONAL);
-    if wbTheGameIniFileName = '' then begin
+    wbMyRegName := GetCSIDLShellFolder(CSIDL_PERSONAL);
+    if wbMyRegName = '' then begin
       ShowMessage('Fatal: Could not determine my documents folder');
       Exit;
     end;
-    wbMyGamesTheGamePath := wbTheGameIniFileName + 'My Games\'+ wbGameName +'\';
+    wbMyGamesTheGamePath := wbMyRegName + 'My Games\'+ wbGameName +'\';
 
-    if wbGameMode in [gmFO3, gmFNV] then
-      wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
-    else
-      wbTheGameIniFileName := wbMyGamesTheGamePath + wbGameName + '.ini';
+    if wbTheGameIniFileName = '' then
+      if wbGameMode in [gmFO3, gmFNV] then
+        wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
+      else
+        wbTheGameIniFileName := wbMyGamesTheGamePath + wbGameName + '.ini';
+  end;
+
+  if not wbFindCmdLineParam('G', wbSavePath) then begin
+    if wbMyGamesTheGamePath = '' then
+      wbMyGamesTheGamePath := ExtractFilePath(wbTheGameIniFileName);
+
+    s := 'Saves\';
+    if FileExists(wbTheGameIniFileName) then begin
+      IniFile := TIniFile.Create(wbTheGameIniFileName);
+      try
+        s := IniFile.ReadString('General', 'SLocalSavePath', s);
+      finally
+        FreeAndNil(IniFile);
+      end;
+    end;
+    wbSavePath := wbMyGamesTheGamePath + s;
   end;
 
   wbParamIndex := ParamIndex;
@@ -453,7 +473,7 @@ begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
     end;
-    if not (wbToolSource in [tsPlugins]) then begin
+    if not (wbToolSource in [tsPlugins, tsSaves]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbSourceName);
       Exit;
     end;
@@ -589,7 +609,7 @@ begin
   if FindCmdLineSwitch('IKnowWhatImDoing') then
     wbIKnowWhatImDoing := True;
 
-  if FindCmdLineSwitch('quickclean') then
+  if FindCmdLineSwitch('quickclean') and (wbToolSource in [tsPlugins]) then
     wbQuickClean := wbIKnowWhatImDoing;
 
   if FindCmdLineSwitch('TrackAllEditorID') then

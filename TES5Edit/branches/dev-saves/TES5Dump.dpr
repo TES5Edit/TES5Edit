@@ -39,7 +39,9 @@ uses
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
   wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
   wbDefinitionsTES5Saves in 'wbDefinitionsTES5Saves.pas',
-  wbDefinitionsFNVSaves in 'wbDefinitionsFNVSaves.pas';
+  wbDefinitionsFNVSaves in 'wbDefinitionsFNVSaves.pas',
+  wbDefinitionsFO3Saves in 'wbDefinitionsFO3Saves.pas',
+  wbDefinitionsTES4Saves in 'wbDefinitionsTES4Saves.pas';
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
@@ -909,11 +911,14 @@ begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
       end;
-      if not (wbToolSource in [tsPlugins]) then begin
+      if not (wbToolSource in [tsPlugins, tsSaves]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
         Exit;
       end;
-      DefineFO3;
+      case wbToolSource of
+        tsSaves:   DefineFO3Saves;
+        tsPlugins: DefineFO3;
+      end;
     end else if isMode('TES3') then begin
       WriteLn(ErrOutput, 'TES3 - Morrowind is not supported yet.');
       Exit;
@@ -1102,8 +1107,12 @@ begin
     if wbToolSource = tsSaves then
       case wbGameMode of
         gmFNV:  if SameText(ExtractFileExt(s), '.nvse') then SwitchToFNVCoSave;
-        gmTES5: if SameText(ExtractFileExt(s), '.skse') then
-          WriteLn(ErrOutput, 'CoSave for Skyrim are not supported yet "',s,'". Please check the command line parameters.');
+        gmFO3:  if SameText(ExtractFileExt(s), '.nvse') then SwitchToFO3CoSave
+          else
+            WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
+        gmTES5: if SameText(ExtractFileExt(s), '.skse') then SwitchToTES5CoSave;
+      else
+          WriteLn(ErrOutput, 'CoSave are not supported yet "',s,'". Please check the command line parameters.');
       end;
 
     if NeedsSyntaxInfo or (ParamCount < 1) or FindCmdLineSwitch('?') or FindCmdLineSwitch('help') then begin
@@ -1112,7 +1121,7 @@ begin
       WriteLn(ErrOutput);
       WriteLn(ErrOutput, wbAppName + 'Dump will load the specified esp/esm files and all it''s masters and will dump the decoded contents of the specified file to stdout. Masters are searched for in the same directory as the specified file.');
       WriteLn(ErrOutput);
-      WriteLn(ErrOutput, wbAppName + 'Dump -Saves will load the specified ess files and all it''s masters and will dump the decoded contents of the specified file to stdout. Masters are searched for in the game directory.');
+      WriteLn(ErrOutput, wbAppName + 'Dump -Saves will load the specified save or coSave file and all it''s masters and will dump the decoded contents of the specified file to stdout. Masters are searched for in the game directory.');
       WriteLn(ErrOutput);
       WriteLn(ErrOutput, wbAppName + 'Export will dump the plugin definition in the specified format.');
       WriteLn(ErrOutput, wbAppName + 'Export -Saves will dump the save file definition in the specified format.');

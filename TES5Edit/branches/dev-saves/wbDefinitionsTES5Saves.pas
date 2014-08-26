@@ -17,6 +17,7 @@ unit wbDefinitionsTES5Saves;
 interface
 
 procedure DefineTES5Saves;
+procedure SwitchToTES5CoSave;
 
 implementation
 
@@ -39,8 +40,12 @@ var
   wbRecordFlagsFlags : IwbFlagsDef;
 
 var // forward type directives
-  wbChangeTypes : IwbEnumDef;
-  wbQuestFlags  : IwbIntegerDef;
+  wbChangeTypes  : IwbEnumDef;
+  wbQuestFlags   : IwbIntegerDef;
+  wbSaveChapters : IwbStructDef;
+  wbSKSEChapters : IwbStructDef;
+  wbSaveHeader   : IwbStructDef;
+  wbSKSEHeader   : IwbStructDef;
 
 procedure DefineTES5SavesA;
 begin
@@ -337,41 +342,6 @@ end;
 
 { TES5saves }
 
-function FindElement(aName: String; aElement: IwbElement): IwbElement;
-var
-  Container : IwbContainer;
-
-  function FindOurself(aName: String; aContainer: IwbContainer; var aElement: IwbElement): Boolean;
-  var
-    i          : Integer;
-    tContainer : IwbContainer;
-  begin
-    Result := False;
-    for i := 0 to Pred(aContainer.ElementCount) do
-      if SameText(aContainer.Elements[i].BaseName, aName) then begin
-        aElement := aContainer.Elements[i];
-        Result := True;
-        break;
-      end else if Supports(aContainer.Elements[i], IwbContainer, tContainer) then
-        if FindOurself(aName, tContainer, aElement) then begin
-          Result := True;
-          break;
-        end;
-  end;
-
-begin
-  Result := aElement;
-  while (not SameText(aName, Result.BaseName)) and Assigned(Result.Container) do
-    Result := Result.Container;
-  if (not Sametext(aName, Result.BaseName)) then begin // try again in reverse
-    Result := aElement;
-    if Supports(Result, IwbContainer, Container) then
-      FindOurself(aName, Container, Result);
-  end;
-  if Assigned(Result) and (not Sametext(aName, Result.BaseName)) then
-    Result := nil;
-end;
-
 function SaveFormVersionDecider(aMinimum: Integer; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aType : Integer;
@@ -537,7 +507,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Array Entry Data', aElement);
+  Element := wbFindSaveElement('Array Entry Data', aElement);
   Assert(Element.BaseName = 'Array Entry Data');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -626,7 +596,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Variable', aElement);
+  Element := wbFindSaveElement('Variable', aElement);
   Assert(Element.BaseName='Variable');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -658,7 +628,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Element', aElement);
+  Element := wbFindSaveElement('Element', aElement);
   Assert(Element.BaseName = 'Element');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -700,7 +670,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Stack', aElement);
+  Element := wbFindSaveElement('Stack', aElement);
   Assert(Element.BaseName='Stack');
 
   if Supports(Element, IwbDataContainer, Container) and (Element.Name = 'Element') then begin
@@ -734,7 +704,7 @@ begin
   if VMObjectArrayCount<0 then begin
     Result := 0;
     if not Assigned(aElement) then Exit;
-    sElement := FindElement('Papyrus Struct', aElement);
+    sElement := wbFindSaveElement('Papyrus Struct', aElement);
     Assert(sElement.BaseName='Papyrus Struct');
 
     if Supports(sElement, IwbDataContainer, Container) then begin
@@ -760,7 +730,7 @@ begin
   if VMArrayTableCount<0 then begin
     Result := 0;
     if not Assigned(aElement) then Exit;
-    Element := FindElement('Papyrus Struct', aElement);
+    Element := wbFindSaveElement('Papyrus Struct', aElement);
     Assert(Element.BaseName='Papyrus Struct');
 
     if Supports(Element, IwbDataContainer, Container) then begin
@@ -781,7 +751,7 @@ begin
   if StackTableCount<0 then begin
     Result := 0;
     if not Assigned(aElement) then Exit;
-    Element := FindElement('Papyrus Struct', aElement);
+    Element := wbFindSaveElement('Papyrus Struct', aElement);
     Assert(Element.BaseName='Papyrus Struct');
 
     if Supports(Element, IwbDataContainer, Container) then begin
@@ -808,7 +778,7 @@ begin
   Handle := 0;
   if not Assigned(aElement) then Exit;
 
-  Element := FindElement(ArrayContentEntryData, aElement);
+  Element := wbFindSaveElement(ArrayContentEntryData, aElement);
   Assert(Element.BaseName=ArrayContentEntryData);
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -820,7 +790,7 @@ begin
   end;
 
   if VMArrayTableCount<0 then begin
-    Element := FindElement('Papyrus Struct', aElement);
+    Element := wbFindSaveElement('Papyrus Struct', aElement);
     Assert(Element.BaseName='Papyrus Struct');
 
     if Supports(Element, IwbDataContainer, Container) then begin
@@ -845,7 +815,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Script', aElement);
+  Element := wbFindSaveElement('Script', aElement);
   Assert(Element.BaseName='Script');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -869,7 +839,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Parameter', aElement);
+  Element := wbFindSaveElement('Parameter', aElement);
   Assert(Element.BaseName='Parameter');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -889,7 +859,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Code', aElement);
+  Element := wbFindSaveElement('Code', aElement);
   Assert(Element.BaseName='Code');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -910,7 +880,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Code', aElement);
+  Element := wbFindSaveElement('Code', aElement);
   Assert(Element.BaseName='Code');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -947,7 +917,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Frame', aElement);
+  Element := wbFindSaveElement('Frame', aElement);
   Assert(Element.BaseName='Frame');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -966,7 +936,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Stack', aElement);
+  Element := wbFindSaveElement('Stack', aElement);
   Assert(Element.BaseName='Stack');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -991,7 +961,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Callback', aElement);
+  Element := wbFindSaveElement('Callback', aElement);
   Assert(Element.BaseName='Callback');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1022,7 +992,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Stack', aElement);
+  Element := wbFindSaveElement('Stack', aElement);
   Assert(Element.BaseName='Stack');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1048,7 +1018,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Papyrus Struct', aElement);
+  Element := wbFindSaveElement('Papyrus Struct', aElement);
   Assert(Element.BaseName='Papyrus Struct');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1075,7 +1045,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Papyrus Struct', aElement);
+  Element := wbFindSaveElement('Papyrus Struct', aElement);
   Assert(Element.BaseName='Papyrus Struct');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1096,7 +1066,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Papyrus Struct', aElement);
+  Element := wbFindSaveElement('Papyrus Struct', aElement);
   Assert(Element.BaseName='Papyrus Struct');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1117,7 +1087,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Papyrus Struct', aElement);
+  Element := wbFindSaveElement('Papyrus Struct', aElement);
   Assert(Element.BaseName='Papyrus Struct');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1138,7 +1108,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Papyrus Struct', aElement);
+  Element := wbFindSaveElement('Papyrus Struct', aElement);
   Assert(Element.BaseName='Papyrus Struct');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1161,7 +1131,7 @@ begin
   if not Assigned(aElement) then Exit;
   aValue := VMversionDecider(aBasePtr, aEndPtr, aElement);
   if aValue >1 then begin
-    Element := FindElement('Frame Data', aElement);
+    Element := wbFindSaveElement('Frame Data', aElement);
     Assert(Element.BaseName='Frame Data');
 
     if Supports(Element, IwbDataContainer, Container) then begin
@@ -1192,7 +1162,7 @@ begin
   if not Assigned(aElement) then Exit;
   aValue := VMversionDecider(aBasePtr, aEndPtr, aElement);
   if aValue >1 then begin
-    Element := FindElement(aName, aElement);
+    Element := wbFindSaveElement(aName, aElement);
     Assert(Element.BaseName=aName);
 
     if Supports(Element, IwbDataContainer, Container) then begin
@@ -1223,7 +1193,7 @@ begin
   if not Assigned(aElement) then Exit;
   aValue := VMversionDecider(aBasePtr, aEndPtr, aElement);
   if aValue >1 then begin
-    Element := FindElement('Papyrus Struct', aElement);
+    Element := wbFindSaveElement('Papyrus Struct', aElement);
     Assert(Element.BaseName='Papyrus Struct');
 
     if Supports(Element, IwbDataContainer, Container) then begin
@@ -1243,7 +1213,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Functor', aElement);
+  Element := wbFindSaveElement('Functor', aElement);
   Assert(Element.BaseName='Functor');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1263,7 +1233,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Dual RefID Table', aElement);
+  Element := wbFindSaveElement('Dual RefID Table', aElement);
   Assert(Element.BaseName='Dual RefID Table');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1280,7 +1250,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Dual RefID Table', aElement);
+  Element := wbFindSaveElement('Dual RefID Table', aElement);
   Assert(Element.BaseName='Dual RefID Table');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1297,7 +1267,7 @@ end;
 //begin
 //  Result := 0;
 //  if not Assigned(aElement) then Exit;
-//  Element := FindElement(aParent, aElement);
+//  Element := wbFindSaveElement(aParent, aElement);
 //  Assert(Element.BaseName=aParent);
 //
 //  if Supports(Element, IwbDataContainer, Container) then begin
@@ -1315,7 +1285,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Unknown1000_0000', aElement);
+  Element := wbFindSaveElement('Unknown1000_0000', aElement);
   Assert(Element.BaseName='Unknown1000_0000');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1371,7 +1341,7 @@ var
 begin
   Result := -1;
   if not Assigned(aElement) then Exit;
-  aElement := FindElement('Changed Form', aElement);
+  aElement := wbFindSaveElement('Changed Form', aElement);
   Assert(aElement.BaseName='Changed Form');
 
   if Supports(aElement, IwbDataContainer, Container) then begin
@@ -1516,7 +1486,7 @@ var
 begin
   Result := 0;
   Element := aElement;
-  Element := FindElement('Change Actor Face', Element);
+  Element := wbFindSaveElement('Change Actor Face', Element);
   Assert(Element.BaseName='Change Actor Face');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1533,7 +1503,7 @@ var
 begin
   Result := 0;
   Element := aElement;
-  Element := FindElement('Change Actor Face', Element);
+  Element := wbFindSaveElement('Change Actor Face', Element);
   Assert(Element.BaseName='Change Actor Face');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1550,7 +1520,7 @@ var
 begin
   Result := 0;
   Element := aElement;
-  Element := FindElement('Change Projectile', Element);
+  Element := wbFindSaveElement('Change Projectile', Element);
   Assert(Element.BaseName='Change Projectile');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1567,7 +1537,7 @@ var
 begin
   Result := 0;
   Element := aElement;
-  Element := FindElement('Extra Unknown 12', Element);
+  Element := wbFindSaveElement('Extra Unknown 12', Element);
   Assert(Element.BaseName='Extra Unknown 12');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1584,7 +1554,7 @@ var
 begin
   Result := 0;
   Element := aElement;
-  Element := FindElement('Change Actor', Element);
+  Element := wbFindSaveElement('Change Actor', Element);
   Assert(Element.BaseName='Change Actor');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1600,7 +1570,7 @@ var
   Container  : IwbDataContainer;
 begin
   Result := 0;
-  Element := FindElement('Havok Moved SubBuffer', aElement);
+  Element := wbFindSaveElement('Havok Moved SubBuffer', aElement);
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Length'];
@@ -1616,7 +1586,7 @@ var
   Container  : IwbDataContainer;
 begin
   Result := 0;
-  Element := FindElement('Animation SubBuffer', aElement);
+  Element := wbFindSaveElement('Animation SubBuffer', aElement);
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Length'];
@@ -1647,7 +1617,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Changed Form', aElement);
+  Element := wbFindSaveElement('Changed Form', aElement);
   Assert(Element.BaseName='Changed Form');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1854,7 +1824,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Changed Form', aElement);
+  Element := wbFindSaveElement('Changed Form', aElement);
   Assert(Element.BaseName='Changed Form');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1880,7 +1850,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Alias', aElement);
+  Element := wbFindSaveElement('Alias', aElement);
   Assert(Element.BaseName='Alias');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1898,7 +1868,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Runtime Data', aElement);
+  Element := wbFindSaveElement('Runtime Data', aElement);
   Assert(Element.BaseName='Runtime Data');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1916,7 +1886,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Param', aElement);
+  Element := wbFindSaveElement('Param', aElement);
   Assert(Element.BaseName='Param');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -1987,7 +1957,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Extra', aElement);
+  Element := wbFindSaveElement('Extra', aElement);
   Assert(Element.BaseName='Extra');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -2029,7 +1999,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('CForm Data', aElement);
+  Element := wbFindSaveElement('CForm Data', aElement);
   Assert(Element.BaseName='CForm Data');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -2056,7 +2026,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('CForm Data', aElement);
+  Element := wbFindSaveElement('CForm Data', aElement);
   Assert(Element.BaseName='CForm Data');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -2073,7 +2043,7 @@ begin
   end;
 
   if Result > 0 then begin
-    Element := FindElement('Changed Form Data', aElement);
+    Element := wbFindSaveElement('Changed Form Data', aElement);
     Assert(Element.BaseName='Changed Form Data');
 
     if Supports(Element, IwbDataContainer, Container) then begin
@@ -2094,7 +2064,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('CForm Data', aElement);
+  Element := wbFindSaveElement('CForm Data', aElement);
   Assert(Element.BaseName='CForm Data');
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -2111,7 +2081,7 @@ begin
   end;
 
   if Result > 0 then begin
-    Element := FindElement('Changed Form Data', aElement);
+    Element := wbFindSaveElement('Changed Form Data', aElement);
     Assert(Element.BaseName='Changed Form Data');
 
     if Supports(Element, IwbDataContainer, Container) and (Container.ElementCount = 3) then begin
@@ -2138,7 +2108,7 @@ begin
   Result := 0;
   // Let's see how many bytes remains:
   RemainingBytes := ChangedFormRemainingDataFromHereCounter(aBasePtr, aEndPtr, aElement);
-  Element := FindElement('Change CELL Data', aElement);
+  Element := wbFindSaveElement('Change CELL Data', aElement);
   Assert(Element.BaseName='Change CELL Data');
   if Supports(Element, IwbContainer, Container) then begin
     BasePtr := Pointer(Cardinal(aBasePtr) + ExteriorSize);
@@ -2175,7 +2145,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement(aName, aElement);
+  Element := wbFindSaveElement(aName, aElement);
   Assert(Element.BaseName=aName);
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -2200,7 +2170,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement(aName, aElement);
+  Element := wbFindSaveElement(aName, aElement);
   Assert(Element.BaseName=aName);
 
   if Supports(Element, IwbDataContainer, Container) then begin
@@ -2244,7 +2214,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Quest Runtime Data', aElement);
+  Element := wbFindSaveElement('Quest Runtime Data', aElement);
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Counter'];
@@ -2261,7 +2231,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := FindElement('Factions', aElement);
+  Element := wbFindSaveElement('Factions', aElement);
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Factions Length'];
@@ -2271,19 +2241,54 @@ begin
   end;
 end;
 
-function ToBeDeterminedDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  LastRegistrationStart : Integer = 0;
+
+function SKSEChaptersDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
 begin
   Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := wbFindSaveElement('Chunk', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Type'];
+    if Assigned(Element) then
+           if Element.Value ='MODS' then Result := 1
+      else if Element.Value ='REGS' then Result := 2
+      else if Element.Value ='REGE' then Result := 3
+      else if Element.Value ='MENR' then begin Result :=  4; LastRegistrationStart := Result; end
+      else if Element.Value ='KEYR' then begin Result :=  5; LastRegistrationStart := Result; end
+      else if Element.Value ='CTLR' then begin Result :=  6; LastRegistrationStart := Result; end
+      else if Element.Value ='MCBR' then begin Result :=  7; LastRegistrationStart := Result; end
+      else if Element.Value ='CHRR' then begin Result :=  8; LastRegistrationStart := Result; end
+      else if Element.Value ='CAMR' then begin Result :=  9; LastRegistrationStart := Result; end
+      else if Element.Value ='AACT' then begin Result := 10; LastRegistrationStart := Result; end
+      else Result := 8;
+  end;
 end;
 
-function ToBeDeterminedCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function SKSERegKeyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := 0;
+  case LastRegistrationStart of
+    4, 6, 7 : Result := 1;  // String
+    5, 10:    Result := 2;  // UInt32
+    8, 9:     Result := 3;  // Null
+  end;
 end;
 
-function ToBeDeterminedCountCallback(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function SKSERegDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := 0;
+  case LastRegistrationStart of
+    7:
+      Result := 1;  // String
+    4, 5, 6, 8, 9, 10:
+      Result := 0;  // Null
+  end;
 end;
 
 procedure DefineTES5SavesS;  // This is all based on current UESP, and HexDump, Triria TESSaveLib and the Runtime
@@ -5544,7 +5549,7 @@ begin
      wbInteger('Rank', itS32),                                  // 00D
      wbInteger('Count', itS16),                                 // 00E
      wbFloat('Heath'),                                          // 00F
-wbNull
+     wbNull
     ])
   ]), -254);
 
@@ -5955,7 +5960,7 @@ wbNull
     wbByteArray('Unused', 15 * 4)
   ]);
 
-  wbFileHeader := wbStruct('Save File Header', [
+  wbSaveHeader := wbStruct('Save File Header', [
      wbString('Magic', 13)
     ,wbInteger('Header Size', itU32)
     ,wbHeader
@@ -5966,7 +5971,7 @@ wbNull
     ,wbFileLocationTable
   ]);
 
-  wbFileChapters := wbStruct('Save File Chapters', [
+  wbSaveChapters := wbStruct('Save File Chapters', [
      wbArray('Global Data 1', wbGlobalData, [], GlobalData1Counter)
     ,wbArray('Global Data 2', wbGlobalData, [], GlobalData2Counter)
     ,wbArray('Changed Forms', wbChangedForm, [], ChangedFormsCounter)
@@ -5978,19 +5983,85 @@ wbNull
 //    ,wbByteArray('Unused', SkipCounter) // Lets you skip an arbitrary number of byte, Setable from CommandLine -bts:n
 //    ,wbArray('Remaining',  WbByteArray('Unknown', BytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
   ]);
+
+  wbSKSEHeader := wbStruct('CoSave File Header', [
+     wbString('Magic', 4)
+    ,wbInteger('Version', itU32)
+    ,wbInteger('SKSE Version', itU16)
+    ,wbInteger('SKSE Minor Version', itU16)
+    ,wbInteger('Skyrim Version', itU32)
+    ,wbInteger('Plugins count', itU32)
+  ]);
+
+  wbSKSEChapters := wbStruct('CoSave File Chapters', [
+     wbArray('Plugins', wbStruct('Plugin', [
+       wbInteger('UID', itU32),
+       wbInteger('Chunks count', itU32),
+       wbInteger('Length', itU32),
+       wbArray('Chunks',
+         wbStruct('Chunk', [
+           wbInteger('Type', itU32, wbStr4),
+           wbInteger('Version', itU32),
+           wbInteger('Length', itU32),
+           wbUnion('Data', SKSEChaptersDecider, [
+             wbNull,
+             wbArray('Modules', wbLenString('PluginName', 2), -4),
+             wbStruct('Registered Event', [
+               wbUnion('Key', SKSERegKeyDecider, [
+                 wbNull,
+                 wbLenString('String Key', -2),
+                 wbInteger('Numeric Key', itU32),
+                 wbNull
+               ]),
+               wbArray('Regs', wbStruct('Reg', [
+                 wbInteger('Handle', itU64),
+                 wbUnion('Data', SKSERegDataDecider, [
+                  wbNull,
+                  wbLenString('Callback', -2)
+                 ])
+               ]), -1)
+             ]),
+             wbNull,  // REGE Registered Event End
+             wbNull,  // MENR Menu Event Registration
+             wbNull,  // KEYR Key Event Registration
+             wbNull,  // CTLR Control Event Registration
+             wbNull,  // MCBR Mod Callback Event Registration
+             wbNull,  // CHRR Crosshair Ref Event Registration
+             wbNull,  // CAMR Camera Event Registration
+             wbNull,  // AACT Actor Action Event Registration
+             wbByteArray('Others', wbXXSEChapterOtherCounter)
+           ])
+         ]), wbXXSEChunkCounter)
+       ]), wbXXSEPluginCounter)
+//    ,wbByteArray('Unused', SkipCounter) // Lets you skip an arbitrary number of byte, Setable from CommandLine -bts:n
+//    ,wbArray('Remaining',  WbByteArray('Unknown', wbBytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
+  ]);
+
+  wbFileChapters := wbSaveChapters;
+  wbFileHeader := wbSaveHeader;
 end;
 
 var
-  ExtractInfo: TByteSet = [4, 5]; // SaveFileChapters that should be initialized before dumping to get more information
+  ExtractInfoSave:   TByteSet = [4, 5]; // SaveFileChapters that should be initialized before dumping to get more information
+  ExtractInfoCoSave: TByteSet = [    ]; // CoSaveFileChapters that should be initialized before dumping to get more information
 
 procedure DefineTES5Saves;
 begin
   wbFileMagic := 'TESV_SAVEGAME';
-  wbExtractInfo := @ExtractInfo;
+  wbExtractInfo := @ExtractInfoSave;
   wbFilePlugins := 'Plugins';
   DefineTES5;
   DefineTES5SavesA;
   DefineTES5SavesS;
+end;
+
+procedure SwitchToTES5CoSave;
+begin
+  wbFileMagic := 'SKSE';
+  wbExtractInfo := @ExtractInfoCoSave;
+  wbFilePlugins := 'Absolute:44';
+  wbFileChapters := wbSKSEChapters;
+  wbFileHeader := wbSKSEHeader;
 end;
 
 initialization
