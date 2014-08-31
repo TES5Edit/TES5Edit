@@ -43,7 +43,7 @@ var
   ChaptersToSkip     : TStringList;
   SubRecordOrderList : TStringList;
 
-procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
+procedure wbMastersForFile(const aFileName: string; aMasters: TStrings; IsPrimary: Boolean);
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
   IsTemporary: Boolean = False; IsPrimary: Boolean = False): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer): IwbFile;
@@ -624,6 +624,7 @@ type
     function GetHeader: IwbMainRecord;
 
     function GetLoadOrder: Integer;
+    procedure ForceLoadOrder(aValue: Integer);
     procedure SetLoadOrder(aValue: Integer);
 
     function LoadOrderFormIDtoFileFormID(aFormID: Cardinal): Cardinal;
@@ -2470,6 +2471,11 @@ begin
   flInjectedRecords        := nil;
   ReleaseElements;
   flCloseFile;
+end;
+
+procedure TwbFile.ForceLoadOrder(aValue: Integer);
+begin
+  flLoadOrder := aValue;
 end;
 
 function TwbFile.GetAddList: TDynStrings;
@@ -9180,7 +9186,9 @@ end;
 
 procedure TwbSubRecord.CheckCount;
 var
-  Count : Cardinal;
+  Count       : Cardinal;
+  i           : Integer;
+  UpdateCount : Integer;
 begin
   if srArraySizePrefix < 1 then
     Exit;
@@ -9196,12 +9204,16 @@ begin
   else
     Count := 0;
 
-  if Count <> Length(cntElements) then
+  if Count <> Length(cntElements) then begin
+    UpdateCount := eUpdateCount;
+    for i := 1 to UpdateCount do EndUpdate;
     case srArraySizePrefix of
       1: PByte(GetDataBasePtr)^ := Length(cntElements);
       2: PWord(GetDataBasePtr)^ := Length(cntElements);
       4: PCardinal(GetDataBasePtr)^ := Length(cntElements);
     end;
+    for i := 1 to UpdateCount do BeginUpdate;
+  end;
 end;
 
 procedure TwbSubRecord.CheckTerminator;
@@ -13682,8 +13694,10 @@ end;
 
 procedure TwbArray.CheckCount;
 var
-  Count    : Cardinal;
-  ArrayDef : IwbArrayDef;
+  Count       : Cardinal;
+  i           : Integer;
+  UpdateCount : Integer;
+  ArrayDef    : IwbArrayDef;
 begin
   if arrSizePrefix = 0 then
     Exit;
@@ -13691,8 +13705,12 @@ begin
   ArrayDef := vbValueDef as IwbArrayDef;
   Count := arrayDef.PrefixCount[dcDataBasePtr];
 
-  if Count <> Length(cntElements) then
+  if Count <> Length(cntElements) then begin
+    UpdateCount := eUpdateCount;
+    for i := 1 to UpdateCount do EndUpdate;  // Stops optimisation
     ArrayDef.SetPrefixCount(dcDataBasePtr, Length(cntElements));
+    for i := 1 to UpdateCount do BeginUpdate; // Restore optimisation
+  end;
 end;
 
 procedure TwbArray.CheckTerminator;
@@ -14361,7 +14379,7 @@ begin
   end;
 end;
 
-procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
+procedure wbMastersForFile(const aFileName: string; aMasters: TStrings; IsPrimary: Boolean);
 var
   FileName : string;
   i        : Integer;
@@ -14374,7 +14392,7 @@ begin
 
   if FilesMap.Find(FileName, i) then
     _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
-  else if wbToolSource in [tsSaves] then
+  else if IsPrimary and (wbToolSource in [tsSaves]) then
     _File := TwbFileSource.Create(FileName, -1, '', True)
   else
     _File := TwbFile.Create(FileName, -1, '', True);
@@ -15919,6 +15937,9 @@ var
   MasterFiles : IwbContainerElementRef;
   fPath       : String;
   i           : Integer;
+  modOffset   : Cardinal;
+  modPtr      : Pointer;
+  mods        : TwbArray;
 begin
   if (GetElementCount <> 1) or not Supports(GetElement(0), IwbFileHeader, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
@@ -15927,7 +15948,14 @@ begin
     raise Exception.CreateFmt('Expected File Magic %s, found %s in file "%s"',
       [wbFileMagic, String(Header.FileMagic), flFileName]);
 
-  MasterFiles := Header.ElementByName[wbFilePlugins] as IwbContainerElementRef;
+  if Pos('Absolute:', wbFilePlugins)=1 then begin
+    modOffset := Cardinal(flView)+StrToInt(Copy(wbFilePlugins, 10, Length(wbFilePlugins)));
+    modPtr := Pointer(modOffset);
+    mods := TwbArray.Create(nil, modPtr, flEndPtr, wbArray('Modules', wbLenString('PluginName', 2), -4), '', False);
+    Supports(mods, IwbContainerElementRef, MasterFiles);
+  end else
+    MasterFiles := Header.ElementByName[wbFilePlugins] as IwbContainerElementRef;
+
   if Assigned(MasterFiles) then
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
       fPath := wbDataPath + MasterFiles[i].Value;
@@ -16036,6 +16064,9 @@ begin
     if (i in ExtractInfo) and Supports(Element, IwbContainer, Container) then
       with Element as TwbContainer do DoInit;
   end;
+
+  for i := 0 to Pred(GetElementCount) do
+    GetElement(i).SortOrder := i;
 
   flProgress('Processing completed');
   flLoadFinished := True;

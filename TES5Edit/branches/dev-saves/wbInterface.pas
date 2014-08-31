@@ -69,6 +69,7 @@ var
   wbVWDInTemporary         : Boolean  = False;
   wbResolveAlias           : Boolean  = True;
   wbActorTemplateHide      : Boolean  = True;
+  wbShowForceTime          : Boolean  = True;
   wbDoNotBuildRefsFor      : TStringList;
 
   wbUDRSetXESP       : Boolean = True;
@@ -745,6 +746,7 @@ type
     function GetRecordByFormID(aFormID: Cardinal; aAllowInjected: Boolean): IwbMainRecord;
     function GetRecordByEditorID(const aEditorID: string): IwbMainRecord;
     function GetLoadOrder: Integer;
+    procedure ForceLoadOrder(aValue: Integer);
     function GetGroupBySignature(const aSignature: TwbSignature): IwbGroupRecord;
     function HasGroup(const aSignature: TwbSignature): Boolean;
     function GetFileStates: TwbFileStates;

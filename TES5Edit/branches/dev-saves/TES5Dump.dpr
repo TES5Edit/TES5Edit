@@ -944,11 +944,14 @@ begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
       end;
-      if not (wbToolSource in [tsPlugins]) then begin
+      if not (wbToolSource in [tsPlugins, tsSaves]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
         Exit;
       end;
-      DefineTES4;
+      case wbToolSource of
+        tsSaves:   DefineTES4Saves;
+        tsPlugins: DefineTES4;
+      end;
     end else if isMode('TES5') then begin
       wbGameMode := gmTES5;
       wbAppName := 'TES5';
@@ -1107,7 +1110,10 @@ begin
     if wbToolSource = tsSaves then
       case wbGameMode of
         gmFNV:  if SameText(ExtractFileExt(s), '.nvse') then SwitchToFNVCoSave;
-        gmFO3:  if SameText(ExtractFileExt(s), '.nvse') then SwitchToFO3CoSave
+        gmFO3:  if SameText(ExtractFileExt(s), '.fose') then SwitchToFO3CoSave
+          else
+            WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
+        gmTES4: if SameText(ExtractFileExt(s), '.obse') then SwitchToTES4CoSave
           else
             WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
         gmTES5: if SameText(ExtractFileExt(s), '.skse') then SwitchToTES5CoSave;
@@ -1209,7 +1215,7 @@ begin
 
     if wbLoadBSAs then begin
       Masters := TStringList.Create;
-      wbMastersForFile(s, Masters);
+      wbMastersForFile(s, Masters, wbToolSource in [tsSaves]);
       Masters.Add(ExtractFileName(s));
 
       for i := 0 to Masters.Count - 1 do begin

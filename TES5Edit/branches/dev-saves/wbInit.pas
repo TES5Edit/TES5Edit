@@ -57,6 +57,7 @@ function wbFindNextValidCmdLineFileName(var startingIndex : integer; out aValue 
 function wbFindNextValidCmdLinePlugin(var startingIndex : integer; out aValue  : string; defaultPath : string) : Boolean;
 
 function wbLoadMOHookFile: Boolean;
+procedure SwitchToCoSave;
 
 implementation
 
@@ -71,11 +72,15 @@ uses
   IniFiles,
   wbInterface,
   wbImplementation,
-  wbDefinitionsTES4,
-  wbDefinitionsTES3,
   wbDefinitionsFO3,
+  wbDefinitionsFO3Saves,
   wbDefinitionsFNV,
-  wbDefinitionsTES5;
+  wbDefinitionsFNVSaves,
+  wbDefinitionsTES3,
+  wbDefinitionsTES4,
+  wbDefinitionsTES4Saves,
+  wbDefinitionsTES5,
+  wbDefinitionsTES5Saves;
 
 function wbFindCmdLineParam(const aSwitch     : string;
                             const aChars      : TSysCharSet;
@@ -422,6 +427,8 @@ begin
   if isMode('Saves') then begin
     wbToolSource := tsSaves;
     wbSourceName := 'Saves';
+    wbUseFalsePlugins := True;
+    wbBuildRefs := False;
   end else begin // defaults to plugin
     wbToolSource := tsPlugins;
     wbSourceName := 'Plugins';
@@ -557,19 +564,27 @@ begin
     Exit;
   end;
 
-  if wbGameMode = gmFNV then
-    DefineFNV
-  else if wbGameMode = gmFO3 then
-    DefineFO3
-  else if wbGameMode = gmTES3 then
-    DefineTES3
-  else if wbGameMode = gmTES4 then
-    DefineTES4
-  else if wbGameMode = gmTES5 then
-    case wbToolSource of
+  case wbGameMode of
+    gmFNV:  case wbToolSource of
+      tsSaves:   DefineFNVSaves;
+      tsPlugins: DefineFNV;
+    end;
+    gmFO3:  case wbToolSource of
+      tsSaves:   DefineFO3Saves;
+      tsPlugins: DefineFO3;
+    end;
+    gmTES3: case wbToolSource of
+      tsPlugins: DefineTES3;
+    end;
+    gmTES4: case wbToolSource of
+      tsSaves:   DefineTES4Saves;
+      tsPlugins: DefineTES4;
+    end;
+    gmTES5: case wbToolSource of
+      tsSaves:   DefineTES5Saves;
       tsPlugins: DefineTES5;
     end
-  else begin
+  else
     ShowMessage('Application name must contain FNV, FO3, TES4 or TES5 to select game.');
     Exit;
   end;
@@ -661,6 +676,17 @@ begin
     wbFixupPGRD := True;
 
   wbShouldLoadMOHookFile := wbFindCmdLineParam('moprofile', wbMOProfile);
+end;
+
+procedure SwitchToCoSave;
+
+begin
+  case wbGameMode of
+    gmFNV:  SwitchToFNVCoSave;
+    gmFO3:  SwitchToFO3CoSave;
+    gmTES4: SwitchToTES4CoSave;
+    gmTES5: SwitchToTES5CoSave;
+  end;
 end;
 
 initialization
