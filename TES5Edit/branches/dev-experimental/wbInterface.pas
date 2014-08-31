@@ -1526,6 +1526,10 @@ type
     ['{CF657B3A-E7A6-48FE-AC68-8DF15962A531}']
   end;
 
+  IwbStr4 = interface(IwbIntegerDefFormater)	// 4 bytes strings stored as itU32 
+    ['{2DC5200E-C1F1-47e7-A927-3D110D59F55A}']
+  end;  // The interface handles swaping the character in readable order
+
   IwbFlagsDef = interface;
 
   IwbFlagDef = interface(IwbValueDef)
@@ -2848,6 +2852,8 @@ function wbFormIDCkNoReach(const aName          : string;
                                                 : IwbIntegerDef; overload;
 
 function wbChar4: IwbChar4;
+
+function wbStr4: IwbStr4;
 
 function wbFlags(const aNames           : array of string;
                        aUnknownIsUnused : Boolean = False)
@@ -4518,6 +4524,21 @@ type
     procedure BuildRef(aInt: Int64; const aElement: IwbElement); override;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function GetLinksTo(aInt: Int64; const aElement: IwbElement): IwbElement; override;
+
+    function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
+    function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
+    function GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean; override;
+    function CanContainFormIDs: Boolean; override;
+  end;
+
+  TwbStr4 = class(TwbIntegerDefFormater, IwbStr4)
+  protected
+    constructor Clone(const aSource: TwbDef); override;
+
+    {---IwbIntegerDefFormater---}
+    function ToString(aInt: Int64; const aElement: IwbElement): string; override;
+    function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
@@ -6225,6 +6246,11 @@ end;
 function wbChar4: IwbChar4;
 begin
   Result := TwbChar4.Create(cpNormal, False, nil);
+end;
+
+function wbStr4: IwbStr4;
+begin
+  Result := TwbStr4.Create(cpNormal, False, nil);
 end;
 
 function wbFormID(const aSignature : TwbSignature;
@@ -10447,6 +10473,77 @@ begin
 
   if U32 <> 0 then
     Result := Result + ' <Warning: could not be resolved>';
+  Used(aElement, Result);
+end;
+
+{ TwbStr4 }
+
+function TwbStr4.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
+begin
+  Result := Supports(aDef, IwbStr4);
+end;
+
+function TwbStr4.CanContainFormIDs: Boolean;
+begin
+  Result := False;
+end;
+
+constructor TwbStr4.Clone(const aSource: TwbDef);
+begin
+  with aSource as TwbStr4 do
+    Self.Create(defPriority, defRequired, defGetCP).defSource := aSource;
+end;
+
+function TwbStr4.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
+const
+  Empty : TwbSignature = '    ';
+var
+  s     : AnsiString;
+  Temp  : AnsiString;
+  i     : Integer;
+begin
+  if aValue = '' then
+    Result := Cardinal(Empty)
+  else begin
+    s := AnsiString(aValue);
+    if Length(s) <> 4 then
+      raise Exception.Create('The value must be exactly 4 characters');
+    Temp := s;
+    for i := 1 to 4 do s[i] := Temp[5-i];
+
+    Result := PCardinal(@s[1])^;
+  end;
+end;
+
+function TwbStr4.GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean;
+begin
+  Result := True;
+end;
+
+function TwbStr4.ToEditValue(aInt: Int64; const aElement: IwbElement): string;
+begin
+  Result := ToSortKey(aInt, aElement);
+end;
+
+function TwbStr4.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
+var
+  U32  : Cardinal;
+  Temp : String;
+  i    : Integer;
+begin
+  if aInt=0 then
+    Result := '    '
+  else begin
+    U32 := aInt;
+    Result := PwbSignature(@U32)^;
+    Temp := Result;
+    for i := 1 to 4 do Result[i] := Temp[5-i];
+  end;
+end;
+
+function TwbStr4.ToString(aInt: Int64; const aElement: IwbElement): string;
+begin
+  Result := ToSortKey(aInt, aElement);
   Used(aElement, Result);
 end;
 
