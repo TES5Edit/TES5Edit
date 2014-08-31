@@ -9164,7 +9164,9 @@ end;
 
 procedure TwbSubRecord.CheckCount;
 var
-  Count : Cardinal;
+  Count       : Cardinal;
+  i           : Integer;
+  UpdateCount : Integer;
 begin
   if srArraySizePrefix < 1 then
     Exit;
@@ -9180,12 +9182,16 @@ begin
   else
     Count := 0;
 
-  if Count <> Length(cntElements) then
+  if Count <> Length(cntElements) then begin
+    UpdateCount := eUpdateCount;
+    for i := 1 to UpdateCount do EndUpdate;
     case srArraySizePrefix of
       1: PByte(GetDataBasePtr)^ := Length(cntElements);
       2: PWord(GetDataBasePtr)^ := Length(cntElements);
       4: PCardinal(GetDataBasePtr)^ := Length(cntElements);
     end;
+    for i := 1 to UpdateCount do BeginUpdate;
+  end;
 end;
 
 procedure TwbSubRecord.CheckTerminator;
@@ -13627,8 +13633,10 @@ end;
 
 procedure TwbArray.CheckCount;
 var
-  Count    : Cardinal;
-  ArrayDef : IwbArrayDef;
+  Count       : Cardinal;
+  i           : Integer;
+  UpdateCount : Integer;
+  ArrayDef    : IwbArrayDef;
 begin
   if arrSizePrefix = 0 then
     Exit;
@@ -13636,8 +13644,12 @@ begin
   ArrayDef := vbValueDef as IwbArrayDef;
   Count := arrayDef.PrefixCount[dcDataBasePtr];
 
-  if Count <> Length(cntElements) then
+  if Count <> Length(cntElements) then begin
+    UpdateCount := eUpdateCount;
+    for i := 1 to UpdateCount do EndUpdate;  // Stops optimisation
     ArrayDef.SetPrefixCount(dcDataBasePtr, Length(cntElements));
+    for i := 1 to UpdateCount do BeginUpdate; // Restore optimisation
+  end;
 end;
 
 procedure TwbArray.CheckTerminator;
