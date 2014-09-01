@@ -378,7 +378,7 @@ begin
       if not ForceDirectories(wbBackupPath) then
         wbBackupPath := wbDataPath;
   end;
-  wbFindCmdLineParam('L', wbLogFile);
+  wbFindCmdLineParam('R', wbLogFile);
 end;
 
 function isMode(aMode: String): Boolean;
