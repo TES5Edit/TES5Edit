@@ -8054,6 +8054,7 @@ begin
     wbOBNDReq,
     wbMODL,
     wbSCRI,
+    wbDEST,
     wbFULL,
     wbICON,
     wbStruct(DATA, '', [
