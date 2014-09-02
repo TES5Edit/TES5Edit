@@ -29,9 +29,11 @@ uses
   Registry,
   Zlibex in 'Zlibex.pas',
   wbBSA in 'wbBSA.pas',
+  wbSort in 'wbSort.pas',
   wbInterface in 'wbInterface.pas',
   wbImplementation in 'wbImplementation.pas',
   wbLocalization in 'wbLocalization.pas',
+  wbHelpers in 'wbHelpers.pas',
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
   wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
@@ -272,10 +274,11 @@ end;
 var
   NeedsSyntaxInfo : Boolean;
   s, s2           : string;
-  i               : integer;
+  i,j             : integer;
   _File           : IwbFile;
   Masters         : TStringList;
   F               : TSearchRec;
+  n,m             : TStringList;
 begin
   {$IF CompilerVersion >= 24}
   FormatSettings.DecimalSeparator := '.';
@@ -521,38 +524,98 @@ begin
       wbMastersForFile(s, Masters);
       Masters.Add(ExtractFileName(s));
 
-      for i := 0 to Masters.Count - 1 do begin
-        if wbLoadAllBSAs then begin
-          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
-            s2 := ChangeFileExt(Masters[i], '');
-            if FindFirst(wbDataPath + s2 + '*.bsa', faAnyFile, F) = 0 then try
-              repeat
-                ReportProgress('[' + F.Name + '] Loading Resources.');
-                wbContainerHandler.AddBSA(wbDataPath + F.Name);
-              until FindNext(F) <> 0;
-            finally
-              SysUtils.FindClose(F);
+      if wbLoadAllBSAs then begin
+        n := TStringList.Create;
+        try
+          m := TStringList.Create;
+          try
+            if (Length(wbTheGameIniFileName)>0) and (FindBSAs(wbTheGameIniFileName, wbDataPath, n, m)>0) then begin
+              for i := 0 to Pred(n.Count) do begin
+                ReportProgress('[' + n[i] + '] Loading Resources.');
+                wbContainerHandler.AddBSA(MakeDataFileName(n[i], wbDataPath));
+              end;
             end;
+          finally
+            FreeAndNil(m);
+          end;
+        finally
+          FreeAndNil(n);
+        end;
+      end;
+
+      for i := 0 to Pred(Masters.Count) do begin
+        if wbLoadAllBSAs then begin
+//          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
+//            s2 := ChangeFileExt(Masters[i], '');
+//            if FindFirst(wbDataPath + s2 + '*.bsa', faAnyFile, F) = 0 then try
+//              repeat
+//                ReportProgress('[' + F.Name + '] Loading Resources.');
+//                wbContainerHandler.AddBSA(wbDataPath + F.Name);
+//              until FindNext(F) <> 0;
+//            finally
+//              SysUtils.FindClose(F);
+//            end;
+//          end;
+          n := TStringList.Create;
+          try
+            m := TStringList.Create;
+            try
+              if HasBSAs(ChangeFileExt(Masters[i], ''), wbDataPath,
+                  wbGameMode in [gmTES5], wbGameMode in [gmTES5], n, m)>0 then begin
+                for j := 0 to Pred(n.Count) do begin
+                  ReportProgress('[' + n[j] + '] Loading Resources.');
+                  wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                end;
+              end;
+            finally
+              FreeAndNil(m);
+            end;
+          finally
+            FreeAndNil(n);
           end;
         end else begin
-          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
-            s2 := ChangeFileExt(Masters[i], '');
-            if FindFirst(wbDataPath + s2 + '.bsa', faAnyFile, F) = 0 then try
-              repeat
-                ReportProgress('[' + F.Name + '] Loading Resources.');
-                wbContainerHandler.AddBSA(wbDataPath + F.Name);
-              until FindNext(F) <> 0;
+//          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
+//            s2 := ChangeFileExt(Masters[i], '');
+//            if FindFirst(wbDataPath + s2 + '.bsa', faAnyFile, F) = 0 then try
+//              repeat
+//                ReportProgress('[' + F.Name + '] Loading Resources.');
+//                wbContainerHandler.AddBSA(wbDataPath + F.Name);
+//              until FindNext(F) <> 0;
+//            finally
+//              SysUtils.FindClose(F);
+//            end;
+//            if FindFirst(wbDataPath + s2 + ' - Interface.bsa', faAnyFile, F) = 0 then try
+//              repeat
+//                ReportProgress('[' + F.Name + '] Loading Resources.');
+//                wbContainerHandler.AddBSA(wbDataPath + F.Name);
+//              until FindNext(F) <> 0;
+//            finally
+//              SysUtils.FindClose(F);
+//            end;
+//          end;
+          n := TStringList.Create;
+          try
+            m := TStringList.Create;
+            try
+              if HasBSAs(ChangeFileExt(Masters[i], ''), wbDataPath, true, false, n, m)>0 then begin
+                for j := 0 to Pred(n.Count) do begin
+                  ReportProgress('[' + n[j] + '] Loading Resources.');
+                  wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                end;
+              end;
+              m.Clear;
+              n.Clear;
+              if HasBSAs(ChangeFileExt(Masters[i], '')+' - Interface', wbDataPath, true, false, n, m)>0 then begin
+                for j := 0 to Pred(n.Count) do begin
+                  ReportProgress('[' + n[j] + '] Loading Resources.');
+                  wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                end;
+              end;
             finally
-              SysUtils.FindClose(F);
+              FreeAndNil(m);
             end;
-            if FindFirst(wbDataPath + s2 + ' - Interface.bsa', faAnyFile, F) = 0 then try
-              repeat
-                ReportProgress('[' + F.Name + '] Loading Resources.');
-                wbContainerHandler.AddBSA(wbDataPath + F.Name);
-              until FindNext(F) <> 0;
-            finally
-              SysUtils.FindClose(F);
-            end;
+          finally
+            FreeAndNil(n);
           end;
         end;
       end;

@@ -87,6 +87,12 @@ function wbCounterByPathAfterSet(aCounterName: String; const aElement: IwbElemen
 function wbCounterContainerAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement; DeleteOnEmpty: Boolean = False): Boolean;
 function wbCounterContainerByPathAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement): Boolean;
 
+// BSA helper
+
+function MakeDataFileName(FileName, DataPath: String): String;
+function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+
 implementation
 
 uses
@@ -802,6 +808,102 @@ begin
   finally
     wbEndInternalEdit;
   end;
+end;
+
+// BSA helper
+
+function MakeDataFileName(FileName, DataPath: String): String;
+begin
+  if Length(FileName) < 5 then
+    Result := ''
+  else if not ((FileName[1] = '\') or (FileName[2] = ':')) then
+    Result := DataPath + FileName
+  else
+    Result := FileName;
+end;
+
+function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+var
+  i: Integer;
+  j: Integer;
+  s: String;
+  t: String;
+begin
+  Result := 0;
+  j := 0;
+  if Assigned(bsaNames) then
+    j := bsaNames.Count;
+  if Assigned(bsaMissing) then
+    j := j + bsaMissing.Count;
+
+  if Assigned(bsaNames) then
+    with TMemIniFile.Create(iniName) do try
+      with TStringList.Create do try
+        if wbGameMode in [gmTES4, gmFO3, gmFNV] then
+          Text := StringReplace(ReadString('Archive', 'sArchiveList', ''), ',' ,#10, [rfReplaceAll])
+        else
+          Text := StringReplace(
+            ReadString('Archive', 'sResourceArchiveList', '') + ',' + ReadString('Archive', 'sResourceArchiveList2', ''),
+            ',', #10, [rfReplaceAll]
+          );
+        for i := 0 to Pred(Count) do begin
+          s := Trim(Strings[i]);
+          t := MakeDataFileName(s, DataPath);
+          if (Length(t)>0) then
+            if FileExists(t) then begin
+              if wbContainerHandler.ContainerExists(t) then
+                Continue;
+              bsaNames.Add(s);
+            end else
+              if Assigned(bsaMissing) then
+                bsaMissing.Add(s);
+        end;
+        Result := bsaNames.Count  + bsaMissing.Count - j; // How many were added
+      finally
+        Free;
+      end;
+    finally
+      Free;
+    end;
+end;
+
+function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+var
+  j: Integer;
+  t: String;
+  F: TSearchRec;
+begin
+  Result := 0;
+  j := 0;
+  if Assigned(bsaNames) then
+    j := bsaNames.Count;
+  if Assigned(bsaMissing) then
+    j := j + bsaMissing.Count;
+
+  // All games prior to Skyrim load BSA files with partial matching, Skyrim requires exact name match and
+  //   can use a private ini to specify the bsa to use.
+  if not exact then
+    ModName := ModName + '*';
+  if FindFirst(DataPath + ModName + '.bsa', faAnyFile, F) = 0 then try
+    repeat
+      if wbContainerHandler.ContainerExists(DataPath + F.Name) then
+        Continue;
+      t := MakeDataFileName(F.Name, DataPath);
+      if (Length(t)>0) and FileExists(t) then begin
+        if not wbContainerHandler.ContainerExists(t) then
+          if Assigned(bsaNames) then
+            bsaNames.Add(F.Name);
+      end else
+        if Assigned(bsaMissing) then
+          bsaMissing.Add(F.Name);
+    until FindNext(F) <> 0;
+    Result := bsaNames.Count  + bsaMissing.Count - j;
+  finally
+    FindClose(F);
+  end;
+
+  if modIni then
+    Result := Result + FindBSAs(DataPath+ChangeFileExt(ModName, '.ini'), DataPath, bsaNames, bsaMissing);
 end;
 
 initialization

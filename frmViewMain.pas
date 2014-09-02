@@ -12519,7 +12519,7 @@ begin
         MainRecord := Element as IwbMainRecord;
         case Column of
           -1, 0: begin
-              if MainRecord.Signature = 'TES4' then
+              if MainRecord.Signature = wbHeaderSignature then
                 CellText := 'File Header'
               else
                 CellText := IntToHex64(MainRecord.LoadOrderFormID, 8)
@@ -13927,11 +13927,12 @@ end;
 
 procedure TLoaderThread.Execute;
 var
-  i                           : Integer;
+  i,j                         : Integer;
   dummy                       : Integer;
   _File                       : IwbFile;
   s,t                         : string;
-  F                           : TSearchRec;
+//  F                           : TSearchRec;
+  n,m                         : TStringList;
 begin
   wbStartTime := Now;
   LoaderProgress('starting...');
@@ -13942,60 +13943,105 @@ begin
       if not Assigned(wbContainerHandler) then begin
         wbContainerHandler := wbCreateContainerHandler;
 
-        with TMemIniFile.Create(wbTheGameIniFileName) do try
-          with TStringList.Create do try
-            if wbGameMode in [gmTES4, gmFO3, gmFNV] then
-              Text := StringReplace(ReadString('Archive', 'sArchiveList', ''), ',' ,#10, [rfReplaceAll])
-            else
-              Text := StringReplace(
-                ReadString('Archive', 'sResourceArchiveList', '') + ',' + ReadString('Archive', 'sResourceArchiveList2', ''),
-                ',', #10, [rfReplaceAll]
-              );
-            for i := 0 to Pred(Count) do begin
-              s := Trim(Strings[i]);
-              if Length(s) < 5 then
-                Continue;
-              if not ((s[1] = '\') or (s[2] = ':')) then
-                t := ltDataPath + s
-              else
-                t := s;
-              if not FileExists(t) then
-                LoaderProgress('Warning: <Can''t find ' + t + '>')
-              else begin
-                if wbContainerHandler.ContainerExists(t) then
-                  Continue;
+        n := TStringList.Create;
+        try
+          m := TStringList.Create;
+          try
+            if FindBSAs(wbTheGameIniFileName, ltDataPath, n, m)>0 then begin
+              for i := 0 to Pred(n.Count) do
                 if wbLoadBSAs then begin
-                  LoaderProgress('[' + s + '] Loading Resources.');
-                  wbContainerHandler.AddBSA(t);
+                  LoaderProgress('[' + n[i] + '] Loading Resources.');
+                  wbContainerHandler.AddBSA(MakeDataFileName(n[i], ltDataPath));
                 end else
-                  LoaderProgress('[' + s + '] Skipped.');
-              end;
+                  LoaderProgress('[' + n[i] + '] Skipped.');
+              for i := 0 to Pred(m.Count) do
+                LoaderProgress('Warning: <Can''t find ' + m[i] + '>')
             end;
           finally
-            Free;
+            FreeAndNil(m);
           end;
         finally
-          Free;
+          FreeAndNil(n);
         end;
 
+//        with TMemIniFile.Create(wbTheGameIniFileName) do try
+//          with TStringList.Create do try
+//            if wbGameMode in [gmTES4, gmFO3, gmFNV] then
+//              Text := StringReplace(ReadString('Archive', 'sArchiveList', ''), ',' ,#10, [rfReplaceAll])
+//            else
+//              Text := StringReplace(
+//                ReadString('Archive', 'sResourceArchiveList', '') + ',' + ReadString('Archive', 'sResourceArchiveList2', ''),
+//                ',', #10, [rfReplaceAll]
+//              );
+//            for i := 0 to Pred(Count) do begin
+//              s := Trim(Strings[i]);
+//              if Length(s) < 5 then
+//                Continue;
+//              if not ((s[1] = '\') or (s[2] = ':')) then
+//                t := ltDataPath + s
+//              else
+//                t := s;
+//              if not FileExists(t) then
+//                LoaderProgress('Warning: <Can''t find ' + t + '>')
+//              else begin
+//                if wbContainerHandler.ContainerExists(t) then
+//                  Continue;
+//                if wbLoadBSAs then begin
+//                  LoaderProgress('[' + s + '] Loading Resources.');
+//                  wbContainerHandler.AddBSA(t);
+//                end else
+//                  LoaderProgress('[' + s + '] Skipped.');
+//              end;
+//            end;
+//          finally
+//            Free;
+//          end;
+//        finally
+//          Free;
+//        end;
+
         for i := 0 to Pred(ltLoadList.Count) do begin
-          s := ChangeFileExt(ltLoadList[i], '');
-          // all games prior to Skyrim load BSA files with partial matching, Skyrim requires exact names match
-          if wbGameMode in [gmTES4, gmFO3, gmFNV] then
-            s := s + '*';
-          if FindFirst(ltDataPath + s + '.bsa', faAnyFile, F) = 0 then try
-            repeat
-              if wbContainerHandler.ContainerExists(ltDataPath + F.Name) then
-                Continue;
-              if wbLoadBSAs then begin
-                LoaderProgress('[' + F.Name + '] Loading Resources.');
-                wbContainerHandler.AddBSA(ltDataPath + F.Name);
-              end else
-                LoaderProgress('[' + F.Name + '] Skipped.');
-            until FindNext(F) <> 0;
+          n := TStringList.Create;
+          try
+            m := TStringList.Create;
+            try
+              // All games prior to Skyrim load BSA files with partial matching, Skyrim requires exact names match and
+              //   can use a private ini to specify the bsa to use.
+              if HasBSAs(ChangeFileExt(ltLoadList[i], ''), ltDataPath,
+                  wbGameMode in [gmTES5], wbGameMode in [gmTES5], n, m)>0 then begin
+                    for j := 0 to Pred(n.Count) do
+                      if wbLoadBSAs then begin
+                        LoaderProgress('[' + n[j] + '] Loading Resources.');
+                        wbContainerHandler.AddBSA(MakeDataFileName(n[j], ltDataPath));
+                      end else
+                        LoaderProgress('[' + n[j] + '] Skipped.');
+                    for j := 0 to Pred(m.Count) do
+                      LoaderProgress('Warning: <Can''t find ' + m[j] + '>');
+              end;
+            finally
+              FreeAndNil(m);
+            end;
           finally
-            FindClose(F);
+            FreeAndNil(n);
           end;
+
+//          s := ChangeFileExt(ltLoadList[i], '');
+//          // all games prior to Skyrim load BSA files with partial matching, Skyrim requires exact names match
+//          if wbGameMode in [gmTES4, gmFO3, gmFNV] then
+//            s := s + '*';
+//          if FindFirst(ltDataPath + s + '.bsa', faAnyFile, F) = 0 then try
+//            repeat
+//              if wbContainerHandler.ContainerExists(ltDataPath + F.Name) then
+//                Continue;
+//              if wbLoadBSAs then begin
+//                LoaderProgress('[' + F.Name + '] Loading Resources.');
+//                wbContainerHandler.AddBSA(ltDataPath + F.Name);
+//              end else
+//                LoaderProgress('[' + F.Name + '] Skipped.');
+//            until FindNext(F) <> 0;
+//          finally
+//            FindClose(F);
+//          end;
         end;
         LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');
         wbContainerHandler.AddFolder(ltDataPath);

@@ -35,11 +35,12 @@ uses
   wbScriptAdapter in 'wbScriptAdapter.pas',
   wbInterface in 'wbInterface.pas',
   wbImplementation in 'wbImplementation.pas',
-  wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
-  wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
-  wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
-  wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
-  wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
+  wbScriptAdapterMisc in 'wbScriptAdapterMisc.pas',
+  wbNifScanner in 'wbNifScanner.pas',
+  wbDDS in 'wbDDS.pas',
+  wbStreams in 'wbStreams.pas',
+  wbSort in 'wbSort.pas',
+  wbLocalization in 'wbLocalization.pas',
   frmViewMain in 'frmViewMain.pas' {frmMain},
   FilterOptionsFrm in 'FilterOptionsFrm.pas' {frmFilterOptions},
   FileSelectFrm in 'FileSelectFrm.pas' {frmFileSelect},
@@ -51,11 +52,11 @@ uses
   frmScriptForm in 'frmScriptForm.pas' {frmScript},
   frmOptionsForm in 'frmOptionsForm.pas' {frmOptions},
   frmLogAnalyzerForm in 'frmLogAnalyzerForm.pas' {frmLogAnalyzer},
-  wbScriptAdapterMisc in 'wbScriptAdapterMisc.pas',
-  wbNifScanner in 'wbNifScanner.pas',
-  wbDDS in 'wbDDS.pas',
-  wbStreams in 'wbStreams.pas',
-  wbSort in 'wbSort.pas';
+  wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
+  wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
+  wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
+  wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
+  wbDefinitionsTES5 in 'wbDefinitionsTES5.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
