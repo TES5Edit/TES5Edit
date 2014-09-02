@@ -43,7 +43,7 @@ var
   ChaptersToSkip     : TStringList;
   SubRecordOrderList : TStringList;
 
-procedure wbMastersForFile(const aFileName: string; aMasters: TStrings; IsPrimary: Boolean);
+procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
   IsTemporary: Boolean = False; IsPrimary: Boolean = False): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer): IwbFile;
@@ -624,7 +624,6 @@ type
     function GetHeader: IwbMainRecord;
 
     function GetLoadOrder: Integer;
-    procedure ForceLoadOrder(aValue: Integer);
     procedure SetLoadOrder(aValue: Integer);
 
     function LoadOrderFormIDtoFileFormID(aFormID: Cardinal): Cardinal;
@@ -2471,11 +2470,6 @@ begin
   flInjectedRecords        := nil;
   ReleaseElements;
   flCloseFile;
-end;
-
-procedure TwbFile.ForceLoadOrder(aValue: Integer);
-begin
-  flLoadOrder := aValue;
 end;
 
 function TwbFile.GetAddList: TDynStrings;
@@ -14379,7 +14373,7 @@ begin
   end;
 end;
 
-procedure wbMastersForFile(const aFileName: string; aMasters: TStrings; IsPrimary: Boolean);
+procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 var
   FileName : string;
   i        : Integer;
@@ -14392,7 +14386,7 @@ begin
 
   if FilesMap.Find(FileName, i) then
     _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
-  else if IsPrimary and (wbToolSource in [tsSaves]) then
+  else if wbToolSource in [tsSaves] then
     _File := TwbFileSource.Create(FileName, -1, '', True)
   else
     _File := TwbFile.Create(FileName, -1, '', True);
@@ -15460,7 +15454,6 @@ var
   MainRecordInternal       : IwbMainRecordInternal;
   DataContainer            : IwbDataContainer;
   Flags                    : TwbMainRecordStructFlags;
-  vcs1                     : Cardinal;
   p                        : Pointer;
 
   ToggleDeleted            : Boolean;
@@ -15501,15 +15494,6 @@ begin
         end;
 
         MainRecordInternal.mrStruct.mrsFlags := Flags;
-      end;
-    end else if SameText(aElement.Def.Name, 'Version Control Master FormID') then begin
-      if Supports(aElement, IwbDataContainer, DataContainer) then begin
-        vcs1 := PCardinal(DataContainer.DataBasePtr)^;
-        UpdateStorageFromElements;
-        dcDataStorage := nil;
-        Exclude(dcFlags, dcfStorageInvalid);
-        MainRecordInternal.MakeHeaderWriteable;
-        MainRecordInternal.mrStruct.mrsVCS1 := vcs1;
       end;
     end;
     p := MainRecordInternal.mrStruct;

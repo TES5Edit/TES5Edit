@@ -54,11 +54,7 @@ uses
   wbNifScanner in 'wbNifScanner.pas',
   wbDDS in 'wbDDS.pas',
   wbStreams in 'wbStreams.pas',
-  wbSort in 'wbSort.pas',
-  wbDefinitionsFNVSaves in 'wbDefinitionsFNVSaves.pas',
-  wbDefinitionsFO3Saves in 'wbDefinitionsFO3Saves.pas',
-  wbDefinitionsTES4Saves in 'wbDefinitionsTES4Saves.pas',
-  wbDefinitionsTES5Saves in 'wbDefinitionsTES5Saves.pas';
+  wbSort in 'wbSort.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

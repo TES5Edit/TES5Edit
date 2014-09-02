@@ -27,6 +27,8 @@ type
       override;
   end;
 
+  TwbForceTimeCallback = procedure(theList: TStrings);
+
   TfrmFileSelect = class(TForm)
     CheckListBox1: TCheckListBox;
     PopupMenu1: TPopupMenu;
@@ -37,6 +39,7 @@ type
     Label1: TLabel;
     cbBackup: TCheckBox;
     btnOK: TButton;
+    btnForceTime: TButton;
     procedure SelectAll1Click(Sender: TObject);
     procedure SelectNone1Click(Sender: TObject);
     procedure InvertSelection1Click(Sender: TObject);
@@ -44,10 +47,12 @@ type
     procedure CheckListBox1DblClick(Sender: TObject);
     procedure edSearchChange(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure btnForceTimeClick(Sender: TObject);
   private
     { Private declarations }
   public
     { Public declarations }
+    btnForceTimeCallback: TwbForceTimeCallback;
   end;
 
 implementation
@@ -67,6 +72,12 @@ begin
     if not (odSelected in State) and ContainsText(Items[Index], s) then
       Canvas.Brush.Color := clGradientInactiveCaption;
   inherited;
+end;
+
+procedure TfrmFileSelect.btnForceTimeClick(Sender: TObject);
+begin
+  if Assigned(btnForceTimeCallback) then
+    btnForceTimeCallback(CheckListBox1.Items);
 end;
 
 procedure TfrmFileSelect.CheckListBox1DblClick(Sender: TObject);

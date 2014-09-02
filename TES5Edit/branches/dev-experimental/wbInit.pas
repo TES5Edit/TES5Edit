@@ -27,20 +27,29 @@ var
   wbScriptsPath        : string;
   wbBackupPath         : string;
   wbTempPath           : string;
+  wbSavePath           : string;
   wbMyGamesTheGamePath : string;
   wbPluginsFileName    : String;
   wbSettingsFileName   : string;
   wbModGroupFileName   : string;
   wbPluginToUse        : string;  // Passed a specific plugin as parameter
   wbLogFile            : string;  // Optional log file for this session
+  wbMyRegName          : string;
 
   wbMasterUpdateDone   : Boolean;
+  wbMasterUpdateOK     : Boolean;
   wbDontSave           : Boolean;
   wbDontBackup         : Boolean = False;
   wbRemoveTempPath     : Boolean = True;
   wbQuickShowConflicts : Boolean;
   wbQuickClean         : Boolean;
+  wbSplitGroups        : Boolean = False; // Split xDump output in different files per each top level group, TBD
+                                          //     {requires wbOutputBaseFileName?}
 
+  wbSplitGroupsLevel   : Integer = 0;     // 0 = only top level groups are splitted,
+                                          // 1 = also cell/worldspace blocks,
+                                          // 2 = also C/W sub blocks and Topics
+                                          // 3 = also Primary/Temporary/...
   wbParamIndex         : integer = 1;     // First unused parameter
   wbPluginsToUse       : TStringList;
 
@@ -48,6 +57,7 @@ function wbFindNextValidCmdLineFileName(var startingIndex : integer; out aValue 
 function wbFindNextValidCmdLinePlugin(var startingIndex : integer; out aValue  : string; defaultPath : string) : Boolean;
 
 function wbLoadMOHookFile: Boolean;
+procedure SwitchToCoSave;
 
 implementation
 
@@ -62,11 +72,15 @@ uses
   IniFiles,
   wbInterface,
   wbImplementation,
-  wbDefinitionsTES4,
-  wbDefinitionsTES3,
   wbDefinitionsFO3,
+  wbDefinitionsFO3Saves,
   wbDefinitionsFNV,
-  wbDefinitionsTES5;
+  wbDefinitionsFNVSaves,
+  wbDefinitionsTES3,
+  wbDefinitionsTES4,
+  wbDefinitionsTES4Saves,
+  wbDefinitionsTES5,
+  wbDefinitionsTES5Saves;
 
 function wbFindCmdLineParam(const aSwitch     : string;
                             const aChars      : TSysCharSet;
@@ -290,6 +304,7 @@ const
   sBethRegKey64           = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
 var
   s : String;
+  IniFile: TIniFile;
 begin
   wbModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
 
@@ -344,17 +359,34 @@ begin
   wbMOHookFile := wbDataPath + '..\Mod Organizer\hook.dll';
 
   if not wbFindCmdLineParam('I', wbTheGameIniFileName) then begin
-    wbTheGameIniFileName := GetCSIDLShellFolder(CSIDL_PERSONAL);
-    if wbTheGameIniFileName = '' then begin
+    wbMyRegName := GetCSIDLShellFolder(CSIDL_PERSONAL);
+    if wbMyRegName = '' then begin
       ShowMessage('Fatal: Could not determine my documents folder');
       Exit;
     end;
-    wbMyGamesTheGamePath := wbTheGameIniFileName + 'My Games\'+ wbGameName +'\';
+    wbMyGamesTheGamePath := wbMyRegName + 'My Games\'+ wbGameName +'\';
 
-    if wbGameMode in [gmFO3, gmFNV] then
-      wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
-    else
-      wbTheGameIniFileName := wbMyGamesTheGamePath + wbGameName + '.ini';
+    if wbTheGameIniFileName = '' then
+      if wbGameMode in [gmFO3, gmFNV] then
+        wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
+      else
+        wbTheGameIniFileName := wbMyGamesTheGamePath + wbGameName + '.ini';
+  end;
+
+  if not wbFindCmdLineParam('G', wbSavePath) then begin
+    if wbMyGamesTheGamePath = '' then
+      wbMyGamesTheGamePath := ExtractFilePath(wbTheGameIniFileName);
+
+    s := 'Saves\';
+    if FileExists(wbTheGameIniFileName) then begin
+      IniFile := TIniFile.Create(wbTheGameIniFileName);
+      try
+        s := IniFile.ReadString('General', 'SLocalSavePath', s);
+      finally
+        FreeAndNil(IniFile);
+      end;
+    end;
+    wbSavePath := wbMyGamesTheGamePath + s;
   end;
 
   wbParamIndex := ParamIndex;
@@ -395,6 +427,8 @@ begin
   if isMode('Saves') then begin
     wbToolSource := tsSaves;
     wbSourceName := 'Saves';
+    wbUseFalsePlugins := True;
+    wbBuildRefs := False;
   end else begin // defaults to plugin
     wbToolSource := tsPlugins;
     wbSourceName := 'Plugins';
@@ -446,7 +480,7 @@ begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
     end;
-    if not (wbToolSource in [tsPlugins]) then begin
+    if not (wbToolSource in [tsPlugins, tsSaves]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbSourceName);
       Exit;
     end;
@@ -530,19 +564,27 @@ begin
     Exit;
   end;
 
-  if wbGameMode = gmFNV then
-    DefineFNV
-  else if wbGameMode = gmFO3 then
-    DefineFO3
-  else if wbGameMode = gmTES3 then
-    DefineTES3
-  else if wbGameMode = gmTES4 then
-    DefineTES4
-  else if wbGameMode = gmTES5 then
-    case wbToolSource of
+  case wbGameMode of
+    gmFNV:  case wbToolSource of
+      tsSaves:   DefineFNVSaves;
+      tsPlugins: DefineFNV;
+    end;
+    gmFO3:  case wbToolSource of
+      tsSaves:   DefineFO3Saves;
+      tsPlugins: DefineFO3;
+    end;
+    gmTES3: case wbToolSource of
+      tsPlugins: DefineTES3;
+    end;
+    gmTES4: case wbToolSource of
+      tsSaves:   DefineTES4Saves;
+      tsPlugins: DefineTES4;
+    end;
+    gmTES5: case wbToolSource of
+      tsSaves:   DefineTES5Saves;
       tsPlugins: DefineTES5;
     end
-  else begin
+  else
     ShowMessage('Application name must contain FNV, FO3, TES4 or TES5 to select game.');
     Exit;
   end;
@@ -582,7 +624,7 @@ begin
   if FindCmdLineSwitch('IKnowWhatImDoing') then
     wbIKnowWhatImDoing := True;
 
-  if FindCmdLineSwitch('quickclean') then
+  if FindCmdLineSwitch('quickclean') and (wbToolSource in [tsPlugins]) then
     wbQuickClean := wbIKnowWhatImDoing;
 
   if FindCmdLineSwitch('TrackAllEditorID') then
@@ -634,6 +676,17 @@ begin
     wbFixupPGRD := True;
 
   wbShouldLoadMOHookFile := wbFindCmdLineParam('moprofile', wbMOProfile);
+end;
+
+procedure SwitchToCoSave;
+
+begin
+  case wbGameMode of
+    gmFNV:  SwitchToFNVCoSave;
+    gmFO3:  SwitchToFO3CoSave;
+    gmTES4: SwitchToTES4CoSave;
+    gmTES5: SwitchToTES5CoSave;
+  end;
 end;
 
 initialization

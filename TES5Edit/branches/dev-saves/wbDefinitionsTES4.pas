@@ -1788,7 +1788,7 @@ var
   s           : string;
   Keys        : TStringList;
 begin
-//  if wbBeginInternalEdit then try
+  if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Connections) then
       Exit;
 
@@ -1806,9 +1806,9 @@ begin
     finally
       Keys.Free;
     end;
-//  finally
-//    wbEndInternalEdit;
-//  end;
+  finally
+    wbEndInternalEdit;
+  end;
 end;
 
 {

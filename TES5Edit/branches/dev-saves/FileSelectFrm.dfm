@@ -66,19 +66,8 @@ object frmFileSelect: TfrmFileSelect
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'OK'
-    Default = True
     ModalResult = 1
     TabOrder = 3
-  end
-  object btnForceTime: TButton
-    Left = 160
-    Top = 582
-    Width = 75
-    Height = 25
-    Caption = 'Force time'
-    TabOrder = 4
-    Visible = False
-    OnClick = btnForceTimeClick
   end
   object PopupMenu1: TPopupMenu
     Left = 128
