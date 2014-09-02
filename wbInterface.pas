@@ -112,9 +112,10 @@ var
   wbDumpOffset : Integer  = 0;  // 1= starting offset, 2 = Count, 3 = Offsets, size and count
   wbBaseOffset : Cardinal = 0;
 
-  wbProgramPath : string;
-  wbDataPath    : string;
-  wbOutputPath  : string;
+  wbProgramPath        : string;
+  wbDataPath           : string;
+  wbOutputPath         : string;
+  wbTheGameIniFileName : string;
 
   wbShouldLoadMOHookFile : Boolean;
   wbMOProfile            : string;
