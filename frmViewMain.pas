@@ -10803,6 +10803,8 @@ begin
         end;
 
     tbsReferencedBy.TabVisible := wbLoaderDone and (lvReferencedBy.Items.Count > 0);
+    if tbsReferencedBy.TabVisible then
+      tbsReferencedBy.Caption := Format('Referenced By (%d)', [lvReferencedBy.Items.Count]);
   finally
     lvReferencedBy.Items.EndUpdate;
   end;
@@ -11654,6 +11656,7 @@ begin
       end;
       ComboLink.Properties.Items.CommaText := EditInfoCache;
       ComboLink.Properties.Sorted := True;
+      ComboLink.Properties.DropDownRows := 16;
     end;
     etCheckComboBox: begin
       CheckComboLink := TcxCheckComboEditLink.Create;
