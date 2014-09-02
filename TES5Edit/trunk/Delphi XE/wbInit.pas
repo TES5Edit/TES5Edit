@@ -23,7 +23,6 @@ uses
 
 var
   wbApplicationTitle   : string;
-  wbTheGameIniFileName : String;
   wbScriptsPath        : string;
   wbBackupPath         : string;
   wbTempPath           : string;
@@ -62,10 +61,10 @@ uses
   IniFiles,
   wbInterface,
   wbImplementation,
-  wbDefinitionsTES4,
-  wbDefinitionsTES3,
-  wbDefinitionsFO3,
   wbDefinitionsFNV,
+  wbDefinitionsFO3,
+  wbDefinitionsTES3,
+  wbDefinitionsTES4,
   wbDefinitionsTES5;
 
 function wbFindCmdLineParam(const aSwitch     : string;

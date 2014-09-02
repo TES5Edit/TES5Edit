@@ -11008,7 +11008,7 @@ begin
       'Battle Set',
       'Location Set',
       'Dungeon Set',
-      'Incidential Set'
+      'Incidental Set'
     ], [
       -1, 'No Set'
     ])),

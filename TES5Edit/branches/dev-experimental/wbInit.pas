@@ -23,7 +23,6 @@ uses
 
 var
   wbApplicationTitle   : string;
-  wbTheGameIniFileName : String;
   wbScriptsPath        : string;
   wbBackupPath         : string;
   wbTempPath           : string;
@@ -72,10 +71,10 @@ uses
   IniFiles,
   wbInterface,
   wbImplementation,
-  wbDefinitionsFO3,
-  wbDefinitionsFO3Saves,
   wbDefinitionsFNV,
   wbDefinitionsFNVSaves,
+  wbDefinitionsFO3,
+  wbDefinitionsFO3Saves,
   wbDefinitionsTES3,
   wbDefinitionsTES4,
   wbDefinitionsTES4Saves,

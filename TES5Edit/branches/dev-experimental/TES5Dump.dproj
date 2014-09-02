@@ -61,10 +61,12 @@
 			</DelphiCompile>
 			<DCCReference Include="Zlibex.pas"/>
 			<DCCReference Include="wbBSA.pas"/>
+			<DCCReference Include="wbSort.pas"/>
 			<DCCReference Include="wbInterface.pas"/>
 			<DCCReference Include="wbSaveInterface.pas"/>
 			<DCCReference Include="wbImplementation.pas"/>
 			<DCCReference Include="wbLocalization.pas"/>
+			<DCCReference Include="wbHelpers.pas"/>
 			<DCCReference Include="wbDefinitionsFNV.pas"/>
 			<DCCReference Include="wbDefinitionsFO3.pas"/>
 			<DCCReference Include="wbDefinitionsTES3.pas"/>
