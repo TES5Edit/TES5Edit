@@ -174,6 +174,10 @@ begin
   if Signature(stat) <> 'STAT' then
     Exit;
 
+  // skip never fade statics
+  if GetElementNativeValues(stat, 'Record Header\Record Flags') and $00000004 > 0 then
+    Exit;
+  
   // getting lod files from cache
   idx := slCache.IndexOfObject(statfid);
   // not in cache
@@ -192,9 +196,14 @@ begin
         m8 := LODMeshFor(stat, j shr 8 and $FF);
         m16 := LODMeshFor(stat, j shr 16 and $FF);
         if (Length(m4) + Length(m8) + Length(m16)) > 0 then begin
+          // LOD material detection
+          s := EditorID(LinksTo(ElementByPath(stat, 'DNAM\Material')));
+          if Pos('Snow', s) > 0 then s := 'Snow'
+          else if Pos('Ash', s) > 0 then s := 'Ash'
+          else s := '';
           // a tab separated string of Editor ID, flags, material, full mesh and lod files
           s := EditorID(stat) + #9 + IntToHex(GetElementNativeValues(stat, 'Record Header\Record Flags'), 8) + #9 +
-               EditorID(LinksTo(ElementByPath(stat, 'DNAM\Material'))) + #9 + mFull + #9 + m4 + #9 + m8 + #9 + m16;
+               s + #9 + mFull + #9 + m4 + #9 + m8 + #9 + m16;
           idx := slCache.Count;
           slCache.AddObject(s, statfid);
           // list of used lod assets
@@ -1241,6 +1250,7 @@ begin
   slCache.Free;
   slLOD.Free;
   slLODTypes.Free;
+  slLODAssets.Free;
 end;
 
 end.
