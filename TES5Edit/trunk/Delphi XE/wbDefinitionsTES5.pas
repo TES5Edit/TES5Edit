@@ -5351,7 +5351,7 @@ begin
   ], True, wbPlacedAddInfo);
 
   {>>> wbRecordFlags: 0x00000000 ACTI: Collision Geometry (default) <<<}
-  wbRecord(ACTI, 'Activator', wbFlags(wbRecordFlagsFlags, [
+  wbRecord(ACTI, 'Activator', wbFlags( wbRecordFlagsFlags, [
     {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
     {0x00000001}'Unused',
     {0x00000002}'Unknown 2',
@@ -12568,7 +12568,41 @@ begin
     wbEffectsReq
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-  wbRecord(STAT, 'Static', [
+  wbRecord(STAT, 'Static',
+    wbFlags(wbRecordFlagsFlags, [
+      {0x00000001} { 0} '',
+      {0x00000002} { 1} '',
+      {0x00000004} { 2} 'Never Fades',
+      {0x00000008} { 3} '',
+      {0x00000010} { 4} '',
+      {0x00000020} { 5} 'Deleted',
+      {0x00000040} { 6} 'Has Tree LOD',
+      {0x00000080} { 7} 'Add-On LOD Object',
+      {0x00000100} { 8} '',
+      {0x00000200} { 9} 'Not On Local Map',
+      {0x00000400} {10} '',
+      {0x00000800} {11} 'Unknown 11', // present in Skyrim.esm but can't be set
+      {0x00001000} {12} '',
+      {0x00002000} {13} '',
+      {0x00004000} {14} '',
+      {0x00008000} {15} 'Has Distant LOD',
+      {0x00010000} {16} 'Unknown 16', // present in Skyrim.esm but can't be set
+      {0x00020000} {17} 'Uses HD LOD Texture',
+      {0x00040000} {18} '',
+      {0x00080000} {19} 'Has Currents',
+      {0x00100000} {20} '',
+      {0x00200000} {21} '',
+      {0x00400000} {22} '',
+      {0x00800000} {23} 'Is Marker',
+      {0x01000000} {24} '',
+      {0x02000000} {25} 'Obstacle',
+      {0x04000000} {26} 'Filter',
+      {0x08000000} {27} 'Bounding Box',
+      {0x10000000} {28} 'Show In World Map',
+      {0x20000000} {29} '',
+      {0x40000000} {30} 'Ground',
+      {0x80000000} {31} ''
+    ], [6, 11, 16, 19]), [
     wbEDID,
     wbOBNDReq,
     wbMODL,
