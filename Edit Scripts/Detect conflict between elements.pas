@@ -61,7 +61,7 @@ begin
     else begin
       // if called with 4 parameters, then the first and second ones are elements to compare
       // if called with 3 parameters, then the first one is TList containing elements to compare
-      // this demo this will never return caConflict or caConflictCritical because that requires at least 3 elements to compare
+      // this demo will never return caConflict or caConflictCritical because that requires at least 3 elements to compare
       // only 2 given here
       c := ConflictAllForElements(e1, e2, False, IsInjected(m));
       // show only benign conflicts and overrides
