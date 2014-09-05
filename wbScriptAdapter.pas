@@ -777,6 +777,15 @@ begin
     Value := Byte(Container.ContainerStates);
 end;
 
+procedure IwbContainer_IsSorted(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Container: IwbSortableContainer;
+begin
+  Value := False;
+  if Supports(IInterface(Args.Values[0]), IwbSortableContainer, Container) then
+    Value := Container.Sorted;
+end;
+
 
 { IwbMainRecord }
 
@@ -1630,6 +1639,7 @@ begin
     AddFunction(cUnit, 'RemoveByIndex', IwbContainer_RemoveByIndex, 3, [varEmpty, varInteger, varBoolean], varEmpty);
     AddFunction(cUnit, 'ReverseElements', IwbContainer_ReverseElements, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ContainerStates', IwbContainer_ContainerStates, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'IsSorted', IwbContainer_IsSorted, 1, [varEmpty], varEmpty);
 
     { IwbMainRecord }
     AddFunction(cUnit, 'Signature', IwbMainRecord_Signature, 1, [varEmpty], varEmpty);
