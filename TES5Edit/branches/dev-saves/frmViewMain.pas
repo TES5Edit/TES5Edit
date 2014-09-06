@@ -13294,11 +13294,14 @@ procedure TfrmMain.JvInterpreterProgram1GetValue(Sender: TObject;
 var
   Element             : IwbElement;
   MainRecord          : IwbMainRecord;
+  Container           : IwbContainerElementRef;
   _File               : IwbFile;
   Node                : PVirtualNode;
   NodeData            : PNavNodeData;
+  NodeDatas           : TDynViewNodeDatas;
   ConflictThis        : TConflictThis;
   ConflictAll         : TConflictAll;
+  List                : TList;
   i                   : Integer;
 begin
   if SameText(Identifier, 'wbGameMode') and (Args.Count = 0) then begin
@@ -13481,6 +13484,40 @@ begin
       Done := True;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
+  end else
+  if SameText(Identifier, 'ConflictAllForElements') and ((Args.Count = 3) or (Args.Count = 4)) then begin
+    if Args.Count = 3 then begin
+      Value := caNone;
+      List := TList(V2O(Args.Values[0]));
+      if Assigned(List) then
+      for i := 0 to Pred(List.Count) do begin
+        if not Supports(IInterface(Pointer(List[i])), IwbElement, Element) then
+          Continue;
+        SetLength(NodeDatas, Succ(Length(NodeDatas)));
+        NodeDatas[Pred(Length(NodeDatas))].Element := Element;
+        if Supports(Element, IwbContainerElementRef, Container) and (Container.ElementCount > 0) then
+          NodeDatas[Pred(Length(NodeDatas))].Container := Container;
+      end;
+      i := 0;
+    end
+    else if Args.Count = 4 then begin
+      for i := 0 to 1 do begin
+        if not Supports(IInterface(Args.Values[i]), IwbElement, Element) then
+          Continue;
+        SetLength(NodeDatas, Succ(Length(NodeDatas)));
+        NodeDatas[Pred(Length(NodeDatas))].Element := Element;
+        if Supports(Element, IwbContainerElementRef, Container) and (Container.ElementCount > 0) then
+          NodeDatas[Pred(Length(NodeDatas))].Container := Container;
+      end;
+      i := 1;
+    end;
+    Value := caNone;
+    if Length(NodeDatas) > 0 then
+      if Assigned(NodeDatas[0].Container) then
+        Value := ConflictLevelForChildNodeDatas(NodeDatas, Args.Values[i+1], Args.Values[i+2])
+      else
+        Value := ConflictLevelForNodeDatas(@NodeDatas[0], Length(NodeDatas), Args.Values[i+1], Args.Values[i+2]);
+    Done := True;
   end else
   if SameText(Identifier, 'JumpTo') and (Args.Count = 2) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
