@@ -1506,6 +1506,9 @@ var
   Rec: IwbRecord;
   Container: IwbContainer;
   s: string;
+  Cell: IwbMainRecord;
+  Position: TwbVector;
+  Grid: TwbGridCell;
 begin
   Result := '';
 
@@ -1526,6 +1529,15 @@ begin
       if Result <> '' then
         Result := Result + ' ';
       Result := Result + 'in ' + s;
+
+      // grid position of persistent reference in exterior persistent cell (interior cells are not persistent)
+      if Supports(aMainRecord.Container, IwbGroupRecord, Container) then
+        Cell := IwbGroupRecord(Container).ChildrenOf;
+      if Assigned(Cell) and Cell.IsPersistent and (Cell.Signature = 'CELL') then
+        if aMainRecord.GetPosition(Position) then begin
+          Grid := wbPositionToGridCell(Position);
+          Result := Result + ' at ' + IntToStr(Grid.x) + ',' + IntToStr(Grid.y);
+        end;
     end;
   end;
 end;
@@ -1589,9 +1601,11 @@ var
 begin
   Result := '';
 
-  Rec := aMainRecord.RecordBySignature['XCLC'];
-  if Assigned(Rec) then
+  if not aMainRecord.IsPersistent then begin
+    Rec := aMainRecord.RecordBySignature['XCLC'];
+    if Assigned(Rec) then
       Result := 'at ' + Rec.Elements[0].Value + ',' + Rec.Elements[1].Value;
+  end;
 
   Container := aMainRecord.Container;
   while Assigned(Container) and not
