@@ -10858,7 +10858,7 @@ begin
           wbInteger('Green', itU8),
           wbInteger('Blue', itU8),
           wbByteArray('Unused', 1)
-        ]),
+        ], cpNormal, False, Nil, 0),
         ['Sunrise', 'Day', 'Sunset', 'Night', 'High Noon', 'Midnight']
       ),
     4),
