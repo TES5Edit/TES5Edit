@@ -362,7 +362,7 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := wbFindSaveElement('Array', aElement);
+  Element := wbFindSaveElement('Array_var', aElement);
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Key Type'];

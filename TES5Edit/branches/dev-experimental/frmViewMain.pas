@@ -699,6 +699,7 @@ type
 
     procedure AddMessage(const s: string);
     procedure AddFile(const aFile: IwbFile);
+    procedure AddFileInternal(const aFile: IwbFile);
 
     procedure ReInitTree;
 
@@ -997,31 +998,35 @@ var
   i, j, k: Integer;
   Present : Boolean;
 begin
-  k := aFile.LoadOrder;
-  if k >= 0 then
-    for i := 0 to Pred(aFile.MasterCount) do begin
-      Present := False;
-      for j := Low(Files) to high(Files) do
-        if sameText(Files[j].FileName, aFile.Masters[i].FileName) then begin
-          Present := True;
-          Break;
-        end;
-      if not Present then
-        begin
-          if aFile.Masters[i].LoadOrder = -1 then begin
-            aFile.Masters[i].ForceLoadOrder(k);
-            Inc(k);
+  if not wbrequireLoadorder then begin
+    k := aFile.LoadOrder;
+    if k >= 0 then
+      for i := 0 to Pred(aFile.MasterCount) do begin
+        Present := False;
+        for j := Low(Files) to high(Files) do
+          if sameText(Files[j].FileName, aFile.Masters[i].FileName) then begin
+            Present := True;
+            Break;
           end;
+        if not Present then
+          begin
+            if aFile.Masters[i].LoadOrder = -1 then begin
+              aFile.Masters[i].ForceLoadOrder(k);
+              Inc(k);
+            end;
 
-          SetLength(Files, Succ(Length(Files)));
-          Files[High(Files)] := aFile.Masters[i];
-          vstNav.AddChild(nil, Pointer(aFile.Masters[i]));
-          aFile.Masters[i]._AddRef;
-        end;
-    end;
-  if k <> aFile.LoadOrder then
-    aFile.ForceLoadOrder(k);
+            AddFileInternal(aFile.Masters[i]);
+          end;
+      end;
+    if k <> aFile.LoadOrder then
+      aFile.ForceLoadOrder(k);
+  end;
 
+  AddFileInternal(aFile);
+end;
+
+procedure TfrmMain.AddFileInternal(const aFile: IwbFile);
+begin
   SetLength(Files, Succ(Length(Files)));
   Files[High(Files)] := aFile;
   vstNav.AddChild(nil, Pointer(aFile));
@@ -3042,27 +3047,100 @@ procedure TfrmMain.DoInit;
     end;
   end;
 
-var
-  i, j, k, l   : Integer;
-  s            : string;
-  sl, sl2, sl3 : TStringList;
-  ConflictAll  : TConflictAll;
-  ConflictThis : TConflictThis;
-  Age          : Integer;
-  AgeDateTime  : TDateTime;
+  procedure LoadPluginListInternal(frmFileSelect: TfrmFileSelect; sl: TStringList);
+  var
+    i, j        : Integer;
+    s           : string;
+    sl2         : TStringList;
+    Age         : Integer;
+    AgeDateTime : TDateTime;
 
-  ModGroupFile : string;
-  MessagePrefix: string;
-  IsOptional   : Boolean;
-  IsRequired   : Boolean;
-  MessageGiven : Boolean;
-  ValidCRCs    : TDynCardinalArray;
-  FileCRC      : Cardinal;
-  FoundAll     : Boolean;
-  saveExt      : string;
-  coSaveExt    : string;
-  R            : TSearchRec;
-  Primary      : Boolean;
+  begin
+    with frmFileSelect do begin
+      {
+         *** Load order handling for Skyrim and later games ***
+         Plugins are sorted by the order in plugins.txt
+         1. Load plugins list from plugins file
+         2. Add missing files from BOSS list loadorder.txt
+      }
+      if not (wbGameMode in [gmTES3, gmTES4, gmFO3, gmFNV]) then begin
+        // Show buutton to reset the time on ESP for Skyrim (for the editor).
+        btnForceTime.Visible := wbShowForceTime;
+        btnForceTimeCallback := ForceTime;
+
+        sl.LoadFromFile(wbPluginsFileName);
+        RemoveCommentsAndEmpty(sl); // remove comments
+        RemoveMissingFiles(sl); // remove nonexisting files
+        // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
+        // even if not present in plugins.txt
+        j := FindMatchText(sl, wbGameName+'.esm');
+        if j = -1 then sl.Insert(0, wbGameName+'.esm');
+        j := FindMatchText(sl, 'Update.esm');
+        if j = -1 then sl.Insert(1, 'Update.esm');
+
+        s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
+        if FileExists(s) then begin
+          AddMessage('Found BOSS load order list: ' + s);
+          sl2 := TStringList.Create;
+          try
+            sl2.LoadFromFile(s);
+            RemoveMissingFiles(sl2); // remove nonexisting files from BOSS list
+            // skip first line "Skyrim.esm" in BOSS list
+            for i := 1 to Pred(sl2.Count) do begin
+              j := FindMatchText(sl, sl2[i]);
+              // if plugin exists in plugins file, skip
+              if j <> -1 then Continue;
+              // otherwise insert it after position of previous plugin
+              j := FindMatchText(sl, sl2[i-1]);
+              if j <> -1 then
+                sl.Insert(j+1, sl2[i]);
+            end;
+          finally
+            sl2.Free;
+          end;
+        end;
+      end;
+
+      {
+         *** Load order handling for Oblivion, Fallout3 and New Vegas ***
+         Plugins are sorted by timestamps.
+         Add files missing in plugins.txt and loadorder.txt for Skyrim and later games.
+      }
+      AddMissingToLoadList(sl);
+
+      if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (sl.Count > 1) and (wbGameMode in [gmFO3, gmFNV]) then begin
+        Age := Integer(sl.Objects[0]);
+        AgeDateTime := FileDateToDateTime(Age);
+        for i := 1 to Pred(sl.Count) do begin
+          AgeDateTime := AgeDateTime + (1/24/60);
+          Age := DateTimeToFileDate(AgeDateTime);
+          FileSetDate(wbDataPath + sl[i], Age);
+        end;
+      end;
+    end;
+  end;
+
+var
+  i, j, k, l    : Integer;
+  s             : string;
+  sl, sl2, sl3  : TStringList;
+  ConflictAll   : TConflictAll;
+  ConflictThis  : TConflictThis;
+
+  ModGroupFile  : string;
+  MessagePrefix : string;
+  IsOptional    : Boolean;
+  IsRequired    : Boolean;
+  MessageGiven  : Boolean;
+  ValidCRCs     : TDynCardinalArray;
+  FileCRC       : Cardinal;
+  FoundAll      : Boolean;
+  saveExt       : string;
+  coSaveExt     : string;
+  R             : TSearchRec;
+  Primary       : Boolean;
+  frmFileSelect : TfrmFileSelect;
+
 begin
   SetDoubleBuffered(Self);
   SaveInterval := DefaultInterval;
@@ -3179,7 +3257,8 @@ begin
   try
     sl := TStringList.Create;
     try
-      with TfrmFileSelect.Create(nil) do try
+      frmFileSelect := TfrmFileSelect.Create(nil);
+      with frmFileSelect do try
         case wbToolSource of
           tsSaves: begin
             case wbGameMode of
@@ -3194,76 +3273,27 @@ begin
               repeat
                 if R.Attr and faDirectory <> faDirectory then begin
                   CheckListBox1.Items.Add(R.Name);
-                  if (coSaveExt<>'')and FileExists(ExpandFileName(ChangeFileExt(wbSavePath+'\'+R.Name, coSaveExt))) then
-                    CheckListBox1.Items.Add(ChangeFileExt(R.Name, coSaveExt));
+                  s := ChangeFileExt(R.Name, coSaveExt);
+                  if (coSaveExt<>'') and FileExists(ExpandFileName(wbSavePath+'\'+s)) then
+                    CheckListBox1.Items.Add(s);
                 end;
               until 0 <> FindNext(R);
             finally
               FindClose(R);
             end;
+            if (coSaveExt<>'') then
+              if FindFirst(ExpandFileName(wbSavePath+'\*'+coSaveExt), faAnyfile, R)=0 then try
+                repeat
+                  if R.Attr and faDirectory <> faDirectory then
+                    if CheckListBox1.Items.IndexOf(R.Name) = -1 then
+                      CheckListBox1.Items.Add(R.Name);
+                until 0 <> FindNext(R);
+              finally
+                FindClose(R);
+              end;
           end;
           tsPlugins: begin
-            {
-               *** Load order handling for Skyrim and later games ***
-               Plugins are sorted by the order in plugins.txt
-               1. Load plugins list from plugins file
-               2. Add missing files from BOSS list loadorder.txt
-            }
-            if not (wbGameMode in [gmTES3, gmTES4, gmFO3, gmFNV]) then begin
-              // Show buutton to reset the time on ESP for Skyrim (for the editor).
-              btnForceTime.Visible := wbShowForceTime;
-              btnForceTimeCallback := ForceTime;
-
-              sl.LoadFromFile(wbPluginsFileName);
-              RemoveCommentsAndEmpty(sl); // remove comments
-              RemoveMissingFiles(sl); // remove nonexisting files
-              // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
-              // even if not present in plugins.txt
-              j := FindMatchText(sl, wbGameName+'.esm');
-              if j = -1 then sl.Insert(0, wbGameName+'.esm');
-              j := FindMatchText(sl, 'Update.esm');
-              if j = -1 then sl.Insert(1, 'Update.esm');
-
-              s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
-              if FileExists(s) then begin
-                AddMessage('Found BOSS load order list: ' + s);
-                sl2 := TStringList.Create;
-                try
-                  sl2.LoadFromFile(s);
-                  RemoveMissingFiles(sl2); // remove nonexisting files from BOSS list
-                  // skip first line "Skyrim.esm" in BOSS list
-                  for i := 1 to Pred(sl2.Count) do begin
-                    j := FindMatchText(sl, sl2[i]);
-                    // if plugin exists in plugins file, skip
-                    if j <> -1 then Continue;
-                    // otherwise insert it after position of previous plugin
-                    j := FindMatchText(sl, sl2[i-1]);
-                    if j <> -1 then
-                      sl.Insert(j+1, sl2[i]);
-                  end;
-                finally
-                  sl2.Free;
-                end;
-              end;
-            end;
-
-            {
-               *** Load order handling for Oblivion, Fallout3 and New Vegas ***
-               Plugins are sorted by timestamps.
-               Add files missing in plugins.txt and loadorder.txt for Skyrim and later games.
-            }
-            AddMissingToLoadList(sl);
-
-            if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (sl.Count > 1) and (wbGameMode in [gmFO3, gmFNV]) then begin
-              Age := Integer(sl.Objects[0]);
-              AgeDateTime := FileDateToDateTime(Age);
-              for i := 1 to Pred(sl.Count) do begin
-                AgeDateTime := AgeDateTime + (1/24/60);
-                Age := DateTimeToFileDate(AgeDateTime);
-                FileSetDate(wbDataPath + sl[i], Age);
-              end;
-            end;
-
+            LoadPluginListInternal(frmFileSelect, sl);
             CheckListBox1.Items.Assign(sl);
           end;
         end;
@@ -3318,11 +3348,9 @@ begin
           end;
         end;
 
+        k := -1;
         sl2 := TStringList.Create;
         try
-          sl2.Sorted := True;
-          sl2.Duplicates := dupIgnore;
-
           sl.Clear;
           for i := 0 to Pred(CheckListBox1.Count) do
             if CheckListBox1.Checked[i] then
@@ -3338,7 +3366,7 @@ begin
               Exit;
             end;
 
-          if wbToolSource = tsSaves then
+          if wbToolSource = tsSaves then begin
             case wbGameMode of
               gmFNV:  if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave;
               gmFO3:  if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave
@@ -3359,9 +3387,20 @@ begin
               frmMain.Close;
               Exit;
             end;
+            LoadPluginListInternal(frmFileSelect, sl2);
+            for i := Pred(sl2.Count) downto 0 do
+              if CheckListBox1.Items.IndexOf(sl2[i]) = -1 then
+                CheckListBox1.Items.Insert(0, sl2[i]);
+            for i := 0 to Pred(CheckListBox1.Count) do
+              if CheckListBox1.Checked[i] then begin
+                k := i;
+                break;
+              end;
+          end;
 
+          sl2.Sorted := True;
+          sl2.Duplicates := dupIgnore;
           Primary := True;
-          k := 0;
           while sl.Count > 0 do begin
             sl2.Clear;
             for i := 0 to Pred(sl.Count) do
@@ -3371,10 +3410,11 @@ begin
                     wbMastersForFile(wbSavePath + sl[i], sl2, True)
                   else
                     wbMastersForFile(wbDataPath + sl[i], sl2, False);
-                  for j := 0 to Pred(sl2.Count) do begin
-                    CheckListBox1.Items.Insert(k, sl2[j]);
-                    Inc(k);
-                  end;
+                  for j := 0 to Pred(sl2.Count) do
+                    if CheckListBox1.Items.IndexOf(sl2[j]) = -1 then begin
+                      CheckListBox1.Items.Insert(k, sl2[j]);
+                      Inc(k);
+                    end;
                   Primary := False;
                 end;
                 tsPlugins: wbMastersForFile(wbDataPath + sl[i], sl2, False);
@@ -3399,7 +3439,6 @@ begin
         finally
           FreeAndNil(sl2);
         end;
-
 
         sl.Clear;
         for i := 0 to Pred(CheckListBox1.Count) do
@@ -13696,7 +13735,8 @@ begin
           NodeDatas[Pred(Length(NodeDatas))].Container := Container;
       end;
       i := 1;
-    end;
+    end else
+      i := 0;
     Value := caNone;
     if Length(NodeDatas) > 0 then
       if Assigned(NodeDatas[0].Container) then
