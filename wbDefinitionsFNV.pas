@@ -4165,34 +4165,6 @@ begin
   Result := Container.ElementByName['Type'].NativeValue + 1;
 end;
 
-function wbWeatherLayerColorsLayerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container : IwbContainer;
-  SubRecord : IwbSubRecord;
-begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
-  if Supports(Container, IwbSubRecord, SubRecord) then
-    if SubRecord.SubRecordHeaderSize = 64 then
-      Result := 1;
-end;
-
-function wbWeatherLayerColorsTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container : IwbContainer;
-  SubRecord : IwbSubRecord;
-begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
-  if Supports(Container, IwbSubRecord, SubRecord) then
-    if SubRecord.SubRecordHeaderSize = 160 then
-      Result := 1;
-end;
-
 procedure wbIDLAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   Element         : IwbElement;
@@ -10880,48 +10852,26 @@ begin
     wbByteArray(LNAM, 'Unknown', 4, cpNormal, True),
     wbArray(ONAM, 'Cloud Speed', wbInteger('Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
     wbArray(PNAM, 'Cloud Layer Colors',
-      wbUnion('Layer', wbWeatherLayerColorsLayerDecider, [
-        wbArray('Layer FNV',
-          wbStruct('Color', [
-            wbInteger('Red', itU8),
-            wbInteger('Green', itU8),
-            wbInteger('Blue', itU8),
-            wbByteArray('Unused', 1)
-          ], cpNormal, False, Nil),
-          ['Sunrise', 'Day', 'Sunset', 'Night', 'High Noon', 'Midnight']
-        ),
-        wbArray('Layer FO3',
-          wbStruct('Color', [
-            wbInteger('Red', itU8),
-            wbInteger('Green', itU8),
-            wbInteger('Blue', itU8),
-            wbByteArray('Unused', 1)
-          ], cpNormal, False, Nil),
-          ['Sunrise', 'Day', 'Sunset', 'Night']
-        )
-      ]),
+      wbArray('Layer',
+				wbStruct('Color', [
+					wbInteger('Red', itU8),
+					wbInteger('Green', itU8),
+					wbInteger('Blue', itU8),
+					wbByteArray('Unused', 1)
+				]),
+				['Sunrise', 'Day', 'Sunset', 'Night', 'High Noon', 'Midnight']
+			),
     4),
     wbArray(NAM0, 'Colors by Types/Times',
-      wbUnion('Type', wbWeatherLayerColorsTypeDecider, [
-        wbArray('Type FNV',
-          wbStruct('Time', [
-            wbInteger('Red', itU8),
-            wbInteger('Green', itU8),
-            wbInteger('Blue', itU8),
-            wbByteArray('Unused', 1)
-          ], cpNormal, False, Nil),
-          ['Sunrise', 'Day', 'Sunset', 'Night', 'High Noon', 'Midnight']
-        ),
-        wbArray('Type FO3',
-          wbStruct('Time', [
-            wbInteger('Red', itU8),
-            wbInteger('Green', itU8),
-            wbInteger('Blue', itU8),
-            wbByteArray('Unused', 1)
-          ], cpNormal, False, Nil),
-          ['Sunrise', 'Day', 'Sunset', 'Night']
-        )
-      ]),
+			wbArray('Type',
+				wbStruct('Time', [
+					wbInteger('Red', itU8),
+					wbInteger('Green', itU8),
+					wbInteger('Blue', itU8),
+					wbByteArray('Unused', 1)
+				]),
+				['Sunrise', 'Day', 'Sunset', 'Night', 'High Noon', 'Midnight']
+			),
       ['Sky-Upper','Fog','Unused','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Unused']
     , cpNormal, True),
     wbStruct(FNAM, 'Fog Distance', [
