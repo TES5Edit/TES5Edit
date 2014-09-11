@@ -9056,33 +9056,7 @@ begin
   if (Length(stSortKey) > 0) or (aExtended and (Length(stExSortKey) > 0)) then begin
     for i := Low(stSortKey) to High(stSortKey) do begin
       SortMember := stSortKey[i];
-
-      BasePtr := aBasePtr;
-      for j := Low(stMembers) to Pred(SortMember) do begin
-        Inc(Cardinal(BasePtr), stMembers[j].Size[BasePtr, aEndPtr, aElement]);
-        if Cardinal(BasePtr) > Cardinal(aEndPtr) then
-          BasePtr := aEndPtr;
-      end;
-
-      EndPtr := Pointer( Cardinal(BasePtr) + Cardinal(stMembers[SortMember].Size[BasePtr, aEndPtr, aElement]) );
-
-      if Cardinal(BasePtr) > Cardinal(aEndPtr) then
-        BasePtr := aEndPtr;
-      if Cardinal(EndPtr) > Cardinal(aEndPtr) then
-        EndPtr := aEndPtr;
-
-      Result := Result + stMembers[SortMember].ToSortKey(BasePtr, EndPtr, aElement, aExtended);
-
-      if i < High(stSortKey) then
-        Result := Result + '|';
-    end;
-    if aExtended then begin
-      if (Length(stSortKey) > 0) and (Length(stExSortKey) > 0) then
-        Result := Result + '|';
-
-      for i := Low(stExSortKey) to High(stExSortKey) do begin
-        SortMember := stExSortKey[i];
-
+      if SortMember < High(stMembers) then begin
         BasePtr := aBasePtr;
         for j := Low(stMembers) to Pred(SortMember) do begin
           Inc(Cardinal(BasePtr), stMembers[j].Size[BasePtr, aEndPtr, aElement]);
@@ -9098,6 +9072,34 @@ begin
           EndPtr := aEndPtr;
 
         Result := Result + stMembers[SortMember].ToSortKey(BasePtr, EndPtr, aElement, aExtended);
+      end;
+
+      if i < High(stSortKey) then
+        Result := Result + '|';
+    end;
+    if aExtended then begin
+      if (Length(stSortKey) > 0) and (Length(stExSortKey) > 0) then
+        Result := Result + '|';
+
+      for i := Low(stExSortKey) to High(stExSortKey) do begin
+        SortMember := stExSortKey[i];
+        if SortMember < High(stMembers) then begin
+          BasePtr := aBasePtr;
+          for j := Low(stMembers) to Pred(SortMember) do begin
+            Inc(Cardinal(BasePtr), stMembers[j].Size[BasePtr, aEndPtr, aElement]);
+            if Cardinal(BasePtr) > Cardinal(aEndPtr) then
+              BasePtr := aEndPtr;
+          end;
+
+          EndPtr := Pointer( Cardinal(BasePtr) + Cardinal(stMembers[SortMember].Size[BasePtr, aEndPtr, aElement]) );
+
+          if Cardinal(BasePtr) > Cardinal(aEndPtr) then
+            BasePtr := aEndPtr;
+          if Cardinal(EndPtr) > Cardinal(aEndPtr) then
+            EndPtr := aEndPtr;
+
+          Result := Result + stMembers[SortMember].ToSortKey(BasePtr, EndPtr, aElement, aExtended);
+        end;
 
         if i < High(stExSortKey) then
           Result := Result + '|';
@@ -10535,6 +10537,9 @@ begin
   if aInt=0 then
     Result := '    '
   else begin
+    if aInt<16777216 then
+      Assert(aInt>=16777216); // we need 4 characters
+
     U32 := aInt;
     Result := PwbSignature(@U32)^;
     Temp := Result;

@@ -13510,7 +13510,8 @@ begin
           NodeDatas[Pred(Length(NodeDatas))].Container := Container;
       end;
       i := 1;
-    end;
+    end else
+	  i := 0;
     Value := caNone;
     if Length(NodeDatas) > 0 then
       if Assigned(NodeDatas[0].Container) then
