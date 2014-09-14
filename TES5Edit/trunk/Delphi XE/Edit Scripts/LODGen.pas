@@ -174,8 +174,8 @@ begin
   if Signature(stat) <> 'STAT' then
     Exit;
 
-  // skip never fade statics
-  if GetElementNativeValues(stat, 'Record Header\Record Flags') and $00000004 > 0 then
+  // skip persistent refs of never fade statics
+  if GetIsPersistent(e) and (GetElementNativeValues(stat, 'Record Header\Record Flags') and $00000004 > 0) then
     Exit;
   
   // getting lod files from cache
