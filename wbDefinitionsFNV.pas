@@ -10033,7 +10033,7 @@ begin
         ])),
         wbInteger('Radius wrt Parent', itU16),
         wbInteger('Radius', itU16),
-        wbByteArray('Unknown', 4),
+        wbFloat('Min Height'),
         wbFloat('Max Height'),
         wbFloat('Sink'),
         wbFloat('Sink Variance'),
