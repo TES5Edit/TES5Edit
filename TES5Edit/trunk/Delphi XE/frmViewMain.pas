@@ -3241,7 +3241,6 @@ begin
           FreeAndNil(sl2);
         end;
 
-
         sl.Clear;
         for i := 0 to Pred(CheckListBox1.Count) do
           if CheckListBox1.Checked[i] then
