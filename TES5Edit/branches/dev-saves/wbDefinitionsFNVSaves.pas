@@ -6785,14 +6785,14 @@ begin
              wbNull,
              wbArray('Modules', wbLenString('PluginName', 2), -4),
              wbNull,  // STVS String Var Map Start
-             wbStructSK([1], 'String_var', [
+             wbStruct('String_var', [
                wbInteger('Owning Module Index', itU8),
                wbInteger('ID', itU32),
                wbLenString('Value', 2)
              ]),
              wbNull,  // STVE String Var Map End
              wbNull,  // ARVS Array Var Map Start
-             wbStructSK([1], 'Array_var', [
+             wbStruct('Array_var', [
                wbInteger('Owning Module Index', itU8),
                wbInteger('ID', itU32),
                wbInteger('Key Type', itU8, wbXXSEArrayType),

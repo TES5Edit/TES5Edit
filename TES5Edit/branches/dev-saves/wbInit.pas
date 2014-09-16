@@ -26,12 +26,14 @@ var
   wbScriptsPath        : string;
   wbBackupPath         : string;
   wbTempPath           : string;
+  wbSavePath           : string;
   wbMyGamesTheGamePath : string;
   wbPluginsFileName    : String;
   wbSettingsFileName   : string;
   wbModGroupFileName   : string;
   wbPluginToUse        : string;  // Passed a specific plugin as parameter
   wbLogFile            : string;  // Optional log file for this session
+  wbMyProfileName      : string;
 
   wbMasterUpdateDone   : Boolean;
   wbDontSave           : Boolean;
@@ -343,12 +345,12 @@ begin
   wbMOHookFile := wbDataPath + '..\Mod Organizer\hook.dll';
 
   if not wbFindCmdLineParam('I', wbTheGameIniFileName) then begin
-    wbTheGameIniFileName := GetCSIDLShellFolder(CSIDL_PERSONAL);
-    if wbTheGameIniFileName = '' then begin
+    wbMyProfileName := GetCSIDLShellFolder(CSIDL_PERSONAL);
+    if wbMyProfileName = '' then begin
       ShowMessage('Fatal: Could not determine my documents folder');
       Exit;
     end;
-    wbMyGamesTheGamePath := wbTheGameIniFileName + 'My Games\'+ wbGameName +'\';
+    wbMyGamesTheGamePath := wbMyProfileName + 'My Games\'+ wbGameName +'\';
 
     if wbGameMode in [gmFO3, gmFNV] then
       wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
@@ -394,6 +396,7 @@ begin
   if isMode('Saves') then begin
     wbToolSource := tsSaves;
     wbSourceName := 'Saves';
+    wbUseFalsePlugins := True;
   end else begin // defaults to plugin
     wbToolSource := tsPlugins;
     wbSourceName := 'Plugins';
@@ -581,7 +584,7 @@ begin
   if FindCmdLineSwitch('IKnowWhatImDoing') then
     wbIKnowWhatImDoing := True;
 
-  if FindCmdLineSwitch('quickclean') then
+  if FindCmdLineSwitch('quickclean') and (wbToolSource in [tsPlugins]) then
     wbQuickClean := wbIKnowWhatImDoing;
 
   if FindCmdLineSwitch('TrackAllEditorID') then

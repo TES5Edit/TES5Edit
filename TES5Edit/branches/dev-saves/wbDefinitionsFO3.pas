@@ -3424,9 +3424,7 @@ procedure wbPACKAfterLoad(const aElement: IwbElement);
 var
   Container     : IwbContainerElementRef;
   MainRecord    : IwbMainRecord;
-//  OldContainer  : IwbContainerElementRef;
   NewContainer  : IwbContainerElementRef;
-//  NewContainer2 : IwbContainerElementRef;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -9626,7 +9624,7 @@ begin
         ])),
         wbInteger('Radius wrt Parent', itU16),
         wbInteger('Radius', itU16),
-        wbByteArray('Unknown', 4),
+        wbFloat('Min Height'),
         wbFloat('Max Height'),
         wbFloat('Sink'),
         wbFloat('Sink Variance'),

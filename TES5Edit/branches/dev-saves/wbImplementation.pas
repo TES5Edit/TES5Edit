@@ -43,7 +43,7 @@ var
   ChaptersToSkip     : TStringList;
   SubRecordOrderList : TStringList;
 
-procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
+procedure wbMastersForFile(const aFileName: string; aMasters: TStrings; IsPrimary: Boolean);
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
   IsTemporary: Boolean = False; IsPrimary: Boolean = False): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer): IwbFile;
@@ -624,6 +624,7 @@ type
     function GetHeader: IwbMainRecord;
 
     function GetLoadOrder: Integer;
+    procedure ForceLoadOrder(aValue: Integer);
     procedure SetLoadOrder(aValue: Integer);
 
     function LoadOrderFormIDtoFileFormID(aFormID: Cardinal): Cardinal;
@@ -1712,7 +1713,14 @@ var
   _File: IwbFile;
   s : string;
   t : string;
+  i : Integer;
 begin
+  if not wbrequireLoadorder and IsTemporary then begin
+    for i := 0 to Pred(GetMasterCount) do
+      if SameText(ExtractFileName(aFileName), GetMaster(i).FileName) then
+        Exit;
+  end;
+
   s := ExtractFilePath(aFileName);
   t := ExtractFileName(aFileName);
   if s = '' then
@@ -2470,6 +2478,11 @@ begin
   flInjectedRecords        := nil;
   ReleaseElements;
   flCloseFile;
+end;
+
+procedure TwbFile.ForceLoadOrder(aValue: Integer);
+begin
+  flLoadOrder := aValue;
 end;
 
 function TwbFile.GetAddList: TDynStrings;
@@ -14373,7 +14386,7 @@ begin
   end;
 end;
 
-procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
+procedure wbMastersForFile(const aFileName: string; aMasters: TStrings; IsPrimary: Boolean);
 var
   FileName : string;
   i        : Integer;
@@ -14386,7 +14399,7 @@ begin
 
   if FilesMap.Find(FileName, i) then
     _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
-  else if wbToolSource in [tsSaves] then
+  else if IsPrimary and (wbToolSource in [tsSaves]) then
     _File := TwbFileSource.Create(FileName, -1, '', True)
   else
     _File := TwbFile.Create(FileName, -1, '', True);
@@ -15959,7 +15972,7 @@ begin
     s := wbDataPath + ExtractFileName(CompareFile);
     if FileExists(s) then // Finds a unique name
       for i := 0 to 255 do begin
-        s := wbDataPath + ChangeFileExt(ExtractFileName(CompareFile), '.' + IntToHex(i, 3));
+        s := wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
         if not FileExists(s) then Break;
       end;
     if FileExists(s) then begin
@@ -15968,6 +15981,26 @@ begin
     end;
     CompareFile := s;
     CopyFile(PChar(FileName), PChar(CompareFile), false);
+  end;
+  Result := CompareFile;
+end;
+
+function SelectTemporaryCopy(FileName, CompareFile: String): String;
+var
+  s : String;
+  i : Integer;
+
+begin
+  if not SameText(ExtractFilePath(CompareFile), wbDataPath) then begin
+    for i := 0 to 255 do begin
+      s := wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
+      if FileExists(s) then Break;
+    end;
+    if not FileExists(s) then
+      s := wbDataPath + CompareFile + IntToHex(0, 3);
+    CompareFile := s;
+    if not FileExists(CompareFile) then
+      CopyFile(PChar(FileName), PChar(CompareFile), false);
   end;
   Result := CompareFile;
 end;
@@ -16024,7 +16057,7 @@ begin
         if not FileExists(fPath) then
           fPath := ExtractFilePath(wbProgramPath) + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
         if FileExists(fPath) then
-          AddMaster(CreateTemporaryCopy(fPath, ChangeFileExt(MasterFiles[i].Value,'.000')), True);
+          AddMaster(SelectTemporaryCopy(fPath, MasterFiles[i].Value), True);
       end;
     end;
 

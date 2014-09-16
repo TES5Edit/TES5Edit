@@ -1078,7 +1078,7 @@ begin
 
     if wbLoadBSAs then begin
       Masters := TStringList.Create;
-      wbMastersForFile(s, Masters);
+      wbMastersForFile(s, Masters, wbToolSource in [tsSaves]);
       Masters.Add(ExtractFileName(s));
 
       if wbLoadAllBSAs then begin
