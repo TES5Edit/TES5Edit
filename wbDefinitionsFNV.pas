@@ -10853,25 +10853,25 @@ begin
     wbArray(ONAM, 'Cloud Speed', wbInteger('Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
     wbArray(PNAM, 'Cloud Layer Colors',
       wbArray('Layer',
-				wbStruct('Color', [
-					wbInteger('Red', itU8),
-					wbInteger('Green', itU8),
-					wbInteger('Blue', itU8),
-					wbByteArray('Unused', 1)
-				]),
-				['Sunrise', 'Day', 'Sunset', 'Night', 'High Noon', 'Midnight']
-			),
+        wbStruct('Color', [
+          wbInteger('Red', itU8),
+          wbInteger('Green', itU8),
+          wbInteger('Blue', itU8),
+          wbByteArray('Unused', 1)
+        ]),
+        ['Sunrise', 'Day', 'Sunset', 'Night', 'High Noon', 'Midnight']
+      ),
     4),
     wbArray(NAM0, 'Colors by Types/Times',
-			wbArray('Type',
-				wbStruct('Time', [
-					wbInteger('Red', itU8),
-					wbInteger('Green', itU8),
-					wbInteger('Blue', itU8),
-					wbByteArray('Unused', 1)
-				]),
-				['Sunrise', 'Day', 'Sunset', 'Night', 'High Noon', 'Midnight']
-			),
+      wbArray('Type',
+        wbStruct('Time', [
+          wbInteger('Red', itU8),
+          wbInteger('Green', itU8),
+          wbInteger('Blue', itU8),
+          wbByteArray('Unused', 1)
+        ]),
+        ['Sunrise', 'Day', 'Sunset', 'Night', 'High Noon', 'Midnight']
+      ),
       ['Sky-Upper','Fog','Unused','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Unused']
     , cpNormal, True),
     wbStruct(FNAM, 'Fog Distance', [
