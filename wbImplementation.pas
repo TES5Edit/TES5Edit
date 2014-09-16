@@ -15888,7 +15888,7 @@ begin
     s := wbDataPath + ExtractFileName(CompareFile);
     if FileExists(s) then // Finds a unique name
       for i := 0 to 255 do begin
-        s := wbDataPath + ChangeFileExt(ExtractFileName(CompareFile), '.' + IntToHex(i, 3));
+        s := wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
         if not FileExists(s) then Break;
       end;
     if FileExists(s) then begin
@@ -15897,6 +15897,26 @@ begin
     end;
     CompareFile := s;
     CopyFile(PChar(FileName), PChar(CompareFile), false);
+  end;
+  Result := CompareFile;
+end;
+
+function SelectTemporaryCopy(FileName, CompareFile: String): String;
+var
+  s : String;
+  i : Integer;
+
+begin
+  if not SameText(ExtractFilePath(CompareFile), wbDataPath) then begin
+    for i := 0 to 255 do begin
+      s := wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
+      if FileExists(s) then Break;
+    end;
+    if not FileExists(s) then
+      s := wbDataPath + CompareFile + IntToHex(0, 3);
+    CompareFile := s;
+    if not FileExists(CompareFile) then
+      CopyFile(PChar(FileName), PChar(CompareFile), false);
   end;
   Result := CompareFile;
 end;
@@ -15943,7 +15963,7 @@ begin
         if not FileExists(fPath) then
           fPath := ExtractFilePath(wbProgramPath) + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
         if FileExists(fPath) then
-          AddMaster(CreateTemporaryCopy(fPath, ChangeFileExt(MasterFiles[i].Value,'.000')), True);
+          AddMaster(SelectTemporaryCopy(fPath, MasterFiles[i].Value), True);
       end;
     end;
 
@@ -15967,6 +15987,9 @@ begin
     if (i in ExtractInfo) and Supports(Element, IwbContainer, Container) then
       with Element as TwbContainer do DoInit;
   end;
+
+  for i := 0 to Pred(GetElementCount) do
+    GetElement(i).SortOrder := i;
 
   flProgress('Processing completed');
   flLoadFinished := True;
