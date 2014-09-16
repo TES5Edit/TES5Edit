@@ -502,12 +502,27 @@ begin
   aType := ChangedFormGetChapterType(aBasePtr, aEndPtr, aElement);
   if (aType>=wbChangedFormOffset) and (aType < wbChangedFormOffset+wbChangeTypes.NameCount) then
     Result := wbChangeTypes.Names[aType-wbChangedFormOffset];
+  {
   if (Pos(' ', Result)>0) and (Length(Result)>1) then
     Result := Copy(Result, Pos(' ', Result)+1, Length(Result));
   if (Pos(' ', Result)>0) and (Length(Result)>1) then
     Result := Copy(Result, 1, Pos(' ', Result)-1);
+  }
   if Length(Result)=0 then
     Result := IntToStr(aType);
+end;
+
+function ChangedFormGetChapterName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
+var
+  Element : IwbElement;
+begin
+  Result := '';
+  if not Assigned(aElement) then
+    Exit;
+  Element := (aElement as iwbContainer).ElementByName['RefID'];
+  if not Assigned(Element) then
+    Exit;
+  Result := Element.Value;
 end;
 
 function ChangedFormDataLengthDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1825,6 +1840,8 @@ var
   wbInitialDataType06        : IwbStructDef;
   wbInitialDataType          : IwbUnionDef;
   wbChangeFlags010Flags      : IwbFlagsDef;
+  wbChunk                    : IwbStructDef;
+  wbNVSEPlugins              : IwbArrayDef;
 
   wbChangeFlags000        : IwbIntegerDef;
   wbChangeFlags001        : IwbIntegerDef;
@@ -2048,7 +2065,7 @@ begin
     ])
   ]);
 
-  wbGlobalData := wbStructC('Global Data', GlobalDataSizer, GlobalDataGetChapterType, GlobalDataGetChapterTypeName, [
+  wbGlobalData := wbStructC('Global Data', GlobalDataSizer, GlobalDataGetChapterType, GlobalDataGetChapterTypeName, nil, [
     wbInteger('Type', itU32),
     wbInteger('DataLength', itU32),
     wbUnion('Data', GlobalDataDecider, [
@@ -6689,6 +6706,7 @@ begin
     ChangedFormSizer,
     ChangedFormGetChapterType,
     ChangedFormGetChapterTypeName,
+    ChangedFormGetChapterName,
     [
       wbRefID('RefID'),
       wbChangeFlags,
@@ -6697,17 +6715,17 @@ begin
       wbUnion('Datas', ChangedFormDataLengthDecider, [
         wbStruct('CForm Data', [
           wbInteger('Length', itU8),
-          wbStructZ('Small Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName,
+          wbStructZ('Small Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName, nil,
             [ wbChangedFormData ])
         ]),
         wbStruct('CForm Data', [
           wbInteger('Length', itU16),
-          wbStructZ('Medium Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName,
+          wbStructZ('Medium Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName, nil,
             [ wbChangedFormData ])
         ]),
         wbStruct('CForm Data', [
           wbInteger('Length', itU32),
-          wbStructZ('Large Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName,
+          wbStructZ('Large Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName, nil,
             [ wbChangedFormData ])
         ]),
         wbUnknown() // If the type is invalid
@@ -6771,60 +6789,65 @@ begin
     ,wbInteger('Plugins count', itU32)
   ]);
 
+  wbChunk := wbStruct('Chunk', [
+    wbInteger('Type', itU32, wbStr4),
+    wbInteger('Version', itU32),
+    wbInteger('Length', itU32),
+    wbUnion('Data', NVSEChaptersDecider, [
+      wbNull,
+      wbArray('Modules', wbLenString('PluginName', 2), -4),
+      wbNull,  // STVS String Var Map Start
+      wbStruct('String_var', [
+        wbInteger('Owning Module Index', itU8),
+        wbInteger('ID', itU32),
+        wbLenString('Value', 2)
+      ]),
+      wbNull,  // STVE String Var Map End
+      wbNull,  // ARVS Array Var Map Start
+      wbStruct('Array_var', [
+        wbInteger('Owning Module Index', itU8),
+        wbInteger('ID', itU32),
+        wbInteger('Key Type', itU8, wbXXSEArrayType),
+        wbInteger('Packed', itU8),
+        wbArray('Refs', wbInteger('Ref', itU8), -1),
+        wbArray('Elements', wbStruct('Element', [
+          wbUnion('Key', wbXXSEArrayKeyElementDecider, [
+            wbNull,
+            wbDouble('Numeric Key'),
+            wbLenString('String Key', 2)
+          ]),
+          wbInteger('Data Type', itU8, wbXXSEArrayType),
+          wbUnion('Data', wbXXSEArrayDataElementDecider, [
+            wbNull,
+            wbDouble('Numeric Data'),
+            wbFormID('Form Data'),
+            wbLenString('String Data', 2),
+            wbInteger('Array Data', itU32)
+          ])
+        ]), -1)
+      ]),
+      wbNull,  // ARVE Array Var Map End
+      wbByteArray('Others', wbXXSEChapterOtherCounter)
+   ])
+  ]);
+  wbChunk.TreeLeaf := True;
+
+  wbNVSEPlugins := wbArray('Plugins', wbStruct('Plugin', [
+    wbInteger('Opcode Base', itU32),
+    wbInteger('Chunks count', itU32),
+    wbInteger('Length', itU32),
+    wbArray('Chunks', wbChunk, wbXXSEChunkCounter)
+  ]), wbXXSEPluginCounter);
+  wbNVSEPlugins.TreeLeaf := true;
+
   wbNVSEChapters := wbStruct('CoSave File Chapters', [
-     wbArray('Plugins', wbStruct('Plugin', [
-       wbInteger('Opcode Base', itU32),
-       wbInteger('Chunks count', itU32),
-       wbInteger('Length', itU32),
-       wbArray('Chunks',
-         wbStruct('Chunk', [
-           wbInteger('Type', itU32, wbStr4),
-           wbInteger('Version', itU32),
-           wbInteger('Length', itU32),
-           wbUnion('Data', NVSEChaptersDecider, [
-             wbNull,
-             wbArray('Modules', wbLenString('PluginName', 2), -4),
-             wbNull,  // STVS String Var Map Start
-             wbStructSK([1], 'String_var', [
-               wbInteger('Owning Module Index', itU8),
-               wbInteger('ID', itU32),
-               wbLenString('Value', 2)
-             ]),
-             wbNull,  // STVE String Var Map End
-             wbNull,  // ARVS Array Var Map Start
-             wbStructSK([1], 'Array_var', [
-               wbInteger('Owning Module Index', itU8),
-               wbInteger('ID', itU32),
-               wbInteger('Key Type', itU8, wbXXSEArrayType),
-               wbInteger('Packed', itU8),
-               wbArray('Refs', wbInteger('Ref', itU8), -1),
-               wbArray('Elements', wbStruct('Element', [
-                 wbUnion('Key', wbXXSEArrayKeyElementDecider, [
-                   wbNull,
-                   wbDouble('Numeric Key'),
-                   wbLenString('String Key', 2)
-                 ]),
-                 wbInteger('Data Type', itU8, wbXXSEArrayType),
-                 wbUnion('Data', wbXXSEArrayDataElementDecider, [
-                   wbNull,
-                   wbDouble('Numeric Data'),
-                   wbFormID('Form Data'),
-                   wbLenString('String Data', 2),
-                   wbInteger('Array Data', itU32)
-                 ])
-               ]), -1)
-             ]),
-             wbNull,  // ARVE Array Var Map End
-             wbByteArray('Others', wbXXSEChapterOtherCounter)
-           ])
-         ]), wbXXSEChunkCounter)
-       ]), wbXXSEPluginCounter)
-//    ,wbByteArray('Unused', SkipCounter) // Lets you skip an arbitrary number of byte, Setable from CommandLine -bts:n
-//    ,wbArray('Remaining',  WbByteArray('Unknown', wbBytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
+    wbNVSEPlugins
   ]);
 
   wbFileChapters := wbSaveChapters;
   wbFileHeader := wbSaveHeader;
+  wbSaveHeader.TreeLeaf := True;
+  wbNVSEHeader.TreeLeaf := True;
 end;
 
 var

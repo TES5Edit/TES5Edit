@@ -1444,6 +1444,19 @@ begin
     Result := IntToStr(aType);
 end;
 
+function ChangedFormGetChapterName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
+var
+  Element : IwbElement;
+begin
+  Result := '';
+  if not Assigned(aElement) then
+    Exit;
+  Element := (aElement as iwbContainer).ElementByName['RefID'];
+  if not Assigned(Element) then
+    Exit;
+  Result := Element.Value;
+end;
+
 function ChangedFormDataLengthDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aType : Integer;
@@ -2967,7 +2980,7 @@ begin
     wbInteger('Unknown', itU32)
    ]), -1);
 
-  wbGlobalData := wbStructC('Global Data', GlobalDataSizer, GlobalDataGetChapterType, GlobalDataGetChapterTypeName, [
+  wbGlobalData := wbStructC('Global Data', GlobalDataSizer, GlobalDataGetChapterType, GlobalDataGetChapterTypeName, nil, [
     wbInteger('Type', itU32),
     wbInteger('DataLength', itU32),
     wbUnion('Data', GlobalDataDecider, [
@@ -5902,6 +5915,7 @@ begin
     ChangedFormSizer,
     ChangedFormGetChapterType,
     ChangedFormGetChapterTypeName,
+    ChangedFormGetChapterName,
     [
       wbRefID('RefID'),
       wbChangeFlags,
@@ -5911,19 +5925,19 @@ begin
         wbStruct('CForm Data', [
           wbInteger('Length', itU8),
           wbInteger('Uncompressed Length', itU8),   // added post save game version 50
-          wbStructZ('Small Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName,
+          wbStructZ('Small Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName, nil,
             [ wbChangedFormData ])
         ]),
         wbStruct('CForm Data', [
           wbInteger('Length', itU16),
           wbInteger('Uncompressed Length', itU16),
-          wbStructZ('Medium Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName,
+          wbStructZ('Medium Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName, nil,
             [ wbChangedFormData ])
         ]),
         wbStruct('CForm Data', [
           wbInteger('Length', itU32),
           wbInteger('Uncompressed Length', itU32),
-          wbStructZ('Large Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName,
+          wbStructZ('Large Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName, nil,
             [ wbChangedFormData ])
         ]),
         wbUnknown() // If the type is invalid

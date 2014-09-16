@@ -390,6 +390,9 @@ type
     procedure AfterConstruction; override;
     class function NewInstance: TObject; override;
     procedure FreeInstance; override;
+
+    function GetTreeLeaf: Boolean;              // Is the element expected to be a "main record" in the tree navigator
+    function GetTreeBranch: Boolean;            // Is the element expected to show in the tree navigator
   end;
 
   TDynElementInternals = array of IwbElementInternal;
@@ -1269,6 +1272,7 @@ type
     function GetElementType: TwbElementType; override;
     function GetChapterType: Integer;
     function GetChapterTypeName: String;
+    function GetChapterName: String;
   public
     constructor Create(const aContainer  : IwbContainer;
                        const aValueDef   : IwbValueDef;
@@ -12215,6 +12219,26 @@ begin
   Result := 0;
 end;
 
+function TwbElement.GetTreeBranch: Boolean;
+var
+  NamedDef: IwbNamedDef;
+begin
+  if Supports(GetDef, IwbNamedDef, NamedDef) then
+    Result := NamedDef.TreeBranch
+  else
+    Result := False;
+end;
+
+function TwbElement.GetTreeLeaf: Boolean;
+var
+  NamedDef: IwbNamedDef;
+begin
+  if Supports(GetDef, IwbNamedDef, NamedDef) then
+    Result := NamedDef.TreeLeaf
+  else
+    Result := False;
+end;
+
 function TwbElement.GetValue: string;
 var
   Def: IwbDef;
@@ -16129,6 +16153,16 @@ begin
   cChapterSkipped := cChapterSkipped or ChaptersToSkip.Find(aValueDef.Name, Dummy);
 end;
 
+function TwbChapter.GetChapterName: String;
+var
+  Struct : IwbStructCDef;
+begin
+  if Assigned(vbValueDef) and Supports(vbValueDef, IwbStructCDef, Struct) then
+    Result := Struct.GetChapterName(dcBasePtr, dcEndPtr, Self)
+  else
+    Result := Struct.GetChapterTypeName(dcBasePtr, dcEndPtr, Self);
+end;
+
 function TwbChapter.GetChapterType: Integer;
 var
   Struct : IwbStructCDef;
@@ -16143,7 +16177,7 @@ var
   Struct : IwbStructCDef;
 begin
   if Assigned(vbValueDef) and Supports(vbValueDef, IwbStructCDef, Struct) then
-    Result := IntToStr(Struct.GetChapterType(dcBasePtr, dcEndPtr, Self))
+    Result := Struct.GetChapterTypeName(dcBasePtr, dcEndPtr, Self)
   else
     Result := IntToStr(Struct.GetChapterType(dcBasePtr, dcEndPtr, Self));
 end;

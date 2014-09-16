@@ -33,7 +33,7 @@ var
   wbModGroupFileName   : string;
   wbPluginToUse        : string;  // Passed a specific plugin as parameter
   wbLogFile            : string;  // Optional log file for this session
-  wbMyRegName          : string;
+  wbMyProfileName      : string;
 
   wbMasterUpdateDone   : Boolean;
   wbMasterUpdateOK     : Boolean;
@@ -302,8 +302,8 @@ const
   sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
   sBethRegKey64           = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
 var
-  s : String;
-  IniFile: TIniFile;
+  s       : String;
+  IniFile : TIniFile;
 begin
   wbModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
 
@@ -358,18 +358,17 @@ begin
   wbMOHookFile := wbDataPath + '..\Mod Organizer\hook.dll';
 
   if not wbFindCmdLineParam('I', wbTheGameIniFileName) then begin
-    wbMyRegName := GetCSIDLShellFolder(CSIDL_PERSONAL);
-    if wbMyRegName = '' then begin
+    wbMyProfileName := GetCSIDLShellFolder(CSIDL_PERSONAL);
+    if wbMyProfileName = '' then begin
       ShowMessage('Fatal: Could not determine my documents folder');
       Exit;
     end;
-    wbMyGamesTheGamePath := wbMyRegName + 'My Games\'+ wbGameName +'\';
+    wbMyGamesTheGamePath := wbMyProfileName + 'My Games\'+ wbGameName +'\';
 
-    if wbTheGameIniFileName = '' then
-      if wbGameMode in [gmFO3, gmFNV] then
-        wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
-      else
-        wbTheGameIniFileName := wbMyGamesTheGamePath + wbGameName + '.ini';
+    if wbGameMode in [gmFO3, gmFNV] then
+      wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
+    else
+      wbTheGameIniFileName := wbMyGamesTheGamePath + wbGameName + '.ini';
   end;
 
   if not wbFindCmdLineParam('G', wbSavePath) then begin
@@ -427,7 +426,6 @@ begin
     wbToolSource := tsSaves;
     wbSourceName := 'Saves';
     wbUseFalsePlugins := True;
-    wbBuildRefs := False;
   end else begin // defaults to plugin
     wbToolSource := tsPlugins;
     wbSourceName := 'Plugins';
@@ -678,7 +676,6 @@ begin
 end;
 
 procedure SwitchToCoSave;
-
 begin
   case wbGameMode of
     gmFNV:  SwitchToFNVCoSave;

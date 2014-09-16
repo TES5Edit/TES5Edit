@@ -537,6 +537,7 @@ type
     procedure InheritStateFromChilds(Node: PVirtualNode; NodeData: PNavNodeData);
 
     function NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
+    function NodeDatasForContainer(const aContainer: IwbDataContainer): TDynViewNodeDatas;
 
     procedure ShowChangeReferencedBy(OldFormID: Cardinal; NewFormID: Cardinal; const ReferencedBy: TDynMainRecords; aSilent: Boolean);
     function GetDragElements(Target: TBaseVirtualTree; Source: TObject; out TargetNode: PVirtualNode; out TargetIndex: Integer; out TargetElement: IwbElement; out SourceElement: IwbElement): Boolean;
@@ -593,6 +594,7 @@ type
     ActiveRecord: IwbMainRecord;
     ActiveMaster: IwbMainRecord;
     ActiveRecords: TDynViewNodeDatas;
+    ActiveContainer: IwbDataContainer;
     LoaderStarted: Boolean;
     ForceTerminate: Boolean;
     ModGroups: TStringList;
@@ -685,6 +687,8 @@ type
     procedure SetDoubleBuffered(aWinControl: TWinControl);
     procedure SetActiveRecord(const aMainRecord: IwbMainRecord); overload;
     procedure SetActiveRecord(const aMainRecords: TDynMainRecords); overload;
+    procedure SetActiveContainer(const aContainer: IwbDataContainer); overload;
+    procedure SetActiveContainer(const aDataContainers: TDynDataContainers); overload;
 
     function ValidateCRC(const aFileName  : string;
                          const aValidCRCs : TDynCardinalArray;
@@ -1029,6 +1033,7 @@ procedure TfrmMain.AddFileInternal(const aFile: IwbFile);
 begin
   SetLength(Files, Succ(Length(Files)));
   Files[High(Files)] := aFile;
+
   vstNav.AddChild(nil, Pointer(aFile));
   aFile._AddRef;
 end;
@@ -6894,7 +6899,7 @@ var
   NodeDatas                   : PViewNodeDatas;
   Element                     : IwbElement;
   EditValue                   : string;
-//  StringDef                   : IwbStringDef;
+  NamedDef                    : IwbNamedDef;
   IntegerDef                  : IwbIntegerDef;
   Flags                       : IwbFlagsDef;
   i, StringID                 : Integer;
@@ -6911,8 +6916,15 @@ begin
 
       EditValue := Element.EditValue;
 
+      // for Flags, try to get the enclosed value
+      if Supports(Element.Def, IwbSubRecordDef) then
+        NamedDef := (Element.Def as IwbSubrecordDef).Value
+      else
+        NamedDef := Element.Def;
+
       // flags editor
-      if Supports(Element.Def, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater[Element], IwbFlagsDef, Flags) then begin
+      if Supports(NamedDef, IwbIntegerDef, IntegerDef) and
+        Supports(IntegerDef.Formater[Element], IwbFlagsDef, Flags) then begin
 
         with TfrmFileSelect.Create(Self) do try
           Caption := 'Edit Value';
@@ -9788,6 +9800,18 @@ begin
   end;
 end;
 
+function TfrmMain.NodeDatasForContainer(const aContainer: IwbDataContainer): TDynViewNodeDatas;
+begin
+  Assert(wbLoaderDone);
+
+  SetLength(Result, 1);
+
+  Result[0].Element := aContainer;
+  Result[0].Container := aContainer as IwbContainerElementRef;
+  if aContainer.ElementCount < 1 then
+    Result[0].Container := nil;
+end;
+
 function TfrmMain.NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
 var
   Master                      : IwbMainRecord;
@@ -10802,6 +10826,205 @@ end;
 procedure TfrmMain.SendLoaderDone;
 begin
   SendMessage(Handle, WM_USER + 2, 0, 0);
+end;
+
+procedure TfrmMain.SetActiveContainer(const aContainer: IwbDataContainer);
+var
+  i                           : Integer;
+begin
+  UserWasActive := True;
+
+  ComparingSiblings := False;
+  CompareRecords := nil;
+
+  if (ActiveContainer = aContainer) and (Assigned(ActiveContainer) = (Length(ActiveRecords) > 0)) then
+    Exit;
+
+  lvReferencedBy.Items.BeginUpdate;
+  try
+    vstView.BeginUpdate;
+    try
+      lvReferencedBy.Items.Clear;
+      vstView.Clear;
+      vstView.NodeDataSize := 0;
+      SetLength(ActiveRecords, 0);
+      ActiveMaster := nil;
+      ActiveIndex := NoColumn;
+      ActiveContainer := aContainer;
+
+      if Assigned(ActiveContainer) then begin
+        ActiveMaster := nil;
+
+        if wbLoaderDone then begin
+          ActiveRecords := NodeDatasForContainer(ActiveContainer);
+        end else begin
+          SetLength(ActiveRecords, 1);
+          ActiveRecords[0].Element := ActiveContainer;
+          ActiveRecords[0].Container := ActiveContainer as IwbContainerElementRef;
+        end;
+
+        with vstView.Header.Columns do begin
+          BeginUpdate;
+          try
+            Clear;
+            with Add do begin
+              Text := '';
+              Width := wbColumnWidth;
+              Options := Options - [coDraggable];
+              Options := Options + [coFixed];
+            end;
+            for I := Low(ActiveRecords) to High(ActiveRecords) do
+              with Add do begin
+                Text := ActiveRecords[i].Element._File.Name;
+                Style := vsOwnerDraw;
+                Width := wbColumnWidth;
+                MinWidth := 5;
+                MaxWidth := 3000;
+                Options := Options - [coAllowclick, coDraggable];
+                Options := Options + [coAutoSpring];
+                if ActiveContainer.Equals(ActiveRecords[i].Element) then
+                  ActiveIndex := i;
+              end;
+            if Length(ActiveRecords) > 1 then
+              with Add do begin
+                Text := '';
+                Width := 1;
+                MinWidth := 1;
+                MaxWidth := 3000;
+                Options := Options - [coAllowclick, coDraggable];
+              end;
+          finally
+            EndUpdate;
+          end;
+        end;
+        vstView.NodeDataSize := SizeOf(TNavNodeData) * Length(ActiveRecords);
+        if Supports(ActiveContainer.Def, IwbStructDef) then
+          vstView.RootNodeCount := (ActiveContainer.Def as IwbStructDef).MemberCount + ActiveContainer.AdditionalElementCount
+        else
+          vstView.RootNodeCount := 1;
+        InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
+        vstView.FullExpand;
+        UpdateColumnWidths;
+        if pgMain.ActivePage <> tbsReferencedBy then
+          pgMain.ActivePage := tbsView;
+      end
+      else begin
+        with vstView.Header.Columns do begin
+          BeginUpdate;
+          try
+            Clear;
+            with Add do begin
+              Text := '';
+              Width := wbColumnWidth;
+            end;
+          finally
+            EndUpdate;
+          end;
+        end;
+      end;
+    finally
+      vstView.EndUpdate;
+    end;
+
+    tbsReferencedBy.TabVisible := wbLoaderDone and (lvReferencedBy.Items.Count > 0);
+    if tbsReferencedBy.TabVisible then
+      tbsReferencedBy.Caption := Format('Referenced By (%d)', [lvReferencedBy.Items.Count]);
+  finally
+    lvReferencedBy.Items.EndUpdate;
+  end;
+end;
+
+procedure TfrmMain.SetActiveContainer(const aDataContainers: TDynDataContainers);
+var
+  i            : Integer;
+  aMainrecords : TDynMainRecords;
+begin
+  UserWasActive := True;
+
+  if Length(aMainRecords) < 2 then begin
+    if Length(aMainRecords) = 1 then
+      if Supports(aMainRecords[0], IwbMainrecord) then
+        SetActiveRecord(aMainRecords[0] as IwbMainRecord)
+      else
+        SetActiveContainer(aMainRecords[0])
+    else
+      SetActiveContainer(IwbDataContainer(nil));
+    Exit;
+  end;
+  if Supports(aMainRecords[0], IwbMainrecord) then begin
+    SetLength(aMainRecords, Length(aDataContainers));
+    for i := Low(aMainRecords) to High(aMainRecords) do
+      aMainRecords[i] := aDataContainers[i] as IwbMainRecord;
+    SetActiveRecord(aMainRecords);
+    Exit;
+  end;
+
+  ComparingSiblings := True;
+  CompareRecords := aMainRecords;
+  lvReferencedBy.Items.BeginUpdate;
+  try
+    vstView.BeginUpdate;
+    try
+      lvReferencedBy.Items.Clear;
+      vstView.Clear;
+      vstView.NodeDataSize := 0;
+      SetLength(ActiveRecords, 0);
+      ActiveMaster := nil;
+      ActiveRecord := nil;
+      ActiveIndex := NoColumn;
+
+      SetLength(ActiveRecords, Length(aDataContainers));
+      for i := Low(ActiveRecords) to High(ActiveRecords) do
+        with ActiveRecords[i] do begin
+          Element := aDataContainers[i];
+          Container := aDataContainers[i] as IwbContainerElementRef;
+        end;
+
+      with vstView.Header.Columns do begin
+        BeginUpdate;
+        try
+          Clear;
+          with Add do begin
+            Text := '';
+            Width := wbColumnWidth;
+            Options := Options - [coDraggable];
+            Options := Options + [coFixed];
+          end;
+          for I := Low(ActiveRecords) to High(ActiveRecords) do
+            with Add do begin
+              Text := (ActiveRecords[i].Element as IwbMainRecord).EditorID;
+              Style := vsOwnerDraw;
+              Width := wbColumnWidth;
+              MinWidth := 5;
+              MaxWidth := 3000;
+              Options := Options - [coAllowclick, coDraggable];
+              Options := Options + [coAutoSpring];
+            end;
+          if Length(ActiveRecords) > 1 then
+            with Add do begin
+              Text := '';
+              Width := 1;
+              MinWidth := 1;
+              MaxWidth := 3000;
+              Options := Options - [coAllowclick, coDraggable];
+            end;
+        finally
+          EndUpdate;
+        end;
+      end;
+
+      vstView.NodeDataSize := SizeOf(TNavNodeData) * Length(ActiveRecords);
+      vstView.RootNodeCount := (aDataContainers[0].Def as IwbStructDef).MemberCount + aDataContainers[0].AdditionalElementCount;
+      InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
+      vstView.FullExpand;
+      pgMain.ActivePage := tbsView;
+    finally
+      vstView.EndUpdate;
+    end;
+    tbsReferencedBy.TabVisible := False;
+  finally
+    lvReferencedBy.Items.EndUpdate;
+  end;
 end;
 
 procedure TfrmMain.SetActiveRecord(const aMainRecords: TDynMainRecords);
@@ -12513,7 +12736,7 @@ begin
   if Assigned(NodeData) then begin
     Element := NodeData.Element;
     if Assigned(Element) then
-      if Element.ElementType <> etMainRecord then
+      if not (Element.ElementType = etMainRecord) and not Element.TreeLeaf then
         Element := nil;
 
     if NodeData.ConflictAll >= caNoConflict then
@@ -12541,7 +12764,10 @@ begin
   else begin
     lblPath.Visible := False;
   end;
-  SetActiveRecord(Element as IwbMainRecord);
+  if Supports(Element, IwbMainRecord) then
+    SetActiveRecord(Element as IwbMainRecord)
+  else if Supports(Element, IwbDataContainer) then
+    SetActiveContainer(Element as IwbDataContainer);
 end;
 
 function FindSortElement(const aElement: IwbElement): IwbElement;
@@ -12570,6 +12796,7 @@ var
 begin
   Element1 := PNavNodeData(Sender.GetNodeData(Node1)).Element;
   Element2 := PNavNodeData(Sender.GetNodeData(Node2)).Element;
+  Result := 0;
 
   if Element1 = Element2 then begin
     Result := 0;
@@ -12667,7 +12894,8 @@ begin
           end;
         end
     else
-//      Assert(False);
+//      Assert(Element1.TreeLeaf or Element1.TreeBranch);
+//      Assert(Element2.TreeLeaf or Element2.TreeBranch);
       Result := CmpI32(Element1.SortPriority, Element2.SortPriority);
       if Result = 0 then
         Result := CmpI32(Element1.SortOrder, Element2.SortOrder);
@@ -12724,9 +12952,10 @@ procedure TfrmMain.vstNavGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: string);
 var
-  Element                     : IwbElement;
-  MainRecord                  : IwbMainRecord;
-  GroupRecord                 : IwbGroupRecord;
+  Element      : IwbElement;
+  MainRecord   : IwbMainRecord;
+  GroupRecord  : IwbGroupRecord;
+  Chapter      : IwbChapter;
 begin
   CellText := '';
 
@@ -12751,6 +12980,15 @@ begin
             end;
           1: CellText := MainRecord.EditorID;
           2: CellText := MainRecord.DisplayName;
+        end;
+        Exit;
+      end
+      else if Element.ElementType = etStructChapter then begin
+        Chapter := Element as IwbChapter;
+        case Column of
+          -1, 0: CellText := Element.Name;
+          1: CellText := Chapter.ChapterTypeName;
+          2: CellText := Chapter.ChapterName;
         end;
         Exit;
       end;
@@ -12894,7 +13132,7 @@ begin
     Exit;
   end;
 
-  if Element.ElementType <> etMainRecord then begin
+  if not (Element.ElementType = etMainRecord) and not Element.TreeLeaf then begin
     if Supports(Element, IwbContainerElementRef, Container) and (Container.ElementCount > 0) then begin
       Include(InitialStates, ivsHasChildren);
       NodeData.Container := IInterface(Container) as IwbContainer;
@@ -13736,7 +13974,7 @@ begin
       end;
       i := 1;
     end else
-      i := 0;
+	  i := 0;
     Value := caNone;
     if Length(NodeDatas) > 0 then
       if Assigned(NodeDatas[0].Container) then
