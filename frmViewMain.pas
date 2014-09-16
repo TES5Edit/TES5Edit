@@ -6675,7 +6675,7 @@ var
   NodeDatas                   : PViewNodeDatas;
   Element                     : IwbElement;
   EditValue                   : string;
-//  StringDef                   : IwbStringDef;
+  NamedDef                    : IwbNamedDef;
   IntegerDef                  : IwbIntegerDef;
   Flags                       : IwbFlagsDef;
   i, StringID                 : Integer;
@@ -6692,8 +6692,15 @@ begin
 
       EditValue := Element.EditValue;
 
+      // for Flags, try to get the enclosed value
+      if Supports(Element.Def, IwbSubRecordDef) then
+        NamedDef := (Element.Def as IwbSubrecordDef).Value
+      else
+        NamedDef := Element.Def;
+
       // flags editor
-      if Supports(Element.Def, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater[Element], IwbFlagsDef, Flags) then begin
+      if Supports(NamedDef, IwbIntegerDef, IntegerDef) and
+        Supports(IntegerDef.Formater[Element], IwbFlagsDef, Flags) then begin
 
         with TfrmFileSelect.Create(Self) do try
           Caption := 'Edit Value';

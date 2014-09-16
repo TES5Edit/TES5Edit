@@ -3381,9 +3381,7 @@ procedure wbPACKAfterLoad(const aElement: IwbElement);
 var
   Container     : IwbContainerElementRef;
   MainRecord    : IwbMainRecord;
-  //OldContainer  : IwbContainerElementRef;
   NewContainer  : IwbContainerElementRef;
-  //NewContainer2 : IwbContainerElementRef;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -3444,12 +3442,6 @@ begin
       end;
     end;
 
-    {if Supports(Container.RemoveElement('PLD2'), IwbContainerElementRef, OldContainer) then begin
-      if not Supports(Container.Add('Locations'), IwbContainerElementRef, NewContainer) then
-        Assert(False);
-      NewContainer.RemoveElement('PLD2');
-      NewContainer.AddElement(OldContainer);
-    end;}
   finally
     wbEndInternalEdit;
   end;
@@ -4569,7 +4561,7 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
-  wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]);
+  wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, CREA, NPC_]); // Ghouls can own too aparently !
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 
   wbRecord(ACRE, 'Placed Creature', [
@@ -8762,7 +8754,7 @@ begin
     ], cpNormal, True, nil, 2),
     wbRStruct('Locations', [
       wbStruct(PLDT, 'Location 1', [
-        wbInteger('Type', itS32, wbEnum([
+        wbInteger('Type', itS32, wbEnum([     // Byte + filler
           {0} 'Near reference',
           {1} 'In cell',
           {2} 'Near current location',
@@ -9108,7 +9100,7 @@ begin
     ])), ['Male', 'Female'], cpNormal, True),
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
     wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
-    wbByteArray(ATTR, 'Unknown', 0, cpNormal, True),
+    wbByteArray(ATTR, 'Unused', 0, cpNormal, True),
     wbRStruct('Head Data', [
       wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
       wbRStruct('Male Head Data', [
@@ -10006,7 +9998,7 @@ begin
       ])),
       {16} wbFloat('Min Spread'),
       {20} wbFloat('Spread'),
-      {24} wbFloat('*Unknown'),
+      {24} wbFloat('Unknown'),
       {28} wbFloat('Sight FOV'),
       {32} wbByteArray('Unused', 4),
       {36} wbFormIDCk('Projectile', [PROJ, NULL]),
@@ -10464,5 +10456,4 @@ begin
   DefineFO3f;
 end;
 
-initialization
 end.
