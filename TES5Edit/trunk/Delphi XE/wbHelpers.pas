@@ -25,7 +25,9 @@ uses
   Graphics,
   ShellAPI,
   IniFiles,
-  wbInterface;
+  wbInterface,
+  Imaging,
+  ImagingTypes;
 
 function wbDistance(const a, b: TwbVector): Single; overload
 function wbDistance(const a, b: IwbMainRecord): Single; overload;
@@ -40,6 +42,8 @@ function wbAlphaBlend(DestDC, X, Y, Width, Height,
   SrcDC, SrcX, SrcY, SrcWidth, SrcHeight, Alpha: integer): Boolean;
 procedure SaveFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
 procedure LoadFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
+function wbDDSDataToBitmap(aData: TBytes; Bitmap: TBitmap): Boolean;
+function wbDDSStreamToBitmap(aStream: TStream; Bitmap: TBitmap): Boolean;
 
 function wbCRC32Data(aData: TBytes): Cardinal;
 function wbCRC32File(aFileName: string): Cardinal;
@@ -904,6 +908,48 @@ begin
 
   if modIni then
     Result := Result + FindBSAs(DataPath+ChangeFileExt(ModName, '.ini'), DataPath, bsaNames, bsaMissing);
+end;
+
+function wbDDSDataToBitmap(aData: TBytes; Bitmap: TBitmap): Boolean;
+var
+  img: TImageData;
+  ms: TMemoryStream;
+begin
+  Result := False;
+  if not LoadImageFromMemory(@aData[0], Length(aData), img) then
+    Exit;
+  ms := TMemoryStream.Create;
+  try
+    if SaveImageToStream('BMP', ms, img) then begin
+      ms.Position := 0;
+      Bitmap.LoadFromStream(ms);
+      Result := True;
+    end;
+  finally
+    FreeImage(img);
+    ms.Free;
+  end;
+end;
+
+function wbDDSStreamToBitmap(aStream: TStream; Bitmap: TBitmap): Boolean;
+var
+  img: TImageData;
+  ms: TMemoryStream;
+begin
+  Result := False;
+  if not LoadImageFromStream(aStream, img) then
+    Exit;
+  ms := TMemoryStream.Create;
+  try
+    if SaveImageToStream('BMP', ms, img) then begin
+      ms.Position := 0;
+      Bitmap.LoadFromStream(ms);
+      Result := True;
+    end;
+  finally
+    FreeImage(img);
+    ms.Free;
+  end;
 end;
 
 initialization

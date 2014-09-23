@@ -118,6 +118,7 @@
         <VerInfo_Debug>true</VerInfo_Debug>
         <UsePackages>true</UsePackages>
         <DCC_ExeOutput>.\TES5Dump</DCC_ExeOutput>
+        <DCC_UnitSearchPath>imaging;imaging\zlib;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_4)'!=''">
         <DCC_ExeOutput>.\DebugLite</DCC_ExeOutput>
