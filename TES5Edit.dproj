@@ -70,6 +70,9 @@
 			<ILINK_MapFileType>DetailedSegments</ILINK_MapFileType>
 			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
 		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+			<DCC_UnitSearchPath>imaging;imaging\zlib;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_4)'!=''">
 			<DCC_ExeOutput>.\DebugLite</DCC_ExeOutput>
 			<DCC_Define>DEBUG;NX_EXCEPTION_LOG_IN_APP_FOLDER;LiteVersion;$(DCC_Define)</DCC_Define>
