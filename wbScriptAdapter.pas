@@ -28,8 +28,7 @@ uses
   wbImplementation,
   wbHelpers,
   wbBSA,
-  wbNifScanner,
-  wbDDS;
+  wbNifScanner;
 
 implementation
 
