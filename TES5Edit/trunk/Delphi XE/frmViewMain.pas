@@ -52,6 +52,7 @@ uses
   wbImplementation,
   wbBSA,
   wbNifScanner,
+  wbLOD,
   wbHelpers,
   wbInit,
   wbLocalization;
@@ -290,6 +291,7 @@ type
     mniModGroupsEnabled: TMenuItem;
     mniModGroupsDisabled: TMenuItem;
     mniNavOtherCodeSiteLogging: TMenuItem;
+    mniNavSplitLOD: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -517,6 +519,7 @@ type
     function GetRefBySelectionAsMainRecords: TDynMainRecords;
     function GetRefBySelectionAsElements: TDynElements;
 
+    procedure SplitLOD(const aWorldspace: IwbMainRecord);
     procedure GenerateLOD(const aWorldspace: IwbMainRecord);
     procedure DoGenerateLOD;
 
@@ -4431,6 +4434,125 @@ begin
     Abort;
 end;
 
+procedure TfrmMain.SplitLOD(const aWorldspace: IwbMainRecord);
+var
+  Lst             : TwbLodTES5TreeList;
+  LodSet          : TwbLodSettings;
+  Res             : TDynResources;
+  BTT             : TwbLodTES5TreeBlock;
+  i, j, r, k      : Integer;
+  slCont, slList  : TwbFastStringList;
+  TreeRecords     : array of IwbMainRecord;
+  loFiles         : array [0..254] of IwbFile;
+  Ref             : IwbMainRecord;
+  SplitPath       : string;
+  TreeFileName    : string;
+  ini             : TMemIniFile;
+begin
+  // split Skyrim's Trees LOD atlas into separate billboard textures
+  Res := wbContainerHandler.OpenResource(wbLODSettingsFileName(aWorldspace.EditorID));
+  if Length(Res) > 0 then
+    LodSet.LoadFromData(Res[High(Res)].GetData)
+  else begin
+    frmMain.PostAddMessage('[' + aWorldspace.EditorID + '] Lodsettings file not found for worldspace.');
+    Exit;
+  end;
+  Lst := TwbLodTES5TreeList.Create(aWorldspace.EditorID);
+  try
+    Res := wbContainerHandler.OpenResource(Lst.ListFileName);
+    if Length(Res) > 0 then
+      Lst.LoadFromData(Res[High(Res)].GetData)
+    else begin
+      frmMain.PostAddMessage('[' + Lst.ListFileName + '] Worldspace doesn''t have a Trees LOD list file.');
+      Exit;
+    end;
+
+    Res := wbContainerHandler.OpenResource(Lst.AtlasFileName);
+    if Length(Res) > 0 then
+      Lst.LoadAtlas(Res[High(Res)].GetData)
+    else begin
+      frmMain.PostAddMessage('[' + Lst.AtlasFileName + '] Trees LOD atlas texture not found.');
+      Exit;
+    end;
+
+    // scan BTT files to associate lod trees indexes with TREE FormIDs
+    slCont := TwbFastStringList.Create;
+    slList := TwbFastStringList.Create;
+    try
+      wbContainerHandler.ContainerList(slCont);
+      for i := 0 to slCont.Count - 1 do
+        wbContainerHandler.ContainerResourceList(slCont[i], slList, ExtractFilePath(Lst.ListFileName));
+      slList.Duplicates := dupIgnore;
+      slList.Sorted := True;
+
+      SetLength(TreeRecords, Lst.TreesListCount);
+
+      // list of loaded plugins by load order
+      for i := High(Files) downto Low(Files) do
+        loFiles[Files[i].LoadOrder] := Files[i];
+
+      BTT.Init(Lst, 0, 0);
+      // for each btt file
+      for i := 0 to slList.Count - 1 do begin
+        if not SameText(ExtractFileExt(slList[i]), '.btt') then
+          Continue;
+        Res := wbContainerHandler.OpenResource(slList[i]);
+        if Length(Res) = 0 then Continue;
+        BTT.LoadFromData(Res[High(Res)].GetData);
+        // for each tree type in btt file
+        for j := Low(BTT.Types) to High(BTT.Types) do
+          if not Assigned(TreeRecords[BTT.Types[j]]) then
+            // for each reference of tree type
+            for r := Low(BTT.Refs[j]) to High(BTT.Refs[j]) do begin
+              // a mod the reference is supposed to be from
+              k := BTT.Refs[j][r].RefFormID shr 24;
+              if not Assigned(loFiles[k]) then
+                Continue;
+              Ref := loFiles[k].RecordByFormID[loFiles[k].LoadOrderFormIDtoFileFormID(BTT.Refs[j][r].RefFormID), False];
+              if Assigned(Ref) and Assigned(Ref.BaseRecord) and (Ref.BaseRecord.Signature = 'TREE') then begin
+                TreeRecords[BTT.Types[j]] := Ref.BaseRecord;
+                Break;
+              end;
+            end;
+      end;
+    finally
+      slCont.Free;
+      slList.Free;
+    end;
+
+    SplitPath := wbDataPath + 'Textures\Terrain\LODGen\_SplitAtlas_\';
+
+    for i := 0 to Pred(Lst.TreesListCount) do with Lst.TreesList[i] do begin
+      if Assigned(TreeRecords[Index]) then
+        TreeFileName := Format('%s\%s.dds', [
+          TreeRecords[Index]._File.FileName,
+          IntToHex(TreeRecords[Index].LoadOrderFormID, 8)
+        ])
+      else
+        TreeFileName := Format('Tree Type %d', [Index]);
+      TreeFileName := SplitPath + TreeFileName;
+
+      frmMain.PostAddMessage('[' + TreeFileName + '] Saving billboard texture');
+
+      ForceDirectories(ExtractFilePath(TreeFileName));
+      Lst.SaveFromAtlas(Index, TreeFileName);
+      ini := TMemIniFile.Create(ChangeFileExt(TreeFileName, '.txt'));
+      try
+        ini.WriteString('LOD', 'Width', FloatToStrF(Width, ffFixed, 99, wbFloatDigits));
+        ini.WriteString('LOD', 'Height', FloatToStrF(Height, ffFixed, 99, wbFloatDigits));
+        if Assigned(TreeRecords[Index]) then
+          ini.WriteString('LOD', 'Model', TreeRecords[Index].ElementEditValues['Model\MODL']);
+        ini.UpdateFile;
+      finally
+        ini.Free;
+      end;
+    end;
+     frmMain.PostAddMessage('[Split atlas] Done.');
+  finally
+    Lst.Free;
+  end;
+end;
+
 procedure TfrmMain.GenerateLOD(const aWorldspace: IwbMainRecord);
 var
   StartTick: Cardinal;
@@ -7057,7 +7179,10 @@ begin
     try
       for i := 0 to Pred(CheckListBox1.Count) do
         if CheckListBox1.Checked[i] then
-          GenerateLOD(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])));
+          if Sender = mniNavGenerateObjectLOD then
+            GenerateLOD(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])))
+          else
+            SplitLOD(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])));
     finally
       Self.Enabled := True;
       Self.Caption := Application.Title
@@ -9808,7 +9933,8 @@ begin
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
   mniNavApplyScript.Visible := mniNavCheckForErrors.Visible;
 
-  mniNavGenerateObjectLOD.Visible := mniNavCompareTo.Visible and (wbGameMode = gmTES4);
+  mniNavGenerateObjectLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4]);
+  mniNavSplitLOD.Visible := mniNavCompareTo.Visible and (wbGameMode = gmTES5);
 
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;
