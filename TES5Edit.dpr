@@ -39,6 +39,7 @@ uses
   wbNifScanner in 'wbNifScanner.pas',
   wbStreams in 'wbStreams.pas',
   wbSort in 'wbSort.pas',
+  wbLOD in 'wbLOD.pas',
   wbLocalization in 'wbLocalization.pas',
   frmViewMain in 'frmViewMain.pas' {frmMain},
   FilterOptionsFrm in 'FilterOptionsFrm.pas' {frmFilterOptions},

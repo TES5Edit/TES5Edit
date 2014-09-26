@@ -1615,7 +1615,7 @@ type
     function GetName: String;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
-    procedure ResourceList(const aList: TStrings);
+    procedure ResourceList(const aList: TStrings; const aFolder: string = '');
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     property Name: string
@@ -1649,7 +1649,8 @@ type
     function ResolveHash(const aHash: Int64): TDynStrings;
     function ContainerExists(aContainerName: string): Boolean;
     procedure ContainerList(const aList: TStrings);
-    procedure ContainerResourceList(const aContainerName: string; const aList: TStrings);
+    procedure ContainerResourceList(const aContainerName: string; const aList: TStrings;
+      const aFolder: string = '');
     function ResourceExists(const aFileName: string): Boolean;
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
     procedure ResourceCopy(const aContainerName, aFileName, aPathOut: string);
