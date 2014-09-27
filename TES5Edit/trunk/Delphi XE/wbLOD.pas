@@ -21,6 +21,7 @@ uses
   SysUtils,
   wbInterface,
   ImagingTypes,
+  ImagingFormats,
   Imaging;
 
 type
@@ -37,6 +38,7 @@ type
     Index: Integer;
     fit: Boolean;
     x, y, w, h: Integer;
+    Data: Integer;
   end;
 
   TDynBinBlockArray = array of TBinBlock;
@@ -71,7 +73,7 @@ type
     Stride, LODLevelMin, LODLevelMax: Integer;
     procedure Init;
     function GetSize: Integer;
-    function BlockForCell(x, y, LODLevel: Integer): TwbGridCell;
+    function BlockForCell(Cell: TwbGridCell; LODLevel: Integer): TwbGridCell;
     procedure LoadFromData(aData: TBytes);
     property Size: Integer read GetSize;
   end;
@@ -98,11 +100,18 @@ type
     Unknown2: Integer;
   end;
 
+  // tree data when building lod
   TwbLodTES5Tree = record
-    BillboardName: string;
+    Index : Integer;
+    FormID: Cardinal;
+    Billboard: string;
     CRC32: Integer;
     Width, Height: Single;
+    ShiftX, ShiftY, ShiftZ, ScaleFactor: Single;
+    Image: TImageData;
+    function LoadFromData(aData: TBytes): Boolean;
   end;
+  PwbLodTES5Tree = ^TwbLodTES5Tree;
 
   // handling atlas and LST file
   TwbLodTES5TreeList = class
@@ -119,21 +128,26 @@ type
     function GetTreesListCount: Integer;
     function GetTreesList(Index: Integer): TwbLodTES5TreeType;
     function GetAtlasRect(Index: Integer): TAtlasRect;
+    function GetTreeByFormID(aFormID: Cardinal): PwbLodTES5Tree;
   public
     constructor Create(WorldspaceID: string);
     destructor Destroy; override;
     procedure LoadFromData(aData: TBytes);
     procedure SaveToFile(aFileName: string);
     procedure LoadAtlas(aData: TBytes);
+    function SaveAtlas(aFileName: string): Boolean;
     procedure SaveFromAtlas(aIndex: Integer; aFileName: string);
     procedure CopyFromAtlas(aIndex: Integer; var Img: TImageData; ImgX, ImgY: Integer);
+    function BuildAtlas(MaxAtlasSize: Integer): Boolean;
+    function AddTree(aFileName: string; aFormID: Cardinal; aWidth, aHeight: Single): PwbLodTES5Tree;
     property WorldspaceID: string read fWorldspaceID write fWorldspaceID;
     property ListFileName: string read GetListFileName;
     property AtlasFileName: string read GetAtlasFileName;
     property TreesListCount: Integer read GetTreesListCount;
-    property TreesList[Index: Integer]: TwbLodTES5TreeType read GetTreesList;// default;
+    property TreesList[Index: Integer]: TwbLodTES5TreeType read GetTreesList;
     property AtlasRect[Index: Integer]: TAtlasRect read GetAtlasRect;
     property Atlas: TImageData read fAtlas;
+    property TreeByFormID[aFormID: Cardinal]: PwbLodTES5Tree read GetTreeByFormID;
   end;
 
   // handling BTT file
@@ -141,14 +155,15 @@ type
     TreeList: TwbLodTES5TreeList;
     Cell: TwbGridCell;
     LODLevel: Integer;
-    Types: array of Integer;
+    Types: array of record Index, Count: Integer; end;
     Refs: array of array of TwbLodTES5TreeRef;
     function GetBlockFileName: string;
-    procedure Init(Trees: TwbLodTES5TreeList; CellX, CellY: Integer;
-      aLODLevel: Integer = 4);
+    procedure Init(Trees: TwbLodTES5TreeList; aCell: TwbGridCell; aLODLevel: Integer = 4);
     procedure Clear;
     procedure LoadFromData(aData: TBytes);
     procedure SaveToFile(aFileName: string);
+    procedure AddReference(aFormID: Cardinal; aTreeIndex: Integer;
+      Pos: TwbVector; Scale: Single);
     property FileName: string read GetBlockFileName;
   end;
 
@@ -182,10 +197,10 @@ begin
   Result := Ceil(Stride/sqrt(2));
 end;
 
-function TwbLodSettings.BlockForCell(x, y, LODLevel: Integer): TwbGridCell;
+function TwbLodSettings.BlockForCell(Cell: TwbGridCell; LODLevel: Integer): TwbGridCell;
 begin
-  Result.x := SWCell.x + ((x - SWCell.x) div LODLevel) * LODLevel;
-  Result.y := SWCell.y + ((y - SWCell.y) div LODLevel) * LODLevel;
+  Result.x := SWCell.x + ((Cell.x - SWCell.x) div LODLevel) * LODLevel;
+  Result.y := SWCell.y + ((Cell.y - SWCell.y) div LODLevel) * LODLevel;
 end;
 
 procedure TwbLodSettings.LoadFromData(aData: TBytes);
@@ -306,6 +321,15 @@ end;
 
 {============================== Skyrim LOD ===================================}
 
+{ TwbLodTES5Tree }
+
+function TwbLodTES5Tree.LoadFromData(aData: TBytes): Boolean;
+begin
+  InitImage(Image);
+  Result := LoadImageFromMemory(@aData[0], Length(aData), Image);
+end;
+
+
 { TwbLodTES5TreeList }
 
 constructor TwbLodTES5TreeList.Create(WorldspaceID: string);
@@ -316,10 +340,14 @@ begin
 end;
 
 destructor TwbLodTES5TreeList.Destroy;
+var
+  i: Integer;
 begin
   if fAtlas.Format <> ifUnknown then
     FreeImage(fAtlas);
-
+  for i := Low(fTrees) to High(fTrees) do
+    if fTrees[i].Image.Format <> ifUnknown then
+      FreeImage(fTrees[i].Image);
   inherited;
 end;
 
@@ -354,6 +382,34 @@ begin
     Result.w := Round(fAtlas.Width * (UVMaxX - UVMinX));
     Result.h := Round(fAtlas.Height * (UVMaxY - UVMinY));
   end;
+end;
+
+function TwbLodTES5TreeList.GetTreeByFormID(aFormID: Cardinal): PwbLodTES5Tree;
+var
+  i: Integer;
+begin
+  Result := nil;
+  for i := Low(fTrees) to High(fTrees) do
+    if fTrees[i].FormID = aFormID then begin
+      Result := @fTrees[i];
+      Break;
+    end;
+end;
+
+function TwbLodTES5TreeList.AddTree(aFileName: string; aFormID: Cardinal; aWidth, aHeight: Single): PwbLodTES5Tree;
+var
+  i, idx: integer;
+begin
+  idx := -1;
+  for i := Low(fTrees) to High(fTrees) do
+    if fTrees[i].Index > idx then idx := fTrees[i].Index;
+  SetLength(fTrees, Succ(Length(fTrees)));
+  Result := @fTrees[Pred(Length(fTrees))];
+  Result^.Index := Succ(idx);
+  Result^.FormID := aFormID;
+  Result^.BillBoard := Format('textures\terrain\lodgen\%s\%s.dds', [aFileName, IntToHex(aFormID and $FFFFFF, 8)]);
+  Result^.Width := aWidth;
+  Result^.Height := aHeight;
 end;
 
 procedure TwbLodTES5TreeList.LoadFromData(aData: TBytes);
@@ -395,6 +451,26 @@ begin
   LoadImageFromMemory(@aData[0], Length(aData), fAtlas);
 end;
 
+function TwbLodTES5TreeList.SaveAtlas(aFileName: string): Boolean;
+var
+  MipmapImg: TDynImageDataArray;
+begin
+  try
+    Result := ConvertImage(fAtlas, ifDXT3);
+    if not Result then
+      raise Exception.Create('Image convertion error')
+    else
+      SetOption(ImagingMipMapFilter, Ord(sfLanczos));
+      Result := GenerateMipMaps(fAtlas, 0, MipmapImg);
+    if not Result then
+      raise Exception.Create('Error generating mipmaps')
+    else
+      Result := SaveMultiImageToFile(aFileName, MipmapImg);
+  finally
+    FreeImagesInArray(MipmapImg);
+  end;
+end;
+
 procedure TwbLodTES5TreeList.SaveFromAtlas(aIndex: Integer; aFileName: string);
 var
   img: TImageData;
@@ -422,15 +498,91 @@ begin
     CopyRect(fAtlas, x, y, w, h, Img, ImgX, ImgY);
 end;
 
+function TwbLodTES5TreeList.BuildAtlas(MaxAtlasSize: Integer): Boolean;
+var
+  i, j, k: Integer;
+  Blocks: TDynBinBlockArray;
+begin
+  for i := Low(fTrees) to High(fTrees) do begin
+    // skip trees with missing/invalid textures
+    if fTrees[i].Index = -1 then
+      Continue;
+
+    // exclude duplicate textures by checksum
+    k := -1;
+    for j := Low(fTrees) to i - 1 do
+      if fTrees[j].CRC32 = fTrees[i].CRC32 then begin
+        k := j;
+        Break;
+      end;
+    if k <> -1 then
+      Continue;
+
+    SetLength(Blocks, Succ(Length(Blocks)));
+    with Blocks[Pred(Length(Blocks))] do begin
+      Index := fTrees[i].Index;
+      w := fTrees[i].Image.Width;
+      h := fTrees[i].Image.Height;
+      Data := fTrees[i].CRC32;
+    end;
+  end;
+
+  Result := False;
+  if Length(Blocks) = 0 then
+    Exit;
+
+  with TwbBinPacker.Create do try
+    Width := Min(512, MaxAtlasSize);
+    Height := Min(512, MaxAtlasSize);
+    PaddingX := 0;
+    PaddingY := 0;
+    // increase atlas size until all blocks fit
+    while not Fit(Blocks) do begin
+      if Width <= Height then
+        Width := Width * 2
+      else
+        Height := Height * 2;
+      if (Width > MaxAtlasSize) or (Width > MaxAtlasSize) then
+        raise Exception.Create('Can''t fit billboards on atlas, not enough space');
+    end;
+    NewImage(Width, Height, ifDefault, fAtlas);
+  finally
+    Free;
+  end;
+
+  // drawing atlas and creating a list of trees with UVs
+  for i := Low(fTrees) to High(fTrees) do begin
+    if fTrees[i].Index = -1 then
+      Continue;
+    // getting atlas block by checksum
+    for j := Low(Blocks) to High(Blocks) do
+      if Blocks[j].Data = fTrees[i].CRC32 then
+        Break;
+    if not CopyRect(fTrees[i].Image, 0, 0, Blocks[j].w, Blocks[j].h, fAtlas, Blocks[j].x, Blocks[j].y) then
+      raise Exception.Create('Error when drawing atlas');
+
+    SetLength(fTreesList, Succ(Length(fTreesList)));
+    with fTreesList[Pred(Length(fTreesList))] do begin
+      Index := fTrees[i].Index;
+      Width := fTrees[i].Width;
+      Height := fTrees[i].Height;
+      UVMinX := Blocks[j].x / fAtlas.Width;
+      UVMaxX := (Blocks[j].x + Blocks[j].w) / fAtlas.Width;
+      UVMinY := Blocks[j].y / fAtlas.Height;
+      UVMaxY := (Blocks[j].y + Blocks[j].h) / fAtlas.Height;
+    end;
+  end;
+
+  Result := True;
+end;
+
 
 { TwbLodTES5TreeBlock }
 
-procedure TwbLodTES5TreeBlock.Init(Trees: TwbLodTES5TreeList; CellX, CellY: Integer;
-  aLODLevel: Integer = 4);
+procedure TwbLodTES5TreeBlock.Init(Trees: TwbLodTES5TreeList; aCell: TwbGridCell; aLODLevel: Integer = 4);
 begin
   TreeList := Trees;
-  Cell.x := CellX;
-  Cell.y := CellY;
+  Cell := aCell;
   LODLevel := aLODLevel;
 end;
 
@@ -474,13 +626,14 @@ begin
       raise Exception.Create(sError);
 
     // tree type
-    Types[i] := PInteger(@aData[p])^;
+    Types[i].Index := PInteger(@aData[p])^;
     Inc(p, SizeOf(Integer));
     if p >= Length(aData) then
       raise Exception.Create(sError);
 
     // number of trees
     TreesNum := PInteger(@aData[p])^;
+    Types[i].Count := TreesNum;
     Inc(p, SizeOf(Integer));
     if p >= Length(aData) then
       raise Exception.Create(sError);
@@ -501,10 +654,9 @@ begin
     Value := Length(Types);
     Write(Value, SizeOf(Value));
     for i := 0 to Pred(Length(Types)) do begin
-      Write(Types[i], SizeOf(Types[i]));
-      Value := Length(Refs[i]);
-      Write(Value, SizeOf(Value));
-      Write(Refs[i][0], SizeOf(TwbLodTES5TreeRef) * Length(Refs[i]));
+      Write(Types[i].Index , SizeOf(Types[i].Index));
+      Write(Types[i].Count , SizeOf(Types[i].Count));
+      Write(Refs[i][0], SizeOf(TwbLodTES5TreeRef) * Types[i].Count);
     end;
     fs := TFileStream.Create(aFileName, fmCreate);
     try
@@ -515,6 +667,35 @@ begin
   finally
     Free;
   end;
+end;
+
+procedure TwbLodTES5TreeBlock.AddReference(aFormID: Cardinal; aTreeIndex: Integer;
+  Pos: TwbVector; Scale: Single);
+var
+  i, j: integer;
+begin
+  j := -1;
+  for i := Low(Types) to High(Types) do
+    if Types[i].Index = aTreeIndex then begin
+      j := i;
+      Break;
+    end;
+  if j = -1 then begin
+    SetLength(Types, Succ(Length(Types)));
+    j := Pred(Length(Types));
+    Types[j].Index := aTreeIndex;
+    SetLength(Refs, Succ(Length(Refs)));
+  end;
+  Inc(Types[j].Count);
+  if Types[j].Count > Length(Refs[j]) then
+    SetLength(Refs[j], Length(Refs[j]) + 64);
+  i := Pred(Types[j].Count);
+  Refs[j][i].RefFormID := aFormID;
+  Refs[j][i].X := Pos.x;
+  Refs[j][i].Y := Pos.y;
+  Refs[j][i].Z := Pos.z;
+  Refs[j][i].Scale := Scale;
+  Refs[j][i].Rotation := 2*Pi*Random;
 end;
 
 end.
