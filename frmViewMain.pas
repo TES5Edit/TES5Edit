@@ -4483,12 +4483,15 @@ begin
       Exit;
     end;
 
+    Caption := 'Scanning LOD Blocks: ' + aWorldspace.Name + ',  please wait...';
+    Application.ProcessMessages;
+
     // scan BTT files to associate lod trees indexes with TREE FormIDs
     slCont := TwbFastStringList.Create;
     slList := TwbFastStringList.Create;
     try
       wbContainerHandler.ContainerList(slCont);
-      for i := slCont.Count - 1 downto 0 do
+      for i := Pred(slCont.Count) downto 0 do
         wbContainerHandler.ContainerResourceList(slCont[i], slList, ExtractFilePath(Lst.ListFileName));
       slList.Duplicates := dupIgnore;
       slList.Sorted := True;
@@ -4501,7 +4504,7 @@ begin
 
       BTT.Init(Lst, Cell);
       // for each btt file
-      for i := 0 to slList.Count - 1 do begin
+      for i := 0 to Pred(slList.Count) do begin
         if not SameText(ExtractFileExt(slList[i]), '.btt') then
           Continue;
         Res := wbContainerHandler.OpenResource(slList[i]);
@@ -4528,12 +4531,13 @@ begin
       slList.Free;
     end;
 
-    SplitPath := wbDataPath + 'Textures\Terrain\LODGen\_' + ExtractFileName(Lst.AtlasFileName) + '_split\';
+    SplitPath := wbOutputPath + 'Textures\Terrain\LODGen\AtlasSplit_' + ChangeFileExt(ExtractFileName(Lst.AtlasFileName), '') + '\';
 
     for i := 0 to Pred(Lst.TreesListCount) do with Lst.TreesList[i] do begin
       if Assigned(TreeRecords[Index]) then
-        TreeFileName := Format('%s\%s.dds', [
+        TreeFileName := Format('%s\%s_%s.dds', [
           TreeRecords[Index]._File.FileName,
+          ChangeFileExt(ExtractFileName(TreeRecords[Index].WinningOverride.ElementEditValues['Model\MODL']), ''),
           IntToHex(TreeRecords[Index].FormID and $FFFFFF, 8)
         ])
       else
@@ -4549,7 +4553,7 @@ begin
         ini.WriteString('LOD', 'Width', FloatToStrF(Width, ffFixed, 99, wbFloatDigits));
         ini.WriteString('LOD', 'Height', FloatToStrF(Height, ffFixed, 99, wbFloatDigits));
         if Assigned(TreeRecords[Index]) then
-          ini.WriteString('LOD', 'Model', TreeRecords[Index].ElementEditValues['Model\MODL']);
+          ini.WriteString('LOD', 'Model', TreeRecords[Index].WinningOverride.ElementEditValues['Model\MODL']);
         ini.UpdateFile;
       finally
         ini.Free;
@@ -4572,8 +4576,7 @@ var
     i          : Integer;
   begin
     if StartTick + 500 < GetTickCount then begin
-      Caption := 'Scanning References: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(TotalCount) +
-        ' References Found: ' + IntToStr(Count) +
+      Caption := 'Scanning References: ' + aWorldspace.Name + ' References Found: ' + IntToStr(Count) +
         ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
       Application.ProcessMessages;
       StartTick := GetTickCount;
@@ -4593,6 +4596,7 @@ var
 
 var
   LODPath         : string;
+  F               : TSearchRec;
   Master, Ovr     : IwbMainRecord;
   TreeRec         : IwbMainRecord;
   REFRs           : TDynMainRecords;
@@ -4607,7 +4611,7 @@ var
   ini             : TMemIniFile;
   slIni           : TStringList;
   bsIni           : TBytesStream;
-  RefPos          : TwbVector;
+  RefPos, RefRot  : TwbVector;
   RefCell, RefBlock : TwbGridCell;
   Scale           : Single;
   LOD4            : array of TwbLodTES5TreeBlock;
@@ -4623,8 +4627,8 @@ begin
     Exit;
   end;
 
-  Caption := 'Scanning References: ' + aWorldspace.Name + ' Processed Records: 0 '+
-    'References Found: 0 Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+  Caption := 'Scanning References: ' + aWorldspace.Name + ' References Found: 0' +
+    ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
   Application.ProcessMessages;
   StartTick := GetTickCount;
 
@@ -4680,8 +4684,12 @@ begin
   Application.ProcessMessages;
   StartTick := GetTickCount;
 
+  PostAddMessage('[' + aWorldspace.EditorID + '] Generating Trees LOD');
+
   // building lod
   Lst := TwbLodTES5TreeList.Create(aWorldspace.EditorID);
+  try
+
   try
     for i := Low(REFRs) to High(REFRs) do begin
       // skip invalid references
@@ -4705,11 +4713,11 @@ begin
           Width  := 0;
           Height := 0;
         end;
-        PTree := Lst.AddTree(TreeRec._File.FileName, TreeRec.LoadOrderFormID, Width, Height);
+        PTree := Lst.AddTree(TreeRec._File.FileName, Ovr.ElementEditValues['Model\MODL'], TreeRec.LoadOrderFormID, Width, Height);
         // load billboard texture
         Res := wbContainerHandler.OpenResource(PTree^.Billboard);
         if (Length(Res) > 0) and PTree^.LoadFromData(Res[High(Res)].GetData) then begin
-          //PostAddMessage('[' + PTree^.Billboard + '] Loaded for ' + TreeRec.Name);
+          PostAddMessage('[' + PTree^.Billboard + '] LOD for ' + TreeRec.Name);
           // store checksum of billboard to avoid duplicates in atlas
           PTree^.CRC32 := wbCRC32Data(Res[High(Res)].GetData);
           // load tree data
@@ -4743,6 +4751,11 @@ begin
       // tree has no billboard texture, skip it's references
       if PTree^.Index = -1 then
         Continue;
+
+      // Trees LOD can't be rotated around x and y (z is ignored), reject "fallen" trees
+      if REFRs[i].GetRotation(RefRot) then
+        if ((RefRot.x > 30.0) and (RefRot.x < 330.0)) or ((RefRot.y > 30.0) and (RefRot.y < 330.0)) then
+          Continue;
 
       if not REFRs[i].GetPosition(RefPos) then
         Continue;
@@ -4789,28 +4802,61 @@ begin
       end;
     end;
 
-    if not Lst.BuildAtlas(8192) then begin
-      PostAddMessage('[' + aWorldspace.EditorID + '] Error occured when building an atlas.');
-      Exit;
+    if not Lst.BuildAtlas(StrToIntDef(Settings.ReadString('Worldspace', 'AtlasSizeMax', ''), 8192)) then begin
+      // will return false without exception only if atlas is empty, skip this silenty
+
+      //PostAddMessage('[' + aWorldspace.EditorID + '] Error occured when building an atlas (empty?).');
+      //Exit;
     end;
 
     // nothing on atlas and in lod
     if Lst.TreesListCount = 0 then
       Exit;
 
+    LODPath := wbOutputPath; // -O switch override
+
+    Caption := 'Deleting old LOD files: ' + aWorldspace.Name +
+      ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+    Application.ProcessMessages;
+    StartTick := GetTickCount;
+
+    if ForceTerminate then
+      Abort;
+
+    if FindFirst(ExtractFilePath(LODPath + Lst.AtlasFileName) + '*.btt', faAnyFile, F) = 0 then try
+      repeat
+        DeleteFile(ExtractFilePath(LODPath + Lst.AtlasFileName) + F.Name);
+        if StartTick + 500 < GetTickCount then begin
+          Caption := 'Deleting old LOD files: ' + aWorldspace.Name +
+            ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+          Application.ProcessMessages;
+          StartTick := GetTickCount;
+        end;
+        if ForceTerminate then
+          Abort;
+      until FindNext(F) <> 0;
+    finally
+      FindClose(F);
+    end;
+
     Caption := 'Saving Trees LOD files: ' + aWorldspace.Name;
     Application.ProcessMessages;
 
-    LODPath := wbOutputPath; // -O switch override
-
     ForceDirectories(ExtractFilePath(LODPath + Lst.AtlasFileName));
-    Lst.SaveAtlas(LODPath + Lst.AtlasFileName);
+    if not Lst.SaveAtlas(LODPath + Lst.AtlasFileName) then
+      raise Exception.Create('Can''t save atlas');
     ForceDirectories(ExtractFilePath(LODPath + Lst.ListFileName));
     Lst.SaveToFile(LODPath + Lst.ListFileName);
     for i := Low(LOD4) to High(LOD4) do
       LOD4[i].SaveToFile(LODPath + LOD4[i].FileName);
 
     PostAddMessage('[' + aWorldspace.EditorID + '] Trees LOD Done.');
+
+  except
+    on E: Exception do
+      PostAddMessage('[' + aWorldspace.EditorID + '] Trees LOD generation error: ' + E.Message);
+  end;
+
   finally
     Lst.Free;
   end;

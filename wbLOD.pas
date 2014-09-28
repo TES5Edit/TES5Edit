@@ -52,7 +52,8 @@ type
     fPaddingY: Integer;
     fRoot: PBinNode;
   protected
-    function AddNode: PBinNode;
+    procedure Clear(Node: PBinNode);
+    procedure NewNode(var Node: PBinNode);
     function FindNode(root: PBinNode; w, h: Integer): PBinNode;
     function SplitNode(node: PBinNode; w, h: Integer): PBinNode;
   public
@@ -139,7 +140,7 @@ type
     procedure SaveFromAtlas(aIndex: Integer; aFileName: string);
     procedure CopyFromAtlas(aIndex: Integer; var Img: TImageData; ImgX, ImgY: Integer);
     function BuildAtlas(MaxAtlasSize: Integer): Boolean;
-    function AddTree(aFileName: string; aFormID: Cardinal; aWidth, aHeight: Single): PwbLodTES5Tree;
+    function AddTree(aFileName, aModelName: string; aFormID: Cardinal; aWidth, aHeight: Single): PwbLodTES5Tree;
     property WorldspaceID: string read fWorldspaceID write fWorldspaceID;
     property ListFileName: string read GetListFileName;
     property AtlasFileName: string read GetAtlasFileName;
@@ -239,10 +240,19 @@ begin
   fPaddingY := 0;
 end;
 
-function TwbBinPacker.AddNode: PBinNode;
+procedure TwbBinPacker.Clear(Node: PBinNode);
 begin
-  SetLength(fNodes, Succ(Length(fNodes)));
-  Result := @fNodes[Pred(Length(fNodes))];
+  if Assigned(Node) then begin
+    Clear(Node^.right);
+    Clear(Node^.down);
+    Dispose(Node);
+  end;
+end;
+
+procedure TwbBinPacker.NewNode(var Node: PBinNode);
+begin
+  New(Node);
+  FillChar(Node^, SizeOf(TBinNode), 0);
 end;
 
 function TwbBinPacker.FindNode(root: PBinNode; w, h: Integer): PBinNode;
@@ -261,12 +271,12 @@ end;
 function TwbBinPacker.SplitNode(node: PBinNode; w, h: Integer): PBinNode;
 begin
   node^.used := True;
-  node^.down := AddNode;
+  NewNode(node^.down);
   node^.down^.x := node^.x;
   node^.down^.y := node^.y + h + fPaddingY;
   node^.down^.w := node^.w;
   node^.down^.h := node^.h - h - fPaddingY;
-  node^.right := AddNode;
+  NewNode(node^.right);
   node^.right^.x := node^.x + w + fPaddingX;
   node^.right^.y := node^.y;
   node^.right^.w := node^.w - w - fPaddingX;
@@ -300,23 +310,22 @@ var
   node: PBinNode;
 begin
   Result := True;
-  SetLength(fNodes, 0);
-  fRoot := AddNode;
+  NewNode(fRoot);
   fRoot^.w := fWidth;
   fRoot^.h := fHeight;
   MaxSideSort(Blocks);
-  for i := 0 to Pred(Length(Blocks)) do begin
+  for i := Low(Blocks) to High(Blocks) do begin
     node := FindNode(fRoot, Blocks[i].w, Blocks[i].h);
-    if Assigned(node) then
-      node := SplitNode(node, Blocks[i].w, Blocks[i].h);
-
     if Assigned(node) then begin
+      node := SplitNode(node, Blocks[i].w, Blocks[i].h);
       Blocks[i].x := node^.x;
       Blocks[i].y := node^.y;
       Blocks[i].fit := True;
     end else
       Result := False;
   end;
+  Clear(fRoot);
+  fRoot := nil;
 end;
 
 {============================== Skyrim LOD ===================================}
@@ -353,12 +362,12 @@ end;
 
 function TwbLodTES5TreeList.GetListFileName: string;
 begin
-  Result := 'meshes\terrain\' + fWorldspaceID + '\trees\' + fWorldspaceID + '.lst';
+  Result := 'Meshes\Terrain\' + fWorldspaceID + '\Trees\' + fWorldspaceID + '.lst';
 end;
 
 function TwbLodTES5TreeList.GetAtlasFileName: string;
 begin
-  Result := 'textures\terrain\' + fWorldspaceID + '\trees\' + fWorldspaceID + 'TreeLod.dds';
+  Result := 'Textures\Terrain\' + fWorldspaceID + '\Trees\' + fWorldspaceID + 'TreeLod.dds';
 end;
 
 function TwbLodTES5TreeList.GetTreesListCount: Integer;
@@ -396,7 +405,7 @@ begin
     end;
 end;
 
-function TwbLodTES5TreeList.AddTree(aFileName: string; aFormID: Cardinal; aWidth, aHeight: Single): PwbLodTES5Tree;
+function TwbLodTES5TreeList.AddTree(aFileName, aModelName: string; aFormID: Cardinal; aWidth, aHeight: Single): PwbLodTES5Tree;
 var
   i, idx: integer;
 begin
@@ -407,7 +416,11 @@ begin
   Result := @fTrees[Pred(Length(fTrees))];
   Result^.Index := Succ(idx);
   Result^.FormID := aFormID;
-  Result^.BillBoard := Format('textures\terrain\lodgen\%s\%s.dds', [aFileName, IntToHex(aFormID and $FFFFFF, 8)]);
+  Result^.BillBoard := Format('Textures\Terrain\LODGen\%s\%s_%s.dds', [
+    aFileName,
+    ChangeFileExt(ExtractFileName(aModelName), ''),
+    IntToHex(aFormID and $FFFFFF, 8)
+  ]);
   Result^.Width := aWidth;
   Result^.Height := aHeight;
 end;
@@ -455,15 +468,15 @@ function TwbLodTES5TreeList.SaveAtlas(aFileName: string): Boolean;
 var
   MipmapImg: TDynImageDataArray;
 begin
+  SetOption(ImagingMipMapFilter, Ord(sfLanczos));
   try
     Result := ConvertImage(fAtlas, ifDXT3);
     if not Result then
-      raise Exception.Create('Image convertion error')
+      raise Exception.Create('Can''t compress atlas')
     else
-      SetOption(ImagingMipMapFilter, Ord(sfLanczos));
       Result := GenerateMipMaps(fAtlas, 0, MipmapImg);
     if not Result then
-      raise Exception.Create('Error generating mipmaps')
+      raise Exception.Create('Can''t generate mipmaps')
     else
       Result := SaveMultiImageToFile(aFileName, MipmapImg);
   finally
