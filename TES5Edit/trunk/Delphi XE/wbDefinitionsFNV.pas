@@ -5251,7 +5251,24 @@ begin
       'Robots Disabled',
       'Contracts Completed',
       'Corpses Eaten',
-      'Mysterious Stranger Visits'
+      'Mysterious Stranger Visits',
+      'Doctor Bags Used',
+      'Challenges Completed',
+      'Miss Fortunate Occurrences',
+      'Disintegrations',
+      'Have Limbs Crippled',
+      'Speech Failures',
+      'Items Crafted',
+      'Weapon Modifications',
+      'Items Repaired',
+      'Total Things Killed',
+      'Dismembered Limbs',
+      'Caravan Games Won',
+      'Caravan Games Lost',
+      'Barter Amount Traded',
+      'Roulette Games Played',
+      'Blackjack Games Played',
+      'Slots Games Played'
     ]);
 
   wbAlignmentEnum :=
