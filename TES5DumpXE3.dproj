@@ -38,6 +38,7 @@
 		<Base>true</Base>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Base)'!=''">
+			<DCC_UnitSearchPath>Imaging;Imaging\ZLib;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 		<DCC_COMPARING_SIGNED_UNSIGNED>false</DCC_COMPARING_SIGNED_UNSIGNED>
 		<DCC_SYMBOL_DEPRECATED>false</DCC_SYMBOL_DEPRECATED>
 		<DCC_COMBINING_SIGNED_UNSIGNED>false</DCC_COMBINING_SIGNED_UNSIGNED>
@@ -95,9 +96,11 @@
 		</DelphiCompile>
 		<DCCReference Include="Zlibex.pas"/>
 		<DCCReference Include="wbBSA.pas"/>
+		<DCCReference Include="wbSort.pas"/>
 		<DCCReference Include="wbInterface.pas"/>
 		<DCCReference Include="wbImplementation.pas"/>
 		<DCCReference Include="wbLocalization.pas"/>
+		<DCCReference Include="wbHelpers.pas"/>
 		<DCCReference Include="wbDefinitionsFNV.pas"/>
 		<DCCReference Include="wbDefinitionsFO3.pas"/>
 		<DCCReference Include="wbDefinitionsTES3.pas"/>
