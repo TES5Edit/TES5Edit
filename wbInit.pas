@@ -45,6 +45,7 @@ var
 
 function wbFindNextValidCmdLineFileName(var startingIndex : integer; out aValue  : string; defaultPath : string = '') : Boolean;
 function wbFindNextValidCmdLinePlugin(var startingIndex : integer; out aValue  : string; defaultPath : string) : Boolean;
+function wbFindCmdLineParam(const aSwitch : string; out aValue : string): Boolean; overload;
 
 function wbLoadMOHookFile: Boolean;
 
@@ -417,6 +418,10 @@ begin
     wbToolName    := 'LODgen';
     wbEditAllowed := False;
     wbDontSave    := True;
+  end else if isMode('Script') then begin
+    wbToolMode    := tmScript;
+    wbToolName    := 'Script';
+    wbEditAllowed := False;
   end else if isMode('Translate') then begin
     wbToolMode    := tmTranslate;
     wbToolName    := 'Trans';
@@ -441,7 +446,7 @@ begin
     wbGameMode := gmFNV;
     wbAppName := 'FNV';
     wbGameName := 'FalloutNV';
-    if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters]) then begin
+    if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmScript]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
     end;
@@ -453,7 +458,7 @@ begin
     wbGameMode := gmFO3;
     wbAppName := 'FO3';
     wbGameName := 'Fallout3';
-    if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters]) then begin
+    if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmScript]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
     end;
@@ -477,7 +482,7 @@ begin
     wbGameMode := gmTES4;
     wbAppName := 'TES4';
     wbGameName := 'Oblivion';
-    if not (wbToolMode in [tmView, tmEdit, tmLODgen, tmESMify, tmESPify, tmSortAndCleanMasters]) then begin
+    if not (wbToolMode in [tmView, tmEdit, tmLODgen, tmESMify, tmESPify, tmSortAndCleanMasters, tmScript]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
     end;
@@ -489,7 +494,7 @@ begin
     wbGameMode := gmTES5;
     wbAppName := 'TES5';
     wbGameName := 'Skyrim';
-    if not (wbToolMode in [tmView, tmEdit, tmLODgen, tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters]) then begin
+    if not (wbToolMode in [tmView, tmEdit, tmLODgen, tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters, tmScript]) then begin
       ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
       Exit;
     end;
@@ -597,6 +602,10 @@ begin
     wbIKnowWhatImDoing := True;
     wbAllowInternalEdit := False;
     wbShowInternalEdit := False;
+    wbLoadBSAs := True;
+    wbBuildRefs := False;
+  end else if wbToolMode = tmScript then begin
+    wbIKnowWhatImDoing := True;
     wbLoadBSAs := True;
     wbBuildRefs := False;
   end else if wbToolMode in [tmMasterUpdate, tmESMify] then begin
