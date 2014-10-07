@@ -13399,8 +13399,8 @@ begin
     Inc(PByte(aBasePtr), SizePrefix);
 
   if ArrSize > 0 then
-    while not VarSize or ((Cardinal(aBasePtr) < Cardinal(aEndPtr)) or
-       (not Assigned(aBasePtr) and (ArrSize<High(Integer)))) do begin
+    while not VarSize or ((Cardinal(aBasePtr) < Cardinal(aEndPtr)) or (not Assigned(aBasePtr))) do begin
+
       if Result then
         t := ''
       else begin

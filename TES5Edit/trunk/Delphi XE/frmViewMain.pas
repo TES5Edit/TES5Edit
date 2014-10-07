@@ -523,6 +523,7 @@ type
     procedure GenerateLODTES4(const aWorldspace: IwbMainRecord);
     procedure GenerateLODTES5(const aWorldspace: IwbMainRecord);
     procedure DoGenerateLOD;
+    procedure DoRunScript;
 
     function CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback = nil): TDynElements;
 
@@ -2914,6 +2915,45 @@ begin
   finally
     GeneratorDone := True;
   end;
+end;
+
+procedure TfrmMain.DoRunScript;
+var
+  s: string;
+begin
+  if wbFindCmdLineParam('script', s) and (Length(s) > 0) then begin
+    // relative script name, use app's folder
+    if TDirectory.IsRelativePath(ExtractFilePath(s)) then
+      s := wbProgramPath + s;
+  end else
+    s := wbProgramPath + wbAppName + 'Script.pas';
+
+  if not FileExists(s) then
+    with TOpenDialog.Create(Self) do try
+      Title := 'Select a script to execute';
+      Filter := 'Script files (*.pas)|*.pas';
+      InitialDir := wbProgramPath;
+      if Execute then
+        s := FileName;
+    finally
+      Free;
+    end;
+
+  if FileExists(s) then begin
+    wbScriptsPath := ExtractFilePath(s);
+
+    with TStringList.Create do try
+      LoadFromFile(s);
+      PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] Script execution: running script ' + s);
+      //vstNav.SelectAll(False);
+      ApplyScript(Text);
+    finally
+      Free;
+      PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] Script execution: finished (you can close this application now)');
+    end;
+
+  end else
+    PostAddMessage('Could not open script (you can close this application now): ' + s);
 end;
 
 procedure TfrmMain.DoInit;
@@ -6067,8 +6107,10 @@ var
   bShowMessages               : Boolean;
 begin
   // prevent execution of new scripts if already executing
-  if Assigned(ScriptEngine) then
+  if Assigned(ScriptEngine) then begin
+    PostAddMessage('Script is already running');
     Exit;
+  end;
 
   if Trim(aScript) = '' then
     Exit;
@@ -6171,8 +6213,8 @@ begin
     InvalidateElementsTreeView(NoNodes);
     vstNav.Invalidate;
   finally
-    jvi.Free;
     ScriptEngine := nil;
+    jvi.Free;
     tmrCheckUnsaved.Enabled := bCheckUnsaved;
   end;
 end;
@@ -11734,7 +11776,10 @@ begin
   if GeneratorStarted then
     Exit;
   GeneratorStarted := True;
-  DoGenerateLOD;
+  if wbToolMode = tmLODGen then
+    DoGenerateLOD
+  else if wbToolMode = tmScript then
+    DoRunScript;
 end;
 
 procedure TfrmMain.tmrMessagesTimer(Sender: TObject);
@@ -14235,7 +14280,7 @@ begin
     Exit;
   end;
 
-  if (wbToolMode in [tmLODgen]) then begin
+  if (wbToolMode in [tmLODgen, tmScript]) then begin
     if not ForceTerminate then
       tmrGenerator.Enabled := True;
     Exit;
