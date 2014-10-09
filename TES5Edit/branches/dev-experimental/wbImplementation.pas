@@ -43,9 +43,9 @@ var
   ChaptersToSkip     : TStringList;
   SubRecordOrderList : TStringList;
 
-procedure wbMastersForFile(const aFileName: string; aMasters: TStrings; IsPrimary: Boolean);
+procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
-  IsTemporary: Boolean = False; IsPrimary: Boolean = False): IwbFile;
+  IsTemporary: Boolean = False): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer): IwbFile;
 procedure wbFileForceClosed;
 
@@ -648,6 +648,12 @@ type
 
     function GetIsLocalized: Boolean;
     procedure SetIsLocalized(Value: Boolean);
+
+    function GetIsTemporary: Boolean;
+    procedure SetIsTemporary(Value: Boolean);
+    function GetIsNotPlugin: Boolean;
+    function GetHasNoFormID: Boolean;
+    procedure SetHasNoFormID(Value: Boolean);
 
     {---IwbFileInternal---}
     procedure AddMainRecord(const aRecord: IwbMainRecord);
@@ -1712,14 +1718,14 @@ end;
 
 { TwbFile }
 
-procedure TwbFile.AddMaster(const aFileName: string; isTemporary: Boolean = False);
+procedure TwbFile.AddMaster(const aFileName: string; IsTemporary: Boolean);
 var
-  _File: IwbFile;
-  s : string;
-  t : string;
-  i : Integer;
+  _File : IwbFile;
+  s     : string;
+  t     : string;
+  i     : Integer;
 begin
-  if not wbrequireLoadorder and IsTemporary then begin
+  if not wbRequireLoadorder and IsTemporary then begin
     for i := 0 to Pred(GetMasterCount) do
       if SameText(ExtractFileName(aFileName), GetMaster(i).FileName) then
         Exit;
@@ -1733,10 +1739,15 @@ begin
     s := IncludeTrailingPathDelimiter(s);
 
   flProgress('Adding master "' + t + '"');
-  _File := wbFile(s + t, -1, '', isTemporary);
-  if wbRequireLoadOrder and (_File.LoadOrder < 0) then
-    raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.');
-  AddMaster(_File);
+  try
+    _File := wbFile(s + t, -1, '', IsTemporary);
+    if wbRequireLoadOrder and (_File.LoadOrder < 0) then
+      raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.');
+    AddMaster(_File);
+  except
+    if not (wbToolMode in [tmDump, tmExport]) then
+      raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.');
+  end;
 end;
 
 function TwbFile.Add(const aName: string; aSilent: Boolean): IwbElement;
@@ -2405,7 +2416,7 @@ begin
     CloseHandle(flFileHandle);
     flFileHandle := INVALID_HANDLE_VALUE;
   end;
-  if fsIsTemporary in flStates then
+  if GetIsTemporary then
     try
       DeleteFile(Self.flFileName);
     except
@@ -2578,6 +2589,11 @@ begin
   Result := nil;
 end;
 
+function TwbFile.GetHasNoFormID: Boolean;
+begin
+  Result := GetIsNotPlugin or (fsHasNoFormID in flStates);
+end;
+
 function TwbFile.GetHeader: IwbMainRecord;
 var
   SelfRef : IwbContainerElementRef;
@@ -2623,9 +2639,19 @@ begin
   Result := Header.IsLocalized;
 end;
 
+function TwbFile.GetIsNotPlugin: Boolean;
+begin
+  Result := not wbIsPlugin(flFileName);
+end;
+
 function TwbFile.GetIsRemoveable: Boolean;
 begin
   Result := False;
+end;
+
+function TwbFile.GetIsTemporary: Boolean;
+begin
+  Result := fsIsTemporary in flStates;
 end;
 
 function TwbFile.GetLoadOrder: Integer;
@@ -3236,6 +3262,14 @@ begin
   flLoadFinished := True;
 end;
 
+procedure TwbFile.SetHasNoFormID(Value: Boolean);
+begin
+  if Value or GetIsNotPlugin then
+    Include(flStates, fsHasNoFormID)
+  else
+    Exclude(flStates, fsHasNoFormID);
+end;
+
 procedure TwbFile.SetIsESM(Value: Boolean);
 var
   Header         : IwbMainRecord;
@@ -3264,6 +3298,14 @@ begin
 
     Header.IsLocalized := Value;
   end;
+end;
+
+procedure TwbFile.SetIsTemporary(Value: Boolean);
+begin
+  if Value then
+    Include(flStates, fsIsTemporary)
+  else
+    Exclude(flStates, fsIsTemporary);
 end;
 
 procedure TwbFile.SetLoadOrder(aValue: Integer);
@@ -13491,7 +13533,8 @@ begin
     Inc(PByte(aBasePtr), SizePrefix);
 
   if ArrSize > 0 then
-    while not VarSize or ((Cardinal(aBasePtr) < Cardinal(aEndPtr)) or (not Assigned(aBasePtr))) do begin
+    while not VarSize or ((Cardinal(aBasePtr) < Cardinal(aEndPtr)) or
+       (not Assigned(aBasePtr) and (ArrSize<High(Integer)))) do begin
 
       if Result then
         t := ''
@@ -14387,7 +14430,7 @@ begin
 end;
 
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
-  IsTemporary: Boolean = False; IsPrimary: Boolean = False): IwbFile;
+  IsTemporary: Boolean = False): IwbFile;
 var
   FileName: string;
   i: Integer;
@@ -14400,8 +14443,8 @@ begin
   if FilesMap.Find(FileName, i) then
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
   else begin
-    if isPrimary and (wbToolSource in [tsSaves]) then
-      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, isTemporary)
+    if not wbIsPlugin(FileName) then
+      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, IsTemporary)
     else
       Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, False, IsTemporary);
     SetLength(Files, Succ(Length(Files)));
@@ -14410,7 +14453,7 @@ begin
   end;
 end;
 
-procedure wbMastersForFile(const aFileName: string; aMasters: TStrings; IsPrimary: Boolean);
+procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 var
   FileName : string;
   i        : Integer;
@@ -14421,14 +14464,19 @@ begin
   else
     FileName := ExpandFileName(aFileName);
 
-  if FilesMap.Find(FileName, i) then
-    _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
-  else if IsPrimary and (wbToolSource in [tsSaves]) then
-    _File := TwbFileSource.Create(FileName, -1, '', True)
-  else
-    _File := TwbFile.Create(FileName, -1, '', True);
+  try
+    if FilesMap.Find(FileName, i) then
+      _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
+    else if not wbIsPlugin(FileName) then
+      _File := TwbFileSource.Create(FileName, -1, '', True)
+    else
+      _File := TwbFile.Create(FileName, -1, '', True);
 
-  _File.GetMasters(aMasters);
+    _File.GetMasters(aMasters);
+  except
+    // File neither found nor replaced, ignore if in xDump
+    if not (wbToolMode in [tmDump, tmExport]) then Raise;
+  end;
 end;
 
 function wbNewFile(const aFileName: string; aLoadOrder: Integer): IwbFile;

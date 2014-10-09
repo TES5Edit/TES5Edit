@@ -5804,7 +5804,7 @@ begin
             wbIntegerT('Wrd050', itU16),
             wbFloatT('Unk038.Flt000'),
             wbFloatT('Unk038.Flt004'),
-            wbRefIDT('Unk040'),
+            wbRefIDT('Unk040'),             // looks to be CombatTarget
             wbRefIDT('Unk044'),
             wbRefIDT('Unk048'),
             wbRefIDT('Form List'),        // 04C

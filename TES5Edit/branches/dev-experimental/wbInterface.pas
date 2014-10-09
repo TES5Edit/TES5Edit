@@ -24,10 +24,10 @@ uses
   Graphics;
 
 const
-  VersionString               = '3.0.33 EXPERIMENTAL';
-
-  clOrange                    = $004080FF;
-  wbFloatDigits               = 6;
+  VersionString  = '3.0.33 EXPERIMENTAL';
+  clOrange       = $004080FF;
+  wbFloatDigits  = 6;
+  wbHardcodedDat = '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
 
 type
   TwbProgressCallback = procedure(const aStatus: string);
@@ -742,10 +742,12 @@ type
     fsOnlyHeader,
     fsIsHardcoded,
     fsIsGameMaster,
-    fsIsTemporary
+    fsIsTemporary,
+    fsHasNoFormID
   );
 
   TwbFileStates = set of TwbFileState;
+  TwbPluginExtensions = TDynStrings;
 
   IwbFile = interface(IwbContainer)
     ['{38AA15A6-F652-45C7-B875-9CB502E5DA92}']
@@ -784,6 +786,12 @@ type
 
     function GetIsLocalized: Boolean;
     procedure SetIsLocalized(Value: Boolean);
+
+    function GetIsTemporary: Boolean;
+    procedure SetIsTemporary(Value: Boolean);
+    function GetIsNotPlugin: Boolean;
+    function GetHasNoFormID: Boolean;
+    procedure SetHasNoFormID(Value: Boolean);
 
     property FileName: string
       read GetFileName;
@@ -824,6 +832,15 @@ type
     property IsLocalized: Boolean
       read GetIsLocalized
       write SetIsLocalized;
+
+    property IsTemporary: Boolean   // Deleted on close
+      read GetIsTemporary
+      write SetIsTemporary;
+    property IsNotPlugin: Boolean   // Save or other file to display.
+      read GetIsNotPlugin;
+    property IsHasNoFormID: Boolean   // Like Morrowind for example. Also true for save/coSave.
+      read GetHasNoFormID
+      write SetHasNoFormID;
   end;
 
   IwbDataContainer = interface(IwbContainer)
@@ -1651,7 +1668,7 @@ type
     function GetName: String;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
-    procedure ResourceList(const aList: TStrings);
+    procedure ResourceList(const aList: TStrings; const aFolder: string = '');
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     property Name: string
@@ -1685,7 +1702,8 @@ type
     function ResolveHash(const aHash: Int64): TDynStrings;
     function ContainerExists(aContainerName: string): Boolean;
     procedure ContainerList(const aList: TStrings);
-    procedure ContainerResourceList(const aContainerName: string; const aList: TStrings);
+    procedure ContainerResourceList(const aContainerName: string; const aList: TStrings;
+      const aFolder: string = '');
     function ResourceExists(const aFileName: string): Boolean;
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
     procedure ResourceCopy(const aContainerName, aFileName, aPathOut: string);
@@ -1700,6 +1718,7 @@ var
     etSubRecordArray,
     etArray
   ];
+  wbPluginExtensions : TwbPluginExtensions;
 
 function wbRecord(const aSignature      : TwbSignature;
                   const aName           : string;
@@ -2931,6 +2950,8 @@ function wbFormaterUnion(aDecider : TwbIntegerDefFormaterUnionDecider;
                          aMembers : array of IwbIntegerDefFormater)
                                   : IwbIntegerDefFormaterUnion;
 
+function wbIsPlugin(aFileName: string): Boolean;
+
 type
   PwbRecordDefEntry = ^TwbRecordDefEntry;
   TwbRecordDefEntry = record
@@ -2989,8 +3010,8 @@ var
 
 type
   TwbGameMode   = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5);
-  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmTranslate,
-                    tmESMify, tmESPify, tmSortAndCleanMasters);
+  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
+                    tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters);
   TwbToolSource = (tsPlugins, tsSaves);
   TwbSetOfMode  = set of TwbToolMode;
 
@@ -3004,7 +3025,7 @@ var
   wbSourceName  : String;
   wbLanguage    : string;
   wbAutoModes   : TwbSetOfMode = [ tmMasterUpdate, tmMasterRestore, tmLODgen, // Tool modes that run without user interaction until final status
-                    tmESMify, tmESPify, tmSortAndCleanMasters ];
+                    tmScript, tmESMify, tmESPify, tmSortAndCleanMasters ];
   wbPluginModes : TwbSetOfMode = [ tmESMify, tmESPify, tmSortAndCleanMasters ];  // Auto modes that require a specific plugin to be povided.
 
 function wbDefToName(const aDef: IwbDef): string;
@@ -14184,6 +14205,19 @@ begin
   Result := '';
 end;
 
+function wbIsPlugin(aFileName: string): Boolean;
+var
+  i: Integer;
+begin
+  Result := Pos(UpperCase(wbHardcodedDat), UpperCase(aFileName))<>0;
+  if not Result then
+    for i := 0 to Pred(Length(wbPluginExtensions)) do
+      if Pos(UpperCase(wbPluginExtensions[i]), UpperCase(ExtractFileExt(aFileName)))=1 then begin
+        Result := True;
+        Exit;
+      end;
+end;
+
 initialization
   TwoPi := 2 * OnePi;
 
@@ -14198,6 +14232,10 @@ initialization
   wbDoNotBuildRefsFor.Duplicates := dupIgnore;
 
   wbProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
+
+  SetLength(wbPluginExtensions, 2);
+  wbPluginExtensions[0] := '.ESP';
+  wbPluginExtensions[1] := '.ESM';
 finalization
   FreeAndNil(wbIgnoreRecords);
   FreeAndNil(wbDoNotBuildRefsFor);
