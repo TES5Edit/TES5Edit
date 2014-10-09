@@ -1078,7 +1078,7 @@ begin
 
     if wbLoadBSAs then begin
       Masters := TStringList.Create;
-      wbMastersForFile(s, Masters, wbToolSource in [tsSaves]);
+      wbMastersForFile(s, Masters);
       Masters.Add(ExtractFileName(s));
 
       if wbLoadAllBSAs then begin
@@ -1152,7 +1152,7 @@ begin
     end;
 
     if wbToolMode in [tmDump] then
-      _File := wbFile(s, -1, '', False, True);  // Only the first file can be something other than a plugin
+      _File := wbFile(s);
 
     ReportProgress('Finished loading record. Starting Dump.');
 

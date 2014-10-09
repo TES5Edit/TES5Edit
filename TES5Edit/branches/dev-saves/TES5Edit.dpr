@@ -25,9 +25,9 @@ uses
   VirtualTrees in 'VirtualTrees.pas',
   VTEditors in 'VTEditors.pas',
   VirtualEditTree in 'VirtualEditTree.pas',
-  {$IFNDEF LiteVersion}
+{$IFNDEF LiteVersion}
   cxVTEditors,
-  {$ENDIF}
+{$ENDIF}
   wbInit in 'wbInit.pas',
   wbBSA in 'wbBSA.pas',
   wbHelpers in 'wbHelpers.pas',
@@ -36,9 +36,9 @@ uses
   wbImplementation in 'wbImplementation.pas',
   wbScriptAdapterMisc in 'wbScriptAdapterMisc.pas',
   wbNifScanner in 'wbNifScanner.pas',
-  wbDDS in 'wbDDS.pas',
   wbStreams in 'wbStreams.pas',
   wbSort in 'wbSort.pas',
+  wbLOD in 'wbLOD.pas',
   wbLocalization in 'wbLocalization.pas',
   frmViewMain in 'frmViewMain.pas' {frmMain},
   FilterOptionsFrm in 'FilterOptionsFrm.pas' {frmFilterOptions},
