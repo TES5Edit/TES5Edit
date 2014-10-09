@@ -12993,9 +12993,9 @@ procedure TfrmMain.vstNavGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: string);
 var
-  Element                     : IwbElement;
-  MainRecord                  : IwbMainRecord;
-  GroupRecord                 : IwbGroupRecord;
+  Element      : IwbElement;
+  MainRecord   : IwbMainRecord;
+  GroupRecord  : IwbGroupRecord;
 begin
   CellText := '';
 
@@ -14472,29 +14472,33 @@ begin
     frmMain.LoaderStarted := True;
     wbProgressCallback := LoaderProgress;
     try
-      if not Assigned(wbContainerHandler) then begin
-        wbContainerHandler := wbCreateContainerHandler;
+      if ltLoadOrderOffset + ltLoadList.Count >= 255 then begin
+        LoaderProgress('Too many plugins selected. Adding '+IntToStr(ltLoadList.Count)+' would exceed the maximum index of 254');
+        wbLoaderError := True;
+      end else begin
+        if not Assigned(wbContainerHandler) then begin
+          wbContainerHandler := wbCreateContainerHandler;
 
-        n := TStringList.Create;
-        try
-          m := TStringList.Create;
+          n := TStringList.Create;
           try
-            if FindBSAs(wbTheGameIniFileName, ltDataPath, n, m)>0 then begin
-              for i := 0 to Pred(n.Count) do
-                if wbLoadBSAs then begin
-                  LoaderProgress('[' + n[i] + '] Loading Resources.');
-                  wbContainerHandler.AddBSA(MakeDataFileName(n[i], ltDataPath));
-                end else
-                  LoaderProgress('[' + n[i] + '] Skipped.');
-              for i := 0 to Pred(m.Count) do
-                LoaderProgress('Warning: <Can''t find ' + m[i] + '>')
+            m := TStringList.Create;
+            try
+              if FindBSAs(wbTheGameIniFileName, ltDataPath, n, m)>0 then begin
+                for i := 0 to Pred(n.Count) do
+                  if wbLoadBSAs then begin
+                    LoaderProgress('[' + n[i] + '] Loading Resources.');
+                    wbContainerHandler.AddBSA(MakeDataFileName(n[i], ltDataPath));
+                  end else
+                    LoaderProgress('[' + n[i] + '] Skipped.');
+                for i := 0 to Pred(m.Count) do
+                  LoaderProgress('Warning: <Can''t find ' + m[i] + '>')
+              end;
+            finally
+              FreeAndNil(m);
             end;
           finally
-            FreeAndNil(m);
+            FreeAndNil(n);
           end;
-        finally
-          FreeAndNil(n);
-        end;
 
 //        with TMemIniFile.Create(wbTheGameIniFileName) do try
 //          with TStringList.Create do try
@@ -14532,30 +14536,30 @@ begin
 //          Free;
 //        end;
 
-        for i := 0 to Pred(ltLoadList.Count) do begin
-          n := TStringList.Create;
-          try
-            m := TStringList.Create;
+          for i := 0 to Pred(ltLoadList.Count) do begin
+            n := TStringList.Create;
             try
-              // All games prior to Skyrim load BSA files with partial matching, Skyrim requires exact names match and
-              //   can use a private ini to specify the bsa to use.
-              if HasBSAs(ChangeFileExt(ltLoadList[i], ''), ltDataPath,
-                  wbGameMode in [gmTES5], wbGameMode in [gmTES5], n, m)>0 then begin
-                    for j := 0 to Pred(n.Count) do
-                      if wbLoadBSAs then begin
-                        LoaderProgress('[' + n[j] + '] Loading Resources.');
-                        wbContainerHandler.AddBSA(MakeDataFileName(n[j], ltDataPath));
-                      end else
-                        LoaderProgress('[' + n[j] + '] Skipped.');
-                    for j := 0 to Pred(m.Count) do
-                      LoaderProgress('Warning: <Can''t find ' + m[j] + '>');
+              m := TStringList.Create;
+              try
+                // All games prior to Skyrim load BSA files with partial matching, Skyrim requires exact names match and
+                //   can use a private ini to specify the bsa to use.
+                if HasBSAs(ChangeFileExt(ltLoadList[i], ''), ltDataPath,
+                    wbGameMode in [gmTES5], wbGameMode in [gmTES5], n, m)>0 then begin
+                      for j := 0 to Pred(n.Count) do
+                        if wbLoadBSAs then begin
+                          LoaderProgress('[' + n[j] + '] Loading Resources.');
+                          wbContainerHandler.AddBSA(MakeDataFileName(n[j], ltDataPath));
+                        end else
+                          LoaderProgress('[' + n[j] + '] Skipped.');
+                      for j := 0 to Pred(m.Count) do
+                        LoaderProgress('Warning: <Can''t find ' + m[j] + '>');
+                end;
+              finally
+                FreeAndNil(m);
               end;
             finally
-              FreeAndNil(m);
+              FreeAndNil(n);
             end;
-          finally
-            FreeAndNil(n);
-          end;
 
 //          s := ChangeFileExt(ltLoadList[i], '');
 //          // all games prior to Skyrim load BSA files with partial matching, Skyrim requires exact names match
@@ -14574,49 +14578,50 @@ begin
 //          finally
 //            FindClose(F);
 //          end;
+          end;
+          LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');
+          wbContainerHandler.AddFolder(ltDataPath);
         end;
-        LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');
-        wbContainerHandler.AddFolder(ltDataPath);
-      end;
 
-      for i := 0 to Pred(ltLoadList.Count) do begin
-        LoaderProgress('loading "' + ltLoadList[i] + '"...');
-        _File := wbFile(ltDataPath + ltLoadList[i], i + ltLoadOrderOffset, ltMaster, ltTemporary);
-        if wbEditAllowed and not wbTranslationMode then begin
-          SetLength(ltFiles, Succ(Length(ltFiles)));
-          ltFiles[High(ltFiles)] := _File;
-        end;
-        frmMain.SendAddFile(_File);
+        for i := 0 to Pred(ltLoadList.Count) do begin
+          LoaderProgress('loading "' + ltLoadList[i] + '"...');
+          _File := wbFile(ltDataPath + ltLoadList[i], i + ltLoadOrderOffset, ltMaster, ltTemporary);
+          if wbEditAllowed and not wbTranslationMode then begin
+            SetLength(ltFiles, Succ(Length(ltFiles)));
+            ltFiles[High(ltFiles)] := _File;
+          end;
+          frmMain.SendAddFile(_File);
 
-        if frmMain.ForceTerminate then
-          Exit;
+          if frmMain.ForceTerminate then
+            Exit;
 
-        if (i = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameName + '.esm') then begin
-          t := wbGameName + '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
-          s := wbProgramPath + t;
-          if FileExists(s) then begin
-            LoaderProgress('loading "' + t + '"...');
-            _File := wbFile(s, 0, ltDataPath + ltLoadList[i]);
-            frmMain.SendAddFile(_File);
-            if frmMain.ForceTerminate then
-              Exit;
-
-            t := wbGameName + '.Hardcoded.esp';
+          if (i = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameName + '.esm') then begin
+            t := wbGameName + wbHardcodedDat;
             s := wbProgramPath + t;
-            if FileExists(s) then
-              DeleteFile(s);
+            if FileExists(s) then begin
+              LoaderProgress('loading "' + t + '"...');
+              _File := wbFile(s, 0, ltDataPath + ltLoadList[i]);
+              frmMain.SendAddFile(_File);
+              if frmMain.ForceTerminate then
+                Exit;
+
+              t := wbGameName + '.Hardcoded.esp';
+              s := wbProgramPath + t;
+              if FileExists(s) then
+                DeleteFile(s);
+            end;
           end;
         end;
-      end;
 
-      if wbBuildRefs then
-        for i := Low(ltFiles) to High(ltFiles) do
-          if not SameText(ltFiles[i].FileName, wbGameName + '.esm') and not wbDoNotBuildRefsFor.Find(ltFiles[i].FileName, dummy) then begin
-            LoaderProgress('[' + ltFiles[i].FileName + '] Building reference info.');
-            ltFiles[i].BuildRef;
-            if frmMain.ForceTerminate then
-              Exit;
-          end;
+        if wbBuildRefs then
+          for i := Low(ltFiles) to High(ltFiles) do
+            if not SameText(ltFiles[i].FileName, wbGameName + '.esm') and not wbDoNotBuildRefsFor.Find(ltFiles[i].FileName, dummy) then begin
+              LoaderProgress('[' + ltFiles[i].FileName + '] Building reference info.');
+              ltFiles[i].BuildRef;
+              if frmMain.ForceTerminate then
+                Exit;
+            end;
+      end;
 
     except
       on E: Exception do begin
