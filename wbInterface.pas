@@ -2972,7 +2972,7 @@ var
   wbSourceName  : String;
   wbLanguage    : string;
   wbAutoModes   : TwbSetOfMode = [ tmMasterUpdate, tmMasterRestore, tmLODgen, // Tool modes that run without user interaction until final status
-                    tmScript, tmESMify, tmESPify, tmSortAndCleanMasters ];
+                    tmESMify, tmESPify, tmSortAndCleanMasters ];
   wbPluginModes : TwbSetOfMode = [ tmESMify, tmESPify, tmSortAndCleanMasters ];  // Auto modes that require a specific plugin to be povided.
 
 function wbDefToName(const aDef: IwbDef): string;

@@ -975,7 +975,6 @@ end;
 
 procedure TfrmMain.acScriptExecute(Sender: TObject);
 var
-  slScript: TStringList;
   i: integer;
   s: string;
 begin
@@ -986,12 +985,11 @@ begin
   if i >= ScriptHotkeys.Count then
     Exit;
 
-  slScript := TStringList.Create;
-  try
-    slScript.LoadFromFile(ScriptHotkeys[i]);
-    s := slScript.Text;
+  with TStringList.Create do try
+    LoadFromFile(ScriptHotkeys[i]);
+    s := Text;
   finally
-    slScript.Free;
+    Free;
   end;
 
   ApplyScript(s);
@@ -2918,12 +2916,29 @@ begin
 end;
 
 procedure TfrmMain.DoRunScript;
+
+  procedure SelectRootNodes(AVirtualTree: TBaseVirtualTree);
+  var
+    Node: PVirtualNode;
+  begin
+    AVirtualTree.BeginUpdate;
+    try
+      Node := AVirtualTree.GetFirst;
+      while Assigned(Node) do begin
+        AVirtualTree.Selected[Node] := True;
+        Node := AVirtualTree.GetNextSibling(Node);
+      end;
+    finally
+      AVirtualTree.EndUpdate;
+    end;
+  end;
+
 var
   s: string;
 begin
   if wbFindCmdLineParam('script', s) and (Length(s) > 0) then begin
     // relative script name, use app's folder
-    if TDirectory.IsRelativePath(ExtractFilePath(s)) then
+    if not TPath.IsPathRooted(s) then
       s := wbProgramPath + s;
   end else
     s := wbProgramPath + wbAppName + 'Script.pas';
@@ -2945,7 +2960,7 @@ begin
     with TStringList.Create do try
       LoadFromFile(s);
       PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] Script execution: running script ' + s);
-      //vstNav.SelectAll(False);
+      SelectRootNodes(vstNav);
       ApplyScript(Text);
     finally
       Free;
@@ -4340,7 +4355,8 @@ begin
   LastUpdate := GetTickCount;
   Font := Screen.IconFont;
   Caption := Application.Title;
-  if (wbToolMode in wbAutoModes) then begin
+  // Script mode is semiautomated - needs user interaction but no UI
+  if (wbToolMode in wbAutoModes) or (wbToolMode in [tmScript]) then begin
     mmoMessages.Parent := Self;
     pnlNav.Visible := False;
     pnlTop.Visible := False;
@@ -6137,6 +6153,8 @@ begin
     Selection := vstNav.GetSortedSelection(True);
     vstNav.BeginUpdate;
     try
+
+    try
       StartTick := GetTickCount;
       wbStartTime := Now;
 
@@ -6201,6 +6219,13 @@ begin
           Exit;
         end;
       end;
+
+    except
+      on E: Exception do begin
+        PostAddMessage(E.Message);
+        raise;
+      end;
+    end;
 
     finally
       vstNav.EndUpdate;
@@ -6283,7 +6308,6 @@ begin
     FindClose(F);
     FreeAndNil(slScript);
   end;
-
 end;
 
 procedure TfrmMain.mniViewHideNoConflictClick(Sender: TObject);
