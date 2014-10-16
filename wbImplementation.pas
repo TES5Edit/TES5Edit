@@ -9273,8 +9273,10 @@ end;
 
 constructor TwbSubRecord.Create(const aContainer: IwbContainer; const aSubRecordDef: IwbSubRecordDef);
 var
-  BasePtr : Pointer;
-  EndPtr  : Pointer;
+  BasePtr            : Pointer;
+  EndPtr             : Pointer;
+  SaveAsCreatedEmpty : Boolean;
+
 begin
   cntStates := [];
   srDef := aSubRecordDef;
@@ -9283,10 +9285,14 @@ begin
 
   DoInit;
 
+  SaveAsCreatedEmpty := (csAsCreatedEmpty in cntStates);
   BasePtr := nil;
   EndPtr := nil;
   RequestStorageChange(BasePtr, EndPtr, GetDataSize);
   SetToDefault;
+
+  if SaveAsCreatedEmpty then
+    Include(cntStates, csAsCreatedEmpty);
 end;
 
 destructor TwbSubRecord.Destroy;
