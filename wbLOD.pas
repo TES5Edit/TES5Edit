@@ -547,8 +547,8 @@ begin
   with TwbBinPacker.Create do try
     Width := Min(512, MaxAtlasSize);
     Height := Min(512, MaxAtlasSize);
-    PaddingX := 0;
-    PaddingY := 0;
+    PaddingX := 2;
+    PaddingY := 2;
     // increase atlas size until all blocks fit
     while not Fit(Blocks) do begin
       if Width <= Height then
