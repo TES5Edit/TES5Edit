@@ -1,10 +1,10 @@
 REM @ECHO OFF
 DEL /S *.dcu
 DEL /S *.bak
-DEL *.res
+DEL /S *.res
 DEL *.drc
 DEL *.cfg
-DEL *.ident*
+DEL /S *.ident*
 DEL *.local
 DEL Resource.Res
 RMDIR /S /Q __history
