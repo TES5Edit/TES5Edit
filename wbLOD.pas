@@ -555,7 +555,7 @@ begin
         Width := Width * 2
       else
         Height := Height * 2;
-      if (Width > MaxAtlasSize) or (Width > MaxAtlasSize) then
+      if (Width > MaxAtlasSize) or (Height > MaxAtlasSize) then
         raise Exception.Create('Can''t fit billboards on atlas, not enough space');
     end;
     NewImage(Width, Height, ifDefault, fAtlas);
