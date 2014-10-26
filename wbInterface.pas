@@ -14033,10 +14033,12 @@ initialization
 
   wbProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
 
-  SetLength(wbPluginExtensions, 2);
+  SetLength(wbPluginExtensions, 3);
   wbPluginExtensions[0] := '.ESP';
   wbPluginExtensions[1] := '.ESM';
-finalization
+  wbPluginExtensions[2] := '.GHOST';
+
+  finalization
   FreeAndNil(wbIgnoreRecords);
   FreeAndNil(wbDoNotBuildRefsFor);
   FreeAndNil(wbGroupOrder);
