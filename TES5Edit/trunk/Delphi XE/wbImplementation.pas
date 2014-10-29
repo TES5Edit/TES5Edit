@@ -1706,9 +1706,9 @@ end;
 
 procedure TwbFile.AddMaster(const aFileName: string; IsTemporary: Boolean);
 var
-  _File: IwbFile;
-  s : string;
-  t : string;
+  _File : IwbFile;
+  s     : string;
+  t     : string;
 begin
   s := ExtractFilePath(aFileName);
   t := ExtractFileName(aFileName);
@@ -2212,7 +2212,7 @@ begin
     Include(flStates, fsIsTemporary);
   if aCompareTo <> '' then begin
     Include(flStates, fsIsCompareLoad);
-    if SameText(ExtractFileName(aFileName), wbGameName + '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat') then
+    if SameText(ExtractFileName(aFileName), wbGameName + wbHardcodedDat) then
       Include(flStates, fsIsHardcoded);
   end else if SameText(ExtractFileName(aFileName), wbGameName + '.esm') then
     Include(flStates, fsIsGameMaster);
@@ -13884,32 +13884,27 @@ begin
 
   ValueDef := UnionDef.Decide(aBasePtr, aEndPtr, aContainer);
 
-  case ValueDef.DefType of
-    dtArray: begin
-      if wbSortSubRecords and Supports(ValueDef, IwbArrayDef, ArrayDef) and ArrayDef.Sorted then
-        Result := ufSortedArray
-      else
-        Result := ufArray;
-      Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-    end;
-    dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-    dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-    dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-  else
-    Element := nil; // >>> so that simple union behave as they did <<< TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-    if ValueDoInit(aValueDef, aContainer, aBasePtr, aEndPtr, aContainer) then Result := ufFlags;
-  end;
-
-  if Assigned(Element) then
-    {if wbHideUnused and not wbEditAllowed and (Element.GetName = 'Unused') then begin
-      with aContainer do begin
-        Assert((LastElement as IwbElementInternal) = Element);
-        RemoveElement(Pred(ElementCount));
+  if Assigned(ValueDef) then // I had one case. Most likely due to an error in wbXXXXDefinitions
+    case ValueDef.DefType of
+      dtArray: begin
+        if wbSortSubRecords and Supports(ValueDef, IwbArrayDef, ArrayDef) and ArrayDef.Sorted then
+          Result := ufSortedArray
+        else
+          Result := ufArray;
+        Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
       end;
-    end else} begin
-      Element.SetSortOrder(0);
-      Element.SetMemoryOrder(0);
+      dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+    else
+      Element := nil; // >>> so that simple union behave as they did <<< TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      if ValueDoInit(aValueDef, aContainer, aBasePtr, aEndPtr, aContainer) then Result := ufFlags;
     end;
+
+  if Assigned(Element) then begin
+    Element.SetSortOrder(0);
+    Element.SetMemoryOrder(0);
+  end;
 
   UnionDef.AfterLoad(aContainer);
 end;
@@ -14319,7 +14314,7 @@ begin
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
   else begin
     if not wbIsPlugin(FileName) then
-      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, IsTemporary)
+      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, False, IsTemporary)
     else
       Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, False, IsTemporary);
     SetLength(Files, Succ(Length(Files)));
