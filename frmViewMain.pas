@@ -1039,6 +1039,10 @@ begin
     if Length(Files) > 0 then
       LoadOrder := Succ(Files[High(Files)].LoadOrder);
 
+    if LoadOrder>254 then begin
+      ShowMessage('Maximum plugins count already reached. Adding 1 more would exceed the maximum index of 254');
+      Exit;
+    end;
     aFile := wbNewFile(wbDataPath + s, LoadOrder);
     SetLength(Files, Succ(Length(Files)));
     Files[High(Files)] := aFile;
@@ -12863,14 +12867,14 @@ end;
 procedure TfrmMain.vstNavCompareNodes(Sender: TBaseVirtualTree; Node1,
   Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
 var
-  Element1                    : IwbElement;
-  Element2                    : IwbElement;
-  SortElement1                : IwbElement;
-  SortElement2                : IwbElement;
-  GroupRecord1                : IwbGroupRecord;
-  GroupRecord2                : IwbGroupRecord;
-  MainRecord1                 : IwbMainRecord;
-  MainRecord2                 : IwbMainRecord;
+  Element1     : IwbElement;
+  Element2     : IwbElement;
+  SortElement1 : IwbElement;
+  SortElement2 : IwbElement;
+  GroupRecord1 : IwbGroupRecord;
+  GroupRecord2 : IwbGroupRecord;
+  MainRecord1  : IwbMainRecord;
+  MainRecord2  : IwbMainRecord;
 begin
   Element1 := PNavNodeData(Sender.GetNodeData(Node1)).Element;
   Element2 := PNavNodeData(Sender.GetNodeData(Node2)).Element;
@@ -13161,10 +13165,10 @@ end;
 procedure TfrmMain.vstNavInitNode(Sender: TBaseVirtualTree; ParentNode,
   Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
 var
-  NodeData                    : PNavNodeData;
-  Element                     : IwbElement;
-  Container                   : IwbContainerElementRef;
-  GroupRecord                 : IwbGroupRecord;
+  NodeData    : PNavNodeData;
+  Element     : IwbElement;
+  Container   : IwbContainerElementRef;
+  GroupRecord : IwbGroupRecord;
 begin
   GroupRecord := nil;
   NodeData := PNavNodeData(Sender.GetNodeData(Node));
@@ -14502,7 +14506,7 @@ begin
     wbProgressCallback := LoaderProgress;
     try
       if ltLoadOrderOffset + ltLoadList.Count >= 255 then begin
-        LoaderProgress('Too many plugins selected. Adding '+IntToStr(ltLoadList.Count)+' would exceed the maximum index of 254');
+        LoaderProgress('Too many plugins selected. Adding '+IntToStr(ltLoadList.Count)+' files would exceed the maximum index of 254');
         wbLoaderError := True;
       end else begin
         if not Assigned(wbContainerHandler) then begin
