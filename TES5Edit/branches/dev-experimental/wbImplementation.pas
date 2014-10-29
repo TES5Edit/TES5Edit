@@ -391,7 +391,8 @@ type
     class function NewInstance: TObject; override;
     procedure FreeInstance; override;
 
-    function GetTreeLeaf: Boolean;              // Is the element expected to be a "main record" in the tree navigator
+    function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
+    function GetTreeLeaf: Boolean;              // Is the element included in a "leaf" expected to be displayed in the view pane
     function GetTreeBranch: Boolean;            // Is the element expected to show in the tree navigator
   end;
 
@@ -1927,6 +1928,9 @@ begin
   if not IsElementEditable(nil) then
     raise Exception.Create('File "'+GetFileName+'" is not editable');
 
+  if GetIsNotPlugin then
+    Exit;
+
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbContainerElementRef, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
@@ -2233,7 +2237,7 @@ begin
     Include(flStates, fsIsTemporary);
   if aCompareTo <> '' then begin
     Include(flStates, fsIsCompareLoad);
-    if SameText(ExtractFileName(aFileName), wbGameName + '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat') then
+    if SameText(ExtractFileName(aFileName), wbGameName + wbHardcodedDat) then
       Include(flStates, fsIsHardcoded);
   end else if SameText(ExtractFileName(aFileName), wbGameName + '.esm') then
     Include(flStates, fsIsGameMaster);
@@ -2623,6 +2627,11 @@ function TwbFile.GetIsESM: Boolean;
 var
   Header         : IwbMainRecord;
 begin
+  if GetIsNotPlugin then begin
+    Result := False;
+    Exit;
+  end;
+
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
@@ -2633,6 +2642,11 @@ function TwbFile.GetIsLocalized: Boolean;
 var
   Header         : IwbMainRecord;
 begin
+  if GetIsNotPlugin then begin
+    Result := False;
+    Exit;
+  end;
+
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
@@ -3274,6 +3288,10 @@ procedure TwbFile.SetIsESM(Value: Boolean);
 var
   Header         : IwbMainRecord;
 begin
+  if GetIsNotPlugin then begin
+    Exit;
+  end;
+
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
@@ -3289,6 +3307,10 @@ procedure TwbFile.SetIsLocalized(Value: Boolean);
 var
   Header         : IwbMainRecord;
 begin
+  if GetIsNotPlugin then begin
+    Exit;
+  end;
+
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
@@ -3369,6 +3391,9 @@ var
 begin
   if not IsElementEditable(nil) then
     raise Exception.Create('File "'+GetFileName+'" is not editable');
+  if GetIsNotPlugin then
+    Exit;
+
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbContainerElementRef, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
@@ -9337,8 +9362,10 @@ end;
 
 constructor TwbSubRecord.Create(const aContainer: IwbContainer; const aSubRecordDef: IwbSubRecordDef);
 var
-  BasePtr : Pointer;
-  EndPtr  : Pointer;
+  BasePtr            : Pointer;
+  EndPtr             : Pointer;
+  SaveAsCreatedEmpty : Boolean;
+
 begin
   cntStates := [];
   srDef := aSubRecordDef;
@@ -9347,10 +9374,14 @@ begin
 
   DoInit;
 
+  SaveAsCreatedEmpty := (csAsCreatedEmpty in cntStates);
   BasePtr := nil;
   EndPtr := nil;
   RequestStorageChange(BasePtr, EndPtr, GetDataSize);
   SetToDefault;
+
+  if SaveAsCreatedEmpty then
+    Include(cntStates, csAsCreatedEmpty);
 end;
 
 destructor TwbSubRecord.Destroy;
@@ -12271,6 +12302,16 @@ begin
     Result := False;
 end;
 
+function TwbElement.GetTreeHead: Boolean;
+var
+  NamedDef: IwbNamedDef;
+begin
+  if Supports(GetDef, IwbNamedDef, NamedDef) then
+    Result := NamedDef.TreeHead
+  else
+    Result := False;
+end;
+
 function TwbElement.GetTreeLeaf: Boolean;
 var
   NamedDef: IwbNamedDef;
@@ -13533,9 +13574,7 @@ begin
     Inc(PByte(aBasePtr), SizePrefix);
 
   if ArrSize > 0 then
-    while not VarSize or ((Cardinal(aBasePtr) < Cardinal(aEndPtr)) or
-       (not Assigned(aBasePtr) and (ArrSize<High(Integer)))) do begin
-
+    while not VarSize or ((Cardinal(aBasePtr) < Cardinal(aEndPtr)) or (not Assigned(aBasePtr))) do begin
       if Result then
         t := ''
       else begin
@@ -14003,32 +14042,27 @@ begin
 
   ValueDef := UnionDef.Decide(aBasePtr, aEndPtr, aContainer);
 
-  case ValueDef.DefType of
-    dtArray: begin
-      if wbSortSubRecords and Supports(ValueDef, IwbArrayDef, ArrayDef) and ArrayDef.Sorted then
-        Result := ufSortedArray
-      else
-        Result := ufArray;
-      Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-    end;
-    dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-    dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-    dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-  else
-    Element := nil; // >>> so that simple union behave as they did <<< TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-    if ValueDoInit(aValueDef, aContainer, aBasePtr, aEndPtr, aContainer) then Result := ufFlags;
-  end;
-
-  if Assigned(Element) then
-    {if wbHideUnused and not wbEditAllowed and (Element.GetName = 'Unused') then begin
-      with aContainer do begin
-        Assert((LastElement as IwbElementInternal) = Element);
-        RemoveElement(Pred(ElementCount));
+  if Assigned(ValueDef) then // I had one case. Most likely due to an error in wbXXXXDefinitions
+    case ValueDef.DefType of
+      dtArray: begin
+        if wbSortSubRecords and Supports(ValueDef, IwbArrayDef, ArrayDef) and ArrayDef.Sorted then
+          Result := ufSortedArray
+        else
+          Result := ufArray;
+        Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
       end;
-    end else} begin
-      Element.SetSortOrder(0);
-      Element.SetMemoryOrder(0);
+      dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+    else
+      Element := nil; // >>> so that simple union behave as they did <<< TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      if ValueDoInit(aValueDef, aContainer, aBasePtr, aEndPtr, aContainer) then Result := ufFlags;
     end;
+
+  if Assigned(Element) then begin
+    Element.SetSortOrder(0);
+    Element.SetMemoryOrder(0);
+  end;
 
   UnionDef.AfterLoad(aContainer);
 end;
@@ -14444,7 +14478,7 @@ begin
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
   else begin
     if not wbIsPlugin(FileName) then
-      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, IsTemporary)
+      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, False, IsTemporary)
     else
       Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, False, IsTemporary);
     SetLength(Files, Succ(Length(Files)));

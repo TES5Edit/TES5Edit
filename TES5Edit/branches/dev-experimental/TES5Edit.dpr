@@ -59,7 +59,9 @@ uses
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
   wbDefinitionsTES4Saves in 'wbDefinitionsTES4Saves.pas',
   wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
-  wbDefinitionsTES5Saves in 'wbDefinitionsTES5Saves.pas';
+  wbDefinitionsTES5Saves in 'wbDefinitionsTES5Saves.pas',
+  wbSaveInterface in 'wbSaveInterface.pas',
+  Zlibex in 'Zlibex.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

@@ -58,7 +58,7 @@
 		</PropertyGroup>
 		<ItemGroup>
 			<DelphiCompile Include="TES5Dump.dpr">
-				<MainSource>MainSource</MainSource>
+			<MainSource>MainSource</MainSource>
 			</DelphiCompile>
 			<DCCReference Include="Zlibex.pas"/>
 			<DCCReference Include="wbBSA.pas"/>
@@ -117,13 +117,13 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">3.0.33.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename"/>
-						<VersionInfoKeys Name="ProductName"/>
-						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductName">xDump from ElminsterAU</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">3.0.33</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Excluded_Packages>

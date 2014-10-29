@@ -1832,6 +1832,10 @@ var
   wbInitialDataType06        : IwbStructDef;
   wbInitialDataType          : IwbUnionDef;
   wbChangeFlags010Flags      : IwbFlagsDef;
+  wbChunk                    : IwbStructDef;
+  wbFOSEChunks               : IwbArrayDef;
+  wbFOSEPlugin               : IwbStructDef;
+  wbFOSEPlugins              : IwbArrayDef;
 
   wbChangeFlags000        : IwbIntegerDef;
   wbChangeFlags001        : IwbIntegerDef;
@@ -6215,60 +6219,70 @@ begin
     ,wbInteger('Plugins count', itU32)
   ]);
 
+  wbChunk := wbStruct('Chunk', [
+    wbInteger('Type', itU32, wbStr4),
+    wbInteger('Version', itU32),
+    wbInteger('Length', itU32),
+    wbUnion('Data', FOSEChaptersDecider, [
+      wbNull,
+      wbArray('Modules', wbLenString('PluginName', 2), -4),
+      wbNull,  // STVS String Var Map Start
+      wbStruct('String_var', [
+        wbInteger('Owning Module Index', itU8),
+        wbInteger('ID', itU32),
+        wbLenString('Value', 2)
+      ]),
+      wbNull,  // STVE String Var Map End
+      wbNull,  // ARVS Array Var Map Start
+      wbStruct('Array_var', [
+        wbInteger('Owning Module Index', itU8),
+        wbInteger('ID', itU32),
+        wbInteger('Key Type', itU8, wbXXSEArrayType),
+        wbInteger('Packed', itU8),
+        wbArray('Refs', wbInteger('Ref', itU8), -1),
+        wbArray('Elements', wbStruct('Element', [
+          wbUnion('Key', wbXXSEArrayKeyElementDecider, [
+            wbNull,
+            wbDouble('Numeric Key'),
+            wbLenString('String Key', 2)
+          ]),
+          wbInteger('Data Type', itU8, wbXXSEArrayType),
+          wbUnion('Data', wbXXSEArrayDataElementDecider, [
+            wbNull,
+            wbDouble('Numeric Data'),
+            wbFormID('Form Data'),
+            wbLenString('String Data', 2),
+            wbInteger('Array Data', itU32)
+          ])
+        ]), -1)
+      ]),
+      wbNull,  // ARVE Array Var Map End
+      wbByteArray('Others', wbXXSEChapterOtherCounter)  // For what we cannot hardcode
+   ])
+  ]);
+  wbChunk.TreeLeaf := True;
+
+  wbFOSEChunks := wbArray('Chunks', wbChunk, wbXXSEChunkCounter, cpNormal, false, wbDontShowBranch);
+  wbFOSEPlugin := wbStruct('Plugin', [
+    wbInteger('Opcode Base', itU32),
+    wbInteger('Chunks count', itU32),
+    wbInteger('Length', itU32),
+    wbFOSEChunks
+  ]);
+  wbFOSEPlugin.TreeLeaf := True;
+  wbFOSEChunks.TreeBranch := True;
+  wbFOSEPlugins := wbArray('Plugins', wbFOSEPlugin, wbXXSEPluginCounter);
+
   wbFOSEChapters := wbStruct('CoSave File Chapters', [
-     wbArray('Plugins', wbStruct('Plugin', [
-       wbInteger('Opcode Base', itU32),
-       wbInteger('Chunks count', itU32),
-       wbInteger('Length', itU32),
-       wbArray('Chunks',
-         wbStruct('Chunk', [
-           wbInteger('Type', itU32, wbStr4),
-           wbInteger('Version', itU32),
-           wbInteger('Length', itU32),
-           wbUnion('Data', FOSEChaptersDecider, [
-             wbNull,
-             wbArray('Modules', wbLenString('PluginName', 2), -4),
-             wbNull,  // STVS String Var Map Start
-             wbStructSK([1], 'String_var', [
-               wbInteger('Owning Module Index', itU8),
-               wbInteger('ID', itU32),
-               wbLenString('Value', 2)
-             ]),
-             wbNull,  // STVE String Var Map End
-             wbNull,  // ARVS Array Var Map Start
-             wbStructSK([1], 'Array_var', [
-               wbInteger('Owning Module Index', itU8),
-               wbInteger('ID', itU32),
-               wbInteger('Key Type', itU8, wbXXSEArrayType),
-               wbInteger('Packed', itU8),
-               wbArray('Refs', wbInteger('Ref', itU8), -1),
-               wbArray('Elements', wbStruct('Element', [
-                 wbUnion('Key', wbXXSEArrayKeyElementDecider, [
-                   wbNull,
-                   wbDouble('Numeric Key'),
-                   wbLenString('String Key', 2)
-                 ]),
-                 wbInteger('Data Type', itU8, wbXXSEArrayType),
-                 wbUnion('Data', wbXXSEArrayDataElementDecider, [
-                   wbNull,
-                   wbDouble('Numeric Data'),
-                   wbFormID('Form Data'),
-                   wbLenString('String Data', 2),
-                   wbInteger('Array Data', itU32)
-                 ])
-               ]), -1)
-             ]),
-             wbNull,  // ARVE Array Var Map End
-             wbByteArray('Others', wbXXSEChapterOtherCounter)
-           ])
-         ]), wbXXSEChunkCounter)
-       ]), wbXXSEPluginCounter)
-//    ,wbByteArray('Unused', SkipCounter) // Lets you skip an arbitrary number of byte, Setable from CommandLine -bts:n
-//    ,wbArray('Remaining',  WbByteArray('Unknown', wbBytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
+    wbFOSEPlugins
   ]);
 
   wbFileChapters := wbSaveChapters;
   wbFileHeader := wbSaveHeader;
+  wbSaveHeader.TreeHead := True;
+  wbFOSEHeader.TreeHead := True;
+  wbSaveHeader.TreeLeaf := True;
+  wbFOSEHeader.TreeLeaf := True;
 end;
 
 var

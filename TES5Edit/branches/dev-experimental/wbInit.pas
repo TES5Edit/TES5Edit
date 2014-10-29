@@ -453,7 +453,6 @@ begin
   end else if isMode('Script') then begin
     wbToolMode    := tmScript;
     wbToolName    := 'Script';
-    wbEditAllowed := False;
   end else if isMode('Translate') then begin
     wbToolMode    := tmTranslate;
     wbToolName    := 'Trans';
@@ -479,11 +478,11 @@ begin
     wbAppName := 'FNV';
     wbGameName := 'FalloutNV';
     if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmScript]) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
     end;
     if not (wbToolSource in [tsPlugins, tsSaves]) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbSourceName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName);
       Exit;
     end;
   end else if isMode('FO3') then begin
@@ -491,11 +490,11 @@ begin
     wbAppName := 'FO3';
     wbGameName := 'Fallout3';
     if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmScript]) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
     end;
     if not (wbToolSource in [tsPlugins]) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbSourceName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName);
       Exit;
     end;
   end else if isMode('TES3') then begin
@@ -503,11 +502,11 @@ begin
     wbAppName := 'TES3';
     wbGameName := 'Morrowind';
     if not (wbToolMode in []) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
     end;
     if not (wbToolSource in []) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbSourceName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName);
       Exit;
     end;
   end else if isMode('TES4') then begin
@@ -515,11 +514,11 @@ begin
     wbAppName := 'TES4';
     wbGameName := 'Oblivion';
     if not (wbToolMode in [tmView, tmEdit, tmLODgen, tmESMify, tmESPify, tmSortAndCleanMasters, tmScript]) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
     end;
     if not (wbToolSource in [tsPlugins]) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbSourceName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName);
       Exit;
     end;
   end else if isMode('TES5') then begin
@@ -527,11 +526,11 @@ begin
     wbAppName := 'TES5';
     wbGameName := 'Skyrim';
     if not (wbToolMode in [tmView, tmEdit, tmLODgen, tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters, tmScript]) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
     end;
     if not (wbToolSource in [tsPlugins, tsSaves]) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbSourceName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName);
       Exit;
     end;
   end else begin

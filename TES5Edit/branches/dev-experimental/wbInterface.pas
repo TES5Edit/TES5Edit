@@ -501,7 +501,8 @@ type
 
     function CopyInto(const aFile: IwbFile; AsNew, DeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 
-    function GetTreeLeaf: Boolean;              // Is the element expected to be a "main record" in the tree navigator
+    function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
+    function GetTreeLeaf: Boolean;              // Is the element included in a "leaf" expected to be displayed in the view pane
     function GetTreeBranch: Boolean;            // Is the element expected to show in the tree navigator
 
     property ElementID: Cardinal
@@ -606,6 +607,9 @@ type
 
     property DontShow: Boolean
       read GetDontShow;
+
+    property TreeHead: Boolean
+      read GetTreeHead;
 
     property TreeLeaf: Boolean
       read GetTreeLeaf;
@@ -1187,15 +1191,20 @@ type
     procedure AfterLoad(const aElement: IwbElement);
     procedure AfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
-    function GetTreeLeaf: Boolean;              // Is the element expected to be a "main record" in the tree navigator
-    procedure SetTreeLeaf(aValue: Boolean);     // Make the element a "Main record" in the tree navigator;
-    function GetTreeBranch: Boolean;            // Is the element expected to show in the tree navigator
-    procedure SetTreeBranch(aValue: Boolean);   // Make the element show in the tree navigator;
+    function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
+    procedure SetTreeHead(aValue: Boolean);     // Make the element a "header record" in the tree navigator;
+    function GetTreeLeaf: Boolean;              // Is the element expected to show in the tree navigator
+    procedure SetTreeLeaf(aValue: Boolean);     // Make the element visible in the tree navigator
+    function GetTreeBranch: Boolean;            // Is the element included in a "leaf" expected to be displayed in the view pane
+    procedure SetTreeBranch(aValue: Boolean);   // Make the element included in a "leaf" visible in the tree navigator;
 
     property Name: string
       read GetName;
     property Path: string
       read GetPath;
+
+    property TreeHead: Boolean
+      read GetTreeHead write SetTreeHead;
 
     property TreeLeaf: Boolean
       read GetTreeLeaf write SetTreeLeaf;
@@ -3025,7 +3034,7 @@ var
   wbSourceName  : String;
   wbLanguage    : string;
   wbAutoModes   : TwbSetOfMode = [ tmMasterUpdate, tmMasterRestore, tmLODgen, // Tool modes that run without user interaction until final status
-                    tmScript, tmESMify, tmESPify, tmSortAndCleanMasters ];
+                    tmESMify, tmESPify, tmSortAndCleanMasters ];
   wbPluginModes : TwbSetOfMode = [ tmESMify, tmESPify, tmSortAndCleanMasters ];  // Auto modes that require a specific plugin to be povided.
 
 function wbDefToName(const aDef: IwbDef): string;
@@ -3493,6 +3502,7 @@ type
     noDontShow   : TwbDontShowCallback;
     noTerminator : Boolean;
     noUnused     : Boolean;
+    noTreeHead   : Boolean;
     noTreeLeaf   : Boolean;
     noTreeBranch : Boolean;
   protected
@@ -3517,10 +3527,12 @@ type
     function GetPath: string;
     procedure AfterLoad(const aElement: IwbElement); virtual;
     procedure AfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-    function GetTreeLeaf: Boolean;              // Is the element expected to a "main record" in the tree navigator
-    procedure SetTreeLeaf(aValue: Boolean);     // Make the element a "Main record" in the tree navigator;
-    function GetTreeBranch: Boolean;            // Is the element expected to show in the tree navigator
-    procedure SetTreeBranch(aValue: Boolean);   // Make the element show in the tree navigator;
+    function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
+    procedure SetTreeHead(aValue: Boolean);     // Make the element a "header record" in the tree navigator;
+    function GetTreeLeaf: Boolean;              // Is the element expected to show in the tree navigator
+    procedure SetTreeLeaf(aValue: Boolean);     // Make the element visible in the tree navigator
+    function GetTreeBranch: Boolean;            // Is the element included in a "leaf" expected to be displayed in the view pane
+    procedure SetTreeBranch(aValue: Boolean);   // Make the element included in a "leaf" visible in the tree navigator;
   end;
 
   TwbSignatureDef = class(TwbNamedDef, IwbSignatureDef)
@@ -6770,6 +6782,7 @@ constructor TwbNamedDef.Clone(const aSource: TwbDef);
 begin
   with (aSource as TwbNamedDef) do begin
     Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, noDontShow, defGetCP, noTerminator).defSource := aSource;
+    Self.noTreeHead := GetTreeHead;
     Self.noTreeLeaf := GetTreeLeaf;
     Self.notreeBranch := GetTreeBranch;
   end
@@ -6789,6 +6802,7 @@ begin
   noAfterLoad := aAfterLoad;
   noAfterSet := aAfterSet;
   noTerminator := aTerminator;
+  noTreeHead := False;
   noTreeLeaf := False;
   noTreeBranch := False;
   if aName = 'Unused' then begin
@@ -6841,9 +6855,14 @@ begin
   Result := noTreeBranch;
 end;
 
+function TwbNamedDef.GetTreeHead: Boolean;
+begin
+  Result := noTreeHead;
+end;
+
 function TwbNamedDef.GetTreeLeaf: Boolean;
 begin
-  result := noTreeLeaf;
+  Result := noTreeLeaf;
 end;
 
 procedure TwbNamedDef.ParentSet;
@@ -6860,6 +6879,11 @@ end;
 procedure TwbNamedDef.SetTreeBranch(aValue: Boolean);
 begin
   noTreeBranch := avalue;
+end;
+
+procedure TwbNamedDef.SetTreeHead(aValue: Boolean);
+begin
+  noTreeHead := aValue;
 end;
 
 procedure TwbNamedDef.SetTreeLeaf(aValue: Boolean);
@@ -12579,9 +12603,13 @@ end;
 { TwbUnionDef }
 
 procedure TwbUnionDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
+var
+  ValueDef : IwbValueDef;
 begin
   inherited;
-  Decide(aBasePtr, aEndPtr, aElement).BuildRef(aBasePtr, aEndPtr, aElement);
+  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  if Assigned(ValueDef) then
+    ValueDef.BuildRef(aBasePtr, aEndPtr, aElement);
 end;
 
 function TwbUnionDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
@@ -14233,9 +14261,11 @@ initialization
 
   wbProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
 
-  SetLength(wbPluginExtensions, 2);
+  SetLength(wbPluginExtensions, 3);
   wbPluginExtensions[0] := '.ESP';
   wbPluginExtensions[1] := '.ESM';
+  wbPluginExtensions[2] := '.GHOST';
+
 finalization
   FreeAndNil(wbIgnoreRecords);
   FreeAndNil(wbDoNotBuildRefsFor);

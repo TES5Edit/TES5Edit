@@ -29,6 +29,7 @@ function GetSaveRefID(aIndex: Cardinal): Cardinal;
 function QueryCountForVMArrayHandle(anArrayHandle: Int64): Int64;
 
 function wbFindSaveElement(aName: String; aElement: IwbElement): IwbElement;
+function wbDontShowBranch(const aElement: IwbElement): Boolean;
 
 // CoSave shared data
 
@@ -302,6 +303,11 @@ begin
     if Supports(Result, IwbContainer, Container) then
       FindOurself(aName, Container, Result);
   end;
+end;
+
+function wbDontShowBranch(const aElement: IwbElement): Boolean;
+begin
+  Result := wbHideNeverShow;
 end;
 
 function wbXXSEChapterOtherCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;

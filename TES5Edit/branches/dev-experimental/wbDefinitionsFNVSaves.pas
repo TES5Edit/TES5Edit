@@ -1841,6 +1841,8 @@ var
   wbInitialDataType          : IwbUnionDef;
   wbChangeFlags010Flags      : IwbFlagsDef;
   wbChunk                    : IwbStructDef;
+  wbNVSEChunks               : IwbArrayDef;
+  wbNVSEPlugin               : IwbStructDef;
   wbNVSEPlugins              : IwbArrayDef;
 
   wbChangeFlags000        : IwbIntegerDef;
@@ -6827,18 +6829,21 @@ begin
         ]), -1)
       ]),
       wbNull,  // ARVE Array Var Map End
-      wbByteArray('Others', wbXXSEChapterOtherCounter)
+      wbByteArray('Others', wbXXSEChapterOtherCounter)  // For what we cannot hardcode
    ])
   ]);
   wbChunk.TreeLeaf := True;
 
-  wbNVSEPlugins := wbArray('Plugins', wbStruct('Plugin', [
+  wbNVSEChunks := wbArray('Chunks', wbChunk, wbXXSEChunkCounter, cpNormal, false, wbDontShowBranch);
+  wbNVSEPlugin := wbStruct('Plugin', [
     wbInteger('Opcode Base', itU32),
     wbInteger('Chunks count', itU32),
     wbInteger('Length', itU32),
-    wbArray('Chunks', wbChunk, wbXXSEChunkCounter)
-  ]), wbXXSEPluginCounter);
-  wbNVSEPlugins.TreeLeaf := true;
+    wbNVSEChunks
+  ]);
+  wbNVSEPlugin.TreeLeaf := True;
+  wbNVSEChunks.TreeBranch := True;
+  wbNVSEPlugins := wbArray('Plugins', wbNVSEPlugin, wbXXSEPluginCounter);
 
   wbNVSEChapters := wbStruct('CoSave File Chapters', [
     wbNVSEPlugins
@@ -6846,6 +6851,8 @@ begin
 
   wbFileChapters := wbSaveChapters;
   wbFileHeader := wbSaveHeader;
+  wbSaveHeader.TreeHead := True;
+  wbNVSEHeader.TreeHead := True;
   wbSaveHeader.TreeLeaf := True;
   wbNVSEHeader.TreeLeaf := True;
 end;
