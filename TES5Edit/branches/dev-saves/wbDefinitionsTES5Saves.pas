@@ -2332,6 +2332,10 @@ var
   wbInitialDataType          : IwbUnionDef;
 
   wbChangeDefaultFlags    : IwbIntegerDef;
+  wbChunk                 : IwbStructDef;
+  wbSKSEChunks            : IwbArrayDef;
+  wbSKSEPlugin            : IwbStructDef;
+  wbSKSEPlugins           : IwbArrayDef;
   wbChangeFlags000        : IwbIntegerDef;
   wbChangeFlags001        : IwbIntegerDef;
   wbChangeFlags002        : IwbIntegerDef;
@@ -5993,52 +5997,62 @@ begin
     ,wbInteger('Plugins count', itU32)
   ]);
 
+  wbChunk := wbStruct('Chunk', [
+    wbInteger('Type', itU32, wbStr4),
+    wbInteger('Version', itU32),
+    wbInteger('Length', itU32),
+    wbUnion('Data', SKSEChaptersDecider, [
+      wbNull,
+      wbArray('Modules', wbLenString('PluginName', 2), -4),
+      wbStruct('Registered Event', [
+        wbUnion('Key', SKSERegKeyDecider, [
+          wbNull,
+          wbLenString('String Key', -2),
+          wbInteger('Numeric Key', itU32),
+          wbNull
+        ]),
+        wbArray('Regs', wbStruct('Reg', [
+          wbInteger('Handle', itU64),
+          wbUnion('Data', SKSERegDataDecider, [
+           wbNull,
+           wbLenString('Callback', -2)
+          ])
+        ]), -1)
+      ]),
+      wbNull,  // REGE Registered Event End
+      wbNull,  // MENR Menu Event Registration
+      wbNull,  // KEYR Key Event Registration
+      wbNull,  // CTLR Control Event Registration
+      wbNull,  // MCBR Mod Callback Event Registration
+      wbNull,  // CHRR Crosshair Ref Event Registration
+      wbNull,  // CAMR Camera Event Registration
+      wbNull,  // AACT Actor Action Event Registration
+      wbByteArray('Others', wbXXSEChapterOtherCounter)  // For what we cannot hardcode
+    ])
+  ]);
+  wbChunk.TreeLeaf := True;
+
+  wbSKSEChunks := wbArray('Chunks', wbChunk, wbXXSEChunkCounter, cpNormal, false, wbDontShowBranch);
+  wbSKSEPlugin := wbStruct('Plugin', [
+    wbInteger('UID', itU32),
+    wbInteger('Chunks count', itU32),
+    wbInteger('Length', itU32),
+    wbSKSEChunks
+  ]);
+  wbSKSEPlugin.TreeLeaf := True;
+  wbSKSEChunks.TreeBranch := True;
+  wbSKSEPlugins := wbArray('Plugins', wbSKSEPlugin, wbXXSEPluginCounter);
+
   wbSKSEChapters := wbStruct('CoSave File Chapters', [
-     wbArray('Plugins', wbStruct('Plugin', [
-       wbInteger('UID', itU32),
-       wbInteger('Chunks count', itU32),
-       wbInteger('Length', itU32),
-       wbArray('Chunks',
-         wbStruct('Chunk', [
-           wbInteger('Type', itU32, wbStr4),
-           wbInteger('Version', itU32),
-           wbInteger('Length', itU32),
-           wbUnion('Data', SKSEChaptersDecider, [
-             wbNull,
-             wbArray('Modules', wbLenString('PluginName', 2), -4),
-             wbStruct('Registered Event', [
-               wbUnion('Key', SKSERegKeyDecider, [
-                 wbNull,
-                 wbLenString('String Key', -2),
-                 wbInteger('Numeric Key', itU32),
-                 wbNull
-               ]),
-               wbArray('Regs', wbStruct('Reg', [
-                 wbInteger('Handle', itU64),
-                 wbUnion('Data', SKSERegDataDecider, [
-                  wbNull,
-                  wbLenString('Callback', -2)
-                 ])
-               ]), -1)
-             ]),
-             wbNull,  // REGE Registered Event End
-             wbNull,  // MENR Menu Event Registration
-             wbNull,  // KEYR Key Event Registration
-             wbNull,  // CTLR Control Event Registration
-             wbNull,  // MCBR Mod Callback Event Registration
-             wbNull,  // CHRR Crosshair Ref Event Registration
-             wbNull,  // CAMR Camera Event Registration
-             wbNull,  // AACT Actor Action Event Registration
-             wbByteArray('Others', wbXXSEChapterOtherCounter)
-           ])
-         ]), wbXXSEChunkCounter)
-       ]), wbXXSEPluginCounter)
-//    ,wbByteArray('Unused', SkipCounter) // Lets you skip an arbitrary number of byte, Setable from CommandLine -bts:n
-//    ,wbArray('Remaining',  WbByteArray('Unknown', wbBytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
+    wbSKSEPlugins
   ]);
 
   wbFileChapters := wbSaveChapters;
   wbFileHeader := wbSaveHeader;
+  wbSaveHeader.TreeHead := True;
+  wbSKSEHeader.TreeHead := True;
+  wbSaveHeader.TreeLeaf := True;
+  wbSKSEHeader.TreeLeaf := True;
 end;
 
 var

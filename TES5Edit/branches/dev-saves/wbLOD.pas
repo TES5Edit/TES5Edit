@@ -46,7 +46,6 @@ type
   // Based on http://codeincomplete.com/posts/2011/5/7/bin_packing/
   TwbBinPacker = class
   private
-//    fNodes: array of TBinNode;
     fWidth, fHeight: Integer;
     fPaddingX: Integer;
     fPaddingY: Integer;
@@ -423,6 +422,10 @@ begin
   ]);
   Result^.Width := aWidth;
   Result^.Height := aHeight;
+  Result^.ShiftX := 0.0;
+  Result^.ShiftY := 0.0;
+  Result^.ShiftZ := 0.0;
+  Result^.ScaleFactor := 1.0;
 end;
 
 procedure TwbLodTES5TreeList.LoadFromData(aData: TBytes);
@@ -547,15 +550,15 @@ begin
   with TwbBinPacker.Create do try
     Width := Min(512, MaxAtlasSize);
     Height := Min(512, MaxAtlasSize);
-    PaddingX := 0;
-    PaddingY := 0;
+    PaddingX := 2;
+    PaddingY := 2;
     // increase atlas size until all blocks fit
     while not Fit(Blocks) do begin
       if Width <= Height then
         Width := Width * 2
       else
         Height := Height * 2;
-      if (Width > MaxAtlasSize) or (Width > MaxAtlasSize) then
+      if (Width > MaxAtlasSize) or (Height > MaxAtlasSize) then
         raise Exception.Create('Can''t fit billboards on atlas, not enough space');
     end;
     NewImage(Width, Height, ifDefault, fAtlas);

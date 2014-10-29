@@ -50,6 +50,7 @@ function wbFindNextValidCmdLinePlugin(var startingIndex : integer; out aValue  :
 function wbFindCmdLineParam(const aSwitch : string; out aValue : string): Boolean; overload;
 
 function wbLoadMOHookFile: Boolean;
+procedure SwitchToCoSave;
 
 implementation
 
@@ -65,10 +66,14 @@ uses
   wbInterface,
   wbImplementation,
   wbDefinitionsFNV,
+  wbDefinitionsFNVSaves,
   wbDefinitionsFO3,
+  wbDefinitionsFO3Saves,
   wbDefinitionsTES3,
   wbDefinitionsTES4,
-  wbDefinitionsTES5;
+  wbDefinitionsTES4Saves,
+  wbDefinitionsTES5,
+  wbDefinitionsTES5Saves;
 
 function wbFindCmdLineParam(const aSwitch     : string;
                             const aChars      : TSysCharSet;
@@ -291,7 +296,8 @@ const
   sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
   sBethRegKey64           = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
 var
-  s : String;
+  s       : String;
+  IniFile : TIniFile;
 begin
   wbModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
 
@@ -359,6 +365,22 @@ begin
       wbTheGameIniFileName := wbMyGamesTheGamePath + wbGameName + '.ini';
   end;
 
+  if not wbFindCmdLineParam('G', wbSavePath) then begin
+    if wbMyGamesTheGamePath = '' then
+      wbMyGamesTheGamePath := ExtractFilePath(wbTheGameIniFileName);
+
+    s := 'Saves\';
+    if FileExists(wbTheGameIniFileName) then begin
+      IniFile := TIniFile.Create(wbTheGameIniFileName);
+      try
+        s := IniFile.ReadString('General', 'SLocalSavePath', s);
+      finally
+        FreeAndNil(IniFile);
+      end;
+    end;
+    wbSavePath := wbMyGamesTheGamePath + s;
+  end;
+
   wbParamIndex := ParamIndex;
   if not wbFindCmdLineParam('P', wbPluginsFileName) then
     if not wbFindNextValidCmdLineFileName(wbParamIndex, wbPluginsFileName) or wbCheckForValidExtension(wbPluginsFileName) then begin
@@ -424,7 +446,6 @@ begin
   end else if isMode('Script') then begin
     wbToolMode    := tmScript;
     wbToolName    := 'Script';
-    wbEditAllowed := False;
   end else if isMode('Translate') then begin
     wbToolMode    := tmTranslate;
     wbToolName    := 'Trans';
@@ -450,11 +471,11 @@ begin
     wbAppName := 'FNV';
     wbGameName := 'FalloutNV';
     if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmScript]) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
     end;
-    if not (wbToolSource in [tsPlugins]) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbSourceName);
+    if not (wbToolSource in [tsPlugins, tsSaves]) then begin
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName);
       Exit;
     end;
   end else if isMode('FO3') then begin
@@ -462,11 +483,11 @@ begin
     wbAppName := 'FO3';
     wbGameName := 'Fallout3';
     if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmScript]) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
     end;
     if not (wbToolSource in [tsPlugins]) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbSourceName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName);
       Exit;
     end;
   end else if isMode('TES3') then begin
@@ -474,11 +495,11 @@ begin
     wbAppName := 'TES3';
     wbGameName := 'Morrowind';
     if not (wbToolMode in []) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
     end;
     if not (wbToolSource in []) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbSourceName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName);
       Exit;
     end;
   end else if isMode('TES4') then begin
@@ -486,11 +507,11 @@ begin
     wbAppName := 'TES4';
     wbGameName := 'Oblivion';
     if not (wbToolMode in [tmView, tmEdit, tmLODgen, tmESMify, tmESPify, tmSortAndCleanMasters, tmScript]) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
     end;
     if not (wbToolSource in [tsPlugins]) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbSourceName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName);
       Exit;
     end;
   end else if isMode('TES5') then begin
@@ -498,11 +519,11 @@ begin
     wbAppName := 'TES5';
     wbGameName := 'Skyrim';
     if not (wbToolMode in [tmView, tmEdit, tmLODgen, tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters, tmScript]) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbToolName);
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
     end;
-    if not (wbToolSource in [tsPlugins]) then begin
-      ShowMessage('Application '+wbGameName+' does not currently supports '+wbSourceName);
+    if not (wbToolSource in [tsPlugins, tsSaves]) then begin
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName);
       Exit;
     end;
   end else begin
@@ -537,19 +558,27 @@ begin
     Exit;
   end;
 
-  if wbGameMode = gmFNV then
-    DefineFNV
-  else if wbGameMode = gmFO3 then
-    DefineFO3
-  else if wbGameMode = gmTES3 then
-    DefineTES3
-  else if wbGameMode = gmTES4 then
-    DefineTES4
-  else if wbGameMode = gmTES5 then
-    case wbToolSource of
+  case wbGameMode of
+    gmFNV:  case wbToolSource of
+      tsSaves:   DefineFNVSaves;
+      tsPlugins: DefineFNV;
+    end;
+    gmFO3:  case wbToolSource of
+      tsSaves:   DefineFO3Saves;
+      tsPlugins: DefineFO3;
+    end;
+    gmTES3: case wbToolSource of
+      tsPlugins: DefineTES3;
+    end;
+    gmTES4: case wbToolSource of
+      tsSaves:   DefineTES4Saves;
+      tsPlugins: DefineTES4;
+    end;
+    gmTES5: case wbToolSource of
+      tsSaves:   DefineTES5Saves;
       tsPlugins: DefineTES5;
     end
-  else begin
+  else
     ShowMessage('Application name must contain FNV, FO3, TES4 or TES5 to select game.');
     Exit;
   end;
@@ -645,6 +674,16 @@ begin
     wbFixupPGRD := True;
 
   wbShouldLoadMOHookFile := wbFindCmdLineParam('moprofile', wbMOProfile);
+end;
+
+procedure SwitchToCoSave;
+begin
+  case wbGameMode of
+    gmFNV:  SwitchToFNVCoSave;
+    gmFO3:  SwitchToFO3CoSave;
+    gmTES4: SwitchToTES4CoSave;
+    gmTES5: SwitchToTES5CoSave;
+  end;
 end;
 
 initialization

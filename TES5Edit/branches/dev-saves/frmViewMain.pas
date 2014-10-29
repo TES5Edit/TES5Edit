@@ -531,6 +531,7 @@ type
     procedure ResetAllTags;
 
     procedure ConflictLevelForMainRecord(const aMainRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
+    procedure ConflictLevelForContainer(const aContainer: IwbDataContainer; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
     function ConflictLevelForChildNodeDatas(const aNodeDatas: TDynViewNodeDatas; aSiblingCompare, aInjected: Boolean): TConflictAll;
     function ConflictLevelForNodeDatas(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer; aSiblingCompare, aInjected: Boolean): TConflictAll;
 
@@ -542,6 +543,7 @@ type
     procedure InheritStateFromChilds(Node: PVirtualNode; NodeData: PNavNodeData);
 
     function NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
+    function NodeDatasForContainer(const aContainer: IwbDataContainer): TDynViewNodeDatas;
 
     procedure ShowChangeReferencedBy(OldFormID: Cardinal; NewFormID: Cardinal; const ReferencedBy: TDynMainRecords; aSilent: Boolean);
     function GetDragElements(Target: TBaseVirtualTree; Source: TObject; out TargetNode: PVirtualNode; out TargetIndex: Integer; out TargetElement: IwbElement; out SourceElement: IwbElement): Boolean;
@@ -598,6 +600,7 @@ type
     ActiveRecord: IwbMainRecord;
     ActiveMaster: IwbMainRecord;
     ActiveRecords: TDynViewNodeDatas;
+    ActiveContainer: IwbDataContainer;
     LoaderStarted: Boolean;
     ForceTerminate: Boolean;
     ModGroups: TStringList;
@@ -690,6 +693,9 @@ type
     procedure SetDoubleBuffered(aWinControl: TWinControl);
     procedure SetActiveRecord(const aMainRecord: IwbMainRecord); overload;
     procedure SetActiveRecord(const aMainRecords: TDynMainRecords); overload;
+    procedure SetActiveContainer(const aContainer: IwbDataContainer); overload;
+    procedure SetActiveContainer(const aDataContainers: TDynDataContainers); overload;
+    procedure ClearActiveContainer; overload;
 
     function ValidateCRC(const aFileName  : string;
                          const aValidCRCs : TDynCardinalArray;
@@ -976,7 +982,6 @@ end;
 
 procedure TfrmMain.acScriptExecute(Sender: TObject);
 var
-  slScript: TStringList;
   i: integer;
   s: string;
 begin
@@ -987,12 +992,11 @@ begin
   if i >= ScriptHotkeys.Count then
     Exit;
 
-  slScript := TStringList.Create;
-  try
-    slScript.LoadFromFile(ScriptHotkeys[i]);
-    s := slScript.Text;
+  with TStringList.Create do try
+    LoadFromFile(ScriptHotkeys[i]);
+    s := Text;
   finally
-    slScript.Free;
+    Free;
   end;
 
   ApplyScript(s);
@@ -1074,6 +1078,10 @@ begin
     if Length(Files) > 0 then
       LoadOrder := Succ(Files[High(Files)].LoadOrder);
 
+    if LoadOrder>254 then begin
+      ShowMessage('Maximum plugins count already reached. Adding 1 more would exceed the maximum index of 254');
+      Exit;
+    end;
     aFile := wbNewFile(wbDataPath + s, LoadOrder);
     SetLength(Files, Succ(Length(Files)));
     Files[High(Files)] := aFile;
@@ -1352,6 +1360,52 @@ begin
       Fix(Master.Overrides[i]);
 
     aConflictThis := aMainRecord.ConflictThis;
+  end;
+end;
+
+procedure TfrmMain.ConflictLevelForContainer(const aContainer: IwbDataContainer; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
+
+  procedure Fix(const aMainRecord: IwbMainRecord);
+  begin
+    with aMainRecord do begin
+      ConflictAll := aConflictAll;
+      if ConflictThis = ctUnknown then begin
+        ConflictThis := ctHiddenByModGroup;
+      end;
+    end;
+  end;
+
+var
+  NodeDatas     : TDynViewNodeDatas;
+  i             : Integer;
+  KeepAliveRoot : IwbKeepAliveRoot;
+  MainRecord    : IwbMainRecord;
+begin
+  KeepAliveRoot := wbCreateKeepAliveRoot;
+
+  Mainrecord := aContainer as IwbMainrecord;
+
+  if Assigned(Mainrecord) then
+    ConflictLevelForMainRecord(MainRecord, aConflictAll, aConflictThis)
+  else begin
+    NodeDatas := NodeDatasForContainer(aContainer);
+    if Length(NodeDatas) = 1 then begin
+      aConflictAll := caOnlyOne;
+      NodeDatas[0].ConflictAll := caOnlyOne;
+      NodeDatas[0].ConflictThis := ctOnlyOne;
+    end else if wbQuickShowConflicts and (Length(NodeDatas) = 2) then begin
+      aConflictAll := caOverride;
+      NodeDatas[0].ConflictAll := caOverride;
+      NodeDatas[1].ConflictAll := caOverride;
+      NodeDatas[0].ConflictThis := ctMaster;
+      NodeDatas[1].ConflictThis := ctOverride;
+    end else
+      aConflictAll := ConflictLevelForChildNodeDatas(NodeDatas, False, False );
+
+    for i := Low(NodeDatas) to High(NodeDatas) do
+      with NodeDatas[i] do
+        if Assigned(Element) and (Element as IwbDataContainer = aContainer) then
+          aConflictThis := NodeDatas[i].ConflictThis;
   end;
 end;
 
@@ -2061,6 +2115,7 @@ var
   _File        : IwbFile;
   NodeData     : PNavNodeData;
   CompareFile  : string;
+  fPath        : string;
   s            : String;
   i            : Integer;
   Temporary    : Boolean;
@@ -2078,16 +2133,21 @@ begin
       Exit;
 
     CompareFile := FileName;
+    if wbIsPlugin(CompareFile) then
+      fPath := wbDataPath
+    else
+      fPath := wbSavePath;
+
     // copy selected file to Data directory without overwriting an existing file
-    if not SameText(ExtractFilePath(CompareFile), wbDataPath) then begin
-      s := wbDataPath + ExtractFileName(CompareFile);
+    if not SameText(ExtractFilePath(CompareFile), fPath) then begin
+      s := fPath + ExtractFileName(CompareFile);
       if FileExists(s) then // Finds a unique name
         for i := 0 to 255 do begin
-          s := wbDataPath + ChangeFileExt(ExtractFileName(CompareFile), '.' + IntToHex(i, 3));
+          s := fPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
           if not FileExists(s) then Break;
         end;
       if FileExists(s) then begin
-        wbProgressCallback('Could not copy '+FileName+' into '+wbDataPath);
+        wbProgressCallback('Could not copy '+FileName+' into '+fPath);
         Exit;
       end;
       CompareFile := s;
@@ -2738,6 +2798,71 @@ begin
   vstNav.Invalidate;
 end;
 
+procedure TfrmMain.ClearActiveContainer;
+var
+  aMainrecords : TDynMainRecords;
+begin
+  UserWasActive := True;
+
+  if Length(aMainRecords) < 2 then begin
+    if Length(aMainRecords) = 1 then
+      if Supports(aMainRecords[0], IwbMainrecord) then
+        SetActiveRecord(aMainRecords[0] as IwbMainRecord)
+      else
+        SetActiveContainer(aMainRecords[0])
+    else
+      SetActiveContainer(IwbDataContainer(nil));
+    Exit;
+  end;
+  if Supports(aMainRecords[0], IwbMainrecord) then begin
+    SetLength(aMainRecords, 0);
+    SetActiveRecord(aMainRecords);
+    Exit;
+  end;
+
+  ComparingSiblings := True;
+  CompareRecords := aMainRecords;
+  lvReferencedBy.Items.BeginUpdate;
+  try
+    vstView.BeginUpdate;
+    try
+      lvReferencedBy.Items.Clear;
+      vstView.Clear;
+      vstView.NodeDataSize := 0;
+      SetLength(ActiveRecords, 0);
+      ActiveMaster := nil;
+      ActiveRecord := nil;
+      ActiveIndex := NoColumn;
+
+      SetLength(ActiveRecords, 0);
+
+      with vstView.Header.Columns do begin
+        BeginUpdate;
+        try
+          Clear;
+          with Add do begin
+            Text := '';
+            Width := wbColumnWidth;
+            Options := Options - [coDraggable];
+            Options := Options + [coFixed];
+          end;
+        finally
+          EndUpdate;
+        end;
+      end;
+
+      vstView.NodeDataSize := SizeOf(TNavNodeData) * Length(ActiveRecords);
+      vstView.RootNodeCount := 0;
+      pgMain.ActivePage := tbsView;
+    finally
+      vstView.EndUpdate;
+    end;
+    tbsReferencedBy.TabVisible := False;
+  finally
+    lvReferencedBy.Items.EndUpdate;
+  end;
+end;
+
 procedure TfrmMain.ClearConflict(Sender: TBaseVirtualTree; Node: PVirtualNode; Data: Pointer; var Abort: Boolean);
 var
   NodeData                    : PNavNodeData;
@@ -2951,12 +3076,29 @@ begin
 end;
 
 procedure TfrmMain.DoRunScript;
+
+  procedure SelectRootNodes(AVirtualTree: TBaseVirtualTree);
+  var
+    Node: PVirtualNode;
+  begin
+    AVirtualTree.BeginUpdate;
+    try
+      Node := AVirtualTree.GetFirst;
+      while Assigned(Node) do begin
+        AVirtualTree.Selected[Node] := True;
+        Node := AVirtualTree.GetNextSibling(Node);
+      end;
+    finally
+      AVirtualTree.EndUpdate;
+    end;
+  end;
+
 var
   s: string;
 begin
   if wbFindCmdLineParam('script', s) and (Length(s) > 0) then begin
     // relative script name, use app's folder
-    if TDirectory.IsRelativePath(ExtractFilePath(s)) then
+    if not TPath.IsPathRooted(s) then
       s := wbProgramPath + s;
   end else
     s := wbProgramPath + wbAppName + 'Script.pas';
@@ -2978,7 +3120,7 @@ begin
     with TStringList.Create do try
       LoadFromFile(s);
       PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] Script execution: running script ' + s);
-      //vstNav.SelectAll(False);
+      SelectRootNodes(vstNav);
       ApplyScript(Text);
     finally
       Free;
@@ -3214,6 +3356,21 @@ begin
     Exit;
   end;
 
+  if wbSavePath <> '' then begin
+    AddMessage('Using save path: ' + wbSavePath);
+    if not DirectoryExists(wbSavePath) then begin
+      if wbToolSource in [tsSaves] then begin
+        AddMessage('Fatal: Could not find save path');
+        Exit;
+      end else
+        AddMessage('Warning: Could not find save path');
+    end;
+  end else
+    if wbToolSource in [tsSaves] then begin
+      AddMessage('Fatal: No save path specified');
+      Exit;
+    end;
+
   AddMessage('Using plugin list: ' + wbPluginsFileName);
   if not FileExists(wbPluginsFileName) then begin
     if wbToolSource in [tsPlugins] then begin
@@ -3240,7 +3397,14 @@ begin
     WindowState := TWindowState(Settings.ReadInteger(Name, 'WindowState', Integer(WindowState)));
   end;
 
-  AddMessage('Loading active plugin list: ' + wbPluginsFileName);
+  if wbToolSource in [tsSaves] then
+    AddMessage('Loading saves list from : ' + wbSavePath)
+  else if wbToolSource in [tsPlugins] then
+    AddMessage('Loading active plugin list: ' + wbPluginsFileName)
+  else begin
+    AddMessage('Fatal: No source specified');
+    Exit;
+  end;
 
   try
     sl := TStringList.Create;
@@ -3248,6 +3412,38 @@ begin
       frmFileSelect := TfrmFileSelect.Create(nil);
       with frmFileSelect do try
         case wbToolSource of
+          tsSaves: begin
+            case wbGameMode of
+              gmFO3:  begin saveExt := '.fos'; coSaveExt := '.fose'; end;
+              gmFNV:  begin saveExt := '.fos'; coSaveExt := '.nvse'; end;
+              gmTES3: begin saveExt := '.ess'; coSaveExt := '';      end;
+              gmTES4: begin saveExt := '.ess'; coSaveExt := '.obse'; end;
+              gmTES5: begin saveExt := '.ess'; coSaveExt := '.skse'; end;
+            end;
+
+            if FindFirst(ExpandFileName(wbSavePath+'\*'+saveExt), faAnyfile, R)=0 then try
+              repeat
+                if R.Attr and faDirectory <> faDirectory then begin
+                  CheckListBox1.Items.Add(R.Name);
+                  s := ChangeFileExt(R.Name, coSaveExt);
+                  if (coSaveExt<>'') and FileExists(ExpandFileName(wbSavePath+'\'+s)) then
+                    CheckListBox1.Items.Add(s);
+                end;
+              until 0 <> FindNext(R);
+            finally
+              FindClose(R);
+            end;
+            if (coSaveExt<>'') then
+              if FindFirst(ExpandFileName(wbSavePath+'\*'+coSaveExt), faAnyfile, R)=0 then try
+                repeat
+                  if R.Attr and faDirectory <> faDirectory then
+                    if CheckListBox1.Items.IndexOf(R.Name) = -1 then
+                      CheckListBox1.Items.Add(R.Name);
+                until 0 <> FindNext(R);
+              finally
+                FindClose(R);
+              end;
+          end;
           tsPlugins: begin
             LoadPluginListInternal(frmFileSelect, sl);
             CheckListBox1.Items.Assign(sl);
@@ -3304,6 +3500,7 @@ begin
           end;
         end;
 
+        k := -1;
         sl2 := TStringList.Create;
         try
           sl.Clear;
@@ -3311,12 +3508,47 @@ begin
             if CheckListBox1.Checked[i] then
               sl.Add(CheckListBox1.Items[i]);
 
-          if wbQuickClean then
+          if wbQuickClean or (wbToolSource in [tsSaves]) then
             if sl.Count <> 1 then begin
-              MessageDlg('Exactly one plugin must be selected in QuickClean mode', mtError, [mbAbort], 0);
+              if wbQuickClean then
+                MessageDlg('Exactly one plugin must be selected in QuickClean mode', mtError, [mbAbort], 0)
+              else
+                MessageDlg('Exactly one plugin must be selected with this source', mtError, [mbAbort], 0);
               frmMain.Close;
               Exit;
             end;
+
+          if wbToolSource = tsSaves then begin
+            case wbGameMode of
+              gmFNV:  if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave;
+              gmFO3:  if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave
+                else begin
+                  MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
+                  frmMain.Close;
+                  Exit;
+                end;
+              gmTES4: if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave
+                else begin
+                  MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
+                  frmMain.Close;
+                  Exit;
+                end;
+              gmTES5: if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave;
+            else
+              MessageDlg('CoSave are not supported yet "'+s+'". Please check the the selection.', mtError, [mbAbort], 0);
+              frmMain.Close;
+              Exit;
+            end;
+            LoadPluginListInternal(frmFileSelect, sl2);
+            for i := Pred(sl2.Count) downto 0 do
+              if CheckListBox1.Items.IndexOf(sl2[i]) = -1 then
+                CheckListBox1.Items.Insert(0, sl2[i]);
+            for i := 0 to Pred(CheckListBox1.Count) do
+              if CheckListBox1.Checked[i] then begin
+                k := i;
+                break;
+              end;
+          end;
 
           sl2.Sorted := True;
           sl2.Duplicates := dupIgnore;
@@ -3324,6 +3556,17 @@ begin
             sl2.Clear;
             for i := 0 to Pred(sl.Count) do
               case wbToolSource of
+                tsSaves: begin
+                  if not wbIsPlugin(sl[i]) then
+                    wbMastersForFile(wbSavePath + sl[i], sl2)
+                  else
+                    wbMastersForFile(wbDataPath + sl[i], sl2);
+                  for j := 0 to Pred(sl2.Count) do
+                    if CheckListBox1.Items.IndexOf(sl2[j]) = -1 then begin
+                      CheckListBox1.Items.Insert(k, sl2[j]);
+                      Inc(k);
+                    end;
+                end;
                 tsPlugins: wbMastersForFile(wbDataPath + sl[i], sl2);
               end;
             {make sure messages for the memo have been processed}
@@ -3358,6 +3601,7 @@ begin
 
       if not (wbToolMode in wbAutoModes) then
         case wbToolSource of
+          tsSaves: { to be done };
           tsPlugins: with TfrmFileSelect.Create(nil) do try
 
             if (not wbEditAllowed) or wbTranslationMode then begin
@@ -4398,7 +4642,8 @@ begin
   LastUpdate := GetTickCount;
   Font := Screen.IconFont;
   Caption := Application.Title;
-  if (wbToolMode in wbAutoModes) then begin
+  // Script mode is semiautomated - needs user interaction but no UI
+  if (wbToolMode in wbAutoModes) or (wbToolMode in [tmScript]) then begin
     mmoMessages.Parent := Self;
     pnlNav.Visible := False;
     pnlTop.Visible := False;
@@ -4707,7 +4952,7 @@ var
   Res             : TDynResources;
   PTree           : PwbLodTES5Tree;
   ini             : TMemIniFile;
-  slIni           : TStringList;
+  slIni, slLog    : TStringList;
   bsIni           : TBytesStream;
   RefPos, RefRot  : TwbVector;
   RefCell, RefBlock : TwbGridCell;
@@ -4785,6 +5030,7 @@ begin
   PostAddMessage('[' + aWorldspace.EditorID + '] Generating Trees LOD');
 
   // building lod
+  slLog := TStringList.Create;
   Lst := TwbLodTES5TreeList.Create(aWorldspace.EditorID);
   try
 
@@ -4815,7 +5061,7 @@ begin
         // load billboard texture
         Res := wbContainerHandler.OpenResource(PTree^.Billboard);
         if (Length(Res) > 0) and PTree^.LoadFromData(Res[High(Res)].GetData) then begin
-          PostAddMessage('[' + PTree^.Billboard + '] LOD for ' + TreeRec.Name);
+          slLog.Add('[' + PTree^.Billboard + '] LOD for ' + TreeRec.Name);
           // store checksum of billboard to avoid duplicates in atlas
           PTree^.CRC32 := wbCRC32Data(Res[High(Res)].GetData);
           // load tree data
@@ -4842,7 +5088,7 @@ begin
         end
         else begin
           PTree^.Index := -1;
-          //PostAddMessage('[' + PTree^.Billboard + '] Invalid texture, ' + TreeRec.Name + ' will be skipped in LOD');
+          slLog.Add('[' + PTree^.Billboard + '] No lod texture found for ' + TreeRec.Name);
         end;
       end;
 
@@ -4899,6 +5145,9 @@ begin
         StartTick := GetTickCount;
       end;
     end;
+
+    slLog.Sort;
+    PostAddMessage(slLog.Text);
 
     if not Lst.BuildAtlas(StrToIntDef(Settings.ReadString('Worldspace', 'AtlasSizeMax', ''), 8192)) then begin
       // will return false without exception only if atlas is empty, skip this silenty
@@ -4957,6 +5206,7 @@ begin
 
   finally
     Lst.Free;
+    slLog.Free;
   end;
 end;
 
@@ -6195,6 +6445,8 @@ begin
     Selection := vstNav.GetSortedSelection(True);
     vstNav.BeginUpdate;
     try
+
+    try
       StartTick := GetTickCount;
       wbStartTime := Now;
 
@@ -6259,6 +6511,13 @@ begin
           Exit;
         end;
       end;
+
+    except
+      on E: Exception do begin
+        PostAddMessage(E.Message);
+        raise;
+      end;
+    end;
 
     finally
       vstNav.EndUpdate;
@@ -6341,7 +6600,6 @@ begin
     FindClose(F);
     FreeAndNil(slScript);
   end;
-
 end;
 
 procedure TfrmMain.mniViewHideNoConflictClick(Sender: TObject);
@@ -10117,6 +10375,40 @@ begin
   end;
 end;
 
+function TfrmMain.NodeDatasForContainer(const aContainer: IwbDataContainer): TDynViewNodeDatas;
+var
+  i, l    : Integer;
+  p       : string;
+  Element : IwbElement;
+begin
+  Assert(wbLoaderDone);
+
+  SetLength(Result, 0);
+  l := 0;
+  p := Copy(aContainer.Path, Length(aContainer.GetFile.FileName)+Length(' \ [xx] '+' \ ') + 1);
+  repeat
+    i := Pos(' \ ', p);
+    if i>0 then begin
+      Delete(p, i, 1);
+      Delete(p, i+1, 1);
+    end;
+  until i = 0;  // Convert GetPath to ByPath
+
+  for i := 0 to pred(Length(Files)) do
+    if Files[i].IsNotPlugin then begin
+      Element := Files[i].ElementByPath[p];
+      if Assigned(Element) then begin
+        SetLength(Result, Succ(l));
+        Result[l].Element := Element;
+        Result[l].Container := Element as IwbContainerElementRef;
+        if Result[l].Container.ElementCount < 1 then
+          Result[l].Container := nil;
+        Inc(l);
+      end;
+    end;
+  Assert(Length(Result)>0); // At least there should be ourself
+end;
+
 function TfrmMain.NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
 var
   Master                      : IwbMainRecord;
@@ -11132,6 +11424,205 @@ end;
 procedure TfrmMain.SendLoaderDone;
 begin
   SendMessage(Handle, WM_USER + 2, 0, 0);
+end;
+
+procedure TfrmMain.SetActiveContainer(const aContainer: IwbDataContainer);
+var
+  i                           : Integer;
+begin
+  UserWasActive := True;
+
+  ComparingSiblings := False;
+  CompareRecords := nil;
+
+  if (ActiveContainer = aContainer) and (Assigned(ActiveContainer) = (Length(ActiveRecords) > 0)) then
+    Exit;
+
+  lvReferencedBy.Items.BeginUpdate;
+  try
+    vstView.BeginUpdate;
+    try
+      lvReferencedBy.Items.Clear;
+      vstView.Clear;
+      vstView.NodeDataSize := 0;
+      SetLength(ActiveRecords, 0);
+      ActiveMaster := nil;
+      ActiveIndex := NoColumn;
+      ActiveContainer := aContainer;
+
+      if Assigned(ActiveContainer) then begin
+        ActiveMaster := nil;
+
+        if wbLoaderDone then begin
+          ActiveRecords := NodeDatasForContainer(ActiveContainer);
+        end else begin
+          SetLength(ActiveRecords, 1);
+          ActiveRecords[0].Element := ActiveContainer;
+          ActiveRecords[0].Container := ActiveContainer as IwbContainerElementRef;
+        end;
+
+        with vstView.Header.Columns do begin
+          BeginUpdate;
+          try
+            Clear;
+            with Add do begin
+              Text := '';
+              Width := wbColumnWidth;
+              Options := Options - [coDraggable];
+              Options := Options + [coFixed];
+            end;
+            for I := Low(ActiveRecords) to High(ActiveRecords) do
+              with Add do begin
+                Text := ActiveRecords[i].Element._File.Name;
+                Style := vsOwnerDraw;
+                Width := wbColumnWidth;
+                MinWidth := 5;
+                MaxWidth := 3000;
+                Options := Options - [coAllowclick, coDraggable];
+                Options := Options + [coAutoSpring];
+                if ActiveContainer.Equals(ActiveRecords[i].Element) then
+                  ActiveIndex := i;
+              end;
+            if Length(ActiveRecords) > 1 then
+              with Add do begin
+                Text := '';
+                Width := 1;
+                MinWidth := 1;
+                MaxWidth := 3000;
+                Options := Options - [coAllowclick, coDraggable];
+              end;
+          finally
+            EndUpdate;
+          end;
+        end;
+        vstView.NodeDataSize := SizeOf(TNavNodeData) * Length(ActiveRecords);
+        if Supports(ActiveContainer.Def, IwbStructDef) then
+          vstView.RootNodeCount := (ActiveContainer.Def as IwbStructDef).MemberCount + ActiveContainer.AdditionalElementCount
+        else
+          vstView.RootNodeCount := 1;
+        InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
+        vstView.FullExpand;
+        UpdateColumnWidths;
+        if pgMain.ActivePage <> tbsReferencedBy then
+          pgMain.ActivePage := tbsView;
+      end
+      else begin
+        with vstView.Header.Columns do begin
+          BeginUpdate;
+          try
+            Clear;
+            with Add do begin
+              Text := '';
+              Width := wbColumnWidth;
+            end;
+          finally
+            EndUpdate;
+          end;
+        end;
+      end;
+    finally
+      vstView.EndUpdate;
+    end;
+
+    tbsReferencedBy.TabVisible := wbLoaderDone and (lvReferencedBy.Items.Count > 0);
+    if tbsReferencedBy.TabVisible then
+      tbsReferencedBy.Caption := Format('Referenced By (%d)', [lvReferencedBy.Items.Count]);
+  finally
+    lvReferencedBy.Items.EndUpdate;
+  end;
+end;
+
+procedure TfrmMain.SetActiveContainer(const aDataContainers: TDynDataContainers);
+var
+  i            : Integer;
+  aMainrecords : TDynMainRecords;
+begin
+  UserWasActive := True;
+
+  if Length(aMainRecords) < 2 then begin
+    if Length(aMainRecords) = 1 then
+      if Supports(aMainRecords[0], IwbMainrecord) then
+        SetActiveRecord(aMainRecords[0] as IwbMainRecord)
+      else
+        SetActiveContainer(aMainRecords[0])
+    else
+      SetActiveContainer(IwbDataContainer(nil));
+    Exit;
+  end;
+  if Supports(aMainRecords[0], IwbMainrecord) then begin
+    SetLength(aMainRecords, Length(aDataContainers));
+    for i := Low(aMainRecords) to High(aMainRecords) do
+      aMainRecords[i] := aDataContainers[i] as IwbMainRecord;
+    SetActiveRecord(aMainRecords);
+    Exit;
+  end;
+
+  ComparingSiblings := True;
+  CompareRecords := aMainRecords;
+  lvReferencedBy.Items.BeginUpdate;
+  try
+    vstView.BeginUpdate;
+    try
+      lvReferencedBy.Items.Clear;
+      vstView.Clear;
+      vstView.NodeDataSize := 0;
+      SetLength(ActiveRecords, 0);
+      ActiveMaster := nil;
+      ActiveRecord := nil;
+      ActiveIndex := NoColumn;
+
+      SetLength(ActiveRecords, Length(aDataContainers));
+      for i := Low(ActiveRecords) to High(ActiveRecords) do
+        with ActiveRecords[i] do begin
+          Element := aDataContainers[i];
+          Container := aDataContainers[i] as IwbContainerElementRef;
+        end;
+
+      with vstView.Header.Columns do begin
+        BeginUpdate;
+        try
+          Clear;
+          with Add do begin
+            Text := '';
+            Width := wbColumnWidth;
+            Options := Options - [coDraggable];
+            Options := Options + [coFixed];
+          end;
+          for I := Low(ActiveRecords) to High(ActiveRecords) do
+            with Add do begin
+              Text := (ActiveRecords[i].Element as IwbMainRecord).EditorID;
+              Style := vsOwnerDraw;
+              Width := wbColumnWidth;
+              MinWidth := 5;
+              MaxWidth := 3000;
+              Options := Options - [coAllowclick, coDraggable];
+              Options := Options + [coAutoSpring];
+            end;
+          if Length(ActiveRecords) > 1 then
+            with Add do begin
+              Text := '';
+              Width := 1;
+              MinWidth := 1;
+              MaxWidth := 3000;
+              Options := Options - [coAllowclick, coDraggable];
+            end;
+        finally
+          EndUpdate;
+        end;
+      end;
+
+      vstView.NodeDataSize := SizeOf(TNavNodeData) * Length(ActiveRecords);
+      vstView.RootNodeCount := (aDataContainers[0].Def as IwbStructDef).MemberCount + aDataContainers[0].AdditionalElementCount;
+      InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
+      vstView.FullExpand;
+      pgMain.ActivePage := tbsView;
+    finally
+      vstView.EndUpdate;
+    end;
+    tbsReferencedBy.TabVisible := False;
+  finally
+    lvReferencedBy.Items.EndUpdate;
+  end;
 end;
 
 procedure TfrmMain.SetActiveRecord(const aMainRecords: TDynMainRecords);
@@ -12846,7 +13337,7 @@ begin
   if Assigned(NodeData) then begin
     Element := NodeData.Element;
     if Assigned(Element) then
-      if Element.ElementType <> etMainRecord then
+      if not (Element.ElementType = etMainRecord) and not Element.TreeLeaf then
         Element := nil;
 
     if NodeData.ConflictAll >= caNoConflict then
@@ -12874,7 +13365,12 @@ begin
   else begin
     lblPath.Visible := False;
   end;
-  SetActiveRecord(Element as IwbMainRecord);
+  if Supports(Element, IwbMainRecord) then
+    SetActiveRecord(Element as IwbMainRecord)
+  else if Supports(Element, IwbDataContainer) then
+    SetActiveContainer(Element as IwbDataContainer)
+  else
+    ClearActiveContainer;
 end;
 
 function FindSortElement(const aElement: IwbElement): IwbElement;
@@ -12892,17 +13388,19 @@ end;
 procedure TfrmMain.vstNavCompareNodes(Sender: TBaseVirtualTree; Node1,
   Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
 var
-  Element1                    : IwbElement;
-  Element2                    : IwbElement;
-  SortElement1                : IwbElement;
-  SortElement2                : IwbElement;
-  GroupRecord1                : IwbGroupRecord;
-  GroupRecord2                : IwbGroupRecord;
-  MainRecord1                 : IwbMainRecord;
-  MainRecord2                 : IwbMainRecord;
+  Element1     : IwbElement;
+  Element2     : IwbElement;
+  Container    : IwbContainerElementRef;
+  SortElement1 : IwbElement;
+  SortElement2 : IwbElement;
+  GroupRecord1 : IwbGroupRecord;
+  GroupRecord2 : IwbGroupRecord;
+  MainRecord1  : IwbMainRecord;
+  MainRecord2  : IwbMainRecord;
 begin
   Element1 := PNavNodeData(Sender.GetNodeData(Node1)).Element;
   Element2 := PNavNodeData(Sender.GetNodeData(Node2)).Element;
+  Result := 0;
 
   if Element1 = Element2 then begin
     Result := 0;
@@ -12918,6 +13416,14 @@ begin
   end
   else if not Assigned(Element1) then begin
     Result := 0;
+    Exit;
+  end;
+
+  if Element1.TreeHead then begin
+    Result := -1;
+    Exit;
+  end else if Element2.TreeHead then begin
+    Result := 1;
     Exit;
   end;
 
@@ -13000,7 +13506,19 @@ begin
           end;
         end
     else
-      Assert(False);
+      Result := CmpI32(Element1.SortPriority, Element2.SortPriority);
+      if Result = 0 then
+        Result := CmpI32(Element1.SortOrder, Element2.SortOrder);
+      if (Result = 0) and Assigned(Element1.Container) and Assigned(Element2.Container) and
+         (Element1.Container = Element2.Container) then begin
+        Container := Element1.Container as IwbContainerElementRef;
+        if Container.ElementType = etArray then
+          Result := CmpI32(Container.IndexOf(Element1), Container.IndexOf(Element2));
+      end;
+
+      if Result = 0 then
+        Result := CmpW32(Cardinal(Pointer(Element1)), Cardinal(Pointer(Element2)));
+      Exit;
     end;
 
   if Result = 0 then
@@ -13190,10 +13708,12 @@ end;
 procedure TfrmMain.vstNavInitNode(Sender: TBaseVirtualTree; ParentNode,
   Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
 var
-  NodeData                    : PNavNodeData;
-  Element                     : IwbElement;
-  Container                   : IwbContainerElementRef;
-  GroupRecord                 : IwbGroupRecord;
+  NodeData    : PNavNodeData;
+  Element     : IwbElement;
+  Container   : IwbContainerElementRef;
+  Container2  : IwbContainerElementRef;
+  GroupRecord : IwbGroupRecord;
+  i           : Integer;
 begin
   GroupRecord := nil;
   NodeData := PNavNodeData(Sender.GetNodeData(Node));
@@ -13221,7 +13741,7 @@ begin
     Exit;
   end;
 
-  if Element.ElementType <> etMainRecord then begin
+  if not (Element.ElementType = etMainRecord) and not Element.TreeLeaf then begin
     if Supports(Element, IwbContainerElementRef, Container) and (Container.ElementCount > 0) then begin
       Include(InitialStates, ivsHasChildren);
       NodeData.Container := IInterface(Container) as IwbContainer;
@@ -13231,7 +13751,16 @@ begin
     if GroupRecord.ElementCount > 0 then
       Include(InitialStates, ivsHasChildren);
     NodeData.Container := GroupRecord;
-  end;
+  end
+  else if Element.TreeLeaf then
+    if Supports(Element, IwbContainerElementRef, Container) and (Container.ElementCount > 0) then
+      for i := 0 to Pred(Container.ElementCount) do
+        if (Container.Elements[i].TreeBranch) and
+            Supports(Container.Elements[i], IwbContainerElementRef, Container2) and (Container2.ElementCount > 0) then begin
+          Include(InitialStates, ivsHasChildren);
+          NodeData.Container := Container.Elements[i] as IwbContainer;
+          Break;
+        end;
 
   if Node.Index > 0 then
     if Supports(Element, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType in [1, 6, 7]) then begin
@@ -14531,7 +15060,7 @@ begin
     wbProgressCallback := LoaderProgress;
     try
       if ltLoadOrderOffset + ltLoadList.Count >= 255 then begin
-        LoaderProgress('Too many plugins selected. Adding '+IntToStr(ltLoadList.Count)+' would exceed the maximum index of 254');
+        LoaderProgress('Too many plugins selected. Adding '+IntToStr(ltLoadList.Count)+' files would exceed the maximum index of 254');
         wbLoaderError := True;
       end else begin
         if not Assigned(wbContainerHandler) then begin
@@ -14589,7 +15118,16 @@ begin
 
         for i := 0 to Pred(ltLoadList.Count) do begin
           LoaderProgress('loading "' + ltLoadList[i] + '"...');
-          _File := wbFile(ltDataPath + ltLoadList[i], i + ltLoadOrderOffset, ltMaster, ltTemporary);
+          if FileExists(ltLoadList[i]) then
+            s := ltLoadList[i]
+          else begin
+            s := ltDataPath + ltLoadList[i];
+            if not wbIsPlugin(ltLoadList[i]) then
+              if wbToolSource in [tsSaves] then
+                if not FileExists(s) then // Assume its a save in the save path
+                  s := wbSavePath + ltLoadList[i];
+          end;
+          _File := wbFile(s, i + ltLoadOrderOffset, ltMaster, ltTemporary);
           if wbEditAllowed and not wbTranslationMode then begin
             SetLength(ltFiles, Succ(Length(ltFiles)));
             ltFiles[High(ltFiles)] := _File;
@@ -14619,7 +15157,9 @@ begin
 
         if wbBuildRefs then
           for i := Low(ltFiles) to High(ltFiles) do
-            if not SameText(ltFiles[i].FileName, wbGameName + '.esm') and not wbDoNotBuildRefsFor.Find(ltFiles[i].FileName, dummy) then begin
+            if not SameText(ltFiles[i].FileName, wbGameName + '.esm') and
+               not wbDoNotBuildRefsFor.Find(ltFiles[i].FileName, dummy) and
+               not ltFiles[i].IsNotPlugin then begin
               LoaderProgress('[' + ltFiles[i].FileName + '] Building reference info.');
               ltFiles[i].BuildRef;
               if frmMain.ForceTerminate then
