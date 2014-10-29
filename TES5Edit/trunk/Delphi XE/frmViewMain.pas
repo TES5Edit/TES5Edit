@@ -4665,7 +4665,7 @@ var
   Res             : TDynResources;
   PTree           : PwbLodTES5Tree;
   ini             : TMemIniFile;
-  slIni           : TStringList;
+  slIni, slLog    : TStringList;
   bsIni           : TBytesStream;
   RefPos, RefRot  : TwbVector;
   RefCell, RefBlock : TwbGridCell;
@@ -4743,6 +4743,7 @@ begin
   PostAddMessage('[' + aWorldspace.EditorID + '] Generating Trees LOD');
 
   // building lod
+  slLog := TStringList.Create;
   Lst := TwbLodTES5TreeList.Create(aWorldspace.EditorID);
   try
 
@@ -4773,7 +4774,7 @@ begin
         // load billboard texture
         Res := wbContainerHandler.OpenResource(PTree^.Billboard);
         if (Length(Res) > 0) and PTree^.LoadFromData(Res[High(Res)].GetData) then begin
-          PostAddMessage('[' + PTree^.Billboard + '] LOD for ' + TreeRec.Name);
+          slLog.Add('[' + PTree^.Billboard + '] LOD for ' + TreeRec.Name);
           // store checksum of billboard to avoid duplicates in atlas
           PTree^.CRC32 := wbCRC32Data(Res[High(Res)].GetData);
           // load tree data
@@ -4800,7 +4801,7 @@ begin
         end
         else begin
           PTree^.Index := -1;
-          //PostAddMessage('[' + PTree^.Billboard + '] Invalid texture, ' + TreeRec.Name + ' will be skipped in LOD');
+          slLog.Add('[' + PTree^.Billboard + '] No lod texture found for ' + TreeRec.Name);
         end;
       end;
 
@@ -4857,6 +4858,9 @@ begin
         StartTick := GetTickCount;
       end;
     end;
+
+    slLog.Sort;
+    PostAddMessage(slLog.Text);
 
     if not Lst.BuildAtlas(StrToIntDef(Settings.ReadString('Worldspace', 'AtlasSizeMax', ''), 8192)) then begin
       // will return false without exception only if atlas is empty, skip this silenty
@@ -4915,6 +4919,7 @@ begin
 
   finally
     Lst.Free;
+    slLog.Free;
   end;
 end;
 
