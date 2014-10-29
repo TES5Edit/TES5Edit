@@ -9033,33 +9033,7 @@ begin
   if (Length(stSortKey) > 0) or (aExtended and (Length(stExSortKey) > 0)) then begin
     for i := Low(stSortKey) to High(stSortKey) do begin
       SortMember := stSortKey[i];
-
-      BasePtr := aBasePtr;
-      for j := Low(stMembers) to Pred(SortMember) do begin
-        Inc(Cardinal(BasePtr), stMembers[j].Size[BasePtr, aEndPtr, aElement]);
-        if Cardinal(BasePtr) > Cardinal(aEndPtr) then
-          BasePtr := aEndPtr;
-      end;
-
-      EndPtr := Pointer( Cardinal(BasePtr) + Cardinal(stMembers[SortMember].Size[BasePtr, aEndPtr, aElement]) );
-
-      if Cardinal(BasePtr) > Cardinal(aEndPtr) then
-        BasePtr := aEndPtr;
-      if Cardinal(EndPtr) > Cardinal(aEndPtr) then
-        EndPtr := aEndPtr;
-
-      Result := Result + stMembers[SortMember].ToSortKey(BasePtr, EndPtr, aElement, aExtended);
-
-      if i < High(stSortKey) then
-        Result := Result + '|';
-    end;
-    if aExtended then begin
-      if (Length(stSortKey) > 0) and (Length(stExSortKey) > 0) then
-        Result := Result + '|';
-
-      for i := Low(stExSortKey) to High(stExSortKey) do begin
-        SortMember := stExSortKey[i];
-
+      if SortMember < High(stMembers) then begin
         BasePtr := aBasePtr;
         for j := Low(stMembers) to Pred(SortMember) do begin
           Inc(Cardinal(BasePtr), stMembers[j].Size[BasePtr, aEndPtr, aElement]);
@@ -9075,6 +9049,34 @@ begin
           EndPtr := aEndPtr;
 
         Result := Result + stMembers[SortMember].ToSortKey(BasePtr, EndPtr, aElement, aExtended);
+      end;
+
+      if i < High(stSortKey) then
+        Result := Result + '|';
+    end;
+    if aExtended then begin
+      if (Length(stSortKey) > 0) and (Length(stExSortKey) > 0) then
+        Result := Result + '|';
+
+      for i := Low(stExSortKey) to High(stExSortKey) do begin
+        SortMember := stExSortKey[i];
+        if SortMember < High(stMembers) then begin
+          BasePtr := aBasePtr;
+          for j := Low(stMembers) to Pred(SortMember) do begin
+            Inc(Cardinal(BasePtr), stMembers[j].Size[BasePtr, aEndPtr, aElement]);
+            if Cardinal(BasePtr) > Cardinal(aEndPtr) then
+              BasePtr := aEndPtr;
+          end;
+
+          EndPtr := Pointer( Cardinal(BasePtr) + Cardinal(stMembers[SortMember].Size[BasePtr, aEndPtr, aElement]) );
+
+          if Cardinal(BasePtr) > Cardinal(aEndPtr) then
+            BasePtr := aEndPtr;
+          if Cardinal(EndPtr) > Cardinal(aEndPtr) then
+            EndPtr := aEndPtr;
+
+          Result := Result + stMembers[SortMember].ToSortKey(BasePtr, EndPtr, aElement, aExtended);
+        end;
 
         if i < High(stExSortKey) then
           Result := Result + '|';
@@ -12392,9 +12394,13 @@ end;
 { TwbUnionDef }
 
 procedure TwbUnionDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
+var
+  ValueDef : IwbValueDef;
 begin
   inherited;
-  Decide(aBasePtr, aEndPtr, aElement).BuildRef(aBasePtr, aEndPtr, aElement);
+  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  if Assigned(ValueDef) then
+    ValueDef.BuildRef(aBasePtr, aEndPtr, aElement);
 end;
 
 function TwbUnionDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
@@ -14038,7 +14044,7 @@ initialization
   wbPluginExtensions[1] := '.ESM';
   wbPluginExtensions[2] := '.GHOST';
 
-  finalization
+finalization
   FreeAndNil(wbIgnoreRecords);
   FreeAndNil(wbDoNotBuildRefsFor);
   FreeAndNil(wbGroupOrder);

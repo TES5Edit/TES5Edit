@@ -58,7 +58,7 @@
 			<Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
 			<VerInfo_MajorVer>3</VerInfo_MajorVer>
 			<UsePackages>true</UsePackages>
-			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.33.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterAU;ProductVersion=3.0.33;Comments=</VerInfo_Keys>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.33.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xEdit by ElminsterAU;ProductVersion=3.0.33;Comments=</VerInfo_Keys>
 			<VerInfo_PreRelease>true</VerInfo_PreRelease>
 			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
@@ -99,6 +99,7 @@
 			<DCCReference Include="wbDefinitionsTES3.pas"/>
 			<DCCReference Include="wbDefinitionsTES4.pas"/>
 			<DCCReference Include="wbDefinitionsTES5.pas"/>
+			<DCCReference Include="wbLocalization.pas"/>
 			<DCCReference Include="frmViewMain.pas">
 				<Form>frmMain</Form>
 			</DCCReference>
