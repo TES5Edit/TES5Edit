@@ -5401,40 +5401,20 @@ begin
   ], True, wbPlacedAddInfo);
 
   wbRecord(ACTI, 'Activator',
-    wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} '',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} '',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} 'Has Tree LOD',
-      {0x00000080} { 7} '',
-      {0x00000100} { 8} 'Must Update Anims',
-      {0x00000200} { 9} 'Hidden From Local Map',
-      {0x00000400} {10} '',
-      {0x00000800} {11} '',
-      {0x00001000} {12} '',
-      {0x00002000} {13} '',
-      {0x00004000} {14} '',
-      {0x00008000} {15} '',
-      {0x00010000} {16} 'Random Anim Start',
-      {0x00020000} {17} 'Dangerous',
-      {0x00040000} {18} '',
-      {0x00080000} {19} '',
-      {0x00100000} {20} 'Ignore Object Interaction',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} 'Is Marker',
-      {0x01000000} {24} '',
-      {0x02000000} {25} 'Obstacle',
-      {0x04000000} {26} 'NavMesh Generation - Filter',
-      {0x08000000} {27} 'NavMesh Generation - Bounding Box',
-      {0x10000000} {28} '',
-      {0x20000000} {29} 'Child Can Use',
-      {0x40000000} {30} 'NavMesh Generation - Ground',
-      {0x80000000} {31} ''
-    ]), [
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000040}  6, 'Has Tree LOD',
+      {0x00000100}  8, 'Must Update Anims',
+      {0x00000200}  9, 'Hidden From Local Map',
+      {0x00010000} 16, 'Random Anim Start',
+      {0x00020000} 17, 'Dangerous',
+      {0x00100000} 20, 'Ignore Object Interaction',
+      {0x00800000} 23, 'Is Marker',
+      {0x02000000} 25, 'Obstacle',
+      {0x04000000} 26, 'NavMesh Generation - Filter',
+      {0x08000000} 27, 'NavMesh Generation - Bounding Box',
+      {0x20000000} 29, 'Child Can Use',
+      {0x40000000} 30, 'NavMesh Generation - Ground'
+    ])), [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -5461,40 +5441,11 @@ begin
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(TACT, 'Talking Activator',
-    wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} '',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} '',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} '',
-      {0x00000080} { 7} '',
-      {0x00000100} { 8} '',
-      {0x00000200} { 9} 'Hidden From Local Map',
-      {0x00000400} {10} '',
-      {0x00000800} {11} '',
-      {0x00001000} {12} '',
-      {0x00002000} {13} '',
-      {0x00004000} {14} '',
-      {0x00008000} {15} '',
-      {0x00010000} {16} 'Random Anim Start',
-      {0x00020000} {17} 'Radio Station',
-      {0x00040000} {18} '',
-      {0x00080000} {19} '',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} '',
-      {0x01000000} {24} '',
-      {0x02000000} {25} '',
-      {0x04000000} {26} '',
-      {0x08000000} {27} '',
-      {0x10000000} {28} '',
-      {0x20000000} {29} '',
-      {0x40000000} {30} '',
-      {0x80000000} {31} ''
-    ], [17]), [
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000200}  9, 'Hidden From Local Map',
+      {0x00010000} 16, 'Random Anim Start',
+      {0x00020000} 17, 'Radio Station'
+    ]), [17]), [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -6247,40 +6198,9 @@ begin
     ], [], cpNormal, True);
 
   wbRecord(ALCH, 'Ingestible',
-    wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} '',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} '',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} '',
-      {0x00000080} { 7} '',
-      {0x00000100} { 8} '',
-      {0x00000200} { 9} '',
-      {0x00000400} {10} '',
-      {0x00000800} {11} '',
-      {0x00001000} {12} '',
-      {0x00002000} {13} '',
-      {0x00004000} {14} '',
-      {0x00008000} {15} '',
-      {0x00010000} {16} '',
-      {0x00020000} {17} '',
-      {0x00040000} {18} '',
-      {0x00080000} {19} '',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} '',
-      {0x01000000} {24} '',
-      {0x02000000} {25} '',
-      {0x04000000} {26} '',
-      {0x08000000} {27} '',
-      {0x10000000} {28} '',
-      {0x20000000} {29} 'Medicine',
-      {0x40000000} {30} '',
-      {0x80000000} {31} ''
-    ]), [
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x20000000} 29, 'Medicine'
+    ])), [
     wbEDID,
     wbOBNDReq,
     wbFULL,
@@ -6324,40 +6244,9 @@ begin
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   wbRecord(AMMO, 'Ammunition',
-    wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} 'Non-Playable',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} '',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} '',
-      {0x00000080} { 7} '',
-      {0x00000100} { 8} '',
-      {0x00000200} { 9} '',
-      {0x00000400} {10} '',
-      {0x00000800} {11} '',
-      {0x00001000} {12} '',
-      {0x00002000} {13} '',
-      {0x00004000} {14} '',
-      {0x00008000} {15} '',
-      {0x00010000} {16} '',
-      {0x00020000} {17} '',
-      {0x00040000} {18} '',
-      {0x00080000} {19} '',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} '',
-      {0x01000000} {24} '',
-      {0x02000000} {25} '',
-      {0x04000000} {26} '',
-      {0x08000000} {27} '',
-      {0x10000000} {28} '',
-      {0x20000000} {29} '',
-      {0x40000000} {30} '',
-      {0x80000000} {31} ''
-    ]), [
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Non-Playable'
+    ])), [
     wbEDID,
     wbOBNDReq,
     wbFULL,
@@ -6383,80 +6272,21 @@ begin
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   wbRecord(ANIO, 'Animated Object',
-    wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} '',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} '',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} '',
-      {0x00000080} { 7} '',
-      {0x00000100} { 8} '',
-      {0x00000200} { 9} 'Unknown 9', // always present in updated records, not in Skyrim.esm
-      {0x00000400} {10} '',
-      {0x00000800} {11} '',
-      {0x00001000} {12} '',
-      {0x00002000} {13} '',
-      {0x00004000} {14} '',
-      {0x00008000} {15} '',
-      {0x00010000} {16} '',
-      {0x00020000} {17} '',
-      {0x00040000} {18} '',
-      {0x00080000} {19} '',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} '',
-      {0x01000000} {24} '',
-      {0x02000000} {25} '',
-      {0x04000000} {26} '',
-      {0x08000000} {27} '',
-      {0x10000000} {28} '',
-      {0x20000000} {29} '',
-      {0x40000000} {30} '',
-      {0x80000000} {31} ''
-    ], [9]), [
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000200}  9, 'Unknown 9' // always present in updated records, not in Skyrim.esm
+    ]), [9]), [
     wbEDID,
     wbMODL,
     wbString(BNAM, 'Unload Event')
   ]);
 
   wbRecord(ARMO, 'Armor',
-    wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} 'Non-Playable',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} '',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} 'Shield',
-      {0x00000080} { 7} '',
-      {0x00000100} { 8} '',
-      {0x00000200} { 9} '',
-      {0x00000400} {10} 'Unknown 10',
-      {0x00000800} {11} '',
-      {0x00001000} {12} '',
-      {0x00002000} {13} '',
-      {0x00004000} {14} '',
-      {0x00008000} {15} 'Unknown 15',
-      {0x00010000} {16} '',
-      {0x00020000} {17} '',
-      {0x00040000} {18} '',
-      {0x00080000} {19} '',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} '',
-      {0x01000000} {24} '',
-      {0x02000000} {25} '',
-      {0x04000000} {26} '',
-      {0x08000000} {27} '',
-      {0x10000000} {28} '',
-      {0x20000000} {29} '',
-      {0x40000000} {30} '',
-      {0x80000000} {31} ''
-    ]), [
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Non-Playable',
+      {0x00000040}  6, 'Shield',
+      {0x00000400} 10, 'Unknown 10',
+      {0x00008000} 15, 'Unknown 15'
+    ])), [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -6658,40 +6488,11 @@ begin
   if wbSimpleRecords then begin
 
     wbRecord(CELL, 'Cell',
-      wbFlags(wbRecordFlagsFlags, [
-        {0x00000001} { 0} '',
-        {0x00000002} { 1} '',
-        {0x00000004} { 2} '',
-        {0x00000008} { 3} '',
-        {0x00000010} { 4} '',
-        {0x00000020} { 5} 'Deleted',
-        {0x00000040} { 6} '',
-        {0x00000080} { 7} '',
-        {0x00000100} { 8} '',
-        {0x00000200} { 9} '',
-        {0x00000400} {10} 'Persistent',
-        {0x00000800} {11} '',
-        {0x00001000} {12} '',
-        {0x00002000} {13} '',
-        {0x00004000} {14} '',
-        {0x00008000} {15} '',
-        {0x00010000} {16} '',
-        {0x00020000} {17} '',
-        {0x00040000} {18} 'Compressed',
-        {0x00080000} {19} '',
-        {0x00100000} {20} '',
-        {0x00200000} {21} '',
-        {0x00400000} {22} '',
-        {0x00800000} {23} '',
-        {0x01000000} {24} '',
-        {0x02000000} {25} '',
-        {0x04000000} {26} '',
-        {0x08000000} {27} '',
-        {0x10000000} {28} '',
-        {0x20000000} {29} '',
-        {0x40000000} {30} '',
-        {0x80000000} {31} ''
-      ]), [
+      wbFlags(wbRecordFlagsFlags, wbFlagsList([
+        {0x00000400} 10, 'Persistent',
+        {0x00040000} 18, 'Compressed',
+        {0x00080000} 19, 'Can''t wait'
+      ])), [
       wbEDID,
       wbFULL,
       {>>>
@@ -6811,40 +6612,11 @@ begin
   end else begin
 
     wbRecord(CELL, 'Cell',
-      wbFlags(wbRecordFlagsFlags, [
-        {0x00000001} { 0} '',
-        {0x00000002} { 1} '',
-        {0x00000004} { 2} '',
-        {0x00000008} { 3} '',
-        {0x00000010} { 4} '',
-        {0x00000020} { 5} 'Deleted',
-        {0x00000040} { 6} '',
-        {0x00000080} { 7} '',
-        {0x00000100} { 8} '',
-        {0x00000200} { 9} '',
-        {0x00000400} {10} 'Persistent',
-        {0x00000800} {11} '',
-        {0x00001000} {12} '',
-        {0x00002000} {13} '',
-        {0x00004000} {14} '',
-        {0x00008000} {15} '',
-        {0x00010000} {16} '',
-        {0x00020000} {17} '',
-        {0x00040000} {18} 'Compressed',
-        {0x00080000} {19} '',
-        {0x00100000} {20} '',
-        {0x00200000} {21} '',
-        {0x00400000} {22} '',
-        {0x00800000} {23} '',
-        {0x01000000} {24} '',
-        {0x02000000} {25} '',
-        {0x04000000} {26} '',
-        {0x08000000} {27} '',
-        {0x10000000} {28} '',
-        {0x20000000} {29} '',
-        {0x40000000} {30} '',
-        {0x80000000} {31} ''
-      ]), [
+      wbFlags(wbRecordFlagsFlags, wbFlagsList([
+        {0x00000400} 10, 'Persistent',
+        {0x00040000} 18, 'Compressed',
+        {0x00080000} 19, 'Can''t wait'
+      ])), [
       wbEDID,
       wbFULL,
       {>>>
@@ -7087,40 +6859,13 @@ begin
   ]);
 
   wbRecord(CONT, 'Container',
-    wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} '',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} '',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} '',
-      {0x00000080} { 7} '',
-      {0x00000100} { 8} '',
-      {0x00000200} { 9} '',
-      {0x00000400} {10} '',
-      {0x00000800} {11} '',
-      {0x00001000} {12} '',
-      {0x00002000} {13} '',
-      {0x00004000} {14} '',
-      {0x00008000} {15} '',
-      {0x00010000} {16} 'Random Anim Start',
-      {0x00020000} {17} '',
-      {0x00040000} {18} '',
-      {0x00080000} {19} '',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} '',
-      {0x01000000} {24} '',
-      {0x02000000} {25} 'Obstacle',
-      {0x04000000} {26} 'NavMesh Generation - Filter',
-      {0x08000000} {27} 'NavMesh Generation - Bounding Box',
-      {0x10000000} {28} '',
-      {0x20000000} {29} '',
-      {0x40000000} {30} 'NavMesh Generation - Ground',
-      {0x80000000} {31} ''
-    ]), [
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00010000} 16, 'Random Anim Start',
+      {0x02000000} 25, 'Obstacle',
+      {0x04000000} 26, 'NavMesh Generation - Filter',
+      {0x08000000} 27, 'NavMesh Generation - Bounding Box',
+      {0x40000000} 30, 'NavMesh Generation - Ground'
+    ])), [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -7244,40 +6989,9 @@ begin
   ]);
 
   wbRecord(CSTY, 'Combat Style',
-    wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} '',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} '',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} '',
-      {0x00000080} { 7} '',
-      {0x00000100} { 8} '',
-      {0x00000200} { 9} '',
-      {0x00000400} {10} '',
-      {0x00000800} {11} '',
-      {0x00001000} {12} '',
-      {0x00002000} {13} '',
-      {0x00004000} {14} '',
-      {0x00008000} {15} '',
-      {0x00010000} {16} '',
-      {0x00020000} {17} '',
-      {0x00040000} {18} '',
-      {0x00080000} {19} 'Allow Dual Wielding',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} '',
-      {0x01000000} {24} '',
-      {0x02000000} {25} '',
-      {0x04000000} {26} '',
-      {0x08000000} {27} '',
-      {0x10000000} {28} '',
-      {0x20000000} {29} '',
-      {0x40000000} {30} '',
-      {0x80000000} {31} ''
-    ]), [
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00080000} 19, 'Allow Dual Wielding'
+    ])), [
     wbEDID,
     wbStruct(CSGD, 'General', [
       wbFloat('Offensive Mult'),
@@ -7465,40 +7179,10 @@ begin
   ]);
 
   wbRecord(DOOR, 'Door',
-    wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} '',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} '',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} '',
-      {0x00000080} { 7} '',
-      {0x00000100} { 8} '',
-      {0x00000200} { 9} '',
-      {0x00000400} {10} '',
-      {0x00000800} {11} '',
-      {0x00001000} {12} '',
-      {0x00002000} {13} '',
-      {0x00004000} {14} '',
-      {0x00008000} {15} '',
-      {0x00010000} {16} 'Random Anim Start',
-      {0x00020000} {17} '',
-      {0x00040000} {18} '',
-      {0x00080000} {19} '',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} 'Is Marker',
-      {0x01000000} {24} '',
-      {0x02000000} {25} '',
-      {0x04000000} {26} '',
-      {0x08000000} {27} '',
-      {0x10000000} {28} '',
-      {0x20000000} {29} '',
-      {0x40000000} {30} '',
-      {0x80000000} {31} ''
-    ]), [
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00010000} 16, 'Random Anim Start',
+      {0x00800000} 23, 'Is Marker'
+    ])), [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -7761,40 +7445,9 @@ begin
   ]);
 
   wbRecord(EYES, 'Eyes',
-    wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} 'Non-Playable',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} '',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} '',
-      {0x00000080} { 7} '',
-      {0x00000100} { 8} '',
-      {0x00000200} { 9} '',
-      {0x00000400} {10} '',
-      {0x00000800} {11} '',
-      {0x00001000} {12} '',
-      {0x00002000} {13} '',
-      {0x00004000} {14} '',
-      {0x00008000} {15} '',
-      {0x00010000} {16} '',
-      {0x00020000} {17} '',
-      {0x00040000} {18} '',
-      {0x00080000} {19} '',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} '',
-      {0x01000000} {24} '',
-      {0x02000000} {25} '',
-      {0x04000000} {26} '',
-      {0x08000000} {27} '',
-      {0x10000000} {28} '',
-      {0x20000000} {29} '',
-      {0x40000000} {30} '',
-      {0x80000000} {31} ''
-    ]), [
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Non-Playable'
+    ])), [
     wbEDID,
     wbFULLReq,
     wbString(ICON, 'Texture', 0, cpNormal, True),
@@ -7901,40 +7554,13 @@ begin
   ], False, nil, cpNormal, False, nil {wbFACTAfterLoad}, wbConditionsAfterSet);
 
   wbRecord(FURN, 'Furniture',
-    wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} '',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} '',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} '',
-      {0x00000080} { 7} 'Is Perch',
-      {0x00000100} { 8} '',
-      {0x00000200} { 9} '',
-      {0x00000400} {10} '',
-      {0x00000800} {11} '',
-      {0x00001000} {12} '',
-      {0x00002000} {13} '',
-      {0x00004000} {14} '',
-      {0x00008000} {15} '',
-      {0x00010000} {16} 'Random Anim Start',
-      {0x00020000} {17} '',
-      {0x00040000} {18} '',
-      {0x00080000} {19} '',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} 'Is Marker',
-      {0x01000000} {24} '',
-      {0x02000000} {25} '',
-      {0x04000000} {26} '',
-      {0x08000000} {27} '',
-      {0x10000000} {28} 'Must Exit To Talk',
-      {0x20000000} {29} 'Child Can Use',
-      {0x40000000} {30} '',
-      {0x80000000} {31} ''
-    ]), [
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000080}  7, 'Is Perch',
+      {0x00010000} 16, 'Random Anim Start',
+      {0x00800000} 23, 'Is Marker',
+      {0x10000000} 28, 'Must Exit To Talk',
+      {0x20000000} 29, 'Child Can Use'
+    ])), [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -8017,40 +7643,9 @@ begin
 // correctly without making a signed float by default
 //----------------------------------------------------------------------------
   wbRecord(GLOB, 'Global',
-    wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} '',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} '',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} 'Constant',
-      {0x00000080} { 7} '',
-      {0x00000100} { 8} '',
-      {0x00000200} { 9} '',
-      {0x00000400} {10} '',
-      {0x00000800} {11} '',
-      {0x00001000} {12} '',
-      {0x00002000} {13} '',
-      {0x00004000} {14} '',
-      {0x00008000} {15} '',
-      {0x00010000} {16} '',
-      {0x00020000} {17} '',
-      {0x00040000} {18} '',
-      {0x00080000} {19} '',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} '',
-      {0x01000000} {24} '',
-      {0x02000000} {25} '',
-      {0x04000000} {26} '',
-      {0x08000000} {27} '',
-      {0x10000000} {28} '',
-      {0x20000000} {29} '',
-      {0x40000000} {30} '',
-      {0x80000000} {31} ''
-    ]), [
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000040}  6, 'Constant'
+    ])), [
     wbEDID,
     wbInteger(FNAM, 'Type', itU8, wbGLOBFNAM, nil, cpNormal, True),
     wbFloat(FLTV, 'Value', cpNormal, True)
@@ -8106,40 +7701,9 @@ begin
   ]);
 
   wbRecord(HDPT, 'Head Part',
-    wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} 'Non-Playable',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} '',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} '',
-      {0x00000080} { 7} '',
-      {0x00000100} { 8} '',
-      {0x00000200} { 9} '',
-      {0x00000400} {10} '',
-      {0x00000800} {11} '',
-      {0x00001000} {12} '',
-      {0x00002000} {13} '',
-      {0x00004000} {14} '',
-      {0x00008000} {15} '',
-      {0x00010000} {16} '',
-      {0x00020000} {17} '',
-      {0x00040000} {18} '',
-      {0x00080000} {19} '',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} '',
-      {0x01000000} {24} '',
-      {0x02000000} {25} '',
-      {0x04000000} {26} '',
-      {0x08000000} {27} '',
-      {0x10000000} {28} '',
-      {0x20000000} {29} '',
-      {0x40000000} {30} '',
-      {0x80000000} {31} ''
-    ]), [
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Non-Playable'
+    ])), [
     wbEDID,
     wbFULL,
     wbMODL,
@@ -8184,40 +7748,16 @@ begin
   ]);
 
   wbRecord(MSTT, 'Moveable Static',
-    wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} '',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} '',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} '',
-      {0x00000080} { 7} '',
-      {0x00000100} { 8} 'Must Update Anims',
-      {0x00000200} { 9} 'Hidden From Local Map',
-      {0x00000400} {10} '',
-      {0x00000800} {11} '',
-      {0x00001000} {12} '',
-      {0x00002000} {13} '',
-      {0x00004000} {14} '',
-      {0x00008000} {15} '',
-      {0x00010000} {16} 'Random Anim Start',
-      {0x00020000} {17} '',
-      {0x00040000} {18} '',
-      {0x00080000} {19} 'Has Currents',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} '',
-      {0x01000000} {24} '',
-      {0x02000000} {25} 'Obstacle',
-      {0x04000000} {26} 'NavMesh Generation - Filter',
-      {0x08000000} {27} 'NavMesh Generation - Bounding Box',
-      {0x10000000} {28} '',
-      {0x20000000} {29} '',
-      {0x40000000} {30} 'NavMesh Generation - Ground',
-      {0x80000000} {31} ''
-    ]), [
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000100}  8, 'Must Update Anims',
+      {0x00000200}  9, 'Hidden From Local Map',
+      {0x00010000} 16, 'Random Anim Start',
+      {0x00080000} 19, 'Has Currents',
+      {0x02000000} 25, 'Obstacle',
+      {0x04000000} 26, 'NavMesh Generation - Filter',
+      {0x08000000} 27, 'NavMesh Generation - Bounding Box',
+      {0x40000000} 30, 'NavMesh Generation - Ground'
+    ])), [
     wbEDID,
     wbOBNDReq,
     wbFULL,
@@ -8233,7 +7773,10 @@ end;
 
 procedure DefineTES5f;
 begin
-  wbRecord(IDLM, 'Idle Marker', [
+  wbRecord(IDLM, 'Idle Marker',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x20000000} 29, 'Child Can Use'
+    ])), [
     wbEDID,
     wbOBNDReq,
     wbInteger(IDLF, 'Flags', itU8, wbFlags([
@@ -8344,7 +7887,10 @@ begin
     {5} 'Grand'
   ]);
 
-  wbRecord(SLGM, 'Soul Gem', [
+  wbRecord(SLGM, 'Soul Gem',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00020000} 17, 'Can Hold NPC Soul'
+    ])), [
     wbEDID,
     wbOBND,
     wbFULL,
@@ -8410,7 +7956,10 @@ begin
       wbUnknown(NVSI)
     ]);
 
-    wbRecord(NAVM, 'Navigation Mesh', [
+    wbRecord(NAVM, 'Navigation Mesh',
+      wbFlags(wbRecordFlagsFlags, wbFlagsList([
+        {0x00040000} 18, 'Compressed'
+      ])), [
       wbEDID,
       wbStruct(NVNM, 'Geometry', [
         wbByteArray('Unknown', 8),
@@ -8507,7 +8056,10 @@ begin
       wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
     ]);
 
-    wbRecord(NAVM, 'Navigation Mesh', [
+    wbRecord(NAVM, 'Navigation Mesh',
+      wbFlags(wbRecordFlagsFlags, wbFlagsList([
+        {0x00040000} 18, 'Compressed'
+      ])), [
       wbEDID,
       wbStruct(NVNM, 'Geometry', [
         wbInteger('Unknown', itU32),
@@ -8652,7 +8204,7 @@ begin
         wbInteger('Percentage', itU8),
         wbString('Model Filename'),
         wbInteger('Flags', itU8, wbFlags([
-          'Has Collission Data'
+          'Has Collision Data'
         ]))
       ], cpNormal, True),
       wbMODT
@@ -8963,7 +8515,10 @@ begin
     wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
   ]);
 
-  wbRecord(PERK, 'Perk', [
+  wbRecord(PERK, 'Perk',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Non-Playable'
+    ])), [
     wbEDID,
     wbVMAD,
     wbFULL,
