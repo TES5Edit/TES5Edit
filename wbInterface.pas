@@ -2943,6 +2943,7 @@ function ConflictThisToColor(aConflictThis: TConflictThis): TColor;
 var
   wbGetFormIDCallback : function(const aElement: IwbElement): Cardinal;
 
+function wbFlagsList(aFlags: array of const; aDeleted: Boolean = True): TDynStrings;
 function wbGetFormID(const aElement: IwbElement): Cardinal;
 function wbPositionToGridCell(const aPosition: TwbVector): TwbGridCell;
 function wbSubBlockFromGridCell(const aGridCell: TwbGridCell): TwbGridCell;
@@ -3368,6 +3369,24 @@ begin
     Result := CmpI32(
       MainRecord1._File.LoadOrder,
       MainRecord2._File.LoadOrder);
+end;
+
+function wbFlagsList(aFlags: array of const; aDeleted: Boolean = True): TDynStrings;
+var
+  e: IwbEnumDef;
+  i: integer;
+  s: string;
+begin
+  e := wbEnum([], aFlags);
+  SetLength(Result, 32);
+  for i := 0 to 31 do
+    if aDeleted and (i = 5) then
+      Result[i] := 'Deleted'
+    else begin
+      s := e.ToString(i, nil);
+      if Pos('<', s) <> 1 then
+        Result[i] := s;
+    end
 end;
 
 type
