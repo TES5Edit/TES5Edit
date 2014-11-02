@@ -69,6 +69,7 @@ var
   wbVWDInTemporary         : Boolean  = False;
   wbResolveAlias           : Boolean  = True;
   wbActorTemplateHide      : Boolean  = True;
+  wbClampFormID            : Boolean  = True;
   wbDoNotBuildRefsFor      : TStringList;
 
   wbUDRSetXESP       : Boolean = True;
@@ -965,6 +966,7 @@ type
     procedure SetFormVersion(aFormVersion: Cardinal);
 
     procedure ChangeFormSignature(aSignature: TwbSignature);
+    procedure ClampFormID(aIndex: Cardinal);
 
     property Version: Cardinal
       read GetFormVersion

@@ -3651,6 +3651,7 @@ begin
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
   wbSortGroupRecord := Settings.ReadBool('Options', 'SortGroupRecord', wbSortGroupRecord);
   wbRemoveOffsetData := Settings.ReadBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
+  wbClampFormID := Settings.ReadBool('Options', 'ClampFormID', wbClampFormID);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
   wbUDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
@@ -9976,6 +9977,7 @@ begin
     cbRemoveOffsetData.Checked := wbRemoveOffsetData;
     cbShowFlagEnumValue.Checked := wbShowFlagEnumValue;
     cbSimpleRecords.Checked := wbSimpleRecords;
+    cbClampFormID.Checked := wbClampFormID;
     edColumnWidth.Text := IntToStr(wbColumnWidth);
     cbAutoSave.Checked := AutoSave;
     //cbIKnow.Checked := wbIKnowWhatImDoing;
@@ -10006,6 +10008,7 @@ begin
     wbRemoveOffsetData := cbRemoveOffsetData.Checked;
     wbShowFlagEnumValue := cbShowFlagEnumValue.Checked;
     wbSimpleRecords := cbSimpleRecords.Checked;
+    wbClampFormID := cbClampFormID.Checked;
     wbColumnWidth := StrToIntDef(edColumnWidth.Text, wbColumnWidth);
     AutoSave := cbAutoSave.Checked;
     //wbIKnowWhatImDoing := cbIKnow.Checked;
@@ -10033,6 +10036,7 @@ begin
     Settings.WriteBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
     Settings.WriteBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
+    Settings.WriteBool('Options', 'ClampFormID', wbClampFormID);
     Settings.WriteInteger('Options', 'ColumnWidth', wbColumnWidth);
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
     Settings.WriteBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);

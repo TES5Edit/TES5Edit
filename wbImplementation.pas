@@ -1007,6 +1007,7 @@ type
     function GetFormVersion: Cardinal; {>>> Form Version access <<<}
     procedure SetFormVersion(aFormVersion: Cardinal); {>>> Form Version access <<<}
     procedure ChangeFormSignature(aSignature: TwbSignature);
+    procedure ClampFormID(aIndex: Cardinal);
 
     procedure Delete;
     procedure DeleteInto(const aFile: IwbFile);
@@ -3029,6 +3030,15 @@ begin
       end;
     Exclude(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
     FileHeader.UpdateRefs;
+  end;
+
+  if wbClampFormID then begin
+    if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
+      k := MasterFiles.ElementCount
+    else
+      k := 0;
+    for i := Low(flRecords) to High(flRecords) do
+      flRecords[i].ClampFormID(k);
   end;
 end;
 
@@ -6624,6 +6634,14 @@ procedure TwbMainRecord.ChangeFormSignature(aSignature: TwbSignature);
 begin
   MakeHeaderWriteable;
   mrStruct.mrsSignature := aSignature;
+end;
+
+procedure TwbMainRecord.ClampFormID(aIndex: Cardinal);
+begin
+  if mrStruct.mrsFormID shr 24 > aIndex then begin
+    MakeHeaderWriteable;
+    mrStruct.mrsFormID := (mrStruct.mrsFormID and $00FFFFFF) or (aIndex shl 24);
+  end;
 end;
 
 function TwbMainRecord.GetGridCell(out aGridCell: TwbGridCell): Boolean;
