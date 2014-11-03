@@ -44,6 +44,8 @@ begin
   for i := 0 to Pred(slContainers.Count) do
     if (aIndex = 0) or (Pred(aIndex) = i) then
       ResourceList(slContainers[i], slAssets);
+  slAssets.Sort;
+  wbRemoveDuplicateStrings(slAssets);
 end;
   
 //===========================================================================
@@ -410,8 +412,6 @@ begin
   slContainers := TStringList.Create;
   
   slAssets := TwbFastStringList.Create;
-  slAssets.Sorted := True;
-  slAssets.Duplicates := dupIgnore;
   slTextures := TwbFastStringList.Create;
   slTextures.Sorted := True;
   slTextures.Duplicates := dupIgnore;
