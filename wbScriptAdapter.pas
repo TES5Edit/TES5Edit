@@ -147,6 +147,19 @@ begin
       slOut.Add(slIn[i]);
 end;
 
+procedure wbRemoveDuplicateStrings(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  sl: TStringList;
+  i, j: integer;
+begin
+  sl := TStringList(V2O(Args.Values[0]));
+  for i := Pred(sl.Count) downto 0 do begin
+    sl.Find(sl[i], j);
+    if (j <> -1) and (j <> i) then
+      sl.Delete(i);
+  end;
+end;
+
 procedure wbGetVersionNumber(var Value: Variant; Args: TJvInterpreterArgs);
 var
   fileInfo   : PVSFIXEDFILEINFO;
@@ -1577,6 +1590,7 @@ begin
     AddFunction(cUnit, 'EnableSkyrimSaveFormat', EnableSkyrimSaveFormat, 0, [], varEmpty);
     AddFunction(cUnit, 'GetRecordDefNames', GetRecordDefNames, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbFilterStrings', wbFilterStrings, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbRemoveDuplicateStrings', wbRemoveDuplicateStrings, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbVersionNumber', wbGetVersionNumber, 0, [], varEmpty);
 
     { IwbElement }

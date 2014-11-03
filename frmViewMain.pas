@@ -4779,7 +4779,7 @@ begin
         // load billboard texture
         Res := wbContainerHandler.OpenResource(PTree^.Billboard);
         if (Length(Res) > 0) and PTree^.LoadFromData(Res[High(Res)].GetData) then begin
-          slLog.Add('[' + PTree^.Billboard + '] LOD for ' + TreeRec.Name);
+          slLog.Add(TreeRec.Name + ' using LOD ' + PTree^.Billboard);
           // store checksum of billboard to avoid duplicates in atlas
           PTree^.CRC32 := wbCRC32Data(Res[High(Res)].GetData);
           // load tree data
@@ -4806,7 +4806,7 @@ begin
         end
         else begin
           PTree^.Index := -1;
-          slLog.Add('[' + PTree^.Billboard + '] No lod texture found for ' + TreeRec.Name);
+          slLog.Add('<Note: ' + TreeRec.Name + ' LOD not found ' + PTree^.Billboard + '>');
         end;
       end;
 
@@ -4865,7 +4865,8 @@ begin
     end;
 
     slLog.Sort;
-    PostAddMessage(slLog.Text);
+    PostAddMessage(Trim(slLog.Text));
+    Application.ProcessMessages;
 
     if not Lst.BuildAtlas(StrToIntDef(Settings.ReadString('Worldspace', 'AtlasSizeMax', ''), 8192)) then begin
       // will return false without exception only if atlas is empty, skip this silenty
