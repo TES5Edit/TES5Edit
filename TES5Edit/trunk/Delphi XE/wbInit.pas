@@ -369,7 +369,11 @@ begin
 
       wbPluginsFileName := wbPluginsFileName + wbGameName + '\Plugins.txt';
     end;
-  wbSettingsFileName := ChangeFileExt(wbPluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
+
+  // settings in the ini file next to app, or in the same folder with plugins.txt
+  wbSettingsFileName := wbProgramPath + wbAppName + wbToolName + '.ini';
+  if not FileExists(wbSettingsFileName) then
+    wbSettingsFileName := ChangeFileExt(wbPluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
 
   wbBackupPath := '';
   if not (wbDontSave or wbFindCmdLineParam('B', wbBackupPath)) then begin
