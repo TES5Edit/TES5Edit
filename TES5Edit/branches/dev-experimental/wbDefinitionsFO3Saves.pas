@@ -39,9 +39,9 @@ var
 var // forward type directives
   wbChangeTypes  : IwbEnumDef;
   wbSaveChapters : IwbStructDef;
-  wbFOSEChapters : IwbStructDef;
+  wbCoSaveChapters : IwbStructDef;
   wbSaveHeader   : IwbStructDef;
-  wbFOSEHeader   : IwbStructDef;
+  wbCoSaveHeader   : IwbStructDef;
 
 procedure DefineFO3SavesA;
 var
@@ -502,10 +502,12 @@ begin
   aType := ChangedFormGetChapterType(aBasePtr, aEndPtr, aElement);
   if (aType>=wbChangedFormOffset) and (aType < wbChangedFormOffset+wbChangeTypes.NameCount) then
     Result := wbChangeTypes.Names[aType-wbChangedFormOffset];
+  {
   if (Pos(' ', Result)>0) and (Length(Result)>1) then
     Result := Copy(Result, Pos(' ', Result)+1, Length(Result));
   if (Pos(' ', Result)>0) and (Length(Result)>1) then
     Result := Copy(Result, 1, Pos(' ', Result)-1);
+  }
   if Length(Result)=0 then
     Result := IntToStr(aType);
 end;
@@ -1804,8 +1806,10 @@ begin
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Type'];
     if Assigned(Element) then
-           if Element.Value ='MODS' then Result := 1
-      else Result := 2;
+      if Element.Value ='MODS' then
+        Result := 1
+      else
+        Result := 2;
   end;
 end;
 
@@ -1832,10 +1836,10 @@ var
   wbInitialDataType06        : IwbStructDef;
   wbInitialDataType          : IwbUnionDef;
   wbChangeFlags010Flags      : IwbFlagsDef;
-  wbChunk                    : IwbStructDef;
-  wbFOSEChunks               : IwbArrayDef;
-  wbFOSEPlugin               : IwbStructDef;
-  wbFOSEPlugins              : IwbArrayDef;
+  wbCoSaveChunk              : IwbStructDef;
+  wbCoSaveChunks             : IwbArrayDef;
+  wbCoSavePlugin             : IwbStructDef;
+  wbCoSavePlugins            : IwbArrayDef;
 
   wbChangeFlags000        : IwbIntegerDef;
   wbChangeFlags001        : IwbIntegerDef;
@@ -6210,7 +6214,7 @@ begin
 //    ,wbArray('Remaining',  WbByteArray('Unknown', wbBytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
   ]);
 
-  wbFOSEHeader := wbStruct('CoSave File Header', [
+  wbCoSaveHeader := wbStruct('CoSave File Header', [
      wbString('Magic', 4)
     ,wbInteger('Version', itU32)
     ,wbInteger('FOSE Version', itU16)
@@ -6219,7 +6223,7 @@ begin
     ,wbInteger('Plugins count', itU32)
   ]);
 
-  wbChunk := wbStruct('Chunk', [
+  wbCoSaveChunk := wbStructC('Chunk', nil, nil, nil, nil, [
     wbInteger('Type', itU32, wbStr4),
     wbInteger('Version', itU32),
     wbInteger('Length', itU32),
@@ -6260,29 +6264,29 @@ begin
       wbByteArray('Others', wbXXSEChapterOtherCounter)  // For what we cannot hardcode
    ])
   ]);
-  wbChunk.TreeLeaf := True;
+//  wbCoSaveChunk.TreeLeaf := True;
 
-  wbFOSEChunks := wbArray('Chunks', wbChunk, wbXXSEChunkCounter, cpNormal, false, wbDontShowBranch);
-  wbFOSEPlugin := wbStruct('Plugin', [
+  wbCoSaveChunks := wbArray('Chunks', wbCoSaveChunk, wbXXSEChunkCounter, cpNormal, false, wbDontShowBranch);
+  wbCoSavePlugin := wbStructC('Plugin', nil, nil, nil, nil, [
     wbInteger('Opcode Base', itU32),
     wbInteger('Chunks count', itU32),
     wbInteger('Length', itU32),
-    wbFOSEChunks
+    wbCoSaveChunks
   ]);
-  wbFOSEPlugin.TreeLeaf := True;
-  wbFOSEChunks.TreeBranch := True;
-  wbFOSEPlugins := wbArray('Plugins', wbFOSEPlugin, wbXXSEPluginCounter);
+//  wbCoSavePlugin.TreeLeaf := True;
+  wbCoSaveChunks.TreeBranch := True;
+  wbCoSavePlugins := wbArray('Plugins', wbCoSavePlugin, wbXXSEPluginCounter);
 
-  wbFOSEChapters := wbStruct('CoSave File Chapters', [
-    wbFOSEPlugins
+  wbCoSaveChapters := wbStruct('CoSave File Chapters', [
+    wbCoSavePlugins
   ]);
 
   wbFileChapters := wbSaveChapters;
   wbFileHeader := wbSaveHeader;
   wbSaveHeader.TreeHead := True;
-  wbFOSEHeader.TreeHead := True;
-  wbSaveHeader.TreeLeaf := True;
-  wbFOSEHeader.TreeLeaf := True;
+  wbCoSaveHeader.TreeHead := True;
+//  wbSaveHeader.TreeLeaf := True;
+//  wbCoSaveHeader.TreeLeaf := True;
 end;
 
 var
@@ -6304,8 +6308,8 @@ begin
   wbFileMagic := 'FOSE';
   wbExtractInfo := @ExtractInfoCoSave;
   wbFilePlugins := 'Absolute:44';
-  wbFileChapters := wbFOSEChapters;
-  wbFileHeader := wbFOSEHeader;
+  wbFileChapters := wbCoSaveChapters;
+  wbFileHeader := wbCoSaveHeader;
 end;
 
 initialization

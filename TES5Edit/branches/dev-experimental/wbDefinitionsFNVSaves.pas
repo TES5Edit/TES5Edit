@@ -37,11 +37,11 @@ var
   wbActorValueLabels : array of string;
 
 var // forward type directives
-  wbChangeTypes  : IwbEnumDef;
-  wbSaveChapters : IwbStructDef;
-  wbNVSEChapters : IwbStructDef;
-  wbSaveHeader   : IwbStructDef;
-  wbNVSEHeader   : IwbStructDef;
+  wbChangeTypes    : IwbEnumDef;
+  wbSaveChapters   : IwbStructDef;
+  wbCoSaveChapters : IwbStructDef;
+  wbSaveHeader     : IwbStructDef;
+  wbCoSaveHeader   : IwbStructDef;
 
 procedure DefineFNVSavesA;
 var
@@ -1840,10 +1840,10 @@ var
   wbInitialDataType06        : IwbStructDef;
   wbInitialDataType          : IwbUnionDef;
   wbChangeFlags010Flags      : IwbFlagsDef;
-  wbChunk                    : IwbStructDef;
-  wbNVSEChunks               : IwbArrayDef;
-  wbNVSEPlugin               : IwbStructDef;
-  wbNVSEPlugins              : IwbArrayDef;
+  wbCoSaveChunk              : IwbStructDef;
+  wbCoSaveChunks             : IwbArrayDef;
+  wbCoSavePlugin             : IwbStructDef;
+  wbCoSavePlugins            : IwbArrayDef;
 
   wbChangeFlags000        : IwbIntegerDef;
   wbChangeFlags001        : IwbIntegerDef;
@@ -2033,7 +2033,7 @@ begin
         wbLenStringT('Voice Filename', -3),
         wbIntegerT('Emotion Type', itU32),
         wbIntegerT('Emotion Value', itU32),
-        wbIntegerT('Use emotion animation', itU8),
+        wbIntegerT('Use emotion animation', itU8), // I don't see those in the engine, or is there more than one case?
         wbRefIDT('Speaker Idle'),
         wbRefIDT('Listener Idle'),
         wbRefIDT('Sound')
@@ -6782,7 +6782,7 @@ begin
 //    ,wbArray('Remaining',  WbByteArray('Unknown', wbBytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
   ]);
 
-  wbNVSEHeader := wbStruct('CoSave File Header', [
+  wbCoSaveHeader := wbStruct('CoSave File Header', [
      wbString('Magic', 4)
     ,wbInteger('Version', itU32)
     ,wbInteger('NVSE Version', itU16)
@@ -6791,7 +6791,7 @@ begin
     ,wbInteger('Plugins count', itU32)
   ]);
 
-  wbChunk := wbStruct('Chunk', [
+  wbCoSaveChunk := wbStructC('Chunk', nil, nil, nil, nil, [
     wbInteger('Type', itU32, wbStr4),
     wbInteger('Version', itU32),
     wbInteger('Length', itU32),
@@ -6832,29 +6832,29 @@ begin
       wbByteArray('Others', wbXXSEChapterOtherCounter)  // For what we cannot hardcode
    ])
   ]);
-  wbChunk.TreeLeaf := True;
+//  wbCoSaveChunk.TreeLeaf := True;
 
-  wbNVSEChunks := wbArray('Chunks', wbChunk, wbXXSEChunkCounter, cpNormal, false, wbDontShowBranch);
-  wbNVSEPlugin := wbStruct('Plugin', [
+  wbCoSaveChunks := wbArray('Chunks', wbCoSaveChunk, wbXXSEChunkCounter, cpNormal, false, wbDontShowBranch);
+  wbCoSavePlugin := wbStructC('Plugin', nil, nil, nil, nil, [
     wbInteger('Opcode Base', itU32),
     wbInteger('Chunks count', itU32),
     wbInteger('Length', itU32),
-    wbNVSEChunks
+    wbCoSaveChunks
   ]);
-  wbNVSEPlugin.TreeLeaf := True;
-  wbNVSEChunks.TreeBranch := True;
-  wbNVSEPlugins := wbArray('Plugins', wbNVSEPlugin, wbXXSEPluginCounter);
+//  wbCoSavePlugin.TreeLeaf := True;
+  wbCoSaveChunks.TreeBranch := True;
+  wbCoSavePlugins := wbArray('Plugins', wbCoSavePlugin, wbXXSEPluginCounter);
 
-  wbNVSEChapters := wbStruct('CoSave File Chapters', [
-    wbNVSEPlugins
+  wbCoSaveChapters := wbStruct('CoSave File Chapters', [
+    wbCoSavePlugins
   ]);
 
   wbFileChapters := wbSaveChapters;
   wbFileHeader := wbSaveHeader;
   wbSaveHeader.TreeHead := True;
-  wbNVSEHeader.TreeHead := True;
-  wbSaveHeader.TreeLeaf := True;
-  wbNVSEHeader.TreeLeaf := True;
+  wbCoSaveHeader.TreeHead := True;
+//  wbSaveHeader.TreeLeaf := True;
+//  wbCoSaveHeader.TreeLeaf := True;
 end;
 
 var
@@ -6876,8 +6876,8 @@ begin
   wbFileMagic := 'NVSE';
   wbExtractInfo := @ExtractInfoCoSave;
   wbFilePlugins := 'Absolute:44';
-  wbFileChapters := wbNVSEChapters;
-  wbFileHeader := wbNVSEHeader;
+  wbFileChapters := wbCoSaveChapters;
+  wbFileHeader := wbCoSaveHeader;
 end;
 
 initialization

@@ -69,6 +69,7 @@ var
   wbVWDInTemporary         : Boolean  = False;
   wbResolveAlias           : Boolean  = True;
   wbActorTemplateHide      : Boolean  = True;
+  wbClampFormID            : Boolean  = True;
   wbShowForceTime          : Boolean  = True;
   wbDoNotBuildRefsFor      : TStringList;
 
@@ -502,7 +503,7 @@ type
     function CopyInto(const aFile: IwbFile; AsNew, DeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 
     function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
-    function GetTreeLeaf: Boolean;              // Is the element included in a "leaf" expected to be displayed in the view pane
+//    function GetTreeLeaf: Boolean;              // Is the element included in a "leaf" expected to be displayed in the view pane
     function GetTreeBranch: Boolean;            // Is the element expected to show in the tree navigator
 
     property ElementID: Cardinal
@@ -611,8 +612,8 @@ type
     property TreeHead: Boolean
       read GetTreeHead;
 
-    property TreeLeaf: Boolean
-      read GetTreeLeaf;
+//    property TreeLeaf: Boolean
+//      read GetTreeLeaf;
 
     property TreeBranch: Boolean
       read GetTreeBranch;
@@ -998,6 +999,7 @@ type
     procedure SetFormVersion(aFormVersion: Cardinal);
 
     procedure ChangeFormSignature(aSignature: TwbSignature);
+    procedure ClampFormID(aIndex: Cardinal);
 
     property Version: Cardinal
       read GetFormVersion
@@ -1193,8 +1195,8 @@ type
 
     function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
     procedure SetTreeHead(aValue: Boolean);     // Make the element a "header record" in the tree navigator;
-    function GetTreeLeaf: Boolean;              // Is the element expected to show in the tree navigator
-    procedure SetTreeLeaf(aValue: Boolean);     // Make the element visible in the tree navigator
+//    function GetTreeLeaf: Boolean;              // Is the element expected to show in the tree navigator
+//    procedure SetTreeLeaf(aValue: Boolean);     // Make the element visible in the tree navigator
     function GetTreeBranch: Boolean;            // Is the element included in a "leaf" expected to be displayed in the view pane
     procedure SetTreeBranch(aValue: Boolean);   // Make the element included in a "leaf" visible in the tree navigator;
 
@@ -1206,8 +1208,8 @@ type
     property TreeHead: Boolean
       read GetTreeHead write SetTreeHead;
 
-    property TreeLeaf: Boolean
-      read GetTreeLeaf write SetTreeLeaf;
+//    property TreeLeaf: Boolean
+//      read GetTreeLeaf write SetTreeLeaf;
 
     property TreeBranch: Boolean
       read GetTreeBranch write SetTreeBranch;
@@ -3005,6 +3007,7 @@ function ConflictThisToColor(aConflictThis: TConflictThis): TColor;
 var
   wbGetFormIDCallback : function(const aElement: IwbElement): Cardinal;
 
+function wbFlagsList(aFlags: array of const; aDeleted: Boolean = True): TDynStrings;
 function wbGetFormID(const aElement: IwbElement): Cardinal;
 function wbPositionToGridCell(const aPosition: TwbVector): TwbGridCell;
 function wbSubBlockFromGridCell(const aGridCell: TwbGridCell): TwbGridCell;
@@ -3434,6 +3437,24 @@ begin
       MainRecord2._File.LoadOrder);
 end;
 
+function wbFlagsList(aFlags: array of const; aDeleted: Boolean = True): TDynStrings;
+var
+  e: IwbEnumDef;
+  i: integer;
+  s: string;
+begin
+  e := wbEnum([], aFlags);
+  SetLength(Result, 32);
+  for i := 0 to 31 do
+    if aDeleted and (i = 5) then
+      Result[i] := 'Deleted'
+    else begin
+      s := e.ToString(i, nil);
+      if Pos('<', s) <> 1 then
+        Result[i] := s;
+    end
+end;
+
 type
   TwbDef = class;
 
@@ -3503,7 +3524,7 @@ type
     noTerminator : Boolean;
     noUnused     : Boolean;
     noTreeHead   : Boolean;
-    noTreeLeaf   : Boolean;
+//    noTreeLeaf   : Boolean;
     noTreeBranch : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
@@ -3529,8 +3550,8 @@ type
     procedure AfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
     function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
     procedure SetTreeHead(aValue: Boolean);     // Make the element a "header record" in the tree navigator;
-    function GetTreeLeaf: Boolean;              // Is the element expected to show in the tree navigator
-    procedure SetTreeLeaf(aValue: Boolean);     // Make the element visible in the tree navigator
+//    function GetTreeLeaf: Boolean;              // Is the element expected to show in the tree navigator
+//    procedure SetTreeLeaf(aValue: Boolean);     // Make the element visible in the tree navigator
     function GetTreeBranch: Boolean;            // Is the element included in a "leaf" expected to be displayed in the view pane
     procedure SetTreeBranch(aValue: Boolean);   // Make the element included in a "leaf" visible in the tree navigator;
   end;
@@ -6783,7 +6804,7 @@ begin
   with (aSource as TwbNamedDef) do begin
     Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, noDontShow, defGetCP, noTerminator).defSource := aSource;
     Self.noTreeHead := GetTreeHead;
-    Self.noTreeLeaf := GetTreeLeaf;
+//    Self.noTreeLeaf := GetTreeLeaf;
     Self.notreeBranch := GetTreeBranch;
   end
 end;
@@ -6803,7 +6824,7 @@ begin
   noAfterSet := aAfterSet;
   noTerminator := aTerminator;
   noTreeHead := False;
-  noTreeLeaf := False;
+//  noTreeLeaf := False;
   noTreeBranch := False;
   if aName = 'Unused' then begin
     noUnused := True;
@@ -6860,10 +6881,10 @@ begin
   Result := noTreeHead;
 end;
 
-function TwbNamedDef.GetTreeLeaf: Boolean;
-begin
-  Result := noTreeLeaf;
-end;
+//function TwbNamedDef.GetTreeLeaf: Boolean;
+//begin
+//  Result := noTreeLeaf;
+//end;
 
 procedure TwbNamedDef.ParentSet;
 var
@@ -6886,10 +6907,10 @@ begin
   noTreeHead := aValue;
 end;
 
-procedure TwbNamedDef.SetTreeLeaf(aValue: Boolean);
-begin
-  noTreeLeaf := aValue;
-end;
+//procedure TwbNamedDef.SetTreeLeaf(aValue: Boolean);
+//begin
+//  noTreeLeaf := aValue;
+//end;
 
 { TwbSignatureDef }
 
@@ -13780,7 +13801,7 @@ begin
   scGetChapterTypeName := aGetChapterTypeName;
   scGetChapterName := aGetChapterName;
   inherited Create(aPriority, aRequired, aName, aMembers, aSortKey, aExSortKey, [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
-  noTreeLeaf := True;
+//  noTreeLeaf := True;
   noTreeBranch := False;
 end;
 
@@ -13809,8 +13830,10 @@ function TwbStructCDef.GetChapterName(aBasePtr, aEndPtr: Pointer;
 begin
   if Assigned(scGetChapterName) then
     Result := scGetChapterName(aBasePtr, aEndPtr, aElement)
+  else if Assigned(scGetChapterTypeName) then
+    Result := scGetChapterTypeName(aBasePtr, aEndPtr, aElement)
   else
-    Result := scGetChapterTypeName(aBasePtr, aEndPtr, aElement);
+    Result := GetName;
 end;
 
 function TwbStructCDef.GetChapterType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;

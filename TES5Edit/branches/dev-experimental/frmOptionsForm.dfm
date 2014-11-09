@@ -167,6 +167,15 @@ object frmOptions: TfrmOptions
         Caption = 'Hide templated fields on actors'
         TabOrder = 13
       end
+      object cbClampFormID: TCheckBox
+        Left = 16
+        Top = 247
+        Width = 105
+        Height = 17
+        Hint = 'Set FormID index to the number of masters if greater'
+        Caption = 'Clamp FormIDs'
+        TabOrder = 14
+      end
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'

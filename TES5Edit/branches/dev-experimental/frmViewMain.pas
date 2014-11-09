@@ -3974,6 +3974,7 @@ begin
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
   wbSortGroupRecord := Settings.ReadBool('Options', 'SortGroupRecord', wbSortGroupRecord);
   wbRemoveOffsetData := Settings.ReadBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
+  wbClampFormID := Settings.ReadBool('Options', 'ClampFormID', wbClampFormID);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
   wbUDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
@@ -5101,7 +5102,7 @@ begin
         // load billboard texture
         Res := wbContainerHandler.OpenResource(PTree^.Billboard);
         if (Length(Res) > 0) and PTree^.LoadFromData(Res[High(Res)].GetData) then begin
-          slLog.Add('[' + PTree^.Billboard + '] LOD for ' + TreeRec.Name);
+          slLog.Add(TreeRec.Name + ' using LOD ' + PTree^.Billboard);
           // store checksum of billboard to avoid duplicates in atlas
           PTree^.CRC32 := wbCRC32Data(Res[High(Res)].GetData);
           // load tree data
@@ -5128,7 +5129,7 @@ begin
         end
         else begin
           PTree^.Index := -1;
-          slLog.Add('[' + PTree^.Billboard + '] No lod texture found for ' + TreeRec.Name);
+          slLog.Add('<Note: ' + TreeRec.Name + ' LOD not found ' + PTree^.Billboard + '>');
         end;
       end;
 
@@ -5187,7 +5188,8 @@ begin
     end;
 
     slLog.Sort;
-    PostAddMessage(slLog.Text);
+    PostAddMessage(Trim(slLog.Text));
+    Application.ProcessMessages;
 
     if not Lst.BuildAtlas(StrToIntDef(Settings.ReadString('Worldspace', 'AtlasSizeMax', ''), 8192)) then begin
       // will return false without exception only if atlas is empty, skip this silenty
@@ -10317,6 +10319,7 @@ begin
     cbRemoveOffsetData.Checked := wbRemoveOffsetData;
     cbShowFlagEnumValue.Checked := wbShowFlagEnumValue;
     cbSimpleRecords.Checked := wbSimpleRecords;
+    cbClampFormID.Checked := wbClampFormID;
     edColumnWidth.Text := IntToStr(wbColumnWidth);
     cbAutoSave.Checked := AutoSave;
     //cbIKnow.Checked := wbIKnowWhatImDoing;
@@ -10347,6 +10350,7 @@ begin
     wbRemoveOffsetData := cbRemoveOffsetData.Checked;
     wbShowFlagEnumValue := cbShowFlagEnumValue.Checked;
     wbSimpleRecords := cbSimpleRecords.Checked;
+    wbClampFormID := cbClampFormID.Checked;
     wbColumnWidth := StrToIntDef(edColumnWidth.Text, wbColumnWidth);
     AutoSave := cbAutoSave.Checked;
     //wbIKnowWhatImDoing := cbIKnow.Checked;
@@ -10374,6 +10378,7 @@ begin
     Settings.WriteBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
     Settings.WriteBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
+    Settings.WriteBool('Options', 'ClampFormID', wbClampFormID);
     Settings.WriteInteger('Options', 'ColumnWidth', wbColumnWidth);
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
     Settings.WriteBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
@@ -13395,7 +13400,7 @@ begin
   if Assigned(NodeData) then begin
     Element := NodeData.Element;
     if Assigned(Element) then
-      if not (Element.ElementType = etMainRecord) and not Element.TreeLeaf then
+      if not (Element.ElementType in [etMainRecord, etStructChapter]) and not Element.TreeHead then
         Element := nil;
 
     if NodeData.ConflictAll >= caNoConflict then
@@ -13811,7 +13816,7 @@ begin
     Exit;
   end;
 
-  if not (Element.ElementType = etMainRecord) and not Element.TreeLeaf then begin
+  if not (Element.ElementType in [etMainRecord, etStructChapter]) and not Element.TreeHead then begin
     if Supports(Element, IwbContainerElementRef, Container) and (Container.ElementCount > 0) then begin
       Include(InitialStates, ivsHasChildren);
       NodeData.Container := IInterface(Container) as IwbContainer;
@@ -13822,7 +13827,7 @@ begin
       Include(InitialStates, ivsHasChildren);
     NodeData.Container := GroupRecord;
   end
-  else if Element.TreeLeaf then
+  else if Element.ElementType = etStructChapter then
     if Supports(Element, IwbContainerElementRef, Container) and (Container.ElementCount > 0) then
       for i := 0 to Pred(Container.ElementCount) do
         if (Container.Elements[i].TreeBranch) and
