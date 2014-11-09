@@ -393,7 +393,11 @@ begin
 
       wbPluginsFileName := wbPluginsFileName + wbGameName + '\Plugins.txt';
     end;
-  wbSettingsFileName := ChangeFileExt(wbPluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
+
+  // settings in the ini file next to app, or in the same folder with plugins.txt
+  wbSettingsFileName := wbProgramPath + wbAppName + wbToolName + '.ini';
+  if not FileExists(wbSettingsFileName) then
+    wbSettingsFileName := ChangeFileExt(wbPluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
 
   wbBackupPath := '';
   if not (wbDontSave or wbFindCmdLineParam('B', wbBackupPath)) then begin
@@ -406,8 +410,10 @@ begin
 end;
 
 function isMode(aMode: String): Boolean;
+var
+  s: string;
 begin
-  Result := FindCmdLineSwitch(aMode) or (Pos(Uppercase(aMode), UpperCase(ExtractFileName(ParamStr(0))))<>0);
+  Result := FindCmdLineSwitch(aMode) or wbFindCmdLineParam(aMode, s) or (Pos(Uppercase(aMode), UpperCase(ExtractFileName(ParamStr(0))))<>0);
 end;
 
 procedure wbDoInit;
@@ -530,6 +536,11 @@ begin
     ShowMessage('Application name must contain FNV, FO3, TES4 or TES5 to select game.');
     Exit;
   end;
+  if (wbToolSource = tsSaves) and (wbToolMode = tmEdit) then begin
+    ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName+' in '+wbToolName+' mode.');
+    Exit;
+  end;
+
 
   DoInitPath(wbParamIndex);
 

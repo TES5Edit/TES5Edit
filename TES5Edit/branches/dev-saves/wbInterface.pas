@@ -69,6 +69,7 @@ var
   wbVWDInTemporary         : Boolean  = False;
   wbResolveAlias           : Boolean  = True;
   wbActorTemplateHide      : Boolean  = True;
+  wbClampFormID            : Boolean  = True;
   wbDoNotBuildRefsFor      : TStringList;
 
   wbUDRSetXESP       : Boolean = True;
@@ -501,7 +502,6 @@ type
     function CopyInto(const aFile: IwbFile; AsNew, DeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 
     function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
-    function GetTreeLeaf: Boolean;              // Is the element included in a "leaf" expected to be displayed in the view pane
     function GetTreeBranch: Boolean;            // Is the element expected to show in the tree navigator
 
     property ElementID: Cardinal
@@ -609,9 +609,6 @@ type
 
     property TreeHead: Boolean
       read GetTreeHead;
-
-    property TreeLeaf: Boolean
-      read GetTreeLeaf;
 
     property TreeBranch: Boolean
       read GetTreeBranch;
@@ -984,6 +981,7 @@ type
     procedure SetFormVersion(aFormVersion: Cardinal);
 
     procedure ChangeFormSignature(aSignature: TwbSignature);
+    procedure ClampFormID(aIndex: Cardinal);
 
     property Version: Cardinal
       read GetFormVersion
@@ -1085,10 +1083,13 @@ type
     ['{3E575648-EF6F-4e9f-956F-D2E184B670E4}']
     function GetChapterType: Integer;
     function GetChapterTypeName: String;
+    function GetChapterName: String;
     property ChapterType: Integer
       read GetChapterType;
     property ChapterTypeName: String
       read GetChapterTypeName;
+    property ChapterName: String
+      read GetChapterName;
   end;
 
   TDynElements = array of IwbElement;
@@ -1165,6 +1166,7 @@ type
   TwbSizeCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement;var CompressedSize: Integer): Cardinal;
   TwbGetChapterTypeCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
   TwbGetChapterTypeNameCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
+  TwbGetChapterNameCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
 
   IwbNamedDef = interface(IwbDef)
     ['{F8FEDE89-C089-42C5-B587-49A7D87055F0}']
@@ -1175,8 +1177,6 @@ type
 
     function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
     procedure SetTreeHead(aValue: Boolean);     // Make the element a "header record" in the tree navigator;
-    function GetTreeLeaf: Boolean;              // Is the element expected to show in the tree navigator
-    procedure SetTreeLeaf(aValue: Boolean);     // Make the element visible in the tree navigator
     function GetTreeBranch: Boolean;            // Is the element included in a "leaf" expected to be displayed in the view pane
     procedure SetTreeBranch(aValue: Boolean);   // Make the element included in a "leaf" visible in the tree navigator;
 
@@ -1187,9 +1187,6 @@ type
 
     property TreeHead: Boolean
       read GetTreeHead write SetTreeHead;
-
-    property TreeLeaf: Boolean
-      read GetTreeLeaf write SetTreeLeaf;
 
     property TreeBranch: Boolean
       read GetTreeBranch write SetTreeBranch;
@@ -1480,6 +1477,7 @@ type
     function GetSizing(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement;var CompressedSize: Integer): Cardinal;
     function GetChapterType(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
     function GetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
+    function GetChapterName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
   end;
 
   IwbStructZDef = interface(IwbStructCDef) // Compressible structure !!! NOT SAFE FOR EDIT AT THE MOMEMNT !!!
@@ -2621,6 +2619,7 @@ function wbStructC(const aName                : string;
                          aSizing              : TwbSizeCallback;
                          aGetChapterType      : TwbGetChapterTypeCallback;
                          aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
+                         aGetChapterName      : TwbGetChapterNameCallback;
                    const aMembers             : array of IwbValueDef;
                          aPriority            : TwbConflictPriority = cpNormal;
                          aRequired            : Boolean = False;
@@ -2635,6 +2634,7 @@ function wbStructZ(const aName                : string;
                          aSizing              : TwbSizeCallback;
                          aGetChapterType      : TwbGetChapterTypeCallback;
                          aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
+                         aGetChapterName      : TwbGetChapterNameCallback;
                    const aMembers             : array of IwbValueDef;
                          aPriority            : TwbConflictPriority = cpNormal;
                          aRequired            : Boolean = False;
@@ -2984,6 +2984,7 @@ function ConflictThisToColor(aConflictThis: TConflictThis): TColor;
 var
   wbGetFormIDCallback : function(const aElement: IwbElement): Cardinal;
 
+function wbFlagsList(aFlags: array of const; aDeleted: Boolean = True): TDynStrings;
 function wbGetFormID(const aElement: IwbElement): Cardinal;
 function wbPositionToGridCell(const aPosition: TwbVector): TwbGridCell;
 function wbSubBlockFromGridCell(const aGridCell: TwbGridCell): TwbGridCell;
@@ -3413,6 +3414,24 @@ begin
       MainRecord2._File.LoadOrder);
 end;
 
+function wbFlagsList(aFlags: array of const; aDeleted: Boolean = True): TDynStrings;
+var
+  e: IwbEnumDef;
+  i: integer;
+  s: string;
+begin
+  e := wbEnum([], aFlags);
+  SetLength(Result, 32);
+  for i := 0 to 31 do
+    if aDeleted and (i = 5) then
+      Result[i] := 'Deleted'
+    else begin
+      s := e.ToString(i, nil);
+      if Pos('<', s) <> 1 then
+        Result[i] := s;
+    end
+end;
+
 type
   TwbDef = class;
 
@@ -3482,7 +3501,6 @@ type
     noTerminator : Boolean;
     noUnused     : Boolean;
     noTreeHead   : Boolean;
-    noTreeLeaf   : Boolean;
     noTreeBranch : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
@@ -3508,8 +3526,6 @@ type
     procedure AfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
     function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
     procedure SetTreeHead(aValue: Boolean);     // Make the element a "header record" in the tree navigator;
-    function GetTreeLeaf: Boolean;              // Is the element expected to show in the tree navigator
-    procedure SetTreeLeaf(aValue: Boolean);     // Make the element visible in the tree navigator
     function GetTreeBranch: Boolean;            // Is the element included in a "leaf" expected to be displayed in the view pane
     procedure SetTreeBranch(aValue: Boolean);   // Make the element included in a "leaf" visible in the tree navigator;
   end;
@@ -4367,6 +4383,7 @@ type
     scSizeCallback       : TwbSizeCallback;
     scGetChapterType     : TwbGetChapterTypeCallback;
     scGetChapterTypeName : TwbGetChapterTypeNameCallback;
+    scGetChapterName     : TwbGetChapterNameCallback;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority            : TwbConflictPriority;
@@ -4382,6 +4399,7 @@ type
                        aSizeCallBack        : TwbSizeCallback;
                        aGetChapterType      : TwbGetChapterTypeCallback;
                        aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
+                       aGetChapterName      : TwbGetChapterNameCallback;
                        aGetCP               : TwbGetConflictPriority);
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
@@ -4389,6 +4407,7 @@ type
     function GetSizing(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement;var CompressedSize: Integer): Cardinal; virtual;
     function GetChapterType(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer; virtual;
     function GetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String; virtual;
+    function GetChapterName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String; virtual;
   end;
 
   TwbStructZDef = class(TwbStructCDef, IwbStructZDef)
@@ -6030,6 +6049,7 @@ function wbStructC(const aName                : string;
                          aSizing              : TwbSizeCallback;
                          aGetChapterType      : TwbGetChapterTypeCallback;
                          aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
+                         aGetChapterName      : TwbGetChapterNameCallback;
                    const aMembers             : array of IwbValueDef;
                          aPriority            : TwbConflictPriority = cpNormal;
                          aRequired            : Boolean = False;
@@ -6040,13 +6060,14 @@ function wbStructC(const aName                : string;
                          aGetCP               : TwbGetConflictPriority = nil)
                                               : IwbStructDef; overload;
 begin
-  Result := TwbStructCDef.Create(aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName, aGetCP);
+  Result := TwbStructCDef.Create(aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName, aGetChapterName, aGetCP);
 end;
 
 function wbStructZ(const aName                : string;
                          aSizing              : TwbSizeCallback;
                          aGetChapterType      : TwbGetChapterTypeCallback;
                          aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
+                         aGetChapterName      : TwbGetChapterNameCallback;
                    const aMembers             : array of IwbValueDef;
                          aPriority            : TwbConflictPriority = cpNormal;
                          aRequired            : Boolean = False;
@@ -6057,7 +6078,7 @@ function wbStructZ(const aName                : string;
                          aGetCP               : TwbGetConflictPriority = nil)
                                               : IwbStructDef; overload;
 begin
-  Result := TwbStructZDef.Create(aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName, aGetCP);
+  Result := TwbStructZDef.Create(aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName, agetChapterName, aGetCP);
 end;
 
 function wbRStruct(const aName           : string;
@@ -6757,7 +6778,6 @@ begin
   with (aSource as TwbNamedDef) do begin
     Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, noDontShow, defGetCP, noTerminator).defSource := aSource;
     Self.noTreeHead := GetTreeHead;
-    Self.noTreeLeaf := GetTreeLeaf;
     Self.notreeBranch := GetTreeBranch;
   end
 end;
@@ -6777,7 +6797,6 @@ begin
   noAfterSet := aAfterSet;
   noTerminator := aTerminator;
   noTreeHead := False;
-  noTreeLeaf := False;
   noTreeBranch := False;
   if aName = 'Unused' then begin
     noUnused := True;
@@ -6834,11 +6853,6 @@ begin
   Result := noTreeHead;
 end;
 
-function TwbNamedDef.GetTreeLeaf: Boolean;
-begin
-  Result := noTreeLeaf;
-end;
-
 procedure TwbNamedDef.ParentSet;
 var
   Parent: IwbNamedDef;
@@ -6858,11 +6872,6 @@ end;
 procedure TwbNamedDef.SetTreeHead(aValue: Boolean);
 begin
   noTreeHead := aValue;
-end;
-
-procedure TwbNamedDef.SetTreeLeaf(aValue: Boolean);
-begin
-  noTreeLeaf := aValue;
 end;
 
 { TwbSignatureDef }
@@ -13731,7 +13740,7 @@ begin
   with aSource as TwbStructCDef do
     Self.Create(defPriority, defRequired, noName, stMembers, stSortKey,
       stExSortKey, stOptionalFromElement, noDontShow, noAfterLoad, noAfterSet,
-      scSizeCallback, scGetChapterType, scGetChapterTypeName, defGetCP).defSource := aSource;
+      scSizeCallback, scGetChapterType, scGetChapterTypeName, scGetChapterName, defGetCP).defSource := aSource;
 end;
 
 constructor TwbStructCDef.Create(aPriority: TwbConflictPriority;
@@ -13746,13 +13755,14 @@ constructor TwbStructCDef.Create(aPriority: TwbConflictPriority;
                                  aSizeCallBack        : TwbSizeCallback;
                                  aGetChapterType      : TwbGetChapterTypeCallback;
                                  aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
+                                 aGetChapterName      : TwbGetChapterNameCallback;
                                  aGetCP               : TwbGetConflictPriority);
 begin
   scSizeCallback := aSizeCallback;
   scGetChapterType := aGetChapterType;
   scGetChapterTypeName := aGetChapterTypeName;
+  scGetChapterName := aGetChapterName;
   inherited Create(aPriority, aRequired, aName, aMembers, aSortKey, aExSortKey, [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
-  noTreeLeaf := True;
   noTreeBranch := False;
 end;
 
@@ -13774,6 +13784,17 @@ begin
     CompressedSize := -1;
     Result := 0;
   end;
+end;
+
+function TwbStructCDef.GetChapterName(aBasePtr, aEndPtr: Pointer;
+  const aElement: IwbElement): String;
+begin
+  if Assigned(scGetChapterName) then
+    Result := scGetChapterName(aBasePtr, aEndPtr, aElement)
+  else if Assigned(scGetChapterTypeName) then
+    Result := scGetChapterTypeName(aBasePtr, aEndPtr, aElement)
+  else
+    Result := GetName;
 end;
 
 function TwbStructCDef.GetChapterType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;

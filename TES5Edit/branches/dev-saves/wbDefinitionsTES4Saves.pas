@@ -37,11 +37,11 @@ var
   wbActorValueLabels : array of string;
 
 var // forward type directives
-  wbChangeTypes  : IwbEnumDef;
-  wbSaveChapters : IwbStructDef;
-  wbOBSEChapters : IwbStructDef;
-  wbSaveHeader   : IwbStructDef;
-  wbOBSEHeader   : IwbStructDef;
+  wbChangeTypes    : IwbEnumDef;
+  wbSaveChapters   : IwbStructDef;
+  wbCoSaveChapters : IwbStructDef;
+  wbSaveHeader     : IwbStructDef;
+  wbCoSaveHeader   : IwbStructDef;
 
 procedure DefineTES4SavesA;
 var
@@ -1842,10 +1842,10 @@ var
 //  wbInitialDataType06        : IwbStructDef;
 //  wbInitialDataType          : IwbUnionDef;
 //  wbChangeFlags010Flags      : IwbFlagsDef;
-  wbChunk                    : IwbStructDef;
-  wbOBSEChunks               : IwbArrayDef;
-  wbOBSEPlugin               : IwbStructDef;
-  wbOBSEPlugins              : IwbArrayDef;
+  wbCoSaveChunk              : IwbStructDef;
+  wbCoSaveChunks             : IwbArrayDef;
+  wbCoSavePlugin             : IwbStructDef;
+  wbCoSavePlugins            : IwbArrayDef;
 
 //  wbChangeFlags000        : IwbIntegerDef;
 //  wbChangeFlags001        : IwbIntegerDef;
@@ -6788,7 +6788,7 @@ begin
 //    ,wbArray('Remaining',  WbByteArray('Unknown', wbBytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
   ]);
 
-  wbOBSEHeader := wbStruct('CoSave File Header', [
+  wbCoSaveHeader := wbStruct('CoSave File Header', [
      wbString('Magic', 4)
     ,wbInteger('Version', itU32)
     ,wbInteger('OBSE Version', itU16)
@@ -6797,7 +6797,7 @@ begin
     ,wbInteger('Plugins count', itU32)
   ]);
 
-  wbChunk := wbStruct('Chunk', [
+  wbCoSaveChunk := wbStructC('Chunk', nil, nil, nil, nil, [
     wbInteger('Type', itU32, wbStr4),
     wbInteger('Version', itU32),
     wbInteger('Length', itU32),
@@ -6842,29 +6842,29 @@ begin
       wbByteArray('Others', wbXXSEChapterOtherCounter)  // For what we cannot hardcode
    ])
   ]);
-  wbChunk.TreeLeaf := True;
+//  wbCoSaveChunk.TreeLeaf := True;
 
-  wbOBSEChunks := wbArray('Chunks', wbChunk, wbXXSEChunkCounter, cpNormal, false, wbDontShowBranch);
-  wbOBSEPlugin := wbStruct('Plugin', [
+  wbCoSaveChunks := wbArray('Chunks', wbCoSaveChunk, wbXXSEChunkCounter, cpNormal, false, wbDontShowBranch);
+  wbCoSavePlugin := wbStructC('Plugin', nil, nil, nil, nil, [
     wbInteger('Opcode Base', itU32),
     wbInteger('Chunks count', itU32),
     wbInteger('Length', itU32),
-    wbOBSEChunks
+    wbCoSaveChunks
   ]);
-  wbOBSEPlugin.TreeLeaf := True;
-  wbOBSEChunks.TreeBranch := True;
-  wbOBSEPlugins := wbArray('Plugins', wbOBSEPlugin, wbXXSEPluginCounter);
+//  wbCoSavePlugin.TreeLeaf := True;
+  wbCoSaveChunks.TreeBranch := True;
+  wbCoSavePlugins := wbArray('Plugins', wbCoSavePlugin, wbXXSEPluginCounter);
 
-  wbOBSEChapters := wbStruct('CoSave File Chapters', [
-    wbOBSEPlugins
+  wbCoSaveChapters := wbStruct('CoSave File Chapters', [
+    wbCoSavePlugins
   ]);
 
   wbFileChapters := wbSaveChapters;
   wbFileHeader := wbSaveHeader;
   wbSaveHeader.TreeHead := True;
-  wbOBSEHeader.TreeHead := True;
-  wbSaveHeader.TreeLeaf := True;
-  wbOBSEHeader.TreeLeaf := True;
+  wbCoSaveHeader.TreeHead := True;
+//  wbSaveHeader.TreeLeaf := True;
+//  wbCoSaveHeader.TreeLeaf := True;
 end;
 
 var
@@ -6886,8 +6886,8 @@ begin
   wbFileMagic := 'OBSE';
   wbExtractInfo := @ExtractInfoCoSave;
   wbFilePlugins := 'Absolute:44';
-  wbFileChapters := wbOBSEChapters;
-  wbFileHeader := wbOBSEHeader;
+  wbFileChapters := wbCoSaveChapters;
+  wbFileHeader := wbCoSaveHeader;
 end;
 
 initialization

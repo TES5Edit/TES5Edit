@@ -40,12 +40,12 @@ var
   wbRecordFlagsFlags : IwbFlagsDef;
 
 var // forward type directives
-  wbChangeTypes  : IwbEnumDef;
-  wbQuestFlags   : IwbIntegerDef;
-  wbSaveChapters : IwbStructDef;
-  wbSKSEChapters : IwbStructDef;
-  wbSaveHeader   : IwbStructDef;
-  wbSKSEHeader   : IwbStructDef;
+  wbChangeTypes    : IwbEnumDef;
+  wbQuestFlags     : IwbIntegerDef;
+  wbSaveChapters   : IwbStructDef;
+  wbCoSaveChapters : IwbStructDef;
+  wbSaveHeader     : IwbStructDef;
+  wbCoSaveHeader   : IwbStructDef;
 
 procedure DefineTES5SavesA;
 begin
@@ -1444,6 +1444,19 @@ begin
     Result := IntToStr(aType);
 end;
 
+function ChangedFormGetChapterName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
+var
+  Element : IwbElement;
+begin
+  Result := '';
+  if not Assigned(aElement) then
+    Exit;
+  Element := (aElement as iwbContainer).ElementByName['RefID'];
+  if not Assigned(Element) then
+    Exit;
+  Result := Element.Value;
+end;
+
 function ChangedFormDataLengthDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aType : Integer;
@@ -2332,10 +2345,10 @@ var
   wbInitialDataType          : IwbUnionDef;
 
   wbChangeDefaultFlags    : IwbIntegerDef;
-  wbChunk                 : IwbStructDef;
-  wbSKSEChunks            : IwbArrayDef;
-  wbSKSEPlugin            : IwbStructDef;
-  wbSKSEPlugins           : IwbArrayDef;
+  wbCoSaveChunk           : IwbStructDef;
+  wbCoSaveChunks          : IwbArrayDef;
+  wbCoSavePlugin          : IwbStructDef;
+  wbCoSavePlugins         : IwbArrayDef;
   wbChangeFlags000        : IwbIntegerDef;
   wbChangeFlags001        : IwbIntegerDef;
   wbChangeFlags002        : IwbIntegerDef;
@@ -2971,7 +2984,7 @@ begin
     wbInteger('Unknown', itU32)
    ]), -1);
 
-  wbGlobalData := wbStructC('Global Data', GlobalDataSizer, GlobalDataGetChapterType, GlobalDataGetChapterTypeName, [
+  wbGlobalData := wbStructC('Global Data', GlobalDataSizer, GlobalDataGetChapterType, GlobalDataGetChapterTypeName, nil, [
     wbInteger('Type', itU32),
     wbInteger('DataLength', itU32),
     wbUnion('Data', GlobalDataDecider, [
@@ -5906,6 +5919,7 @@ begin
     ChangedFormSizer,
     ChangedFormGetChapterType,
     ChangedFormGetChapterTypeName,
+    ChangedFormGetChapterName,
     [
       wbRefID('RefID'),
       wbChangeFlags,
@@ -5915,19 +5929,19 @@ begin
         wbStruct('CForm Data', [
           wbInteger('Length', itU8),
           wbInteger('Uncompressed Length', itU8),   // added post save game version 50
-          wbStructZ('Small Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName,
+          wbStructZ('Small Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName, nil,
             [ wbChangedFormData ])
         ]),
         wbStruct('CForm Data', [
           wbInteger('Length', itU16),
           wbInteger('Uncompressed Length', itU16),
-          wbStructZ('Medium Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName,
+          wbStructZ('Medium Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName, nil,
             [ wbChangedFormData ])
         ]),
         wbStruct('CForm Data', [
           wbInteger('Length', itU32),
           wbInteger('Uncompressed Length', itU32),
-          wbStructZ('Large Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName,
+          wbStructZ('Large Struct', ChangedFormDataSizer, ChangedFormGetChapterType, ChangedFormGetChapterTypeName, nil,
             [ wbChangedFormData ])
         ]),
         wbUnknown() // If the type is invalid
@@ -5985,10 +5999,10 @@ begin
     ,wbInteger('Unknown Table Size', itU32)
     ,wbArray('Unknown Table', wbLenString('Unknown', 2), -1)
 //    ,wbByteArray('Unused', SkipCounter) // Lets you skip an arbitrary number of byte, Setable from CommandLine -bts:n
-//    ,wbArray('Remaining',  WbByteArray('Unknown', BytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
+//    ,wbArray('Remaining',  WbByteArray('Unknown', wbBytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
   ]);
 
-  wbSKSEHeader := wbStruct('CoSave File Header', [
+  wbCoSaveHeader := wbStruct('CoSave File Header', [
      wbString('Magic', 4)
     ,wbInteger('Version', itU32)
     ,wbInteger('SKSE Version', itU16)
@@ -5997,7 +6011,7 @@ begin
     ,wbInteger('Plugins count', itU32)
   ]);
 
-  wbChunk := wbStruct('Chunk', [
+  wbCoSaveChunk := wbStructC('Chunk', nil, nil, nil, nil, [
     wbInteger('Type', itU32, wbStr4),
     wbInteger('Version', itU32),
     wbInteger('Length', itU32),
@@ -6030,34 +6044,34 @@ begin
       wbByteArray('Others', wbXXSEChapterOtherCounter)  // For what we cannot hardcode
     ])
   ]);
-  wbChunk.TreeLeaf := True;
+//  wbCoSaveChunk.TreeLeaf := True;
 
-  wbSKSEChunks := wbArray('Chunks', wbChunk, wbXXSEChunkCounter, cpNormal, false, wbDontShowBranch);
-  wbSKSEPlugin := wbStruct('Plugin', [
+  wbCoSaveChunks := wbArray('Chunks', wbCoSaveChunk, wbXXSEChunkCounter, cpNormal, false, wbDontShowBranch);
+  wbCoSavePlugin := wbStructC('Plugin', nil, nil, nil, nil, [
     wbInteger('UID', itU32),
     wbInteger('Chunks count', itU32),
     wbInteger('Length', itU32),
-    wbSKSEChunks
+    wbCoSaveChunks
   ]);
-  wbSKSEPlugin.TreeLeaf := True;
-  wbSKSEChunks.TreeBranch := True;
-  wbSKSEPlugins := wbArray('Plugins', wbSKSEPlugin, wbXXSEPluginCounter);
+//  wbCoSavePlugin.TreeLeaf := True;
+  wbCoSaveChunks.TreeBranch := True;
+  wbCoSavePlugins := wbArray('Plugins', wbCoSavePlugin, wbXXSEPluginCounter);
 
-  wbSKSEChapters := wbStruct('CoSave File Chapters', [
-    wbSKSEPlugins
+  wbCoSaveChapters := wbStruct('CoSave File Chapters', [
+    wbCoSavePlugins
   ]);
 
   wbFileChapters := wbSaveChapters;
   wbFileHeader := wbSaveHeader;
   wbSaveHeader.TreeHead := True;
-  wbSKSEHeader.TreeHead := True;
-  wbSaveHeader.TreeLeaf := True;
-  wbSKSEHeader.TreeLeaf := True;
+  wbCoSaveHeader.TreeHead := True;
+//  wbSaveHeader.TreeLeaf := True;
+//  wbCoSaveHeader.TreeLeaf := True;
 end;
 
 var
   ExtractInfoSave:   TByteSet = [4, 5]; // SaveFileChapters that should be initialized before dumping to get more information
-  ExtractInfoCoSave: TByteSet = [    ]; // CoSaveFileChapters that should be initialized before dumping to get more information
+  ExtractInfoCoSave: TByteSet = [];     // CoSaveFileChapters that should be initialized before dumping to get more information
 
 procedure DefineTES5Saves;
 begin
@@ -6074,8 +6088,8 @@ begin
   wbFileMagic := 'SKSE';
   wbExtractInfo := @ExtractInfoCoSave;
   wbFilePlugins := 'Absolute:44';
-  wbFileChapters := wbSKSEChapters;
-  wbFileHeader := wbSKSEHeader;
+  wbFileChapters := wbCoSaveChapters;
+  wbFileHeader := wbCoSaveHeader;
 end;
 
 initialization

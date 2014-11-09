@@ -392,7 +392,6 @@ type
     procedure FreeInstance; override;
 
     function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
-    function GetTreeLeaf: Boolean;              // Is the element included in a "leaf" expected to be displayed in the view pane
     function GetTreeBranch: Boolean;            // Is the element expected to show in the tree navigator
   end;
 
@@ -1014,6 +1013,7 @@ type
     function GetFormVersion: Cardinal; {>>> Form Version access <<<}
     procedure SetFormVersion(aFormVersion: Cardinal); {>>> Form Version access <<<}
     procedure ChangeFormSignature(aSignature: TwbSignature);
+    procedure ClampFormID(aIndex: Cardinal);
 
     procedure Delete;
     procedure DeleteInto(const aFile: IwbFile);
@@ -1274,6 +1274,7 @@ type
     function GetElementType: TwbElementType; override;
     function GetChapterType: Integer;
     function GetChapterTypeName: String;
+    function GetChapterName: String;
   public
     constructor Create(const aContainer  : IwbContainer;
                        const aValueDef   : IwbValueDef;
@@ -3070,6 +3071,15 @@ begin
       end;
     Exclude(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
     FileHeader.UpdateRefs;
+  end;
+
+  if wbClampFormID then begin
+    if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
+      k := MasterFiles.ElementCount
+    else
+      k := 0;
+    for i := Low(flRecords) to High(flRecords) do
+      flRecords[i].ClampFormID(k);
   end;
 end;
 
@@ -6676,6 +6686,14 @@ procedure TwbMainRecord.ChangeFormSignature(aSignature: TwbSignature);
 begin
   MakeHeaderWriteable;
   mrStruct.mrsSignature := aSignature;
+end;
+
+procedure TwbMainRecord.ClampFormID(aIndex: Cardinal);
+begin
+  if mrStruct.mrsFormID shr 24 > aIndex then begin
+    MakeHeaderWriteable;
+    mrStruct.mrsFormID := (mrStruct.mrsFormID and $00FFFFFF) or (aIndex shl 24);
+  end;
 end;
 
 function TwbMainRecord.GetGridCell(out aGridCell: TwbGridCell): Boolean;
@@ -12280,16 +12298,6 @@ begin
     Result := False;
 end;
 
-function TwbElement.GetTreeLeaf: Boolean;
-var
-  NamedDef: IwbNamedDef;
-begin
-  if Supports(GetDef, IwbNamedDef, NamedDef) then
-    Result := NamedDef.TreeLeaf
-  else
-    Result := False;
-end;
-
 function TwbElement.GetValue: string;
 var
   Def: IwbDef;
@@ -16193,6 +16201,16 @@ begin
   cChapterSkipped := cChapterSkipped or ChaptersToSkip.Find(aValueDef.Name, Dummy);
 end;
 
+function TwbChapter.GetChapterName: String;
+var
+  Struct : IwbStructCDef;
+begin
+  if Assigned(vbValueDef) and Supports(vbValueDef, IwbStructCDef, Struct) then
+    Result := Struct.GetChapterName(dcBasePtr, dcEndPtr, Self)
+  else
+    Result := Struct.GetChapterTypeName(dcBasePtr, dcEndPtr, Self);
+end;
+
 function TwbChapter.GetChapterType: Integer;
 var
   Struct : IwbStructCDef;
@@ -16207,7 +16225,7 @@ var
   Struct : IwbStructCDef;
 begin
   if Assigned(vbValueDef) and Supports(vbValueDef, IwbStructCDef, Struct) then
-    Result := IntToStr(Struct.GetChapterType(dcBasePtr, dcEndPtr, Self))
+    Result := Struct.GetChapterTypeName(dcBasePtr, dcEndPtr, Self)
   else
     Result := IntToStr(Struct.GetChapterType(dcBasePtr, dcEndPtr, Self));
 end;
