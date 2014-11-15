@@ -187,7 +187,7 @@ bool DoTheWork()
 	_MESSAGE("\n    // Added by NVSE");
 
 	// Loop through all function in the command table looking for those where the eval member is not null
-	for (UInt32 i = kNVSEOpcodeStart; i<= lastOpcode; i++)		// 0x2000 is arbitrary. I need to add a way to get the highest valid opcode
+	for (UInt32 i = kNVSEOpcodeStart; i<= lastOpcode; i++)
 	{
 		CI = SaveCT->GetByOpcode(i);
 		if (CI && CI->eval && (kNVSEOpcodeTest>i || (kNVSEOpcodeTest+16-1)<i))

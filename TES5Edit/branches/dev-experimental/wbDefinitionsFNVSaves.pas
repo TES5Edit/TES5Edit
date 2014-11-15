@@ -579,20 +579,23 @@ begin
 end;
 
 var
-  SwappedChangedFormFlags : Boolean;
-  TempChangedFormFlags   : Integer;
+  TempChangedFormFlags : Integer;
 
 function ChangedFlagXXDecider(aMask: Cardinal; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  Element : IwbElement;
-  Container: IwbDataContainer;
+  Element   : IwbElement;
+  Container : IwbDataContainer;
 begin
   Result := 0;
-  if SwappedChangedFormFlags then begin
+
+  if not Assigned(aElement) then Exit;
+  Element := nil;
+  if Pos('\ Leveled Creature \', aElement.Path)>0 then
+    Element := wbFindSaveElement('Leveled Creature', aElement);
+  if Assigned(Element) then begin
     if (TempChangedFormFlags and aMask)<>0 then
       Result := 1;
   end else begin
-    if not Assigned(aElement) then Exit;
     Element := wbFindSaveElement('Changed Form', aElement);
     Assert(Element.BaseName='Changed Form');
 
@@ -885,6 +888,22 @@ begin
   // if we are in an Exterior cell, there will be a separor, 21 bytes down
   aBasePtr := Pointer(Cardinal(aBasePtr) + ExteriorOffsetEnd);
   if PByte(aBasePtr)^ <> wbTerminator then Result := 1;
+end;
+
+function ChangedFormProjectileHasEntryDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element    : IwbElement;
+  Container  : IwbDataContainer;
+begin
+  Result := 0;
+  Element := wbFindSaveElement('Changed Projectile', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Has Entry Data'];
+    if Assigned(Element) and (Element.NativeValue<>0) then begin
+      Result := 1;
+    end;
+  end;
 end;
 
 function ChangedFormQuestStageHasLogDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1241,19 +1260,12 @@ begin
     Element := wbFindSaveElement('Leveled Creature', aElement);
     if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
       Element := Container.GetElementByName('Actor Base Changed Flags');
-      if Assigned(Element) and (Element.NativeValue<>0) then begin
+      if Assigned(Element) then begin
         TempChangedFormFlags := Element.NativeValue;
-        SwappedChangedFormFlags := True;
       end else
         Result := 0;
     end;
   end;
-end;
-
-function ChangedFormActorBaseRestorer(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := 0;
-  SwappedChangedFormFlags := False;
 end;
 
 function ChangeFormExtraPackageTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1796,8 +1808,9 @@ end;
 
 function NVSEChaptersDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  Element : IwbElement;
-  Container: IwbDataContainer;
+  Element   : IwbElement;
+  EValue    : String;
+  Container : IwbDataContainer;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
@@ -1805,15 +1818,17 @@ begin
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Type'];
-    if Assigned(Element) then
-           if Element.Value ='MODS' then Result := 1
-      else if Element.Value ='STVS' then Result := 2
-      else if Element.Value ='STVR' then Result := 3
-      else if Element.Value ='STVE' then Result := 4
-      else if Element.Value ='ARVS' then Result := 5
-      else if Element.Value ='ARVR' then Result := 6
-      else if Element.Value ='ARVE' then Result := 7
+    if Assigned(Element) then begin
+      EValue := Element.Value;
+           if EValue = 'MODS' then Result := 1
+      else if EValue = 'STVS' then Result := 2
+      else if EValue = 'STVR' then Result := 3
+      else if EValue = 'STVE' then Result := 4
+      else if EValue = 'ARVS' then Result := 5
+      else if EValue = 'ARVR' then Result := 6
+      else if EValue = 'ARVE' then Result := 7
       else Result := 8;
+    end;
   end;
 end;
 
@@ -1908,11 +1923,13 @@ var
   wbChangedACHR           : IwbStructDef;
   wbChangedACTI           : IwbStructDef;
   wbChangedMobileObject   : IwbStructDef;
+  wbChangedProjectile     : IwbStructDef;
   wbChangedActor          : IwbStructDef;
   wbChangedCharacter      : IwbStructDef;
   wbChangedCreature       : IwbStructDef;
   wbChangedExtraData      : IwbArrayDef;
   wbChangedInventory      : IwbArrayDef;
+  wbEntryData             : IwbStructDef;
   wbChangeScriptEventList : IwbStructDef;
   wbPackageLocationData   : IwbStructDef;
   wbPackageTargetData     : IwbStructDef;
@@ -5109,8 +5126,7 @@ begin
        wbRefIDT('Actor Base'),
        wbRefIDT('Selected Actor Base'),
        wbIntegerT('Actor Base Changed Flags', itU32, wbChangeFlags010Flags),
-       wbUnion('Changed Actor Base', ChangedFormActorBaseDecider, [wbNull, wbChangedNPC, wbChangedCREA]),
-       wbUnion('Hidden : Hack to restore change flags', ChangedFormActorBaseRestorer, [wbNull])
+       wbUnion('Changed Actor Base', ChangedFormActorBaseDecider, [wbNull, wbChangedNPC, wbChangedCREA])
      ]),
     wbStruct('Leveled Item', [                                  // 016
       wbIntegerT('Unknown', itU32),
@@ -5232,11 +5248,12 @@ begin
     ])
   ])]), -254);
 
-  wbChangedInventory := wbArrayPT('Entry Datas', wbStruct('Entry Data', [
+  wbEntryData :=   wbStruct('Entry Data', [
     wbRefIDT('Type'),
     wbIntegerT('Delta', itS32),
     wbArrayPT('Extend Datas', wbChangedExtraData, -254)
-  ]), -254);
+  ]);
+  wbChangedInventory := wbArrayPT('Entry Datas', wbEntryData, -254);
 
   wbUnionCHANGE_REFR_INVENTORY := wbUnion('Inventory', ChangedFlag05or27Decider, [wbNull, wbChangedInventory]);
 //identical to wbUnionCHANGE_REFR_INVENTORY  wbUnionCHANGE_REFR_LEVELED_INVENTORY := wbUnion('Leveled Inventory', ChangedFlag05or27Decider, [wbNull, wbChangedInventory]);
@@ -6458,6 +6475,51 @@ begin
     ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
   ]);
 
+  wbChangedProjectile := wbStruct('Changed projectile', [
+    wbChangedMobileObject,
+    wbIntegerT('Unk00C8', itU32),
+    wbIntegerT('Unk00CC', itU32),
+    wbIntegerT('Unk00D4', itU32),
+    wbIntegerT('Unk00D0', itU32),
+    wbIntegerT('Unk00D8', itU32),
+    wbIntegerT('Unk00DC', itU32),
+    wbIntegerT('Unk00E0', itU32),
+    wbIntegerT('Unk00E4', itU32),
+    wbIntegerT('Unk00E8', itU32),
+    wbRefIDT('Weapon'),
+    wbRefIDT('Ref00FC'),
+    wbRefIDT('Ref0100'),
+    wbByteArrayT('Unk0104', $0C), // wbCoordXYZ('Coords'),
+    wbIntegerT('Unk0110', itU32),
+    wbIntegerT('Unk0118', itU8),
+    wbIntegerT('Unk0124', itU32),
+    wbStruct('Unk0094', [
+      wbFloat('Unk000'), // Coefficient
+      wbFloat('Unk004'), // triplet of values
+      wbFloat('Unk008'),
+      wbFloatT('Unk00C')
+    ]),
+    wbByteArrayT('Unk00B8', $0C), // if version >= 0D
+    wbIntegerT('Unk00C4', itU32), // if version >= 0D
+    wbIntegerT('Unk00EC', itU32), // if version >= 08
+    wbIntegerT('Unk00F0', itU32), // if version >= 08
+    wbIntegerT('Unk00F4', itU32), // if version >= 0E
+    wbIntegerT('Unknown', itU32), // key in gList_11D6124, "result" goes int Unk0120
+    wbIntegerT('Has Entry Data', itU8), // if version >= 03
+    wbUnion('Entry Data Union', ChangedFormProjectileHasEntryDataDecider, [wbNull, wbEntryData]), // goes into Unk0144
+    wbArrayPT('Lst0088',  wbStruct('Struct0088', [
+      wbByteArrayT('Unk004', $0C), // thats' 3 iyU32/float ? wbCoordXYZ('Coords'),
+      wbByteArrayT('Unk010', $0C),
+      wbIntegerT('Unk020', itU32),
+      wbIntegerT('Unk024', itU32),
+      wbIntegerT('Unk028', itU8),
+      wbIntegerT('Unk02A', itU16),  // if version >= 011
+      wbIntegerT('Unk02C', itU16),  // if version >= 011
+      wbRefIDT('RefID')             // goes into 000
+    ]), -254), // if version >= 0E also , whats in Unk01C ?
+    wbIntegerT('Unk0090', itU8) // if version >= 010
+  ]);
+
   wbChangedFormData := wbStruct('Changed Form Data', [
     wbInitialDataType,
     wbUnion('CForm Union', ChangedFormDataDecider, [
@@ -6468,16 +6530,18 @@ begin
          wbChangedCreature
        ])
       ,wbStruct('Change PMIS Data', [ {03D}
-         wbChangedREFR
+        wbChangedProjectile
        ])
       ,wbStruct('Change PGRE Data', [ {03E}
-         wbChangedREFR
+        wbChangedProjectile
        ])
       ,wbStruct('Change PBEA Data', [ {03F}
-         wbChangedREFR
+        wbChangedProjectile
        ])
       ,wbStruct('Change PFLA Data', [ {040}
-         wbChangedREFR
+        wbChangedProjectile,
+        wbIntegerT('Unk0150', itU32),
+        wbIntegerT('Unk0154', itU32)
        ])
       ,wbStruct('Change CELL Data', [ {039}
          wbUnionCHANGE_FORM_FLAGS
@@ -6648,7 +6712,7 @@ begin
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
       ,wbStruct('Change PCBE Data', [ {069}
-         wbChangedREFR
+         wbChangedProjectile
        ])
       ,wbStruct('Change RCPE Data', [ {06A}
          wbUnionCHANGE_FORM_FLAGS
@@ -6791,7 +6855,7 @@ begin
     ,wbInteger('Plugins count', itU32)
   ]);
 
-  wbCoSaveChunk := wbStructC('Chunk', nil, nil, nil, nil, [
+  wbCoSaveChunk := wbStructC('Chunk', nil, wbCoSaveChunkType, wbCoSaveChunkTypeName, nil, [
     wbInteger('Type', itU32, wbStr4),
     wbInteger('Version', itU32),
     wbInteger('Length', itU32),
@@ -6809,17 +6873,17 @@ begin
       wbStruct('Array_var', [
         wbInteger('Owning Module Index', itU8),
         wbInteger('ID', itU32),
-        wbInteger('Key Type', itU8, wbXXSEArrayType),
+        wbInteger('Key Type', itU8, wbCoSaveArrayTypeEnum),
         wbInteger('Packed', itU8),
         wbArray('Refs', wbInteger('Ref', itU8), -1),
         wbArray('Elements', wbStruct('Element', [
-          wbUnion('Key', wbXXSEArrayKeyElementDecider, [
+          wbUnion('Key', wbCoSaveArrayKeyElementDecider, [
             wbNull,
             wbDouble('Numeric Key'),
             wbLenString('String Key', 2)
           ]),
-          wbInteger('Data Type', itU8, wbXXSEArrayType),
-          wbUnion('Data', wbXXSEArrayDataElementDecider, [
+          wbInteger('Data Type', itU8, wbCoSaveArrayTypeEnum),
+          wbUnion('Data', wbCoSaveArrayDataElementDecider, [
             wbNull,
             wbDouble('Numeric Data'),
             wbFormID('Form Data'),
@@ -6829,13 +6893,13 @@ begin
         ]), -1)
       ]),
       wbNull,  // ARVE Array Var Map End
-      wbByteArray('Others', wbXXSEChapterOtherCounter)  // For what we cannot hardcode
+      wbByteArray('Others', wbCoSaveChapterOtherCounter)  // For what we cannot hardcode
    ])
   ]);
 //  wbCoSaveChunk.TreeLeaf := True;
 
-  wbCoSaveChunks := wbArray('Chunks', wbCoSaveChunk, wbXXSEChunkCounter, cpNormal, false, wbDontShowBranch);
-  wbCoSavePlugin := wbStructC('Plugin', nil, nil, nil, nil, [
+  wbCoSaveChunks := wbArray('Chunks', wbCoSaveChunk, wbCoSaveChunkCounter, cpNormal, false, wbDontShowBranch);
+  wbCoSavePlugin := wbStructC('Plugin', nil, wbCoSaveArrayType, wbCoSaveArrayTypeName, nil, [
     wbInteger('Opcode Base', itU32),
     wbInteger('Chunks count', itU32),
     wbInteger('Length', itU32),
@@ -6843,7 +6907,7 @@ begin
   ]);
 //  wbCoSavePlugin.TreeLeaf := True;
   wbCoSaveChunks.TreeBranch := True;
-  wbCoSavePlugins := wbArray('Plugins', wbCoSavePlugin, wbXXSEPluginCounter);
+  wbCoSavePlugins := wbArray('Plugins', wbCoSavePlugin, wbCoSavePluginCounter);
 
   wbCoSaveChapters := wbStruct('CoSave File Chapters', [
     wbCoSavePlugins
