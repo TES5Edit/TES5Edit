@@ -1781,8 +1781,9 @@ end;
 
 function OBSEChaptersDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  Element : IwbElement;
-  Container: IwbDataContainer;
+  Element   : IwbElement;
+  EValue    : String;
+  Container : IwbDataContainer;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
@@ -1790,16 +1791,18 @@ begin
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Type'];
-    if Assigned(Element) then
-           if Element.Value ='MODS' then Result := 1
-      else if Element.Value ='STVS' then Result := 2
-      else if Element.Value ='STVR' then Result := 3
-      else if Element.Value ='STVE' then Result := 4
-      else if Element.Value ='ARVS' then Result := 5
-      else if Element.Value ='ARVR' then Result := 6
-      else if Element.Value ='ARVE' then Result := 7
-      else if Element.Value ='GLOB' then Result := 8
+    if Assigned(Element) then begin
+      EValue := Element.Value;
+           if EValue = 'MODS' then Result := 1
+      else if EValue = 'STVS' then Result := 2
+      else if EValue = 'STVR' then Result := 3
+      else if EValue = 'STVE' then Result := 4
+      else if EValue = 'ARVS' then Result := 5
+      else if EValue = 'ARVR' then Result := 6
+      else if EValue = 'ARVE' then Result := 7
+      else if EValue = 'GLOB' then Result := 8
       else Result := 9;
+    end;
   end;
 end;
 
@@ -6797,7 +6800,7 @@ begin
     ,wbInteger('Plugins count', itU32)
   ]);
 
-  wbCoSaveChunk := wbStructC('Chunk', nil, nil, nil, nil, [
+  wbCoSaveChunk := wbStructC('Chunk', nil, wbCoSaveChunkType, wbCoSaveChunkTypeName, nil, [
     wbInteger('Type', itU32, wbStr4),
     wbInteger('Version', itU32),
     wbInteger('Length', itU32),
@@ -6815,17 +6818,17 @@ begin
       wbStruct('Array_var', [
         wbInteger('Owning Module Index', itU8),
         wbInteger('ID', itU32),
-        wbInteger('Key Type', itU8, wbXXSEArrayType),
+        wbInteger('Key Type', itU8, wbCoSaveArrayTypeEnum),
         wbInteger('Packed', itU8),
         wbArray('Refs', wbInteger('Ref', itU8), -1),
         wbArray('Elements', wbStruct('Element', [
-          wbUnion('Key', wbXXSEArrayKeyElementDecider, [
+          wbUnion('Key', wbCoSaveArrayKeyElementDecider, [
             wbNull,
             wbDouble('Numeric Key'),
             wbLenString('String Key', 2)
           ]),
-          wbInteger('Data Type', itU8, wbXXSEArrayType),
-          wbUnion('Data', wbXXSEArrayDataElementDecider, [
+          wbInteger('Data Type', itU8, wbCoSaveArrayTypeEnum),
+          wbUnion('Data', wbCoSaveArrayDataElementDecider, [
             wbNull,
             wbDouble('Numeric Data'),
             wbFormID('Form Data'),
@@ -6839,13 +6842,13 @@ begin
         wbInteger('ID', itU8),
         wbDouble('Value')
       ]), OBSEChapterGlobalCounter),
-      wbByteArray('Others', wbXXSEChapterOtherCounter)  // For what we cannot hardcode
+      wbByteArray('Others', wbCoSaveChapterOtherCounter)  // For what we cannot hardcode
    ])
   ]);
 //  wbCoSaveChunk.TreeLeaf := True;
 
-  wbCoSaveChunks := wbArray('Chunks', wbCoSaveChunk, wbXXSEChunkCounter, cpNormal, false, wbDontShowBranch);
-  wbCoSavePlugin := wbStructC('Plugin', nil, nil, nil, nil, [
+  wbCoSaveChunks := wbArray('Chunks', wbCoSaveChunk, wbCoSaveChunkCounter, cpNormal, false, wbDontShowBranch);
+  wbCoSavePlugin := wbStructC('Plugin', nil, wbCoSaveArrayType, wbCoSaveArrayTypeName, nil, [
     wbInteger('Opcode Base', itU32),
     wbInteger('Chunks count', itU32),
     wbInteger('Length', itU32),
@@ -6853,7 +6856,7 @@ begin
   ]);
 //  wbCoSavePlugin.TreeLeaf := True;
   wbCoSaveChunks.TreeBranch := True;
-  wbCoSavePlugins := wbArray('Plugins', wbCoSavePlugin, wbXXSEPluginCounter);
+  wbCoSavePlugins := wbArray('Plugins', wbCoSavePlugin, wbCoSavePluginCounter);
 
   wbCoSaveChapters := wbStruct('CoSave File Chapters', [
     wbCoSavePlugins

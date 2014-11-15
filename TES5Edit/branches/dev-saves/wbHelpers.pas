@@ -309,7 +309,9 @@ begin
   	end else if s[i] = '"' then
       s[i] := ''''
   	else if s[i] = ':' then
-      s[i] := '-';
+      s[i] := '-'
+  	else if s[i] = '/' then
+      s[i] := ' ';
   Result := s;
 end;
 

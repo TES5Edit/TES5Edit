@@ -2260,6 +2260,7 @@ var
 function SKSEChaptersDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element   : IwbElement;
+  EValue    : String;
   Container : IwbDataContainer;
 begin
   Result := 0;
@@ -2268,18 +2269,20 @@ begin
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Type'];
-    if Assigned(Element) then
-           if Element.Value ='MODS' then Result := 1
-      else if Element.Value ='REGS' then Result := 2
-      else if Element.Value ='REGE' then Result := 3
-      else if Element.Value ='MENR' then begin Result :=  4; LastRegistrationStart := Result; end
-      else if Element.Value ='KEYR' then begin Result :=  5; LastRegistrationStart := Result; end
-      else if Element.Value ='CTLR' then begin Result :=  6; LastRegistrationStart := Result; end
-      else if Element.Value ='MCBR' then begin Result :=  7; LastRegistrationStart := Result; end
-      else if Element.Value ='CHRR' then begin Result :=  8; LastRegistrationStart := Result; end
-      else if Element.Value ='CAMR' then begin Result :=  9; LastRegistrationStart := Result; end
-      else if Element.Value ='AACT' then begin Result := 10; LastRegistrationStart := Result; end
-      else Result := 8;
+    if Assigned(Element) then begin
+      EValue := Element.Value;
+           if EValue = 'MODS' then Result := 1
+      else if EValue = 'REGS' then Result := 2
+      else if EValue = 'REGE' then Result := 3
+      else if EValue = 'MENR' then begin Result :=  4; LastRegistrationStart := Result; end
+      else if EValue = 'KEYR' then begin Result :=  5; LastRegistrationStart := Result; end
+      else if EValue = 'CTLR' then begin Result :=  6; LastRegistrationStart := Result; end
+      else if EValue = 'MCBR' then begin Result :=  7; LastRegistrationStart := Result; end
+      else if EValue = 'CHRR' then Result :=  8
+      else if EValue = 'CAMR' then Result :=  9
+      else if EValue = 'AACT' then begin Result := 10; LastRegistrationStart := Result; end
+      else Result := 11;
+    end;
   end;
 end;
 
@@ -6011,7 +6014,7 @@ begin
     ,wbInteger('Plugins count', itU32)
   ]);
 
-  wbCoSaveChunk := wbStructC('Chunk', nil, nil, nil, nil, [
+  wbCoSaveChunk := wbStructC('Chunk', nil, wbCoSaveChunkType, wbCoSaveChunkTypeName, nil, [
     wbInteger('Type', itU32, wbStr4),
     wbInteger('Version', itU32),
     wbInteger('Length', itU32),
@@ -6038,16 +6041,16 @@ begin
       wbNull,  // KEYR Key Event Registration
       wbNull,  // CTLR Control Event Registration
       wbNull,  // MCBR Mod Callback Event Registration
-      wbNull,  // CHRR Crosshair Ref Event Registration
-      wbNull,  // CAMR Camera Event Registration
+      wbArray('Crosshair refs', wbInteger('Crosshair ref handle', itU64), -1),  // CHRR Crosshair Ref Event Registration
+      wbArray('Cameras', wbInteger('Camera handle', itU64), -1),  // CAMR Camera Event Registration
       wbNull,  // AACT Actor Action Event Registration
-      wbByteArray('Others', wbXXSEChapterOtherCounter)  // For what we cannot hardcode
+      wbByteArray('Others', wbCoSaveChapterOtherCounter)  // For what we cannot hardcode
     ])
   ]);
 //  wbCoSaveChunk.TreeLeaf := True;
 
-  wbCoSaveChunks := wbArray('Chunks', wbCoSaveChunk, wbXXSEChunkCounter, cpNormal, false, wbDontShowBranch);
-  wbCoSavePlugin := wbStructC('Plugin', nil, nil, nil, nil, [
+  wbCoSaveChunks := wbArray('Chunks', wbCoSaveChunk, wbCoSaveChunkCounter, cpNormal, false, wbDontShowBranch);
+  wbCoSavePlugin := wbStructC('Plugin', nil, wbCoSaveArrayType, wbCoSaveArrayTypeName, nil, [
     wbInteger('UID', itU32),
     wbInteger('Chunks count', itU32),
     wbInteger('Length', itU32),
@@ -6055,7 +6058,7 @@ begin
   ]);
 //  wbCoSavePlugin.TreeLeaf := True;
   wbCoSaveChunks.TreeBranch := True;
-  wbCoSavePlugins := wbArray('Plugins', wbCoSavePlugin, wbXXSEPluginCounter);
+  wbCoSavePlugins := wbArray('Plugins', wbCoSavePlugin, wbCoSavePluginCounter);
 
   wbCoSaveChapters := wbStruct('CoSave File Chapters', [
     wbCoSavePlugins

@@ -34,13 +34,17 @@ function wbDontShowBranch(const aElement: IwbElement): Boolean;
 // CoSave shared data
 
 var
-  wbXXSEArrayType : IwbEnumDef;
+  wbCoSaveArrayTypeEnum : IwbEnumDef;
 
-function wbXXSEChapterOtherCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-function wbXXSEPluginCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-function wbXXSEChunkCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-function wbXXSEArrayKeyElementDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-function wbXXSEArrayDataElementDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbCoSaveChapterOtherCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbCoSavePluginCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbCoSaveChunkCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbCoSaveChunkType(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbCoSaveChunkTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
+function wbCoSaveArrayKeyElementDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbCoSaveArrayDataElementDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbCoSaveArrayType(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbCoSaveArrayTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
 
 // Place holder during decoding...
 
@@ -310,7 +314,7 @@ begin
   Result := wbHideNeverShow;
 end;
 
-function wbXXSEChapterOtherCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbCoSaveChapterOtherCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element : IwbElement;
   Container: IwbDataContainer;
@@ -326,7 +330,7 @@ begin
   end;
 end;
 
-function wbXXSEPluginCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbCoSavePluginCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element   : IwbElement;
   Container : IwbDataContainer;
@@ -345,7 +349,7 @@ begin
   end;
 end;
 
-function wbXXSEChunkCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbCoSaveChunkCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element : IwbElement;
   Container: IwbDataContainer;
@@ -361,7 +365,21 @@ begin
   end;
 end;
 
-function wbXXSEArrayKeyElementDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbCoSaveChunkType(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := -1;
+  if not Assigned(aBasePtr) then Exit;
+  Result := PCardinal(aBasePtr)^;
+end;
+
+function wbCoSaveChunkTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
+begin
+  Result := '';
+  if not Assigned(aBasePtr) then Exit;
+  Result := wbStr4ToString(PCardinal(aBasePtr)^);
+end;
+
+function wbCoSaveArrayKeyElementDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element : IwbElement;
   Container: IwbDataContainer;
@@ -381,7 +399,7 @@ begin
   end;
 end;
 
-function wbXXSEArrayDataElementDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbCoSaveArrayDataElementDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element : IwbElement;
   Container: IwbDataContainer;
@@ -402,6 +420,20 @@ begin
   end;
 end;
 
+function wbCoSaveArrayType(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := -1;
+  if not Assigned(aBasePtr) then Exit;
+  Result := PCardinal(aBasePtr)^;
+end;
+
+function wbCoSaveArrayTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
+begin
+  Result := '';
+  if not Assigned(aBasePtr) then Exit;
+  Result := IntToHex(PCardinal(aBasePtr)^, 8);
+end;
+
 function ToBeDeterminedDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := 0;
@@ -419,7 +451,7 @@ end;
 
 initialization
 
-  wbXXSEArrayType := wbEnum([
+  wbCoSaveArrayTypeEnum := wbEnum([
     'Invalid',
     'Numeric',
     'Form',

@@ -2940,6 +2940,8 @@ function wbFormaterUnion(aDecider : TwbIntegerDefFormaterUnionDecider;
 
 function wbIsPlugin(aFileName: string): Boolean;
 
+function wbStr4ToString(aInt: Int64): string;
+
 type
   PwbRecordDefEntry = ^TwbRecordDefEntry;
   TwbRecordDefEntry = record
@@ -10624,22 +10626,8 @@ begin
 end;
 
 function TwbStr4.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
-var
-  U32  : Cardinal;
-  Temp : String;
-  i    : Integer;
 begin
-  if aInt=0 then
-    Result := '    '
-  else begin
-    if aInt<16777216 then
-      Assert(aInt>=16777216); // we need 4 characters
-
-    U32 := aInt;
-    Result := PwbSignature(@U32)^;
-    Temp := Result;
-    for i := 1 to 4 do Result[i] := Temp[5-i];
-  end;
+  Result := wbStr4ToString(aInt);
 end;
 
 function TwbStr4.ToString(aInt: Int64; const aElement: IwbElement): string;
@@ -14228,6 +14216,27 @@ begin
         Result := True;
         Exit;
       end;
+end;
+
+function wbStr4ToString(aInt: Int64): string;
+var
+  U32  : Cardinal;
+  Temp : String;
+  i    : Integer;
+begin
+  if aInt=0 then
+    Result := '    '
+  else begin
+    U32 := aInt;
+    Result := PwbSignature(@U32)^;
+    if Length(Result)=4 then begin
+      Temp := Result;
+      for i := 1 to 4 do Result[i] := Temp[5-i];
+    end else begin
+      Result := '    ';
+      // wbProgressCallback('Found a str4 that does not have 4 characters! (1) '+IntToHex64(aInt, 8));
+    end;
+  end;
 end;
 
 initialization

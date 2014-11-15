@@ -167,22 +167,30 @@ bool DoTheWork()
 	_MESSAGE("*****************************************************************************************************");
 	_MESSAGE("\n\n\n");
   
+	// Test plugin handle, content vary from user to user
+	#define kNVSEOpcodeTest 0x02000
 	#define ALength 256
   
 	char ParamType1[ALength];
 	char ParamType2[ALength];
 
 	const PluginInfo	* PI = NULL;
+	const CommandInfo	* CI = SaveCT->End();
+	do
+	{
+		CI--;
+	}
+	while ((!CI->opcode) && (CI != SaveCT->Start()));
+	UInt32 lastOpcode = CI->opcode;
 
 	_MESSAGE("*****************************************************************************************************");
-	_MESSAGE("\n    // Added by Fallout NV");
+	_MESSAGE("\n    // Added by NVSE");
 
 	// Loop through all function in the command table looking for those where the eval member is not null
-	for (const CommandInfo * CI = SaveCT->Start(); CI < SaveCT->End(); CI++)
+	for (UInt32 i = kNVSEOpcodeStart; i<= lastOpcode; i++)
 	{
-		UInt32 i = CI->opcode;
-
-		if (i && CI && CI->eval && (kNVSEOpcodeTest>i || (kNVSEOpcodeTest+16-1)<i))
+		CI = SaveCT->GetByOpcode(i);
+		if (CI && CI->eval && (kNVSEOpcodeTest>i || (kNVSEOpcodeTest+16-1)<i))
 		{
 			if (PI != SaveCT->GetParentPlugin(CI))	// Ok, this is bugged !!!
 			{
