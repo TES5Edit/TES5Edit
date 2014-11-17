@@ -2052,7 +2052,7 @@ begin
       s := wbDataPath + ExtractFileName(CompareFile);
       if FileExists(s) then // Finds a unique name
         for i := 0 to 255 do begin
-          s := wbDataPath + ChangeFileExt(ExtractFileName(CompareFile), '.' + IntToHex(i, 3));
+          s := wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
           if not FileExists(s) then Break;
         end;
       if FileExists(s) then begin
