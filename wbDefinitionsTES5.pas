@@ -6490,8 +6490,9 @@ begin
     wbRecord(CELL, 'Cell',
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00000400} 10, 'Persistent',
+        {0x00020000} 17, 'Off Limits',
         {0x00040000} 18, 'Compressed',
-        {0x00080000} 19, 'Can''t wait'
+        {0x00080000} 19, 'Can''t Wait'
       ])), [
       wbEDID,
       wbFULL,
@@ -6614,8 +6615,9 @@ begin
     wbRecord(CELL, 'Cell',
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00000400} 10, 'Persistent',
+        {0x00020000} 17, 'Off Limits',
         {0x00040000} 18, 'Compressed',
-        {0x00080000} 19, 'Can''t wait'
+        {0x00080000} 19, 'Can''t Wait'
       ])), [
       wbEDID,
       wbFULL,
