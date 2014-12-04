@@ -10734,7 +10734,7 @@ begin
     wbRArrayS('Factions',
       wbStructSK(SNAM, [0], 'Faction', [
         wbFormIDCk('Faction', [FACT]),
-        wbInteger('Rank', itU8),
+        wbInteger('Rank', itS8),
         wbByteArray('Unused', 3, cpIgnore)
       ]), cpNormal, False, nil, nil, nil{wbActorTemplateUseFactions}
     ),
