@@ -6490,8 +6490,9 @@ begin
     wbRecord(CELL, 'Cell',
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00000400} 10, 'Persistent',
+        {0x00020000} 17, 'Off Limits',
         {0x00040000} 18, 'Compressed',
-        {0x00080000} 19, 'Can''t wait'
+        {0x00080000} 19, 'Can''t Wait'
       ])), [
       wbEDID,
       wbFULL,
@@ -6614,8 +6615,9 @@ begin
     wbRecord(CELL, 'Cell',
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00000400} 10, 'Persistent',
+        {0x00020000} 17, 'Off Limits',
         {0x00040000} 18, 'Compressed',
-        {0x00080000} 19, 'Can''t wait'
+        {0x00080000} 19, 'Can''t Wait'
       ])), [
       wbEDID,
       wbFULL,
@@ -10732,7 +10734,7 @@ begin
     wbRArrayS('Factions',
       wbStructSK(SNAM, [0], 'Faction', [
         wbFormIDCk('Faction', [FACT]),
-        wbInteger('Rank', itU8),
+        wbInteger('Rank', itS8),
         wbByteArray('Unused', 3, cpIgnore)
       ]), cpNormal, False, nil, nil, nil{wbActorTemplateUseFactions}
     ),
@@ -12061,9 +12063,11 @@ begin
   ]), [
     wbEDID,
     wbVMAD,
-    wbFormIDCk(NAME, 'Base', [TREE, SNDR, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
-                              MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, INGR,
-                              MSTT, TACT, TXST, FLOR, SLGM, SCRL, SOUN, APPA, SPEL, ARTO], False, cpNormal, True),
+    wbFormIDCk(NAME, 'Base', [
+      TREE, SNDR, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
+      MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, INGR,
+      MSTT, TACT, TXST, FLOR, SLGM, SCRL, SOUN, APPA, SPEL, ARTO, ADDN
+    ], False, cpNormal, True),
 
     {--- Bound Contents ---}
     {--- Bound Data ---}

@@ -1,5 +1,5 @@
 {
-    Check that triangles Edges in navmeshes are pointing to each other
+    Check triangle Edges in navmeshes for irregularities.
 }
 unit NavMeshCheckEdges;
 
@@ -25,7 +25,7 @@ end;
 function CheckEdge(tris: IInterface; tri1, tri2: integer): Boolean;
 var
   tri: IInterface;
-  TriLimit, j, flags, EdgeValue, EdgeLinkLimit: integer;
+  TriLimit, j, flags, EdgeValue: integer;
 begin
   TriLimit := Pred(ElementCount(tris));
   tri := ElementByIndex(tris, tri1);
@@ -35,8 +35,8 @@ begin
     if flags and (1 shl j) = 0 then begin
       EdgeValue := GetElementNativeValues(tri, arEdge[j]);
       if EdgeValue < 0 then
-		// no known edge
-	  else if EdgeValue > TriLimit then
+        // no known edge
+      else if EdgeValue > TriLimit then
         AddMessage(Format('Bad %s value (%d > %d)!', [arEdge[j], EdgeValue, TriLimit]))
       else if EdgeValue = tri2 then begin
         Result := True;
@@ -81,7 +81,7 @@ begin
       EdgeValue := GetElementNativeValues(tri, arEdge[j]);
       if EdgeValue < 0 then
         AddMessage(Format('Bad %s link (%d < 0)!', [arEdge[j], EdgeValue]))
-	  else if EdgeValue > EdgeLinkLimit then begin
+      else if EdgeValue > EdgeLinkLimit then begin
         AddMessage(Format('Bad %s link (%d > %d)!', [arEdge[j], EdgeValue, EdgeLinkLimit]));
         AddMessage(Format('Referenced triangle %d in %s', [tri1, Name(navm1)]));
       end
@@ -103,7 +103,8 @@ end;
 function Process(pe: IInterface): integer;
 var
   tris, tri, EdgeLinks, EdgeLink, e: IInterface;
-  TriLimit, j, i, flags, errors, EdgeValue, EdgeLinkLimit, EdgeLinkFound, EdgeLinkCount: integer;
+  warnings, TriLimit, skips, j, i, flags: integer;
+  EdgeValue, EdgeLinkLimit, EdgeLinkFound, EdgeLinkCount: integer;
 begin
   if Signature(pe) <> 'NAVM' then
     Exit;
@@ -118,48 +119,53 @@ begin
 
   // iterate through triangles
   for i := 0 to TriLimit do begin
-    errors := 0;
+    skips := 0;
+    warnings := 0;
     tri := ElementByIndex(tris, i);
     flags := GetElementNativeValues(tri, 'Flags');
     for j := 0 to 2 do begin
       EdgeValue := GetElementNativeValues(tri, arEdge[j]);
       // triangle has EdgeLinks?
       if flags and (1 shl j) > 0 then begin
-		// AddMessage(Format('test %s external', [arEdge[j]]));
+        // AddMessage(Format('test %s value %d', [arEdge[j], EdgeValue]));
         if EdgeValue < 0 then begin
           AddMessage(Format('Bad %s link (%d < 0)!', [arEdge[j], EdgeValue]))
-		  Inc(errors);
-		  end
-		else if EdgeValue > EdgeLinkLimit then begin
+          Inc(warnings);
+          end
+        else if EdgeValue > EdgeLinkLimit then begin
           AddMessage(Format('Bad %s link (%d > %d)!', [arEdge[j], EdgeValue, EdgeLinkLimit]))
-		  Inc(errors);
+          Inc(warnings);
         end
-		else begin
+        else begin
           Inc(EdgeLinkFound);
           EdgeLink := ElementByIndex(EdgeLinks, EdgeValue);
           if not CheckEdgeLink(WinningOverride(LinksTo(ElementByName(EdgeLink, 'Mesh'))), e, GetElementNativeValues(EdgeLink, 'Triangle'), i) then begin
             AddMessage(Format('via %s link %d', [arEdge[j], EdgeValue]));
-            Inc(errors);
+            Inc(warnings);
           end;
         end;
       end
-	  else begin
-		// AddMessage(Format('test %s internal', [arEdge[j]]));
-		if EdgeValue < 0 then
-			// no known edge
-		else if EdgeValue > TriLimit then begin
+      else begin
+        // AddMessage(Format('test %s internal', [arEdge[j]]));
+        if EdgeValue < 0 then
+            Inc(skips)
+        else if EdgeValue > TriLimit then begin
           AddMessage(Format('Bad %s value (%d > %d)!', [arEdge[j], EdgeValue, TriLimit]));
-		  Inc(errors);
+          Inc(warnings);
         end
-		else if not CheckEdge(tris, EdgeValue, i) then begin
+        else if not CheckEdge(tris, EdgeValue, i) then begin
           AddMessage(Format('Referenced triangle %d', [EdgeValue]));
-          Inc(errors);
-		end;
-	  end;
-	end;
+          Inc(warnings);
+        end;
+      end;
+    end;
 
-    if errors > 0 then
-      AddMessage(Format('^^^ Error triangle %d in %s', [i, Name(e)]));
+    if warnings > 0 then
+      AddMessage(Format('^^^ ERROR Triangle %d in %s', [i, Name(e)]))
+    else if skips = 3 then
+      AddMessage(Format('*** Island Triangle %d in %s', [i, Name(e)]))
+    else if flags and 2048 = 0 then
+      AddMessage(Format('*** Not Found Triangle %d in %s', [i, Name(e)]));
   end;
     
   if (EdgeLinkFound > 0) and (EdgeLinkFound > EdgeLinkCount) then begin

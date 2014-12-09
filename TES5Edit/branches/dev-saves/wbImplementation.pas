@@ -1439,6 +1439,7 @@ type
   IwbGroupRecordInternal = interface(IwbGroupRecord)
     ['{0BDDCF46-DFF6-4771-8FBB-0BC78828999B}']
     procedure Sort;
+    procedure SetModified(aValue: Boolean);
   end;
 
   TwbGroupState = (
@@ -1485,6 +1486,7 @@ type
 
     procedure UpdatedEnded; override;
 
+    procedure SetModified(aValue: Boolean); override;
 
     procedure PrepareSave; override;
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); override;
@@ -3249,7 +3251,7 @@ begin
                 Inc(j);
               end;
               (Groups[GroupRecord.SortOrder] as IwbGroupRecordInternal).Sort;
-              (Groups[GroupRecord.SortOrder] as IwbElementInternal).Modified := True;
+              (Groups[GroupRecord.SortOrder] as IwbGroupRecordInternal).SetModified(True);
               flProgress('Merged ' + IntToStr(j) + ' record from duplicated group: ' + cntElements[i].Name);
               GroupRecord.Remove;
             end;
@@ -7148,7 +7150,10 @@ end;
 
 function TwbMainRecord.GetPermanentName: string;
 begin
-  Result := '[' + GetMasterOrSelf.GetFile.GetPermanentName + ':' + IntToHex64($00FFFFFF and GetLoadOrderFormID, 8) + ']'
+  if GetIsMaster then
+    Result := '[self:' + IntToHex64($00FFFFFF and GetLoadOrderFormID, 8) + ']'
+  else
+    Result := '[' + GetMasterOrSelf.GetFile.GetPermanentName + ':' + IntToHex64($00FFFFFF and GetLoadOrderFormID, 8) + ']'
 end;
 
 function TwbMainRecord.GetCountedRecordCount: Cardinal;
@@ -8705,14 +8710,14 @@ begin
   if OldTypeGroup.ElementCount = 0 then
     OldTypeGroup.Remove
   else
-    (OldTypeGroup as IwbElementInternal).SetModified(True);
+    (OldTypeGroup as IwbGroupRecordInternal).SetModified(True);
   NewTypeGroup.AddElement(SelfRef);
-  (NewTypeGroup as IwbElementInternal).SetModified(True);
+  (NewTypeGroup as IwbGroupRecordInternal).SetModified(True);
   (NewTypeGroup as IwbGroupRecordInternal).Sort;
   if OldChildGroup.ElementCount = 0 then
     OldChildGroup.Remove
   else
-    (OldChildGroup as IwbElementInternal).SetModified(True);
+    (OldChildGroup as IwbGroupRecordInternal).SetModified(True);
 end;
 
 procedure TwbMainRecord.UpdateInteriorCellGroup;
@@ -8792,7 +8797,7 @@ begin
 
     if not Assigned(NewBlockGroup) then begin
       NewBlockGroup := TwbGroupRecord.Create(TopGroup, 2, Block);
-      (TopGroup as IwbElementInternal).SetModified(True);
+      (TopGroup as IwbGroupRecordInternal).SetModified(True);
       (TopGroup as IwbGroupRecordInternal).Sort;
     end;
   end;
@@ -8809,7 +8814,7 @@ begin
 
     if not Assigned(NewSubBlockGroup) then begin
       NewSubBlockGroup := TwbGroupRecord.Create(NewBlockGroup, 3, SubBlock);
-      (NewBlockGroup as IwbElementInternal).SetModified(True);
+      (NewBlockGroup as IwbGroupRecordInternal).SetModified(True);
       (NewBlockGroup as IwbGroupRecordInternal).Sort;
     end;
   end;
@@ -8825,7 +8830,7 @@ begin
     NewSubBlockGroup.AddElement(SelfRef);
     if Assigned(ChildGroup) then
       NewSubBlockGroup.AddElement(ChildGroup);
-    (NewSubBlockGroup as IwbElementInternal).SetModified(True);
+    (NewSubBlockGroup as IwbGroupRecordInternal).SetModified(True);
     (NewSubBlockGroup as IwbGroupRecordInternal).Sort;
 
     if Assigned(SubBlockGroup) then begin
@@ -8834,12 +8839,12 @@ begin
         if Assigned(BlockGroup) then begin
           if BlockGroup.ElementCount = 0 then begin
             BlockGroup.Remove;
-            (TopGroup as IwbElementInternal).SetModified(True);
+            (TopGroup as IwbGroupRecordInternal).SetModified(True);
           end else
-            (BlockGroup as IwbElementInternal).SetModified(True);
+            (BlockGroup as IwbGroupRecordInternal).SetModified(True);
         end;
       end else
-        (SubBlockGroup as IwbElementInternal).SetModified(True);
+        (SubBlockGroup as IwbGroupRecordInternal).SetModified(True);
     end;
   end;
 end;
@@ -11161,6 +11166,12 @@ begin
           GroupRecord.GroupLabel := aLabel;
     end else if Supports(GetElement(i), IwbContainedIn, ContainedIn) then
       ContainedIn.ContainerChanged;
+end;
+
+procedure TwbGroupRecord.SetModified(aValue: Boolean);
+begin
+  inherited;
+  InvalidateStorage;
 end;
 
 function FindSortElement(const aElement: IwbElement): IwbElement;
@@ -15878,25 +15889,25 @@ begin
 
           Group1.RemoveElement(MainRecord);
           if Group1.ElementCount = 0 then begin
-            (Group1 as IwbElementInternal).SetModified(True);
+            (Group1 as IwbGroupRecordInternal).SetModified(True);
             Group1.Remove;
             if Assigned(Group2) then
               if Group2.ElementCount = 0 then begin
-               (Group2 as IwbElementInternal).SetModified(True);
+               (Group2 as IwbGroupRecordInternal).SetModified(True);
                 Group2.Remove;
                 if Assigned(Group3) then
                   if Group3.ElementCount = 0 then begin
-                    (Group3 as IwbElementInternal).SetModified(True);
+                    (Group3 as IwbGroupRecordInternal).SetModified(True);
                     Group3.Remove;
                   end else
-                    (Group3 as IwbElementInternal).SetModified(True);
+                    (Group3 as IwbGroupRecordInternal).SetModified(True);
               end else
-                (Group2 as IwbElementInternal).SetModified(True);
+                (Group2 as IwbGroupRecordInternal).SetModified(True);
           end else
-            (Group1 as IwbElementInternal).SetModified(True);
+            (Group1 as IwbGroupRecordInternal).SetModified(True);
 
           GroupRecord.AddElement(MainRecord);
-          (GroupRecord as IwbElementInternal).SetModified(True);
+          (GroupRecord as IwbGroupRecordInternal).SetModified(True);
           (GroupRecord as IwbGroupRecordInternal).Sort;
         end;
         6: begin
@@ -15922,9 +15933,9 @@ begin
              if OldGroup.ElementCount = 0 then
                OldGroup.Remove
              else
-               (OldGroup as IwbElementInternal).SetModified(True);
+               (OldGroup as IwbGroupRecordInternal).SetModified(True);
              Group3.AddElement(MainRecord);
-             (Group3 as IwbElementInternal).SetModified(True);
+             (Group3 as IwbGroupRecordInternal).SetModified(True);
              (Group3 as IwbGroupRecordInternal).Sort;
         end;
         7: begin
@@ -15932,9 +15943,9 @@ begin
              if OldGroup.ElementCount = 0 then
                OldGroup.Remove
              else
-               (OldGroup as IwbElementInternal).SetModified(True);
+               (OldGroup as IwbGroupRecordInternal).SetModified(True);
              GroupRecord.AddElement(MainRecord);
-             (GroupRecord as IwbElementInternal).SetModified(True);
+             (GroupRecord as IwbGroupRecordInternal).SetModified(True);
              (GroupRecord as IwbGroupRecordInternal).Sort;
           end;
       else
