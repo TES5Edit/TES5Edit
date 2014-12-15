@@ -4633,13 +4633,14 @@ begin
   wbSCROs :=
     wbRArray('References',
       wbRUnion('', [
-        wbFormIDCk(SCRO, 'Global Reference',
-          [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, IMAD,
-           BOOK, KEYM, ALCH, LIGH, QUST, PLYR, PACK, LVLI, ECZN, EXPL, FLST, IDLM, PMIS,
-           FACT, ACHR, REFR, ACRE, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
-           LVLC, CSTY, WRLD, SCPT, IMGS, MESG, MSTT, MUSC, NOTE, PERK, PGRE, PROJ, LVLN,
-           WATR, ENCH, TREE, REPU, REGN, CSNO, CHAL, IMOD, RCCT, CMNY, CDCK, CHIP, CCRD,
-           TERM, HAIR, EYES, ADDN, RCPE, NULL]),
+        wbFormID(SCRO, 'Global Reference'),
+//        wbFormIDCk(SCRO, 'Global Reference',
+//          [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, IMAD,
+//           BOOK, KEYM, ALCH, LIGH, QUST, PLYR, PACK, LVLI, ECZN, EXPL, FLST, IDLM, PMIS,
+//           FACT, ACHR, REFR, ACRE, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
+//           LVLC, CSTY, WRLD, SCPT, IMGS, MESG, MSTT, MUSC, NOTE, PERK, PGRE, PROJ, LVLN,
+//           WATR, ENCH, TREE, REPU, REGN, CSNO, CHAL, IMOD, RCCT, CMNY, CDCK, CHIP, CCRD,
+//           TERM, HAIR, EYES, ADDN, RCPE, NULL]),
         wbInteger(SCRV, 'Local Variable', itU32)
       ], [])
     );
@@ -9074,12 +9075,36 @@ begin
            {8} 'Use Item At',
            {9} 'Ambush',
           {10} 'Flee Not Combat',
-          {11} '',
+          {11} 'Package Type 11',
           {12} 'Sandbox',
           {13} 'Patrol',
           {14} 'Guard',
           {15} 'Dialogue',
-          {16} 'Use Weapon'
+          {16} 'Use Weapon',
+          {17} 'Package Type 17',
+          {18} 'Combat Controller',
+          {19} 'Package Type 19',
+          {20} 'Package Type 20',
+          {21} 'Alarm',
+          {22} 'Flee',
+          {23} 'TressPass',
+          {24} 'Spectator',
+          {25} 'Package Type 25',
+          {26} 'Package Type 26',
+          {27} 'Package Type 27',
+          {28} 'Dialogue 2',
+          {29} 'Package Type 29',
+          {30} 'Package Type 30',
+          {31} 'Package Type 31',
+          {32} 'Package Type 32',
+          {33} 'Package Type 33',
+          {34} 'Package Type 34',
+          {35} 'Package Type 35',
+          {36} 'Package Type 36',
+          {37} 'Package Type 37',
+          {38} 'Package Type 38',
+          {39} 'Package Type 39',
+          {40} 'Package Type 40'
         ]);
 
   wbObjectTypeEnum := wbEnum([
@@ -9578,6 +9603,11 @@ begin
       wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
       wbRStruct('Male Head Data', [
         wbEmpty(MNAM, 'Male Data Marker', cpNormal, True),
+        wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
+        wbMODLReq,
+        wbICON,
+        wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
+        wbICON,
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
           wbMODLReq,
@@ -9586,6 +9616,11 @@ begin
       ], [], cpNormal, True),
       wbRStruct('Female Head Data', [
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
+        wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
+        wbMODLReq,
+        wbICON,
+        wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
+        wbICON,
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
           wbMODLReq,
