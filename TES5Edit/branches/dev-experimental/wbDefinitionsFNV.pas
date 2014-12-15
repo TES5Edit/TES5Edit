@@ -4687,13 +4687,14 @@ begin
   wbSCROs :=
     wbRArray('References',
       wbRUnion('', [
-        wbFormIDCk(SCRO, 'Global Reference',
-          [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, IMAD,
-           BOOK, KEYM, ALCH, LIGH, QUST, PLYR, PACK, LVLI, ECZN, EXPL, FLST, IDLM, PMIS,
-           FACT, ACHR, REFR, ACRE, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
-           LVLC, CSTY, WRLD, SCPT, IMGS, MESG, MSTT, MUSC, NOTE, PERK, PGRE, PROJ, LVLN,
-           WATR, ENCH, TREE, REPU, REGN, CSNO, CHAL, IMOD, RCCT, CMNY, CDCK, CHIP, CCRD,
-           TERM, HAIR, EYES, ADDN, RCPE, NULL]),
+        wbFormID(SCRO, 'Global Reference'),
+//        wbFormIDCk(SCRO, 'Global Reference',
+//          [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, IMAD,
+//           BOOK, KEYM, ALCH, LIGH, QUST, PLYR, PACK, LVLI, ECZN, EXPL, FLST, IDLM, PMIS,
+//           FACT, ACHR, REFR, ACRE, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
+//           LVLC, CSTY, WRLD, SCPT, IMGS, MESG, MSTT, MUSC, NOTE, PERK, PGRE, PROJ, LVLN,
+//           WATR, ENCH, TREE, REPU, REGN, CSNO, CHAL, IMOD, RCCT, CMNY, CDCK, CHIP, CCRD,
+//           TERM, HAIR, EYES, ADDN, RCPE, NULL]),
         wbInteger(SCRV, 'Local Variable', itU32)
       ], [])
     );
@@ -9659,6 +9660,11 @@ begin
       wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
       wbRStruct('Male Head Data', [
         wbEmpty(MNAM, 'Male Data Marker', cpNormal, True),
+        wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
+        wbMODLReq,
+        wbICON,
+        wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
+        wbICON,
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
           wbMODLReq,
@@ -9667,6 +9673,11 @@ begin
       ], [], cpNormal, True),
       wbRStruct('Female Head Data', [
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
+        wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
+        wbMODLReq,
+        wbICON,
+        wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
+        wbICON,
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
           wbMODLReq,
