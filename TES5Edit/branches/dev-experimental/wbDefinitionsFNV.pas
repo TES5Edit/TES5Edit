@@ -11205,6 +11205,7 @@ begin
   wbRecord(CHAL, 'Challenge', [
     wbEDIDReq,
     wbFULL,
+    wbICON,
     wbSCRI,
     wbDESC,
     wbStruct(DATA, 'Data', [
