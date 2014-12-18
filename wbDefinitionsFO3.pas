@@ -1287,6 +1287,19 @@ begin
     Result := Result or $04;
 end;
 
+procedure wbHeadPartsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainerElementRef;
+begin
+  if wbBeginInternalEdit then try
+    if Supports(aElement, IwbContainerElementRef, Container) then
+      if (Container.Elements[0].NativeValue = 1) and (Container.ElementCount > 2) then
+        Container.RemoveElement(1);
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
 procedure wbMESGDNAMAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   OldValue, NewValue : Integer;
@@ -9080,7 +9093,7 @@ begin
     wbFormIDCk(YNAM, 'Younger', [RACE]),
     wbEmpty(NAM2, 'Unknown Marker', cpNormal, True),
     wbArray(VTCK, 'Voices', wbFormIDCk('Voice', [VTYP]), ['Male', 'Female'], cpNormal, True),
-    wbArray(DNAM, 'Default Hair Styles', wbFormIDCk('Default Hair Style', [HAIR]), ['Male', 'Female'], cpNormal, True),
+    wbArray(DNAM, 'Default Hair Styles', wbFormIDCk('Default Hair Style', [HAIR, NULL]), ['Male', 'Female'], cpNormal, True),
     wbArray(CNAM, 'Default Hair Colors', wbInteger('Default Hair Color', itU8, wbEnum([
       'Bleached',
       'Brown',
@@ -9106,29 +9119,19 @@ begin
       wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
       wbRStruct('Male Head Data', [
         wbEmpty(MNAM, 'Male Data Marker', cpNormal, True),
-        wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
-        wbMODLReq,
-        wbICON,
-        wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
-        wbICON,
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
           wbMODLReq,
           wbICON
-        ], []), cpNormal, True)
+        ], [], cpNormal, False, nil, False, nil, wbHeadPartsAfterSet), cpNormal, True)
       ], [], cpNormal, True),
       wbRStruct('Female Head Data', [
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
-        wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
-        wbMODLReq,
-        wbICON,
-        wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
-        wbICON,
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
           wbMODLReq,
           wbICON
-        ], []), cpNormal, True)
+        ], [], cpNormal, False, nil, False, nil, wbHeadPartsAfterSet), cpNormal, True)
       ], [], cpNormal, True)
     ], [], cpNormal, True),
     wbRStruct('Body Data', [
