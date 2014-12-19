@@ -6475,7 +6475,7 @@ begin
     MainRecords[i].Remove;
     MainRecords[i] := nil;
     while Assigned(Container) and (Container.ElementCount = 0) do begin
-      Supports(Container, IwbContainerElementRef, NextContainer);
+      Supports(Container.Container, IwbContainerElementRef, NextContainer);
       Container.Remove;
       Container := NextContainer;
     end;
