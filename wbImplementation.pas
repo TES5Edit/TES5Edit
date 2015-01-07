@@ -9227,14 +9227,17 @@ end;
 
 procedure TwbSubRecord.CheckTerminator;
 var
-  i        : Integer;
-  ArrayDef : IwbArrayDef;
+  i         : Integer;
+  ArrayDef  : IwbArrayDef;
+  StringDef : IwbStringDef;
 begin
   if not Supports(srValueDef, IwbArrayDef, ArrayDef) then
     Exit;
   if not ArrayDef.IsVariableSize then
     Exit;
   if ArrayDef.Element.DefType <> dtString then
+    Exit;
+  if (not Supports(ArrayDef.Element, IwbStringDef, StringDef)) or (StringDef.GetStringSize>0) then
     Exit;
 
   for i := Low(cntElements) to High(cntElements) do
