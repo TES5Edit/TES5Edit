@@ -7510,13 +7510,6 @@ begin
 
   end else
     inherited;
-  {
-  if mrStruct.mrsSignature = 'MGEF' then begin
-    EditorID := GetElementBySignature('EDID');
-    if Assigned(EditorID) then
-      mrEditorID := EditorID.SortKey[False];
-  end;
-  }
 end;
 
 procedure TwbMainRecord.MasterIndicesUpdated(const aOld, aNew: TBytes);
@@ -9199,7 +9192,7 @@ var
   i           : Integer;
   UpdateCount : Integer;
 begin
-  if srArraySizePrefix < 1 then
+  if not (srArraySizePrefix in [1, 2, 4]) then
     Exit;
 
   if Assigned(dcDataBasePtr) then
@@ -11630,6 +11623,7 @@ begin
       CodeSite.Send('aElement', 'nil');
     CodeSite.Send('aCheckDontShow', aCheckDontShow);
   end;
+  Result := False;
   try
   {$ENDIF}
     Result := CanAssignInternal(aIndex, aElement, aCheckDontShow);
