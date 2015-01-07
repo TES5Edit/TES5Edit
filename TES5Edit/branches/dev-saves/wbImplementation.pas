@@ -1505,6 +1505,7 @@ type
     function FindChildGroup(aType: Integer; aMainRecord: IwbMainRecord): IwbGroupRecord;
 
     function GetMainRecordByEditorID(const aEditorID: string): IwbMainRecord;
+    function GetMainRecordByFormID(const aFormID: Cardinal): IwbMainRecord;
 
     function GetGroupType: Integer;
     function GetGroupLabel: Cardinal;
@@ -7570,13 +7571,6 @@ begin
 
   end else
     inherited;
-  {
-  if mrStruct.mrsSignature = 'MGEF' then begin
-    EditorID := GetElementBySignature('EDID');
-    if Assigned(EditorID) then
-      mrEditorID := EditorID.SortKey[False];
-  end;
-  }
 end;
 
 procedure TwbMainRecord.MasterIndicesUpdated(const aOld, aNew: TBytes);
@@ -10832,6 +10826,22 @@ begin
   Result := nil;
 end;
 
+function TwbGroupRecord.GetMainRecordByFormID(const aFormID: Cardinal): IwbMainRecord;
+var
+  SelfRef : IwbContainerElementRef;
+  i       : Integer;
+begin
+  Result := nil;
+
+  SelfRef := Self;
+  DoInit;
+  for i := Low(cntElements) to High(cntElements) do
+    if Supports(cntElements[i], IwbMainRecord, Result) then
+      if Result.FormID = aFormID then
+        Exit;
+  Result := nil;
+end;
+
 function TwbGroupRecord.GetName: string;
 begin
   Result := inherited GetName;
@@ -10886,7 +10896,7 @@ begin
         if Assigned(aRecord) then
           Result := 'Children of ' + aRecord.PermanentName
         else
-        Result := 'Children of ' + IntToHex(grStruct.grsLabel, 8);
+          Result := 'Children of non existant ' + IntToHex(grStruct.grsLabel, 8);
     end;
     2: Result := 'Block ' + IntToStr(grStruct.grsLabel);
     3: Result := 'Sub-Block ' + IntToStr(grStruct.grsLabel);

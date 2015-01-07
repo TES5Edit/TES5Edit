@@ -1114,6 +1114,7 @@ type
     function FindChildGroup(aType: Integer; aMainRecord: IwbMainRecord): IwbGroupRecord;
 
     function GetMainRecordByEditorID(const aEditorID: string): IwbMainRecord;
+    function GetMainRecordByFormID(const aFormID: Cardinal): IwbMainRecord;
 
     procedure AddElement(const aElement: IwbElement);
 
@@ -1128,6 +1129,8 @@ type
 
     property MainRecordByEditorID[const aEditorID: string]: IwbMainRecord
       read GetMainRecordByEditorID;
+    property MainRecordByFormID[const aFormID: Cardinal]: IwbMainRecord
+      read GetMainRecordByFormID;
   end;
 
   IwbSubRecordArray = interface
@@ -1540,6 +1543,7 @@ type
 
   IwbFormID = interface(IwbIntegerDefFormater)
     ['{71C4A255-B983-488C-9837-0A720132348A}']
+    function GetMainRecord(aInt: Int64; const aElement: IwbElement): IwbMainRecord;
   end;
 
   IwbRefID = interface(IwbFormID)
@@ -4541,6 +4545,9 @@ type
     function MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes; const aElement: IwbElement): Int64; override;
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement); override;
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean; override;
+
+    {---IwbFormID---}
+    function GetMainRecord(aInt: Int64; const aElement: IwbElement): IwbMainRecord; virtual;
   end;
 
   TwbRefID = class(TwbFormID, IwbRefID)
@@ -11094,6 +11101,18 @@ begin
     if Assigned(_File) then try
       Result := _File.RecordByFormID[aInt, True];
     except end;
+  end;
+end;
+
+function TwbFormID.GetMainRecord(aInt: Int64; const aElement: IwbElement): IwbMainRecord;
+var
+  _File: IwbFile;
+begin
+  Result := nil;
+  if Assigned(aElement) then begin
+    _File := aElement._File;
+    if Assigned(_File) then
+      Result := _File.RecordByFormID[aInt, True];
   end;
 end;
 

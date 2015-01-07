@@ -1511,6 +1511,7 @@ type
     function FindChildGroup(aType: Integer; aMainRecord: IwbMainRecord): IwbGroupRecord;
 
     function GetMainRecordByEditorID(const aEditorID: string): IwbMainRecord;
+    function GetMainRecordByFormID(const aFormID: Cardinal): IwbMainRecord;
 
     function GetGroupType: Integer;
     function GetGroupLabel: Cardinal;
@@ -10860,6 +10861,22 @@ begin
   for i := Low(cntElements) to High(cntElements) do
     if Supports(cntElements[i], IwbMainRecord, Result) then
       if SameText(Result.EditorID, aEditorID) then
+        Exit;
+  Result := nil;
+end;
+
+function TwbGroupRecord.GetMainRecordByFormID(const aFormID: Cardinal): IwbMainRecord;
+var
+  SelfRef : IwbContainerElementRef;
+  i       : Integer;
+begin
+  Result := nil;
+
+  SelfRef := Self;
+  DoInit;
+  for i := Low(cntElements) to High(cntElements) do
+    if Supports(cntElements[i], IwbMainRecord, Result) then
+      if Result.FormID = aFormID then
         Exit;
   Result := nil;
 end;
