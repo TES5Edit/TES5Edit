@@ -10099,32 +10099,26 @@ end;
 
 function TfrmMain.NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
 var
-  Master                      : IwbMainRecord;
-  Rec                         : IwbMainRecord;
-  i, j, k                     : Integer;
-  sl                          : TStringList;
-  Records                     : TStringList;
-  MadeChanges                 : Boolean;
-  AnyHidden                   : Boolean;
-  IsGMST                      : Boolean;
-  EditorID                    : string;
-  Group                       : IwbGroupRecord;
+  Master        : IwbMainRecord;
+  Rec           : IwbMainRecord;
+  i, j, k       : Integer;
+  sl            : TStringList;
+  Records       : TStringList;
+  MadeChanges   : Boolean;
+  AnyHidden     : Boolean;
+  IsNonOverride : Boolean;
+  EditorID      : string;
+  FormID        : Cardinal;
+  LoadOrder     : Integer;
+  Group         : IwbGroupRecord;
+  Signature     : TwbSignature;
 begin
   Assert(wbLoaderDone);
-  IsGMST := False;
+  IsNonOverride := False;
   AnyHidden := False;
 
-  if aMainRecord.Signature = 'NAVI' then begin
-    SetLength(Result, 1);
-    Result[0].Element := aMainRecord;
-    Result[0].Container := aMainRecord as IwbContainerElementRef;
-    if aMainRecord.ElementCount < 1 then
-      Result[0].Container := nil;
-    Exit;
-  end;
-
   if aMainRecord.Signature = 'GMST' then begin
-    IsGMST := True;
+    IsNonOverride := True;
     EditorID := aMainRecord.EditorID;
     SetLength(Result, Length(Files));
     Master := nil;
@@ -10140,6 +10134,46 @@ begin
       end;
     end;
 
+  end else if (aMainRecord.Signature = 'NAVI') (* or (aMainRecord.Signature = 'TES4') *) then begin
+    IsNonOverride := True;
+    Signature := aMainRecord.Signature;
+    FormID := aMainRecord.FormID;
+    LoadOrder := aMainRecord.GetFile.LoadOrder;
+    SetLength(Result, 0);
+    Master := nil;
+    for i := Low(Files) to High(Files) do
+      if Files[i].LoadOrder = LoadOrder then begin
+        Group := Files[i].GroupBySignature[Signature];
+        if Assigned(Group) then begin
+          Rec := Group.MainRecordByFormID[FormID];
+          if Assigned(Rec) then begin
+            j := Length(Result);
+            SetLength(Result, j+1);
+            if not Assigned(Master) then
+              Master := Rec;
+            Result[j].Element := Rec;
+          end;
+        end;
+      end;
+
+  end else if (aMainRecord.Signature = 'TES4') then begin
+    IsNonOverride := True;
+    Signature := aMainRecord.Signature;
+    LoadOrder := aMainRecord.GetFile.LoadOrder;
+    SetLength(Result, 0);
+    Master := nil;
+    for i := Low(Files) to High(Files) do
+      if Files[i].LoadOrder = LoadOrder then begin
+        Rec := Files[i].Elements[0] as IwbMainRecord;
+        if Assigned(Rec) then begin
+          j := Length(Result);
+          SetLength(Result, j+1);
+          if not Assigned(Master) then
+            Master := Rec;
+          Result[j].Element := Rec;
+        end;
+      end;
+
   end else begin
     Master := aMainRecord.MasterOrSelf;
 
@@ -10154,11 +10188,11 @@ begin
       end;
   end;
 
-  if (Length(Result) > 1) and (ModGroupsEnabled or AnyHidden) or IsGMST then begin
+  if (Length(Result) > 1) and (ModGroupsEnabled or AnyHidden) or IsNonOverride then begin
 
     Records := TStringList.Create;
     try
-      if IsGMST then begin
+      if IsNonOverride then begin
         for i := Low(Result) to High(Result) do
           if Supports(Result[i].Element, IwbMainRecord, Rec) then
              Records.AddObject(Rec._File.FileName, Pointer(Rec));
