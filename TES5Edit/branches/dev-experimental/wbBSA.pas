@@ -265,7 +265,7 @@ end;
 
 procedure TwbContainerHandler.ResourceCopy(const aContainerName, aFileName, aPathOut: string);
 var
-  aDir       : string;
+  fn, dir    : string;
   aData      : TBytes;
   res        : TDynResources;
   i, residx  : integer;
@@ -285,26 +285,29 @@ begin
       Break;
     end;
 
-  aDir := IncludeTrailingPathDelimiter(aPathOut) + ExtractFilePath(aFileName);
-  if not DirectoryExists(aDir) then
-    if not ForceDirectories(aDir) then
-      raise Exception.Create('Unable to create destination directory ' + aDir);
+  // file name is provided instead of path
+  if TPath.HasExtension(aPathOut) then
+    fn := aPathOut
+  // destination path is provided
+  else
+    fn := IncludeTrailingPathDelimiter(aPathOut) + aFileName;
 
-  // direct copy if file is loose with overwriting
+  // create distination directory
+  dir := ExtractFilePath(fn);
+  if not DirectoryExists(dir) then
+    if not ForceDirectories(dir) then
+      raise Exception.Create('Unable to create destination directory ' + dir);
+
+  // direct copy if file is loose, with overwriting
   if ExtractFileExt(res[residx].Container.Name) = '' then begin
-    try
-      TFile.Copy(res[residx].Container.Name + aFileName, aDir + ExtractFileName(aFileName), True);
-    except
-    end;
+    TFile.Copy(res[residx].Container.Name + aFileName, fn, True);
   end
-
   // otherwise extract from BSA
   else begin
     aData := res[residx].GetData;
-
     // exception handled outside
-    with TFileStream.Create(aDir + ExtractFileName(aFileName), fmCreate) do try
-      WriteBuffer(aData[0], length(aData));
+    with TFileStream.Create(fn, fmCreate) do try
+      WriteBuffer(aData[0], Length(aData));
     finally
       Free;
     end;

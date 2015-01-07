@@ -10090,7 +10090,10 @@ end;
 
 function TwbStringDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  Result := 1 + Ord(noTerminator);
+  if sdSize > 0 then
+    Result := sdSize + Ord(noTerminator)
+  else
+    Result := 1 + Ord(noTerminator);
 end;
 
 function TwbStringDef.ToEditValue(aBasePtr, aEndPtr: Pointer;
@@ -10221,7 +10224,7 @@ begin
       PCardinal(aBasePtr)^ := $7F7FFFFF;
   end else if SameText(aValue, 'Min') then begin
     if fdDouble then
-      PInt64(aBasePtr)^ := $FFEFFFFFFFFFFFFF
+      PInt64(aBasePtr)^ := -$10000000000001 // $FFEFFFFFFFFFFFFF
     else
       PCardinal(aBasePtr)^ := $FF7FFFFF;
   end else begin
@@ -10262,7 +10265,7 @@ begin
     end else if fdDouble and (SameValue(Value, MaxDouble) or (Value > MaxDouble)) then
       PInt64(aBasePtr)^ := $7FEFFFFFFFFFFFFF
     else if fdDouble and (SameValue(Value, -MaxDouble) or (Value < -MaxDouble)) then
-      PInt64(aBasePtr)^ := $FFEFFFFFFFFFFFFF
+      PInt64(aBasePtr)^ := -$10000000000001 // $FFEFFFFFFFFFFFFF
     else if not fdDouble and (SameValue(Value, MaxSingle) or (Value > MaxSingle)) then
       PCardinal(aBasePtr)^ := $7F7FFFFF
     else if not fdDouble and (SameValue(Value, -MaxSingle) or (Value < -MaxSingle)) then

@@ -694,7 +694,7 @@ type
     procedure SetActiveRecord(const aMainRecord: IwbMainRecord); overload;
     procedure SetActiveRecord(const aMainRecords: TDynMainRecords); overload;
     procedure SetActiveContainer(const aContainer: IwbDataContainer); overload;
-    procedure SetActiveContainer(const aDataContainers: TDynDataContainers); overload;
+//    procedure SetActiveContainer(const aDataContainers: TDynDataContainers); overload;
     procedure ClearActiveContainer; overload;
 
     function ValidateCRC(const aFileName  : string;
@@ -11537,98 +11537,98 @@ begin
   end;
 end;
 
-procedure TfrmMain.SetActiveContainer(const aDataContainers: TDynDataContainers);
-var
-  i            : Integer;
-  aMainrecords : TDynMainRecords;
-begin
-  UserWasActive := True;
-
-  if Length(aMainRecords) < 2 then begin
-    if Length(aMainRecords) = 1 then
-      if Supports(aMainRecords[0], IwbMainrecord) then
-        SetActiveRecord(aMainRecords[0] as IwbMainRecord)
-      else
-        SetActiveContainer(aMainRecords[0])
-    else
-      SetActiveContainer(IwbDataContainer(nil));
-    Exit;
-  end;
-  if Supports(aMainRecords[0], IwbMainrecord) then begin
-    SetLength(aMainRecords, Length(aDataContainers));
-    for i := Low(aMainRecords) to High(aMainRecords) do
-      aMainRecords[i] := aDataContainers[i] as IwbMainRecord;
-    SetActiveRecord(aMainRecords);
-    Exit;
-  end;
-
-  ComparingSiblings := True;
-  CompareRecords := aMainRecords;
-  lvReferencedBy.Items.BeginUpdate;
-  try
-    vstView.BeginUpdate;
-    try
-      lvReferencedBy.Items.Clear;
-      vstView.Clear;
-      vstView.NodeDataSize := 0;
-      SetLength(ActiveRecords, 0);
-      ActiveMaster := nil;
-      ActiveRecord := nil;
-      ActiveIndex := NoColumn;
-
-      SetLength(ActiveRecords, Length(aDataContainers));
-      for i := Low(ActiveRecords) to High(ActiveRecords) do
-        with ActiveRecords[i] do begin
-          Element := aDataContainers[i];
-          Container := aDataContainers[i] as IwbContainerElementRef;
-        end;
-
-      with vstView.Header.Columns do begin
-        BeginUpdate;
-        try
-          Clear;
-          with Add do begin
-            Text := '';
-            Width := wbColumnWidth;
-            Options := Options - [coDraggable];
-            Options := Options + [coFixed];
-          end;
-          for I := Low(ActiveRecords) to High(ActiveRecords) do
-            with Add do begin
-              Text := (ActiveRecords[i].Element as IwbMainRecord).EditorID;
-              Style := vsOwnerDraw;
-              Width := wbColumnWidth;
-              MinWidth := 5;
-              MaxWidth := 3000;
-              Options := Options - [coAllowclick, coDraggable];
-              Options := Options + [coAutoSpring];
-            end;
-          if Length(ActiveRecords) > 1 then
-            with Add do begin
-              Text := '';
-              Width := 1;
-              MinWidth := 1;
-              MaxWidth := 3000;
-              Options := Options - [coAllowclick, coDraggable];
-            end;
-        finally
-          EndUpdate;
-        end;
-      end;
-
-      vstView.NodeDataSize := SizeOf(TNavNodeData) * Length(ActiveRecords);
-      vstView.RootNodeCount := (aDataContainers[0].Def as IwbStructDef).MemberCount + aDataContainers[0].AdditionalElementCount;
-      InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
-      vstView.FullExpand;
-      pgMain.ActivePage := tbsView;
-    finally
-      vstView.EndUpdate;
-    end;
-    tbsReferencedBy.TabVisible := False;
-  finally
-    lvReferencedBy.Items.EndUpdate;
-  end;
-end;
+//procedure TfrmMain.SetActiveContainer(const aDataContainers: TDynDataContainers);
+//var
+//  i            : Integer;
+//  aMainrecords : TDynMainRecords;
+//begin
+//  UserWasActive := True;
+//
+//  if Length(aMainRecords) < 2 then begin
+//    if Length(aMainRecords) = 1 then
+//      if Supports(aMainRecords[0], IwbMainrecord) then
+//        SetActiveRecord(aMainRecords[0] as IwbMainRecord)
+//      else
+//        SetActiveContainer(aMainRecords[0])
+//    else
+//      SetActiveContainer(IwbDataContainer(nil));
+//    Exit;
+//  end;
+//  if Supports(aMainRecords[0], IwbMainrecord) then begin
+//    SetLength(aMainRecords, Length(aDataContainers));
+//    for i := Low(aMainRecords) to High(aMainRecords) do
+//      aMainRecords[i] := aDataContainers[i] as IwbMainRecord;
+//    SetActiveRecord(aMainRecords);
+//    Exit;
+//  end;
+//
+//  ComparingSiblings := True;
+//  CompareRecords := aMainRecords;
+//  lvReferencedBy.Items.BeginUpdate;
+//  try
+//    vstView.BeginUpdate;
+//    try
+//      lvReferencedBy.Items.Clear;
+//      vstView.Clear;
+//      vstView.NodeDataSize := 0;
+//      SetLength(ActiveRecords, 0);
+//      ActiveMaster := nil;
+//      ActiveRecord := nil;
+//      ActiveIndex := NoColumn;
+//
+//      SetLength(ActiveRecords, Length(aDataContainers));
+//      for i := Low(ActiveRecords) to High(ActiveRecords) do
+//        with ActiveRecords[i] do begin
+//          Element := aDataContainers[i];
+//          Container := aDataContainers[i] as IwbContainerElementRef;
+//        end;
+//
+//      with vstView.Header.Columns do begin
+//        BeginUpdate;
+//        try
+//          Clear;
+//          with Add do begin
+//            Text := '';
+//            Width := wbColumnWidth;
+//            Options := Options - [coDraggable];
+//            Options := Options + [coFixed];
+//          end;
+//          for I := Low(ActiveRecords) to High(ActiveRecords) do
+//            with Add do begin
+//              Text := (ActiveRecords[i].Element as IwbMainRecord).EditorID;
+//              Style := vsOwnerDraw;
+//              Width := wbColumnWidth;
+//              MinWidth := 5;
+//              MaxWidth := 3000;
+//              Options := Options - [coAllowclick, coDraggable];
+//              Options := Options + [coAutoSpring];
+//            end;
+//          if Length(ActiveRecords) > 1 then
+//            with Add do begin
+//              Text := '';
+//              Width := 1;
+//              MinWidth := 1;
+//              MaxWidth := 3000;
+//              Options := Options - [coAllowclick, coDraggable];
+//            end;
+//        finally
+//          EndUpdate;
+//        end;
+//      end;
+//
+//      vstView.NodeDataSize := SizeOf(TNavNodeData) * Length(ActiveRecords);
+//      vstView.RootNodeCount := (aDataContainers[0].Def as IwbStructDef).MemberCount + aDataContainers[0].AdditionalElementCount;
+//      InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
+//      vstView.FullExpand;
+//      pgMain.ActivePage := tbsView;
+//    finally
+//      vstView.EndUpdate;
+//    end;
+//    tbsReferencedBy.TabVisible := False;
+//  finally
+//    lvReferencedBy.Items.EndUpdate;
+//  end;
+//end;
 
 procedure TfrmMain.SetActiveRecord(const aMainRecords: TDynMainRecords);
 var

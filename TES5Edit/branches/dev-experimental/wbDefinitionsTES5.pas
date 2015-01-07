@@ -7960,7 +7960,8 @@ begin
 
     wbRecord(NAVM, 'Navigation Mesh',
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00040000} 18, 'Compressed'
+        {0x00040000} 18, 'Compressed',
+        {0x04000000} 26, 'AutoGen'
       ])), [
       wbEDID,
       wbStruct(NVNM, 'Geometry', [
@@ -8060,7 +8061,8 @@ begin
 
     wbRecord(NAVM, 'Navigation Mesh',
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00040000} 18, 'Compressed'
+        {0x00040000} 18, 'Compressed',
+        {0x04000000} 26, 'AutoGen'
       ])), [
       wbEDID,
       wbStruct(NVNM, 'Geometry', [

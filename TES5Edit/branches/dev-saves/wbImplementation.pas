@@ -9259,7 +9259,7 @@ var
   i           : Integer;
   UpdateCount : Integer;
 begin
-  if srArraySizePrefix < 1 then
+  if not (srArraySizePrefix in [1, 2, 4]) then
     Exit;
 
   if Assigned(dcDataBasePtr) then
@@ -11716,6 +11716,7 @@ begin
       CodeSite.Send('aElement', 'nil');
     CodeSite.Send('aCheckDontShow', aCheckDontShow);
   end;
+  Result := False;
   try
   {$ENDIF}
     Result := CanAssignInternal(aIndex, aElement, aCheckDontShow);
