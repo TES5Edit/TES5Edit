@@ -580,6 +580,11 @@ begin
   else if FindCmdLineSwitch('forcebsa') then
     wbLoadBSAs := True;
 
+  if FindCmdLineSwitch('skipInternalEditing') then
+    wbAllowInternalEdit := False
+  else if FindCmdLineSwitch('forceInternalEditing') then
+    wbAllowInternalEdit := True;
+
   if FindCmdLineSwitch('showfixup') then
     wbShowInternalEdit := True
   else if FindCmdLineSwitch('hidefixup') then
