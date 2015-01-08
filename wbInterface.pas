@@ -13344,9 +13344,9 @@ end;
 
 function TwbStringMgefCodeDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 begin
-  Result := not Assigned(aBasePtr) or (ToString(aBasePtr, aEndPtr, aElement) <> ' <Warning: Expected 4 bytes but found 0>');
+  Result := not Assigned(aBasePtr) or (ToString(aBasePtr, aEndPtr, aElement) <> '____');
   if Result then
-    FromEditValue(aBasePtr, aEndPtr, aElement, '');
+    FromEditValue(aBasePtr, aEndPtr, aElement, '____');
 end;
 
 function TwbStringMgefCodeDef.TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString;
