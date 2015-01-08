@@ -1558,7 +1558,7 @@ end;
 
 procedure wbMGEFAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
-  wbCounterContainerByPathAfterSet('DATA - Data\Counter effect count', 'Counter Effects', aElement);
+  wbCounterContainerByPathAfterSet('DATA - Data\Counter effect count', 'ESCE - Counter Effects', aElement);
 end;
 
 procedure wbEFITAfterLoad(const aElement: IwbElement);
@@ -4002,7 +4002,8 @@ begin
       wbFloat('Constant Effect enchantment factor'),
       wbFloat('Constant Effect barter factor')
     ], cpNormal, True, nil, 10),
-    wbArrayS(ESCE, 'Counter Effects', wbStringMgefCode('Counter Effect Code', 4), 0, cpNormal, False, nil, wbCounterEffectsAfterSet)
+    wbArrayS(ESCE, 'Counter Effects', wbStringMgefCode('Counter Effect Code', 4),
+      0, cpNormal, False, nil, wbCounterEffectsAfterSet)
   ], False, nil, cpNormal, False, wbMGEFAfterLoad, wbMGEFAfterSet);
 
   wbRecord(MISC, 'Misc. Item', [
