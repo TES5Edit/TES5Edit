@@ -13700,6 +13700,8 @@ begin
   ArrayDef := vbValueDef as IwbArrayDef;
   Count := arrayDef.PrefixCount[dcDataBasePtr];
 
+  DoInit;
+
   if Count <> Length(cntElements) then begin
     UpdateCount := eUpdateCount;
     for i := 1 to UpdateCount do EndUpdate;  // Stops optimisation
