@@ -3578,71 +3578,7 @@ begin
 
   TotalUsageTime := Settings.ReadFloat('Usage', 'TotalTime', 0);
   RateNoticeGiven := Settings.ReadInteger('Usage', 'RateNoticeGiven', 0);
-
-  FilterConflictAll := Settings.ReadBool('Filter', 'ConflictAll', True);
-  FilterConflictThis := Settings.ReadBool('Filter', 'ConflictThis', True);
-
-  FilterByInjectStatus := Settings.ReadBool('Filter', 'byInjectStatus', False);
-  FilterInjectStatus := Settings.ReadBool('Filter', 'InjectStatus', True);
-
-  FilterByNotReachableStatus := Settings.ReadBool('Filter', 'byNotReachableStatus', False);
-  FilterNotReachableStatus := Settings.ReadBool('Filter', 'NotReachableStatus', True);
-
-  FilterByReferencesInjectedStatus := Settings.ReadBool('Filter', 'byReferencesInjectedStatus', False);
-  FilterReferencesInjectedStatus := Settings.ReadBool('Filter', 'ReferencesInjectedStatus', True);
-
-  FilterByEditorID := Settings.ReadBool('Filter', 'ByEditorID', False);
-  FilterEditorID := Settings.ReadString('Filter', 'EditorID', '');
-
-  FilterByName := Settings.ReadBool('Filter', 'ByName', False);
-  FilterName := Settings.ReadString('Filter', 'Name', '');
-
-  FilterByBaseEditorID := Settings.ReadBool('Filter', 'ByBaseEditorID', False);
-  FilterBaseEditorID := Settings.ReadString('Filter', 'BaseEditorID', '');
-
-  FilterByBaseName := Settings.ReadBool('Filter', 'ByBaseName', False);
-  FilterBaseName := Settings.ReadString('Filter', 'BaseName', '');
-
-  FilterScaledActors := Settings.ReadBool('Filter', 'ScaledActors', False);
-
-  FilterBySignature := Settings.ReadBool('Filter', 'BySignature', False);
-  FilterSignatures := Settings.ReadString('Filter', 'Signatures', '');
-
-  FilterByBaseSignature := Settings.ReadBool('Filter', 'ByBaseSignature', False);
-  FilterBaseSignatures := Settings.ReadString('Filter', 'BaseSignatures', '');
-
-  FilterByPersistent := Settings.ReadBool('Filter', 'ByPersistent', False);
-  FilterPersistent := Settings.ReadBool('Filter', 'Persistent', True);
-  FilterUnnecessaryPersistent := Settings.ReadBool('Filter', 'UnnecessaryPersistent', False);
-  FilterMasterIsTemporary := Settings.ReadBool('Filter', 'MasterIsTemporary', False);
-  FilterIsMaster := Settings.ReadBool('Filter', 'IsMaster', False);
-  FilterPersistentPosChanged := Settings.ReadBool('Filter', 'PersistentPosChanged', False);
-
-  FilterDeleted := Settings.ReadBool('Filter', 'Deleted', False);
-
-  FilterByVWD := Settings.ReadBool('Filter', 'ByVWD', False);
-  FilterVWD := Settings.ReadBool('Filter', 'VWD', True);
-
-  FilterByHasVWDMesh := Settings.ReadBool('Filter', 'ByHasVWDMesh', False);
-  FilterHasVWDMesh := Settings.ReadBool('Filter', 'HasVWDMesh', True);
-
-  FilterConflictAllSet := [];
-  for ConflictAll := Low(ConflictAll) to High(ConflictAll) do
-    if Settings.ReadBool('Filter', GetEnumName(TypeInfo(TConflictAll), Ord(ConflictAll)), True) then
-      Include(FilterConflictAllSet, ConflictAll);
-
-  FilterConflictThisSet := [];
-  for ConflictThis := Low(ConflictThis) to High(ConflictThis) do
-    if Settings.ReadBool('Filter', GetEnumName(TypeInfo(TConflictThis), Ord(ConflictThis)), True) then
-      Include(FilterConflictThisSet, ConflictThis);
-
-  FlattenBlocks := Settings.ReadBool('Filter', 'FlattenBlocks', False);
-  FlattenCellChilds := Settings.ReadBool('Filter', 'FlattenCellChilds', False);
-  AssignPersWrldChild := Settings.ReadBool('Filter', 'AssignPersWrldChild', False);
-  InheritConflictByParent := Settings.ReadBool('Filter', 'InheritConflictByParent', True);
-
   AutoSave := Settings.ReadBool('Options', 'AutoSave', AutoSave);
-
   wbHideUnused := Settings.ReadBool('Options', 'HideUnused', wbHideUnused);
   wbHideIgnored := Settings.ReadBool('Options', 'HideIgnored', wbHideIgnored);
   wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
@@ -9146,7 +9082,6 @@ begin
   Result := True;
 end;
 
-
 procedure TfrmMain.mniNavFilterApplyClick(Sender: TObject);
 
   function CustomScriptFilter(MainRecord: IwbMainRecord): Boolean;
@@ -9197,63 +9132,7 @@ begin
   if not FilterPreset then begin
 
     with TfrmFilterOptions.Create(nil) do try
-      cbConflictAll.Checked := FilterConflictAll;
-      cbConflictThis.Checked := FilterConflictThis;
-
-      cbByInjectionStatus.Checked := FilterByInjectStatus;
-      cbInjected.Checked := FilterInjectStatus;
-
-      cbByNotReachableStatus.Checked := FilterByNotReachableStatus;
-      cbNotReachable.Checked := FilterNotReachableStatus;
-
-      cbByNotReachableStatus.Enabled := ReachableBuild;
-      cbNotReachable.Enabled := ReachableBuild;
-
-      cbByReferencesInjectedStatus.Checked := FilterByReferencesInjectedStatus;
-      cbReferencesInjected.Checked := FilterReferencesInjectedStatus;
-
-      cbByEditorID.Checked := FilterByEditorID;
-      edEditorID.Text := FilterEditorID;
-
-      cbByName.Checked := FilterByName;
-      edName.Text := FilterName;
-
-      cbByBaseEditorID.Checked := FilterByBaseEditorID;
-      edBaseEditorID.Text := FilterBaseEditorID;
-
-      cbByBaseName.Checked := FilterByBaseName;
-      edBaseName.Text := FilterBaseName;
-
-      cbScaledActors.Checked := FilterScaledActors;
-
-      cbByPersistent.Checked := FilterByPersistent;
-      cbPersistent.Checked := FilterPersistent;
-      cbUnnecessaryPersistent.Checked := FilterUnnecessaryPersistent;
-      cbMasterIsTemporary.Checked := FilterMasterIsTemporary;
-      cbIsMaster.Checked := FilterIsMaster;
-      cbPersistentPosChanged.Checked := FilterPersistentPosChanged;
-      cbDeleted.Checked := FilterDeleted;
-
-      cbByVWD.Checked := FilterByVWD;
-      cbVWD.Checked := FilterVWD;
-
-      cbByHasVWDMesh.Checked := FilterByHasVWDMesh;
-      cbHasVWDMesh.Checked := FilterHasVWDMesh;
-
-      cbRecordSignature.Checked := FilterBySignature;
-      RecordSignatures := FilterSignatures;
-
-      cbBaseRecordSignature.Checked := FilterByBaseSignature;
-      BaseRecordSignatures := FilterBaseSignatures;
-
-      for i := 0 to Pred(clbConflictAll.Items.Count) do
-        clbConflictAll.Checked[i] := TConflictAll(Succ(i)) in FilterConflictAllSet;
-      for i := 0 to Pred(clbConflictThis.Items.Count) do
-        clbConflictThis.Checked[i] := TConflictThis(i + 2) in FilterConflictThisSet;
-      cbFlattenBlocks.Checked := FlattenBlocks;
-      cbFlattenCellChilds.Checked := FlattenCellChilds;
-      cbAssignPersWrldChild.Checked := AssignPersWrldChild;
-      cbInherit.Checked := InheritConflictByParent;
+      SetSettings(Settings);
 
       if ShowModal <> mrOk then
         Exit;
@@ -9322,64 +9201,6 @@ begin
     finally
       Free;
     end;
-
-    Settings.WriteBool('Filter', 'ConflictAll', FilterConflictAll);
-    Settings.WriteBool('Filter', 'ConflictThis', FilterConflictThis);
-
-    Settings.WriteBool('Filter', 'ByInjectStatus', FilterByInjectStatus);
-    Settings.WriteBool('Filter', 'InjectStatus', FilterInjectStatus);
-
-    Settings.WriteBool('Filter', 'ByNotReachableStatus', FilterByNotReachableStatus);
-    Settings.WriteBool('Filter', 'NotReachableStatus', FilterNotReachableStatus);
-
-    Settings.WriteBool('Filter', 'ByReferencesInjectedStatus', FilterByReferencesInjectedStatus);
-    Settings.WriteBool('Filter', 'ReferencesInjectedStatus', FilterReferencesInjectedStatus);
-
-    Settings.WriteBool('Filter', 'ByEditorID', FilterByEditorID);
-    Settings.WriteString('Filter', 'EditorID', FilterEditorID);
-
-    Settings.WriteBool('Filter', 'ByName', FilterByName);
-    Settings.WriteString('Filter', 'Name', FilterName);
-
-    Settings.WriteBool('Filter', 'ByBaseEditorID', FilterByBaseEditorID);
-    Settings.WriteString('Filter', 'BaseEditorID', FilterBaseEditorID);
-
-    Settings.WriteBool('Filter', 'ByBaseName', FilterByBaseName);
-    Settings.WriteString('Filter', 'BaseName', FilterBaseName);
-
-    Settings.WriteBool('Filter', 'ScaledActors', FilterScaledActors);
-
-    Settings.WriteBool('Filter', 'ByPersistent', FilterByPersistent);
-    Settings.WriteBool('Filter', 'Persistent', FilterPersistent);
-    Settings.WriteBool('Filter', 'UnnecessaryPersistent', FilterUnnecessaryPersistent);
-    Settings.WriteBool('Filter', 'MasterIsTemporary', FilterMasterIsTemporary);
-    Settings.WriteBool('Filter', 'PersistentPosChanged', FilterPersistentPosChanged);
-
-    Settings.WriteBool('Filter', 'Deleted', FilterDeleted);
-
-    Settings.WriteBool('Filter', 'ByVWD', FilterByVWD);
-    Settings.WriteBool('Filter', 'VWD', FilterVWD);
-
-    Settings.WriteBool('Filter', 'ByHasVWDMesh', FilterByHasVWDMesh);
-    Settings.WriteBool('Filter', 'HasVWDMesh', FilterHasVWDMesh);
-
-    Settings.WriteBool('Filter', 'BySignature', FilterBySignature);
-    Settings.WriteString('Filter', 'Signatures', FilterSignatures);
-
-    Settings.WriteBool('Filter', 'ByBaseSignature', FilterByBaseSignature);
-    Settings.WriteString('Filter', 'BaseSignatures', FilterBaseSignatures);
-
-    for ConflictAll := Low(ConflictAll) to High(ConflictAll) do
-      Settings.WriteBool('Filter', GetEnumName(TypeInfo(TConflictAll), Ord(ConflictAll)), ConflictAll in FilterConflictAllSet);
-
-    for ConflictThis := Low(ConflictThis) to High(ConflictThis) do
-      Settings.WriteBool('Filter', GetEnumName(TypeInfo(TConflictThis), Ord(ConflictThis)), ConflictThis in FilterConflictThisSet);
-
-    Settings.WriteBool('Filter', 'FlattenBlocks', FlattenBlocks);
-    Settings.WriteBool('Filter', 'FlattenCellChilds', FlattenCellChilds);
-    Settings.WriteBool('Filter', 'AssignPersWrldChild', AssignPersWrldChild);
-    Settings.WriteBool('Filter', 'InheritConflictByParent', InheritConflictByParent);
-    Settings.UpdateFile;
 
   end;
 
