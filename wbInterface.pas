@@ -9061,7 +9061,7 @@ begin
   if (Length(stSortKey) > 0) or (aExtended and (Length(stExSortKey) > 0)) then begin
     for i := Low(stSortKey) to High(stSortKey) do begin
       SortMember := stSortKey[i];
-      if SortMember < High(stMembers) then begin
+      if SortMember <= High(stMembers) then begin
         BasePtr := aBasePtr;
         for j := Low(stMembers) to Pred(SortMember) do begin
           Inc(Cardinal(BasePtr), stMembers[j].Size[BasePtr, aEndPtr, aElement]);
@@ -9088,7 +9088,7 @@ begin
 
       for i := Low(stExSortKey) to High(stExSortKey) do begin
         SortMember := stExSortKey[i];
-        if SortMember < High(stMembers) then begin
+        if SortMember <= High(stMembers) then begin
           BasePtr := aBasePtr;
           for j := Low(stMembers) to Pred(SortMember) do begin
             Inc(Cardinal(BasePtr), stMembers[j].Size[BasePtr, aEndPtr, aElement]);
