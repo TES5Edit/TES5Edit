@@ -388,6 +388,64 @@ begin
       Value := Element.ValueDef.DefType;
 end;
 
+procedure IwbElement_EnumValues(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element    : IwbElement;
+  NamedDef   : IwbNamedDef;
+  IntegerDef : IwbIntegerDef;
+  Enums      : IwbEnumDef;
+  i          : integer;
+  s          : string;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+    if Supports(Element.Def, IwbSubRecordDef) then
+      NamedDef := (Element.Def as IwbSubrecordDef).Value
+    else
+      NamedDef := Element.Def;
+
+    if Supports(NamedDef, IwbIntegerDef, IntegerDef) and
+      Supports(IntegerDef.Formater[Element], IwbEnumDef, Enums) then begin
+
+      for i := 0 to Pred(Enums.NameCount) do begin
+        if i > 0 then s := s + #13#10;
+        s := s + Enums.Names[i];
+      end;
+
+      Value := s;
+    end;
+  end;
+end;
+
+procedure IwbElement_FlagValues(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element    : IwbElement;
+  NamedDef   : IwbNamedDef;
+  IntegerDef : IwbIntegerDef;
+  Flags      : IwbFlagsDef;
+  i          : integer;
+  s          : string;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+    if Supports(Element.Def, IwbSubRecordDef) then
+      NamedDef := (Element.Def as IwbSubrecordDef).Value
+    else
+      NamedDef := Element.Def;
+
+    if Supports(NamedDef, IwbIntegerDef, IntegerDef) and
+      Supports(IntegerDef.Formater[Element], IwbFlagsDef, Flags) then begin
+
+      for i := 0 to Pred(Flags.FlagCount) do begin
+        if i > 0 then s := s + #13#10;
+        s := s + Flags.Flags[i];
+      end;
+
+      Value := s;
+    end;
+  end;
+end;
+
 procedure IwbElement_IsInjected(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -1602,6 +1660,8 @@ begin
     AddFunction(cUnit, 'PathName', IwbElement_PathName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ElementType', IwbElement_ElementType, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'DefType', IwbElement_DefType, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'EnumValues', IwbElement_EnumValues, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'FlagValues', IwbElement_FlagValues, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SortKey', IwbElement_SortKey, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'IsInjected', IwbElement_IsInjected, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'IsEditable', IwbElement_GetIsEditable, 1, [varEmpty], varEmpty);
