@@ -13925,6 +13925,11 @@ begin
       Done := True;
     end;
   end else
+  if SameText(Identifier, 'RemoveFilter') and (Args.Count = 0) then begin
+    SetActiveRecord(nil);
+    mniNavFilterRemoveClick(nil);
+    Done := True;
+  end else
   if SameText(Identifier, 'frmFileSelect') and (Args.Count = 0) then begin
     Value := O2V(TfrmFileSelect.Create(nil));
     Done := True;
