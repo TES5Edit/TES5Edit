@@ -6493,7 +6493,7 @@ begin
         {0x00020000} 17, 'Off Limits',
         {0x00040000} 18, 'Compressed',
         {0x00080000} 19, 'Can''t Wait'
-      ])), [
+      ]), [18]), [
       wbEDID,
       wbFULL,
       {>>>
@@ -6618,7 +6618,7 @@ begin
         {0x00020000} 17, 'Off Limits',
         {0x00040000} 18, 'Compressed',
         {0x00080000} 19, 'Can''t Wait'
-      ])), [
+      ]), [18]), [
       wbEDID,
       wbFULL,
       {>>>
@@ -7962,7 +7962,7 @@ begin
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed',
         {0x04000000} 26, 'AutoGen'
-      ])), [
+      ]), [18]), [
       wbEDID,
       wbStruct(NVNM, 'Geometry', [
         wbByteArray('Unknown', 8),
@@ -8063,7 +8063,7 @@ begin
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed',
         {0x04000000} 26, 'AutoGen'
-      ])), [
+      ]), [18]), [
       wbEDID,
       wbStruct(NVNM, 'Geometry', [
         wbInteger('Unknown', itU32),
