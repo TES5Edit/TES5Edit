@@ -22,6 +22,9 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, CheckLst, Menus, IniFiles, ExtCtrls;
 
+const
+  sFilterSection = 'Filter';
+
 type
   TfrmFilterOptions = class(TForm)
     clbConflictAll: TCheckListBox;
@@ -73,13 +76,18 @@ type
     pnlBevel: TPanel;
     cmbPreset: TComboBox;
     Label1: TLabel;
-    Button1: TButton;
+    btnFilterAdd: TButton;
+    btnFilterDel: TButton;
+    btnFilterSave: TButton;
     procedure FormCreate(Sender: TObject);
     procedure mniSelectionClick(Sender: TObject);
     procedure cmbPresetSelect(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure btnFilterAddClick(Sender: TObject);
+    procedure btnFilterDelClick(Sender: TObject);
+    procedure btnFilterSaveClick(Sender: TObject);
   private
     Settings: TMemIniFile;
     function GetRecordSignatures: string;
@@ -89,6 +97,7 @@ type
     { Private declarations }
   public
     procedure SetSettings(aIni: TMemIniFile);
+    procedure FilterListPresets(aStrings: TStrings);
     procedure FilterLoadPreset(aPresetName: string = '');
     procedure FilterSavePreset(aPresetName: string = '');
     property RecordSignatures: string
@@ -152,15 +161,25 @@ begin
 end;
 
 procedure TfrmFilterOptions.FormShow(Sender: TObject);
+var
+  i: integer;
 begin
+  FilterListPresets(cmbPreset.Items);
+  i := cmbPreset.Items.IndexOf(Settings.ReadString('View', 'LastUsedFilter', ''));
+  if i <> -1 then
+    cmbPreset.ItemIndex := i
+  else
+    cmbPreset.ItemIndex := 0;
   cmbPresetSelect(nil);
 end;
 
 procedure TfrmFilterOptions.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  if ModalResult = mrOk then
+  if ModalResult = mrOk then begin
+    Settings.WriteString('View', 'LastUsedFilter', cmbPreset.Text);
     FilterSavePreset(cmbPreset.Text);
+  end;
 end;
 
 function TfrmFilterOptions.GetBaseRecordSignatures: string;
@@ -242,6 +261,66 @@ begin
   Settings := aIni;
 end;
 
+procedure TfrmFilterOptions.FilterListPresets(aStrings: TStrings);
+var
+  sl: TStringList;
+  i: integer;
+  s: string;
+begin
+  sl := TStringList.Create;
+  try
+    Settings.ReadSections(sl);
+    sl.Sort;
+    for i := 0 to Pred(sl.Count) do
+      if SameText(Copy(sl[i], 1, Length(sFilterSection)), sFilterSection) then begin
+        s := Trim(Copy(sl[i], Length(sFilterSection) + 1, Length(sl[i])));
+        if s <> '' then
+          aStrings.Add(s);
+      end;
+    aStrings.Insert(0, '');
+  finally
+    sl.Free;
+  end;
+end;
+
+procedure TfrmFilterOptions.btnFilterAddClick(Sender: TObject);
+var
+  s: string;
+begin
+  if InputQuery('Filter', 'Preset name', s) and (Trim(s) <> '') then
+    if cmbPreset.Items.IndexOf(s) = -1 then begin
+      cmbPreset.Items.Add(s);
+      cmbPreset.ItemIndex := Pred(cmbPreset.Items.Count);
+    end;
+end;
+
+procedure TfrmFilterOptions.btnFilterDelClick(Sender: TObject);
+var
+  i: integer;
+begin
+  if cmbPreset.ItemIndex = 0 then begin
+    FilterLoadPreset('fictionalsectiontosetdefaultvalues');
+    Exit;
+  end;
+  i := cmbPreset.ItemIndex;
+  Settings.EraseSection(Trim(sFilterSection + ' ' + cmbPreset.Text));
+  Settings.UpdateFile;
+  cmbPreset.Items.Delete(i);
+  if i > cmbPreset.Items.Count - 1 then Dec(i);
+  cmbPreset.ItemIndex := i;
+  cmbPresetSelect(nil);
+end;
+
+procedure TfrmFilterOptions.btnFilterSaveClick(Sender: TObject);
+begin
+  FilterSavePreset(cmbPreset.Text);
+end;
+
+procedure TfrmFilterOptions.cmbPresetSelect(Sender: TObject);
+begin
+  FilterLoadPreset(cmbPreset.Text);
+end;
+
 procedure TfrmFilterOptions.FilterLoadPreset(aPresetName: string = '');
 var
   i                    : integer;
@@ -251,10 +330,7 @@ var
   FilterConflictAllSet : TConflictAllSet;
   FilterConflictThisSet: TConflictThisSet;
 begin
-  Section := 'Filter';
-
-  if aPresetName <> '' then
-    Section := Section + ' ' + aPresetName;
+  Section := Trim(sFilterSection + ' ' + aPresetName);
 
   cbConflictAll.Checked := Settings.ReadBool(Section, 'ConflictAll', True);
   cbConflictThis.Checked := Settings.ReadBool(Section, 'ConflictThis', True);
@@ -333,10 +409,7 @@ var
   FilterConflictAllSet : TConflictAllSet;
   FilterConflictThisSet: TConflictThisSet;
 begin
-  Section := 'Filter';
-
-  if aPresetName <> '' then
-    Section := Section + ' ' + aPresetName;
+  Section := Trim(sFilterSection + ' ' + aPresetName);
 
   Settings.WriteBool(Section, 'ConflictAll', cbConflictAll.Checked);
   Settings.WriteBool(Section, 'ConflictThis', cbConflictThis.Checked);
@@ -406,11 +479,6 @@ begin
     Settings.WriteBool(Section, GetEnumName(TypeInfo(TConflictThis), Ord(ConflictThis)), ConflictThis in FilterConflictThisSet);
 
   Settings.UpdateFile;
-end;
-
-procedure TfrmFilterOptions.cmbPresetSelect(Sender: TObject);
-begin
-  FilterLoadPreset(cmbPreset.Text);
 end;
 
 end.

@@ -24,9 +24,7 @@ object frmFilterOptions: TfrmFilterOptions
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
-    TabOrder = 0
-    ExplicitWidth = 931
-    ExplicitHeight = 633
+    TabOrder = 1
     object Label1: TLabel
       Left = 12
       Top = 10
@@ -40,7 +38,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 277
       Height = 17
       Caption = 'Assign Persistent Worldspace Children to Cells'
-      TabOrder = 0
+      TabOrder = 4
     end
     object cbBaseRecordSignature: TCheckBox
       Left = 646
@@ -48,7 +46,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 281
       Height = 17
       Caption = 'by Base Record Signature'
-      TabOrder = 1
+      TabOrder = 5
     end
     object cbByBaseEditorID: TCheckBox
       Left = 643
@@ -56,7 +54,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 234
       Height = 17
       Caption = 'Base Record EditorID contains'
-      TabOrder = 2
+      TabOrder = 6
     end
     object cbByBaseName: TCheckBox
       Left = 643
@@ -64,7 +62,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 234
       Height = 17
       Caption = 'Base Record Name contains'
-      TabOrder = 3
+      TabOrder = 7
     end
     object cbByEditorID: TCheckBox
       Left = 12
@@ -72,7 +70,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 154
       Height = 17
       Caption = 'EditorID contains'
-      TabOrder = 4
+      TabOrder = 8
     end
     object cbByHasVWDMesh: TCheckBox
       Left = 172
@@ -80,7 +78,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 201
       Height = 17
       Caption = 'by Has Visible When Distant Mesh'
-      TabOrder = 5
+      TabOrder = 9
     end
     object cbByInjectionStatus: TCheckBox
       Left = 12
@@ -88,7 +86,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 145
       Height = 17
       Caption = 'by injection status'
-      TabOrder = 6
+      TabOrder = 10
     end
     object cbByName: TCheckBox
       Left = 12
@@ -96,7 +94,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 161
       Height = 17
       Caption = 'Name contains'
-      TabOrder = 7
+      TabOrder = 11
     end
     object cbByNotReachableStatus: TCheckBox
       Left = 172
@@ -104,7 +102,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 193
       Height = 17
       Caption = 'by not reachable status'
-      TabOrder = 8
+      TabOrder = 12
     end
     object cbByPersistent: TCheckBox
       Left = 12
@@ -112,7 +110,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 145
       Height = 17
       Caption = 'by persistence'
-      TabOrder = 9
+      TabOrder = 13
     end
     object cbByReferencesInjectedStatus: TCheckBox
       Left = 172
@@ -120,7 +118,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 193
       Height = 17
       Caption = 'by references injected status'
-      TabOrder = 10
+      TabOrder = 14
     end
     object cbByVWD: TCheckBox
       Left = 172
@@ -128,7 +126,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 180
       Height = 17
       Caption = 'by Visible When Distant'
-      TabOrder = 11
+      TabOrder = 15
     end
     object cbConflictAll: TCheckBox
       Left = 12
@@ -136,7 +134,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 329
       Height = 17
       Caption = 'by conflict status overall (that'#39's the background color)'
-      TabOrder = 12
+      TabOrder = 16
     end
     object cbConflictThis: TCheckBox
       Left = 12
@@ -146,7 +144,7 @@ object frmFilterOptions: TfrmFilterOptions
       Caption = 
         'by conflict status for this particular record  (that'#39's the text ' +
         'color)'
-      TabOrder = 13
+      TabOrder = 17
     end
     object cbDeleted: TCheckBox
       Left = 12
@@ -154,7 +152,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 145
       Height = 17
       Caption = 'deleted'
-      TabOrder = 14
+      TabOrder = 18
     end
     object cbFlattenBlocks: TCheckBox
       Left = 12
@@ -162,7 +160,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 161
       Height = 17
       Caption = 'Flatten Blocks/Sub-Blocks'
-      TabOrder = 15
+      TabOrder = 19
     end
     object cbFlattenCellChilds: TCheckBox
       Left = 189
@@ -170,7 +168,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 157
       Height = 17
       Caption = 'Flatten Cell Children'
-      TabOrder = 16
+      TabOrder = 20
     end
     object cbHasVWDMesh: TCheckBox
       Left = 189
@@ -178,7 +176,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 184
       Height = 17
       Caption = 'only Has VWD Mesh'
-      TabOrder = 17
+      TabOrder = 21
     end
     object cbInherit: TCheckBox
       Left = 358
@@ -186,7 +184,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 279
       Height = 17
       Caption = 'Conflict status inherited by parent'
-      TabOrder = 18
+      TabOrder = 22
     end
     object cbInjected: TCheckBox
       Left = 27
@@ -194,7 +192,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 139
       Height = 17
       Caption = 'only injected'
-      TabOrder = 19
+      TabOrder = 23
     end
     object cbIsMaster: TCheckBox
       Left = 251
@@ -202,7 +200,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 114
       Height = 17
       Caption = 'or if it'#39's the master'
-      TabOrder = 20
+      TabOrder = 24
     end
     object cbMasterIsTemporary: TCheckBox
       Left = 58
@@ -210,7 +208,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 187
       Height = 17
       Caption = 'only if master is not persistent'
-      TabOrder = 21
+      TabOrder = 25
     end
     object cbNotReachable: TCheckBox
       Left = 189
@@ -218,7 +216,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 163
       Height = 17
       Caption = 'only not reachable'
-      TabOrder = 22
+      TabOrder = 26
     end
     object cbPersistent: TCheckBox
       Left = 27
@@ -226,7 +224,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 156
       Height = 17
       Caption = 'only persistent'
-      TabOrder = 23
+      TabOrder = 27
     end
     object cbPersistentPosChanged: TCheckBox
       Left = 42
@@ -234,7 +232,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 307
       Height = 17
       Caption = 'only if position/rotation was changed'
-      TabOrder = 24
+      TabOrder = 28
     end
     object cbRecordSignature: TCheckBox
       Left = 358
@@ -242,7 +240,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 281
       Height = 17
       Caption = 'by Record Signature'
-      TabOrder = 25
+      TabOrder = 29
     end
     object cbReferencesInjected: TCheckBox
       Left = 186
@@ -250,7 +248,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 187
       Height = 17
       Caption = 'only references injected'
-      TabOrder = 26
+      TabOrder = 30
     end
     object cbScaledActors: TCheckBox
       Left = 643
@@ -258,7 +256,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 90
       Height = 17
       Caption = 'Scaled Actors'
-      TabOrder = 27
+      TabOrder = 31
     end
     object cbUnnecessaryPersistent: TCheckBox
       Left = 42
@@ -266,7 +264,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 307
       Height = 17
       Caption = 'only possible unnecessary persistent'
-      TabOrder = 28
+      TabOrder = 32
     end
     object cbVWD: TCheckBox
       Left = 189
@@ -274,7 +272,7 @@ object frmFilterOptions: TfrmFilterOptions
       Width = 176
       Height = 17
       Caption = 'only Visible When Distant'
-      TabOrder = 29
+      TabOrder = 33
     end
     object clbBaseRecordSignatures: TCheckListBox
       Left = 667
@@ -284,10 +282,10 @@ object frmFilterOptions: TfrmFilterOptions
       BevelKind = bkTile
       BevelWidth = 3
       BorderStyle = bsNone
+      Color = clBtnFace
       ItemHeight = 13
-      ParentColor = True
       PopupMenu = pmuSelection
-      TabOrder = 30
+      TabOrder = 34
     end
     object clbConflictAll: TCheckListBox
       Left = 34
@@ -297,10 +295,10 @@ object frmFilterOptions: TfrmFilterOptions
       BevelKind = bkTile
       BevelWidth = 3
       BorderStyle = bsNone
+      Color = clBtnFace
       ItemHeight = 13
-      ParentColor = True
       PopupMenu = pmuSelection
-      TabOrder = 31
+      TabOrder = 35
     end
     object clbConflictThis: TCheckListBox
       Left = 34
@@ -310,10 +308,10 @@ object frmFilterOptions: TfrmFilterOptions
       BevelKind = bkTile
       BevelWidth = 3
       BorderStyle = bsNone
+      Color = clBtnFace
       ItemHeight = 13
-      ParentColor = True
       PopupMenu = pmuSelection
-      TabOrder = 32
+      TabOrder = 36
     end
     object clbRecordSignatures: TCheckListBox
       Left = 379
@@ -323,55 +321,75 @@ object frmFilterOptions: TfrmFilterOptions
       BevelKind = bkTile
       BevelWidth = 3
       BorderStyle = bsNone
+      Color = clBtnFace
       ItemHeight = 13
-      ParentColor = True
       PopupMenu = pmuSelection
-      TabOrder = 33
+      TabOrder = 37
     end
     object edBaseEditorID: TEdit
       Left = 665
       Top = 554
       Width = 132
       Height = 21
-      TabOrder = 34
+      TabOrder = 38
     end
     object edBaseName: TEdit
       Left = 665
       Top = 610
       Width = 139
       Height = 21
-      TabOrder = 35
+      TabOrder = 39
     end
     object edEditorID: TEdit
       Left = 34
       Top = 435
       Width = 132
       Height = 21
-      TabOrder = 36
+      TabOrder = 40
     end
     object edName: TEdit
       Left = 34
       Top = 485
       Width = 132
       Height = 21
-      TabOrder = 37
+      TabOrder = 41
     end
     object cmbPreset: TComboBox
       Left = 58
       Top = 6
-      Width = 294
+      Width = 382
       Height = 21
       Style = csDropDownList
-      TabOrder = 38
+      DropDownCount = 16
+      TabOrder = 0
       OnSelect = cmbPresetSelect
     end
-    object Button1: TButton
-      Left = 358
+    object btnFilterAdd: TButton
+      Left = 546
       Top = 4
-      Width = 75
+      Width = 91
       Height = 25
       Caption = 'Add'
-      TabOrder = 39
+      TabOrder = 2
+      OnClick = btnFilterAddClick
+    end
+    object btnFilterDel: TButton
+      Left = 643
+      Top = 4
+      Width = 91
+      Height = 25
+      Caption = 'Remove'
+      TabOrder = 3
+      OnClick = btnFilterDelClick
+    end
+    object btnFilterSave: TButton
+      Left = 449
+      Top = 4
+      Width = 91
+      Height = 25
+      Caption = 'Save'
+      TabOrder = 1
+      OnClick = btnFilterSaveClick
     end
   end
   object pnlBottom: TPanel
@@ -382,9 +400,7 @@ object frmFilterOptions: TfrmFilterOptions
     Align = alBottom
     BevelOuter = bvNone
     ParentColor = True
-    TabOrder = 1
-    ExplicitTop = 688
-    ExplicitWidth = 931
+    TabOrder = 0
     DesignSize = (
       935
       41)
@@ -397,7 +413,6 @@ object frmFilterOptions: TfrmFilterOptions
       Caption = 'Filter'
       ModalResult = 1
       TabOrder = 0
-      ExplicitLeft = 733
     end
     object btnCancel: TButton
       Left = 834
@@ -408,7 +423,6 @@ object frmFilterOptions: TfrmFilterOptions
       Caption = 'Cancel'
       ModalResult = 2
       TabOrder = 1
-      ExplicitLeft = 830
     end
     object pnlBevel: TPanel
       AlignWithMargins = True
@@ -422,9 +436,6 @@ object frmFilterOptions: TfrmFilterOptions
       Margins.Bottom = 0
       Align = alTop
       TabOrder = 2
-      ExplicitLeft = 320
-      ExplicitTop = 8
-      ExplicitWidth = 185
     end
   end
   object pmuSelection: TPopupMenu
