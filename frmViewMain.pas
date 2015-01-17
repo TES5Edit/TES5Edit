@@ -521,7 +521,7 @@ type
 
     procedure SplitLOD(const aWorldspace: IwbMainRecord);
     procedure GenerateLODTES4(const aWorldspace: IwbMainRecord);
-    procedure GenerateLODTES5(const aWorldspace: IwbMainRecord);
+    procedure GenerateLODTES5(const aWorldspace: IwbMainRecord; const LODTypes: TLODTypes);
     procedure DoGenerateLOD;
     procedure DoRunScript;
 
@@ -2900,7 +2900,7 @@ begin
           if wbGameMode = gmTES4 then
             GenerateLODTES4(WorldSpaces[i])
           else if wbGameMode = gmTES5 then
-            GenerateLODTES5(WorldSpaces[i]);
+            GenerateLODTES5(WorldSpaces[i], [lodTrees]);
           if ForceTerminate then
             Abort;
         end;
@@ -3601,8 +3601,17 @@ begin
   for ConflictAll := Low(TConflictAll) to High(TConflictAll) do
     wbColorConflictAll[ConflictAll] := Settings.ReadInteger('ColorConflictAll', GetEnumName(TypeInfo(TConflictAll), Integer(ConflictAll)), Integer(wbColorConflictAll[ConflictAll]));
   Settings.ReadSection('DoNotBuildRefsFor', wbDoNotBuildRefsFor);
-  if (wbDoNotBuildRefsFor.Count = 0) and (wbGameMode = gmFNV) then
-    wbDoNotBuildRefsFor.Add('Fallout3.esm');
+  // do not build refs for fallout3.esm in FNVEdit by default for TTW
+  if (wbDoNotBuildRefsFor.Count = 0) and (wbGameMode = gmFNV) then begin
+    sl := TStringList.Create;
+    try
+      Settings.ReadSections(sl);
+      if sl.IndexOf('DoNotBuildRefsFor') = -1 then
+        wbDoNotBuildRefsFor.Add('Fallout3.esm');
+    finally
+      sl.Free;
+    end;
+  end;
 
   HideNoConflict := Settings.ReadBool('View', 'HodeNoConflict', False);
   mniViewHideNoConflict.Checked := HideNoConflict;
@@ -4562,7 +4571,66 @@ begin
   end;
 end;
 
-procedure TfrmMain.GenerateLODTES5(const aWorldspace: IwbMainRecord);
+function ExecuteCaptureConsoleOutput(const aCommandLine: string; aStrings: TStrings): Cardinal;
+const
+  CReadBuffer = 2400;
+var
+  saSecurity: TSecurityAttributes;
+  hRead: THandle;
+  hWrite: THandle;
+  suiStartup: TStartupInfo;
+  piProcess: TProcessInformation;
+  pBuffer: array [0..CReadBuffer] of AnsiChar;
+  dBuffer: array [0 .. CReadBuffer] of Char;
+  pCmdLine: array [0..MAX_PATH] of Char;
+  dRead: DWord;
+  dRunning: DWord;
+begin
+  saSecurity.nLength := SizeOf(TSecurityAttributes);
+  saSecurity.bInheritHandle := True;
+  saSecurity.lpSecurityDescriptor := nil;
+
+  if CreatePipe(hRead, hWrite, @saSecurity, 0) then begin
+    try
+      FillChar(suiStartup, SizeOf(TStartupInfo), #0);
+      suiStartup.cb := SizeOf(TStartupInfo);
+      suiStartup.hStdInput := hRead;
+      suiStartup.hStdOutput := hWrite;
+      suiStartup.hStdError := hWrite;
+      suiStartup.dwFlags := STARTF_USESTDHANDLES or STARTF_USESHOWWINDOW;
+      suiStartup.wShowWindow := SW_HIDE;
+
+      StrPCopy(pCmdLine, aCommandLine);
+      if CreateProcess(nil, pCmdLine, @saSecurity, @saSecurity, True, NORMAL_PRIORITY_CLASS, nil, nil, suiStartup, piProcess) then begin
+        try
+          repeat
+            dRunning := WaitForSingleObject(piProcess.hProcess, 100);
+            Application.ProcessMessages();
+            repeat
+              dRead := 0;
+              ReadFile(hRead, pBuffer[0], CReadBuffer, dRead, nil);
+              pBuffer[dRead] := #0;
+              OemToChar(pBuffer, dBuffer);
+              aStrings.Add(string(pBuffer));
+            until dRead < CReadBuffer;
+          until dRunning <> WAIT_TIMEOUT;
+          GetExitCodeProcess(piProcess.hProcess, Result);
+        finally
+          CloseHandle(piProcess.hProcess);
+          CloseHandle(piProcess.hThread);
+        end;
+      end else
+        RaiseLastOSError;
+
+    finally
+      CloseHandle(hRead);
+      CloseHandle(hWrite);
+    end;
+  end else
+    RaiseLastOSError;
+end;
+
+procedure TfrmMain.GenerateLODTES5(const aWorldspace: IwbMainRecord; const LODTypes: TLODTypes);
 var
   StartTick: Cardinal;
 
@@ -4573,14 +4641,15 @@ var
     i          : Integer;
   begin
     if StartTick + 500 < GetTickCount then begin
-      Caption := 'Scanning References: ' + aWorldspace.Name + ' References Found: ' + IntToStr(Count) +
+      Caption := 'Scanning References: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(TotalCount) +
+        ' References Found: ' + IntToStr(Count) +
         ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
       Application.ProcessMessages;
       StartTick := GetTickCount;
     end;
 
     if Supports(aElement, IwbMainRecord, MainRecord) then begin
-      if (MainRecord.Signature = 'REFR') and Assigned(MainRecord.BaseRecord) and (MainRecord.BaseRecord.Signature = 'TREE') then begin
+      if MainRecord.Signature = 'REFR' then begin
         if High(REFRs) < Count then
           SetLength(REFRs, Length(REFRs) * 2);
         REFRs[Count] := MainRecord;
@@ -4591,27 +4660,53 @@ var
         FindREFRs(Container.Elements[i], REFRs, TotalCount, Count);
   end;
 
+  function GetLODMeshName(const aStat: IwbMainRecord; const aLODLevel: Integer): string;
+  var
+    i   : integer;
+    arr : TBytes;
+  begin
+    Result := '';
+    // full mesh
+    if aLODLevel = -1 then
+      Result := aStat.ElementEditValues['Model\MODL']
+    else begin
+      arr := aStat.ElementNativeValues[Format('MNAM\LOD #%d (Level %d)\Mesh', [aLODLevel, aLODLevel])];
+      for i := Low(arr) to High(arr) do
+        if arr[i] = 0 then
+          Break
+        else
+          Result := Result + Chr(arr[i]);
+    end;
+    if Result <> '' then begin
+      Result := LowerCase(Result);
+      if Result[1] = '\' then Delete(Result, 1, 1);
+      if Copy(Result, 1, 5) = 'data\' then Delete(Result, 1, 5);
+      if Copy(Result, 1, 7) <> 'meshes\' then Result := 'meshes\' + Result;
+    end;
+  end;
+
 var
-  LODPath         : string;
-  F               : TSearchRec;
-  Master, Ovr     : IwbMainRecord;
-  TreeRec         : IwbMainRecord;
-  REFRs           : TDynMainRecords;
-  Count           : Integer;
-  TotalCount      : Integer;
-  i, j, k, l      : Integer;
-  Width, Height   : Single;
-  Lst             : TwbLodTES5TreeList;
-  LodSet          : TwbLodSettings;
-  Res             : TDynResources;
-  PTree           : PwbLodTES5Tree;
-  ini             : TMemIniFile;
-  slIni, slLog    : TStringList;
-  bsIni           : TBytesStream;
-  RefPos, RefRot  : TwbVector;
-  RefCell, RefBlock : TwbGridCell;
-  Scale           : Single;
-  LOD4            : array of TwbLodTES5TreeBlock;
+  LODPath             : string;
+  s, mat, m4, m8, m16 : string;
+  F                   : TSearchRec;
+  Master, Ovr         : IwbMainRecord;
+  TreeRec, StatRec    : IwbMainRecord;
+  REFRs               : TDynMainRecords;
+  Count               : Integer;
+  TotalCount          : Integer;
+  i, j, k, l          : Integer;
+  Width, Height       : Single;
+  Lst                 : TwbLodTES5TreeList;
+  LodSet              : TwbLodSettings;
+  Res                 : TDynResources;
+  PTree               : PwbLodTES5Tree;
+  ini                 : TMemIniFile;
+  slIni, slLog, slCache : TStringList;
+  bsIni               : TBytesStream;
+  RefPos, RefRot      : TwbVector;
+  RefCell, RefBlock   : TwbGridCell;
+  Scale               : Single;
+  LOD4                : array of TwbLodTES5TreeBlock;
 begin
   Master := aWorldspace.MasterOrSelf;
 
@@ -4629,7 +4724,7 @@ begin
   Application.ProcessMessages;
   StartTick := GetTickCount;
 
-  // getting all refs of TREE records in worldspace
+  // getting all refs in worldspace
   Count := 0;
   TotalCount := 0;
   REFRs := nil;
@@ -4676,193 +4771,315 @@ begin
   if Length(REFRs) = 0 then
     Exit;
 
-  Caption := 'Building LOD blocks: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(0) +
-    ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-  Application.ProcessMessages;
-  StartTick := GetTickCount;
+  PostAddMessage('[' + aWorldspace.EditorID + '] Generating LOD');
 
-  PostAddMessage('[' + aWorldspace.EditorID + '] Generating Trees LOD');
-
-  // building lod
-  slLog := TStringList.Create;
-  Lst := TwbLodTES5TreeList.Create(aWorldspace.EditorID);
-  try
-
-  try
-    for i := Low(REFRs) to High(REFRs) do begin
-      // skip invalid references
-      if REFRs[i].Flags.IsInitiallyDisabled or
-         REFRs[i].Flags.IsDeleted or
-         REFRs[i].ElementExists['XESP']
-      then
-        Continue;
-
-      TreeRec := REFRs[i].BaseRecord.MasterOrSelf;
-      PTree := Lst.TreeByFormID[TreeRec.LoadOrderFormID];
-      // adding a new tree to the list
-      if not Assigned(PTree) then begin
-        // calculate default width and height of a tree from object bounds
-        Ovr := TreeRec.WinningOverride;
-        if Ovr.ElementExists['OBND'] then begin
-           Width  := Ovr.ElementNativeValues['OBND\X2'] - Ovr.ElementNativeValues['OBND\X1'];
-           Height := Ovr.ElementNativeValues['OBND\Z2'] - Ovr.ElementNativeValues['OBND\Z1'];
-        end
-        else begin
-          Width  := 0;
-          Height := 0;
-        end;
-        PTree := Lst.AddTree(TreeRec._File.FileName, Ovr.ElementEditValues['Model\MODL'], TreeRec.LoadOrderFormID, Width, Height);
-        // load billboard texture
-        Res := wbContainerHandler.OpenResource(PTree^.Billboard);
-        if (Length(Res) > 0) and PTree^.LoadFromData(Res[High(Res)].GetData) then begin
-          slLog.Add(TreeRec.Name + ' using LOD ' + PTree^.Billboard);
-          // store checksum of billboard to avoid duplicates in atlas
-          PTree^.CRC32 := wbCRC32Data(Res[High(Res)].GetData);
-          // load tree data
-          Res := wbContainerHandler.OpenResource(ChangeFileExt(PTree^.Billboard, '.txt'));
-          if Length(Res) > 0 then begin
-            bsIni := TBytesStream.Create(Res[High(Res)].GetData);
-            slIni := TStringList.Create;
-            ini := TMemIniFile.Create('');
-            try
-              slIni.LoadFromStream(bsIni);
-              ini.SetStrings(slIni);
-              PTree^.Width := ini.ReadFloat('LOD', 'Width', PTree^.Width);
-              PTree^.Height := ini.ReadFloat('LOD', 'Height', PTree^.Height);
-              PTree^.ShiftX := ini.ReadFloat('LOD', 'ShiftX', 0.0);
-              PTree^.ShiftY := ini.ReadFloat('LOD', 'ShiftY', 0.0);
-              PTree^.ShiftZ := ini.ReadFloat('LOD', 'ShiftZ', 0.0);
-              PTree^.ScaleFactor := ini.ReadFloat('LOD', 'Scale', 1.0);
-            finally
-              bsIni.Free;
-              slIni.Free;
-              ini.Free;
-            end;
-          end;
-        end
-        else begin
-          PTree^.Index := -1;
-          slLog.Add('<Note: ' + TreeRec.Name + ' LOD not found ' + PTree^.Billboard + '>');
-        end;
-      end;
-
-      // tree has no billboard texture, skip it's references
-      if PTree^.Index = -1 then
-        Continue;
-
-      // Trees LOD can't be rotated around x and y (z is ignored), reject "fallen" trees
-      if REFRs[i].GetRotation(RefRot) then
-        if ((RefRot.x > 30.0) and (RefRot.x < 330.0)) or ((RefRot.y > 30.0) and (RefRot.y < 330.0)) then
-          Continue;
-
-      if not REFRs[i].GetPosition(RefPos) then
-        Continue;
-
-      RefPos.x := RefPos.x + PTree^.ShiftX;
-      RefPos.y := RefPos.y + PTree^.ShiftY;
-      RefPos.z := RefPos.z + PTree^.ShiftZ;
-
-      if REFRs[i].ElementExists['XSCL'] then
-        Scale := REFRs[i].ElementNativeValues['XSCL']
-      else
-        Scale := 1.0;
-      Scale := Scale * PTree^.ScaleFactor;
-
-      RefCell := wbPositionToGridCell(RefPos);
-      RefBlock := Lodset.BlockForCell(RefCell, 4);
-
-      // reference is out of lod range
-      if (RefBlock.x < Lodset.SWCell.x) or (RefBlock.y < Lodset.SWCell.y) then
-        Continue;
-
-      // find existing block or add a new one
-      k := -1;
-      for j := Low(LOD4) to High(LOD4) do
-        if (LOD4[j].Cell.x = RefBlock.x) and (LOD4[j].Cell.y = RefBlock.y) then begin
-          k := j;
-          Break;
-        end;
-      if k = -1 then begin
-        SetLength(LOD4, Succ(Length(LOD4)));
-        k := Pred(Length(LOD4));
-        LOD4[k].Init(Lst, RefBlock, 4);
-      end;
-
-      LOD4[k].AddReference(REFRs[i].LoadOrderFormID, PTree^.Index, RefPos, Scale);
-
-      if ForceTerminate then
-        Abort;
-      if StartTick + 500 < GetTickCount then begin
-        Caption := 'Building LOD blocks: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(i) +
-          ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-        Application.ProcessMessages;
-        StartTick := GetTickCount;
-      end;
-    end;
-
-    slLog.Sort;
-    PostAddMessage(Trim(slLog.Text));
-    Application.ProcessMessages;
-
-    if not Lst.BuildAtlas(StrToIntDef(Settings.ReadString('Worldspace', 'AtlasSizeMax', ''), 8192)) then begin
-      // will return false without exception only if atlas is empty, skip this silenty
-
-      //PostAddMessage('[' + aWorldspace.EditorID + '] Error occured when building an atlas (empty?).');
-      //Exit;
-    end;
-
-    // nothing on atlas and in lod
-    if Lst.TreesListCount = 0 then
-      Exit;
-
-    LODPath := wbOutputPath; // -O switch override
-
-    Caption := 'Deleting old LOD files: ' + aWorldspace.Name +
+  // Trees LOD
+  if lodTrees in LODTypes then begin
+    Caption := 'Building Trees LOD blocks: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(0) +
       ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
     Application.ProcessMessages;
     StartTick := GetTickCount;
 
-    if ForceTerminate then
-      Abort;
+    slLog := TStringList.Create;
+    Lst := TwbLodTES5TreeList.Create(aWorldspace.EditorID);
+    try
+    try
+      for i := Low(REFRs) to High(REFRs) do begin
+        // only for TREEs
+        if (not Assigned(REFRs[i].BaseRecord)) or (REFRs[i].BaseRecord.Signature <> 'TREE') then
+          Continue;
 
-    if FindFirst(ExtractFilePath(LODPath + Lst.AtlasFileName) + '*.btt', faAnyFile, F) = 0 then try
-      repeat
-        DeleteFile(ExtractFilePath(LODPath + Lst.AtlasFileName) + F.Name);
+        if not REFRs[i].GetPosition(RefPos) then
+          Continue;
+
+        RefCell := wbPositionToGridCell(RefPos);
+        RefBlock := Lodset.BlockForCell(RefCell, 4);
+
+        // reference is out of lod range
+        if (RefBlock.x < Lodset.SWCell.x) or (RefBlock.y < Lodset.SWCell.y) then
+          Continue;
+
+        // find existing block or add a new one
+        // this ensures that empty blocks are created for cells even will all deleted/disabled trees to override vanilla lod files
+        k := -1;
+        for j := Low(LOD4) to High(LOD4) do
+          if (LOD4[j].Cell.x = RefBlock.x) and (LOD4[j].Cell.y = RefBlock.y) then begin
+            k := j;
+            Break;
+          end;
+        if k = -1 then begin
+          SetLength(LOD4, Succ(Length(LOD4)));
+          k := Pred(Length(LOD4));
+          LOD4[k].Init(Lst, RefBlock, 4);
+        end;
+
+        // skip invisible references
+        if REFRs[i].Flags.IsInitiallyDisabled or
+           REFRs[i].Flags.IsDeleted or
+           REFRs[i].ElementExists['XESP']
+        then
+          Continue;
+
+        TreeRec := REFRs[i].BaseRecord.MasterOrSelf;
+        PTree := Lst.TreeByFormID[TreeRec.LoadOrderFormID];
+        // adding a new tree to the list
+        if not Assigned(PTree) then begin
+          // calculate default width and height of a tree from object bounds
+          Ovr := TreeRec.WinningOverride;
+          if Ovr.ElementExists['OBND'] then begin
+             Width  := Ovr.ElementNativeValues['OBND\X2'] - Ovr.ElementNativeValues['OBND\X1'];
+             Height := Ovr.ElementNativeValues['OBND\Z2'] - Ovr.ElementNativeValues['OBND\Z1'];
+          end
+          else begin
+            Width  := 0;
+            Height := 0;
+          end;
+          PTree := Lst.AddTree(TreeRec._File.FileName, Ovr.ElementEditValues['Model\MODL'], TreeRec.LoadOrderFormID, Width, Height);
+          // load billboard texture
+          Res := wbContainerHandler.OpenResource(PTree^.Billboard);
+          if (Length(Res) > 0) and PTree^.LoadFromData(Res[High(Res)].GetData) then begin
+            slLog.Add(TreeRec.Name + ' using LOD ' + PTree^.Billboard);
+            // store checksum of billboard to avoid duplicates in atlas
+            PTree^.CRC32 := wbCRC32Data(Res[High(Res)].GetData);
+            // load tree data
+            Res := wbContainerHandler.OpenResource(ChangeFileExt(PTree^.Billboard, '.txt'));
+            if Length(Res) > 0 then begin
+              bsIni := TBytesStream.Create(Res[High(Res)].GetData);
+              slIni := TStringList.Create;
+              ini := TMemIniFile.Create('');
+              try
+                slIni.LoadFromStream(bsIni);
+                ini.SetStrings(slIni);
+                PTree^.Width := ini.ReadFloat('LOD', 'Width', PTree^.Width);
+                PTree^.Height := ini.ReadFloat('LOD', 'Height', PTree^.Height);
+                PTree^.ShiftX := ini.ReadFloat('LOD', 'ShiftX', 0.0);
+                PTree^.ShiftY := ini.ReadFloat('LOD', 'ShiftY', 0.0);
+                PTree^.ShiftZ := ini.ReadFloat('LOD', 'ShiftZ', 0.0);
+                PTree^.ScaleFactor := ini.ReadFloat('LOD', 'Scale', 1.0);
+              finally
+                bsIni.Free;
+                slIni.Free;
+                ini.Free;
+              end;
+            end;
+          end
+          else begin
+            PTree^.Index := -1;
+            slLog.Add('<Note: ' + TreeRec.Name + ' LOD not found ' + PTree^.Billboard + '>');
+          end;
+        end;
+
+        // tree has no billboard texture, skip it's references
+        if PTree^.Index = -1 then
+          Continue;
+
+        // Trees LOD can't be rotated around x and y (z is ignored), reject "fallen" trees
+        if REFRs[i].GetRotation(RefRot) then
+          if ((RefRot.x > 30.0) and (RefRot.x < 330.0)) or ((RefRot.y > 30.0) and (RefRot.y < 330.0)) then
+            Continue;
+
+        RefPos.x := RefPos.x + PTree^.ShiftX;
+        RefPos.y := RefPos.y + PTree^.ShiftY;
+        RefPos.z := RefPos.z + PTree^.ShiftZ;
+
+        if REFRs[i].ElementExists['XSCL'] then
+          Scale := REFRs[i].ElementNativeValues['XSCL']
+        else
+          Scale := 1.0;
+        Scale := Scale * PTree^.ScaleFactor;
+
+        LOD4[k].AddReference(REFRs[i].LoadOrderFormID, PTree^.Index, RefPos, Scale);
+
+        if ForceTerminate then
+          Abort;
         if StartTick + 500 < GetTickCount then begin
-          Caption := 'Deleting old LOD files: ' + aWorldspace.Name +
+          Caption := 'Building Trees LOD blocks: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(i) +
             ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
           Application.ProcessMessages;
           StartTick := GetTickCount;
         end;
+      end;
+
+      slLog.Sort;
+      PostAddMessage(Trim(slLog.Text));
+      Application.ProcessMessages;
+
+      if not Lst.BuildAtlas(StrToIntDef(Settings.ReadString('Worldspace', 'AtlasSizeMax', ''), 8192)) then begin
+        // will return false without exception only if atlas is empty, skip this silenty
+        //PostAddMessage('[' + aWorldspace.EditorID + '] Error occured when building an atlas (empty?).');
+        //Exit;
+      end;
+
+      // nothing on atlas and in lod
+      if Lst.TreesListCount = 0 then
+        PostAddMessage('<Note: Can not build Trees LOD for ' + aWorldspace.EditorID + ', no resource billboards or TREE references found>')
+      else begin
+        LODPath := wbOutputPath; // -O switch override
+
+        Caption := 'Deleting old LOD files: ' + aWorldspace.Name +
+          ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+        Application.ProcessMessages;
+        StartTick := GetTickCount;
+
         if ForceTerminate then
           Abort;
-      until FindNext(F) <> 0;
-    finally
-      FindClose(F);
-    end;
 
-    Caption := 'Saving Trees LOD files: ' + aWorldspace.Name;
-    Application.ProcessMessages;
+        if FindFirst(ExtractFilePath(LODPath + Lst.AtlasFileName) + '*.btt', faAnyFile, F) = 0 then try
+          repeat
+            DeleteFile(ExtractFilePath(LODPath + Lst.AtlasFileName) + F.Name);
+            if StartTick + 500 < GetTickCount then begin
+              Caption := 'Deleting old LOD files: ' + aWorldspace.Name +
+                ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+              Application.ProcessMessages;
+              StartTick := GetTickCount;
+            end;
+            if ForceTerminate then
+              Abort;
+          until FindNext(F) <> 0;
+        finally
+          FindClose(F);
+        end;
 
-    ForceDirectories(ExtractFilePath(LODPath + Lst.AtlasFileName));
-    if not Lst.SaveAtlas(LODPath + Lst.AtlasFileName) then
-      raise Exception.Create('Can''t save atlas');
-    ForceDirectories(ExtractFilePath(LODPath + Lst.ListFileName));
-    Lst.SaveToFile(LODPath + Lst.ListFileName);
-    for i := Low(LOD4) to High(LOD4) do
-      LOD4[i].SaveToFile(LODPath + LOD4[i].FileName);
+        Caption := 'Saving Trees LOD files: ' + aWorldspace.Name;
+        Application.ProcessMessages;
 
-    PostAddMessage('[' + aWorldspace.EditorID + '] Trees LOD Done.');
+        ForceDirectories(ExtractFilePath(LODPath + Lst.AtlasFileName));
+        if not Lst.SaveAtlas(LODPath + Lst.AtlasFileName) then
+          raise Exception.Create('Can''t save atlas');
+        ForceDirectories(ExtractFilePath(LODPath + Lst.ListFileName));
+        Lst.SaveToFile(LODPath + Lst.ListFileName);
+        for i := Low(LOD4) to High(LOD4) do
+          LOD4[i].SaveToFile(LODPath + LOD4[i].FileName);
 
-  except
-    on E: Exception do
+        PostAddMessage('[' + aWorldspace.EditorID + '] Trees LOD Done.');
+      end;
+    except on E: Exception do
       PostAddMessage('[' + aWorldspace.EditorID + '] Trees LOD generation error: ' + E.Message);
+    end;
+    finally
+      Lst.Free;
+      slLog.Free;
+    end;
   end;
 
-  finally
-    Lst.Free;
-    slLog.Free;
+  // Objects LOD
+  if lodObjects in LODTypes then begin
+    Caption := 'Building Objects LOD: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(0) +
+      ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+    Application.ProcessMessages;
+    StartTick := GetTickCount;
+
+    slCache := TStringList.Create;
+    slLog := TStringList.Create;
+    try
+    try
+      for i := Low(REFRs) to High(REFRs) do begin
+        // only for STATs
+        StatRec := REFRs[i].BaseRecord;
+        if (not Assigned(StatRec)) or (StatRec.Signature <> 'STAT') then
+          Continue;
+
+        // skip invisible references
+        if REFRs[i].Flags.IsInitiallyDisabled or
+           REFRs[i].Flags.IsDeleted or
+           REFRs[i].ElementExists['XESP']
+        then
+          Continue;
+
+        StatRec := StatRec.WinningOverride;
+
+        // skip persistent refs of "never fade" statics
+        if REFRs[i].IsPersistent and (StatRec.Flags._Flags and $00000004 > 0) then
+          Exit;
+
+        if not REFRs[i].GetPosition(RefPos) then
+          Continue;
+
+        RefCell := wbPositionToGridCell(RefPos);
+        RefBlock := Lodset.BlockForCell(RefCell, 4);
+
+        // reference is out of lod range
+        if (RefBlock.x < Lodset.SWCell.x) or (RefBlock.y < Lodset.SWCell.y) then
+          Continue;
+
+        k := slCache.IndexOfObject(Pointer(StatRec.LoadOrderFormID));
+        if k = -1 then begin
+          s := '';
+          if StatRec.ElementExists['MNAM'] and StatRec.Flags.IsVisibleWhenDistant then begin
+            // getting lod models
+            m4 := GetLODMeshName(StatRec, 0);
+            m8 := GetLODMeshName(StatRec, 1);
+            m16 := GetLODMeshName(StatRec, 2);
+            if (m4 <> '') or (m8 <> '') or (m16 <> '') then begin
+              // detecting LOD material
+              mat := '';
+              if Assigned(StatRec.ElementByPath['DNAM\Material']) then begin
+                if Supports(StatRec.ElementByPath['DNAM\Material'].LinksTo, IwbMainRecord, Ovr) then begin
+                  mat := Ovr.EditorID;
+                  if Pos('Snow', mat) > 0 then mat := 'Snow'
+                  else if Pos('Ash', mat) > 0 then mat := 'Ash'
+                  else mat := '';
+                end;
+              end;
+              // a tab separated string of Editor ID, flags, material, full mesh and lod files
+              s := StatRec.EditorID + #9 + IntToHex(StatRec.Flags._Flags, 8) + #9 +
+                   mat + #9 + GetLODMeshName(StatRec, -1) + #9 +
+                   m4 + #9 + m8 + #9 + m16;
+            end;
+          end;
+          k := slCache.Count;
+          slCache.AddObject(s, Pointer(StatRec.LoadOrderFormID))
+        end;
+
+        if slCache[k] = '' then
+          Continue;
+
+        if REFRs[i].ElementExists['XSCL'] then
+          s := REFRs[i].ElementEditValues['XSCL']
+        else
+          s := '1.0';
+
+        s := IntToHex(REFRs[i].LoadOrderFormID , 8) + #9 +
+             IntToHex(REFRs[i].Flags._Flags, 8) + #9 +
+             REFRs[i].ElementEditValues['DATA\Position\X'] + #9 +
+             REFRs[i].ElementEditValues['DATA\Position\Y'] + #9 +
+             REFRs[i].ElementEditValues['DATA\Position\Z'] + #9 +
+             REFRs[i].ElementEditValues['DATA\Rotation\X'] + #9 +
+             REFRs[i].ElementEditValues['DATA\Rotation\Y'] + #9 +
+             REFRs[i].ElementEditValues['DATA\Rotation\Z'] + #9 +
+             s + #9 + slCache[k];
+
+        slLog.Add(s);
+      end;
+
+      // nothing to export for LODGen
+      if slLog.Count = 0 then
+        PostAddMessage('<Note: Can not build Objects LOD for ' + aWorldspace.EditorID + ', no valid references found>')
+      else begin
+        slLog.Insert(0, aWorldspace.EditorID);
+        slLog.Insert(1, Format('%d %d', [Lodset.SWCell.x, Lodset.SWCell.y]));
+        slLog.Insert(2, aWorldspace.ElementEditValues['TNAM']);
+        slLog.Insert(3, aWorldspace.ElementEditValues['UNAM']);
+        slLog.Insert(4, wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects');
+        s := wbScriptsPath + 'lodgen.txt';
+        slLog.SaveToFile(s);
+        s := Format(wbScriptsPath + 'LODGen.exe "%s" "%s"', [s, ExcludeTrailingPathDelimiter(wbDataPath)]);
+        s := s + ' --dontFixTangents --removeUnseenFaces';
+        s := s + ' --dontGenerateTangents --dontGenerateVertexColors';
+        k := ExecuteCaptureConsoleOutput(s, mmoMessages.Lines);
+        if k <> 0 then
+          raise Exception.Create('LODGen error, exit code ' + IntToStr(k));
+        PostAddMessage('[' + aWorldspace.EditorID + '] Objects LOD Done.');
+      end;
+    except on E: Exception do
+      PostAddMessage('[' + aWorldspace.EditorID + '] Objects LOD generation error: ' + E.Message);
+    end;
+    finally
+      slCache.Free;
+      slLog.Free;
+    end;
   end;
+
 end;
 
 
@@ -7510,7 +7727,7 @@ begin
             if wbGameMode = gmTES4 then
               GenerateLODTES4(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])))
             else if wbGameMode = gmTES5 then
-              GenerateLODTES5(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])));
+              GenerateLODTES5(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])), [lodObjects]);
           end else
             SplitLOD(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])));
     finally
@@ -9873,6 +10090,12 @@ begin
       Settings.WriteInteger('ColorConflictThis', GetEnumName(TypeInfo(TConflictThis), Integer(ct)), Integer(wbColorConflictThis[ct]));
     for ca := Low(TConflictAll) to High(TConflictAll) do
       Settings.WriteInteger('ColorConflictAll', GetEnumName(TypeInfo(TConflictAll), Integer(ca)), Integer(wbColorConflictAll[ca]));
+    // if donotbuildrefs section exists, then clear it
+    if Settings.SectionExists('DoNotBuildRefsFor') then begin
+      Settings.EraseSection('DoNotBuildRefsFor');
+      Settings.WriteString('DoNotBuildRefsFor', 'dummy', '');
+      Settings.DeleteKey('DoNotBuildRefsFor', 'dummy');
+    end;
     for i := 0 to Pred(wbDoNotBuildRefsFor.Count) do
       Settings.WriteInteger('DoNotBuildRefsFor', wbDoNotBuildRefsFor[i], 1);
 
