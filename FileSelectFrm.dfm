@@ -50,7 +50,7 @@ object frmFileSelect: TfrmFileSelect
   object cbBackup: TCheckBox
     Left = 8
     Top = 582
-    Width = 97
+    Width = 113
     Height = 17
     Anchors = [akLeft, akBottom]
     Caption = 'Backup plugins'
