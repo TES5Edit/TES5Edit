@@ -291,7 +291,6 @@ type
     mniModGroupsEnabled: TMenuItem;
     mniModGroupsDisabled: TMenuItem;
     mniNavOtherCodeSiteLogging: TMenuItem;
-    mniNavSplitLOD: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -519,6 +518,7 @@ type
     function GetRefBySelectionAsMainRecords: TDynMainRecords;
     function GetRefBySelectionAsElements: TDynElements;
 
+    function ExecuteCaptureConsoleOutput(const aCommandLine: string): Cardinal;
     procedure SplitLOD(const aWorldspace: IwbMainRecord);
     procedure GenerateLODTES4(const aWorldspace: IwbMainRecord);
     procedure GenerateLODTES5(const aWorldspace: IwbMainRecord; const LODTypes: TLODTypes);
@@ -858,6 +858,7 @@ uses
   frmLocalizePluginForm,
   frmScriptForm,
   frmLogAnalyzerForm,
+  frmLODGenForm,
   frmOptionsForm;
 
 var
@@ -2858,6 +2859,18 @@ var
   MainRecord  : IwbMainRecord;
   Worldspaces : TDynMainRecords;
 begin
+  // TES5LODGen: selective lodgenning, no need to regenerate lod for all worldspaces like in Oblivion
+  if wbGameMode = gmTES5 then begin
+    try
+      mniNavGenerateLODClick(nil);
+    finally
+      frmMain.PostAddMessage('LOD Generator: finished (you can close this application now)');
+      GeneratorDone := True;
+    end;
+    Exit;
+  end;
+
+  // TES4LODGen, rebuild for all worldspaces
   try
     frmMain.PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] LOD Generator: starting');
 
@@ -2868,9 +2881,6 @@ begin
         for j := 0 to Pred(Group.ElementCount) do
           if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
             if Mainrecord.Signature = 'WRLD' then begin
-              // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbGameMode in [gmTES5]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
-                Continue;
               SetLength(Worldspaces, Succ(Length(Worldspaces)));
               Worldspaces[High(Worldspaces)] := MainRecord;
             end;
@@ -2897,10 +2907,7 @@ begin
     try
       try
         for i := Low(WorldSpaces) to High(WorldSpaces) do begin
-          if wbGameMode = gmTES4 then
-            GenerateLODTES4(WorldSpaces[i])
-          else if wbGameMode = gmTES5 then
-            GenerateLODTES5(WorldSpaces[i], [lodTrees]);
+          GenerateLODTES4(WorldSpaces[i]);
           if ForceTerminate then
             Abort;
         end;
@@ -4447,6 +4454,83 @@ begin
     Abort;
 end;
 
+function TfrmMain.ExecuteCaptureConsoleOutput(const aCommandLine: string): Cardinal;
+type
+  OemString = type AnsiString(CP_OEMCP);
+const
+  CReadBuffer = 2400;
+var
+  saSecurity: TSecurityAttributes;
+  hRead: THandle;
+  hWrite: THandle;
+  suiStartup: TStartupInfo;
+  piProcess: TProcessInformation;
+  pBuffer: array [0..CReadBuffer] of AnsiChar;
+  dBuffer: array [0 .. CReadBuffer] of Char;
+  pCmdLine: array [0..MAX_PATH] of Char;
+  dRead, dRunning, dw: DWord;
+  s: string;
+begin
+  saSecurity.nLength := SizeOf(TSecurityAttributes);
+  saSecurity.bInheritHandle := True;
+  saSecurity.lpSecurityDescriptor := nil;
+
+  if CreatePipe(hRead, hWrite, @saSecurity, 0) then begin
+    try
+      FillChar(suiStartup, SizeOf(TStartupInfo), #0);
+      suiStartup.cb := SizeOf(TStartupInfo);
+      suiStartup.hStdInput := hRead;
+      suiStartup.hStdOutput := hWrite;
+      suiStartup.hStdError := hWrite;
+      suiStartup.dwFlags := STARTF_USESTDHANDLES or STARTF_USESHOWWINDOW;
+      suiStartup.wShowWindow := SW_HIDE;
+
+      StrPCopy(pCmdLine, aCommandLine);
+      if CreateProcess(nil, pCmdLine, @saSecurity, @saSecurity, True, NORMAL_PRIORITY_CLASS, nil, nil, suiStartup, piProcess) then begin
+        try
+          repeat
+            dRunning := WaitForSingleObject(piProcess.hProcess, 100);
+            Application.ProcessMessages;
+
+            if ForceTerminate or (GetKeyState(VK_ESCAPE) and 128 = 128) then begin
+              dw := Integer(TerminateProcess(piProcess.hProcess, 1));
+              if dw <> 0 then begin
+                dw := WaitForSingleObject(piProcess.hProcess, 1000);
+                if dw = WAIT_FAILED then
+                  Result := GetLastError;
+              end else
+                Result := GetLastError;
+              Exit;
+            end;
+
+            if PeekNamedPipe(hRead, nil, 0, nil, @dRead, nil) then begin
+              if dRead > 0 then repeat
+                dRead := 0;
+                ReadFile(hRead, pBuffer[0], CReadBuffer, dRead, nil);
+                pBuffer[dRead] := #0;
+                OemToChar(pBuffer, dBuffer);
+                s := Trim(string(Oemstring(pBuffer)));
+                if s <> '' then
+                  PostAddMessage(s);
+              until dRead < CReadBuffer;
+            end;
+          until dRunning <> WAIT_TIMEOUT;
+          GetExitCodeProcess(piProcess.hProcess, Result);
+        finally
+          CloseHandle(piProcess.hProcess);
+          CloseHandle(piProcess.hThread);
+        end;
+      end else
+        RaiseLastOSError;
+
+    finally
+      CloseHandle(hRead);
+      CloseHandle(hWrite);
+    end;
+  end else
+    RaiseLastOSError;
+end;
+
 procedure TfrmMain.SplitLOD(const aWorldspace: IwbMainRecord);
 var
   Lst             : TwbLodTES5TreeList;
@@ -4569,65 +4653,6 @@ begin
   finally
     Lst.Free;
   end;
-end;
-
-function ExecuteCaptureConsoleOutput(const aCommandLine: string; aStrings: TStrings): Cardinal;
-const
-  CReadBuffer = 2400;
-var
-  saSecurity: TSecurityAttributes;
-  hRead: THandle;
-  hWrite: THandle;
-  suiStartup: TStartupInfo;
-  piProcess: TProcessInformation;
-  pBuffer: array [0..CReadBuffer] of AnsiChar;
-  dBuffer: array [0 .. CReadBuffer] of Char;
-  pCmdLine: array [0..MAX_PATH] of Char;
-  dRead: DWord;
-  dRunning: DWord;
-begin
-  saSecurity.nLength := SizeOf(TSecurityAttributes);
-  saSecurity.bInheritHandle := True;
-  saSecurity.lpSecurityDescriptor := nil;
-
-  if CreatePipe(hRead, hWrite, @saSecurity, 0) then begin
-    try
-      FillChar(suiStartup, SizeOf(TStartupInfo), #0);
-      suiStartup.cb := SizeOf(TStartupInfo);
-      suiStartup.hStdInput := hRead;
-      suiStartup.hStdOutput := hWrite;
-      suiStartup.hStdError := hWrite;
-      suiStartup.dwFlags := STARTF_USESTDHANDLES or STARTF_USESHOWWINDOW;
-      suiStartup.wShowWindow := SW_HIDE;
-
-      StrPCopy(pCmdLine, aCommandLine);
-      if CreateProcess(nil, pCmdLine, @saSecurity, @saSecurity, True, NORMAL_PRIORITY_CLASS, nil, nil, suiStartup, piProcess) then begin
-        try
-          repeat
-            dRunning := WaitForSingleObject(piProcess.hProcess, 100);
-            Application.ProcessMessages();
-            repeat
-              dRead := 0;
-              ReadFile(hRead, pBuffer[0], CReadBuffer, dRead, nil);
-              pBuffer[dRead] := #0;
-              OemToChar(pBuffer, dBuffer);
-              aStrings.Add(string(pBuffer));
-            until dRead < CReadBuffer;
-          until dRunning <> WAIT_TIMEOUT;
-          GetExitCodeProcess(piProcess.hProcess, Result);
-        finally
-          CloseHandle(piProcess.hProcess);
-          CloseHandle(piProcess.hThread);
-        end;
-      end else
-        RaiseLastOSError;
-
-    finally
-      CloseHandle(hRead);
-      CloseHandle(hWrite);
-    end;
-  end else
-    RaiseLastOSError;
 end;
 
 procedure TfrmMain.GenerateLODTES5(const aWorldspace: IwbMainRecord; const LODTypes: TLODTypes);
@@ -5048,8 +5073,16 @@ begin
              REFRs[i].ElementEditValues['DATA\Rotation\Y'] + #9 +
              REFRs[i].ElementEditValues['DATA\Rotation\Z'] + #9 +
              s + #9 + slCache[k];
-
         slLog.Add(s);
+
+        if ForceTerminate then
+          Abort;
+        if StartTick + 500 < GetTickCount then begin
+          Caption := 'Building Objects LOD: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(i) +
+            ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+          Application.ProcessMessages;
+          StartTick := GetTickCount;
+        end;
       end;
 
       // nothing to export for LODGen
@@ -5058,15 +5091,25 @@ begin
       else begin
         slLog.Insert(0, aWorldspace.EditorID);
         slLog.Insert(1, Format('%d %d', [Lodset.SWCell.x, Lodset.SWCell.y]));
-        slLog.Insert(2, aWorldspace.ElementEditValues['TNAM']);
-        slLog.Insert(3, aWorldspace.ElementEditValues['UNAM']);
+        slLog.Insert(2, aWorldspace.WinningOverride.ElementEditValues['TNAM']);
+        slLog.Insert(3, aWorldspace.WinningOverride.ElementEditValues['UNAM']);
         slLog.Insert(4, wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects');
         s := wbScriptsPath + 'lodgen.txt';
+        PostAddMessage('[' + aWorldspace.EditorID + '] Saving LODGen data to ' + s);
         slLog.SaveToFile(s);
+
         s := Format(wbScriptsPath + 'LODGen.exe "%s" "%s"', [s, ExcludeTrailingPathDelimiter(wbDataPath)]);
         s := s + ' --dontFixTangents --removeUnseenFaces';
-        s := s + ' --dontGenerateTangents --dontGenerateVertexColors';
-        k := ExecuteCaptureConsoleOutput(s, mmoMessages.Lines);
+        if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoTangents', False) then
+          s := s + ' --dontGenerateTangents';
+        if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False) then
+          s := s + ' --dontGenerateVertexColors';
+
+        Caption := 'Running LODGen, press ESC to abort';
+        PostAddMessage('[' + aWorldspace.EditorID + '] Running ' + s);
+        Application.ProcessMessages;
+
+        k := ExecuteCaptureConsoleOutput(s);
         if k <> 0 then
           raise Exception.Create('LODGen error, exit code ' + IntToStr(k));
         PostAddMessage('[' + aWorldspace.EditorID + '] Objects LOD Done.');
@@ -7670,22 +7713,47 @@ var
   Group       : IwbContainerElementRef;
   MainRecord  : IwbMainRecord;
   Worldspaces : TDynMainRecords;
+  lodTypes    : TLODTypes;
+  Section     : string;
 begin
-  Selection := vstNav.GetSortedSelection(True);
-  if Length(Selection) < 1 then
-    Exit;
+  // called from menu, xEdit mode, worldspaces from selection
+  if Assigned(Sender) then begin
+    Selection := vstNav.GetSortedSelection(True);
+    if Length(Selection) < 1 then
+      Exit;
 
-  Worldspaces := nil;
-  for i := Low(Selection) to High(Selection) do begin
-    NodeData := vstNav.GetNodeData(Selection[i]);
-    if Supports(NodeData.Element, IwbFile, _File) then begin
+    Worldspaces := nil;
+    for i := Low(Selection) to High(Selection) do begin
+      NodeData := vstNav.GetNodeData(Selection[i]);
+      if Supports(NodeData.Element, IwbFile, _File) then begin
+        if Supports(_File.GroupBySignature['WRLD'], IwbContainerElementRef, Group) then begin
+          for j := 0 to Pred(Group.ElementCount) do
+            if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
+              // TES5LODGen works only for worldspaces with lodsettings file
+              if (wbGameMode in [gmTES5]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+                Continue;
+              if Mainrecord.Signature = 'WRLD' then begin
+                SetLength(Worldspaces, Succ(Length(Worldspaces)));
+                Worldspaces[High(Worldspaces)] := MainRecord;
+              end;
+            end;
+        end;
+      end;
+    end;
+  end
+
+  // called manually, LODGen mode, worldspaces from all loaded plugins
+  else begin
+    Worldspaces := nil;
+    for i := Low(Files) to High(Files) do begin
+      _File := Files[i];
       if Supports(_File.GroupBySignature['WRLD'], IwbContainerElementRef, Group) then begin
         for j := 0 to Pred(Group.ElementCount) do
           if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
-            // TES5LODGen works only for worldspaces with lodsettings file
-            if (wbGameMode in [gmTES5]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
-              Continue;
             if Mainrecord.Signature = 'WRLD' then begin
+              // TES5LODGen works only for worldspaces with lodsettings file
+              if (wbGameMode in [gmTES5]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+                Continue;
               SetLength(Worldspaces, Succ(Length(Worldspaces)));
               Worldspaces[High(Worldspaces)] := MainRecord;
             end;
@@ -7710,33 +7778,92 @@ begin
   if Length(Worldspaces) = 0 then
     Exit;
 
-  with TfrmFileSelect.Create(Self) do try
-    Width := 450;
-    for i := Low(WorldSpaces) to High(WorldSpaces) do
-      CheckListBox1.AddItem(WorldSpaces[i].Name, TObject(Integer(WorldSpaces[i])));
-    CheckListBox1.Sorted := True;
-    Caption := 'Select Worldspaces';
-    ShowModal;
+  // TES4LODGen
+  if wbGameMode = gmTES4 then begin
+    with TfrmFileSelect.Create(Self) do try
+      Width := 450;
+      for i := Low(WorldSpaces) to High(WorldSpaces) do
+        CheckListBox1.AddItem(WorldSpaces[i].Name, TObject(Integer(WorldSpaces[i])));
+      CheckListBox1.Sorted := True;
+      Caption := 'Select Worldspaces';
+      ShowModal;
 
-    wbStartTime := Now;
-    Self.Enabled := False;
-    try
-      for i := 0 to Pred(CheckListBox1.Count) do
-        if CheckListBox1.Checked[i] then
-          if Sender = mniNavGenerateLOD then begin
-            if wbGameMode = gmTES4 then
-              GenerateLODTES4(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])))
-            else if wbGameMode = gmTES5 then
-              GenerateLODTES5(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])), [lodObjects]);
-          end else
-            SplitLOD(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])));
+      wbStartTime := Now;
+      Self.Enabled := False;
+      try
+        for i := 0 to Pred(CheckListBox1.Count) do
+          if CheckListBox1.Checked[i] then
+            if Sender = mniNavGenerateLOD then begin
+              if wbGameMode = gmTES4 then
+                GenerateLODTES4(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])))
+              else if wbGameMode = gmTES5 then
+                GenerateLODTES5(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])), [lodObjects]);
+            end else
+              SplitLOD(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])));
+      finally
+        Self.Enabled := True;
+        Self.Caption := Application.Title
+      end;
     finally
-      Self.Enabled := True;
-      Self.Caption := Application.Title
+      Free;
     end;
-  finally
-    Free;
   end;
+
+  // TES5LODGen
+  if wbGameMode = gmTES5 then begin
+    with TfrmLODGen.Create(Self) do try
+      j := -1;
+      for i := Low(WorldSpaces) to High(WorldSpaces) do begin
+        clbWorldspace.AddItem(WorldSpaces[i].Name, TObject(Integer(WorldSpaces[i])));
+        if WorldSpaces[i].LoadOrderFormID = $0000003C then
+          j := i;
+      end;
+
+      if j >= 0 then begin
+        clbWorldspace.Items.Move(j, 0);
+        clbWorldspace.Checked[0] := True;
+      end;
+
+      Section := wbAppName + ' LOD Options';
+      cbObjectsLOD.Checked := Settings.ReadBool(Section, 'ObjectsLOD', True);
+      cbTreesLOD.Checked := Settings.ReadBool(Section, 'TreesLOD', True);
+      cbNoTangents.Checked := Settings.ReadBool(Section, 'ObjectsNoTangents', False);
+      cbNoVertexColors.Checked := Settings.ReadBool(Section, 'ObjectsNoVertexColors', False);
+
+      // hidden option to split trees lod atlases when Shift is pressed
+      if GetAsyncKeyState(VK_SHIFT) <> 0 then begin
+        SplitTreesLOD := SplitLOD;
+        btnSplitTreesLOD.Visible := True;
+      end;
+
+      if ShowModal <> mrOk then
+        Exit;
+
+      Settings.WriteBool(Section, 'ObjectsLOD', cbObjectsLOD.Checked);
+      Settings.WriteBool(Section, 'TreesLOD', cbTreesLOD.Checked);
+      Settings.WriteBool(Section, 'ObjectsNoTangents', cbNoTangents.Checked);
+      Settings.WriteBool(Section, 'ObjectsNoVertexColors', cbNoVertexColors.Checked);
+      Settings.UpdateFile;
+
+      lodTypes := [];
+      if cbObjectsLOD.Checked then lodTypes := lodTypes + [lodObjects];
+      if cbTreesLOD.Checked then lodTypes := lodTypes + [lodTrees];
+
+      wbStartTime := Now;
+      Self.Enabled := False;
+      try
+        for i := 0 to Pred(clbWorldspace.Count) do
+          if clbWorldspace.Checked[i] then
+            GenerateLODTES5(IwbMainRecord(Integer(clbWorldspace.Items.Objects[i])), lodTypes);
+      finally
+        Self.Enabled := True;
+        Self.Caption := Application.Title
+      end;
+    finally
+      Free;
+    end;
+  end;
+
 end;
 
 procedure TfrmMain.mniNavRaceLVLIsClick(Sender: TObject);
@@ -10407,9 +10534,7 @@ begin
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
   mniNavApplyScript.Visible := mniNavCheckForErrors.Visible;
-
   mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmTES5]);
-  mniNavSplitLOD.Visible := mniNavCompareTo.Visible and (wbGameMode = gmTES5);
 
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;
