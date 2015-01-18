@@ -421,7 +421,7 @@ begin
     wbToolName    := 'MasterRestore';
   end else if isMode('LODgen') then begin
     wbToolMode    := tmLODgen;
-    wbToolName    := 'LODgen';
+    wbToolName    := 'LODGen';
     wbEditAllowed := False;
     wbDontSave    := True;
   end else if isMode('Script') then begin
