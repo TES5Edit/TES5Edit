@@ -2944,42 +2944,41 @@ procedure TfrmMain.DoRunScript;
     end;
   end;
 
-var
-  s: string;
 begin
-  if wbFindCmdLineParam('script', s) and (Length(s) > 0) then begin
+  if wbScriptToRun = '' then
+    wbScriptToRun := wbProgramPath + wbAppName + 'Script.pas';
+
+  {if wbFindCmdLineParam('script', s) and (Length(s) > 0) then begin
     // relative script name, use app's folder
     if not TPath.IsPathRooted(s) then
       s := wbProgramPath + s;
   end else
-    s := wbProgramPath + wbAppName + 'Script.pas';
+    s := wbProgramPath + wbAppName + 'Script.pas';}
 
-  if not FileExists(s) then
+  if not FileExists(wbScriptToRun) then
     with TOpenDialog.Create(Self) do try
       Title := 'Select a script to execute';
       Filter := 'Script files (*.pas)|*.pas';
       InitialDir := wbProgramPath;
       if Execute then
-        s := FileName;
+        wbScriptToRun := FileName;
     finally
       Free;
     end;
 
-  if FileExists(s) then begin
-    wbScriptsPath := ExtractFilePath(s);
-
+  if FileExists(wbScriptToRun) then begin
+    wbScriptsPath := ExtractFilePath(wbScriptToRun);
     with TStringList.Create do try
-      LoadFromFile(s);
-      PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] Script execution: running script ' + s);
+      LoadFromFile(wbScriptToRun);
       SelectRootNodes(vstNav);
       ApplyScript(Text);
     finally
       Free;
-      PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] Script execution: finished (you can close this application now)');
     end;
-
   end else
-    PostAddMessage('Could not open script (you can close this application now): ' + s);
+    PostAddMessage('Could not open script: ' + wbScriptToRun);
+
+  PostAddMessage('You can close this application now.');
 end;
 
 procedure TfrmMain.DoInit;
