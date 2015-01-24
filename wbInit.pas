@@ -24,6 +24,7 @@ uses
 var
   wbApplicationTitle   : string;
   wbScriptsPath        : string;
+  wbScriptToRun        : string;
   wbBackupPath         : string;
   wbTempPath           : string;
   wbMyGamesTheGamePath : string;
@@ -60,6 +61,7 @@ uses
   ShlObj,
   IOUtils,
   IniFiles,
+  wbHelpers,
   wbInterface,
   wbImplementation,
   wbDefinitionsFNV,
@@ -359,7 +361,9 @@ begin
 
   wbParamIndex := ParamIndex;
   if not wbFindCmdLineParam('P', wbPluginsFileName) then
-    if not wbFindNextValidCmdLineFileName(wbParamIndex, wbPluginsFileName) or wbCheckForValidExtension(wbPluginsFileName) then begin
+    if not (wbFindNextValidCmdLineFileName(wbParamIndex, wbPluginsFileName) and SameText(ExtractFileExt(wbPluginsFileName), '.txt'))
+       or wbCheckForValidExtension(wbPluginsFileName)
+    then begin
       wbParamIndex := ParamIndex;
       wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
       if wbPluginsFileName = '' then begin
@@ -385,12 +389,41 @@ begin
   wbFindCmdLineParam('R', wbLogFile);
 end;
 
+var
+  wbForcedModes: string;
+
 function isMode(aMode: String): Boolean;
 var
   s: string;
 begin
-  Result := FindCmdLineSwitch(aMode) or wbFindCmdLineParam(aMode, s) or (Pos(Uppercase(aMode), UpperCase(ExtractFileName(ParamStr(0))))<>0);
+  Result := (Pos(Uppercase(aMode), UpperCase(wbForcedModes)) <> 0) or
+            FindCmdLineSwitch(aMode) or
+            wbFindCmdLineParam(aMode, s) or
+            (Pos(Uppercase(aMode), UpperCase(ExtractFileName(ParamStr(0)))) <> 0);
 end;
+
+// Force app modes
+function CheckForcedMode: Boolean;
+var
+  s: string;
+  i: integer;
+begin
+  Result := False;
+  // there is a game specific script provided to execute
+  i := 1;
+  if wbFindCmdLineParam('script', s) or wbFindNextValidCmdLineFileName(i, s) then begin
+    if not FileExists(s) then
+      Exit;
+    wbScriptToRun := s;
+    s := ExtractFileExt(s);
+    i := Pos(UpperCase('pas'), UpperCase(s));
+    if (i > 0) and (i = Length(s) - 2) then begin
+      wbForcedModes := Copy(s, 2, Length(s) - 4) + ',script';
+      Result := True;
+    end;
+  end;
+end;
+
 
 procedure wbDoInit;
 var
@@ -408,6 +441,7 @@ begin
 
   wbEditAllowed := True;
   wbDontSave    := False;
+  CheckForcedMode;
   if isMode('View') then begin
     wbToolMode    := tmView;
     wbToolName    := 'View';
@@ -419,7 +453,7 @@ begin
   end else if isMode('MasterRestore') then begin
     wbToolMode    := tmMasterRestore;
     wbToolName    := 'MasterRestore';
-  end else if isMode('LODgen') then begin
+  end else if isMode('LODGen') then begin
     wbToolMode    := tmLODgen;
     wbToolName    := 'LODGen';
     wbEditAllowed := False;
@@ -443,7 +477,7 @@ begin
     wbToolMode    := tmEdit;
     wbToolName    := 'Edit';
   end else begin
-    ShowMessage('Application name must contain Edit, View, LODgen, MasterUpdate, MasterRestore, setESM, clearESM or sortAndCleanMasters to select mode.');
+    ShowMessage('Application name must contain Edit, View, LODGen, MasterUpdate, MasterRestore, setESM, clearESM or sortAndCleanMasters to select mode.');
     Exit;
   end;
 
@@ -514,23 +548,23 @@ begin
 
   DoInitPath(wbParamIndex);
 
-  if isMode('FNV') then begin
+  if wbGameMode = gmFNV then begin
     wbVWDInTemporary := True;
     wbLoadBSAs := False;
     ReadSettings;
-  end else if isMode('FO3') then begin
+  end else if wbGameMode = gmFO3 then begin
     wbVWDInTemporary := True;
     wbLoadBSAs := False;
     ReadSettings;
-  end else if isMode('TES3') then begin
+  end else if wbGameMode = gmTES3 then begin
     wbLoadBSAs := False;
     wbAllowInternalEdit := false;
     ReadSettings;
-  end else if isMode('TES4') then begin
+  end else if wbGameMode = gmTES4 then begin
     wbLoadBSAs := True;
     wbAllowInternalEdit := false;
     ReadSettings;
-  end else if isMode('TES5') then begin
+  end else if wbGameMode = gmTES5 then begin
     wbVWDInTemporary := True;
     wbLoadBSAs := True; // localization won't work otherwise
     wbHideIgnored := False; // to show Form Version
@@ -617,7 +651,7 @@ begin
   end else if wbToolMode = tmScript then begin
     wbIKnowWhatImDoing := True;
     wbLoadBSAs := True;
-    wbBuildRefs := False;
+    wbBuildRefs := True;
   end else if wbToolMode in [tmMasterUpdate, tmESMify] then begin
     wbIKnowWhatImDoing := True;
     wbAllowInternalEdit := False;
@@ -652,6 +686,11 @@ begin
     wbFixupPGRD := True;
 
   wbShouldLoadMOHookFile := wbFindCmdLineParam('moprofile', wbMOProfile);
+
+  if (wbToolMode = tmEdit) and not wbIsAssociatedWithExtension('.' + wbAppName + 'pas') then try
+    wbAssociateWithExtension('.' + wbAppName + 'pas', wbAppName + 'Script', wbAppName + wbToolName + ' script');
+  except end;
+
 end;
 
 initialization
