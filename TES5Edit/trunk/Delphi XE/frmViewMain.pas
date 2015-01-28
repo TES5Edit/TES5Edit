@@ -5122,7 +5122,7 @@ begin
         PostAddMessage('[' + aWorldspace.EditorID + '] Saving LODGen data to ' + s);
         slExport.SaveToFile(s);
 
-        s := Format(wbScriptsPath + 'LODGen.exe "%s" "%s"', [s, ExcludeTrailingPathDelimiter(wbDataPath)]);
+        s := Format(wbScriptsPath + 'LODGen.exe "%s"', [s]);
         s := s + ' --dontFixTangents --removeUnseenFaces';
         if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoTangents', False) then
           s := s + ' --dontGenerateTangents';
