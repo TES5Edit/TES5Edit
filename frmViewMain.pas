@@ -558,6 +558,7 @@ type
     function CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord): IwbMainRecord;
     function CheckForErrors(const aIndent: Integer; const aElement: IwbElement): Boolean;
 
+    function AddNewFileName(aFileName: string): IwbFile;
     function AddNewFile(out aFile: IwbFile): Boolean;
 
     procedure SaveChanged;
@@ -1018,37 +1019,46 @@ begin
     tbsMessages.Highlighted := True;
 end;
 
+function TfrmMain.AddNewFileName(aFileName: string): IwbFile;
+var
+  LoadOrder : Integer;
+begin
+  Result := nil;
+
+  if FileExists(wbDataPath + aFileName) then begin
+    ShowMessage('A file of that name exists already.');
+    Exit;
+  end;
+
+  LoadOrder := 0;
+  if Length(Files) > 0 then
+    LoadOrder := Succ(Files[High(Files)].LoadOrder);
+
+  if LoadOrder > 254 then begin
+    ShowMessage('Maximum plugins count already reached. Adding 1 more would exceed the maximum index of 254');
+    Exit;
+  end;
+
+  Result := wbNewFile(wbDataPath + aFileName, LoadOrder);
+  SetLength(Files, Succ(Length(Files)));
+  Files[High(Files)] := Result;
+  vstNav.AddChild(nil, Pointer(Result));
+  Result._AddRef;
+end;
+
 function TfrmMain.AddNewFile(out aFile: IwbFile): Boolean;
 var
-  s                           : string;
-  LoadOrder                   : Integer;
+  s: string;
 begin
   aFile := nil;
   Result := False;
   s := '';
   if InputQuery('New Module File', 'Filename without extension:', s) then begin
-    Result := True;
     if s = '' then
       Exit;
     s := s + '.esp';
-    if FileExists(wbDataPath + s) then begin
-      ShowMessage('A file of that name exists already.');
-      Exit;
-    end;
-
-    LoadOrder := 0;
-    if Length(Files) > 0 then
-      LoadOrder := Succ(Files[High(Files)].LoadOrder);
-
-    if LoadOrder>254 then begin
-      ShowMessage('Maximum plugins count already reached. Adding 1 more would exceed the maximum index of 254');
-      Exit;
-    end;
-    aFile := wbNewFile(wbDataPath + s, LoadOrder);
-    SetLength(Files, Succ(Length(Files)));
-    Files[High(Files)] := aFile;
-    vstNav.AddChild(nil, Pointer(aFile));
-    aFile._AddRef;
+    aFile := AddNewFileName(s);
+    Result := Assigned(aFile);
   end;
 end;
 
@@ -4725,7 +4735,7 @@ var
   Res                 : TDynResources;
   PTree               : PwbLodTES5Tree;
   ini                 : TMemIniFile;
-  slIni, slLog, slCache : TStringList;
+  slIni, slLog, slCache, slRefs, slExport, sl: TStringList;
   bsIni               : TBytesStream;
   RefPos, RefRot      : TwbVector;
   RefCell, RefBlock   : TwbGridCell;
@@ -4994,7 +5004,8 @@ begin
     StartTick := GetTickCount;
 
     slCache := TStringList.Create;
-    slLog := TStringList.Create;
+    slRefs := TStringList.Create;
+    slExport := TStringList.Create;
     try
     try
       for i := Low(REFRs) to High(REFRs) do begin
@@ -5072,7 +5083,7 @@ begin
              REFRs[i].ElementEditValues['DATA\Rotation\Y'] + #9 +
              REFRs[i].ElementEditValues['DATA\Rotation\Z'] + #9 +
              s + #9 + slCache[k];
-        slLog.Add(s);
+        slRefs.Add(s);
 
         if ForceTerminate then
           Abort;
@@ -5085,17 +5096,31 @@ begin
       end;
 
       // nothing to export for LODGen
-      if slLog.Count = 0 then
+      if slRefs.Count = 0 then
         PostAddMessage('<Note: Can not build Objects LOD for ' + aWorldspace.EditorID + ', no valid references found>')
       else begin
-        slLog.Insert(0, aWorldspace.EditorID);
-        slLog.Insert(1, Format('%d %d', [Lodset.SWCell.x, Lodset.SWCell.y]));
-        slLog.Insert(2, aWorldspace.WinningOverride.ElementEditValues['TNAM']);
-        slLog.Insert(3, aWorldspace.WinningOverride.ElementEditValues['UNAM']);
-        slLog.Insert(4, wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects');
+        slExport.Add('Worldspace=' + aWorldspace.EditorID);
+        slExport.Add('CellSW=' + Format('%d %d', [Lodset.SWCell.x, Lodset.SWCell.y]));
+        slExport.Add('TextureDiffuseHD=' + aWorldspace.WinningOverride.ElementEditValues['TNAM']);
+        slExport.Add('TextureNormalHD=' + aWorldspace.WinningOverride.ElementEditValues['UNAM']);
+        slExport.Add('TextureAtlasMap=');
+        slExport.Add('PathData=' + wbDataPath);
+        slExport.Add('PathOutput=' + wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects');
+        // list of BSAs
+        if Assigned(wbContainerHandler) then begin
+          sl := TStringList.Create;
+          try
+            wbContainerHandler.ContainerList(sl);
+            for i := 0 to sl.Count - 2 do
+              slExport.Add('Resource=' + sl[i]);
+          finally
+            sl.Free;
+          end;
+        end;
+        slExport.AddStrings(slRefs);
         s := wbScriptsPath + 'lodgen.txt';
         PostAddMessage('[' + aWorldspace.EditorID + '] Saving LODGen data to ' + s);
-        slLog.SaveToFile(s);
+        slExport.SaveToFile(s);
 
         s := Format(wbScriptsPath + 'LODGen.exe "%s" "%s"', [s, ExcludeTrailingPathDelimiter(wbDataPath)]);
         s := s + ' --dontFixTangents --removeUnseenFaces';
@@ -5118,7 +5143,8 @@ begin
     end;
     finally
       slCache.Free;
-      slLog.Free;
+      slRefs.Free;
+      slExport.Free;
     end;
   end;
 
@@ -14147,6 +14173,10 @@ begin
   if SameText(Identifier, 'AddNewFile') and (Args.Count = 0) then begin
     AddNewFile(_File);
     Value := _File;
+    Done := True;
+  end else
+  if SameText(Identifier, 'AddNewFileName') and (Args.Count = 1) then begin
+    Value := AddNewFileName(Args.Values[0]);
     Done := True;
   end else
   if SameText(Identifier, 'AddRequiredElementMasters') and (Args.Count = 3) then begin

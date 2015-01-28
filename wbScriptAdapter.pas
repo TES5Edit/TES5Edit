@@ -271,6 +271,15 @@ begin
     Value := Element.BaseName;
 end;
 
+procedure IwbElement_DisplayName(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Value := Element.DisplayName;
+end;
+
 function IntToEsState(anInt: Integer): TwbElementState;
 begin
   case anInt of
@@ -1655,6 +1664,7 @@ begin
     AddFunction(cUnit, 'Name', IwbElement_Name, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ShortName', IwbElement_ShortName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'BaseName', IwbElement_BaseName, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'DisplayName', IwbElement_DisplayName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'Path', IwbElement_Path, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'FullPath', IwbElement_FullPath, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'PathName', IwbElement_PathName, 1, [varEmpty], varEmpty);
