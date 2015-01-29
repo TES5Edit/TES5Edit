@@ -1576,7 +1576,7 @@ procedure Misc_wbFindREFRsByBase(var Value: Variant; Args: TJvInterpreterArgs);
 var
   MainRecord          : IwbMainRecord;
   REFRs               : TDynMainRecords;
-  i, j, Count         : Integer;
+  i, j, Count, Opt    : Integer;
   lst                 : TList;
   BaseSignatures      : string;
 begin
@@ -1604,10 +1604,13 @@ begin
   end;
 
   BaseSignatures := string(Args.Values[1]);
-  lst := TList(V2O(Args.Values[2]));
+  Opt := Integer(Args.Values[2]);
+  lst := TList(V2O(Args.Values[3]));
   for i := Succ(Low(REFRs)) to High(REFRs) do begin
-    if not (REFRs[i].IsDeleted or REFRs[i].IsInitiallyDisabled{ or REFRs[i].ElementExists['XESP']})
-       and (Assigned(REFRs[i].BaseRecord) and (Pos(REFRs[i].BaseRecord.Signature, BaseSignatures) > 0))
+    if  not ((Opt and 1 <> 0) and REFRs[i].IsDeleted)
+    and not ((Opt and 2 <> 0) and REFRs[i].IsInitiallyDisabled)
+    and not ((Opt and 4 <> 0) and REFRs[i].ElementExists['XESP'])
+    and (Assigned(REFRs[i].BaseRecord) and (Pos(REFRs[i].BaseRecord.Signature, BaseSignatures) <> 0))
     then
       lst.Add(Pointer(REFRs[i]));
   end;
@@ -1886,7 +1889,7 @@ begin
     AddFunction(cUnit, 'wbSHA1File', Misc_wbSHA1File, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbMD5Data', Misc_wbMD5Data, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbMD5File', Misc_wbMD5File, 1, [varEmpty], varEmpty);
-    AddFunction(cUnit, 'wbFindREFRsByBase', Misc_wbFindRefrsByBase, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbFindREFRsByBase', Misc_wbFindRefrsByBase, 4, [varEmpty, varEmpty, varEmpty], varEmpty);
   end;
 end;
 
