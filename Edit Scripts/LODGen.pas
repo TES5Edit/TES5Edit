@@ -154,9 +154,6 @@ var
   stat: IInterface;
   s, mFull, m4, m8, m16: string;
 begin
-  if ElementExists(e, 'XESP') then
-    Exit;
-  
   stat := BaseRecord(e);
   statfid := GetLoadOrderFormID(stat);
   // check if to skip
@@ -240,7 +237,7 @@ var
 begin
   lst := TList.Create;
   AddMessage('Gathering references...');
-  wbFindREFRsByBase(e, 'STAT', lst);
+  wbFindREFRsByBase(e, 'STAT', 5, lst);
   AddMessage('Filtering for valid LOD references...');
   for i := 0 to lst.Count - 1 do
     ProcessReference(ObjectToElement(lst[i]));
@@ -1072,7 +1069,6 @@ begin
   lodgenexe := ScriptsPath + 'lodgen.exe';
   AddMessage('Executing LODGen...');
   AddMessage(lodgenexe + LODGenParams);
-  Exit;
   CreateProcessWait(lodgenexe, LODGenParams, SW_SHOW, 0);
 end;
 

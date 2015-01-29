@@ -817,7 +817,8 @@ end;
 
 function MakeDataFileName(FileName, DataPath: String): String;
 begin
-  if Length(FileName) < 5 then
+  // MO uses 3 chars aliases
+  if Length(FileName) < 3 then
     Result := ''
   else if not ((FileName[1] = '\') or (FileName[2] = ':')) then
     Result := DataPath + FileName
