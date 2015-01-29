@@ -4265,7 +4265,8 @@ begin
   SaveChanged;
 
   if Assigned(Settings) then begin
-    Settings.WriteInteger(Name, 'WindowState', Integer(WindowState));
+    if WindowState <> wsMinimized then
+      Settings.WriteInteger(Name, 'WindowState', Integer(WindowState));
     if WindowState = wsNormal then begin
       Settings.WriteInteger(Name, 'Left', Left);
       Settings.WriteInteger(Name, 'Top', Top);

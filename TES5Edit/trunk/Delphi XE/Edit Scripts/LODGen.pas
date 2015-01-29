@@ -237,7 +237,7 @@ var
 begin
   lst := TList.Create;
   AddMessage('Gathering references...');
-  wbFindREFRsByBase(e, 'STAT', 5, lst);
+  wbFindREFRsByBase(e, 'STAT', 7, lst);
   AddMessage('Filtering for valid LOD references...');
   for i := 0 to lst.Count - 1 do
     ProcessReference(ObjectToElement(lst[i]));
