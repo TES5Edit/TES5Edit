@@ -4547,9 +4547,11 @@ var
   LodSet          : TwbLodSettings;
   Res             : TDynResources;
   BTT             : TwbLodTES5TreeBlock;
-  i, j, r, k      : Integer;
+  i, j, n, r, k   : Integer;
+  LstIndex        : Integer;
+  bFound          : Boolean;
   slCont, slList  : TwbFastStringList;
-  TreeRecords     : array of IwbMainRecord;
+  TreeRecords     : array of array of IwbMainRecord;
   loFiles         : array [0..254] of IwbFile;
   Ref             : IwbMainRecord;
   SplitPath       : string;
@@ -4596,6 +4598,7 @@ begin
       slList.Duplicates := dupIgnore;
       slList.Sorted := True;
 
+      // array of found TREE records indexed by LST index
       SetLength(TreeRecords, Lst.TreesListCount);
 
       // list of loaded plugins by load order
@@ -4612,19 +4615,29 @@ begin
         BTT.LoadFromData(Res[High(Res)].GetData);
         // for each tree type in btt file
         for j := Low(BTT.Types) to High(BTT.Types) do
-          if not Assigned(TreeRecords[BTT.Types[j].Index]) then
-            // for each reference of tree type
-            for r := 0 to BTT.Types[j].Count - 1 do begin
-              // a mod the reference is supposed to be from
-              k := BTT.Refs[j][r].RefFormID shr 24;
-              if not Assigned(loFiles[k]) then
-                Continue;
-              Ref := loFiles[k].RecordByFormID[loFiles[k].LoadOrderFormIDtoFileFormID(BTT.Refs[j][r].RefFormID), False];
-              if Assigned(Ref) and Assigned(Ref.BaseRecord) and (Ref.BaseRecord.Signature = 'TREE') then begin
-                TreeRecords[BTT.Types[j].Index] := Ref.BaseRecord.MasterOrSelf;
-                Break;
+          // for each reference of tree type
+          for r := 0 to BTT.Types[j].Count - 1 do begin
+            // a mod the reference is supposed to be from
+            k := BTT.Refs[j][r].RefFormID shr 24;
+            if not Assigned(loFiles[k]) then
+              Continue;
+            Ref := loFiles[k].RecordByFormID[loFiles[k].LoadOrderFormIDtoFileFormID(BTT.Refs[j][r].RefFormID), False];
+            // found a matching reference of TREE
+            if Assigned(Ref) and Assigned(Ref.BaseRecord) and (Ref.BaseRecord.Signature = 'TREE') then begin
+              LstIndex := BTT.Types[j].Index;
+              // check if we already associated that TREE record with LST index
+              bFound := False;
+              for n := 0 to Pred(Length(TreeRecords[LstIndex])) do
+                if TreeRecords[LstIndex][n].LoadOrderFormID = Ref.BaseRecord.LoadOrderFormID then begin
+                  bFound := True;
+                  Break;
+                end;
+              if not bFound then begin
+                SetLength(TreeRecords[LstIndex], Succ(Length(TreeRecords[LstIndex])));
+                TreeRecords[LstIndex][Pred(Length(TreeRecords[LstIndex]))] := Ref.BaseRecord.MasterOrSelf;
               end;
             end;
+          end;
       end;
     finally
       slCont.Free;
@@ -4634,34 +4647,37 @@ begin
     SplitPath := wbOutputPath + 'Textures\Terrain\LODGen\AtlasSplit_' + ChangeFileExt(ExtractFileName(Lst.AtlasFileName), '') + '\';
 
     for i := 0 to Pred(Lst.TreesListCount) do with Lst.TreesList[i] do begin
-      if Assigned(TreeRecords[Index]) then
-        TreeFileName := Format('%s\%s_%s.dds', [
-          TreeRecords[Index]._File.FileName,
-          ChangeFileExt(ExtractFileName(TreeRecords[Index].WinningOverride.ElementEditValues['Model\MODL']), ''),
-          IntToHex(TreeRecords[Index].FormID and $FFFFFF, 8)
-        ])
-      else
-        TreeFileName := Format('Tree Type %d.dds', [Index]);
-      TreeFileName := SplitPath + TreeFileName;
+      for n := Low(TreeRecords[Index]) to High(TreeRecords[Index]) do begin
+        if Length(TreeRecords[Index]) > 0 then
+          TreeFileName := Format('%s\%s_%s.dds', [
+            TreeRecords[Index][n]._File.FileName,
+            ChangeFileExt(ExtractFileName(TreeRecords[Index][n].WinningOverride.ElementEditValues['Model\MODL']), ''),
+            IntToHex(TreeRecords[Index][n].FormID and $FFFFFF, 8)
+          ])
+        else
+          TreeFileName := Format('Tree Type %d.dds', [Index]);
+        TreeFileName := SplitPath + TreeFileName;
 
-      frmMain.PostAddMessage('[' + TreeFileName + '] Saving billboard texture');
+        frmMain.PostAddMessage('[' + TreeFileName + '] Saving billboard texture');
 
-      ForceDirectories(ExtractFilePath(TreeFileName));
-      Lst.SaveFromAtlas(Index, TreeFileName);
-      ini := TMemIniFile.Create(ChangeFileExt(TreeFileName, '.txt'));
-      try
-        ini.WriteString('LOD', 'Width', FloatToStrF(Width, ffFixed, 99, wbFloatDigits));
-        ini.WriteString('LOD', 'Height', FloatToStrF(Height, ffFixed, 99, wbFloatDigits));
-        if Assigned(TreeRecords[Index]) then
-          ini.WriteString('LOD', 'Model', TreeRecords[Index].WinningOverride.ElementEditValues['Model\MODL']);
-        ini.UpdateFile;
-      finally
-        ini.Free;
+        ForceDirectories(ExtractFilePath(TreeFileName));
+        Lst.SaveFromAtlas(Index, TreeFileName);
+        ini := TMemIniFile.Create(ChangeFileExt(TreeFileName, '.txt'));
+        try
+          ini.WriteString('LOD', 'Width', FloatToStrF(Width, ffFixed, 99, wbFloatDigits));
+          ini.WriteString('LOD', 'Height', FloatToStrF(Height, ffFixed, 99, wbFloatDigits));
+          if Length(TreeRecords[Index]) > 0 then
+            ini.WriteString('LOD', 'Model', TreeRecords[Index][n].WinningOverride.ElementEditValues['Model\MODL']);
+          ini.UpdateFile;
+        finally
+          ini.Free;
+        end;
       end;
     end;
      frmMain.PostAddMessage('[Split atlas] Done.');
   finally
     Lst.Free;
+    Caption := Application.Title;
   end;
 end;
 
@@ -4885,8 +4901,11 @@ begin
               try
                 slIni.LoadFromStream(bsIni);
                 ini.SetStrings(slIni);
-                PTree^.Width := ini.ReadFloat('LOD', 'Width', PTree^.Width);
-                PTree^.Height := ini.ReadFloat('LOD', 'Height', PTree^.Height);
+                // don't read Width and Height from ini if they are 0
+                if not SameValue(ini.ReadFloat('LOD', 'Width', 0.0), 0.0) then
+                  PTree^.Width := ini.ReadFloat('LOD', 'Width', PTree^.Width);
+                if not SameValue(ini.ReadFloat('LOD', 'Height', 0.0), 0.0) then
+                  PTree^.Height := ini.ReadFloat('LOD', 'Height', PTree^.Height);
                 PTree^.ShiftX := ini.ReadFloat('LOD', 'ShiftX', 0.0);
                 PTree^.ShiftY := ini.ReadFloat('LOD', 'ShiftY', 0.0);
                 PTree^.ShiftZ := ini.ReadFloat('LOD', 'ShiftZ', 0.0);
@@ -4994,6 +5013,7 @@ begin
     finally
       Lst.Free;
       slLog.Free;
+      Caption := Application.Title;
     end;
   end;
 
@@ -5146,6 +5166,7 @@ begin
       slCache.Free;
       slRefs.Free;
       slExport.Free;
+      Caption := Application.Title;
     end;
   end;
 
@@ -7819,13 +7840,7 @@ begin
       try
         for i := 0 to Pred(CheckListBox1.Count) do
           if CheckListBox1.Checked[i] then
-            if Sender = mniNavGenerateLOD then begin
-              if wbGameMode = gmTES4 then
-                GenerateLODTES4(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])))
-              else if wbGameMode = gmTES5 then
-                GenerateLODTES5(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])), [lodObjects]);
-            end else
-              SplitLOD(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])));
+            GenerateLODTES4(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])))
       finally
         Self.Enabled := True;
         Self.Caption := Application.Title

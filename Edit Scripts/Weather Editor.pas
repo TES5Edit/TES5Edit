@@ -635,7 +635,7 @@ begin
 
       e1 := ElementByName(Weather, 'Directional Ambient Lighting Colors');
       for i := 0 to Pred(CountTimes) do begin
-        e2 := ElementByPath(ElementByIndex(e1, i), 'Directional Ambient\Colors');
+        e2 := ElementByPath(ElementByIndex(e1, i), 'Ambient Colors\Colors');
         for j := 0 to Pred(ElementCount(e2)) do begin
           if j = 0 then begin
             lbl := CreateLabel(sbx, 120 + i*iColorEditorWidth, 8, slColorTimes[i]);
