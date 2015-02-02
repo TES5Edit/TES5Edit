@@ -24,7 +24,9 @@ uses
   SysUtils,
   Graphics,
   ShellAPI,
+  ShlObj,
   IniFiles,
+  Registry,
   wbInterface,
   Imaging,
   ImagingTypes;
@@ -44,18 +46,15 @@ procedure SaveFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
 procedure LoadFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
 function wbDDSDataToBitmap(aData: TBytes; Bitmap: TBitmap): Boolean;
 function wbDDSStreamToBitmap(aStream: TStream; Bitmap: TBitmap): Boolean;
-
 function wbCRC32Data(aData: TBytes): Cardinal;
 function wbCRC32File(aFileName: string): Cardinal;
-
 function wbDecodeCRCList(const aList: string): TDynCardinalArray;
-
-
 function wbSHA1Data(aData: TBytes): string;
 function wbSHA1File(aFileName: string): string;
-
 function wbMD5Data(aData: TBytes): string;
 function wbMD5File(aFileName: string): string;
+function wbIsAssociatedWithExtension(aExt: string): Boolean;
+function wbAssociateWithExtension(aExt, aName, aDescr: string): Boolean;
 
 type
   PnxLeveledListCheckCircularStack = ^TnxLeveledListCheckCircularStack;
@@ -820,7 +819,8 @@ end;
 
 function MakeDataFileName(FileName, DataPath: String): String;
 begin
-  if Length(FileName) < 5 then
+  // MO uses 3 chars aliases
+  if Length(FileName) < 3 then
     Result := ''
   else if not ((FileName[1] = '\') or (FileName[2] = ':')) then
     Result := DataPath + FileName
@@ -843,7 +843,9 @@ begin
     j := j + bsaMissing.Count;
 
   if Assigned(bsaNames) then
-    with TMemIniFile.Create(iniName) do try
+    // TIniFile uses GetPrivateProfileString() to read data, it is virtualized by MO
+    // TMemIniFile reads from string list directly, not supported by MO
+    with TIniFile.Create(iniName) do try
       with TStringList.Create do try
         if wbGameMode in [gmTES4, gmFO3, gmFNV] then
           Text := StringReplace(ReadString('Archive', 'sArchiveList', ''), ',' ,#10, [rfReplaceAll])
@@ -952,6 +954,61 @@ begin
     FreeImage(img);
     ms.Free;
   end;
+end;
+
+function wbIsAssociatedWithExtension(aExt: string): Boolean;
+var
+  Name: string;
+begin
+  Result := False;
+  with TRegistry.Create do try
+    RootKey := HKEY_CURRENT_USER;
+    if OpenKey('\Software\Classes\' + LowerCase(aExt), False) then begin
+      Name := ReadString('');
+      if OpenKey('\Software\Classes\' + Name + '\DefaultIcon', False) then
+        if SameText(ReadString(''), ParamStr(0)) then
+          Result := True;
+    end;
+  finally
+    Free;
+  end;
+end;
+
+function wbAssociateWithExtension(aExt, aName, aDescr: string): Boolean;
+begin
+  Result := False;
+
+  if aExt = '' then
+    Exit
+  else
+    aExt := LowerCase(aExt);
+
+  if aExt[1] <> '.' then
+    aExt := '.' + aExt;
+
+  with TRegistry.Create do try
+    RootKey := HKEY_CURRENT_USER;
+
+    if OpenKey('\Software\Classes\' + aExt, True) then
+      WriteString('', aName)
+    else
+      raise Exception.Create('Not enough rights to modify the registry');
+
+    if OpenKey('\Software\Classes\' + aName, True) then
+      WriteString('', aDescr);
+
+    if OpenKey('\Software\Classes\' + aName + '\DefaultIcon', True) then
+      WriteString('', ParamStr(0));
+
+    if OpenKey('\Software\Classes\' + aName + '\shell\open\command', True) then
+      WriteString('', ParamStr(0) + ' "%1"');
+
+    Result := True;
+  finally
+    Free;
+  end;
+
+  SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nil, nil);
 end;
 
 initialization

@@ -28,6 +28,7 @@ uses
   wbImplementation,
   wbHelpers,
   wbBSA,
+  wbSort,
   wbNifScanner;
 
 implementation
@@ -269,6 +270,15 @@ begin
   Value := '';
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Value := Element.BaseName;
+end;
+
+procedure IwbElement_DisplayName(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Value := Element.DisplayName;
 end;
 
 function IntToEsState(anInt: Integer): TwbElementState;
@@ -1541,6 +1551,71 @@ begin
   Value := wbMD5File(string(Args.Values[0]));
 end;
 
+// find REFR records in child groups by base record signatures
+// that are not deleted or disabled
+procedure Misc_wbFindREFRsByBase(var Value: Variant; Args: TJvInterpreterArgs);
+
+  procedure FindREFRs(const aElement: IwbElement; var REFRs: TDynMainRecords; var Count: Integer);
+  var
+    MainRecord : IwbMainRecord;
+    Container  : IwbContainerElementRef;
+    i          : Integer;
+  begin
+    if Supports(aElement, IwbMainRecord, MainRecord) then begin
+      if MainRecord.Signature = 'REFR' then begin
+        if High(REFRs) < Count then
+          SetLength(REFRs, Length(REFRs) * 2);
+        REFRs[Count] := MainRecord;
+        Inc(Count);
+      end;
+    end else if Supports(aElement, IwbContainerElementRef, Container) then
+      for i := 0 to Pred(Container.ElementCount) do
+        FindREFRs(Container.Elements[i], REFRs, Count);
+  end;
+
+var
+  MainRecord          : IwbMainRecord;
+  REFRs               : TDynMainRecords;
+  i, j, Count, Opt    : Integer;
+  lst                 : TList;
+  BaseSignatures      : string;
+begin
+  if not Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    Exit;
+
+  REFRs := nil;
+  Count := 0;
+  SetLength(REFRs, 4096);
+  FindREFRs(MainRecord.ChildGroup, REFRs, Count);
+  for i := 0 to Pred(MainRecord.OverrideCount) do
+    FindREFRs(MainRecord.Overrides[i].ChildGroup, REFRs, Count);
+  SetLength(REFRs, Count);
+  // removing duplicates
+  if Length(REFRs) > 1 then begin
+    wbMergeSort(@REFRs[0], Length(REFRs), CompareElementsFormIDAndLoadOrder);
+    j := 0;
+    for i := Succ(Low(REFRs)) to High(REFRs) do begin
+      if REFRs[j].LoadOrderFormID <> REFRs[i].LoadOrderFormID then
+        Inc(j);
+      if j <> i then
+        REFRs[j] := REFRs[i];
+    end;
+    SetLength(REFRs, Succ(j));
+  end;
+
+  BaseSignatures := string(Args.Values[1]);
+  Opt := Integer(Args.Values[2]);
+  lst := TList(V2O(Args.Values[3]));
+  for i := Succ(Low(REFRs)) to High(REFRs) do begin
+    if  not ((Opt and 1 <> 0) and REFRs[i].IsDeleted)
+    and not ((Opt and 2 <> 0) and REFRs[i].IsInitiallyDisabled)
+    and not ((Opt and 4 <> 0) and REFRs[i].ElementExists['XESP'])
+    and (Assigned(REFRs[i].BaseRecord) and (Pos(REFRs[i].BaseRecord.Signature, BaseSignatures) <> 0))
+    then
+      lst.Add(Pointer(REFRs[i]));
+  end;
+end;
+
 
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
@@ -1655,6 +1730,7 @@ begin
     AddFunction(cUnit, 'Name', IwbElement_Name, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ShortName', IwbElement_ShortName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'BaseName', IwbElement_BaseName, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'DisplayName', IwbElement_DisplayName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'Path', IwbElement_Path, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'FullPath', IwbElement_FullPath, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'PathName', IwbElement_PathName, 1, [varEmpty], varEmpty);
@@ -1813,6 +1889,7 @@ begin
     AddFunction(cUnit, 'wbSHA1File', Misc_wbSHA1File, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbMD5Data', Misc_wbMD5Data, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbMD5File', Misc_wbMD5File, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbFindREFRsByBase', Misc_wbFindRefrsByBase, 4, [varEmpty, varEmpty, varEmpty], varEmpty);
   end;
 end;
 

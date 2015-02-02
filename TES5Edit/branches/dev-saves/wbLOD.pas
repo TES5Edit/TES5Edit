@@ -64,6 +64,9 @@ type
     property PaddingY: Integer read fPaddingY write fPaddingY;
   end;
 
+  TLODType = (lodTerrain, lodTrees, lodObjects);
+  TLODTypes = set of TLODType;
+
   TAtlasRect = record
     x, y, w, h: Integer;
   end;

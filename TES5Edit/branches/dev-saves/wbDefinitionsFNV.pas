@@ -5796,11 +5796,12 @@ begin
     ], cpNormal, True),
     wbStruct(DNAM, '', [
       wbInteger('AR', itS16, wbDiv(100)),
-      wbInteger('Flags', itU16, wbFlags([
+      wbInteger('Flags', itU16, wbFlags([ // Only a byte or 2 distincts byte
         'Modulates Voice'
       ])),
-      wbUnknown
-    ], cpNormal, True)
+      wbInteger('Unknown', itU32),
+      wbByteArray('Unknown', 4)
+    ], cpNormal, True, nil, 2)
   ]);
 
   wbRecord(BOOK, 'Book', [
@@ -6101,7 +6102,7 @@ begin
      {02} wbInteger('Energy Level', itU8),
      {03} wbInteger('Responsibility', itU8),
      {04} wbInteger('Mood', itU8, wbMoodEnum),
-          wbByteArray('Unused', 3),
+          wbByteArray('Unused', 3),   // Mood is stored as a DWord as shown by endainSwapping but is truncated to byte during load :)
      {08} wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
      {0C} wbInteger('Teaches', itS8, wbSkillEnum),
      {0D} wbInteger('Maximum training level', itU8),

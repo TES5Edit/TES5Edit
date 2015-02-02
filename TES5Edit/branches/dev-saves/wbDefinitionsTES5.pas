@@ -5271,7 +5271,7 @@ begin
     wbInteger(XRNK, 'Faction rank', itS32)
   ], []);
 
-  wbAmbientColors := wbStruct('Directional Ambient', [
+  wbAmbientColors := wbStruct('Ambient Colors', [
     wbArray('Colors',
       wbStruct('Color', [
         wbInteger('Red', itU8),
@@ -6493,7 +6493,7 @@ begin
         {0x00020000} 17, 'Off Limits',
         {0x00040000} 18, 'Compressed',
         {0x00080000} 19, 'Can''t Wait'
-      ])), [
+      ]), [18]), [
       wbEDID,
       wbFULL,
       {>>>
@@ -6618,7 +6618,7 @@ begin
         {0x00020000} 17, 'Off Limits',
         {0x00040000} 18, 'Compressed',
         {0x00080000} 19, 'Can''t Wait'
-      ])), [
+      ]), [18]), [
       wbEDID,
       wbFULL,
       {>>>
@@ -6702,8 +6702,12 @@ begin
       wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
 //      wbArray(TVDT, 'Unknown', wbInteger('Unknown', itS32)),
 //      wbStruct(MHDT, 'Max Height Data', [ // Rolled back temporarily due to issues while copying.
-//         wbUnion('Unknown', wbMHDTDecider, [wbNull, wbInteger('Unknown', itU32)]), // First DWord is Endian swapped if the record size is 1028
-//         wbArray('Unknown', wbInteger('Data', itS8))
+//         wbUnion('Unknown', wbMHDTDecider, [
+//           wbArray('Unknown', wbInteger('Data', itS8)),
+//           wbStruct('Unknown', [
+//             wbInteger('Unknown', itU32)]), // First DWord is Endian swapped if the record size is 1028
+//             wbArray('Unknown', wbInteger('Data', itS8))
+//           ])
 //      ]),
       wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
       wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
@@ -7962,7 +7966,7 @@ begin
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed',
         {0x04000000} 26, 'AutoGen'
-      ])), [
+      ]), [18]), [
       wbEDID,
       wbStruct(NVNM, 'Geometry', [
         wbByteArray('Unknown', 8),
@@ -8063,7 +8067,7 @@ begin
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed',
         {0x04000000} 26, 'AutoGen'
-      ])), [
+      ]), [18]), [
       wbEDID,
       wbStruct(NVNM, 'Geometry', [
         wbInteger('Unknown', itU32),
@@ -9435,7 +9439,7 @@ begin
       wbFloat('Directional Fade'),
       wbFloat('Fog Clip Dist'),
       wbFloat('Fog Power'),
-      wbByteArray('Unknown', 32),		// WindhelmLightingTemplate [LGTM:0007BA87] only find 24 !
+      wbAmbientColors, // wbByteArray('Unknown', 32),		// WindhelmLightingTemplate [LGTM:0007BA87] only find 24 !
       wbStruct('Fog Color Far', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),

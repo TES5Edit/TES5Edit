@@ -41,17 +41,18 @@ uses
   wbSort in 'wbSort.pas',
   wbLOD in 'wbLOD.pas',
   wbLocalization in 'wbLocalization.pas',
-  frmViewMain in 'frmViewMain.pas' {frmMain},
-  FilterOptionsFrm in 'FilterOptionsFrm.pas' {frmFilterOptions},
-  FileSelectFrm in 'FileSelectFrm.pas' {frmFileSelect},
-  ViewElementsFrm in 'ViewElementsFrm.pas' {frmViewElements},
-  EditWarningFrm in 'EditWarningFrm.pas' {frmEditWarning},
-  frmWaitForm in 'frmWaitForm.pas' {frmWait},
-  frmLocalizationForm in 'frmLocalizationForm.pas' {frmLocalization},
-  frmLocalizePluginForm in 'frmLocalizePluginForm.pas' {frmLocalizePlugin},
-  frmScriptForm in 'frmScriptForm.pas' {frmScript},
-  frmOptionsForm in 'frmOptionsForm.pas' {frmOptions},
-  frmLogAnalyzerForm in 'frmLogAnalyzerForm.pas' {frmLogAnalyzer},
+  frmViewMain in 'frmViewMain.pas', {frmMain}
+  FilterOptionsFrm in 'FilterOptionsFrm.pas', {frmFilterOptions}
+  FileSelectFrm in 'FileSelectFrm.pas', {frmFileSelect}
+  ViewElementsFrm in 'ViewElementsFrm.pas', {frmViewElements}
+  EditWarningFrm in 'EditWarningFrm.pas', {frmEditWarning}
+  frmWaitForm in 'frmWaitForm.pas', {frmWait}
+  frmLocalizationForm in 'frmLocalizationForm.pas', {frmLocalization}
+  frmLocalizePluginForm in 'frmLocalizePluginForm.pas', {frmLocalizePlugin}
+  frmScriptForm in 'frmScriptForm.pas', {frmScript}
+  frmOptionsForm in 'frmOptionsForm.pas', {frmOptions}
+  frmLogAnalyzerForm in 'frmLogAnalyzerForm.pas', {frmLogAnalyzer}
+  frmLODGenForm in 'frmLODGenForm.pas', {frmLODGen}
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
   wbDefinitionsFNVSaves in 'wbDefinitionsFNVSaves.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
