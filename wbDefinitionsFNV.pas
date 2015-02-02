@@ -5770,11 +5770,12 @@ begin
     ], cpNormal, True),
     wbStruct(DNAM, '', [
       wbInteger('AR', itS16, wbDiv(100)),
-      wbInteger('Flags', itU16, wbFlags([
+      wbInteger('Flags', itU16, wbFlags([ // Only a byte or 2 distincts byte
         'Modulates Voice'
       ])),
-      wbUnknown
-    ], cpNormal, True)
+      wbInteger('Unknown', itU32),
+      wbByteArray('Unknown', 4)
+    ], cpNormal, True, nil, 2)
   ]);
 
   wbRecord(BOOK, 'Book', [

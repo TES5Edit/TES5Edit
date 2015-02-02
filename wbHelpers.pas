@@ -1009,7 +1009,6 @@ begin
   SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nil, nil);
 end;
 
-
 initialization
   CRCInit;
 
