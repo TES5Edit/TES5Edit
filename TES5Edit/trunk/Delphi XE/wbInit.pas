@@ -424,7 +424,6 @@ begin
   end;
 end;
 
-
 procedure wbDoInit;
 var
   s: string;

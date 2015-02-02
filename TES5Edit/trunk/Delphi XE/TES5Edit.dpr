@@ -26,7 +26,9 @@ uses
   VirtualTrees in 'VirtualTrees.pas',
   VTEditors in 'VTEditors.pas',
   VirtualEditTree in 'VirtualEditTree.pas',
+{$IFNDEF LiteVersion}
   cxVTEditors,
+{$ENDIF}
   wbInit in 'wbInit.pas',
   wbBSA in 'wbBSA.pas',
   wbHelpers in 'wbHelpers.pas',
