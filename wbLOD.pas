@@ -20,6 +20,7 @@ uses
   Classes,
   SysUtils,
   wbInterface,
+  wbNifScanner,
   ImagingTypes,
   ImagingFormats,
   Imaging;
@@ -80,6 +81,19 @@ type
     procedure LoadFromData(aData: TBytes);
     property Size: Integer read GetSize;
   end;
+
+  TGameResourceType = (resMesh, resTexture, resSound, resMusic);
+
+  // source texture for atlas builder
+  TSourceAtlasTexture = record
+    Name: string;
+    Name_n: string;
+    Image: TImageData;
+    Image_n: TImageData;
+    AtlasName: string;
+    X, Y: integer;
+  end;
+  TSourceAtlasTextures = array of TSourceAtlasTexture;
 
 {============================== Skyrim LOD ===================================}
 
@@ -171,6 +185,9 @@ type
   end;
 
 function wbLODSettingsFileName(WorldspaceID: string): string;
+function wbNormalizeResourceName(aName: string; aResType: TGameResourceType): string;
+procedure wbBuildAtlas(var Images: TSourceAtlasTextures; aWidth, aHeight: Integer;
+  aName: string);
 
 implementation
 
@@ -715,6 +732,133 @@ begin
   Refs[j][i].Z := Pos.z;
   Refs[j][i].Scale := Scale;
   Refs[j][i].Rotation := 2*Pi*Random;
+end;
+
+function wbNormalizeResourceName(aName: string; aResType: TGameResourceType): string;
+var
+  i: integer;
+begin
+  Result := LowerCase(aName);
+  if Length(Result) < 2 then
+    Exit;
+
+  // absolute path, cut everything before Data
+  if Result[2] = ':' then begin
+    i := Pos('data\', Result);
+    if i <> 0 then
+      Delete(Result, 1, Pred(i))
+    else
+      Result := ExtractFileName(Result);
+  end;
+  // starts with slash, remove it
+  if Result[1] = '\' then Delete(Result, 1, 1);
+  // starts with Data, remove it
+  if Copy(Result, 1, 5) = 'data\' then Delete(Result, 1, 5);
+  // root folder in Data for different resource types
+  if (aResType = resMesh) and (Copy(Result, 1, 7) <> 'meshes\') then
+    Result := 'meshes\' + Result
+  else if (aResType = resTexture) and (Copy(Result, 1, 9) <> 'textures\') then
+    Result := 'textures\' + Result
+  else if (aResType = resSound) and (Copy(Result, 1, 6) <> 'sound\') then
+    Result := 'sound\' + Result
+  else if (aResType = resMusic) and (Copy(Result, 1, 6) <> 'music\') then
+    Result := 'music\' + Result;
+end;
+
+procedure wbBuildAtlas(var Images: TSourceAtlasTextures; aWidth, aHeight: Integer;
+  aName: string);
+var
+  i, num: integer;
+  Blocks, Blocks2: TDynBinBlockArray;
+  atlas: TImageData;
+  mipmap: TDynImageDataArray;
+  fname: string;
+begin
+  if Length(Images) = 0 then
+    Exit;
+
+  SetLength(Blocks, Length(Images));
+  for i := Low(Blocks) to High(Blocks) do begin
+    Blocks[i].Index := i;
+    Blocks[i].w := Images[i].Image.Width;
+    Blocks[i].h := Images[i].Image.Height;
+  end;
+
+  //SetOption(ImagingMipMapFilter, Ord(sfLanczos));
+  num := 0;
+  aName := ChangeFileExt(aName, '');
+
+  with TwbBinPacker.Create do try
+    Width := aWidth;
+    Height := aHeight;
+    repeat
+      // try to fit images on atlas
+      while not Fit(Blocks) do begin
+        // if not fit, remove images one by one from the end and try again
+        // at least 4 textures per atlas, useless otherwise
+        if Length(Blocks) > 4 then begin
+          SetLength(Blocks2, Succ(Length(Blocks2)));
+          Blocks2[Pred(Length(Blocks2))] := Blocks[Pred(Length(Blocks))];
+          SetLength(Blocks, Pred(Length(Blocks)));
+        end else
+          Exit;
+      end;
+      // we are here if Blocks fit
+      // if unfitted blocks are left, then numerate atlases
+      if (Length(Blocks2) <> 0) or (num <> 0) then
+        fname := aName + Format('%.2d', [num]) + '.dds'
+      else
+        fname := aName + '.dds';
+
+      // diffuse atlas
+      NewImage(aWidth, aHeight, ifDefault, atlas);
+      for i := Low(Blocks) to High(Blocks) do begin
+        CopyRect(
+          Images[Blocks[i].Index].Image, 0, 0, Blocks[i].w, Blocks[i].h,
+          atlas, Blocks[i].x, Blocks[i].y
+        );
+        Images[Blocks[i].Index].AtlasName := fname;
+        Images[Blocks[i].Index].X := Blocks[i].x;
+        Images[Blocks[i].Index].Y := Blocks[i].y;
+      end;
+      if not ConvertImage(atlas, ifDXT3) then
+        raise Exception.Create('Image convertion error');
+      GenerateMipMaps(atlas, 0, mipmap);
+      SaveMultiImageToFile(fname, mipmap);
+      FreeImage(atlas);
+      FreeImagesInArray(mipmap);
+
+      // normals atlas
+      if (Length(Blocks2) <> 0) or (num <> 0) then
+        fname := aName + Format('%.2d', [num]) + '_n.dds'
+      else
+        fname := aName + '_n.dds';
+
+      NewImage(aWidth, aHeight, ifDefault, atlas);
+      for i := Low(Blocks) to High(Blocks) do begin
+        CopyRect(
+          Images[Blocks[i].Index].Image_n, 0, 0, Blocks[i].w, Blocks[i].h,
+          atlas, Blocks[i].x, Blocks[i].y
+        );
+      end;
+      if not ConvertImage(atlas, ifDXT5) then
+        raise Exception.Create('Image convertion error');
+      GenerateMipMaps(atlas, 0, mipmap);
+      SaveMultiImageToFile(fname, mipmap);
+      FreeImage(atlas);
+      FreeImagesInArray(mipmap);
+
+      // copy remaining blocks back
+      SetLength(Blocks, Length(Blocks2));
+      if Length(Blocks) <> 0 then
+        for i := Low(Blocks) to High(Blocks) do
+          Blocks[i] := Blocks2[i];
+      SetLength(Blocks2, 0);
+      Inc(num);
+    until Length(Blocks) = 0;
+  finally
+    Free;
+  end;
 end;
 
 end.

@@ -3,7 +3,7 @@ object frmLODGen: TfrmLODGen
   Top = 0
   BorderStyle = bsDialog
   Caption = 'LODGen Options'
-  ClientHeight = 410
+  ClientHeight = 437
   ClientWidth = 791
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -14,13 +14,14 @@ object frmLODGen: TfrmLODGen
   KeyPreview = True
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
     Left = 8
-    Top = 327
+    Top = 351
     Width = 769
     Height = 39
     AutoSize = False
@@ -53,13 +54,12 @@ object frmLODGen: TfrmLODGen
     AutoSize = False
     Caption = 
       'Create distant LOD for static objects like mountains, rocks, hou' +
-      'ses, castles and the like. Requires lowpoly LOD mesh resources t' +
-      'o be present in the Data folder.'
+      'ses, castles and the like.'
     WordWrap = True
   end
   object Label4: TLabel
     Left = 376
-    Top = 198
+    Top = 232
     Width = 401
     Height = 50
     AutoSize = False
@@ -69,27 +69,32 @@ object frmLODGen: TfrmLODGen
       'cluded with the game and must be installed separately.'
     WordWrap = True
   end
+  object Label8: TLabel
+    Left = 376
+    Top = 292
+    Width = 73
+    Height = 13
+    Caption = 'LOD brightness'
+  end
   object clbWorldspace: TCheckListBox
     Left = 8
     Top = 24
     Width = 329
-    Height = 297
+    Height = 321
     ItemHeight = 13
     PopupMenu = PopupMenu1
     TabOrder = 1
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 369
+    Top = 396
     Width = 791
     Height = 41
     Align = alBottom
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 0
-    ExplicitLeft = -135
-    ExplicitTop = 407
-    ExplicitWidth = 935
+    ExplicitTop = 369
     DesignSize = (
       791
       41)
@@ -102,7 +107,6 @@ object frmLODGen: TfrmLODGen
       Caption = 'Generate'
       ModalResult = 1
       TabOrder = 0
-      ExplicitLeft = 737
     end
     object btnCancel: TButton
       Left = 690
@@ -113,7 +117,6 @@ object frmLODGen: TfrmLODGen
       Caption = 'Cancel'
       ModalResult = 2
       TabOrder = 1
-      ExplicitLeft = 834
     end
     object pnlBevel: TPanel
       AlignWithMargins = True
@@ -127,7 +130,6 @@ object frmLODGen: TfrmLODGen
       Margins.Bottom = 0
       Align = alTop
       TabOrder = 2
-      ExplicitWidth = 927
     end
   end
   object cbObjectsLOD: TCheckBox
@@ -149,7 +151,7 @@ object frmLODGen: TfrmLODGen
   end
   object cbTreesLOD: TCheckBox
     Left = 360
-    Top = 176
+    Top = 210
     Width = 97
     Height = 17
     Caption = 'Trees LOD'
@@ -162,42 +164,152 @@ object frmLODGen: TfrmLODGen
     ParentFont = False
     State = cbChecked
     TabOrder = 3
-  end
-  object cbNoTangents: TCheckBox
-    Left = 376
-    Top = 87
-    Width = 145
-    Height = 17
-    Hint = 
-      'Reduces size of generated LOD and frees memory for the game at t' +
-      'he expense of LOD quality'
-    Caption = 'No tangents'
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 4
-  end
-  object cbNoVertexColors: TCheckBox
-    Left = 376
-    Top = 110
-    Width = 145
-    Height = 17
-    Hint = 
-      'Reduces size of generated LOD and frees memory for the game at t' +
-      'he expense of LOD quality'
-    Caption = 'No vertex colors'
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 5
+    OnClick = cbObjectsLODClick
   end
   object btnSplitTreesLOD: TButton
     Left = 672
-    Top = 255
+    Top = 288
     Width = 105
     Height = 25
     Caption = 'Split LOD Atlas'
-    TabOrder = 6
+    TabOrder = 4
     Visible = False
     OnClick = btnSplitTreesLODClick
+  end
+  object gbObjectsOptions: TGroupBox
+    Left = 376
+    Top = 80
+    Width = 401
+    Height = 119
+    TabOrder = 5
+    object Label5: TLabel
+      Left = 32
+      Top = 28
+      Width = 45
+      Height = 13
+      Caption = 'Atlas size'
+    end
+    object Label6: TLabel
+      Left = 32
+      Top = 52
+      Width = 80
+      Height = 13
+      Caption = 'Max texture size'
+    end
+    object Label7: TLabel
+      Left = 192
+      Top = 52
+      Width = 55
+      Height = 13
+      Caption = 'in UV range'
+    end
+    object Label9: TLabel
+      Left = 145
+      Top = 28
+      Width = 6
+      Height = 13
+      Caption = 'x'
+    end
+    object cbBuildAtlas: TCheckBox
+      Left = 16
+      Top = 5
+      Width = 81
+      Height = 17
+      Hint = 'Put LOD textures on texture atlas(es) for better performance'
+      Caption = 'Build atlas'
+      Checked = True
+      ParentShowHint = False
+      ShowHint = True
+      State = cbChecked
+      TabOrder = 0
+    end
+    object cbNoTangents: TCheckBox
+      Left = 16
+      Top = 93
+      Width = 145
+      Height = 17
+      Hint = 
+        'Reduces size of generated LOD and frees memory for the game at t' +
+        'he expense of LOD quality'
+      Caption = 'No tangents'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 1
+    end
+    object cbNoVertexColors: TCheckBox
+      Left = 16
+      Top = 75
+      Width = 145
+      Height = 17
+      Hint = 
+        'Reduces size of generated LOD and frees memory for the game at t' +
+        'he expense of LOD quality'
+      Caption = 'No vertex colors'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 2
+    end
+    object cmbAtlasWidth: TComboBox
+      Left = 91
+      Top = 24
+      Width = 50
+      Height = 21
+      Hint = 'Atlas width in pixels'
+      Style = csDropDownList
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 3
+    end
+    object cmbAtlasHeight: TComboBox
+      Left = 154
+      Top = 24
+      Width = 50
+      Height = 21
+      Hint = 'Atlas width in pixels'
+      Style = csDropDownList
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 4
+    end
+    object cmbAtlasTextureSize: TComboBox
+      Left = 126
+      Top = 48
+      Width = 50
+      Height = 21
+      Hint = 
+        'Max LOD texture size to put on atlas, larger textures are ignore' +
+        'd'
+      Style = csDropDownList
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 5
+    end
+    object cmbAtlasTextureUVRange: TComboBox
+      Left = 253
+      Top = 48
+      Width = 44
+      Height = 21
+      Hint = 
+        'Put only those textures that have -UVRange <= uv <= UVRange in L' +
+        'OD models'
+      Style = csDropDownList
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 6
+    end
+  end
+  object cmbTreesLODBrightness: TComboBox
+    Left = 455
+    Top = 288
+    Width = 43
+    Height = 21
+    Hint = 
+      'Some ENB presets might require different brightness of distant t' +
+      'rees for better look, usually negative darker brightness.'
+    Style = csDropDownList
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 6
   end
   object PopupMenu1: TPopupMenu
     Left = 168

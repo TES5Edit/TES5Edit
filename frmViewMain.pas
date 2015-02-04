@@ -48,6 +48,9 @@ uses
   VirtualEditTree,
   JvComponentBase,
   JvInterpreter,
+  ImagingTypes,
+  ImagingFormats,
+  Imaging,
   wbInterface,
   wbImplementation,
   wbBSA,
@@ -4681,6 +4684,123 @@ begin
   end;
 end;
 
+procedure wbGetUVRangeTexturesList(slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
+var
+  i, j: integer;
+  res: TDynResources;
+  slNifTextures: TStringList;
+begin
+  if not Assigned(slMeshes) or not Assigned(slTextures) then
+    Exit;
+
+  slNifTextures := TStringList.Create;
+  try
+    for i := 0 to Pred(slMeshes.Count) do begin
+      res := wbContainerHandler.OpenResource(wbNormalizeResourceName(slMeshes[i], resMesh));
+
+      if Length(res) = 0 then
+        Continue;
+
+      NifTexturesUVRange(res[High(res)].GetData, UVRange, slNifTextures);
+      for j := 0 to Pred(slNifTextures.Count) do begin
+        // get only texture at index 0 in BSTextureSet nodes (diffuse texture)
+        if Integer(slNifTextures.Objects[j]) <> 0 then
+          Continue;
+
+        slTextures.Add(wbNormalizeResourceName(slNifTextures[j], resTexture))
+      end;
+    end;
+  finally
+    slNifTextures.Free;
+  end;
+end;
+
+procedure wbBuildAtlasFromTexturesList(slTextures: TStrings; aMaxTextureSize: integer;
+  aWidth, aHeight: integer; aName, aMapName: string);
+var
+  i: integer;
+  s: string;
+  res: TDynResources;
+  data: TBytes;
+  Images: TSourceAtlasTextures;
+  slMap: TStringList;
+begin
+  for i := 0 to Pred(slTextures.Count) do begin
+    res := wbContainerHandler.OpenResource(slTextures[i]);
+
+    if Length(res) = 0 then
+      Continue;
+
+    data := res[High(res)].GetData;
+
+    SetLength(Images, Succ(Length(Images)));
+    // load diffuse
+    InitImage(Images[Pred(Length(Images))].Image);
+    if not LoadImageFromMemory(@data[0], Length(data), Images[Pred(Length(Images))].Image) then begin
+      SetLength(Images, Pred(Length(Images)));
+      Continue;
+    end;
+    // texture is too large
+    if (Images[Pred(Length(Images))].Image.Width > aMaxTextureSize) or (Images[Pred(Length(Images))].Image.Height > aMaxTextureSize) then begin
+      SetLength(Images, Pred(Length(Images)));
+      Continue;
+    end;
+
+    // load normals
+    InitImage(Images[Pred(Length(Images))].Image_n);
+    s := slTextures[i];
+    s := ChangeFileExt(slTextures[i], '') + '_n.dds';
+    if not wbContainerHandler.ResourceExists(s) then
+      s := 'textures\default_n.dds';
+    res := wbContainerHandler.OpenResource(s);
+    if Length(res) <> 0 then
+      data := res[High(res)].GetData;
+    if (Length(res) <> 0) and LoadImageFromMemory(@data[0], Length(data), Images[Pred(Length(Images))].Image_n) then begin
+      // resize normals to match diffuze
+      if (Images[Pred(Length(Images))].Image.Width <> Images[Pred(Length(Images))].Image_n.Width) then
+        ResizeImage(
+          Images[Pred(Length(Images))].Image_n,
+          Images[Pred(Length(Images))].Image.Width,
+          Images[Pred(Length(Images))].Image.Height,
+          rfLanczos
+        );
+    end
+    // error loading normals
+    else begin
+      SetLength(Images, Pred(Length(Images)));
+      Continue;
+    end;
+    Images[Pred(Length(Images))].Name := slTextures[i];
+    Images[Pred(Length(Images))].Name_n := s;
+  end;
+
+  slMap := TStringList.Create;
+  try
+    wbBuildAtlas(Images, aWidth, aHeight, aName);
+    for i := Low(Images) to High(Images) do
+      if Images[i].AtlasName <> '' then
+        slMap.Add(
+          Images[i].Name + #9 +
+          IntToStr(Images[i].Image.Width)  + #9 +
+          IntToStr(Images[i].Image.Height)  + #9 +
+          IntToStr(Images[i].X) + #9 +
+          IntToStr(Images[i].Y) + #9 +
+          wbNormalizeResourceName(Images[i].AtlasName, resTexture) + #9 +
+          IntToStr(aWidth) + #9 +
+          IntToStr(aHeight) + #9
+        );
+     if slMap.Count <> 0 then
+      slMap.SaveToFile(aMapName);
+  finally
+    slMap.Free;
+    if Length(Images) <> 0 then
+      for i := Low(Images) to High(Images) do begin
+        FreeImage(Images[i].Image);
+        FreeImage(Images[i].Image_n);
+      end;
+  end;
+end;
+
 procedure TfrmMain.GenerateLODTES5(const aWorldspace: IwbMainRecord; const LODTypes: TLODTypes);
 var
   StartTick: Cardinal;
@@ -7752,6 +7872,12 @@ begin
 end;
 
 procedure TfrmMain.mniNavGenerateLODClick(Sender: TObject);
+
+  function IndexOf(Items: TStrings; Item: string): integer;
+  begin
+    Result := Max(Items.IndexOf(item), 0);
+  end;
+
 var
   Selection   : TNodeArray;
   i, j        : Integer;
@@ -7867,9 +7993,15 @@ begin
 
       Section := wbAppName + ' LOD Options';
       cbObjectsLOD.Checked := Settings.ReadBool(Section, 'ObjectsLOD', True);
-      cbTreesLOD.Checked := Settings.ReadBool(Section, 'TreesLOD', True);
+      cbBuildAtlas.Checked := Settings.ReadBool(Section, 'BuildAtlas', True);
+      cmbAtlasWidth.ItemIndex := IndexOf(cmbAtlasWidth.Items, Settings.ReadString(Section, 'AtlasWidth', '2048'));
+      cmbAtlasHeight.ItemIndex := IndexOf(cmbAtlasHeight.Items, Settings.ReadString(Section, 'AtlasHeight', '2048'));
+      cmbAtlasTextureSize.ItemIndex := IndexOf(cmbAtlasTextureSize.Items, Settings.ReadString(Section, 'AtlasTextureSize', '512'));
+      cmbAtlasTextureUVRange.ItemIndex := IndexOf(cmbAtlasTextureUVRange.Items, Settings.ReadString(Section, 'AtlasTextureUVRange', '1.2'));
       cbNoTangents.Checked := Settings.ReadBool(Section, 'ObjectsNoTangents', False);
       cbNoVertexColors.Checked := Settings.ReadBool(Section, 'ObjectsNoVertexColors', False);
+      cbTreesLOD.Checked := Settings.ReadBool(Section, 'TreesLOD', True);
+      cmbTreesLODBrightness.ItemIndex := IndexOf(cmbTreesLODBrightness.Items, Settings.ReadString(Section, 'TreesBrightness', '0'));
 
       // hidden option to split trees lod atlases when Shift is pressed
       if GetAsyncKeyState(VK_SHIFT) <> 0 then begin
@@ -7881,9 +8013,15 @@ begin
         Exit;
 
       Settings.WriteBool(Section, 'ObjectsLOD', cbObjectsLOD.Checked);
-      Settings.WriteBool(Section, 'TreesLOD', cbTreesLOD.Checked);
+      Settings.WriteBool(Section, 'BuildAtlas', cbBuildAtlas.Checked);
+      Settings.WriteString(Section, 'AtlasWidth', cmbAtlasWidth.Text);
+      Settings.WriteString(Section, 'AtlasHeight', cmbAtlasHeight.Text);
+      Settings.WriteString(Section, 'AtlasTextureSize', cmbAtlasTextureSize.Text);
+      Settings.WriteString(Section, 'AtlasTextureUVRange', cmbAtlasTextureUVRange.Text);
       Settings.WriteBool(Section, 'ObjectsNoTangents', cbNoTangents.Checked);
       Settings.WriteBool(Section, 'ObjectsNoVertexColors', cbNoVertexColors.Checked);
+      Settings.WriteBool(Section, 'TreesLOD', cbTreesLOD.Checked);
+      Settings.WriteString(Section, 'TreesBrightness', cmbTreesLODBrightness.Text);
       Settings.UpdateFile;
 
       lodTypes := [];
@@ -14083,92 +14221,92 @@ begin
   if SameText(Identifier, 'wbGameMode') and (Args.Count = 0) then begin
     Value := wbGameMode;
     Done := True;
-  end else
-  if SameText(Identifier, 'wbGameName') and (Args.Count = 0) then begin
+  end
+  else if SameText(Identifier, 'wbGameName') and (Args.Count = 0) then begin
     Value := wbGameName;
     Done := True;
-  end else
-  if SameText(Identifier, 'wbAppName') and (Args.Count = 0) then begin
+  end
+  else if SameText(Identifier, 'wbAppName') and (Args.Count = 0) then begin
     Value := wbAppName;
     Done := True;
-  end else
-  if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
+  end
+  else if SameText(Identifier, 'wbLoadBSAs') and (Args.Count = 0) then begin
     Value := wbLoadBSAs;
     Done := True;
-  end else
-  if SameText(Identifier, 'wbSimpleRecords') and (Args.Count = 0) then begin
+  end
+  else if SameText(Identifier, 'wbSimpleRecords') and (Args.Count = 0) then begin
     Value := wbSimpleRecords;
     Done := True;
-  end else
-  if SameText(Identifier, 'wbTrackAllEditorID') and (Args.Count = 0) then begin
+  end
+  else if SameText(Identifier, 'wbTrackAllEditorID') and (Args.Count = 0) then begin
     Value := wbTrackAllEditorID;
     Done := True;
-  end else
-  if SameText(Identifier, 'wbRecordDefMap') and (Args.Count = 0) then begin
+  end
+  else if SameText(Identifier, 'wbRecordDefMap') and (Args.Count = 0) then begin
     Value := O2V(_wbRecordDefMap);
     Done := True;
-  end else
-  if (SameText(Identifier,   'ProgramPath') and (Args.Count = 0)) or
+  end
+  else if (SameText(Identifier,   'ProgramPath') and (Args.Count = 0)) or
      (SameText(Identifier, 'wbProgramPath') and (Args.Count = 0)) then begin
     Value := wbProgramPath;
     Done := True;
-  end else
-  if (SameText(Identifier,   'ScriptsPath') and (Args.Count = 0)) or
+  end
+  else if (SameText(Identifier,   'ScriptsPath') and (Args.Count = 0)) or
      (SameText(Identifier, 'wbScriptsPath') and (Args.Count = 0)) then begin
     Value := wbScriptsPath;
     Done := True;
-  end else
-  if (SameText(Identifier, 'wbDataPath') and (Args.Count = 0)) or
+  end
+  else if (SameText(Identifier, 'wbDataPath') and (Args.Count = 0)) or
      (SameText(Identifier, 'DataPath') and (Args.Count = 0)) then begin
     Value := wbDataPath;
     Done := True;
-  end else
-  if (SameText(Identifier, 'wbTempPath') and (Args.Count = 0)) or
+  end
+  else if (SameText(Identifier, 'wbTempPath') and (Args.Count = 0)) or
      (SameText(Identifier, 'TempPath') and (Args.Count = 0)) then begin
     Value := wbTempPath;
     Done := True;
-  end else
-  if (SameText(Identifier, 'wbSettingsFileName') and (Args.Count = 0)) then begin
+  end
+  else if (SameText(Identifier, 'wbSettingsFileName') and (Args.Count = 0)) then begin
     Value := wbSettingsFileName;
     Done := True;
-  end else
-  if (SameText(Identifier, 'wbSettings') and (Args.Count = 0)) then begin
+  end
+  else if (SameText(Identifier, 'wbSettings') and (Args.Count = 0)) then begin
     Value := O2V(Settings);
     Done := True;
-  end else
-  if SameText(Identifier, 'FilterApplied') and (Args.Count = 0) then begin
+  end
+  else if SameText(Identifier, 'FilterApplied') and (Args.Count = 0) then begin
     Value := FilterApplied;
     Done := True;
-  end else
-  if SameText(Identifier, 'frmMain') and (Args.Count = 0) then begin
+  end
+  else if SameText(Identifier, 'frmMain') and (Args.Count = 0) then begin
     Value := O2V(frmMain);
     Done := True;
-  end else
-  if SameText(Identifier, 'AddMessage') then begin
+  end
+  else if SameText(Identifier, 'AddMessage') then begin
     if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
       AddMessage(Args.Values[0]);
       Done := True;
       Application.ProcessMessages;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
-  end else
-  if SameText(Identifier, 'ClearMessages') and (Args.Count = 0) then begin
+  end
+  else if SameText(Identifier, 'ClearMessages') and (Args.Count = 0) then begin
     mmoMessages.Clear;
     Done := True;
     Application.ProcessMessages;
-  end else
-  if SameText(Identifier, 'FileCount') and (Args.Count = 0) then begin
+  end
+  else if SameText(Identifier, 'FileCount') and (Args.Count = 0) then begin
     Value := Length(Files);
     Done := True;
-  end else
-  if SameText(Identifier, 'FileByIndex') then begin
+  end
+  else if SameText(Identifier, 'FileByIndex') then begin
     if (Args.Count = 1) and VarIsNumeric(Args.Values[0]) and (Args.Values[0] < Length(Files)) then begin
       Value := Files[Integer(Args.Values[0])];
       Done := True;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0); // or  ieNotEnoughParams, ieIncompatibleTypes or others.
-  end else
-  if SameText(Identifier, 'FileByLoadOrder') then begin
+  end
+  else if SameText(Identifier, 'FileByLoadOrder') then begin
     if (Args.Count = 1) and VarIsNumeric(Args.Values[0]) and (Args.Values[0] < Length(Files)) then begin
       for i := Low(Files) to High(Files) do
         if Files[i].LoadOrder = Integer(Args.Values[0]) then begin
@@ -14178,31 +14316,31 @@ begin
       Done := True;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
-  end else
-  if SameText(Identifier, 'IsPositionChanged') and (Args.Count = 1) then begin
+  end
+  else if SameText(Identifier, 'IsPositionChanged') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
       Value := IsPositionChanged(MainRecord);
       Done := True;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
-  end else
-  if SameText(Identifier, 'AddNewFile') and (Args.Count = 0) then begin
+  end
+  else if SameText(Identifier, 'AddNewFile') and (Args.Count = 0) then begin
     AddNewFile(_File);
     Value := _File;
     Done := True;
-  end else
-  if SameText(Identifier, 'AddNewFileName') and (Args.Count = 1) then begin
+  end
+  else if SameText(Identifier, 'AddNewFileName') and (Args.Count = 1) then begin
     Value := AddNewFileName(Args.Values[0]);
     Done := True;
-  end else
-  if SameText(Identifier, 'AddRequiredElementMasters') and (Args.Count = 3) then begin
+  end
+  else if SameText(Identifier, 'AddRequiredElementMasters') and (Args.Count = 3) then begin
     Value := false;
     if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
       if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
         Value := AddRequiredMasters(Element, _File, Args.Values[2]);
     Done := True;
-  end else
-  if SameText(Identifier, 'RemoveNode') and (Args.Count = 1) then begin
+  end
+  else if SameText(Identifier, 'RemoveNode') and (Args.Count = 1) then begin
     Value := False;
     if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
       Node := FindNodeForElement(Element);
@@ -14226,24 +14364,24 @@ begin
       end;
     end;
     Done := True;
-  end else
-  if SameText(Identifier, 'ConflictThisForMainRecord') and (Args.Count = 1) then begin
+  end
+  else if SameText(Identifier, 'ConflictThisForMainRecord') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
       ConflictLevelForMainRecord(MainRecord, ConflictAll, ConflictThis);
       Value := ConflictThis;
       Done := True;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
-  end else
-  if SameText(Identifier, 'ConflictAllForMainRecord') and (Args.Count = 1) then begin
+  end
+  else if SameText(Identifier, 'ConflictAllForMainRecord') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
       ConflictLevelForMainRecord(MainRecord, ConflictAll, ConflictThis);
       Value := ConflictAll;
       Done := True;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
-  end else
-  if SameText(Identifier, 'ConflictThisForNode') and (Args.Count = 1) then begin
+  end
+  else if SameText(Identifier, 'ConflictThisForNode') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
       Node := FindNodeForElement(Element);
       if Assigned(Node) then begin
@@ -14253,8 +14391,8 @@ begin
       Done := True;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
-  end else
-  if SameText(Identifier, 'ConflictAllForNode') and (Args.Count = 1) then begin
+  end
+  else if SameText(Identifier, 'ConflictAllForNode') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
       Node := FindNodeForElement(Element);
       if Assigned(Node) then begin
@@ -14264,8 +14402,8 @@ begin
       Done := True;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
-  end else
-  if SameText(Identifier, 'ConflictAllForElements') and ((Args.Count = 3) or (Args.Count = 4)) then begin
+  end
+  else if SameText(Identifier, 'ConflictAllForElements') and ((Args.Count = 3) or (Args.Count = 4)) then begin
     if Args.Count = 3 then begin
       Value := caNone;
       List := TList(V2O(Args.Values[0]));
@@ -14299,8 +14437,8 @@ begin
       else
         Value := ConflictLevelForNodeDatas(@NodeDatas[0], Length(NodeDatas), Args.Values[i+1], Args.Values[i+2]);
     Done := True;
-  end else
-  if SameText(Identifier, 'JumpTo') and (Args.Count = 2) then begin
+  end
+  else if SameText(Identifier, 'JumpTo') and (Args.Count = 2) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
       vstNav.EndUpdate;
       if not vstNav.Enabled then vstNav.Enabled := True;
@@ -14308,8 +14446,8 @@ begin
       Done := True;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
-  end else
-  if SameText(Identifier, 'ApplyFilter') and (Args.Count = 0) then begin
+  end
+  else if SameText(Identifier, 'ApplyFilter') and (Args.Count = 0) then begin
     FilterPreset := True; // skip filter dialog
     try
       mniNavFilterApplyClick(Sender);
@@ -14317,14 +14455,37 @@ begin
       FilterPreset := False;
       Done := True;
     end;
-  end else
-  if SameText(Identifier, 'RemoveFilter') and (Args.Count = 0) then begin
+  end
+  else if SameText(Identifier, 'RemoveFilter') and (Args.Count = 0) then begin
     SetActiveRecord(nil);
     mniNavFilterRemoveClick(nil);
     Done := True;
-  end else
-  if SameText(Identifier, 'frmFileSelect') and (Args.Count = 0) then begin
+  end
+  else if SameText(Identifier, 'frmFileSelect') and (Args.Count = 0) then begin
     Value := O2V(TfrmFileSelect.Create(nil));
+    Done := True;
+  end
+  else if SameText(Identifier, 'frmFileSelect') and (Args.Count = 0) then begin
+    Value := O2V(TfrmFileSelect.Create(nil));
+    Done := True;
+  end
+  else if SameText(Identifier, 'wbGetUVRangeTexturesList') and (Args.Count = 3) then begin
+    wbGetUVRangeTexturesList(
+      TStrings(V2O(Args.Values[0])), // TStrings list of meshes
+      TStrings(V2O(Args.Values[1])), // TStrings list of textures, output
+      Single(Args.Values[1]) // UVRange
+    );
+    Done := True;
+  end
+  else if SameText(Identifier, 'wbBuildAtlasFromTexturesList') and (Args.Count = 6) then begin
+    wbBuildAtlasFromTexturesList(
+      TStrings(V2O(Args.Values[0])), // TStrings list of textures
+      Args.Values[1], // max texture size
+      Args.Values[2], // atlas width
+      Args.Values[3], // atlas height
+      Args.Values[4], // atlas file name
+      Args.Values[5]  // atlas map file name
+    );
     Done := True;
   end;
 end;
