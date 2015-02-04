@@ -18,19 +18,32 @@ type
     Label2: TLabel;
     cbTreesLOD: TCheckBox;
     Label3: TLabel;
-    cbNoTangents: TCheckBox;
-    cbNoVertexColors: TCheckBox;
     Label4: TLabel;
     btnSplitTreesLOD: TButton;
     PopupMenu1: TPopupMenu;
     SelectAll1: TMenuItem;
     SelectNone1: TMenuItem;
+    gbObjectsOptions: TGroupBox;
+    cbBuildAtlas: TCheckBox;
+    cbNoTangents: TCheckBox;
+    cbNoVertexColors: TCheckBox;
+    cmbAtlasWidth: TComboBox;
+    cmbAtlasHeight: TComboBox;
+    Label5: TLabel;
+    Label6: TLabel;
+    cmbAtlasTextureSize: TComboBox;
+    Label7: TLabel;
+    cmbAtlasTextureUVRange: TComboBox;
+    Label8: TLabel;
+    cmbTreesLODBrightness: TComboBox;
+    Label9: TLabel;
     procedure cbObjectsLODClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnSplitTreesLODClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure SelectAll1Click(Sender: TObject);
     procedure SelectNone1Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
   public
@@ -59,8 +72,36 @@ end;
 
 procedure TfrmLODGen.cbObjectsLODClick(Sender: TObject);
 begin
-  cbNoTangents.Enabled := cbObjectsLOD.Checked;
-  cbNoVertexColors.Enabled := cbObjectsLOD.Checked;
+  gbObjectsOptions.Enabled := cbObjectsLOD.Checked;
+  cmbTreesLODBrightness.Enabled := cbTreesLOD.Checked;
+end;
+
+procedure TfrmLODGen.FormCreate(Sender: TObject);
+var
+  i: integer;
+  v: double;
+begin
+  i := 1024;
+  while i <= 8192 do begin
+    cmbAtlasWidth.Items.Add(IntToStr(i));
+    cmbAtlasHeight.Items.Add(IntToStr(i));
+    i := i * 2;
+  end;
+  i := 256;
+  while i <= 1024 do begin
+    cmbAtlasTextureSize.Items.Add(IntToStr(i));
+    i := i * 2;
+  end;
+  v := 1.0;
+  while v <= 1.5 do begin
+    cmbAtlasTextureUVRange.Items.Add(Format('%1.1f', [v]));
+    v := v + 0.1;
+  end;
+  i := -20;
+  while i <= 20 do begin
+    cmbTreesLODBrightness.Items.Add(IntToStr(i));
+    Inc(i);
+  end;
 end;
 
 procedure TfrmLODGen.FormKeyDown(Sender: TObject; var Key: Word;
