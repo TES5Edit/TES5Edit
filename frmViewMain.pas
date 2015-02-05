@@ -4778,18 +4778,21 @@ begin
   try
     wbBuildAtlas(Images, aWidth, aHeight, aName);
     for i := Low(Images) to High(Images) do
-      if Images[i].AtlasName <> '' then
+      if Images[i].AtlasName <> '' then begin
+        // atlas name in map file must be relative to data folder
+        Delete(Images[i].AtlasName, 1, Pred(Pos('textures\', LowerCase(Images[i].AtlasName))));
         slMap.Add(
           Images[i].Name + #9 +
           IntToStr(Images[i].Image.Width)  + #9 +
           IntToStr(Images[i].Image.Height)  + #9 +
           IntToStr(Images[i].X) + #9 +
           IntToStr(Images[i].Y) + #9 +
-          wbNormalizeResourceName(Images[i].AtlasName, resTexture) + #9 +
+          Images[i].AtlasName + #9 +
           IntToStr(aWidth) + #9 +
           IntToStr(aHeight) + #9
         );
-     if slMap.Count <> 0 then
+      end;
+    if slMap.Count <> 0 then
       slMap.SaveToFile(aMapName);
   finally
     slMap.Free;
