@@ -94,7 +94,6 @@ object frmLODGen: TfrmLODGen
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 0
-    ExplicitTop = 369
     DesignSize = (
       791
       41)

@@ -4848,16 +4848,12 @@ var
         else
           Result := Result + Chr(arr[i]);
     end;
-    if Result <> '' then begin
-      Result := LowerCase(Result);
-      if Result[1] = '\' then Delete(Result, 1, 1);
-      if Copy(Result, 1, 5) = 'data\' then Delete(Result, 1, 5);
-      if Copy(Result, 1, 7) <> 'meshes\' then Result := 'meshes\' + Result;
-    end;
+    Result := wbNormalizeResourceName(Result, resMesh);
   end;
 
 var
-  LODPath             : string;
+  LODPath, AtlasName, AtlasMapName: string;
+  Section             : string;
   s, mat, m4, m8, m16 : string;
   F                   : TSearchRec;
   Master, Ovr         : IwbMainRecord;
@@ -4873,10 +4869,11 @@ var
   PTree               : PwbLodTES5Tree;
   ini                 : TMemIniFile;
   slIni, slLog, slCache, slRefs, slExport, sl: TStringList;
+  slLODMeshes, slLODTextures: TStringList;
   bsIni               : TBytesStream;
   RefPos, RefRot      : TwbVector;
   RefCell, RefBlock   : TwbGridCell;
-  Scale               : Single;
+  Scale, UVRange      : Single;
   LOD4                : array of TwbLodTES5TreeBlock;
 begin
   Master := aWorldspace.MasterOrSelf;
@@ -4889,6 +4886,9 @@ begin
     frmMain.PostAddMessage('[' + aWorldspace.EditorID + '] Lodsettings file not found for worldspace.');
     Exit;
   end;
+
+  // settings file LOD options section
+  Section := wbAppName + ' LOD Options';
 
   Caption := 'Scanning References: ' + aWorldspace.Name + ' References Found: 0' +
     ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
@@ -5117,6 +5117,8 @@ begin
         Caption := 'Saving Trees LOD files: ' + aWorldspace.Name;
         Application.ProcessMessages;
 
+        i := Settings.ReadInteger(Section, 'TreesBrightness', 0);
+        Lst.ChangeAtlasBrightness(i);
         ForceDirectories(ExtractFilePath(LODPath + Lst.AtlasFileName));
         if not Lst.SaveAtlas(LODPath + Lst.AtlasFileName) then
           raise Exception.Create('Can''t save atlas');
@@ -5147,6 +5149,12 @@ begin
     slCache := TStringList.Create;
     slRefs := TStringList.Create;
     slExport := TStringList.Create;
+    slLODMeshes := TStringList.Create;
+    slLODMeshes.Sorted := True;
+    slLODMeshes.Duplicates := dupIgnore;
+    slLODTextures := TStringList.Create;
+    slLODTextures.Sorted := True;
+    slLODTextures.Duplicates := dupIgnore;
     try
     try
       for i := Low(REFRs) to High(REFRs) do begin
@@ -5184,8 +5192,11 @@ begin
           if StatRec.ElementExists['MNAM'] and StatRec.Flags.IsVisibleWhenDistant then begin
             // getting lod models
             m4 := GetLODMeshName(StatRec, 0);
+            if m4 <> '' then slLODMeshes.Add(m4);
             m8 := GetLODMeshName(StatRec, 1);
+            if m8 <> '' then slLODMeshes.Add(m8);
             m16 := GetLODMeshName(StatRec, 2);
+            if m16 <> '' then slLODMeshes.Add(m16);
             if (m4 <> '') or (m8 <> '') or (m16 <> '') then begin
               // detecting LOD material
               mat := '';
@@ -5240,11 +5251,43 @@ begin
       if slRefs.Count = 0 then
         PostAddMessage('<Note: Can not build Objects LOD for ' + aWorldspace.EditorID + ', no valid references found>')
       else begin
+        // creating lod textures atlas
+        if Settings.ReadBool(Section, 'BuildAtlas', True) then begin
+          UVRange := StrToFloatDef(Settings.ReadString(Section, 'AtlasTextureUVRange', '1.5'), 1.5);
+          wbGetUVRangeTexturesList(slLODMeshes, slLODTextures, UVRange);
+          if slLODTextures.Count > 1 then begin
+            // remove HD LOD texture if there
+            i := slLODTextures.IndexOf(wbNormalizeResourceName(aWorldspace.WinningOverride.ElementEditValues['TNAM'], resTexture));
+            if i <> -1 then slLODTextures.Delete(i);
+            // atlas file name and map name
+            AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds';
+            AtlasMapName := wbScriptsPath + 'LODGenAtlasMap.txt';
+            // make sure atlas folder exists
+            if not DirectoryExists(ExtractFilePath(AtlasName)) then
+              if not ForceDirectories(ExtractFilePath(AtlasName)) then
+                raise Exception.Create('Can not create output folder for atlas ' + ExtractFilePath(AtlasName));
+            PostAddMessage('[' + aWorldspace.EditorID + '] Building LOD textures atlas: ' + AtlasName);
+            Application.ProcessMessages;
+            wbBuildAtlasFromTexturesList(
+              slLODTextures,
+              Settings.ReadInteger(Section, 'AtlasTextureSize', 512),
+              Settings.ReadInteger(Section, 'AtlasWidth', 2048),
+              Settings.ReadInteger(Section, 'AtlasHeight', 2048),
+              AtlasName,
+              AtlasMapName
+            );
+          end;
+        end;
+
+        // creating lodgen data file
         slExport.Add('Worldspace=' + aWorldspace.EditorID);
         slExport.Add('CellSW=' + Format('%d %d', [Lodset.SWCell.x, Lodset.SWCell.y]));
         slExport.Add('TextureDiffuseHD=' + aWorldspace.WinningOverride.ElementEditValues['TNAM']);
         slExport.Add('TextureNormalHD=' + aWorldspace.WinningOverride.ElementEditValues['UNAM']);
-        slExport.Add('TextureAtlasMap=');
+        if (AtlasMapName <> '') and FileExists(AtlasMapName) then begin
+          slExport.Add('TextureAtlasMap=' + AtlasMapName);
+          slExport.Add('AtlasTolerance=' + Format('%1.1f', [UVRange - 1.0]));
+        end;
         slExport.Add('PathData=' + wbDataPath);
         slExport.Add('PathOutput=' + wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects');
         // list of BSAs
@@ -5252,15 +5295,26 @@ begin
           sl := TStringList.Create;
           try
             wbContainerHandler.ContainerList(sl);
-            for i := 0 to sl.Count - 2 do
+            for i := 0 to sl.Count - 2 do  // exclude the last Data folder
               slExport.Add('Resource=' + sl[i]);
           finally
             sl.Free;
           end;
         end;
+        // list of meshes to ignore translation/rotation
+        with TStringList.Create do try
+          Delimiter := ',';
+          StrictDelimiter := True;
+          DelimitedText := Settings.ReadString(Section, 'IgnoreTranslation', sMeshIgnoreTranslationTES5);
+          for i := 0 to Pred(Count) do
+            slExport.Add('IgnoreTranslation=' + wbNormalizeResourceName(Strings[i], resMesh));
+        finally
+          Free;
+        end;
+
         slExport.AddStrings(slRefs);
-        s := wbScriptsPath + 'lodgen.txt';
-        PostAddMessage('[' + aWorldspace.EditorID + '] Saving LODGen data to ' + s);
+        s := wbScriptsPath + 'LODGen.txt';
+        PostAddMessage('[' + aWorldspace.EditorID + '] Saving LODGen data: ' + s);
         slExport.SaveToFile(s);
 
         s := Format(wbScriptsPath + 'LODGen.exe "%s"', [s]);
@@ -5285,13 +5339,13 @@ begin
     finally
       slCache.Free;
       slRefs.Free;
+      slLODMeshes.Free;
+      slLODTextures.Free;
       slExport.Free;
       Caption := Application.Title;
     end;
   end;
-
 end;
-
 
 procedure TfrmMain.GenerateLODTES4(const aWorldspace: IwbMainRecord);
 var
@@ -7997,7 +8051,7 @@ begin
       cmbAtlasWidth.ItemIndex := IndexOf(cmbAtlasWidth.Items, Settings.ReadString(Section, 'AtlasWidth', '2048'));
       cmbAtlasHeight.ItemIndex := IndexOf(cmbAtlasHeight.Items, Settings.ReadString(Section, 'AtlasHeight', '2048'));
       cmbAtlasTextureSize.ItemIndex := IndexOf(cmbAtlasTextureSize.Items, Settings.ReadString(Section, 'AtlasTextureSize', '512'));
-      cmbAtlasTextureUVRange.ItemIndex := IndexOf(cmbAtlasTextureUVRange.Items, Settings.ReadString(Section, 'AtlasTextureUVRange', '1.2'));
+      cmbAtlasTextureUVRange.ItemIndex := IndexOf(cmbAtlasTextureUVRange.Items, Settings.ReadString(Section, 'AtlasTextureUVRange', '1.5'));
       cbNoTangents.Checked := Settings.ReadBool(Section, 'ObjectsNoTangents', False);
       cbNoVertexColors.Checked := Settings.ReadBool(Section, 'ObjectsNoVertexColors', False);
       cbTreesLOD.Checked := Settings.ReadBool(Section, 'TreesLOD', True);
@@ -14469,11 +14523,15 @@ begin
     Value := O2V(TfrmFileSelect.Create(nil));
     Done := True;
   end
+  else if SameText(Identifier, 'ExecuteCaptureConsoleOutput') and (Args.Count = 1) then begin
+    Value := ExecuteCaptureConsoleOutput(Args.Values[0]);
+    Done := True;
+  end
   else if SameText(Identifier, 'wbGetUVRangeTexturesList') and (Args.Count = 3) then begin
     wbGetUVRangeTexturesList(
       TStrings(V2O(Args.Values[0])), // TStrings list of meshes
       TStrings(V2O(Args.Values[1])), // TStrings list of textures, output
-      Single(Args.Values[1]) // UVRange
+      Single(Args.Values[2]) // UVRange
     );
     Done := True;
   end
