@@ -292,6 +292,7 @@ object frmLODGen: TfrmLODGen
         'Put only those textures that have -UVRange <= uv <= UVRange in L' +
         'OD models'
       Style = csDropDownList
+      DropDownCount = 16
       ParentShowHint = False
       ShowHint = True
       TabOrder = 6
@@ -306,6 +307,7 @@ object frmLODGen: TfrmLODGen
       'Some ENB presets might require different brightness of distant t' +
       'rees for better look, usually negative darker brightness.'
     Style = csDropDownList
+    DropDownCount = 16
     ParentShowHint = False
     ShowHint = True
     TabOrder = 6
