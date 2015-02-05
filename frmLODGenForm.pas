@@ -73,6 +73,7 @@ end;
 procedure TfrmLODGen.cbObjectsLODClick(Sender: TObject);
 begin
   gbObjectsOptions.Enabled := cbObjectsLOD.Checked;
+  gbObjectsOptions.Visible := cbObjectsLOD.Checked;
   cmbTreesLODBrightness.Enabled := cbTreesLOD.Checked;
 end;
 
@@ -93,7 +94,7 @@ begin
     i := i * 2;
   end;
   v := 1.0;
-  while v <= 2.0 do begin
+  while v <= 10.0 do begin
     cmbAtlasTextureUVRange.Items.Add(Format('%1.1f', [v]));
     v := v + 0.1;
   end;
