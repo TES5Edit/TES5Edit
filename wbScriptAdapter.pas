@@ -29,7 +29,8 @@ uses
   wbHelpers,
   wbBSA,
   wbSort,
-  wbNifScanner;
+  wbNifScanner,
+  wbLOD;
 
 implementation
 
@@ -1458,6 +1459,11 @@ begin
   Value := NifTextures(TBytes(Args.Values[0]), TStrings(V2O(Args.Values[1])));
 end;
 
+procedure NifUtils_NifTextureListUVRange(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := NifTexturesUVRange(TBytes(Args.Values[0]), Single(Args.Values[1]), TStrings(V2O(Args.Values[2])));
+end;
+
 
 { DDS routines }
 
@@ -1616,6 +1622,10 @@ begin
   end;
 end;
 
+procedure Misc_wbNormalizeResourceName(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbNormalizeResourceName(string(Args.Values[0]), Args.Values[1]);
+end;
 
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
@@ -1715,6 +1725,12 @@ begin
     AddConst(cUnit, 'csInitializing', ord(csInitializing));
     AddConst(cUnit, 'csRefsBuild', ord(csRefsBuild));
     AddConst(cUnit, 'csAsCreatedEmpty', ord(csAsCreatedEmpty));
+
+    {TGameResourceType}
+    AddConst(cUnit, 'resMesh', ord(resMesh));
+    AddConst(cUnit, 'resTexture', ord(resTexture));
+    AddConst(cUnit, 'resSound', ord(resSound));
+    AddConst(cUnit, 'resMusic', ord(resMusic));
 
 
     AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
@@ -1870,6 +1886,7 @@ begin
 
     { Nif routines }
     AddFunction(cUnit, 'NifTextureList', NifUtils_NifTextureList, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'NifTextureListUVRange', NifUtils_NifTextureListUVRange, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
 
     { DDS routines }
     AddFunction(cUnit, 'wbDDSStreamToBitmap', DDSUtils_wbDDSStreamToBitmap, 2, [varEmpty, varEmpty], varEmpty);
@@ -1889,7 +1906,8 @@ begin
     AddFunction(cUnit, 'wbSHA1File', Misc_wbSHA1File, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbMD5Data', Misc_wbMD5Data, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbMD5File', Misc_wbMD5File, 1, [varEmpty], varEmpty);
-    AddFunction(cUnit, 'wbFindREFRsByBase', Misc_wbFindRefrsByBase, 4, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbFindREFRsByBase', Misc_wbFindRefrsByBase, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbNormalizeResourceName', Misc_wbNormalizeResourceName, 2, [varEmpty, varEmpty], varEmpty);
   end;
 end;
 

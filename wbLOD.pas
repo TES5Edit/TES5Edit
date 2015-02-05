@@ -23,6 +23,7 @@ uses
   wbNifScanner,
   ImagingTypes,
   ImagingFormats,
+  ImagingCanvases,
   Imaging;
 
 type
@@ -153,6 +154,7 @@ type
     procedure SaveToFile(aFileName: string);
     procedure LoadAtlas(aData: TBytes);
     function SaveAtlas(aFileName: string): Boolean;
+    procedure ChangeAtlasBrightness(aBrightness: integer);
     procedure SaveFromAtlas(aIndex: Integer; aFileName: string);
     procedure CopyFromAtlas(aIndex: Integer; var Img: TImageData; ImgX, ImgY: Integer);
     function BuildAtlas(MaxAtlasSize: Integer): Boolean;
@@ -188,6 +190,33 @@ function wbLODSettingsFileName(WorldspaceID: string): string;
 function wbNormalizeResourceName(aName: string; aResType: TGameResourceType): string;
 procedure wbBuildAtlas(var Images: TSourceAtlasTextures; aWidth, aHeight: Integer;
   aName: string);
+
+
+const
+  // vanilla lOD meshes having translation/rotation that must be ignored
+  sMeshIgnoreTranslationTES5 =
+    'meshes\lod\solitude\cwtower01_lod.nif' + ',' +
+    'meshes\lod\solitude\sfarmhousesilo_lod.nif' + ',' +
+    'meshes\lod\solitude\slumbermill01_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowall02_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowall03_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowall30_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowallsteps01_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowallsteps02_lod.nif' + ',' +
+    'meshes\lod\solitude\sstyrrshouse_lod.nif' + ',' +
+    'meshes\lod\solitude\sthe winking skeever_lod.nif' + ',' +
+    'meshes\lod\windhelm\wharena_lod.nif' + ',' +
+    'meshes\lod\windhelm\whbrunwulfsq_lod.nif' + ',' +
+    'meshes\lod\windhelm\whgrayquarter_lod.nif' + ',' +
+    'meshes\lod\windhelm\whinnerwall01_lod.nif' + ',' +
+    'meshes\lod\windhelm\whinnerwall02_lod.nif' + ',' +
+    'meshes\lod\windhelm\whinnland_lod.nif' + ',' +
+    'meshes\lod\windhelm\whmaingate_lod.nif' + ',' +
+    'meshes\lod\windhelm\whmarket01_lod.nif' + ',' +
+    'meshes\lod\windhelm\whouterwall3_lod.nif' + ',' +
+    'meshes\lod\windhelm\whpalace_lod.nif' + ',' +
+    'meshes\lod\windhelm\whtempletalos_lod.nif' + ',' +
+    'meshes\lod\windhelm\whvalunstrad_lod.nif';
 
 implementation
 
@@ -507,6 +536,21 @@ begin
   end;
 end;
 
+procedure TwbLodTES5TreeList.ChangeAtlasBrightness(aBrightness: integer);
+var
+  Canvas: TImagingCanvas;
+begin
+  if aBrightness = 0 then
+    Exit;
+
+  Canvas := TImagingCanvas.CreateForData(@fAtlas);
+  try
+    Canvas.ModifyContrastBrightness(aBrightness / 10, aBrightness);
+  finally
+    Canvas.Free;
+  end;
+end;
+
 procedure TwbLodTES5TreeList.SaveFromAtlas(aIndex: Integer; aFileName: string);
 var
   img: TImageData;
@@ -742,7 +786,7 @@ begin
   if Length(Result) < 2 then
     Exit;
 
-  // absolute path, cut everything before Data
+  // absolute path, cut everything before Data or leave only file name
   if Result[2] = ':' then begin
     i := Pos('data\', Result);
     if i <> 0 then
@@ -784,7 +828,7 @@ begin
     Blocks[i].h := Images[i].Image.Height;
   end;
 
-  //SetOption(ImagingMipMapFilter, Ord(sfLanczos));
+  SetOption(ImagingMipMapFilter, Ord(sfLanczos));
   num := 0;
   aName := ChangeFileExt(aName, '');
 
