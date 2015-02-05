@@ -93,12 +93,12 @@ begin
     i := i * 2;
   end;
   v := 1.0;
-  while v <= 1.5 do begin
+  while v <= 2.0 do begin
     cmbAtlasTextureUVRange.Items.Add(Format('%1.1f', [v]));
     v := v + 0.1;
   end;
-  i := -20;
-  while i <= 20 do begin
+  i := -30;
+  while i <= 30 do begin
     cmbTreesLODBrightness.Items.Add(IntToStr(i));
     Inc(i);
   end;

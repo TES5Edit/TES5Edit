@@ -12,9 +12,41 @@ const
   iLOD16 = 4;
   iLODFar = 5;
 
+  // Atlas options
+  bBuildAtlas = True;
+  iAtlasTextureSize = 512; // max size of source lod texture to be included on atlas
+  iAtlasWidth = 2048;
+  iAtlasHeight = 2048;
+  fUVRange = 1.5; // put textures on atlas having -UVRange <= uv <= UVRange in lod nif models
+
+  // vanilla lOD meshes having translation/rotation that must be ignored
+  sMeshIgnoreTranslationTES5 =
+    'meshes\lod\solitude\cwtower01_lod.nif' + ',' +
+    'meshes\lod\solitude\sfarmhousesilo_lod.nif' + ',' +
+    'meshes\lod\solitude\slumbermill01_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowall02_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowall03_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowall30_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowallsteps01_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowallsteps02_lod.nif' + ',' +
+    'meshes\lod\solitude\sstyrrshouse_lod.nif' + ',' +
+    'meshes\lod\solitude\sthe winking skeever_lod.nif' + ',' +
+    'meshes\lod\windhelm\wharena_lod.nif' + ',' +
+    'meshes\lod\windhelm\whbrunwulfsq_lod.nif' + ',' +
+    'meshes\lod\windhelm\whgrayquarter_lod.nif' + ',' +
+    'meshes\lod\windhelm\whinnerwall01_lod.nif' + ',' +
+    'meshes\lod\windhelm\whinnerwall02_lod.nif' + ',' +
+    'meshes\lod\windhelm\whinnland_lod.nif' + ',' +
+    'meshes\lod\windhelm\whmaingate_lod.nif' + ',' +
+    'meshes\lod\windhelm\whmarket01_lod.nif' + ',' +
+    'meshes\lod\windhelm\whouterwall3_lod.nif' + ',' +
+    'meshes\lod\windhelm\whpalace_lod.nif' + ',' +
+    'meshes\lod\windhelm\whtempletalos_lod.nif' + ',' +
+    'meshes\lod\windhelm\whvalunstrad_lod.nif';
+
 var
   slLODTypes, slLOD, slCache, slExport: TStringList;
-  slLODAssets: TwbFastStringList;
+  slLODMeshes, slLODTextures: TwbFastStringList;
   lstSkip: TList;
   LODRefs: integer;
   LODGenWorld: IInterface;
@@ -59,22 +91,6 @@ begin
   Result := Items.IndexOf(Item);
   if (Result = -1) and (Items.Count > 0) then
     Result := 0;
-end;
-
-//==========================================================================
-// make sure that mesh file name starts with 'meshes\'
-function NormalizePath(value: string): string;
-begin
-  if value = '' then
-    Exit;
-  if Copy(value, 1, 1) = '\' then
-    Delete(value, 1, 1);
-  value := LowerCase(value);
-  if Copy(value, 1, 5) = 'data\' then
-    value := Copy(value, 6, Length(value));
-  if not (Copy(value, 1, 7) = 'meshes\') then
-    value := 'meshes\' + value;
-  Result := value;
 end;
 
 //============================================================================
@@ -141,7 +157,7 @@ begin
     Exit;
 
   if Result <> '' then begin
-    Result := NormalizePath(Result);
+    Result := wbNormalizeResourceName(Result, resMesh);
     if LODType = iLODFar then
       if not ResourceExists(Result) then Result := '';
   end;
@@ -192,10 +208,10 @@ begin
                s + #9 + mFull + #9 + m4 + #9 + m8 + #9 + m16;
           idx := slCache.Count;
           slCache.AddObject(s, statfid);
-          // list of used lod assets
-          if m4 <> '' then slLODAssets.Add(m4);
-          if m8 <> '' then slLODAssets.Add(m8);
-          if m16 <> '' then slLODAssets.Add(m16);
+          // list of used lod meshes
+          if m4 <> '' then slLODMeshes.Add(m4);
+          if m8 <> '' then slLODMeshes.Add(m8);
+          if m16 <> '' then slLODMeshes.Add(m16);
         end
         Break;
       end;
@@ -249,38 +265,92 @@ function ExportWorldspace(wrld: IInterface): Boolean;
 var
   x, y, i: integer;
   ent: IInterface;
-  sl: TStringList;
+  slHeader, sl: TStringList;
+  AtlasName, AtlasMapName: string;
 begin
   slExport.Clear;
   slCache.Clear;
   lstSkip.Clear;
-  slLODAssets.Clear;
+  slLODMeshes.Clear;
+  slLODTextures.Clear;
 
-  slExport.Add('Worldspace=' + EditorID(wrld));
   Result := LODCellSW(wrld, x, y);
   if not Result then begin
     AddMessage('Unable to open lod settings file for worldspace ' + LODSettingsFileName(wrld));
     Exit;
   end;
-  slExport.Add('CellSW=' + Format('%d %d', [x, y]));
-  slExport.Add('TextureDiffuseHD=' + GetElementEditValues(wrld, 'TNAM'));
-  slExport.Add('TextureNormalHD=' + GetElementEditValues(wrld, 'UNAM'));
-  slExport.Add('TextureAtlasMap=');
-  slExport.Add('PathData=' + DataPath);
-  slExport.Add('PathOut=' + sDestination);
-  sl := TStringList.Create;
-  ResourceContainerList(sl);
-  for i := 0 to sl.Count - 2 do
-    slExport.Add('Resource=' + sl[i]);
-  sl.Free;
 
-  AddMessage('Building a list of LOD objects, please wait...');
+  AddMessage('Building list of LOD objects, please wait...');
   LODRefs := 0;
   IterateWorldspace(wrld);
 
-  if slExport.Count > 5 then begin
+  if slExport.Count <> 0 then begin
+    // make sure atlas folder exists
+    {if not DirectoryExists(ExtractFilePath(sDestination)) then
+      if not ForceDirectories(ExtractFilePath(sDestination)) then begin
+        AddMessage('Error: can not create output folder for LOD ' + ExtractFilePath(sDestination));
+        Exit;
+      end;}
+
+    // building atlas
+    if bBuildAtlas then begin
+      // get list of diffuse textures within UVRange in provided list of meshes
+      wbGetUVRangeTexturesList(slLODMeshes, slLODTextures, fUVRange);
+      if slLODTextures.Count > 1 then begin
+        // remove HD LOD texture if there
+        i := slLODTextures.IndexOf(wbNormalizeResourceName(GetElementEditValues(wrld, 'TNAM'), resTexture));
+        if i <> -1 then slLODTextures.Delete(i);
+        // atlas file name and map name
+        if Pos('meshes\', LowerCase(sDestination)) = 0 then begin
+          AddMessage('Error: LODGen path must contain "meshes\" folder if building atlas');
+          Exit;
+        end else
+          AtlasName := StringReplace(sDestination, 'meshes\', 'textures\', [rfIgnoreCase]) + EditorID(wrld) + 'ObjectsLOD.dds';
+        AtlasMapName := ScriptsPath + 'LODGen ' + EditorID(wrld) + ' Atlas Map.txt';
+        // make sure atlas folder exists
+        if not DirectoryExists(ExtractFilePath(AtlasName)) then
+          if not ForceDirectories(ExtractFilePath(AtlasName)) then begin
+            AddMessage('Error: can not create output folder for atlas ' + ExtractFilePath(AtlasName));
+            Exit;
+          end;
+        AddMessage('Building LOD textures atlas: ' + AtlasName);
+        wbBuildAtlasFromTexturesList(
+          slLODTextures,
+          iAtlasTextureSize,
+          iAtlasWidth,
+          iAtlasHeight,
+          AtlasName,
+          AtlasMapName
+        );
+      end;
+    end;
+    slHeader := TStringList.Create;
+    slHeader.Add('Worldspace=' + EditorID(wrld));
+    slHeader.Add('CellSW=' + Format('%d %d', [x, y]));
+    slHeader.Add('TextureDiffuseHD=' + GetElementEditValues(wrld, 'TNAM'));
+    slHeader.Add('TextureNormalHD=' + GetElementEditValues(wrld, 'UNAM'));
+    if (AtlasMapName <> '') and FileExists(AtlasMapName) then begin
+      slHeader.Add('TextureAtlasMap=' + AtlasMapName);
+      slHeader.Add('AtlasTolerance=' + Format('%1.1f', [fUVRange - 1.0]));
+    end;
+    slHeader.Add('PathData=' + DataPath);
+    slHeader.Add('PathOutput=' + sDestination);
+    // list of BSAs and meshes to ignore translation/rotation
+    sl := TStringList.Create;
+    ResourceContainerList(sl);
+    for i := 0 to sl.Count - 2 do
+      slHeader.Add('Resource=' + sl[i]);
+    sl.Clear;
+    sl.Delimiter := ',';
+    sl.StrictDelimiter := True;
+    sl.DelimitedText := sMeshIgnoreTranslationTES5;
+    for i := 0 to Pred(sl.Count) do
+      slHeader.Add('IgnoreTranslation=' + wbNormalizeResourceName(sl[i], resMesh));
+    sl.Free;
+    slHeader.AddStrings(slExport);
     AddMessage('Saving objects LOD data to ' + sExport);
-    slExport.SaveToFile(sExport);
+    slHeader.SaveToFile(sExport);
+    slHeader.Free;
     AddMessage(Format('LOD references: %d, unique LOD objects: %d', [LODRefs, slCache.Count]));
   end
   else begin
@@ -1020,7 +1090,7 @@ begin
       Exit;
 
     sExport := edExport.Text;
-    sDestination := edDestination.Text;
+    sDestination := IncludeTrailingBackslash(edDestination.Text);
     sDataPath := IncludeTrailingBackslash(edDataPath.Text);
       
     PresetSave(ScriptsPath + 'LODGen preset default.ini');
@@ -1079,7 +1149,7 @@ var
 begin
   fExport := not FileExists(sExport);
   if not fExport then
-    if MessageDlg('LOD export file already exists. Do you want to reexport LOD data?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    if MessageDlg('LOD export file already exists. Do you want to reexport LOD data (load order has changed)?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       fExport := True;
 
   // export LOD data
@@ -1100,7 +1170,7 @@ begin
     Exit;
   end;
   
-  sTitle := wbAppName + 'LODGen by Ehamloptiran and Zilav';
+  sTitle := wbAppName + 'LODGen by Ehamloptiran, Sheson and Zilav';
   AddMessage('');
   AddMessage(sTitle + ', starting...');
 
@@ -1111,9 +1181,12 @@ begin
   slCache := TStringList.Create;
   slExport := TStringList.Create;
   lstSkip := TList.Create;
-  slLODAssets := TwbFastStringList.Create;
-  slLODAssets.Sorted := True;
-  slLODAssets.Duplicates := dupIgnore;
+  slLODMeshes := TwbFastStringList.Create;
+  slLODMeshes.Sorted := True;
+  slLODMeshes.Duplicates := dupIgnore;
+  slLODTextures := TwbFastStringList.Create;
+  slLODTextures.Sorted := True;
+  slLODTextures.Duplicates := dupIgnore;
 
   OptionsForm;
   if Assigned(LODGenWorld) then
@@ -1124,7 +1197,8 @@ begin
   slCache.Free;
   slLOD.Free;
   slLODTypes.Free;
-  slLODAssets.Free;
+  slLODMeshes.Free;
+  slLODTextures.Free;
 end;
 
 end.
