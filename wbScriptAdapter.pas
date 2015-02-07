@@ -1627,6 +1627,24 @@ begin
   Value := wbNormalizeResourceName(string(Args.Values[0]), Args.Values[1]);
 end;
 
+procedure Misc_wbStringListInString(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  sl: TStringList;
+  s: string;
+  i: integer;
+begin
+  Value := -1;
+  sl := TStringList(V2O(Args.Values[0]));
+  if not Assigned(sl) then
+    Exit;
+  s := string(Args.Values[1]);
+  for i := 0 to Pred(sl.Count) do
+    if Pos(Lowercase(sl[i]), Lowercase(s)) > 0 then begin
+      Value := i;
+      Exit;
+    end;
+end;
+
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 begin
@@ -1908,6 +1926,7 @@ begin
     AddFunction(cUnit, 'wbMD5File', Misc_wbMD5File, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbFindREFRsByBase', Misc_wbFindRefrsByBase, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbNormalizeResourceName', Misc_wbNormalizeResourceName, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbStringListInString', Misc_wbStringListInString, 2, [varEmpty, varEmpty], varEmpty);
   end;
 end;
 
