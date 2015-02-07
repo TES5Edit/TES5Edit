@@ -5335,6 +5335,15 @@ begin
         if k <> 0 then
           raise Exception.Create('LODGen error, exit code ' + IntToStr(k));
         PostAddMessage('[' + aWorldspace.EditorID + '] Objects LOD Done.');
+
+        // DynDoLOD reference message, tribute to Sheson who made TES5LODGen possible
+        if wbGameMode = gmTES5 then begin
+          PostAddMessage(StringOfChar('*', 120));
+          PostAddMessage('If you want more detailed, dynamic LOD with wide customization, please check DynDoLOD by Sheson');
+          PostAddMessage('http://www.nexusmods.com/skyrim/mods/59721/');
+          PostAddMessage('It uses the same LODGen building process as TES5LODGen internally, but with more options.');
+          PostAddMessage(StringOfChar('*', 120));
+        end;
       end;
     except on E: Exception do
       PostAddMessage('[' + aWorldspace.EditorID + '] Objects LOD generation error: ' + E.Message);
