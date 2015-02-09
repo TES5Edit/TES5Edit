@@ -92,7 +92,7 @@ type
     Image: TImageData;
     Image_n: TImageData;
     AtlasName: string;
-    X, Y: integer;
+    X, Y, W, H: integer;
   end;
   TSourceAtlasTextures = array of TSourceAtlasTexture;
 
@@ -345,6 +345,7 @@ function TwbBinPacker.Fit(var Blocks: TDynBinBlockArray): Boolean;
       changed := False;
       for i := Low(Blocks) to Pred(High(Blocks)) do
         if Max(Blocks[i].w, Blocks[i].h) < Max(Blocks[i+1].w, Blocks[i+1].h) then begin
+        //if Blocks[i].w * Blocks[i].h < Blocks[i+1].w * Blocks[i+1].h then begin
           temp := Blocks[i+1];
           Blocks[i+1] := Blocks[i];
           Blocks[i] := temp;
@@ -812,9 +813,9 @@ end;
 procedure wbBuildAtlas(var Images: TSourceAtlasTextures; aWidth, aHeight: Integer;
   aName: string);
 var
-  i, num: integer;
+  i, num, maxw, maxh: integer;
   Blocks, Blocks2: TDynBinBlockArray;
-  atlas: TImageData;
+  atlas, crop: TImageData;
   mipmap: TDynImageDataArray;
   fname: string;
 begin
@@ -839,8 +840,8 @@ begin
       // try to fit images on atlas
       while not Fit(Blocks) do begin
         // if not fit, remove images one by one from the end and try again
-        // at least 4 textures per atlas, useless otherwise
-        if Length(Blocks) > 4 then begin
+        // at least 2 textures per atlas, useless otherwise
+        if Length(Blocks) > 2 then begin
           SetLength(Blocks2, Succ(Length(Blocks2)));
           Blocks2[Pred(Length(Blocks2))] := Blocks[Pred(Length(Blocks))];
           SetLength(Blocks, Pred(Length(Blocks)));
@@ -856,21 +857,55 @@ begin
 
       // diffuse atlas
       NewImage(aWidth, aHeight, ifDefault, atlas);
-      for i := Low(Blocks) to High(Blocks) do begin
-        CopyRect(
-          Images[Blocks[i].Index].Image, 0, 0, Blocks[i].w, Blocks[i].h,
-          atlas, Blocks[i].x, Blocks[i].y
-        );
-        Images[Blocks[i].Index].AtlasName := fname;
-        Images[Blocks[i].Index].X := Blocks[i].x;
-        Images[Blocks[i].Index].Y := Blocks[i].y;
+      try
+        maxw := 0;
+        maxh := 0;
+        for i := Low(Blocks) to High(Blocks) do begin
+          CopyRect(
+            Images[Blocks[i].Index].Image, 0, 0, Blocks[i].w, Blocks[i].h,
+            atlas, Blocks[i].x, Blocks[i].y
+          );
+          Images[Blocks[i].Index].AtlasName := fname;
+          Images[Blocks[i].Index].X := Blocks[i].x;
+          Images[Blocks[i].Index].Y := Blocks[i].y;
+          // find the actual width and height of atlas tiles
+          if maxw < Blocks[i].x + Blocks[i].w then
+            maxw := Blocks[i].x + Blocks[i].w;
+          if maxh < Blocks[i].y + Blocks[i].h then
+            maxh := Blocks[i].y + Blocks[i].h;
+        end;
+
+        // round to the larger power of 2 value
+        i := 1; while i < maxw do i := i * 2; maxw := i;
+        i := 1; while i < maxh do i := i * 2; maxh := i;
+        // crop if less than atlas size
+        if (maxw < aWidth) or (maxh < aHeight) then begin
+          NewImage(maxw, maxh, ifDefault, crop);
+          try
+            CopyRect(atlas, 0, 0, maxw, maxh, crop, 0, 0);
+            CloneImage(crop, atlas);
+          finally
+            FreeImage(crop);
+          end;
+        end;
+        // store atlas size
+        for i := Low(Blocks) to High(Blocks) do begin
+          Images[Blocks[i].Index].W := maxw;
+          Images[Blocks[i].Index].H := maxh;
+        end;
+
+        if not ConvertImage(atlas, ifDXT3) then
+          raise Exception.Create('Image convertion error');
+
+        try
+          GenerateMipMaps(atlas, 0, mipmap);
+          SaveMultiImageToFile(fname, mipmap);
+        finally
+          FreeImagesInArray(mipmap);
+        end;
+      finally
+        FreeImage(atlas);
       end;
-      if not ConvertImage(atlas, ifDXT3) then
-        raise Exception.Create('Image convertion error');
-      GenerateMipMaps(atlas, 0, mipmap);
-      SaveMultiImageToFile(fname, mipmap);
-      FreeImage(atlas);
-      FreeImagesInArray(mipmap);
 
       // normals atlas
       if (Length(Blocks2) <> 0) or (num <> 0) then
@@ -879,18 +914,36 @@ begin
         fname := aName + '_n.dds';
 
       NewImage(aWidth, aHeight, ifDefault, atlas);
-      for i := Low(Blocks) to High(Blocks) do begin
-        CopyRect(
-          Images[Blocks[i].Index].Image_n, 0, 0, Blocks[i].w, Blocks[i].h,
-          atlas, Blocks[i].x, Blocks[i].y
-        );
+      try
+        for i := Low(Blocks) to High(Blocks) do
+          CopyRect(
+            Images[Blocks[i].Index].Image_n, 0, 0, Blocks[i].w, Blocks[i].h,
+            atlas, Blocks[i].x, Blocks[i].y
+          );
+
+        // crop if less than atlas size
+        if (maxw < aWidth) or (maxh < aHeight) then begin
+          NewImage(maxw, maxh, ifDefault, crop);
+          try
+            CopyRect(atlas, 0, 0, maxw, maxh, crop, 0, 0);
+            CloneImage(crop, atlas);
+          finally
+            FreeImage(crop);
+          end;
+        end;
+
+        if not ConvertImage(atlas, ifDXT5) then
+          raise Exception.Create('Image convertion error');
+
+        try
+          GenerateMipMaps(atlas, 0, mipmap);
+          SaveMultiImageToFile(fname, mipmap);
+        finally
+          FreeImagesInArray(mipmap);
+        end;
+      finally
+        FreeImage(atlas);
       end;
-      if not ConvertImage(atlas, ifDXT5) then
-        raise Exception.Create('Image convertion error');
-      GenerateMipMaps(atlas, 0, mipmap);
-      SaveMultiImageToFile(fname, mipmap);
-      FreeImage(atlas);
-      FreeImagesInArray(mipmap);
 
       // copy remaining blocks back
       SetLength(Blocks, Length(Blocks2));
