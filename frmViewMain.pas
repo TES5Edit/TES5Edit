@@ -4788,8 +4788,8 @@ begin
           IntToStr(Images[i].X) + #9 +
           IntToStr(Images[i].Y) + #9 +
           Images[i].AtlasName + #9 +
-          IntToStr(aWidth) + #9 +
-          IntToStr(aHeight) + #9
+          IntToStr(Images[i].W) + #9 +
+          IntToStr(Images[i].H)
         );
       end;
     if slMap.Count <> 0 then
@@ -5176,8 +5176,8 @@ begin
         StatRec := StatRec.WinningOverride;
 
         // skip persistent refs of "never fade" statics
-        if REFRs[i].IsPersistent and (StatRec.Flags._Flags and $00000004 > 0) then
-          Exit;
+        if REFRs[i].IsPersistent and (StatRec.Flags._Flags and $00000004 <> 0) then
+          Continue;
 
         if not REFRs[i].GetPosition(RefPos) then
           Continue;
