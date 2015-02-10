@@ -9693,8 +9693,8 @@ var
   Count                       : Cardinal;
   StartTick                   : Cardinal;
   //  wbStartTime                   : TDateTime;
-  ConflictAll                 : TConflictAll;
-  ConflictThis                : TConflictThis;
+//  ConflictAll                 : TConflictAll;
+//  ConflictThis                : TConflictThis;
   Signatures                  : TStringList;
   BaseSignatures              : TStringList;
   Dummy                       : Integer;
