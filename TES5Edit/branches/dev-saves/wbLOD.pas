@@ -20,8 +20,10 @@ uses
   Classes,
   SysUtils,
   wbInterface,
+  wbNifScanner,
   ImagingTypes,
   ImagingFormats,
+  ImagingCanvases,
   Imaging;
 
 type
@@ -81,6 +83,19 @@ type
     property Size: Integer read GetSize;
   end;
 
+  TGameResourceType = (resMesh, resTexture, resSound, resMusic);
+
+  // source texture for atlas builder
+  TSourceAtlasTexture = record
+    Name: string;
+    Name_n: string;
+    Image: TImageData;
+    Image_n: TImageData;
+    AtlasName: string;
+    X, Y, W, H: integer;
+  end;
+  TSourceAtlasTextures = array of TSourceAtlasTexture;
+
 {============================== Skyrim LOD ===================================}
 
   // entry in LST file
@@ -139,6 +154,7 @@ type
     procedure SaveToFile(aFileName: string);
     procedure LoadAtlas(aData: TBytes);
     function SaveAtlas(aFileName: string): Boolean;
+    procedure ChangeAtlasBrightness(aBrightness: integer);
     procedure SaveFromAtlas(aIndex: Integer; aFileName: string);
     procedure CopyFromAtlas(aIndex: Integer; var Img: TImageData; ImgX, ImgY: Integer);
     function BuildAtlas(MaxAtlasSize: Integer): Boolean;
@@ -171,6 +187,36 @@ type
   end;
 
 function wbLODSettingsFileName(WorldspaceID: string): string;
+function wbNormalizeResourceName(aName: string; aResType: TGameResourceType): string;
+procedure wbBuildAtlas(var Images: TSourceAtlasTextures; aWidth, aHeight: Integer;
+  aName: string);
+
+
+const
+  // vanilla lOD meshes having translation/rotation that must be ignored
+  sMeshIgnoreTranslationTES5 =
+    'meshes\lod\solitude\cwtower01_lod.nif' + ',' +
+    'meshes\lod\solitude\sfarmhousesilo_lod.nif' + ',' +
+    'meshes\lod\solitude\slumbermill01_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowall02_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowall03_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowall30_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowallsteps01_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowallsteps02_lod.nif' + ',' +
+    'meshes\lod\solitude\sstyrrshouse_lod.nif' + ',' +
+    'meshes\lod\solitude\sthe winking skeever_lod.nif' + ',' +
+    'meshes\lod\windhelm\wharena_lod.nif' + ',' +
+    'meshes\lod\windhelm\whbrunwulfsq_lod.nif' + ',' +
+    'meshes\lod\windhelm\whgrayquarter_lod.nif' + ',' +
+    'meshes\lod\windhelm\whinnerwall01_lod.nif' + ',' +
+    'meshes\lod\windhelm\whinnerwall02_lod.nif' + ',' +
+    'meshes\lod\windhelm\whinnland_lod.nif' + ',' +
+    'meshes\lod\windhelm\whmaingate_lod.nif' + ',' +
+    'meshes\lod\windhelm\whmarket01_lod.nif' + ',' +
+    'meshes\lod\windhelm\whouterwall3_lod.nif' + ',' +
+    'meshes\lod\windhelm\whpalace_lod.nif' + ',' +
+    'meshes\lod\windhelm\whtempletalos_lod.nif' + ',' +
+    'meshes\lod\windhelm\whvalunstrad_lod.nif';
 
 implementation
 
@@ -299,6 +345,7 @@ function TwbBinPacker.Fit(var Blocks: TDynBinBlockArray): Boolean;
       changed := False;
       for i := Low(Blocks) to Pred(High(Blocks)) do
         if Max(Blocks[i].w, Blocks[i].h) < Max(Blocks[i+1].w, Blocks[i+1].h) then begin
+        //if Blocks[i].w * Blocks[i].h < Blocks[i+1].w * Blocks[i+1].h then begin
           temp := Blocks[i+1];
           Blocks[i+1] := Blocks[i];
           Blocks[i] := temp;
@@ -487,6 +534,21 @@ begin
       Result := SaveMultiImageToFile(aFileName, MipmapImg);
   finally
     FreeImagesInArray(MipmapImg);
+  end;
+end;
+
+procedure TwbLodTES5TreeList.ChangeAtlasBrightness(aBrightness: integer);
+var
+  Canvas: TImagingCanvas;
+begin
+  if aBrightness = 0 then
+    Exit;
+
+  Canvas := TImagingCanvas.CreateForData(@fAtlas);
+  try
+    Canvas.ModifyContrastBrightness(aBrightness / 10, aBrightness);
+  finally
+    Canvas.Free;
   end;
 end;
 
@@ -715,6 +777,185 @@ begin
   Refs[j][i].Z := Pos.z;
   Refs[j][i].Scale := Scale;
   Refs[j][i].Rotation := 2*Pi*Random;
+end;
+
+function wbNormalizeResourceName(aName: string; aResType: TGameResourceType): string;
+var
+  i: integer;
+begin
+  Result := LowerCase(aName);
+  if Length(Result) < 2 then
+    Exit;
+
+  // absolute path, cut everything before Data or leave only file name
+  if Result[2] = ':' then begin
+    i := Pos('data\', Result);
+    if i <> 0 then
+      Delete(Result, 1, Pred(i))
+    else
+      Result := ExtractFileName(Result);
+  end;
+  // starts with slash, remove it
+  if Result[1] = '\' then Delete(Result, 1, 1);
+  // starts with Data, remove it
+  if Copy(Result, 1, 5) = 'data\' then Delete(Result, 1, 5);
+  // root folder in Data for different resource types
+  if (aResType = resMesh) and (Copy(Result, 1, 7) <> 'meshes\') then
+    Result := 'meshes\' + Result
+  else if (aResType = resTexture) and (Copy(Result, 1, 9) <> 'textures\') then
+    Result := 'textures\' + Result
+  else if (aResType = resSound) and (Copy(Result, 1, 6) <> 'sound\') then
+    Result := 'sound\' + Result
+  else if (aResType = resMusic) and (Copy(Result, 1, 6) <> 'music\') then
+    Result := 'music\' + Result;
+end;
+
+procedure wbBuildAtlas(var Images: TSourceAtlasTextures; aWidth, aHeight: Integer;
+  aName: string);
+var
+  i, num, maxw, maxh: integer;
+  Blocks, Blocks2: TDynBinBlockArray;
+  atlas, crop: TImageData;
+  mipmap: TDynImageDataArray;
+  fname: string;
+begin
+  if Length(Images) = 0 then
+    Exit;
+
+  SetLength(Blocks, Length(Images));
+  for i := Low(Blocks) to High(Blocks) do begin
+    Blocks[i].Index := i;
+    Blocks[i].w := Images[i].Image.Width;
+    Blocks[i].h := Images[i].Image.Height;
+  end;
+
+  SetOption(ImagingMipMapFilter, Ord(sfLanczos));
+  num := 0;
+  aName := ChangeFileExt(aName, '');
+
+  with TwbBinPacker.Create do try
+    Width := aWidth;
+    Height := aHeight;
+    repeat
+      // try to fit images on atlas
+      while not Fit(Blocks) do begin
+        // if not fit, remove images one by one from the end and try again
+        // at least 2 textures per atlas, useless otherwise
+        if Length(Blocks) > 2 then begin
+          SetLength(Blocks2, Succ(Length(Blocks2)));
+          Blocks2[Pred(Length(Blocks2))] := Blocks[Pred(Length(Blocks))];
+          SetLength(Blocks, Pred(Length(Blocks)));
+        end else
+          Exit;
+      end;
+      // we are here if Blocks fit
+      // if unfitted blocks are left, then numerate atlases
+      if (Length(Blocks2) <> 0) or (num <> 0) then
+        fname := aName + Format('%.2d', [num]) + '.dds'
+      else
+        fname := aName + '.dds';
+
+      // diffuse atlas
+      NewImage(aWidth, aHeight, ifDefault, atlas);
+      try
+        maxw := 0;
+        maxh := 0;
+        for i := Low(Blocks) to High(Blocks) do begin
+          CopyRect(
+            Images[Blocks[i].Index].Image, 0, 0, Blocks[i].w, Blocks[i].h,
+            atlas, Blocks[i].x, Blocks[i].y
+          );
+          Images[Blocks[i].Index].AtlasName := fname;
+          Images[Blocks[i].Index].X := Blocks[i].x;
+          Images[Blocks[i].Index].Y := Blocks[i].y;
+          // find the actual width and height of atlas tiles
+          if maxw < Blocks[i].x + Blocks[i].w then
+            maxw := Blocks[i].x + Blocks[i].w;
+          if maxh < Blocks[i].y + Blocks[i].h then
+            maxh := Blocks[i].y + Blocks[i].h;
+        end;
+
+        // round to the larger power of 2 value
+        i := 1; while i < maxw do i := i * 2; maxw := i;
+        i := 1; while i < maxh do i := i * 2; maxh := i;
+        // crop if less than atlas size
+        if (maxw < aWidth) or (maxh < aHeight) then begin
+          NewImage(maxw, maxh, ifDefault, crop);
+          try
+            CopyRect(atlas, 0, 0, maxw, maxh, crop, 0, 0);
+            CloneImage(crop, atlas);
+          finally
+            FreeImage(crop);
+          end;
+        end;
+        // store atlas size
+        for i := Low(Blocks) to High(Blocks) do begin
+          Images[Blocks[i].Index].W := maxw;
+          Images[Blocks[i].Index].H := maxh;
+        end;
+
+        if not ConvertImage(atlas, ifDXT3) then
+          raise Exception.Create('Image convertion error');
+
+        try
+          GenerateMipMaps(atlas, 0, mipmap);
+          SaveMultiImageToFile(fname, mipmap);
+        finally
+          FreeImagesInArray(mipmap);
+        end;
+      finally
+        FreeImage(atlas);
+      end;
+
+      // normals atlas
+      if (Length(Blocks2) <> 0) or (num <> 0) then
+        fname := aName + Format('%.2d', [num]) + '_n.dds'
+      else
+        fname := aName + '_n.dds';
+
+      NewImage(aWidth, aHeight, ifDefault, atlas);
+      try
+        for i := Low(Blocks) to High(Blocks) do
+          CopyRect(
+            Images[Blocks[i].Index].Image_n, 0, 0, Blocks[i].w, Blocks[i].h,
+            atlas, Blocks[i].x, Blocks[i].y
+          );
+
+        // crop if less than atlas size
+        if (maxw < aWidth) or (maxh < aHeight) then begin
+          NewImage(maxw, maxh, ifDefault, crop);
+          try
+            CopyRect(atlas, 0, 0, maxw, maxh, crop, 0, 0);
+            CloneImage(crop, atlas);
+          finally
+            FreeImage(crop);
+          end;
+        end;
+
+        if not ConvertImage(atlas, ifDXT5) then
+          raise Exception.Create('Image convertion error');
+
+        try
+          GenerateMipMaps(atlas, 0, mipmap);
+          SaveMultiImageToFile(fname, mipmap);
+        finally
+          FreeImagesInArray(mipmap);
+        end;
+      finally
+        FreeImage(atlas);
+      end;
+
+      // copy remaining blocks back
+      SetLength(Blocks, Length(Blocks2));
+      if Length(Blocks) <> 0 then
+        for i := Low(Blocks) to High(Blocks) do
+          Blocks[i] := Blocks2[i];
+      SetLength(Blocks2, 0);
+      Inc(num);
+    until Length(Blocks) = 0;
+  finally
+    Free;
+  end;
 end;
 
 end.
