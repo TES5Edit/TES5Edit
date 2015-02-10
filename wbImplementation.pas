@@ -4432,13 +4432,16 @@ begin
     begin
       m := Low(Integer);
       for l := Low(cntElements) to High(cntElements) do
-        if cntElements[l].MemoryOrder > m then
+        if (cntElements[l].MemoryOrder > m) and not Supports(cntElements[l], IwbStringListTerminator) then
           m := cntElements[l].MemoryOrder;
       for l := Low(cntElements) to High(cntElements) do
         if cntElements[l].MemoryOrder = Low(Integer) then begin
           cntElements[l].MemoryOrder := m + 1;
           Inc(m);
         end;
+      for l := Low(cntElements) to High(cntElements) do
+        if Supports(cntElements[l], IwbStringListTerminator) then
+          cntElements[l].MemoryOrder := m+1;
       m := Low(Integer);
       k := Low(Integer);
       for i := Low(cntElements) to High(cntElements) do begin
