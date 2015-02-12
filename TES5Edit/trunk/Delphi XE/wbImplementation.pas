@@ -6647,6 +6647,8 @@ begin
   if mrStruct.mrsFormID shr 24 > aIndex then begin
     MakeHeaderWriteable;
     mrStruct.mrsFormID := (mrStruct.mrsFormID and $00FFFFFF) or (aIndex shl 24);
+    if Assigned(mrGroup) then
+      mrGroup.GroupLabel := mrStruct.mrsFormID;
   end;
 end;
 
