@@ -783,7 +783,7 @@ function wbNormalizeResourceName(aName: string; aResType: TGameResourceType): st
 var
   i: integer;
 begin
-  Result := LowerCase(aName);
+  Result := Trim(StringReplace(LowerCase(aName), '/', '\', [rfReplaceAll]));
   if Length(Result) < 2 then
     Exit;
 
