@@ -5228,6 +5228,7 @@ begin
   if Length(REFRs) = 0 then
     Exit;
 
+  pgMain.ActivePage := tbsMessages;
   PostAddMessage('[' + aWorldspace.EditorID + '] Generating LOD');
 
   // Trees LOD
@@ -5626,6 +5627,7 @@ begin
           PostAddMessage('http://www.nexusmods.com/skyrim/mods/59721/');
           PostAddMessage('It uses the same LODGen building process as TES5LODGen internally, but with more options.');
           PostAddMessage(StringOfChar('*', 120));
+          PostAddMessage('');
         end;
       end;
     except on E: Exception do
