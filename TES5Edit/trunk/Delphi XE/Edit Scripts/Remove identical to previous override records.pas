@@ -16,6 +16,10 @@ begin
   // skip master records
   if IsMaster(e) then
     Exit;
+    
+  // skip records that have elements in child group (WRLD, CELL, DIAL)
+  if ElementCount(ChildGroup(e)) <> 0 then
+    Exit;
   
   m := MasterOrSelf(e);
 
