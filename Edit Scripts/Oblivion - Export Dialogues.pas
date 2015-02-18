@@ -26,9 +26,9 @@ var
 begin
   if ElementExists(race, 'VNAM') then
     if male then
-      voicerace := LinksTo(ElementByPath(race, 'VNAM\Male'))
+      voicerace := WinningOverride(LinksTo(ElementByPath(race, 'VNAM\Male')))
     else
-      voicerace := LinksTo(ElementByPath(race, 'VNAM\Female'));
+      voicerace := WinningOverride(LinksTo(ElementByPath(race, 'VNAM\Female')));
   
   if Assigned(voicerace) then
     Result := GetElementEditValues(voicerace, 'FULL')
@@ -83,12 +83,12 @@ begin
 
     func := GetElementEditValues(ctda, 'Function');
     if func = 'GetIsID' then begin
-      npc := LinksTo(ElementByIndex(ctda, 4));
+      npc := WinningOverride(LinksTo(ElementByIndex(ctda, 4)));
       GetSpeakersFromNPC(npc, sl);
       lstIDs.Add(EditorID(npc));
     end
     else if func = 'GetIsRace' then
-      GetSpeakersFromRace(LinksTo(ElementByIndex(ctda, 4)), sl);
+      GetSpeakersFromRace(WinningOverride(LinksTo(ElementByIndex(ctda, 4))), sl);
     {else if func = 'GetIsSex' then begin
       if GetElementEditValues(ctda, 'Sex') = 'Male' then
         spk := spk + sSpkMale + #13#10
@@ -182,7 +182,7 @@ begin
       else
         fullname := fname;
       
-      voicename := 'sound\voice\' + LowerCase(GetFileName(e) + '\' + fullname) + '.mp3';
+      voicename := 'sound\voice\' + LowerCase(GetFileName(MasterOrSelf(e)) + '\' + fullname) + '.mp3';
       if ResourceExists(voicename) then HasMP3 := '*' else HasMP3 := '';
       if ResourceExists(ChangeFileExt(voicename, '.lip')) then HasLIP := '*' else HasLIP := '';
       
