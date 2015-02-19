@@ -4191,10 +4191,19 @@ begin
   if not Supports(NameRec.LinksTo, IwbMainRecord, MainRecord) then
     Exit;
 
-  if MainRecord.Signature = ACTI then
+  if (MainRecord.Signature = ACTI) or
+     (MainRecord.Signature = STAT) or
+     (MainRecord.Signature = TREE)
+  then
     Result := 1
+  else if MainRecord.Signature = CONT then
+    Result := 2
+  else if MainRecord.Signature = DOOR then
+    Result := 3
+  else if MainRecord.Signature = LIGH then
+    Result := 4
   else if MainRecord.Signature = MSTT then
-    Result := 2;
+    Result := 5;
 end;
 
 var
@@ -4419,113 +4428,116 @@ begin
     ])
   ]);
 
-  wbRecordFlagsFlags := wbFlags([
-    {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
-    {0x00000001}'ESM',
-    {0x00000002}'Unknown 2',
-    {>>> 0x00000004 ARMO: Not playable <<<}
-    {0x00000004}'NotPlayable',
-    {0x00000008}'Unknown 4',
-    {0x00000010}'Unknown 5',
-    {0x00000020}'Deleted',
-    {>>> 0x00000040 ACTI: Has Tree LOD <<<}
-    {>>> 0x00000040 REGN: Border Region <<<}
-    {>>> 0x00000040 STAT: Has Tree LOD <<<}
-    {>>> 0x00000040 REFR: Hidden From Local Map <<<}
-    {0x00000040}'Constant HiddenFromLocalMap BorderRegion HasTreeLOD',
-    {>>> 0x00000080 TES4: Localized <<<}
-    {>>> 0x00000080 PHZD: Turn Off Fire <<<}
-    {>>> 0x00000080 SHOU: Treat Spells as Powers <<<}
-    {>>> 0x00000080 STAT: Add-on LOD Object <<<}
-    {0x00000080}'Localized IsPerch AddOnLODObject TurnOffFire TreatSpellsAsPowers',
-    {>>> 0x00000100 ACTI: Must Update Anims <<<}
-    {>>> 0x00000100 REFR: Inaccessible <<<}
-    {>>> 0x00000100 REFR for LIGH: Doesn't light water <<<}
-    {0x00000100}'MustUpdateAnims Inaccessible DoesntLightWater',
-    {>>> 0x00000200 ACTI: Local Map - Turns Flag Off, therefore it is Hidden <<<}
-    {>>> 0x00000200 REFR: MotionBlurCastsShadows <<<}
-    {0x00000200}'HiddenFromLocalMap StartsDead MotionBlurCastsShadows',
-    {>>> 0x00000400 LSCR: Displays in Main Menu <<<}
-    {0x00000400}'PersistentReference QuestItem DisplaysInMainMenu',
-    {0x00000800}'InitiallyDisabled',
-    {0x00001000}'Ignored',
-    {0x00002000}'ActorChanged',
-    {0x00004000}'Unknown 15',
-    {>>> 0x00008000 STAT: Has Distant LOD <<<}
-    {0x00008000}'VWD',
-    {>>> 0x00010000 ACTI: Random Animation Start <<<}
-    {>>> 0x00010000 REFR light: Never fades <<<}
-    {0x00010000}'RandomAnimationStart NeverFades',
-    {>>> 0x00020000 ACTI: Dangerous <<<}
-    {>>> 0x00020000 REFR light: Doesn't light landscape <<<}
-    {>>> 0x00020000 SLGM: Can hold NPC's soul <<<}
-    {>>> 0x00020000 STAT: Use High-Detail LOD Texture <<<}
-    {0x00020000}'Dangerous OffLimits DoesntLightLandscape HighDetailLOD CanHoldNPC',
-    {0x00040000}'Compressed',
-    {>>> 0x00080000 STAT: Has Currents <<<}
-    {0x00080000}'CantWait HasCurrents',
-    {>>> 0x00100000 ACTI: Ignore Object Interaction <<<}
-    {0x00100000}'IgnoreObjectInteraction',
-    {0x00200000}'(Used in Memory Changed Form)',
-    {0x00400000}'Unknown 23',
-    {>>> 0x00800000 ACTI: Is Marker <<<}
-    {0x00800000}'IsMarker',
-    {0x01000000}'Unknown 25',
-    {>>> 0x02000000 ACTI: Obstacle <<<}
-    {>>> 0x02000000 REFR: No AI Acquire <<<}
-    {0x02000000}'Obstacle NoAIAcquire',
-    {>>> 0x04000000 ACTI: Filter <<<}
-    {0x04000000}'NavMeshFilter',
-    {>>> 0x08000000 ACTI: Bounding Box <<<}
-    {0x08000000}'NavMeshBoundingBox',
-    {>>> 0x10000000 STAT: Show in World Map <<<}
-    {0x10000000}'MustExitToTalk ShowInWorldMap',
-    {>>> 0x20000000 ACTI: Child Can Use <<<}
-    {>>> 0x20000000 REFR: Don't Havok Settle <<<}
-    {0x20000000}'ChildCanUse DontHavokSettle',
-    {>>> 0x40000000 ACTI: GROUND <<<}
-    {>>> 0x40000000 REFR: NoRespawn <<<}
-    {0x40000000}'NavMeshGround NoRespawn',
-    {>>> 0x80000000 REFR: MultiBound <<<}
-    {0x80000000}'MultiBound'
-  ], [18]);
+//  wbRecordFlagsFlags := wbFlags([
+//    {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
+//    {0x00000001}'ESM',
+//    {0x00000002}'Unknown 2',
+//    {>>> 0x00000004 ARMO: Not playable <<<}
+//    {0x00000004}'NotPlayable',
+//    {0x00000008}'Unknown 4',
+//    {0x00000010}'Unknown 5',
+//    {0x00000020}'Deleted',
+//    {>>> 0x00000040 ACTI: Has Tree LOD <<<}
+//    {>>> 0x00000040 REGN: Border Region <<<}
+//    {>>> 0x00000040 STAT: Has Tree LOD <<<}
+//    {>>> 0x00000040 REFR: Hidden From Local Map <<<}
+//    {0x00000040}'Constant HiddenFromLocalMap BorderRegion HasTreeLOD',
+//    {>>> 0x00000080 TES4: Localized <<<}
+//    {>>> 0x00000080 PHZD: Turn Off Fire <<<}
+//    {>>> 0x00000080 SHOU: Treat Spells as Powers <<<}
+//    {>>> 0x00000080 STAT: Add-on LOD Object <<<}
+//    {0x00000080}'Localized IsPerch AddOnLODObject TurnOffFire TreatSpellsAsPowers',
+//    {>>> 0x00000100 ACTI: Must Update Anims <<<}
+//    {>>> 0x00000100 REFR: Inaccessible <<<}
+//    {>>> 0x00000100 REFR for LIGH: Doesn't light water <<<}
+//    {0x00000100}'MustUpdateAnims Inaccessible DoesntLightWater',
+//    {>>> 0x00000200 ACTI: Local Map - Turns Flag Off, therefore it is Hidden <<<}
+//    {>>> 0x00000200 REFR: MotionBlurCastsShadows <<<}
+//    {0x00000200}'HiddenFromLocalMap StartsDead MotionBlurCastsShadows',
+//    {>>> 0x00000400 LSCR: Displays in Main Menu <<<}
+//    {0x00000400}'PersistentReference QuestItem DisplaysInMainMenu',
+//    {0x00000800}'InitiallyDisabled',
+//    {0x00001000}'Ignored',
+//    {0x00002000}'ActorChanged',
+//    {0x00004000}'Unknown 15',
+//    {>>> 0x00008000 STAT: Has Distant LOD <<<}
+//    {0x00008000}'VWD',
+//    {>>> 0x00010000 ACTI: Random Animation Start <<<}
+//    {>>> 0x00010000 REFR light: Never fades <<<}
+//    {0x00010000}'RandomAnimationStart NeverFades',
+//    {>>> 0x00020000 ACTI: Dangerous <<<}
+//    {>>> 0x00020000 REFR light: Doesn't light landscape <<<}
+//    {>>> 0x00020000 SLGM: Can hold NPC's soul <<<}
+//    {>>> 0x00020000 STAT: Use High-Detail LOD Texture <<<}
+//    {0x00020000}'Dangerous OffLimits DoesntLightLandscape HighDetailLOD CanHoldNPC',
+//    {0x00040000}'Compressed',
+//    {>>> 0x00080000 STAT: Has Currents <<<}
+//    {0x00080000}'CantWait HasCurrents',
+//    {>>> 0x00100000 ACTI: Ignore Object Interaction <<<}
+//    {0x00100000}'IgnoreObjectInteraction',
+//    {0x00200000}'(Used in Memory Changed Form)',
+//    {0x00400000}'Unknown 23',
+//    {>>> 0x00800000 ACTI: Is Marker <<<}
+//    {0x00800000}'IsMarker',
+//    {0x01000000}'Unknown 25',
+//    {>>> 0x02000000 ACTI: Obstacle <<<}
+//    {>>> 0x02000000 REFR: No AI Acquire <<<}
+//    {0x02000000}'Obstacle NoAIAcquire',
+//    {>>> 0x04000000 ACTI: Filter <<<}
+//    {0x04000000}'NavMeshFilter',
+//    {>>> 0x08000000 ACTI: Bounding Box <<<}
+//    {0x08000000}'NavMeshBoundingBox',
+//    {>>> 0x10000000 STAT: Show in World Map <<<}
+//    {0x10000000}'MustExitToTalk ShowInWorldMap',
+//    {>>> 0x20000000 ACTI: Child Can Use <<<}
+//    {>>> 0x20000000 REFR: Don't Havok Settle <<<}
+//    {0x20000000}'ChildCanUse DontHavokSettle',
+//    {>>> 0x40000000 ACTI: GROUND <<<}
+//    {>>> 0x40000000 REFR: NoRespawn <<<}
+//    {0x40000000}'NavMeshGround NoRespawn',
+//    {>>> 0x80000000 REFR: MultiBound <<<}
+//    {0x80000000}'MultiBound'
+//  ], [18]);
 
-//  wbRecordFlagsFlags := wbFlags(wbRecordFlagsFlags, [
-//    {0x00000001} { 0} 'Unknown 0',
-//    {0x00000002} { 1} 'Unknown 1',
-//    {0x00000004} { 2} 'Unknown 2',
-//    {0x00000008} { 3} 'Unknown 3',
-//    {0x00000010} { 4} 'Unknown 4',
-//    {0x00000020} { 5} 'Deleted',
-//    {0x00000040} { 6} 'Unknown 6',
-//    {0x00000080} { 7} 'Unknown 7',
-//    {0x00000100} { 8} 'Unknown 8',
-//    {0x00000200} { 9} 'Unknown 9',
-//    {0x00000400} {10} 'Unknown 10',
-//    {0x00000800} {11} 'Unknown 11',
-//    {0x00001000} {12} 'Unknown 12',
-//    {0x00002000} {13} 'Unknown 13',
-//    {0x00004000} {14} 'Unknown 14',
-//    {0x00008000} {15} 'Unknown 15',
-//    {0x00010000} {16} 'Unknown 16',
-//    {0x00020000} {17} 'Unknown 17',
-//    {0x00040000} {18} 'Unknown 18',
-//    {0x00080000} {19} 'Unknown 19',
-//    {0x00100000} {20} 'Unknown 20',
-//    {0x00200000} {21} 'Unknown 21',
-//    {0x00400000} {22} 'Unknown 22',
-//    {0x00800000} {23} 'Unknown 23',
-//    {0x01000000} {24} 'Unknown 24',
-//    {0x02000000} {25} 'Unknown 25',
-//    {0x04000000} {26} 'Unknown 26',
-//    {0x08000000} {27} 'Unknown 27',
-//    {0x10000000} {28} 'Unknown 28',
-//    {0x20000000} {29} 'Unknown 29',
-//    {0x40000000} {30} 'Unknown 30',
-//    {0x80000000} {31} 'Unknown 31'
-//  ]);
+  wbRecordFlagsFlags := wbFlags(wbRecordFlagsFlags, [
+    {0x00000001} { 0} 'Unknown 0',
+    {0x00000002} { 1} 'Unknown 1',
+    {0x00000004} { 2} 'Unknown 2',
+    {0x00000008} { 3} 'Unknown 3',
+    {0x00000010} { 4} 'Unknown 4',
+    {0x00000020} { 5} 'Deleted',
+    {0x00000040} { 6} 'Unknown 6',
+    {0x00000080} { 7} 'Unknown 7',
+    {0x00000100} { 8} 'Unknown 8',
+    {0x00000200} { 9} 'Unknown 9',
+    {0x00000400} {10} 'Unknown 10',
+    {0x00000800} {11} 'Unknown 11',
+    {0x00001000} {12} 'Unknown 12',
+    {0x00002000} {13} 'Unknown 13',
+    {0x00004000} {14} 'Unknown 14',
+    {0x00008000} {15} 'Unknown 15',
+    {0x00010000} {16} 'Unknown 16',
+    {0x00020000} {17} 'Unknown 17',
+    {0x00040000} {18} 'Unknown 18',
+    {0x00080000} {19} 'Unknown 19',
+    {0x00100000} {20} 'Unknown 20',
+    {0x00200000} {21} 'Unknown 21',
+    {0x00400000} {22} 'Unknown 22',
+    {0x00800000} {23} 'Unknown 23',
+    {0x01000000} {24} 'Unknown 24',
+    {0x02000000} {25} 'Unknown 25',
+    {0x04000000} {26} 'Unknown 26',
+    {0x08000000} {27} 'Unknown 27',
+    {0x10000000} {28} 'Unknown 28',
+    {0x20000000} {29} 'Unknown 29',
+    {0x40000000} {30} 'Unknown 30',
+    {0x80000000} {31} 'Unknown 31'
+  ]);
 
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbRecordFlagsFlags);
+  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([
+    {0x00000001}  0, 'ESM',
+    {0x00000080}  7, 'Localized'
+  ], False)));
 
   wbMainRecordHeader := wbStruct('Record Header', [
     wbString('Signature', 4, cpCritical),
@@ -9596,7 +9608,10 @@ begin
     wbLString(TNAM, 'Translation', 0, cpNormal, True)
   ]);
 
-  wbRecord(SHOU, 'Shout', [
+  wbRecord(SHOU, 'Shout',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000080}  7, 'Treat spells as powers'
+    ])), [
     wbEDID,
     wbFULL,
     wbMDOB,
@@ -9617,7 +9632,10 @@ begin
     wbInteger(DATA, 'Use All Parents', itU32, wbEnum(['False', 'True']))
   ]);
 
-  wbRecord(RELA, 'Relationship', [
+  wbRecord(RELA, 'Relationship',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000040}  6, 'Secret'
+    ])), [
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbFormIDCk('Parent', [NPC_, NULL]),
@@ -9983,7 +10001,10 @@ begin
     wbArrayS(CNAM, 'Collides With', wbFormIDCk('Forms', [COLL]), 0, cpNormal, False)
   ]);
 
-  wbRecord(CLFM, 'Color', [
+  wbRecord(CLFM, 'Color',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Non-Playable'
+    ])), [
     wbEDID,
     wbFULL,
     wbCNAMReq,
@@ -10068,7 +10089,10 @@ begin
     ], cpIgnore, True)
   ]);
 
-  wbRecord(INFO, 'Dialog response', [
+  wbRecord(INFO, 'Dialog response',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00002000} 13, 'Actor Changed'
+    ])), [
     wbEDID,
     wbVMAD,
     wbUnknown(DATA),
@@ -10105,7 +10129,6 @@ begin
     wbRArray('Link To', wbFormIDCk(TCLT, 'Response', [DIAL, INFO, NULL])),
     wbFormID(DNAM, 'Response Data'),
 
-    {>>> Unordered, CTDA can appear before or after LNAM <- REQUIRES CONFIRMATION <<<}
     wbRArray('Responses', wbRStruct('Response', [
       wbStruct(TRDT, 'Response Data', [
         wbInteger('Emotion Type', itU32, wbEmotionTypeEnum),
@@ -10178,7 +10201,10 @@ begin
     wbEffectsReq
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-  wbRecord(KEYM, 'Key', [
+  wbRecord(KEYM, 'Key',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Non-Playable'
+    ])), [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -10205,7 +10231,10 @@ begin
 
   if wbSimpleRecords then begin
 
-    wbRecord(LAND, 'Landscape', [
+    wbRecord(LAND, 'Landscape',
+      wbFlags(wbRecordFlagsFlags, wbFlagsList([
+        {0x00040000} 18, 'Compressed'
+      ]), [18]), [
       wbByteArray(DATA, 'Unknown'),
       wbByteArray(VNML, 'Vertex Normals'),
       wbByteArray(VHGT, 'Vertext Height Map'),
@@ -10236,7 +10265,10 @@ begin
 
   end else begin
 
-    wbRecord(LAND, 'Landscape', [
+    wbRecord(LAND, 'Landscape',
+      wbFlags(wbRecordFlagsFlags, wbFlagsList([
+        {0x00040000} 18, 'Compressed'
+      ]), [18]), [
       wbByteArray(DATA, 'Unknown'),
       wbArray(VNML, 'Vertex Normals', wbStruct('Row', [
         wbArray('Columns', wbStruct('Column', [
@@ -10289,7 +10321,12 @@ begin
 
   end;
 
-  wbRecord(LIGH, 'Light', [
+  wbRecord(LIGH, 'Light',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00010000} 16, 'Random Anim Start',
+      {0x00020000} 17, 'Portal-strict',
+      {0x02000000} 25, 'Obstacle'
+    ])), [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -10512,7 +10549,7 @@ begin
 				{0x00000020}  'Unknown 6',
 				{0x00000040}  'Unknown 7',
 				{0x00000080}  'Unknown 8',
-				{0x00000100}  'Dispell with Keywords',
+				{0x00000100}  'Dispel with Keywords',
 				{0x00000200}  'No Duration',
 				{0x00000400}  'No Magnitude',
 				{0x00000800}  'No Area',
@@ -10618,7 +10655,10 @@ begin
     wbCTDAs
   ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad}, wbMGEFAfterSet);
 
-  wbRecord(MISC, 'Misc. Item', [
+  wbRecord(MISC, 'Misc. Item',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Non-Playable'
+    ])), [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -10670,7 +10710,13 @@ begin
     wbInteger(NAM1, 'Created Object Count', itU16)
   ], False, nil, cpNormal, False, nil, wbContainerAfterSet);
 
-  wbRecord(NPC_, 'Non-Player Character (Actor)', [
+  wbRecord(NPC_, 'Non-Player Character (Actor)',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000400} 10, 'Unknown 10',
+      {0x00040000} 18, 'Compressed',
+      {0x00080000} 19, 'Unknown 19',
+      {0x20000000} 29, 'Bleedout Override'
+    ]), [18]), [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -11741,7 +11787,10 @@ begin
     wbFormIDCk(HEAD, 'Head', [HDPT, NULL])
   ], []);
 
-  wbRecord(RACE, 'Race', [
+  wbRecord(RACE, 'Race',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00080000} 19, 'Critter?'
+    ])), [
     wbEDID,
     wbFULL,
     wbDESCReq,
@@ -11925,147 +11974,60 @@ begin
 
 
   wbRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
-    wbRecordFlagsFlags,
-    {ACTI} wbFlags(wbRecordFlagsFlags, [
-      {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
-      {0x00000001}'ESM',
-      {0x00000002}'Unknown 2 ACTI',
-      {>>> 0x00000004 ARMO: Not playable <<<}
-      {0x00000004}'NotPlayable X',
-      {0x00000008}'Unknown 4',
-      {0x00000010}'Unknown 5',
-      {0x00000020}'Deleted',
-      {>>> 0x00000040 ACTI: Has Tree LOD <<<}
-      {>>> 0x00000040 REGN: Border Region <<<}
-      {>>> 0x00000040 STAT: Has Tree LOD <<<}
-      {>>> 0x00000040 REFR: Hidden From Local Map <<<}
-      {0x00000040}'Constant HiddenFromLocalMap BorderRegion HasTreeLOD',
-      {>>> 0x00000080 TES4: Localized <<<}
-      {>>> 0x00000080 PHZD: Turn Off Fire <<<}
-      {>>> 0x00000080 SHOU: Treat Spells as Powers <<<}
-      {>>> 0x00000080 STAT: Add-on LOD Object <<<}
-      {0x00000080}'Localized IsPerch AddOnLODObject TurnOffFire TreatSpellsAsPowers',
-      {>>> 0x00000100 ACTI: Must Update Anims <<<}
-      {>>> 0x00000100 REFR: Inaccessible <<<}
-      {>>> 0x00000100 REFR for LIGH: Doesn't light water <<<}
-      {0x00000100}'MustUpdateAnims Inaccessible DoesntLightWater',
-      {>>> 0x00000200 ACTI: Local Map - Turns Flag Off, therefore it is Hidden <<<}
-      {>>> 0x00000200 REFR: MotionBlurCastsShadows <<<}
-      {0x00000200}'HiddenFromLocalMap StartsDead MotionBlurCastsShadows',
-      {>>> 0x00000400 LSCR: Displays in Main Menu <<<}
-      {0x00000400}'PersistentReference QuestItem DisplaysInMainMenu',
-      {0x00000800}'InitiallyDisabled',
-      {0x00001000}'Ignored',
-      {0x00002000}'ActorChanged',
-      {0x00004000}'Unknown 15',
-      {>>> 0x00008000 STAT: Has Distant LOD <<<}
-      {0x00008000}'VWD',
-      {>>> 0x00010000 ACTI: Random Animation Start <<<}
-      {>>> 0x00010000 REFR light: Never fades <<<}
-      {0x00010000}'RandomAnimationStart NeverFades',
-      {>>> 0x00020000 ACTI: Dangerous <<<}
-      {>>> 0x00020000 REFR light: Doesn't light landscape <<<}
-      {>>> 0x00020000 SLGM: Can hold NPC's soul <<<}
-      {>>> 0x00020000 STAT: Use High-Detail LOD Texture <<<}
-      {0x00020000}'Dangerous OffLimits DoesntLightLandscape HighDetailLOD CanHoldNPC',
-      {0x00040000}'Compressed',
-      {>>> 0x00080000 STAT: Has Currents <<<}
-      {0x00080000}'CantWait HasCurrents',
-      {>>> 0x00100000 ACTI: Ignore Object Interaction <<<}
-      {0x00100000}'IgnoreObjectInteraction',
-      {0x00200000}'(Used in Memory Changed Form)',
-      {0x00400000}'Unknown 23',
-      {>>> 0x00800000 ACTI: Is Marker <<<}
-      {0x00800000}'IsMarker',
-      {0x01000000}'Unknown 25',
-      {>>> 0x02000000 ACTI: Obstacle <<<}
-      {>>> 0x02000000 REFR: No AI Acquire <<<}
-      {0x02000000}'Obstacle NoAIAcquire',
-      {>>> 0x04000000 ACTI: Filter <<<}
-      {0x04000000}'NavMeshFilter',
-      {>>> 0x08000000 ACTI: Bounding Box <<<}
-      {0x08000000}'NavMeshBoundingBox',
-      {>>> 0x10000000 STAT: Show in World Map <<<}
-      {0x10000000}'MustExitToTalk ShowInWorldMap',
-      {>>> 0x20000000 ACTI: Child Can Use <<<}
-      {>>> 0x20000000 REFR: Don't Havok Settle <<<}
-      {0x20000000}'ChildCanUse DontHavokSettle',
-      {>>> 0x40000000 ACTI: GROUND <<<}
-      {>>> 0x40000000 REFR: NoRespawn <<<}
-      {0x40000000}'NavMeshGround NoRespawn',
-      {>>> 0x80000000 REFR: MultiBound <<<}
-      {0x80000000}'MultiBound'
-    ], [18]),
-    {MSTT} wbFlags(wbRecordFlagsFlags, [
-      {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
-      {0x00000001}'ESM',
-      {0x00000002}'Unknown 2 MSTT',
-      {>>> 0x00000004 ARMO: Not playable <<<}
-      {0x00000004}'NotPlayable X',
-      {0x00000008}'Unknown 4',
-      {0x00000010}'Unknown 5',
-      {0x00000020}'Deleted',
-      {>>> 0x00000040 ACTI: Has Tree LOD <<<}
-      {>>> 0x00000040 REGN: Border Region <<<}
-      {>>> 0x00000040 STAT: Has Tree LOD <<<}
-      {>>> 0x00000040 REFR: Hidden From Local Map <<<}
-      {0x00000040}'Constant HiddenFromLocalMap BorderRegion HasTreeLOD',
-      {>>> 0x00000080 TES4: Localized <<<}
-      {>>> 0x00000080 PHZD: Turn Off Fire <<<}
-      {>>> 0x00000080 SHOU: Treat Spells as Powers <<<}
-      {>>> 0x00000080 STAT: Add-on LOD Object <<<}
-      {0x00000080}'Localized IsPerch AddOnLODObject TurnOffFire TreatSpellsAsPowers',
-      {>>> 0x00000100 ACTI: Must Update Anims <<<}
-      {>>> 0x00000100 REFR: Inaccessible <<<}
-      {>>> 0x00000100 REFR for LIGH: Doesn't light water <<<}
-      {0x00000100}'MustUpdateAnims Inaccessible DoesntLightWater',
-      {>>> 0x00000200 ACTI: Local Map - Turns Flag Off, therefore it is Hidden <<<}
-      {>>> 0x00000200 REFR: MotionBlurCastsShadows <<<}
-      {0x00000200}'HiddenFromLocalMap StartsDead MotionBlurCastsShadows',
-      {>>> 0x00000400 LSCR: Displays in Main Menu <<<}
-      {0x00000400}'PersistentReference QuestItem DisplaysInMainMenu',
-      {0x00000800}'InitiallyDisabled',
-      {0x00001000}'Ignored',
-      {0x00002000}'ActorChanged',
-      {0x00004000}'Unknown 15',
-      {>>> 0x00008000 STAT: Has Distant LOD <<<}
-      {0x00008000}'VWD',
-      {>>> 0x00010000 ACTI: Random Animation Start <<<}
-      {>>> 0x00010000 REFR light: Never fades <<<}
-      {0x00010000}'RandomAnimationStart NeverFades',
-      {>>> 0x00020000 ACTI: Dangerous <<<}
-      {>>> 0x00020000 REFR light: Doesn't light landscape <<<}
-      {>>> 0x00020000 SLGM: Can hold NPC's soul <<<}
-      {>>> 0x00020000 STAT: Use High-Detail LOD Texture <<<}
-      {0x00020000}'Dangerous OffLimits DoesntLightLandscape HighDetailLOD CanHoldNPC',
-      {0x00040000}'Compressed',
-      {>>> 0x00080000 STAT: Has Currents <<<}
-      {0x00080000}'CantWait HasCurrents',
-      {>>> 0x00100000 ACTI: Ignore Object Interaction <<<}
-      {0x00100000}'IgnoreObjectInteraction',
-      {0x00200000}'(Used in Memory Changed Form)',
-      {0x00400000}'Unknown 23',
-      {>>> 0x00800000 ACTI: Is Marker <<<}
-      {0x00800000}'IsMarker',
-      {0x01000000}'Unknown 25',
-      {>>> 0x02000000 ACTI: Obstacle <<<}
-      {>>> 0x02000000 REFR: No AI Acquire <<<}
-      {0x02000000}'Obstacle NoAIAcquire',
-      {>>> 0x04000000 ACTI: Filter <<<}
-      {0x04000000}'NavMeshFilter',
-      {>>> 0x08000000 ACTI: Bounding Box <<<}
-      {0x08000000}'NavMeshBoundingBox',
-      {>>> 0x10000000 STAT: Show in World Map <<<}
-      {0x10000000}'MustExitToTalk ShowInWorldMap',
-      {>>> 0x20000000 ACTI: Child Can Use <<<}
-      {>>> 0x20000000 REFR: Don't Havok Settle <<<}
-      {0x20000000}'ChildCanUse DontHavokSettle',
-      {>>> 0x40000000 ACTI: GROUND <<<}
-      {>>> 0x40000000 REFR: NoRespawn <<<}
-      {0x40000000}'NavMeshGround NoRespawn',
-      {>>> 0x80000000 REFR: MultiBound <<<}
-      {0x80000000}'MultiBound'
-    ], [18])
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000400} 10, 'Persistent',
+      {0x00000800} 11, 'Initially Disabled',
+      {0x04000000} 26, 'Filter (Collision Geometry)',
+      {0x08000000} 27, 'Bounding Box (Collision Geometry)',
+      {0x40000000} 30, 'Ground'
+    ], True, True)),
+    {ACTI STAT TREE} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000200}  9, 'Hidden From Local Map',
+      {0x00000400} 10, 'Persistent',
+      {0x00000800} 11, 'Initially Disabled',
+      {0x04000000} 26, 'Filter (Collision Geometry)',
+      {0x08000000} 27, 'Bounding Box (Collision Geometry)',
+      {0x20000000} 29, 'Don''t Havok Settle',
+      {0x40000000} 30, 'No Respawn'
+    ], True, True)),
+    {CONT} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000400} 10, 'Persistent',
+      {0x00000800} 11, 'Initially Disabled',
+      {0x02000000} 25, 'No AI Acquire',
+      {0x04000000} 26, 'Filter (Collision Geometry)',
+      {0x08000000} 27, 'Bounding Box (Collision Geometry)',
+      {0x20000000} 29, 'Don''t Havok Settle',
+      {0x40000000} 30, 'Ground'
+    ], True, True)),
+    {DOOR} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000040}  6, 'Hidden From Local Map',
+      {0x00000100}  8, 'Inaccessible',
+      {0x00000400} 10, 'Persistent',
+      {0x00000800} 11, 'Initially Disabled',
+      {0x04000000} 26, 'Filter (Collision Geometry)',
+      {0x08000000} 27, 'Bounding Box (Collision Geometry)',
+      {0x20000000} 29, 'Don''t Havok Settle',
+      {0x40000000} 30, 'No Respawn'
+    ], True, True)),
+    {LIGH} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000100}  8, 'Doesn''t light water',
+      {0x00000200}  9, 'Casts Shadows',
+      {0x00000400} 10, 'Persistent',
+      {0x00000800} 11, 'Initially Disabled',
+      {0x00010000} 16, 'Never Fades',
+      {0x00020000} 17, 'Doesn''t light landscape',
+      {0x02000000} 25, 'No AI Acquire',
+      {0x20000000} 29, 'Don''t Havok Settle',
+      {0x40000000} 30, 'No Respawn'
+    ], True, True)),
+    {MSTT} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000200}  9, 'Motion Blur',
+      {0x00000400} 10, 'Persistent',
+      {0x00000800} 11, 'Initially Disabled',
+      {0x04000000} 26, 'Filter (Collision Geometry)',
+      {0x08000000} 27, 'Bounding Box (Collision Geometry)',
+      {0x40000000} 30, 'No Respawn'
+    ], True, True))
   ]), [
     wbEDID,
     wbVMAD,
@@ -12456,9 +12418,10 @@ begin
     wbDataPosRot
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
-
-  {>>> Almost no changes here, seems to be working as is <<<}
-  wbRecord(REGN, 'Region', [
+  wbRecord(REGN, 'Region',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000040} 6, 'Border Region'
+    ])), [
     wbEDID,
     wbStruct(RCLR, 'Map Color', [
       wbInteger('Red', itU8),
@@ -12757,41 +12720,7 @@ end;
 procedure DefineTES5o;
 begin
 
-  wbRecord(TREE, 'Tree',
-    wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} '',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} '',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} '',
-      {0x00000080} { 7} '',
-      {0x00000100} { 8} '',
-      {0x00000200} { 9} 'Hidden From Local Map',
-      {0x00000400} {10} '',
-      {0x00000800} {11} '',
-      {0x00001000} {12} '',
-      {0x00002000} {13} '',
-      {0x00004000} {14} '',
-      {0x00008000} {15} '',
-      {0x00010000} {16} '',
-      {0x00020000} {17} '',
-      {0x00040000} {18} '',
-      {0x00080000} {19} '',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} '',
-      {0x01000000} {24} '',
-      {0x02000000} {25} '',
-      {0x04000000} {26} '',
-      {0x08000000} {27} '',
-      {0x10000000} {28} '',
-      {0x20000000} {29} '',
-      {0x40000000} {30} '',
-      {0x80000000} {31} ''
-    ]), [
+  wbRecord(TREE, 'Tree', [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -12938,7 +12867,10 @@ begin
     wbString(NAM4, 'Unused', 0, cpNormal)  // leftover
   ], False, nil, cpNormal, False);
 
-  wbRecord(WEAP, 'Weapon', [
+  wbRecord(WEAP, 'Weapon',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Non-Playable'
+    ])), [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -13049,7 +12981,10 @@ begin
   ], False, nil, cpNormal, False, wbWEAPAfterLoad, wbKeywordsAfterSet);
 
   if wbSimpleRecords then
-    wbRecord(WRLD, 'Worldspace', [
+    wbRecord(WRLD, 'Worldspace',
+      wbFlags(wbRecordFlagsFlags, wbFlagsList([
+        {0x00080000} 19, 'Can''t Wait'
+      ])), [
       wbEDID,
       {>>> BEGIN leftover from earlier CK versions <<<}
       wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False{, wbNeverShow}),
@@ -13123,7 +13058,7 @@ begin
         {0x04} 'Unknown 3',
         {0x08} 'No LOD Water',
         {0x10} 'No Landscape',
-        {0x20} 'Unknown 6',
+        {0x20} 'No Sky',
         {0x40} 'Fixed Dimensions',
         {0x80} 'No Grass'
       ]), cpNormal, True),
@@ -13147,7 +13082,10 @@ begin
       wbByteArray(OFST, 'Offset Data')
     ], False, nil, cpNormal, False, wbWRLDAfterLoad)
   else
-    wbRecord(WRLD, 'Worldspace', [
+    wbRecord(WRLD, 'Worldspace',
+      wbFlags(wbRecordFlagsFlags, wbFlagsList([
+        {0x00080000} 19, 'Can''t Wait'
+      ])), [
       wbEDID,
       {>>> BEGIN leftover from earlier CK versions <<<}
       wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False{, wbNeverShow}),
@@ -13221,7 +13159,7 @@ begin
         {0x04} 'Unknown 3',
         {0x08} 'No LOD Water',
         {0x10} 'No Landscape',
-        {0x20} 'Unknown 6',
+        {0x20} 'No Sky',
         {0x40} 'Fixed Dimensions',
         {0x80} 'No Grass'
       ]), cpNormal, True),
