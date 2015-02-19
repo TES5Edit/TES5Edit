@@ -4230,15 +4230,18 @@ procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
 
   begin
     try
-      if FileExists(s) then begin
-        fs := TFileStream.Create(s, fmOpenReadWrite);
-        fs.Seek(0, soFromEnd);
-      end else
-        fs := TFileStream.Create(s, fmCreate);
-      if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
-        fs.Size := 0;
-      txt := AnsiString(mmoMessages.Lines.Text) + #13#10;
-      fs.WriteBuffer(txt[1], Length(txt));
+      try
+        if FileExists(s) then begin
+          fs := TFileStream.Create(s, fmOpenReadWrite);
+          fs.Seek(0, soFromEnd);
+        end else
+          fs := TFileStream.Create(s, fmCreate);
+        if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
+          fs.Size := 0;
+        txt := AnsiString(mmoMessages.Lines.Text) + #13#10;
+        fs.WriteBuffer(txt[1], Length(txt));
+      // suppress log saving errors, it is not critical for xEdit
+      except end;
     finally
       if Assigned(fs) then
         FreeAndNil(fs);
