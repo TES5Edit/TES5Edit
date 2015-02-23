@@ -4203,7 +4203,22 @@ begin
   else if MainRecord.Signature = LIGH then
     Result := 4
   else if MainRecord.Signature = MSTT then
-    Result := 5;
+    Result := 5
+  else if MainRecord.Signature = ADDN then
+    Result := 6
+  else if
+     (MainRecord.Signature = SCRL) or
+     (MainRecord.Signature = AMMO) or
+     (MainRecord.Signature = ARMO) or
+     (MainRecord.Signature = BOOK) or
+     (MainRecord.Signature = INGR) or
+     (MainRecord.Signature = KEYM) or
+     (MainRecord.Signature = MISC) or
+     (MainRecord.Signature = SLGM) or
+     (MainRecord.Signature = WEAP) or
+     (MainRecord.Signature = ALCH)
+  then
+    Result := 7;
 end;
 
 var
@@ -4505,7 +4520,7 @@ begin
     {0x00000004} { 2} 'Unknown 2',
     {0x00000008} { 3} 'Unknown 3',
     {0x00000010} { 4} 'Unknown 4',
-    {0x00000020} { 5} 'Deleted',
+    {0x00000020} { 4} 'Unknown 5',
     {0x00000040} { 6} 'Unknown 6',
     {0x00000080} { 7} 'Unknown 7',
     {0x00000100} { 8} 'Unknown 8',
@@ -4534,15 +4549,15 @@ begin
     {0x80000000} {31} 'Unknown 31'
   ]);
 
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([
-    {0x00000001}  0, 'ESM',
-    {0x00000080}  7, 'Localized'
-  ], False)));
+  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbRecordFlagsFlags, wbFlagsList([])));
 
   wbMainRecordHeader := wbStruct('Record Header', [
     wbString('Signature', 4, cpCritical),
     wbInteger('Data Size', itU32, nil, cpIgnore),
-    wbRecordFlags,
+    wbInteger('Record Flags', itU32, wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000001}  0, 'ESM',
+      {0x00000080}  7, 'Localized'
+    ], False), True)),
     wbFormID('FormID', cpFormID),
     wbByteArray('Version Control Info 1', 4, cpIgnore),
     wbInteger('Form Version', itU16, nil, cpIgnore),
@@ -5311,7 +5326,14 @@ end;
 procedure DefineTES5b;
 begin
 
-  wbRecord(ACHR, 'Placed NPC', [
+  wbRecord(ACHR, 'Placed NPC',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000200}  9, 'Starts Dead',
+      {0x00000400} 10, 'Persistent',
+      {0x00000800} 11, 'Initially Disabled',
+      {0x02000000} 25, 'No AI Acquire',
+      {0x20000000} 29, 'Don''t Havok Settle'
+    ], True, True)), [
     wbEDID,
     wbVMAD,
     wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
@@ -6432,7 +6454,15 @@ procedure DefineTES5c;
 
   procedure ReferenceRecord(aSignature: TwbSignature; const aName: string);
   begin
-    wbRecord(aSignature, aName, [
+    wbRecord(aSignature, aName,
+      wbFlags(wbRecordFlagsFlags, wbFlagsList([
+        {0x00000080}  7, 'Turn Off Fire',
+        {0x00000400} 10, 'Persistent',
+        {0x00000800} 11, 'Initially Disabled',
+        {0x10000000} 28, 'Reflected By Auto Water',
+        {0x20000000} 29, 'Don''t Havok Settle',
+        {0x40000000} 30, 'No Respawn'
+      ], True, True)), [
       wbEDID,
       wbVMAD,
       wbFormIDCk(NAME, 'Projectile', [PROJ, HAZD]),
@@ -9984,7 +10014,7 @@ begin
   wbRecord(COLL, 'Collision Layer', [
     wbEDID,
     wbDESCReq,
-    wbInteger(BNAM, 'ID?', itU32, nil, cpNormal, True),
+    wbInteger(BNAM, 'Index', itU32, nil, cpNormal, True),
     wbStruct(FNAM, 'Debug Color', [
       wbInteger('Red', itU8),
       wbInteger('Green', itU8),
@@ -11979,7 +12009,8 @@ begin
       {0x00000800} 11, 'Initially Disabled',
       {0x04000000} 26, 'Filter (Collision Geometry)',
       {0x08000000} 27, 'Bounding Box (Collision Geometry)',
-      {0x40000000} 30, 'Ground'
+      {0x40000000} 30, 'Ground',
+      {0x80000000} 31, 'Multibound'
     ], True, True)),
     {ACTI STAT TREE} wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Hidden From Local Map',
@@ -12010,12 +12041,12 @@ begin
       {0x40000000} 30, 'No Respawn'
     ], True, True)),
     {LIGH} wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000100}  8, 'Doesn''t light water',
+      {0x00000100}  8, 'Doesn''t Light Water',
       {0x00000200}  9, 'Casts Shadows',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
       {0x00010000} 16, 'Never Fades',
-      {0x00020000} 17, 'Doesn''t light landscape',
+      {0x00020000} 17, 'Doesn''t Light Landscape',
       {0x02000000} 25, 'No AI Acquire',
       {0x20000000} 29, 'Don''t Havok Settle',
       {0x40000000} 30, 'No Respawn'
@@ -12026,6 +12057,22 @@ begin
       {0x00000800} 11, 'Initially Disabled',
       {0x04000000} 26, 'Filter (Collision Geometry)',
       {0x08000000} 27, 'Bounding Box (Collision Geometry)',
+      {0x20000000} 29, 'Don''t Havok Settle',
+      {0x40000000} 30, 'No Respawn'
+    ], True, True)),
+    {ADDN} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000400} 10, 'Persistent',
+      {0x00000800} 11, 'Initially Disabled',
+      {0x10000000} 28, 'Reflected By Auto Water',
+      {0x20000000} 29, 'Don''t Havok Settle',
+      {0x40000000} 30, 'No Respawn'
+    ], True, True)),
+    {ALCH SCRL AMMO ARMO INGR KEYM MISC SLGM WEAP}
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000400} 10, 'Persistent',
+      {0x00000800} 11, 'Initially Disabled',
+      {0x02000000} 25, 'No AI Acquire',
+      {0x20000000} 29, 'Don''t Havok Settle',
       {0x40000000} 30, 'No Respawn'
     ], True, True))
   ]), [
