@@ -1,9 +1,9 @@
 #summary TES5Edit Readme
 
-TES5Edit 3.1.0 EXPERIMENTAL by ElminsterAU
+TES5Edit 3.1.0 by ElminsterAU
 Updated for Skyrim by Hlp, Zilav and Sharlikran.
 
-TES5Edit is considered experimental. Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available.
+Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available.
 
 Starting from 3.1.0 we need to remind you that we only support version 1.9.0.32 of Skyrim. Update TES5Edit and Skyrim before you post in the forum.
 
@@ -14,9 +14,7 @@ TES5Edit Mod Cleaning Tutorial (Detailed Instructions with Pictures): http://www
 
 Current Official Threads:
 Plugin-cleaning-emporium (Unrelated to development of Edit): http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium/
-Official Bethesda Developmental Thread: http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium/
-
-YouTube Videos: http://www.youtube.com/user/Sharlikran/videos?flow=list&view=0&sort=dd
+Official Bethesda Developmental Thread: http://forums.bethsoft.com/topic/1511975-relz-tes5edit/
 
 Rename to TES4Edit.exe to work with Oblivion.
 Rename to FO3Edit.exe to work with Fallout3.
@@ -24,10 +22,12 @@ Rename to FNVEdit.exe to work with New Vegas.
 
 Fallout3 Training Manual for FO3Edit (applies to all game versions)
 http://fallout3.nexusmods.com/mods/8629
+Fallout New Vegas Training Manual for FO3Edit (applies to all game versions)
+http://www.nexusmods.com/newvegas/mods/38413
 
 Check for new versions here:
 Nexus: http://skyrim.nexusmods.com/mods/25859/
-Mirror: https://code.google.com/p/skyrim-plugin-decoding-project/downloads/list
+Mirror: http://1drv.ms/1o8jvih
 
 Important DirectX Information:
 
