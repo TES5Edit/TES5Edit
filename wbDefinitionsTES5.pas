@@ -4272,7 +4272,6 @@ begin
     'Clothing'
   ]);
 
-  {>>> When Set to None this Equals FF FF FF FF <<<}
   {>>> When NAME is user defined these will be incorrect <<<}
   wbBipedObjectEnum := wbEnum([
     '30 - Head',
@@ -4338,7 +4337,7 @@ begin
     {0x00800000} '53 - Unnamed',
     {0x01000000} '54 - Unnamed',
     {0x02000000} '55 - Unnamed',
-    {0x03000000} '56 - Unnamed',
+    {0x04000000} '56 - Unnamed',
     {0x08000000} '57 - Unnamed',
     {0x10000000} '58 - Unnamed',
     {0x20000000} '59 - Unnamed',
@@ -4554,10 +4553,7 @@ begin
   wbMainRecordHeader := wbStruct('Record Header', [
     wbString('Signature', 4, cpCritical),
     wbInteger('Data Size', itU32, nil, cpIgnore),
-    wbInteger('Record Flags', itU32, wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000001}  0, 'ESM',
-      {0x00000080}  7, 'Localized'
-    ], False), True)),
+    wbRecordFlags,
     wbFormID('FormID', cpFormID),
     wbByteArray('Version Control Info 1', 4, cpIgnore),
     wbInteger('Form Version', itU16, nil, cpIgnore),
@@ -6269,7 +6265,7 @@ begin
 				{0x00008000} 'Unknown 16',
 				{0x00010000} 'Medicine',
 				{0x00020000} 'Poison'
-      ])),
+      ], [0])),
       wbFormID('Addiction'),
       wbFloat('Addiction Chance'),
       wbFormIDCk('Sound - Consume', [SNDR, NULL])
@@ -9778,8 +9774,8 @@ begin
         {0x00000800} 'Unknown 12',
         {0x00001000} 'Unknown 13',
         {0x00002000} 'Unknown 14',
-        {0x00003000} 'Unknown 15',
-        {0x00004000} 'Face Target',
+        {0x00004000} 'Unknown 15',
+        {0x00008000} 'Face Target',
         {0x00010000} 'Looping',
         {0x00020000} 'Headtrack Player'
       ])),
@@ -9834,7 +9830,7 @@ begin
     wbString(MCHT, 'Male Child Title'),
     wbString(FCHT, 'Female Child Title'),
     wbInteger(DATA, 'Flags', itU32, wbFlags([
-      'Related'
+      'Family Association'
     ]))
   ]);
 end;
@@ -10408,7 +10404,10 @@ end;
 procedure DefineTES5m;
 begin
 
-  wbRecord(LSCR, 'Load Screen', [
+  wbRecord(LSCR, 'Load Screen',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000400} 10, 'Displays In Main Menu'
+    ])), [
     wbEDID,
     wbICON,
     wbDESCReq,
@@ -11032,7 +11031,7 @@ begin
     {0x20000000} 'Wear Sleep Outfit (unused)',
     {0x40000000} 'Unknown 31',
     {0x80000000} 'Unknown 32'
-  ]);
+  ], [29]);
 
   wbPKDTInterruptFlags := wbFlags([
     {0x0001}'Hellos to player',
@@ -12265,19 +12264,8 @@ begin
     wbXLCM,
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
 
-    {>>> Has some int values, but in CK it is assigned a COLL formid <<<}
+    {>>> COLL form Index value <<<}
     wbInteger(XTRI, 'Collision Layer', itU32),
-//    wbInteger(XTRI, 'Collision Layer', itU32, wbEnum([], [
-//      12, 'L_TRIGGER',
-//      22, 'L_ACTORZONE',
-//      23, 'L_PROJECTILEZONE',
-//      24, 'L_GASTRAP',
-//      47, 'L_DEADACTORZONE',
-//      48, 'L_TRIGGER_FALLINGTRAP',
-//      51, 'L_SPELLTRIGGER',
-//      54, 'L_TRAPTRIGGER',
-//      52, 'L_LIVING_AND_DEAD_ACTORS'
-//    ])),
 
     {--- Lock ---}
     {>>Lock Tab for REFR when 'Locked' is Unchecked this record is not present <<<}
@@ -12741,7 +12729,11 @@ begin
     )
   ]);
 
-  wbRecord(TES4, 'Main File Header', [
+  wbRecord(TES4, 'Main File Header',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000001}  0, 'ESM',
+      {0x00000080}  7, 'Localized'
+    ], False), True), [
     wbStruct(HEDR, 'Header', [
       wbFloat('Version'),
       wbInteger('Number of Records', itU32),
@@ -12969,7 +12961,7 @@ begin
         {0x0020}'Embedded Weapon (unused)',
         {0x0040}'Don''t Use 1st Person IS Anim (unused)',
         {0x0080}'Non-playable'
-      ])),
+      ], [1, 2, 4, 5, 6])),
       wbByteArray('Unused', 2, cpIgnore),
       wbFloat('Sight FOV'),
       wbByteArray('Unknown', 4),
@@ -13000,7 +12992,7 @@ begin
         {0x00000800}'Unknown 12',
         {0x00001000}'Non-hostile',
         {0x00002000}'Bound Weapon'
-      ])),
+      ], [2, 8])),
       wbFloat('Animation Attack Mult'),
       wbFloat('Unknown'),
       wbFloat('Rumble - Left Motor Strength'),
@@ -13056,7 +13048,7 @@ begin
             {0x0010}'Use Climate Data',
             {0x0020}'Use Image Space Data (unused)',
             {0x0040}'Use Sky Cell'
-          ], True)),
+          ], [5])),
           wbByteArray('Unknown', 1)
         ], cpNormal, True)
       ], []),
@@ -13157,7 +13149,7 @@ begin
             {0x0010}'Use Climate Data',
             {0x0020}'Use Image Space Data (unused)',
             {0x0040}'Use Sky Cell'
-          ], True)),
+          ], [5])),
           wbByteArray('Unknown', 1)
         ], cpNormal, True)
       ], []),
