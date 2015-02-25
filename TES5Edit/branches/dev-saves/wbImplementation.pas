@@ -2956,134 +2956,137 @@ begin
   if Length(cntElements) < 1 then
     raise Exception.Create('File '+GetFileName+' has no file header');
 
-  if cntElements[0].ElementType <> etMainRecord then
-    raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' as file header.');
+  if not GetIsNotPlugin then begin
+    if cntElements[0].ElementType <> etMainRecord then
+      raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' as file header.');
 
-  FileHeader := cntElements[0] as IwbMainRecord;
-  if FileHeader.Signature <> wbHeaderSignature then
-    raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' with invalid signature as file header.');
+    FileHeader := cntElements[0] as IwbMainRecord;
+    if FileHeader.Signature <> wbHeaderSignature then
+      raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' with invalid signature as file header.');
 
-  HEDR := FileHeader.RecordBySignature['HEDR'];
-  if not Assigned(HEDR) then
-    raise Exception.Create('File '+GetFileName+' has a file header with missing HEDR subrecord');
+    HEDR := FileHeader.RecordBySignature['HEDR'];
+    if not Assigned(HEDR) then
+      raise Exception.Create('File '+GetFileName+' has a file header with missing HEDR subrecord');
 
-  inherited;
+    inherited;
 
-  SetLength(Groups, wbGroupOrder.Count);
-  for i := Succ(Low(cntElements)) to High(cntElements) do begin
-    if not Supports(cntElements[i], IwbGroupRecord, GroupRecord) then
-      raise Exception.Create('File '+GetFileName+' contains invalid top level record: '+ cntElements[i].Name);
-    if GroupRecord.GroupType <> 0 then
-      raise Exception.Create('File '+GetFileName+' contains invalid top level group type '+IntToStr(GroupRecord.GroupType)+' for group: '+ cntElements[i].Name);
-    if GroupRecord.SortOrder < 0 then
-      raise Exception.Create('File '+GetFileName+' contains top level group without known sort order: '+ cntElements[i].Name);
-    if GroupRecord.SortOrder > High(Groups) then
-      raise Exception.Create('File '+GetFileName+' contains top level group with invalid sort order: '+ cntElements[i].Name);
-    if Groups[GroupRecord.SortOrder] then
-      raise Exception.Create('File '+GetFileName+' contains duplicated top level group: '+ cntElements[i].Name);
-    Groups[GroupRecord.SortOrder] := True;
-  end;
+    SetLength(Groups, wbGroupOrder.Count);
+    for i := Succ(Low(cntElements)) to High(cntElements) do begin
+      if not Supports(cntElements[i], IwbGroupRecord, GroupRecord) then
+        raise Exception.Create('File '+GetFileName+' contains invalid top level record: '+ cntElements[i].Name);
+      if GroupRecord.GroupType <> 0 then
+        raise Exception.Create('File '+GetFileName+' contains invalid top level group type '+IntToStr(GroupRecord.GroupType)+' for group: '+ cntElements[i].Name);
+      if GroupRecord.SortOrder < 0 then
+        raise Exception.Create('File '+GetFileName+' contains top level group without known sort order: '+ cntElements[i].Name);
+      if GroupRecord.SortOrder > High(Groups) then
+        raise Exception.Create('File '+GetFileName+' contains top level group with invalid sort order: '+ cntElements[i].Name);
+      if Groups[GroupRecord.SortOrder] then
+        raise Exception.Create('File '+GetFileName+' contains duplicated top level group: '+ cntElements[i].Name);
+      Groups[GroupRecord.SortOrder] := True;
+    end;
 
-  if Length(cntElements) > 1 then
-    wbMergeSort(@cntElements[1],  High(cntElements), CompareSortOrder);
+    if Length(cntElements) > 1 then
+      wbMergeSort(@cntElements[1],  High(cntElements), CompareSortOrder);
 
-  RecordCount := GetCountedRecordCount;
-  if RecordCount < 1 then
-    raise Exception.Create('File '+GetFileName+' has an invalid record count');
+    RecordCount := GetCountedRecordCount;
+    if RecordCount < 1 then
+      raise Exception.Create('File '+GetFileName+' has an invalid record count');
 
-  HEDR.Elements[1].EditValue := IntToStr(Pred(RecordCount));
+    HEDR.Elements[1].EditValue := IntToStr(Pred(RecordCount));
 
-  j := 0;
-  ONAMs := nil;
-  if wbGameMode in [gmFO3, gmFNV, gmTES5] then begin
-    Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
-    while FileHeader.RemoveElement('ONAM') <> nil do
-      ;
-    if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
-      for i := 0 to Pred(MasterFiles.ElementCount) do begin
-        if Supports(MasterFiles.Elements[i], IwbContainerElementRef, MasterFile) then begin
+    j := 0;
+    ONAMs := nil;
+    if wbGameMode in [gmFO3, gmFNV, gmTES5] then begin
+      Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
+      while FileHeader.RemoveElement('ONAM') <> nil do
+        ;
+      if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
+        for i := 0 to Pred(MasterFiles.ElementCount) do begin
+          if Supports(MasterFiles.Elements[i], IwbContainerElementRef, MasterFile) then begin
 
-          if FileHeader.IsESM then
-            while j <= High(flRecords) do begin
-              Current := flRecords[j];
-              FormID := Current.FixedFormID;
-              FileID := FormID shr 24;
-              if FileID > i then
-                Break;
-              Assert(FileID = i);
-              Inc(j);
+            if FileHeader.IsESM then
+              while j <= High(flRecords) do begin
+                Current := flRecords[j];
+                FormID := Current.FixedFormID;
+                FileID := FormID shr 24;
+                if FileID > i then
+                  Break;
+                Assert(FileID = i);
+                Inc(j);
 
-              Signature := Current.Signature;
+                Signature := Current.Signature;
 
-              if (Signature = 'NAVM') or
-                 (Signature = 'LAND') or
-                 (Signature = 'REFR') or
-                 (Signature = 'PGRE') or
-                 (Signature = 'PMIS') or
-                 (Signature = 'ACHR') or
-                 (Signature = 'ACRE') or
-                 (Signature = 'PARW') or {>>> Skyrim <<<}
-                 (Signature = 'PBEA') or {>>> Skyrim <<<}
-                 (Signature = 'PFLA') or {>>> Skyrim <<<}
-                 (Signature = 'PCON') or {>>> Skyrim <<<}
-                 (Signature = 'PBAR') or {>>> Skyrim <<<}
-                 (Signature = 'PHZD')    {>>> Skyrim <<<}
-              then begin
+                if (Signature = 'NAVM') or
+                   (Signature = 'LAND') or
+                   (Signature = 'REFR') or
+                   (Signature = 'PGRE') or
+                   (Signature = 'PMIS') or
+                   (Signature = 'ACHR') or
+                   (Signature = 'ACRE') or
+                   (Signature = 'PARW') or {>>> Skyrim <<<}
+                   (Signature = 'PBEA') or {>>> Skyrim <<<}
+                   (Signature = 'PFLA') or {>>> Skyrim <<<}
+                   (Signature = 'PCON') or {>>> Skyrim <<<}
+                   (Signature = 'PBAR') or {>>> Skyrim <<<}
+                   (Signature = 'PHZD')    {>>> Skyrim <<<}
+                then begin
 
-                if (not wbMasterUpdateFilterONAM) or Current.IsWinningOverride then begin
-                  if not Assigned(ONAMs) then begin
-                    if not Supports(FileHeader.Add('ONAM', True), IwbContainerElementRef, ONAMs) then
-                      Assert(False);
-                    Assert(ONAMs.ElementCount = 1);
-                    NewONAM := ONAMs.Elements[0];
-                  end else
-                    NewONAM := ONAMs.Assign(High(Integer), nil, True);
+                  if (not wbMasterUpdateFilterONAM) or Current.IsWinningOverride then begin
+                    if not Assigned(ONAMs) then begin
+                      if not Supports(FileHeader.Add('ONAM', True), IwbContainerElementRef, ONAMs) then
+                        Assert(False);
+                      Assert(ONAMs.ElementCount = 1);
+                      NewONAM := ONAMs.Elements[0];
+                    end else
+                      NewONAM := ONAMs.Assign(High(Integer), nil, True);
 
-                  {if wbDisplayLoadOrderFormID then
-                    NewONAM.NativeValue := Current.LoadOrderFormID
-                  else}
-                    NewONAM.NativeValue := FormID;
+                    {if wbDisplayLoadOrderFormID then
+                      NewONAM.NativeValue := Current.LoadOrderFormID
+                    else}
+                      NewONAM.NativeValue := FormID;
 
-                  if wbMasterUpdateFixPersistence and not Current.IsPersistent and not Current.IsMaster then begin
-                    Master := Current.Master;
-                    if Assigned(Master) then begin
-                      if Master.IsPersistent then begin
-                        flProgress('Setting Persistent: ' + Current.Name);
-                        Current.IsPersistent := True;
-                      end else
-                        for k := 0 to Pred(Master.OverrideCount) do
-                          if Current.Equals(Master.Overrides[k]) then
-                            Break
-                          else
-                            if Master.Overrides[k].IsPersistent then begin
-                              flProgress('Setting Persistent: ' + Current.Name);
-                              Current.IsPersistent := True;
-                              Break;
-                            end;
+                    if wbMasterUpdateFixPersistence and not Current.IsPersistent and not Current.IsMaster then begin
+                      Master := Current.Master;
+                      if Assigned(Master) then begin
+                        if Master.IsPersistent then begin
+                          flProgress('Setting Persistent: ' + Current.Name);
+                          Current.IsPersistent := True;
+                        end else
+                          for k := 0 to Pred(Master.OverrideCount) do
+                            if Current.Equals(Master.Overrides[k]) then
+                              Break
+                            else
+                              if Master.Overrides[k].IsPersistent then begin
+                                flProgress('Setting Persistent: ' + Current.Name);
+                                Current.IsPersistent := True;
+                                Break;
+                              end;
+                      end;
                     end;
+
                   end;
 
                 end;
 
               end;
-
-            end;
+          end;
+          if j > High(flRecords) then
+            Break;
         end;
-        if j > High(flRecords) then
-          Break;
-      end;
-    Exclude(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
-    FileHeader.UpdateRefs;
-  end;
+      Exclude(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
+      FileHeader.UpdateRefs;
+    end;
 
-  if wbClampFormID then begin
-    if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
-      k := MasterFiles.ElementCount
-    else
-      k := 0;
-    for i := Low(flRecords) to High(flRecords) do
-      flRecords[i].ClampFormID(k);
-  end;
+    if wbClampFormID then begin
+      if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
+        k := MasterFiles.ElementCount
+      else
+        k := 0;
+      for i := Low(flRecords) to High(flRecords) do
+        flRecords[i].ClampFormID(k);
+    end;
+  end else
+    inherited;
 end;
 
 function TwbFile.Reached: Boolean;

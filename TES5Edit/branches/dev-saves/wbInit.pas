@@ -382,6 +382,7 @@ begin
     end;
     wbSavePath := wbMyGamesTheGamePath + s;
   end;
+  wbSavePath := IncludeTrailingPathDelimiter(wbSavePath);
 
   wbParamIndex := ParamIndex;
   if not wbFindCmdLineParam('P', wbPluginsFileName) then

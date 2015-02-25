@@ -4241,32 +4241,6 @@ begin
     Result := s;
 end;
 
-//var
-//  sl: TStringList;
-
-type
-  TNifInfo = class(TObject)
-    MainRecords : TDynMainRecords;
-    HasLights: Boolean;
-    HasOthers: Boolean;
-  public
-    constructor Create(const aMainRecord: IwbMainRecord);
-    procedure Add(const aMainRecord: IwbMainRecord);
-  end;
-
-constructor TNifInfo.Create(const aMainRecord: IwbMainRecord);
-begin
-  Add(aMainRecord);
-end;
-
-procedure TNifInfo.Add(const aMainRecord: IwbMainRecord);
-begin
-  SetLength(MainRecords, Succ(Length(MainRecords)));
-  MainRecords[High(MainRecords)] := aMainRecord;
-  HasLights := HasLights or (aMainRecord.Signature = 'LIGH');
-  HasOthers := HasOthers or (aMainRecord.Signature <> 'LIGH');
-end;
-
 procedure TfrmMain.mniNavUndeleteAndDisableReferencesClick(Sender: TObject);
 const
   sJustWait                   = 'Undeleting and Disabling References. Please wait...';
@@ -4513,15 +4487,18 @@ procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
 
   begin
     try
-      if FileExists(s) then begin
-        fs := TFileStream.Create(s, fmOpenReadWrite);
-        fs.Seek(0, soFromEnd);
-      end else
-        fs := TFileStream.Create(s, fmCreate);
-      if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
-        fs.Size := 0;
-      txt := AnsiString(mmoMessages.Lines.Text) + #13#10;
-      fs.WriteBuffer(txt[1], Length(txt));
+      try
+        if FileExists(s) then begin
+          fs := TFileStream.Create(s, fmOpenReadWrite);
+          fs.Seek(0, soFromEnd);
+        end else
+          fs := TFileStream.Create(s, fmCreate);
+        if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
+          fs.Size := 0;
+        txt := AnsiString(mmoMessages.Lines.Text) + #13#10;
+        fs.WriteBuffer(txt[1], Length(txt));
+      // suppress log saving errors, it is not critical for xEdit
+      except end;
     finally
       if Assigned(fs) then
         FreeAndNil(fs);
@@ -4900,6 +4877,7 @@ begin
         if Length(Res) = 0 then Continue;
         BTT.LoadFromData(Res[High(Res)].GetData);
         // for each tree type in btt file
+        if Length(BTT.Types) > 0 then
         for j := Low(BTT.Types) to High(BTT.Types) do
           // for each reference of tree type
           for r := 0 to BTT.Types[j].Count - 1 do begin
@@ -10899,6 +10877,12 @@ begin
     Master := nil;
     for i := Low(Files) to High(Files) do
       if Files[i].LoadOrder = LoadOrder then begin
+        // header of .dat file, show only itself
+        if SameText(ExtractFileExt(aMainRecord.GetFile.FileName), '.dat') and not SameText(ExtractFileExt(Files[i].FileName), '.dat') then
+          Continue;
+        // skip .dat file header by default
+        if not SameText(ExtractFileExt(aMainRecord.GetFile.FileName), '.dat') and SameText(ExtractFileExt(Files[i].FileName), '.dat') then
+          Continue;
         Rec := Files[i].Elements[0] as IwbMainRecord;
         if Assigned(Rec) then begin
           j := Length(Result);
@@ -11580,7 +11564,7 @@ var
   SavedAny                    : Boolean;
   AnyErrors                   : Boolean;
 begin
-  if wbDontSave or (wbToolMode in [tmLODgen]) then
+  if wbDontSave then
     Exit;
 
   pgMain.ActivePage := tbsMessages;
@@ -11605,7 +11589,7 @@ begin
     if Assigned(Settings) then
       cbBackup.Checked := not Settings.ReadBool(frmMain.Name, 'DontBackup', not cbBackup.Checked);
 
-    if (CheckListBox1.Count > 0) and ((wbToolMode = tmLodGen) or not (wbToolMode in wbAutoModes)) then begin
+    if (CheckListBox1.Count > 0) and (not (wbToolMode in wbAutoModes)) then begin
       ShowModal;
       wbDontBackup := not cbBackup.Checked;
       if Assigned(Settings) then begin
@@ -11665,7 +11649,7 @@ begin
             if NeedsRename then
               s := s + t;
 
-            //try
+            try
               FileStream := TFileStream.Create(wbDataPath + s, fmCreate);
               try
                 PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
@@ -11675,12 +11659,12 @@ begin
                 FileStream.Free;
               end;
 
-            {except
+            except
               on E: Exception do begin
                 AnyErrors := True;
                 PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
               end;
-            end;}
+            end;
 
           end;
 
