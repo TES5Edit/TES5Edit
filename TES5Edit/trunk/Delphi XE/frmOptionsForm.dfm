@@ -103,6 +103,7 @@ object frmOptions: TfrmOptions
         Top = 201
         Width = 357
         Height = 17
+        Hint = 'Display binary data as hex arrays'
         Caption = 'Simple records LAND, NAVI, NAVM, CELL, WRLD (requires restart)'
         TabOrder = 7
       end
@@ -155,7 +156,7 @@ object frmOptions: TfrmOptions
         Top = 177
         Width = 169
         Height = 17
-        Hint = 'Sort INFOs in DIAL by previous INFO'
+        Hint = 'Remove OFST subrecords from worldspaces'
         Caption = 'Remove OFST offset data'
         TabOrder = 12
       end
