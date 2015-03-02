@@ -1,0 +1,207 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--Project was exported from assembly: C:\LODGen.exe-->
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{1E00BDA9-8245-4B1D-B43D-B1776009893D}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>LODGen</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <RootNamespace>LODGenerator</RootNamespace>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.0</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AtlasDesc.cs" />
+    <Compile Include="Common\BSA.cs" />
+    <Compile Include="Common\Ini.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="sharpziplib\Checksums\Adler32.cs" />
+    <Compile Include="sharpziplib\Checksums\CRC32.cs" />
+    <Compile Include="sharpziplib\Checksums\IChecksum.cs" />
+    <Compile Include="sharpziplib\Core\FileSystemScanner.cs" />
+    <Compile Include="sharpziplib\Core\INameTransform.cs" />
+    <Compile Include="sharpziplib\Core\IScanFilter.cs" />
+    <Compile Include="sharpziplib\Core\NameFilter.cs" />
+    <Compile Include="sharpziplib\Core\PathFilter.cs" />
+    <Compile Include="sharpziplib\Core\StreamUtils.cs" />
+    <Compile Include="sharpziplib\Core\WindowsPathUtils.cs" />
+    <Compile Include="sharpziplib\Encryption\PkzipClassic.cs" />
+    <Compile Include="sharpziplib\Encryption\ZipAESStream.cs" />
+    <Compile Include="sharpziplib\Encryption\ZipAESTransform.cs" />
+    <Compile Include="sharpziplib\SharpZipBaseException.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\Deflater.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\DeflaterConstants.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\DeflaterEngine.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\DeflaterHuffman.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\DeflaterPending.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\IEntryFactory.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\Inflater.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\InflaterDynHeader.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\InflaterHuffmanTree.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\PendingBuffer.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\Streams\DeflaterOutputStream.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\Streams\InflaterInputStream.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\Streams\OutputWindow.cs" />
+    <Compile Include="sharpziplib\Zip\Compression\Streams\StreamManipulator.cs" />
+    <Compile Include="sharpziplib\Zip\FastZip.cs" />
+    <Compile Include="sharpziplib\Zip\WindowsNameTransform.cs" />
+    <Compile Include="sharpziplib\Zip\ZipConstants.cs" />
+    <Compile Include="sharpziplib\Zip\ZipEntry.cs" />
+    <Compile Include="sharpziplib\Zip\ZipEntryFactory.cs" />
+    <Compile Include="sharpziplib\Zip\ZipException.cs" />
+    <Compile Include="sharpziplib\Zip\ZipExtraData.cs" />
+    <Compile Include="sharpziplib\Zip\ZipFile.cs" />
+    <Compile Include="sharpziplib\Zip\ZipHelperStream.cs" />
+    <Compile Include="sharpziplib\Zip\ZipInputStream.cs" />
+    <Compile Include="sharpziplib\Zip\ZipNameTransform.cs" />
+    <Compile Include="sharpziplib\Zip\ZipOutputStream.cs" />
+    <Compile Include="StaticDesc.cs" />
+    <Compile Include="OutDesc.cs" />
+    <Compile Include="QuadDesc.cs" />
+    <Compile Include="SegmentDesc.cs" />
+    <Compile Include="ShapeDesc.cs" />
+    <Compile Include="BBox.cs" />
+    <Compile Include="LODApp.cs" />
+    <Compile Include="LogFile.cs" />
+    <Compile Include="NiFile.cs" />
+    <Compile Include="Common\Color3.cs" />
+    <Compile Include="Common\Color4.cs" />
+    <Compile Include="Common\Matrix33.cs" />
+    <Compile Include="Common\Matrix44.cs" />
+    <Compile Include="Common\QuadTreeLeaf.cs" />
+    <Compile Include="Common\QuadTreeNode.cs" />
+    <Compile Include="Common\QuadTree.cs" />
+    <Compile Include="Common\Quaternion.cs" />
+    <Compile Include="Common\TexDesc.cs" />
+    <Compile Include="Common\ShaderTexDesc.cs" />
+    <Compile Include="Common\Triangle.cs" />
+    <Compile Include="Common\CmdArgs.cs" />
+    <Compile Include="Common\Utils.cs" />
+    <Compile Include="Common\UVCoord.cs" />
+    <Compile Include="Common\Vector2.cs" />
+    <Compile Include="Common\Vector3.cs" />
+    <Compile Include="Common\Vector4.cs" />
+    <Compile Include="NifMain\NiObject.cs" />
+    <Compile Include="NifMain\NiObjectNET.cs" />
+    <Compile Include="NifMain\NiProperty.cs" />
+    <Compile Include="NifMain\BSEffectShaderProperty.cs" />
+    <Compile Include="NifMain\NiAVObject.cs" />
+    <Compile Include="NifMain\NiNode.cs" />
+    <Compile Include="NifMain\BSFadeNode.cs" />
+    <Compile Include="NifMain\BSLightingShaderProperty.cs" />
+    <Compile Include="NifMain\NiGeometry.cs" />
+    <Compile Include="NifMain\NiTriBasedGeom.cs" />
+    <Compile Include="NifMain\BSLODTriShape.cs" />
+    <Compile Include="NifMain\BSMultiBound.cs" />
+    <Compile Include="NifMain\BSMultiBoundData.cs" />
+    <Compile Include="NifMain\BSMultiBoundAABB.cs" />
+    <Compile Include="NifMain\BSMultiBoundNode.cs" />
+    <Compile Include="NifMain\BSOrderedNode.cs" />
+    <Compile Include="NifMain\BSSegment.cs" />
+    <Compile Include="NifMain\NiTriShape.cs" />
+    <Compile Include="NifMain\BSSegmentedTriShape.cs" />
+    <Compile Include="NifMain\BSShaderTextureSet.cs" />
+    <Compile Include="NifMain\NiExtraData.cs" />
+    <Compile Include="NifMain\NiIntegerExtraData.cs" />
+    <Compile Include="NifMain\BSXFlags.cs" />
+    <Compile Include="NifMain\NiAlphaProperty.cs" />
+    <Compile Include="NifMain\NiBinaryExtraData.cs" />
+    <Compile Include="NifMain\NiGeometryData.cs" />
+    <Compile Include="NifMain\NiHeader.cs" />
+    <Compile Include="NifMain\NiMaterialColorController.cs" />
+    <Compile Include="NifMain\NiMaterialProperty.cs" />
+    <Compile Include="NifMain\NiPoint3Interpolator.cs" />
+    <Compile Include="NifMain\NiPosData.cs" />
+    <Compile Include="NifMain\NiTexture.cs" />
+    <Compile Include="NifMain\NiSourceTexture.cs" />
+    <Compile Include="NifMain\NiStencilProperty.cs" />
+    <Compile Include="NifMain\NiStringExtraData.cs" />
+    <Compile Include="NifMain\NiTexturingProperty.cs" />
+    <Compile Include="NifMain\NiTriBasedGeomData.cs" />
+    <Compile Include="NifMain\MatchGroup.cs" />
+    <Compile Include="NifMain\NiTriShapeData.cs" />
+    <Compile Include="NifMain\NiTriStrips.cs" />
+    <Compile Include="NifMain\NiTriStripsData.cs" />
+    <Compile Include="NifMain\NiVertexColorProperty.cs" />
+    <Compile Include="LODGeneratorCMD\Program.cs" />
+    <Compile Include="AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.4.5">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 4.5</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

@@ -1,0 +1,23 @@
+Changelog
+
+0.6	fixed cell origin of LOD objects causing some LOD models to show/not show
+	fixed use of world offset so filenames for reading BTR and writing BTO match
+	fixed tangents and bitangents not being adjusted for LOD object rotation
+	optimized remove unseen faces to also remove unseen vertices, vertex colors, normal, tangents and bitangents data for smaller file size
+	remove HD flag and vertex color in LOD level 8/16 to match CK
+	added support for additional material shaders Snow/Ash
+	added support for SLSF2_Double_Sided flag
+	lessened log output, added --verbose command line parameter to show all log messages
+	added console error message for missing input file or data directory
+	added stop error message for missing LOD nif 
+	added stop error message if logfile cant be written to
+	added verbose error message for missing landscape BTR, continues without removing unseen faces for quad
+	added uv remapping for atlas textures
+	added tolerance value for uv remapping
+	added BSA archive reading for LOD meshes and landscape BTR, so no need to unpack them first
+        atlas texture or 'lod' in texture name HD will be unset. All other textures set HD. --useHDLOD to use HD flag (2nd column) from input file to set HD on non atlassed textures with 'lod' in name
+	moved a cmd line directory arguments to input file
+	updated input file format to accept parameters in the form of parameter=value
+	added IgnoreTranslation as a workaround for certain problematic vanilla meshes
+	read input file with current codepage
+0.5	Last release by Ehamloptiran
