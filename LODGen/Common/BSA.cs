@@ -11,6 +11,7 @@ namespace LODGenerator.Common
     {
         private string name;
         private bool defaultCompressed;
+        private bool defaultFlag9;
         private static readonly BSAList LoadedArchives = new BSAList();
         private static readonly Dictionary<string, BSAArchiveFileInfo> FileList = new Dictionary<string, BSAArchiveFileInfo>();
 
@@ -35,7 +36,6 @@ namespace LODGenerator.Common
                 {
                     compressed = bsa.defaultCompressed;
                 }
-
                 //Console.WriteLine(bsa.name + " " + size);
 
             }
@@ -45,12 +45,19 @@ namespace LODGenerator.Common
                 FileInfo file = new FileInfo(bsa.name);
                 BinaryReader binary = new BinaryReader(file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite), System.Text.Encoding.Default);
                 binary.BaseStream.Seek(offset, SeekOrigin.Begin);
+                byte start = 0;
+                if (bsa.defaultFlag9)
+                {
+                    start = binary.ReadByte();
+                    string str = new string(binary.ReadChars(start));
+                    //Console.WriteLine(bsa.name + " name " + start + " " + str);
+                }
                 if (compressed)
                 {
                     //Console.WriteLine(bsa.name + " compressed " + size);
-                    byte[] b = new byte[size - 4];
+                    byte[] b = new byte[size - 4 - start];
                     byte[] output = new byte[binary.ReadUInt32()];
-                    binary.Read(b, 0, size - 4);
+                    binary.Read(b, 0, size - 4 - start);
                     ICSharpCode.SharpZipLib.Zip.Compression.Inflater inf = new ICSharpCode.SharpZipLib.Zip.Compression.Inflater();
                     inf.SetInput(b, 0, b.Length);
                     inf.Inflate(output);
@@ -115,16 +122,12 @@ namespace LODGenerator.Common
             public readonly int size;
             public readonly uint offset;
 
-            public BSAFileInfo(BinaryReader binary, bool defaultCompressed)
+            public BSAFileInfo(BinaryReader binary, bool iscompressed)
             {
                 path = null;
                 hash = binary.ReadUInt64();
                 size = binary.ReadInt32();
                 offset = binary.ReadUInt32();
-                //if (defaultCompressed)
-                //{
-                //    size ^= (1 << 30);
-                //}
             }
         }
 
@@ -144,20 +147,28 @@ namespace LODGenerator.Common
             FileInfo file = new FileInfo(archivepath);
             BinaryReader binary = new BinaryReader(file.Open(FileMode.Open, FileAccess.Read, FileShare.ReadWrite), System.Text.Encoding.Default);
             header = new BSAHeader(binary);
+            //theLog.WriteLog(archivepath + " version " + header.bsaVersion);
             if (header.bsaVersion != 0x67 && header.bsaVersion != 0x68)
             {
                 theLog.WriteLog("Unknown BSA version " + archivepath);
                 binary.Close();
                 return;
             }
-            defaultCompressed = false;
             if ((header.archiveFlags & 0x4) > 0) 
             {
                 defaultCompressed = true;
             }
+            else
+            {
+                defaultCompressed = false;
+            }
             if ((header.archiveFlags & 0x100) > 0)
             {
-                defaultCompressed = true;
+                defaultFlag9 = true;
+            }
+            else
+            {
+                defaultFlag9 = false;
             }
             //theLog.WriteLog(name + " is compressed? " + defaultCompressed + " flags " + header.archiveFlags);
             BSAFolderInfo[] folderInfo = new BSAFolderInfo[header.folderCount];
@@ -201,7 +212,7 @@ namespace LODGenerator.Common
                     BSAFileInfo bsaFileInfo = fileInfo[folderInfo[index].offset + index2];
                     BSAArchiveFileInfo bsaArchiveFileInfo = new BSAArchiveFileInfo(this, (int)bsaFileInfo.offset, bsaFileInfo.size);
                     string filepath = Path.Combine(folderInfo[index].path, bsaFileInfo.path);
-                    //theLog.WriteLog("file in BSA " + filepath + " off = " + bsaFileInfo.offset + " size = " + bsaFileInfo.size); // + " compressed "  + bsaFileInfo.compressed);
+                    //theLog.WriteLog(archivepath + " file = " + filepath + " off = " + bsaFileInfo.offset + " size = " + bsaFileInfo.size + " compressed = " + bsaArchiveFileInfo.compressed);
                     FileList[filepath.ToLower()] = bsaArchiveFileInfo;
                 }
             }
