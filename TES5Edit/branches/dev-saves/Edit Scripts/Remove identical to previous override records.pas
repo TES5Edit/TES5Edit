@@ -33,7 +33,7 @@ begin
   end;
   
   // remove record if no conflicts
-  if ConflictAllForElements(prevovr, e, False, False) <= caConflictBenign then begin
+  if ConflictAllForElements(prevovr, e, False, False) <= caNoConflict then begin
     AddMessage('Removing: ' + Name(e));
     RemoveNode(e);
     Inc(CountITPO);

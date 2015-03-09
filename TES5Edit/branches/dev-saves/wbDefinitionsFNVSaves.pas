@@ -1731,7 +1731,7 @@ var
   Container : IwbDataContainer;
   EasC      : IwbDataContainer;
   Origin    : Cardinal;
-  Consumed   : Cardinal;
+  Consumed  : Cardinal;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
@@ -2349,8 +2349,8 @@ begin
       wbNull
     ])
 //    ,wbByteArray('Remainder', DataRemainderCounter)  // Single line
-    ,wbArray('Remainder', wbByteArray('Unknown', wbBytesToGroup), DataQuartetCounter) // per Quartet
-    ,wbByteArray('Unknown', DataQuartetRemainderCounter)
+//    ,wbArray('Remainder', wbByteArray('Unknown', wbBytesToGroup), DataQuartetCounter) // per Quartet
+//    ,wbByteArray('Unknown', DataQuartetRemainderCounter)
   ]);
 
   wbQuestFlags := wbInteger('Flags', itU16, wbFlags([
