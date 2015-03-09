@@ -86,11 +86,11 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-		<VerInfo_Release>33</VerInfo_Release>
+        <VerInfo_Release>33</VerInfo_Release>
         <Manifest_File>None</Manifest_File>
         <Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
         <VerInfo_MajorVer>3</VerInfo_MajorVer>
-		<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.1.1.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterAU;ProductVersion=3.1.1;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.1.1.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterAU;ProductVersion=3.1.1;Comments=</VerInfo_Keys>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
@@ -135,7 +135,7 @@
         <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-	<VerInfo_Release>33</VerInfo_Release>
+        <VerInfo_Release>33</VerInfo_Release>
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_MajorVer>3</VerInfo_MajorVer>
 	<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.1.1.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xEdit by ElminsterAU;ProductVersion=3.1.1;Comments=</VerInfo_Keys>
