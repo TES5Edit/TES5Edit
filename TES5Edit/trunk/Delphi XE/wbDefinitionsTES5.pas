@@ -4796,7 +4796,7 @@ begin
   ], cpNormal, True);
 
   wbPropTypeEnum := wbEnum([
-    {00} '',
+    {00} 'None',
     {01} 'Object',
     {02} 'String',
     {03} 'Int32',
@@ -4845,7 +4845,7 @@ begin
         {0x03} 'Removed'
       ])),
       wbUnion('Value', wbScriptPropertyDecider, [
-        {00} wbInteger('Null', itU32),
+        {00} wbNull,
         {01} wbScriptObject,
         {02} wbLenString('String', 2),
         {03} wbInteger('Int32', itS32),

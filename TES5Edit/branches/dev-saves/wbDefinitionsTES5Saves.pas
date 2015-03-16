@@ -50,7 +50,7 @@ var // forward type directives
 procedure DefineTES5SavesA;
 begin
   wbPropTypeEnum := wbEnum([
-    {00} '',
+    {00} 'None',
     {01} 'Object',
     {02} 'String',
     {03} 'Int32',
