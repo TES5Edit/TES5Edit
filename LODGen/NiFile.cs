@@ -171,7 +171,7 @@ namespace LODGenerator
                 {
                     logFile.WriteLog("Error reading " + fileName + " from BSA " + ex.Message);
                     logFile.Close();
-                    System.Environment.Exit(500);
+                    System.Environment.Exit(501);
                 }
             }
             else
@@ -203,16 +203,26 @@ namespace LODGenerator
             //Console.WriteLine("done " + fileName);
         }
 
-        public void Write(string fileName)
+        public void Write(string fileName, LogFile logFile)
         {
-            BinaryWriter writer = new BinaryWriter((Stream)new FileStream(fileName, FileMode.Create));
-            this.header.Update(this.blocks);
-            this.header.Write(writer);
-            for (int index = 0; (long)index < (long)this.header.GetNumBlocks(); ++index)
-                this.blocks[index].Write(writer);
-            writer.Write(1);
-            writer.Write(0);
-            writer.Close();
+            try
+            {
+                BinaryWriter writer = new BinaryWriter((Stream)new FileStream(fileName, FileMode.Create));
+                this.header.Update(this.blocks);
+                this.header.Write(writer);
+                for (int index = 0; (long)index < (long)this.header.GetNumBlocks(); ++index)
+                    this.blocks[index].Write(writer);
+                writer.Write(1);
+                writer.Write(0);
+                writer.Close();
+            }
+            catch (Exception ex)
+            {
+                logFile.WriteLog("Error writing " + fileName + " " + ex.Message);
+                logFile.WriteLog("In case Mod Organizer is used, set output path outside of game and MO virtual file system directory");
+                logFile.Close();
+                System.Environment.Exit(502);
+            }
         }
 
         public int GetNumBlocks()

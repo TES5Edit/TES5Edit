@@ -14525,6 +14525,30 @@ begin
     Value := ExecuteCaptureConsoleOutput(Args.Values[0]);
     Done := True;
   end
+  else if SameText(Identifier, 'GenerateLODTES4') and (Args.Count = 1) then begin
+    if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+      if wbGameMode = gmTES4 then
+        GenerateLODTES4(MainRecord);
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end
+  else if SameText(Identifier, 'GenerateLODTES5Trees') and (Args.Count = 1) then begin
+    if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+      if wbGameMode = gmTES5 then
+        GenerateLODTES5(MainRecord, [lodTrees]);
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end
+  else if SameText(Identifier, 'GenerateLODTES5Objects') and (Args.Count = 1) then begin
+    if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
+      if wbGameMode = gmTES5 then
+        GenerateLODTES5(MainRecord, [lodObjects]);
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end
   else if SameText(Identifier, 'wbGetUVRangeTexturesList') and (Args.Count = 3) then begin
     wbGetUVRangeTexturesList(
       TStrings(V2O(Args.Values[0])), // TStrings list of meshes
