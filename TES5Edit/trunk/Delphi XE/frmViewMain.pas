@@ -14318,6 +14318,10 @@ begin
     Value := wbTempPath;
     Done := True;
   end
+  else if SameText(Identifier, 'wbOutputPath') and (Args.Count = 0) then begin
+    Value := wbOutputPath;
+    Done := True;
+  end
   else if (SameText(Identifier, 'wbSettingsFileName') and (Args.Count = 0)) then begin
     Value := wbSettingsFileName;
     Done := True;
@@ -14584,6 +14588,10 @@ begin
         Include(ScriptProcessElements, TwbElementType(i));
     if ScriptProcessElements = [] then
       ScriptProcessElements := [etMainRecord];
+    Done := True;
+  end else
+  if SameText(Identifier, 'wbOutputPath') then begin
+    wbOutputPath := Value;
     Done := True;
   end else
   if SameText(Identifier, 'FilterScripted') then begin
