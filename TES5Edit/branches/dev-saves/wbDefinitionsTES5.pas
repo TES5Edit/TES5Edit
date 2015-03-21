@@ -5027,8 +5027,8 @@ begin
       {5} wbInteger('Object Type', itU32, wbObjectTypeEnum),
       {6} wbFormIDCk('Keyword', [NULL, KYWD]),
       {7} wbByteArray('Unused', 4, cpIgnore),
-      {8} wbFormIDCkNoReach('Reference', [NULL, DOOR, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-      {9} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
+      {8} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
+      {9} wbInteger('Reference', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
      {10} wbByteArray('Unknown', 4, cpIgnore),
      {11} wbByteArray('Unknown', 4, cpIgnore),
      {12} wbByteArray('Unknown', 4, cpIgnore)
@@ -5047,8 +5047,8 @@ begin
       {5} wbInteger('Object Type', itU32, wbObjectTypeEnum),
       {6} wbFormIDCk('Keyword', [NULL, KYWD]),
       {7} wbByteArray('Unused', 4, cpIgnore),
-      {8} wbFormIDCkNoReach('Reference', [NULL, DOOR, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-      {9} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
+      {8} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
+      {9} wbInteger('Reference', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
      {10} wbByteArray('Unknown', 4, cpIgnore),
      {11} wbByteArray('Unknown', 4, cpIgnore),
      {12} wbByteArray('Unknown', 4, cpIgnore)
