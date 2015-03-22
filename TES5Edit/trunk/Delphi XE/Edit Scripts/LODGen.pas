@@ -12,6 +12,9 @@ const
   iLOD16 = 4;
   iLODFar = 5;
 
+  // run LODGen.exe
+  bExecuteLODGen = True;
+
   // Atlas options
   bBuildAtlas = True;
   iAtlasTextureSize = 512; // max size of source lod texture to be included on atlas
@@ -45,13 +48,15 @@ const
     'meshes\lod\windhelm\whvalunstrad_lod.nif';
 
 var
-  slLODTypes, slLOD, slCache, slExport: TStringList;
+  slLODTypes, slLOD, slCache, slCacheHPLod, slExport: TStringList;
   slLODMeshes, slLODTextures: TwbFastStringList;
   lstSkip: TList;
   LODRefs: integer;
   LODGenWorld: IInterface;
   LODGenExport, LODGenParams: string;
   sTitle, sExport, sDestination, sDataPath: string;
+  bFallout: Boolean;
+  sLODBaseObjects: string;
 
   frm: TForm;
   btnOk, btnCancel, btnSave, btnLoad, btnDefault, btnExport, btnDestination, btnDataPath: TButton;
@@ -152,7 +157,11 @@ begin
     Result := HexArrayToStr(GetElementEditValues(rec, 'MNAM\LOD #2 (Level 2)\Mesh'))
   else if LODType = iLODFar then begin
     Result := GetElementEditValues(rec, 'Model\MODL');
-    Result := Copy(Result, 1, Length(Result) - 4) + '_far.nif';
+    Result := Copy(Result, 1, Length(Result) - 4);
+    if bFallout then
+      Result := Result + '_lod.nif'
+    else
+      Result := Result + '_far.nif';
   end else
     Exit;
 
@@ -168,7 +177,7 @@ procedure ProcessReference(e: IInterface);
 var
   i, j, idx, statfid: integer;
   stat: IInterface;
-  s, mFull, m4, m8, m16: string;
+  s, mat, mFull, m4, m8, m16, scl: string;
 begin
   stat := BaseRecord(e);
   statfid := GetLoadOrderFormID(stat);
@@ -176,8 +185,8 @@ begin
   if lstSkip.IndexOf(statfid) <> -1 then
     Exit;
 
-  // skip persistent refs of never fade statics
-  if GetIsPersistent(e) and (GetElementNativeValues(stat, 'Record Header\Record Flags') and $00000004 > 0) then
+  // skip persistent refs of never fade statics in Skyrim
+  if (wbGameMode = gmTES5) and GetIsPersistent(e) and (GetElementNativeValues(stat, 'Record Header\Record Flags') and $00000004 > 0) then
     Exit;
   
   // getting lod files from cache
@@ -195,24 +204,39 @@ begin
           Continue;
       if Pos(slLOD[i], mFull) > 0 then begin
         m4 := LODMeshFor(stat, j and $FF);
-        m8 := LODMeshFor(stat, j shr 8 and $FF);
-        m16 := LODMeshFor(stat, j shr 16 and $FF);
+        // other LOD levels only for Skyrim
+        if wbGameMode = gmTES5 then begin
+          m8 := LODMeshFor(stat, j shr 8 and $FF);
+          m16 := LODMeshFor(stat, j shr 16 and $FF);
+        end;
+        
         if (Length(m4) + Length(m8) + Length(m16)) > 0 then begin
-          // LOD material detection
-          s := EditorID(LinksTo(ElementByPath(stat, 'DNAM\Material')));
-          if Pos('Snow', s) > 0 then s := 'Snow'
-          else if Pos('Ash', s) > 0 then s := 'Ash'
-          else s := '';
+          // LOD material detection for Skyrim
+          if wbGameMode = gmTES5 then begin
+            mat := EditorID(LinksTo(ElementByPath(stat, 'DNAM\Material')));
+            if Pos('Snow', mat) > 0 then mat := 'Snow' else
+              if Pos('Ash', mat) > 0 then mat := 'Ash' else
+                mat := '';
+          end;
           // a tab separated string of Editor ID, flags, material, full mesh and lod files
           s := EditorID(stat) + #9 + IntToHex(GetElementNativeValues(stat, 'Record Header\Record Flags'), 8) + #9 +
-               s + #9 + mFull + #9 + m4 + #9 + m8 + #9 + m16;
+               mat + #9 + mFull + #9 + m4 + #9 + m8 + #9 + m16;
           idx := slCache.Count;
           slCache.AddObject(s, statfid);
+          
+          // Fallout: High Priority LOD info variation with m4 model for m8, at the same index as normal cache
+          if bFallout then begin
+            s := EditorID(stat) + #9 + IntToHex(GetElementNativeValues(stat, 'Record Header\Record Flags'), 8) + #9 +
+                 mat + #9 + mFull + #9 + m4 + #9 + m4 + #9 + m16;
+            slCacheHPLod.Add(s)
+          end;
+
           // list of used lod meshes
           if m4 <> '' then slLODMeshes.Add(m4);
           if m8 <> '' then slLODMeshes.Add(m8);
           if m16 <> '' then slLODMeshes.Add(m16);
-        end
+        end;
+        
         Break;
       end;
     end;
@@ -224,11 +248,17 @@ begin
     Exit;
   end;
 
+  // get fallout high priority lod from separate cache
+  if bFallout and (GetElementNativeValues(e, 'Record Header\Record Flags') and $00010000 <> 0) then
+    s := slCacheHPLod[idx]
+  else
+    s := slCache[idx];
+
   // reference scale
   if ElementExists(e, 'XSCL') then
-    s := GetElementEditValues(e, 'XSCL')
+    scl := GetElementEditValues(e, 'XSCL')
   else
-    s := '1.0';
+    scl := '1.0';
 
   slExport.Add(Format('%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s', [
     IntToHex(GetLoadOrderFormID(e), 8),
@@ -239,8 +269,8 @@ begin
     GetElementEditValues(e, 'DATA\Rotation\X'),
     GetElementEditValues(e, 'DATA\Rotation\Y'),
     GetElementEditValues(e, 'DATA\Rotation\Z'),
-    s,
-    slCache[idx]
+    scl,
+    s
   ]));
   Inc(LODRefs);
 end;
@@ -253,7 +283,7 @@ var
 begin
   lst := TList.Create;
   AddMessage('Gathering references...');
-  wbFindREFRsByBase(e, 'STAT', 7, lst);
+  wbFindREFRsByBase(e, sLODBaseObjects, 7, lst);
   AddMessage('Filtering for valid LOD references...');
   for i := 0 to lst.Count - 1 do
     ProcessReference(ObjectToElement(lst[i]));
@@ -270,6 +300,7 @@ var
 begin
   slExport.Clear;
   slCache.Clear;
+  slCacheHPLod.Clear;
   lstSkip.Clear;
   slLODMeshes.Clear;
   slLODTextures.Clear;
@@ -298,8 +329,10 @@ begin
       wbGetUVRangeTexturesList(slLODMeshes, slLODTextures, fUVRange);
       if slLODTextures.Count > 1 then begin
         // remove HD LOD texture if there
-        i := slLODTextures.IndexOf(wbNormalizeResourceName(GetElementEditValues(wrld, 'TNAM'), resTexture));
-        if i <> -1 then slLODTextures.Delete(i);
+        if wbGameMode = gmTES5 then begin
+          i := slLODTextures.IndexOf(wbNormalizeResourceName(GetElementEditValues(wrld, 'TNAM'), resTexture));
+          if i <> -1 then slLODTextures.Delete(i);
+        end;
         // atlas file name and map name
         if Pos('meshes\', LowerCase(sDestination)) = 0 then begin
           AddMessage('Error: LODGen path must contain "meshes\" folder if building atlas');
@@ -325,10 +358,13 @@ begin
       end;
     end;
     slHeader := TStringList.Create;
+    slHeader.Add('GameMode=' + wbAppName);
     slHeader.Add('Worldspace=' + EditorID(wrld));
     slHeader.Add('CellSW=' + Format('%d %d', [x, y]));
-    slHeader.Add('TextureDiffuseHD=' + GetElementEditValues(wrld, 'TNAM'));
-    slHeader.Add('TextureNormalHD=' + GetElementEditValues(wrld, 'UNAM'));
+    if wbGameMode = gmTES5 then begin
+      slHeader.Add('TextureDiffuseHD=' + GetElementEditValues(wrld, 'TNAM'));
+      slHeader.Add('TextureNormalHD=' + GetElementEditValues(wrld, 'UNAM'));
+    end;
     if (AtlasMapName <> '') and FileExists(AtlasMapName) then begin
       slHeader.Add('TextureAtlasMap=' + AtlasMapName);
       slHeader.Add('AtlasTolerance=' + Format('%1.1f', [fUVRange - 1.0]));
@@ -343,7 +379,8 @@ begin
     sl.Clear;
     sl.Delimiter := ',';
     sl.StrictDelimiter := True;
-    sl.DelimitedText := sMeshIgnoreTranslationTES5;
+    if wbGameMode = gmTES5 then
+      sl.DelimitedText := sMeshIgnoreTranslationTES5;
     for i := 0 to Pred(sl.Count) do
       slHeader.Add('IgnoreTranslation=' + wbNormalizeResourceName(sl[i], resMesh));
     sl.Free;
@@ -483,7 +520,10 @@ end;
 procedure cbWorldSelect(Sender: TObject);
 begin
   edExport.Text := ScriptsPath + 'LODGen ' + TComboBox(Sender).Text + '.txt';
-  edDestination.Text := DataPath + 'meshes\terrain\' + TComboBox(Sender).Text + '\Objects';
+  if wbGameMode = gmTES5 then
+    edDestination.Text := DataPath + 'meshes\terrain\' + TComboBox(Sender).Text + '\Objects'
+  else if bFallout then
+    edDestination.Text := DataPath + 'meshes\landscape\lod\' + TComboBox(Sender).Text + '\Blocks';
 end;
 
 //============================================================================
@@ -1139,7 +1179,8 @@ begin
   lodgenexe := ScriptsPath + 'lodgen.exe';
   AddMessage('Executing LODGen...');
   AddMessage(lodgenexe + LODGenParams);
-  CreateProcessWait(lodgenexe, LODGenParams, SW_SHOW, 0);
+  if bExecuteLODGen then
+    CreateProcessWait(lodgenexe, LODGenParams, SW_SHOW, 0);
 end;
 
 //============================================================================
@@ -1165,10 +1206,21 @@ end;
 function Initialize: integer;
 begin
   Result := 1;
-  if wbGameMode <> gmTES5 then begin
-    MessageDlg('LODGen supports Skyrim only.', mtInformation, [mbOk], 0);
+
+  if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then
+    bFallout := True
+  else
+    bFallout := False;
+
+  if not ((wbGameMode = gmTES5) or bFallout) then begin
+    MessageDlg('LODGen supports Skyrim, Fallout 3 and Fallout New Vegas only.', mtInformation, [mbOk], 0);
     Exit;
   end;
+  
+  if bFallout then
+    sLODBaseObjects := 'STAT SCOL'
+  else
+    sLODBaseObjects := 'STAT';
   
   sTitle := wbAppName + 'LODGen by Ehamloptiran, Sheson and Zilav';
   AddMessage('');
@@ -1179,6 +1231,7 @@ begin
   slLODTypes.CommaText := sLODOptions;
   slLOD := TStringList.Create;
   slCache := TStringList.Create;
+  slCacheHPLod := TStringList.Create;
   slExport := TStringList.Create;
   lstSkip := TList.Create;
   slLODMeshes := TwbFastStringList.Create;
@@ -1195,6 +1248,7 @@ begin
   lstSkip.Free;
   slExport.Free;
   slCache.Free;
+  slCacheHPLod.Free;
   slLOD.Free;
   slLODTypes.Free;
   slLODMeshes.Free;

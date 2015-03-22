@@ -4679,7 +4679,12 @@ begin
       if Length(res) = 0 then
         Continue;
 
-      NifTexturesUVRange(res[High(res)].GetData, UVRange, slNifTextures);
+      if wbGameMode = gmTES5 then
+        NifTexturesUVRange(res[High(res)].GetData, UVRange, slNifTextures)
+      else
+        // fallouts nif scanner doesn't support them fully, grab all textures for now
+        NifTextures(res[High(res)].GetData, slNifTextures);
+
       for j := 0 to Pred(slNifTextures.Count) do begin
         // get only texture at index 0 in BSTextureSet nodes (diffuse texture)
         if Integer(slNifTextures.Objects[j]) <> 0 then
@@ -4728,8 +4733,13 @@ begin
     InitImage(Images[Pred(Length(Images))].Image_n);
     s := slTextures[i];
     s := ChangeFileExt(slTextures[i], '') + '_n.dds';
-    if not wbContainerHandler.ResourceExists(s) then
-      s := 'textures\default_n.dds';
+    if not wbContainerHandler.ResourceExists(s) then begin
+      // default normals texture to use
+      if wbGameMode = gmTES5 then
+        s := 'textures\default_n.dds'
+      else if wbGameMode = gmFNV then
+        s := 'textures\weapons\1handpistol\euclidscreendefault_n.dds';
+    end;
     res := wbContainerHandler.OpenResource(s);
     if Length(res) <> 0 then
       data := res[High(res)].GetData;
