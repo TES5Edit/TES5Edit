@@ -1454,6 +1454,11 @@ end;
 
 { Nif routines }
 
+procedure NifUtils_NifBlockList(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := NifBlockList(TBytes(Args.Values[0]), TStrings(V2O(Args.Values[1])));
+end;
+
 procedure NifUtils_NifTextureList(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := NifTextures(TBytes(Args.Values[0]), TStrings(V2O(Args.Values[1])));
@@ -1903,6 +1908,7 @@ begin
     AddGet(TwbFastStringList, 'Create', TwbFastStringList_Create, 0, [varEmpty], varEmpty);
 
     { Nif routines }
+    AddFunction(cUnit, 'NifBlockList', NifUtils_NifBlockList, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'NifTextureList', NifUtils_NifTextureList, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'NifTextureListUVRange', NifUtils_NifTextureListUVRange, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
 
