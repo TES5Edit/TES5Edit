@@ -22,6 +22,7 @@ uses
   SysUtils,
   Classes;
 
+function NifBlockList(aNifData: TBytes; aBlocks: TStrings): Boolean;
 function NifTextures(aNifData: TBytes; aTextures: TStrings): Boolean;
 function NifTexturesUVRange(aNifData: TBytes; UVRange: Single; aTextures: TStrings): Boolean;
 
@@ -77,6 +78,16 @@ type
     NodeStrings: array of string;
     NodeOffsets: array of integer;
     constructor Create(aNiFile: TNiFile; aIndex: Integer); override;
+    procedure Load(aStream: TStream); override;
+  end;
+
+  TNodeNiNode = class(TBaseNiNode)
+  public
+    procedure Load(aStream: TStream); override;
+  end;
+
+  TNodeBSFadeNode = class(TBaseNiNode)
+  public
     procedure Load(aStream: TStream); override;
   end;
 
@@ -148,6 +159,10 @@ type
     procedure Load(aStream: TStream); override;
   end;
 
+  TNodeNiTriStrips = class(TNodeNiTriShape)
+  public
+    procedure Load(aStream: TStream); override;
+  end;
 
   TNiFile = class
   public
@@ -328,6 +343,20 @@ begin
 end;
 
 //===========================================================================
+procedure TNodeNiNode.Load(aStream: TStream);
+begin
+  inherited;
+  Name := ReadString;
+end;
+
+//===========================================================================
+procedure TNodeBSFadeNode.Load(aStream: TStream);
+begin
+  inherited;
+  Name := ReadString;
+end;
+
+//===========================================================================
 procedure TNodeBSShaderTextureSet.Load(aStream: TStream);
 var
   i, n: Cardinal;
@@ -486,6 +515,13 @@ begin
 end;
 
 //===========================================================================
+procedure TNodeNiTriStrips.Load(aStream: TStream);
+begin
+  // same as NiTriShape loader
+  inherited;
+end;
+
+//===========================================================================
 constructor TNiFile.Create;
 begin
   //
@@ -532,16 +568,24 @@ begin
   for i := Low(Nodes) to High(Nodes) do begin
     NodeType := Header.NodeTypes[Header.NodeTypeIndex[i]];
     aStream.Position := Header.NodeOffsets[i];
-    if NodeType = 'NiTriShape' then
+    if NodeType = 'NiNode' then
+      Nodes[i] := TNodeNiNode.Create(Self, i)
+    else if NodeType = 'NiTriShape' then
       Nodes[i] := TNodeNiTriShape.Create(Self, i)
     else if NodeType = 'NiTriShapeData' then
       Nodes[i] := TNodeNiTriShapeData.Create(Self, i)
+    else if NodeType = 'NiTriStrips' then
+      Nodes[i] := TNodeNiTriStrips.Create(Self, i)
+    else if NodeType = 'BSFadeNode' then
+      Nodes[i] := TNodeBSFadeNode.Create(Self, i)
     else if NodeType = 'BSShaderTextureSet' then
       Nodes[i] := TNodeBSShaderTextureSet.Create(Self, i)
     else if NodeType = 'BSLightingShaderProperty' then
       Nodes[i] := TNodeBSLightingShaderProperty.Create(Self, i)
     else if NodeType = 'BSEffectShaderProperty' then
-      Nodes[i] := TNodeBSEffectShaderProperty.Create(Self, i);
+      Nodes[i] := TNodeBSEffectShaderProperty.Create(Self, i)
+    else
+      Nodes[i] := TBaseNiNode.Create(Self, i);
 
     if Assigned(Nodes[i]) then
       Nodes[i].Load(aStream);
@@ -561,6 +605,39 @@ begin
       sl.Delete(i)
     else
       sl[i] := s;
+  end;
+end;
+
+//===========================================================================
+// Get the list of all blocks: index, name and type
+function NifBlockList(aNifData: TBytes; aBlocks: TStrings): Boolean;
+var
+  bs: TBytesStream;
+  nif: TNiFile;
+  n: TBaseNiNode;
+  i: integer;
+begin
+  Result := False;
+  if Assigned(aBlocks) then
+    aBlocks.Clear
+  else
+    Exit;
+
+  bs := TBytesStream.Create(aNifData);
+  nif := TNiFile.Create;
+  try
+    nif.Load(bs);
+    for i := Low(nif.Nodes) to High(nif.Nodes) do begin
+      n := nif.Nodes[i];
+      if not Assigned(n) then
+        Continue;
+      aBlocks.AddObject(n.Name + '=' + nif.Header.NodeTypes[nif.Header.NodeTypeIndex[i]], Pointer(n.Index));
+    end;
+    StringsRemoveEmptyAndTrim(aBlocks);
+    Result := True;
+  finally
+    nif.Free;
+    bs.Free;
   end;
 end;
 
