@@ -189,9 +189,15 @@ end;
 
 //===========================================================================
 function TBaseNiNode.ReadShortString: string;
+var
+  i: byte;
 begin
-  Result := TEncoding.ASCII.GetString(data.ReadBytes(data.ReadByte - 1));
-  data.ReadByte; // skip null
+  i := data.ReadByte;
+  if i > 0 then begin
+    Result := TEncoding.ASCII.GetString(data.ReadBytes(i - 1));
+    data.ReadByte; // skip null
+  end else
+    Result := '';
 end;
 
 //===========================================================================
