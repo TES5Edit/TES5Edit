@@ -158,6 +158,7 @@ type
     procedure SaveFromAtlas(aIndex: Integer; aFileName: string);
     procedure CopyFromAtlas(aIndex: Integer; var Img: TImageData; ImgX, ImgY: Integer);
     function BuildAtlas(MaxAtlasSize: Integer): Boolean;
+    function BillboardFileName(aFileName, aModelName: string; aFormID: Cardinal): string;
     function AddTree(aFileName, aModelName: string; aFormID: Cardinal; aWidth, aHeight: Single): PwbLodTES5Tree;
     property WorldspaceID: string read fWorldspaceID write fWorldspaceID;
     property ListFileName: string read GetListFileName;
@@ -187,6 +188,7 @@ type
   end;
 
 function wbLODSettingsFileName(WorldspaceID: string): string;
+function wbLODTreeBlockFileExt: string;
 function wbNormalizeResourceName(aName: string; aResType: TGameResourceType): string;
 procedure wbBuildAtlas(var Images: TSourceAtlasTextures; aWidth, aHeight: Integer;
   aName: string);
@@ -233,6 +235,17 @@ begin
     Result := 'lodsettings\' + WorldspaceID + '.lod';
 end;
 
+function wbLODTreeBlockFileExt: string;
+begin
+  if wbGameMode = gmTES5 then
+    Result := 'btt'
+  else if wbGameMode in [gmFO3, gmFNV] then
+    Result := 'dtl'
+  else
+    Result := '';
+end;
+
+
 { TwbLodSettings }
 
 procedure TwbLodSettings.Init;
@@ -258,11 +271,11 @@ const
 begin
   // Fallouts
   if wbGameMode in [gmFO3, gmFNV] then begin
-    if Length(aData) <> 16 then
+    if Length(aData) <> 24 then
       raise Exception.Create(sError);
-    Stride := PInteger(@aData[0])^;
-    LODLevelMin := PInteger(@aData[4])^;
-    LODLevelMax := PInteger(@aData[8])^;
+    LODLevelMin := PInteger(@aData[0])^;
+    LODLevelMax := PInteger(@aData[4])^;
+    Stride := PInteger(@aData[8])^;
     SWCell.x := PSmallInt(@aData[12])^;
     SWCell.y := PSmallInt(@aData[14])^;
   end
@@ -411,12 +424,25 @@ end;
 
 function TwbLodTES5TreeList.GetListFileName: string;
 begin
-  Result := 'Meshes\Terrain\' + fWorldspaceID + '\Trees\' + fWorldspaceID + '.lst';
+  if wbGameMode = gmTES5 then
+    Result := 'Meshes\Terrain\' + fWorldspaceID + '\Trees\' + fWorldspaceID + '.lst'
+  else if wbGameMode in [gmFO3, gmFNV] then
+    Result := 'Meshes\Landscape\LOD\' + fWorldspaceID + '\Trees\TreeTypes.lst'
+  else
+    Result := '';
 end;
 
 function TwbLodTES5TreeList.GetAtlasFileName: string;
 begin
-  Result := 'Textures\Terrain\' + fWorldspaceID + '\Trees\' + fWorldspaceID + 'TreeLod.dds';
+  if wbGameMode = gmTES5 then
+    Result := 'Textures\Terrain\' + fWorldspaceID + '\Trees\' + fWorldspaceID + 'TreeLod.dds'
+  else if wbGameMode in [gmFO3, gmFNV] then begin
+    if SameText(Copy(fWorldspaceID, 1, 4), 'DLC4') then
+      Result := 'Textures\Landscape\Trees\TreeSwampLod.dds'
+    else
+      Result := 'Textures\Landscape\Trees\TreeDeadLod.dds';
+  end else
+    Result := '';
 end;
 
 function TwbLodTES5TreeList.GetTreesListCount: Integer;
@@ -454,6 +480,15 @@ begin
     end;
 end;
 
+function TwbLodTES5TreeList.BillboardFileName(aFileName, aModelName: string; aFormID: Cardinal): string;
+begin
+  Result := Format('Textures\Terrain\LODGen\%s\%s_%s.dds', [
+    aFileName,
+    ChangeFileExt(ExtractFileName(aModelName), ''),
+    IntToHex(aFormID and $FFFFFF, 8)
+  ]);
+end;
+
 function TwbLodTES5TreeList.AddTree(aFileName, aModelName: string; aFormID: Cardinal; aWidth, aHeight: Single): PwbLodTES5Tree;
 var
   i, idx: integer;
@@ -465,11 +500,7 @@ begin
   Result := @fTrees[Pred(Length(fTrees))];
   Result^.Index := Succ(idx);
   Result^.FormID := aFormID;
-  Result^.BillBoard := Format('Textures\Terrain\LODGen\%s\%s_%s.dds', [
-    aFileName,
-    ChangeFileExt(ExtractFileName(aModelName), ''),
-    IntToHex(aFormID and $FFFFFF, 8)
-  ]);
+  Result^.BillBoard := BillboardFileName(aFileName, aModelName, aFormID);
   Result^.Width := aWidth;
   Result^.Height := aHeight;
   Result^.ShiftX := 0.0;
@@ -675,7 +706,16 @@ end;
 
 function TwbLodTES5TreeBlock.GetBlockFileName: string;
 begin
-  Result := Format('meshes\terrain\%s\trees\%s.%d.%d.%d.btt', [
+  Result := '';
+
+  if wbGameMode = gmTES5 then
+    Result := 'meshes\terrain\%s\trees\%s.%d.%d.%d.' + wbLODTreeBlockFileExt
+  else if wbGameMode in [gmFO3, gmFNV] then
+    Result := 'meshes\landscape\lod\%s\trees\%s.level%d.x%d.y%d.' + wbLODTreeBlockFileExt
+  else
+    Exit;
+
+  Result := Format(Result, [
     TreeList.WorldspaceID,
     TreeList.WorldspaceID,
     LODLevel,
@@ -686,7 +726,7 @@ end;
 
 procedure TwbLodTES5TreeBlock.LoadFromData(aData: TBytes);
 const
-  sError = 'Invalid BTT file';
+  sError = 'Invalid tree LOD block file';
 var
   TypesNum, TreesNum, i, p: integer;
 begin
