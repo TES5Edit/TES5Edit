@@ -13,7 +13,7 @@ const
   iLODFar = 5;
 
   // run LODGen.exe
-  bExecuteLODGen = True;
+  bExecuteLODGen = True; // True/False
 
   // Atlas options
   bBuildAtlas = True;
@@ -367,7 +367,10 @@ begin
     end;
     if (AtlasMapName <> '') and FileExists(AtlasMapName) then begin
       slHeader.Add('TextureAtlasMap=' + AtlasMapName);
-      slHeader.Add('AtlasTolerance=' + Format('%1.1f', [fUVRange - 1.0]));
+      if not bFallout then
+        slHeader.Add('AtlasTolerance=' + Format('%1.1f', [fUVRange - 1.0]))
+      else
+        slHeader.Add('AtlasTolerance=100000.0');
     end;
     slHeader.Add('PathData=' + DataPath);
     slHeader.Add('PathOutput=' + sDestination);

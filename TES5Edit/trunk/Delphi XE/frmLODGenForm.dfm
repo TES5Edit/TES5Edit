@@ -27,10 +27,10 @@ object frmLODGen: TfrmLODGen
     AutoSize = False
     Caption = 
       'Only worldspaces that have existing lodsettings file "LODSetting' +
-      's\<Worldspace>.lod" are shown either in the Data folder, or in B' +
-      'SA archives. Archives are loaded similar to the game itself - th' +
-      'e ones specified in Skyrim.ini and those that match loaded plugi' +
-      'ns names.'
+      's\<Worldspace>.lod" (.dlodsettings for Fallout3 and New Vegas) a' +
+      're shown either in the Data folder, or in BSA archives. Archives' +
+      ' are loaded similar to the game itself - the ones specified in S' +
+      'kyrim.ini and those that match loaded plugins names.'
     WordWrap = True
   end
   object Label2: TLabel
