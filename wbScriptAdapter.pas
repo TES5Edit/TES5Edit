@@ -1617,14 +1617,18 @@ begin
   BaseSignatures := string(Args.Values[1]);
   Opt := Integer(Args.Values[2]);
   lst := TList(V2O(Args.Values[3]));
-  for i := Low(REFRs) to High(REFRs) do begin
-    if  not ((Opt and 1 <> 0) and REFRs[i].IsDeleted)
-    and not ((Opt and 2 <> 0) and REFRs[i].IsInitiallyDisabled)
-    and not ((Opt and 4 <> 0) and REFRs[i].ElementExists['XESP'])
-    and (Assigned(REFRs[i].BaseRecord) and (Pos(REFRs[i].BaseRecord.Signature, BaseSignatures) <> 0))
-    then
-      lst.Add(Pointer(REFRs[i]));
-  end;
+  if not Assigned(lst) then
+    Exit;
+
+  if Length(REFRs) <> 0 then
+    for i := Low(REFRs) to High(REFRs) do begin
+      if  not ((Opt and 1 <> 0) and REFRs[i].IsDeleted)
+      and not ((Opt and 2 <> 0) and REFRs[i].IsInitiallyDisabled)
+      and not ((Opt and 4 <> 0) and REFRs[i].ElementExists['XESP'])
+      and (Assigned(REFRs[i].BaseRecord) and (Pos(REFRs[i].BaseRecord.Signature, BaseSignatures) <> 0))
+      then
+        lst.Add(Pointer(REFRs[i]));
+    end;
 end;
 
 procedure Misc_wbNormalizeResourceName(var Value: Variant; Args: TJvInterpreterArgs);
