@@ -484,7 +484,7 @@ begin
     wbGameMode := gmFNV;
     wbAppName := 'FNV';
     wbGameName := 'FalloutNV';
-    if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmScript]) then begin
+    if not (wbToolMode in [tmView, tmEdit, tmLODgen, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmScript]) then begin
       ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
     end;
@@ -496,7 +496,7 @@ begin
     wbGameMode := gmFO3;
     wbAppName := 'FO3';
     wbGameName := 'Fallout3';
-    if not (wbToolMode in [tmView, tmEdit, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmScript]) then begin
+    if not (wbToolMode in [tmView, tmEdit, tmLODgen, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmScript]) then begin
       ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
     end;
