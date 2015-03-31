@@ -4772,24 +4772,26 @@ begin
 
   slMap := TStringList.Create;
   try
-    wbBuildAtlas(Images, aWidth, aHeight, aName);
-    for i := Low(Images) to High(Images) do
-      if Images[i].AtlasName <> '' then begin
-        // atlas name in map file must be relative to data folder
-        Delete(Images[i].AtlasName, 1, Pred(Pos('textures\', LowerCase(Images[i].AtlasName))));
-        slMap.Add(
-          Images[i].Name + #9 +
-          IntToStr(Images[i].Image.Width)  + #9 +
-          IntToStr(Images[i].Image.Height)  + #9 +
-          IntToStr(Images[i].X) + #9 +
-          IntToStr(Images[i].Y) + #9 +
-          Images[i].AtlasName + #9 +
-          IntToStr(Images[i].W) + #9 +
-          IntToStr(Images[i].H)
-        );
-      end;
-    if slMap.Count <> 0 then
-      slMap.SaveToFile(aMapName);
+    if Length(Images) <> 0 then begin
+      wbBuildAtlas(Images, aWidth, aHeight, aName);
+      for i := Low(Images) to High(Images) do
+        if Images[i].AtlasName <> '' then begin
+          // atlas name in map file must be relative to data folder
+          Delete(Images[i].AtlasName, 1, Pred(Pos('textures\', LowerCase(Images[i].AtlasName))));
+          slMap.Add(
+            Images[i].Name + #9 +
+            IntToStr(Images[i].Image.Width)  + #9 +
+            IntToStr(Images[i].Image.Height)  + #9 +
+            IntToStr(Images[i].X) + #9 +
+            IntToStr(Images[i].Y) + #9 +
+            Images[i].AtlasName + #9 +
+            IntToStr(Images[i].W) + #9 +
+            IntToStr(Images[i].H)
+          );
+        end;
+      if slMap.Count <> 0 then
+        slMap.SaveToFile(aMapName);
+    end;
   finally
     slMap.Free;
     if Length(Images) <> 0 then
@@ -4862,6 +4864,7 @@ var
     ini: TMemIniFile;
     slIni: TStringList;
     bsIni: TBytesStream;
+    Width, Height: Single;
   begin
     // calculate default width and height of a tree from object bounds
     Ovr := TreeRec.WinningOverride;
@@ -4922,7 +4925,6 @@ var
   TotalCount          : Integer;
   LodLevel            : Integer;
   i, j, k, l          : Integer;
-  Width, Height       : Single;
   Lst                 : TwbLodTES5TreeList;
   LodSet              : TwbLodSettings;
   Res                 : TDynResources;
@@ -5333,7 +5335,10 @@ begin
             i := slLODTextures.IndexOf(wbNormalizeResourceName(aWorldspace.WinningOverride.ElementEditValues['TNAM'], resTexture));
             if i <> -1 then slLODTextures.Delete(i);
             // atlas file name and map name
-            AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds';
+            if wbGameMode = gmTES5 then
+              AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds'
+            else if wbGameMode in [gmFO3, gmFNV] then
+              AtlasName := wbOutputPath + 'textures\landscape\lod\' + aWorldspace.EditorID  + '\Blocks\' + aWorldspace.EditorID + 'ObjectsLOD.dds';
             AtlasMapName := wbScriptsPath + 'LODGenAtlasMap.txt';
             // make sure atlas folder exists
             if not DirectoryExists(ExtractFilePath(AtlasName)) then
@@ -5353,6 +5358,7 @@ begin
         end;
 
         // creating lodgen data file
+        slExport.Add('GameMode=' + wbAppName);
         slExport.Add('Worldspace=' + aWorldspace.EditorID);
         slExport.Add('CellSW=' + Format('%d %d', [Lodset.SWCell.x, Lodset.SWCell.y]));
         slExport.Add('TextureDiffuseHD=' + aWorldspace.WinningOverride.ElementEditValues['TNAM']);
@@ -5362,7 +5368,12 @@ begin
           slExport.Add('AtlasTolerance=' + Format('%1.1f', [UVRange - 1.0]));
         end;
         slExport.Add('PathData=' + wbDataPath);
-        slExport.Add('PathOutput=' + wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects');
+        if wbGameMode = gmTES5 then
+          slExport.Add('PathOutput=' + wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects')
+        else if wbGameMode in [gmFO3, gmFNV] then
+          slExport.Add('PathOutput=' + wbOutputPath + 'meshes\landscape\lod\' + aWorldspace.EditorID  + '\Blocks')
+        else
+          raise Exception.Create('Unsupported LODGen game');
         // list of BSAs
         if Assigned(wbContainerHandler) then begin
           sl := TStringList.Create;
@@ -8169,7 +8180,7 @@ begin
         Settings.WriteString(Section, 'AtlasWidth', '4096');
         Settings.WriteString(Section, 'AtlasHeight', '4096');
         Settings.WriteString(Section, 'AtlasTextureSize', '1024');
-        Settings.WriteString(Section, 'AtlasTextureUVRange', '100000');
+        Settings.WriteString(Section, 'AtlasTextureUVRange', '10000');
         Settings.WriteBool(Section, 'ObjectsNoTangents', False);
         Settings.WriteBool(Section, 'ObjectsNoVertexColors', True);
       end;

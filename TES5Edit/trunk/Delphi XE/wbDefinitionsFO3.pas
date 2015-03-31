@@ -4188,16 +4188,22 @@ begin
   wbDESC := wbString(DESC, 'Description', 0, cpTranslate);
   wbDESCReq := wbString(DESC, 'Description', 0, cpTranslate, True);
   wbXSCL := wbFloat(XSCL, 'Scale');
-  wbOBND := wbArray(OBND, 'Object Bounds', wbStruct('Corner', [
-    wbInteger('X', itS16),
-    wbInteger('Y', itS16),
-    wbInteger('Z', itS16)
-  ]));
-  wbOBNDReq := wbArray(OBND, 'Object Bounds', wbStruct('Corner', [
-    wbInteger('X', itS16),
-    wbInteger('Y', itS16),
-    wbInteger('Z', itS16)
-  ]), 2, nil, nil, cpNormal, True);
+  wbOBND := wbStruct(OBND, 'Object Bounds', [
+    wbInteger('X1', itS16),
+    wbInteger('Y1', itS16),
+    wbInteger('Z1', itS16),
+    wbInteger('X2', itS16),
+    wbInteger('Y2', itS16),
+    wbInteger('Z2', itS16)
+  ]);
+  wbOBNDReq := wbStruct(OBND, 'Object Bounds', [
+    wbInteger('X1', itS16),
+    wbInteger('Y1', itS16),
+    wbInteger('Z1', itS16),
+    wbInteger('X2', itS16),
+    wbInteger('Y2', itS16),
+    wbInteger('Z2', itS16)
+  ], cpNormal, True);
   wbREPL := wbFormIDCkNoReach(REPL, 'Repair List', [FLST]);
   wbEITM := wbFormIDCk(EITM, 'Object Effect', [ENCH, SPEL]);
   wbBIPL := wbFormIDCk(BIPL, 'Biped Model List', [FLST]);
