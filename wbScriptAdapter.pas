@@ -1586,6 +1586,7 @@ procedure Misc_wbFindREFRsByBase(var Value: Variant; Args: TJvInterpreterArgs);
 
 var
   MainRecord          : IwbMainRecord;
+  Element             : IwbElement;
   REFRs               : TDynMainRecords;
   i, j, Count, Opt    : Integer;
   lst                 : TList;
@@ -1626,8 +1627,10 @@ begin
       and not ((Opt and 2 <> 0) and REFRs[i].IsInitiallyDisabled)
       and not ((Opt and 4 <> 0) and REFRs[i].ElementExists['XESP'])
       then
-        if Assigned(REFRs[i].BaseRecord) and (Pos(REFRs[i].BaseRecord.Signature, BaseSignatures) <> 0) then
-          lst.Add(Pointer(REFRs[i]));
+        if Supports(REFRs[i].ElementBySignature['NAME'], IwbElement, Element) then
+          if Supports(Element.LinksTo, IwbMainRecord, MainRecord) then
+            if Pos(MainRecord.Signature, BaseSignatures) <> 0 then
+              lst.Add(Pointer(REFRs[i]));
 end;
 
 procedure Misc_wbNormalizeResourceName(var Value: Variant; Args: TJvInterpreterArgs);
