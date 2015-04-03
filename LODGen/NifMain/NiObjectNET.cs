@@ -1,4 +1,5 @@
 ﻿using LODGenerator.Common;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -25,7 +26,9 @@ namespace LODGenerator.NifMain
             Utils.ReadString(reader, header.GetVersion(), out this.nameIdx, out this.name);
             this.numExtraData = reader.ReadUInt32();
             for (int index = 0; (long)index < (long)this.numExtraData; ++index)
+            {
                 this.extraData.Add(reader.ReadInt32());
+            }
             this.controller = reader.ReadInt32();
         }
 

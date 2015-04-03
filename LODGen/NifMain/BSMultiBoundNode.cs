@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using LODGenerator.Common;
+using System.IO;
 
 namespace LODGenerator.NifMain
 {
@@ -17,19 +18,32 @@ namespace LODGenerator.NifMain
         {
             base.Read(header, reader);
             this.multiBound = reader.ReadInt32();
-            this.cullMode = reader.ReadUInt32();
+            if (header.GetUserVersion() >= 12)
+            {
+                this.cullMode = reader.ReadUInt32();
+            }
         }
 
         public override void Write(BinaryWriter writer)
         {
             base.Write(writer);
             writer.Write(this.multiBound);
-            writer.Write(this.cullMode);
+            if (Game.Mode != "fnv")
+            {
+                writer.Write(this.cullMode);
+            }
         }
 
         public override uint GetSize()
         {
-            return base.GetSize() + 8U;
+            if (Game.Mode == "fnv")
+            {
+                return base.GetSize() + 4U;
+            }
+            else
+            {
+                return base.GetSize() + 8U;
+            }
         }
 
         public override string GetClassName()

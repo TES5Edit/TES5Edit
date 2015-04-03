@@ -1,4 +1,5 @@
 ﻿using LODGenerator.Common;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -28,7 +29,7 @@ namespace LODGenerator.NifMain
             this.hasVertices = data.HasVertices();
             this.vertices = data.GetVertices();
             this.bsNumUVSets = data.GetBSNumUVSets();
-            this.unknownInt2 = data.GetUnknownInt2();
+            this.skyrimMaterial = data.GetSkyrimMaterial();
             this.hasNormals = data.HasNormals();
             this.normals = data.GetNormals();
             this.tangents = data.GetTangents();
@@ -41,34 +42,38 @@ namespace LODGenerator.NifMain
             this.consistencyFlags = data.GetConsistencyFlags();
             this.additionalData = data.GetAdditionalData();
             this.hasTriangles = true;
-            this.numTriangles = data.GetNumTriangles();
-            this.numTrianglePoints = (uint)data.GetNumTriangles() * 3U;
             this.triangles = new List<Triangle>();
             for (int index1 = 0; index1 < (int)data.GetNumStrips(); ++index1)
             {
                 ushort stripLengthAtIndex = data.GetStripLengthAtIndex(index1);
                 List<ushort> pointsAtIndex = data.GetPointsAtIndex(index1);
-                for (int index2 = 0; index2 < (int)stripLengthAtIndex - 2; ++index2)
+                bool flip = false; ;
+                ushort _v1 = pointsAtIndex[0];
+                ushort _v2 = pointsAtIndex[0];
+                ushort _v3 = pointsAtIndex[1];
+                for (int index2 = 2; index2 < (int)stripLengthAtIndex; ++index2)
                 {
-                    ushort _v1;
-                    ushort _v2;
-                    ushort _v3;
-                    if ((index2 + 1) % 2 == 0)
+                    _v1 = _v2;
+                    _v2 = _v3;
+                    _v3 = pointsAtIndex[index2];
+
+                    if ((_v1 != _v2) && (_v2 != _v3) && (_v3 != _v1))
                     {
-                        _v1 = pointsAtIndex[index2 + 2];
-                        _v2 = pointsAtIndex[index2 + 1];
-                        _v3 = pointsAtIndex[index2];
+                        if (flip)
+                        {
+                            this.triangles.Add(new Triangle(_v1, _v3, _v2));
+                        }
+                        else
+                        {
+                            this.triangles.Add(new Triangle(_v1, _v2, _v3));
+                        }
                     }
-                    else
-                    {
-                        _v1 = pointsAtIndex[index2];
-                        _v2 = pointsAtIndex[index2 + 1];
-                        _v3 = pointsAtIndex[index2 + 2];
-                    }
-                    this.triangles.Add(new Triangle(_v1, _v2, _v3));
+                    flip = !flip;
                 }
             }
-            this.numMatchGroups = (ushort)0;
+            this.numTriangles = (ushort) this.triangles.Count;
+            this.numTrianglePoints = (uint) this.triangles.Count * 3U;
+            this.numMatchGroups = (ushort) 0;
             this.matchGroups = new List<MatchGroup>();
         }
 
@@ -121,6 +126,16 @@ namespace LODGenerator.NifMain
             return num;
         }
 
+        public void SetHasTriangles(bool value)
+        {
+            this.hasTriangles = value;
+        }
+
+        public bool HasTriangles()
+        {
+            return this.hasTriangles;
+        }
+
         public void AppendTriangles(List<Triangle> tris)
         {
             this.triangles.AddRange((IEnumerable<Triangle>)tris);
@@ -140,6 +155,11 @@ namespace LODGenerator.NifMain
         public List<Triangle> GetTriangles()
         {
             return this.triangles;
+        }
+
+        public void SetNumTrianglePoints(uint value)
+        {
+            this.numTrianglePoints = value;
         }
 
         public uint GetNumTrianglePoints()

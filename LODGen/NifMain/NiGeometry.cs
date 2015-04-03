@@ -1,4 +1,5 @@
 ﻿using LODGenerator.Common;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -46,8 +47,11 @@ namespace LODGenerator.NifMain
                     this.materialExtraData.Add(reader.ReadInt32());
                 this.activeMaterial = reader.ReadInt32();
                 this.dirtyFlag = Utils.ReadBool(reader);
-                this.bsProperties[0] = reader.ReadInt32();
-                this.bsProperties[1] = reader.ReadInt32();
+                if (header.GetUserVersion() == 12)
+                {
+                    this.bsProperties[0] = reader.ReadInt32();
+                    this.bsProperties[1] = reader.ReadInt32();
+                }
             }
             else
             {
@@ -71,13 +75,24 @@ namespace LODGenerator.NifMain
                 writer.Write(this.materialExtraData[index]);
             writer.Write(this.activeMaterial);
             Utils.WriteBool(writer, this.dirtyFlag);
-            writer.Write(this.bsProperties[0]);
-            writer.Write(this.bsProperties[1]);
+            if (Game.Mode != "fnv")
+            {
+                writer.Write(this.bsProperties[0]);
+                writer.Write(this.bsProperties[1]);
+            }
         }
 
         public override uint GetSize()
         {
-            return base.GetSize() + 25U + this.numMaterials * (uint)this.materialNames.Count + this.numMaterials * (uint)this.materialExtraData.Count;
+            if (Game.Mode == "fnv")
+            {
+                return base.GetSize() + 17U + this.numMaterials * (uint)this.materialNames.Count + this.numMaterials * (uint)this.materialExtraData.Count;
+            }
+            else
+            {
+                return base.GetSize() + 25U + this.numMaterials * (uint)this.materialNames.Count + this.numMaterials * (uint)this.materialExtraData.Count;
+            }
+
         }
 
         public override string GetClassName()

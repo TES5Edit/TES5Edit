@@ -4,6 +4,24 @@ using System.Linq;
 
 namespace LODGenerator.Common
 {
+    public static class Game
+    {
+        static string _mode;
+        public static bool Testing;
+
+        public static string Mode
+        {
+            get
+            {
+                return _mode;
+            }
+            set
+            {
+                _mode = value;
+            }
+        }
+    }
+
     public static class Utils
     {
 

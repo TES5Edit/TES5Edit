@@ -1,4 +1,5 @@
 ﻿using LODGenerator.Common;
+using System;
 using System.IO;
 
 namespace LODGenerator.NifMain
@@ -68,6 +69,12 @@ namespace LODGenerator.NifMain
             if (!flag)
                 flag = type == "BSEffectShaderProperty";
             return flag;
+        }
+
+        // get ShaderFlags2;
+        public uint GetShaderFlags1()
+        {
+            return this.shaderFlags1;
         }
 
         // get ShaderFlags2;

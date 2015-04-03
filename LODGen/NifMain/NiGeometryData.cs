@@ -13,7 +13,7 @@ namespace LODGenerator.NifMain
         protected bool hasVertices;
         protected List<Vector3> vertices;
         protected ushort bsNumUVSets;
-        protected uint unknownInt2;
+        protected uint skyrimMaterial;
         protected bool hasNormals;
         protected List<Vector3> normals;
         protected List<Vector3> tangents;
@@ -35,7 +35,7 @@ namespace LODGenerator.NifMain
             this.hasVertices = false;
             this.vertices = new List<Vector3>();
             this.bsNumUVSets = (ushort)0;
-            this.unknownInt2 = 0U;
+            this.skyrimMaterial = 0U;
             this.hasNormals = false;
             this.normals = new List<Vector3>();
             this.tangents = new List<Vector3>();
@@ -63,8 +63,8 @@ namespace LODGenerator.NifMain
                     this.vertices.Add(Utils.ReadVector3(reader));
             }
             this.bsNumUVSets = reader.ReadUInt16();
-            if (header.GetVersion() > 335544325U)
-                this.unknownInt2 = reader.ReadUInt32();
+            if (header.GetUserVersion() == 12U)
+                this.skyrimMaterial = reader.ReadUInt32();
             this.hasNormals = Utils.ReadBool(reader);
             if (this.hasNormals)
             {
@@ -109,7 +109,10 @@ namespace LODGenerator.NifMain
                     Utils.WriteVector3(writer, this.vertices[index]);
             }
             writer.Write(this.bsNumUVSets);
-            writer.Write(this.unknownInt2);
+            if (Game.Mode != "fnv")
+            {
+                writer.Write(this.skyrimMaterial);
+            }
             if (this.hasNormals && this.normals.Count == 0)
             {
                 for (int index = 0; index < (int)this.numVertices; ++index)
@@ -147,7 +150,14 @@ namespace LODGenerator.NifMain
 
         public override uint GetSize()
         {
-            return (uint)((int)(base.GetSize() + 39U) + (this.hasVertices ? 12 * (int)this.numVertices : 0) + (this.hasNormals ? 12 * (int)this.numVertices : 0) + (!this.hasNormals || (int)this.bsNumUVSets < 4096 ? 0 : 12 * (int)this.numVertices) + (!this.hasNormals || (int)this.bsNumUVSets < 4096 ? 0 : 12 * (int)this.numVertices) + (this.hasVertexColors ? 16 * (int)this.numVertices : 0) + (((int)this.bsNumUVSets & 1) == 1 ? 8 * (int)this.numVertices : 0));
+            if (Game.Mode == "fnv")
+            {
+                return (uint)((int)(base.GetSize() + 35U) + (this.hasVertices ? 12 * (int)this.numVertices : 0) + (this.hasNormals ? 12 * (int)this.numVertices : 0) + (!this.hasNormals || (int)this.bsNumUVSets < 4096 ? 0 : 12 * (int)this.numVertices) + (!this.hasNormals || (int)this.bsNumUVSets < 4096 ? 0 : 12 * (int)this.numVertices) + (this.hasVertexColors ? 16 * (int)this.numVertices : 0) + (((int)this.bsNumUVSets & 1) == 1 ? 8 * (int)this.numVertices : 0));
+            }
+            else
+            {
+                return (uint)((int)(base.GetSize() + 39U) + (this.hasVertices ? 12 * (int)this.numVertices : 0) + (this.hasNormals ? 12 * (int)this.numVertices : 0) + (!this.hasNormals || (int)this.bsNumUVSets < 4096 ? 0 : 12 * (int)this.numVertices) + (!this.hasNormals || (int)this.bsNumUVSets < 4096 ? 0 : 12 * (int)this.numVertices) + (this.hasVertexColors ? 16 * (int)this.numVertices : 0) + (((int)this.bsNumUVSets & 1) == 1 ? 8 * (int)this.numVertices : 0));
+            }
         }
 
         public int GetUnknownInt()
@@ -160,9 +170,19 @@ namespace LODGenerator.NifMain
             return this.numVertices;
         }
 
+        public void SetNumVertices(ushort value)
+        {
+            this.numVertices = value;
+        }
+
         public bool HasVertices()
         {
             return this.hasVertices;
+        }
+
+        public void SetHasVertices(bool value)
+        {
+            this.hasVertices = value;
         }
 
         public List<Vector3> GetVertices()
@@ -179,6 +199,11 @@ namespace LODGenerator.NifMain
         public bool HasNormals()
         {
             return this.hasNormals;
+        }
+
+        public void SetHasNormals(bool value)
+        {
+            this.hasNormals = value;
         }
 
         public List<Vector3> GetNormals()
@@ -270,14 +295,14 @@ namespace LODGenerator.NifMain
             this.keepFlags = value;
         }
 
-        public uint GetUnknownInt2()
+        public uint GetSkyrimMaterial()
         {
-            return this.unknownInt2;
+            return this.skyrimMaterial;
         }
 
-        public void SetUnknownInt2(uint value)
+        public void SetSkyrimMaterial(uint value)
         {
-            this.unknownInt2 = value;
+            this.skyrimMaterial = value;
         }
 
         public bool HasVertexColors()

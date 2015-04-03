@@ -4742,6 +4742,7 @@ begin
     s := slTextures[i];
     s := ChangeFileExt(slTextures[i], '') + '_n.dds';
     if not wbContainerHandler.ResourceExists(s) then begin
+      wbProgressCallback('<Note: ' + s + ' normap map not found, using flat replacement>');
       // default normals texture to use
       if wbGameMode = gmTES5 then
         s := 'textures\default_n.dds'
@@ -4841,13 +4842,14 @@ var
     // full mesh
     if aLODLevel = -1 then
       Result := aStat.ElementEditValues['Model\MODL']
-    else if wbGameMode = gmTES5 then begin
+    else if (wbGameMode = gmTES5) and aStat.ElementExists['MNAM'] then begin
       arr := aStat.ElementNativeValues[Format('MNAM\LOD #%d (Level %d)\Mesh', [aLODLevel, aLODLevel])];
-      for i := Low(arr) to High(arr) do
-        if arr[i] = 0 then
-          Break
-        else
-          Result := Result + Chr(arr[i]);
+      if Length(arr) > 0 then
+        for i := Low(arr) to High(arr) do
+          if arr[i] = 0 then
+            Break
+          else
+            Result := Result + Chr(arr[i]);
     end
     else if (wbGameMode in [gmFO3, gmFNV]) and (aLODLevel = 0) then
       Result := ChangeFileExt(aStat.ElementEditValues['Model\MODL'], '') + '_lod.nif';
@@ -5170,18 +5172,20 @@ begin
           FindClose(F);
         end;
 
-        Caption := 'Saving Trees LOD files: ' + aWorldspace.Name;
-        Application.ProcessMessages;
+        if Length(LOD4) > 0 then begin
+          Caption := 'Saving Trees LOD files: ' + aWorldspace.Name;
+          Application.ProcessMessages;
 
-        i := Settings.ReadInteger(Section, 'TreesBrightness', 0);
-        Lst.ChangeAtlasBrightness(i);
-        ForceDirectories(ExtractFilePath(LODPath + Lst.AtlasFileName));
-        if not Lst.SaveAtlas(LODPath + Lst.AtlasFileName) then
-          raise Exception.Create('Can''t save atlas');
-        ForceDirectories(ExtractFilePath(LODPath + Lst.ListFileName));
-        Lst.SaveToFile(LODPath + Lst.ListFileName);
-        for i := Low(LOD4) to High(LOD4) do
-          LOD4[i].SaveToFile(LODPath + LOD4[i].FileName);
+          i := Settings.ReadInteger(Section, 'TreesBrightness', 0);
+          Lst.ChangeAtlasBrightness(i);
+          ForceDirectories(ExtractFilePath(LODPath + Lst.AtlasFileName));
+          if not Lst.SaveAtlas(LODPath + Lst.AtlasFileName) then
+            raise Exception.Create('Can''t save atlas');
+          ForceDirectories(ExtractFilePath(LODPath + Lst.ListFileName));
+          Lst.SaveToFile(LODPath + Lst.ListFileName);
+          for i := Low(LOD4) to High(LOD4) do
+            LOD4[i].SaveToFile(LODPath + LOD4[i].FileName);
+        end;
 
         PostAddMessage('[' + aWorldspace.EditorID + '] Trees LOD Done.');
       end;
@@ -5215,9 +5219,17 @@ begin
     try
     try
       for i := Low(REFRs) to High(REFRs) do begin
-        // only for STAT and SCOL
+        // only for STAT, SCOL and ACTI
         StatRec := REFRs[i].BaseRecord;
-        if (not Assigned(StatRec)) or ((StatRec.Signature <> 'STAT') and (StatRec.Signature <> 'SCOL')) then
+        if not Assigned(StatRec) then
+          Continue;
+
+        // Skyrim: only STAT objects
+        if (wbGameMode = gmTES5) and (StatRec.Signature <> 'STAT') then
+          Continue;
+
+        // Fallouts: only STAT, SCOL and ACTI objects
+        if (wbGameMode in [gmFO3, gmFNV]) and ((StatRec.Signature <> 'STAT') and (StatRec.Signature <> 'SCOL') and (StatRec.Signature <> 'ACTI')) then
           Continue;
 
         // skip invisible references
@@ -5260,14 +5272,12 @@ begin
             if m16 <> '' then slLODMeshes.Add(m16);
             if (m4 <> '') or (m8 <> '') or (m16 <> '') then begin
               // detecting LOD material
-              if (wbGameMode = gmTES5) and Assigned(StatRec.ElementByPath['DNAM\Material']) then begin
-                if Supports(StatRec.ElementByPath['DNAM\Material'].LinksTo, IwbMainRecord, Ovr) then begin
-                  mat := Ovr.EditorID;
-                  if Pos('Snow', mat) > 0 then mat := 'Snow'
-                  else if Pos('Ash', mat) > 0 then mat := 'Ash'
-                  else mat := '';
-                end;
-              end;
+              if (wbGameMode = gmTES5) and StatRec.ElementExists['DNAM\Material'] and Supports(StatRec.ElementByPath['DNAM\Material'].LinksTo, IwbMainRecord, Ovr) then begin
+                mat := LowerCase(Ovr.EditorID);
+                if Pos('snow', mat) > 0 then mat := 'Snow' else
+                  if Pos('ash', mat) > 0 then mat := 'Ash';
+              end else
+                mat := '';
               // a tab separated string of Editor ID, flags, material, full mesh and lod files
               s := StatRec.EditorID + #9 + IntToHex(StatRec.Flags._Flags, 8) + #9 +
                    mat + #9 + GetLODMeshName(StatRec, -1) + #9 +
@@ -5332,8 +5342,10 @@ begin
           wbGetUVRangeTexturesList(slLODMeshes, slLODTextures, UVRange);
           if slLODTextures.Count > 1 then begin
             // remove HD LOD texture if there
-            i := slLODTextures.IndexOf(wbNormalizeResourceName(aWorldspace.WinningOverride.ElementEditValues['TNAM'], resTexture));
-            if i <> -1 then slLODTextures.Delete(i);
+            if wbGameMode = gmTES5 then begin
+              i := slLODTextures.IndexOf(wbNormalizeResourceName(aWorldspace.WinningOverride.ElementEditValues['TNAM'], resTexture));
+              if i <> -1 then slLODTextures.Delete(i);
+            end;
             // atlas file name and map name
             if wbGameMode = gmTES5 then
               AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds'
@@ -5361,8 +5373,10 @@ begin
         slExport.Add('GameMode=' + wbAppName);
         slExport.Add('Worldspace=' + aWorldspace.EditorID);
         slExport.Add('CellSW=' + Format('%d %d', [Lodset.SWCell.x, Lodset.SWCell.y]));
-        slExport.Add('TextureDiffuseHD=' + aWorldspace.WinningOverride.ElementEditValues['TNAM']);
-        slExport.Add('TextureNormalHD=' + aWorldspace.WinningOverride.ElementEditValues['UNAM']);
+        if wbGameMode = gmTES5 then begin
+          slExport.Add('TextureDiffuseHD=' + aWorldspace.WinningOverride.ElementEditValues['TNAM']);
+          slExport.Add('TextureNormalHD=' + aWorldspace.WinningOverride.ElementEditValues['UNAM']);
+        end;
         if (AtlasMapName <> '') and FileExists(AtlasMapName) then begin
           slExport.Add('TextureAtlasMap=' + AtlasMapName);
           slExport.Add('AtlasTolerance=' + Format('%1.1f', [UVRange - 1.0]));
@@ -5418,7 +5432,7 @@ begin
 
         k := ExecuteCaptureConsoleOutput(s);
         if k <> 0 then
-          raise Exception.Create('LODGen error, exit code ' + IntToStr(k));
+          raise Exception.Create('LODGen process error, exit code ' + IntToStr(k));
         PostAddMessage('[' + aWorldspace.EditorID + '] Objects LOD Done.');
 
         // DynDoLOD reference message, tribute to Sheson who made TES5LODGen possible

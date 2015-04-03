@@ -1,5 +1,23 @@
 Changelog
 
+0.7	added FNV mode
+	added BSShaderPPLightingProperty
+	updated nitristrips
+	fixed points to triangles conversion
+	added NotHDTextureMask= matching textures are not HD, overwrites flag from derived from column #2
+        added IsHDTextureMask= matching textures are HD, overwrites any other method
+	new export file switches [default value]:
+		GameMode=[TES5]/FNV
+		DontMergeShapes=true/[false]
+		DontGenerateVertexColors=true/[false]
+		RemoveUnseenFaces=true/[false]
+		IgnoreWater=true/[false] [FNV no effect]
+		IgnoreMaterial=true/[false]
+		DontFixTangents=true/[false]
+		DontGenerateTangents=true/[false]
+		UseHDFlag=[true]/false [FNV no effect] (0x00020000 in column #2)
+		GlobalScale=[1.0]
+
 0.6	fixed cell origin of LOD objects causing some LOD models to show/not show
 	fixed use of world offset so filenames for reading BTR and writing BTO match
 	fixed tangents and bitangents not being adjusted for LOD object rotation

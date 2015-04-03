@@ -1,4 +1,5 @@
 ﻿using LODGenerator.Common;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -34,10 +35,18 @@ namespace LODGenerator.NifMain
             this.headerString = "Gamebryo File Format, Version 20.2.0.7";
             this.version = 335675399U;
             this.endianType = (byte)1;
-            this.userVersion = 12U;
-            this.userVersion2 = 83U;
+            if (Game.Mode == "fnv")
+            {
+                this.userVersion = 11U;
+                this.userVersion2 = 34U;
+            }
+            else
+            {
+                this.userVersion = 12U;
+                this.userVersion2 = 83U;
+            }
             this.unknownInt2 = 0U;
-            this.creator = "";
+            this.creator = ""; //LODGen";
             this.exportInfo1 = "";
             this.exportInfo2 = "";
         }
@@ -113,6 +122,16 @@ namespace LODGenerator.NifMain
         public uint GetVersion()
         {
             return this.version;
+        }
+
+        public uint GetUserVersion()
+        {
+            return this.userVersion;
+        }
+
+        public uint GetUserVersion2()
+        {
+            return this.userVersion2;
         }
 
         public uint GetNumBlocks()

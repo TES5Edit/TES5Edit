@@ -11,12 +11,13 @@ using Ini;
 
 namespace LODGeneratorCMD
 {
+
     internal class Program
     {
         private static Dictionary<string, string> CollectCmdArgs(string[] args)
         {
             Dictionary<string, string> dictionary = new Dictionary<string, string>();
-            for (int index = 2; index < Enumerable.Count<string>((IEnumerable<string>)args); ++index)
+            for (int index = 1; index < Enumerable.Count<string>((IEnumerable<string>)args); ++index)
             {
                 string str = "";
                 string key = args[index].Remove(0, 2).ToLower();
@@ -25,31 +26,6 @@ namespace LODGeneratorCMD
                 dictionary.Add(key, str);
             }
             return dictionary;
-        }
-
-        private static void PrintCmdArgs(LogFile theLog, Dictionary<string, string> cmdArgs)
-        {
-            int int1 = CmdArgs.GetInt(cmdArgs, "lodLevel", -1);
-            int int2 = CmdArgs.GetInt(cmdArgs, "x", -1);
-            int int3 = CmdArgs.GetInt(cmdArgs, "y", -1);
-            theLog.WriteLog("Fix tangents: " + (!CmdArgs.GetBool(cmdArgs, "dontFixTangents", false) ? "True" : "False"));
-            theLog.WriteLog("Generate tangents: " + (!CmdArgs.GetBool(cmdArgs, "dontGenerateTangents", false) ? "True" : "False"));
-            theLog.WriteLog("Generate Vertex Colors: " + (!CmdArgs.GetBool(cmdArgs, "dontGenerateVertexColors", false) ? "True" : "False"));
-            theLog.WriteLog("Merge meshes: " + (CmdArgs.GetBool(cmdArgs, "mergeShapes", true) ? "True" : "False"));
-            theLog.WriteLog("Remove Faces under Terrain: " + (CmdArgs.GetBool(cmdArgs, "removeUnseenFaces", true) ? "True" : "False"));
-            theLog.WriteLog("Remove Faces under Water: " + (!CmdArgs.GetBool(cmdArgs, "ignoreWater", false) ? "True" : "False"));
-            theLog.WriteLog("Use HD LOD: " + (CmdArgs.GetBool(cmdArgs, "useHDLOD", false) ? "True" : "False"));
-            theLog.WriteLog("Ignore Materials: " + (CmdArgs.GetBool(cmdArgs, "ignoreMaterial", false) ? "True" : "False"));
-            theLog.WriteLog("Global scale: " + string.Format("{0:0.00}", (object)CmdArgs.GetFloat(cmdArgs, "globalScale", 1f)));
-            theLog.WriteLog("Specific level: " + (int1 != -1 ? int1.ToString() : "No"));
-            if (int2 != -1 && int3 == -1)
-                theLog.WriteLog("Specific quad: [" + (object)int2.ToString() + ", X]");
-            else if (int2 == -1 && int3 != -1)
-                theLog.WriteLog("Specific quad: [X, " + (object)int3.ToString() + "]");
-            else if (int2 != -1 && int3 != -1)
-                theLog.WriteLog("Specific quad: [" + (object)int2.ToString() + ", " + (string)(object)int3.ToString() + "]");
-            else
-                theLog.WriteLog("Specific quad: No");
         }
 
         private static int Main(string[] args)
@@ -61,8 +37,6 @@ namespace LODGeneratorCMD
                 theLog.Close();
                 return -1;
             }
-
-            Dictionary<string, string> cmdArgs = Program.CollectCmdArgs(args);
             string path = args[0];
             if (!File.Exists(path))
             {
@@ -70,20 +44,38 @@ namespace LODGeneratorCMD
                 theLog.Close();
                 return -1;
             }
-            Program.PrintCmdArgs(theLog, cmdArgs);
             CultureInfo cultureInfo = CmdArgs.ci;
             StreamReader streamReader = new StreamReader(path, System.Text.Encoding.Default, true);
             List<StaticDesc> statics = new List<StaticDesc>();
             StringList BSAFiles = new StringList();
             StringList ignoreList = new StringList();
+            StringList HDTexture = new StringList();
+            StringList notHDTexture = new StringList();
+            Game.Mode = "tes5";
+            Game.Testing = false;
             int counter = 0;
             string worldspaceName = "";
-            string skyrimDir = "";
+            string gameDir = "";
             string outputDir = "";
             string uvfile = "";
             float southWestX = 0;
             float southWestY = 0;
             float atlasTolerance = 0.2f;
+            bool generateVertexColors = true;
+            bool dontFixTangents = false;
+            bool dontGenerateTangents = false;
+            bool mergeShapes = true;
+            bool removeUnseenFaces = false;
+            bool ignoreWater = false;
+            bool useHDFlag = true;
+            bool ignoreMaterial = false;
+            float globalScale = 1f;
+            if (path.ToLower().Contains("dyndolod"))
+            {
+                useHDFlag = false;
+                notHDTexture.Add("lod");
+                notHDTexture.Add("lowres");
+            }
             while (!streamReader.EndOfStream)
             {
                 string[] strArray2 = streamReader.ReadLine().Split('=');
@@ -102,10 +94,10 @@ namespace LODGeneratorCMD
                     }
                     if (strArray2[0].ToLower() == "pathdata")
                     {
-                        skyrimDir = strArray2[1].ToLower();
-                        if (!Directory.Exists(skyrimDir))
+                        gameDir = strArray2[1].ToLower();
+                        if (!Directory.Exists(gameDir))
                         {
-                            theLog.WriteLog("No Data directory " + skyrimDir);
+                            theLog.WriteLog("No Data directory " + gameDir);
                             theLog.Close();
                             return -1;
                         }
@@ -129,6 +121,14 @@ namespace LODGeneratorCMD
                             BSAFiles.Add(strArray2[1].ToLower());
                         }
                     }
+                    if (strArray2[0].ToLower() == "ishdtexturemask")
+                    {
+                        HDTexture.Add(strArray2[1].ToLower());
+                    }
+                    if (strArray2[0].ToLower() == "nothdtexturemask")
+                    {
+                        notHDTexture.Add(strArray2[1].ToLower());
+                    }
                     if (strArray2[0].ToLower() == "atlastolerance")
                     {
                         atlasTolerance = float.Parse(strArray2[1], (IFormatProvider)cultureInfo);
@@ -137,12 +137,115 @@ namespace LODGeneratorCMD
                     {
                         ignoreList.Add(strArray2[1].ToLower());
                     }
+                    if (strArray2[0].ToLower() == "gamemode")
+                    {
+                        Game.Mode = ((strArray2[1].ToLower()));
+                        //generateVertexColors = false;
+                    }
+                    if (strArray2[0].ToLower() == "dontgeneratevertexcolors")
+                    {
+                        generateVertexColors = !Boolean.Parse(strArray2[1]);
+                    }
+                    if (strArray2[0].ToLower() == "dontfixtangents")
+                    {
+                        dontFixTangents = Boolean.Parse(strArray2[1]);
+                    }
+                    if (strArray2[0].ToLower() == "dontgeneratetangents")
+                    {
+                        dontGenerateTangents = Boolean.Parse(strArray2[1]);
+                    }
+                    if (strArray2[0].ToLower() == "dontmergeshapes")
+                    {
+                        mergeShapes = !Boolean.Parse(strArray2[1]);
+                    }
+                    if (strArray2[0].ToLower() == "removeunseenfaces")
+                    {
+                        removeUnseenFaces = Boolean.Parse(strArray2[1]);
+                    }
+                    if (strArray2[0].ToLower() == "ignorewater")
+                    {
+                        ignoreWater = Boolean.Parse(strArray2[1]);
+                    }
+                    if (strArray2[0].ToLower() == "usehdflag")
+                    {
+                        useHDFlag = Boolean.Parse(strArray2[1]);
+                    }
+                    if (strArray2[0].ToLower() == "ignorematerial")
+                    {
+                        ignoreMaterial = Boolean.Parse(strArray2[1]);
+                    }
+                    if (strArray2[0].ToLower() == "globalscale")
+                    {
+                        globalScale = float.Parse(strArray2[1], (IFormatProvider)cultureInfo);
+                    }
                 }
                 else
                 {
                     break;
                 }
             }
+
+            Dictionary<string, string> cmdArgs = Program.CollectCmdArgs(args);
+            if (CmdArgs.GetBool(cmdArgs, "dontGenerateVertexColors", false))
+            {
+                generateVertexColors = false;
+            }
+            if (CmdArgs.GetBool(cmdArgs, "dontFixTangents", false))
+            {
+                dontFixTangents = true;
+            }
+            if (CmdArgs.GetBool(cmdArgs, "dontGenerateTangents", false))
+            {
+                dontGenerateTangents = true;
+            }
+            if (CmdArgs.GetBool(cmdArgs, "dontMergeShapes", false))
+            {
+                mergeShapes = false;
+            }
+            if (CmdArgs.GetBool(cmdArgs, "removeUnseenFaces", false))
+            {
+                removeUnseenFaces = true;
+            }
+            if (CmdArgs.GetBool(cmdArgs, "ignoreWater", false))
+            {
+                ignoreWater = true;
+            }
+            if (CmdArgs.GetBool(cmdArgs, "ignoreMaterial", false))
+            {
+                ignoreMaterial = true;
+            }
+            if (CmdArgs.GetBool(cmdArgs, "usehdlod", false))
+            {
+                useHDFlag = true;
+            }
+            if (CmdArgs.GetBool(cmdArgs, "globalScale", false))
+            {
+                globalScale = CmdArgs.GetFloat(cmdArgs, "globalScale", 1f);
+            }
+
+            int int1 = CmdArgs.GetInt(cmdArgs, "lodLevel", -1);
+            int int2 = CmdArgs.GetInt(cmdArgs, "x", -1);
+            int int3 = CmdArgs.GetInt(cmdArgs, "y", -1);
+            theLog.WriteLog("Game Mode: " + Game.Mode.ToUpper());
+            theLog.WriteLog("Fix Tangents: " + (!dontFixTangents ? "True" : "False"));
+            theLog.WriteLog("Generate Tangents: " + (!dontGenerateTangents ? "True" : "False"));
+            theLog.WriteLog("Generate Vertex Colors: " + (generateVertexColors ? "True" : "False"));
+            theLog.WriteLog("Merge Meshes: " + (mergeShapes ? "True" : "False"));
+            theLog.WriteLog("Remove Faces under Terrain: " + (removeUnseenFaces ? "True" : "False"));
+            theLog.WriteLog("Remove Faces under Water: " + (!ignoreWater ? "True" : "False"));
+            theLog.WriteLog("Use HD Flag: " + (useHDFlag ? "True" : "False"));
+            theLog.WriteLog("Ignore Materials: " + (ignoreMaterial ? "True" : "False"));
+            theLog.WriteLog("Global scale: " + string.Format("{0:0.00}", globalScale));
+            theLog.WriteLog("Specific level: " + (int1 != -1 ? int1.ToString() : "No"));
+            if (int2 != -1 && int3 == -1)
+                theLog.WriteLog("Specific quad: [" + (object)int2.ToString() + ", X]");
+            else if (int2 == -1 && int3 != -1)
+                theLog.WriteLog("Specific quad: [X, " + (object)int3.ToString() + "]");
+            else if (int2 != -1 && int3 != -1)
+                theLog.WriteLog("Specific quad: [" + (object)int2.ToString() + ", " + (string)(object)int3.ToString() + "]");
+            else
+                theLog.WriteLog("Specific quad: No");
+
             streamReader.Close();
             if (worldspaceName == "")
             {
@@ -169,9 +272,9 @@ namespace LODGeneratorCMD
                 BSAFiles.AddRange(archiveList1.Split(','));
                 for (int index = 0; index < BSAFiles.Count; ++index)
                 {
-                    if (File.Exists(Path.Combine(skyrimDir, BSAFiles[index].Trim())))
+                    if (File.Exists(Path.Combine(gameDir, BSAFiles[index].Trim())))
                     {
-                        BSAFiles[index] = Path.Combine(skyrimDir, BSAFiles[index].Trim());
+                        BSAFiles[index] = Path.Combine(gameDir, BSAFiles[index].Trim());
                     }
                 }
             }*/
@@ -206,11 +309,11 @@ namespace LODGeneratorCMD
                     {
                         string str = strArray2[13 + index];
                         staticDesc.staticModels[index] = str.ToLower();
-                        if (str.Length > 0 && !File.Exists(skyrimDir + str))
+                        if (str.Length > 0 && !File.Exists(gameDir + str))
                         {
                             if (!BSAArchive.FileExists(str))
                             {
-                                theLog.WriteLog("file not found " + skyrimDir + str);
+                                theLog.WriteLog("file not found " + gameDir + str);
                                 theLog.Close();
                                 System.Environment.Exit(404);
                             }
@@ -220,7 +323,6 @@ namespace LODGeneratorCMD
                 }
             }
             streamReader.Close();
-            theLog.WriteLog("the file: " + uvfile);
             if (File.Exists(uvfile))
             {
                 theLog.WriteLog("Using UV Atlas: " + uvfile);
@@ -260,28 +362,30 @@ namespace LODGeneratorCMD
                 list1.Add(new Thread((ParameterizedThreadStart)(state =>
                 {
                     List<int> list2 = (List<int>)state;
-                    new LODApp(worldspaceName, outputDir, skyrimDir, theLog)
+                    new LODApp(worldspaceName, outputDir, gameDir, theLog)
                     {
                         verbose = (CmdArgs.GetBool(cmdArgs, "verbose", false)),
-                        fixTangents = (!CmdArgs.GetBool(cmdArgs, "dontFixTangents", false)),
-                        generateTangents = (!CmdArgs.GetBool(cmdArgs, "dontGenerateTangents", false)),
-                        generateVertexColors = (!CmdArgs.GetBool(cmdArgs, "dontGenerateVertexColors", false)),
-                        mergeShapes = (!CmdArgs.GetBool(cmdArgs, "dontMerge", false)),
-                        useHDFlag = CmdArgs.GetBool(cmdArgs, "useHDLOD", false),
+                        fixTangents = dontFixTangents,
+                        generateTangents = !dontGenerateTangents,
+                        generateVertexColors = generateVertexColors,
+                        mergeShapes = mergeShapes,
+                        useHDFlag = useHDFlag,
                         useFadeNode = CmdArgs.GetBool(cmdArgs, "useFadeNode", false),
-                        removeUnseenFaces = CmdArgs.GetBool(cmdArgs, "removeUnseenFaces", false),
-                        globalScale = CmdArgs.GetFloat(cmdArgs, "globalScale", 1f),
+                        removeUnseenFaces = removeUnseenFaces,
+                        globalScale = globalScale,
                         lodLevelToGenerate = CmdArgs.GetInt(cmdArgs, "lodLevel", -1),
                         lodX = CmdArgs.GetInt(cmdArgs, "x", -1),
                         lodY = CmdArgs.GetInt(cmdArgs, "y", -1),
-                        southWestX = ((int)southWestX),
-                        southWestY = ((int)southWestY),
-                        atlasToleranceMin = ((float)atlasTolerance) * -1f,
-                        atlasToleranceMax = ((float)atlasTolerance) + 1f,
-                        removeUnderwaterFaces = (!CmdArgs.GetBool(cmdArgs, "ignoreWater", false)),
-                        ignoreMaterial = CmdArgs.GetBool(cmdArgs, "ignoreMaterial", false),
+                        southWestX = (int) southWestX,
+                        southWestY = (int) southWestY,
+                        atlasToleranceMin = atlasTolerance * -1f,
+                        atlasToleranceMax = atlasTolerance + 1f,
+                        removeUnderwaterFaces = !ignoreWater,
+                        ignoreMaterial = ignoreMaterial,
                         skyblivionTexPath = CmdArgs.GetBool(cmdArgs, "skyblivionTexPath", false),
-                        ignoreTransRot = ignoreList
+                        ignoreTransRot = ignoreList,
+                        HDTextureList = HDTexture,
+                        notHDTextureList = notHDTexture
                     }.GenerateLOD(list2[1], list2[0], statics);
                 })));
                 list1[index1].Start((object)new List<int>()

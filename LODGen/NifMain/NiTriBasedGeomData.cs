@@ -33,6 +33,11 @@ namespace LODGenerator.NifMain
             return "NiTriBasedGeomData";
         }
 
+        public void SetNumTriangles(ushort value)
+        {
+            this.numTriangles = value;
+        }
+
         public ushort GetNumTriangles()
         {
             return this.numTriangles;

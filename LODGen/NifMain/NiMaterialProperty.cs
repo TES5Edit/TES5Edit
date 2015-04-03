@@ -1,4 +1,5 @@
 ﻿using LODGenerator.Common;
+using System;
 using System.IO;
 
 namespace LODGenerator.NifMain
@@ -11,6 +12,7 @@ namespace LODGenerator.NifMain
         protected Color3 emissiveColor;
         protected float glossiness;
         protected float alpha;
+        protected float emitMulti;
 
         public NiMaterialProperty()
         {
@@ -20,17 +22,25 @@ namespace LODGenerator.NifMain
             this.emissiveColor = new Color3(0.0f, 0.0f, 0.0f);
             this.glossiness = 1f;
             this.alpha = 1f;
+            this.emitMulti = 1f;
         }
 
         public override void Read(NiHeader header, BinaryReader reader)
         {
             base.Read(header, reader);
-            this.ambientColor = Utils.ReadColor3(reader);
-            this.diffuseColor = Utils.ReadColor3(reader);
+            if (!((header.GetVersion() == 335675399U) && (header.GetUserVersion() >= 11) && (header.GetUserVersion2() > 21)))
+            {
+                this.ambientColor = Utils.ReadColor3(reader);
+                this.diffuseColor = Utils.ReadColor3(reader);
+            }
             this.specularColor = Utils.ReadColor3(reader);
             this.emissiveColor = Utils.ReadColor3(reader);
             this.glossiness = reader.ReadSingle();
             this.alpha = reader.ReadSingle();
+            if ((header.GetVersion() == 335675399U) && (header.GetUserVersion() >= 11) && (header.GetUserVersion2() > 21))
+            {
+                this.emitMulti = reader.ReadSingle();
+            }
         }
 
         public override uint GetSize()
