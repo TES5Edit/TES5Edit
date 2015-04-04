@@ -693,6 +693,12 @@ type
 
     FileCRCs: TwbFastStringListIC;
 
+    ErrorsCount : Cardinal;
+    ITMcount    : Cardinal;
+    DRcount     : Cardinal;
+    CheckResult : Byte;
+    AutoDone    : Boolean;
+
     procedure DoInit;
     procedure SetDoubleBuffered(aWinControl: TWinControl);
     procedure SetActiveRecord(const aMainRecord: IwbMainRecord); overload;
@@ -1964,8 +1970,10 @@ begin
   if Error <> '' then begin
     Result := aElement.ContainingMainRecord;
     // first error in this record - show record's name
-    if Assigned(Result) and (Result <> LastRecord) then
+    if Assigned(Result) and (Result <> LastRecord) then begin
       wbProgressCallback(Result.Name);
+      Inc(ErrorsCount);
+    end;
     wbProgressCallback('    ' + aElement.Path + ' -> ' + Error);
   end else
     // passing through last record with error
@@ -2060,6 +2068,7 @@ begin
   wbStartTime := Now;
   Enabled := False;
   pgMain.ActivePage := tbsMessages;
+  ErrorsCount := 0;
   try
     Nodes := vstNav.GetSortedSelection(True);
     for i := Low(Nodes) to High(Nodes) do begin
@@ -3029,7 +3038,7 @@ var
   Worldspaces : TDynMainRecords;
 begin
   // TES5LODGen: selective lodgenning, no need to regenerate lod for all worldspaces like in Oblivion
-  if wbGameMode = gmTES5 then begin
+  if wbGameMode in [gmTES5, gmFNV] then begin
     try
       mniNavGenerateLODClick(nil);
     finally
@@ -3313,6 +3322,11 @@ var
   frmFileSelect : TfrmFileSelect;
 
 begin
+  AutoDone := False;
+  ErrorsCount := 0;
+  ITMcount := 0;
+  DRcount := 0;
+
   SetDoubleBuffered(Self);
   SaveInterval := DefaultInterval;
   TfrmMain(splElements).OnMouseDown := splElementsMouseDown;
@@ -4258,6 +4272,8 @@ var
   Element                     : IwbElement;
   Position                    : TwbVector;
   Cntr {, Cntr2}              : IwbContainerElementRef;
+  AutoModeCheckForDR          : Boolean;
+  Operation                   : String;
 
   function canUndelete: Boolean;
   begin
@@ -4283,7 +4299,10 @@ var
   end;
 
 begin
-  if not wbEditAllowed then
+  AutoModeCheckForDR := wbToolMode in [tmCheckForDR];
+  if AutoModeCheckForDR then Operation := 'Count' else Operation := 'Undelet';
+
+  if not AutoModeCheckForDR and not wbEditAllowed then
     Exit;
   if wbTranslationMode then
     Exit;
@@ -4319,7 +4338,7 @@ begin
     Exit;
   end;
 
-  if not EditWarn then
+  if not AutoModeCheckForDR and not EditWarn then
     Exit;
 
   vstNav.BeginUpdate;
@@ -4362,52 +4381,53 @@ begin
              ) then
           //begin
           if canUndelete then begin
-            IsDeleted := True;
-            IsDeleted := False;
-            PostAddMessage('Undeleting: ' + MainRecord.Name);
-            if (wbGameMode in [gmFO3, gmFNV, gmTES5]) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
-              IsPersistent := True
-            else if wbGameMode = gmTES4 then
-              IsPersistent := False;
-            if not IsPersistent then
-              if wbUDRSetZ and GetPosition(Position) then begin
-                Position.z := wbUDRSetZValue;
-                SetPosition(Position);
+            PostAddMessage(Operation+'ing: ' + MainRecord.Name);
+            if not AutoModeCheckForDR then begin
+              IsDeleted := True;
+              IsDeleted := False;
+              if (wbGameMode in [gmFO3, gmFNV, gmTES5]) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
+                IsPersistent := True
+              else if wbGameMode = gmTES4 then
+                IsPersistent := False;
+              if not IsPersistent then
+                if wbUDRSetZ and GetPosition(Position) then begin
+                  Position.z := wbUDRSetZValue;
+                  SetPosition(Position);
+                end;
+              RemoveElement('Enable Parent');
+              RemoveElement('XTEL');
+              IsInitiallyDisabled := True;
+              if wbUDRSetXESP and Supports(Add('XESP', True), IwbContainerElementRef, Cntr) then begin
+                Cntr.ElementNativeValues['Reference'] := $14;
+                Cntr.ElementNativeValues['Flags'] := 1;
               end;
-            RemoveElement('Enable Parent');
-            RemoveElement('XTEL');
-            IsInitiallyDisabled := True;
-            if wbUDRSetXESP and Supports(Add('XESP', True), IwbContainerElementRef, Cntr) then begin
-              Cntr.ElementNativeValues['Reference'] := $14;
-              Cntr.ElementNativeValues['Flags'] := 1;
-            end;
 
-            if wbUDRSetScale then begin
-              if not Assigned(ElementBySignature['XSCL']) then
-                Element := Add('XSCL', True);
+              if wbUDRSetScale then begin
+                if not Assigned(ElementBySignature['XSCL']) then
+                  Element := Add('XSCL', True);
+                  if Assigned(Element) then
+                    Element.NativeValue := wbUDRSetScaleValue;
+              end;
+
+              if wbUDRSetMSTT and (wbGameMode in [gmFO3, gmFNV]) then begin
+                Element := ElementBySignature['NAME'];
                 if Assigned(Element) then
-                  Element.NativeValue := wbUDRSetScaleValue;
+                  if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
+                    if LinksToRecord.Signature = 'MSTT' then
+                      Element.NativeValue := wbUDRSetMSTTValue;
+              end;
+
+              // Undeleting NAVM, needs to update NAVI as well
+  //            if (Signature = 'NAVM') then
+  //              if wbGameMode in [gmTES5] then begin
+  //                if Supports(MainRecord.ElementByPath['NVNM - Geometry\Vertices'], IwbContainerElementRef, Cntr) then begin
+  //                  for n := 0 to Pred(Cntr.ElementCount) do
+  //                    if Supports(Cntr.Elements[n], IwbContainerElementRef, Cntr2) then
+  //                      Cntr2.ElementByName['Z'].NativeValue := -30000;
+  //                end;
+  //              end else
+  //                Inc(DeletedNAVM);
             end;
-
-            if wbUDRSetMSTT and (wbGameMode in [gmFO3, gmFNV]) then begin
-              Element := ElementBySignature['NAME'];
-              if Assigned(Element) then
-                if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
-                  if LinksToRecord.Signature = 'MSTT' then
-                    Element.NativeValue := wbUDRSetMSTTValue;
-            end;
-
-            // Undeleting NAVM, needs to update NAVI as well
-//            if (Signature = 'NAVM') then
-//              if wbGameMode in [gmTES5] then begin
-//                if Supports(MainRecord.ElementByPath['NVNM - Geometry\Vertices'], IwbContainerElementRef, Cntr) then begin
-//                  for n := 0 to Pred(Cntr.ElementCount) do
-//                    if Supports(Cntr.Elements[n], IwbContainerElementRef, Cntr2) then
-//                      Cntr2.ElementByName['Z'].NativeValue := -30000;
-//                end;
-//              end else
-//                Inc(DeletedNAVM);
-
             Inc(UndeletedCount);
           end;
         end;
@@ -4416,7 +4436,7 @@ begin
         Inc(Count);
         if StartTick + 500 < GetTickCount then begin
           Caption := sJustWait + ' Processed Records: ' + IntToStr(Count) +
-            ' Removed Records: ' + IntToStr(UndeletedCount) +
+            ' '+Operation+'ed Records: ' + IntToStr(UndeletedCount) +
             ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
           Application.ProcessMessages;
           StartTick := GetTickCount;
@@ -4429,13 +4449,14 @@ begin
       Enabled := True;
     end;
 
-    PostAddMessage('[Undeleting and Disabling References done] ' + ' Processed Records: ' + IntToStr(Count) +
-      ', Undeleted Records: ' + IntToStr(UndeletedCount) +
+    PostAddMessage('['+Operation+'ing and Disabling References done] ' + ' Processed Records: ' + IntToStr(Count) +
+      ', '+Operation+'ed Records: ' + IntToStr(UndeletedCount) +
       ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
     if DeletedNAVM > 0 then
       PostAddMessage('<Warning: Plugin contains ' + IntToStr(DeletedNAVM) + ' deleted NavMeshes which can not be undeleted>');
     if NotDeletedCount > 0 then
       PostAddMessage('<Warning: Plugin contains ' + IntToStr(NotDeletedCount) + ' deleted references which can not be undeleted>');
+    if AutomodeCheckForDR then DRcount := UndeletedCount;
   finally
     vstNav.EndUpdate;
     Caption := Application.Title;
@@ -4556,6 +4577,7 @@ begin
   pnlNav.Free;
   Files := nil;
   wbProgressCallback := nil;
+  ExitCode := CheckResult;
 end;
 
 var
@@ -4596,6 +4618,7 @@ begin
     pgMain.Visible := False;
     splElements.Visible := False;
   end;
+  CheckResult := 0;
 end;
 
 procedure TfrmMain.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -4812,6 +4835,7 @@ var
   BTT             : TwbLodTES5TreeBlock;
   i, j, n, r, k   : Integer;
   LstIndex        : Integer;
+  LodLevel        : Integer;
   bFound          : Boolean;
   slCont, slList  : TwbFastStringList;
   TreeRecords     : array of array of IwbMainRecord;
@@ -4868,10 +4892,11 @@ begin
       for i := High(Files) downto Low(Files) do
         loFiles[Files[i].LoadOrder] := Files[i];
 
-      BTT.Init(Lst, Cell);
+      if wbGameMode in [gmFO3, gmFNV] then LodLevel := 8 else LodLevel := 4;
+      BTT.Init(Lst, Cell, LodLevel);
       // for each btt file
       for i := 0 to Pred(slList.Count) do begin
-        if not SameText(ExtractFileExt(slList[i]), '.btt') then
+        if not SameText(ExtractFileExt(slList[i]), '.' + wbLODTreeBlockFileExt) then
           Continue;
         Res := wbContainerHandler.OpenResource(slList[i]);
         if Length(Res) = 0 then Continue;
@@ -4887,7 +4912,7 @@ begin
               Continue;
             Ref := loFiles[k].RecordByFormID[loFiles[k].LoadOrderFormIDtoFileFormID(BTT.Refs[j][r].RefFormID), False];
             // found a matching reference of TREE
-            if Assigned(Ref) and Assigned(Ref.BaseRecord) and (Ref.BaseRecord.Signature = 'TREE') then begin
+            if Assigned(Ref) and Assigned(Ref.BaseRecord) and ((Ref.BaseRecord.Signature = 'TREE') or (Ref.BaseRecord.Signature = 'STAT')) then begin
               LstIndex := BTT.Types[j].Index;
               // check if we already associated that TREE record with LST index
               bFound := False;
@@ -4962,7 +4987,12 @@ begin
       if Length(res) = 0 then
         Continue;
 
-      NifTexturesUVRange(res[High(res)].GetData, UVRange, slNifTextures);
+      if wbGameMode = gmTES5 then
+        NifTexturesUVRange(res[High(res)].GetData, UVRange, slNifTextures)
+      else
+        // fallouts nif scanner doesn't support them fully, grab all textures for now
+        NifTextures(res[High(res)].GetData, slNifTextures);
+
       for j := 0 to Pred(slNifTextures.Count) do begin
         // get only texture at index 0 in BSTextureSet nodes (diffuse texture)
         if Integer(slNifTextures.Objects[j]) <> 0 then
@@ -4987,8 +5017,14 @@ var
   slMap: TStringList;
 begin
   for i := 0 to Pred(slTextures.Count) do begin
-    res := wbContainerHandler.OpenResource(slTextures[i]);
+    s := slTextures[i];
+    if not wbContainerHandler.ResourceExists(s) then begin
+      // default diffuse texture to use, only for fallouts since they can't use loose textures in LOD
+      if wbGameMode in [gmFO3, gmFNV] then
+        s := 'textures\shared\shadefade01.dds';
+    end;
 
+    res := wbContainerHandler.OpenResource(s);
     if Length(res) = 0 then
       Continue;
 
@@ -5011,8 +5047,13 @@ begin
     InitImage(Images[Pred(Length(Images))].Image_n);
     s := slTextures[i];
     s := ChangeFileExt(slTextures[i], '') + '_n.dds';
-    if not wbContainerHandler.ResourceExists(s) then
-      s := 'textures\default_n.dds';
+    if not wbContainerHandler.ResourceExists(s) then begin
+      // default normals texture to use
+      if wbGameMode = gmTES5 then
+        s := 'textures\default_n.dds'
+      else if wbGameMode in [gmFO3, gmFNV] then
+        s := 'textures\shared\shadefade01_n.dds';
+    end;
     res := wbContainerHandler.OpenResource(s);
     if Length(res) <> 0 then
       data := res[High(res)].GetData;
@@ -5037,24 +5078,26 @@ begin
 
   slMap := TStringList.Create;
   try
-    wbBuildAtlas(Images, aWidth, aHeight, aName);
-    for i := Low(Images) to High(Images) do
-      if Images[i].AtlasName <> '' then begin
-        // atlas name in map file must be relative to data folder
-        Delete(Images[i].AtlasName, 1, Pred(Pos('textures\', LowerCase(Images[i].AtlasName))));
-        slMap.Add(
-          Images[i].Name + #9 +
-          IntToStr(Images[i].Image.Width)  + #9 +
-          IntToStr(Images[i].Image.Height)  + #9 +
-          IntToStr(Images[i].X) + #9 +
-          IntToStr(Images[i].Y) + #9 +
-          Images[i].AtlasName + #9 +
-          IntToStr(Images[i].W) + #9 +
-          IntToStr(Images[i].H)
-        );
-      end;
-    if slMap.Count <> 0 then
-      slMap.SaveToFile(aMapName);
+    if Length(Images) <> 0 then begin
+      wbBuildAtlas(Images, aWidth, aHeight, aName);
+      for i := Low(Images) to High(Images) do
+        if Images[i].AtlasName <> '' then begin
+          // atlas name in map file must be relative to data folder
+          Delete(Images[i].AtlasName, 1, Pred(Pos('textures\', LowerCase(Images[i].AtlasName))));
+          slMap.Add(
+            Images[i].Name + #9 +
+            IntToStr(Images[i].Image.Width)  + #9 +
+            IntToStr(Images[i].Image.Height)  + #9 +
+            IntToStr(Images[i].X) + #9 +
+            IntToStr(Images[i].Y) + #9 +
+            Images[i].AtlasName + #9 +
+            IntToStr(Images[i].W) + #9 +
+            IntToStr(Images[i].H)
+          );
+        end;
+      if slMap.Count <> 0 then
+        slMap.SaveToFile(aMapName);
+    end;
   finally
     slMap.Free;
     if Length(Images) <> 0 then
@@ -5104,37 +5147,96 @@ var
     // full mesh
     if aLODLevel = -1 then
       Result := aStat.ElementEditValues['Model\MODL']
-    else begin
+    else if wbGameMode = gmTES5 then begin
       arr := aStat.ElementNativeValues[Format('MNAM\LOD #%d (Level %d)\Mesh', [aLODLevel, aLODLevel])];
       for i := Low(arr) to High(arr) do
         if arr[i] = 0 then
           Break
         else
           Result := Result + Chr(arr[i]);
-    end;
+    end
+    else if (wbGameMode in [gmFO3, gmFNV]) and (aLODLevel = 0) then
+      Result := ChangeFileExt(aStat.ElementEditValues['Model\MODL'], '') + '_lod.nif';
+
     Result := wbNormalizeResourceName(Result, resMesh);
+    if (aLODLevel <> -1) and not wbContainerHandler.ResourceExists(Result) then
+      Result := '';
+  end;
+
+  function LoadBillboard(Lst: TwbLodTES5TreeList; TreeRec: IwbMainRecord): PwbLodTES5Tree;
+  var
+    Ovr: IwbMainRecord;
+    Res: TDynResources;
+    ini: TMemIniFile;
+    slIni: TStringList;
+    bsIni: TBytesStream;
+    Width, Height: Single;
+  begin
+    // calculate default width and height of a tree from object bounds
+    Ovr := TreeRec.WinningOverride;
+    if Ovr.ElementExists['OBND'] then begin
+       Width  := Ovr.ElementNativeValues['OBND\X2'] - Ovr.ElementNativeValues['OBND\X1'];
+       Height := Ovr.ElementNativeValues['OBND\Z2'] - Ovr.ElementNativeValues['OBND\Z1'];
+    end
+    else begin
+      Width  := 0;
+      Height := 0;
+    end;
+    Result := Lst.AddTree(TreeRec._File.FileName, Ovr.ElementEditValues['Model\MODL'], TreeRec.LoadOrderFormID, Width, Height);
+    // load billboard texture
+    Res := wbContainerHandler.OpenResource(Result^.Billboard);
+    if (Length(Res) > 0) and Result^.LoadFromData(Res[High(Res)].GetData) then begin
+      //slLog.Add(TreeRec.Name + ' using LOD ' + Result^.Billboard);
+      // store checksum of billboard to avoid duplicates in atlas
+      Result^.CRC32 := wbCRC32Data(Res[High(Res)].GetData);
+      // load tree data
+      Res := wbContainerHandler.OpenResource(ChangeFileExt(Result^.Billboard, '.txt'));
+      if Length(Res) > 0 then begin
+        bsIni := TBytesStream.Create(Res[High(Res)].GetData);
+        slIni := TStringList.Create;
+        ini := TMemIniFile.Create('');
+        try
+          slIni.LoadFromStream(bsIni);
+          ini.SetStrings(slIni);
+          // don't read Width and Height from ini if they are 0
+          if not SameValue(ini.ReadFloat('LOD', 'Width', 0.0), 0.0) then
+            Result^.Width := ini.ReadFloat('LOD', 'Width', Result^.Width);
+          if not SameValue(ini.ReadFloat('LOD', 'Height', 0.0), 0.0) then
+            Result^.Height := ini.ReadFloat('LOD', 'Height', Result^.Height);
+          Result^.ShiftX := ini.ReadFloat('LOD', 'ShiftX', 0.0);
+          Result^.ShiftY := ini.ReadFloat('LOD', 'ShiftY', 0.0);
+          Result^.ShiftZ := ini.ReadFloat('LOD', 'ShiftZ', 0.0);
+          Result^.ScaleFactor := ini.ReadFloat('LOD', 'Scale', 1.0);
+        finally
+          bsIni.Free;
+          slIni.Free;
+          ini.Free;
+        end;
+      end;
+    end else
+      Result^.Index := -1;
   end;
 
 var
   LODPath, AtlasName, AtlasMapName: string;
   Section             : string;
-  s, mat, m4, m8, m16 : string;
+  s, mat, m4, m8, m16, scl: string;
   F                   : TSearchRec;
   Master, Ovr         : IwbMainRecord;
   TreeRec, StatRec    : IwbMainRecord;
+  Group               : IwbGroupRecord;
+  Sigs                : TwbSignatures;
   REFRs               : TDynMainRecords;
-  Count               : Integer;
+  Count, TreesCount   : Integer;
   TotalCount          : Integer;
+  LodLevel            : Integer;
   i, j, k, l          : Integer;
-  Width, Height       : Single;
   Lst                 : TwbLodTES5TreeList;
   LodSet              : TwbLodSettings;
   Res                 : TDynResources;
   PTree               : PwbLodTES5Tree;
-  ini                 : TMemIniFile;
-  slIni, slLog, slCache, slRefs, slExport, sl: TStringList;
+  slLog, slCache, slCacheHPLod, slRefs, slExport, sl: TStringList;
   slLODMeshes, slLODTextures: TStringList;
-  bsIni               : TBytesStream;
   RefPos, RefRot      : TwbVector;
   RefCell, RefBlock   : TwbGridCell;
   Scale, UVRange      : Single;
@@ -5216,20 +5318,56 @@ begin
     Application.ProcessMessages;
     StartTick := GetTickCount;
 
+    TreesCount := 0;
     slLog := TStringList.Create;
+    if wbGameMode in [gmFO3, gmFNV] then LodLevel := 8 else LodLevel := 4;
     Lst := TwbLodTES5TreeList.Create(aWorldspace.EditorID);
     try
+
+    // Fallouts use common atlas for all worldspaces, so we need to collect all available billboards
+    // instead of adding them only for trees in specific worldspace
+    if wbGameMode in [gmFO3, gmFNV] then begin
+      // Tree can be STAT, ACTI or TREE record with Has Tree LOD flag
+      SetLength(Sigs, 3);
+      Sigs[0] := 'STAT'; Sigs[1] := 'ACTI'; Sigs[2] := 'TREE';
+      for i := Low(Files) to High(Files) do
+        for j := Low(Sigs) to High(Sigs) do begin
+          Group := Files[i].GroupBySignature[Sigs[j]];
+          if Assigned(Group) then
+          for k := 0 to Pred(Group.ElementCount) do
+            if Supports(Group.Elements[k], IwbMainRecord, TreeRec) and
+               TreeRec.IsMaster and
+               (TreeRec.WinningOverride.Flags._Flags and $00000040 <> 0)
+            then begin
+              PTree := LoadBillboard(Lst, TreeRec);
+              if PTree^.Index <> - 1 then
+                slLog.Add(TreeRec.Name + ' using LOD ' + PTree^.Billboard)
+              else
+                slLog.Add('<Note: ' + TreeRec.Name + ' LOD not found ' + PTree^.Billboard + '>');
+            end;
+        end;
+    end;
+
     try
       for i := Low(REFRs) to High(REFRs) do begin
-        // only for TREEs
-        if (not Assigned(REFRs[i].BaseRecord)) or (REFRs[i].BaseRecord.Signature <> 'TREE') then
+        if not Assigned(REFRs[i].BaseRecord) then
+          Continue;
+
+        TreeRec := REFRs[i].BaseRecord.MasterOrSelf;
+
+        // Skyrim: only for TREE
+        if (wbGameMode = gmTES5) and (TreeRec.Signature <> 'TREE') then
+          Continue;
+
+        // Fallouts: only for already added trees
+        if (wbGameMode in [gmFO3, gmFNV]) and not Assigned(Lst.TreeByFormID[TreeRec.LoadOrderFormID]) then
           Continue;
 
         if not REFRs[i].GetPosition(RefPos) then
           Continue;
 
         RefCell := wbPositionToGridCell(RefPos);
-        RefBlock := Lodset.BlockForCell(RefCell, 4);
+        RefBlock := Lodset.BlockForCell(RefCell, LodLevel);
 
         // reference is out of lod range
         if (RefBlock.x < Lodset.SWCell.x) or (RefBlock.y < Lodset.SWCell.y) then
@@ -5246,7 +5384,7 @@ begin
         if k = -1 then begin
           SetLength(LOD4, Succ(Length(LOD4)));
           k := Pred(Length(LOD4));
-          LOD4[k].Init(Lst, RefBlock, 4);
+          LOD4[k].Init(Lst, RefBlock, LodLevel);
         end;
 
         // skip invisible references
@@ -5256,56 +5394,14 @@ begin
         then
           Continue;
 
-        TreeRec := REFRs[i].BaseRecord.MasterOrSelf;
         PTree := Lst.TreeByFormID[TreeRec.LoadOrderFormID];
         // adding a new tree to the list
         if not Assigned(PTree) then begin
-          // calculate default width and height of a tree from object bounds
-          Ovr := TreeRec.WinningOverride;
-          if Ovr.ElementExists['OBND'] then begin
-             Width  := Ovr.ElementNativeValues['OBND\X2'] - Ovr.ElementNativeValues['OBND\X1'];
-             Height := Ovr.ElementNativeValues['OBND\Z2'] - Ovr.ElementNativeValues['OBND\Z1'];
-          end
-          else begin
-            Width  := 0;
-            Height := 0;
-          end;
-          PTree := Lst.AddTree(TreeRec._File.FileName, Ovr.ElementEditValues['Model\MODL'], TreeRec.LoadOrderFormID, Width, Height);
-          // load billboard texture
-          Res := wbContainerHandler.OpenResource(PTree^.Billboard);
-          if (Length(Res) > 0) and PTree^.LoadFromData(Res[High(Res)].GetData) then begin
-            slLog.Add(TreeRec.Name + ' using LOD ' + PTree^.Billboard);
-            // store checksum of billboard to avoid duplicates in atlas
-            PTree^.CRC32 := wbCRC32Data(Res[High(Res)].GetData);
-            // load tree data
-            Res := wbContainerHandler.OpenResource(ChangeFileExt(PTree^.Billboard, '.txt'));
-            if Length(Res) > 0 then begin
-              bsIni := TBytesStream.Create(Res[High(Res)].GetData);
-              slIni := TStringList.Create;
-              ini := TMemIniFile.Create('');
-              try
-                slIni.LoadFromStream(bsIni);
-                ini.SetStrings(slIni);
-                // don't read Width and Height from ini if they are 0
-                if not SameValue(ini.ReadFloat('LOD', 'Width', 0.0), 0.0) then
-                  PTree^.Width := ini.ReadFloat('LOD', 'Width', PTree^.Width);
-                if not SameValue(ini.ReadFloat('LOD', 'Height', 0.0), 0.0) then
-                  PTree^.Height := ini.ReadFloat('LOD', 'Height', PTree^.Height);
-                PTree^.ShiftX := ini.ReadFloat('LOD', 'ShiftX', 0.0);
-                PTree^.ShiftY := ini.ReadFloat('LOD', 'ShiftY', 0.0);
-                PTree^.ShiftZ := ini.ReadFloat('LOD', 'ShiftZ', 0.0);
-                PTree^.ScaleFactor := ini.ReadFloat('LOD', 'Scale', 1.0);
-              finally
-                bsIni.Free;
-                slIni.Free;
-                ini.Free;
-              end;
-            end;
-          end
-          else begin
-            PTree^.Index := -1;
+          PTree := LoadBillboard(Lst, TreeRec);
+          if PTree^.Index <> - 1 then
+            slLog.Add(TreeRec.Name + ' using LOD ' + PTree^.Billboard)
+          else
             slLog.Add('<Note: ' + TreeRec.Name + ' LOD not found ' + PTree^.Billboard + '>');
-          end;
         end;
 
         // tree has no billboard texture, skip it's references
@@ -5328,6 +5424,7 @@ begin
         Scale := Scale * PTree^.ScaleFactor;
 
         LOD4[k].AddReference(REFRs[i].LoadOrderFormID, PTree^.Index, RefPos, Scale);
+        Inc(TreesCount);
 
         if ForceTerminate then
           Abort;
@@ -5349,9 +5446,9 @@ begin
         //Exit;
       end;
 
-      // nothing on atlas and in lod
-      if Lst.TreesListCount = 0 then
-        PostAddMessage('<Note: Can not build Trees LOD for ' + aWorldspace.EditorID + ', no resource billboards or TREE references found>')
+      // nothing on atlas or in LOD
+      if (Lst.TreesListCount = 0) or ((wbGameMode in [gmFO3, gmFNV]) and (TreesCount = 0)) then
+        PostAddMessage('<Note: Can not build Trees LOD for ' + aWorldspace.EditorID + ', no resource billboards or valid tree references found>')
       else begin
         LODPath := wbOutputPath; // -O switch override
 
@@ -5363,7 +5460,7 @@ begin
         if ForceTerminate then
           Abort;
 
-        if FindFirst(ExtractFilePath(LODPath + Lst.AtlasFileName) + '*.btt', faAnyFile, F) = 0 then try
+        if FindFirst(ExtractFilePath(LODPath + Lst.AtlasFileName) + '*.' + wbLODTreeBlockFileExt, faAnyFile, F) = 0 then try
           repeat
             DeleteFile(ExtractFilePath(LODPath + Lst.AtlasFileName) + F.Name);
             if StartTick + 500 < GetTickCount then begin
@@ -5412,6 +5509,7 @@ begin
     StartTick := GetTickCount;
 
     slCache := TStringList.Create;
+    slCacheHPLod := TStringList.Create;
     slRefs := TStringList.Create;
     slExport := TStringList.Create;
     slLODMeshes := TStringList.Create;
@@ -5423,9 +5521,9 @@ begin
     try
     try
       for i := Low(REFRs) to High(REFRs) do begin
-        // only for STATs
+        // only for STAT and SCOL
         StatRec := REFRs[i].BaseRecord;
-        if (not Assigned(StatRec)) or (StatRec.Signature <> 'STAT') then
+        if (not Assigned(StatRec)) or ((StatRec.Signature <> 'STAT') and (StatRec.Signature <> 'SCOL')) then
           Continue;
 
         // skip invisible references
@@ -5437,9 +5535,10 @@ begin
 
         StatRec := StatRec.WinningOverride;
 
-        // skip persistent refs of "never fade" statics
-        if REFRs[i].IsPersistent and (StatRec.Flags._Flags and $00000004 <> 0) then
-          Continue;
+        // Skyrim: skip persistent refs of "never fade" statics and "Is Full LOD" refs
+        if wbGameMode = gmTES5 then
+          if REFRs[i].IsPersistent and ((StatRec.Flags._Flags and $00000004 <> 0) or (REFRs[i].Flags._Flags and $00010000 <> 0)) then
+            Continue;
 
         if not REFRs[i].GetPosition(RefPos) then
           Continue;
@@ -5454,7 +5553,10 @@ begin
         k := slCache.IndexOfObject(Pointer(StatRec.LoadOrderFormID));
         if k = -1 then begin
           s := '';
-          if StatRec.ElementExists['MNAM'] and StatRec.Flags.IsVisibleWhenDistant then begin
+          // Skyrim: process only VWD statics, Fallouts: process all statics
+          if ((wbGameMode = gmTES5) and StatRec.Flags.IsVisibleWhenDistant) or
+             (wbGameMode in [gmFO3, gmFNV])
+          then begin
             // getting lod models
             m4 := GetLODMeshName(StatRec, 0);
             if m4 <> '' then slLODMeshes.Add(m4);
@@ -5464,8 +5566,7 @@ begin
             if m16 <> '' then slLODMeshes.Add(m16);
             if (m4 <> '') or (m8 <> '') or (m16 <> '') then begin
               // detecting LOD material
-              mat := '';
-              if Assigned(StatRec.ElementByPath['DNAM\Material']) then begin
+              if (wbGameMode = gmTES5) and Assigned(StatRec.ElementByPath['DNAM\Material']) then begin
                 if Supports(StatRec.ElementByPath['DNAM\Material'].LinksTo, IwbMainRecord, Ovr) then begin
                   mat := Ovr.EditorID;
                   if Pos('Snow', mat) > 0 then mat := 'Snow'
@@ -5480,16 +5581,31 @@ begin
             end;
           end;
           k := slCache.Count;
-          slCache.AddObject(s, Pointer(StatRec.LoadOrderFormID))
+          slCache.AddObject(s, Pointer(StatRec.LoadOrderFormID));
+
+          // Fallouts: High Priority LOD info with m4 model for m8, at the same index as normal cache
+          if wbGameMode in [gmFO3, gmFNV] then begin
+            if s <> '' then
+              s := StatRec.EditorID + #9 + IntToHex(StatRec.Flags._Flags, 8) + #9 +
+                   mat + #9 + GetLODMeshName(StatRec, -1) + #9 +
+                   m4 + #9 + m4 + #9 + m16;
+            slCacheHPLod.Add(s)
+          end;
         end;
 
         if slCache[k] = '' then
           Continue;
 
-        if REFRs[i].ElementExists['XSCL'] then
-          s := REFRs[i].ElementEditValues['XSCL']
+        // Fallouts: High Priority LOD references info from separate cache
+        if (wbGameMode in [gmFO3, gmFNV]) and (REFRs[i].Flags._Flags and $00010000 <> 0) then
+          s := slCacheHPLod[k]
         else
-          s := '1.0';
+          s := slCache[k];
+
+        if REFRs[i].ElementExists['XSCL'] then
+          scl := REFRs[i].ElementEditValues['XSCL']
+        else
+          scl := '1.0';
 
         s := IntToHex(REFRs[i].LoadOrderFormID , 8) + #9 +
              IntToHex(REFRs[i].Flags._Flags, 8) + #9 +
@@ -5499,7 +5615,7 @@ begin
              REFRs[i].ElementEditValues['DATA\Rotation\X'] + #9 +
              REFRs[i].ElementEditValues['DATA\Rotation\Y'] + #9 +
              REFRs[i].ElementEditValues['DATA\Rotation\Z'] + #9 +
-             s + #9 + slCache[k];
+             scl + #9 + s;
         slRefs.Add(s);
 
         if ForceTerminate then
@@ -5525,7 +5641,10 @@ begin
             i := slLODTextures.IndexOf(wbNormalizeResourceName(aWorldspace.WinningOverride.ElementEditValues['TNAM'], resTexture));
             if i <> -1 then slLODTextures.Delete(i);
             // atlas file name and map name
-            AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds';
+            if wbGameMode = gmTES5 then
+              AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds'
+            else if wbGameMode in [gmFO3, gmFNV] then
+              AtlasName := wbOutputPath + 'textures\landscape\lod\' + aWorldspace.EditorID  + '\Blocks\' + aWorldspace.EditorID + 'ObjectsLOD.dds';
             AtlasMapName := wbScriptsPath + 'LODGenAtlasMap.txt';
             // make sure atlas folder exists
             if not DirectoryExists(ExtractFilePath(AtlasName)) then
@@ -5545,6 +5664,7 @@ begin
         end;
 
         // creating lodgen data file
+        slExport.Add('GameMode=' + wbAppName);
         slExport.Add('Worldspace=' + aWorldspace.EditorID);
         slExport.Add('CellSW=' + Format('%d %d', [Lodset.SWCell.x, Lodset.SWCell.y]));
         slExport.Add('TextureDiffuseHD=' + aWorldspace.WinningOverride.ElementEditValues['TNAM']);
@@ -5554,7 +5674,12 @@ begin
           slExport.Add('AtlasTolerance=' + Format('%1.1f', [UVRange - 1.0]));
         end;
         slExport.Add('PathData=' + wbDataPath);
-        slExport.Add('PathOutput=' + wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects');
+        if wbGameMode = gmTES5 then
+          slExport.Add('PathOutput=' + wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects')
+        else if wbGameMode in [gmFO3, gmFNV] then
+          slExport.Add('PathOutput=' + wbOutputPath + 'meshes\landscape\lod\' + aWorldspace.EditorID  + '\Blocks')
+        else
+          raise Exception.Create('Unsupported LODGen game');
         // list of BSAs
         if Assigned(wbContainerHandler) then begin
           sl := TStringList.Create;
@@ -5567,15 +5692,16 @@ begin
           end;
         end;
         // list of meshes to ignore translation/rotation
-        with TStringList.Create do try
-          Delimiter := ',';
-          StrictDelimiter := True;
-          DelimitedText := Settings.ReadString(Section, 'IgnoreTranslation', sMeshIgnoreTranslationTES5);
-          for i := 0 to Pred(Count) do
-            slExport.Add('IgnoreTranslation=' + wbNormalizeResourceName(Strings[i], resMesh));
-        finally
-          Free;
-        end;
+        if wbGameMode = gmTES5 then
+          with TStringList.Create do try
+            Delimiter := ',';
+            StrictDelimiter := True;
+            DelimitedText := Settings.ReadString(Section, 'IgnoreTranslation', sMeshIgnoreTranslationTES5);
+            for i := 0 to Pred(Count) do
+              slExport.Add('IgnoreTranslation=' + wbNormalizeResourceName(Strings[i], resMesh));
+          finally
+            Free;
+          end;
 
         slExport.AddStrings(slRefs);
         s := wbScriptsPath + 'LODGen.txt';
@@ -5583,11 +5709,14 @@ begin
         slExport.SaveToFile(s);
 
         s := Format(wbScriptsPath + 'LODGen.exe "%s"', [s]);
-        s := s + ' --dontFixTangents --removeUnseenFaces';
-        if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoTangents', False) then
-          s := s + ' --dontGenerateTangents';
-        if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False) then
-          s := s + ' --dontGenerateVertexColors';
+        s := s + ' --dontFixTangents';
+        if wbGameMode = gmTES5 then begin
+            s := s + ' --removeUnseenFaces';
+          if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoTangents', False) then
+            s := s + ' --dontGenerateTangents';
+          if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False) then
+            s := s + ' --dontGenerateVertexColors';
+        end;
 
         Caption := 'Running LODGen, press ESC to abort';
         PostAddMessage('[' + aWorldspace.EditorID + '] Running ' + s);
@@ -5613,6 +5742,7 @@ begin
     end;
     finally
       slCache.Free;
+      slCacheHPLod.Free;
       slRefs.Free;
       slLODMeshes.Free;
       slLODTextures.Free;
@@ -8232,7 +8362,7 @@ begin
           for j := 0 to Pred(Group.ElementCount) do
             if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbGameMode in [gmTES5]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (wbGameMode in [gmTES5, gmFNV, gmFO3]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
                 Continue;
               if Mainrecord.Signature = 'WRLD' then begin
                 SetLength(Worldspaces, Succ(Length(Worldspaces)));
@@ -8254,7 +8384,7 @@ begin
           if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
             if Mainrecord.Signature = 'WRLD' then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbGameMode in [gmTES5]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (wbGameMode in [gmTES5, gmFNV, gmFO3]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
                 Continue;
               SetLength(Worldspaces, Succ(Length(Worldspaces)));
               Worldspaces[High(Worldspaces)] := MainRecord;
@@ -8306,12 +8436,13 @@ begin
   end;
 
   // TES5LODGen
-  if wbGameMode = gmTES5 then begin
+  if wbGameMode in [gmTES5, gmFO3, gmFNV] then begin
     with TfrmLODGen.Create(Self) do try
       j := -1;
       for i := Low(WorldSpaces) to High(WorldSpaces) do begin
         clbWorldspace.AddItem(WorldSpaces[i].Name, TObject(Integer(WorldSpaces[i])));
-        if WorldSpaces[i].LoadOrderFormID = $0000003C then
+        // default selected worldspace at the top
+        if (WorldSpaces[i].LoadOrderFormID = $0000003C) or ((wbGameMode = gmFNV) and (WorldSpaces[i].LoadOrderFormID = $000DA726)) then
           j := i;
       end;
 
@@ -8349,6 +8480,16 @@ begin
       Settings.WriteString(Section, 'AtlasTextureUVRange', cmbAtlasTextureUVRange.Text);
       Settings.WriteBool(Section, 'ObjectsNoTangents', cbNoTangents.Checked);
       Settings.WriteBool(Section, 'ObjectsNoVertexColors', cbNoVertexColors.Checked);
+      // Fallouts can have only a single atlas, so no options here
+      if wbGameMode in [gmFO3, gmFNV] then begin
+        Settings.WriteBool(Section, 'BuildAtlas', True);
+        Settings.WriteString(Section, 'AtlasWidth', '4096');
+        Settings.WriteString(Section, 'AtlasHeight', '4096');
+        Settings.WriteString(Section, 'AtlasTextureSize', '1024');
+        Settings.WriteString(Section, 'AtlasTextureUVRange', '10000');
+        Settings.WriteBool(Section, 'ObjectsNoTangents', False);
+        Settings.WriteBool(Section, 'ObjectsNoVertexColors', True);
+      end;
       Settings.WriteBool(Section, 'TreesLOD', cbTreesLOD.Checked);
       Settings.WriteString(Section, 'TreesBrightness', cmbTreesLODBrightness.Text);
       Settings.UpdateFile;
@@ -9078,8 +9219,14 @@ var
   i                           : Integer;
   MainRecord                  : IwbMainRecord;
   GroupRecord                 : IwbGroupRecord;
+  AutoModeCheckForITM         : Boolean;
+  Operation                   : String;
+
 begin
-  if not wbEditAllowed then
+  AutoModeCheckForITM := wbToolMode in [tmCheckForITM];
+  if AutoModeCheckForITM then Operation := 'Count' else Operation := 'Remov';
+
+  if not wbEditAllowed and not AutoModeCheckForITM then
     Exit;
   if wbTranslationMode then
     Exit;
@@ -9115,7 +9262,7 @@ begin
     Exit;
   end;
 
-  if not EditWarn then
+  if not AutoModeCheckForITM and not EditWarn then
     Exit;
 
   vstNav.BeginUpdate;
@@ -9155,14 +9302,16 @@ begin
             if not NodeData.Element.IsRemoveable then
               PostAddMessage('Can''t remove: ' + NodeData.Element.Name)
             else begin
-              PostAddMessage('Removing: ' + NodeData.Element.Name);
-              if Assigned(NodeData.Container) and not NodeData.Container.Equals(NodeData.Element) then
-                NodeData.Container.Remove;
-              NodeData.Element.Remove;
-              NodeData.Container := nil;
-              NodeData.Element := nil;
+              PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
+              if not AutoModeCheckForITM then begin
+                if Assigned(NodeData.Container) and not NodeData.Container.Equals(NodeData.Element) then
+                    NodeData.Container.Remove;
+                NodeData.Element.Remove;
+                NodeData.Container := nil;
+                NodeData.Element := nil;
+                vstNav.DeleteNode(Node, False);
+              end;
               Inc(RemovedCount);
-              vstNav.DeleteNode(Node, False);
             end;
           end;
         end;
@@ -9171,7 +9320,7 @@ begin
         Inc(Count);
         if StartTick + 500 < GetTickCount then begin
           Caption := sJustWait + ' Processed Records: ' + IntToStr(Count) +
-            ' Removed Records: ' + IntToStr(RemovedCount) +
+            ' '+Operation+'ed Records: ' + IntToStr(RemovedCount) +
             ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
           Application.ProcessMessages;
           StartTick := GetTickCount;
@@ -9184,9 +9333,11 @@ begin
       Enabled := True;
     end;
 
-    PostAddMessage('[Removing "Identical to Master" records done] ' + ' Processed Records: ' + IntToStr(Count) +
-      ', Removed Records: ' + IntToStr(RemovedCount) +
+    PostAddMessage('['+Operation+'ing "Identical to Master" records done] ' + ' Processed Records: ' + IntToStr(Count) +
+      ', '+Operation+'ed Records: ' + IntToStr(RemovedCount) +
       ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime)); // Does not show up if handling "a lot" of records !
+    if AutoModeCheckForITM then ITMcount := RemovedCount;
+
   finally
     vstNav.EndUpdate;
     Caption := Application.Title;
@@ -11082,7 +11233,7 @@ begin
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
   mniNavApplyScript.Visible := mniNavCheckForErrors.Visible;
-  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmTES5]);
+  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5]);
 
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;
@@ -12786,7 +12937,10 @@ begin
       tbsMessages.Highlighted := True;
   end;
 
-  if (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters]) and wbLoaderDone and not wbMasterUpdateDone then begin
+  if AutoDone then frmMain.Close;   // Wait until NewMessages are processed.
+
+  if (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmCheckForITM,
+        tmCheckForDR, tmCheckForErrors]) and wbLoaderDone and not wbMasterUpdateDone then begin
     wbMasterUpdateDone := True;
     ChangesMade := False;
     if wbLoaderError then begin
@@ -12812,7 +12966,40 @@ begin
           end
       end else if (wbToolMode in [tmMasterRestore, tmESPify]) then
         ChangesMade := RestorePluginsFromMaster
-      else
+      else if (wbToolMode in [tmCheckForErrors, tmCheckForITM, tmCheckForDR]) then begin
+        if (wbToolMode in [tmCheckForITM, tmCheckForDR]) then
+          mniNavFilterForCleaning.Click;
+        JumpTo(Files[High(Files)].Header, False);
+        vstNav.ClearSelection;
+        vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+        vstNav.Selected[vstNav.FocusedNode] := True;
+        SetActiveRecord(nil);
+        pgMain.ActivePage := tbsMessages;
+        try
+          if wbToolMode = tmCheckForErrors then begin
+            mniNavCheckForErrorsClick(Nil);
+            if ErrorsCount>126 then
+              CheckResult := 127
+            else
+              CheckResult := ErrorsCount;
+          end else if wbToolMode = tmCheckForITM then begin
+            mniNavRemoveIdenticalToMasterClick(Nil);
+            if ITMcount>126 then
+              CheckResult := 127
+            else
+              CheckResult := ITMcount;
+          end else if wbToolMode = tmCheckForDR then begin
+            mniNavUndeleteAndDisableReferencesClick(Nil);
+            if DRcount>126 then
+              CheckResult := 127
+            else
+              CheckResult := DRcount;
+          end else
+            CheckResult := 255;
+        finally
+          wbDontSave := True;
+        end;
+      end else
         ChangesMade := SetAllToMaster;
       SaveChanged;
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= All Done =--');
@@ -12827,7 +13014,7 @@ begin
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! Remember to run this program again any time you make changes to your active mods. !!!.');
       end else
         if (wbToolMode in wbPluginModes) then
-          frmMain.Close;
+          AutoDone := true;
 
     except
       wbDontSave := True;

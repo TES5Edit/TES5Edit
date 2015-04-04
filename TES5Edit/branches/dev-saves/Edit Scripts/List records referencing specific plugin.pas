@@ -24,6 +24,9 @@ var
 begin
   Result := 0;
 
+  if (ElementType(e) = etMainRecord) and (GetLoadOrder(GetFile(MasterOrSelf(e))) = ModLoadOrder) then
+    AddMessage(FullPath(e) + ' is override');
+  
   ref := LinksTo(e);
   if Assigned(ref) then
     if GetLoadOrder(GetFile(ref)) = ModLoadOrder then

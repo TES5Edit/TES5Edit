@@ -2255,7 +2255,7 @@ begin
             wbFloatT('Tim000C'),
             wbIntegerT('Unk0010', itU32)
           ]), -254),
-          wbArrayPT('Combatant List', wbRefIDT('Combattant'), -254),
+          wbArrayPT('Combattant List', wbRefIDT('Combattant'), -254),
           wbFloatT('Tim0020'),
           wbFloatT('Flt0024'),          // Paired
           wbFloatT('Flt0028'),

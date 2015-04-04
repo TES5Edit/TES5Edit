@@ -12006,8 +12006,10 @@ begin
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
+      {0x00010000} 16, 'Is Full LOD',
       {0x04000000} 26, 'Filter (Collision Geometry)',
       {0x08000000} 27, 'Bounding Box (Collision Geometry)',
+      {0x10000000} 28, 'Reflected By Auto Water',
       {0x40000000} 30, 'Ground',
       {0x80000000} 31, 'Multibound'
     ], True, True)),
@@ -12015,17 +12017,21 @@ begin
       {0x00000200}  9, 'Hidden From Local Map',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
+      {0x00010000} 16, 'Is Full LOD',
       {0x04000000} 26, 'Filter (Collision Geometry)',
       {0x08000000} 27, 'Bounding Box (Collision Geometry)',
+      {0x10000000} 28, 'Reflected By Auto Water',
       {0x20000000} 29, 'Don''t Havok Settle',
       {0x40000000} 30, 'No Respawn'
     ], True, True)),
     {CONT} wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
+      {0x00010000} 16, 'Is Full LOD',
       {0x02000000} 25, 'No AI Acquire',
       {0x04000000} 26, 'Filter (Collision Geometry)',
       {0x08000000} 27, 'Bounding Box (Collision Geometry)',
+      {0x10000000} 28, 'Reflected By Auto Water',
       {0x20000000} 29, 'Don''t Havok Settle',
       {0x40000000} 30, 'Ground'
     ], True, True)),
@@ -12034,8 +12040,10 @@ begin
       {0x00000100}  8, 'Inaccessible',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
+      {0x00010000} 16, 'Is Full LOD',
       {0x04000000} 26, 'Filter (Collision Geometry)',
       {0x08000000} 27, 'Bounding Box (Collision Geometry)',
+      {0x10000000} 28, 'Reflected By Auto Water',
       {0x20000000} 29, 'Don''t Havok Settle',
       {0x40000000} 30, 'No Respawn'
     ], True, True)),
@@ -12047,6 +12055,7 @@ begin
       {0x00010000} 16, 'Never Fades',
       {0x00020000} 17, 'Doesn''t Light Landscape',
       {0x02000000} 25, 'No AI Acquire',
+      {0x10000000} 28, 'Reflected By Auto Water',
       {0x20000000} 29, 'Don''t Havok Settle',
       {0x40000000} 30, 'No Respawn'
     ], True, True)),
@@ -12054,14 +12063,17 @@ begin
       {0x00000200}  9, 'Motion Blur',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
+      {0x00010000} 16, 'Is Full LOD',
       {0x04000000} 26, 'Filter (Collision Geometry)',
       {0x08000000} 27, 'Bounding Box (Collision Geometry)',
+      {0x10000000} 28, 'Reflected By Auto Water',
       {0x20000000} 29, 'Don''t Havok Settle',
       {0x40000000} 30, 'No Respawn'
     ], True, True)),
     {ADDN} wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
+      {0x00010000} 16, 'Is Full LOD',
       {0x10000000} 28, 'Reflected By Auto Water',
       {0x20000000} 29, 'Don''t Havok Settle',
       {0x40000000} 30, 'No Respawn'
@@ -12070,7 +12082,9 @@ begin
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
+      {0x00010000} 16, 'Is Full LOD',
       {0x02000000} 25, 'No AI Acquire',
+      {0x10000000} 28, 'Reflected By Auto Water',
       {0x20000000} 29, 'Don''t Havok Settle',
       {0x40000000} 30, 'No Respawn'
     ], True, True))

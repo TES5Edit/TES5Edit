@@ -74,6 +74,10 @@ procedure TfrmLODGen.cbObjectsLODClick(Sender: TObject);
 begin
   gbObjectsOptions.Enabled := cbObjectsLOD.Checked;
   gbObjectsOptions.Visible := cbObjectsLOD.Checked;
+  if wbGameMode in [gmFO3, gmFNV] then begin
+    gbObjectsOptions.Enabled := False;
+    gbObjectsOptions.Visible := False;
+  end;
   cmbTreesLODBrightness.Enabled := cbTreesLOD.Checked;
 end;
 
