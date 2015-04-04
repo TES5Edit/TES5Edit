@@ -690,6 +690,12 @@ type
 
     FileCRCs: TwbFastStringListIC;
 
+    ErrorsCount : Cardinal;
+    ITMcount    : Cardinal;
+    DRcount     : Cardinal;
+    CheckResult : Byte;
+    AutoDone    : Boolean;
+
     procedure DoInit;
     procedure SetDoubleBuffered(aWinControl: TWinControl);
     procedure SetActiveRecord(const aMainRecord: IwbMainRecord); overload;
@@ -1879,8 +1885,10 @@ begin
   if Error <> '' then begin
     Result := aElement.ContainingMainRecord;
     // first error in this record - show record's name
-    if Assigned(Result) and (Result <> LastRecord) then
+    if Assigned(Result) and (Result <> LastRecord) then begin
       wbProgressCallback(Result.Name);
+      Inc(ErrorsCount);
+    end;
     wbProgressCallback('    ' + aElement.Path + ' -> ' + Error);
   end else
     // passing through last record with error
@@ -1975,6 +1983,7 @@ begin
   wbStartTime := Now;
   Enabled := False;
   pgMain.ActivePage := tbsMessages;
+  ErrorsCount := 0;
   try
     Nodes := vstNav.GetSortedSelection(True);
     for i := Low(Nodes) to High(Nodes) do begin
@@ -3085,6 +3094,11 @@ var
   FileCRC      : Cardinal;
   FoundAll     : Boolean;
 begin
+  AutoDone := False;
+  ErrorsCount := 0;
+  ITMcount := 0;
+  DRcount := 0;
+
   SetDoubleBuffered(Self);
   SaveInterval := DefaultInterval;
   TfrmMain(splElements).OnMouseDown := splElementsMouseDown;
@@ -3975,6 +3989,8 @@ var
   Element                     : IwbElement;
   Position                    : TwbVector;
   Cntr {, Cntr2}              : IwbContainerElementRef;
+  AutoModeCheckForDR          : Boolean;
+  Operation                   : String;
 
   function canUndelete: Boolean;
   begin
@@ -4000,7 +4016,10 @@ var
   end;
 
 begin
-  if not wbEditAllowed then
+  AutoModeCheckForDR := wbToolMode in [tmCheckForDR];
+  if AutoModeCheckForDR then Operation := 'Count' else Operation := 'Undelet';
+
+  if not AutoModeCheckForDR and not wbEditAllowed then
     Exit;
   if wbTranslationMode then
     Exit;
@@ -4036,7 +4055,7 @@ begin
     Exit;
   end;
 
-  if not EditWarn then
+  if not AutoModeCheckForDR and not EditWarn then
     Exit;
 
   vstNav.BeginUpdate;
@@ -4079,52 +4098,53 @@ begin
              ) then
           //begin
           if canUndelete then begin
-            IsDeleted := True;
-            IsDeleted := False;
-            PostAddMessage('Undeleting: ' + MainRecord.Name);
-            if (wbGameMode in [gmFO3, gmFNV, gmTES5]) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
-              IsPersistent := True
-            else if wbGameMode = gmTES4 then
-              IsPersistent := False;
-            if not IsPersistent then
-              if wbUDRSetZ and GetPosition(Position) then begin
-                Position.z := wbUDRSetZValue;
-                SetPosition(Position);
+            PostAddMessage(Operation+'ing: ' + MainRecord.Name);
+            if not AutoModeCheckForDR then begin
+              IsDeleted := True;
+              IsDeleted := False;
+              if (wbGameMode in [gmFO3, gmFNV, gmTES5]) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
+                IsPersistent := True
+              else if wbGameMode = gmTES4 then
+                IsPersistent := False;
+              if not IsPersistent then
+                if wbUDRSetZ and GetPosition(Position) then begin
+                  Position.z := wbUDRSetZValue;
+                  SetPosition(Position);
+                end;
+              RemoveElement('Enable Parent');
+              RemoveElement('XTEL');
+              IsInitiallyDisabled := True;
+              if wbUDRSetXESP and Supports(Add('XESP', True), IwbContainerElementRef, Cntr) then begin
+                Cntr.ElementNativeValues['Reference'] := $14;
+                Cntr.ElementNativeValues['Flags'] := 1;
               end;
-            RemoveElement('Enable Parent');
-            RemoveElement('XTEL');
-            IsInitiallyDisabled := True;
-            if wbUDRSetXESP and Supports(Add('XESP', True), IwbContainerElementRef, Cntr) then begin
-              Cntr.ElementNativeValues['Reference'] := $14;
-              Cntr.ElementNativeValues['Flags'] := 1;
-            end;
 
-            if wbUDRSetScale then begin
-              if not Assigned(ElementBySignature['XSCL']) then
-                Element := Add('XSCL', True);
+              if wbUDRSetScale then begin
+                if not Assigned(ElementBySignature['XSCL']) then
+                  Element := Add('XSCL', True);
+                  if Assigned(Element) then
+                    Element.NativeValue := wbUDRSetScaleValue;
+              end;
+
+              if wbUDRSetMSTT and (wbGameMode in [gmFO3, gmFNV]) then begin
+                Element := ElementBySignature['NAME'];
                 if Assigned(Element) then
-                  Element.NativeValue := wbUDRSetScaleValue;
+                  if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
+                    if LinksToRecord.Signature = 'MSTT' then
+                      Element.NativeValue := wbUDRSetMSTTValue;
+              end;
+
+              // Undeleting NAVM, needs to update NAVI as well
+  //            if (Signature = 'NAVM') then
+  //              if wbGameMode in [gmTES5] then begin
+  //                if Supports(MainRecord.ElementByPath['NVNM - Geometry\Vertices'], IwbContainerElementRef, Cntr) then begin
+  //                  for n := 0 to Pred(Cntr.ElementCount) do
+  //                    if Supports(Cntr.Elements[n], IwbContainerElementRef, Cntr2) then
+  //                      Cntr2.ElementByName['Z'].NativeValue := -30000;
+  //                end;
+  //              end else
+  //                Inc(DeletedNAVM);
             end;
-
-            if wbUDRSetMSTT and (wbGameMode in [gmFO3, gmFNV]) then begin
-              Element := ElementBySignature['NAME'];
-              if Assigned(Element) then
-                if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
-                  if LinksToRecord.Signature = 'MSTT' then
-                    Element.NativeValue := wbUDRSetMSTTValue;
-            end;
-
-            // Undeleting NAVM, needs to update NAVI as well
-//            if (Signature = 'NAVM') then
-//              if wbGameMode in [gmTES5] then begin
-//                if Supports(MainRecord.ElementByPath['NVNM - Geometry\Vertices'], IwbContainerElementRef, Cntr) then begin
-//                  for n := 0 to Pred(Cntr.ElementCount) do
-//                    if Supports(Cntr.Elements[n], IwbContainerElementRef, Cntr2) then
-//                      Cntr2.ElementByName['Z'].NativeValue := -30000;
-//                end;
-//              end else
-//                Inc(DeletedNAVM);
-
             Inc(UndeletedCount);
           end;
         end;
@@ -4133,7 +4153,7 @@ begin
         Inc(Count);
         if StartTick + 500 < GetTickCount then begin
           Caption := sJustWait + ' Processed Records: ' + IntToStr(Count) +
-            ' Removed Records: ' + IntToStr(UndeletedCount) +
+            ' '+Operation+'ed Records: ' + IntToStr(UndeletedCount) +
             ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
           Application.ProcessMessages;
           StartTick := GetTickCount;
@@ -4146,13 +4166,14 @@ begin
       Enabled := True;
     end;
 
-    PostAddMessage('[Undeleting and Disabling References done] ' + ' Processed Records: ' + IntToStr(Count) +
-      ', Undeleted Records: ' + IntToStr(UndeletedCount) +
+    PostAddMessage('['+Operation+'ing and Disabling References done] ' + ' Processed Records: ' + IntToStr(Count) +
+      ', '+Operation+'ed Records: ' + IntToStr(UndeletedCount) +
       ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
     if DeletedNAVM > 0 then
       PostAddMessage('<Warning: Plugin contains ' + IntToStr(DeletedNAVM) + ' deleted NavMeshes which can not be undeleted>');
     if NotDeletedCount > 0 then
       PostAddMessage('<Warning: Plugin contains ' + IntToStr(NotDeletedCount) + ' deleted references which can not be undeleted>');
+    if AutomodeCheckForDR then DRcount := UndeletedCount;
   finally
     vstNav.EndUpdate;
     Caption := Application.Title;
@@ -4273,6 +4294,7 @@ begin
   pnlNav.Free;
   Files := nil;
   wbProgressCallback := nil;
+  ExitCode := CheckResult;
 end;
 
 var
@@ -4313,6 +4335,7 @@ begin
     pgMain.Visible := False;
     splElements.Visible := False;
   end;
+  CheckResult := 0;
 end;
 
 procedure TfrmMain.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -8927,8 +8950,14 @@ var
   i                           : Integer;
   MainRecord                  : IwbMainRecord;
   GroupRecord                 : IwbGroupRecord;
+  AutoModeCheckForITM         : Boolean;
+  Operation                   : String;
+
 begin
-  if not wbEditAllowed then
+  AutoModeCheckForITM := wbToolMode in [tmCheckForITM];
+  if AutoModeCheckForITM then Operation := 'Count' else Operation := 'Remov';
+
+  if not wbEditAllowed and not AutoModeCheckForITM then
     Exit;
   if wbTranslationMode then
     Exit;
@@ -8964,7 +8993,7 @@ begin
     Exit;
   end;
 
-  if not EditWarn then
+  if not AutoModeCheckForITM and not EditWarn then
     Exit;
 
   vstNav.BeginUpdate;
@@ -9004,14 +9033,16 @@ begin
             if not NodeData.Element.IsRemoveable then
               PostAddMessage('Can''t remove: ' + NodeData.Element.Name)
             else begin
-              PostAddMessage('Removing: ' + NodeData.Element.Name);
-              if Assigned(NodeData.Container) and not NodeData.Container.Equals(NodeData.Element) then
-                NodeData.Container.Remove;
-              NodeData.Element.Remove;
-              NodeData.Container := nil;
-              NodeData.Element := nil;
+              PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
+              if not AutoModeCheckForITM then begin
+                if Assigned(NodeData.Container) and not NodeData.Container.Equals(NodeData.Element) then
+                    NodeData.Container.Remove;
+                NodeData.Element.Remove;
+                NodeData.Container := nil;
+                NodeData.Element := nil;
+                vstNav.DeleteNode(Node, False);
+              end;
               Inc(RemovedCount);
-              vstNav.DeleteNode(Node, False);
             end;
           end;
         end;
@@ -9020,7 +9051,7 @@ begin
         Inc(Count);
         if StartTick + 500 < GetTickCount then begin
           Caption := sJustWait + ' Processed Records: ' + IntToStr(Count) +
-            ' Removed Records: ' + IntToStr(RemovedCount) +
+            ' '+Operation+'ed Records: ' + IntToStr(RemovedCount) +
             ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
           Application.ProcessMessages;
           StartTick := GetTickCount;
@@ -9033,9 +9064,11 @@ begin
       Enabled := True;
     end;
 
-    PostAddMessage('[Removing "Identical to Master" records done] ' + ' Processed Records: ' + IntToStr(Count) +
-      ', Removed Records: ' + IntToStr(RemovedCount) +
+    PostAddMessage('['+Operation+'ing "Identical to Master" records done] ' + ' Processed Records: ' + IntToStr(Count) +
+      ', '+Operation+'ed Records: ' + IntToStr(RemovedCount) +
       ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime)); // Does not show up if handling "a lot" of records !
+    if AutoModeCheckForITM then ITMcount := RemovedCount;
+
   finally
     vstNav.EndUpdate;
     Caption := Application.Title;
@@ -12402,7 +12435,10 @@ begin
       tbsMessages.Highlighted := True;
   end;
 
-  if (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters]) and wbLoaderDone and not wbMasterUpdateDone then begin
+  if AutoDone then frmMain.Close;   // Wait until NewMessages are processed.
+
+  if (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmCheckForITM,
+        tmCheckForDR, tmCheckForErrors]) and wbLoaderDone and not wbMasterUpdateDone then begin
     wbMasterUpdateDone := True;
     ChangesMade := False;
     if wbLoaderError then begin
@@ -12428,7 +12464,40 @@ begin
           end
       end else if (wbToolMode in [tmMasterRestore, tmESPify]) then
         ChangesMade := RestorePluginsFromMaster
-      else
+      else if (wbToolMode in [tmCheckForErrors, tmCheckForITM, tmCheckForDR]) then begin
+        if (wbToolMode in [tmCheckForITM, tmCheckForDR]) then
+          mniNavFilterForCleaning.Click;
+        JumpTo(Files[High(Files)].Header, False);
+        vstNav.ClearSelection;
+        vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+        vstNav.Selected[vstNav.FocusedNode] := True;
+        SetActiveRecord(nil);
+        pgMain.ActivePage := tbsMessages;
+        try
+          if wbToolMode = tmCheckForErrors then begin
+            mniNavCheckForErrorsClick(Nil);
+            if ErrorsCount>126 then
+              CheckResult := 127
+            else
+              CheckResult := ErrorsCount;
+          end else if wbToolMode = tmCheckForITM then begin
+            mniNavRemoveIdenticalToMasterClick(Nil);
+            if ITMcount>126 then
+              CheckResult := 127
+            else
+              CheckResult := ITMcount;
+          end else if wbToolMode = tmCheckForDR then begin
+            mniNavUndeleteAndDisableReferencesClick(Nil);
+            if DRcount>126 then
+              CheckResult := 127
+            else
+              CheckResult := DRcount;
+          end else
+            CheckResult := 255;
+        finally
+          wbDontSave := True;
+        end;
+      end else
         ChangesMade := SetAllToMaster;
       SaveChanged;
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= All Done =--');
@@ -12443,7 +12512,7 @@ begin
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! Remember to run this program again any time you make changes to your active mods. !!!.');
       end else
         if (wbToolMode in wbPluginModes) then
-          frmMain.Close;
+          AutoDone := true;
 
     except
       wbDontSave := True;
