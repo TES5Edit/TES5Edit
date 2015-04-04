@@ -2965,7 +2965,8 @@ var
 type
   TwbGameMode   = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5);
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
-                    tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters);
+                    tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
+                    tmCheckForErrors, tmCheckForITM, tmCheckForDR);
   TwbToolSource = (tsPlugins, tsSaves);
   TwbSetOfMode  = set of TwbToolMode;
 
@@ -2979,8 +2980,12 @@ var
   wbSourceName  : String;
   wbLanguage    : string;
   wbAutoModes   : TwbSetOfMode = [ tmMasterUpdate, tmMasterRestore, tmLODgen, // Tool modes that run without user interaction until final status
-                    tmESMify, tmESPify, tmSortAndCleanMasters ];
-  wbPluginModes : TwbSetOfMode = [ tmESMify, tmESPify, tmSortAndCleanMasters ];  // Auto modes that require a specific plugin to be provided.
+                    tmESMify, tmESPify, tmSortAndCleanMasters,
+                    tmCheckForErrors, tmCheckForITM, tmCheckForDR ];
+  wbPluginModes : TwbSetOfMode = [ tmESMify, tmESPify, tmSortAndCleanMasters,
+                                   tmCheckForErrors, tmCheckForITM, tmCheckForDR ];  // Auto modes that require a specific plugin to be provided.
+  wbAlwaysMode  : TwbSetOfMode = [ tmView, tmEdit, tmESMify, tmESPify, tmSortAndCleanMasters,
+                    tmLODgen, tmScript, tmCheckForITM, tmCheckForDR, tmCheckForErrors ]; // Modes available to all decoded games
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
