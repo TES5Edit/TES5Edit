@@ -5093,7 +5093,7 @@ begin
        wbIntegerT('Unk004', itU8)
      ]), -254),
      wbRefIDT('Reference Pointer'),                             // 006
-     wbArrayPT('Follower Array', wbRefIDT('Follower'), -254),    // 007
+     wbArrayPT('Follower Array', wbRefIDT('Follower'), -254),   // 007
      wbIntegerT('Leveled Creature Modifier', itU32),            // 008
      wbNull, // ExtraGhost no data                              // 009
      wbRefIDT('Ownership'),                                     // 00A
