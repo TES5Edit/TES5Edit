@@ -220,6 +220,9 @@ const
     'meshes\lod\windhelm\whtempletalos_lod.nif' + ',' +
     'meshes\lod\windhelm\whvalunstrad_lod.nif';
 
+  sMeshIgnoreTranslationFNV =
+    'meshes\architecture\urban\monorail\nv_mrcurvedmg01_lod.nif';
+
 implementation
 
 uses
