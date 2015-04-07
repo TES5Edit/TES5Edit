@@ -4737,8 +4737,10 @@ begin
     s := slTextures[i];
     if not wbContainerHandler.ResourceExists(s) then begin
       // default diffuse texture to use, only for fallouts since they can't use loose textures in LOD
-      if wbGameMode in [gmFO3, gmFNV] then
+      if wbGameMode in [gmFO3, gmFNV] then begin
+        wbProgressCallback('<Note: ' + s + ' diffuse texture not found, using replacement>');
         s := 'textures\shared\shadefade01.dds';
+      end;
     end;
 
     res := wbContainerHandler.OpenResource(s);
@@ -5142,7 +5144,7 @@ begin
           Scale := 1.0;
         Scale := Scale * PTree^.ScaleFactor;
 
-        LOD4[k].AddReference(REFRs[i].LoadOrderFormID, PTree^.Index, RefPos, Scale);
+        LOD4[k].AddReference(REFRs[i].FixedFormID, PTree^.Index, RefPos, Scale);
         Inc(TreesCount);
 
         if ForceTerminate then
@@ -5423,16 +5425,18 @@ begin
           end;
         end;
         // list of meshes to ignore translation/rotation
-        if wbGameMode = gmTES5 then
-          with TStringList.Create do try
-            Delimiter := ',';
-            StrictDelimiter := True;
-            DelimitedText := Settings.ReadString(Section, 'IgnoreTranslation', sMeshIgnoreTranslationTES5);
-            for i := 0 to Pred(Count) do
-              slExport.Add('IgnoreTranslation=' + wbNormalizeResourceName(Strings[i], resMesh));
-          finally
-            Free;
-          end;
+        with TStringList.Create do try
+          Delimiter := ',';
+          StrictDelimiter := True;
+          if wbGameMode = gmTES5 then
+            DelimitedText := Settings.ReadString(Section, 'IgnoreTranslation', sMeshIgnoreTranslationTES5)
+          else if wbGameMode in [gmFO3, gmFNV] then
+            DelimitedText := Settings.ReadString(Section, 'IgnoreTranslation', sMeshIgnoreTranslationFNV);
+          for i := 0 to Pred(Count) do
+            slExport.Add('IgnoreTranslation=' + wbNormalizeResourceName(Strings[i], resMesh));
+        finally
+          Free;
+        end;
 
         slExport.AddStrings(slRefs);
         s := wbScriptsPath + 'LODGen.txt';
@@ -5441,13 +5445,14 @@ begin
 
         s := Format(wbScriptsPath + 'LODGen.exe "%s"', [s]);
         s := s + ' --dontFixTangents';
+        if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False) then
+          s := s + ' --dontGenerateVertexColors';
         if wbGameMode = gmTES5 then begin
             s := s + ' --removeUnseenFaces';
           if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoTangents', False) then
             s := s + ' --dontGenerateTangents';
-          if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False) then
-            s := s + ' --dontGenerateVertexColors';
         end;
+
 
         Caption := 'Running LODGen, press ESC to abort';
         PostAddMessage('[' + aWorldspace.EditorID + '] Running ' + s);
@@ -6786,7 +6791,10 @@ begin
 
     except
       on E: Exception do begin
-        PostAddMessage(E.Message);
+        if Assigned(jvi.LastError) then
+          PostAddMessage('Exception in unit ' + jvi.LastError.ErrUnitName + ' line ' + IntToStr(jvi.LastError.ErrLine) + ': ' + E.Message)
+        else
+          PostAddMessage(E.Message);
         raise;
       end;
     end;
