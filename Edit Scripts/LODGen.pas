@@ -18,6 +18,7 @@ const
   // Atlas options
   bBuildAtlas = True;
   iAtlasTextureSize = 512; // max size of source lod texture to be included on atlas
+  iAtlasTileSize = 512; // max size of tile on atlas, source texture is rescaled if above
   iAtlasWidth = 2048;
   iAtlasHeight = 2048;
   fUVRange = 1.5; // put textures on atlas having -UVRange <= uv <= UVRange in lod nif models
@@ -350,6 +351,7 @@ begin
         wbBuildAtlasFromTexturesList(
           slLODTextures,
           iAtlasTextureSize,
+          iAtlasTileSize,
           iAtlasWidth,
           iAtlasHeight,
           AtlasName,
