@@ -190,8 +190,9 @@ type
 function wbLODSettingsFileName(WorldspaceID: string): string;
 function wbLODTreeBlockFileExt: string;
 function wbNormalizeResourceName(aName: string; aResType: TGameResourceType): string;
+procedure wbPrepareImageAlpha(img: TImageData; fmt: TImageFormat);
 procedure wbBuildAtlas(var Images: TSourceAtlasTextures; aWidth, aHeight: Integer;
-  aName: string);
+  aName: string; fmtDiffuse, fmtNormal: TImageFormat);
 
 
 const
@@ -853,8 +854,27 @@ begin
     Result := 'music\' + Result;
 end;
 
+procedure wbPrepareImageAlpha(img: TImageData; fmt: TImageFormat);
+var
+  x, y: integer;
+  c: TColor32Rec;
+begin
+  // Max alpha for formats saved without alpha, otherwise they will become black
+  if fmt in [ifDXT1, ifR8G8B8] then begin
+    for x := 0 to Pred(img.Width) do
+      for y := 0 to Pred(img.Height) do begin
+        c := GetPixel32(img, x, y);
+        if c.A <> 255 then begin
+          c.A := 255;
+          SetPixel32(img, x, y, c);
+        end;
+      end;
+  end;
+end;
+
 procedure wbBuildAtlas(var Images: TSourceAtlasTextures; aWidth, aHeight: Integer;
-  aName: string);
+  aName: string; fmtDiffuse, fmtNormal: TImageFormat
+);
 var
   i, num, maxw, maxh: integer;
   Blocks, Blocks2: TDynBinBlockArray;
@@ -937,7 +957,8 @@ begin
           Images[Blocks[i].Index].H := maxh;
         end;
 
-        if not ConvertImage(atlas, ifDXT3) then
+        wbPrepareImageAlpha(atlas, fmtDiffuse);
+        if not ConvertImage(atlas, fmtDiffuse) then
           raise Exception.Create('Image convertion error');
 
         try
@@ -975,7 +996,8 @@ begin
           end;
         end;
 
-        if not ConvertImage(atlas, ifDXT5) then
+        wbPrepareImageAlpha(atlas, fmtNormal);
+        if not ConvertImage(atlas, fmtNormal) then
           raise Exception.Create('Image convertion error');
 
         try

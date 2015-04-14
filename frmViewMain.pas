@@ -50,6 +50,7 @@ uses
   JvInterpreter,
   ImagingTypes,
   ImagingFormats,
+  ImagingCanvases,
   Imaging,
   wbInterface,
   wbImplementation,
@@ -522,6 +523,8 @@ type
     function GetRefBySelectionAsElements: TDynElements;
 
     function ExecuteCaptureConsoleOutput(const aCommandLine: string): Cardinal;
+    procedure wbBuildAtlasFromTexturesList(slTextures: TStrings; aMaxTextureSize, aMaxTileSize, aWidth, aHeight: integer; aName, aMapName: string);
+    procedure wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer);
     procedure SplitLOD(const aWorldspace: IwbMainRecord);
     procedure GenerateLODTES4(const aWorldspace: IwbMainRecord);
     procedure GenerateLODTES5(const aWorldspace: IwbMainRecord; const LODTypes: TLODTypes);
@@ -4723,7 +4726,7 @@ begin
   end;
 end;
 
-procedure wbBuildAtlasFromTexturesList(
+procedure TfrmMain.wbBuildAtlasFromTexturesList(
   slTextures: TStrings;
   aMaxTextureSize,
   aMaxTileSize,
@@ -4738,6 +4741,7 @@ var
   data: TBytes;
   Images: TSourceAtlasTextures;
   slMap: TStringList;
+  fmtDiffuse, fmtNormal: TImageFormat;
 begin
   for i := 0 to Pred(slTextures.Count) do begin
     s := slTextures[i];
@@ -4794,7 +4798,7 @@ begin
     if Length(res) <> 0 then
       data := res[High(res)].GetData;
     if (Length(res) <> 0) and LoadImageFromMemory(@data[0], Length(data), Images[Pred(Length(Images))].Image_n) then begin
-      // resize normals to match diffuze
+      // resize normals to match diffuse
       if ((Images[Pred(Length(Images))].Image.Width <> Images[Pred(Length(Images))].Image_n.Width) or (Images[Pred(Length(Images))].Image.Height <> Images[Pred(Length(Images))].Image_n.Height)) then
         ResizeImage(
           Images[Pred(Length(Images))].Image_n,
@@ -4815,7 +4819,9 @@ begin
   slMap := TStringList.Create;
   try
     if Length(Images) <> 0 then begin
-      wbBuildAtlas(Images, aWidth, aHeight, aName);
+      fmtDiffuse := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasDiffuseFormat', Integer(ifDXT3)));
+      fmtNormal := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(ifDXT1)));
+      wbBuildAtlas(Images, aWidth, aHeight, aName, fmtDiffuse, fmtNormal);
       for i := Low(Images) to High(Images) do
         if Images[i].AtlasName <> '' then begin
           // atlas name in map file must be relative to data folder
@@ -4844,7 +4850,7 @@ begin
   end;
 end;
 
-procedure wbBuildAtlasFromAtlasMap(slMap: TStrings);
+procedure TfrmMain.wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer);
 var
   l, i: integer;
   sl, slAtlas: TStringList;
@@ -4854,6 +4860,8 @@ var
   Atlases, Atlases_n: array of TImageData;
   mipmap: TDynImageDataArray;
   fname: string;
+  imgcanv: TImagingCanvas;
+  fmtDiffuse, fmtNormal: TImageFormat;
 begin
   if not Assigned(slMap) then
     Exit;
@@ -4910,9 +4918,22 @@ begin
     end;
 
     SetOption(ImagingMipMapFilter, Ord(sfLanczos));
+    fmtDiffuse := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasDiffuseFormat', Integer(ifDXT3)));
+    fmtNormal := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(ifDXT1)));
 
     for i := 0 to Pred(slAtlas.Count) do begin
-      if not ConvertImage(Atlases[i], ifDXT3) then
+      // change brightness
+      if aBrightness <> 0 then begin
+        imgcanv := TImagingCanvas.CreateForData(@Atlases[i]);
+        try
+          imgcanv.ModifyContrastBrightness(aBrightness / 10, aBrightness);
+        finally
+          imgcanv.Free;
+        end;
+      end;
+
+      wbPrepareImageAlpha(Atlases[i], fmtDiffuse);
+      if not ConvertImage(Atlases[i], fmtDiffuse) then
         raise Exception.Create('Image convertion error');
 
       fname := slAtlas[i];
@@ -4930,7 +4951,8 @@ begin
         FreeImagesInArray(mipmap);
       end;
 
-      if not ConvertImage(Atlases_n[i], ifDXT5) then
+      wbPrepareImageAlpha(Atlases_n[i], fmtNormal);
+      if not ConvertImage(Atlases_n[i], fmtNormal) then
         raise Exception.Create('Image convertion error');
 
       try
@@ -5272,12 +5294,16 @@ begin
           Scale := 1.0;
         Scale := Scale * PTree^.ScaleFactor;
 
-        if REFRs[i].IsMaster then
+        // Skyrim
+        if wbGameMode = gmTES5 then
+          RefFormID := REFRs[i].LoadOrderFormID
+        // Fallouts
+        else if REFRs[i].IsMaster then
           RefFormID := REFRs[i].FixedFormID
         else
           RefFormID := (REFRs[i].FixedFormID and $00FFFFFF) or $01000000;
-        LOD4[k].AddReference(RefFormID, PTree^.Index, RefPos, Scale);
 
+        LOD4[k].AddReference(RefFormID, PTree^.Index, RefPos, Scale);
         Inc(TreesCount);
 
         if ForceTerminate then
@@ -5597,10 +5623,10 @@ begin
           raise Exception.Create('LODGen process error, exit code ' + IntToStr(k));
         PostAddMessage('[' + aWorldspace.EditorID + '] Objects LOD Done.');
 
-        // DynDoLOD reference message, tribute to Sheson who made TES5LODGen possible
+        // DynDOLOD reference message, tribute to Sheson who made TES5LODGen possible
         if wbGameMode = gmTES5 then begin
           PostAddMessage(StringOfChar('*', 120));
-          PostAddMessage('If you want more detailed, dynamic LOD with wide customization, please check DynDoLOD by Sheson');
+          PostAddMessage('If you want more detailed, dynamic LOD with wide customization, please check DynDOLOD by Sheson');
           PostAddMessage('http://www.nexusmods.com/skyrim/mods/59721/');
           PostAddMessage('It uses the same LODGen building process as TES5LODGen internally, but with more options.');
           PostAddMessage(StringOfChar('*', 120));
@@ -14916,9 +14942,10 @@ begin
     );
     Done := True;
   end
-  else if SameText(Identifier, 'wbBuildAtlasFromAtlasMap') and (Args.Count = 1) then begin
+  else if SameText(Identifier, 'wbBuildAtlasFromAtlasMap') and (Args.Count = 2) then begin
     wbBuildAtlasFromAtlasMap(
-      TStrings(V2O(Args.Values[0])) // TStrings atlas map
+      TStrings(V2O(Args.Values[0])), // TStrings atlas map
+      Args.Values[1]                 // brightness
     );
     Done := True;
   end;
