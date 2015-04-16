@@ -524,7 +524,7 @@ type
 
     function ExecuteCaptureConsoleOutput(const aCommandLine: string): Cardinal;
     procedure wbBuildAtlasFromTexturesList(slTextures: TStrings; aMaxTextureSize, aMaxTileSize, aWidth, aHeight: integer; aName, aMapName: string);
-    procedure wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer);
+    procedure wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer; GammaR, GammaG, GammaB: Single);
     procedure SplitLOD(const aWorldspace: IwbMainRecord);
     procedure GenerateLODTES4(const aWorldspace: IwbMainRecord);
     procedure GenerateLODTES5(const aWorldspace: IwbMainRecord; const LODTypes: TLODTypes);
@@ -4850,7 +4850,8 @@ begin
   end;
 end;
 
-procedure TfrmMain.wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer);
+procedure TfrmMain.wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer;
+  GammaR, GammaG, GammaB: Single);
 var
   l, i: integer;
   sl, slAtlas: TStringList;
@@ -4922,14 +4923,15 @@ begin
     fmtNormal := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(ifDXT1)));
 
     for i := 0 to Pred(slAtlas.Count) do begin
-      // change brightness
-      if aBrightness <> 0 then begin
-        imgcanv := TImagingCanvas.CreateForData(@Atlases[i]);
-        try
+      // change brightness or gamme
+      imgcanv := TImagingCanvas.CreateForData(@Atlases[i]);
+      try
+        if aBrightness <> 0 then
           imgcanv.ModifyContrastBrightness(aBrightness / 10, aBrightness);
-        finally
-          imgcanv.Free;
-        end;
+        if (not SameValue(GammaR, 1.0)) or (not SameValue(GammaG, 1.0)) or (not SameValue(GammaB, 1.0)) then
+          imgcanv.GammaCorection(GammaR, GammaG, GammaB);
+      finally
+        imgcanv.Free;
       end;
 
       wbPrepareImageAlpha(Atlases[i], fmtDiffuse);
@@ -14942,10 +14944,13 @@ begin
     );
     Done := True;
   end
-  else if SameText(Identifier, 'wbBuildAtlasFromAtlasMap') and (Args.Count = 2) then begin
+  else if SameText(Identifier, 'wbBuildAtlasFromAtlasMap') and (Args.Count = 5) then begin
     wbBuildAtlasFromAtlasMap(
       TStrings(V2O(Args.Values[0])), // TStrings atlas map
-      Args.Values[1]                 // brightness
+      Args.Values[1],                // brightness
+      Args.Values[2],                // GammaR
+      Args.Values[3],                // GammaG
+      Args.Values[4]                 // GammaB
     );
     Done := True;
   end;
