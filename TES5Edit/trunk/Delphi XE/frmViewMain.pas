@@ -5420,9 +5420,12 @@ begin
 
         // skip invisible references
         if REFRs[i].Flags.IsInitiallyDisabled or
-           REFRs[i].Flags.IsDeleted or
-           REFRs[i].ElementExists['XESP']
+           REFRs[i].Flags.IsDeleted
         then
+          Continue;
+
+        // skip parent enabled refs except FO3 Megaton town
+        if REFRs[i].ElementExists['XESP'] and (Pos('MegatonToggle', REFRs[i].ElementEditValues['XESP\Reference']) = 0) then
           Continue;
 
         StatRec := StatRec.WinningOverride;
