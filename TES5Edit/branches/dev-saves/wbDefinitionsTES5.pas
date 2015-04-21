@@ -792,6 +792,8 @@ var
   wbPDTOs: IwbSubRecordArrayDef;
   wbUNAMs: IwbSubRecordArrayDef;
   wbNull: IwbValueDef;
+  wbTimeInterpolator: IwbStructDef;
+  wbColorInterpolator: IwbStructDef;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -8310,197 +8312,133 @@ begin
     ], cpNormal, False, nil, 3)
   ]);
 
-  {>>> Most wbUnknowns here are a series of floats that don't have values in CK <<<}
+  wbTimeInterpolator := wbStruct('Data', [
+    wbFloat('Time'),
+    wbFloat('Value')
+  ]);
+
+  wbColorInterpolator := wbStruct('Data', [
+    wbFloat('Time'),
+    wbFloat('Red', cpNormal, False, 255, 0),
+    wbFloat('Green', cpNormal, False, 255, 0),
+    wbFloat('Blue', cpNormal, False, 255, 0),
+    wbFloat('Alpha', cpNormal, False, 255, 0)
+  ]);
+
   wbRecord(IMAD, 'Image Space Adapter', [
     wbEDID,
-    wbStruct(DNAM, 'Data', [
+    wbStruct(DNAM, 'Data Count', [
       wbInteger('Flags', itU32, wbFlags(['Animatable'])),
       wbFloat('Duration'),
-      wbByteArray('Unknown', 4*48),
+      wbStruct('HDR', [
+        wbInteger('Eye Adapt Speed Mult', itU32),
+        wbInteger('Eye Adapt Speed Add', itU32),
+        wbInteger('Bloom Blur Radius Mult', itU32),
+        wbInteger('Bloom Blur Radius Add', itU32),
+        wbInteger('Bloom Threshold Mult', itU32),
+        wbInteger('Bloom Threshold Add', itU32),
+        wbInteger('Bloom Scale Mult', itU32),
+        wbInteger('Bloom Scale Add', itU32),
+        wbInteger('Target Lum Min Mult', itU32),
+        wbInteger('Target Lum Min Add', itU32),
+        wbInteger('Target Lum Max Mult', itU32),
+        wbInteger('Target Lum Max Add', itU32),
+        wbInteger('Sunlight Scale Mult', itU32),
+        wbInteger('Sunlight Scale Add', itU32),
+        wbInteger('Sky Scale Mult', itU32),
+        wbInteger('Sky Scale Add', itU32)
+      ]),
+      wbInteger('Unknown08 Mult', itU32),
+      wbInteger('Unknown48 Add', itU32),
+      wbInteger('Unknown09 Mult', itU32),
+      wbInteger('Unknown49 Add', itU32),
+      wbInteger('Unknown0A Mult', itU32),
+      wbInteger('Unknown4A Add', itU32),
+      wbInteger('Unknown0B Mult', itU32),
+      wbInteger('Unknown4B Add', itU32),
+      wbInteger('Unknown0C Mult', itU32),
+      wbInteger('Unknown4C Add', itU32),
+      wbInteger('Unknown0D Mult', itU32),
+      wbInteger('Unknown4D Add', itU32),
+      wbInteger('Unknown0E Mult', itU32),
+      wbInteger('Unknown4E Add', itU32),
+      wbInteger('Unknown0F Mult', itU32),
+      wbInteger('Unknown4F Add', itU32),
+      wbInteger('Unknown10 Mult', itU32),
+      wbInteger('Unknown50 Add', itU32),
+      wbStruct('Cinematic', [
+        wbInteger('Saturation Mult', itU32),
+        wbInteger('Saturation Add', itU32),
+        wbInteger('Brightness Mult', itU32),
+        wbInteger('Brightness Add', itU32),
+        wbInteger('Contrast Mult', itU32),
+        wbInteger('Contrast Add', itU32)
+      ]),
+      wbInteger('Unknown14 Mult', itU32),
+      wbInteger('Unknown54 Add', itU32),
+      wbInteger('Tint Color', itU32),
+      wbInteger('Blur Radius', itU32),
+      wbInteger('Double Vision Strength', itU32),
+      wbInteger('Radial Blur Strength', itU32),
+      wbInteger('Radial Blur Ramp Up', itU32),
+      wbInteger('Radial Blur Start', itU32),
       wbInteger('Radial Blur Flags', itU32, wbFlags(['Use Target'])),
       wbFloat('Radial Blur Center X'),
       wbFloat('Radial Blur Center Y'),
-      wbArray('Unknown', wbByteArray('Unknown', 4), 3),
+      wbInteger('DoF Strength', itU32),
+      wbInteger('DoF Distance', itU32),
+      wbInteger('DoF Range', itU32),
       wbInteger('DoF Flags', itU32, wbFlags([
-        {0x00000001}'Use Target',
-        {0x00000002}'Unknown 2',
-        {0x00000004}'Unknown 3',
-        {0x00000008}'Unknown 4',
-        {0x00000010}'Unknown 5',
-        {0x00000020}'Unknown 6',
-        {0x00000040}'Unknown 7',
-        {0x00000080}'Unknown 8',
-        {0x00000100}'Mode - Front',
-        {0x00000200}'Mode - Back',
-        {0x00000400}'No Sky',
-        {0x00000800}'Blur Radius Bit 2',
-        {0x00001000}'Blur Radius Bit 1',
-        {0x00002000}'Blur Radius Bit 0'
+        {0x00000001} 'Use Target',
+        {0x00000002} 'Unknown 2',
+        {0x00000004} 'Unknown 3',
+        {0x00000008} 'Unknown 4',
+        {0x00000010} 'Unknown 5',
+        {0x00000020} 'Unknown 6',
+        {0x00000040} 'Unknown 7',
+        {0x00000080} 'Unknown 8',
+        {0x00000100} 'Mode - Front',
+        {0x00000200} 'Mode - Back',
+        {0x00000400} 'No Sky',
+        {0x00000800} 'Blur Radius Bit 2',
+        {0x00001000} 'Blur Radius Bit 1',
+        {0x00002000} 'Blur Radius Bit 0'
       ])),
-      wbUnknown
+      wbInteger('Radial Blur Ramp Down', itU32),
+      wbInteger('Radial Blur Down Start', itU32),
+      wbInteger('Fade Color', itU32),
+      wbInteger('Motion Blur Strength', itU32)
     ]),
-    wbStruct(BNAM, 'Blur', [
-      wbFloat('Unknown'),
-      wbFloat('Radius'),
-      wbUnknown
-    ]),
-    wbStruct(VNAM, 'Double Vision', [
-      wbFloat('Unknown'),
-      wbFloat('Strength'),
-      wbUnknown
-    ]),
-    wbRStruct('Cinematic Colors', [
-      wbStruct(TNAM, 'Tint', [
-        wbFloat('Unknown'),
-        wbStruct('Tint', [
-          wbFloat('Red', cpNormal, True, 255, 0),
-          wbFloat('Green', cpNormal, True, 255, 0),
-          wbFloat('Blue', cpNormal, True, 255, 0),
-          wbFloat('Alpha', cpNormal, True, 255, 0)
-        ]),
-        wbUnknown
-      ]),
-      wbStruct(NAM3, 'Fade', [
-        wbFloat('Unknown'),
-        wbStruct('Fade', [
-          wbFloat('Red', cpNormal, True, 255, 0),
-          wbFloat('Green', cpNormal, True, 255, 0),
-          wbFloat('Blue', cpNormal, True, 255, 0),
-          wbFloat('Alpha', cpNormal, True, 255, 0)
-        ]),
-        wbUnknown
-      ])
-    ], []),
-    wbRStruct('Radial Blur', [
-      wbStruct(RNAM, '', [
-        wbFloat('Unknown'),
-        wbFloat('Strength'),
-        wbUnknown
-      ]),
-      wbStruct(SNAM, '', [
-        wbFloat('Unknown'),
-        wbFloat('Rampup'),
-        wbUnknown
-      ]),
-      wbStruct(UNAM, '', [
-        wbFloat('Unknown'),
-        wbFloat('Start'),
-        wbUnknown
-      ]),
-      wbStruct(NAM1, '', [
-        wbFloat('Unknown'),
-        wbFloat('Rampdown'),
-        wbUnknown
-      ]),
-      wbStruct(NAM2, '', [
-        wbFloat('Unknown'),
-        wbFloat('Downstart'),
-        wbUnknown
-      ])
-    ], []),
-    wbRStruct('Depth of Field', [
-      wbStruct(WNAM, 'Depth of Field', [
-        wbFloat('Unknown'),
-        wbFloat('Strength'),
-        wbUnknown
-      ]),
-      wbStruct(XNAM, 'Depth of Field', [
-        wbFloat('Unknown'),
-        wbFloat('Distance'),
-        wbUnknown
-      ]),
-      wbStruct(YNAM, 'Depth of Field', [
-        wbFloat('Unknown'),
-        wbFloat('Range'),
-        wbUnknown
-      ])
-    ], []),
-    wbStruct(NAM4, 'FullScreen Motion Blur', [
-      wbFloat('Unknown'),
-      wbFloat('Strength'),
-      wbUnknown
-    ]),
+    wbArray(BNAM, 'Blur Radius', wbTimeInterpolator),
+    wbArray(VNAM, 'Double Vision Strength', wbTimeInterpolator),
+    wbArray(TNAM, 'Tint Color', wbColorInterpolator),
+    wbArray(NAM3, 'Fade Color', wbColorInterpolator),
+    wbArray(RNAM, 'Radial Blur Strength', wbTimeInterpolator),
+    wbArray(SNAM, 'Radial Blur Ramp Up', wbTimeInterpolator),
+    wbArray(UNAM, 'Radial Blur Start', wbTimeInterpolator),
+    wbArray(NAM1, 'Radial Blur Ramp Down', wbTimeInterpolator),
+    wbArray(NAM2, 'Radial Blur Down Start', wbTimeInterpolator),
+    wbArray(WNAM, 'DoF Strength', wbTimeInterpolator),
+    wbArray(XNAM, 'DoF Distance', wbTimeInterpolator),
+    wbArray(YNAM, 'DoF Range', wbTimeInterpolator),
+    wbArray(NAM4, 'Motion Blur Strength', wbTimeInterpolator),
     wbRStruct('HDR', [
-      wbStruct(_00_IAD, 'Eye Adapt Speed', [
-        wbFloat('Unknown'),
-        wbFloat('Multiply'),
-        wbUnknown
-      ]),
-      wbStruct(_40_IAD, 'Eye Adapt Speed', [
-        wbFloat('Unknown'),
-        wbFloat('Add'),
-        wbUnknown
-      ]),
-      wbStruct(_01_IAD, 'Bloom Blur Radius', [
-        wbFloat('Unknown'),
-        wbFloat('Multiply'),
-        wbUnknown
-      ]),
-      wbStruct(_41_IAD, 'Bloom Blur Radius', [
-        wbFloat('Unknown'),
-        wbFloat('Add'),
-        wbUnknown
-      ]),
-      wbStruct(_02_IAD, 'Bloom Threshold', [
-        wbFloat('Unknown'),
-        wbFloat('Multiply'),
-        wbUnknown
-      ]),
-      wbStruct(_42_IAD, 'Bloom Threshold', [
-        wbFloat('Unknown'),
-        wbFloat('Add'),
-        wbUnknown
-      ]),
-      wbStruct(_03_IAD, 'Bloom Scale', [
-        wbFloat('Unknown'),
-        wbFloat('Multiply'),
-        wbUnknown
-      ]),
-      wbStruct(_43_IAD, 'Bloom Scale', [
-        wbFloat('Unknown'),
-        wbFloat('Add'),
-        wbUnknown
-      ]),
-      wbStruct(_04_IAD, 'Target Lum Min', [
-        wbFloat('Unknown'),
-        wbFloat('Multiply'),
-        wbUnknown
-      ]),
-      wbStruct(_44_IAD, 'Target Lum Min', [
-        wbFloat('Unknown'),
-        wbFloat('Add'),
-        wbUnknown
-      ]),
-      wbStruct(_05_IAD, 'Target Lum Max', [
-        wbFloat('Unknown'),
-        wbFloat('Multiply'),
-        wbUnknown
-      ]),
-      wbStruct(_45_IAD, 'Target Lum Max', [
-        wbFloat('Unknown'),
-        wbFloat('Add'),
-        wbUnknown
-      ]),
-      wbStruct(_06_IAD, 'Sunlight Scale', [
-        wbFloat('Unknown'),
-        wbFloat('Multiply'),
-        wbUnknown
-      ]),
-      wbStruct(_46_IAD, 'Sunlight Scale', [
-        wbFloat('Unknown'),
-        wbFloat('Add'),
-        wbUnknown
-      ]),
-      wbStruct(_07_IAD, 'Sky Scale', [
-        wbFloat('Unknown'),
-        wbFloat('Multiply'),
-        wbUnknown
-      ]),
-      wbStruct(_47_IAD, 'Sky Scale', [
-        wbFloat('Unknown'),
-        wbFloat('Add'),
-        wbUnknown
-      ])
+      wbArray(_00_IAD, 'Eye Adapt Speed Mult', wbTimeInterpolator),
+      wbArray(_40_IAD, 'Eye Adapt Speed Add', wbTimeInterpolator),
+      wbArray(_01_IAD, 'Bloom Blur Radius Mult', wbTimeInterpolator),
+      wbArray(_41_IAD, 'Bloom Blur Radius Add', wbTimeInterpolator),
+      wbArray(_02_IAD, 'Bloom Threshold Mult', wbTimeInterpolator),
+      wbArray(_42_IAD, 'Bloom Threshold Add', wbTimeInterpolator),
+      wbArray(_03_IAD, 'Bloom Scale Mult', wbTimeInterpolator),
+      wbArray(_43_IAD, 'Bloom Scale Add', wbTimeInterpolator),
+      wbArray(_04_IAD, 'Target Lum Min Mult', wbTimeInterpolator),
+      wbArray(_44_IAD, 'Target Lum Min Add', wbTimeInterpolator),
+      wbArray(_05_IAD, 'Target Lum Max Mult', wbTimeInterpolator),
+      wbArray(_45_IAD, 'Target Lum Max Add', wbTimeInterpolator),
+      wbArray(_06_IAD, 'Sunlight Scale Mult', wbTimeInterpolator),
+      wbArray(_46_IAD, 'Sunlight Scale Add', wbTimeInterpolator),
+      wbArray(_07_IAD, 'Sky Scale Mult', wbTimeInterpolator),
+      wbArray(_47_IAD, 'Sky Scale Add', wbTimeInterpolator)
     ], []),
     wbUnknown(_08_IAD),
     wbUnknown(_48_IAD),
@@ -8521,36 +8459,12 @@ begin
     wbUnknown(_10_IAD),
     wbUnknown(_50_IAD),
     wbRStruct('Cinematic', [
-      wbStruct(_11_IAD, 'Saturation', [
-        wbFloat('Unknown'),
-        wbFloat('Multiply'),
-        wbUnknown
-      ]),
-      wbStruct(_51_IAD, 'Saturation', [
-        wbFloat('Unknown'),
-        wbFloat('Add'),
-        wbUnknown
-      ]),
-      wbStruct(_12_IAD, 'Brightness', [
-        wbFloat('Unknown'),
-        wbFloat('Multiply'),
-        wbUnknown
-      ]),
-      wbStruct(_52_IAD, 'Brightness', [
-        wbFloat('Unknown'),
-        wbFloat('Add'),
-        wbUnknown
-      ]),
-      wbStruct(_13_IAD, 'Contrast', [
-        wbFloat('Unknown'),
-        wbFloat('Multiply'),
-        wbUnknown
-      ]),
-      wbStruct(_53_IAD, 'Contrast', [
-        wbFloat('Unknown'),
-        wbFloat('Add'),
-        wbUnknown
-      ])
+      wbArray(_11_IAD, 'Saturation Mult', wbTimeInterpolator),
+      wbArray(_51_IAD, 'Saturation Add', wbTimeInterpolator),
+      wbArray(_12_IAD, 'Brightness Mult', wbTimeInterpolator),
+      wbArray(_52_IAD, 'Brightness Add', wbTimeInterpolator),
+      wbArray(_13_IAD, 'Contrast Mult', wbTimeInterpolator),
+      wbArray(_53_IAD, 'Contrast Add', wbTimeInterpolator)
     ], []),
     wbUnknown(_14_IAD),
     wbUnknown(_54_IAD)

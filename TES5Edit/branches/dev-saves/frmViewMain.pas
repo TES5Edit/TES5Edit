@@ -50,6 +50,7 @@ uses
   JvInterpreter,
   ImagingTypes,
   ImagingFormats,
+  ImagingCanvases,
   Imaging,
   wbInterface,
   wbImplementation,
@@ -522,6 +523,8 @@ type
     function GetRefBySelectionAsElements: TDynElements;
 
     function ExecuteCaptureConsoleOutput(const aCommandLine: string): Cardinal;
+    procedure wbBuildAtlasFromTexturesList(slTextures: TStrings; aMaxTextureSize, aMaxTileSize, aWidth, aHeight: integer; aName, aMapName: string);
+    procedure wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer; GammaR, GammaG, GammaB: Single);
     procedure SplitLOD(const aWorldspace: IwbMainRecord);
     procedure GenerateLODTES4(const aWorldspace: IwbMainRecord);
     procedure GenerateLODTES5(const aWorldspace: IwbMainRecord; const LODTypes: TLODTypes);
@@ -5006,22 +5009,31 @@ begin
   end;
 end;
 
-procedure wbBuildAtlasFromTexturesList(slTextures: TStrings; aMaxTextureSize: integer;
-  aWidth, aHeight: integer; aName, aMapName: string);
+procedure TfrmMain.wbBuildAtlasFromTexturesList(
+  slTextures: TStrings;
+  aMaxTextureSize,
+  aMaxTileSize,
+  aWidth, aHeight: integer;
+  aName, aMapName: string
+);
 var
   i: integer;
   s: string;
+  scl: double;
   res: TDynResources;
   data: TBytes;
   Images: TSourceAtlasTextures;
   slMap: TStringList;
+  fmtDiffuse, fmtNormal: TImageFormat;
 begin
   for i := 0 to Pred(slTextures.Count) do begin
     s := slTextures[i];
     if not wbContainerHandler.ResourceExists(s) then begin
       // default diffuse texture to use, only for fallouts since they can't use loose textures in LOD
-      if wbGameMode in [gmFO3, gmFNV] then
+      if wbGameMode in [gmFO3, gmFNV] then begin
+        wbProgressCallback('<Note: ' + s + ' diffuse texture not found, using replacement>');
         s := 'textures\shared\shadefade01.dds';
+      end;
     end;
 
     res := wbContainerHandler.OpenResource(s);
@@ -5042,13 +5054,23 @@ begin
       SetLength(Images, Pred(Length(Images)));
       Continue;
     end;
+    // resize tile if over the limit
+    if (Images[Pred(Length(Images))].Image.Width > aMaxTileSize) or (Images[Pred(Length(Images))].Image.Height > aMaxTileSize) then begin
+      scl := Min(aMaxTileSize / Images[Pred(Length(Images))].Image.Width, aMaxTileSize / Images[Pred(Length(Images))].Image.Height);
+      ResizeImage(
+        Images[Pred(Length(Images))].Image,
+        Round(Images[Pred(Length(Images))].Image.Width * scl),
+        Round(Images[Pred(Length(Images))].Image.Height * scl),
+        rfLanczos
+      );
+    end;
 
     // load normals
     InitImage(Images[Pred(Length(Images))].Image_n);
     s := slTextures[i];
     s := ChangeFileExt(slTextures[i], '') + '_n.dds';
     if not wbContainerHandler.ResourceExists(s) then begin
-      wbProgressCallback('<Note: ' + s + ' normap map not found, using flat replacement>');
+      wbProgressCallback('<Note: ' + s + ' normal map not found, using flat replacement>');
       // default normals texture to use
       if wbGameMode = gmTES5 then
         s := 'textures\default_n.dds'
@@ -5059,8 +5081,8 @@ begin
     if Length(res) <> 0 then
       data := res[High(res)].GetData;
     if (Length(res) <> 0) and LoadImageFromMemory(@data[0], Length(data), Images[Pred(Length(Images))].Image_n) then begin
-      // resize normals to match diffuze
-      if (Images[Pred(Length(Images))].Image.Width <> Images[Pred(Length(Images))].Image_n.Width) then
+      // resize normals to match diffuse
+      if ((Images[Pred(Length(Images))].Image.Width <> Images[Pred(Length(Images))].Image_n.Width) or (Images[Pred(Length(Images))].Image.Height <> Images[Pred(Length(Images))].Image_n.Height)) then
         ResizeImage(
           Images[Pred(Length(Images))].Image_n,
           Images[Pred(Length(Images))].Image.Width,
@@ -5080,7 +5102,9 @@ begin
   slMap := TStringList.Create;
   try
     if Length(Images) <> 0 then begin
-      wbBuildAtlas(Images, aWidth, aHeight, aName);
+      fmtDiffuse := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasDiffuseFormat', Integer(ifDXT3)));
+      fmtNormal := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(ifDXT1)));
+      wbBuildAtlas(Images, aWidth, aHeight, aName, fmtDiffuse, fmtNormal);
       for i := Low(Images) to High(Images) do
         if Images[i].AtlasName <> '' then begin
           // atlas name in map file must be relative to data folder
@@ -5108,6 +5132,135 @@ begin
       end;
   end;
 end;
+
+procedure TfrmMain.wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer;
+  GammaR, GammaG, GammaB: Single);
+var
+  l, i: integer;
+  sl, slAtlas: TStringList;
+  res: TDynResources;
+  data: TBytes;
+  img, img_n: TImageData;
+  Atlases, Atlases_n: array of TImageData;
+  mipmap: TDynImageDataArray;
+  fname: string;
+  imgcanv: TImagingCanvas;
+  fmtDiffuse, fmtNormal: TImageFormat;
+begin
+  if not Assigned(slMap) then
+    Exit;
+
+  slAtlas := TStringList.Create;
+  sl := TStringList.Create;
+  sl.Delimiter := #9;
+  sl.StrictDelimiter := True;
+  InitImage(img);
+  InitImage(img_n);
+  try
+    for l := 0 to Pred(slMap.Count) do begin
+      sl.DelimitedText := slMap[l];
+      if sl.Count <> 8 then Continue;
+
+      // load diffuse tile
+      res := wbContainerHandler.OpenResource(sl[0]);
+      if Length(res) = 0 then
+        raise Exception.Create('Source tile not found ' + sl[0]);
+
+      data := res[High(res)].GetData;
+      if not LoadImageFromMemory(@data[0], Length(data), img) then
+        raise Exception.Create('Error loading tile ' + sl[0]);
+
+      // load normal tile
+      res := wbContainerHandler.OpenResource(ChangeFileExt(sl[0], '') + '_n.dds');
+      if Length(res) = 0 then
+        raise Exception.Create('Source tile normal map not found for ' + sl[0]);
+
+      data := res[High(res)].GetData;
+      if not LoadImageFromMemory(@data[0], Length(data), img_n) then
+        raise Exception.Create('Error loading tile normal map for ' + sl[0]);
+
+      // resize diffuse as set in atlas map
+      if (img.Width <> StrToInt(sl[1])) or (img.Height <> StrToInt(sl[2])) then
+        ResizeImage(img, StrToInt(sl[1]), StrToInt(sl[2]), rfLanczos);
+
+      // resize normal to diffuse if doesn't match
+      if (img.Width <> img_n.Width) or (img.Height <> img_n.Height) then
+        ResizeImage(img_n, img.Width, img.Height, rfLanczos);
+
+      i := slAtlas.IndexOf(sl[5]);
+      if i = -1 then begin
+        slAtlas.Add(sl[5]);
+        i := Pred(slAtlas.Count);
+        SetLength(Atlases, slAtlas.Count);
+        NewImage(StrToInt(sl[6]), StrToInt(sl[7]), ifDefault, Atlases[i]);
+        SetLength(Atlases_n, slAtlas.Count);
+        NewImage(StrToInt(sl[6]), StrToInt(sl[7]), ifDefault, Atlases_n[i]);
+      end;
+
+      CopyRect(img, 0, 0, img.Width, img.Height, Atlases[i], StrToInt(sl[3]), StrToInt(sl[4]));
+      CopyRect(img_n, 0, 0, img_n.Width, img_n.Height, Atlases_n[i], StrToInt(sl[3]), StrToInt(sl[4]));
+    end;
+
+    SetOption(ImagingMipMapFilter, Ord(sfLanczos));
+    fmtDiffuse := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasDiffuseFormat', Integer(ifDXT3)));
+    fmtNormal := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(ifDXT1)));
+
+    for i := 0 to Pred(slAtlas.Count) do begin
+      // change brightness or gamme
+      imgcanv := TImagingCanvas.CreateForData(@Atlases[i]);
+      try
+        if aBrightness <> 0 then
+          imgcanv.ModifyContrastBrightness(aBrightness / 10, aBrightness);
+        if (not SameValue(GammaR, 1.0)) or (not SameValue(GammaG, 1.0)) or (not SameValue(GammaB, 1.0)) then
+          imgcanv.GammaCorection(GammaR, GammaG, GammaB);
+      finally
+        imgcanv.Free;
+      end;
+
+      wbPrepareImageAlpha(Atlases[i], fmtDiffuse);
+      if not ConvertImage(Atlases[i], fmtDiffuse) then
+        raise Exception.Create('Image convertion error');
+
+      fname := slAtlas[i];
+      if SameText(Copy(fname, 1, 9), 'textures\') then
+        fname := wbOutputPath + fname;
+
+      if not DirectoryExists(ExtractFilePath(fname)) then
+        if not ForceDirectories(ExtractFilePath(fname)) then
+          raise Exception.Create('Error creating atlas folder');
+
+      try
+        GenerateMipMaps(Atlases[i], 0, mipmap);
+        SaveMultiImageToFile(fname, mipmap);
+      finally
+        FreeImagesInArray(mipmap);
+      end;
+
+      wbPrepareImageAlpha(Atlases_n[i], fmtNormal);
+      if not ConvertImage(Atlases_n[i], fmtNormal) then
+        raise Exception.Create('Image convertion error');
+
+      try
+        GenerateMipMaps(Atlases_n[i], 0, mipmap);
+        SaveMultiImageToFile(ChangeFileExt(fname, '') + '_n.dds', mipmap);
+      finally
+        FreeImagesInArray(mipmap);
+      end;
+    end;
+  finally
+    slAtlas.Free;
+    sl.Free;
+    FreeImage(img);
+    FreeImage(img_n);
+    if Length(Atlases) <> 0 then
+      for i := Low(Atlases) to High(Atlases) do
+        FreeImage(Atlases[i]);
+    if Length(Atlases_n) <> 0 then
+      for i := Low(Atlases_n) to High(Atlases_n) do
+        FreeImage(Atlases_n[i]);
+  end;
+end;
+
 
 procedure TfrmMain.GenerateLODTES5(const aWorldspace: IwbMainRecord; const LODTypes: TLODTypes);
 var
@@ -5229,6 +5382,7 @@ var
   Group               : IwbGroupRecord;
   Sigs                : TwbSignatures;
   REFRs               : TDynMainRecords;
+  RefFormID           : Cardinal;
   Count, TreesCount   : Integer;
   TotalCount          : Integer;
   LodLevel            : Integer;
@@ -5425,7 +5579,16 @@ begin
           Scale := 1.0;
         Scale := Scale * PTree^.ScaleFactor;
 
-        LOD4[k].AddReference(REFRs[i].LoadOrderFormID, PTree^.Index, RefPos, Scale);
+        // Skyrim
+        if wbGameMode = gmTES5 then
+          RefFormID := REFRs[i].LoadOrderFormID
+        // Fallouts
+        else if REFRs[i].IsMaster then
+          RefFormID := REFRs[i].FixedFormID
+        else
+          RefFormID := (REFRs[i].FixedFormID and $00FFFFFF) or $01000000;
+
+        LOD4[k].AddReference(RefFormID, PTree^.Index, RefPos, Scale);
         Inc(TreesCount);
 
         if ForceTerminate then
@@ -5540,9 +5703,12 @@ begin
 
         // skip invisible references
         if REFRs[i].Flags.IsInitiallyDisabled or
-           REFRs[i].Flags.IsDeleted or
-           REFRs[i].ElementExists['XESP']
+           REFRs[i].Flags.IsDeleted
         then
+          Continue;
+
+        // skip parent enabled refs except FO3 Megaton town
+        if REFRs[i].ElementExists['XESP'] and (Pos('MegatonToggle', REFRs[i].ElementEditValues['XESP\Reference']) = 0) then
           Continue;
 
         StatRec := StatRec.WinningOverride;
@@ -5667,6 +5833,7 @@ begin
             wbBuildAtlasFromTexturesList(
               slLODTextures,
               Settings.ReadInteger(Section, 'AtlasTextureSize', 512),
+              Settings.ReadInteger(Section, 'AtlasTextureSize', 512), // tile size, same as texture size
               Settings.ReadInteger(Section, 'AtlasWidth', 2048),
               Settings.ReadInteger(Section, 'AtlasHeight', 2048),
               AtlasName,
@@ -5706,16 +5873,18 @@ begin
           end;
         end;
         // list of meshes to ignore translation/rotation
-        if wbGameMode = gmTES5 then
-          with TStringList.Create do try
-            Delimiter := ',';
-            StrictDelimiter := True;
-            DelimitedText := Settings.ReadString(Section, 'IgnoreTranslation', sMeshIgnoreTranslationTES5);
-            for i := 0 to Pred(Count) do
-              slExport.Add('IgnoreTranslation=' + wbNormalizeResourceName(Strings[i], resMesh));
-          finally
-            Free;
-          end;
+        with TStringList.Create do try
+          Delimiter := ',';
+          StrictDelimiter := True;
+          if wbGameMode = gmTES5 then
+            DelimitedText := Settings.ReadString(Section, 'IgnoreTranslation', sMeshIgnoreTranslationTES5)
+          else if wbGameMode in [gmFO3, gmFNV] then
+            DelimitedText := Settings.ReadString(Section, 'IgnoreTranslation', sMeshIgnoreTranslationFNV);
+          for i := 0 to Pred(Count) do
+            slExport.Add('IgnoreTranslation=' + wbNormalizeResourceName(Strings[i], resMesh));
+        finally
+          Free;
+        end;
 
         slExport.AddStrings(slRefs);
         s := wbScriptsPath + 'LODGen.txt';
@@ -5724,12 +5893,12 @@ begin
 
         s := Format(wbScriptsPath + 'LODGen.exe "%s"', [s]);
         s := s + ' --dontFixTangents';
+        if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False) then
+          s := s + ' --dontGenerateVertexColors';
         if wbGameMode = gmTES5 then begin
             s := s + ' --removeUnseenFaces';
           if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoTangents', False) then
             s := s + ' --dontGenerateTangents';
-          if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False) then
-            s := s + ' --dontGenerateVertexColors';
         end;
 
         Caption := 'Running LODGen, press ESC to abort';
@@ -5741,10 +5910,10 @@ begin
           raise Exception.Create('LODGen process error, exit code ' + IntToStr(k));
         PostAddMessage('[' + aWorldspace.EditorID + '] Objects LOD Done.');
 
-        // DynDoLOD reference message, tribute to Sheson who made TES5LODGen possible
+        // DynDOLOD reference message, tribute to Sheson who made TES5LODGen possible
         if wbGameMode = gmTES5 then begin
           PostAddMessage(StringOfChar('*', 120));
-          PostAddMessage('If you want more detailed, dynamic LOD with wide customization, please check DynDoLOD by Sheson');
+          PostAddMessage('If you want more detailed, dynamic LOD with wide customization, please check DynDOLOD by Sheson');
           PostAddMessage('http://www.nexusmods.com/skyrim/mods/59721/');
           PostAddMessage('It uses the same LODGen building process as TES5LODGen internally, but with more options.');
           PostAddMessage(StringOfChar('*', 120));
@@ -7069,7 +7238,10 @@ begin
 
     except
       on E: Exception do begin
-        PostAddMessage(E.Message);
+        if Assigned(jvi.LastError) then
+          PostAddMessage('Exception in unit ' + jvi.LastError.ErrUnitName + ' line ' + IntToStr(jvi.LastError.ErrLine) + ': ' + E.Message)
+        else
+          PostAddMessage(E.Message);
         raise;
       end;
     end;
@@ -15326,14 +15498,25 @@ begin
     );
     Done := True;
   end
-  else if SameText(Identifier, 'wbBuildAtlasFromTexturesList') and (Args.Count = 6) then begin
+  else if SameText(Identifier, 'wbBuildAtlasFromTexturesList') and (Args.Count = 7) then begin
     wbBuildAtlasFromTexturesList(
       TStrings(V2O(Args.Values[0])), // TStrings list of textures
       Args.Values[1], // max texture size
-      Args.Values[2], // atlas width
-      Args.Values[3], // atlas height
-      Args.Values[4], // atlas file name
-      Args.Values[5]  // atlas map file name
+      Args.Values[2], // max tile size
+      Args.Values[3], // atlas width
+      Args.Values[4], // atlas height
+      Args.Values[5], // atlas file name
+      Args.Values[6]  // atlas map file name
+    );
+    Done := True;
+  end
+  else if SameText(Identifier, 'wbBuildAtlasFromAtlasMap') and (Args.Count = 5) then begin
+    wbBuildAtlasFromAtlasMap(
+      TStrings(V2O(Args.Values[0])), // TStrings atlas map
+      Args.Values[1],                // brightness
+      Args.Values[2],                // GammaR
+      Args.Values[3],                // GammaG
+      Args.Values[4]                 // GammaB
     );
     Done := True;
   end;
