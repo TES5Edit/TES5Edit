@@ -28,8 +28,9 @@ uses
   wbImplementation,
   wbHelpers,
   wbBSA,
+  wbSort,
   wbNifScanner,
-  wbDDS;
+  wbLOD;
 
 implementation
 
@@ -148,6 +149,19 @@ begin
       slOut.Add(slIn[i]);
 end;
 
+procedure wbRemoveDuplicateStrings(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  sl: TStringList;
+  i, j: integer;
+begin
+  sl := TStringList(V2O(Args.Values[0]));
+  for i := Pred(sl.Count) downto 0 do begin
+    sl.Find(sl[i], j);
+    if (j <> -1) and (j <> i) then
+      sl.Delete(i);
+  end;
+end;
+
 procedure wbGetVersionNumber(var Value: Variant; Args: TJvInterpreterArgs);
 var
   fileInfo   : PVSFIXEDFILEINFO;
@@ -257,6 +271,15 @@ begin
   Value := '';
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Value := Element.BaseName;
+end;
+
+procedure IwbElement_DisplayName(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Value := Element.DisplayName;
 end;
 
 function IntToEsState(anInt: Integer): TwbElementState;
@@ -374,6 +397,64 @@ begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     if Assigned(Element.ValueDef) then
       Value := Element.ValueDef.DefType;
+end;
+
+procedure IwbElement_EnumValues(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element    : IwbElement;
+  NamedDef   : IwbNamedDef;
+  IntegerDef : IwbIntegerDef;
+  Enums      : IwbEnumDef;
+  i          : integer;
+  s          : string;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+    if Supports(Element.Def, IwbSubRecordDef) then
+      NamedDef := (Element.Def as IwbSubrecordDef).Value
+    else
+      NamedDef := Element.Def;
+
+    if Supports(NamedDef, IwbIntegerDef, IntegerDef) and
+      Supports(IntegerDef.Formater[Element], IwbEnumDef, Enums) then begin
+
+      for i := 0 to Pred(Enums.NameCount) do begin
+        if i > 0 then s := s + #13#10;
+        s := s + Enums.Names[i];
+      end;
+
+      Value := s;
+    end;
+  end;
+end;
+
+procedure IwbElement_FlagValues(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element    : IwbElement;
+  NamedDef   : IwbNamedDef;
+  IntegerDef : IwbIntegerDef;
+  Flags      : IwbFlagsDef;
+  i          : integer;
+  s          : string;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+    if Supports(Element.Def, IwbSubRecordDef) then
+      NamedDef := (Element.Def as IwbSubrecordDef).Value
+    else
+      NamedDef := Element.Def;
+
+    if Supports(NamedDef, IwbIntegerDef, IntegerDef) and
+      Supports(IntegerDef.Formater[Element], IwbFlagsDef, Flags) then begin
+
+      for i := 0 to Pred(Flags.FlagCount) do begin
+        if i > 0 then s := s + #13#10;
+        s := s + Flags.Flags[i];
+      end;
+
+      Value := s;
+    end;
+  end;
 end;
 
 procedure IwbElement_IsInjected(var Value: Variant; Args: TJvInterpreterArgs);
@@ -775,6 +856,15 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
     Value := Byte(Container.ContainerStates);
+end;
+
+procedure IwbContainer_IsSorted(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Container: IwbSortableContainer;
+begin
+  Value := False;
+  if Supports(IInterface(Args.Values[0]), IwbSortableContainer, Container) then
+    Value := Container.Sorted;
 end;
 
 
@@ -1369,6 +1459,11 @@ begin
   Value := NifTextures(TBytes(Args.Values[0]), TStrings(V2O(Args.Values[1])));
 end;
 
+procedure NifUtils_NifTextureListUVRange(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := NifTexturesUVRange(TBytes(Args.Values[0]), Single(Args.Values[1]), TStrings(V2O(Args.Values[2])));
+end;
+
 
 { DDS routines }
 
@@ -1462,6 +1557,93 @@ begin
   Value := wbMD5File(string(Args.Values[0]));
 end;
 
+// find REFR records in child groups by base record signatures
+// that are not deleted or disabled
+procedure Misc_wbFindREFRsByBase(var Value: Variant; Args: TJvInterpreterArgs);
+
+  procedure FindREFRs(const aElement: IwbElement; var REFRs: TDynMainRecords; var Count: Integer);
+  var
+    MainRecord : IwbMainRecord;
+    Container  : IwbContainerElementRef;
+    i          : Integer;
+  begin
+    if Supports(aElement, IwbMainRecord, MainRecord) then begin
+      if MainRecord.Signature = 'REFR' then begin
+        if High(REFRs) < Count then
+          SetLength(REFRs, Length(REFRs) * 2);
+        REFRs[Count] := MainRecord;
+        Inc(Count);
+      end;
+    end else if Supports(aElement, IwbContainerElementRef, Container) then
+      for i := 0 to Pred(Container.ElementCount) do
+        FindREFRs(Container.Elements[i], REFRs, Count);
+  end;
+
+var
+  MainRecord          : IwbMainRecord;
+  REFRs               : TDynMainRecords;
+  i, j, Count, Opt    : Integer;
+  lst                 : TList;
+  BaseSignatures      : string;
+begin
+  if not Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    Exit;
+
+  REFRs := nil;
+  Count := 0;
+  SetLength(REFRs, 4096);
+  FindREFRs(MainRecord.ChildGroup, REFRs, Count);
+  for i := 0 to Pred(MainRecord.OverrideCount) do
+    FindREFRs(MainRecord.Overrides[i].ChildGroup, REFRs, Count);
+  SetLength(REFRs, Count);
+  // removing duplicates
+  if Length(REFRs) > 1 then begin
+    wbMergeSort(@REFRs[0], Length(REFRs), CompareElementsFormIDAndLoadOrder);
+    j := 0;
+    for i := Succ(Low(REFRs)) to High(REFRs) do begin
+      if REFRs[j].LoadOrderFormID <> REFRs[i].LoadOrderFormID then
+        Inc(j);
+      if j <> i then
+        REFRs[j] := REFRs[i];
+    end;
+    SetLength(REFRs, Succ(j));
+  end;
+
+  BaseSignatures := string(Args.Values[1]);
+  Opt := Integer(Args.Values[2]);
+  lst := TList(V2O(Args.Values[3]));
+  for i := Low(REFRs) to High(REFRs) do begin
+    if  not ((Opt and 1 <> 0) and REFRs[i].IsDeleted)
+    and not ((Opt and 2 <> 0) and REFRs[i].IsInitiallyDisabled)
+    and not ((Opt and 4 <> 0) and REFRs[i].ElementExists['XESP'])
+    and (Assigned(REFRs[i].BaseRecord) and (Pos(REFRs[i].BaseRecord.Signature, BaseSignatures) <> 0))
+    then
+      lst.Add(Pointer(REFRs[i]));
+  end;
+end;
+
+procedure Misc_wbNormalizeResourceName(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbNormalizeResourceName(string(Args.Values[0]), Args.Values[1]);
+end;
+
+procedure Misc_wbStringListInString(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  sl: TStringList;
+  s: string;
+  i: integer;
+begin
+  Value := -1;
+  sl := TStringList(V2O(Args.Values[0]));
+  if not Assigned(sl) then
+    Exit;
+  s := string(Args.Values[1]);
+  for i := 0 to Pred(sl.Count) do
+    if Pos(Lowercase(sl[i]), Lowercase(s)) > 0 then begin
+      Value := i;
+      Exit;
+    end;
+end;
 
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
@@ -1562,6 +1744,12 @@ begin
     AddConst(cUnit, 'csRefsBuild', ord(csRefsBuild));
     AddConst(cUnit, 'csAsCreatedEmpty', ord(csAsCreatedEmpty));
 
+    {TGameResourceType}
+    AddConst(cUnit, 'resMesh', ord(resMesh));
+    AddConst(cUnit, 'resTexture', ord(resTexture));
+    AddConst(cUnit, 'resSound', ord(resSound));
+    AddConst(cUnit, 'resMusic', ord(resMusic));
+
 
     AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ObjectToElement', ObjectToElement, 1, [varEmpty], varEmpty);
@@ -1569,17 +1757,21 @@ begin
     AddFunction(cUnit, 'EnableSkyrimSaveFormat', EnableSkyrimSaveFormat, 0, [], varEmpty);
     AddFunction(cUnit, 'GetRecordDefNames', GetRecordDefNames, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbFilterStrings', wbFilterStrings, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbRemoveDuplicateStrings', wbRemoveDuplicateStrings, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbVersionNumber', wbGetVersionNumber, 0, [], varEmpty);
 
     { IwbElement }
     AddFunction(cUnit, 'Name', IwbElement_Name, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ShortName', IwbElement_ShortName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'BaseName', IwbElement_BaseName, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'DisplayName', IwbElement_DisplayName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'Path', IwbElement_Path, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'FullPath', IwbElement_FullPath, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'PathName', IwbElement_PathName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ElementType', IwbElement_ElementType, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'DefType', IwbElement_DefType, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'EnumValues', IwbElement_EnumValues, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'FlagValues', IwbElement_FlagValues, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SortKey', IwbElement_SortKey, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'IsInjected', IwbElement_IsInjected, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'IsEditable', IwbElement_GetIsEditable, 1, [varEmpty], varEmpty);
@@ -1630,6 +1822,7 @@ begin
     AddFunction(cUnit, 'RemoveByIndex', IwbContainer_RemoveByIndex, 3, [varEmpty, varInteger, varBoolean], varEmpty);
     AddFunction(cUnit, 'ReverseElements', IwbContainer_ReverseElements, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ContainerStates', IwbContainer_ContainerStates, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'IsSorted', IwbContainer_IsSorted, 1, [varEmpty], varEmpty);
 
     { IwbMainRecord }
     AddFunction(cUnit, 'Signature', IwbMainRecord_Signature, 1, [varEmpty], varEmpty);
@@ -1711,6 +1904,7 @@ begin
 
     { Nif routines }
     AddFunction(cUnit, 'NifTextureList', NifUtils_NifTextureList, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'NifTextureListUVRange', NifUtils_NifTextureListUVRange, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
 
     { DDS routines }
     AddFunction(cUnit, 'wbDDSStreamToBitmap', DDSUtils_wbDDSStreamToBitmap, 2, [varEmpty, varEmpty], varEmpty);
@@ -1730,6 +1924,9 @@ begin
     AddFunction(cUnit, 'wbSHA1File', Misc_wbSHA1File, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbMD5Data', Misc_wbMD5Data, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbMD5File', Misc_wbMD5File, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbFindREFRsByBase', Misc_wbFindRefrsByBase, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbNormalizeResourceName', Misc_wbNormalizeResourceName, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbStringListInString', Misc_wbStringListInString, 2, [varEmpty, varEmpty], varEmpty);
   end;
 end;
 

@@ -24,8 +24,12 @@ uses
   SysUtils,
   Graphics,
   ShellAPI,
+  ShlObj,
   IniFiles,
-  wbInterface;
+  Registry,
+  wbInterface,
+  Imaging,
+  ImagingTypes;
 
 function wbDistance(const a, b: TwbVector): Single; overload
 function wbDistance(const a, b: IwbMainRecord): Single; overload;
@@ -40,18 +44,17 @@ function wbAlphaBlend(DestDC, X, Y, Width, Height,
   SrcDC, SrcX, SrcY, SrcWidth, SrcHeight, Alpha: integer): Boolean;
 procedure SaveFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
 procedure LoadFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
-
+function wbDDSDataToBitmap(aData: TBytes; Bitmap: TBitmap): Boolean;
+function wbDDSStreamToBitmap(aStream: TStream; Bitmap: TBitmap): Boolean;
 function wbCRC32Data(aData: TBytes): Cardinal;
 function wbCRC32File(aFileName: string): Cardinal;
-
 function wbDecodeCRCList(const aList: string): TDynCardinalArray;
-
-
 function wbSHA1Data(aData: TBytes): string;
 function wbSHA1File(aFileName: string): string;
-
 function wbMD5Data(aData: TBytes): string;
 function wbMD5File(aFileName: string): string;
+function wbIsAssociatedWithExtension(aExt: string): Boolean;
+function wbAssociateWithExtension(aExt, aName, aDescr: string): Boolean;
 
 type
   PnxLeveledListCheckCircularStack = ^TnxLeveledListCheckCircularStack;
@@ -86,6 +89,12 @@ function wbCounterAfterSet(aCounterName: String; const aElement: IwbElement): Bo
 function wbCounterByPathAfterSet(aCounterName: String; const aElement: IwbElement): Boolean;
 function wbCounterContainerAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement; DeleteOnEmpty: Boolean = False): Boolean;
 function wbCounterContainerByPathAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement): Boolean;
+
+// BSA helper
+
+function MakeDataFileName(FileName, DataPath: String): String;
+function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
 
 implementation
 
@@ -802,6 +811,202 @@ begin
   finally
     wbEndInternalEdit;
   end;
+end;
+
+// BSA helper
+
+function MakeDataFileName(FileName, DataPath: String): String;
+begin
+  // MO uses 3 chars aliases
+  if Length(FileName) < 3 then
+    Result := ''
+  else if not ((FileName[1] = '\') or (FileName[2] = ':')) then
+    Result := DataPath + FileName
+  else
+    Result := FileName;
+end;
+
+function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+var
+  i: Integer;
+  j: Integer;
+  s: String;
+  t: String;
+begin
+  Result := 0;
+  j := 0;
+  if Assigned(bsaNames) then
+    j := bsaNames.Count;
+  if Assigned(bsaMissing) then
+    j := j + bsaMissing.Count;
+
+  if Assigned(bsaNames) then
+    // TIniFile uses GetPrivateProfileString() to read data, it is virtualized by MO
+    // TMemIniFile reads from string list directly, not supported by MO
+    with TIniFile.Create(iniName) do try
+      with TStringList.Create do try
+        if wbGameMode in [gmTES4, gmFO3, gmFNV] then
+          Text := StringReplace(ReadString('Archive', 'sArchiveList', ''), ',' ,#10, [rfReplaceAll])
+        else
+          Text := StringReplace(
+            ReadString('Archive', 'sResourceArchiveList', '') + ',' + ReadString('Archive', 'sResourceArchiveList2', ''),
+            ',', #10, [rfReplaceAll]
+          );
+        for i := 0 to Pred(Count) do begin
+          s := Trim(Strings[i]);
+          t := MakeDataFileName(s, DataPath);
+          if (Length(t)>0) then
+            if FileExists(t) then begin
+              if wbContainerHandler.ContainerExists(t) then
+                Continue;
+              bsaNames.Add(s);
+            end else
+              if Assigned(bsaMissing) then
+                bsaMissing.Add(s);
+        end;
+        Result := bsaNames.Count  + bsaMissing.Count - j; // How many were added
+      finally
+        Free;
+      end;
+    finally
+      Free;
+    end;
+end;
+
+function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+var
+  j: Integer;
+  t: String;
+  F: TSearchRec;
+begin
+  Result := 0;
+  j := 0;
+  if Assigned(bsaNames) then
+    j := bsaNames.Count;
+  if Assigned(bsaMissing) then
+    j := j + bsaMissing.Count;
+
+  // All games prior to Skyrim load BSA files with partial matching, Skyrim requires exact name match and
+  //   can use a private ini to specify the bsa to use.
+  if not exact then
+    ModName := ModName + '*';
+  if FindFirst(DataPath + ModName + '.bsa', faAnyFile, F) = 0 then try
+    repeat
+      if wbContainerHandler.ContainerExists(DataPath + F.Name) then
+        Continue;
+      t := MakeDataFileName(F.Name, DataPath);
+      if (Length(t)>0) and FileExists(t) then begin
+        if not wbContainerHandler.ContainerExists(t) then
+          if Assigned(bsaNames) then
+            bsaNames.Add(F.Name);
+      end else
+        if Assigned(bsaMissing) then
+          bsaMissing.Add(F.Name);
+    until FindNext(F) <> 0;
+    Result := bsaNames.Count  + bsaMissing.Count - j;
+  finally
+    FindClose(F);
+  end;
+
+  if modIni then
+    Result := Result + FindBSAs(DataPath+ChangeFileExt(ModName, '.ini'), DataPath, bsaNames, bsaMissing);
+end;
+
+function wbDDSDataToBitmap(aData: TBytes; Bitmap: TBitmap): Boolean;
+var
+  img: TImageData;
+  ms: TMemoryStream;
+begin
+  Result := False;
+  if not LoadImageFromMemory(@aData[0], Length(aData), img) then
+    Exit;
+  ms := TMemoryStream.Create;
+  try
+    if SaveImageToStream('BMP', ms, img) then begin
+      ms.Position := 0;
+      Bitmap.LoadFromStream(ms);
+      Result := True;
+    end;
+  finally
+    FreeImage(img);
+    ms.Free;
+  end;
+end;
+
+function wbDDSStreamToBitmap(aStream: TStream; Bitmap: TBitmap): Boolean;
+var
+  img: TImageData;
+  ms: TMemoryStream;
+begin
+  Result := False;
+  if not LoadImageFromStream(aStream, img) then
+    Exit;
+  ms := TMemoryStream.Create;
+  try
+    if SaveImageToStream('BMP', ms, img) then begin
+      ms.Position := 0;
+      Bitmap.LoadFromStream(ms);
+      Result := True;
+    end;
+  finally
+    FreeImage(img);
+    ms.Free;
+  end;
+end;
+
+function wbIsAssociatedWithExtension(aExt: string): Boolean;
+var
+  Name: string;
+begin
+  Result := False;
+  with TRegistry.Create do try
+    RootKey := HKEY_CURRENT_USER;
+    if OpenKey('\Software\Classes\' + LowerCase(aExt), False) then begin
+      Name := ReadString('');
+      if OpenKey('\Software\Classes\' + Name + '\DefaultIcon', False) then
+        if SameText(ReadString(''), ParamStr(0)) then
+          Result := True;
+    end;
+  finally
+    Free;
+  end;
+end;
+
+function wbAssociateWithExtension(aExt, aName, aDescr: string): Boolean;
+begin
+  Result := False;
+
+  if aExt = '' then
+    Exit
+  else
+    aExt := LowerCase(aExt);
+
+  if aExt[1] <> '.' then
+    aExt := '.' + aExt;
+
+  with TRegistry.Create do try
+    RootKey := HKEY_CURRENT_USER;
+
+    if OpenKey('\Software\Classes\' + aExt, True) then
+      WriteString('', aName)
+    else
+      raise Exception.Create('Not enough rights to modify the registry');
+
+    if OpenKey('\Software\Classes\' + aName, True) then
+      WriteString('', aDescr);
+
+    if OpenKey('\Software\Classes\' + aName + '\DefaultIcon', True) then
+      WriteString('', ParamStr(0));
+
+    if OpenKey('\Software\Classes\' + aName + '\shell\open\command', True) then
+      WriteString('', ParamStr(0) + ' "%1"');
+
+    Result := True;
+  finally
+    Free;
+  end;
+
+  SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nil, nil);
 end;
 
 initialization

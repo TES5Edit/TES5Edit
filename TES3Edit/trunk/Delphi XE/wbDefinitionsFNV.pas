@@ -307,6 +307,7 @@ const
   OFST : TwbSignature = 'OFST';
   ONAM : TwbSignature = 'ONAM';
   PACK : TwbSignature = 'PACK';
+  PBEA : TwbSignature = 'PBEA';
   PERK : TwbSignature = 'PERK';
   PFIG : TwbSignature = 'PFIG';
   PFPC : TwbSignature = 'PFPC';
@@ -628,6 +629,8 @@ var
   wbEffects: IwbSubRecordArrayDef;
   wbEffectsReq: IwbSubRecordArrayDef;
   wbBPNDStruct: IwbSubRecordDef;
+  wbTimeInterpolator: IwbStructDef;
+  wbColorInterpolator: IwbStructDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -1359,6 +1362,19 @@ begin
     Result := Result or $04;
 end;
 
+procedure wbHeadPartsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainerElementRef;
+begin
+  if wbBeginInternalEdit then try
+    if Supports(aElement, IwbContainerElementRef, Container) then
+      if (Container.Elements[0].NativeValue = 1) and (Container.ElementCount > 2) then
+        Container.RemoveElement(1);
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
 procedure wbMESGDNAMAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   OldValue, NewValue : Integer;
@@ -1578,6 +1594,9 @@ var
   Rec: IwbRecord;
   Container: IwbContainer;
   s: string;
+  Cell: IwbMainRecord;
+  Position: TwbVector;
+  Grid: TwbGridCell;
 begin
   Result := '';
 
@@ -1598,6 +1617,15 @@ begin
       if Result <> '' then
         Result := Result + ' ';
       Result := Result + 'in ' + s;
+
+      // grid position of persistent reference in exterior persistent cell (interior cells are not persistent)
+      if Supports(aMainRecord.Container, IwbGroupRecord, Container) then
+        Cell := IwbGroupRecord(Container).ChildrenOf;
+      if Assigned(Cell) and Cell.IsPersistent and (Cell.Signature = 'CELL') then
+        if aMainRecord.GetPosition(Position) then begin
+          Grid := wbPositionToGridCell(Position);
+          Result := Result + ' at ' + IntToStr(Grid.x) + ',' + IntToStr(Grid.y);
+        end;
     end;
   end;
 end;
@@ -1661,9 +1689,11 @@ var
 begin
   Result := '';
 
-  Rec := aMainRecord.RecordBySignature['XCLC'];
-  if Assigned(Rec) then
+  if not aMainRecord.IsPersistent then begin
+    Rec := aMainRecord.RecordBySignature['XCLC'];
+    if Assigned(Rec) then
       Result := 'at ' + Rec.Elements[0].Value + ',' + Rec.Elements[1].Value;
+  end;
 
   Container := aMainRecord.Container;
   while Assigned(Container) and not
@@ -4369,16 +4399,22 @@ begin
   wbDESC := wbString(DESC, 'Description', 0, cpTranslate);
   wbDESCReq := wbString(DESC, 'Description', 0, cpTranslate, True);
   wbXSCL := wbFloat(XSCL, 'Scale');
-  wbOBND := wbArray(OBND, 'Object Bounds', wbStruct('Corner', [
-    wbInteger('X', itS16),
-    wbInteger('Y', itS16),
-    wbInteger('Z', itS16)
-  ]));
-  wbOBNDReq := wbArray(OBND, 'Object Bounds', wbStruct('Corner', [
-    wbInteger('X', itS16),
-    wbInteger('Y', itS16),
-    wbInteger('Z', itS16)
-  ]), 2, nil, nil, cpNormal, True);
+  wbOBND := wbStruct(OBND, 'Object Bounds', [
+    wbInteger('X1', itS16),
+    wbInteger('Y1', itS16),
+    wbInteger('Z1', itS16),
+    wbInteger('X2', itS16),
+    wbInteger('Y2', itS16),
+    wbInteger('Z2', itS16)
+  ]);
+  wbOBNDReq := wbStruct(OBND, 'Object Bounds', [
+    wbInteger('X1', itS16),
+    wbInteger('Y1', itS16),
+    wbInteger('Z1', itS16),
+    wbInteger('X2', itS16),
+    wbInteger('Y2', itS16),
+    wbInteger('Z2', itS16)
+  ], cpNormal, True);
   wbREPL := wbFormIDCkNoReach(REPL, 'Repair List', [FLST]);
   wbEITM := wbFormIDCk(EITM, 'Object Effect', [ENCH, SPEL]);
   wbBIPL := wbFormIDCk(BIPL, 'Biped Model List', [FLST]);
@@ -4592,7 +4628,7 @@ begin
   wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
 
   wbXESP := wbStruct(XESP, 'Enable Parent', [
-    wbFormIDCk('Reference', [PLYR, REFR, ACRE, ACHR, PGRE, PMIS]),
+    wbFormIDCk('Reference', [PLYR, REFR, ACRE, ACHR, PGRE, PMIS, PBEA]),
     wbInteger('Flags', itU8, wbFlags([
       'Set Enable State to Opposite of Parent',
       'Pop In'
@@ -4619,13 +4655,14 @@ begin
   wbSCROs :=
     wbRArray('References',
       wbRUnion('', [
-        wbFormIDCk(SCRO, 'Global Reference',
-          [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, IMAD,
-           BOOK, KEYM, ALCH, LIGH, QUST, PLYR, PACK, LVLI, ECZN, EXPL, FLST, IDLM, PMIS,
-           FACT, ACHR, REFR, ACRE, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
-           LVLC, CSTY, WRLD, SCPT, IMGS, MESG, MSTT, MUSC, NOTE, PERK, PGRE, PROJ, LVLN,
-           WATR, ENCH, TREE, REPU, REGN, CSNO, CHAL, IMOD, RCCT, CMNY, CDCK, CHIP, CCRD,
-           TERM, HAIR, EYES, ADDN, NULL]),
+        wbFormID(SCRO, 'Global Reference'),
+//        wbFormIDCk(SCRO, 'Global Reference',
+//          [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, IMAD,
+//           BOOK, KEYM, ALCH, LIGH, QUST, PLYR, PACK, LVLI, ECZN, EXPL, FLST, IDLM, PMIS,
+//           FACT, ACHR, REFR, ACRE, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
+//           LVLC, CSTY, WRLD, SCPT, IMGS, MESG, MSTT, MUSC, NOTE, PERK, PGRE, PROJ, LVLN,
+//           WATR, ENCH, TREE, REPU, REGN, CSNO, CHAL, IMOD, RCCT, CMNY, CDCK, CHIP, CCRD,
+//           TERM, HAIR, EYES, ADDN, RCPE, NULL]),
         wbInteger(SCRV, 'Local Variable', itU32)
       ], [])
     );
@@ -4711,7 +4748,7 @@ begin
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
+    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
       wbStruct('Link Start Color', [
         wbInteger('Red', itU8),
@@ -4734,7 +4771,7 @@ begin
       ], True)),
       wbRArrayS('Activate Parent Refs',
         wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
+          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
           wbFloat('Delay')
         ])
       )
@@ -4799,13 +4836,13 @@ begin
     {--- Decals ---}
     wbRArrayS('Linked Decals',
       wbStructSK(XDCR, [0], 'Decal', [
-        wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS]),
+        wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA]),
         wbUnknown
       ])
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
+    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
       wbStruct('Link Start Color', [
         wbInteger('Red', itU8),
@@ -4828,7 +4865,7 @@ begin
       ], True)),
       wbRArrayS('Activate Parent Refs',
         wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
+          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
           wbFloat('Delay')
         ])
       )
@@ -5237,7 +5274,24 @@ begin
       'Robots Disabled',
       'Contracts Completed',
       'Corpses Eaten',
-      'Mysterious Stranger Visits'
+      'Mysterious Stranger Visits',
+      'Doctor Bags Used',
+      'Challenges Completed',
+      'Miss Fortunate Occurrences',
+      'Disintegrations',
+      'Have Limbs Crippled',
+      'Speech Failures',
+      'Items Crafted',
+      'Weapon Modifications',
+      'Items Repaired',
+      'Total Things Killed',
+      'Dismembered Limbs',
+      'Caravan Games Won',
+      'Caravan Games Lost',
+      'Barter Amount Traded',
+      'Roulette Games Played',
+      'Blackjack Games Played',
+      'Slots Games Played'
     ]);
 
   wbAlignmentEnum :=
@@ -5351,7 +5405,7 @@ begin
         {11} wbInteger('Equip Type', itU32, wbEquipTypeEnum),
         {12} wbInteger('Form Type', itU32, wbFormTypeEnum),
         {13} wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
-        {14} wbFormIDCkNoReach('Object Reference', [PLYR, REFR, ACHR, ACRE, PGRE, PMIS, TRGT], True),
+        {14} wbFormIDCkNoReach('Object Reference', [PLYR, REFR, ACHR, ACRE, PGRE, PMIS, PBEA, TRGT], True),
         {16} wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY, IMOD]),
         {17} wbFormIDCkNoReach('Actor', [PLYR, ACHR, ACRE, TRGT], True),
         {18} wbFormIDCkNoReach('Voice Type', [VTYP]),
@@ -5404,7 +5458,7 @@ begin
         {11} wbInteger('Equip Type', itU32, wbEquipTypeEnum),
         {12} wbInteger('Form Type', itU32, wbFormTypeEnum),
         {13} wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
-        {14} wbFormIDCkNoReach('Object Reference', [PLYR, REFR, PMIS, ACHR, ACRE, PGRE, TRGT], True),
+        {14} wbFormIDCkNoReach('Object Reference', [PLYR, REFR, PMIS, PBEA, ACHR, ACRE, PGRE, TRGT], True),
         {16} wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY, CCRD, IMOD]),
         {17} wbFormIDCkNoReach('Actor', [PLYR, ACHR, ACRE, TRGT], True),
         {18} wbFormIDCkNoReach('Voice Type', [VTYP]),
@@ -5491,7 +5545,7 @@ begin
       ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
       wbUnion('Reference', wbCTDAReferenceDecider, [
         wbInteger('Unused', itU32, nil, cpIgnore),
-        wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PGRE, NULL], True)    // Can end up NULL if the original function requiring a reference is replaced by another who has no Run on prerequisite
+        wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PBEA, PGRE, NULL], True)    // Can end up NULL if the original function requiring a reference is replaced by another who has no Run on prerequisite
       ])
     ], cpNormal, False, nil, 6, wbCTDAAfterLoad);
   wbCTDAs := wbRArray('Conditions', wbCTDA);
@@ -5725,11 +5779,12 @@ begin
     ], cpNormal, True),
     wbStruct(DNAM, '', [
       wbInteger('AR', itS16, wbDiv(100)),
-      wbInteger('Flags', itU16, wbFlags([
+      wbInteger('Flags', itU16, wbFlags([ // Only a byte or 2 distincts byte
         'Modulates Voice'
       ])),
-      wbUnknown
-    ], cpNormal, True)
+      wbInteger('Unknown', itU32),
+      wbByteArray('Unknown', 4)
+    ], cpNormal, True, nil, 2)
   ]);
 
   wbRecord(BOOK, 'Book', [
@@ -7322,7 +7377,7 @@ begin
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
+    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
       wbStruct('Link Start Color', [
         wbInteger('Red', itU8),
@@ -7345,7 +7400,7 @@ begin
       ], True)),
       wbRArrayS('Activate Parent Refs',
         wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
+          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
           wbFloat('Delay')
         ])
       )
@@ -7418,7 +7473,7 @@ begin
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
+    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
       wbStruct('Link Start Color', [
         wbInteger('Red', itU8),
@@ -7441,7 +7496,7 @@ begin
       ], True)),
       wbRArrayS('Activate Parent Refs',
         wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
+          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
           wbFloat('Delay')
         ])
       )
@@ -7466,6 +7521,101 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
+  wbRecord(PBEA, 'Placed Beam', [
+    wbEDID,
+    wbFormIDCk(NAME, 'Base', [PROJ], False, cpNormal, True),
+    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+
+    wbXRGD,
+    wbXRGB,
+
+    {--- Patrol Data ---}
+    wbRStruct('Patrol Data', [
+      wbFloat(XPRD, 'Idle Time', cpNormal, True),
+      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
+      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
+      wbEmbeddedScriptReq,
+      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal, True)
+    ], []),
+
+    {--- Ownership ---}
+    wbRStruct('Ownership', [
+      wbXOWN,
+      wbInteger(XRNK, 'Faction rank', itS32)
+    ], [XCMT, XCMO]),
+
+    {--- Extra ---}
+    wbInteger(XCNT, 'Count', itS32),
+    wbFloat(XRDS, 'Radius'),
+    wbFloat(XHLP, 'Health'),
+
+    {--- Reflected By / Refracted By ---}
+    wbRArrayS('Reflected/Refracted By',
+      wbStructSK(XPWR, [0], 'Water', [
+        wbFormIDCk('Reference', [REFR]),
+        wbInteger('Type', itU32, wbFlags([
+          'Reflection',
+          'Refraction'
+        ]))
+      ])
+    ),
+
+    {--- Decals ---}
+    wbRArrayS('Linked Decals',
+      wbStructSK(XDCR, [0], 'Decal', [
+        wbFormIDCk('Reference', [REFR]),
+        wbUnknown
+      ])
+    ),
+
+    {--- Linked Ref ---}
+    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
+    wbStruct(XCLP, 'Linked Reference Color', [
+      wbStruct('Link Start Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unused', 1)
+      ]),
+      wbStruct('Link End Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unused', 1)
+      ])
+    ]),
+
+    {--- Activate Parents ---}
+    wbRStruct('Activate Parents', [
+      wbInteger(XAPD, 'Flags', itU8, wbFlags([
+        'Parent Activate Only'
+      ], True)),
+      wbRArrayS('Activate Parent Refs',
+        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
+          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
+          wbFloat('Delay')
+        ])
+      )
+    ], []),
+
+    wbString(XATO, 'Activation Prompt'),
+
+    {--- Enable Parent ---}
+    wbXESP,
+
+    {--- Emittance ---}
+    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+
+    {--- MultiBound ---}
+    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
+
+    {--- Flags ---}
+    wbEmpty(XIBS, 'Ignored By Sandbox'),
+
+    {--- 3D Data ---}
+    wbXSCL,
+    wbDATAPosRot
+  ], True, wbPlacedAddInfo);
 
    wbRecord(EXPL, 'Explosion', [
     wbEDIDReq,
@@ -7590,38 +7740,119 @@ begin
     ], cpNormal, True, nil, 5)
   ]);
 
-  wbRecord(IMAD, 'Image Space Modifier', [
+  wbTimeInterpolator := wbStruct('Data', [
+    wbFloat('Time'),
+    wbFloat('Value')
+  ]);
+
+  wbColorInterpolator := wbStruct('Data', [
+    wbFloat('Time'),
+    wbFloat('Red', cpNormal, False, 255, 0),
+    wbFloat('Green', cpNormal, False, 255, 0),
+    wbFloat('Blue', cpNormal, False, 255, 0),
+    wbFloat('Alpha', cpNormal, False, 255, 0)
+  ]);
+
+  wbRecord(IMAD, 'Image Space Adapter', [
     wbEDID,
-    wbUnknown(DNAM),
-    wbUnknown(BNAM),
-    wbUnknown(VNAM),
-    wbUnknown(TNAM),
-    wbUnknown(NAM3),
-    wbUnknown(RNAM),
-    wbUnknown(SNAM),
-    wbUnknown(UNAM),
-    wbUnknown(NAM1),
-    wbUnknown(NAM2),
-    wbUnknown(WNAM),
-    wbUnknown(XNAM),
-    wbUnknown(YNAM),
-    wbUnknown(NAM4),
-    wbUnknown(_00_IAD),
-    wbUnknown(_40_IAD),
-    wbUnknown(_01_IAD),
-    wbUnknown(_41_IAD),
-    wbUnknown(_02_IAD),
-    wbUnknown(_42_IAD),
-    wbUnknown(_03_IAD),
-    wbUnknown(_43_IAD),
-    wbUnknown(_04_IAD),
-    wbUnknown(_44_IAD),
-    wbUnknown(_05_IAD),
-    wbUnknown(_45_IAD),
-    wbUnknown(_06_IAD),
-    wbUnknown(_46_IAD),
-    wbUnknown(_07_IAD),
-    wbUnknown(_47_IAD),
+    wbStruct(DNAM, 'Data Count', [
+      wbInteger('Flags', itU32, wbFlags(['Animatable'])),
+      wbFloat('Duration'),
+      wbStruct('HDR', [
+        wbInteger('Eye Adapt Speed Mult', itU32),
+        wbInteger('Eye Adapt Speed Add', itU32),
+        wbInteger('Bloom Blur Radius Mult', itU32),
+        wbInteger('Bloom Blur Radius Add', itU32),
+        wbInteger('Bloom Threshold Mult', itU32),
+        wbInteger('Bloom Threshold Add', itU32),
+        wbInteger('Bloom Scale Mult', itU32),
+        wbInteger('Bloom Scale Add', itU32),
+        wbInteger('Target Lum Min Mult', itU32),
+        wbInteger('Target Lum Min Add', itU32),
+        wbInteger('Target Lum Max Mult', itU32),
+        wbInteger('Target Lum Max Add', itU32),
+        wbInteger('Sunlight Scale Mult', itU32),
+        wbInteger('Sunlight Scale Add', itU32),
+        wbInteger('Sky Scale Mult', itU32),
+        wbInteger('Sky Scale Add', itU32)
+      ]),
+      wbInteger('Unknown08 Mult', itU32),
+      wbInteger('Unknown48 Add', itU32),
+      wbInteger('Unknown09 Mult', itU32),
+      wbInteger('Unknown49 Add', itU32),
+      wbInteger('Unknown0A Mult', itU32),
+      wbInteger('Unknown4A Add', itU32),
+      wbInteger('Unknown0B Mult', itU32),
+      wbInteger('Unknown4B Add', itU32),
+      wbInteger('Unknown0C Mult', itU32),
+      wbInteger('Unknown4C Add', itU32),
+      wbInteger('Unknown0D Mult', itU32),
+      wbInteger('Unknown4D Add', itU32),
+      wbInteger('Unknown0E Mult', itU32),
+      wbInteger('Unknown4E Add', itU32),
+      wbInteger('Unknown0F Mult', itU32),
+      wbInteger('Unknown4F Add', itU32),
+      wbInteger('Unknown10 Mult', itU32),
+      wbInteger('Unknown50 Add', itU32),
+      wbStruct('Cinematic', [
+        wbInteger('Saturation Mult', itU32),
+        wbInteger('Saturation Add', itU32),
+        wbInteger('Brightness Mult', itU32),
+        wbInteger('Brightness Add', itU32),
+        wbInteger('Contrast Mult', itU32),
+        wbInteger('Contrast Add', itU32)
+      ]),
+      wbInteger('Unknown14 Mult', itU32),
+      wbInteger('Unknown54 Add', itU32),
+      wbInteger('Tint Color', itU32),
+      wbInteger('Blur Radius', itU32),
+      wbInteger('Double Vision Strength', itU32),
+      wbInteger('Radial Blur Strength', itU32),
+      wbInteger('Radial Blur Ramp Up', itU32),
+      wbInteger('Radial Blur Start', itU32),
+      wbInteger('Radial Blur Flags', itU32, wbFlags(['Use Target'])),
+      wbFloat('Radial Blur Center X'),
+      wbFloat('Radial Blur Center Y'),
+      wbInteger('DoF Strength', itU32),
+      wbInteger('DoF Distance', itU32),
+      wbInteger('DoF Range', itU32),
+      wbInteger('DoF Flags', itU32, wbFlags(['Use Target'])),
+      wbInteger('Radial Blur Ramp Down', itU32),
+      wbInteger('Radial Blur Down Start', itU32),
+      wbInteger('Fade Color', itU32),
+      wbInteger('Motion Blur Strength', itU32)
+    ], cpNormal, True, nil, 26),
+    wbArray(BNAM, 'Blur Radius', wbTimeInterpolator),
+    wbArray(VNAM, 'Double Vision Strength', wbTimeInterpolator),
+    wbArray(TNAM, 'Tint Color', wbColorInterpolator),
+    wbArray(NAM3, 'Fade Color', wbColorInterpolator),
+    wbArray(RNAM, 'Radial Blur Strength', wbTimeInterpolator),
+    wbArray(SNAM, 'Radial Blur Ramp Up', wbTimeInterpolator),
+    wbArray(UNAM, 'Radial Blur Start', wbTimeInterpolator),
+    wbArray(NAM1, 'Radial Blur Ramp Down', wbTimeInterpolator),
+    wbArray(NAM2, 'Radial Blur Down Start', wbTimeInterpolator),
+    wbArray(WNAM, 'DoF Strength', wbTimeInterpolator),
+    wbArray(XNAM, 'DoF Distance', wbTimeInterpolator),
+    wbArray(YNAM, 'DoF Range', wbTimeInterpolator),
+    wbArray(NAM4, 'Motion Blur Strength', wbTimeInterpolator),
+    wbRStruct('HDR', [
+      wbArray(_00_IAD, 'Eye Adapt Speed Mult', wbTimeInterpolator),
+      wbArray(_40_IAD, 'Eye Adapt Speed Add', wbTimeInterpolator),
+      wbArray(_01_IAD, 'Bloom Blur Radius Mult', wbTimeInterpolator),
+      wbArray(_41_IAD, 'Bloom Blur Radius Add', wbTimeInterpolator),
+      wbArray(_02_IAD, 'Bloom Threshold Mult', wbTimeInterpolator),
+      wbArray(_42_IAD, 'Bloom Threshold Add', wbTimeInterpolator),
+      wbArray(_03_IAD, 'Bloom Scale Mult', wbTimeInterpolator),
+      wbArray(_43_IAD, 'Bloom Scale Add', wbTimeInterpolator),
+      wbArray(_04_IAD, 'Target Lum Min Mult', wbTimeInterpolator),
+      wbArray(_44_IAD, 'Target Lum Min Add', wbTimeInterpolator),
+      wbArray(_05_IAD, 'Target Lum Max Mult', wbTimeInterpolator),
+      wbArray(_45_IAD, 'Target Lum Max Add', wbTimeInterpolator),
+      wbArray(_06_IAD, 'Sunlight Scale Mult', wbTimeInterpolator),
+      wbArray(_46_IAD, 'Sunlight Scale Add', wbTimeInterpolator),
+      wbArray(_07_IAD, 'Sky Scale Mult', wbTimeInterpolator),
+      wbArray(_47_IAD, 'Sky Scale Add', wbTimeInterpolator)
+    ], []),
     wbUnknown(_08_IAD),
     wbUnknown(_48_IAD),
     wbUnknown(_09_IAD),
@@ -7640,12 +7871,14 @@ begin
     wbUnknown(_4F_IAD),
     wbUnknown(_10_IAD),
     wbUnknown(_50_IAD),
-    wbUnknown(_11_IAD),
-    wbUnknown(_51_IAD),
-    wbUnknown(_12_IAD),
-    wbUnknown(_52_IAD),
-    wbUnknown(_13_IAD),
-    wbUnknown(_53_IAD),
+    wbRStruct('Cinematic', [
+      wbArray(_11_IAD, 'Saturation Mult', wbTimeInterpolator),
+      wbArray(_51_IAD, 'Saturation Add', wbTimeInterpolator),
+      wbArray(_12_IAD, 'Brightness Mult', wbTimeInterpolator),
+      wbArray(_52_IAD, 'Brightness Add', wbTimeInterpolator),
+      wbArray(_13_IAD, 'Contrast Mult', wbTimeInterpolator),
+      wbArray(_53_IAD, 'Contrast Add', wbTimeInterpolator)
+    ], []),
     wbUnknown(_14_IAD),
     wbUnknown(_54_IAD),
     wbFormIDCk(RDSD, 'Sound - Intro', [SOUN]),
@@ -8479,6 +8712,7 @@ begin
     wbOBNDReq,
     wbMODL,
     wbSCRI,
+    wbDEST,
     wbFULL,
     wbICON,
     wbStruct(DATA, '', [
@@ -9042,12 +9276,36 @@ begin
            {8} 'Use Item At',
            {9} 'Ambush',
           {10} 'Flee Not Combat',
-          {11} '',
+          {11} 'Package Type 11',
           {12} 'Sandbox',
           {13} 'Patrol',
           {14} 'Guard',
           {15} 'Dialogue',
-          {16} 'Use Weapon'
+          {16} 'Use Weapon',
+          {17} 'Package Type 17',
+          {18} 'Combat Controller',
+          {19} 'Package Type 19',
+          {20} 'Package Type 20',
+          {21} 'Alarm',
+          {22} 'Flee',
+          {23} 'TressPass',
+          {24} 'Spectator',
+          {25} 'Package Type 25',
+          {26} 'Package Type 26',
+          {27} 'Package Type 27',
+          {28} 'Dialogue 2',
+          {29} 'Package Type 29',
+          {30} 'Package Type 30',
+          {31} 'Package Type 31',
+          {32} 'Package Type 32',
+          {33} 'Package Type 33',
+          {34} 'Package Type 34',
+          {35} 'Package Type 35',
+          {36} 'Package Type 36',
+          {37} 'Package Type 37',
+          {38} 'Package Type 38',
+          {39} 'Package Type 39',
+          {40} 'Package Type 40'
         ]);
 
   wbObjectTypeEnum := wbEnum([
@@ -9206,7 +9464,7 @@ begin
           {7} 'At package location'
         ])),
         wbUnion('Location', wbPxDTLocationDecider, [
-          wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, ACHR, ACRE, PLYR], True),
+          wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, PBEA, ACHR, ACRE, PLYR], True),
           wbFormIDCkNoReach('Cell', [CELL]),
           wbByteArray('Unused', 4, cpIgnore),
           wbByteArray('Unused', 4, cpIgnore),
@@ -9229,7 +9487,7 @@ begin
           {7} 'At package location'
         ])),
         wbUnion('Location', wbPxDTLocationDecider, [
-          wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, ACHR, ACRE, PLYR], True),
+          wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, PBEA, ACHR, ACRE, PLYR], True),
           wbFormIDCkNoReach('Cell', [CELL]),
           wbByteArray('Unused', 4, cpIgnore),
           wbByteArray('Unused', 4, cpIgnore),
@@ -9270,7 +9528,7 @@ begin
         {3} 'Linked Reference'
       ]), cpNormal, False, nil, nil, 2),
       wbUnion('Target', wbPxDTLocationDecider, [
-        wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PLYR], True),
+        wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PBEA, PLYR], True),
         wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, LVLN, LVLC, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, IDLM, CHIP, CMNY, CCRD, IMOD]),
         wbInteger('Object Type', itU32, wbObjectTypeEnum),
         wbByteArray('Unused', 4, cpIgnore)
@@ -9356,7 +9614,7 @@ begin
         {3} 'Linked Reference'
       ])),
       wbUnion('Target', wbPxDTLocationDecider, [
-        wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PLYR], True),
+        wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PGRE, PMIS, PBEA, PLYR], True),
         wbFormIDCkNoReach('Object ID', [ACTI, DOOR, STAT, FURN, CREA, SPEL, NPC_, LVLN, LVLC, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, CHIP, CMNY, CCRD, IMOD]),
         wbInteger('Object Type', itU32, wbObjectTypeEnum),
         wbByteArray('Unused', 4, cpIgnore)
@@ -9399,7 +9657,7 @@ begin
         {7} 'At package location'
       ])),
       wbUnion('Location', wbPxDTLocationDecider, [
-        wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, ACHR, ACRE, PLYR], True),
+        wbFormIDCkNoReach('Reference', [REFR, PGRE, PMIS, PBEA, ACHR, ACRE, PLYR], True),
         wbFormIDCkNoReach('Cell', [CELL]),
         wbByteArray('Unused', 4, cpIgnore),
         wbByteArray('Unused', 4, cpIgnore),
@@ -9466,7 +9724,7 @@ begin
       wbString(NNAM, 'Description', 0, cpNormal, True),
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
-          wbFormIDCkNoReach('Target', [REFR, PGRE, PMIS, ACRE, ACHR], True),
+          wbFormIDCkNoReach('Target', [REFR, PGRE, PMIS, PBEA, ACRE, ACHR], True),
           wbInteger('Flags', itU8, wbFlags([
             {0x01} 'Compass Marker Ignores Locks'
           ])),
@@ -9550,7 +9808,7 @@ begin
           wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
           wbMODLReq,
           wbICON
-        ], []), cpNormal, True)
+        ], [], cpNormal, False, nil, False, nil, wbHeadPartsAfterSet), cpNormal, True)
       ], [], cpNormal, True),
       wbRStruct('Female Head Data', [
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
@@ -9558,7 +9816,7 @@ begin
           wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
           wbMODLReq,
           wbICON
-        ], []), cpNormal, True)
+        ], [], cpNormal, False, nil, False, nil, wbHeadPartsAfterSet), cpNormal, True)
       ], [], cpNormal, True)
     ], [], cpNormal, True),
     wbRStruct('Body Data', [
@@ -9754,7 +10012,7 @@ begin
     wbUnknown(XSRD),
 
     {--- X Target Data ---}
-    wbFormIDCk(XTRG, 'Target', [REFR, ACRE, ACHR, PGRE, PMIS], True),
+    wbFormIDCk(XTRG, 'Target', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA], True),
 
     {--- Leveled Actor ----}
     wbXLCM,
@@ -9779,7 +10037,7 @@ begin
         'Current Cell Only'
       ])),
       wbFloat('Static Percentage'),
-      wbFormIDCkNoReach('Position Reference', [REFR, ACRE, ACHR, PGRE, PMIS, NULL])
+      wbFormIDCkNoReach('Position Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, NULL])
     ]),
 
     {--- Ownership ---}
@@ -9834,7 +10092,7 @@ begin
     ),
 
     {--- Linked Ref ---}
-    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
+    wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
       wbStruct('Link Start Color', [
         wbInteger('Red', itU8),
@@ -9857,7 +10115,7 @@ begin
       ], True)),
       wbRArrayS('Activate Parent Refs',
         wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PLYR]),
+          wbFormIDCk('Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
           wbFloat('Delay')
         ])
       )
@@ -10018,7 +10276,7 @@ begin
         ])),
         wbInteger('Radius wrt Parent', itU16),
         wbInteger('Radius', itU16),
-        wbByteArray('Unknown', 4),
+        wbFloat('Min Height'),
         wbFloat('Max Height'),
         wbFloat('Sink'),
         wbFloat('Sink Variance'),
@@ -10208,7 +10466,7 @@ begin
       wbString(MAST, 'Filename', 0, cpNormal, True),
       wbByteArray(DATA, 'Unused', 8, cpIgnore, True)
     ], [ONAM])),
-    wbArray(ONAM, 'Overriden Forms', wbFormIDCk('Form', [REFR, ACHR, ACRE, PMIS, PGRE, LAND, NAVM]), 0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
+    wbArray(ONAM, 'Overriden Forms', wbFormIDCk('Form', [REFR, ACHR, ACRE, PMIS, PBEA, PGRE, LAND, NAVM]), 0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
     wbByteArray(SCRN, 'Screenshot')
   ], True, nil, cpNormal, True, wbRemoveOFST);
 
@@ -10954,7 +11212,7 @@ begin
       'Battle Set',
       'Location Set',
       'Dungeon Set',
-      'Incidential Set'
+      'Incidental Set'
     ], [
       -1, 'No Set'
     ])),
@@ -11070,6 +11328,7 @@ begin
   wbRecord(CHAL, 'Challenge', [
     wbEDIDReq,
     wbFULL,
+    wbICON,
     wbSCRI,
     wbDESC,
     wbStruct(DATA, 'Data', [

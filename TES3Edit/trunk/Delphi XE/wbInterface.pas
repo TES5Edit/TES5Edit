@@ -24,10 +24,10 @@ uses
   Graphics;
 
 const
-  VersionString               = '3.0.33 EXPERIMENTAL';
-
-  clOrange                    = $004080FF;
-  wbFloatDigits               = 6;
+  VersionString  = '3.1.1';
+  clOrange       = $004080FF;
+  wbFloatDigits  = 6;
+  wbHardcodedDat = '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
 
 type
   TwbProgressCallback = procedure(const aStatus: string);
@@ -69,6 +69,7 @@ var
   wbVWDInTemporary         : Boolean  = False;
   wbResolveAlias           : Boolean  = True;
   wbActorTemplateHide      : Boolean  = True;
+  wbClampFormID            : Boolean  = True;
   wbDoNotBuildRefsFor      : TStringList;
 
   wbUDRSetXESP       : Boolean = True;
@@ -112,9 +113,10 @@ var
   wbDumpOffset : Integer  = 0;  // 1= starting offset, 2 = Count, 3 = Offsets, size and count
   wbBaseOffset : Cardinal = 0;
 
-  wbProgramPath : string;
-  wbDataPath    : string;
-  wbOutputPath  : string;
+  wbProgramPath        : string;
+  wbDataPath           : string;
+  wbOutputPath         : string;
+  wbTheGameIniFileName : string;
 
   wbShouldLoadMOHookFile : Boolean;
   wbMOProfile            : string;
@@ -732,6 +734,7 @@ type
   );
 
   TwbFileStates = set of TwbFileState;
+  TwbPluginExtensions = TDynStrings;
 
   IwbFile = interface(IwbContainer)
     ['{38AA15A6-F652-45C7-B875-9CB502E5DA92}']
@@ -770,6 +773,7 @@ type
     function GetIsLocalized: Boolean;
     procedure SetIsLocalized(Value: Boolean);
 
+    function GetIsNotPlugin: Boolean;
     property FileName: string
       read GetFileName;
     property UnsavedSince: TDateTime
@@ -809,6 +813,8 @@ type
     property IsLocalized: Boolean
       read GetIsLocalized
       write SetIsLocalized;
+    property IsNotPlugin: Boolean   // Save or other file to display.
+      read GetIsNotPlugin;
   end;
 
   IwbDataContainer = interface(IwbContainer)
@@ -960,6 +966,7 @@ type
     procedure SetFormVersion(aFormVersion: Cardinal);
 
     procedure ChangeFormSignature(aSignature: TwbSignature);
+    procedure ClampFormID(aIndex: Cardinal);
 
     property Version: Cardinal
       read GetFormVersion
@@ -1089,6 +1096,7 @@ type
     function FindChildGroup(aType: Integer; aMainRecord: IwbMainRecord): IwbGroupRecord;
 
     function GetMainRecordByEditorID(const aEditorID: string): IwbMainRecord;
+    function GetMainRecordByFormID(const aFormID: Cardinal): IwbMainRecord;
 
     procedure AddElement(const aElement: IwbElement);
 
@@ -1103,6 +1111,8 @@ type
 
     property MainRecordByEditorID[const aEditorID: string]: IwbMainRecord
       read GetMainRecordByEditorID;
+    property MainRecordByFormID[const aFormID: Cardinal]: IwbMainRecord
+      read GetMainRecordByFormID;
   end;
 
   IwbSubRecordArray = interface
@@ -1502,6 +1512,7 @@ type
 
   IwbFormID = interface(IwbIntegerDefFormater)
     ['{71C4A255-B983-488C-9837-0A720132348A}']
+    function GetMainRecord(aInt: Int64; const aElement: IwbElement): IwbMainRecord;
   end;
 
   IwbRefID = interface(IwbFormID)
@@ -1614,7 +1625,7 @@ type
     function GetName: String;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
-    procedure ResourceList(const aList: TStrings);
+    procedure ResourceList(const aList: TStrings; const aFolder: string = '');
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     property Name: string
@@ -1648,7 +1659,8 @@ type
     function ResolveHash(const aHash: Int64): TDynStrings;
     function ContainerExists(aContainerName: string): Boolean;
     procedure ContainerList(const aList: TStrings);
-    procedure ContainerResourceList(const aContainerName: string; const aList: TStrings);
+    procedure ContainerResourceList(const aContainerName: string; const aList: TStrings;
+      const aFolder: string = '');
     function ResourceExists(const aFileName: string): Boolean;
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
     procedure ResourceCopy(const aContainerName, aFileName, aPathOut: string);
@@ -1663,6 +1675,7 @@ var
     etSubRecordArray,
     etArray
   ];
+  wbPluginExtensions : TwbPluginExtensions;
 
 function wbRecord(const aSignature      : TwbSignature;
                   const aName           : string;
@@ -2910,6 +2923,8 @@ function wbFormaterUnion(aDecider : TwbIntegerDefFormaterUnionDecider;
                          aMembers : array of IwbIntegerDefFormater)
                                   : IwbIntegerDefFormaterUnion;
 
+function wbIsPlugin(aFileName: string): Boolean;
+
 type
   PwbRecordDefEntry = ^TwbRecordDefEntry;
   TwbRecordDefEntry = record
@@ -2954,6 +2969,7 @@ function ConflictThisToColor(aConflictThis: TConflictThis): TColor;
 var
   wbGetFormIDCallback : function(const aElement: IwbElement): Cardinal;
 
+function wbFlagsList(aFlags: array of const; aDeleted : Boolean = True; aUnknowns: Boolean = False): TDynStrings;
 function wbGetFormID(const aElement: IwbElement): Cardinal;
 function wbPositionToGridCell(const aPosition: TwbVector): TwbGridCell;
 function wbSubBlockFromGridCell(const aGridCell: TwbGridCell): TwbGridCell;
@@ -2970,8 +2986,9 @@ var
 
 type
   TwbGameMode   = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5);
-  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmTranslate,
-                    tmESMify, tmESPify, tmSortAndCleanMasters);
+  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
+                    tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
+                    tmCheckForErrors, tmCheckForITM, tmCheckForDR);
   TwbToolSource = (tsPlugins, tsSaves);
   TwbSetOfMode  = set of TwbToolMode;
 
@@ -2985,8 +3002,12 @@ var
   wbSourceName  : String;
   wbLanguage    : string;
   wbAutoModes   : TwbSetOfMode = [ tmMasterUpdate, tmMasterRestore, tmLODgen, // Tool modes that run without user interaction until final status
-                    tmESMify, tmESPify, tmSortAndCleanMasters ];
-  wbPluginModes : TwbSetOfMode = [ tmESMify, tmESPify, tmSortAndCleanMasters ];  // Auto modes that require a specific plugin to be povided.
+                    tmESMify, tmESPify, tmSortAndCleanMasters,
+                    tmCheckForErrors, tmCheckForITM, tmCheckForDR ];
+  wbPluginModes : TwbSetOfMode = [ tmESMify, tmESPify, tmSortAndCleanMasters,
+                                   tmCheckForErrors, tmCheckForITM, tmCheckForDR ];  // Auto modes that require a specific plugin to be provided.
+  wbAlwaysMode  : TwbSetOfMode = [ tmView, tmEdit, tmESMify, tmESPify, tmSortAndCleanMasters,
+                    tmLODgen, tmScript, tmCheckForITM, tmCheckForDR, tmCheckForErrors ]; // Modes available to all decoded games
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
@@ -3381,6 +3402,28 @@ begin
     Result := CmpI32(
       MainRecord1._File.LoadOrder,
       MainRecord2._File.LoadOrder);
+end;
+
+function wbFlagsList(aFlags: array of const; aDeleted : Boolean = True; aUnknowns: Boolean = False): TDynStrings;
+var
+  e: IwbEnumDef;
+  i: integer;
+  s: string;
+begin
+  e := wbEnum([], aFlags);
+  SetLength(Result, 32);
+  for i := 0 to 31 do
+    if i = 12 then
+      Result[i] := 'Ignored'
+    else if aDeleted and (i = 5) then
+      Result[i] := 'Deleted'
+    else begin
+      s := e.ToString(i, nil);
+      if Pos('<', s) <> 1 then
+        Result[i] := s
+      else if aUnknowns then
+        Result[i] := 'Unknown ' + IntToStr(i);
+    end
 end;
 
 type
@@ -4483,6 +4526,9 @@ type
     function MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes; const aElement: IwbElement): Int64; override;
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement); override;
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean; override;
+
+    {---IwbFormID---}
+    function GetMainRecord(aInt: Int64; const aElement: IwbElement): IwbMainRecord; virtual;
   end;
 
   TwbRefID = class(TwbFormID, IwbRefID)
@@ -9074,33 +9120,7 @@ begin
   if (Length(stSortKey) > 0) or (aExtended and (Length(stExSortKey) > 0)) then begin
     for i := Low(stSortKey) to High(stSortKey) do begin
       SortMember := stSortKey[i];
-
-      BasePtr := aBasePtr;
-      for j := Low(stMembers) to Pred(SortMember) do begin
-        Inc(Cardinal(BasePtr), stMembers[j].Size[BasePtr, aEndPtr, aElement]);
-        if Cardinal(BasePtr) > Cardinal(aEndPtr) then
-          BasePtr := aEndPtr;
-      end;
-
-      EndPtr := Pointer( Cardinal(BasePtr) + Cardinal(stMembers[SortMember].Size[BasePtr, aEndPtr, aElement]) );
-
-      if Cardinal(BasePtr) > Cardinal(aEndPtr) then
-        BasePtr := aEndPtr;
-      if Cardinal(EndPtr) > Cardinal(aEndPtr) then
-        EndPtr := aEndPtr;
-
-      Result := Result + stMembers[SortMember].ToSortKey(BasePtr, EndPtr, aElement, aExtended);
-
-      if i < High(stSortKey) then
-        Result := Result + '|';
-    end;
-    if aExtended then begin
-      if (Length(stSortKey) > 0) and (Length(stExSortKey) > 0) then
-        Result := Result + '|';
-
-      for i := Low(stExSortKey) to High(stExSortKey) do begin
-        SortMember := stExSortKey[i];
-
+      if SortMember <= High(stMembers) then begin
         BasePtr := aBasePtr;
         for j := Low(stMembers) to Pred(SortMember) do begin
           Inc(Cardinal(BasePtr), stMembers[j].Size[BasePtr, aEndPtr, aElement]);
@@ -9116,6 +9136,34 @@ begin
           EndPtr := aEndPtr;
 
         Result := Result + stMembers[SortMember].ToSortKey(BasePtr, EndPtr, aElement, aExtended);
+      end;
+
+      if i < High(stSortKey) then
+        Result := Result + '|';
+    end;
+    if aExtended then begin
+      if (Length(stSortKey) > 0) and (Length(stExSortKey) > 0) then
+        Result := Result + '|';
+
+      for i := Low(stExSortKey) to High(stExSortKey) do begin
+        SortMember := stExSortKey[i];
+        if SortMember <= High(stMembers) then begin
+          BasePtr := aBasePtr;
+          for j := Low(stMembers) to Pred(SortMember) do begin
+            Inc(Cardinal(BasePtr), stMembers[j].Size[BasePtr, aEndPtr, aElement]);
+            if Cardinal(BasePtr) > Cardinal(aEndPtr) then
+              BasePtr := aEndPtr;
+          end;
+
+          EndPtr := Pointer( Cardinal(BasePtr) + Cardinal(stMembers[SortMember].Size[BasePtr, aEndPtr, aElement]) );
+
+          if Cardinal(BasePtr) > Cardinal(aEndPtr) then
+            BasePtr := aEndPtr;
+          if Cardinal(EndPtr) > Cardinal(aEndPtr) then
+            EndPtr := aEndPtr;
+
+          Result := Result + stMembers[SortMember].ToSortKey(BasePtr, EndPtr, aElement, aExtended);
+        end;
 
         if i < High(stExSortKey) then
           Result := Result + '|';
@@ -10011,7 +10059,10 @@ end;
 
 function TwbStringDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  Result := 1 + Ord(noTerminator);
+  if sdSize > 0 then
+    Result := sdSize + Ord(noTerminator)
+  else
+    Result := 1 + Ord(noTerminator);
 end;
 
 function TwbStringDef.ToEditValue(aBasePtr, aEndPtr: Pointer;
@@ -10149,7 +10200,7 @@ begin
       PCardinal(aBasePtr)^ := $7F7FFFFF;
   end else if SameText(aValue, 'Min') then begin
     if fdDouble then
-      PInt64(aBasePtr)^ := $FFEFFFFFFFFFFFFF
+      PInt64(aBasePtr)^ := -$10000000000001 // $FFEFFFFFFFFFFFFF
     else
       PCardinal(aBasePtr)^ := $FF7FFFFF;
   end else begin
@@ -10190,7 +10241,7 @@ begin
     end else if fdDouble and (SameValue(Value, MaxDouble) or (Value > MaxDouble)) then
       PInt64(aBasePtr)^ := $7FEFFFFFFFFFFFFF
     else if fdDouble and (SameValue(Value, -MaxDouble) or (Value < -MaxDouble)) then
-      PInt64(aBasePtr)^ := $FFEFFFFFFFFFFFFF
+      PInt64(aBasePtr)^ := -$10000000000001 // $FFEFFFFFFFFFFFFF
     else if not fdDouble and (SameValue(Value, MaxSingle) or (Value > MaxSingle)) then
       PCardinal(aBasePtr)^ := $7F7FFFFF
     else if not fdDouble and (SameValue(Value, -MaxSingle) or (Value < -MaxSingle)) then
@@ -10959,6 +11010,18 @@ begin
     if Assigned(_File) then try
       Result := _File.RecordByFormID[aInt, True];
     except end;
+  end;
+end;
+
+function TwbFormID.GetMainRecord(aInt: Int64; const aElement: IwbElement): IwbMainRecord;
+var
+  _File: IwbFile;
+begin
+  Result := nil;
+  if Assigned(aElement) then begin
+    _File := aElement._File;
+    if Assigned(_File) then
+      Result := _File.RecordByFormID[aInt, True];
   end;
 end;
 
@@ -12442,9 +12505,13 @@ end;
 { TwbUnionDef }
 
 procedure TwbUnionDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
+var
+  ValueDef : IwbValueDef;
 begin
   inherited;
-  Decide(aBasePtr, aEndPtr, aElement).BuildRef(aBasePtr, aEndPtr, aElement);
+  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  if Assigned(ValueDef) then
+    ValueDef.BuildRef(aBasePtr, aEndPtr, aElement);
 end;
 
 function TwbUnionDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
@@ -13345,9 +13412,9 @@ end;
 
 function TwbStringMgefCodeDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 begin
-  Result := not Assigned(aBasePtr) or (ToString(aBasePtr, aEndPtr, aElement) <> ' <Warning: Expected 4 bytes but found 0>');
+  Result := not Assigned(aBasePtr) or (ToString(aBasePtr, aEndPtr, aElement) <> '____');
   if Result then
-    FromEditValue(aBasePtr, aEndPtr, aElement, '');
+    FromEditValue(aBasePtr, aEndPtr, aElement, '____');
 end;
 
 function TwbStringMgefCodeDef.TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString;
@@ -14055,6 +14122,19 @@ begin
   Result := '';
 end;
 
+function wbIsPlugin(aFileName: string): Boolean;
+var
+  i: Integer;
+begin
+  Result := Pos(UpperCase(wbHardcodedDat), UpperCase(aFileName))<>0;
+  if not Result then
+    for i := 0 to Pred(Length(wbPluginExtensions)) do
+      if Pos(UpperCase(wbPluginExtensions[i]), UpperCase(ExtractFileExt(aFileName)))=1 then begin
+        Result := True;
+        Exit;
+      end;
+end;
+
 initialization
   TwoPi := 2 * OnePi;
 
@@ -14069,6 +14149,12 @@ initialization
   wbDoNotBuildRefsFor.Duplicates := dupIgnore;
 
   wbProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
+
+  SetLength(wbPluginExtensions, 3);
+  wbPluginExtensions[0] := '.ESP';
+  wbPluginExtensions[1] := '.ESM';
+  wbPluginExtensions[2] := '.GHOST';
+
 finalization
   FreeAndNil(wbIgnoreRecords);
   FreeAndNil(wbDoNotBuildRefsFor);

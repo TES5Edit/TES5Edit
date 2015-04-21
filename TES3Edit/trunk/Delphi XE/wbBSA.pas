@@ -52,7 +52,8 @@ type
     function OpenResource(const aFileName: string): TDynResources;
     function ContainerExists(aContainerName: string): Boolean;
     procedure ContainerList(const aList: TStrings);
-    procedure ContainerResourceList(const aContainerName: string; const aList: TStrings);
+    procedure ContainerResourceList(const aContainerName: string; const aList: TStrings;
+      const aFolder: string = '');
     function ResourceExists(const aFileName: string): Boolean;
     function ResolveHash(const aHash: Int64): TDynStrings;
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
@@ -75,7 +76,7 @@ type
 
   IwbBSAFileInternal = interface(IwbBSAFile)
     ['{A360B348-8F6B-4FC1-A869-9D5B833DCA5F}']
-    function GetData(aOffset, aSize: Cardinal):TBytes;
+    function GetData(aOffset, aSize: Cardinal): TBytes;
   end;
 
   TwbBSAFile = class(TInterfacedObject, IwbResourceContainer, IwbBSAFile, IwbBSAFileInternal)
@@ -95,7 +96,7 @@ type
     function GetName: string;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
-    procedure ResourceList(const aList: TStrings);
+    procedure ResourceList(const aList: TStrings; const aFolder: string = '');
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     {---IwbBSAFile---}
@@ -132,7 +133,7 @@ type
     function GetName: string;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
-    procedure ResourceList(const aList: TStrings);
+    procedure ResourceList(const aList: TStrings; const aFolder: string = '');
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     {---IwbFolder---}
@@ -216,13 +217,14 @@ begin
     aList.Add(chContainers[i].Name);
 end;
 
-procedure TwbContainerHandler.ContainerResourceList(const aContainerName: string; const aList: TStrings);
+procedure TwbContainerHandler.ContainerResourceList(const aContainerName: string; const aList: TStrings;
+  const aFolder: string = '');
 var
   i: Integer;
 begin
   for i := Low(chContainers) to High(chContainers) do
     if SameText(chContainers[i].Name, aContainerName) then begin
-      chContainers[i].ResourceList(aList);
+      chContainers[i].ResourceList(aList, aFolder);
       Break;
     end;
 end;
@@ -263,7 +265,7 @@ end;
 
 procedure TwbContainerHandler.ResourceCopy(const aContainerName, aFileName, aPathOut: string);
 var
-  aDir       : string;
+  fn, dir    : string;
   aData      : TBytes;
   res        : TDynResources;
   i, residx  : integer;
@@ -283,26 +285,29 @@ begin
       Break;
     end;
 
-  aDir := IncludeTrailingPathDelimiter(aPathOut) + ExtractFilePath(aFileName);
-  if not DirectoryExists(aDir) then
-    if not ForceDirectories(aDir) then
-      raise Exception.Create('Unable to create destination directory ' + aDir);
+  // file name is provided instead of path
+  if TPath.HasExtension(aPathOut) then
+    fn := aPathOut
+  // destination path is provided
+  else
+    fn := IncludeTrailingPathDelimiter(aPathOut) + aFileName;
 
-  // direct copy if file is loose with overwriting
+  // create distination directory
+  dir := ExtractFilePath(fn);
+  if not DirectoryExists(dir) then
+    if not ForceDirectories(dir) then
+      raise Exception.Create('Unable to create destination directory ' + dir);
+
+  // direct copy if file is loose, with overwriting
   if ExtractFileExt(res[residx].Container.Name) = '' then begin
-    try
-      TFile.Copy(res[residx].Container.Name + aFileName, aDir + ExtractFileName(aFileName), True);
-    except
-    end;
+    TFile.Copy(res[residx].Container.Name + aFileName, fn, True);
   end
-
   // otherwise extract from BSA
   else begin
     aData := res[residx].GetData;
-
     // exception handled outside
-    with TFileStream.Create(aDir + ExtractFileName(aFileName), fmCreate) do try
-      WriteBuffer(aData[0], length(aData));
+    with TFileStream.Create(fn, fmCreate) do try
+      WriteBuffer(aData[0], Length(aData));
     finally
       Free;
     end;
@@ -397,15 +402,18 @@ begin
     Result := bfFolders[Integer(bfFolderMap.Objects[i])].Map.IndexOf(lName) <> -1;
 end;
 
-procedure TwbBSAFile.ResourceList(const aList: TStrings);
+procedure TwbBSAFile.ResourceList(const aList: TStrings; const aFolder: string = '');
 var
   i, j: Integer;
+  Folder: string;
 begin
   if not Assigned(aList) then
     Exit;
+  Folder := ExcludeTrailingPathDelimiter(aFolder);
   for i := Low(bfFolders) to High(bfFolders) do with bfFolders[i] do
-    for j := Low(Files) to High(Files) do
-      aList.Add(Name + '\' + Files[j].Name);
+    if (aFolder = '') or SameText(Folder, Name) then
+      for j := Low(Files) to High(Files) do
+        aList.Add(Name + '\' + Files[j].Name);
 end;
 
 procedure TwbBSAFile.ReadDirectory;
@@ -533,14 +541,15 @@ begin
   Result := FileExists(fPath + aFileName);
 end;
 
-procedure TwbFolder.ResourceList(const aList: TStrings);
+procedure TwbFolder.ResourceList(const aList: TStrings; const aFolder: string = '');
 var
   FileName: string;
 begin
   if not Assigned(aList) then
     Exit;
-  for FileName in TDirectory.GetFiles(fPath, '*.*', TSearchOption.soAllDirectories) do
-    aList.Add(LowerCase(Copy(FileName, Length(fPath) + 1, Length(FileName))));
+  if TDirectory.Exists(fPath + aFolder) then
+    for FileName in TDirectory.GetFiles(fPath + aFolder, '*.*', TSearchOption.soAllDirectories) do
+      aList.Add(LowerCase(Copy(FileName, Length(fPath) + 1, Length(FileName))));
 end;
 
 procedure TwbFolder.ResolveHash(const aHash: Int64; var Results: TDynStrings);

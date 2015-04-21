@@ -12,23 +12,60 @@ const
   iLOD16 = 4;
   iLODFar = 5;
 
+  // run LODGen.exe
+  bExecuteLODGen = True; // True/False
+
+  // Atlas options
+  bBuildAtlas = True;
+  iAtlasTextureSize = 512; // max size of source lod texture to be included on atlas
+  iAtlasTileSize = 512; // max size of tile on atlas, source texture is rescaled if above
+  iAtlasWidth = 2048;
+  iAtlasHeight = 2048;
+  fUVRange = 1.5; // put textures on atlas having -UVRange <= uv <= UVRange in lod nif models
+
+  // vanilla lOD meshes having translation/rotation that must be ignored
+  sMeshIgnoreTranslationTES5 =
+    'meshes\lod\solitude\cwtower01_lod.nif' + ',' +
+    'meshes\lod\solitude\sfarmhousesilo_lod.nif' + ',' +
+    'meshes\lod\solitude\slumbermill01_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowall02_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowall03_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowall30_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowallsteps01_lod.nif' + ',' +
+    'meshes\lod\solitude\spatiowallsteps02_lod.nif' + ',' +
+    'meshes\lod\solitude\sstyrrshouse_lod.nif' + ',' +
+    'meshes\lod\solitude\sthe winking skeever_lod.nif' + ',' +
+    'meshes\lod\windhelm\wharena_lod.nif' + ',' +
+    'meshes\lod\windhelm\whbrunwulfsq_lod.nif' + ',' +
+    'meshes\lod\windhelm\whgrayquarter_lod.nif' + ',' +
+    'meshes\lod\windhelm\whinnerwall01_lod.nif' + ',' +
+    'meshes\lod\windhelm\whinnerwall02_lod.nif' + ',' +
+    'meshes\lod\windhelm\whinnland_lod.nif' + ',' +
+    'meshes\lod\windhelm\whmaingate_lod.nif' + ',' +
+    'meshes\lod\windhelm\whmarket01_lod.nif' + ',' +
+    'meshes\lod\windhelm\whouterwall3_lod.nif' + ',' +
+    'meshes\lod\windhelm\whpalace_lod.nif' + ',' +
+    'meshes\lod\windhelm\whtempletalos_lod.nif' + ',' +
+    'meshes\lod\windhelm\whvalunstrad_lod.nif';
+
 var
-  slLODTypes, slLOD, slCache, slExport: TStringList;
-  slLODAssets: TwbFastStringList;
+  slLODTypes, slLOD, slCache, slCacheHPLod, slExport: TStringList;
+  slLODMeshes, slLODTextures: TwbFastStringList;
   lstSkip: TList;
+  LODRefs: integer;
   LODGenWorld: IInterface;
   LODGenExport, LODGenParams: string;
   sTitle, sExport, sDestination, sDataPath: string;
-  bWarnMissing: Boolean;
+  bFallout: Boolean;
+  sLODBaseObjects: string;
 
   frm: TForm;
   btnOk, btnCancel, btnSave, btnLoad, btnDefault, btnExport, btnDestination, btnDataPath: TButton;
-  btnUnpackLandscape: TButton;
   cbWorld, cbLODLevel, cbLODX, cbLODY: TComboBox;
   lvRules: TListView;
   SelectedRuleIndex: integer;
   gbOptions: TGroupBox;
-  chkDontFixTangents, chkNoTangents, chkNoColors, chkNoMaterial, chkWarnMissing: TCheckBox;
+  chkDontFixTangents, chkNoTangents, chkNoColors, chkNoMaterial: TCheckBox;
   chkRemoveUnseen, chkIgnoreWater: TCheckBox;
   edExport, edDestination, edDataPath, edLODScale: TEdit;
 
@@ -60,22 +97,6 @@ begin
   Result := Items.IndexOf(Item);
   if (Result = -1) and (Items.Count > 0) then
     Result := 0;
-end;
-
-//==========================================================================
-// make sure that mesh file name starts with 'meshes\'
-function NormalizePath(value: string): string;
-begin
-  if value = '' then
-    Exit;
-  if Copy(value, 1, 1) = '\' then
-    Delete(value, 1, 1);
-  value := LowerCase(value);
-  if Copy(value, 1, 5) = 'data\' then
-    value := Copy(value, 6, Length(value));
-  if not (Copy(value, 1, 7) = 'meshes\') then
-    value := 'meshes\' + value;
-  Result := value;
 end;
 
 //============================================================================
@@ -137,12 +158,16 @@ begin
     Result := HexArrayToStr(GetElementEditValues(rec, 'MNAM\LOD #2 (Level 2)\Mesh'))
   else if LODType = iLODFar then begin
     Result := GetElementEditValues(rec, 'Model\MODL');
-    Result := Copy(Result, 1, Length(Result) - 4) + '_far.nif';
+    Result := Copy(Result, 1, Length(Result) - 4);
+    if bFallout then
+      Result := Result + '_lod.nif'
+    else
+      Result := Result + '_far.nif';
   end else
     Exit;
 
   if Result <> '' then begin
-    Result := NormalizePath(Result);
+    Result := wbNormalizeResourceName(Result, resMesh);
     if LODType = iLODFar then
       if not ResourceExists(Result) then Result := '';
   end;
@@ -153,27 +178,18 @@ procedure ProcessReference(e: IInterface);
 var
   i, j, idx, statfid: integer;
   stat: IInterface;
-  s, mFull, m4, m8, m16: string;
+  s, mat, mFull, m4, m8, m16, scl: string;
 begin
-  // get the last override and check if deleted or disabled, or enabled via parent
-  e := WinningOverride(e);
-  if GetIsDeleted(e) or GetIsInitiallyDisabled(e) or ElementExists(e, 'XESP') then
-    Exit;
-  
-  // no position
-  if not ElementExists(e, 'DATA') then
-    Exit;
-
   stat := BaseRecord(e);
   statfid := GetLoadOrderFormID(stat);
   // check if to skip
   if lstSkip.IndexOf(statfid) <> -1 then
     Exit;
 
-  // not a reference of STAT
-  if Signature(stat) <> 'STAT' then
+  // skip persistent refs of never fade statics in Skyrim
+  if (wbGameMode = gmTES5) and GetIsPersistent(e) and (GetElementNativeValues(stat, 'Record Header\Record Flags') and $00000004 > 0) then
     Exit;
-
+  
   // getting lod files from cache
   idx := slCache.IndexOfObject(statfid);
   // not in cache
@@ -189,21 +205,39 @@ begin
           Continue;
       if Pos(slLOD[i], mFull) > 0 then begin
         m4 := LODMeshFor(stat, j and $FF);
-        m8 := LODMeshFor(stat, j shr 8 and $FF);
-        m16 := LODMeshFor(stat, j shr 16 and $FF);
+        // other LOD levels only for Skyrim
+        if wbGameMode = gmTES5 then begin
+          m8 := LODMeshFor(stat, j shr 8 and $FF);
+          m16 := LODMeshFor(stat, j shr 16 and $FF);
+        end;
+        
         if (Length(m4) + Length(m8) + Length(m16)) > 0 then begin
+          // LOD material detection for Skyrim
+          if wbGameMode = gmTES5 then begin
+            mat := EditorID(LinksTo(ElementByPath(stat, 'DNAM\Material')));
+            if Pos('Snow', mat) > 0 then mat := 'Snow' else
+              if Pos('Ash', mat) > 0 then mat := 'Ash' else
+                mat := '';
+          end;
           // a tab separated string of Editor ID, flags, material, full mesh and lod files
           s := EditorID(stat) + #9 + IntToHex(GetElementNativeValues(stat, 'Record Header\Record Flags'), 8) + #9 +
-               EditorID(LinksTo(ElementByPath(stat, 'DNAM\Material'))) + #9 + mFull + #9 + m4 + #9 + m8 + #9 + m16;
+               mat + #9 + mFull + #9 + m4 + #9 + m8 + #9 + m16;
           idx := slCache.Count;
           slCache.AddObject(s, statfid);
-          // list of used lod assets
-          if bWarnMissing then begin
-            if m4 <> '' then slLODAssets.Add(m4);
-            if m8 <> '' then slLODAssets.Add(m8);
-            if m16 <> '' then slLODAssets.Add(m16);
+          
+          // Fallout: High Priority LOD info variation with m4 model for m8, at the same index as normal cache
+          if bFallout then begin
+            s := EditorID(stat) + #9 + IntToHex(GetElementNativeValues(stat, 'Record Header\Record Flags'), 8) + #9 +
+                 mat + #9 + mFull + #9 + m4 + #9 + m4 + #9 + m16;
+            slCacheHPLod.Add(s)
           end;
-        end
+
+          // list of used lod meshes
+          if m4 <> '' then slLODMeshes.Add(m4);
+          if m8 <> '' then slLODMeshes.Add(m8);
+          if m16 <> '' then slLODMeshes.Add(m16);
+        end;
+        
         Break;
       end;
     end;
@@ -215,11 +249,17 @@ begin
     Exit;
   end;
 
+  // get fallout high priority lod from separate cache
+  if bFallout and (GetElementNativeValues(e, 'Record Header\Record Flags') and $00010000 <> 0) then
+    s := slCacheHPLod[idx]
+  else
+    s := slCache[idx];
+
   // reference scale
   if ElementExists(e, 'XSCL') then
-    s := GetElementEditValues(e, 'XSCL')
+    scl := GetElementEditValues(e, 'XSCL')
   else
-    s := '1.0';
+    scl := '1.0';
 
   slExport.Add(Format('%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s', [
     IntToHex(GetLoadOrderFormID(e), 8),
@@ -230,27 +270,25 @@ begin
     GetElementEditValues(e, 'DATA\Rotation\X'),
     GetElementEditValues(e, 'DATA\Rotation\Y'),
     GetElementEditValues(e, 'DATA\Rotation\Z'),
-    s,
-    slCache[idx]
+    scl,
+    s
   ]));
+  Inc(LODRefs);
 end;
 
 //============================================================================
 procedure IterateWorldspace(e: IInterface);
 var
+  lst: TList;
   i: integer;
 begin
-  if ElementType(e) = etGroupRecord then begin
-    // Exterior cell block progress messages
-    if GroupType(e) = 4 then
-      AddMessage('Processing: ' + Name(e) + ' in ' + GetFileName(e));
-    for i := 0 to Pred(ElementCount(e)) do
-      IterateWorldspace(ElementByIndex(e, i));
-  end
-  // processing master references
-  else if Signature(e) = 'REFR' then
-    if IsMaster(e) then
-      ProcessReference(e);
+  lst := TList.Create;
+  AddMessage('Gathering references...');
+  wbFindREFRsByBase(e, sLODBaseObjects, 7, lst);
+  AddMessage('Filtering for valid LOD references...');
+  for i := 0 to lst.Count - 1 do
+    ProcessReference(ObjectToElement(lst[i]));
+  lst.Free;
 end;
 
 //============================================================================
@@ -258,34 +296,104 @@ function ExportWorldspace(wrld: IInterface): Boolean;
 var
   x, y, i: integer;
   ent: IInterface;
+  slHeader, sl: TStringList;
+  AtlasName, AtlasMapName: string;
 begin
   slExport.Clear;
   slCache.Clear;
+  slCacheHPLod.Clear;
   lstSkip.Clear;
-  slLODAssets.Clear;
+  slLODMeshes.Clear;
+  slLODTextures.Clear;
 
-  slExport.Add(EditorID(wrld));
   Result := LODCellSW(wrld, x, y);
   if not Result then begin
     AddMessage('Unable to open lod settings file for worldspace ' + LODSettingsFileName(wrld));
     Exit;
   end;
-  slExport.Add(Format('%d %d', [x, y]));
-  slExport.Add(GetElementEditValues(wrld, 'TNAM'));
-  slExport.Add(GetElementEditValues(wrld, 'UNAM'));
-  slExport.Add(sDestination);
 
-  AddMessage('Building a list of LOD objects, please wait...');
-  IterateWorldspace(ChildGroup(wrld));
-  for i := 0 to Pred(OverrideCount(wrld)) do begin
-    ent := OverrideByIndex(wrld, i);
-    IterateWorldspace(ChildGroup(ent));
-  end;
+  AddMessage('Building list of LOD objects, please wait...');
+  LODRefs := 0;
+  IterateWorldspace(wrld);
 
-  if slExport.Count > 5 then begin
+  if slExport.Count <> 0 then begin
+    // make sure atlas folder exists
+    {if not DirectoryExists(ExtractFilePath(sDestination)) then
+      if not ForceDirectories(ExtractFilePath(sDestination)) then begin
+        AddMessage('Error: can not create output folder for LOD ' + ExtractFilePath(sDestination));
+        Exit;
+      end;}
+
+    // building atlas
+    if bBuildAtlas then begin
+      // get list of diffuse textures within UVRange in provided list of meshes
+      wbGetUVRangeTexturesList(slLODMeshes, slLODTextures, fUVRange);
+      if slLODTextures.Count > 1 then begin
+        // remove HD LOD texture if there
+        if wbGameMode = gmTES5 then begin
+          i := slLODTextures.IndexOf(wbNormalizeResourceName(GetElementEditValues(wrld, 'TNAM'), resTexture));
+          if i <> -1 then slLODTextures.Delete(i);
+        end;
+        // atlas file name and map name
+        if Pos('meshes\', LowerCase(sDestination)) = 0 then begin
+          AddMessage('Error: LODGen path must contain "meshes\" folder if building atlas');
+          Exit;
+        end else
+          AtlasName := StringReplace(sDestination, 'meshes\', 'textures\', [rfIgnoreCase]) + EditorID(wrld) + 'ObjectsLOD.dds';
+        AtlasMapName := ScriptsPath + 'LODGen ' + EditorID(wrld) + ' Atlas Map.txt';
+        // make sure atlas folder exists
+        if not DirectoryExists(ExtractFilePath(AtlasName)) then
+          if not ForceDirectories(ExtractFilePath(AtlasName)) then begin
+            AddMessage('Error: can not create output folder for atlas ' + ExtractFilePath(AtlasName));
+            Exit;
+          end;
+        AddMessage('Building LOD textures atlas: ' + AtlasName);
+        wbBuildAtlasFromTexturesList(
+          slLODTextures,
+          iAtlasTextureSize,
+          iAtlasTileSize,
+          iAtlasWidth,
+          iAtlasHeight,
+          AtlasName,
+          AtlasMapName
+        );
+      end;
+    end;
+    slHeader := TStringList.Create;
+    slHeader.Add('GameMode=' + wbAppName);
+    slHeader.Add('Worldspace=' + EditorID(wrld));
+    slHeader.Add('CellSW=' + Format('%d %d', [x, y]));
+    if wbGameMode = gmTES5 then begin
+      slHeader.Add('TextureDiffuseHD=' + GetElementEditValues(wrld, 'TNAM'));
+      slHeader.Add('TextureNormalHD=' + GetElementEditValues(wrld, 'UNAM'));
+    end;
+    if (AtlasMapName <> '') and FileExists(AtlasMapName) then begin
+      slHeader.Add('TextureAtlasMap=' + AtlasMapName);
+      if not bFallout then
+        slHeader.Add('AtlasTolerance=' + Format('%1.1f', [fUVRange - 1.0]))
+      else
+        slHeader.Add('AtlasTolerance=100000.0');
+    end;
+    slHeader.Add('PathData=' + DataPath);
+    slHeader.Add('PathOutput=' + sDestination);
+    // list of BSAs and meshes to ignore translation/rotation
+    sl := TStringList.Create;
+    ResourceContainerList(sl);
+    for i := 0 to sl.Count - 2 do
+      slHeader.Add('Resource=' + sl[i]);
+    sl.Clear;
+    sl.Delimiter := ',';
+    sl.StrictDelimiter := True;
+    if wbGameMode = gmTES5 then
+      sl.DelimitedText := sMeshIgnoreTranslationTES5;
+    for i := 0 to Pred(sl.Count) do
+      slHeader.Add('IgnoreTranslation=' + wbNormalizeResourceName(sl[i], resMesh));
+    sl.Free;
+    slHeader.AddStrings(slExport);
     AddMessage('Saving objects LOD data to ' + sExport);
-    slExport.SaveToFile(sExport);
-    AddMessage(Format('LOD references: %d, unique LOD objects: %d', [slExport.Count-5, slCache.Count]));
+    slHeader.SaveToFile(sExport);
+    slHeader.Free;
+    AddMessage(Format('LOD references: %d, unique LOD objects: %d', [LODRefs, slCache.Count]));
   end
   else begin
     MessageDlg('No LOD objects in ' + Name(wrld) + ' world.', mtInformation, [mbOk], 0);
@@ -314,7 +422,6 @@ begin
   ini.WriteBool(wbGameName, 'NoMaterial', chkNoMaterial.Checked);
   ini.WriteBool(wbGameName, 'RemoveUnseen', chkRemoveUnseen.Checked);
   ini.WriteBool(wbGameName, 'RemoveUnseenIgnoreWater', chkIgnoreWater.Checked);
-  ini.WriteBool(wbGameName, 'WarnMissing', chkWarnMissing.Checked);
   ini.WriteString(wbGameName, 'LODLevel', cbLODLevel.Text);
   ini.WriteString(wbGameName, 'LODX', cbLODX.Text);
   ini.WriteString(wbGameName, 'LODY', cbLODY.Text);
@@ -354,7 +461,6 @@ begin
   chkNoMaterial.Checked := ini.ReadBool(wbGameName, 'NoMaterial', chkNoMaterial.Checked);
   chkRemoveUnseen.Checked := ini.ReadBool(wbGameName, 'RemoveUnseen', chkRemoveUnseen.Checked);
   chkIgnoreWater.Checked := ini.ReadBool(wbGameName, 'RemoveUnseenIgnoreWater', chkIgnoreWater.Checked);
-  chkWarnMissing.Checked := ini.ReadBool(wbGameName, 'WarnMissing', chkWarnMissing.Checked);
   cbLODLevel.ItemIndex := IndexIn(cbLODLevel.Items, ini.ReadString(wbGameName, 'LODLevel', cbLODLevel.Text));
   cbLODX.ItemIndex := IndexIn(cbLODX.Items, ini.ReadString(wbGameName, 'LODX', cbLODX.Text));
   cbLODY.ItemIndex := IndexIn(cbLODY.Items, ini.ReadString(wbGameName, 'LODY', cbLODY.Text));
@@ -419,7 +525,10 @@ end;
 procedure cbWorldSelect(Sender: TObject);
 begin
   edExport.Text := ScriptsPath + 'LODGen ' + TComboBox(Sender).Text + '.txt';
-  edDestination.Text := DataPath + 'meshes\terrain\' + TComboBox(Sender).Text + '\Objects';
+  if wbGameMode = gmTES5 then
+    edDestination.Text := DataPath + 'meshes\terrain\' + TComboBox(Sender).Text + '\Objects'
+  else if bFallout then
+    edDestination.Text := DataPath + 'meshes\landscape\lod\' + TComboBox(Sender).Text + '\Blocks';
 end;
 
 //============================================================================
@@ -514,57 +623,6 @@ begin
   cbLODX.ItemIndex := 0;
   cbLODY.ItemIndex := 0;
   edLODScale.Text := '';
-  chkWarnMissing.Checked := True;
-end;
-
-//============================================================================
-// unpack landscape LOD files *.btr for selected worldspace
-procedure btnUnpackLandscapeClick(Sender: TObject);
-var
-  slContainers, slAssets, slFiles: TStringList;
-  i: integer;
-  lodpath, fulllodpath: string;
-begin
-  lodpath := 'meshes\terrain\' + LowerCase(cbWorld.Text);
-  sDataPath := IncludeTrailingBackslash(edDataPath.Text);
-  fulllodpath := sDataPath + lodpath;
-  if DirectoryExists(fulllodpath) then begin
-    // path can be long and not fit into message dialog, repeat it in messages tab
-    AddMessage('LOD folder already exists ' + fulllodpath + ' Do you wish to unpack there?');
-    if MessageDlg('LOD folder already exists ' + fulllodpath + #13'Do you wish to unpack there?', mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
-      Exit;
-  end;
-  AddMessage('Unpacking landscape LOD meshes into ' + fulllodpath + ', please wait..');
-  lodpath := lodpath + '\' + LowerCase(cbWorld.Text); // to filter out objects and trees subfolders
-  // list of available landscape LOD files for selected worldspace
-  slFiles := TwbFastStringList.Create;
-  slFiles.Sorted := True;
-  slFiles.Duplicates := dupIgnore;
-  slContainers := TStringList.Create;
-  slAssets := TStringList.Create;
-  try
-    ResourceContainerList(slContainers);
-    for i := 0 to Pred(slContainers.Count) do begin
-      ResourceList(slContainers[i], slAssets);
-      wbFilterStrings(slAssets, slFiles, lodpath);
-    end;
-  finally
-    slAssets.Free;
-    slContainers.Free;
-  end;
-  try
-    try
-      for i := 0 to Pred(slFiles.Count) do
-        ResourceCopy('', slFiles[i], sDataPath);
-      AddMessage('Done.');
-      MessageDlg(IntToStr(slFiles.Count) + ' LOD files were unpacked.', mtInformation, [mbOk], 0);
-    except
-      on E: Exception do
-        AddMessage('Error copying file ' + slFiles[i] + ': ' + E.Message);
-    end;
-  finally
-    slFiles.Free;
-  end;
 end;
 
 //===========================================================================
@@ -837,7 +895,7 @@ begin
   try
     frm.Caption := sTitle;
     frm.Width := 600;
-    frm.Height := 600;
+    frm.Height := 530;
     frm.Position := poMainFormCenter;
     frm.BorderStyle := bsDialog;
     frm.KeyPreview := True;
@@ -1008,8 +1066,8 @@ begin
     chkRemoveUnseen.Left := 12;
     chkRemoveUnseen.Top := 98;
     chkRemoveUnseen.Width := 380;
-    chkRemoveUnseen.Caption := 'Remove unseen faces (requires landscape LOD unpacked in Data folder)';
-    chkRemoveUnseen.Hint := 'Remove mesh parts that are under the landscape or water. You must have landscape LOD files present in Data folder (*.btr files) for selected worldspace';
+    chkRemoveUnseen.Caption := 'Remove unseen faces';
+    chkRemoveUnseen.Hint := 'Remove mesh parts that are under the landscape or water. You must have landscape LOD files generated for selected worldspace';
     chkRemoveUnseen.ShowHint := True;
     chkRemoveUnseen.Checked := True;
 
@@ -1020,13 +1078,6 @@ begin
     chkIgnoreWater.Caption := 'Keep underwater LOD';
     chkIgnoreWater.Hint := 'Do not remove LOD geometry under water.';
     chkIgnoreWater.ShowHint := True;
-
-    btnUnpackLandscape := TButton.Create(frm); btnUnpackLandscape.Parent := gbOptions;
-    btnUnpackLandscape.Caption := 'Unpack landscape LOD';
-    btnUnpackLandscape.Left := chkRemoveUnseen.Left + chkRemoveUnseen.Width + 4;
-    btnUnpackLandscape.Top := chkRemoveUnseen.Top - 4;
-    btnUnpackLandscape.Width := 150;
-    btnUnpackLandscape.OnClick := btnUnpackLandscapeClick;
 
     cbLODLevel := TComboBox.Create(frm); cbLODLevel.Parent := gbOptions;
     cbLODLevel.Left := 440;
@@ -1061,23 +1112,6 @@ begin
     edLODScale.Width := 40;
     CreateLabel(gbOptions, edLODScale.Left - 160, edLODScale.Top + 4, 'Global LOD objects scale');
 
-    lbl := CreateLabel(frm, gbOptions.Left, gbOptions.Top + gbOptions.Height + 8, '');
-    lbl.AutoSize := False;
-    lbl.WordWrap := True;
-    lbl.Width := gbOptions.Width;
-    lbl.Height := 40;
-    lbl.Caption := 'WARNING! LODGen requires meshes used in LOD to exist in the Data folder ' +
-                   'to work properly, otherwise there will be missing distant objects in game. ' +
-                   'It is highly recommended for a user to unpack BSA archives manually and install meshes with ' +
-                   'used Mod Manager to avoid possible conflicts.';
-
-    chkWarnMissing := TCheckBox.Create(frm); chkWarnMissing.Parent := frm;
-    chkWarnMissing.Left := lbl.Left + 18;
-    chkWarnMissing.Top := lbl.Top + lbl.Height + 8;
-    chkWarnMissing.Width := 340;
-    chkWarnMissing.Caption := 'Warn me to unpack missing LOD files required for LODGen if any';
-    chkWarnMissing.Checked := True;
-
     btnOk := TButton.Create(frm); btnOk.Parent := frm;
     btnOk.Caption := 'OK';
     btnOk.ModalResult := mrOk;
@@ -1101,9 +1135,8 @@ begin
       Exit;
 
     sExport := edExport.Text;
-    sDestination := edDestination.Text;
+    sDestination := IncludeTrailingBackslash(edDestination.Text);
     sDataPath := IncludeTrailingBackslash(edDataPath.Text);
-    bWarnMissing := chkWarnMissing.Checked;
       
     PresetSave(ScriptsPath + 'LODGen preset default.ini');
     
@@ -1113,10 +1146,7 @@ begin
 
     LODGenWorld := ObjectToElement(cbWorld.Items.Objects[cbWorld.ItemIndex]);
     LODGenExport := edExport.Text;
-    LODGenParams := Format(' "%s" "%s"', [
-      LODGenExport,
-      ExcludeTrailingBackslash(sDataPath)
-    ]);
+    LODGenParams := Format(' "%s"', [LODGenExport]);
     if chkDontFixTangents.Checked then
       LODGenParams := LODGenParams + ' --dontFixTangents';
     if chkNoTangents.Checked then
@@ -1154,35 +1184,8 @@ begin
   lodgenexe := ScriptsPath + 'lodgen.exe';
   AddMessage('Executing LODGen...');
   AddMessage(lodgenexe + LODGenParams);
-  CreateProcessWait(lodgenexe, LODGenParams, SW_SHOW, 0);
-end;
-
-//============================================================================
-// Check and extract missing LOD assets
-function CheckMissingAssets: Boolean;
-var
-  i: integer;
-begin
-  // remove existing
-  for i := Pred(slLODAssets.Count) downto 0 do begin
-    if FileExists(sDataPath + slLODAssets[i]) then
-      slLODAssets.Delete(i);
-  end;
-  if slLODAssets.Count > 0 then begin
-    if MessageDlg(Format('There are %d missing meshes required for LODGen.'#13'Do you want %sEdit to unpack them now and continue building LOD?', [
-        slLODAssets.Count,
-        wbAppName
-      ]), mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
-    begin
-      Exit;
-    end;
-    // unpacking
-    AddMessage('Unpacking required LOD meshes...');
-    for i := 0 to Pred(slLODAssets.Count) do
-      ResourceCopy('', slLODAssets[i], sDataPath);
-    AddMessage('Done.');
-  end;
-  Result := True;
+  if bExecuteLODGen then
+    CreateProcessWait(lodgenexe, LODGenParams, SW_SHOW, 0);
 end;
 
 //============================================================================
@@ -1192,17 +1195,13 @@ var
 begin
   fExport := not FileExists(sExport);
   if not fExport then
-    if MessageDlg('LOD export file already exists. Do you want to reexport LOD data?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    if MessageDlg('LOD export file already exists. Do you want to reexport LOD data (load order has changed)?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       fExport := True;
 
   // export LOD data
   if fExport then begin
     if not ExportWorldspace(wrld) then
       Exit;
-    // checking for missing LOD assets
-    if bWarnMissing then
-      if not CheckMissingAssets then
-        Exit;
   end;
   
   ExecuteLODGen;
@@ -1212,12 +1211,23 @@ end;
 function Initialize: integer;
 begin
   Result := 1;
-  if wbGameMode <> gmTES5 then begin
-    MessageDlg('LODGen supports Skyrim only.', mtInformation, [mbOk], 0);
+
+  if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then
+    bFallout := True
+  else
+    bFallout := False;
+
+  if not ((wbGameMode = gmTES5) or bFallout) then begin
+    MessageDlg('LODGen supports Skyrim, Fallout 3 and Fallout New Vegas only.', mtInformation, [mbOk], 0);
     Exit;
   end;
   
-  sTitle := wbAppName + 'LODGen by Ehamloptiran and Zilav';
+  if bFallout then
+    sLODBaseObjects := 'STAT SCOL'
+  else
+    sLODBaseObjects := 'STAT';
+  
+  sTitle := wbAppName + 'LODGen by Ehamloptiran, Sheson and Zilav';
   AddMessage('');
   AddMessage(sTitle + ', starting...');
 
@@ -1226,11 +1236,15 @@ begin
   slLODTypes.CommaText := sLODOptions;
   slLOD := TStringList.Create;
   slCache := TStringList.Create;
+  slCacheHPLod := TStringList.Create;
   slExport := TStringList.Create;
   lstSkip := TList.Create;
-  slLODAssets := TwbFastStringList.Create;
-  slLODAssets.Sorted := True;
-  slLODAssets.Duplicates := dupIgnore;
+  slLODMeshes := TwbFastStringList.Create;
+  slLODMeshes.Sorted := True;
+  slLODMeshes.Duplicates := dupIgnore;
+  slLODTextures := TwbFastStringList.Create;
+  slLODTextures.Sorted := True;
+  slLODTextures.Duplicates := dupIgnore;
 
   OptionsForm;
   if Assigned(LODGenWorld) then
@@ -1239,8 +1253,11 @@ begin
   lstSkip.Free;
   slExport.Free;
   slCache.Free;
+  slCacheHPLod.Free;
   slLOD.Free;
   slLODTypes.Free;
+  slLODMeshes.Free;
+  slLODTextures.Free;
 end;
 
 end.

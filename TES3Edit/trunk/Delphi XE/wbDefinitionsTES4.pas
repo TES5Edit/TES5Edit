@@ -573,6 +573,9 @@ var
   Rec: IwbRecord;
   Container: IwbContainer;
   s: string;
+  Cell: IwbMainRecord;
+  Position: TwbVector;
+  Grid: TwbGridCell;
 begin
   Result := '';
 
@@ -593,6 +596,15 @@ begin
       if Result <> '' then
         Result := Result + ' ';
       Result := Result + 'in ' + s;
+
+      // grid position of persistent reference in exterior persistent cell (interior cells are not persistent)
+      if Supports(aMainRecord.Container, IwbGroupRecord, Container) then
+        Cell := IwbGroupRecord(Container).ChildrenOf;
+      if Assigned(Cell) and Cell.IsPersistent and (Cell.Signature = 'CELL') then
+        if aMainRecord.GetPosition(Position) then begin
+          Grid := wbPositionToGridCell(Position);
+          Result := Result + ' at ' + IntToStr(Grid.x) + ',' + IntToStr(Grid.y);
+        end;
     end;
   end;
 end;
@@ -606,9 +618,11 @@ var
 begin
   Result := '';
 
-  Rec := aMainRecord.RecordBySignature['XCLC'];
-  if Assigned(Rec) then
+  if not aMainRecord.IsPersistent then begin
+    Rec := aMainRecord.RecordBySignature['XCLC'];
+    if Assigned(Rec) then
       Result := 'at ' + Rec.Elements[0].Value + ',' + Rec.Elements[1].Value;
+  end;
 
   Container := aMainRecord.Container;
   while Assigned(Container) and not
@@ -1544,7 +1558,7 @@ end;
 
 procedure wbMGEFAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
-  wbCounterContainerByPathAfterSet('DATA - Data\Counter effect count', 'Counter Effects', aElement);
+  wbCounterContainerByPathAfterSet('DATA - Data\Counter effect count', 'ESCE - Counter Effects', aElement);
 end;
 
 procedure wbEFITAfterLoad(const aElement: IwbElement);
@@ -3515,11 +3529,12 @@ begin
   wbSCROs :=
     wbRArray('References',
       wbRUnion('', [
-        wbFormIDCk(SCRO, 'Global Reference',
-          [ACTI, DOOR, FLOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP,
-           INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, QUST, PLYR, PACK, LVLI,
-           FACT, ACHR, REFR, ACRE, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
-           LVLC, CSTY, WATR, WRLD, SCPT, BSGN, TREE, ENCH, NULL]),
+        wbFormID(SCRO, 'Global Reference'),
+//        wbFormIDCk(SCRO, 'Global Reference',
+//          [ACTI, DOOR, FLOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP,
+//           INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, QUST, PLYR, PACK, LVLI,
+//           FACT, ACHR, REFR, ACRE, GLOB, DIAL, CELL, SOUN, MGEF, WTHR, CLAS, EFSH, RACE,
+//           LVLC, CSTY, WATR, WRLD, SCPT, BSGN, TREE, ENCH, NULL]),
         wbInteger(SCRV, 'Local Variable', itU32)
       ], [])
     );
@@ -3987,7 +4002,8 @@ begin
       wbFloat('Constant Effect enchantment factor'),
       wbFloat('Constant Effect barter factor')
     ], cpNormal, True, nil, 10),
-    wbArrayS(ESCE, 'Counter Effects', wbStringMgefCode('Counter Effect Code', 4), 0, cpNormal, False, nil, wbCounterEffectsAfterSet)
+    wbArrayS(ESCE, 'Counter Effects', wbStringMgefCode('Counter Effect Code', 4),
+      0, cpNormal, False, nil, wbCounterEffectsAfterSet)
   ], False, nil, cpNormal, False, wbMGEFAfterLoad, wbMGEFAfterSet);
 
   wbRecord(MISC, 'Misc. Item', [
@@ -4574,7 +4590,7 @@ begin
         ])),
         wbInteger('Radius wrt Parent', itU16),
         wbInteger('Radius', itU16),
-        wbByteArray('Unknown', 4),
+        wbFloat('Min Height'),
         wbFloat('Max Height'),
         wbFloat('Sink'),
         wbFloat('Sink Variance'),
