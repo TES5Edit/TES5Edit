@@ -6358,7 +6358,7 @@ begin
     Exit;
   end;
   if mrBaseRecordID <> 0 then
-    with GetFile do
+    with GetMasterOrSelf.GetFile do
       Result := RecordByFormID[mrBaseRecordID, True];
 end;
 
