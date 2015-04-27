@@ -17,14 +17,15 @@ namespace LODGenerator
             this.keepRunning = true;
             try
             {
-                this.logWriter = new StreamWriter(Directory.GetCurrentDirectory() + "\\LODGen_log.txt");
+                this.logWriter = new StreamWriter(Directory.GetCurrentDirectory() + "\\LODGen_log.txt", true);
             }
             catch
             {
                 Console.WriteLine("Can not write to " + Directory.GetCurrentDirectory() + "\\LODGen_log.txt");
                 System.Environment.Exit(403);
             }
-            this.logWriter.WriteLine(this.WriteToScreen("Skyrim Object LOD Generator v0.6"));
+            this.logWriter.WriteLine(this.WriteToScreen("============================================================"));
+            this.logWriter.WriteLine(this.WriteToScreen("Skyrim Object LOD Generator v0.8"));
             this.logWriter.WriteLine(this.WriteToScreen("Created by Ehamloptiran and Zilav"));
             this.logWriter.WriteLine(this.WriteToScreen("Updated by Sheson\n"));
             this.logWriter.WriteLine(this.WriteToScreen("Log started at " + DateTime.Now.ToShortTimeString()));

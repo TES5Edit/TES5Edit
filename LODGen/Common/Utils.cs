@@ -7,8 +7,8 @@ namespace LODGenerator.Common
     public static class Game
     {
         static string _mode;
-        public static bool Testing;
-
+        static float _sampleSize;
+        
         public static string Mode
         {
             get
@@ -20,6 +20,19 @@ namespace LODGenerator.Common
                 _mode = value;
             }
         }
+
+        public static float sampleSize
+        {
+            get
+            {
+                return _sampleSize;
+            }
+            set
+            {
+                _sampleSize = value;
+            }
+        }
+
     }
 
     public static class Utils
@@ -202,7 +215,7 @@ namespace LODGenerator.Common
             u = (float)((double)num4 * (double)num3 - (double)num2 * (double)num5) * num6;
             v = (float)((double)num1 * (double)num5 - (double)num2 * (double)num3) * num6;
             if ((double)u >= 0.0 && (double)v >= 0.0)
-                return (double)u + (double)v < 1.0;
+                return (double)u + (double)v <= 1.0;
             else
                 return false;
         }

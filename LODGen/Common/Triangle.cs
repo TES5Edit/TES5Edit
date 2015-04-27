@@ -45,5 +45,10 @@
             this.v2 = _v2;
             this.v3 = _v3;
         }
+
+        public override string ToString()
+        {
+            return this.v1.ToString() + ", " + this.v2.ToString() + ", " + this.v3.ToString();
+        }
     }
 }

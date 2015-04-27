@@ -46,7 +46,7 @@ namespace LODGenerator.NifMain
                 this.userVersion2 = 83U;
             }
             this.unknownInt2 = 0U;
-            this.creator = ""; //LODGen";
+            this.creator = "LODGen by Ehamloptiran, Zilav and Sheson";
             this.exportInfo1 = "";
             this.exportInfo2 = "";
         }

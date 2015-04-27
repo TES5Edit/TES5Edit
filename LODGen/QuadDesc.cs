@@ -18,5 +18,6 @@ namespace LODGenerator
         {
             return "(" + (object)this.x.ToString() + ", " + this.y.ToString() + "): " + (string)(object)this.statics.Count + " statics";
         }
+
     }
 }

@@ -5598,7 +5598,7 @@ begin
           else if wbGameMode in [gmFO3, gmFNV] then
             DelimitedText := Settings.ReadString(Section, 'IgnoreTranslation', sMeshIgnoreTranslationFNV);
           for i := 0 to Pred(Count) do
-            slExport.Add('IgnoreTranslation=' + wbNormalizeResourceName(Strings[i], resMesh));
+            slExport.Add('IgnoreTranslation=' + Strings[i]);
         finally
           Free;
         end;
@@ -5610,13 +5610,11 @@ begin
 
         s := Format(wbScriptsPath + 'LODGen.exe "%s"', [s]);
         s := s + ' --dontFixTangents';
+        s := s + ' --removeUnseenFaces';
         if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False) then
           s := s + ' --dontGenerateVertexColors';
-        if wbGameMode = gmTES5 then begin
-            s := s + ' --removeUnseenFaces';
-          if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoTangents', False) then
-            s := s + ' --dontGenerateTangents';
-        end;
+        if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoTangents', False) then
+          s := s + ' --dontGenerateTangents';
 
 
         Caption := 'Running LODGen, press ESC to abort';

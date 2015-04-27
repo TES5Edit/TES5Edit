@@ -51,8 +51,11 @@ namespace LODGeneratorCMD
             StringList ignoreList = new StringList();
             StringList HDTexture = new StringList();
             StringList notHDTexture = new StringList();
+            StringList HDMesh = new StringList();
+            StringList notHDMesh = new StringList();
             Game.Mode = "tes5";
-            Game.Testing = false;
+            // 1 = 1 cell seems best
+            Game.sampleSize = 1f;
             int counter = 0;
             string worldspaceName = "";
             string gameDir = "";
@@ -68,14 +71,9 @@ namespace LODGeneratorCMD
             bool removeUnseenFaces = false;
             bool ignoreWater = false;
             bool useHDFlag = true;
+            bool useOptimizer = false;
             bool ignoreMaterial = false;
             float globalScale = 1f;
-            if (path.ToLower().Contains("dyndolod"))
-            {
-                useHDFlag = false;
-                notHDTexture.Add("lod");
-                notHDTexture.Add("lowres");
-            }
             while (!streamReader.EndOfStream)
             {
                 string[] strArray2 = streamReader.ReadLine().Split('=');
@@ -121,6 +119,14 @@ namespace LODGeneratorCMD
                             BSAFiles.Add(strArray2[1].ToLower());
                         }
                     }
+                    if (strArray2[0].ToLower() == "ishdmeshmask")
+                    {
+                        HDMesh.Add(strArray2[1].ToLower());
+                    }
+                    if (strArray2[0].ToLower() == "nothdmeshmask")
+                    {
+                        notHDMesh.Add(strArray2[1].ToLower());
+                    }
                     if (strArray2[0].ToLower() == "ishdtexturemask")
                     {
                         HDTexture.Add(strArray2[1].ToLower());
@@ -140,6 +146,10 @@ namespace LODGeneratorCMD
                     if (strArray2[0].ToLower() == "gamemode")
                     {
                         Game.Mode = ((strArray2[1].ToLower()));
+                        if (Game.Mode == "fo3")
+                        {
+                            Game.Mode = "fnv";
+                        }
                         //generateVertexColors = false;
                     }
                     if (strArray2[0].ToLower() == "dontgeneratevertexcolors")
@@ -169,6 +179,10 @@ namespace LODGeneratorCMD
                     if (strArray2[0].ToLower() == "usehdflag")
                     {
                         useHDFlag = Boolean.Parse(strArray2[1]);
+                    }
+                    if (strArray2[0].ToLower() == "useoptimizer")
+                    {
+                        useOptimizer = Boolean.Parse(strArray2[1]);
                     }
                     if (strArray2[0].ToLower() == "ignorematerial")
                     {
@@ -234,6 +248,7 @@ namespace LODGeneratorCMD
             theLog.WriteLog("Remove Faces under Terrain: " + (removeUnseenFaces ? "True" : "False"));
             theLog.WriteLog("Remove Faces under Water: " + (!ignoreWater ? "True" : "False"));
             theLog.WriteLog("Use HD Flag: " + (useHDFlag ? "True" : "False"));
+            //theLog.WriteLog("Use Optimizer: " + (useOptimizer ? "True" : "False"));
             theLog.WriteLog("Ignore Materials: " + (ignoreMaterial ? "True" : "False"));
             theLog.WriteLog("Global scale: " + string.Format("{0:0.00}", globalScale));
             theLog.WriteLog("Specific level: " + (int1 != -1 ? int1.ToString() : "No"));
@@ -370,6 +385,7 @@ namespace LODGeneratorCMD
                         generateVertexColors = generateVertexColors,
                         mergeShapes = mergeShapes,
                         useHDFlag = useHDFlag,
+                        useOptimizer = useOptimizer,
                         useFadeNode = CmdArgs.GetBool(cmdArgs, "useFadeNode", false),
                         removeUnseenFaces = removeUnseenFaces,
                         globalScale = globalScale,
@@ -385,7 +401,9 @@ namespace LODGeneratorCMD
                         skyblivionTexPath = CmdArgs.GetBool(cmdArgs, "skyblivionTexPath", false),
                         ignoreTransRot = ignoreList,
                         HDTextureList = HDTexture,
-                        notHDTextureList = notHDTexture
+                        notHDTextureList = notHDTexture,
+                        HDMeshList = HDMesh,
+                        notHDMeshList = notHDMesh
                     }.GenerateLOD(list2[1], list2[0], statics);
                 })));
                 list1[index1].Start((object)new List<int>()

@@ -1,6 +1,13 @@
 Changelog
 
-0.7	added FNV mode
+0.8	rewritten remove unseen faces code to be more effetive
+	changed IgnoreTranslation= to be a mesh mask, e.g. to ignore all use just use .nif
+	added NotHDMeshMask= requires UseHDFlag=true, matching meshes are not HD, overwrites flag from derived from column #2, overwritten by texture masks
+	added IsHDMeshMask= requires UseHDFlag=true, matching meshes are HD, overwrites NotHDMeshMask, overwritten by texture masks
+
+0.7	append to log file instead of overwriting
+	added FO3 mode, same as FNV
+	added FNV mode
 	added BSShaderPPLightingProperty
 	updated nitristrips
 	fixed points to triangles conversion

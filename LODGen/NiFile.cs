@@ -27,6 +27,10 @@ namespace LODGenerator
                 typeof (BSLightingShaderProperty)
             },
             {
+                "BSShaderPPLightingProperty",
+                typeof (BSShaderPPLightingProperty)
+            },
+            {
                 "BSShaderTextureSet",
                 typeof (BSShaderTextureSet)
             },
@@ -132,17 +136,17 @@ namespace LODGenerator
             this.blocks = new List<NiObject>();
         }
 
-        public void Read(string skyrimDir, string fileName, LogFile logFile)
+        public void Read(string gameDir, string fileName, LogFile logFile)
         {
             MemoryStream memoryStream = new MemoryStream();
-            if (File.Exists(skyrimDir + fileName))
+            if (File.Exists(gameDir + fileName))
             {
                 try
                 {
                     FileStream fileStream = (FileStream)null;
                     while (fileStream == null)
                     {
-                        fileStream = Utils.GetFileStream(new FileInfo(skyrimDir + fileName), logFile);
+                        fileStream = Utils.GetFileStream(new FileInfo(gameDir + fileName), logFile);
                     }
                     BinaryReader binaryReader = new BinaryReader((Stream)fileStream);
                     long length = binaryReader.BaseStream.Length;
@@ -186,6 +190,7 @@ namespace LODGenerator
             this.header.Read(reader);
             for (int index = 0; (long)index < (long)this.header.GetNumBlocks(); ++index)
             {
+                //Console.WriteLine(index + " Block = " + this.header.GetBlockTypeAtIndex(index));
                 if (NiFile.classTypes.ContainsKey(this.header.GetBlockTypeAtIndex(index)))
                 {
                     NiObject niObject = (NiObject)Activator.CreateInstance(NiFile.classTypes[this.header.GetBlockTypeAtIndex(index)]);
@@ -245,6 +250,10 @@ namespace LODGenerator
             return this.header.GetVersion();
         }
 
+        public uint GetUserVersion()
+        {
+            return this.header.GetUserVersion();
+        }
         public int AddBlock(NiObject obj)
         {
             this.blocks.Add(obj);

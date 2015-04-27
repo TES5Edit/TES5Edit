@@ -1,114 +1,109 @@
 ﻿using LODGenerator;
 using LODGenerator.NifMain;
 using System.Collections.Generic;
+using System;
 
 namespace LODGenerator.Common
 {
     public class QuadTree
     {
         public List<Vector3> vertices;
-        public QuadTreeNode[] nodes;
+        public BBox boundingBox;
+        public QuadTreeLeaf[] segments;
+        public QuadTreeLeaf entirequad;
+        public float sampleSize;
+        public bool isLand;
 
-        public QuadTree(NiTriShapeData data, BBox boundingBox)
+        public QuadTree(NiTriShapeData data, int quadLevel)
         {
-            this.nodes = new QuadTreeNode[4];
-            this.vertices = data.GetVertices();
-            BBox boundingBox1 = new BBox();
-            BBox boundingBox2 = new BBox();
-            BBox boundingBox3 = new BBox();
-            BBox boundingBox4 = new BBox();
-            float num1 = (float)(((double)boundingBox.px2 - (double)boundingBox.px1) / 2.0);
-            float num2 = (float)(((double)boundingBox.py2 - (double)boundingBox.py1) / 2.0);
-            boundingBox1.Set(boundingBox.px1, boundingBox.px1 + num1, boundingBox.py1, boundingBox.py1 + num2, 0.0f, 0.0f);
-            boundingBox2.Set(boundingBox.px1 + num1, boundingBox.px2, boundingBox.py1, boundingBox.py1 + num2, 0.0f, 0.0f);
-            boundingBox3.Set(boundingBox.px1, boundingBox.px1 + num1, boundingBox.py1 + num2, boundingBox.py2, 0.0f, 0.0f);
-            boundingBox4.Set(boundingBox.px1 + num1, boundingBox.px2, boundingBox.py1 + num2, boundingBox.py2, 0.0f, 0.0f);
-            this.nodes[0] = this.CreateQuadNode(data.GetTriangles(), data.GetVertices(), boundingBox1);
-            this.nodes[1] = this.CreateQuadNode(data.GetTriangles(), data.GetVertices(), boundingBox2);
-            this.nodes[2] = this.CreateQuadNode(data.GetTriangles(), data.GetVertices(), boundingBox3);
-            this.nodes[3] = this.CreateQuadNode(data.GetTriangles(), data.GetVertices(), boundingBox4);
-        }
-
-        private QuadTreeLeaf CreateQuadLeaf(List<Triangle> tris, BBox boundingBox)
-        {
-            return new QuadTreeLeaf()
+            this.sampleSize = Game.sampleSize;
+            // water
+            if (data.GetBSNumUVSets() == 0)
             {
-                triangles = tris,
-                boundingBox = boundingBox
-            };
-        }
-
-        private QuadTreeNode CreateQuadNode(List<Triangle> tris, List<Vector3> verts, BBox boundingBox)
-        {
-            List<Triangle> tris1 = new List<Triangle>();
-            QuadTreeNode quadTreeNode = new QuadTreeNode();
-            for (int index = 0; index < tris.Count; ++index)
-            {
-                Triangle triangle = tris[index];
-                Vector3 vector3_1 = verts[(int)triangle[0]];
-                Vector3 vector3_2 = verts[(int)triangle[1]];
-                Vector3 vector3_3 = verts[(int)triangle[2]];
-                Vector3 vector3_4 = (vector3_1 + vector3_2 + vector3_3) / 3f;
-                if ((double)vector3_1[0] > (double)boundingBox.px1 && (double)vector3_1[0] < (double)boundingBox.px2 && ((double)vector3_1[1] > (double)boundingBox.py1 && (double)vector3_1[1] < (double)boundingBox.py2))
-                    tris1.Add(triangle);
-                if ((double)vector3_2[0] > (double)boundingBox.px1 && (double)vector3_2[0] < (double)boundingBox.px2 && ((double)vector3_2[1] > (double)boundingBox.py1 && (double)vector3_2[1] < (double)boundingBox.py2))
-                    tris1.Add(triangle);
-                if ((double)vector3_3[0] > (double)boundingBox.px1 && (double)vector3_3[0] < (double)boundingBox.px2 && ((double)vector3_3[1] > (double)boundingBox.py1 && (double)vector3_3[1] < (double)boundingBox.py2))
-                    tris1.Add(triangle);
-            }
-            if (tris1.Count > 50)
-            {
-                BBox boundingBox1 = new BBox();
-                BBox boundingBox2 = new BBox();
-                BBox boundingBox3 = new BBox();
-                BBox boundingBox4 = new BBox();
-                float num1 = (float)(((double)boundingBox.px2 - (double)boundingBox.px1) / 2.0);
-                float num2 = (float)(((double)boundingBox.py2 - (double)boundingBox.py1) / 2.0);
-                boundingBox1.Set(boundingBox.px1, boundingBox.px1 + num1, boundingBox.py1, boundingBox.py1 + num2, 0.0f, 0.0f);
-                boundingBox2.Set(boundingBox.px1 + num1, boundingBox.px2, boundingBox.py1, boundingBox.py1 + num2, 0.0f, 0.0f);
-                boundingBox3.Set(boundingBox.px1, boundingBox.px1 + num1, boundingBox.py1 + num2, boundingBox.py2, 0.0f, 0.0f);
-                boundingBox4.Set(boundingBox.px1 + num1, boundingBox.px2, boundingBox.py1 + num2, boundingBox.py2, 0.0f, 0.0f);
-                quadTreeNode.children[0] = this.CreateQuadNode(tris, verts, boundingBox1);
-                quadTreeNode.children[1] = this.CreateQuadNode(tris, verts, boundingBox2);
-                quadTreeNode.children[2] = this.CreateQuadNode(tris, verts, boundingBox3);
-                quadTreeNode.children[3] = this.CreateQuadNode(tris, verts, boundingBox4);
-                quadTreeNode.boundingBox = boundingBox;
+                this.sampleSize = 1;
+                this.isLand = false;
             }
             else
             {
-                quadTreeNode.boundingBox = boundingBox;
-                quadTreeNode.leaf = this.CreateQuadLeaf(tris1, boundingBox);
+                isLand = true;
             }
-            return quadTreeNode;
+            this.vertices = data.GetVertices();
+            this.boundingBox = new BBox();
+            this.boundingBox.Set(float.MaxValue, float.MinValue, float.MaxValue, float.MinValue, float.MaxValue, float.MinValue);
+            this.segments = new QuadTreeLeaf[(int)(this.sampleSize * quadLevel * this.sampleSize * quadLevel)];
+            for (int index = 0; index < (this.sampleSize * quadLevel) * (this.sampleSize * quadLevel); index++)
+            {
+                this.segments[index] = this.CreateSegment(index, quadLevel, data.GetTriangles(), data.GetVertices());
+                boundingBox.GrowByBox(this.segments[index].boundingBox);
+            }
+            QuadTreeLeaf quadTreeLeaf = new QuadTreeLeaf();
+            List<Triangle> triangles = data.GetTriangles();
+            quadTreeLeaf.boundingBox.GrowByBox(boundingBox);
+            quadTreeLeaf.triangles = triangles;
+            this.entirequad = quadTreeLeaf;
         }
 
-        private QuadTreeLeaf FindLeaf(QuadTreeNode node, Vector3 pt)
+        public List<Triangle> GetSegment(Vector3 vertex, int quadLevel)
         {
-            if (node.leaf != null)
-                return node.leaf;
-            QuadTreeLeaf quadTreeLeaf = (QuadTreeLeaf)null;
-            if ((double)pt[0] > (double)node.children[0].boundingBox.px1 && (double)pt[0] < (double)node.children[0].boundingBox.px2 && ((double)pt[1] > (double)node.children[0].boundingBox.py1 && (double)pt[1] < (double)node.children[0].boundingBox.py2))
-                quadTreeLeaf = this.FindLeaf(node.children[0], pt);
-            if ((double)pt[0] > (double)node.children[1].boundingBox.px1 && (double)pt[0] < (double)node.children[1].boundingBox.px2 && ((double)pt[1] > (double)node.children[1].boundingBox.py1 && (double)pt[1] < (double)node.children[1].boundingBox.py2))
-                quadTreeLeaf = this.FindLeaf(node.children[1], pt);
-            if ((double)pt[0] > (double)node.children[2].boundingBox.px1 && (double)pt[0] < (double)node.children[2].boundingBox.px2 && ((double)pt[1] > (double)node.children[2].boundingBox.py1 && (double)pt[1] < (double)node.children[2].boundingBox.py2))
-                quadTreeLeaf = this.FindLeaf(node.children[2], pt);
-            if ((double)pt[0] > (double)node.children[3].boundingBox.px1 && (double)pt[0] < (double)node.children[3].boundingBox.px2 && ((double)pt[1] > (double)node.children[3].boundingBox.py1 && (double)pt[1] < (double)node.children[3].boundingBox.py2))
-                quadTreeLeaf = this.FindLeaf(node.children[3], pt);
-            return quadTreeLeaf;
+            int cursegment = 0;
+            float x = vertex[0];
+            float y = vertex[1];
+            float z = vertex[2];
+            QuadTreeLeaf quadTreeLeaf = new QuadTreeLeaf();
+            quadLevel = (int)(this.sampleSize * quadLevel);
+            int num1 = (int)(x / (4096 / quadLevel));
+            int num2 = (int)(y / (4096 / quadLevel));
+            if (num1 >= quadLevel)
+                num1 = quadLevel - 1;
+            if (num1 < 0)
+                num1 = 0;
+            if (num2 >= quadLevel)
+                num2 = quadLevel - 1;
+            if (num2 < 0)
+                num2 = 0;
+            cursegment = (quadLevel * num1) + num2;
+            quadTreeLeaf = this.segments[cursegment];
+            List<Triangle> triangles = new List<Triangle>();
+            triangles = quadTreeLeaf.triangles;
+            // x/y inside box
+            if (x >= quadTreeLeaf.boundingBox.px1 && x <= quadTreeLeaf.boundingBox.px2 && y >= quadTreeLeaf.boundingBox.py1 && y <= quadTreeLeaf.boundingBox.py2)
+            {
+                if (isLand && z < quadTreeLeaf.boundingBox.pz1)
+                {
+                    // z under box
+                    return null;
+                }
+                return triangles;
+            }
+            return new List<Triangle>();
+            //return this.entirequad.triangles;
         }
 
-        public QuadTreeLeaf FindLeaf(Vector3 pt)
+        private QuadTreeLeaf CreateSegment(int segmentnumber, int quadLevel, List<Triangle> triangles, List<Vector3> vertices)
         {
-            QuadTreeLeaf quadTreeLeaf = (QuadTreeLeaf)null;
-            if ((double)pt[0] > (double)this.nodes[0].boundingBox.px1 && (double)pt[0] < (double)this.nodes[0].boundingBox.px2 && ((double)pt[1] > (double)this.nodes[0].boundingBox.py1 && (double)pt[1] < (double)this.nodes[0].boundingBox.py2))
-                quadTreeLeaf = this.FindLeaf(this.nodes[0], pt);
-            if ((double)pt[0] > (double)this.nodes[1].boundingBox.px1 && (double)pt[0] < (double)this.nodes[1].boundingBox.px2 && ((double)pt[1] > (double)this.nodes[1].boundingBox.py1 && (double)pt[1] < (double)this.nodes[1].boundingBox.py2))
-                quadTreeLeaf = this.FindLeaf(this.nodes[1], pt);
-            if ((double)pt[0] > (double)this.nodes[2].boundingBox.px1 && (double)pt[0] < (double)this.nodes[2].boundingBox.px2 && ((double)pt[1] > (double)this.nodes[2].boundingBox.py1 && (double)pt[1] < (double)this.nodes[2].boundingBox.py2))
-                quadTreeLeaf = this.FindLeaf(this.nodes[2], pt);
-            if ((double)pt[0] > (double)this.nodes[3].boundingBox.px1 && (double)pt[0] < (double)this.nodes[3].boundingBox.px2 && ((double)pt[1] > (double)this.nodes[3].boundingBox.py1 && (double)pt[1] < (double)this.nodes[3].boundingBox.py2))
-                quadTreeLeaf = this.FindLeaf(this.nodes[3], pt);
+            quadLevel = (int)(this.sampleSize * quadLevel);
+            QuadTreeLeaf quadTreeLeaf = new QuadTreeLeaf();
+            List<Triangle> triangles1 = new List<Triangle>();
+            int segmentx = segmentnumber / quadLevel;
+            int segmenty = segmentnumber - (segmentx * quadLevel);
+            quadTreeLeaf.boundingBox.Set(float.MaxValue, float.MinValue, float.MaxValue, float.MinValue, float.MaxValue, float.MinValue);
+            BBox bbox = new BBox();
+            bbox.Set((float)segmentx / quadLevel * 4096, ((float)segmentx + 1) / quadLevel * 4096, (float)segmenty / quadLevel * 4096, ((float)segmenty + 1) / quadLevel * 4096, 0f, 0f);
+            for (int index = 0; index < triangles.Count; index++)
+            {
+                BBox tbox = new BBox(float.MaxValue, float.MinValue, float.MaxValue, float.MinValue, float.MaxValue, float.MinValue);
+                for (int index2 = 0; index2 < 3; index2++)
+                {
+                    Vector3 vertex = vertices[triangles[index][index2]];
+                    tbox.GrowByVertex(vertex);
+                }
+                if (tbox.px2 >= bbox.px1 && tbox.px1 <= bbox.px2 && tbox.py2 >= bbox.py1 && tbox.py1 <= bbox.py2)
+                {
+                    triangles1.Add(triangles[index]);
+                    quadTreeLeaf.boundingBox.GrowByBox(tbox);
+                }
+            }
+            quadTreeLeaf.triangles = triangles1;
             return quadTreeLeaf;
         }
     }
