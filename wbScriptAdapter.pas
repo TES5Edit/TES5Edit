@@ -1586,7 +1586,6 @@ procedure Misc_wbFindREFRsByBase(var Value: Variant; Args: TJvInterpreterArgs);
 
 var
   MainRecord          : IwbMainRecord;
-  Element             : IwbElement;
   REFRs               : TDynMainRecords;
   i, j, Count, Opt    : Integer;
   lst                 : TList;
