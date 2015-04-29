@@ -1757,28 +1757,50 @@ function wbMGEFFAssocItemDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aEle
 var
   Container     : IwbContainer;
   Archtype      : Variant;
+  DataContainer : IwbDataContainer;
+  Element       : IwbElement;
+const
+  OffsetArchtype = 56;
 
 begin
-  Result := 0;
+  Result := 1;
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  ArchType := Container.ElementNativeValues['Archtype'];
-  if VarIsEmpty(ArchType) then begin
-    aBasePtr := Pointer(Cardinal(aBasePtr) + 56);
-    if Cardinal(aEndPtr) >= (Cardinal(aBasePtr) + 4) then
+  VarClear(ArchType);
+  Element := Container.ElementByName['Archtype'];
+  if Assigned(Element) then
+    ArchType := Element.NativeValue
+  else if Supports(Container, IwbDataContainer, DataContainer) and
+          DataContainer.IsValidOffset(aBasePtr, aEndPtr, OffsetArchtype) then begin // we are part a proper structure
+      aBasePtr := Pointer(Cardinal(aBasePtr) + OffsetArchtype);
       ArchType := PCardinal(aBasePtr)^;
-  end;
+    end;
 
-  if VarIsEmpty(ArchType) then
-    Result := 1
-  else
+  if not VarIsEmpty(ArchType) then
     case Integer(ArchType) of
       01: Result := 2;//Script
       18: Result := 3;//Bound Item
       19: Result := 4;//Summon Creature
+    else
+      Result := 0;
     end;
+end;
+
+procedure wbMGEFFAssocItemAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainer;
+  Element   : IwbElement;
+begin
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+  if (aNewValue <> 0) then begin
+    Element := Container.ElementByName['Archtype'];
+    if Assigned(Element) and Element.NativeValue = 0 then
+        Element.NativeValue := $FF; // Signals ArchType that it should not mess with us on the next change!
+  end;
 end;
 
 procedure wbMGEFArchtypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -1789,13 +1811,15 @@ begin
     Exit;
   if not Supports(aElement, IwbContainerElementRef, Container) then
     Exit;
-  Container.ElementNativeValues['..\Assoc. Item'] := 0;
-  case Integer(aNewValue) of
-    11: Container.ElementNativeValues['..\Actor Value'] := 48;//Invisibility
-    12: Container.ElementNativeValues['..\Actor Value'] := 49;//Chameleon
-    24: Container.ElementNativeValues['..\Actor Value'] := 47;//Paralysis
-  else
-    Container.ElementNativeValues['..\Actor Value'] := -1;
+  if (aNewValue < $FF) and (aOldValue < $FF) then begin
+    Container.ElementNativeValues['..\Assoc. Item'] := 0;
+    case Integer(aNewValue) of
+      11: Container.ElementNativeValues['..\Actor Value'] := 48;//Invisibility
+      12: Container.ElementNativeValues['..\Actor Value'] := 49;//Chameleon
+      24: Container.ElementNativeValues['..\Actor Value'] := 47;//Paralysis
+    else
+      Container.ElementNativeValues['..\Actor Value'] := -1;
+    end;
   end;
 end;
 
@@ -8465,7 +8489,7 @@ begin
              wbFormIDCk('Assoc. Script', [SCPT, NULL]), //Script
              wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]), //Bound Item
              wbFormIDCk('Assoc. Creature', [CREA]) //Summon Creature
-           ]),
+           ], cpNormal, false, nil, wbMGEFFAssocItemAfterSet),
       {12} wbInteger('Magic School (Unused)', itS32, wbEnum([
       ], [
         -1, 'None'
