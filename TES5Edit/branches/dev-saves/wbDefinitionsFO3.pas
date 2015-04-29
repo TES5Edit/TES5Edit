@@ -8574,7 +8574,7 @@ begin
              wbFormIDCk('Assoc. Script', [SCPT, NULL]), //Script
              wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]), //Bound Item
              wbFormIDCk('Assoc. Creature', [CREA]) //Summon Creature
-           ]),
+           ], cpNormal, false, nil, wbMGEFFAssocItemAfterSet),
       {12} wbInteger('Magic School (Unused)', itS32, wbEnum([
       ], [
         -1, 'None'
