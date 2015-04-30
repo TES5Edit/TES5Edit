@@ -207,7 +207,7 @@ var
 begin
   i := data.ReadInt32;
   if i > 4000 then
-    raise Exception.Create('Probably invalid Nif file, SizedString length > 1000');
+    raise Exception.Create('Probably invalid Nif file, SizedString length > 4000');
 
   Result := TEncoding.ASCII.GetString(data.ReadBytes(i));
 end;
@@ -220,7 +220,7 @@ begin
   // string is an index into strings table if version >= 20.1.0.3
   if NiFile.Header.Version >= $14010003 then begin
     i := data.ReadInt32;
-    if i <> -1 then
+    if (Length(NiFile.Header.NodeStrings) <> 0) and (i >= Low(NiFile.Header.NodeStrings)) and (i <= High(NiFile.Header.NodeStrings)) then
       Result := NiFile.Header.NodeStrings[i]
     else
       Result := '';
