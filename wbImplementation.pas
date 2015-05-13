@@ -6298,12 +6298,12 @@ begin
     Include(mrStates, mrsBaseRecordChecked);
     if Supports(GetRecordBySignature('NAME'), IwbContainerElementRef, NameRec) then
       if Supports(NameRec.LinksTo, IwbMainRecord, Result) then begin
-        mrBaseRecordID := Result.FixedFormID;
+        mrBaseRecordID := NameRec.NativeValue;
       end;
     Exit;
   end;
   if mrBaseRecordID <> 0 then
-    with GetMasterOrSelf.GetFile do
+    with GetFile do
       Result := RecordByFormID[mrBaseRecordID, True];
 end;
 
