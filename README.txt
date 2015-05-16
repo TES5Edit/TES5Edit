@@ -3,9 +3,7 @@
 TES5Edit 3.1.0 by ElminsterAU
 Updated for Skyrim by Hlp, Zilav and Sharlikran.
 
-Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available.
-
-Starting from 3.1.0 we need to remind you that we only support version 1.9.0.32 of Skyrim. Update TES5Edit and Skyrim before you post in the forum.
+Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available.  Starting from 3.1.0 we need to remind you that we only support version 1.9.0.32 of Skyrim. Update TES5Edit and Skyrim before you post in the forum.  If you see any references to xEdit that is a short way of saying all versions of the program which would cover FO3Edit, FNVEdit, TES4Edit and TES5Edit.
 
 TES5Edit Cleaning Guides:
 TES5Edit: http://www.creationkit.com/TES5Edit
@@ -26,34 +24,23 @@ Fallout New Vegas Training Manual for FO3Edit (applies to all game versions)
 http://www.nexusmods.com/newvegas/mods/38413
 
 Check for new versions here:
-Nexus: http://skyrim.nexusmods.com/mods/25859/
+FO3Edit: http://www.nexusmods.com/fallout3/mods/637
+FNVEdit: http://www.nexusmods.com/newvegas/mods/34703
+TES4Edit: http://www.nexusmods.com/oblivion/mods/11536
+TES5Edit: http://www.nexusmods.com/skyrim/mods/25859
 Mirror: http://1drv.ms/1o8jvih
 
-Important DirectX Information:
+Future of xEdit:
 
-If you get an error about d3dx9_*.dll not being installed, you need to update your DirectX to the most current version.  The most current (March 2008) version can be found here: http://www.microsoft.com/en-us/download/details.aspx?id=35 DirectX End-User Runtime Web Installer or here: DirectX End-User Runtimes Redistributable (make sure to install it after unpacking it).  http://www.microsoft.com/en-us/download/details.aspx?id=23611
-
-Future of TES5Edit:
-
-We appreciate all the thanks and support from the community.  HuguesLePors recently volunteered and was responsible for the additional updates to the VMAD routines.  Although they look good please keep backups of your plugins and report any errors with VMAD.  Zilav has some updates planed that will improve the Check for Errors routine so that it includes checking for assets.  The additional function will check for meshes, textures, pex scripts, seq files (if needed), and will search BSA files as well.  This will help end users check to see if all required assets are present.  When files are missing especially scripts, that can lead to undetected issues, malfunctions with the plugin, and CTDs.
-
-Although we welcome suggestions for improving TES5Edit automation is not one of them.  We do not plan on adding an automated way to clean multiple plugins or access to TES5Edit from the command line.  Currently cleaning a plugin involves indexing over a million references at times.  When only the required plugins are loaded then the cleaning is accurate.  If unnecessary plugins are involved those become part of the index and could cause the plugin to lose important and required data.  We understand the need for unattended automation at times.  However, without human intervention too many issues during the cleaning process would go unnoticed and make troubleshooting game issues related to plugins even more difficult then it already is.
-
-As TES5Edit becomes more widely used in the Skyrim community it has become a concern that many people want to use the utility in place of the Construction Kit.  This is still not recommended.  We work hard to make TES5Edit as accurate as possible but development is directly related to the plugins themselves.  TES5Edit can not replicate all the changes that the CK will make.  Attack Data is the best example.  Merely checking or unchecking certain things for an NPC will alter the attack data dramatically.  We won't be adding those types of things to TES5Edit.  Please understand that we don't directly support the use of TES5Edit when it is used outside the scope of its design which is conflict resolution.  Editing masses of entries, merging plugins, and creating compatibility patches for Skyrim overhauls may be possible.  However, please create your own separate thread apart from the official Bethesda developmental thread for TES5Edit.
-
-Trouble shooting plugins:
-
-Detecting issues with plugins is a big concern.  Nobody wants to start their game over due to constant crashes to desktop.  Detecting issues with plugins is very difficult and is unique depending on the other plugins in your load order.  Recently I had two plugins that I felt were not related to the cause of my own crash to desktop while in the character creation menu.  However, after uninstalling those plugins I was able to create a new character and experience uninterrupted game play.  I know many of you look to the TES5Edit development team for guidance but we are not modders.  We rarely use the Construction Kit unless we need to test the data in the records of the plugins.  As noted by FlaFlada (slightly revised) who posted on my YouTube channel: The main points if having issues are 1. Dirty mods. 2. Leveled list issues. 3. Improper mod placement.  The solutions are 1.Clean all mods except Skyrim.esm and Unofficial patches using TES5Edit. 2. Let BOSS sort your mods. 3. make a bashed patch using Wrye Bash.  And in this order: Update mods, activate plugins, BOSS sort mods, clean mods, create patches with TES5Edit, delete duplicate records in any user created patches already handled by Wrye Bash, drag bashed patch BELOW additional user created patches, rebuild Bash Patch. If issues persist contact mod makers.
-
-Contacting the mod authors is probably the last thing you should do after encountering an issue.  Unfortunately it's the first thing most people do.  As authors of TES5Edit we understand that there may be a lot of information to absorb for new users but give it time.  It took us time to inform ourselves about everything so you can't expect to understand it in a day.  I myself still look to the community and modders for advice and information to make sure I provide the most accurate guidance and information.  Telling us or a mod author that you can't read walls of text you can't comprehend doesn't help you at all when asking for help.  Most authors don't have the time to compile compatibility lists of plugins and list in detail how to manage your load order.  Questions like, "Is this updated for Skyrim 1.8?", "Is this compatible with [Insert Plugin Here]?", are easily answered by reading the documentation (if provided) or reading the description page.  I myself will be referring people more and more to community based resources, videos, and documentation so that I can work more directly with improving TES5Edit, updating Wrye Bash, updating plugins for Skyrim, and helping the BOSS team when possible.  For that reason I will be increasingly less understanding when it comes to questions that have been asked and answered before.
+We appreciate all the thanks and support from the community.  We would like to thank all the users that made bug reports on the Nexus or in the Bug Tracker.  Zilav and Hlp continue to make various bug fixes and improvements.  Zilav has added more scripting functions while Hlp is still working on having a working Save game editor.  Currently early testing only allows you to view save games.  We were very excited recently when ElminsterAU had some time to make some optimizations to the code.  The program loads plugins faster then before and uses less memory.
 
 Previous versions such as FO3Edit, FNVEdit, TES4Edit:
 
 We understand that sometimes updates to programs break things.  Please use the updates with caution.  However, please use them and then report issues so we can improve the program.  Our goal is to make all versions as bug free as possible and introduce new features that are useful for the modding community for all the Bethesda games this utility supports.
 
-TES5Edit Updates:
+xEdit Updates:
 
-With each new version of TES5Edit it is STRONGLY recommended to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect. 
+With each new version of xEdit it is recommended to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect.
 
 Version 3.1.0 contains the following changes:
 - speed optimizations
@@ -64,7 +51,7 @@ Version 3.1.0 contains the following changes:
 - drag&drop and "Remove from selected records" support for individual flags
 - fonts are changeable in Options
 - new scripting functions
-- new script autoexecution mode with -script:"test.pas" switch or when renamed to (TES4|TES5|FO3|FNV)Script.exe
+- new script auto execution mode with -script:"test.pas" switch or when renamed to (TES4|TES5|FO3|FNV)Script.exe
 - xEdit associates itself with *.tes5pas, *.tes4pas, *.fo3pas and *.fnvpas extensions
 - load Mod Organizer profile internally using command line parameter -moprofile:<profilename>
 - faster -quickshowconflicts switch processing
@@ -421,13 +408,3 @@ What's new in 1.2?
 - Mod groups are applied better under certain circumstances.
 - double clicking on a row in the right side treeview will open a window that shows the text of that field in a multi line memo. So you can now easily read scripts or books
 - everything I've forgotton about ;)
-
-Forum: http://forums.bethsoft.com/topic/1418088-relz-tes5edit/ 
-
-Be warned, this program uses a lot of memory. Performance on a system with less then 2GB of RAM will most likely be sub-optimal. Activating the filtering uses even more memory.
-
-TES5Edit also has a little brother: TES5Dump
-
-http://code.google.com/p/skyrim-plugin-decoding-project/downloads/list
-
-It's based on the same parsing engine and converts any given esp or esm into a text representation. (No conflict detection or funky colors here tho I'm afraid).
