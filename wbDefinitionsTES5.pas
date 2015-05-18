@@ -4044,6 +4044,7 @@ end;
 
 procedure wbNPCAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
+  wbCounterContainerAfterSet('COCT - Count', 'Items', aElement);
   wbCounterContainerAfterSet('SPCT - Count', 'Actor Effects', aElement);
   wbCounterContainerAfterSet('LLCT - Count', 'Leveled List Entries', aElement);
   wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
