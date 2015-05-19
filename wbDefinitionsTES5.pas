@@ -5438,6 +5438,7 @@ begin
       {0x00000040}  6, 'Has Tree LOD',
       {0x00000100}  8, 'Must Update Anims',
       {0x00000200}  9, 'Hidden From Local Map',
+      {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
       {0x00020000} 17, 'Dangerous',
       {0x00100000} 20, 'Ignore Object Interaction',
@@ -6907,6 +6908,7 @@ begin
 
   wbRecord(CONT, 'Container',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
       {0x02000000} 25, 'Obstacle',
       {0x04000000} 26, 'NavMesh Generation - Filter',
@@ -7227,6 +7229,7 @@ begin
 
   wbRecord(DOOR, 'Door',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
       {0x00800000} 23, 'Is Marker'
     ])), [
@@ -7603,6 +7606,7 @@ begin
   wbRecord(FURN, 'Furniture',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000080}  7, 'Is Perch',
+      {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
       {0x00800000} 23, 'Is Marker',
       {0x10000000} 28, 'Must Exit To Talk',
@@ -7798,6 +7802,7 @@ begin
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000100}  8, 'Must Update Anims',
       {0x00000200}  9, 'Hidden From Local Map',
+      {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
       {0x00080000} 19, 'Has Currents',
       {0x02000000} 25, 'Obstacle',
@@ -12688,7 +12693,10 @@ end;
 procedure DefineTES5o;
 begin
 
-  wbRecord(TREE, 'Tree', [
+  wbRecord(TREE, 'Tree',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00008000} 15, 'Has Distant LOD'
+    ])), [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -12705,7 +12713,15 @@ begin
     wbStruct(CNAM, 'Tree Data', [
       wbFloat('Trunk Flexibility'),
       wbFloat('Branch Flexibility'),
-      wbByteArray('Unknown', 32),
+      //wbByteArray('Unknown', 32),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
       wbFloat('Leaf Amplitude'),
       wbFloat('Leaf Frequency')
     ], cpNormal, True)
