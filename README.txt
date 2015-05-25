@@ -30,6 +30,12 @@ TES4Edit: http://www.nexusmods.com/oblivion/mods/11536
 TES5Edit: http://www.nexusmods.com/skyrim/mods/25859
 Mirror: https://github.com/TES5Edit/TES5Edit/releases
 
+xLODGen Versions:
+
+FO3LODGen: http://www.nexusmods.com/fallout3/mods/21174
+TES4LODGen: http://www.nexusmods.com/oblivion/mods/15781
+TES5LODGen: http://www.nexusmods.com/skyrim/mods/62698
+
 Future of xEdit:
 
 We appreciate all the thanks and support from the community.  We would like to thank all the users that made bug reports on the Nexus or in the Bug Tracker.  Zilav and Hlp continue to make various bug fixes and improvements.  Zilav has added more scripting functions while Hlp is still working on having a working Save game editor.  Currently early testing only allows you to view save games.  We were very excited recently when ElminsterAU had some time to make some optimizations to the code.  The program loads plugins faster then before and uses less memory.
