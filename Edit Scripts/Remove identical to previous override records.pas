@@ -1,7 +1,8 @@
 {
   Compare record to the previous override and remove if the same.
   This process depends on the plugins and their load order in xEdit!
-  Can be used to remove unneeded records from dynamic patch files.
+  Not to be used on DLC, mods, nor any part of the cleaning process.
+  Recomended use: for removing unneeded records from dynamic patch files.
 }
 unit RemoveITPO;
 
