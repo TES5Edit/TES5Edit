@@ -6,8 +6,8 @@ Updated for Skyrim by Hlp, Zilav and Sharlikran.
 Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available.  Starting from 3.1.0 we need to remind you that we only support version 1.9.0.32 of Skyrim. Update TES5Edit and Skyrim before you post in the forum.  If you see any references to xEdit that is a short way of saying all versions of the program which would cover FO3Edit, FNVEdit, TES4Edit and TES5Edit.
 
 TES5Edit Cleaning Guides:
-TES5Edit: http://www.creationkit.com/TES5Edit
-TES5Edit Cleaning Guide (Fewer Details): http://www.creationkit.com/index.php?title=TES5Edit_Cleaning_Guide_-_TES5Edit
+TES5Edit: http://www.creationkit.com/Category:TES5Edit
+TES5Edit Cleaning Guide (Fewer Details): http://www.creationkit.com/TES5Edit_Cleaning_Guide_-_TES5Edit
 TES5Edit Mod Cleaning Tutorial (Detailed Instructions with Pictures): http://www.creationkit.com/TES5Edit_Mod_Cleaning_Tutorial
 
 Current Official Threads:
@@ -28,7 +28,7 @@ FO3Edit: http://www.nexusmods.com/fallout3/mods/637
 FNVEdit: http://www.nexusmods.com/newvegas/mods/34703
 TES4Edit: http://www.nexusmods.com/oblivion/mods/11536
 TES5Edit: http://www.nexusmods.com/skyrim/mods/25859
-Mirror: http://1drv.ms/1o8jvih
+Mirror: https://github.com/TES5Edit/TES5Edit/releases
 
 Future of xEdit:
 
