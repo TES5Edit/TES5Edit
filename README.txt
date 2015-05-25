@@ -150,7 +150,7 @@ Misc:
 
 Version 3.0.29 contains the following changes:
 
-- new icon provided by moiman100 http://forums.nexusmods.com/index.php?/topic/921884-icons-for-tes5edit/
+- new icon provided by moiman100 http://moiman100.deviantart.com/art/Tes5edit-Icons-467927896
 - [TES5] more information is decoded (Records ARMA, NVSI, MOD2, LVLO).
 - [TES5] Every string value gets own ID when localizing plugin
 - [TES5] Fixed error when copying VMAD scripts using drag&drop
@@ -220,7 +220,7 @@ Version 3.0.25 contains the following changes:
 - "Options" menu
 - "Analyze Log" menu, currently supports
   * Skyrim papyrus log
-  * Oblivion RuntimeScriptProfiler log http://www.oblivion.nexusmods.com/mods/41863
+  * Oblivion RuntimeScriptProfiler log http://www.nexusmods.com/oblivion/mods/41863
 - Moved several not so often used menus to the "Other" submenu (Build ref/reachable, Merged Parch, Seq File, Localization, etc.)
 - Full expand key modifier changed to ALT
 
