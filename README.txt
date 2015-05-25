@@ -45,6 +45,7 @@ With each new version of xEdit it is recommended to restore plugins from backups
 Version 3.1.1 contains the following changes:
 - [FO3/FNV] Added PBEA record
 - improved record definitions
+- VMAD fix for empty arrays
 - xLODGen fix reading BSA archives
 - xLODGen impoved removing of mesh faces under landscape LOD
 - FNVLODGen and FO3LODGen
