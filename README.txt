@@ -1,6 +1,6 @@
 #summary TES5Edit Readme
 
-TES5Edit 3.1.0 by ElminsterAU
+TES5Edit 3.1.1 EXPERIMENTAL by ElminsterAU
 Updated for Skyrim by Hlp, Zilav and Sharlikran.
 
 Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available.  Starting from 3.1.0 we need to remind you that we only support version 1.9.0.32 of Skyrim. Update TES5Edit and Skyrim before you post in the forum.  If you see any references to xEdit that is a short way of saying all versions of the program which would cover FO3Edit, FNVEdit, TES4Edit and TES5Edit.
@@ -41,6 +41,13 @@ We understand that sometimes updates to programs break things.  Please use the u
 xEdit Updates:
 
 With each new version of xEdit it is recommended to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect.
+
+Version 3.1.1 contains the following changes:
+- [FO3/FNV] Added PBEA record
+- improved record definitions
+- xLODGen fix reading BSA archives
+- xLODGen impoved removing of mesh faces under landscape LOD
+- FNVLODGen and FO3LODGen
 
 Version 3.1.0 contains the following changes:
 - speed optimizations
@@ -101,7 +108,7 @@ Version 3.0.31 contains the following changes:
 - new scripting functions, UI controls and scripts: Assets manager, Assets browser (Ctrl+F3)
 - [TES5] added XCZR (encounter zone reference?) subrecord in REFR
 - [TES5] added PMIS record
-- [TES5] removed obsolete model subrecords: MODB, MOSD, FGGA, FGGS, FGTS 
+- [TES5] removed obsolete model subrecords: MODB, MOSD, FGGA, FGGS, FGTS
 - [TES5] updated LCTN definition (showed errors in USKP before)
 - [TES5] optional switch to resolve aliases (show ID and name)
 - [TES5] fixed error when copying PACK record
@@ -118,7 +125,7 @@ Version 3.0.30 contains the following changes:
 
 - Added Prev/NextMember for Record union. Use after adding a new one to select the apropriate.
 - Search for required master extended upward.
-- Added a second command line parameter to specify the game's ini file location. 
+- Added a second command line parameter to specify the game's ini file location.
 - Ctrl+A to select all in editor window.
 - "Jump to" option in record's header popup menu.
 - Enable/disable autosaves in options.
@@ -140,7 +147,7 @@ Misc:
 - Code modified for compatibility with both Delphi XE and XE3 in the same source files.
 - Added BaseName property so unsorted arrays can contain structured unions.
 - ByteArray length increased to 64 bits.
-  
+
 Version 3.0.29 contains the following changes:
 
 - new icon provided by moiman100 http://forums.nexusmods.com/index.php?/topic/921884-icons-for-tes5edit/
@@ -161,8 +168,8 @@ Fixes:
 - Compare to will not overwrite an existing file, nor will it leave temporary files behind.
 - issue 125 : Condition added are no longer empty.
 - issue 121 : Changing FormID of Region causes severe bugs. Reference building is delayed to after the change is done. Non region reference XCLR record are no longer removed.
-- issue 120/118 : Reference not updated while adding a master. Reference lookup during the addition were sometime unreliable. 
-- issue 117 : Bug in script Undelete and Disable References.pas 
+- issue 120/118 : Reference not updated while adding a master. Reference lookup during the addition were sometime unreliable.
+- issue 117 : Bug in script Undelete and Disable References.pas
 - issue 112 : Option "Simple Record" malfunctioning.
 - issue 111 : AV when saving subrecords with prefixed arrays. Sizing and memory allocation are done properly during every phase.
 - issue 108 : Very slow saving after editing ESM flag. Background updating limited as much as possible during saves.
@@ -259,7 +266,7 @@ Version 3.0.23 contains the following changes:
 - Filter option for deleted records.
 - Saving messages to [TES5/FNV/FO3/TES4]Edit_log.txt upon exit.
 - Fixed minor bug when Edit can't find game's folder. If your registry settings is invalid due to a Steam bug and Edit is unable to find your game, put it in the game's root folder where the game executable file is (Oblivion.exe, TESV.exe, etc).
-  
+
 Version 3.0.22 contains the following changes:
 
 - Skyrim Support.
@@ -334,7 +341,7 @@ Game Settings (GMST) will now be properly resolved based on EditorID, not FormID
 A field in the Region record was improperly defined as a Float field.
 
 What's new in 2.2.0?
-This version contains no major new functionality, but a number of bugfixes. Update is highly recommended. 
+This version contains no major new functionality, but a number of bugfixes. Update is highly recommended.
 
 TES4View is an advanced graphical esp viewer and conflict detector.
 
@@ -344,7 +351,7 @@ The tree view on the left side now shows all active masters and plugins in their
 
 Once a record has been selected the detailed contents of that record is shown on the right side. The detail view shows all versions of the selected record from all plugins which contain it. The left most column is the master. The right most column is the plugin that "wins". This is the version of the record that Oblivion sees.
 
-Both the detail view and the record list use the same color coding to signal the conflict state of individual fields (in the detail view) and the record overall (in the record list). 
+Both the detail view and the record list use the same color coding to signal the conflict state of individual fields (in the detail view) and the record overall (in the record list).
 
 Background color:
 White - Single Record
@@ -366,7 +373,7 @@ Conflict detection is not simply based on the existence of multiple records for 
 
 The record tree view on the left side has a context menu where you can activate filtering. Filtering is based on the same conflict categorization as the background and text color.
 
-Yes, filtering will take a while. It has to decode and compare the contents of every single record which turns up more then once. 
+Yes, filtering will take a while. It has to decode and compare the contents of every single record which turns up more then once.
 
 What's new in 1.1?
 
@@ -378,9 +385,9 @@ What's new in 1.1?
 
 What are Mod Groups?
 
-The answer to the "I installed FCOM and everything is red! What do I do now?" question. 
+The answer to the "I installed FCOM and everything is red! What do I do now?" question.
 
-There are groups of mods that, while raising heaps of conflict warnings, should be considered as non-conflicting. e.g. if you've installed FCOM then you are not interested in seeing conflicts between the mods that make up FCOM. The solution for this is to define a mod group. Mod groups are stored in a TES4View.modgroups file in the same directory as TES4View.exe. There already is such a file included with a few example mod groups defined. This is just an example and not meant as a guarantee that these specific mod groups are "clean" and conflicts can safely be ignored. 
+There are groups of mods that, while raising heaps of conflict warnings, should be considered as non-conflicting. e.g. if you've installed FCOM then you are not interested in seeing conflicts between the mods that make up FCOM. The solution for this is to define a mod group. Mod groups are stored in a TES4View.modgroups file in the same directory as TES4View.exe. There already is such a file included with a few example mod groups defined. This is just an example and not meant as a guarantee that these specific mod groups are "clean" and conflicts can safely be ignored.
 
 Not all mod groups defined in that file will necessarily show up in the selection list. Mod groups for which less then 2 plugins are currently active are filtered. If the load order of plugins doesn't match the order in the mod group it is also filtered.
 
