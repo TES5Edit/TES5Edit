@@ -2885,7 +2885,7 @@ var
   Worldspaces : TDynMainRecords;
 begin
   // TES5LODGen: selective lodgenning, no need to regenerate lod for all worldspaces like in Oblivion
-  if wbGameMode in [gmTES5, gmFNV] then begin
+  if wbGameMode in [gmTES5, gmFO3, gmFNV] then begin
     try
       mniNavGenerateLODClick(nil);
     finally
@@ -2896,7 +2896,7 @@ begin
   end;
 
   // TES4LODGen, rebuild for all worldspaces
-  try
+  if wbGameMode = gmTES4 then try
     frmMain.PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] LOD Generator: starting');
 
     Worldspaces := nil;
