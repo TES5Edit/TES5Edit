@@ -11420,6 +11420,7 @@ begin
     wbString(MODL, 'Slot Machine Model'),
     wbString(MOD2, 'Slot Machine Model (again?)'),
     wbString(MOD3, 'BlackJack Table Model'),
+    wbString(MODT, 'BlackJack Table Model related'),
     wbString(MOD4, 'Roulette Table Model'),
     wbRStruct('Slot Reel Textures', [
       wbString(ICON, 'Symbol 1'),
