@@ -1743,6 +1743,26 @@ function wbString(const aName      : string = 'Unknown';
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbStringDef; overload;
 
+function wbStringForward(const aSignature : TwbSignature;           // When the editor can leave chars after the ending #0
+                         const aName      : string = 'Unknown';
+                               aSize      : Integer = 0;
+                               aPriority  : TwbConflictPriority = cpNormal;
+                               aRequired  : Boolean = False;
+                               aDontShow  : TwbDontShowCallback = nil;
+                               aAfterSet  : TwbAfterSetCallback = nil;
+                               aGetCP     : TwbGetConflictPriority = nil)
+                                          : IwbSubRecordDef; overload;
+
+function wbString(      aForward   : Boolean = False;
+                  const aName      : string = 'Unknown';
+                        aSize      : Integer = 0;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
+                                   : IwbStringDef; overload;
+
 function wbStringT(const aSignature : TwbSignature;
                    const aName      : string = 'Unknown';
                          aSize      : Integer = 0;
@@ -3908,6 +3928,7 @@ type
   TwbStringDef = class(TwbValueDef, IwbStringDef)
   protected
     sdSize: Integer;
+    sdForward: boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority   : TwbConflictPriority;
@@ -3918,7 +3939,8 @@ type
                        aAfterSet   : TwbAfterSetCallback;
                        aDontShow   : TwbDontShowCallback;
                        aGetCP      : TwbGetConflictPriority; 
-                       aTerminator : Boolean); virtual;
+                       aTerminator : Boolean;
+					             aForward    : boolean = false); virtual;
     function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString; virtual;
     function ToStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
 
@@ -4894,6 +4916,32 @@ function wbString(const aName      : string = 'Unknown';
                                    : IwbStringDef; overload;
 begin
   Result := TwbStringDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False);
+end;
+
+function wbStringForward(const aSignature : TwbSignature;           // When the editor can leave chars after the ending #0
+                         const aName      : string = 'Unknown';
+                               aSize      : Integer = 0;
+                               aPriority  : TwbConflictPriority = cpNormal;
+                               aRequired  : Boolean = False;
+                               aDontShow  : TwbDontShowCallback = nil;
+                               aAfterSet  : TwbAfterSetCallback = nil;
+                               aGetCP     : TwbGetConflictPriority = nil)
+                                          : IwbSubRecordDef; overload;
+begin
+  Result := wbSubRecord(aSignature, aName, wbString(True, '', aSize, aPriority, aRequired, aDontShow, aAfterSet), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
+end;
+
+function wbString(      aForward   : Boolean = False;
+                  const aName      : string = 'Unknown';
+                        aSize      : Integer = 0;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
+                                   : IwbStringDef; overload;
+begin
+  Result := TwbStringDef.Create(aPriority, aRequired, aName, aSize, nil, aAfterSet, aDontShow, aGetCP, False, aForward);
 end;
 
 function wbStringT(const aSignature : TwbSignature;
@@ -9905,9 +9953,11 @@ constructor TwbStringDef.Create(aPriority   : TwbConflictPriority;
                                 aAfterSet   : TwbAfterSetCallback;
                                 aDontShow   : TwbDontShowCallback;
                                 aGetCP      : TwbGetConflictPriority;
-                                aTerminator : Boolean);
+                                aTerminator : Boolean;
+								                aForward    : boolean);
 begin
   sdSize := aSize;
+  sdForward := aForward;
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
 end;
 
@@ -10036,7 +10086,7 @@ end;
 
 function TwbStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString;
 var
-  Len : Cardinal;
+  aLen,Len : Cardinal;
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
   if sdSize > 0 then begin
@@ -10044,8 +10094,15 @@ begin
       Len := sdSize;
   end;
 
-  while (Len > 0) and (PAnsiChar(aBasePtr)[Pred(Len)] = #0) do
-    Dec(Len);
+  if sdForward then begin
+    aLen := 0;
+    while (aLen < Len) and (PAnsiChar(aBasePtr)[Succ(aLen)] <> #0) do
+      Inc(aLen);
+    if aLen<Len then
+      Len := Succ(aLen);
+  end else
+    while (Len > 0) and (PAnsiChar(aBasePtr)[Pred(Len)] = #0) do
+      Dec(Len);
 
   SetLength(Result, Len);
   if Len > 0 then
