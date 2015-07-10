@@ -368,27 +368,6 @@ begin
 end;
 
 //==========================================================================
-function HexArrayToStr(s: string): string;
-var
-  i: integer;
-  c: char;
-  hex: string;
-begin
-  Result := '';
-  i := 1;
-  while i < Length(s) do begin
-    if s <> ' ' then begin
-      c := Chr(StrToInt('$' + Copy(s, i, 2)));
-      if c = #0 then
-        Exit;
-      Result := Result + c;
-      i := i + 3;
-    end else
-      i := i + 1;
-  end;
-end;
-
-//==========================================================================
 function NormalizePath(value: string; atype: integer): string;
 begin
   if value = '' then
@@ -736,7 +715,7 @@ begin
         if not Assigned(ent) then Continue;
         ProcessAsset(ent);
         // additional weight models
-        if ((i mod 2 = 1) and (i1 = 2)) or ((i mod 2 = 0) and (i2 = 2)) then begin
+        if ((i mod 2 = 1) and (i1 = 2)) or ((i mod 2 = 0) and (i2 = 2)) or (optMode = wmCopy) then begin
           s := NormalizePath(GetEditValue(ent), atMesh);
           if SameText(Copy(s, Length(s)-5, 6), '_1.nif') then
             ProcessAssetEx(ent, Copy(s, 1, Length(s)-6) + '_0.nif', '', atMesh)
@@ -812,7 +791,7 @@ begin
       ents := ElementBySignature(e, 'MNAM');
       for i := 0 to Pred(ElementCount(ents)) do begin
         ent := ElementByIndex(ents, i);
-        s := NormalizePath(HexArrayToStr(GetElementEditValues(ent, 'Mesh')), atMesh);
+        s := NormalizePath(GetElementEditValues(ent, 'Mesh'), atMesh);
         ProcessAssetEx(e, s, 'Static LOD level ' + IntToStr(i) + ' mesh for ' + Name(e), atLODAsset);
       end;
     end

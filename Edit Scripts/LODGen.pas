@@ -69,27 +69,6 @@ var
   chkRemoveUnseen, chkIgnoreWater: TCheckBox;
   edExport, edDestination, edDataPath, edLODScale: TEdit;
 
-//==========================================================================
-function HexArrayToStr(s: string): string;
-var
-  i: integer;
-  c: char;
-  hex: string;
-begin
-  Result := '';
-  i := 1;
-  while i < Length(s) do begin
-    if s <> ' ' then begin
-      c := Chr(StrToInt('$' + Copy(s, i, 2)));
-      if c = #0 then
-        Exit;
-      Result := Result + c;
-      i := i + 3;
-    end else
-      i := i + 1;
-  end;
-end;
-
 //============================================================================
 // get index of Item in Items, or 0 if not found and Items are not empty
 function IndexIn(Items: TStrings; Item: string): integer;
@@ -151,11 +130,11 @@ begin
   else if LodType = iLODFull then
     Result := GetElementEditValues(rec, 'Model\MODL')
   else if LODType = iLOD4 then
-    Result := HexArrayToStr(GetElementEditValues(rec, 'MNAM\LOD #0 (Level 0)\Mesh'))
+    Result := GetElementEditValues(rec, 'MNAM\LOD #0 (Level 0)\Mesh')
   else if LODType = iLOD8 then
-    Result := HexArrayToStr(GetElementEditValues(rec, 'MNAM\LOD #1 (Level 1)\Mesh'))
+    Result := GetElementEditValues(rec, 'MNAM\LOD #1 (Level 1)\Mesh')
   else if LODType = iLOD16 then
-    Result := HexArrayToStr(GetElementEditValues(rec, 'MNAM\LOD #2 (Level 2)\Mesh'))
+    Result := GetElementEditValues(rec, 'MNAM\LOD #2 (Level 2)\Mesh')
   else if LODType = iLODFar then begin
     Result := GetElementEditValues(rec, 'Model\MODL');
     Result := Copy(Result, 1, Length(Result) - 4);
