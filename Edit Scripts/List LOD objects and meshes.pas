@@ -7,40 +7,6 @@ unit ListLOD;
 var
   slLOD, slTex: TStringList;
 
-function StrTo260HexArray(s: string): string;
-var
-  i: integer;
-  c: char;
-begin
-  Result := '';
-  for i := 1 to 260 do begin
-    if i <= Length(s) then c := Copy(s, i, 1)
-      else c := #0;
-    Result := Result + IntToHex(ord(c), 2) + ' '
-  end;
-  Result := Trim(Result);
-end;
-
-function HexArrayToStr(s: string): string;
-var
-  i: integer;
-  c: char;
-  hex: string;
-begin
-  Result := '';
-  i := 1;
-  while i < Length(s) do begin
-    if s <> ' ' then begin
-      c := Chr(StrToInt('$' + Copy(s, i, 2)));
-      if c = #0 then
-        Exit;
-      Result := Result + c;
-      i := i + 3;
-    end else
-      i := i + 1;
-  end;
-end;
-
 procedure ParseLOD(rec, lod: IInterface);
 var
   i, j: integer;
@@ -49,7 +15,7 @@ var
 begin
   for i := 0 to 3 do begin
     ent := ElementByIndex(lod, i);
-    mesh := HexArrayToStr(GetElementEditValues(ent, 'Mesh'));
+    mesh := GetElementEditValues(ent, 'Mesh');
     if mesh = '' then Continue;
     s := Format('%s;LOD %d;%s', [Name(rec), i, mesh]);
     NifTextureList(ResourceOpenData('', 'meshes\' + mesh), slTex);
@@ -67,11 +33,13 @@ end;
 
 function Process(e: IInterface): integer;
 begin
-  if Signature(e) = 'STAT' then
+  if Signature(e) = 'STAT' then begin
+    e := WinningOverride(e);
     if ElementExists(e, 'MNAM') then begin
       ParseLOD(e, ElementBySignature(e, 'MNAM'));
       Exit;
     end;
+  end;
 end;
 
 function Finalize: integer;
