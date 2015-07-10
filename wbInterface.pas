@@ -10086,7 +10086,7 @@ end;
 
 function TwbStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString;
 var
-  aLen,Len : Cardinal;
+  aLen, Len : Cardinal;
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
   if sdSize > 0 then begin
@@ -10096,10 +10096,14 @@ begin
 
   if sdForward then begin
     aLen := 0;
-    while (aLen < Len) and (PAnsiChar(aBasePtr)[Succ(aLen)] <> #0) do
+    while aLen < Len do begin
+      if PAnsiChar(aBasePtr)[aLen] = #0 then
+        Break;
       Inc(aLen);
-    if aLen<Len then
-      Len := Succ(aLen);
+    end;
+    Len := aLen;
+    //if aLen < Len then
+    //  Len := Succ(aLen);
   end else
     while (Len > 0) and (PAnsiChar(aBasePtr)[Pred(Len)] = #0) do
       Dec(Len);

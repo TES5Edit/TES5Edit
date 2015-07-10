@@ -293,6 +293,11 @@ begin
     raise Exception.Create('CreateProcess failed, error code ' + IntToStr(GetLastError));
 end;
 
+procedure JvInterpreter_Sleep(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Sleep(Cardinal(Args.Values[0]));
+end;
+
 procedure JvInterpreter_SelectDirectory(var Value: Variant; Args: TJvInterpreterArgs);
 var
   aDir: string;
@@ -1012,6 +1017,7 @@ begin
     AddFunction('ShellApi', 'ShellExecute', JvInterpreter_ShellExecute, 6, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction('ShellApi', 'ShellExecuteWait', JvInterpreter_ShellExecuteWait, 6, [varEmpty, varEmpty, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction('Windows', 'CreateProcessWait', JvInterpreter_CreateProcessWait, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction('Windows', 'Sleep', JvInterpreter_Sleep, 1, [varEmpty], varEmpty);
     AddFunction('FileCtrl', 'SelectDirectory', JvInterpreter_SelectDirectory, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
 
     { Math }

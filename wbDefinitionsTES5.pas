@@ -12653,8 +12653,8 @@ begin
     wbArray(MNAM, 'Distant LOD',
       wbStruct('LOD', [
         {>>> Contains null-terminated mesh filename followed by random data up to 260 bytes <<<}
-        // wbString(True, 'Mesh', 260)
-        wbByteArray('Mesh', 260, cpIgnore)
+        wbString(True, 'Mesh', 260, cpIgnore)
+        //wbByteArray('Mesh', 260, cpIgnore)
       ]), [
         'Level 0',
         'Level 1',
