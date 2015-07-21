@@ -140,6 +140,9 @@ type
     // list of trees when building a new LOD
     fTrees: array of TwbLodTES5Tree;
     fAtlas: TImageData;
+    // list of tree references FormID numbers to avoid duplicates
+    fRefFormIDs: TList;
+    fRefAllowDuplicates: Boolean;
   protected
     function GetListFileName: string;
     function GetAtlasFileName: string;
@@ -168,6 +171,8 @@ type
     property AtlasRect[Index: Integer]: TAtlasRect read GetAtlasRect;
     property Atlas: TImageData read fAtlas;
     property TreeByFormID[aFormID: Cardinal]: PwbLodTES5Tree read GetTreeByFormID;
+    property RefAllowDuplicates: Boolean read fRefAllowDuplicates write fRefAllowDuplicates;
+    property RefFormIDs: TList read fRefFormIDs;
   end;
 
   // handling BTT file
@@ -182,8 +187,8 @@ type
     procedure Clear;
     procedure LoadFromData(aData: TBytes);
     procedure SaveToFile(aFileName: string);
-    procedure AddReference(aFormID: Cardinal; aTreeIndex: Integer;
-      Pos: TwbVector; Scale: Single);
+    function AddReference(aFormID: Cardinal; aTreeIndex: Integer;
+      Pos: TwbVector; Scale: Single): Boolean;
     property FileName: string read GetBlockFileName;
   end;
 
@@ -411,6 +416,8 @@ begin
   fWorldspaceID := WorldspaceID;
   if fWorldspaceID = '' then
     fWorldspaceID := 'Tamriel';
+  RefAllowDuplicates := False;
+  fRefFormIDs := TList.Create;
 end;
 
 destructor TwbLodTES5TreeList.Destroy;
@@ -422,6 +429,7 @@ begin
   for i := Low(fTrees) to High(fTrees) do
     if fTrees[i].Image.Format <> ifUnknown then
       FreeImage(fTrees[i].Image);
+  fRefFormIDs.Free;
   inherited;
 end;
 
@@ -793,11 +801,16 @@ begin
   end;
 end;
 
-procedure TwbLodTES5TreeBlock.AddReference(aFormID: Cardinal; aTreeIndex: Integer;
-  Pos: TwbVector; Scale: Single);
+function TwbLodTES5TreeBlock.AddReference(aFormID: Cardinal; aTreeIndex: Integer;
+  Pos: TwbVector; Scale: Single): Boolean;
 var
   i, j: integer;
 begin
+  // check that FormID number is not duplicate
+  if (not TreeList.RefAllowDuplicates) and (TreeList.RefFormIDs.IndexOf(Pointer(aFormID and $00FFFFFF)) <> -1) then begin
+    Result := False;
+    Exit;
+  end;
   j := -1;
   for i := Low(Types) to High(Types) do
     if Types[i].Index = aTreeIndex then begin
@@ -820,6 +833,9 @@ begin
   Refs[j][i].Z := Pos.z;
   Refs[j][i].Scale := Scale;
   Refs[j][i].Rotation := 2*Pi*Random;
+
+  TreeList.RefFormIDs.Add(Pointer(aFormID and $00FFFFFF));
+  Result := True;
 end;
 
 function wbNormalizeResourceName(aName: string; aResType: TGameResourceType): string;
