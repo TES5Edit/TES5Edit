@@ -5101,6 +5101,7 @@ var
   REFRs               : TDynMainRecords;
   RefFormID           : Cardinal;
   Count, TreesCount   : Integer;
+  TreesDupCount       : Integer;
   TotalCount          : Integer;
   LodLevel            : Integer;
   i, j, k, l          : Integer;
@@ -5192,6 +5193,7 @@ begin
     StartTick := GetTickCount;
 
     TreesCount := 0;
+    TreesDupCount := 0;
     slLog := TStringList.Create;
     if wbGameMode in [gmFO3, gmFNV] then LodLevel := 8 else LodLevel := 4;
     Lst := TwbLodTES5TreeList.Create(aWorldspace.EditorID);
@@ -5305,8 +5307,10 @@ begin
         else
           RefFormID := (REFRs[i].FixedFormID and $00FFFFFF) or $01000000;
 
-        LOD4[k].AddReference(RefFormID, PTree^.Index, RefPos, Scale);
-        Inc(TreesCount);
+        if LOD4[k].AddReference(RefFormID, PTree^.Index, RefPos, Scale) then
+          Inc(TreesCount)
+        else
+          Inc(TreesDupCount);
 
         if ForceTerminate then
           Abort;
@@ -5374,6 +5378,8 @@ begin
         end;
 
         PostAddMessage('[' + aWorldspace.EditorID + '] Trees LOD Done.');
+        if TreesDupCount <> 0 then
+          PostAddMessage('<Warning: ' + IntToStr(TreesDupCount) + ' duplicate FormID numbers of trees references were detected, excluded from LOD>');
       end;
     except on E: Exception do
       PostAddMessage('[' + aWorldspace.EditorID + '] Trees LOD generation error: ' + E.Message);
