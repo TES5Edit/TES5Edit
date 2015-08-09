@@ -7023,7 +7023,12 @@ begin
           recContainsEditorID := True;
 
       end;
-      recSignatures.AddObject(Sig, Pointer(i) );
+      try
+        recSignatures.AddObject(Sig, Pointer(i) );
+      except
+        on E: Exception do
+          raise Exception.Create('Duplicate definition ' + Sig + ' in allow unordered record ' + aSignature);
+      end;
     end;
   end;
 
