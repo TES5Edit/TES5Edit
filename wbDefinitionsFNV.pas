@@ -10682,7 +10682,14 @@ begin
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO4S
     ], []),
-    wbRStruct('Model with Mods', [
+    wbString(MWD1, 'Model - Mod 1'),
+    wbString(MWD2, 'Model - Mod 2'),
+    wbString(MWD3, 'Model - Mod 1 and 2'),
+    wbString(MWD4, 'Model - Mod 3'),
+    wbString(MWD5, 'Model - Mod 1 and 3'),
+    wbString(MWD6, 'Model - Mod 2 and 3'),
+    wbString(MWD7, 'Model - Mod 1, 2 and 3'),
+    {wbRStruct( 'Model with Mods', [
       wbString(MWD1, 'Mod 1'),
       wbString(MWD2, 'Mod 2'),
       wbString(MWD3, 'Mod 1 and 2'),
@@ -10690,14 +10697,21 @@ begin
       wbString(MWD5, 'Mod 1 and 3'),
       wbString(MWD6, 'Mod 2 and 3'),
       wbString(MWD7, 'Mod 1, 2 and 3')
-    ], [], cpNormal, False, nil, True),
+    ], [], cpNormal, False, nil, True),}
 
     wbString(VANM, 'VATS Attack Name'),
     wbString(NNAM, 'Embedded Weapon Node'),
 
     wbFormIDCk(INAM, 'Impact DataSet', [IPDS]),
     wbFormIDCk(WNAM, '1st Person Model', [STAT]),
-    wbRStruct('1st Person Models with Mods', [
+    wbFormIDCk(WNM1, '1st Person Model - Mod 1', [STAT]),
+    wbFormIDCk(WNM2, '1st Person Model - Mod 2', [STAT]),
+    wbFormIDCk(WNM3, '1st Person Model - Mod 1 and 2', [STAT]),
+    wbFormIDCk(WNM4, '1st Person Model - Mod 3', [STAT]),
+    wbFormIDCk(WNM5, '1st Person Model - Mod 1 and 3', [STAT]),
+    wbFormIDCk(WNM6, '1st Person Model - Mod 2 and 3', [STAT]),
+    wbFormIDCk(WNM7, '1st Person Model - Mod 1, 2 and 3', [STAT]),
+    {wbRStruct('1st Person Models with Mods', [
       wbFormIDCk(WNM1, 'Mod 1', [STAT]),
       wbFormIDCk(WNM2, 'Mod 2', [STAT]),
       wbFormIDCk(WNM3, 'Mod 1 and 2', [STAT]),
@@ -10705,14 +10719,21 @@ begin
       wbFormIDCk(WNM5, 'Mod 1 and 3', [STAT]),
       wbFormIDCk(WNM6, 'Mod 2 and 3', [STAT]),
       wbFormIDCk(WNM7, 'Mod 1, 2 and 3', [STAT])
-    ], [], cpNormal, False, nil, True),
-    wbRStruct('Weapon Mods', [
+    ], [], cpNormal, False, nil, True),}
+    wbFormIDCk(WMI1, 'Weapon Mod 1', [IMOD]),
+    wbFormIDCk(WMI2, 'Weapon Mod 2', [IMOD]),
+    wbFormIDCk(WMI3, 'Weapon Mod 3', [IMOD]),
+    {wbRStruct('Weapon Mods', [
       wbFormIDCk(WMI1, 'Mod 1', [IMOD]),
       wbFormIDCk(WMI2, 'Mod 2', [IMOD]),
       wbFormIDCk(WMI3, 'Mod 3', [IMOD])
-    ], [], cpNormal, False, nil, True),
-    wbFormIDCk(SNAM, 'Sound - Gun - Shoot 3D', [SOUN]),
-    wbFormIDCk(SNAM, 'Sound - Gun - Shoot Dist', [SOUN]),
+    ], [], cpNormal, False, nil, True),}
+    wbRStruct('Sound - Gun', [
+      wbFormIDCk(SNAM, 'Shoot 3D', [SOUN]),
+      wbFormIDCk(SNAM, 'Shoot Dist', [SOUN])
+    ], []),
+    //wbFormIDCk(SNAM, 'Sound - Gun - Shoot 3D', [SOUN]),
+    //wbFormIDCk(SNAM, 'Sound - Gun - Shoot Dist', [SOUN]),
     wbFormIDCk(XNAM, 'Sound - Gun - Shoot 2D', [SOUN]),
     wbFormIDCk(NAM7, 'Sound - Gun - Shoot 3D Looping', [SOUN]),
     wbFormIDCk(TNAM, 'Sound - Melee - Swing / Gun - No Ammo', [SOUN]),
@@ -10720,8 +10741,12 @@ begin
     wbFormIDCk(UNAM, 'Sound - Idle', [SOUN]),
     wbFormIDCk(NAM9, 'Sound - Equip', [SOUN]),
     wbFormIDCk(NAM8, 'Sound - Unequip', [SOUN]),
-    wbFormIDCk(WMS1, 'Sound - Mod 1 - Shoot 3D', [SOUN]),
-    wbFormIDCk(WMS1, 'Sound - Mod 1 - Shoot Dist', [SOUN]),
+    wbRStruct('Sound - Mod 1', [
+      wbFormIDCk(WMS1, 'Shoot 3D', [SOUN]),
+      wbFormIDCk(WMS1, 'Shoot Dist', [SOUN])
+    ], []),
+    //wbFormIDCk(WMS1, 'Sound - Mod 1 - Shoot 3D', [SOUN]),
+    //wbFormIDCk(WMS1, 'Sound - Mod 1 - Shoot Dist', [SOUN]),
     wbFormIDCk(WMS2, 'Sound - Mod 1 - Shoot 2D', [SOUN]),
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
@@ -10897,7 +10922,7 @@ begin
      wbByteArray('Unused', 2)
     ]),
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
-  ], False, nil, cpNormal, False, wbWEAPAfterLoad);
+  ], True, nil, cpNormal, False, wbWEAPAfterLoad);
 
   if wbSimpleRecords then
     wbRecord(WRLD, 'Worldspace', [
