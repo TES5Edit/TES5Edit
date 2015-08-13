@@ -5782,8 +5782,8 @@ begin
       wbInteger('Flags', itU16, wbFlags([ // Only a byte or 2 distincts byte
         'Modulates Voice'
       ])),
-      wbInteger('Unknown', itU32),
-      wbByteArray('Unknown', 4)
+      wbFloat('DT'),
+      wbByteArray('Unused', 4)
     ], cpNormal, True, nil, 2)
   ]);
 
