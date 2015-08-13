@@ -5010,24 +5010,21 @@ var
   end;
 
   function GetLODMeshName(const aStat: IwbMainRecord; const aLODLevel: Integer): string;
-  var
-    i   : integer;
-    arr : TBytes;
   begin
     Result := '';
     // full mesh
     if aLODLevel = -1 then
       Result := aStat.ElementEditValues['Model\MODL']
-    else if (wbGameMode = gmTES5) and aStat.ElementExists['MNAM'] then begin
-      arr := aStat.ElementNativeValues[Format('MNAM\LOD #%d (Level %d)\Mesh', [aLODLevel, aLODLevel])];
-      if Length(arr) > 0 then
-        for i := Low(arr) to High(arr) do
-          if arr[i] = 0 then
-            Break
-          else
-            Result := Result + Chr(arr[i]);
+    else if wbGameMode = gmTES5 then begin
+      // use MNAM data of STAT record for lod meshes if exists
+      if aStat.ElementExists['MNAM'] then
+        Result := aStat.ElementEditValues[Format('MNAM\LOD #%d (Level %d)\Mesh', [aLODLevel, aLODLevel])]
+      // otherwise meshes with the same path and name as full one with _lod_0, _lod_1 and _lod_2 suffixes
+      else
+        Result := ChangeFileExt(aStat.ElementEditValues['Model\MODL'], '') + '_lod_' + IntToStr(aLODLevel) + '.nif';
     end
     else if (wbGameMode in [gmFO3, gmFNV]) and (aLODLevel = 0) then
+      // fallouts always use _lod mesh only
       Result := ChangeFileExt(aStat.ElementEditValues['Model\MODL'], '') + '_lod.nif';
 
     Result := wbNormalizeResourceName(Result, resMesh);
@@ -5411,13 +5408,12 @@ begin
     try
     try
       for i := Low(REFRs) to High(REFRs) do begin
-        // only for STAT, SCOL and ACTI
         StatRec := REFRs[i].BaseRecord;
         if not Assigned(StatRec) then
           Continue;
 
-        // Skyrim: only STAT objects
-        if (wbGameMode = gmTES5) and (StatRec.Signature <> 'STAT') then
+        // Skyrim: only STAT and TREEE objects
+        if (wbGameMode = gmTES5) and ((StatRec.Signature <> 'STAT') and (StatRec.Signature <> 'TREE')) then
           Continue;
 
         // Fallouts: only STAT, SCOL and ACTI objects
@@ -5470,7 +5466,9 @@ begin
               if (wbGameMode = gmTES5) and StatRec.ElementExists['DNAM\Material'] and Supports(StatRec.ElementByPath['DNAM\Material'].LinksTo, IwbMainRecord, Ovr) then begin
                 mat := LowerCase(Ovr.EditorID);
                 if Pos('snow', mat) > 0 then mat := 'Snow' else
-                  if Pos('ash', mat) > 0 then mat := 'Ash';
+                  if Pos('ash', mat) > 0 then mat := 'Ash' else
+                    // Sheson: So the material name needs to be 'PassThru', then it will simply use the entire shader effect/lighting as is in the source fie.
+                    if Pos('passthru', mat) > 0 then mat := 'PassThru';
               end else
                 mat := '';
               // a tab separated string of Editor ID, flags, material, full mesh and lod files
@@ -7754,12 +7752,12 @@ end;
 procedure TfrmMain.mniNavChangeFormIDClick(Sender: TObject);
 var
   s                           : string;
-  i, j                        : Integer;
+  i, j, k                     : Integer;
   NewFormID                   : Cardinal;
   OldFormID                   : Cardinal;
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
-  ReferencedBy                : TDynMainRecords;
+  ReferencedBy, Overrides     : TDynMainRecords;
   Nodes                       : TNodeArray;
 //  NewFileID                   : Integer;
   OldFileID                   : Integer;
@@ -7886,7 +7884,29 @@ begin
 
     AddMessage('Record is referenced by '+IntToStr(Length(ReferencedBy))+' other record(s)');
     try
-      MainRecord.LoadOrderFormID := NewFormID;
+      if Master.OverrideCount <> 0 then begin
+        k := -1;
+        // store overrides since they change on the go when renumbering FormIDs
+        SetLength(Overrides, Master.OverrideCount);
+        for i := 0 to Pred(Master.OverrideCount) do begin
+          Overrides[i] := Master.Overrides[i];
+          // index of the focused record in overrides list
+          if Overrides[i].Equals(MainRecord) then k := i;
+        end;
+        // if it is not the last override and user confirms
+        if (k < Pred(Length(Overrides))) and (MessageDlg('Record '+MainRecord.Name+' has later overrides, update them too?', mtConfirmation, [mbYes, mbNo], 0) = mrYes) then begin
+          // happens when master record is selected which is not in the list of overrides, renumber all overrides
+          if k = -1 then k := 0;
+          // change this record and all later overrides
+          for i := k to Pred(Length(Overrides)) do begin
+            //AddMessage('Renumbering ' + Overrides[i].FullPath);
+            Overrides[i].LoadOrderFormID := NewFormID;
+          end;
+        end;
+      end;
+
+      if MainRecord.LoadOrderFormID <> NewFormID then
+        MainRecord.LoadOrderFormID := NewFormID;
 
       NodeData.ConflictAll := caUnknown;
       NodeData.ConflictThis := ctUnknown;
