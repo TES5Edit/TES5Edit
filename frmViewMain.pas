@@ -5266,6 +5266,11 @@ begin
         then
           Continue;
 
+        // Skyrim: skip persistent "Is Full LOD" tree refs
+        if wbGameMode = gmTES5 then
+          if REFRs[i].IsPersistent and (REFRs[i].Flags._Flags and $00010000 <> 0) then
+            Continue;
+
         PTree := Lst.TreeByFormID[TreeRec.LoadOrderFormID];
         // adding a new tree to the list
         if not Assigned(PTree) then begin
