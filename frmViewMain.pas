@@ -4707,11 +4707,16 @@ begin
       if Length(res) = 0 then
         Continue;
 
-      if wbGameMode = gmTES5 then
-        NifTexturesUVRange(res[High(res)].GetData, UVRange, slNifTextures)
-      else
-        // fallouts nif scanner doesn't support them fully, grab all textures for now
-        NifTextures(res[High(res)].GetData, slNifTextures);
+      try
+        if wbGameMode = gmTES5 then
+          NifTexturesUVRange(res[High(res)].GetData, UVRange, slNifTextures)
+        else
+          // fallouts nif scanner doesn't support them fully, grab all textures for now
+          NifTextures(res[High(res)].GetData, slNifTextures);
+      except
+        on E: Exception do
+          raise Exception.Create(E.Message + ' in ' + slMeshes[i]);
+      end;
 
       for j := 0 to Pred(slNifTextures.Count) do begin
         // get only texture at index 0 in BSTextureSet nodes (diffuse texture)
