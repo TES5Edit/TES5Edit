@@ -3,7 +3,7 @@ object frmOptions: TfrmOptions
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Options'
-  ClientHeight = 379
+  ClientHeight = 402
   ClientWidth = 466
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,30 +20,31 @@ object frmOptions: TfrmOptions
   OnKeyDown = FormKeyDown
   DesignSize = (
     466
-    379)
+    402)
   PixelsPerInch = 96
   TextHeight = 13
   object pcOptions: TPageControl
     Left = 0
     Top = 0
     Width = 466
-    Height = 337
+    Height = 363
     ActivePage = tsGeneral
     Align = alTop
     TabOrder = 0
     object tsGeneral: TTabSheet
       Caption = 'General'
       ImageIndex = 1
+      ExplicitHeight = 313
       object Label5: TLabel
         Left = 16
-        Top = 280
+        Top = 304
         Width = 64
         Height = 13
         Caption = 'Column width'
       end
       object cbIKnow: TCheckBox
         Left = 298
-        Top = 278
+        Top = 302
         Width = 137
         Height = 17
         Caption = 'I know what I am doing'
@@ -109,7 +110,7 @@ object frmOptions: TfrmOptions
       end
       object edColumnWidth: TEdit
         Left = 86
-        Top = 276
+        Top = 300
         Width = 51
         Height = 21
         TabOrder = 8
@@ -170,20 +171,25 @@ object frmOptions: TfrmOptions
       end
       object cbClampFormID: TCheckBox
         Left = 16
-        Top = 247
+        Top = 271
         Width = 105
         Height = 17
         Hint = 'Set FormID index to the number of masters if greater'
         Caption = 'Clamp FormIDs'
         TabOrder = 14
       end
+      object cbShowGroupRecordCount: TCheckBox
+        Left = 16
+        Top = 247
+        Width = 233
+        Height = 17
+        Caption = 'Show elements count for group records'
+        TabOrder = 15
+      end
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitHeight = 309
       object Label1: TLabel
         Left = 16
         Top = 9
@@ -251,10 +257,7 @@ object frmOptions: TfrmOptions
     object tsDoNotBuildRefs: TTabSheet
       Caption = 'References building'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitHeight = 309
       object Label2: TLabel
         Left = 16
         Top = 13
@@ -293,10 +296,7 @@ object frmOptions: TfrmOptions
     object tsUISettings: TTabSheet
       Caption = 'UI Settings'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitHeight = 309
       object Label3: TLabel
         Left = 16
         Top = 16
@@ -405,22 +405,24 @@ object frmOptions: TfrmOptions
   end
   object btnOK: TButton
     Left = 302
-    Top = 346
+    Top = 369
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 1
+    ExplicitTop = 346
   end
   object btnCancel: TButton
     Left = 383
-    Top = 346
+    Top = 369
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
+    ExplicitTop = 346
   end
 end

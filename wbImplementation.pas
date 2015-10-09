@@ -2238,7 +2238,7 @@ begin
   flFileName := aFileName;
   Header := TwbMainRecord.Create(Self, wbHeaderSignature, 0);
   if wbGameMode = gmFNV then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.32'
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.34'
   else if wbGameMode = gmFO3 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.94'
   else if wbGameMode = gmTES3 then
