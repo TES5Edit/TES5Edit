@@ -33,7 +33,9 @@ uses
 
 function wbDistance(const a, b: TwbVector): Single; overload
 function wbDistance(const a, b: IwbMainRecord): Single; overload;
+function wbStringToSignatures(aSignatures: string): TwbSignatures;
 function wbGetSiblingREFRsWithin(const aMainRecord: IwbMainRecord; aDistance: Single): TDynMainRecords;
+function wbGetSiblingRecords(const aElement: IwbElement; aSignatures: TwbSignatures; aOverrides: Boolean): TDynMainRecords;
 function FindMatchText(Strings: TStrings; const Str: string): Integer;
 function IsFileESM(const aFileName: string): Boolean;
 function IsFileESP(const aFileName: string): Boolean;
@@ -187,6 +189,27 @@ begin
   Result := wbDistance(PosA, PosB);
 end;
 
+function wbStringToSignatures(aSignatures: string): TwbSignatures;
+var
+  i: integer;
+  s: AnsiString;
+begin
+  with TStringList.Create do try
+    if Pos(',', aSignatures) <> 0 then Delimiter := ',' else Delimiter := ' ';
+    StrictDelimiter := True;
+    DelimitedText := aSignatures;
+    for i := 0 to Pred(Count) do begin
+      s := AnsiString(Strings[i]);
+      if Length(s) >= SizeOf(TwbSignature) then begin
+        SetLength(Result, Succ(Length(Result)));
+        System.Move(s[1], Result[Pred(Length(Result))][0], SizeOf(TwbSignature));
+      end;
+    end;
+  finally
+    Free;
+  end;
+end;
+
 function wbGetSiblingREFRsWithin(const aMainRecord: IwbMainRecord; aDistance: Single): TDynMainRecords;
 var
   Count       : Integer;
@@ -252,6 +275,62 @@ begin
     j := 0;
     for i := Succ(Low(Result)) to High(Result) do begin
       if (Result[j].LoadOrderFormID <> Result[i].LoadOrderFormID) and not (Result[j].IsDeleted) then
+        Inc(j);
+      if j <> i then
+        Result[j] := Result[i];
+    end;
+    SetLength(Result, Succ(j));
+  end;
+end;
+
+function wbGetSiblingRecords(const aElement: IwbElement; aSignatures: TwbSignatures; aOverrides: Boolean): TDynMainRecords;
+
+  procedure FindRecords(const aElement: IwbElement; var aSignatures: TwbSignatures; var Records: TDynMainRecords; var Count: Integer);
+  var
+    MainRecord : IwbMainRecord;
+    Container  : IwbContainerElementRef;
+    i          : Integer;
+  begin
+    if Supports(aElement, IwbMainRecord, MainRecord) then begin
+      for i := Low(aSignatures) to High(aSignatures) do
+        if MainRecord.Signature = aSignatures[i] then begin
+          if High(Records) < Count then
+            SetLength(Records, Length(Records) * 2);
+          Records[Count] := MainRecord;
+          Inc(Count);
+          Break;
+        end;
+    end else if Supports(aElement, IwbContainerElementRef, Container) then
+      for i := 0 to Pred(Container.ElementCount) do
+        FindRecords(Container.Elements[i], aSignatures, Records, Count);
+  end;
+
+var
+  MainRecord, Master  : IwbMainRecord;
+  i, j, Count         : Integer;
+begin
+  Count := 0;
+  SetLength(Result, 4096);
+  if Supports(aElement, IwbMainRecord, MainRecord) then begin
+    FindRecords(MainRecord.ChildGroup, aSignatures, Result, Count);
+    // include overrides from plugins loaded later for that record
+    if aOverrides then begin
+      Master := MainRecord.MasterOrSelf;
+      for i := 0 to Pred(Master.OverrideCount) do
+        if Master.Overrides[i]._File.LoadOrder > MainRecord._File.LoadOrder then
+          FindRecords(Master.Overrides[i].ChildGroup, aSignatures, Result, Count);
+    end;
+  end else
+    // if Group or File object is passed, no overrides
+    FindRecords(aElement, aSignatures, Result, Count);
+
+  SetLength(Result, Count);
+  // removing duplicates (overridden records)
+  if aOverrides and (Length(Result) > 1) then begin
+    wbMergeSort(@Result[0], Length(Result), CompareElementsFormIDAndLoadOrder);
+    j := 0;
+    for i := Succ(Low(Result)) to High(Result) do begin
+      if Result[j].LoadOrderFormID <> Result[i].LoadOrderFormID then
         Inc(j);
       if j <> i then
         Result[j] := Result[i];

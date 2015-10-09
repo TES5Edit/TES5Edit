@@ -52,6 +52,7 @@ type
     pnlFontViewer: TPanel;
     cbActorTemplateHide: TCheckBox;
     cbClampFormID: TCheckBox;
+    cbShowGroupRecordCount: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);

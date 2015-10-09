@@ -3623,6 +3623,7 @@ begin
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
   wbSortGroupRecord := Settings.ReadBool('Options', 'SortGroupRecord', wbSortGroupRecord);
   wbRemoveOffsetData := Settings.ReadBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
+  wbShowGroupRecordCount := Settings.ReadBool('Options', 'ShowGroupRecordCount', wbShowGroupRecordCount);
   wbClampFormID := Settings.ReadBool('Options', 'ClampFormID', wbClampFormID);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
@@ -10739,6 +10740,7 @@ begin
     cbSortGroupRecord.Checked := wbSortGroupRecord;
     cbRemoveOffsetData.Checked := wbRemoveOffsetData;
     cbShowFlagEnumValue.Checked := wbShowFlagEnumValue;
+    cbShowGroupRecordCount.Checked := wbShowGroupRecordCount;
     cbSimpleRecords.Checked := wbSimpleRecords;
     cbClampFormID.Checked := wbClampFormID;
     edColumnWidth.Text := IntToStr(wbColumnWidth);
@@ -10770,6 +10772,7 @@ begin
     wbSortGroupRecord := cbSortGroupRecord.Checked;
     wbRemoveOffsetData := cbRemoveOffsetData.Checked;
     wbShowFlagEnumValue := cbShowFlagEnumValue.Checked;
+    wbShowGroupRecordCount := cbShowGroupRecordCount.Checked;
     wbSimpleRecords := cbSimpleRecords.Checked;
     wbClampFormID := cbClampFormID.Checked;
     wbColumnWidth := StrToIntDef(edColumnWidth.Text, wbColumnWidth);
@@ -10798,6 +10801,7 @@ begin
     Settings.WriteBool('Options', 'SortGroupRecord', wbSortGroupRecord);
     Settings.WriteBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
     Settings.WriteBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
+    Settings.WriteBool('Options', 'ShowGroupRecordCount', wbShowGroupRecordCount);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
     Settings.WriteBool('Options', 'ClampFormID', wbClampFormID);
     Settings.WriteInteger('Options', 'ColumnWidth', wbColumnWidth);
@@ -13887,6 +13891,9 @@ begin
         GroupRecord := Element as IwbGroupRecord;
         if Column < 1 then
           CellText := GroupRecord.ShortName;
+        if wbShowGroupRecordCount and (Column = 2) then
+          if GroupRecord.ElementCount <> 0 then
+            CellText := IntToStr(GroupRecord.ElementCount);
         Exit;
       end
       else if Element.ElementType = etMainRecord then begin

@@ -14,21 +14,20 @@
 
 unit wbNifScanner;
 
-{$I wbDefines.inc}
-
 interface
 
 uses
   SysUtils,
   Classes;
 
-function NifBlockList(aNifData: TBytes; aBlocks: TStrings): Boolean;
-function NifTextures(aNifData: TBytes; aTextures: TStrings): Boolean;
-function NifTexturesUVRange(aNifData: TBytes; UVRange: Single; aTextures: TStrings): Boolean;
-
-implementation
+const
+  SLSF1_Environment_Mapping = 1 shl 7;
+  SLSF2_Vertex_Colors = 1 shl 5;
 
 type
+  TNifCheck = (ncBSX, ncStringIndex, ncMultiName, ncShader, ncVertexColor);
+  TNifCheckSet = set of TNifCheck;
+
   TNodeRef = Integer;
   TNiFlags = ShortInt;
   TNiFloat = Single;
@@ -87,6 +86,17 @@ type
   end;
 
   TNodeBSFadeNode = class(TBaseNiNode)
+  public
+    procedure Load(aStream: TStream); override;
+  end;
+
+  TNodeBSXFlags = class(TBaseNiNode)
+  public
+    Flags: Cardinal;
+    procedure Load(aStream: TStream); override;
+  end;
+
+  TNodeNiAlphaProperty = class(TBaseNiNode)
   public
     procedure Load(aStream: TStream); override;
   end;
@@ -164,6 +174,11 @@ type
     procedure Load(aStream: TStream); override;
   end;
 
+  TNodeBSLODTriShape = class(TNodeNiTriShape)
+  public
+    procedure Load(aStream: TStream); override;
+  end;
+
   TNiFile = class
   public
     Header: TNiHeader;
@@ -173,6 +188,16 @@ type
     procedure Load(aStream: TStream);
     function GetNode(aRef: TNodeRef): TBaseNiNode;
   end;
+
+function NifBlockList(aNifData: TBytes; aBlocks: TStrings): Boolean;
+function NifTextures(aNifData: TBytes; aTextures: TStrings): Boolean;
+function NifTexturesUVRange(aNifData: TBytes; UVRange: Single; aTextures: TStrings): Boolean;
+
+var
+  wbWarningCallback: procedure(aCheck: TNifCheck; aNode: TBaseNiNode; aMessage: string);
+
+
+implementation
 
 //===========================================================================
 function TBaseNiNode.ReadLineString: string;
@@ -222,8 +247,11 @@ begin
     i := data.ReadInt32;
     if (Length(NiFile.Header.NodeStrings) <> 0) and (i >= Low(NiFile.Header.NodeStrings)) and (i <= High(NiFile.Header.NodeStrings)) then
       Result := NiFile.Header.NodeStrings[i]
-    else
+    else begin
+      if Assigned(wbWarningCallback) and (i <> -1) then
+        wbWarningCallback(ncStringIndex, Self, 'String index ' + IntToStr(i) + ' out of range in NiHeader strings table');
       Result := '';
+    end;
   end else
     Result := ReadSizedString;
 end;
@@ -363,6 +391,21 @@ begin
 end;
 
 //===========================================================================
+procedure TNodeBSXFlags.Load(aStream: TStream);
+begin
+  inherited;
+  Name := ReadString;
+  Flags := data.ReadUInt32;
+end;
+
+//===========================================================================
+procedure TNodeNiAlphaProperty.Load(aStream: TStream);
+begin
+  inherited;
+  Name := ReadString;
+end;
+
+//===========================================================================
 procedure TNodeBSShaderTextureSet.Load(aStream: TStream);
 var
   i, n: Cardinal;
@@ -492,11 +535,11 @@ begin
   if HasNormals then begin
     SetLength(Normals, NumVertices);
     aStream.Read(Normals[0], SizeOf(TNiVector3) * NumVertices);
-    if BSNumUVSets and 1 <> 0 then begin
+    if BSNumUVSets and 61440 <> 0 then begin
       SetLength(Tangents, NumVertices);
       aStream.Read(Tangents[0], SizeOf(TNiVector3) * NumVertices);
     end;
-    if BSNumUVSets and 4096 <> 0 then begin
+    if BSNumUVSets and 61440 <> 0 then begin
       SetLength(Bitangents, NumVertices);
       aStream.Read(Bitangents[0], SizeOf(TNiVector3) * NumVertices);
     end;
@@ -522,6 +565,13 @@ end;
 
 //===========================================================================
 procedure TNodeNiTriStrips.Load(aStream: TStream);
+begin
+  // same as NiTriShape loader
+  inherited;
+end;
+
+//===========================================================================
+procedure TNodeBSLODTriShape.Load(aStream: TStream);
 begin
   // same as NiTriShape loader
   inherited;
@@ -576,10 +626,14 @@ begin
     aStream.Position := Header.NodeOffsets[i];
     if NodeType = 'NiNode' then
       Nodes[i] := TNodeNiNode.Create(Self, i)
+    else if NodeType = 'BSXFlags' then
+      Nodes[i] := TNodeBSXFlags.Create(Self, i)
     else if NodeType = 'NiTriShape' then
       Nodes[i] := TNodeNiTriShape.Create(Self, i)
     else if NodeType = 'NiTriShapeData' then
       Nodes[i] := TNodeNiTriShapeData.Create(Self, i)
+    else if NodeType = 'BSLODTriShape' then
+      Nodes[i] := TNodeBSLODTriShape.Create(Self, i)
     else if NodeType = 'NiTriStrips' then
       Nodes[i] := TNodeNiTriStrips.Create(Self, i)
     else if NodeType = 'BSFadeNode' then
@@ -590,6 +644,8 @@ begin
       Nodes[i] := TNodeBSLightingShaderProperty.Create(Self, i)
     else if NodeType = 'BSEffectShaderProperty' then
       Nodes[i] := TNodeBSEffectShaderProperty.Create(Self, i)
+    else if NodeType = 'NiAlphaProperty' then
+      Nodes[i] := TNodeNiAlphaProperty.Create(Self, i)
     else
       Nodes[i] := TBaseNiNode.Create(Self, i);
 

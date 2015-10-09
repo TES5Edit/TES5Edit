@@ -51,6 +51,7 @@ var
   wbHideNeverShow          : Boolean  = True;
   wbShowFormVersion        : Boolean  = False;
   wbShowFlagEnumValue      : Boolean  = False;
+  wbShowGroupRecordCount   : Boolean  = False;
   wbDisplayShorterNames    : Boolean  = False;
   wbSortSubRecords         : Boolean  = False;
   wbSortFLST               : Boolean  = True;
