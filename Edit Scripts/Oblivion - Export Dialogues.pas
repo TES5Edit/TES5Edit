@@ -1,4 +1,4 @@
-﻿{
+{
   Export dialogues for Oblivion.
   Full voice file names are generated and checked only for lines with GetIsID or GetIsRace conditions.
 }

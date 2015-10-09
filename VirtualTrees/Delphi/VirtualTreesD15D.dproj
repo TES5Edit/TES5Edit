@@ -1,4 +1,4 @@
-﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 		<PropertyGroup>
 			<ProjectGuid>{CD4602E7-06C3-4F58-9EE0-5DED84071F1C}</ProjectGuid>
 			<MainSource>VirtualTreesD15D.dpk</MainSource>
