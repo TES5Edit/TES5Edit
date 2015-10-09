@@ -1565,69 +1565,51 @@ end;
 // find REFR records in child groups by base record signatures
 // that are not deleted or disabled
 procedure Misc_wbFindREFRsByBase(var Value: Variant; Args: TJvInterpreterArgs);
-
-  procedure FindREFRs(const aElement: IwbElement; var REFRs: TDynMainRecords; var Count: Integer);
-  var
-    MainRecord : IwbMainRecord;
-    Container  : IwbContainerElementRef;
-    i          : Integer;
-  begin
-    if Supports(aElement, IwbMainRecord, MainRecord) then begin
-      if MainRecord.Signature = 'REFR' then begin
-        if High(REFRs) < Count then
-          SetLength(REFRs, Length(REFRs) * 2);
-        REFRs[Count] := MainRecord;
-        Inc(Count);
-      end;
-    end else if Supports(aElement, IwbContainerElementRef, Container) then
-      for i := 0 to Pred(Container.ElementCount) do
-        FindREFRs(Container.Elements[i], REFRs, Count);
-  end;
-
 var
   MainRecord          : IwbMainRecord;
   REFRs               : TDynMainRecords;
-  i, j, Count, Opt    : Integer;
+  i, Opt              : Integer;
   lst                 : TList;
   BaseSignatures      : string;
 begin
   if not Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
     Exit;
-
-  REFRs := nil;
-  Count := 0;
-  SetLength(REFRs, 4096);
-  FindREFRs(MainRecord.ChildGroup, REFRs, Count);
-  for i := 0 to Pred(MainRecord.OverrideCount) do
-    FindREFRs(MainRecord.Overrides[i].ChildGroup, REFRs, Count);
-  SetLength(REFRs, Count);
-  // removing duplicates
-  if Length(REFRs) > 1 then begin
-    wbMergeSort(@REFRs[0], Length(REFRs), CompareElementsFormIDAndLoadOrder);
-    j := 0;
-    for i := Succ(Low(REFRs)) to High(REFRs) do begin
-      if REFRs[j].LoadOrderFormID <> REFRs[i].LoadOrderFormID then
-        Inc(j);
-      if j <> i then
-        REFRs[j] := REFRs[i];
-    end;
-    SetLength(REFRs, Succ(j));
-  end;
-
   BaseSignatures := string(Args.Values[1]);
   Opt := Integer(Args.Values[2]);
   lst := TList(V2O(Args.Values[3]));
   if not Assigned(lst) then
     Exit;
 
-  if Length(REFRs) <> 0 then
-    for i := Low(REFRs) to High(REFRs) do
-      if  not ((Opt and 1 <> 0) and REFRs[i].IsDeleted)
-      and not ((Opt and 2 <> 0) and REFRs[i].IsInitiallyDisabled)
-      and not ((Opt and 4 <> 0) and REFRs[i].ElementExists['XESP'])
-      then
-        if Assigned(REFRs[i].BaseRecord) and (Pos(REFRs[i].BaseRecord.Signature, BaseSignatures) <> 0) then
-          lst.Add(Pointer(REFRs[i]));
+  REFRs := wbGetSiblingRecords(MainRecord, wbStringToSignatures('REFR'), True);
+  for i := Low(REFRs) to High(REFRs) do
+    if  not ((Opt and 1 <> 0) and REFRs[i].IsDeleted)
+    and not ((Opt and 2 <> 0) and REFRs[i].IsInitiallyDisabled)
+    and not ((Opt and 4 <> 0) and REFRs[i].ElementExists['XESP'])
+    then
+      if Assigned(REFRs[i].BaseRecord) and (Pos(REFRs[i].BaseRecord.Signature, BaseSignatures) <> 0) then
+        lst.Add(Pointer(REFRs[i]));
+end;
+
+procedure Misc_wbGetSiblingRecords(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element             : IwbElement;
+  Records             : TDynMainRecords;
+  Overrides           : Boolean;
+  i                   : Integer;
+  lst                 : TList;
+  sigs                : string;
+begin
+  if not Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Exit;
+  sigs := string(Args.Values[1]);
+  Overrides := Boolean(Args.Values[2]);
+  lst := TList(V2O(Args.Values[3]));
+  if not Assigned(lst) then
+    Exit;
+
+  Records := wbGetSiblingRecords(Element, wbStringToSignatures(sigs), Overrides);
+  for i := Low(Records) to High(Records) do
+    lst.Add(Pointer(Records[i]));
 end;
 
 procedure Misc_wbNormalizeResourceName(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1934,6 +1916,7 @@ begin
     AddFunction(cUnit, 'wbMD5Data', Misc_wbMD5Data, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbMD5File', Misc_wbMD5File, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbFindREFRsByBase', Misc_wbFindRefrsByBase, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbGetSiblingRecords', Misc_wbGetSiblingRecords, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbNormalizeResourceName', Misc_wbNormalizeResourceName, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbStringListInString', Misc_wbStringListInString, 2, [varEmpty, varEmpty], varEmpty);
   end;
