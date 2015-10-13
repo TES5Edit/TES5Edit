@@ -5423,7 +5423,7 @@ begin
         if not Assigned(StatRec) then
           Continue;
 
-        // Skyrim: only STAT and TREEE objects
+        // Skyrim: only STAT and TREE objects
         if (wbGameMode = gmTES5) and ((StatRec.Signature <> 'STAT') and (StatRec.Signature <> 'TREE')) then
           Continue;
 
@@ -5626,6 +5626,10 @@ begin
         s := Format(wbScriptsPath + 'LODGen.exe "%s"', [s]);
         s := s + ' --dontFixTangents';
         s := s + ' --removeUnseenFaces';
+        // if "No LOD Water" flag is set for a worldspace, then don't remove underwater meshes
+        i := aWorldspace.WinningOverride.ElementNativeValues['DATA'];
+        if ((wbGameMode = gmTES5) and (i and $08 <> 0)) or ((wbGameMode in [gmFO3, gmFNV]) and (i and $10 <> 0)) then
+          s := s + ' --ignoreWater';
         if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False) then
           s := s + ' --dontGenerateVertexColors';
         if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoTangents', False) then

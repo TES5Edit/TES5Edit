@@ -1362,6 +1362,8 @@ begin
   if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
     Exit;
 
+  MainRecord := MainRecord.WinningOverride;
+
   if MainRecord.Signature <> QUST then begin
     case aType of
       ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
