@@ -1371,7 +1371,7 @@ var
   _File: IwbFile;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    Value := _File.HasMaster(StrToSignature(Args.Values[1]));
+    Value := _File.HasMaster(Args.Values[1]);
 end;
 
 procedure IwbFile_HasGroup(var Value: Variant; Args: TJvInterpreterArgs);
