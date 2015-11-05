@@ -934,7 +934,13 @@ begin
       ScanForAssets(ElementByPath(e, 'Shell Casing Model'));
       ScanForAssets(ElementByPath(e, 'Scope Model'));
       ScanForAssets(ElementByPath(e, 'World Model'));
-      ScanForAssets(ElementByPath(e, 'Model with Mods'));
+      ProcessAsset(ElementByPath(e, 'MWD1'));
+      ProcessAsset(ElementByPath(e, 'MWD2'));
+      ProcessAsset(ElementByPath(e, 'MWD3'));
+      ProcessAsset(ElementByPath(e, 'MWD4'));
+      ProcessAsset(ElementByPath(e, 'MWD5'));
+      ProcessAsset(ElementByPath(e, 'MWD6'));
+      ProcessAsset(ElementByPath(e, 'MWD7'));
     end
 
     else if (sig = 'WRLD') then begin
