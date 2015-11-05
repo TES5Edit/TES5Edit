@@ -810,7 +810,7 @@ var
   Element: IwbElement;
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    if Supports(IInterface(Args.Values[1]), IwbElement, Element) then
+    if Supports(IInterface(Args.Values[2]), IwbElement, Element) then
       Container.InsertElement(integer(Args.Values[1]), Element);
 end;
 
