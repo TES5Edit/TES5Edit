@@ -1331,7 +1331,11 @@ begin
   if aType = ctToSortKey then
     Result := IntToHex64(aInt, 4)
   else if aType = ctToStr then
-    Result := TimeToStr( EncodeTime(aInt div 6, (aInt mod 6) * 10, 0, 0) )
+    try
+      Result := TimeToStr( EncodeTime(aInt div 6, (aInt mod 6) * 10, 0, 0) )
+    except
+      Result := IntToStr(aInt)
+    end
   else
     Result := '';
 end;
