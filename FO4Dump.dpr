@@ -391,7 +391,7 @@ begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
       end;
-      if not (wbToolSource in []) then begin
+      if not (wbToolSource in [tsPlugins]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
         Exit;
       end;

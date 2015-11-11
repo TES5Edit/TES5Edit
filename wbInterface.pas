@@ -2984,7 +2984,7 @@ var
   wbSizeOfMainRecordStruct : Integer;
 
 type
-  TwbGameMode   = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5);
+  TwbGameMode   = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmFO4);
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
                     tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
                     tmCheckForErrors, tmCheckForITM, tmCheckForDR);
