@@ -549,6 +549,18 @@ begin
       ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName);
       Exit;
     end;
+  end else if isMode('FO4') then begin
+    wbGameMode := gmFO4;
+    wbAppName := 'FO4';
+    wbGameName := 'Fallout4';
+    if not (wbToolMode in wbAlwaysMode) and not (wbToolMode in [tmMasterUpdate, tmMasterRestore]) then begin
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
+      Exit;
+    end;
+    if not (wbToolSource in [tsPlugins]) then begin
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName);
+      Exit;
+    end;
   end else begin
     ShowMessage('Application name must contain FNV, FO3, TES4 or TES5 to select game.');
     Exit;
@@ -577,6 +589,10 @@ begin
     wbLoadBSAs := True; // localization won't work otherwise
     wbHideIgnored := False; // to show Form Version
     ReadSettings;
+  end else if wbGameMode = gmFO4 then begin
+    wbVWDInTemporary := True;
+    wbLoadBSAs := False;
+    ReadSettings;
   end else begin
     Exit;
   end;
@@ -593,8 +609,12 @@ begin
     case wbToolSource of
       tsPlugins: DefineTES5;
     end
+  else if wbGameMode = gmFO4 then
+    case wbToolSource of
+      tsPlugins: DefineFO4;
+    end
   else begin
-    ShowMessage('Application name must contain FNV, FO3, TES4 or TES5 to select game.');
+    ShowMessage('Application name must contain FNV, FO3, TES4, TES5 or FO4 to select game.');
     Exit;
   end;
 
