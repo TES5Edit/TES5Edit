@@ -13321,9 +13321,6 @@ end;
 {>>> Unused records, they have empty GRUP in skyrim.esm and still in Fallout 4.esm <<<}
 procedure DefineFO4p;
 begin
-  wbRecord(RGDL, 'RGDL', [
-    wbEDID
-  ]);
   wbRecord(SCOL, 'SCOL', [
     wbEDID
   ]);
