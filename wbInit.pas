@@ -213,9 +213,9 @@ end;
 
 function CheckAppPath: string;
 const
-  //gmFNV, gmFO3, gmTES3, gmTES4, gmTES5
+  //gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmFO4
   ExeName : array[TwbGameMode] of string =
-    ('FalloutNV.exe', 'Fallout3.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe');
+    ('FalloutNV.exe', 'Fallout3.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe', 'Fallout4.exe');
 var
   s: string;
 begin
@@ -353,7 +353,7 @@ begin
     end;
     wbMyGamesTheGamePath := wbTheGameIniFileName + 'My Games\'+ wbGameName +'\';
 
-    if wbGameMode in [gmFO3, gmFNV] then
+    if wbGameMode in [gmFO3, gmFNV, gmFO4] then
       wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
     else
       wbTheGameIniFileName := wbMyGamesTheGamePath + wbGameName + '.ini';
