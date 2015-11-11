@@ -116,6 +116,7 @@ const
   ACTI : TwbSignature = 'ACTI';
   ACUN : TwbSignature = 'ACUN'; { New To Dawnguard }
   ADDN : TwbSignature = 'ADDN';
+  AECH : TwbSignature = 'AECH'; { New To Fallout 4 }
   AHCF : TwbSignature = 'AHCF'; { New To Skyrim }
   AHCM : TwbSignature = 'AHCM'; { New To Skyrim }
   AIDT : TwbSignature = 'AIDT';
@@ -143,9 +144,11 @@ const
   ALSP : TwbSignature = 'ALSP'; { New To Skyrim }
   ALST : TwbSignature = 'ALST'; { New To Skyrim }
   ALUA : TwbSignature = 'ALUA'; { New To Skyrim }
+  AMDL : TwbSignature = 'AMDL'; { New To Fallout 4 }
   AMMO : TwbSignature = 'AMMO';
   ANAM : TwbSignature = 'ANAM';
   ANIO : TwbSignature = 'ANIO';
+  AORU : TwbSignature = 'AORU'; { New To Fallout 4 }
   APPA : TwbSignature = 'APPA';
   ARMA : TwbSignature = 'ARMA';
   ARMO : TwbSignature = 'ARMO';
@@ -163,6 +166,7 @@ const
   BIPL : TwbSignature = 'BIPL';
   BMCT : TwbSignature = 'BMCT';
   BNAM : TwbSignature = 'BNAM';
+  BNDS : TwbSignature = 'BNDS'; { New to Fallout 4 }
   BOD2 : TwbSignature = 'BOD2'; { New to Skyrim 1.6.91 CK}
   BODT : TwbSignature = 'BODT'; { New to Skyrim }
   BOOK : TwbSignature = 'BOOK';
@@ -182,6 +186,7 @@ const
   CLDC : TwbSignature = 'CLDC'; { New to Skyrim, but unused }
   CLFM : TwbSignature = 'CLFM';
   CLMT : TwbSignature = 'CLMT';
+  CMPO : TwbSignature = 'CMPO'; { New to Fallout 4 }
   CNAM : TwbSignature = 'CNAM';
   CNTO : TwbSignature = 'CNTO';
   COBJ : TwbSignature = 'COBJ';
@@ -213,6 +218,7 @@ const
   DESC : TwbSignature = 'DESC';
   DEST : TwbSignature = 'DEST';
   DEVA : TwbSignature = 'DEVA'; { New to Skyrim }
+  DFOB : TwbSignature = 'DFOB'; { New to Fallout 4 }
   DFTF : TwbSignature = 'DFTF'; { New To Skyrim }
   DFTM : TwbSignature = 'DFTM'; { New To Skyrim }
   DIAL : TwbSignature = 'DIAL';
@@ -222,6 +228,7 @@ const
   DMDL : TwbSignature = 'DMDL';
   DMDS : TwbSignature = 'DMDS'; { New to Skyrim }
   DMDT : TwbSignature = 'DMDT';
+  DMGT : TwbSignature = 'DMGT'; { New to Fallout 4 }
   DMIN : TwbSignature = 'DMIN'; { New to Skyrim }
   DNAM : TwbSignature = 'DNAM';
   DOBJ : TwbSignature = 'DOBJ';
@@ -270,6 +277,7 @@ const
   FTST : TwbSignature = 'FTST'; { New to Skyrim }
   FULL : TwbSignature = 'FULL';
   FURN : TwbSignature = 'FURN';
+  GDRY : TwbSignature = 'GDRY'; { New to Fallout 4 }
   GLOB : TwbSignature = 'GLOB';
   GMST : TwbSignature = 'GMST';
   GNAM : TwbSignature = 'GNAM';
@@ -300,6 +308,7 @@ const
   INDX : TwbSignature = 'INDX';
   INFO : TwbSignature = 'INFO';
   INGR : TwbSignature = 'INGR';
+  INNR : TwbSignature = 'INNR'; { New To Fallout 4 }
   INTV : TwbSignature = 'INTV';
   IPCT : TwbSignature = 'IPCT';
   IPDS : TwbSignature = 'IPDS';
@@ -310,9 +319,11 @@ const
   KEYM : TwbSignature = 'KEYM';
   KNAM : TwbSignature = 'KNAM';
   KSIZ : TwbSignature = 'KSIZ';
+  KSSM : TwbSignature = 'KSSM'; { New To Fallout 4 }
   KWDA : TwbSignature = 'KWDA';
   KYWD : TwbSignature = 'KYWD';
   LAND : TwbSignature = 'LAND';
+  LAYR : TwbSignature = 'LAYR'; { New to Fallout 4 }
   LCEC : TwbSignature = 'LCEC'; { New to Skyrim }
   LCEP : TwbSignature = 'LCEP'; { New to Skyrim }
   LCID : TwbSignature = 'LCID'; { New to Skyrim }
@@ -321,11 +332,13 @@ const
   LCSR : TwbSignature = 'LCSR'; { New to Skyrim }
   LCTN : TwbSignature = 'LCTN';
   LCUN : TwbSignature = 'LCUN'; { New to Skyrim }
+  LENS : TwbSignature = 'LENS'; { New to Fallout 4 }
   LGTM : TwbSignature = 'LGTM';
   LIGH : TwbSignature = 'LIGH';
   LLCT : TwbSignature = 'LLCT'; {New to Skyrim, part of LVLI 'Count'}
   LNAM : TwbSignature = 'LNAM';
   LSCR : TwbSignature = 'LSCR';
+  LSPR : TwbSignature = 'LSPR'; { New to Fallout 4 }
   LTEX : TwbSignature = 'LTEX';
   LTMP : TwbSignature = 'LTMP';
   LVLC : TwbSignature = 'LVLC';
@@ -345,6 +358,7 @@ const
   MGEF : TwbSignature = 'MGEF';
   MHDT : TwbSignature = 'MHDT'; { New to Skyrim }
   MIC2 : TwbSignature = 'MIC2';
+  MICN : TwbSignature = 'MICN'; { New to Fallout 4 }
   MICO : TwbSignature = 'MICO';
   MISC : TwbSignature = 'MISC';
   MNAM : TwbSignature = 'MNAM';
@@ -369,6 +383,7 @@ const
   MPAV : TwbSignature = 'MPAV'; { New To Skyrim }
   MPRT : TwbSignature = 'MPRT'; { New to Skyrim }
   MSTT : TwbSignature = 'MSTT';
+  MSWP : TwbSignature = 'MSWP'; { New to Fallout 4 }
   MTNM : TwbSignature = 'MTNM'; { New to Skyrim }
   MTYP : TwbSignature = 'MTYP'; { New To Skyrim }
   MUSC : TwbSignature = 'MUSC';
@@ -389,6 +404,8 @@ const
   NAVM : TwbSignature = 'NAVM';
   NEXT : TwbSignature = 'NEXT';
   NNAM : TwbSignature = 'NNAM';
+  NOCM : TwbSignature = 'NOCM'; { New to Fallout 4 }
+  NOTE : TwbSignature = 'NOTE'; { New to Fallout 4 }
   NPC_ : TwbSignature = 'NPC_';
   NULL : TwbSignature = 'NULL';
   NVER : TwbSignature = 'NVER';
@@ -399,8 +416,10 @@ const
   OBND : TwbSignature = 'OBND';
   OCOR : TwbSignature = 'OCOR'; { New to Skyrim }
   OFST : TwbSignature = 'OFST';
+  OMOD : TwbSignature = 'OMOD'; { New to Fallout 4 }
   ONAM : TwbSignature = 'ONAM';
   OTFT : TwbSignature = 'OTFT';
+  OVIS : TwbSignature = 'OVIS'; { New to Fallout 4 }
   PACK : TwbSignature = 'PACK';
   PARW : TwbSignature = 'PARW'; { New to Skyrim }
   PBAR : TwbSignature = 'PBAR'; { New to Skyrim }
@@ -421,6 +440,7 @@ const
   PKCU : TwbSignature = 'PKCU'; { New to Skyrim }
   PKDT : TwbSignature = 'PKDT';
   PKID : TwbSignature = 'PKID';
+  PKIN : TwbSignature = 'PKIN'; { New to Fallout 4 }
   PLCN : TwbSignature = 'PLCN'; { New to Skyrim }
   PLDT : TwbSignature = 'PLDT';
   PLVD : TwbSignature = 'PLVD'; { New to Skyrim }
@@ -464,15 +484,17 @@ const
   REGN : TwbSignature = 'REGN';
   RELA : TwbSignature = 'RELA';
   REPL : TwbSignature = 'REPL';
-  RGDL : TwbSignature = 'RGDL';{ Unused in Skyrim, but contained in Skyrim.esm }
   REVB : TwbSignature = 'REVB';
   RFCT : TwbSignature = 'RFCT';
+  RFGP : TwbSignature = 'RFGP'; { New to Fallout 4 }
+  RGDL : TwbSignature = 'RGDL'; { Unused in Skyrim, but contained in Skyrim.esm }
   RNAM : TwbSignature = 'RNAM';
   RNMV : TwbSignature = 'RNMV'; { New to Skyrim }
   RPLD : TwbSignature = 'RPLD';
   RPLI : TwbSignature = 'RPLI';
   RPRF : TwbSignature = 'RPRF'; { New To Skyrim }
   RPRM : TwbSignature = 'RPRM'; { New To Skyrim }
+  SCCO : TwbSignature = 'SCCO'; { New To Fallout 4 }
   SCDA : TwbSignature = 'SCDA';
   SCEN : TwbSignature = 'SCEN';
   SCHR : TwbSignature = 'SCHR';
@@ -481,10 +503,12 @@ const
   SCRL : TwbSignature = 'SCRL';
   SCRN : TwbSignature = 'SCRN';
   SCRO : TwbSignature = 'SCRO';
+  SCSN : TwbSignature = 'SCSN'; { New To Fallout 4 }
   SCTX : TwbSignature = 'SCTX';
   SDSC : TwbSignature = 'SDSC'; { New to Skyrim }
   SHOU : TwbSignature = 'SHOU';
   SHRT : TwbSignature = 'SHRT'; { New to Skyrim }
+  SKIL : TwbSignature = 'SKIL'; { New to Fallout 4 }
   SLCP : TwbSignature = 'SLCP';
   SLGM : TwbSignature = 'SLGM';
   SMBN : TwbSignature = 'SMBN';
@@ -507,11 +531,13 @@ const
   SPLO : TwbSignature = 'SPLO';
   SPMV : TwbSignature = 'SPMV'; { New To Skyrim }
   SPOR : TwbSignature = 'SPOR'; { New to Skyrim }
+  STAG : TwbSignature = 'STAG'; { New to Fallout 4 }
   STAT : TwbSignature = 'STAT';
   STOL : TwbSignature = 'STOL'; { New to Skyrim }
   SWMV : TwbSignature = 'SWMV'; { New to Skyrim }
   TACT : TwbSignature = 'TACT';
   TCLT : TwbSignature = 'TCLT';
+  TERM : TwbSignature = 'TERM'; { New to Fallout 4 }
   TES4 : TwbSignature = 'TES4';
   TIAS : TwbSignature = 'TIAS'; { New to Skyrim }
   TIFC : TwbSignature = 'TIFC'; { New To Skyrim }
@@ -523,11 +549,14 @@ const
   TINT : TwbSignature = 'TINT'; { New to Skyrim }
   TINV : TwbSignature = 'TINV'; { New to Skyrim }
   TIRS : TwbSignature = 'TIRS'; { New to Skyrim }
+  TLOD : TwbSignature = 'TLOD'; { New to Fallout 4 }
   TNAM : TwbSignature = 'TNAM';
+  TOFT : TwbSignature = 'TOFT'; { New to Fallout 4 }
   TPIC : TwbSignature = 'TPIC';
   TPLT : TwbSignature = 'TPLT';
   TRDT : TwbSignature = 'TRDT';
   TREE : TwbSignature = 'TREE';
+  TRNS : TwbSignature = 'TRNS'; { New To Fallout 4 }
   TVDT : TwbSignature = 'TVDT'; { New To Skyrim }
   TWAT : TwbSignature = 'TWAT'; { New To Skyrim }
   TX00 : TwbSignature = 'TX00';
@@ -635,13 +664,14 @@ const
   XTEL : TwbSignature = 'XTEL';
   XTNM : TwbSignature = 'XTNM'; { New To Skyrim }
   XTRI : TwbSignature = 'XTRI';
-  XWEM : TwbSignature = 'XWEM'; { New To Skyrim }
   XWCN : TwbSignature = 'XWCN'; { New To Skyrim }
   XWCS : TwbSignature = 'XWCS'; { New To Skyrim }
   XWCU : TwbSignature = 'XWCU'; { New To Skyrim }
+  XWEM : TwbSignature = 'XWEM'; { New To Skyrim }
   XXXX : TwbSignature = 'XXXX';
   YNAM : TwbSignature = 'YNAM';
   ZNAM : TwbSignature = 'ZNAM';
+  ZOOM : TwbSignature = 'ZOOM'; { New To Fallout 4 }
 
 var
   wbPKDTSpecificFlagsUnused : Boolean;
@@ -13345,16 +13375,20 @@ begin
    wbAddGroupOrder(KYWD);
    wbAddGroupOrder(LCRT);
    wbAddGroupOrder(AACT);
+   wbAddGroupOrder(TRNS);
+   wbAddGroupOrder(CMPO);
    wbAddGroupOrder(TXST);
+   wbAddGroupOrder(MICN);
    wbAddGroupOrder(GLOB);
+   wbAddGroupOrder(DMGT);
    wbAddGroupOrder(CLAS);
    wbAddGroupOrder(FACT);
    wbAddGroupOrder(HDPT);
-   wbAddGroupOrder(HAIR);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
    wbAddGroupOrder(EYES);
    wbAddGroupOrder(RACE);
    wbAddGroupOrder(SOUN);
    wbAddGroupOrder(ASPC);
+   wbAddGroupOrder(SKIL);
    wbAddGroupOrder(MGEF);
    wbAddGroupOrder(SCPT);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
    wbAddGroupOrder(LTEX);
@@ -13370,14 +13404,11 @@ begin
    wbAddGroupOrder(INGR);
    wbAddGroupOrder(LIGH);
    wbAddGroupOrder(MISC);
-   wbAddGroupOrder(APPA);
    wbAddGroupOrder(STAT);
    wbAddGroupOrder(SCOL);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
    wbAddGroupOrder(MSTT);
-   wbAddGroupOrder(PWAT);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
    wbAddGroupOrder(GRAS);
    wbAddGroupOrder(TREE);
-   wbAddGroupOrder(CLDC);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
    wbAddGroupOrder(FLOR);
    wbAddGroupOrder(FURN);
    wbAddGroupOrder(WEAP);
@@ -13387,10 +13418,12 @@ begin
    wbAddGroupOrder(KEYM);
    wbAddGroupOrder(ALCH);
    wbAddGroupOrder(IDLM);
-   wbAddGroupOrder(COBJ);
+   wbAddGroupOrder(NOTE);
    wbAddGroupOrder(PROJ);
    wbAddGroupOrder(HAZD);
+   wbAddGroupOrder(BNDS);
    wbAddGroupOrder(SLGM);
+   wbAddGroupOrder(TERM);
    wbAddGroupOrder(LVLI);
    wbAddGroupOrder(WTHR);
    wbAddGroupOrder(CLMT);
@@ -13399,8 +13432,22 @@ begin
    wbAddGroupOrder(REGN);
    wbAddGroupOrder(NAVI);
    wbAddGroupOrder(CELL);
+   wbAddGroupOrder(REFR);
+   wbAddGroupOrder(ACHR);
+   wbAddGroupOrder(PMIS);
+   wbAddGroupOrder(PARW);
+   wbAddGroupOrder(PGRE);
+   wbAddGroupOrder(PBEA);
+   wbAddGroupOrder(PFLA);
+   wbAddGroupOrder(PCON);
+   wbAddGroupOrder(PBAR);
+   wbAddGroupOrder(PHZD);
    wbAddGroupOrder(WRLD);
+   wbAddGroupOrder(LAND);
+   wbAddGroupOrder(NAVM);
+   wbAddGroupOrder(TLOD);
    wbAddGroupOrder(DIAL);
+   wbAddGroupOrder(INFO);
    wbAddGroupOrder(QUST);
    wbAddGroupOrder(IDLE);
    wbAddGroupOrder(PACK);
@@ -13410,6 +13457,7 @@ begin
    wbAddGroupOrder(ANIO);
    wbAddGroupOrder(WATR);
    wbAddGroupOrder(EFSH);
+   wbAddGroupOrder(TOFT);
    wbAddGroupOrder(EXPL);
    wbAddGroupOrder(DEBR);
    wbAddGroupOrder(IMGS);
@@ -13431,6 +13479,7 @@ begin
    wbAddGroupOrder(MESG);
    wbAddGroupOrder(RGDL);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
    wbAddGroupOrder(DOBJ);
+   wbAddGroupOrder(DFOB);
    wbAddGroupOrder(LGTM);
    wbAddGroupOrder(MUSC);
    wbAddGroupOrder(FSTP);
@@ -13458,6 +13507,26 @@ begin
    wbAddGroupOrder(COLL);
    wbAddGroupOrder(CLFM);
    wbAddGroupOrder(REVB);
+   wbAddGroupOrder(PKIN);
+   wbAddGroupOrder(RFGP);
+   wbAddGroupOrder(AMDL);
+   wbAddGroupOrder(LAYR);
+   wbAddGroupOrder(COBJ);
+   wbAddGroupOrder(OMOD);
+   wbAddGroupOrder(MSWP);
+   wbAddGroupOrder(ZOOM);
+   wbAddGroupOrder(INNR);
+   wbAddGroupOrder(KSSM);
+   wbAddGroupOrder(AECH);
+   wbAddGroupOrder(SCCO);
+   wbAddGroupOrder(AORU);
+   wbAddGroupOrder(SCSN);
+   wbAddGroupOrder(STAG);
+   wbAddGroupOrder(NOCM);
+   wbAddGroupOrder(LENS);
+   wbAddGroupOrder(LSPR);
+   wbAddGroupOrder(GDRY);
+   wbAddGroupOrder(OVIS);
 end;
 
 procedure DefineTES5;
