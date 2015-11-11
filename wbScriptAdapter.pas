@@ -1652,6 +1652,7 @@ begin
     AddConst(cUnit, 'gmTES5', ord(gmTES5));
     AddConst(cUnit, 'gmFO3', ord(gmFO3));
     AddConst(cUnit, 'gmFNV', ord(gmFNV));
+    AddConst(cUnit, 'gmFO4', ord(gmFO4));
 
     { TwbElementType }
     AddConst(cUnit, 'etFile', ord(etFile));
