@@ -149,7 +149,6 @@ const
   ANAM : TwbSignature = 'ANAM';
   ANIO : TwbSignature = 'ANIO';
   AORU : TwbSignature = 'AORU'; { New To Fallout 4 }
-  APPA : TwbSignature = 'APPA';
   ARMA : TwbSignature = 'ARMA';
   ARMO : TwbSignature = 'ARMO';
   ARTO : TwbSignature = 'ARTO';
@@ -183,7 +182,6 @@ const
   CIS2 : TwbSignature = 'CIS2'; { New to Skyrim }
   CITC : TwbSignature = 'CITC'; { New to Skyrim }
   CLAS : TwbSignature = 'CLAS';
-  CLDC : TwbSignature = 'CLDC'; { New to Skyrim, but unused }
   CLFM : TwbSignature = 'CLFM';
   CLMT : TwbSignature = 'CLMT';
   CMPO : TwbSignature = 'CMPO'; { New to Fallout 4 }
@@ -283,7 +281,6 @@ const
   GNAM : TwbSignature = 'GNAM';
   GRAS : TwbSignature = 'GRAS';
   GWOR : TwbSignature = 'GWOR'; { New to Skyrim }
-  HAIR : TwbSignature = 'HAIR'; { Unused in Skyrim, but contained in Skyrim.esm }
   HAZD : TwbSignature = 'HAZD';
   HCLF : TwbSignature = 'HCLF'; { New to Skyrim }
   HDPT : TwbSignature = 'HDPT';
@@ -459,7 +456,6 @@ const
   PROJ : TwbSignature = 'PROJ';
   PSDT : TwbSignature = 'PSDT';
   PTDA : TwbSignature = 'PTDA'; { New to Skyrim }
-  PWAT : TwbSignature = 'PWAT'; { Unused in Skyrim, but contained in Skyrim.esm }
   QNAM : TwbSignature = 'QNAM';
   QOBJ : TwbSignature = 'QOBJ';
   QSDT : TwbSignature = 'QSDT';
@@ -4291,7 +4287,7 @@ begin
   wbCNTO :=
     wbRStructExSK([0], [1], 'Item', [
       wbStructExSK(CNTO, [0], [1], 'Item', [
-        wbFormIDCk('Item', [ARMO, AMMO, APPA, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, INGR, LIGH, SLGM, SCRL]),
+        wbFormIDCk('Item', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, INGR, LIGH, SLGM, SCRL]),
         wbInteger('Count', itS32)
       ]),
       wbCOED
@@ -10435,7 +10431,7 @@ begin
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
           wbInteger('Level', itU16),
           wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow),
-          wbFormIDCk('Reference', [ARMO, AMMO, APPA, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, LIGH, INGR, SLGM, SCRL]),
+          wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, LIGH, INGR, SLGM, SCRL]),
           wbInteger('Count', itU16),
           wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
         ]),
@@ -10654,30 +10650,6 @@ begin
       wbFloat('Weight')
     ], cpNormal, True)
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
-
-  wbRecord(APPA, 'Alchemical Apparatus', [
-    wbEDID,
-    wbVMAD,
-    wbOBNDReq,
-    wbFULL,
-    wbMODL,
-    wbICON,
-    wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
-    wbInteger(QUAL, 'Quality', itS32, wbEnum([], [
-      0, 'Novice',
-      1, 'Apprentice',
-      2, 'Journeyman',
-      3, 'Expert',
-      4, 'Master'
-    ])),
-    wbDESC,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
-    ])
-  ]);
 
   wbRecord(COBJ, 'Constructible Object', [
     wbEDID,
@@ -12045,7 +12017,7 @@ begin
     wbFormIDCk(NAME, 'Base', [
       TREE, SNDR, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
       MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, INGR,
-      MSTT, TACT, TXST, FLOR, SLGM, SCRL, SOUN, APPA, SPEL, ARTO, ADDN
+      MSTT, TACT, TXST, FLOR, SLGM, SCRL, SOUN, SPEL, ARTO, ADDN
     ], False, cpNormal, True),
 
     {--- Bound Contents ---}
@@ -13349,15 +13321,6 @@ end;
 {>>> Unused records, they have empty GRUP in skyrim.esm <<<}
 procedure DefineFO4p;
 begin
-  wbRecord(CLDC, 'CLDC', [
-    wbEDID
-  ]);
-  wbRecord(HAIR, 'HAIR', [
-    wbEDID
-  ]);
-  wbRecord(PWAT, 'PWAT', [
-    wbEDID
-  ]);
   wbRecord(RGDL, 'RGDL', [
     wbEDID
   ]);
@@ -13369,7 +13332,153 @@ begin
   ]);
 end;
 
+{>>> Start of new Fallout 4 Records <<<}
+
 procedure DefineFO4q;
+begin
+  wbRecord(CLDC, 'CLDC', [
+    wbEDID
+  ]);
+
+  wbRecord(HAIR, 'HAIR', [
+    wbEDID
+  ]);
+
+  wbRecord(PWAT, 'PWAT', [
+    wbEDID
+  ]);
+
+  wbRecord(RGDL, 'RGDL', [
+    wbEDID
+  ]);
+
+  wbRecord(SCOL, 'SCOL', [
+    wbEDID
+  ]);
+
+  wbRecord(SCPT, 'SCPT', [
+    wbEDID
+  ]);
+
+  wbRecord(SCOL, 'SCOL', [
+    wbEDID
+  ]);
+
+  wbRecord(SCOL, 'SCOL', [
+    wbEDID
+  ]);
+
+end;
+
+procedure DefineFO4r;
+begin
+  wbRecord(CLDC, 'CLDC', [
+    wbEDID
+  ]);
+
+  wbRecord(HAIR, 'HAIR', [
+    wbEDID
+  ]);
+
+  wbRecord(PWAT, 'PWAT', [
+    wbEDID
+  ]);
+
+  wbRecord(RGDL, 'RGDL', [
+    wbEDID
+  ]);
+
+  wbRecord(SCOL, 'SCOL', [
+    wbEDID
+  ]);
+
+  wbRecord(SCPT, 'SCPT', [
+    wbEDID
+  ]);
+
+  wbRecord(SCOL, 'SCOL', [
+    wbEDID
+  ]);
+
+  wbRecord(SCOL, 'SCOL', [
+    wbEDID
+  ]);
+
+end;
+
+procedure DefineFO4s;
+begin
+  wbRecord(CLDC, 'CLDC', [
+    wbEDID
+  ]);
+
+  wbRecord(HAIR, 'HAIR', [
+    wbEDID
+  ]);
+
+  wbRecord(PWAT, 'PWAT', [
+    wbEDID
+  ]);
+
+  wbRecord(RGDL, 'RGDL', [
+    wbEDID
+  ]);
+
+  wbRecord(SCOL, 'SCOL', [
+    wbEDID
+  ]);
+
+  wbRecord(SCPT, 'SCPT', [
+    wbEDID
+  ]);
+
+  wbRecord(SCOL, 'SCOL', [
+    wbEDID
+  ]);
+
+  wbRecord(SCOL, 'SCOL', [
+    wbEDID
+  ]);
+
+end;
+
+procedure DefineFO4t;
+begin
+  wbRecord(CLDC, 'CLDC', [
+    wbEDID
+  ]);
+
+  wbRecord(HAIR, 'HAIR', [
+    wbEDID
+  ]);
+
+  wbRecord(PWAT, 'PWAT', [
+    wbEDID
+  ]);
+
+  wbRecord(RGDL, 'RGDL', [
+    wbEDID
+  ]);
+
+  wbRecord(SCOL, 'SCOL', [
+    wbEDID
+  ]);
+
+  wbRecord(SCPT, 'SCPT', [
+    wbEDID
+  ]);
+
+  wbRecord(SCOL, 'SCOL', [
+    wbEDID
+  ]);
+
+  wbRecord(SCOL, 'SCOL', [
+    wbEDID
+  ]);
+
+end;
+
+procedure DefineFO4u;
 begin
    wbAddGroupOrder(GMST);
    wbAddGroupOrder(KYWD);
@@ -13548,6 +13657,10 @@ begin
   DefineFO4o;
   DefineFO4p;
   DefineFO4q;
+  DefineFO4r;
+  DefineFO4s;
+  DefineFO4t;
+  DefineFO4u;
 end;
 
 initialization
