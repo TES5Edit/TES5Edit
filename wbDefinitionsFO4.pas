@@ -12,13 +12,13 @@
 
 *******************************************************************************}
 
-unit wbDefinitionsTES5;
+unit wbDefinitionsFO4;
 
 {$I wbDefines.inc}
 
 interface
 
-procedure DefineTES5;
+procedure DefineFO4;
 
 implementation
 
@@ -4257,7 +4257,7 @@ end;
 var
   wbRecordFlagsFlags : IwbFlagsDef;
 
-procedure DefineTES5a;
+procedure DefineFO4a;
 
 begin
   wbNull := wbByteArray('Unused', -255);
@@ -5352,7 +5352,7 @@ begin
 
 end;
 
-procedure DefineTES5b;
+procedure DefineFO4b;
 begin
 
   wbRecord(ACHR, 'Placed NPC',
@@ -6480,7 +6480,7 @@ begin
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 end;
 
-procedure DefineTES5c;
+procedure DefineFO4c;
 
   procedure ReferenceRecord(aSignature: TwbSignature; const aName: string);
   begin
@@ -7123,7 +7123,7 @@ begin
   ]);
 end;
 
-procedure DefineTES5d;
+procedure DefineFO4d;
 begin
   wbRecord(DIAL, 'Dialog Topic', [
     wbEDID,
@@ -7748,7 +7748,7 @@ begin
   ]);
 end;
 
-procedure DefineTES5e;
+procedure DefineFO4e;
 begin
   wbRecord(LCRT, 'Location Reference Type', [
     wbEDID,
@@ -7853,7 +7853,7 @@ begin
   ]);
 end;
 
-procedure DefineTES5f;
+procedure DefineFO4f;
 begin
   wbRecord(IDLM, 'Idle Marker',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -8244,7 +8244,7 @@ begin
 
 end;
 
-procedure DefineTES5g;
+procedure DefineFO4g;
 begin
 
    wbRecord(EXPL, 'Explosion', [
@@ -8708,7 +8708,7 @@ begin
   ]);
 end;
 
-procedure DefineTES5h;
+procedure DefineFO4h;
 begin
   wbRecord(AVIF, 'Actor Value Information', [
     wbEDID,
@@ -9007,7 +9007,7 @@ begin
 end;
 
 
-procedure DefineTES5i;
+procedure DefineFO4i;
 var
   a, b, c : TVarRecs;
 begin
@@ -9531,7 +9531,7 @@ begin
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 end;
 
-procedure DefineTES5j;
+procedure DefineFO4j;
 begin
   wbRecord(DLBR, 'Dialog Branch', [
     wbEDID,
@@ -9785,7 +9785,7 @@ begin
   ]);
 end;
 
-procedure DefineTES5k;
+procedure DefineFO4k;
 begin
 
   wbRecord(OTFT, 'Outfit', [
@@ -9988,7 +9988,7 @@ begin
   ]);
 end;
 
-procedure DefineTES5l;
+procedure DefineFO4l;
 begin
   wbRecord(REVB, 'Reverb Parameters', [
     wbEDID,
@@ -10351,7 +10351,7 @@ begin
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 end;
 
-procedure DefineTES5m;
+procedure DefineFO4m;
 begin
 
   wbRecord(LSCR, 'Load Screen',
@@ -11003,7 +11003,7 @@ begin
   ]);
 end;
 
-procedure DefineTES5n;
+procedure DefineFO4n;
 begin
 
   wbUNAMs:= wbRArray('Data Inputs', wbRStruct('Data Input', [
@@ -12722,7 +12722,7 @@ begin
   ], True, nil, cpNormal, True, wbRemoveOFST);
 end;
 
-procedure DefineTES5o;
+procedure DefineFO4o;
 begin
 
   wbRecord(TREE, 'Tree',
@@ -13347,7 +13347,7 @@ begin
 end;
 
 {>>> Unused records, they have empty GRUP in skyrim.esm <<<}
-procedure DefineTES5p;
+procedure DefineFO4p;
 begin
   wbRecord(CLDC, 'CLDC', [
     wbEDID
@@ -13369,7 +13369,7 @@ begin
   ]);
 end;
 
-procedure DefineTES5q;
+procedure DefineFO4q;
 begin
    wbAddGroupOrder(GMST);
    wbAddGroupOrder(KYWD);
@@ -13529,25 +13529,25 @@ begin
    wbAddGroupOrder(OVIS);
 end;
 
-procedure DefineTES5;
+procedure DefineFO4;
 begin
-  DefineTES5a;
-  DefineTES5b;
-  DefineTES5c;
-  DefineTES5d;
-  DefineTES5e;
-  DefineTES5f;
-  DefineTES5g;
-  DefineTES5h;
-  DefineTES5i;
-  DefineTES5j;
-  DefineTES5k;
-  DefineTES5l;
-  DefineTES5m;
-  DefineTES5n;
-  DefineTES5o;
-  DefineTES5p;
-  DefineTES5q;
+  DefineFO4a;
+  DefineFO4b;
+  DefineFO4c;
+  DefineFO4d;
+  DefineFO4e;
+  DefineFO4f;
+  DefineFO4g;
+  DefineFO4h;
+  DefineFO4i;
+  DefineFO4j;
+  DefineFO4k;
+  DefineFO4l;
+  DefineFO4m;
+  DefineFO4n;
+  DefineFO4o;
+  DefineFO4p;
+  DefineFO4q;
 end;
 
 initialization
