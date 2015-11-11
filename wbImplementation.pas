@@ -15209,19 +15209,22 @@ var
   Container: IwbDataContainer;
 begin
   Resolved := Resolve(vbValueDef, GetDataBasePtr, GetDataEndPtr, Self);
-  if (Resolved <> vbValueDef) and (Resolved.DefType in dtNonValues) then
+  if (not Assigned(Resolved)) or (Resolved <> vbValueDef) and (Resolved.DefType in dtNonValues) then
     Result := vbValueDef.Name
   else
     Result := Resolved.Name;
-  if (Resolved.DefType in dtNonValues) and (wbDumpOffset=1) then // simply display starting offset.
-    Result := Result + ' {' + IntToHex64(Cardinal(GetDataBasePtr)-wbBaseOffset, 8) + '}';
-  // something for Dump: Displaying the size in {} and the array count in []
-  //  Triggers a lot of pre calculations
-  if (Resolved.DefType in dtNonValues) and (wbDumpOffset>2) then
-    Result := Result + ' {' + IntToHex64(Cardinal(GetDataEndPtr)-wbBaseOffset, 8) + '-' + IntToHex64(Cardinal(GetDataBasePtr)-wbBaseOffset, 8) +
-      ' = ' +IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}';
-  if (Resolved.DefType = dtArray) and (wbDumpOffset>1) and Supports(Self, IwbDataContainer, Container) then
-    Result := Result + ' [' + IntToStr(Container.GetElementCount) + ']';
+  if Assigned(Resolved) then
+  begin
+    if (Resolved.DefType in dtNonValues) and (wbDumpOffset=1) then // simply display starting offset.
+      Result := Result + ' {' + IntToHex64(Cardinal(GetDataBasePtr)-wbBaseOffset, 8) + '}';
+    // something for Dump: Displaying the size in {} and the array count in []
+    //  Triggers a lot of pre calculations
+    if (Resolved.DefType in dtNonValues) and (wbDumpOffset>2) then
+      Result := Result + ' {' + IntToHex64(Cardinal(GetDataEndPtr)-wbBaseOffset, 8) + '-' + IntToHex64(Cardinal(GetDataBasePtr)-wbBaseOffset, 8) +
+        ' = ' +IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}';
+    if (Resolved.DefType = dtArray) and (wbDumpOffset>1) and Supports(Self, IwbDataContainer, Container) then
+      Result := Result + ' [' + IntToStr(Container.GetElementCount) + ']';
+  end;
   if vbNameSuffix <> '' then
     Result := Result + ' ' + vbNameSuffix;
 end;
