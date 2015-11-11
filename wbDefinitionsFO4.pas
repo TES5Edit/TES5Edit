@@ -13318,7 +13318,7 @@ begin
   ]);
 end;
 
-{>>> Unused records, they have empty GRUP in skyrim.esm <<<}
+{>>> Unused records, they have empty GRUP in skyrim.esm and still in Fallout 4.esm <<<}
 procedure DefineFO4p;
 begin
   wbRecord(RGDL, 'RGDL', [
@@ -13336,35 +13336,35 @@ end;
 
 procedure DefineFO4q;
 begin
-  wbRecord(CLDC, 'CLDC', [
+  wbRecord(AECH, 'AECH', [
     wbEDID
   ]);
 
-  wbRecord(HAIR, 'HAIR', [
+  wbRecord(AMDL, 'AMDL', [
     wbEDID
   ]);
 
-  wbRecord(PWAT, 'PWAT', [
+  wbRecord(AORU, 'AORU', [
     wbEDID
   ]);
 
-  wbRecord(RGDL, 'RGDL', [
+  wbRecord(BNDS, 'BNDS', [
     wbEDID
   ]);
 
-  wbRecord(SCOL, 'SCOL', [
+  wbRecord(CMPO, 'CMPO', [
     wbEDID
   ]);
 
-  wbRecord(SCPT, 'SCPT', [
+  wbRecord(DFOB, 'DFOB', [
     wbEDID
   ]);
 
-  wbRecord(SCOL, 'SCOL', [
+  wbRecord(DMGT, 'DMGT', [
     wbEDID
   ]);
 
-  wbRecord(SCOL, 'SCOL', [
+  wbRecord(GDRY, 'GDRY', [
     wbEDID
   ]);
 
@@ -13372,35 +13372,35 @@ end;
 
 procedure DefineFO4r;
 begin
-  wbRecord(CLDC, 'CLDC', [
+  wbRecord(INNR, 'INNR', [
     wbEDID
   ]);
 
-  wbRecord(HAIR, 'HAIR', [
+  wbRecord(KSSM, 'KSSM', [
     wbEDID
   ]);
 
-  wbRecord(PWAT, 'PWAT', [
+  wbRecord(LAYR, 'LAYR', [
     wbEDID
   ]);
 
-  wbRecord(RGDL, 'RGDL', [
+  wbRecord(LENS, 'LENS', [
     wbEDID
   ]);
 
-  wbRecord(SCOL, 'SCOL', [
+  wbRecord(LSPR, 'LSPR', [
     wbEDID
   ]);
 
-  wbRecord(SCPT, 'SCPT', [
+  wbRecord(MICN, 'MICN', [
     wbEDID
   ]);
 
-  wbRecord(SCOL, 'SCOL', [
+  wbRecord(MSWP, 'MSWP', [
     wbEDID
   ]);
 
-  wbRecord(SCOL, 'SCOL', [
+  wbRecord(NOCM, 'NOCM', [
     wbEDID
   ]);
 
@@ -13408,15 +13408,23 @@ end;
 
 procedure DefineFO4s;
 begin
-  wbRecord(CLDC, 'CLDC', [
+  wbRecord(NOTE, 'NOTE', [
     wbEDID
   ]);
 
-  wbRecord(HAIR, 'HAIR', [
+  wbRecord(OMOD, 'OMOD', [
     wbEDID
   ]);
 
-  wbRecord(PWAT, 'PWAT', [
+  wbRecord(OVIS, 'OVIS', [
+    wbEDID
+  ]);
+
+  wbRecord(PKIN, 'PKIN', [
+    wbEDID
+  ]);
+
+  wbRecord(RFGP, 'RFGP', [
     wbEDID
   ]);
 
@@ -13424,19 +13432,11 @@ begin
     wbEDID
   ]);
 
-  wbRecord(SCOL, 'SCOL', [
+  wbRecord(SCCO, 'SCCO', [
     wbEDID
   ]);
 
-  wbRecord(SCPT, 'SCPT', [
-    wbEDID
-  ]);
-
-  wbRecord(SCOL, 'SCOL', [
-    wbEDID
-  ]);
-
-  wbRecord(SCOL, 'SCOL', [
+  wbRecord(SCSN, 'SCSN', [
     wbEDID
   ]);
 
@@ -13444,35 +13444,31 @@ end;
 
 procedure DefineFO4t;
 begin
-  wbRecord(CLDC, 'CLDC', [
+  wbRecord(SKIL, 'SKIL', [
     wbEDID
   ]);
 
-  wbRecord(HAIR, 'HAIR', [
+  wbRecord(STAG, 'STAG', [
     wbEDID
   ]);
 
-  wbRecord(PWAT, 'PWAT', [
+  wbRecord(TERM, 'TERM', [
     wbEDID
   ]);
 
-  wbRecord(RGDL, 'RGDL', [
+  wbRecord(TLOD, 'TLOD', [
     wbEDID
   ]);
 
-  wbRecord(SCOL, 'SCOL', [
+  wbRecord(TOFT, 'TOFT', [
     wbEDID
   ]);
 
-  wbRecord(SCPT, 'SCPT', [
+  wbRecord(TRNS, 'TRNS', [
     wbEDID
   ]);
 
-  wbRecord(SCOL, 'SCOL', [
-    wbEDID
-  ]);
-
-  wbRecord(SCOL, 'SCOL', [
+  wbRecord(ZOOM, 'ZOOM', [
     wbEDID
   ]);
 
