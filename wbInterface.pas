@@ -12618,21 +12618,40 @@ begin
 end;
 
 function TwbUnionDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+var
+  ValueDef: IwbValueDef;
 begin
-  Result := Decide(aBasePtr, aEndPtr, aElement).
-    EditInfo[aBasePtr, aEndPtr, aElement];
+  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  if Assigned(ValueDef) then
+    Result := ValueDef.EditInfo[aBasePtr, aEndPtr, aElement]
+  else
+    Result := '';
 end;
 
 function TwbUnionDef.GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType;
+var
+  ValueDef: IwbValueDef;
 begin
-  Result := Decide(aBasePtr, aEndPtr, aElement).
-    EditType[aBasePtr, aEndPtr, aElement];
+  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  if Assigned(ValueDef) then
+    Result := ValueDef.EditType[aBasePtr, aEndPtr, aElement]
+  else
+    Result := etDefault;
 end;
 
 function TwbUnionDef.GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
+var
+  ValueDef: IwbValueDef;
 begin
-  Result := wbIsInternalEdit or
-    Decide(aBasePtr, aEndPtr, aElement).IsEditable[aBasePtr, aEndPtr, aElement];
+  Result := wbIsInternalEdit;
+  if Result then
+  begin
+    ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+    if Assigned(ValueDef) then
+      Result := ValueDef.IsEditable[aBasePtr, aEndPtr, aElement]
+    else
+      Result := False;
+  end;
 end;
 
 function TwbUnionDef.GetIsVariableSizeInternal: Boolean;
@@ -12658,8 +12677,14 @@ begin
 end;
 
 function TwbUnionDef.GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement;
+var
+  ValueDef: IwbValueDef;
 begin
-  Result := Decide(aBasePtr, aEndPtr, aElement).LinksTo[aBasePtr, aEndPtr, aElement];
+  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  if Assigned(ValueDef) then
+    Result := ValueDef.LinksTo[aBasePtr, aEndPtr, aElement]
+  else
+    Result := nil;
 end;
 
 function TwbUnionDef.GetMember(aIndex: Integer): IwbValueDef;
@@ -12686,7 +12711,10 @@ begin
 //  end;
   aMember := Decide(aBasePtr, aEndPtr, aElement);
   if not Assigned(aMember) then begin
-    Result := udMembers[0].Size[aBasePtr, aEndPtr, aElement];
+    if Length(udMembers)>0 then
+      Result := udMembers[0].Size[aBasePtr, aEndPtr, aElement]
+    else
+      Result := Low(Integer);
     if Result > 0 then
       for i := 1 to High(udMembers) do
         if Result <> High(Integer) then begin
@@ -12750,31 +12778,58 @@ begin
 end;
 
 function TwbUnionDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
+var
+  ValueDef: IwbValueDef;
 begin
-  Result := Decide(aBasePtr, aEndPtr, aElement).SetToDefault(aBasePtr, aEndPtr, aElement);
+  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  if Assigned(ValueDef) then
+    Result := ValueDef.SetToDefault(aBasePtr, aEndPtr, aElement)
+  else
+    Result := False;
 end;
 
-function TwbUnionDef.ToEditValue(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement): string;
+function TwbUnionDef.ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+var
+  ValueDef: IwbValueDef;
 begin
-  Result := Decide(aBasePtr, aEndPtr, aElement).
-    EditValue[aBasePtr, aEndPtr, aElement];
+  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  if Assigned(ValueDef) then
+    Result := ValueDef.EditValue[aBasePtr, aEndPtr, aElement]
+  else
+    Result := '';
 end;
 
 function TwbUnionDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
+var
+  ValueDef: IwbValueDef;
 begin
-  Result := Decide(aBasePtr, aEndPtr, aElement).
-    NativeValue[aBasePtr, aEndPtr, aElement];
+  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  if Assigned(ValueDef) then
+    Result := ValueDef.NativeValue[aBasePtr, aEndPtr, aElement]
+  else
+    Result := '';
 end;
 
 function TwbUnionDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
+var
+  ValueDef: IwbValueDef;
 begin
-  Result := Decide(aBasePtr, aEndPtr, aElement).ToSortKey(aBasePtr, aEndPtr, aElement, aExtended);
+  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  if Assigned(ValueDef) then
+    Result := ValueDef.ToSortKey(aBasePtr, aEndPtr, aElement, aExtended)
+  else
+    Result := '';
 end;
 
 function TwbUnionDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+var
+  ValueDef: IwbValueDef;
 begin
-  Result := Decide(aBasePtr, aEndPtr, aElement).ToString(aBasePtr, aEndPtr, aElement);
+  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  if Assigned(ValueDef) then
+    Result := ValueDef.ToString(aBasePtr, aEndPtr, aElement)
+  else
+    Result := '';
   Used(aElement, Result);
 end;
 
@@ -13783,16 +13838,26 @@ end;
 
 procedure TwbIntegerDefFormaterUnion.BuildRef(aInt     : Int64;
                                         const aElement : IwbElement);
+var
+  IntegerDef: IwbIntegerDefFormater;
 begin
-  Decide(aElement).BuildRef(aInt, aElement);
+  IntegerDef := Decide(aElement);
+  if Assigned(IntegerDef) then
+    IntegerDef.BuildRef(aInt, aElement);
 end;
 
 function TwbIntegerDefFormaterUnion.CanAssign(const aElement : IwbElement;
                                                     aIndex   : Integer;
                                               const aDef     : IwbDef)
                                                              : Boolean;
+var
+  IntegerDef: IwbIntegerDefFormater;
 begin
-  Result := Decide(aElement).CanAssign(aElement, aIndex, aDef);
+  IntegerDef := Decide(aElement);
+  if Assigned(IntegerDef) then
+    Result := IntegerDef.CanAssign(aElement, aIndex, aDef)
+  else
+    Result := False;
 end;
 
 function TwbIntegerDefFormaterUnion.CanContainFormIDs: Boolean;
@@ -13823,8 +13888,14 @@ function TwbIntegerDefFormaterUnion.CompareExchangeFormID(var aInt       : Int64
                                                               aNewFormID : Cardinal;
                                                         const aElement   : IwbElement)
                                                                          : Boolean;
+var
+  IntegerDef: IwbIntegerDefFormater;
 begin
-  Result := Decide(aElement).CompareExchangeFormID(aInt, aOldFormID, aNewFormID, aElement);
+  IntegerDef := Decide(aElement);
+  if Assigned(IntegerDef) then
+    Result := IntegerDef.CompareExchangeFormID(aInt, aOldFormID, aNewFormID, aElement)
+  else
+    Result := False;
 end;
 
 constructor TwbIntegerDefFormaterUnion.Create(aPriority : TwbConflictPriority;
@@ -13844,22 +13915,38 @@ end;
 
 function TwbIntegerDefFormaterUnion.Decide(const aElement : IwbElement)
                                                           : IwbIntegerDefFormater;
+var
+  i: Integer;
 begin
-  Result := idfuMembers[idfuDecider(aElement)];
+  i := idfuDecider(aElement);
+  if (i>=0) and (i<Length(idfuMembers)) then
+    Result := idfuMembers[i]
+  else
+    Result := nil;
 end;
 
 procedure TwbIntegerDefFormaterUnion.FindUsedMasters(aInt     : Int64;
                                                      aMasters : PwbUsedMasters;
                                                const aElement : IwbElement);
+var
+  IntegerDef: IwbIntegerDefFormater;
 begin
-  Decide(aElement).FindUsedMasters(aInt, aMasters, aElement);
+  IntegerDef := Decide(aElement);
+  if Assigned(IntegerDef) then
+    IntegerDef.FindUsedMasters(aInt, aMasters, aElement);
 end;
 
 function TwbIntegerDefFormaterUnion.FromEditValue(const aValue   : string;
                                                   const aElement : IwbElement)
                                                                  : Int64;
+var
+  IntegerDef: IwbIntegerDefFormater;
 begin
-  Result := Decide(aElement).FromEditValue(aValue, aElement);
+  IntegerDef := Decide(aElement);
+  if Assigned(IntegerDef) then
+    Result := IntegerDef.FromEditValue(aValue, aElement)
+  else
+    Result := 0;
 end;
 
 function TwbIntegerDefFormaterUnion.GetDefType: TwbDefType;
@@ -13870,34 +13957,59 @@ end;
 function TwbIntegerDefFormaterUnion.GetEditInfo(aInt     : Int64;
                                           const aElement : IwbElement)
                                                          : string;
+var
+  IntegerDef: IwbIntegerDefFormater;
 begin
-  Result := Decide(aElement).GetEditInfo(aInt, aElement);
+  IntegerDef := Decide(aElement);
+  if Assigned(IntegerDef) then
+    Result := IntegerDef.GetEditInfo(aInt, aElement)
+  else
+    Result := '';
 end;
 
 function TwbIntegerDefFormaterUnion.GetEditType(aInt     : Int64;
                                           const aElement : IwbElement)
                                                          : TwbEditType;
+var
+  IntegerDef: IwbIntegerDefFormater;
 begin
-  Result := Decide(aElement).GetEditType(aInt, aElement);
+  IntegerDef := Decide(aElement);
+  if Assigned(IntegerDef) then
+    Result := IntegerDef.GetEditType(aInt, aElement)
+  else
+    Result := etDefault;
 end;
 
 function TwbIntegerDefFormaterUnion.GetIsEditable(aInt     : Int64;
                                             const aElement : IwbElement)
                                                            : Boolean;
+var
+  IntegerDef: IwbIntegerDefFormater;
 begin
-  Result := Decide(aElement).GetIsEditable(aInt, aElement);
+  IntegerDef := Decide(aElement);
+  if Assigned(IntegerDef) then
+    Result := IntegerDef.GetIsEditable(aInt, aElement)
+  else
+    Result := False;
 end;
 
 function TwbIntegerDefFormaterUnion.GetLinksTo(aInt     : Int64;
                                          const aElement : IwbElement)
                                                         : IwbElement;
+var
+  IntegerDef: IwbIntegerDefFormater;
 begin
-  Result := Decide(aElement).GetLinksTo(aInt, aElement);
+  IntegerDef := Decide(aElement);
+  if Assigned(IntegerDef) then
+    Result := IntegerDef.GetLinksTo(aInt, aElement)
+  else
+    Result := nil;
 end;
 
 function TwbIntegerDefFormaterUnion.GetMember(aIndex: Integer): IwbIntegerDefFormater;
 begin
-  Result := idfuMembers[aIndex];
+  if (aIndex>=0) and (aIndex<Length(idfuMembers)) then
+    Result := idfuMembers[aIndex];
 end;
 
 function TwbIntegerDefFormaterUnion.GetMemberCount: Integer;
@@ -13920,8 +14032,14 @@ function TwbIntegerDefFormaterUnion.MasterCountUpdated(aInt     : Int64;
                                                        aNew     : Byte;
                                                  const aElement : IwbElement)
                                                                 : Int64;
+var
+  IntegerDef: IwbIntegerDefFormater;
 begin
-  Result := Decide(aElement).MasterCountUpdated(aInt, aOld, aNew, aElement);
+  IntegerDef := Decide(aElement);
+  if Assigned(IntegerDef) then
+    Result := IntegerDef.MasterCountUpdated(aInt, aOld, aNew, aElement)
+  else
+    Result := 0;
 end;
 
 function TwbIntegerDefFormaterUnion.MasterIndicesUpdated(aInt     : Int64;
@@ -13929,8 +14047,14 @@ function TwbIntegerDefFormaterUnion.MasterIndicesUpdated(aInt     : Int64;
                                                    const aNew     : TBytes;
                                                    const aElement : IwbElement)
                                                                   : Int64;
+var
+  IntegerDef: IwbIntegerDefFormater;
 begin
-  Result := Decide(aElement).MasterIndicesUpdated(aInt, aOld, aNew, aElement);
+  IntegerDef := Decide(aElement);
+  if Assigned(IntegerDef) then
+    Result := IntegerDef.MasterIndicesUpdated(aInt, aOld, aNew, aElement)
+  else
+    Result := 0;
 end;
 
 procedure TwbIntegerDefFormaterUnion.Report(const aParents: TwbDefPath);
@@ -13942,22 +14066,40 @@ end;
 function TwbIntegerDefFormaterUnion.ToEditValue(aInt     : Int64;
                                           const aElement : IwbElement)
                                                          : string;
+var
+  IntegerDef: IwbIntegerDefFormater;
 begin
-  Result := Decide(aElement).ToEditValue(aInt, aElement);
+  IntegerDef := Decide(aElement);
+  if Assigned(IntegerDef) then
+    Result := IntegerDef.ToEditValue(aInt, aElement)
+  else
+    Result := '';
 end;
 
 function TwbIntegerDefFormaterUnion.ToSortKey(aInt     : Int64;
                                         const aElement : IwbElement)
                                                        : string;
+var
+  IntegerDef: IwbIntegerDefFormater;
 begin
-  Result := Decide(aElement).ToSortKey(aInt, aElement);
+  IntegerDef := Decide(aElement);
+  if Assigned(IntegerDef) then
+    Result := IntegerDef.ToSortKey(aInt, aElement)
+  else
+    Result := '';
 end;
 
 function TwbIntegerDefFormaterUnion.ToString(aInt     : Int64;
                                        const aElement : IwbElement)
                                                       : string;
+var
+  IntegerDef: IwbIntegerDefFormater;
 begin
-  Result := Decide(aElement).ToString(aInt, aElement);
+  IntegerDef := Decide(aElement);
+  if Assigned(IntegerDef) then
+    Result := IntegerDef.ToString(aInt, aElement)
+  else
+    Result := '';
 end;
 
 function wbFindRecordDef(const aSignature : TwbSignature;
