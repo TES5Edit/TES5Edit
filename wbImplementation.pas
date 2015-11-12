@@ -9389,47 +9389,48 @@ begin
   ValueDef := Resolve(srDef.Value, BasePtr, dcDataEndPtr, Self);
   srArraySizePrefix := 0;
 
-  if ValueDef.Name = '' then begin
-    srValueDef := ValueDef;
-    case ValueDef.DefType of
-      dtArray: begin
-        Include(srStates, srsIsArray);
-        if ArrayDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, srArraySizePrefix) then
-          Include(srStates, srsSorted);
-      end;
-      dtStruct, dtStructChapter: StructDoInit(ValueDef, Self, BasePtr, dcDataEndPtr);
-      dtUnion:  begin
-        Include(srStates, srsIsUnion);
-        case UnionDoInit(ValueDef, Self, BasePtr, dcDataEndPtr) of
-          ufArray: Include(srStates, srsIsArray);
-          ufSortedArray: begin
-            Include(srStates, srsIsArray);
+  if Assigned(ValueDef) then
+    if ValueDef.Name = '' then begin
+      srValueDef := ValueDef;
+      case ValueDef.DefType of
+        dtArray: begin
+          Include(srStates, srsIsArray);
+          if ArrayDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, srArraySizePrefix) then
             Include(srStates, srsSorted);
-          end;
-          ufFlags: begin
-            Include(srStates, srsIsFlags);
-            Include(srStates, srsSorted);
+        end;
+        dtStruct, dtStructChapter: StructDoInit(ValueDef, Self, BasePtr, dcDataEndPtr);
+        dtUnion:  begin
+          Include(srStates, srsIsUnion);
+          case UnionDoInit(ValueDef, Self, BasePtr, dcDataEndPtr) of
+            ufArray: Include(srStates, srsIsArray);
+            ufSortedArray: begin
+              Include(srStates, srsIsArray);
+              Include(srStates, srsSorted);
+            end;
+            ufFlags: begin
+              Include(srStates, srsIsFlags);
+              Include(srStates, srsSorted);
+            end;
           end;
         end;
+      else
+        if ValueDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, Self) then begin
+          Include(srStates, srsIsFlags);
+          Include(srStates, srsSorted);
+        end;
       end;
-    else
-      if ValueDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, Self) then begin
-        Include(srStates, srsIsFlags);
-        Include(srStates, srsSorted);
+      // flags are already created in the right sort order
+      if srStates * [srsSorted, srsIsFlags] = [srsSorted] then
+        Include(srStates, srsSortInvalid);
+    end else
+      case ValueDef.DefType of
+        dtArray: Element := TwbArray.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
+        dtStruct: Element := TwbStruct.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
+        dtStructChapter: Element := TwbChapter.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
+        dtUnion: Element := TwbUnion.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
+      else
+        Element := TwbValue.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
       end;
-    end;
-    // flags are already created in the right sort order
-    if srStates * [srsSorted, srsIsFlags] = [srsSorted] then
-      Include(srStates, srsSortInvalid);
-  end else
-    case ValueDef.DefType of
-      dtArray: Element := TwbArray.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
-      dtStruct: Element := TwbStruct.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
-      dtStructChapter: Element := TwbChapter.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
-      dtUnion: Element := TwbUnion.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
-    else
-      Element := TwbValue.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
-    end;
 
   if Assigned(dcDataEndPtr) and Assigned(BasePtr) and (BasePtr <> dcDataEndPtr) then begin
     HasUnusedData := not SameText(ValueDef.Name, 'Unused');
@@ -14108,32 +14109,38 @@ begin
 
   ValueDef := Resolve(aValueDef, aBasePtr, aEndPtr, aElement);
 
-  if wbFlagsAsArray then
-    if Supports(ValueDef, IwbIntegerDef, IntegerDef) then
-      if Supports(IntegerDef.Formater[aElement], IwbFlagsDef, FlagsDef) then begin
+  if Assigned(ValueDef) then
+  begin
+    if wbFlagsAsArray then
+      if Supports(ValueDef, IwbIntegerDef, IntegerDef) then
+        if Supports(IntegerDef.Formater[aElement], IwbFlagsDef, FlagsDef) then begin
 
-        if Assigned(aBasePtr) and (FlagsDef.FlagCount > 0) then begin
-          j := IntegerDef.ToInt(aBasePtr, aEndPtr, aContainer);
-          if j <> 0 then
-            for i := 0 to Pred(FlagsDef.FlagCount) do
-              if (j and (Cardinal(1) shl i)) <> 0 then begin
-                t := FlagsDef.Flags[i];
-                if (t <> '') and (not wbHideUnused or not SameText(t,'Unused')) then
-                  Element := TwbFlag.Create(aContainer, aBasePtr, aEndPtr, IntegerDef, FlagsDef, i);
-                j := j and not (Cardinal(1) shl i);
-                if j = 0 then
-                  Break;
-              end;
+          if Assigned(aBasePtr) and (FlagsDef.FlagCount > 0) then begin
+            j := IntegerDef.ToInt(aBasePtr, aEndPtr, aContainer);
+            if j <> 0 then
+              for i := 0 to Pred(FlagsDef.FlagCount) do
+                if (j and (Cardinal(1) shl i)) <> 0 then begin
+                  t := FlagsDef.Flags[i];
+                  if (t <> '') and (not wbHideUnused or not SameText(t,'Unused')) then
+                    Element := TwbFlag.Create(aContainer, aBasePtr, aEndPtr, IntegerDef, FlagsDef, i);
+                  j := j and not (Cardinal(1) shl i);
+                  if j = 0 then
+                    Break;
+                end;
+          end;
+
+          Result := True;
+
         end;
 
-        Result := True;
-
-      end;
-
-  ValueDef.AfterLoad(aContainer);
+    ValueDef.AfterLoad(aContainer);
+  end;
 
   if wbMoreInfoForUnknown then begin
-    t := ValueDef.Name;
+    if Assigned(ValueDef) then
+      t := ValueDef.Name
+    else
+      t := '';
     if t = '' then
       t := aContainer.Def.Name;
     if SameText(t, 'Unknown') and (not Assigned(aBasePtr) or (aBasePtr <> aEndPtr)) then
@@ -14163,7 +14170,10 @@ begin
       end;
   end;
 
-  i := ValueDef.Size[aBasePtr, aEndPtr, aContainer];
+  if assigned(ValueDef) then
+    i := ValueDef.Size[aBasePtr, aEndPtr, aContainer]
+  else
+    i := High(Integer);
   if i = Cardinal(High(Integer)) then
     aBasePtr := aEndPtr
   else if Assigned(aBasePtr) then
