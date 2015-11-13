@@ -47,12 +47,534 @@ const
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
 
 var
+  dtArrays : set of TwbDefType = [
+    dtSubRecordArray,
+    dtArray
+  ];
+
+var
   StartTime  : TDateTime;
   DumpGroups : TStringList;
 
 procedure ReportProgress(const aStatus: string);
 begin
   WriteLn(ErrOutput, FormatDateTime('<hh:nn:ss.zzz>', Now - StartTime), ' ', aStatus);
+end;
+
+type
+  TExportFormat = (efUESPWiki, efRaw);
+  TwbDefProfile = string;
+  TwbExportPass = ( epRead, epSimple, epShared, epChapters, epRemaining, epNothing);
+var
+  wbDefProfiles : TStringList = nil;
+function StrToTExportFormat(aFormat: string): TExportFormat;
+begin
+  Result := efRaw;
+  if Uppercase(aFormat)='RAW' then
+    Result := efRaw
+  else if Uppercase(aFormat)='UESPWIKI' then
+    Result := efUESPWiki;
+end;
+
+function UESPName(aName: String): String;
+begin
+  while Pos(' ', aName)>0 do
+    aName[Pos(' ', aName)] := '_';
+  Result := aName;
+end;
+
+function UESPType(aType: String): String;
+
+  function UESParrayType(aType: String): String; forward;
+
+  function UESPsingleType(aType, aStandard, aResult: String): String;
+  var
+    i: Integer;
+    l: Integer;
+  begin
+    i := Pos(UpperCase(aStandard), Uppercase(aType));
+    if i>0 then begin
+      Result := '';
+      l := Length(aStandard);
+      if i>1 then begin
+        Result := Copy(aType, 1, i-1);
+        Delete(aType, 1, i+l-1);
+      end else
+        Delete(aType, 1, l);
+      Result := Result + aResult + aType;
+    end else
+      Result := aType;
+  end;
+
+  function UESParrayCount(aType: String): String;
+  var
+    i: Integer;
+    c: String;
+  begin
+    i := Pos('_', aType);
+    if i>1 then begin
+      c := Copy(aType, 1, i-1);
+      Delete(aType, 1, i);
+    end else
+      c := '';
+    Result := '_'+aType+'['+c+']';
+  end;
+
+  function UESParrayType(aType: String): String;
+  const
+    cArray = '_ARRAY';
+    cof = '_OF_';
+  var
+    i: Integer;
+    j : Integer;
+    l: Integer;
+    t: String;
+  begin
+    i := Pos(cArray, UpperCase(aType));
+    l := Length(cArray);
+    if (i>0) and ((i+l-1) = Length(aType)) then begin
+      Delete(aType, i, l);
+      j := Pos(cOf, UpperCase(aType));
+      if j>1 then begin
+        Result := Copy(aType, 1, j-1);
+        Delete(aType, 1, j+Length(cOf)-1);
+        t := UESParrayCount(aType);
+        Result := Result + t;
+      end;
+    end else
+      Result := aType;
+  end;
+
+begin
+  Result := UESPName(aType);
+  Result := UESParrayType(Result);
+
+  Result := UESPsingleType(Result, 'Unsigned_Bytes', 'uint8');
+  Result := UESPsingleType(Result, 'Signed_Bytes', 'int8');
+  Result := UESPsingleType(Result, 'Bytes', 'int8');
+  Result := UESPsingleType(Result, 'Unsigned_Byte', 'uint8');
+  Result := UESPsingleType(Result, 'Signed_Byte', 'int8');
+  Result := UESPsingleType(Result, 'Byte', 'int8');
+  Result := UESPsingleType(Result, 'Unsigned_DWord', 'uint32');
+  Result := UESPsingleType(Result, 'Signed_DWord', 'int32');
+  Result := UESPsingleType(Result, 'DWord', 'int32');
+  Result := UESPsingleType(Result, 'Unsigned_Word', 'uint16');
+  Result := UESPsingleType(Result, 'Signed_Word', 'int16');
+  Result := UESPsingleType(Result, 'Word', 'int16');
+  Result := UESPsingleType(Result, 'Float', 'float32');
+
+  Result := UESPsingleType(Result, 'FormID', 'formid');
+end;
+
+const
+  UESPWikiTable = '{| class="wikitable" border="1" width="100%"'+#13+#10+
+  '! width="3%" | [[Tes5Mod:File Format Conventions|C]]'+#13+#10+
+  '! width="10%" | SubRecord'+#13+#10+
+  '! width="15%" | Name'+#13+#10+
+  '! width="15%" | [[Tes5Mod:File Format Conventions|Type/Size]]'+#13+#10+
+  '! width="57%" | Info';
+  UESPWikiClose ='|}'+#13+#10;
+
+function AnchorProfile(aFormat: TExportFormat; aIndent, aProfile: String; useProfile: Boolean; aName, aType: String): String;
+begin
+  case aFormat of
+    efUESPWiki: begin
+      if aIndent='' then
+        Result := '=== [[Tes5Mod:Save File Format/'+aProfile+'|'+UESPName(aName)+']] ==='+#13+#10+UESPWikiTable
+      else begin
+        Result := '|-'+#13+#10+'|'+UESPName(aName)+#13+#10+'|';
+        if useProfile then
+          Result := Result+'[[Tes5Mod:Save File Format/'+aProfile+'|'+UESPType(aType)+']]'
+        else
+          Result := Result+UESPType(aType);
+        Result := Result+#13+#10+'|';
+      end;
+    end;
+    efRaw: begin
+      Result := aIndent+aName+' as '+aType;
+      if useProfile then Result := Result+' ['+aProfile+']';
+    end;
+  end;
+end;
+
+procedure AddProfile(aProfile: String);
+var
+  i       : Integer;
+begin
+  i := wbDefProfiles.IndexOf(aProfile);
+  if i >= 0 then begin
+    wbDefProfiles.Objects[i] := Pointer(Integer(wbDefProfiles.Objects[i])+1);
+  end else begin
+    wbDefProfiles.AddObject(aProfile, Pointer(1));
+  end;
+end;
+
+function FindProfile(aProfile: String): Integer;
+var
+  i       : Integer;
+begin
+  i := wbDefProfiles.IndexOf(aProfile);
+  if i >= 0 then begin
+    Result := Integer(wbDefProfiles.Objects[i]);
+  end else
+    Result := 0;
+end;
+
+procedure MarkProfile(aProfile: String);
+var
+  i       : Integer;
+begin
+  i := wbDefProfiles.IndexOf(aProfile);
+  if i >= 0 then
+    wbDefProfiles.Objects[i] := Pointer(-1);
+end;
+
+procedure LockProfile(aProfile: String);
+var
+  i       : Integer;
+begin
+  i := wbDefProfiles.IndexOf(aProfile);
+  if i >= 0 then
+    wbDefProfiles.Objects[i] := Pointer(-2);
+end;
+
+procedure ProfileContainer(aFormat: TExportFormat; aElement: IwbNamedDef; var aProfile: String;
+  Pass: TwbExportPass; aIndent: String); forward;
+
+procedure ExportElement(aFormat: TExportFormat; aElement: IwbNamedDef; var aProfile: String;
+  Pass: TwbExportPass; aIndent: string = ''); forward;
+
+procedure ExportContainer(aFormat: TExportFormat; aElement: IwbNamedDef; var aProfile: String;
+  Pass: TwbExportPass; aIndent: String; skipFirst: Boolean);
+var
+  i       : Integer;
+  j       : Integer;
+  Profile : String;
+begin
+  case aElement.DefType of
+    dtSubRecordStruct,
+    dtSubRecordUnion,
+    dtRecord :
+      with aElement as IwbRecordDef do
+        for i := 0 to Pred(MemberCount) do begin
+          Profile := '';
+          ExportElement(aFormat, Members[i], Profile, Pass, aIndent);
+          aProfile := aProfile + Profile;
+        end;
+    dtSubRecord :
+      with aElement as IwbSubRecordDef do begin
+        Profile := '';
+        ExportElement(aFormat, Value, Profile, Pass, aIndent);
+        aProfile := aProfile + Profile;
+      end;
+    dtString,
+    dtLString,
+    dtLenString,
+    dtByteArray,
+    dtInteger,
+    dtIntegerFormater,
+    dtFloat : ;
+    dtSubRecordArray :
+      with aElement as IwbSubRecordArrayDef do begin
+        Profile := '';
+        ExportElement(aFormat, Element, Profile, Pass, aIndent);
+        aProfile := aProfile + Profile;
+      end;
+    dtArray :
+      with aElement as IwbArrayDef do begin
+        Profile := '';
+        ExportElement(aFormat, Element, Profile, Pass, aIndent);
+        aProfile := aProfile + Profile;
+      end;
+    dtStruct,
+    dtStructChapter :
+      with aElement as IwbStructDef do
+        for i := 0 to Pred(MemberCount) do begin
+          Profile := '';
+          ExportElement(aFormat, Members[i], Profile, Pass, aIndent);
+          aProfile := aProfile + Profile;
+        end;
+    dtUnion :
+      with aElement as IwbUnionDef do begin
+        if skipFirst then j := 1 else j := 0;
+        for i := j to Pred(MemberCount) do begin
+          Profile := '';
+          ExportElement(aFormat, Members[i], Profile, Pass, aIndent);
+          aProfile := aProfile + Profile;
+        end;
+      end;
+    dtEmpty: ;
+  end;
+end;
+
+procedure ExportElement(aFormat: TExportFormat; aElement: IwbNamedDef; var aProfile: String;
+  Pass: TwbExportPass; aIndent: string = '');
+var
+  doIt       : Boolean;
+  skipFirst  : Boolean;
+  theElement : IwbNamedDef;
+  theIndent  : String;
+  Profile    : String;
+begin
+  doIt := False;
+  skipFirst := False;
+  theElement := aElement;
+  if aElement.defType in dtArrays then begin
+    case aElement.DefType of
+      dtArray: with aElement as IwbArrayDef do begin
+        doIt := Element.DefType in dtNonValues;
+        theElement := Element;
+      end;
+      dtSubRecordArray: with aElement as IwbSubRecordArrayDef do begin
+        doIt := Element.DefType in dtNonValues;
+      end;
+    end;
+  end else if aElement.defType in [dtSubrecord] then begin
+    with aElement as IwbSubRecordDef do begin
+      doIt := Value.DefType in dtNonValues;
+      theElement := Value;
+    end;
+  end else if aElement.defType in [dtUnion] then begin
+    with aElement as IwbUnionDef do if MemberCount>0 then begin
+      doIt := True;
+      skipFirst := Members[0].DefTypeName = 'Null';
+    end;
+  end else if (aElement.defType in dtNonValues) then
+    doIt := True;
+
+  Profile := ':' + wbDefToName(aElement)+'='+aElement.DefTypeName;
+  aProfile := aProfile + Profile;
+  if doIt then begin
+    Profile := '';
+    ProfileContainer(aFormat, theElement, Profile, Pass, aIndent);
+    aProfile := aProfile + Profile;
+  end;
+  Write(AnchorProfile(aFormat, aIndent, aProfile, doIt, wbDefToName(aElement), aElement.DefTypeName));
+  if skipFirst then Write(' Present only if ...');
+  WriteLn;
+  theIndent := aIndent + '  ';
+  if ((aIndent='') or (FindProfile(aProfile)<>-1)) and doIt then begin
+    Profile := '';
+    ExportContainer(aFormat, theElement, Profile, Pass, theIndent, skipFirst);
+  end;
+  if aIndent = '' then begin
+    case aFormat of
+      efUESPWiki: Write(UESPWikiClose);
+    end;
+    WriteLN;
+  end;
+end;
+
+procedure ProfileElement(aFormat: TExportFormat; aElement: IwbNamedDef; var aProfile: String;
+  Pass: TwbExportPass; aIndent: String); forward;
+
+procedure ProfileContainer(aFormat: TExportFormat; aElement: IwbNamedDef; var aProfile: String;
+  Pass: TwbExportPass; aIndent: String);
+var
+  i       : Integer;
+  Profile : string;
+begin
+  Profile := '';
+  case aElement.DefType of
+    dtSubRecordStruct,
+    dtSubRecordUnion,
+    dtRecord :
+      with aElement as IwbRecordDef do
+        for i := 0 to Pred(MemberCount) do begin
+          Profile := '';
+          ProfileElement(aFormat, Members[i], Profile, Pass, aIndent);
+          aProfile := aProfile + Profile;
+        end;
+    dtSubRecord :
+      with aElement as IwbSubRecordDef do begin
+        Profile := '';
+        ProfileElement(aFormat, Value, profile, Pass, aIndent);
+        aProfile := aProfile + Profile;
+      end;
+    dtString,
+    dtLString,
+    dtLenString,
+    dtByteArray,
+    dtInteger,
+    dtIntegerFormater,
+    dtFloat : ;
+    dtSubRecordArray :
+      with aElement as IwbSubRecordArrayDef do begin
+        Profile := '';
+        ProfileElement(aFormat, Element, Profile, Pass, aIndent);
+        aProfile := aProfile + Profile;
+      end;
+    dtArray :
+      with aElement as IwbArrayDef do begin
+        Profile := '';
+        ProfileElement(aFormat, Element, Profile, Pass, aIndent);
+        aProfile := aProfile + Profile;
+      end;
+    dtStruct,
+    dtStructChapter :
+      with aElement as IwbStructDef do
+        for i := 0 to Pred(MemberCount) do begin
+          Profile := '';
+          ProfileElement(aFormat, Members[i], Profile, Pass, aIndent);
+          aProfile := aProfile + Profile;
+        end;
+    dtUnion :
+      with aElement as IwbUnionDef do
+        for i := 0 to Pred(MemberCount) do begin
+          Profile := '';
+          ProfileElement(aFormat, Members[i], Profile, Pass, aIndent);
+          aProfile := aProfile + Profile;
+        end;
+    dtEmpty: ;
+  end;
+end;
+
+procedure ProfileElement(aFormat: TExportFormat; aElement: IwbNamedDef; var aProfile: String; Pass: TwbExportPass;
+  aIndent: String);
+var
+  Profile    : String;
+  doIt       : Boolean;
+  doubleIt   : Boolean;
+  theElement : IwbNamedDef;
+  n          : Integer;
+
+  procedure doFindSimpleProfile(aProfile: String);
+  begin
+    n := FindProfile(aProfile);
+    if not (aElement.DefType in dtNonValues) and (n>1) then begin
+      LockProfile(aProfile);
+    end;
+  end;
+
+  procedure doFindSharedProfile(aProfile: String);
+  begin
+    if (aElement.DefType in [dtStruct, dtSubRecordStruct]) and (FindProfile(aProfile)>0) then begin
+      MarkProfile(aProfile);
+      ExportElement(aFormat, aElement, Profile, Pass, aIndent);
+    end;
+    if (aElement.DefType in [dtUnion, dtSubRecordUnion]) and (FindProfile(aProfile)>1) then begin
+      MarkProfile(aProfile);
+      ExportElement(aFormat, aElement, Profile, Pass, aIndent);
+    end;
+  end;
+
+  procedure doFindChaptersProfile(aProfile: String);
+  begin
+    if (aElement.DefType in [dtRecord, dtStructChapter]) then begin
+      MarkProfile(aProfile);
+      ExportElement(aFormat, aElement, Profile, Pass, aIndent);
+    end;
+  end;
+
+  procedure doFindProfile(aProfile: String);
+  begin
+    if FindProfile(aProfile)>0 then begin
+      MarkProfile(aProfile);
+    end;
+  end;
+
+  procedure CheckPass(Pass: TwbExportPass; aProfile: String);
+  begin
+    Profile := '';
+    case Pass of
+      epRead:      AddProfile(aProfile);
+      epSimple:    doFindSimpleProfile(aProfile);
+      epShared:    doFindSharedProfile(aProfile);
+      epChapters:  doFindChaptersProfile(aProfile);
+      epRemaining: doFindProfile(aProfile);
+    end;
+  end;
+
+begin
+  if not Assigned(wbDefProfiles) then begin
+    wbDefProfiles := TStringList.Create;
+    wbDefProfiles.Sorted := True;
+    wbDefProfiles.Duplicates := dupIgnore;
+  end;
+
+  Profile := ':' + wbDefToName(aElement)+'='+aElement.DefTypeName;
+  aProfile := aProfile + Profile;
+
+  doIt := False;
+  doubleIt := False;
+  theElement := aElement;
+  if aElement.defType in dtArrays then begin
+    case aElement.DefType of
+      dtArray: with aElement as IwbArrayDef do begin
+        doIt := Element.DefType in dtNonValues;
+        doubleIt := doIt;
+        theElement := Element;
+      end;
+      dtSubRecordArray: with aElement as IwbSubRecordArrayDef do begin
+        doIt := Element.DefType in dtNonValues;
+        doubleIt := doIt;
+      end;
+    end;
+  end else if aElement.defType in [dtSubrecord] then begin
+    with aElement as IwbSubRecordDef do begin
+      doIt := Value.DefType in dtNonValues;
+      theElement := Value;
+    end;
+  end else if (aElement.defType in dtNonValues) then
+    doIt := True;
+  if doIt then begin
+    Profile := '';
+    ProfileContainer(aFormat, theElement, Profile, Pass, aIndent);
+    aProfile := aProfile + Profile;
+    if doubleIt then begin
+      Profile := '';
+      ProfileContainer(aFormat, theElement, Profile, Pass, aIndent);
+      aProfile := aProfile + Profile;
+    end;
+
+  end;
+  CheckPass(Pass, aProfile);
+end;
+
+procedure ProfileHeader(aFormat: TExportFormat; Pass: TwbExportPass);
+var
+  RecordDef : PwbRecordDef;
+  Profile   : String;
+begin
+  Profile := '';
+  case wbToolSource of
+    tsPlugins: begin
+      if wbFindRecordDef(wbHeaderSignature, RecordDef) then
+        ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
+    end;
+    tsSaves: begin
+      ProfileElement(aFormat, wbFileHeader, Profile, Pass, '');
+    end;
+  end;
+end;
+
+procedure ProfileArray(aFormat: TExportFormat; Pass: TwbExportPass);
+var
+  i         : Integer;
+  RecordDef : PwbRecordDef;
+  Profile   : String;
+begin
+  case wbToolSource of
+    tsPlugins: for i := 0 to Pred(wbGroupOrder.Count) do
+      if wbGroupOrder[i]<>wbHeaderSignature then begin
+        Profile := '';
+        if wbFindRecordDef(AnsiString(wbGroupOrder[i]), RecordDef) then
+          ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
+      end;
+  end;
+end;
+
+procedure ProfileChapters(aFormat: TExportFormat; Pass: TwbExportPass);
+var
+  i         : Integer;
+  Profile   : String;
+begin
+  Profile := '';
+  case wbToolSource of
+    tsSaves: for i := 0 to Pred(wbFileChapters.MemberCount) do begin
+      ProfileElement(aFormat, wbFileChapters.Members[i], Profile, Pass, '');
+    end;
+  end;
 end;
 
 procedure WriteElement(aElement: IwbElement; aIndent: string = ''); forward;
@@ -264,10 +786,10 @@ end;
 
 function isFormatValid(aFormatName: String): Boolean;
 begin
-  if Uppercase(aFormatName) = 'UESP' then
-    Result := False
-  else if Uppercase(aFormatName) = 'UESP' then
-    Result := False
+  if Uppercase(aFormatName) = 'RAW' then
+    Result := True
+  else if Uppercase(aFormatName) = 'UESPWIKI' then
+    Result := True
   else
     Result := False;
 end;
@@ -280,6 +802,7 @@ var
   Masters         : TStringList;
   F               : TSearchRec;
   n,m             : TStringList;
+  Pass            : TwbExportPass;
 begin
   {$IF CompilerVersion >= 24}
   FormatSettings.DecimalSeparator := '.';
@@ -313,7 +836,7 @@ begin
       wbAppName := 'FNV';
       wbGameName := 'FalloutNV';
       wbLoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
-      if not (wbToolMode in [tmDump]) then begin
+      if not (wbToolMode in [tmDump, tmExport]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
       end;
@@ -327,7 +850,7 @@ begin
       wbAppName := 'FO3';
       wbGameName := 'Fallout3';
       wbLoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
-      if not (wbToolMode in [tmDump]) then begin
+      if not (wbToolMode in [tmDump, tmExport]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
       end;
@@ -357,7 +880,7 @@ begin
       wbAppName := 'TES4';
       wbGameName := 'Oblivion';
       wbLoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
-      if not (wbToolMode in [tmDump]) then begin
+      if not (wbToolMode in [tmDump, tmExport]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
       end;
@@ -371,7 +894,7 @@ begin
       wbAppName := 'TES5';
       wbGameName := 'Skyrim';
       wbLoadBSAs := true;
-      if not (wbToolMode in [tmDump]) then begin
+      if not (wbToolMode in [tmDump, tmExport]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
       end;
@@ -387,7 +910,7 @@ begin
       wbAppName := 'FO4';
       wbGameName := 'Fallout4';
       wbLoadBSAs := false;
-      if not (wbToolMode in [tmDump]) then begin
+      if not (wbToolMode in [tmDump, tmExport]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
       end;
@@ -404,6 +927,11 @@ begin
     DoInitPath;
     if (wbToolMode in [tmDump]) and (wbDataPath = '') then // Dump can be run in any directory configuration
       wbDataPath := CheckParamPath;
+
+    if FindCmdLineSwitch('report') then
+      wbReportMode := True
+    else
+      wbReportMode := False;
 
     if not FindCmdLineSwitch('q') and not wbReportMode then begin
       WriteLn(ErrOutput, wbAppName, wbToolName,' ', VersionString);
@@ -486,6 +1014,9 @@ begin
       WriteLn(ErrOutput);
       WriteLn(ErrOutput, wbAppName + 'Dump will load the specified esp/esm files and all it''s masters and will dump the decoded contents of the specified file to stdout. Masters are searched for in the same directory as the specified file.');
       WriteLn(ErrOutput);
+      WriteLn(ErrOutput, wbAppName + 'Export will dump the plugin definition in the specified format.');
+      WriteLn(ErrOutput, wbAppName + 'Export -Saves will dump the save file definition in the specified format.');
+      WriteLn(ErrOutput);
       WriteLn(ErrOutput, 'You can use the normal redirect mechanism to send the output to a file.');
       WriteLn(ErrOutput, 'e.g. "'+wbAppName+'Dump '+wbGameName+'.esm > '+wbGameName+'.txt"');
       WriteLn(ErrOutput);
@@ -517,6 +1048,10 @@ begin
       WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Example: full dump of Skyrim.esm excluding "bloated" records');
       WriteLn(ErrOutput, '  FO4Dump.exe -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Skyrim.esm');
+      WriteLn(ErrOutput, '             ', '');
+      WriteLn(ErrOutput, 'Currently supported export formats:');
+      WriteLn(ErrOutput, 'RAW          ','Private format for debugging');
+      WriteLn(ErrOutput, 'UESPWIKI     ','UESP Wiki table format [Very WIP]');
       WriteLn(ErrOutput, '             ', '');
       Exit;
     end;
@@ -639,17 +1174,28 @@ begin
       wbContainerHandler.AddFolder(wbDataPath);
     end;
 
-    _File := wbFile(s);
+    if wbToolMode in [tmDump] then
+      _File := wbFile(s);
 
     ReportProgress('Finished loading record. Starting Dump.');
 
-    if FindCmdLineSwitch('check') and not wbReportMode then
-      CheckForErrors(0, _File)
-    else
-      WriteContainer(_File);
+    if wbToolMode in [tmDump] then begin
+      if FindCmdLineSwitch('check') and not wbReportMode then
+        CheckForErrors(0, _File)
+      else
+        WriteContainer(_File);
 
-    if wbReportMode then
-      ReportDefs;
+      if wbReportMode then
+        ReportDefs;
+    end else if wbToolMode in [tmExport] then begin
+      for Pass := epRead to epRemaining do begin
+        ProfileHeader(StrToTExportFormat(s), Pass);
+        ProfileArray(StrToTExportFormat(s), Pass);
+        ProfileChapters(StrToTExportFormat(s), Pass);
+      end;
+
+      wbDefProfiles.SaveToFile(wbAppName+wbToolName+wbSourceName+'.txt');
+    end;
 
     ReportProgress('All Done.');
   except
