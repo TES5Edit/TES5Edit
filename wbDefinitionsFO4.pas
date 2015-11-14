@@ -347,6 +347,7 @@ const
   LVLM : TwbSignature = 'LVLM'; { New to Fallout 4 }
   LVLN : TwbSignature = 'LVLN';
   LVLO : TwbSignature = 'LVLO';
+  LVSG : TwbSignature = 'LVSG'; { New to Fallout 4 }
   MAST : TwbSignature = 'MAST';
   MATO : TwbSignature = 'MATO';
   MATT : TwbSignature = 'MATT';
@@ -10426,6 +10427,7 @@ begin
     wbEDID,
     wbOBNDReq,
     wbLVLD,
+    wbUnknown(LVLM), { Always 00 }
     wbInteger(LVLF, 'Flags', itU8, wbFlags([
       {0x01} 'Calculate from all levels <= player''s level',
       {0x02} 'Calculate for each item in count',
@@ -10445,7 +10447,10 @@ begin
         ]),
         wbCOED
       ], []), cpNormal, False, nil, wbLVLOsAfterSet
-    )
+    ),
+    wbUnknown(LLKC), { Possible FormID then Flags }
+    wbUnknown(LVSG),
+    wbUnknown(ONAM)
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
   wbMGEFType := wbInteger('Archtype', itU32, wbEnum([
