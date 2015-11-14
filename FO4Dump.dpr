@@ -1175,9 +1175,10 @@ begin
         end;
       end;
       FreeAndNil(Masters);
-      ReportProgress('[' + wbDataPath + '] Setting Resource Path.');
-      wbContainerHandler.AddFolder(wbDataPath);
     end;
+
+    ReportProgress('[' + wbDataPath + '] Setting Resource Path.');
+    wbContainerHandler.AddFolder(wbDataPath);
 
     if wbToolMode in [tmDump] then
       _File := wbFile(s);
