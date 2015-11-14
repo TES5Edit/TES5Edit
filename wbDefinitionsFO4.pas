@@ -208,6 +208,7 @@ const
   CSME : TwbSignature = 'CSME'; { New to Skyrim }
   CSTY : TwbSignature = 'CSTY';
   CTDA : TwbSignature = 'CTDA';
+  CUSD : TwbSignature = 'CUSD'; { New to Fallout 4 }
   DALC : TwbSignature = 'DALC'; { New to Skyrim }
   DATA : TwbSignature = 'DATA';
   DEBR : TwbSignature = 'DEBR';
@@ -13343,7 +13344,13 @@ begin
   ]);
 
   wbRecord(CMPO, 'CMPO', [
-    wbEDID
+    wbEDID,
+    wbOBND,
+    wbFULL,
+    wbUnknown(CUSD),
+    wbUnknown(DATA),
+    wbUnknown(MNAM),
+    wbUnknown(GNAM)
   ]);
 
   wbRecord(DFOB, 'DFOB', [
