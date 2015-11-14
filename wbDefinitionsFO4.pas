@@ -820,6 +820,7 @@ var
   wbNull: IwbValueDef;
   wbTimeInterpolator: IwbStructDef;
   wbColorInterpolator: IwbStructDef;
+  wbTNAM: IwbSubRecordDef; { New for Fallout 4 }
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -4256,6 +4257,7 @@ var
 procedure DefineFO4a;
 
 begin
+  wbTNAM := wbByteArray(TNAM, 'TNAM_Array');
   wbNull := wbByteArray('Unused', -255);
   wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
   wbCITC := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign);
@@ -12689,8 +12691,8 @@ begin
       wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
       0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),  // If possible then ignored by the runtime
     wbByteArray(SCRN, 'Screenshot'),                      // If possible then ignored by the runtime
-    wbRArray('Unknown', wbRStruct('Unknown', [
-      wbUnknown(TNAM)                                     // Ignored by the runtime
+    wbRArray('TNAM Array', wbRStruct('Array', [
+      wbTNAM
     ], [])),
     wbUnknown(INTV),                                      // Ignored by the runtime
     wbInteger(INCC, 'Unknown', itU32)                     // Size of some array of 12 bytes elements
