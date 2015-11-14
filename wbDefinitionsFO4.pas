@@ -345,7 +345,6 @@ const
   LVLI : TwbSignature = 'LVLI';
   LVLN : TwbSignature = 'LVLN';
   LVLO : TwbSignature = 'LVLO';
-  LVSP : TwbSignature = 'LVSP';
   MAST : TwbSignature = 'MAST';
   MATO : TwbSignature = 'MATO';
   MATT : TwbSignature = 'MATT';
@@ -4264,7 +4263,7 @@ begin
   wbLVLD := wbInteger(LVLD, 'Chance None', itU8, nil, cpNormal, True);
 
   wbSPCT := wbInteger(SPCT, 'Count', itU32, nil, cpBenign);
-  wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL, SHOU, LVSP]);
+  wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL, SHOU]);
   wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, wbSPLOsAfterSet, nil{wbActorTemplateUseActorEffectList});
 
   wbKSIZ := wbInteger(KSIZ, 'Keyword Count', itU32, nil, cpBenign);
@@ -6108,7 +6107,7 @@ begin
         wbFormIDCkNoReach('Worldspace', [WRLD, FLST]),
         wbInteger('VATS Value Function', itU32, wbVATSValueFunctionEnum),
         wbInteger('VATS Value Param (INVALID)', itU32),
-        wbFormIDCkNoReach('Referenceable Object', [NULL, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, FLST, LVLI, LVSP, SPEL, SCRL, SHOU, SLGM, ENCH], [NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, LVLI, LVSP, SPEL, SCRL, SHOU, SLGM, ENCH]),
+        wbFormIDCkNoReach('Referenceable Object', [NULL, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, FLST, LVLI, SPEL, SCRL, SHOU, SLGM, ENCH], [NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, LVLI, SPEL, SCRL, SHOU, SLGM, ENCH]),
         wbFormIDCkNoReach('Region', [REGN]),
         wbFormIDCkNoReach('Keyword', [KYWD, NULL]),
         wbInteger('Player Action', itU32, wbAdvanceActionEnum),
@@ -6209,7 +6208,7 @@ begin
          {19} wbInteger('Delivery Type', itU32, wbTargetEnum),
          {20} wbInteger('Casting Type', itU32, wbCastEnum)
         ]),
-        wbFormIDCkNoReach('Referenceable Object', [NULL, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, FLST, LVLI, LVSP, SPEL, SCRL, SHOU, SLGM, ENCH], [NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, LVLI, LVSP, SPEL, SCRL, SHOU, SLGM, ENCH]),
+        wbFormIDCkNoReach('Referenceable Object', [NULL, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, FLST, LVLI, SPEL, SCRL, SHOU, SLGM, ENCH], [NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, LVLI, SPEL, SCRL, SHOU, SLGM, ENCH]),
         wbFormIDCkNoReach('Region', [REGN]),
         wbFormIDCkNoReach('Keyword', [KYWD, NULL]),
         wbInteger('Player Action', itU32, wbAdvanceActionEnum),
@@ -10445,29 +10444,6 @@ begin
     )
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
-   wbRecord(LVSP, 'Leveled Spell', [
-    wbEDID,
-    wbOBNDReq,
-    wbLVLD,
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
-      {0x01} 'Calculate from all levels <= player''s level',
-      {0x02} 'Calculate for each item in count',
-      {0x04} 'Use All Spells'
-    ]), cpNormal, True),
-    wbLLCT,
-    wbRArrayS('Leveled List Entries',
-      wbRStructSK([0], 'Leveled List Entry', [
-        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-        wbInteger('Level', itU16),
-        wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow),
-        wbFormIDCk('Reference', [SPEL, LVSP]),
-        wbInteger('Count', itU16),
-        wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
-      ])
-      ], []), cpNormal, False, nil, wbLVLOsAfterSet
-    )
-  ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
-
   wbMGEFType := wbInteger('Archtype', itU32, wbEnum([
     {00} 'Value Modifier',
     {01} 'Script',
@@ -13564,7 +13540,6 @@ begin
    wbAddGroupOrder(PACK);
    wbAddGroupOrder(CSTY);
    wbAddGroupOrder(LSCR);
-   wbAddGroupOrder(LVSP);
    wbAddGroupOrder(ANIO);
    wbAddGroupOrder(WATR);
    wbAddGroupOrder(EFSH);
