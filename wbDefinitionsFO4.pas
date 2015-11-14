@@ -12677,20 +12677,23 @@ begin
       wbInteger('Number of Records', itU32),
       wbInteger('Next Object ID', itU32)
     ], cpNormal, True),
-    wbByteArray(OFST, 'Unknown', 0, cpIgnore),
-    wbByteArray(DELE, 'Unknown', 0, cpIgnore),
+    wbByteArray(OFST, 'Unknown', 0, cpIgnore),            // Ignored by the runtime
+    wbByteArray(DELE, 'Unknown', 0, cpIgnore),            // Ignored by the runtime
     wbString(CNAM, 'Author', 0, cpTranslate, True),
     wbString(SNAM, 'Description', 0, cpTranslate),
     wbRArray('Master Files', wbRStruct('Master File', [
       wbString(MAST, 'Filename', 0, cpNormal, True),
       wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
     ], [ONAM])),
-    wbArray(ONAM, 'Overridden Forms',
+    wbArray(ONAM, 'Overridden Forms',                     // If possible then ignored by the runtime
       wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-      0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
-    wbByteArray(SCRN, 'Screenshot'),
-    wbUnknown(INTV),
-    wbUnknown(INCC)
+      0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),  // If possible then ignored by the runtime
+    wbByteArray(SCRN, 'Screenshot'),                      // If possible then ignored by the runtime
+    wbRArray('Unknown', wbRStruct('Unknown', [
+      wbUnknown(TNAM)                                     // Ignored by the runtime
+    ], [])),
+    wbUnknown(INTV),                                      // Ignored by the runtime
+    wbInteger(INCC, 'Unknown', itU32)                     // Size of some array of 12 bytes elements
   ], True, nil, cpNormal, True, wbRemoveOFST);
 end;
 
