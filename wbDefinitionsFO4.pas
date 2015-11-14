@@ -13470,7 +13470,8 @@ begin
   ]);
 
   wbRecord(TRNS, 'TRNS', [
-    wbEDID
+    wbEDID,
+    wbUnknown(DATA)
   ]);
 
   wbRecord(ZOOM, 'ZOOM', [
