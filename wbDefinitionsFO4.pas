@@ -333,6 +333,7 @@ const
   LGTM : TwbSignature = 'LGTM';
   LIGH : TwbSignature = 'LIGH';
   LLCT : TwbSignature = 'LLCT'; {New to Skyrim, part of LVLI 'Count'}
+  LLKC : TwbSignature = 'LLKC'; { New to Fallout 4 }
   LNAM : TwbSignature = 'LNAM';
   LSCR : TwbSignature = 'LSCR';
   LSPR : TwbSignature = 'LSPR'; { New to Fallout 4 }
@@ -343,6 +344,7 @@ const
   LVLF : TwbSignature = 'LVLF';
   LVLG : TwbSignature = 'LVLG';
   LVLI : TwbSignature = 'LVLI';
+  LVLM : TwbSignature = 'LVLM'; { New to Fallout 4 }
   LVLN : TwbSignature = 'LVLN';
   LVLO : TwbSignature = 'LVLO';
   MAST : TwbSignature = 'MAST';
@@ -10397,6 +10399,7 @@ begin
     wbEDID,
     wbOBNDReq,
     wbLVLD,
+    wbUnknown(LVLM), { Always 00 }
     wbInteger(LVLF, 'Flags', itU8, wbFlags([
       {0x01} 'Calculate from all levels <= player''s level',
       {0x02} 'Calculate for each item in count'
@@ -10415,6 +10418,7 @@ begin
 				wbCOED
       ], []),
     cpNormal, True, nil, wbLVLOsAfterSet),
+    wbUnknown(LLKC), { Possible FormID then Flags }
     wbMODL
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
