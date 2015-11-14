@@ -981,10 +981,15 @@ begin
       GroupToSkip.Add('WRLD');
     end;
 
-    if wbFindCmdLineParam('l', s) and (wbGameMode in [gmTES5]) then
+    if wbFindCmdLineParam('l', s) and (wbGameMode in [gmTES5, gmFO4]) then
       wbLanguage := s
     else
-      wbLanguage := 'English';
+      case wbGameMode of
+        gmTES5:
+          wbLanguage := 'English';
+        gmFO4:
+          wbLanguage := 'En';
+      end;
 
     if wbFindCmdLineParam('do', s) then
       wbDumpOffset := StrToInt64Def(s, wbDumpOffset);
