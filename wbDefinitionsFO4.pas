@@ -7757,7 +7757,9 @@ begin
   wbRecord(AACT, 'Action', [
     wbEDID,
     wbCNAM,
-    wbString(DNAM, 'Name'),
+    {>>> Only one record ActionTrick, with DNAM.  Result is DNAM - Name: Dog Trick
+    wbString(DNAM, 'Name'), <<<}
+    wbUnknown(DNAM),
     wbUnknown(TNAM)
   ]);
 
