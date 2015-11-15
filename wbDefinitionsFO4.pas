@@ -175,6 +175,7 @@ const
   BPNT : TwbSignature = 'BPNT';
   BPTD : TwbSignature = 'BPTD';
   BPTN : TwbSignature = 'BPTN';
+  BSIZ : TwbSignature = 'BSIZ'; { New to Fallout 4 }
   BTXT : TwbSignature = 'BTXT';
   CAMS : TwbSignature = 'CAMS';
   CELL : TwbSignature = 'CELL';
@@ -310,6 +311,8 @@ const
   INTV : TwbSignature = 'INTV';
   IPCT : TwbSignature = 'IPCT';
   IPDS : TwbSignature = 'IPDS';
+  ISIZ : TwbSignature = 'ISIZ'; { New To Fallout 4 }
+  ITID : TwbSignature = 'ITID'; { New To Fallout 4 }
   ITXT : TwbSignature = 'ITXT';
   JAIL : TwbSignature = 'JAIL'; { New To Skyrim }
   JNAM : TwbSignature = 'JNAM';
@@ -457,10 +460,11 @@ const
   PRKF : TwbSignature = 'PRKF';
   PRKR : TwbSignature = 'PRKR'; { New to Skyrim }
   PRKZ : TwbSignature = 'PRKZ'; { New to Skyrim }
-  PROJ : TwbSignature = 'PROJ';
   PRPS : TwbSignature = 'PRPS'; { New to Fallout 4 }
+  PROJ : TwbSignature = 'PROJ';
   PSDT : TwbSignature = 'PSDT';
   PTDA : TwbSignature = 'PTDA'; { New to Skyrim }
+  PTRN : TwbSignature = 'PTRN'; { New to Fallout 4 }
   QNAM : TwbSignature = 'QNAM';
   QOBJ : TwbSignature = 'QOBJ';
   QSDT : TwbSignature = 'QSDT';
@@ -825,6 +829,7 @@ var
   wbNull: IwbValueDef;
   wbTimeInterpolator: IwbStructDef;
   wbColorInterpolator: IwbStructDef;
+  wbServiceFlags: IwbFlagsDef;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -4988,7 +4993,8 @@ begin
   ], cpNormal, false, wbScriptFragmentsDontShow);
 
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
-  wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
+  wbVMAD := wbUnknown(VMAD);
+  {wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
     wbInteger('Version', itS16, nil, cpIgnore),
     wbInteger('Object Format', itS16, nil, cpIgnore),
     wbUnion('Data', wbScriptFragmentExistsDecider, [
@@ -5014,7 +5020,7 @@ begin
         wbScriptFragmentsScen
       ], cpNormal, False, nil, 0)
     ])
-  ], cpNormal, false, nil, -1);
+  ], cpNormal, false, nil, -1);}
 
   wbAttackData := wbRStructSK([1], 'Attack', [
     wbStruct(ATKD, 'Attack Data', [
@@ -6819,6 +6825,28 @@ begin
 
   end;
 
+  wbServiceFlags :=
+    wbFlags([
+      {0x00000001} 'Weapons',
+      {0x00000002} 'Armor',
+      {0x00000004} 'Alcohol',
+      {0x00000008} 'Books',
+      {0x00000010} 'Food',
+      {0x00000020} 'Chems',
+      {0x00000040} 'Stimpacks',
+      {0x00000080} 'Lights?',
+      {0x00000100} '',
+      {0x00000200} '',
+      {0x00000400} 'Miscellaneous',
+      {0x00000800} '',
+      {0x00001000} '',
+      {0x00002000} 'Potions?',
+      {0x00004000} 'Training',
+      {0x00008000} '',
+      {0x00010000} 'Recharge',
+      {0x00020000} 'Repair'
+    ]);
+
   wbRecord(CLAS, 'Class', [
     wbEDID,
     wbFULLReq,
@@ -7736,7 +7764,9 @@ begin
       {0x0002}'Facegen Textures',
       {0x0004}'Has Model Space Normal Map'
     ]), cpNormal, False),
-    wbString(MNAM)
+    {>>> MNAM Decals\POIJS038GraffitiDeca2l.BGSM
+    This is a string of a Filename <<<}
+    wbUnknown(MNAM)
   ]);
 
   wbRecord(HDPT, 'Head Part',
@@ -7775,8 +7805,7 @@ begin
     ], []),
     wbFormIDCk(TNAM, 'Texture Set', [TXST, NULL]),
     wbFormIDCk(CNAM, 'Color', [CLFM, NULL]),
-    wbFormIDCk(RNAM, 'Valid Races', [FLST, NULL]),
-    wbCTDA
+    wbFormIDCk(RNAM, 'Valid Races', [FLST, NULL])
   ]);
 
   wbRecord(ASPC, 'Acoustic Space', [
@@ -13424,12 +13453,57 @@ begin
     wbEDID
   ]);
 
-  wbRecord(STAG, 'STAG', [
-    wbEDID
+  wbRecord(STAG, 'Attack Sound', [
+    wbEDID,
+    wbRArray('Sounds', wbStruct(TNAM, 'Sound', [
+      wbFormIDCk('Sound', [SNDR]),
+      wbString('Action')
+    ]))
   ]);
 
   wbRecord(TERM, 'TERM', [
-    wbEDID
+    wbEDID,
+    wbVMAD,
+    wbOBNDReq,
+    wbFormIDCk(PTRN, 'Unknown', [TRNS]),
+    wbUnknown(NAM0),
+    wbUnknown(WNAM),
+    wbFULL,
+    wbMODL,
+    wbKSIZ,
+    wbKWDAs,
+    wbUnknown(PRPS),
+    wbUnknown(PNAM),
+    wbUnknown(FNAM),
+    wbCOCT,
+    wbCNTOs,
+    wbUnknown(MNAM),
+    wbUnknown(WBDT),
+    wbString(XMRK, 'Marker Model'),
+    wbUnknown(SNAM),
+    wbInteger(BSIZ, 'Count', itU32, nil, cpBenign),
+    wbRArray('Display Items',
+      wbRStruct('Display Item', [
+        wbLString(BTXT, 'Text'),
+        wbCTDAs
+      ], [])
+    ),
+    wbInteger(ISIZ, 'Count', itU32, nil, cpBenign),
+    wbRArray('Menu Items',
+      wbRStruct('Menu Item', [
+        wbLString(ITXT, 'Item Text'),
+        wbLString(RNAM, 'Error Text'),
+        wbInteger(ANAM, 'Flags', itU8, wbFlags([
+          'Add Note',
+          'Force Redraw',
+          'Unknown 2'
+        ]), cpNormal, True),
+        wbInteger(ITID, 'Item ID', itU16),
+        wbLString(UNAM, 'Response Text'),
+        wbFormIDCk(TNAM, 'Terminal', [TERM]),
+        wbCTDAs
+      ], [])
+    )
   ]);
 
   wbRecord(TLOD, 'TLOD', [
@@ -13446,7 +13520,8 @@ begin
   ]);
 
   wbRecord(ZOOM, 'ZOOM', [
-    wbEDID
+    wbEDID,
+    wbUnknown(GNAM)
   ]);
 
 end;
