@@ -335,6 +335,8 @@ const
   LCTN : TwbSignature = 'LCTN';
   LCUN : TwbSignature = 'LCUN'; { New to Skyrim }
   LENS : TwbSignature = 'LENS'; { New to Fallout 4 }
+  LFSD : TwbSignature = 'LFSD'; { New to Fallout 4 }
+  LFSP : TwbSignature = 'LFSP'; { New to Fallout 4 }
   LGTM : TwbSignature = 'LGTM';
   LIGH : TwbSignature = 'LIGH';
   LLCT : TwbSignature = 'LLCT'; {New to Skyrim, part of LVLI 'Count'}
@@ -13484,8 +13486,18 @@ begin
     wbFormIDCk(PNAM, 'Parent', [LAYR])
   ]);
 
-  wbRecord(LENS, 'LENS', [
-    wbEDID
+  wbRecord(LENS, 'Lens Flare', [
+    wbEDID,
+    wbFloat(CNAM),
+    wbFloat(DNAM),
+    wbUnknown(LFSP),
+    wbRArray('Flares',
+      wbRStruct('Flare', [
+        wbString(DNAM, 'Shape'),
+        wbString(FNAM, 'Texture'),
+        wbUnknown(LFSD)
+      ], [])
+    )
   ]);
 
   wbRecord(LSPR, 'LSPR', [
@@ -13497,11 +13509,27 @@ begin
   ]);
 
   wbRecord(MSWP, 'MSWP', [
-    wbEDID
+    wbEDID,
+    wbString(FNAM),
+    wbRArray('Unknown',
+      wbRStruct('Unknown', [
+        wbString(BNAM),
+        wbString(SNAM),
+        wbString(FNAM),
+        wbUnknown(CNAM)
+      ], [])
+    )
   ]);
 
   wbRecord(NOCM, 'NOCM', [
-    wbEDID
+    wbRArray('Unknown',
+      wbRStruct('Unknown', [
+        wbInteger(INDX, 'Index', itU32),
+        wbRArray('Unknown', wbUnknown(DATA)),
+        wbUnknown(INTV),
+        wbString(NAM1, 'Model')
+      ], [])
+    )
   ]);
 
 end;
@@ -13509,23 +13537,54 @@ end;
 procedure DefineFO4s;
 begin
   wbRecord(NOTE, 'NOTE', [
-    wbEDID
+    wbEDID,
+    wbVMAD,
+    wbOBND,
+    wbFormIDCk(PTRN, 'Unknown', [TRNS]),
+    wbFULL,
+    wbMODL,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
+    wbFormIDCk(ZNAM, 'Sound - Pick Up', [SNDR]),
+    wbUnknown(DNAM),
+    wbUnknown(DATA),
+    wbFormIDCk(SNAM, 'Unknown', [SCEN, TERM]),
+    wbString(PNAM, 'Game')
   ]);
 
-  wbRecord(OMOD, 'OMOD', [
-    wbEDID
+  wbRecord(OMOD, 'Modification', [
+    wbEDID,
+    wbFULL,
+    wbLString(DESC, 'Description'),
+    wbMODL,
+    wbUnknown(DATA),
+    wbArray(MNAM, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
+    wbArray(FNAM, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
+    wbFormID(LNAM),
+    wbUnknown(NAM1),
+    wbString(FLTR, 'Filter')
   ]);
 
   wbRecord(OVIS, 'OVIS', [
-    wbEDID
+    wbRArray('Unknown',
+      wbRStruct('Unknown', [
+        wbFormIDCk(INDX, 'Object', [STAT]),
+        wbUnknown(DATA)
+      ], [])
+    )
   ]);
 
-  wbRecord(PKIN, 'PKIN', [
-    wbEDID
+  wbRecord(PKIN, 'Pack In', [
+    wbEDID,
+    wbOBND,
+    wbString(FLTR, 'Filter'),
+    wbFormIDCk(CNAM, 'Cell', [CELL]),
+    wbUnknown(VNAM)
   ]);
 
-  wbRecord(RFGP, 'RFGP', [
-    wbEDID
+  wbRecord(RFGP, 'Reference Group', [
+    wbEDID,
+    wbString(NNAM, 'Name'),
+    wbFormIDCk(RNAM, 'Reference', [REFR])
   ]);
 
   wbRecord(RGDL, 'RGDL', [
@@ -13533,11 +13592,32 @@ begin
   ]);
 
   wbRecord(SCCO, 'SCCO', [
-    wbEDID
+    wbEDID,
+    wbFormIDCk(QNAM, 'Quest', [QUST]),
+    wbRArray('Unknown',
+      wbRStruct('Unknown', [
+        wbFormIDCk(SNAM, 'Scene', [SCEN]),
+        wbStruct(XNAM, 'Unknown', [
+          wbInteger('Unknown', itS32),
+          wbInteger('Unknown', itS32)
+        ])
+      ], [])
+    ),
+    wbUnknown(VNAM, cpNormal, True),
+    wbRArray('Unknown', wbStruct(XNAM, 'Unknown', [
+      wbInteger('Unknown', itS32),
+      wbInteger('Unknown', itS32)
+    ])),
+    wbUnknown(VNAM, cpNormal, True)
   ]);
 
-  wbRecord(SCSN, 'SCSN', [
-    wbEDID
+  wbRecord(SCSN, 'Scene Sound', [
+    wbEDID,
+    wbInteger(PNAM, 'Index?', itU16),
+    wbRArray('Sounds', wbStruct(CNAM, 'Sound', [
+      wbFormIDCk('Sound Categoty', [SNCT]),
+      wbByteArray('Unknown', 4)
+    ]))
   ]);
 
 end;
@@ -13556,7 +13636,7 @@ begin
     ]))
   ]);
 
-  wbRecord(TERM, 'TERM', [
+  wbRecord(TERM, 'Terminal', [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
