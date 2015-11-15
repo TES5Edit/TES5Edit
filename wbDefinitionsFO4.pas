@@ -7775,7 +7775,8 @@ begin
     ], []),
     wbFormIDCk(TNAM, 'Texture Set', [TXST, NULL]),
     wbFormIDCk(CNAM, 'Color', [CLFM, NULL]),
-    wbFormIDCk(RNAM, 'Valid Races', [FLST, NULL])
+    wbFormIDCk(RNAM, 'Valid Races', [FLST, NULL]),
+    wbCTDA
   ]);
 
   wbRecord(ASPC, 'Acoustic Space', [
