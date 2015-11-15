@@ -148,8 +148,8 @@ const
   AMMO : TwbSignature = 'AMMO';
   ANAM : TwbSignature = 'ANAM';
   ANIO : TwbSignature = 'ANIO';
-  AORU : TwbSignature = 'AORU'; { New To Fallout 4 }
   AOR2 : TwbSignature = 'AOR2'; { New To Fallout 4 }
+  AORU : TwbSignature = 'AORU'; { New To Fallout 4 }
   ARMA : TwbSignature = 'ARMA';
   ARMO : TwbSignature = 'ARMO';
   ARTO : TwbSignature = 'ARTO';
@@ -463,8 +463,8 @@ const
   PRKF : TwbSignature = 'PRKF';
   PRKR : TwbSignature = 'PRKR'; { New to Skyrim }
   PRKZ : TwbSignature = 'PRKZ'; { New to Skyrim }
-  PRPS : TwbSignature = 'PRPS'; { New to Fallout 4 }
   PROJ : TwbSignature = 'PROJ';
+  PRPS : TwbSignature = 'PRPS'; { New to Fallout 4 }
   PSDT : TwbSignature = 'PSDT';
   PTDA : TwbSignature = 'PTDA'; { New to Skyrim }
   PTRN : TwbSignature = 'PTRN'; { New to Fallout 4 }
@@ -492,6 +492,7 @@ const
   REGN : TwbSignature = 'REGN';
   RELA : TwbSignature = 'RELA';
   REPL : TwbSignature = 'REPL';
+  REPT : TwbSignature = 'REPT'; { New To Fallout 4 }
   REVB : TwbSignature = 'REVB';
   RFCT : TwbSignature = 'RFCT';
   RFGP : TwbSignature = 'RFGP'; { New to Fallout 4 }
@@ -12517,7 +12518,8 @@ begin
     wbOBNDReq,
     wbUnknown(FNAM, cpIgnore), // leftover, unused
     wbUnknown(SNDD, cpIgnore), // leftover, unused
-    wbFormIDCk(SDSC, 'Sound Descriptor', [SNDR, NULL])
+    wbFormIDCk(SDSC, 'Sound Descriptor', [SNDR, NULL]),
+    wbUnknown(REPT)
   ]);
 
   wbSPIT := wbStruct(SPIT, 'Data', [
