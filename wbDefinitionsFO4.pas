@@ -13383,8 +13383,9 @@ begin
     wbEDID
   ]);
 
-  wbRecord(DMGT, 'DMGT', [
-    wbEDID
+  wbRecord(DMGT, 'Damage Type', [
+    wbEDID,
+    wbUnknown(DNAM)
   ]);
 
   wbRecord(GDRY, 'GDRY', [
