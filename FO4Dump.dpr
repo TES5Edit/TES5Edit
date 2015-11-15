@@ -617,7 +617,7 @@ begin
         if not DumpGroups.Find(String(TwbSignature(GroupRecord.GroupLabel)), i) then
           Exit;
 
-  Name := aElement.DisplayName;
+  Name := aElement.Name;
   Value := aElement.Value;
 
   if (aElement.Name <> 'Unused') and (Name <> 'Unused') then begin
