@@ -158,6 +158,7 @@ const
   ATKD : TwbSignature = 'ATKD'; { New to Skyrim }
   ATKE : TwbSignature = 'ATKE'; { New to Skyrim }
   ATKR : TwbSignature = 'ATKR'; { New to Skyrim }
+  ATTX : TwbSignature = 'ATTX'; { New To Fallout 4 }
   ATXT : TwbSignature = 'ATXT';
   AVIF : TwbSignature = 'AVIF';
   AVSK : TwbSignature = 'AVSK'; { New to Skyrim }
@@ -278,6 +279,7 @@ const
   FTSF : TwbSignature = 'FTSF'; { New to Skyrim }
   FTSM : TwbSignature = 'FTSM'; { New to Skyrim }
   FTST : TwbSignature = 'FTST'; { New to Skyrim }
+  FTYP : TwbSignature = 'FTYP'; { New To Fallout 4 }
   FULL : TwbSignature = 'FULL';
   FURN : TwbSignature = 'FURN';
   GDRY : TwbSignature = 'GDRY'; { New to Fallout 4 }
@@ -416,6 +418,7 @@ const
   NOCM : TwbSignature = 'NOCM'; { New to Fallout 4 }
   NOTE : TwbSignature = 'NOTE'; { New to Fallout 4 }
   NPC_ : TwbSignature = 'NPC_';
+  NTRM : TwbSignature = 'NTRM'; { New to Fallout 4 }
   NULL : TwbSignature = 'NULL';
   NVER : TwbSignature = 'NVER';
   NVMI : TwbSignature = 'NVMI';
@@ -478,6 +481,7 @@ const
   QUAL : TwbSignature = 'QUAL'; { New To Skyrim }
   QUST : TwbSignature = 'QUST';
   RACE : TwbSignature = 'RACE';
+  RADR : TwbSignature = 'RADR'; { New To Fallout 4 }
   RCEC : TwbSignature = 'RCEC'; { New To Skyrim }
   RCLR : TwbSignature = 'RCLR';
   RCPR : TwbSignature = 'RCPR'; { New to Dawnguard }
@@ -544,6 +548,7 @@ const
   SPOR : TwbSignature = 'SPOR'; { New to Skyrim }
   STAG : TwbSignature = 'STAG'; { New to Fallout 4 }
   STAT : TwbSignature = 'STAT';
+  STCP : TwbSignature = 'STCP'; { New to Fallout 4 }
   STOL : TwbSignature = 'STOL'; { New to Skyrim }
   SWMV : TwbSignature = 'SWMV'; { New to Skyrim }
   TACT : TwbSignature = 'TACT';
@@ -5498,11 +5503,16 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbUnknown(PTRN),
+    wbUnknown(STCP),
     wbFULL,
     wbMODL,
     wbDEST,
     wbKSIZ,
     wbKWDAs,
+    wbUnknown(PRPS),
+    wbUnknown(NTRM),
+    wbUnknown(FTYP),
     wbStruct(PNAM, 'Marker Color', [
       wbInteger('Red', itU8),
       wbInteger('Green', itU8),
@@ -5513,11 +5523,21 @@ begin
     wbFormIDCk(VNAM, 'Sound - Activation', [SNDR, SOUN]),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
     wbLString(RNAM, 'Activate Text Override'),
+    wbUnknown(ATTX),
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       'No Displacement',
       'Ignored by Sandbox'
     ])),
-    wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD])
+    wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
+    wbUnknown(RADR),
+    wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign),
+    wbRArray('Conditions',
+      wbRStruct('Condition', [
+        wbUnknown(CTDA),
+        wbUnknown(CIS1),
+        wbUnknown(CIS2)
+      ], [])
+    )
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(TACT, 'Talking Activator',
