@@ -843,6 +843,8 @@ var
   wbTimeInterpolator: IwbStructDef;
   wbColorInterpolator: IwbStructDef;
   wbServiceFlags: IwbFlagsDef;
+  wbCUSD: IwbSubRecordDef;
+  wbPTRN: IwbSubRecordDef;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -6215,6 +6217,9 @@ begin
   wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
   wbCTDAsReqCount := wbRArray('Conditions', wbCTDA, cpNormal, True, nil, wbCTDAsAfterSet);
 
+  wbPTRN := wbFormIDCk(PTRN, 'Unknown', [TRNS]);
+  wbCUSD := wbFormIDCk(CUSD, 'UI Sound', [SNDR]);
+
   wbEffectsReq :=
     wbRStructs('Effects', 'Effect', [
       wbEFID,
@@ -6241,7 +6246,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
-    wbFormIDCk(PTRN, 'Unknown', [TRNS]),
+    wbPTRN,
     wbFormIDCk(STCP, 'Sound', [STAG]),
     wbFULL,
     wbMODL,
@@ -6257,8 +6262,8 @@ begin
       wbInteger('Blue', itU8),
       wbInteger('Unused', itU8)
     ]),
-    wbFormIDCk(SNAM, 'Sound - Looping', [SNDR, SOUN]),
-    wbFormIDCk(VNAM, 'Sound - Activation', [SNDR, SOUN]),
+    wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
+    wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
     wbLString(ATTX, 'Activate Text Override'),
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
@@ -6286,7 +6291,7 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbUnknown(PNAM, cpIgnore, True),
-    wbFormIDCk(SNAM, 'Looping Sound', [SNDR, SOUN]),
+    wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
     wbUnknown(FNAM, cpIgnore, True),
     wbFormIDCk(VNAM, 'Voice Type', [VTYP])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
@@ -6297,16 +6302,16 @@ begin
     ])), [
     wbEDID,
     wbOBNDReq,
+    wbPTRN,
     wbFULL,
     wbKSIZ,
     wbKWDAs,
-    wbDESC,
     wbMODL,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
+    wbCUSD,
     wbDEST,
-    wbICON,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
-    wbETYP,
+    wbDESC,
     wbFloat(DATA, 'Weight', cpNormal, True),
     wbStruct(ENIT, 'Effect Data', [
       wbInteger('Value', itS32),
@@ -6334,6 +6339,7 @@ begin
       wbFloat('Addiction Chance'),
       wbFormIDCk('Sound - Consume', [SNDR, NULL])
     ], cpNormal, True),
+    wbLString(DNAM, 'Unknown'),
     wbEffectsReq
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
@@ -6474,7 +6480,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
-    wbUnknown(PTRN),
+    wbPTRN,
     wbFULL,
     wbMODL,
     wbICON,
@@ -13435,7 +13441,7 @@ begin
     wbEDID,
     wbOBND,
     wbFULL,
-    wbFormIDCk(CUSD, 'UI Sound', [SNDR]),
+    wbCUSD,
     wbUnknown(DATA),
     wbFormIDCk(MNAM, 'Scrap Item', [MISC]),
     wbFormIDCk(GNAM, 'Rarity', [GLOB])
@@ -13565,7 +13571,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBND,
-    wbFormIDCk(PTRN, 'Unknown', [TRNS]),
+    wbPTRN,
     wbFULL,
     wbMODL,
     wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
@@ -13665,7 +13671,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
-    wbFormIDCk(PTRN, 'Unknown', [TRNS]),
+    wbPTRN,
     wbUnknown(NAM0),
     wbUnknown(WNAM),
     wbFULL,
