@@ -5485,82 +5485,6 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
-  wbRecord(ACTI, 'Activator',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000040}  6, 'Has Tree LOD',
-      {0x00000100}  8, 'Must Update Anims',
-      {0x00000200}  9, 'Hidden From Local Map',
-      {0x00008000} 15, 'Has Distant LOD',
-      {0x00010000} 16, 'Random Anim Start',
-      {0x00020000} 17, 'Dangerous',
-      {0x00100000} 20, 'Ignore Object Interaction',
-      {0x00800000} 23, 'Is Marker',
-      {0x02000000} 25, 'Obstacle',
-      {0x04000000} 26, 'NavMesh Generation - Filter',
-      {0x08000000} 27, 'NavMesh Generation - Bounding Box',
-      {0x20000000} 29, 'Child Can Use',
-      {0x40000000} 30, 'NavMesh Generation - Ground'
-    ])), [
-    wbEDID,
-    wbVMAD,
-    wbOBNDReq,
-    wbUnknown(PTRN),
-    wbUnknown(STCP),
-    wbFULL,
-    wbMODL,
-    wbDEST,
-    wbKSIZ,
-    wbKWDAs,
-    wbUnknown(PRPS),
-    wbUnknown(NTRM),
-    wbUnknown(FTYP),
-    wbStruct(PNAM, 'Marker Color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbInteger('Unused', itU8)
-    ]),
-    wbFormIDCk(SNAM, 'Sound - Looping', [SNDR, SOUN]),
-    wbFormIDCk(VNAM, 'Sound - Activation', [SNDR, SOUN]),
-    wbFormIDCk(WNAM, 'Water Type', [WATR]),
-    wbLString(RNAM, 'Activate Text Override'),
-    wbUnknown(ATTX),
-    wbInteger(FNAM, 'Flags', itU16, wbFlags([
-      'No Displacement',
-      'Ignored by Sandbox'
-    ])),
-    wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
-    wbUnknown(RADR),
-    wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign),
-    wbRArray('Conditions',
-      wbRStruct('Condition', [
-        wbUnknown(CTDA),
-        wbUnknown(CIS1),
-        wbUnknown(CIS2)
-      ], [])
-    )
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
-
-  wbRecord(TACT, 'Talking Activator',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000200}  9, 'Hidden From Local Map',
-      {0x00010000} 16, 'Random Anim Start',
-      {0x00020000} 17, 'Radio Station'
-    ]), [17]), [
-    wbEDID,
-    wbVMAD,
-    wbOBNDReq,
-    wbFULL,
-    wbMODL,
-    wbDEST,
-    wbKSIZ,
-    wbKWDAs,
-    wbUnknown(PNAM, cpIgnore, True),
-    wbFormIDCk(SNAM, 'Looping Sound', [SNDR, SOUN]),
-    wbUnknown(FNAM, cpIgnore, True),
-    wbFormIDCk(VNAM, 'Voice Type', [VTYP])
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
-
   wbICON := wbRStruct('Icon', [
     wbString(ICON, 'Large Icon filename'),
     wbString(MICO, 'Small Icon filename')
@@ -6297,6 +6221,75 @@ begin
       wbEFIT,
       wbCTDAs
     ], [], cpNormal, True);
+
+  wbRecord(ACTI, 'Activator',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000040}  6, 'Has Tree LOD',
+      {0x00000100}  8, 'Must Update Anims',
+      {0x00000200}  9, 'Hidden From Local Map',
+      {0x00008000} 15, 'Has Distant LOD',
+      {0x00010000} 16, 'Random Anim Start',
+      {0x00020000} 17, 'Dangerous',
+      {0x00100000} 20, 'Ignore Object Interaction',
+      {0x00800000} 23, 'Is Marker',
+      {0x02000000} 25, 'Obstacle',
+      {0x04000000} 26, 'NavMesh Generation - Filter',
+      {0x08000000} 27, 'NavMesh Generation - Bounding Box',
+      {0x20000000} 29, 'Child Can Use',
+      {0x40000000} 30, 'NavMesh Generation - Ground'
+    ])), [
+    wbEDID,
+    wbVMAD,
+    wbOBNDReq,
+    wbFormIDCk(PTRN, 'Unknown', [TRNS]),
+    wbFormIDCk(STCP, 'Sound', [STAG]),
+    wbFULL,
+    wbMODL,
+    wbDEST,
+    wbKSIZ,
+    wbKWDAs,
+    wbUnknown(PRPS),
+    wbFormIDCk(NTRM, 'Terminal', [TERM]),
+    wbFormIDCk(FTYP, 'Unknown', [LCRT]),
+    wbStruct(PNAM, 'Marker Color', [
+      wbInteger('Red', itU8),
+      wbInteger('Green', itU8),
+      wbInteger('Blue', itU8),
+      wbInteger('Unused', itU8)
+    ]),
+    wbFormIDCk(SNAM, 'Sound - Looping', [SNDR, SOUN]),
+    wbFormIDCk(VNAM, 'Sound - Activation', [SNDR, SOUN]),
+    wbFormIDCk(WNAM, 'Water Type', [WATR]),
+    wbLString(ATTX, 'Activate Text Override'),
+    wbInteger(FNAM, 'Flags', itU16, wbFlags([
+      'No Displacement',
+      'Ignored by Sandbox'
+    ])),
+    wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
+    wbUnknown(RADR),
+    wbCITC,
+    wbCTDAs
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+
+  wbRecord(TACT, 'Talking Activator',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000200}  9, 'Hidden From Local Map',
+      {0x00010000} 16, 'Random Anim Start',
+      {0x00020000} 17, 'Radio Station'
+    ]), [17]), [
+    wbEDID,
+    wbVMAD,
+    wbOBNDReq,
+    wbFULL,
+    wbMODL,
+    wbDEST,
+    wbKSIZ,
+    wbKWDAs,
+    wbUnknown(PNAM, cpIgnore, True),
+    wbFormIDCk(SNAM, 'Looping Sound', [SNDR, SOUN]),
+    wbUnknown(FNAM, cpIgnore, True),
+    wbFormIDCk(VNAM, 'Voice Type', [VTYP])
+  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(ALCH, 'Ingestible',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
