@@ -265,6 +265,7 @@ const
   EYES : TwbSignature = 'EYES';
   FACT : TwbSignature = 'FACT';
   FCHT : TwbSignature = 'FCHT'; { New to Skyrim }
+  FIMD : TwbSignature = 'FIMD'; { New To Fallout 4 }
   FLMV : TwbSignature = 'FLMV'; { New to Skyrim }
   FLOR : TwbSignature = 'FLOR';
   FLST : TwbSignature = 'FLST';
@@ -6480,6 +6481,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbUnknown(PTRN),
     wbFULL,
     wbMODL,
     wbICON,
@@ -6489,6 +6491,7 @@ begin
     wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
     wbKSIZ,
     wbKWDAs,
+    wbUnknown(FIMD),
     wbStruct(DATA, 'Data', [
       wbInteger('Flags', itU8, wbFlags([
        {0x01} 'Teaches Skill',
@@ -6511,8 +6514,9 @@ begin
       wbInteger('Value', itU32),
       wbFloat('Weight')
     ], cpNormal, True),
-    wbFormIDCk(INAM, 'Inventory Art', [STAT]),
-    wbLString(CNAM, 'Description')
+    wbUnknown(DNAM),
+    wbLString(CNAM, 'Description'),
+    wbFormIDCk(INAM, 'Inventory Art', [STAT])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 end;
 
