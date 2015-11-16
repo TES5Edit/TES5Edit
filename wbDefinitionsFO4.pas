@@ -13572,7 +13572,7 @@ begin
     wbFULL,
     wbMODL,
     wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
-    wbFormIDCk(ZNAM, 'Sound - Pick Up', [SNDR]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
     wbUnknown(DNAM),
     wbUnknown(DATA),
     wbFormIDCk(SNAM, 'Unknown', [SCEN, TERM]),
