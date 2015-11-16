@@ -150,6 +150,7 @@ const
   ANIO : TwbSignature = 'ANIO';
   AOR2 : TwbSignature = 'AOR2'; { New To Fallout 4 }
   AORU : TwbSignature = 'AORU'; { New To Fallout 4 }
+  APPR : TwbSignature = 'APPR'; { New To Fallout 4 }
   ARMA : TwbSignature = 'ARMA';
   ARMO : TwbSignature = 'ARMO';
   ARTO : TwbSignature = 'ARTO';
@@ -213,6 +214,7 @@ const
   CTDA : TwbSignature = 'CTDA';
   CUSD : TwbSignature = 'CUSD'; { New to Fallout 4 }
   DALC : TwbSignature = 'DALC'; { New to Skyrim }
+  DAMA : TwbSignature = 'DAMA'; { New to Fallout 4 }
   DAMC : TwbSignature = 'DAMC'; { New to Fallout 4 }
   DATA : TwbSignature = 'DATA';
   DEBR : TwbSignature = 'DEBR';
@@ -314,6 +316,7 @@ const
   INFO : TwbSignature = 'INFO';
   INGR : TwbSignature = 'INGR';
   INNR : TwbSignature = 'INNR'; { New To Fallout 4 }
+  INRD : TwbSignature = 'INRD'; { New To Fallout 4 }
   INTV : TwbSignature = 'INTV';
   IPCT : TwbSignature = 'IPCT';
   IPDS : TwbSignature = 'IPDS';
@@ -428,6 +431,9 @@ const
   NVPP : TwbSignature = 'NVPP'; { New to Skyrim }
   NVSI : TwbSignature = 'NVSI'; { New to Dawnguard }
   OBND : TwbSignature = 'OBND';
+  OBTE : TwbSignature = 'OBTE'; { New to Fallout 4 }
+  OBTF : TwbSignature = 'OBTF'; { New to Fallout 4 }
+  OBTS : TwbSignature = 'OBTS'; { New to Fallout 4 }
   OCOR : TwbSignature = 'OCOR'; { New to Skyrim }
   OFST : TwbSignature = 'OFST';
   OMOD : TwbSignature = 'OMOD'; { New to Fallout 4 }
@@ -552,6 +558,7 @@ const
   STAT : TwbSignature = 'STAT';
   STCP : TwbSignature = 'STCP'; { New to Fallout 4 }
   STOL : TwbSignature = 'STOL'; { New to Skyrim }
+  STOP : TwbSignature = 'STOP'; { New to Fallout 4 }
   SWMV : TwbSignature = 'SWMV'; { New to Skyrim }
   TACT : TwbSignature = 'TACT';
   TCLT : TwbSignature = 'TCLT';
@@ -4419,8 +4426,8 @@ begin
   ], cpNormal, False, nil, 3);
 
   wbBOD2 := wbStruct(BOD2, 'Biped Body Template', [
-    wbFirstPersonFlagsU32,
-    wbInteger('Armor Type', itU32, wbArmorTypeEnum)
+    wbFirstPersonFlagsU32
+    //wbInteger('Armor Type', itU32, wbArmorTypeEnum)
   ], cpNormal, False);
 
   wbBODTBOD2 :=
@@ -6392,40 +6399,57 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbPTRN,
     wbFULL,
     wbEITM,
-    wbInteger(EAMT, 'Enchantment Amount', itU16),
     wbRStruct('Male world model', [
       wbString(MOD2, 'Model Filename'),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO2S
     ], []),
-    wbICON,
     wbRStruct('Female world model', [
       wbString(MOD4, 'Model Filename'),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO4S
     ], []),
-    wbICO2,
-    wbBODTBOD2,
+    wbBOD2,
     wbDEST,
     wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
     wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
-    wbString(BMCT, 'Ragdoll Constraint Template'),
     wbETYP,
-    wbFormIDCk(BIDS, 'Bash Impact Data Set', [IPDS]),
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT]),
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbKSIZ,
     wbKWDAs,
     wbDESC,
-    wbRArray('Armature', wbFormIDCK(MODL, 'Model Filename', [ARMA, NULL])),
-    wbStruct(DATA, 'Data', [
+    wbFormIDCk(INRD, 'Unknown', [INNR]),
+    wbRArray('Armatures',
+      wbRStruct('Armature', [
+        wbInteger(INDX, 'Index', itU16),
+        wbFormIDCk(MODL, 'Armature', [ARMA])
+      ], [])
+    ),
+    wbUnknown(DATA),
+    {wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
-    ], cpNormal, True),
-    wbInteger(DNAM, 'Armor Rating', itS32, wbDiv(100), cpNormal, True),
-    wbFormIDCk(TNAM, 'Template Armor', [ARMO])
+    ], cpNormal, True),}
+    wbUnknown(FNAM),
+    wbUnknown(DAMA),
+    wbArray(APPR, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
+    wbRStruct('Unknown', [
+      wbUnknown(OBTE),
+      wbUnknown(OBTF),
+      wbUnknown(FULL)
+    ], []),
+    wbRArray('Unknown',
+      wbRStruct('Unknown', [
+        wbUnknown(OBTS),
+        wbUnknown(OBTF),
+        wbUnknown(FULL)
+      ], [])
+    ),
+    wbEmpty(STOP, 'Marker')
   ], False, nil, cpNormal, False, wbARMOAfterLoad, wbKeywordsAfterSet);
 
   wbRecord(ARMA, 'Armor Addon', [
