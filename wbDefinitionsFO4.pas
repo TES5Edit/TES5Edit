@@ -458,6 +458,7 @@ const
   PRKR : TwbSignature = 'PRKR'; { New to Skyrim }
   PRKZ : TwbSignature = 'PRKZ'; { New to Skyrim }
   PROJ : TwbSignature = 'PROJ';
+  PRPS : TwbSignature = 'PRPS'; { New to Fallout 4 }
   PSDT : TwbSignature = 'PSDT';
   PTDA : TwbSignature = 'PTDA'; { New to Skyrim }
   QNAM : TwbSignature = 'QNAM';
@@ -6822,59 +6823,9 @@ begin
     wbEDID,
     wbFULLReq,
     wbDESCReq,
+    wbUnknown(PRPS),
     wbICON,
-    wbStruct(DATA, '', [
-      wbByteArray('Unknown', 4),
-      wbInteger('Teaches', itS8, wbEnum([
-        'One Handed',
-        'Two Handed',
-        'Archery',
-        'Block',
-        'Smithing',
-        'Heavy Armor',
-        'Light Armor',
-        'Pickpocket',
-        'Lockpicking',
-        'Sneak',
-        'Alchemy',
-        'Speech',
-        'Alteration',
-        'Conjuration',
-        'Destruction',
-        'Illusion',
-        'Restoration',
-        'Enchanting'
-      ])),
-      wbInteger('Maximum training level', itU8),
-      wbArray('Skill Weights', wbInteger('Weight', itU8), [
-        'One Handed',
-        'Two Handed',
-        'Archery',
-        'Block',
-        'Smithing',
-        'Heavy Armor',
-        'Light Armor',
-        'Pickpocket',
-        'Lockpicking',
-        'Sneak',
-        'Alchemy',
-        'Speech',
-        'Alteration',
-        'Conjuration',
-        'Destruction',
-        'Illusion',
-        'Restoration',
-        'Enchanting'
-      ]),
-      wbFloat('Bleedout Default'),
-      wbInteger('Voice Points', itU32),
-      wbArray('Attribute Weights', wbInteger('Weight', itU8), [
-        'Health',
-        'Magicka',
-        'Stamina',
-        'Unknown'
-      ])
-    ], cpNormal, True)
+    wbUnknown(DATA)
   ]);
 
   wbRecord(CLMT, 'Climate', [
