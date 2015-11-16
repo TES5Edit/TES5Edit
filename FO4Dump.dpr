@@ -1029,8 +1029,8 @@ begin
       WriteLn(ErrOutput, '-? / -help   ', 'This help screen');
       WriteLn(ErrOutput, '-q           ', 'Suppress version message');
       WriteLn(ErrOutput, '-more        ', 'Displays aditional information on Unknowns');
-      WriteLn(ErrOutput, '-l:language  ', 'Specifies language for localization files (TES5 only)');
-      WriteLn(ErrOutput, '             ', '  Default language is English');
+      WriteLn(ErrOutput, '-l:language  ', 'Specifies language for localization files (since TES5)');
+      WriteLn(ErrOutput, '             ', '  Default language is English for TES5 and En for FO4');
       WriteLn(ErrOutput, '-bsa         ', 'Loads default associated BSAs');
       WriteLn(ErrOutput, '             ', ' (plugin.bsa and plugin - interface.bsa)');
       WriteLn(ErrOutput, '-allbsa      ', 'Loads all associated BSAs (plugin*.bsa)');
