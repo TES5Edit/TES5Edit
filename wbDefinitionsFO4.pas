@@ -212,6 +212,7 @@ const
   CTDA : TwbSignature = 'CTDA';
   CUSD : TwbSignature = 'CUSD'; { New to Fallout 4 }
   DALC : TwbSignature = 'DALC'; { New to Skyrim }
+  DAMC : TwbSignature = 'DAMC'; { New to Fallout 4 }
   DATA : TwbSignature = 'DATA';
   DEBR : TwbSignature = 'DEBR';
   DELE : TwbSignature = 'DELE';
@@ -237,6 +238,7 @@ const
   DOFT : TwbSignature = 'DOFT'; { New to Skyrim }
   DOOR : TwbSignature = 'DOOR';
   DPLT : TwbSignature = 'DPLT'; { New to Skyrim }
+  DSTA : TwbSignature = 'DSTA'; { New To Fallout 4 }
   DSTD : TwbSignature = 'DSTD';
   DSTF : TwbSignature = 'DSTF';
   DUAL : TwbSignature = 'DUAL';
@@ -5242,6 +5244,7 @@ begin
       wbInteger('VATS Targetable', itU8, wbEnum(['False', 'True'])),
       wbByteArray('Unknown', 2)
     ]),
+    wbUnknown(DAMC),
     wbRArray('Stages',
       wbRStruct('Stage', [
         wbStruct(DSTD, 'Destruction Stage Data', [
@@ -5259,6 +5262,7 @@ begin
           wbFormIDCk('Debris', [DEBR, NULL]),
           wbInteger('Debris Count', itS32)
         ], cpNormal, True),
+        wbUnknown(DSTA),
         wbRStructSK([0], 'Model', [
           wbString(DMDL, 'Model Filename'),
           wbDMDT,
