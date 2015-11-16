@@ -12711,8 +12711,8 @@ begin
       wbInteger('Number of Records', itU32),
       wbInteger('Next Object ID', itU32)
     ], cpNormal, True),
-    wbByteArray(OFST, 'Unknown', 0, cpIgnore),            // Ignored by the runtime
-    wbByteArray(DELE, 'Unknown', 0, cpIgnore),            // Ignored by the runtime
+    wbByteArray(OFST, 'Unknown', 0, cpIgnore),            // If possible then ignored by the runtime
+    wbByteArray(DELE, 'Unknown', 0, cpIgnore),            // If possible then ignored by the runtime
     wbString(CNAM, 'Author', 0, cpTranslate, True),
     wbString(SNAM, 'Description', 0, cpTranslate),
     wbRArray('Master Files', wbRStruct('Master File', [
@@ -12724,7 +12724,7 @@ begin
       0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),  // If possible then ignored by the runtime
     wbByteArray(SCRN, 'Screenshot'),                      // If possible then ignored by the runtime
     wbRArray('TNAM Array', wbRStruct('Array', [
-      wbUnknown(TNAM)
+      wbUnknown(TNAM)                                     // Ignored by the runtime
     ], [])),
     wbUnknown(INTV),                                      // Ignored by the runtime
     wbInteger(INCC, 'Unknown', itU32)                     // Size of some array of 12 bytes elements
