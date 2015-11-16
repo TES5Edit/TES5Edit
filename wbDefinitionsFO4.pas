@@ -7818,7 +7818,9 @@ begin
     wbOBNDReq,
     wbFormIDCk(SNAM, 'Ambient Sound', [SNDR]),
     wbFormIDCk(RDAT, 'Use Sound from Region (Interiors Only)', [REGN]),
-    wbFormIDCk(BNAM, 'Environment Type (reverb)', [REVB])
+    wbFormIDCk(BNAM, 'Environment Type (reverb)', [REVB]),
+    wbUnknown(XTRI),
+    wbUnknown(WNAM)
   ]);
 
   wbRecord(MSTT, 'Moveable Static',
