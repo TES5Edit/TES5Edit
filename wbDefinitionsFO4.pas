@@ -366,6 +366,7 @@ const
   LVLO : TwbSignature = 'LVLO';
   LVSG : TwbSignature = 'LVSG'; { New to Fallout 4 }
   LVSP : TwbSignature = 'LVSP';
+  MASE : TwbSignature = 'MASE'; { New To Fallout 4 }
   MAST : TwbSignature = 'MAST';
   MATO : TwbSignature = 'MATO';
   MATT : TwbSignature = 'MATT';
@@ -611,6 +612,7 @@ const
   VTXT : TwbSignature = 'VTXT';
   VTYP : TwbSignature = 'VTYP';
   WAIT : TwbSignature = 'WAIT'; { New To Skyrim }
+  WAMD : TwbSignature = 'WAMD'; { New To Fallout 4 }
   WATR : TwbSignature = 'WATR';
   WBDT : TwbSignature = 'WBDT'; { New to Skyrim }
   WCTR : TwbSignature = 'WCTR'; { New To Skyrim }
@@ -622,6 +624,7 @@ const
   WOOP : TwbSignature = 'WOOP';
   WRLD : TwbSignature = 'WRLD';
   WTHR : TwbSignature = 'WTHR';
+  WZMD : TwbSignature = 'WZMD'; { New To Fallout 4 }
   XACT : TwbSignature = 'XACT';
   XALP : TwbSignature = 'XALP'; { New To Skyrim }
   XAPD : TwbSignature = 'XAPD';
@@ -12973,6 +12976,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbPTRN,
     wbFULL,
     wbMODL,
     wbICON,
@@ -12993,7 +12997,6 @@ begin
       wbMO3S
     ], []),
     wbByteArray(NNAM, 'Unused', 0, cpIgnore, False), // leftover
-    wbFormIDCk(INAM, 'Impact Data Set', [IPDS, NULL]),
     wbFormIDCk(WNAM, '1st Person Model Object', [STAT, NULL]),
     wbFormIDCk(SNAM, 'Attack Sound', [SNDR]),
     wbFormIDCk(XNAM, 'Attack Sound 2D', [SNDR]),
@@ -13007,6 +13010,27 @@ begin
       wbFloat('Weight'),
       wbInteger('Damage', itU16)
     ]),
+    wbFormID(INRD),
+    wbArray(APPR, 'Unknown', wbFormID('Unknown')),
+    wbRStruct('Unknown', [
+      wbUnknown(OBTE),
+      wbUnknown(OBTF),
+      wbUnknown(FULL)
+    ], []),
+    wbRArray('Unknown',
+      wbRStruct('Unknown', [
+        wbUnknown(OBTS),
+        wbUnknown(OBTF),
+        wbUnknown(FULL)
+      ], [])
+    ),
+    wbEmpty(STOP, 'Marker'),
+    wbUnknown(NNAM),
+    wbRStruct('Unknown', [
+      wbString(MOD4, 'Model Filename'),
+      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbMO4S
+    ], []),
     wbStruct(DNAM, 'Data', [
       wbInteger('Animation Type', itU8, wbWeaponAnimTypeEnum),
       wbByteArray('Unused', 3, cpIgnore),
@@ -13063,8 +13087,10 @@ begin
       wbByteArray('Unknown', 8),
       wbInteger('Resist', itS32, wbActorValueEnum),
       wbByteArray('Unknown', 4),
-      wbFloat('Stagger')
+      wbFloat('Stagger'),
+      wbByteArray
     ]),
+    wbUnknown(FNAM),
     wbStruct(CRDT, 'Critical Data', [
       wbInteger('Damage', itU16),
       wbByteArray('Unused', 2, cpIgnore),
@@ -13074,6 +13100,15 @@ begin
       ])),
       wbByteArray('Unused', 3, cpIgnore),
       wbFormIDCk('Effect', [SPEL, NULL])
+    ]),
+    wbFormIDCk(INAM, 'Impact Data Set', [IPDS, NULL]),
+    wbUnknown(MASE),
+    wbFormID(LNAM, 'Unknown'),
+    wbFormID(WAMD, 'Unknown'),
+    wbFormID(WZMD, 'Unknown'),
+    wbStruct(DAMA, 'Critical Data', [
+      wbFormID('Unknown'),
+      wbByteArray('Unknown', 4)
     ]),
     wbInteger(VNAM, 'Detection Sound Level', itU32, wbSoundlevelEnum),
     wbFormIDCk(CNAM, 'Template', [WEAP])
