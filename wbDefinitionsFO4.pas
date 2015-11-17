@@ -10262,6 +10262,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbPTRN,
     wbFULLReq,
     wbMODL,
     wbICON,
