@@ -909,7 +909,8 @@ begin
       wbGameMode := gmFO4;
       wbAppName := 'FO4';
       wbGameName := 'Fallout4';
-      wbLoadBSAs := false;
+      wbLoadBSAs := False;
+      wbCreateContainedIn := False;
       if not (wbToolMode in [tmDump, tmExport]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;

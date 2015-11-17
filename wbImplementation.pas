@@ -5304,7 +5304,7 @@ begin
         end;
 
         if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-          if GroupRecord.GroupType in [1, 4..10] then
+          if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
             with TwbContainedInElement.Create(Self) do begin
               _AddRef; _Release;
             end;
@@ -5881,7 +5881,7 @@ begin
   GetFlagsPtr.SetDeleted(True);
 
   if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-    if GroupRecord.GroupType in [1, 4..10] then
+    if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
       with TwbContainedInElement.Create(Self) do begin
         _AddRef; _Release;
       end;
@@ -5950,7 +5950,7 @@ begin
 
   if not (mrsQuickInit in mrStates) then begin
     if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-      if GroupRecord.GroupType in [1, 4..10] then
+      if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
         with TwbContainedInElement.Create(Self) do begin
           _AddRef; _Release;
         end;
@@ -6227,7 +6227,7 @@ var
   GroupRecord: IwbGroupRecord;
 begin
   Result := 1;
-  if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
+  if wbCreateContainedIn and Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
     if GroupRecord.GroupType in [1, 4..10] then
       Inc(Result);
 end;
@@ -8154,7 +8154,7 @@ begin
       GetFlagsPtr.SetDeleted(False);
 
       if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-        if GroupRecord.GroupType in [1, 4..10] then
+        if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
           with TwbContainedInElement.Create(Self) do begin
             _AddRef; _Release;
           end;
