@@ -7960,6 +7960,8 @@ begin
     ])), [
     wbEDID,
     wbOBNDReq,
+    wbKSIZ,
+    wbKWDAs,
     wbInteger(IDLF, 'Flags', itU8, wbFlags([
       'Run in Sequence',
       'Unknown 1',
@@ -7970,6 +7972,7 @@ begin
     wbInteger(IDLC, 'Animation Count', itU8, nil, cpBenign),
     wbFloat(IDLT, 'Idle Timer Setting', cpNormal, False),
     wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, False),
+    wbFormID(QNAM, 'Unknown'),
     wbMODL
   ], False, nil, cpNormal, False, nil, wbAnimationsAfterSet);
 
