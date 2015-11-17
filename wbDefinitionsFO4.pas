@@ -13443,9 +13443,6 @@ end;
 {>>> Unused records, they have empty GRUP in skyrim.esm and still in Fallout 4.esm <<<}
 procedure DefineFO4p;
 begin
-  wbRecord(SCOL, 'SCOL', [
-    wbEDID
-  ]);
   wbRecord(SCPT, 'SCPT', [
     wbEDID
   ]);
@@ -13695,6 +13692,21 @@ begin
     wbUnknown(VNAM, cpNormal, True)
   ]);
 
+  wbRecord(SCOL, 'SCOL', [
+    wbEDID,
+    wbOBNDReq,
+    wbPTRN,
+    wbMODL,
+    wbFULL,
+    wbUnknown(FLTR),
+    wbRArray('Unknown',
+      wbRStruct('Unknown', [
+        wbFormID(ONAM),
+        wbUnknown(DATA)
+      ], [])
+    )
+  ]);
+
   wbRecord(SCSN, 'Scene Sound', [
     wbEDID,
     wbInteger(PNAM, 'Index?', itU16),
@@ -13821,7 +13833,7 @@ begin
    wbAddGroupOrder(LIGH);
    wbAddGroupOrder(MISC);
    wbAddGroupOrder(STAT);
-   wbAddGroupOrder(SCOL);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
+   wbAddGroupOrder(SCOL);
    wbAddGroupOrder(MSTT);
    wbAddGroupOrder(GRAS);
    wbAddGroupOrder(TREE);
