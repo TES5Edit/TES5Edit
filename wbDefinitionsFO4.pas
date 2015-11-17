@@ -8029,6 +8029,7 @@ begin
            wbFormIDCk('Decal Data', [TXST, NULL]),
            wbFormIDCk('Collision Layer', [COLL, NULL])
     ], cpNormal, True, nil, 22),
+    wbUnknown(DNAM),
     wbRStructSK([0], 'Muzzle Flash Model', [
       wbString(NAM1, 'Model Filename'),
       wbByteArray(NAM2, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow)
