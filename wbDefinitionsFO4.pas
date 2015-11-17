@@ -8043,6 +8043,7 @@ begin
     wbFULL,
     wbMODL,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD, NULL]),
+    wbUnknown(DNAM),
     wbStruct(DATA, 'Data', [
       wbInteger('Limit', itU32),
       wbFloat('Radius'),
