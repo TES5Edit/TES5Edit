@@ -114,6 +114,7 @@ const
   ACPR : TwbSignature = 'ACPR'; { New To Skyrim }
   ACSR : TwbSignature = 'ACSR'; { New To Dawnguard }
   ACTI : TwbSignature = 'ACTI';
+  ACTV : TwbSignature = 'ACTV'; { New To Fallout 4 }
   ACUN : TwbSignature = 'ACUN'; { New To Dawnguard }
   ADDN : TwbSignature = 'ADDN';
   AECH : TwbSignature = 'AECH'; { New To Fallout 4 }
@@ -206,6 +207,7 @@ const
   CRDT : TwbSignature = 'CRDT';
   CRGR : TwbSignature = 'CRGR'; { New to Skyrim }
   CRIF : TwbSignature = 'CRIF'; { New to Skyrim }
+  CRIS : TwbSignature = 'CRIS'; { New to Fallout 4 }
   CRVA : TwbSignature = 'CRVA'; { New to Skyrim }
   CSCR : TwbSignature = 'CSCR';
   CSDC : TwbSignature = 'CSDC';
@@ -251,6 +253,8 @@ const
   DSTA : TwbSignature = 'DSTA'; { New To Fallout 4 }
   DSTD : TwbSignature = 'DSTD';
   DSTF : TwbSignature = 'DSTF';
+  DTGT : TwbSignature = 'DTGT'; { New To Fallout 4 }
+  DTID : TwbSignature = 'DTID'; { New To Fallout 4 }
   DUAL : TwbSignature = 'DUAL';
   EAMT : TwbSignature = 'EAMT';
   ECOR : TwbSignature = 'ECOR'; { New to Skyrim }
@@ -324,6 +328,7 @@ const
   INGR : TwbSignature = 'INGR';
   INNR : TwbSignature = 'INNR'; { New To Fallout 4 }
   INRD : TwbSignature = 'INRD'; { New To Fallout 4 }
+  INTT : TwbSignature = 'INTT'; { New To Fallout 4 }
   INTV : TwbSignature = 'INTV';
   IPCT : TwbSignature = 'IPCT';
   IPDS : TwbSignature = 'IPDS';
@@ -426,11 +431,19 @@ const
   NAME : TwbSignature = 'NAME';
   NAVI : TwbSignature = 'NAVI';
   NAVM : TwbSignature = 'NAVM';
+  NETO : TwbSignature = 'NETO'; { New to Fallout 4 }
   NEXT : TwbSignature = 'NEXT';
   NNAM : TwbSignature = 'NNAM';
+  NNGT : TwbSignature = 'NNGT'; { New to Fallout 4 }
+  NNUT : TwbSignature = 'NNUT'; { New to Fallout 4 }
   NOCM : TwbSignature = 'NOCM'; { New to Fallout 4 }
   NOTE : TwbSignature = 'NOTE'; { New to Fallout 4 }
   NPC_ : TwbSignature = 'NPC_';
+  NPOS : TwbSignature = 'NPOS'; { New to Fallout 4 }
+  NPOT : TwbSignature = 'NPOT'; { New to Fallout 4 }
+  NQUS : TwbSignature = 'NQUS'; { New to Fallout 4 }
+  NQUT : TwbSignature = 'NQUT'; { New to Fallout 4 }
+  NTOP : TwbSignature = 'NTOP'; { New to Fallout 4 }
   NTRM : TwbSignature = 'NTRM'; { New to Fallout 4 }
   NULL : TwbSignature = 'NULL';
   NVER : TwbSignature = 'NVER';
@@ -488,12 +501,14 @@ const
   PRPS : TwbSignature = 'PRPS'; { New to Fallout 4 }
   PSDT : TwbSignature = 'PSDT';
   PTDA : TwbSignature = 'PTDA'; { New to Skyrim }
+  PTOP : TwbSignature = 'PTOP'; { New to Fallout 4 }
   PTRN : TwbSignature = 'PTRN'; { New to Fallout 4 }
   QNAM : TwbSignature = 'QNAM';
   QOBJ : TwbSignature = 'QOBJ';
   QSDT : TwbSignature = 'QSDT';
   QSTA : TwbSignature = 'QSTA';
   QTGL : TwbSignature = 'QTGL'; { New To Skyrim }
+  QTOP : TwbSignature = 'QTOP'; { New to Fallout 4 }
   QUAL : TwbSignature = 'QUAL'; { New To Skyrim }
   QUST : TwbSignature = 'QUST';
   RACE : TwbSignature = 'RACE';
@@ -531,6 +546,7 @@ const
   SCHR : TwbSignature = 'SCHR';
   SCOL : TwbSignature = 'SCOL'; { Unused in Skyrim, but contained in Skyrim.esm }
   SCPT : TwbSignature = 'SCPT'; { Unused in Skyrim, but contained in Skyrim.esm }
+  SCQS : TwbSignature = 'SCQS'; { New To Fallout 4 }
   SCRL : TwbSignature = 'SCRL';
   SCRN : TwbSignature = 'SCRN';
   SCRO : TwbSignature = 'SCRO';
@@ -562,11 +578,13 @@ const
   SPLO : TwbSignature = 'SPLO';
   SPMV : TwbSignature = 'SPMV'; { New To Skyrim }
   SPOR : TwbSignature = 'SPOR'; { New to Skyrim }
+  SSPN : TwbSignature = 'SSPN'; { New to Fallout 4 }
   STAG : TwbSignature = 'STAG'; { New to Fallout 4 }
   STAT : TwbSignature = 'STAT';
   STCP : TwbSignature = 'STCP'; { New to Fallout 4 }
   STOL : TwbSignature = 'STOL'; { New to Skyrim }
   STOP : TwbSignature = 'STOP'; { New to Fallout 4 }
+  STSC : TwbSignature = 'STSC'; { New to Fallout 4 }
   SWMV : TwbSignature = 'SWMV'; { New to Skyrim }
   TACT : TwbSignature = 'TACT';
   TCLT : TwbSignature = 'TCLT';
@@ -9769,29 +9787,13 @@ begin
       wbRStruct('Phase', [
         wbEmpty(HNAM, 'Marker Phase Start'),
         wbString(NAM0, 'Name'),
-        // CTDA before or after next
-        //wbEmpty(NEXT, 'Marker'),
         wbRStruct('Start Conditions', [wbCTDAs], []),
-        wbEmpty(NEXT, 'Marker'),
+        wbUnknown(NEXT),
         wbRStruct('Completion Conditions', [wbCTDAs], []),
-        {>>> BEGIN leftover from earlier CK versions <<<}
-        wbRStruct('Unused', [
-          wbUnknown(SCHR),
-          wbUnknown(SCDA),
-          wbUnknown(SCTX),
-          wbUnknown(QNAM),
-          wbUnknown(SCRO)
-        ], [], cpIgnore, false, wbNeverShow),
-        wbEmpty(NEXT, 'Marker'),
-        wbRStruct('Unused', [
-          wbUnknown(SCHR),
-          wbUnknown(SCDA),
-          wbUnknown(SCTX),
-          wbUnknown(QNAM),
-          wbUnknown(SCRO)
-        ], [], cpIgnore, false, wbNeverShow),
-        {>>> END leftover from earlier CK versions begin <<<}
+        wbUnknown(NEXT),
         wbInteger(WNAM, 'Editor Width', itU32),
+        wbUnknown(FNAM),
+        wbUnknown(SCQS),
         wbEmpty(HNAM, 'Marker Phase End')
       ], [])
     ),
@@ -9845,44 +9847,57 @@ begin
       wbInteger(SNAM, 'Start Phase', itU32),
       wbInteger(ENAM, 'End Phase', itU32),
       wbFloat(SNAM, 'Timer Seconds'),
+      wbUnknown(TNAM),
+      wbUnknown(SCQS),
+      wbUnknown(STSC),
+      wbRStructs('Unknown', 'Unnknown', [
+        wbUnknown(LCEP),
+        wbUnknown(INTT),
+        wbUnknown(SSPN),
+        wbCITC,
+        wbCTDAs
+      ], []),
+      wbUnknown(PTOP),
+      wbUnknown(NTOP),
+      wbUnknown(NETO),
+      wbUnknown(QTOP),
+      wbUnknown(JOUT),
+      wbUnknown(DTID),
+      wbUnknown(DALC),
+      wbUnknown(NPOT),
+      wbUnknown(NNGT),
+      wbUnknown(NNUT),
+      wbUnknown(NQUT),
+      wbUnknown(NQUS),
+      wbUnknown(NPOS),
+      wbUnknown(DTGT),
       wbRArray('Packages', wbFormIDCk(PNAM, 'Package', [PACK])),
       wbFormIDCk(DATA, 'Topic', [DIAL, NULL]),
-      wbInteger(HTID, 'Headtrack Actor ID', itS32),
+      wbArray(HTID, 'Headtrack', wbInteger('Actor ID', itS32)), // very rare in this place, Scene [001D2863] <MQ302RadioEvacScene>
       wbFloat(DMAX, 'Looping - Max'),
       wbFloat(DMIN, 'Looping - Min'),
+      wbUnknown(CRIS),
       wbInteger(DEMO, 'Emotion Type', itU32, wbEmotionTypeEnum),
       wbInteger(DEVA, 'Emotion Value', itU32),
-      {>>> BEGIN leftover from earlier CK versions <<<}
-      wbRStruct('Unused', [
-        wbUnknown(SCHR),
-        wbUnknown(SCDA),
-        wbUnknown(SCTX),
-        wbUnknown(QNAM),
-        wbUnknown(SCRO)
-      ], [], cpIgnore, false, wbNeverShow),
-      {>>> END leftover from earlier CK versions <<<}
+      wbArray(HTID, 'Headtrack', wbInteger('Actor ID', itS32)),
+      wbUnknown(VENC),
+      wbFormIDCk(PNAM, 'Unknown', [KYWD]),
+      wbUnknown(ONAM),
       wbEmpty(ANAM, 'End Marker')
     ], [])),
-    {>>> BEGIN leftover from earlier CK versions <<<}
-    wbRStruct('Unused', [
-      wbUnknown(SCHR),
-      wbUnknown(SCDA),
-      wbUnknown(SCTX),
-      wbUnknown(QNAM),
-      wbUnknown(SCRO)
-    ], [], cpIgnore, false, wbNeverShow),
-    wbEmpty(NEXT, 'Marker'),
-    wbRStruct('Unused', [
-      wbUnknown(SCHR),
-      wbUnknown(SCDA),
-      wbUnknown(SCTX),
-      wbUnknown(QNAM),
-      wbUnknown(SCRO)
-    ], [], cpIgnore, false, wbNeverShow),
-    {>>> END leftover from earlier CK versions <<<}
     wbFormIDCk(PNAM, 'Quest', [QUST]),
     wbInteger(INAM, 'Last Action Index', itU32),
     wbUnknown(VNAM),
+    wbUnknown(CNAM),
+    wbUnknown(ACTV),
+    wbKSIZ,
+    wbKWDAs,
+    wbCTDAs,
+    wbUnknown(CRIS),
+    wbUnknown(SCQS),
+    wbUnknown(NNAM),
+    wbUnknown(TNAM),
+    wbUnknown(XNAM),
     wbCTDAs
   ]);
 
