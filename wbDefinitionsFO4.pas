@@ -10362,8 +10362,12 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbPTRN,
     wbMODL,
+    wbKSIZ,
+    wbKWDAs,
     wbDEST,
+    wbUnknown(PRPS),
     wbFULL,
     wbICON,
     wbStruct(DATA, '', [
@@ -10400,9 +10404,13 @@ begin
         wbFloat('Movement Amplitude')
       ]),
       wbInteger('Value', itU32),
-      wbFloat('Weight')
+      wbFloat('Weight'),
+      wbByteArray
     ], cpNormal, True),
     wbFloat(FNAM, 'Fade value', cpNormal, True),
+    wbString(NAM0, 'Unknown'),
+    wbFormID(LNAM, 'Lens'),
+    wbFormID(WGDR, 'Godray'),
     wbFormIDCk(SNAM, 'Sound', [SNDR])
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 end;
