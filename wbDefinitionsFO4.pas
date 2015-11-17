@@ -10515,10 +10515,12 @@ begin
       wbInteger('Y', itS16),
       wbInteger('Z', itS16)
     ]),
+    wbUnknown(TNAM),
     wbStruct(ONAM, 'Rotation Offset Constraints', [
       wbInteger('Min', itS16),
       wbInteger('Max', itS16)
     ]),
+    wbUnknown(ZNAM),
     wbStruct(XNAM, 'Initial Translation Offset', [
       wbFloat('X'),
       wbFloat('Y'),
