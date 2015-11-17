@@ -7690,16 +7690,24 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbPTRN,
     wbFULL,
     wbMODL,
     wbDEST,
     wbKSIZ,
     wbKWDAs,
+    wbUnknown(PRPS),
+    wbUnknown(FTYP),
     wbUnknown(PNAM),
+    wbUnknown(ATTX),
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       {0x0001} 'Unknown 0',
       {0x0002} 'Ignored By Sandbox'
     ])),
+    wbCITC,
+    wbCTDAs,
+    wbCOCT,
+    wbCNTOs,
     wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD, NULL]),
     wbInteger(MNAM, 'Active Markers / Flags', itU32, wbFlags([
       {0x00000001} 'Sit 0',
@@ -7761,7 +7769,13 @@ begin
       wbInteger('Type', itU16, wbFurnitureAnimTypeEnum),
       wbInteger('Entry Points', itU16, wbFurnitureEntryTypeFlags)
     ])),
-    wbString(XMRK, 'Model Filename')
+    wbString(XMRK, 'Model Filename'),
+    wbUnknown(SNAM),
+    wbUnknown(NVNM),
+    wbUnknown(APPR),
+    wbUnknown(OBTE),
+    wbUnknown(OBTS),
+    wbEmpty(STOP, 'Marker')
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
 //----------------------------------------------------------------------------
@@ -12829,12 +12843,15 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbPTRN,
     wbFULLReq,
     wbMODL,
     wbDEST,
     wbKSIZ,
     wbKWDAs,
+    wbUnknown(PRPS),
     wbUnknown(PNAM),
+    wbUnknown(ATTX),
     wbLString(RNAM, 'Activate Text Override'),
     wbUnknown(FNAM),
     wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, LVLI, MISC, NULL]),
