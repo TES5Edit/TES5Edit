@@ -6990,6 +6990,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbPTRN,
     wbFULL,
     wbMODL,
     wbCOCT,
@@ -7003,8 +7004,15 @@ begin
       ])),
       wbFloat('Weight')
     ], cpNormal, True),
+    wbKSIZ,
+    wbKWDAs,
+    wbUnknown(FTYP),
+    wbUnknown(PRPS),
+    wbUnknown(NTRM),
     wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]),
-    wbFormIDCk(QNAM, 'Sound - Close', [SOUN, SNDR])
+    wbFormIDCk(QNAM, 'Sound - Close', [SOUN, SNDR]),
+    wbFormID(ONAM, 'Unknown'),
+    wbUnknown(TNAM)
   ], True, nil, cpNormal, False, nil, wbContainerAfterSet);
 
   wbCSDT := wbRStructSK([0], 'Sound Type', [
