@@ -55,6 +55,7 @@ var
 var
   StartTime  : TDateTime;
   DumpGroups : TStringList;
+  DumpCount, DumpMax: Integer;
 
 procedure ReportProgress(const aStatus: string);
 begin
@@ -617,6 +618,11 @@ begin
         if not DumpGroups.Find(String(TwbSignature(GroupRecord.GroupLabel)), i) then
           Exit;
 
+  if aElement.ElementType = etMainRecord then
+    Inc(DumpCount);
+  if (DumpMax > 0) and (DumpCount > DumpMax) then
+    Exit;
+
   Name := aElement.Name;
   Value := aElement.Value;
 
@@ -995,6 +1001,9 @@ begin
     if wbFindCmdLineParam('do', s) then
       wbDumpOffset := StrToInt64Def(s, wbDumpOffset);
 
+    if wbFindCmdLineParam('top', s) then
+      DumpMax := StrToIntDef(s, 0);
+
     s := ParamStr(ParamCount);
 
     NeedsSyntaxInfo := False;
@@ -1050,6 +1059,7 @@ begin
       WriteLn(ErrOutput, '-xbloat      ', 'The following value applies:');
       WriteLn(ErrOutput, '             ', '  -xg:LAND,REGN,PGRD,SCEN,PACK,PERK,NAVI,CELL,WRLD');
       WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
+      WriteLn(ErrOutput, '-top:N       ', 'If specified, only dump the first N records');
       WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
       WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Example: full dump of Skyrim.esm excluding "bloated" records');
