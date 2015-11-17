@@ -6976,8 +6976,10 @@ begin
         'Snow'
       ])),
       wbInteger('Box Size', itU32),
-      wbFloat('Particle Density')
+      wbFloat('Particle Density'),
+      wbByteArray
     ], cpNormal, True, nil, 10),
+    wbString(MNAM, 'Unknown'),
     wbString(ICON, 'Particle Texture')
   ]);
 
