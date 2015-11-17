@@ -858,6 +858,12 @@ var
   wbServiceFlags: IwbFlagsDef;
   wbCUSD: IwbSubRecordDef;
   wbPTRN: IwbSubRecordDef;
+  wbPRPS: IwbSubRecordDef;
+  wbFLTR: IwbSubRecordDef;
+  wbAPPR: IwbSubRecordDef;
+  wbOBTESequence: IwbSubRecordStructDef;
+  wbFTYP: IwbSubRecordDef;
+  wbATTX: IwbSubRecordDef;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -6232,8 +6238,30 @@ begin
   wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
   wbCTDAsReqCount := wbRArray('Conditions', wbCTDA, cpNormal, True, nil, wbCTDAsAfterSet);
 
-  wbPTRN := wbFormIDCk(PTRN, 'Unknown', [TRNS]);
+  wbPTRN := wbFormIDCk(PTRN, 'Transform', [TRNS]);
   wbCUSD := wbFormIDCk(CUSD, 'UI Sound', [SNDR]);
+  wbPRPS := wbStructs(PRPS, 'Unknown', 'Unknown', [
+    wbByteArray('Unknown', 4),
+    wbFloat('Unknown')
+  ]);
+  wbFLTR := wbString(FLTR, 'Filter');
+  wbAPPR := wbArray(APPR, 'Keywords', wbFormIDCk('Keyword', [KYWD]));
+  wbFTYP := wbFormIDCk(FTYP, 'Unknown', [LCRT]);
+  wbATTX := wbLString(ATTX, 'Activate Text Override');
+
+  wbOBTESequence := wbRStruct('Unknown', [
+    wbRStruct('Unknown', [
+      wbInteger(OBTE, 'Count', itU32, nil, cpBenign),
+      wbEmpty(OBTF, 'Unknown'),
+      wbFULL
+    ], []),
+    wbRStructs('Unknown', 'Unknown', [
+      wbUnknown(OBTS),
+      wbEmpty(OBTF, 'Unknown'),
+      wbFULL
+    ], []),
+    wbEmpty(STOP, 'Marker', cpNormal, True)
+  ], []);
 
   wbEffectsReq :=
     wbRStructs('Effects', 'Effect', [
@@ -6268,9 +6296,9 @@ begin
     wbDEST,
     wbKSIZ,
     wbKWDAs,
-    wbUnknown(PRPS),
+    wbPRPS,
     wbFormIDCk(NTRM, 'Terminal', [TERM]),
-    wbFormIDCk(FTYP, 'Unknown', [LCRT]),
+    wbFTYP,
     wbStruct(PNAM, 'Marker Color', [
       wbInteger('Red', itU8),
       wbInteger('Green', itU8),
@@ -6280,7 +6308,7 @@ begin
     wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
     wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
-    wbLString(ATTX, 'Activate Text Override'),
+    wbATTX,
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       'No Displacement',
       'Ignored by Sandbox'
@@ -6441,20 +6469,8 @@ begin
     ], cpNormal, True),}
     wbUnknown(FNAM),
     wbUnknown(DAMA),
-    wbArray(APPR, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
-    wbRStruct('Unknown', [
-      wbUnknown(OBTE),
-      wbUnknown(OBTF),
-      wbUnknown(FULL)
-    ], []),
-    wbRArray('Unknown',
-      wbRStruct('Unknown', [
-        wbUnknown(OBTS),
-        wbUnknown(OBTF),
-        wbUnknown(FULL)
-      ], [])
-    ),
-    wbEmpty(STOP, 'Marker')
+    wbAPPR,
+    wbOBTESequence
   ], False, nil, cpNormal, False, wbARMOAfterLoad, wbKeywordsAfterSet);
 
   wbRecord(ARMA, 'Armor Addon', [
@@ -6914,7 +6930,7 @@ begin
     wbEDID,
     wbFULLReq,
     wbDESCReq,
-    wbUnknown(PRPS),
+    wbPRPS,
     wbICON,
     wbUnknown(DATA)
   ]);
@@ -7006,8 +7022,8 @@ begin
     ], cpNormal, True),
     wbKSIZ,
     wbKWDAs,
-    wbUnknown(FTYP),
-    wbUnknown(PRPS),
+    wbFTYP,
+    wbPRPS,
     wbUnknown(NTRM),
     wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]),
     wbFormIDCk(QNAM, 'Sound - Close', [SOUN, SNDR]),
@@ -7707,10 +7723,10 @@ begin
     wbDEST,
     wbKSIZ,
     wbKWDAs,
-    wbUnknown(PRPS),
-    wbUnknown(FTYP),
+    wbPRPS,
+    wbFTYP,
     wbUnknown(PNAM),
-    wbUnknown(ATTX),
+    wbATTX,
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       {0x0001} 'Unknown 0',
       {0x0002} 'Ignored By Sandbox'
@@ -7719,7 +7735,6 @@ begin
     wbCTDAs,
     wbCOCT,
     wbCNTOs,
-    wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD, NULL]),
     wbInteger(MNAM, 'Active Markers / Flags', itU32, wbFlags([
       {0x00000001} 'Sit 0',
       {0x00000002} 'Sit 1',
@@ -7766,15 +7781,15 @@ begin
         {7} 'Smithing Armor'
       ])),
       wbInteger('Uses Skill', itS8, wbSkillEnum)
-    ]),
-    wbFormIDCk(NAM1, 'Associated Spell', [SPEL]),
+    ], cpNormal, True, nil, 1),
+    wbFormIDCk(NAM1, 'Associated weapon', [WEAP]),
     wbRArray('Markers', wbRStruct('Marker', [
       wbInteger(ENAM, 'Marker Index', itU32),
       wbStruct(NAM0, 'Disabled Entry Points', [
         wbByteArray('Unknown', 2),
         wbInteger('Disabled Points', itU16, wbFurnitureEntryTypeFlags)
-      ]),
-      wbFormIDCk(FNMK, 'Marker Keyword', [KYWD, NULL])
+      ])
+      //wbFormIDCk(FNMK, 'Marker Keyword', [KYWD, NULL])
     ], [])),
     wbRArray('Marker Entry Points', wbStruct(FNPR, 'Marker', [
       wbInteger('Type', itU16, wbFurnitureAnimTypeEnum),
@@ -7783,10 +7798,8 @@ begin
     wbString(XMRK, 'Model Filename'),
     wbUnknown(SNAM),
     wbUnknown(NVNM),
-    wbUnknown(APPR),
-    wbUnknown(OBTE),
-    wbUnknown(OBTS),
-    wbEmpty(STOP, 'Marker')
+    wbAPPR,
+    wbOBTESequence
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
 //----------------------------------------------------------------------------
@@ -7930,7 +7943,7 @@ begin
     wbDEST,
     wbKSIZ,
     wbKWDAs,
-    wbUnknown(PRPS),
+    wbPRPS,
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       'On Local Map',
       'Unknown 2'
@@ -10398,7 +10411,7 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbDEST,
-    wbUnknown(PRPS),
+    wbPRPS,
     wbFULL,
     wbICON,
     wbStruct(DATA, '', [
@@ -11329,7 +11342,7 @@ begin
     ]),
     wbString(ENAM, 'Event', 4),
     wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
-    wbString(FLTR, 'Object Window Filter', 0, cpTranslate),
+    wbFLTR,
     wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, False),
     wbEmpty(NEXT, 'Marker'),
     wbCTDAs, {>>> Unknown, doesn't show up in CK <<<}
@@ -12622,8 +12635,6 @@ begin
   wbRecord(SOUN, 'Sound Marker', [
     wbEDID,
     wbOBNDReq,
-    wbUnknown(FNAM, cpIgnore), // leftover, unused
-    wbUnknown(SNDD, cpIgnore), // leftover, unused
     wbFormIDCk(SDSC, 'Sound Descriptor', [SNDR, NULL]),
     wbUnknown(REPT)
   ]);
@@ -12700,25 +12711,8 @@ begin
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(SCRL, 'Scroll', [
-    wbEDID,
-    wbOBNDReq,
-    wbFULL,
-    wbKSIZ,
-    wbKWDAs,
-    wbMDOB,
-    wbETYP,
-    wbDESC,
-    wbMODL,
-    wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
-    wbStruct(DATA, 'Item', [
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
-    ], cpNormal, True),
-    wbSPIT,
-    wbEffectsReq
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+    wbEDID
+  ]);
 
   wbRecord(STAT, 'Static',
     wbFlags(wbRecordFlagsFlags, [
@@ -12759,14 +12753,15 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbPTRN,
-    wbUnknown(FTYP),
+    wbFTYP,
     wbMODL,
-    wbUnknown(PRPS),
+    wbPRPS,
     wbFULL,
     wbStruct(DNAM, 'Direction Material', [
       wbFloat('Max Angle (30-120)'),
       wbFormIDCk('Material', [MATO, NULL]),
-      wbByteArray
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
     ], cpNormal, True),
     wbUnknown(NVNM),
     wbArray(MNAM, 'Distant LOD',
@@ -12861,9 +12856,9 @@ begin
     wbDEST,
     wbKSIZ,
     wbKWDAs,
-    wbUnknown(PRPS),
+    wbPRPS,
     wbUnknown(PNAM),
-    wbUnknown(ATTX),
+    wbATTX,
     wbLString(RNAM, 'Activate Text Override'),
     wbUnknown(FNAM),
     wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, LVLI, MISC, NULL]),
@@ -13000,41 +12995,15 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbDESC,
-    wbRStruct('Has Scope', [
-      wbString(MOD3, 'Model Filename'),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO3S
-    ], []),
-    wbByteArray(NNAM, 'Unused', 0, cpIgnore, False), // leftover
-    wbFormIDCk(WNAM, '1st Person Model Object', [STAT, NULL]),
-    wbFormIDCk(SNAM, 'Attack Sound', [SNDR]),
-    wbFormIDCk(XNAM, 'Attack Sound 2D', [SNDR]),
-    wbFormIDCk(NAM7, 'Attack Loop Sound', [SNDR]),
-    wbFormIDCk(TNAM, 'Attack Fail Sound', [SNDR]),
-    wbFormIDCk(UNAM, 'Idle Sound', [SNDR]),
-    wbFormIDCk(NAM9, 'Equip Sound', [SNDR]),
-    wbFormIDCk(NAM8, 'Unequip Sound', [SNDR]),
     wbStruct(DATA, 'Game Data', [
       wbInteger('Value', itU32),
       wbFloat('Weight'),
       wbInteger('Damage', itU16)
     ]),
-    wbFormID(INRD),
-    wbArray(APPR, 'Unknown', wbFormID('Unknown')),
-    wbRStruct('Unknown', [
-      wbUnknown(OBTE),
-      wbUnknown(OBTF),
-      wbUnknown(FULL)
-    ], []),
-    wbRArray('Unknown',
-      wbRStruct('Unknown', [
-        wbUnknown(OBTS),
-        wbUnknown(OBTF),
-        wbUnknown(FULL)
-      ], [])
-    ),
-    wbEmpty(STOP, 'Marker'),
-    wbUnknown(NNAM),
+    wbFormIDCk(INRD, 'Unknown', [INNR]),
+    wbAPPR,
+    wbOBTESequence,
+    wbFormIDCk(NNAM, 'Modification', [OMOD]),
     wbRStruct('Unknown', [
       wbString(MOD4, 'Model Filename'),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
@@ -13097,7 +13066,7 @@ begin
       wbInteger('Resist', itS32, wbActorValueEnum),
       wbByteArray('Unknown', 4),
       wbFloat('Stagger'),
-      wbByteArray
+      wbUnknown
     ]),
     wbUnknown(FNAM),
     wbStruct(CRDT, 'Critical Data', [
@@ -13107,21 +13076,18 @@ begin
       wbInteger('Flags', itU8, wbFlags([
         'On Death'
       ])),
-      wbByteArray('Unused', 3, cpIgnore),
-      wbFormIDCk('Effect', [SPEL, NULL])
+      wbByteArray('Unused', 3, cpIgnore)
     ]),
     wbFormIDCk(INAM, 'Impact Data Set', [IPDS, NULL]),
     wbUnknown(MASE),
-    wbFormID(LNAM, 'Unknown'),
-    wbFormID(WAMD, 'Unknown'),
-    wbFormID(WZMD, 'Unknown'),
+    wbFormIDCk(LNAM, 'Ammunition', [LVLI]),
+    wbFormIDCk(WAMD, 'Unknown', [AMDL]),
+    wbFormIDCk(WZMD, 'Zoom', [ZOOM]),
     wbStruct(DAMA, 'Critical Data', [
-      wbFormID('Unknown'),
-      wbByteArray('Unknown', 4)
-    ]),
-    wbInteger(VNAM, 'Detection Sound Level', itU32, wbSoundlevelEnum),
-    wbFormIDCk(CNAM, 'Template', [WEAP])
-  ], False, nil, cpNormal, False, wbWEAPAfterLoad, wbKeywordsAfterSet);
+      wbFormIDCk('Damage Type', [DMGT]),
+      wbInteger('Damage', itU32)
+    ])
+  ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad}, wbKeywordsAfterSet);
 
   if wbSimpleRecords then
     wbRecord(WRLD, 'Worldspace',
@@ -13708,7 +13674,7 @@ begin
     wbArray(FNAM, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbFormID(LNAM),
     wbUnknown(NAM1),
-    wbString(FLTR, 'Filter')
+    wbFLTR
   ]);
 
   wbRecord(OVIS, 'OVIS', [
@@ -13723,7 +13689,7 @@ begin
   wbRecord(PKIN, 'Pack In', [
     wbEDID,
     wbOBND,
-    wbString(FLTR, 'Filter'),
+    wbFLTR,
     wbFormIDCk(CNAM, 'Cell', [CELL]),
     wbUnknown(VNAM)
   ]);
@@ -13764,13 +13730,23 @@ begin
     wbPTRN,
     wbMODL,
     wbFULL,
-    wbUnknown(FLTR),
-    wbRArray('Unknown',
-      wbRStruct('Unknown', [
-        wbFormID(ONAM),
-        wbUnknown(DATA)
-      ], [])
-    )
+    wbFLTR,
+    wbRStructsSK('Parts', 'Part', [0], [
+      wbFormIDCk(ONAM, 'Static', [STAT]),
+      wbArrayS(DATA, 'Placements', wbStruct('Placement', [
+        wbStruct('Position', [
+          wbFloat('X'),
+          wbFloat('Y'),
+          wbFloat('Z')
+        ]),
+        wbStruct('Rotation', [
+          wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+          wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+          wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+        ]),
+        wbFloat('Scale')
+      ]), 0, cpNormal, True)
+    ], [], cpNormal, True)
   ]);
 
   wbRecord(SCSN, 'Scene Sound', [
@@ -13809,7 +13785,7 @@ begin
     wbMODL,
     wbKSIZ,
     wbKWDAs,
-    wbUnknown(PRPS),
+    wbPRPS,
     wbUnknown(PNAM),
     wbUnknown(FNAM),
     wbCOCT,
@@ -13851,9 +13827,19 @@ begin
     wbEDID
   ]);
 
-  wbRecord(TRNS, 'TRNS', [
+  wbRecord(TRNS, 'Transform', [
     wbEDID,
-    wbUnknown(DATA)
+    wbStruct(DATA, 'Data', [
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
+    ], cpNormal, True, nil, 7)
   ]);
 
   wbRecord(ZOOM, 'ZOOM', [
