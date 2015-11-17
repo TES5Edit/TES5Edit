@@ -67,6 +67,7 @@ var
   wbForceNewHeader         : Boolean  = False; // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
   wbNewHeaderAddon         : Cardinal = 40;    // 4 additional bytes, 40 - new form version field
   wbRequireLoadOrder       : Boolean  = False;
+  wbCreateContainedIn      : Boolean  = True;
   wbVWDInTemporary         : Boolean  = False;
   wbResolveAlias           : Boolean  = True;
   wbActorTemplateHide      : Boolean  = True;
