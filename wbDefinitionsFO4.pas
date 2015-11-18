@@ -195,6 +195,7 @@ const
   CLAS : TwbSignature = 'CLAS';
   CLFM : TwbSignature = 'CLFM';
   CLMT : TwbSignature = 'CLMT';
+  CLSZ : TwbSignature = 'CLSZ'; { New to Fallout 4 }
   CMPO : TwbSignature = 'CMPO'; { New to Fallout 4 }
   CNAM : TwbSignature = 'CNAM';
   CNTO : TwbSignature = 'CNTO';
@@ -654,6 +655,7 @@ const
   WEAP : TwbSignature = 'WEAP';
   WGDR : TwbSignature = 'WGDR'; { New To Fallout 4 }
   WKMV : TwbSignature = 'WKMV'; { New to Skyrim }
+  WLEV : TwbSignature = 'WLEV'; { New To Fallout 4 }
   WLST : TwbSignature = 'WLST';
   WNAM : TwbSignature = 'WNAM';
   WOOP : TwbSignature = 'WOOP';
@@ -662,9 +664,13 @@ const
   WZMD : TwbSignature = 'WZMD'; { New To Fallout 4 }
   XACT : TwbSignature = 'XACT';
   XALP : TwbSignature = 'XALP'; { New To Skyrim }
+  XAMC : TwbSignature = 'XAMC'; { New To Fallout 4 }
   XAPD : TwbSignature = 'XAPD';
   XAPR : TwbSignature = 'XAPR';
+  XASP : TwbSignature = 'XASP'; { New To Fallout 4 }
+  XATP : TwbSignature = 'XATP'; { New To Fallout 4 }
   XATR : TwbSignature = 'XATR'; { New To Dawnguard }
+  XBSD : TwbSignature = 'XBSD'; { New To Fallout 4 }
   XCAS : TwbSignature = 'XCAS';
   XCCM : TwbSignature = 'XCCM';
   XCHG : TwbSignature = 'XCHG';
@@ -678,6 +684,7 @@ const
   XCNT : TwbSignature = 'XCNT';
   XCRI : TwbSignature = 'XCRI'; { New To Fallout 4 }
   XCVL : TwbSignature = 'XCVL'; { New To Skyrim }
+  XCVR : TwbSignature = 'XCVR'; { New To Fallout 4 }
   XCWT : TwbSignature = 'XCWT';
   XCZA : TwbSignature = 'XCZA'; { New To Skyrim }
   XCZC : TwbSignature = 'XCZC'; { New To Skyrim }
@@ -690,6 +697,7 @@ const
   XGDR : TwbSignature = 'XGDR'; { New To Fallout 4 }
   XGLB : TwbSignature = 'XGLB';
   XHLP : TwbSignature = 'XHLP';
+  XHLT : TwbSignature = 'XHLT'; { New To Fallout 4 }
   XHOR : TwbSignature = 'XHOR'; { New To Skyrim }
   XHTW : TwbSignature = 'XHTW'; { New To Skyrim }
   XIBS : TwbSignature = 'XIBS';
@@ -701,6 +709,7 @@ const
   XLIB : TwbSignature = 'XLIB'; { New To Skyrim }
   XLIG : TwbSignature = 'XLIG'; { New To Skyrim }
   XLKR : TwbSignature = 'XLKR';
+  XLKT : TwbSignature = 'XLKT'; { New To Fallout 4 }
   XLOC : TwbSignature = 'XLOC';
   XLOD : TwbSignature = 'XLOD';
   XLRL : TwbSignature = 'XLRL'; { New To Skyrim }
@@ -719,6 +728,8 @@ const
   XOCP : TwbSignature = 'XOCP';
   XORD : TwbSignature = 'XORD';
   XOWN : TwbSignature = 'XOWN';
+  XPDD : TwbSignature = 'XPDD'; { New To Fallout 4 }
+  XPLK : TwbSignature = 'XPLK'; { New To Fallout 4 }
   XPOD : TwbSignature = 'XPOD';
   XPPA : TwbSignature = 'XPPA';
   XPRD : TwbSignature = 'XPRD';
@@ -726,7 +737,9 @@ const
   XPRM : TwbSignature = 'XPRM';
   XPTL : TwbSignature = 'XPTL';
   XPWR : TwbSignature = 'XPWR';
+  XRDO : TwbSignature = 'XRDO'; { New To Fallout 4 }
   XRDS : TwbSignature = 'XRDS';
+  XRFG : TwbSignature = 'XRFG'; { New To Fallout 4 }
   XRGB : TwbSignature = 'XRGB';
   XRGD : TwbSignature = 'XRGD';
   XRMR : TwbSignature = 'XRMR';
@@ -740,6 +753,8 @@ const
   XWCS : TwbSignature = 'XWCS'; { New To Skyrim }
   XWCU : TwbSignature = 'XWCU'; { New To Skyrim }
   XWEM : TwbSignature = 'XWEM'; { New To Skyrim }
+  XWPG : TwbSignature = 'XWPG'; { New To Fallout 4 }
+  XWPN : TwbSignature = 'XWPN'; { New To Fallout 4 }
   XXXX : TwbSignature = 'XXXX';
   YNAM : TwbSignature = 'YNAM';
   ZNAM : TwbSignature = 'ZNAM';
@@ -5470,15 +5485,6 @@ begin
       wbFloat(XPRD, 'Idle Time', cpNormal, True),
       wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-      {>>> BEGIN leftover from earlier CK versions <<<}
-      wbRStruct('Unused', [
-        wbUnknown(SCHR),
-        wbUnknown(SCDA),
-        wbUnknown(SCTX),
-        wbUnknown(QNAM),
-        wbUnknown(SCRO)
-      ], [], cpIgnore, false, wbNeverShow),
-      {>>> END leftover from earlier CK versions <<<}
       wbPDTOs,
       wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal)
     ], []),
@@ -5527,6 +5533,12 @@ begin
         wbByteArray('Unknown', 1)
       ])
     ]),
+
+    wbUnknown(XLKT),
+    wbUnknown(XRFG),
+    wbUnknown(XLYR),
+    wbUnknown(XMSP),
+    wbUnknown(XRNK),
 
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
     wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
@@ -6658,8 +6670,20 @@ procedure DefineFO4c;
           ])
         )
       ], []),
+
+      wbUnknown(XASP),
+      wbUnknown(XATP),
+      wbUnknown(XAMC),
+      wbUnknown(XLKT),
       wbUnknown(XLYR),
       wbUnknown(XMSP),
+      wbUnknown(XRFG),
+      wbUnknown(XRDO),
+      wbUnknown(XBSD),
+      wbUnknown(XPDD),
+      wbUnknown(XCVR),
+      wbUnknown(XRNK),
+
       wbXESP,
       wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
       wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
@@ -8225,7 +8249,7 @@ begin
         ]),
         wbArray('Vertices', wbByteArray('Vertex', 12), -1),
         wbArray('Triangles', wbByteArray('Triangle', 16), -1),
-        wbArray('External Connections',
+        {wbArray('External Connections',
           wbStruct('Connection', [
             wbByteArray('Unknown', 4),
             wbFormIDCk('Mesh', [NAVM]),
@@ -8238,12 +8262,12 @@ begin
             wbByteArray('Unknown', 4),
             wbFormIDCk('Door', [REFR])
           ])
-        , -1),
+        , -1),}
         wbUnknown
       ]),
       wbUnknown(ONAM),
-      wbUnknown(PNAM),
-      wbUnknown(NNAM)
+      wbUnknown(NNAM),
+      wbUnknown(MNAM)
     ], False, wbNAVMAddInfo);
 
   end else begin
@@ -8378,7 +8402,8 @@ begin
             //wbInteger('Cover Edge #2 Flags', itU8)
           ])
         , -1),
-        wbArray('Edge Links',
+        wbUnknown
+        {wbArray('Edge Links',
           wbStruct('Edge Link', [
             wbByteArray('Unknown', 4),
             wbFormIDCk('Mesh', [NAVM]),
@@ -8402,11 +8427,11 @@ begin
         wbFloat('Max X'),
         wbFloat('Max Y'),
         wbFloat('Max Z'),
-        wbArray('NavMeshGrid', wbArray('NavMeshGridCell', wbInteger('Triangle', itS16), -1))
+        wbArray('NavMeshGrid', wbArray('NavMeshGridCell', wbInteger('Triangle', itS16), -1))}
       ]),
       wbUnknown(ONAM),
-      wbUnknown(PNAM),
-      wbUnknown(NNAM)
+      wbUnknown(NNAM),
+      wbUnknown(MNAM)
     ], False, wbNAVMAddInfo);
 
   end;
@@ -12346,7 +12371,7 @@ begin
       wbFloat('Fade 1.35+/-'),
       wbByteArray('Unknown', 4),
       wbFloat('Shadow Depth Bias'),
-      wbByteArray('Unknown', 4) // optional
+      wbUnknown
     ], cpNormal, False, nil, 4),
 		wbStruct(XALP, 'Alpha', [
       wbInteger('Cutoff', itU8),
@@ -12359,15 +12384,16 @@ begin
       wbPosRot,
       wbInteger('Flags', itU32, wbFlags([
         'No Alarm'
-      ]))
+      ])),
+      wbUnknown
     ]),
     wbFormIDCk(XTNM, 'Teleport Message Box', [MESG]),
 
     {--- MultiBound ---}
     wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
 
-    wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
-    wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
+    wbUnknown(XWCN),
+    //wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
     wbStruct(XWCU, 'Water Velocity', [
       wbFloat('X Offset'),
       wbFloat('Y Offset'),
@@ -12378,6 +12404,19 @@ begin
       wbFloat('Z Angle'),
       wbByteArray('Unknown', 0)
     ]),
+
+    wbUnknown(XASP),
+    wbUnknown(XATP),
+    wbUnknown(XAMC),
+    wbUnknown(XLKT),
+    wbUnknown(XLYR),
+    wbUnknown(XMSP),
+    wbUnknown(XRFG),
+    wbUnknown(XRDO),
+    wbUnknown(XBSD),
+    wbUnknown(XPDD),
+    wbUnknown(XCVR),
+    wbUnknown(XRNK),
 
     wbStruct(XCVL, 'Unknown', [
 			wbByteArray('Unknown', 4),
@@ -12425,7 +12464,7 @@ begin
       wbFormIDCkNoReach('Key', [KEYM, NULL]),
       wbInteger('Flags', itU8, wbFlags(['', '', 'Leveled Lock'])),
       wbByteArray('Unused', 3, cpIgnore),
-      wbByteArray('Unused', 8, cpIgnore)
+      wbUnknown
     ], cpNormal, False, nil, 4),
 
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -12444,6 +12483,7 @@ begin
     wbOwnership,
 
     wbInteger(XCNT, 'Item Count', itS32),
+    wbUnknown(XHLT),
     wbFloat(XCHG, 'Charge'),
     wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
 
@@ -12453,12 +12493,19 @@ begin
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA])
     ], cpNormal, False, nil, 1)),
 
+    wbRArray('Unknown', wbUnknown(XPLK)),
+
+    wbRStruct('Unknown', [
+      wbUnknown(XWPG),
+      wbRArray('Unknown', wbUnknown(XWPN))
+    ], []),
+
     wbRArray('Patrol', wbRStruct('Data', [
       wbFloat(XPRD, 'Idle Time', cpNormal, True),
       wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-      wbByteArray(SCHR, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
-      wbByteArray(SCTX, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
+      //wbByteArray(SCHR, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
+      //wbByteArray(SCTX, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
       wbPDTOs
     ], [])),
 
@@ -12590,10 +12637,13 @@ begin
         wbByteArray('Unused', 1)
       ], cpNormal, True)
     ], []),
+
     {--- Attach reference ---}
     wbFormIDCk(XATR, 'Attach Ref', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
+
     wbXLOD,
-    wbDataPosRot
+    wbDataPosRot,
+    wbUnknown(MNAM)
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
   wbRecord(REGN, 'Region',
@@ -13274,7 +13324,9 @@ begin
       wbString(TNAM, 'HD LOD Diffuse Texture'),
       wbString(UNAM, 'HD LOD Normal Texture'),
       wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
-      wbByteArray(OFST, 'Offset Data')
+      wbRArray('Unknown', wbUnknown(WLEV)),
+      wbByteArray(OFST, 'Offset Data'),
+      wbUnknown(CLSZ)
     ], False, nil, cpNormal, False, wbWRLDAfterLoad)
   else
     wbRecord(WRLD, 'Worldspace',
@@ -13375,7 +13427,9 @@ begin
       wbString(TNAM, 'HD LOD Diffuse Texture'),
       wbString(UNAM, 'HD LOD Normal Texture'),
       wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
-      wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0)
+      wbRArray('Unknown', wbUnknown(WLEV)),
+      wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0),
+      wbUnknown(CLSZ)
     ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
   wbRecord(WTHR, 'Weather', [
