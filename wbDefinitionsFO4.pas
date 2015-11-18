@@ -8486,8 +8486,10 @@ begin
         16952, 'No Sky, Radius 5',
         16984, 'No Sky, Radius 6',
         17016, 'No Sky, Radius 7'
-      ]))
-    ], cpNormal, False, nil, 3)
+      ])),
+      wbByteArray
+    ], cpNormal, False, nil, 3),
+    wbString(TX00, 'Unknown')
   ]);
 
   wbTimeInterpolator := wbStruct('Data', [
