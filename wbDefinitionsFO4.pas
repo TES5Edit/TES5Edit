@@ -12935,8 +12935,10 @@ begin
     wbFormIDCk(TNAM, 'Material', [MATT]),
     wbFormIDCk(SNAM, 'Open Sound', [SNDR, NULL]),
     wbFormIDCk(XNAM, 'Spell', [SPEL]),
+    wbFormID(YNAM, 'Unknown'),
     wbFormIDCk(INAM, 'Image Space', [IMGS]),
-    wbInteger(DATA, 'Damage Per Second', itU16, nil, cpNormal, True, True),
+    {>>> wbInteger(DATA, 'Damage Per Second', itU16, nil, cpNormal, True, True), <<<}
+    wbByteArray(DATA, 'Unused', 0),
     wbStruct(DNAM, 'Visual Data', [
       wbFloat('Unknown'),
       wbFloat('Unknown'),
