@@ -8418,7 +8418,8 @@ begin
         'Chain',
         'No Controller Vibration'
       ])),
-      wbInteger('Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
+      wbInteger('Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),
+      wbByteArray
     ], cpNormal, True, nil, 10)
   ]);
 
