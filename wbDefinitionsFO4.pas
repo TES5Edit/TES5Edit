@@ -7603,7 +7603,9 @@ begin
       wbFloat('Fill/Texture Effect - Texture Scale (U)'),
       wbFloat('Fill/Texture Effect - Texture Scale (V)'),
       wbInteger('Scene Graph Emit Depth Limit (unused)', itU32)
-    ], cpNormal, True, nil, 0)
+    ], cpNormal, True, nil, 0),
+    wbUnknown(DNAM),
+    wbMODL
   ], False, nil, cpNormal, False, nil {wbEFSHAfterLoad});
 
   wbRecord(ENCH, 'Object Effect', [
