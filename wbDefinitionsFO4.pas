@@ -210,6 +210,11 @@ const
   CRIF : TwbSignature = 'CRIF'; { New to Skyrim }
   CRIS : TwbSignature = 'CRIS'; { New to Fallout 4 }
   CRVA : TwbSignature = 'CRVA'; { New to Skyrim }
+  CS2H : TwbSignature = 'CS2H'; { New To Fallout 4 }
+  CS2D : TwbSignature = 'CS2D'; { New To Fallout 4 }
+  CS2E : TwbSignature = 'CS2E'; { New To Fallout 4 }
+  CS2F : TwbSignature = 'CS2F'; { New To Fallout 4 }
+  CS2K : TwbSignature = 'CS2K'; { New To Fallout 4 }
   CSCR : TwbSignature = 'CSCR';
   CSCV : TwbSignature = 'CSCV'; { New To Fallout 4 }
   CSDC : TwbSignature = 'CSDC';
@@ -287,6 +292,9 @@ const
   FLST : TwbSignature = 'FLST';
   FLTR : TwbSignature = 'FLTR'; { New to Skyrim }
   FLTV : TwbSignature = 'FLTV';
+  FMIN : TwbSignature = 'FMIN'; { New To Fallout 4 }
+  FMRI : TwbSignature = 'FMRI'; { New To Fallout 4 }
+  FMRS : TwbSignature = 'FMRS'; { New To Fallout 4 }
   FNAM : TwbSignature = 'FNAM';
   FNMK : TwbSignature = 'FNMK'; { New to Skyrim }
   FNPR : TwbSignature = 'FNPR'; { New to Skyrim }
@@ -371,6 +379,8 @@ const
   LSPR : TwbSignature = 'LSPR'; { New to Fallout 4 }
   LTEX : TwbSignature = 'LTEX';
   LTMP : TwbSignature = 'LTMP';
+  LTPT : TwbSignature = 'LTPT'; { New to Fallout 4 }
+  LTPC : TwbSignature = 'LTPC'; { New to Fallout 4 }
   LVLC : TwbSignature = 'LVLC';
   LVLD : TwbSignature = 'LVLD';
   LVLF : TwbSignature = 'LVLF';
@@ -417,12 +427,16 @@ const
   MPAI : TwbSignature = 'MPAI'; { New To Skyrim }
   MPAV : TwbSignature = 'MPAV'; { New To Skyrim }
   MPRT : TwbSignature = 'MPRT'; { New to Skyrim }
+  MRSV : TwbSignature = 'MRSV'; { New to Fallout 4 }
+  MSDK : TwbSignature = 'MSDK'; { New to Fallout 4 }
+  MSDV : TwbSignature = 'MSDV'; { New to Fallout 4 }
   MSTT : TwbSignature = 'MSTT';
   MSWP : TwbSignature = 'MSWP'; { New to Fallout 4 }
   MTNM : TwbSignature = 'MTNM'; { New to Skyrim }
   MTYP : TwbSignature = 'MTYP'; { New To Skyrim }
   MUSC : TwbSignature = 'MUSC';
   MUST : TwbSignature = 'MUST';
+  MWGT : TwbSignature = 'MWGT'; { New to Fallout 4 }
   NAM0 : TwbSignature = 'NAM0';
   NAM1 : TwbSignature = 'NAM1';
   NAM2 : TwbSignature = 'NAM2';
@@ -480,6 +494,7 @@ const
   PFO2 : TwbSignature = 'PFO2'; { New to Skyrim }
   PFOR : TwbSignature = 'PFOR'; { New to Skyrim }
   PFPC : TwbSignature = 'PFPC';
+  PFRN : TwbSignature = 'PFRN'; { New to Fallout 4 }
   PGRE : TwbSignature = 'PGRE';
   PHTN : TwbSignature = 'PHTN'; { New to Skyrim }
   PHWT : TwbSignature = 'PHWT'; { New to Skyrim }
@@ -599,6 +614,8 @@ const
   TCLT : TwbSignature = 'TCLT';
   TERM : TwbSignature = 'TERM'; { New to Fallout 4 }
   TES4 : TwbSignature = 'TES4';
+  TETI : TwbSignature = 'TETI'; { New to Fallout 4 }
+  TEND : TwbSignature = 'TEND'; { New to Fallout 4 }
   TIAS : TwbSignature = 'TIAS'; { New to Skyrim }
   TIFC : TwbSignature = 'TIFC'; { New To Skyrim }
   TINC : TwbSignature = 'TINC'; { New to Skyrim }
@@ -615,6 +632,7 @@ const
   TOFT : TwbSignature = 'TOFT'; { New to Fallout 4 }
   TPIC : TwbSignature = 'TPIC';
   TPLT : TwbSignature = 'TPLT';
+  TPTA : TwbSignature = 'TPTA'; { New To Fallout 4 }
   TRDA : TwbSignature = 'TRDA'; { New To Fallout 4 }
   TRDT : TwbSignature = 'TRDT';
   TREE : TwbSignature = 'TREE';
@@ -914,6 +932,7 @@ var
   wbServiceFlags: IwbFlagsDef;
   wbCUSD: IwbSubRecordDef;
   wbPTRN: IwbSubRecordDef;
+  wbNTRM: IwbSubRecordDef;
   wbPRPS: IwbSubRecordDef;
   wbFLTR: IwbSubRecordDef;
   wbAPPR: IwbSubRecordDef;
@@ -5085,11 +5104,11 @@ begin
   ], cpNormal, false, wbScriptFragmentsDontShow);
 
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
-  wbVMAD := wbUnknown(VMAD);
-  {wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
+  wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
     wbInteger('Version', itS16, nil, cpIgnore),
     wbInteger('Object Format', itS16, nil, cpIgnore),
-    wbUnion('Data', wbScriptFragmentExistsDecider, [
+    wbUnknown
+    {wbUnion('Data', wbScriptFragmentExistsDecider, [
       wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
       wbStruct('Info VMAD', [
         wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
@@ -5111,8 +5130,8 @@ begin
         wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
         wbScriptFragmentsScen
       ], cpNormal, False, nil, 0)
-    ])
-  ], cpNormal, false, nil, -1);}
+    ])}
+  ], cpNormal, false, nil, -1);
 
   wbAttackData := wbRStructSK([1], 'Attack', [
     wbStruct(ATKD, 'Attack Data', [
@@ -6299,6 +6318,7 @@ begin
   wbCTDAsReqCount := wbRArray('Conditions', wbCTDA, cpNormal, True, nil, wbCTDAsAfterSet);
 
   wbPTRN := wbFormIDCk(PTRN, 'Transform', [TRNS]);
+  wbNTRM := wbFormIDCk(NTRM, 'Terminal', [TERM]);
   wbCUSD := wbFormIDCk(CUSD, 'UI Sound', [SNDR]);
   wbPRPS := wbStructs(PRPS, 'Unknown', 'Unknown', [
     wbByteArray('Unknown', 4),
@@ -6357,7 +6377,7 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbPRPS,
-    wbFormIDCk(NTRM, 'Terminal', [TERM]),
+    wbNTRM,
     wbFTYP,
     wbStruct(PNAM, 'Marker Color', [
       wbInteger('Red', itU8),
@@ -7104,7 +7124,7 @@ begin
     wbKWDAs,
     wbFTYP,
     wbPRPS,
-    wbUnknown(NTRM),
+    wbNTRM,
     wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]),
     wbFormIDCk(QNAM, 'Sound - Close', [SOUN, SNDR]),
     wbFormID(ONAM, 'Unknown'),
@@ -7188,7 +7208,8 @@ begin
             wbInteger('Warn', itU32),
             wbInteger('Warn/Attack', itU32),
             wbInteger('Attack', itU32)
-          ])
+          ]),
+          wbUnknown
     ], cpNormal, True, nil{wbActorTemplateUseAIData});
 
   wbAttackAnimationEnum := wbEnum([], [
@@ -7425,7 +7446,7 @@ begin
     wbDEST,
     wbKSIZ,
     wbKWDAs,
-    wbUnknown(NTRM),
+    wbNTRM,
     wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]),
     wbFormIDCk(ANAM, 'Sound - Close', [SOUN, SNDR]),
     wbFormIDCk(BNAM, 'Sound - Loop', [SOUN, SNDR]),
@@ -8885,7 +8906,7 @@ begin
         {28} wbInteger('Explodable - Decal Count', itU8),
         {76} wbByteArray('Unknown', 2),
         {80} wbFloat('Limb Replacement Scale'),
-        wbByteArray
+             wbUnknown
       ], cpNormal, True),
       wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
       wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
@@ -10897,6 +10918,8 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbPTRN,
+    wbFormIDCk(STCP, 'Unknown', [STAG]),
     wbStruct(ACBS, 'Configuration', [
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Female',
@@ -10932,7 +10955,7 @@ begin
         {0x40000000} 'Unknown 30',
         {0x80000000} 'Invulnerable'
       ])),
-      wbInteger('Magicka Offset', itS16, nil, cpNormal, True, nil{wbActorTemplateUseStats}),
+      wbInteger('Health Offset', itS16, nil, cpNormal, True, nil{wbActorTemplateUseStats}),
       wbInteger('Stamina Offset', itS16, nil, cpNormal, False, nil{wbActorTemplateUseAIData}),
       wbUnion('Level', wbNPCLevelDecider, [
         wbInteger('Level', itS16, nil, cpNormal, True, nil{wbActorTemplateUseStats}),
@@ -10940,8 +10963,7 @@ begin
       ], cpNormal, True, nil{wbActorTemplateUseStats}),
       wbInteger('Calc min level', itU16, nil, cpNormal, True, nil{wbActorTemplateUseStats}),
       wbInteger('Calc max level', itU16, nil, cpNormal, True, nil{wbActorTemplateUseStats}),
-      wbInteger('Speed Multiplier', itU16, nil, cpNormal, True, nil{wbActorTemplateUseStats}),
-      wbInteger('Disposition Base (unused)', itS16, nil, cpIgnore, True, nil{wbActorTemplateUseTraits}),
+      wbByteArray('Unknown', 4),
       wbInteger('Template Flags', itU16, wbFlags([
         {0x0001} 'Use Traits',
         {0x0002} 'Use Stats',
@@ -10956,9 +10978,7 @@ begin
         {0x0400} 'Use Def Pack List',
         {0x0800} 'Use Attack Data',
         {0x1000} 'Use Keywords'
-      ])),
-      wbInteger('Health Offset', itS16, nil, cpNormal, True, nil{wbActorTemplateUseStats}),
-      wbInteger('Bleedout Override', itU16, nil, cpNormal, True, nil{wbActorTemplateUseStats})
+      ]))
     ], cpNormal, True),
     wbRArrayS('Factions',
       wbStructSK(SNAM, [0], 'Faction', [
@@ -10970,6 +10990,9 @@ begin
     wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]),
+    wbFormID(LTPT, 'Unknown'),
+    wbFormID(LTPC, 'Unknown'),
+    wbUnknown(TPTA),
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, nil{wbActorTemplateUseTraits}),
     wbSPCT,
     wbSPLOs,
@@ -10982,6 +11005,7 @@ begin
     wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
     wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
     wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
+    wbFormID(RCLR, 'Unknown'),
     wbInteger(PRKZ, 'Perk Count', itU32, nil, cpBenign),
     wbRArrayS('Perks',
       wbStructSK(PRKR, [0], 'Perk', [
@@ -10990,66 +11014,22 @@ begin
         wbByteArray('Unused', 3, cpIgnore)
       ]), cpNormal, False, nil, wbPRKRsAfterSet
     ),
+    wbPRPS,
+    wbFTYP,
+    wbNTRM,
     wbCOCT,
     wbCNTOs,
     wbAIDT,
     wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, nil{wbActorTemplateUseAIPackages}),
     wbKSIZ,
     wbKWDAs,
+    wbAPPR,
+    wbOBTESequence,
     wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
     wbFULL,
     wbLString(SHRT, 'Short Name'),
     wbByteArray(DATA, 'Marker'),
-    wbStruct(DNAM, 'Player Skills', [
-      wbArray('Skill Values', wbInteger('Skill', itU8), [
-        'OneHanded',
-        'TwoHanded',
-        'Marksman',
-        'Block',
-        'Smithing',
-        'HeavyArmor',
-        'LightArmor',
-        'Pickpocket',
-        'Lockpicking',
-        'Sneak',
-        'Alchemy',
-        'Speechcraft',
-        'Alteration',
-        'Conjuration',
-        'Destruction',
-        'Illusion',
-        'Restoration',
-        'Enchanting'
-      ]),
-      wbArray('Skill Offsets', wbInteger('Skill', itU8), [
-        'OneHanded',
-        'TwoHanded',
-        'Marksman',
-        'Block',
-        'Smithing',
-        'HeavyArmor',
-        'LightArmor',
-        'Pickpocket',
-        'Lockpicking',
-        'Sneak',
-        'Alchemy',
-        'Speechcraft',
-        'Alteration',
-        'Conjuration',
-        'Destruction',
-        'Illusion',
-        'Restoration',
-        'Enchanting'
-      ]),
-      //wbByteArray('Unknown', 4),
-      wbInteger('Health', itU16),
-      wbInteger('Magicka', itU16),
-      wbInteger('Stamina', itU16),
-      wbByteArray('Unused', 2, cpIgnore),
-      wbFloat('Far away model distance'),
-      wbInteger('Geared up weapons', itU8),
-      wbByteArray('Unused', 3, cpIgnore)
-    ], cpNormal, False, nil{wbActorTemplateUseStatsAutoCalc}),
+    wbUnknown(DNAM),
     wbRArrayS('Head Parts', wbFormIDCk(PNAM, 'Head Part', [HDPT]), cpNormal, False, nil, nil, nil{wbActorTemplateUseModelAnimation}),
     wbFormIDCk(HCLF, 'Hair Color', [CLFM], False, cpNormal, False),
     wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False),
@@ -11057,8 +11037,24 @@ begin
     wbUnknown(NAM5, cpNormal, True),
     wbFloat(NAM6, 'Height', cpNormal, True),
     wbFloat(NAM7, 'Weight', cpNormal, True),
+    wbFloat(NAM4, 'Unknown'),
+    wbStruct(MWGT, 'Unknown', [
+       wbFloat('Unknown'),
+       wbFloat('Unknown'),
+       wbFloat('Unknown')
+    ]),
     wbInteger(NAM8, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),
-    wbCSDTs,
+    wbFormIDCk(PFRN, 'Power Armor Stand', [FURN]),
+    //wbCSDTs,
+    wbInteger(CS2H, 'Sound Count', itU32),
+    wbRArray('Sounds',
+      wbRStruct('Sound', [
+        wbFormIDCk(CS2D, 'Sound', [SNDR]),
+        wbUnknown(CS2K)
+      ], [])
+    ),
+    wbEmpty(CS2E, 'Marker'),
+    wbUnknown(CS2F),
     // When CSCR exists CSDT, CSDI, CSDC are not present
     wbFormIDCk(CSCR, 'Inherits Sounds From', [NPC_], False, cpNormal, False),
     wbFormIDCk(DOFT, 'Default outfit', [OTFT], False, cpNormal, False),
@@ -11069,47 +11065,25 @@ begin
     wbStruct(QNAM, 'Texture lighting', [
       wbFloat('Red'),
       wbFloat('Green'),
-      wbFloat('Blue')
+      wbFloat('Blue'),
+      wbFloat('Alpha')
     ]),
-    wbStruct(NAM9, 'Face morph', [
-      wbFloat('Nose Long/Short'),
-      wbFloat('Nose Up/Down'),
-      wbFloat('Jaw Up/Down'),
-      wbFloat('Jaw Narrow/Wide'),
-      wbFloat('Jaw Farward/Back'),
-      wbFloat('Cheeks Up/Down'),
-      wbFloat('Cheeks Farward/Back'),
-      wbFloat('Eyes Up/Down'),
-      wbFloat('Eyes In/Out'),
-      wbFloat('Brows Up/Down'),
-      wbFloat('Brows In/Out'),
-      wbFloat('Brows Farward/Back'),
-      wbFloat('Lips Up/Down'),
-      wbFloat('Lips In/Out'),
-      wbFloat('Chin Narrow/Wide'),
-      wbFloat('Chin Up/Down'),
-      wbFloat('Chin Underbite/Overbite'),
-      wbFloat('Eyes Farward/Back'),
-      wbFloat('Unknown')
-    ], cpNormal, False),
-    wbStruct(NAMA, 'Face parts', [
-      wbInteger('Nose', itU32),
-      wbInteger('Unknown', itS32),
-      wbInteger('Eyes', itU32),
-      wbInteger('Mouth', itU32)
-    ]),
-    wbRArrayS('Tint Layers',
-      wbRStructSK([0], 'Layer', [
-        wbInteger(TINI, 'Tint Index', itU16),
-        wbStruct(TINC, 'Tint Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbInteger('Alpha', itU8)
-        ]),
-        wbInteger(TINV, 'Interpolation Value', itU32, wbDiv(100)),
-        wbInteger(TIAS, 'Preset', itS16)
-      ], []))
+    wbUnknown(MSDK),
+    wbUnknown(MSDV),
+    wbRArray('Unknown',
+      wbRStruct('Unknown', [
+        wbUnknown(TETI),
+        wbUnknown(TEND)
+      ], [])
+    ),
+    wbUnknown(MRSV),
+    wbRArray('Unknown',
+      wbRStruct('Unknown', [
+        wbUnknown(FMRI),
+        wbUnknown(FMRS)
+      ], [])
+    ),
+    wbFloat(FMIN, 'Unknown')
   ], False, nil, cpNormal, False, wbNPCAfterLoad, wbNPCAfterSet);
 
   wbObjectTypeEnum := wbEnum([
