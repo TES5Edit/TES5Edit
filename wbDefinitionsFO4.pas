@@ -303,6 +303,7 @@ const
   GMST : TwbSignature = 'GMST';
   GNAM : TwbSignature = 'GNAM';
   GRAS : TwbSignature = 'GRAS';
+  GREE : TwbSignature = 'GREE'; { New to Fallout 4 }
   GWOR : TwbSignature = 'GWOR'; { New to Skyrim }
   HAZD : TwbSignature = 'HAZD';
   HCLF : TwbSignature = 'HCLF'; { New to Skyrim }
@@ -332,6 +333,7 @@ const
   INRD : TwbSignature = 'INRD'; { New To Fallout 4 }
   INTT : TwbSignature = 'INTT'; { New To Fallout 4 }
   INTV : TwbSignature = 'INTV';
+  IOVR : TwbSignature = 'IOVR'; { New To Fallout 4 }
   IPCT : TwbSignature = 'IPCT';
   IPDS : TwbSignature = 'IPDS';
   ISIZ : TwbSignature = 'ISIZ'; { New To Fallout 4 }
@@ -409,6 +411,7 @@ const
   MODL : TwbSignature = 'MODL';
   MODS : TwbSignature = 'MODS';
   MODT : TwbSignature = 'MODT';
+  MODQ : TwbSignature = 'MODQ'; { New to Fallout 4 }
   MOVT : TwbSignature = 'MOVT';
   MPAI : TwbSignature = 'MPAI'; { New To Skyrim }
   MPAV : TwbSignature = 'MPAV'; { New To Skyrim }
@@ -467,6 +470,7 @@ const
   PARW : TwbSignature = 'PARW'; { New to Skyrim }
   PBAR : TwbSignature = 'PBAR'; { New to Skyrim }
   PBEA : TwbSignature = 'PBEA'; { New to Skyrim }
+  PCMB : TwbSignature = 'PCMB'; { New to Fallout 4 }
   PCON : TwbSignature = 'PCON'; { New to Skyrim }
   PDTO : TwbSignature = 'PDTO'; { New to Skyrim }
   PERK : TwbSignature = 'PERK';
@@ -542,6 +546,7 @@ const
   RPLI : TwbSignature = 'RPLI';
   RPRF : TwbSignature = 'RPRF'; { New To Skyrim }
   RPRM : TwbSignature = 'RPRM'; { New To Skyrim }
+  RVIS : TwbSignature = 'RVIS'; { New to Fallout 4 }
   SCCO : TwbSignature = 'SCCO'; { New To Fallout 4 }
   SCDA : TwbSignature = 'SCDA';
   SCEN : TwbSignature = 'SCEN';
@@ -580,6 +585,7 @@ const
   SPLO : TwbSignature = 'SPLO';
   SPMV : TwbSignature = 'SPMV'; { New To Skyrim }
   SPOR : TwbSignature = 'SPOR'; { New to Skyrim }
+  SRAF : TwbSignature = 'SRAF'; { New to Fallout 4 }
   SSPN : TwbSignature = 'SSPN'; { New to Fallout 4 }
   STAG : TwbSignature = 'STAG'; { New to Fallout 4 }
   STAT : TwbSignature = 'STAT';
@@ -601,15 +607,18 @@ const
   TINP : TwbSignature = 'TINP'; { New to Skyrim }
   TINT : TwbSignature = 'TINT'; { New to Skyrim }
   TINV : TwbSignature = 'TINV'; { New to Skyrim }
+  TIQS : TwbSignature = 'TIQS'; { New to Fallout 4 }
   TIRS : TwbSignature = 'TIRS'; { New to Skyrim }
   TLOD : TwbSignature = 'TLOD'; { New to Fallout 4 }
   TNAM : TwbSignature = 'TNAM';
   TOFT : TwbSignature = 'TOFT'; { New to Fallout 4 }
   TPIC : TwbSignature = 'TPIC';
   TPLT : TwbSignature = 'TPLT';
+  TRDA : TwbSignature = 'TRDA'; { New To Fallout 4 }
   TRDT : TwbSignature = 'TRDT';
   TREE : TwbSignature = 'TREE';
   TRNS : TwbSignature = 'TRNS'; { New To Fallout 4 }
+  TSCE : TwbSignature = 'TSCE'; { New To Fallout 4 }
   TVDT : TwbSignature = 'TVDT'; { New To Skyrim }
   TWAT : TwbSignature = 'TWAT'; { New To Skyrim }
   TX00 : TwbSignature = 'TX00';
@@ -629,6 +638,7 @@ const
   VEND : TwbSignature = 'VEND'; { New To Skyrim }
   VENV : TwbSignature = 'VENV'; { New To Skyrim }
   VHGT : TwbSignature = 'VHGT';
+  VISI : TwbSignature = 'VISI'; { New To Fallout 4 }
   VMAD : TwbSignature = 'VMAD';
   VNAM : TwbSignature = 'VNAM';
   VNML : TwbSignature = 'VNML';
@@ -666,6 +676,7 @@ const
   XCLW : TwbSignature = 'XCLW';
   XCMO : TwbSignature = 'XCMO';
   XCNT : TwbSignature = 'XCNT';
+  XCRI : TwbSignature = 'XCRI'; { New To Fallout 4 }
   XCVL : TwbSignature = 'XCVL'; { New To Skyrim }
   XCWT : TwbSignature = 'XCWT';
   XCZA : TwbSignature = 'XCZA'; { New To Skyrim }
@@ -676,12 +687,14 @@ const
   XESP : TwbSignature = 'XESP';
   XEZN : TwbSignature = 'XEZN';
   XFVC : TwbSignature = 'XFVC'; { New To Skyrim }
+  XGDR : TwbSignature = 'XGDR'; { New To Fallout 4 }
   XGLB : TwbSignature = 'XGLB';
   XHLP : TwbSignature = 'XHLP';
   XHOR : TwbSignature = 'XHOR'; { New To Skyrim }
   XHTW : TwbSignature = 'XHTW'; { New To Skyrim }
   XIBS : TwbSignature = 'XIBS';
   XILL : TwbSignature = 'XILL'; { New To Skyrim }
+  XILW : TwbSignature = 'XILW'; { New To Fallout 4 }
   XIS2 : TwbSignature = 'XIS2'; { New To Skyrim }
   XLCM : TwbSignature = 'XLCM';
   XLCN : TwbSignature = 'XLCN'; { New To Skyrim }
@@ -694,11 +707,13 @@ const
   XLRM : TwbSignature = 'XLRM';
   XLRT : TwbSignature = 'XLRT'; { New To Skyrim }
   XLTW : TwbSignature = 'XLTW';
+  XLYR : TwbSignature = 'XLYR'; { New To Fallout 4 }
   XMBO : TwbSignature = 'XMBO';
   XMBP : TwbSignature = 'XMBP';
   XMBR : TwbSignature = 'XMBR';
   XMRC : TwbSignature = 'XMRC';
   XMRK : TwbSignature = 'XMRK';
+  XMSP : TwbSignature = 'XMSP'; { New To Fallout 4 }
   XNAM : TwbSignature = 'XNAM';
   XNDP : TwbSignature = 'XNDP';
   XOCP : TwbSignature = 'XOCP';
@@ -707,6 +722,7 @@ const
   XPOD : TwbSignature = 'XPOD';
   XPPA : TwbSignature = 'XPPA';
   XPRD : TwbSignature = 'XPRD';
+  XPRI : TwbSignature = 'XPRI'; { New To Fallout 4 }
   XPRM : TwbSignature = 'XPRM';
   XPTL : TwbSignature = 'XPTL';
   XPWR : TwbSignature = 'XPWR';
@@ -5395,9 +5411,14 @@ begin
   ]));
 
   wbOwnership := wbRStruct('Ownership', [
-    wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]),
+    //wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]),
+    // GoodneighborWarehouse02
+    wbStruct(XOWN, 'Owner', [
+      wbFormIDCkNoReach('Owner', [FACT, ACHR, NPC_]),
+      wbUnknown
+    ]),
     wbInteger(XRNK, 'Faction rank', itS32)
-  ], []);
+  ], [XILL]);
 
   wbAmbientColors := wbStruct('Ambient Colors', [
     wbArray('Colors',
@@ -6637,6 +6658,8 @@ procedure DefineFO4c;
           ])
         )
       ], []),
+      wbUnknown(XLYR),
+      wbUnknown(XMSP),
       wbXESP,
       wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
       wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
@@ -6681,11 +6704,6 @@ begin
       ]), [18]), [
       wbEDID,
       wbFULL,
-      {>>>
-      Flags can be itU8, but CELL\DATA has a critical role in various wbImplementation.pas routines
-      and replacing it with wbUnion generates error when setting for example persistent flag in REFR.
-      So let it be always itU16
-      <<<}
       wbInteger(DATA, 'Flags', itU16, wbFlags([
         {0x0001} 'Is Interior Cell',
         {0x0002} 'Has Water',
@@ -6707,6 +6725,11 @@ begin
           'Quad 4'
         ], True))
       ], cpNormal, False, nil, 2),
+
+      wbUnknown(VISI),
+      wbUnknown(RVIS),
+      wbUnknown(PCMB),
+
       wbStruct(XCLL, 'Lighting', [
         wbStruct('Ambient Color', [
           wbInteger('Red', itU8),
@@ -6755,22 +6778,21 @@ begin
           {0x00000100}'Fog Power',
           {0x00000200}'Fog Max',
           {0x00000400}'Light Fade Distances'
-        ]))
+        ])),
+        wbUnknown
       ], cpNormal, False, nil, 11),
 
       wbByteArray(TVDT, 'Unknown', 0, cpNormal),
       wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
       wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
-      wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
 
       {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
       wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
-      //wbByteArray(XCLW, 'Water Height', 4),
-      wbString(XNAM, 'Water Noise Texture'),
+      //wbString(XNAM, 'Water Noise Texture'),
       wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
       wbFormIDCk(XLCN, 'Location', [LCTN]),
       wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
-      wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
+      //wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
       wbStruct(XWCU, 'Water Velocity', [
         wbFloat('X Offset'),
         wbFloat('Y Offset'),
@@ -6787,13 +6809,17 @@ begin
       wbOwnership,
       wbFormIDCk(XILL, 'Lock List', [FLST, NPC_]),
 
+      wbUnknown(XILW),
       wbString(XWEM, 'Water Environment Map'),
       wbFormIDCk(XCCM, 'Sky/Weather from Region', [REGN]),
       wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
       wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
       wbFormIDCk(XCMO, 'Music Type', [MUSC]),
-      wbFormIDCk(XCIM, 'Image Space', [IMGS])
-    ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad)
+      wbFormIDCk(XCIM, 'Image Space', [IMGS]),
+      wbUnknown(XGDR),
+      wbUnknown(XPRI),
+      wbUnknown(XCRI)
+    ], True, wbCellAddInfo, cpNormal, False{, wbCELLAfterLoad})
 
   end else begin
 
@@ -6806,11 +6832,6 @@ begin
       ]), [18]), [
       wbEDID,
       wbFULL,
-      {>>>
-      Flags can be itU8, but CELL\DATA has a critical role in various wbImplementation.pas routines
-      and replacing it with wbUnion generates error when setting for example persistent flag in REFR.
-      So let it be always itU16
-      <<<}
       wbInteger(DATA, 'Flags', itU16, wbFlags([
         {0x0001} 'Is Interior Cell',
         {0x0002} 'Has Water',
@@ -6832,6 +6853,10 @@ begin
           'Quad 4'
         ], True))
       ], cpNormal, False, nil, 2),
+      wbUnknown(VISI),
+      wbUnknown(RVIS),
+      wbUnknown(PCMB),
+
       wbStruct(XCLL, 'Lighting', [
         wbStruct('Ambient Color', [
           wbInteger('Red', itU8),
@@ -6895,16 +6920,14 @@ begin
 //           ])
 //      ]),
       wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
-      wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
 
       {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
       wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
-      //wbByteArray(XCLW, 'Water Height', 4),
-      wbString(XNAM, 'Water Noise Texture'),
+      //wbString(XNAM, 'Water Noise Texture'),
       wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
       wbFormIDCk(XLCN, 'Location', [LCTN]),
       wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
-      wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
+      //wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
       wbStruct(XWCU, 'Water Velocity', [
         wbFloat('X Offset'),
         wbFloat('Y Offset'),
@@ -6921,12 +6944,16 @@ begin
       wbOwnership,
       wbFormIDCk(XILL, 'Lock List', [FLST, NPC_]),
 
+      wbUnknown(XILW),
       wbString(XWEM, 'Water Environment Map'),
       wbFormIDCk(XCCM, 'Sky/Weather from Region', [REGN]),
       wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
       wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
       wbFormIDCk(XCMO, 'Music Type', [MUSC]),
-      wbFormIDCk(XCIM, 'Image Space', [IMGS])
+      wbFormIDCk(XCIM, 'Image Space', [IMGS]),
+      wbUnknown(XGDR),
+      wbUnknown(XPRI),
+      wbUnknown(XCRI)
     ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
 
   end;
@@ -7232,6 +7259,7 @@ begin
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
     wbFormIDCk(BNAM, 'Branch', [DLBR, NULL]),
     wbFormIDCk(QNAM, 'Quest', [QUST, NULL], False, cpNormal, False),
+    wbFormIDCk(KNAM, 'Unknown', [KYWD]),
     wbStruct(DATA, 'Data', [
       // this should not be named Flags since TwbFile.BuildReachable
       // expects Top-Level flag here from FNV
@@ -8419,7 +8447,7 @@ begin
         'No Controller Vibration'
       ])),
       wbInteger('Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),
-      wbByteArray
+      wbUnknown
     ], cpNormal, True, nil, 10)
   ]);
 
@@ -8487,7 +8515,7 @@ begin
         16984, 'No Sky, Radius 6',
         17016, 'No Sky, Radius 7'
       ])),
-      wbByteArray
+      wbUnknown
     ], cpNormal, False, nil, 3),
     wbString(TX00, 'Unknown')
   ]);
@@ -8588,7 +8616,7 @@ begin
       wbInteger('Radial Blur Down Start', itU32),
       wbInteger('Fade Color', itU32),
       wbInteger('Motion Blur Strength', itU32),
-      wbByteArray
+      wbUnknown
     ]),
     wbArray(BNAM, 'Blur Radius', wbTimeInterpolator),
     wbArray(VNAM, 'Double Vision Strength', wbTimeInterpolator),
@@ -10216,7 +10244,7 @@ begin
     ])), [
     wbEDID,
     wbVMAD,
-    wbUnknown(DATA),
+    //wbUnknown(DATA),
     wbStruct(ENAM, 'Response flags', [
       wbInteger('Flags', itU16, wbFlags([
         {0x0001} 'Goodbye',
@@ -10238,54 +10266,48 @@ begin
       ])),
       wbInteger('Reset Hours', itU16, wbDiv(2730))
     ]),
-    wbFormIDCk(TPIC, 'Topic', [DIAL]),
-    wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL], False, cpBenign),
-    wbInteger(CNAM, 'Favor Level', itU8, wbEnum([
-      'None',
-      'Small',
-      'Medium',
-      'Large'
-    ])),
-
-    wbRArray('Link To', wbFormIDCk(TCLT, 'Response', [DIAL, INFO, NULL])),
-    wbFormID(DNAM, 'Response Data'),
+    wbFormIDCk(DNAM, 'Unknown', [INFO]),
+    wbFormIDCk(GNAM, 'Unknown', [INFO]),
+    wbString(IOVR, 'Unknown'),
 
     wbRArray('Responses', wbRStruct('Response', [
-      wbStruct(TRDT, 'Response Data', [
-        wbInteger('Emotion Type', itU32, wbEmotionTypeEnum),
-        wbInteger('Emotion Value', itU32),
-        wbByteArray('Unused', 4),
+      wbStruct(TRDA, 'Response Data', [
+        //wbInteger('Emotion Type', itU32, wbEmotionTypeEnum),
+        //wbInteger('Emotion Value', itU32),
+        wbByteArray('Unknown', 4),
         wbInteger('Response number', itU8),
         wbByteArray('Unused', 3),
-        wbFormIDCk('Sound', [SNDR, NULL]),
-        wbInteger('Flags', itU8, wbFlags([
-          'Use Emotion Animation'
-        ])),
-        wbByteArray('Unused', 3)
+        //wbFormIDCk('Sound', [SNDR, NULL]),
+        //wbInteger('Flags', itU8, wbFlags([
+        //  'Use Emotion Animation'
+        //])),
+        wbUnknown
       ]),
       wbLStringKC(NAM1, 'Response Text', 0),
       wbString(NAM2, 'Script Notes', 0),
       wbString(NAM3, 'Edits', 0),
+      wbUnknown(NAM4),
       wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
-      wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
+      //wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
+      wbUnknown(TNAM),
+      wbUnknown(NAM9),
+      wbFormID(SRAF),
+      wbUnknown(WZMD)
     ], [])),
 
     wbCTDAs,
-
-    {>>> BEGIN leftover from earlier CK versions <<<}
-    wbRArray('Unknown',
-      wbRStruct('Unknown', [
-        wbUnknown(SCHR),
-        wbFormID(QNAM, 'Unknown'),
-        wbEmpty(NEXT, 'Marker')
-      ], []), cpIgnore, false, nil, nil, wbNeverShow
-    ),
-    {>>> END leftover from earlier CK versions <<<}
-
     wbLString(RNAM, 'Prompt'),
     wbFormIDCk(ANAM, 'Speaker', [NPC_]),
-    wbFormIDCk(TWAT, 'Walk Away Topic', [DIAL]),
-    wbFormIDCk(ONAM, 'Audio Output Override', [SOPM])
+    wbUnknown(TSCE),
+    wbUnknown(ALFA),
+    wbUnknown(INTV),
+    wbFormIDCk(ONAM, 'Audio Output Override', [SOPM]),
+    wbUnknown(GREE),
+    wbUnknown(TIQS),
+    wbString(NAM0),
+    wbFormIDCk(MODQ, 'Unknown', [GLOB]),
+    wbUnknown(INCC),
+    wbUnknown(INAM)
   ], False, wbINFOAddInfo, cpNormal, False, nil{wbINFOAfterLoad});
 
   wbRecord(INGR, 'Ingredient', [
