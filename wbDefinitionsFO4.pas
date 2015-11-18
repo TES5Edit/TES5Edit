@@ -8884,11 +8884,19 @@ begin
         {28} wbInteger('Severable - Decal Count', itU8),
         {28} wbInteger('Explodable - Decal Count', itU8),
         {76} wbByteArray('Unknown', 2),
-        {80} wbFloat('Limb Replacement Scale')
+        {80} wbFloat('Limb Replacement Scale'),
+        wbByteArray
       ], cpNormal, True),
       wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
       wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
-      wbByteArray(NAM5, 'Texture Files Hashes', 0, cpNormal)
+      wbByteArray(NAM5, 'Texture Files Hashes', 0, cpNormal),
+      wbString(ENAM, 'Unknown'),
+      wbString(FNAM, 'Unknown'),
+      wbFormID(BNAM, 'Unknown'),
+      wbFormID(CNAM, 'Unknown'),
+      wbFormID(INAM, 'Unknown'),
+      wbFormID(JNAM, 'Unknown'),
+      wbString(DNAM, 'Unknown')
     ], [], cpNormal, True)
   ]);
 
