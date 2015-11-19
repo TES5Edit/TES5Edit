@@ -10286,6 +10286,7 @@ procedure DefineFO4l;
 begin
   wbRecord(REVB, 'Reverb Parameters', [
     wbEDID,
+    {<<< Commented out DATA because previous definition caused ANAM to be unrecognized
     wbStruct(DATA, 'Data', [
       wbInteger('Decay Time (ms)', itU16),
       wbInteger('HF Reference (Hz)', itU16),
@@ -10299,7 +10300,8 @@ begin
       wbInteger('Diffusion %', itU8),
       wbInteger('Density %', itU8),
       wbInteger('Unknown', itU8)
-    ], cpNormal, True),
+    ], cpNormal, True), >>>}
+    wbUnknown(DATA),
     wbUnknown(ANAM)
   ]);
 
