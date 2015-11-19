@@ -414,12 +414,20 @@ const
   MISC : TwbSignature = 'MISC';
   MLSI : TwbSignature = 'MLSI'; { New to Fallout 4 }
   MNAM : TwbSignature = 'MNAM';
+  MO2C : TwbSignature = 'MO2C'; { New to Fallout 4 }
+  MO2F : TwbSignature = 'MO2F'; { New to Fallout 4 }
   MO2S : TwbSignature = 'MO2S';
   MO2T : TwbSignature = 'MO2T';
+  MO3C : TwbSignature = 'MO3C'; { New to Fallout 4 }
+  MO3F : TwbSignature = 'MO3F'; { New to Fallout 4 }
   MO3S : TwbSignature = 'MO3S';
   MO3T : TwbSignature = 'MO3T';
+  MO4C : TwbSignature = 'MO4C'; { New to Fallout 4 }
+  MO4F : TwbSignature = 'MO4F'; { New to Fallout 4 }
   MO4S : TwbSignature = 'MO4S';
   MO4T : TwbSignature = 'MO4T';
+  MO5C : TwbSignature = 'MO5C'; { New to Fallout 4 }
+  MO5F : TwbSignature = 'MO5F'; { New to Fallout 4 }
   MO5S : TwbSignature = 'MO5S'; { New to Skyrim }
   MO5T : TwbSignature = 'MO5T'; { New to Skyrim }
   MOD2 : TwbSignature = 'MOD2';
@@ -428,6 +436,7 @@ const
   MOD5 : TwbSignature = 'MOD5'; { New to Skyrim }
   MODC : TwbSignature = 'MODC'; { New to Fallout 4 }
   MODD : TwbSignature = 'MODD';
+  MODF : TwbSignature = 'MODF'; { New to Fallout 4 }
   MODL : TwbSignature = 'MODL';
   MODS : TwbSignature = 'MODS';
   MODT : TwbSignature = 'MODT';
@@ -857,12 +866,22 @@ var
   wbXSCL: IwbSubRecordDef;
   wbDATAPosRot: IwbSubRecordDef;
   wbPosRot: IwbStructDef;
+  wbMODC: IwbSubRecordDef;
   wbMODD: IwbSubRecordDef;
+  wbMODF: IwbSubRecordDef;
   wbMODL: IwbSubRecordStructDef;
   wbMODS: IwbSubRecordDef;
   wbMO2S: IwbSubRecordDef;
   wbMO3S: IwbSubRecordDef;
   wbMO4S: IwbSubRecordDef;
+  wbMO2F: IwbSubRecordDef;
+  wbMO3F: IwbSubRecordDef;
+  wbMO4F: IwbSubRecordDef;
+  wbMO5F: IwbSubRecordDef;
+  wbMO2C: IwbSubRecordDef;
+  wbMO3C: IwbSubRecordDef;
+  wbMO4C: IwbSubRecordDef;
+  wbMO5C: IwbSubRecordDef;
   wbMODLActor: IwbSubRecordStructDef;
   wbMODLReq: IwbSubRecordStructDef;
   wbCTDA: IwbSubRecordStructDef;
@@ -974,6 +993,7 @@ var
   wbFLTR: IwbSubRecordDef;
   wbAPPR: IwbSubRecordDef;
   wbOBTESequence: IwbSubRecordStructDef;
+  wbBSMPSequence: IwbSubRecordArrayDef;
   wbFTYP: IwbSubRecordDef;
   wbATTX: IwbSubRecordDef;
   wbRaceTTGP: IwbSubrecordArrayDef;
@@ -5227,7 +5247,8 @@ begin
      {11} wbByteArray('Unknown', 4, cpIgnore),
      {12} wbByteArray('Unknown', 4, cpIgnore)
     ]),
-    wbInteger('Radius', itS32)
+    wbInteger('Radius', itS32),
+    wbUnknown
   ]);
 
   wbPLVD := wbStruct(PLVD, 'Location', [
@@ -5352,6 +5373,19 @@ begin
       'Left Hand'
     ]));
 
+  wbMODC := wbUnknown(MODC);
+  wbMODF := wbUnknown(MODF);
+
+  wbMO2F := wbUnknown(MO2F);
+  wbMO3F := wbUnknown(MO3F);
+  wbMO4F := wbUnknown(MO4F);
+  wbMO5F := wbUnknown(MO5F);
+
+  wbMO2C := wbUnknown(MO2C);
+  wbMO3C := wbUnknown(MO3C);
+  wbMO4C := wbUnknown(MO4C);
+  wbMO5C := wbUnknown(MO5C);
+
 	wbMODT := wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
 	wbDMDT := wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
 
@@ -5359,8 +5393,9 @@ begin
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
       wbMODT,
-      wbUnknown(MODC),
-      wbMODS
+      wbMODS,
+      wbMODC,
+      wbMODF
     ], [], cpNormal, False, nil, True);
 
   wbMODLActor :=
@@ -5374,8 +5409,9 @@ begin
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename'),
       wbMODT,
-      wbUnknown(MODC),
-      wbMODS
+      wbMODS,
+      wbMODC,
+      wbMODF
     ], [], cpNormal, True, nil, True);
 
   wbDMDSs := wbArrayS(DMDS, 'Alternate Textures',
@@ -6386,6 +6422,19 @@ begin
     wbEmpty(STOP, 'Marker', cpNormal, True)
   ], []);
 
+  wbBSMPSequence := wbRArray('Unknown',
+    wbRStruct('Unknown', [
+      wbInteger(BSMP, 'Unknown', itU32),
+      wbRArray('Unknown',
+        wbRStruct('Unknown', [
+          wbString(BSMB, 'Name'),
+          wbUnknown(BSMS),
+          wbUnknown(BMMP)
+        ], [])
+      )
+    ], [])
+  );
+
   wbEffectsReq :=
     wbRStructs('Effects', 'Effect', [
       wbEFID,
@@ -6598,7 +6647,7 @@ begin
 
   wbRecord(ARMA, 'Armor Addon', [
     wbEDID,
-    wbBODTBOD2,
+    wbBOD2,
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Male Priority', itU8),
@@ -6620,22 +6669,30 @@ begin
     wbRStruct('Male world model', [
       wbString(MOD2, 'Model Filename'),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO2S
+      wbMO2S,
+      wbMO2C,
+      wbMO2F
     ], [], cpNormal, False),
     wbRStruct('Female world model', [
       wbString(MOD3, 'Model Filename'),
       wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO3S
+      wbMO3S,
+      wbMO3C,
+      wbMO3F
     ], []),
     wbRStruct('Male 1st Person', [
       wbString(MOD4, 'Model Filename'),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO4S
+      wbMO4S,
+      wbMO4C,
+      wbMO4F
     ], []),
     wbRStruct('Female 1st Person', [
       wbString(MOD5, 'Model Filename'),
       wbByteArray(MO5T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO5S
+      wbMO5S,
+      wbMO5C,
+      wbMO5F
     ], []),
     wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),
     wbFormIDCK(NAM1, 'Female Skin texture', [TXST, NULL]),
@@ -6643,7 +6700,8 @@ begin
     wbFormIDCK(NAM3, 'Female Skin Texture Swap List', [FLST, NULL]),
     wbRArrayS('Additional Races', wbFormIDCK(MODL, 'Race', [RACE, NULL])),
     wbFormIDCk(SNDD, 'Footstep Sound', [FSTS, NULL]),
-    wbFormIDCk(ONAM, 'Art Object', [ARTO])
+    wbFormIDCk(ONAM, 'Art Object', [ARTO]),
+    wbBSMPSequence
   ], False, nil, cpNormal, False, wbARMAAfterLoad);
 
   wbRecord(BOOK, 'Book', [
@@ -6653,35 +6711,35 @@ begin
     wbPTRN,
     wbFULL,
     wbMODL,
-    wbICON,
     wbLStringKC(DESC, 'Book Text', 0, cpNormal, True),
     wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
     wbKSIZ,
     wbKWDAs,
-    wbUnknown(FIMD),
+    wbFormIDCk(FIMD, 'Unknown', [MESG]),
     wbStruct(DATA, 'Data', [
-      wbInteger('Flags', itU8, wbFlags([
-       {0x01} 'Teaches Skill',
-       {0x02} 'Can''t be Taken',
-       {0x04} 'Teaches Spell',
-       {0x08} 'Unknown 4',
-       {0x10} 'Unknown 5',
-       {0x20} 'Unknown 6',
-       {0x40} 'Unknown 7',
-       {0x80} 'Unknown 8'
-      ])),
-      wbInteger('Type', itU8, wbEnum([], [
-        0, 'Book/Tome', 255, 'Note/Scroll'
-      ])),
-      wbByteArray('Unused', 2),
-      wbUnion('Teaches', wbBOOKTeachesDecider, [
-        wbInteger('Skill', itS32, wbSkillEnum),
-        wbFormIDCk('Spell', [SPEL, NULL])
-      ]),
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
+      wbUnknown
+//      wbInteger('Flags', itU8, wbFlags([
+//       {0x01} 'Teaches Skill',
+//       {0x02} 'Can''t be Taken',
+//       {0x04} 'Teaches Spell',
+//       {0x08} 'Unknown 4',
+//       {0x10} 'Unknown 5',
+//       {0x20} 'Unknown 6',
+//       {0x40} 'Unknown 7',
+//       {0x80} 'Unknown 8'
+//      ])),
+//      wbInteger('Type', itU8, wbEnum([], [
+//        0, 'Book/Tome', 255, 'Note/Scroll'
+//      ])),
+//      wbByteArray('Unused', 2),
+//      wbUnion('Teaches', wbBOOKTeachesDecider, [
+//        wbInteger('Skill', itS32, wbSkillEnum),
+//        wbFormIDCk('Spell', [SPEL, NULL])
+//      ]),
+//      wbInteger('Value', itU32),
+//      wbFloat('Weight')
     ], cpNormal, True),
     wbUnknown(DNAM),
     wbLString(CNAM, 'Description'),
@@ -12292,19 +12350,7 @@ begin
     wbUnknown(MLSI),
     wbString(HNAM, 'Unknown'),
     wbFormIDCk(QSTI, 'Unknown', [QUST]),
-    wbRArray('Unknown',
-      wbRStruct('Unknown', [
-        wbInteger(BSMP, 'Unknown', itU32),
-        wbRArray('Unknown',
-          wbRStruct('Unknown', [
-            wbString(BSMB, 'Unknown'),
-            wbUnknown(BSMS),
-            wbUnknown(BMMP)
-          ], [])
-        )
-      ], [])
-    )
-
+    wbBSMPSequence
     //wbFormIDCk(NAM8, 'Morph race', [RACE, NULL]),
     //wbFormIDCk(RNAM, 'Armor race', [RACE, NULL])
   ], False, nil, cpNormal, False, wbRACEAfterLoad, wbRACEAfterSet);
