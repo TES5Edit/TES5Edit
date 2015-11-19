@@ -5268,7 +5268,8 @@ begin
      {11} wbByteArray('Unknown', 4, cpIgnore),
      {12} wbByteArray('Unknown', 4, cpIgnore)
     ]),
-    wbInteger('Radius', itS32)
+    wbInteger('Radius', itS32),
+    wbUnknown
   ]);
 
   wbTargetData := wbStruct('Target Data', [
@@ -7566,8 +7567,8 @@ begin
       'Sliding',
       'Do Not Open in Combat Search'
     ]), cpNormal, True),
-    wbUnknown(ONAM),
-    wbUnknown(CNAM)
+    wbLString(ONAM, 'Unknown'),
+    wbLString(CNAM, 'Unknown')
   ]);
 
   wbBlendModeEnum := wbEnum([
@@ -7814,23 +7815,8 @@ begin
     wbEffectsReq
   ]);
 
-  wbRecord(EYES, 'Eyes',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Non-Playable'
-    ])), [
-    wbEDID,
-    wbFULLReq,
-    wbString(ICON, 'Texture', 0, cpNormal, True),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01}'Playable',
-      {0x02}'Not Male',
-      {0x04}'Not Female',
-      {0x08}'Unknown 4',
-      {0x10}'Unknown 5',
-      {0x20}'Unknown 6',
-      {0x40}'Unknown 7',
-      {0x80}'Unknown 8'
-    ]), cpNormal, True)
+  wbRecord(EYES, 'Eyes', [
+    wbEDID
   ]);
 
   wbRecord(FACT, 'Faction', [
@@ -7950,7 +7936,7 @@ begin
       {0x0002} 'Ignored By Sandbox'
     ])),
     wbCITC,
-    wbCTDAs,
+    wbCTDAsCount,
     wbCOCT,
     wbCNTOs,
     wbInteger(MNAM, 'Active Markers / Flags', itU32, wbFlags([
