@@ -9863,12 +9863,12 @@ begin
     wbFloat(DNAM, 'Fade-Out'),
     wbString(ANAM, 'Track Filename'),
     wbString(BNAM, 'Finale Filename'),
-    wbArray(FNAM, 'Cue Points', wbFloat('Point')),
     wbStruct(LNAM, 'Loop Data', [
       wbFloat('Loop Begins'),
       wbFloat('Loop Ends'),
       wbInteger('Loop Count', itU32)
     ]),
+    wbArray(FNAM, 'Cue Points', wbFloat('Point')),
     wbCITC,
     wbCTDAsCount,
     wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
