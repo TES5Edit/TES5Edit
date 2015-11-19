@@ -168,6 +168,7 @@ const
   ATKT : TwbSignature = 'ATKT'; { New To Fallout 4 }
   ATKS : TwbSignature = 'ATKS'; { New To Fallout 4 }
   ATKW : TwbSignature = 'ATKW'; { New To Fallout 4 }
+  ATTN : TwbSignature = 'ATTN'; { New To Fallout 4 }
   ATTX : TwbSignature = 'ATTX'; { New To Fallout 4 }
   ATXT : TwbSignature = 'ATXT';
   AVFL : TwbSignature = 'AVFL'; { New To Fallout 4 }
@@ -357,6 +358,9 @@ const
   IPDS : TwbSignature = 'IPDS';
   ISIZ : TwbSignature = 'ISIZ'; { New To Fallout 4 }
   ITID : TwbSignature = 'ITID'; { New To Fallout 4 }
+  ITMC : TwbSignature = 'ITMC'; { New To Fallout 4 }
+  ITME : TwbSignature = 'ITME'; { New To Fallout 4 }
+  ITMS : TwbSignature = 'ITMS'; { New To Fallout 4 }
   ITXT : TwbSignature = 'ITXT';
   JAIL : TwbSignature = 'JAIL'; { New To Skyrim }
   JNAM : TwbSignature = 'JNAM';
@@ -10151,10 +10155,9 @@ begin
     wbRArray('Sounds',
       wbRStruct('Sound Files', [
         wbString(ANAM, 'File Name')
-      ],[])
+      ], [])
     ),
     wbFormIDCk(ONAM, 'Output Model', [SOPM, NULL]),
-    wbLString(FNAM, 'String', 0, cpIgnore),
     wbCTDAs,
     wbStruct(LNAM, 'Values', [
       wbByteArray('Unknown', 1),
@@ -10173,24 +10176,21 @@ begin
       wbInteger('Priority', itU8),
       wbInteger('db Variance', itU8),
       wbInteger('Static Attenuation (db)', itU16, wbDiv(100))
-    ])
+    ], cpNormal, False, nil, 4),
+    wbRArray('Layers', wbFormIDCk(DNAM, 'Layer', [SNDR])),
+    wbInteger(ITMC, 'Count', itU32, nil, cpBenign),
+    wbRArray('Unknown',
+      wbRStruct('Unknown', [
+        wbEmpty(ITMS, 'Marker Start'),
+        wbUnknown(INTV),
+        wbString(FNAM, 'Unknown'),
+        wbEmpty(ITME, 'Marker End')
+      ], [])
+    )
   ]);
 
   wbRecord(DUAL, 'Dual Cast Data', [
-    wbEDID,
-    wbOBNDReq,
-    wbStruct(DATA, 'Data', [
-      wbFormIDCk('Projectile', [PROJ, NULL]),
-      wbFormIDCk('Explosion', [EXPL, NULL]),
-      wbFormIDCk('Effect Shader', [EFSH, NULL]),
-      wbFormIDCk('Hit Effect Art', [ARTO, NULL]),
-      wbFormIDCk('Impact Data Set', [IPDS, NULL]),
-      wbInteger('Inherit Scale', itU32, wbFlags([
-        'Hit Effect Art',
-        'Projectile',
-        'Explosion'
-      ]))
-    ], cpNormal, True)
+    wbEDID
   ]);
 
   wbRecord(SNCT, 'Sound Category', [
@@ -10201,8 +10201,11 @@ begin
       'Should Appear on Menu'
     ]), cpNormal, True),
     wbFormIDCk(PNAM, 'Parent', [SNCT]),
+    wbFormIDCk(ONAM, 'Unknown', [SNCT]),
     wbInteger(VNAM, 'Static Volume Multiplier', itU16, wbDiv(65535)),
-    wbInteger(UNAM, 'Default Menu Value', itU16, wbDiv(65535))
+    wbInteger(UNAM, 'Default Menu Value', itU16, wbDiv(65535)),
+    wbFloat(MNAM, 'Unknown'),
+    wbUnknown(CNAM)
   ]);
 
   wbRecord(SOPM, 'Sound Output Model', [
@@ -10215,13 +10218,11 @@ begin
       wbByteArray('Unknown', 2),
       wbInteger('Reverb Send %', itU8)
     ]),
-    wbUnknown(FNAM), // leftover, unused
     wbInteger(MNAM, 'Type', itU32, wbEnum([
       'Uses HRTF',
       'Defined Speaker Output'
     ])),
-    wbUnknown(CNAM), // leftover, unused
-    wbUnknown(SNAM), // leftover, unused
+    wbUnknown(VNAM),
     wbStruct(ONAM, 'Output Values', [
       wbArray('Channels', wbStruct('', [
         wbInteger('L', itU8),
@@ -10238,13 +10239,15 @@ begin
         'Channel 2? (unused)'
       ])
     ]),
-    wbStruct(ANAM, 'Attenuation Values', [
+    {wbStruct(ANAM, 'Attenuation Values', [
       wbByteArray('Unknown', 4),
       wbFloat('Min Distance'),
       wbFloat('Max Distance'),
       wbArray('Curve', wbInteger('Value', itU8), 5),
       wbByteArray('Unknown')
-    ])
+    ]),}
+    wbUnknown(ATTN),
+    wbFormIDCk(ENAM, 'Unknown', [AECH])
   ]);
 
   wbRecord(COLL, 'Collision Layer', [
