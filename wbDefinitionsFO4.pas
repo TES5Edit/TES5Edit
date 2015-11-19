@@ -5949,7 +5949,8 @@ begin
       -1, 'None'
     ]);
 
-  wbActorValue := wbInteger('Actor Value', itS32, wbActorValueEnum);
+  //wbActorValue := wbInteger('Actor Value', itS32, wbActorValueEnum);
+  wbActorValue := wbFormIDCkNoReach('Actor Value', [AVIF, NULL]);
 
   wbETYP := wbFormIDCk(ETYP, 'Equipment Type', [EQUP, NULL]);
   wbETYPReq := wbFormIDCk(ETYP, 'Equipment Type', [EQUP, NULL], False, cpNormal, True);
@@ -6227,7 +6228,7 @@ begin
         wbFloat('Float'),
         wbByteArray('Variable Name (unused)', 4, cpIgnore),
         wbInteger('Sex', itU32, wbSexEnum),
-        wbInteger('Actor Value', itS32, wbActorValueEnum),
+        wbActorValue,
         wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
         wbInteger('Axis', itU32, wbAxisEnum),
         wbInteger('Quest Stage (unused)', itS32),
@@ -6285,7 +6286,7 @@ begin
         wbFloat('Float'),
         wbByteArray('Variable Name (unused)', 4, cpIgnore),
         wbInteger('Sex', itU32, wbSexEnum),
-        wbInteger('Actor Value', itS32, wbActorValueEnum),
+        wbActorValue,
         wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
         wbInteger('Axis', itU32, wbAxisEnum),
         wbInteger('Quest Stage', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
@@ -8821,7 +8822,6 @@ begin
     wbVMAD,
     wbFULL,
     wbDESCReq,
-    wbICON,
     wbCTDAs,
     wbStruct(DATA, 'Data', [
       wbInteger('Trait', itU8, wbEnum(['False', 'True'])),
@@ -8922,7 +8922,7 @@ begin
           {6} wbString('Text'),
           {7} wbLString('Text'),
           {8} wbStruct('Actor Value, Float', [
-                wbInteger('Actor Value', itU32, wbEPFDActorValueToStr, wbEPFDActorValueToInt),
+                wbActorValue, // wbInteger('Actor Value', itU32, wbEPFDActorValueToStr, wbEPFDActorValueToInt),
                 wbFloat('Float')
               ])
         ], cpNormal, False{, wbEPFDDontShow})
@@ -10286,7 +10286,6 @@ procedure DefineFO4l;
 begin
   wbRecord(REVB, 'Reverb Parameters', [
     wbEDID,
-    {<<< Commented out DATA because previous definition caused ANAM to be unrecognized
     wbStruct(DATA, 'Data', [
       wbInteger('Decay Time (ms)', itU16),
       wbInteger('HF Reference (Hz)', itU16),
@@ -10300,8 +10299,7 @@ begin
       wbInteger('Diffusion %', itU8),
       wbInteger('Density %', itU8),
       wbInteger('Unknown', itU8)
-    ], cpNormal, True), >>>}
-    wbUnknown(DATA),
+    ], cpNormal, True),
     wbUnknown(ANAM)
   ]);
 
@@ -10443,7 +10441,6 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbMODL,
-    wbICON,
     wbDEST,
     wbETYP,
     wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
@@ -10479,7 +10476,6 @@ begin
     wbPTRN,
     wbFULLReq,
     wbMODL,
-    wbICON,
     wbDEST,
     wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
     wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
@@ -10606,7 +10602,6 @@ begin
     wbDEST,
     wbPRPS,
     wbFULL,
-    wbICON,
     wbStruct(DATA, '', [
       wbInteger('Time', itS32),
       wbInteger('Radius', itU32),
@@ -10887,7 +10882,7 @@ begin
       wbFormIDCk('Explosion', [EXPL, NULL]),
       wbInteger('Casting Type', itU32, wbCastEnum),
       wbInteger('Delivery', itU32, wbTargetEnum),
-      wbInteger('Second Actor Value', itS32, wbActorValueEnum),
+      wbActorValue, //wbInteger('Second Actor Value', itS32, wbActorValueEnum),
       wbFormIDCk('Casting Art', [ARTO, NULL]),
       wbFormIDCk('Hit Effect Art', [ARTO, NULL]),
       wbFormIDCk('Impact Data', [IPDS, NULL]),
@@ -12013,7 +12008,8 @@ begin
   wbRaceTTGP :=
     wbRArray('Unknown',
       wbRStruct('Unknown', [
-        wbUnknown(TTGP),
+        //wbUnknown(TTGP),
+        wbLString(TTGP, 'Unknown'),
         wbRUnion('Unknown', [
 
           wbUnknown(TETI),
@@ -12049,8 +12045,10 @@ begin
          wbRArray('Unknown',
            wbRStruct('Unknown', [
              wbUnknown(MPPI),
-             wbUnknown(MPPN),
-             wbUnknown(MPPM),
+             //wbUnknown(MPPN),
+             //wbUnknown(MPPM),
+             wbLString(MPPN, 'Unknown'),
+             wbString(MPPM, 'Unknown'),
              wbUnknown(MPPT),
              wbUnknown(MPPF)
            ], [])
@@ -13823,7 +13821,7 @@ begin
     wbFormIDCk(GNAM, 'Rarity', [GLOB])
   ]);
 
-  wbRecord(DFOB, 'DFOB', [
+  wbRecord(DFOB, 'Default Object', [
     wbEDID,
     wbFormID(DATA)
   ]);
@@ -13863,10 +13861,10 @@ begin
     wbUnknown(UNAM),
     wbRArray('Unknown',
       wbRStruct('Unknown', [
-        wbUnknown(VNAM),
+        wbInteger(VNAM, 'Count', itU32),
         wbRArray('Unknown',
           wbRStruct('Unknown', [
-            wbUnknown(WNAM),
+            wbLString(WNAM, 'Unknown'),
             wbKSIZ,
             wbKWDAs
           ], [])
@@ -13897,7 +13895,7 @@ begin
     wbEDID,
     wbFloat(CNAM),
     wbFloat(DNAM),
-    wbUnknown(LFSP),
+    wbInteger(LFSP, 'Count', itU32),
     wbRArray('Flares',
       wbRStruct('Flare', [
         wbString(DNAM, 'Shape'),
@@ -13915,7 +13913,7 @@ begin
     wbEDID
   ]);
 
-  wbRecord(MSWP, 'MSWP', [
+  wbRecord(MSWP, 'Material Swap', [
     wbEDID,
     wbString(FNAM),
     wbRArray('Unknown',
@@ -13943,7 +13941,7 @@ end;
 
 procedure DefineFO4s;
 begin
-  wbRecord(NOTE, 'NOTE', [
+  wbRecord(NOTE, 'Note', [
     wbEDID,
     wbVMAD,
     wbOBND,
@@ -14018,7 +14016,7 @@ begin
     wbUnknown(VNAM, cpNormal, True)
   ]);
 
-  wbRecord(SCOL, 'SCOL', [
+  wbRecord(SCOL, 'Static Collection', [
     wbEDID,
     wbOBNDReq,
     wbPTRN,
@@ -14136,7 +14134,7 @@ begin
     ], cpNormal, True, nil, 7)
   ]);
 
-  wbRecord(ZOOM, 'ZOOM', [
+  wbRecord(ZOOM, 'Zoom', [
     wbEDID,
     wbUnknown(GNAM)
   ]);
@@ -14152,23 +14150,23 @@ begin
    wbAddGroupOrder(TRNS);
    wbAddGroupOrder(CMPO);
    wbAddGroupOrder(TXST);
-   wbAddGroupOrder(MICN);
+   //wbAddGroupOrder(MICN);
    wbAddGroupOrder(GLOB);
    wbAddGroupOrder(DMGT);
    wbAddGroupOrder(CLAS);
    wbAddGroupOrder(FACT);
    wbAddGroupOrder(HDPT);
-   wbAddGroupOrder(EYES);
+   //wbAddGroupOrder(EYES);
    wbAddGroupOrder(RACE);
    wbAddGroupOrder(SOUN);
    wbAddGroupOrder(ASPC);
-   wbAddGroupOrder(SKIL);
+   //wbAddGroupOrder(SKIL);
    wbAddGroupOrder(MGEF);
-   wbAddGroupOrder(SCPT);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
+   //wbAddGroupOrder(SCPT);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
    wbAddGroupOrder(LTEX);
    wbAddGroupOrder(ENCH);
    wbAddGroupOrder(SPEL);
-   wbAddGroupOrder(SCRL);
+   //wbAddGroupOrder(SCRL);
    wbAddGroupOrder(ACTI);
    wbAddGroupOrder(TACT);
    wbAddGroupOrder(ARMO);
@@ -14196,7 +14194,7 @@ begin
    wbAddGroupOrder(PROJ);
    wbAddGroupOrder(HAZD);
    wbAddGroupOrder(BNDS);
-   wbAddGroupOrder(SLGM);
+   //wbAddGroupOrder(SLGM);
    wbAddGroupOrder(TERM);
    wbAddGroupOrder(LVLI);
    wbAddGroupOrder(WTHR);
@@ -14206,22 +14204,22 @@ begin
    wbAddGroupOrder(REGN);
    wbAddGroupOrder(NAVI);
    wbAddGroupOrder(CELL);
-   wbAddGroupOrder(REFR);
-   wbAddGroupOrder(ACHR);
-   wbAddGroupOrder(PMIS);
-   wbAddGroupOrder(PARW);
-   wbAddGroupOrder(PGRE);
-   wbAddGroupOrder(PBEA);
-   wbAddGroupOrder(PFLA);
-   wbAddGroupOrder(PCON);
-   wbAddGroupOrder(PBAR);
-   wbAddGroupOrder(PHZD);
+   //wbAddGroupOrder(REFR);
+   //wbAddGroupOrder(ACHR);
+   //wbAddGroupOrder(PMIS);
+   //wbAddGroupOrder(PARW);
+   //wbAddGroupOrder(PGRE);
+   //wbAddGroupOrder(PBEA);
+   //wbAddGroupOrder(PFLA);
+   //wbAddGroupOrder(PCON);
+   //wbAddGroupOrder(PBAR);
+   //wbAddGroupOrder(PHZD);
    wbAddGroupOrder(WRLD);
-   wbAddGroupOrder(LAND);
-   wbAddGroupOrder(NAVM);
-   wbAddGroupOrder(TLOD);
-   wbAddGroupOrder(DIAL);
-   wbAddGroupOrder(INFO);
+   //wbAddGroupOrder(LAND);
+   //wbAddGroupOrder(NAVM);
+   //wbAddGroupOrder(TLOD);
+   //wbAddGroupOrder(DIAL);
+   //wbAddGroupOrder(INFO);
    wbAddGroupOrder(QUST);
    wbAddGroupOrder(IDLE);
    wbAddGroupOrder(PACK);
@@ -14231,7 +14229,7 @@ begin
    wbAddGroupOrder(ANIO);
    wbAddGroupOrder(WATR);
    wbAddGroupOrder(EFSH);
-   wbAddGroupOrder(TOFT);
+   //wbAddGroupOrder(TOFT);
    wbAddGroupOrder(EXPL);
    wbAddGroupOrder(DEBR);
    wbAddGroupOrder(IMGS);
@@ -14251,7 +14249,7 @@ begin
    wbAddGroupOrder(ECZN);
    wbAddGroupOrder(LCTN);
    wbAddGroupOrder(MESG);
-   wbAddGroupOrder(RGDL);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
+   //wbAddGroupOrder(RGDL);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
    wbAddGroupOrder(DOBJ);
    wbAddGroupOrder(DFOB);
    wbAddGroupOrder(LGTM);
@@ -14264,8 +14262,8 @@ begin
    wbAddGroupOrder(DLBR);
    wbAddGroupOrder(MUST);
    wbAddGroupOrder(DLVW);
-   wbAddGroupOrder(WOOP);
-   wbAddGroupOrder(SHOU);
+   //wbAddGroupOrder(WOOP);
+   //wbAddGroupOrder(SHOU);
    wbAddGroupOrder(EQUP);
    wbAddGroupOrder(RELA);
    wbAddGroupOrder(SCEN);
@@ -14275,7 +14273,7 @@ begin
    wbAddGroupOrder(MATO);
    wbAddGroupOrder(MOVT);
    wbAddGroupOrder(SNDR);
-   wbAddGroupOrder(DUAL);
+   //wbAddGroupOrder(DUAL);
    wbAddGroupOrder(SNCT);
    wbAddGroupOrder(SOPM);
    wbAddGroupOrder(COLL);
