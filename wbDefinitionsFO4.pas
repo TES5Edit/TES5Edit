@@ -9740,7 +9740,7 @@ begin
         wbFloat('Start'),
         wbFloat('End')
       ]),
-      wbByteArray('Unknown', 4)
+      wbUnknown
     ], cpNormal, True, nil, 11),
     wbStruct(DALC, 'Directional Ambient Lighting Colors', [wbAmbientColors], cpNormal, True)
   ]);
@@ -9812,6 +9812,7 @@ begin
     ]),
     wbInteger(XNAM, 'Max concurrent quests', itU32),
     wbInteger(MNAM, 'Num quests to run', itU32),
+    wbFloat(HNAM, 'Unknown'),
     wbInteger(QNAM, 'Quest Count', itU32, nil, cpBenign),
     wbRArray('Quests', wbRStructSK([0], 'Quest', [
       wbFormIDCk(NNAM, 'Quest', [QUST]),
