@@ -41,23 +41,24 @@ uses
   wbSort in 'wbSort.pas',
   wbLOD in 'wbLOD.pas',
   wbLocalization in 'wbLocalization.pas',
-  frmViewMain in 'frmViewMain.pas', {frmMain}
-  FilterOptionsFrm in 'FilterOptionsFrm.pas', {frmFilterOptions}
-  FileSelectFrm in 'FileSelectFrm.pas', {frmFileSelect}
-  ViewElementsFrm in 'ViewElementsFrm.pas', {frmViewElements}
-  EditWarningFrm in 'EditWarningFrm.pas', {frmEditWarning}
-  frmWaitForm in 'frmWaitForm.pas', {frmWait}
-  frmLocalizationForm in 'frmLocalizationForm.pas', {frmLocalization}
-  frmLocalizePluginForm in 'frmLocalizePluginForm.pas', {frmLocalizePlugin}
-  frmScriptForm in 'frmScriptForm.pas', {frmScript}
-  frmOptionsForm in 'frmOptionsForm.pas', {frmOptions}
-  frmLogAnalyzerForm in 'frmLogAnalyzerForm.pas', {frmLogAnalyzer}
-  frmLODGenForm in 'frmLODGenForm.pas', {frmLODGen}
+  frmViewMain in 'frmViewMain.pas',
+  FilterOptionsFrm in 'FilterOptionsFrm.pas',
+  FileSelectFrm in 'FileSelectFrm.pas',
+  ViewElementsFrm in 'ViewElementsFrm.pas',
+  EditWarningFrm in 'EditWarningFrm.pas',
+  frmWaitForm in 'frmWaitForm.pas',
+  frmLocalizationForm in 'frmLocalizationForm.pas',
+  frmLocalizePluginForm in 'frmLocalizePluginForm.pas',
+  frmScriptForm in 'frmScriptForm.pas',
+  frmOptionsForm in 'frmOptionsForm.pas',
+  frmLogAnalyzerForm in 'frmLogAnalyzerForm.pas',
+  frmLODGenForm in 'frmLODGenForm.pas',
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
   wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
-  wbDefinitionsTES5 in 'wbDefinitionsTES5.pas';
+  wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
+  wbDefinitionsFO4 in 'wbDefinitionsFO4.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

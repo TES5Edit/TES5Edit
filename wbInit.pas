@@ -66,6 +66,7 @@ uses
   wbImplementation,
   wbDefinitionsFNV,
   wbDefinitionsFO3,
+  wbDefinitionsFO4,
   wbDefinitionsTES3,
   wbDefinitionsTES4,
   wbDefinitionsTES5;
@@ -353,8 +354,10 @@ begin
     end;
     wbMyGamesTheGamePath := wbTheGameIniFileName + 'My Games\'+ wbGameName +'\';
 
-    if wbGameMode in [gmFO3, gmFNV, gmFO4] then
+    if wbGameMode in [gmFO3, gmFNV] then
       wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
+    else if wbGameMode = gmFO4 then
+      wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout4.ini'
     else
       wbTheGameIniFileName := wbMyGamesTheGamePath + wbGameName + '.ini';
   end;
@@ -391,15 +394,61 @@ end;
 
 var
   wbForcedModes: string;
+  AppGameMode, AppToolMode: string;
 
-function isMode(aMode: String): Boolean;
+procedure DetectAppMode;
+const
+  GameModes: array [1..5] of string = ('tes4', 'tes5', 'fo3', 'fnv', 'fo4');
+  ToolModes: array [1..13] of string = (
+    'edit', 'view', 'saves', 'lodgen', 'script', 'translate',
+    'setesm', 'clearesm', 'sortandclean', 'sortandcleanmasters',
+    'checkforerrors', 'checkforitm', 'checkfordr');
 var
   s: string;
 begin
-  Result := (Pos(Uppercase(aMode), UpperCase(wbForcedModes)) <> 0) or
-            FindCmdLineSwitch(aMode) or
-            wbFindCmdLineParam(aMode, s) or
-            (Pos(Uppercase(aMode), UpperCase(ExtractFileName(ParamStr(0)))) <> 0);
+  // Detecting game mode
+  // check command line params first for mode overrides
+  // they should take precendence over application name detection
+  for s in GameModes do
+    if FindCmdLineSwitch(s) or (Pos(s, wbForcedModes) <> 0) then begin
+      AppGameMode := s;
+      Break;
+    end;
+  // if no overrrides, then check by executable name
+  if AppGameMode = '' then
+    for s in GameModes do
+      if (Pos(s, LowerCase(ExtractFileName(ParamStr(0)))) <> 0) or (Pos(s, wbForcedModes) <> 0) then begin
+        AppGameMode := s;
+        Break;
+      end;
+  // if still nothing, then default value
+  if AppGameMode = '' then
+    AppGameMode := 'fo4';
+
+  // the same for tool mode
+  for s in ToolModes do
+    if FindCmdLineSwitch(s) or (Pos(s, wbForcedModes) <> 0) then begin
+      AppToolMode := s;
+      Break;
+    end;
+  if AppToolMode = '' then
+    for s in ToolModes do
+      if (Pos(s, LowerCase(ExtractFileName(ParamStr(0)))) <> 0) or (Pos(s, wbForcedModes) <> 0) then begin
+        AppToolMode := s;
+        Break;
+      end;
+  if AppToolMode = '' then
+    AppToolMode := 'edit';
+end;
+
+function isMode(aMode: String): Boolean;
+begin
+  aMode := LowerCase(aMode);
+  Result := (AppGameMode = aMode) or (AppToolMode = aMode);
+//  Result := (Pos(Uppercase(aMode), UpperCase(wbForcedModes)) <> 0) or
+//            FindCmdLineSwitch(aMode) or
+//            wbFindCmdLineParam(aMode, s) or
+//            (Pos(Uppercase(aMode), UpperCase(ExtractFileName(ParamStr(0)))) <> 0);
 end;
 
 // Force app modes
@@ -410,6 +459,7 @@ var
 begin
   Result := False;
   // there is a game specific script provided to execute
+  // go into 'script' tool mode and detect game mode by script's extension
   i := 1;
   if wbFindCmdLineParam('script', s) or wbFindNextValidCmdLineFileName(i, s) then begin
     if not FileExists(s) then
@@ -441,6 +491,7 @@ begin
   wbEditAllowed := True;
   wbDontSave    := False;
   CheckForcedMode;
+  DetectAppMode;
   if isMode('View') then begin
     wbToolMode    := tmView;
     wbToolName    := 'View';
@@ -553,7 +604,7 @@ begin
     wbGameMode := gmFO4;
     wbAppName := 'FO4';
     wbGameName := 'Fallout4';
-    if not (wbToolMode in wbAlwaysMode) and not (wbToolMode in [tmMasterUpdate, tmMasterRestore]) then begin
+    if not (wbToolMode in wbAlwaysMode) and not (wbToolMode in [tmTranslate]) then begin
       ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
     end;
@@ -562,7 +613,7 @@ begin
       Exit;
     end;
   end else begin
-    ShowMessage('Application name must contain FNV, FO3, TES4 or TES5 to select game.');
+    ShowMessage('Application name must contain FNV, FO3, FO4, TES4 or TES5 to select game.');
     Exit;
   end;
 
@@ -591,8 +642,10 @@ begin
     ReadSettings;
   end else if wbGameMode = gmFO4 then begin
     wbVWDInTemporary := True;
-    wbLoadBSAs := False;
+    wbVWDAsQuestChildren := True;
     ReadSettings;
+    wbLoadBSAs := False; // no support for BA2 yet
+    wbCreateContainedIn := False;
   end else begin
     Exit;
   end;
@@ -618,7 +671,12 @@ begin
     Exit;
   end;
 
-  wbLanguage := 'English';
+  case wbGameMode of
+    gmTES5:
+      wbLanguage := 'English';
+    gmFO4:
+      wbLanguage := 'En';
+  end;
   if wbFindCmdLineParam('l', s) then
     wbLanguage := s;
 
