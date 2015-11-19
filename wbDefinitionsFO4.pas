@@ -318,6 +318,7 @@ const
   FTYP : TwbSignature = 'FTYP'; { New To Fallout 4 }
   FULL : TwbSignature = 'FULL';
   FURN : TwbSignature = 'FURN';
+  FVPA : TwbSignature = 'FVPA'; { New To Fallout 4 }
   GDRY : TwbSignature = 'GDRY'; { New to Fallout 4 }
   GLOB : TwbSignature = 'GLOB';
   GMST : TwbSignature = 'GMST';
@@ -10298,7 +10299,8 @@ begin
       wbInteger('Diffusion %', itU8),
       wbInteger('Density %', itU8),
       wbInteger('Unknown', itU8)
-    ], cpNormal, True)
+    ], cpNormal, True),
+    wbUnknown(ANAM)
   ]);
 
   wbRecord(GRAS, 'Grass', [
@@ -10638,12 +10640,14 @@ begin
       ]),
       wbInteger('Value', itU32),
       wbFloat('Weight'),
-      wbByteArray
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbUnknown
     ], cpNormal, True),
     wbFloat(FNAM, 'Fade value', cpNormal, True),
     wbString(NAM0, 'Unknown'),
-    wbFormID(LNAM, 'Lens'),
-    wbFormID(WGDR, 'Godray'),
+    wbFormIDCk(LNAM, 'Lens', [LENS]),
+    wbFormIDCk(WGDR, 'Godray', [GDRY]),
     wbFormIDCk(SNAM, 'Sound', [SNDR])
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 end;
@@ -10656,7 +10660,6 @@ begin
       {0x00000400} 10, 'Displays In Main Menu'
     ])), [
     wbEDID,
-    wbICON,
     wbDESCReq,
     wbCTDAs,
     wbFormIDCk(NNAM, 'Loading Screen NIF', [STAT, NULL], False, cpNormal, True),
@@ -10666,12 +10669,15 @@ begin
       wbInteger('Y', itS16),
       wbInteger('Z', itS16)
     ]),
-    wbUnknown(TNAM),
+    wbFormIDCk(TNAM, 'Transform', [TRNS]),
     wbStruct(ONAM, 'Rotation Offset Constraints', [
       wbInteger('Min', itS16),
       wbInteger('Max', itS16)
     ]),
-    wbUnknown(ZNAM),
+    wbStruct(ZNAM, 'Unknown', [
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
+    ]),
     wbStruct(XNAM, 'Initial Translation Offset', [
       wbFloat('X'),
       wbFloat('Y'),
@@ -10715,7 +10721,10 @@ begin
 				wbCOED
       ], []),
     cpNormal, True, nil, wbLVLOsAfterSet),
-    wbUnknown(LLKC), { Possible FormID then Flags }
+    wbStructs(LLKC, 'Unknown', 'Unknown', [
+      wbFormIDCk('Keyword', [KYWD]),
+      wbByteArray('Unknown', 4)
+    ]),
     wbMODL
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
@@ -10744,33 +10753,17 @@ begin
         wbCOED
       ], []), cpNormal, False, nil, wbLVLOsAfterSet
     ),
-    wbUnknown(LLKC), { Possible FormID then Flags }
-    wbUnknown(LVSG),
-    wbUnknown(ONAM)
+    wbStructs(LLKC, 'Unknown', 'Unknown', [
+      wbFormIDCk('Keyword', [KYWD]),
+      wbByteArray('Unknown', 4)
+    ]),
+    wbFormIDCk(LVSG, 'Unknown', [GLOB]),
+    wbLString(ONAM, 'Unknown')
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
-   wbRecord(LVSP, 'Leveled Spell', [
-    wbEDID,
-    wbOBNDReq,
-    wbLVLD,
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
-      {0x01} 'Calculate from all levels <= player''s level',
-      {0x02} 'Calculate for each item in count',
-      {0x04} 'Use All Spells'
-    ]), cpNormal, True),
-    wbLLCT,
-    wbRArrayS('Leveled List Entries',
-      wbRStructSK([0], 'Leveled List Entry', [
-        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-        wbInteger('Level', itU16),
-        wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow),
-        wbFormIDCk('Reference', [SPEL, LVSP]),
-        wbInteger('Count', itU16),
-        wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
-      ])
-      ], []), cpNormal, False, nil, wbLVLOsAfterSet
-    )
-  ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
+  wbRecord(LVSP, 'Leveled Spell', [
+    wbEDID
+  ]);
 
   wbMGEFType := wbInteger('Archtype', itU32, wbEnum([
     {00} 'Value Modifier',
@@ -10949,30 +10942,45 @@ begin
     wbPTRN,
     wbFULL,
     wbMODL,
-    wbICON,
     wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
     wbKSIZ,
     wbKWDAs,
-    wbUnknown(FIMD),
+    wbFormID(FIMD),
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
     ], cpNormal, True),
-    wbUnknown(CVPA),
+    // the amount of components is the same as size of CDIX, so should not be sorted probably
+    wbStructs(CVPA, 'Components', 'Component', [
+      wbFormIDCk('Component', [CMPO]),
+      wbInteger('Count', itU32)
+    ]),
     wbUnknown(CDIX)
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   wbRecord(COBJ, 'Constructible Object', [
     wbEDID,
-    wbCOCT,
-    wbCNTOs,
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
+    wbArrayS(FVPA, 'Components',
+      wbStructSK([0], 'Component', [
+        wbFormIDCk('Component', [CMPO]),
+        wbInteger('Count', itU32)
+      ])
+    ),
+    wbLString(DESC, 'Description'),
     wbCTDAs,
     wbFormID(CNAM, 'Created Object'),
     wbFormIDCk(BNAM, 'Workbench Keyword', [KYWD]),
-    wbInteger(NAM1, 'Created Object Count', itU16)
-  ], False, nil, cpNormal, False, nil, wbContainerAfterSet);
+    wbByteArray(NAM1, 'Unused', 0, cpIgnore), // co_PA_FusionCore01
+    wbByteArray(NAM2, 'Unused', 0, cpIgnore), // co_PA_FusionCore01
+    wbByteArray(NAM3, 'Unused', 0, cpIgnore), // co_PA_FusionCore01
+    wbFormIDCk(ANAM, 'Unknown', [ARTO]),
+    wbArray(FNAM, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
+    wbUnknown(INTV)
+  ]);
 
   wbRecord(NPC_, 'Non-Player Character (Actor)',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -11387,35 +11395,16 @@ begin
     wbRStruct('OnBegin', [
       wbEmpty(POBA, 'OnBegin Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-      {>>> BEGIN leftover from earlier CK versions <<<}
-      wbByteArray(SCHR, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
-      wbByteArray(SCTX, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
-      wbByteArray(QNAM, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
-      wbByteArray(TNAM, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
-      {>>> END leftover from earlier CK versions <<<}
       wbPDTOs
     ], []),
     wbRStruct('OnEnd', [
       wbEmpty(POEA, 'OnEnd Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-      {>>> BEGIN leftover from earlier CK versions <<<}
-      wbByteArray(SCHR, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
-      wbByteArray(SCTX, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
-      wbByteArray(QNAM, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
-      wbByteArray(TNAM, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
-      {>>> END leftover from earlier CK versions <<<}
       wbPDTOs
     ], []),
     wbRStruct('OnChange', [
       wbEmpty(POCA, 'OnChange Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-      {>>> BEGIN leftover from earlier CK versions <<<}
-      wbByteArray(SCHR, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
-      wbByteArray(SCDA, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
-      wbByteArray(SCTX, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
-      wbByteArray(QNAM, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
-      wbByteArray(TNAM, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
-      {>>> END leftover from earlier CK versions <<<}
       wbPDTOs
     ], [])
   ], False, nil, cpNormal, False, nil {wbPACKAfterLoad});
@@ -13006,7 +12995,7 @@ begin
     wbFULL,
     wbKSIZ,
     wbKWDAs,
-    wbMDOB,
+    //wbMDOB,
     wbETYP,
     wbDESCReq,
     wbSPIT,
@@ -13184,7 +13173,7 @@ begin
     wbFormIDCk(TNAM, 'Material', [MATT]),
     wbFormIDCk(SNAM, 'Open Sound', [SNDR, NULL]),
     wbFormIDCk(XNAM, 'Spell', [SPEL]),
-    wbFormID(YNAM, 'Unknown'),
+    wbFormIDCk(YNAM, 'Unknown', [SPEL]),
     wbFormIDCk(INAM, 'Image Space', [IMGS]),
     {>>> wbInteger(DATA, 'Damage Per Second', itU16, nil, cpNormal, True, True), <<<}
     wbByteArray(DATA, 'Unused', 0),
@@ -13253,14 +13242,14 @@ begin
       wbFloat('Noise Properties - Layer One - Amplitude Scale'),
       wbFloat('Noise Properties - Layer Two - Amplitude Scale'),
       wbFloat('Noise Properties - Layer Three - Amplitude Scale'),
-      wbFloat('Water Properties - Reflection Magnitude'),
-      wbFloat('Specular Properties - Sun Sparkle Magnitude'),
-      wbFloat('Specular Properties - Sun Specular Magnitude'),
-      wbFloat('Depth Properties - Reflections'),
-      wbFloat('Depth Properties - Refraction'),
-      wbFloat('Depth Properties - Normals'),
-      wbFloat('Depth Properties - Specular Lighting'),
-      wbFloat('Specular Properties - Sun Sparkle Power')
+      wbFloat('Water Properties - Reflection Magnitude')
+//      wbFloat('Specular Properties - Sun Sparkle Magnitude'),
+//      wbFloat('Specular Properties - Sun Specular Magnitude'),
+//      wbFloat('Depth Properties - Reflections'),
+//      wbFloat('Depth Properties - Refraction'),
+//      wbFloat('Depth Properties - Normals'),
+//      wbFloat('Depth Properties - Specular Lighting'),
+//      wbFloat('Specular Properties - Sun Sparkle Power')
     ]),
     wbByteArray(GNAM, 'Unused', 0, cpNormal, True),  // leftover
     wbStruct(NAM0, 'Linear Velocity', [
@@ -13274,8 +13263,8 @@ begin
       wbFloat('Z')
     ], cpNormal, False),
     wbString(NAM2, 'Noise Texture', 0, cpNormal, False),
-    wbString(NAM3, 'Unused', 0, cpNormal),  // leftover
-    wbString(NAM4, 'Unused', 0, cpNormal)  // leftover
+    wbString(NAM3, 'Unknown', 0, cpNormal),  // leftover
+    wbString(NAM4, 'Unknown', 0, cpNormal)
   ], False, nil, cpNormal, False);
 
   wbRecord(WEAP, 'Weapon',
@@ -13288,7 +13277,6 @@ begin
     wbPTRN,
     wbFULL,
     wbMODL,
-    wbICON,
     wbEITM,
     wbInteger(EAMT, 'Enchantment Amount', itU16),
     wbDEST,
@@ -13300,11 +13288,6 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbDESC,
-    wbStruct(DATA, 'Game Data', [
-      wbInteger('Value', itU32),
-      wbFloat('Weight'),
-      wbInteger('Damage', itU16)
-    ]),
     wbFormIDCk(INRD, 'Unknown', [INNR]),
     wbAPPR,
     wbOBTESequence,
@@ -13319,58 +13302,58 @@ begin
       wbByteArray('Unused', 3, cpIgnore),
       wbFloat('Speed'),
       wbFloat('Reach'),
-      wbInteger('Flags', itU16, wbFlags([
-        {0x0001}'Ignores Normal Weapon Resistance',
-        {0x0002}'Automatic (unused)',
-        {0x0004}'Has Scope (unused)',
-        {0x0008}'Can''t Drop',
-        {0x0010}'Hide Backpack (unused)',
-        {0x0020}'Embedded Weapon (unused)',
-        {0x0040}'Don''t Use 1st Person IS Anim (unused)',
-        {0x0080}'Non-playable'
-      ], [1, 2, 4, 5, 6])),
-      wbByteArray('Unused', 2, cpIgnore),
-      wbFloat('Sight FOV'),
-      wbByteArray('Unknown', 4),
-      wbInteger('Base VATS To-Hit Chance', itU8),
-      wbInteger('Attack Animation', itU8, wbAttackAnimationEnum),
-      wbInteger('# Projectiles', itU8),
-      wbInteger('Embedded Weapon AV (unused)', itU8),
-      wbFloat('Range Min'),
-      wbFloat('Range Max'),
-      wbInteger('On Hit', itU32, wbEnum([
-        'No formula behaviour',
-        'Dismember only',
-        'Explode only',
-        'No dismember/explode'
-      ])),
-      wbInteger('Flags2', itU32, wbFlags([
-        {0x00000001}'Player Only',
-        {0x00000002}'NPCs Use Ammo',
-        {0x00000004}'No Jam After Reload (unused)',
-        {0x00000008}'Unknown 4',
-        {0x00000010}'Minor Crime',
-        {0x00000020}'Range Fixed',
-        {0x00000040}'Not Used in Normal Combat',
-        {0x00000080}'Unknown 8',
-        {0x00000100}'Don''t Use 3rd Person IS Anim (unused)',
-        {0x00000200}'Unknown 10',
-        {0x00000400}'Rumble - Alternate',
-        {0x00000800}'Unknown 12',
-        {0x00001000}'Non-hostile',
-        {0x00002000}'Bound Weapon'
-      ], [2, 8])),
-      wbFloat('Animation Attack Mult'),
-      wbFloat('Unknown'),
-      wbFloat('Rumble - Left Motor Strength'),
-      wbFloat('Rumble - Right Motor Strength'),
-      wbFloat('Rumble - Duration'),
-      wbByteArray('Unknown', 12),
-      wbInteger('Skill', itS32, wbSkillEnum),
-      wbByteArray('Unknown', 8),
-      wbInteger('Resist', itS32, wbActorValueEnum),
-      wbByteArray('Unknown', 4),
-      wbFloat('Stagger'),
+//      wbInteger('Flags', itU16, wbFlags([
+//        {0x0001}'Ignores Normal Weapon Resistance',
+//        {0x0002}'Automatic (unused)',
+//        {0x0004}'Has Scope (unused)',
+//        {0x0008}'Can''t Drop',
+//        {0x0010}'Hide Backpack (unused)',
+//        {0x0020}'Embedded Weapon (unused)',
+//        {0x0040}'Don''t Use 1st Person IS Anim (unused)',
+//        {0x0080}'Non-playable'
+//      ], [1, 2, 4, 5, 6])),
+//      wbByteArray('Unused', 2, cpIgnore),
+//      wbFloat('Sight FOV'),
+//      wbByteArray('Unknown', 4),
+//      wbInteger('Base VATS To-Hit Chance', itU8),
+//      wbInteger('Attack Animation', itU8, wbAttackAnimationEnum),
+//      wbInteger('# Projectiles', itU8),
+//      wbInteger('Embedded Weapon AV (unused)', itU8),
+//      wbFloat('Range Min'),
+//      wbFloat('Range Max'),
+//      wbInteger('On Hit', itU32, wbEnum([
+//        'No formula behaviour',
+//        'Dismember only',
+//        'Explode only',
+//        'No dismember/explode'
+//      ])),
+//      wbInteger('Flags2', itU32, wbFlags([
+//        {0x00000001}'Player Only',
+//        {0x00000002}'NPCs Use Ammo',
+//        {0x00000004}'No Jam After Reload (unused)',
+//        {0x00000008}'Unknown 4',
+//        {0x00000010}'Minor Crime',
+//        {0x00000020}'Range Fixed',
+//        {0x00000040}'Not Used in Normal Combat',
+//        {0x00000080}'Unknown 8',
+//        {0x00000100}'Don''t Use 3rd Person IS Anim (unused)',
+//        {0x00000200}'Unknown 10',
+//        {0x00000400}'Rumble - Alternate',
+//        {0x00000800}'Unknown 12',
+//        {0x00001000}'Non-hostile',
+//        {0x00002000}'Bound Weapon'
+//      ], [2, 8])),
+//      wbFloat('Animation Attack Mult'),
+//      wbFloat('Unknown'),
+//      wbFloat('Rumble - Left Motor Strength'),
+//      wbFloat('Rumble - Right Motor Strength'),
+//      wbFloat('Rumble - Duration'),
+//      wbByteArray('Unknown', 12),
+//      wbInteger('Skill', itS32, wbSkillEnum),
+//      wbByteArray('Unknown', 8),
+//      wbInteger('Resist', itS32, wbActorValueEnum),
+//      wbByteArray('Unknown', 4),
+//      wbFloat('Stagger'),
       wbUnknown
     ]),
     wbUnknown(FNAM),
