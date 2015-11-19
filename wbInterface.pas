@@ -24,7 +24,7 @@ uses
   Graphics;
 
 const
-  VersionString  = '3.1.2';
+  VersionString  = '3.1.3 EXPERIMENTAL';
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
   wbHardcodedDat = '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
@@ -69,6 +69,7 @@ var
   wbRequireLoadOrder       : Boolean  = False;
   wbCreateContainedIn      : Boolean  = True;
   wbVWDInTemporary         : Boolean  = False;
+  wbVWDAsQuestChildren     : Boolean   = False;
   wbResolveAlias           : Boolean  = True;
   wbActorTemplateHide      : Boolean  = True;
   wbClampFormID            : Boolean  = True;

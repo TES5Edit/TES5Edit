@@ -3178,7 +3178,7 @@ begin
   SortRecordsByEditorID;
   flProgress('EditorID index built');
 
-  if wbGameMode in [gmFNV, gmTES5] then begin
+  if wbGameMode in [gmFNV, gmTES5, gmFO4] then begin
     IsInternal := not GetIsEditable and wbBeginInternalEdit(True);
     try
       SetLength(Groups, wbGroupOrder.Count);
@@ -5745,10 +5745,13 @@ begin
   BasePtr.mrsFlags._Flags := 0;
   BasePtr.mrsFormID := aFormID;
   BasePtr.mrsVCS1 := DefaultVCS1;
-  if wbGameMode >= gmTES5 then
-    BasePtr.mrsVersion := 43
-  else
-    BasePtr.mrsVersion := 15;
+  case wbGameMode of
+    gmFO4 : BasePtr.mrsVersion := 131;
+    gmTES5: BasePtr.mrsVersion := 43;
+    gmFNV : BasePtr.mrsVersion := 15;
+    gmFO3 : BasePtr.mrsVersion := 15;
+    else    BasePtr.mrsVersion := 15;
+  end;
   BasePtr.mrsVCS2 := DefaultVCS2;
 
   Group := nil;

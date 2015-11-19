@@ -25,13 +25,18 @@
 			<CfgParent>Base</CfgParent>
 			<Base>true</Base>
 		</PropertyGroup>
+		<PropertyGroup Condition="'$(Platform)'=='Win32' and '$(Cfg_2)'=='true' or '$(Cfg_2_Win32)'!=''">
+			<Cfg_2_Win32>true</Cfg_2_Win32>
+			<CfgParent>Cfg_2</CfgParent>
+			<Cfg_2>true</Cfg_2>
+			<Base>true</Base>
+		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='DebugLite' or '$(Cfg_4)'!=''">
 			<Cfg_4>true</Cfg_4>
 			<CfgParent>Base</CfgParent>
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_UnitSearchPath>Imaging;Imaging\ZLib;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_SYMBOL_DEPRECATED>false</DCC_SYMBOL_DEPRECATED>
 			<DCC_WIDECHAR_REDUCED>false</DCC_WIDECHAR_REDUCED>
 			<DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
@@ -58,7 +63,7 @@
 			<Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
 			<VerInfo_MajorVer>3</VerInfo_MajorVer>
 			<UsePackages>true</UsePackages>
-			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.1.1.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xEdit by ElminsterAU;ProductVersion=3.1.1;Comments=</VerInfo_Keys>
+			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.33.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterAU;ProductVersion=3.0.33;Comments=</VerInfo_Keys>
 			<VerInfo_PreRelease>true</VerInfo_PreRelease>
 			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
 			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
@@ -73,6 +78,7 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
 			<DCC_UnitSearchPath>imaging;imaging\zlib;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_Define>madExcept;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_4)'!=''">
 			<DCC_ExeOutput>.\DebugLite</DCC_ExeOutput>
@@ -94,50 +100,32 @@
 			<DCCReference Include="wbScriptAdapter.pas"/>
 			<DCCReference Include="wbInterface.pas"/>
 			<DCCReference Include="wbImplementation.pas"/>
-			<DCCReference Include="wbDefinitionsFO3.pas"/>
-			<DCCReference Include="wbDefinitionsFNV.pas"/>
-			<DCCReference Include="wbDefinitionsTES3.pas"/>
-			<DCCReference Include="wbDefinitionsTES4.pas"/>
-			<DCCReference Include="wbDefinitionsTES5.pas"/>
-			<DCCReference Include="wbLocalization.pas"/>
-			<DCCReference Include="frmViewMain.pas">
-				<Form>frmMain</Form>
-			</DCCReference>
-			<DCCReference Include="FilterOptionsFrm.pas">
-				<Form>frmFilterOptions</Form>
-			</DCCReference>
-			<DCCReference Include="FileSelectFrm.pas">
-				<Form>frmFileSelect</Form>
-			</DCCReference>
-			<DCCReference Include="ViewElementsFrm.pas">
-				<Form>frmViewElements</Form>
-			</DCCReference>
-			<DCCReference Include="EditWarningFrm.pas">
-				<Form>frmEditWarning</Form>
-			</DCCReference>
-			<DCCReference Include="frmWaitForm.pas">
-				<Form>frmWait</Form>
-			</DCCReference>
-			<DCCReference Include="frmLocalizationForm.pas">
-				<Form>frmLocalization</Form>
-			</DCCReference>
-			<DCCReference Include="frmLocalizePluginForm.pas">
-				<Form>frmLocalizePlugin</Form>
-			</DCCReference>
-			<DCCReference Include="frmScriptForm.pas">
-				<Form>frmScript</Form>
-			</DCCReference>
-			<DCCReference Include="frmOptionsForm.pas">
-				<Form>frmOptions</Form>
-			</DCCReference>
-			<DCCReference Include="frmLogAnalyzerForm.pas">
-				<Form>frmLogAnalyzer</Form>
-			</DCCReference>
 			<DCCReference Include="wbScriptAdapterMisc.pas"/>
 			<DCCReference Include="wbNifScanner.pas"/>
-			<DCCReference Include="wbDDS.pas"/>
 			<DCCReference Include="wbStreams.pas"/>
 			<DCCReference Include="wbSort.pas"/>
+			<DCCReference Include="wbLOD.pas"/>
+			<DCCReference Include="wbLocalization.pas"/>
+			<DCCReference Include="frmViewMain.pas"/>
+			<DCCReference Include="FilterOptionsFrm.pas"/>
+			<DCCReference Include="FileSelectFrm.pas"/>
+			<DCCReference Include="ViewElementsFrm.pas"/>
+			<DCCReference Include="EditWarningFrm.pas"/>
+			<DCCReference Include="frmWaitForm.pas"/>
+			<DCCReference Include="frmLocalizationForm.pas"/>
+			<DCCReference Include="frmLocalizePluginForm.pas"/>
+			<DCCReference Include="frmScriptForm.pas"/>
+			<DCCReference Include="frmOptionsForm.pas"/>
+			<DCCReference Include="frmLogAnalyzerForm.pas"/>
+			<DCCReference Include="frmLODGenForm.pas"/>
+			<DCCReference Include="wbDefinitionsFNV.pas"/>
+			<DCCReference Include="wbDefinitionsFO3.pas"/>
+			<DCCReference Include="wbDefinitionsTES3.pas"/>
+			<DCCReference Include="wbDefinitionsTES4.pas"/>
+			<DCCReference Include="wbDefinitionsTES5.pas">
+				<Form>$R *.res</Form>
+			</DCCReference>
+			<DCCReference Include="wbDefinitionsFO4.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
@@ -169,7 +157,7 @@
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">3</VersionInfo>
 						<VersionInfo Name="MinorVer">1</VersionInfo>
-						<VersionInfo Name="Release">1</VersionInfo>
+						<VersionInfo Name="Release">3</VersionInfo>
 						<VersionInfo Name="Build">0</VersionInfo>
 						<VersionInfo Name="Debug">True</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
@@ -182,20 +170,22 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">3.1.1.0</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">3.1.3.0</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename"/>
 						<VersionInfoKeys Name="ProductName">xEdit from ElminsterAU</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductVersion">3.1.1</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">3.1.3</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 					<Excluded_Packages>
 						<Excluded_Packages Name="$(BDSBIN)\dcloffice2k150.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
 						<Excluded_Packages Name="$(BDSBIN)\dclofficexp150.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
 					</Excluded_Packages>
-					<Parameters_Win32/>
+					<Parameters_Win32>
+						<Parameters_Win32 Name="RunParams">-fo4 -edit</Parameters_Win32>
+					</Parameters_Win32>
 				</Delphi.Personality>
 				<Platforms>
 					<Platform value="Win64">False</Platform>

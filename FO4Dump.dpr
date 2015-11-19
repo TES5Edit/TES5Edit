@@ -818,7 +818,7 @@ begin
   wbProgressCallback := ReportProgress;
   wbAllowInternalEdit := False;
   wbMoreInfoForUnknown := False;
-  wbSimpleRecords := False;
+  wbSimpleRecords := True;
   wbHideUnused := False;
   StartTime := Now;
 
