@@ -9881,33 +9881,18 @@ begin
   ]);
 
   wbRecord(WOOP, 'Word of Power', [
-    wbEDID,
-    wbFULL,
-    wbLString(TNAM, 'Translation', 0, cpNormal, True)
+    wbEDID
   ]);
 
-  wbRecord(SHOU, 'Shout',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000080}  7, 'Treat spells as powers'
-    ])), [
-    wbEDID,
-    wbFULL,
-    wbMDOB,
-    wbDESC,
-    {>>> Don't sort <<<}
-    wbRArray('Words of Power',
-      wbStruct(SNAM, '', [
-        wbFormIDCk('Word', [WOOP, NULL]),
-        wbFormIDCk('Spell', [SPEL, NULL]),
-        wbFloat('Recovery Time')
-      ])
-    )
+  wbRecord(SHOU, 'Shout', [
+    wbEDID
   ]);
 
   wbRecord(EQUP, 'Equip Type', [
     wbEDID,
     wbArray(PNAM, 'Slot Parents', wbFormID('Can Be Equipped'), 0, nil, nil, cpNormal, False),
-    wbInteger(DATA, 'Use All Parents', itU32, wbEnum(['False', 'True']))
+    wbInteger(DATA, 'Use All Parents', itU32, wbEnum(['False', 'True'])),
+    wbUnknown(ANAM)
   ]);
 
   wbRecord(RELA, 'Relationship',
@@ -10095,6 +10080,9 @@ begin
   wbRecord(ARTO, 'Art Object', [
     wbEDID,
     wbOBNDReq,
+    wbPTRN,
+    wbKSIZ,
+    wbKWDAs,
     wbMODL,
     wbInteger(DNAM, 'Art Type', itU32, wbEnum([
       'Magic Casting',
@@ -10143,13 +10131,16 @@ begin
       wbFloat('Back Run'),
       wbFloat('Rotate in Place Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
       wbFloat('Rotate in Place Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Rotate while Moving Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+      wbFloat('Rotate while Moving Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbUnknown
     ], cpNormal, True, nil, 10),
     wbStruct(INAM, 'Anim Change Thresholds', [
       wbFloat('Directional', cpNormal, True, 180/Pi),
       wbFloat('Movement Speed'),
       wbFloat('Rotation Speed', cpNormal, True, 180/Pi)
-    ])
+    ]),
+    wbUnknown(JNAM),
+    wbFloat(LNAM, 'Unknown')
   ]);
 
   wbRecord(SNDR, 'Sound Descriptor', [
