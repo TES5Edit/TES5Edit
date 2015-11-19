@@ -7130,7 +7130,6 @@ begin
     wbFULLReq,
     wbDESCReq,
     wbPRPS,
-    wbICON,
     wbUnknown(DATA)
   ]);
 
@@ -7226,10 +7225,10 @@ begin
     wbFTYP,
     wbPRPS,
     wbNTRM,
-    wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]),
-    wbFormIDCk(QNAM, 'Sound - Close', [SOUN, SNDR]),
-    wbFormID(ONAM, 'Unknown'),
-    wbUnknown(TNAM)
+    wbFormIDCk(SNAM, 'Sound - Open', [SNDR]),
+    wbFormIDCk(QNAM, 'Sound - Close', [SNDR]),
+    wbFormIDCk(TNAM, 'Sound - Take All', [SNDR]),
+    wbFormIDCk(ONAM, 'Filter List', [FLST])
   ], True, nil, cpNormal, False, nil, wbContainerAfterSet);
 
   wbCSDT := wbRStructSK([0], 'Sound Type', [
@@ -7352,7 +7351,8 @@ begin
       wbFloat('Equipment Score Mult - Unarmed'),
       wbFloat('Equipment Score Mult - Staff'),
       wbFloat('Avoid Threat Chance'),
-      wbByteArray
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
     ], cpNormal, True, nil, 0),
     wbUnknown(CSMD, cpIgnore),
     wbStruct(CSME, 'Melee', [
@@ -7364,21 +7364,28 @@ begin
       wbFloat('Bash Attack Mult'),
       wbFloat('Bash Power Attack Mult'),
       wbFloat('Special Attack Mult'),
-      wbByteArray
+      wbFloat('Unknown')
     ], cpNormal, False, nil, 0),
-    wbUnknown(CSRA),
+    wbFloat(CSRA, 'Unknown'),
     wbStruct(CSCR, 'Close Range', [
       wbFloat('Circle Mult'),
       wbFloat('Fallback Mult'),
       wbFloat('Flank Distance'),
       wbFloat('Stalk Time'),
-      wbByteArray
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
     ], cpNormal, False, nil, 0),
     wbStruct(CSLR, 'Long Range', [
       wbFloat('Strafe Mult'),
-      wbByteArray
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
     ], cpNormal, False),
-    wbUnknown(CSCV),
+    wbFloat(CSCV, 'Unknown'),
     wbStruct(CSFL, 'Flight', [
       wbFloat('Hover Chance'),
       wbFloat('Dive Bomb Chance'),
