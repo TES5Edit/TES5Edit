@@ -170,6 +170,7 @@ const
   ATKW : TwbSignature = 'ATKW'; { New To Fallout 4 }
   ATTX : TwbSignature = 'ATTX'; { New To Fallout 4 }
   ATXT : TwbSignature = 'ATXT';
+  AVFL : TwbSignature = 'AVFL'; { New To Fallout 4 }
   AVIF : TwbSignature = 'AVIF';
   AVSK : TwbSignature = 'AVSK'; { New to Skyrim }
   BAMT : TwbSignature = 'BAMT'; { New to Skyrim }
@@ -284,6 +285,7 @@ const
   ENIT : TwbSignature = 'ENIT';
   EPF2 : TwbSignature = 'EPF2';
   EPF3 : TwbSignature = 'EPF3';
+  EPFB : TwbSignature = 'EPFB'; { New To Fallout 4 }
   EPFD : TwbSignature = 'EPFD';
   EPFT : TwbSignature = 'EPFT';
   EQUP : TwbSignature = 'EQUP';
@@ -8040,16 +8042,14 @@ begin
   wbRecord(LCRT, 'Location Reference Type', [
     wbEDID,
     wbCNAM,
-    wbUnknown(TNAM)
+    wbByteArray(TNAM, 'Unknown', 4, cpNormal, True)
   ]);
 
   wbRecord(AACT, 'Action', [
     wbEDID,
     wbCNAM,
-    {>>> Only one record ActionTrick, with DNAM.  Result is DNAM - Name: Dog Trick
-    wbString(DNAM, 'Name'), <<<}
-    wbUnknown(DNAM),
-    wbUnknown(TNAM)
+    wbString(DNAM, 'Name'),
+    wbByteArray(TNAM, 'Unknown', 4, cpNormal, True)
   ]);
 
   wbRecord(TXST, 'Texture Set', [
@@ -8072,9 +8072,7 @@ begin
       {0x0002}'Facegen Textures',
       {0x0004}'Has Model Space Normal Map'
     ]), cpNormal, False),
-    {>>> MNAM Decals\POIJS038GraffitiDeca2l.BGSM
-    This is a string of a Filename <<<}
-    wbUnknown(MNAM)
+    wbString(MNAM, 'Unknown')
   ]);
 
   wbRecord(HDPT, 'Head Part',
@@ -8112,8 +8110,9 @@ begin
       wbString(NAM1, 'Filename', 0, cpTranslate, True)
     ], []),
     wbFormIDCk(TNAM, 'Texture Set', [TXST, NULL]),
-    wbFormIDCk(CNAM, 'Color', [CLFM, NULL]),
-    wbFormIDCk(RNAM, 'Valid Races', [FLST, NULL])
+    //wbFormIDCk(CNAM, 'Color', [CLFM, NULL]),
+    wbFormIDCk(RNAM, 'Valid Races', [FLST, NULL]),
+    wbCTDAs
   ]);
 
   wbRecord(ASPC, 'Acoustic Space', [
@@ -8176,7 +8175,7 @@ begin
     wbInteger(IDLC, 'Animation Count', itU8, nil, cpBenign),
     wbFloat(IDLT, 'Idle Timer Setting', cpNormal, False),
     wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, False),
-    wbFormID(QNAM, 'Unknown'),
+    wbFormIDCk(QNAM, 'Unknown', [KYWD]),
     wbMODL
   ], False, nil, cpNormal, False, nil, wbAnimationsAfterSet);
 
@@ -8186,53 +8185,54 @@ begin
     wbFULL,
     wbMODL,
     wbDEST,
-    wbStruct(DATA, 'Data', [
-      {00} wbInteger('Flags', itU16, wbFlags([
-        'Hitscan',
-        'Explosion',
-        'Alt. Trigger',
-        'Muzzle Flash',
-        '',
-        'Can Be Disabled',
-        'Can Be Picked Up',
-        'Supersonic',
-        'Pins Limbs',
-        'Pass Through Small Transparent',
-        'Disable Combat Aim Correction',
-        'Rotation'
-      ])),
-      {02} wbInteger('Type', itU16, wbEnum([], [
-        $01, 'Missile',
-        $02, 'Lobber',
-        $04, 'Beam',
-        $08, 'Flame',
-        $10, 'Cone',
-        $20, 'Barrier',
-        $40, 'Arrow'
-      ])),
-      {04} wbFloat('Gravity'),
-      {08} wbFloat('Speed'),
-      {12} wbFloat('Range'),
-      {16} wbFormIDCk('Light', [LIGH, NULL]),
-      {20} wbFormIDCk('Muzzle Flash - Light', [LIGH, NULL]),
-      {24} wbFloat('Tracer Chance'),
-      {28} wbFloat('Explosion - Alt. Trigger - Proximity'),
-      {32} wbFloat('Explosion - Alt. Trigger - Timer'),
-      {36} wbFormIDCk('Explosion', [EXPL, NULL]),
-      {40} wbFormIDCk('Sound', [SOUN, SNDR, NULL]),
-      {44} wbFloat('Muzzle Flash - Duration'),
-      {48} wbFloat('Fade Duration'),
-      {52} wbFloat('Impact Force'),
-      {56} wbFormIDCk('Sound - Countdown', [SOUN, SNDR, NULL]),
-      {60} wbFormIDCk('Sound - Disable', [SOUN, SNDR, NULL]),
-      {64} wbFormIDCk('Default Weapon Source', [WEAP, NULL]),
-      {68} wbFloat('Cone Spread'),
-      {72} wbFloat('Collision Radius'),
-      {76} wbFloat('Lifetime'),
-      {80} wbFloat('Relaunch Interval'),
-           wbFormIDCk('Decal Data', [TXST, NULL]),
-           wbFormIDCk('Collision Layer', [COLL, NULL])
-    ], cpNormal, True, nil, 22),
+    wbUnknown(DATA),
+//    wbStruct(DATA, 'Data', [
+//      {00} wbInteger('Flags', itU16, wbFlags([
+//        'Hitscan',
+//        'Explosion',
+//        'Alt. Trigger',
+//        'Muzzle Flash',
+//        '',
+//        'Can Be Disabled',
+//        'Can Be Picked Up',
+//        'Supersonic',
+//        'Pins Limbs',
+//        'Pass Through Small Transparent',
+//        'Disable Combat Aim Correction',
+//        'Rotation'
+//      ])),
+//      {02} wbInteger('Type', itU16, wbEnum([], [
+//        $01, 'Missile',
+//        $02, 'Lobber',
+//        $04, 'Beam',
+//        $08, 'Flame',
+//        $10, 'Cone',
+//        $20, 'Barrier',
+//        $40, 'Arrow'
+//      ])),
+//      {04} wbFloat('Gravity'),
+//      {08} wbFloat('Speed'),
+//      {12} wbFloat('Range'),
+//      {16} wbFormIDCk('Light', [LIGH, NULL]),
+//      {20} wbFormIDCk('Muzzle Flash - Light', [LIGH, NULL]),
+//      {24} wbFloat('Tracer Chance'),
+//      {28} wbFloat('Explosion - Alt. Trigger - Proximity'),
+//      {32} wbFloat('Explosion - Alt. Trigger - Timer'),
+//      {36} wbFormIDCk('Explosion', [EXPL, NULL]),
+//      {40} wbFormIDCk('Sound', [SOUN, SNDR, NULL]),
+//      {44} wbFloat('Muzzle Flash - Duration'),
+//      {48} wbFloat('Fade Duration'),
+//      {52} wbFloat('Impact Force'),
+//      {56} wbFormIDCk('Sound - Countdown', [SOUN, SNDR, NULL]),
+//      {60} wbFormIDCk('Sound - Disable', [SOUN, SNDR, NULL]),
+//      {64} wbFormIDCk('Default Weapon Source', [WEAP, NULL]),
+//      {68} wbFloat('Cone Spread'),
+//      {72} wbFloat('Collision Radius'),
+//      {76} wbFloat('Lifetime'),
+//      {80} wbFloat('Relaunch Interval'),
+//           wbFormIDCk('Decal Data', [TXST, NULL]),
+//           wbFormIDCk('Collision Layer', [COLL, NULL])
+//    ], cpNormal, True, nil, 22),
     wbUnknown(DNAM),
     wbRStructSK([0], 'Muzzle Flash Model', [
       wbString(NAM1, 'Model Filename'),
@@ -8247,25 +8247,25 @@ begin
     wbFULL,
     wbMODL,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD, NULL]),
-    wbUnknown(DNAM),
-    wbStruct(DATA, 'Data', [
-      wbInteger('Limit', itU32),
-      wbFloat('Radius'),
-      wbFloat('Lifetime'),
-      wbFloat('Image Space Radius'),
-      wbFloat('Target Interval'),
-      wbInteger('Flags', itU32, wbFlags([
-        {0x01} 'Affects Player Only',
-        {0x02} 'Inherit Duration from Spawn Spell',
-        {0x04} 'Align to Impact Normal',
-        {0x08} 'Inherit Radius from Spawn Spell',
-        {0x10} 'Drop to Ground'
-      ])),
-      wbFormIDCk('Spell', [SPEL, NULL]),
-      wbFormIDCk('Light', [LIGH, NULL]),
-      wbFormIDCk('Impact Data Set', [IPDS, NULL]),
-      wbFormIDCk('Sound', [SNDR, NULL])
-    ])
+    wbUnknown(DNAM)
+//    wbStruct(DATA, 'Data', [
+//      wbInteger('Limit', itU32),
+//      wbFloat('Radius'),
+//      wbFloat('Lifetime'),
+//      wbFloat('Image Space Radius'),
+//      wbFloat('Target Interval'),
+//      wbInteger('Flags', itU32, wbFlags([
+//        {0x01} 'Affects Player Only',
+//        {0x02} 'Inherit Duration from Spawn Spell',
+//        {0x04} 'Align to Impact Normal',
+//        {0x08} 'Inherit Radius from Spawn Spell',
+//        {0x10} 'Drop to Ground'
+//      ])),
+//      wbFormIDCk('Spell', [SPEL, NULL]),
+//      wbFormIDCk('Light', [LIGH, NULL]),
+//      wbFormIDCk('Impact Data Set', [IPDS, NULL]),
+//      wbFormIDCk('Sound', [SNDR, NULL])
+//    ])
   ]);
 
   wbSoulGemEnum := wbEnum([
@@ -8277,28 +8277,9 @@ begin
     {5} 'Grand'
   ]);
 
-  wbRecord(SLGM, 'Soul Gem',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00020000} 17, 'Can Hold NPC Soul'
-    ])), [
-    wbEDID,
-    wbOBND,
-    wbFULL,
-    wbMODL,
-    wbICON,
-    wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
-    wbKSIZ,
-    wbKWDAs,
-    wbStruct(DATA, '', [
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
-    ], cpNormal, True),
-    wbInteger(SOUL, 'Contained Soul', itU8, wbSoulGemEnum, cpNormal, True),
-    wbInteger(SLCP, 'Maximum Capacity', itU8, wbSoulGemEnum, cpNormal, True),
-    wbFormIDCk(NAM0, 'Linked To', [SLGM])
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  wbRecord(SLGM, 'Soul Gem', [
+    wbEDID
+  ]);
 
   if wbSimpleRecords then begin
 
@@ -8575,7 +8556,7 @@ begin
       wbFloat('Radius'),
       wbFloat('IS Radius'),
       wbFloat('Vertical Offset Mult'),
-      wbInteger('Flags', itU32, wbFlags([
+      {wbInteger('Flags', itU32, wbFlags([
         'Unknown 0',
         'Always Uses World Orientation',
         'Knock Down - Always',
@@ -8586,7 +8567,7 @@ begin
         'Chain',
         'No Controller Vibration'
       ])),
-      wbInteger('Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),
+      wbInteger('Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),}
       wbUnknown
     ], cpNormal, True, nil, 10)
   ]);
@@ -8844,7 +8825,9 @@ begin
       wbInteger('Playable', itU8, wbEnum(['False', 'True'])),
       wbInteger('Hidden', itU8, wbEnum(['False', 'True']))
     ], cpNormal, True),
+    wbFormIDCk(SNAM, 'UI Sound', [SNDR]),
     wbFormIDCK(NNAM, 'Next Perk', [PERK, NULL]),
+    wbString(FNAM, 'Unknown'),
 
     wbRStructsSK('Effects', 'Effect', [0, 1], [
       wbStructSK(PRKE, [1, 2, 0], 'Header', [
@@ -8911,6 +8894,8 @@ begin
         // 5: EPFD=SPEL
         // 6: EPFD=string
         // 7: EPFD=lstring
+
+        wbUnknown(EPFB),
         wbLString(EPF2, 'Button Label'),
         wbStruct(EPF3, 'Script Flags', [
           wbInteger('Script Flags', itU8, wbFlags([
@@ -8951,66 +8936,66 @@ begin
       wbString(BPNT, 'VATS Target', 0, cpNormal, True),
       wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
       wbStruct(BPND, '', [
-        {00} wbFloat('Damage Mult'),
-        {04} wbInteger('Flags', itU8, wbFlags([
-          'Severable',
-          'IK Data',
-          'IK Data - Biped Data',
-          'Explodable',
-          'IK Data - Is Head',
-          'IK Data - Headtracking',
-          'To Hit Chance - Absolute'
-        ])),
-        {05} wbInteger('Part Type', itU8, wbEnum([
-               'Torso',
-               'Head',
-               'Eye',
-               'LookAt',
-               'Fly Grab',
-               'Saddle'
-             ])),
-        {06} wbInteger('Health Percent', itU8),
-        {07} wbInteger('Actor Value', itS8, wbActorValueEnum),
-        {08} wbInteger('To Hit Chance', itU8),
-        {09} wbInteger('Explodable - Explosion Chance %', itU8),
-        {10} wbInteger('Explodable - Debris Count', itU16),
-        {12} wbFormIDCk('Explodable - Debris', [DEBR, NULL]),
-        {16} wbFormIDCk('Explodable - Explosion', [EXPL, NULL]),
-        {20} wbFloat('Tracking Max Angle'),
-        {24} wbFloat('Explodable - Debris Scale'),
-        {28} wbInteger('Severable - Debris Count', itS32),
-        {32} wbFormIDCk('Severable - Debris', [DEBR, NULL]),
-        {36} wbFormIDCk('Severable - Explosion', [EXPL, NULL]),
-        {40} wbFloat('Severable - Debris Scale'),
-        wbStruct('Gore Effects Positioning', [
-          wbStruct('Translate', [
-            {44} wbFloat('X'),
-            {48} wbFloat('Y'),
-            {52} wbFloat('Z')
-          ]),
-          wbStruct('Rotation', [
-            {56} wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-            {60} wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-            {64} wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-          ])
-        ]),
-        {68} wbFormIDCk('Severable - Impact DataSet', [IPDS, NULL]),
-        {72} wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
-        {28} wbInteger('Severable - Decal Count', itU8),
-        {28} wbInteger('Explodable - Decal Count', itU8),
-        {76} wbByteArray('Unknown', 2),
-        {80} wbFloat('Limb Replacement Scale'),
-             wbUnknown
+        wbUnknown
+//        {00} wbFloat('Damage Mult'),
+//        {04} wbInteger('Flags', itU8, wbFlags([
+//          'Severable',
+//          'IK Data',
+//          'IK Data - Biped Data',
+//          'Explodable',
+//          'IK Data - Is Head',
+//          'IK Data - Headtracking',
+//          'To Hit Chance - Absolute'
+//        ])),
+//        {05} wbInteger('Part Type', itU8, wbEnum([
+//               'Torso',
+//               'Head',
+//               'Eye',
+//               'LookAt',
+//               'Fly Grab',
+//               'Saddle'
+//             ])),
+//        {06} wbInteger('Health Percent', itU8),
+//        {07} wbInteger('Actor Value', itS8, wbActorValueEnum),
+//        {08} wbInteger('To Hit Chance', itU8),
+//        {09} wbInteger('Explodable - Explosion Chance %', itU8),
+//        {10} wbInteger('Explodable - Debris Count', itU16),
+//        {12} wbFormIDCk('Explodable - Debris', [DEBR, NULL]),
+//        {16} wbFormIDCk('Explodable - Explosion', [EXPL, NULL]),
+//        {20} wbFloat('Tracking Max Angle'),
+//        {24} wbFloat('Explodable - Debris Scale'),
+//        {28} wbInteger('Severable - Debris Count', itS32),
+//        {32} wbFormIDCk('Severable - Debris', [DEBR, NULL]),
+//        {36} wbFormIDCk('Severable - Explosion', [EXPL, NULL]),
+//        {40} wbFloat('Severable - Debris Scale'),
+//        wbStruct('Gore Effects Positioning', [
+//          wbStruct('Translate', [
+//            {44} wbFloat('X'),
+//            {48} wbFloat('Y'),
+//            {52} wbFloat('Z')
+//          ]),
+//          wbStruct('Rotation', [
+//            {56} wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+//            {60} wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+//            {64} wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+//          ])
+//        ]),
+//        {68} wbFormIDCk('Severable - Impact DataSet', [IPDS, NULL]),
+//        {72} wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
+//        {28} wbInteger('Severable - Decal Count', itU8),
+//        {28} wbInteger('Explodable - Decal Count', itU8),
+//        {76} wbByteArray('Unknown', 2),
+//        {80} wbFloat('Limb Replacement Scale'),
       ], cpNormal, True),
       wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
       wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
       wbByteArray(NAM5, 'Texture Files Hashes', 0, cpNormal),
       wbString(ENAM, 'Unknown'),
       wbString(FNAM, 'Unknown'),
-      wbFormID(BNAM, 'Unknown'),
-      wbFormID(CNAM, 'Unknown'),
-      wbFormID(INAM, 'Unknown'),
-      wbFormID(JNAM, 'Unknown'),
+      wbFormIDCk(BNAM, 'Unknown', [ARTO]),
+      wbFormIDCk(CNAM, 'Unknown', [TXST]),
+      wbFormIDCk(INAM, 'Unknown', [MATT]),
+      wbFormIDCk(JNAM, 'Unknown', [MATT]),
       wbString(DNAM, 'Unknown')
     ], [], cpNormal, True)
   ]);
@@ -9020,7 +9005,8 @@ begin
     wbOBNDReq,
     wbMODL,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SOUN, SNDR, NULL]),
+    wbFormIDCk(SNAM, 'Sound', [SNDR, NULL]),
+    wbFormIDCk(LNAM, 'Light', [LIGH]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Master Particle System Cap', itU16),
       wbInteger('Flags', itU16, wbEnum([], [
@@ -9038,27 +9024,10 @@ begin
     wbEDID,
     wbFULL,
     wbDESCReq,
-    wbString(ANAM, 'Abbreviation'),
-    wbUnknown(CNAM),
-    wbStruct(AVSK, 'Skill', [
-      wbFloat('Skill Use Mult'),
-      wbFloat('Skill Offset Mult'),
-      wbFloat('Skill Improve Mult'),
-      wbFloat('Skill Improve Offset')
-    ]),
-    wbRArray('Perk Tree',
-      wbRStruct('Node', [
-        wbFormIDCk(PNAM, 'Perk', [PERK, NULL]),
-        wbUnknown(FNAM),
-        wbInteger(XNAM, 'Perk-Grid X', itU32),
-        wbInteger(YNAM, 'Perk-Grid Y', itU32),
-        wbFloat(HNAM, 'Horizontal Position'),
-        wbFloat(VNAM, 'Vertical Position'),
-        wbFormIDCk(SNAM, 'Associated Skill', [AVIF, NULL]),
-        wbRArray('Connections', wbInteger(CNAM, 'Line to Index', itU32)),
-        wbInteger(INAM, 'Index', itU32)
-      ], [])
-    )
+    wbLString(ANAM, 'Abbreviation'),
+    wbUnknown(NAM0),
+    wbUnknown(AVFL),
+    wbUnknown(NAM1)
   ]);
 
   wbRecord(CAMS, 'Camera Shot', [
