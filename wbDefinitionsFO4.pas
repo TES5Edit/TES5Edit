@@ -9033,6 +9033,7 @@ begin
   wbRecord(CAMS, 'Camera Shot', [
     wbEDID,
     wbMODL,
+    wbCTDAs,
     wbStruct(DATA, 'Data', [
       {00} wbInteger('Action', itU32, wbEnum([
         'Shoot',
@@ -9068,7 +9069,8 @@ begin
       {28} wbFloat('Max Time'),
       {32} wbFloat('Min Time'),
       {36} wbFloat('Target % Between Actors'),
-      {40} wbFloat('Near Target Distance')
+      {40} wbFloat('Near Target Distance'),
+      wbUnknown
     ], cpNormal, True, nil, 8),
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
   ]);
@@ -9110,7 +9112,9 @@ begin
       'Stair Material',
       'Arrows Stick'
     ], False)),
-    wbFormIDCk(HNAM, 'Havok Impact Data Set', [IPDS, NULL])
+    wbFormIDCk(HNAM, 'Havok Impact Data Set', [IPDS, NULL]),
+    wbString(ANAM, 'Unknown'),
+    wbMODT
   ]);
 
   wbRecord(IPCT, 'Impact', [
@@ -9141,9 +9145,10 @@ begin
     wbDODT,
     wbFormIDCk(DNAM, 'Texture Set', [TXST]),
     wbFormIDCk(ENAM, 'Secondary Texture Set', [TXST]),
-    wbFormIDCk(SNAM, 'Sound 1', [SNDR, SOUN, NULL]),
-    wbFormIDCk(NAM1, 'Sound 2', [SNDR, SOUN, NULL]),
-    wbFormIDCk(NAM2, 'Hazard', [HAZD, NULL])
+    wbFormIDCk(SNAM, 'Sound 1', [SNDR, NULL]),
+    wbFormIDCk(NAM1, 'Sound 2', [SNDR, NULL]),
+    wbFormIDCk(NAM2, 'Hazard', [HAZD, NULL]),
+    wbUnknown(FNAM)
   ]);
 
   wbRecord(IPDS, 'Impact Data Set', [
@@ -9271,7 +9276,8 @@ begin
     wbFormIDCk(FNAM, 'Unreported Crime Faction', [FACT]),
     wbFormIDCk(MNAM, 'World Location Marker Ref', [REFR, ACHR]),
     wbFloat(RNAM, 'World Location Radius'),
-    wbFormIDCk(NAM0, 'Horse Marker Ref', [REFR]),
+    //wbFormIDCk(NAM0, 'Horse Marker Ref', [REFR]),
+    wbFloat(ANAM, 'Unknown'),
     wbCNAM
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
@@ -9315,6 +9321,8 @@ begin
       'Auto Display'
     ]), cpNormal, True, False, nil, wbMESGDNAMAfterSet),
     wbInteger(TNAM, 'Display Time', itU32, nil, cpNormal, False, False, wbMESGTNAMDontShow),
+    wbLString(NNAM, 'Unknown'),
+    wbString(SNAM, 'Unknown'),
     wbRStructs('Menu Buttons', 'Menu Button', [
       wbLString(ITXT, 'Button Text'),
       wbCTDAs
