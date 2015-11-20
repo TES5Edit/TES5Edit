@@ -3541,6 +3541,15 @@ begin
     if MainRecord.ElementExists['Unused RNAM'] then
       MainRecord.RemoveElement('Unused RNAM');
 
+    if MainRecord.ElementExists['Unknown WLEV'] then
+      MainRecord.RemoveElement('Unknown WLEV');
+
+    if MainRecord.ElementExists['MHDT'] then
+      MainRecord.RemoveElement('MHDT');
+
+    if MainRecord.ElementExists['CLSZ'] then
+      MainRecord.RemoveElement('CLSZ');
+
     // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
     // CK can occasionally set them wrong, so make a warning
     if Supports(MainRecord.ElementByName['Object Bounds'], IwbContainer, Container) then
@@ -6590,7 +6599,7 @@ begin
       wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4)
     ]),
-    wbUnknown(ONAM),
+    wbLString(ONAM, 'Unknown'),
     wbString(NAM1, 'Casing Model'),
     wbUnknown(NAM2)
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
@@ -8044,7 +8053,7 @@ begin
     wbString(DNAM, 'Unknown'),
     wbUnknown(TNAM),
     wbFULL,
-    wbFormID(DATA),
+    wbFormIDCk(DATA, 'Unknown', [AORU]),
     wbString(NNAM, 'Unknown')
   ]);
 end;
@@ -8054,14 +8063,14 @@ begin
   wbRecord(LCRT, 'Location Reference Type', [
     wbEDID,
     wbCNAM,
-    wbByteArray(TNAM, 'Unknown', 4, cpNormal, True)
+    wbUnknown(TNAM)
   ]);
 
   wbRecord(AACT, 'Action', [
     wbEDID,
     wbCNAM,
     wbString(DNAM, 'Name'),
-    wbByteArray(TNAM, 'Unknown', 4, cpNormal, True)
+    wbUnknown(TNAM)
   ]);
 
   wbRecord(TXST, 'Texture Set', [
@@ -13482,7 +13491,7 @@ begin
       wbString(TNAM, 'HD LOD Diffuse Texture'),
       wbString(UNAM, 'HD LOD Normal Texture'),
       wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
-      wbRArray('Unknown', wbUnknown(WLEV)),
+      wbRArray('Unknown WLEV', wbUnknown(WLEV)),
       wbByteArray(OFST, 'Offset Data'),
       wbUnknown(CLSZ)
     ], False, nil, cpNormal, False, wbWRLDAfterLoad)
@@ -13585,7 +13594,7 @@ begin
       wbString(TNAM, 'HD LOD Diffuse Texture'),
       wbString(UNAM, 'HD LOD Normal Texture'),
       wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
-      wbRArray('Unknown', wbUnknown(WLEV)),
+      wbRArray('Unknown WLEV', wbUnknown(WLEV)),
       wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0),
       wbUnknown(CLSZ)
     ], False, nil, cpNormal, False, wbWRLDAfterLoad);
@@ -13750,14 +13759,14 @@ begin
       wbFormIDCK('Unknown', [IMGS, NULL])
     ]),
     wbStruct(WGDR, 'God Rays', [
-      wbFormIDCK('Sunrise', [IMGS, NULL]),
-      wbFormIDCK('Day', [IMGS, NULL]),
-      wbFormIDCK('Sunset', [IMGS, NULL]),
-      wbFormIDCK('Night', [IMGS, NULL]),
-      wbFormIDCK('Unknown', [IMGS, NULL]),
-      wbFormIDCK('Unknown', [IMGS, NULL]),
-      wbFormIDCK('Unknown', [IMGS, NULL]),
-      wbFormIDCK('Unknown', [IMGS, NULL])
+      wbFormIDCK('Sunrise', [GDRY, NULL]),
+      wbFormIDCK('Day', [GDRY, NULL]),
+      wbFormIDCK('Sunset', [GDRY, NULL]),
+      wbFormIDCK('Night', [GDRY, NULL]),
+      wbFormIDCK('Unknown', [GDRY, NULL]),
+      wbFormIDCK('Unknown', [GDRY, NULL]),
+      wbFormIDCK('Unknown', [GDRY, NULL]),
+      wbFormIDCK('Unknown', [GDRY, NULL])
     ]),
     wbRArray('Directional Ambient Lighting Colors',
       wbStruct(DALC, 'Sunrise/Day/Sunset/Night/Unknown/Unknown/Unknown/Unknown', [wbAmbientColors], cpNormal, True)
@@ -14052,7 +14061,7 @@ begin
     wbInteger(PNAM, 'Index?', itU16),
     wbRArray('Sounds', wbStruct(CNAM, 'Sound', [
       wbFormIDCk('Sound Categoty', [SNCT]),
-      wbByteArray('Unknown', 4)
+      wbFloat('Unknown')
     ]))
   ]);
 

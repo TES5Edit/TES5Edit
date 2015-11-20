@@ -219,7 +219,7 @@ begin
   Layer := lbCloudLayers.ItemIndex;
   SetElementEditValues(Weather, slCloudSignatures[Layer], cmbCloudTexture.Text);
 
-  if wbGameMode = gmTES5 then begin
+  if (wbGameMode = gmTES5) or (wbGameMode = gmFO4) then begin
     SetElementEditValues(Weather, Format('Cloud Speed\QNAM - X Speed\Layer #%d', [Layer]), edCloudXSpeed.Text);
     SetElementEditValues(Weather, Format('Cloud Speed\RNAM - Y Speed\Layer #%d', [Layer]), edCloudYSpeed.Text);
     SetElementEditValues(Weather, Format('JNAM\Layer #%d\Sunrise', [Layer]), edCloudAlpha1.Text);
@@ -256,7 +256,7 @@ begin
     imgCloud.Picture := nil;
 
   // fill layer parameters
-  if wbGameMode = gmTES5 then begin
+  if (wbGameMode = gmTES5) or (wbGameMode = gmFO4) then begin
     edCloudXSpeed.Text := GetElementEditValues(Weather, Format('Cloud Speed\QNAM - X Speed\Layer #%d', [Layer]));
     edCloudYSpeed.Text := GetElementEditValues(Weather, Format('Cloud Speed\RNAM - Y Speed\Layer #%d', [Layer]));
     edCloudAlpha1.Text := GetElementEditValues(Weather, Format('JNAM\Layer #%d\Sunrise', [Layer]));
@@ -270,7 +270,7 @@ begin
     edCloudXSpeed.Text := GetEditValue(ElementByIndex(ElementByPath(Weather, 'DATA'), Layer + 1));
 
   // fill layer colors
-  if wbGameMode = gmTES5 then
+  if (wbGameMode = gmTES5) or (wbGameMode = gmFO4) then
     elColors := ElementByName(ElementByIndex(ElementByPath(Weather, 'PNAM'), Layer), 'Colors')
   else if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then
     elColors := ElementByIndex(ElementByPath(Weather, 'PNAM'), Layer)
@@ -350,7 +350,7 @@ begin
     CopyElement(WeatherFrom, Weather, slCloudSignatures[i]);
   
   // copy clouds speed, alpha, colors
-  if wbGameMode = gmTES5 then begin
+  if (wbGameMode = gmTES5) or (wbGameMode = gmFO4) then begin
     CopyElement(WeatherFrom, Weather, 'NAM1');
     CopyElement(WeatherFrom, Weather, 'Cloud Speed');
     CopyElement(WeatherFrom, Weather, 'JNAM');
@@ -456,8 +456,9 @@ begin
   frm := TForm.Create(nil);
   try
     frm.Caption := Format('%s \ %s - %s Weather Editor', [GetFileName(Weather), Name(Weather), wbGameName]);
-    frm.Width := 860;
-    frm.Height := 650;
+    //frm.Width := 860;
+    frm.Width := 860 + (CountTimes-4) * iColorEditorWidth;
+    frm.Height := 800;
     frm.Position := poScreenCenter;
     frm.Color := clWindow;
     frm.KeyPreview := True;
@@ -621,7 +622,7 @@ begin
     btnApplyWeatherColors.OnClick := btnApplyWeatherColorsClick;
 
     // LIGHTING COLORS TABSHEET
-    if wbGameMode = gmTES5 then begin
+    if (wbGameMode = gmTES5) or (wbGameMode = gmFO4) then begin
       tsLightingColors := TTabSheet.Create(pgcWeather);
       tsLightingColors.PageControl := pgcWeather;
       tsLightingColors.Caption := 'Directional Ambient Lighting Colors';
@@ -680,7 +681,7 @@ begin
     btnCopyWeatherColors.Caption := 'Copy weather colors from';
     btnCopyWeatherColors.OnClick := btnCopyWeatherColorsClick;
 
-    if wbGameMode = gmTES5 then begin
+    if (wbGameMode = gmTES5) or (wbGameMode = gmFO4) then begin
       btnCopyLightingColors := TButton.Create(frm);
       btnCopyLightingColors.Parent := tsTools;
       btnCopyLightingColors.Left := 16; btnCopyLightingColors.Top := 76; btnCopyLightingColors.Width := 200;
@@ -749,7 +750,7 @@ end;
 function Initialize: integer;
 begin
   // game specific settings
-  if wbGameMode = gmTES5 then begin
+  if (wbGameMode = gmTES5) or (wbGameMode = gmFO4) then begin
     sCloudLayerSignatures := '00TX,10TX,20TX,30TX,40TX,50TX,60TX,70TX,80TX,90TX,:0TX,;0TX,<0TX,=0TX,>0TX,?0TX,@0TX,A0TX,B0TX,C0TX,D0TX,E0TX,F0TX,G0TX,H0TX,I0TX,J0TX,K0TX,L0TX';
   end
   else if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then begin
@@ -763,8 +764,11 @@ begin
     Result := 1;
     Exit;
   end;
-  // all games have 4 time spans for colors
-  sColorTimes := 'Sunrise,Day,Sunset,Night';
+  // time spans for colors
+  if wbGameMode = gmFO4 then
+    sColorTimes := 'Sunrise,Day,Sunset,Night,Unknown,Unknown,Unknown,Unknown'
+  else
+    sColorTimes := 'Sunrise,Day,Sunset,Night';
 end;
 
 //============================================================================

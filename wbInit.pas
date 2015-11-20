@@ -404,13 +404,13 @@ const
     'setesm', 'clearesm', 'sortandclean', 'sortandcleanmasters',
     'checkforerrors', 'checkforitm', 'checkfordr');
 var
-  s: string;
+  s, p: string;
 begin
   // Detecting game mode
   // check command line params first for mode overrides
   // they should take precendence over application name detection
   for s in GameModes do
-    if FindCmdLineSwitch(s) or (Pos(s, wbForcedModes) <> 0) then begin
+    if FindCmdLineSwitch(s) or wbFindCmdLineParam(s, p) or (Pos(s, wbForcedModes) <> 0) then begin
       AppGameMode := s;
       Break;
     end;
@@ -427,7 +427,7 @@ begin
 
   // the same for tool mode
   for s in ToolModes do
-    if FindCmdLineSwitch(s) or (Pos(s, wbForcedModes) <> 0) then begin
+    if FindCmdLineSwitch(s) or wbFindCmdLineParam(s, p) or (Pos(s, wbForcedModes) <> 0) then begin
       AppToolMode := s;
       Break;
     end;
@@ -643,9 +643,10 @@ begin
   end else if wbGameMode = gmFO4 then begin
     wbVWDInTemporary := True;
     wbVWDAsQuestChildren := True;
+    wbHideIgnored := False; // to show Form Version
     ReadSettings;
     wbLoadBSAs := False; // no support for BA2 yet
-    wbCreateContainedIn := False;
+    //wbCreateContainedIn := False;
   end else begin
     Exit;
   end;

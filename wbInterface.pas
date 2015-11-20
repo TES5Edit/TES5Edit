@@ -276,6 +276,8 @@ type
     dtStructChapter
   );
 
+  TwbGroupTypes = set of Byte;
+
 var
   dtNonValues : set of TwbDefType = [
     dtRecord,
