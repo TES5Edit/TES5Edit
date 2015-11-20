@@ -7148,7 +7148,10 @@ begin
     wbEDID,
     wbFULLReq,
     wbDESCReq,
-    wbPRPS,
+    wbArrayS(PRPS, 'Properties', wbStructSK([0], 'Property', [
+      wbActorValue,
+      wbFloat('Value')
+    ])),
     wbUnknown(DATA)
   ]);
 
