@@ -5295,7 +5295,7 @@ begin
             with TwbMainRecord(MainRecord.ElementID) do begin
               Self.mrStruct.mrsFlags := mrStruct.mrsFlags;
               Self.mrStruct.mrsVCS1 := DefaultVCS1;
-              if wbGameMode in [gmFO3, gmFNV, gmTES5] then begin
+              if wbGameMode in [gmFO3, gmFNV, gmTES5, gmFO4] then begin
                 Self.mrStruct.mrsVersion := mrStruct.mrsVersion;
                 Self.mrStruct.mrsVCS2 := DefaultVCS2; //mrStruct.mrsVCS2;
               end;
@@ -11308,7 +11308,8 @@ begin
   Include(grStates, gsSorting);
   try
     ChildrenOf := GetChildrenOf;
-    if Assigned(ChildrenOf) and (ChildrenOf.Signature = 'DIAL') then begin
+    // there is no PNAM in Fallout 4, looks like INFOs are no longer linked lists
+    if (wbGameMode <> gmFO4) and Assigned(ChildrenOf) and (ChildrenOf.Signature = 'DIAL') then begin
       {>>> Sorting DIAL group doesn't always work, and Skyrim.esm has a plenty of unsorted DIALs <<<}
       {>>> Also disabled for FNV, https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=59 <<<}
       if not wbSortGroupRecord then
@@ -15693,22 +15694,30 @@ constructor TwbContainedInElement.Create(const aMainRecord: IwbMainRecord);
 var
   BasePtr        : Pointer;
   EndPtr         : Pointer;
-
   GroupRecord    : IwbGroupRecord;
+  Grp            : TwbGroupTypes;
 begin
+  // MainRecord must be in a group
   if not Supports(aMainRecord.Container, IwbGroupRecord, GroupRecord) then
     Assert(False);
+  // if that group is Exterior Sub-Block, then it must be in a group too, get it
   if GroupRecord.GroupType = 5 then
     if not Supports(GroupRecord.Container, IwbGroupRecord, GroupRecord) then
       Assert(False);
+  // if that group is Exterior Block, then it must be in a group too, get it
   if GroupRecord.GroupType = 4 then
     if not Supports(GroupRecord.Container, IwbGroupRecord, GroupRecord) then
       Assert(False);
-  if GroupRecord.GroupType in [8..10] then
+  // if group is persistent, temporary or vwd cell children, it should be in a group too
+  // if vwd is treated as quest children, then exclude it from check
+  if wbVWDAsQuestChildren then Grp := [8..9] else Grp := [8..10];
+  if GroupRecord.GroupType in Grp then
     if not Supports(GroupRecord.Container, IwbGroupRecord, GroupRecord) then
       Assert(False);
 
-  Assert(GroupRecord.GroupType in [1, 6, 7]);
+  // the final list of parent groups, mainrecords in those will have ContainedIn element
+  if wbVWDAsQuestChildren then Grp := [1, 6, 7, 10] else Grp := [1, 6, 7];
+  Assert(GroupRecord.GroupType in Grp);
 
   Include(dcFlags, dcfDontMerge);
   Include(dcFlags, dcfDontSave);
@@ -15925,6 +15934,7 @@ const
   WRLD : TwbSignature = 'WRLD';
   CELL : TwbSignature = 'CELL';
   DIAL : TwbSignature = 'DIAL';
+  QUST : TwbSignature = 'QUST';
 
 { TwbFileSource }
 
@@ -16186,6 +16196,7 @@ initialization
   wbContainedInDef[1] := wbFormIDCk('Worldspace', [WRLD], False, cpNormal, True);
   wbContainedInDef[6] := wbFormIDCk('Cell', [CELL], False, cpNormal, True);
   wbContainedInDef[7] := wbFormIDCk('Topic', [DIAL], False, cpNormal, True);
+  wbContainedInDef[10] := wbFormIDCk('Quest', [QUST], False, cpNormal, True);
 
   SubRecordOrderList := TwbFastStringList.Create;
   SubRecordOrderList.Sorted := True;
@@ -16216,4 +16227,5 @@ finalization
   wbContainedInDef[1] := nil;
   wbContainedInDef[6] := nil;
   wbContainedInDef[7] := nil;
+  wbContainedInDef[10] := nil;
 end.
