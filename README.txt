@@ -49,6 +49,11 @@ xEdit Updates:
 
 With each new version of xEdit it is recommended to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect.
 
+Version 3.1.3 contains the following changes:
+- [FO4] Fallout 4 support
+
+** NOTE ** Not all records are fully decoded for Fallout 4.  Some FormIDs may not be accounted for and when making a plugin will not be renumbered properly at runtime.  This will cause game instability and crashes.  Please remember to load any plugins made with this experimental pre-release into the GECK once it's released and repair the plugin once our first official release is available.
+
 Version 3.1.2 contains the following changes:
 - improved record definitions
 - [TES5] LODGen support for glowing meshes
