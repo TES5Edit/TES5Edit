@@ -13313,10 +13313,32 @@ begin
       wbMO4S
     ], []),
     wbStruct(DNAM, 'Data', [
-      wbInteger('Animation Type', itU8, wbWeaponAnimTypeEnum),
-      wbByteArray('Unused', 3, cpIgnore),
-      wbFloat('Speed'),
-      wbFloat('Reach'),
+      //wbInteger('Animation Type', itU8, wbWeaponAnimTypeEnum),
+      //wbByteArray('Unused', 4, cpIgnore),
+      wbFormIDCk('Ammo', [AMMO, NULL]),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbByteArray('Unknown', 16),
+      wbInteger('Magazine Size', itU16),
+      wbByteArray('Unknown', 1),
+      wbByteArray('Unknown', 4),
+      wbFloat('Unknown'),
+      wbByteArray('Unknown', 4),
+      wbInteger('Damage', itU16),
+      wbByteArray('Unknown', 4),
+      wbFormIDCk('Sound - ?', [SNDR, NULL]),
+      wbByteArray('Unknown', 8),
+      wbFormIDCk('Sound - Fire Dry', [SNDR, NULL]),
+      wbFormIDCk('Sound - Charge', [SNDR, NULL]),
+      wbFormIDCk('Sound - Equip Up', [SNDR, NULL]),
+      wbFormIDCk('Sound - Equip Down', [SNDR, NULL]),
+      wbUnknown
 //      wbInteger('Flags', itU16, wbFlags([
 //        {0x0001}'Ignores Normal Weapon Resistance',
 //        {0x0002}'Automatic (unused)',
@@ -13369,17 +13391,14 @@ begin
 //      wbInteger('Resist', itS32, wbActorValueEnum),
 //      wbByteArray('Unknown', 4),
 //      wbFloat('Stagger'),
-      wbUnknown
     ]),
     wbUnknown(FNAM),
     wbStruct(CRDT, 'Critical Data', [
-      wbInteger('Damage', itU16),
-      wbByteArray('Unused', 2, cpIgnore),
+      //wbInteger('Damage', itU16),
+      //wbByteArray('Unused', 2, cpIgnore),
+      wbByteArray('Unknown', 4),
       wbFloat('% Mult'),
-      wbInteger('Flags', itU8, wbFlags([
-        'On Death'
-      ])),
-      wbByteArray('Unused', 3, cpIgnore)
+      wbFormIDCk('Effect', [SPEL, NULL])
     ]),
     wbFormIDCk(INAM, 'Impact Data Set', [IPDS, NULL]),
     wbUnknown(MASE),
