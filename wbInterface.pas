@@ -12648,7 +12648,7 @@ var
   ValueDef: IwbValueDef;
 begin
   Result := wbIsInternalEdit;
-  if Result then
+  if not Result then
   begin
     ValueDef := Decide(aBasePtr, aEndPtr, aElement);
     if Assigned(ValueDef) then
