@@ -1063,7 +1063,7 @@ begin
       WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
       WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Example: full dump of Skyrim.esm excluding "bloated" records');
-      WriteLn(ErrOutput, '  FO4Dump.exe -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Skyrim.esm');
+      WriteLn(ErrOutput, '  FO4Dump.exe -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Fallout4.esm');
       WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Currently supported export formats:');
       WriteLn(ErrOutput, 'RAW          ','Private format for debugging');

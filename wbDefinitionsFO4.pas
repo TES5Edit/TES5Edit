@@ -4472,6 +4472,9 @@ begin
     wbReqKWDAs
   ], []);
 
+  //wbActorValue := wbInteger('Actor Value', itS32, wbActorValueEnum);
+  wbActorValue := wbFormIDCkNoReach('Actor Value', [AVIF, NULL]);
+
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
     {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
     {04} wbUnion('Global Variable / Required Rank', wbCOEDOwnerDecider, [
@@ -5959,9 +5962,6 @@ begin
       -1, 'None'
     ]);
 
-  //wbActorValue := wbInteger('Actor Value', itS32, wbActorValueEnum);
-  wbActorValue := wbFormIDCkNoReach('Actor Value', [AVIF, NULL]);
-
   wbETYP := wbFormIDCk(ETYP, 'Equipment Type', [EQUP, NULL]);
   wbETYPReq := wbFormIDCk(ETYP, 'Equipment Type', [EQUP, NULL], False, cpNormal, True);
 
@@ -6418,10 +6418,10 @@ begin
   wbPTRN := wbFormIDCk(PTRN, 'Transform', [TRNS]);
   wbNTRM := wbFormIDCk(NTRM, 'Terminal', [TERM]);
   wbCUSD := wbFormIDCk(CUSD, 'UI Sound', [SNDR]);
-  wbPRPS := wbStructs(PRPS, 'Unknown', 'Unknown', [
-    wbByteArray('Unknown', 4),
-    wbFloat('Unknown')
-  ]);
+  wbPRPS := wbArrayS(PRPS, 'Properties', wbStructSK([0], 'Property', [
+    wbActorValue,
+    wbFloat('Value')
+  ]));
   wbFLTR := wbString(FLTR, 'Filter');
   wbAPPR := wbArray(APPR, 'Keywords', wbFormIDCk('Keyword', [KYWD]));
   wbFTYP := wbFormIDCk(FTYP, 'Unknown', [LCRT]);
@@ -7148,10 +7148,7 @@ begin
     wbEDID,
     wbFULLReq,
     wbDESCReq,
-    wbArrayS(PRPS, 'Properties', wbStructSK([0], 'Property', [
-      wbActorValue,
-      wbFloat('Value')
-    ])),
+    wbPRPS,
     wbUnknown(DATA)
   ]);
 
@@ -13072,7 +13069,7 @@ begin
       wbFormIDCk('Material', [MATO, NULL]),
       wbFloat('Unknown'),
       wbFloat('Unknown')
-    ], cpNormal, True),
+    ], cpNormal, True, nil, 2),
     wbUnknown(NVNM),
     wbArray(MNAM, 'Distant LOD',
       wbStruct('LOD', [
