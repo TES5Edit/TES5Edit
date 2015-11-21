@@ -10966,7 +10966,7 @@ begin
     ], cpNormal, True),
     // the amount of components is the same as size of CDIX, so should not be sorted probably
     wbStructs(CVPA, 'Components', 'Component', [
-      wbFormIDCk('Component', [CMPO]),
+      wbFormIDCk('Component', [CMPO, MISC, ALCH]),
       wbInteger('Count', itU32)
     ]),
     wbUnknown(CDIX)
@@ -10978,7 +10978,7 @@ begin
     wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
     wbArrayS(FVPA, 'Components',
       wbStructSK([0], 'Component', [
-        wbFormIDCk('Component', [CMPO]),
+        wbFormIDCk('Component', [CMPO, MISC, ALCH]),
         wbInteger('Count', itU32)
       ])
     ),
