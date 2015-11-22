@@ -1080,6 +1080,8 @@ begin
   if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
     Exit;
 
+  MainRecord := MainRecord.WinningOverride;
+
   if MainRecord.Signature <> QUST then begin
     case aType of
       ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
@@ -1168,6 +1170,8 @@ begin
 
   if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
     Exit;
+
+  MainRecord := MainRecord.WinningOverride;
 
   if MainRecord.Signature <> QUST then begin
     case aType of
@@ -1272,6 +1276,8 @@ begin
   if not Supports(aQuestRef, IwbMainRecord, MainRecord) then
     if not Supports(aQuestRef.LinksTo, IwbMainRecord, MainRecord) then
       Exit;
+
+  MainRecord := MainRecord.WinningOverride;
 
   if MainRecord.Signature <> QUST then begin
     case aType of
@@ -6299,7 +6305,7 @@ begin
         wbActorValue,
         wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
         wbInteger('Axis', itU32, wbAxisEnum),
-        wbInteger('Quest Stage', itS32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
+        wbInteger('Quest Stage', itU32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
         wbInteger('Misc Stat', itU32, wbMiscStatEnum),
         wbInteger('Alignment', itU32, wbAlignmentEnum),
         wbFormIDCkNoReach('Equip Type', [EQUP]),
@@ -6658,8 +6664,14 @@ begin
       wbInteger('Value', itS32),
       wbFloat('Weight')
     ], cpNormal, True),}
-    wbUnknown(FNAM),
-    wbUnknown(DAMA),
+    wbStruct(FNAM, '', [
+      wbInteger('Damage Resistance', itU16),
+      wbUnknown
+    ]),
+    wbArrayS(DAMA, 'Resistances',wbStructSK([0], 'Resistance', [
+      wbFormIDCk('Damage Type', [DMGT]),
+      wbInteger('Value', itU32)
+    ])),
     wbAPPR,
     wbOBTESequence
   ], False, nil, cpNormal, False, wbARMOAfterLoad, wbKeywordsAfterSet);
