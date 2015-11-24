@@ -277,6 +277,7 @@ type
   );
 
   TwbGroupTypes = set of Byte;
+  TwbStringEncoding = (seCP1252, seUTF8);
 
 var
   dtNonValues : set of TwbDefType = [
@@ -290,6 +291,8 @@ var
     dtUnion,
     dtStructChapter
   ];
+
+  wbStringEncoding: TwbStringEncoding = seCP1252;
 
 type
   IwbDef = interface;
@@ -3079,6 +3082,8 @@ procedure wbEndInternalEdit;
 function wbIsInternalEdit: Boolean;
 
 function StrToSignature(const s: string): TwbSignature;
+function wbStringToAnsi(const aString: string; const aElement: IwbElement): AnsiString;
+function wbAnsiToString(const aString: AnsiString; const aElement: IwbElement): string;
 
 function FixupFormID(aFormID: Cardinal; const aOld, aNew: TBytes): Cardinal;
 
@@ -3142,6 +3147,52 @@ begin
     Result := PwbSignature(@t[1])^
   else
     raise Exception.Create('"'+t+'" is not a valid signature');
+end;
+
+function IsTranslatable(const aElement: IwbElement): Boolean;
+var
+  Def: IwbDef;
+begin
+  Result := False;
+
+  if Assigned(aElement) then begin
+    Def := aElement.ValueDef;
+    if not Assigned(Def) then
+      Def := aElement.Def;
+
+    if Assigned(Def) then
+       Result := Def.ConflictPriority[aElement] = cpTranslate;
+  end;
+end;
+
+function wbStringToAnsi(const aString: String; const aElement: IwbElement): AnsiString;
+var
+  Translatable: Boolean;
+begin
+  if Assigned(aElement) then
+    Translatable := IsTranslatable(aElement)
+  else
+    Translatable := True;
+
+  if Translatable and (wbStringEncoding = seUTF8) then
+    Result := UTF8Encode(aString)
+  else
+    Result := AnsiString(aString);
+end;
+
+function wbAnsiToString(const aString: AnsiString; const aElement: IwbElement): string;
+var
+  Translatable: Boolean;
+begin
+  if Assigned(aElement) then
+    Translatable := IsTranslatable(aElement)
+  else
+    Translatable := True;
+
+  if Translatable and (wbStringEncoding = seUTF8) then
+    Result := UTF8Decode(aString)
+  else
+    Result := string(aString);
 end;
 
 function wbBeginInternalEdit(aForce: Boolean): Boolean;
@@ -10009,7 +10060,7 @@ end;
 
 procedure TwbStringDef.FromStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType);
 begin
-  FromStringNative(aBasePtr, aEndPtr, aElement, TransformString(AnsiString(aValue), aTransformType, aElement));
+  FromStringNative(aBasePtr, aEndPtr, aElement, TransformString(wbStringToAnsi(aValue, aElement), aTransformType, aElement));
 end;
 
 function TwbStringDef.GetDefType: TwbDefType;
@@ -10126,7 +10177,7 @@ end;
 
 function TwbStringDef.ToStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
 begin
-  Result := TransformString(ToStringNative(aBasePtr, aEndPtr, aElement), aTransformType, aElement);
+  Result := wbAnsiToString(TransformString(ToStringNative(aBasePtr, aEndPtr, aElement), aTransformType, aElement), aElement);
 end;
 
 function TwbStringDef.TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString;
@@ -13248,7 +13299,7 @@ begin
   SetLength(s, Len);
   if Len > 0 then
     Move(aBasePtr^, s[1], Len);
-  Result := s;
+  Result := wbAnsiToString(s, aElement);
   Used(aElement, Result);
 end;
 
@@ -13355,7 +13406,7 @@ begin
     if (Cardinal(aEndPtr) - Cardinal(aBasePtr)) <> 4 then
       Result := '< Error: lstring ID should be Int32 value >'
     else
-      Result := AnsiString(wbLocalizationHandler.GetValue(PCardinal(aBasePtr)^, aElement))
+      Result := wbStringToAnsi(wbLocalizationHandler.GetValue(PCardinal(aBasePtr)^, aElement), aElement)
   end else
     Result := inherited ToStringNative(aBasePtr, aEndPtr, aElement);
 end;
