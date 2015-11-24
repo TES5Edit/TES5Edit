@@ -5073,7 +5073,7 @@ begin
   wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
   wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
   wbFULLActor := wbLStringKC(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
-  wbFULLReq := wbLStringKC(FULL, 'Name', 0, cpNormal, True);
+  wbFULLReq := wbLStringKC(FULL, 'Name', 0, cpTranslate, True);
   wbDESC := wbLStringKC(DESC, 'Description', 0, cpTranslate);
   wbDESCReq := wbLStringKC(DESC, 'Description', 0, cpTranslate, True);
   wbXSCL := wbFloat(XSCL, 'Scale');
@@ -6496,7 +6496,7 @@ begin
   wbFLTR := wbString(FLTR, 'Filter');
   wbAPPR := wbArray(APPR, 'Keywords', wbFormIDCk('Keyword', [KYWD]));
   wbFTYP := wbFormIDCk(FTYP, 'Unknown', [LCRT]);
-  wbATTX := wbLString(ATTX, 'Activate Text Override');
+  wbATTX := wbLString(ATTX, 'Activate Text Override', 0, cpTranslate);
 
   wbOBTESequence := wbRStruct('Unknown', [
     wbRStruct('Unknown', [
@@ -6644,7 +6644,7 @@ begin
       wbFloat('Addiction Chance'),
       wbFormIDCk('Sound - Consume', [SNDR, NULL])
     ], cpNormal, True),
-    wbLString(DNAM, 'Unknown'),
+    wbLString(DNAM, 'Unknown', 0, cpTranslate),
     wbEffectsReq
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
@@ -6670,7 +6670,7 @@ begin
       wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4)
     ]),
-    wbLString(ONAM, 'Unknown'),
+    wbLString(ONAM, 'Unknown', 0, cpTranslate),
     wbString(NAM1, 'Casing Model'),
     wbUnknown(NAM2)
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
@@ -6807,7 +6807,7 @@ begin
     wbPTRN,
     wbFULL,
     wbMODL,
-    wbLStringKC(DESC, 'Book Text', 0, cpNormal, True),
+    wbLStringKC(DESC, 'Book Text', 0, cpTranslate, True),
     wbDEST,
     wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
     wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
@@ -6838,7 +6838,7 @@ begin
 //      wbFloat('Weight')
     ], cpNormal, True),
     wbUnknown(DNAM),
-    wbLString(CNAM, 'Description'),
+    wbLString(CNAM, 'Description', 0, cpTranslate),
     wbFormIDCk(INAM, 'Inventory Art', [STAT])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 end;
@@ -7662,8 +7662,8 @@ begin
       'Sliding',
       'Do Not Open in Combat Search'
     ]), cpNormal, True),
-    wbLString(ONAM, 'Unknown'),
-    wbLString(CNAM, 'Unknown')
+    wbLString(ONAM, 'Unknown', 0, cpTranslate),
+    wbLString(CNAM, 'Unknown', 0, cpTranslate)
   ]);
 
   wbBlendModeEnum := wbEnum([
@@ -7984,8 +7984,8 @@ begin
       ], cpNormal, False, nil, 7),
     wbRStructsSK('Ranks', 'Rank', [0], [
       wbInteger(RNAM, 'Rank#', itU32),
-      wbLString(MNAM, 'Male Title'),
-      wbLString(FNAM, 'Female Title'),
+      wbLString(MNAM, 'Male Title', 0, cpTranslate),
+      wbLString(FNAM, 'Female Title', 0, cpTranslate),
       wbString(INAM, 'Insignia Unused')
     ], []),
     wbFormIDCk(VEND, 'Vendor Buy/Sell List', [FLST]),
@@ -8117,7 +8117,7 @@ begin
   wbRecord(GMST, 'Game Setting', [
     wbString(EDID, 'Editor ID', 0, cpCritical, True, nil, wbGMSTEDIDAfterSet),
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
-      wbLString('Name'),
+      wbLString('Name', 0, cpTranslate),
       wbInteger('Int', itS32),
       wbFloat('Float'),
       wbInteger('Bool', itU32, wbEnum(['False', 'True']))
@@ -8194,7 +8194,10 @@ begin
       'Hair',
       'Facial Hair',
       'Scar',
-      'Eyebrows'
+      'Eyebrows',
+      'Meatcaps',
+      'Teeth',
+      'Head Rear'
     ])),
     wbRArrayS('Extra Parts',
       wbFormIDCk(HNAM, 'Part', [HDPT])
@@ -8994,7 +8997,7 @@ begin
         // 7: EPFD=lstring
 
         wbUnknown(EPFB),
-        wbLString(EPF2, 'Button Label'),
+        wbLString(EPF2, 'Button Label', 0, cpTranslate),
         wbStruct(EPF3, 'Script Flags', [
           wbInteger('Script Flags', itU8, wbFlags([
             'Run Immediately',
@@ -9012,8 +9015,8 @@ begin
           {3} wbFormIDCk('Leveled Item', [LVLI]),
           {4} wbFormIDCk('Spell', [SPEL]),
           {5} wbFormIDCk('Spell', [SPEL]),
-          {6} wbString('Text'),
-          {7} wbLString('Text'),
+          {6} wbString('Text', 0, cpTranslate),
+          {7} wbLString('Text', 0, cpTranslate),
           {8} wbStruct('Actor Value, Float', [
                 wbActorValue, // wbInteger('Actor Value', itU32, wbEPFDActorValueToStr, wbEPFDActorValueToInt),
                 wbFloat('Float')
@@ -9028,7 +9031,7 @@ begin
     wbEDID,
     wbMODL,
     wbRStructsSK('Body Parts', 'Body Part', [2], [
-      wbLString(BPTN, 'Part Name', 0, cpNormal, True),
+      wbLString(BPTN, 'Part Name', 0, cpTranslate, True),
       wbString(PNAM, 'Pose Matching', 0, cpNormal, False),
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
       wbString(BPNT, 'VATS Target', 0, cpNormal, True),
@@ -9122,7 +9125,7 @@ begin
     wbEDID,
     wbFULL,
     wbDESCReq,
-    wbLString(ANAM, 'Abbreviation'),
+    wbLString(ANAM, 'Abbreviation', 0, cpTranslate),
     wbUnknown(NAM0),
     wbUnknown(AVFL),
     wbUnknown(NAM1)
@@ -9419,10 +9422,10 @@ begin
       'Auto Display'
     ]), cpNormal, True, False, nil, wbMESGDNAMAfterSet),
     wbInteger(TNAM, 'Display Time', itU32, nil, cpNormal, False, False, wbMESGTNAMDontShow),
-    wbLString(NNAM, 'Unknown'),
+    wbLString(NNAM, 'Unknown', 0, cpTranslate),
     wbString(SNAM, 'Unknown'),
     wbRStructs('Menu Buttons', 'Menu Button', [
-      wbLString(ITXT, 'Button Text'),
+      wbLString(ITXT, 'Button Text', 0, cpTranslate),
       wbCTDAs
     ], [])
   ], False, nil, cpNormal, False, wbMESGAfterLoad);
@@ -10488,9 +10491,7 @@ begin
 
     wbRArray('Responses', wbRStruct('Response', [
       wbStruct(TRDA, 'Response Data', [
-        //wbInteger('Emotion Type', itU32, wbEmotionTypeEnum),
-        //wbInteger('Emotion Value', itU32),
-        wbByteArray('Unknown', 4),
+        wbFormIDCk('Emotion', [KYWD, NULL]),
         wbInteger('Response number', itU8),
         wbByteArray('Unused', 3),
         //wbFormIDCk('Sound', [SNDR, NULL]),
@@ -10499,7 +10500,7 @@ begin
         //])),
         wbUnknown
       ]),
-      wbLStringKC(NAM1, 'Response Text', 0),
+      wbLStringKC(NAM1, 'Response Text', 0, cpTranslate),
       wbString(NAM2, 'Script Notes', 0),
       wbString(NAM3, 'Edits', 0),
       wbUnknown(NAM4),
@@ -10512,7 +10513,7 @@ begin
     ], [])),
 
     wbCTDAs,
-    wbLString(RNAM, 'Prompt'),
+    wbLString(RNAM, 'Prompt', 0, cpTranslate),
     wbFormIDCk(ANAM, 'Speaker', [NPC_]),
     wbUnknown(TSCE),
     wbUnknown(ALFA),
@@ -10848,7 +10849,7 @@ begin
       wbByteArray('Unknown', 4)
     ]),
     wbFormIDCk(LVSG, 'Unknown', [GLOB]),
-    wbLString(ONAM, 'Unknown')
+    wbLString(ONAM, 'Unknown', 0, cpTranslate)
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
   wbRecord(LVSP, 'Leveled Spell', [
@@ -11018,7 +11019,7 @@ begin
       ])),
       wbFormIDCk('Sound', [SNDR])
     ])),
-    wbLStringKC(DNAM, 'Magic Item Description'),
+    wbLStringKC(DNAM, 'Magic Item Description', 0, cpTranslate),
     wbCTDAs
   ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad}, wbMGEFAfterSet);
 
@@ -11044,7 +11045,7 @@ begin
     ], cpNormal, True),
     // the amount of components is the same as size of CDIX, so should not be sorted probably
     wbStructs(CVPA, 'Components', 'Component', [
-      wbFormIDCk('Component', [CMPO, MISC, ALCH]),
+      wbFormIDCk('Component', [CMPO, MISC, ALCH, AMMO]),
       wbInteger('Count', itU32)
     ]),
     wbUnknown(CDIX)
@@ -11056,11 +11057,11 @@ begin
     wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
     wbArrayS(FVPA, 'Components',
       wbStructSK([0], 'Component', [
-        wbFormIDCk('Component', [CMPO, MISC, ALCH]),
+        wbFormIDCk('Component', [CMPO, MISC, ALCH, AMMO]),
         wbInteger('Count', itU32)
       ])
     ),
-    wbLString(DESC, 'Description'),
+    wbLString(DESC, 'Description', 0, cpTranslate),
     wbCTDAs,
     wbFormID(CNAM, 'Created Object'),
     wbFormIDCk(BNAM, 'Workbench Keyword', [KYWD]),
@@ -11191,7 +11192,7 @@ begin
     wbOBTESequence,
     wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
     wbFULL,
-    wbLString(SHRT, 'Short Name'),
+    wbLString(SHRT, 'Short Name', 0, cpTranslate),
     wbByteArray(DATA, 'Marker'),
     wbUnknown(DNAM),
     wbRArrayS('Head Parts', wbFormIDCk(PNAM, 'Head Part', [HDPT]), cpNormal, False, nil, nil, nil{wbActorTemplateUseModelAnimation}),
@@ -11596,7 +11597,7 @@ begin
     wbRArray('Objectives', wbRStruct('Objective', [
       wbInteger(QOBJ, 'Objective Index', itU16),
       wbInteger(FNAM, 'Flags', itU32, wbFlags(['ORed With Previous'])),
-      wbLString(NNAM, 'Display Text', 0, cpNormal, True),
+      wbLString(NNAM, 'Display Text', 0, cpTranslate, True),
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
           wbInteger('Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
@@ -11751,7 +11752,7 @@ begin
 
       ], [])
     ),
-    wbString(NNAM, 'Description', 0, cpNormal, False),
+    wbString(NNAM, 'Description', 0, cpTranslate, False),
     wbRArray('Targets', wbRStruct('Target', [
       wbStruct(QSTA, 'Target', [
         wbFormIDCkNoReach('Target', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], True),
@@ -12102,7 +12103,7 @@ begin
     wbRArray('Unknown',
       wbRStruct('Unknown', [
         //wbUnknown(TTGP),
-        wbLString(TTGP, 'Unknown'),
+        wbLString(TTGP, 'Unknown', 0, cpTranslate),
         wbRUnion('Unknown', [
 
           wbUnknown(TETI),
@@ -12140,7 +12141,7 @@ begin
              wbUnknown(MPPI),
              //wbUnknown(MPPN),
              //wbUnknown(MPPM),
-             wbLString(MPPN, 'Unknown'),
+             wbLString(MPPN, 'Unknown', 0, cpTranslate),
              wbString(MPPM, 'Unknown'),
              wbUnknown(MPPT),
              wbUnknown(MPPF)
@@ -13244,7 +13245,7 @@ begin
     wbPRPS,
     wbUnknown(PNAM),
     wbATTX,
-    wbLString(RNAM, 'Activate Text Override'),
+    wbLString(RNAM, 'Activate Text Override', 0, cpTranslate),
     wbUnknown(FNAM),
     wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, LVLI, MISC, NULL]),
     wbFormIDCK(SNAM, 'Sound', [SNDR, SOUN, NULL]),
@@ -13976,7 +13977,7 @@ begin
         wbInteger(VNAM, 'Count', itU32),
         wbRArray('Unknown',
           wbRStruct('Unknown', [
-            wbLString(WNAM, 'Unknown'),
+            wbLString(WNAM, 'Unknown', 0, cpTranslate),
             wbKSIZ,
             wbKWDAs
           ], [])
@@ -14071,7 +14072,7 @@ begin
   wbRecord(OMOD, 'Modification', [
     wbEDID,
     wbFULL,
-    wbLString(DESC, 'Description'),
+    wbLString(DESC, 'Description', 0, cpTranslate),
     wbMODL,
     wbUnknown(DATA),
     wbArray(MNAM, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
@@ -14201,22 +14202,22 @@ begin
     wbInteger(BSIZ, 'Count', itU32, nil, cpBenign),
     wbRArray('Display Items',
       wbRStruct('Display Item', [
-        wbLString(BTXT, 'Text'),
+        wbLString(BTXT, 'Text', 0, cpTranslate),
         wbCTDAs
       ], [])
     ),
     wbInteger(ISIZ, 'Count', itU32, nil, cpBenign),
     wbRArray('Menu Items',
       wbRStruct('Menu Item', [
-        wbLString(ITXT, 'Item Text'),
-        wbLString(RNAM, 'Error Text'),
+        wbLString(ITXT, 'Item Text', 0, cpTranslate),
+        wbLString(RNAM, 'Error Text', 0, cpTranslate),
         wbInteger(ANAM, 'Flags', itU8, wbFlags([
           'Add Note',
           'Force Redraw',
           'Unknown 2'
         ]), cpNormal, True),
         wbInteger(ITID, 'Item ID', itU16),
-        wbLString(UNAM, 'Response Text'),
+        wbLString(UNAM, 'Response Text', 0, cpTranslate),
         wbFormIDCk(TNAM, 'Terminal', [TERM]),
         wbCTDAs
       ], [])

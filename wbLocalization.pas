@@ -43,10 +43,10 @@ type
 
     procedure Init;
     function FileStringType(aFileName: string): TwbLStringType;
-    function ReadZString(aStream: TMemoryStream): string;
-    function ReadLenZString(aStream: TMemoryStream): string;
-    procedure WriteZString(aStream: TMemoryStream; aString: string);
-    procedure WriteLenZString(aStream: TMemoryStream; aString: string);
+    function ReadZString(aStream: TMemoryStream): AnsiString;
+    function ReadLenZString(aStream: TMemoryStream): AnsiString;
+    procedure WriteZString(aStream: TMemoryStream; aString: AnsiString);
+    procedure WriteLenZString(aStream: TMemoryStream; aString: AnsiString);
     procedure ReadDirectory(aStream: TMemoryStream);
   protected
     function Get(Index: Cardinal): string;
@@ -183,53 +183,43 @@ begin
       Result := i;
 end;
 
-function TwbLocalizationFile.ReadZString(aStream: TMemoryStream): string;
+function TwbLocalizationFile.ReadZString(aStream: TMemoryStream): AnsiString;
 var
   Position : Integer;
-  s        : RawByteString;
 begin
   Position := aStream.Position;
-  s := PAnsiChar(@PByte(aStream.Memory)[Position]);
-  aStream.Position := aStream.Position + Succ(Length(s));
-  //Result := UTF8Decode(s); // chinese
-  Result := s; // others
-  //if IsUTF8String(s) then Result := UTF8Decode(s) else Result := s;
+  Result := PAnsiChar(@PByte(aStream.Memory)[Position]);
+  aStream.Position := aStream.Position + Succ(Length(Result));
 end;
 
-function TwbLocalizationFile.ReadLenZString(aStream: TMemoryStream): string;
+function TwbLocalizationFile.ReadLenZString(aStream: TMemoryStream): AnsiString;
 var
-  s: RawByteString;
   Len: Cardinal;
 begin
   aStream.ReadBuffer(Len, 4);
   Dec(Len); // trailing null
-  SetLength(s, Len);
+  SetLength(Result, Len);
   if Len > 0 then
-    aStream.ReadBuffer(s[1], Len);
-  Result := s;
-  //if IsUTF8String(s) then Result := UTF8Decode(s) else Result := s;
+    aStream.ReadBuffer(Result[1], Len);
 end;
 
-procedure TwbLocalizationFile.WriteZString(aStream: TMemoryStream; aString: string);
-const z: Byte = 0;
-var
-  s: RawByteString;
+procedure TwbLocalizationFile.WriteZString(aStream: TMemoryStream; aString: AnsiString);
+const
+  z: Byte = 0;
 begin
-  s := RawByteString(aString);
-  aStream.WriteBuffer(s[1], length(s));
+  aStream.WriteBuffer(aString[1], Length(aString));
   aStream.WriteBuffer(z, SizeOf(z));
 end;
 
-procedure TwbLocalizationFile.WriteLenZString(aStream: TMemoryStream; aString: string);
-const z: Byte = 0;
+procedure TwbLocalizationFile.WriteLenZString(aStream: TMemoryStream; aString: AnsiString);
+const
+  z: Byte = 0;
 var
-  s: RawByteString;
   l: Cardinal;
 begin
-  s := RawByteString(aString);
-  l := length(s) + SizeOf(z);
+  l := Length(aString) + SizeOf(z);
   aStream.WriteBuffer(l, SizeOf(Cardinal));
-  aStream.WriteBuffer(s[1], length(s));
+  aStream.WriteBuffer(aString[1], Length(aString));
   aStream.WriteBuffer(z, SizeOf(z));
 end;
 
@@ -238,7 +228,7 @@ var
   i: integer;
   scount, id, offset: Cardinal;
   oldPos: int64;
-  s: string;
+  s: AnsiString;
 begin
   if aStream.Size < 8 then
     Exit;
@@ -255,7 +245,7 @@ begin
         s := ReadZString(aStream)
       else
         s := ReadLenZString(aStream);
-      fStrings.AddObject(s, pointer(id));
+      fStrings.AddObject(wbAnsiToString(s, nil), pointer(id));
       if Succ(id) > fNextID then
         fNextID := Succ(id);
       aStream.Position := oldPos;
@@ -280,9 +270,9 @@ begin
       c := data.Position;
       dir.WriteBuffer(c, SizeOf(c)); // relative position
       if fFileType = lsString then
-        WriteZString(data, fStrings[i])
+        WriteZString(data, wbStringToAnsi(fStrings[i], nil))
       else
-        WriteLenZString(data, fStrings[i]);
+        WriteLenZString(data, wbStringToAnsi(fStrings[i], nil));
     end;
     c := data.Size;
     dir.Position := 4;
