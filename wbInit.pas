@@ -681,6 +681,11 @@ begin
   if wbFindCmdLineParam('l', s) then
     wbLanguage := s;
 
+  if wbFindCmdLineParam('cp', s) then begin
+    if SameText(s, 'utf-8') then
+      wbStringEncoding := seUTF8;
+  end;
+
   if FindCmdLineSwitch('speed') then
     wbSpeedOverMemory := True;
   if FindCmdLineSwitch('memory') then
