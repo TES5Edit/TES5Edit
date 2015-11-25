@@ -2235,7 +2235,7 @@ begin
   if not Assigned(Container) then Exit;
 
   VarClear(ArchType);
-  Element := Container.ElementByName['Archtype'];
+  Element := Container.ElementByName['Archetype'];
   if Assigned(Element) then
     ArchType := Element.NativeValue
   else if Supports(Container, IwbDataContainer, DataContainer) and
@@ -2268,7 +2268,7 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
   if (aNewValue <> 0) then begin
-    Element := Container.ElementByName['Archtype'];
+    Element := Container.ElementByName['Archetype'];
     if Assigned(Element) and (Element.NativeValue = 0) then
         Element.NativeValue := $FF; // Signals ArchType that it should not mess with us on the next change!
           // I assume this will alo protect Second AV Weight (The two actor values are after ArchType)
@@ -2284,7 +2284,7 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
   if (aNewValue <> 0.0) then begin
-    Element := Container.ElementByName['Archtype'];
+    Element := Container.ElementByName['Archetype'];
     if Assigned(Element) and (Element.NativeValue = 0) then
         Element.NativeValue := $FF; // Signals ArchType that it should not mess with us on the next change!
   end;
@@ -4972,19 +4972,20 @@ begin
   ]);
 
   wbLocationEnum := wbEnum([
-    {0} 'Near reference',
-    {1} 'In cell',
-    {2} 'Near package start location',
-    {3} 'Near editor location',
+    {0} 'Near reference', // string dump: '%s' in '%s' radius %u
+    {1} 'In cell', // string dump: In cell '%s'
+    {2} 'Near package start location', // string dump: Near package start location, radius %u
+    {3} 'Near editor location', // string dump: Near editor location, radius %u
     {4} 'Object ID',
     {5} 'Object Type',
-    {6} 'Near linked reference',
-    {7} 'At package location',
-    {8} 'Alias (reference)',
-    {9} 'Alias (location)',
-   {10} 'Unknown 10',
-   {11} 'Unknown 11',
-   {12} 'Near self'
+    {6} 'Near linked reference', // string dump: Near linked reference, radius %u%s%s
+    {7} 'At package location', // string dump: At package location, radius %u
+    {8} 'Alias (reference)', // string dump: Alias: %s [item #%u], radius %u
+    {9} 'Alias (location)', // string dump: Alias: %s, radius %u
+   {10} 'Target', // string dump: <Target>
+   {11} 'Target (location)', // string dump: Target: %s, radius %u
+   {12} 'Near self', // Near Self, radius %u
+   {13} 'Unknown 13'
   ]);
 
   wbEquipType := wbFlags([
@@ -5336,7 +5337,8 @@ begin
       {9} wbInteger('Reference', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
      {10} wbByteArray('Unknown', 4, cpIgnore),
      {11} wbByteArray('Unknown', 4, cpIgnore),
-     {12} wbByteArray('Unknown', 4, cpIgnore)
+     {12} wbByteArray('Unknown', 4, cpIgnore),
+     {13} wbByteArray('Unknown', 4)
     ]),
     wbInteger('Radius', itS32),
     wbUnknown
@@ -5357,7 +5359,8 @@ begin
       {9} wbInteger('Reference', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
      {10} wbByteArray('Unknown', 4, cpIgnore),
      {11} wbByteArray('Unknown', 4, cpIgnore),
-     {12} wbByteArray('Unknown', 4, cpIgnore)
+     {12} wbByteArray('Unknown', 4, cpIgnore),
+     {13} wbByteArray('Unknown', 4)
     ]),
     wbInteger('Radius', itS32),
     wbUnknown
@@ -5371,7 +5374,8 @@ begin
       {3} 'Linked Reference',
       {4} 'Ref Alias',
       {5} 'Unknown 5',
-      {6} 'Self'
+      {6} 'Self',
+      {7} 'Keyword'
     ]), cpNormal, False, nil, nil, 2),
     wbUnion('Target', wbTypeDecider, [
       {0} wbFormIDCkNoReach('Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], True),
@@ -5380,7 +5384,8 @@ begin
       {3} wbFormID('Reference'),
       {4} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
       {5} wbByteArray('Unknown', 4, cpIgnore),
-      {6} wbByteArray('Unknown', 4, cpIgnore)
+      {6} wbByteArray('Unknown', 4, cpIgnore),
+      {7} wbFormIDCk('Keyword', [KYWD, NULL])
     ]),
     wbInteger('Count / Distance', itS32)
   ]);
@@ -5514,7 +5519,7 @@ begin
     ]),
   -1);
 
-  wbDEST := wbRStruct('Destructable', [
+  wbDEST := wbRStruct('Destructible', [
     wbStruct(DEST, 'Header', [
       wbInteger('Health', itS32),
       wbInteger('DEST Count', itU8),
@@ -5550,7 +5555,7 @@ begin
     )
   ], [], cpNormal, False, nil);
 
-  wbDESTActor := wbRStruct('Destructable', [
+  wbDESTActor := wbRStruct('Destructible', [
     wbStruct(DEST, 'Header', [
       wbInteger('Health', itS32),
       wbInteger('Count', itU8),
@@ -5800,7 +5805,7 @@ begin
 
   wbActorValueEnum :=
     wbEnum([
-    {00} 'Aggresion',
+    {00} 'Aggression',
     {01} 'Confidence',
     {02} 'Energy',
     {03} 'Morality',
@@ -8071,13 +8076,14 @@ begin
     wbStruct(WBDT, 'Workbench Data', [
       wbInteger('Bench Type', itU8, wbEnum([
         {0} 'None',
-        {1} 'Create object',
-        {2} 'Smithing Weapon',
-        {3} 'Enchanting',
-        {4} 'Enchanting Experiment',
-        {5} 'Alchemy',
-        {6} 'Alchemy Experiment',
-        {7} 'Smithing Armor'
+        {1} 'Create object', // used only for MS11Workbench [FURN:00091FD5]
+        {2} 'Weapons', // used for the Weapons (plural) workbench
+        {3} 'Enchanting (unused)', // not used
+        {4} 'Enchanting Experiment (unused)', // not used
+        {5} 'Alchemy', // used for Chemistry and Cooking, so Alchemy is probably okay
+        {6} 'Alchemy Experiment (unused)', // not used
+        {7} 'Armor', // FO4 calls this the Armor workbench, no mention of Smithing
+        {8} 'Power Armor' // used for Power Armor stations
       ])),
       wbInteger('Uses Skill', itS8, wbSkillEnum)
     ], cpNormal, True, nil, 1),
@@ -10856,7 +10862,7 @@ begin
     wbEDID
   ]);
 
-  wbMGEFType := wbInteger('Archtype', itU32, wbEnum([
+  wbMGEFType := wbInteger('Archetype', itU32, wbEnum([
     {00} 'Value Modifier',
     {01} 'Script',
     {02} 'Dispel',
@@ -10870,8 +10876,8 @@ begin
     {10} 'Command Summoned',
     {11} 'Invisibility',
     {12} 'Light',
-    {13} 'Unknown 13',
-    {14} 'Unknown 14',
+    {13} 'Darkness',
+    {14} 'Nighteye',
     {15} 'Lock',
     {16} 'Open',
     {17} 'Bound Weapon',
@@ -10883,17 +10889,17 @@ begin
     {23} 'Soul Trap',
     {24} 'Turn Undead',
     {25} 'Guide',
-    {26} 'Werewolf Feed',
+    {26} 'Unknown 26',
     {27} 'Cure Paralysis',
     {28} 'Cure Addiction',
     {29} 'Cure Poison',
     {30} 'Concussion',
-    {31} 'Value and Parts',
+    {31} 'Stimpack',
     {32} 'Accumulate Magnitude',
     {33} 'Stagger',
     {34} 'Peak Value Modifier',
     {35} 'Cloak',
-    {36} 'Werewolf',
+    {36} 'Unknown 36',
     {37} 'Slow Time',
     {38} 'Rally',
     {39} 'Enhance Weapon',
@@ -10902,8 +10908,11 @@ begin
     {42} 'Banish',
     {43} 'Spawn Scripted Ref',
     {44} 'Disguise',
-    {45} 'Grab Actor',
-    {46} 'Vampire Lord'
+    {45} 'Damage',
+    {46} 'Immunity',
+    {47} 'Permanent Reanimate',
+    {48} 'Jetpack',
+    {49} 'Chameleon'
   ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet);
 
   wbMGEFData := wbRStruct('Magic Effect Data', [
@@ -10954,8 +10963,8 @@ begin
         wbFormIDCk('Assoc. Item', [ENCH, NULL]),
         wbFormIDCk('Assoc. Item', [KYWD, NULL])
       ], cpNormal, False, nil, wbMGEFAssocItemAfterSet),
-      wbInteger('Magic Skill', itS32, wbActorValueEnum),
-      wbInteger('Resist Value', itS32, wbActorValueEnum),
+      wbByteArray('Magic Skill (unused)', 4),
+      wbFormIDCk('Resist Value', [AVIF, NULL]),
       wbInteger('Counter Effect count', itU16),
       wbByteArray('Unused', 2),
       wbFormIDCk('Casting Light', [LIGH, NULL]),
