@@ -442,7 +442,6 @@ const
   MOD4 : TwbSignature = 'MOD4';
   MOD5 : TwbSignature = 'MOD5'; { New to Skyrim }
   MODC : TwbSignature = 'MODC'; { New to Fallout 4 }
-  MODD : TwbSignature = 'MODD';
   MODF : TwbSignature = 'MODF'; { New to Fallout 4 }
   MODL : TwbSignature = 'MODL';
   MODS : TwbSignature = 'MODS';
@@ -879,7 +878,6 @@ var
   wbDATAPosRot: IwbSubRecordDef;
   wbPosRot: IwbStructDef;
   wbMODC: IwbSubRecordDef;
-  wbMODD: IwbSubRecordDef;
   wbMODF: IwbSubRecordDef;
   wbMODL: IwbSubRecordStructDef;
   wbMODS: IwbSubRecordDef;
@@ -5486,55 +5484,11 @@ begin
       ])
     ], cpNormal, True);
 
-  wbMO2S :=
-    wbArrayS(MO2S, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
-      ]),
-    -1);
-  wbMO3S :=
-    wbArrayS(MO3S, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
-      ]),
-    -1);
-  wbMO4S :=
-    wbArrayS(MO4S, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
-      ]),
-    -1);
-  wbMO5S :=
-    wbArrayS(MO5S, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
-      ]),
-    -1);
-
-  wbMODS :=
-    wbArrayS(MODS, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
-      ]),
-    -1);
-
-  wbMODD :=
-    wbInteger(MODD, 'FaceGen Model Flags', itU8, wbFlags([
-      'Head',
-      'Torso',
-      'Right Hand',
-      'Left Hand'
-    ]));
+  wbMO2S := wbFormIDCk(MO2S, 'Material Swap', [MSWP]);
+  wbMO3S := wbFormIDCk(MO3S, 'Material Swap', [MSWP]);
+  wbMO4S := wbFormIDCk(MO4S, 'Material Swap', [MSWP]);
+  wbMO5S := wbFormIDCk(MO5S, 'Material Swap', [MSWP]);
+  wbMODS := wbFormIDCk(MODS, 'Material Swap', [MSWP]);
 
   wbMODC := wbUnknown(MODC);
   wbMODF := wbUnknown(MODF);
@@ -14106,8 +14060,8 @@ begin
     wbString(FNAM),
     wbRArray('Unknown',
       wbRStruct('Unknown', [
-        wbString(BNAM),
-        wbString(SNAM),
+        wbString(BNAM, 'Base Material'),
+        wbString(SNAM, 'Swap Material'),
         wbString(FNAM),
         wbUnknown(CNAM)
       ], [])
