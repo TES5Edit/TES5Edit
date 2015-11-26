@@ -5049,7 +5049,8 @@ begin
    {10} 'Target', // string dump: <Target>
    {11} 'Target (location)', // string dump: Target: %s, radius %u
    {12} 'Near self', // Near Self, radius %u
-   {13} 'Unknown 13'
+   {13} 'Unknown 13',
+   {14} 'Unknown 14'
   ]);
 
   wbEquipType := wbFlags([
@@ -5402,7 +5403,8 @@ begin
      {10} wbByteArray('Unknown', 4, cpIgnore),
      {11} wbByteArray('Unknown', 4, cpIgnore),
      {12} wbByteArray('Unknown', 4, cpIgnore),
-     {13} wbByteArray('Unknown', 4)
+     {13} wbByteArray('Unknown', 4),
+     {14} wbByteArray('Unknown', 4)
     ]),
     wbInteger('Radius', itS32),
     wbUnknown
@@ -5424,7 +5426,8 @@ begin
      {10} wbByteArray('Unknown', 4, cpIgnore),
      {11} wbByteArray('Unknown', 4, cpIgnore),
      {12} wbByteArray('Unknown', 4, cpIgnore),
-     {13} wbByteArray('Unknown', 4)
+     {13} wbByteArray('Unknown', 4),
+     {14} wbByteArray('Unknown', 4)
     ]),
     wbInteger('Radius', itS32),
     wbUnknown
@@ -5439,7 +5442,8 @@ begin
       {4} 'Ref Alias',
       {5} 'Unknown 5',
       {6} 'Self',
-      {7} 'Keyword'
+      {7} 'Keyword',
+      {8} 'Unknown 8'
     ]), cpNormal, False, nil, nil, 2),
     wbUnion('Target', wbTypeDecider, [
       {0} wbFormIDCkNoReach('Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], True),
@@ -5449,7 +5453,8 @@ begin
       {4} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
       {5} wbByteArray('Unknown', 4, cpIgnore),
       {6} wbByteArray('Unknown', 4, cpIgnore),
-      {7} wbFormIDCk('Keyword', [KYWD, NULL])
+      {7} wbFormIDCk('Keyword', [KYWD, NULL]),
+      {8} wbByteArray('Unknown', 4, cpIgnore)
     ]),
     wbInteger('Count / Distance', itS32)
   ]);
@@ -11177,8 +11182,7 @@ begin
     wbRArrayS('Factions',
       wbStructSK(SNAM, [0], 'Faction', [
         wbFormIDCk('Faction', [FACT]),
-        wbInteger('Rank', itS8),
-        wbByteArray('Unused', 3, cpIgnore)
+        wbInteger('Rank', itS8)
       ]), cpNormal, False, nil, nil, nil{wbActorTemplateUseFactions}
     ),
     wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
@@ -11204,8 +11208,7 @@ begin
     wbRArrayS('Perks',
       wbStructSK(PRKR, [0], 'Perk', [
         wbFormIDCk('Perk', [PERK]),
-        wbInteger('Rank', itU8),
-        wbByteArray('Unused', 3, cpIgnore)
+        wbInteger('Rank', itU8)
       ]), cpNormal, False, nil, wbPRKRsAfterSet
     ),
     wbPRPS,
@@ -11431,6 +11434,7 @@ begin
       wbByteArray('Unused', 3, cpIgnore),
       wbInteger('Duration (minutes)', itS32)
     ], cpNormal, True),
+
     wbCTDAs,
 
     wbRStruct('Idle Animations', [
@@ -14245,8 +14249,9 @@ begin
         wbByteArray('Value 2', 4)
       ]), -1),
       wbArray('Includes', wbStruct('Include', [
-        wbByteArray('Value 1', 4),
-        wbInteger('Value 2', itU8)
+        wbFormIDCk('Mod', [OMOD]),
+        wbInteger('Unknown', itU8),
+        wbByteArray('Unknown', 2)
       ]), wbOMODDataIncludeCounter),
       wbArray('Properties', wbStruct('Property', [
         wbInteger('Value Type', itU8, wbEnum([
@@ -14274,8 +14279,8 @@ begin
         wbByteArray('Unused', 2, cpIgnore),
         wbUnion('Value', wbOMODDataPropertyValueDecider, [
           wbStruct('Unknown', [
-            wbByteArray('Value 1', 4),
-            wbByteArray('Value 2', 4)
+            wbByteArray('Unknown', 4),
+            wbByteArray('Unknown', 4)
           ]),
           wbStruct('Int', [
             wbInteger('Value 1', itU32),
@@ -14289,7 +14294,7 @@ begin
             wbInteger('Value 1', itU32, wbEnum(['False', 'True'])),
             wbInteger('Value 2', itU32, wbEnum(['False', 'True']))
           ]),
-          wbStruct('ID,Int', [
+          wbStruct('FormID,Int', [
             wbFormID('Value 1'),
             wbInteger('Value 2', itU32)
           ]),
@@ -14297,14 +14302,13 @@ begin
             wbByteArray('Value 1', 4),
             wbByteArray('Value 2', 4)
           ]),
-          wbStruct('ID,Float', [
+          wbStruct('FormID,Float', [
             wbFormID('Value 1'),
             wbFloat('Value 2')
           ])
         ]),
         wbFloat('Factor')
-      ]), wbOMODDataPropertyCounter),
-      wbUnknown
+      ]), wbOMODDataPropertyCounter)
     ]),
     wbArray(MNAM, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbArray(FNAM, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
