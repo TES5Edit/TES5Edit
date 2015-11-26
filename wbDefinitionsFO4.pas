@@ -4430,6 +4430,7 @@ var
   FormType      : Integer;
 begin
   Result := 0;
+  if not Assigned(aBasePtr) then Exit;
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
