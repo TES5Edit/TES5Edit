@@ -12147,6 +12147,7 @@ begin
       for i := 0 to Pred(ActiveMaster.ReferencedByCount) do
         with lvReferencedBy.Items.Add do begin
           Caption := ActiveMaster.ReferencedBy[i].Name;
+          SubItems.Add(ActiveMaster.ReferencedBy[i].Signature);
           SubItems.Add(ActiveMaster.ReferencedBy[i]._File.Name);
           Data := Pointer(ActiveMaster.ReferencedBy[i]);
         end;
