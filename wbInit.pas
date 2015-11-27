@@ -604,6 +604,7 @@ begin
     wbGameMode := gmFO4;
     wbAppName := 'FO4';
     wbGameName := 'Fallout4';
+    wbArchiveExtension := '.ba2';
     if not (wbToolMode in wbAlwaysMode) and not (wbToolMode in [tmTranslate]) then begin
       ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
@@ -645,7 +646,6 @@ begin
     wbVWDAsQuestChildren := True;
     wbHideIgnored := False; // to show Form Version
     ReadSettings;
-    wbLoadBSAs := False; // no support for BA2 yet
     //wbCreateContainedIn := False;
   end else begin
     Exit;

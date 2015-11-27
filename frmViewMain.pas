@@ -15466,7 +15466,10 @@ begin
                 for i := 0 to Pred(n.Count) do
                   if wbLoadBSAs then begin
                     LoaderProgress('[' + n[i] + '] Loading Resources.');
-                    wbContainerHandler.AddBSA(MakeDataFileName(n[i], ltDataPath));
+                    if wbArchiveExtension = '.bsa' then
+                      wbContainerHandler.AddBSA(MakeDataFileName(n[i], ltDataPath))
+                    else if wbArchiveExtension = '.ba2' then
+                      wbContainerHandler.AddBA2(MakeDataFileName(n[i], ltDataPath))
                   end else
                     LoaderProgress('[' + n[i] + '] Skipped.');
                 for i := 0 to Pred(m.Count) do
@@ -15478,42 +15481,6 @@ begin
           finally
             FreeAndNil(n);
           end;
-
-//        with TMemIniFile.Create(wbTheGameIniFileName) do try
-//          with TStringList.Create do try
-//            if wbGameMode in [gmTES4, gmFO3, gmFNV] then
-//              Text := StringReplace(ReadString('Archive', 'sArchiveList', ''), ',' ,#10, [rfReplaceAll])
-//            else
-//              Text := StringReplace(
-//                ReadString('Archive', 'sResourceArchiveList', '') + ',' + ReadString('Archive', 'sResourceArchiveList2', ''),
-//                ',', #10, [rfReplaceAll]
-//              );
-//            for i := 0 to Pred(Count) do begin
-//              s := Trim(Strings[i]);
-//              if Length(s) < 5 then
-//                Continue;
-//              if not ((s[1] = '\') or (s[2] = ':')) then
-//                t := ltDataPath + s
-//              else
-//                t := s;
-//              if not FileExists(t) then
-//                LoaderProgress('Warning: <Can''t find ' + t + '>')
-//              else begin
-//                if wbContainerHandler.ContainerExists(t) then
-//                  Continue;
-//                if wbLoadBSAs then begin
-//                  LoaderProgress('[' + s + '] Loading Resources.');
-//                  wbContainerHandler.AddBSA(t);
-//                end else
-//                  LoaderProgress('[' + s + '] Skipped.');
-//              end;
-//            end;
-//          finally
-//            Free;
-//          end;
-//        finally
-//          Free;
-//        end;
 
           for i := 0 to Pred(ltLoadList.Count) do begin
             n := TStringList.Create;
@@ -15527,7 +15494,10 @@ begin
                       for j := 0 to Pred(n.Count) do
                         if wbLoadBSAs then begin
                           LoaderProgress('[' + n[j] + '] Loading Resources.');
-                          wbContainerHandler.AddBSA(MakeDataFileName(n[j], ltDataPath));
+                          if wbArchiveExtension = '.bsa' then
+                            wbContainerHandler.AddBSA(MakeDataFileName(n[j], ltDataPath))
+                          else if wbArchiveExtension = '.ba2' then
+                            wbContainerHandler.AddBA2(MakeDataFileName(n[j], ltDataPath))
                         end else
                           LoaderProgress('[' + n[j] + '] Skipped.');
                       for j := 0 to Pred(m.Count) do
@@ -15540,23 +15510,6 @@ begin
               FreeAndNil(n);
             end;
 
-//          s := ChangeFileExt(ltLoadList[i], '');
-//          // all games prior to Skyrim load BSA files with partial matching, Skyrim requires exact names match
-//          if wbGameMode in [gmTES4, gmFO3, gmFNV] then
-//            s := s + '*';
-//          if FindFirst(ltDataPath + s + '.bsa', faAnyFile, F) = 0 then try
-//            repeat
-//              if wbContainerHandler.ContainerExists(ltDataPath + F.Name) then
-//                Continue;
-//              if wbLoadBSAs then begin
-//                LoaderProgress('[' + F.Name + '] Loading Resources.');
-//                wbContainerHandler.AddBSA(ltDataPath + F.Name);
-//              end else
-//                LoaderProgress('[' + F.Name + '] Skipped.');
-//            until FindNext(F) <> 0;
-//          finally
-//            FindClose(F);
-//          end;
           end;
           LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');
           wbContainerHandler.AddFolder(ltDataPath);
