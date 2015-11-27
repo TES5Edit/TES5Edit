@@ -95,10 +95,16 @@ begin
                     else texname := 'textures\landscape\lod\%s\normals\%s.n.level%d.x%d.y%d.dds';
     Result := Format(texname, [aEditorID, aEditorID, aLODLevel, x, y]);
   end
-  // Skyrim (and probably later games)
-  else begin
+  // Skyrim
+  else if aGame = gmTES5 then begin
     if not aNormals then texname := 'textures\terrain\%s\%s.%d.%d.%d.dds'
                     else texname := 'textures\terrain\%s\%s.%d.%d.%d_n.dds';
+    Result := Format(texname, [aEditorID, aEditorID, aLODLevel, x, y]);
+  end
+  // FO4
+  else if aGame = gmFO4 then begin
+    if not aNormals then texname := 'textures\terrain\%s\%s.%d.%d.%d.dds'
+                    else texname := 'textures\terrain\%s\%s.%d.%d.%d_msn.dds';
     Result := Format(texname, [aEditorID, aEditorID, aLODLevel, x, y]);
   end;
 end;
@@ -110,6 +116,9 @@ begin
   // for Oblivion it is a presence of 0,0 quad lod texture
   if wbGameMode = gmTES4 then
     Result := ResourceExists(LODTextureFileName(wbGameMode, FormID(wrld), EditorID(wrld), 0, 0, 32, False))
+  // for FO4 unknown yet
+  else if wbGameMode = gmFO4 then
+    Result := True
   // for other games a presence of lod settings file
   else
     Result := ResourceExists(LODSettingsFileName(wrld));
@@ -129,6 +138,10 @@ begin
   if not HasLOD(wrld) then
     Exit;
 
+  // not sure for FO4, use MapSize
+  if wbGameMode = gmFO4 then
+    Exit;
+  
   // read from lod settings file
   if wbGameMode <> gmTES4 then begin
     BytesStream := TBytesStream.Create(ResourceOpenData('', LODSettingsFileName(wrld)));
