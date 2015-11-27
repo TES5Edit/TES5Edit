@@ -185,7 +185,9 @@ begin
   f := Item.Caption;
   ext := ExtractFileExt(f);
   if SameText(ext, '.nif') then begin
-    NifTextureList(ResourceOpenData('', f), sl);
+    try
+      NifTextureList(ResourceOpenData('', f), sl);
+    except end;
     slTextures.AddStrings(sl); // remove duplicates
     mInfo.Lines.BeginUpdate;
     mInfo.Clear;

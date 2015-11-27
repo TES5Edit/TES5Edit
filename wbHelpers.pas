@@ -926,9 +926,18 @@ begin
       with TStringList.Create do try
         if wbGameMode in [gmTES4, gmFO3, gmFNV] then
           Text := StringReplace(ReadString('Archive', 'sArchiveList', ''), ',' ,#10, [rfReplaceAll])
-        else
+        else if wbGameMode = gmTES5 then
           Text := StringReplace(
-            ReadString('Archive', 'sResourceArchiveList', '') + ',' + ReadString('Archive', 'sResourceArchiveList2', ''),
+            ReadString('Archive', 'sResourceArchiveList', '') + ',' +
+            ReadString('Archive', 'sResourceArchiveList2', ''),
+            ',', #10, [rfReplaceAll]
+          )
+        else if wbGameMode = gmFO4 then
+          Text := StringReplace(
+            ReadString('Archive', 'sResourceIndexFileList', '') + ',' +
+            ReadString('Archive', 'sResourceStartUpArchiveList', '') + ',' +
+            ReadString('Archive', 'sResourceArchiveList', '') + ',' +
+            ReadString('Archive', 'sResourceArchiveList2', ''),
             ',', #10, [rfReplaceAll]
           );
         for i := 0 to Pred(Count) do begin
@@ -964,12 +973,11 @@ begin
     j := bsaNames.Count;
   if Assigned(bsaMissing) then
     j := j + bsaMissing.Count;
-
   // All games prior to Skyrim load BSA files with partial matching, Skyrim requires exact name match and
   //   can use a private ini to specify the bsa to use.
   if not exact then
     ModName := ModName + '*';
-  if FindFirst(DataPath + ModName + '.bsa', faAnyFile, F) = 0 then try
+  if FindFirst(DataPath + ModName + wbArchiveExtension, faAnyFile, F) = 0 then try
     repeat
       if wbContainerHandler.ContainerExists(DataPath + F.Name) then
         Continue;
