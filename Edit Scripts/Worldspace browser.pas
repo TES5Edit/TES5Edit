@@ -1,5 +1,5 @@
 {
-  Worldspace Browser v0.2 for Oblivion, Fallout 3, New Vegas, Skyrim.
+  Worldspace Browser v0.3 for Oblivion, Fallout 3, New Vegas, Skyrim and Fallout 4
   Hotkey: Alt+F3
   
   Reconstructs worldspace map from distand LOD (level of detail) landscape textures.
@@ -45,7 +45,7 @@ var
   PosSizePx, MapViewScale, FontMult: real;
   GridOpacity: integer;
   fMapDrawn, fMapNormals, fCellsDebug: boolean;
-  CurrentWorld: IInterface;
+  StartWorld, CurrentWorld: IInterface;
   slPlugin, slRegion, slWorldspaces: TStringList;
 
   frmMain, frmWorld: TForm;
@@ -116,9 +116,6 @@ begin
   // for Oblivion it is a presence of 0,0 quad lod texture
   if wbGameMode = gmTES4 then
     Result := ResourceExists(LODTextureFileName(wbGameMode, FormID(wrld), EditorID(wrld), 0, 0, 32, False))
-  // for FO4 unknown yet
-  else if wbGameMode = gmFO4 then
-    Result := True
   // for other games a presence of lod settings file
   else
     Result := ResourceExists(LODSettingsFileName(wrld));
@@ -456,7 +453,7 @@ begin
     bmpMap.Canvas.FillRect(Rect(0, 0, bmpMap.Width, bmpMap.Height));
     y := SWy;
     while y < MapSizeY do begin
-      frmMain.Caption := Format('Building map %d%%...', [Round((MapSizeY + y)/(2*MapSizeY)*100)]);
+      frmMain.Caption := Format('Building map %d%%, please wait...', [Round((MapSizeY + y)/(2*MapSizeY)*100)]);
       Application.ProcessMessages;
       x := SWx;
       while x < MapSizeX do begin
@@ -1290,6 +1287,14 @@ begin
 end;
 
 //============================================================================
+// activate event for main form
+procedure frmMainFormActivate(Sender: TObject);
+begin
+  if Assigned(StartWorld) and HasLOD(StartWorld) then
+    DrawMap(StartWorld);
+end;
+
+//============================================================================
 function CreateLabel(aForm: TForm; aText: string; aLeft, aTop: integer): TLabel;
 begin
   Result := TLabel.Create(aForm);
@@ -1324,6 +1329,7 @@ begin
   frmMain.PopupMode := pmAuto;
   frmMain.KeyPreview := True;
   frmMain.OnResize := frmMainFormResize;
+  frmMain.OnActivate := frmMainFormActivate;
   //frmMain.OnKeyDown := FormKeyDown;
 
   mnMain := TMainMenu.Create(frmMain);
@@ -1504,22 +1510,25 @@ procedure InitBrowser;
 begin
   MapSizeX := 64;
   MapSizeY := 64;
-  LODLevel := 32;
   LODSize := 256; // default lod texture size for level 32
+  LODLevel := 32;
   MapViewScale := 1;
   GridOpacity := 0;
   fMapNormals := False;
   if wbGameMode = gmTES4 then begin
     LODSize := 1024; // Oblivion uses 1024x1024 lod textures only
     MapViewScale := 0.25; // scale them down since they are huge
+  end
+  else if wbGameMode = gmFO4 then begin
+    MapSizeX := 96;
+    MapSizeY := 96;
+    LODSize := 512; // FO4 uses 512 for all LOD levels
   end;
   ColorOverlay := ColorOverlayDefault;
 end;
 
 //============================================================================
 function Initialize: integer;
-var
-  wrld: IInterface;
 begin
   InitBrowser;
   try
@@ -1528,11 +1537,9 @@ begin
     slPlugin := TStringList.Create;
     BuildForms;
     if wbGameMode = gmFNV then
-      wrld := RecordByFormID(FileByIndex(0), $000DA726, False)
+      StartWorld := RecordByFormID(FileByIndex(0), $000DA726, False)
     else
-      wrld := RecordByFormID(FileByIndex(0), $0000003C, False);
-    if Assigned(wrld) and HasLOD(wrld) then
-      DrawMap(wrld);
+      StartWorld := RecordByFormID(FileByIndex(0), $0000003C, False);
     frmMain.ShowModal;
   finally
     frmWorld.Free;
