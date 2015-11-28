@@ -2806,7 +2806,8 @@ type
     {51} ptVoiceType,          // VTYP
     {52} ptWardState,          // enum
     {53} ptWeather,            // WTHR
-    {54} ptWorldspace          // WRLD
+    {54} ptWorldspace,         // WRLD
+    {55} ptDamageType          // DMGT
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -3255,7 +3256,7 @@ const
     (Index: 729; Name: 'GetActorStance'),
     (Index: 734; Name: 'CanProduceForWorkshop'),
     (Index: 735; Name: 'CanFlyHere'),
-    (Index: 736; Name: 'EPIsDamageType'; ParamType1: ptReferencableObject),
+    (Index: 736; Name: 'EPIsDamageType'; ParamType1: ptDamageType),
     (Index: 738; Name: 'GetActorGunState'),
     (Index: 739; Name: 'GetVoiceLineLength'),
     (Index: 741; Name: 'ObjectTemplateItem_HasKeyword'; ParamType1: ptKeyword),
@@ -6556,7 +6557,9 @@ begin
         {53 ptWeather}
         wbFormIDCkNoReach('Weather', [WTHR]),
         {54 ptWorldspace}
-        wbFormIDCkNoReach('Worldspace', [WRLD, FLST])
+        wbFormIDCkNoReach('Worldspace', [WRLD, FLST]),
+        {55 ptDamageType}
+        wbFormIDCkNoReach('Damage Type', [DMGT, FLST])
       ]),
 
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
@@ -6714,7 +6717,9 @@ begin
         {53 ptWeather}
         wbFormIDCkNoReach('Weather', [WTHR]),
         {54 ptWorldspace}
-        wbFormIDCkNoReach('Worldspace', [WRLD, FLST])
+        wbFormIDCkNoReach('Worldspace', [WRLD, FLST]),
+        {55 ptDamageType}
+        wbFormIDCkNoReach('Damage Type', [DMGT, FLST])
       ]),
       wbInteger('Run On', itU32, wbEnum([
         {0} 'Subject',
@@ -9198,8 +9203,8 @@ begin
       wbUnion(DATA, 'Effect Data', wbPerkDATADecider, [
         wbStructSK([0, 1], 'Quest + Stage', [
           wbFormIDCk('Quest', [QUST]),
-          wbInteger('Quest Stage', itU8, wbPerkDATAQuestStageToStr, wbCTDAParam2QuestStageToInt),
-          wbByteArray('Unused', 3)
+          wbInteger('Quest Stage', itU16, wbPerkDATAQuestStageToStr, wbCTDAParam2QuestStageToInt),
+          wbByteArray('Unused', 2)
         ]),
         wbFormIDCk('Ability', [SPEL]),
         wbStructSK([0, 1], 'Entry Point', [
