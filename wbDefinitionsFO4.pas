@@ -5868,9 +5868,9 @@ begin
     ]),
 
     wbUnknown(XLKT),
-    wbUnknown(XRFG),
-    wbUnknown(XLYR),
-    wbUnknown(XMSP),
+    wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
+    wbFormIDCk(XLYR, 'Layer', [LAYR]),
+    wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
     wbUnknown(XRNK),
 
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
@@ -7148,13 +7148,13 @@ procedure DefineFO4c;
         )
       ], []),
 
-      wbUnknown(XASP),
+      wbFormIDCk(XASP, 'Unknown', [REFR]),
       wbUnknown(XATP),
       wbUnknown(XAMC),
       wbUnknown(XLKT),
-      wbUnknown(XLYR),
-      wbUnknown(XMSP),
-      wbUnknown(XRFG),
+      wbFormIDCk(XLYR, 'Layer', [LAYR]),
+      wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
+      wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
       wbUnknown(XRDO),
       wbUnknown(XBSD),
       wbUnknown(XPDD),
@@ -7228,7 +7228,7 @@ begin
       ], cpNormal, False, nil, 2),
 
       wbUnknown(VISI),
-      wbUnknown(RVIS),
+      wbFormIDCk(RVIS, 'Unknown', [CELL]),
       wbUnknown(PCMB),
 
       wbStruct(XCLL, 'Lighting', [
@@ -7318,7 +7318,7 @@ begin
       wbFormIDCk(XCMO, 'Music Type', [MUSC]),
       wbFormIDCk(XCIM, 'Image Space', [IMGS]),
       wbUnknown(XGDR),
-      wbUnknown(XPRI),
+      wbArrayS(XPRI, 'Unknown', wbFormIDCk('Unknown', [REFR])),
       wbUnknown(XCRI)
     ], True, wbCellAddInfo, cpNormal, False{, wbCELLAfterLoad})
 
@@ -7355,7 +7355,7 @@ begin
         ], True))
       ], cpNormal, False, nil, 2),
       wbUnknown(VISI),
-      wbUnknown(RVIS),
+      wbFormIDCk(RVIS, 'Unknown', [CELL]),
       wbUnknown(PCMB),
 
       wbStruct(XCLL, 'Lighting', [
@@ -7453,7 +7453,7 @@ begin
       wbFormIDCk(XCMO, 'Music Type', [MUSC]),
       wbFormIDCk(XCIM, 'Image Space', [IMGS]),
       wbUnknown(XGDR),
-      wbUnknown(XPRI),
+      wbArray(XPRI, 'Unknown', wbFormIDCk('Unknown', [REFR])),
       wbUnknown(XCRI)
     ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
 
@@ -11333,8 +11333,11 @@ begin
     wbByteArray(NAM2, 'Unused', 0, cpIgnore), // co_PA_FusionCore01
     wbByteArray(NAM3, 'Unused', 0, cpIgnore), // co_PA_FusionCore01
     wbFormIDCk(ANAM, 'Unknown', [ARTO]),
-    wbArray(FNAM, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
-    wbUnknown(INTV)
+    wbArray(FNAM, 'Category', wbFormIDCk('Keyword', [KYWD])),
+    wbStruct(INTV, '', [
+      wbInteger('Created Object Count', itU16),
+      wbByteArray('Unknown', 2)
+    ])
   ]);
 
   wbRecord(NPC_, 'Non-Player Character (Actor)',
@@ -11828,7 +11831,7 @@ begin
       ]))
     ]),
     wbString(ENAM, 'Event', 4),
-    wbUnknown(LNAM),
+    wbFormIDCk(LNAM, 'Location', [LCTN]),
     wbFormIDCk(XNAM, 'Global', [GLOB]),
     wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
     wbFLTR,
@@ -12419,7 +12422,7 @@ begin
       wbRArray('Unknown',
         wbRStruct('Unknown', [
           wbUnknown(FMRI),
-          wbUnknown(FMRN)
+          wbLString(FMRN, 'Unknown')
         ], [])
     );
 
@@ -12546,8 +12549,8 @@ begin
     wbFormIDCk(NAM4, 'Material Type', [MATT, NULL]),
     wbFormIDCk(NAM5, 'Impact Data Set', [IPDS, NULL]),
 		wbFormIDCk(NAM7, 'Decapitation FX', [ARTO, NULL]),
-    wbUnknown(CNAM),
-    wbUnknown(NAM2),
+		wbFormIDCk(CNAM, 'Unknown', [TXST, NULL]),
+		wbFormIDCk(NAM2, 'Unknown', [TXST, NULL]),
     wbFormIDCk(ONAM, 'Open Loot Sound', [SNDR, NULL]),
     wbFormIDCk(LNAM, 'Close Loot Sound', [SNDR, NULL]),
     {>>> When NAME is user defined wbBipedObjectEnum will be incorrect <<<}
@@ -12620,12 +12623,12 @@ begin
     ], [], cpNormal, False),
     // End Head Data
 
-    wbUnknown(RNAM),
-    wbUnknown(SRAC),
+    wbFormIDCk(RNAM, 'Unknown', [RACE]),
+    wbFormIDCk(SRAC, 'Unknown', [RACE]),
 
     // mess here, pattern starts with different subrecords: SGNM, SAKD, STKD
     wbRArray('Unknown', wbUnknown(SAKD)),
-    wbUnknown(STKD),
+    wbFormIDCk(STKD, 'Unknown', [KYWD]),
     wbRArray('Unknown',
       wbRStruct('Unknown', [
         //wbUnknown(SGNM),
@@ -12633,7 +12636,7 @@ begin
         wbRArray('Unknown', wbString(SAPT, 'Unknown')),
         wbUnknown(SRAF),
         wbRArray('Unknown', wbUnknown(SAKD)),
-        wbRArray('Unknown', wbUnknown(STKD))
+        wbRArray('Unknown', wbFormIDCk(STKD, 'Unknown', [KYWD]))
       ], [])
     ),
     {wbRArray('Unknown',
@@ -12917,13 +12920,13 @@ begin
       wbByteArray('Unknown', 0)
     ]),
 
-    wbUnknown(XASP),
+    wbFormIDCk(XASP, 'Unknown', [REFR]),
     wbUnknown(XATP),
     wbUnknown(XAMC),
     wbUnknown(XLKT),
-    wbUnknown(XLYR),
-    wbUnknown(XMSP),
-    wbUnknown(XRFG),
+    wbFormIDCk(XLYR, 'Layer', [LAYR]),
+    wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
+    wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
     wbUnknown(XRDO),
     wbUnknown(XBSD),
     wbUnknown(XPDD),
@@ -14134,7 +14137,7 @@ begin
       wbStruct(DALC, 'Sunrise/Day/Sunset/Night/Unknown/Unknown/Unknown/Unknown', [wbAmbientColors], cpNormal, True)
     ),
     wbRStruct('Aurora', [wbMODL], []),
-    wbUnknown(GNAM),
+    wbFormIDCk(GNAM, 'Lens', [LENS]),
     wbUnknown(UNAM),
     wbFloat(VNAM, 'Unknown'),
     wbFloat(WNAM, 'Unknown')
@@ -14650,8 +14653,8 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbPTRN,
-    wbUnknown(NAM0),
-    wbUnknown(WNAM),
+    wbLString(NAM0, 'Network'),
+    wbLString(WNAM, 'Owner'),
     wbFULL,
     wbMODL,
     wbKSIZ,
