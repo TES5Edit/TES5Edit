@@ -226,3 +226,5 @@ pip-log.txt
 TES5Dump/*
 FO4Dump/*
 __history/*
+__history
+FO4Dump
