@@ -204,7 +204,7 @@ begin
     AddMessage(CloudTexture + ' does not exist.');
     Exit;
   end;
-  wbDDSDataToBitmap(ResourceOpenData('', CloudTexture), imgCloud.Picture.Bitmap);
+  wbDDSResourceToBitmap(CloudTexture, imgCloud.Picture.Bitmap);
 end;
 
 //============================================================================
