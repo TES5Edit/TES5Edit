@@ -66,18 +66,12 @@ begin
   else begin
     f := TempPath + ExtractFileName(aFileName);
     try
-      bs := TBytesStream.Create(ResourceOpenData(aContainerName, aFileName));
-      try
-        ForceDirectories(TempPath); // TempPath folder is removed by xEdit upon exit
-        fs := TFileStream.Create(f, fmCreate);
-        fs.CopyFrom(bs, 0);
-      except
-        on E: Exception do
-          MessageDlg(E.Message, mtError, [mbOk], 0);
+      ResourceCopy(aContainerName, aFileName, f);
+    except
+      on E: Exception do begin
+        MessageDlg(E.Message, mtError, [mbOk], 0);
+        Exit;
       end;
-    finally
-      if Assigned(bs) then bs.Free;
-      if Assigned(fs) then fs.Free;
     end;
   end;
   // error 31 - no associated application
@@ -89,8 +83,6 @@ end;
 // save asset as
 procedure AssetSaveAs(aContainerName, aFileName: string);
 var
-  bs: TBytesStream;
-  fs: TFileStream;
   dlgSave: TSaveDialog;
 begin
   dlgSave := TSaveDialog.Create(nil);
@@ -99,18 +91,16 @@ begin
     dlgSave.InitialDir := DataPath;
     dlgSave.FileName := ExtractFileName(aFileName);
     if dlgSave.Execute then begin
-      bs := TBytesStream.Create(ResourceOpenData(aContainerName, aFileName));
       try
-        fs := TFileStream.Create(dlgSave.FileName, fmCreate);
-        fs.CopyFrom(bs, 0);
+        ResourceCopy(aContainerName, aFileName, dlgSave.FileName);
       except
-        on E: Exception do
+        on E: Exception do begin
           MessageDlg(E.Message, mtError, [mbOk], 0);
+          Exit;
+        end;
       end;
     end;
   finally
-    if Assigned(bs) then bs.Free;
-    if Assigned(fs) then fs.Free;
     dlgSave.Free;
   end;
 end;

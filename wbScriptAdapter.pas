@@ -1483,6 +1483,18 @@ begin
   Value := wbDDSDataToBitmap(TBytes(Args.Values[0]), TBitmap(V2O(Args.Values[1])));
 end;
 
+procedure DDSUtils_wbDDSResourceToBitmap(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  res: TDynResources;
+begin
+  if not Assigned(wbContainerHandler) then
+    Exit;
+
+  res := wbContainerHandler.OpenResource(string(Args.Values[0]));
+  if Length(res) <> 0 then
+    Value := wbDDSDataToBitmap(res[High(res)].GetData, TBitmap(V2O(Args.Values[1])));
+end;
+
 
 { Misc routines }
 
@@ -1908,6 +1920,7 @@ begin
     { DDS routines }
     AddFunction(cUnit, 'wbDDSStreamToBitmap', DDSUtils_wbDDSStreamToBitmap, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbDDSDataToBitmap', DDSUtils_wbDDSDataToBitmap, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbDDSResourceToBitmap', DDSUtils_wbDDSResourceToBitmap, 2, [varEmpty, varEmpty], varEmpty);
 
     { Misc routines }
     AddFunction(cUnit, 'wbFlipBitmap', Misc_wbFlipBitmap, 2, [varEmpty, varEmpty], varEmpty);
