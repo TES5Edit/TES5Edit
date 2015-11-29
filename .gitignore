@@ -225,3 +225,4 @@ pip-log.txt
 *.identcache
 TES5Dump/*
 FO4Dump/*
+__history/*
