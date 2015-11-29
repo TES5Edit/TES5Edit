@@ -28,6 +28,7 @@ uses
   wbImplementation,
   wbHelpers,
   wbBSA,
+  wbLocalization,
   wbSort,
   wbNifScanner,
   wbLOD;
@@ -1635,6 +1636,12 @@ begin
     end;
 end;
 
+procedure Misc_LocalizationGetStringsFromFile(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  if Assigned(wbLocalizationHandler) then
+    wbLocalizationHandler.GetStringsFromFile(string(Args.Values[0]), TStrings(V2O(Args.Values[1])));
+end;
+
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 begin
@@ -1920,6 +1927,7 @@ begin
     AddFunction(cUnit, 'wbGetSiblingRecords', Misc_wbGetSiblingRecords, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbNormalizeResourceName', Misc_wbNormalizeResourceName, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbStringListInString', Misc_wbStringListInString, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'LocalizationGetStringsFromFile', Misc_LocalizationGetStringsFromFile, 2, [varEmpty, varEmpty], varEmpty);
   end;
 end;
 
