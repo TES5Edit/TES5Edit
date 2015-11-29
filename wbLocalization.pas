@@ -96,6 +96,7 @@ type
     function AddValue(aValue: string; aElement: IwbElement): Cardinal;
     function GetLocalizationFileNameByElement(aElement: IwbElement): string;
     function GetLocalizationFileNameByType(aPluginFile: string; ls: TwbLStringType): string;
+    procedure GetStringsFromFile(aFileName: string; const aList: TStrings);
   end;
 
 const
@@ -622,6 +623,21 @@ begin
 
   Result := _Files[idx][ID];
 end;
+
+procedure TwbLocalizationHandler.GetStringsFromFile(aFileName: string; const aList: TStrings);
+var
+  i: integer;
+begin
+  if not Assigned(aList) then
+    Exit;
+
+  for i := 0 to Pred(lFiles.Count) do
+    if SameText(lFiles[i], aFileName) then begin
+      aList.Assign(_Files[i].fStrings);
+      Break;
+    end;
+end;
+
 
 initialization
   wbLocalizationHandler := TwbLocalizationHandler.Create;

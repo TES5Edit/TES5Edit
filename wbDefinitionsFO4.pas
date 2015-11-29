@@ -2898,7 +2898,7 @@ const
     (Index: 128; Name: 'GetStaminaPercentage'),
     (Index: 129; Name: 'HasBeenRead'),
     (Index: 130; Name: 'GetDying'),
-    (Index: 131; Name: 'GetSceneActionPercent'; ParamType1: ptScene; ParamType2: ptObjectReference),
+    (Index: 131; Name: 'GetSceneActionPercent'; ParamType1: ptScene; ParamType2: ptInteger),
     (Index: 132; Name: 'WouldRefuseCommand'; ParamType1: ptObjectReference),
     (Index: 133; Name: 'SameFactionAsPC'),
     (Index: 134; Name: 'SameRaceAsPC'),
@@ -3124,7 +3124,7 @@ const
     (Index: 544; Name: 'GetSpeechChallengeSuccessLevel'),
     (Index: 545; Name: 'PipBoyRadioOff'),
     (Index: 547; Name: 'IsGoreDisabled'),
-    (Index: 550; Name: 'IsSceneActionComplete'; ParamType1: ptScene; ParamType2: ptObjectReference),
+    (Index: 550; Name: 'IsSceneActionComplete'; ParamType1: ptScene; ParamType2: ptInteger),
     (Index: 552; Name: 'GetSpellUsageNum'; ParamType1: ptMagicItem),
     (Index: 554; Name: 'GetActorsInHigh'),
     (Index: 555; Name: 'HasLoaded3D'),
@@ -5496,8 +5496,8 @@ begin
     ]),
     wbString(ATKE, 'Attack Event'),
     wbUnknown(ATKW),
-    wbUnknown(ATKS),
-    wbUnknown(ATKT)
+    wbFormIDCk(ATKS, 'Unknown', [EQUP]),
+    wbString(ATKT, 'Unknown')
   ], []);
 
   wbPLDT := wbStruct(PLDT, 'Location', [
@@ -5682,7 +5682,7 @@ begin
           wbFormIDCk('Debris', [DEBR, NULL]),
           wbInteger('Debris Count', itS32)
         ], cpNormal, True),
-        wbUnknown(DSTA),
+        wbString(DSTA, 'Unknown'),
         wbRStructSK([0], 'Model', [
           wbString(DMDL, 'Model Filename'),
           wbDMDT,
@@ -10368,26 +10368,26 @@ begin
       wbUnknown(TNAM),
       wbUnknown(SCQS),
       wbUnknown(STSC),
-      wbRStructs('Unknown', 'Unnknown', [
-        wbUnknown(LCEP),
+      wbRStructs('Unknown', 'Unknown', [
+        wbFormIDCk(LCEP, 'Unknown', [SCEN]),
         wbUnknown(INTT),
-        wbUnknown(SSPN),
+        wbString(SSPN, 'Unknown'),
         wbCITC,
         wbCTDAs
       ], []),
-      wbUnknown(PTOP),
-      wbUnknown(NTOP),
-      wbUnknown(NETO),
-      wbUnknown(QTOP),
-      wbUnknown(JOUT),
+      wbFormIDCk(PTOP, 'Unknown', [DIAL]),
+      wbFormIDCk(NTOP, 'Unknown', [DIAL]),
+      wbFormIDCk(NETO, 'Unknown', [DIAL]),
+      wbFormIDCk(QTOP, 'Unknown', [DIAL]),
+      wbFormIDCk(JOUT, 'Unknown', [KYWD]),
       wbUnknown(DTID),
-      wbUnknown(DALC),
-      wbUnknown(NPOT),
-      wbUnknown(NNGT),
-      wbUnknown(NNUT),
-      wbUnknown(NQUT),
-      wbUnknown(NQUS),
-      wbUnknown(NPOS),
+      wbFormIDCk(DALC, 'Unknown', [KYWD]),
+      wbFormIDCk(NPOT, 'Unknown', [DIAL]),
+      wbFormIDCk(NNGT, 'Unknown', [DIAL]),
+      wbFormIDCk(NNUT, 'Unknown', [DIAL]),
+      wbFormIDCk(NQUT, 'Unknown', [DIAL]),
+      wbFormIDCk(NQUS, 'Unknown', [KYWD]),
+      wbFormIDCk(NPOS, 'Unknown', [KYWD]),
       wbUnknown(DTGT),
       wbRArray('Packages', wbFormIDCk(PNAM, 'Package', [PACK])),
       wbFormIDCk(DATA, 'Topic', [DIAL, NULL]),
@@ -10398,9 +10398,9 @@ begin
       wbInteger(DEMO, 'Emotion Type', itU32, wbEmotionTypeEnum),
       wbInteger(DEVA, 'Emotion Value', itU32),
       wbArray(HTID, 'Headtrack', wbInteger('Actor ID', itS32)),
-      wbUnknown(VENC),
+      wbFormIDCk(VENC, 'Unknown', [KYWD]),
       wbFormIDCk(PNAM, 'Unknown', [KYWD]),
-      wbUnknown(ONAM),
+      wbFormIDCk(ONAM, 'Unknown', [SOPM]),
       wbEmpty(ANAM, 'End Marker')
     ], [])),
     wbFormIDCk(PNAM, 'Quest', [QUST]),
@@ -10414,7 +10414,7 @@ begin
     wbUnknown(CRIS),
     wbUnknown(SCQS),
     wbUnknown(NNAM),
-    wbUnknown(TNAM),
+    wbFormIDCk(TNAM, 'Unknown', [SCEN]),
     wbUnknown(XNAM),
     wbCTDAs
   ]);
@@ -10776,7 +10776,7 @@ begin
     wbCTDAs,
     wbLString(RNAM, 'Prompt', 0, cpTranslate),
     wbFormIDCk(ANAM, 'Speaker', [NPC_]),
-    wbUnknown(TSCE),
+    wbFormIDCk(TSCE, 'Scene', [SCEN]),
     wbUnknown(ALFA),
     wbUnknown(INTV),
     wbFormIDCk(ONAM, 'Audio Output Override', [SOPM]),
@@ -11423,7 +11423,7 @@ begin
     wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]),
     wbFormID(LTPT, 'Unknown'),
     wbFormID(LTPC, 'Unknown'),
-    wbUnknown(TPTA),
+    wbArray(TPTA, 'Unknown', wbFormIDCk('Unknown', [LVLN, NPC_, NULL])),
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, nil{wbActorTemplateUseTraits}),
     wbSPCT,
     wbSPLOs,
@@ -11937,7 +11937,7 @@ begin
           wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
           wbUnknown(ALLA),
           wbFormIDCk(ALDN, 'Display Name', [MESG]),
-          wbUnknown(ALFV),
+          wbFormIDCk(ALFV, 'Forced Voice', [VTYP]),
           wbRArray('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
           wbRArray('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
@@ -12003,7 +12003,7 @@ begin
           wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
           wbUnknown(ALLA),
           wbFormIDCk(ALDN, 'Display Name', [MESG]),
-          wbUnknown(ALFV),
+          wbFormIDCk(ALFV, 'Forced Voice', [VTYP]),
           wbRArray('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
           wbRArray('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
@@ -12400,21 +12400,21 @@ begin
   wbRaceMPGN :=
     wbRArray('Unknown',
       wbRStruct('Unknown', [
-         wbString(MPGN, 'Unknown'),
-         wbUnknown(MPPC),
-         wbRArray('Unknown',
-           wbRStruct('Unknown', [
-             wbUnknown(MPPI),
-             //wbUnknown(MPPN),
-             //wbUnknown(MPPM),
-             wbLString(MPPN, 'Unknown', 0, cpTranslate),
-             wbString(MPPM, 'Unknown'),
-             wbUnknown(MPPT),
-             wbUnknown(MPPF)
-           ], [])
-         ),
-         wbUnknown(MPPK),
-         wbUnknown(MPGS)
+        wbString(MPGN, 'Unknown'),
+        wbUnknown(MPPC),
+        wbRArray('Unknown',
+          wbRStruct('Unknown', [
+            wbUnknown(MPPI),
+            //wbUnknown(MPPN),
+            //wbUnknown(MPPM),
+            wbLString(MPPN, 'Unknown', 0, cpTranslate),
+            wbString(MPPM, 'Unknown'),
+            wbFormIDCk(MPPT, 'Unknown', [TXST]),
+            wbUnknown(MPPF)
+          ], [])
+        ),
+        wbUnknown(MPPK),
+        wbUnknown(MPGS)
       ], [])
     );
 
@@ -12505,7 +12505,8 @@ begin
     wbEmpty(FNAM, 'Female Marker'),
     wbString(ANAM, 'Female Skeletal Model'),
     wbMODT,
-    wbRArray('Unknown', wbUnknown(MTNM)),
+    //wbRArray('Unknown', wbUnknown(MTNM)),
+    wbRArray('Unknown', wbString(MTNM, 'Unknown', 4)),
     wbEmpty(NAM2, 'Marker NAM2 #1'),
     wbRArrayS('Movement Type Names', wbString(MTNM, 'Name')),
     wbArray(VTCK, 'Voices', wbFormIDCk('Voice', [VTYP]), ['Male', 'Female'], cpNormal, True),
@@ -12627,7 +12628,7 @@ begin
     wbFormIDCk(SRAC, 'Unknown', [RACE]),
 
     // mess here, pattern starts with different subrecords: SGNM, SAKD, STKD
-    wbRArray('Unknown', wbUnknown(SAKD)),
+    wbRArray('Unknown', wbFormIDCk(SAKD, 'Unknown', [KYWD])),
     wbFormIDCk(STKD, 'Unknown', [KYWD]),
     wbRArray('Unknown',
       wbRStruct('Unknown', [
@@ -12635,7 +12636,7 @@ begin
         wbString(SGNM, 'Unknown'),
         wbRArray('Unknown', wbString(SAPT, 'Unknown')),
         wbUnknown(SRAF),
-        wbRArray('Unknown', wbUnknown(SAKD)),
+        wbRArray('Unknown', wbFormIDCk(SAKD, 'Unknown', [KYWD])),
         wbRArray('Unknown', wbFormIDCk(STKD, 'Unknown', [KYWD]))
       ], [])
     ),
