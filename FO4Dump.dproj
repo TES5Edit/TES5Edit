@@ -81,7 +81,7 @@
         <VerInfo_MajorVer>3</VerInfo_MajorVer>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <Icon_MainIcon>TES5Dump_Icon.ico</Icon_MainIcon>
+        <Icon_MainIcon>FO4Edit_Red.ico</Icon_MainIcon>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.32.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDump by ElminsterAU;ProductVersion=3.0.32.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
@@ -102,7 +102,7 @@
         <VerInfo_Release>32</VerInfo_Release>
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <Icon_MainIcon>TES5Dump_Icon.ico</Icon_MainIcon>
+        <Icon_MainIcon>FO4Edit_Red.ico</Icon_MainIcon>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.0.32.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxDump by ElminsterAU;ProductVersion=3.0.32;Comments=</VerInfo_Keys>
         <DCC_ExeOutput>.\FO4Dump</DCC_ExeOutput>
     </PropertyGroup>
