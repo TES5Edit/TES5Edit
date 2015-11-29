@@ -459,7 +459,7 @@ begin
       while x < MapSizeX do begin
         texName := LODTextureFileName(wbGameMode, wrldFormID, wrldEDID, x, y, LODLevel, fMapNormals);
         if ResourceExists(texName) then begin
-          if wbDDSDataToBitmap(ResourceOpenData('', texName), bmp) then begin
+          if wbDDSResourceToBitmap(texName, bmp) then begin
             Result := True;
             if wbGameMode = gmTES4 then begin
               bmpx := CellX2px(x);
