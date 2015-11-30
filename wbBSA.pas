@@ -160,6 +160,7 @@ type
     bfVersion     : Cardinal;
     bfType        : TwbSignature;
     bfFiles       : array of TwbBA2FileRec;
+    bfFolderMap   : TStringList;
 
     procedure ReadDirectory;
   protected
@@ -592,8 +593,13 @@ begin
 end;
 
 destructor TwbBA2File.Destroy;
+var
+  i: integer;
 begin
   FreeAndNil(bfStream);
+  for i := 0 to Pred(bfFolderMap.Count) do
+    TStringList(bfFolderMap.Objects[i]).Free;
+  FreeAndNil(bfFolderMap);
   inherited;
 end;
 
@@ -604,6 +610,7 @@ var
   FileCount : Cardinal;
   FileTablePosition: Int64;
   NumChunks: Byte;
+  folder: string;
 begin
   if bfStream.ReadSignature <> 'BTDX' then
     raise Exception.Create(bfFileName + ' is not a valid BA2 file');
@@ -660,6 +667,22 @@ begin
         end;
     end;
   end;
+
+  bfFolderMap := TwbFastStringList.Create;
+  bfFolderMap.Sorted := True;
+  for i := Low(bfFiles) to High(bfFiles) do begin
+    folder := LowerCase(ExtractFilePath(bfFiles[i].Name));
+    SetLength(folder, Pred(Length(folder)));
+    j := bfFolderMap.IndexOf(folder);
+    if not bfFolderMap.Find(folder, j) then begin
+      bfFolderMap.AddObject(folder, TwbFastStringList.Create);
+      if not bfFolderMap.Find(folder, j) then
+        raise Exception.Create('Indexing error');
+    end;
+    TStringList(bfFolderMap.Objects[j]).AddObject(LowerCase(ExtractFileName(bfFiles[i].Name)), TObject(i));
+  end;
+  for i := 0 to Pred(bfFolderMap.Count) do
+    TStringList(bfFolderMap.Objects[i]).Sorted := True;
 end;
 
 function TwbBA2File.GetFileName: string;
@@ -680,13 +703,15 @@ end;
 
 function TwbBA2File.OpenResource(const aFileName: string): IwbResource;
 var
-  i: Integer;
+  lPath, lName: string;
+  i, j: Integer;
 begin
-  for i := Low(bfFiles) to High(bfFiles) do
-    if SameText(bfFiles[i].Name, aFileName) then begin
-      Result := TwbBA2Resource.Create(Self, bfFiles[i]);
-      Break;
-    end;
+  lPath := LowerCase(ExtractFilePath(aFileName));
+  SetLength(lPath, Pred(Length(lPath)));
+  lName := LowerCase(ExtractFileName(aFileName));
+  if bfFolderMap.Find(lPath, i) then with TStringList(bfFolderMap.Objects[i]) do
+    if Find(lName, j) then
+      Result := TwbBA2Resource.Create(Self, bfFiles[Integer(Objects[j])]);
 end;
 
 procedure TwbBA2File.ResolveHash(const aHash: Int64; var Results: TDynStrings);
@@ -696,14 +721,15 @@ end;
 
 function TwbBA2File.ResourceExists(const aFileName: string): Boolean;
 var
+  lPath, lName: string;
   i: Integer;
 begin
   Result := False;
-  for i := Low(bfFiles) to High(bfFiles) do
-    if SameText(bfFiles[i].Name, aFileName) then begin
-      Result := True;
-      Break;
-    end;
+  lPath := LowerCase(ExtractFilePath(aFileName));
+  SetLength(lPath, Pred(Length(lPath)));
+  lName := LowerCase(ExtractFileName(aFileName));
+  if bfFolderMap.Find(lPath, i) then
+    Result := TStringList(bfFolderMap.Objects[i]).IndexOf(lName) <> -1;
 end;
 
 procedure TwbBA2File.ResourceList(const aList: TStrings; const aFolder: string = '');
