@@ -11944,7 +11944,7 @@ begin
           wbRArray('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
           wbRArray('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
-          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, NULL]),
+          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, VTYP, NULL]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
         ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet),
 
@@ -12010,7 +12010,7 @@ begin
           wbRArray('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
           wbRArray('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
-          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, NULL]),
+          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, VTYP, NULL]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
         ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet),
 
