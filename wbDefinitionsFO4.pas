@@ -4671,7 +4671,7 @@ begin
   wbCNTO :=
     wbRStructExSK([0], [1], 'Item', [
       wbStructExSK(CNTO, [0], [1], 'Item', [
-        wbFormIDCk('Item', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, INGR, LIGH, SLGM, SCRL]),
+        wbFormIDCk('Item', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, INGR, LIGH, NOTE, CMPO]),
         wbInteger('Count', itS32)
       ]),
       wbCOED
@@ -6505,9 +6505,9 @@ begin
         {27 ptIdleForm}
         wbFormIDCkNoReach('Idle', [IDLE]),
         {28 ptInventoryObject}
-        wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, INGR, FLST, LIGH, LVLI, COBJ, OMOD]),
+        wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, INGR, FLST, LIGH, LVLI, COBJ, OMOD, NOTE, CMPO]),
         {29 ptKeyword}
-        wbFormIDCkNoReach('Keyword', [KYWD, NULL]),
+        wbFormIDCkNoReach('Keyword', [KYWD, FLST, NULL]),
         {30 ptLocation}
         wbFormIDCkNoReach('Location', [LCTN]),
         {31 ptMagicEffect}
@@ -6533,7 +6533,7 @@ begin
         {41 ptRace}
         wbFormIDCkNoReach('Race', [RACE]),
         {42 ptReferencableObject}
-        wbFormIDCkNoReach('Referenceable Object', [NULL, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, FLST, LVLI, LVSP, SPEL, ENCH, OMOD], [NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, LVLI, LVSP, SPEL, ENCH, OMOD]),
+        wbFormIDCkNoReach('Referenceable Object', [NULL, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, FLST, LVLI, LVSP, SPEL, ENCH, OMOD, NOTE, CMPO], [NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, LVLI, LVSP, SPEL, ENCH, OMOD, NOTE, CMPO]),
         {43 ptRefType}
         wbFormIDCkNoReach('Location Ref Type', [LCRT]),
         {44 ptRegion}
@@ -6622,9 +6622,9 @@ begin
         {27 ptIdleForm}
         wbFormIDCkNoReach('Idle', [IDLE]),
         {28 ptInventoryObject}
-        wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, INGR, FLST, LIGH, LVLI, COBJ, OMOD]),
+        wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, INGR, FLST, LIGH, LVLI, COBJ, OMOD, NOTE, CMPO]),
         {29 ptKeyword}
-        wbFormIDCkNoReach('Keyword', [KYWD, NULL]),
+        wbFormIDCkNoReach('Keyword', [KYWD, FLST, NULL]),
         {30 ptLocation}
         wbFormIDCkNoReach('Location', [LCTN]),
         {31 ptMagicEffect}
@@ -6650,7 +6650,7 @@ begin
         {41 ptRace}
         wbFormIDCkNoReach('Race', [RACE]),
         {42 ptReferencableObject}
-        wbFormIDCkNoReach('Referenceable Object', [NULL, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, FLST, LVLI, LVSP, SPEL, ENCH, OMOD], [NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, LVLI, LVSP, SPEL, ENCH, OMOD]),
+        wbFormIDCkNoReach('Referenceable Object', [NULL, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, FLST, LVLI, LVSP, SPEL, ENCH, OMOD, NOTE, CMPO], [NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, LVLI, LVSP, SPEL, ENCH, OMOD, NOTE, CMPO]),
         {43 ptRefType}
         wbFormIDCkNoReach('Location Ref Type', [LCRT]),
         {44 ptRegion}
@@ -11017,7 +11017,7 @@ begin
     wbEDID,
     wbDESCReq,
     wbCTDAs,
-    wbFormIDCk(NNAM, 'Loading Screen NIF', [STAT, NULL], False, cpNormal, True),
+    wbFormIDCk(NNAM, 'Loading Screen NIF', [STAT, SCOL, NULL], False, cpNormal, True),
     wbFloat(SNAM, 'Initial Scale'),
     wbStruct(RNAM, 'Initial Rotation', [
       wbInteger('X', itS16),
@@ -11101,7 +11101,7 @@ begin
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
           wbInteger('Level', itU16),
           wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow),
-          wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, LIGH, INGR, SLGM, SCRL]),
+          wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, LIGH, INGR, NOTE, CMPO]),
           wbInteger('Count', itU16),
           wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
         ]),
@@ -12767,7 +12767,8 @@ begin
     wbFormIDCk(NAME, 'Base', [
       TREE, SNDR, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
       MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, INGR,
-      MSTT, TACT, TXST, FLOR, SLGM, SCRL, SOUN, SPEL, ARTO, ADDN
+      MSTT, TACT, TXST, FLOR, NOTE, CMPO, SCOL, SOUN, SPEL, ARTO, ADDN,
+      BNDS, TERM
     ], False, cpNormal, True),
 
     {--- Bound Contents ---}
@@ -14611,7 +14612,7 @@ begin
     wbFULL,
     wbFLTR,
     wbRStructsSK('Parts', 'Part', [0], [
-      wbFormIDCk(ONAM, 'Static', [STAT]),
+      wbFormIDCk(ONAM, 'Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP]),
       wbArrayS(DATA, 'Placements', wbStruct('Placement', [
         wbStruct('Position', [
           wbFloat('X'),
