@@ -7720,8 +7720,9 @@ begin
       wbFloat('Bash Attack Mult'),
       wbFloat('Bash Power Attack Mult'),
       wbFloat('Special Attack Mult'),
+      wbFloat('Unknown'),
       wbFloat('Unknown')
-    ], cpNormal, False, nil, 0),
+    ], cpNormal, False, nil, 9),
     wbFloat(CSRA, 'Unknown'),
     wbStruct(CSCR, 'Close Range', [
       wbFloat('Circle Mult'),
@@ -7739,8 +7740,10 @@ begin
     wbStruct(CSLR, 'Long Range', [
       wbFloat('Strafe Mult'),
       wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
       wbFloat('Unknown')
-    ], cpNormal, False),
+    ], cpNormal, False, nil, 3),
     wbFloat(CSCV, 'Unknown'),
     wbStruct(CSFL, 'Flight', [
       wbFloat('Hover Chance'),
@@ -13603,7 +13606,8 @@ begin
       wbFloat('Noise Properties - Layer One - Amplitude Scale'),
       wbFloat('Noise Properties - Layer Two - Amplitude Scale'),
       wbFloat('Noise Properties - Layer Three - Amplitude Scale'),
-      wbFloat('Water Properties - Reflection Magnitude')
+      wbFloat('Water Properties - Reflection Magnitude'),
+      wbUnknown
 //      wbFloat('Specular Properties - Sun Sparkle Magnitude'),
 //      wbFloat('Specular Properties - Sun Specular Magnitude'),
 //      wbFloat('Depth Properties - Reflections'),
