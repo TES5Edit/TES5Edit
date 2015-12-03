@@ -6778,7 +6778,11 @@ begin
       wbRArray('Unknown',
         wbRStruct('Unknown', [
           wbString(BSMB, 'Name'),
-          wbUnknown(BSMS),
+          wbArray(BSMS, 'Weights', wbStruct('Weight', [
+            wbFloat('X'),
+            wbFloat('Y'),
+            wbFloat('Z')
+          ]), ['Thin', 'Muscular', 'Fat']),
           wbUnknown(BMMP)
         ], [])
       )
@@ -14724,7 +14728,12 @@ begin
 
   wbRecord(ZOOM, 'Zoom', [
     wbEDID,
-    wbUnknown(GNAM)
+    wbStruct(GNAM, '', [
+      wbFloat('Unknown'),
+      wbByteArray('Unknown', 4),
+      wbFormIDCk('Unknown', [IMAD, NULL]),
+      wbUnknown
+    ])
   ]);
 
 end;
