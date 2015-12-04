@@ -4579,6 +4579,26 @@ begin
   end;
 end;
 
+function wbOBTSCounter1(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container       : IwbContainer;
+begin
+  if Supports(aElement.Container, IwbContainer, Container) then
+    Result := Container.ElementNativeValues['Parts A Count']
+  else
+    Result := 0;
+end;
+
+function wbOBTSCounter2(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container       : IwbContainer;
+begin
+  if Supports(aElement.Container, IwbContainer, Container) then
+    Result := Container.ElementNativeValues['Parts B Count']
+  else
+    Result := 0;
+end;
+
 function wbREFRRecordFlagsDecider(const aElement: IwbElement): Integer;
 var
   MainRecord : IwbMainRecord;
@@ -6761,12 +6781,31 @@ begin
   wbOBTESequence := wbRStruct('Unknown', [
     wbRStruct('Unknown', [
       wbInteger(OBTE, 'Count', itU32, nil, cpBenign),
-      wbEmpty(OBTF, 'Unknown'),
+      wbEmpty(OBTF, 'Boolean True'),
       wbFULL
     ], []),
     wbRStructs('Unknown', 'Unknown', [
-      wbUnknown(OBTS),
-      wbEmpty(OBTF, 'Unknown'),
+      wbStruct(OBTS, 'Unknown', [
+        wbInteger('Parts A Count', itU32),
+        wbInteger('Parts B Count', itU32),
+        wbByteArray('Unknown', 7),
+        wbArray('Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), -4),
+        wbByteArray('Unknown', 2),
+        wbArray('Parts A', wbStruct('Part A', [
+          wbFormIDCk('Mod', [OMOD]),
+          wbByteArray('Unknown', 2),
+          wbInteger('Flags', itU8)
+        ]), wbOBTSCounter1),
+        wbArray('Parts B', wbStruct('Part B', [
+          wbByteArray('Unknown', 4),
+          wbByteArray('Unknown', 4),
+          wbByteArray('Unknown', 4),
+          wbFormIDCk('Material Swap', [MSWP]),
+          wbFloat('Unknown'),
+          wbByteArray('Unknown', 4)
+        ]), wbOBTSCounter2)
+      ]),
+      wbEmpty(OBTF, 'Boolean True'),
       wbFULL
     ], []),
     wbEmpty(STOP, 'Marker', cpNormal, True)
