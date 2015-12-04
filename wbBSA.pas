@@ -145,6 +145,7 @@ type
     Width      : Word;
     NumMips    : Byte;
     DXGIFormat : Byte;
+    CubeMaps   : Word;
     TexChunks  : array of TwbBA2TexChunkRec;
   end;
 
@@ -654,7 +655,7 @@ begin
       bfFiles[i].Width := bfStream.ReadWord;
       bfFiles[i].NumMips := bfStream.ReadByte;
       bfFiles[i].DXGIFormat := bfStream.ReadByte;
-      bfStream.ReadWord; // skip 0800
+      bfFiles[i].CubeMaps := bfStream.ReadWord;
       SetLength(bfFiles[i].TexChunks, NumChunks);
       for j := Low(bfFiles[i].TexChunks) to High(bfFiles[i].TexChunks) do
         with bfFiles[i].TexChunks[j] do begin
@@ -794,6 +795,11 @@ begin
     hdr.Desc.Flags := DDS_SAVE_FLAGS or DDSD_MIPMAPCOUNT;
     hdr.Desc.Caps.Caps1 := DDSCAPS_TEXTURE or DDSCAPS_MIPMAP;
     hdr.Desc.MipMaps := brFileRec.NumMips;
+    if brFileRec.CubeMaps = 2049 then
+      hdr.Desc.Caps.Caps2 := DDSCAPS2_POSITIVEX or DDSCAPS2_NEGATIVEX
+                          or DDSCAPS2_POSITIVEY or DDSCAPS2_NEGATIVEY
+                          or DDSCAPS2_POSITIVEZ or DDSCAPS2_NEGATIVEZ
+                          or DDSCAPS2_CUBEMAP;
     hdr.Desc.PixelFormat.Size := SizeOf(hdr.Desc.PixelFormat);
     case TDXGIFormat(brFileRec.DXGIFormat) of
       DXGI_FORMAT_BC1_UNORM: begin
