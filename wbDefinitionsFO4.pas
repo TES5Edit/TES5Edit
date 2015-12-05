@@ -9342,9 +9342,26 @@ begin
       wbString(PNAM, 'Pose Matching', 0, cpNormal, False),
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
       wbString(BPNT, 'VATS Target', 0, cpNormal, True),
-      wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, True),
+      wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, False),
       wbStruct(BPND, '', [
-        wbUnknown
+        wbFloat('Damage Mult'),
+        wbFormIDCk('Unknown2', [DEBR, NULL]),
+        wbFormIDCk('Unknown3', [EXPL, NULL]),
+        wbFloat('Unknown4'),
+        wbFormIDCk('Unknown5', [DEBR, NULL]),
+        wbFormIDCk('Unknown6', [EXPL, NULL]),
+        wbFloat('Unknown7'),
+        wbByteArray('Unknown8', 24),
+        wbFormIDCk('Unknown9', [IPDS, NULL]),
+        wbFormIDCk('Unknown10', [IPDS, NULL]),
+        wbFloat('Unknown11'),
+        wbByteArray('Unknown12', 15),
+        wbFormIDCk('Unknown13', [ARTO, NULL]),
+        wbFormIDCk('Unknown14', [DEBR, NULL]),
+        wbFormIDCk('Unknown15', [EXPL, NULL]),
+        wbByteArray('Unknown16', 4),
+        wbFloat('Unknown17'),
+        wbByteArray('Unknown18', 2)
 //        {00} wbFloat('Damage Mult'),
 //        {04} wbInteger('Flags', itU8, wbFlags([
 //          'Severable',
