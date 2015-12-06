@@ -7039,8 +7039,8 @@ begin
     ], []),
     wbBOD2,
     wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
     wbETYP,
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT]),
     wbFormIDCk(RNAM, 'Race', [RACE]),
@@ -7054,11 +7054,11 @@ begin
         wbFormIDCk(MODL, 'Armature', [ARMA])
       ], [])
     ),
-    wbUnknown(DATA),
-    {wbStruct(DATA, 'Data', [
+    wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
-      wbFloat('Weight')
-    ], cpNormal, True),}
+      wbFloat('Weight'),
+      wbByteArray('Unknown', 4)
+    ], cpNormal, True),
     wbStruct(FNAM, '', [
       wbInteger('Damage Resistance', itU16),
       wbUnknown
@@ -7167,7 +7167,18 @@ begin
 //      wbInteger('Value', itU32),
 //      wbFloat('Weight')
     ], cpNormal, True),
-    wbUnknown(DNAM),
+    wbStruct(DNAM, 'Unknown', [
+      wbInteger('Flags', itU8, wbFlags([
+        {0x01} 'Unknown 0',
+        {0x02} 'Unknown 1',
+        {0x04} 'Unknown 2',
+        {0x08} 'Unknown 3',
+        {0x10} 'Add Perk'
+      ])),
+      wbFormIDCk('Perk', [PERK, NULL]),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
+    ], cpNormal, True),
     wbLString(CNAM, 'Description', 0, cpTranslate),
     wbFormIDCk(INAM, 'Inventory Art', [STAT])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
@@ -7684,7 +7695,7 @@ begin
       {21} 'PlayRandom/Loop'
     ])),
     wbRArrayS('Sounds', wbRStructSK([0], 'Sound', [
-      wbFormIDCk(CSDI, 'Sound', [SOUN, SNDR, NULL], False, cpNormal, True),
+      wbFormIDCk(CSDI, 'Sound', [SNDR, NULL], False, cpNormal, True),
       wbInteger(CSDC, 'Sound Chance', itU8, nil, cpNormal, True)
     ], []), cpNormal, True)
   ], []);
@@ -7984,9 +7995,9 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbNTRM,
-    wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]),
-    wbFormIDCk(ANAM, 'Sound - Close', [SOUN, SNDR]),
-    wbFormIDCk(BNAM, 'Sound - Loop', [SOUN, SNDR]),
+    wbFormIDCk(SNAM, 'Sound - Open', [SNDR]),
+    wbFormIDCk(ANAM, 'Sound - Close', [SNDR]),
+    wbFormIDCk(BNAM, 'Sound - Loop', [SNDR]),
     wbInteger(FNAM, 'Flags', itU8, wbFlags([
       '',
       'Automatic',
@@ -8150,7 +8161,7 @@ begin
       wbFloat('Addon Models - Scale End'),
       wbFloat('Addon Models - Scale In Time'),
       wbFloat('Addon Models - Scale Out Time'),
-      wbFormIDCk('Ambient Sound', [SNDR, SOUN, NULL]),
+      wbFormIDCk('Ambient Sound', [SNDR, NULL]),
       wbStruct('Fill/Texture Effect - Color Key 2', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
@@ -9524,8 +9535,13 @@ begin
       {32} wbFloat('Min Time'),
       {36} wbFloat('Target % Between Actors'),
       {40} wbFloat('Near Target Distance'),
-      wbUnknown
-    ], cpNormal, True, nil, 8),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
+      //wbUnknown
+    ], cpNormal, True, nil, 11),
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
   ]);
 
@@ -10890,8 +10906,8 @@ begin
     wbMODL,
     wbDEST,
     wbETYP,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -10924,8 +10940,8 @@ begin
     wbFULLReq,
     wbMODL,
     wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
     wbKSIZ,
     wbKWDAs,
     wbStruct(DATA, '', [
@@ -13310,7 +13326,7 @@ begin
       {--- Sound ---}
       wbFormIDCk(RDMO, 'Music', [MUSC], False, cpNormal, False, wbREGNSoundDontShow),
       wbArrayS(RDSA, 'Sounds', wbStructSK([0], 'Sound', [
-        wbFormIDCk('Sound', [SOUN, SNDR, NULL]),
+        wbFormIDCk('Sound', [SNDR, NULL]),
         wbInteger('Flags', itU32, wbFlags([
           {0x00000001}'Pleasant',
           {0x00000002}'Cloudy',
@@ -13608,7 +13624,7 @@ begin
     wbLString(RNAM, 'Activate Text Override', 0, cpTranslate),
     wbUnknown(FNAM),
     wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, LVLI, MISC, NULL]),
-    wbFormIDCK(SNAM, 'Sound', [SNDR, SOUN, NULL]),
+    wbFormIDCK(SNAM, 'Sound', [SNDR, NULL]),
     wbStruct(PFPC, 'Seasonal ingredient production', [
       wbInteger('Spring', itU8),
       wbInteger('Summer ', itU8),
@@ -13738,8 +13754,8 @@ begin
     wbETYP,
     wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
+    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
+    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
     wbKSIZ,
     wbKWDAs,
     wbDESC,
@@ -14198,7 +14214,7 @@ begin
     wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
     wbRArray('Sounds',
       wbStruct(SNAM, 'Sound', [
-        wbFormIDCK('Sound', [SOUN, SNDR, NULL]),
+        wbFormIDCK('Sound', [SNDR, NULL]),
         wbInteger('Type', itU32, wbEnum([
           {0x01} 'Default',
           {0x02} 'Precipitation',
@@ -14291,7 +14307,7 @@ begin
     wbOBND,
     wbFULL,
     wbCUSD,
-    wbUnknown(DATA),
+    wbInteger(DATA, 'Rarity?', itU32),
     wbFormIDCk(MNAM, 'Scrap Item', [MISC]),
     wbFormIDCk(GNAM, 'Rarity', [GLOB])
   ]);
