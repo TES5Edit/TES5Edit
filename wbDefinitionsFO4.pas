@@ -10623,8 +10623,24 @@ begin
       wbFloat('Rotate in Place Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
       wbFloat('Rotate in Place Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
       wbFloat('Rotate while Moving Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbUnknown
-    ], cpNormal, True, nil, 10),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+    ], cpNormal, True, nil, 11),
     wbStruct(INAM, 'Anim Change Thresholds', [
       wbFloat('Directional', cpNormal, True, 180/Pi),
       wbFloat('Movement Speed'),
@@ -14472,8 +14488,16 @@ begin
     wbMODL,
     wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
     wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
-    wbUnknown(DNAM),
-    wbUnknown(DATA),
+    wbInteger(DNAM, 'Type', itU8, wbEnum([
+      'Unknown',
+      'Quest holotapes',
+      'Holotape games',
+      'Special/collectible/recipe holotapes'
+    ])),
+    wbStruct(DATA, 'Unknown', [
+      wbInteger('Unknown', itU32),
+      wbFloat('Unknown')
+    ]),
     wbFormIDCk(SNAM, 'Unknown', [SCEN, TERM]),
     wbString(PNAM, 'Game')
   ]);
@@ -14602,7 +14626,7 @@ begin
     {94} 'ActorValues'
   ]);
 
-  wbRecord(OMOD, 'Modification', [
+  wbRecord(OMOD, 'Object Modification', [
     wbEDID,
     wbFULL,
     wbLString(DESC, 'Description', 0, cpTranslate),
