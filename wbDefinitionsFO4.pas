@@ -4557,7 +4557,7 @@ begin
     Result := 3;
 end;
 
-function wbOMODDataPropertyValueDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbOMODDataPropertyValue1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
   ValueType      : Integer;
@@ -4573,9 +4573,31 @@ begin
     0: Result := 1;
     1: Result := 2;
     2: Result := 3;
-    4: Result := 4;
-    5: Result := 5;
-    6: Result := 6;
+    4: Result := 5;
+    5: Result := 4;
+    6: Result := 5;
+  end;
+end;
+
+function wbOMODDataPropertyValue2Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbContainer;
+  ValueType      : Integer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
+  ValueType := Container.ElementNativeValues['Value Type'];
+
+  case ValueType of
+    0: Result := 1;
+    1: Result := 2;
+    2: Result := 3;
+    4: Result := 1;
+    5: Result := 4;
+    6: Result := 2;
   end;
 end;
 
@@ -6879,7 +6901,12 @@ begin
       'Ignored by Sandbox'
     ])),
     wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
-    wbUnknown(RADR),
+    wbStruct(RADR, 'Unknown', [
+      wbFormIDCk('Sound Model', [SOPM, NULL]),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbByteArray('Unknown', 2)
+    ]),
     wbCITC,
     wbCTDAs
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
@@ -8594,54 +8621,53 @@ begin
     wbMODL,
     wbDEST,
     wbUnknown(DATA),
-//    wbStruct(DATA, 'Data', [
-//      {00} wbInteger('Flags', itU16, wbFlags([
-//        'Hitscan',
-//        'Explosion',
-//        'Alt. Trigger',
-//        'Muzzle Flash',
-//        '',
-//        'Can Be Disabled',
-//        'Can Be Picked Up',
-//        'Supersonic',
-//        'Pins Limbs',
-//        'Pass Through Small Transparent',
-//        'Disable Combat Aim Correction',
-//        'Rotation'
-//      ])),
-//      {02} wbInteger('Type', itU16, wbEnum([], [
-//        $01, 'Missile',
-//        $02, 'Lobber',
-//        $04, 'Beam',
-//        $08, 'Flame',
-//        $10, 'Cone',
-//        $20, 'Barrier',
-//        $40, 'Arrow'
-//      ])),
-//      {04} wbFloat('Gravity'),
-//      {08} wbFloat('Speed'),
-//      {12} wbFloat('Range'),
-//      {16} wbFormIDCk('Light', [LIGH, NULL]),
-//      {20} wbFormIDCk('Muzzle Flash - Light', [LIGH, NULL]),
-//      {24} wbFloat('Tracer Chance'),
-//      {28} wbFloat('Explosion - Alt. Trigger - Proximity'),
-//      {32} wbFloat('Explosion - Alt. Trigger - Timer'),
-//      {36} wbFormIDCk('Explosion', [EXPL, NULL]),
-//      {40} wbFormIDCk('Sound', [SOUN, SNDR, NULL]),
-//      {44} wbFloat('Muzzle Flash - Duration'),
-//      {48} wbFloat('Fade Duration'),
-//      {52} wbFloat('Impact Force'),
-//      {56} wbFormIDCk('Sound - Countdown', [SOUN, SNDR, NULL]),
-//      {60} wbFormIDCk('Sound - Disable', [SOUN, SNDR, NULL]),
-//      {64} wbFormIDCk('Default Weapon Source', [WEAP, NULL]),
-//      {68} wbFloat('Cone Spread'),
-//      {72} wbFloat('Collision Radius'),
-//      {76} wbFloat('Lifetime'),
-//      {80} wbFloat('Relaunch Interval'),
-//           wbFormIDCk('Decal Data', [TXST, NULL]),
-//           wbFormIDCk('Collision Layer', [COLL, NULL])
-//    ], cpNormal, True, nil, 22),
-    wbUnknown(DNAM),
+    wbStruct(DNAM, 'Data', [
+      wbInteger('Flags', itU16, wbFlags([
+        'Hitscan',
+        'Explosion',
+        'Alt. Trigger',
+        'Muzzle Flash',
+        '',
+        'Can Be Disabled',
+        'Can Be Picked Up',
+        'Supersonic',
+        'Pins Limbs',
+        'Pass Through Small Transparent',
+        'Disable Combat Aim Correction',
+        'Rotation'
+      ])),
+      wbInteger('Type', itU16, wbEnum([], [
+        $01, 'Missile',
+        $02, 'Lobber',
+        $04, 'Beam',
+        $08, 'Flame',
+        $10, 'Cone',
+        $20, 'Barrier',
+        $40, 'Arrow'
+      ])),
+      wbFloat('Gravity'),
+      wbFloat('Speed'),
+      wbFloat('Range'),
+      wbFormIDCk('Light', [LIGH, NULL]),
+      wbFormIDCk('Muzzle Flash - Light', [LIGH, NULL]),
+      wbFloat('Explosion - Alt. Trigger - Proximity'),
+      wbFloat('Explosion - Alt. Trigger - Timer'),
+      wbFormIDCk('Explosion', [EXPL, NULL]),
+      wbFormIDCk('Sound', [SNDR, NULL]),
+      wbFloat('Muzzle Flash - Duration'),
+      wbFloat('Fade Duration'),
+      wbFloat('Impact Force'),
+      wbFormIDCk('Sound - Countdown', [SNDR, NULL]),
+      wbFormIDCk('Sound - Disable', [SNDR, NULL]),
+      wbFormIDCk('Default Weapon Source', [WEAP, NULL]),
+      wbFloat('Cone Spread'),
+      wbFloat('Collision Radius'),
+      wbFloat('Lifetime'),
+      wbFloat('Relaunch Interval'),
+      wbFormIDCk('Decal Data', [TXST, NULL]),
+      wbFormIDCk('Collision Layer', [COLL, NULL]),
+      wbByteArray('Unknown', 5)
+    ]),
     wbRStructSK([0], 'Muzzle Flash Model', [
       wbString(NAM1, 'Model Filename'),
       wbByteArray(NAM2, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow)
@@ -14577,35 +14603,20 @@ begin
           wbInteger('Weapon Property', itU16, wbWeaponPropertyEnum)
         ]),
         wbByteArray('Unused', 2, cpIgnore),
-        wbUnion('Value', wbOMODDataPropertyValueDecider, [
-          wbStruct('Unknown', [
-            wbByteArray('Unknown', 4),
-            wbByteArray('Unknown', 4)
-          ]),
-          wbStruct('Int', [
-            wbInteger('Value 1', itU32),
-            wbInteger('Value 2', itU32)
-          ]),
-          wbStruct('Float', [
-            wbFloat('Value 1'),
-            wbFloat('Value 2')
-          ]),
-          wbStruct('Bool', [
-            wbInteger('Value 1', itU32, wbEnum(['False', 'True'])),
-            wbInteger('Value 2', itU32, wbEnum(['False', 'True']))
-          ]),
-          wbStruct('FormID,Int', [
-            wbFormID('Value 1'),
-            wbInteger('Value 2', itU32)
-          ]),
-          wbStruct('Enum', [
-            wbByteArray('Value 1', 4),
-            wbByteArray('Value 2', 4)
-          ]),
-          wbStruct('FormID,Float', [
-            wbFormID('Value 1'),
-            wbFloat('Value 2')
-          ])
+        wbUnion('Value 1', wbOMODDataPropertyValue1Decider, [
+          wbByteArray('Value 1 - Unknown', 4),
+          wbInteger('Value 1 - Int', itU32),
+          wbFloat('Value 1 - Float'),
+          wbInteger('Value 1 - Bool', itU32, wbEnum(['False', 'True'])),
+          wbByteArray('Value 1 - Enum', 4),
+          wbFormID('Value 1 - FormID')
+        ]),
+        wbUnion('Value 2', wbOMODDataPropertyValue2Decider, [
+          wbByteArray('Value 2 - Unknown', 4),
+          wbInteger('Value 2 - Int', itU32),
+          wbFloat('Value 2 - Float'),
+          wbInteger('Value 2 - Bool', itU32, wbEnum(['False', 'True'])),
+          wbByteArray('Value 2 - Enum', 4)
         ]),
         wbFloat('Factor')
       ]), wbOMODDataPropertyCounter)
