@@ -8473,7 +8473,28 @@ begin
     wbEDID,
     wbCNAM,
     wbString(DNAM, 'Unknown'),
-    wbUnknown(TNAM),
+    //wbUnknown(TNAM),
+    wbInteger(TNAM, 'Type', itU32, wbEnum([
+      {00} 'None',
+      {01} 'Unknown 1',
+      {02} 'Unknown 2',
+      {03} 'Unknown 3',
+      {04} 'Unknown 4',
+      {05} 'Unknown 5',
+      {06} 'Unknown 6',
+      {07} 'Unknown 7',
+      {08} 'Unknown 8',
+      {09} 'Unknown 9',
+      {10} 'Unknown 10',
+      {11} 'Unknown 11',
+      {12} 'Unknown 12',
+      {13} 'Unknown 13',
+      {14} 'Unknown 14',
+      {15} 'Unknown 15',
+      {16} 'Unknown 16',
+      {17} 'Unknown 17',
+      {18} 'Unknown 18'
+    ])),
     wbFULL,
     wbFormIDCk(DATA, 'Unknown', [AORU]),
     wbString(NNAM, 'Unknown')
@@ -14387,11 +14408,21 @@ begin
     wbFloat(CNAM),
     wbFloat(DNAM),
     wbInteger(LFSP, 'Count', itU32),
-    wbRArray('Flares',
-      wbRStruct('Flare', [
+    wbRArrayS('Flares',
+      wbRStructSK([0], 'Flare', [
         wbString(DNAM, 'Shape'),
         wbString(FNAM, 'Texture'),
-        wbUnknown(LFSD)
+        wbStruct(LFSD, 'Unknown', [
+          wbFloat('Unknown'),
+          wbFloat('Unknown'),
+          wbFloat('Unknown'),
+          wbFloat('Unknown'),
+          wbFloat('Unknown'),
+          wbFloat('Unknown'),
+          wbFloat('Unknown'),
+          wbFloat('Unknown'),
+          wbByteArray('Unknown', 4)
+        ])
       ], [])
     )
   ]);
