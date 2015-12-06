@@ -73,6 +73,7 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.UpdateFormatSettings := False;
+  Application.HintHidePause := 10000;
   Application.Title := wbApplicationTitle;
   Application.CreateForm(TfrmMain, frmMain);
   Application.Run;
