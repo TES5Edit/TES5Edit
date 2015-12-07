@@ -8536,7 +8536,7 @@ begin
       {0x0002}'Facegen Textures',
       {0x0004}'Has Model Space Normal Map'
     ]), cpNormal, False),
-    wbString(MNAM, 'Unknown')
+    wbString(MNAM, 'Material')
   ]);
 
   wbRecord(HDPT, 'Head Part',
@@ -13435,7 +13435,11 @@ begin
     wbEDID,
     wbOBNDReq,
     wbFormIDCk(SDSC, 'Sound Descriptor', [SNDR, NULL]),
-    wbUnknown(REPT)
+    wbStruct(REPT, 'Unknown', [
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbInteger('Unknown', itU8)
+    ], cpNormal, False, nil, 2)
   ]);
 
   wbSPIT := wbStruct(SPIT, 'Data', [
@@ -14286,7 +14290,14 @@ begin
     ),
     wbRStruct('Aurora', [wbMODL], []),
     wbFormIDCk(GNAM, 'Lens', [LENS]),
-    wbUnknown(UNAM),
+    wbStruct(UNAM, 'Unknown', [
+      wbFormIDCk('Unknown', [SPEL, NULL]),
+      wbByteArray('Unknown', 4),
+      wbFormIDCk('Unknown', [SPEL, NULL]),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
+    ], cpNormal, False, nil, 3),
     wbFloat(VNAM, 'Unknown'),
     wbFloat(WNAM, 'Unknown')
   ]);
@@ -14314,7 +14325,7 @@ begin
     )
   ]);
 
-  wbRecord(AMDL, 'AMDL', [
+  wbRecord(AMDL, 'Aim Model', [
     wbEDID,
     wbUnknown(DNAM)
   ]);
@@ -14324,7 +14335,7 @@ begin
     wbUnknown(AOR2)
   ]);
 
-  wbRecord(BNDS, 'BNDS', [
+  wbRecord(BNDS, 'Bendable Spline', [
     wbEDID,
     wbOBND,
     wbStruct(DNAM, 'Data', [
@@ -14384,7 +14395,7 @@ end;
 
 procedure DefineFO4r;
 begin
-  wbRecord(INNR, 'INNR', [
+  wbRecord(INNR, 'Instance Naming Rule', [
     wbEDID,
     wbUnknown(UNAM),
     wbRArray('Unknown',
@@ -14401,7 +14412,7 @@ begin
     )
   ]);
 
-  wbRecord(KSSM, 'KSSM', [
+  wbRecord(KSSM, 'Sound Keyword Mapping', [
     wbEDID,
     wbFormIDCk(DNAM, 'Sound', [SNDR]),
     wbFormIDCk(ENAM, 'Sound', [SNDR]),
@@ -14464,7 +14475,7 @@ begin
     )
   ]);
 
-  wbRecord(NOCM, 'NOCM', [
+  wbRecord(NOCM, 'Navigation Mesh Obstacle Manager', [
     wbRArray('Unknown',
       wbRStruct('Unknown', [
         wbInteger(INDX, 'Index', itU32),
@@ -14729,7 +14740,7 @@ begin
     wbEDID
   ]);
 
-  wbRecord(SCCO, 'SCCO', [
+  wbRecord(SCCO, 'Scene Complex Object', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST]),
     wbRArray('Unknown',
@@ -14873,7 +14884,9 @@ begin
       wbFloat('Unknown'),
       wbByteArray('Unknown', 4),
       wbFormIDCk('Unknown', [IMAD, NULL]),
-      wbUnknown
+      wbByteArray('Unknown', 4),
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
     ])
   ]);
 
