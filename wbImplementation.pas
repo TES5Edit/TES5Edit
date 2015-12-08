@@ -730,6 +730,7 @@ type
     function GetDontCompare: Boolean;
     function GetDontSave: Boolean;
     function IsValidOffset(aBasePtr, aEndPtr: Pointer; anOffset: Integer): Boolean;
+    function IsLocalOffset(anOffset: Integer): Boolean;
 
     {--- IwbDataContainerInternal ---}
     procedure UpdateStorageFromElements; virtual;
@@ -14894,6 +14895,19 @@ begin
         if Cardinal(aEndPtr) <= Cardinal(dcEndPtr) then
           if Cardinal(aBasePtr)+anOffset < Cardinal(dcEndPtr) then
             Result := True;
+end;
+
+function TwbDataContainer.IsLocalOffset(anOffset: Integer): Boolean;
+var
+  abp, aep: Integer;
+begin
+  abp := Cardinal(dcBasePtr);
+  aep := Cardinal(dcEndPtr);
+//  if Cardinal(dcBasePtr)+anOffset < Cardinal(dcEndPtr) then
+  if (abp+anOffset) < aep then
+    Result := True
+  else
+    Result := False;
 end;
 
 procedure TwbDataContainer.MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer);
