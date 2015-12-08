@@ -4516,6 +4516,22 @@ begin
   end;
 end;
 
+procedure wbOMODpropertyAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('Property Count', aElement);
+end;
+
+procedure wbOMODincludeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('Include Count', aElement);
+end;
+
+procedure wbOMODdataAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerAfterSet('Property Count', 'Properties', aElement);
+  wbCounterContainerAfterSet('Include Count', 'Includes', aElement);
+end;
+
 function wbOMODDataIncludeCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container       : IwbContainer;
@@ -4539,7 +4555,11 @@ end;
 function wbOMODDataPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
+  DataContainer : IwbDataContainer;
   FormType      : Integer;
+  aPtr          : Pointer;
+const
+  OffsetFormType = 10;
 begin
   Result := 0;
   if not Assigned(aBasePtr) then Exit;
@@ -4547,14 +4567,17 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  FormType := Container.ElementNativeValues['..\..\Form Type'];
-
-  if FormType = Sig2Int(ARMO) then
-    Result := 1
-  else if FormType = Sig2Int(NPC_) then
-    Result := 2
-  else if FormType = Sig2Int(WEAP) then
-    Result := 3;
+  if Supports(Container, IwbDataContainer, DataContainer) and DataContainer.IsLocalOffset(OffsetFormType) then
+  begin
+    aPtr := Pointer(Cardinal(DataContainer.DataBasePtr) + OffsetFormType);
+    FormType := PInteger(aPtr)^;
+    if FormType = Sig2Int(ARMO) then
+      Result := 1
+    else if FormType = Sig2Int(NPC_) then
+      Result := 2
+    else if FormType = Sig2Int(WEAP) then
+      Result := 3;
+  end;
 end;
 
 function wbOMODDataPropertyValue1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -14678,12 +14701,12 @@ begin
         wbByteArray('Value 1', 4),
         wbByteArray('Value 2', 4)
       ]), -1),
-      wbArray('Includes', wbStruct('Include', [
+      wbArrayS('Includes', wbStruct('Include', [
         wbFormIDCk('Mod', [OMOD]),
         wbInteger('Unknown', itU8),
         wbByteArray('Unknown', 2)
-      ]), wbOMODDataIncludeCounter),
-      wbArray('Properties', wbStruct('Property', [
+      ]), wbOMODDataIncludeCounter, cpNormal, False, nil, wbOMODincludeAfterSet),
+      wbArrayS('Properties', wbStruct('Property', [
         wbInteger('Value Type', itU8, wbEnum([
           {0} 'Int',
           {1} 'Float',
@@ -14723,8 +14746,8 @@ begin
           wbByteArray('Value 2 - Enum', 4)
         ]),
         wbFloat('Factor')
-      ]), wbOMODDataPropertyCounter)
-    ]),
+      ]), wbOMODDataPropertyCounter, cpNormal, False, nil, wbOMODpropertyAfterSet)
+    ], cpNormal, False, nil, -1, nil, wbOMODdataAfterSet),
     wbArray(MNAM, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbArray(FNAM, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbFormID(LNAM),
