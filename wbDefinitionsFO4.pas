@@ -4729,75 +4729,75 @@ begin
 
   {>>> When NAME is user defined these will be incorrect <<<}
   wbBipedObjectEnum := wbEnum([
-    '30 - Head',
-    '31 - Hair',
-    '32 - Body',
-    '33 - Hands',
-    '34 - Forearms',
-    '35 - Amulet',
-    '36 - Ring',
-    '37 - Feet',
-    '38 - Calves',
-    '39 - Shield',
-    '40 - Tail',
-    '41 - LongHair',
-    '42 - Circlet',
-    '43 - Ears',
-    '44 - Unnamed',
-    '45 - Unnamed',
-    '46 - Unnamed',
-    '47 - Unnamed',
-    '48 - Unnamed',
-    '49 - Unnamed',
-    '50 - DecapitateHead',
-    '51 - Decapitate',
-    '52 - Unnamed',
-    '53 - Unnamed',
+    '30 - Hair Top',
+    '31 - Hair Long',
+    '32 - FaceGen Head',
+    '33 - BODY',
+    '34 - L Hand',
+    '35 - R Hand',
+    '36 - [U] Torso',
+    '37 - [U] L Arm',
+    '38 - [U] R Arm',
+    '39 - [U] L Leg',
+    '40 - [U] R Leg',
+    '41 - [A] Torso',
+    '42 - [A] L Arm',
+    '43 - [A] R Arm',
+    '44 - [A] L Leg',
+    '45 - [A] R Leg',
+    '46 - Headband',
+    '47 - Eyes',
+    '48 - Beard',
+    '49 - Mouth',
+    '50 - Neck',
+    '51 - Ring',
+    '52 - Scalp',
+    '53 - Decapitation',
     '54 - Unnamed',
     '55 - Unnamed',
     '56 - Unnamed',
     '57 - Unnamed',
     '58 - Unnamed',
-    '59 - Unnamed',
-    '60 - Unnamed',
-    '61 - FX01'
+    '59 - Shield',
+    '60 - Pipboy',
+    '61 - FX'
   ], [
     -1, 'None'
   ]);
 
   wbBipedObjectFlags := wbFlags([
-    {0x00000001} '30 - Head',
-    {0x00000002} '31 - Hair',
-    {0x00000004} '32 - Body',
-    {0x00000008} '33 - Hands',
-    {0x00000010} '34 - Forearms',
-    {0x00000020} '35 - Amulet',
-    {0x00000040} '36 - Ring',
-    {0x00000080} '37 - Feet',
-    {0x00000100} '38 - Calves',
-    {0x00000200} '39 - Shield',
-    {0x00000400} '40 - Tail',
-    {0x00000800} '41 - LongHair',
-    {0x00001000} '42 - Circlet',
-    {0x00002000} '43 - Ears',
-    {0x00004000} '44 - Unnamed',
-    {0x00008000} '45 - Unnamed',
-    {0x00010000} '46 - Unnamed',
-    {0x00020000} '47 - Unnamed',
-    {0x00040000} '48 - Unnamed',
-    {0x00080000} '49 - Unnamed',
-    {0x00100000} '50 - DecapitateHead',
-    {0x00200000} '51 - Decapitate',
-    {0x00400000} '52 - Unnamed',
-    {0x00800000} '53 - Unnamed',
+    {0x00000001} '30 - Hair Top',
+    {0x00000002} '31 - Hair Long',
+    {0x00000004} '32 - FaceGen Head',
+    {0x00000008} '33 - BODY',
+    {0x00000010} '34 - L Hand',
+    {0x00000020} '35 - R Hand',
+    {0x00000040} '36 - [U] Torso',
+    {0x00000080} '37 - [U] L Arm',
+    {0x00000100} '38 - [U] R Arm',
+    {0x00000200} '39 - [U] L Leg',
+    {0x00000400} '40 - [U] R Leg',
+    {0x00000800} '41 - [A] Torso',
+    {0x00001000} '42 - [A] L Arm',
+    {0x00002000} '43 - [A] R Arm',
+    {0x00004000} '44 - [A] L Leg',
+    {0x00008000} '45 - [A] R Leg',
+    {0x00010000} '46 - Headband',
+    {0x00020000} '47 - Eyes',
+    {0x00040000} '48 - Beard',
+    {0x00080000} '49 - Mouth',
+    {0x00100000} '50 - Neck',
+    {0x00200000} '51 - Ring',
+    {0x00400000} '52 - Scalp',
+    {0x00800000} '53 - Decapitation',
     {0x01000000} '54 - Unnamed',
     {0x02000000} '55 - Unnamed',
     {0x04000000} '56 - Unnamed',
     {0x08000000} '57 - Unnamed',
     {0x10000000} '58 - Unnamed',
-    {0x20000000} '59 - Unnamed',
-    {0x40000000} '60 - Unnamed',
-    {0x80000000} '61 - FX01'
+    {0x20000000} '59 - Shield',
+    {0x40000000} '60 - Pipboy',
+    {0x80000000} '61 - FX'
   ], True);
 
   wbFirstPersonFlagsU32 := wbInteger('First Person Flags', itU32, wbBipedObjectFlags);
@@ -6839,11 +6839,7 @@ begin
       wbRArray('Unknown',
         wbRStruct('Unknown', [
           wbString(BSMB, 'Name'),
-          wbArray(BSMS, 'Weights', wbStruct('Weight', [
-            wbFloat('X'),
-            wbFloat('Y'),
-            wbFloat('Z')
-          ]), ['Thin', 'Muscular', 'Fat']),
+          wbArray(BSMS, 'Weights?', wbFloat('Unknown')),
           wbUnknown(BMMP)
         ], [])
       )
@@ -11566,8 +11562,8 @@ begin
     wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]),
-    wbFormID(LTPT, 'Unknown'),
-    wbFormID(LTPC, 'Unknown'),
+    wbFormIDCk(LTPT, 'Legendary Template', [LVLN, NPC_]),
+    wbFormIDCk(LTPC, 'Legendary Chance', [GLOB]),
     wbArray(TPTA, 'Unknown', wbFormIDCk('Unknown', [LVLN, NPC_, NULL])),
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, nil{wbActorTemplateUseTraits}),
     wbSPCT,
@@ -11581,7 +11577,7 @@ begin
     wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
     wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
     wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
-    wbFormID(RCLR, 'Unknown'),
+    wbFormIDCk(RCLR, 'Unknown', [FLST]),
     wbInteger(PRKZ, 'Perk Count', itU32, nil, cpBenign),
     wbRArrayS('Perks',
       wbStructSK(PRKR, [0], 'Perk', [
@@ -12080,7 +12076,7 @@ begin
           wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
-          wbUnknown(ALLA),
+          wbFormIDCk(ALLA, 'Unknown', [KYWD]),
           wbFormIDCk(ALDN, 'Display Name', [MESG]),
           wbFormIDCk(ALFV, 'Forced Voice', [VTYP]),
           wbRArray('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
@@ -12146,7 +12142,7 @@ begin
           wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
-          wbUnknown(ALLA),
+          wbFormIDCk(ALLA, 'Unknown', [KYWD]),
           wbFormIDCk(ALDN, 'Display Name', [MESG]),
           wbFormIDCk(ALFV, 'Forced Voice', [VTYP]),
           wbRArray('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
@@ -13836,6 +13832,7 @@ begin
       wbFormIDCk('Sound - Charge', [SNDR, NULL]),
       wbFormIDCk('Sound - Equip Up', [SNDR, NULL]),
       wbFormIDCk('Sound - Equip Down', [SNDR, NULL]),
+      wbFormIDCk('Sound - Fast Equip', [SNDR, NULL]),
       wbUnknown
 //      wbInteger('Flags', itU16, wbFlags([
 //        {0x0001}'Ignores Normal Weapon Resistance',
@@ -14327,12 +14324,34 @@ begin
 
   wbRecord(AMDL, 'Aim Model', [
     wbEDID,
-    wbUnknown(DNAM)
+    wbStruct(DNAM, 'Unknown', [
+      wbByteArray('Unknown', 4),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbInteger('Unknown', itU32),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbInteger('Unknown', itU32),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
+    ])
   ]);
 
   wbRecord(AORU, 'Object Rule', [
     wbEDID,
-    wbUnknown(AOR2)
+    wbStruct(AOR2, 'Unknown', [
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbByteArray('Unknown', 4)
+    ])
   ]);
 
   wbRecord(BNDS, 'Bendable Spline', [
