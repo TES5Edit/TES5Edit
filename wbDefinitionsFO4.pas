@@ -933,7 +933,8 @@ var
   wbBODTBOD2: IwbSubRecordUnionDef;
   wbScriptEntry: IwbStructDef;
   wbPropTypeEnum: IwbEnumDef;
-  wbScriptObject: IwbUnionDef;
+  wbScriptPropertyObject: IwbUnionDef;
+  wbScriptPropertyStruct: IwbArrayDef;
   wbScriptFragments: IwbStructDef;
   wbScriptFragmentsQuest: IwbStructDef;
   wbScriptFragmentsInfo: IwbStructDef;
@@ -2550,6 +2551,30 @@ end;
 
 {>>> For VMAD <<<}
 function wbScriptPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
+  case Integer(Container.ElementNativeValues['Type']) of
+     1: Result := 1;
+     2: Result := 2;
+     3: Result := 3;
+     4: Result := 4;
+     5: Result := 5;
+    11: Result := 6;
+    12: Result := 7;
+    13: Result := 8;
+    14: Result := 9;
+    15: Result := 10;
+    17: Result := 11;
+  end;
+end;
+
+function wbScriptPropertyStructMemberDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
 begin
@@ -5352,10 +5377,12 @@ begin
     {12} 'Array of String',
     {13} 'Array of Int32',
     {14} 'Array of Float',
-    {15} 'Array of Bool'
+    {15} 'Array of Bool',
+    {16} 'Unknown 16',
+    {17} 'Array of Struct'
   ]);
 
-  wbScriptObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
+  wbScriptPropertyObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
     wbStructSK([1], 'Object v2', [
       wbInteger('Unused', itU16, nil, cpIgnore),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
@@ -5368,6 +5395,32 @@ begin
     ])
   ]);
 
+  wbScriptPropertyStruct :=
+    wbArray('Struct', wbStruct('Member', [
+      wbLenString('memberName', 2),
+      wbInteger('Type', itU8, wbPropTypeEnum, cpNormal, False, nil, wbScriptPropertyTypeAfterSet),
+      wbInteger('Flags', itU8, wbEnum([
+        {0x00} '',
+        {0x01} 'Edited',
+        {0x02} '',
+        {0x03} 'Removed'
+      ])),
+      wbUnion('Value', wbScriptPropertyStructMemberDecider, [
+        {00} wbNull,
+        {01} wbScriptPropertyObject,
+        {02} wbLenString('String', 2),
+        {03} wbInteger('Int32', itS32),
+        {04} wbFloat('Float'),
+        {05} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
+        {11} wbArray('Array of Object', wbScriptPropertyObject, -1),
+        {12} wbArray('Array of String', wbLenString('Element', 2), -1),
+        {13} wbArray('Array of Int32', wbInteger('Element', itS32), -1),
+        {14} wbArray('Array of Float', wbFloat('Element'), -1),
+        {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1)
+      ])
+    ]), -1, cpNormal, False);
+
+
   wbScriptEntry := wbStructSK([0], 'Script', [
     wbLenString('scriptName', 2),
     wbInteger('Flags', itU8, wbEnum([
@@ -5378,7 +5431,7 @@ begin
     ])),
     wbArrayS('Properties', wbStructSK([0], 'Property', [
       wbLenString('propertyName', 2),
-      wbInteger('Type', itU8, wbPropTypeEnum, cpNormal, False,nil, wbScriptPropertyTypeAfterSet),
+      wbInteger('Type', itU8, wbPropTypeEnum, cpNormal, False, nil, wbScriptPropertyTypeAfterSet),
       wbInteger('Flags', itU8, wbEnum([
         {0x00} '',
         {0x01} 'Edited',
@@ -5386,17 +5439,18 @@ begin
         {0x03} 'Removed'
       ])),
       wbUnion('Value', wbScriptPropertyDecider, [
-        {00} wbNull,
-        {01} wbScriptObject,
-        {02} wbLenString('String', 2),
-        {03} wbInteger('Int32', itS32),
-        {04} wbFloat('Float'),
-        {05} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
-        {11} wbArray('Array of Object', wbScriptObject, -1),
-        {12} wbArray('Array of String', wbLenString('Element', 2), -1),
-        {13} wbArray('Array of Int32', wbInteger('Element', itS32), -1),
-        {14} wbArray('Array of Float', wbFloat('Element'), -1),
-        {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1)
+       {00} wbNull,
+       {01} wbScriptPropertyObject,
+       {02} wbLenString('String', 2),
+       {03} wbInteger('Int32', itS32),
+       {04} wbFloat('Float'),
+       {05} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
+       {11} wbArray('Array of Object', wbScriptPropertyObject, -1),
+       {12} wbArray('Array of String', wbLenString('Element', 2), -1),
+       {13} wbArray('Array of Int32', wbInteger('Element', itS32), -1),
+       {14} wbArray('Array of Float', wbFloat('Element'), -1),
+       {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1),
+       {17} wbArray('Array of Struct', wbScriptPropertyStruct, -1)
       ])
     ]), -2, cpNormal, False, nil, nil, nil, False)
   ]);
@@ -5459,7 +5513,7 @@ begin
         wbLenString('fragmentName', 2)
       ]), wbScriptFragmentsQuestCounter),
     wbArrayS('Aliases', wbStructSK([0], 'Alias', [
-      wbScriptObject,
+      wbScriptPropertyObject,
       wbInteger('Version', itS16, nil, cpIgnore),
       wbInteger('Object Format', itS16, nil, cpIgnore),
 	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
@@ -5495,34 +5549,49 @@ begin
   ], cpNormal, false, wbScriptFragmentsDontShow);
 
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
-  wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore),
-    wbInteger('Object Format', itS16, nil, cpIgnore),
-    wbUnknown
-    {wbUnion('Data', wbScriptFragmentExistsDecider, [
-      wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-      wbStruct('Info VMAD', [
+
+  if wbSimpleRecords then
+
+    wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
+      wbInteger('Version', itS16, nil, cpIgnore),
+      wbInteger('Object Format', itS16, nil, cpIgnore),
+      wbUnknown
+    ], cpNormal, false, nil, -1)
+
+  else
+
+    wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
+      wbInteger('Version', itS16, nil, cpIgnore),
+      wbInteger('Object Format', itS16, nil, cpIgnore),
+      wbUnion('Data', wbScriptFragmentExistsDecider, [
         wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-        wbScriptFragmentsInfo
-      ], cpNormal, False, nil, 0),
-      wbStruct('Pack VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-        wbScriptFragmentsPack
-      ], cpNormal, False, nil, 0),
-      wbStruct('Perk VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-        wbScriptFragmentsPerk
-      ], cpNormal, False, nil, 0),
-      wbStruct('Quest VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-        wbScriptFragmentsQuest
-      ], cpNormal, False, nil, 0),
-      wbStruct('Scene VMAD', [
-        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-        wbScriptFragmentsScen
-      ], cpNormal, False, nil, 0)
-    ])}
-  ], cpNormal, false, nil, -1);
+        wbStruct('Info VMAD', [
+          wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+          wbUnknown
+          //wbScriptFragmentsInfo
+        ], cpNormal, False, nil, 0),
+        wbStruct('Pack VMAD', [
+          wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+          wbUnknown
+          //wbScriptFragmentsPack
+        ], cpNormal, False, nil, 0),
+        wbStruct('Perk VMAD', [
+          wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+          wbUnknown
+          //wbScriptFragmentsPerk
+        ], cpNormal, False, nil, 0),
+        wbStruct('Quest VMAD', [
+          wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+          wbUnknown
+          //wbScriptFragmentsQuest
+        ], cpNormal, False, nil, 0),
+        wbStruct('Scene VMAD', [
+          wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+          wbUnknown
+          //wbScriptFragmentsScen
+        ], cpNormal, False, nil, 0)
+      ])
+    ], cpNormal, false, nil, -1);
 
   wbAttackData := wbRStructSK([1], 'Attack', [
     wbStruct(ATKD, 'Attack Data', [
@@ -12150,7 +12219,10 @@ begin
           wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
-          wbFormIDCk(ALLA, 'Unknown', [KYWD]),
+          wbArray(ALLA, 'Unknown', wbStruct('Unknown', [
+            wbFormIDCk('Unknown', [KYWD]),
+            wbByteArray('Unknown', 4)
+          ])),
           wbFormIDCk(ALDN, 'Display Name', [MESG]),
           wbFormIDCk(ALFV, 'Forced Voice', [VTYP]),
           wbRArray('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
@@ -12216,7 +12288,10 @@ begin
           wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
-          wbFormIDCk(ALLA, 'Unknown', [KYWD]),
+          wbArray(ALLA, 'Unknown', wbStruct('Unknown', [
+            wbFormIDCk('Unknown', [KYWD]),
+            wbByteArray('Unknown', 4)
+          ])),
           wbFormIDCk(ALDN, 'Display Name', [MESG]),
           wbFormIDCk(ALFV, 'Forced Voice', [VTYP]),
           wbRArray('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
