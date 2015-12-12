@@ -14898,13 +14898,8 @@ begin
 end;
 
 function TwbDataContainer.IsLocalOffset(anOffset: Integer): Boolean;
-var
-  abp, aep: Integer;
 begin
-  abp := Cardinal(dcBasePtr);
-  aep := Cardinal(dcEndPtr);
-//  if Cardinal(dcBasePtr)+anOffset < Cardinal(dcEndPtr) then
-  if (abp+anOffset) < aep then
+  if Cardinal(dcDataBasePtr)+anOffset < Cardinal(dcDataEndPtr) then
     Result := True
   else
     Result := False;
