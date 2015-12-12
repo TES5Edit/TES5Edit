@@ -2484,6 +2484,17 @@ function wbArrayS(const aName          : string;
                         aGetCP         : TwbGetConflictPriority = nil)
                                        : IwbArrayDef; overload;
 
+function wbArray(const aName          : string;
+                 const aElement       : IwbValueDef;
+                       aCountCallback : TwbCountCallback;
+                       aPriority      : TwbConflictPriority;
+                       aRequired      : Boolean;
+                       aAfterLoad     : TwbAfterLoadCallback;
+                       aAfterSet      : TwbAfterSetCallback;
+                       aDontShow      : TwbDontShowCallback = nil;
+                       aGetCP         : TwbGetConflictPriority = nil)
+                                       : IwbArrayDef; overload;
+
 function wbArrayS(const aSignature : TwbSignature;
                   const aName      : string;
                   const aElement   : IwbValueDef;
@@ -2518,7 +2529,6 @@ function wbRArrayS(const aName      : string;
                          aIsSorted  : TwbIsSortedCallback = nil;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordArrayDef; overload;
-
 
 {--- wbStruct - ordered list of members ----------------------------------------}
 function wbStructSK(const aSortKey             : array of Integer;
@@ -5939,6 +5949,20 @@ begin
   Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, [], True, aAfterLoad, aAfterSet, aDontShow, aGetCP, True, False, False);
 end;
 
+function wbArray(const aName          : string;
+                 const aElement       : IwbValueDef;
+                       aCountCallback : TwbCountCallback;
+                       aPriority      : TwbConflictPriority;
+                       aRequired      : Boolean;
+                       aAfterLoad     : TwbAfterLoadCallback;
+                       aAfterSet      : TwbAfterSetCallback;
+                       aDontShow      : TwbDontShowCallback = nil;
+                       aGetCP         : TwbGetConflictPriority = nil)
+                                       : IwbArrayDef; overload;
+begin
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCountCallback, [], False, aAfterLoad, aAfterSet, aDontShow, aGetCP, True, False, False);
+end;
+
 function wbRArrayS(const aName      : string;
                    const aElement   : IwbRecordMemberDef;
                          aPriority  : TwbConflictPriority = cpNormal;
@@ -5981,8 +6005,6 @@ function wbArrayS(const aName      : string;
 begin
   Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, Length(aLabels), aLabels, True, aAfterLoad, aAfterSet, aDontShow, aGetCP, True, False, False);
 end;
-
-
 
 {--- wbStruct - ordered list of members ----------------------------------------}
 function wbStructSK(const aSignature           : TwbSignature;
@@ -8816,7 +8838,7 @@ begin
     if (Count < 1) and Assigned(arCountCallback) and not (Container=nil) then
       Count := arCountCallback(BasePtr, aEndPtr, ArrayContainer);
 
-    if not Assigned(BasePtr) and (Count < 1) then
+    if not Assigned(BasePtr) and (Count < 1) and not Assigned(arCountCallback) then // EXPERIMENT: Probably should not be done
       Count := 1;
 
     if (Count < 1) and not Assigned(arCountCallback) then begin
