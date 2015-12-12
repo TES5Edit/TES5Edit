@@ -939,7 +939,6 @@ var
   wbScriptFragmentsQuest: IwbStructDef;
   wbScriptFragmentsInfo: IwbStructDef;
   wbScriptFragmentsPack: IwbStructDef;
-  wbScriptFragmentsPerk: IwbStructDef;
   wbScriptFragmentsScen: IwbStructDef;
   wbEntryPointsEnum: IwbEnumDef;
   wbLocationEnum: IwbEnumDef;
@@ -2630,7 +2629,9 @@ begin
   else if MainRecord.Signature = QUST then
     Result := 4
   else if MainRecord.Signature = SCEN then
-    Result := 5;
+    Result := 5
+  else if MainRecord.Signature = TERM then
+    Result := 6;
 end;
 
 {>>> For VMAD <<<}
@@ -5491,19 +5492,6 @@ begin
       ]), [], wbScriptFragmentsPackCounter)
   ], cpNormal, false, wbScriptFragmentsDontShow);
 
-  wbScriptFragmentsPerk := wbStruct('Script Fragments Perk', [
-    wbInteger('Unknown', itS8),
-    wbLenString('fileName', 2),
-    wbArrayS('Perk Fragments',
-      wbStructSK([0], 'Perk Fragment', [
-        wbInteger('Fragment Index', itU16),
-        wbInteger('Unknown', itS16),
-        wbInteger('Unknown', itS8),
-        wbLenString('scriptName', 2),
-        wbLenString('fragmentName', 2)
-      ]), -2)
-  ], cpNormal, false, wbScriptFragmentsDontShow);
-
   wbScriptFragmentsQuest := wbStruct('Script Fragments Quest', [
     wbInteger('Unknown', itS8),
     wbInteger('fragmentCount', itU16),
@@ -5553,6 +5541,19 @@ begin
       ]), -2)
   ], cpNormal, false, wbScriptFragmentsDontShow);
 
+  wbScriptFragments := wbStruct('Script Fragments', [
+    wbInteger('Unknown', itS8),
+    wbScriptEntry,
+    wbArrayS('Fragments',
+      wbStructSK([0], 'Fragment', [
+        wbInteger('Fragment Index', itU16),
+        wbInteger('Unknown', itS16),
+        wbInteger('Unknown', itS8),
+        wbLenString('scriptName', 2),
+        wbLenString('fragmentName', 2)
+      ]), -2)
+  ], cpNormal, false, wbScriptFragmentsDontShow);
+
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
 
   if wbSimpleRecords then
@@ -5582,8 +5583,7 @@ begin
         ], cpNormal, False, nil, 0),
         wbStruct('Perk VMAD', [
           wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-          wbUnknown
-          //wbScriptFragmentsPerk
+          wbScriptFragments
         ], cpNormal, False, nil, 0),
         wbStruct('Quest VMAD', [
           wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
@@ -5594,6 +5594,10 @@ begin
           wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
           wbUnknown
           //wbScriptFragmentsScen
+        ], cpNormal, False, nil, 0),
+        wbStruct('Terminal VMAD', [
+          wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+          wbScriptFragments
         ], cpNormal, False, nil, 0)
       ])
     ], cpNormal, false, nil, -1);
@@ -7576,7 +7580,8 @@ begin
           {0x00000100}'Fog Power',
           {0x00000200}'Fog Max',
           {0x00000400}'Light Fade Distances'
-        ]))
+        ])),
+        wbUnknown
       ], cpNormal, False, nil, 11),
 
       wbByteArray(TVDT, 'Unknown', 0, cpNormal),
