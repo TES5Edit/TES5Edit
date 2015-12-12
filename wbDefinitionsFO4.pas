@@ -4576,6 +4576,7 @@ end;
 function wbOMODDataPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
+  tContainer    : IwbContainer;
   DataContainer : IwbDataContainer;
   FormType      : Cardinal;
   aPtr          : Pointer;
@@ -4588,17 +4589,21 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  if Supports(Container, IwbDataContainer, DataContainer) and DataContainer.IsLocalOffset(OffsetFormType) then
+  if Supports(Container.Container, IwbContainer, tContainer) and
+     Supports(tContainer.Container, IwbDataContainer, DataContainer) and
+     DataContainer.IsLocalOffset(OffsetFormType) then
   begin
     aPtr := Pointer(Cardinal(DataContainer.DataBasePtr) + OffsetFormType);
     FormType := PCardinal(aPtr)^;
-    if FormType = Sig2Int(ARMO) then
-      Result := 1
-    else if FormType = Sig2Int(NPC_) then
-      Result := 2
-    else if FormType = Sig2Int(WEAP) then
-      Result := 3;
-  end;
+  end
+  else
+    FormType := Container.ElementNativeValues['Form Type'];
+  if FormType = Sig2Int(ARMO) then
+    Result := 1
+  else if FormType = Sig2Int(NPC_) then
+    Result := 2
+  else if FormType = Sig2Int(WEAP) then
+    Result := 3;
 end;
 
 function wbOMODDataPropertyValue1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
