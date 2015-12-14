@@ -5495,22 +5495,28 @@ begin
   wbScriptFragmentsQuest := wbStruct('Script Fragments Quest', [
     wbInteger('Unknown', itS8),
     wbInteger('fragmentCount', itU16),
-    wbLenString('fileName', 2),
+    wbScriptEntry,
     wbArrayS('Quest Fragments',
-      wbStructSK([0, 2], 'Quest Fragment', [
-        wbInteger('Quest Stage', itU16),
-        wbInteger('Unknown', itS16),
-        wbInteger('Quest Stage Index', itS32),
-        wbInteger('Unknown', itS8),
-        wbLenString('scriptName', 2),
-        wbLenString('fragmentName', 2)
-      ]), wbScriptFragmentsQuestCounter),
+    wbStructSK([0, 2], 'Quest Fragment', [
+      wbInteger('Quest Stage', itU16),
+      wbInteger('Unknown', itS16),
+      wbInteger('Quest Stage Index', itS32),
+      wbInteger('Unknown', itS8),
+      wbLenString('scriptName', 2),
+      wbLenString('fragmentName', 2)
+    ]), wbScriptFragmentsQuestCounter),
+    // Those 3 quests has something else instead of Aliases block (fragment script has Inhetited type)
+    // added wbUnknown at the end to not lose data at least
+    // Quest [000179EF] <DialogueGenericPlayer>
+    // Quest [000792CA] <DialogueGenericMerchants> "Merchant Dialogue System"
+    // Quest [00091FE1] <DialogueDiamondCityChapel>
     wbArrayS('Aliases', wbStructSK([0], 'Alias', [
       wbScriptPropertyObject,
       wbInteger('Version', itS16, nil, cpIgnore),
       wbInteger('Object Format', itS16, nil, cpIgnore),
 	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
-	  ]), -2)
+	  ]), -2),
+    wbUnknown
   ], cpNormal, false, wbScriptFragmentsDontShow);
 
   wbScriptFragmentsScen := wbStruct('Script Fragments Scene', [
@@ -5587,8 +5593,7 @@ begin
         ], cpNormal, False, nil, 0),
         wbStruct('Quest VMAD', [
           wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-          wbUnknown
-          //wbScriptFragmentsQuest
+          wbScriptFragmentsQuest
         ], cpNormal, False, nil, 0),
         wbStruct('Scene VMAD', [
           wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
