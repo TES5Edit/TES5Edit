@@ -1,3 +1,13 @@
+#Our GitHub Issue Tracker
+
+When using our [GitHub issue tracker](https://github.com/TES5Edit/TES5Edit/issues) or commenting on an existing ticket please follow these general guidelines.
+
+ - Our issue tracker offers a place to request additional functionality or, report bugs or issues with xEdit in a positive fashion
+ - We welcome constructive criticism on aspects of how xEdit could be improved
+ - The public is welcome to discuss issues and requests with our team and the author of the request
+ - Our issue tracker can be used as a place to troubleshoot issues or report bugs with xEdit.  It is not a place to troubleshoot issues with editing plugins unless you feel xEdit is causing bug or corrupting a record in the plugin.
+
+
 #summary TES5Edit Readme
 
 TES5Edit 3.1.2 EXPERIMENTAL by ElminsterAU
