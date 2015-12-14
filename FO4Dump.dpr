@@ -54,7 +54,7 @@ var
 
 var
   StartTime  : TDateTime;
-  DumpGroups : TStringList;
+  DumpGroups, SkipChildGroups : TStringList;
   DumpCount, DumpMax: Integer;
 
 procedure ReportProgress(const aStatus: string);
@@ -592,7 +592,12 @@ begin
         if Assigned(DumpGroups) and not DumpGroups.Find(String(TwbSignature(GroupRecord.GroupLabel)), i) then
           Exit;
         ReportProgress('Dumping: ' + GroupRecord.Name);
-      end;
+      end
+      else
+        if Assigned(SkipChildGroups) and Assigned(GroupRecord.ChildrenOf) and
+           SkipChildGroups.Find(String(TwbSignature(GroupRecord.ChildrenOf.Signature)), i)
+        then
+          Exit;
 
   if aContainer.Skipped then begin
     if not wbReportMode then WriteLn(aIndent, '<contents skipped>');
@@ -614,8 +619,14 @@ var
 begin
   if Assigned(DumpGroups) and (aElement.ElementType = etGroupRecord) then
     if Supports(aElement, IwbGroupRecord, GroupRecord) then
-      if GroupRecord.GroupType = 0 then
+      if GroupRecord.GroupType = 0 then begin
         if not DumpGroups.Find(String(TwbSignature(GroupRecord.GroupLabel)), i) then
+          Exit;
+      end
+      else
+        if Assigned(SkipChildGroups) and Assigned(GroupRecord.ChildrenOf) and
+           SkipChildGroups.Find(String(TwbSignature(GroupRecord.ChildrenOf.Signature)), i)
+        then
           Exit;
 
   if aElement.ElementType = etMainRecord then
@@ -818,7 +829,7 @@ begin
   wbProgressCallback := ReportProgress;
   wbAllowInternalEdit := False;
   wbMoreInfoForUnknown := False;
-  wbSimpleRecords := True;
+  wbSimpleRecords := False;
   wbHideUnused := False;
   StartTime := Now;
 
@@ -964,6 +975,14 @@ begin
       DumpGroups.Sort;
     end;
 
+    if wbFindCmdLineParam('xcg', s) then begin
+      SkipChildGroups := TStringList.Create;
+      SkipChildGroups.Sorted := True;
+      SkipChildGroups.Duplicates := dupIgnore;
+      SkipChildGroups.CommaText := s;
+      SkipChildGroups.Sort;
+    end;
+
     wbLoadAllBSAs := FindCmdLineSwitch('allbsa');
 
     if FindCmdLineSwitch('more') then
@@ -1056,6 +1075,7 @@ begin
       WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
       WriteLn(ErrOutput, '             ', '  decompressed and processed.');
       WriteLn(ErrOutput, '-xg:list     ', 'Excludes complete top level groups from being processed');
+      WriteLn(ErrOutput, '-xcg:list    ', 'Excludes record child groups from being processed');
       WriteLn(ErrOutput, '-xbloat      ', 'The following value applies:');
       WriteLn(ErrOutput, '             ', '  -xg:LAND,REGN,PGRD,SCEN,PACK,PERK,NAVI,CELL,WRLD');
       WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
