@@ -9985,14 +9985,14 @@ begin
           Sig2Int('ACWR'), 'Action Cower',
           Sig2Int('ADGE'), 'Action Dodge',
           Sig2Int('ADPA'), 'Action Dual Power Attack',
-          Sig2Int('AECL'), 'Action Dialogue Enter', // Action Enter/Exit labels are all very similar. This is a guess.
+          Sig2Int('AECL'), 'Action Enter Cover',
           Sig2Int('AELA'), 'Action End Looping Activate',
-          Sig2Int('AENC'), 'Action Enter Combat', // Action Enter/Exit labels are all very similar. This is a guess.
-          Sig2Int('AENI'), 'Action Enter Cover', // Action Enter/Exit labels are all very similar. This is a guess.
+          Sig2Int('AENC'), 'Action Enter Combat',
+          Sig2Int('AENI'), 'Action Dialogue Enter',
           Sig2Int('AEVD'), 'Action Evade',
-          Sig2Int('AEXC'), 'Action Exit Combat', // Action Enter/Exit labels are all very similar. This is a guess.
-          Sig2Int('AEXI'), 'Action Exit Cover', // Action Enter/Exit labels are all very similar. This is a guess.
-          Sig2Int('AEXT'), 'Action Dialogue Exit', // Action Enter/Exit labels are all very similar. This is a guess.
+          Sig2Int('AEXC'), 'Action Exit Cover',
+          Sig2Int('AEXI'), 'Action Dialogue Exit',
+          Sig2Int('AEXT'), 'Action Exit Combat',
           Sig2Int('AFCH'), 'Action Fire Charge',
           Sig2Int('AFCO'), 'Action Fire Charge Hold',
           Sig2Int('AFEM'), 'Action Fire Empty',
@@ -10009,8 +10009,8 @@ begin
           Sig2Int('AIEN'), 'Action Interaction Enter',
           Sig2Int('AIEQ'), 'Action Interaction Exit Quick',
           Sig2Int('AIEX'), 'Action Interaction Exit',
-          Sig2Int('AILN'), 'Action Dialogue Listen Negative', // This label could be Neutral.
-          Sig2Int('AILP'), 'Action Dialogue Listen Positive',
+          Sig2Int('AILN'), 'Action Dialogue Listen Negative',
+          Sig2Int('AILp'), 'Action Dialogue Listen Positive',
           Sig2Int('AILQ'), 'Action Dialogue Listen Question',
           Sig2Int('AINT'), 'Action Intimidate',
           Sig2Int('AIVC'), 'Verlet Cape',
@@ -10053,19 +10053,19 @@ begin
           Sig2Int('AOST'), 'Keyword Armor Material Steel',
           Sig2Int('APIC'), 'Action Pipboy Close',
           Sig2Int('APID'), 'Action Pipboy Data',
-          Sig2Int('APII'), 'Action Pipboy Inspect', // Action Pipboy labels are all very similar. This label is a guess.
+          Sig2Int('APII'), 'Action Pipboy Inventory',
           Sig2Int('APIM'), 'Action Pipboy Map',
-          Sig2Int('APIN'), 'Action Pipboy Inventory', // Action Pipboy labels are all very similar. This label is a guess.
+          Sig2Int('APIN'), 'Action Pipboy Inspect',
           Sig2Int('APIP'), 'Action Pipboy',
-          Sig2Int('APIS'), 'Action Pipboy Select', // Action Pipboy labels are all very similar. This label is a guess.
+          Sig2Int('APIS'), 'Action Pipboy Stats',
           Sig2Int('APIT'), 'Action Pipboy Tab',
           Sig2Int('APIZ'), 'Action Pipboy Zoom',
           Sig2Int('APLH'), 'Action Pipboy Load Holotape',
-          Sig2Int('APLN'), 'Action Dialogue Listen Neutral', // This label could be Negative.
+          Sig2Int('APLN'), 'Action Dialogue Listen Neutral',
           Sig2Int('APNC'), 'Action Panic',
-          Sig2Int('APPS'), 'Action Pipboy Stats', // Action Pipboy labels are all very similar. This label is a guess.
-          Sig2Int('APR0'), 'Action Pipboy Radio On',
-          Sig2Int('APR1'), 'Action Pipboy Radio Off',
+          Sig2Int('APPS'), 'Action Pipboy Select',
+          Sig2Int('APR0'), 'Action Pipboy Radio Off',
+          Sig2Int('APR1'), 'Action Pipboy Radio On',
           Sig2Int('APSH'), 'Allow Player Shout',
           Sig2Int('APTP'), 'Action Pipboy Tab Previous',
           Sig2Int('AREL'), 'Action Reload',
@@ -10081,7 +10081,7 @@ begin
           Sig2Int('ATRI'), 'Action Turn Right',
           Sig2Int('ATSP'), 'Action Turn Stop',
           Sig2Int('AVVP'), 'Vampire Available Perks',
-          Sig2Int('AVWP'), 'Unused', // There are 4 unused. Not sure if this unused is labeled correctly.
+          Sig2Int('AVWP'), 'Unused',
           Sig2Int('AWWS'), 'Action Waterwalk Start',
           Sig2Int('AWWW'), 'Bunny Faction',
           Sig2Int('BAPO'), 'Base Potion',
@@ -10094,7 +10094,7 @@ begin
           Sig2Int('CHIK'), 'Chem Item keyword',
           Sig2Int('CLIK'), 'Clothes Item keyword',
           Sig2Int('CMPX'), 'Complex Scene Object',
-          Sig2Int('CNMK'), 'Color Form', // Of the signatures left, this was the best match possible.
+          Sig2Int('CNMK'), 'Keyword nullptr Mod',
           Sig2Int('COEX'), 'Keyword Conditional Explosion',
           Sig2Int('COOK'), 'Keyword Cooking Pot',
           Sig2Int('CSTY'), 'Combat Style',
@@ -10115,8 +10115,8 @@ begin
           Sig2Int('DMSN'), 'Default Movement Type: Sneak',
           Sig2Int('DMSW'), 'Default Movement Type: Swim',
           Sig2Int('DMWL'), 'Default Movement Type: Default',
-          Sig2Int('DOP2'), 'Dialogue Output Model 2D',
-          Sig2Int('DOP3'), 'Dialogue Output Model 3D',
+          Sig2Int('DOP2'), 'Dialogue Output Model 3D',
+          Sig2Int('DOP3'), 'Dialogue Output Model 2D',
           Sig2Int('DRAK'), 'Keyword Dragon',
           Sig2Int('DTMS'), 'Death Music',
           Sig2Int('EACA'), 'Every Actor Ability',
@@ -10193,7 +10193,7 @@ begin
           Sig2Int('JWLR'), 'Keyword Jewelry',
           Sig2Int('KHFL'), 'Kinect Help FormList',
           Sig2Int('KTRW'), 'Teammate Ready Weapon',
-          Sig2Int('KWBR'), 'Keyword nullptr Mod', // Of the signatures left, this was the best match possible.
+          Sig2Int('KWBR'), 'Color Form',
           Sig2Int('KWCU'), 'Keyword Cuirass',
           Sig2Int('KWDM'), 'Keyword DummyObject',
           Sig2Int('KWDO'), 'Keyword ClearableLocation',
@@ -10236,7 +10236,7 @@ begin
           Sig2Int('PFAC'), 'Player Faction',
           Sig2Int('PIMC'), 'Pause During Menu Category Immediate',
           Sig2Int('PIVV'), 'Player Is Vampire Variable',
-          Sig2Int('PIWV'), 'UNUSED01', // There are 4 unused. Not sure if this unused is labeled correctly.
+          Sig2Int('PIWV'), 'UNUSED01',
           Sig2Int('PLOC'), 'PersistAll Location',
           Sig2Int('PLST'), 'Default Pack List',
           Sig2Int('POEQ'), 'Potion Equip',
@@ -10261,7 +10261,7 @@ begin
           Sig2Int('QMLO'), 'Quest Marker Location',
           Sig2Int('RIVR'), 'Vampire Race',
           Sig2Int('RIVS'), 'Vampire Spells',
-          Sig2Int('RIWR'), 'UNUSED02', // There are 4 unused. Not sure if this unused is labeled correctly.
+          Sig2Int('RIWR'), 'UNUSED02',
           Sig2Int('RKIK'), 'Repair Kit Item Keyword',
           Sig2Int('RUSG'), 'Keyword Reusable SoulGem',
           Sig2Int('RVBT'), 'Reverb Type',
@@ -10318,7 +10318,7 @@ begin
           Sig2Int('WMWO'), 'Keyword Weapon Material Wood',
           Sig2Int('WPOK'), 'Workshop Player Ownership',
           Sig2Int('WTBA'), 'Keyword WeaponTypeBoundArrow',
-          Sig2Int('WWSP'), 'UNUSED03' // There are 4 unused. Not sure if this unused is labeled correctly.
+          Sig2Int('WWSP'), 'UNUSED03'
         ]);
 
   c := CombineVarRecs(a, b);
@@ -13983,12 +13983,12 @@ begin
       //wbInteger('Animation Type', itU8, wbWeaponAnimTypeEnum),
       //wbByteArray('Unused', 4, cpIgnore),
       wbFormIDCk('Ammo', [AMMO, NULL]),
+      wbFloat('Fire Speed'),
+      wbFloat('Reload Anim Speed'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
+      wbFloat('Attack Delay'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
       wbByteArray('Unknown', 16),
