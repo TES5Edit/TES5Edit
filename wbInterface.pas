@@ -396,7 +396,8 @@ type
     esConstructionComplete,
     esDestroying,
     esChangeNotified,
-    esModifiedUpdated
+    esModifiedUpdated,
+    esSorting
   );
 
   TwbElementStates = set of TwbElementState;
@@ -12797,13 +12798,16 @@ begin
 //    wbProgressCallback('Found a union with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
 //      ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
 //  end;
-  aMember := Decide(aBasePtr, aEndPtr, aElement);
+  if GetIsVariableSize then
+    aMember := Decide(aBasePtr, aEndPtr, aElement)
+  else
+    aMember := nil;;
   if not Assigned(aMember) then begin
     if Length(udMembers)>0 then
       Result := udMembers[0].Size[aBasePtr, aEndPtr, aElement]
     else
       Result := Low(Integer);
-    if Result > 0 then
+    if (Result > 0) and GetIsVariableSize then
       for i := 1 to High(udMembers) do
         if Result <> High(Integer) then begin
           Size := udMembers[i].Size[aBasePtr, aEndPtr, aElement];
