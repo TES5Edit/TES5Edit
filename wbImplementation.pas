@@ -12189,13 +12189,24 @@ function TwbElement.GetSortKey(aExtended: Boolean): string;
 begin
   if aExtended then begin
     if not (esExtendedSortKeyValid in eStates) then begin
-      eExtendedSortKey := GetSortKeyInternal(aExtended);
+      if not (esSorting in eStates) then begin
+        Include(eStates, esSorting);
+        eExtendedSortKey := GetSortKeyInternal(aExtended);
+        Exclude(eStates, esSorting);
+      end
+      else
+        eExtendedSortKey := GetSortKeyInternal(aExtended);
       Include(eStates, esExtendedSortKeyValid);
     end;
     Result := eExtendedSortKey;
   end else begin
     if not (esSortKeyValid in eStates) then begin
-      eSortKey := GetSortKeyInternal(aExtended);
+      if not (esSorting in eStates) then begin
+        Include(eStates, esSorting);
+        eSortKey := GetSortKeyInternal(aExtended);
+        Exclude(eStates, esSorting);
+      end else
+        eSortKey := GetSortKeyInternal(aExtended);
       Include(eStates, esSortKeyValid);
     end;
     Result := eSortKey;
@@ -13746,12 +13757,24 @@ begin
 end;
 
 procedure TwbArray.DoInit;
+var
+  i       : Integer;
+  Sorting : Boolean;
 begin
   inherited;
   if arrSorted and arrSortInvalid then
-    if Length(cntElements) > 1 then
-      wbMergeSort(@cntElements[0], Length(cntElements), CompareSortKeys);
-  arrSortInvalid := False;
+    if (Length(cntElements) > 1) then begin
+      Sorting := False;
+      for i := 0 to Length(cntElements)-1 do
+        if (esSorting in (cntElements[i] as IwbElementInternal).ElementStates) then begin
+          Sorting := TRue;
+          Break;
+        end;
+        if not Sorting then begin
+          wbMergeSort(@cntElements[0], Length(cntElements), CompareSortKeys);
+          arrSortInvalid := False;
+        end;
+    end;
 end;
 
 procedure TwbArray.ElementChanged(const aElement: IwbElement; aContainer: Pointer);
