@@ -2771,7 +2771,6 @@ begin
   if i and $00000004 <> 0 then Result := 1;
 end;
 
-
 type
   TCTDAFunctionParamType = (
     { 0} ptNone,
@@ -8527,7 +8526,7 @@ begin
     ], cpNormal, True, nil, 1),
     wbFormIDCk(NAM1, 'Associated weapon', [WEAP]),
     wbRArray('Markers', wbRStruct('Marker', [
-      wbInteger(ENAM, 'Marker Index', itU32),
+      wbInteger(ENAM, 'Marker Index', itS32),
       wbStruct(NAM0, 'Disabled Entry Points', [
         wbByteArray('Unknown', 2),
         wbInteger('Disabled Points', itU16, wbFurnitureEntryTypeFlags)
@@ -8539,7 +8538,14 @@ begin
       wbInteger('Entry Points', itU16, wbFurnitureEntryTypeFlags)
     ])),
     wbString(XMRK, 'Model Filename'),
-    wbUnknown(SNAM),
+    wbArray(SNAM, 'Marker Paramaters', wbStruct('Marker', [
+      wbFloat('Offset X'),
+      wbFloat('Offset Y'),
+      wbFloat('Offset Z'),
+      wbFloat('Rotation Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFormIDCk('Keyword', [KYWD, NULL]),
+      wbInteger('Unknown', itS32)
+    ], cpNormal, False, nil, 4)),
     wbUnknown(NVNM),
     wbAPPR,
     wbOBTESequence
@@ -10774,26 +10780,26 @@ begin
       wbFloat('Forward Run'),
       wbFloat('Back Walk'),
       wbFloat('Back Run'),
-      wbFloat('Rotate in Place Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Rotate in Place Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Rotate while Moving Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Rotate in Place Walk'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+      wbFloat('Rotate in Place Run'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+      wbFloat('Rotate while Moving Run'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
-      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize})
     ], cpNormal, True, nil, 11),
     wbStruct(INAM, 'Anim Change Thresholds', [
       wbFloat('Directional', cpNormal, True, 180/Pi),
@@ -14007,7 +14013,14 @@ begin
       wbFormIDCk('Sound - Equip Up', [SNDR, NULL]),
       wbFormIDCk('Sound - Equip Down', [SNDR, NULL]),
       wbFormIDCk('Sound - Fast Equip', [SNDR, NULL]),
-      wbUnknown
+      wbByteArray('Unknown', 1),
+      wbFloat('Unknown'),
+      wbByteArray('Unknown', 2),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
 //      wbInteger('Flags', itU16, wbFlags([
 //        {0x0001}'Ignores Normal Weapon Resistance',
 //        {0x0002}'Automatic (unused)',
