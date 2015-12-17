@@ -1006,6 +1006,7 @@ var
   wbBSMPSequence: IwbSubRecordArrayDef;
   wbFTYP: IwbSubRecordDef;
   wbATTX: IwbSubRecordDef;
+  wbOBTS: IwbSubRecordDef;
   wbRaceTTGP: IwbSubrecordArrayDef;
   wbRaceMPGN: IwbSubrecordArrayDef;
   wbRaceFRMI: IwbSubrecordArrayDef;
@@ -4670,6 +4671,11 @@ begin
     Result := 0;
 end;
 
+procedure wbOBTSCombinationsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('OBTE - Count', aElement);
+end;
+
 function wbREFRRecordFlagsDecider(const aElement: IwbElement): Integer;
 var
   MainRecord : IwbMainRecord;
@@ -6900,8 +6906,51 @@ begin
   wbAPPR := wbArray(APPR, 'Keywords', wbFormIDCk('Keyword', [KYWD]));
   wbFTYP := wbFormIDCk(FTYP, 'Unknown', [LCRT]);
   wbATTX := wbLString(ATTX, 'Activate Text Override', 0, cpTranslate);
+  wbOBTS := wbStruct(OBTS, 'Unknown', [
+    wbInteger('Parts A Count', itU32),
+    wbInteger('Parts B Count', itU32),
+    wbByteArray('Unknown', 7),
+    wbArray('Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), -4),
+    wbByteArray('Unknown', 2),
+    wbArray('Parts A', wbStruct('Part A', [
+      wbFormIDCk('Mod', [OMOD]),
+      wbByteArray('Unknown', 2),
+      wbInteger('Flags', itU8)
+    ]), wbOBTSCounter1),
+    wbArray('Parts B', wbStruct('Part B', [
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbFormIDCk('Material Swap', [MSWP]),
+      wbFloat('Unknown'),
+      wbByteArray('Unknown', 4)
+    ]), wbOBTSCounter2)
+  ], cpNormal, True);
 
   wbOBTESequence := wbRStruct('Unknown', [
+    wbInteger(OBTE, 'Count', itU32, nil, cpBenign),
+    wbRArray('Combinations',
+      wbRUnion('Combination', [
+        wbRStruct('Combination', [
+          wbOBTS
+        ], []),
+
+        wbRStruct('Combination', [
+          wbFULL,
+          wbOBTS
+        ], []),
+
+        wbRStruct('Combination', [
+          wbEmpty(OBTF, 'Boolean True'),
+          wbFULL,
+          wbOBTS
+        ], [])
+      ], []),
+      cpNormal, False, nil, wbOBTSCombinationsAfterSet),
+    wbEmpty(STOP, 'Marker', cpNormal, True)
+  ], []);
+
+  {wbOBTESequence := wbRStruct('Unknown', [
     wbRStruct('Unknown', [
       wbInteger(OBTE, 'Count', itU32, nil, cpBenign),
       wbEmpty(OBTF, 'Boolean True'),
@@ -6932,7 +6981,7 @@ begin
       wbFULL
     ], []),
     wbEmpty(STOP, 'Marker', cpNormal, True)
-  ], []);
+  ], []);}
 
   wbBSMPSequence := wbRArray('Unknown',
     wbRStruct('Unknown', [
