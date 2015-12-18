@@ -933,8 +933,10 @@ var
   wbBODTBOD2: IwbSubRecordUnionDef;
   wbScriptEntry: IwbStructDef;
   wbPropTypeEnum: IwbEnumDef;
+  wbScriptFlags: IwbIntegerDef;
   wbScriptPropertyObject: IwbUnionDef;
   wbScriptPropertyStruct: IwbArrayDef;
+  wbScriptProperties: IwbArrayDef;
   wbScriptFragments: IwbStructDef;
   wbScriptFragmentsQuest: IwbStructDef;
   wbScriptFragmentsInfo: IwbStructDef;
@@ -2756,6 +2758,20 @@ begin
       Inc(Result);
     F := F shr 1;
   end;
+end;
+
+{>>> For VMAD <<<}
+function wbScriptFragmentsQuestScriptDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container  : IwbContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
+  if Container.ElementEditValues['scriptName'] = '' then
+    Result := 1;
 end;
 
 function wbBOOKTeachesDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -5393,6 +5409,13 @@ begin
     {17} 'Array of Struct'
   ]);
 
+  wbScriptFlags := wbInteger('Flags', itU8, wbEnum([
+    {0x00} 'Local',
+    {0x01} 'Inherited',
+    {0x02} 'Removed',
+    {0x03} 'Inherited and Removed'
+  ]));
+
   wbScriptPropertyObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
     wbStructSK([1], 'Object v2', [
       wbInteger('Unused', itU16, nil, cpIgnore),
@@ -5431,15 +5454,7 @@ begin
       ])
     ]), -1, cpNormal, False);
 
-
-  wbScriptEntry := wbStructSK([0], 'Script', [
-    wbLenString('scriptName', 2),
-    wbInteger('Flags', itU8, wbEnum([
-      {0x00} 'Local',
-      {0x01} 'Inherited',
-      {0x02} 'Removed',
-      {0x03} 'Inherited and Removed'
-    ])),
+  wbScriptProperties :=
     wbArrayS('Properties', wbStructSK([0], 'Property', [
       wbLenString('propertyName', 2),
       wbInteger('Type', itU8, wbPropTypeEnum, cpNormal, False, nil, wbScriptPropertyTypeAfterSet),
@@ -5463,7 +5478,12 @@ begin
        {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1),
        {17} wbArray('Array of Struct', wbScriptPropertyStruct, -1)
       ])
-    ]), -2, cpNormal, False, nil, nil, nil, False)
+    ]), -2, cpNormal, False, nil, nil, nil, False);
+
+  wbScriptEntry := wbStructSK([0], 'Script', [
+    wbLenString('scriptName', 2),
+    wbScriptFlags,
+    wbScriptProperties
   ]);
 
   wbScriptFragmentsInfo := wbStruct('Script Fragments Info', [
@@ -5500,28 +5520,37 @@ begin
   wbScriptFragmentsQuest := wbStruct('Script Fragments Quest', [
     wbInteger('Unknown', itS8),
     wbInteger('fragmentCount', itU16),
-    wbScriptEntry,
+    wbLenString('scriptName', 2),
+    // if scriptName = "" then no Flags and Properties
+    wbUnion('Script', wbScriptFragmentsQuestScriptDecider, [
+      wbStruct('Script', [
+        wbScriptFlags,
+        wbScriptProperties
+      ]),
+//       Quest [000179EF] <DialogueGenericPlayer>
+//       Quest [000792CA] <DialogueGenericMerchants> "Merchant Dialogue System"
+//       Quest [00091FE1] <DialogueDiamondCityChapel>
+//       MQ101KelloggSequence "Kellogg Sequence in Vault 111" [QUST:000D3997]
+//       DialogueGlowingSeaAtom "Children of the Atom Dialogue" [QUST:0012DB31]
+//       BoSIdleHandlerQuest [QUST:00157460]
+      wbNull
+    ]),
     wbArrayS('Quest Fragments',
-    wbStructSK([0, 2], 'Quest Fragment', [
-      wbInteger('Quest Stage', itU16),
-      wbInteger('Unknown', itS16),
-      wbInteger('Quest Stage Index', itS32),
-      wbInteger('Unknown', itS8),
-      wbLenString('scriptName', 2),
-      wbLenString('fragmentName', 2)
-    ]), wbScriptFragmentsQuestCounter),
-    // Those 3 quests has something else instead of Aliases block (fragment script has Inhetited type)
-    // added wbUnknown at the end to not lose data at least
-    // Quest [000179EF] <DialogueGenericPlayer>
-    // Quest [000792CA] <DialogueGenericMerchants> "Merchant Dialogue System"
-    // Quest [00091FE1] <DialogueDiamondCityChapel>
+      wbStructSK([0, 2], 'Quest Fragment', [
+        wbInteger('Quest Stage', itU16),
+        wbInteger('Unknown', itS16),
+        wbInteger('Quest Stage Index', itS32),
+        wbInteger('Unknown', itS8),
+        wbLenString('scriptName', 2),
+        wbLenString('fragmentName', 2)
+      ]),
+      wbScriptFragmentsQuestCounter),
     wbArrayS('Aliases', wbStructSK([0], 'Alias', [
       wbScriptPropertyObject,
       wbInteger('Version', itS16, nil, cpIgnore),
       wbInteger('Object Format', itS16, nil, cpIgnore),
-	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
-	  ]), -2),
-    wbUnknown
+      wbArrayS('Alias Scripts', wbScriptEntry, -2)
+    ]), -2)
   ], cpNormal, false, wbScriptFragmentsDontShow);
 
   wbScriptFragmentsScen := wbStruct('Script Fragments Scene', [
