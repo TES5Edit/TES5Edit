@@ -11056,6 +11056,8 @@ begin
         end else begin
           if IsValid('NULL') then
             Strings.Add('NULL - Null Reference [00000000]');
+          if IsValid('FFFF') then
+            Strings.Add('FFFF - None Reference [FFFFFFFF]');
           if IsValid('TRGT') then
             Strings.Add('TARGET - Target Reference [00000000]');
           if IsValid('PLYR') then
@@ -11097,6 +11099,8 @@ begin
   if aInt = 0 then
     Exit;
   if aInt = $14 then
+    Exit;
+  if (aInt = $FFFFFFFF) and IsValid('FFFF') then
     Exit;
 
   if (aInt < $800) and IsValid('ACVA') then
@@ -11146,7 +11150,7 @@ begin
   OldValue := aInt;
   NewValue := OldValue;
 
-  if (aInt < $800) or (aInt = $FFFFFFFF) and IsValid('ACVA') then begin
+  if (aInt < $800) or (aInt = $FFFFFFFF) and (IsValid('ACVA') or IsValid('FFFF')) then begin
     Result := NewValue;
     Exit;
   end;
@@ -11168,7 +11172,7 @@ var
   i      : Integer;
 begin
   Result := aFormID;
-  if (Result = 0) or (Result = $14) then
+  if (Result = 0) or (Result = $14) or (Result = $FFFFFFFF) then
     Exit;
   FileID := aFormID shr 24;
   for i := Low(aOld) to High(aOld) do
@@ -11186,7 +11190,7 @@ begin
   OldValue := aInt;
   NewValue := OldValue;
 
-  if (aInt < $800) or (aInt = $FFFFFFFF) and IsValid('ACVA') then begin
+  if (aInt < $800) or (aInt = $FFFFFFFF) and (IsValid('ACVA') or IsValid('FFFF')) then begin
     Result := NewValue;
     Exit;
   end;
@@ -11244,7 +11248,7 @@ var
   _File: IwbFile;
   MainRecord: IwbMainRecord;
 begin
-  if aInt < $800 then begin
+  if (aInt < $800) or (aInt = $FFFFFFFF) then begin
     Result := IntToHex64(aInt, 8);
     Exit;
   end;
@@ -11315,6 +11319,18 @@ begin
           FoundSignatures.Objects[i] := TObject(Succ(Integer(FoundSignatures.Objects[i])));
         end;
     end;
+    Used(aElement, Result);
+    Exit;
+  end else if aInt = $FFFFFFFF then begin
+    Result := 'FFFF - None Reference ['+IntToHex64(aInt,8)+']';
+    if wbReportMode then
+      if wbReportFormIDs then begin
+        if not Assigned(FoundSignatures) then
+          FoundSignatures := TwbFastStringListCS.CreateSorted;
+        if not FoundSignatures.Find('FFFF', i) then
+          i := FoundSignatures.Add('FFFF');
+        FoundSignatures.Objects[i] := TObject(Succ(Integer(FoundSignatures.Objects[i])));
+      end;
     Used(aElement, Result);
     Exit;
   end else if aInt = $14 then begin
@@ -12316,6 +12332,11 @@ begin
       if fidcValidRefs.IndexOf(Found) < 0 then
         Result := 'Found a NULL reference, expected: ' + fidcValidRefs.CommaText;
     end;
+    Exit;
+  end else if aInt = $FFFFFFFF then begin
+    Found := 'FFFF';
+    if fidcValidRefs.IndexOf(Found) < 0 then
+      Result := 'Found a None (FFFFFFFF) reference, expected: ' + fidcValidRefs.CommaText;
     Exit;
   end else if aInt = $14 then begin
     Found := 'PLYR';
