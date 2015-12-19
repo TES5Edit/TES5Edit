@@ -296,6 +296,7 @@ const
   EYES : TwbSignature = 'EYES';
   FACT : TwbSignature = 'FACT';
   FCHT : TwbSignature = 'FCHT'; { New to Skyrim }
+  FFFF : TwbSignature = 'FFFF';
   FIMD : TwbSignature = 'FIMD'; { New To Fallout 4 }
   FLMV : TwbSignature = 'FLMV'; { New to Skyrim }
   FLOR : TwbSignature = 'FLOR';
@@ -5492,7 +5493,7 @@ begin
       {1} 'OnBegin',
       {2} 'OnEnd'
     ])),
-    wbLenString('fileName', 2),
+    wbScriptEntry,
     wbArray('Info Fragments',  // Do NOT sort, ordered OnBegin, OnEnd
       wbStruct('Info Fragment', [
         wbInteger('Unknown', itS8),
@@ -5508,7 +5509,8 @@ begin
       {2} 'OnEnd',
       {4} 'OnChange'
     ])),
-    wbLenString('fileName', 2),
+    //wbLenString('fileName', 2),
+    wbScriptEntry,
     wbArray('Package Fragments',  // Do NOT sort, ordered OnBegin, OnEnd, OnChange
       wbStruct('Package Fragment', [
         wbInteger('Unknown', itS8),
@@ -5559,7 +5561,7 @@ begin
       {1} 'OnBegin',
       {2} 'OnEnd'
     ])),
-    wbLenString('fileName', 2),
+    wbScriptEntry,
     wbArray('Scene Fragments',  // Do NOT sort, ordered OnBegin, OnEnd
       wbStruct('Scene Fragment', [
         wbInteger('Unknown', itS8),
@@ -5596,50 +5598,37 @@ begin
 
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
 
-  if wbSimpleRecords then
-
-    wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
-      wbInteger('Version', itS16, nil, cpIgnore),
-      wbInteger('Object Format', itS16, nil, cpIgnore),
-      wbUnknown
-    ], cpNormal, false, nil, -1)
-
-  else
-
-    wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
-      wbInteger('Version', itS16, nil, cpIgnore),
-      wbInteger('Object Format', itS16, nil, cpIgnore),
-      wbUnion('Data', wbScriptFragmentExistsDecider, [
+  wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
+    wbInteger('Version', itS16, nil, cpIgnore),
+    wbInteger('Object Format', itS16, nil, cpIgnore),
+    wbUnion('Data', wbScriptFragmentExistsDecider, [
+      wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+      wbStruct('Info VMAD', [
         wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-        wbStruct('Info VMAD', [
-          wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-          wbUnknown
-          //wbScriptFragmentsInfo
-        ], cpNormal, False, nil, 0),
-        wbStruct('Pack VMAD', [
-          wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-          wbUnknown
-          //wbScriptFragmentsPack
-        ], cpNormal, False, nil, 0),
-        wbStruct('Perk VMAD', [
-          wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-          wbScriptFragments
-        ], cpNormal, False, nil, 0),
-        wbStruct('Quest VMAD', [
-          wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-          wbScriptFragmentsQuest
-        ], cpNormal, False, nil, 0),
-        wbStruct('Scene VMAD', [
-          wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-          wbUnknown
-          //wbScriptFragmentsScen
-        ], cpNormal, False, nil, 0),
-        wbStruct('Terminal VMAD', [
-          wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-          wbScriptFragments
-        ], cpNormal, False, nil, 0)
-      ])
-    ], cpNormal, false, nil, -1);
+        wbScriptFragmentsInfo
+      ], cpNormal, False, nil, 0),
+      wbStruct('Pack VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+        wbScriptFragmentsPack
+      ], cpNormal, False, nil, 0),
+      wbStruct('Perk VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+        wbScriptFragments
+      ], cpNormal, False, nil, 0),
+      wbStruct('Quest VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+        wbScriptFragmentsQuest
+      ], cpNormal, False, nil, 0),
+      wbStruct('Scene VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+        wbScriptFragmentsScen
+      ], cpNormal, False, nil, 0),
+      wbStruct('Terminal VMAD', [
+        wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+        wbScriptFragments
+      ], cpNormal, False, nil, 0)
+    ])
+  ], cpNormal, false, nil, -1);
 
   wbAttackData := wbRStructSK([1], 'Attack', [
     wbStruct(ATKD, 'Attack Data', [
@@ -11135,7 +11124,7 @@ begin
 
     wbRArray('Responses', wbRStruct('Response', [
       wbStruct(TRDA, 'Response Data', [
-        wbFormIDCk('Emotion', [KYWD, NULL]),
+        wbFormIDCk('Emotion', [KYWD, FFFF]),
         wbInteger('Response number', itU8),
         wbByteArray('Unused', 3),
         //wbFormIDCk('Sound', [SNDR, NULL]),
