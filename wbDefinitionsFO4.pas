@@ -14688,14 +14688,18 @@ begin
   wbRecord(GDRY, 'God Ray', [
     wbEDID,
     wbStruct(DATA, 'Data', [
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
+      wbStruct('Sky/Fog Color', [
+        wbFloat('Red'),
+        wbFloat('Green'),
+        wbFloat('Blue')
+      ]),
+      wbStruct('Light/Ray Color', [
+        wbFloat('Red'),
+        wbFloat('Green'),
+        wbFloat('Blue')
+      ]),
+      wbFloat('Intensity'),
+      wbFloat('Multiscatter'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
