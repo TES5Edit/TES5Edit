@@ -1013,6 +1013,7 @@ var
   wbRaceTTGP: IwbSubrecordArrayDef;
   wbRaceMPGN: IwbSubrecordArrayDef;
   wbRaceFRMI: IwbSubrecordArrayDef;
+  wbNVNM: IwbSubRecordDef;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -5790,6 +5791,18 @@ begin
 
 	wbMODT := wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
 	wbDMDT := wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
+  {wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
+    wbInteger('Number of headers', itU32),
+    wbInteger('Textures count', itU32),
+    wbByteArray('Unused', 4),
+    wbInteger('Unique textures count', itU32),
+    wbInteger('Materials count', itU32),
+    wbArray('Hashes', wbStruct('Hash', [
+      wbByteArray('Flags', 4),
+      wbString('Type', 4),
+      wbByteArray('Texture hash', 4)
+    ]))
+  ]);}
 
   wbMODL :=
     wbRStructSK([0], 'Model', [
@@ -5957,6 +5970,31 @@ begin
   ], cpNormal, False, nil, 1);
 
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
+
+  if wbSimpleRecords then
+    wbNVNM := wbByteArray(NVNM, 'Navmesh Geometry')
+  else
+    wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
+      wbInteger('Unknown', itU32),
+      wbByteArray('Unknown', 4),
+      wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+      wbFormIDCk('Parent Cell', [CELL]),
+      wbArray('Vertices', wbStruct('Vertex', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ]), -1),
+      wbArray('Triangles', wbStruct('Triangle', [
+        wbInteger('Vertex 0', itS16),
+        wbInteger('Vertex 1', itS16),
+        wbInteger('Vertex 2', itS16),
+        wbInteger('Edge 0-1', itS16),
+        wbInteger('Edge 1-2', itS16),
+        wbInteger('Edge 2-0', itS16),
+        wbByteArray('Flags', 9)
+      ]), -1),
+      wbUnknown
+    ]);
 
 end;
 
@@ -7157,13 +7195,17 @@ begin
     wbDESC,
     wbKSIZ,
     wbKWDAs,
-    wbUnknown(DATA),
+    wbInteger(DATA, 'Value', itU32, nil, cpNormal, True),
     wbStruct(DNAM, '', [
       wbFormIDCk('Projectile', [PROJ, NULL]),
-      wbByteArray('Unknown', 4),
+      wbInteger('Flags', itU32, wbFlags([
+        'Ignores Normal Weapon Resistance',
+        'Non-Playable',
+        'Ballistic?'
+      ])),
       wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4)
-    ]),
+    ], cpNormal, True),
     wbLString(ONAM, 'Unknown', 0, cpTranslate),
     wbString(NAM1, 'Casing Model'),
     wbUnknown(NAM2)
@@ -8613,7 +8655,7 @@ begin
       wbFormIDCk('Keyword', [KYWD, NULL]),
       wbInteger('Unknown', itS32)
     ], cpNormal, False, nil, 4)),
-    wbUnknown(NVNM),
+    wbNVNM,
     wbAPPR,
     wbOBTESequence
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
@@ -12316,7 +12358,7 @@ begin
           wbRArray('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
           wbRArray('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
-          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, VTYP, NULL]),
+          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
         ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet),
 
@@ -12385,7 +12427,7 @@ begin
           wbRArray('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
           wbRArray('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
-          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, VTYP, NULL]),
+          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
         ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet),
 
@@ -13809,7 +13851,7 @@ begin
       wbFloat('Unknown'),
       wbFloat('Unknown')
     ], cpNormal, True, nil, 2),
-    wbUnknown(NVNM),
+    wbNVNM,
     wbArray(MNAM, 'Distant LOD',
       wbStruct('LOD', [
         {>>> Contains null-terminated mesh filename followed by random data up to 260 bytes <<<}
