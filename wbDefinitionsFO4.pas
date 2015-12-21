@@ -14983,7 +14983,7 @@ begin
         wbInteger('Unknown', itU8),
         wbByteArray('Unknown', 2)
       ]), wbOMODDataIncludeCounter, cpNormal, False, nil, wbOMODincludeAfterSet),
-      wbArrayS('Properties', wbStruct('Property', [
+      wbArrayS('Properties', wbStructSK([4], 'Property', [
         wbInteger('Value Type', itU8, wbEnum([
           {0} 'Int',
           {1} 'Float',
