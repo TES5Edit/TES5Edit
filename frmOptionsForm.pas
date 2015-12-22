@@ -35,8 +35,6 @@ type
     cbConflictAll: TComboBox;
     clbConflictAll: TColorBox;
     cbSimpleRecords: TCheckBox;
-    Label5: TLabel;
-    edColumnWidth: TEdit;
     cbAutoSave: TCheckBox;
     cbTrackAllEditorID: TCheckBox;
     cbSortGroupRecord: TCheckBox;
@@ -53,6 +51,10 @@ type
     cbActorTemplateHide: TCheckBox;
     cbClampFormID: TCheckBox;
     cbShowGroupRecordCount: TCheckBox;
+    Label5: TLabel;
+    edColumnWidth: TEdit;
+    edRowHeight: TEdit;
+    Label6: TLabel;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);
