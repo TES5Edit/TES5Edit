@@ -28,27 +28,19 @@ object frmOptions: TfrmOptions
     Top = 0
     Width = 466
     Height = 363
-    ActivePage = tsGeneral
+    ActivePage = tsUISettings
     Align = alTop
     TabOrder = 0
     object tsGeneral: TTabSheet
       Caption = 'General'
       ImageIndex = 1
-      ExplicitHeight = 313
-      object Label5: TLabel
-        Left = 16
-        Top = 304
-        Width = 64
-        Height = 13
-        Caption = 'Column width'
-      end
       object cbIKnow: TCheckBox
         Left = 298
         Top = 302
         Width = 137
         Height = 17
         Caption = 'I know what I am doing'
-        TabOrder = 9
+        TabOrder = 8
         Visible = False
       end
       object cbHideUnused: TCheckBox
@@ -108,13 +100,6 @@ object frmOptions: TfrmOptions
         Caption = 'Simple records LAND, NAVI, NAVM, CELL, WRLD (requires restart)'
         TabOrder = 7
       end
-      object edColumnWidth: TEdit
-        Left = 86
-        Top = 300
-        Width = 51
-        Height = 21
-        TabOrder = 8
-      end
       object cbAutoSave: TCheckBox
         Left = 298
         Top = 15
@@ -139,7 +124,7 @@ object frmOptions: TfrmOptions
         Height = 17
         Hint = 'Sort INFOs in DIAL by previous INFO'
         Caption = 'Sort INFOs'
-        TabOrder = 10
+        TabOrder = 9
       end
       object cbShowFlagEnumValue: TCheckBox
         Left = 16
@@ -150,7 +135,7 @@ object frmOptions: TfrmOptions
           'Add integer values of flags and enumerations in () brackets at t' +
           'he end'
         Caption = 'Show values of flags and enumerations (requires restart)'
-        TabOrder = 11
+        TabOrder = 10
       end
       object cbRemoveOffsetData: TCheckBox
         Left = 16
@@ -159,7 +144,7 @@ object frmOptions: TfrmOptions
         Height = 17
         Hint = 'Remove OFST subrecords from worldspaces'
         Caption = 'Remove OFST offset data'
-        TabOrder = 12
+        TabOrder = 11
       end
       object cbActorTemplateHide: TCheckBox
         Left = 16
@@ -167,7 +152,7 @@ object frmOptions: TfrmOptions
         Width = 169
         Height = 17
         Caption = 'Hide templated fields on actors'
-        TabOrder = 13
+        TabOrder = 12
       end
       object cbClampFormID: TCheckBox
         Left = 16
@@ -176,7 +161,7 @@ object frmOptions: TfrmOptions
         Height = 17
         Hint = 'Set FormID index to the number of masters if greater'
         Caption = 'Clamp FormIDs'
-        TabOrder = 14
+        TabOrder = 13
       end
       object cbShowGroupRecordCount: TCheckBox
         Left = 16
@@ -184,12 +169,11 @@ object frmOptions: TfrmOptions
         Width = 233
         Height = 17
         Caption = 'Show elements count for group records'
-        TabOrder = 15
+        TabOrder = 14
       end
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'
-      ExplicitHeight = 309
       object Label1: TLabel
         Left = 16
         Top = 9
@@ -257,7 +241,6 @@ object frmOptions: TfrmOptions
     object tsDoNotBuildRefs: TTabSheet
       Caption = 'References building'
       ImageIndex = 3
-      ExplicitHeight = 309
       object Label2: TLabel
         Left = 16
         Top = 13
@@ -296,7 +279,6 @@ object frmOptions: TfrmOptions
     object tsUISettings: TTabSheet
       Caption = 'UI Settings'
       ImageIndex = 2
-      ExplicitHeight = 309
       object Label3: TLabel
         Left = 16
         Top = 16
@@ -310,6 +292,20 @@ object frmOptions: TfrmOptions
         Width = 123
         Height = 13
         Caption = 'Conflict Color Background'
+      end
+      object Label5: TLabel
+        Left = 18
+        Top = 192
+        Width = 66
+        Height = 13
+        Caption = 'Column Width'
+      end
+      object Label6: TLabel
+        Left = 159
+        Top = 191
+        Width = 55
+        Height = 13
+        Caption = 'Row Height'
       end
       object clbConflictThis: TColorBox
         Left = 223
@@ -401,6 +397,20 @@ object frmOptions: TfrmOptions
         TabOrder = 6
         OnClick = pnlFontRecordsClick
       end
+      object edColumnWidth: TEdit
+        Left = 92
+        Top = 188
+        Width = 51
+        Height = 21
+        TabOrder = 7
+      end
+      object edRowHeight: TEdit
+        Left = 223
+        Top = 188
+        Width = 51
+        Height = 21
+        TabOrder = 8
+      end
     end
   end
   object btnOK: TButton
@@ -412,7 +422,6 @@ object frmOptions: TfrmOptions
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 1
-    ExplicitTop = 346
   end
   object btnCancel: TButton
     Left = 383
@@ -423,6 +432,5 @@ object frmOptions: TfrmOptions
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
-    ExplicitTop = 346
   end
 end
