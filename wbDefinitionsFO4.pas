@@ -7314,7 +7314,8 @@ begin
     wbKWDAs,
     wbFormIDCk(FIMD, 'Unknown', [MESG]),
     wbStruct(DATA, 'Data', [
-      wbUnknown
+      wbInteger('Value', itU32),
+      wbByteArray('Unknown', 4)
 //      wbInteger('Flags', itU8, wbFlags([
 //       {0x01} 'Teaches Skill',
 //       {0x02} 'Can''t be Taken',
@@ -13977,7 +13978,18 @@ begin
 //      wbByteArray('Unknown', 4),
 //      wbFloat('Stagger'),
     ]),
-    wbUnknown(FNAM),
+    wbStruct(FNAM, '', [
+      wbByteArray('Unknown', 4),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbFloat('Unknown'),
+      wbByteArray('Unknown', 1),
+      wbFormIDCk('Projectile', [PROJ, NULL]),
+      wbByteArray('Unknown', 8)
+    ]),
     wbStruct(CRDT, 'Critical Data', [
       //wbInteger('Damage', itU16),
       //wbByteArray('Unused', 2, cpIgnore),
