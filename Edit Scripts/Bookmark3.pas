@@ -3,15 +3,22 @@
   Hotkey: Ctrl+3
   Mode: Silent
 }
-unit Bookmark3;
+unit Bookmark1;
 
 uses
   Bookmark;
 
+var
+  MarkRecord: IInterface;
+
 function Process(e: IInterface): Integer;
 begin
-  BookmarkSet(e, 3);
-  Result := 1;
+  MarkRecord := e;
+end;
+
+function Finalize: Integer;
+begin
+  BookmarkSet(MarkRecord, 3);
 end;
 
 end.
