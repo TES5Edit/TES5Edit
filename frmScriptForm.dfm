@@ -23,13 +23,13 @@ object frmScript: TfrmScript
     Left = 0
     Top = 0
     Width = 682
-    Height = 33
+    Height = 49
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
     DesignSize = (
       682
-      33)
+      49)
     object Label1: TLabel
       Left = 8
       Top = 10
@@ -44,7 +44,7 @@ object frmScript: TfrmScript
       Height = 21
       Style = csDropDownList
       Anchors = [akLeft, akTop, akRight]
-      DropDownCount = 20
+      DropDownCount = 30
       TabOrder = 0
       OnChange = cmbScriptsChange
     end
@@ -57,6 +57,15 @@ object frmScript: TfrmScript
       Caption = 'Save'
       TabOrder = 1
       OnClick = btnSaveClick
+    end
+    object chkScriptsSubDir: TCheckBox
+      Left = 41
+      Top = 30
+      Width = 192
+      Height = 17
+      Caption = 'Include scripts from subdirectories'
+      TabOrder = 2
+      OnClick = chkScriptsSubDirClick
     end
   end
   object pnlBottom: TPanel
@@ -109,9 +118,9 @@ object frmScript: TfrmScript
   end
   object Editor: TMemo
     Left = 0
-    Top = 33
+    Top = 49
     Width = 682
-    Height = 340
+    Height = 324
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -125,6 +134,8 @@ object frmScript: TfrmScript
     WordWrap = False
     OnKeyUp = EditorKeyUp
     OnMouseUp = EditorMouseUp
+    ExplicitTop = 33
+    ExplicitHeight = 340
   end
   object dlgSave: TSaveDialog
     DefaultExt = 'pas'

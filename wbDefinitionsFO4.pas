@@ -6971,7 +6971,9 @@ begin
       wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4),
       wbByteArray('Unknown', 4),
-      wbFormIDCk('Material Swap', [MSWP]),
+      // STAT is here SkinMirelurkSpawnHatchlingJuice [ARMO:00176DA1]
+      // probably not a FormID depending on above values
+      wbFormIDCk('Material Swap', [MSWP, STAT]),
       wbFloat('Unknown'),
       wbByteArray('Unknown', 4)
     ]), wbOBTSCounter2)
@@ -6999,39 +7001,6 @@ begin
       cpNormal, False, nil, wbOBTSCombinationsAfterSet),
     wbEmpty(STOP, 'Marker', cpNormal, True)
   ], []);
-
-  {wbOBTESequence := wbRStruct('Unknown', [
-    wbRStruct('Unknown', [
-      wbInteger(OBTE, 'Count', itU32, nil, cpBenign),
-      wbEmpty(OBTF, 'Boolean True'),
-      wbFULL
-    ], []),
-    wbRStructs('Unknown', 'Unknown', [
-      wbStruct(OBTS, 'Unknown', [
-        wbInteger('Parts A Count', itU32),
-        wbInteger('Parts B Count', itU32),
-        wbByteArray('Unknown', 7),
-        wbArray('Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), -4),
-        wbByteArray('Unknown', 2),
-        wbArray('Parts A', wbStruct('Part A', [
-          wbFormIDCk('Mod', [OMOD]),
-          wbByteArray('Unknown', 2),
-          wbInteger('Flags', itU8)
-        ]), wbOBTSCounter1),
-        wbArray('Parts B', wbStruct('Part B', [
-          wbByteArray('Unknown', 4),
-          wbByteArray('Unknown', 4),
-          wbByteArray('Unknown', 4),
-          wbFormIDCk('Material Swap', [MSWP]),
-          wbFloat('Unknown'),
-          wbByteArray('Unknown', 4)
-        ]), wbOBTSCounter2)
-      ]),
-      wbEmpty(OBTF, 'Boolean True'),
-      wbFULL
-    ], []),
-    wbEmpty(STOP, 'Marker', cpNormal, True)
-  ], []);}
 
   wbBSMPSequence := wbRArray('Unknown',
     wbRStruct('Unknown', [
