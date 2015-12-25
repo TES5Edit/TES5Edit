@@ -980,13 +980,7 @@ var
   wbArmorTypeEnum: IwbEnumDef;
   wbRACE_DATAFlags01: IwbIntegerDef;
   wbPhonemeTargets: IwbSubRecordDef;
-  wbNoseMorphFlags: IwbIntegerDef;
-  wbBrowMorphFlags: IwbIntegerDef;
-  wbEyesMorphFlags01: IwbIntegerDef;
-  wbEyesMorphFlags02: IwbIntegerDef;
-  wbLipMorphFlags: IwbIntegerDef;
   wbPHWT: IwbSubRecordStructDef;
-  wbMorphs: IwbSubRecordStructDef;
   wbHeadPart: IwbSubRecordStructDef;
   wbTintMaskTypeEnum: IwbEnumDef;
   wbQUSTAliasFlags: IwbSubRecordDef;
@@ -1010,8 +1004,8 @@ var
   wbFTYP: IwbSubRecordDef;
   wbATTX: IwbSubRecordDef;
   wbOBTS: IwbSubRecordDef;
-  wbRaceTTGP: IwbSubrecordArrayDef;
-  wbRaceMPGN: IwbSubrecordArrayDef;
+  wbTintTemplateGroups: IwbSubrecordArrayDef;
+  wbMorphGroups: IwbSubrecordArrayDef;
   wbRaceFRMI: IwbSubrecordArrayDef;
   wbNVNM: IwbSubRecordDef;
 
@@ -11049,7 +11043,10 @@ begin
     wbEDID,
     wbFULL,
     wbCNAMReq,
-    wbInteger(FNAM, 'Playable', itU32, wbEnum(['False', 'True']), cpNormal, True)
+    wbInteger(FNAM, 'Flags', itU32, wbFlags([
+      'Playable',
+      'Hair Color'
+    ]), cpNormal, True)
   ]);
 end;
 
@@ -12457,145 +12454,6 @@ begin
     'Body Texture'
   ]);
 
-  wbNoseMorphFlags := wbInteger('Nose Morph Flags', itU32, wbFlags([
-    {0x00000001}'NoseType0',
-    {0x00000002}'NoseType1',
-    {0x00000004}'NoseType2',
-    {0x00000008}'NoseType3',
-    {0x00000010}'NoseType4',
-    {0x00000020}'NoseType5',
-    {0x00000040}'NoseType6',
-    {0x00000080}'NoseType7',
-    {0x00000100}'NoseType8',
-    {0x00000200}'NoseType9',
-    {0x00000400}'NoseType10',
-    {0x00000800}'NoseType11',
-    {0x00001000}'NoseType12',
-    {0x00002000}'NoseType13',
-    {0x00004000}'NoseType14',
-    {0x00008000}'NoseType15',
-    {0x00010000}'NoseType16',
-    {0x00020000}'NoseType17',
-    {0x00040000}'NoseType18',
-    {0x00080000}'NoseType19',
-    {0x00100000}'NoseType20',
-    {0x00200000}'NoseType21',
-    {0x00400000}'NoseType22',
-    {0x00800000}'NoseType23',
-    {0x01000000}'NoseType24',
-    {0x02000000}'NoseType25',
-    {0x04000000}'NoseType26',
-    {0x08000000}'NoseType27',
-    {0x10000000}'NoseType28',
-    {0x20000000}'NoseType29',
-    {0x40000000}'NoseType30',
-    {0x80000000}'NoseType31'
-  ]));
-
-  wbBrowMorphFlags := wbInteger('Brow Morph Flags', itU32, wbFlags([
-    {0x00000001}'BrowType0',
-    {0x00000002}'BrowType1',
-    {0x00000004}'BrowType2',
-    {0x00000008}'BrowType3',
-    {0x00000010}'BrowType4',
-    {0x00000020}'BrowType5',
-    {0x00000040}'BrowType6',
-    {0x00000080}'BrowType7',
-    {0x00000100}'BrowType8',
-    {0x00000200}'BrowType9',
-    {0x00000400}'BrowType10',
-    {0x00000800}'BrowType11',
-    {0x00001000}'BrowType12',
-    {0x00002000}'BrowType13',
-    {0x00004000}'BrowType14',
-    {0x00008000}'BrowType15',
-    {0x00010000}'BrowType16',
-    {0x00020000}'BrowType17',
-    {0x00040000}'BrowType18',
-    {0x00080000}'BrowType19',
-    {0x00100000}'BrowType20'
-  ], True));
-
-  wbEyesMorphFlags01 := wbInteger('Eye Morph Flags 1', itU32, wbFlags([
-    {0x00000001}'EyesType0',
-    {0x00000002}'EyesType1',
-    {0x00000004}'EyesType2',
-    {0x00000008}'EyesType3',
-    {0x00000010}'EyesType4',
-    {0x00000020}'EyesType5',
-    {0x00000040}'EyesType6',
-    {0x00000080}'EyesType7',
-    {0x00000100}'EyesType8',
-    {0x00000200}'EyesType9',
-    {0x00000400}'EyesType10',
-    {0x00000800}'EyesType11',
-    {0x00001000}'EyesType12',
-    {0x00002000}'EyesType13',
-    {0x00004000}'EyesType14',
-    {0x00008000}'EyesType15',
-    {0x00010000}'EyesType16',
-    {0x00020000}'EyesType17',
-    {0x00040000}'EyesType18',
-    {0x00080000}'EyesType19',
-    {0x00100000}'EyesType20',
-    {0x00200000}'EyesType21',
-    {0x00400000}'EyesType22',
-    {0x00800000}'EyesType23',
-    {0x01000000}'EyesType24',
-    {0x02000000}'EyesType25',
-    {0x04000000}'EyesType26',
-    {0x08000000}'EyesType27',
-    {0x10000000}'EyesType28',
-    {0x20000000}'EyesType29',
-    {0x40000000}'EyesType30',
-    {0x80000000}'EyesType31'
-  ]));
-
-  wbEyesMorphFlags02 := wbInteger('Eye Morph Flags 2', itU8, wbFlags([
-    {0x00000001}'EyesType32',
-    {0x00000002}'EyesType33',
-    {0x00000004}'EyesType34',
-    {0x00000008}'EyesType35',
-    {0x00000010}'EyesType36',
-    {0x00000020}'EyesType37',
-    {0x00000040}'EyesType38'
-  ], True));
-
-  wbLipMorphFlags := wbInteger('Lip Morph Flags', itU32, wbFlags([
-    {0x00000001}'LipType0',
-    {0x00000002}'LipType1',
-    {0x00000004}'LipType2',
-    {0x00000008}'LipType3',
-    {0x00000010}'LipType4',
-    {0x00000020}'LipType5',
-    {0x00000040}'LipType6',
-    {0x00000080}'LipType7',
-    {0x00000100}'LipType8',
-    {0x00000200}'LipType9',
-    {0x00000400}'LipType10',
-    {0x00000800}'LipType11',
-    {0x00001000}'LipType12',
-    {0x00002000}'LipType13',
-    {0x00004000}'LipType14',
-    {0x00008000}'LipType15',
-    {0x00010000}'LipType16',
-    {0x00020000}'LipType17',
-    {0x00040000}'LipType18',
-    {0x00080000}'LipType19',
-    {0x00100000}'LipType20',
-    {0x00200000}'LipType21',
-    {0x00400000}'LipType22',
-    {0x00800000}'LipType23',
-    {0x01000000}'LipType24',
-    {0x02000000}'LipType25',
-    {0x04000000}'LipType26',
-    {0x08000000}'LipType27',
-    {0x10000000}'LipType28',
-    {0x20000000}'LipType29',
-    {0x40000000}'LipType30',
-    {0x80000000}'LipType31'
-  ]));
-
   wbTintMaskTypeEnum := wbEnum([
     'None',
     'Lip Color',
@@ -12732,112 +12590,42 @@ begin
     wbRStruct('FLAP', [wbPhonemeTargets], [])
   ], []);
 
-  wbMorphs := wbRStruct('Available Morphs', [
-    wbByteArray(MPAI, 'Unknown', 0),
-    wbStruct(MPAV, 'Nose Variants', [
-      wbNoseMorphFlags,
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
-    ]),
-    wbByteArray(MPAI, 'Unknown', 0),
-    wbStruct(MPAV, 'Brow Variants', [
-      wbBrowMorphFlags,
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
-    ]),
-    wbByteArray(MPAI, 'Unknown', 0),
-    wbStruct(MPAV, 'Eye Variants', [
-      wbEyesMorphFlags01,
-      wbEyesMorphFlags02,
-      wbByteArray('Unknown', 3),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
-    ]),
-    wbByteArray(MPAI, 'Unknown', 0),
-    wbStruct(MPAV, 'Lip Variants', [
-      wbLipMorphFlags,
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
-    ])
-  ], []);
-
   wbHeadPart := wbRStructSK([0],'Head Part', [
     wbInteger(INDX, 'Head Part Number', itU32),
     wbFormIDCk(HEAD, 'Head', [HDPT, NULL])
   ], []);
 
-  wbRaceTTGP :=
-    wbRArray('Unknown',
-      wbRStruct('Unknown', [
-        //wbUnknown(TTGP),
-        wbLString(TTGP, 'Unknown', 0, cpTranslate),
-        wbRUnion('Unknown', [
-
-          wbUnknown(TETI),
-
-          wbRStruct('Unknown', [
-            wbUnknown(TTEF),
-            wbCTDA,
-            wbRArray('Unknown', wbString(TTET, 'Unknown')),
-            wbUnknown(TTEB),
-            wbArray(TTEC, 'Unknown', wbStruct('Unknown', [
-              wbFormIDCk('Color', [CLFM]),
-              wbFloat('Unknown'),
-              wbByteArray('Unknown', 6)
-            ])),
-            wbUnknown(TTED),
-            wbUnknown(TETI)
-          ], []),
-
-          wbRStruct('Unknown', [
-            wbRArray('Unknown', wbString(TTET, 'Unknown')),
-            wbUnknown(TTEB),
-            wbArray(TTEC, 'Unknown', wbStruct('Unknown', [
-              wbFormIDCk('Color', [CLFM]),
-              wbFloat('Unknown'),
-              wbByteArray('Unknown', 6)
-            ])),
-            wbUnknown(TTED),
-            wbUnknown(TETI)
-          ], [])
-
-        ], []),
+  wbTintTemplateGroups :=
+    wbRArray{S}('Tint Template Groups',
+      wbRStruct{SK}({[0], }'Tint Template Group', [
+        wbLString(TTGP, 'Name', 0, cpTranslate),
+        wbUnknown(TTEF),
+        wbCTDAs,
+        wbRArray('Textures', wbString(TTET, 'Texture')),
+        wbUnknown(TTEB),
+        wbArray(TTEC, 'Template Colors', wbStruct('Template Color', [
+          wbFormIDCk('Color', [CLFM]),
+          wbFloat('Alpha'),
+          wbInteger('Template Index', itU16),
+          wbByteArray('Unknown', 4)
+        ])),
+        wbUnknown(TTED),
+        wbUnknown(TETI),
         wbUnknown(TTGE)
       ], [])
     );
 
-  wbRaceMPGN :=
-    wbRArray('Unknown',
-      wbRStruct('Unknown', [
-        wbString(MPGN, 'Unknown'),
+  wbMorphGroups :=
+    wbRArray('Morph Groups',
+      wbRStruct('Morph Group', [
+        wbString(MPGN, 'Name'),
         wbUnknown(MPPC),
-        wbRArray('Unknown',
-          wbRStruct('Unknown', [
-            wbUnknown(MPPI),
-            //wbUnknown(MPPN),
-            //wbUnknown(MPPM),
-            wbLString(MPPN, 'Unknown', 0, cpTranslate),
+        wbRArray('Morph Presets',
+          wbRStruct('Morph Preset', [
+            wbByteArray(MPPI, 'Intensity'),
+            wbLString(MPPN, 'Name', 0, cpTranslate),
             wbString(MPPM, 'Unknown'),
-            wbFormIDCk(MPPT, 'Unknown', [TXST]),
+            wbFormIDCk(MPPT, 'Texture', [TXST]),
             wbUnknown(MPPF)
           ], [])
         ),
@@ -12847,11 +12635,11 @@ begin
     );
 
   wbRaceFRMI :=
-      wbRArray('Unknown',
-        wbRStruct('Unknown', [
-          wbUnknown(FMRI),
-          wbLString(FMRN, 'Unknown')
-        ], [])
+    wbRArray('Unknown',
+      wbRStruct('Unknown', [
+        wbUnknown(FMRI),
+        wbLString(FMRN, 'Unknown')
+      ], [])
     );
 
   wbRecord(RACE, 'Race',
@@ -13020,7 +12808,7 @@ begin
     wbFormIDCk(SPMV, 'Base Movement Default - Sprint', [MOVT, NULL]),
 
     // Start Head Data
-    wbRStruct('Head Data', [
+    {wbRStruct('Head Data', [
       wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
       wbRStruct('Male Head Data', [
         wbEmpty(MNAM, 'Male Data Marker', cpNormal, True),
@@ -13030,8 +12818,8 @@ begin
         wbRArrayS('Available Hair Colors Male', wbFormIDCk(AHCM, 'Hair Color', [CLFM, NULL])),
         wbRArrayS('Face Details Texture Set List Male', wbFormIDCk(FTSM, 'Texture Set', [TXST, NULL])),
         wbFormIDCk(DFTM, 'Default Face Texture Male', [TXST, NULL]),
-        wbRaceTTGP,
-        wbRaceMPGN,
+        wbTintTemplateGroups,
+        wbMorphGroups,
         wbRaceFRMI,
         wbString(WMAP, 'Unknown')
       ], [], cpNormal, True),
@@ -13044,43 +12832,82 @@ begin
         wbRArrayS('Available Hair Colors Female', wbFormIDCk(AHCF, 'Hair Color', [CLFM, NULL])),
         wbRArrayS('Face Details Texture Set List Female', wbFormIDCk(FTSF, 'Texture Set', [TXST, NULL])),
         wbFormIDCk(DFTF, 'Default Face Texture Female', [TXST, NULL]),
-        wbRaceTTGP,
-        wbRaceMPGN,
+        wbTintTemplateGroups,
+        wbMorphGroups,
         wbRaceFRMI,
         wbString(WMAP, 'Unknown')
       ], [], cpNormal, True)
-    ], [], cpNormal, False),
+    ], [], cpNormal, False),}
     // End Head Data
+    wbEmpty(NAM0, 'Head Data Marker'),
+    wbEmpty(MNAM, 'Male Data Marker'),
+    wbUnknown(NNAM),
+    wbRArrayS('Head Parts Male', wbHeadPart),
+    wbRArrayS('Race Presets Male', wbFormIDCk(RPRM, 'Preset NPC', [NPC_, NULL])),
+    wbRArrayS('Available Hair Colors Male', wbFormIDCk(AHCM, 'Hair Color', [CLFM, NULL])),
+    wbRArrayS('Face Details Texture Set List Male', wbFormIDCk(FTSM, 'Texture Set', [TXST, NULL])),
+    wbFormIDCk(DFTM, 'Default Face Texture Male', [TXST, NULL]),
+    wbTintTemplateGroups,
+    wbMorphGroups,
+    wbRaceFRMI,
+    wbString(WMAP, 'Unknown'),
 
-    wbFormIDCk(RNAM, 'Unknown', [RACE]),
-    wbFormIDCk(SRAC, 'Unknown', [RACE]),
+    wbEmpty(NAM0, 'Head Data Marker'),
+    wbEmpty(FNAM, 'Female Data Marker'),
+    wbUnknown(NNAM),
+    wbRArrayS('Head Parts Female', wbHeadPart),
+    wbRArrayS('Race Presets Female', wbFormIDCk(RPRF, 'Preset NPC', [NPC_, NULL])),
+    wbRArrayS('Available Hair Colors Female', wbFormIDCk(AHCF, 'Hair Color', [CLFM, NULL])),
+    wbRArrayS('Face Details Texture Set List Female', wbFormIDCk(FTSF, 'Texture Set', [TXST, NULL])),
+    wbFormIDCk(DFTF, 'Default Face Texture Female', [TXST, NULL]),
+    wbTintTemplateGroups,
+    wbMorphGroups,
+    wbRaceFRMI,
+    wbString(WMAP, 'Unknown'),
 
-    // mess here, pattern starts with different subrecords: SGNM, SAKD, STKD
+    wbFormIDCk(RNAM, 'Armor Race', [RACE]),
+    wbFormIDCk(SRAC, 'States Race', [RACE]),
+
+    // Doesn't copy properly!!! Only the first RUnion member def is copied
+    // sequence starts with any of those: SGNM, STKD, SAKD
+    {wbRArray('State Groups',
+      wbRUnion('State Group', [
+        wbRStruct('State Group', [
+          wbString(SGNM, 'Group Name'),
+          wbRArray('Unknown', wbString(SAPT, 'Unknown')),
+          wbUnknown(SRAF)
+        ], []),
+
+        wbRStruct('State Group', [
+          wbRArray('Unknown', wbFormIDCk(STKD, 'Unknown', [KYWD])),
+          wbString(SGNM, 'Group Name'),
+          wbRArray('Unknown', wbString(SAPT, 'Unknown')),
+          wbUnknown(SRAF)
+        ], []),
+
+        wbRStruct('State Group', [
+          wbRArray('Unknown', wbFormIDCk(SAKD, 'Unknown', [KYWD])),
+          wbRArray('Unknown', wbFormIDCk(STKD, 'Unknown', [KYWD])),
+          wbString(SGNM, 'Group Name'),
+          wbRArray('Unknown', wbString(SAPT, 'Unknown')),
+          wbUnknown(SRAF)
+        ], [])
+      ], [])
+    ),}
+
+    // temporary workaround to make this copyable
     wbRArray('Unknown', wbFormIDCk(SAKD, 'Unknown', [KYWD])),
-    wbFormIDCk(STKD, 'Unknown', [KYWD]),
-    wbRArray('Unknown',
-      wbRStruct('Unknown', [
-        //wbUnknown(SGNM),
-        wbString(SGNM, 'Unknown'),
+    wbRArray('Unknown', wbFormIDCk(STKD, 'Unknown', [KYWD])),
+    wbRArray('State Groups',
+      wbRStruct('State Group', [
+        wbString(SGNM, 'Group Name'),
         wbRArray('Unknown', wbString(SAPT, 'Unknown')),
         wbUnknown(SRAF),
         wbRArray('Unknown', wbFormIDCk(SAKD, 'Unknown', [KYWD])),
         wbRArray('Unknown', wbFormIDCk(STKD, 'Unknown', [KYWD]))
       ], [])
     ),
-    {wbRArray('Unknown',
-      wbRStruct('Unknown', [
-         wbUnknown(STKD),
-         wbRArray('Unknown',
-           wbRStruct('Unknown', [
-             wbUnknown(SGNM),
-             wbRArray('Unknown', wbUnknown(SAPT)),
-             wbUnknown(SRAF)
-           ], [])
-         ),
-         wbUnknown(SAKD)
-      ], [])
-    ),}
+
     wbUnknown(PTOP),
     wbUnknown(NTOP),
     wbRArray('Unknown',
@@ -13094,8 +12921,6 @@ begin
     wbString(HNAM, 'Unknown'),
     wbFormIDCk(QSTI, 'Unknown', [QUST]),
     wbBSMPSequence
-    //wbFormIDCk(NAM8, 'Morph race', [RACE, NULL]),
-    //wbFormIDCk(RNAM, 'Armor race', [RACE, NULL])
   ], False, nil, cpNormal, False, wbRACEAfterLoad, wbRACEAfterSet);
 
 
