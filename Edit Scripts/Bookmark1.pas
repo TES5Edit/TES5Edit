@@ -8,10 +8,17 @@ unit Bookmark1;
 uses
   Bookmark;
 
+var
+  MarkRecord: IInterface;
+
 function Process(e: IInterface): Integer;
 begin
-  BookmarkSet(e, 1);
-  Result := 1;
+  MarkRecord := e;
+end;
+
+function Finalize: Integer;
+begin
+  BookmarkSet(MarkRecord, 1);
 end;
 
 end.
