@@ -4,10 +4,12 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls;
+  Dialogs, StdCtrls, ExtCtrls, IOUtils;
 
 const
   sNewScript = '<new script>';
+  sNewScriptName = '_newscript_';
+  sScriptExt = '.pas';
 
 type
   TfrmScript = class(TForm)
@@ -22,6 +24,7 @@ type
     btnSave: TButton;
     dlgSave: TSaveDialog;
     Editor: TMemo;
+    chkScriptsSubDir: TCheckBox;
     procedure FormShow(Sender: TObject);
     procedure cmbScriptsChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -30,6 +33,7 @@ type
     procedure EditorMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure chkScriptsSubDirClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -71,7 +75,7 @@ begin
     end else
       Exit;
   end else
-    s := Path + s + '.pas';
+    s := Path + s + sScriptExt;
 
 
   with TStringList.Create do try
@@ -92,11 +96,11 @@ begin
 
   s := cmbScripts.Items[cmbScripts.ItemIndex];
   if s = sNewScript then
-    s := '_newscript_';
+    s := sNewScriptName;
   Editor.Lines.Clear;
 
   with TStringList.Create do try
-    try LoadFromFile(Path + s + '.pas'); except end;
+    try LoadFromFile(Path + s + sScriptExt); except end;
     Editor.Lines.Text := Text;
     Editor.Modified := False;
     Editor.SetFocus;
@@ -127,27 +131,41 @@ begin
   UpdateCaretPos;
 end;
 
+procedure TfrmScript.chkScriptsSubDirClick(Sender: TObject);
+begin
+  ReadScriptsList;
+end;
+
 procedure TfrmScript.ReadScriptsList;
 var
-  F : TSearchRec;
-  sl: TStringList;
+  sl1, sl2: TStringList;
+  f, sname: string;
+  so: TSearchOption;
   i : Integer;
 begin
-  sl := TStringList.Create;
+  sl1 := TStringList.Create;
+  sl2 := TStringList.Create;
   try
-    if FindFirst(Path + '*.pas', faAnyFile, F) = 0 then try
-      repeat
-        if not SameText('_newscript_.pas', F.Name) then
-          sl.Add(ChangeFileExt(F.Name, ''));
-      until FindNext(F) <> 0;
-    finally
-      FindClose(F);
+    if chkScriptsSubDir.Checked then
+      so := TSearchOption.soAllDirectories
+    else
+      so := TSearchOption.soTopDirectoryOnly;
+    for f in TDirectory.GetFiles(Path, '*' + sScriptExt, so) do begin
+      sname := ChangeFileExt(Copy(f, Length(Path) + 1, Length(f)), '');
+      if SameText(sNewScriptName, sname) then Continue;
+      if Pos('\', sname) <> 0 then
+        sl1.Add(sname)
+      else
+        sl2.Add(sname);
     end;
-    sl.Sort;
-    sl.Insert(0, sNewScript);
-    cmbScripts.Items.Assign(sl);
+    sl1.Sort;
+    sl2.Sort;
+    sl1.Insert(0, sNewScript);
+    sl1.AddStrings(sl2);
+    cmbScripts.Items.Assign(sl1);
   finally
-    sl.Free;
+    sl1.Free;
+    sl2.Free;
   end;
 
   i := cmbScripts.Items.IndexOf(LastUsedScript);
