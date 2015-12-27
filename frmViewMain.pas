@@ -7018,10 +7018,12 @@ begin
   with TfrmScript.Create(Self) do try
     Path := wbScriptsPath;
     LastUsedScript := Settings.ReadString('View', 'LastUsedScript', '');
+    chkScriptsSubDir.Checked := Settings.ReadBool('View', 'IncludeScriptsFromSubDir', False);
     if ShowModal <> mrOK then
       Exit;
     Scr := Script;
     Settings.WriteString('View', 'LastUsedScript', LastUsedScript);
+    Settings.WriteBool('View', 'IncludeScriptsFromSubDir', chkScriptsSubDir.Checked);
     Settings.UpdateFile;
     CreateActionsForScripts;
   finally

@@ -172,6 +172,8 @@ begin
 
   wbColorConflictAllDefault := wbColorConflictAll;
   wbColorConflictThisDefault := wbColorConflictThis;
+
+  pcOptions.ActivePageIndex := 0;
 end;
 
 procedure TfrmOptions.FormKeyDown(Sender: TObject; var Key: Word;

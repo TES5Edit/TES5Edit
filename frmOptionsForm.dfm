@@ -28,7 +28,7 @@ object frmOptions: TfrmOptions
     Top = 0
     Width = 466
     Height = 363
-    ActivePage = tsUISettings
+    ActivePage = tsGeneral
     Align = alTop
     TabOrder = 0
     object tsGeneral: TTabSheet
@@ -73,9 +73,8 @@ object frmOptions: TfrmOptions
         Width = 81
         Height = 17
         Hint = 
-          'Deactivate for Skyrim only if you extracted STRINGS files, will ' +
-          'reduce loading time greatly. Otherwise you'#39'll see "no localizati' +
-          'on" text everywhere.'
+          'Skip loading BSA and BA2 archives. Some functions like LOD gener' +
+          'ation and localization may not work properly if disabled.'
         Caption = 'Load BSAs'
         TabOrder = 3
       end
