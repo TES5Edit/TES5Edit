@@ -8224,9 +8224,11 @@ begin
     wbString(NAM7, 'Holes Texture'),
     wbString(NAM8, 'Membrane Palette Texture'),
     wbString(NAM9, 'Particle Palette Texture'),
-    wbStruct(DATA, '', [
-      wbByteArray('Unknown', 4),
-      wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
+    wbUnknown(DATA),
+    // format depends on Form Version, different for older records starting from the first field
+    wbStruct(DNAM, '', [
+      wbUnknown
+      {wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
       wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
       wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
       wbStruct('Fill/Texture Effect - Color Key 1', [
@@ -8394,9 +8396,8 @@ begin
       ])),
       wbFloat('Fill/Texture Effect - Texture Scale (U)'),
       wbFloat('Fill/Texture Effect - Texture Scale (V)'),
-      wbInteger('Scene Graph Emit Depth Limit (unused)', itU32)
+      wbInteger('Scene Graph Emit Depth Limit (unused)', itU32),}
     ], cpNormal, True, nil, 0),
-    wbUnknown(DNAM),
     wbMODL
   ], False, nil, cpNormal, False, nil {wbEFSHAfterLoad});
 
