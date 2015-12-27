@@ -1399,6 +1399,18 @@ begin
     Value := _File.FileFormIDtoLoadOrderFormID(Args.Values[1]);
 end;
 
+procedure IwbFile_WriteToStream(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File : IwbFile;
+  Stream: TStream;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then begin
+    Stream := TStream(V2O(Args.Values[1]));
+    if Assigned(Stream) then
+      _File.WriteToStream(Stream, Boolean(Args.Values[2]));
+  end;
+end;
+
 
 { wbContainerHandler }
 
@@ -1899,6 +1911,7 @@ begin
     AddFunction(cUnit, 'HasGroup', IwbFile_HasGroup, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'LoadOrderFormIDtoFileFormID', IwbFile_LoadOrderFormIDtoFileFormID, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'FileFormIDtoLoadOrderFormID', IwbFile_FileFormIDtoLoadOrderFormID, 2, [varEmpty, varString], varEmpty);
+    AddFunction(cUnit, 'FileWriteToStream', IwbFile_WriteToStream, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
 
     { IwbContainerHandler }
     AddFunction(cUnit, 'ResourceContainerList', IwbContainerHandler_ResourceContainerList, 1, [varEmpty], varEmpty);

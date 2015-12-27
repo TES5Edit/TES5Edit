@@ -134,8 +134,6 @@ object frmScript: TfrmScript
     WordWrap = False
     OnKeyUp = EditorKeyUp
     OnMouseUp = EditorMouseUp
-    ExplicitTop = 33
-    ExplicitHeight = 340
   end
   object dlgSave: TSaveDialog
     DefaultExt = 'pas'
