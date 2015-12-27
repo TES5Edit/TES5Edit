@@ -5838,7 +5838,11 @@ begin
       wbInteger('VATS Targetable', itU8, wbEnum(['False', 'True'])),
       wbByteArray('Unknown', 2)
     ]),
-    wbUnknown(DAMC),
+//    wbUnknown(DAMC),
+    wbStructs(DAMC, 'Unknowns', 'Unknown', [
+      wbFormIDck('Damage Type?', [DMGT, NULL]),
+      wbInteger('Unknown', itU32)
+    ]),
     wbRArray('Stages',
       wbRStruct('Stage', [
         wbStruct(DSTD, 'Destruction Stage Data', [
@@ -5966,7 +5970,13 @@ begin
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 
   if wbSimpleRecords then
-    wbNVNM := wbByteArray(NVNM, 'Navmesh Geometry')
+    wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
+      wbInteger('Unknown', itU32),
+      wbByteArray('Unknown', 4),
+      wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+      wbFormIDCk('Parent Cell', [CELL]),
+      wbByteArray('Vertices and Triangles')
+    ])
   else
     wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
       wbInteger('Unknown', itU32),
@@ -6956,7 +6966,7 @@ begin
   wbAPPR := wbArray(APPR, 'Keywords', wbFormIDCk('Keyword', [KYWD]));
   wbFTYP := wbFormIDCk(FTYP, 'Unknown', [LCRT]);
   wbATTX := wbLString(ATTX, 'Activate Text Override', 0, cpTranslate);
-  wbOBTS := wbStruct(OBTS, 'Unknown', [
+  wbOBTS := wbStruct(OBTS, 'Object Mod Template Item', [
     wbInteger('Parts A Count', itU32),
     wbInteger('Parts B Count', itU32),
     wbByteArray('Unknown', 7),
@@ -11694,7 +11704,7 @@ begin
       wbFormIDCk('Component', [CMPO, MISC, ALCH, AMMO]),
       wbInteger('Count', itU32)
     ]),
-    wbUnknown(CDIX)
+    wbArray(CDIX, 'Unknowns', wbInteger('Unknown', itU8))
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   wbRecord(COBJ, 'Constructible Object', [
@@ -14631,11 +14641,11 @@ begin
       'Holotape games',
       'Special/collectible/recipe holotapes'
     ])),
-    wbStruct(DATA, 'Unknown', [
-      wbInteger('Unknown', itU32),
-      wbFloat('Unknown')
+    wbStruct(DATA, 'Data', [      // was DNAM before form version 65. Now holds value and weight
+      wbInteger('Value', itU32),
+      wbFloat('Weight')
     ]),
-    wbFormIDCk(SNAM, 'Unknown', [SCEN, TERM]),
+    wbFormIDCk(SNAM, 'Unknown', [SCEN, TERM]),  // valid if type is 0, 1 or 3. if type 0, not resolved as a LoadOrderFormID (null only ?)
     wbString(PNAM, 'Game')
   ]);
 
@@ -14771,14 +14781,14 @@ begin
     wbStruct(DATA, 'Data', [
       wbInteger('Include Count', itU32),
       wbInteger('Property Count', itU32),
-      wbByteArray('Unused', 2, cpIgnore),
+      wbByteArray('Unused', 2, cpIgnore), // loaded as two distincts bytes
       wbInteger('Form Type', itU32, wbEnum([], [
         Sig2Int(ARMO), 'Armor',
         Sig2Int(NPC_), 'Non-player character',
         Sig2Int(WEAP), 'Weapon',
         Sig2Int(NONE), 'None'
       ])),
-      wbByteArray('Unused', 2, cpIgnore),
+      wbByteArray('Unused', 2, cpIgnore), // loaded as 2 distincts bytes
       wbFormIDCk('Keyword', [KYWD, NULL]),
       wbArray('Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), -1),
       wbArray('Items', wbStruct('Item', [
