@@ -11714,10 +11714,10 @@ begin
     wbByteArray(NAM2, 'Unused', 0, cpIgnore), // co_PA_FusionCore01
     wbByteArray(NAM3, 'Unused', 0, cpIgnore), // co_PA_FusionCore01
     wbFormIDCk(ANAM, 'Unknown', [ARTO]),
-    wbArray(FNAM, 'Category', wbFormIDCk('Keyword', [KYWD])),
+    wbArrayS(FNAM, 'Category', wbFormIDCk('Keyword', [KYWD])),
     wbStruct(INTV, '', [
       wbInteger('Created Object Count', itU16),
-      wbByteArray('Unknown', 2)
+      wbInteger('Priority', itU16)
     ])
   ]);
 
