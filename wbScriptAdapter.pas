@@ -562,6 +562,7 @@ procedure IwbElement_Check(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
 begin
+  Value := '';
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Value := Element.Check;
 end;
@@ -580,6 +581,7 @@ procedure IwbElement_Equals(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element, Element2: IwbElement;
 begin
+  Value := False;
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     if Supports(IInterface(Args.Values[1]), IwbElement, Element2) then
       Value := Element.Equals(Element2);
@@ -589,6 +591,7 @@ procedure IwbElement_CanContainFormIDs(var Value: Variant; Args: TJvInterpreterA
 var
   Element: IwbElement;
 begin
+  Value := False;
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Value := Element.CanContainFormIDs;
 end;
@@ -597,6 +600,7 @@ procedure IwbElement_CanMoveUp(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
 begin
+  Value := False;
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Value := Element.CanMoveUp;
 end;
@@ -605,6 +609,7 @@ procedure IwbElement_CanMoveDown(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
 begin
+  Value := False;
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Value := Element.CanMoveDown;
 end;
