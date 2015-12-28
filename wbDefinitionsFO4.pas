@@ -1250,8 +1250,12 @@ var
   s, t       : string;
 begin
   case aType of
-    ctToStr: if aInt = -1 then Result := 'None' else
-      Result := IntToStr(aInt) + ' <Warning: Could not resolve alias>';
+    ctToStr: if aInt = -1 then
+        Result := 'None'
+      else if aInt = -2 then
+        Result := 'Player'
+      else
+        Result := IntToStr(aInt) + ' <Warning: Could not resolve alias>';
     ctToEditValue: if aInt = -1 then Result := 'None' else
       Result := IntToStr(aInt);
     ctToSortKey: begin
@@ -1264,7 +1268,7 @@ begin
     ctEditInfo: Result := '';
   end;
 
-  if (aInt = -1) and (aType <> ctEditType) and (aType <> ctEditInfo) then
+  if ((aInt = -1) or (aInt = -2)) and (aType <> ctEditType) and (aType <> ctEditInfo) then
     Exit;
 
   if not Assigned(aQuestRef) then
@@ -1290,8 +1294,11 @@ begin
       Result := 'ComboBox';
       Exit;
     end;
-    ctEditInfo:
+    ctEditInfo: begin
       EditInfos := TStringList.Create;
+      EditInfos.Add('None');
+      EditInfos.Add('Player');
+    end;
   else
     EditInfos := nil;
   end;
@@ -1343,7 +1350,11 @@ begin
   Result := -1;
 
   if aString = 'None' then
+    Exit
+  else if aString = 'Player' then begin
+    Result := -2;
     Exit;
+  end;
 
   i := 1;
   s := Trim(aString);
@@ -3445,8 +3456,14 @@ begin
     ParamType := Desc.ParamType1;
     ParamFlag := Container.ElementByName['Type'].NativeValue;
     if ParamType in [ptObjectReference, ptActor, ptPackage] then begin
-      if ParamFlag and $02 > 0 then ParamType := ptAlias else {>>> 'use aliases' is set <<<}
-      if ParamFlag and $08 > 0 then ParamType := ptPackdata;  {>>> 'use packdata' is set <<<}
+      if ParamFlag and $02 > 0 then begin
+        // except for this func when Run On = Quest Alias, then alias is param3 and package is param1
+        // [INFO:00020D3C]
+        if not ((Container.ElementByName['Run On'].NativeValue = 5) and (Desc.Name = 'GetIsCurrentPackage')) then
+          ParamType := ptAlias    {>>> 'use aliases' is set <<<}
+      end
+      else if ParamFlag and $08 > 0 then
+        ParamType := ptPackdata;  {>>> 'use packdata' is set <<<}
     end;
     Result := Succ(Integer(ParamType));
   end;
@@ -10548,7 +10565,7 @@ begin
       ], [])
     ),
     wbRArray('Actors', wbRStruct('Actor', [
-      wbInteger(ALID, 'Actor ID', itU32),
+      wbInteger(ALID, 'Alias ID', itS32),
       wbInteger(LNAM, 'Flags', itU32, wbFlags([
         'No Player Activation',
         'Optional'
@@ -10571,7 +10588,7 @@ begin
         'Timer'
       ])),
       wbString(NAM0, 'Name'),
-      wbInteger(ALID, 'Actor ID', itS32),
+      wbInteger(ALID, 'Alias ID', itS32),
       wbUnknown(LNAM),
       wbInteger(INAM, 'Index', itU32),
       wbInteger(FNAM, 'Flags', itU32, wbFlags([
