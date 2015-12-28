@@ -14546,14 +14546,14 @@ begin
     wbStruct(DATA, 'Data', [
       wbInteger('Include Count', itU32),
       wbInteger('Property Count', itU32),
-      wbByteArray('Unused', 2, cpIgnore), // loaded as two distincts bytes
+      wbByteArray('Unused', 2, cpIgnore),
       wbInteger('Form Type', itU32, wbEnum([], [
         Sig2Int(ARMO), 'Armor',
         Sig2Int(NPC_), 'Non-player character',
         Sig2Int(WEAP), 'Weapon',
         Sig2Int(NONE), 'None'
       ])),
-      wbByteArray('Unused', 2, cpIgnore), // loaded as 2 distincts bytes
+      wbByteArray('Unused', 2, cpIgnore),
       wbFormIDCk('Keyword', [KYWD, NULL]),
       wbArray('Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), -1),
       wbArray('Items', wbStruct('Item', [
