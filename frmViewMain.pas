@@ -907,16 +907,18 @@ begin
     s := IntToHex64(aElement._File.FileFormIDtoLoadOrderFormID(aElement._File.NewFormID), 8);
   end;
 
-  if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then try
-    Result := StrToInt64('$' + s);
-  except
-    on E: Exception do
-      Application.HandleException(E);
+  try
+    if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then try
+      Result := StrToInt64('$' + s);
+    except
+      on E: Exception do
+        Application.HandleException(E);
+    end;
+  finally
+    // restore Next Object ID if failed
+    if (Result = 0) and (ObjectID <> 0) then
+      aElement._File.NextObjectID := ObjectID;
   end;
-
-  // restore Next Object ID if failed
-  if (Result = 0) and (ObjectID <> 0) then
-    aElement._File.NextObjectID := ObjectID;
 end;
 
 procedure DoRename;
