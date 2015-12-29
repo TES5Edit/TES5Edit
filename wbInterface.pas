@@ -782,6 +782,9 @@ type
     function GetIsLocalized: Boolean;
     procedure SetIsLocalized(Value: Boolean);
 
+    function GetNextObjectID: Cardinal;
+    procedure SetNextObjectID(aObjectID: Cardinal);
+
     function GetIsNotPlugin: Boolean;
     property FileName: string
       read GetFileName;
@@ -822,6 +825,11 @@ type
     property IsLocalized: Boolean
       read GetIsLocalized
       write SetIsLocalized;
+
+    property NextObjectID: Cardinal
+      read GetNextObjectID
+      write SetNextObjectID;
+
     property IsNotPlugin: Boolean   // Save or other file to display.
       read GetIsNotPlugin;
   end;

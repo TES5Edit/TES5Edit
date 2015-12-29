@@ -896,12 +896,16 @@ end;
 
 function GetFormIDCallback(const aElement: IwbElement): Cardinal;
 var
-  s                           : string;
+  s        : string;
+  ObjectID : Cardinal;
 begin
-  if Assigned(aElement) then
-    s := IntToHex64(aElement._File.FileFormIDtoLoadOrderFormID(aElement._File.NewFormID), 8);
-
   Result := 0;
+  ObjectID := 0;
+
+  if Assigned(aElement) then begin
+    ObjectID := aElement._File.NextObjectID; // remember ID
+    s := IntToHex64(aElement._File.FileFormIDtoLoadOrderFormID(aElement._File.NewFormID), 8);
+  end;
 
   if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then try
     Result := StrToInt64('$' + s);
@@ -909,6 +913,10 @@ begin
     on E: Exception do
       Application.HandleException(E);
   end;
+
+  // restore Next Object ID if failed
+  if (Result = 0) and (ObjectID <> 0) then
+    aElement._File.NextObjectID := ObjectID;
 end;
 
 procedure DoRename;
