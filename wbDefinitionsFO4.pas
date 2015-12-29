@@ -2546,7 +2546,7 @@ begin
     Exit;
   if not Supports(aElement.Container, IwbMainRecord, MainRecord) then
     Exit;
-  if MainRecord.Version <= 100 then
+  if MainRecord.Version < 102 then
     Result := 1;
 end;
 
@@ -8121,8 +8121,8 @@ begin
     wbString(NAM7, 'Holes Texture'),
     wbString(NAM8, 'Membrane Palette Texture'),
     wbString(NAM9, 'Particle Palette Texture'),
-    wbUnknown(DATA),
-    // format depends on Form Version, different for older records starting from the first field
+    wbUnknown(DATA),  // if form version < 62, ignored otherwise
+    // format depends on Form Version (appear with form version 62, changed in form version 106), different for older records starting from the first field
     wbUnion(DNAM, '', wbEFSHFormatDecider, [
       wbStruct('Data', [
         wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
