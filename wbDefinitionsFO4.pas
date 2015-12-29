@@ -6537,7 +6537,8 @@ begin
     99, 'Collision Layer',
    100, 'Scroll',
    101, 'ColorForm',
-   102, 'Reverb Parameters'
+   102, 'Reverb Parameters',
+   116, 'Terminal'
   ]);
 
   wbMiscStatEnum := wbEnum([], [
