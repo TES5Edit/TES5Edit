@@ -643,6 +643,9 @@ type
     function GetIsLocalized: Boolean;
     procedure SetIsLocalized(Value: Boolean);
 
+    function GetNextObjectID: Cardinal;
+    procedure SetNextObjectID(aObjectID: Cardinal);
+
     function GetIsNotPlugin: Boolean;
     {---IwbFileInternal---}
     procedure AddMainRecord(const aRecord: IwbMainRecord);
@@ -2613,6 +2616,24 @@ begin
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
   Result := Header.IsLocalized;
+end;
+
+function TwbFile.GetNextObjectID: Cardinal;
+var
+  Header         : IwbContainerElementRef;
+begin
+  if (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then
+    Result := Cardinal(Header.ElementNativeValues['HEDR\Next Object ID'])
+  else
+    Result := 0;
+end;
+
+procedure TwbFile.SetNextObjectID(aObjectID: Cardinal);
+var
+  Header         : IwbMainRecord;
+begin
+  if (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then
+    Header.ElementNativeValues['HEDR\Next Object ID'] := aObjectID;
 end;
 
 function TwbFile.GetIsNotPlugin: Boolean;
