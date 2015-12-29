@@ -133,7 +133,8 @@ end;
 
 procedure TfrmScript.chkScriptsSubDirClick(Sender: TObject);
 begin
-  ReadScriptsList;
+  if Self.Active then
+    ReadScriptsList;
 end;
 
 procedure TfrmScript.ReadScriptsList;
