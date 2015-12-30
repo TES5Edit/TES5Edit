@@ -92,6 +92,8 @@ function wbCounterByPathAfterSet(aCounterName: String; const aElement: IwbElemen
 function wbCounterContainerAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement; DeleteOnEmpty: Boolean = False): Boolean;
 function wbCounterContainerByPathAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement): Boolean;
 
+function wbFormVer78Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+
 // BSA helper
 
 function MakeDataFileName(FileName, DataPath: String): String;
@@ -1094,6 +1096,30 @@ begin
   end;
 
   SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nil, nil);
+end;
+
+function wbFormVerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aMinimum: Integer): Integer;
+var
+  FormVer    : Integer;
+  MainRecord : IwbMainRecord;
+  Element    : IwbElement;
+begin
+  Result := 1;
+  if not Assigned(aElement) then Exit;
+  MainRecord := aElement.GetContainingMainRecord;
+  if not Assigned(MainRecord) then Exit;
+
+  Element := MainRecord.ElementByPath['Record Header\Form Version'];
+  if Assigned(Element) then begin
+    FormVer := Element.NativeValue;
+    if FormVer<aMinimum then
+      Result := 0;
+  end;
+end;
+
+function wbFormVer78Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 78);
 end;
 
 initialization

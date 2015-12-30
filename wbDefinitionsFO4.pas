@@ -1006,6 +1006,7 @@ var
   wbTintTemplateGroups: IwbSubrecordArrayDef;
   wbMorphGroups: IwbSubrecordArrayDef;
   wbRaceFRMI: IwbSubrecordArrayDef;
+  wbRaceRBPC: IwbSubRecordDef;
   wbNVNM: IwbSubRecordDef;
   wbMHDT: IwbSubRecordDef;
   wbOFST: IwbSubRecordDef;
@@ -9663,10 +9664,10 @@ begin
     wbFULL,
     wbDESCReq,
     wbLString(ANAM, 'Abbreviation', 0, cpTranslate),
-    wbUnknown(NAM0),
-    wbUnknown(AVFL),
-    wbUnknown(NAM1)
-  ]);
+    wbFloat(NAM0, 'Unknown'), // Prior to form version 81, it was either 0.0, 1.0 or 100.0, so scale or multiplier ?
+    wbInteger(AVFL, 'Unknown', itU32), // 32 bits Flags, it used to impact NAM0 loading (bits 10, 11, 12) (even though it loads later :) )
+    wbInteger(NAM1, 'Unknown', itU32)
+  ]); // S.P.E.C.I.A.L start at index 5, so FormID 0x2bc+5 to 0x2bc+11, RadResistIngestion at index 0x29
 
   wbRecord(CAMS, 'Camera Shot', [
     wbEDID,
@@ -12585,6 +12586,16 @@ begin
       ], [])
     );
 
+  // since version 78: array of pair of AVIF FormID, before array of AVIF index. Similar to DamageType (and MGEF also somehow).
+  wbRaceRBPC :=
+    wbUnion(RBPC, '', wbFormVer78Decider, [
+      wbArray('Unknown', wbInteger('AVIF index', itU32)),
+      wbArray('Unknown', wbStruct('Unknown', [
+        wbFormIDck('AVIF 1', [AVIF, NULL]),
+        wbFormIDck('AVIF 2', [AVIF, NULL])
+      ]))
+    ]);
+
   wbRecord(RACE, 'Race',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00080000} 19, 'Critter?'
@@ -12715,7 +12726,7 @@ begin
     wbFormIDCk(LNAM, 'Close Loot Sound', [SNDR, NULL]),
     {>>> When NAME is user defined wbBipedObjectEnum will be incorrect <<<}
     wbRArray('Biped Object Names', wbString(NAME, 'Name')),
-    wbUnknown(RBPC),
+    wbRaceRBPC,
     wbRArrayS('Movement Types', wbRStructSK([0], 'Movement Types', [
       wbFormIDCk(MTYP, 'Movement Type', [MOVT, NULL]),
       wbStruct(SPED, 'Override Values', [
@@ -14349,7 +14360,14 @@ begin
 
   wbRecord(DMGT, 'Damage Type', [
     wbEDID,
-    wbUnknown(DNAM)
+    // Before form version 78, it was an array of AVIF index, since then array of AVIF formID, coupled with a SPEL formID ?
+    wbUnion(DNAM, 'Data', wbFormVer78Decider, [
+      wbArray('Indexes', wbInteger('AVIF index', itU32)),
+      wbArray('Unknown', wbStruct('Unknown', [
+        wbFormIDck('Actor Value Info', [AVIF, NULL]),
+        wbFormIDck('Spell', [SPEL, NULL])
+      ]))
+    ])
   ]);
 
   wbRecord(GDRY, 'God Ray', [
