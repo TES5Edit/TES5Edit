@@ -929,9 +929,7 @@ var
   wbFunctionsEnum: IwbEnumDef;
   wbEffectsReq: IwbSubRecordArrayDef;
   wbFirstPersonFlagsU32: IwbIntegerDef;
-  wbBODT: IwbSubRecordDef;
   wbBOD2: IwbSubRecordDef;
-  wbBODTBOD2: IwbSubRecordUnionDef;
   wbScriptEntry: IwbStructDef;
   wbPropTypeEnum: IwbEnumDef;
   wbScriptFlags: IwbIntegerDef;
@@ -4904,60 +4902,9 @@ begin
 
   wbFirstPersonFlagsU32 := wbInteger('First Person Flags', itU32, wbBipedObjectFlags);
 
-  wbBODT := wbStruct(BODT, 'Body Template', [
-    wbFirstPersonFlagsU32,
-    wbInteger('General Flags', itU8, wbFlags([
-      {0x00000001}'(ARMA)Modulates Voice', {>>> From ARMA <<<}
-      {0x00000002}'Unknown 2',
-      {0x00000004}'Unknown 3',
-      {0x00000008}'Unknown 4',
-      {0x00000010}'(ARMO)Non-Playable', {>>> From ARMO <<<}
-      {0x00000020}'Unknown 6',
-      {0x00000040}'Unknown 7',
-      {0x00000080}'Unknown 8'
-    ], True)),
-    wbByteArray('Unused', 3, cpIgnore),
-    wbInteger('Armor Type', itU32, wbArmorTypeEnum)
-  ], cpNormal, False, nil, 3);
-
   wbBOD2 := wbStruct(BOD2, 'Biped Body Template', [
     wbFirstPersonFlagsU32
-    //wbInteger('Armor Type', itU32, wbArmorTypeEnum)
   ], cpNormal, False);
-
-  wbBODTBOD2 :=
-    wbRUnion('Biped Body Template', [
-      wbStruct(BOD2, 'Biped Body Template', [
-        wbFirstPersonFlagsU32,
-        wbInteger('General Flags', it0, wbFlags([
-          {0x00000001}'(ARMA)Modulates Voice', {>>> From ARMA <<<}
-          {0x00000002}'Unknown 2',
-          {0x00000004}'Unknown 3',
-          {0x00000008}'Unknown 4',
-          {0x00000010}'(ARMO)Non-Playable', {>>> From ARMO <<<}
-          {0x00000020}'Unknown 6',
-          {0x00000040}'Unknown 7',
-          {0x00000080}'Unknown 8'
-        ], True)),
-        wbEmpty('Unused'),
-        wbInteger('Armor Type', itU32, wbArmorTypeEnum)
-      ], cpNormal, False),
-      wbStruct(BODT, 'Body Template', [
-        wbFirstPersonFlagsU32,
-        wbInteger('General Flags', itU8, wbFlags([
-          {0x00000001}'(ARMA)Modulates Voice', {>>> From ARMA <<<}
-          {0x00000002}'Unknown 2',
-          {0x00000004}'Unknown 3',
-          {0x00000008}'Unknown 4',
-          {0x00000010}'(ARMO)Non-Playable', {>>> From ARMO <<<}
-          {0x00000020}'Unknown 6',
-          {0x00000040}'Unknown 7',
-          {0x00000080}'Unknown 8'
-        ], True)),
-        wbByteArray('Unused', 3, cpIgnore),
-        wbInteger('Armor Type', itU32, wbArmorTypeEnum)
-      ], cpNormal, False, nil, 3)
-    ], []);
 
   wbMDOB := wbFormID(MDOB, 'Menu Display Object', cpNormal, False);
   wbCNAM := wbStruct(CNAM, 'Color', [
@@ -7286,7 +7233,7 @@ begin
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
       wbFloat('Weight'),
-      wbByteArray('Unknown', 4)
+      wbInteger('Power Armor Health', itU32)
     ], cpNormal, True),
     wbStruct(FNAM, '', [
       wbInteger('Damage Resistance', itU16),
@@ -11853,8 +11800,8 @@ begin
       wbFloat('Blue'),
       wbFloat('Alpha')
     ]),
-    wbUnknown(MSDK),
-    wbUnknown(MSDV),
+    wbArray(MSDK, 'Unknown', wbByteArray('Key', 4)),
+    wbArray(MSDV, 'Unknown', wbFloat('Value')),
     wbRArray('Unknown',
       wbRStruct('Unknown', [
         wbUnknown(TETI),
@@ -14299,7 +14246,7 @@ begin
   wbRecord(AMDL, 'Aim Model', [
     wbEDID,
     wbStruct(DNAM, 'Unknown', [
-      wbByteArray('Unknown', 4),
+      wbFloat('Unknown'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
