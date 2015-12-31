@@ -10922,7 +10922,13 @@ begin
       wbArray('Curve', wbInteger('Value', itU8), 5),
       wbByteArray('Unknown')
     ]),}
-    wbUnknown(ATTN),
+    wbStruct(ATTN, 'Attenuation Values', [
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbArray('Curve', wbInteger('Value', itU8), 8)
+    ]),
     wbFormIDCk(ENAM, 'Unknown', [AECH])
   ]);
 
@@ -12828,8 +12834,8 @@ begin
       ], [])
     ),
 
-    wbUnknown(PTOP),
-    wbUnknown(NTOP),
+    wbFloat(PTOP, 'Unknown'),
+    wbFloat(NTOP, 'Unknown'),
     wbRArray('Unknown',
       wbRStruct('Unknown', [
         wbUnknown(MSID),
@@ -13726,7 +13732,7 @@ begin
       wbFloat('Specular Properties - Sun Specular Power'),
       wbFloat('Water Properties - Reflectivity Amount'),
       wbFloat('Water Properties - Fresnel Amount'),
-      wbByteArray('Unknown', 4),
+      wbFloat('Unknown'),
       wbFloat('Fog Properties - Above Water - Fog Distance - Near Plane'),
       wbFloat('Fog Properties - Above Water - Fog Distance - Far Plane'),
       wbStruct('Shallow Color', [
@@ -13747,7 +13753,7 @@ begin
         wbInteger('Blue', itU8),
         wbByteArray('Unknown', 1)
       ]),
-      wbByteArray('Unknown', 4),
+      wbFloat('Unknown'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
@@ -14441,7 +14447,7 @@ begin
         wbString(BNAM, 'Base Material'),
         wbString(SNAM, 'Swap Material'),
         wbString(FNAM),
-        wbUnknown(CNAM)
+        wbFloat(CNAM, 'Unknown')
       ], [])
     )
   ]);
