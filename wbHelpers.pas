@@ -91,7 +91,7 @@ function wbCounterAfterSet(aCounterName: String; const aElement: IwbElement): Bo
 function wbCounterByPathAfterSet(aCounterName: String; const aElement: IwbElement): Boolean;
 function wbCounterContainerAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement; DeleteOnEmpty: Boolean = False): Boolean;
 function wbCounterContainerByPathAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement): Boolean;
-
+function wbFormVerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aMinimum: Integer): Integer;
 function wbFormVer78Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 
 // BSA helper

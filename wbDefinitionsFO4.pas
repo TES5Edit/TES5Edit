@@ -2549,6 +2549,12 @@ begin
     Result := 1;
 end;
 
+function wbDeciderFormVersion99(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 99);
+end;
+
+
 {>>> For VMAD <<<}
 function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -9137,7 +9143,20 @@ begin
         'No Controller Vibration'
       ])),
       wbInteger('Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),}
-      wbUnknown
+      wbUnion('Unknown', wbDeciderFormVersion99, [
+        wbByteArray('Unknown', 4),
+        wbFloat('Unknown')
+      ]),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbFloat('Unknown'),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
+      //wbUnknown
     ], cpNormal, True, nil, 10)
   ]);
 
@@ -9739,7 +9758,7 @@ begin
     wbFormIDCk(SNAM, 'Sound 1', [SNDR, NULL]),
     wbFormIDCk(NAM1, 'Sound 2', [SNDR, NULL]),
     wbFormIDCk(NAM2, 'Hazard', [HAZD, NULL]),
-    wbUnknown(FNAM)
+    wbFloat(FNAM, 'Unknown')
   ]);
 
   wbRecord(IPDS, 'Impact Data Set', [
