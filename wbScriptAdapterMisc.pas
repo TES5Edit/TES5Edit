@@ -31,6 +31,20 @@ uses
   wbInterface;
 
 
+{ Classes Events }
+
+{type
+  TJvInterpreterClassesEvent = class(TJvInterpreterEvent)
+  private
+    procedure NotifyEvent(Sender: TObject);
+  end;
+
+procedure TJvInterpreterClassesEvent.NotifyEvent(Sender: TObject);
+begin
+  CallFunction(nil, [O2V(Sender)]);
+end;}
+
+
 { Missing code }
 
 procedure JvInterpreter_Inc(var Value: Variant; Args: TJvInterpreterArgs);
@@ -91,6 +105,10 @@ begin
   Value := Extended(Math.IntPower(Extended(Args.Values[0]), Integer(Args.Values[1])));
 end;
 
+procedure JvInterpreter_Power(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Extended(Math.Power(Extended(Args.Values[0]), Extended(Args.Values[1])));
+end;
 
 
 { TStrings }
@@ -786,6 +804,18 @@ end;
 
 { TPerlRegEx }
 
+{type
+  TJvInterpreterPerlRegExEvents = class(TJvInterpreterEvent)
+  private
+    procedure OnReplace(Sender: TObject; var ReplaceWith: UTF8String);
+  end;
+
+procedure TJvInterpreterPerlRegExEvents.OnReplace(Sender: TObject; var ReplaceWith: UTF8String);
+begin
+  CallFunction(nil, [O2V(Sender), ReplaceWith]);
+  ReplaceWith := Args.Values[1];
+end;}
+
 procedure TPerlRegEx_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := O2V(TPerlRegEx.Create);
@@ -801,9 +831,19 @@ begin
   TPerlRegEx(Args.Obj).Compile;
 end;
 
+procedure TPerlRegEx_Read_Compiled(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TPerlRegEx(Args.Obj).Compiled;
+end;
+
 procedure TPerlRegEx_Study(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   TPerlRegEx(Args.Obj).Study;
+end;
+
+procedure TPerlRegEx_Read_Studied(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TPerlRegEx(Args.Obj).Studied;
 end;
 
 procedure TPerlRegEx_Match(var Value: Variant; Args: TJvInterpreterArgs);
@@ -951,6 +991,15 @@ begin
   TPerlRegEx(Args.Obj).RegEx := String(Value);
 end;
 
+procedure TPerlRegEx_Read_Replacement(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := String(TPerlRegEx(Args.Obj).Replacement);
+end;
+
+procedure TPerlRegEx_Write_Replacement(const Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TPerlRegEx(Args.Obj).Replacement := String(Value);
+end;
 
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
@@ -1024,6 +1073,7 @@ begin
     AddFunction('Math', 'Max', JvInterpreter_Max, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('Math', 'Min', JvInterpreter_Min, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('Math', 'IntPower', JvInterpreter_IntPower, 2, [varEmpty,varEmpty], varEmpty);
+    AddFunction('Math', 'Power', JvInterpreter_Power, 2, [varEmpty,varEmpty], varEmpty);
 
     { TStrings }
     AddGet(TStrings, 'Delimiter', TStrings_Read_Delimiter, 0, [varEmpty], varEmpty);
@@ -1178,13 +1228,18 @@ begin
     AddConst('RegularExpressionsCore', 'preAnchored', Ord(preAnchored));
     AddConst('RegularExpressionsCore', 'preUnGreedy', Ord(preUnGreedy));
     AddConst('RegularExpressionsCore', 'preNoAutoCapture', Ord(preNoAutoCapture));
+    AddConst('RegularExpressionsCore', 'preNotBOL', Ord(preNotBOL));
+    AddConst('RegularExpressionsCore', 'preNotEOL', Ord(preNotEOL));
+    AddConst('RegularExpressionsCore', 'preNotEmpty', Ord(preNotEmpty));
 
     { TPerlRegEx }
     AddClass('RegularExpressionsCore', TPerlRegEx, 'TPerlRegEx');
     AddGet(TPerlRegEx, 'Create', TPerlRegEx_Create, 0, [varEmpty], varEmpty);
     AddGet(TPerlRegEx, 'EscapeRegExChars', TPerlRegEx_EscapeRegExChars, 1, [varEmpty], varEmpty);
     AddGet(TPerlRegEx, 'Compile', TPerlRegEx_Compile, 0, [varEmpty], varEmpty);
+    AddGet(TPerlRegEx, 'Compiled', TPerlRegEx_Read_Compiled, 0, [varEmpty], varEmpty);
     AddGet(TPerlRegEx, 'Study', TPerlRegEx_Study, 0, [varEmpty], varEmpty);
+    AddGet(TPerlRegEx, 'Studied', TPerlRegEx_Read_Studied, 0, [varEmpty], varEmpty);
     AddGet(TPerlRegEx, 'Match', TPerlRegEx_Match, 0, [varEmpty], varEmpty);
     AddGet(TPerlRegEx, 'MatchAgain', TPerlRegEx_MatchAgain, 0, [varEmpty], varEmpty);
     AddGet(TPerlRegEx, 'Replace', TPerlRegEx_Replace, 0, [varEmpty], varEmpty);
@@ -1214,7 +1269,12 @@ begin
     AddSet(TPerlRegEx, 'Options', TPerlRegEx_Write_Options, 0, [varEmpty]);
     AddGet(TPerlRegEx, 'RegEx', TPerlRegEx_Read_RegEx, 0, [varEmpty], varEmpty);
     AddSet(TPerlRegEx, 'RegEx', TPerlRegEx_Write_RegEx, 0, [varEmpty]);
-
+    AddGet(TPerlRegEx, 'Replacement', TPerlRegEx_Read_Replacement, 0, [varEmpty], varEmpty);
+    AddSet(TPerlRegEx, 'Replacement', TPerlRegEx_Write_Replacement, 0, [varEmpty]);
+    //AddEvent('RegularExpressionsCore', TPerlRegEx, 'TNotifyEvent');
+    //AddEvent('RegularExpressionsCore', TPerlRegEx, 'TPerlRegExReplaceEvent');
+    //AddHandler('RegularExpressionsCore', 'TNotifyEvent', TJvInterpreterClassesEvent, @TJvInterpreterClassesEvent.NotifyEvent);
+    //AddHandler('RegularExpressionsCore', 'TPerlRegExReplaceEvent', TJvInterpreterPerlRegExEvents, @TJvInterpreterPerlRegExEvents.OnReplace);
   end;
 end;
 
