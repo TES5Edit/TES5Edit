@@ -7,7 +7,7 @@
         <AppType>Application</AppType>
         <FrameworkType>VCL</FrameworkType>
         <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
-        <ProjectVersion>14.3</ProjectVersion>
+        <ProjectVersion>15.3</ProjectVersion>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1</TargetedPlatforms>
         <Platform>Win32</Platform>
@@ -82,7 +82,7 @@
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
-        <DCC_DebugInformation>false</DCC_DebugInformation>
+        <DCC_DebugInformation>0</DCC_DebugInformation>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
@@ -94,7 +94,6 @@
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
-        <DCC_DebugInformation>false</DCC_DebugInformation>
         <DCC_ExeOutput>.\Release</DCC_ExeOutput>
         <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
         <BCC_SourceDebuggingOn>true</BCC_SourceDebuggingOn>
@@ -119,7 +118,6 @@
         <VerInfo_Debug>true</VerInfo_Debug>
         <UsePackages>true</UsePackages>
         <DCC_ExeOutput>.\TES5Dump</DCC_ExeOutput>
-        <DCC_UnitSearchPath>imaging;imaging\zlib;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_4)'!=''">
         <DCC_ExeOutput>.\DebugLite</DCC_ExeOutput>
@@ -245,13 +243,13 @@
                 <VersionInfoKeys>
                     <VersionInfoKeys Name="CompanyName"/>
                     <VersionInfoKeys Name="FileDescription"/>
-                    <VersionInfoKeys Name="FileVersion">3.1.3.0</VersionInfoKeys>
+                    <VersionInfoKeys Name="FileVersion">3.0.33.0</VersionInfoKeys>
                     <VersionInfoKeys Name="InternalName"/>
                     <VersionInfoKeys Name="LegalCopyright"/>
                     <VersionInfoKeys Name="LegalTrademarks"/>
                     <VersionInfoKeys Name="OriginalFilename"/>
                     <VersionInfoKeys Name="ProductName">xEdit from ElminsterAU</VersionInfoKeys>
-                    <VersionInfoKeys Name="ProductVersion">3.1.3</VersionInfoKeys>
+                    <VersionInfoKeys Name="ProductVersion">3.0.33</VersionInfoKeys>
                     <VersionInfoKeys Name="Comments"/>
                 </VersionInfoKeys>
                 <Excluded_Packages>
