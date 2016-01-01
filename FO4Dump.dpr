@@ -36,10 +36,10 @@ uses
   wbHelpers in 'wbHelpers.pas',
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
+  wbDefinitionsFO4 in 'wbDefinitionsFO4.pas',
   wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
-  wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
-  wbDefinitionsFO4 in 'wbDefinitionsFO4.pas';
+  wbDefinitionsTES5 in 'wbDefinitionsTES5.pas';
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
@@ -53,9 +53,13 @@ var
   ];
 
 var
-  StartTime  : TDateTime;
-  DumpGroups, SkipChildGroups : TStringList;
-  DumpCount, DumpMax: Integer;
+  StartTime       : TDateTime;
+  DumpGroups      : TStringList;
+  SkipChildGroups : TStringList;
+  DumpChapters : TStringList;
+  DumpForms    : TStringList;
+  DumpCount       : Integer;
+  DumpMax         : Integer;
 
 procedure ReportProgress(const aStatus: string);
 begin
@@ -585,6 +589,7 @@ var
   i            : Integer;
   GroupRecord  : IwbGroupRecord;
   ContainerRef : IwbContainerElementRef;
+  Chapter      : IwbChapter;
 begin
   if (wbToolSource in [tsPlugins]) then if (aContainer.ElementType = etGroupRecord) then
     if Supports(aContainer, IwbGroupRecord, GroupRecord) then
@@ -598,6 +603,16 @@ begin
            SkipChildGroups.Find(String(TwbSignature(GroupRecord.ChildrenOf.Signature)), i)
         then
           Exit;
+  if (wbToolSource in [tsSaves]) and Assigned(DumpChapters) and Supports(aContainer, IwbChapter, Chapter) then begin
+    if not DumpChapters.Find(IntToStr(Chapter.ChapterType), i) then
+      Exit;
+    ReportProgress('Dumping: ' + aContainer.Name);
+  end;
+  if (wbToolSource in [tsSaves]) and Assigned(ChaptersToSkip) and Supports(aContainer, IwbChapter, Chapter) then
+    if ChaptersToSkip.Find(IntToStr(Chapter.ChapterType), i) then begin
+      ReportProgress('Skiping: ' + Chapter.ChapterTypeName);
+      Exit;
+    end;
 
   if aContainer.Skipped then begin
     if not wbReportMode then WriteLn(aIndent, '<contents skipped>');
@@ -811,10 +826,16 @@ begin
     Result := False;
 end;
 
+procedure SwitchToCoSave;
+begin
+  //
+end;
+
 var
   NeedsSyntaxInfo : Boolean;
   s, s2           : string;
   i,j             : integer;
+  c               : Integer;
   _File           : IwbFile;
   Masters         : TStringList;
   F               : TSearchRec;
@@ -834,8 +855,13 @@ begin
   StartTime := Now;
 
   try
-    wbToolSource := tsPlugins;
-    wbSourceName := 'Plugins';
+    if isMode('Saves') then begin
+      wbToolSource := tsSaves;
+      wbSourceName := 'Saves';
+    end else begin // defaults to plugin
+      wbToolSource := tsPlugins;
+      wbSourceName := 'Plugins';
+    end;
 
     if isMode('Export') then begin
       wbToolMode := tmExport;
@@ -861,7 +887,9 @@ begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
         Exit;
       end;
-      DefineFNV;
+      case wbToolSource of
+        tsPlugins: DefineFNV;
+      end;
     end else if isMode('FO3') then begin
       wbGameMode := gmFO3;
       wbAppName := 'FO3';
@@ -875,7 +903,9 @@ begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
         Exit;
       end;
-      DefineFO3;
+      case wbToolSource of
+        tsPlugins: DefineFO3;
+      end;
     end else if isMode('TES3') then begin
       WriteLn(ErrOutput, 'TES3 - Morrowind is not supported yet.');
       Exit;
@@ -905,7 +935,9 @@ begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
         Exit;
       end;
-      DefineTES4;
+      case wbToolSource of
+        tsPlugins: DefineTES4;
+      end;
     end else if isMode('TES5') then begin
       wbGameMode := gmTES5;
       wbAppName := 'TES5';
@@ -936,7 +968,9 @@ begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
         Exit;
       end;
-      DefineFO4;
+      case wbToolSource of
+        tsPlugins: DefineFO4;
+      end;
     end else begin
       WriteLn(ErrOutput, 'Application name must contain FNV, FO3, TES4, TES5 to select game.');
       Exit;
@@ -983,6 +1017,31 @@ begin
       SkipChildGroups.Sort;
     end;
 
+    if wbFindCmdLineParam('dc', s) or wbFindCmdLineParam('df', s) then begin
+      DumpChapters := TStringList.Create;
+      DumpChapters.Sorted := True;
+      DumpChapters.Duplicates := dupIgnore;
+    end;
+
+    if wbFindCmdLineParam('dc', s) then begin
+      DumpChapters.CommaText := s;
+      DumpChapters.Sort;
+    end;
+
+    if wbFindCmdLineParam('df', s) then begin
+      DumpForms := TStringList.Create;
+      DumpForms.Sorted := True;
+      DumpForms.Duplicates := dupIgnore;
+      DumpForms.CommaText := s;
+      DumpForms.Sort;
+      for i := 0 to DumpForms.Count-1 do try
+        c := StrToInt(DumpForms[i]);
+        DumpChapters.Add(IntToStr(wbChangedFormOffset+c));
+      finally
+      end;
+      DumpForms.Free;
+    end;
+
     wbLoadAllBSAs := FindCmdLineSwitch('allbsa');
 
     if FindCmdLineSwitch('more') then
@@ -1007,6 +1066,26 @@ begin
       GroupToSkip.Add('WRLD');
     end;
 
+    if wbFindCmdLineParam('xc', s) then
+      ChaptersToSkip.CommaText := s
+    else if FindCmdLineSwitch('xcbloat') then begin
+      ChaptersToSkip.Add('1001');
+    end;
+
+    if wbFindCmdLineParam('xf', s) then begin
+      DumpForms := TStringList.Create;
+      DumpForms.Sorted := True;
+      DumpForms.Duplicates := dupIgnore;
+      DumpForms.CommaText := s;
+      DumpForms.Sort;
+      for i := 0 to DumpForms.Count-1 do try
+        c := StrToInt(DumpForms[i]);
+        ChaptersToSkip.Add(IntToStr(wbChangedFormOffset+c));
+      finally
+      end;
+      DumpForms.Free;
+    end;
+
     if wbFindCmdLineParam('l', s) and (wbGameMode in [gmTES5, gmFO4]) then
       wbLanguage := s
     else
@@ -1016,6 +1095,10 @@ begin
         gmFO4:
           wbLanguage := 'En';
       end;
+    if wbFindCmdLineParam('bts', s) then
+      wbBytesToSkip := StrToInt64Def(s, wbBytesToSkip);
+    if wbFindCmdLineParam('btd', s) then
+      wbBytesToDump := StrToInt64Def(s, wbBytesToDump);
 
     if wbFindCmdLineParam('do', s) then
       wbDumpOffset := StrToInt64Def(s, wbDumpOffset);
@@ -1041,6 +1124,19 @@ begin
       WriteLn;
       NeedsSyntaxInfo := True;
     end;
+    if wbToolSource = tsSaves then
+      case wbGameMode of
+        gmFNV:  if SameText(ExtractFileExt(s), '.nvse') then SwitchToCoSave;
+        gmFO3:  if SameText(ExtractFileExt(s), '.fose') then SwitchToCoSave
+          else
+            WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
+        gmTES4: if SameText(ExtractFileExt(s), '.obse') then SwitchToCoSave
+          else
+            WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
+        gmTES5: if SameText(ExtractFileExt(s), '.skse') then SwitchToCoSave;
+      else
+          WriteLn(ErrOutput, 'CoSave are not supported yet "',s,'". Please check the command line parameters.');
+      end;
 
     if NeedsSyntaxInfo or (ParamCount < 1) or FindCmdLineSwitch('?') or FindCmdLineSwitch('help') then begin
       WriteLn(ErrOutput, 'Syntax:  '+wbAppName+'Dump [options] inputfile');
@@ -1092,6 +1188,12 @@ begin
       Exit;
     end;
 
+    if wbToolMode = tmExport then begin
+      wbLoadBSAs := False;
+      wbReportMode := False;
+      wbMoreInfoForUnknown:= False;
+    end;
+
     if not Assigned(wbContainerHandler) then
       wbContainerHandler := wbCreateContainerHandler;
 
@@ -1104,6 +1206,17 @@ begin
       ReportProgress('['+s+']   Excluding groups : '+GroupToSkip.CommaText);
     if Assigned(RecordToSkip) and (RecordToSkip.Count>0) then
       ReportProgress('['+s+']   Excluding records : '+RecordToSkip.CommaText);
+
+    if Assigned(DumpChapters) then
+      ReportProgress('['+s+']   Dumping chapters : '+DumpChapters.CommaText);
+    if Assigned(ChaptersToSkip) and (ChaptersToSkip.Count>0) then
+      ReportProgress('['+s+']   Excluding chapters : '+ChaptersToSkip.CommaText);
+    if wbBytesToSkip>0 then
+      ReportProgress('['+s+']   BytesToSkip : '+IntToStr(wbBytesToSkip));
+    if wbBytesToDump<$FFFFFFFF then
+      ReportProgress('['+s+']   BytesToDump : '+IntToStr(wbBytesToDump));
+    if wbDumpOffset>0 then
+      ReportProgress('['+s+']   Dump Offset mode : '+IntToStr(wbDumpOffset));
 
     if wbLoadBSAs then begin
       Masters := TStringList.Create;

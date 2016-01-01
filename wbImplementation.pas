@@ -389,6 +389,9 @@ type
     procedure AfterConstruction; override;
     class function NewInstance: TObject; override;
     procedure FreeInstance; override;
+
+    function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
+    function GetTreeBranch: Boolean;            // Is the element expected to show in the tree navigator
   end;
 
   TDynElementInternals = array of IwbElementInternal;
@@ -622,6 +625,7 @@ type
     function GetHeader: IwbMainRecord;
 
     function GetLoadOrder: Integer;
+    procedure ForceLoadOrder(aValue: Integer);
     procedure SetLoadOrder(aValue: Integer);
 
     function LoadOrderFormIDtoFileFormID(aFormID: Cardinal): Cardinal;
@@ -647,6 +651,9 @@ type
     procedure SetNextObjectID(aObjectID: Cardinal);
 
     function GetIsNotPlugin: Boolean;
+    function GetHasNoFormID: Boolean;
+    procedure SetHasNoFormID(Value: Boolean);
+
     {---IwbFileInternal---}
     procedure AddMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveMainRecord(const aRecord: IwbMainRecord);
@@ -1271,6 +1278,7 @@ type
     function GetElementType: TwbElementType; override;
     function GetChapterType: Integer;
     function GetChapterTypeName: String;
+    function GetChapterName: String;
   public
     constructor Create(const aContainer  : IwbContainer;
                        const aValueDef   : IwbValueDef;
@@ -1717,7 +1725,14 @@ var
   _File : IwbFile;
   s     : string;
   t     : string;
+  i     : Integer;
 begin
+  if not wbRequireLoadorder and IsTemporary then begin
+    for i := 0 to Pred(GetMasterCount) do
+      if SameText(ExtractFileName(aFileName), GetMaster(i).FileName) then
+        Exit;
+  end;
+
   s := ExtractFilePath(aFileName);
   t := ExtractFileName(aFileName);
   if s = '' then
@@ -1913,6 +1928,9 @@ begin
 
   if not IsElementEditable(nil) then
     raise Exception.Create('File "'+GetFileName+'" is not editable');
+
+  if GetIsNotPlugin then
+    Exit;
 
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbContainerElementRef, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
@@ -2484,6 +2502,11 @@ begin
   flCloseFile;
 end;
 
+procedure TwbFile.ForceLoadOrder(aValue: Integer);
+begin
+  flLoadOrder := aValue;
+end;
+
 function TwbFile.GetAddList: TDynStrings;
 var
   i, j        : Integer;
@@ -2573,6 +2596,11 @@ begin
   Result := nil;
 end;
 
+function TwbFile.GetHasNoFormID: Boolean;
+begin
+  Result := GetIsNotPlugin or (fsHasNoFormID in flStates);
+end;
+
 function TwbFile.GetHeader: IwbMainRecord;
 var
   SelfRef : IwbContainerElementRef;
@@ -2602,6 +2630,11 @@ function TwbFile.GetIsESM: Boolean;
 var
   Header         : IwbMainRecord;
 begin
+  if GetIsNotPlugin then begin
+    Result := False;
+    Exit;
+  end;
+
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
@@ -2612,6 +2645,11 @@ function TwbFile.GetIsLocalized: Boolean;
 var
   Header         : IwbMainRecord;
 begin
+  if GetIsNotPlugin then begin
+    Result := False;
+    Exit;
+  end;
+
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
@@ -2939,134 +2977,137 @@ begin
   if Length(cntElements) < 1 then
     raise Exception.Create('File '+GetFileName+' has no file header');
 
-  if cntElements[0].ElementType <> etMainRecord then
-    raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' as file header.');
+  if not GetIsNotPlugin then begin
+    if cntElements[0].ElementType <> etMainRecord then
+      raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' as file header.');
 
-  FileHeader := cntElements[0] as IwbMainRecord;
-  if FileHeader.Signature <> wbHeaderSignature then
-    raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' with invalid signature as file header.');
+    FileHeader := cntElements[0] as IwbMainRecord;
+    if FileHeader.Signature <> wbHeaderSignature then
+      raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' with invalid signature as file header.');
 
-  HEDR := FileHeader.RecordBySignature['HEDR'];
-  if not Assigned(HEDR) then
-    raise Exception.Create('File '+GetFileName+' has a file header with missing HEDR subrecord');
+    HEDR := FileHeader.RecordBySignature['HEDR'];
+    if not Assigned(HEDR) then
+      raise Exception.Create('File '+GetFileName+' has a file header with missing HEDR subrecord');
 
-  inherited;
+    inherited;
 
-  SetLength(Groups, wbGroupOrder.Count);
-  for i := Succ(Low(cntElements)) to High(cntElements) do begin
-    if not Supports(cntElements[i], IwbGroupRecord, GroupRecord) then
-      raise Exception.Create('File '+GetFileName+' contains invalid top level record: '+ cntElements[i].Name);
-    if GroupRecord.GroupType <> 0 then
-      raise Exception.Create('File '+GetFileName+' contains invalid top level group type '+IntToStr(GroupRecord.GroupType)+' for group: '+ cntElements[i].Name);
-    if GroupRecord.SortOrder < 0 then
-      raise Exception.Create('File '+GetFileName+' contains top level group without known sort order: '+ cntElements[i].Name);
-    if GroupRecord.SortOrder > High(Groups) then
-      raise Exception.Create('File '+GetFileName+' contains top level group with invalid sort order: '+ cntElements[i].Name);
-    if Groups[GroupRecord.SortOrder] then
-      raise Exception.Create('File '+GetFileName+' contains duplicated top level group: '+ cntElements[i].Name);
-    Groups[GroupRecord.SortOrder] := True;
-  end;
+    SetLength(Groups, wbGroupOrder.Count);
+    for i := Succ(Low(cntElements)) to High(cntElements) do begin
+      if not Supports(cntElements[i], IwbGroupRecord, GroupRecord) then
+        raise Exception.Create('File '+GetFileName+' contains invalid top level record: '+ cntElements[i].Name);
+      if GroupRecord.GroupType <> 0 then
+        raise Exception.Create('File '+GetFileName+' contains invalid top level group type '+IntToStr(GroupRecord.GroupType)+' for group: '+ cntElements[i].Name);
+      if GroupRecord.SortOrder < 0 then
+        raise Exception.Create('File '+GetFileName+' contains top level group without known sort order: '+ cntElements[i].Name);
+      if GroupRecord.SortOrder > High(Groups) then
+        raise Exception.Create('File '+GetFileName+' contains top level group with invalid sort order: '+ cntElements[i].Name);
+      if Groups[GroupRecord.SortOrder] then
+        raise Exception.Create('File '+GetFileName+' contains duplicated top level group: '+ cntElements[i].Name);
+      Groups[GroupRecord.SortOrder] := True;
+    end;
 
-  if Length(cntElements) > 1 then
-    wbMergeSort(@cntElements[1],  High(cntElements), CompareSortOrder);
+    if Length(cntElements) > 1 then
+      wbMergeSort(@cntElements[1],  High(cntElements), CompareSortOrder);
 
-  RecordCount := GetCountedRecordCount;
-  if RecordCount < 1 then
-    raise Exception.Create('File '+GetFileName+' has an invalid record count');
+    RecordCount := GetCountedRecordCount;
+    if RecordCount < 1 then
+      raise Exception.Create('File '+GetFileName+' has an invalid record count');
 
-  HEDR.Elements[1].EditValue := IntToStr(Pred(RecordCount));
+    HEDR.Elements[1].EditValue := IntToStr(Pred(RecordCount));
 
-  j := 0;
-  ONAMs := nil;
-  if wbGameMode in [gmFO3, gmFNV, gmTES5] then begin
-    Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
-    while FileHeader.RemoveElement('ONAM') <> nil do
-      ;
-    if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
-      for i := 0 to Pred(MasterFiles.ElementCount) do begin
-        if Supports(MasterFiles.Elements[i], IwbContainerElementRef, MasterFile) then begin
+    j := 0;
+    ONAMs := nil;
+    if wbGameMode in [gmFO3, gmFNV, gmTES5] then begin
+      Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
+      while FileHeader.RemoveElement('ONAM') <> nil do
+        ;
+      if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
+        for i := 0 to Pred(MasterFiles.ElementCount) do begin
+          if Supports(MasterFiles.Elements[i], IwbContainerElementRef, MasterFile) then begin
 
-          if FileHeader.IsESM then
-            while j <= High(flRecords) do begin
-              Current := flRecords[j];
-              FormID := Current.FixedFormID;
-              FileID := FormID shr 24;
-              if FileID > i then
-                Break;
-              Assert(FileID = i);
-              Inc(j);
+            if FileHeader.IsESM then
+              while j <= High(flRecords) do begin
+                Current := flRecords[j];
+                FormID := Current.FixedFormID;
+                FileID := FormID shr 24;
+                if FileID > i then
+                  Break;
+                Assert(FileID = i);
+                Inc(j);
 
-              Signature := Current.Signature;
+                Signature := Current.Signature;
 
-              if (Signature = 'NAVM') or
-                 (Signature = 'LAND') or
-                 (Signature = 'REFR') or
-                 (Signature = 'PGRE') or
-                 (Signature = 'PMIS') or
-                 (Signature = 'ACHR') or
-                 (Signature = 'ACRE') or
-                 (Signature = 'PARW') or {>>> Skyrim <<<}
-                 (Signature = 'PBEA') or {>>> Skyrim <<<}
-                 (Signature = 'PFLA') or {>>> Skyrim <<<}
-                 (Signature = 'PCON') or {>>> Skyrim <<<}
-                 (Signature = 'PBAR') or {>>> Skyrim <<<}
-                 (Signature = 'PHZD')    {>>> Skyrim <<<}
-              then begin
+                if (Signature = 'NAVM') or
+                   (Signature = 'LAND') or
+                   (Signature = 'REFR') or
+                   (Signature = 'PGRE') or
+                   (Signature = 'PMIS') or
+                   (Signature = 'ACHR') or
+                   (Signature = 'ACRE') or
+                   (Signature = 'PARW') or {>>> Skyrim <<<}
+                   (Signature = 'PBEA') or {>>> Skyrim <<<}
+                   (Signature = 'PFLA') or {>>> Skyrim <<<}
+                   (Signature = 'PCON') or {>>> Skyrim <<<}
+                   (Signature = 'PBAR') or {>>> Skyrim <<<}
+                   (Signature = 'PHZD')    {>>> Skyrim <<<}
+                then begin
 
-                if (not wbMasterUpdateFilterONAM) or Current.IsWinningOverride then begin
-                  if not Assigned(ONAMs) then begin
-                    if not Supports(FileHeader.Add('ONAM', True), IwbContainerElementRef, ONAMs) then
-                      Assert(False);
-                    Assert(ONAMs.ElementCount = 1);
-                    NewONAM := ONAMs.Elements[0];
-                  end else
-                    NewONAM := ONAMs.Assign(High(Integer), nil, True);
+                  if (not wbMasterUpdateFilterONAM) or Current.IsWinningOverride then begin
+                    if not Assigned(ONAMs) then begin
+                      if not Supports(FileHeader.Add('ONAM', True), IwbContainerElementRef, ONAMs) then
+                        Assert(False);
+                      Assert(ONAMs.ElementCount = 1);
+                      NewONAM := ONAMs.Elements[0];
+                    end else
+                      NewONAM := ONAMs.Assign(High(Integer), nil, True);
 
-                  {if wbDisplayLoadOrderFormID then
-                    NewONAM.NativeValue := Current.LoadOrderFormID
-                  else}
-                    NewONAM.NativeValue := FormID;
+                    {if wbDisplayLoadOrderFormID then
+                      NewONAM.NativeValue := Current.LoadOrderFormID
+                    else}
+                      NewONAM.NativeValue := FormID;
 
-                  if wbMasterUpdateFixPersistence and not Current.IsPersistent and not Current.IsMaster then begin
-                    Master := Current.Master;
-                    if Assigned(Master) then begin
-                      if Master.IsPersistent then begin
-                        flProgress('Setting Persistent: ' + Current.Name);
-                        Current.IsPersistent := True;
-                      end else
-                        for k := 0 to Pred(Master.OverrideCount) do
-                          if Current.Equals(Master.Overrides[k]) then
-                            Break
-                          else
-                            if Master.Overrides[k].IsPersistent then begin
-                              flProgress('Setting Persistent: ' + Current.Name);
-                              Current.IsPersistent := True;
-                              Break;
-                            end;
+                    if wbMasterUpdateFixPersistence and not Current.IsPersistent and not Current.IsMaster then begin
+                      Master := Current.Master;
+                      if Assigned(Master) then begin
+                        if Master.IsPersistent then begin
+                          flProgress('Setting Persistent: ' + Current.Name);
+                          Current.IsPersistent := True;
+                        end else
+                          for k := 0 to Pred(Master.OverrideCount) do
+                            if Current.Equals(Master.Overrides[k]) then
+                              Break
+                            else
+                              if Master.Overrides[k].IsPersistent then begin
+                                flProgress('Setting Persistent: ' + Current.Name);
+                                Current.IsPersistent := True;
+                                Break;
+                              end;
+                      end;
                     end;
+
                   end;
 
                 end;
 
               end;
-
-            end;
+          end;
+          if j > High(flRecords) then
+            Break;
         end;
-        if j > High(flRecords) then
-          Break;
-      end;
-    Exclude(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
-    FileHeader.UpdateRefs;
-  end;
+      Exclude(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
+      FileHeader.UpdateRefs;
+    end;
 
-  if wbClampFormID then begin
-    if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
-      k := MasterFiles.ElementCount
-    else
-      k := 0;
-    for i := Low(flRecords) to High(flRecords) do
-      flRecords[i].ClampFormID(k);
-  end;
+    if wbClampFormID then begin
+      if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
+        k := MasterFiles.ElementCount
+      else
+        k := 0;
+      for i := Low(flRecords) to High(flRecords) do
+        flRecords[i].ClampFormID(k);
+    end;
+  end else
+    inherited;
 end;
 
 function TwbFile.Reached: Boolean;
@@ -3256,10 +3297,22 @@ begin
   flLoadFinished := True;
 end;
 
+procedure TwbFile.SetHasNoFormID(Value: Boolean);
+begin
+  if Value or GetIsNotPlugin then
+    Include(flStates, fsHasNoFormID)
+  else
+    Exclude(flStates, fsHasNoFormID);
+end;
+
 procedure TwbFile.SetIsESM(Value: Boolean);
 var
   Header         : IwbMainRecord;
 begin
+  if GetIsNotPlugin then begin
+    Exit;
+  end;
+
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
@@ -3275,6 +3328,10 @@ procedure TwbFile.SetIsLocalized(Value: Boolean);
 var
   Header         : IwbMainRecord;
 begin
+  if GetIsNotPlugin then begin
+    Exit;
+  end;
+
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
@@ -3347,6 +3404,9 @@ var
 begin
   if not IsElementEditable(nil) then
     raise Exception.Create('File "'+GetFileName+'" is not editable');
+  if GetIsNotPlugin then
+    Exit;
+
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbContainerElementRef, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
@@ -11870,7 +11930,8 @@ end;
 
 procedure TwbElement.FreeInstance;
 begin
-  Assert(FRefCount = 1);
+  if FRefCount <> 1 then
+    Assert(FRefCount = 1);
   Assert(eExternalRefs = 1);
   inherited;
 end;
@@ -12247,6 +12308,26 @@ end;
 function TwbElement.GetSortPriority: Integer;
 begin
   Result := 0;
+end;
+
+function TwbElement.GetTreeBranch: Boolean;
+var
+  NamedDef: IwbNamedDef;
+begin
+  if Supports(GetDef, IwbNamedDef, NamedDef) then
+    Result := NamedDef.TreeBranch
+  else
+    Result := False;
+end;
+
+function TwbElement.GetTreeHead: Boolean;
+var
+  NamedDef: IwbNamedDef;
+begin
+  if Supports(GetDef, IwbNamedDef, NamedDef) then
+    Result := NamedDef.TreeHead
+  else
+    Result := False;
 end;
 
 function TwbElement.GetValue: string;
@@ -14163,7 +14244,6 @@ begin
     if wbFlagsAsArray then
       if Supports(ValueDef, IwbIntegerDef, IntegerDef) then
         if Supports(IntegerDef.Formater[aElement], IwbFlagsDef, FlagsDef) then begin
-
           if Assigned(aBasePtr) and (FlagsDef.FlagCount > 0) then begin
             j := IntegerDef.ToInt(aBasePtr, aEndPtr, aContainer);
             if j <> 0 then
@@ -14216,6 +14296,12 @@ begin
         Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsFloat', wbFloat('AsFloat')), '', True);
         BasePtr := Pointer( Cardinal(aBasePtr) + i );
         Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsString', wbString('AsString')), '', True);
+        if wbToolSource in [tsSaves] then begin
+          BasePtr := Pointer( Cardinal(aBasePtr) + i );
+          Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsRefID', wbRefID('RefID')), '', True);
+          BasePtr := Pointer( Cardinal(aBasePtr) + i );
+          Element := TwbArray.Create(aContainer, BasePtr, aEndPtr, wbArray('Offset '+IntToStr(i)+' AsU6to30', wbInteger('AsU6to30', itU6to30)), '', True);
+        end;
       end;
   end;
 
@@ -14899,7 +14985,8 @@ begin
   SizeNeeded := GetDataSize;
   if SizeNeeded > 0 then begin
     SizeAvailable := Cardinal( aEndPtr ) - Cardinal( aBasePtr );
-    Assert( SizeAvailable >= SizeNeeded );
+    if (SizeAvailable < SizeNeeded) then
+      Assert( SizeAvailable >= SizeNeeded );
 
     BasePtr := aBasePtr;
     Inc(PByte(aBasePtr), GetDataPrefixSize);
@@ -16004,6 +16091,9 @@ var
   MasterFiles : IwbContainerElementRef;
   fPath       : String;
   i           : Integer;
+  modOffset   : Cardinal;
+  modPtr      : Pointer;
+  mods        : TwbArray;
 begin
   if (GetElementCount <> 1) or not Supports(GetElement(0), IwbFileHeader, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
@@ -16012,7 +16102,14 @@ begin
     raise Exception.CreateFmt('Expected File Magic %s, found %s in file "%s"',
       [wbFileMagic, String(Header.FileMagic), flFileName]);
 
-  MasterFiles := Header.ElementByName[wbFilePlugins] as IwbContainerElementRef;
+  if Pos('Absolute:', wbFilePlugins)=1 then begin
+    modOffset := Cardinal(flView)+StrToInt(Copy(wbFilePlugins, 10, Length(wbFilePlugins)));
+    modPtr := Pointer(modOffset);
+    mods := TwbArray.Create(nil, modPtr, flEndPtr, wbArray('Modules', wbLenString('PluginName', 2), -4), '', False);
+    Supports(mods, IwbContainerElementRef, MasterFiles);
+  end else
+    MasterFiles := Header.ElementByName[wbFilePlugins] as IwbContainerElementRef;
+
   if Assigned(MasterFiles) then
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
       fPath := wbDataPath + MasterFiles[i].Value;
@@ -16076,6 +16173,9 @@ var
   Container   : IwbContainer;
   SelfRef     : IwbContainerElementRef;
   fPath       : String;
+  modOffset   : Cardinal;
+  modPtr      : Pointer;
+  mods        : TwbArray;
 
 begin
   SelfRef := Self as IwbContainerElementRef;
@@ -16096,7 +16196,14 @@ begin
   if fsOnlyHeader in flStates then
     Exit;
 
-  MasterFiles := Header.ElementByName[wbFilePlugins] as IwbContainerElementRef;
+  if Pos('Absolute:', wbFilePlugins)=1 then begin
+    modOffset := Cardinal(flView)+StrToInt(Copy(wbFilePlugins, 10, Length(wbFilePlugins)));
+    modPtr := Pointer(modOffset);
+    mods := TwbArray.Create(nil, modPtr, flEndPtr, wbArray('Modules', wbLenString('PluginName', 2), -4), '', False);
+    Supports(mods, IwbContainerElementRef, MasterFiles);
+  end else
+    MasterFiles := Header.ElementByName[wbFilePlugins] as IwbContainerElementRef;
+
   if Assigned(MasterFiles) then
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
       fPath := wbDataPath + MasterFiles[i].Value;
@@ -16169,6 +16276,16 @@ begin
   cChapterSkipped := cChapterSkipped or ChaptersToSkip.Find(aValueDef.Name, Dummy);
 end;
 
+function TwbChapter.GetChapterName: String;
+var
+  Struct : IwbStructCDef;
+begin
+  if Assigned(vbValueDef) and Supports(vbValueDef, IwbStructCDef, Struct) then
+    Result := Struct.GetChapterName(dcBasePtr, dcEndPtr, Self)
+  else
+    Result := Struct.GetChapterTypeName(dcBasePtr, dcEndPtr, Self);
+end;
+
 function TwbChapter.GetChapterType: Integer;
 var
   Struct : IwbStructCDef;
@@ -16183,7 +16300,7 @@ var
   Struct : IwbStructCDef;
 begin
   if Assigned(vbValueDef) and Supports(vbValueDef, IwbStructCDef, Struct) then
-    Result := IntToStr(Struct.GetChapterType(dcBasePtr, dcEndPtr, Self))
+    Result := Struct.GetChapterTypeName(dcBasePtr, dcEndPtr, Self)
   else
     Result := IntToStr(Struct.GetChapterType(dcBasePtr, dcEndPtr, Self));
 end;

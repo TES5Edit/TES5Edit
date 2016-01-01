@@ -386,10 +386,16 @@ begin
     if Copy(s, i, 3) = ' \ ' then begin
       Delete(s, i, 1);
       Delete(s, i+1, 1);
+    end else if Copy(s, i, 2) = ' \' then begin
+      Delete(s, i, 1);
   	end else if s[i] = '"' then
       s[i] := ''''
   	else if s[i] = ':' then
-      s[i] := '-';
+      s[i] := '-'
+  	else if s[i] = '/' then
+      s[i] := ' ';
+  while (Length(s)>0) and (s[Length(s)]=' ') do
+    Delete(s, Length(s), 1);
   Result := s;
 end;
 
