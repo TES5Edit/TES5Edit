@@ -11833,11 +11833,11 @@ begin
         wbUnknown(TEND)
       ], [])
     ),
-    wbUnknown(MRSV),
+    wbArray(MRSV, 'Unknown', wbFloat('Unknown')),
     wbRArray('Unknown',
       wbRStruct('Unknown', [
         wbUnknown(FMRI),
-        wbUnknown(FMRS)
+        wbArray(FMRS, 'Unknown', wbFloat('Unknown'))
       ], [])
     ),
     wbFloat(FMIN, 'Unknown')
@@ -13149,9 +13149,9 @@ begin
     {>>Lock Tab for REFR when 'Locked' is Unchecked this record is not present <<<}
     wbStruct(XLOC, 'Lock Data', [
       wbInteger('Level', itU8, wbEnum([], [
-         1, 'Novice',
-        25, 'Apprentice',
-        50, 'Adept',
+         1, 'Novice 1',
+        25, 'Novice 25',
+        50, 'Advanced',
         75, 'Expert',
        100, 'Master',
        253, 'Requires Terminal',
@@ -14694,7 +14694,14 @@ begin
     wbRArray('Unknown',
       wbRStruct('Unknown', [
         wbFormIDCk(INDX, 'Object', [STAT]),
-        wbUnknown(DATA)
+        wbStruct(DATA, 'Object Bounds', [
+          wbFloat('X1'),
+          wbFloat('Y1'),
+          wbFloat('Z1'),
+          wbFloat('X2'),
+          wbFloat('Y2'),
+          wbFloat('Z2')
+        ])
       ], [])
     )
   ]);
