@@ -9084,9 +9084,9 @@ begin
            {0x00800000} 'Autocalc Service',
            {0x01000000} '',
            {0x02000000} '',
-           {0x03000000} 'No Knockdowns',
+           {0x04000000} 'No Knockdowns',
            {0x08000000} 'Not Pushable',
-           {0x10000000} '', {28}
+           {0x10000000} 'Unknown 28',
            {0x20000000} '',
            {0x40000000} 'No Rotating To Head-track',
            {0x80000000} ''
@@ -9117,7 +9117,7 @@ begin
            {0x00800000 } nil,
            {0x01000000 } nil,
            {0x02000000 } nil,
-           {0x03000000 No Knockdowns} nil,
+           {0x04000000 No Knockdowns} nil,
            {0x08000000 Not Pushable} wbActorTemplateUseModelAnimation,
            {0x10000000 } nil,
            {0x20000000 } nil,
