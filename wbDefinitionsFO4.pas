@@ -18,6 +18,59 @@ unit wbDefinitionsFO4;
 
 interface
 
+uses
+  wbInterface;
+
+var
+	wbBipedObjectFlags: IwbFlagsDef;
+	wbEquipType: IwbFlagsDef;
+	wbFurnitureEntryTypeFlags: IwbFlagsDef;
+	wbPKDTFlags: IwbFlagsDef;
+	wbPKDTInterruptFlags: IwbFlagsDef;
+	wbSMNodeFlags: IwbFlagsDef;
+
+	wbActorPropertyEnum: IwbEnumDef;
+	wbAdvanceActionEnum: IwbEnumDef;
+	wbAlignmentEnum: IwbEnumDef;
+	wbArmorPropertyEnum: IwbEnumDef;
+	wbArmorTypeEnum: IwbEnumDef;
+	wbAttackAnimationEnum: IwbEnumDef;
+	wbAxisEnum: IwbEnumDef;
+	wbBipedObjectEnum: IwbEnumDef;
+	wbBlendModeEnum: IwbEnumDef;
+	wbBlendOpEnum: IwbEnumDef;
+	wbBodyPartIndexEnum: IwbEnumDef;
+	wbCastEnum: IwbEnumDef;
+	wbCastingSourceEnum: IwbEnumDef;
+	wbCrimeTypeEnum: IwbEnumDef;
+	wbCriticalStageEnum: IwbEnumDef;
+	wbEmotionTypeEnum: IwbEnumDef;
+	wbEntryPointsEnum: IwbEnumDef;
+	wbEventFunctionEnum: IwbEnumDef;
+	wbEventMemberEnum: IwbEnumDef;
+	wbFormTypeEnum: IwbEnumDef;
+	wbFunctionsEnum: IwbEnumDef;
+	wbFurnitureAnimTypeEnum: IwbEnumDef;
+	wbLocationEnum: IwbEnumDef;
+	wbMiscStatEnum: IwbEnumDef;
+	wbMusicEnum: IwbEnumDef;
+	wbObjectTypeEnum: IwbEnumDef;
+	wbPropTypeEnum: IwbEnumDef;
+	wbQuadrantEnum: IwbEnumDef;
+	wbSexEnum: IwbEnumDef;
+	wbSkillEnum: IwbEnumDef;
+	wbSoulGemEnum: IwbEnumDef;
+	wbSoundLevelEnum: IwbEnumDef;
+	wbTargetEnum: IwbEnumDef;
+	wbTintMaskTypeEnum: IwbEnumDef;
+	wbVatsValueFunctionEnum: IwbEnumDef;
+	wbWardStateEnum: IwbEnumDef;
+	wbWeaponAnimTypeEnum: IwbEnumDef;
+	wbWeaponPropertyEnum: IwbEnumDef;
+	wbZTestFuncEnum: IwbEnumDef;
+	wbScriptProperties: IwbArrayDef;
+	wbScriptPropertyStruct: IwbArrayDef;
+
 procedure DefineFO4;
 
 implementation
@@ -28,7 +81,6 @@ uses
   SysUtils,
   Math,
   Variants,
-  wbInterface,
   wbHelpers;
 
 const
@@ -836,7 +888,6 @@ const
 var
   wbPKDTSpecificFlagsUnused : Boolean;
   wbEDID: IwbSubRecordDef;
-  wbSoulGemEnum: IwbEnumDef;
   wbCOED: IwbSubRecordDef;
   wbXLCM: IwbSubRecordDef;
   wbEITM: IwbSubRecordDef;
@@ -848,21 +899,6 @@ var
   wbXGLB: IwbSubRecordDef;
   wbXRGD: IwbSubRecordDef;
   wbXRGB: IwbSubRecordDef;
-  wbEquipType: IwbFlagsDef;
-  wbEmotionTypeEnum: IwbEnumDef;
-  wbFurnitureAnimTypeEnum: IwbEnumDef;
-  wbFurnitureEntryTypeFlags: IwbFlagsDef;
-  wbWeaponAnimTypeEnum: IwbEnumDef;
-  wbWardStateEnum: IwbEnumDef;
-  wbEventFunctionEnum: IwbEnumDef;
-  wbEventMemberEnum: IwbEnumDef;
-  wbMusicEnum: IwbEnumDef;
-  wbSoundLevelEnum: IwbEnumDef;
-  wbBodyPartIndexEnum: IwbEnumDef;
-  wbAttackAnimationEnum: IwbEnumDef;
-  wbArmorPropertyEnum: IwbEnumDef;
-  wbActorPropertyEnum: IwbEnumDef;
-  wbWeaponPropertyEnum: IwbEnumDef;
   wbSPLO: IwbSubRecordDef;
   wbSPLOs: IwbSubRecordArrayDef;
   wbCNTO: IwbSubRecordStructDef;
@@ -906,43 +942,21 @@ var
   wbICONReq: IwbSubRecordStructDef;
   wbICO2: IwbSubRecordStructDef;
   wbActorValue: IwbIntegerDef;
-  wbCrimeTypeEnum: IwbEnumDef;
-  wbVatsValueFunctionEnum: IwbEnumDef;
-  wbSkillEnum: IwbEnumDef;
   wbETYP: IwbSubRecordDef;
   wbETYPReq: IwbSubRecordDef;
-  wbFormTypeEnum: IwbEnumDef;
-  wbMiscStatEnum: IwbEnumDef;
-  wbAdvanceActionEnum: IwbEnumDef;
-  wbAlignmentEnum: IwbEnumDef;
-  wbAxisEnum: IwbEnumDef;
-  wbCastingSourceEnum: IwbEnumDef;
-  wbCriticalStageEnum: IwbEnumDef;
-  wbSexEnum: IwbEnumDef;
-  wbObjectTypeEnum: IwbEnumDef;
-  wbQuadrantEnum: IwbEnumDef;
-  wbBlendModeEnum: IwbEnumDef;
-  wbBlendOpEnum: IwbEnumDef;
-  wbZTestFuncEnum: IwbEnumDef;
   wbEFID: IwbSubRecordDef;
   wbEFIT: IwbSubRecordDef;
-  wbFunctionsEnum: IwbEnumDef;
   wbEffectsReq: IwbSubRecordArrayDef;
   wbFirstPersonFlagsU32: IwbIntegerDef;
   wbBOD2: IwbSubRecordDef;
   wbScriptEntry: IwbStructDef;
-  wbPropTypeEnum: IwbEnumDef;
   wbScriptFlags: IwbIntegerDef;
   wbScriptPropertyObject: IwbUnionDef;
-  wbScriptPropertyStruct: IwbArrayDef;
-  wbScriptProperties: IwbArrayDef;
   wbScriptFragments: IwbStructDef;
   wbScriptFragmentsQuest: IwbStructDef;
   wbScriptFragmentsInfo: IwbStructDef;
   wbScriptFragmentsPack: IwbStructDef;
   wbScriptFragmentsScen: IwbStructDef;
-  wbEntryPointsEnum: IwbEnumDef;
-  wbLocationEnum: IwbEnumDef;
   wbPLDT: IwbSubRecordDef;
   wbPLVD: IwbSubRecordDef;
   wbTargetData: IwbStructDef;
@@ -960,8 +974,6 @@ var
   wbCITC: IwbSubRecordDef;
   wbMGEFData: IwbSubRecordStructDef;
   wbMGEFType: IwbIntegerDef;
-  wbCastEnum: IwbEnumDef;
-  wbTargetEnum: IwbEnumDef;
   wbMDOB: IwbSubRecordDef;
   wbSPIT: IwbSubRecordDef;
   wbDMDSs: IwbSubRecordDef;
@@ -972,18 +984,11 @@ var
   wbDMDT: IwbSubRecordDef;
   wbOwnership: IwbSubRecordStructDef;
   wbAmbientColors: IwbStructDef;
-  wbSMNodeFlags: IwbFlagsDef;
-  wbBipedObjectEnum: IwbEnumDef;
-  wbBipedObjectFlags: IwbFlagsDef;
-  wbArmorTypeEnum: IwbEnumDef;
   wbRACE_DATAFlags01: IwbIntegerDef;
   wbPhonemeTargets: IwbSubRecordDef;
   wbPHWT: IwbSubRecordStructDef;
   wbHeadPart: IwbSubRecordStructDef;
-  wbTintMaskTypeEnum: IwbEnumDef;
   wbQUSTAliasFlags: IwbSubRecordDef;
-  wbPKDTFlags: IwbFlagsDef;
-  wbPKDTInterruptFlags: IwbFlagsDef;
   wbPDTO: IwbSubRecordDef;
   wbPDTOs: IwbSubRecordArrayDef;
   wbUNAMs: IwbSubRecordArrayDef;
@@ -13876,7 +13881,7 @@ begin
       wbByteArray('Unknown', 1),
       wbFloat('Unknown'),
       wbByteArray('Unknown', 2),
-      wbFloat('Unknown'),
+      wbFloat('Action Points cost'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
       wbByteArray('Unknown', 4),
