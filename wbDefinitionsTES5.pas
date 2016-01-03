@@ -18,6 +18,54 @@ unit wbDefinitionsTES5;
 
 interface
 
+uses
+  wbInterface;
+
+var
+	wbBipedObjectFlags: IwbFlagsDef;
+	wbEquipType: IwbFlagsDef;
+	wbFurnitureEntryTypeFlags: IwbFlagsDef;
+	wbPKDTFlags: IwbFlagsDef;
+	wbPKDTInterruptFlags: IwbFlagsDef;
+	wbSMNodeFlags: IwbFlagsDef;
+
+	wbAdvanceActionEnum: IwbEnumDef;
+	wbAlignmentEnum: IwbEnumDef;
+	wbArmorTypeEnum: IwbEnumDef;
+	wbAttackAnimationEnum: IwbEnumDef;
+	wbAxisEnum: IwbEnumDef;
+	wbBipedObjectEnum: IwbEnumDef;
+	wbBlendModeEnum: IwbEnumDef;
+	wbBlendOpEnum: IwbEnumDef;
+	wbBodyPartIndexEnum: IwbEnumDef;
+	wbCastEnum: IwbEnumDef;
+	wbCastingSourceEnum: IwbEnumDef;
+	wbCrimeTypeEnum: IwbEnumDef;
+	wbCriticalStageEnum: IwbEnumDef;
+	wbEmotionTypeEnum: IwbEnumDef;
+	wbEntryPointsEnum: IwbEnumDef;
+	wbEventFunctionEnum: IwbEnumDef;
+	wbEventMemberEnum: IwbEnumDef;
+	wbFormTypeEnum: IwbEnumDef;
+	wbFunctionsEnum: IwbEnumDef;
+	wbFurnitureAnimTypeEnum: IwbEnumDef;
+	wbLocationEnum: IwbEnumDef;
+	wbMiscStatEnum: IwbEnumDef;
+	wbMusicEnum: IwbEnumDef;
+	wbObjectTypeEnum: IwbEnumDef;
+	wbPropTypeEnum: IwbEnumDef;
+	wbQuadrantEnum: IwbEnumDef;
+	wbSexEnum: IwbEnumDef;
+	wbSkillEnum: IwbEnumDef;
+	wbSoulGemEnum: IwbEnumDef;
+	wbSoundLevelEnum: IwbEnumDef;
+	wbTargetEnum: IwbEnumDef;
+	wbTintMaskTypeEnum: IwbEnumDef;
+	wbVatsValueFunctionEnum: IwbEnumDef;
+	wbWardStateEnum: IwbEnumDef;
+	wbWeaponAnimTypeEnum: IwbEnumDef;
+	wbZTestFuncEnum: IwbEnumDef;
+
 procedure DefineTES5;
 
 implementation
@@ -28,7 +76,6 @@ uses
   SysUtils,
   Math,
   Variants,
-  wbInterface,
   wbHelpers;
 
 const
@@ -646,7 +693,6 @@ const
 var
   wbPKDTSpecificFlagsUnused : Boolean;
   wbEDID: IwbSubRecordDef;
-  wbSoulGemEnum: IwbEnumDef;
   wbCOED: IwbSubRecordDef;
   wbXLCM: IwbSubRecordDef;
   wbEITM: IwbSubRecordDef;
@@ -658,18 +704,6 @@ var
   wbXGLB: IwbSubRecordDef;
   wbXRGD: IwbSubRecordDef;
   wbXRGB: IwbSubRecordDef;
-  wbEquipType: IwbFlagsDef;
-  wbEmotionTypeEnum: IwbEnumDef;
-  wbFurnitureAnimTypeEnum: IwbEnumDef;
-  wbFurnitureEntryTypeFlags: IwbFlagsDef;
-  wbWeaponAnimTypeEnum: IwbEnumDef;
-  wbWardStateEnum: IwbEnumDef;
-  wbEventFunctionEnum: IwbEnumDef;
-  wbEventMemberEnum: IwbEnumDef;
-  wbMusicEnum: IwbEnumDef;
-  wbSoundLevelEnum: IwbEnumDef;
-  wbBodyPartIndexEnum: IwbEnumDef;
-  wbAttackAnimationEnum: IwbEnumDef;
   wbSPLO: IwbSubRecordDef;
   wbSPLOs: IwbSubRecordArrayDef;
   wbCNTO: IwbSubRecordStructDef;
@@ -704,34 +738,16 @@ var
   wbICONReq: IwbSubRecordStructDef;
   wbICO2: IwbSubRecordStructDef;
   wbActorValue: IwbIntegerDef;
-  wbCrimeTypeEnum: IwbEnumDef;
-  wbVatsValueFunctionEnum: IwbEnumDef;
-  wbSkillEnum: IwbEnumDef;
   wbETYP: IwbSubRecordDef;
   wbETYPReq: IwbSubRecordDef;
-  wbFormTypeEnum: IwbEnumDef;
-  wbMiscStatEnum: IwbEnumDef;
-  wbAdvanceActionEnum: IwbEnumDef;
-  wbAlignmentEnum: IwbEnumDef;
-  wbAxisEnum: IwbEnumDef;
-  wbCastingSourceEnum: IwbEnumDef;
-  wbCriticalStageEnum: IwbEnumDef;
-  wbSexEnum: IwbEnumDef;
-  wbObjectTypeEnum: IwbEnumDef;
-  wbQuadrantEnum: IwbEnumDef;
-  wbBlendModeEnum: IwbEnumDef;
-  wbBlendOpEnum: IwbEnumDef;
-  wbZTestFuncEnum: IwbEnumDef;
   wbEFID: IwbSubRecordDef;
   wbEFIT: IwbSubRecordDef;
-  wbFunctionsEnum: IwbEnumDef;
   wbEffectsReq: IwbSubRecordArrayDef;
   wbFirstPersonFlagsU32: IwbIntegerDef;
   wbBODT: IwbSubRecordDef;
   wbBOD2: IwbSubRecordDef;
   wbBODTBOD2: IwbSubRecordUnionDef;
   wbScriptEntry: IwbStructDef;
-  wbPropTypeEnum: IwbEnumDef;
   wbScriptObject: IwbUnionDef;
   wbScriptFragments: IwbStructDef;
   wbScriptFragmentsQuest: IwbStructDef;
@@ -739,8 +755,6 @@ var
   wbScriptFragmentsPack: IwbStructDef;
   wbScriptFragmentsPerk: IwbStructDef;
   wbScriptFragmentsScen: IwbStructDef;
-  wbEntryPointsEnum: IwbEnumDef;
-  wbLocationEnum: IwbEnumDef;
   wbPLDT: IwbSubRecordDef;
   wbPLVD: IwbSubRecordDef;
   wbTargetData: IwbStructDef;
@@ -758,8 +772,6 @@ var
   wbCITC: IwbSubRecordDef;
   wbMGEFData: IwbSubRecordStructDef;
   wbMGEFType: IwbIntegerDef;
-  wbCastEnum: IwbEnumDef;
-  wbTargetEnum: IwbEnumDef;
   wbMDOB: IwbSubRecordDef;
   wbSPIT: IwbSubRecordDef;
   wbDMDSs: IwbSubRecordDef;
@@ -770,10 +782,6 @@ var
   wbDMDT: IwbSubRecordDef;
   wbOwnership: IwbSubRecordStructDef;
   wbAmbientColors: IwbStructDef;
-  wbSMNodeFlags: IwbFlagsDef;
-  wbBipedObjectEnum: IwbEnumDef;
-  wbBipedObjectFlags: IwbFlagsDef;
-  wbArmorTypeEnum: IwbEnumDef;
   wbRACE_DATAFlags01: IwbIntegerDef;
   wbPhonemeTargets: IwbSubRecordDef;
   wbNoseMorphFlags: IwbIntegerDef;
@@ -784,10 +792,7 @@ var
   wbPHWT: IwbSubRecordStructDef;
   wbMorphs: IwbSubRecordStructDef;
   wbHeadPart: IwbSubRecordStructDef;
-  wbTintMaskTypeEnum: IwbEnumDef;
   wbQUSTAliasFlags: IwbSubRecordDef;
-  wbPKDTFlags: IwbFlagsDef;
-  wbPKDTInterruptFlags: IwbFlagsDef;
   wbPDTO: IwbSubRecordDef;
   wbPDTOs: IwbSubRecordArrayDef;
   wbUNAMs: IwbSubRecordArrayDef;

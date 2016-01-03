@@ -18,13 +18,40 @@ unit wbDefinitionsTES3;
 
 interface
 
+uses
+  wbInterface;
+
+var
+	wbPKDTFlags: IwbFlagsDef;
+	wbServiceFlags: IwbFlagsDef;
+
+	wbAxisEnum: IwbEnumDef;
+	wbBlendModeEnum: IwbEnumDef;
+	wbBlendOpEnum: IwbEnumDef;
+	wbCrimeTypeEnum: IwbEnumDef;
+	wbFormTypeEnum: IwbEnumDef;
+	wbFunctionsEnum: IwbEnumDef;
+	wbMagicSchoolEnum: IwbEnumDef;
+	wbMusicEnum: IwbEnumDef;
+	wbOBMEResolutionInfo: IwbEnumDef;
+	wbPKDTType: IwbEnumDef;
+	wbQuadrantEnum: IwbEnumDef;
+	wbSexEnum: IwbEnumDef;
+	wbSkillEnum: IwbEnumDef;
+	wbSoulGemEnum: IwbEnumDef;
+	wbSpecializationEnum: IwbEnumDef;
+	wbZTestFuncEnum: IwbEnumDef;
+
 procedure DefineTES3;
 
 implementation
 
 uses
-  Types, Classes, SysUtils, Math, Variants,
-  wbInterface;
+  Types,
+  Classes,
+  SysUtils,
+  Math,
+  Variants;
 
 const
   ACBS : TwbSignature = 'ACBS';
@@ -271,10 +298,6 @@ var
   wbXOWN: IwbSubRecordDef;
   wbXGLB: IwbSubRecordDef;
   wbXRGD: IwbSubRecordDef;
-  wbSpecializationEnum: IwbEnumDef;
-  wbOBMEResolutionInfo: IwbEnumDef;
-  wbSoulGemEnum: IwbEnumDef;
-  wbMusicEnum: IwbEnumDef;
   wbSLSD: IwbSubRecordDef;
   wbBodyDataIndex: IwbSubRecordDef;
   wbSPLO: IwbSubRecordDef;
@@ -306,25 +329,11 @@ var
   wbXLOD: IwbSubRecordDef;
   wbXESP: IwbSubRecordDef;
   wbICON: IwbSubRecordDef;
-  wbCrimeTypeEnum: IwbEnumDef;
-  wbFormTypeEnum: IwbEnumDef;
-  wbSexEnum: IwbEnumDef;
-  wbAxisEnum: IwbEnumDef;
-  wbServiceFlags: IwbFlagsDef;
-  wbSkillEnum: IwbEnumDef;
-  wbPKDTType: IwbEnumDef;
-  wbPKDTFlags: IwbFlagsDef;
-  wbQuadrantEnum: IwbEnumDef;
-  wbBlendModeEnum: IwbEnumDef;
-  wbBlendOpEnum: IwbEnumDef;
-  wbZTestFuncEnum: IwbEnumDef;
   wbEFID: IwbSubRecordDef;
   wbEFIDOBME: IwbSubRecordDef;
   wbEFIT: IwbSubRecordDef;
   wbEFITOBME: IwbSubRecordDef;
   wbEFIX: IwbSubRecordDef;
-  wbMagicSchoolEnum: IwbEnumDef;
-  wbFunctionsEnum: IwbEnumDef;
   wbSCIT: IwbSubRecordStructDef;
   wbSCITOBME: IwbSubRecordStructDef;
   wbEffects: IwbSubRecordUnionDef;
