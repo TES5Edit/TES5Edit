@@ -53,12 +53,24 @@ end;
 procedure SavePlugin(aFile: IInterface; aFileName: string; aReset: Boolean);
 var
   fs: TFileStream;
+  fdate: Integer;
 begin
+  if FileExists(aFileName) then
+    fdate := FileAge(aFileName);
+
   fs := TFileStream.Create(aFileName, fmCreate);
   try
     FileWriteToStream(aFile, fs, aReset);
   finally
     fs.Free;
+  end;
+
+  // restore original file date for games that use it for load order sorting
+  if (fdate <> 0) and ((wbGameMode = gmTES4) or (wbGameMode = gmFO3) or (wbGameMode = gmFNV)) then try
+    FileSetDate(aFileName, fdate);
+  except
+    on E: Exception do
+      AddMessage('Can not change file date to original one: ' + E.Message);
   end;
 end;
 
