@@ -128,6 +128,13 @@ type
 
   TPluggyLinkThread = class;
 
+  TPluginDirtyInfo = record
+    Plugin: string;
+    CRC32: integer;
+    ITM, UDR, NAV: integer;
+  end;
+  PPluginDirtyInfo = ^TPluginDirtyInfo;
+
   TfrmMain = class(TForm)
     vstNav: TVirtualEditTree;
     splElements: TSplitter;
@@ -295,6 +302,8 @@ type
     mniModGroupsEnabled: TMenuItem;
     mniModGroupsDisabled: TMenuItem;
     mniNavOtherCodeSiteLogging: TMenuItem;
+    mniNavLOManagersDirtyInfo: TMenuItem;
+    N19: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -503,6 +512,7 @@ type
     procedure vstSpreadSheetCreateEditor(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
     procedure mniNavOtherCodeSiteLoggingClick(Sender: TObject);
+    procedure mniNavLOManagersDirtyInfoClick(Sender: TObject);
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -593,6 +603,7 @@ type
     function RestorePluginsFromMaster: Boolean;
     procedure ApplyScript(aScript: string);
     procedure CreateActionsForScripts;
+    function LOManagersDirtyInfo(aInfo: TPluginDirtyInfo): string;
   private
     procedure WMUser(var Message: TMessage); message WM_USER;
     procedure WMUser1(var Message: TMessage); message WM_USER + 1;
@@ -702,6 +713,8 @@ type
     AutoDone    : Boolean;
     ColumnWidth : Integer;
     RowHeight   : Integer;
+
+    PluginDirtyInfos: array of TPluginDirtyInfo;
 
     procedure DoInit;
     procedure SetDoubleBuffered(aWinControl: TWinControl);
@@ -3995,214 +4008,6 @@ begin
     Result := -90
   else
     Result := s;
-end;
-
-procedure TfrmMain.mniNavUndeleteAndDisableReferencesClick(Sender: TObject);
-const
-  sJustWait                   = 'Undeleting and Disabling References. Please wait...';
-var
-  Selection                   : TNodeArray;
-  StartNode, Node, NextNode   : PVirtualNode;
-  NodeData                    : PNavNodeData;
-  Count                       : Cardinal;
-  UndeletedCount              : Cardinal;
-  NotDeletedCount             : Cardinal;
-  DeletedNAVM                 : Cardinal;
-  StartTick                   : Cardinal;
-  i {, n}                     : Integer;
-  MainRecord, LinksToRecord   : IwbMainRecord;
-  Element                     : IwbElement;
-  Position                    : TwbVector;
-  Cntr {, Cntr2}              : IwbContainerElementRef;
-  AutoModeCheckForDR          : Boolean;
-  Operation                   : String;
-
-  function canUndelete: Boolean;
-  begin
-    Result := True;
-    LinksToRecord := MainRecord.MasterOrSelf.BaseRecord;
-    // skip navmeshes
-    if MainRecord.Signature = 'NAVM' then begin
-      Result := False;
-      Inc(DeletedNAVM);
-    end
-    // skip injected or bad refs (crashes after cleaning TES4 Battlehorn DLC)
-    else if MainRecord.IsInjected or (not Assigned(LinksToRecord)) then begin
-      Result := False;
-      Inc(notDeletedCount);
-    end
-    // skip refs of TREEs with LOD in FNV
-    else if (wbGameMode in [gmFNV]) and (LinksToRecord.Signature = 'TREE') and LinksToRecord.Flags.HasLODtree then begin
-      Result := False;
-      Inc(notDeletedCount);
-    end;
-    if not Result then
-      PostAddMessage('Skipping: ' + MainRecord.Name);
-  end;
-
-begin
-  AutoModeCheckForDR := wbToolMode in [tmCheckForDR];
-  if AutoModeCheckForDR then Operation := 'Count' else Operation := 'Undelet';
-
-  if not AutoModeCheckForDR and not wbEditAllowed then
-    Exit;
-  if wbTranslationMode then
-    Exit;
-
-  UserWasActive := True;
-
-  Selection := vstNav.GetSortedSelection(True);
-
-  if Length(Selection) < 1 then
-    Exit;
-
-  if not FilterApplied or
-    FilterConflictAll or
-    FilterConflictThis or
-    FilterByInjectStatus or
-    FilterByPersistent or
-    FilterByVWD or
-    (FilterByNotReachableStatus and ReachableBuild) or
-    FilterByReferencesInjectedStatus or
-    FilterByEditorID or
-    FilterByName or
-    FilterBySignature or
-    FilterByBaseEditorID or
-    FilterByBaseName or
-    FilterScaledActors or
-    FilterByBaseSignature or
-    FlattenBlocks or
-    FlattenCellChilds or
-    AssignPersWrldChild or
-    not InheritConflictByParent then begin
-
-    MessageDlg('To use this function you need to apply a filter with *only* the option "Conflict status inherited by parent" active.', mtError, [mbOk], 0);
-    Exit;
-  end;
-
-  if not AutoModeCheckForDR and not EditWarn then
-    Exit;
-
-  vstNav.BeginUpdate;
-  try
-    StartTick := GetTickCount;
-    wbStartTime := Now;
-
-    Enabled := False;
-
-    UndeletedCount := 0;
-    NotDeletedCount := 0;
-    DeletedNAVM := 0;
-    Count := 0;
-    for i := Low(Selection) to High(Selection) do try
-      StartNode := Selection[i];
-      if Assigned(StartNode) then
-        Node := vstNav.GetLast(StartNode)
-      else
-        Node := nil;
-      while Assigned(Node) do begin
-        NextNode := vstNav.GetPrevious(Node);
-        NodeData := vstNav.GetNodeData(Node);
-
-        if Supports(NodeData.Element, IwbMainRecord, MainRecord) then with MainRecord do begin
-          if IsEditable and
-             (IsDeleted or (GetPosition(Position) and (Position.z = -30000.0)) and (MainRecord.ElementNativeValues['XESP\Reference'] <> $14) ) and
-             (
-               (Signature = 'REFR') or
-               (Signature = 'PGRE') or
-               (Signature = 'PMIS') or
-               (Signature = 'ACHR') or
-               (Signature = 'ACRE') or
-               (Signature = 'NAVM') or
-               (Signature = 'PARW') or {>>> Skyrim <<<}
-               (Signature = 'PBAR') or {>>> Skyrim <<<}
-               (Signature = 'PBEA') or {>>> Skyrim <<<}
-               (Signature = 'PCON') or {>>> Skyrim <<<}
-               (Signature = 'PFLA') or {>>> Skyrim <<<}
-               (Signature = 'PHZD')    {>>> Skyrim <<<}
-             ) then
-          //begin
-          if canUndelete then begin
-            PostAddMessage(Operation+'ing: ' + MainRecord.Name);
-            if not AutoModeCheckForDR then begin
-              IsDeleted := True;
-              IsDeleted := False;
-              if (wbGameMode in [gmFO3, gmFO4, gmFNV, gmTES5]) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
-                IsPersistent := True
-              else if wbGameMode = gmTES4 then
-                IsPersistent := False;
-              if not IsPersistent then
-                if wbUDRSetZ and GetPosition(Position) then begin
-                  Position.z := wbUDRSetZValue;
-                  SetPosition(Position);
-                end;
-              RemoveElement('Enable Parent');
-              RemoveElement('XTEL');
-              IsInitiallyDisabled := True;
-              if wbUDRSetXESP and Supports(Add('XESP', True), IwbContainerElementRef, Cntr) then begin
-                Cntr.ElementNativeValues['Reference'] := $14;
-                Cntr.ElementNativeValues['Flags'] := 1;
-              end;
-
-              if wbUDRSetScale then begin
-                if not Assigned(ElementBySignature['XSCL']) then
-                  Element := Add('XSCL', True);
-                  if Assigned(Element) then
-                    Element.NativeValue := wbUDRSetScaleValue;
-              end;
-
-              if wbUDRSetMSTT and (wbGameMode in [gmFO3, gmFNV]) then begin
-                Element := ElementBySignature['NAME'];
-                if Assigned(Element) then
-                  if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
-                    if LinksToRecord.Signature = 'MSTT' then
-                      Element.NativeValue := wbUDRSetMSTTValue;
-              end;
-
-              // Undeleting NAVM, needs to update NAVI as well
-  //            if (Signature = 'NAVM') then
-  //              if wbGameMode in [gmTES5] then begin
-  //                if Supports(MainRecord.ElementByPath['NVNM - Geometry\Vertices'], IwbContainerElementRef, Cntr) then begin
-  //                  for n := 0 to Pred(Cntr.ElementCount) do
-  //                    if Supports(Cntr.Elements[n], IwbContainerElementRef, Cntr2) then
-  //                      Cntr2.ElementByName['Z'].NativeValue := -30000;
-  //                end;
-  //              end else
-  //                Inc(DeletedNAVM);
-            end;
-            Inc(UndeletedCount);
-          end;
-        end;
-
-        Node := NextNode;
-        Inc(Count);
-        if StartTick + 500 < GetTickCount then begin
-          Caption := sJustWait + ' Processed Records: ' + IntToStr(Count) +
-            ' '+Operation+'ed Records: ' + IntToStr(UndeletedCount) +
-            ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-          Application.ProcessMessages;
-          StartTick := GetTickCount;
-        end;
-        if Node = StartNode then
-          Node := nil;
-      end;
-
-    finally
-      Enabled := True;
-    end;
-
-    PostAddMessage('['+Operation+'ing and Disabling References done] ' + ' Processed Records: ' + IntToStr(Count) +
-      ', '+Operation+'ed Records: ' + IntToStr(UndeletedCount) +
-      ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
-    if DeletedNAVM > 0 then
-      PostAddMessage('<Warning: Plugin contains ' + IntToStr(DeletedNAVM) + ' deleted NavMeshes which can not be undeleted>');
-    if NotDeletedCount > 0 then
-      PostAddMessage('<Warning: Plugin contains ' + IntToStr(NotDeletedCount) + ' deleted references which can not be undeleted>');
-    if AutomodeCheckForDR then DRcount := UndeletedCount;
-  finally
-    vstNav.EndUpdate;
-    Caption := Application.Title;
-  end;
 end;
 
 function TfrmMain.FindNodeForElement(const aElement: IwbElement): PVirtualNode;
@@ -9174,6 +8979,280 @@ begin
   end;
 end;
 
+function TfrmMain.LOManagersDirtyInfo(aInfo: TPluginDirtyInfo): string;
+// LOOT entry example
+{
+  - name: 'UDO.esp'
+    dirty:
+      - crc: 0xd7d3445d
+        util: *dirtyUtil
+        itm: 15
+        udr: 4448
+        nav: 1
+}
+// BOSS entry example
+{
+WAC - NoMapMarker.esp
+  IF CHECKSUM("WAC - NoMapMarker.esp", 9BD8F9C2) DIRTY: 16 ITM, 0 UDR records. Needs TES4Edit cleaning: "http://cs.elderscrolls.com/index.php?title=TES4Edit_Cleaning_Guide"
+}
+const
+  CRLF = #13#10;
+begin
+  Result := '';
+  if (aInfo.ITM <> 0) or (aInfo.UDR <> 0) or (aInfo.NAV <> 0) then begin
+
+    if aInfo.CRC32 = 0 then try
+      aInfo.CRC32 := wbCRC32File(wbDataPath + aInfo.Plugin);
+    except
+      aInfo.CRC32 := 0;
+    end;
+    if aInfo.CRC32 = 0 then
+      Exit;
+
+    Result := Result + CRLF + 'LOOT Masterlist Entry';
+    Result := Result + CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin]);
+    Result := Result + CRLF + StringOfChar(' ', 4) + 'dirty:';
+    Result := Result + CRLF + Format(StringOfChar(' ', 6) + '- crc: 0x%s', [LowerCase(IntToHex(aInfo.CRC32, 8))]);
+    Result := Result + CRLF + StringOfChar(' ', 8) + 'util: *dirtyUtil';
+    if aInfo.ITM <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'itm: %d', [aInfo.ITM]);
+    if aInfo.UDR <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'udr: %d', [aInfo.UDR]);
+    if aInfo.NAV <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'nav: %d', [aInfo.NAV]);
+  end;
+  if Result <> '' then
+    Result := Result + CRLF;
+  if (aInfo.ITM <> 0) or (aInfo.UDR <> 0) then begin
+    Result := Result + CRLF + 'BOSS Masterlist Entry';
+    Result := Result + CRLF + aInfo.Plugin;
+    Result := Result + CRLF + Format('  IF CHECKSUM("%s", %s) DIRTY: %d ITM, %d UDR records. Needs %sEdit cleaning: "http://cs.elderscrolls.com/index.php?title=TES4Edit_Cleaning_Guide"', [
+      aInfo.Plugin,
+      IntToHex(aInfo.CRC32, 8),
+      aInfo.ITM,
+      aInfo.UDR,
+      wbAppName
+    ]);
+  end;
+end;
+
+procedure TfrmMain.mniNavUndeleteAndDisableReferencesClick(Sender: TObject);
+const
+  sJustWait                   = 'Undeleting and Disabling References. Please wait...';
+var
+  Selection                   : TNodeArray;
+  StartNode, Node, NextNode   : PVirtualNode;
+  NodeData                    : PNavNodeData;
+  Count                       : Cardinal;
+  UndeletedCount              : Cardinal;
+  NotDeletedCount             : Cardinal;
+  DeletedNAVM                 : Cardinal;
+  StartTick                   : Cardinal;
+  i {, n}                     : Integer;
+  MainRecord, LinksToRecord   : IwbMainRecord;
+  Element                     : IwbElement;
+  Position                    : TwbVector;
+  Cntr {, Cntr2}              : IwbContainerElementRef;
+  AutoModeCheckForDR          : Boolean;
+  Operation, Plugin           : String;
+  DirtyInfo                   : PPluginDirtyInfo;
+
+  function canUndelete: Boolean;
+  begin
+    Result := True;
+    LinksToRecord := MainRecord.MasterOrSelf.BaseRecord;
+    // skip navmeshes
+    if MainRecord.Signature = 'NAVM' then begin
+      Result := False;
+      Inc(DeletedNAVM);
+    end
+    // skip injected or bad refs (crashes after cleaning TES4 Battlehorn DLC)
+    else if MainRecord.IsInjected or (not Assigned(LinksToRecord)) then begin
+      Result := False;
+      Inc(notDeletedCount);
+    end
+    // skip refs of TREEs with LOD in FNV
+    else if (wbGameMode in [gmFNV]) and (LinksToRecord.Signature = 'TREE') and LinksToRecord.Flags.HasLODtree then begin
+      Result := False;
+      Inc(notDeletedCount);
+    end;
+    if not Result then
+      PostAddMessage('Skipping: ' + MainRecord.Name);
+  end;
+
+begin
+  AutoModeCheckForDR := wbToolMode in [tmCheckForDR];
+  if AutoModeCheckForDR then Operation := 'Count' else Operation := 'Undelet';
+
+  if not AutoModeCheckForDR and not wbEditAllowed then
+    Exit;
+  if wbTranslationMode then
+    Exit;
+
+  UserWasActive := True;
+
+  Selection := vstNav.GetSortedSelection(True);
+
+  if Length(Selection) < 1 then
+    Exit;
+
+  if not FilterApplied or
+    FilterConflictAll or
+    FilterConflictThis or
+    FilterByInjectStatus or
+    FilterByPersistent or
+    FilterByVWD or
+    (FilterByNotReachableStatus and ReachableBuild) or
+    FilterByReferencesInjectedStatus or
+    FilterByEditorID or
+    FilterByName or
+    FilterBySignature or
+    FilterByBaseEditorID or
+    FilterByBaseName or
+    FilterScaledActors or
+    FilterByBaseSignature or
+    FlattenBlocks or
+    FlattenCellChilds or
+    AssignPersWrldChild or
+    not InheritConflictByParent then begin
+
+    MessageDlg('To use this function you need to apply a filter with *only* the option "Conflict status inherited by parent" active.', mtError, [mbOk], 0);
+    Exit;
+  end;
+
+  if not AutoModeCheckForDR and not EditWarn then
+    Exit;
+
+  vstNav.BeginUpdate;
+  try
+    StartTick := GetTickCount;
+    wbStartTime := Now;
+
+    Enabled := False;
+
+    Plugin := '';
+    UndeletedCount := 0;
+    NotDeletedCount := 0;
+    DeletedNAVM := 0;
+    Count := 0;
+    for i := Low(Selection) to High(Selection) do try
+      StartNode := Selection[i];
+      if Assigned(StartNode) then
+        Node := vstNav.GetLast(StartNode)
+      else
+        Node := nil;
+      while Assigned(Node) do begin
+        NextNode := vstNav.GetPrevious(Node);
+        NodeData := vstNav.GetNodeData(Node);
+
+        if Supports(NodeData.Element, IwbMainRecord, MainRecord) then with MainRecord do begin
+          if Assigned(MainRecord._File) then
+            Plugin := MainRecord._File.FileName;
+          if IsEditable and
+             (IsDeleted or (GetPosition(Position) and (Position.z = -30000.0)) and (MainRecord.ElementNativeValues['XESP\Reference'] <> $14) ) and
+             (
+               (Signature = 'REFR') or
+               (Signature = 'PGRE') or
+               (Signature = 'PMIS') or
+               (Signature = 'ACHR') or
+               (Signature = 'ACRE') or
+               (Signature = 'NAVM') or
+               (Signature = 'PARW') or {>>> Skyrim <<<}
+               (Signature = 'PBAR') or {>>> Skyrim <<<}
+               (Signature = 'PBEA') or {>>> Skyrim <<<}
+               (Signature = 'PCON') or {>>> Skyrim <<<}
+               (Signature = 'PFLA') or {>>> Skyrim <<<}
+               (Signature = 'PHZD')    {>>> Skyrim <<<}
+             ) then
+          //begin
+          if canUndelete then begin
+            PostAddMessage(Operation+'ing: ' + MainRecord.Name);
+            if not AutoModeCheckForDR then begin
+              IsDeleted := True;
+              IsDeleted := False;
+              if (wbGameMode in [gmFO3, gmFO4, gmFNV, gmTES5]) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
+                IsPersistent := True
+              else if wbGameMode = gmTES4 then
+                IsPersistent := False;
+              if not IsPersistent then
+                if wbUDRSetZ and GetPosition(Position) then begin
+                  Position.z := wbUDRSetZValue;
+                  SetPosition(Position);
+                end;
+              RemoveElement('Enable Parent');
+              RemoveElement('XTEL');
+              IsInitiallyDisabled := True;
+              if wbUDRSetXESP and Supports(Add('XESP', True), IwbContainerElementRef, Cntr) then begin
+                Cntr.ElementNativeValues['Reference'] := $14;
+                Cntr.ElementNativeValues['Flags'] := 1;
+              end;
+
+              if wbUDRSetScale then begin
+                if not Assigned(ElementBySignature['XSCL']) then
+                  Element := Add('XSCL', True);
+                  if Assigned(Element) then
+                    Element.NativeValue := wbUDRSetScaleValue;
+              end;
+
+              if wbUDRSetMSTT and (wbGameMode in [gmFO3, gmFNV]) then begin
+                Element := ElementBySignature['NAME'];
+                if Assigned(Element) then
+                  if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
+                    if LinksToRecord.Signature = 'MSTT' then
+                      Element.NativeValue := wbUDRSetMSTTValue;
+              end;
+
+            end;
+            Inc(UndeletedCount);
+          end;
+        end;
+
+        Node := NextNode;
+        Inc(Count);
+        if StartTick + 500 < GetTickCount then begin
+          Caption := sJustWait + ' Processed Records: ' + IntToStr(Count) +
+            ' '+Operation+'ed Records: ' + IntToStr(UndeletedCount) +
+            ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+          Application.ProcessMessages;
+          StartTick := GetTickCount;
+        end;
+        if Node = StartNode then
+          Node := nil;
+      end;
+
+    finally
+      Enabled := True;
+    end;
+
+    PostAddMessage('['+Operation+'ing and Disabling References done] ' + ' Processed Records: ' + IntToStr(Count) +
+      ', '+Operation+'ed Records: ' + IntToStr(UndeletedCount) +
+      ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
+    if DeletedNAVM > 0 then
+      PostAddMessage('<Warning: Plugin contains ' + IntToStr(DeletedNAVM) + ' deleted NavMeshes which can not be undeleted>');
+    if NotDeletedCount > 0 then
+      PostAddMessage('<Warning: Plugin contains ' + IntToStr(NotDeletedCount) + ' deleted references which can not be undeleted>');
+
+    // store dirty information
+    if (Plugin <> '') and ((UndeletedCount <> 0) or (DeletedNAVM <> 0)) then begin
+      DirtyInfo := nil;
+      for i := Low(PluginDirtyInfos) to High(PluginDirtyInfos) do
+        if PluginDirtyInfos[i].Plugin = Plugin then begin
+          DirtyInfo := @PluginDirtyInfos[i];
+          Break;
+        end;
+      if not Assigned(DirtyInfo) then begin
+        SetLength(PluginDirtyInfos, Succ(Length(PluginDirtyInfos)));
+        DirtyInfo := @PluginDirtyInfos[Pred(Length(PluginDirtyInfos))];
+      end;
+      DirtyInfo.Plugin := Plugin;
+      DirtyInfo.UDR := UndeletedCount;
+      DirtyInfo.NAV := DeletedNAVM;
+    end;
+
+    if AutomodeCheckForDR then DRcount := UndeletedCount;
+  finally
+    vstNav.EndUpdate;
+    Caption := Application.Title;
+  end;
+end;
+
 procedure TfrmMain.mniNavRemoveIdenticalToMasterClick(Sender: TObject);
 const
   sJustWait                   = 'Removing "Identical to Master" records. Please wait...';
@@ -9188,7 +9267,8 @@ var
   MainRecord                  : IwbMainRecord;
   GroupRecord                 : IwbGroupRecord;
   AutoModeCheckForITM         : Boolean;
-  Operation                   : String;
+  Operation, Plugin           : String;
+  DirtyInfo                   : PPluginDirtyInfo;
 
 begin
   AutoModeCheckForITM := wbToolMode in [tmCheckForITM];
@@ -9267,6 +9347,9 @@ begin
             ) then begin
             MainRecord := nil;
 
+            if Assigned(NodeData.Element._File) then
+              Plugin := NodeData.Element._File.FileName;
+
             if not NodeData.Element.IsRemoveable then
               PostAddMessage('Can''t remove: ' + NodeData.Element.Name)
             else begin
@@ -9304,12 +9387,39 @@ begin
     PostAddMessage('['+Operation+'ing "Identical to Master" records done] ' + ' Processed Records: ' + IntToStr(Count) +
       ', '+Operation+'ed Records: ' + IntToStr(RemovedCount) +
       ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime)); // Does not show up if handling "a lot" of records !
+
+    // store dirty information
+    if (Plugin <> '') and (RemovedCount <> 0) then begin
+      DirtyInfo := nil;
+      for i := Low(PluginDirtyInfos) to High(PluginDirtyInfos) do
+        if PluginDirtyInfos[i].Plugin = Plugin then begin
+          DirtyInfo := @PluginDirtyInfos[i];
+          Break;
+        end;
+      if not Assigned(DirtyInfo) then begin
+        SetLength(PluginDirtyInfos, Succ(Length(PluginDirtyInfos)));
+        DirtyInfo := @PluginDirtyInfos[Pred(Length(PluginDirtyInfos))];
+      end;
+      DirtyInfo.Plugin := Plugin;
+      DirtyInfo.ITM := RemovedCount;
+    end;
+
     if AutoModeCheckForITM then ITMcount := RemovedCount;
 
   finally
     vstNav.EndUpdate;
     Caption := Application.Title;
   end;
+end;
+
+procedure TfrmMain.mniNavLOManagersDirtyInfoClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  pgMain.ActivePage := tbsMessages;
+  for i := Low(PluginDirtyInfos) to High(PluginDirtyInfos) do
+    AddMessage(LOManagersDirtyInfo(PluginDirtyInfos[i]));
+  AddMessage('');
 end;
 
 procedure TfrmMain.mniSpreadsheetCompareSelectedClick(Sender: TObject);
@@ -11158,6 +11268,7 @@ begin
   mniNavSetVWDAuto.Visible := mniNavCheckForErrors.Visible and (wbGameMode = gmTES4);
   mniNavSetVWDAutoInto.Visible := mniNavCheckForErrors.Visible and (wbGameMode = gmTES4);
   mniNavRemoveIdenticalToMaster.Visible := mniNavCheckForErrors.Visible;
+  mniNavLOManagersDirtyInfo.Visible := mniNavCheckForErrors.Visible and (Length(PluginDirtyInfos) <> 0);
 
   mniNavRemove.Visible :=
     not wbTranslationMode and
