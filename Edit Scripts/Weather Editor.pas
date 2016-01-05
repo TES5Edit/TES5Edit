@@ -1,6 +1,6 @@
 {
-  Weather Editor v0.1
-  Supports Oblivion, Skyrim, Fallout 3, Fallout New Vegas
+  Weather Editor v0.2
+  Supports Oblivion, Skyrim, Fallout 3, Fallout New Vegas, Fallout 4
 
   Hotkey: Ctrl+W
 }
@@ -25,7 +25,7 @@ var
   cmbCloudTexture: TComboBox;
   btnShowCloudTexture, btnApplyCloud, btnApplyWeatherColors, btnApplyLightingColors: TButton;
   btnCopyClouds, btnCopyWeatherColors, btnCopyLightingColors: TButton;
-  edCloudXSpeed, edCloudYSpeed, edCloudAlpha1, edCloudAlpha2, edCloudAlpha3, edCloudAlpha4: TLabeledEdit;
+  edCloudXSpeed, edCloudYSpeed, edCloudAlpha1, edCloudAlpha2, edCloudAlpha3, edCloudAlpha4, edCloudAlpha5, edCloudAlpha6, edCloudAlpha7, edCloudAlpha8: TLabeledEdit;
   imgCloud: TImage;
   CountCloudLayers: integer; // a total number of supported cloud layers
   CountTimes: integer; // a total number of times (sunrise, day, sunset, night)
@@ -226,6 +226,12 @@ begin
     SetElementEditValues(Weather, Format('JNAM\Layer #%d\Day', [Layer]), edCloudAlpha2.Text);
     SetElementEditValues(Weather, Format('JNAM\Layer #%d\Sunset', [Layer]), edCloudAlpha3.Text);
     SetElementEditValues(Weather, Format('JNAM\Layer #%d\Night', [Layer]), edCloudAlpha4.Text);
+    if wbGameMode = gmFO4 then begin
+      SetEditValue(ElementByIndex(ElementByPath(Weather, Format('JNAM\Layer #%d', [Layer])), 4), edCloudAlpha5.Text);
+      SetEditValue(ElementByIndex(ElementByPath(Weather, Format('JNAM\Layer #%d', [Layer])), 5), edCloudAlpha6.Text);
+      SetEditValue(ElementByIndex(ElementByPath(Weather, Format('JNAM\Layer #%d', [Layer])), 6), edCloudAlpha7.Text);
+      SetEditValue(ElementByIndex(ElementByPath(Weather, Format('JNAM\Layer #%d', [Layer])), 7), edCloudAlpha8.Text);
+    end;
   end
   else if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then
     SetEditValue(ElementByIndex(ElementByPath(Weather, 'ONAM'), Layer), edCloudXSpeed.Text)
@@ -263,6 +269,12 @@ begin
     edCloudAlpha2.Text := GetElementEditValues(Weather, Format('JNAM\Layer #%d\Day', [Layer]));
     edCloudAlpha3.Text := GetElementEditValues(Weather, Format('JNAM\Layer #%d\Sunset', [Layer]));
     edCloudAlpha4.Text := GetElementEditValues(Weather, Format('JNAM\Layer #%d\Night', [Layer]));
+    if wbGameMode = gmFO4 then begin
+      edCloudAlpha5.Text := GetEditValue(ElementByIndex(ElementByPath(Weather, Format('JNAM\Layer #%d', [Layer])), 4));
+      edCloudAlpha6.Text := GetEditValue(ElementByIndex(ElementByPath(Weather, Format('JNAM\Layer #%d', [Layer])), 5));
+      edCloudAlpha7.Text := GetEditValue(ElementByIndex(ElementByPath(Weather, Format('JNAM\Layer #%d', [Layer])), 6));
+      edCloudAlpha8.Text := GetEditValue(ElementByIndex(ElementByPath(Weather, Format('JNAM\Layer #%d', [Layer])), 7));
+    end;
   end
   else if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then
     edCloudXSpeed.Text := GetEditValue(ElementByIndex(ElementByPath(Weather, 'ONAM'), Layer))
@@ -456,7 +468,6 @@ begin
   frm := TForm.Create(nil);
   try
     frm.Caption := Format('%s \ %s - %s Weather Editor', [GetFileName(Weather), Name(Weather), wbGameName]);
-    //frm.Width := 860;
     frm.Width := 860 + (CountTimes-4) * iColorEditorWidth;
     frm.Height := 800;
     frm.Position := poScreenCenter;
@@ -555,6 +566,20 @@ begin
       edCloudAlpha4 := TLabeledEdit.Create(frm); edCloudAlpha4.Parent := pnlCloudEdit;
       edCloudAlpha4.LabelPosition := lpLeft; edCloudAlpha4.EditLabel.Caption := 'Alpha';
       edCloudAlpha4.Left := 62 + 3*iColorEditorWidth; edCloudAlpha4.Top := 155; edCloudAlpha4.Width := iColorEditorWidth - 50;
+      if wbGameMode = gmFO4 then begin
+        edCloudAlpha5 := TLabeledEdit.Create(frm); edCloudAlpha5.Parent := pnlCloudEdit;
+        edCloudAlpha5.LabelPosition := lpLeft; edCloudAlpha5.EditLabel.Caption := 'Alpha';
+        edCloudAlpha5.Left := 62 + 4*iColorEditorWidth; edCloudAlpha5.Top := 155; edCloudAlpha5.Width := iColorEditorWidth - 50;
+        edCloudAlpha6 := TLabeledEdit.Create(frm); edCloudAlpha6.Parent := pnlCloudEdit;
+        edCloudAlpha6.LabelPosition := lpLeft; edCloudAlpha6.EditLabel.Caption := 'Alpha';
+        edCloudAlpha6.Left := 62 + 5*iColorEditorWidth; edCloudAlpha6.Top := 155; edCloudAlpha6.Width := iColorEditorWidth - 50;
+        edCloudAlpha7 := TLabeledEdit.Create(frm); edCloudAlpha7.Parent := pnlCloudEdit;
+        edCloudAlpha7.LabelPosition := lpLeft; edCloudAlpha7.EditLabel.Caption := 'Alpha';
+        edCloudAlpha7.Left := 62 + 6*iColorEditorWidth; edCloudAlpha7.Top := 155; edCloudAlpha7.Width := iColorEditorWidth - 50;
+        edCloudAlpha8 := TLabeledEdit.Create(frm); edCloudAlpha8.Parent := pnlCloudEdit;
+        edCloudAlpha8.LabelPosition := lpLeft; edCloudAlpha8.EditLabel.Caption := 'Alpha';
+        edCloudAlpha8.Left := 62 + 7*iColorEditorWidth; edCloudAlpha8.Top := 155; edCloudAlpha8.Width := iColorEditorWidth - 50;
+      end;
     end;
 
     for i := 0 to Pred(CountTimes) do begin
@@ -723,10 +748,11 @@ begin
   slAssets := TwbFastStringList.Create;
   try
     ResourceContainerList(slContainers);
-    for i := 0 to Pred(slContainers.Count) do begin
+    for i := 0 to Pred(slContainers.Count) do
       ResourceList(slContainers[i], slAssets);
-      wbFilterStrings(slAssets, slCloudTextures, sCloudTexturesLocation);
-    end;
+    slAssets.Sort;
+    wbRemoveDuplicateStrings(slAssets);
+    wbFilterStrings(slAssets, slCloudTextures, sCloudTexturesLocation);
   finally
     slAssets.Free;
     slContainers.Free;
