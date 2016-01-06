@@ -9784,7 +9784,8 @@ begin
       wbInteger('Flags', itU8, wbFlags([
         'Never Resets',
         'Match PC Below Minimum Level',
-        'Disable Combat Boundary'
+        'Disable Combat Boundary',
+        'Settlement'
       ])),
       wbInteger('Max Level', itS8)
     ], cpNormal, True, nil, 2)
