@@ -68,11 +68,15 @@ uses
   wbInterface,
   wbImplementation,
   wbDefinitionsFNV,
+  wbDefinitionsFNVSaves,
   wbDefinitionsFO3,
+  wbDefinitionsFO3Saves,
   wbDefinitionsFO4,
   wbDefinitionsTES3,
   wbDefinitionsTES4,
-  wbDefinitionsTES5;
+  wbDefinitionsTES4Saves,
+  wbDefinitionsTES5,
+  wbDefinitionsTES5Saves;
 
 function wbFindCmdLineParam(const aSwitch     : string;
                             const aChars      : TSysCharSet;
@@ -584,7 +588,7 @@ begin
       ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
     end;
-    if not (wbToolSource in [tsPlugins]) then begin
+    if not (wbToolSource in [tsPlugins, tsSaves]) then begin
       ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName);
       Exit;
     end;
@@ -632,7 +636,7 @@ begin
       ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
     end;
-    if not (wbToolSource in [tsPlugins]) then begin
+    if not (wbToolSource in [tsPlugins, tsSaves]) then begin
       ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName);
       Exit;
     end;
@@ -693,9 +697,11 @@ begin
 
   case wbGameMode of
     gmFNV:  case wbToolSource of
+      tsSaves:   DefineFNVSaves;
       tsPlugins: DefineFNV;
     end;
     gmFO3:  case wbToolSource of
+      tsSaves:   DefineFO3Saves;
       tsPlugins: DefineFO3;
     end;
     gmFO4:  case wbToolSource of
@@ -705,9 +711,11 @@ begin
       tsPlugins: DefineTES3;
     end;
     gmTES4: case wbToolSource of
+      tsSaves:   DefineTES4Saves;
       tsPlugins: DefineTES4;
     end;
     gmTES5: case wbToolSource of
+      tsSaves:   DefineTES5Saves;
       tsPlugins: DefineTES5;
     end
   else
@@ -830,7 +838,12 @@ end;
 
 procedure SwitchToCoSave;
 begin
-  //
+  case wbGameMode of
+    gmFNV:  SwitchToFNVCoSave;
+    gmFO3:  SwitchToFO3CoSave;
+    gmTES4: SwitchToTES4CoSave;
+    gmTES5: SwitchToTES5CoSave;
+  end;
 end;
 
 initialization
