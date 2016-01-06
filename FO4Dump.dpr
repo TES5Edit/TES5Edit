@@ -31,15 +31,20 @@ uses
   wbBSA in 'wbBSA.pas',
   wbSort in 'wbSort.pas',
   wbInterface in 'wbInterface.pas',
+  wbSaveInterface in 'wbSaveInterface.pas',
   wbImplementation in 'wbImplementation.pas',
   wbLocalization in 'wbLocalization.pas',
   wbHelpers in 'wbHelpers.pas',
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
+  wbDefinitionsFNVSaves in 'wbDefinitionsFNVSaves.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
+  wbDefinitionsFO3Saves in 'wbDefinitionsFO3Saves.pas',
   wbDefinitionsFO4 in 'wbDefinitionsFO4.pas',
   wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
-  wbDefinitionsTES5 in 'wbDefinitionsTES5.pas';
+  wbDefinitionsTES4Saves in 'wbDefinitionsTES4Saves.pas',
+  wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
+  wbDefinitionsTES5Saves in 'wbDefinitionsTES5Saves.pas';
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
@@ -828,7 +833,12 @@ end;
 
 procedure SwitchToCoSave;
 begin
-  //
+  case wbGameMode of
+    gmFNV:  SwitchToFNVCoSave;
+    gmFO3:  SwitchToFO3CoSave;
+    gmTES4: SwitchToTES4CoSave;
+    gmTES5: SwitchToTES5CoSave;
+  end;
 end;
 
 var
@@ -883,11 +893,12 @@ begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
       end;
-      if not (wbToolSource in [tsPlugins]) then begin
+      if not (wbToolSource in [tsPlugins, tsSaves]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
         Exit;
       end;
       case wbToolSource of
+        tsSaves:   DefineFNVSaves;
         tsPlugins: DefineFNV;
       end;
     end else if isMode('FO3') then begin
@@ -904,6 +915,7 @@ begin
         Exit;
       end;
       case wbToolSource of
+        tsSaves:   DefineFO3Saves;
         tsPlugins: DefineFO3;
       end;
     end else if isMode('TES3') then begin
@@ -931,11 +943,12 @@ begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
       end;
-      if not (wbToolSource in [tsPlugins]) then begin
+      if not (wbToolSource in [tsPlugins, tsSaves]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
         Exit;
       end;
       case wbToolSource of
+        tsSaves:   DefineTES4Saves;
         tsPlugins: DefineTES4;
       end;
     end else if isMode('TES5') then begin
@@ -947,11 +960,12 @@ begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
       end;
-      if not (wbToolSource in [tsPlugins]) then begin
+      if not (wbToolSource in [tsPlugins, tsSaves]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
         Exit;
       end;
       case wbToolSource of
+        tsSaves:   DefineTES5Saves;
         tsPlugins: DefineTES5;
       end;
     end else if isMode('FO4') then begin
@@ -1144,6 +1158,8 @@ begin
       WriteLn(ErrOutput);
       WriteLn(ErrOutput, wbAppName + 'Dump will load the specified esp/esm files and all it''s masters and will dump the decoded contents of the specified file to stdout. Masters are searched for in the same directory as the specified file.');
       WriteLn(ErrOutput);
+      WriteLn(ErrOutput, wbAppName + 'Dump -Saves will load the specified save or coSave file and all it''s masters and will dump the decoded contents of the specified file to stdout. Masters are searched for in the game directory.');
+      WriteLn(ErrOutput);
       WriteLn(ErrOutput, wbAppName + 'Export will dump the plugin definition in the specified format.');
       WriteLn(ErrOutput, wbAppName + 'Export -Saves will dump the save file definition in the specified format.');
       WriteLn(ErrOutput);
@@ -1166,6 +1182,8 @@ begin
       WriteLn(ErrOutput, '             ', '  -do:1 starting offset');
       WriteLn(ErrOutput, '             ', '  -do:2 starting offset and array count  PERFORMANCE PENALTY');
       WriteLn(ErrOutput, '             ', '  -do:3 starting and ending offset, size and array count  PERFORMANCE PENALTY');
+      WriteLn(ErrOutput, '-bts         ', 'BytesToSkip  = number of undecoded bytes to skip, default = 0');
+      WriteLn(ErrOutput, '-btd         ', 'BytesToDump  = number of undecoded bytes to dump as unknown, default = all');
       WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Plugin mode ONLY');
       WriteLn(ErrOutput, '-xr:list     ', 'Excludes the contents of specified records from being');
@@ -1178,8 +1196,17 @@ begin
       WriteLn(ErrOutput, '-top:N       ', 'If specified, only dump the first N records');
       WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
       WriteLn(ErrOutput, '             ', '');
+      WriteLn(ErrOutput, 'Saves mode ONLY');
+      WriteLn(ErrOutput, '-df:list     ', 'If specified, only dump the listed ChangedForm type');
+      WriteLn(ErrOutput, '-xf:list     ', 'Excludes complete ChangedForm type from being processed');
+      WriteLn(ErrOutput, '-dc:GlobalDataIDlist   ', 'If specified, only process those global data ID');
+      WriteLn(ErrOutput, '-xc:GlobalDataIDlist   ', 'Excludes those global data from being processed');
+      WriteLn(ErrOutput, '-xcbloat     ', 'The following value applies:');
+      WriteLn(ErrOutput, '             ', '  -xc:1001');
+      WriteLn(ErrOutput, '             ', '    1001 is the ID of Papyrus data the largest part of the save.');
+      WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Example: full dump of Skyrim.esm excluding "bloated" records');
-      WriteLn(ErrOutput, '  FO4Dump.exe -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Fallout4.esm');
+      WriteLn(ErrOutput, '  TES5Dump.exe -FO4 -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Fallout4.esm');
       WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Currently supported export formats:');
       WriteLn(ErrOutput, 'RAW          ','Private format for debugging');
