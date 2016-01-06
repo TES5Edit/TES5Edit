@@ -23,7 +23,7 @@ uses
 
 var
 	wbAggroRadiusFlags: IwbFlagsDef;
-  wbPKDTFlags: IwbFlagsDef;
+	wbPKDTFlags: IwbFlagsDef;
 	wbRecordFlagsFlags: IwbFlagsDef;
 	wbServiceFlags: IwbFlagsDef;
 	wbTemplateFlags: IwbFlagsDef;
@@ -6107,7 +6107,7 @@ begin
      {02} wbInteger('Energy Level', itU8),
      {03} wbInteger('Responsibility', itU8),
      {04} wbInteger('Mood', itU8, wbMoodEnum),
-          wbByteArray('Unused', 3),   // Mood is stored as a DWord as shown by endianSwapping but is truncated to byte during load :)
+     {05} wbByteArray('Unused', 3),   // Mood is stored as a DWord as shown by endianSwapping but is truncated to byte during load :)
      {08} wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
      {0C} wbInteger('Teaches', itS8, wbSkillEnum),
      {0D} wbInteger('Maximum training level', itU8),

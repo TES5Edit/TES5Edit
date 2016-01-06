@@ -1,12 +1,12 @@
 {
-  Export the text of scripts in selected records.
+  Export the text of selected records.
 }
 unit UserScript;
 
 var
   slText, sl: TStringList;
   basePath, extension: string;
-	doScriptsOnly, doImport, doStop: boolean;
+  doScriptsOnly, doImport, doStop: boolean;
   debug: boolean;
     
 //=========================================================================
@@ -79,33 +79,34 @@ begin
     rb2.Caption := 'Import';
     rb2.Width := 75;
     
-		if wbGameMode <> gmTES5 then begin
+		if wbGameMode < gmTES5 then begin
 			rg2 := TRadioGroup.Create(frm);
 			rg2.Parent := pnl;
 			rg2.Left := 16;
 			rg2.Height := 60;
 			rg2.Top := rg.Top + rg.Height + 1;
-			rg2.Width := 220;
+			rg2.Width := rg.Width;
 			rg2.Caption := 'Selection ?';
 			rg2.ClientHeight := 45;
-			rg2.ClientWidth := 220;
-			
-			rb4 := TRadioButton.Create(rg);
+			rg2.ClientWidth := rg2.Width;
+		end;
+		rb4 := TRadioButton.Create(rg);
+		if wbGameMode < gmTES5 then begin
 			rb4.Parent := rg2;
-			rb4.Left := 26;
-			rb4.Top := 18;
+			rb4.Left := rb1.left;
+			rb4.Top := rb1.Top;
 			rb4.Caption := 'All texts';
-			rb4.Width := 80;
-			rb4.Checked := True;
+			rb4.Width := rb1.Width;
 			
 			rb5 := TRadioButton.Create(rg);
 			rb5.Parent := rg2;
-			rb5.Left := rb1.Left + rb1.Width + 30;
-			rb5.Top := rb1.Top;
+			rb5.Left := rb4.Left + rb4.Width + 30;
+			rb5.Top := rb4.Top;
 			rb5.Caption := 'Only scripts';
-			rb5.Width := 75;
-    end;
-		
+			rb5.Width := rb4.Width;
+		end;
+		rb4.Checked := True;
+
     btnOk := TButton.Create(frm);
     btnOk.Parent := pnl;
     btnOk.Caption := 'OK';
@@ -125,11 +126,8 @@ begin
     if frm.ShowModal = mrOk then begin
 			if rb1.Checked then doImport := False else
 			if rb2.Checked then doImport := True;
-			if wbGameMode = gmTES5 then
-			  doScriptsOnly := False
-			else
-				if rb4.Checked then doScriptsOnly := False else
-				if rb5.Checked then doScriptsOnly := True;
+			if rb4.Checked then doScriptsOnly := False else
+			if rb5.Checked then doScriptsOnly := True;
 			doStop := False;
 		end else
 			doStop := True;
@@ -262,7 +260,7 @@ begin
 	if doStop then Exit;
 	
 	if Pos('\\?\', basePath)=0 then basePath := '\\?\'+basePath;  // allows program to handle very long file names
-  debug := False;
+	debug := False;
 	AddMessage('Using directory: "'+basePath+'" and extension: "'+extension+'"');
 end;
 
@@ -286,27 +284,32 @@ begin
     c := basePath + x + extension;
     x := ExtractFilePath(c);
     c := ExtractFileName(c);
-    if debug then AddMessage('Processing: '+c+' at '+x);
+    // if debug then AddMessage('Processing: '+c+' at '+x);
     
+    while (Length(x)>0) and (x[Length(x)]=' ') do Delete(x, 1, 1);
     ForceDirectories(x);
     if DirectoryExists(x) then begin
       x := x+c;
+      while (Length(x)>0) and (x[Length(x)]=' ') do Delete(x, 1, 1);
       s := GetEditValue(e);
       slText.Text := s;
+      // if debug then AddMessage('Checking: '+x);
       if FileExists(x) then begin
         if debug then AddMessage(x+' exists');
         sl.Clear;
         sl.LoadFromFile(x);
         if sl.Text <> slText.Text then begin
-					if debug then AddMessage(x+' modified');
+          // if debug then AddMessage(x+' modified');
           if doImport then
-						SetEditValue(e, sl.Text)
-					else
-						slText.SaveToFile(x);
-				end;
-      end else
-        if not doImport then
-					slText.SaveToFile(x);
+            SetEditValue(e, sl.Text)
+          else
+            try slText.SaveToFile(x); except end;
+        end;
+      end else begin
+        // if debug then AddMessage(x+' created');
+        if (not doImport) and (Length(s)>0) then
+          try slText.SaveToFile(x); except end;
+      end;
     end else
       if debug then AddMessage('Directory not created : '+x);
   end;

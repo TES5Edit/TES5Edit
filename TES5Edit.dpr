@@ -54,11 +54,17 @@ uses
   frmLogAnalyzerForm in 'frmLogAnalyzerForm.pas',
   frmLODGenForm in 'frmLODGenForm.pas',
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
+  wbDefinitionsFNVSaves in 'wbDefinitionsFNVSaves.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
+  wbDefinitionsFO3Saves in 'wbDefinitionsFO3Saves.pas',
+  wbDefinitionsFO4 in 'wbDefinitionsFO4.pas',
   wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
+  wbDefinitionsTES4Saves in 'wbDefinitionsTES4Saves.pas',
   wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
-  wbDefinitionsFO4 in 'wbDefinitionsFO4.pas';
+  wbDefinitionsTES5Saves in 'wbDefinitionsTES5Saves.pas',
+  wbSaveInterface in 'wbSaveInterface.pas',
+  Zlibex in 'Zlibex.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
