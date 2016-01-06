@@ -4732,6 +4732,91 @@ begin
   wbCounterAfterSet('VNAM - Count', aElement);
 end;
 
+function wbCELLCombinedMeshesCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+var
+  Container       : IwbContainer;
+begin
+  if Supports(aElement.Container, IwbContainer, Container) then
+    Result := Container.ElementNativeValues['Meshes Count']
+  else
+    Result := 0;
+end;
+
+procedure wbCELLCombinedMeshesAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('Meshes Count', aElement);
+end;
+
+function wbCELLCombinedRefsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+var
+  Container       : IwbContainer;
+begin
+  // the counter is double of entries (each member of struct is counted)
+  if Supports(aElement.Container, IwbContainer, Container) then
+    Result := Container.ElementNativeValues['References Count'] div 2
+  else
+    Result := 0;
+end;
+
+procedure wbCELLCombinedRefsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Element         : IwbElement;
+  Container       : IwbContainer;
+  SelfAsContainer : IwbContainer;
+begin
+  // the counter is double of entries (each member of struct is counted)
+  if wbBeginInternalEdit then try
+    if Supports(aElement.Container, IwbContainer, Container) and
+       Supports(aElement, IwbContainer, SelfAsContainer) then begin
+      Element := Container.ElementByName['References Count'];
+      if Assigned(Element) then try
+        if (Element.GetNativeValue <> (SelfAsContainer.GetElementCount * 2)) then
+          Element.SetNativeValue(SelfAsContainer.GetElementCount * 2);
+      except end;
+    end;
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
+function wbCombinedMeshIDToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Cell: IwbMainRecord;
+begin
+  Result := IntToHex(aInt, 8);
+
+  Cell := aElement.ContainingMainRecord;
+  if not Assigned(Cell) then
+    Exit;
+
+  case aType of
+    ctToStr, ctToEditValue: begin
+      Result := 'Meshes\Precombined\' + IntToHex(Cell.FormID and $00FFFFFF, 8) + '_' + Result + '_oc.nif';
+    end;
+    ctCheck: Result := '';
+  end;
+end;
+
+function wbCombinedMeshIDToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  s: string;
+  i: Integer;
+begin
+  Result := 0;
+  // hex number between first and second underscope
+  i := Pos('_', aString);
+  if i <> 0 then begin
+    s := Copy(aString, i + 1, Length(aString) - i);
+    i := Pos('_', s);
+    if i <> 0 then begin
+      s := Copy(s, 1, i - 1);
+      if Length(s) = 8 then try
+        Result := StrToInt64('$' + s);
+      except end;
+    end;
+  end;
+end;
+
 function wbREFRRecordFlagsDecider(const aElement: IwbElement): Integer;
 var
   MainRecord : IwbMainRecord;
@@ -7496,7 +7581,7 @@ begin
 
     wbUnknown(VISI),
     wbFormIDCk(RVIS, 'Unknown', [CELL]),
-    wbUnknown(PCMB),
+    wbByteArray(PCMB, 'Physics Combined', 2),
 
     wbStruct(XCLL, 'Lighting', [
       wbStruct('Ambient Color', [
@@ -7556,11 +7641,9 @@ begin
 
     {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
     wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
-    //wbString(XNAM, 'Water Noise Texture'),
     wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
     wbFormIDCk(XLCN, 'Location', [LCTN]),
     wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
-    //wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
     wbStruct(XWCU, 'Water Velocity', [
       wbFloat('X Offset'),
       wbFloat('Y Offset'),
@@ -7586,8 +7669,16 @@ begin
     wbFormIDCk(XCIM, 'Image Space', [IMGS]),
 
     wbUnknown(XGDR),
-    wbArrayS(XPRI, 'Unknown', wbFormIDCk('Unknown', [REFR])),
-    wbUnknown(XCRI)
+    wbArrayS(XPRI, 'Physics References', wbFormIDCk('Unknown', [REFR])),
+    wbStruct(XCRI, 'Combined References', [
+      wbInteger('Meshes Count', itU32),
+      wbInteger('References Count', itU32),
+      wbArrayS('Meshes', wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt), wbCELLCombinedMeshesCounter, cpNormal, False, nil, wbCELLCombinedMeshesAfterSet),
+      wbArrayS('References',  wbStructSK([0], 'Reference', [
+        wbFormIDCk('Reference', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
+        wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt)
+      ]), wbCELLCombinedRefsCounter, cpNormal, False, nil, wbCELLCombinedRefsAfterSet)
+    ])
   ], True, wbCellAddInfo, cpNormal, False{, wbCELLAfterLoad});
 
   wbRecord(CLAS, 'Class', [
