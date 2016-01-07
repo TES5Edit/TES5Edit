@@ -4791,7 +4791,7 @@ begin
 
   case aType of
     ctToStr, ctToEditValue: begin
-      Result := 'Meshes\Precombined\' + IntToHex(Cell.FormID and $00FFFFFF, 8) + '_' + Result + '_oc.nif';
+      Result := 'Meshes\Precombined\' + IntToHex(Cell.FormID and $00FFFFFF, 8) + '_' + Result + '_OC.nif';
     end;
     ctCheck: Result := '';
   end;
@@ -7669,12 +7669,12 @@ begin
     wbFormIDCk(XCIM, 'Image Space', [IMGS]),
 
     wbUnknown(XGDR),
-    wbArrayS(XPRI, 'Physics References', wbFormIDCk('Unknown', [REFR])),
+    wbArrayS(XPRI, 'Physics References', wbFormIDCk('Reference', [REFR])),
     wbStruct(XCRI, 'Combined References', [
       wbInteger('Meshes Count', itU32),
       wbInteger('References Count', itU32),
       wbArrayS('Meshes', wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt), wbCELLCombinedMeshesCounter, cpNormal, False, nil, wbCELLCombinedMeshesAfterSet),
-      wbArrayS('References',  wbStructSK([0], 'Reference', [
+      wbArrayS('References',  wbStructSK([1, 0], 'Reference', [
         wbFormIDCk('Reference', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
         wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt)
       ]), wbCELLCombinedRefsCounter, cpNormal, False, nil, wbCELLCombinedRefsAfterSet)
@@ -11812,11 +11812,11 @@ begin
         {0x80000000} 'Invulnerable'
       ])),
       wbInteger('Health Offset', itS16, nil, cpNormal, True, nil{wbActorTemplateUseStats}),
-      wbInteger('Stamina Offset', itS16, nil, cpNormal, False, nil{wbActorTemplateUseAIData}),
       wbUnion('Level', wbNPCLevelDecider, [
         wbInteger('Level', itS16, nil, cpNormal, True, nil{wbActorTemplateUseStats}),
         wbInteger('Level Mult', itS16, wbDiv(1000), cpNormal, True, nil{wbActorTemplateUseStats})
       ], cpNormal, True, nil{wbActorTemplateUseStats}),
+      wbInteger('Unknown', itS16, nil, cpNormal, False, nil{wbActorTemplateUseAIData}),
       wbInteger('Calc min level', itU16, nil, cpNormal, True, nil{wbActorTemplateUseStats}),
       wbInteger('Calc max level', itU16, nil, cpNormal, True, nil{wbActorTemplateUseStats}),
       wbByteArray('Unknown', 4),
