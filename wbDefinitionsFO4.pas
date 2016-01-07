@@ -14474,8 +14474,9 @@ begin
     wbRArray('Naming Rules',
       wbRStruct('Naming Rule', [
         wbInteger(VNAM, 'Count', itU32),
-        wbRArrayS('Names',
-          wbRStructSK([0], 'Name', [
+        // should not be sorted
+        wbRArray('Names',
+          wbRStruct('Name', [
             wbLString(WNAM, 'Label', 0, cpTranslate),
             wbKSIZ,
             wbKWDAs
