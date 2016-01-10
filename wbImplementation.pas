@@ -3017,7 +3017,7 @@ begin
 
     j := 0;
     ONAMs := nil;
-    if wbGameMode in [gmFO3, gmFNV, gmTES5] then begin
+    if wbGameMode in [gmFO3, gmFNV, gmTES5, gmFO4] then begin
       Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
       while FileHeader.RemoveElement('ONAM') <> nil do
         ;
