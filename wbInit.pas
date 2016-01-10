@@ -719,7 +719,7 @@ begin
       tsPlugins: DefineTES5;
     end
   else
-    ShowMessage('Application name must contain FNV, FO3, TES4, TES5 or FO4 to select game.');
+    ShowMessage('Application name must contain FNV, FO3, FO4, TES4 or TES5 to select game.');
     Exit;
   end;
 

@@ -986,7 +986,7 @@ begin
         tsPlugins: DefineFO4;
       end;
     end else begin
-      WriteLn(ErrOutput, 'Application name must contain FNV, FO3, TES4, TES5 to select game.');
+      WriteLn(ErrOutput, 'Application name must contain FNV, FO3, FO4, TES4 or TES5 to select game.');
       Exit;
     end;
 
