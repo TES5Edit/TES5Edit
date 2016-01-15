@@ -10780,7 +10780,7 @@ begin
     1: Assert(aMainRecord.Signature = 'WRLD');
     6, 8, 9: Assert(aMainRecord.Signature = 'CELL');
     10: Assert(
-      (not wbVWDAsQuestChildren and (aMainRecord.Signature = 'CELL')) or
+      (aMainRecord.Signature = 'CELL') or
       (wbVWDAsQuestChildren and (aMainRecord.Signature = 'QUST'))
     );
     7: Assert(aMainRecord.Signature = 'DIAL');
