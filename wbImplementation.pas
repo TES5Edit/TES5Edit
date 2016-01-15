@@ -10736,9 +10736,11 @@ begin
 
         Exit;
       end;
+      raise Exception.Create('Can''t add ' + aElement.Name + ' to ' + GetName);
     end;
+  else
+    raise Exception.Create(ClassName + '.AddIfMissingInternal is not implemented for GroupType ' + IntToStr(grStruct.grsGroupType));
   end;
-  raise Exception.Create(ClassName + '.AddIfMissingInternal is not implemented for GroupType ' + IntToStr(grStruct.grsGroupType));
 end;
 
 procedure TwbGroupRecord.BuildRef;
