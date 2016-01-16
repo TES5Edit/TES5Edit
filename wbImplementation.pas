@@ -10292,7 +10292,6 @@ end;
 
 function TwbGroupRecord.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 var
-  Element      : IwbElement;
   MainRecord   : IwbMainRecord;
   MainRecord2  : IwbMainRecord;
   FormID       : Cardinal;
@@ -10713,11 +10712,8 @@ begin
                 end;
               end;
           if Assigned(MainRecord) then
-            Element := AddIfMissing(MainRecord, aAsNew, false, aPrefixRemove, aPrefix, aSuffix)
-          else
-            Element := nil;
+            AddIfMissing(MainRecord, aAsNew, false, aPrefixRemove, aPrefix, aSuffix);
           GroupRecord2 := nil;
-          Supports(Element, IwbMainRecord, MainRecord);
         end;
         if not Assigned(MainRecord) then
           raise Exception.Create(ClassName + '.AddIfMissingInternal could not create associated MainRecord with formID ' +
