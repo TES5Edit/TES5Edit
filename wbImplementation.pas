@@ -10221,8 +10221,9 @@ begin
           (Signature <> 'ACRE') and
           (Signature <> 'ACHR') then
          Exit;
-   10: if (not wbVWDAsQuestChildren and (Signature <> 'REFR')) and
-          (wbVWDAsQuestChildren and ((Signature <> 'DLBR') or (Signature <> 'DIAL') or (Signature <> 'SCEN')))
+   10: if (not wbVWDAsQuestChildren and (Signature <> 'REFR')) or
+          (wbVWDAsQuestChildren and
+             not ((Signature = 'REFR') or (Signature = 'DLBR') or (Signature = 'DIAL') or (Signature = 'SCEN')))
        then
          Exit;
   else
@@ -10275,9 +10276,9 @@ var
   i         : Integer;
 begin
   if esUnsaved in aElement.ElementStates then  // Let's not penalised too much loading time.
-    if TwbSignature(grStruct.grsLabel) = 'DIAL' then  // Issue 86: https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=86
+    if ((TwbSignature(grStruct.grsLabel) = 'DIAL') or wbVWDAsQuestChildren) then  // Issue 86: https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=86
       if Supports(aElement, IwbGroupRecord, DialGroup) then // The DIAL GRUP must immediatly follow corresponding DIAL MainRecord.
-        if DialGroup.GroupType = 7 then
+        if DialGroup.GroupType = 7 then // Let's hope nobody messes up the groupType
           if Supports(Self, IwbContainer, Container) then
             if Container.ElementCount > 0 then
               for i := 0 to Pred(Container.ElementCount) - 1 do  // If we are reading the plugins and at the end don't bother moving data around.
@@ -10635,6 +10636,26 @@ begin
         Result.BuildRef;
     end;
     8, 9, 10: begin
+      if wbVWDAsQuestChildren and Supports(aElement, IwbGroupRecord, GroupRecord) then begin
+        if GroupRecord.GroupType <> 7 then
+          raise Exception.Create('Can''t add '+GroupRecord.Name+' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
+        MainRecord := GroupRecord.ChildrenOf;
+        if not Assigned(MainRecord) then
+          raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
+        MainRecord := MainRecord.HighestOverrideOrSelf[GetFile.LoadOrder];
+        MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix) as IwbMainRecord;
+        Assert(Assigned(MainRecord));
+        Result := MainRecord.ChildGroup;
+        if not Assigned(Result) then
+          Result := TwbGroupRecord.Create(Self, 7, MainRecord);
+
+        GroupRecord2 := Result as IwbGroupRecord;
+        if aDeepCopy then
+          for i := 0 to Pred(GroupRecord.ElementCount) do
+            GroupRecord2.AddIfMissing(GroupRecord.Elements[i], aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix);
+
+        Exit;
+      end;
       if not Supports(aElement, IwbMainRecord, MainRecord) then
         raise Exception.Create('Only main records can be added to ' + GetName);
       if (MainRecord.Signature <> 'REFR') and
