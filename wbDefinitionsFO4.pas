@@ -12851,6 +12851,7 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbPRPS,
+    wbAPPR,
     wbStruct(DATA, '', [
       wbUnknown
 //      wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
@@ -14648,7 +14649,8 @@ begin
           wbRStruct('Name', [
             wbLString(WNAM, 'Label', 0, cpTranslate),
             wbKSIZ,
-            wbKWDAs
+            wbKWDAs,
+            wbUnknown(YNAM)
           ], []),
           cpNormal, False, nil, wbINNRAfterSet
         )
