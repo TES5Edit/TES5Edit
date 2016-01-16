@@ -69,7 +69,7 @@ var
   wbRequireLoadOrder       : Boolean  = False;
   wbCreateContainedIn      : Boolean  = True;
   wbVWDInTemporary         : Boolean  = False;
-  wbVWDAsQuestChildren     : Boolean   = False;
+  wbVWDAsQuestChildren     : Boolean  = False;
   wbResolveAlias           : Boolean  = True;
   wbActorTemplateHide      : Boolean  = True;
   wbClampFormID            : Boolean  = True;
