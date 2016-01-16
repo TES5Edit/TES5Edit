@@ -10635,110 +10635,62 @@ begin
         Result.BuildRef;
     end;
     8, 9, 10: begin
-      MainRecord := nil;
-      if not ((grStruct.grsGroupType = 10) and wbVWDAsQuestChildren and
-              Supports(aElement, IwbGroupRecord, GroupRecord) and
-              (GroupRecord.GroupType = 7)) then
-        if not Supports(aElement, IwbMainRecord, MainRecord) then
-          raise Exception.Create('Only main records can be added to ' + GetName);
-      if  Assigned(MainRecord) then begin
-        if (MainRecord.Signature <> 'REFR') and
-           (MainRecord.Signature <> 'ACHR') and
-           (MainRecord.Signature <> 'ACRE') and
-           (MainRecord.Signature <> 'PGRE') and
-           (MainRecord.Signature <> 'PMIS') and
-           (MainRecord.Signature <> 'PARW') and {>>> Skyrim <<<}
-           (MainRecord.Signature <> 'PBEA') and {>>> Skyrim <<<}
-           (MainRecord.Signature <> 'PFLA') and {>>> Skyrim <<<}
-           (MainRecord.Signature <> 'PCON') and {>>> Skyrim <<<}
-           (MainRecord.Signature <> 'PBAR') and {>>> Skyrim <<<}
-           (MainRecord.Signature <> 'PHZD')     {>>> Skyrim <<<}
-        then
-          // check any non reference record
-          if not (
-            // DIAL, DLBR and SCEN can be added to child group 10 (quest children)
-            (wbVWDAsQuestChildren and (grStruct.grsGroupType = 10) and ((MainRecord.Signature = 'DLBR') or (MainRecord.Signature = 'DIAL') or (MainRecord.Signature = 'SCEN')))
-            or
-            // PGRD, LAND and NAVM can be added to child group 9 (temporary)
-            (grStruct.grsGroupType = 9) and ((MainRecord.Signature = 'PGRD') or (MainRecord.Signature = 'LAND') or (MainRecord.Signature = 'NAVM'))
-          ) then
-            raise Exception.Create('Can''t add main record with signature '+MainRecord.Signature+' to ' + GetName);
-        if aAsNew then
-          FormID := GetFile.NewFormID
-        else begin
-          FormID := GetFile.LoadOrderFormIDtoFileFormID(MainRecord.LoadOrderFormID);
-          for i := Low(cntElements) to High(cntElements) do
-            if Supports(cntElements[i], IwbMainRecord, MainRecord2) then
-              if MainRecord2.FixedFormID = FormID then begin
-                Result := MainRecord2;
-                exit;
-              end;
-        end;
+      if not Supports(aElement, IwbMainRecord, MainRecord) then
+        raise Exception.Create('Only main records can be added to ' + GetName);
+      if (MainRecord.Signature <> 'REFR') and
+         (MainRecord.Signature <> 'ACHR') and
+         (MainRecord.Signature <> 'ACRE') and
+         (MainRecord.Signature <> 'PGRE') and
+         (MainRecord.Signature <> 'PMIS') and
+         (MainRecord.Signature <> 'PARW') and {>>> Skyrim <<<}
+         (MainRecord.Signature <> 'PBEA') and {>>> Skyrim <<<}
+         (MainRecord.Signature <> 'PFLA') and {>>> Skyrim <<<}
+         (MainRecord.Signature <> 'PCON') and {>>> Skyrim <<<}
+         (MainRecord.Signature <> 'PBAR') and {>>> Skyrim <<<}
+         (MainRecord.Signature <> 'PHZD')     {>>> Skyrim <<<}
+      then
+        // check any non reference record
+        if not (
+          // DIAL, DLBR and SCEN can be added to child group 10 (quest children)
+          (wbVWDAsQuestChildren and (grStruct.grsGroupType = 10) and ((MainRecord.Signature = 'DLBR') or (MainRecord.Signature = 'DIAL') or (MainRecord.Signature = 'SCEN')))
+          or
+          // PGRD, LAND and NAVM can be added to child group 9 (temporary)
+          (grStruct.grsGroupType = 9) and ((MainRecord.Signature = 'PGRD') or (MainRecord.Signature = 'LAND') or (MainRecord.Signature = 'NAVM'))
+        ) then
+          raise Exception.Create('Can''t add main record with signature '+MainRecord.Signature+' to ' + GetName);
 
-        Result := TwbMainRecord.Create(Self, MainRecord.Signature, FormID);
-        if aDeepCopy then begin
-          Result.Assign(Low(Integer), aElement, False);
-          if (aPrefix <> '') or (aSuffix <> '') then
-            with Result as IwbMainRecord do begin
-              s := EditorID;
-              s := RemovePrefix(s, aPrefixRemove);
-              if s <> '' then
-                EditorID := aPrefix + s + aSuffix;
+      if aAsNew then
+        FormID := GetFile.NewFormID
+      else begin
+        FormID := GetFile.LoadOrderFormIDtoFileFormID(MainRecord.LoadOrderFormID);
+        for i := Low(cntElements) to High(cntElements) do
+          if Supports(cntElements[i], IwbMainRecord, MainRecord2) then
+            if MainRecord2.FixedFormID = FormID then begin
+              Result := MainRecord2;
+              exit;
             end;
-        end;
-        if not aAsNew and MainRecord.IsMaster and (Result._File.LoadOrder <= MainRecord._File.LoadOrder) then
-          if Supports(Result, IwbMainRecord, MainRecord2) then
-            (MainRecord as IwbMainRecordInternal).YouGotAMaster(MainRecord2);
-        if Assigned(Result) and (csRefsBuild in Result._File.ContainerStates) then
-          Result.BuildRef;
-        Exit;
       end;
-      if Supports(aElement, IwbGroupRecord, GroupRecord) then begin
-        if not (GroupRecord.GroupType in [7]) then
-          raise Exception.Create('Can''t add '+GroupRecord.Name+' to ' + GetName);
-        for i := 0 to Pred(GetElementCount) do // Is the DIAL for our INFO present already ?
-          if Supports(GetElement(i), IwbMainRecord, MainRecord) then begin
-            if MainRecord.FormID = GroupRecord.GroupLabel then begin
-              break;
-            end;
+
+      Result := TwbMainRecord.Create(Self, MainRecord.Signature, FormID);
+      if aDeepCopy then begin
+        Result.Assign(Low(Integer), aElement, False);
+        if (aPrefix <> '') or (aSuffix <> '') then
+          with Result as IwbMainRecord do begin
+            s := EditorID;
+            s := RemovePrefix(s, aPrefixRemove);
+            if s <> '' then
+              EditorID := aPrefix + s + aSuffix;
           end;
-        if not Assigned(MainRecord) then begin // No. Let's copy it. !!! I am worried for Copy as New !!!
-          if Assigned(aElement.Container) then Supports(aElement.Container, IwbGroupRecord, GroupRecord2);
-          if Assigned(GroupRecord2) then
-            for i := 0 to Pred(GroupRecord2.GetElementCount) do
-              if Supports(GroupRecord2.GetElement(i), IwbMainRecord, MainRecord) then begin
-                if MainRecord.FormID = GroupRecord.GroupLabel then begin
-                  break;
-                end;
-              end;
-          if Assigned(MainRecord) then
-            AddIfMissing(MainRecord, aAsNew, false, aPrefixRemove, aPrefix, aSuffix);
-          GroupRecord2 := nil;
-        end;
-        if not Assigned(MainRecord) then
-          raise Exception.Create(ClassName + '.AddIfMissingInternal could not create associated MainRecord with formID ' +
-            IntToStr(GroupRecord.GroupLabel));
-
-        for i := 0 to Pred(GetElementCount) do
-          if Supports(GetElement(i), IwbGroupRecord, GroupRecord2) then begin
-            if GroupRecord2.GroupType = GroupRecord.GroupType then begin
-              Result := GroupRecord2;
-              break;
-            end;
-          end;
-        if not Assigned(Result) then
-          Result := TwbGroupRecord.Create(Self, GroupRecord.GroupType, MainRecord);
-
-        GroupRecord2 := Result as IwbGroupRecord;
-        if aDeepCopy then
-          for i := 0 to Pred(GroupRecord.ElementCount) do
-            GroupRecord2.AddIfMissing(GroupRecord.Elements[i], aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix);
-
-        Exit;
       end;
+      if not aAsNew and MainRecord.IsMaster and (Result._File.LoadOrder <= MainRecord._File.LoadOrder) then
+        if Supports(Result, IwbMainRecord, MainRecord2) then
+          (MainRecord as IwbMainRecordInternal).YouGotAMaster(MainRecord2);
+      if Assigned(Result) and (csRefsBuild in Result._File.ContainerStates) then
+        Result.BuildRef;
     end;
+  else
+    raise Exception.Create(ClassName + '.AddIfMissingInternal is not implemented for GroupType ' + IntToStr(grStruct.grsGroupType));
   end;
-  raise Exception.Create(ClassName + '.AddIfMissingInternal is not implemented for GroupType ' + IntToStr(grStruct.grsGroupType));
 end;
 
 procedure TwbGroupRecord.BuildRef;
@@ -10768,11 +10720,8 @@ begin
   Assert(aContainer._File.Equals(aMainRecord._File));
   Assert(aType in [1, 6, 7, 8, 9, 10]);
 
-  if aType in [1, 6] then
+  if aType in [1, 6, 7] then
     Assert(aContainer.Equals(aMainRecord.Container));
-
-  if aType in [7] then
-    Assert(wbVWDAsQuestChildren or aContainer.Equals(aMainRecord.Container));
 
   case aType of
     1: Assert(aMainRecord.Signature = 'WRLD');
@@ -11674,7 +11623,6 @@ function TwbElement.AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy :
 {$IFDEF USE_CODESITE}
 var
   Log: Boolean;
-  Group : IwbGroupRecord;
 {$ENDIF}
 begin
   if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount) then begin
@@ -11693,8 +11641,6 @@ begin
       CodeSite.Send('aElement.Name', aElement.Name);
       CodeSite.Send('aElement.Path', aElement.Path);
       CodeSite.Send('aElement.Value', aElement.Value);
-      if Supports(aElement, IwbGrouprecord, Group) then
-        CodeSite.Send('aGroup.Type', Group.GroupType);
     end else
         CodeSite.Send('aElement', 'nil');
   end;
