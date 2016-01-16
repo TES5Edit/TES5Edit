@@ -10727,7 +10727,7 @@ begin
     1: Assert(aMainRecord.Signature = 'WRLD');
     6, 8, 9: Assert(aMainRecord.Signature = 'CELL');
     10: Assert(
-      (not wbVWDAsQuestChildren and (aMainRecord.Signature = 'CELL')) or
+      (aMainRecord.Signature = 'CELL') or
       (wbVWDAsQuestChildren and (aMainRecord.Signature = 'QUST'))
     );
     7: Assert(aMainRecord.Signature = 'DIAL');
@@ -11623,6 +11623,7 @@ function TwbElement.AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy :
 {$IFDEF USE_CODESITE}
 var
   Log: Boolean;
+  Group : IwbGroupRecord;
 {$ENDIF}
 begin
   if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount) then begin
@@ -11641,6 +11642,8 @@ begin
       CodeSite.Send('aElement.Name', aElement.Name);
       CodeSite.Send('aElement.Path', aElement.Path);
       CodeSite.Send('aElement.Value', aElement.Value);
+      if Supports(aElement, IwbGrouprecord, Group) then
+        CodeSite.Send('aGroup.Type', Group.GroupType);
     end else
         CodeSite.Send('aElement', 'nil');
   end;
