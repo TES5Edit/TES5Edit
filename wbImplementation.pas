@@ -5830,6 +5830,7 @@ var
   i            : Integer;
   SelfRef      : IwbContainerElementRef;
   Group        : IwbGroupRecordInternal;
+  Group2       : IwbGroupRecordInternal;
   ContainerRef : IwbContainerElementRef;
   s            : string;
   Block        : Cardinal;
@@ -5859,7 +5860,8 @@ begin
   if Supports(lContainer, IwbGroupRecordInternal, Group) then
     if Group.GroupType = 8 then
       BasePtr.mrsFlags.SetPersistent(True)
-    else if (Group.GroupType = 10) and not wbVWDAsQuestChildren then
+    else if (Group.GroupType = 10) and not (wbVWDAsQuestChildren
+               and Supports(Group.Container, IwbGroupRecord, Group2) and (TwbSignature(Group2.GroupLabel) = 'QUST')) then
       BasePtr.mrsFlags.SetVisibleWhenDistant(True);
 
   if Assigned(Group) then
@@ -6506,20 +6508,24 @@ var
 begin
   Result := mrGroup;
   if not Assigned(Result) and not (mrsSearchedChildGroup in mrStates) then begin
-    Include(mrStates, mrsSearchedChildGroup);
-    SearchForGroup := 0;
-    if GetSignature = 'WRLD' then
-      SearchForGroup := 1
-    else if GetSignature = 'CELL' then
-      SearchForGroup := 6
-    else if GetSignature = 'DIAL' then
-      SearchForGroup := 7
-    else if wbVWDAsQuestChildren and (GetSignature = 'QUST') then
-      SearchForGroup := 10;
+    try
+      Include(mrStates, mrsSearchedChildGroup);
+      SearchForGroup := 0;
+      if GetSignature = 'WRLD' then
+        SearchForGroup := 1
+      else if GetSignature = 'CELL' then
+        SearchForGroup := 6
+      else if GetSignature = 'DIAL' then
+        SearchForGroup := 7
+      else if wbVWDAsQuestChildren and (GetSignature = 'QUST') then
+        SearchForGroup := 10;
 
-    if (SearchForGroup > 0) and Supports(GetContainer, IwbGroupRecord, ContainingGroup) then
-      mrGroup := ContainingGroup.FindChildGroup(SearchForGroup, Self);
-    Result := mrGroup;
+      if (SearchForGroup > 0) and Supports(GetContainer, IwbGroupRecord, ContainingGroup) then
+        mrGroup := ContainingGroup.FindChildGroup(SearchForGroup, Self);
+      Result := mrGroup;
+    finally
+      Exclude(mrStates, mrsSearchedChildGroup);
+    end;
   end;
 end;
 
