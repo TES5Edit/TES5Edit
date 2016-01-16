@@ -11061,6 +11061,9 @@ begin
   if Result < $800 then
     Exit;
 
+  if Result = $FFFFFFFF then
+    Exit;
+
   if Assigned(aElement) then begin
     _File := aElement._File;
     if Assigned(_File) then begin
