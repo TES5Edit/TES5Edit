@@ -133,11 +133,16 @@
 			</DCCReference>
 			<DCCReference Include="frmLODGenForm.pas"/>
 			<DCCReference Include="wbDefinitionsFNV.pas"/>
+			<DCCReference Include="wbDefinitionsFNVSaves.pas"/>
 			<DCCReference Include="wbDefinitionsFO3.pas"/>
+			<DCCReference Include="wbDefinitionsFO3Saves.pas"/>
 			<DCCReference Include="wbDefinitionsFO4.pas"/>
 			<DCCReference Include="wbDefinitionsTES3.pas"/>
 			<DCCReference Include="wbDefinitionsTES4.pas"/>
+			<DCCReference Include="wbDefinitionsTES4Saves.pas"/>
 			<DCCReference Include="wbDefinitionsTES5.pas"/>
+			<DCCReference Include="wbDefinitionsTES5Saves.pas"/>
+			<DCCReference Include="wbSaveInterface.pas"/>
 			<DCCReference Include="Zlibex.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
