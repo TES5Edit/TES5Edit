@@ -40,6 +40,7 @@ uses
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
   wbDefinitionsFO3Saves in 'wbDefinitionsFO3Saves.pas',
   wbDefinitionsFO4 in 'wbDefinitionsFO4.pas',
+  wbDefinitionsFO4Saves in 'wbDefinitionsFO4Saves.pas',
   wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
   wbDefinitionsTES4Saves in 'wbDefinitionsTES4Saves.pas',
@@ -910,7 +911,7 @@ begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
       end;
-      if not (wbToolSource in [tsPlugins]) then begin
+      if not (wbToolSource in [tsPlugins, tsSaves]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
         Exit;
       end;
@@ -983,6 +984,7 @@ begin
         Exit;
       end;
       case wbToolSource of
+        tsSaves:   DefineFO4Saves;
         tsPlugins: DefineFO4;
       end;
     end else begin
@@ -1144,6 +1146,7 @@ begin
         gmFO3:  if SameText(ExtractFileExt(s), '.fose') then SwitchToCoSave
           else
             WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
+        gmFO4:  if SameText(ExtractFileExt(s), '.f4se') then SwitchToCoSave;
         gmTES4: if SameText(ExtractFileExt(s), '.obse') then SwitchToCoSave
           else
             WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
