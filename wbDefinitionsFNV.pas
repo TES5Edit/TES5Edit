@@ -2141,7 +2141,8 @@ type
     ptReputation,         //REPU
     ptRegion,             //REGN
     ptChallenge,          //CHAL
-    ptCasino              //CSNO
+    ptCasino,             //CSNO
+    ptAnyForm             // Any form
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -2153,7 +2154,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..277] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..288] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -2429,6 +2430,9 @@ const
     (Index: 1301; Name: 'GetPackageCount'; ParamType1: ptObjectReference; ),
     (Index: 1440; Name: 'IsPlayerSwimming'; ),
     (Index: 1441; Name: 'GetTFC'; ),
+    (Index: 1475; Name: 'GetPerkRank'; ParamType1: ptPerk; ParamType2: ptActor;),
+    (Index: 1476; Name: 'GetAltPerkRank'; ParamType1: ptPerk; ParamType2: ptActor;),
+    (Index: 1541; Name: 'GetActorFIKstatus'; ),
 
     // Added by nvse_plugin_ExtendedActorVariable
     (Index: 4352; Name: 'GetExtendedActorVariable'; ParamType1: ptInventoryObject; ),
@@ -2437,7 +2441,19 @@ const
 
     // Added by nvse_extender
     (Index: 4420; Name: 'NX_GetEVFl'; ParamType1: ptNone; ),  // Actually ptString, but it cannot be used in GECK
-    (Index: 4426; Name: 'NX_GetQVEVFl'; ParamType1: ptQuest; ParamType2: ptInteger;)
+    (Index: 4426; Name: 'NX_GetQVEVFl'; ParamType1: ptQuest; ParamType2: ptInteger;),
+
+    // Added by lutana_nvse
+    (Index: 4708; Name: 'GetArmorClass'; ParamType1: ptAnyForm; ),
+    (Index: 4709; Name: 'IsRaceInList'; ParamType1: ptFormList; ),
+    (Index: 4822; Name: 'GetReferenceFlag'; ParamType1: ptInteger; ),
+
+    // Added by JIP NVSE Plugin
+    (Index: 5637; Name: 'GetIsPoisoned'; ),
+    (Index: 5708; Name: 'IsEquippedWeaponSilenced'; ),
+    (Index: 5709; Name: 'IsEquippedWeaponScoped'; ),
+    (Index: 5953; Name: 'GetPCInRegion'; ParamType1: ptRegion; ),
+    (Index: 5962; Name: 'GetPCDetectionState'; )
   );
 
 var
