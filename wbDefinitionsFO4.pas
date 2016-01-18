@@ -2552,11 +2552,6 @@ begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 99);
 end;
 
-function wbDeciderFormVersion119(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 119);
-end;
-
 
 {>>> For VMAD <<<}
 function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -2638,7 +2633,6 @@ end;
 
 {>>> For VMAD <<<}
 function wbScriptFragmentsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-//function wbScriptFragmentExistsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container  : IwbContainer;
   MainRecord : IwbMainRecord;
@@ -2664,19 +2658,6 @@ begin
     Result := 4
   else if MainRecord.Signature = SCEN then
     Result := 5;
-end;
-
-{>>> For VMAD <<<}
-function wbScriptFragmentsDontShow(const aElement: IwbElement): Boolean;
-var
-  Container: IwbContainer;
-begin
-  Result := False;
-  if Assigned(aElement) then
-    if Supports(aElement, IwbContainer, Container) then
-      if Container.ElementCount > 0 then
-        // wbNull is a value, fragments are unions
-        Result := Container.Elements[0].ElementType = etValue;
 end;
 
 {>>> For VMAD <<<}
@@ -2789,7 +2770,7 @@ begin
 end;
 
 {>>> For VMAD <<<}
-function wbScriptFragmentsQuestScriptDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbScriptFragmentsEmptyScriptDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container  : IwbContainer;
 begin
@@ -5749,7 +5730,7 @@ begin
     wbInteger('fragmentCount', itU16),
     wbLenString('scriptName', 2),
     // if scriptName = "" then no Flags and Properties
-    wbUnion('Script', wbScriptFragmentsQuestScriptDecider, [
+    wbUnion('Script', wbScriptFragmentsEmptyScriptDecider, [
       wbStruct('Script Data', [
         wbScriptFlags,
         wbScriptProperties
@@ -5817,31 +5798,6 @@ begin
 
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
 
-  {wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore),
-    wbInteger('Object Format', itS16, nil, cpIgnore),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
-    // wrap in struct with optional element since fragments may be missing and hide them
-    // in this case (wbNull)
-    wbStruct('Fragments', [
-      wbUnion('Fragments Union', wbScriptFragmentsDecider, [
-        // 0 No fragments
-        wbNull,
-        // 1 PERK, TERM
-        wbScriptFragments,
-        // 2 INFO
-        wbScriptFragmentsInfo,
-        // 3 PACK
-        wbScriptFragmentsPack,
-        // 4 QUST
-        wbScriptFragmentsQuest,
-        // 5 SCEN
-        wbScriptFragmentsScen
-      ])
-    ], cpNormal, False, wbScriptFragmentsDontShow, 0)
-  ], cpNormal, false, nil, -1);
-  }
-
   wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
     wbInteger('Version', itS16, nil, cpIgnore),
     wbInteger('Object Format', itS16, nil, cpIgnore),
@@ -5887,7 +5843,7 @@ begin
     wbInteger('Object Format', itS16, nil, cpIgnore),
     wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
     wbScriptFragmentsInfo
-  ]);
+  ], cpNormal, False, nil, 3);
 
   wbAttackData := wbRStructSK([1], 'Attack', [
     wbStruct(ATKD, 'Attack Data', [
@@ -9441,8 +9397,7 @@ begin
       wbFloat('Unknown'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
-      wbFloat('Unknown')
-      //wbUnknown
+      wbByteArray('Unknown', 4)
     ], cpNormal, True, nil, 10)
   ]);
 
@@ -13427,7 +13382,10 @@ begin
     wbFormIDCk(XLYR, 'Layer', [LAYR]),
     wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
     wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
-    wbByteArray(XRDO, 'Radio', 0),
+    wbStruct(XRDO, 'Radio', [
+      wbFloat('Frequency'),
+      wbUnknown
+    ]),
     wbUnknown(XBSD),
     wbUnknown(XPDD),
     wbUnknown(XCVR),
