@@ -7311,9 +7311,9 @@ begin
       'Ignored by Sandbox'
     ])),
     wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
-    wbStruct(RADR, 'Unknown', [
+    wbStruct(RADR, 'Radio Receiver', [
       wbFormIDCk('Sound Model', [SOPM, NULL]),
-      wbFloat('Unknown'),
+      wbFloat('Frequency'),
       wbFloat('Unknown'),
       wbByteArray('Unknown', 2)
     ]),
