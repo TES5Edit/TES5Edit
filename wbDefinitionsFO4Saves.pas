@@ -478,12 +478,6 @@ var
 begin
   Result := 0;
 
-///////////////////////
-///
-Exit;
-///
-///////////////////////
-
   if not Assigned(aElement) then Exit;
   Element := aElement;
   while (Pos('Global Data ', Element.Name)=0) and Assigned(Element.Container) do
@@ -493,14 +487,14 @@ Exit;
     Element := Container.ElementByName['Type'];
     if Assigned(Element) then begin
       aType := Element.NativeValue;
-      if (aType >= 0) and (aType <= 8) then // 0 to 8 = 9
+      if (aType >= 0) and (aType <= 11) then // 0 to 8 = 9
         Result := aType + 1
-      else if (aType >= 100) and (aType <= 114) then  // 100 to 114 = 15
-        Result := aType - 100 + 9 + 1
-      else  if (aType >= 1000) and (aType <= 1005) then // 1000 to 1005 = 6
-        Result := aType - 1000 + 9 + 15 + 1;
+      else if (aType >= 100) and (aType <= 117) then  // 100 to 114 = 15
+        Result := aType - 100 + 12 + 1
+      else  if (aType >= 1000) and (aType <= 1007) then // 1000 to 1005 = 6
+        Result := aType - 1000 + 12 + 18 + 1;
     end;
-    if (Result < (1001-1000+9+15+1)) and (Result > 2) then Result := 0; //Others are not decoded yet
+    if (Result < (1001-1000+12+18+1)) and (Result > 2) then Result := 0; //Others are not decoded yet
     if Assigned(ChaptersToSkip) and ChaptersToSkip.Find(IntToStr(aType), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
       Result := 0;
   end;
@@ -1490,14 +1484,6 @@ var
 begin
   Element := aElement;
   Result := ChangedFormGetRawType(Element);
-
-///////////////////////
-///
-Result := 0;
-Exit;
-///
-///////////////////////
-
 
   if (Result>=0) and Supports(Element, IwbDataContainer, Container) then begin
     Result := 1 + (Result and $3F);
@@ -2511,6 +2497,27 @@ var
   wbUnionCHANGE_FORM_LIST_ADDED_FORM : IwbUnionDef;
   wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT : IwbUnionDef;
 
+  // (re)added until decoding properly
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_LINK_REF : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_WORKSHOP : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_AMMO : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_LOCK : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_FORCE_MOVE : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EMPTY : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE : IwbUnionDef;
+  wbUnionCHANGE_REFR_PROMOTED : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN : IwbUnionDef;
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_EXTRA_PACKAGE_DATA : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_EXTRA_MERCHANT_CONTAINER : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_EXTRA_DISMEMBERED_LIMBS : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_LEVELED_ACTOR : IwbUnionDef;
+  wbUnionCHANGE_NPC_BODY_SCALES : IwbUnionDef;
+
 begin
   wbNull := wbByteArray('Unused', -255);
   wbTypeData := wbStruct('SkyrimVM Type Data', [      // UESP : scriptInstance
@@ -3025,16 +3032,16 @@ begin
       ]),
       wbStruct('Player Location Struct', [  // Seems to be 30 bytes in version 64 and 31 in version 73 or 74
         wbByteArray('Unknown', 4)
-        ,wbRefID('WorldSpace 1')
+        ,wbRefID('WorldSpace')
         ,wbInteger('Coord X', itS32)
         ,wbInteger('Coord Y', itS32)
-        ,wbRefID('WorldSpace 2')
-        ,wbFloat('Pos X')
+        ,wbRefID('WorldSpace/Cell')
+        ,wbFloat('Pos X')   // To be verified, read as 12 bytes
         ,wbFloat('Pos Y')
         ,wbFloat('Pos Z')
-        ,wbUnion('Added data', SaveFormVersionGreaterThan72Decider, [
-          wbNull
-          ,wbByteArray('Unknown', 1)
+//        ,wbUnion('Added data', SaveFormVersionGreaterThan72Decider, [
+//          wbNull
+//          ,wbByteArray('Unknown', 1)
         ])
       ]),
       wbArray('TES', wbInteger('', itU8), -2),
@@ -3044,22 +3051,28 @@ begin
       wbArray('Weather', wbInteger('', itU8), -2),
       wbArray('Audio', wbInteger('', itU8), -2),
       wbArray('Sky Cells', wbInteger('', itU8), -2),
+      wbByteArray('Input Enable Manager'),
+      wbByteArray('StoryTeller'),
+      wbByteArray('ReservedIDs'),
       // 100 to 114
       wbArray('Process List', wbInteger('', itU8), -2),
       wbArray('Combat', wbInteger('', itU8), -2),
       wbArray('Interface', wbInteger('', itU8), -2),
       wbArray('Actor Causes', wbInteger('', itU8), -2),
-      wbArray('Unknown 104', wbInteger('', itU8), -2),
       wbArray('Detection Manager', wbInteger('', itU8), -2),
       wbArray('Location MetaData', wbInteger('', itU8), -2),
       wbArray('Quest Static Data', wbInteger('', itU8), -2),
-      wbArray('Story Teller', wbInteger('', itU8), -2),
-      wbArray('Magic Favorites', wbInteger('', itU8), -2),
+      wbByteArray('Attraction Object LOS'),
+      wbByteArray('Animation'),
       wbArray('Player Controls', wbInteger('', itU8), -2),
       wbArray('Story Event Manager', wbInteger('', itU8), -2),
       wbArray('Ingredient Shared', wbInteger('', itU8), -2),
       wbArray('Menu Controls', wbInteger('', itU8), -2),
       wbArray('Menu Topic Manager', wbInteger('', itU8), -2),
+      wbByteArray('Scene-filler Actors'),
+      wbByteArray('Range Formations'),
+      wbByteArray('Anim Objects'),
+      wbByteArray('Radio Manager'),
       // 1000 to 1005
       wbStruct('Temp Effect', [
         wbStruct('Unknown1000_00', [
@@ -3244,7 +3257,7 @@ begin
         wbRefID('ANIO'),
         wbInteger('Boolean', itU8, wbEnum(['False', 'True']))
       ]), -1),
-      wbStruct('Timers', [
+      wbStruct('Timer', [
         wbInteger('Unknown', itU32),
         wbInteger('Unknown', itU32)
       ]),
@@ -3256,7 +3269,9 @@ begin
           wbLenString('String', 2)
         ]), -1)
       ]), -1),
-      wbStruct('Main', []) // Empty
+      wbStruct('Main', []), // Empty
+      wbByteArray('Topic Info'),
+      wbByteArray('Explosion Manager')
     ])
 //    ,wbByteArray('Remainder', DataRemainderCounter)  // Single line
     ,wbArray('Remainder', wbByteArray('Unknown', wbBytesToGroup), DataQuartetCounter) // per Quartet
@@ -3264,58 +3279,58 @@ begin
   ]);
 
   wbChangeTypes := wbKey2Data6Enum([
-    '00 (03D : REFR)',
-    '01 (03E : ACHR)',
-    '02 (03F : PMIS)',
-    '03 (041 : PGRE)',
-    '04 (042 : PBEA)',
-    '05 (043 : PFLA)',
-    '06 (03C : CELL)',
-    '07 (04C : INFO)',
-    '08 (04D : QUST)',
-    '09 (02B : NPC_)',
-    '10 (018 : ACTI)',
-    '11 (019 : TACT)',
-    '12 (01A : ARMO)',
-    '13 (01B : BOOK)',
-    '14 (01C : CONT)',
-    '15 (01D : DOOR)',
-    '16 (01E : INGR)',
-    '17 (01F : LIGH)',
-    '18 (020 : MISC)',
-    '19 (021 : APPA)',
-    '20 (022 : STAT)',
-    '21 (024 : MSTT)',
-    '22 (028 : FURN)',
-    '23 (029 : WEAP)',
-    '24 (02A : AMMO)',
-    '25 (02D : KEYM)',
-    '26 (02E : ALCH)',
-    '27 (02F : IDLM)',
-    '28 (030 : NOTE)',
-    '29 (067 : ECZN)',
-    '30 (00A : CLAS)',
-    '31 (00B : FACT)',
-    '32 (04F : PACK)',
-    '33 (049 : NAVM)',
-    '34 (076 : WOOP)',
-    '35 (012 : MGEF)',
-    '36 (071 : SMQN)',
-    '37 (07A : SCEN)',
-    '38 (068 : LCTN)',
-    '39 (079 : RELA)',
-    '40 (046 : PHZD)',
-    '41 (045 : PBAR)',
-    '42 (044 : PCON)',
-    '43 (05B : FLST)',
-    '44 (02C : LVLN)',
-    '45 (035 : LVLI)',
-    '46 (052 : LVSP)',
-    '47 (040 : PARW)',
-    '48 (015 : ENCH)'
+    '00 (040 : REFR)',
+    '01 (041 : ACHR)',
+    '02 (042 : PMIS)',
+    '03 (044 : PGRE)',
+    '04 (045 : PBEA)',
+    '05 (046 : PFLA)',
+    '06 (03F : CELL)',
+    '07 (04F : INFO)',
+    '08 (050 : QUST)',
+    '09 (02D : NPC_)',
+    '10 (01B : ACTI)',
+    '11 (01C : TACT)',
+    '12 (01D : ARMO)',
+    '13 (01E : BOOK)',
+    '14 (01F : CONT)',
+    '15 (020 : DOOR)',
+    '16 (021 : INGR)',
+    '17 (022 : LIGH)',
+    '18 (023 : MISC)',
+    '19 (024 : STAT)',
+    '20 (026 : MSTT)',
+    '21 (02A : FURN)',
+    '22 (02B : WEAP)',
+    '23 (02C : AMMO)',
+    '24 (02F : KEYM)',
+    '25 (030 : ALCH)',
+    '26 (031 : IDLM)',
+    '27 (032 : NOTE)',
+    '28 (06A : ECZN)',
+    '29 (00D : CLAS)',
+    '30 (00E : FACT)',
+    '31 (052 : PACK)',
+    '32 (04C : NAVM)',
+    '33 (07A : WOOP)',
+    '34 (015 : MGEF)',
+    '35 (075 : SMQN)',
+    '36 (07E : SCEN)',
+    '37 (06B : LCTN)',
+    '38 (07D : RELA)',
+    '39 (049 : PHZD)',
+    '40 (048 : PBAR)',
+    '41 (047 : PCON)',
+    '42 (05E : FLST)',
+    '43 (02E : LVLN)',
+    '44 (038 : LVLI)',
+    '45 (055 : LVSP)',
+    '46 (043 : PARW)',
+    '47 (018 : ENCH)',
+    '48 (037 : TERM)'
   ]);
 
-  // changeType: 000 = formType: 061 : REFR
+  // changeType: 000 = formType: 064 : REFR
   wbChangeFlags000 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_REFR_MOVE', // Moved
@@ -3325,12 +3340,12 @@ begin
     {05} 'CHANGE_REFR_INVENTORY', // Inventory
     {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
     {07} 'CHANGE_REFR_BASEOBJECT', // BaseObject
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
+    {08} 'CHANGE_REFR_EXTRA_LINK_REF', // Link Ref Extra
+    {09} 'CHANGE_OBJECT_EXTRA_WORKSHOP', // Workshop Extra
     {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
     {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
     {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
-    {13} 'UnnamedFlag13',
+    {13} 'CHANGE_OBJECT_FORCE_MOVE', // Force Move
     {14} 'UnnamedFlag14',
     {15} 'UnnamedFlag15',
     {16} 'UnnamedFlag16',
@@ -3351,7 +3366,7 @@ begin
     {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
   ]));
 
-  // changeType: 001 = formType: 062 : ACHR
+  // changeType: 001 = formType: 065 : ACHR
   wbChangeFlags001 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_REFR_MOVE', // Moved
@@ -3361,8 +3376,8 @@ begin
     {05} 'CHANGE_REFR_INVENTORY', // Inventory
     {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
     {07} 'CHANGE_REFR_BASEOBJECT', // BaseObject
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
+    {08} 'CHANGE_REFR_EXTRA_LINK_REF', // Link Ref Extra
+    {09} 'CHANGE_OBJECT_EXTRA_WORKSHOP', // Workshop Extra
     {10} 'CHANGE_ACTOR_LIFESTATE', // Life State
     {11} 'CHANGE_ACTOR_EXTRA_PACKAGE_DATA', // Package Data Extra
     {12} 'CHANGE_ACTOR_EXTRA_MERCHANT_CONTAINER', // Merchant Container
@@ -3387,7 +3402,7 @@ begin
     {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
   ]));
 
-  // changeType: 002 = formType: 063 : PMIS
+  // changeType: 002 = formType: 066 : PMIS
   wbChangeFlags002 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_REFR_MOVE', // Moved
@@ -3397,12 +3412,12 @@ begin
     {05} 'CHANGE_REFR_INVENTORY', // Inventory
     {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
     {07} 'CHANGE_REFR_BASEOBJECT', // BaseObject
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
+    {08} 'CHANGE_REFR_EXTRA_LINK_REF', // Link Ref Extra
+    {09} 'CHANGE_OBJECT_EXTRA_WORKSHOP', // Workshop Extra
     {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
     {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
     {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
-    {13} 'UnnamedFlag13',
+    {13} 'CHANGE_OBJECT_FORCE_MOVE', // Force Move
     {14} 'UnnamedFlag14',
     {15} 'UnnamedFlag15',
     {16} 'UnnamedFlag16',
@@ -3423,7 +3438,7 @@ begin
     {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
   ]));
 
-  // changeType: 003 = formType: 065 : PGRE
+  // changeType: 003 = formType: 068 : PGRE
   wbChangeFlags003 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_REFR_MOVE', // Moved
@@ -3433,12 +3448,12 @@ begin
     {05} 'CHANGE_REFR_INVENTORY', // Inventory
     {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
     {07} 'CHANGE_REFR_BASEOBJECT', // BaseObject
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
+    {08} 'CHANGE_REFR_EXTRA_LINK_REF', // Link Ref Extra
+    {09} 'CHANGE_OBJECT_EXTRA_WORKSHOP', // Workshop Extra
     {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
     {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
     {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
-    {13} 'UnnamedFlag13',
+    {13} 'CHANGE_OBJECT_FORCE_MOVE', // Force Move
     {14} 'UnnamedFlag14',
     {15} 'UnnamedFlag15',
     {16} 'UnnamedFlag16',
@@ -3459,7 +3474,7 @@ begin
     {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
   ]));
 
-  // changeType: 004 = formType: 066 : PBEA
+  // changeType: 004 = formType: 069 : PBEA
   wbChangeFlags004 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_REFR_MOVE', // Moved
@@ -3469,12 +3484,12 @@ begin
     {05} 'CHANGE_REFR_INVENTORY', // Inventory
     {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
     {07} 'CHANGE_REFR_BASEOBJECT', // BaseObject
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
+    {08} 'CHANGE_REFR_EXTRA_LINK_REF', // Link Ref Extra
+    {09} 'CHANGE_OBJECT_EXTRA_WORKSHOP', // Workshop Extra
     {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
     {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
     {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
-    {13} 'UnnamedFlag13',
+    {13} 'CHANGE_OBJECT_FORCE_MOVE', // Force Move
     {14} 'UnnamedFlag14',
     {15} 'UnnamedFlag15',
     {16} 'UnnamedFlag16',
@@ -3495,7 +3510,7 @@ begin
     {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
   ]));
 
-  // changeType: 005 = formType: 067 : PFLA
+  // changeType: 005 = formType: 070 : PFLA
   wbChangeFlags005 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_REFR_MOVE', // Moved
@@ -3505,12 +3520,12 @@ begin
     {05} 'CHANGE_REFR_INVENTORY', // Inventory
     {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
     {07} 'CHANGE_REFR_BASEOBJECT', // BaseObject
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
+    {08} 'CHANGE_REFR_EXTRA_LINK_REF', // Link Ref Extra
+    {09} 'CHANGE_OBJECT_EXTRA_WORKSHOP', // Workshop Extra
     {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
     {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
     {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
-    {13} 'UnnamedFlag13',
+    {13} 'CHANGE_OBJECT_FORCE_MOVE', // Force Move
     {14} 'UnnamedFlag14',
     {15} 'UnnamedFlag15',
     {16} 'UnnamedFlag16',
@@ -3531,7 +3546,7 @@ begin
     {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
   ]));
 
-  // changeType: 006 = formType: 060 : CELL
+  // changeType: 006 = formType: 063 : CELL
   wbChangeFlags006 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_CELL_FLAGS', // Flags
@@ -3567,7 +3582,7 @@ begin
     {31} 'CHANGE_CELL_SEENDATA' // Seen Data
   ]));
 
-  // changeType: 007 = formType: 076 : INFO
+  // changeType: 007 = formType: 079 : INFO
   wbChangeFlags007 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'UnnamedFlag01',
@@ -3603,7 +3618,7 @@ begin
     {31} 'CHANGE_TOPIC_SAIDONCE' // Said Once
   ]));
 
-  // changeType: 008 = formType: 077 : QUST
+  // changeType: 008 = formType: 080 : QUST
   wbChangeFlags008 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_QUEST_FLAGS', // Quest Flags
@@ -3639,7 +3654,7 @@ begin
     {31} 'CHANGE_QUEST_STAGES' // Quest Stages
   ]));
 
-  // changeType: 009 = formType: 043 : NPC_
+  // changeType: 009 = formType: 045 : NPC_
   wbChangeFlags009 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_ACTOR_BASE_DATA', // Base Data
@@ -3655,7 +3670,7 @@ begin
     {11} 'CHANGE_NPC_FACE', // Face
     {12} 'CHANGE_NPC_DEFAULT_OUTFIT', // Default Outfit
     {13} 'CHANGE_NPC_SLEEP_OUTFIT', // Sleep Outfit
-    {14} 'UnnamedFlag14',
+    {14} 'CHANGE_NPC_BODY_SCALES', // Body Scales
     {15} 'UnnamedFlag15',
     {16} 'UnnamedFlag16',
     {17} 'UnnamedFlag17',
@@ -3675,7 +3690,7 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 010 = formType: 024 : ACTI
+  // changeType: 010 = formType: 027 : ACTI
   wbChangeFlags010 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -3711,7 +3726,7 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 011 = formType: 025 : TACT
+  // changeType: 011 = formType: 028 : TACT
   wbChangeFlags011 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -3747,7 +3762,7 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 012 = formType: 026 : ARMO
+  // changeType: 012 = formType: 029 : ARMO
   wbChangeFlags012 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -3783,7 +3798,7 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 013 = formType: 027 : BOOK
+  // changeType: 013 = formType: 030 : BOOK
   wbChangeFlags013 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -3819,7 +3834,7 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 014 = formType: 028 : CONT
+  // changeType: 014 = formType: 031 : CONT
   wbChangeFlags014 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -3855,7 +3870,7 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 015 = formType: 029 : DOOR
+  // changeType: 015 = formType: 032 : DOOR
   wbChangeFlags015 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -3891,7 +3906,7 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 016 = formType: 030 : INGR
+  // changeType: 016 = formType: 033 : INGR
   wbChangeFlags016 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'UnnamedFlag01',
@@ -3927,7 +3942,7 @@ begin
     {31} 'CHANGE_INGREDIENT_USE' // Ingredient Use
   ]));
 
-  // changeType: 017 = formType: 031 : LIGH
+  // changeType: 017 = formType: 034 : LIGH
   wbChangeFlags017 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -3963,7 +3978,7 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 018 = formType: 032 : MISC
+  // changeType: 018 = formType: 035 : MISC
   wbChangeFlags018 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -3999,7 +4014,7 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 019 = formType: 033 : APPA
+  // changeType: 019 = formType: 036 : STAT
   wbChangeFlags019 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -4035,7 +4050,7 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 020 = formType: 034 : STAT
+  // changeType: 020 = formType: 038 : MSTT
   wbChangeFlags020 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -4071,7 +4086,7 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 021 = formType: 036 : MSTT
+  // changeType: 021 = formType: 042 : FURN
   wbChangeFlags021 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -4107,7 +4122,7 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 022 = formType: 040 : FURN
+  // changeType: 022 = formType: 043 : WEAP
   wbChangeFlags022 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -4143,7 +4158,7 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 023 = formType: 041 : WEAP
+  // changeType: 023 = formType: 044 : AMMO
   wbChangeFlags023 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -4179,7 +4194,7 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 024 = formType: 042 : AMMO
+  // changeType: 024 = formType: 047 : KEYM
   wbChangeFlags024 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -4215,7 +4230,7 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 025 = formType: 045 : KEYM
+  // changeType: 025 = formType: 048 : ALCH
   wbChangeFlags025 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -4251,7 +4266,7 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 026 = formType: 046 : ALCH
+  // changeType: 026 = formType: 049 : IDLM
   wbChangeFlags026 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -4287,44 +4302,8 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 027 = formType: 047 : IDLM
+  // changeType: 027 = formType: 050 : NOTE
   wbChangeFlags027 := wbInteger('Change Flags', itU32 , wbFlags([
-    {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
-    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
-    {03} 'UnnamedFlag03',
-    {04} 'UnnamedFlag04',
-    {05} 'UnnamedFlag05',
-    {06} 'UnnamedFlag06',
-    {07} 'UnnamedFlag07',
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
-    {10} 'UnnamedFlag10',
-    {11} 'UnnamedFlag11',
-    {12} 'UnnamedFlag12',
-    {13} 'UnnamedFlag13',
-    {14} 'UnnamedFlag14',
-    {15} 'UnnamedFlag15',
-    {16} 'UnnamedFlag16',
-    {17} 'UnnamedFlag17',
-    {18} 'UnnamedFlag18',
-    {19} 'UnnamedFlag19',
-    {20} 'UnnamedFlag20',
-    {21} 'UnnamedFlag21',
-    {22} 'UnnamedFlag22',
-    {23} 'UnnamedFlag23',
-    {24} 'UnnamedFlag24',
-    {25} 'UnnamedFlag25',
-    {26} 'UnnamedFlag26',
-    {27} 'UnnamedFlag27',
-    {28} 'UnnamedFlag28',
-    {29} 'UnnamedFlag29',
-    {30} 'UnnamedFlag30',
-    {31} 'UnnamedFlag31'
-  ]));
-
-  // changeType: 028 = formType: 048 : NOTE
-  wbChangeFlags028 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'UnnamedFlag01',
     {02} 'UnnamedFlag02',
@@ -4359,8 +4338,8 @@ begin
     {31} 'CHANGE_NOTE_READ' // Note Read
   ]));
 
-  // changeType: 029 = formType: 103 : ECZN
-  wbChangeFlags029 := wbInteger('Change Flags', itU32 , wbFlags([
+  // changeType: 028 = formType: 106 : ECZN
+  wbChangeFlags028 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_ENCOUNTER_ZONE_FLAGS', // Zone Flags
     {02} 'UnnamedFlag02',
@@ -4395,8 +4374,8 @@ begin
     {31} 'CHANGE_ENCOUNTER_ZONE_GAME_DATA' // Game Data
   ]));
 
-  // changeType: 030 = formType: 010 : CLAS
-  wbChangeFlags030 := wbInteger('Change Flags', itU32 , wbFlags([
+  // changeType: 029 = formType: 013 : CLAS
+  wbChangeFlags029 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_CLASS_TAG_SKILLS', // Tag Skills
     {02} 'UnnamedFlag02',
@@ -4431,8 +4410,8 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 031 = formType: 011 : FACT
-  wbChangeFlags031 := wbInteger('Change Flags', itU32 , wbFlags([
+  // changeType: 030 = formType: 014 : FACT
+  wbChangeFlags030 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_FACTION_FLAGS', // Faction Flags
     {02} 'CHANGE_FACTION_REACTIONS', // Faction Reactions
@@ -4467,8 +4446,8 @@ begin
     {31} 'CHANGE_FACTION_CRIME_COUNTS' // Faction Crime Counts
   ]));
 
-  // changeType: 032 = formType: 079 : PACK
-  wbChangeFlags032 := wbInteger('Change Flags', itU32 , wbFlags([
+  // changeType: 031 = formType: 082 : PACK
+  wbChangeFlags031 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'UnnamedFlag01',
     {02} 'UnnamedFlag02',
@@ -4503,7 +4482,43 @@ begin
     {31} 'CHANGE_PACKAGE_NEVER_RUN' // Never Run Flag
   ]));
 
-  // changeType: 033 = formType: 073 : NAVM
+  // changeType: 032 = formType: 076 : NAVM
+  wbChangeFlags032 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 033 = formType: 122 : WOOP
   wbChangeFlags033 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -4539,7 +4554,7 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 034 = formType: 118 : WOOP
+  // changeType: 034 = formType: 021 : MGEF
   wbChangeFlags034 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -4575,44 +4590,8 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 035 = formType: 018 : MGEF
+  // changeType: 035 = formType: 117 : SMQN
   wbChangeFlags035 := wbInteger('Change Flags', itU32 , wbFlags([
-    {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
-    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
-    {03} 'UnnamedFlag03',
-    {04} 'UnnamedFlag04',
-    {05} 'UnnamedFlag05',
-    {06} 'UnnamedFlag06',
-    {07} 'UnnamedFlag07',
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
-    {10} 'UnnamedFlag10',
-    {11} 'UnnamedFlag11',
-    {12} 'UnnamedFlag12',
-    {13} 'UnnamedFlag13',
-    {14} 'UnnamedFlag14',
-    {15} 'UnnamedFlag15',
-    {16} 'UnnamedFlag16',
-    {17} 'UnnamedFlag17',
-    {18} 'UnnamedFlag18',
-    {19} 'UnnamedFlag19',
-    {20} 'UnnamedFlag20',
-    {21} 'UnnamedFlag21',
-    {22} 'UnnamedFlag22',
-    {23} 'UnnamedFlag23',
-    {24} 'UnnamedFlag24',
-    {25} 'UnnamedFlag25',
-    {26} 'UnnamedFlag26',
-    {27} 'UnnamedFlag27',
-    {28} 'UnnamedFlag28',
-    {29} 'UnnamedFlag29',
-    {30} 'UnnamedFlag30',
-    {31} 'UnnamedFlag31'
-  ]));
-
-  // changeType: 036 = formType: 113 : SMQN
-  wbChangeFlags036 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'UnnamedFlag01',
     {02} 'UnnamedFlag02',
@@ -4647,8 +4626,8 @@ begin
     {31} 'CHANGE_QUEST_NODE_TIME_RUN' // Time Last Run
   ]));
 
-  // changeType: 037 = formType: 122 : SCEN
-  wbChangeFlags037 := wbInteger('Change Flags', itU32 , wbFlags([
+  // changeType: 036 = formType: 126 : SCEN
+  wbChangeFlags036 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'UnnamedFlag01',
     {02} 'UnnamedFlag02',
@@ -4683,8 +4662,8 @@ begin
     {31} 'CHANGE_SCENE_ACTIVE' // Active
   ]));
 
-  // changeType: 038 = formType: 104 : LCTN
-  wbChangeFlags038 := wbInteger('Change Flags', itU32 , wbFlags([
+  // changeType: 037 = formType: 107 : LCTN
+  wbChangeFlags037 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'UnnamedFlag01',
     {02} 'UnnamedFlag02',
@@ -4719,8 +4698,8 @@ begin
     {31} 'CHANGE_LOCATION_CLEARED' // Cleared
   ]));
 
-  // changeType: 039 = formType: 121 : RELA
-  wbChangeFlags039 := wbInteger('Change Flags', itU32 , wbFlags([
+  // changeType: 038 = formType: 125 : RELA
+  wbChangeFlags038 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_RELATIONSHIP_DATA', // Relationship Data
     {02} 'UnnamedFlag02',
@@ -4755,7 +4734,43 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 040 = formType: 070 : PHZD
+  // changeType: 039 = formType: 073 : PHZD
+  wbChangeFlags039 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_REFR_MOVE', // Moved
+    {02} 'CHANGE_REFR_HAVOK_MOVE', // Havok Moved
+    {03} 'CHANGE_REFR_CELL_CHANGED', // Cell Changed
+    {04} 'CHANGE_REFR_SCALE', // Scale
+    {05} 'CHANGE_REFR_INVENTORY', // Inventory
+    {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
+    {07} 'CHANGE_REFR_BASEOBJECT', // BaseObject
+    {08} 'CHANGE_REFR_EXTRA_LINK_REF', // Link Ref Extra
+    {09} 'CHANGE_OBJECT_EXTRA_WORKSHOP', // Workshop Extra
+    {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
+    {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
+    {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
+    {13} 'CHANGE_OBJECT_FORCE_MOVE', // Force Move
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'CHANGE_OBJECT_EMPTY', // Empty
+    {22} 'CHANGE_OBJECT_OPEN_DEFAULT_STATE', // Open Default State
+    {23} 'CHANGE_OBJECT_OPEN_STATE', // Open State
+    {24} 'UnnamedFlag24',
+    {25} 'CHANGE_REFR_PROMOTED', // Promoted
+    {26} 'CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN', // Activating Children
+    {27} 'CHANGE_REFR_LEVELED_INVENTORY', // Leveled Inventory
+    {28} 'CHANGE_REFR_ANIMATION', // Animation
+    {29} 'CHANGE_REFR_EXTRA_ENCOUNTER_ZONE', // Enc Zone Extra
+    {30} 'CHANGE_REFR_EXTRA_CREATED_ONLY', // Created Only Extra
+    {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
+  ]));
+
+  // changeType: 040 = formType: 072 : PBAR
   wbChangeFlags040 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_REFR_MOVE', // Moved
@@ -4765,12 +4780,12 @@ begin
     {05} 'CHANGE_REFR_INVENTORY', // Inventory
     {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
     {07} 'CHANGE_REFR_BASEOBJECT', // BaseObject
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
+    {08} 'CHANGE_REFR_EXTRA_LINK_REF', // Link Ref Extra
+    {09} 'CHANGE_OBJECT_EXTRA_WORKSHOP', // Workshop Extra
     {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
     {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
     {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
-    {13} 'UnnamedFlag13',
+    {13} 'CHANGE_OBJECT_FORCE_MOVE', // Force Move
     {14} 'UnnamedFlag14',
     {15} 'UnnamedFlag15',
     {16} 'UnnamedFlag16',
@@ -4791,7 +4806,7 @@ begin
     {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
   ]));
 
-  // changeType: 041 = formType: 069 : PBAR
+  // changeType: 041 = formType: 071 : PCON
   wbChangeFlags041 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_REFR_MOVE', // Moved
@@ -4801,12 +4816,12 @@ begin
     {05} 'CHANGE_REFR_INVENTORY', // Inventory
     {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
     {07} 'CHANGE_REFR_BASEOBJECT', // BaseObject
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
+    {08} 'CHANGE_REFR_EXTRA_LINK_REF', // Link Ref Extra
+    {09} 'CHANGE_OBJECT_EXTRA_WORKSHOP', // Workshop Extra
     {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
     {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
     {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
-    {13} 'UnnamedFlag13',
+    {13} 'CHANGE_OBJECT_FORCE_MOVE', // Force Move
     {14} 'UnnamedFlag14',
     {15} 'UnnamedFlag15',
     {16} 'UnnamedFlag16',
@@ -4827,44 +4842,8 @@ begin
     {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
   ]));
 
-  // changeType: 042 = formType: 068 : PCON
+  // changeType: 042 = formType: 094 : FLST
   wbChangeFlags042 := wbInteger('Change Flags', itU32 , wbFlags([
-    {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'CHANGE_REFR_MOVE', // Moved
-    {02} 'CHANGE_REFR_HAVOK_MOVE', // Havok Moved
-    {03} 'CHANGE_REFR_CELL_CHANGED', // Cell Changed
-    {04} 'CHANGE_REFR_SCALE', // Scale
-    {05} 'CHANGE_REFR_INVENTORY', // Inventory
-    {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
-    {07} 'CHANGE_REFR_BASEOBJECT', // BaseObject
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
-    {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
-    {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
-    {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
-    {13} 'UnnamedFlag13',
-    {14} 'UnnamedFlag14',
-    {15} 'UnnamedFlag15',
-    {16} 'UnnamedFlag16',
-    {17} 'UnnamedFlag17',
-    {18} 'UnnamedFlag18',
-    {19} 'UnnamedFlag19',
-    {20} 'UnnamedFlag20',
-    {21} 'CHANGE_OBJECT_EMPTY', // Empty
-    {22} 'CHANGE_OBJECT_OPEN_DEFAULT_STATE', // Open Default State
-    {23} 'CHANGE_OBJECT_OPEN_STATE', // Open State
-    {24} 'UnnamedFlag24',
-    {25} 'CHANGE_REFR_PROMOTED', // Promoted
-    {26} 'CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN', // Activating Children
-    {27} 'CHANGE_REFR_LEVELED_INVENTORY', // Leveled Inventory
-    {28} 'CHANGE_REFR_ANIMATION', // Animation
-    {29} 'CHANGE_REFR_EXTRA_ENCOUNTER_ZONE', // Enc Zone Extra
-    {30} 'CHANGE_REFR_EXTRA_CREATED_ONLY', // Created Only Extra
-    {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
-  ]));
-
-  // changeType: 043 = formType: 091 : FLST
-  wbChangeFlags043 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'UnnamedFlag01',
     {02} 'UnnamedFlag02',
@@ -4899,7 +4878,43 @@ begin
     {31} 'CHANGE_FORM_LIST_ADDED_FORM' // Added Form
   ]));
 
-  // changeType: 044 = formType: 044 : LVLN
+  // changeType: 043 = formType: 046 : LVLN
+  wbChangeFlags043 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'UnnamedFlag01',
+    {02} 'UnnamedFlag02',
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'CHANGE_LEVELED_LIST_ADDED_OBJECT' // Added Object
+  ]));
+
+  // changeType: 044 = formType: 056 : LVLI
   wbChangeFlags044 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'UnnamedFlag01',
@@ -4935,7 +4950,7 @@ begin
     {31} 'CHANGE_LEVELED_LIST_ADDED_OBJECT' // Added Object
   ]));
 
-  // changeType: 045 = formType: 053 : LVLI
+  // changeType: 045 = formType: 085 : LVSP
   wbChangeFlags045 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'UnnamedFlag01',
@@ -4971,11 +4986,47 @@ begin
     {31} 'CHANGE_LEVELED_LIST_ADDED_OBJECT' // Added Object
   ]));
 
-  // changeType: 046 = formType: 082 : LVSP
+  // changeType: 046 = formType: 067 : PARW
   wbChangeFlags046 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'UnnamedFlag01',
-    {02} 'UnnamedFlag02',
+    {01} 'CHANGE_REFR_MOVE', // Moved
+    {02} 'CHANGE_REFR_HAVOK_MOVE', // Havok Moved
+    {03} 'CHANGE_REFR_CELL_CHANGED', // Cell Changed
+    {04} 'CHANGE_REFR_SCALE', // Scale
+    {05} 'CHANGE_REFR_INVENTORY', // Inventory
+    {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
+    {07} 'CHANGE_REFR_BASEOBJECT', // BaseObject
+    {08} 'CHANGE_REFR_EXTRA_LINK_REF', // Link Ref Extra
+    {09} 'CHANGE_OBJECT_EXTRA_WORKSHOP', // Workshop Extra
+    {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
+    {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
+    {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
+    {13} 'CHANGE_OBJECT_FORCE_MOVE', // Force Move
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'CHANGE_OBJECT_EMPTY', // Empty
+    {22} 'CHANGE_OBJECT_OPEN_DEFAULT_STATE', // Open Default State
+    {23} 'CHANGE_OBJECT_OPEN_STATE', // Open State
+    {24} 'UnnamedFlag24',
+    {25} 'CHANGE_REFR_PROMOTED', // Promoted
+    {26} 'CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN', // Activating Children
+    {27} 'CHANGE_REFR_LEVELED_INVENTORY', // Leveled Inventory
+    {28} 'CHANGE_REFR_ANIMATION', // Animation
+    {29} 'CHANGE_REFR_EXTRA_ENCOUNTER_ZONE', // Enc Zone Extra
+    {30} 'CHANGE_REFR_EXTRA_CREATED_ONLY', // Created Only Extra
+    {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
+  ]));
+
+  // changeType: 047 = formType: 024 : ENCH
+  wbChangeFlags047 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
     {03} 'UnnamedFlag03',
     {04} 'UnnamedFlag04',
     {05} 'UnnamedFlag05',
@@ -5004,46 +5055,10 @@ begin
     {28} 'UnnamedFlag28',
     {29} 'UnnamedFlag29',
     {30} 'UnnamedFlag30',
-    {31} 'CHANGE_LEVELED_LIST_ADDED_OBJECT' // Added Object
+    {31} 'UnnamedFlag31'
   ]));
 
-  // changeType: 047 = formType: 064 : PARW
-  wbChangeFlags047 := wbInteger('Change Flags', itU32 , wbFlags([
-    {00} 'CHANGE_FORM_FLAGS', // Flags
-    {01} 'CHANGE_REFR_MOVE', // Moved
-    {02} 'CHANGE_REFR_HAVOK_MOVE', // Havok Moved
-    {03} 'CHANGE_REFR_CELL_CHANGED', // Cell Changed
-    {04} 'CHANGE_REFR_SCALE', // Scale
-    {05} 'CHANGE_REFR_INVENTORY', // Inventory
-    {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
-    {07} 'CHANGE_REFR_BASEOBJECT', // BaseObject
-    {08} 'UnnamedFlag08',
-    {09} 'UnnamedFlag09',
-    {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
-    {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
-    {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
-    {13} 'UnnamedFlag13',
-    {14} 'UnnamedFlag14',
-    {15} 'UnnamedFlag15',
-    {16} 'UnnamedFlag16',
-    {17} 'UnnamedFlag17',
-    {18} 'UnnamedFlag18',
-    {19} 'UnnamedFlag19',
-    {20} 'UnnamedFlag20',
-    {21} 'CHANGE_OBJECT_EMPTY', // Empty
-    {22} 'CHANGE_OBJECT_OPEN_DEFAULT_STATE', // Open Default State
-    {23} 'CHANGE_OBJECT_OPEN_STATE', // Open State
-    {24} 'UnnamedFlag24',
-    {25} 'CHANGE_REFR_PROMOTED', // Promoted
-    {26} 'CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN', // Activating Children
-    {27} 'CHANGE_REFR_LEVELED_INVENTORY', // Leveled Inventory
-    {28} 'CHANGE_REFR_ANIMATION', // Animation
-    {29} 'CHANGE_REFR_EXTRA_ENCOUNTER_ZONE', // Enc Zone Extra
-    {30} 'CHANGE_REFR_EXTRA_CREATED_ONLY', // Created Only Extra
-    {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
-  ]));
-
-  // changeType: 048 = formType: 021 : ENCH
+  // changeType: 048 = formType: 055 : TERM
   wbChangeFlags048 := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'CHANGE_FORM_FLAGS', // Flags
     {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
@@ -5709,222 +5724,569 @@ begin
     ])
   ]);
 
+  // (re) added until decoded
+
+  wbUnionCHANGE_ACTOR_BASE_AIDATA := wbUnion('AI Data', ChangedFlag03Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_BASE_ATTRIBUTES := wbUnion('Attributes', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_BASE_DATA := wbUnion('Base Data', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_BASE_FACTIONS := wbUnion('Factions', ChangedFlag06Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_BASE_FULLNAME := wbUnion('Full Name', ChangedFlag05Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_BASE_SPELLLIST := wbUnion('Spell List', ChangedFlag04Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_DAMAGE_MODIFIERS := wbUnion('Damage Modifiers', ChangedFlag21Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_DISPOSITION_MODIFIERS := wbUnion('Disp Modifiers', ChangedFlag19Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_EXTRA_DISMEMBERED_LIMBS := wbUnion('Dismembered Limbs', ChangedFlag17Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_EXTRA_MERCHANT_CONTAINER := wbUnion('Merchant Container', ChangedFlag12Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_EXTRA_PACKAGE_DATA := wbUnion('Package Data Extra', ChangedFlag11Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_LEVELED_ACTOR := wbUnion('Leveled Actor', ChangedFlag18Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_LIFESTATE := wbUnion('Life State', ChangedFlag10Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_OVERRIDE_MODIFIERS := wbUnion('Override Modifiers', ChangedFlag22Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_PERMANENT_MODIFIERS := wbUnion('Permanent Modifiers', ChangedFlag23Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_TEMP_MODIFIERS := wbUnion('Temp Modifiers', ChangedFlag20Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BOOK_READ := wbUnion('Read', ChangedFlag06Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BOOK_TEACHES := wbUnion('Teaches Skill', ChangedFlag05Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_CELL_DETACHTIME := wbUnion('Detach Time', ChangedFlag30Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_CELL_EXTERIOR_CHAR := wbUnion('Exterior Char', ChangedFlag29Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_CELL_EXTERIOR_SHORT := wbUnion('Exterior Short', ChangedFlag28Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_CELL_FLAGS := wbUnion('Flags', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_CELL_FULLNAME := wbUnion('Full name', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_CELL_OWNERSHIP := wbUnion('Ownership', ChangedFlag03Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_CELL_SEENDATA := wbUnion('Seen Data', ChangedFlag31Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_CLASS_TAG_SKILLS := wbUnion('Tag Skills', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ENCOUNTER_ZONE_FLAGS := wbUnion('Zone Flags', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ENCOUNTER_ZONE_GAME_DATA := wbUnion('Game Data', ChangedFlag31Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_FACTION_CRIME_COUNTS := wbUnion('Faction Crime Counts', ChangedFlag31Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_FACTION_FLAGS := wbUnion('Faction Flags', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_FACTION_REACTIONS := wbUnion('Faction Reactions', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_FORM_LIST_ADDED_FORM := wbUnion('Added Form', ChangedFlag31Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_INGREDIENT_USE := wbUnion('Ingredient Use', ChangedFlag31Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT := wbUnion('Added Object', ChangedFlag31Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_LOCATION_CLEARED := wbUnion('Cleared', ChangedFlag31Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_LOCATION_KEYWORDDATA := wbUnion('KeywordData', ChangedFlag30Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_NOTE_READ := wbUnion('Note Read', ChangedFlag31Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_NPC_BODY_SCALES := wbUnion('Body Scales', ChangedFlag14Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_NPC_CLASS := wbUnion('Class', ChangedFlag10Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_NPC_DEFAULT_OUTFIT := wbUnion('Default Outfit', ChangedFlag12Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_NPC_FACE := wbUnion('Face', ChangedFlag11Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_NPC_GENDER := wbUnion('Gender', ChangedFlag24Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_NPC_RACE := wbUnion('Race', ChangedFlag25Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_NPC_SKILLS := wbUnion('NPC Skills', ChangedFlag09Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_NPC_SLEEP_OUTFIT := wbUnion('Sleep Outfit', ChangedFlag13Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EMPTY := wbUnion('Empty', ChangedFlag21Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_AMMO := wbUnion('Ammo Extra', ChangedFlag11Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA := wbUnion('Item Data Extra', ChangedFlag10Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_LOCK := wbUnion('Lock Extra', ChangedFlag12Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_WORKSHOP := wbUnion('Workshop Extra', ChangedFlag09Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_FORCE_MOVE := wbUnion('Force Move', ChangedFlag13Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE := wbUnion('Open Default State', ChangedFlag22Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_OPEN_STATE := wbUnion('Open State', ChangedFlag23Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_PACKAGE_NEVER_RUN := wbUnion('Never Run Flag', ChangedFlag31Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_PACKAGE_WAITING := wbUnion('Waiting Flag', ChangedFlag30Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_QUEST_ALREADY_RUN := wbUnion('Quest Already Run', ChangedFlag26Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_QUEST_FLAGS := wbUnion('Quest Flags', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_QUEST_INSTANCES := wbUnion('Quest Instance Data', ChangedFlag27Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_QUEST_NODE_TIME_RUN := wbUnion('Time Last Run', ChangedFlag31Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_QUEST_OBJECTIVES := wbUnion('Quest Objectives', ChangedFlag29Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_QUEST_RUNDATA := wbUnion('Quest Runtime Data', ChangedFlag28Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_QUEST_SCRIPT := wbUnion('Quest Script', ChangedFlag30Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_QUEST_SCRIPT_DELAY := wbUnion('Quest Script Delay', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_QUEST_STAGES := wbUnion('Quest Stages', ChangedFlag31Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_ANIMATION := wbUnion('Animation', ChangedFlag28Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_BASEOBJECT := wbUnion('BaseObject', ChangedFlag07Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_CELL_CHANGED := wbUnion('Cell Changed', ChangedFlag03Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN := wbUnion('Activating Children', ChangedFlag26Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY := wbUnion('Created Only Extra', ChangedFlag30Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE := wbUnion('Enc Zone Extra', ChangedFlag29Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY := wbUnion('Game Only Extra', ChangedFlag31Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_LINK_REF := wbUnion('Link Ref Extra', ChangedFlag08Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP := wbUnion('Ownership Extra', ChangedFlag06Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_HAVOK_MOVE := wbUnion('Havok Moved', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_INVENTORY := wbUnion('Inventory', ChangedFlag05Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY := wbUnion('Leveled Inventory', ChangedFlag27Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_MOVE := wbUnion('Moved', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_PROMOTED := wbUnion('Promoted', ChangedFlag25Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_SCALE := wbUnion('Scale', ChangedFlag04Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_RELATIONSHIP_DATA := wbUnion('Relationship Data', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_SCENE_ACTIVE := wbUnion('Active', ChangedFlag31Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_TALKING_ACTIVATOR_SPEAKER := wbUnion('Speaker', ChangedFlag23Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_TOPIC_SAIDONCE := wbUnion('Said Once', ChangedFlag31Decider, [wbNull, wbNull]);
+
   wbChangedFormData := wbStruct('Changed Form Data', [
     wbInitialDataType,
     wbUnion('CForm Union', ChangedFormDataDecider, [
        wbNull
-      ,wbChangedREFR  {03D}
-      ,wbStruct('Change ACHR Data', [ {03E}
-         wbUnion('Player specific', IsActorPlayerDecider, [wbNull, wbStruct('Player data', [
-         ])])
-        ,wbChangedCharacter
-        ,wbUnion('Player specific 2', IsActorPlayerDecider, [wbNull, wbStruct('Player data 2', [
-         ])])
+      ,wbStruct('Change REFR Data', [ {040}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_REFR_BASEOBJECT
+        ,wbUnionCHANGE_REFR_EXTRA_LINK_REF
+        ,wbUnionCHANGE_OBJECT_EXTRA_WORKSHOP
+        ,wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA
+        ,wbUnionCHANGE_OBJECT_EXTRA_AMMO
+        ,wbUnionCHANGE_OBJECT_EXTRA_LOCK
+        ,wbUnionCHANGE_OBJECT_FORCE_MOVE
+        ,wbUnionCHANGE_OBJECT_EMPTY
+        ,wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE
+        ,wbUnionCHANGE_OBJECT_OPEN_STATE
+        ,wbUnionCHANGE_REFR_PROMOTED
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
        ])
-      ,wbStruct('Change PMIS Data', [ {03F}
+      ,wbStruct('Change ACHR Data', [ {041}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_REFR_BASEOBJECT
+        ,wbUnionCHANGE_REFR_EXTRA_LINK_REF
+        ,wbUnionCHANGE_OBJECT_EXTRA_WORKSHOP
+        ,wbUnionCHANGE_ACTOR_LIFESTATE
+        ,wbUnionCHANGE_ACTOR_EXTRA_PACKAGE_DATA
+        ,wbUnionCHANGE_ACTOR_EXTRA_MERCHANT_CONTAINER
+        ,wbUnionCHANGE_ACTOR_EXTRA_DISMEMBERED_LIMBS
+        ,wbUnionCHANGE_ACTOR_LEVELED_ACTOR
+        ,wbUnionCHANGE_ACTOR_DISPOSITION_MODIFIERS
+        ,wbUnionCHANGE_ACTOR_TEMP_MODIFIERS
+        ,wbUnionCHANGE_ACTOR_DAMAGE_MODIFIERS
+        ,wbUnionCHANGE_ACTOR_OVERRIDE_MODIFIERS
+        ,wbUnionCHANGE_ACTOR_PERMANENT_MODIFIERS
+        ,wbUnionCHANGE_REFR_PROMOTED
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
        ])
-      ,wbStruct('Change PGRE Data', [ {041}
+      ,wbStruct('Change PMIS Data', [ {042}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_REFR_BASEOBJECT
+        ,wbUnionCHANGE_REFR_EXTRA_LINK_REF
+        ,wbUnionCHANGE_OBJECT_EXTRA_WORKSHOP
+        ,wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA
+        ,wbUnionCHANGE_OBJECT_EXTRA_AMMO
+        ,wbUnionCHANGE_OBJECT_EXTRA_LOCK
+        ,wbUnionCHANGE_OBJECT_FORCE_MOVE
+        ,wbUnionCHANGE_OBJECT_EMPTY
+        ,wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE
+        ,wbUnionCHANGE_OBJECT_OPEN_STATE
+        ,wbUnionCHANGE_REFR_PROMOTED
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
        ])
-      ,wbStruct('Change PBEA Data', [ {042}
+      ,wbStruct('Change PGRE Data', [ {044}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_REFR_BASEOBJECT
+        ,wbUnionCHANGE_REFR_EXTRA_LINK_REF
+        ,wbUnionCHANGE_OBJECT_EXTRA_WORKSHOP
+        ,wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA
+        ,wbUnionCHANGE_OBJECT_EXTRA_AMMO
+        ,wbUnionCHANGE_OBJECT_EXTRA_LOCK
+        ,wbUnionCHANGE_OBJECT_FORCE_MOVE
+        ,wbUnionCHANGE_OBJECT_EMPTY
+        ,wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE
+        ,wbUnionCHANGE_OBJECT_OPEN_STATE
+        ,wbUnionCHANGE_REFR_PROMOTED
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
        ])
-      ,wbStruct('Change PFLA Data', [ {043}
+      ,wbStruct('Change PBEA Data', [ {045}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_REFR_BASEOBJECT
+        ,wbUnionCHANGE_REFR_EXTRA_LINK_REF
+        ,wbUnionCHANGE_OBJECT_EXTRA_WORKSHOP
+        ,wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA
+        ,wbUnionCHANGE_OBJECT_EXTRA_AMMO
+        ,wbUnionCHANGE_OBJECT_EXTRA_LOCK
+        ,wbUnionCHANGE_OBJECT_FORCE_MOVE
+        ,wbUnionCHANGE_OBJECT_EMPTY
+        ,wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE
+        ,wbUnionCHANGE_OBJECT_OPEN_STATE
+        ,wbUnionCHANGE_REFR_PROMOTED
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
        ])
-      ,wbStruct('Change CELL Data', [ {03C}
+      ,wbStruct('Change PFLA Data', [ {046}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_REFR_BASEOBJECT
+        ,wbUnionCHANGE_REFR_EXTRA_LINK_REF
+        ,wbUnionCHANGE_OBJECT_EXTRA_WORKSHOP
+        ,wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA
+        ,wbUnionCHANGE_OBJECT_EXTRA_AMMO
+        ,wbUnionCHANGE_OBJECT_EXTRA_LOCK
+        ,wbUnionCHANGE_OBJECT_FORCE_MOVE
+        ,wbUnionCHANGE_OBJECT_EMPTY
+        ,wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE
+        ,wbUnionCHANGE_OBJECT_OPEN_STATE
+        ,wbUnionCHANGE_REFR_PROMOTED
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
+       ])
+      ,wbStruct('Change CELL Data', [ {03F}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_CELL_FLAGS
-        ,wbUnionCHANGE_CELL_SEENDATA
         ,wbUnionCHANGE_CELL_FULLNAME
         ,wbUnionCHANGE_CELL_OWNERSHIP
+        ,wbUnionCHANGE_CELL_EXTERIOR_SHORT
+        ,wbUnionCHANGE_CELL_EXTERIOR_CHAR
+        ,wbUnionCHANGE_CELL_DETACHTIME
+        ,wbUnionCHANGE_CELL_SEENDATA
        ])
-      ,wbStruct('Change INFO Data', [ {04C}
+      ,wbStruct('Change INFO Data', [ {04F}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_TOPIC_SAIDONCE
        ])
-      ,wbStruct('Change QUST Data', [ {04D}
+      ,wbStruct('Change QUST Data', [ {050}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_QUEST_FLAGS
         ,wbUnionCHANGE_QUEST_SCRIPT_DELAY
-        ,wbUnionCHANGE_QUEST_STAGES
-        ,wbUnionCHANGE_QUEST_OBJECTIVES
-        ,wbUnionCHANGE_QUEST_RUNDATA
-        ,wbUnionCHANGE_QUEST_INSTANCES
         ,wbUnionCHANGE_QUEST_ALREADY_RUN
+        ,wbUnionCHANGE_QUEST_INSTANCES
+        ,wbUnionCHANGE_QUEST_RUNDATA
+        ,wbUnionCHANGE_QUEST_OBJECTIVES
         ,wbUnionCHANGE_QUEST_SCRIPT
+        ,wbUnionCHANGE_QUEST_STAGES
        ])
-      ,wbChangedNPC {02B}
-      ,wbStruct('Change ACTI Data', [ {018}
+      ,wbStruct('Change NPC_ Data', [ {02D}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_ACTOR_BASE_DATA
+        ,wbUnionCHANGE_ACTOR_BASE_ATTRIBUTES
+        ,wbUnionCHANGE_ACTOR_BASE_AIDATA
+        ,wbUnionCHANGE_ACTOR_BASE_SPELLLIST
+        ,wbUnionCHANGE_ACTOR_BASE_FULLNAME
+        ,wbUnionCHANGE_ACTOR_BASE_FACTIONS
+        ,wbUnionCHANGE_NPC_SKILLS
+        ,wbUnionCHANGE_NPC_CLASS
+        ,wbUnionCHANGE_NPC_FACE
+        ,wbUnionCHANGE_NPC_DEFAULT_OUTFIT
+        ,wbUnionCHANGE_NPC_SLEEP_OUTFIT
+        ,wbUnionCHANGE_NPC_BODY_SCALES
+        ,wbUnionCHANGE_NPC_GENDER
+        ,wbUnionCHANGE_NPC_RACE
+       ])
+      ,wbStruct('Change ACTI Data', [ {01B}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
-      ,wbStruct('Change TACT Data', [ {019}
+      ,wbStruct('Change TACT Data', [ {01C}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
         ,wbUnionCHANGE_TALKING_ACTIVATOR_SPEAKER
        ])
-      ,wbStruct('Change ARMO Data', [ {01A}
+      ,wbStruct('Change ARMO Data', [ {01D}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
-      ,wbStruct('Change BOOK Data', [ {01B}
+      ,wbStruct('Change BOOK Data', [ {01E}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
         ,wbUnionCHANGE_BOOK_TEACHES
         ,wbUnionCHANGE_BOOK_READ
        ])
-      ,wbStruct('Change CONT Data', [ {01C}
+      ,wbStruct('Change CONT Data', [ {01F}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
-      ,wbStruct('Change DOOR Data', [ {01D}
+      ,wbStruct('Change DOOR Data', [ {020}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
-      ,wbStruct('Change INGR Data', [ {01E}
+      ,wbStruct('Change INGR Data', [ {021}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_INGREDIENT_USE
        ])
-      ,wbStruct('Change LIGH Data', [ {01F}
+      ,wbStruct('Change LIGH Data', [ {022}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
-      ,wbStruct('Change MISC Data', [ {020}
+      ,wbStruct('Change MISC Data', [ {023}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
-      ,wbStruct('Change APPA Data', [ {021}
+      ,wbStruct('Change STAT Data', [ {024}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
-      ,wbStruct('Change STAT Data', [ {022}
+      ,wbStruct('Change MSTT Data', [ {026}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
-      ,wbStruct('Change MSTT Data', [ {024}
+      ,wbStruct('Change FURN Data', [ {02A}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
-      ,wbStruct('Change FURN Data', [ {028}
+      ,wbStruct('Change WEAP Data', [ {02B}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
-      ,wbStruct('Change WEAP Data', [ {029}
+      ,wbStruct('Change AMMO Data', [ {02C}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
-      ,wbStruct('Change AMMO Data', [ {02A}
+      ,wbStruct('Change KEYM Data', [ {02F}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
-      ,wbStruct('Change KEYM Data', [ {02D}
+      ,wbStruct('Change ALCH Data', [ {030}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
-      ,wbStruct('Change ALCH Data', [ {02E}
+      ,wbStruct('Change IDLM Data', [ {031}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
-      ,wbStruct('Change IDLM Data', [ {02F}
-         wbUnionCHANGE_FORM_FLAGS
-        ,wbUnionCHANGE_BASE_OBJECT_VALUE
-        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
-       ])
-      ,wbStruct('Change NOTE Data', [ {030}
+      ,wbStruct('Change NOTE Data', [ {032}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_NOTE_READ
        ])
-      ,wbStruct('Change ECZN Data', [ {067}
+      ,wbStruct('Change ECZN Data', [ {06A}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_ENCOUNTER_ZONE_FLAGS
         ,wbUnionCHANGE_ENCOUNTER_ZONE_GAME_DATA
        ])
-      ,wbStruct('Change CLAS Data', [ {00A}
+      ,wbStruct('Change CLAS Data', [ {00D}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_CLASS_TAG_SKILLS
        ])
-      ,wbStruct('Change FACT Data', [ {00B}
+      ,wbStruct('Change FACT Data', [ {00E}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_FACTION_FLAGS
         ,wbUnionCHANGE_FACTION_REACTIONS
         ,wbUnionCHANGE_FACTION_CRIME_COUNTS
        ])
-      ,wbStruct('Change PACK Data', [ {04F}
+      ,wbStruct('Change PACK Data', [ {052}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_PACKAGE_WAITING
         ,wbUnionCHANGE_PACKAGE_NEVER_RUN
        ])
-      ,wbStruct('Change NAVM Data', [ {049}
+      ,wbStruct('Change NAVM Data', [ {04C}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
-      ,wbStruct('Change WOOP Data', [ {076}
+      ,wbStruct('Change WOOP Data', [ {07A}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
-      ,wbStruct('Change MGEF Data', [ {012}
+      ,wbStruct('Change MGEF Data', [ {015}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
        ])
-      ,wbStruct('Change SMQN Data', [ {071}
+      ,wbStruct('Change SMQN Data', [ {075}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_QUEST_NODE_TIME_RUN
        ])
-      ,wbStruct('Change SCEN Data', [ {07A}
+      ,wbStruct('Change SCEN Data', [ {07E}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_SCENE_ACTIVE
        ])
-      ,wbStruct('Change LCTN Data', [ {068}
+      ,wbStruct('Change LCTN Data', [ {06B}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_LOCATION_KEYWORDDATA
         ,wbUnionCHANGE_LOCATION_CLEARED
        ])
-      ,wbStruct('Change RELA Data', [ {079}
+      ,wbStruct('Change RELA Data', [ {07D}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_RELATIONSHIP_DATA
        ])
-      ,wbStruct('Change PHZD Data', [ {046}
+      ,wbStruct('Change PHZD Data', [ {049}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_REFR_BASEOBJECT
+        ,wbUnionCHANGE_REFR_EXTRA_LINK_REF
+        ,wbUnionCHANGE_OBJECT_EXTRA_WORKSHOP
+        ,wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA
+        ,wbUnionCHANGE_OBJECT_EXTRA_AMMO
+        ,wbUnionCHANGE_OBJECT_EXTRA_LOCK
+        ,wbUnionCHANGE_OBJECT_FORCE_MOVE
+        ,wbUnionCHANGE_OBJECT_EMPTY
+        ,wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE
+        ,wbUnionCHANGE_OBJECT_OPEN_STATE
+        ,wbUnionCHANGE_REFR_PROMOTED
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
        ])
-      ,wbStruct('Change PBAR Data', [ {045}
+      ,wbStruct('Change PBAR Data', [ {048}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_REFR_BASEOBJECT
+        ,wbUnionCHANGE_REFR_EXTRA_LINK_REF
+        ,wbUnionCHANGE_OBJECT_EXTRA_WORKSHOP
+        ,wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA
+        ,wbUnionCHANGE_OBJECT_EXTRA_AMMO
+        ,wbUnionCHANGE_OBJECT_EXTRA_LOCK
+        ,wbUnionCHANGE_OBJECT_FORCE_MOVE
+        ,wbUnionCHANGE_OBJECT_EMPTY
+        ,wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE
+        ,wbUnionCHANGE_OBJECT_OPEN_STATE
+        ,wbUnionCHANGE_REFR_PROMOTED
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
        ])
-      ,wbStruct('Change PCON Data', [ {044}
+      ,wbStruct('Change PCON Data', [ {047}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_REFR_BASEOBJECT
+        ,wbUnionCHANGE_REFR_EXTRA_LINK_REF
+        ,wbUnionCHANGE_OBJECT_EXTRA_WORKSHOP
+        ,wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA
+        ,wbUnionCHANGE_OBJECT_EXTRA_AMMO
+        ,wbUnionCHANGE_OBJECT_EXTRA_LOCK
+        ,wbUnionCHANGE_OBJECT_FORCE_MOVE
+        ,wbUnionCHANGE_OBJECT_EMPTY
+        ,wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE
+        ,wbUnionCHANGE_OBJECT_OPEN_STATE
+        ,wbUnionCHANGE_REFR_PROMOTED
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
        ])
-      ,wbStruct('Change FLST Data', [ {05B}
+      ,wbStruct('Change FLST Data', [ {05E}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_FORM_LIST_ADDED_FORM
        ])
-      ,wbStruct('Change LVLN Data', [ {02C}
+      ,wbStruct('Change LVLN Data', [ {02E}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT
        ])
-      ,wbStruct('Change LVLI Data', [ {035}
+      ,wbStruct('Change LVLI Data', [ {038}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT
        ])
-      ,wbStruct('Change LVSP Data', [ {052}
+      ,wbStruct('Change LVSP Data', [ {055}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT
        ])
-      ,wbStruct('Change PARW Data', [ {040}
+      ,wbStruct('Change PARW Data', [ {043}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_REFR_BASEOBJECT
+        ,wbUnionCHANGE_REFR_EXTRA_LINK_REF
+        ,wbUnionCHANGE_OBJECT_EXTRA_WORKSHOP
+        ,wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA
+        ,wbUnionCHANGE_OBJECT_EXTRA_AMMO
+        ,wbUnionCHANGE_OBJECT_EXTRA_LOCK
+        ,wbUnionCHANGE_OBJECT_FORCE_MOVE
+        ,wbUnionCHANGE_OBJECT_EMPTY
+        ,wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE
+        ,wbUnionCHANGE_OBJECT_OPEN_STATE
+        ,wbUnionCHANGE_REFR_PROMOTED
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
        ])
-      ,wbStruct('Change ENCH Data', [ {015}
+      ,wbStruct('Change ENCH Data', [ {018}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change TERM Data', [ {037}
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME

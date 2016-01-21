@@ -547,6 +547,7 @@ type
     procedure ResetAllTags;
 
     procedure ConflictLevelForMainRecord(const aMainRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
+    procedure ConflictLevelForContainer(const aContainer: IwbDataContainer; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
     function ConflictLevelForChildNodeDatas(const aNodeDatas: TDynViewNodeDatas; aSiblingCompare, aInjected: Boolean): TConflictAll;
     function ConflictLevelForNodeDatas(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer; aSiblingCompare, aInjected: Boolean): TConflictAll;
 
@@ -558,6 +559,7 @@ type
     procedure InheritStateFromChilds(Node: PVirtualNode; NodeData: PNavNodeData);
 
     function NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
+    function NodeDatasForContainer(const aContainer: IwbDataContainer): TDynViewNodeDatas;
 
     procedure ShowChangeReferencedBy(OldFormID: Cardinal; NewFormID: Cardinal; const ReferencedBy: TDynMainRecords; aSilent: Boolean);
     function GetDragElements(Target: TBaseVirtualTree; Source: TObject; out TargetNode: PVirtualNode; out TargetIndex: Integer; out TargetElement: IwbElement; out SourceElement: IwbElement): Boolean;
@@ -617,6 +619,7 @@ type
     ActiveRecord: IwbMainRecord;
     ActiveMaster: IwbMainRecord;
     ActiveRecords: TDynViewNodeDatas;
+    ActiveContainer: IwbDataContainer;
     LoaderStarted: Boolean;
     ForceTerminate: Boolean;
     ModGroups: TStringList;
@@ -720,6 +723,8 @@ type
     procedure SetDoubleBuffered(aWinControl: TWinControl);
     procedure SetActiveRecord(const aMainRecord: IwbMainRecord); overload;
     procedure SetActiveRecord(const aMainRecords: TDynMainRecords); overload;
+    procedure SetActiveContainer(const aContainer: IwbDataContainer); overload;
+    procedure ClearActiveContainer; overload;
 
     function ValidateCRC(const aFileName  : string;
                          const aValidCRCs : TDynCardinalArray;
@@ -734,6 +739,7 @@ type
 
     procedure AddMessage(const s: string);
     procedure AddFile(const aFile: IwbFile);
+    procedure AddFileInternal(const aFile: IwbFile);
 
     procedure ReInitTree;
 
@@ -1037,6 +1043,38 @@ begin
 end;
 
 procedure TfrmMain.AddFile(const aFile: IwbFile);
+var
+  i, j, k: Integer;
+  Present : Boolean;
+begin
+  if not wbrequireLoadorder then begin
+    k := aFile.LoadOrder;
+    if k >= 0 then
+      for i := 0 to Pred(aFile.MasterCount) do begin
+        Present := False;
+        for j := Low(Files) to high(Files) do
+          if sameText(Files[j].FileName, aFile.Masters[i].FileName) then begin
+            Present := True;
+            Break;
+          end;
+        if not Present then
+          begin
+            if aFile.Masters[i].LoadOrder = -1 then begin
+              aFile.Masters[i].ForceLoadOrder(k);
+              Inc(k);
+            end;
+
+            AddFileInternal(aFile.Masters[i]);
+          end;
+      end;
+    if k <> aFile.LoadOrder then
+      aFile.ForceLoadOrder(k);
+  end;
+
+  AddFileInternal(aFile);
+end;
+
+procedure TfrmMain.AddFileInternal(const aFile: IwbFile);
 begin
   SetLength(Files, Succ(Length(Files)));
   Files[High(Files)] := aFile;
@@ -1371,6 +1409,52 @@ begin
       Fix(Master.Overrides[i]);
 
     aConflictThis := aMainRecord.ConflictThis;
+  end;
+end;
+
+procedure TfrmMain.ConflictLevelForContainer(const aContainer: IwbDataContainer; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
+
+  procedure Fix(const aMainRecord: IwbMainRecord);
+  begin
+    with aMainRecord do begin
+      ConflictAll := aConflictAll;
+      if ConflictThis = ctUnknown then begin
+        ConflictThis := ctHiddenByModGroup;
+      end;
+    end;
+  end;
+
+var
+  NodeDatas     : TDynViewNodeDatas;
+  i             : Integer;
+  KeepAliveRoot : IwbKeepAliveRoot;
+  MainRecord    : IwbMainRecord;
+begin
+  KeepAliveRoot := wbCreateKeepAliveRoot;
+
+  Mainrecord := aContainer as IwbMainrecord;
+
+  if Assigned(Mainrecord) then
+    ConflictLevelForMainRecord(MainRecord, aConflictAll, aConflictThis)
+  else begin
+    NodeDatas := NodeDatasForContainer(aContainer);
+    if Length(NodeDatas) = 1 then begin
+      aConflictAll := caOnlyOne;
+      NodeDatas[0].ConflictAll := caOnlyOne;
+      NodeDatas[0].ConflictThis := ctOnlyOne;
+    end else if wbQuickShowConflicts and (Length(NodeDatas) = 2) then begin
+      aConflictAll := caOverride;
+      NodeDatas[0].ConflictAll := caOverride;
+      NodeDatas[1].ConflictAll := caOverride;
+      NodeDatas[0].ConflictThis := ctMaster;
+      NodeDatas[1].ConflictThis := ctOverride;
+    end else
+      aConflictAll := ConflictLevelForChildNodeDatas(NodeDatas, False, False );
+
+    for i := Low(NodeDatas) to High(NodeDatas) do
+      with NodeDatas[i] do
+        if Assigned(Element) and (Element as IwbDataContainer = aContainer) then
+          aConflictThis := NodeDatas[i].ConflictThis;
   end;
 end;
 
@@ -2083,6 +2167,7 @@ var
   _File        : IwbFile;
   NodeData     : PNavNodeData;
   CompareFile  : string;
+  fPath        : string;
   s            : String;
   i            : Integer;
   Temporary    : Boolean;
@@ -2100,16 +2185,21 @@ begin
       Exit;
 
     CompareFile := FileName;
+    if wbIsPlugin(CompareFile) then
+      fPath := wbDataPath
+    else
+      fPath := wbSavePath;
+
     // copy selected file to Data directory without overwriting an existing file
-    if not SameText(ExtractFilePath(CompareFile), wbDataPath) then begin
-      s := wbDataPath + ExtractFileName(CompareFile);
+    if not SameText(ExtractFilePath(CompareFile), fPath) then begin
+      s := fPath + ExtractFileName(CompareFile);
       if FileExists(s) then // Finds a unique name
         for i := 0 to 255 do begin
-          s := wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
+          s := fPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
           if not FileExists(s) then Break;
         end;
       if FileExists(s) then begin
-        wbProgressCallback('Could not copy '+FileName+' into '+wbDataPath);
+        wbProgressCallback('Could not copy '+FileName+' into '+fPath);
         Exit;
       end;
       CompareFile := s;
@@ -2760,6 +2850,71 @@ begin
   vstNav.Invalidate;
 end;
 
+procedure TfrmMain.ClearActiveContainer;
+var
+  aMainrecords : TDynMainRecords;
+begin
+  UserWasActive := True;
+
+  if Length(aMainRecords) < 2 then begin
+    if Length(aMainRecords) = 1 then
+      if Supports(aMainRecords[0], IwbMainrecord) then
+        SetActiveRecord(aMainRecords[0] as IwbMainRecord)
+      else
+        SetActiveContainer(aMainRecords[0])
+    else
+      SetActiveContainer(IwbDataContainer(nil));
+    Exit;
+  end;
+  if Supports(aMainRecords[0], IwbMainrecord) then begin
+    SetLength(aMainRecords, 0);
+    SetActiveRecord(aMainRecords);
+    Exit;
+  end;
+
+  ComparingSiblings := True;
+  CompareRecords := aMainRecords;
+  lvReferencedBy.Items.BeginUpdate;
+  try
+    vstView.BeginUpdate;
+    try
+      lvReferencedBy.Items.Clear;
+      vstView.Clear;
+      vstView.NodeDataSize := 0;
+      SetLength(ActiveRecords, 0);
+      ActiveMaster := nil;
+      ActiveRecord := nil;
+      ActiveIndex := NoColumn;
+
+      SetLength(ActiveRecords, 0);
+
+      with vstView.Header.Columns do begin
+        BeginUpdate;
+        try
+          Clear;
+          with Add do begin
+            Text := '';
+            Width := ColumnWidth;
+            Options := Options - [coDraggable];
+            Options := Options + [coFixed];
+          end;
+        finally
+          EndUpdate;
+        end;
+      end;
+
+      vstView.NodeDataSize := SizeOf(TNavNodeData) * Length(ActiveRecords);
+      vstView.RootNodeCount := 0;
+      pgMain.ActivePage := tbsView;
+    finally
+      vstView.EndUpdate;
+    end;
+    tbsReferencedBy.TabVisible := False;
+  finally
+    lvReferencedBy.Items.EndUpdate;
+  end;
+end;
+
 procedure TfrmMain.ClearConflict(Sender: TBaseVirtualTree; Node: PVirtualNode; Data: Pointer; var Abort: Boolean);
 var
   NodeData                    : PNavNodeData;
@@ -3106,23 +3261,97 @@ procedure TfrmMain.DoInit;
     end;
   end;
 
-var
-  i, j, k, l   : Integer;
-  s            : string;
-  sl, sl2, sl3 : TStringList;
-  ConflictAll  : TConflictAll;
-  ConflictThis : TConflictThis;
-  Age          : Integer;
-  AgeDateTime  : TDateTime;
+  procedure LoadPluginListInternal(frmFileSelect: TfrmFileSelect; sl: TStringList);
+  var
+    i, j        : Integer;
+    s           : string;
+    sl2         : TStringList;
+    Age         : Integer;
+    AgeDateTime : TDateTime;
 
-  ModGroupFile : string;
-  MessagePrefix: string;
-  IsOptional   : Boolean;
-  IsRequired   : Boolean;
-  MessageGiven : Boolean;
-  ValidCRCs    : TDynCardinalArray;
-  FileCRC      : Cardinal;
-  FoundAll     : Boolean;
+  begin
+    with frmFileSelect do begin
+      {
+         *** Load order handling for Skyrim and later games ***
+         Plugins are sorted by the order in plugins.txt
+         1. Load plugins list from plugins file
+         2. Add missing files from BOSS list loadorder.txt
+      }
+      if not (wbGameMode in [gmTES3, gmTES4, gmFO3, gmFNV]) then begin
+        sl.LoadFromFile(wbPluginsFileName);
+        RemoveCommentsAndEmpty(sl); // remove comments
+        RemoveMissingFiles(sl); // remove nonexisting files
+        // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
+        // even if not present in plugins.txt
+        j := FindMatchText(sl, wbGameName+'.esm');
+        if j = -1 then sl.Insert(0, wbGameName+'.esm');
+        if wbGameMode = gmTES5 then begin
+          j := FindMatchText(sl, 'Update.esm');
+          if j = -1 then sl.Insert(1, 'Update.esm');
+        end;
+
+        s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
+        if FileExists(s) then begin
+          AddMessage('Found BOSS load order list: ' + s);
+          sl2 := TStringList.Create;
+          try
+            sl2.LoadFromFile(s);
+            RemoveMissingFiles(sl2); // remove nonexisting files from BOSS list
+            // skip first line "Skyrim.esm" in BOSS list
+            for i := 1 to Pred(sl2.Count) do begin
+              j := FindMatchText(sl, sl2[i]);
+              // if plugin exists in plugins file, skip
+              if j <> -1 then Continue;
+              // otherwise insert it after position of previous plugin
+              j := FindMatchText(sl, sl2[i-1]);
+              if j <> -1 then
+                sl.Insert(j+1, sl2[i]);
+            end;
+          finally
+            sl2.Free;
+          end;
+        end;
+      end;
+
+      {
+         *** Load order handling for Oblivion, Fallout3 and New Vegas ***
+         Plugins are sorted by timestamps.
+         Add files missing in plugins.txt and loadorder.txt for Skyrim and later games.
+      }
+      AddMissingToLoadList(sl);
+
+      if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (sl.Count > 1) and (wbGameMode in [gmFO3, gmFNV]) then begin
+        Age := Integer(sl.Objects[0]);
+        AgeDateTime := FileDateToDateTime(Age);
+        for i := 1 to Pred(sl.Count) do begin
+          AgeDateTime := AgeDateTime + (1/24/60);
+          Age := DateTimeToFileDate(AgeDateTime);
+          FileSetDate(wbDataPath + sl[i], Age);
+        end;
+      end;
+    end;
+  end;
+
+var
+  i, j, k, l    : Integer;
+  s             : string;
+  sl, sl2, sl3  : TStringList;
+  ConflictAll   : TConflictAll;
+  ConflictThis  : TConflictThis;
+
+  ModGroupFile  : string;
+  MessagePrefix : string;
+  IsOptional    : Boolean;
+  IsRequired    : Boolean;
+  MessageGiven  : Boolean;
+  ValidCRCs     : TDynCardinalArray;
+  FileCRC       : Cardinal;
+  FoundAll      : Boolean;
+  saveExt       : string;
+  coSaveExt     : string;
+  R             : TSearchRec;
+  frmFileSelect : TfrmFileSelect;
+
 begin
   AutoDone := False;
   ErrorsCount := 0;
@@ -3148,7 +3377,7 @@ begin
   wbDisplayShorterNames := True;
   wbHideUnused := True;
   wbFlagsAsArray := True;
-  wbRequireLoadOrder := True;
+  wbRequireLoadOrder := not wbUseFalsePlugins;
   AutoSave := False;
   ParentedGroupRecordType := [1, 6, 7];
   if wbVWDAsQuestChildren then
@@ -3194,10 +3423,28 @@ begin
     Exit;
   end;
 
+  if wbSavePath <> '' then begin
+    AddMessage('Using save path: ' + wbSavePath);
+    if not DirectoryExists(wbSavePath) then begin
+      if wbToolSource in [tsSaves] then begin
+        AddMessage('Fatal: Could not find save path');
+        Exit;
+      end else
+        AddMessage('Warning: Could not find save path');
+    end;
+  end else
+    if wbToolSource in [tsSaves] then begin
+      AddMessage('Fatal: No save path specified');
+      Exit;
+    end;
+
   AddMessage('Using plugin list: ' + wbPluginsFileName);
   if not FileExists(wbPluginsFileName) then begin
-    AddMessage('Fatal: Could not find plugin list');
-    Exit;
+    if wbToolSource in [tsPlugins] then begin
+      AddMessage('Fatal: Could not find plugin list');
+      Exit;
+    end else
+      AddMessage('Warning: Could not find plugin list');
   end;
 
   AddMessage('Using settings file: ' + wbSettingsFileName);
@@ -3217,74 +3464,59 @@ begin
     WindowState := TWindowState(Settings.ReadInteger(Name, 'WindowState', Integer(WindowState)));
   end;
 
-  AddMessage('Loading active plugin list: ' + wbPluginsFileName);
+  if wbToolSource in [tsSaves] then
+    AddMessage('Loading saves list from : ' + wbSavePath)
+  else if wbToolSource in [tsPlugins] then
+    AddMessage('Loading active plugin list: ' + wbPluginsFileName)
+  else begin
+    AddMessage('Fatal: No source specified');
+    Exit;
+  end;
 
   try
     sl := TStringList.Create;
     try
-
-      with TfrmFileSelect.Create(nil) do try
-
-        {
-           *** Load order handling for Skyrim and later games ***
-           Plugins are sorted by the order in plugins.txt
-           1. Load plugins list from plugins file
-           2. Add missing files from BOSS list loadorder.txt
-        }
-        if not (wbGameMode in [gmTES4, gmFO3, gmFNV]) then begin
-          sl.LoadFromFile(wbPluginsFileName);
-          RemoveCommentsAndEmpty(sl); // remove comments
-          RemoveMissingFiles(sl); // remove nonexisting files
-          // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
-          // even if not present in plugins.txt
-          j := FindMatchText(sl, wbGameName+'.esm');
-          if j = -1 then sl.Insert(0, wbGameName+'.esm');
-          if wbGameMode = gmTES5 then begin
-            j := FindMatchText(sl, 'Update.esm');
-            if j = -1 then sl.Insert(1, 'Update.esm');
-          end;
-
-          s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
-          if FileExists(s) then begin
-            AddMessage('Found BOSS load order list: ' + s);
-            sl2 := TStringList.Create;
-            try
-              sl2.LoadFromFile(s);
-              RemoveMissingFiles(sl2); // remove nonexisting files from BOSS list
-              // skip first line "Skyrim.esm" in BOSS list
-              for i := 1 to Pred(sl2.Count) do begin
-                j := FindMatchText(sl, sl2[i]);
-                // if plugin exists in plugins file, skip
-                if j <> -1 then Continue;
-                // otherwise insert it after position of previous plugin
-                j := FindMatchText(sl, sl2[i-1]);
-                if j <> -1 then
-                  sl.Insert(j+1, sl2[i]);
-              end;
-            finally
-              sl2.Free;
+      frmFileSelect := TfrmFileSelect.Create(nil);
+      with frmFileSelect do try
+        case wbToolSource of
+          tsSaves: begin
+            case wbGameMode of
+              gmFO3:  begin saveExt := '.fos'; coSaveExt := '.fose'; end;
+              gmFO4:  begin saveExt := '.fos'; coSaveExt := '';      end;
+              gmFNV:  begin saveExt := '.fos'; coSaveExt := '.nvse'; end;
+              gmTES3: begin saveExt := '.ess'; coSaveExt := '';      end;
+              gmTES4: begin saveExt := '.ess'; coSaveExt := '.obse'; end;
+              gmTES5: begin saveExt := '.ess'; coSaveExt := '.skse'; end;
             end;
+
+            if FindFirst(ExpandFileName(wbSavePath+'\*'+saveExt), faAnyfile, R)=0 then try
+              repeat
+                if R.Attr and faDirectory <> faDirectory then begin
+                  CheckListBox1.Items.Add(R.Name);
+                  s := ChangeFileExt(R.Name, coSaveExt);
+                  if (coSaveExt<>'') and FileExists(ExpandFileName(wbSavePath+'\'+s)) then
+                    CheckListBox1.Items.Add(s);
+                end;
+              until 0 <> FindNext(R);
+            finally
+              FindClose(R);
+            end;
+            if (coSaveExt<>'') then
+              if FindFirst(ExpandFileName(wbSavePath+'\*'+coSaveExt), faAnyfile, R)=0 then try
+                repeat
+                  if R.Attr and faDirectory <> faDirectory then
+                    if CheckListBox1.Items.IndexOf(R.Name) = -1 then
+                      CheckListBox1.Items.Add(R.Name);
+                until 0 <> FindNext(R);
+              finally
+                FindClose(R);
+              end;
+          end;
+          tsPlugins: begin
+            LoadPluginListInternal(frmFileSelect, sl);
+            CheckListBox1.Items.Assign(sl);
           end;
         end;
-
-        {
-           *** Load order handling for Oblivion, Fallout3 and New Vegas ***
-           Plugins are sorted by timestamps.
-           Add files missing in plugins.txt and loadorder.txt for Skyrim and later games.
-        }
-        AddMissingToLoadList(sl);
-
-        if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (sl.Count > 1) and (wbGameMode in [gmFO3, gmFNV]) then begin
-          Age := Integer(sl.Objects[0]);
-          AgeDateTime := FileDateToDateTime(Age);
-          for i := 1 to Pred(sl.Count) do begin
-            AgeDateTime := AgeDateTime + (1/24/60);
-            Age := DateTimeToFileDate(AgeDateTime);
-            FileSetDate(wbDataPath + sl[i], Age);
-          end;
-        end;
-
-        CheckListBox1.Items.Assign(sl);
 
         if not wbQuickClean then
           if (wbToolMode in wbPluginModes) and (sl.Count > 1) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFNV, gmTES5]) then begin
@@ -3306,7 +3538,7 @@ begin
                 end else
                   CheckListBox1.Checked[j] := True;
               end;
-          end else begin
+          end else if wbToolSource in [tsPlugins] then begin
             // check active files using the game's plugins list
             sl.LoadFromFile(wbPluginsFileName);
             for i := Pred(sl.Count) downto 0 do begin
@@ -3336,27 +3568,76 @@ begin
           end;
         end;
 
+        k := -1;
         sl2 := TStringList.Create;
         try
-          sl2.Sorted := True;
-          sl2.Duplicates := dupIgnore;
-
           sl.Clear;
           for i := 0 to Pred(CheckListBox1.Count) do
             if CheckListBox1.Checked[i] then
               sl.Add(CheckListBox1.Items[i]);
 
-          if wbQuickClean then
+          if wbQuickClean or (wbToolSource in [tsSaves]) then
             if sl.Count <> 1 then begin
-              MessageDlg('Exactly one plugin must be selected in QuickClean mode', mtError, [mbAbort], 0);
+              if wbQuickClean then
+                MessageDlg('Exactly one plugin must be selected in QuickClean mode', mtError, [mbAbort], 0)
+              else
+                MessageDlg('Exactly one plugin must be selected with this source', mtError, [mbAbort], 0);
               frmMain.Close;
               Exit;
             end;
 
+          if wbToolSource = tsSaves then begin
+            case wbGameMode of
+              gmFNV:  if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave;
+              gmFO3:  if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave
+                else begin
+                  MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
+                  frmMain.Close;
+                  Exit;
+                end;
+              gmFO4:  if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave;
+              gmTES4: if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave
+                else begin
+                  MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
+                  frmMain.Close;
+                  Exit;
+                end;
+              gmTES5: if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave;
+            else
+              MessageDlg('CoSave are not supported yet "'+s+'". Please check the the selection.', mtError, [mbAbort], 0);
+              frmMain.Close;
+              Exit;
+            end;
+            LoadPluginListInternal(frmFileSelect, sl2);
+            for i := Pred(sl2.Count) downto 0 do
+              if CheckListBox1.Items.IndexOf(sl2[i]) = -1 then
+                CheckListBox1.Items.Insert(0, sl2[i]);
+            for i := 0 to Pred(CheckListBox1.Count) do
+              if CheckListBox1.Checked[i] then begin
+                k := i;
+                break;
+              end;
+          end;
+
+          sl2.Sorted := True;
+          sl2.Duplicates := dupIgnore;
           while sl.Count > 0 do begin
             sl2.Clear;
             for i := 0 to Pred(sl.Count) do
-              wbMastersForFile(wbDataPath + sl[i], sl2);
+              case wbToolSource of
+                tsSaves: begin
+                  if not wbIsPlugin(sl[i]) then
+                    wbMastersForFile(wbSavePath + sl[i], sl2)
+                  else
+                    wbMastersForFile(wbDataPath + sl[i], sl2);
+                  for j := 0 to Pred(sl2.Count) do
+                    if CheckListBox1.Items.IndexOf(sl2[j]) = -1 then begin
+                      CheckListBox1.Items.Insert(k, sl2[j]);
+                      Inc(k);
+                    end;
+                end;
+                tsPlugins: wbMastersForFile(wbDataPath + sl[i], sl2);
+              end;
             {make sure messages for the memo have been processed}
             Application.ProcessMessages;
             tmrMessagesTimer(nil);
@@ -3388,155 +3669,158 @@ begin
       end;
 
       if not (wbToolMode in wbAutoModes) then
-        with TfrmFileSelect.Create(nil) do try
+        case wbToolSource of
+          tsSaves: { to be done };
+          tsPlugins: with TfrmFileSelect.Create(nil) do try
 
-          if (not wbEditAllowed) or wbTranslationMode then begin
-            Caption := 'Skip these records:';
+            if (not wbEditAllowed) or wbTranslationMode then begin
+              Caption := 'Skip these records:';
 
-            sl2 := TStringList.Create;
-            try
-              sl2.Sorted := True;
-              sl2.Duplicates := dupIgnore;
-              sl2.CommaText := Settings.ReadString('RecordsToSkip', 'Selection', 'LAND,ROAD,PGRD,REGN,NAVI,NAVM,IMAD');
+              sl2 := TStringList.Create;
+              try
+                sl2.Sorted := True;
+                sl2.Duplicates := dupIgnore;
+                sl2.CommaText := Settings.ReadString('RecordsToSkip', 'Selection', 'LAND,ROAD,PGRD,REGN,NAVI,NAVM,IMAD');
 
-              for i := Low(wbRecordDefs) to High(wbRecordDefs) do
-                with wbRecordDefs[i].rdeDef do begin
-                  j := CheckListBox1.Items.Add(DefaultSignature + ' - ' + GetName);
-                  if sl2.IndexOf(DefaultSignature) >= 0 then
-                    CheckListBox1.Checked[j] := True;
-                end;
-              CheckListBox1.Sorted := True;
+                for i := Low(wbRecordDefs) to High(wbRecordDefs) do
+                  with wbRecordDefs[i].rdeDef do begin
+                    j := CheckListBox1.Items.Add(DefaultSignature + ' - ' + GetName);
+                    if sl2.IndexOf(DefaultSignature) >= 0 then
+                      CheckListBox1.Checked[j] := True;
+                  end;
+                CheckListBox1.Sorted := True;
 
-              ShowModal;
+                ShowModal;
 
-              sl2.Clear;
-              for i := 0 to Pred(CheckListBox1.Count) do
-                if CheckListBox1.Checked[i] then begin
-                  RecordToSkip.Add(Copy(CheckListBox1.Items[i], 1, 4));
-                  sl2.Add(Copy(CheckListBox1.Items[i], 1, 4));
-                end;
-              Settings.WriteString('RecordsToSkip', 'Selection', sl2.CommaText);
-              Settings.UpdateFile;
-            finally
-              FreeAndNil(sl2);
+                sl2.Clear;
+                for i := 0 to Pred(CheckListBox1.Count) do
+                  if CheckListBox1.Checked[i] then begin
+                    RecordToSkip.Add(Copy(CheckListBox1.Items[i], 1, 4));
+                    sl2.Add(Copy(CheckListBox1.Items[i], 1, 4));
+                  end;
+                Settings.WriteString('RecordsToSkip', 'Selection', sl2.CommaText);
+                Settings.UpdateFile;
+              finally
+                FreeAndNil(sl2);
+              end;
             end;
-          end;
 
-          if not wbQuickClean then
-            for l := 0 to sl.Count do begin
-              if l >= sl.Count then
-                ModGroupFile := wbModGroupFileName
-              else
-                ModGroupFile := wbDataPath + ChangeFileExt(sl[l], '.modgroups');
+            if not wbQuickClean then
+              for l := 0 to sl.Count do begin
+                if l >= sl.Count then
+                  ModGroupFile := wbModGroupFileName
+                else
+                  ModGroupFile := wbDataPath + ChangeFileExt(sl[l], '.modgroups');
 
-              if FileExists(ModGroupFile) then
-                with TMemIniFile.Create(ModGroupFile) do try
-                  ModGroupFile := ExtractFileName(ModGroupFile);
-                  sl3 := TStringList.Create;
-                  try
-                  ReadSections(sl3);
-                  for i := 0 to Pred(sl3.Count) do begin
-                    MessagePrefix := 'Ignoring ModGroup [' + sl3[i] + '] (from ' + ModGroupFile + '): ';
-                    sl2 := TStringList.Create;
+                if FileExists(ModGroupFile) then
+                  with TMemIniFile.Create(ModGroupFile) do try
+                    ModGroupFile := ExtractFileName(ModGroupFile);
+                    sl3 := TStringList.Create;
                     try
-                      if ModGroups.IndexOf(sl3[i]) >= 0 then
-                        AddMessage(MessagePrefix + 'ModGroup of same name already defined')
-                      else begin
-                        MessageGiven := False;
-                        ReadSectionValues(sl3[i], sl2);
+                    ReadSections(sl3);
+                    for i := 0 to Pred(sl3.Count) do begin
+                      MessagePrefix := 'Ignoring ModGroup [' + sl3[i] + '] (from ' + ModGroupFile + '): ';
+                      sl2 := TStringList.Create;
+                      try
+                        if ModGroups.IndexOf(sl3[i]) >= 0 then
+                          AddMessage(MessagePrefix + 'ModGroup of same name already defined')
+                        else begin
+                          MessageGiven := False;
+                          ReadSectionValues(sl3[i], sl2);
 
-                        for j := Pred(sl2.Count) downto 0 do begin
-                          s := Trim(sl2[j]);
-                          k := Pos(';', s);
-                          if k > 0 then begin
-                            Delete(s, k, High(Integer));
-                            s := Trim(s);
-                          end;
-                          if Length(s) > 0 then begin
-                            IsOptional := s[1] = '+';
-                            IsRequired := s[1] = '-';
-                            if IsOptional or IsRequired then begin
-                              Delete(s, 1, 1);
-                              sl2[j] := s;
-                            end;
-                          end else begin // Only to quiet the compiler (W1036).
-                            IsOptional := False;
-                            IsRequired := False;
-                          end;
-                          ValidCRCs := nil;
-                          if Length(s) > 0 then begin
-                            k := Pos(':', s);
-                            if k > 1 then begin
-                              ValidCRCs := wbDecodeCRCList(Copy(s, Succ(k), High(Integer)));
+                          for j := Pred(sl2.Count) downto 0 do begin
+                            s := Trim(sl2[j]);
+                            k := Pos(';', s);
+                            if k > 0 then begin
                               Delete(s, k, High(Integer));
                               s := Trim(s);
                             end;
-                          end;
-                          if Length(s) > 0 then begin
-                            k := sl.IndexOf(s);
-                            if k >= 0 then begin
-                              if not ValidateCRC(s, ValidCRCs, FileCRC) then begin
-                                AddMessage(MessagePrefix + 'CRC of plugin "' + s + '" ('+IntToHex(Int64(FileCRC), 8)+') is not in the list of valid CRCs');
-                                MessageGiven := True;
-                                sl2.Clear;
-                                break;
-                              end else
-                                if IsRequired then
-                                  sl2.Objects[j] := TObject(-k)
-                                else
-                                  sl2.Objects[j] := TObject(k)
-                            end else begin
-                              if IsOptional then
-                                sl2.Delete(j)
-                              else begin
-                                AddMessage(MessagePrefix + 'required plugin "' + s + '" missing');
-                                MessageGiven := True;
-                                sl2.Clear;
-                                break;
-                              end
+                            if Length(s) > 0 then begin
+                              IsOptional := s[1] = '+';
+                              IsRequired := s[1] = '-';
+                              if IsOptional or IsRequired then begin
+                                Delete(s, 1, 1);
+                                sl2[j] := s;
+                              end;
+                            end else begin // Only to quiet the compiler (W1036).
+                              IsOptional := False;
+                              IsRequired := False;
                             end;
-                          end else
-                            sl2.Delete(j);
-                        end;
-
-                        if sl2.Count < 2 then begin
-                          if not MessageGiven then
-                            AddMessage(MessagePrefix + 'less then 2 plugins active');
-                        end else begin
-                          k := Abs(Integer(sl2.Objects[0]));
-                          for j := 1 to Pred(sl2.Count) do begin
-                            if Abs(Integer(sl2.Objects[j])) <= k then begin
-                              sl2.Clear;
-                              MessageGiven := True;
-                              AddMessage(MessagePrefix + 'plugins are not in the correct order');
-                              Break;
+                            ValidCRCs := nil;
+                            if Length(s) > 0 then begin
+                              k := Pos(':', s);
+                              if k > 1 then begin
+                                ValidCRCs := wbDecodeCRCList(Copy(s, Succ(k), High(Integer)));
+                                Delete(s, k, High(Integer));
+                                s := Trim(s);
+                              end;
                             end;
-                          end;
-                          for j := Pred(sl2.Count) downto 0 do
-                            if Integer(sl2.Objects[j]) < 0 then
+                            if Length(s) > 0 then begin
+                              k := sl.IndexOf(s);
+                              if k >= 0 then begin
+                                if not ValidateCRC(s, ValidCRCs, FileCRC) then begin
+                                  AddMessage(MessagePrefix + 'CRC of plugin "' + s + '" ('+IntToHex(Int64(FileCRC), 8)+') is not in the list of valid CRCs');
+                                  MessageGiven := True;
+                                  sl2.Clear;
+                                  break;
+                                end else
+                                  if IsRequired then
+                                    sl2.Objects[j] := TObject(-k)
+                                  else
+                                    sl2.Objects[j] := TObject(k)
+                              end else begin
+                                if IsOptional then
+                                  sl2.Delete(j)
+                                else begin
+                                  AddMessage(MessagePrefix + 'required plugin "' + s + '" missing');
+                                  MessageGiven := True;
+                                  sl2.Clear;
+                                  break;
+                                end
+                              end;
+                            end else
                               sl2.Delete(j);
-                          if sl2.Count >= 2 then begin
-                            ModGroups.AddObject(sl3[i], sl2);
-                            sl2 := nil;
-                          end else
+                          end;
+
+                          if sl2.Count < 2 then begin
                             if not MessageGiven then
                               AddMessage(MessagePrefix + 'less then 2 plugins active');
+                          end else begin
+                            k := Abs(Integer(sl2.Objects[0]));
+                            for j := 1 to Pred(sl2.Count) do begin
+                              if Abs(Integer(sl2.Objects[j])) <= k then begin
+                                sl2.Clear;
+                                MessageGiven := True;
+                                AddMessage(MessagePrefix + 'plugins are not in the correct order');
+                                Break;
+                              end;
+                            end;
+                            for j := Pred(sl2.Count) downto 0 do
+                              if Integer(sl2.Objects[j]) < 0 then
+                                sl2.Delete(j);
+                            if sl2.Count >= 2 then begin
+                              ModGroups.AddObject(sl3[i], sl2);
+                              sl2 := nil;
+                            end else
+                              if not MessageGiven then
+                                AddMessage(MessagePrefix + 'less then 2 plugins active');
+                          end;
                         end;
-                      end;
 
-                    finally
-                      FreeAndNil(sl2);
+                      finally
+                        FreeAndNil(sl2);
+                      end;
                     end;
-                  end;
+                    finally
+                      FreeAndNil(sl3);
+                    end;
                   finally
-                    FreeAndNil(sl3);
+                    Free;
                   end;
-                finally
-                  Free;
-                end;
-            end;
-        finally
-          Free;
+              end;
+          finally
+            Free;
+          end;
         end;
 
       if wbQuickClean then
@@ -6753,6 +7037,11 @@ begin
       for i := Low(Selection) to High(Selection) do begin
         StartNode := Selection[i];
         if Assigned(StartNode) then begin
+          NodeData := vstNav.GetNodeData(StartNode);
+          if Assigned(NodeData.Element) then
+            if NodeData.Element.ElementType = etFile then
+              wbCurrentSelf := (NodeData.Element as IwbFile).MasterCount;
+
           Node := vstNav.GetLast(StartNode);
           if not Assigned(Node) then
             Node := StartNode;
@@ -11012,6 +11301,40 @@ begin
   end;
 end;
 
+function TfrmMain.NodeDatasForContainer(const aContainer: IwbDataContainer): TDynViewNodeDatas;
+var
+  i, l    : Integer;
+  p       : string;
+  Element : IwbElement;
+begin
+  Assert(wbLoaderDone);
+
+  SetLength(Result, 0);
+  l := 0;
+  p := Copy(aContainer.Path, Length(aContainer.GetFile.FileName)+Length(' \ [xx] '+' \ ') + 1);
+  repeat
+    i := Pos(' \ ', p);
+    if i>0 then begin
+      Delete(p, i, 1);
+      Delete(p, i+1, 1);
+    end;
+  until i = 0;  // Convert GetPath to ByPath
+
+  for i := 0 to pred(Length(Files)) do
+    if Files[i].IsNotPlugin then begin
+      Element := Files[i].ElementByPath[p];
+      if Assigned(Element) then begin
+        SetLength(Result, Succ(l));
+        Result[l].Element := Element;
+        Result[l].Container := Element as IwbContainerElementRef;
+        if Result[l].Container.ElementCount < 1 then
+          Result[l].Container := nil;
+        Inc(l);
+      end;
+    end;
+  Assert(Length(Result)>0); // At least there should be ourself
+end;
+
 function TfrmMain.NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
 var
   Master        : IwbMainRecord;
@@ -12068,6 +12391,111 @@ begin
   SendMessage(Handle, WM_USER + 2, 0, 0);
 end;
 
+procedure TfrmMain.SetActiveContainer(const aContainer: IwbDataContainer);
+var
+  i                           : Integer;
+begin
+  UserWasActive := True;
+
+  ComparingSiblings := False;
+  CompareRecords := nil;
+
+  if (ActiveContainer = aContainer) and (Assigned(ActiveContainer) = (Length(ActiveRecords) > 0)) then
+    Exit;
+
+  lvReferencedBy.Items.BeginUpdate;
+  try
+    vstView.BeginUpdate;
+    try
+      lvReferencedBy.Items.Clear;
+      vstView.Clear;
+      vstView.NodeDataSize := 0;
+      SetLength(ActiveRecords, 0);
+      ActiveMaster := nil;
+      ActiveIndex := NoColumn;
+      ActiveContainer := aContainer;
+
+      if Assigned(ActiveContainer) then begin
+        ActiveMaster := nil;
+
+        if wbLoaderDone then begin
+          ActiveRecords := NodeDatasForContainer(ActiveContainer);
+        end else begin
+          SetLength(ActiveRecords, 1);
+          ActiveRecords[0].Element := ActiveContainer;
+          ActiveRecords[0].Container := ActiveContainer as IwbContainerElementRef;
+        end;
+
+        with vstView.Header.Columns do begin
+          BeginUpdate;
+          try
+            Clear;
+            with Add do begin
+              Text := '';
+              Width := ColumnWidth;
+              Options := Options - [coDraggable];
+              Options := Options + [coFixed];
+            end;
+            for I := Low(ActiveRecords) to High(ActiveRecords) do
+              with Add do begin
+                Text := ActiveRecords[i].Element._File.Name;
+                Style := vsOwnerDraw;
+                Width := ColumnWidth;
+                MinWidth := 5;
+                MaxWidth := 3000;
+                Options := Options - [coAllowclick, coDraggable];
+                Options := Options + [coAutoSpring];
+                if ActiveContainer.Equals(ActiveRecords[i].Element) then
+                  ActiveIndex := i;
+              end;
+            if Length(ActiveRecords) > 1 then
+              with Add do begin
+                Text := '';
+                Width := 1;
+                MinWidth := 1;
+                MaxWidth := 3000;
+                Options := Options - [coAllowclick, coDraggable];
+              end;
+          finally
+            EndUpdate;
+          end;
+        end;
+        vstView.NodeDataSize := SizeOf(TNavNodeData) * Length(ActiveRecords);
+        if Supports(ActiveContainer.Def, IwbStructDef) then
+          vstView.RootNodeCount := (ActiveContainer.Def as IwbStructDef).MemberCount + ActiveContainer.AdditionalElementCount
+        else
+          vstView.RootNodeCount := 1;
+        InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
+        vstView.FullExpand;
+        UpdateColumnWidths;
+        if pgMain.ActivePage <> tbsReferencedBy then
+          pgMain.ActivePage := tbsView;
+      end
+      else begin
+        with vstView.Header.Columns do begin
+          BeginUpdate;
+          try
+            Clear;
+            with Add do begin
+              Text := '';
+              Width := ColumnWidth;
+            end;
+          finally
+            EndUpdate;
+          end;
+        end;
+      end;
+    finally
+      vstView.EndUpdate;
+    end;
+
+    tbsReferencedBy.TabVisible := wbLoaderDone and (lvReferencedBy.Items.Count > 0);
+    if tbsReferencedBy.TabVisible then
+      tbsReferencedBy.Caption := Format('Referenced By (%d)', [lvReferencedBy.Items.Count]);
+  finally
+    lvReferencedBy.Items.EndUpdate;
+  end;
+end;
 procedure TfrmMain.SetActiveRecord(const aMainRecords: TDynMainRecords);
 var
   i                           : Integer;
@@ -13828,7 +14256,7 @@ begin
   if Assigned(NodeData) then begin
     Element := NodeData.Element;
     if Assigned(Element) then
-      if Element.ElementType <> etMainRecord then
+      if not (Element.ElementType in [etMainRecord, etStructChapter]) and not Element.TreeHead then
         Element := nil;
 
     if NodeData.ConflictAll >= caNoConflict then
@@ -13856,7 +14284,12 @@ begin
   else begin
     lblPath.Visible := False;
   end;
-  SetActiveRecord(Element as IwbMainRecord);
+  if Supports(Element, IwbMainRecord) then
+    SetActiveRecord(Element as IwbMainRecord)
+  else if Supports(Element, IwbDataContainer) then
+    SetActiveContainer(Element as IwbDataContainer)
+  else
+    ClearActiveContainer;
 end;
 
 function FindSortElement(const aElement: IwbElement): IwbElement;
@@ -13876,6 +14309,7 @@ procedure TfrmMain.vstNavCompareNodes(Sender: TBaseVirtualTree; Node1,
 var
   Element1     : IwbElement;
   Element2     : IwbElement;
+  Container    : IwbContainerElementRef;
   SortElement1 : IwbElement;
   SortElement2 : IwbElement;
   GroupRecord1 : IwbGroupRecord;
@@ -13885,6 +14319,7 @@ var
 begin
   Element1 := PNavNodeData(Sender.GetNodeData(Node1)).Element;
   Element2 := PNavNodeData(Sender.GetNodeData(Node2)).Element;
+  Result := 0;
 
   if Element1 = Element2 then begin
     Result := 0;
@@ -13900,6 +14335,14 @@ begin
   end
   else if not Assigned(Element1) then begin
     Result := 0;
+    Exit;
+  end;
+
+  if Element1.TreeHead then begin
+    Result := -1;
+    Exit;
+  end else if Element2.TreeHead then begin
+    Result := 1;
     Exit;
   end;
 
@@ -13982,7 +14425,19 @@ begin
           end;
         end
     else
-      Assert(False);
+      Result := CmpI32(Element1.SortPriority, Element2.SortPriority);
+      if Result = 0 then
+        Result := CmpI32(Element1.SortOrder, Element2.SortOrder);
+      if (Result = 0) and Assigned(Element1.Container) and Assigned(Element2.Container) and
+         (Element1.Container = Element2.Container) then begin
+        Container := Element1.Container as IwbContainerElementRef;
+        if Container.ElementType = etArray then
+          Result := CmpI32(Container.IndexOf(Element1), Container.IndexOf(Element2));
+      end;
+
+      if Result = 0 then
+        Result := CmpW32(Cardinal(Pointer(Element1)), Cardinal(Pointer(Element2)));
+      Exit;
     end;
 
   if Result = 0 then
@@ -14036,6 +14491,7 @@ var
   Element      : IwbElement;
   MainRecord   : IwbMainRecord;
   GroupRecord  : IwbGroupRecord;
+  Chapter      : IwbChapter;
 begin
   CellText := '';
 
@@ -14063,6 +14519,15 @@ begin
             end;
           1: CellText := MainRecord.EditorID;
           2: CellText := MainRecord.DisplayName;
+        end;
+        Exit;
+      end
+      else if Element.ElementType = etStructChapter then begin
+        Chapter := Element as IwbChapter;
+        case Column of
+          -1, 0: CellText := Element.Name;
+          1: CellText := Chapter.ChapterTypeName;
+          2: CellText := Chapter.ChapterName;
         end;
         Exit;
       end;
@@ -14178,7 +14643,9 @@ var
   NodeData    : PNavNodeData;
   Element     : IwbElement;
   Container   : IwbContainerElementRef;
+  Container2  : IwbContainerElementRef;
   GroupRecord : IwbGroupRecord;
+  i           : Integer;
 begin
   GroupRecord := nil;
   NodeData := PNavNodeData(Sender.GetNodeData(Node));
@@ -14206,7 +14673,7 @@ begin
     Exit;
   end;
 
-  if Element.ElementType <> etMainRecord then begin
+  if not (Element.ElementType in [etMainRecord, etStructChapter]) and not Element.TreeHead then begin
     if Supports(Element, IwbContainerElementRef, Container) and (Container.ElementCount > 0) then begin
       Include(InitialStates, ivsHasChildren);
       NodeData.Container := IInterface(Container) as IwbContainer;
@@ -14216,7 +14683,16 @@ begin
     if GroupRecord.ElementCount > 0 then
       Include(InitialStates, ivsHasChildren);
     NodeData.Container := GroupRecord;
-  end;
+  end
+  else if Element.ElementType = etStructChapter then
+    if Supports(Element, IwbContainerElementRef, Container) and (Container.ElementCount > 0) then
+      for i := 0 to Pred(Container.ElementCount) do
+        if (Container.Elements[i].TreeBranch) and
+            Supports(Container.Elements[i], IwbContainerElementRef, Container2) and (Container2.ElementCount > 0) then begin
+          Include(InitialStates, ivsHasChildren);
+          NodeData.Container := Container.Elements[i] as IwbContainer;
+          Break;
+        end;
 
   if Node.Index > 0 then
     if Supports(Element, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType in ParentedGroupRecordType) then begin
@@ -15660,7 +16136,16 @@ begin
 
         for i := 0 to Pred(ltLoadList.Count) do begin
           LoaderProgress('loading "' + ltLoadList[i] + '"...');
-          _File := wbFile(ltDataPath + ltLoadList[i], i + ltLoadOrderOffset, ltMaster, ltTemporary);
+          if FileExists(ltLoadList[i]) then
+            s := ltLoadList[i]
+          else begin
+            s := ltDataPath + ltLoadList[i];
+            if not wbIsPlugin(ltLoadList[i]) then
+              if wbToolSource in [tsSaves] then
+                if not FileExists(s) then // Assume its a save in the save path
+                  s := wbSavePath + ltLoadList[i];
+          end;
+          _File := wbFile(s, i + ltLoadOrderOffset, ltMaster, ltTemporary);
           if wbEditAllowed and not wbTranslationMode then begin
             SetLength(ltFiles, Succ(Length(ltFiles)));
             ltFiles[High(ltFiles)] := _File;
@@ -15690,7 +16175,9 @@ begin
 
         if wbBuildRefs then
           for i := Low(ltFiles) to High(ltFiles) do
-            if not SameText(ltFiles[i].FileName, wbGameName + '.esm') and not wbDoNotBuildRefsFor.Find(ltFiles[i].FileName, dummy) then begin
+            if not SameText(ltFiles[i].FileName, wbGameName + '.esm') and
+               not wbDoNotBuildRefsFor.Find(ltFiles[i].FileName, dummy) and
+               not ltFiles[i].IsNotPlugin then begin
               LoaderProgress('[' + ltFiles[i].FileName + '] Building reference info.');
               ltFiles[i].BuildRef;
               if frmMain.ForceTerminate then
