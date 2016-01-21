@@ -3013,9 +3013,9 @@ begin
     wbInteger('Type', itU32),
     wbInteger('DataLength', itU32),
     wbUnion('Data', GlobalDataDecider, [
-      wbByteArray('Unknown', DataCounter),  // Single line
+      wbByteArray('Unknown', DataCounter)  // Single line
       // 0 to 8
-      wbStruct('Misc Stats Struct', [
+     ,wbStruct('Misc Stats Struct', [
         wbArray('Misc Stats', wbStruct('Misc Stat',[
           wbLenString('Misc Stat Name', 2),
           wbInteger('Category', itU8, wbEnum([
@@ -3042,7 +3042,7 @@ begin
 //        ,wbUnion('Added data', SaveFormVersionGreaterThan72Decider, [
 //          wbNull
 //          ,wbByteArray('Unknown', 1)
-        ])
+//        ])
       ]),
       wbArray('TES', wbInteger('', itU8), -2),
       wbArray('Global Variables', wbInteger('', itU8), -2),
