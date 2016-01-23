@@ -7037,8 +7037,6 @@ begin
       for i := Low(Selection) to High(Selection) do begin
         StartNode := Selection[i];
         if Assigned(StartNode) then begin
-          NodeData := vstNav.GetNodeData(StartNode);
-
           Node := vstNav.GetLast(StartNode);
           if not Assigned(Node) then
             Node := StartNode;
