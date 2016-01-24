@@ -2373,45 +2373,45 @@ end;
 
 procedure DefineFO4SavesS;  // This is all based on current UESP, and HexDump, Triria TESSaveLib and the Runtime
 var
-  wbHeader                   : IwbStructDef;
-  wbFileLocationTable        : IwbStructDef;
-  wbGlobalData               : IwbStructDef;
-  wbChangedForm              : IwbStructDef;
-  wbChangedFormData          : IwbStructDef;
-  wbNull                     : IwbValueDef;
-  wbChangeFlags              : IwbUnionDef;
-  wbTypeData1                : IwbStructDef;
-  wbTypeData2                : IwbStructDef;
-  wbVariable                 : IwbStructDef;
-  wbCodeOpcodes              : IwbEnumDef;
-  wbCodeParameter            : IwbStructDef;
-  wbCode                     : IwbStructDef;
-  wbFunction                 : IwbStructDef;
-  wbObjectTableEntry         : IwbStructDef;
-  wbObjectDetachedTableEntry : IwbStructDef;
-  wbArrayTableEntry          : IwbStructDef;
-  wbStackTableEntry          : IwbStructDef;
-  wbObjectDataTableEntry     : IwbStructDef;
-  wbDetachedObjectDataTableEntry     : IwbStructDef;
-  wbArrayElementsTableEntry  : IwbStructDef;
-  wbCallbackParameters       : IwbUnionDef;
-  wbStackTableDataEntry      : IwbStructDef;
-  wbUnknownS1                : IwbStructDef;
-  wbFunctionMessageDataEntry : IwbStructDef;
-  wbSuspendedStackDataEntry  : IwbStructDef;
-  wbQueuedUnbindDataEntry    : IwbStructDef;
-  wbStackTimeUpdateOffset    : IwbStructDef;
-  wbObjectTimeUpdateOffset   : IwbStructDef;
-  wbFunctor                  : IwbStructDef;
-  wbFunctors                 : IwbStructDef;
-  wbUnknown0900              : IwbArrayDef;
-  wbInitialDataType01        : IwbStructDef;
-  wbInitialDataType02        : IwbStructDef;
-  wbInitialDataType03        : IwbStructDef;
-  wbInitialDataType04        : IwbStructDef;
-  wbInitialDataType05        : IwbStructDef;
-  wbInitialDataType06        : IwbStructDef;
-  wbInitialDataType          : IwbUnionDef;
+  wbHeader                       : IwbStructDef;
+  wbFileLocationTable            : IwbStructDef;
+  wbGlobalData                   : IwbStructDef;
+  wbChangedForm                  : IwbStructDef;
+  wbChangedFormData              : IwbStructDef;
+  wbNull                         : IwbValueDef;
+  wbChangeFlags                  : IwbUnionDef;
+  wbTypeData1                    : IwbStructDef;
+  wbTypeData2                    : IwbStructDef;
+  wbVariable                     : IwbStructDef;
+  wbCodeOpcodes                  : IwbEnumDef;
+  wbCodeParameter                : IwbStructDef;
+  wbCode                         : IwbStructDef;
+  wbFunction                     : IwbStructDef;
+  wbObjectTableEntry             : IwbStructDef;
+  wbObjectDetachedTableEntry     : IwbStructDef;
+  wbArrayTableEntry              : IwbStructDef;
+  wbStackTableEntry              : IwbStructDef;
+  wbObjectDataTableEntry         : IwbStructDef;
+  wbDetachedObjectDataTableEntry : IwbStructDef;
+  wbArrayElementsTableEntry      : IwbStructDef;
+  wbCallbackParameters           : IwbUnionDef;
+  wbStackTableDataEntry          : IwbStructDef;
+  wbUnknownS1                    : IwbStructDef;
+  wbFunctionMessageDataEntry     : IwbStructDef;
+  wbSuspendedStackDataEntry      : IwbStructDef;
+  wbQueuedUnbindDataEntry        : IwbStructDef;
+  wbStackTimeUpdateOffset        : IwbStructDef;
+  wbObjectTimeUpdateOffset       : IwbStructDef;
+  wbFunctor                      : IwbStructDef;
+  wbFunctors                     : IwbStructDef;
+  wbUnknown0900                  : IwbArrayDef;
+  wbInitialDataType01            : IwbStructDef;
+  wbInitialDataType02            : IwbStructDef;
+  wbInitialDataType03            : IwbStructDef;
+  wbInitialDataType04            : IwbStructDef;
+  wbInitialDataType05            : IwbStructDef;
+  wbInitialDataType06            : IwbStructDef;
+  wbInitialDataType              : IwbUnionDef;
 
   wbChangeDefaultFlags    : IwbIntegerDef;
   wbCoSaveChunk           : IwbStructDef;
@@ -2747,18 +2747,12 @@ begin
     wbInteger('Object Handle', itU64, wbVMObjectHandle),
     wbStruct('Script', [
       wbInteger('Unknown Flags', itU8),
-//      wbInteger('Type', itU16, wbVMType),
-//      wbInteger('Unknown', itU32, wbDumpInteger),
-//      wbUnion('Unknown', ObjectDataTableEntryExtraDecider, [
-//        wbNull,
-//        wbInteger('Unknown', itU32, wbDumpInteger)
-//      ]),
       wbArray('Members', wbVariable, -1)
     ])
   ]);
 
   wbArrayTableEntry := wbStruct('Array Entry Data', [  // UESP: arrayInfo
-    wbInteger('Array Handle', itU64, wbVMArrayHandle),
+    wbInteger('Array Handle', itU64, wbVMHandle),
     wbInteger('Array Type', itU8, wbPropTypeEnum),    // valid values : 0 to 5, 0B to 0F
     wbUnion('Data', ArrayTableEntryOptionalStringDecider, [
       wbNull,
@@ -2769,7 +2763,7 @@ begin
   ]);
 
   wbArrayElementsTableEntry := wbStruct(ArrayContentEntryData, [   // UESP: arrayData
-    wbInteger('Array Handle', itU64, wbVMHandle),
+    wbInteger('Array Handle', itU64, wbVMArrayHandle),
     wbArrayS('Elements', wbvariable, ArrayElementsTableElementCounter)
   ]);
 
