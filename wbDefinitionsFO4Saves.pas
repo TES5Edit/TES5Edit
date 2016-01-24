@@ -34,8 +34,6 @@ uses
   wbDefinitionsFO4;
 
 var
-  wbSexEnum          : IwbEnumDef;
-  wbPropTypeEnum     : IwbEnumDef;
   wbExtraTypeEnum    : IwbEnumDef;
   wbRecordFlagsFlags : IwbFlagsDef;
 
@@ -49,27 +47,6 @@ var // forward type directives
 
 procedure DefineFO4SavesA;
 begin
-  wbPropTypeEnum := wbEnum([
-    {00} 'None',
-    {01} 'Object',
-    {02} 'String',
-    {03} 'Int32',
-    {04} 'Float',
-    {05} 'Bool',
-    {06} '',
-    {07} '',
-    {08} '',
-    {09} '',
-    {10} '',
-    {11} 'Array of Object',
-    {12} 'Array of String',
-    {13} 'Array of Int32',
-    {14} 'Array of Float',
-    {15} 'Array of Bool'
-  ]);
-
-  wbSexEnum := wbEnum(['Male','Female']);
-
   wbRecordFlagsFlags := wbFlags([
     {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
     {0x00000001}'ESM',
@@ -517,7 +494,7 @@ begin
     if Assigned(Element) then begin
       aType := Element.NativeValue;
       case aType of
-        1: Result := 2;
+        1, 7: Result := 2;
       else
         Result := 1;
       end;
@@ -611,11 +588,15 @@ begin
          3: Result := 3;
          4: Result := 4;
          5: Result := 5;
-        11: Result := 6;
-        12: Result := 7;
-        13: Result := 8;
-        14: Result := 9;
-        15: Result := 10;
+         6: Result := 6;
+         7: Result := 7;
+        11: Result := 8;
+        12: Result := 9;
+        13: Result := 10;
+        14: Result := 11;
+        15: Result := 12;
+        16: Result := 13;
+        17: Result := 14;
       end;
     end;
   end;
@@ -733,7 +714,7 @@ begin
   end;
 end;
 
-function ObjectDataTableCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+function ObjectTableDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   sElement  : IwbElement;
   Element   : IwbElement;
@@ -751,13 +732,30 @@ begin
       if Supports(Element, IwbDataContainer, Container) then
         Result := Container.ElementCount;
     end;
+  end else
+    Result := VMObjectArrayCount;
+end;
+
+function DetachedObjectTableDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+var
+  sElement  : IwbElement;
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+
+begin
+  if VMObjectDetachedArrayCount<0 then begin
+    Result := 0;
+    if not Assigned(aElement) then Exit;
+    sElement := wbFindSaveElement('Papyrus Struct', aElement);
+    Assert(sElement.BaseName='Papyrus Struct');
+
     if Supports(sElement, IwbDataContainer, Container) then begin
       Element := Container.ElementByName['Detached Object Table'];
       if Supports(Element, IwbDataContainer, Container) then
-        Inc(Result, Container.ElementCount);
+        Result := Container.ElementCount;
     end;
   end else
-    Result := VMObjectArrayCount+VMObjectDetachedArrayCount;
+    Result := VMObjectDetachedArrayCount;
 end;
 
 function ArrayContentTableCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
@@ -810,7 +808,7 @@ var
   Element       : IwbElement;
   Container     : IwbDataContainer;
   DataContainer : IwbDataContainer;
-  Handle        : Cardinal;
+  Handle        : Int64;
   i             : Integer;
 begin
   Result := 0;
@@ -1080,19 +1078,24 @@ begin
   Assert(Element.BaseName='Papyrus Struct');
 
   if Supports(Element, IwbDataContainer, Container) then begin
-    Element := Container.ElementByName['SkyrimVM_version'];
+    Element := Container.ElementByName['VM_version'];
     if Assigned(Element) then begin
       aVersion := Element.NativeValue;
       case aVersion of
         1: Result := 1;
         2: Result := 2;
-        3: Result := 3;
-        4: Result := 4;
       else
         Result := 0;
       end;
     end;
   end;
+end;
+
+function VMVersionGreaterThan1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 0;
+  if VMVersionDecider(aBasePtr, aEndPtr, aElement) > 1 then
+    Result := 1;
 end;
 
 function SaveIsValidDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1109,8 +1112,8 @@ begin
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Save File Version'];
     if Assigned(Element) then begin
-      aVersion :=Element.NativeValue;
-      if (0 <= aVersion) and (aVersion <=5) then
+      aVersion := Element.NativeValue;
+      if (0 <= aVersion) and (aVersion <= 3) then
         Result := 1;
     end;
   end;
@@ -1212,22 +1215,18 @@ end;
 
 function HasUnknownS1Decider(aName: String; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  aValue    : Integer;
   Element   : IwbElement;
   Container : IwbDataContainer;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  aValue := VMversionDecider(aBasePtr, aEndPtr, aElement);
-  if aValue >1 then begin
-    Element := wbFindSaveElement(aName, aElement);
-    Assert(Element.BaseName=aName);
+  Element := wbFindSaveElement(aName, aElement);
+  Assert(Element.BaseName=aName);
 
-    if Supports(Element, IwbDataContainer, Container) then begin
-      Element := Container.ElementByName['Has UnknownS1'];
-      if Assigned(Element) then
-        Result := Element.NativeValue;
-    end;
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Has UnknownS1'];
+    if Assigned(Element) then
+      Result := Element.NativeValue;
   end;
 end;
 
@@ -1243,23 +1242,19 @@ end;
 
 function PreviousUnknownDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  aValue    : Integer;
   Element   : IwbElement;
   Container : IwbDataContainer;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  aValue := VMversionDecider(aBasePtr, aEndPtr, aElement);
-  if aValue >1 then begin
-    Element := wbFindSaveElement('Papyrus Struct', aElement);
-    Assert(Element.BaseName='Papyrus Struct');
+  Element := wbFindSaveElement('Papyrus Struct', aElement);
+  Assert(Element.BaseName='Papyrus Struct');
 
-    if Supports(Element, IwbDataContainer, Container) then begin
-      Element := Container.ElementByName['Previous Unknown'];
-      if Assigned(Element) then
-        if Element.NativeValue > 0 then
-          Result := 1;
-    end;
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Previous Unknown'];
+    if Assigned(Element) then
+      if Element.NativeValue > 0 then
+        Result := 1;
   end;
 end;
 
@@ -2386,6 +2381,7 @@ var
   wbArrayTableEntry          : IwbStructDef;
   wbStackTableEntry          : IwbStructDef;
   wbObjectDataTableEntry     : IwbStructDef;
+  wbDetachedObjectDataTableEntry     : IwbStructDef;
   wbArrayElementsTableEntry  : IwbStructDef;
   wbCallbackParameters       : IwbUnionDef;
   wbStackTableDataEntry      : IwbStructDef;
@@ -2616,20 +2612,30 @@ begin
       wbInteger('Int32', itS32),
       wbStruct('Object', [
         wbInteger('Object Type', itU16, wbVMType),
-        wbInteger('Object Handle', itU32, wbVMObjectHandle)
+        wbInteger('Object Handle', itU64, wbVMObjectHandle)
       ]),
       wbInteger('String', itU16, wbVMType),
       wbInteger('Int32', itU32),
       wbFloat('Float'),
       wbInteger('Bool', itU32, wbEnum(['False', 'True'])),
+      wbInteger('Unknown', itU32, wbDumpInteger),
+      wbStruct('Struct', [
+        wbInteger('Struct Type', itU16, wbVMType),
+        wbInteger('Struct Handle', itU64, wbVMObjectHandle)
+      ]),
       wbStruct('Object Array', [
         wbInteger('Object Type', itU16, wbVMType),
-        wbInteger('Array Handle', itU32)
+        wbInteger('Array Handle', itU64, wbVMArrayHandle)
       ]),
-      wbInteger('String Array Handle', itU32),
-      wbInteger('Int32 Array Handle', itU32),
-      wbInteger('Float Array Handle', itU32),
-      wbInteger('Bool Array Handle', itU32)
+      wbInteger('String Array Handle', itU64, wbVMArrayHandle),
+      wbInteger('Int32 Array Handle', itU64, wbVMArrayHandle),
+      wbInteger('Float Array Handle', itU64, wbVMArrayHandle),
+      wbInteger('Bool Array Handle', itU64, wbVMArrayHandle),
+      wbInteger('Unknown Array Handle', itU64, wbVMArrayHandle),
+      wbStruct('Struct Array', [
+        wbInteger('Struct Type', itU16, wbVMType),
+        wbInteger('Array Handle', itU64, wbVMArrayHandle)
+      ])
     ])
   ]);
 
@@ -2712,8 +2718,8 @@ begin
     wbArray('Codes', wbCode, -2)
   ]);
 
-  wbObjectDataTableEntry := wbStruct('Object Data Table Entry', [  //  UESP: scriptData
-    wbInteger('Object Handle', itU32, wbVMObjectHandle),
+  wbObjectDataTableEntry := wbStruct('Object Table Data Entry', [  //  UESP: scriptData
+    wbInteger('Object Handle', itU64, wbVMObjectHandle),
     wbStruct('Script', [
       wbInteger('Unknown Flags', itU8),
       wbInteger('Type', itU16, wbVMType),
@@ -2726,8 +2732,22 @@ begin
     ])
   ]);
 
+  wbDetachedObjectDataTableEntry := wbStruct('Detached Object Table Data Entry', [  //  UESP: scriptData
+    wbInteger('Object Handle', itU64, wbVMObjectHandle),
+    wbStruct('Script', [
+      wbInteger('Unknown Flags', itU8),
+//      wbInteger('Type', itU16, wbVMType),
+//      wbInteger('Unknown', itU32, wbDumpInteger),
+//      wbUnion('Unknown', ObjectDataTableEntryExtraDecider, [
+//        wbNull,
+//        wbInteger('Unknown', itU32, wbDumpInteger)
+//      ]),
+      wbArray('Members', wbVariable, -1)
+    ])
+  ]);
+
   wbArrayTableEntry := wbStruct('Array Entry Data', [  // UESP: arrayInfo
-    wbInteger('Array Handle', itU32),
+    wbInteger('Array Handle', itU64, wbVMArrayHandle),
     wbInteger('Array Type', itU8, wbPropTypeEnum),    // valid values : 0 to 5, 0B to 0F
     wbUnion('Data', ArrayTableEntryOptionalStringDecider, [
       wbNull,
@@ -2738,7 +2758,7 @@ begin
   ]);
 
   wbArrayElementsTableEntry := wbStruct(ArrayContentEntryData, [   // UESP: arrayData
-    wbInteger('Array Handle', itU32),
+    wbInteger('Array Handle', itU64, wbVMArrayHandle),
     wbArrayS('Elements', wbvariable, ArrayElementsTableElementCounter)
   ]);
 
@@ -3206,31 +3226,37 @@ begin
           wbArray('Type table 1', wbTypeData1, TypeTable1Counter)  // Type table for internal VM save data  USEP:script
          ])
         ,wbArray('Object Table', wbObjectTableEntry, -1, ObjectTableAfterLoad)  // UESP: scriptInstance
+        ,wbByteArray('Tempo correction', 4)
         ,wbArray('Detached Object Table', wbObjectDetachedTableEntry, -1, ObjectDetachedTableAfterLoad) // UESP: reference
-//        ,wbArrayS('Array Table', wbArrayTableEntry, -1, ArrayTableAfterLoad) // UESP: arrayInfo
-//        ,wbStruct('Stacks', [
-//          wbInteger('Next Active Script ID', itU32, wbDumpInteger)                // Part of Stack table
-//         ,wbArrayS('Stack Table', wbStackTableEntry, -1, StackTableAfterLoad) // UESP: activeScript
-//        ])
-//        ,wbArray('Object Data Table', wbObjectDataTableEntry, ObjectDataTableCounter)     // UESP: scriptData and referenceData
-//        ,wbArray('Array Content Table', wbArrayElementsTableEntry, ArrayContentTableCounter) // UESP: arrayData
-//        ,wbArray('Stack Content Table', wbStackTableDataEntry, StackContentTableCounter)  // UESP: activeScriptData
-//        ,wbArray('Function Message Table', wbFunctionMessageDataEntry, -1)
-//        ,wbArray('First Suspended Stack Table', wbSuspendedStackDataEntry, -1)
-//        ,wbArray('Second Suspended Stack Table', wbSuspendedStackDataEntry, -1)
-//        ,wbInteger('Previous Unknown', itU32)
-//        ,wbUnion('Unknown', PreviousUnknownDecider, [
-//          wbNull,
-//          wbInteger('Unknown', itU32)
-//        ])
-//        ,wbArray('Unknown0', wbInteger('Unknown', itU32), -1)
-//        ,wbUnion('Version >= 4', VMVersionDecider, [
-//          wbNull,
-//          wbNull,
-//          wbNull,
-//          wbNull,
-//          wbArray('Queued Unbind Table', wbQueuedUnbindDataEntry, -1)
-//        ]) // End of .text:00C53760
+        ,wbArrayS('Array Table', wbArrayTableEntry, -1, ArrayTableAfterLoad) // UESP: arrayInfo
+        ,wbStruct('Stacks', [
+          wbInteger('Next Active Script ID', itU32)                // Part of Stack table
+         ,wbArrayS('Stack Table', wbStackTableEntry, -1, StackTableAfterLoad) // UESP: activeScript
+         ])
+        ,wbArray('Object Table Data', wbObjectDataTableEntry, ObjectTableDataCounter)     // UESP: scriptData and referenceData
+        ,wbArray('Detached Object Table Data', wbDetachedObjectDataTableEntry, DetachedObjectTableDataCounter)     // UESP: scriptData and referenceData
+        ,wbArray('Array Content Table', wbArrayElementsTableEntry, ArrayContentTableCounter) // UESP: arrayData
+        ,wbArray('Stack Content Table', wbStackTableDataEntry, StackContentTableCounter)  // UESP: activeScriptData
+        ,wbArray('Function Message Table', wbFunctionMessageDataEntry, -1)
+        ,wbArray('First Suspended Stack Table', wbSuspendedStackDataEntry, -1)
+        ,wbArray('Second Suspended Stack Table', wbSuspendedStackDataEntry, -1)
+        ,wbInteger('Previous Unknown', itU32)
+        ,wbUnion('Unknown', PreviousUnknownDecider, [
+          wbNull,
+          wbInteger('Unknown', itU32)
+         ])
+        ,wbUnion('Version >= 2', VMVersionGreaterThan1Decider, [
+           wbNull
+          ,wbArray('Unknown0', wbStruct('Unknown00', [
+            wbInteger('Unknown', itU32),
+            wbVariable
+           ]), -1)
+        ])
+        ,wbArray('Unknown Handles', wbInteger('Unknown Handle', itU64), -1)
+        ,wbArray('Unknown1', wbStruct('Unknown11', [
+          wbInteger('Unknown', itU64),
+          wbInteger('Unknown', itU32)
+         ]), -1)
 //        ,wbInteger('Save File Version', itS16)
 //        ,wbUnion('', SaveIsValidDecider, [
 //           wbNull,
