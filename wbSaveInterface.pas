@@ -13,6 +13,7 @@ var
   ];
 
 function wbVMType              : IwbIntegerDefFormater;
+function wbVMHandle            : IwbIntegerDefFormater;
 function wbVMObjectHandle      : IwbIntegerDefFormater;
 function wbVMArrayHandle       : IwbIntegerDefFormater;
 function wbSaveWorldspaceIndex : IwbIntegerDefFormater;
@@ -142,6 +143,11 @@ begin
     Result := '[' + IntToHex64(aInt, 8) + '] '+ sifVMTypeArray[VMType];
 end;
 
+function TwbHandleFormaterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := IntToHex64(aInt, 16)
+end;
+
 function TwbObjectHandleFormaterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   if aType = ctToSortKey then
@@ -260,6 +266,11 @@ end;
 function wbVMType : IwbIntegerDefFormater;
 begin
   Result := wbCallback(@TwbVMTypeFormaterToString, nil);
+end;
+
+function wbVMHandle : IwbIntegerDefFormater; overload;
+begin
+  Result := wbCallback(@TwbHandleFormaterToString, nil);
 end;
 
 function wbVMObjectHandle : IwbIntegerDefFormater; overload;

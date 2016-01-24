@@ -536,14 +536,25 @@ begin
 end;
 
 var
-  VMObjectArrayCount         : Integer = -1;
-  VMObjectDetachedArrayCount : Integer = -1;
+  VMObjectArrayCount           : Integer = -1;
+  VMSupplementObjectArrayCount : Integer = -1;
+  VMObjectDetachedArrayCount   : Integer = -1;
 
 procedure ObjectTableAfterLoad(const aElement: IwbElement);
 begin
   if VMObjectArrayCount < 0 then begin
     VMObjectArrayCount := (aElement as IwbContainer).ElementCount;
     InitializeVMObjectArray(aElement as IwbContainer);
+  end;
+end;
+
+procedure SupplementObjectTableAfterLoad(const aElement: IwbElement);
+begin
+  if VMSupplementObjectArrayCount < 0 then begin
+    VMSupplementObjectArrayCount := (aElement as IwbContainer).ElementCount;
+    InitializeVMObjectArray(aElement as IwbContainer);
+    if VMObjectArrayCount >= 0 then
+      VMObjectArrayCount := VMObjectArrayCount + VMSupplementObjectArrayCount;
   end;
 end;
 
@@ -2590,8 +2601,8 @@ begin
     ]), -1)
   ]);
 
-  wbObjectTableEntry := wbStruct('Object Table Entry', [  // UESP : reference
-    wbInteger('Object Handle', itU64),
+  wbObjectTableEntry := wbStruct('Full Object Table Entry', [  // UESP : reference
+    wbInteger('Object Handle', itU64, wbVMHandle),
     wbInteger('Name', itU16, wbVMType),
     wbStruct('Grouped', [
       wbInteger('Flag2bits', itU16, wbDumpInteger),
@@ -2601,8 +2612,8 @@ begin
     wbInteger('Unknown', itU8, wbDumpInteger)
   ]);
 
-  wbObjectDetachedTableEntry := wbStruct('Object Table Entry', [   // UESP : detachedReference
-    wbInteger('Object Handle', itU64),
+  wbObjectDetachedTableEntry := wbStruct('Simple Object Table Entry', [   // UESP : detachedReference
+    wbInteger('Object Handle', itU64, wbVMHandle),
     wbInteger('Name', itU16, wbVMType)
   ]);
 
@@ -2758,7 +2769,7 @@ begin
   ]);
 
   wbArrayElementsTableEntry := wbStruct(ArrayContentEntryData, [   // UESP: arrayData
-    wbInteger('Array Handle', itU64, wbVMArrayHandle),
+    wbInteger('Array Handle', itU64, wbVMHandle),
     wbArrayS('Elements', wbvariable, ArrayElementsTableElementCounter)
   ]);
 
@@ -3226,7 +3237,7 @@ begin
           wbArray('Type table 1', wbTypeData1, TypeTable1Counter)  // Type table for internal VM save data  USEP:script
          ])
         ,wbArray('Object Table', wbObjectTableEntry, -1, ObjectTableAfterLoad)  // UESP: scriptInstance
-        ,wbByteArray('Tempo correction', 4)
+        ,wbArray('Supplement Object Table', wbObjectDetachedTableEntry, -1, SupplementObjectTableAfterLoad)  // UESP: scriptInstance
         ,wbArray('Detached Object Table', wbObjectDetachedTableEntry, -1, ObjectDetachedTableAfterLoad) // UESP: reference
         ,wbArrayS('Array Table', wbArrayTableEntry, -1, ArrayTableAfterLoad) // UESP: arrayInfo
         ,wbStruct('Stacks', [
