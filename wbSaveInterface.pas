@@ -190,6 +190,7 @@ begin
   for i := 0 to High(ahfVMArrayHandleTable) do
     if ahfVMArrayHandleTable[i].Handle = anArrayHandle then begin
       Result := ahfVMArrayHandleTable[i].Count;
+      Break;
     end;
   if result < 0 then
     result := 0;
