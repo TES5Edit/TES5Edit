@@ -1059,8 +1059,8 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := wbFindSaveElement('Stack', aElement);
-  Assert(Element.BaseName='Stack');
+  Element := wbFindSaveElement('CallBacks', aElement);
+  Assert(Element.BaseName='CallBacks');
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Type'];
@@ -1069,7 +1069,7 @@ begin
       case aType of
         1: Result := 1;
         2: Result := 2;
-        3: Result := 3;
+//        3: Result := 3;
       else
         Result := 0;
       end;
@@ -2690,14 +2690,16 @@ begin
   ]);
 
   wbCodeParameter := wbStruct('Parameter', [
-    wbInteger('Type', itU8, wbDumpInteger),  // Lower than 8 and lower than 5
+    wbInteger('Type', itU8, wbPropTypeEnum),  // Lower than 8 and lower than 5
     wbUnion('Value', CodeParameterTypeValueDecider, [
       wbNull,
       wbInteger('Object Type', itU16, wbVMType),
       wbInteger('String', itU16, wbVMType),
       wbInteger('Unsigned Integer', itU32),
       wbFloat('Float'),
-      wbInteger('Boolean', itU8, wbEnum(['False', 'True']))
+      wbInteger('Boolean', itU8, wbEnum(['False', 'True'])),
+      wbInteger('Unknown', itU32),  // Guess and/or placeholder
+      wbInteger('Struct Type', itU16, wbVMType)  // Guess
     ])
   ]);
 
@@ -2791,8 +2793,8 @@ begin
   wbStackTableDataEntry := wbStruct('Stack Data Entry Data', [ // UESP: activeScriptData
     wbInteger('Stack ID', itU32),
     wbStruct('Stack', [
-      wbInteger('Unknown', itU8),  // Should be lower than 9    UESP: Major version
-      wbInteger('Unknown', itU8),  // Should be lower than 3    UESP: Minor version
+      wbInteger('Unknown', itU8),  // Should be lower than 9  (still in FO4)  UESP: Major version
+      wbInteger('Unknown', itU8),  // Should be lower than 3  (still in FO4)  UESP: Minor version
       wbVariable,
       wbInteger('Extra Flag', itU8),
       wbInteger('Unknown', itU8, wbDumpInteger),  // Should be lower than 3 also
@@ -2801,20 +2803,23 @@ begin
         wbInteger('Unknown', itU32, wbDumpInteger),
         wbNull
       ]),
-      wbInteger('Type', itU8),  // Should be lower than 4
-      wbUnion('Unknown', StackTableDataEntryStackTypeDecider, [
-        wbNull,       // < 1 or > 3
-        wbStruct('Callback', [   // = 1
-          wbLenString('Type', 4),
-          wbCallbackParameters
-        ]),
-        wbVariable,   // = 2
-        wbStruct('Callback', [  // = 3
-          wbLenString('Type', 4),
-          wbCallbackParameters,
-          wbVariable
+      wbStruct('CallBacks', [
+        wbInteger('Type', itU8),  // Lower than 4 (in fact 3 errors out also)
+        wbUnion('Unknown', StackTableDataEntryStackTypeDecider, [
+          wbNull,       // < 1 or > 2
+          wbStruct('Callback', [   // = 1  _anonymous_namespace_::EventCallbackAdapter::Func000A
+            wbLenString('Type', 4)
+            // To Be Verified: no example for now: ,wbCallbackParameters (case TerminalRunCallback = nothing)
+            ,wbInteger('Unknown 3', itU32)
+          ]),
+          wbStruct('Callback', [  // = 2   _anonymous_namespace_::LatentCallback::Func000A
+            wbInteger('Unknown', itU32),
+            wbInteger('Unknown', itU8),
+            wbInteger('Unknown 3', itU32)
+          ])
         ])
       ]),
+      wbInteger('Handle', itU64, wbVMObjectHandle),
       wbArray('Frames', wbStruct('Frame', [
         wbInteger('Extra Variables', itU32),
         wbStruct('Frame Data', [
@@ -3257,9 +3262,9 @@ begin
             wbVariable
            ]), -1)
         ])
-        ,wbArray('Unknown Handles', wbInteger('Unknown Handle', itU64), -1)
-        ,wbArray('Unknown1', wbStruct('Unknown11', [
-          wbInteger('Unknown', itU64),
+        ,wbArray('Unknown Handles', wbInteger('Unknown Handle', itU64, wbVMHandle), -1)
+        ,wbArray('Queued Unbind Array', wbStruct('Queued Unbind', [
+          wbInteger('Handle', itU64, wbVMObjectHandle),
           wbInteger('Unknown', itU32)
          ]), -1)
 //        ,wbInteger('Save File Version', itS16)
