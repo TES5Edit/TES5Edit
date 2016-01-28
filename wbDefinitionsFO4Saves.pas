@@ -3267,6 +3267,17 @@ begin
           wbInteger('Handle', itU64, wbVMObjectHandle),
           wbInteger('Unknown', itU32)
          ]), -1)
+         ,wbArray('Events', wbStruct('Event', [
+            wbStruct('Grouped', [
+              wbInteger('Flag2bits', itU16, wbDumpInteger),
+              wbInteger('Unknown', itS16, wbDumpInteger),   // returned as Dword = Word or (10000 * Flag2bits)
+              wbUnion('', ObjectTableEntryDecider, [wbRefID('RefID'), wbByteArray('Unknown', 4)]) // if flags is not 3, returned as 0 if unknown is -1/FFFFFFFF
+            ]),
+            wbArray('Event Target List', wbStruct('Event Target', [
+                wbInteger('Unknown', itU16, wbVMType),
+                wbArray('Target', wbInteger('Handle', itU64, wbVMObjectHandle), -1)
+              ]), -1)
+           ]), -1)
 //        ,wbInteger('Save File Version', itS16)
 //        ,wbUnion('', SaveIsValidDecider, [
 //           wbNull,
