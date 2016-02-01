@@ -696,11 +696,11 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  sElement := wbFindSaveElement('Papyrus Struct', aElement);
-  Assert(sElement.BaseName='Papyrus Struct');
+  sElement := wbFindSaveElement('Type tables for internal VM save data', aElement);
+  Assert(sElement.BaseName='Type tables for internal VM save data');
 
   if Supports(sElement, IwbDataContainer, Container) then begin
-    Element := Container.ElementByPath['Type tables for internal VM save data\Type table 2 Count'];
+    Element := Container.ElementByName['Type table 2 Count'];
     if Assigned(Element) then
       Result := Element.NativeValue;
   end;
@@ -715,11 +715,11 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  sElement := wbFindSaveElement('Papyrus Struct', aElement);
-  Assert(sElement.BaseName='Papyrus Struct');
+  sElement := wbFindSaveElement('Type tables for internal VM save data', aElement);
+  Assert(sElement.BaseName='Type tables for internal VM save data');
 
   if Supports(sElement, IwbDataContainer, Container) then begin
-    Element := Container.ElementByPath['Type tables for internal VM save data\Type table 1 Count'];
+    Element := Container.ElementByName['Type table 1 Count'];
     if Assigned(Element) then
       Result := Element.NativeValue;
   end;
@@ -879,7 +879,7 @@ begin
   end;
 end;
 
-function ObjectTableEntryDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function GroupedDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element   : IwbElement;
   Container : IwbDataContainer;
@@ -1109,6 +1109,37 @@ begin
     Result := 1;
 end;
 
+function SaveFileVersionDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := wbFindSaveElement('Papyrus Struct', aElement);
+  Assert(Element.BaseName='Papyrus Struct');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Save File Version'];
+    if Assigned(Element) then
+      Result := Element.NativeValue;
+  end;
+end;
+
+function SaveFileVersionGreaterThanDDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 0;
+  if SaveFileVersionDecider(aBasePtr, aEndPtr, aElement) > $D then
+    Result := 1;
+end;
+
+function SaveFileVersionGreaterThanBDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 0;
+  if SaveFileVersionDecider(aBasePtr, aEndPtr, aElement) > $B then
+    Result := 1;
+end;
+
 function SaveIsValidDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aVersion  : Integer;
@@ -1124,7 +1155,7 @@ begin
     Element := Container.ElementByName['Save File Version'];
     if Assigned(Element) then begin
       aVersion := Element.NativeValue;
-      if (0 <= aVersion) and (aVersion <= 3) then
+      if (0 <= aVersion) and (aVersion <= $E) then
         Result := 1;
     end;
   end;
@@ -1266,6 +1297,26 @@ begin
     if Assigned(Element) then
       if Element.NativeValue > 0 then
         Result := 1;
+  end;
+end;
+
+function wbLOSEventDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := wbFindSaveElement('LOS event', aElement);
+  Assert(Element.BaseName='LOS event');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Type'];
+    if Assigned(Element) then
+      if Element.NativeValue = 0 then
+        Result := 1
+      else if Element.NativeValue = 1 then
+        Result := 2
   end;
 end;
 
@@ -2382,6 +2433,7 @@ var
   wbChangeFlags                  : IwbUnionDef;
   wbTypeData1                    : IwbStructDef;
   wbTypeData2                    : IwbStructDef;
+  wbVMGroup                      : IwbStructDef;
   wbVariable                     : IwbStructDef;
   wbCodeOpcodes                  : IwbEnumDef;
   wbCodeParameter                : IwbStructDef;
@@ -2601,14 +2653,16 @@ begin
     ]), -1)
   ]);
 
+  wbVMGroup := wbStruct('Grouped', [  // Seen repetivly while decoding VM
+      wbInteger('Flag2bits', itU16, wbDumpInteger),
+      wbInteger('Unknown', itS16, wbDumpInteger),   // returned as Dword = Word or (10000 * Flag2bits)
+      wbUnion('', GroupedDecider, [wbRefID('RefID'), wbByteArray('Unknown', 4)]) // if flags is not 3, returned as 0 if unknown is -1/FFFFFFFF
+    ]);
+
   wbObjectTableEntry := wbStruct('Full Object Table Entry', [  // UESP : reference
     wbInteger('Object Handle', itU64, wbVMHandle),
     wbInteger('Name', itU16, wbVMType),
-    wbStruct('Grouped', [
-      wbInteger('Flag2bits', itU16, wbDumpInteger),
-      wbInteger('Unknown', itS16, wbDumpInteger),   // returned as Dword = Word or (10000 * Flag2bits)
-      wbUnion('', ObjectTableEntryDecider, [wbRefID('RefID'), wbByteArray('Unknown', 4)]) // if flags is not 3, returned as 0 if unknown is -1/FFFFFFFF
-    ]),
+    wbVMGroup,
     wbInteger('Unknown', itU8, wbDumpInteger)
   ]);
 
@@ -2893,13 +2947,10 @@ begin
     ,wbInteger('Offset', itS32)
   ]);
 
-  wbObjectTimeUpdateOffset := wbStruct('Stack Time Update Offset', [
-    wbInteger('Unknown', itU8)
+  wbObjectTimeUpdateOffset := wbStruct('Object Time Update Offset', [
+     wbInteger('Unknown', itU32)
     ,wbInteger('Unknown', itU32)
-    ,wbInteger('Unknown', itS32)
-    ,wbInteger('Unknown', itU16)
-    ,wbInteger('Unknown', itS16)
-    ,wbRefID('RefID')
+    ,wbInteger('Handle', itU64, wbVMHandle)
   ]);
 
   wbFunctor := wbStruct('Functor', [
@@ -3227,68 +3278,127 @@ begin
         ]), -254)
       ]),
       wbStruct('Papyrus Struct', [
-        wbInteger('VM_version', itU16)  // FFFF marks an invalid save, 4 seems current max     UESP: header
-        ,wbArray('String Table for Internal VM save data', wbLenString('String', 2), -2, VMTypeAfterLoad)  // UESP strings
-        ,wbStruct('Type tables for internal VM save data', [
-          wbInteger('Type Table 2 Count', itU32),
-          wbInteger('Type Table 1 Count', itU32),
-          wbArray('Type table 2', wbTypeData2, TypeTable2Counter),  // Type table for internal VM save data  USEP:script
-          wbArray('Type table 1', wbTypeData1, TypeTable1Counter)  // Type table for internal VM save data  USEP:script
-         ])
-        ,wbArray('Object Table', wbObjectTableEntry, -1, ObjectTableAfterLoad)  // UESP: scriptInstance
-        ,wbArray('Supplement Object Table', wbObjectDetachedTableEntry, -1, SupplementObjectTableAfterLoad)  // UESP: scriptInstance
-        ,wbArray('Detached Object Table', wbObjectDetachedTableEntry, -1, ObjectDetachedTableAfterLoad) // UESP: reference
-        ,wbArrayS('Array Table', wbArrayTableEntry, -1, ArrayTableAfterLoad) // UESP: arrayInfo
-        ,wbStruct('Stacks', [
-          wbInteger('Next Active Script ID', itU32)                // Part of Stack table
-         ,wbArrayS('Stack Table', wbStackTableEntry, -1, StackTableAfterLoad) // UESP: activeScript
-         ])
-        ,wbArray('Object Table Data', wbObjectDataTableEntry, ObjectTableDataCounter)     // UESP: scriptData and referenceData
-        ,wbArray('Detached Object Table Data', wbDetachedObjectDataTableEntry, DetachedObjectTableDataCounter)     // UESP: scriptData and referenceData
-        ,wbArray('Array Content Table', wbArrayElementsTableEntry, ArrayContentTableCounter) // UESP: arrayData
-        ,wbArray('Stack Content Table', wbStackTableDataEntry, StackContentTableCounter)  // UESP: activeScriptData
-        ,wbArray('Function Message Table', wbFunctionMessageDataEntry, -1)
-        ,wbArray('First Suspended Stack Table', wbSuspendedStackDataEntry, -1)
-        ,wbArray('Second Suspended Stack Table', wbSuspendedStackDataEntry, -1)
-        ,wbInteger('Previous Unknown', itU32)
-        ,wbUnion('Unknown', PreviousUnknownDecider, [
-          wbNull,
-          wbInteger('Unknown', itU32)
-         ])
-        ,wbUnion('Version >= 2', VMVersionGreaterThan1Decider, [
-           wbNull
-          ,wbArray('Unknown0', wbStruct('Unknown00', [
-            wbInteger('Unknown', itU32),
-            wbVariable
+        wbInteger('VM_version', itU16),  // FFFF marks an invalid save, 4 seems current max     UESP: header
+        wbStruct('Tables', [
+          wbArray('String Table for Internal VM save data', wbLenString('String', 2), -2, VMTypeAfterLoad),  // UESP strings
+          wbStruct('Type tables for internal VM save data', [
+           wbInteger('Type Table 2 Count', itU32),
+           wbInteger('Type Table 1 Count', itU32),
+           wbArray('Type table 2', wbTypeData2, TypeTable2Counter),  // Type table for internal VM save data  USEP:script
+           wbArray('Type table 1', wbTypeData1, TypeTable1Counter)  // Type table for internal VM save data  USEP:script
+          ]),
+          wbArray('Object Table', wbObjectTableEntry, -1, ObjectTableAfterLoad),  // UESP: scriptInstance
+          wbArray('Supplement Object Table', wbObjectDetachedTableEntry, -1, SupplementObjectTableAfterLoad),  // UESP: scriptInstance
+          wbArray('Detached Object Table', wbObjectDetachedTableEntry, -1, ObjectDetachedTableAfterLoad), // UESP: reference
+          wbArrayS('Array Table', wbArrayTableEntry, -1, ArrayTableAfterLoad), // UESP: arrayInfo
+          wbStruct('Stacks', [
+            wbInteger('Next Active Script ID', itU32),                // Part of Stack table
+            wbArrayS('Stack Table', wbStackTableEntry, -1, StackTableAfterLoad) // UESP: activeScript
+          ]),
+          wbArray('Object Table Data', wbObjectDataTableEntry, ObjectTableDataCounter),     // UESP: scriptData and referenceData
+          wbArray('Detached Object Table Data', wbDetachedObjectDataTableEntry, DetachedObjectTableDataCounter),     // UESP: scriptData and referenceData
+          wbArray('Array Content Table', wbArrayElementsTableEntry, ArrayContentTableCounter), // UESP: arrayData
+          wbArray('Stack Content Table', wbStackTableDataEntry, StackContentTableCounter),  // UESP: activeScriptData
+          wbArray('Function Message Table', wbFunctionMessageDataEntry, -1),
+          wbArray('First Suspended Stack Table', wbSuspendedStackDataEntry, -1),
+          wbArray('Second Suspended Stack Table', wbSuspendedStackDataEntry, -1),
+          wbInteger('Previous Unknown', itU32),
+          wbUnion('Unknown', PreviousUnknownDecider, [
+            wbNull,
+            wbInteger('Unknown', itU32)
+          ])
+        ]),
+        wbUnion('Version >= 2', VMVersionGreaterThan1Decider, [
+           wbNull,
+           wbArray('Unknown0', wbStruct('Unknown00', [
+             wbInteger('Unknown', itU32),
+             wbVariable
            ]), -1)
-        ])
-        ,wbArray('Unknown Handles', wbInteger('Unknown Handle', itU64, wbVMHandle), -1)
-        ,wbArray('Queued Unbind Array', wbStruct('Queued Unbind', [
+        ]),
+        wbArray('Unknown Handle Table', wbInteger('Unknown Handle', itU64, wbVMHandle), -1),
+        wbArray('Queued Unbind Array', wbStruct('Queued Unbind', [
           wbInteger('Handle', itU64, wbVMObjectHandle),
           wbInteger('Unknown', itU32)
-         ]), -1)
-         ,wbArray('Events', wbStruct('Event', [
-            wbStruct('Grouped', [
-              wbInteger('Flag2bits', itU16, wbDumpInteger),
-              wbInteger('Unknown', itS16, wbDumpInteger),   // returned as Dword = Word or (10000 * Flag2bits)
-              wbUnion('', ObjectTableEntryDecider, [wbRefID('RefID'), wbByteArray('Unknown', 4)]) // if flags is not 3, returned as 0 if unknown is -1/FFFFFFFF
+        ]), -1),
+        wbArray('Events', wbStruct('Event', [
+          wbVMGroup,
+          wbArray('Event Target List', wbStruct('Event Target', [
+            wbInteger('Unknown', itU16, wbVMType),
+            wbArray('Targets', wbInteger('Handle', itU64, wbVMObjectHandle), -1)
+          ]), -1)
+        ]), -1),
+        wbInteger('Save File Version', itS16),
+        wbUnion('', SaveIsValidDecider, [
+          wbNull,
+          wbStruct('Save File', [
+            wbStruct('Updates', [
+               wbArray('First Stack Time Update Table', wbStackTimeUpdateOffset, -1)
+              ,wbArray('Second Stack Time Update Table', wbStackTimeUpdateOffset, -1)
+              ,wbArray('Third Stack Time Update Table', wbStackTimeUpdateOffset, -1)
+              ,wbArray('First Object Time Update Table', wbObjectTimeUpdateOffset, -1)
+              ,wbArray('Second Object Time Update Table', wbObjectTimeUpdateOffset, -1)
             ]),
-            wbArray('Event Target List', wbStruct('Event Target', [
+            wbArray('Long Strings', wbLenString('Unknown', 4), -1),
+            wbFunctors,    // Still untested, no suitable save found
+            wbArray('LOS events', wbStruct('LOS event', [
+              wbInteger('Type', itU8), // valid if less than 2
+              wbUnion('Data', wbLOSEventDataDecider, [
+                wbNull,
+                wbStruct('Detection event', [
+                  wbInteger('Handle', itU64, wbVMHandle),
+                  wbUnion('VM Version > D', SaveFileVersionGreaterThanDDecider, [
+                    wbStruct('Old version', [
+                      wbRefID('Unknown'),
+                      wbRefID('Unknown')
+                    ]),
+                    wbStruct('New Version', [
+                      wbVMGroup,
+                      wbVMGroup
+                    ])
+                  ]),
+                  wbInteger('Unknown', itU8)  // valid if less than 3
+                ]),  // Type = 0
+                wbStruct('Direct event', [
+                  wbInteger('Handle', itU64, wbVMHandle),
+                  wbUnion('VM Version > D', SaveFileVersionGreaterThanDDecider, [
+                    wbStruct('Old version', [
+                      wbRefID('Unknown'),
+                      wbRefID('Unknown')
+                    ]),
+                    wbStruct('New Version', [
+                      wbVMGroup,
+                      wbVMGroup
+                    ])
+                  ]),
+                  wbInteger('Unknown', itU8),  // valid if less than 3
+                  wbInteger('String', itU16, wbVMType),
+                  wbInteger('String', itU16, wbVMType)
+                ])      // Type = 1
+              ])
+            ]), -1),
+            wbArray('Sleep Event Handler', wbInteger('Handle', itU64, wbVMHandle), -1),
+            wbArray('Tracked Stats Event Handler',
+                wbUnion('VM Version > B', SaveFileVersionGreaterThanBDecider, [
+                  wbArray('Handles', wbInteger('Handle', itU64, wbVMHandle), -1),
+                  wbStruct('Tracked Stat Event Handler', [
+                    wbLenString('Stat', 4),
+                    wbArray('Values', wbStruct('Value struct', [
+                      wbInteger('Handle', itU64, wbVMHandle),
+                      wbInteger('Value', itU32)
+                    ]), -1)
+                  ])
+              ]), -1),
+            wbArray('Inventory Event Handler', wbStruct('Inventory Event', [
+              wbInteger('Handle', itU64, wbVMHandle),
+              wbArray('Inventory Event Data', wbRefID('RefID'), -1) // Simplified version assuming vmVersion > 2, otherwize 2 counters then 2 arrays of refID
+            ]), -1),
+            wbArray('Custom Event Handler', wbStruct('Custom Event', [
+              wbInteger('Handle', itU64, wbVMHandle),
+              wbArray('Custom Event Data', wbStruct('Data', [
                 wbInteger('Unknown', itU16, wbVMType),
-                wbArray('Target', wbInteger('Handle', itU64, wbVMObjectHandle), -1)
+                wbArray('Unknown', wbInteger('Handle', itU64, wbVMHandle), -1)
               ]), -1)
-           ]), -1)
-//        ,wbInteger('Save File Version', itS16)
-//        ,wbUnion('', SaveIsValidDecider, [
-//           wbNull,
-//           wbStruct('Save File', [
-//             wbArray('First Stack Time Update Table', wbStackTimeUpdateOffset, -1)
-//            ,wbArray('Second Stack Time Update Table', wbStackTimeUpdateOffset, -1)
-//            ,wbArray('Third Stack Time Update Table', wbStackTimeUpdateOffset, -1)
-//            ,wbArray('First Object Time Update Table', wbObjectTimeUpdateOffset, -1)
-//            ,wbArray('Second Object Time Update Table', wbObjectTimeUpdateOffset, -1)
-//            ,wbArray('Unknown01', wbLenString('Unknown', 4), -1)
-//            ,wbFunctors    // Untested, no suitable save found
+            ]), -1)
 //            ,wbArray('Unknown02', wbStruct('Unknown', [
 //               wbRefID('RefID')
 //              ,wbRefID('RefID')
@@ -3371,8 +3481,8 @@ begin
 //              wbInteger('Unknown', itU32)
 //             ,wbArray('Unknown0A0', wbInteger('Unknown', itU32), -1)
 //           ]), -1)
-//          ])
-//        ])
+          ])
+        ])
       ]),
       wbArray('Anim Objects', wbStruct('Anim Object', [
         wbRefID('REFR'),
