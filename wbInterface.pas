@@ -8864,7 +8864,7 @@ end;
 
 function TwbArrayDef.GetPrefixCount(aBasePtr: Pointer): Cardinal;
 var
-  Count : Integer;
+  Count : int64;
 begin
   Result := 0;
   if arCount = -255 then
@@ -8873,6 +8873,10 @@ begin
     Result := ReadIntegerCounter(aBasePtr)
   else if arCount = -253 then begin  // Matrix of count * count
     Count := ReadIntegerCounter(aBasePtr);
+    Result := Count * Count;
+  end
+  else if arCount = -241 then begin  // Matrix of cardinal * cardinal
+    Count := PCardinal(aBasePtr)^;
     Result := Count * Count;
   end
   else if Assigned(aBasePtr) then
@@ -8893,6 +8897,8 @@ begin
       Result := 2
     else if arCount = -4 then
       Result := 1
+    else if arCount = -241 then
+      Result := 4
     else if arCount = -253 then
       Result := ReadIntegerCounterSize(aBasePtr)
     else if arCount = -254 then
