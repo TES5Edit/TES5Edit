@@ -471,7 +471,7 @@ begin
       else  if (aType >= 1000) and (aType <= 1007) then // 1000 to 1005 = 6
         Result := aType - 1000 + 12 + 18 + 1;
     end;
-    if (Result < (1001-1000+12+18+1)) and (Result > 3) then Result := 0; //Others are not decoded yet
+    if (Result < (1001-1000+12+18+1)) and (Result > 6) then Result := 0; //Others are not decoded yet
     if Assigned(ChaptersToSkip) and ChaptersToSkip.Find(IntToStr(aType), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
       Result := 0;
   end;
@@ -2464,6 +2464,7 @@ var
   wbInitialDataType05            : IwbStructDef;
   wbInitialDataType06            : IwbStructDef;
   wbInitialDataType              : IwbUnionDef;
+  wbCreatedObject                : IwbStructDef;
 
   wbChangeDefaultFlags    : IwbIntegerDef;
   wbCoSaveChunk           : IwbStructDef;
@@ -3155,6 +3156,18 @@ begin
     wbInteger('Unknown', itU32)
    ]), -1);
 
+  wbCreatedObject := wbStruct('Created Object', [
+    wbRefID('RefID'),
+    wbInteger('Unknown', itU32),
+    wbArray('Unknwon', wbStruct('Unknown', [
+      wbRefID('RefID'),
+      wbInteger('Unknown', itU32),
+      wbInteger('Unknown', itU32),
+      wbInteger('Unknown', itU32),
+      wbInteger('Unknown', itU32)
+    ]), -254)
+  ]);
+
   wbGlobalData := wbStructC('Global Data', GlobalDataSizer, GlobalDataGetChapterType, GlobalDataGetChapterTypeName, nil, [
     wbInteger('Type', itU32),
     wbInteger('DataLength', itU32),
@@ -3187,18 +3200,33 @@ begin
         ,wbFloat('Pos Z')
       ]),
       wbStruct('TES Struct', [
-        wbArray('Unknown', wbStruct('Unknown', [
+        wbArray('Unknown0', wbStruct('Unknown00', [
           wbRefID('Actor Base'),
           wbInteger('Unknown', itU16)
         ]), -254),
-        wbArray('Unknown', wbStruct('Unknown', [
-          wbRefID('Unknown')
-        ]), -253), // counter * counter elements
-        wbArray('Unknown', wbRefID('Reference'), -254)
+        wbArray('Unknown1', wbRefID('Unknown'), -241), // counter * counter elements
+        wbArray('Unknown2', wbRefID('Reference'), -254)
       ]),
-      wbArray('Global Variables', wbInteger('', itU8), -2),
-      wbArray('Created Objects', wbInteger('', itU8), -2),
-      wbArray('Effects', wbInteger('', itU8), -2),
+      wbArray('Global Variables', wbStruct('Global', [
+        wbRefID('Global Name'),
+        wbFloat('Value')
+      ]), -253),
+      wbStruct('Created Objects', [
+        wbArray('Created Objects Array 1', wbCreatedObject, -254),
+        wbArray('Created Objects Array 2', wbCreatedObject, -254),
+        wbArray('Created Objects Array 3', wbCreatedObject, -254),
+        wbArray('Created Objects Array 4', wbCreatedObject, -254)
+      ]),
+      wbStruct('Effects', [
+        wbArray('Effect array', wbStruct('Effect', [
+          wbInteger('Unknown', itU32),
+          wbInteger('Unknown', itU32),
+          wbInteger('Unknown', itU32),
+          wbRefID('Image Space Modifier')
+        ]), -254),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32)
+      ]),
       wbArray('Weather', wbInteger('', itU8), -2),
       wbArray('Audio', wbInteger('', itU8), -2),
       wbArray('Sky Cells', wbInteger('', itU8), -2),
@@ -3345,7 +3373,7 @@ begin
               wbUnion('Data', wbLOSEventDataDecider, [
                 wbNull,
                 wbStruct('Detection event', [
-                  wbInteger('Handle', itU64, wbVMHandle),
+                  wbInteger('Handle', itU64, wbVMObjectHandle),
                   wbUnion('VM Version > D', SaveFileVersionGreaterThanDDecider, [
                     wbStruct('Old version', [
                       wbRefID('Unknown'),
@@ -3359,7 +3387,7 @@ begin
                   wbInteger('Unknown', itU8)  // valid if less than 3
                 ]),  // Type = 0
                 wbStruct('Direct event', [
-                  wbInteger('Handle', itU64, wbVMHandle),
+                  wbInteger('Handle', itU64, wbVMObjectHandle),
                   wbUnion('VM Version > D', SaveFileVersionGreaterThanDDecider, [
                     wbStruct('Old version', [
                       wbRefID('Unknown'),
@@ -3379,26 +3407,42 @@ begin
             wbArray('Sleep Event Handler', wbInteger('Handle', itU64, wbVMHandle), -1),
             wbArray('Tracked Stats Event Handler',
                 wbUnion('VM Version > B', SaveFileVersionGreaterThanBDecider, [
-                  wbArray('Handles', wbInteger('Handle', itU64, wbVMHandle), -1),
+                  wbArray('Handles', wbInteger('Handle', itU64, wbVMObjectHandle), -1),
                   wbStruct('Tracked Stat Event Handler', [
                     wbLenString('Stat', 4),
                     wbArray('Values', wbStruct('Value struct', [
-                      wbInteger('Handle', itU64, wbVMHandle),
+                      wbInteger('Handle', itU64, wbVMObjectHandle),
                       wbInteger('Value', itU32)
                     ]), -1)
                   ])
               ]), -1),
             wbArray('Inventory Event Handler', wbStruct('Inventory Event', [
-              wbInteger('Handle', itU64, wbVMHandle),
+              wbInteger('Handle', itU64, wbVMObjectHandle),
               wbArray('Inventory Event Data', wbRefID('RefID'), -1) // Simplified version assuming vmVersion > 2, otherwize 2 counters then 2 arrays of refID
             ]), -1),
             wbArray('Custom Event Handler', wbStruct('Custom Event', [
-              wbInteger('Handle', itU64, wbVMHandle),
+              wbInteger('Handle', itU64, wbVMObjectHandle),
               wbArray('Custom Event Data', wbStruct('Data', [
                 wbInteger('Unknown', itU16, wbVMType),
-                wbArray('Unknown', wbInteger('Handle', itU64, wbVMHandle), -1)
+                wbArray('Unknown', wbInteger('Handle', itU64, wbVMObjectHandle), -1)
               ]), -1)
             ]), -1)
+//            wbStruct('Combat Event Handler', [
+//              wbArray('Unknown0', wbArray('Unknown00', wbInteger('Handle', itU64, wbVMObjectHandle), -1), -1),
+//              wbArray('Unknown1', wbArray('Unknown10', wbStruct('Unknown10 struct',[
+//                wbInteger('Handle', itU64, wbVMObjectHandle),
+//                wbArray('Unknown101', wbStruct('Unknown101 struct',[
+//                  wbByteArray('Unknown', 4),
+//                  wbRefID('RefID')
+//                ]), -1)
+//              ]), -1), -1)
+//             ,wbArray('Unknown2', wbArray('Unknown20', wbStruct('Unknown20 struct',[
+//                wbInteger('Handle', itU64, wbVMObjectHandle),
+//                wbArray('Unknown101', wbStruct('Unknown101 struct',[
+//                  wbUnknown
+//                ]), -1)
+//              ]), -1), -1)
+//            ])
 //            ,wbArray('Unknown02', wbStruct('Unknown', [
 //               wbRefID('RefID')
 //              ,wbRefID('RefID')
