@@ -3427,7 +3427,7 @@ begin
                 wbArray('Unknown', wbInteger('Handle', itU64, wbVMObjectHandle), -1)
               ]), -1)
             ]), -1),
-            wbStruct('Combat Event Handler', [
+            wbStruct('Combat Event Handler', [ // Need version greater than 1
               wbArray('Unknown0', wbStruct('Unknwon00', [
                 wbVMGroup,
                 wbArray('Unknown000', wbStruct('Unknwon000 struct', [
@@ -3459,7 +3459,18 @@ begin
                 wbVMGroup,
                 wbArray('Unknown20', wbInteger('Handle', itU64, wbVMObjectHandle), -1)
               ]), -1)
-            ])
+            ]),
+            wbArray('Distance Event Handler', wbStruct('Distance Event struct', [ // Need version greater than 2
+              wbInteger('Handle', itU64, wbVMObjectHandle),
+              wbVMGroup,
+              wbVMGroup,
+              wbInteger('Unknown', itU8),  // should be less than 2
+              wbFloat('Unknown')
+            ]), -1),
+            wbArray('Menu Event Handler', wbStruct('Menu Event struct', [ // Need version greater than 4
+              wbLenString('Unknown', 2),
+              wbArray('Handles', wbInteger('Handle', itU64, wbVMObjectHandle), -1)
+            ]), -1)
 //            ,wbArray('Unknown02', wbStruct('Unknown', [
 //               wbRefID('RefID')
 //              ,wbRefID('RefID')
