@@ -3426,23 +3426,40 @@ begin
                 wbInteger('Unknown', itU16, wbVMType),
                 wbArray('Unknown', wbInteger('Handle', itU64, wbVMObjectHandle), -1)
               ]), -1)
-            ]), -1)
-//            wbStruct('Combat Event Handler', [
-//              wbArray('Unknown0', wbArray('Unknown00', wbInteger('Handle', itU64, wbVMObjectHandle), -1), -1),
-//              wbArray('Unknown1', wbArray('Unknown10', wbStruct('Unknown10 struct',[
-//                wbInteger('Handle', itU64, wbVMObjectHandle),
-//                wbArray('Unknown101', wbStruct('Unknown101 struct',[
-//                  wbByteArray('Unknown', 4),
-//                  wbRefID('RefID')
-//                ]), -1)
-//              ]), -1), -1)
-//             ,wbArray('Unknown2', wbArray('Unknown20', wbStruct('Unknown20 struct',[
-//                wbInteger('Handle', itU64, wbVMObjectHandle),
-//                wbArray('Unknown101', wbStruct('Unknown101 struct',[
-//                  wbUnknown
-//                ]), -1)
-//              ]), -1), -1)
-//            ])
+            ]), -1),
+            wbStruct('Combat Event Handler', [
+              wbArray('Unknown0', wbStruct('Unknwon00', [
+                wbVMGroup,
+                wbArray('Unknown000', wbStruct('Unknwon000 struct', [
+                  wbInteger('Handle', itU64, wbVMObjectHandle),
+                  wbArray('Unknown0000', wbStruct('Unknwon0000 struct', [
+                    wbVMGroup,
+                    wbRefID('RefID'),
+                    wbRefID('RefID'),
+                    wbInteger('Unknown', itU8),  // less than 3
+                    wbInteger('Unknown', itU8),  // less than 3 also
+                    wbInteger('Unknown', itU8),  // less than 3 still
+                    wbInteger('Unknown', itU8),  // less than 3 again
+                    wbInteger('Unknown', itU8)   // less than 3 final
+                  ]), -1)
+                ]), -1)
+              ]), -1),
+              wbArray('Unknown1', wbStruct('Unknown1 struct', [
+                wbVMGroup,
+                wbArray('Unknown10', wbStruct('Unknown10 struct',[
+                  wbInteger('Handle', itU64, wbVMObjectHandle),
+                  wbArray('Unknown100', wbStruct('Unknown100 struct',[
+                    wbVMGroup,
+                    wbRefID('RefID'),
+                    wbInteger('Unknown', itU8)
+                  ]), -1)
+                ]), -1)
+              ]), -1)
+             ,wbArray('Unknown2', wbStruct('Unkwnon2 struct', [
+                wbVMGroup,
+                wbArray('Unknown20', wbInteger('Handle', itU64, wbVMObjectHandle), -1)
+              ]), -1)
+            ])
 //            ,wbArray('Unknown02', wbStruct('Unknown', [
 //               wbRefID('RefID')
 //              ,wbRefID('RefID')
