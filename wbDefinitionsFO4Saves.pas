@@ -3484,17 +3484,56 @@ begin
             wbArray('Unknown0', wbStruct('Unknown0 struct', [
               wbRefID('RefID'),
               wbInteger('Unknown', itU8)
-            ]), -1)
-// too small           wbArray('Unknown1', wbStruct('Unknown1 struct', [  // this is about animations
-//              wbRefID('RefID'),
-//              wbArray('Unknown10', wbStruct('Unknown10 struct', [
-//                wbLenString('Unknown', 4),
-//                wbArray('Unknown100', wbStruct('Unknwon100 struct', [
-//                  wbInteger('Unknown', itU32),
-//                  wbInteger('Unknown', itU32)
-//                ]), -1)
-//              ]), -1)
-//            ]), -1)
+            ]), -1),
+           wbArray('Animation Callback Manager', wbStruct('Unknown1 struct', [  // this is about animations
+              wbRefID('RefID'),
+              wbArray('Unknown10', wbStruct('Unknown10 struct', [
+                wbLenString('Unknown', 4),
+                wbArray('Unknown100', wbStruct('Unknwon100 struct', [
+                  wbInteger('Unknown', itU32),
+                  wbInteger('Unknown', itU32)
+                ]), -1)
+              ]), -1),
+              wbArray('Unknown11', wbInteger('Handle', itU64, wbVMObjectHandle), -1)
+            ]), -1),
+            wbArray('Pathing Callback manager', wbStruct('Pathing Callback', [  // Untested empty
+              wbInteger('Unknown', itU32),
+              wbInteger('Unknown', itU32)
+            ]), -1),
+            wbStruct('Quest Callback Manager', [
+              wbArray('Quest Callbacks 1', wbStruct('Quest Callback', [
+                wbRefID('RefID'),
+                wbArray('Unknown30', wbStruct('Unknown30 struct', [
+                  wbInteger('Unknown', itU8),
+                  wbInteger('Unknown', itU32),
+                  wbInteger('Unknown', itU32)
+                ]), -1)
+              ]), -1),
+              wbArray('Quest Callbacks 2', wbStruct('Quest Callback', [
+                wbRefID('RefID'),
+                wbArray('Unknown31', wbStruct('Unknown31 struct', [
+                  wbInteger('Unknown', itU32),
+                  wbArray('Unknown310', wbInteger('Unknown', itU32), -1),
+                  wbArray('Unknown311', wbStruct('Unknown311 struct', [
+                    wbInteger('Unknown', itU32),
+                    wbInteger('Unknown', itU8)
+                  ]), -1),
+                  wbInteger('Unknown', itU32)
+                ]), -1)
+              ]), -1),
+              wbArray('Quest Callbacks 3', wbStruct('Quest Callback', [
+                wbRefID('RefID'),
+                wbArray('Unknown30', wbStruct('Unknown30 struct', [
+                  wbInteger('Unknown', itU8),
+                  wbInteger('Unknown', itU32),
+                  wbInteger('Unknown', itU32)
+                ]), -1)
+              ]), -1)
+            ]),
+            wbArray('Sound Callback manager', wbStruct('Sound Callback', [
+                wbInteger('Unknown', itU32),
+                wbArray('Unknown10', wbInteger('Unknown', itU32), -1)
+              ]), -1)
 //            ,wbArray('Unknown02', wbStruct('Unknown', [
 //               wbRefID('RefID')
 //              ,wbRefID('RefID')
