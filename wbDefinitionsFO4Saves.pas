@@ -3467,10 +3467,34 @@ begin
               wbInteger('Unknown', itU8),  // should be less than 2
               wbFloat('Unknown')
             ]), -1),
-            wbArray('Menu Event Handler', wbStruct('Menu Event struct', [ // Need version greater than 4
-              wbLenString('Unknown', 2),
-              wbArray('Handles', wbInteger('Handle', itU64, wbVMObjectHandle), -1)
+            wbStruct('Menu Event Handler', [ // Need version greater than 4
+              wbArray('Menu Events 1', wbStruct('Menu Event struct', [
+                wbLenString('Unknown', 2),
+                wbArray('Handles', wbInteger('Handle', itU64, wbVMObjectHandle), -1)
+              ]), -1),
+              wbArray('Handles 2', wbInteger('Handle', itU64, wbVMObjectHandle), -1), // Need version > 5
+              wbArray('Menu Event 3', wbStruct('Menu Event struct', [ // Need version greater than 9
+                wbLenString('Unknown', 2),
+                wbArray('Handles', wbInteger('Handle', itU64, wbVMObjectHandle), -1)
+              ]), -1)
+              // wbArray('Handles 4', wbInteger('Handle', itU64, wbVMObjectHandle), -1) // Need version = 8 or 9
+            ]),
+            wbArray('Wait Event Handler', wbInteger('Handle', itU64, wbVMHandle), -1),
+            wbArray('Teleport Event Handler', wbInteger('Handle', itU64, wbVMHandle), -1),
+            wbArray('Unknown0', wbStruct('Unknown0 struct', [
+              wbRefID('RefID'),
+              wbInteger('Unknown', itU8)
             ]), -1)
+// too small           wbArray('Unknown1', wbStruct('Unknown1 struct', [  // this is about animations
+//              wbRefID('RefID'),
+//              wbArray('Unknown10', wbStruct('Unknown10 struct', [
+//                wbLenString('Unknown', 4),
+//                wbArray('Unknown100', wbStruct('Unknwon100 struct', [
+//                  wbInteger('Unknown', itU32),
+//                  wbInteger('Unknown', itU32)
+//                ]), -1)
+//              ]), -1)
+//            ]), -1)
 //            ,wbArray('Unknown02', wbStruct('Unknown', [
 //               wbRefID('RefID')
 //              ,wbRefID('RefID')
