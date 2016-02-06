@@ -3537,16 +3537,16 @@ begin
               wbRefID('RefID'),
               wbInteger('Unknown', itU8)
             ]), -1),
-           wbArray('Animation Callback Manager', wbStruct('Unknown1 struct', [  // this is about animations
+           wbArray('Animation Callback Manager', wbStruct('Animation Callback', [  // this is about animations
               wbRefID('RefID'),
               wbArray('Unknown10', wbStruct('Unknown10 struct', [
                 wbLenString('Unknown', 4),
                 wbArray('Unknown100', wbStruct('Unknwon100 struct', [
                   wbInteger('Unknown', itU32),
                   wbInteger('Unknown', itU32)
-                ]), -1)
-              ]), -1),
-              wbArray('Unknown11', wbInteger('Handle', itU64, wbVMObjectHandle), -1)
+                ]), -1),
+                wbArray('Unknown101', wbInteger('Handle', itU64, wbVMObjectHandle), -1)
+              ]), -1)
             ]), -1),
             wbArray('Pathing Callback manager', wbStruct('Pathing Callback', [  // Untested empty
               wbInteger('Unknown', itU32),
