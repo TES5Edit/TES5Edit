@@ -1077,6 +1077,36 @@ begin
   end;
 end;
 
+function wbCallbackTypeDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aTypeName : String;
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := wbFindSaveElement('CallBack', aElement);
+//  Assert(Element.BaseName='CallBack');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Type'];
+    if Assigned(Element) then begin
+      aTypeName := Element.NativeValue;
+      if SameStr(aTypeName, 'QuestStage') then
+        Result := 1
+      else
+      if SameStr(aTypeName, 'SceneResults') then
+        Result := 2
+      else
+      if SameStr(aTypeName, 'SceneActionResults') then
+        Result := 3
+      else
+      if SameStr(aTypeName, 'ScenePhaseResults') then
+        Result := 4;
+    end;
+  end;
+end;
+
 function VMVersionDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aVersion  : Integer;
@@ -2863,9 +2893,31 @@ begin
         wbUnion('Unknown', StackTableDataEntryStackTypeDecider, [
           wbNull,       // < 1 or > 2
           wbStruct('Callback', [   // = 1  _anonymous_namespace_::EventCallbackAdapter::Func000A
-            wbLenString('Type', 4)
-            // To Be Verified: no example for now: ,wbCallbackParameters (case TerminalRunCallback = nothing)
-            ,wbInteger('Unknown 3', itU32)
+            wbLenString('Type', 4),
+            // Default is wbNull (REFREventCallbacks::IEventCallback virtual func 4)
+            // TerminalRunResults is default
+            // QuestStage id RefID (0x010), Word (0x014), Byte (0x016)
+            // SceneResults is RefID (0x010)
+            // SceneActionResults is RefID (0x010), DWord (0x014)
+            // ScenePhaseResults is RefID (0x010), DWord (0x014)
+            wbUnion('Callback Type Data', wbCallbackTypeDataDecider, [
+              wbNull,
+              wbStruct('Data', [
+                wbRefID('RefID'),
+                wbInteger('Unknown', itU16),
+                wbInteger('Unknown', itU8)
+              ]),
+              wbRefID('RefID'),
+              wbStruct('Data', [
+                wbRefID('RefID'),
+                wbInteger('Unknown', itU32)
+              ]),
+              wbStruct('Data', [
+                wbRefID('RefID'),
+                wbInteger('Unknown', itU32)
+              ])
+            ]),
+            wbInteger('Unknown', itU32)
           ]),
           wbStruct('Callback', [  // = 2   _anonymous_namespace_::LatentCallback::Func000A
             wbInteger('Unknown', itU32),
