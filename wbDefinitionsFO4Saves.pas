@@ -970,6 +970,11 @@ begin
         031: Result := 2;
         034,
         035: Result := 4;
+        037: Result := 1;
+        040,
+        041: Result := 5;
+        044,
+        046: Result := 1;
       else
         Result := 3;
       end;
@@ -2737,42 +2742,64 @@ begin
 
   wbCodeOpcodes := wbEnum([
     {000} 'Noop()',
-    {001} 'IAdd(String, Integer, Integer)',
-    {002} 'FAdd(String, Float, Float)',
-    {003} 'ISubtract(String, Integer, Integer)',
-    {004} 'FSubtract(String, Float, Float)',
-    {005} 'IMultiply(String, Integer, Integer)',
-    {006} 'FMultiply(String, Float, Float)',
-    {007} 'IDivide(String, Integer, Integer)',
-    {008} 'FDivide(String, Float, Float)',
-    {009} 'IMod(String, Integer, Integer)',
-    {010} 'Not(String, Any)',
-    {011} 'INegate(String, Integer)',
-    {012} 'FNegate(String, Float)',
-    {013} 'Assign(String, Any)',
-    {014} 'Cast(String, Any)',
-    {015} 'CompareEQ(String, Any, Any)',
-    {016} 'CompareLT(String, Any, Any)',
-    {017} 'CompareLTE(String, Any, Any)',
-    {018} 'CompareGT(String, Any, Any)',
-    {019} 'CompareGTE(String, Any, Any)',
+    {001} 'IAdd(Identifier, Integer, Integer)',
+    {002} 'FAdd(Identifier, Float, Float)',
+    {003} 'ISubtract(Identifier, Integer, Integer)',
+    {004} 'FSubtract(Identifier, Float, Float)',
+    {005} 'IMultiply(Identifier, Integer, Integer)',
+    {006} 'FMultiply(Identifier, Float, Float)',
+    {007} 'IDivide(Identifier, Integer, Integer)',
+    {008} 'FDivide(Identifier, Float, Float)',
+    {009} 'IMod(Identifier, Integer, Integer)',
+    {010} 'Not(Identifier, Any)',
+    {011} 'INegate(Identifier, Integer)',
+    {012} 'FNegate(Identifier, Float)',
+    {013} 'Assign(Identifier, Any)',
+    {014} 'Cast(Identifier, Any)',
+    {015} 'CompareEQ(Identifier, Any, Any)',
+    {016} 'CompareLT(Identifier, Any, Any)',
+    {017} 'CompareLTE(Identifier, Any, Any)',
+    {018} 'CompareGT(Identifier, Any, Any)',
+    {019} 'CompareGTE(Identifier, Any, Any)',
     {020} 'Jump(Label)',
     {021} 'JumpT(Any, Label)',
     {022} 'JumpF(Any, Label)',
-    {023} 'CallMethod(N, String, String, *)',
-    {024} 'CallParent(N, String, *)',
-    {025} 'CallStatic(N, N, String, *)',
+    {023} 'CallMethod(Name, Identifier, Identifier, *)',
+    {024} 'CallParent(Name, Identifier, *)',
+    {025} 'CallStatic(Name, Name, Identifier, *)',
     {026} 'Return(Any)',
-    {027} 'StrCat(String, Q, Q)',
-    {028} 'PropGet(N, String, String)',
-    {029} 'PropSet(N, String, Any)',
-    {030} 'ArrayCreate(String, U)',
-    {031} 'ArrayLength(String, String)',
-    {032} 'ArrayGetElement(String, String, Integer)',
-    {033} 'ArraySetElement(String, Integer, Any)',
-    {034} 'ArrayFindElement(String, String, Any, Integer)',
-    {035} 'ArrayRFindElement(String, String, Any, Integer)'
+    {027} 'StrCat(Identifier, String, String)',
+    {028} 'PropGet(N, Identifier, Identifier)',
+    {029} 'PropSet(N, Identifier, Any)',
+    {030} 'ArrayCreate(Identifier, unsigned)',
+    {031} 'ArrayLength(Identifier, Identifier)',
+    {032} 'ArrayGetElement(Identifier, Identifier, Integer)',
+    {033} 'ArraySetElement(Identifier, Integer, Any)',
+    {034} 'ArrayFindElement(Identifier, Identifier, Any, Integer)',
+    {035} 'ArrayRFindElement(Identifier, Identifier, Any, Integer)',
+    {036} 'Is(Identifier, Any, Type)',
+    {037} 'StructCreate(Struct)',
+    {038} 'StructGet(Identifier)',
+    {039} 'StructSet(Identifier, Name, Any',
+    {040} 'ArrayFindStruct(Identifier, Identifier, String, Any, Integer)',
+    {041} 'ArrayRFindStruct(Identifier, Identifier, String, Any, Integer)',
+    {042} 'ArrayAddElements(Identifier, Any, Integer)',
+    {043} 'ArrayInsertElement(Identifier, Any, Integer)',
+    {044} 'ArrayRemoveLastElement(Identifier)',
+    {045} 'ArrayRemoveElements(Identifier, Integer, Integer)',
+    {046} 'ArrayClearElements(Identifier)'
   ]);
+  // opCode parameter type Encoding:
+  //  S : string    = Identifier
+  //  I : integer   = an integer literal or an identifier
+  //  u : unsigned  = an unsigned integer literal or an identifier
+  //  F : float     = a float literal or an identifier
+  //  Q :           = a string literal or an identifier
+  //  L : label     = a label
+  //  N : name      = a type, property or function name
+  //  T : type      = a type name
+  //  A : any
+  //  * : optional
 
   wbCodeParameter := wbStruct('Parameter', [
     wbInteger('Type', itU8, wbPropTypeEnum),  // Lower than 8 and lower than 5
@@ -2804,7 +2831,7 @@ begin
     wbInteger('Return Type', itU16, wbVMType),
     wbInteger('DocString', itU16, wbVMType),
     wbInteger('User Flags', itU32, wbDumpInteger),
-    wbInteger('Flags', itU8, wbDumpInteger),
+    wbInteger('Function Flags', itU8, wbDumpInteger),
     wbArray('Parameters', wbStruct('Parameter', [
       wbInteger('Name', itU16, wbVMType),
       wbInteger('Type', itU16, wbVMType)
@@ -2931,13 +2958,7 @@ begin
         wbInteger('Extra Variables', itU32),
         wbStruct('Frame Data', [
           wbInteger('Flags', itU8),
-          wbUnion('Type', VMVersionDecider, [ // Should be lower than 3
-            wbNull,
-            wbNull,
-            wbInteger('Function Type', itU8),
-            wbInteger('Function Type', itU8),
-            wbInteger('Function Type', itU8)
-          ]),
+          wbInteger('Function Type', itU8), // Should be lower than 3
           wbInteger('Unknown', itU16, wbVMType),
           wbInteger('Unknown', itU16, wbVMType),
           wbInteger('Unknown', itU16, wbVMType),
