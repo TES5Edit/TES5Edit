@@ -1324,8 +1324,8 @@ var
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
-  Element := wbFindSaveElement('Papyrus Struct', aElement);
-  Assert(Element.BaseName='Papyrus Struct');
+  Element := wbFindSaveElement('Tables', aElement);
+  Assert(Element.BaseName='Tables');
 
   if Supports(Element, IwbDataContainer, Container) then begin
     Element := Container.ElementByName['Previous Unknown'];
