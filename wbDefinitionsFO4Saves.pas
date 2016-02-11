@@ -458,6 +458,28 @@ begin
   end;
 end;
 
+function wbGlobalData10TypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aType     : Integer;
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := wbFindSaveElement('Unknown struct', aElement);
+  Assert(Element.BaseName = 'Unknown struct');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Type'];
+    Assert(Assigned(Element));
+    if Assigned(Element) then begin
+      aType := Element.NativeValue;
+      if aType < 5 then
+        Result := 1 + aType;
+    end;
+  end;
+end;
+
 function ScreenShotDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   Element : IwbElement;
@@ -542,14 +564,14 @@ begin
     Element := Container.ElementByName['Type'];
     if Assigned(Element) then begin
       aType := Element.NativeValue;
-      if (aType >= 0) and (aType <= 11) then // 0 to 8 = 9
+      if (aType >= 0) and (aType <= 11) then // 0 to 11 = 12
         Result := aType + 1
-      else if (aType >= 100) and (aType <= 117) then  // 100 to 114 = 15
+      else if (aType >= 100) and (aType <= 117) then  // 100 to 117 = 18
         Result := aType - 100 + 12 + 1
-      else  if (aType >= 1000) and (aType <= 1007) then // 1000 to 1005 = 6
+      else  if (aType >= 1000) and (aType <= 1007) then // 1000 to 1007 = 8
         Result := aType - 1000 + 12 + 18 + 1;
     end;
-    if (Result < (1001-1000+12+18+1)) and (Result > 8) then Result := 0; //Others are not decoded yet
+    if (Result < (1001-1000+12+18+1)) and (Result > 12) then Result := 0; //Others are not decoded yet
     if Assigned(ChaptersToSkip) and ChaptersToSkip.Find(IntToStr(aType), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
       Result := 0;
   end;
@@ -2582,6 +2604,7 @@ var
   wbReferenceEffect              : IwbStructDef;
   wbModelReferenceEffect         : IwbStructDef;
   wbOwnedController              : IwbStructDef;
+  wbGlobalData10Unknown          : IwbStructDef;
 
   wbChangeDefaultFlags    : IwbIntegerDef;
   wbCoSaveChunk           : IwbStructDef;
@@ -3356,6 +3379,21 @@ begin
     wbInteger('Unknown', itU32)
   ]);
 
+  wbGlobalData10Unknown := wbStruct('Unknown struct', [
+    wbInteger('Unknown', itU32),
+    wbInteger('Unknown', itU32),
+    wbInteger('Unknown', itU32),
+    wbInteger('Type', itU32),
+    wbUnion('Unknown', wbGlobalData10TypeDecider, [
+      wbRefID('Keyword'),
+      wbRefID('Reference'),
+      wbRefID('RefID'),
+      wbRefID('Location'),
+      wbInteger('Unknown', itU32),
+      wbNull
+    ])
+  ]);
+
   wbGlobalData := wbStructC('Global Data', GlobalDataSizer, GlobalDataGetChapterType, GlobalDataGetChapterTypeName, nil, [
     wbInteger('Type', itU32),
     wbInteger('DataLength', itU32),
@@ -3451,10 +3489,36 @@ begin
         ]),
         wbArray('Unknown', wbRefID('Reference'), -253)
       ]),
-      wbArray('Sky Cells', wbInteger('', itU8), -2),
-      wbByteArray('Input Enable Manager'), // First word is version, supported 0 or 1
-      wbByteArray('StoryTeller'),
-      wbByteArray('ReservedIDs'),
+      wbArray('Sky Cells', wbStruct('Sky Cell', [
+        wbRefID('Worldspace'),
+        wbRefID('RefID')
+      ]), -253),
+      wbStruct('Input Enable Manager', [
+        wbInteger('Unknown', itU16),  // Required 0 or 1
+        wbInteger('Unknown', itU32),
+        wbArray('Unknown', wbStruct('Unknown', [
+          wbInteger('Unknown', itU32),
+          wbInteger('Unknown', itS32),
+          wbInteger('Unknown', itS32),
+          wbLenString('Unknown', 2)
+        ]), -1)
+      ]),
+      wbStruct('StoryTeller', [
+        wbArray('Unknown', wbGlobalData10Unknown, -1),
+        wbArray('Unknown', wbGlobalData10Unknown, -1),
+        wbArray('Quests 1', wbRefID('Quest'), -1),
+        wbArray('Quests 2', wbRefID('Quest'), -1),
+        wbArray('Quests 3', wbRefID('Quest'), -1),
+        wbArray('Unknown', wbStruct('Unknown', [
+          wbRefID('RefID'),
+          wbArray('Unknown', wbStruct('Unknown', [
+            wbInteger('Unknown', itU32),
+            wbInteger('Unknown', itU32)
+          ]), -253)
+        ]), -253),
+        wbInteger('Unknown', itU8)
+      ]),
+      wbArray('ReservedIDs', wbRefID('ReservedID'), -253),
       // 100 to 114
       wbArray('Process List', wbInteger('', itU8), -2),
       wbArray('Combat', wbInteger('', itU8), -2),
@@ -3756,88 +3820,6 @@ begin
                 wbInteger('Unknown', itU32),
                 wbArray('Unknown10', wbInteger('Unknown', itU32), -1)
               ]), -1)
-//            ,wbArray('Unknown02', wbStruct('Unknown', [
-//               wbRefID('RefID')
-//              ,wbRefID('RefID')
-//              ,wbInteger('Unknown', itU8) // Should be less than 3
-//              ,wbInteger('Unknown', itU8) // Should also be less than 3, would be skipped if previous greater than 2
-//            ]), -1)    // Untested, no suitable save found
-//            ,wbArray('Unknown03', wbStruct('Unknown', [
-//               wbInteger('Unknown', itU16)  // Check for String Index
-//              ,wbInteger('Unknown', itU16)
-//              ,wbRefID('RefID')
-//            ]), -1)
-//            ,wbUnion('Unknown04', VersionGreaterThan3Decider, [
-//               wbNull
-//              ,wbArray('Unknown040', wbStruct('Unknown', [
-//                 wbInteger('Unknown', itU16)  // Check for String Index
-//                ,wbInteger('Unknown', itU16)
-//                ,wbRefID('RefID')
-//              ]), -1)
-//            ])
-//            ,wbUnion('Unknown', VersionGreaterThan4Decider, [
-//               wbNull
-//              ,wbArray('Unknown05', wbStruct('Unknown', [
-//                 wbInteger('Unknown', itU16)  // Check for String Index
-//                ,wbInteger('Unknown', itU16)
-//                ,wbRefID('RefID')
-//                ,wbStruct('Dual RefID Table', [
-//                  wbInteger('First Count', itU32)
-//                  ,wbInteger('Second Count', itU32)
-//                  ,wbArray('Unknown050', wbRefID('RefID'), FirstCountCounter)
-//                  ,wbArray('Unknown051', wbRefID('RefID'), SecondCountCounter)
-//                ])
-//              ]), -1)
-//            ])
-//            ,wbArray('Unknown06', wbStruct('Unknown', [
-//               wbRefID('RefID')
-//              ,wbInteger('Unknown', itU8)
-//            ]), -1)
-//            ,wbArray('Unknown07', wbStruct('Unknown', [
-//               wbRefID('RefID')
-//              ,wbArray('Unknown070', wbStruct('Unknown', [
-//                 wbLenString('Unknown')
-//                ,wbArray('Unknown0700', wbStruct('Unknown', [
-//                   wbInteger('Unknown', itU32)
-//                  ,wbInteger('Unknown', itU32)
-//                 ]), -1)
-//                ,wbArray('Unknown0701', wbStruct('Unknown', [
-//                   wbInteger('Unknown', itU16)  // Check for String Index
-//                  ,wbInteger('Unknown', itU16)
-//                  ,wbRefID('RefID')
-//                 ]), -1)
-//               ]), -1)
-//             ]), -1)
-//           ,wbArray('Unknown08', wbStruct('Unknown', [
-//              wbInteger('Unknown', itU32)
-//             ,wbInteger('Unknown', itU32)
-//            ]), -1)
-//           ,wbStruct('Unknown09', [
-//              wbArray('Unknown090', wbStruct('Unknown', [
-//                wbRefID('RefID')
-//               ,wbUnknown0900
-//             ]), -1)
-//             ,wbArray('Unknown091', wbStruct('Unknown', [
-//                wbRefID('RefID')
-//               ,wbArray('Unknown0910', wbStruct('Unknown', [
-//                  wbInteger('Unknown', itU32)
-//                 ,wbArray('Unknown09100', wbInteger('Unknown', itU32), -1)
-//                 ,wbArray('Unknown09101', wbStruct('Unknown', [
-//                    wbInteger('Unknown', itU32)
-//                   ,wbInteger('Unknown', itU8, wbEnum(['False', 'True']))
-//                  ]), -1)
-//                 ,wbInteger('Unknown', itU32)
-//                ]), -1)
-//             ]), -1)
-//             ,wbArray('Unknown092', wbStruct('Unknown', [
-//                wbRefID('RefID')
-//               ,wbUnknown0900
-//             ]), -1)
-//            ])
-//           ,wbArray('Unknown0A', wbStruct('Unknown', [
-//              wbInteger('Unknown', itU32)
-//             ,wbArray('Unknown0A0', wbInteger('Unknown', itU32), -1)
-//           ]), -1)
           ])
         ])
       ]),
@@ -3859,8 +3841,11 @@ begin
         ]), -1)
       ]), -1),
       wbStruct('Main', []), // Empty
-      wbByteArray('Topic Info'),
-      wbByteArray('Explosion Manager')
+      wbArray('Topic Infos', wbStruct('Topic Info', [
+        wbRefID('Topic Info'),
+        wbInteger('Unknown', itU32)
+      ]), -253),
+      wbArray('Explosion Manager', wbRefID('Reference'), -253)
     ])
 //    ,wbByteArray('Remainder', DataRemainderCounter)  // Single line
     ,wbArray('Remainder', wbByteArray('Unknown', wbBytesToGroup), DataQuartetCounter) // per Quartet
