@@ -380,6 +380,84 @@ begin
     Result := SaveFormVersionDecider(73, aBasePtr, aEndPtr, aElement);
 end;
 
+function GlobalData6FlagsBit0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := wbFindSaveElement('Weather', aElement);
+  Assert(Element.BaseName = 'Weather');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Flags'];
+    Assert(Assigned(Element));
+    if Assigned(Element) then begin
+      if (Element.NativeValue and $1) = $1 then
+        Result := 1;
+    end;
+  end;
+end;
+
+function GlobalData6FlagsBit1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := wbFindSaveElement('Weather', aElement);
+  Assert(Element.BaseName = 'Weather');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Flags'];
+    Assert(Assigned(Element));
+    if Assigned(Element) then begin
+      if (Element.NativeValue and $2) = $2 then
+        Result := 1;
+    end;
+  end;
+end;
+
+function wbGlobalData6OwnedControllerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := wbFindSaveElement('Reference Effect', aElement);
+  Assert(Element.BaseName = 'Reference Effect');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Owned Controller Type'];
+    Assert(Assigned(Element));
+    if Assigned(Element) then begin
+      case Element.NativeValue of
+        1: Result := 1;
+        2: Result := 2;
+      end;
+    end;
+  end;
+end;
+
+function wbSubBufferCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+var
+  Element    : IwbElement;
+  Container  : IwbDataContainer;
+begin
+  Result := 0;
+  Element := wbFindSaveElement('SubBuffer', aElement);
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Length'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue;
+    end;
+  end;
+end;
+
 function ScreenShotDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   Element : IwbElement;
@@ -471,7 +549,7 @@ begin
       else  if (aType >= 1000) and (aType <= 1007) then // 1000 to 1005 = 6
         Result := aType - 1000 + 12 + 18 + 1;
     end;
-    if (Result < (1001-1000+12+18+1)) and (Result > 6) then Result := 0; //Others are not decoded yet
+    if (Result < (1001-1000+12+18+1)) and (Result > 8) then Result := 0; //Others are not decoded yet
     if Assigned(ChaptersToSkip) and ChaptersToSkip.Find(IntToStr(aType), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
       Result := 0;
   end;
@@ -2500,6 +2578,10 @@ var
   wbInitialDataType06            : IwbStructDef;
   wbInitialDataType              : IwbUnionDef;
   wbCreatedObject                : IwbStructDef;
+  wbBSTempEffect                 : IwbStructDef;
+  wbReferenceEffect              : IwbStructDef;
+  wbModelReferenceEffect         : IwbStructDef;
+  wbOwnedController              : IwbStructDef;
 
   wbChangeDefaultFlags    : IwbIntegerDef;
   wbCoSaveChunk           : IwbStructDef;
@@ -3241,6 +3323,39 @@ begin
     ]), -254)
   ]);
 
+  wbOwnedController := wbStruct('Owned Controller', [
+    wbRefID('Reference'),
+    wbRefID('TESEffectShader'),
+    wbRefID('BGSArtObject'),
+    wbRefID('Reference')
+  ]);
+  wbBSTempEffect := wbStruct('Temp Effect', [
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbInteger('Unknown', itU8),
+    wbInteger('Unknown', itU32)
+  ]);
+  wbReferenceEffect := wbStruct('Reference Effect', [
+    wbBSTempEffect,
+    wbInteger('Unknown', itU8),
+    wbRefID('Reference'),
+    wbInteger('Owned Controller Type', itU8),
+    wbUnion('Owned Controller', wbGlobalData6OwnedControllerDecider, [wbNull, wbOwnedController, wbStruct('Owned Camera Effect Controller', [
+      wbInteger('Unknown', itU8),
+      wbOwnedController
+    ])])
+  ]);
+  wbModelReferenceEffect := wbStruct('Model Reference Effect', [
+    wbReferenceEffect,
+    wbRefID('BGSArtObject'),
+    wbStruct('SubBuffer', [ // Also used in ActorMagicCaster
+      wbInteger('Unknown', itU8),
+      wbInteger('Length', itU6to30),
+      wbByteArray('Unknown', wbSubBufferCounter)
+    ]),
+    wbInteger('Unknown', itU32)
+  ]);
+
   wbGlobalData := wbStructC('Global Data', GlobalDataSizer, GlobalDataGetChapterType, GlobalDataGetChapterTypeName, nil, [
     wbInteger('Type', itU32),
     wbInteger('DataLength', itU32),
@@ -3300,8 +3415,42 @@ begin
         wbInteger('Unknown', itU32),
         wbInteger('Unknown', itU32)
       ]),
-      wbArray('Weather', wbInteger('', itU8), -2),
-      wbArray('Audio', wbInteger('', itU8), -2),
+      wbStruct('Weather', [
+        wbRefID('Climate'),
+        wbRefID('Weather 1'),
+        wbRefID('Weather 2'),
+        wbRefID('Weather 3'),
+        wbRefID('Weather 4'),
+        wbRefID('Region'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Flags', itU8),
+        wbUnion('Flags bit 0', GlobalData6FlagsBit0Decider, [wbNull, wbModelReferenceEffect]),
+        wbUnion('Flags bit 1', GlobalData6FlagsBit1Decider, [wbNull, wbModelReferenceEffect])
+      ]),
+      wbStruct('Audio', [
+        wbRefID('BGSSoundDescriptorForm'),
+        wbArray('Unknown', wbRefID('BGSMusicType'), -253),
+        wbStruct('BGSPlayerMusicChanger', [
+          wbRefID('BGSMusicType')
+        ]),
+        wbStruct('Unknown', [
+          wbArray('Unknown', wbStruct('Unknown', [
+            wbRefID('BGSSoundCategorySnapshot'),
+            wbInteger('Unknown', itU32)
+          ]), -1)
+        ]),
+        wbArray('Unknown', wbRefID('Reference'), -253)
+      ]),
       wbArray('Sky Cells', wbInteger('', itU8), -2),
       wbByteArray('Input Enable Manager'), // First word is version, supported 0 or 1
       wbByteArray('StoryTeller'),
