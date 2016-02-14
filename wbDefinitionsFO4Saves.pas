@@ -1377,7 +1377,7 @@ begin
       if Assigned(Element) then begin
         aValue := Element.NativeValue;
         if (aValue and $1) = 0 then begin
-          Element := Container.ElementByPath['Function Type'];
+          Element := Container.ElementByName['Function Type'];
           if Assigned(Element) then begin
             aValue := Element.NativeValue;
             if aValue = 0 then
@@ -2569,6 +2569,7 @@ var
   wbTypeData1                    : IwbStructDef;
   wbTypeData2                    : IwbStructDef;
   wbVMGroup                      : IwbStructDef;
+  wbNonRecursiveVariable         : IwbStructDef;
   wbVariable                     : IwbStructDef;
   wbCodeOpcodes                  : IwbEnumDef;
   wbCodeParameter                : IwbStructDef;
@@ -2812,7 +2813,7 @@ begin
     wbInteger('Name', itU16, wbVMType)
   ]);
 
-  wbVariable := wbStruct('Variable', [
+  wbNonRecursiveVariable := wbStruct('Variable', [
     wbInteger('Type', itU8, wbPropTypeEnum),
     wbUnion('Value', VariableDecider, [
       wbInteger('Int32', itS32),
@@ -2824,7 +2825,7 @@ begin
       wbInteger('Int32', itU32),
       wbFloat('Float'),
       wbInteger('Bool', itU32, wbEnum(['False', 'True'])),
-      wbInteger('Unknown', itU32, wbDumpInteger),
+      wbNull, // avoid recursive variable
       wbStruct('Struct', [
         wbInteger('Struct Type', itU16, wbVMType),
         wbInteger('Struct Handle', itU64, wbVMObjectHandle)
@@ -2837,7 +2838,40 @@ begin
       wbInteger('Int32 Array Handle', itU64, wbVMArrayHandle),
       wbInteger('Float Array Handle', itU64, wbVMArrayHandle),
       wbInteger('Bool Array Handle', itU64, wbVMArrayHandle),
-      wbInteger('Unknown Array Handle', itU64, wbVMArrayHandle),
+      wbInteger('Variable Array Handle', itU64, wbVMArrayHandle),
+      wbStruct('Struct Array', [
+        wbInteger('Struct Type', itU16, wbVMType),
+        wbInteger('Array Handle', itU64, wbVMArrayHandle)
+      ])
+    ])
+  ]);
+
+  wbVariable := wbStruct('Variable', [
+    wbInteger('Type', itU8, wbPropTypeEnum),
+    wbUnion('Value', VariableDecider, [
+      wbInteger('Int32', itS32),
+      wbStruct('Object', [
+        wbInteger('Object Type', itU16, wbVMType),
+        wbInteger('Object Handle', itU64, wbVMObjectHandle)
+      ]),
+      wbInteger('String', itU16, wbVMType),
+      wbInteger('Int32', itU32),
+      wbFloat('Float'),
+      wbInteger('Bool', itU32, wbEnum(['False', 'True'])),
+      wbNonRecursiveVariable,
+      wbStruct('Struct', [
+        wbInteger('Struct Type', itU16, wbVMType),
+        wbInteger('Struct Handle', itU64, wbVMObjectHandle)
+      ]),
+      wbStruct('Object Array', [
+        wbInteger('Object Type', itU16, wbVMType),
+        wbInteger('Array Handle', itU64, wbVMArrayHandle)
+      ]),
+      wbInteger('String Array Handle', itU64, wbVMArrayHandle),
+      wbInteger('Int32 Array Handle', itU64, wbVMArrayHandle),
+      wbInteger('Float Array Handle', itU64, wbVMArrayHandle),
+      wbInteger('Bool Array Handle', itU64, wbVMArrayHandle),
+      wbInteger('Variable Array Handle', itU64, wbVMArrayHandle),
       wbStruct('Struct Array', [
         wbInteger('Struct Type', itU16, wbVMType),
         wbInteger('Array Handle', itU64, wbVMArrayHandle)
@@ -2972,7 +3006,7 @@ begin
 
   wbArrayTableEntry := wbStruct('Array Entry Data', [  // UESP: arrayInfo
     wbInteger('Array Handle', itU64, wbVMHandle),
-    wbInteger('Array Type', itU8, wbPropTypeEnum),    // valid values : 0 to 5, 0B to 0F
+    wbInteger('Array Type', itU8, wbPropTypeEnum),    // valid values : 0 to 7, 0B to 11
     wbUnion('Data', ArrayTableEntryOptionalStringDecider, [
       wbNull,
       wbNull,
