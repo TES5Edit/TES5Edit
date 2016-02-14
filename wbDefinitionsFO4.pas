@@ -5602,7 +5602,7 @@ begin
     {03} 'Int32',
     {04} 'Float',
     {05} 'Bool',
-    {06} 'Unknown 6',
+    {06} 'Variable',
     {07} 'Struct ?',
     {08} '',
     {09} '',
@@ -5612,7 +5612,7 @@ begin
     {13} 'Array of Int32',
     {14} 'Array of Float',
     {15} 'Array of Bool',
-    {16} 'Unknown 16',
+    {16} 'Array of Variable',
     {17} 'Array of Struct'
   ]);
 
