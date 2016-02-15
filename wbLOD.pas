@@ -195,6 +195,7 @@ type
 function wbLODSettingsFileName(WorldspaceID: string): string;
 function wbLODTreeBlockFileExt: string;
 function wbNormalizeResourceName(aName: string; aResType: TGameResourceType): string;
+function wbDefaultNormalTexture(aGameMode: TwbGameMode): string;
 procedure wbPrepareImageAlpha(img: TImageData; fmt: TImageFormat);
 procedure wbBuildAtlas(var Images: TSourceAtlasTextures; aWidth, aHeight: Integer;
   aName: string; fmtDiffuse, fmtNormal: TImageFormat);
@@ -253,6 +254,17 @@ begin
     Result := '';
 end;
 
+function wbDefaultNormalTexture(aGameMode: TwbGameMode): string;
+begin
+  if aGameMode = gmFO4 then
+    Result := 'textures\shared\flatflat_n.dds'
+  else if aGameMode = gmTES5 then
+    Result := 'textures\default_n.dds'
+  else if aGameMode in [gmFO3, gmFNV] then
+    Result := 'textures\shared\shadefade01_n.dds'
+  else
+    Result := '';
+end;
 
 { TwbLodSettings }
 
