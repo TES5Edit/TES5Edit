@@ -35,6 +35,7 @@ uses
 
 var
   wbExtraTypeEnum    : IwbEnumDef;
+  wbCodeTypeEnum     : IwbEnumDef;
   wbRecordFlagsFlags : IwbFlagsDef;
 
 var // forward type directives
@@ -2940,8 +2941,20 @@ begin
   //  A : any
   //  * : optional
 
+  wbCodeTypeEnum := wbEnum([
+    {00} 'None',
+    {01} 'Object',
+    {02} 'String',
+    {03} 'Int32',
+    {04} 'Float',
+    {05} 'Bool',
+    {06} 'Unknown',
+    {07} 'Unknown',   // Same format as 0, 3, 5, 6
+    {08} 'Unknown'    // Same format as 1 and 2 wbPropType
+  ]);
+
   wbCodeParameter := wbStruct('Parameter', [
-    wbInteger('Type', itU8, wbPropTypeEnum),  // Lower than 8 and lower than 5
+    wbInteger('Type', itU8, wbCodeTypeEnum),  // Lower than 8 and lower than 5
     wbUnion('Value', CodeParameterTypeValueDecider, [
       wbNull,
       wbInteger('Object Type', itU16, wbVMType),
@@ -2949,8 +2962,9 @@ begin
       wbInteger('Unsigned Integer', itU32),
       wbFloat('Float'),
       wbInteger('Boolean', itU8, wbEnum(['False', 'True'])),
-      wbInteger('Unknown', itU32),  // Guess and/or placeholder
-      wbInteger('Struct Type', itU16, wbVMType)  // Guess
+      wbInteger('Unknown 6', itU32),  // Guess and/or placeholder
+      wbInteger('Unknown 7', itU32),  // Guess and/or placeholder
+      wbInteger('Unknown 8', itU16, wbVMType)  // Guess
     ])
   ]);
 
