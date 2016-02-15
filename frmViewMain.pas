@@ -4907,10 +4907,7 @@ begin
     if not wbContainerHandler.ResourceExists(s) then begin
       wbProgressCallback('<Note: ' + s + ' normal map not found, using flat replacement>');
       // default normals texture to use
-      if wbGameMode = gmTES5 then
-        s := 'textures\default_n.dds'
-      else if wbGameMode in [gmFO3, gmFNV] then
-        s := 'textures\shared\shadefade01_n.dds';
+      s := wbDefaultNormalTexture(wbGameMode);
     end;
     res := wbContainerHandler.OpenResource(s);
     if Length(res) <> 0 then
@@ -5006,9 +5003,16 @@ begin
         raise Exception.Create('Error loading tile ' + sl[0]);
 
       // load normal tile
-      res := wbContainerHandler.OpenResource(ChangeFileExt(sl[0], '') + '_n.dds');
-      if Length(res) = 0 then
-        raise Exception.Create('Source tile normal map not found for ' + sl[0]);
+      fname := ChangeFileExt(sl[0], '') + '_n.dds';
+      res := wbContainerHandler.OpenResource(fname);
+      if Length(res) = 0 then begin
+        wbProgressCallback('<Note: ' + fname + ' normal map not found, using flat replacement>');
+        // default normals texture to use
+        fname := wbDefaultNormalTexture(wbGameMode);
+        res := wbContainerHandler.OpenResource(fname);
+        if Length(res) = 0 then
+          raise Exception.Create('Source tile normal map not found for ' + sl[0]);
+      end;
 
       data := res[High(res)].GetData;
       if not LoadImageFromMemory(@data[0], Length(data), img_n) then
@@ -5041,7 +5045,7 @@ begin
     fmtNormal := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(ifDXT1)));
 
     for i := 0 to Pred(slAtlas.Count) do begin
-      // change brightness or gamme
+      // change brightness or gamma
       imgcanv := TImagingCanvas.CreateForData(@Atlases[i]);
       try
         if aBrightness <> 0 then
