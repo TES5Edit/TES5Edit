@@ -13111,10 +13111,15 @@ end;
 procedure TfrmMain.SetDefaultNodeHeight(aHeight: Integer);
 begin
   vstNav.DefaultNodeHeight := aHeight;
+  vstNav.Header.Height := aHeight + 3;
   vstView.DefaultNodeHeight := aHeight;
+  vstView.Header.Height := aHeight + 3;
   vstSpreadSheetWeapon.DefaultNodeHeight := aHeight;
+  vstSpreadSheetWeapon.Header.Height := aHeight + 3;
   vstSpreadSheetArmor.DefaultNodeHeight := aHeight;
+  vstSpreadSheetArmor.Header.Height := aHeight + 3;
   vstSpreadSheetAmmo.DefaultNodeHeight := aHeight;
+  vstSpreadSheetAmmo.Header.Height := aHeight + 3;
 end;
 
 function TfrmMain.ValidateCRC(const aFileName  : string;
