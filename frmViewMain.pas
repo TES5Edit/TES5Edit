@@ -5349,9 +5349,15 @@ begin
 
         TreeRec := REFRs[i].BaseRecord.MasterOrSelf;
 
-        // Skyrim: only for TREE
-        if (wbGameMode = gmTES5) and (TreeRec.Signature <> 'TREE') then
-          Continue;
+        // Skyrim: only for TREE and STAT
+        if wbGameMode = gmTES5 then begin
+          if (TreeRec.Signature <> 'TREE') and (TreeRec.Signature <> 'STAT') then
+            Continue;
+          // STAT with Has Tree LOD flag only
+          // for Dragonborn DLC: xx03383D and xx03383C
+          if (TreeRec.Signature = 'STAT') and (TreeRec.Flags._Flags and $00000040 = 0) then
+            Continue;
+        end;
 
         // Fallouts: only for already added trees
         if (wbGameMode in [gmFO3, gmFNV]) and not Assigned(Lst.TreeByFormID[TreeRec.LoadOrderFormID]) then
@@ -5543,8 +5549,8 @@ begin
         if (wbGameMode = gmTES5) and ((StatRec.Signature <> 'STAT') and (StatRec.Signature <> 'TREE')) then
           Continue;
 
-        // Fallouts: only STAT, SCOL and ACTI objects
-        if (wbGameMode in [gmFO3, gmFNV]) and ((StatRec.Signature <> 'STAT') and (StatRec.Signature <> 'SCOL') and (StatRec.Signature <> 'ACTI')) then
+        // Fallouts: only STAT, SCOL, ACTI and MSTT objects
+        if (wbGameMode in [gmFO3, gmFNV]) and ((StatRec.Signature <> 'STAT') and (StatRec.Signature <> 'SCOL') and (StatRec.Signature <> 'ACTI') and (StatRec.Signature <> 'MSTT')) then
           Continue;
 
         // skip invisible references
@@ -5554,6 +5560,7 @@ begin
           Continue;
 
         // skip parent enabled refs except FO3 Megaton town
+        // Fallout 3 is hardcoded to use 'apocalypse' LOD meshes when it is destroyed
         if REFRs[i].ElementExists['XESP'] and (Pos('MegatonToggle', REFRs[i].ElementEditValues['XESP\Reference']) = 0) then
           Continue;
 
