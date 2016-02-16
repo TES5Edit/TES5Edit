@@ -443,6 +443,86 @@ begin
   end;
 end;
 
+function wbBSTempEffectScreenSpaceDecalSixDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := wbFindSaveElement('Temp Effect Screen Space Decal', aElement);
+  Assert(Element.BaseName = 'Temp Effect Screen Space Decal');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Flag'];
+    Assert(Assigned(Element));
+    if Assigned(Element) then begin
+      if Element.NativeValue <> 0 then
+        Result := 1;
+    end;
+  end;
+end;
+
+function wbBSTempEffectScreenSpaceDecalRemainDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := wbFindSaveElement('Reference Effect', aElement);
+  Assert(Element.BaseName = 'Reference Effect');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Flag2'];
+    Assert(Assigned(Element));
+    if Assigned(Element) then begin
+      if Element.NativeValue <> 0 then
+        Result := 1;
+    end;
+  end;
+end;
+
+function wbBSTempEffectScreenSpaceDecalThirdDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := wbFindSaveElement('Remain', aElement);
+  Assert(Element.BaseName = 'Remain');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Flag3'];
+    Assert(Assigned(Element));
+    if Assigned(Element) then begin
+      if Element.NativeValue <> 0 then
+        Result := 1;
+    end;
+  end;
+end;
+
+function wbGlobalData1000FlagDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := wbFindSaveElement('Unknown 02 struct', aElement);
+  Assert(Element.BaseName = 'Unknown 02 struct');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Flag'];
+    Assert(Assigned(Element));
+    if Assigned(Element) then begin
+      if Element.NativeValue <> 0 then
+        Result := 1;
+    end;
+  end;
+end;
+
 function wbSubBufferCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   Element    : IwbElement;
@@ -540,7 +620,7 @@ end;
 
 function GlobalData3Counter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 begin
-  Result := GlobalDataCounter(3, aBasePtr, aEndPtr, aElement) + 1;  // +1 due to the bug as seen on UESP
+  Result := GlobalDataCounter(3, aBasePtr, aEndPtr, aElement);
 end;
 
 function ChangedFormsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
@@ -572,7 +652,7 @@ begin
       else  if (aType >= 1000) and (aType <= 1007) then // 1000 to 1007 = 8
         Result := aType - 1000 + 12 + 18 + 1;
     end;
-    if (Result < (1001-1000+12+18+1)) and (Result > 12) then Result := 0; //Others are not decoded yet
+    if (aType > 100) and (aType < 1000) then Result := 0; //Others are not decoded yet
     if Assigned(ChaptersToSkip) and ChaptersToSkip.Find(IntToStr(aType), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
       Result := 0;
   end;
@@ -2605,6 +2685,7 @@ var
   wbBSTempEffect                 : IwbStructDef;
   wbReferenceEffect              : IwbStructDef;
   wbModelReferenceEffect         : IwbStructDef;
+  wbBSTempEffectScreenSpaceDecal : IwbStructDef;
   wbOwnedController              : IwbStructDef;
   wbGlobalData10Unknown          : IwbStructDef;
 
@@ -3426,6 +3507,49 @@ begin
     ]),
     wbInteger('Unknown', itU32)
   ]);
+  wbBSTempEffectScreenSpaceDecal := wbStruct('Temp Effect Screen Space Decal', [
+    wbBSTempEffect,
+    wbRefID('Cell'),
+    wbInteger('Unknown', itU8),
+    wbInteger('Flag', itU8),
+    wbUnion('Six', wbBSTempEffectScreenSpaceDecalSixDecider, [wbNull,
+      wbStruct('Six struct', [
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU8),
+        wbInteger('Unknown', itU8)
+      ]),
+      wbInteger('Flag2', itU8), // if null skip the rest
+      wbUnion('Unknown', wbBSTempEffectScreenSpaceDecalRemainDecider, [ wbNull,
+        wbStruct('Remain', [
+          wbArray('Unknown', wbInteger('Unknown', itU64), {48 * constant / 48} 1), // need sample
+          wbArray('Unknown', wbInteger('Unknown', itU64), {16 / 16} 1 ),
+          wbInteger('Flag3', itU8),
+          wbUnion('Unknown', wbBSTempEffectScreenSpaceDecalThirdDecider, [ wbNull,
+            wbRefID('Reference'),
+            wbLenString('Unknown', 2),
+            wbInteger('Unknown', itU32),
+            wbInteger('Unknown', itU32)
+          ]),
+          wbInteger('Unknown', itU32),
+          wbInteger('Unknown', itU32),
+          wbInteger('Unknown', itU32),
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU16),
+          wbInteger('Unknown', itU32),
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU32),
+          wbInteger('Unknown', itU8)
+        ])
+      ])
+    ])
+  ]);
 
   wbGlobalData10Unknown := wbStruct('Unknown struct', [
     wbInteger('Unknown', itU32),
@@ -3484,7 +3608,7 @@ begin
       wbArray('Global Variables', wbStruct('Global', [
         wbRefID('Global Name'),
         wbFloat('Value')
-      ]), -253),
+      ]), -254),
       wbStruct('Created Objects', [
         wbArray('Created Objects Array 1', wbCreatedObject, -254),
         wbArray('Created Objects Array 2', wbCreatedObject, -254),
@@ -3525,7 +3649,7 @@ begin
       ]),
       wbStruct('Audio', [
         wbRefID('BGSSoundDescriptorForm'),
-        wbArray('Unknown', wbRefID('BGSMusicType'), -253),
+        wbArray('Unknown', wbRefID('BGSMusicType'), -254),
         wbStruct('BGSPlayerMusicChanger', [
           wbRefID('BGSMusicType')
         ]),
@@ -3535,12 +3659,12 @@ begin
             wbInteger('Unknown', itU32)
           ]), -1)
         ]),
-        wbArray('Unknown', wbRefID('Reference'), -253)
+        wbArray('Unknown', wbRefID('Reference'), -254)
       ]),
       wbArray('Sky Cells', wbStruct('Sky Cell', [
         wbRefID('Worldspace'),
         wbRefID('RefID')
-      ]), -253),
+      ]), -254),
       wbStruct('Input Enable Manager', [
         wbInteger('Unknown', itU16),  // Required 0 or 1
         wbInteger('Unknown', itU32),
@@ -3562,13 +3686,39 @@ begin
           wbArray('Unknown', wbStruct('Unknown', [
             wbInteger('Unknown', itU32),
             wbInteger('Unknown', itU32)
-          ]), -253)
-        ]), -253),
+          ]), -254)
+        ]), -254),
         wbInteger('Unknown', itU8)
       ]),
-      wbArray('ReservedIDs', wbRefID('ReservedID'), -253),
+      wbArray('ReservedIDs', wbRefID('ReservedID'), -254),
       // 100 to 114
-      wbArray('Process List', wbInteger('', itU8), -2),
+      wbStruct('Process List', [
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32),
+        wbArray('Unknown', wbArray('Unknown', wbStruct('Unknown', [
+          wbInteger('Unknown', itU32),
+          wbInteger('Unknown', itU32),
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU32),
+          wbInteger('Unknown', itU32),
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU32),
+          wbFloat('Unknown'),
+          wbRefID('Reference'),
+          wbRefID('Actor'),
+          wbRefID('Bound Object'),
+          wbRefID('RefID'),
+          wbArray('Actors', wbRefID('Actor'), -254),
+          wbInteger('Unknown', itU32),
+          wbRefID('Faction'),
+          wbInteger('Unknown', itU8),
+          wbInteger('Unknown', itU16),
+          wbInteger('Unknown', itU8),   // if version > 26
+          wbInteger('Unknown', itU32)   // if version > 33
+        ]), -254))
+      ]),
       wbArray('Combat', wbInteger('', itU8), -2),
       wbArray('Interface', wbInteger('', itU8), -2),
       wbArray('Actor Causes', wbInteger('', itU8), -2),
@@ -3588,55 +3738,32 @@ begin
       wbByteArray('Radio Manager'),
       // 1000 to 1005
       wbStruct('Temp Effect', [
-        wbStruct('Unknown1000_00', [
-          wbArray('Unknown1000_000', wbStruct('Unknown1000_0000', [
-            wbInteger('Unknown1000_00000', itU8),
-            wbUnion('Unknown1000_00001', Unknown1000_00001Decider, [
-              wbRefID('REFR'),
-              wbStruct('Unknown1000_000011', [
-                wbRefID('CELL'),
-                wbInteger('Unknown', itU32)
-              ])
-            ]),
-            wbRefID('Texture Set'),
-            wbRefID('Texture Set'),
-            wbArray('Unknown1000_00002', wbInteger('Unknown', itU32), 3),
-            wbArray('Unknown1000_00003', wbInteger('Unknown', itU32), 3),
-            wbInteger('Unknown', itU32),
-            wbInteger('Unknown', itU32),
-            wbInteger('Unknown', itU32),
-            wbArray('Unknown1000_00004', wbInteger('Unknown', itU32), 4), // Check for float
-            wbInteger('Unknown', itU8),
-            wbInteger('Unknown', itU8),
-            wbInteger('Unknown', itU8),
-            wbInteger('Unknown', itU8),
-            wbInteger('Unknown', itU32),
-            wbInteger('Unknown', itU8),
-            wbInteger('Unknown', itU32),
-            wbInteger('Unknown', itU32),
-            wbInteger('Unknown', itU32),
-            wbInteger('Unknown', itU32),
-            wbInteger('Unknown', itU32),
-            wbInteger('Unknown', itU8),
-            wbInteger('Unknown', itU8),
-            wbUnion('Unknown1000_00005', SaveFormVersionGreaterThan35Decider, [
-              wbNull,
+        wbArray('Unknown array 01', wbBSTempEffectScreenSpaceDecal, -254),
+        wbArray('Unknown array 02', wbStruct('Unknown 02 struct', [
+          wbInteger('Unknown', itU8),
+          wbInteger('Flag', itU8),
+          wbUnion('Unknown', wbGlobalData1000FlagDecider, [wbNull,
+            wbStruct('Unknown', [
+              wbRefID('Reference'),
+              wbLenString('Unknown', 2),
+              wbInteger('Unknown', itU32),
               wbInteger('Unknown', itU32)
             ])
-          ]), -254)
-        ]),
-        wbInteger('Next ID', itU32),
-        wbArray('Unknown1000_01', wbStruct('Unknown', [
-          wbInteger('Unknown', itU32),
-          wbStruct('Unknown', []) // Needs sample to continue
+          ]),
+          wbInteger('NiNode count', itU32)
         ]), -254),
-        wbArray('Unknown1000_02', wbStruct('Unknown', [
-          wbInteger('Unknown', itU32),
-          wbStruct('Unknown', []) // Needs sample to continue
+        wbInteger('Unknown', itU32),  // g_7FF7334407C8
+        wbArray('Unknown array 11', wbStruct('Unknown', [
+          wbInteger('Index', itU32), // Less than 12
+          wbModelReferenceEffect
         ]), -254),
-        wbArray('Unknown1000_03', wbStruct('Unknown', [
-          wbInteger('Unknown', itU32),
-          wbStruct('Unknown', []) // Needs sample to continue
+        wbArray('Unknown array 12', wbStruct('Unknown', [
+          wbInteger('Index', itU32), // Less than 12
+          wbModelReferenceEffect
+        ]), -254),
+        wbArray('Unknown array 13', wbStruct('Unknown', [
+          wbInteger('Index', itU32), // Less than 12
+          wbModelReferenceEffect
         ]), -254)
       ]),
       wbStruct('Papyrus Struct', [
@@ -3892,8 +4019,8 @@ begin
       wbArray('Topic Infos', wbStruct('Topic Info', [
         wbRefID('Topic Info'),
         wbInteger('Unknown', itU32)
-      ]), -253),
-      wbArray('Explosion Manager', wbRefID('Reference'), -253)
+      ]), -254),
+      wbArray('Explosion Manager', wbRefID('Reference'), -254)
     ])
 //    ,wbByteArray('Remainder', DataRemainderCounter)  // Single line
     ,wbArray('Remainder', wbByteArray('Unknown', wbBytesToGroup), DataQuartetCounter) // per Quartet
