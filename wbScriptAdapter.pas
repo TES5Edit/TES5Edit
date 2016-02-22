@@ -646,6 +646,14 @@ begin
     Element.BuildRef;
 end;
 
+procedure IwbElement_MarkModifiedRecursive(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Element.MarkModifiedRecursive;
+end;
+
 procedure _wbCopyElementToFile(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -1827,6 +1835,7 @@ begin
     AddFunction(cUnit, 'GetElementState', IwbElement_GetElementState, 2, [varEmpty, varEmpty], varBoolean);
     AddFunction(cUnit, 'ReportRequiredMasters', IwbElement_ReportRequiredMasters, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'BuildRef', IwbElement_BuildRef, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'MarkModifiedRecursive', IwbElement_MarkModifiedRecursive, 1, [varEmpty], varEmpty);
 
     { IwbContainer }
     AddFunction(cUnit, 'GetElementEditValues', IwbContainer_GetElementEditValues, 2, [varEmpty, varString], varEmpty);
