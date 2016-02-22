@@ -7218,7 +7218,13 @@ begin
       wbByteArray('Unknown', 4),
       // STAT is here SkinMirelurkSpawnHatchlingJuice [ARMO:00176DA1]
       // probably not a FormID depending on above values
-      wbFormIDCk('Material Swap', [MSWP, STAT]),
+      //wbFormIDCk('Material Swap', [MSWP, ARMO, STAT]),
+      wbFormIDCk('FormID', [
+        TREE, SNDR, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
+        MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, INGR,
+        MSTT, TACT, TXST, FLOR, NOTE, CMPO, SCOL, SOUN, SPEL, ARTO, ADDN,
+        BNDS, TERM
+      ]),
       wbFloat('Unknown'),
       wbByteArray('Unknown', 4)
     ]), wbOBTSCounter2)
