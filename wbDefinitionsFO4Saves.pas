@@ -652,7 +652,7 @@ begin
       else  if (aType >= 1000) and (aType <= 1007) then // 1000 to 1007 = 8
         Result := aType - 1000 + 12 + 18 + 1;
     end;
-    if (aType > 100) and (aType < 1000) then Result := 0; //Others are not decoded yet
+//    if (aType > 100) and (aType < 1000) then Result := 0; //Others are not decoded yet
     if Assigned(ChaptersToSkip) and ChaptersToSkip.Find(IntToStr(aType), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
       Result := 0;
   end;
@@ -1354,6 +1354,25 @@ begin
   Result := 0;
   if SaveFileVersionDecider(aBasePtr, aEndPtr, aElement) > $B then
     Result := 1;
+end;
+
+function wbGlobalData1002BooleanDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Element   : IwbElement;
+  Container : IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := wbFindSaveElement('Anim Object', aElement);
+  Assert(Element.BaseName='Anim Object');
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    Element := Container.ElementByName['Boolean'];
+    if Assigned(Element) then begin
+      if Element.NativeValue <> 0 then
+        Result := 1;
+    end;
+  end;
 end;
 
 function SaveIsValidDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -3715,23 +3734,85 @@ begin
           wbRefID('Faction'),
           wbInteger('Unknown', itU8),
           wbInteger('Unknown', itU16),
-          wbInteger('Unknown', itU8),   // if version > 26
-          wbInteger('Unknown', itU32)   // if version > 33
+          wbInteger('Unknown', itU8),   // if form version > 26
+          wbInteger('Unknown', itU32)   // if form version > 33
         ]), -254))
       ]),
-      wbArray('Combat', wbInteger('', itU8), -2),
-      wbArray('Interface', wbInteger('', itU8), -2),
-      wbArray('Actor Causes', wbInteger('', itU8), -2),
-      wbArray('Detection Manager', wbInteger('', itU8), -2),
-      wbArray('Location MetaData', wbInteger('', itU8), -2),
-      wbArray('Quest Static Data', wbInteger('', itU8), -2),
+      wbStruct('Combat', [
+//        wbInteger('Unknown', itU32),
+//        wbArray('Unknown1', wbStruct('Unknown1 struct', [
+//          wbInteger('Unknown', itU32),
+//          wbInteger('Unknown', itU32),
+//          wbArray('Unknown12', wbStruct('Unknown12 struct' [
+//            wbArray('Unknown120', wbStruct('Unknown120 struct', [
+//              wbRefID('Actor'),
+//              wbInteger('Unknown', itU32),
+//              wbInteger('Unknown', itU32),
+//              wbInteger('Unknown', itU32),  // if version > 17
+//              wbInteger('Unknown', itU32),
+//              wbInteger('Unknown', itU16),
+//              wbInteger('Unknown', itU16),  // if version > 17
+//              wbRefID('Actor'),
+//              wbStruct('Unknown', [
+//                wbInteger('Unknown', itU32),
+//                wbRefID('RefID')
+//              ]),
+//              wbStruct('Unknown', [
+//                wbInteger('Unknown', itU32),
+//                wbRefID('RefID')
+//              ]),
+//              wbStruct('Unknown', [
+//                wbInteger('Unknown', itU32),
+//                wbRefID('RefID')
+//              ]),
+//              wbStruct('Unknown', [
+//                wbInteger('Unknown', itU32),
+//                wbRefID('RefID')
+//              ]),
+//              wbStruct('Unknown', [
+//                wbInteger('Unknown', itU32),
+//                wbRefID('RefID')
+//              ]),
+//              wbStruct('Unknown', [
+//                wbInteger('Unknown', itU32),
+//                wbRefID('RefID')
+//              ]),
+//              wbFloat('Unknown'),
+//              wbFloat('Unknown'),
+//              wbFloat('Unknown'),
+//              wbFloat('Unknown'),
+//              wbFloat('Unknown'),
+//              wbFloat('Unknown'),
+//              wbFloat('Unknown')
+//            ]), -254),
+//            wbArray('Unknown121', wbStruct('Unknown120 struct', [
+//              wbRefID('Actor'),
+//              wbInteger('Unknown', itU32),
+//              wbInteger('Unknown', itU32),
+//              wbInteger('Unknown', itU32),  // if version > 17
+//              wbStruct('Unknown', [
+//                wbInteger('Flags', itU64) // bit 0 used for next union
+//              ])
+//            ]), -254)
+////            wbArray('Unknown122', , -254),
+////            wbInteger('Unknown', itU32),
+////            wbRefID('Actor'),
+//          ]), -254)
+//        ]), -254),
+//        wbArray('Unused', wbInteger('Unused', itU8), -254)
+      ]),
+      wbByteArray('Interface'),
+      wbByteArray('Actor Causes'),
+      wbByteArray('Detection Manager'),
+      wbByteArray('Location MetaData'),
+      wbByteArray('Quest Static Data'),
       wbByteArray('Attraction Object LOS'),
       wbByteArray('Animation'),
-      wbArray('Player Controls', wbInteger('', itU8), -2),
-      wbArray('Story Event Manager', wbInteger('', itU8), -2),
-      wbArray('Ingredient Shared', wbInteger('', itU8), -2),
-      wbArray('Menu Controls', wbInteger('', itU8), -2),
-      wbArray('Menu Topic Manager', wbInteger('', itU8), -2),
+      wbByteArray('Player Controls'),
+      wbByteArray('Story Event Manager'),
+      wbByteArray('Ingredient Shared'),
+      wbByteArray('Menu Controls'),
+      wbByteArray('Menu Topic Manager'),
       wbByteArray('Scene-filler Actors'),
       wbByteArray('Range Formations'),
       wbByteArray('Anim Objects'),
@@ -3998,11 +4079,54 @@ begin
           ])
         ])
       ]),
-      wbArray('Anim Objects', wbStruct('Anim Object', [
-        wbRefID('REFR'),
-        wbRefID('ANIO'),
-        wbInteger('Boolean', itU8, wbEnum(['False', 'True']))
-      ]), -1),
+      wbStruct('Anim Objects', [
+//        wbArray('Anim Objects', wbStruct('Anim Object', [
+//          wbRefID('REFR'),
+//          wbRefID('ANIO'),
+//          wbInteger('Boolean', itU8, wbEnum(['False', 'True'])),
+//          wbUnion('Unknown', wbGlobalData1002BooleanDecider, [wbNull,
+//            wbArray('Unknown', wbStruct('Unknown', [
+//              wbLenString('Unknown', 2),
+//              // Most likely variable
+//              wbArray('Unknown', wbStruct('Unknown', [
+//                wbLenString('Unknown', 2),
+//                wbInteger('Unknown', itU32),
+//                wbLenString('Unknown', 2),
+//                wbInteger('Unknown', itU64),
+//                wbInteger('Unknown', itU64),
+//                wbInteger('Unknown', itU16),
+//                wbInteger('Unknown', itU16),
+//                wbInteger('Unknown', itU16),
+//                wbInteger('Unknown', itU16)
+//              ]), -1),
+//              wbArray('Unknown', wbStruct('Unknown', [
+//                wbLenString('Unknown', 2),
+//                wbLenString('Unknown', 2),
+//                wbInteger('Unknown', itU32)
+//              ]), -1),
+//              wbInteger('Unknown', itU32),
+//              wbStruct(
+//              wbLenString('Unknown', 2),
+//
+//              wbLenString('Unknown', 2),
+//              wbInteger('Unknown', itU32),
+//              wbStruct(
+//              wbInteger('Unknown', itU32),
+//              wbLenString('Unknown', 2),
+//
+//            ]), -1)
+//          ])
+//        ]), -1)
+// Version for older Form Versions
+//       ,wbStruct('Unknown1', [
+//          wbInteger('Unknown', itU32),  // Version greater than 28 , need to be confirmed
+//          wbArray('Anim Objects', wbStruct('Anim Object', [
+//            wbRefID('REFR'),
+//            wbRefID('ANIO'),
+//            wbInteger('Boolean', itU8, wbEnum(['False', 'True']))
+//          ]), -1)
+//        ])
+      ]),
       wbStruct('Timer', [
         wbInteger('Unknown', itU32),
         wbInteger('Unknown', itU32)
