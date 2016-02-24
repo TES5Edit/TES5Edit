@@ -2210,6 +2210,21 @@ begin
     Result := 1;
 end;
 
+function wbAmmoWeightDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container : IwbContainer;
+  SubRecord : IwbSubRecord;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
+  if Supports(Container, IwbSubRecord, SubRecord) then
+    if SubRecord.IsLocalOffset(sizeof(Cardinal)) then
+      Result := 1;
+end;
+
 function wbMGEFAssocItemDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
@@ -7409,7 +7424,10 @@ begin
     wbDESC,
     wbKSIZ,
     wbKWDAs,
-    wbInteger(DATA, 'Value', itU32, nil, cpNormal, True),
+    wbStruct(DATA, 'Data', [
+      wbInteger('Value', itU32, nil, cpNormal, True),
+      wbUnion('', wbAmmoWeightDecider, [wbNull, wbFloat('Weight')])
+    ]),
     wbStruct(DNAM, '', [
       wbFormIDCk('Projectile', [PROJ, NULL]),
       wbInteger('Flags', itU32, wbFlags([
