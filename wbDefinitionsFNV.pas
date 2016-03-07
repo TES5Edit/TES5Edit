@@ -4461,7 +4461,7 @@ begin
     {04} wbUnion('Global Variable / Required Rank', wbCOEDOwnerDecider, [
            wbByteArray('Unused', 4, cpIgnore),
            wbFormIDCk('Global Variable', [GLOB, NULL]),
-           wbInteger('Required Rank', itU32)
+           wbInteger('Required Rank', itS32)
          ]),
     {08} wbFloat('Item Condition')
   ]);
