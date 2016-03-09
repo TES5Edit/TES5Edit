@@ -7223,7 +7223,7 @@ begin
         TREE, SNDR, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
         MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, INGR,
         MSTT, TACT, TXST, FLOR, NOTE, CMPO, SCOL, SOUN, SPEL, ARTO, ADDN,
-        BNDS, TERM
+        BNDS, TERM, MSWP
       ]),
       wbFloat('Unknown'),
       wbByteArray('Unknown', 4)
