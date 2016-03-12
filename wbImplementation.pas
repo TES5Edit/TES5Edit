@@ -13169,6 +13169,9 @@ begin
         SubRecord.SetDef(ElementDef as IwbSubRecordDef);
         AddElement(SubRecord);
       end;
+      dtSubRecordArray: begin
+        Element := TwbSubRecordArray.Create(Self, aContainer, aPos, ElementDef as IwbSubRecordArrayDef);
+      end;
       dtSubRecordStruct:
         Element := TwbSubRecordStruct.Create(Self, aContainer, aPos, ElementDef as IwbSubRecordStructDef);
     else
