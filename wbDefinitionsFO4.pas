@@ -13104,16 +13104,30 @@ begin
       ], [])
     ),}
 
-    // temporary workaround to make this copyable
-    wbRArray('Unknown', wbFormIDCk(SAKD, 'Unknown', [KYWD])),
-    wbRArray('Unknown', wbFormIDCk(STKD, 'Unknown', [KYWD])),
+//    // temporary workaround to make this copyable
+//    wbRArray('Unknown', wbFormIDCk(SAKD, 'Unknown', [KYWD])),
+//    wbRArray('Unknown', wbFormIDCk(STKD, 'Unknown', [KYWD])),
+//    wbRArray('State Groups',
+//      wbRStruct('State Group', [
+//        wbString(SGNM, 'Group Name'),
+//        wbRArray('Unknown', wbString(SAPT, 'Unknown')),
+//        wbUnknown(SRAF),
+//        wbRArray('Unknown', wbFormIDCk(SAKD, 'Unknown', [KYWD])),
+//        wbRArray('Unknown', wbFormIDCk(STKD, 'Unknown', [KYWD]))
+//      ], [])
+//    ),
+
+    // Version where wbRUnion accepts wbRArray members:
     wbRArray('State Groups',
-      wbRStruct('State Group', [
-        wbString(SGNM, 'Group Name'),
-        wbRArray('Unknown', wbString(SAPT, 'Unknown')),
-        wbUnknown(SRAF),
-        wbRArray('Unknown', wbFormIDCk(SAKD, 'Unknown', [KYWD])),
-        wbRArray('Unknown', wbFormIDCk(STKD, 'Unknown', [KYWD]))
+      wbRStruct('State Group Struct', [
+        wbRArray('Members', wbRUnion('State Group', [
+            wbString(SGNM, 'Group Name'),
+            wbRArray('Unknown', wbFormIDCk(SAKD, 'Unknown', [KYWD])),
+            wbRArray('Unknown', wbFormIDCk(STKD, 'Unknown', [KYWD])),
+            wbRArray('Unknown', wbString(SAPT, 'Unknown'))
+          ], [])
+        ),
+        wbInteger(SRAF, 'State Group End', itU32) // Values greater than $10000 sets a bool. Reading this "closes" the current record.
       ], [])
     ),
 
