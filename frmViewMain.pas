@@ -16117,10 +16117,10 @@ begin
             try
               m := TStringList.Create;
               try
-                // All games prior to Skyrim load BSA files with partial matching, Skyrim requires exact names match and
+                // All games except Skyrim load BSA files with partial matching, Skyrim requires exact names match and
                 //   can use a private ini to specify the bsa to use.
                 if HasBSAs(ChangeFileExt(ltLoadList[i], ''), ltDataPath,
-                    wbGameMode in [gmFO4, gmTES5], wbGameMode in [gmTES5], n, m)>0 then begin
+                    wbGameMode in [gmTES5], wbGameMode in [gmTES5], n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do
                         if wbLoadBSAs then begin
                           LoaderProgress('[' + n[j] + '] Loading Resources.');
