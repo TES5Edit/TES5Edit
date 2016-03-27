@@ -1254,6 +1254,57 @@ begin
     Result := '';
 end;
 
+function wbREFRNavmeshTriangleToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Container  : IwbContainerElementRef;
+  Navmesh    : IwbElement;
+  MainRecord : IwbMainRecord;
+  Triangles  : IwbContainerElementRef;
+begin
+  case aType of
+    ctToStr: Result := IntToStr(aInt);
+    ctToEditValue: Result := IntToStr(aInt);
+    ctToSortKey: begin
+      Result := IntToHex64(aInt, 8);
+      Exit;
+    end;
+    ctCheck: Result := '';
+    ctEditType: Result := '';
+    ctEditInfo: Result := '';
+  end;
+
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerRefFromUnionOrValue(aElement);
+  if not Assigned(Container) then Exit;
+
+  Navmesh := Container.Elements[0];
+
+  if not Assigned(Navmesh) then
+    Exit;
+
+  if not Supports(Navmesh.LinksTo, IwbMainRecord, MainRecord) then
+    Exit;
+
+  MainRecord := MainRecord.WinningOverride;
+
+  if MainRecord.Signature <> NAVM then begin
+    case aType of
+      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Navmesh record>';
+      ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Navmesh record>';
+    end;
+    Exit;
+  end;
+
+  if Supports(MainRecord.ElementByPath['NVTR'], IwbContainerElementRef, Triangles) and (aType = ctCheck) then
+    if aInt >= Triangles.ElementCount then
+      Result := '<Warning: Navmesh triangle not found in "' + MainRecord.Name + '">';
+end;
+
+function wbStringToInt(const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := StrToIntDef(aString, 0);
+end;
+
 
 var
   wbCtdaTypeFlags : IwbFlagsDef;
@@ -7281,7 +7332,7 @@ begin
       wbByteArray(NVCA, 'Unknown'),
       wbArray(NVDP, 'Doors', wbStruct('Door', [
         wbFormIDCk('Reference', [REFR]),
-        wbInteger('Unknown', itU16),
+        wbInteger('Triangle', itU16),
         wbByteArray('Unused', 2)
       ])),
       wbByteArray(NVGD, 'Unknown'),
@@ -10186,7 +10237,7 @@ begin
     {--- Generated Data ---}
     wbStruct(XNDP, 'Navigation Door Link', [
       wbFormIDCk('Navigation Mesh', [NAVM]),
-      wbInteger('Unknown', itU16),
+      wbInteger('Teleport Marker Triangle', itS16, wbREFRNavmeshTriangleToStr, wbStringToInt),
       wbByteArray('Unused', 2)
     ]),
 
