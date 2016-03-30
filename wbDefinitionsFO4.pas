@@ -2642,12 +2642,13 @@ begin
      4: Result := 4;
      5: Result := 5;
      6: Result := 6;
-    11: Result := 7;
-    12: Result := 8;
-    13: Result := 9;
-    14: Result := 10;
-    15: Result := 11;
-    17: Result := 12;
+     7: Result := 7;
+    11: Result := 8;
+    12: Result := 9;
+    13: Result := 10;
+    14: Result := 11;
+    15: Result := 12;
+    17: Result := 13;
   end;
 end;
 
@@ -5655,7 +5656,7 @@ begin
     {04} 'Float',
     {05} 'Bool',
     {06} 'Variable',
-    {07} 'Struct ?',
+    {07} 'Struct',
     {08} '',
     {09} '',
     {10} '',
@@ -5730,7 +5731,8 @@ begin
        {03} wbInteger('Int32', itS32),
        {04} wbFloat('Float'),
        {05} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
-       {06} wbScriptPropertyStruct, // or is this 7?
+       {06} wbScriptPropertyStruct, // Variable. No idea if possible or how to decode, leaving like that for the moment
+       {07} wbScriptPropertyStruct,
        {11} wbArray('Array of Object', wbScriptPropertyObject, -1),
        {12} wbArray('Array of String', wbLenString('Element', 2), -1),
        {13} wbArray('Array of Int32', wbInteger('Element', itS32), -1),
