@@ -7875,12 +7875,14 @@ begin
     wbFormIDCk(XCIM, 'Image Space', [IMGS]),
 
     wbUnknown(XGDR),
-    wbArrayS(XPRI, 'Physics References', wbFormIDCk('Reference', [REFR])),
+    // those can be sorted I think, but makes copying records very slow since some cells have over 22000+ entries
+    // DLC01Lair01 "The Mechanist's Lair" [CELL:010008A3]
+    wbArray{S}(XPRI, 'Physics References', wbFormIDCk('Reference', [REFR])),
     wbStruct(XCRI, 'Combined References', [
       wbInteger('Meshes Count', itU32),
       wbInteger('References Count', itU32),
-      wbArrayS('Meshes', wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt), wbCELLCombinedMeshesCounter, cpNormal, False, nil, wbCELLCombinedMeshesAfterSet),
-      wbArrayS('References',  wbStructSK([1, 0], 'Reference', [
+      wbArray{S}('Meshes', wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt), wbCELLCombinedMeshesCounter, cpNormal, False, nil, wbCELLCombinedMeshesAfterSet),
+      wbArray{S}('References',  wbStruct{SK}({[1, 0], }'Reference', [
         wbFormIDCk('Reference', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
         wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt)
       ]), wbCELLCombinedRefsCounter, cpNormal, False, nil, wbCELLCombinedRefsAfterSet)
