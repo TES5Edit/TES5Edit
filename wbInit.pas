@@ -182,7 +182,7 @@ begin
     Result := wbFindNextValidCmdLineFileName(startingIndex, aValue, defaultPath);
   until not Result or wbCheckForPluginExtension(aValue);
   if Result  then
-    if (AnsiCompareText(ExpandFileName(ExtractFilePath(aValue)), ExpandFileName(defaultPath)) = 0) then begin
+    if (AnsiCompareText(ExtractFilePath(ExpandFileName(aValue)), ExpandFileName(defaultPath)) = 0) then begin
       aValue := ExtractFileName(aValue);
       if not Assigned(wbPluginsToUse) then wbPluginsToUse := TStringList.Create;
       wbPluginsToUse.Add(aValue);
