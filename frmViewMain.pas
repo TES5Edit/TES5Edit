@@ -13241,7 +13241,10 @@ begin
       tbsMessages.Highlighted := True;
   end;
 
-  if AutoDone then frmMain.Close;   // Wait until NewMessages are processed.
+  if AutoDone then begin
+    AutoDone := False;
+    frmMain.Close;   // Wait until NewMessages are processed.
+  end;
 
   if (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmCheckForITM,
         tmCheckForDR, tmCheckForErrors]) and wbLoaderDone and not wbMasterUpdateDone then begin
