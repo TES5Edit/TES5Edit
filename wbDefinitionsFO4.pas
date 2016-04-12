@@ -15374,7 +15374,7 @@ begin
       wbFloat('Scale'),
       wbFloat('Zoom Min'),
       wbFloat('Zoom Max')
-    ], cpNormal, True, nil, 7)
+    ], cpNormal, True, nil, 2)
   ]);
 
   wbRecord(ZOOM, 'Zoom', [
