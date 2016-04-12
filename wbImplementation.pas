@@ -3049,7 +3049,14 @@ begin
                    (Signature = 'PFLA') or {>>> Skyrim <<<}
                    (Signature = 'PCON') or {>>> Skyrim <<<}
                    (Signature = 'PBAR') or {>>> Skyrim <<<}
-                   (Signature = 'PHZD')    {>>> Skyrim <<<}
+                   (Signature = 'PHZD') or {>>> Skyrim <<<}
+                   // Fallout 4 (and later games?)
+                   ((wbGameMode >= gmFO4) and (
+                     (Signature = 'SCEN') or
+                     (Signature = 'DLBR') or
+                     (Signature = 'DIAL') or
+                     (Signature = 'INFO')
+                   ))
                 then begin
 
                   if (not wbMasterUpdateFilterONAM) or Current.IsWinningOverride then begin
