@@ -3190,19 +3190,31 @@ end;
 
 procedure TfrmMain.DoInit;
 
-  // remove comments and empty lines from list
-  procedure RemoveCommentsAndEmpty(sl: TStrings);
+  // remove comments and empty lines from list. Also handles star activation
+  procedure RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl: TStrings; al: TStrings);
   var
     i, j: integer;
     s: string;
   begin
     for i := Pred(sl.Count) downto 0 do begin
       s := Trim(sl.Strings[i]);
-      j := Pos('#', s);
+      j := Pos('#', s); // comments
       if j > 0 then
         System.Delete(s, j, High(Integer));
-      if Trim(s) = '' then
-        sl.Delete(i);
+      s := Trim(s);
+      if s = '' then
+        sl.Delete(i)
+      else begin
+        j := Pos('*', s); // active plugin
+        if j > 0 then begin
+          System.Delete(s, 1, j);
+          if Assigned(al) then
+            al.Add(s);
+        end;
+        s := Trim(s);
+        if s = '' then
+          sl.Delete(i);
+      end;
     end;
   end;
 
@@ -3272,23 +3284,41 @@ procedure TfrmMain.DoInit;
   begin
     with frmFileSelect do begin
       {
-         *** Load order handling for Skyrim and later games ***
+         *** Load order handling for Skyrim and originaly FO4 ***
          Plugins are sorted by the order in plugins.txt
+         1. Load plugins list from plugins file
+         2. Add missing files from BOSS list loadorder.txt
+      }
+      {
+         *** Load order handling for newer FO4 and later games ***
+         Plugins are sorted by the order in plugins.txt.
+          They are activated if they are preceded by a * in the file.
+          On the order of inactive plugins:
+            without a load manager inactive plugins shouldn't matter.
+            let's just list them in the order we find them to begin with
+            and assume the load manager will sort it out if needed.
+            false masters ??? To Be Tested
          1. Load plugins list from plugins file
          2. Add missing files from BOSS list loadorder.txt
       }
       if not (wbGameMode in [gmTES3, gmTES4, gmFO3, gmFNV]) then begin
         sl.LoadFromFile(wbPluginsFileName);
-        RemoveCommentsAndEmpty(sl); // remove comments
-        RemoveMissingFiles(sl); // remove nonexisting files
+        RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl, nil); // remove comments
         // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
         // even if not present in plugins.txt
+        // FO4 has the first three official DLC listed in the game (since 1.4), so maybe they will be forced also
+        // They obviously don't need to be listed in plugins.txt to be loaded at the moment (1.5 beta 2 survival 2016 04 08)
         j := FindMatchText(sl, wbGameName+'.esm');
         if j = -1 then sl.Insert(0, wbGameName+'.esm');
         if wbGameMode = gmTES5 then begin
           j := FindMatchText(sl, 'Update.esm');
           if j = -1 then sl.Insert(1, 'Update.esm');
-        end;
+        end else if wbGameMode = gmFO4 then
+          for i := High(wbOfficialDLC) downto Low(wbOfficialDLC) do begin
+            j := FindMatchText(sl, wbOfficialDLC[i]);
+            if j = -1 then sl.Insert(1, wbOfficialDLC[i]);
+          end;
+        RemoveMissingFiles(sl); // remove nonexisting files (including optional DLC)
 
         s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
         if FileExists(s) then begin
@@ -3539,25 +3569,36 @@ begin
                   CheckListBox1.Checked[j] := True;
               end;
           end else if wbToolSource in [tsPlugins] then begin
-            // check active files using the game's plugins list
-            sl.LoadFromFile(wbPluginsFileName);
-            for i := Pred(sl.Count) downto 0 do begin
-              s := Trim(sl.Strings[i]);
-              j := Pos('#', s);
-              if j > 0 then
-                System.Delete(s, j, High(Integer));
-              s := Trim(s);
-              if s = '' then begin
-                sl.Delete(i);
-                Continue;
+            sl2 := TStringList.Create;
+            try
+              // check active files using the game's plugins list
+              sl.LoadFromFile(wbPluginsFileName);
+              RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl, sl2);
+              if (wbGameMode >= gmFO4) and (sl2.Count>0) then begin // use starred files as active files...
+                sl.Clear;
+                for i := 0 to Pred(sl2.Count) do
+                  sl.Add(sl2[i]);
               end;
-
-              j := CheckListBox1.Items.IndexOf(s);
-              if j < 0 then
-                AddMessage('Note: Active plugin List contains nonexisting file "' + s + '"')
-              else
-                CheckListBox1.Checked[j] := True;
+            finally
+              sl2.Free;
             end;
+            for i := Pred(sl.Count) downto 0 do begin
+              s := sl.Strings[i];
+//              j := Pos('#', s);
+//              if j > 0 then
+//                System.Delete(s, j, High(Integer));
+//              s := Trim(s);
+//              if s = '' then begin
+//                sl.Delete(i);
+//                Continue;
+//              end;
+
+                j := CheckListBox1.Items.IndexOf(s);
+                if j < 0 then
+                  AddMessage('Note: Active plugin List contains nonexisting file "' + s + '"')
+                else
+                  CheckListBox1.Checked[j] := True;
+              end;
           end;
 
         if not ((wbToolMode in wbAutoModes) or wbQuickShowConflicts) then begin

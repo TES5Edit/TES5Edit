@@ -15594,6 +15594,11 @@ begin
   DefineFO4s;
   DefineFO4t;
   DefineFO4u;
+
+  SetLength(wbOfficialDLC, 3);
+  wbOfficialDLC[0] :='DLCRobot.esm';
+  wbOfficialDLC[1] :='DLCWorkshop01.esm';
+  wbOfficialDLC[2] :='DLCCost.esm';
 end;
 
 initialization
