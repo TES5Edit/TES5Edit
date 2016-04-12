@@ -3186,6 +3186,7 @@ var
   wbTerminator        : Byte = Ord('|');
   wbPlayerRefID       : Cardinal = $14;
   wbChangedFormOffset : Integer = 10000;
+  wbOfficialDLC       : array of string;
 
 type
   TwbRefIDArray = array of Cardinal;
