@@ -5690,7 +5690,7 @@ begin
   ]);
 
   wbScriptPropertyStruct :=
-    wbArray('Struct', wbStruct('Member', [
+    wbArrayS('Struct', wbStructSK([0], 'Member', [
       wbLenString('memberName', 2),
       wbInteger('Type', itU8, wbPropTypeEnum, cpNormal, False, nil, wbScriptPropertyTypeAfterSet),
       wbInteger('Flags', itU8, wbEnum([
