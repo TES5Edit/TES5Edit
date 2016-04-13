@@ -9986,14 +9986,14 @@ begin
       'Unknown 32'
     ])),
     wbInteger(NAM1, 'Type', itU32, wbEnum([
-      'Unknown 1',
-      'Unknown 2',
-      'Unknown 3',
-      'Unknown 4',
-      'Unknown 5',
-      'Unknown 6',
-      'Unknown 7',
-      'Unknown 8',
+      'Derived Attribute',
+      'Special (Attribute)',
+      'Skill',
+      'AI Attribute',
+      'Resistance',
+      'Condition',
+      'Charge',
+      'Int Value',
       'Variable',
       'Resource'
     ]))
