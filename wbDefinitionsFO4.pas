@@ -15168,8 +15168,8 @@ begin
         wbByteArray('Unused', 3, cpIgnore),
         wbInteger('Function Type', itU8, wbEnum([
           {0} 'Set',
-          {1} 'Multiply+Add',
-          {2} 'Set'
+          {1} 'Multiply',
+          {2} 'Add'
         ])),
         wbByteArray('Unused', 3, cpIgnore),
         wbUnion('Property', wbOMODDataPropertyDecider, [
@@ -15179,7 +15179,7 @@ begin
           wbInteger('Weapon Property', itU16, wbWeaponPropertyEnum)
         ]),
         wbByteArray('Unused', 2, cpIgnore),
-        wbUnion('Min', wbOMODDataPropertyValue1Decider, [
+        wbUnion('Value 1', wbOMODDataPropertyValue1Decider, [
           wbByteArray('Value 1 - Unknown', 4),
           wbInteger('Value 1 - Int', itU32),
           wbFloat('Value 1 - Float'),
@@ -15187,7 +15187,7 @@ begin
           wbByteArray('Value 1 - Enum', 4),
           wbFormID('Value 1 - FormID')
         ]),
-        wbUnion('Max', wbOMODDataPropertyValue2Decider, [
+        wbUnion('Value 2', wbOMODDataPropertyValue2Decider, [
           wbByteArray('Value 2 - Unknown', 4),
           wbInteger('Value 2 - Int', itU32),
           wbFloat('Value 2 - Float'),
