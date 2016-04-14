@@ -9983,7 +9983,7 @@ begin
       'Unknown 29',
       'Unknown 30',
       'Unknown 31',
-      'Harcoded'
+      'Hardcoded'
     ])),
     wbInteger(NAM1, 'Type', itU32, wbEnum([
       'Derived Attribute',
