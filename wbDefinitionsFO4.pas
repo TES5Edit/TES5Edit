@@ -5358,7 +5358,8 @@ begin
      'Loud',
      'Normal',
      'Silent',
-     'Very Loud'
+     'Very Loud',
+     'Quiet'
     ]);
 
   wbEntryPointsEnum := wbEnum([
@@ -7370,14 +7371,18 @@ begin
     wbATTX,
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       'No Displacement',
-      'Ignored by Sandbox'
+      'Ignored by Sandbox',
+      'Unknown 2',
+      'Unknown 3',
+      'Is a Radio'
     ])),
     wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
     wbStruct(RADR, 'Radio Receiver', [
       wbFormIDCk('Sound Model', [SOPM, NULL]),
       wbFloat('Frequency'),
-      wbFloat('Unknown'),
-      wbByteArray('Unknown', 2)
+      wbFloat('Volume'),
+      wbInteger('Start Active', itU8, wbEnum(['False', 'True'])),
+      wbInteger('No Signal Static', itU8, wbEnum(['False', 'True']))
     ]),
     wbCITC,
     wbCTDAs,
@@ -8977,7 +8982,8 @@ begin
       {0x02} 'Male',
       {0x04} 'Female',
       {0x10} 'Is Extra Part',
-      {0x20} 'Use Solid Tint'
+      {0x20} 'Use Solid Tint',
+      {0x40} 'Uses Body Texture'
     ]), cpNormal, True),
     wbInteger(PNAM, 'Type', itU32, wbEnum([
       'Misc',
