@@ -7260,6 +7260,8 @@ begin
   ]));
   wbFLTR := wbString(FLTR, 'Filter');
   wbAPPR := wbArray(APPR, 'Keywords', wbFormIDCk('Keyword', [KYWD]));
+  { when FTYP is present in STAT it is a Forced Loc Ref Type.
+    Which alters WRLD and LCTN References }
   wbFTYP := wbFormIDCk(FTYP, 'Unknown', [LCRT]);
   wbATTX := wbLString(ATTX, 'Activate Text Override', 0, cpTranslate);
   wbOBTS := wbStruct(OBTS, 'Object Mod Template Item', [
@@ -13998,21 +14000,21 @@ begin
     wbFlags(wbRecordFlagsFlags, [
       {0x00000001} { 0} '',
       {0x00000002} { 1} '',
-      {0x00000004} { 2} 'Never Fades',
+      {0x00000004} { 2} 'Heading Marker',
       {0x00000008} { 3} '',
-      {0x00000010} { 4} '',
+      {0x00000010} { 4} 'Non Occluder',
       {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} 'Has Tree LOD',
+      {0x00000040} { 6} 'Has Tree LOD', // Used in Fallout 4 ?
       {0x00000080} { 7} 'Add-On LOD Object',
       {0x00000100} { 8} '',
       {0x00000200} { 9} 'Hidden From Local Map',
-      {0x00000400} {10} '',
-      {0x00000800} {11} 'Unknown 11', // present in Skyrim.esm but can't be set
+      {0x00000400} {10} 'Headtrack Marker',
+      {0x00000800} {11} 'Used as Platform',
       {0x00001000} {12} '',
-      {0x00002000} {13} '',
+      {0x00002000} {13} 'Pack-In Use Only',
       {0x00004000} {14} '',
       {0x00008000} {15} 'Has Distant LOD',
-      {0x00010000} {16} 'Unknown 16', // present in Skyrim.esm but can't be set
+      {0x00010000} {16} '',
       {0x00020000} {17} 'Uses HD LOD Texture',
       {0x00040000} {18} '',
       {0x00080000} {19} 'Has Currents',
@@ -14024,11 +14026,11 @@ begin
       {0x02000000} {25} 'Obstacle',
       {0x04000000} {26} 'NavMesh Generation - Filter',
       {0x08000000} {27} 'NavMesh Generation - Bounding Box',
-      {0x10000000} {28} 'Show In World Map',
+      {0x10000000} {28} 'Show In World Map (Sky Cell Only)',
       {0x20000000} {29} '',
       {0x40000000} {30} 'NavMesh Generation - Ground',
       {0x80000000} {31} ''
-    ], [11, 16]), [
+    ]), [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
@@ -14040,8 +14042,8 @@ begin
     wbStruct(DNAM, 'Direction Material', [
       wbFloat('Max Angle (30-120)'),
       wbFormIDCk('Material', [MATO, NULL]),
-      wbFloat('Unknown'),
-      wbFloat('Unknown')
+      wbFloat('Leaf Amplitude'),
+      wbFloat('Leaf Frequency')
     ], cpNormal, True, nil, 2),
     wbNVNM,
     wbArray(MNAM, 'Distant LOD',
