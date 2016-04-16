@@ -12216,13 +12216,13 @@ begin
     wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False),
     wbFormIDCk(GNAM, 'Gift Filter', [FLST], False, cpNormal, False),
     wbUnknown(NAM5, cpNormal, True),
-    wbFloat(NAM6, 'Height', cpNormal, True),
-    wbFloat(NAM7, 'Weight', cpNormal, True),
-    wbFloat(NAM4, 'Unknown'),
-    wbStruct(MWGT, 'Unknown', [
-       wbFloat('Unknown'),
-       wbFloat('Unknown'),
-       wbFloat('Unknown')
+    wbFloat(NAM6, 'Height Min', cpNormal, True),
+    wbFloat(NAM7, 'Unused', cpNormal, True),
+    wbFloat(NAM4, 'Height Max'),
+    wbStruct(MWGT, 'Weight', [
+       wbFloat('Thin'),
+       wbFloat('Muscular'),
+       wbFloat('Fat')
     ]),
     wbInteger(NAM8, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),
     wbFormIDCk(PFRN, 'Power Armor Stand', [FURN]),
