@@ -838,6 +838,8 @@ type
     mrsSearchedChildGroup,
     mrsHasVWDMeshChecked,
     mrsHasVWDMesh,
+    mrsHasPrecombinedMeshChecked,
+    mrsHasPrecombinedMesh,
     mrsBaseRecordChecked,
     mrsQuickInit,
     mrsQuickInitDone,
@@ -866,6 +868,7 @@ type
     mrFullName         : string;
     mrStates           : TwbMainRecordStates;
     mrBaseRecordID     : Cardinal;
+    mrPrecombinedMeshID: Int64;
     mrConflictAll      : TConflictAll;
     mrConflictThis     : TConflictThis;
     mrDataStorage      : TBytes;
@@ -1005,6 +1008,7 @@ type
     procedure SetIsVisibleWhenDistant(aValue: Boolean);
     function GetHasVisibleWhenDistantMesh: Boolean;
     function GetHasMesh: Boolean;
+    function GetPrecombinedMesh: string;
     function GetIsInitiallyDisabled: Boolean;
     procedure SetIsInitiallyDisabled(aValue: Boolean);
 
@@ -6831,6 +6835,66 @@ begin
     end;
   end;
   Result := mrsHasMesh in mrStates;
+end;
+
+function TwbMainRecord.GetPrecombinedMesh: string;
+var
+  Signature   : TwbSignature;
+  SelfRef     : IwbContainerElementRef;
+  Group       : IwbGroupRecord;
+  Cell        : IwbMainRecord;
+  CombinedRefs, CombinedRef: IwbContainerElementRef;
+  cnt, i      : Cardinal;
+begin
+  Result := '';
+
+  if not ((mrsQuickInitDone in mrStates) or (csInitOnce in cntStates)) then
+    Exit;
+
+  if not (mrsHasPrecombinedMeshChecked in mrStates) then begin
+
+    Include(mrStates, mrsHasPrecombinedMeshChecked);
+    Self.mrPrecombinedMeshID := 0;
+
+    if wbGameMode <> gmFO4 then
+      Exit;
+
+    Signature := Self.GetSignature;
+
+    if (Signature <> 'REFR') and
+       (Signature <> 'PGRE') and
+       (Signature <> 'PMIS') and
+       (Signature <> 'PARW') and
+       (Signature <> 'PBEA') and
+       (Signature <> 'PFLA') and
+       (Signature <> 'PCON') and
+       (Signature <> 'PBAR') and
+       (Signature <> 'PHZD')
+    then
+      Exit;
+
+    SelfRef := Self as IwbContainerElementRef;
+
+    if Supports(SelfRef.Container, IwbGroupRecord, Group) then
+      Cell := Group.ChildrenOf;
+
+    if not Assigned(Cell) then
+      Exit;
+
+    if Supports(Cell.ElementByPath['XCRI\References'], IwbContainerElementRef, CombinedRefs) then begin
+      cnt := CombinedRefs.ElementCount;
+      for i := 0 to Pred(cnt) do
+        if Supports(CombinedRefs[i], IwbContainerElementRef, CombinedRef) and (CombinedRef.ElementCount = 2) then
+          if CombinedRef.Elements[0].NativeValue = Self.GetFormID then begin
+            Self.mrPrecombinedMeshID := Cardinal(CombinedRef.Elements[1].NativeValue) or (Int64(Cell.FormID and $00FFFFFF) shl 32);
+            Include(mrStates, mrsHasPrecombinedMesh);
+            Break;
+          end;
+    end;
+  end;
+
+  if mrsHasPrecombinedMesh in mrStates then
+    Result := 'Precombined\' + IntToHex((Self.mrPrecombinedMeshID shr 32) and $00FFFFFF, 8) + '_' + IntToHex(Self.mrPrecombinedMeshID and $00FFFFFF, 8) + '_OC.nif';
 end;
 
 function TwbMainRecord.GetHasVisibleWhenDistantMesh: Boolean;
