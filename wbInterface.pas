@@ -1004,6 +1004,7 @@ type
 
     procedure ChangeFormSignature(aSignature: TwbSignature);
     procedure ClampFormID(aIndex: Cardinal);
+    function GetPrecombinedMesh: string;
 
     property Version: Cardinal
       read GetFormVersion
@@ -1081,6 +1082,8 @@ type
       read GetHasVisibleWhenDistantMesh;
     property HasMesh: Boolean
       read GetHasMesh;
+    property PrecombinedMesh: string
+      read GetPrecombinedMesh;
     property IsInitiallyDisabled: Boolean
       read GetIsInitiallyDisabled
       write SetIsInitiallyDisabled;
