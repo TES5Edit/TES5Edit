@@ -3213,7 +3213,9 @@ procedure TfrmMain.DoInit;
         end;
         s := Trim(s);
         if s = '' then
-          sl.Delete(i);
+          sl.Delete(i)
+        else
+          sl[i] := s;
       end;
     end;
   end;
@@ -3306,17 +3308,11 @@ procedure TfrmMain.DoInit;
         RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl, nil); // remove comments
         // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
         // even if not present in plugins.txt
-        // FO4 has the first three official DLC listed in the game (since 1.4), so maybe they will be forced also
-        // They obviously don't need to be listed in plugins.txt to be loaded at the moment (1.5 beta 2 survival 2016 04 08)
         j := FindMatchText(sl, wbGameName+'.esm');
         if j = -1 then sl.Insert(0, wbGameName+'.esm');
         if wbGameMode = gmTES5 then begin
           j := FindMatchText(sl, 'Update.esm');
           if j = -1 then sl.Insert(1, 'Update.esm');
-        end else if wbGameMode = gmFO4 then
-          for i := High(wbOfficialDLC) downto Low(wbOfficialDLC) do begin
-            j := FindMatchText(sl, wbOfficialDLC[i]);
-            if j = -1 then sl.Insert(1, wbOfficialDLC[i]);
           end;
         RemoveMissingFiles(sl); // remove nonexisting files (including optional DLC)
 
@@ -3579,6 +3575,12 @@ begin
                 for i := 0 to Pred(sl2.Count) do
                   sl.Add(sl2[i]);
               end;
+              if wbGameMode = gmFO4 then // DLC are activated if they are present
+                for i := High(wbOfficialDLC) downto Low(wbOfficialDLC) do begin
+                  j := FindMatchText(sl, wbOfficialDLC[i]);
+                  k := CheckListBox1.Items.IndexOf(wbOfficialDLC[i]);
+                  if (j = -1) and (k>=0) then sl.Add(wbOfficialDLC[i]);
+                end;
             finally
               sl2.Free;
             end;
