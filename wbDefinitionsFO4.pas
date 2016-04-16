@@ -2114,6 +2114,10 @@ begin
           Grid := wbPositionToGridCell(Position);
           Result := Result + ' at ' + IntToStr(Grid.x) + ',' + IntToStr(Grid.y);
         end;
+
+      // in precombined mesh
+      if aMainRecord.PrecombinedMesh <> '' then
+        Result := Result + ' in ' + aMainRecord.PrecombinedMesh;
     end;
   end;
 end;
@@ -4977,7 +4981,7 @@ begin
 
   case aType of
     ctToStr, ctToEditValue: begin
-      Result := 'Meshes\Precombined\' + IntToHex(Cell.FormID and $00FFFFFF, 8) + '_' + Result + '_OC.nif';
+      Result := 'Precombined\' + IntToHex(Cell.FormID and $00FFFFFF, 8) + '_' + Result + '_OC.nif';
     end;
     ctCheck: Result := '';
   end;
@@ -7898,7 +7902,7 @@ begin
       wbArray{S}('Meshes', wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt), wbCELLCombinedMeshesCounter, cpNormal, False, nil, wbCELLCombinedMeshesAfterSet),
       wbArray{S}('References',  wbStruct{SK}({[1, 0], }'Reference', [
         wbFormIDCk('Reference', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-        wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt)
+        wbInteger('Precombined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt)
       ]), wbCELLCombinedRefsCounter, cpNormal, False, nil, wbCELLCombinedRefsAfterSet)
     ])
   ], True, wbCellAddInfo, cpNormal, False{, wbCELLAfterLoad});
