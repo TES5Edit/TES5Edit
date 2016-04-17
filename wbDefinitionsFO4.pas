@@ -13694,7 +13694,7 @@ begin
           8, 'Natural Landmark', {Vv}
           9, 'Office / Civic Building', {Vv}
           10, 'Ruins - Town', {Vv}
-          11, 'Ruins - Landmark', {Vv}
+          11, 'Ruins - Urban', {Vv}
           12, 'Sanctuary', {Vv}
           13, 'Settlement', {Vv}
           14, 'Sewer / Utility Tunnels', {Vv}
@@ -13733,7 +13733,7 @@ begin
           47, 'Swan Pond', {Vv}
           48, 'Synth Head', {Vv}
           49, 'Town', {Vv}
-          50, 'Brotherhood Of Steel', {Vv}
+          50, 'Brotherhood of Steel', {Vv}
           51, 'Brownstone Townhouse', {Vv}
           52, 'Bunker', {Vv}
           53, 'Castle', {Vv}
@@ -13748,7 +13748,7 @@ begin
           62, 'Satellite', {Vv}
           63, 'Sentinel', {Vv}
           64, 'USS Constitution', {Vv}
-          65, 'Mechanist LairRaider SettlementVassal SettlementPotential Vassal Settlement', {Vv}
+          65, 'Mechanist LairRaider settlementVassal settlementPotential Vassal settlement', {Vv}
           66, 'Custom 66',
           67, 'Custom 67',
           68, 'Custom 68',
