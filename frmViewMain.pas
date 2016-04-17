@@ -3282,6 +3282,7 @@ procedure TfrmMain.DoInit;
     sl2         : TStringList;
     Age         : Integer;
     AgeDateTime : TDateTime;
+    useBOSS     : Boolean;
 
   begin
     with frmFileSelect do begin
@@ -3305,7 +3306,13 @@ procedure TfrmMain.DoInit;
       }
       if not (wbGameMode in [gmTES3, gmTES4, gmFO3, gmFNV]) then begin
         sl.LoadFromFile(wbPluginsFileName);
-        RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl, nil); // remove comments
+        sl2 := TStringList.Create;
+        try
+          RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl, sl2); // remove comments
+          useBOSS := sl2.Count = 0;
+        finally
+          sl2.Free;
+        end;
         // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
         // even if not present in plugins.txt
         j := FindMatchText(sl, wbGameName+'.esm');
@@ -3313,28 +3320,30 @@ procedure TfrmMain.DoInit;
         if wbGameMode = gmTES5 then begin
           j := FindMatchText(sl, 'Update.esm');
           if j = -1 then sl.Insert(1, 'Update.esm');
-          end;
+        end;
         RemoveMissingFiles(sl); // remove nonexisting files (including optional DLC)
 
-        s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
-        if FileExists(s) then begin
-          AddMessage('Found BOSS load order list: ' + s);
-          sl2 := TStringList.Create;
-          try
-            sl2.LoadFromFile(s);
-            RemoveMissingFiles(sl2); // remove nonexisting files from BOSS list
-            // skip first line "Skyrim.esm" in BOSS list
-            for i := 1 to Pred(sl2.Count) do begin
-              j := FindMatchText(sl, sl2[i]);
-              // if plugin exists in plugins file, skip
-              if j <> -1 then Continue;
-              // otherwise insert it after position of previous plugin
-              j := FindMatchText(sl, sl2[i-1]);
-              if j <> -1 then
-                sl.Insert(j+1, sl2[i]);
+        if useBOSS then begin
+          s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
+          if FileExists(s) then begin
+            AddMessage('Found BOSS load order list: ' + s);
+            sl2 := TStringList.Create;
+            try
+              sl2.LoadFromFile(s);
+              RemoveMissingFiles(sl2); // remove nonexisting files from BOSS list
+              // skip first line "Skyrim.esm" in BOSS list
+              for i := 1 to Pred(sl2.Count) do begin
+                j := FindMatchText(sl, sl2[i]);
+                // if plugin exists in plugins file, skip
+                if j <> -1 then Continue;
+                // otherwise insert it after position of previous plugin
+                j := FindMatchText(sl, sl2[i-1]);
+                if j <> -1 then
+                  sl.Insert(j+1, sl2[i]);
+              end;
+            finally
+              sl2.Free;
             end;
-          finally
-            sl2.Free;
           end;
         end;
       end;
