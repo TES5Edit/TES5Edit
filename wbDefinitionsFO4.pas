@@ -13674,72 +13674,74 @@ begin
       wbFULLReq,
       wbStruct(TNAM, '', [
         wbInteger('Type', itU8, wbEnum([], [
-          0, 'None',
-          1, 'City',
-          2, 'Town',
-          3, 'Settlement',
-          4, 'Cave',
-          5, 'Camp',
-          6, 'Fort',
-          7, 'Nordic Ruins',
-          8, 'Dwemer Ruin',
-          9, 'Shipwreck',
-          10, 'Grove',
-          11, 'Landmark',
-          12, 'Dragon Lair',
-          13, 'Farm',
-          14, 'Wood Mill',
-          15, 'Mine',
-          16, 'Imperial Camp',
-          17, 'Stormcloak Camp',
-          18, 'Doomstone',
-          19, 'Wheat Mill',
-          20, 'Smelter',
-          21, 'Stable',
-          22, 'Imperial Tower',
-          23, 'Clearing',
-          24, 'Pass',
-          25, 'Altar',
-          26, 'Rock',
-          27, 'Lighthouse',
-          28, 'Orc Stronghold',
-          29, 'Giant Camp',
-          30, 'Shack',
-          31, 'Nordic Tower',
-          32, 'Nordic Dwelling',
-          33, 'Docks',
-          34, 'Shrine',
-          35, 'Riften Castle',
-          36, 'Riften Capitol',
-          37, 'Windhelm Castle',
-          38, 'Windhelm Capitol',
-          39, 'Whiterun Castle',
-          40, 'Whiterun Capitol',
-          41, 'Solitude Castle',
-          42, 'Solitude Capitol',
-          43, 'Markarth Castle',
-          44, 'Markarth Capitol',
-          45, 'Winterhold Castle',
-          46, 'Winterhold Capitol',
-          47, 'Morthal Castle',
-          48, 'Morthal Capitol',
-          49, 'Falkreath Castle',
-          50, 'Falkreath Capitol',
-          51, 'Dawnstar Castle',
-          52, 'Dawnstar Capitol',
-          53, 'DLC02 - Temple of Miraak',
-          54, 'DLC02 - Raven Rock',
-          55, 'DLC02 - Beast Stone',
-          56, 'DLC02 - Tel Mithryn',
-          57, 'DLC02 - To Skyrim',
-          58, 'DLC02 - To Solstheim',
-          59, 'Custom 59',
-          60, 'Custom 60',
-          61, 'Custom 61',
-          62, 'Custom 62',
-          63, 'Custom 63',
-          64, 'Custom 64',
-          65, 'Custom 65',
+          {Vv = Verified Vanilla}
+          {No new map markers for Automatron or Workshop}
+          0, 'Cave', {Vv}
+          1, 'City', {Vv}
+          2, 'Diamond City', {Vv}
+          3, 'Encampment', {Vv}
+          4, 'Factory / Industrial Site', {Vv}
+          5, 'Gov''t Building / Monument', {Vv}
+          6, 'Metro Station', {Vv}
+          7, 'Military Base', {Vv}
+          8, 'Natural Landmark', {Vv}
+          9, 'Office / Civic Building', {Vv}
+          10, 'Ruins - Town', {Vv}
+          11, 'Ruins - Landmark', {Vv}
+          12, 'Sanctuary', {Vv}
+          13, 'Settlement', {Vv}
+          14, 'Sewer / Utility Tunnels', {Vv}
+          15, 'Vault', {Vv}
+          16, 'Airfield', {Vv}
+          17, 'Bunker Hill', {Vv}
+          18, 'Camper', {Vv}
+          19, 'Car', {Vv}
+          20, 'Church', {Vv}
+          21, 'Country Club', {Vv}
+          22, 'Custom House', {Vv}
+          23, 'Drive-In', {Vv}
+          24, 'Elevated Highway', {Vv}
+          25, 'Faneuil Hall', {Vv}
+          26, 'Farm', {Vv}
+          27, 'Filling Station', {Vv}
+          28, 'Forested', {Vv}
+          29, 'Goodneighbor', {Vv}
+          30, 'Graveyard', {Vv}
+          31, 'Hospital', {Vv}
+          32, 'Industrial Dome', {Vv}
+          33, 'Industrial Stacks', {Vv}
+          34, 'Institute', {Vv}
+          35, 'Irish Pride', {Vv}
+          36, 'Junkyard', {Vv}
+          37, 'Observatory', {Vv}
+          38, 'Pier', {Vv}
+          39, 'Pond / Lake', {Vv}
+          40, 'Quarry', {Vv}
+          41, 'Radioactive Area', {Vv}
+          42, 'Radio Tower', {Vv}
+          43, 'Salem', {Vv}
+          44, 'School', {Vv}
+          45, 'Shipwreck', {Vv}
+          46, 'Submarine', {Vv}
+          47, 'Swan Pond', {Vv}
+          48, 'Synth Head', {Vv}
+          49, 'Town', {Vv}
+          50, 'Brotherhood Of Steel', {Vv}
+          51, 'Brownstone Townhouse', {Vv}
+          52, 'Bunker', {Vv}
+          53, 'Castle', {Vv}
+          54, 'Skyscraper', {Vv}
+          55, 'Libertalia', {Vv}
+          56, 'Low-Rise Building', {Vv}
+          57, 'Minutemen', {Vv}
+          58, 'Police Station', {Vv}
+          59, 'Prydwen', {Vv}
+          60, 'Railroad - Faction', {Vv}
+          61, 'Railroad', {Vv}
+          62, 'Satellite', {Vv}
+          63, 'Sentinel', {Vv}
+          64, 'USS Constitution', {Vv}
+          65, 'Mechanist LairRaider SettlementVassal SettlementPotential Vassal Settlement', {Vv}
           66, 'Custom 66',
           67, 'Custom 67',
           68, 'Custom 68',
