@@ -7486,12 +7486,12 @@ begin
       wbInteger('Flags', itU32, wbFlags([
         'Ignores Normal Weapon Resistance',
         'Non-Playable',
-        'Ballistic?'
+        'Has Count Based 3D'
       ])),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
+      wbFloat('Damage'),
+      wbInteger('Health', itU32)
     ], cpNormal, True),
-    wbLString(ONAM, 'Unknown', 0, cpTranslate),
+    wbLString(ONAM, 'Short Name', 0, cpTranslate),
     wbString(NAM1, 'Casing Model'),
     wbUnknown(NAM2)
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
