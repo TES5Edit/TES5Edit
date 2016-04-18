@@ -7338,9 +7338,13 @@ begin
 
   wbRecord(ACTI, 'Activator',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000002}  2, 'Never Fades',
+      {0x00000004}  4, 'Non Occluder',
       {0x00000040}  6, 'Has Tree LOD',
       {0x00000100}  8, 'Must Update Anims',
       {0x00000200}  9, 'Hidden From Local Map',
+      {0x00000800} 11, 'Used as Platform',
+      {0x00001000} 13, 'Pack In Use Only',
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
       {0x00020000} 17, 'Dangerous',
@@ -7389,7 +7393,7 @@ begin
       wbFloat('Volume'),
       wbInteger('Start Active', itU8, wbEnum(['False', 'True'])),
       wbInteger('No Signal Static', itU8, wbEnum(['False', 'True']))
-    ]),
+    ], cpNormal, False, Nil, 4), // Not sure if the Activator without the 'No Signal Static' member is a bug or expected.
     wbCITC,
     wbCTDAs,
     wbNVNM
