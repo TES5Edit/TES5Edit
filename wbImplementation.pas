@@ -6845,6 +6845,8 @@ var
   Cell        : IwbMainRecord;
   CombinedRefs, CombinedRef: IwbContainerElementRef;
   cnt, i      : Cardinal;
+  Master      : Int64;
+  Local       : Int64;
 begin
   Result := '';
 
@@ -6880,13 +6882,17 @@ begin
 
     if not Assigned(Cell) then
       Exit;
+    // Split so there isn't any implicit conversion leading to overflow
+    Master := Cell.FormID;
+    Master := (Master and $00FFFFFF) shl 32;
 
     if Supports(Cell.ElementByPath['XCRI\References'], IwbContainerElementRef, CombinedRefs) then begin
       cnt := CombinedRefs.ElementCount;
       for i := 0 to Pred(cnt) do
         if Supports(CombinedRefs[i], IwbContainerElementRef, CombinedRef) and (CombinedRef.ElementCount = 2) then
           if CombinedRef.Elements[0].NativeValue = Self.GetFormID then begin
-            Self.mrPrecombinedMeshID := Cardinal(CombinedRef.Elements[1].NativeValue) or (Int64(Cell.FormID and $00FFFFFF) shl 32);
+            Local := CombinedRef.Elements[1].NativeValue;
+            Self.mrPrecombinedMeshID := Local or Master;
             Include(mrStates, mrsHasPrecombinedMesh);
             Break;
           end;
