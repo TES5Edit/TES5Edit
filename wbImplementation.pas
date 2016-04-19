@@ -143,24 +143,29 @@ var
   Container   : IwbContainer;
   Target      : IwbElement;
 begin
-  if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount) then begin
-    wbProgressCallback('');
-    wbCurrentTick := GetTickCount;
-  end;
-  Container := aSource.Container;
-  if Assigned(Container) then begin
-    if Supports(Container, IwbMainRecord, MainRecord) then
-      Container := MainRecord.HighestOverrideOrSelf[aFile.LoadOrder];
-    Target := wbCopyElementToFile(Container, aFile, False, False, aPrefixRemove, aPrefix, aSuffix)
-  end else begin
-    Result := aFile;
-    Exit;
-  end;
+  Inc(wbCopyIsRunning);
+  try
+    if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount) then begin
+      wbProgressCallback('');
+      wbCurrentTick := GetTickCount;
+    end;
+    Container := aSource.Container;
+    if Assigned(Container) then begin
+      if Supports(Container, IwbMainRecord, MainRecord) then
+        Container := MainRecord.HighestOverrideOrSelf[aFile.LoadOrder];
+      Target := wbCopyElementToFile(Container, aFile, False, False, aPrefixRemove, aPrefix, aSuffix)
+    end else begin
+      Result := aFile;
+      Exit;
+    end;
 
-  if Assigned(Target) then
-    Result := Target.AddIfMissing(aSource, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix)
-  else
-    Result := nil;
+    if Assigned(Target) then
+      Result := Target.AddIfMissing(aSource, aAsNew, aDeepCopy, aPrefixRemove, aPrefix, aSuffix)
+    else
+      Result := nil;
+  finally
+    Dec(wbCopyIsRunning);
+  end;
 end;
 
 function wbCopyElementToRecord(const aSource: IwbElement; aMainRecord: IwbMainRecord; aAsNew, aDeepCopy: Boolean): IwbElement;

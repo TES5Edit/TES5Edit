@@ -74,7 +74,7 @@ var
   wbActorTemplateHide      : Boolean  = True;
   wbClampFormID            : Boolean  = True;
   wbDoNotBuildRefsFor      : TStringList;
-  wbCopyIsRunning          : Boolean  = False;
+  wbCopyIsRunning          : Integer  = 0;
 
   wbUDRSetXESP       : Boolean = True;
   wbUDRSetScale      : Boolean = False;
@@ -7113,7 +7113,7 @@ end;
 
 function TwbRecordDef.AdditionalInfoFor(const aMainRecord: IwbMainRecord): string;
 begin
-  if not wbCopyIsRunning and Assigned(recAddInfoCallback) then
+  if (wbCopyIsRunning = 0) and Assigned(recAddInfoCallback) then
     Result := recAddInfoCallback(aMainRecord)
   else
     Result := '';

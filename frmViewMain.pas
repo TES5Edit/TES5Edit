@@ -2364,7 +2364,6 @@ begin
     wbStartTime := now;
     wbShowStartTime := 1;
     wbCurrentTick := GetTickCount;
-    wbCopyIsRunning := True;
 
     CopyInto(
       Sender = mniNavCopyAsNewRecord,
@@ -2380,7 +2379,6 @@ begin
     if (Length(Elements) > 1) or (Elements[0].ElementType <> etMainRecord) then
       vstNav.Invalidate;
   finally
-    wbCopyIsRunning := False;
     wbProgressCallback('Copying done.');
     wbCurrentAction := '';
     wbCurrentTick := 0;
