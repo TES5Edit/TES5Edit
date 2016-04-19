@@ -11058,17 +11058,17 @@ begin
         wbCITC,
         wbCTDAs
       ], []),
-      wbFormIDCk(PTOP, 'Unknown', [DIAL]),
-      wbFormIDCk(NTOP, 'Unknown', [DIAL]),
-      wbFormIDCk(NETO, 'Unknown', [DIAL]),
-      wbFormIDCk(QTOP, 'Unknown', [DIAL]),
+      wbFormIDCk(PTOP, 'Player Positive Response', [DIAL]),
+      wbFormIDCk(NTOP, 'Player Negative Response', [DIAL]),
+      wbFormIDCk(NETO, 'Player Neutral Response', [DIAL]),
+      wbFormIDCk(QTOP, 'Player Question Response', [DIAL]),
       wbFormIDCk(JOUT, 'Unknown', [KYWD]),
       wbUnknown(DTID),
       wbFormIDCk(DALC, 'Unknown', [KYWD]),
-      wbFormIDCk(NPOT, 'Unknown', [DIAL]),
-      wbFormIDCk(NNGT, 'Unknown', [DIAL]),
-      wbFormIDCk(NNUT, 'Unknown', [DIAL]),
-      wbFormIDCk(NQUT, 'Unknown', [DIAL]),
+      wbFormIDCk(NPOT, 'NPC Positive Response', [DIAL]),
+      wbFormIDCk(NNGT, 'NPC Negative Response', [DIAL]),
+      wbFormIDCk(NNUT, 'NPC Neutral Response', [DIAL]),
+      wbFormIDCk(NQUT, 'NPC Question Response', [DIAL]),
       wbFormIDCk(NQUS, 'Unknown', [KYWD]),
       wbFormIDCk(NPOS, 'Unknown', [KYWD]),
       wbUnknown(DTGT),
@@ -12547,7 +12547,10 @@ begin
       ]))
     ], cpNormal, False, nil, 1);
 
-  wbRecord(QUST, 'Quest', [
+  wbRecord(QUST, 'Quest',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00004000} 14, 'Partial Form'	// Allows the Record to inherit some surecords from its master
+    ])), [
     wbEDID,
     wbVMADFragmentedQUST,
     wbFULL,
