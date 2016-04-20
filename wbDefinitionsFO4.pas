@@ -2116,7 +2116,7 @@ begin
         end;
 
       // in precombined mesh
-      if aMainRecord.PrecombinedMesh <> '' then
+      if aMainRecord.HasPrecombinedMesh then
         Result := Result + ' in ' + aMainRecord.PrecombinedMesh;
     end;
   end;
