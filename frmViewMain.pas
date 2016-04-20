@@ -681,6 +681,9 @@ type
     FilterByHasVWDMesh: Boolean;
     FilterHasVWDMesh: Boolean;
 
+    FilterByHasPrecombinedMesh: Boolean;
+    FilterHasPrecombinedMesh: Boolean;
+
     FlattenBlocks: Boolean;
     FlattenCellChilds: Boolean;
     AssignPersWrldChild: Boolean;
@@ -10606,6 +10609,9 @@ begin
       FilterByHasVWDMesh := cbByHasVWDMesh.Checked;
       FilterHasVWDMesh := cbHasVWDMesh.Checked;
 
+      FilterByHasPrecombinedMesh := cbByHasPrecombinedMesh.Checked;
+      FilterHasPrecombinedMesh := cbHasPrecombinedMesh.Checked;
+
       FilterBySignature := cbRecordSignature.Checked;
       FilterSignatures := RecordSignatures;
 
@@ -10969,7 +10975,7 @@ begin
               )
             ) or
             (
-              (FilterByPersistent or FilterByVWD or FilterByHasVWDMesh) and (
+              (FilterByPersistent or FilterByVWD or FilterByHasVWDMesh or FilterByHasPrecombinedMesh) and (
                 not Supports(NodeData.Element, IwbMainRecord, MainRecord) or
                 (
                   (MainRecord.Signature <> 'REFR') and
@@ -11022,6 +11028,12 @@ begin
                       Supports(Rec.LinksTo, IwbMainRecord, MainRecord) and
                       MainRecord.HasVisibleWhenDistantMesh
                     ) <> FilterHasVWDMesh
+                  )
+                ) or
+                (
+                  FilterByHasPrecombinedMesh and
+                  (
+                    MainRecord.HasPrecombinedMesh <> FilterHasPrecombinedMesh
                   )
                 )
               )
@@ -11119,6 +11131,9 @@ begin
   FilterByHasVWDMesh := False;
   FilterHasVWDMesh := False;
 
+  FilterByHasPrecombinedMesh := False;
+  FilterHasPrecombinedMesh := False;
+
   FilterBySignature := False;
   FilterSignatures := '';
 
@@ -11183,6 +11198,9 @@ begin
 
   FilterByHasVWDMesh := False;
   FilterHasVWDMesh := False;
+
+  FilterByHasPrecombinedMesh := False;
+  FilterHasPrecombinedMesh := False;
 
   FilterBySignature := False;
   FilterSignatures := '';
@@ -14607,9 +14625,12 @@ begin
       if (Column < 1) and (Element.ElementType = etMainRecord) then begin
         if Supports(Element.Container, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType in [1, 8..10]) then begin
           MainRecord := Element as IwbMainRecord;
-          if Assigned(MainRecord.Def) then
-            CellText := MainRecord.Def.GetName
-          else
+          if Assigned(MainRecord.Def) then begin
+            if MainRecord.HasPrecombinedMesh then
+              CellText := '[' + MainRecord.Def.GetName + ']'
+            else
+              CellText := MainRecord.Def.GetName;
+          end else
             CellText := MainRecord.Signature;
         end;
       end;
@@ -15864,6 +15885,14 @@ begin
   end else
   if SameText(Identifier, 'FilterHasVWDMesh') then begin
     FilterHasVWDMesh := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterByHasPrecombinedMesh') then begin
+    FilterByHasPrecombinedMesh := Value;
+    Done := True;
+  end else
+  if SameText(Identifier, 'FilterHasPrecombinedMesh') then begin
+    FilterHasPrecombinedMesh := Value;
     Done := True;
   end else
   if SameText(Identifier, 'FlattenBlocks') then begin
