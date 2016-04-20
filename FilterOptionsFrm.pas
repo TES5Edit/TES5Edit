@@ -79,6 +79,8 @@ type
     btnFilterAdd: TButton;
     btnFilterDel: TButton;
     btnFilterSave: TButton;
+    cbByHasPrecombinedMesh: TCheckBox;
+    cbHasPrecombinedMesh: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure mniSelectionClick(Sender: TObject);
     procedure cmbPresetSelect(Sender: TObject);
@@ -379,6 +381,9 @@ begin
   cbByHasVWDMesh.Checked := Settings.ReadBool(Section, 'ByHasVWDMesh', False);
   cbHasVWDMesh.Checked := Settings.ReadBool(Section, 'HasVWDMesh', True);
 
+  cbByHasPrecombinedMesh.Checked := Settings.ReadBool(Section, 'ByHasPrecombinedMesh', False);
+  cbHasPrecombinedMesh.Checked := Settings.ReadBool(Section, 'HasPrecombinedMesh', True);
+
   cbFlattenBlocks.Checked := Settings.ReadBool(Section, 'FlattenBlocks', False);
   cbFlattenCellChilds.Checked := Settings.ReadBool(Section, 'FlattenCellChilds', False);
   cbAssignPersWrldChild.Checked := Settings.ReadBool(Section, 'AssignPersWrldChild', False);
@@ -456,6 +461,9 @@ begin
 
   Settings.WriteBool(Section, 'ByHasVWDMesh', cbByHasVWDMesh.Checked);
   Settings.WriteBool(Section, 'HasVWDMesh', cbHasVWDMesh.Checked);
+
+  Settings.WriteBool(Section, 'ByHasPrecombinedMesh', cbByHasPrecombinedMesh.Checked);
+  Settings.WriteBool(Section, 'HasPrecombinedMesh', cbHasPrecombinedMesh.Checked);
 
   Settings.WriteBool(Section, 'FlattenBlocks', cbFlattenBlocks.Checked);
   Settings.WriteBool(Section, 'FlattenCellChilds', cbFlattenCellChilds.Checked);

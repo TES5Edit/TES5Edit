@@ -1198,6 +1198,24 @@ begin
   end;
 end;
 
+procedure IwbMainRecord_HasPrecombinedMesh(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  Value := False;
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    Value := MainRecord.HasPrecombinedMesh;
+end;
+
+procedure IwbMainRecord_PrecombinedMesh(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    Value := MainRecord.PrecombinedMesh;
+end;
+
 
 { IwbGroupRecord }
 
@@ -1897,6 +1915,8 @@ begin
     AddFunction(cUnit, 'GetPosition', IwbMainRecord_GetPosition, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetRotation', IwbMainRecord_GetRotation, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetGridCell', IwbMainRecord_GetGridCell, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'HasPrecombinedMesh', IwbMainRecord_HasPrecombinedMesh, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'PrecombinedMesh', IwbMainRecord_PrecombinedMesh, 1, [varEmpty], varEmpty);
 
     { IwbGroupRecord }
     AddFunction(cUnit, 'GroupType', IwbGroupRecord_GroupType, 1, [varEmpty], varEmpty);

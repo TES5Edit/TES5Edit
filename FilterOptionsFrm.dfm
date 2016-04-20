@@ -73,8 +73,8 @@ object frmFilterOptions: TfrmFilterOptions
       TabOrder = 8
     end
     object cbByHasVWDMesh: TCheckBox
-      Left = 172
-      Top = 508
+      Left = 175
+      Top = 470
       Width = 201
       Height = 17
       Caption = 'by Has Visible When Distant Mesh'
@@ -97,8 +97,8 @@ object frmFilterOptions: TfrmFilterOptions
       TabOrder = 11
     end
     object cbByNotReachableStatus: TCheckBox
-      Left = 172
-      Top = 412
+      Left = 175
+      Top = 392
       Width = 193
       Height = 17
       Caption = 'by not reachable status'
@@ -113,16 +113,16 @@ object frmFilterOptions: TfrmFilterOptions
       TabOrder = 13
     end
     object cbByReferencesInjectedStatus: TCheckBox
-      Left = 172
-      Top = 374
+      Left = 175
+      Top = 354
       Width = 193
       Height = 17
       Caption = 'by references injected status'
       TabOrder = 14
     end
     object cbByVWD: TCheckBox
-      Left = 172
-      Top = 462
+      Left = 175
+      Top = 430
       Width = 180
       Height = 17
       Caption = 'by Visible When Distant'
@@ -171,8 +171,8 @@ object frmFilterOptions: TfrmFilterOptions
       TabOrder = 20
     end
     object cbHasVWDMesh: TCheckBox
-      Left = 189
-      Top = 531
+      Left = 192
+      Top = 485
       Width = 184
       Height = 17
       Caption = 'only Has VWD Mesh'
@@ -211,8 +211,8 @@ object frmFilterOptions: TfrmFilterOptions
       TabOrder = 25
     end
     object cbNotReachable: TCheckBox
-      Left = 189
-      Top = 435
+      Left = 192
+      Top = 407
       Width = 163
       Height = 17
       Caption = 'only not reachable'
@@ -243,8 +243,8 @@ object frmFilterOptions: TfrmFilterOptions
       TabOrder = 29
     end
     object cbReferencesInjected: TCheckBox
-      Left = 186
-      Top = 389
+      Left = 189
+      Top = 369
       Width = 187
       Height = 17
       Caption = 'only references injected'
@@ -267,8 +267,8 @@ object frmFilterOptions: TfrmFilterOptions
       TabOrder = 32
     end
     object cbVWD: TCheckBox
-      Left = 189
-      Top = 485
+      Left = 192
+      Top = 447
       Width = 176
       Height = 17
       Caption = 'only Visible When Distant'
@@ -390,6 +390,22 @@ object frmFilterOptions: TfrmFilterOptions
       Caption = 'Save'
       TabOrder = 1
       OnClick = btnFilterSaveClick
+    end
+    object cbByHasPrecombinedMesh: TCheckBox
+      Left = 175
+      Top = 508
+      Width = 201
+      Height = 17
+      Caption = 'by Has Precombined Mesh'
+      TabOrder = 42
+    end
+    object cbHasPrecombinedMesh: TCheckBox
+      Left = 192
+      Top = 523
+      Width = 184
+      Height = 17
+      Caption = 'only Has Precombined Mesh'
+      TabOrder = 43
     end
   end
   object pnlBottom: TPanel

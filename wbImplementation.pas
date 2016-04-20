@@ -873,7 +873,8 @@ type
     mrFullName         : string;
     mrStates           : TwbMainRecordStates;
     mrBaseRecordID     : Cardinal;
-    mrPrecombinedMeshID: Int64;
+    mrPrecombinedCellID: Cardinal;
+    mrPrecombinedID    : Cardinal;
     mrConflictAll      : TConflictAll;
     mrConflictThis     : TConflictThis;
     mrDataStorage      : TBytes;
@@ -1013,6 +1014,7 @@ type
     procedure SetIsVisibleWhenDistant(aValue: Boolean);
     function GetHasVisibleWhenDistantMesh: Boolean;
     function GetHasMesh: Boolean;
+    function GetHasPrecombinedMesh: Boolean;
     function GetPrecombinedMesh: string;
     function GetIsInitiallyDisabled: Boolean;
     procedure SetIsInitiallyDisabled(aValue: Boolean);
@@ -6842,6 +6844,24 @@ begin
   Result := mrsHasMesh in mrStates;
 end;
 
+function TwbMainRecord.GetHasPrecombinedMesh: Boolean;
+begin
+  if not (mrsHasPrecombinedMeshChecked in mrStates) then
+    Self.GetPrecombinedMesh;
+
+  Result := mrsHasPrecombinedMesh in mrStates;
+end;
+
+type
+  TwbPrecombinedInfo = record
+    Ref, ID: Cardinal;
+  end;
+
+var
+  PrecombinedCacheFileName: string;
+  PrecombinedCacheCellFormID: Cardinal;
+  PrecombinedCache: array of TwbPrecombinedInfo;
+
 function TwbMainRecord.GetPrecombinedMesh: string;
 var
   Signature   : TwbSignature;
@@ -6850,18 +6870,19 @@ var
   Cell        : IwbMainRecord;
   CombinedRefs, CombinedRef: IwbContainerElementRef;
   cnt, i      : Cardinal;
-  Master      : Int64;
-  Local       : Int64;
+  s: string;
 begin
   Result := '';
 
-  if not ((mrsQuickInitDone in mrStates) or (csInitOnce in cntStates)) then
-    Exit;
-
   if not (mrsHasPrecombinedMeshChecked in mrStates) then begin
 
+    // we need file for cache checking
+    if not Assigned(IwbElement(Self)._File) then
+      Exit;
+
     Include(mrStates, mrsHasPrecombinedMeshChecked);
-    Self.mrPrecombinedMeshID := 0;
+    Self.mrPrecombinedCellID := 0;
+    Self.mrPrecombinedID := 0;
 
     if wbGameMode <> gmFO4 then
       Exit;
@@ -6882,30 +6903,49 @@ begin
 
     SelfRef := Self as IwbContainerElementRef;
 
+    // markers can't be precombined
+    if Cardinal(SelfRef.ElementNativeValues['NAME']) < $800 then
+      Exit;
+
     if Supports(SelfRef.Container, IwbGroupRecord, Group) then
       Cell := Group.ChildrenOf;
 
     if not Assigned(Cell) then
       Exit;
-    // Split so there isn't any implicit conversion leading to overflow
-    Master := Cell.FormID;
-    Master := (Master and $00FFFFFF) shl 32;
 
-    if Supports(Cell.ElementByPath['XCRI\References'], IwbContainerElementRef, CombinedRefs) then begin
-      cnt := CombinedRefs.ElementCount;
-      for i := 0 to Pred(cnt) do
-        if Supports(CombinedRefs[i], IwbContainerElementRef, CombinedRef) and (CombinedRef.ElementCount = 2) then
-          if CombinedRef.Elements[0].NativeValue = Self.GetFormID then begin
-            Local := CombinedRef.Elements[1].NativeValue;
-            Self.mrPrecombinedMeshID := Local or Master;
-            Include(mrStates, mrsHasPrecombinedMesh);
-            Break;
+    s := IwbElement(Self)._File.Name;
+    i := Cell.FormID;
+
+    // store cell's precombined index in cache
+    if (i <> PrecombinedCacheCellFormID) or (s <> PrecombinedCacheFileName) then begin
+      PrecombinedCacheCellFormID := i;
+      PrecombinedCacheFileName := s;
+      SetLength(PrecombinedCache, 0);
+
+      if Supports(Cell.ElementByPath['XCRI\References'], IwbContainerElementRef, CombinedRefs) then begin
+        cnt := CombinedRefs.ElementCount;
+        SetLength(PrecombinedCache, cnt);
+        for i := 0 to Pred(cnt) do
+          if Supports(CombinedRefs[i], IwbContainerElementRef, CombinedRef) and (CombinedRef.ElementCount = 2) then begin
+            PrecombinedCache[i].Ref := CombinedRef.Elements[0].NativeValue;
+            PrecombinedCache[i].ID := CombinedRef.Elements[1].NativeValue;
           end;
+      end;
     end;
+
+    // search for ref in precombined index cache
+    if Length(PrecombinedCache) > 0 then
+      for i := Low(PrecombinedCache) to High(PrecombinedCache) do
+        if PrecombinedCache[i].Ref = Self.GetFormID then begin
+          Self.mrPrecombinedCellID := Cell.FormID and $00FFFFFF;
+          Self.mrPrecombinedID := PrecombinedCache[i].ID;
+          Include(mrStates, mrsHasPrecombinedMesh);
+          Break;
+        end;
   end;
 
   if mrsHasPrecombinedMesh in mrStates then
-    Result := 'Precombined\' + IntToHex((Self.mrPrecombinedMeshID shr 32) and $00FFFFFF, 8) + '_' + IntToHex(Self.mrPrecombinedMeshID and $00FFFFFF, 8) + '_OC.nif';
+    Result := 'Precombined\' + IntToHex(Self.mrPrecombinedCellID, 8) + '_' + IntToHex(Self.mrPrecombinedID, 8) + '_OC.nif';
 end;
 
 function TwbMainRecord.GetHasVisibleWhenDistantMesh: Boolean;
