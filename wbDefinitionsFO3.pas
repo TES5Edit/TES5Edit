@@ -1225,7 +1225,7 @@ begin
     Exit;
   end;
 
-  if Supports(MainRecord.ElementByPath['NVTR'], IwbContainerElementRef, Triangles) and (aType = ctCheck) then
+  if not wbSimpleRecords and (aType = ctCheck) and Supports(MainRecord.ElementByPath['NVTR'], IwbContainerElementRef, Triangles) then
     if aInt >= Triangles.ElementCount then
       Result := '<Warning: Navmesh triangle not found in "' + MainRecord.Name + '">';
 end;
