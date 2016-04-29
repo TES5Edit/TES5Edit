@@ -11721,7 +11721,7 @@ begin
       wbFloat('God Rays - Near Clip'),
       wbInteger('Value', itU32),
       wbFloat('Weight')
-    ], cpNormal, True),
+    ], cpNormal, True, nil, 12),
     wbFloat(FNAM, 'Fade value', cpNormal, True),
     wbString(NAM0, 'Unknown'),
     wbFormIDCk(LNAM, 'Lens', [LENS]),
