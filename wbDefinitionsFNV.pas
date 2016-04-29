@@ -1295,7 +1295,7 @@ begin
     Exit;
   end;
 
-  if Supports(MainRecord.ElementByPath['NVTR'], IwbContainerElementRef, Triangles) and (aType = ctCheck) then
+  if not wbSimpleRecords and (aType = ctCheck) and Supports(MainRecord.ElementByPath['NVTR'], IwbContainerElementRef, Triangles) then
     if aInt >= Triangles.ElementCount then
       Result := '<Warning: Navmesh triangle not found in "' + MainRecord.Name + '">';
 end;
@@ -9122,7 +9122,8 @@ begin
     ], cpNormal, True)
   ]);
 
-  if wbSimpleRecords then begin
+  // floats are reported to change faces after copying
+  if True {wbSimpleRecords} then begin
     wbFaceGen := wbRStruct('FaceGen Data', [
       wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
       wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
