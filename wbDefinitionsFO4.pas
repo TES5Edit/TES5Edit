@@ -308,6 +308,7 @@ const
   DLBR : TwbSignature = 'DLBR';
   DLVW : TwbSignature = 'DLVW';
   DMAX : TwbSignature = 'DMAX'; { New to Skyrim }
+  DMDC : TwbSignature = 'DMDC'; { New to Fallout 4 }
   DMDL : TwbSignature = 'DMDL';
   DMDS : TwbSignature = 'DMDS'; { New to Skyrim }
   DMDT : TwbSignature = 'DMDT';
@@ -939,9 +940,8 @@ var
   wbCTDAsReqCount: IwbSubRecordArrayDef;
   wbXLOD: IwbSubRecordDef;
   wbXESP: IwbSubRecordDef;
-  wbICON: IwbSubRecordStructDef;
-  wbICONReq: IwbSubRecordStructDef;
-  wbICO2: IwbSubRecordStructDef;
+  wbICON: IwbSubRecordDef;
+  wbMICO: IwbSubRecordDef;
   wbActorValue: IwbIntegerDef;
   wbETYP: IwbSubRecordDef;
   wbETYPReq: IwbSubRecordDef;
@@ -982,7 +982,8 @@ var
   wbMGEFType: IwbIntegerDef;
   wbMDOB: IwbSubRecordDef;
   wbSPIT: IwbSubRecordDef;
-  wbDMDSs: IwbSubRecordDef;
+  wbDMDC: IwbSubRecordDef;
+  wbDMDS: IwbSubRecordDef;
   wbMO5S: IwbSubRecordDef;
   wbSPCT: IwbSubRecordDef;
   wbTints: IwbSubRecordArrayDef;
@@ -1001,7 +1002,10 @@ var
   wbNull: IwbValueDef;
   wbTimeInterpolator: IwbStructDef;
   wbColorInterpolator: IwbStructDef;
+  wbYNAM: IwbSubRecordDef;
+  wbZNAM: IwbSubRecordDef;
   wbCUSD: IwbSubRecordDef;
+  wbINRD: IwbSubRecordDef;
   wbPTRN: IwbSubRecordDef;
   wbNTRM: IwbSubRecordDef;
   wbPRPS: IwbSubRecordDef;
@@ -1366,6 +1370,7 @@ begin
     if Supports(MainRecord.ElementByName['Aliases'], IwbContainerElementRef, Aliases) then begin
       for i := 0 to Pred(Aliases.ElementCount) do
         if Supports(Aliases.Elements[i], IwbContainerElementRef, Alias) then begin
+          // skip alias collection
           if Assigned(Alias.ElementBySignature['ALCS']) then
             Continue;
           j := Alias.Elements[0].NativeValue;
@@ -6043,24 +6048,23 @@ begin
       ])
     ], cpNormal, True);
 
+  wbMODS := wbFormIDCk(MODS, 'Material Swap', [MSWP]);
   wbMO2S := wbFormIDCk(MO2S, 'Material Swap', [MSWP]);
   wbMO3S := wbFormIDCk(MO3S, 'Material Swap', [MSWP]);
   wbMO4S := wbFormIDCk(MO4S, 'Material Swap', [MSWP]);
   wbMO5S := wbFormIDCk(MO5S, 'Material Swap', [MSWP]);
-  wbMODS := wbFormIDCk(MODS, 'Material Swap', [MSWP]);
 
-  wbMODC := wbUnknown(MODC);
   wbMODF := wbUnknown(MODF);
-
   wbMO2F := wbUnknown(MO2F);
   wbMO3F := wbUnknown(MO3F);
   wbMO4F := wbUnknown(MO4F);
   wbMO5F := wbUnknown(MO5F);
 
-  wbMO2C := wbUnknown(MO2C);
-  wbMO3C := wbUnknown(MO3C);
-  wbMO4C := wbUnknown(MO4C);
-  wbMO5C := wbUnknown(MO5C);
+  wbMODC := wbFloat(MODC, 'Color Remapping Index');
+  wbMO2C := wbFloat(MO2C, 'Color Remapping Index');
+  wbMO3C := wbFloat(MO3C, 'Color Remapping Index');
+  wbMO4C := wbFloat(MO4C, 'Color Remapping Index');
+  wbMO5C := wbFloat(MO5C, 'Color Remapping Index');
 
 	wbMODT := wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
 	wbDMDT := wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
@@ -6102,25 +6106,23 @@ begin
       wbMODF
     ], [], cpNormal, True, nil, True);
 
-  wbDMDSs := wbArrayS(DMDS, 'Alternate Textures',
-    wbStructSK([0, 2], 'Alternate Texture', [
-      wbLenString('3D Name'),
-      wbFormIDCk('New Texture', [TXST]),
-      wbInteger('3D Index', itS32)
-    ]),
-  -1);
+  wbDMDS := wbFormIDCk(DMDS, 'Material Swap', [MSWP]);
+  wbDMDC := wbFloat(DMDC, 'Color Remapping Index');
 
   wbDEST := wbRStruct('Destructible', [
     wbStruct(DEST, 'Header', [
       wbInteger('Health', itS32),
       wbInteger('DEST Count', itU8),
-      wbInteger('VATS Targetable', itU8, wbEnum(['False', 'True'])),
+      wbInteger('Flags', itU8, wbFlags([
+        'VATS Targetable',
+        'Large Actor Destroys'
+      ])),
       wbByteArray('Unknown', 2)
     ]),
-    wbStructs(DAMC, 'Unknowns', 'Unknown', [
-      wbFormIDck('Damage Type?', [DMGT, NULL]),
-      wbInteger('Unknown', itU32)
-    ]),
+    wbArrayS(DAMC, 'Resistances', wbStructSK([0], 'Resistance', [
+      wbFormIDCk('Damage Type', [DMGT]),
+      wbInteger('Value', itU32)
+    ])),
     wbRArray('Stages',
       wbRStruct('Stage', [
         wbStruct(DSTD, 'Destruction Stage Data', [
@@ -6131,19 +6133,21 @@ begin
             'Cap Damage',
             'Disable',
             'Destroy',
-            'Ignore External Dmg'
+            'Ignore External Dmg',
+            'Becomes Dynamic'
           ])),
           wbInteger('Self Damage per Second', itS32),
           wbFormIDCk('Explosion', [EXPL, NULL]),
           wbFormIDCk('Debris', [DEBR, NULL]),
           wbInteger('Debris Count', itS32)
         ], cpNormal, True),
-        wbString(DSTA, 'Unknown'),
+        wbString(DSTA, 'Sequence Name'),
         wbRStructSK([0], 'Model', [
           wbString(DMDL, 'Model Filename'),
           wbDMDT,
-          wbDMDSs
-        ], [], cpNormal, False, nil),
+          wbDMDC,
+          wbDMDS
+        ], [], cpNormal, False, nil, True),
         wbEmpty(DSTF, 'End Marker', cpNormal, True)
       ], [], cpNormal, False, nil)
     )
@@ -6176,7 +6180,8 @@ begin
           wbString(DMDL, 'Model Filename')
         ], []), // End DMDL
         wbDMDT,
-        wbDMDSs,
+        wbDMDC,
+        wbDMDS,
         wbEmpty(DSTF, 'End Marker', cpNormal, True)
       ], []) // Begin Stage RStruct
     ) // End Stage Array
@@ -6404,21 +6409,6 @@ begin
     wbXSCL,
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
-
-  wbICON := wbRStruct('Icon', [
-    wbString(ICON, 'Large Icon filename'),
-    wbString(MICO, 'Small Icon filename')
-  ], [], cpNormal, False, nil, True);
-
-  wbICONReq := wbRStruct('Icon', [
-    wbString(ICON, 'Large Icon filename'),
-    wbString(MICO, 'Small Icon filename')
-  ], [], cpNormal, True, nil, True);
-
-  wbICO2 := wbRStruct('Icon 2 (female)', [
-    wbString(ICO2, 'Large Icon filename'),
-    wbString(MIC2, 'Small Icon filename')
-  ], [], cpNormal, False, nil, True);
 
   wbVatsValueFunctionEnum :=
     wbEnum([
@@ -7251,19 +7241,23 @@ begin
   wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
   wbCTDAsReqCount := wbRArray('Conditions', wbCTDA, cpNormal, True, nil, wbCTDAsAfterSet);
 
-  wbPTRN := wbFormIDCk(PTRN, 'Transform', [TRNS]);
-  wbNTRM := wbFormIDCk(NTRM, 'Terminal', [TERM]);
-  wbCUSD := wbFormIDCk(CUSD, 'UI Sound', [SNDR]);
+  wbICON := wbString(ICON, 'Inventory Image');
+  wbMICO := wbString(MICO, 'Message Icon');
+  wbPTRN := wbFormIDCk(PTRN, 'Preview Transform', [TRNS]);
+  wbNTRM := wbFormIDCk(NTRM, 'Native Terminal', [TERM]);
+  wbYNAM := wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]);
+  wbZNAM := wbFormIDCk(ZNAM, 'Sound - Put Down', [SNDR]);
+  wbCUSD := wbFormIDCk(CUSD, 'Sound - Crafting', [SNDR]);
+  wbINRD := wbFormIDCk(INRD, 'Instance Naming', [INNR]);
   wbPRPS := wbArrayS(PRPS, 'Properties', wbStructSK([0], 'Property', [
     wbActorValue,
     wbFloat('Value')
   ]));
   wbFLTR := wbString(FLTR, 'Filter');
-  wbAPPR := wbArray(APPR, 'Keywords', wbFormIDCk('Keyword', [KYWD]));
-  { when FTYP is present in STAT it is a Forced Loc Ref Type.
-    Which alters WRLD and LCTN References }
-  wbFTYP := wbFormIDCk(FTYP, 'Unknown', [LCRT]);
+  wbAPPR := wbArray(APPR, 'Attach Parent Slots', wbFormIDCk('Keyword', [KYWD]));
+  wbFTYP := wbFormIDCk(FTYP, 'Forced Loc Ref Type', [LCRT]);
   wbATTX := wbLString(ATTX, 'Activate Text Override', 0, cpTranslate);
+
   wbOBTS := wbStruct(OBTS, 'Object Mod Template Item', [
     wbInteger('Parts A Count', itU32),
     wbInteger('Parts B Count', itU32),
@@ -7293,7 +7287,7 @@ begin
     ]), wbOBTSCounter2)
   ], cpNormal, True);
 
-  wbOBTESequence := wbRStruct('Unknown', [
+  wbOBTESequence := wbRStruct('Object Template', [
     wbInteger(OBTE, 'Count', itU32, nil, cpBenign),
     wbRArray('Combinations',
       wbRUnion('Combination', [
@@ -7316,16 +7310,14 @@ begin
     wbEmpty(STOP, 'Marker', cpNormal, True)
   ], []);
 
-  wbBSMPSequence := wbRArray('Unknown',
-    wbRStruct('Unknown', [
-      wbInteger(BSMP, 'Unknown', itU32),
-      wbRArray('Unknown',
-        wbRStruct('Unknown', [
-          wbString(BSMB, 'Name'),
-          wbArray(BSMS, 'Weights?', wbFloat('Unknown')),
-          wbUnknown(BMMP)
-        ], [])
-      )
+  wbBSMPSequence := wbRArray('Bone Scaling',
+    wbRStruct('Data', [
+      wbInteger(BSMP, 'Gender?', itU32),
+      wbRStructsSK('Bones', 'Bone', [0], [
+        wbString(BSMB, 'Name'),
+        wbArray(BSMS, 'Weights', wbFloat('Weight')),
+        wbUnknown(BMMP)
+      ], [])
     ], [])
   );
 
@@ -7340,9 +7332,11 @@ begin
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000002}  2, 'Never Fades',
       {0x00000004}  4, 'Non Occluder',
-      {0x00000040}  6, 'Has Tree LOD',
+      {0x00000040}  6, 'Unknown 6',
+      {0x00000080}  7, 'Heading Marker',
       {0x00000100}  8, 'Must Update Anims',
       {0x00000200}  9, 'Hidden From Local Map',
+      {0x00000400} 10, 'Headtrack Marker',
       {0x00000800} 11, 'Used as Platform',
       {0x00001000} 13, 'Pack In Use Only',
       {0x00008000} 15, 'Has Distant LOD',
@@ -7391,9 +7385,9 @@ begin
       wbFormIDCk('Sound Model', [SOPM, NULL]),
       wbFloat('Frequency'),
       wbFloat('Volume'),
-      wbInteger('Start Active', itU8, wbEnum(['False', 'True'])),
+      wbInteger('Starts Active', itU8, wbEnum(['False', 'True'])),
       wbInteger('No Signal Static', itU8, wbEnum(['False', 'True']))
-    ], cpNormal, False, Nil, 4), // Not sure if the Activator without the 'No Signal Static' member is a bug or expected.
+    ], cpNormal, False, nil, 4),
     wbCITC,
     wbCTDAs,
     wbNVNM
@@ -7430,8 +7424,11 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbMODL,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
+    wbICON,
+    wbMICO,
+    wbYNAM,
+    wbZNAM,
+    wbETYP,
     wbCUSD,
     wbDEST,
     wbDESC,
@@ -7439,7 +7436,7 @@ begin
     wbStruct(ENIT, 'Effect Data', [
       wbInteger('Value', itS32),
       wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'No Auto-Calc (Unused)',
+        {0x00000001} 'No Auto-Calc',
         {0x00000002} 'Food Item',
         {0x00000004} 'Unknown 3',
         {0x00000008} 'Unknown 4',
@@ -7457,12 +7454,12 @@ begin
 				{0x00008000} 'Unknown 16',
 				{0x00010000} 'Medicine',
 				{0x00020000} 'Poison'
-      ], [0])),
+      ])),
       wbFormID('Addiction'),
       wbFloat('Addiction Chance'),
       wbFormIDCk('Sound - Consume', [SNDR, NULL])
     ], cpNormal, True),
-    wbLString(DNAM, 'Unknown', 0, cpTranslate),
+    wbLString(DNAM, 'Addiction Name', 0, cpTranslate),
     wbEffectsReq
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
@@ -7476,8 +7473,8 @@ begin
     wbFULL,
     wbMODL,
     wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
+    wbYNAM,
+    wbZNAM,
     wbDESC,
     wbKSIZ,
     wbKWDAs,
@@ -7502,7 +7499,7 @@ begin
 
   wbRecord(ANIO, 'Animated Object',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000200}  9, 'Unknown 9' // always present in updated records, not in Skyrim.esm
+      {0x00000200}  9, 'Unknown 9'
     ]), [9]), [
     wbEDID,
     wbMODL,
@@ -7527,46 +7524,64 @@ begin
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO2S
     ], []),
+    wbString(ICON, 'Male Inventory Image'),
+    wbString(MICO, 'Male Message Icon'),
     wbRStruct('Female world model', [
       wbString(MOD4, 'Model Filename'),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO4S
     ], []),
+    wbString(ICO2, 'Female Inventory Image'),
+    wbString(MIC2, 'Female Message Icon'),
     wbBOD2,
     wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
+    wbYNAM,
+    wbZNAM,
     wbETYP,
-    wbFormIDCk(BAMT, 'Alternate Block Material', [MATT]),
+    wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
+    wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbKSIZ,
     wbKWDAs,
     wbDESC,
-    wbFormIDCk(INRD, 'Unknown', [INNR]),
-    wbRArray('Armatures',
-      wbRStruct('Armature', [
-        wbInteger(INDX, 'Index', itU16),
-        wbFormIDCk(MODL, 'Armature', [ARMA])
+    wbINRD,
+    wbRArray('Models',
+      wbRStruct('Model', [
+        wbInteger(INDX, 'Addon Index', itU16),
+        wbFormIDCk(MODL, 'Armor Addon', [ARMA])
       ], [])
     ),
-    wbStruct(DATA, 'Data', [
+    wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight'),
-      wbInteger('Power Armor Health', itU32)
+      wbInteger('Health', itU32)
     ], cpNormal, True),
     wbStruct(FNAM, '', [
-      wbInteger('Damage Resistance', itU16),
+      wbInteger('Armor Rating', itU16),
+      wbInteger('Unknown', itU16),
+      wbInteger('Stagger Rating', itU8, wbEnum([
+        'None',
+        'Small',
+        'Medium',
+        'Large',
+        'Extra Large'
+      ])),
       wbUnknown
     ]),
-    wbArrayS(DAMA, 'Resistances',wbStructSK([0], 'Resistance', [
+    wbArrayS(DAMA, 'Resistances', wbStructSK([0], 'Resistance', [
       wbFormIDCk('Damage Type', [DMGT]),
       wbInteger('Value', itU32)
     ])),
+    wbFormIDCk(TNAM, 'Template Armor', [ARMO]),
     wbAPPR,
     wbOBTESequence
   ], False, nil, cpNormal, False, wbARMOAfterLoad, wbKeywordsAfterSet);
 
-  wbRecord(ARMA, 'Armor Addon', [
+  wbRecord(ARMA, 'Armor Addon',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000040}  6, 'No Underarmor Scaling',
+      {0x40000000} 30, 'Hi-Res 1st Person Only'
+    ])), [
     wbEDID,
     wbBOD2,
     wbFormIDCk(RNAM, 'Race', [RACE]),
@@ -12776,7 +12791,7 @@ begin
         ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet),
 
         wbRStruct('Alias', [
-          wbUnknown(ALCS),
+          wbInteger(ALCS, 'Collection Alias ID', itU32),
           wbUnknown(ALMI)
         ], [])
 
