@@ -2856,7 +2856,14 @@ begin
   if not Assigned(Container) then Exit;
 
   i := Container.ElementByName['Flags'].NativeValue;
-  if i and $00000004 <> 0 then Result := 1;
+  if i and $01 <> 0 then
+    Result := 1
+  else if i and $04 <> 0 then
+    Result := 2
+  else if i and $10 <> 0 then
+    Result := 3
+  else
+    Result := 0;
 end;
 
 type
@@ -7647,48 +7654,37 @@ begin
     wbPTRN,
     wbFULL,
     wbMODL,
+    wbICON,
+    wbMICO,
     wbLStringKC(DESC, 'Book Text', 0, cpTranslate, True),
     wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
+    wbYNAM,
+    wbZNAM,
     wbKSIZ,
     wbKWDAs,
-    wbFormIDCk(FIMD, 'Unknown', [MESG]),
+    wbFormIDCk(FIMD, 'Featured Item Message', [MESG]),
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itU32),
-      wbByteArray('Unknown', 4)
-//      wbInteger('Flags', itU8, wbFlags([
-//       {0x01} 'Teaches Skill',
-//       {0x02} 'Can''t be Taken',
-//       {0x04} 'Teaches Spell',
-//       {0x08} 'Unknown 4',
-//       {0x10} 'Unknown 5',
-//       {0x20} 'Unknown 6',
-//       {0x40} 'Unknown 7',
-//       {0x80} 'Unknown 8'
-//      ])),
-//      wbInteger('Type', itU8, wbEnum([], [
-//        0, 'Book/Tome', 255, 'Note/Scroll'
-//      ])),
-//      wbByteArray('Unused', 2),
-//      wbUnion('Teaches', wbBOOKTeachesDecider, [
-//        wbInteger('Skill', itS32, wbSkillEnum),
-//        wbFormIDCk('Spell', [SPEL, NULL])
-//      ]),
-//      wbInteger('Value', itU32),
-//      wbFloat('Weight')
+      wbFloat('Weight')
     ], cpNormal, True),
-    wbStruct(DNAM, 'Unknown', [
+    wbStruct(DNAM, '', [
       wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'Unknown 0',
-        {0x02} 'Unknown 1',
-        {0x04} 'Unknown 2',
+        {0x01} 'Advance Actor Value',
+        {0x02} 'Can''t be Taken',
+        {0x04} 'Add Spell',
         {0x08} 'Unknown 3',
         {0x10} 'Add Perk'
       ])),
-      wbFormIDCk('Perk', [PERK, NULL]),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
+      wbUnion('Teaches', wbBOOKTeachesDecider, [
+        wbByteArray('Unused', 4),
+        wbFormIDCk('Actor Value', [AVIF, NULL]),
+        wbFormIDCk('Spell', [SPEL, NULL]),
+        wbFormIDCk('Perk', [Perk, NULL])
+      ]),
+      wbStruct('Text Offset' , [
+        wbInteger('X', itU32),
+        wbInteger('Y', itU32)
+      ])
     ], cpNormal, True),
     wbLString(CNAM, 'Description', 0, cpTranslate),
     wbFormIDCk(INAM, 'Inventory Art', [STAT])
@@ -7807,8 +7803,8 @@ begin
       {0x0100} 'Use Sky Lighting',
       {0x0200} 'Unknown 10',
       {0x0400} 'Unknown 11',
-      {0x0800} 'Unknown 12',
-      {0x1000} 'Unknown 13',
+      {0x0800} 'Sunlight Shadows',
+      {0x1000} 'Distant LOD only',
       {0x2000} 'Player Followers Can''t Travel Here',
       {0x4000} 'Unknown 15',
       {0x8000} 'Unknown 16'
@@ -7865,21 +7861,43 @@ begin
       wbFloat('Light Fade Begin'),
       wbFloat('Light Fade End'),
       wbInteger('Inherits', itU32, wbFlags([
-        {0x00000001}'Ambient Color',
-        {0x00000002}'Directional Color',
-        {0x00000004}'Fog Color',
-        {0x00000008}'Fog Near',
-        {0x00000010}'Fog Far',
-        {0x00000020}'Directional Rotation',
-        {0x00000040}'Directional Fade',
-        {0x00000080}'Clip Distance',
-        {0x00000100}'Fog Power',
-        {0x00000200}'Fog Max',
-        {0x00000400}'Light Fade Distances'
+        {0x00000001} 'Ambient Color',
+        {0x00000002} 'Directional Color',
+        {0x00000004} 'Fog Color',
+        {0x00000008} 'Fog Near',
+        {0x00000010} 'Fog Far',
+        {0x00000020} 'Directional Rotation',
+        {0x00000040} 'Directional Fade',
+        {0x00000080} 'Clip Distance',
+        {0x00000100} 'Fog Power',
+        {0x00000200} 'Fog Max',
+        {0x00000400} 'Light Fade Distances'
       ])),
-      wbUnknown
+      wbFloat('Near Height Mid'),
+      wbFloat('Near Height Range'),
+      wbStruct('Fog Color High Near', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
+      ]),
+      wbStruct('Fog Color High Far', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
+      ]),
+      wbFloat('High Density Scale'),
+      wbFloat('Fog Near Scale'),
+      wbFloat('Fog Far Scale'),
+      wbFloat('Fog High Near Scale'),
+      wbFloat('Fog High Far Scale'),
+      wbFloat('Far Height Mid'),
+      wbFloat('Far Height Range')
     ], cpNormal, False, nil, 11),
 
+    wbInteger(CNAM, 'Precombined Object Level XY', itU8),
+    wbInteger(ZNAM, 'Precombined Object Level Z', itU8),
     wbByteArray(TVDT, 'Unknown', 0, cpNormal),
     wbMHDT,
     wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
@@ -7905,15 +7923,20 @@ begin
     wbOwnership,
     wbFormIDCk(XILL, 'Lock List', [FLST, NPC_]),
 
-    wbUnknown(XILW),
+    wbStruct(XILW, 'Exterior LOD', [
+      wbFormIDCk('Worldspace', [WRLD]),
+      wbFloat('Offset X'),
+      wbFloat('Offset Y'),
+      wbFloat('Offset Z')
+    ]),
     wbString(XWEM, 'Water Environment Map'),
     wbFormIDCk(XCCM, 'Sky/Weather from Region', [REGN]),
     wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
     wbFormIDCk(XCMO, 'Music Type', [MUSC]),
     wbFormIDCk(XCIM, 'Image Space', [IMGS]),
+    wbFormIDCk(XGDR, 'God Rays', [GDRY]),
 
-    wbUnknown(XGDR),
     // those can be sorted I think, but makes copying records very slow since some cells have over 22000+ entries
     // DLC01Lair01 "The Mechanist's Lair" [CELL:010008A3]
     wbArray{S}(XPRI, 'Physics References', wbFormIDCk('Reference', [REFR])),
@@ -7932,8 +7955,12 @@ begin
     wbEDID,
     wbFULLReq,
     wbDESCReq,
+    wbICON,
     wbPRPS,
-    wbUnknown(DATA)
+    wbStruct(DATA, 'Data', [
+      wbByteArray('Unknown', 4),
+      wbFloat('Bleedout Default')
+    ])
   ]);
 
   wbRecord(CLMT, 'Climate', [
@@ -7964,24 +7991,34 @@ begin
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbFloat('Gravity Velocity'),
+      wbByteArray('Unknown', 4),
       wbFloat('Rotation Velocity'),
+      wbByteArray('Unknown', 4),
       wbFloat('Particle Size X'),
-      wbFloat('Particle Size Y'),
       wbFloat('Center Offset Min'),
+      wbFloat('Particle Size Y'),
+      wbByteArray('Unknown', 4),
+      wbFloat('Center Offset Min'),
+      wbByteArray('Unknown', 4),
       wbFloat('Center Offset Max'),
-      wbFloat('Initial Rotation Range'),
+      wbByteArray('Unknown', 4),
+      wbFloat('Initial Rotation'),
+      wbByteArray('Unknown', 4),
       wbInteger('# of Subtextures X', itU32),
+      wbByteArray('Unknown', 4),
       wbInteger('# of Subtextures Y', itU32),
+      wbByteArray('Unknown', 4),
       wbInteger('Type', itU32, wbEnum([
         'Rain',
         'Snow'
       ])),
+      wbByteArray('Unknown', 4),
       wbInteger('Box Size', itU32),
+      wbByteArray('Unknown', 4),
       wbFloat('Particle Density'),
       wbUnknown
     ], cpNormal, True, nil, 10),
-    wbString(MNAM, 'Unknown'),
-    wbString(ICON, 'Particle Texture')
+    wbString(MNAM, 'Particle Texture')
   ]);
 
   wbRecord(RFCT, 'Visual Effect', [
@@ -7990,9 +8027,9 @@ begin
 			wbFormIDCK('Effect Art', [ARTO, NULL]),
       wbFormIDCK('Shader', [EFSH, NULL]),
       wbInteger('Flags', itU32, wbFlags([
-        {0x00000001}'Rotate to Face Target',
-        {0x00000002}'Attach to Camera',
-        {0x00000004}'Inherit Rotation'
+        {0x00000001} 'Rotate to Face Target',
+        {0x00000002} 'Attach to Camera',
+        {0x00000004} 'Inherit Rotation'
       ]))
     ], cpNormal, True)
   ]);
