@@ -990,7 +990,6 @@ var
   wbMODT: IwbSubRecordDef;
   wbDMDT: IwbSubRecordDef;
   wbOwnership: IwbSubRecordStructDef;
-  wbAmbientColors: IwbStructDef;
   wbRACE_DATAFlags01: IwbIntegerDef;
   wbPhonemeTargets: IwbSubRecordDef;
   wbPHWT: IwbSubRecordStructDef;
@@ -3783,11 +3782,11 @@ begin
     if MainRecord.ElementExists['Unused RNAM'] then
       MainRecord.RemoveElement('Unused RNAM');
 
-    if MainRecord.ElementExists['Unknown WLEV'] then
-      MainRecord.RemoveElement('Unknown WLEV');
+    //if MainRecord.ElementExists['World Default Level Data'] then
+    //  MainRecord.RemoveElement('World Default Level Data');
 
-    if MainRecord.ElementExists['MHDT'] then
-      MainRecord.RemoveElement('MHDT');
+    //if MainRecord.ElementExists['MHDT'] then
+    //  MainRecord.RemoveElement('MHDT');
 
     if MainRecord.ElementExists['CLSZ'] then
       MainRecord.RemoveElement('CLSZ');
@@ -5071,6 +5070,63 @@ begin
     Result := 7;
 end;
 
+function wbByteColors(const aName: string = 'Color'): IwbStructDef;
+begin
+  Result := wbStruct(aName, [
+    wbInteger('Red', itU8),
+    wbInteger('Green', itU8),
+    wbInteger('Blue', itU8),
+    wbByteArray('Unknown', 1)
+  ]);
+end;
+
+function wbWeatherColors(const aName: string): IwbStructDef;
+begin
+  Result := wbStruct(aName, [
+    wbByteColors('Sunrise'),
+    wbByteColors('Day'),
+    wbByteColors('Sunset'),
+    wbByteColors('Night'),
+    wbByteColors('EarlySunrise'),
+    wbByteColors('LateSunrise'),
+    wbByteColors('EarlySunset'),
+    wbByteColors('LateSunset')
+  ], cpNormal, True, nil, 4);
+end;
+
+function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'): IwbSubRecordDef; overload;
+begin
+  Result := wbStruct(aSignature, aName, [
+    wbStruct('Directional', [
+      wbByteColors('X+'),
+      wbByteColors('X-'),
+      wbByteColors('Y+'),
+      wbByteColors('Y-'),
+      wbByteColors('Z+'),
+      wbByteColors('Z-')
+    ]),
+    wbByteColors('Specular'),
+    wbFloat('Scale')
+  ])
+end;
+
+function wbAmbientColors(const aName: string = 'Directional Ambient Lighting Colors'): IwbStructDef; overload;
+begin
+  Result := wbStruct(aName, [
+    wbStruct('Directional', [
+      wbByteColors('X+'),
+      wbByteColors('X-'),
+      wbByteColors('Y+'),
+      wbByteColors('Y-'),
+      wbByteColors('Z+'),
+      wbByteColors('Z-')
+    ]),
+    wbByteColors('Specular'),
+    wbFloat('Scale', cpIgnore)
+  ]);
+end;
+
+
 var
   wbRecordFlagsFlags : IwbFlagsDef;
 
@@ -6250,27 +6306,6 @@ begin
     ]),
     wbInteger(XRNK, 'Faction rank', itS32)
   ], [XILL]);
-
-  wbAmbientColors := wbStruct('Ambient Colors', [
-    wbArray('Colors',
-      wbStruct('Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      ['X+', 'X-', 'Y+', 'Y-', 'Z+', 'Z-']
-    ),
-    wbStruct('Specular', [
-      wbStruct('Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbFloat('Fresnel Power')
-    ])
-  ], cpNormal, False, nil, 1);
 
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 
@@ -7825,24 +7860,9 @@ begin
     wbByteArray(PCMB, 'Physics Combined', 2),
 
     wbStruct(XCLL, 'Lighting', [
-      wbStruct('Ambient Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Directional Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Fog Color Near', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
+      wbByteColors('Ambient Color'),
+      wbByteColors('Directional Color'),
+      wbByteColors('Fog Color Near'),
       wbFloat('Fog Near'),
       wbFloat('Fog Far'),
       wbInteger('Directional Rotation XY', itS32),
@@ -7851,12 +7871,7 @@ begin
       wbFloat('Fog Clip Distance'),
       wbFloat('Fog Power'),
       wbAmbientColors,
-      wbStruct('Fog Color Far', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
+      wbByteColors('Fog Color Far'),
       wbFloat('Fog Max'),
       wbFloat('Light Fade Begin'),
       wbFloat('Light Fade End'),
@@ -7875,18 +7890,8 @@ begin
       ])),
       wbFloat('Near Height Mid'),
       wbFloat('Near Height Range'),
-      wbStruct('Fog Color High Near', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Fog Color High Far', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
+      wbByteColors('Fog Color High Near'),
+      wbByteColors('Fog Color High Far'),
       wbFloat('High Density Scale'),
       wbFloat('Fog Near Scale'),
       wbFloat('Fog Far Scale'),
@@ -7939,7 +7944,7 @@ begin
 
     // those can be sorted I think, but makes copying records very slow since some cells have over 22000+ entries
     // DLC01Lair01 "The Mechanist's Lair" [CELL:010008A3]
-    wbArray{S}(XPRI, 'Physics References', wbFormIDCk('Reference', [REFR])),
+    wbArray{S}(XPRI, 'Physics References', wbFormIDCk('Reference', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA])),
     wbStruct(XCRI, 'Combined References', [
       wbInteger('Meshes Count', itU32),
       wbInteger('References Count', itU32),
@@ -10788,58 +10793,36 @@ begin
   wbRecord(LGTM, 'Lighting Template', [
     wbEDID,
     wbStruct(DATA, 'Lighting', [
-      wbStruct('Ambient Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Directional Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Fog Color Near', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
+      wbByteColors('Ambient Color'),
+      wbByteColors('Directional Color'),
+      wbByteColors('Fog Color Near'),
       wbFloat('Fog Near'),
       wbFloat('Fog Far'),
       wbInteger('Directional Rotation XY', itS32),
       wbInteger('Directional Rotation Z', itS32),
       wbFloat('Directional Fade'),
-      wbFloat('Fog Clip Dist'),
+      wbFloat('Fog Clip Distance'),
       wbFloat('Fog Power'),
-      wbAmbientColors, // wbByteArray('Unknown', 32),		// WindhelmLightingTemplate [LGTM:0007BA87] only find 24 !
-      wbStruct('Fog Color Far', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
+      wbByteArray('Unused', 32, cpIgnore),
+      wbByteColors('Fog Color Far'),
       wbFloat('Fog Max'),
-      wbStruct('Light Fade Distances', [
-        wbFloat('Start'),
-        wbFloat('End')
-      ]),
-      wbByteArray('Unknown', 4),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown')
+      wbFloat('Light Fade Begin'),
+      wbFloat('Light Fade End'),
+      wbByteArray('Unused', 4, cpIgnore),
+      wbFloat('Near Height Mid'),
+      wbFloat('Near Height Range'),
+      wbByteColors('Fog Color High Near'),
+      wbByteColors('Fog Color High Far'),
+      wbFloat('High Density Scale'),
+      wbFloat('Fog Near Scale'),
+      wbFloat('Fog Far Scale'),
+      wbFloat('Fog High Near Scale'),
+      wbFloat('Fog High Far Scale'),
+      wbFloat('Far Height Mid'),
+      wbFloat('Far Height Range')
     ], cpNormal, True, nil, 15),
-    wbStruct(DALC, 'Directional Ambient Lighting Colors', [wbAmbientColors], cpNormal, True),
-    wbFormIDCk(WGDR, 'Godray', [GDRY])
+    wbAmbientColors(DALC),
+    wbFormIDCk(WGDR, 'God Rays', [GDRY])
   ]);
 
   wbRecord(MUSC, 'Music Type', [
@@ -14559,13 +14542,13 @@ begin
       wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
       wbStruct(PNAM, '', [
         wbInteger('Flags', itU8, wbFlags([
-          {0x0001}'Use Land Data',
-          {0x0002}'Use LOD Data',
-          {0x0004}'Don''t Use Map Data',
-          {0x0008}'Use Water Data',
-          {0x0010}'Use Climate Data',
-          {0x0020}'Use Image Space Data (unused)',
-          {0x0040}'Use Sky Cell'
+          {0x0001} 'Use Land Data',
+          {0x0002} 'Use LOD Data',
+          {0x0004} 'Don''t Use Map Data',
+          {0x0008} 'Use Water Data',
+          {0x0010} 'Use Climate Data',
+          {0x0020} 'Use Image Space Data (unused)',
+          {0x0040} 'Use Sky Cell'
         ], [5])),
         wbByteArray('Unknown', 1)
       ], cpNormal, True)
@@ -14626,14 +14609,26 @@ begin
     ], []),
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
-    wbString(XNAM, 'Water Noise Texture'),
+    wbString(XWEM, 'Water Environment Map'),
     wbString(TNAM, 'HD LOD Diffuse Texture'),
     wbString(UNAM, 'HD LOD Normal Texture'),
-    wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
-    wbRArray('Unknown WLEV', wbUnknown(WLEV)),
+    wbRStruct('World Default Level Data', [
+      wbStruct(WLEV, 'Dimension', [
+        wbStruct('NW Cell', [
+          wbInteger('X', itS8),
+          wbInteger('Y', itS8)
+        ]),
+        wbStruct('Size', [
+          wbInteger('Width', itU8),
+          wbInteger('Height', itU8)
+        ])
+      ]),
+      wbByteArray(WLEV, 'Data')
+    ], []),
     wbOFST,
     wbUnknown(CLSZ)
   ], False, nil, cpNormal, False, wbWRLDAfterLoad);
+
 
   wbRecord(WTHR, 'Weather', [
     wbEDID,
@@ -14666,10 +14661,6 @@ begin
     wbString(J0TX, 'Cloud Texture Layer #26'),
     wbString(K0TX, 'Cloud Texture Layer #27'),
     wbString(L0TX, 'Cloud Texture Layer #28'),
-    wbByteArray(DNAM, 'Unused', 0, cpIgnore),
-    wbByteArray(CNAM, 'Unused', 0, cpIgnore),
-    wbByteArray(ANAM, 'Unused', 0, cpIgnore),
-    wbByteArray(BNAM, 'Unused', 0, cpIgnore),
     wbUnknown(LNAM),
     wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
     wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
@@ -14678,48 +14669,38 @@ begin
       wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)),
       wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt))
     ], []),
-    wbArray(PNAM, 'Cloud Colors', wbStruct('Layer', [
-      wbArray('Colors',
-        wbStruct('Time', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']
-      )
-    ])),
+    wbArray(PNAM, 'Cloud Colors', wbWeatherColors('Layer')),
     wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
       wbFloat('Sunrise'),
       wbFloat('Day'),
       wbFloat('Sunset'),
       wbFloat('Night'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown')
+      wbFloat('EarlySunrise'),
+      wbFloat('LateSunrise'),
+      wbFloat('EarlySunset'),
+      wbFloat('LateSunset')
     ])),
     wbStruct(NAM0, 'Weather Colors', [
-      wbArray('Sky-Upper',         wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Fog Near',          wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Unknown',           wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Ambient',           wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Sunlight',          wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Sun',               wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Stars',             wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Sky-Lower',         wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Horizon',           wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Effect Lighting',   wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Cloud LOD Diffuse', wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Cloud LOD Ambient', wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Fog Far',           wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Sky Statics',       wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Water Multiplier',  wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Sun Glare',         wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Moon Glare',        wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Unknown1',          wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown']),
-      wbArray('Unknown2',          wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night', 'Unknown', 'Unknown', 'Unknown', 'Unknown'])
-    ], cpNormal, True),
+      wbWeatherColors('Sky-Upper'),
+      wbWeatherColors('Fog Near'),
+      wbWeatherColors('Unknown'),
+      wbWeatherColors('Ambient'),
+      wbWeatherColors('Sunlight'),
+      wbWeatherColors('Sun'),
+      wbWeatherColors('Stars'),
+      wbWeatherColors('Sky-Lower'),
+      wbWeatherColors('Horizon'),
+      wbWeatherColors('Effect Lighting'),
+      wbWeatherColors('Cloud LOD Diffuse'),
+      wbWeatherColors('Cloud LOD Ambient'),
+      wbWeatherColors('Fog Far'),
+      wbWeatherColors('Sky Statics'),
+      wbWeatherColors('Water Multiplier'),
+      wbWeatherColors('Sun Glar'),
+      wbWeatherColors('Moon Glare'),
+      wbWeatherColors('Fog Near High'),
+      wbWeatherColors('Fog Far High')
+    ], cpNormal, True, nil, 8),
     wbArray(NAM4, 'Unknown', wbFloat('Unknown')),
     wbStruct(FNAM, 'Fog Distance', [
       wbFloat('Day - Near'),
@@ -14730,17 +14711,17 @@ begin
       wbFloat('Night - Power'),
       wbFloat('Day - Max'),
       wbFloat('Night - Max'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown')
-    ], cpNormal, True),
+      wbFloat('Day - Near Height Mid'),
+      wbFloat('Day - Near Height Range'),
+      wbFloat('Night - Near Height Mid'),
+      wbFloat('Night - Near Height Range'),
+      wbFloat('Day - High Density Scale'),
+      wbFloat('Night - High Density Scale'),
+      wbFloat('Day - Far Height Mid'),
+      wbFloat('Day - Far Height Range'),
+      wbFloat('Night - Far Height Mid'),
+      wbFloat('Night - Far Height Range')
+    ], cpNormal, True, nil, 8),
     wbStruct(DATA, 'Data', [
       wbInteger('Wind Speed', itU8), // scaled 0..1
       wbByteArray('Unknown', 2),
@@ -14759,8 +14740,8 @@ begin
         {0x08} 'Weather - Snow',
         {0x10} 'Sky Statics - Always Visible',
         {0x20} 'Sky Statics - Follows Sun Position',
-        {0x40} 'Unknown 7',
-        {0x80} 'Unknown 8'
+        {0x40} 'Rain Occlusion',
+        {0x80} 'HUD Rain Effects'
       ])),
       wbStruct('Lightning Color', [
         wbInteger('Red', itU8),
@@ -14772,7 +14753,7 @@ begin
       wbInteger('Wind Direction', itU8), // scaled 0..360
       wbInteger('Wind Direction Range', itU8), // scaled 0..180
       wbInteger('Unknown', itU8)
-    ], cpNormal, True),
+    ], cpNormal, True, nil, 16),
     wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
     wbRArray('Sounds',
       wbStruct(SNAM, 'Sound', [
@@ -14791,36 +14772,43 @@ begin
       wbFormIDCK('Day', [IMGS, NULL]),
       wbFormIDCK('Sunset', [IMGS, NULL]),
       wbFormIDCK('Night', [IMGS, NULL]),
-      wbFormIDCK('Unknown', [IMGS, NULL]),
-      wbFormIDCK('Unknown', [IMGS, NULL]),
-      wbFormIDCK('Unknown', [IMGS, NULL]),
-      wbFormIDCK('Unknown', [IMGS, NULL])
-    ]),
+      wbFormIDCK('EarlySunrire', [IMGS, NULL]),
+      wbFormIDCK('LateSunrise', [IMGS, NULL]),
+      wbFormIDCK('EarlySunset', [IMGS, NULL]),
+      wbFormIDCK('LateSunset', [IMGS, NULL])
+    ], cpNormal, True, nil, 4),
     wbStruct(WGDR, 'God Rays', [
       wbFormIDCK('Sunrise', [GDRY, NULL]),
       wbFormIDCK('Day', [GDRY, NULL]),
       wbFormIDCK('Sunset', [GDRY, NULL]),
       wbFormIDCK('Night', [GDRY, NULL]),
-      wbFormIDCK('Unknown', [GDRY, NULL]),
-      wbFormIDCK('Unknown', [GDRY, NULL]),
-      wbFormIDCK('Unknown', [GDRY, NULL]),
-      wbFormIDCK('Unknown', [GDRY, NULL])
+      wbFormIDCK('EarlySunrire', [GDRY, NULL]),
+      wbFormIDCK('LateSunrise', [GDRY, NULL]),
+      wbFormIDCK('EarlySunset', [GDRY, NULL]),
+      wbFormIDCK('LateSunset', [GDRY, NULL])
     ]),
-    wbRArray('Directional Ambient Lighting Colors',
-      wbStruct(DALC, 'Sunrise/Day/Sunset/Night/Unknown/Unknown/Unknown/Unknown', [wbAmbientColors], cpNormal, True)
-    ),
+    wbRStruct('Directional Ambient Lighting Colors', [
+      wbAmbientColors(DALC, 'Sunrise'),
+      wbAmbientColors(DALC, 'Day'),
+      wbAmbientColors(DALC, 'Sunset'),
+      wbAmbientColors(DALC, 'Night'),
+      wbAmbientColors(DALC, 'EarlySunrire'),
+      wbAmbientColors(DALC, 'LateSunrise'),
+      wbAmbientColors(DALC, 'EarlySunset'),
+      wbAmbientColors(DALC, 'LateSunset')
+    ], [], cpNormal, True),
     wbRStruct('Aurora', [wbMODL], []),
-    wbFormIDCk(GNAM, 'Lens', [LENS]),
-    wbStruct(UNAM, 'Unknown', [
-      wbFormIDCk('Unknown', [SPEL, NULL]),
-      wbByteArray('Unknown', 4),
-      wbFormIDCk('Unknown', [SPEL, NULL]),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
+    wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
+    wbStruct(UNAM, 'Magic', [
+      wbFormIDCk('On Lightning Strike - Spell', [SPEL, NULL]),
+      wbFloat('On Lightning Strike - Threshold'),
+      wbFormIDCk('On Weather Activate - Spell', [SPEL, NULL]),
+      wbFloat('On Weather Activate - Threshold'),
+      wbByteArray('Unknown', 4), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
+      wbFloat('Unknown')
     ], cpNormal, False, nil, 3),
-    wbFloat(VNAM, 'Unknown'),
-    wbFloat(WNAM, 'Unknown')
+    wbFloat(VNAM, 'Volatility Mult'),
+    wbFloat(WNAM, 'Visibility Mult')
   ]);
 end;
 
@@ -14920,7 +14908,7 @@ begin
     ])
   ]);
 
-  wbRecord(GDRY, 'God Ray', [
+  wbRecord(GDRY, 'God Rays', [
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbStruct('Sky/Fog Color', [
@@ -14949,7 +14937,7 @@ end;
 
 procedure DefineFO4r;
 begin
-  wbRecord(INNR, 'Instance Naming Rule', [
+  wbRecord(INNR, 'Instance Naming Rules', [
     wbEDID,
     wbUnknown(UNAM),
     wbRArray('Naming Rules',
@@ -15357,7 +15345,7 @@ begin
     ], [], cpNormal, True)
   ]);
 
-  wbRecord(SCSN, 'Scene Sound', [
+  wbRecord(SCSN, 'Audio Category Snapshot', [
     wbEDID,
     wbInteger(PNAM, 'Index?', itU16),
     wbRArray('Sounds', wbStruct(CNAM, 'Sound', [
@@ -15374,7 +15362,7 @@ begin
     wbEDID
   ]);
 
-  wbRecord(STAG, 'Attack Sound', [
+  wbRecord(STAG, 'Animation Sound Tag Set', [
     wbEDID,
     wbRArray('Sounds', wbStruct(TNAM, 'Sound', [
       wbFormIDCk('Sound', [SNDR]),
