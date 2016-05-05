@@ -4477,52 +4477,6 @@ begin
   end;
 end;
 
-
-{>>>
-  Updated, but not called for Skyrim
-  Why is it required to fix particle counts? Because 1 pass = 79 particles?
->>>}
-//procedure wbEFSHAfterLoad(const aElement: IwbElement);
-//var
-//  Container: IwbContainerElementRef;
-//  MainRecord   : IwbMainRecord;
-//  FullParticleBirthRatio : Extended;
-//  PersistantParticleCount : Extended;
-//begin
-//  if wbBeginInternalEdit then try
-//    if not Supports(aElement, IwbContainerElementRef, Container) then
-//      Exit;
-//
-//    if Container.ElementCount < 1 then
-//      Exit;
-//
-//    if not Supports(aElement, IwbMainRecord, MainRecord) then
-//      Exit;
-//
-//    if MainRecord.IsDeleted then
-//      Exit;
-//
-//    if not Container.ElementExists['DATA'] then
-//      Exit;
-//
-//    FullParticleBirthRatio := Container.ElementNativeValues['DATA\Particle Shader - Full Particle Birth Ratio'];
-//    PersistantParticleCount := Container.ElementNativeValues['DATA\Particle Shader - Persistant Particle Count'];
-//
-//    if ((FullParticleBirthRatio <> 0) and (FullParticleBirthRatio <= 1)) then begin
-//      FullParticleBirthRatio := FullParticleBirthRatio * 78.0;
-//      Container.ElementNativeValues['DATA\Particle Shader - Full Particle Birth Ratio'] := FullParticleBirthRatio;
-//    end;
-//
-//    if ((PersistantParticleCount <> 0) and (PersistantParticleCount <= 1)) then begin
-//      PersistantParticleCount := PersistantParticleCount * 78.0;
-//      Container.ElementNativeValues['DATA\Particle Shader - Persistant Particle Count'] := PersistantParticleCount;
-//    end;
-//
-//  finally
-//    wbEndInternalEdit;
-//  end;
-//end;
-
 procedure wbLIGHAfterLoad(const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
@@ -8478,11 +8432,10 @@ begin
     '',
     '',
     'Equal To',
-    'Normal',
+    '',
     'Greater Than',
     '',
-    'Greater Than or Equal To',
-    'Always Show'
+    'Greater Than or Equal To'
   ]);
 
   wbRecord(EFSH, 'Effect Shader', [
@@ -8499,12 +8452,7 @@ begin
         wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
         wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
         wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
-        wbStruct('Fill/Texture Effect - Color Key 1', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
+        wbByteColors('Fill/Texture Effect - Color Key 1'),
         wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
         wbFloat('Fill/Texture Effect - Full Alpha Time'),
         wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
@@ -8514,12 +8462,7 @@ begin
         wbFloat('Fill/Texture Effect - Texture Animation Speed (U)'),
         wbFloat('Fill/Texture Effect - Texture Animation Speed (V)'),
         wbFloat('Edge Effect - Fall Off'),
-        wbStruct('Edge Effect - Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
+        wbByteColors('Edge Effect - Color'),
         wbFloat('Edge Effect - Alpha Fade In Time'),
         wbFloat('Edge Effect - Full Alpha Time'),
         wbFloat('Edge Effect - Alpha Fade Out Time'),
@@ -8529,55 +8472,58 @@ begin
         wbFloat('Fill/Texture Effect - Full Alpha Ratio'),
         wbFloat('Edge Effect - Full Alpha Ratio'),
         wbInteger('Membrane Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbStruct('Color Key 1 - Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbStruct('Color Key 2 - Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbStruct('Color Key 3 - Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
+        wbFloat('Holes Animation - Start Time'),
+        wbFloat('Holes Animation - End Time'),
+        wbFloat('Holes Animation - Start Value'),
+        wbFloat('Holes Animation - End Value'),
+        wbFormIDCk('Ambient Sound', [SNDR, NULL]),
+        wbByteColors('Fill/Texture Effect - Color Key 2'),
+        wbByteColors('Fill/Texture Effect - Color Key 3'),
         wbInteger('Unknown', itU8),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbStruct('Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
+        wbStruct('Fill/Texture Effect - Color Key Scale/Time', [
+          wbFloat('Color Key 1 - Scale'),
+          wbFloat('Color Key 2 - Scale'),
+          wbFloat('Color Key 3 - Scale'),
+          wbFloat('Color Key 1 - Time'),
+          wbFloat('Color Key 2 - Time'),
+          wbFloat('Color Key 3 - Time')
         ]),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
+        wbInteger('Flags', itU32, wbFlags([
+          'No Membrane Shader',
+          'Membrane Grayscale Color',
+          'Membrane Grayscale Alpha',
+          'No Particle Shader',
+          'Edge Effect - Inverse',
+          'Affect Skin Only',
+          'Texture Effect - Ignore Alpha',
+          'Texture Effect - Project UVs',
+          'Ignore Base Geometry Alpha',
+          'Texture Effect - Lighting',
+          'Texture Effect - No Weapons',
+          'Use Alpha Sorting',
+          'Prefer Dismembered Limbs',
+          'Unknown 13',
+          'Unknown 14',
+          'Particle Animated',
+          'Particle Grayscale Color',
+          'Particle Grayscale Alpha',
+          'Unknown 18',
+          'Unknown 19',
+          'Unknown 20',
+          'Unknown 21',
+          'Unknown 22',
+          'Unknown 23',
+          'Use Blood Geometry (Weapons Only)'
+        ])),
+        wbFloat('Fill/Texture Effect - Texture Scale (U)'),
+        wbFloat('Fill/Texture Effect - Texture Scale (V)')
       ]),
       wbStruct('Data (old format)', [
         wbByteArray('Unknown', 1),
         wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
         wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
         wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
-        wbStruct('Fill/Texture Effect - Color Key 1', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
+        wbByteColors('Fill/Texture Effect - Color Key 1'),
         wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
         wbFloat('Fill/Texture Effect - Full Alpha Time'),
         wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
@@ -8587,12 +8533,7 @@ begin
         wbFloat('Fill/Texture Effect - Texture Animation Speed (U)'),
         wbFloat('Fill/Texture Effect - Texture Animation Speed (V)'),
         wbFloat('Edge Effect - Fall Off'),
-        wbStruct('Edge Effect - Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
+        wbByteColors('Edge Effect - Color'),
         wbFloat('Edge Effect - Alpha Fade In Time'),
         wbFloat('Edge Effect - Full Alpha Time'),
         wbFloat('Edge Effect - Alpha Fade Out Time'),
@@ -8625,24 +8566,9 @@ begin
         wbFloat('Particle Shader - Scale Key 2'),
         wbFloat('Particle Shader - Scale Key 1 Time'),
         wbFloat('Particle Shader - Scale Key 2 Time'),
-        wbStruct('Color Key 1 - Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbStruct('Color Key 2 - Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbStruct('Color Key 3 - Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
+        wbByteColors('Color Key 1 - Color'),
+        wbByteColors('Color Key 2 - Color'),
+        wbByteColors('Color Key 3 - Color'),
         wbFloat('Color Key 1 - Color Alpha'),
         wbFloat('Color Key 2 - Color Alpha'),
         wbFloat('Color Key 3 - Color Alpha'),
@@ -8660,12 +8586,7 @@ begin
         wbFloat('Holes - Start Val'),
         wbFloat('Holes - End Val'),
         wbFloat('Edge Width (alpha units)'),
-        wbStruct('Edge Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
+        wbByteColors('Edge Color'),
         wbFloat('Explosion Wind Speed'),
         wbInteger('Texture Count U', itU32),
         wbInteger('Texture Count V', itU32),
@@ -8676,18 +8597,8 @@ begin
         wbFloat('Addon Models - Scale In Time'),
         wbFloat('Addon Models - Scale Out Time'),
         wbFormIDCk('Ambient Sound', [SNDR, NULL]),
-        wbStruct('Fill/Texture Effect - Color Key 2', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbStruct('Fill/Texture Effect - Color Key 3', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
+        wbByteColors('Fill/Texture Effect - Color Key 2'),
+        wbByteColors('Fill/Texture Effect - Color Key 3'),
         wbStruct('Fill/Texture Effect - Color Key Scale/Time', [
           wbFloat('Color Key 1 - Scale'),
           wbFloat('Color Key 2 - Scale'),
@@ -8741,7 +8652,7 @@ begin
       ])
     ], cpNormal, True),
     wbMODL
-  ], False, nil, cpNormal, False, nil {wbEFSHAfterLoad});
+  ]);
 
   wbRecord(ENCH, 'Object Effect', [
     wbEDID,
@@ -8780,46 +8691,31 @@ begin
         wbFormIDCkNoReach('Faction', [FACT, RACE]),
         wbInteger('Modifier', itS32),
         wbInteger('Group Combat Reaction', itU32, wbEnum([
-        {0x00000001}'Neutral',
-        {0x00000002}'Enemy',
-        {0x00000004}'Ally',
-        {0x00000008}'Friend'
+        {0x00000001} 'Neutral',
+        {0x00000002} 'Enemy',
+        {0x00000004} 'Ally',
+        {0x00000008} 'Friend'
       ]))
     ])),
     wbStruct(DATA, 'Flags', [
       wbInteger('Flags', itU32, wbFlags([
-        {0x00000001}'Hidden From NPC',
-        {0x00000002}'Special Combat',
-        {0x00000004}'Unknown 3',
-        {0x00000008}'Unknown 4',
-        {0x00000010}'Unknown 5',
-        {0x00000020}'Unknown 6',
-        {0x00000040}'Track Crime',
-        {0x00000080}'Ignore Crimes: Murder',
-        {0x00000100}'Ignore Crimes: Assault',
-        {0x00000200}'Ignore Crimes: Stealing',
-        {0x00000400}'Ignore Crimes: Trespass',
-        {0x00000800}'Do Not Report Crimes Against Members',
-        {0x00001000}'Crime Gold - Use Defaults',
-        {0x00002000}'Ignore Crimes: Pickpocket',
-        {0x00004000}'Vendor',
-        {0x00008000}'Can Be Owner',
-        {0x00010000}'Ignore Crimes: Werewolf',
-        {0x00020000}'Unknown 18',
-        {0x00040000}'Unknown 19',
-        {0x00080000}'Unknown 20',
-        {0x00100000}'Unknown 21',
-        {0x00200000}'Unknown 22',
-        {0x00400000}'Unknown 23',
-        {0x00800000}'Unknown 24',
-        {0x01000000}'Unknown 25',
-        {0x02000000}'Unknown 26',
-        {0x04000000}'Unknown 27',
-        {0x08000000}'Unknown 28',
-        {0x10000000}'Unknown 29',
-        {0x20000000}'Unknown 30',
-        {0x40000000}'Unknown 31',
-        {0x80000000}'Unknown 32'
+        {0x00000001} 'Hidden From NPC',
+        {0x00000002} 'Special Combat',
+        {0x00000004} 'Unknown 3',
+        {0x00000008} 'Unknown 4',
+        {0x00000010} 'Unknown 5',
+        {0x00000020} 'Unknown 6',
+        {0x00000040} 'Track Crime',
+        {0x00000080} 'Ignore Crimes: Murder',
+        {0x00000100} 'Ignore Crimes: Assault',
+        {0x00000200} 'Ignore Crimes: Stealing',
+        {0x00000400} 'Ignore Crimes: Trespass',
+        {0x00000800} 'Do Not Report Crimes Against Members',
+        {0x00001000} 'Crime Gold - Use Defaults',
+        {0x00002000} 'Ignore Crimes: Pickpocket',
+        {0x00004000} 'Vendor',
+        {0x00008000} 'Can Be Owner',
+        {0x00010000} 'Ignore Crimes: Werewolf (unused)'
       ]))
     ], cpNormal, True, nil, 1),
     wbFormIDCk(JAIL, 'Exterior Jail Marker', [REFR]),
@@ -8838,25 +8734,25 @@ begin
       {02} wbInteger('Unknown', itU16),
       {02} wbFloat('Steal Multiplier'),
       {02} wbInteger('Escape', itU16),
-      {02} wbInteger('Werewolf', itU16)
+      {02} wbInteger('Werewolf (unused)', itU16)
       ], cpNormal, False, nil, 7),
     wbRStructsSK('Ranks', 'Rank', [0], [
       wbInteger(RNAM, 'Rank#', itU32),
       wbLString(MNAM, 'Male Title', 0, cpTranslate),
       wbLString(FNAM, 'Female Title', 0, cpTranslate),
-      wbString(INAM, 'Insignia Unused')
+      wbString(INAM, 'Insignia (unused)')
     ], []),
     wbFormIDCk(VEND, 'Vendor Buy/Sell List', [FLST]),
     wbFormIDCk(VENC, 'Merchant Container', [REFR]),
     wbStruct(VENV, 'Vendor Values', [
-      {01} wbInteger('Start Hour', itU16),
-      {02} wbInteger('End Hour', itU16),
-      {02} wbInteger('Radius', itU16),
-      {02} wbByteArray('Unknown 1', 2),
-           wbInteger('Only Buys Stolen Items', itU8, wbEnum(['False', 'True'])),
-           wbInteger('Not/Sell Buy', itU8, wbEnum(['False', 'True'])),
-      {02} wbByteArray('Unknown 2', 2)
-      ]),
+      wbInteger('Start Hour', itU16),
+      wbInteger('End Hour', itU16),
+      wbInteger('Radius', itU16),
+      wbByteArray('Unknown 1', 2),
+      wbInteger('Buys Stolen Items', itU8, wbEnum(['False', 'True'])),
+      wbInteger('Buy/Sell Everything Not In List?', itU8, wbEnum(['False', 'True'])),
+      wbInteger('Buys NonStolen Items', itU8, wbEnum(['False', 'True']))
+    ]),
     wbPLVD,
     wbCITC,
     wbCTDAsCount
