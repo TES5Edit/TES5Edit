@@ -8223,9 +8223,9 @@ begin
       wbFloat('Equipment Score Mult - Unarmed'),
       wbFloat('Equipment Score Mult - Staff'),
       wbFloat('Avoid Threat Chance'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown')
-    ], cpNormal, True, nil, 0),
+      wbFloat('Dodge Threat Chance'),
+      wbFloat('Evade Threat Chance')
+    ], cpNormal, True),
     wbUnknown(CSMD, cpIgnore),
     wbStruct(CSME, 'Melee', [
       wbFloat('Attack Staggered Mult'),
@@ -8236,31 +8236,31 @@ begin
       wbFloat('Bash Attack Mult'),
       wbFloat('Bash Power Attack Mult'),
       wbFloat('Special Attack Mult'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown')
-    ], cpNormal, False, nil, 9),
-    wbFloat(CSRA, 'Unknown'),
+      wbFloat('Block When Staggered Mult'),
+      wbFloat('Attack When Staggered Mult')
+    ], cpNormal, True, nil, 9),
+    wbFloat(CSRA, 'Ranged Accuracy Mult', cpNormal, True),
     wbStruct(CSCR, 'Close Range', [
-      wbFloat('Circle Mult'),
-      wbFloat('Fallback Mult'),
-      wbFloat('Flank Distance'),
-      wbFloat('Stalk Time'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown')
-    ], cpNormal, False, nil, 0),
+      wbFloat('Dueling - Circle Mult'),
+      wbFloat('Dueling - Fallback Mult'),
+      wbFloat('Flanking - Flank Distance'),
+      wbFloat('Flanking - Stalk Time'),
+      wbFloat('Charging - Charge Distance'),
+      wbFloat('Charging - Throw Probability'),
+      wbFloat('Charging - Sprint Fast Probability'),
+      wbFloat('Charging - Sideswipe Probability'),
+      wbFloat('Charging - Disengane Probability'),
+      wbInteger('Charging - Throw Max Targets', itU32),
+      wbFloat('Flanking - Flank Variance')
+    ], cpNormal, True),
     wbStruct(CSLR, 'Long Range', [
       wbFloat('Strafe Mult'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown')
-    ], cpNormal, False, nil, 3),
-    wbFloat(CSCV, 'Unknown'),
+      wbFloat('Adjust Range Mult'),
+      wbFloat('Crouch Mult'),
+      wbFloat('Wait Mult'),
+      wbFloat('Range Mult')
+    ], cpNormal, True, nil, 3),
+    wbFloat(CSCV, 'Cover Search Distance Mult', cpNormal, True),
     wbStruct(CSFL, 'Flight', [
       wbFloat('Hover Chance'),
       wbFloat('Dive Bomb Chance'),
@@ -8270,12 +8270,14 @@ begin
       wbFloat('Perch Attack Chance'),
       wbFloat('Perch Attack Time'),
       wbFloat('Flying Attack Chance')
-    ], cpNormal, False, nil, 0),
+    ], cpNormal, True),
     wbInteger(DATA, 'Flags', itU32, wbFlags([
       {0x01} 'Dueling',
       {0x02} 'Flanking',
-      {0x04} 'Allow Dual Wielding'
-    ]), cpNormal, False)
+      {0x04} 'Allow Dual Wielding',
+      {0x08} 'Charging',
+      {0x10} 'Retarget Any Nearby Melee Target'
+    ]), cpNormal, True)
   ]);
 end;
 
@@ -8416,6 +8418,7 @@ begin
 
   wbRecord(DOOR, 'Door',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000010}  4, 'Non Occluder',
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
       {0x00800000} 23, 'Is Marker'
@@ -8439,10 +8442,11 @@ begin
       'Hidden',
       'Minimal Use',
       'Sliding',
-      'Do Not Open in Combat Search'
+      'Do Not Open in Combat Search',
+      'No "To" Text'
     ]), cpNormal, True),
-    wbLString(ONAM, 'Unknown', 0, cpTranslate),
-    wbLString(CNAM, 'Unknown', 0, cpTranslate)
+    wbLString(ONAM, 'Alternate Text - Open', 0, cpTranslate),
+    wbLString(CNAM, 'Alternate Text - Close', 0, cpTranslate)
   ]);
 
   wbBlendModeEnum := wbEnum([
