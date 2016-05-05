@@ -2612,6 +2612,33 @@ begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 99);
 end;
 
+function wbAECHDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container  : IwbContainer;
+  rKNAM      : IwbElement;
+  s: string;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
+  Container := Container.Container;
+  if not Assigned(Container) then Exit;
+
+  rKNAM := Container.ElementBySignature['KNAM'];
+  if not Assigned(rKNAM) then Exit;
+
+  s := rKNAM.EditValue;
+
+  if s = 'BSOverdrive' then
+    Result := 0
+  else if s = 'BSStateVariableFilter' then
+    Result := 1
+  else if s = 'BSDelayEffect' then
+    Result := 2;
+end;
+
 
 {>>> For VMAD <<<}
 function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -14696,7 +14723,7 @@ begin
       wbWeatherColors('Fog Far'),
       wbWeatherColors('Sky Statics'),
       wbWeatherColors('Water Multiplier'),
-      wbWeatherColors('Sun Glar'),
+      wbWeatherColors('Sun Glare'),
       wbWeatherColors('Moon Glare'),
       wbWeatherColors('Fog Near High'),
       wbWeatherColors('Fog Far High')
@@ -14772,7 +14799,7 @@ begin
       wbFormIDCK('Day', [IMGS, NULL]),
       wbFormIDCK('Sunset', [IMGS, NULL]),
       wbFormIDCK('Night', [IMGS, NULL]),
-      wbFormIDCK('EarlySunrire', [IMGS, NULL]),
+      wbFormIDCK('EarlySunrise', [IMGS, NULL]),
       wbFormIDCK('LateSunrise', [IMGS, NULL]),
       wbFormIDCK('EarlySunset', [IMGS, NULL]),
       wbFormIDCK('LateSunset', [IMGS, NULL])
@@ -14782,7 +14809,7 @@ begin
       wbFormIDCK('Day', [GDRY, NULL]),
       wbFormIDCK('Sunset', [GDRY, NULL]),
       wbFormIDCK('Night', [GDRY, NULL]),
-      wbFormIDCK('EarlySunrire', [GDRY, NULL]),
+      wbFormIDCK('EarlySunrise', [GDRY, NULL]),
       wbFormIDCK('LateSunrise', [GDRY, NULL]),
       wbFormIDCK('EarlySunset', [GDRY, NULL]),
       wbFormIDCK('LateSunset', [GDRY, NULL])
@@ -14792,7 +14819,7 @@ begin
       wbAmbientColors(DALC, 'Day'),
       wbAmbientColors(DALC, 'Sunset'),
       wbAmbientColors(DALC, 'Night'),
-      wbAmbientColors(DALC, 'EarlySunrire'),
+      wbAmbientColors(DALC, 'EarlySunrise'),
       wbAmbientColors(DALC, 'LateSunrise'),
       wbAmbientColors(DALC, 'EarlySunset'),
       wbAmbientColors(DALC, 'LateSunset')
@@ -14828,8 +14855,39 @@ begin
     wbEDID,
     wbRArray('Effects',
       wbRStruct('Effect', [
-        wbUnknown(KNAM),
-        wbUnknown(DNAM)
+        wbInteger(KNAM, 'Type', itU32, wbEnum([], [
+          Int64($864804BE), 'BSOverdrive',
+          Int64($EF575F7F), 'BSStateVariableFilter',
+          Int64($18837B4F), 'BSDelayEffect'
+        ]), cpNormal, False, False, nil, nil, Int64($864804BE)),
+        wbStruct(DNAM, 'Data', [
+          wbInteger('Enabled', itU32, wbEnum(['False', 'True'])),
+          wbUnion('Value 1', wbAECHDataDecider, [
+            wbFloat('Input Gain'), // exponentially(?) normalized from 0..10 to -80..20
+            wbFloat('Center Freq'),
+            wbFloat('Feedback %')
+          ]),
+          wbUnion('Value 2', wbAECHDataDecider, [
+            wbFloat('Output Gain'), // exponentially(?) normalized from 0..10 to -80..20
+            wbFloat('Q Value'),
+            wbFloat('Wet Mix %')
+          ]),
+          wbUnion('Value 3', wbAECHDataDecider, [
+            wbFloat('Upper Threshold'), // exponentially(?) normalized from 0..1 to -74..0
+            wbInteger('Filter Mode', itU32, wbEnum([
+              'High Pass',
+              'Low Pass',
+              'Band Pass',
+              'Notch'
+            ])),
+            wbInteger('Delay MS', itU32)
+          ]),
+          wbUnion('Value 4', wbAECHDataDecider, [
+            wbFloat('Lower Threshold'), // exponentially(?) normalized from 0..1 to -80..0
+            wbByteArray('Unused', 0),
+            wbByteArray('Unused', 0)
+          ])
+        ])
       ], [])
     )
   ]);
@@ -14870,13 +14928,14 @@ begin
     wbEDID,
     wbOBND,
     wbStruct(DNAM, 'Data', [
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown')
+      wbFloat('Default Number of Tiles'),
+      wbInteger('Default Number of Slices', itU16),
+      wbInteger('Default Number of Tiles - Relative to Length', itU16, wbEnum(['False', 'True'])),
+      wbFloat('Default Color - Red'),
+      wbFloat('Default Color - Green'),
+      wbFloat('Default Color - Blue'),
+      wbFloat('Wind Settings - Sensibility'),
+      wbFloat('Wind Settings - Flexibility')
     ]),
     wbFormIDCk(TNAM, 'Texture', [TXST])
   ]);
