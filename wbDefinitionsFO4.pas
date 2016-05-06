@@ -68,6 +68,7 @@ var
 	wbWeaponAnimTypeEnum: IwbEnumDef;
 	wbWeaponPropertyEnum: IwbEnumDef;
 	wbZTestFuncEnum: IwbEnumDef;
+  wbKeywordTypeEnum: IwbEnumDef;
 	wbScriptProperties: IwbArrayDef;
 	wbScriptPropertyStruct: IwbArrayDef;
 
@@ -5267,18 +5268,13 @@ begin
       wbInteger('Passes', itU8) {>>> This can't be higher than 30 <<<}
     ]),
     wbInteger('Flags', itU8, wbFlags([
-      {0x01}'Parallax',
-      {0x02}'Alpha - Blending',
-      {0x04}'Alpha - Testing',
-      {0x08}'No Subtextures'
+      {0x01} 'POM Shadows',
+      {0x02} 'Alpha - Blending',
+      {0x04} 'Alpha - Testing',
+      {0x08} 'No Subtextures'
     ], True)),
-    wbByteArray('Unknown', 2),
-    wbStruct('Color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbByteArray('Unknown', 1)
-    ])
+    wbInteger('Alpha Threshold?', itU16),
+    wbByteColors('Color')
   ]);
 
 //  wbRecordFlagsFlags := wbFlags([
@@ -6691,6 +6687,29 @@ begin
       'Werewolf Transformation'
     ], [
       -1, 'None'
+    ]);
+
+  wbKeywordTypeEnum :=
+    wbEnum([
+      {00} 'None',
+      {01} 'Component Tech Level',
+      {02} 'Attach Point',
+      {03} 'Component Property',
+      {04} 'Instantiation Filter',
+      {05} 'Mod Association',
+      {06} 'Sound',
+      {07} 'Anim Archetype',
+      {08} 'Function Call',
+      {09} 'Recipe Filter',
+      {10} 'Attraction Type',
+      {11} 'Dialogue Subtype',
+      {12} 'Quest Target',
+      {13} 'Anim Flavor',
+      {14} 'Anim Gender',
+      {15} 'Anim Face',
+      {16} 'Quest Group',
+      {17} 'Anim Injured',
+      {18} 'Dispel Effect'
     ]);
 
   wbETYP := wbFormIDCk(ETYP, 'Equipment Type', [EQUP, NULL]);
@@ -8761,6 +8780,7 @@ begin
   wbRecord(FURN, 'Furniture',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000080}  7, 'Is Perch',
+      {0x00002000} 13, 'Unknown 13',
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
       {0x00800000} 23, 'Is Marker',
@@ -8779,6 +8799,7 @@ begin
     wbPRPS,
     wbFTYP,
     wbUnknown(PNAM),
+    wbFormIDCk(WNAM, 'Drinking Water Type', [WATR]),
     wbATTX,
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       {0x0001} 'Unknown 0',
@@ -8789,35 +8810,35 @@ begin
     wbCOCT,
     wbCNTOs,
     wbInteger(MNAM, 'Active Markers / Flags', itU32, wbFlags([
-      {0x00000001} 'Sit 0',
-      {0x00000002} 'Sit 1',
-      {0x00000004} 'Sit 2',
-      {0x00000008} 'Sit 3',
-      {0x00000010} 'Sit 4',
-      {0x00000020} 'Sit 5',
-      {0x00000040} 'Sit 6',
-      {0x00000080} 'Sit 7',
-      {0x00000100} 'Sit 8',
-      {0x00000200} 'Sit 9',
-      {0x00000400} 'Sit 10',
-      {0x00000800} 'Sit 11',
-      {0x00001000} 'Sit 12',
-      {0x00002000} 'Sit 13',
-      {0x00004000} 'Sit 14',
-      {0x00008000} 'Sit 15',
-      {0x00010000} 'Sit 16',
-      {0x00020000} 'Sit 17',
-      {0x00040000} 'Sit 18',
-      {0x00080000} 'Sit 19',
-      {0x00100000} 'Sit 20',
-      {0x00200000} 'Sit 21',
-      {0x00400000} 'Sit 22',
-      {0x00800000} 'Sit 23',
-      {0x01000000} 'Unknown 25',
+      {0x00000001} 'Marker 0',
+      {0x00000002} 'Marker 1',
+      {0x00000004} 'Marker 2',
+      {0x00000008} 'Marker 3',
+      {0x00000010} 'Marker 4',
+      {0x00000020} 'Marker 5',
+      {0x00000040} 'Marker 6',
+      {0x00000080} 'Marker 7',
+      {0x00000100} 'Marker 8',
+      {0x00000200} 'Marker 9',
+      {0x00000400} 'Marker 10',
+      {0x00000800} 'Marker 11',
+      {0x00001000} 'Marker 12',
+      {0x00002000} 'Marker 13',
+      {0x00004000} 'Marker 14',
+      {0x00008000} 'Marker 15',
+      {0x00010000} 'Marker 16',
+      {0x00020000} 'Marker 17',
+      {0x00040000} 'Marker 18',
+      {0x00080000} 'Marker 19',
+      {0x00100000} 'Marker 20',
+      {0x00200000} 'Marker 21',
+      {0x00400000} 'Allow Awake Sound',
+      {0x00800000} 'Enter With Weapon Drawn',
+      {0x01000000} 'Play Anim When Full',
       {0x02000000} 'Disables Activation',
       {0x04000000} 'Is Perch',
       {0x08000000} 'Must Exit to Talk',
-      {0x10000000} 'Unknown 29',
+      {0x10000000} 'Use Static Avoid Node',
       {0x20000000} 'Unknown 30',
       {0x40000000} 'Unknown 31',
       {0x80000000} 'Unknown 32'
@@ -8832,11 +8853,12 @@ begin
         {5} 'Alchemy', // used for Chemistry and Cooking, so Alchemy is probably okay
         {6} 'Alchemy Experiment (unused)', // not used
         {7} 'Armor', // FO4 calls this the Armor workbench, no mention of Smithing
-        {8} 'Power Armor' // used for Power Armor stations
+        {8} 'Power Armor', // used for Power Armor stations
+        {9} 'Robot Mod' // used for Robot stations
       ])),
       wbInteger('Uses Skill', itS8, wbSkillEnum)
     ], cpNormal, True, nil, 1),
-    wbFormIDCk(NAM1, 'Associated weapon', [WEAP]),
+    wbFormIDCk(NAM1, 'Associated Form', [ARMO, WEAP, PERK, SPEL, HAZD]),
     wbRArray('Markers', wbRStruct('Marker', [
       wbInteger(ENAM, 'Marker Index', itS32),
       wbStruct(NAM0, 'Disabled Entry Points', [
@@ -8849,24 +8871,30 @@ begin
       wbInteger('Type', itU16, wbFurnitureAnimTypeEnum),
       wbInteger('Entry Points', itU16, wbFurnitureEntryTypeFlags)
     ])),
-    wbString(XMRK, 'Model Filename'),
+    wbString(XMRK, 'Marker Model'),
     wbArray(SNAM, 'Marker Paramaters', wbStruct('Marker', [
       wbFloat('Offset X'),
       wbFloat('Offset Y'),
       wbFloat('Offset Z'),
       wbFloat('Rotation Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
       wbFormIDCk('Keyword', [KYWD, NULL]),
-      wbInteger('Unknown', itS32)
+      wbInteger('Entry Types', itU8, wbFlags([
+        'Front',
+        'Rear',
+        'Right',
+        'Left',
+        'Other',
+        'Unused 5',
+        'Unused 6',
+        'Unused 7'
+      ])),
+      wbByteArray('Unknown', 3)
     ], cpNormal, False, nil, 4)),
     wbNVNM,
     wbAPPR,
     wbOBTESequence
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-//----------------------------------------------------------------------------
-// For expansion to use wbGLOBUnionDecider to display Short, Long, Float
-// correctly without making a signed float by default
-//----------------------------------------------------------------------------
   wbRecord(GLOB, 'Global',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000040}  6, 'Constant'
@@ -8899,28 +8927,8 @@ begin
     wbEDID,
     wbCNAM,
     wbString(DNAM, 'Notes'),
-    wbInteger(TNAM, 'Type', itU32, wbEnum([
-      {00} 'None',
-      {01} 'Component Tech Level',
-      {02} 'Attach Point',
-      {03} 'Component Property',
-      {04} 'Instantiation Filter',
-      {05} 'Mod Association',
-      {06} 'Sound',
-      {07} 'Anim Archetype',
-      {08} 'Function Call',
-      {09} 'Recipe Filter',
-      {10} 'Attraction Type',
-      {11} 'Dialogue Subtype',
-      {12} 'Quest Target',
-      {13} 'Anim Flavor',
-      {14} 'Anim Gender',
-      {15} 'Anim Face',
-      {16} 'Quest Group',
-      {17} 'Anim Injured',
-      {18} 'Dispel Effect'
-    ])),
-    wbFormID(DATA, 'Rule'),
+    wbInteger(TNAM, 'Type', itU32, wbKeywordTypeEnum),
+    wbFormIDCk(DATA, 'Attraction Rule', [AORU]),
     wbFULL,
     wbString(NNAM, 'Display Name') {Legacy record replaced with FULL}
   ]);
@@ -8934,33 +8942,37 @@ begin
     wbUnknown(TNAM)
   ]);
 
-  wbRecord(AACT, 'Action', [
+  wbRecord(AACT, 'Action',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00080000} {15} 15, 'Restricted'
+    ])), [
     wbEDID,
     wbCNAM,
-    wbString(DNAM, 'Name'),
-    wbUnknown(TNAM)
+    wbString(DNAM, 'Notes'),
+    wbInteger(TNAM, 'Type', itU32, wbKeywordTypeEnum),
+    wbFormIDCk(DATA, 'Attraction Rule', [AORU]),
+    wbFULL
   ]);
 
   wbRecord(TXST, 'Texture Set', [
     wbEDID,
     wbOBNDReq,
-    { Unsure if texture names are the same }
     wbRStruct('Textures (RGB/A)', [
-      wbString(TX00,'Difuse'),
-      wbString(TX01,'Normal/Gloss'),
-      wbString(TX03,'Glow/Detail Map'),
-      wbString(TX04,'Height'),
-      wbString(TX05,'Environment'),
-      wbString(TX02,'Wrinkles'), {TX05 TX02 TX06 Yes this has to go here}
-      wbString(TX06,'Multilayer'),
-      wbString(TX07,'Backlight Mask/Specular')
+      wbString(TX00, 'Difuse'),
+      wbString(TX01, 'Normal/Gloss'),
+      wbString(TX03, 'Glow'),
+      wbString(TX04, 'Height'),
+      wbString(TX05, 'Environment'),
+      wbString(TX02, 'Wrinkles'), {TX05 TX02 TX06 Yes this has to go here}
+      wbString(TX06, 'Multilayer'),
+      wbString(TX07, 'Smooth Spec')
     ], []),
     wbDODT,
     wbInteger(DNAM, 'Flags', itU16, wbFlags([
-      {0x0001}'No Specular Map',
-      {0x0002}'Facegen Textures',
-      {0x0004}'Has Model Space Normal Map'
-    ]), cpNormal, False),
+      {0x0001} 'No Specular Map',
+      {0x0002} 'Facegen Textures',
+      {0x0004} 'Has Model Space Normal Map'
+    ]), cpNormal, True),
     wbString(MNAM, 'Material')
   ]);
 
@@ -14814,14 +14826,16 @@ begin
     ])
   ]);
 
-  wbRecord(AORU, 'Object Rule', [
+  wbRecord(AORU, 'Attraction Rule', [
     wbEDID,
-    wbStruct(AOR2, 'Unknown', [
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbByteArray('Unknown', 4)
-    ])
+    wbStruct(AOR2, 'Data', [
+      wbFloat('Radius'),
+      wbFloat('Min Delay'),
+      wbFloat('Max Delay'),
+      wbInteger('Requires Line of Sight', itU8, wbEnum(['False', 'True'])),
+      wbInteger('Combat Target', itU8, wbEnum(['False', 'True'])),
+      wbByteArray('Unused', 2)
+    ], cpNormal, True)
   ]);
 
   wbRecord(BNDS, 'Bendable Spline', [
