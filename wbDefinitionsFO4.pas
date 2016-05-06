@@ -69,6 +69,7 @@ var
 	wbWeaponPropertyEnum: IwbEnumDef;
 	wbZTestFuncEnum: IwbEnumDef;
   wbKeywordTypeEnum: IwbEnumDef;
+  wbBoolEnum: IwbEnumDef;
 	wbScriptProperties: IwbArrayDef;
 	wbScriptPropertyStruct: IwbArrayDef;
 
@@ -5116,6 +5117,7 @@ procedure DefineFO4a;
 
 begin
   wbNull := wbByteArray('Unused', -255);
+  wbBoolEnum := wbEnum(['False', 'True']);
   wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
   wbCITC := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign);
   wbLVLD := wbInteger(LVLD, 'Chance None', itU8, nil, cpNormal, True);
@@ -9014,26 +9016,28 @@ begin
       ])),
       wbString(NAM1, 'Filename', 0, cpTranslate, True)
     ], []),
-    wbFormIDCk(TNAM, 'Texture Set', [TXST, NULL]),
-    //wbFormIDCk(CNAM, 'Color', [CLFM, NULL]),
-    wbFormIDCk(RNAM, 'Valid Races', [FLST, NULL]),
+    wbFormIDCk(TNAM, 'Texture Set', [TXST]),
+    wbFormIDCk(CNAM, 'Color', [CLFM]),
+    wbFormIDCk(RNAM, 'Valid Races', [FLST]),
     wbCTDAs
   ]);
 
   wbRecord(ASPC, 'Acoustic Space', [
     wbEDID,
     wbOBNDReq,
-    wbFormIDCk(SNAM, 'Ambient Sound', [SNDR]),
+    wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
     wbFormIDCk(RDAT, 'Use Sound from Region (Interiors Only)', [REGN]),
-    wbFormIDCk(BNAM, 'Environment Type (reverb)', [REVB]),
-    wbUnknown(XTRI),
-    wbUnknown(WNAM)
+    wbFormIDCk(BNAM, 'Environment Type', [REVB]),
+    wbInteger(XTRI, 'Is Interior', itU8, wbBoolEnum, cpNormal, True),
+    wbInteger(WNAM, 'Weather Attenuation (dB)', itU16, wbDiv(100))
   ]);
 
   wbRecord(MSTT, 'Moveable Static',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000100}  8, 'Must Update Anims',
       {0x00000200}  9, 'Hidden From Local Map',
+      {0x00000800} 11, 'Used As Platform',
+      {0x00002000} 13, 'Pack-In Use Only',
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
       {0x00080000} 19, 'Has Currents',
@@ -9052,10 +9056,7 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbPRPS,
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      'On Local Map',
-      'Unknown 2'
-    ]), cpNormal, True),
+    wbInteger(DATA, 'On Local Map', itU8, wbBoolEnum, cpNormal, True),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR])
   ]);
 end;
