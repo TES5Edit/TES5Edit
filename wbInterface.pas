@@ -10509,15 +10509,16 @@ function TwbFloatDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElem
 begin
   if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aBasePtr) >= Cardinal(aEndPtr)) then
     Result := Ord(noTerminator)
-  else if fdDouble then
-    Result := SizeOf(Double) + Ord(noTerminator)
   else
-    Result := SizeOf(Single) + Ord(noTerminator);
+    Result := GetDefaultSize(aBasePtr, aEndPtr, aElement)
 end;
 
 function TwbFloatDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  Result := GetSize(aBasePtr, aEndPtr, aElement);
+  if fdDouble then
+    Result := SizeOf(Double) + Ord(noTerminator)
+  else
+    Result := SizeOf(Single) + Ord(noTerminator);
 end;
 
 function TwbFloatDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
