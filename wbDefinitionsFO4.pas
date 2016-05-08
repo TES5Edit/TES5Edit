@@ -978,7 +978,6 @@ var
   wbReqKWDAs: IwbSubRecordDef;
   wbKeywords: IwbSubRecordStructDef;
   wbCNAM: IwbSubRecordDef;
-  wbCNAMReq: IwbSubRecordDef;
   wbCITC: IwbSubRecordDef;
   wbMGEFData: IwbSubRecordStructDef;
   wbMGEFType: IwbIntegerDef;
@@ -2641,6 +2640,34 @@ begin
     Result := 2;
 end;
 
+function wbCLFMColorDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container  : IwbContainer;
+  rFNAM      : IwbElement;
+  i          : Integer;
+begin
+  Result := 0;
+
+  // resolving to a float causes data loss when copying
+  // since deciding field FNAM comes after a value CNAM
+  Exit;
+
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
+  Container := Container.Container;
+  if not Assigned(Container) then Exit;
+
+  rFNAM := Container.ElementBySignature['FNAM'];
+  if not Assigned(rFNAM) then Exit;
+
+  i := rFNAM.NativeValue;
+
+  if i and 2 <> 0 then
+    Result := 1;
+end;
+
 
 {>>> For VMAD <<<}
 function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -2964,7 +2991,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..512] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..513] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
@@ -3473,6 +3500,7 @@ const
     (Index: 812; Name: 'GetPathingRequestedQuickTurn'),
     (Index: 813; Name: 'EPIsCalculatingBaseDamage'),
     (Index: 814; Name: 'GetReanimating'),
+    (Index: 817; Name: 'IsInRobotWorkbench'),
 
     // F4SE
     (Index: 1024; Name: 'GetSKSEVersion'; ),
@@ -5251,12 +5279,6 @@ begin
     wbInteger('Blue', itU8),
     wbByteArray('Unknown', 1)
   ]);
-  wbCNAMReq := wbStruct(CNAM, 'Color', [
-    wbInteger('Red', itU8),
-    wbInteger('Green', itU8),
-    wbInteger('Blue', itU8),
-    wbByteArray('Unknown', 1)
-  ], cpNormal, True);
 
   wbDODT := wbStruct(DODT, 'Decal Data', [
     wbFloat('Min Width'),
@@ -7261,14 +7283,17 @@ begin
         wbFormIDCkNoReach('Damage Type', [DMGT, FLST])
       ]),
       wbInteger('Run On', itU32, wbEnum([
-        {0} 'Subject',
-        {1} 'Target',
-        {2} 'Reference',
-        {3} 'Combat Target',
-        {4} 'Linked Reference',
-        {5} 'Quest Alias',
-        {6} 'Package Data',
-        {7} 'Event Data'
+        { 0} 'Subject',
+        { 1} 'Target',
+        { 2} 'Reference',
+        { 3} 'Combat Target',
+        { 4} 'Linked Reference',
+        { 5} 'Quest Alias',
+        { 6} 'Package Data',
+        { 7} 'Event Data',
+        { 9} 'Command Target',
+        {10} 'Event Camera Ref',
+        {11} 'My Killer'
       ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
       wbUnion('Reference', wbCTDAReferenceDecider, [
         wbInteger('Unused', itU32, nil, cpIgnore),
@@ -11317,10 +11342,14 @@ begin
     ])), [
     wbEDID,
     wbFULL,
-    wbCNAMReq,
+    wbUnion(CNAM, 'Value', wbCLFMColorDecider, [
+      wbByteColors('Color'),
+      wbFloat('Remapping Index')
+    ]),
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
       'Playable',
-      'Hair Color'
+      'Remapping Index',
+      'Extended LUT'
     ]), cpNormal, True)
   ]);
 end;
@@ -11343,7 +11372,14 @@ begin
       wbInteger('Density %', itU8),
       wbInteger('Unknown', itU8)
     ], cpNormal, True),
-    wbUnknown(ANAM)
+    wbInteger(ANAM, 'Reverb Class', itU32, wbEnum([
+      'Default',
+      'Class A',
+      'Class B',
+      'Class C',
+      'Class D',
+      'Class E'
+    ]), cpNormal, True)
   ]);
 
   wbRecord(GRAS, 'Grass', [
@@ -11383,11 +11419,11 @@ begin
   wbRecord(IDLE, 'Idle Animation', [
     wbEDID,
     wbCTDAs,
-    wbString(DNAM, 'Filename'),
+    wbString(DNAM, 'Behavior Graph'),
     wbString(ENAM, 'Animation Event'),
     wbArray(ANAM, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [AACT, IDLE, NULL]),
       ['Parent', 'Previous Sibling'], cpNormal, True),
-    wbStruct(DATA, 'Data (unused)', [
+    wbStruct(DATA, '', [
       wbStruct('Looping seconds (both 255 forever)', [
         wbInteger('Min', itU8),
         wbInteger('Max', itU8)
@@ -11400,8 +11436,8 @@ begin
       ], True)),
       wbInteger('Animation Group Section', itU8{, wbIdleAnam}),
       wbInteger('Replay Delay', itU16)
-    ], cpIgnore, True),
-    wbString(GNAM, 'Unknown')
+    ], cpNormal, True),
+    wbString(GNAM, 'Animation File')
   ]);
 
   wbRecord(INFO, 'Dialog response',
@@ -11483,10 +11519,12 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbMODL,
+    wbICON,
+    wbMICO,
     wbDEST,
     wbETYP,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
+    wbYNAM,
+    wbZNAM,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -11510,7 +11548,8 @@ begin
 
   wbRecord(KEYM, 'Key',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Non-Playable'
+      {0x00000800} 11, 'Calc Value From Components',
+      {0x00002000} 13, 'Pack-In Use Only'
     ])), [
     wbEDID,
     wbVMAD,
@@ -11518,9 +11557,11 @@ begin
     wbPTRN,
     wbFULLReq,
     wbMODL,
+    wbICON,
+    wbMICO,
     wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
+    wbYNAM,
+    wbZNAM,
     wbKSIZ,
     wbKWDAs,
     wbStruct(DATA, '', [
@@ -11630,9 +11671,8 @@ begin
 
   wbRecord(LIGH, 'Light',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00020000} 16, 'Random Anim Start',
-      { There is always an Unknown }
-      {0x00020000} 17, 'Unknown',
+      {0x00010000} 16, 'Random Anim Start',
+      {0x00020000} 17, 'Unknown 17',
       {0x00020000} 25, 'Obstacle',
       {0x00020000} 28, 'Portal-strict'
     ])), [
@@ -11646,47 +11686,42 @@ begin
     wbDEST,
     wbPRPS,
     wbFULL,
+    wbICON,
+    wbMICO,
     wbStruct(DATA, '', [
       wbInteger('Time', itS32),
       wbInteger('Radius', itU32),
-      wbStruct('Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbInteger('Unknown', itU8)
-      ]),
-      { Omnidirectional never shows up for Flags or Record Flags }
-      { There is always an Unknown 1}
+      wbByteColors('Color'),
+      // Omnidirectional is the default type
       wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'Unknown 1',
+        {0x00000001} 'Unknown 0',
         {0x00000002} 'Can be Carried',
-        {0x00000004} 'Unknown 3',
+        {0x00000004} 'Unknown 2',
         {0x00000008} 'Flicker',
-        {0x00000010} 'Unknown 5',
+        {0x00000010} 'Unknown 4',
         {0x00000020} 'Off By Default',
-        {0x00000040} 'Unknown 7',
+        {0x00000040} 'Unknown 6',
         {0x00000080} 'Pulse',
-        {0x00000100} 'Unknown 9',
-        {0x00000200} 'Unknown 10',
+        {0x00000100} 'Unknown 8',
+        {0x00000200} 'Unknown 9',
         {0x00000400} 'Shadow Spotlight',
         {0x00000800} 'Shadow Hemisphere',
         {0x00001000} 'Shadow OmniDirectional',
-        {0x00002000} 'Unknown 14',
-        {0x00004000} 'NonShadowSpotlight',
+        {0x00002000} 'Unknown 13',
+        {0x00004000} 'NonShadow Spotlight',
         {0x00008000} 'Non Specular',
         {0x00010000} 'Attenuation Only',
-        {0x00020000} 'NonShadowBox',
+        {0x00020000} 'NonShadow Box',
         {0x00040000} 'Ignore Roughness',
         {0x00080000} 'No Rim Lighting',
-        {0x00100000} 'Ambient Only'
+        {0x00100000} 'Ambient Only',
+        {0x00200000} 'Unknown 21' // only in [001C7F0C] <RandomSpot01GR>
       ])),
       wbFloat('Falloff Exponent'),
       wbFloat('FOV'),
       wbFloat('Near Clip'),
-        {If I set Period to 1.1000 it shows as 0.909091}
-        {If I set Period to 0.1234 it shows as 0.081037}
       wbStruct('Flicker Effect', [
-        wbFloat('Period', cpNormal, False, 0.01),
+        wbFloat('Period'),
         wbFloat('Intensity Amplitude'),
         wbFloat('Movement Amplitude')
       ]),
@@ -11696,11 +11731,11 @@ begin
       wbFloat('God Rays - Near Clip'),
       wbInteger('Value', itU32),
       wbFloat('Weight')
-    ], cpNormal, True, nil, 12),
+    ], cpNormal, True, nil, 10),
     wbFloat(FNAM, 'Fade value', cpNormal, True),
-    wbString(NAM0, 'Unknown'),
+    wbString(NAM0, 'Gobo'),
     wbFormIDCk(LNAM, 'Lens', [LENS]),
-    wbFormIDCk(WGDR, 'Godray', [GDRY]),
+    wbFormIDCk(WGDR, 'God Rays', [GDRY]),
     wbFormIDCk(SNAM, 'Sound', [SNDR])
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 end;
