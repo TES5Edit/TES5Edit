@@ -2668,6 +2668,33 @@ begin
     Result := 1;
 end;
 
+function wbNOTEDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container  : IwbContainer;
+  rDNAM      : IwbElement;
+  i          : Integer;
+begin
+  Result := 0;
+
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
+  Container := Container.Container;
+  if not Assigned(Container) then Exit;
+
+  rDNAM := Container.ElementBySignature['DNAM'];
+  if not Assigned(rDNAM) then Exit;
+
+  i := rDNAM.NativeValue;
+
+  case i of
+    0: Result := 1;
+    1: Result := 2;
+    3: Result := 3;
+  end;
+end;
+
 
 {>>> For VMAD <<<}
 function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -2991,7 +3018,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..513] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..514] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
@@ -3472,6 +3499,7 @@ const
     (Index: 783; Name: 'IsSeatOccupied'; ParamType1: ptKeyword),
     (Index: 784; Name: 'IsPlayerRiding'),
     (Index: 785; Name: 'IsTryingEventCamera'),
+    (Index: 786; Name: 'UseLeftSideCamera'),
     (Index: 787; Name: 'GetNoteType'),
     (Index: 788; Name: 'LocationHasPlayerOwnedWorkshop'),
     (Index: 789; Name: 'IsStartingAction'),
@@ -9116,21 +9144,23 @@ begin
     wbFULL,
     wbMODL,
     wbDEST,
-    wbUnknown(DATA),
+    wbByteArray(DATA, 'Unused', 0, cpIgnore),
     wbStruct(DNAM, 'Data', [
       wbInteger('Flags', itU16, wbFlags([
-        'Hitscan',
-        'Explosion',
-        'Alt. Trigger',
-        'Muzzle Flash',
-        '',
-        'Can Be Disabled',
-        'Can Be Picked Up',
-        'Supersonic',
-        'Pins Limbs',
-        'Pass Through Small Transparent',
-        'Disable Combat Aim Correction',
-        'Rotation'
+        {0x00001} 'Hitscan',
+        {0x00002} 'Explosion',
+        {0x00004} 'Alt. Trigger',
+        {0x00008} 'Muzzle Flash',
+        {0x00010} 'Unknown 4',
+        {0x00020} 'Can Be Disabled',
+        {0x00040} 'Can Be Picked Up',
+        {0x00080} 'Supersonic',
+        {0x00100} 'Pins Limbs',
+        {0x00200} 'Pass Through Small Transparent',
+        {0x00400} 'Disable Combat Aim Correction',
+        {0x00800} 'Penetrates Geometry',
+        {0x01000} 'Continuous Update',
+        {0x02000} 'Seeks Target'
       ])),
       wbInteger('Type', itU16, wbEnum([], [
         $01, 'Missile',
@@ -9162,7 +9192,7 @@ begin
       wbFloat('Relaunch Interval'),
       wbFormIDCk('Decal Data', [TXST, NULL]),
       wbFormIDCk('Collision Layer', [COLL, NULL]),
-      wbByteArray('Unknown', 1),
+      wbInteger('Tracer Frequency', itU8),
       wbFormIDCk('VATS Projectile', [PROJ, NULL])
     ]),
     wbRStructSK([0], 'Muzzle Flash Model', [
@@ -9190,15 +9220,17 @@ begin
         {0x04} 'Align to Impact Normal',
         {0x08} 'Inherit Radius from Spawn Spell',
         {0x10} 'Drop to Ground',
-        {0x20} 'Unknown 5'
+        {0x20} 'Taper Effectiveness by Proximity'
       ])),
       wbFormIDCk('Effect', [SPEL, ENCH, NULL]),
       wbFormIDCk('Light', [LIGH, NULL]),
       wbFormIDCk('Impact Data Set', [IPDS, NULL]),
       wbFormIDCk('Sound', [SNDR, NULL]),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown')
+      wbStruct('Taper Effectiveness', [
+        wbFloat('Full Effect Radius'),
+        wbFloat('Taper Weight'),
+        wbFloat('Taper Curse')
+      ])
     ])
   ]);
 
@@ -9478,7 +9510,7 @@ begin
     wbMODL,
     wbEITM,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
-    wbStruct(DATA, 'Data', [  // Contradicted by FireStormExplosion02 [EXPL:000877F9]
+    wbStruct(DATA, 'Data', [
       wbFormIDCk('Light', [LIGH, NULL]),
       wbFormIDCk('Sound 1', [SNDR, NULL]),
       wbFormIDCk('Sound 2', [SNDR, NULL]),
@@ -9487,35 +9519,43 @@ begin
       wbFormIDCk('Spawn Projectile', [PROJ, NULL]),
       wbFloat('Force'),
       wbFloat('Damage'),
-      wbFloat('Radius'),
+      wbFloat('Inner Radius'),
+      wbFloat('Outer Radius'),
       wbFloat('IS Radius'),
-      wbFloat('Vertical Offset Mult'),
-      {wbInteger('Flags', itU32, wbFlags([
-        'Unknown 0',
-        'Always Uses World Orientation',
-        'Knock Down - Always',
-        'Knock Down - By Formula',
-        'Ignore LOS Check',
-        'Push Explosion Source Ref Only',
-        'Ignore Image Space Swap',
-        'Chain',
-        'No Controller Vibration'
-      ])),
-      wbInteger('Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),}
-      wbUnion('Unknown', wbDeciderFormVersion99, [
+      wbUnion('Vertical Offset Mult', wbDeciderFormVersion99, [
         wbByteArray('Unknown', 4),
-        wbFloat('Unknown')
+        wbFloat('Vertical Offset Mult')
       ]),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbFloat('Unknown'),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbByteArray('Unknown', 4)
-    ], cpNormal, True, nil, 10)
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001} 'Unknown 0',
+        {0x00000002} 'Always Uses World Orientation',
+        {0x00000004} 'Knock Down - Always',
+        {0x00000008} 'Knock Down - By Formula',
+        {0x00000010} 'Ignore LOS Check',
+        {0x00000020} 'Push Explosion Source Ref Only',
+        {0x00000040} 'Ignore Image Space Swap',
+        {0x00000080} 'Chain',
+        {0x00000100} 'No Controller Vibration',
+        {0x00000200} 'Placed Object Persists',
+        {0x00000400} 'Skip Underwater Tests'
+      ])),
+      wbInteger('Sound Level', itU32, wbSoundLevelEnum),
+      wbFloat('Placed Object AutoFade Delay'),
+      wbInteger('Stagger', itU32, wbEnum([
+        'None',
+        'Small',
+        'Medium',
+        'Large',
+        'Extra Large'
+      ])),
+      wbStruct('Spawn', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z'),
+        wbFloat('Spread Degrees'),
+        wbInteger('Count', itU32)
+      ])
+    ], cpNormal, True, nil, 13)
   ]);
 
   wbRecord(DEBR, 'Debris', [
@@ -9534,23 +9574,23 @@ begin
 
   wbRecord(IMGS, 'Image Space', [
     wbEDID,
-    wbUnknown(ENAM, cpIgnore),
+    wbByteArray(ENAM, 'Unused', 0, cpIgnore),
     wbStruct(HNAM, 'HDR', [
       wbFloat('Eye Adapt Speed'),
-      wbFloat('Bloom Blur Radius'),
+      wbFloat('Tonemap E'),
       wbFloat('Bloom Threshold'),
       wbFloat('Bloom Scale'),
-      wbFloat('Receive Bloom Threshold'),
-      wbFloat('White'),
+      wbFloat('Auto Exposure Max'),
+      wbFloat('Auto Exposure Min'),
       wbFloat('Sunlight Scale'),
       wbFloat('Sky Scale'),
-      wbFloat('Eye Adapt Strength')
-    ]),
+      wbFloat('Middle Gray')
+    ], cpNormal, True),
     wbStruct(CNAM, 'Cinematic', [
       wbFloat('Saturation'),
       wbFloat('Brightness'),
       wbFloat('Contrast')
-    ]),
+    ], cpNormal, True),
     wbStruct(TNAM, 'Tint', [
       wbFloat('Amount'),
       wbStruct('Color', [
@@ -9558,12 +9598,12 @@ begin
         wbFloat('Green', cpNormal, True, 255, 0),
         wbFloat('Blue', cpNormal, True, 255, 0)
       ])
-    ]),
+    ], cpNormal, True),
     wbStruct(DNAM, 'Depth of Field', [
       wbFloat('Strength'),
       wbFloat('Distance'),
       wbFloat('Range'),
-      wbByteArray('Unknown', 2),
+      wbByteArray('Unused', 2, cpIgnore),
       wbInteger('Sky / Blur Radius', itU16, wbEnum([], [
         16384, 'Radius 0',
         16672, 'Radius 1',
@@ -9582,9 +9622,10 @@ begin
         16984, 'No Sky, Radius 6',
         17016, 'No Sky, Radius 7'
       ])),
-      wbUnknown
-    ], cpNormal, False, nil, 3),
-    wbString(TX00, 'Unknown')
+      wbFloat('Vignette Radius'),
+      wbFloat('Vignette Strength')
+    ], cpNormal, True, nil, 5),
+    wbString(TX00, 'LUT')
   ]);
 
   wbTimeInterpolator := wbStruct('Data', [
@@ -9689,16 +9730,20 @@ begin
     wbArray(VNAM, 'Double Vision Strength', wbTimeInterpolator),
     wbArray(TNAM, 'Tint Color', wbColorInterpolator),
     wbArray(NAM3, 'Fade Color', wbColorInterpolator),
-    wbArray(RNAM, 'Radial Blur Strength', wbTimeInterpolator),
-    wbArray(SNAM, 'Radial Blur Ramp Up', wbTimeInterpolator),
-    wbArray(UNAM, 'Radial Blur Start', wbTimeInterpolator),
-    wbArray(NAM1, 'Radial Blur Ramp Down', wbTimeInterpolator),
-    wbArray(NAM2, 'Radial Blur Down Start', wbTimeInterpolator),
-    wbArray(WNAM, 'DoF Strength', wbTimeInterpolator),
-    wbArray(XNAM, 'DoF Distance', wbTimeInterpolator),
-    wbArray(YNAM, 'DoF Range', wbTimeInterpolator),
-    wbUnknown(NAM5),
-    wbUnknown(NAM6),
+    wbRStruct('Radial Blur', [
+      wbArray(RNAM, 'Strength', wbTimeInterpolator),
+      wbArray(SNAM, 'RampUp', wbTimeInterpolator),
+      wbArray(UNAM, 'Start', wbTimeInterpolator),
+      wbArray(NAM1, 'RampDown', wbTimeInterpolator),
+      wbArray(NAM2, 'DownStart', wbTimeInterpolator)
+    ], []),
+    wbRStruct('Depth of Field', [
+      wbArray(WNAM, 'Strength', wbTimeInterpolator),
+      wbArray(XNAM, 'Distance', wbTimeInterpolator),
+      wbArray(YNAM, 'Range', wbTimeInterpolator),
+      wbArray(NAM5, 'Vignette Radius', wbTimeInterpolator),
+      wbArray(NAM6, 'Vignette Strength', wbTimeInterpolator)
+    ], []),
     wbArray(NAM4, 'Motion Blur Strength', wbTimeInterpolator),
     wbRStruct('HDR', [
       wbArray(_00_IAD, 'Eye Adapt Speed Mult', wbTimeInterpolator),
@@ -9762,17 +9807,18 @@ begin
     wbVMADFragmentedPERK,
     wbFULL,
     wbDESCReq,
+    wbString(ICON, 'Image'),
     wbCTDAs,
     wbStruct(DATA, 'Data', [
-      wbInteger('Trait', itU8, wbEnum(['False', 'True'])),
+      wbInteger('Trait', itU8, wbBoolEnum),
       wbInteger('Level', itU8),
       wbInteger('Num Ranks', itU8),
-      wbInteger('Playable', itU8, wbEnum(['False', 'True'])),
-      wbInteger('Hidden', itU8, wbEnum(['False', 'True']))
+      wbInteger('Playable', itU8, wbBoolEnum),
+      wbInteger('Hidden', itU8, wbBoolEnum)
     ], cpNormal, True),
-    wbFormIDCk(SNAM, 'UI Sound', [SNDR]),
+    wbFormIDCk(SNAM, 'Sound', [SNDR]),
     wbFormIDCK(NNAM, 'Next Perk', [PERK, NULL]),
-    wbString(FNAM, 'Unknown'),
+    wbString(FNAM, 'SWF'),
 
     wbRStructsSK('Effects', 'Effect', [0, 1], [
       wbStructSK(PRKE, [1, 2, 0], 'Header', [
@@ -9877,89 +9923,92 @@ begin
     wbMODL,
     wbRStructsSK('Body Parts', 'Body Part', [2], [
       wbLString(BPTN, 'Part Name', 0, cpTranslate, True),
-      wbString(PNAM, 'Pose Matching', 0, cpNormal, False),
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
       wbString(BPNT, 'VATS Target', 0, cpNormal, True),
-      wbString(BPNI, 'IK Data - Start Node', 0, cpNormal, False),
       wbStruct(BPND, '', [
         wbFloat('Damage Mult'),
-        wbFormIDCk('Unknown2', [DEBR, NULL]),
-        wbFormIDCk('Unknown3', [EXPL, NULL]),
-        wbFloat('Unknown4'),
-        wbFormIDCk('Unknown5', [DEBR, NULL]),
-        wbFormIDCk('Unknown6', [EXPL, NULL]),
-        wbFloat('Unknown7'),
-        wbByteArray('Unknown8', 24),
-        wbFormIDCk('Unknown9', [IPDS, NULL]),
-        wbFormIDCk('Unknown10', [IPDS, NULL]),
-        wbFloat('Unknown11'),
-        wbByteArray('Unknown12', 15),
-        wbFormIDCk('Unknown13', [ARTO, NULL]),
-        wbFormIDCk('Unknown14', [DEBR, NULL]),
-        wbFormIDCk('Unknown15', [EXPL, NULL]),
-        wbByteArray('Unknown16', 4),
-        wbFloat('Unknown17'),
-        wbByteArray('Unknown18', 2)
-//        {00} wbFloat('Damage Mult'),
-//        {04} wbInteger('Flags', itU8, wbFlags([
-//          'Severable',
-//          'IK Data',
-//          'IK Data - Biped Data',
-//          'Explodable',
-//          'IK Data - Is Head',
-//          'IK Data - Headtracking',
-//          'To Hit Chance - Absolute'
-//        ])),
-//        {05} wbInteger('Part Type', itU8, wbEnum([
-//               'Torso',
-//               'Head',
-//               'Eye',
-//               'LookAt',
-//               'Fly Grab',
-//               'Saddle'
-//             ])),
-//        {06} wbInteger('Health Percent', itU8),
-//        {07} wbInteger('Actor Value', itS8, wbActorValueEnum),
-//        {08} wbInteger('To Hit Chance', itU8),
-//        {09} wbInteger('Explodable - Explosion Chance %', itU8),
-//        {10} wbInteger('Explodable - Debris Count', itU16),
-//        {12} wbFormIDCk('Explodable - Debris', [DEBR, NULL]),
-//        {16} wbFormIDCk('Explodable - Explosion', [EXPL, NULL]),
-//        {20} wbFloat('Tracking Max Angle'),
-//        {24} wbFloat('Explodable - Debris Scale'),
-//        {28} wbInteger('Severable - Debris Count', itS32),
-//        {32} wbFormIDCk('Severable - Debris', [DEBR, NULL]),
-//        {36} wbFormIDCk('Severable - Explosion', [EXPL, NULL]),
-//        {40} wbFloat('Severable - Debris Scale'),
-//        wbStruct('Gore Effects Positioning', [
-//          wbStruct('Translate', [
-//            {44} wbFloat('X'),
-//            {48} wbFloat('Y'),
-//            {52} wbFloat('Z')
-//          ]),
-//          wbStruct('Rotation', [
-//            {56} wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-//            {60} wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-//            {64} wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-//          ])
-//        ]),
-//        {68} wbFormIDCk('Severable - Impact DataSet', [IPDS, NULL]),
-//        {72} wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
-//        {28} wbInteger('Severable - Decal Count', itU8),
-//        {28} wbInteger('Explodable - Decal Count', itU8),
-//        {76} wbByteArray('Unknown', 2),
-//        {80} wbFloat('Limb Replacement Scale'),
+        wbFormIDCk('Explodable - Debris', [DEBR, NULL]),
+        wbFormIDCk('Explodable - Explosion', [EXPL, NULL]),
+        wbFloat('Explodable - Debris Scale'),
+        wbFormIDCk('Severable - Debris', [DEBR, NULL]),
+        wbFormIDCk('Severable - Explosion', [EXPL, NULL]),
+        wbFloat('Severable - Debris Scale'),
+        wbFloat('Cut - Min'),
+        wbFloat('Cut - Max'),
+        wbFloat('Cut - Radius'),
+        wbFloat('Gore Effects - Local Rotate X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Gore Effects - Local Rotate Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Cut - Tesselation'),
+        wbFormIDCk('Severable - Impact DataSet', [IPDS, NULL]),
+        wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
+        wbFloat('Explodable - Limb Replacement Scale'),
+        wbInteger('Flags', itU8, wbFlags([
+          {0x01} 'Severable',
+          {0x02} 'Hit Reaction',
+          {0x04} 'Hit Reaction - Default',
+          {0x08} 'Explodable',
+          {0x10} 'Cut - Meat Cap Sever',
+          {0x20} 'On Cripple',
+          {0x40} 'Explodable - Absolute Chance',
+          {0x80} 'Show Cripple Geometry'
+        ])),
+        wbInteger('Part Type', itU8, wbEnum([
+          { 0} 'Torso',
+          { 1} 'Head1',
+          { 2} 'Eye',
+          { 3} 'LookAt',
+          { 4} 'Fly Grab',
+          { 5} 'Head2',
+          { 6} 'LeftArm1',
+          { 7} 'LeftArm2',
+          { 8} 'RightArm1',
+          { 9} 'RightArm2',
+          {10} 'LeftLeg1',
+          {11} 'LeftLeg2',
+          {12} 'LeftLeg3',
+          {13} 'RightLeg1',
+          {14} 'RightLeg2',
+          {15} 'RightLeg3',
+          {16} 'Brain',
+          {17} 'Weapon',
+          {18} 'Root',
+          {19} 'COM',
+          {20} 'Pelvis',
+          {21} 'Camera',
+          {22} 'Offset Root',
+          {23} 'Left Foot',
+          {24} 'Right Foot',
+          {25} 'Face Target Source'
+        ])),
+        wbInteger('Health Percent', itU8),
+        wbFormIDCk('Actor Value', [AVIF, NULL]),
+        wbInteger('To Hit Chance', itU8),
+        wbInteger('Explodable - Explosion Chance %', itU8),
+        wbInteger('Non-Lethal Dismemberment Chance', itU8),
+        wbInteger('Severable - Debris Count', itU8),
+        wbInteger('Explodable - Debris Count', itU8),
+        wbInteger('Severable - Decal Count', itU8),
+        wbInteger('Explodable - Decal Count', itU8),
+        wbInteger('Geometry Segment Index', itU8),
+        wbFormIDCk('On Cripple - Art Object', [ARTO, NULL]),
+        wbFormIDCk('On Cripple - Debris', [DEBR, NULL]),
+        wbFormIDCk('On Cripple - Explosion', [EXPL, NULL]),
+        wbFormIDCk('On Cripple - Impact DataSet', [IPDS, NULL]),
+        wbFloat('On Cripple - Debris Scale'),
+        wbInteger('On Cripple - Debris Count', itU8),
+        wbInteger('On Cripple - Decal Count', itU8)
       ], cpNormal, True),
       wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
       wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
       wbByteArray(NAM5, 'Texture Files Hashes', 0, cpNormal),
-      wbString(ENAM, 'Unknown'),
-      wbString(FNAM, 'Unknown'),
-      wbFormIDCk(BNAM, 'Unknown', [ARTO]),
-      wbFormIDCk(CNAM, 'Unknown', [TXST]),
-      wbFormIDCk(INAM, 'Unknown', [MATT]),
-      wbFormIDCk(JNAM, 'Unknown', [MATT]),
-      wbString(DNAM, 'Unknown')
+      wbString(ENAM, 'Hit Reaction - Start'),
+      wbString(FNAM, 'Hit Reaction - End'),
+      wbFormIDCk(BNAM, 'Gore Effects - Dismember Blood Art', [ARTO]),
+      wbFormIDCk(INAM, 'Gore Effects - Blood Impact Material Type', [MATT]),
+      wbFormIDCk(JNAM, 'On Cripple - Blood Impact Material Type', [MATT]),
+      wbFormIDCk(CNAM, 'Meat Cap TextureSet', [TXST]),
+      wbFormIDCk(NAM2, 'Collar TextureSet', [TXST]),
+      wbString(DNAM, 'Twist Variable Prefix')
     ], [], cpNormal, True)
   ]);
 
@@ -9968,14 +10017,15 @@ begin
     wbOBNDReq,
     wbMODL,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SNDR, NULL]),
+    wbFormIDCk(SNAM, 'Sound', [SNDR]),
     wbFormIDCk(LNAM, 'Light', [LIGH]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Master Particle System Cap', itU16),
-      wbInteger('Flags', itU16, wbEnum([], [
-        {>>> Value Must be 1 or 3 <<<}
-        1, 'Unknown 1',    // {0x0001}'Unknown 0', : The Check-Box is Unchecked in the CK
-        3, 'Always Loaded' // {0x0002}'Always Loaded' : The Check-Box is Unchecked in the CK
+      wbInteger('Flags', itU16, wbEnum([
+        'No Master Particle System',
+        'Master Particle System',
+        'Always Loaded',
+        'Master Particle System and Always Loaded'
       ]))
     ], cpNormal, True)
   ]);
@@ -10042,48 +10092,51 @@ begin
     wbMODL,
     wbCTDAs,
     wbStruct(DATA, 'Data', [
-      {00} wbInteger('Action', itU32, wbEnum([
-        'Shoot',
-        'Fly',
-        'Hit',
-        'Zoom'
+      wbInteger('Action', itU32, wbEnum([
+        {0} 'Shoot',
+        {1} 'Fly',
+        {2} 'Hit',
+        {3} 'Zoom'
       ])),
-      {04} wbInteger('Location', itU32, wbEnum([
-        'Attacker',
-        'Projectile',
-        'Target',
-        'Lead Actor'
+      wbInteger('Location', itU32, wbEnum([
+        {0} 'Attacker',
+        {1} 'Projectile',
+        {2} 'Target',
+        {3} 'Lead Actor'
       ])),
-      {08} wbInteger('Target', itU32, wbEnum([
-        'Attacker',
-        'Projectile',
-        'Target',
-        'Lead Actor'
+      wbInteger('Target', itU32, wbEnum([
+        {0} 'Attacker',
+        {1} 'Projectile',
+        {2} 'Target',
+        {3} 'Lead Actor'
       ])),
-      {12} wbInteger('Flags', itU32, wbFlags([
-        'Position Follows Location',
-        'Rotation Follows Target',
-        'Don''t Follow Bone',
-        'First Person Camera',
-        'No Tracer',
-        'Start At Time Zero'
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001} 'Position Follows Location',
+        {0x00000002} 'Rotation Follows Target',
+        {0x00000004} 'Don''t Follow Bone',
+        {0x00000008} 'First Person Camera',
+        {0x00000010} 'No Tracer',
+        {0x00000020} 'Start At Time Zero',
+        {0x00000040} 'Don''t Reset Location Spring',
+        {0x00000080} 'Don''t Reset Target Spring'
       ])),
       wbStruct('Time Multipliers', [
-        {16} wbFloat('Player'),
-        {20} wbFloat('Target'),
-        {24} wbFloat('Global')
+        wbFloat('Player'),
+        wbFloat('Target'),
+        wbFloat('Global')
       ]),
-      {28} wbFloat('Max Time'),
-      {32} wbFloat('Min Time'),
-      {36} wbFloat('Target % Between Actors'),
-      {40} wbFloat('Near Target Distance'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown')
-      //wbUnknown
-    ], cpNormal, True, nil, 11),
+      wbFloat('Max Time'),
+      wbFloat('Min Time'),
+      wbFloat('Target % Between Actors'),
+      wbFloat('Near Target Distance'),
+      wbFloat('Location Spring'),
+      wbFloat('Target Spring'),
+      wbStruct('Rotation Offset', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ])
+    ], cpNormal, True, nil, 9),
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
   ]);
 
@@ -10091,13 +10144,15 @@ begin
     wbEDID,
     wbCTDAs,
     wbArray(ANAM, 'Related Camera Paths', wbFormIDCk('Related Camera Path', [CPTH, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True),
-    wbInteger(DATA, 'Camera Zoom', itU8, wbEnum([], [
-      0, 'Default, Must Have Camera Shots',
-      1, 'Disable, Must Have Camera Shots',
-      2, 'Shot List, Must Have Camera Shots',
-      128, 'Default',
-      129, 'Disable',
-      130, 'Shot List'
+    wbInteger(DATA, 'Camera Zoom / Flags', itU8, wbFlags([
+      {0x01} 'Disable',
+      {0x02} 'Shot List',
+      {0x04} 'Dynamic Camera Times',
+      {0x08} 'Unknown 3',
+      {0x10} 'Unknown 4',
+      {0x20} 'Unknown 5',
+      {0x40} 'Randomize Paths',
+      {0x80} 'Not Must Have Camera Shots'
     ]), cpNormal, True),
     wbRArray('Camera Shots', wbFormIDCk(SNAM, 'Camera Shot', [CAMS]))
   ]);
@@ -10122,10 +10177,11 @@ begin
     wbFloat(BNAM, 'Buoyancy'),
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
       'Stair Material',
-      'Arrows Stick'
+      'Arrows Stick',
+      'Can Tunnel'
     ], False)),
-    wbFormIDCk(HNAM, 'Havok Impact Data Set', [IPDS, NULL]),
-    wbString(ANAM, 'Unknown'),
+    wbFormIDCk(HNAM, 'Havok Impact Data Set', [IPDS]),
+    wbString(ANAM, 'Breakable FX'),
     wbMODT
   ]);
 
@@ -10153,14 +10209,15 @@ begin
          {4} 'Stick'
       ])),
       wbByteArray('Unknown', 2)
-    ], cpNormal, True, nil, 4),
+    ], cpNormal, True),
     wbDODT,
     wbFormIDCk(DNAM, 'Texture Set', [TXST]),
     wbFormIDCk(ENAM, 'Secondary Texture Set', [TXST]),
-    wbFormIDCk(SNAM, 'Sound 1', [SNDR, NULL]),
-    wbFormIDCk(NAM1, 'Sound 2', [SNDR, NULL]),
-    wbFormIDCk(NAM2, 'Hazard', [HAZD, NULL]),
-    wbFloat(FNAM, 'Unknown')
+    wbFormIDCk(SNAM, 'Sound 1', [SNDR]),
+    wbFormIDCk(NAM1, 'Sound 2', [SNDR]),
+    wbFormIDCk(NAM3, 'Footstep Explosion', [EXPL]),
+    wbFormIDCk(NAM2, 'Hazard', [HAZD]),
+    wbFloat(FNAM, 'Footstep Particle Max Dist')
   ]);
 
   wbRecord(IPDS, 'Impact Data Set', [
@@ -10182,10 +10239,10 @@ begin
         'Never Resets',
         'Match PC Below Minimum Level',
         'Disable Combat Boundary',
-        'Settlement'
+        'Workshop'
       ])),
       wbInteger('Max Level', itS8)
-    ], cpNormal, True, nil, 2)
+    ], cpNormal, True)
   ]);
 
   wbRecord(LCTN, 'Location', [
@@ -10203,7 +10260,6 @@ begin
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
     ])),
-    {>>> From Danwguard.esm, Does not follow similar previous patterns <<<}
     wbArray(RCPR, 'Reference Cell Persistent Reference', wbFormIDCk('Ref', [ACHR, REFR], False, cpBenign)),
 
     wbArray(ACUN, 'Actor Cell Unique', wbStruct('', [
@@ -10216,7 +10272,6 @@ begin
       wbFormIDCk('Ref', [ACHR], False, cpBenign),
       wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
     ])),
-    {>>> in Unofficial Skyrim patch <<<}
     wbArray(RCUN, 'Reference Cell Unique', wbFormIDCk('Actor', [NPC_], False, cpBenign)),
 
     wbArray(ACSR, 'Actor Cell Static Reference', wbStruct('', [
@@ -10233,7 +10288,6 @@ begin
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
     ])),
-    {>>> Seen in Open Cities <<<}
     wbArray(RCSR, 'Reference Cell Static Reference', wbFormIDCk('Ref', [ACHR, REFR], False, cpBenign)),
 
     wbRArray('Actor Cell Encounter Cell',
@@ -10254,7 +10308,6 @@ begin
         ]))
       ])
     ),
-    {>>> Seen in Open Cities <<<}
     wbRArray('Reference Cell Encounter Cell',
       wbStruct(RCEC, 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
@@ -10331,11 +10384,11 @@ begin
     wbFormIDCk(QNAM, 'Owner Quest', [QUST]),
     wbInteger(DNAM, 'Flags', itU32, wbFlags([
       'Message Box',
-      'Auto Display'
+      'Delay Initial Display'
     ]), cpNormal, True, False, nil, wbMESGDNAMAfterSet),
     wbInteger(TNAM, 'Display Time', itU32, nil, cpNormal, False, False, wbMESGTNAMDontShow),
-    wbLString(NNAM, 'Unknown', 0, cpTranslate),
-    wbString(SNAM, 'Unknown'),
+    wbString(SNAM, 'SWF'),
+    wbLString(NNAM, 'Short Title', 0, cpTranslate),
     wbRStructs('Menu Buttons', 'Menu Button', [
       wbLString(ITXT, 'Button Text', 0, cpTranslate),
       wbCTDAs
@@ -10798,7 +10851,8 @@ begin
       {0x04} 'Cycle Tracks',
       {0x08} 'Maintain Track Order',
       {0x10} 'Unknown 5',
-      {0x20} 'Ducks Current Track'
+      {0x20} 'Ducks Current Track',
+      {0x40} 'Doesn''t Queue'
     ]), cpNormal, True),
     wbStruct(PNAM, 'Data', [
       wbInteger('Priority', itU16),
@@ -10817,11 +10871,11 @@ begin
   wbRecord(FSTS, 'Footstep Set', [
     wbEDID,
     wbStruct(XCNT, 'Count', [
-      wbInteger('Walk Forward Sets', itU32),
-      wbInteger('Run Forward Sets', itU32),
-      wbInteger('Walk Forward Alternate Sets', itU32),
-      wbInteger('Run Forward Alternate Sets', itU32),
-      wbInteger('Walk Forward Alternate 2 Sets', itU32)
+      wbInteger('Walking', itU32),
+      wbInteger('Running', itU32),
+      wbInteger('Sprinting', itU32),
+      wbInteger('Sneaking', itU32),
+      wbInteger('Swimming', itU32)
     ], cpNormal, True),
     wbArray(DATA, 'Footstep Sets', wbFormIDCk('Footstep', [FSTP]), 0, nil, nil, cpNormal, True)
   ]);
@@ -12787,7 +12841,7 @@ begin
 
         wbRStruct('Alias', [
           wbInteger(ALCS, 'Collection Alias ID', itU32),
-          wbUnknown(ALMI)
+          wbInteger(ALMI, 'Max Initial Fill Count', itU8)
         ], [])
 
       ], [])
@@ -15054,20 +15108,26 @@ begin
     wbPTRN,
     wbFULL,
     wbMODL,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR]),
+    wbICON,
+    wbYNAM,
+    wbZNAM,
     wbInteger(DNAM, 'Type', itU8, wbEnum([
       'Sound',
-      'Voice', {Quest holotapes}
-      'Program', {Holotape games}
-      'Terminal' {Special/collectible/recipe holotapes}
-    ])),
-    wbStruct(DATA, 'Data', [      // was DNAM before form version 65. Now holds value and weight
+      'Voice',
+      'Program',
+      'Terminal'
+    ]), cpNormal, True),
+    wbStruct(DATA, '', [      // was DNAM before form version 65. Now holds value and weight
       wbInteger('Value', itU32),
       wbFloat('Weight')
     ]),
-    wbFormIDCk(SNAM, 'Scene', [SCEN, TERM]),  // valid if type is 0, 1 or 3. if type 0, not resolved as a LoadOrderFormID (null only ?)
-    wbString(PNAM, 'Game')
+    wbUnion(SNAM, 'Data', wbNOTEDataDecider, [
+      wbByteArray('Unused', 4),
+      wbFormIDCk('Sound', [SNDR]),
+      wbFormIDCk('Scene', [SCEN]),
+      wbFormIDCk('Terminal', [TERM])
+    ]),
+    wbString(PNAM, 'Program File')
   ]);
 
   wbArmorPropertyEnum := wbEnum([
