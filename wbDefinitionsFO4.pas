@@ -14156,8 +14156,11 @@ begin
       wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
       0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),  // If possible then ignored by the runtime
     wbByteArray(SCRN, 'Screenshot'),                      // If possible then ignored by the runtime
-    wbRArray('TNAMs (Unused)', wbUnknown(TNAM)),          // Ignored by the runtime
-    wbUnknown(INTV),                                      // Ignored by the runtime
+    wbRArray('Transient Types (CK only)', wbStruct(TNAM, 'Transient Type', [
+      wbInteger('FormType', itU32), // seen TESTopic (array of DIAL) and BGSScene (array of SCEN)
+      wbArray('Unknown', wbFormID('Unknown'))
+    ])),          // Ignored by the runtime
+    wbUnknown(INTV),                                      // Ignored by the runtime, 4 bytes loaded in CK
     wbInteger(INCC, 'Unknown', itU32)                     // Size of some array of 12 bytes elements
   ], True, nil, cpNormal, True, wbRemoveOFST);
 end;
