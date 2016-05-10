@@ -14144,23 +14144,24 @@ begin
       wbInteger('Number of Records', itU32),
       wbInteger('Next Object ID', itU32)
     ], cpNormal, True),
-    wbByteArray(OFST, 'Unknown', 0, cpIgnore),            // If possible then ignored by the runtime
-    wbByteArray(DELE, 'Unknown', 0, cpIgnore),            // If possible then ignored by the runtime
+    wbByteArray(OFST, 'Unknown', 0, cpIgnore),            // If possible then ignored by the runtime. Neither from the CK
+    wbByteArray(DELE, 'Unknown', 0, cpIgnore),            // If possible then ignored by the runtime. Neither from the CK
     wbString(CNAM, 'Author', 0, cpTranslate, True),
     wbString(SNAM, 'Description', 0, cpTranslate),
     wbRArray('Master Files', wbRStruct('Master File', [
       wbString(MAST, 'Filename', 0, cpNormal, True),
+      // wbInteger(DATA, 'Filesize', itU64, nil, nil, cpIgnore, True)  // Should be set by CK but usually null
       wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
     ], [ONAM])),
-    wbArray(ONAM, 'Overridden Forms',                     // If possible then ignored by the runtime
+    wbArray(ONAM, 'Overridden Forms',                     // Valid in CK
       wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-      0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),  // If possible then ignored by the runtime
-    wbByteArray(SCRN, 'Screenshot'),                      // If possible then ignored by the runtime
+      0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
+    wbByteArray(SCRN, 'Screenshot'),                      // If possible then ignored by the runtime. Neither from the CK
     wbRArray('Transient Types (CK only)', wbStruct(TNAM, 'Transient Type', [
-      wbInteger('FormType', itU32), // seen TESTopic (array of DIAL) and BGSScene (array of SCEN)
+      wbInteger('FormType', itU32), // seen TESTopic 78 (array of DIAL) and BGSScene 126 (array of SCEN)
       wbArray('Unknown', wbFormID('Unknown'))
     ])),          // Ignored by the runtime
-    wbUnknown(INTV),                                      // Ignored by the runtime, 4 bytes loaded in CK
+    wbInteger(INTV, 'Unknown', itU32),                    // Ignored by the runtime, 4 bytes loaded in CK
     wbInteger(INCC, 'Unknown', itU32)                     // Size of some array of 12 bytes elements
   ], True, nil, cpNormal, True, wbRemoveOFST);
 end;
