@@ -548,6 +548,8 @@ const
   NEXT : TwbSignature = 'NEXT';
   NNAM : TwbSignature = 'NNAM';
   NNGT : TwbSignature = 'NNGT'; { New to Fallout 4 }
+  NNGS : TwbSignature = 'NNGS'; { New to Fallout 4 }
+  NNUS : TwbSignature = 'NNUS'; { New to Fallout 4 }
   NNUT : TwbSignature = 'NNUT'; { New to Fallout 4 }
   NOCM : TwbSignature = 'NOCM'; { New to Fallout 4 }
   NONE : TwbSignature = 'NONE'; { New to Fallout 4, used in OMOD Form Type }
@@ -10911,7 +10913,7 @@ begin
     ]),
     wbInteger(XNAM, 'Max concurrent quests', itU32),
     wbInteger(MNAM, 'Num quests to run', itU32),
-    wbFloat(HNAM, 'Unknown'),
+    wbFloat(HNAM, 'Hours until reset'),
     wbInteger(QNAM, 'Quest Count', itU32, nil, cpBenign),
     wbRArray('Quests', wbRStructSK([0], 'Quest', [
       wbFormIDCk(NNAM, 'Quest', [QUST]),
@@ -10989,20 +10991,21 @@ begin
 
   wbRecord(EQUP, 'Equip Type', [
     wbEDID,
-    wbArray(PNAM, 'Slot Parents', wbFormID('Can Be Equipped'), 0, nil, nil, cpNormal, False),
-    wbInteger(DATA, 'Use All Parents', itU32, wbEnum(['False', 'True'])),
-    wbUnknown(ANAM)
+    wbArray(PNAM, 'Slot Parents', wbFormIDCk('Parent', [EQUP])),
+    wbInteger(DATA, 'Flags', itU32, wbFlags([
+      'Use All Parents',
+      'Parents Optional',
+      'Item Slot'
+    ])),
+    wbFormIDCk(ANAM, 'Condition Actor Value', [AVIF, NULL, FFFF])
   ]);
 
-  wbRecord(RELA, 'Relationship',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000040}  6, 'Secret'
-    ])), [
+  wbRecord(RELA, 'Relationship', [
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbFormIDCk('Parent', [NPC_, NULL]),
       wbFormIDCk('Child', [NPC_, NULL]),
-      wbInteger('Rank', itU16, wbEnum([
+      wbInteger('Rank', itU8, wbEnum([
         'Lover',
         'Ally',
         'Confidant',
@@ -11013,7 +11016,7 @@ begin
         'Enemy',
         'Archnemesis'
       ])),
-      wbByteArray('Unknown', 1),
+      wbByteArray('Unknown', 2),
       wbInteger('Flags', itU8, wbFlags([
         {0x01} 'Unknown 1',
         {0x02} 'Unknown 2',
@@ -11032,23 +11035,38 @@ begin
     wbEDID,
     wbVMADFragmentedSCEN,
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
-      'Begin on Quest Start',
-      'Stop on Quest End',
-      'Unknown 3',
-      'Repeat Conditions While True',
-      'Interruptible'
+      {0x00000001} 'Begin on Quest Start',
+      {0x00000002} 'Stop on Quest End',
+      {0x00000004} 'Unknown 2',
+      {0x00000008} 'Repeat Conditions While True',
+      {0x00000010} 'Interruptible',
+      {0x00000020} 'Unknown 5',
+      {0x00000040} 'Prevent Player Exit Dialogue',
+      {0x00000080} 'Unknown 7',
+      {0x00000100} 'Unknown 8',
+      {0x00000200} 'Unknown 9',
+      {0x00000400} 'Unknown 10',
+      {0x00000800} 'Disable Dialogue Camera',
+      {0x00001000} 'No Follower Idle Chatter'
     ])),
     wbRArray('Phases',
       wbRStruct('Phase', [
         wbEmpty(HNAM, 'Marker Phase Start'),
         wbString(NAM0, 'Name'),
         wbRStruct('Start Conditions', [wbCTDAs], []),
-        wbUnknown(NEXT),
+        wbEmpty(NEXT, 'Marker Start Conditions'),
         wbRStruct('Completion Conditions', [wbCTDAs], []),
-        wbUnknown(NEXT),
+        wbEmpty(NEXT, 'Marker Completion Conditions'),
         wbInteger(WNAM, 'Editor Width', itU32),
-        wbUnknown(FNAM),
-        wbUnknown(SCQS),
+        wbInteger(FNAM, 'Flags', itU16, wbFlags([
+          {0x0001} 'Start - WalkAway Phase',
+          {0x0002} 'Don''t Run End Scripts on Scene Jump',
+          {0x0004} 'Start - Inherit In Templated Scenes'
+        ])),
+        wbStruct(SCQS, 'Set Parent Quest Stage', [
+          wbInteger('On Start', itS16),
+          wbInteger('On Completion', itS16)
+        ]),
         wbEmpty(HNAM, 'Marker Phase End')
       ], [])
     ),
@@ -11056,10 +11074,12 @@ begin
       wbInteger(ALID, 'Alias ID', itS32),
       wbInteger(LNAM, 'Flags', itU32, wbFlags([
         'No Player Activation',
-        'Optional'
+        'Optional',
+        'Run Only Scene Packages',
+        'No Command State'
       ])),
       wbInteger(DNAM, 'Behaviour Flags', itU32, wbFlags([
-        'Death Pause (unsused)',
+        'Death Pause',
         'Death End',
         'Combat Pause',
         'Combat End',
@@ -11071,44 +11091,60 @@ begin
     ], [])),
     wbRArray('Actions', wbRStruct('Action', [
       wbInteger(ANAM, 'Type', itU16, wbEnum([
-        'Dialogue',
-        'Package',
-        'Timer'
+        {0} 'Dialogue',
+        {1} 'Package',
+        {2} 'Timer',
+        {3} 'Player Dialogue',
+        {4} 'Start Scene',
+        {5} 'NPC Response Dialogue',
+        {6} 'Radio'
       ])),
       wbString(NAM0, 'Name'),
       wbInteger(ALID, 'Alias ID', itS32),
-      wbUnknown(LNAM),
       wbInteger(INAM, 'Index', itU32),
       wbInteger(FNAM, 'Flags', itU32, wbFlags([
-        {0x00000001} 'Unknown 1',
-        {0x00000002} 'Unknown 2',
-        {0x00000004} 'Unknown 3',
-        {0x00000008} 'Unknown 4',
-        {0x00000010} 'Unknown 5',
-        {0x00000020} 'Unknown 6',
-        {0x00000040} 'Unknown 7',
-        {0x00000080} 'Unknown 8',
-        {0x00000100} 'Unknown 9',
-        {0x00000200} 'Unknown 10',
-        {0x00000400} 'Unknown 11',
-        {0x00000800} 'Unknown 12',
-        {0x00001000} 'Unknown 13',
-        {0x00002000} 'Unknown 14',
-        {0x00004000} 'Unknown 15',
+        {0x00000001} 'Unknown 0',
+        {0x00000002} 'Unknown 1',
+        {0x00000004} 'Unknown 2',
+        {0x00000008} 'Unknown 3',
+        {0x00000010} 'Unknown 4',
+        {0x00000020} 'Unknown 5',
+        {0x00000040} 'Unknown 6',
+        {0x00000080} 'Player Positive Use Dialogue Subtype / Hold Into Next Scene',
+        {0x00000100} 'Player Negative Use Dialogue Subtype',
+        {0x00000200} 'Player Neutral Use Dialogue Subtype',
+        {0x00000400} 'Use Dialogue Subtype',
+        {0x00000800} 'Player Question Use Dialogue Subtype',
+        {0x00001000} 'Keep/Clear Target on Action End',
+        {0x00002000} 'Unknown 13',
+        {0x00004000} 'Unknown 14',
         {0x00008000} 'Face Target',
         {0x00010000} 'Looping',
-        {0x00020000} 'Headtrack Player'
+        {0x00020000} 'Headtrack Player',
+        {0x00040000} 'Unknown 18',
+        {0x00080000} 'Ignore For Completion',
+        {0x00100000} 'Unknown 20',
+        {0x00200000} 'Camera Speaker Target',
+        {0x00400000} 'Complete Face Target',
+        {0x00800000} 'Unknown 23',
+        {0x01000000} 'Unknown 24',
+        {0x02000000} 'Unknown 25',
+        {0x04000000} 'Unknown 26',
+        {0x08000000} 'NPC Positive Use Dialogue Subtype',
+        {0x10000000} 'NPC Negative Use Dialogue Subtype',
+        {0x20000000} 'NPC Neutral Use Dialogue Subtype',
+        {0x40000000} 'NPC Question Use Dialogue Subtype'
       ])),
       wbInteger(SNAM, 'Start Phase', itU32),
       wbInteger(ENAM, 'End Phase', itU32),
-      wbFloat(SNAM, 'Timer Seconds'),
-      wbUnknown(TNAM),
-      wbUnknown(SCQS),
+      wbFloat(SNAM, 'Timer - Max Seconds'),
+      wbInteger(SCQS, 'Set Parent Quest Stage', itS16),
+      wbFloat(TNAM, 'Timer - Min Seconds'),
       wbUnknown(STSC),
-      wbRStructs('Unknown', 'Unknown', [
-        wbFormIDCk(LCEP, 'Unknown', [SCEN]),
-        wbUnknown(INTT),
-        wbString(SSPN, 'Unknown'),
+      wbRStructs('Start Scenes', 'Start Scene', [
+        wbFormIDCk(LCEP, 'Scene', [SCEN]),
+        wbInteger(INTT, 'Phase Index', itU16),
+        wbString(SSPN, 'Start Phase for Scene'),
         wbCITC,
         wbCTDAs
       ], []),
@@ -11116,47 +11152,56 @@ begin
       wbFormIDCk(NTOP, 'Player Negative Response', [DIAL]),
       wbFormIDCk(NETO, 'Player Neutral Response', [DIAL]),
       wbFormIDCk(QTOP, 'Player Question Response', [DIAL]),
-      wbFormIDCk(JOUT, 'Unknown', [KYWD]),
-      wbUnknown(DTID),
-      wbFormIDCk(DALC, 'Unknown', [KYWD]),
+      wbFormIDCk(VENC, 'Player Positive Dialogue Subtype', [KYWD]),
+      wbFormIDCk(PLVD, 'Player Negative Dialogue Subtype', [KYWD]),
+      wbFormIDCk(JOUT, 'Player Neutral Dialogue Subtype', [KYWD]),
+      wbFormIDCk(DALC, 'Player Question Dialogue Subtype', [KYWD]),
+      wbArray(DTID, 'NPC Headtracking', wbInteger('Actor ID', itS32)),
       wbFormIDCk(NPOT, 'NPC Positive Response', [DIAL]),
       wbFormIDCk(NNGT, 'NPC Negative Response', [DIAL]),
       wbFormIDCk(NNUT, 'NPC Neutral Response', [DIAL]),
       wbFormIDCk(NQUT, 'NPC Question Response', [DIAL]),
-      wbFormIDCk(NQUS, 'Unknown', [KYWD]),
-      wbFormIDCk(NPOS, 'Unknown', [KYWD]),
-      wbUnknown(DTGT),
+      wbFormIDCk(NPOS, 'NPC Positive Dialogue Subtype', [KYWD]),
+      wbFormIDCk(NNGS, 'NPC Negative Dialogue Subtype', [KYWD]),
+      wbFormIDCk(NNUS, 'NPC Neutral Dialogue Subtype', [KYWD]),
+      wbFormIDCk(NQUS, 'NPC Question Dialogue Subtype', [KYWD]),
+      wbInteger(DTGT, 'Dialogue Target Actor', itS32),
       wbRArray('Packages', wbFormIDCk(PNAM, 'Package', [PACK])),
       wbFormIDCk(DATA, 'Topic', [DIAL, NULL]),
-      wbUnion(HTID, 'Sound', wbSceneActionSoundDecider, [
-        wbByteArray('Unknown', 0),
+      wbUnion(HTID, '', wbSceneActionSoundDecider, [
+        wbEmpty('End Scene Say Greeting'),
         wbFormIDCk('Play Sound', [SNDR, NULL])
       ]),
       wbFloat(DMAX, 'Looping - Max'),
       wbFloat(DMIN, 'Looping - Min'),
-      wbUnknown(CRIS),
+      wbStruct(CRIS, 'Camera', [
+        wbFloat('FOV On Player Camera'),
+        wbFloat('Rate Of Camera Change')
+      ]),
       wbInteger(DEMO, 'Emotion Type', itU32, wbEmotionTypeEnum),
       wbInteger(DEVA, 'Emotion Value', itU32),
-      wbArray(HTID, 'Headtrack', wbInteger('Actor ID', itS32)),
-      wbFormIDCk(VENC, 'Unknown', [KYWD]),
-      wbFormIDCk(PNAM, 'Unknown', [KYWD]),
-      wbFormIDCk(ONAM, 'Unknown', [SOPM]),
+      wbArray(HTID, 'Player Headtracking', wbInteger('Actor ID', itS32)),
+      wbFormIDCk(VENC, 'Dialogue Subtype', [KYWD]),
+      wbFormIDCk(PNAM, 'AnimArchType', [KYWD]),
+      wbFormIDCk(ONAM, 'Audio Output Override', [SOPM]),
       wbEmpty(ANAM, 'End Marker')
     ], [])),
     wbFormIDCk(PNAM, 'Quest', [QUST]),
     wbInteger(INAM, 'Last Action Index', itU32),
     wbUnknown(VNAM),
-    wbUnknown(CNAM),
-    wbUnknown(ACTV),
+    wbFloat(CNAM, 'Camera Distance Override'),
+    wbFloat(ACTV, 'Dialogue Distance Override'),
+    wbFloat(CRIS, 'FOV Override'),
     wbKSIZ,
     wbKWDAs,
     wbCTDAs,
-    wbUnknown(CRIS),
-    wbUnknown(SCQS),
-    wbUnknown(NNAM),
-    wbFormIDCk(TNAM, 'Unknown', [SCEN]),
-    wbUnknown(XNAM),
-    wbCTDAs
+    wbStruct(SCQS, 'Set Parent Quest Stage', [
+      wbInteger('On Begin', itS16),
+      wbInteger('On End', itS16)
+    ]),
+    wbString(NNAM, 'Notes'),
+    wbFormIDCk(TNAM, 'Template Scene', [SCEN]),
+    wbInteger(XNAM, 'Index', itU32)
   ]);
 
   wbRecord(ASTP, 'Association Type', [
@@ -11223,42 +11268,42 @@ begin
     wbEDID,
     wbString(MNAM, 'Name'),
     wbStruct(SPED, 'Default Data', [
-      wbFloat('Left Walk'),
-      wbFloat('Left Run'),
-      wbFloat('Right Walk'),
-      wbFloat('Right Run'),
-      wbFloat('Forward Walk'),
-      wbFloat('Forward Run'),
-      wbFloat('Back Walk'),
-      wbFloat('Back Run'),
-      wbFloat('Rotate in Place Walk'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-      wbFloat('Rotate in Place Run'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-      wbFloat('Rotate while Moving Run'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+      wbFloat('Unknown'),
+      wbFloat('Walk - Left'),
+      wbFloat('Run - Left'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
+      wbFloat('Walk - Right'),
+      wbFloat('Run - Right'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
+      wbFloat('Walk - Forward'),
+      wbFloat('Run - Forward'),
+      wbFloat('Sprint - Forward'),
       wbFloat('Unknown'),
+      wbFloat('Walk - Back'),
+      wbFloat('Run - Back'),
+      wbFloat('Unknown'),
+      wbFloat('Standing - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Walk - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Run - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Sprint - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
       wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
       wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
       wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
       wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize})
-    ], cpNormal, True, nil, 11),
-    wbStruct(INAM, 'Anim Change Thresholds', [
+      wbFloat('Standing - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Walk - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Run - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Sprint - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+    ], cpNormal, True, nil, 10),
+    wbStruct(INAM, 'Anim Change Thresholds (unused)', [
       wbFloat('Directional', cpNormal, True, 180/Pi),
       wbFloat('Movement Speed'),
       wbFloat('Rotation Speed', cpNormal, True, 180/Pi)
     ]),
-    wbUnknown(JNAM),
-    wbFloat(LNAM, 'Unknown')
+    wbFloat(JNAM, 'Float Height'),
+    wbFloat(LNAM, 'Flight - Angle Gain')
   ]);
 
   wbRecord(SNDR, 'Sound Descriptor', [
