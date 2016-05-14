@@ -181,6 +181,7 @@ const
   ALCL : TwbSignature = 'ALCL'; { New To Skyrim }
   ALCO : TwbSignature = 'ALCO'; { New To Skyrim }
   ALCS : TwbSignature = 'ALCS'; { New To Fallout 4 }
+  ALDI : TwbSignature = 'ALDI'; { New To Fallout 4 }
   ALDN : TwbSignature = 'ALDN'; { New To Skyrim }
   ALEA : TwbSignature = 'ALEA'; { New To Skyrim }
   ALED : TwbSignature = 'ALED'; { New To Skyrim }
@@ -8338,9 +8339,9 @@ begin
     wbEDID,
     wbFULL,
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
-    wbFormIDCk(BNAM, 'Branch', [DLBR, NULL]),
-    wbFormIDCk(QNAM, 'Quest', [QUST, NULL], False, cpNormal, False),
-    wbFormIDCk(KNAM, 'Unknown', [KYWD]),
+    wbFormIDCk(BNAM, 'Branch', [DLBR]),
+    wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, False),
+    wbFormIDCk(KNAM, 'Keyword', [KYWD]),
     wbStruct(DATA, 'Data', [
       // this should not be named Flags since TwbFile.BuildReachable
       // expects Top-Level flag here from FNV
@@ -11584,73 +11585,89 @@ begin
 
   wbRecord(INFO, 'Dialog response',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000080}  7, 'Exclude From Export',
       {0x00002000} 13, 'Actor Changed'
     ])), [
     wbEDID,
     wbVMADFragmentedINFO,
-    //wbUnknown(DATA),
     wbStruct(ENAM, 'Response flags', [
       wbInteger('Flags', itU16, wbFlags([
-        {0x0001} 'Goodbye',
+        {0x0001} 'Start Scene on End',
         {0x0002} 'Random',
-        {0x0004} 'Say once',
-        {0x0008} 'Unknown 4',
-        {0x0010} 'Unknown 5',
-        {0x0020} 'Random end',
-        {0x0040} 'Invisible continue',
-        {0x0080} 'Walk Away',
-        {0x0100} 'Walk Away Invisible in Menu',
-        {0x0200} 'Force subtitle',
-        {0x0400} 'Can move while greeting',
+        {0x0004} 'Say Once',
+        {0x0008} 'Requires Player Activation',
+        {0x0010} 'Unknown 4',
+        {0x0020} 'Random End',
+        {0x0040} 'End Running Scene',
+        {0x0080} 'ForceGreet Hello',
+        {0x0100} 'Player Address',
+        {0x0200} 'Unknown 9',
+        {0x0400} 'Can Move While Greeting',
         {0x0800} 'No LIP File',
         {0x1000} 'Requires post-processing',
         {0x2000} 'Audio Output Override',
-        {0x4000} 'Spends favor points',
+        {0x4000} 'Has Capture',
         {0x8000} 'Unknown 16'
       ])),
       wbInteger('Reset Hours', itU16, wbDiv(2730))
     ]),
     wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL], False, cpBenign),
-    wbFormIDCk(DNAM, 'Unknown', [INFO]),
+    wbFormIDCk(DNAM, 'Shared INFO', [INFO]),
     wbFormIDCk(GNAM, 'Unknown', [INFO]),
-    wbString(IOVR, 'Unknown'),
+    wbString(IOVR, 'Override Filename'),
 
     wbRArray('Responses', wbRStruct('Response', [
       wbStruct(TRDA, 'Response Data', [
         wbFormIDCk('Emotion', [KYWD, FFFF]),
         wbInteger('Response number', itU8),
         wbByteArray('Unused', 3),
-        //wbFormIDCk('Sound', [SNDR, NULL]),
-        //wbInteger('Flags', itU8, wbFlags([
-        //  'Use Emotion Animation'
-        //])),
-        wbUnknown
+        wbByteArray('Unknown', 2),
+        wbInteger('Interrupt Percentage', itU16),
+        wbInteger('Camera Target Alias', itS32),
+        wbInteger('Camera Location Alias', itS32)
       ]),
-      wbLStringKC(NAM1, 'Response Text', 0, cpTranslate),
-      wbString(NAM2, 'Script Notes', 0),
-      wbString(NAM3, 'Edits', 0),
-      wbUnknown(NAM4),
+      wbLStringKC(NAM1, 'Response Text', 0, cpTranslate, True),
+      wbString(NAM2, 'Script Notes', 0, cpNormal, True),
+      wbString(NAM3, 'Edits', 0, cpNormal, True),
+      wbString(NAM4, 'Alternate LIP Text', 0, cpNormal, True),
       wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
-      //wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE])
-      wbUnknown(TNAM),
-      wbUnknown(NAM9),
-      wbFormID(SRAF),
-      wbUnknown(WZMD)
+      wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE]),
+      wbInteger(TNAM, 'Interrupt Percentage', itU16),
+      wbByteArray(NAM9, 'Text Hash'),
+      wbFormIDCk(SRAF, 'Camera Path', [CPTH]),
+      wbEmpty(WZMD, 'Stop on Scene End')
     ], [])),
 
     wbCTDAs,
     wbLString(RNAM, 'Prompt', 0, cpTranslate),
     wbFormIDCk(ANAM, 'Speaker', [NPC_]),
-    wbFormIDCk(TSCE, 'Scene', [SCEN]),
-    wbUnknown(ALFA),
+    wbFormIDCk(TSCE, 'Start Scene', [SCEN]),
+    wbInteger(ALFA, 'Forced Alias', itS32),
     wbUnknown(INTV),
     wbFormIDCk(ONAM, 'Audio Output Override', [SOPM]),
-    wbUnknown(GREE),
-    wbUnknown(TIQS),
-    wbString(NAM0),
-    wbFormIDCk(MODQ, 'Unknown', [GLOB]),
-    wbUnknown(INCC),
-    wbUnknown(INAM)
+    wbInteger(GREE, 'Greet Distance', itU32),
+    wbStruct(TIQS, 'Set Parent Quest Stage', [
+      wbInteger('On Begin', itS16),
+      wbInteger('On End', itS16)
+    ]),
+    wbString(NAM0, 'Start Scene Phase'),
+    wbInteger(INCC, 'Challenge', itU32, wbEnum([
+      {0} 'None',
+      {1} 'Easy',
+      {2} 'Medium',
+      {3} 'Hard',
+      {4} 'Always Succeeds',
+      {5} 'Easy Repeatable',
+      {6} 'Medium Repeatable',
+      {7} 'Hard Repeatable'
+    ])),
+    wbFormIDCk(MODQ, 'Reset Global', [GLOB]),
+    wbInteger(INAM, 'Subtitle Priority', itU32, wbEnum([
+      'Low',
+      'Normal',
+      'Unknown 2',
+      'Force'
+    ]))
   ], False, wbINFOAddInfo, cpNormal, False, nil{wbINFOAfterLoad});
 
   wbRecord(INGR, 'Ingredient', [
@@ -12674,30 +12691,33 @@ begin
   ], False, nil, cpNormal, False, nil {wbPACKAfterLoad});
 
   wbQUSTAliasFlags :=
-    wbStruct(FNAM, 'Alias Flags', [
-      wbInteger('Flags', itU16, wbFlags([
-        {0x0001}'Reserves Location/Reference',
-        {0x0002}'Optional',
-        {0x0004}'Quest Object',
-        {0x0008}'Allow Reuse in Quest',
-        {0x0010}'Allow Dead',
-        {0x0020}'Matching Ref - In Loaded Area',
-        {0x0040}'Essential',
-        {0x0080}'Allow Disabled',
-        {0x0100}'Stores Text',
-        {0x0200}'Allow Reserved',
-        {0x0400}'Protected',
-        {0x0800}'Forced by Aliases?',
-        {0x1000}'Allow Destroyed',
-        {0x2000}'Matching Ref - Closest',
-        {0x4000}'Uses Stored Text',
-        {0x8000}'Initially Disabled'
-      ])),
-      wbInteger('Additional Flags', itU16, wbFlags([
-        {0x0001}'Allow Cleared',
-        {0x0002}'Clear Names When Removed'
-      ]))
-    ], cpNormal, False, nil, 1);
+    wbInteger(FNAM, 'Flags', itU32, wbFlags([
+      {0x00000001} 'Reserves Location/Reference',
+      {0x00000002} 'Optional',
+      {0x00000004} 'Quest Object',
+      {0x00000008} 'Allow Reuse in Quest',
+      {0x00000010} 'Allow Dead',
+      {0x00000020} 'Matching Ref - In Loaded Area',
+      {0x00000040} 'Essential',
+      {0x00000080} 'Allow Disabled',
+      {0x00000100} 'Stores Text',
+      {0x00000200} 'Allow Reserved',
+      {0x00000400} 'Protected',
+      {0x00000800} 'Forced by Aliases',
+      {0x00001000} 'Allow Destroyed',
+      {0x00002000} 'Matching Ref - Closest',
+      {0x00004000} 'Uses Stored Text',
+      {0x00008000} 'Initially Disabled',
+      {0x00010000} 'Allow Cleared',
+      {0x00020000} 'Clear Names When Removed',
+      {0x00040000} 'Matching Ref - Actors Only',
+      {0x00080000} 'Create Ref - Temp',
+      {0x00100000} 'External Alias - Linked',
+      {0x00200000} 'No Pickpocket',
+      {0x00400000} 'Can Apply Data To Non-Aliased Refs',
+      {0x00800000} 'Is Companion',
+      {0x01000000} 'Optional All Scenes'
+    ]));
 
   wbRecord(QUST, 'Quest',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -12710,7 +12730,7 @@ begin
       wbInteger('Flags', itU16, wbFlags([
         {0x0001} 'Start Game Enabled',
         {0x0002} 'Unknown 2',
-        {0x0004} 'Unknown 3',
+        {0x0004} 'Add Idle Topic To Hello',
         {0x0008} 'Allow repeated stages',
         {0x0010} 'Unknown 5',
         {0x0020} 'Unknown 6',
@@ -12728,21 +12748,24 @@ begin
       wbInteger('Type', itU32, wbEnum([
         {0} 'None',
         {1} 'Main Quest',
-        {2} 'Mages'' Guild',
-        {3} 'Thieves'' Guild',
-        {4} 'Dark Brotherhood',
-        {5} 'Companion Quests',
+        {2} 'Brotherhood of Steel',
+        {3} 'Institute',
+        {4} 'Minutemen',
+        {5} 'Railroad',
         {6} 'Miscellaneous',
-        {7} 'Daedric',
-        {8} 'Side Quest',
-        {9} 'Civil War',
-       {10} 'DLC01 - Vampire',
-       {11} 'DLC02 - Dragonborn'
+        {7} 'Side Quests',
+        {8} 'DLC01',
+        {9} 'DLC02',
+       {10} 'DLC03',
+       {11} 'DLC04',
+       {12} 'DLC05',
+       {13} 'DLC06',
+       {14} 'DLC07'
       ]))
     ]),
     wbString(ENAM, 'Event', 4),
     wbFormIDCk(LNAM, 'Location', [LCTN]),
-    wbFormIDCk(XNAM, 'Global', [GLOB]),
+    wbFormIDCk(XNAM, 'Quest Completion XP', [GLOB]),
     wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
     wbFLTR,
     wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, False),
@@ -12753,8 +12776,8 @@ begin
         wbInteger('Stage Index', itU16),
         wbInteger('Flags', itU8, wbFlags([
           {0x01} 'Unknown 1',
-          {0x02} 'Start Up Stage',
-          {0x04} 'Shut Down Stage',
+          {0x02} 'Run On Start',
+          {0x04} 'Run On Stop',
           {0x08} 'Keep Instance Data From Here On'
         ])),
         wbInteger('Unknown', itU8)
@@ -12772,20 +12795,27 @@ begin
     ], [])),
     wbRArray('Objectives', wbRStruct('Objective', [
       wbInteger(QOBJ, 'Objective Index', itU16),
-      wbInteger(FNAM, 'Flags', itU32, wbFlags(['ORed With Previous'])),
+      wbInteger(FNAM, 'Flags', itU32, wbFlags([
+        {0x01} 'ORed With Previous',
+        {0x02} 'No Stats Tracking'
+      ])),
       wbLString(NNAM, 'Display Text', 0, cpTranslate, True),
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
           wbInteger('Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
-          wbInteger('Flags', itU8, wbFlags([
-            {0x01} 'Compass Marker Ignores Locks'
+          wbInteger('Flags', itU32, wbFlags([
+            {0x01} 'Compass Marker Ignores Locks',
+            {0x02} 'Hostile',
+            {0x04} 'Use Straight Line Pathing'
           ])),
-          wbUnknown
+          wbFormIDCk('Keyword', [KYWD, NULL])
         ]),
         wbCTDAs
       ], []))
     ], [])),
+
     wbByteArray(ANAM, 'Aliases Marker', 4),
+
     wbRArray('Aliases',
       wbRUnion('Alias', [
 
@@ -12795,7 +12825,7 @@ begin
           wbString(ALID, 'Alias Name'),
           wbQUSTAliasFlags,
           wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
-          wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
+          //wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
           wbFormID(ALFR, 'Forced Reference'),
           wbFormIDCk(ALUA, 'Unique Actor', [NPC_]),
           wbRStruct('Location Alias Reference', [
@@ -12827,16 +12857,16 @@ begin
           wbRStruct('Find Matching Reference Near Alias', [
             wbInteger(ALNA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
             wbInteger(ALNT, 'Type', itU32, wbEnum([
-              'Linked Ref Child'
+              'Linked From',
+              'Linked Ref'
             ]))
           ], []),
           wbRStruct('Find Matching Reference From Event', [
             wbString(ALFE, 'From Event', 4),
             wbByteArray(ALFD, 'Event Data')
           ], []),
-          wbUnknown(ALCC),
+          wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
           wbCTDAs,
-          wbUnknown(ALCC),
           wbKSIZ,
           wbKWDAs,
           wbCOCT,
@@ -12845,14 +12875,15 @@ begin
           wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
-          wbArray(ALLA, 'Unknown', wbStruct('Unknown', [
-            wbFormIDCk('Unknown', [KYWD]),
-            wbByteArray('Unknown', 4)
+          wbArray(ALLA, 'Linked Aliases', wbStruct('Linked Alias', [
+            wbFormIDCk('Keyword', [KYWD, NULL]),
+            wbInteger('Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
           ])),
           wbFormIDCk(ALDN, 'Display Name', [MESG]),
           wbFormIDCk(ALFV, 'Forced Voice', [VTYP]),
-          wbRArray('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
-          wbRArray('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
+          wbFormIDCk(ALDI, 'Death Item', [LVLI]),
+          wbRArrayS('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
+          wbRArrayS('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
           wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
@@ -12865,68 +12896,24 @@ begin
           wbQUSTAliasFlags,
           wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
           wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
-          wbFormID(ALFR, 'Forced Reference'),
-          wbFormIDCk(ALUA, 'Unique Actor', [NPC_]),
-          wbRStruct('Location Alias Reference', [
+          wbRStruct('Reference Alias Location', [
             wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
-            wbFormIDCk(KNAM, 'Keyword', [KYWD]),
-            wbFormIDCk(ALRT, 'Ref Type', [LCRT])
+            wbFormIDCk(KNAM, 'Keyword', [KYWD])
           ], []),
-          wbRStruct('External Alias Reference', [
+          wbRStruct('External Alias Location', [
             wbFormIDCk(ALEQ, 'Quest', [QUST]),
             wbInteger(ALEA, 'Alias', itS32, wbQuestExternalAliasToStr, wbStrToAlias)
           ], []),
-          wbRStruct('Create Reference to Object', [
-            wbFormID(ALCO, 'Object'),
-            wbStruct(ALCA, 'Alias', [
-              wbInteger('Alias', itS16, wbQuestAliasToStr, wbStrToAlias),
-              wbInteger('Create', itU16, wbEnum([] ,[
-                $0000, 'At',
-                $8000, 'In'
-              ]))
-            ]),
-            wbInteger(ALCL, 'Level', itU32, wbEnum([
-              'Easy',
-              'Medium',
-              'Hard',
-              'Very Hard',
-              'None'
-            ]))
-          ], []),
-          wbRStruct('Find Matching Reference Near Alias', [
-            wbInteger(ALNA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
-            wbInteger(ALNT, 'Type', itU32, wbEnum([
-              'Linked Ref Child'
-            ]))
-          ], []),
-          wbRStruct('Find Matching Reference From Event', [
+          wbRStruct('Find Matching Location From Event', [
             wbString(ALFE, 'From Event', 4),
             wbByteArray(ALFD, 'Event Data')
           ], []),
-          wbUnknown(ALCC),
           wbCTDAs,
-          wbUnknown(ALCC),
-          wbKSIZ,
-          wbKWDAs,
-          wbCOCT,
-          wbCNTOs,
-          wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
-          wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
-          wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
-          wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
-          wbArray(ALLA, 'Unknown', wbStruct('Unknown', [
-            wbFormIDCk('Unknown', [KYWD]),
-            wbByteArray('Unknown', 4)
-          ])),
-          wbFormIDCk(ALDN, 'Display Name', [MESG]),
-          wbFormIDCk(ALFV, 'Forced Voice', [VTYP]),
-          wbRArray('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
-          wbRArray('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
-          wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
-          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
+          wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
-        ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet),
+        ], []),
 
+        // Ref Collection Alias
         wbRStruct('Alias', [
           wbInteger(ALCS, 'Collection Alias ID', itU32),
           wbInteger(ALMI, 'Max Initial Fill Count', itU8)
@@ -12934,19 +12921,10 @@ begin
 
       ], [])
     ),
+
     wbString(NNAM, 'Description', 0, cpTranslate, False),
-    wbRArray('Targets', wbRStruct('Target', [
-      wbStruct(QSTA, 'Target', [
-        wbFormIDCkNoReach('Target', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], True),
-        wbInteger('Flags', itU8, wbFlags([
-          {0x01} 'Compass Marker Ignores Locks'
-        ])),
-        wbByteArray('Unknown', 3)
-      ]),
-      wbCTDAs
-    ], [])),
-    wbFormIDCk(GNAM, 'Keyword', [KYWD]),
-    wbString(SNAM, 'Unknown')
+    wbFormIDCk(GNAM, 'Quest Group', [KYWD]),
+    wbString(SNAM, 'SWF File')
   ]);
 
   wbBodyPartIndexEnum := wbEnum([
