@@ -2697,6 +2697,27 @@ begin
   end;
 end;
 
+function wbSNDRDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container  : IwbContainer;
+  rCNAM      : IwbElement;
+begin
+  Result := 0;
+
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
+  Container := Container.Container;
+  if not Assigned(Container) then Exit;
+
+  rCNAM := Container.ElementBySignature['CNAM'];
+  if not Assigned(rCNAM) then Exit;
+
+  if rCNAM.EditValue = 'AutoWeapon' then
+    Result := 1;
+end;
+
 
 {>>> For VMAD <<<}
 function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -11308,41 +11329,48 @@ begin
 
   wbRecord(SNDR, 'Sound Descriptor', [
     wbEDID,
-    wbUnknown(CNAM),
-    wbFormID(GNAM, 'Category'),
-    wbFormIDCk(SNAM, 'Alternate Sound For', [SNDR, NULL]),
+    wbInteger(CNAM, 'Descriptor Type', itU32, wbEnum([], [
+      Int64($1EEF540A), 'Standard',
+      Int64($54651A43), 'Compound',
+      Int64($ED157AE3), 'AutoWeapon'
+    ])),
+    wbFormIDCk(GNAM, 'Category', [SNCT]),
+    wbFormIDCk(SNAM, 'Alternate Sound For', [SNDR]),
     wbRArray('Sounds',
       wbRStruct('Sound Files', [
         wbString(ANAM, 'File Name')
       ], [])
     ),
-    wbFormIDCk(ONAM, 'Output Model', [SOPM, NULL]),
+    wbFormIDCk(ONAM, 'Output Model', [SOPM]),
     wbCTDAs,
     wbStruct(LNAM, 'Values', [
       wbByteArray('Unknown', 1),
       wbInteger('Looping', itU8, wbEnum([], [
-        $00 , 'None',
-        $08 , 'Loop',
-        $10 , 'Envelope Fast',
-        $20 , 'Envelope Slow'
+        $00, 'None',
+        $08, 'Loop',
+        $10, 'Envelope Fast',
+        $20, 'Envelope Slow'
       ])),
-      wbByteArray('Unknown', 1),
+      wbInteger('Sidechain', itU8),
       wbInteger('Rumble Send Value = (Small / 7) + ((Big / 7) * 16)', itU8)
     ]),
-    wbStruct(BNAM, 'Values', [
-      wbInteger('% Frequency Shift', itS8),
-      wbInteger('% Frequency Variance', itS8),
-      wbInteger('Priority', itU8),
-      wbInteger('db Variance', itU8),
-      wbInteger('Static Attenuation (db)', itU16, wbDiv(100))
-    ], cpNormal, False, nil, 4),
-    wbRArray('Layers', wbFormIDCk(DNAM, 'Layer', [SNDR])),
+    wbUnion(BNAM, 'Data', wbSNDRDataDecider, [
+      wbStruct('Values', [
+        wbInteger('% Frequency Shift', itS8),
+        wbInteger('% Frequency Variance', itS8),
+        wbInteger('Priority', itU8),
+        wbInteger('db Variance', itU8),
+        wbInteger('Static Attenuation (db)', itU16, wbDiv(100))
+      ]),
+      wbFormIDCk('Base Descriptor', [SNDR])
+    ]),
+    wbRArray('Descriptors', wbFormIDCk(DNAM, 'Descriptor', [SNDR])),
     wbInteger(ITMC, 'Count', itU32, nil, cpBenign),
-    wbRArray('Unknown',
-      wbRStruct('Unknown', [
+    wbRArrayS('Rates of Fire',
+      wbRStructSK([1], 'Sound', [
         wbEmpty(ITMS, 'Marker Start'),
-        wbUnknown(INTV),
-        wbString(FNAM, 'Unknown'),
+        wbInteger(INTV, 'RoF (RPM)', itU32),
+        wbString(FNAM, 'File'),
         wbEmpty(ITME, 'Marker End')
       ], [])
     )
@@ -11356,23 +11384,34 @@ begin
     wbEDID,
     wbFULL,
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
-      'Mute When Submerged',
-      'Should Appear on Menu'
+      {0x0000001} 'Mute When Submerged',
+      {0x0000002} 'Should Appear on Menu',
+      {0x0000004} 'Immune to Time Speedup',
+      {0x0000008} 'Pause During Menus (Immed)',
+      {0x0000010} 'Pause During Menus (Fade)',
+      {0x0000020} 'Exclude from Player OPM Override',
+      {0x0000040} 'Pause During Start Menu'
     ]), cpNormal, True),
-    wbFormIDCk(PNAM, 'Parent', [SNCT]),
-    wbFormIDCk(ONAM, 'Unknown', [SNCT]),
+    wbFormIDCk(PNAM, 'Parent Category', [SNCT]),
+    wbFormIDCk(ONAM, 'Menu Slider Category', [SNCT]),
     wbInteger(VNAM, 'Static Volume Multiplier', itU16, wbDiv(65535)),
     wbInteger(UNAM, 'Default Menu Value', itU16, wbDiv(65535)),
-    wbFloat(MNAM, 'Unknown'),
-    wbUnknown(CNAM)
+    wbFloat(MNAM, 'Min Frequency Multiplier'),
+    wbFloat(CNAM, 'Sidechain Target Multiplier')
   ]);
 
   wbRecord(SOPM, 'Sound Output Model', [
     wbEDID,
     wbStruct(NAM1, 'Data', [
       wbInteger('Flags', itU8, wbFlags([
-        'Attenuates With Distance',
-        'Allows Rumble'
+        {0x01} 'Attenuates With Distance',
+        {0x02} 'Allows Rumble',
+        {0x04} 'Applies Doppler',
+        {0x08} 'Applies Distance Delay',
+        {0x10} 'Player Output Model',
+        {0x20} 'Try Play on Controller',
+        {0x40} 'Causes Ducking',
+        {0x80} 'Avoids Ducking'
       ])),
       wbByteArray('Unknown', 2),
       wbInteger('Reverb Send %', itU8)
@@ -11381,38 +11420,42 @@ begin
       'Uses HRTF',
       'Defined Speaker Output'
     ])),
-    wbUnknown(VNAM),
+    wbInteger(VNAM, 'Static Attenuation', itS16, wbDiv(100)),
     wbStruct(ONAM, 'Output Values', [
       wbArray('Channels', wbStruct('', [
-        wbInteger('L', itU8),
-        wbInteger('R', itU8),
+        wbInteger('FL', itU8),
+        wbInteger('FR', itU8),
         wbInteger('C', itU8),
         wbInteger('LFE', itU8),
         wbInteger('RL', itU8),
         wbInteger('RR', itU8),
-        wbInteger('BL', itU8),
-        wbInteger('BR', itU8)
+        wbInteger('SL', itU8),
+        wbInteger('SR', itU8)
       ]), [
         'Channel 0',
         'Channel 1',
         'Channel 2? (unused)'
       ])
     ]),
-    {wbStruct(ANAM, 'Attenuation Values', [
-      wbByteArray('Unknown', 4),
-      wbFloat('Min Distance'),
-      wbFloat('Max Distance'),
-      wbArray('Curve', wbInteger('Value', itU8), 5),
-      wbByteArray('Unknown')
-    ]),}
     wbStruct(ATTN, 'Attenuation Values', [
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbArray('Curve', wbInteger('Value', itU8), 8)
+      wbFloat('Fade In Distance - Start'),
+      wbFloat('Fade In Distance - End'),
+      wbFloat('Fade Out Distance - Start'),
+      wbFloat('Fade Out Distance - End'),
+      wbStruct('Fade In Curve', [
+        wbInteger('Value 1', itU8),
+        wbInteger('Value 2', itU8),
+        wbInteger('Value 3', itU8),
+        wbInteger('Value 4', itU8)
+      ]),
+      wbStruct('Fade Out Curve', [
+        wbInteger('Value 1', itU8),
+        wbInteger('Value 2', itU8),
+        wbInteger('Value 3', itU8),
+        wbInteger('Value 4', itU8)
+      ])
     ]),
-    wbFormIDCk(ENAM, 'Unknown', [AECH])
+    wbFormIDCk(ENAM, 'Effect Chain', [AECH])
   ]);
 
   wbRecord(COLL, 'Collision Layer', [
