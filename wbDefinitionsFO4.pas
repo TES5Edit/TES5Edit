@@ -1009,6 +1009,7 @@ var
   wbColorInterpolator: IwbStructDef;
   wbYNAM: IwbSubRecordDef;
   wbZNAM: IwbSubRecordDef;
+  wbSPED: IwbSubRecordDef;
   wbCUSD: IwbSubRecordDef;
   wbINRD: IwbSubRecordDef;
   wbPTRN: IwbSubRecordDef;
@@ -5650,19 +5651,21 @@ begin
   ]);
 
   wbEquipType := wbFlags([
-    {0x00000001}'Hand To Hand Melee',
-    {0x00000002}'One Hand Sword',
-    {0x00000004}'One Hand Dagger',
-    {0x00000008}'One Hand Axe',
-    {0x00000010}'One Hand Mace',
-    {0x00000020}'Two Hand Sword',
-    {0x00000040}'Two Hand Axe',
-    {0x00000080}'Bow',
-    {0x00000100}'Staff',
-    {0x00000200}'Spell',
-    {0x00000400}'Shield',
-    {0x00000800}'Torch',
-    {0x00001000}'Crossbow'
+    {0x00000001} 'Hand To Hand Melee',
+    {0x00000002} 'One Hand Sword',
+    {0x00000004} 'One Hand Dagger',
+    {0x00000008} 'One Hand Axe',
+    {0x00000010} 'One Hand Mace',
+    {0x00000020} 'Two Hand Sword',
+    {0x00000040} 'Two Hand Axe',
+    {0x00000080} 'Bow',
+    {0x00000100} 'Staff',
+    {0x00000200} 'Gun',
+    {0x00000400} 'Grenade',
+    {0x00000800} 'Mine',
+    {0x00001000} 'Spell',
+    {0x00002000} 'Shield',
+    {0x00004000} 'Torch'
   ], True);
 
   wbEmotionTypeEnum := wbEnum([
@@ -11266,6 +11269,37 @@ end;
 procedure DefineFO4k;
 begin
 
+  wbSPED := wbStruct(SPED, 'Movement Data', [
+    wbFloat('Unknown'),
+    wbFloat('Walk - Left'),
+    wbFloat('Run - Left'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Walk - Right'),
+    wbFloat('Run - Right'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Walk - Forward'),
+    wbFloat('Run - Forward'),
+    wbFloat('Sprint - Forward'),
+    wbFloat('Unknown'),
+    wbFloat('Walk - Back'),
+    wbFloat('Run - Back'),
+    wbFloat('Unknown'),
+    wbFloat('Standing - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+    wbFloat('Walk - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+    wbFloat('Run - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+    wbFloat('Sprint - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+    wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+    wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+    wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+    wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
+    wbFloat('Standing - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+    wbFloat('Walk - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+    wbFloat('Run - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+    wbFloat('Sprint - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+  ], cpNormal, True, nil, 10);
+
   wbRecord(OTFT, 'Outfit', [
     wbEDID,
     wbArrayS(INAM, 'Items', wbFormIDCk('Item', [ARMO, LVLI]))
@@ -11314,36 +11348,7 @@ begin
   wbRecord(MOVT, 'Movement Type', [
     wbEDID,
     wbString(MNAM, 'Name'),
-    wbStruct(SPED, 'Default Data', [
-      wbFloat('Unknown'),
-      wbFloat('Walk - Left'),
-      wbFloat('Run - Left'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Walk - Right'),
-      wbFloat('Run - Right'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Walk - Forward'),
-      wbFloat('Run - Forward'),
-      wbFloat('Sprint - Forward'),
-      wbFloat('Unknown'),
-      wbFloat('Walk - Back'),
-      wbFloat('Run - Back'),
-      wbFloat('Unknown'),
-      wbFloat('Standing - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Walk - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Run - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Sprint - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-      wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-      wbFloat('Standing - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Walk - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Run - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Sprint - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-    ], cpNormal, True, nil, 10),
+    wbSPED,
     wbStruct(INAM, 'Anim Change Thresholds (unused)', [
       wbFloat('Directional', cpNormal, True, 180/Pi),
       wbFloat('Movement Speed'),
@@ -13161,20 +13166,26 @@ begin
       ], [])
     );
 
-  // since version 78: array of pair of AVIF FormID, before array of AVIF index. Similar to DamageType (and MGEF also somehow).
   wbRaceRBPC :=
-    wbUnion(RBPC, '', wbFormVer78Decider, [
-      wbArray('Unknown', wbInteger('AVIF index', itU32)),
-      wbArray('Unknown', wbStruct('Unknown', [
+    wbArray(RBPC, 'Biped Object Conditions',
+      wbUnion('Slot 30+', wbFormVer78Decider, [
+        wbInteger('Slot 30+', itU32),
+        wbFormIDCk('Slot 30+', [AVIF, NULL])
+      ])
+    );
+    // since version 78: array of pair of AVIF FormID, before array of AVIF index. Similar to DamageType (and MGEF also somehow).
+    {wbUnion(RBPC, 'Biped Object Conditions', wbFormVer78Decider, [
+      wbArray('Biped Object Conditions', wbInteger('Condition AV', itU32)),
+      wbArray('Biped Object Conditions', wbStruct('Condition AV', [
         wbFormIDck('AVIF 1', [AVIF, NULL]),
         wbFormIDck('AVIF 2', [AVIF, NULL])
       ]))
-    ]);
+    ]);}
 
-  wbRecord(RACE, 'Race',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00080000} 19, 'Critter?'
-    ])), [
+  wbRecord(RACE, 'Race', [
+//    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+//      {0x00080000} 19, 'Critter?'
+//    ])), [
     wbEDID,
     wbFormIDCk(STCP, 'Sound', [STAG]),
     wbFULL,
@@ -13188,62 +13199,85 @@ begin
     wbPRPS,
     wbAPPR,
     wbStruct(DATA, '', [
-      wbUnknown
-//      wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
-//        wbInteger('Skill', itS8, wbActorValueEnum),
-//        wbInteger('Boost', itS8)
-//      ]), 7),
-//      wbByteArray('Unknown', 2),
-//      wbFloat('Male Height'),
-//      wbFloat('Female Height'),
-//      wbFloat('Male Weight'),
-//      wbFloat('Female Weight'),
-//      wbRACE_DATAFlags01,
-//      wbFloat('Starting Health'),
-//      wbFloat('Starting Magicka'),
-//      wbFloat('Starting Stamina'),
-//      wbFloat('Base Carry Weight'),
-//      wbFloat('Base Mass'),
-//      wbFloat('Acceleration rate'),
-//      wbFloat('Deceleration rate'),
-//      wbInteger('Size', itU32, wbEnum([
-//        'Small',
-//        'Medium',
-//        'Large',
-//        'Extra Large'
-//      ])),
-//      wbInteger('Head Biped Object', itS32, wbBipedObjectEnum),
-//      wbInteger('Hair Biped Object', itS32, wbBipedObjectEnum),
-//      wbFloat('Injured Health Pct'),
-//      wbInteger('Shield Biped Object', itS32, wbBipedObjectEnum),
-//      wbFloat('Health Regen'),
-//      wbFloat('Magicka Regen'),
-//      wbFloat('Stamina Regen'),
-//      wbFloat('Unarmed Damage'),
-//      wbFloat('Unarmed Reach'),
-//      wbInteger('Body Biped Object', itS32, wbBipedObjectEnum),
-//      wbFloat('Aim Angle Tolerance'),
-//      wbFloat('Flight Radius'),
-//      wbFloat('Angular Acceleration Rate'),
-//      wbFloat('Angular Tolerance'),
-//      wbInteger('Flags 2', itU32, wbFlags([
-//        {0x00000001} 'Use Advanced Avoidance',
-//        {0x00000002} 'Non-Hostile',
-//        {0x00000004} 'Unknown 2',
-//        {0x00000008} 'Unknown 3',
-//        {0x00000010} 'Allow Mounted Combat'
-//      ])),
-//      wbStruct('Mount Data', [
-//        wbFloat('Offset X', cpNormal, False, 1, -1, nil, nil, -63.479000),
-//        wbFloat('Offset Y'),
-//        wbFloat('Unknown'),
-//        wbFloat('Unknown', cpNormal, False, 1, -1, nil, nil, -50.0),
-//        wbFloat('Unknown'),
-//        wbFloat('Unknown', cpNormal, False, 1, -1, nil, nil, 65.0),
-//        wbFloat('Unknown'),
-//        wbFloat('Unknown', cpNormal, False, 1, -1, nil, nil, -300.0),
-//        wbFloat('Unknown')
-//      ]),
+      wbFloat('Male Height'),
+      wbFloat('Female Height'),
+      wbStruct('Male Default Weight', [
+        wbFloat('Thin'),
+        wbFloat('Muscular'),
+        wbFloat('Fat')
+      ]),
+      wbStruct('Female Default Weight', [
+        wbFloat('Thin'),
+        wbFloat('Muscular'),
+        wbFloat('Fat')
+      ]),
+      wbRACE_DATAFlags01,
+      wbFloat('Acceleration Rate'),
+      wbFloat('Deceleration Rate'),
+      wbInteger('Size', itU32, wbEnum([
+        'Small',
+        'Medium',
+        'Large',
+        'Extra Large'
+      ])),
+      wbByteArray('Unknown', 8),
+      wbFloat('Injured Health Pct'),
+      wbInteger('Shield Biped Object', itS32, wbBipedObjectEnum),
+      wbByteArray('Unknown', 4),
+      wbInteger('Body Biped Object', itS32, wbBipedObjectEnum),
+      wbFloat('Aim Angle Tolerance'),
+      wbFloat('Flight Radius'),
+      wbFloat('Angular Acceleration Rate'),
+      wbFloat('Angular Tolerance'),
+      wbInteger('Flags 2', itU32, wbFlags([
+        {0x00000001} 'Use Advanced Avoidance',
+        {0x00000002} 'Non-Hostile',
+        {0x00000004} 'Floats',
+        {0x00000008} 'Unknown 3',
+        {0x00000010} 'Unknown 4',
+        {0x00000020} 'Head Axis Bit 0',
+        {0x00000040} 'Head Axis Bit 1',
+        {0x00000080} 'Can Melee When Knocked Down',
+        {0x00000100} 'Use Idle Chatter During Combat',
+        {0x00000200} 'Ungendered',
+        {0x00000400} 'Can Move When Knocked Down',
+        {0x00000800} 'Use Large Actor Pathing',
+        {0x00001000} 'Use Subsegmented Damage',
+        {0x00002000} 'Flight - Defer Kill',
+        {0x00004000} 'Unknown 14',
+        {0x00008000} 'Flight - Allow Procedural Crash Land',
+        {0x00010000} 'Disable Weapon Culling',
+        {0x00020000} 'Use Optimal Speeds',
+        {0x00040000} 'Has Facial Rig',
+        {0x00080000} 'Can Use Crippled Limbs',
+        {0x00100000} 'Use Quadruped Controller',
+        {0x00200000} 'Low Priority Pushable',
+        {0x00400000} 'Cannot Use Playable Items'
+      ])),
+      wbByteArray('Unknown', 36),
+      wbInteger('Pipboy Biped Object', itS32, wbBipedObjectEnum),
+      wbInteger('XP Value', itS16),
+      wbFloat('Severable - Debris Scale'),
+      wbInteger('Severable - Debris Count', itU8),
+      wbInteger('Severable - Decal Count', itU8),
+      wbFloat('Explodable - Debris Scale'),
+      wbInteger('Explodable - Debris Count', itU8),
+      wbInteger('Explodable - Decal Count', itU8),
+      wbFormIDCk('Severable - Explosion', [EXPL, NULL]),
+      wbFormIDCk('Severable - Debris', [DEBR, NULL]),
+      wbFormIDCk('Severable - Impact DataSet', [IPDS, NULL]),
+      wbFormIDCk('Explodable - Debris', [DEBR, NULL]),
+      wbFormIDCk('Explodable - Explosion', [EXPL, NULL]),
+      wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
+      wbFloat('OnCripple - Debris Scale'),
+      wbInteger('OnCripple - Debris Count', itU8),
+      wbInteger('OnCripple - Decal Count', itU8),
+      wbFormIDCk('OnCripple - Explosion', [EXPL, NULL]),
+      wbFormIDCk('OnCripple - Debris', [DEBR, NULL]),
+      wbFormIDCk('OnCripple - Impact DataSet', [IPDS, NULL]),
+      wbFormIDCk('Explodable - Subsegment Explosion', [EXPL, NULL]),
+      wbFloat('Orientation Limits - Pitch'),
+      wbFloat('Orientation Limits - Roll')
     ], cpNormal, True),
     wbEmpty(MNAM, 'Male Marker'),
     wbString(ANAM, 'Male Skeletal Model'),
@@ -13293,49 +13327,36 @@ begin
       wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
       wbMODL
     ], [], cpNormal, True),
-    wbFormIDCk(NAM4, 'Material Type', [MATT, NULL]),
-    wbFormIDCk(NAM5, 'Impact Data Set', [IPDS, NULL]),
-		wbFormIDCk(NAM7, 'Decapitation FX', [ARTO, NULL]),
-		wbFormIDCk(CNAM, 'Unknown', [TXST, NULL]),
-		wbFormIDCk(NAM2, 'Unknown', [TXST, NULL]),
-    wbFormIDCk(ONAM, 'Open Loot Sound', [SNDR, NULL]),
-    wbFormIDCk(LNAM, 'Close Loot Sound', [SNDR, NULL]),
-    {>>> When NAME is user defined wbBipedObjectEnum will be incorrect <<<}
+    wbFormIDCk(NAM4, 'Impact Material Type', [MATT]),
+    wbFormIDCk(NAM5, 'Impact Data Set', [IPDS]),
+		wbFormIDCk(NAM7, 'Dismember Blood Art', [ARTO]),
+		wbFormIDCk(CNAM, 'Meat Cap TextureSet', [TXST]),
+		wbFormIDCk(NAM2, 'Collar TextureSet', [TXST]),
+    wbFormIDCk(ONAM, 'Sound - Open Corpse', [SNDR]),
+    wbFormIDCk(LNAM, 'Sound - Close Corpse', [SNDR]),
     wbRArray('Biped Object Names', wbString(NAME, 'Name')),
     wbRaceRBPC,
-    wbRArrayS('Movement Types', wbRStructSK([0], 'Movement Types', [
+    wbRArrayS('Movement Data Overrides', wbRStructSK([0], 'Override', [
       wbFormIDCk(MTYP, 'Movement Type', [MOVT, NULL]),
-      wbStruct(SPED, 'Override Values', [
-        wbFloat('Left - Walk'),
-        wbFloat('Left - Run'),
-        wbFloat('Right - Walk'),
-        wbFloat('Right - Run'),
-        wbFloat('Forward - Walk'),
-        wbFloat('Forward - Run'),
-        wbFloat('Back - Walk'),
-        wbFloat('Back - Run'),
-        wbFloat('Rotate - Walk'),
-        wbFloat('Rotate - Walk'),
-        wbFloat('Unknown')
-      ])
+      wbSPED
     ], [])),
     wbInteger(VNAM, 'Equipment Flags', itU32, wbEquipType),
     wbRArray('Equip Slots',
       wbRStruct('Equip Slot', [
-        wbFormIDCk(QNAM, 'Equip Slot', [EQUP, NULL]),
-        wbString(ZNAM, 'Unknown')
+        wbFormIDCk(QNAM, 'Equip Slot', [EQUP]),
+        wbString(ZNAM, 'Node')
       ], [])
     ),
-    wbFormIDCk(UNES, 'Unarmed Equip Slot', [EQUP, NULL]),
-    wbFormID(UNWP, 'Unknown'),
+    //wbFormIDCk(UNES, 'Unarmed Equip Slot', [EQUP, NULL]),
+    wbFormIDCk(UNWP, 'Unarmed Weapon', [WEAP]),
     wbRArray('Phoneme Target Names', wbString(PHTN, 'Name')),
     wbPHWT,
-    wbFormIDCk(WKMV, 'Base Movement Default - Walk', [MOVT, NULL]),
-    wbFormIDCk(RNMV, 'Base Movement Default - Run', [MOVT, NULL]),
-    wbFormIDCk(SWMV, 'Base Movement Default - Swim', [MOVT, NULL]),
-    wbFormIDCk(FLMV, 'Base Movement Default - Fly', [MOVT, NULL]),
-    wbFormIDCk(SNMV, 'Base Movement Default - Sneak', [MOVT, NULL]),
-    wbFormIDCk(SPMV, 'Base Movement Default - Sprint', [MOVT, NULL]),
+    wbFormIDCk(WKMV, 'Base Movement Defaults - Default', [MOVT]),
+    //wbFormIDCk(RNMV, 'Base Movement Defaults - Run', [MOVT]),
+    wbFormIDCk(SWMV, 'Base Movement Defaults - Swim', [MOVT]),
+    wbFormIDCk(FLMV, 'Base Movement Defaults - Fly', [MOVT]),
+    wbFormIDCk(SNMV, 'Base Movement Defaults - Sneak', [MOVT]),
+    //wbFormIDCk(SPMV, 'Base Movement Defaults - Sprint', [MOVT]),
 
     // Start Head Data
     {wbRStruct('Head Data', [
@@ -13395,66 +13416,39 @@ begin
     wbRaceFRMI,
     wbString(WMAP, 'Unknown'),
 
+		wbFormIDCk(NAM8, 'Morph Race', [RACE]),
     wbFormIDCk(RNAM, 'Armor Race', [RACE]),
-    wbFormIDCk(SRAC, 'States Race', [RACE]),
-
-    // Doesn't copy properly!!! Only the first RUnion member def is copied
-    // sequence starts with any of those: SGNM, STKD, SAKD
-    {wbRArray('State Groups',
-      wbRUnion('State Group', [
-        wbRStruct('State Group', [
-          wbString(SGNM, 'Group Name'),
-          wbRArray('Unknown', wbString(SAPT, 'Unknown')),
-          wbUnknown(SRAF)
-        ], []),
-
-        wbRStruct('State Group', [
-          wbRArray('Unknown', wbFormIDCk(STKD, 'Unknown', [KYWD])),
-          wbString(SGNM, 'Group Name'),
-          wbRArray('Unknown', wbString(SAPT, 'Unknown')),
-          wbUnknown(SRAF)
-        ], []),
-
-        wbRStruct('State Group', [
-          wbRArray('Unknown', wbFormIDCk(SAKD, 'Unknown', [KYWD])),
-          wbRArray('Unknown', wbFormIDCk(STKD, 'Unknown', [KYWD])),
-          wbString(SGNM, 'Group Name'),
-          wbRArray('Unknown', wbString(SAPT, 'Unknown')),
-          wbUnknown(SRAF)
-        ], [])
-      ], [])
-    ),}
-
-//    // temporary workaround to make this copyable
-//    wbRArray('Unknown', wbFormIDCk(SAKD, 'Unknown', [KYWD])),
-//    wbRArray('Unknown', wbFormIDCk(STKD, 'Unknown', [KYWD])),
-//    wbRArray('State Groups',
-//      wbRStruct('State Group', [
-//        wbString(SGNM, 'Group Name'),
-//        wbRArray('Unknown', wbString(SAPT, 'Unknown')),
-//        wbUnknown(SRAF),
-//        wbRArray('Unknown', wbFormIDCk(SAKD, 'Unknown', [KYWD])),
-//        wbRArray('Unknown', wbFormIDCk(STKD, 'Unknown', [KYWD]))
-//      ], [])
-//    ),
-
-    wbFormIDCk(SADD, 'Additional States', [RACE]),
+    wbFormIDCk(SRAC, 'Subgraph Template Race', [RACE]),
+    wbFormIDCk(SADD, 'Subgraph Additive Race', [RACE]),
     // Version where wbRUnion accepts wbRArray members:
-    wbRArray('State Groups',
-      wbRStruct('State Group Struct', [
-        wbRArray('Members', wbRUnion('State Group', [
-            wbString(SGNM, 'Group Name'),
-            wbRArray('Unknown', wbFormIDCk(SAKD, 'Unknown', [KYWD])),
-            wbRArray('Unknown', wbFormIDCk(STKD, 'Unknown', [KYWD])),
-            wbRArray('Unknown', wbString(SAPT, 'Unknown'))
+    wbRArray('Subgraph Data',
+      wbRStruct('Data Struct', [
+        wbRArray('Data', wbRUnion('Data', [
+            wbString(SGNM, 'Behaviour Graph'),
+            wbRArray('Actor Keywords', wbFormIDCk(SAKD, 'Keyword', [KYWD])),
+            wbRArray('Target Keywords', wbFormIDCk(STKD, 'Keyword', [KYWD])),
+            wbRArray('Animation Paths', wbString(SAPT, 'Path'))
           ], [])
         ),
-        wbInteger(SRAF, 'State Group End', itU32) // Values greater than $10000 sets a bool. Reading this "closes" the current record.
+        // Values greater than $10000 sets a bool. Reading this "closes" the current record.
+        wbStruct(SRAF, 'Flags', [
+          wbInteger('Role', itU16, wbEnum([
+            {0} 'MT',
+            {1} 'Weapon',
+            {2} 'Furniture',
+            {3} 'Idle',
+            {4} 'Pipboy'
+          ])),
+          wbInteger('Perspective', itU16, wbEnum([
+            '3rd',
+            '1st'
+          ]))
+        ])
       ], [])
     ),
 
-    wbFloat(PTOP, 'Unknown'),
-    wbFloat(NTOP, 'Unknown'),
+    wbFloat(PTOP, 'Idle Chatter Time Min'),
+    wbFloat(NTOP, 'Idle Chatter Time Max'),
     wbRArray('Unknown',
       wbRStruct('Unknown', [
         wbUnknown(MSID),
@@ -13464,7 +13458,7 @@ begin
     ),
     wbUnknown(MLSI),
     wbString(HNAM, 'Unknown'),
-    wbFormIDCk(QSTI, 'Unknown', [QUST]),
+    wbFormIDCk(QSTI, 'Dialogue Quest', [QUST]),
     wbBSMPSequence
   ], False, nil, cpNormal, False, wbRACEAfterLoad, wbRACEAfterSet);
 
