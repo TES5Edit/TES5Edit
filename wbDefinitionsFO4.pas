@@ -8877,7 +8877,8 @@ begin
       wbByteArray('Unknown 1', 2),
       wbInteger('Buys Stolen Items', itU8, wbEnum(['False', 'True'])),
       wbInteger('Buy/Sell Everything Not In List?', itU8, wbEnum(['False', 'True'])),
-      wbInteger('Buys NonStolen Items', itU8, wbEnum(['False', 'True']))
+      wbInteger('Buys NonStolen Items', itU8, wbEnum(['False', 'True'])),
+      wbInteger('Unknown', itU8)
     ]),
     wbPLVD,
     wbCITC,
