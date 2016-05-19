@@ -8286,6 +8286,7 @@ begin
 
    wbRecord(EXPL, 'Explosion', [
     wbEDID,
+    wbVMAD,
     wbOBNDReq,
     wbFULL,
     wbMODL,
