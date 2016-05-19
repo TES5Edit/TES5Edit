@@ -70,6 +70,7 @@ var
 	wbWeaponPropertyEnum: IwbEnumDef;
 	wbZTestFuncEnum: IwbEnumDef;
   wbKeywordTypeEnum: IwbEnumDef;
+  wbReverbClassEnum: IwbEnumDef;
   wbBoolEnum: IwbEnumDef;
 	wbScriptProperties: IwbArrayDef;
 	wbScriptPropertyStruct: IwbArrayDef;
@@ -1023,6 +1024,8 @@ var
   wbBSMPSequence: IwbSubRecordArrayDef;
   wbFTYP: IwbSubRecordDef;
   wbATTX: IwbSubRecordDef;
+  wbMNAMFurnitureMarker: IwbSubRecordDef;
+  wbSNAMMarkerParams: IwbSubRecordDef;
   wbOBTS: IwbSubRecordDef;
   wbTintTemplateGroups: IwbSubrecordArrayDef;
   wbMorphGroups: IwbSubrecordArrayDef;
@@ -5143,6 +5146,15 @@ begin
   ]);
 end;
 
+function wbFloatColors(const aName: string = 'Color'): IwbStructDef;
+begin
+  Result := wbStruct(aName, [
+    wbFloat('Red', cpNormal, True, 255, 0),
+    wbFloat('Green', cpNormal, True, 255, 0),
+    wbFloat('Blue', cpNormal, True, 255, 0)
+  ]);
+end;
+
 function wbWeatherColors(const aName: string): IwbStructDef;
 begin
   Result := wbStruct(aName, [
@@ -5730,6 +5742,15 @@ begin
     {7} 'Bow',
     {8} 'Staff',
     {9} 'Crossbow'
+  ]);
+
+  wbReverbClassEnum := wbEnum([
+    'Default',
+    'Class A',
+    'Class B',
+    'Class C',
+    'Class D',
+    'Class E'
   ]);
 
   wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
@@ -7413,6 +7434,61 @@ begin
   wbFTYP := wbFormIDCk(FTYP, 'Forced Loc Ref Type', [LCRT]);
   wbATTX := wbLString(ATTX, 'Activate Text Override', 0, cpTranslate);
 
+  wbMNAMFurnitureMarker := wbInteger(MNAM, 'Active Markers / Flags', itU32, wbFlags([
+    {0x00000001} 'Interaction Point 0',
+    {0x00000002} 'Interaction Point 1',
+    {0x00000004} 'Interaction Point 2',
+    {0x00000008} 'Interaction Point 3',
+    {0x00000010} 'Interaction Point 4',
+    {0x00000020} 'Interaction Point 5',
+    {0x00000040} 'Interaction Point 6',
+    {0x00000080} 'Interaction Point 7',
+    {0x00000100} 'Interaction Point 8',
+    {0x00000200} 'Interaction Point 9',
+    {0x00000400} 'Interaction Point 10',
+    {0x00000800} 'Interaction Point 11',
+    {0x00001000} 'Interaction Point 12',
+    {0x00002000} 'Interaction Point 13',
+    {0x00004000} 'Interaction Point 14',
+    {0x00008000} 'Interaction Point 15',
+    {0x00010000} 'Interaction Point 16',
+    {0x00020000} 'Interaction Point 17',
+    {0x00040000} 'Interaction Point 18',
+    {0x00080000} 'Interaction Point 19',
+    {0x00100000} 'Interaction Point 20',
+    {0x00200000} 'Interaction Point 21',
+    {0x00400000} 'Allow Awake Sound',
+    {0x00800000} 'Enter With Weapon Drawn',
+    {0x01000000} 'Play Anim When Full',
+    {0x02000000} 'Disables Activation',
+    {0x04000000} 'Is Perch',
+    {0x08000000} 'Must Exit to Talk',
+    {0x10000000} 'Use Static Avoid Node',
+    {0x20000000} 'Unknown 29',
+    {0x40000000} 'Terminal?',
+    {0x80000000} 'Unknown 31'
+  ]));
+
+  wbSNAMMarkerParams :=
+    wbArray(SNAM, 'Marker Paramaters', wbStruct('Marker', [
+      wbFloat('Offset X'),
+      wbFloat('Offset Y'),
+      wbFloat('Offset Z'),
+      wbFloat('Rotation Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFormIDCk('Keyword', [KYWD, NULL]),
+      wbInteger('Entry Types', itU8, wbFlags([
+        'Front',
+        'Rear',
+        'Right',
+        'Left',
+        'Other',
+        'Unused 5',
+        'Unused 6',
+        'Unused 7'
+      ])),
+      wbByteArray('Unknown', 3)
+    ], cpNormal, False, nil, 4));
+
   wbOBTS := wbStruct(OBTS, 'Object Mod Template Item', [
     wbInteger('Parts A Count', itU32),
     wbInteger('Parts B Count', itU32),
@@ -7505,7 +7581,7 @@ begin
       {0x00000200}  9, 'Hidden From Local Map',
       {0x00000400} 10, 'Headtrack Marker',
       {0x00000800} 11, 'Used as Platform',
-      {0x00001000} 13, 'Pack In Use Only',
+      {0x00001000} 13, 'Pack-In Use Only',
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
       {0x00020000} 17, 'Dangerous',
@@ -7910,7 +7986,8 @@ procedure DefineFO4c;
       wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
       wbXLOD,
       wbXSCL,
-      wbDataPosRot
+      wbDataPosRot,
+      wbString(MNAM, 'Comments')
     ], True, wbPlacedAddInfo);
   end;
 
@@ -8929,40 +9006,7 @@ begin
     wbCTDAsCount,
     wbCOCT,
     wbCNTOs,
-    wbInteger(MNAM, 'Active Markers / Flags', itU32, wbFlags([
-      {0x00000001} 'Marker 0',
-      {0x00000002} 'Marker 1',
-      {0x00000004} 'Marker 2',
-      {0x00000008} 'Marker 3',
-      {0x00000010} 'Marker 4',
-      {0x00000020} 'Marker 5',
-      {0x00000040} 'Marker 6',
-      {0x00000080} 'Marker 7',
-      {0x00000100} 'Marker 8',
-      {0x00000200} 'Marker 9',
-      {0x00000400} 'Marker 10',
-      {0x00000800} 'Marker 11',
-      {0x00001000} 'Marker 12',
-      {0x00002000} 'Marker 13',
-      {0x00004000} 'Marker 14',
-      {0x00008000} 'Marker 15',
-      {0x00010000} 'Marker 16',
-      {0x00020000} 'Marker 17',
-      {0x00040000} 'Marker 18',
-      {0x00080000} 'Marker 19',
-      {0x00100000} 'Marker 20',
-      {0x00200000} 'Marker 21',
-      {0x00400000} 'Allow Awake Sound',
-      {0x00800000} 'Enter With Weapon Drawn',
-      {0x01000000} 'Play Anim When Full',
-      {0x02000000} 'Disables Activation',
-      {0x04000000} 'Is Perch',
-      {0x08000000} 'Must Exit to Talk',
-      {0x10000000} 'Use Static Avoid Node',
-      {0x20000000} 'Unknown 30',
-      {0x40000000} 'Unknown 31',
-      {0x80000000} 'Unknown 32'
-    ])),
+    wbMNAMFurnitureMarker,
     wbStruct(WBDT, 'Workbench Data', [
       wbInteger('Bench Type', itU8, wbEnum([
         {0} 'None',
@@ -8992,24 +9036,7 @@ begin
       wbInteger('Entry Points', itU16, wbFurnitureEntryTypeFlags)
     ])),
     wbString(XMRK, 'Marker Model'),
-    wbArray(SNAM, 'Marker Paramaters', wbStruct('Marker', [
-      wbFloat('Offset X'),
-      wbFloat('Offset Y'),
-      wbFloat('Offset Z'),
-      wbFloat('Rotation Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFormIDCk('Keyword', [KYWD, NULL]),
-      wbInteger('Entry Types', itU8, wbFlags([
-        'Front',
-        'Rear',
-        'Right',
-        'Left',
-        'Other',
-        'Unused 5',
-        'Unused 6',
-        'Unused 7'
-      ])),
-      wbByteArray('Unknown', 3)
-    ], cpNormal, False, nil, 4)),
+    wbSNAMMarkerParams,
     wbNVNM,
     wbAPPR,
     wbObjectTemplate
@@ -9658,11 +9685,7 @@ begin
     ], cpNormal, True),
     wbStruct(TNAM, 'Tint', [
       wbFloat('Amount'),
-      wbStruct('Color', [
-        wbFloat('Red', cpNormal, True, 255, 0),
-        wbFloat('Green', cpNormal, True, 255, 0),
-        wbFloat('Blue', cpNormal, True, 255, 0)
-      ])
+      wbFloatColors('Color')
     ], cpNormal, True),
     wbStruct(DNAM, 'Depth of Field', [
       wbFloat('Strength'),
@@ -11349,11 +11372,7 @@ begin
         wbFloat('Z')
       ]),
       wbFloat('Normal Dampener'),
-      wbStruct('Single Pass Color', [
-        wbFloat('Red', cpNormal, True, 255, 0),
-        wbFloat('Green', cpNormal, True, 255, 0),
-        wbFloat('Blue', cpNormal, True, 255, 0)
-      ]),
+      wbFloatColors('Single Pass Color'),
       wbInteger('Flags', itU32, wbFlags(['Single Pass']))
     ], cpNormal, True, nil, 5)
   ]);
@@ -11559,14 +11578,7 @@ begin
       wbInteger('Density %', itU8),
       wbInteger('Unknown', itU8)
     ], cpNormal, True),
-    wbInteger(ANAM, 'Reverb Class', itU32, wbEnum([
-      'Default',
-      'Class A',
-      'Class B',
-      'Class C',
-      'Class D',
-      'Class E'
-    ]), cpNormal, True)
+    wbInteger(ANAM, 'Reverb Class', itU32, wbReverbClassEnum, cpNormal, True)
   ]);
 
   wbRecord(GRAS, 'Grass', [
@@ -12454,9 +12466,9 @@ begin
     wbFormIDCk(CRIF, 'Crime Faction', [FACT], False, cpNormal, False),
     wbFormIDCk(FTST, 'Head Texture', [TXST], False, cpNormal, False),
     wbStruct(QNAM, 'Texture lighting', [
-      wbFloat('Red'),
-      wbFloat('Green'),
-      wbFloat('Blue'),
+      wbFloat('Red', cpNormal, True, 255, 0),
+      wbFloat('Green', cpNormal, True, 255, 0),
+      wbFloat('Blue', cpNormal, True, 255, 0),
       wbFloat('Alpha')
     ]),
     wbArray(MSDK, 'CharGen Keys', wbByteArray('Key', 4)),
@@ -13278,8 +13290,8 @@ begin
       wbFormIDCk('Severable - Explosion', [EXPL, NULL]),
       wbFormIDCk('Severable - Debris', [DEBR, NULL]),
       wbFormIDCk('Severable - Impact DataSet', [IPDS, NULL]),
-      wbFormIDCk('Explodable - Debris', [DEBR, NULL]),
       wbFormIDCk('Explodable - Explosion', [EXPL, NULL]),
+      wbFormIDCk('Explodable - Debris', [DEBR, NULL]),
       wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
       wbFloat('OnCripple - Debris Scale'),
       wbInteger('OnCripple - Debris Count', itU8),
@@ -13565,11 +13577,7 @@ begin
         wbFloat('Y', cpNormal, True, 2, 4),
         wbFloat('Z', cpNormal, True, 2, 4)
       ]),
-      wbStruct('Color', [
-        {84} wbFloat('Red', cpNormal, False, 255, 0),
-        {88} wbFloat('Green', cpNormal, False, 255, 0),
-        {92} wbFloat('Blue', cpNormal, False, 255, 0)
-      ]),
+      wbFloatColors('Color'),
       wbFloat('Unknown'),
       wbInteger('Type', itU32, wbEnum([
         'None',
@@ -13949,7 +13957,7 @@ begin
 
     wbXLOD,
     wbDataPosRot,
-    wbUnknown(MNAM)
+    wbString(MNAM, 'Comments')
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
   wbRecord(REGN, 'Region',
@@ -14245,8 +14253,8 @@ begin
       wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
     ], [ONAM])),
     wbArray(ONAM, 'Overridden Forms',                     // Valid in CK
-      wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, DIAL, INFO]),
-      0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
+      wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, DLBR, DIAL, INFO, SCEN]),
+      0, nil, nil, cpNormal, False{, wbTES4ONAMDontShow}),
     wbByteArray(SCRN, 'Screenshot'),                      // If possible then ignored by the runtime. Neither from the CK
     wbRArray('Transient Types (CK only)', wbStruct(TNAM, 'Transient Type', [
       wbInteger('FormType', itU32), // seen TESTopic 78 (array of DIAL) and BGSScene 126 (array of SCEN)
@@ -14964,9 +14972,7 @@ begin
       wbFloat('Default Number of Tiles'),
       wbInteger('Default Number of Slices', itU16),
       wbInteger('Default Number of Tiles - Relative to Length', itU16, wbBoolEnum),
-      wbFloat('Default Color - Red'),
-      wbFloat('Default Color - Green'),
-      wbFloat('Default Color - Blue'),
+      wbFloatColors('Default Color'),
       wbFloat('Wind Settings - Sensibility'),
       wbFloat('Wind Settings - Flexibility')
     ]),
@@ -14990,11 +14996,11 @@ begin
 
   wbRecord(DMGT, 'Damage Type', [
     wbEDID,
-    // Before form version 78, it was an array of AVIF index, since then array of AVIF formID, coupled with a SPEL formID ?
+    // Before form version 78, it was an array of AVIF index, since then array of AVIF formID, coupled with a SPEL formID
     wbUnion(DNAM, 'Data', wbFormVer78Decider, [
-      wbArray('Indexes', wbInteger('AVIF index', itU32)),
-      wbArray('Unknown', wbStruct('Unknown', [
-        wbFormIDck('Actor Value Info', [AVIF, NULL]),
+      wbArray('Damage Types', wbInteger('Actor Value Index', itU32)),
+      wbArray('Damage Types', wbStruct('Damage Type', [
+        wbFormIDck('Actor Value', [AVIF, NULL]),
         wbFormIDck('Spell', [SPEL, NULL])
       ]))
     ])
@@ -15003,25 +15009,15 @@ begin
   wbRecord(GDRY, 'God Rays', [
     wbEDID,
     wbStruct(DATA, 'Data', [
-      wbStruct('Sky/Fog Color', [
-        wbFloat('Red'),
-        wbFloat('Green'),
-        wbFloat('Blue')
-      ]),
-      wbStruct('Light/Ray Color', [
-        wbFloat('Red'),
-        wbFloat('Green'),
-        wbFloat('Blue')
-      ]),
+      wbFloatColors('Back Color'),
+      wbFloatColors('Fwd Color'),
       wbFloat('Intensity'),
-      wbFloat('Multiscatter'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown')
+      wbFloat('Air Color - Scale'),
+      wbFloat('Back Color - Scale'),
+      wbFloat('Fwd Color - Scale'),
+      wbFloat('Back Phase'),
+      wbFloatColors('Air Color'),
+      wbFloat('Fwd Phase')
     ])
   ]);
 
@@ -15031,17 +15027,49 @@ procedure DefineFO4r;
 begin
   wbRecord(INNR, 'Instance Naming Rules', [
     wbEDID,
-    wbUnknown(UNAM),
+    wbInteger(UNAM, 'Target', itU32, wbEnum([], [
+        0, 'None',
+      $1D, 'Armor',
+      $2D, 'Actor',
+      $2A, 'Furniture',
+      $2B, 'Weapon'
+    ])),
     wbRArray('Naming Rules',
-      wbRStruct('Naming Rule', [
+      wbRStruct('Ruleset', [
         wbInteger(VNAM, 'Count', itU32),
         // should not be sorted
         wbRArray('Names',
           wbRStruct('Name', [
-            wbLString(WNAM, 'Label', 0, cpTranslate),
+            wbLString(WNAM, 'Text', 0, cpTranslate),
             wbKSIZ,
             wbKWDAs,
-            wbUnknown(YNAM)
+            wbStruct(XNAM, 'Property', [
+              wbFloat('Value'),
+              wbInteger('Target', itU8, wbEnum([
+                { 0} 'Enchantments',
+                { 1} 'BashImpactDataSet',
+                { 2} 'BlockMaterial',
+                { 3} 'Keywords',
+                { 4} 'Weight',
+                { 5} 'Value',
+                { 6} 'Rating',
+                { 7} 'AddonIndex',
+                { 8} 'BodyPart',
+                { 9} 'DamageTypeValues',
+                {10} 'ActorValues',
+                {11} 'Health',
+                {12} 'ColorRemappingIndex',
+                {13} 'MaterialSwaps'
+              ])),
+              wbInteger('Op', itU8, wbEnum([
+                {0} '>=',
+                {1} '>',
+                {2} '<=',
+                {3} '<',
+                {4} '='
+              ]))
+            ]),
+            wbInteger(YNAM, 'Index', itU16)
           ], []),
           cpNormal, False, nil, wbINNRAfterSet
         )
@@ -15051,14 +15079,14 @@ begin
 
   wbRecord(KSSM, 'Sound Keyword Mapping', [
     wbEDID,
-    wbFormIDCk(DNAM, 'Sound', [SNDR]),
-    wbFormIDCk(ENAM, 'Sound', [SNDR]),
-    wbFormIDCk(VNAM, 'Sound', [SNDR]),
-    wbFloat(TNAM),
+    wbFormIDCk(DNAM, 'Primary Descriptor', [SNDR]),
+    wbFormIDCk(ENAM, 'Exterior Tail', [SNDR]),
+    wbFormIDCk(VNAM, 'VATS Descriptor', [SNDR]),
+    wbFloat(TNAM, 'VATS Threshold'),
     wbRArray('Keywords', wbFormIDCk(KNAM, 'Keyword', [KYWD])),
-    wbRArray('Sounds', wbStruct(RNAM, 'Sound', [
-      wbInteger('Unknown', itU32),
-      wbFormIDCk('Sound', [SNDR])
+    wbRArrayS('Sounds', wbStructSK(RNAM, [0], 'Sound', [
+      wbInteger('Reverb Class', itU32, wbReverbClassEnum),
+      wbFormIDCk('Descriptor', [SNDR])
     ]))
   ]);
 
@@ -15077,17 +15105,15 @@ begin
         wbString(DNAM, 'Lens Flare Sprite ID'),
         wbString(FNAM, 'Texture'),
         wbStruct(LFSD, 'Lens Flare Data', [
-          wbFloat('Red Tint'),
-          wbFloat('Green Tint'),
-          wbFloat('Blue Tint'),
+          wbFloatColors('Tint'),
           wbFloat('Width'),
           wbFloat('Height'),
           wbFloat('Position'),
           wbFloat('Angular Fade'),
           wbFloat('Opacity'),
           wbInteger('Flags', itU32, wbFlags([
-            {1} 'Rotates',
-            {2} 'Shrinks When Occluded'
+            {0x01} 'Rotates',
+            {0x02} 'Shrinks When Occluded'
           ]))
         ])
       ], [])
@@ -15379,18 +15405,21 @@ begin
     )
   ]);
 
-  wbRecord(PKIN, 'Pack-In', [
+  wbRecord(PKIN, 'Pack-In',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000200}  9, 'Prefab'
+    ])), [
     wbEDID,
     wbOBND,
     wbFLTR,
     wbFormIDCk(CNAM, 'Cell', [CELL]),
-    wbUnknown(VNAM)
+    wbInteger(VNAM, 'Version', itU32)
   ]);
 
   wbRecord(RFGP, 'Reference Group', [
     wbEDID,
     wbString(NNAM, 'Name'),
-    wbFormIDCk(RNAM, 'Reference', [REFR]),
+    wbFormIDCk(RNAM, 'Reference', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
     wbUnknown(PNAM)
   ]);
 
@@ -15401,8 +15430,8 @@ begin
   wbRecord(SCCO, 'Scene Collection', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST]),
-    wbRArray('Unknown',
-      wbRStruct('Unknown', [
+    wbRArray('Scenes',
+      wbRStruct('Scene', [
         wbFormIDCk(SNAM, 'Scene', [SCEN]),
         wbStruct(XNAM, 'Unknown', [
           wbInteger('Unknown', itS32),
@@ -15445,10 +15474,10 @@ begin
 
   wbRecord(SCSN, 'Audio Category Snapshot', [
     wbEDID,
-    wbInteger(PNAM, 'Index?', itU16),
-    wbRArray('Sounds', wbStruct(CNAM, 'Sound', [
-      wbFormIDCk('Sound Categoty', [SNCT]),
-      wbFloat('Unknown')
+    wbInteger(PNAM, 'Priority', itU16),
+    wbRArray('Category Multipliers', wbStruct(CNAM, 'Category Multiplier', [
+      wbFormIDCk('Categoty', [SNCT]),
+      wbFloat('Multiplier')
     ]))
   ]);
 
@@ -15468,29 +15497,36 @@ begin
     ]))
   ]);
 
-  wbRecord(TERM, 'Terminal', [
+  wbRecord(TERM, 'Terminal',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  4, 'Unknown 4',
+      {0x00002000} 13, 'Unknown 13',
+      {0x00008000} 15, 'Has Distant LOD',
+      {0x00010000} 16, 'Random Anim Start'
+    ])), [
     wbEDID,
     wbVMADFragmentedPERK, // same fragments format as in PERK
     wbOBNDReq,
     wbPTRN,
-    wbLString(NAM0, 'Network'),
-    wbLString(WNAM, 'Owner'),
+    wbLString(NAM0, 'Header Text'),
+    wbLString(WNAM, 'Welcome Text'),
     wbFULL,
     wbMODL,
     wbKSIZ,
     wbKWDAs,
     wbPRPS,
     wbUnknown(PNAM),
+    wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
     wbUnknown(FNAM),
     wbCOCT,
     wbCNTOs,
-    wbUnknown(MNAM),
-    wbUnknown(WBDT),
+    wbMNAMFurnitureMarker,
+    wbByteArray(WBDT, 'Workbench Data (unused)', 0),
     wbString(XMRK, 'Marker Model'),
-    wbUnknown(SNAM),
+    wbSNAMMarkerParams,
     wbInteger(BSIZ, 'Count', itU32, nil, cpBenign),
-    wbRArray('Display Items',
-      wbRStruct('Display Item', [
+    wbRArray('Body Text',
+      wbRStruct('Item', [
         wbLString(BTXT, 'Text', 0, cpTranslate),
         wbCTDAs
       ], []),
@@ -15500,15 +15536,22 @@ begin
     wbRArray('Menu Items',
       wbRStruct('Menu Item', [
         wbLString(ITXT, 'Item Text', 0, cpTranslate),
-        wbLString(RNAM, 'Error Text', 0, cpTranslate),
-        wbInteger(ANAM, 'Flags', itU8, wbFlags([
-          'Add Note',
-          'Force Redraw',
-          'Unknown 2'
+        wbLString(RNAM, 'Response Text', 0, cpTranslate),
+        wbInteger(ANAM, 'Type', itU8, wbEnum([
+          {0} 'Unknown 0',
+          {1} 'Unknown 1',
+          {2} 'Unknown 2',
+          {3} 'Unknown 3',
+          {4} 'Submenu - Terminal',
+          {5} 'Submenu - Return to Top Level',
+          {6} 'Submenu - Force Redraw',
+          {7} 'Unknown 7',
+          {8} 'Display Text'
         ]), cpNormal, True),
         wbInteger(ITID, 'Item ID', itU16),
-        wbLString(UNAM, 'Response Text', 0, cpTranslate),
-        wbFormIDCk(TNAM, 'Terminal', [TERM]),
+        wbLString(UNAM, 'Display Text', 0, cpTranslate),
+        wbString(VNAM, 'Show Image'),
+        wbFormIDCk(TNAM, 'Submenu', [TERM]),
         wbCTDAs
       ], []),
       cpNormal, False, nil, wbTERMMenuItemsAfterSet
@@ -15538,19 +15581,19 @@ begin
 
   wbRecord(ZOOM, 'Zoom', [
     wbEDID,
-    wbStruct(GNAM, '', [
+    wbStruct(GNAM, 'Data', [
       wbFloat('FOV Mult'),
       wbInteger('Overlay', itU32, wbEnum([
-        {0} 'Default',
-        {1} 'Fine',
-        {2} 'Duplex',
-        {3} 'German',
-        {4} 'Dot',
-        {5} 'Mil-Dot',
-        {6} 'Circle',
-        {7} 'Old Rangefind',
-        {8} 'Modern Rangefind',
-        {9} 'SVD',
+        { 0} 'Default',
+        { 1} 'Fine',
+        { 2} 'Duplex',
+        { 3} 'German',
+        { 4} 'Dot',
+        { 5} 'Mil-Dot',
+        { 6} 'Circle',
+        { 7} 'Old Rangefind',
+        { 8} 'Modern Rangefind',
+        { 9} 'SVD',
         {10} 'Hand Painted',
         {11} 'Binoculars',
         {12} 'Cross',

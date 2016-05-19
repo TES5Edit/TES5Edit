@@ -3035,8 +3035,8 @@ begin
       if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
         for i := 0 to Pred(MasterFiles.ElementCount) do begin
           if Supports(MasterFiles.Elements[i], IwbContainerElementRef, MasterFile) then begin
-
-            if FileHeader.IsESM then
+            // Fallout 4 CK creates ONAMs in ESP too
+            if FileHeader.IsESM or (wbGameMode = gmFO4) then
               while j <= High(flRecords) do begin
                 Current := flRecords[j];
                 FormID := Current.FixedFormID;
@@ -3071,6 +3071,10 @@ begin
                 then begin
 
                   if (not wbMasterUpdateFilterONAM) or Current.IsWinningOverride then begin
+                    // ONAMs are for overridden temporary refs only
+                    if Current.IsPersistent then
+                      Continue;
+
                     if not Assigned(ONAMs) then begin
                       if not Supports(FileHeader.Add('ONAM', True), IwbContainerElementRef, ONAMs) then
                         Assert(False);
@@ -3079,10 +3083,7 @@ begin
                     end else
                       NewONAM := ONAMs.Assign(High(Integer), nil, True);
 
-                    {if wbDisplayLoadOrderFormID then
-                      NewONAM.NativeValue := Current.LoadOrderFormID
-                    else}
-                      NewONAM.NativeValue := FormID;
+                    NewONAM.NativeValue := FormID;
 
                     if wbMasterUpdateFixPersistence and not Current.IsPersistent and not Current.IsMaster then begin
                       Master := Current.Master;
