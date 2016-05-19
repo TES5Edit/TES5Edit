@@ -15757,7 +15757,7 @@ begin
   SetLength(wbOfficialDLC, 3);
   wbOfficialDLC[0] :='DLCRobot.esm';
   wbOfficialDLC[1] :='DLCWorkshop01.esm';
-  wbOfficialDLC[2] :='DLCCost.esm';
+  wbOfficialDLC[2] :='DLCCoast.esm';
 end;
 
 initialization
