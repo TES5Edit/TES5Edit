@@ -6527,7 +6527,8 @@ begin
 
     {--- 3D Data ---}
     wbXSCL,
-    wbDATAPosRot
+    wbDATAPosRot,
+    wbString(MNAM, 'Comments')
   ], True, wbPlacedAddInfo);
 
   wbVatsValueFunctionEnum :=
