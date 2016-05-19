@@ -11373,6 +11373,7 @@ begin
 
   wbRecord(SNDR, 'Sound Descriptor', [
     wbEDID,
+    wbString(NNAM, 'Notes'),
     wbInteger(CNAM, 'Descriptor Type', itU32, wbEnum([], [
       Int64($1EEF540A), 'Standard',
       Int64($54651A43), 'Compound',
