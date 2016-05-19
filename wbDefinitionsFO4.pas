@@ -15754,10 +15754,13 @@ begin
   DefineFO4t;
   DefineFO4u;
 
-  SetLength(wbOfficialDLC, 3);
+  SetLength(wbOfficialDLC, 6);
   wbOfficialDLC[0] :='DLCRobot.esm';
   wbOfficialDLC[1] :='DLCWorkshop01.esm';
   wbOfficialDLC[2] :='DLCCoast.esm';
+  wbOfficialDLC[3] :='DLCNukaWorld.esm';
+  wbOfficialDLC[4] :='DLCWorkshop02.esm';
+  wbOfficialDLC[5] :='DLCWorkshop03.esm';
 end;
 
 initialization
