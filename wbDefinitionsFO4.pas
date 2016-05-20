@@ -63,7 +63,6 @@ var
 	wbSoulGemEnum: IwbEnumDef;
 	wbSoundLevelEnum: IwbEnumDef;
 	wbTargetEnum: IwbEnumDef;
-	wbTintMaskTypeEnum: IwbEnumDef;
 	wbVatsValueFunctionEnum: IwbEnumDef;
 	wbWardStateEnum: IwbEnumDef;
 	wbWeaponAnimTypeEnum: IwbEnumDef;
@@ -898,6 +897,23 @@ const
   ZNAM : TwbSignature = 'ZNAM';
   ZOOM : TwbSignature = 'ZOOM'; { New To Fallout 4 }
 
+  // signatures of reference records
+  sigReferences : array [0..11] of TwbSignature = (
+    'NULL', 'PLYR', 'ACHR', 'REFR', 'PGRE', 'PHZD',
+    'PMIS', 'PARW', 'PBAR', 'PBEA', 'PCON', 'PFLA'
+  );
+
+  // signatures of referenceable records (placed by references or constructable)
+  sigBaseObjects : array [0..41] of TwbSignature = (
+    'NULL', 'ACTI', 'ADDN', 'ALCH', 'AMMO', 'ARMO',
+    'ARTO', 'ASPC', 'BNDS', 'BOOK', 'CMPO', 'COBJ',
+    'CONT', 'DEBR', 'DOOR', 'EXPL', 'FLST', 'FLOR',
+    'FURN', 'HAZD', 'IDLM', 'INGR', 'KEYM', 'LIGH',
+    'LVLI', 'LVLN', 'LVSP', 'MISC', 'MSTT', 'NOTE',
+    'OMOD', 'PROJ', 'SCOL', 'SCRL', 'SPEL', 'STAT',
+    'TACT', 'TERM', 'TREE', 'TXST', 'WATR', 'WEAP'
+  );
+
 var
   wbPKDTSpecificFlagsUnused : Boolean;
   wbEDID: IwbSubRecordDef;
@@ -909,7 +925,6 @@ var
   wbDEST: IwbSubRecordStructDef;
   wbDESTActor: IwbSubRecordStructDef;
   wbDODT: IwbSubRecordDef;
-  wbXGLB: IwbSubRecordDef;
   wbXRGD: IwbSubRecordDef;
   wbXRGB: IwbSubRecordDef;
   wbSPLO: IwbSubRecordDef;
@@ -996,10 +1011,10 @@ var
   wbDMDS: IwbSubRecordDef;
   wbMO5S: IwbSubRecordDef;
   wbSPCT: IwbSubRecordDef;
-  wbTints: IwbSubRecordArrayDef;
   wbMODT: IwbSubRecordDef;
   wbDMDT: IwbSubRecordDef;
-  wbOwnership: IwbSubRecordStructDef;
+  wbXOWN: IwbSubRecordDef;
+  wbXRNK: IwbSubRecordDef;
   wbPhonemeTargets: IwbSubRecordDef;
   wbPHWT: IwbSubRecordStructDef;
   wbHeadPart: IwbSubRecordStructDef;
@@ -5108,10 +5123,14 @@ begin
 
   if (MainRecord.Signature = ACTI) or
      (MainRecord.Signature = STAT) or
+     (MainRecord.Signature = SCOL) or
      (MainRecord.Signature = TREE)
   then
     Result := 1
-  else if MainRecord.Signature = CONT then
+  else if
+     (MainRecord.Signature = CONT) or
+     (MainRecord.Signature = TERM)
+  then
     Result := 2
   else if MainRecord.Signature = DOOR then
     Result := 3
@@ -5129,7 +5148,7 @@ begin
      (MainRecord.Signature = INGR) or
      (MainRecord.Signature = KEYM) or
      (MainRecord.Signature = MISC) or
-     (MainRecord.Signature = SLGM) or
+     (MainRecord.Signature = FURN) or
      (MainRecord.Signature = WEAP) or
      (MainRecord.Signature = ALCH)
   then
@@ -5243,7 +5262,7 @@ begin
   wbCNTO :=
     wbRStructExSK([0], [1], 'Item', [
       wbStructExSK(CNTO, [0], [1], 'Item', [
-        wbFormIDCk('Item', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, INGR, LIGH, NOTE, CMPO]),
+        wbFormIDCk('Item', sigBaseObjects),
         wbInteger('Count', itS32)
       ]),
       wbCOED
@@ -6137,11 +6156,11 @@ begin
   wbPLDT := wbStruct(PLDT, 'Location', [
     wbInteger('Type', itS32, wbLocationEnum),
     wbUnion('Location Value', wbTypeDecider, [
-      {0} wbFormIDCkNoReach('Reference', [NULL, DOOR, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
+      {0} wbFormIDCkNoReach('Reference', sigReferences),
       {1} wbFormIDCkNoReach('Cell', [NULL, CELL]),
       {2} wbByteArray('Near Package Start Location', 4, cpIgnore),
       {3} wbByteArray('Near Editor Location', 4, cpIgnore),
-      {4} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, MSTT, FURN, SPEL, SCRL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, FACT, FLST, IDLM, SOUN, TXST, PROJ, CMPO]),
+      {4} wbFormIDCkNoReach('Object ID', sigBaseObjects),
       {5} wbInteger('Object Type', itU32, wbObjectTypeEnum),
       {6} wbFormIDCk('Keyword', [NULL, KYWD]),
       {7} wbByteArray('Unused', 4, cpIgnore),
@@ -6160,11 +6179,11 @@ begin
   wbPLVD := wbStruct(PLVD, 'Location', [
     wbInteger('Type', itS32, wbLocationEnum),
     wbUnion('Location Value', wbTypeDecider, [
-      {0} wbFormIDCkNoReach('Reference', [NULL, DOOR, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
+      {0} wbFormIDCkNoReach('Reference', sigReferences),
       {1} wbFormIDCkNoReach('Cell', [NULL, CELL]),
       {2} wbByteArray('Near Package Start Location', 4, cpIgnore),
       {3} wbByteArray('Near Editor Location', 4, cpIgnore),
-      {4} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, MSTT, FURN, SPEL, SCRL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, INGR, LIGH, FACT, FLST, IDLM, SOUN, TXST, PROJ, CMPO]),
+      {4} wbFormIDCkNoReach('Object ID', sigBaseObjects),
       {5} wbInteger('Object Type', itU32, wbObjectTypeEnum),
       {6} wbFormIDCk('Keyword', [NULL, KYWD]),
       {7} wbByteArray('Unused', 4, cpIgnore),
@@ -6193,8 +6212,8 @@ begin
       {8} 'Unknown 8'
     ]), cpNormal, False, nil, nil, 2),
     wbUnion('Target', wbTypeDecider, [
-      {0} wbFormIDCkNoReach('Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], True),
-      {1} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, MSTT, FURN, SPEL, SCRL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, INGR, LIGH, FACT, FLST, IDLM, SOUN, TXST, PROJ, CMPO]),
+      {0} wbFormIDCkNoReach('Reference', sigReferences, True),
+      {1} wbFormIDCkNoReach('Object ID', sigBaseObjects),
       {2} wbInteger('Object Type', itU32, wbObjectTypeEnum),
       {3} wbFormIDCk('Keyword', [KYWD, NULL]),
       {4} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
@@ -6378,7 +6397,7 @@ begin
   wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
 
   wbXESP := wbStruct(XESP, 'Enable Parent', [
-    wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
+    wbFormIDCk('Reference', sigReferences),
     wbInteger('Flags', itU8, wbFlags([
       'Set Enable State to Opposite of Parent',
       'Pop In'
@@ -6422,17 +6441,13 @@ begin
   else
     wbOFST := wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0);
 
-  wbOwnership := wbRStruct('Ownership', [
-    //wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]),
-    // GoodneighborWarehouse02
-    wbStruct(XOWN, 'Owner', [
-      wbFormIDCkNoReach('Owner', [FACT, ACHR, NPC_]),
-      wbUnknown
-    ]),
-    wbInteger(XRNK, 'Faction rank', itS32)
-  ], [XILL]);
-
-  wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
+  wbXOWN := wbStruct(XOWN, 'Owner', [
+    wbFormIDCkNoReach('Owner', [FACT, ACHR, NPC_]),
+    wbByteArray('Unknown', 4),
+    wbInteger('Flags', itU8, wbFlags(['No Crime'])),
+    wbByteArray('Unknown', 3)
+  ]);
+  wbXRNK := wbInteger(XRNK, 'Owner Faction Rank', itS32);
 
   if wbSimpleRecords then
     wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
@@ -6499,20 +6514,15 @@ begin
     {--- Leveled Actor ----}
     wbXLCM,
 
-    {--- Merchant Container ----}
-    wbFormIDCk(XMRC, 'Merchant Container', [REFR], True),
-
     {--- Extra ---}
     wbInteger(XCNT, 'Count', itS32),
     wbFloat(XRDS, 'Radius'),
-    wbFloat(XHLP, 'Health'),
+    wbInteger(XHLT, 'Health %', itU32),
 
     wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
       wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA])
+      wbFormIDCk('Ref', sigReferences)
     ], cpNormal, False, nil, 1)),
-
-    wbRArray('Unknown', wbUnknown(XPLK)),
 
     {--- Activate Parents ---}
     wbRStruct('Activate Parents', [
@@ -6521,39 +6531,21 @@ begin
       ], True)),
       wbRArrayS('Activate Parent Refs',
         wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
+          wbFormIDCk('Reference', sigReferences),
           wbFloat('Delay')
         ])
       )
     ], []),
 
-    {--- Linked Ref ---}
-    wbStruct(XCLP, 'Linked Reference Color', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ])
-    ]),
-
-    wbUnknown(XLKT),
+    wbEmpty(XLKT, 'Linked Ref Transient'),
     wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
     wbFormIDCk(XLYR, 'Layer', [LAYR]),
     wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
-    wbUnknown(XRNK),
 
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
-    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
     wbEmpty(XIS2, 'Ignored by Sandbox'),
+    wbRArray('Spline Connection', wbFormIDCk(XPLK, 'Link', [REFR])),
     wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
-		wbFormIDCk(XHOR, 'Horse', [ACHR]),
     wbFloat(XHTW, 'Head-Tracking Weight'),
     wbFloat(XFVC, 'Favor Cost'),
 
@@ -6561,13 +6553,14 @@ begin
     wbXESP,
 
     {--- Ownership ---}
-    wbOwnership,
+    wbXOWN,
+    wbXRNK,
 
     {--- Emittance ---}
     wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
 
     {--- MultiBound ---}
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
+    wbFormIDCk(XMBR, 'MultiBound Reference', sigReferences),
 
     {--- Flags ---}
     wbEmpty(XIBS, 'Ignored By Sandbox'),
@@ -7199,7 +7192,7 @@ begin
         {27 ptIdleForm}
         wbFormIDCkNoReach('Idle', [IDLE]),
         {28 ptInventoryObject}
-        wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, INGR, FLST, LIGH, LVLI, COBJ, OMOD, NOTE, CMPO]),
+        wbFormIDCkNoReach('Inventory Object', sigBaseObjects),
         {29 ptKeyword}
         wbFormIDCkNoReach('Keyword', [KYWD, FLST, NULL]),
         {30 ptLocation}
@@ -7211,7 +7204,7 @@ begin
         {33 ptMiscStat}
         wbInteger('Misc Stat', itU32, wbMiscStatEnum),
         {34 ptObjectReference}
-        wbFormIDCkNoReach('Object Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
+        wbFormIDCkNoReach('Object Reference', sigReferences),
         {35 ptOwner}
         wbFormIDCkNoReach('Owner', [NULL, FACT, NPC_]),
         {36 ptPackage}
@@ -7227,7 +7220,7 @@ begin
         {41 ptRace}
         wbFormIDCkNoReach('Race', [RACE]),
         {42 ptReferencableObject}
-        wbFormIDCkNoReach('Referenceable Object', [NULL, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, FLST, LVLI, LVSP, SPEL, ENCH, OMOD, NOTE, CMPO], [NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, LVLI, LVSP, SPEL, ENCH, OMOD, NOTE, CMPO]),
+        wbFormIDCkNoReach('Referenceable Object', sigBaseObjects),
         {43 ptRefType}
         wbFormIDCkNoReach('Location Ref Type', [LCRT]),
         {44 ptRegion}
@@ -7316,7 +7309,7 @@ begin
         {27 ptIdleForm}
         wbFormIDCkNoReach('Idle', [IDLE]),
         {28 ptInventoryObject}
-        wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, INGR, FLST, LIGH, LVLI, COBJ, OMOD, NOTE, CMPO]),
+        wbFormIDCkNoReach('Inventory Object', sigBaseObjects),
         {29 ptKeyword}
         wbFormIDCkNoReach('Keyword', [KYWD, FLST, NULL]),
         {30 ptLocation}
@@ -7328,7 +7321,7 @@ begin
         {33 ptMiscStat}
         wbInteger('Misc Stat', itU32, wbMiscStatEnum),
         {34 ptObjectReference}
-        wbFormIDCkNoReach('Object Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
+        wbFormIDCkNoReach('Object Reference', sigReferences),
         {35 ptOwner}
         wbFormIDCkNoReach('Owner', [NULL, FACT, NPC_]),
         {36 ptPackage}
@@ -7344,7 +7337,7 @@ begin
         {41 ptRace}
         wbFormIDCkNoReach('Race', [RACE]),
         {42 ptReferencableObject}
-        wbFormIDCkNoReach('Referenceable Object', [NULL, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, FLST, LVLI, LVSP, SPEL, ENCH, OMOD, NOTE, CMPO], [NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, LVLI, LVSP, SPEL, ENCH, OMOD, NOTE, CMPO]),
+        wbFormIDCkNoReach('Referenceable Object', sigBaseObjects),
         {43 ptRefType}
         wbFormIDCkNoReach('Location Ref Type', [LCRT]),
         {44 ptRegion}
@@ -7430,7 +7423,7 @@ begin
       ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
       wbUnion('Reference', wbCTDAReferenceDecider, [
         wbInteger('Unused', itU32, nil, cpIgnore),
-        wbFormIDCkNoReach('Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False)
+        wbFormIDCkNoReach('Reference', sigReferences, False)
       ]),
       wbInteger('Parameter #3', itS32)
     ], cpNormal, False{, nil, 0, wbCTDAAfterLoad}),
@@ -7894,7 +7887,7 @@ begin
       wbMO5F
     ], []),
     wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),
-    wbFormIDCK(NAM1, 'Female Skin texture', [TXST, NULL]),
+    wbFormIDCK(NAM1, 'Female Skin Texture', [TXST, NULL]),
     wbFormIDCK(NAM2, 'Male Skin Texture Swap List', [FLST, NULL]),
     wbFormIDCK(NAM3, 'Female Skin Texture Swap List', [FLST, NULL]),
     wbRArrayS('Additional Races', wbFormIDCK(MODL, 'Race', [RACE, NULL])),
@@ -7964,7 +7957,6 @@ procedure DefineFO4c;
       wbVMAD,
       wbFormIDCk(NAME, 'Projectile', [PROJ, HAZD]),
       wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-      wbOwnership,
       wbFloat(XHTW, 'Head-Tracking Weight'),
       wbFloat(XFVC, 'Favor Cost'),
       wbRArrayS('Reflected/Refracted By',
@@ -7978,7 +7970,7 @@ procedure DefineFO4c;
       ),
       wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
         wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-        wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA])
+        wbFormIDCk('Ref', sigReferences)
       ], cpNormal, False, nil, 1)),
       wbRStruct('Activate Parents', [
         wbInteger(XAPD, 'Flags', itU8, wbFlags([
@@ -7986,7 +7978,7 @@ procedure DefineFO4c;
         ], True)),
         wbRArrayS('Activate Parent Refs',
           wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-            wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
+            wbFormIDCk('Reference', sigReferences),
             wbFloat('Delay')
           ])
         )
@@ -7994,24 +7986,22 @@ procedure DefineFO4c;
 
       wbFormIDCk(XASP, 'Unknown', [REFR]),
       wbUnknown(XATP),
-      wbUnknown(XAMC),
-      wbUnknown(XLKT),
+      wbInteger(XAMC, 'Ammo Count', itU32),
+      wbEmpty(XLKT, 'Linked Ref Transient'),
       wbFormIDCk(XLYR, 'Layer', [LAYR]),
       wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
       wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
-      wbUnknown(XBSD),
-      wbUnknown(XPDD),
       wbUnknown(XCVR),
-      wbUnknown(XRNK),
-
       wbXESP,
+      wbXOWN,
+      wbXRNK,
       wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
       wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
       wbEmpty(XIS2, 'Ignored by Sandbox'),
       wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
       wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
-      wbXLOD,
       wbXSCL,
+      wbXLOD,
       wbDataPosRot,
       wbString(MNAM, 'Comments')
     ], True, wbPlacedAddInfo);
@@ -8077,9 +8067,9 @@ begin
       ], True))
     ], cpNormal, False, nil, 2),
 
-    wbUnknown(VISI),
-    wbFormIDCk(RVIS, 'Unknown', [CELL]),
-    wbByteArray(PCMB, 'Physics Combined', 2),
+    wbByteArray(VISI, 'PreVis Files Timestamp', 2),
+    wbFormIDCk(RVIS, 'In PreVis File Of', [CELL]),
+    wbByteArray(PCMB, 'PreCombined Files Timestamp', 2),
 
     wbStruct(XCLL, 'Lighting', [
       wbByteColors('Ambient Color'),
@@ -8147,7 +8137,9 @@ begin
     wbFormIDCk(XCWT, 'Water', [WATR]),
 
     {--- Ownership ---}
-    wbOwnership,
+    wbXOWN,
+    wbXRNK,
+
     wbFormIDCk(XILL, 'Lock List', [FLST, NPC_]),
 
     wbStruct(XILW, 'Exterior LOD', [
@@ -8173,7 +8165,7 @@ begin
       wbArray{S}('Meshes', wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt), wbCELLCombinedMeshesCounter, cpNormal, False, nil, wbCELLCombinedMeshesAfterSet),
       wbArray{S}('References',  wbStruct{SK}({[1, 0], }'Reference', [
         wbFormIDCk('Reference', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-        wbInteger('Precombined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt)
+        wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt)
       ]), wbCELLCombinedRefsCounter, cpNormal, False, nil, wbCELLCombinedRefsAfterSet)
     ])
   ], True, wbCellAddInfo, cpNormal, False{, wbCELLAfterLoad});
@@ -10363,13 +10355,13 @@ begin
     wbEDID,
 
     wbArray(ACPR, 'Actor Cell Persistent Reference', wbStruct('', [
-      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Actor', sigReferences, False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
     ])),
     wbArray(LCPR, 'Location Cell Persistent Reference', wbStruct('', [
-      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Actor', sigReferences, False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
@@ -10390,14 +10382,14 @@ begin
 
     wbArray(ACSR, 'Actor Cell Static Reference', wbStruct('', [
       wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
-      wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Marker', sigReferences, False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
     ])),
     wbArray(LCSR, 'Location Cell Static Reference', wbStruct('', [
       wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
-      wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Marker', sigReferences, False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
@@ -10432,18 +10424,18 @@ begin
       ])
     ),
 
-    wbArray(ACID, 'Actor Cell Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign)),
-    wbArray(LCID, 'Location Cell Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign)),
+    wbArray(ACID, 'Actor Cell Marker Reference', wbFormIDCk('Ref', sigReferences, False, cpBenign)),
+    wbArray(LCID, 'Location Cell Marker Reference', wbFormIDCk('Ref', sigReferences, False, cpBenign)),
 
     wbArray(ACEP, 'Actor Cell Enable Point', wbStruct('', [
-      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
-      wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Actor', sigReferences, False, cpBenign),
+      wbFormIDCk('Ref', sigReferences, False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
     ])),
     wbArray(LCEP, 'Location Cell Enable Point', wbStruct('', [
-      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
-      wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Actor', sigReferences, False, cpBenign),
+      wbFormIDCk('Ref', sigReferences, False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
     ])),
@@ -12067,7 +12059,7 @@ begin
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
           wbInteger('Level', itU16),
           wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow),
-          wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, LIGH, INGR, NOTE, CMPO]),
+          wbFormIDCk('Reference', sigBaseObjects),
           wbInteger('Count', itU16),
           wbInteger('Chance None', itU16)
         ]),
@@ -12283,7 +12275,7 @@ begin
     ], cpNormal, True),
     // the amount of components is the same as size of CDIX, so should not be sorted probably
     wbStructs(CVPA, 'Components', 'Component', [
-      wbFormIDCk('Component', [CMPO, MISC, ALCH, AMMO]), // CK allows only CMPO
+      wbFormIDCk('Component', sigBaseObjects), // CK allows only CMPO
       wbInteger('Count', itU32)
     ]),
     wbArray(CDIX, 'Component Display Indices', wbInteger('Display Index', itU8))
@@ -12295,18 +12287,13 @@ begin
     wbZNAM,
     wbArrayS(FVPA, 'Components',
       wbStructSK([0], 'Component', [
-        wbFormIDCk('Component', [ALCH, AMMO, ARMO, BOOK, CMPO, COBJ, KEYM, LIGH, LVLI, MISC, NOTE, WEAP]),
+        wbFormIDCk('Component', sigBaseObjects),
         wbInteger('Count', itU32)
       ])
     ),
     wbLString(DESC, 'Description', 0, cpTranslate),
     wbCTDAs,
-    wbFormIDCk(CNAM, 'Created Object', [
-      TREE, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLI,
-      MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, IDLM, ARMA, INGR,
-      MSTT, TACT, FLOR, NOTE, CMPO, COBJ, SCOL, ARTO, ADDN, BNDS,
-      TERM
-    ]),
+    wbFormIDCk(CNAM, 'Created Object', sigBaseObjects),
     wbFormIDCk(BNAM, 'Workbench Keyword', [KYWD]),
     wbByteArray(NAM1, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
     wbByteArray(NAM2, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
@@ -13030,41 +13017,6 @@ begin
     'Body Texture'
   ]);
 
-  wbTintMaskTypeEnum := wbEnum([
-    'None',
-    'Lip Color',
-    'Cheek Color',
-    'Eyeliner',
-    'EyeSocket Upper',
-    'EyeSocket Lower',
-    'Skin Tone',
-    'Paint',
-    'Laugh Lines',
-    'Cheek Color Lower',
-    'Nose',
-    'Chin',
-    'Neck',
-    'Forehead',
-    'Dirt',
-    'Unknown 16'
-  ]);
-
-  wbTints := wbRArray('Tint Masks', wbRStruct('Tint Assets', [
-    wbRArray('Tint Layer', wbRStruct('Texture', [
-      wbInteger(TINI, 'Unknown', itU16),
-      wbString(TINT, 'File Name'),
-      {>>> When set to None TINP does not exist Needs routine to add when
-      changing the Mask Type <<<}
-      wbInteger(TINP, 'Mask Type', itU16, wbTintMaskTypeEnum),
-      wbFormIDCk(TIND, 'Preset Default', [CLFM, NULL])
-    ], [])),
-    wbRArray('Presets', wbRStruct('Preset', [
-      wbFormIDCk(TINC, 'Color', [CLFM, NULL]),
-			wbFloat(TINV, 'Default Value'),
-      wbInteger(TIRS, 'Unknown', itU16)
-    ], []))
-  ], []));
-
   wbPhonemeTargets := wbStruct(PHWT, 'Phoneme Target Weight', [
     wbFloat('Aah / LipBigAah'),
     wbFloat('BigAah / LipDST'),
@@ -13493,6 +13445,8 @@ begin
 
   wbRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000010}  4, 'Ground Piece',
+      {0x00000100}  8, 'LOD Respects Enable State',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
       {0x00010000} 16, 'Is Full LOD',
@@ -13502,7 +13456,9 @@ begin
       {0x40000000} 30, 'Ground',
       {0x80000000} 31, 'Multibound'
     ], True, True)),
-    {ACTI STAT TREE} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    {ACTI STAT SCOL TREE} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000010}  4, 'Ground Piece',
+      {0x00000100}  8, 'LOD Respects Enable State',
       {0x00000200}  9, 'Hidden From Local Map',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
@@ -13514,18 +13470,19 @@ begin
       {0x20000000} 29, 'Don''t Havok Settle',
       {0x40000000} 30, 'No Respawn'
     ], True, True)),
-    {CONT} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    {CONT TERM} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000010}  4, 'Ground Piece',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
       {0x00010000} 16, 'Is Full LOD',
       {0x02000000} 25, 'No AI Acquire',
       {0x04000000} 26, 'Filter (Collision Geometry)',
       {0x08000000} 27, 'Bounding Box (Collision Geometry)',
-      {0x10000000} 28, 'Reflected By Auto Water',
       {0x20000000} 29, 'Don''t Havok Settle',
       {0x40000000} 30, 'Ground'
     ], True, True)),
     {DOOR} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Minimal Use Door',
       {0x00000040}  6, 'Hidden From Local Map',
       {0x00000100}  8, 'Inaccessible',
       {0x00000400} 10, 'Persistent',
@@ -13533,7 +13490,6 @@ begin
       {0x00010000} 16, 'Is Full LOD',
       {0x04000000} 26, 'Filter (Collision Geometry)',
       {0x08000000} 27, 'Bounding Box (Collision Geometry)',
-      {0x10000000} 28, 'Reflected By Auto Water',
       {0x20000000} 29, 'Don''t Havok Settle',
       {0x40000000} 30, 'No Respawn'
     ], True, True)),
@@ -13550,6 +13506,7 @@ begin
       {0x40000000} 30, 'No Respawn'
     ], True, True)),
     {MSTT} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000010}  4, 'Ground Piece',
       {0x00000200}  9, 'Motion Blur',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
@@ -13568,8 +13525,9 @@ begin
       {0x20000000} 29, 'Don''t Havok Settle',
       {0x40000000} 30, 'No Respawn'
     ], True, True)),
-    {ALCH SCRL AMMO ARMO INGR KEYM MISC SLGM WEAP}
+    {ALCH BOOK SCRL AMMO ARMO INGR KEYM MISC FURN WEAP}
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000010}  4, 'Ground Piece',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
       {0x00010000} 16, 'Is Full LOD',
@@ -13581,12 +13539,7 @@ begin
   ]), [
     wbEDID,
     wbVMAD,
-    wbFormIDCk(NAME, 'Base', [
-      TREE, SNDR, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
-      MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, INGR,
-      MSTT, TACT, TXST, FLOR, NOTE, CMPO, SCOL, SOUN, SPEL, ARTO, ADDN,
-      BNDS, TERM
-    ], False, cpNormal, True),
+    wbFormIDCk(NAME, 'Base', sigBaseObjects, False, cpNormal, True),
 
     {--- Bound Contents ---}
     {--- Bound Data ---}
@@ -13609,11 +13562,19 @@ begin
         'None',
         'Box',
         'Sphere',
-        'Portal Box',
-        'Unknown 4'
+        'Plane',
+        'Line',
+        'Ellipsoid'
       ]))
     ]),
+
+    wbArray(XPOD, 'Portal Data', wbStruct('References', [
+      wbFormIDCk('Origin', [REFR, NULL]),
+      wbFormIDCk('Destination', [REFR, NULL])
+    ])),
+
     wbUnknown(XORD),
+
     wbStruct(XOCP, 'Occlusion Plane Data', [
       wbStruct('Size', [
         wbFloat('Width', cpNormal, False, 2),
@@ -13631,28 +13592,6 @@ begin
         wbFloat('q4')
       ])
     ]),
-
-    wbArray(XPOD, 'Portal Data', wbStruct('References', [
-      wbFormIDCk('Origin', [REFR, NULL]),
-      wbFormIDCk('Destination', [REFR, NULL])
-    ])),
-    wbStruct(XPTL, 'Room Portal (unused)', [
-      wbStruct('Size', [
-        wbFloat('Width', cpNormal, False, 2),
-        wbFloat('Height', cpNormal, False, 2)
-      ]),
-      wbStruct('Position', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]),
-      wbStruct('Rotation (Quaternion?)', [
-        wbFloat('q1'),
-        wbFloat('q2'),
-        wbFloat('q3'),
-        wbFloat('q4')
-      ])
-    ], cpIgnore), // removed by CK
 
     wbRStruct('Bound Data', [
       wbStruct(XRMR, 'Header', [
@@ -13677,34 +13616,22 @@ begin
     ], []),
     wbEmpty(XMBP, 'MultiBound Primitive Marker', cpIgnore),
 
+    {--- Ragdoll ---}
     wbXRGD,
     wbXRGB,
+
     wbFloat(XRDS, 'Radius'),
-
-    {--- Reflected By / Refracted By ---}
-    wbRArrayS('Reflected/Refracted By',
-      wbStructSK(XPWR, [0], 'Water', [
-        wbFormIDCk('Reference', [REFR]),
-        wbInteger('Type', itU32, wbFlags([
-          'Reflection',
-          'Refraction'
-        ]))
-      ], cpNormal, False, nil, 1)
-    ),
-
-    {--- Lit Water ---}
-    wbRArrayS('Lit Water',
-      wbFormIDCk(XLTW, 'Water', [REFR])
-    ),
+    wbXSCL,
 
     {--- Emittance ---}
     wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
 		wbStruct(XLIG, 'Light Data', [
       wbFloat('FOV 90+/-'),
-      wbFloat('Fade 1.35+/-'),
-      wbByteArray('Unknown', 4),
+      wbFloat('Fade 1.0+/-'),
+      wbFloat('End Distance Cap'),
       wbFloat('Shadow Depth Bias'),
-      wbUnknown
+      wbFloat('Near Clip'),
+      wbFloat('Volumetric Intensity')
     ], cpNormal, False, nil, 4),
 		wbStruct(XALP, 'Alpha', [
       wbInteger('Cutoff', itU8),
@@ -13716,17 +13643,19 @@ begin
       wbFormIDCk('Door', [REFR], True),
       wbPosRot,
       wbInteger('Flags', itU32, wbFlags([
-        'No Alarm'
+        'No Alarm',
+        'No Load Screen',
+        'Relative Position'
       ])),
-      wbUnknown
+      wbFormIDCk('Transition Interior', [CELL, NULL])
     ]),
-    wbFormIDCk(XTNM, 'Teleport Message Box', [MESG]),
+    wbFormIDCk(XTNM, 'Teleport Loc Name', [MESG]),
 
     {--- MultiBound ---}
     wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
 
+    {--- Placed Water ---}
     wbUnknown(XWCN),
-    //wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
     wbStruct(XWCU, 'Water Velocity', [
       wbFloat('X Offset'),
       wbFloat('Y Offset'),
@@ -13738,31 +13667,21 @@ begin
       wbByteArray('Unknown', 0)
     ]),
 
-    wbFormIDCk(XASP, 'Unknown', [REFR]),
-    wbUnknown(XATP),
-    wbUnknown(XAMC),
-    wbUnknown(XLKT),
+    wbFormIDCk(XASP, 'Acoustic Space Reference', [REFR]),
+    wbEmpty(XATP, 'Activation Point'),
+    wbInteger(XAMC, 'Ammo Count', itU32),
+    wbEmpty(XLKT, 'Linked Ref Transient'),
     wbFormIDCk(XLYR, 'Layer', [LAYR]),
     wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
     wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
     wbStruct(XRDO, 'Radio', [
       wbFloat('Frequency'),
-      wbUnknown
+      wbFloat('Min Weak Distance'),
+      wbFloat('Max Weak Distance'),
+      wbInteger('Flags', itU32, wbFlags(['Ignores Distance Checks']))
     ]),
-    wbUnknown(XBSD),
-    wbUnknown(XPDD),
-    wbUnknown(XCVR),
-    wbUnknown(XRNK),
-
-    wbStruct(XCVL, 'Unknown', [
-			wbByteArray('Unknown', 4),
-			wbFloat('X Angle'),
-			wbByteArray('Unknown', 4)
-    ]),
-    wbFormIDCk(XCZR, 'Unknown', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-    wbUnknown(XCZA),
-    wbFormIDCk(XCZC, 'Unknown', [CELL, NULL]),
-    wbXSCL,
+    wbByteArray(XBSD, 'Bendable Spline Data', 0),
+    wbByteArray(XPDD, 'Decal Data', 0),
     wbFormIDCk(XSPC, 'Spawn Container', [REFR]),
 
     {--- Activate Parents ---}
@@ -13772,7 +13691,7 @@ begin
       ], True)),
       wbRArrayS('Activate Parent Refs',
         wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
+          wbFormIDCk('Reference', sigReferences),
           wbFloat('Delay')
         ])
       )
@@ -13786,15 +13705,17 @@ begin
     wbInteger(XTRI, 'Collision Layer', itU32),
 
     {--- Lock ---}
-    {>>Lock Tab for REFR when 'Locked' is Unchecked this record is not present <<<}
     wbStruct(XLOC, 'Lock Data', [
       wbInteger('Level', itU8, wbEnum([], [
+         0, 'None',
          1, 'Novice 1',
         25, 'Novice 25',
         50, 'Advanced',
         75, 'Expert',
        100, 'Master',
        253, 'Requires Terminal',
+       251, 'Barred',
+       252, 'Chained',
        254, 'Inaccessible',
        255, 'Requires Key'
       ])),
@@ -13818,32 +13739,22 @@ begin
     wbEmpty(XIS2, 'Ignored by Sandbox'),
 
     {--- Ownership ---}
-    wbOwnership,
+    wbXOWN,
+    wbXRNK,
 
     wbInteger(XCNT, 'Item Count', itS32),
-    wbUnknown(XHLT),
-    wbFloat(XCHG, 'Charge'),
-    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
+    wbInteger(XHLT, 'Health %', itU32),
 
     wbXESP,
     wbRArray('Linked References', wbStruct(XLKR, 'Linked Reference', [
       wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA])
+      wbFormIDCk('Ref', sigReferences)
     ], cpNormal, False, nil, 1)),
-
-    wbRArray('Unknown', wbUnknown(XPLK)),
-
-    wbRStruct('Unknown', [
-      wbUnknown(XWPG),
-      wbRArray('Unknown', wbUnknown(XWPN))
-    ], []),
 
     wbRArray('Patrol', wbRStruct('Data', [
       wbFloat(XPRD, 'Idle Time', cpNormal, True),
       wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-      //wbByteArray(SCHR, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
-      //wbByteArray(SCTX, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
       wbPDTOs
     ], [])),
 
@@ -13866,7 +13777,8 @@ begin
       wbInteger(FNAM, 'Map Flags', itU8, wbFlags([
         {0x01} 'Visible',
         {0x02} 'Can Travel To',
-        {0x04} '"Show All" Hidden'
+        {0x04} '"Show All" Hidden',
+        {0x08} 'Use Location Name'
       ]), cpNormal, True),
       wbFULLReq,
       wbStruct(TNAM, '', [
@@ -13981,7 +13893,25 @@ begin
     {--- Attach reference ---}
     wbFormIDCk(XATR, 'Attach Ref', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
 
-    wbXLOD,
+    wbRArray('Spline Connection', wbFormIDCk(XPLK, 'Link', [REFR])),
+
+    wbRStruct('Power Grid', [
+      wbInteger(XWPG, 'Count', itU32),
+      wbRArray('Connections', wbStruct(XWPN, 'Connection', [
+        wbFormIDCk('Node 1', [REFR, NULL]),
+        wbFormIDCk('Node 2', [REFR, NULL]),
+        wbFormIDCk('Line', [REFR, NULL]) // BNDS ref
+      ]))
+    ], []),
+
+    wbUnknown(XCVR),
+    wbUnknown(XCVL),
+    wbFormIDCk(XCZR, 'Unknown', sigReferences),
+    wbUnknown(XCZA),
+    wbFormIDCk(XCZC, 'Unknown', [CELL, NULL]),
+
+    wbXLOD, // not seen in FO4 vanilla files
+
     wbDataPosRot,
     wbString(MNAM, 'Comments')
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
@@ -14302,7 +14232,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbMODL,
-    wbFormIDCK(PFIG, 'Ingredient', [INGR, ALCH, MISC, LVLI, NULL]),
+    wbFormIDCK(PFIG, 'Ingredient', sigBaseObjects),
     wbFormIDCK(SNAM, 'Harvest Sound', [SNDR, NULL]),
     wbStruct(PFPC, 'Ingredient Production', [
       wbInteger('Spring', itU8),
@@ -14343,7 +14273,7 @@ begin
     wbATTX,
     wbLString(RNAM, 'Activate Text Override', 0, cpTranslate),
     wbUnknown(FNAM),
-    wbFormIDCk(PFIG, 'Ingredient', [INGR, ARMO, ALCH, COBJ, LVLI, MISC, NOTE, OMOD, CMPO, NULL]),
+    wbFormIDCk(PFIG, 'Ingredient', sigBaseObjects),
     wbFormIDCK(SNAM, 'Harvest Sound', [SNDR]),
     wbStruct(PFPC, 'Ingredient Production', [
       wbInteger('Spring', itU8),
@@ -15017,7 +14947,7 @@ begin
 
   wbRecord(DFOB, 'Default Object', [
     wbEDID,
-    wbFormID(DATA)
+    wbFormID(DATA, 'Object')
   ]);
 
   wbRecord(DMGT, 'Damage Type', [
@@ -15445,7 +15375,7 @@ begin
   wbRecord(RFGP, 'Reference Group', [
     wbEDID,
     wbString(NNAM, 'Name'),
-    wbFormIDCk(RNAM, 'Reference', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
+    wbFormIDCk(RNAM, 'Reference', sigReferences),
     wbUnknown(PNAM)
   ]);
 
