@@ -34,8 +34,6 @@ var
 	wbStaggerEnum: IwbEnumDef;
 	wbAlignmentEnum: IwbEnumDef;
 	wbArmorPropertyEnum: IwbEnumDef;
-	wbArmorTypeEnum: IwbEnumDef;
-	wbAttackAnimationEnum: IwbEnumDef;
 	wbAxisEnum: IwbEnumDef;
 	wbBipedObjectEnum: IwbEnumDef;
 	wbBlendModeEnum: IwbEnumDef;
@@ -50,7 +48,6 @@ var
 	wbEventFunctionEnum: IwbEnumDef;
 	wbEventMemberEnum: IwbEnumDef;
 	wbFormTypeEnum: IwbEnumDef;
-	wbFunctionsEnum: IwbEnumDef;
 	wbFurnitureAnimTypeEnum: IwbEnumDef;
 	wbLocationEnum: IwbEnumDef;
 	wbMiscStatEnum: IwbEnumDef;
@@ -904,14 +901,15 @@ const
   );
 
   // signatures of referenceable records (placed by references or constructable)
-  sigBaseObjects : array [0..41] of TwbSignature = (
+  sigBaseObjects : array [0..42] of TwbSignature = (
     'NULL', 'ACTI', 'ADDN', 'ALCH', 'AMMO', 'ARMO',
     'ARTO', 'ASPC', 'BNDS', 'BOOK', 'CMPO', 'COBJ',
     'CONT', 'DEBR', 'DOOR', 'EXPL', 'FLST', 'FLOR',
     'FURN', 'HAZD', 'IDLM', 'INGR', 'KEYM', 'LIGH',
     'LVLI', 'LVLN', 'LVSP', 'MISC', 'MSTT', 'NOTE',
-    'OMOD', 'PROJ', 'SCOL', 'SCRL', 'SPEL', 'STAT',
-    'TACT', 'TERM', 'TREE', 'TXST', 'WATR', 'WEAP'
+    'NPC_', 'OMOD', 'PROJ', 'SCOL', 'SCRL', 'SPEL',
+    'STAT', 'TACT', 'TERM', 'TREE', 'TXST', 'WATR',
+    'WEAP'
   );
 
 var
@@ -4940,6 +4938,46 @@ begin
     Result := 3;
 end;
 
+function wbOBTSDataPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  MainRecord: IwbMainRecord;
+begin
+  Result := 0;
+  if not Assigned(aBasePtr) then Exit;
+  if not Assigned(aElement) then Exit;
+  MainRecord := aElement.ContainingMainRecord;
+  if not Assigned(MainRecord) then Exit;
+
+  if MainRecord.Signature = ARMO then
+    Result := 1
+  else if MainRecord.Signature = NPC_ then
+    Result := 2
+  else if MainRecord.Signature = WEAP then
+    Result := 3;
+end;
+
+function wbOMODDataFunctionTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbContainer;
+  ValueType      : Integer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
+  ValueType := Container.ElementNativeValues['Value Type'];
+
+  case ValueType of
+    0: Result := 0;
+    1: Result := 0;
+    2: Result := 1;
+    4: Result := 3;
+    5: Result := 2;
+    6: Result := 3;
+  end;
+end;
+
 function wbOMODDataPropertyValue1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
@@ -4982,26 +5020,6 @@ begin
     5: Result := 4;
     6: Result := 2;
   end;
-end;
-
-function wbOBTSCounter1(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-var
-  Container       : IwbContainer;
-begin
-  if Supports(aElement.Container, IwbContainer, Container) then
-    Result := Container.ElementNativeValues['Parts A Count']
-  else
-    Result := 0;
-end;
-
-function wbOBTSCounter2(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-var
-  Container       : IwbContainer;
-begin
-  if Supports(aElement.Container, IwbContainer, Container) then
-    Result := Container.ElementNativeValues['Parts B Count']
-  else
-    Result := 0;
 end;
 
 procedure wbOBTSCombinationsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -5269,12 +5287,6 @@ begin
     ], []);
   wbCOCT := wbInteger(COCT, 'Count', itU32, nil, cpBenign);
   wbCNTOs := wbRArrayS('Items', wbCNTO, cpNormal, False, nil, wbCNTOsAfterSet);
-
-  wbArmorTypeEnum := wbEnum([
-    'Light Armor',
-    'Heavy Armor',
-    'Clothing'
-  ]);
 
   {>>> When NAME is user defined these will be incorrect <<<}
   wbBipedObjectEnum := wbEnum([
@@ -6060,7 +6072,7 @@ begin
         {0x00000004} 'Power Attack',
         {0x00000008} 'Charge Attack',
         {0x00000010} 'Rotating Attack',
-        {0x00000020} 'Continous Attack',
+        {0x00000020} 'Continuous Attack',
         {0x00000040} 'Unknown 6',
         {0x00000080} 'Unknown 7',
         {0x00000100} 'Unknown 8',
@@ -6543,9 +6555,11 @@ begin
     wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
 
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
+    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
+    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
+
     wbEmpty(XIS2, 'Ignored by Sandbox'),
     wbRArray('Spline Connection', wbFormIDCk(XPLK, 'Link', [REFR])),
-    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
     wbFloat(XHTW, 'Head-Tracking Weight'),
     wbFloat(XFVC, 'Favor Cost'),
 
@@ -7508,33 +7522,190 @@ begin
       wbByteArray('Unknown', 3)
     ], cpNormal, False, nil, 4));
 
+  wbArmorPropertyEnum := wbEnum([
+    { 0} 'Enchantments',
+    { 1} 'BashImpactDataSet',
+    { 2} 'BlockMaterial',
+    { 3} 'Keywords',
+    { 4} 'Weight',
+    { 5} 'Value',
+    { 6} 'Rating',
+    { 7} 'AddonIndex',
+    { 8} 'BodyPart',
+    { 9} 'DamageTypeValue',
+    {10} 'ActorValues',
+    {11} 'Health',
+    {12} 'ColorRemappingIndex',
+    {13} 'MaterialSwaps'
+  ]);
+
+  wbActorPropertyEnum := wbEnum([
+    { 0} 'Keywords',
+    { 1} 'ForcedInventory',
+    { 2} 'XPOffset',
+    { 3} 'Enchantments',
+    { 4} 'ColorRemappingIndex',
+    { 5} 'MaterialSwaps'
+  ]);
+
+  wbWeaponPropertyEnum := wbEnum([
+    { 0} 'Speed',
+    { 1} 'Reach',
+    { 2} 'MinRange',
+    { 3} 'MaxRange',
+    { 4} 'AttackDelaySec',
+    { 5} 'Unknown 5',
+    { 6} 'OutOfRangeDamageMult',
+    { 7} 'SecondaryDamage',
+    { 8} 'CriticalChargeBonus',
+    { 9} 'HitBehaviour',
+    {10} 'Rank',
+    {11} 'Unknown 11',
+    {12} 'AmmoCapacity',
+    {13} 'Unknown 13',
+    {14} 'Unknown 14',
+    {15} 'Type',
+    {16} 'IsPlayerOnly',
+    {17} 'NPCsUseAmmo',
+    {18} 'HasChargingReload',
+    {19} 'IsMinorCrime',
+    {20} 'IsFixedRange',
+    {21} 'HasEffectOnDeath',
+    {22} 'HasAlternateRumble',
+    {23} 'IsNonHostile',
+    {24} 'IgnoreResist',
+    {25} 'IsAutomatic',
+    {26} 'CantDrop',
+    {27} 'IsNonPlayable',
+    {28} 'AttackDamage',
+    {29} 'Value',
+    {30} 'Weight',
+    {31} 'Keywords',
+    {32} 'AimModel',
+    {33} 'AimModelMinConeDegrees',
+    {34} 'AimModelMaxConeDegrees',
+    {35} 'AimModelConeIncreasePerShot',
+    {36} 'AimModelConeDecreasePerSec',
+    {37} 'AimModelConeDecreaseDelayMs',
+    {38} 'AimModelConeSneakMultiplier',
+    {39} 'AimModelRecoilDiminishSpringForce',
+    {40} 'AimModelRecoilDiminishSightsMult',
+    {41} 'AimModelRecoilMaxDegPerShot',
+    {42} 'AimModelRecoilMinDegPerShot',
+    {43} 'AimModelRecoilHipMult',
+    {44} 'AimModelRecoilShotsForRunaway',
+    {45} 'AimModelRecoilArcDeg',
+    {46} 'AimModelRecoilArcRotateDeg',
+    {47} 'AimModelConeIronSightsMultiplier',
+    {48} 'HasScope',
+    {49} 'ZoomDataFOVMult',
+    {50} 'FireSeconds',
+    {51} 'NumProjectiles',
+    {52} 'AttackSound',
+    {53} 'AttackSound2D',
+    {54} 'AttackLoop',
+    {55} 'AttackFailSound',
+    {56} 'IdleSound',
+    {57} 'EquipSound',
+    {58} 'UnEquipSound',
+    {59} 'SoundLevel',
+    {50} 'ImpactDataSet',
+    {61} 'Ammo',
+    {62} 'CritEffect',
+    {63} 'BashImpactDataSet',
+    {64} 'BlockMaterial',
+    {65} 'Enchantments',
+    {66} 'AimModelBaseStability',
+    {67} 'ZoomData',
+    {68} 'ZoomDataOverlay',
+    {69} 'ZoomDataImageSpace',
+    {70} 'ZoomDataCameraOffsetX',
+    {71} 'ZoomDataCameraOffsetY',
+    {72} 'ZoomDataCameraOffsetZ',
+    {73} 'EquipSlot',
+    {74} 'SoundLevelMult',
+    {75} 'NPCAmmoList',
+    {76} 'ReloadSpeed',
+    {77} 'DamageTypeValues',
+    {78} 'AccuracyBonus',
+    {79} 'AttackActionPointCost',
+    {80} 'OverrideProjectile',
+    {81} 'HasBoltAction',
+    {82} 'StaggerValue',
+    {83} 'SightedTransitionSeconds',
+    {84} 'FullPowerSeconds',
+    {85} 'HoldInputToPower',
+    {86} 'HasRepeatableSingleFire',
+    {87} 'MinPowerPerShot',
+    {88} 'ColorRemappingIndex',
+    {89} 'MaterialSwaps',
+    {90} 'CriticalDamageMult',
+    {91} 'FastEquipSound',
+    {92} 'DisableShells',
+    {93} 'HasChargingAttack',
+    {94} 'ActorValues'
+  ]);
+
   wbOBTS := wbStruct(OBTS, 'Object Mod Template Item', [
-    wbInteger('Parts A Count', itU32),
-    wbInteger('Parts B Count', itU32),
-    wbByteArray('Unknown', 7),
+    wbInteger('Include Count', itU32),  // fixed name for wbOMOD* handlers
+    wbInteger('Property Count', itU32), // fixed name for wbOMOD* handlers
+    wbInteger('Level Min', itU8),
+    wbByteArray('Unused', 1),
+    wbInteger('Level Max', itU8),
+    wbByteArray('Unused', 1),
+    wbInteger('ID', itS16),
+    wbInteger('Default', itU8, wbBoolEnum),
     wbArray('Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), -4),
-    wbByteArray('Unknown', 2),
-    wbArray('Parts A', wbStruct('Part A', [
+    wbInteger('Min Level For Ranks', itU8),
+    wbInteger('Alt Levels Per Tier', itU8),
+    wbArray('Includes', wbStruct('Include', [
       wbFormIDCk('Mod', [OMOD]),
-      wbByteArray('Unknown', 2),
-      wbInteger('Flags', itU8)
-    ]), wbOBTSCounter1),
-    wbArray('Parts B', wbStruct('Part B', [
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
-      // STAT is here SkinMirelurkSpawnHatchlingJuice [ARMO:00176DA1]
-      // probably not a FormID depending on above values
-      //wbFormIDCk('Material Swap', [MSWP, ARMO, STAT]),
-      wbFormIDCk('FormID', [
-        TREE, SNDR, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
-        MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, INGR,
-        MSTT, TACT, TXST, FLOR, NOTE, CMPO, SCOL, SOUN, SPEL, ARTO, ADDN,
-        BNDS, TERM, MSWP
+      wbInteger('Attach Point Index', itU8),
+      wbInteger('Optional', itU8, wbBoolEnum),
+      wbInteger('Don''t Use All', itU8, wbBoolEnum)
+    ]), wbOMODDataIncludeCounter, cpNormal, False, nil, wbOMODincludeAfterSet),
+    wbArrayS('Properties', wbStructSK([4], 'Property', [
+      wbInteger('Value Type', itU8, wbEnum([
+        {0} 'Int',
+        {1} 'Float',
+        {2} 'Bool',
+        {3} 'Unknown 3',
+        {4} 'FormID,Int',
+        {5} 'Enum',
+        {6} 'FormID,Float'
+      ])),
+      wbByteArray('Unused', 3, cpIgnore),
+      wbUnion('Function Type', wbOMODDataFunctionTypeDecider, [
+        { Float }  wbInteger('Function Type', itU8, wbEnum(['SET', 'MUL+ADD', 'ADD'])),
+        { Bool }   wbInteger('Function Type', itU8, wbEnum(['SET', 'AND', 'OR'])),
+        { Enum }   wbInteger('Function Type', itU8, wbEnum(['SET'])),
+        { FormID } wbInteger('Function Type', itU8, wbEnum(['SET', 'REM', 'ADD']))
       ]),
-      wbFloat('Unknown'),
-      wbByteArray('Unknown', 4)
-    ]), wbOBTSCounter2)
+      wbByteArray('Unused', 3, cpIgnore),
+      wbUnion('Property', wbOBTSDataPropertyDecider, [
+        wbInteger('Index', itU16),
+        wbInteger('Armor Property', itU16, wbArmorPropertyEnum),
+        wbInteger('Actor Property', itU16, wbActorPropertyEnum),
+        wbInteger('Weapon Property', itU16, wbWeaponPropertyEnum)
+      ]),
+      wbByteArray('Unused', 2, cpIgnore),
+      wbUnion('Value 1', wbOMODDataPropertyValue1Decider, [
+        wbByteArray('Value 1 - Unknown', 4),
+        wbInteger('Value 1 - Int', itU32),
+        wbFloat('Value 1 - Float'),
+        wbInteger('Value 1 - Bool', itU32, wbBoolEnum),
+        wbInteger('Value 1 - Enum', itU32),
+        wbFormID('Value 1 - FormID')
+      ]),
+      wbUnion('Value 2', wbOMODDataPropertyValue2Decider, [
+        wbByteArray('Value 2 - Unknown', 4),
+        wbInteger('Value 2 - Int', itU32),
+        wbFloat('Value 2 - Float'),
+        wbInteger('Value 2 - Bool', itU32, wbBoolEnum),
+        wbByteArray('Value 2 - Enum', 4)
+      ]),
+      wbFloat('Step')
+    ]), wbOMODDataPropertyCounter, cpNormal, False, nil, wbOMODpropertyAfterSet)
   ], cpNormal, True);
 
   wbObjectTemplate := wbRStruct('Object Template', [
@@ -7551,7 +7722,7 @@ begin
         ], []),
 
         wbRStruct('Combination', [
-          wbEmpty(OBTF, 'Boolean True'),
+          wbEmpty(OBTF, 'Editor Only'),
           wbFULL,
           wbOBTS
         ], [])
@@ -8371,28 +8542,6 @@ begin
           wbByteArray('Unknown', 4)
     ], cpNormal, True, nil{wbActorTemplateUseAIData});
 
-  wbAttackAnimationEnum := wbEnum([], [
-     26, 'AttackLeft',
-     32, 'AttackRight',
-     38, 'Attack3',
-     44, 'Attack4',
-     50, 'Attack5',
-     56, 'Attack6',
-     62, 'Attack7',
-     68, 'Attack8',
-     74, 'AttackLoop',
-     80, 'AttackSpin',
-     86, 'AttackSpin2',
-     97, 'PlaceMine',
-    103, 'PlaceMine2',
-    109, 'AttackThrow',
-    115, 'AttackThrow2',
-    121, 'AttackThrow3',
-    127, 'AttackThrow4',
-    133, 'AttackThrow5',
-    255, ' DEFAULT'
-  ]);
-
   wbRecord(CSTY, 'Combat Style',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00080000} 19, 'Allow Dual Wielding'
@@ -8912,9 +9061,9 @@ begin
     wbEffectsReq
   ]);
 
-  wbRecord(EYES, 'Eyes', [
+  {wbRecord(EYES, 'Eyes', [
     wbEDID
-  ]);
+  ]);}
 
   wbRecord(FACT, 'Faction', [
     wbEDID,
@@ -8958,17 +9107,17 @@ begin
     wbFormIDCk(CRGR, 'Shared Crime Faction List', [FLST]),
     wbFormIDCk(JOUT, 'Jail Outfit', [OTFT]),
     wbStruct(CRVA, 'Crime Values', [
-      {01} wbInteger('Arrest', itU8, wbBoolEnum),
-      {02} wbInteger('Attack On Sight', itU8, wbBoolEnum),
-      {02} wbInteger('Murder', itU16),
-      {02} wbInteger('Assault', itU16),
-      {02} wbInteger('Trespass', itU16),
-      {02} wbInteger('Pickpocket', itU16),
-      {02} wbInteger('Unknown', itU16),
-      {02} wbFloat('Steal Multiplier'),
-      {02} wbInteger('Escape', itU16),
-      {02} wbInteger('Werewolf (unused)', itU16)
-      ], cpNormal, False, nil, 7),
+      wbInteger('Arrest', itU8, wbBoolEnum),
+      wbInteger('Attack On Sight', itU8, wbBoolEnum),
+      wbInteger('Murder', itU16),
+      wbInteger('Assault', itU16),
+      wbInteger('Trespass', itU16),
+      wbInteger('Pickpocket', itU16),
+      wbInteger('Unknown', itU16),
+      wbFloat('Steal Multiplier'),
+      wbInteger('Escape', itU16),
+      wbInteger('Werewolf (unused)', itU16)
+    ], cpNormal, False, nil, 7),
     wbRStructsSK('Ranks', 'Rank', [0], [
       wbInteger(RNAM, 'Rank#', itU32),
       wbLString(MNAM, 'Male Title', 0, cpTranslate),
@@ -9028,7 +9177,7 @@ begin
     wbStruct(WBDT, 'Workbench Data', [
       wbInteger('Bench Type', itU8, wbEnum([
         {0} 'None',
-        {1} 'Create object', // used only for MS11Workbench [FURN:00091FD5]
+        {1} 'Create Object', // used only for MS11Workbench [FURN:00091FD5]
         {2} 'Weapons', // used for the Weapons (plural) workbench
         {3} 'Enchanting (unused)', // not used
         {4} 'Enchanting Experiment (unused)', // not used
@@ -13667,7 +13816,7 @@ begin
       wbByteArray('Unknown', 0)
     ]),
 
-    wbFormIDCk(XASP, 'Acoustic Space Reference', [REFR]),
+    wbFormIDCk(XASP, 'Acoustic Restriction', [REFR]),
     wbEmpty(XATP, 'Activation Point'),
     wbInteger(XAMC, 'Ammo Count', itU32),
     wbEmpty(XLKT, 'Linked Ref Transient'),
@@ -13735,6 +13884,7 @@ begin
       wbByteArray('Unused', 2, cpIgnore)
     ]),
 
+    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
     wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
     wbEmpty(XIS2, 'Ignored by Sandbox'),
 
@@ -14120,9 +14270,9 @@ begin
     wbEffectsReq
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-  wbRecord(SCRL, 'Scroll', [
+  {wbRecord(SCRL, 'Scroll', [
     wbEDID
-  ]);
+  ]);}
 
   wbRecord(STAT, 'Static',
     wbFlags(wbRecordFlagsFlags, [
@@ -15076,13 +15226,13 @@ begin
     )
   ]);
 
-  wbRecord(LSPR, 'LSPR', [
+  {wbRecord(LSPR, 'LSPR', [
     wbEDID
   ]);
 
   wbRecord(MICN, 'MICN', [
     wbEDID
-  ]);
+  ]);}
 
   wbRecord(MSWP, 'Material Swap', [
     wbEDID,
@@ -15141,134 +15291,10 @@ begin
     wbString(PNAM, 'Program File')
   ]);
 
-  wbArmorPropertyEnum := wbEnum([
-    { 0} 'Enchantments',
-    { 1} 'BashImpactDataSet',
-    { 2} 'BlockMaterial',
-    { 3} 'Keywords',
-    { 4} 'Weight',
-    { 5} 'Value',
-    { 6} 'Rating',
-    { 7} 'AddonIndex',
-    { 8} 'BodyPart',
-    { 9} 'DamageTypeValue',
-    {10} 'ActorValues',
-    {11} 'Health',
-    {12} 'ColorRemappingIndex',
-    {13} 'MaterialSwaps'
-  ]);
-
-  wbActorPropertyEnum := wbEnum([
-    { 0} 'Keywords',
-    { 1} 'ForcedInventory',
-    { 2} 'XPOffset',
-    { 3} 'Enchantments',
-    { 4} 'ColorRemappingIndex',
-    { 5} 'MaterialSwaps'
-  ]);
-
-  wbWeaponPropertyEnum := wbEnum([
-    { 0} 'Speed',
-    { 1} 'Reach',
-    { 2} 'MinRange',
-    { 3} 'MaxRange',
-    { 4} 'AttackDelaySec',
-    { 5} 'Unknown 5',
-    { 6} 'OutOfRangeDamageMult',
-    { 7} 'SecondaryDamage',
-    { 8} 'CriticalChargeBonus',
-    { 9} 'HitBehaviour',
-    {10} 'Rank',
-    {11} 'Unknown 11',
-    {12} 'AmmoCapacity',
-    {13} 'Unknown 13',
-    {14} 'Unknown 14',
-    {15} 'Type',
-    {16} 'IsPlayerOnly',
-    {17} 'NPCsUseAmmo',
-    {18} 'HasChargingReload',
-    {19} 'IsMinorCrime',
-    {20} 'IsFixedRange',
-    {21} 'HasEffectOnDeath',
-    {22} 'HasAlternateRumble',
-    {23} 'IsNonHostile',
-    {24} 'IgnoreResist',
-    {25} 'IsAutomatic',
-    {26} 'CantDrop',
-    {27} 'IsNonPlayable',
-    {28} 'AttackDamage',
-    {29} 'Value',
-    {30} 'Weight',
-    {31} 'Keywords',
-    {32} 'AimModel',
-    {33} 'AimModelMinConeDegrees',
-    {34} 'AimModelMaxConeDegrees',
-    {35} 'AimModelConeIncreasePerShot',
-    {36} 'AimModelConeDecreasePerSec',
-    {37} 'AimModelConeDecreaseDelayMs',
-    {38} 'AimModelConeSneakMultiplier',
-    {39} 'AimModelRecoilDiminishSpringForce',
-    {40} 'AimModelRecoilDiminishSightsMult',
-    {41} 'AimModelRecoilMaxDegPerShot',
-    {42} 'AimModelRecoilMinDegPerShot',
-    {43} 'AimModelRecoilHipMult',
-    {44} 'AimModelRecoilShotsForRunaway',
-    {45} 'AimModelRecoilArcDeg',
-    {46} 'AimModelRecoilArcRotateDeg',
-    {47} 'AimModelConeIronSightsMultiplier',
-    {48} 'HasScope',
-    {49} 'ZoomDataFOVMult',
-    {50} 'FireSeconds',
-    {51} 'NumProjectiles',
-    {52} 'AttackSound',
-    {53} 'AttackSound2D',
-    {54} 'AttackLoop',
-    {55} 'AttackFailSound',
-    {56} 'IdleSound',
-    {57} 'EquipSound',
-    {58} 'UnEquipSound',
-    {59} 'SoundLevel',
-    {50} 'ImpactDataSet',
-    {61} 'Ammo',
-    {62} 'CritEffect',
-    {63} 'BashImpactDataSet',
-    {64} 'BlockMaterial',
-    {65} 'Enchantments',
-    {66} 'AimModelBaseStability',
-    {67} 'ZoomData',
-    {68} 'ZoomDataOverlay',
-    {69} 'ZoomDataImageSpace',
-    {70} 'ZoomDataCameraOffsetX',
-    {71} 'ZoomDataCameraOffsetY',
-    {72} 'ZoomDataCameraOffsetZ',
-    {73} 'EquipSlot',
-    {74} 'SoundLevelMult',
-    {75} 'NPCAmmoList',
-    {76} 'ReloadSpeed',
-    {77} 'DamageTypeValues',
-    {78} 'AccuracyBonus',
-    {79} 'AttackActionPointCost',
-    {80} 'OverrideProjectile',
-    {81} 'HasBoltAction',
-    {82} 'StaggerValue',
-    {83} 'SightedTransitionSeconds',
-    {84} 'FullPowerSeconds',
-    {85} 'HoldInputToPower',
-    {86} 'HasRepeatableSingleFire',
-    {87} 'MinPowerPerShot',
-    {88} 'ColorRemappingIndex',
-    {89} 'MaterialSwaps',
-    {90} 'CriticalDamageMult',
-    {91} 'FastEquipSound',
-    {92} 'DisableShells',
-    {93} 'HasChargingAttack',
-    {94} 'ActorValues'
-  ]);
-
   wbRecord(OMOD, 'Object Modification',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000008} {4} 4, 'Legendary Mod',
-      {0x00000040} {7} 7, 'Mod Collection'
+      {0x00000008} 4, 'Legendary Mod',
+      {0x00000040} 7, 'Mod Collection'
     ])), [
     wbEDID,
     wbFULL,
@@ -15285,16 +15311,19 @@ begin
         Sig2Int(NONE), 'None'
       ])),
       wbByteArray('Unused', 2, cpIgnore),
-      wbFormIDCk('Attatch Point', [KYWD, NULL]),
+      wbFormIDCk('Attach Point', [KYWD, NULL]),
       wbArray('Attach Parent Slots', wbFormIDCk('Keyword', [KYWD, NULL]), -1),
+      // no way to change these in CK, legacy data leftover?
       wbArray('Items', wbStruct('Item', [
         wbByteArray('Value 1', 4),
         wbByteArray('Value 2', 4)
       ]), -1),
-      wbArrayS('Includes', wbStruct('Include', [
+      // should not be sorted
+      wbArray('Includes', wbStruct('Include', [
         wbFormIDCk('Mod', [OMOD]),
-        wbInteger('Unknown', itU8),
-        wbByteArray('Unknown', 2)
+        wbInteger('Minimum Level', itU8),
+        wbInteger('Optional', itU8, wbBoolEnum),
+        wbInteger('Don''t Use All', itU8, wbBoolEnum)
       ]), wbOMODDataIncludeCounter, cpNormal, False, nil, wbOMODincludeAfterSet),
       wbArrayS('Properties', wbStructSK([4], 'Property', [
         wbInteger('Value Type', itU8, wbEnum([
@@ -15307,11 +15336,12 @@ begin
           {6} 'FormID,Float'
         ])),
         wbByteArray('Unused', 3, cpIgnore),
-        wbInteger('Function Type', itU8, wbEnum([
-          {0} 'Set',
-          {1} 'Multiply',
-          {2} 'Add'
-        ])),
+        wbUnion('Function Type', wbOMODDataFunctionTypeDecider, [
+          { Float }  wbInteger('Function Type', itU8, wbEnum(['SET', 'MUL+ADD', 'ADD'])),
+          { Bool }   wbInteger('Function Type', itU8, wbEnum(['SET', 'AND', 'OR'])),
+          { Enum }   wbInteger('Function Type', itU8, wbEnum(['SET'])),
+          { FormID } wbInteger('Function Type', itU8, wbEnum(['SET', 'REM', 'ADD']))
+        ]),
         wbByteArray('Unused', 3, cpIgnore),
         wbUnion('Property', wbOMODDataPropertyDecider, [
           wbInteger('Index', itU16),
@@ -15325,7 +15355,7 @@ begin
           wbInteger('Value 1 - Int', itU32),
           wbFloat('Value 1 - Float'),
           wbInteger('Value 1 - Bool', itU32, wbBoolEnum),
-          wbByteArray('Value 1 - Enum', 4),
+          wbInteger('Value 1 - Enum', itU32),
           wbFormID('Value 1 - FormID')
         ]),
         wbUnion('Value 2', wbOMODDataPropertyValue2Decider, [
@@ -15340,7 +15370,7 @@ begin
     ], cpNormal, False, nil, -1, nil, wbOMODdataAfterSet),
     wbArray(MNAM, 'Target OMOD Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbArray(FNAM, 'Filter Keywords', wbFormIDCk('Keyword', [KYWD])),
-    wbFormID(LNAM, 'Loose Mod'),
+    wbFormIDCk(LNAM, 'Loose Mod', sigBaseObjects),
     wbInteger(NAM1, 'Priority', itU8),
     wbFLTR
   ]);
@@ -15379,9 +15409,9 @@ begin
     wbUnknown(PNAM)
   ]);
 
-  wbRecord(RGDL, 'RGDL', [
+  {wbRecord(RGDL, 'RGDL', [
     wbEDID
-  ]);
+  ]);}
 
   wbRecord(SCCO, 'Scene Collection', [
     wbEDID,
@@ -15441,9 +15471,9 @@ end;
 
 procedure DefineFO4t;
 begin
-  wbRecord(SKIL, 'SKIL', [
+  {wbRecord(SKIL, 'SKIL', [
     wbEDID
-  ]);
+  ]);}
 
   wbRecord(STAG, 'Animation Sound Tag Set', [
     wbEDID,
@@ -15514,13 +15544,13 @@ begin
     )
   ]);
 
-  wbRecord(TLOD, 'TLOD', [
+  {wbRecord(TLOD, 'TLOD', [
     wbEDID
   ]);
 
   wbRecord(TOFT, 'TOFT', [
     wbEDID
-  ]);
+  ]);}
 
   wbRecord(TRNS, 'Transform',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -15724,7 +15754,7 @@ begin
    wbAddGroupOrder(STAG);
    wbAddGroupOrder(NOCM);
    wbAddGroupOrder(LENS);
-   wbAddGroupOrder(LSPR);
+   //wbAddGroupOrder(LSPR);
    wbAddGroupOrder(GDRY);
    wbAddGroupOrder(OVIS);
 end;
