@@ -14134,7 +14134,7 @@ end;
 
 function TwbArray.IsElementRemoveable(const aElement: IwbElement): Boolean;
 begin
-  Result := IsElementEditable(aElement) and ((vbValueDef as IwbArrayDef).ElementCount <= 0) and (Length(cntElements)>1);
+  Result := IsElementEditable(aElement) and ((vbValueDef as IwbArrayDef).ElementCount <= 0) { and (Length(cntElements)>1)};
 end;
 
 procedure TwbArray.PrepareSave;
