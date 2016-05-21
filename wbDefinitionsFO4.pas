@@ -6172,7 +6172,7 @@ begin
       {1} wbFormIDCkNoReach('Cell', [NULL, CELL]),
       {2} wbByteArray('Near Package Start Location', 4, cpIgnore),
       {3} wbByteArray('Near Editor Location', 4, cpIgnore),
-      {4} wbFormIDCkNoReach('Object ID', sigBaseObjects),
+      {4} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, MSTT, FURN, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, OMOD, BOOK, NOTE, KEYM, ALCH, INGR, LIGH, FACT, FLST, IDLM, TXST, PROJ]),
       {5} wbInteger('Object Type', itU32, wbObjectTypeEnum),
       {6} wbFormIDCk('Keyword', [NULL, KYWD]),
       {7} wbByteArray('Unused', 4, cpIgnore),
@@ -6195,7 +6195,7 @@ begin
       {1} wbFormIDCkNoReach('Cell', [NULL, CELL]),
       {2} wbByteArray('Near Package Start Location', 4, cpIgnore),
       {3} wbByteArray('Near Editor Location', 4, cpIgnore),
-      {4} wbFormIDCkNoReach('Object ID', sigBaseObjects),
+      {4} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, MSTT, FURN, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, OMOD, BOOK, NOTE, KEYM, ALCH, INGR, LIGH, FACT, FLST, IDLM, TXST, PROJ]),
       {5} wbInteger('Object Type', itU32, wbObjectTypeEnum),
       {6} wbFormIDCk('Keyword', [NULL, KYWD]),
       {7} wbByteArray('Unused', 4, cpIgnore),
@@ -6225,7 +6225,7 @@ begin
     ]), cpNormal, False, nil, nil, 2),
     wbUnion('Target', wbTypeDecider, [
       {0} wbFormIDCkNoReach('Reference', sigReferences, True),
-      {1} wbFormIDCkNoReach('Object ID', sigBaseObjects),
+      {1} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, MSTT, FURN, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, OMOD, BOOK, NOTE, KEYM, ALCH, INGR, LIGH, FACT, FLST, IDLM, TXST, PROJ]),
       {2} wbInteger('Object Type', itU32, wbObjectTypeEnum),
       {3} wbFormIDCk('Keyword', [KYWD, NULL]),
       {4} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
@@ -7498,7 +7498,7 @@ begin
     {0x08000000} 'Must Exit to Talk',
     {0x10000000} 'Use Static Avoid Node',
     {0x20000000} 'Unknown 29',
-    {0x40000000} 'Terminal?',
+    {0x40000000} 'Has Model?',
     {0x80000000} 'Unknown 31'
   ]));
 
@@ -8007,6 +8007,7 @@ begin
   wbRecord(ARMA, 'Armor Addon',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000040}  6, 'No Underarmor Scaling',
+      {0x00000200}  9, 'Unknown 9',
       {0x40000000} 30, 'Hi-Res 1st Person Only'
     ])), [
     wbEDID,
@@ -8612,7 +8613,8 @@ begin
       {0x02} 'Flanking',
       {0x04} 'Allow Dual Wielding',
       {0x08} 'Charging',
-      {0x10} 'Retarget Any Nearby Melee Target'
+      {0x10} 'Retarget Any Nearby Melee Target',
+      {0x20} 'Unknown 5'
     ]), cpNormal, True)
   ]);
 end;
@@ -9143,11 +9145,14 @@ begin
 
   wbRecord(FURN, 'Furniture',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000010}  4, 'Unknown 4',
       {0x00000080}  7, 'Is Perch',
       {0x00002000} 13, 'Unknown 13',
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
       {0x00800000} 23, 'Is Marker',
+      {0x02000000} 25, 'Power Armor',
       {0x10000000} 28, 'Must Exit To Talk',
       {0x20000000} 29, 'Child Can Use'
     ])), [
@@ -14802,7 +14807,10 @@ begin
   ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
 
-  wbRecord(WTHR, 'Weather', [
+  wbRecord(WTHR, 'Weather',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000200}  9, 'Unknown 9'
+    ])), [
     wbEDID,
     wbString(_00_0TX, 'Cloud Texture Layer #0'),
     wbString(_10_0TX, 'Cloud Texture Layer #1'),
@@ -15234,7 +15242,10 @@ begin
     wbEDID
   ]);}
 
-  wbRecord(MSWP, 'Material Swap', [
+  wbRecord(MSWP, 'Material Swap',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00010000} 16, 'Unknown 16'
+    ])), [
     wbEDID,
     wbString(FNAM, 'Tree Folder'), {First FNAM}
     wbRArray('Material Substitutions',
@@ -15433,7 +15444,18 @@ begin
     wbUnknown(VNAM, cpNormal, True)
   ]);
 
-  wbRecord(SCOL, 'Static Collection', [
+  wbRecord(SCOL, 'Static Collection',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  4, 'Non Occluder',
+      {0x00000200}  9, 'Hidden From Local Map',
+      {0x00000400} 10, 'Unknown 10',
+      {0x00000800} 11, 'Used as Platform',
+      {0x00008000} 15, 'Has Distant LOD',
+      {0x02000000} 25, 'Obstacle',
+      {0x04000000} 26, 'NavMesh Generation - Filter',
+      {0x08000000} 27, 'NavMesh Generation - Bounding Box',
+      {0x40000000} 30, 'NavMesh Generation - Ground'
+    ])), [
     wbEDID,
     wbOBNDReq,
     wbPTRN,
@@ -15478,7 +15500,7 @@ begin
   wbRecord(STAG, 'Animation Sound Tag Set', [
     wbEDID,
     wbRArray('Sounds', wbStruct(TNAM, 'Sound', [
-      wbFormIDCk('Sound', [SNDR]),
+      wbFormIDCk('Sound', [SNDR, NULL]),
       wbString('Action')
     ]))
   ]);
