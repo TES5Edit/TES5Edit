@@ -502,6 +502,8 @@ const
   XRTM : TwbSignature = 'XRTM';
   XSCL : TwbSignature = 'XSCL';
   XSED : TwbSignature = 'XSED';
+  XSRF : TwbSignature = 'XSRF';
+  XSRD : TwbSignature = 'XSRD';
   XTEL : TwbSignature = 'XTEL';
   XTRG : TwbSignature = 'XTRG';
   XTRI : TwbSignature = 'XTRI';
@@ -9614,6 +9616,13 @@ begin
         wbByteArray('Unused', 1)
       ], cpNormal, True)
     ], []),
+
+    wbInteger(XSRF, 'Special Rendering Flags', itU32, wbFlags([
+      'Unknown 0',
+      'Imposter',
+      'Use Full Shader in LOD'
+    ])),
+    wbByteArray(XSRD, 'Special Rendering Data', 4),
 
     {--- X Target Data ---}
     wbFormIDCk(XTRG, 'Target', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA], True),
