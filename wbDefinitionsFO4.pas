@@ -5252,7 +5252,7 @@ begin
   wbLVLD := wbInteger(LVLD, 'Chance None', itU8, nil, cpNormal, True);
 
   wbSPCT := wbInteger(SPCT, 'Count', itU32, nil, cpBenign);
-  wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL, SHOU, LVSP]);
+  wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL, LVSP]);
   wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, wbSPLOsAfterSet, nil{wbActorTemplateUseActorEffectList});
 
   wbKSIZ := wbInteger(KSIZ, 'Keyword Count', itU32, nil, cpBenign);
@@ -11262,13 +11262,13 @@ begin
     wbUnknown(DNAM)
   ]);
 
-  wbRecord(WOOP, 'Word of Power', [
+  {wbRecord(WOOP, 'Word of Power', [
     wbEDID
-  ]);
+  ]);}
 
-  wbRecord(SHOU, 'Shout', [
+  {wbRecord(SHOU, 'Shout', [
     wbEDID
-  ]);
+  ]);}
 
   wbRecord(EQUP, 'Equip Type', [
     wbEDID,
@@ -13861,9 +13861,11 @@ begin
     wbStruct(XBSD, 'Spline', [
       wbFloat('Slack'),
       wbFloat('Thickness'),
-      wbUnknown
-      // flags or bool? there's only one checkbox.
-      //wbInteger('Wind - Detached End', itU32, wbBoolEnum)
+      wbFloat('Unknown'), // not shown in editor
+      wbFloat('Unknown'), // not shown in editor
+      wbFloat('Unknown'), // not shown in editor
+      wbInteger('Wind - Detached End', itU8, wbBoolEnum),
+      wbByteArray('Unused', 0) // junk data?
     ]),
     wbStruct(XPDD, 'Projected Decal', [
       wbFloat('Width Scale'),
@@ -15035,12 +15037,11 @@ begin
   ]);
 end;
 
-{>>> Unused records, they have empty GRUP in skyrim.esm and still in Fallout 4.esm <<<}
 procedure DefineFO4p;
 begin
-  wbRecord(SCPT, 'SCPT', [
+  {wbRecord(SCPT, 'SCPT', [
     wbEDID
-  ]);
+  ]);}
 end;
 
 {>>> Start of new Fallout 4 Records <<<}
@@ -15429,7 +15430,7 @@ begin
     wbFLTR
   ]);
 
-  wbRecord(OVIS, 'OVIS', [
+  wbRecord(OVIS, 'Object Visibility Manager', [
     wbRArray('Unknown',
       wbRStruct('Unknown', [
         wbFormIDCk(INDX, 'Object', [STAT]),
@@ -15619,7 +15620,7 @@ begin
 
   wbRecord(TRNS, 'Transform',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00008000} {16} 16, 'Around Origin'
+      {0x00008000} 16, 'Around Origin'
     ])), [
     wbEDID,
     wbStruct(DATA, 'Data', [
