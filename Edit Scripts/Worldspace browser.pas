@@ -135,10 +135,6 @@ begin
   if not HasLOD(wrld) then
     Exit;
 
-  // not sure for FO4, use MapSize
-  if wbGameMode = gmFO4 then
-    Exit;
-  
   // read from lod settings file
   if wbGameMode <> gmTES4 then begin
     BytesStream := TBytesStream.Create(ResourceOpenData('', LODSettingsFileName(wrld)));
