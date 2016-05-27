@@ -13,11 +13,12 @@ Tools \ Options \ Environment variables
 Add JCLBase pointing to the root of the JCL distribution (that is the jcl subdirectory in GIT or the jcl sub directory in the release)
 Add JVCLBase pointing to the root of the JVCL distribution (that is the jvcl subdirectory in GIT or the jvcl sub directory in the release)
 
+validate and close the options dialog
 
 Tools \ Options \ Delphi Options \ Library
 
 Library path: append the JCL and the JVCL:
-  ;$(JCLBASE)\lib\d24\win32;$(JCLBASE)\source\include;$(JVCLBASE)\lib\d24\win32;$(JVCLBASE)\common;$(JVCLBASE)\resources;
+  ;$(JCLBASE)\lib\d24\win32;$(JCLBASE)\source\include;$(JVCLBASE)\lib\d24\win32;$(JVCLBASE)\common;$(JVCLBASE)\resources
 
 Browsing path: append the JCL and the JVCL:
   ;$(JCLBASE)\source\common;$(JCLBASE)\sources\windows;$(JCLBASE)\source\vcl;$(JVCLBASE)\common;$(JVCLBASE)\run
@@ -25,13 +26,16 @@ Browsing path: append the JCL and the JVCL:
 Debug DCU path: append the JCL and the JVCL:
   ;$(JVCLBASE)\lib\d24\win32\debug
 
+validate and close the options dialog
+
+from jcl\source\include, copy jcl.template - Copy.inc as jcld24win32.inc (for 10.1 Berlin)
 
 Open the JCL groupproj from $(JCLBase)\Packages (the one for your version of Delphi). So JclPackagesD240.groupproj for 10.1 Berlin
 Compile all.
 
 Component \ Install Packages
 Press Add, browse to $(BDSCOMMONDIR) which should be C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl and select all jcl*.bpl. 
-Accept the errors (3 normally). Then in the list of installed packages remove the ones from JCL which aren't checked.
+Accept the errors (4 normally). Then in the list of installed packages remove the ones from JCL which aren't checked.
 
 Close and restart Delphi.
 
@@ -58,4 +62,4 @@ At this point, you can open the xEdit project files in Delphi and compile them.
 On Berlin, use TES5EditD24.dproj for xEdit and FO4DumpD24.dproj for xDump
 
 If you don't have the madExcept library, comment out the reference (TES5Edit.dpr line 21)
-If you don't have the XXX component library, select the DebugLite build configuration in TES5Edit.exe
+If you don't have the DevExpress component library, select the DebugLite build configuration in TES5Edit.exe
