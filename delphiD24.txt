@@ -28,7 +28,9 @@ Debug DCU path: append the JCL and the JVCL:
 
 validate and close the options dialog
 
-from jcl\source\include, copy jcl.template - Copy.inc as jcld24win32.inc (for 10.1 Berlin)
+Open the JCL installer JediInstaller.bdsproj from $(JCLBase)\install and compile it
+Run the JCL installer JediInstaller.exe from $(JCLBase)\bin even though it will produce errors.
+This will create jcld24win32.inc (for 10.1 Berlin)
 
 Open the JCL groupproj from $(JCLBase)\Packages (the one for your version of Delphi). So JclPackagesD240.groupproj for 10.1 Berlin
 Compile all.
@@ -39,8 +41,12 @@ Accept the errors (4 normally). Then in the list of installed packages remove th
 
 Close and restart Delphi.
 
+
 Open the JVCL groupproj from $(JVCLBase)\Packages (the one for your version of Delphi). So D24 Packages.groupproj for 10.1 Berlin
-Compile all.
+
+MAKE SURE THE CHANGES TO Tools \ Options \ Delphi Options \ Library are still present. If not do it again. (I don't understand why it can disapear).
+
+Compile all. The starter edition cannot compile the JvDB, both jvDBxx packages and jvDotNetxx packages cannot be compile. They are not used by xEdit.
 
 Component \ Install Packages
 Press Add, browse to $(BDSCOMMONDIR) which should be C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl and select all jv*.bpl. 
@@ -56,7 +62,7 @@ Open the VirtualTrees groupproj from $(JVCLBase)\Packages (the one closer to you
 Compile all.
 
 Component \ Install Packages
-Press Add, browse to $(BDSCOMMONDIR) which should be C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl and select VirtualTreesD17.bpl. 
+Press Add, browse to $(BDSCOMMONDIR) which should be C:\Users\Public\Documents\Embarcadero\Studio\18.0\Bpl and select VirtualTreesD17D.bpl. 
 
 At this point, you can open the xEdit project files in Delphi and compile them.
 On Berlin, use TES5EditD24.dproj for xEdit and FO4DumpD24.dproj for xDump
