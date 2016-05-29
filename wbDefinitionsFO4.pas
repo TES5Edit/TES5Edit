@@ -10170,7 +10170,7 @@ begin
         // 6: EPFD=string
         // 7: EPFD=lstring
 
-        wbUnknown(EPFB),
+        wbInteger(EPFB, 'Perk Entry ID (unique)', itU16),
         wbLString(EPF2, 'Button Label', 0, cpTranslate),
         wbStruct(EPF3, 'Script Flags', [
           wbInteger('Script Flags', itU8, wbFlags([
