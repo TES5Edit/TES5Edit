@@ -728,6 +728,8 @@ type
     procedure SetActiveRecord(const aMainRecords: TDynMainRecords); overload;
     procedure SetActiveContainer(const aContainer: IwbDataContainer); overload;
     procedure ClearActiveContainer; overload;
+    function GetViewNodePositionLabel: string;
+    procedure SetViewNodePositionLabel(aViewLabel: string);
 
     function ValidateCRC(const aFileName  : string;
                          const aValidCRCs : TDynCardinalArray;
@@ -12682,9 +12684,71 @@ begin
       Exit;
 end;
 
+function TfrmMain.GetViewNodePositionLabel: string;
+var
+  Node: PVirtualNode;
+begin
+  Node := vstView.TopNode;
+  while Assigned(Node) and (Node <> vstView.RootNode) do begin
+    Result := '\' + vstView.Text[Node, 0, False] + Result;
+    Node := Node.Parent;
+  end;
+
+  if Length(Result) <> 0 then
+    Delete(Result, 1, 1);
+end;
+
+procedure TfrmMain.SetViewNodePositionLabel(aViewLabel: string);
+var
+  Node, LabelNode: PVirtualNode;
+  s, DefName: string;
+  i: integer;
+  bFound: Boolean;
+begin
+  if aViewLabel = '' then
+    Exit;
+
+  Node := vstView.GetFirst;
+
+  if not Assigned(Node) then
+    Exit;
+
+  LabelNode := nil;
+
+  with TStringList.Create do try
+    Delimiter := '\';
+    StrictDelimiter := True;
+    DelimitedText := aViewLabel;
+
+    for i := 0 to Pred(Count) do begin
+      DefName := Strings[i];
+      bFound := False;
+      while Assigned(Node) do begin
+        s := vstView.Text[Node, 0, False];
+        if s = DefName then begin
+          LabelNode := Node;
+          Node := Node.FirstChild;
+          bFound := True;
+          Break;
+        end;
+        Node := vstView.GetNextSibling(Node);
+      end;
+
+      if not Assigned(Node) or not bFound then
+        Break;
+    end;
+  finally
+    Free;
+  end;
+
+  if Assigned(LabelNode) then
+    vstView.TopNode := LabelNode;
+end;
+
 procedure TfrmMain.SetActiveRecord(const aMainRecord: IwbMainRecord);
 var
   i                           : Integer;
+  ViewLabel: string;
 begin
   UserWasActive := True;
 
@@ -12699,6 +12763,7 @@ begin
     vstView.BeginUpdate;
     try
       lvReferencedBy.Items.Clear;
+      ViewLabel := GetViewNodePositionLabel;
       vstView.Clear;
       vstView.NodeDataSize := 0;
       SetLength(ActiveRecords, 0);
@@ -12760,6 +12825,7 @@ begin
         InitConflictStatus(vstView.RootNode, ActiveMaster.IsInjected and not (ActiveMaster.Signature = 'GMST'), @ActiveRecords[0]);
         vstView.FullExpand;
         UpdateColumnWidths;
+        SetViewNodePositionLabel(ViewLabel);
         if pgMain.ActivePage <> tbsReferencedBy then
           pgMain.ActivePage := tbsView;
       end
