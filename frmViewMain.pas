@@ -304,6 +304,9 @@ type
     mniNavOtherCodeSiteLogging: TMenuItem;
     mniNavLOManagersDirtyInfo: TMenuItem;
     N19: TMenuItem;
+    mniViewStick: TMenuItem;
+    mniViewStickAuto: TMenuItem;
+    mniViewStickSelected: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -513,6 +516,8 @@ type
       Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
     procedure mniNavOtherCodeSiteLoggingClick(Sender: TObject);
     procedure mniNavLOManagersDirtyInfoClick(Sender: TObject);
+    procedure mniViewStickAutoClick(Sender: TObject);
+    procedure mniViewStickSelectedClick(Sender: TObject);
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -721,6 +726,7 @@ type
     RowHeight   : Integer;
 
     PluginDirtyInfos: array of TPluginDirtyInfo;
+    StickViewNodeLabel: string;
 
     procedure DoInit;
     procedure SetDoubleBuffered(aWinControl: TWinControl);
@@ -728,7 +734,7 @@ type
     procedure SetActiveRecord(const aMainRecords: TDynMainRecords); overload;
     procedure SetActiveContainer(const aContainer: IwbDataContainer); overload;
     procedure ClearActiveContainer; overload;
-    function GetViewNodePositionLabel: string;
+    function GetViewNodePositionLabel(aNode: PVirtualNode = nil): string;
     procedure SetViewNodePositionLabel(aViewLabel: string);
 
     function ValidateCRC(const aFileName  : string;
@@ -4028,6 +4034,8 @@ begin
   HideNoConflict := Settings.ReadBool('View', 'HodeNoConflict', False);
   mniViewHideNoConflict.Checked := HideNoConflict;
 
+  StickViewNodeLabel := Settings.ReadString('View', 'StickViewNodeLabel', '');
+
   case Settings.ReadInteger('View', 'ColumnWidth', 0) of
     1: mniViewColumnWidthFitAll.Checked := True;
     2: mniViewColumnWidthFitText.Checked := True;
@@ -7252,6 +7260,28 @@ begin
   HideNoConflict := mniViewHideNoConflict.Checked;
   ResetActiveTree;
   Settings.WriteBool('View', 'HodeNoConflict', HideNoConflict);
+  Settings.UpdateFile;
+end;
+
+procedure TfrmMain.mniViewStickAutoClick(Sender: TObject);
+begin
+  if not mniViewStickAuto.Checked then
+    StickViewNodeLabel := '*'
+  else
+    StickViewNodeLabel := '';
+
+  Settings.WriteString('View', 'StickViewNodeLabel', StickViewNodeLabel);
+  Settings.UpdateFile;
+end;
+
+procedure TfrmMain.mniViewStickSelectedClick(Sender: TObject);
+begin
+  if not mniViewStickSelected.Checked then
+    StickViewNodeLabel := GetViewNodePositionLabel(vstView.FocusedNode)
+  else
+    StickViewNodeLabel := '';
+
+  Settings.WriteString('View', 'StickViewNodeLabel', StickViewNodeLabel);
   Settings.UpdateFile;
 end;
 
@@ -11926,8 +11956,10 @@ var
   TargetNode    : PVirtualNode;
   TargetIndex   : Integer;
   TargetElement : IwbElement;
+  NodeLabel     : String;
 begin
   mniViewHideNoConflict.Visible := not ComparingSiblings;
+  mniViewStick.Visible := False;
   mniViewEdit.Visible := False;
   mniViewAdd.Visible := False;
   mniViewNextMember.Visible := False;
@@ -11943,6 +11975,26 @@ begin
 
   if Length(ActiveRecords) < 1 then
     Exit;
+
+  mniViewStick.Visible := True;
+  NodeLabel := GetViewNodePositionLabel(vstView.FocusedNode);
+  if StickViewNodeLabel = '*' then begin
+    mniViewStickAuto.Checked := True;
+    mniViewStickSelected.Checked := False;
+    mniViewStickSelected.Visible := NodeLabel <> '';
+    mniViewStickSelected.Caption := NodeLabel;
+  end
+  else if StickViewNodeLabel <> '' then begin
+    mniViewStickAuto.Checked := False;
+    mniViewStickSelected.Checked := True;
+    mniViewStickSelected.Caption := StickViewNodeLabel;
+  end
+  else begin
+    mniViewStickAuto.Checked := False;
+    mniViewStickSelected.Checked := False;
+    mniViewStickSelected.Visible := NodeLabel <> '';
+    mniViewStickSelected.Caption := NodeLabel;
+  end;
 
   if vstView.FocusedColumn > 0 then begin
     NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
@@ -12684,11 +12736,15 @@ begin
       Exit;
 end;
 
-function TfrmMain.GetViewNodePositionLabel: string;
+function TfrmMain.GetViewNodePositionLabel(aNode: PVirtualNode = nil): string;
 var
   Node: PVirtualNode;
 begin
-  Node := vstView.TopNode;
+  if Assigned(aNode) then
+    Node := aNode
+  else
+    Node := vstView.TopNode;
+
   while Assigned(Node) and (Node <> vstView.RootNode) do begin
     Result := '\' + vstView.Text[Node, 0, False] + Result;
     Node := Node.Parent;
@@ -12762,8 +12818,17 @@ begin
   try
     vstView.BeginUpdate;
     try
+      // automatic sticking to the current top visible node
+      if StickViewNodeLabel = '*' then
+        ViewLabel := GetViewNodePositionLabel
+      // manual to the stored node label
+      else if StickViewNodeLabel <> '' then
+        ViewLabel := StickViewNodeLabel
+      // no sticking
+      else
+        ViewLabel := '';
+
       lvReferencedBy.Items.Clear;
-      ViewLabel := GetViewNodePositionLabel;
       vstView.Clear;
       vstView.NodeDataSize := 0;
       SetLength(ActiveRecords, 0);

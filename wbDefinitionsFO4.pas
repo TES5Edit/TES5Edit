@@ -930,8 +930,6 @@ var
   wbCNTO: IwbSubRecordStructDef;
   wbCNTOs: IwbSubRecordArrayDef;
   wbAIDT: IwbSubRecordDef;
-  wbCSDT: IwbSubRecordStructDef;
-  wbCSDTs: IwbSubRecordArrayDef;
   wbFULL: IwbSubRecordDef;
   wbFULLActor: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
@@ -8100,7 +8098,7 @@ begin
         wbByteArray('Unused', 4),
         wbFormIDCk('Actor Value', [AVIF, NULL]),
         wbFormIDCk('Spell', [SPEL, NULL]),
-        wbFormIDCk('Perk', [Perk, NULL])
+        wbFormIDCk('Perk', [PERK, NULL])
       ]),
       wbStruct('Text Offset' , [
         wbInteger('X', itU32),
@@ -8462,40 +8460,6 @@ begin
     wbFormIDCk(ONAM, 'Filter List', [FLST])
   ], True, nil, cpNormal, False, nil, wbContainerAfterSet);
 
-  wbCSDT := wbRStructSK([0], 'Sound Type', [
-    wbInteger(CSDT, 'Type', itU32,wbEnum([
-      {00} 'Left Foot',
-      {01} 'Right Foot',
-      {02} 'Left Back Foot',
-      {03} 'Right Back Foot',
-      {04} 'Idle',
-      {05} 'Aware',
-      {06} 'Attack',
-      {07} 'Hit',
-      {08} 'Death',
-      {09} 'Weapon',
-      {10} 'Movement Loop',
-      {11} 'Conscious Loop',
-      {12} 'Auxiliary 1',
-      {13} 'Auxiliary 2',
-      {14} 'Auxiliary 3',
-      {15} 'Auxiliary 4',
-      {16} 'Auxiliary 5',
-      {17} 'Auxiliary 6',
-      {18} 'Auxiliary 7',
-      {19} 'Auxiliary 8',
-      {19} 'Auxiliary 8',
-      {20} 'Jump',
-      {21} 'PlayRandom/Loop'
-    ])),
-    wbRArrayS('Sounds', wbRStructSK([0], 'Sound', [
-      wbFormIDCk(CSDI, 'Sound', [SNDR, NULL], False, cpNormal, True),
-      wbInteger(CSDC, 'Sound Chance', itU8, nil, cpNormal, True)
-    ], []), cpNormal, True)
-  ], []);
-
-  wbCSDTs := wbRArrayS('Sound Types', wbCSDT, cpNormal, False, nil, nil, nil{wbActorTemplateUseModelAnimation});
-
   wbAIDT :=
     wbStruct(AIDT, 'AI Data', [
      {00} wbInteger('Aggression', itU8, wbEnum([
@@ -8552,7 +8516,6 @@ begin
       wbFloat('Offensive Mult'),
       wbFloat('Defensive Mult'),
       wbFloat('Group Offensive Mult'),
-      // keep as separate floats, some elements can be omitted
       wbFloat('Equipment Score Mult - Melee'),
       wbFloat('Equipment Score Mult - Magic'),
       wbFloat('Equipment Score Mult - Ranged'),
@@ -9529,9 +9492,9 @@ begin
     {5} 'Grand'
   ]);
 
-  wbRecord(SLGM, 'Soul Gem', [
+  {wbRecord(SLGM, 'Soul Gem', [
     wbEDID
-  ]);
+  ]);}
 
   if wbSimpleRecords then begin
 
@@ -15850,12 +15813,12 @@ begin
   DefineFO4u;
 
   SetLength(wbOfficialDLC, 6);
-  wbOfficialDLC[0] :='DLCRobot.esm';
-  wbOfficialDLC[1] :='DLCWorkshop01.esm';
-  wbOfficialDLC[2] :='DLCCoast.esm';
-  wbOfficialDLC[3] :='DLCNukaWorld.esm';
-  wbOfficialDLC[4] :='DLCWorkshop02.esm';
-  wbOfficialDLC[5] :='DLCWorkshop03.esm';
+  wbOfficialDLC[0] := 'DLCRobot.esm';
+  wbOfficialDLC[1] := 'DLCWorkshop01.esm';
+  wbOfficialDLC[2] := 'DLCCoast.esm';
+  wbOfficialDLC[3] := 'DLCNukaWorld.esm';
+  wbOfficialDLC[4] := 'DLCWorkshop02.esm';
+  wbOfficialDLC[5] := 'DLCWorkshop03.esm';
 end;
 
 initialization
