@@ -128,6 +128,7 @@
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_4_Win32)'!=''">
+        <Debugger_RunParams>-FO4</Debugger_RunParams>
         <BCC_DebugLineNumbers>true</BCC_DebugLineNumbers>
         <ILINK_FullDebugInfo>true</ILINK_FullDebugInfo>
         <BCC_SourceDebuggingOn>true</BCC_SourceDebuggingOn>
