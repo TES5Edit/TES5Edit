@@ -11910,7 +11910,8 @@ end;
 procedure TwbElement.BeforeDestruction;
 begin
   Assert(eExternalRefs = 0);
-  Assert(FRefCount = 0);
+  if (FRefCount and $7FFFFFFF) <> 0 then
+    Assert(FRefCount = 0);
   Include(eStates, esDestroying);
   inherited BeforeDestruction;
   //LockedInc(eExternalRefs);
@@ -12158,7 +12159,7 @@ end;
 
 procedure TwbElement.FreeInstance;
 begin
-  if FRefCount <> 1 then
+  if (FRefCount and $7FFFFFFF) <> 1 then
     Assert(FRefCount = 1);
   Assert(eExternalRefs = 1);
   inherited;
