@@ -4,6 +4,7 @@
   "only this plugin" option controls which persistent references to move
     - unchecked: refs in master file will be processed, copied as override into this plugin and then moved
     - checked: only already copied refs in this plugin will be moved
+  Optionally updated teleport coordinates on doors leading to the moved markers
   
   The plugin that the script is applied to must be the last one loaded in xEdit
   Supports all games (Oblivion, Fallout 3, New Vegas, Skyrim, Fallout 4)
@@ -20,12 +21,12 @@ const
 var
   DestWorld, SrcPCell, DestPCell, PRefs: IInterface;
   fOffsetX, fOffsetY, fOffsetZ: Double;
-  bMovePersistent, bPersistentThisFileOnly, bInitSource: Boolean;
+  bMovePersistent, bPersistentThisFileOnly, bInitSource, bUpdateDoors: Boolean;
   frm: TForm;
   lbl: TLabel;
   cmbWorldspace: TComboBox;
   edX, edY, edZ: TEdit;
-  chkPersistent, chkThisFile: TCheckBox;
+  chkPersistent, chkThisFile, chkDoors: TCheckBox;
   btnOk, btnCancel: TButton;
   
 //============================================================================
@@ -83,17 +84,17 @@ begin
 end;
 
 //===========================================================================
-procedure UpdateRefPosition(aRef: IInterface);
+procedure UpdateRefPosition(aRef: IInterface; aPath: string);
 var
   x, y, z: Single;
 begin
   // calculate and update new position
-  x := GetElementNativeValues(aRef, 'DATA\Position\X') + fOffsetX;
-  y := GetElementNativeValues(aRef, 'DATA\Position\Y') + fOffsetY;
-  z := GetElementNativeValues(aRef, 'DATA\Position\Z') + fOffsetZ;
-  SetElementNativeValues(aRef, 'DATA\Position\X', x);
-  SetElementNativeValues(aRef, 'DATA\Position\Y', y);
-  SetElementNativeValues(aRef, 'DATA\Position\Z', z);
+  x := GetElementNativeValues(aRef, aPath + 'X') + fOffsetX;
+  y := GetElementNativeValues(aRef, aPath + 'Y') + fOffsetY;
+  z := GetElementNativeValues(aRef, aPath + 'Z') + fOffsetZ;
+  SetElementNativeValues(aRef, aPath + 'X', x);
+  SetElementNativeValues(aRef, aPath + 'Y', y);
+  SetElementNativeValues(aRef, aPath + 'Z', z);
 end;
 
 //===========================================================================
@@ -102,7 +103,7 @@ var
   cell: IInterface;
   c: TwbGridCell;
 begin
-  UpdateRefPosition(aRef);
+  UpdateRefPosition(aRef, 'DATA\Position\');
   // find destination cell coordinates
   c := wbPositionToGridCell(GetPosition(aRef));
   // get cell from the current plugin
@@ -127,6 +128,7 @@ end;
 procedure chkPersistentClick(Sender: TObject);
 begin
   chkThisFile.Enabled := TCheckBox(Sender).Checked;
+  chkDoors.Enabled := TCheckBox(Sender).Checked;
 end;
 
 //===========================================================================
@@ -187,6 +189,14 @@ begin
     chkThisFile.ShowHint := True;
     chkThisFile.Enabled := False;
 
+    chkDoors := TCheckBox.Create(frm); chkDoors.Parent := frm;
+    chkDoors.Left := 170; chkDoors.Top := 70;
+    chkDoors.Width := 156;
+    chkDoors.Caption := 'update doors teleport data';
+    chkDoors.Hint := 'If the moved persistent reference is a door and destination door ref links to it, then offset teleport data';
+    chkDoors.ShowHint := True;
+    chkDoors.Enabled := False;
+
     lbl := TLabel.Create(frm); lbl.Parent := frm;
     lbl.Left := 12; lbl.Top := 82;
     lbl.Width := 100;
@@ -220,6 +230,7 @@ begin
     DestWorld := ObjectToElement(cmbWorldspace.Items.Objects[cmbWorldspace.ItemIndex]);
     bMovePersistent := chkPersistent.Checked;
     bPersistentThisFileOnly := chkThisFile.Checked;
+    bUpdateDoors := chkDoors.Checked;
     if edX.Text = '' then edX.Text := '0'; fOffsetX := FloatToStr(edX.Text);
     if edY.Text = '' then edY.Text := '0'; fOffsetY := FloatToStr(edY.Text);
     if edZ.Text = '' then edZ.Text := '0'; fOffsetZ := FloatToStr(edZ.Text);
@@ -234,7 +245,7 @@ function Process(e: IInterface): integer;
 var
   i, cellx, celly: integer;
   c: TwbGridCell;
-  w, ref: IInterface;
+  w, ref, doorref: IInterface;
 begin
   if GetIsDeleted(e) or not IsEditable(e) then
     Exit;
@@ -293,10 +304,26 @@ begin
       end;
 
       // calculate and update new position
-      UpdateRefPosition(ref);
+      UpdateRefPosition(ref, 'DATA\Position\');
 
       // move persistent reference
       SetElementEditValues(ref, 'Cell', Name(DestPCell));
+      
+      // update teleport coordinates leading to the moved persistent ref
+      if bUpdateDoors and ElementExists(ref, 'XTEL') then begin
+        // getting the door reference
+        doorref := WinningOverride(LinksTo(ElementByPath(ref, 'XTEL\Door')));
+        // no valid door ref or no teleport data, then skip
+        if not Assigned(doorref) then Continue;
+        if not ElementExists(doorref, 'XTEL') then Continue;
+        // copy it to plugin and update teleport position
+        if not Equals(GetFile(doorref), GetFile(e)) then begin
+          AddRequiredElementMasters(doorref, GetFile(e), False);
+          doorref := wbCopyElementToFile(doorref, GetFile(e), False, True);
+          UpdateRefPosition(doorref, 'XTEL\Position/Rotation\Position\');
+        end;
+      end;
+    
     end;
   end;
 end;
