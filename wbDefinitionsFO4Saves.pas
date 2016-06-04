@@ -6633,7 +6633,7 @@ begin
   wbUnionCHANGE_FACTION_FLAGS := wbUnion('Faction Flags', ChangedFlag01Decider, [wbNull, wbNull]);
   wbUnionCHANGE_FACTION_REACTIONS := wbUnion('Faction Reactions', ChangedFlag02Decider, [wbNull, wbNull]);
   wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
-  wbUnionCHANGE_FORM_LIST_ADDED_FORM := wbUnion('Added Form', ChangedFlag31Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_FORM_LIST_ADDED_FORM := wbUnion('Added Form', ChangedFlag31Decider, [wbNull, wbArray('Forms', wbRefID('RefID'), -1)]);
   wbUnionCHANGE_INGREDIENT_USE := wbUnion('Ingredient Use', ChangedFlag31Decider, [wbNull, wbNull]);
   wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT := wbUnion('Added Object', ChangedFlag31Decider, [wbNull, wbNull]);
   wbUnionCHANGE_LOCATION_CLEARED := wbUnion('Cleared', ChangedFlag31Decider, [wbNull, wbNull]);
