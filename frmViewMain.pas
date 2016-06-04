@@ -2944,13 +2944,14 @@ end;
 
 function TfrmMain.ConflictLevelForChildNodeDatas(const aNodeDatas: TDynViewNodeDatas; aSiblingCompare, aInjected: Boolean): TConflictAll;
 var
-  ChildCount                  : Cardinal;
-  i, j                        : Integer;
-  NodeDatas                   : TDynViewNodeDatas;
-  InitialStates               : TVirtualNodeInitStates;
-  ConflictAll                 : TConflictAll;
-  ConflictThis                : TConflictThis;
-  Element                     : IwbElement;
+  ChildCount    : Cardinal;
+  i, j          : Integer;
+  NodeDatas     : TDynViewNodeDatas;
+  InitialStates : TVirtualNodeInitStates;
+  ConflictAll   : TConflictAll;
+  ConflictThis  : TConflictThis;
+  Element       : IwbElement;
+  ElementCount  : Integer;
 begin
   case Length(aNodeDatas) of
     0: Result := caUnknown;
@@ -3005,8 +3006,9 @@ begin
         end;
 
         if Assigned(Element) and (Element.ElementType in [etMainRecord, etSubRecordStruct]) then begin
+          ElementCount := (Element.Def as IwbRecordDef).MemberCount;
           j := (Element as IwbContainer).AdditionalElementCount;
-          if i >= j then
+          if (i >= j) and (i-j < ElementCount) then
             with (Element.Def as IwbRecordDef).Members[i - j] do
               if (wbTranslationMode and (ConflictPriority[nil] <> cpTranslate)) or
                 (wbTranslationMode and (ConflictPriority[nil] = cpIgnore)) then
@@ -6587,14 +6589,15 @@ procedure TfrmMain.InitConflictStatus(aNode: PVirtualNode; aInjected: Boolean; a
   end;
 
 var
-  ChildNode                   : PVirtualNode;
-  ChildNodeDatas              : PViewNodeDatas;
-  NodeDatas                   : PViewNodeDatas;
-  i                           : Integer;
-  ConflictAll                 : TConflictAll;
-  ConflictThis                : TConflictThis;
-  Element                     : IwbElement;
-  lDontShow                    : Boolean;
+  ChildNode      : PVirtualNode;
+  ChildNodeDatas : PViewNodeDatas;
+  NodeDatas      : PViewNodeDatas;
+  i,j,k          : Integer;
+  ConflictAll    : TConflictAll;
+  ConflictThis   : TConflictThis;
+  Element        : IwbElement;
+  ElementCount   : Integer;
+  lDontShow      : Boolean;
 begin
   lDontShow := False;
   if not Assigned(aNodeDatas) then begin
@@ -6657,20 +6660,22 @@ begin
           end;
 
           if Assigned(Element) and (Element.ElementType in [etMainRecord, etSubRecordStruct]) then begin
+            ElementCount := (Element.Def as IwbRecordDef).MemberCount;
             i := (Element as IwbContainer).AdditionalElementCount;
-            if Integer(aNode.Index) >= i then
-              with (Element.Def as IwbRecordDef).Members[Integer(aNode.Index) - i] do begin
+            j := Integer(aNode.Index);
+            if (j >= i) and ((j-i) < ElementCount) then
+              with (Element.Def as IwbRecordDef).Members[j - i] do begin
                 if (wbTranslationMode and (ConflictPriority[nil] <> cpTranslate)) or
                   (wbTranslationMode and (ConflictPriority[nil] = cpIgnore)) then begin
                   ConflictThis := ctIgnored;
-                  for i := Low(ActiveRecords) to High(ActiveRecords) do
-                    aNodeDatas[i].ConflictThis := ConflictThis;
+                  for k := Low(ActiveRecords) to High(ActiveRecords) do
+                    aNodeDatas[k].ConflictThis := ConflictThis;
                 end;
 
                 if (ConflictThis <> ctIgnored) and HasDontShow then begin
                   lDontShow := True;
-                  for i := Low(ActiveRecords) to High(ActiveRecords) do begin
-                    Element := ChildNodeDatas[i].Container;
+                  for k := Low(ActiveRecords) to High(ActiveRecords) do begin
+                    Element := ChildNodeDatas[k].Container;
                     if Assigned(Element) then begin
                       lDontShow := DontShow[Element];
                       if not lDontShow then
@@ -6691,8 +6696,10 @@ begin
                 Break;
             end;
             if Assigned(Element) and (Element.ElementType in [etMainRecord, etSubRecordStruct]) then begin
+              ElementCount := (Element.Def as IwbRecordDef).MemberCount;
               i := (Element as IwbContainer).AdditionalElementCount;
-              if Integer(aNode.Index) >= i then
+              j := Integer(aNode.Index);
+              if (j >= i) and ((j-i) < ElementCount) then
                 with (Element.Def as IwbRecordDef).Members[Integer(aNode.Index) - i] do
                   if ConflictPriority[nil] = cpIgnore then
                     ConflictThis := ctIgnored;
@@ -14079,9 +14086,10 @@ procedure TfrmMain.vstViewGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: string);
 var
-  NodeDatas                   : PViewNodeDatas;
-  Element                     : IwbElement;
-  i                           : Integer;
+  NodeDatas    : PViewNodeDatas;
+  Element      : IwbElement;
+  ElementCount : Integer;
+  i,j          : Integer;
 begin
   CellText := '';
   NodeDatas := Sender.GetNodeData(Node);
@@ -14123,9 +14131,11 @@ begin
           Break;
       end;
       if Assigned(Element) and (Element.ElementType in [etMainRecord, etSubRecordStruct]) then begin
+        ElementCount := (Element.Def as IwbRecordDef).MemberCount;
         i := (Element as IwbContainer).AdditionalElementCount;
-        if Integer(Node.Index) >= i then
-          with (Element.Def as IwbRecordDef).Members[Integer(Node.Index) - i] do begin
+        j := Integer(Node.Index);
+        if (j >= i) and ((j-i) < ElementCount) then
+          with (Element.Def as IwbRecordDef).Members[j - i] do begin
             if DefType = dtSubRecord then
               CellText := Displayable(DefaultSignature) + ' - ' + GetName
             else
