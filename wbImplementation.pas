@@ -4641,7 +4641,7 @@ begin
     Exit;
   if Supports(aElement.Container, IwbContainer, Container) then begin
     for i := 0 to Pred(RecordDef.MemberCount) do
-      if RecordDef.Members[i].Name = aElement.Name then
+      if RecordDef.Members[i].Equals(aElement.Def) then
         break;
     if i < RecordDef.MemberCount then begin
       RemoveElement(aElement);
@@ -4721,7 +4721,7 @@ begin
     Exit;
   if Supports(aElement.Container, IwbContainer, Container) then begin
     for i := 0 to Pred(RecordDef.MemberCount) do
-      if RecordDef.Members[i].Name = aElement.Name then
+      if RecordDef.Members[i].Equals(aElement.Def) then
         break;
     if i < RecordDef.MemberCount then begin
       RemoveElement(aElement);
