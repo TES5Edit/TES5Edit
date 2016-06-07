@@ -4673,6 +4673,45 @@ begin
   end;
 end;
 
+procedure wbLLEAfterLoad(const aElement: IwbElement);
+var
+  Container  : IwbContainerElementRef;
+  Entries    : IwbContainerElementRef;
+  MainRecord : IwbMainRecord;
+  i          : integer;
+begin
+  if wbBeginInternalEdit then try
+    // zero entries' Chance None if Form Version < 69
+    if wbFormVerDecider(nil, nil, aElement, 69) = 1 then
+      Exit;
+
+    if not Supports(aElement, IwbContainerElementRef, Container) then
+      Exit;
+
+    if Container.ElementCount < 1 then
+      Exit;
+
+    if not Supports(aElement, IwbMainRecord, MainRecord) then
+      Exit;
+
+    if MainRecord.IsDeleted then
+      Exit;
+
+    if not Supports(MainRecord.ElementByName['Leveled List Entries'], IwbContainerElementRef, Entries) then
+      Exit;
+
+
+    for i := 0 to Pred(Entries.ElementCount) do begin
+      if not Supports(Entries.Elements[i], IwbContainerElementRef, Container) then
+        Exit;
+      Container.ElementNativeValues['LVLO\Chance None'] := 0;
+    end;
+
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
 function wbPubPackCNAMDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   rANAM: IwbRecord;
@@ -12166,10 +12205,11 @@ begin
       wbRStructExSK([0], [1], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
           wbInteger('Level', itU16),
-          wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow),
+          wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
           wbFormIDCk('Reference', [NPC_, LVLN]),
           wbInteger('Count', itS16),
-          wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
+          wbInteger('Chance None', itU8),
+          wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
         ]),
 				wbCOED
       ], []),
@@ -12181,7 +12221,7 @@ begin
       ])
     ),
     wbMODL
-  ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
+  ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
   wbRecord(LVLI, 'Leveled Item', [
     wbEDID,
@@ -12199,10 +12239,11 @@ begin
       wbRStructExSK([0], [1], 'Leveled List Entry', [
         wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
           wbInteger('Level', itU16),
-          wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow),
+          wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
           wbFormIDCk('Reference', sigBaseObjects),
           wbInteger('Count', itU16),
-          wbInteger('Chance None', itU16)
+          wbInteger('Chance None', itU8),
+          wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
         ]),
         wbCOED
       ], []), cpNormal, False, nil, wbLVLOsAfterSet
@@ -12215,7 +12256,7 @@ begin
     ),
     wbFormIDCk(LVSG, 'Epic Loot Chance', [GLOB]),
     wbLString(ONAM, 'Override Name', 0, cpTranslate)
-  ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
+  ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
   wbRecord(LVSP, 'Leveled Spell', [
     wbEDID
@@ -15760,7 +15801,7 @@ begin
    wbAddGroupOrder(MATO);
    wbAddGroupOrder(MOVT);
    wbAddGroupOrder(SNDR);
-   //wbAddGroupOrder(DUAL);
+   wbAddGroupOrder(DUAL); // doesn't exist but can be created in CK
    wbAddGroupOrder(SNCT);
    wbAddGroupOrder(SOPM);
    wbAddGroupOrder(COLL);
