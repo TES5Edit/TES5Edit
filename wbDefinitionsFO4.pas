@@ -12686,8 +12686,9 @@ begin
       wbFloat('Lower Torso'),
       wbFloat('Legs')
     ]),
-    wbRArrayS('Character Gen Morphs',
-      wbRStructSK([0], 'Morph', [
+    // reported to cause issues when sorted
+    wbRArray{S}('Character Gen Morphs',
+      wbRStruct{SK}({[0], }'Morph', [
         wbByteArray(FMRI, 'Feature'),
         {wbInteger(FMRI, 'Feature', itU32, wbEnum([], [
           $0000003A, 'Eyelids - Top',
