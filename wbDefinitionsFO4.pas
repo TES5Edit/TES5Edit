@@ -7962,7 +7962,7 @@ begin
       wbFloat('Damage'),
       wbInteger('Health', itU32)
     ], cpNormal, True),
-    wbLString(ONAM, 'Short Name', 0, cpTranslate),
+    wbLStringKC(ONAM, 'Short Name', 0, cpTranslate),
     wbString(NAM1, 'Casing Model'),
     wbUnknown(NAM2)
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
@@ -8807,8 +8807,8 @@ begin
       'Do Not Open in Combat Search',
       'No "To" Text'
     ]), cpNormal, True),
-    wbLString(ONAM, 'Alternate Text - Open', 0, cpTranslate),
-    wbLString(CNAM, 'Alternate Text - Close', 0, cpTranslate)
+    wbLStringKC(ONAM, 'Alternate Text - Open', 0, cpTranslate),
+    wbLStringKC(CNAM, 'Alternate Text - Close', 0, cpTranslate)
   ]);
 
   wbBlendModeEnum := wbEnum([
