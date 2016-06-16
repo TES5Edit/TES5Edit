@@ -12255,7 +12255,7 @@ begin
       ])
     ),
     wbFormIDCk(LVSG, 'Epic Loot Chance', [GLOB]),
-    wbLString(ONAM, 'Override Name', 0, cpTranslate)
+    wbLStringKC(ONAM, 'Override Name', 0, cpTranslate)
   ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
   wbRecord(LVSP, 'Leveled Spell', [
