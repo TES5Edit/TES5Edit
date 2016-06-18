@@ -52,6 +52,7 @@ var
 	wbLocationEnum: IwbEnumDef;
 	wbMiscStatEnum: IwbEnumDef;
 	wbMusicEnum: IwbEnumDef;
+  wbObjectModProperties: IwbArrayDef;
 	wbObjectTypeEnum: IwbEnumDef;
 	wbPropTypeEnum: IwbEnumDef;
 	wbQuadrantEnum: IwbEnumDef;
@@ -67,6 +68,7 @@ var
 	wbZTestFuncEnum: IwbEnumDef;
   wbKeywordTypeEnum: IwbEnumDef;
   wbReverbClassEnum: IwbEnumDef;
+  wbHitBehaviourEnum: IwbEnumDef;
   wbBoolEnum: IwbEnumDef;
 	wbScriptProperties: IwbArrayDef;
 	wbScriptPropertyStruct: IwbArrayDef;
@@ -4942,55 +4944,69 @@ begin
     Result := 0;
 end;
 
-function wbOMODDataPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container     : IwbContainer;
-  tContainer    : IwbContainer;
-  DataContainer : IwbDataContainer;
-  FormType      : Cardinal;
-  aPtr          : Pointer;
-const
-  OffsetFormType = 10;
-begin
-  Result := 0;
-  if not Assigned(aBasePtr) then Exit;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
-
-  if Supports(Container.Container, IwbContainer, tContainer) and
-     Supports(tContainer.Container, IwbDataContainer, DataContainer) and
-     DataContainer.IsLocalOffset(OffsetFormType) then
-  begin
-    aPtr := Pointer(Cardinal(DataContainer.DataBasePtr) + OffsetFormType);
-    FormType := PCardinal(aPtr)^;
-  end
-  else
-    FormType := Container.ElementNativeValues['Form Type'];
-  if FormType = Sig2Int(ARMO) then
-    Result := 1
-  else if FormType = Sig2Int(NPC_) then
-    Result := 2
-  else if FormType = Sig2Int(WEAP) then
-    Result := 3;
-end;
-
-function wbOBTSDataPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function GetObjectModPropertyEnum(const aElement: IwbElement): IwbEnumDef;
 var
   MainRecord: IwbMainRecord;
+  rDATA: IwbContainer;
+  Signature: TwbSignature;
+  FormType: Cardinal;
 begin
-  Result := 0;
-  if not Assigned(aBasePtr) then Exit;
-  if not Assigned(aElement) then Exit;
-  MainRecord := aElement.ContainingMainRecord;
-  if not Assigned(MainRecord) then Exit;
+  Result := nil;
 
-  if MainRecord.Signature = ARMO then
-    Result := 1
-  else if MainRecord.Signature = NPC_ then
-    Result := 2
-  else if MainRecord.Signature = WEAP then
-    Result := 3;
+  MainRecord := aElement.ContainingMainRecord;
+
+  if not Assigned(MainRecord) then
+    Exit;
+
+  Signature := MainRecord.Signature;
+
+  if Signature = OMOD then
+    if Supports(MainRecord.ElementBySignature['DATA'], IwbContainer, rDATA) then begin
+      FormType := rDATA.ElementNativeValues['Form Type'];
+      Signature := PwbSignature(@FormType)^;
+    end;
+
+  if Signature = ARMO then
+    Result := wbArmorPropertyEnum
+  else if Signature = WEAP then
+    Result := wbWeaponPropertyEnum
+  else if Signature = NPC_ then
+    Result := wbActorPropertyEnum;
+end;
+
+function wbObjectModPropertyToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  PropEnum: IwbEnumDef;
+begin
+  Result := '';
+
+  PropEnum := GetObjectModPropertyEnum(aElement);
+
+  if not Assigned(PropEnum) then
+    case aType of
+      ctToStr, ctToSortKey, ctToEditValue: Result := IntToStr(aInt);
+    end
+  else
+    case aType of
+      ctToStr: Result := PropEnum.ToString(aInt, aElement);
+      ctToSortKey: Result := PropEnum.ToSortKey(aInt, aElement);
+      ctCheck: Result := PropEnum.Check(aInt, aElement);
+      ctToEditValue: Result := PropEnum.ToEditValue(aInt, aElement);
+      ctEditType: Result := 'ComboBox';
+      ctEditInfo: Result := PropEnum.EditInfo[aInt, aElement];
+    end;
+end;
+
+function wbObjectModPropertyToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  PropEnum: IwbEnumDef;
+begin
+  PropEnum := GetObjectModPropertyEnum(aElement);
+
+  if not Assigned(PropEnum) then
+    Result := StrToIntDef(aString, 0)
+  else
+    Result := PropEnum.FromEditValue(aString, aElement);
 end;
 
 function wbOMODDataFunctionTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -5018,7 +5034,8 @@ end;
 function wbOMODDataPropertyValue1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
-  ValueType      : Integer;
+  ValueType     : Integer;
+  PropName      : string;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
@@ -5026,14 +5043,19 @@ begin
   if not Assigned(Container) then Exit;
 
   ValueType := Container.ElementNativeValues['Value Type'];
+  PropName := Container.ElementEditValues['Property'];
 
   case ValueType of
     0: Result := 1;
     1: Result := 2;
     2: Result := 3;
-    4: Result := 5;
-    5: Result := 4;
-    6: Result := 5;
+    4, 6: Result := 4;
+    5: begin
+      if PropName = 'SoundLevel'    then Result := 6 else
+      if PropName = 'StaggerValue'  then Result := 7 else
+      if PropName = 'HitBehaviour'  then Result := 8 else
+      Result := 5;
+    end;
   end;
 end;
 
@@ -5054,7 +5076,6 @@ begin
     1: Result := 2;
     2: Result := 3;
     4: Result := 1;
-    5: Result := 4;
     6: Result := 2;
   end;
 end;
@@ -5819,6 +5840,13 @@ begin
     'Class C',
     'Class D',
     'Class E'
+  ]);
+
+  wbHitBehaviourEnum := wbEnum([
+    'Normal formula behaviour',
+    'Dismember only',
+    'Explode only',
+    'No dismember/explode'
   ]);
 
   wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
@@ -7683,24 +7711,7 @@ begin
     {94} 'ActorValues'
   ]);
 
-  wbOBTS := wbStruct(OBTS, 'Object Mod Template Item', [
-    wbInteger('Include Count', itU32),  // fixed name for wbOMOD* handlers
-    wbInteger('Property Count', itU32), // fixed name for wbOMOD* handlers
-    wbInteger('Level Min', itU8),
-    wbByteArray('Unused', 1),
-    wbInteger('Level Max', itU8),
-    wbByteArray('Unused', 1),
-    wbInteger('ID', itS16),
-    wbInteger('Default', itU8, wbBoolEnum),
-    wbArray('Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), -4),
-    wbInteger('Min Level For Ranks', itU8),
-    wbInteger('Alt Levels Per Tier', itU8),
-    wbArray('Includes', wbStruct('Include', [
-      wbFormIDCk('Mod', [OMOD]),
-      wbInteger('Attach Point Index', itU8),
-      wbInteger('Optional', itU8, wbBoolEnum),
-      wbInteger('Don''t Use All', itU8, wbBoolEnum)
-    ]), wbOMODDataIncludeCounter, cpNormal, False, nil, wbOMODincludeAfterSet),
+  wbObjectModProperties :=
     wbArrayS('Properties', wbStructSK([4], 'Property', [
       wbInteger('Value Type', itU8, wbEnum([
         {0} 'Int',
@@ -7719,30 +7730,47 @@ begin
         { FormID } wbInteger('Function Type', itU8, wbEnum(['SET', 'REM', 'ADD']))
       ]),
       wbByteArray('Unused', 3, cpIgnore),
-      wbUnion('Property', wbOBTSDataPropertyDecider, [
-        wbInteger('Index', itU16),
-        wbInteger('Armor Property', itU16, wbArmorPropertyEnum),
-        wbInteger('Actor Property', itU16, wbActorPropertyEnum),
-        wbInteger('Weapon Property', itU16, wbWeaponPropertyEnum)
-      ]),
+      wbInteger('Property', itU16, wbObjectModPropertyToStr, wbObjectModPropertyToInt),
       wbByteArray('Unused', 2, cpIgnore),
       wbUnion('Value 1', wbOMODDataPropertyValue1Decider, [
-        wbByteArray('Value 1 - Unknown', 4),
-        wbInteger('Value 1 - Int', itU32),
-        wbFloat('Value 1 - Float'),
-        wbInteger('Value 1 - Bool', itU32, wbBoolEnum),
-        wbInteger('Value 1 - Enum', itU32),
-        wbFormID('Value 1 - FormID')
+        { 0} wbByteArray('Value 1 - Unknown', 4),
+        { 1} wbInteger('Value 1 - Int', itU32),
+        { 2} wbFloat('Value 1 - Float'),
+        { 3} wbInteger('Value 1 - Bool', itU32, wbBoolEnum),
+        { 4} wbFormID('Value 1 - FormID'),
+        { 5} wbInteger('Value 1 - Enum', itU32),
+        { 6} wbInteger('Sound Level', itU32, wbSoundLevelEnum),
+        { 7} wbInteger('Stagger Value', itU32, wbStaggerEnum),
+        { 8} wbInteger('Hit Behaviour', itU32, wbHitBehaviourEnum)
       ]),
       wbUnion('Value 2', wbOMODDataPropertyValue2Decider, [
-        wbByteArray('Value 2 - Unknown', 4),
+        wbByteArray('Unused', 4, cpIgnore),
         wbInteger('Value 2 - Int', itU32),
         wbFloat('Value 2 - Float'),
-        wbInteger('Value 2 - Bool', itU32, wbBoolEnum),
-        wbByteArray('Value 2 - Enum', 4)
+        wbInteger('Value 2 - Bool', itU32, wbBoolEnum)
       ]),
       wbFloat('Step')
-    ]), wbOMODDataPropertyCounter, cpNormal, False, nil, wbOMODpropertyAfterSet)
+    ]), wbOMODDataPropertyCounter, cpNormal, False, nil, wbOMODpropertyAfterSet);
+
+  wbOBTS := wbStruct(OBTS, 'Object Mod Template Item', [
+    wbInteger('Include Count', itU32),  // fixed name for wbOMOD* handlers
+    wbInteger('Property Count', itU32), // fixed name for wbOMOD* handlers
+    wbInteger('Level Min', itU8),
+    wbByteArray('Unused', 1),
+    wbInteger('Level Max', itU8),
+    wbByteArray('Unused', 1),
+    wbInteger('ID', itS16),
+    wbInteger('Default', itU8, wbBoolEnum),
+    wbArray('Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), -4),
+    wbInteger('Min Level For Ranks', itU8),
+    wbInteger('Alt Levels Per Tier', itU8),
+    wbArray('Includes', wbStruct('Include', [
+      wbFormIDCk('Mod', [OMOD]),
+      wbInteger('Attach Point Index', itU8),
+      wbInteger('Optional', itU8, wbBoolEnum),
+      wbInteger('Don''t Use All', itU8, wbBoolEnum)
+    ]), wbOMODDataIncludeCounter, cpNormal, False, nil, wbOMODincludeAfterSet),
+    wbObjectModProperties
   ], cpNormal, True);
 
   wbObjectTemplate := wbRStruct('Object Template', [
@@ -8367,12 +8395,12 @@ begin
 
     // those can be sorted I think, but makes copying records very slow since some cells have over 22000+ entries
     // DLC01Lair01 "The Mechanist's Lair" [CELL:010008A3]
-    wbArray{S}(XPRI, 'Physics References', wbFormIDCk('Reference', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA])),
+    wbArrayS(XPRI, 'Physics References', wbFormIDCk('Reference', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA])),
     wbStruct(XCRI, 'Combined References', [
       wbInteger('Meshes Count', itU32),
       wbInteger('References Count', itU32),
-      wbArray{S}('Meshes', wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt), wbCELLCombinedMeshesCounter, cpNormal, False, nil, wbCELLCombinedMeshesAfterSet),
-      wbArray{S}('References',  wbStruct{SK}({[1, 0], }'Reference', [
+      wbArrayS('Meshes', wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt), wbCELLCombinedMeshesCounter, cpNormal, False, nil, wbCELLCombinedMeshesAfterSet),
+      wbArrayS('References',  wbStructSK([1, 0], 'Reference', [
         wbFormIDCk('Reference', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
         wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt)
       ]), wbCELLCombinedRefsCounter, cpNormal, False, nil, wbCELLCombinedRefsAfterSet)
@@ -14629,12 +14657,7 @@ begin
       wbFloat('Attack Delay'),
       wbByteArray('Unknown', 4),
       wbFloat('Damage - OutOfRange Mult'),
-      wbInteger('On Hit', itU32, wbEnum([
-        'Normal formula behaviour',
-        'Dismember only',
-        'Explode only',
-        'No dismember/explode'
-      ])),
+      wbInteger('On Hit', itU32, wbHitBehaviourEnum),
       wbFormIDCk('Skill', [AVIF, NULL]),
       wbFormIDCk('Resist', [AVIF, NULL]),
       wbInteger('Flags', itU32, wbFlags([
@@ -15385,48 +15408,7 @@ begin
         wbInteger('Optional', itU8, wbBoolEnum),
         wbInteger('Don''t Use All', itU8, wbBoolEnum)
       ]), wbOMODDataIncludeCounter, cpNormal, False, nil, wbOMODincludeAfterSet),
-      wbArrayS('Properties', wbStructSK([4], 'Property', [
-        wbInteger('Value Type', itU8, wbEnum([
-          {0} 'Int',
-          {1} 'Float',
-          {2} 'Bool',
-          {3} 'Unknown 3',
-          {4} 'FormID,Int',
-          {5} 'Enum',
-          {6} 'FormID,Float'
-        ])),
-        wbByteArray('Unused', 3, cpIgnore),
-        wbUnion('Function Type', wbOMODDataFunctionTypeDecider, [
-          { Float }  wbInteger('Function Type', itU8, wbEnum(['SET', 'MUL+ADD', 'ADD'])),
-          { Bool }   wbInteger('Function Type', itU8, wbEnum(['SET', 'AND', 'OR'])),
-          { Enum }   wbInteger('Function Type', itU8, wbEnum(['SET'])),
-          { FormID } wbInteger('Function Type', itU8, wbEnum(['SET', 'REM', 'ADD']))
-        ]),
-        wbByteArray('Unused', 3, cpIgnore),
-        wbUnion('Property', wbOMODDataPropertyDecider, [
-          wbInteger('Index', itU16),
-          wbInteger('Armor Property', itU16, wbArmorPropertyEnum),
-          wbInteger('Actor Property', itU16, wbActorPropertyEnum),
-          wbInteger('Weapon Property', itU16, wbWeaponPropertyEnum)
-        ]),
-        wbByteArray('Unused', 2, cpIgnore),
-        wbUnion('Value 1', wbOMODDataPropertyValue1Decider, [
-          wbByteArray('Value 1 - Unknown', 4),
-          wbInteger('Value 1 - Int', itU32),
-          wbFloat('Value 1 - Float'),
-          wbInteger('Value 1 - Bool', itU32, wbBoolEnum),
-          wbInteger('Value 1 - Enum', itU32),
-          wbFormID('Value 1 - FormID')
-        ]),
-        wbUnion('Value 2', wbOMODDataPropertyValue2Decider, [
-          wbByteArray('Value 2 - Unknown', 4),
-          wbInteger('Value 2 - Int', itU32),
-          wbFloat('Value 2 - Float'),
-          wbInteger('Value 2 - Bool', itU32, wbBoolEnum),
-          wbByteArray('Value 2 - Enum', 4)
-        ]),
-        wbFloat('Step')
-      ]), wbOMODDataPropertyCounter, cpNormal, False, nil, wbOMODpropertyAfterSet)
+      wbObjectModProperties
     ], cpNormal, False, nil, -1, nil, wbOMODdataAfterSet),
     wbArray(MNAM, 'Target OMOD Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbArray(FNAM, 'Filter Keywords', wbFormIDCk('Keyword', [KYWD])),
