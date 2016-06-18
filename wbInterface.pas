@@ -9069,7 +9069,10 @@ end;
 
 function TwbArrayDef.GetSorted: Boolean;
 begin
-  Result := arSorted;
+  if wbCopyIsRunning = 0 then
+    Result := arSorted
+  else
+    Result := False;
 end;
 
 procedure TwbArrayDef.Report(const aParents: TwbDefPath);
