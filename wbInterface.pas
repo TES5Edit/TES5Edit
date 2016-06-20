@@ -7675,14 +7675,17 @@ constructor TwbSubRecordStructDef.Create(aPriority       : TwbConflictPriority;
                                          aGetCP          : TwbGetConflictPriority);
 var
   i,j: Integer;
+  FoundRequired : Boolean;
 begin
   srsAllowUnordered := aAllowUnordered;
   srsSignatures := TwbFastStringListCS.CreateSorted(dupIgnore);
 
+  FoundRequired := False;
   SetLength(srsMembers, Length(aMembers));
   for i := Low(srsMembers) to High(srsMembers) do begin
     srsMembers[i] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
     srsCanContainFormIDs := srsCanContainFormIDs or aMembers[i].CanContainFormIDs;
+    FoundRequired := FoundRequired or srsMembers[i].Required;
     for j := 0 to Pred(aMembers[i].SignatureCount) do
       srsSignatures.AddObject(aMembers[i].Signatures[j], Pointer(i) );
   end;
@@ -7694,6 +7697,9 @@ begin
   end;
 
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
+
+  if srsAllowUnordered and not FoundRequired then
+   raise Exception.Create(GetPath + ' must contain at least one required element');
 end;
 
 destructor TwbSubRecordStructDef.Destroy;

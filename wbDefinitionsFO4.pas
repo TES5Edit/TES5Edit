@@ -1039,7 +1039,7 @@ var
   wbATTX: IwbSubRecordDef;
   wbMNAMFurnitureMarker: IwbSubRecordDef;
   wbSNAMMarkerParams: IwbSubRecordDef;
-  wbOBTS: IwbSubRecordDef;
+  wbOBTSReq: IwbSubRecordDef;
   wbTintTemplateGroups: IwbSubrecordArrayDef;
   wbMorphGroups: IwbSubrecordArrayDef;
   wbRaceFRMI: IwbSubrecordArrayDef;
@@ -6367,7 +6367,7 @@ begin
 
   wbMODL :=
     wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename'),
+      wbString(MODL, 'Model Filename', 0, cpNormal, True),
       wbMODT,
       wbMODS,
       wbMODC,
@@ -6376,14 +6376,14 @@ begin
 
   wbMODLActor :=
     wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename'),
+      wbString(MODL, 'Model Filename', 0, cpNormal, True),
       wbMODT,
       wbMODS
     ], [], cpNormal, False, nil{wbActorTemplateUseModelAnimation}, True);
 
   wbMODLReq :=
     wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename'),
+      wbString(MODL, 'Model Filename', 0, cpNormal, True),
       wbMODT,
       wbMODS,
       wbMODC,
@@ -6427,7 +6427,7 @@ begin
         ], cpNormal, True),
         wbString(DSTA, 'Sequence Name'),
         wbRStructSK([0], 'Model', [
-          wbString(DMDL, 'Model Filename'),
+          wbString(DMDL, 'Model Filename', 0, cpNormal, True),
           wbDMDT,
           wbDMDC,
           wbDMDS
@@ -7752,7 +7752,7 @@ begin
       wbFloat('Step')
     ]), wbOMODDataPropertyCounter, cpNormal, False, nil, wbOMODpropertyAfterSet);
 
-  wbOBTS := wbStruct(OBTS, 'Object Mod Template Item', [
+  wbOBTSReq := wbStruct(OBTS, 'Object Mod Template Item', [
     wbInteger('Include Count', itU32),  // fixed name for wbOMOD* handlers
     wbInteger('Property Count', itU32), // fixed name for wbOMOD* handlers
     wbInteger('Level Min', itU8),
@@ -7776,22 +7776,11 @@ begin
   wbObjectTemplate := wbRStruct('Object Template', [
     wbInteger(OBTE, 'Count', itU32, nil, cpBenign),
     wbRArray('Combinations',
-      wbRUnion('Combination', [
-        wbRStruct('Combination', [
-          wbOBTS
-        ], []),
-
-        wbRStruct('Combination', [
-          wbFULL,
-          wbOBTS
-        ], []),
-
-        wbRStruct('Combination', [
-          wbEmpty(OBTF, 'Editor Only'),
-          wbFULL,
-          wbOBTS
-        ], [])
-      ], []),
+      wbRStruct('Combination', [
+        wbEmpty(OBTF, 'Editor Only'),
+        wbFULL,
+        wbOBTSReq
+      ], [], cpNormal, False, nil, True),
       cpNormal, False, nil, wbOBTSCombinationsAfterSet),
     wbEmpty(STOP, 'Marker', cpNormal, True)
   ], []);
@@ -12672,15 +12661,17 @@ begin
        wbFloat('Fat')
     ]),
     wbInteger(NAM8, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),
-    wbInteger(CS2H, 'Sound Count', itU32),
-    wbRArray('Sounds',
-      wbRUnion('Sound', [
-        wbFormIDCk(CS2K, 'Keyword', [KYWD]),
-        wbFormIDCk(CS2D, 'Sound', [SNDR])
-      ], [])
-    ),
-    wbEmpty(CS2E, 'Marker'),
-    wbUnknown(CS2F),
+    wbRStruct('Actor Sounds', [
+      wbInteger(CS2H, 'Count', itU32, nil, cpNormal, True),
+      wbRArrayS('Sounds',
+        wbRStructSK([0], 'Sound', [
+          wbFormIDCk(CS2K, 'Keyword', [KYWD]),
+          wbFormIDCk(CS2D, 'Sound', [SNDR], False, cpNormal, True)
+        ], [], cpNormal, False, nil, True)
+      ),
+      wbEmpty(CS2E, 'End Marker', cpNormal, True),
+      wbByteArray(CS2F, 'Finalize', 1, cpNormal, True)
+    ], []),
     wbFormIDCk(CSCR, 'Inherits Sounds From', [NPC_], False, cpNormal, False),
     wbFormIDCk(PFRN, 'Power Armor Stand', [FURN]),
     wbFormIDCk(DOFT, 'Default Outfit', [OTFT], False, cpNormal, False),
@@ -13246,7 +13237,7 @@ begin
     wbFloat('TH'),
     wbFloat('W'),
     wbUnknown
-  ], cpNormal, False, nil, 8);
+  ], cpNormal, False, nil, 1); // only a single value in HandyRace
 
   wbPHWT := wbRStruct('FaceFX Phonemes', [
     wbRStruct('IY', [wbPhonemeTargets], []),
@@ -13612,14 +13603,11 @@ begin
     wbFormIDCk(SRAC, 'Subgraph Template Race', [RACE]),
     wbFormIDCk(SADD, 'Subgraph Additive Race', [RACE]),
     wbRArray('Subgraph Data',
-      wbRStruct('Data Struct', [
-        wbRArray('Data', wbRUnion('Data', [
-            wbString(SGNM, 'Behaviour Graph'),
-            wbRArray('Actor Keywords', wbFormIDCk(SAKD, 'Keyword', [KYWD])),
-            wbRArray('Target Keywords', wbFormIDCk(STKD, 'Keyword', [KYWD])),
-            wbRArray('Animation Paths', wbString(SAPT, 'Path'))
-          ], [])
-        ),
+      wbRStruct('Data', [
+        wbString(SGNM, 'Behaviour Graph'),
+        wbRArray('Actor Keywords', wbFormIDCk(SAKD, 'Keyword', [KYWD])),
+        wbRArray('Target Keywords', wbFormIDCk(STKD, 'Keyword', [KYWD])),
+        wbRArray('Animation Paths', wbString(SAPT, 'Path'), cpNormal, True),
         // Values greater than $10000 sets a bool. Reading this "closes" the current record.
         wbStruct(SRAF, 'Flags', [
           wbInteger('Role', itU16, wbEnum([
@@ -13633,10 +13621,9 @@ begin
             '3rd',
             '1st'
           ]))
-        ])
-      ], [])
+        ], cpNormal, True)
+      ], [], cpNormal, False, nil, True)
     ),
-
     wbFloat(PTOP, 'Idle Chatter Time Min'),
     wbFloat(NTOP, 'Idle Chatter Time Max'),
     wbRArray('Unknown',

@@ -13436,7 +13436,7 @@ var
 begin
   for CurrentDefPos := 0 to Pred(srcDef.MemberCount) do begin
     CurrentDef := srcDef.Members[CurrentDefPos];
-    if (CurrentDefPos = 0) or CurrentDef.Required then begin
+    if ((CurrentDefPos = 0) and not srcDef.AllowUnordered) or CurrentDef.Required then begin
 
       if CurrentDef.DefType = dtSubRecordUnion then begin
         CurrentDef := (CurrentDef as IwbRecordDef).Members[0];
@@ -13733,7 +13733,7 @@ end;
 
 function TwbSubRecordStruct.IsElementRemoveable(const aElement: IwbElement): Boolean;
 begin
-  Result := IsElementEditable(aElement) and (Length(cntElements) > 0) and not cntElements[0].Equals(aElement);
+  Result := IsElementEditable(aElement) and (Length(cntElements) > 1) and (srcDef.AllowUnordered or not cntElements[0].Equals(aElement));
   if Result and Assigned(aElement.Def) then
     Result := not aElement.Def.Required;
 end;
