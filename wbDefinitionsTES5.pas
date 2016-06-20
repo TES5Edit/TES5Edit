@@ -5249,21 +5249,21 @@ begin
 
   wbMODL :=
     wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename'),
+      wbString(MODL, 'Model Filename', 0, cpNormal, True),
       wbMODT,
       wbMODS
     ], [], cpNormal, False, nil, True);
 
   wbMODLActor :=
     wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename'),
+      wbString(MODL, 'Model Filename', 0, cpNormal, True),
       wbMODT,
       wbMODS
     ], [], cpNormal, False, nil{wbActorTemplateUseModelAnimation}, True);
 
   wbMODLReq :=
     wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename'),
+      wbString(MODL, 'Model Filename', 0, cpNormal, True),
       wbMODT,
       wbMODS
     ], [], cpNormal, True, nil, True);
@@ -5578,17 +5578,17 @@ begin
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbICON := wbRStruct('Icon', [
-    wbString(ICON, 'Large Icon filename'),
+    wbString(ICON, 'Large Icon filename', 0, cpNormal, True),
     wbString(MICO, 'Small Icon filename')
   ], [], cpNormal, False, nil, True);
 
   wbICONReq := wbRStruct('Icon', [
-    wbString(ICON, 'Large Icon filename'),
+    wbString(ICON, 'Large Icon filename', 0, cpNormal, True),
     wbString(MICO, 'Small Icon filename')
   ], [], cpNormal, True, nil, True);
 
   wbICO2 := wbRStruct('Icon 2 (female)', [
-    wbString(ICO2, 'Large Icon filename'),
+    wbString(ICO2, 'Large Icon filename', 0, cpNormal, True),
     wbString(MIC2, 'Small Icon filename')
   ], [], cpNormal, False, nil, True);
 
