@@ -1040,9 +1040,9 @@ var
   wbMNAMFurnitureMarker: IwbSubRecordDef;
   wbSNAMMarkerParams: IwbSubRecordDef;
   wbOBTSReq: IwbSubRecordDef;
-  wbTintTemplateGroups: IwbSubrecordArrayDef;
-  wbMorphGroups: IwbSubrecordArrayDef;
-  wbRaceFRMI: IwbSubrecordArrayDef;
+  //wbTintTemplateGroups: IwbSubrecordArrayDef;
+  //wbMorphGroups: IwbSubrecordArrayDef;
+  //wbRaceFRMI: IwbSubrecordArrayDef;
   wbRaceRBPC: IwbSubRecordDef;
   wbNVNM: IwbSubRecordDef;
   wbMHDT: IwbSubRecordDef;
@@ -5294,6 +5294,323 @@ begin
     wbByteColors('Specular'),
     wbFloat('Scale', cpIgnore)
   ]);
+end;
+
+function wbIntToHexStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  case aType of
+    ctToStr, ctToSortKey, ctToEditValue: Result := IntToHex(aInt, 8);
+  else
+    Result := '';
+  end;
+end;
+
+function wbStrToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  s: string;
+  i: integer;
+begin
+  // ignore anything after space or :
+  i := Pos(' ', aString);
+  if i = 0 then
+    i := Pos(':', aString);
+
+  if i <> 0 then
+    s := Copy(aString, 1, i - 1)
+  else
+    s := aString;
+
+  try
+    Result := StrToInt64(s)
+  except
+    Result := 0;
+  end;
+end;
+
+function wbHexStrToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  s: string;
+  i: integer;
+begin
+  // ignore anything after space or :
+  i := Pos(' ', aString);
+  if i = 0 then
+    i := Pos(':', aString);
+
+  if i <> 0 then
+    s := Copy(aString, 1, i - 1)
+  else
+    s := aString;
+
+  try
+    Result := StrToInt64('$' + s)
+  except
+    Result := 0;
+  end;
+end;
+
+type
+  TFaceGenFeature = record
+    RaceID  : String;
+    Female  : Boolean;
+    Entries : array of record
+      Index: Cardinal;
+      Name : String;
+    end;
+  end;
+  PFaceGenFeature = ^TFaceGenFeature;
+
+var
+  // cache of race specific face morphs
+  FaceMorphs: array of TFaceGenFeature;
+  // cache of race specific tint layers
+  TintLayers: array of TFaceGenFeature;
+
+function wbFaceMorphToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+
+  function GetCached(const aRaceID: string; aFemale: boolean): PFaceGenFeature;
+  var
+    i: integer;
+  begin
+    Result := nil;
+    if Length(FaceMorphs) <> 0 then
+      for i := Low(FaceMorphs) to High(FaceMorphs) do
+        if (FaceMorphs[i].Female = aFemale) and (FaceMorphs[i].RaceID = aRaceID) then begin
+          Result := @FaceMorphs[i];
+          Break;
+        end;
+  end;
+
+var
+  Actor, Race       : IwbMainRecord;
+  Element           : IwbElement;
+  Container, Entry  : IwbContainerElementRef;
+  Female, Female2   : Boolean;
+  RaceID, EntryName : string;
+  Cache             : PFaceGenFeature;
+  Index             : Cardinal;
+  i, j              : integer;
+begin
+  // defaults
+  case aType of
+    ctToStr, ctToEditValue: Result := IntToHex64(aInt, 8);
+    ctToSortKey: begin
+      Result := IntToHex64(aInt, 8);
+      Exit;
+    end;
+    ctCheck: Result := '<Warning: Could not resolve face morph index ' + IntToHex64(aInt, 8) + '>';
+    ctEditType: Result := '';
+    ctEditInfo: Result := '';
+  end;
+
+  Actor := aElement.ContainingMainRecord;
+
+  Female := Actor.ElementEditValues['ACBS\Flags\Female'] = '1';
+
+  Element := Actor.ElementBySignature['RNAM'];
+  if not Assigned(Element) then
+    Exit;
+
+  Element := Element.LinksTo;
+  if not Supports(Element, IwbMainRecord, Race) then
+    Exit;
+
+  RaceID := Race.EditorID;
+
+  Cache := GetCached(RaceID, Female);
+
+  // cache not found, fill with data from RACE
+  if not Assigned(Cache) then begin
+
+    for i := 0 to 1 do begin
+      Female2 := i = 1;
+      if not Female2 then
+        Element := Race.ElementByName['Male Face Morphs']
+      else
+        Element := Race.ElementByName['Female Face Morphs'];
+
+      if not Supports(Element, IwbContainerElementRef, Container) then
+        Continue;
+
+      SetLength(FaceMorphs, Succ(Length(FaceMorphs)));
+      Cache := @FaceMorphs[Pred(Length(FaceMorphs))];
+      Cache.RaceID := RaceID;
+      Cache.Female := Female2;
+      SetLength(Cache.Entries, Container.ElementCount);
+
+      for j := 0 to Pred(Container.ElementCount) do begin
+        if not Supports(Container.Elements[j], IwbContainerElementRef, Entry) then
+          Break;
+        Cache.Entries[j].Index := Entry.ElementNativeValues['FMRI'];
+        Cache.Entries[j].Name := Entry.ElementEditValues['FMRN'];
+      end;
+    end;
+
+  end;
+
+  Cache := GetCached(RaceID, Female);
+  if not Assigned(Cache) then
+    Exit;
+
+  EntryName := '';
+  Index := Cardinal(aInt);
+  if Length(Cache.Entries) <> 0 then
+    for i := Low(Cache.Entries) to High(Cache.Entries) do
+      if Cache.Entries[i].Index = Index then begin
+        EntryName := Cache.Entries[i].Name;
+        Break;
+      end;
+
+  case aType of
+    ctToStr: begin
+      if EntryName <> '' then
+        Result := IntToHex64(aInt, 8) + ' ' + EntryName
+      else
+        Result := IntToHex64(aInt, 8) + ' <Face morph index not found in ' + Race.Name + '>';
+    end;
+    ctCheck: begin
+      if EntryName = '' then
+        Result := '<Face morph index ' + IntToHex(aInt, 8) + ' not found in ' + Race.Name + '>'
+      else
+        Result := '';
+    end;
+    ctEditType: Result := 'ComboBox';
+    ctEditInfo: begin
+      Result := '';
+      if Length(Cache.Entries) <> 0 then
+        for i := Low(Cache.Entries) to High(Cache.Entries) do begin
+          if Result <> '' then Result := Result + ',';
+          Result := Result + IntToHex(Cache.Entries[i].Index, 8) + ':' + Cache.Entries[i].Name;
+        end;
+      Result := StringReplace(Result, ' ', '', [rfReplaceAll]);
+    end;
+  end;
+end;
+
+function wbTintLayerToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+
+  function GetCached(const aRaceID: string; aFemale: boolean): PFaceGenFeature;
+  var
+    i: integer;
+  begin
+    Result := nil;
+    if Length(TintLayers) <> 0 then
+      for i := Low(TintLayers) to High(TintLayers) do
+        if (TintLayers[i].Female = aFemale) and (TintLayers[i].RaceID = aRaceID) then begin
+          Result := @TintLayers[i];
+          Break;
+        end;
+  end;
+
+var
+  Actor, Race       : IwbMainRecord;
+  Element           : IwbElement;
+  Container, Entry  : IwbContainerElementRef;
+  Female, Female2   : Boolean;
+  RaceID, EntryName : string;
+  Cache             : PFaceGenFeature;
+  Index             : Cardinal;
+  i, j, t           : integer;
+begin
+  // defaults
+  case aType of
+    ctToStr, ctToEditValue: Result := IntToStr(aInt);
+    ctToSortKey: begin
+      Result := IntToHex64(aInt, 8);
+      Exit;
+    end;
+    ctCheck: Result := '<Warning: Could not resolve tint layer index ' + IntToStr(aInt) + '>';
+    ctEditType: Result := '';
+    ctEditInfo: Result := '';
+  end;
+
+  Actor := aElement.ContainingMainRecord;
+
+  Female := Actor.ElementEditValues['ACBS\Flags\Female'] = '1';
+
+  Element := Actor.ElementBySignature['RNAM'];
+  if not Assigned(Element) then
+    Exit;
+
+  Element := Element.LinksTo;
+  if not Supports(Element, IwbMainRecord, Race) then
+    Exit;
+
+  RaceID := Race.EditorID;
+
+  Cache := GetCached(RaceID, Female);
+
+  // cache not found, fill with data from RACE
+  if not Assigned(Cache) then begin
+
+    for i := 0 to 1 do begin
+      Female2 := i = 1;
+      if not Female2 then
+        Element := Race.ElementByName['Male Tint Layers']
+      else
+        Element := Race.ElementByName['Female Tint Layers'];
+
+      if not Supports(Element, IwbContainerElementRef, Container) then
+        Continue;
+
+      SetLength(TintLayers, Succ(Length(TintLayers)));
+      Cache := @TintLayers[Pred(Length(TintLayers))];
+      Cache.RaceID := RaceID;
+      Cache.Female := Female2;
+      SetLength(Cache.Entries, Container.ElementCount);
+
+      t := 0;
+      for j := 0 to Pred(Container.ElementCount) do begin
+        if not Supports(Container.Elements[j], IwbContainerElementRef, Entry) then
+          Break;
+        if not Entry.ElementExists['TETI'] then
+          Continue;
+        Cache.Entries[t].Index := Entry.ElementNativeValues['TETI\Index'];
+        Cache.Entries[t].Name := Entry.ElementEditValues['TTGP'];
+        Inc(t);
+      end;
+      SetLength(Cache.Entries, t);
+    end;
+
+  end;
+
+  Cache := GetCached(RaceID, Female);
+  if not Assigned(Cache) then
+    Exit;
+
+  EntryName := '';
+  Index := Cardinal(aInt);
+  if Length(Cache.Entries) <> 0 then
+    for i := Low(Cache.Entries) to High(Cache.Entries) do
+      if Cache.Entries[i].Index = Index then begin
+        EntryName := Cache.Entries[i].Name;
+        Break;
+      end;
+
+  case aType of
+    ctToStr: begin
+      if EntryName <> '' then
+        Result := IntToStr(aInt) + ' ' + EntryName
+      else
+        Result := IntToStr(aInt) + ' <Tint layer index not found in ' + Race.Name + '>';
+    end;
+    ctCheck: begin
+      if EntryName = '' then
+        Result := '<Tint layer index ' + IntToStr(aInt) + ' not found in ' + Race.Name + '>'
+      else
+        Result := '';
+    end;
+    ctEditType: Result := 'ComboBox';
+    ctEditInfo: begin
+      Result := '';
+      if Length(Cache.Entries) <> 0 then
+        for i := Low(Cache.Entries) to High(Cache.Entries) do begin
+          if Result <> '' then Result := Result + ',';
+          Result := Result + IntToStr(Cache.Entries[i].Index) + ':' + Cache.Entries[i].Name;
+        end;
+      Result := StringReplace(Result, ' ', '', [rfReplaceAll]);
+    end;
+  end;
 end;
 
 
@@ -12689,13 +13006,16 @@ begin
     wbArray(MSDV, 'CharGen Values', wbFloat('Value')),
     wbRArray('Face Tinting Layers',
       wbRStruct('Layer', [
-        wbByteArray(TETI, 'Feature'),
-        wbByteArray(TEND, 'Values')
-        {wbStruct(TEND, 'Values', [
+        wbStruct(TETI, 'Index', [
+          wbByteArray('Unknown', 2),
+          wbInteger('Index', itU16, wbTintLayerToStr, wbStrToInt)
+        ]),
+        //wbByteArray(TEND, 'Data')
+        wbStruct(TEND, 'Data', [
           wbInteger('Value', itU8, wbDiv(100)),
           wbByteColors('Color'),
           wbUnknown
-        ], cpNormal, True, nil, 1)}
+        ], cpNormal, True, nil, 1)
       ], [])
     ),
     wbStruct(MRSV, 'Body Morph Region Values', [
@@ -12706,43 +13026,9 @@ begin
       wbFloat('Legs')
     ]),
     // reported to cause issues when sorted
-    wbRArray{S}('Character Gen Morphs',
-      wbRStruct{SK}({[0], }'Morph', [
-        wbByteArray(FMRI, 'Feature'),
-        {wbInteger(FMRI, 'Feature', itU32, wbEnum([], [
-          $0000003A, 'Eyelids - Top',
-          $0000003B, 'Eyelids - Bottom',
-          $0000274E, 'Jowls - Lower',
-          $0000274F, 'Nose - Ridge',
-          $000186A0, 'Eyebrows - Full',
-          $000186A1, 'Eyebrows - Inner',
-          $000186A2, 'Eyebrows - Outer',
-          $000186A3, 'Cheekbones',
-          $000186A4, 'Cheeks',
-          $000186A5, 'Ears - Full',
-          $000186A6, 'Ears - Top',
-          $000186A7, 'Ears - Middle',
-          $000186A8, 'Earlobes',
-          $000186A9, 'Nose - Full',
-          $000186AA, 'Nostrils',
-          $000186AB, 'Jaw - Outer',
-          $000186AC, 'Jaw - Middle',
-          $000186AD, 'Temples',
-          $000186AE, 'Chin',
-          $000186AF, 'Neck',
-          $000186B0, 'Eyes',
-          $000186B1, 'Nose - Bridge',
-          $000186B2, 'Eyebrows - Middle',
-          $000186B3, 'Nose - Tip',
-          $000186B4, 'Mouth - Full',
-          $000186B5, 'Mouth - Cornes',
-          $000186B6, 'Mouth - Top',
-          $000186B7, 'Mouth - Bottom',
-          $000186B8, 'Forehead',
-          $000186B9, 'Face - Lower',
-          $000186BA, 'Jowls - Upper',
-          $000186BB, 'Cheekbones - Back'
-        ])),}
+    wbRArrayS('Face Morphs',
+      wbRStructSK([0], 'Face Morph', [
+        wbInteger(FMRI, 'Index', itU32, wbFaceMorphToStr, wbHexStrToInt),
         //wbArray(FMRS, 'Unknown', wbFloat('Unknown'))
         wbStruct(FMRS, 'Values', [
           wbFloat('Position - X'),
@@ -12817,9 +13103,69 @@ begin
   ]);
 end;
 
-procedure DefineFO4n;
-begin
 
+procedure DefineFO4n;
+
+  function wbTintTemplateGroups(const aName: string): IwbSubRecordArrayDef;
+  begin
+    Result :=
+      wbRArray{S}(aName,
+        wbRStruct{SK}({[0], }'Tint Template Group', [
+          wbLString(TTGP, 'Name', 0, cpTranslate),
+          wbUnknown(TTEF),
+          wbCTDAs,
+          wbRArray('Textures', wbString(TTET, 'Texture')),
+          wbUnknown(TTEB),
+          wbArray(TTEC, 'Template Colors', wbStruct('Template Color', [
+            wbFormIDCk('Color', [CLFM]),
+            wbFloat('Alpha'),
+            wbInteger('Template Index', itU16),
+            wbByteArray('Unknown', 4)
+          ])),
+          wbUnknown(TTED),
+          wbStruct(TETI, 'Index', [
+            wbByteArray('Unknown', 2),
+            wbInteger('Index', itU16)
+          ]),
+          wbUnknown(TTGE)
+        ], [])
+      );
+  end;
+
+  function wbMorphGroups(const aName: string): IwbSubRecordArrayDef;
+  begin
+    Result :=
+      wbRArray(aName,
+        wbRStruct('Morph Group', [
+          wbString(MPGN, 'Name'),
+          wbInteger(MPPC, 'Count', itU32),
+          wbRArray('Morph Presets',
+            wbRStruct('Morph Preset', [
+              wbByteArray(MPPI, 'Index'),
+              wbLString(MPPN, 'Name', 0, cpTranslate),
+              wbString(MPPM, 'Unknown'),
+              wbFormIDCk(MPPT, 'Texture', [TXST]),
+              wbUnknown(MPPF)
+            ], [])
+          ),
+          wbUnknown(MPPK),
+          wbUnknown(MPGS)
+        ], [])
+      );
+  end;
+
+  function wbFaceMorphs(const aName: string): IwbSubRecordArrayDef;
+  begin
+    Result :=
+      wbRArray(aName,
+        wbRStruct('Face Morph', [
+          wbInteger(FMRI, 'Index', itU32, wbIntToHexStr, wbHexStrToInt),
+          wbLString(FMRN, 'Name')
+        ], [])
+      );
+  end;
+
+begin
   wbUNAMs := wbRArray('Data Inputs', wbRStruct('Data Input', [
     wbInteger(UNAM, 'Index', itS8),
     wbString(BNAM, 'Name'),
@@ -13290,53 +13636,6 @@ begin
     wbFormIDCk(HEAD, 'Head', [HDPT, NULL])
   ], []);
 
-  wbTintTemplateGroups :=
-    wbRArray{S}('Tint Template Groups',
-      wbRStruct{SK}({[0], }'Tint Template Group', [
-        wbLString(TTGP, 'Name', 0, cpTranslate),
-        wbUnknown(TTEF),
-        wbCTDAs,
-        wbRArray('Textures', wbString(TTET, 'Texture')),
-        wbUnknown(TTEB),
-        wbArray(TTEC, 'Template Colors', wbStruct('Template Color', [
-          wbFormIDCk('Color', [CLFM]),
-          wbFloat('Alpha'),
-          wbInteger('Template Index', itU16),
-          wbByteArray('Unknown', 4)
-        ])),
-        wbUnknown(TTED),
-        wbUnknown(TETI),
-        wbUnknown(TTGE)
-      ], [])
-    );
-
-  wbMorphGroups :=
-    wbRArray('Morph Groups',
-      wbRStruct('Morph Group', [
-        wbString(MPGN, 'Name'),
-        wbUnknown(MPPC),
-        wbRArray('Morph Presets',
-          wbRStruct('Morph Preset', [
-            wbByteArray(MPPI, 'Intensity'),
-            wbLString(MPPN, 'Name', 0, cpTranslate),
-            wbString(MPPM, 'Unknown'),
-            wbFormIDCk(MPPT, 'Texture', [TXST]),
-            wbUnknown(MPPF)
-          ], [])
-        ),
-        wbUnknown(MPPK),
-        wbUnknown(MPGS)
-      ], [])
-    );
-
-  wbRaceFRMI :=
-    wbRArray('Unknown',
-      wbRStruct('Unknown', [
-        wbUnknown(FMRI),
-        wbLString(FMRN, 'Unknown')
-      ], [])
-    );
-
   wbRaceRBPC :=
     wbArray(RBPC, 'Biped Object Conditions',
       wbUnion('Slot 30+', wbFormVer78Decider, [
@@ -13570,14 +13869,14 @@ begin
       wbFloat('X'),
       wbFloat('Y')
     ]),
-    wbRArrayS('Head Parts Male', wbHeadPart),
-    wbRArrayS('Race Presets Male', wbFormIDCk(RPRM, 'Preset NPC', [NPC_, NULL])),
-    wbRArrayS('Available Hair Colors Male', wbFormIDCk(AHCM, 'Hair Color', [CLFM, NULL])),
-    wbRArrayS('Face Details Texture Set List Male', wbFormIDCk(FTSM, 'Texture Set', [TXST, NULL])),
-    wbFormIDCk(DFTM, 'Default Face Texture Male', [TXST]),
-    wbTintTemplateGroups,
-    wbMorphGroups,
-    wbRaceFRMI,
+    wbRArrayS('Male Head Parts', wbHeadPart),
+    wbRArrayS('Male Race Presets', wbFormIDCk(RPRM, 'Preset NPC', [NPC_, NULL])),
+    wbRArrayS('Male Hair Colors', wbFormIDCk(AHCM, 'Hair Color', [CLFM, NULL])),
+    wbRArrayS('Male Face Details', wbFormIDCk(FTSM, 'Texture Set', [TXST, NULL])),
+    wbFormIDCk(DFTM, 'Male Default Face Texture', [TXST]),
+    wbTintTemplateGroups('Male Tint Layers'),
+    wbMorphGroups('Male Morph Groups'),
+    wbFaceMorphs('Male Face Morphs'),
     wbString(WMAP, 'Male Wrinkle Map Path'),
 
     // Female head
@@ -13588,14 +13887,14 @@ begin
       wbFloat('X'),
       wbFloat('Y')
     ]),
-    wbRArrayS('Head Parts Female', wbHeadPart),
-    wbRArrayS('Race Presets Female', wbFormIDCk(RPRF, 'Preset NPC', [NPC_, NULL])),
-    wbRArrayS('Available Hair Colors Female', wbFormIDCk(AHCF, 'Hair Color', [CLFM, NULL])),
-    wbRArrayS('Face Details Texture Set List Female', wbFormIDCk(FTSF, 'Texture Set', [TXST, NULL])),
-    wbFormIDCk(DFTF, 'Default Face Texture Female', [TXST]),
-    wbTintTemplateGroups,
-    wbMorphGroups,
-    wbRaceFRMI,
+    wbRArrayS('Female Head Parts', wbHeadPart),
+    wbRArrayS('Female Race Presets', wbFormIDCk(RPRF, 'Preset NPC', [NPC_, NULL])),
+    wbRArrayS('Female Hair Colors', wbFormIDCk(AHCF, 'Hair Color', [CLFM, NULL])),
+    wbRArrayS('Female Face Details', wbFormIDCk(FTSF, 'Texture Set', [TXST, NULL])),
+    wbFormIDCk(DFTF, 'Female Default Face Texture', [TXST]),
+    wbTintTemplateGroups('Female Tint Layers'),
+    wbMorphGroups('Female Morph Groups'),
+    wbFaceMorphs('Female Face Morphs'),
     wbString(WMAP, 'Female Wrinkle Map Path'),
 
 		wbFormIDCk(NAM8, 'Morph Race', [RACE]),
