@@ -111,12 +111,15 @@ begin
   end;
 
   if sFiles = '*' then
-    // nothing selected - merge into master
+    // nothing selected - merge into master only
     MergeInto(e, m)
   else
     // merge into selected files
-    for i := 0 to Pred(OverrideCount(m)) do begin
-      ovr := OverrideByIndex(m, i);
+    for i := -1 to Pred(OverrideCount(m)) do begin
+      if i = -1 then
+        ovr := m
+      else
+        ovr := OverrideByIndex(m, i);
       if Pos(GetFileName(ovr), sFiles) > 0 then
         MergeInto(e, ovr);
     end;
