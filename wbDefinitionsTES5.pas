@@ -6334,7 +6334,7 @@ begin
     wbStruct(ENIT, 'Effect Data', [
       wbInteger('Value', itS32),
       wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'No Auto-Calc (Unused)',
+        {0x00000001} 'No Auto-Calc',
         {0x00000002} 'Food Item',
         {0x00000004} 'Unknown 3',
         {0x00000008} 'Unknown 4',
@@ -6352,7 +6352,7 @@ begin
 				{0x00008000} 'Unknown 16',
 				{0x00010000} 'Medicine',
 				{0x00020000} 'Poison'
-      ], [0])),
+      ])),
       wbFormID('Addiction'),
       wbFloat('Addiction Chance'),
       wbFormIDCk('Sound - Consume', [SNDR, NULL])
