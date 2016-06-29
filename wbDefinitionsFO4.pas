@@ -5365,6 +5365,168 @@ var
   FaceMorphs: array of TFaceGenFeature;
   // cache of race specific tint layers
   TintLayers: array of TFaceGenFeature;
+  // cache of race specific morph groups/presets and values
+  MorphValues: array of TFaceGenFeature;
+
+
+function wbMorphValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+
+  function GetCached(const aRaceID: string; aFemale: boolean): PFaceGenFeature;
+  var
+    i: integer;
+  begin
+    Result := nil;
+    if Length(MorphValues) <> 0 then
+      for i := Low(MorphValues) to High(MorphValues) do
+        if (MorphValues[i].Female = aFemale) and (MorphValues[i].RaceID = aRaceID) then begin
+          Result := @MorphValues[i];
+          Break;
+        end;
+  end;
+
+var
+  Actor, Race       : IwbMainRecord;
+  Element           : IwbElement;
+  Container, Entry  : IwbContainerElementRef;
+  Container2, Entry2: IwbContainerElementRef;
+  Female, Female2   : Boolean;
+  RaceID, EntryName : string;
+  Cache             : PFaceGenFeature;
+  Index             : Cardinal;
+  i, j, k           : integer;
+  slList            : TStringList;
+begin
+  // defaults
+  case aType of
+    ctToStr, ctToEditValue: Result := IntToHex64(aInt, 8);
+    ctToSortKey: begin
+      Result := IntToHex64(aInt, 8);
+      Exit;
+    end;
+    ctCheck: Result := '<Warning: Could not resolve morph index ' + IntToHex64(aInt, 8) + '>';
+    ctEditType: Result := '';
+    ctEditInfo: Result := '';
+  end;
+
+  Actor := aElement.ContainingMainRecord;
+
+  Female := Actor.ElementEditValues['ACBS\Flags\Female'] = '1';
+
+  Element := Actor.ElementBySignature['RNAM'];
+  if not Assigned(Element) then
+    Exit;
+
+  Element := Element.LinksTo;
+  if not Supports(Element, IwbMainRecord, Race) then
+    Exit;
+
+  RaceID := Race.EditorID;
+
+  Cache := GetCached(RaceID, Female);
+
+  // cache not found, fill with data from RACE
+  if not Assigned(Cache) then begin
+
+    slList := TStringList.Create;
+
+    for i := 0 to 1 do begin
+
+      Female2 := i = 1;
+      SetLength(MorphValues, Succ(Length(MorphValues)));
+      Cache := @MorphValues[Pred(Length(MorphValues))];
+      Cache.RaceID := RaceID;
+      Cache.Female := Female2;
+
+      slList.Clear;
+
+      if not Female2 then
+        Element := Race.ElementByName['Male Morph Groups']
+      else
+        Element := Race.ElementByName['Female Morph Groups'];
+
+      // iterate over morph groups
+      if Supports(Element, IwbContainerElementRef, Container) then
+        for j := 0 to Pred(Container.ElementCount) do begin
+          if not Supports(Container.Elements[j], IwbContainerElementRef, Entry) then
+            Break;
+
+          // group name
+          EntryName := Entry.ElementEditValues['MPGN'];
+
+          // iterate over morph group presets
+          if not Supports(Entry.ElementByName['Morph Presets'], IwbContainerElementRef, Container2) then
+            Continue;
+
+          for k := 0 to Pred(Container2.ElementCount) do
+            if Supports(Container2.Elements[k], IwbContainerElementRef, Entry2) then
+              slList.AddObject(
+                EntryName + ' - ' + Entry2.ElementEditValues['MPPN'],
+                TObject(Cardinal(Entry2.ElementNativeValues['MPPI']))
+              );
+        end;
+
+      // append morph values, same for both sexes
+      if Supports(Race.ElementByName['Morph Values'], IwbContainerElementRef, Container) then
+        for j := 0 to Pred(Container.ElementCount) do
+          if Supports(Container.Elements[j], IwbContainerElementRef, Entry) then
+            slList.AddObject(
+              Entry.ElementEditValues['MSM0'] + '/' + Entry.ElementEditValues['MSM1'],
+              TObject(Cardinal(Entry.ElementNativeValues['MSID']))
+            );
+
+      SetLength(Cache.Entries, slList.Count);
+
+      for j := 0 to Pred(slList.Count) do begin
+        Cache.Entries[j].Index := Cardinal(slList.Objects[j]);
+        Cache.Entries[j].Name := slList[j];
+      end;
+
+    end;
+
+    slList.Free;
+
+    Cache := GetCached(RaceID, Female);
+  end;
+
+  if not Assigned(Cache) then
+    Exit;
+
+  EntryName := '';
+  Index := Cardinal(aInt);
+  if Length(Cache.Entries) <> 0 then
+    for i := Low(Cache.Entries) to High(Cache.Entries) do
+      if Cache.Entries[i].Index = Index then begin
+        EntryName := Cache.Entries[i].Name;
+        Break;
+      end;
+
+  case aType of
+    ctToStr: begin
+      if EntryName <> '' then
+        Result := IntToHex64(aInt, 8) + ' ' + EntryName
+      else
+        Result := IntToHex64(aInt, 8) + ' <Morph index not found in ' + Race.Name + '>';
+    end;
+    ctCheck: begin
+      if EntryName = '' then
+        Result := '<Morph index ' + IntToHex(aInt, 8) + ' not found in ' + Race.Name + '>'
+      else
+        Result := '';
+    end;
+    ctEditType: Result := 'ComboBox';
+    ctEditInfo: begin
+      Result := '';
+      if Length(Cache.Entries) <> 0 then
+        for i := Low(Cache.Entries) to High(Cache.Entries) do begin
+          if Result <> '' then Result := Result + ',';
+          Result := Result + IntToHex(Cache.Entries[i].Index, 8) + ':' + Cache.Entries[i].Name;
+        end;
+      Result := StringReplace(Result, ' ', '', [rfReplaceAll]);
+    end;
+  end;
+end;
+
+
 
 function wbFaceMorphToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 
@@ -5423,7 +5585,13 @@ begin
   if not Assigned(Cache) then begin
 
     for i := 0 to 1 do begin
+
       Female2 := i = 1;
+      SetLength(FaceMorphs, Succ(Length(FaceMorphs)));
+      Cache := @FaceMorphs[Pred(Length(FaceMorphs))];
+      Cache.RaceID := RaceID;
+      Cache.Female := Female2;
+
       if not Female2 then
         Element := Race.ElementByName['Male Face Morphs']
       else
@@ -5432,10 +5600,6 @@ begin
       if not Supports(Element, IwbContainerElementRef, Container) then
         Continue;
 
-      SetLength(FaceMorphs, Succ(Length(FaceMorphs)));
-      Cache := @FaceMorphs[Pred(Length(FaceMorphs))];
-      Cache.RaceID := RaceID;
-      Cache.Female := Female2;
       SetLength(Cache.Entries, Container.ElementCount);
 
       for j := 0 to Pred(Container.ElementCount) do begin
@@ -5446,9 +5610,9 @@ begin
       end;
     end;
 
+    Cache := GetCached(RaceID, Female);
   end;
 
-  Cache := GetCached(RaceID, Female);
   if not Assigned(Cache) then
     Exit;
 
@@ -5506,11 +5670,13 @@ var
   Actor, Race       : IwbMainRecord;
   Element           : IwbElement;
   Container, Entry  : IwbContainerElementRef;
+  Container2, Entry2: IwbContainerElementRef;
   Female, Female2   : Boolean;
   RaceID, EntryName : string;
   Cache             : PFaceGenFeature;
   Index             : Cardinal;
-  i, j, t           : integer;
+  i, j, k           : integer;
+  slList            : TStringList;
 begin
   // defaults
   case aType of
@@ -5543,8 +5709,16 @@ begin
   // cache not found, fill with data from RACE
   if not Assigned(Cache) then begin
 
+    slList := TStringList.Create;
+
     for i := 0 to 1 do begin
+
       Female2 := i = 1;
+      SetLength(TintLayers, Succ(Length(TintLayers)));
+      Cache := @TintLayers[Pred(Length(TintLayers))];
+      Cache.RaceID := RaceID;
+      Cache.Female := Female2;
+
       if not Female2 then
         Element := Race.ElementByName['Male Tint Layers']
       else
@@ -5553,28 +5727,33 @@ begin
       if not Supports(Element, IwbContainerElementRef, Container) then
         Continue;
 
-      SetLength(TintLayers, Succ(Length(TintLayers)));
-      Cache := @TintLayers[Pred(Length(TintLayers))];
-      Cache.RaceID := RaceID;
-      Cache.Female := Female2;
-      SetLength(Cache.Entries, Container.ElementCount);
+      slList.Clear;
 
-      t := 0;
-      for j := 0 to Pred(Container.ElementCount) do begin
-        if not Supports(Container.Elements[j], IwbContainerElementRef, Entry) then
-          Break;
-        if not Entry.ElementExists['TETI'] then
-          Continue;
-        Cache.Entries[t].Index := Entry.ElementNativeValues['TETI\Index'];
-        Cache.Entries[t].Name := Entry.ElementEditValues['TTGP'];
-        Inc(t);
+      // iterate over tint groups
+      for j := 0 to Pred(Container.ElementCount) do
+        if Supports(Container.Elements[j], IwbContainerElementRef, Entry) then
+          // iterate over tint group options
+          if Supports(Entry.ElementByName['Options'], IwbContainerElementRef, Container2) then
+            for k := 0 to Pred(Container2.ElementCount) do
+              if Supports(Container2.Elements[k], IwbContainerElementRef, Entry2) then
+                slList.AddObject(
+                  Entry.ElementEditValues['TTGP'] + ' - ' + Entry2.ElementEditValues['TTGP'],
+                  TObject(Cardinal(Entry2.ElementNativeValues['TETI\Index']))
+                );
+
+      SetLength(Cache.Entries, slList.Count);
+
+      for j := 0 to Pred(slList.Count) do begin
+        Cache.Entries[j].Index := Cardinal(slList.Objects[j]);
+        Cache.Entries[j].Name := slList[j];
       end;
-      SetLength(Cache.Entries, t);
     end;
 
+    slList.Free;
+
+    Cache := GetCached(RaceID, Female);
   end;
 
-  Cache := GetCached(RaceID, Female);
   if not Assigned(Cache) then
     Exit;
 
@@ -13002,19 +13181,19 @@ begin
       wbFloat('Blue', cpNormal, True, 255, 0),
       wbFloat('Alpha')
     ]),
-    wbArray(MSDK, 'CharGen Keys', wbByteArray('Key', 4)),
-    wbArray(MSDV, 'CharGen Values', wbFloat('Value')),
-    wbRArray('Face Tinting Layers',
-      wbRStruct('Layer', [
-        wbStruct(TETI, 'Index', [
-          wbByteArray('Unknown', 2),
+    wbArray(MSDK, 'Morph Keys', wbInteger('Key', itU32, wbMorphValueToStr, wbHexStrToInt)),
+    wbArray(MSDV, 'Morph Values', wbFloat('Value')),
+    wbRArrayS('Face Tinting Layers',
+      wbRStructSK([0], 'Layer', [
+        wbStructSK(TETI, [1], 'Index', [
+          wbInteger('Data Type', itU16, wbEnum(['', 'Value/Color', 'Value'])),
           wbInteger('Index', itU16, wbTintLayerToStr, wbStrToInt)
         ]),
         //wbByteArray(TEND, 'Data')
         wbStruct(TEND, 'Data', [
           wbInteger('Value', itU8, wbDiv(100)),
           wbByteColors('Color'),
-          wbUnknown
+          wbInteger('Template Color Index', itS16)
         ], cpNormal, True, nil, 1)
       ], [])
     ),
@@ -13109,8 +13288,13 @@ procedure DefineFO4n;
   function wbTintTemplateGroups(const aName: string): IwbSubRecordArrayDef;
   begin
     Result :=
-      wbRArray{S}(aName,
-        wbRStruct{SK}({[0], }'Tint Template Group', [
+      wbRStructs(aName, 'Group', [
+        wbLString(TTGP, 'Group Name', 0, cpTranslate),
+        wbRStructs('Options', 'Option', [
+          wbStruct(TETI, 'Index', [
+            wbByteArray('Unknown', 2),
+            wbInteger('Index', itU16)
+          ]),
           wbLString(TTGP, 'Name', 0, cpTranslate),
           wbUnknown(TTEF),
           wbCTDAs,
@@ -13122,14 +13306,10 @@ procedure DefineFO4n;
             wbInteger('Template Index', itU16),
             wbByteArray('Unknown', 4)
           ])),
-          wbUnknown(TTED),
-          wbStruct(TETI, 'Index', [
-            wbByteArray('Unknown', 2),
-            wbInteger('Index', itU16)
-          ]),
-          wbUnknown(TTGE)
-        ], [])
-      );
+          wbFloat(TTED, 'Unknown')
+        ], []),
+        wbByteArray(TTGE, 'Group End', 4)
+      ], []);
   end;
 
   function wbMorphGroups(const aName: string): IwbSubRecordArrayDef;
@@ -13141,7 +13321,7 @@ procedure DefineFO4n;
           wbInteger(MPPC, 'Count', itU32),
           wbRArray('Morph Presets',
             wbRStruct('Morph Preset', [
-              wbByteArray(MPPI, 'Index'),
+              wbInteger(MPPI, 'Index', itU32, wbIntToHexStr, wbHexStrToInt),
               wbLString(MPPN, 'Name', 0, cpTranslate),
               wbString(MPPM, 'Unknown'),
               wbFormIDCk(MPPT, 'Texture', [TXST]),
@@ -13925,11 +14105,11 @@ begin
     ),
     wbFloat(PTOP, 'Idle Chatter Time Min'),
     wbFloat(NTOP, 'Idle Chatter Time Max'),
-    wbRArray('Unknown',
-      wbRStruct('Unknown', [
-        wbUnknown(MSID),
-        wbString(MSM0, 'Unknown'),
-        wbString(MSM1, 'Unknown')
+    wbRArray('Morph Values',
+      wbRStruct('Value', [
+        wbInteger(MSID, 'Index', itU32, wbIntToHexStr, wbHexStrToInt),
+        wbString(MSM0, 'Min Name'),
+        wbString(MSM1, 'Max Name')
       ], [])
     ),
     wbUnknown(MLSI),
