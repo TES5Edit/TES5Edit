@@ -7379,7 +7379,7 @@ begin
              {0x00000001}'Unknown 1',
              {0x00000002}'Always Uses World Orientation',
              {0x00000004}'Knock Down - Always',
-             {0x00000008}'Knock Down - By Formular',
+             {0x00000008}'Knock Down - By Formula',
              {0x00000010}'Ignore LOS Check',
              {0x00000020}'Push Explosion Source Ref Only',
              {0x00000040}'Ignore Image Space Swap'
@@ -10306,7 +10306,7 @@ begin
         171, 'HandGrip1',
         172, 'HandGrip2',
         173, 'HandGrip3',
-        255, ' DEFAULT'
+        255, 'DEFAULT'
       ])),
       {14} wbInteger('Ammo Use', itU8),
       {15} wbInteger('Reload Animation', itU8, wbReloadAnimEnum),
@@ -10337,7 +10337,7 @@ begin
             121, 'AttackThrow3',
             127, 'AttackThrow4',
             133, 'AttackThrow5',
-            255, ' DEFAULT'
+            255, 'DEFAULT'
            ])),
       {42} wbInteger('Projectile Count', itU8),
       {43} wbInteger('Embedded Weapon - Actor Value', itU8, wbEnum([
