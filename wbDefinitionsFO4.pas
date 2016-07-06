@@ -8627,7 +8627,7 @@ begin
     wbMODL,
     wbICON,
     wbMICO,
-    wbLStringKC(DESC, 'Book Text', 0, cpTranslate, True),
+    wbDESCreq,
     wbDEST,
     wbYNAM,
     wbZNAM,
@@ -12986,7 +12986,7 @@ begin
         wbInteger('Count', itU32)
       ])
     ),
-    wbLString(DESC, 'Description', 0, cpTranslate),
+    wbDESC,
     wbCTDAs,
     wbFormIDCk(CNAM, 'Created Object', sigBaseObjects),
     wbFormIDCk(BNAM, 'Workbench Keyword', [KYWD]),
@@ -15847,7 +15847,7 @@ begin
     ])), [
     wbEDID,
     wbFULL,
-    wbLString(DESC, 'Description', 0, cpTranslate),
+    wbDESC,
     wbMODL,
     wbStruct(DATA, 'Data', [
       wbInteger('Include Count', itU32),
