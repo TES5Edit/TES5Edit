@@ -7120,7 +7120,10 @@ begin
     wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
 
     wbEmpty(XIS2, 'Ignored by Sandbox'),
-    wbRArray('Spline Connection', wbFormIDCk(XPLK, 'Link', [REFR])),
+    wbRArray('Spline Connection', wbStruct(XPLK, 'Link', [
+      wbFormIDCk('Ref', [REFR]),
+      wbUnknown  // always 00 00 00 00 so far in DLCWorkshop03.esm
+    ])),
     wbFloat(XHTW, 'Head-Tracking Weight'),
     wbFloat(XFVC, 'Favor Cost'),
 
@@ -9703,6 +9706,7 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbPRPS,
+    wbNTRM,
     wbFTYP,
     wbUnknown(PNAM),
     wbFormIDCk(WNAM, 'Drinking Water Type', [WATR]),
@@ -14592,7 +14596,10 @@ begin
     {--- Attach reference ---}
     wbFormIDCk(XATR, 'Attach Ref', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
 
-    wbRArray('Spline Connection', wbFormIDCk(XPLK, 'Link', [REFR])),
+    wbRArray('Spline Connection', wbStruct(XPLK, 'Link', [
+      wbFormIDCk('Ref', [REFR]),
+      wbUnknown  // always 00 00 00 00 so far in DLCWorkshop03.esm
+    ])),
 
     wbRStruct('Power Grid', [
       wbInteger(XWPG, 'Count', itU32),
