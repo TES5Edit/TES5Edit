@@ -13057,9 +13057,9 @@ begin
         wbInteger('Level', itS16, nil, cpNormal, True, nil{wbActorTemplateUseStats}),
         wbInteger('Level Mult', itS16, wbDiv(1000), cpNormal, True, nil{wbActorTemplateUseStats})
       ], cpNormal, True, nil{wbActorTemplateUseStats}),
-      wbInteger('Unknown', itS16, nil, cpNormal, False, nil{wbActorTemplateUseAIData}),
       wbInteger('Calc min level', itU16, nil, cpNormal, True, nil{wbActorTemplateUseStats}),
       wbInteger('Calc max level', itU16, nil, cpNormal, True, nil{wbActorTemplateUseStats}),
+      wbInteger('Disposition Base', itS16),
       wbInteger('Use Template Actors', itU16, wbFlags([
         {0x0001} 'Traits',
         {0x0002} 'Stats',
@@ -13217,9 +13217,9 @@ begin
           wbFloat('Position - X'),
           wbFloat('Position - Y'),
           wbFloat('Position - Z'),
-          wbFloat('Rotation - X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-          wbFloat('Rotation - Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-          wbFloat('Rotation - Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+          wbFloat('Rotation - X'),
+          wbFloat('Rotation - Y'),
+          wbFloat('Rotation - Z'),
           wbFloat('Scale'),
           wbByteArray('Unknown')
         ])
