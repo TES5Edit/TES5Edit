@@ -7121,7 +7121,7 @@ begin
 
     wbEmpty(XIS2, 'Ignored by Sandbox'),
     wbRArray('Spline Connection', wbStruct(XPLK, 'Link', [
-      wbFormIDCk('Ref', [REFR]),
+      wbFormIDCk('Ref', [REFR, ACHR]),
       wbUnknown  // always 00 00 00 00 so far in DLCWorkshop03.esm
     ])),
     wbFloat(XHTW, 'Head-Tracking Weight'),
@@ -14597,15 +14597,15 @@ begin
     wbFormIDCk(XATR, 'Attach Ref', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
 
     wbRArray('Spline Connection', wbStruct(XPLK, 'Link', [
-      wbFormIDCk('Ref', [REFR]),
+      wbFormIDCk('Ref', [REFR, ACHR]),
       wbUnknown  // always 00 00 00 00 so far in DLCWorkshop03.esm
     ])),
 
     wbRStruct('Power Grid', [
       wbInteger(XWPG, 'Count', itU32),
       wbRArray('Connections', wbStruct(XWPN, 'Connection', [
-        wbFormIDCk('Node 1', [REFR, NULL]),
-        wbFormIDCk('Node 2', [REFR, NULL]),
+        wbFormIDCk('Node 1', [REFR, ACHR, NULL]),
+        wbFormIDCk('Node 2', [REFR, ACHR, NULL]),
         wbFormIDCk('Line', [REFR, NULL]) // BNDS ref
       ]))
     ], []),
