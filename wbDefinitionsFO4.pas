@@ -12270,7 +12270,8 @@ begin
       'Playable',
       'Remapping Index',
       'Extended LUT'
-    ]), cpNormal, True)
+    ]), cpNormal, True),
+    wbCTDAs
   ]);
 end;
 
@@ -14369,7 +14370,7 @@ begin
       wbFloat('Unknown'), // not shown in editor
       wbInteger('Wind - Detached End', itU8, wbBoolEnum),
       wbByteArray('Unused', 0) // junk data?
-    ]),
+    ], cpNormal, False, nil, 5),
     wbStruct(XPDD, 'Projected Decal', [
       wbFloat('Width Scale'),
       wbFloat('Height Scale')
