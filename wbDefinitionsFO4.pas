@@ -15794,8 +15794,8 @@ begin
     ])), [
     wbEDID,
     wbString(FNAM, 'Tree Folder'), {First FNAM}
-    wbRArray('Material Substitutions',
-      wbRStruct('Substitution', [
+    wbRArrayS('Material Substitutions',
+      wbRStructSK([0], 'Substitution', [
         wbString(BNAM, 'Original Material'),
         wbString(SNAM, 'Replacement Material'),
         wbString(FNAM, 'Tree Folder (obsolete)'), {Unused, will be moved up to First FNAM}
