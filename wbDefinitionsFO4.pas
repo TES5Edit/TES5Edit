@@ -8470,17 +8470,18 @@ begin
     ], cpNormal, True, nil, 1),
     wbStruct(DNAM, '', [
       wbFormIDCk('Projectile', [PROJ, NULL]),
-      wbInteger('Flags', itU32, wbFlags([
-        'Ignores Normal Weapon Resistance',
-        'Non-Playable',
-        'Has Count Based 3D'
+      wbInteger('Flags', itU8, wbFlags([
+        {0x01} 'Ignores Normal Weapon Resistance',
+        {0x02} 'Non-Playable',
+        {0x04} 'Has Count Based 3D'
       ])),
+      wbByteArray('Unused', 3),
       wbFloat('Damage'),
       wbInteger('Health', itU32)
     ], cpNormal, True),
     wbLStringKC(ONAM, 'Short Name', 0, cpTranslate),
     wbString(NAM1, 'Casing Model'),
-    wbUnknown(NAM2)
+    wbByteArray(NAM2, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow)
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   wbRecord(ANIO, 'Animated Object',
