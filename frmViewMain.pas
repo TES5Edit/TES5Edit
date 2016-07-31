@@ -3318,11 +3318,12 @@ procedure TfrmMain.DoInit;
          2. Add missing files from BOSS list loadorder.txt
       }
       if not (wbGameMode in [gmTES3, gmTES4, gmFO3, gmFNV]) then begin
-        sl.LoadFromFile(wbPluginsFileName);
+        if FileExists(wbPluginsFileName) then
+          sl.LoadFromFile(wbPluginsFileName);
         sl2 := TStringList.Create;
         try
           RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl, sl2); // remove comments
-          useBOSS := sl2.Count = 0;
+          useBOSS := (sl2.Count = 0) and (wbGameMode = gmTES5); // FO4 doesn't use loadorder.txt anymore
         finally
           sl2.Free;
         end;
@@ -3398,6 +3399,7 @@ var
   saveExt       : string;
   coSaveExt     : string;
   R             : TSearchRec;
+  Rect          : TRect;
   frmFileSelect : TfrmFileSelect;
 
 begin
@@ -3488,7 +3490,8 @@ begin
 
   AddMessage('Using plugin list: ' + wbPluginsFileName);
   if not FileExists(wbPluginsFileName) then begin
-    if wbToolSource in [tsPlugins] then begin
+    // plugins file could be missing in Fallout 4 since DLCs are loaded automatically
+    if (wbToolSource in [tsPlugins]) and not (wbGameMode in [gmFO4]) then begin
       AddMessage('Fatal: Could not find plugin list');
       Exit;
     end else
@@ -3505,10 +3508,21 @@ begin
 
   // skip reading main form position if Shift is pressed
   if GetKeyState(VK_SHIFT) >= 0 then begin
-    Left := Settings.ReadInteger(Name, 'Left', Left);
-    Top := Settings.ReadInteger(Name, 'Top', Top);
-    Width := Settings.ReadInteger(Name, 'Width', Width);
-    Height := Settings.ReadInteger(Name, 'Height', Height);
+    i := Settings.ReadInteger(Name, 'Left', Left);
+    j := Settings.ReadInteger(Name, 'Top', Top);
+    k := Settings.ReadInteger(Name, 'Width', Width);
+    l := Settings.ReadInteger(Name, 'Height', Height);
+    Rect := Screen.WorkAreaRect;
+    if (i >= Rect.Top) and
+       (j >= Rect.Left) and
+       (i + k <= Rect.Right) and
+       (j + l <= Rect.Bottom)
+    then begin
+      Left := i;
+      Top := j;
+      Width := k;
+      Height := l;
+    end;
     WindowState := TWindowState(Settings.ReadInteger(Name, 'WindowState', Integer(WindowState)));
   end;
 
@@ -3590,7 +3604,8 @@ begin
             sl2 := TStringList.Create;
             try
               // check active files using the game's plugins list
-              sl.LoadFromFile(wbPluginsFileName);
+              if FileExists(wbPluginsFileName) then
+                sl.LoadFromFile(wbPluginsFileName);
               RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl, sl2);
               if (wbGameMode >= gmFO4) and (sl2.Count>0) then begin // use starred files as active files...
                 sl.Clear;
