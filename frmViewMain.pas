@@ -3247,18 +3247,23 @@ procedure TfrmMain.DoInit;
   procedure AddMissingToLoadList(sl: TStrings);
   var
     F     : TSearchRec;
+    slDlc : TStringList;
     slNew : TStringList;
     i, j  : integer;
   begin
     if FindFirst(wbDataPath + '*.*', faAnyFile, F) = 0 then try
       slNew := TStringList.Create;
+      slDlc := TStringList.Create;
       try
+        if wbGameMode >= gmFO4 then // allows using string list search rather than for loop comparison
+          for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
+            slDLC.Add(wbOfficialDLC[i]);
         repeat
           if IsFileESM(F.Name) or IsFileESP(F.Name) then begin
             if SameText(F.Name, wbGameName + '.hardcoded.esp') then
               DeleteFile(wbDataPath + F.Name)
             else
-            if FindMatchText(sl, F.Name) < 0 then
+            if (FindMatchText(sl, F.Name) < 0) and (FindMatchText(slDLC, F.Name) < 0) then
               slNew.AddObject(F.Name, TObject(FileAge(wbDataPath + F.Name)));
           end;
         until FindNext(F) <> 0;
@@ -3281,6 +3286,7 @@ procedure TfrmMain.DoInit;
             sl.AddObject(slNew[i], slNew.Objects[i]);
         end;
       finally
+        slDlc.Free;
         slNew.Free;
       end;
     finally
@@ -3383,6 +3389,7 @@ procedure TfrmMain.DoInit;
 
 var
   i, j, k, l    : Integer;
+  e             : Boolean;
   s             : string;
   sl, sl2, sl3  : TStringList;
   ConflictAll   : TConflictAll;
@@ -3612,32 +3619,30 @@ begin
                 for i := 0 to Pred(sl2.Count) do
                   sl.Add(sl2[i]);
               end;
-              if wbGameMode = gmFO4 then // DLC are activated if they are present
+              if wbGameMode = gmFO4 then // DLC are added if they are present on disk and not in plugins.txt
                 for i := High(wbOfficialDLC) downto Low(wbOfficialDLC) do begin
+                  e := FileExists(wbDataPath+wbOfficialDLC[i]);
                   j := FindMatchText(sl, wbOfficialDLC[i]);
                   k := CheckListBox1.Items.IndexOf(wbOfficialDLC[i]);
-                  if (j = -1) and (k>=0) then sl.Add(wbOfficialDLC[i]);
+                  // Since FO4 1.6 that should be right after the main game
+                  if (j = -1) then begin
+                    if (k = -1) and e then CheckListBox1.Items.Insert(1, wbOfficialDLC[i]);
+                    if (k>=0) or e then sl.Insert(1, wbOfficialDLC[i]);
+                    // Still need to verify the exact indexes used if some DLC are in plugins.txt but not others.
+                  end;
                 end;
             finally
               sl2.Free;
             end;
             for i := Pred(sl.Count) downto 0 do begin
               s := sl.Strings[i];
-//              j := Pos('#', s);
-//              if j > 0 then
-//                System.Delete(s, j, High(Integer));
-//              s := Trim(s);
-//              if s = '' then begin
-//                sl.Delete(i);
-//                Continue;
-//              end;
 
-                j := CheckListBox1.Items.IndexOf(s);
-                if j < 0 then
-                  AddMessage('Note: Active plugin List contains nonexisting file "' + s + '"')
-                else
-                  CheckListBox1.Checked[j] := True;
-              end;
+              j := CheckListBox1.Items.IndexOf(s);
+              if j < 0 then
+                AddMessage('Note: Active plugin List contains nonexisting file "' + s + '"')
+              else
+                CheckListBox1.Checked[j] := True;
+            end;
           end;
 
         if not ((wbToolMode in wbAutoModes) or wbQuickShowConflicts) then begin
