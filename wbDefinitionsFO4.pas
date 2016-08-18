@@ -1116,7 +1116,11 @@ begin
   if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
     Exit;
 
-  MainRecord := MainRecord.WinningOverride;
+  // get winning quest override except for partial forms
+  if MainRecord.WinningOverride.Flags._Flags and $00004000 = 0 then
+    MainRecord := MainRecord.WinningOverride
+  else if MainRecord.Flags._Flags and $00004000 <> 0 then
+    MainRecord := MainRecord.MasterOrSelf;
 
   if MainRecord.Signature <> QUST then begin
     case aType of
@@ -1207,7 +1211,11 @@ begin
   if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
     Exit;
 
-  MainRecord := MainRecord.WinningOverride;
+  // get winning quest override except for partial forms
+  if MainRecord.WinningOverride.Flags._Flags and $00004000 = 0 then
+    MainRecord := MainRecord.WinningOverride
+  else if MainRecord.Flags._Flags and $00004000 <> 0 then
+    MainRecord := MainRecord.MasterOrSelf;
 
   if MainRecord.Signature <> QUST then begin
     case aType of
@@ -1368,7 +1376,11 @@ begin
     if not Supports(aQuestRef.LinksTo, IwbMainRecord, MainRecord) then
       Exit;
 
-  MainRecord := MainRecord.WinningOverride;
+  // get winning quest override except for partial forms
+  if MainRecord.WinningOverride.Flags._Flags and $00004000 = 0 then
+    MainRecord := MainRecord.WinningOverride
+  else if MainRecord.Flags._Flags and $00004000 <> 0 then
+    MainRecord := MainRecord.MasterOrSelf;
 
   if MainRecord.Signature <> QUST then begin
     case aType of
@@ -9209,11 +9221,13 @@ begin
       // this should not be named Flags since TwbFile.BuildReachable
       // expects Top-Level flag here from FNV
       wbInteger('Topic Flags', itU8, wbFlags([
-        'Do All Before Repeating'
+        'Do All Before Repeating',
+        'Unknown 1',
+        'Unknown 2'
       ]), cpNormal, True),
       wbInteger('Category', itU8, wbEnum([
         {0} 'Topic',
-        {1} 'Favor', // only in DA14 quest topics
+        {1} 'Favor',
         {2} 'Scene',
         {3} 'Combat',
         {4} 'Favors',
@@ -10782,95 +10796,97 @@ begin
   wbRecord(BPTD, 'Body Part Data', [
     wbEDID,
     wbMODL,
-    wbRStructsSK('Body Parts', 'Body Part', [1], [
-      wbLString(BPTN, 'Part Name', 0, cpTranslate, True),
-      wbString(BPNN, 'Part Node', 0, cpNormal, True),
-      wbString(BPNT, 'VATS Target', 0, cpNormal, True),
-      wbStruct(BPND, '', [
-        wbFloat('Damage Mult'),
-        wbFormIDCk('Explodable - Debris', [DEBR, NULL]),
-        wbFormIDCk('Explodable - Explosion', [EXPL, NULL]),
-        wbFloat('Explodable - Debris Scale'),
-        wbFormIDCk('Severable - Debris', [DEBR, NULL]),
-        wbFormIDCk('Severable - Explosion', [EXPL, NULL]),
-        wbFloat('Severable - Debris Scale'),
-        wbFloat('Cut - Min'),
-        wbFloat('Cut - Max'),
-        wbFloat('Cut - Radius'),
-        wbFloat('Gore Effects - Local Rotate X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Gore Effects - Local Rotate Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Cut - Tesselation'),
-        wbFormIDCk('Severable - Impact DataSet', [IPDS, NULL]),
-        wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
-        wbFloat('Explodable - Limb Replacement Scale'),
-        wbInteger('Flags', itU8, wbFlags([
-          {0x01} 'Severable',
-          {0x02} 'Hit Reaction',
-          {0x04} 'Hit Reaction - Default',
-          {0x08} 'Explodable',
-          {0x10} 'Cut - Meat Cap Sever',
-          {0x20} 'On Cripple',
-          {0x40} 'Explodable - Absolute Chance',
-          {0x80} 'Show Cripple Geometry'
-        ])),
-        wbInteger('Part Type', itU8, wbEnum([
-          { 0} 'Torso',
-          { 1} 'Head1',
-          { 2} 'Eye',
-          { 3} 'LookAt',
-          { 4} 'Fly Grab',
-          { 5} 'Head2',
-          { 6} 'LeftArm1',
-          { 7} 'LeftArm2',
-          { 8} 'RightArm1',
-          { 9} 'RightArm2',
-          {10} 'LeftLeg1',
-          {11} 'LeftLeg2',
-          {12} 'LeftLeg3',
-          {13} 'RightLeg1',
-          {14} 'RightLeg2',
-          {15} 'RightLeg3',
-          {16} 'Brain',
-          {17} 'Weapon',
-          {18} 'Root',
-          {19} 'COM',
-          {20} 'Pelvis',
-          {21} 'Camera',
-          {22} 'Offset Root',
-          {23} 'Left Foot',
-          {24} 'Right Foot',
-          {25} 'Face Target Source'
-        ])),
-        wbInteger('Health Percent', itU8),
-        wbFormIDCk('Actor Value', [AVIF, NULL]),
-        wbInteger('To Hit Chance', itU8),
-        wbInteger('Explodable - Explosion Chance %', itU8),
-        wbInteger('Non-Lethal Dismemberment Chance', itU8),
-        wbInteger('Severable - Debris Count', itU8),
-        wbInteger('Explodable - Debris Count', itU8),
-        wbInteger('Severable - Decal Count', itU8),
-        wbInteger('Explodable - Decal Count', itU8),
-        wbInteger('Geometry Segment Index', itU8),
-        wbFormIDCk('On Cripple - Art Object', [ARTO, NULL]),
-        wbFormIDCk('On Cripple - Debris', [DEBR, NULL]),
-        wbFormIDCk('On Cripple - Explosion', [EXPL, NULL]),
-        wbFormIDCk('On Cripple - Impact DataSet', [IPDS, NULL]),
-        wbFloat('On Cripple - Debris Scale'),
-        wbInteger('On Cripple - Debris Count', itU8),
-        wbInteger('On Cripple - Decal Count', itU8)
-      ], cpNormal, True),
-      wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
-      wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
-      wbByteArray(NAM5, 'Texture Files Hashes', 0, cpNormal),
-      wbString(ENAM, 'Hit Reaction - Start'),
-      wbString(FNAM, 'Hit Reaction - End'),
-      wbFormIDCk(BNAM, 'Gore Effects - Dismember Blood Art', [ARTO]),
-      wbFormIDCk(INAM, 'Gore Effects - Blood Impact Material Type', [MATT]),
-      wbFormIDCk(JNAM, 'On Cripple - Blood Impact Material Type', [MATT]),
-      wbFormIDCk(CNAM, 'Meat Cap TextureSet', [TXST]),
-      wbFormIDCk(NAM2, 'Collar TextureSet', [TXST]),
-      wbString(DNAM, 'Twist Variable Prefix')
-    ], [], cpNormal, True)
+    wbRArrayS('Body Parts',
+      wbRStructSK([1], 'Body Part', [
+        wbLString(BPTN, 'Part Name', 0, cpTranslate), // optional
+        wbString(BPNN, 'Part Node', 0, cpNormal, True),
+        wbString(BPNT, 'VATS Target', 0, cpNormal, True),
+        wbStruct(BPND, '', [
+          wbFloat('Damage Mult'),
+          wbFormIDCk('Explodable - Debris', [DEBR, NULL]),
+          wbFormIDCk('Explodable - Explosion', [EXPL, NULL]),
+          wbFloat('Explodable - Debris Scale'),
+          wbFormIDCk('Severable - Debris', [DEBR, NULL]),
+          wbFormIDCk('Severable - Explosion', [EXPL, NULL]),
+          wbFloat('Severable - Debris Scale'),
+          wbFloat('Cut - Min'),
+          wbFloat('Cut - Max'),
+          wbFloat('Cut - Radius'),
+          wbFloat('Gore Effects - Local Rotate X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+          wbFloat('Gore Effects - Local Rotate Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+          wbFloat('Cut - Tesselation'),
+          wbFormIDCk('Severable - Impact DataSet', [IPDS, NULL]),
+          wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
+          wbFloat('Explodable - Limb Replacement Scale'),
+          wbInteger('Flags', itU8, wbFlags([
+            {0x01} 'Severable',
+            {0x02} 'Hit Reaction',
+            {0x04} 'Hit Reaction - Default',
+            {0x08} 'Explodable',
+            {0x10} 'Cut - Meat Cap Sever',
+            {0x20} 'On Cripple',
+            {0x40} 'Explodable - Absolute Chance',
+            {0x80} 'Show Cripple Geometry'
+          ])),
+          wbInteger('Part Type', itU8, wbEnum([
+            { 0} 'Torso',
+            { 1} 'Head1',
+            { 2} 'Eye',
+            { 3} 'LookAt',
+            { 4} 'Fly Grab',
+            { 5} 'Head2',
+            { 6} 'LeftArm1',
+            { 7} 'LeftArm2',
+            { 8} 'RightArm1',
+            { 9} 'RightArm2',
+            {10} 'LeftLeg1',
+            {11} 'LeftLeg2',
+            {12} 'LeftLeg3',
+            {13} 'RightLeg1',
+            {14} 'RightLeg2',
+            {15} 'RightLeg3',
+            {16} 'Brain',
+            {17} 'Weapon',
+            {18} 'Root',
+            {19} 'COM',
+            {20} 'Pelvis',
+            {21} 'Camera',
+            {22} 'Offset Root',
+            {23} 'Left Foot',
+            {24} 'Right Foot',
+            {25} 'Face Target Source'
+          ])),
+          wbInteger('Health Percent', itU8),
+          wbFormIDCk('Actor Value', [AVIF, NULL]),
+          wbInteger('To Hit Chance', itU8),
+          wbInteger('Explodable - Explosion Chance %', itU8),
+          wbInteger('Non-Lethal Dismemberment Chance', itU8),
+          wbInteger('Severable - Debris Count', itU8),
+          wbInteger('Explodable - Debris Count', itU8),
+          wbInteger('Severable - Decal Count', itU8),
+          wbInteger('Explodable - Decal Count', itU8),
+          wbInteger('Geometry Segment Index', itU8),
+          wbFormIDCk('On Cripple - Art Object', [ARTO, NULL]),
+          wbFormIDCk('On Cripple - Debris', [DEBR, NULL]),
+          wbFormIDCk('On Cripple - Explosion', [EXPL, NULL]),
+          wbFormIDCk('On Cripple - Impact DataSet', [IPDS, NULL]),
+          wbFloat('On Cripple - Debris Scale'),
+          wbInteger('On Cripple - Debris Count', itU8),
+          wbInteger('On Cripple - Decal Count', itU8)
+        ], cpNormal, True),
+        wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
+        wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
+        wbByteArray(NAM5, 'Texture Files Hashes', 0, cpNormal),
+        wbString(ENAM, 'Hit Reaction - Start'),
+        wbString(FNAM, 'Hit Reaction - End'),
+        wbFormIDCk(BNAM, 'Gore Effects - Dismember Blood Art', [ARTO]),
+        wbFormIDCk(INAM, 'Gore Effects - Blood Impact Material Type', [MATT]),
+        wbFormIDCk(JNAM, 'On Cripple - Blood Impact Material Type', [MATT]),
+        wbFormIDCk(CNAM, 'Meat Cap TextureSet', [TXST]),
+        wbFormIDCk(NAM2, 'Collar TextureSet', [TXST]),
+        wbString(DNAM, 'Twist Variable Prefix')
+      ], [], cpNormal, False, nil, True)
+    )
   ]);
 
   wbRecord(ADDN, 'Addon Node', [
@@ -13602,7 +13618,7 @@ begin
 
   wbRecord(QUST, 'Quest',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00004000} 14, 'Partial Form'	// Allows the Record to inherit some surecords from its master
+      {0x00004000} 14, 'Partial Form'	// Allows the Record to inherit some subrecords from its master
     ])), [
     wbEDID,
     wbVMADFragmentedQUST,

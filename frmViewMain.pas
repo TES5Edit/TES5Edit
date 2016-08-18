@@ -3333,6 +3333,7 @@ procedure TfrmMain.DoInit;
         finally
           sl2.Free;
         end;
+
         // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
         // even if not present in plugins.txt
         j := FindMatchText(sl, wbGameName+'.esm');
@@ -3341,7 +3342,20 @@ procedure TfrmMain.DoInit;
           j := FindMatchText(sl, 'Update.esm');
           if j = -1 then sl.Insert(1, 'Update.esm');
         end;
-        RemoveMissingFiles(sl); // remove nonexisting files (including optional DLC)
+
+        // Fallout 4: add official DLCs right after the game master file
+        if wbGameMode = gmFO4 then
+          for i := High(wbOfficialDLC) downto Low(wbOfficialDLC) do begin
+            // delete DLC from list if already there, no matter where it is located since we hardcode their order
+            j := FindMatchText(sl, wbOfficialDLC[i]);
+            if j <> -1 then
+              sl.Delete(j);
+
+            sl.Insert(1, wbOfficialDLC[i]);
+          end;
+
+        // remove nonexisting files (including optional DLC)
+        RemoveMissingFiles(sl);
 
         if useBOSS then begin
           s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
@@ -3614,22 +3628,10 @@ begin
               if FileExists(wbPluginsFileName) then
                 sl.LoadFromFile(wbPluginsFileName);
               RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl, sl2);
-              if (wbGameMode >= gmFO4) and (sl2.Count>0) then begin // use starred files as active files...
+              if (wbGameMode >= gmFO4) and (sl2.Count > 0) then begin // use starred files as active files...
                 sl.Clear;
                 for i := 0 to Pred(sl2.Count) do
                   sl.Add(sl2[i]);
-              end;
-              if wbGameMode = gmFO4 then // DLC are added if they are present on disk and not in plugins.txt
-                for i := High(wbOfficialDLC) downto Low(wbOfficialDLC) do begin
-                  e := FileExists(wbDataPath+wbOfficialDLC[i]);
-                  j := FindMatchText(sl, wbOfficialDLC[i]);
-                  k := CheckListBox1.Items.IndexOf(wbOfficialDLC[i]);
-                  // Since FO4 1.6 that should be right after the main game
-                  if (j = -1) then begin
-                    if (k = -1) and e then CheckListBox1.Items.Insert(1, wbOfficialDLC[i]);
-                    if (k>=0) or e then sl.Insert(1, wbOfficialDLC[i]);
-                    // Still need to verify the exact indexes used if some DLC are in plugins.txt but not others.
-                  end;
                 end;
             finally
               sl2.Free;
