@@ -108,6 +108,7 @@ var
   wbMoreInfoForRequired              : Boolean = False;
   wbMoreInfoForDecider               : Boolean = False;
   wbTrackAllEditorID                 : Boolean = False;
+  wbShowTip                          : Boolean = True;
 
   wbCheckExpectedBytes : Boolean = True;
 

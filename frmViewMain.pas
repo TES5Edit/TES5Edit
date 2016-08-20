@@ -906,7 +906,8 @@ uses
   frmScriptForm,
   frmLogAnalyzerForm,
   frmLODGenForm,
-  frmOptionsForm;
+  frmOptionsForm,
+  frmTipForm;
 
 var
   NoNodes                     : TNodeArray;
@@ -4002,6 +4003,10 @@ begin
 
       if wbQuickClean then
         wbBuildRefs := False;
+
+      wbShowTip := Settings.ReadBool('Options', 'ShowTip', wbShowTip);
+      if wbShowTip and (wbToolMode in [tmEdit]) then
+        ShowTip;
 
       wbStartTime := Now;
       TLoaderThread.Create(sl);
@@ -11312,6 +11317,7 @@ begin
     edRowHeight.Text := IntToStr(RowHeight);
     cbAutoSave.Checked := AutoSave;
     //cbIKnow.Checked := wbIKnowWhatImDoing;
+    cbShowTip.Checked := wbShowTip;
     cbTrackAllEditorID.Checked := wbTrackAllEditorID;
     cbUDRSetXESP.Checked := wbUDRSetXESP;
     cbUDRSetScale.Checked := wbUDRSetScale;
@@ -11346,6 +11352,7 @@ begin
     SetDefaultNodeHeight(RowHeight);
     AutoSave := cbAutoSave.Checked;
     //wbIKnowWhatImDoing := cbIKnow.Checked;
+    wbShowTip := cbShowTip.Checked;
     wbTrackAllEditorID := cbTrackAllEditorID.Checked;
     wbUDRSetXESP := cbUDRSetXESP.Checked;
     wbUDRSetScale := cbUDRSetScale.Checked;
@@ -11376,6 +11383,7 @@ begin
     Settings.WriteInteger('Options', 'RowHeight', RowHeight);
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
     Settings.WriteBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
+    Settings.WriteBool('Options', 'ShowTip', wbShowTip);
     Settings.WriteBool('Options', 'UDRSetXESP', wbUDRSetXESP);
     Settings.WriteBool('Options', 'UDRSetScale', wbUDRSetScale);
     Settings.WriteFloat('Options', 'UDRSetScaleValue', wbUDRSetScaleValue);
@@ -13395,6 +13403,10 @@ const
     ('Fallout3', 'NewVegas', 'Oblivion', 'Oblivion', 'Skyrim', 'Fallout4');
 begin
   if not wbLoaderDone then
+    Exit;
+
+  // skip if Left mouse button is pressed, could be indication of active drag&drop or other action in progress
+  if GetAsyncKeyState(VK_LBUTTON) and $8000 <> 0 then
     Exit;
 
   if UserWasActive then begin
@@ -16130,6 +16142,15 @@ var
   i: Integer;
 begin
   wbLoaderDone := True;
+
+  if wbToolMode in [tmEdit] then begin
+    // unchecked Show Tip checkbox, update setting
+    if Assigned(frmTip) and not wbShowTip then begin
+      Settings.WriteBool('Options', 'ShowTip', wbShowTip);
+      Settings.UpdateFile;
+    end;
+    HideTip;
+  end;
 
   if wbLoaderError then begin
     ShowMessage('An error occured while loading modules. Editing is disabled. Check the message log and correct the error.');
