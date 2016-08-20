@@ -170,6 +170,15 @@ object frmOptions: TfrmOptions
         Caption = 'Show elements count for group records'
         TabOrder = 14
       end
+      object cbShowTip: TCheckBox
+        Left = 298
+        Top = 61
+        Width = 111
+        Height = 17
+        Hint = 'Default only track MGEF and game settings'
+        Caption = 'Show tip on start'
+        TabOrder = 15
+      end
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'
