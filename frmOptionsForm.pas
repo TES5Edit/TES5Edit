@@ -55,6 +55,7 @@ type
     edColumnWidth: TEdit;
     edRowHeight: TEdit;
     Label6: TLabel;
+    cbShowTip: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);

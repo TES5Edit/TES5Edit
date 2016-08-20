@@ -132,6 +132,7 @@
 				<Form>frmLogAnalyzer</Form>
 			</DCCReference>
 			<DCCReference Include="frmLODGenForm.pas"/>
+			<DCCReference Include="frmTipForm.pas"/>
 			<DCCReference Include="wbDefinitionsFNV.pas"/>
 			<DCCReference Include="wbDefinitionsFNVSaves.pas"/>
 			<DCCReference Include="wbDefinitionsFO3.pas"/>
