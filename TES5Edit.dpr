@@ -53,6 +53,7 @@ uses
   frmOptionsForm in 'frmOptionsForm.pas',
   frmLogAnalyzerForm in 'frmLogAnalyzerForm.pas',
   frmLODGenForm in 'frmLODGenForm.pas',
+  frmTipForm in 'frmTipForm.pas',
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
   wbDefinitionsFNVSaves in 'wbDefinitionsFNVSaves.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
