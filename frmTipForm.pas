@@ -57,7 +57,7 @@ end;
 
 procedure TfrmTip.NextTip;
 begin
-  if slTips.Count <> 0 then
+  if Assigned(slTips) and (slTips.Count <> 0) then
     textTip.Caption := slTips[Random(slTips.Count)];
 end;
 
