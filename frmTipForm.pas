@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, uniGUIBaseClasses, uniGUIClasses, uniLabel;
+  Dialogs, StdCtrls, ExtCtrls;
 
 type
   TfrmTip = class(TForm)
