@@ -41,7 +41,7 @@ Pressing Ctrl+W when a weather record is selected brings up visual weather edito
 Holding Shift while clicking OK in plugins selection window disables building of references for all plugins, this speeds up loading but several functions won't work properly like changing FormIDs for example. Cleaning plugins will work though
 xEdit has Options window accessible with right click -> Other -> Options menu, where you can change colors, fonts and other settings
 xEdit stores all of it's settings in Plugins.XXXviewsettings file located in the same folder as plugins.txt, but if you create ini file with the same name as executable in the same folder (FO4Edit.ini for example), xEdit will use it instead
-If you don't see xEdit window after launching, hold Ctrl next time to reset window position
+If you don't see xEdit window after launching, hold Shift next time to reset window position
 Italic font in the left pane means that those records or other record(s) deeper in the tree are injected. They have FormID load order index of a master file but don't override any records from it
 Underlined font in the left pane means that the reference(s) of those records are injected
 Red background color in the records tree doesn't mean something bad, it is just an indication that record(s) are overridden by later loaded plugins having different data
