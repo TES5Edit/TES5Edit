@@ -2519,6 +2519,18 @@ begin  // Could be simplified by checking if Parent Worldspace is NULL, that's w
     Result := 1;
 end;
 
+function wbSubrecordSizeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  SubRecord : IwbSubRecord;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+
+  if Supports(aElement, IwbSubRecord, SubRecord) then
+    if SubRecord.DataSize > 0 then
+      Result := 1;
+end;
+
 function wbCOEDOwnerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container  : IwbContainer;
@@ -10423,7 +10435,14 @@ begin
       ]),
       wbUnknown(ONAM),
       wbUnknown(NNAM),
-      wbUnknown(MNAM)
+      wbUnion(MNAM, 'Unknown', wbSubrecordSizeDecider, [wbNull,
+        wbStruct('Unknown', [
+          wbFormID('Unknown'),
+          wbInteger('Unknown', itU16),
+          wbInteger('Unused', itU16),
+          wbUnknown
+        ])
+      ])
     ], False, wbNAVMAddInfo);
 
   end;
