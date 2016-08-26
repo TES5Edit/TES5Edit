@@ -2472,7 +2472,7 @@ var
   MainRecord  : IwbMainRecord;
   rData       : IwbRecord;
   i           : integer;
-begin
+begin  // Could be simplified by checking if Parent Worldspace is NULL, that's what the runtime does :)
   Result := 0;
 
   Container := aElement.Container;
@@ -7118,15 +7118,29 @@ begin
       wbInteger('Unknown', itU32),
       wbByteArray('Unknown', 4),
       wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-      wbFormIDCk('Parent Cell', [CELL]),
+      wbUnion('Parent', wbNVNMParentDecider, [
+        wbStruct('Coordinates', [
+          wbInteger('Grid Y', itS16),
+          wbInteger('Grid X', itS16)
+        ]),
+        wbFormIDCk('Parent Cell', [CELL])
+      ]),
       wbByteArray('Vertices and Triangles')
     ])
   else
     wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
-      wbInteger('Unknown', itU32),
-      wbByteArray('Unknown', 4),
-      wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-      wbFormIDCk('Parent Cell', [CELL]),
+      wbInteger('Version', itU32),  // Changes how the struct is loaded, should be 15 in FO4
+      wbStruct('Pathing Cell', [
+        wbInteger('Magic', itU32),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
+        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+        wbUnion('Parent', wbNVNMParentDecider, [  // same as TES5 cell if worldspace is null or Grid X Y
+          wbStruct('Coordinates', [
+            wbInteger('Grid Y', itS16),
+            wbInteger('Grid X', itS16)
+          ]),
+          wbFormIDCk('Parent Cell', [CELL])
+        ])
+      ]),
       wbArray('Vertices', wbStruct('Vertex', [
         wbFloat('X'),
         wbFloat('Y'),
@@ -7140,11 +7154,50 @@ begin
           wbInteger('Edge 0-1', itS16),
           wbInteger('Edge 1-2', itS16),
           wbInteger('Edge 2-0', itS16),
-          wbFloat('Height'),
-          wbByteArray('Unknown', 5)
+          wbFloat('Height'), // this and next if form ver > 57
+          wbInteger('Unknown', itU8), // flags
+          wbInteger('Unknown', itU32) // encoding or flags
         ])
       , -1),
-      wbUnknown
+      wbArray('Edge Links',
+        wbStruct('Edge Link', [
+          wbInteger('Unknown', itU32),
+          wbFormIDCk('Mesh', [NAVM]), // those last three are a structure
+          wbInteger('Triangle', itS16),
+          wbInteger('Unknown', itU8) // if form ver > 127
+        ])
+      , -1),
+      wbArray('Door Triangles',
+        wbStruct('Door Triangle', [
+          wbInteger('Triangle before door', itU16), // I would say itU16
+          wbInteger('Unknown', itU32),
+          wbFormIDCk('Door', [REFR])
+        ])
+      , -1),
+      wbArray('Unknown',  // if navmesh version gt 12
+        wbStruct('Unknown', [
+          wbInteger('Unknown', itU16),
+          wbInteger('Unknown', itU16),
+          wbInteger('Unknown', itU32)
+        ])
+      , -1),
+      wbArray('Unknown',  // if navmesh version gt 14
+        wbStruct('Unknown', [
+          wbInteger('Unknown', itU32),
+          wbInteger('Unknown', itU16),
+          wbInteger('Unknown', itU16)
+        ])
+      , -1),
+      wbArray('Unknown',  // if navmesh version gt 11
+        wbStruct('Unknown', [
+          wbFloat('Unknown'),
+          wbFloat('Unknown'),
+          wbFloat('Unknown'),
+          wbInteger('Unknown', itU16),
+          wbInteger('Unknown', itU32)
+        ])
+      , -1)
+//      wbUnknown
     ]);
 
 end;
@@ -10196,6 +10249,7 @@ begin
         {0x80000000} 31, 'Unknown 31'
       ]), [18]), [
       wbEDID,
+//      wbNVNM,
       wbStruct(NVNM, 'Geometry', [
         wbByteArray('Unknown', 8),
         wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
@@ -10298,6 +10352,7 @@ begin
         {0x04000000} 26, 'AutoGen'
       ]), [18]), [
       wbEDID,
+//      wbNVNM,
       wbStruct(NVNM, 'Geometry', [
         wbInteger('Unknown', itU32),
         wbByteArray('Unknown', 4),
