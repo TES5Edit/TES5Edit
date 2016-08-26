@@ -8437,28 +8437,17 @@ begin
     wbEmpty(STOP, 'Marker', cpNormal, True)
   ], []);
 
-  wbBSMPSequence := wbRStructsSK('Bone Data', 'Data', [0], [
+  wbBSMPSequence := wbRStructs('Bone Data', 'Data', [
     wbInteger(BSMP, 'Gender', itU32, wbEnum(['Male', 'Female'])),
-    wbRArrayS('Bones',
-      wbRStructSK([0], 'Bone', [
+    // should not be sorted!!!
+    wbRArray('Bones',
+      wbRStruct('Bone', [
         wbString(BSMB, 'Name'),
         wbArray(BSMS, 'Values', wbFloat('Value')),
         wbUnknown(BMMP)
       ], [])
     )
   ], []);
-  {wbBSMPSequence := wbRArray('Bone Data',
-    wbRStruct('Data', [
-      wbInteger(BSMP, 'Gender', itU32, wbEnum(['Male', 'Female'])),
-      wbRArrayS('Bones',
-        wbRStructSK([0], 'Bone', [
-          wbString(BSMB, 'Name'),
-          wbArray(BSMS, 'Values', wbFloat('Value')),
-          wbUnknown(BMMP)
-        ], [])
-      )
-    ], [])
-  );}
 
   wbEffectsReq :=
     wbRStructs('Effects', 'Effect', [
