@@ -10388,8 +10388,8 @@ begin
         wbArray('NavMeshGrid', wbArray('NavMeshGridCell', wbInteger('Triangle', itS16), -1))
         }
       ]),
-      wbUnknown(ONAM),
-      wbUnknown(NNAM),
+      wbFormID(ONAM),
+      wbArray(NNAM, 'Unknown', wbInteger('Unknown', itU16)),
       wbUnion(MNAM, 'Unknown', wbSubrecordSizeDecider, [wbNull,
         wbStruct('Unknown', [
           wbFormID('Unknown'),
