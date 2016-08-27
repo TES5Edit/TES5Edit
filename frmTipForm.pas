@@ -68,7 +68,7 @@ end;
 
 procedure TfrmTip.cbShowTipClick(Sender: TObject);
 begin
-  wbShowTip := cbShowTip.Checked;
+  wbShowTip := Assigned(cbShowTip) and cbShowTip.Checked;
 end;
 
 procedure TfrmTip.FormCreate(Sender: TObject);
