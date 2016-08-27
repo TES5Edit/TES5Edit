@@ -436,12 +436,13 @@ begin
   // Detecting game mode
   // check command line params first for mode overrides
   // they should take precendence over application name detection
-  AppSourceMode := SourceModes[1];
+  // AppSourceMode := SourceModes[1];
   for s in SourceModes do
     if FindCmdLineSwitch(s) or wbFindCmdLineParam(s, p) or (Pos(s, wbForcedModes) <> 0) then begin
       AppSourceMode := s;
       Break;
     end;
+  // if no overrrides, then check by executable name
   if AppSourceMode = '' then
     for s in SourceModes do
       if (Pos(s, LowerCase(ExtractFileName(ParamStr(0)))) <> 0) or (Pos(s, wbForcedModes) <> 0) then begin
