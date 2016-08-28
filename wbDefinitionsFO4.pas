@@ -2485,6 +2485,28 @@ begin  // Could be simplified by checking if Parent Worldspace is NULL, that's w
     Result := 1;
 end;
 
+function wbDoorTriangleDoorTriangleDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container   : IwbContainer;
+  Parent      : IwbElement;
+  i           : int64;
+begin
+  Result := 0;
+
+  Container := aElement.Container;
+
+  Parent := Container.ElementByName['DTUnknown'];
+
+  if not Assigned(Parent) then
+    Exit;
+
+  i := Parent.NativeValue;
+
+  // not sure if it would be an error in the file or if it really possible
+  if i <> 0 then
+    Result := 1;
+end;
+
 function wbSubrecordSizeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   SubRecord : IwbSubRecord;
@@ -7093,8 +7115,8 @@ begin
 
   if wbSimpleRecords then
     wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
-      wbInteger('Unknown', itU32),
-      wbByteArray('Unknown', 4),
+      wbInteger('Version', itU32),
+      wbByteArray('Magic', 4),
       wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
       wbUnion('Parent', wbNVNMParentDecider, [
         wbStruct('Coordinates', [
@@ -7133,7 +7155,7 @@ begin
           wbInteger('Edge 1-2', itS16),
           wbInteger('Edge 2-0', itS16),
           wbFloat('Height'), // this and next if form ver > 57
-          wbInteger('Unknown', itU8), // flags
+          wbInteger('Unknown', itU8, wbFlags([])), // flags
           wbInteger('Unknown', itU32) // encoding or flags
         ])
       , -1),
@@ -7148,25 +7170,24 @@ begin
       wbArray('Door Triangles',
         wbStruct('Door Triangle', [
           wbInteger('Triangle before door', itU16), // I would say itU16
-          wbInteger('Unknown', itU32),
-          wbFormIDCk('Door', [REFR])
+          wbInteger('DTUnknown', itU32),  // used as a key to lookup in a map of PathingDoor
+          wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
         ])
       , -1),
-      wbArray('Unknown',  // if navmesh version gt 12
+      wbArray('Unknown 5',  // if navmesh version gt 12
         wbStruct('Unknown', [
           wbInteger('Unknown', itU16),
           wbInteger('Unknown', itU16),
-          wbInteger('Unknown', itU32)
+          wbInteger('Unknown', itU32 {, wbFlags([]) ? })
         ])
       , -1),
-      wbArray('Unknown',  // if navmesh version gt 14
-        wbStruct('Unknown', [
-          wbInteger('Unknown', itU32),
+      wbArray('Unknown 6',
+        wbStruct('Uknown', [
           wbInteger('Unknown', itU16),
           wbInteger('Unknown', itU16)
         ])
       , -1),
-      wbArray('Unknown',  // if navmesh version gt 11
+      wbArray('Unknown 7',  // if navmesh version gt 11
         wbStruct('Unknown', [
           wbFloat('Unknown'),
           wbFloat('Unknown'),
@@ -7174,8 +7195,19 @@ begin
           wbInteger('Unknown', itU16),
           wbInteger('Unknown', itU32)
         ])
-      , -1)
-//      wbUnknown
+      , -1),
+      wbStruct('Navmesh Grid', [
+        wbInteger('Navmesh Grid Size', itU32),  // max 12
+        wbFloat('Max X Distance'),
+        wbFloat('Max Y Distance'),
+        wbFloat('Min X'),
+        wbFloat('Min Y'),
+        wbFloat('Min Z'),
+        wbFloat('Max X'),
+        wbFloat('Max Y'),
+        wbFloat('Max Z'),
+        wbArray('NavMesh Grid Arrays', wbArray('NavMeshGridCell', wbInteger('Triangle', itS16), -1)) // There are NavMeshGridSize^2 arrays to load
+      ])
     ]);
 
 end;
@@ -10216,36 +10248,36 @@ begin
         {0x80000000} 31, 'Unknown 31'
       ]), [18]), [
       wbEDID,
-//      wbNVNM,
-      wbStruct(NVNM, 'Geometry', [
-        wbByteArray('Unknown', 8),
-        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-        wbUnion('Parent', wbNVNMParentDecider, [
-          wbStruct('Coordinates', [
-            wbInteger('Grid Y', itS16),
-            wbInteger('Grid X', itS16)
-          ]),
-          wbFormIDCk('Parent Cell', [CELL])
-        ]),
-        wbArray('Vertices', wbByteArray('Vertex', 12), -1),
-        wbArray('Triangles', wbByteArray('Triangle', 21), -1),
-        wbArray('Edge Links',
-          wbStruct('Edge Link', [
-            wbByteArray('Unknown', 4),
-            wbFormIDCk('Mesh', [NAVM]),
-            wbInteger('Triangle', itS16),
-            wbInteger('Unknown', itU8)
-          ])
-        , -1),
-        wbArray('Door Triangles',
-          wbStruct('Door Triangle', [
-            wbInteger('Triangle before door', itS16),
-            wbByteArray('Unknown', 4),
-            wbFormIDCk('Door', [REFR])
-          ])
-        , -1),
-        wbUnknown
-      ]),
+      wbNVNM,
+//      wbStruct(NVNM, 'Geometry', [
+//        wbByteArray('Unknown', 8),
+//        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+//        wbUnion('Parent', wbNVNMParentDecider, [
+//          wbStruct('Coordinates', [
+//            wbInteger('Grid Y', itS16),
+//            wbInteger('Grid X', itS16)
+//          ]),
+//          wbFormIDCk('Parent Cell', [CELL])
+//        ]),
+//        wbArray('Vertices', wbByteArray('Vertex', 12), -1),
+//        wbArray('Triangles', wbByteArray('Triangle', 21), -1),
+//        wbArray('Edge Links',
+//          wbStruct('Edge Link', [
+//            wbByteArray('Unknown', 4),
+//            wbFormIDCk('Mesh', [NAVM]),
+//            wbInteger('Triangle', itS16),
+//            wbInteger('Unknown', itU8)
+//          ])
+//        , -1),
+//        wbArray('Door Triangles',
+//          wbStruct('Door Triangle', [
+//            wbInteger('Triangle before door', itS16),
+//            wbByteArray('Unknown', 4),
+//            wbFormIDCk('Door', [REFR])
+//          ])
+//        , -1),
+//        wbUnknown
+//      ]),
       wbUnknown(ONAM),
       wbUnknown(NNAM),
       wbUnknown(MNAM)
@@ -10319,75 +10351,52 @@ begin
         {0x04000000} 26, 'AutoGen'
       ]), [18]), [
       wbEDID,
-//      wbNVNM,
-      wbStruct(NVNM, 'Geometry', [
-        wbInteger('Unknown', itU32),
-        wbByteArray('Unknown', 4),
-        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-        wbUnion('Parent', wbNVNMParentDecider, [
-          wbStruct('Coordinates', [
-            wbInteger('Grid Y', itS16),
-            wbInteger('Grid X', itS16)
-          ]),
-          wbFormIDCk('Parent Cell', [CELL])
-        ]),
-        wbArray('Vertices', wbStruct('Vertex', [
-          wbFloat('X'),
-          wbFloat('Y'),
-          wbFloat('Z')
-        ]), -1),
-        wbArray('Triangles',
-          wbStruct('Triangle', [
-            wbInteger('Vertex 0', itS16),
-            wbInteger('Vertex 1', itS16),
-            wbInteger('Vertex 2', itS16),
-            wbInteger('Edge 0-1', itS16),
-            wbInteger('Edge 1-2', itS16),
-            wbInteger('Edge 2-0', itS16),
-            wbFloat('Height'),
-            wbByteArray('Unknown', 5)
-          ])
-        , -1),
-        wbArray('Edge Links',
-          wbStruct('Edge Link', [
-            wbByteArray('Unknown', 4),
-            wbFormIDCk('Mesh', [NAVM]),
-            wbInteger('Triangle', itS16),
-            wbInteger('Unknown', itU8)
-          ])
-        , -1),
-        wbArray('Door Triangles',
-          wbStruct('Door Triangle', [
-            wbInteger('Triangle before door', itS16),
-            wbByteArray('Unknown', 4),
-            wbFormIDCk('Door', [REFR])
-          ])
-        , -1),
-        wbUnknown
-        {
-        wbArray('Unknown',
-          wbStruct('Uknown', [
-            wbByteArray('Unknown', 8)
-          ])
-        , -1),
-        wbArray('Unknown',
-          wbStruct('Uknown', [
-            wbByteArray('Unknown', 6)
-          ])
-        , -1),
-        //wbArray('Cover Triangles', wbInteger('Triangle', itS16), -1),
-        //wbInteger('NavMeshGrid Divisor', itU32),
-        wbFloat('Max X Distance'),
-        wbFloat('Max Y Distance'),
-        wbFloat('Min X'),
-        wbFloat('Min Y'),
-        wbFloat('Min Z'),
-        wbFloat('Max X'),
-        wbFloat('Max Y'),
-        wbFloat('Max Z'),
-        wbArray('NavMeshGrid', wbArray('NavMeshGridCell', wbInteger('Triangle', itS16), -1))
-        }
-      ]),
+      wbNVNM,
+//      wbStruct(NVNM, 'Geometry', [
+//        wbInteger('Unknown', itU32),
+//        wbByteArray('Unknown', 4),
+//        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+//        wbUnion('Parent', wbNVNMParentDecider, [
+//          wbStruct('Coordinates', [
+//            wbInteger('Grid Y', itS16),
+//            wbInteger('Grid X', itS16)
+//          ]),
+//          wbFormIDCk('Parent Cell', [CELL])
+//        ]),
+//        wbArray('Vertices', wbStruct('Vertex', [
+//          wbFloat('X'),
+//          wbFloat('Y'),
+//          wbFloat('Z')
+//        ]), -1),
+//        wbArray('Triangles',
+//          wbStruct('Triangle', [
+//            wbInteger('Vertex 0', itS16),
+//            wbInteger('Vertex 1', itS16),
+//            wbInteger('Vertex 2', itS16),
+//            wbInteger('Edge 0-1', itS16),
+//            wbInteger('Edge 1-2', itS16),
+//            wbInteger('Edge 2-0', itS16),
+//            wbFloat('Height'),
+//            wbByteArray('Unknown', 5)
+//          ])
+//        , -1),
+//        wbArray('Edge Links',
+//          wbStruct('Edge Link', [
+//            wbByteArray('Unknown', 4),
+//            wbFormIDCk('Mesh', [NAVM]),
+//            wbInteger('Triangle', itS16),
+//            wbInteger('Unknown', itU8)
+//          ])
+//        , -1),
+//        wbArray('Door Triangles',
+//          wbStruct('Door Triangle', [
+//            wbInteger('Triangle before door', itS16),
+//            wbByteArray('Unknown', 4),
+//            wbFormIDCk('Door', [REFR])
+//          ])
+//        , -1),
+//        wbUnknown
+//      ]),
       wbFormID(ONAM),
       wbArray(NNAM, 'Unknown', wbInteger('Unknown', itU16)),
       wbUnion(MNAM, 'Unknown', wbSubrecordSizeDecider, [wbNull,
