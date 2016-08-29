@@ -451,7 +451,7 @@ begin
       end;
   // if still nothing, then default value
   if AppSourceMode = '' then
-    AppGameMode := 'plugins';
+    AppSourceMode := 'plugins';
 
   for s in GameModes do
     if FindCmdLineSwitch(s) or wbFindCmdLineParam(s, p) or (Pos(s, wbForcedModes) <> 0) then begin
