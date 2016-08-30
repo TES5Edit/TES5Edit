@@ -4949,7 +4949,7 @@ end;
 
 function TwbContainer.ResolveElementName(aName: string; out aRemainingName: string; aCanCreate: Boolean = False): IwbElement;
 var
-  i, openBracketPos, closeBracketPos : Integer;
+  i : Integer;
 begin
   aRemainingName := '';
   i := Pos('\', aName);
@@ -4957,12 +4957,10 @@ begin
     aRemainingName := Copy(aName, Succ(i), High(Integer));
     Delete(aName, i, High(Integer));
   end;
-  openBracketPos := Pos('[', aName);
-  closeBracketPos := Pos(']', aName);
   if aName = '..' then
     Result := GetContainer
-  else if (openBracketPos > 0) and (closeBracketPos > 0) then begin
-    i := StrToInt(Copy(aName, openBracketPos, closeBracketPos - openBracketPos));
+  else if (aName[1] = '[') and (aName[Length(aName)] = ']') then begin
+    i := StrToInt(Copy(aName, 2, Length(aName) - 2));
     Result := GetElement(i);
   end
   else
