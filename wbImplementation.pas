@@ -4953,12 +4953,12 @@ var
 begin
   aRemainingName := '';
   i := Pos('\', aName);
-  openBracketPos := Pos('[', aName);
-  closeBracketPos := Pos(']', aName);
   if i > 0 then begin
     aRemainingName := Copy(aName, Succ(i), High(Integer));
     Delete(aName, i, High(Integer));
   end;
+  openBracketPos := Pos('[', aName);
+  closeBracketPos := Pos(']', aName);
   if aName = '..' then
     Result := GetContainer
   else if (openBracketPos > 0) and (closeBracketPos > 0) then begin
