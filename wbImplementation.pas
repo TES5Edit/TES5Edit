@@ -4959,6 +4959,10 @@ begin
   end;
   if aName = '..' then
     Result := GetContainer
+  else if (aName[1] = '[') and (aName[Length(aName)] = ']') then begin
+    i := StrToInt(Copy(aName, 2, Length(aName) - 2));
+    Result := GetElement(i);
+  end
   else
     Result := GetElementByName(aName);
   if not Assigned(Result) and (Length(aName) = 4) then
