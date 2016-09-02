@@ -4959,7 +4959,7 @@ begin
   end;
   if aName = '..' then
     Result := GetContainer
-  else if (aName[1] = '[') and (aName[Length(aName)] = ']') then begin
+  else if (Length(aName)>0) and (aName[1] = '[') and (aName[Length(aName)] = ']') then begin
     i := StrToInt(Copy(aName, 2, Length(aName) - 2));
     Result := GetElement(i);
   end
