@@ -70,8 +70,6 @@ var
   wbReverbClassEnum: IwbEnumDef;
   wbHitBehaviourEnum: IwbEnumDef;
   wbBoolEnum: IwbEnumDef;
-	wbScriptProperties: IwbArrayDef;
-	wbScriptPropertyStruct: IwbArrayDef;
 
 procedure DefineFO4;
 
@@ -977,6 +975,8 @@ var
   wbScriptEntry: IwbStructDef;
   wbScriptFlags: IwbIntegerDef;
   wbScriptPropertyObject: IwbUnionDef;
+	wbScriptPropertyStruct: IwbArrayDef;
+	wbScriptProperties: IwbArrayDef;
   wbScriptFragments: IwbStructDef;
   wbScriptFragmentsQuest: IwbStructDef;
   wbScriptFragmentsInfo: IwbStructDef;
