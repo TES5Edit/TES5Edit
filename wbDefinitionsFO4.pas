@@ -8685,7 +8685,7 @@ begin
     ], cpNormal, True),
     wbStruct(FNAM, '', [
       wbInteger('Armor Rating', itU16),
-      wbInteger('Unknown', itU16),
+      wbInteger('Base Addon Index', itU16),
       wbInteger('Stagger Rating', itU8, wbStaggerEnum),
       wbUnknown
     ]),
