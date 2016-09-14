@@ -5500,6 +5500,8 @@ begin
   end;
 
   Actor := aElement.ContainingMainRecord;
+  if not Assigned(Actor) then
+    Exit;
 
   Female := Actor.ElementEditValues['ACBS\Flags\Female'] = '1';
 
@@ -5657,6 +5659,8 @@ begin
   end;
 
   Actor := aElement.ContainingMainRecord;
+  if not Assigned(Actor) then
+    Exit;
 
   Female := Actor.ElementEditValues['ACBS\Flags\Female'] = '1';
 
@@ -5782,6 +5786,8 @@ begin
   end;
 
   Actor := aElement.ContainingMainRecord;
+  if not Assigned(Actor) then
+    Exit;
 
   Female := Actor.ElementEditValues['ACBS\Flags\Female'] = '1';
 
@@ -14170,8 +14176,8 @@ begin
       wbFloat('Y')
     ]),
     wbRArrayS('Male Head Parts', wbHeadPart),
-    wbRArrayS('Male Race Presets', wbFormIDCk(RPRM, 'Preset NPC', [NPC_, NULL])),
-    wbRArrayS('Male Hair Colors', wbFormIDCk(AHCM, 'Hair Color', [CLFM, NULL])),
+    wbRArray('Male Race Presets', wbFormIDCk(RPRM, 'Preset NPC', [NPC_, NULL])),
+    wbRArray('Male Hair Colors', wbFormIDCk(AHCM, 'Hair Color', [CLFM, NULL])),
     wbRArrayS('Male Face Details', wbFormIDCk(FTSM, 'Texture Set', [TXST, NULL])),
     wbFormIDCk(DFTM, 'Male Default Face Texture', [TXST]),
     wbTintTemplateGroups('Male Tint Layers'),
@@ -14188,8 +14194,8 @@ begin
       wbFloat('Y')
     ]),
     wbRArrayS('Female Head Parts', wbHeadPart),
-    wbRArrayS('Female Race Presets', wbFormIDCk(RPRF, 'Preset NPC', [NPC_, NULL])),
-    wbRArrayS('Female Hair Colors', wbFormIDCk(AHCF, 'Hair Color', [CLFM, NULL])),
+    wbRArray('Female Race Presets', wbFormIDCk(RPRF, 'Preset NPC', [NPC_, NULL])),
+    wbRArray('Female Hair Colors', wbFormIDCk(AHCF, 'Hair Color', [CLFM, NULL])),
     wbRArrayS('Female Face Details', wbFormIDCk(FTSF, 'Texture Set', [TXST, NULL])),
     wbFormIDCk(DFTF, 'Female Default Face Texture', [TXST]),
     wbTintTemplateGroups('Female Tint Layers'),
