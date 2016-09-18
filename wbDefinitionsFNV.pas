@@ -5530,7 +5530,8 @@ begin
         {47} wbFormIDCkNoReach('Reputation', [REPU]),
         {48} wbFormIDCkNoReach('Region', [REGN]),
         {49} wbFormIDCkNoReach('Challenge', [CHAL]),
-        {50} wbFormIDCkNoReach('Casino', [CSNO])
+        {50} wbFormIDCkNoReach('Casino', [CSNO]),
+        {51} wbFormID('Form')
       ]),
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
         {00} wbByteArray('Unknown', 4),
@@ -5623,7 +5624,8 @@ begin
         {47} wbFormIDCkNoReach('Reputation', [REPU]),
         {48} wbFormIDCkNoReach('Region', [REGN]),
         {49} wbFormIDCkNoReach('Challenge', [CHAL]),
-        {50} wbFormIDCkNoReach('Casino', [CSNO])
+        {50} wbFormIDCkNoReach('Casino', [CSNO]),
+        {51} wbFormID('Form')
       ]),
       wbInteger('Run On', itU32, wbEnum([
         'Subject',
