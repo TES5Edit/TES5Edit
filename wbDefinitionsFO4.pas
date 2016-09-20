@@ -15912,7 +15912,7 @@ begin
 
   wbRecord(MSWP, 'Material Swap',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00010000} 16, 'Unknown 16'
+      {0x00010000} 16, 'Custom Swap'
     ])), [
     wbEDID,
     wbString(FNAM, 'Tree Folder'), {First FNAM}
