@@ -1248,7 +1248,12 @@ end;
 procedure TfrmMain.ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
 begin
   if Msg.message = 524 {WM_XBUTTONUP} then
+    {$IFDEF WIN32}
     case LongRec(Msg.wParam).Hi of
+    {$ENDIF WIN32}
+    {$IFDEF WIN64}
+    case Int64Rec(Msg.wParam).Hi of
+    {$ENDIF WIN64}
       1: Handled := acBack.Execute;
       2: Handled := acForward.Execute;
     end;
@@ -8604,7 +8609,7 @@ begin
     with TfrmFileSelect.Create(Self) do try
       Width := 450;
       for i := Low(WorldSpaces) to High(WorldSpaces) do
-        CheckListBox1.AddItem(WorldSpaces[i].Name, TObject(Integer(WorldSpaces[i])));
+        CheckListBox1.AddItem(WorldSpaces[i].Name, TObject(Pointer(WorldSpaces[i])));
       CheckListBox1.Sorted := True;
       Caption := 'Select Worldspaces';
       ShowModal;
@@ -8614,7 +8619,7 @@ begin
       try
         for i := 0 to Pred(CheckListBox1.Count) do
           if CheckListBox1.Checked[i] then
-            GenerateLODTES4(IwbMainRecord(Integer(CheckListBox1.Items.Objects[i])))
+            GenerateLODTES4(IwbMainRecord(Pointer(CheckListBox1.Items.Objects[i])))
       finally
         Self.Enabled := True;
         Self.Caption := Application.Title
@@ -8629,7 +8634,7 @@ begin
     with TfrmLODGen.Create(Self) do try
       j := -1;
       for i := Low(WorldSpaces) to High(WorldSpaces) do begin
-        clbWorldspace.AddItem(WorldSpaces[i].Name, TObject(Integer(WorldSpaces[i])));
+        clbWorldspace.AddItem(WorldSpaces[i].Name, TObject(Pointer(WorldSpaces[i])));
         // default selected worldspace at the top
         if (WorldSpaces[i].LoadOrderFormID = $0000003C) or ((wbGameMode = gmFNV) and (WorldSpaces[i].LoadOrderFormID = $000DA726)) then
           j := i;
@@ -8692,7 +8697,7 @@ begin
       try
         for i := 0 to Pred(clbWorldspace.Count) do
           if clbWorldspace.Checked[i] then
-            GenerateLODTES5(IwbMainRecord(Integer(clbWorldspace.Items.Objects[i])), lodTypes);
+            GenerateLODTES5(IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), lodTypes);
       finally
         Self.Enabled := True;
         Self.Caption := Application.Title

@@ -1609,6 +1609,7 @@ const
 
 function CompareFormIDs(Item1, Item2: Pointer): Integer;
 asm
+{$IFDEF WIN32}
   xor ecx, ecx
   cmp eax, edx
   ja @@GT
@@ -1620,6 +1621,19 @@ asm
   inc ecx
 @@EQ:
   mov eax, ecx
+{$ENDIF WIN32}
+{$IFDEF WIN64}
+  xor rax, rax
+  cmp rcx, rdx
+  ja @@GT
+  je @@EQ
+@@LT:
+  dec rax
+  dec rax
+@@GT:
+  inc rax
+@@EQ:
+{$ENDIF WIN64}
 end;
 
 function CompareSubRecords(Item1, Item2: Pointer): Integer;
@@ -3482,6 +3496,7 @@ type
 
 function CompareSortEntryPtrs(Item1{eax}, Item2{edx}: Pointer): Integer;
 asm
+  {$IFDEF WIN32}
   mov ecx, [eax + TwbRecordSortEntry.rseFormID]
   mov edx, [edx + TwbRecordSortEntry.rseFormID]
   xor eax, eax
@@ -3489,6 +3504,16 @@ asm
   mov ecx, -1
   cmovb eax, ecx
   seta al
+  {$ENDIF WIN32}
+  {$IFDEF WIN64}
+  mov rcx, [rcx + TwbRecordSortEntry.rseFormID]
+  mov rdx, [rdx + TwbRecordSortEntry.rseFormID]
+  xor rax, rax
+  cmp rcx, rdx
+  mov rcx, -1
+  cmovb rax, rcx
+  seta al
+  {$ENDIF WIN64}
 end;
 
 procedure TwbFile.SortRecords;
@@ -3656,28 +3681,46 @@ end;
 
 function LockedInc(var Target: Integer): Integer; register;
 asm
+  {$IFDEF WIN32}
         mov     ecx, eax
         mov     eax, 1
    lock xadd    [ecx], eax
         inc     eax
+  {$ENDIF WIN32}
+  {$IFDEF WIN64}
+        mov     rax, 1
+   lock xadd    [rcx], rax
+        inc     rax
+  {$ENDIF WIN64}
 end;
 
 function LockedDec(var Target: Integer): Integer; register;
 asm
+  {$IFDEF WIN32}
         mov     ecx, eax
         mov     eax, -1
    lock xadd    [ecx], eax
         dec     eax
+  {$ENDIF WIN32}
+  {$IFDEF WIN64}
+        mov     rax, -1
+   lock xadd    [rcx], rax
+        dec     rax
+  {$ENDIF WIN64}
 end;
 
 procedure TwbContainer.AfterConstruction;
 begin
   inherited;
-  //LockedDec(cntElementRefs);
+  {$IFDEF WIN64}
+  LockedDec(cntElementRefs);
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov eax, [Self]
     lock dec dword ptr [eax + cntElementRefs]
   end;
+  {$ENDIF WIN32}
 end;
 
 function TwbContainer.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
@@ -3800,11 +3843,15 @@ procedure TwbContainer.BeforeDestruction;
 begin
   Assert(cntElementRefs = 0);
   inherited BeforeDestruction;
-  //LockedInc(cntElementRefs);
+  {$IFDEF WIN64}
+  LockedInc(cntElementRefs);
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov eax, [Self]
     lock inc dword ptr [eax + cntElementRefs]
   end;
+  {$ENDIF WIN32}
 end;
 
 procedure TwbContainer.BuildRef;
@@ -4016,11 +4063,15 @@ begin
   if [csInitializing, csReseting] * cntStates <> [] then
     Exit;
 
-  //LockedInc(cntElementRefs);
+  {$IFDEF WIN64}
+  LockedInc(cntElementRefs);
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov eax, [Self]
     lock inc dword ptr [eax + cntElementRefs]
   end;
+  {$ENDIF WIN32}
   try
     Include(cntStates, csReseting);
     Exclude(cntStates, csInitDone);
@@ -4028,11 +4079,15 @@ begin
     cntElementsMap := nil;
   finally
     Exclude(cntStates, csReseting);
-    //LockedDec(cntElementRefs);
+    {$IFDEF WIN64}
+    LockedDec(cntElementRefs);
+    {$ENDIF WIN64}
+    {$IFDEF WIN32}
     asm
            mov eax, [Self]
       lock dec dword ptr [eax + cntElementRefs]
     end;
+    {$ENDIF WIN32}
     Exclude(cntStates, csInit);
   end;
 end;
@@ -4040,11 +4095,15 @@ end;
 {$D-}
 function TwbContainer.ElementAddRef: Integer;
 begin
-  //LockedInc(cntElementRefs);
+  {$IFDEF WIN64}
+  LockedInc(cntElementRefs);
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov eax, [Self]
     lock inc dword ptr [eax + cntElementRefs]
   end;
+  {$ENDIF WIN32}
   Result := inherited _AddRef;
 end;
 {$D+}
@@ -4059,7 +4118,10 @@ function TwbContainer.ElementRelease: Integer;
 label
   Skip;
 begin
-  //if LockedDec(cntElementRefs) = 0 then
+  {$IFDEF WIN64}
+  if LockedDec(cntElementRefs) = 0 then
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov  eax, -1
          mov  ecx, [Self]
@@ -4067,6 +4129,7 @@ begin
          cmp  eax, 1
          jne  Skip
   end;
+  {$ENDIF WIN32}
   DoReset(False);
 Skip:
 
@@ -9687,7 +9750,7 @@ begin
           HasUnusedData := True;
           Break;
         end;
-        Inc(Cardinal(BasePtr));
+        Inc(PByte(BasePtr));
       end;
     end;
     if HasUnusedData then begin
@@ -9963,7 +10026,7 @@ begin
   Assert( SizeAvailable >= SizeNeeded );
 
   BasePtr := aBasePtr;
-  Inc(Cardinal(aBasePtr), SizeNeeded );
+  Inc(PByte(aBasePtr), SizeNeeded );
   inherited;
 
   Assert(srStruct.srsDataSize = Cardinal( dcDataEndPtr ) - Cardinal( dcDataBasePtr ));
@@ -10071,7 +10134,7 @@ begin
 
   BasePtr := aBasePtr;
   Move(dcBasePtr^, aBasePtr^, SizeNeeded);
-  Inc(Cardinal(aBasePtr), SizeNeeded );
+  Inc(PByte(aBasePtr), SizeNeeded );
   inherited;
 
   if not Assigned(dcEndPtr) then
@@ -11838,7 +11901,10 @@ label
   Skip;
 begin
   inherited;
-  //if LockedDec(eExternalRefs) = 0 then
+  {$IFDEF WIN64}
+  if LockedDec(eExternalRefs) = 0 then
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov  eax, -1
          mov  ecx, [Self]
@@ -11846,6 +11912,7 @@ begin
          cmp  eax, 1
          jne  Skip
   end;
+  {$ENDIF WIN32}
   eContainerRef := nil;
 Skip:
   Include(eStates, esConstructionComplete);
@@ -11918,13 +11985,17 @@ begin
     Assert(FRefCount = 0);
   Include(eStates, esDestroying);
   inherited BeforeDestruction;
-  //LockedInc(eExternalRefs);
-  //LockedInc(FRefCount);
+  {$IFDEF WIN64}
+  LockedInc(eExternalRefs);
+  LockedInc(FRefCount);
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov eax, [Self]
     lock inc dword ptr [eax + eExternalRefs]
     lock inc dword ptr [eax + FRefCount]
   end;
+  {$ENDIF WIN64}
 end;
 
 function TwbElement.BeginDecide: Boolean;
@@ -13021,7 +13092,10 @@ label
   Skip;
 begin
   Assert(not (esDestroying in eStates));
-  //if LockedInc(eExternalRefs) = 1 then
+  {$IFDEF WIN64}
+  if LockedInc(eExternalRefs) = 1 then
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov  eax, 1
          mov  ecx, [Self]
@@ -13029,6 +13103,7 @@ begin
          cmp  eax, 0
          jne  Skip
   end;
+  {$ENDIF WIN32}
   eContainerRef := IInterface(eContainer) as IwbContainerElementRef;
 Skip:
 
@@ -13039,7 +13114,10 @@ function TwbElement._Release: Integer;
 label
   Skip;
 begin
-  //if LockedDec(eExternalRefs) = 0 then
+  {$IFDEF WIN64}
+  if LockedDec(eExternalRefs) = 0 then
+  {$ENDIF WIN64}
+  {$IFDEF WIN32}
   asm
          mov  eax, -1
          mov  ecx, [Self]
@@ -13047,6 +13125,7 @@ begin
          cmp  eax, 1
          jne  Skip
   end;
+  {$ENDIF WIN32}
   eContainerRef := nil;
 Skip:
   Result := inherited _Release;
@@ -13835,7 +13914,7 @@ begin
         dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
         dtString: begin
           if Assigned(aBasePtr) and (PAnsiChar(aBasePtr)^ = #0) and (ValueDef.IsVariableSize) then begin
-            Inc(Cardinal(aBasePtr));
+            Inc(PByte(aBasePtr));
             Break;
           end;
           Element := TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
@@ -14548,7 +14627,7 @@ begin
   if i = Cardinal(High(Integer)) then
     aBasePtr := aEndPtr
   else if Assigned(aBasePtr) then
-    Inc(Cardinal(aBasePtr), i);
+    Inc(PByte(aBasePtr), i);
 end;
 
 
@@ -15230,12 +15309,12 @@ begin
 
     if BasePtr = aBasePtr then begin
       if not (dcfDontMerge in dcFlags) then
-        Inc(Cardinal(aBasePtr), SizeNeeded);
+        Inc(PByte(aBasePtr), SizeNeeded);
     end else
       if Cardinal(aBasePtr) - Cardinal(BasePtr) > SizeNeeded then // we overwrote something
         Assert( Cardinal(aBasePtr) - Cardinal(BasePtr) = SizeNeeded)
       else // Adjust size of data not initialized yet
-        Cardinal(aBasePtr) := Cardinal(BasePtr) + SizeNeeded;
+        aBasePtr := PByte(BasePtr) + SizeNeeded;
 
     dcDataBasePtr := BasePtr;
     dcDataEndPtr := aBasePtr;
@@ -15302,7 +15381,7 @@ begin
       Move(dcDataBasePtr^, aBasePtr^, SizeNeeded);
 
       dcDataBasePtr := aBasePtr;
-      Inc(Cardinal(aBasePtr), SizeNeeded);
+      Inc(PByte(aBasePtr), SizeNeeded);
       dcDataEndPtr := aBasePtr;
 
       BasePtr := dcDataBasePtr;
@@ -15970,14 +16049,14 @@ end;
 procedure TwbStringListTerminator.InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
 begin
   Assert( Cardinal(aBasePtr) < Cardinal(aEndPtr));
-  Inc(Cardinal(aBasePtr));
+  Inc(PByte(aBasePtr));
 end;
 
 procedure TwbStringListTerminator.MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer);
 begin
   Assert( Cardinal(aBasePtr) < Cardinal(aEndPtr));
   PAnsiChar(aBasePtr)^ := #0;
-  Inc(Cardinal(aBasePtr));
+  Inc(PByte(aBasePtr));
 end;
 
 procedure TwbStringListTerminator.SetEditValue(const aValue: string);
