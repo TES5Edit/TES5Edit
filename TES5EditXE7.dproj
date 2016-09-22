@@ -50,7 +50,7 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <SanitizedProjectName>TES5EditXE7</SanitizedProjectName>
-        <DCC_UnitSearchPath>Imaging;Imaging\ZLib;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>Zlib;Imaging;Imaging\ZLib;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_SYMBOL_DEPRECATED>false</DCC_SYMBOL_DEPRECATED>
         <DCC_WIDECHAR_REDUCED>false</DCC_WIDECHAR_REDUCED>
         <DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
