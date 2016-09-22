@@ -67,7 +67,7 @@ begin
 
   for i := 0 to Pred(clbWorldspace.Count) do
     if clbWorldspace.Checked[i] then
-      SplitTreesLOD(IwbMainRecord(Integer(clbWorldspace.Items.Objects[i])));
+      SplitTreesLOD(IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])));
 end;
 
 procedure TfrmLODGen.cbObjectsLODClick(Sender: TObject);

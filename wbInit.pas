@@ -240,6 +240,7 @@ begin
 end;
 
 {===SafeLoadLibrary============================================================}
+{$IFDEF CPUX86}
 function TestAndClearFPUExceptions(AExceptionMask: Word): Boolean;
 asm
       PUSH    ECX
@@ -274,6 +275,7 @@ begin
   end;
 end;
 {==============================================================================}
+{$ENDIF CPUX86}
 
 
 function wbLoadMOHookFile: Boolean;
@@ -827,6 +829,9 @@ begin
   {$IFDEF LiteVersion}
   wbApplicationTitle := wbApplicationTitle + ' Lite';
   {$ENDIF}
+  {$IFDEF WIN64}
+  wbApplicationTitle := wbApplicationTitle + ' x64';
+  {$ENDIF WIN64}
 
   if FindCmdLineSwitch('fixuppgrd') then
     wbFixupPGRD := True;
