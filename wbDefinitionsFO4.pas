@@ -14256,7 +14256,8 @@ begin
       {0x08000000} 27, 'Bounding Box (Collision Geometry)',
       {0x10000000} 28, 'Reflected By Auto Water',
       {0x20000000} 29, 'Don''t Havok Settle',
-      {0x40000000} 30, 'No Respawn'
+      {0x40000000} 30, 'No Respawn',
+      {0x80000000} 31, 'Multibound'
     ], True, True)),
     {CONT TERM} wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
@@ -14267,7 +14268,8 @@ begin
       {0x04000000} 26, 'Filter (Collision Geometry)',
       {0x08000000} 27, 'Bounding Box (Collision Geometry)',
       {0x20000000} 29, 'Don''t Havok Settle',
-      {0x40000000} 30, 'Ground'
+      {0x40000000} 30, 'Ground',
+      {0x80000000} 31, 'Multibound'
     ], True, True)),
     {DOOR} wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Minimal Use Door',
@@ -14279,7 +14281,8 @@ begin
       {0x04000000} 26, 'Filter (Collision Geometry)',
       {0x08000000} 27, 'Bounding Box (Collision Geometry)',
       {0x20000000} 29, 'Don''t Havok Settle',
-      {0x40000000} 30, 'No Respawn'
+      {0x40000000} 30, 'No Respawn',
+      {0x80000000} 31, 'Multibound'
     ], True, True)),
     {LIGH} wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000100}  8, 'Doesn''t Light Water',
@@ -14291,7 +14294,8 @@ begin
       {0x02000000} 25, 'No AI Acquire',
       {0x10000000} 28, 'Reflected By Auto Water',
       {0x20000000} 29, 'Don''t Havok Settle',
-      {0x40000000} 30, 'No Respawn'
+      {0x40000000} 30, 'No Respawn',
+      {0x80000000} 31, 'Multibound'
     ], True, True)),
     {MSTT} wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
@@ -14303,7 +14307,8 @@ begin
       {0x08000000} 27, 'Bounding Box (Collision Geometry)',
       {0x10000000} 28, 'Reflected By Auto Water',
       {0x20000000} 29, 'Don''t Havok Settle',
-      {0x40000000} 30, 'No Respawn'
+      {0x40000000} 30, 'No Respawn',
+      {0x80000000} 31, 'Multibound'
     ], True, True)),
     {ADDN} wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000400} 10, 'Persistent',
@@ -14311,7 +14316,8 @@ begin
       {0x00010000} 16, 'Is Full LOD',
       {0x10000000} 28, 'Reflected By Auto Water',
       {0x20000000} 29, 'Don''t Havok Settle',
-      {0x40000000} 30, 'No Respawn'
+      {0x40000000} 30, 'No Respawn',
+      {0x80000000} 31, 'Multibound'
     ], True, True)),
     {ALCH BOOK SCRL AMMO ARMO INGR KEYM MISC FURN WEAP}
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -14322,7 +14328,8 @@ begin
       {0x02000000} 25, 'No AI Acquire',
       {0x10000000} 28, 'Reflected By Auto Water',
       {0x20000000} 29, 'Don''t Havok Settle',
-      {0x40000000} 30, 'No Respawn'
+      {0x40000000} 30, 'No Respawn',
+      {0x80000000} 31, 'Multibound'
     ], True, True))
   ]), [
     wbEDID,
