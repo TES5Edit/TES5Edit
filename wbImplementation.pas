@@ -45,7 +45,7 @@ var
 
 procedure wbMastersForFile(const aFileName: string; aMasters: TStrings);
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
-  aOnlyHeader: Boolean = False; IsTemporary: Boolean = False): IwbFile;
+  IsTemporary: Boolean = False; aOnlyHeader: Boolean = False): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer): IwbFile;
 procedure wbFileForceClosed;
 
@@ -1767,7 +1767,7 @@ begin
 
   flProgress('Adding master "' + t + '"');
   try
-    _File := wbFile(s + t, -1, '', False, IsTemporary);
+    _File := wbFile(s + t, -1, '', IsTemporary, False);
     if wbRequireLoadOrder and (_File.LoadOrder < 0) then
       raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.');
     AddMaster(_File);
@@ -14809,7 +14809,7 @@ begin
 end;
 
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
-  aOnlyHeader: Boolean = False; IsTemporary: Boolean = False): IwbFile;
+  IsTemporary: Boolean = False; aOnlyHeader: Boolean = False): IwbFile;
 var
   FileName: string;
   i: Integer;
