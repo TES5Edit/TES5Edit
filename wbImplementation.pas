@@ -2294,6 +2294,8 @@ begin
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.0'
   else if wbGameMode = gmTES5 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.7'
+  else if wbGameMode = gmSSE then
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.7'
   else if wbGameMode = gmFO4 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.95';
   Header.RecordBySignature['HEDR'].Elements[2].EditValue := '2048';
@@ -3042,7 +3044,7 @@ begin
 
     j := 0;
     ONAMs := nil;
-    if wbGameMode in [gmFO3, gmFNV, gmTES5, gmFO4] then begin
+    if wbGameMode in [gmFO3, gmFNV, gmTES5, gmSSE, gmFO4] then begin
       Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
       while FileHeader.RemoveElement('ONAM') <> nil do
         ;
@@ -3274,7 +3276,7 @@ begin
   SortRecordsByEditorID;
   flProgress('EditorID index built');
 
-  if wbGameMode in [gmFNV, gmTES5, gmFO4] then begin
+  if wbGameMode in [gmFNV, gmTES5, gmSSE, gmFO4] then begin
     IsInternal := not GetIsEditable and wbBeginInternalEdit(True);
     try
       SetLength(Groups, wbGroupOrder.Count);
@@ -5479,7 +5481,7 @@ begin
             with TwbMainRecord(MainRecord.ElementID) do begin
               Self.mrStruct.mrsFlags := mrStruct.mrsFlags;
               Self.mrStruct.mrsVCS1 := DefaultVCS1;
-              if wbGameMode in [gmFO3, gmFNV, gmTES5, gmFO4] then begin
+              if wbGameMode in [gmFO3, gmFNV, gmTES5, gmSSE, gmFO4] then begin
                 Self.mrStruct.mrsVersion := mrStruct.mrsVersion;
                 Self.mrStruct.mrsVCS2 := DefaultVCS2; //mrStruct.mrsVCS2;
               end;
@@ -5936,6 +5938,7 @@ begin
   case wbGameMode of
     gmFO4 : BasePtr.mrsVersion := 131;
     gmTES5: BasePtr.mrsVersion := 43;
+    gmSSE : BasePtr.mrsVersion := 43;
     gmFNV : BasePtr.mrsVersion := 15;
     gmFO3 : BasePtr.mrsVersion := 15;
     else    BasePtr.mrsVersion := 15;
@@ -11723,7 +11726,7 @@ begin
             else if not TargetRecord.IsDeleted then if wbBeginInternalEdit then try
               if not TargetRecord.ElementExists['PNAM'] then begin
                 {>>> No QSTI in Skyrim, using DIAL\QNAM <<<}
-                if wbGameMode = gmTES5 then begin
+                if wbGameMode in [ gmTES5, gmSSE ] then begin
                   Supports(TargetRecord.Container, IwbGroupRecord, g);
                   InfoQuest := g.ChildrenOf.ElementNativeValues['QNAM'];
                 end else
@@ -11731,7 +11734,7 @@ begin
                 InsertRecord := PrevRecord;
                 Inserted := False;
                 while Assigned(InsertRecord) do begin
-                  if wbGameMode = gmTES5 then begin
+                  if wbGameMode in [ gmTES5, gmSSE ] then begin
                     Supports(InsertRecord.Container, IwbGroupRecord, g);
                     InfoQuest2 := g.ChildrenOf.ElementNativeValues['QNAM'];
                   end else
