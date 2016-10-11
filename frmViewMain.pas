@@ -2648,7 +2648,7 @@ var
   LastLoadOrder   : Integer;
   i               : Integer;
 begin
-  if wbGameMode in [gmTES5, gmFO4] then begin
+  if wbGameMode in [gmTES5, gmSSE, gmFO4] then begin
     if MessageDlg('Merged patch is unsupported for ' + wbGameName +
       '. Create it only if you know what you are doing and can troubleshoot possible issues yourself. ' +
       'Do you want to continue?',
@@ -3086,7 +3086,7 @@ var
   Worldspaces : TDynMainRecords;
 begin
   // TES5LODGen: selective lodgenning, no need to regenerate lod for all worldspaces like in Oblivion
-  if wbGameMode in [gmTES5, gmFO3, gmFNV] then begin
+  if wbGameMode in [gmTES5, gmSSE, gmFO3, gmFNV] then begin
     try
       mniNavGenerateLODClick(nil);
     finally
@@ -3335,7 +3335,7 @@ procedure TfrmMain.DoInit;
         sl2 := TStringList.Create;
         try
           RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl, sl2); // remove comments
-          useBOSS := (sl2.Count = 0) and (wbGameMode = gmTES5); // FO4 doesn't use loadorder.txt anymore
+          useBOSS := (sl2.Count = 0) and (wbGameMode in [ gmTES5, gmSSE ]); // FO4 doesn't use loadorder.txt anymore
         finally
           sl2.Free;
         end;
@@ -3344,7 +3344,7 @@ procedure TfrmMain.DoInit;
         // even if not present in plugins.txt
         j := FindMatchText(sl, wbGameName+'.esm');
         if j = -1 then sl.Insert(0, wbGameName+'.esm');
-        if wbGameMode = gmTES5 then begin
+        if wbGameMode in [ gmTES5, gmSSE ] then begin
           j := FindMatchText(sl, 'Update.esm');
           if j = -1 then sl.Insert(1, 'Update.esm');
         end;
@@ -3576,6 +3576,7 @@ begin
               gmTES3: begin saveExt := '.ess'; coSaveExt := '';      end;
               gmTES4: begin saveExt := '.ess'; coSaveExt := '.obse'; end;
               gmTES5: begin saveExt := '.ess'; coSaveExt := '.skse'; end;
+              gmSSE:  begin saveExt := '.ess'; coSaveExt := '.skse'; end;
             end;
 
             if FindFirst(ExpandFileName(wbSavePath+'\*'+saveExt), faAnyfile, R)=0 then try
@@ -3608,7 +3609,7 @@ begin
         end;
 
         if not wbQuickClean then
-          if (wbToolMode in wbPluginModes) and (sl.Count > 1) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFNV, gmTES5]) then begin
+          if (wbToolMode in wbPluginModes) and (sl.Count > 1) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFNV, gmTES5, gmSSE]) then begin
               j := CheckListBox1.Items.IndexOf(wbPluginToUse);
               if j < 0 then begin
                 ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
@@ -3696,6 +3697,7 @@ begin
                   Exit;
                 end;
               gmTES5: if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave;
+              gmSSE:  if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave;
             else
               MessageDlg('CoSave are not supported yet "'+s+'". Please check the the selection.', mtError, [mbAbort], 0);
               frmMain.Close;
@@ -4920,7 +4922,7 @@ begin
         Continue;
 
       try
-        if wbGameMode = gmTES5 then
+        if wbGameMode in [ gmTES5, gmSSE ] then
           NifTexturesUVRange(res[High(res)].GetData, UVRange, slNifTextures)
         else
           // fallouts nif scanner doesn't support them fully, grab all textures for now
@@ -5236,7 +5238,7 @@ var
     // full mesh
     if aLODLevel = -1 then
       Result := aStat.ElementEditValues['Model\MODL']
-    else if wbGameMode = gmTES5 then begin
+    else if wbGameMode in [ gmTES5, gmSSE ] then begin
       // use MNAM data of STAT record for lod meshes if exists
       if aStat.ElementExists['MNAM'] then
         Result := aStat.ElementEditValues[Format('MNAM\LOD #%d (Level %d)\Mesh', [aLODLevel, aLODLevel])]
@@ -5449,7 +5451,7 @@ begin
         TreeRec := REFRs[i].BaseRecord.MasterOrSelf;
 
         // Skyrim: only for TREE and STAT
-        if wbGameMode = gmTES5 then begin
+        if wbGameMode in [ gmTES5, gmSSE ] then begin
           if (TreeRec.Signature <> 'TREE') and (TreeRec.Signature <> 'STAT') then
             Continue;
           // STAT with Has Tree LOD flag only
@@ -5494,7 +5496,7 @@ begin
           Continue;
 
         // Skyrim: skip persistent "Is Full LOD" tree refs
-        if wbGameMode = gmTES5 then
+        if wbGameMode in [ gmTES5, gmSSE ] then
           if REFRs[i].IsPersistent and (REFRs[i].Flags._Flags and $00010000 <> 0) then
             Continue;
 
@@ -5528,7 +5530,7 @@ begin
         Scale := Scale * PTree^.ScaleFactor;
 
         // Skyrim
-        if wbGameMode = gmTES5 then
+        if wbGameMode in [ gmTES5, gmSSE ] then
           RefFormID := REFRs[i].LoadOrderFormID
         // Fallouts
         else if REFRs[i].IsMaster then
@@ -5645,7 +5647,7 @@ begin
           Continue;
 
         // Skyrim: only STAT and TREE objects
-        if (wbGameMode = gmTES5) and ((StatRec.Signature <> 'STAT') and (StatRec.Signature <> 'TREE')) then
+        if (wbGameMode in [ gmTES5, gmSSE ]) and ((StatRec.Signature <> 'STAT') and (StatRec.Signature <> 'TREE')) then
           Continue;
 
         // Fallouts: only STAT, SCOL, ACTI and MSTT objects
@@ -5666,7 +5668,7 @@ begin
         StatRec := StatRec.WinningOverride;
 
         // Skyrim: skip persistent refs of "never fade" statics and "Is Full LOD" refs
-        if wbGameMode = gmTES5 then
+        if wbGameMode in [ gmTES5, gmSSE ] then
           if REFRs[i].IsPersistent and ((StatRec.Flags._Flags and $00000004 <> 0) or (REFRs[i].Flags._Flags and $00010000 <> 0)) then
             Continue;
 
@@ -5684,7 +5686,7 @@ begin
         if k = -1 then begin
           s := '';
           // Skyrim: process only VWD statics, Fallouts: process all statics
-          if ((wbGameMode = gmTES5) and StatRec.Flags.IsVisibleWhenDistant) or
+          if ((wbGameMode in [ gmTES5, gmSSE ]) and StatRec.Flags.IsVisibleWhenDistant) or
              (wbGameMode in [gmFO3, gmFNV])
           then begin
             // getting lod models
@@ -5696,7 +5698,7 @@ begin
             if m16 <> '' then slLODMeshes.Add(m16);
             if (m4 <> '') or (m8 <> '') or (m16 <> '') then begin
               // detecting LOD material
-              if (wbGameMode = gmTES5) and StatRec.ElementExists['DNAM\Material'] and Supports(StatRec.ElementByPath['DNAM\Material'].LinksTo, IwbMainRecord, Ovr) then begin
+              if (wbGameMode in [ gmTES5, gmSSE ]) and StatRec.ElementExists['DNAM\Material'] and Supports(StatRec.ElementByPath['DNAM\Material'].LinksTo, IwbMainRecord, Ovr) then begin
                 mat := LowerCase(Ovr.EditorID);
                 if Pos('snow', mat) > 0 then mat := 'Snow' else
                   if Pos('ash', mat) > 0 then mat := 'Ash' else
@@ -5768,12 +5770,12 @@ begin
           wbGetUVRangeTexturesList(slLODMeshes, slLODTextures, UVRange);
           if slLODTextures.Count > 1 then begin
             // remove HD LOD texture if there
-            if wbGameMode = gmTES5 then begin
+            if wbGameMode in [ gmTES5, gmSSE ] then begin
               i := slLODTextures.IndexOf(wbNormalizeResourceName(aWorldspace.WinningOverride.ElementEditValues['TNAM'], resTexture));
               if i <> -1 then slLODTextures.Delete(i);
             end;
             // atlas file name and map name
-            if wbGameMode = gmTES5 then
+            if wbGameMode in [ gmTES5, gmSSE ] then
               AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds'
             else if wbGameMode in [gmFO3, gmFNV] then
               AtlasName := wbOutputPath + 'textures\landscape\lod\' + aWorldspace.EditorID  + '\Blocks\' + aWorldspace.EditorID + 'ObjectsLOD.dds';
@@ -5800,7 +5802,7 @@ begin
         slExport.Add('GameMode=' + wbAppName);
         slExport.Add('Worldspace=' + aWorldspace.EditorID);
         slExport.Add('CellSW=' + Format('%d %d', [Lodset.SWCell.x, Lodset.SWCell.y]));
-        if wbGameMode = gmTES5 then begin
+        if wbGameMode in [ gmTES5, gmSSE ] then begin
           slExport.Add('TextureDiffuseHD=' + aWorldspace.WinningOverride.ElementEditValues['TNAM']);
           slExport.Add('TextureNormalHD=' + aWorldspace.WinningOverride.ElementEditValues['UNAM']);
         end;
@@ -5809,7 +5811,7 @@ begin
           slExport.Add('AtlasTolerance=' + Format('%1.1f', [UVRange - 1.0]));
         end;
         slExport.Add('PathData=' + wbDataPath);
-        if wbGameMode = gmTES5 then
+        if wbGameMode in [ gmTES5, gmSSE ] then
           slExport.Add('PathOutput=' + wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects')
         else if wbGameMode in [gmFO3, gmFNV] then
           slExport.Add('PathOutput=' + wbOutputPath + 'meshes\landscape\lod\' + aWorldspace.EditorID  + '\Blocks')
@@ -5830,7 +5832,7 @@ begin
         with TStringList.Create do try
           Delimiter := ',';
           StrictDelimiter := True;
-          if wbGameMode = gmTES5 then
+          if wbGameMode in [ gmTES5, gmSSE ] then
             DelimitedText := Settings.ReadString(Section, 'IgnoreTranslation', sMeshIgnoreTranslationTES5)
           else if wbGameMode in [gmFO3, gmFNV] then
             DelimitedText := Settings.ReadString(Section, 'IgnoreTranslation', sMeshIgnoreTranslationFNV);
@@ -5850,7 +5852,7 @@ begin
         s := s + ' --removeUnseenFaces';
         // if "No LOD Water" flag is set for a worldspace, then don't remove underwater meshes
         i := aWorldspace.WinningOverride.ElementNativeValues['DATA'];
-        if ((wbGameMode = gmTES5) and (i and $08 <> 0)) or ((wbGameMode in [gmFO3, gmFNV]) and (i and $10 <> 0)) then
+        if ((wbGameMode in [ gmTES5, gmSSE ]) and (i and $08 <> 0)) or ((wbGameMode in [gmFO3, gmFNV]) and (i and $10 <> 0)) then
           s := s + ' --ignoreWater';
         if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False) then
           s := s + ' --dontGenerateVertexColors';
@@ -5868,7 +5870,7 @@ begin
         PostAddMessage('[' + aWorldspace.EditorID + '] Objects LOD Done.');
 
         // DynDOLOD reference message, tribute to Sheson who made TES5LODGen possible
-        if wbGameMode = gmTES5 then begin
+        if wbGameMode in [ gmTES5, gmSSE ] then begin
           PostAddMessage(StringOfChar('*', 120));
           PostAddMessage('If you want more detailed, dynamic LOD with wide customization, please check DynDOLOD by Sheson');
           PostAddMessage('http://www.nexusmods.com/skyrim/mods/59721/');
@@ -8556,7 +8558,7 @@ begin
           for j := 0 to Pred(Group.ElementCount) do
             if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbGameMode in [gmTES5, gmFNV, gmFO3]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (wbGameMode in [gmTES5, gmSSE, gmFNV, gmFO3]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
                 Continue;
               if Mainrecord.Signature = 'WRLD' then begin
                 SetLength(Worldspaces, Succ(Length(Worldspaces)));
@@ -8578,7 +8580,7 @@ begin
           if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
             if Mainrecord.Signature = 'WRLD' then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbGameMode in [gmTES5, gmFNV, gmFO3]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (wbGameMode in [gmTES5, gmSSE, gmFNV, gmFO3]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
                 Continue;
               SetLength(Worldspaces, Succ(Length(Worldspaces)));
               Worldspaces[High(Worldspaces)] := MainRecord;
@@ -8630,7 +8632,7 @@ begin
   end;
 
   // TES5LODGen
-  if wbGameMode in [gmTES5, gmFO3, gmFNV] then begin
+  if wbGameMode in [gmTES5, gmSSE, gmFO3, gmFNV] then begin
     with TfrmLODGen.Create(Self) do try
       j := -1;
       for i := Low(WorldSpaces) to High(WorldSpaces) do begin
@@ -9588,7 +9590,7 @@ begin
             if not AutoModeCheckForDR then begin
               IsDeleted := True;
               IsDeleted := False;
-              if (wbGameMode in [gmFO3, gmFO4, gmFNV, gmTES5]) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
+              if (wbGameMode in [gmFO3, gmFO4, gmFNV, gmTES5, gmSSE]) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
                 IsPersistent := True
               else if wbGameMode = gmTES4 then
                 IsPersistent := False;
@@ -11758,7 +11760,7 @@ begin
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
   mniNavApplyScript.Visible := mniNavCheckForErrors.Visible;
-  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5]);
+  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmSSE]);
 
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;
@@ -11828,11 +11830,11 @@ begin
     mniNavCellChildVWD.Checked := SelectionIncludesAnyVWD(NoNodes);
   end;
 
-  mniNavCreateSEQFile.Visible := (wbGameMode = gmTES5) and
+  mniNavCreateSEQFile.Visible := (wbGameMode in [ gmTES5, gmSSE ]) and
      Assigned(Element) and
     (Element.ElementType = etFile);
 
-  mniNavLocalization.Visible := (wbGameMode in [gmTES5, gmFO4]);
+  mniNavLocalization.Visible := (wbGameMode in [gmTES5, gmSSE, gmFO4]);
   mniNavLocalizationSwitch.Visible :=
      Assigned(Element) and
     (Element.ElementType = etFile) and
@@ -11843,7 +11845,7 @@ begin
     else
       mniNavLocalizationSwitch.Caption := 'Localize plugin';
 
-  if wbGameMode in [gmTES5, gmFO4] then begin
+  if wbGameMode in [gmTES5, gmSSE, gmFO4] then begin
     mniNavLocalizationLanguage.Clear;
     sl := wbLocalizationHandler.AvailableLanguages;
     for i := 0 to Pred(sl.Count) do begin
@@ -11858,9 +11860,9 @@ begin
     sl.Free;
   end;
 
-  mniNavLogAnalyzer.Visible := (wbGameMode in [gmTES4, gmTES5]);
+  mniNavLogAnalyzer.Visible := (wbGameMode in [gmTES4, gmTES5, gmSSE]);
   mniNavLogAnalyzer.Clear;
-  if wbGameMode = gmTES5 then begin
+  if wbGameMode in [ gmTES5, gmSSE ] then begin
     MenuItem := TMenuItem.Create(mniNavLogAnalyzer);
     MenuItem.OnClick := mniNavLogAnalyzerClick;
     MenuItem.Caption := 'Papyrus Log';
@@ -13066,6 +13068,8 @@ begin
       ShellExecute(Handle, 'open', 'https://flattr.com/thing/77972/FNVEdit-Editor-for-Fallout-New-Vegas', '', '', 0);
     gmTES5:
       ShellExecute(Handle, 'open', 'https://flattr.com/thing/77985/TES4Edit-Editor-for-The-Elder-Scrolls-IV-Oblivion', '', '', 0);
+    gmSSE:
+      ShellExecute(Handle, 'open', 'https://flattr.com/thing/77985/TES4Edit-Editor-for-The-Elder-Scrolls-IV-Oblivion', '', '', 0);
   end;
 end;
 
@@ -13266,7 +13270,7 @@ begin
         FreeAndNil(sl2);
       end;
 
-      if wbGameMode in [gmTES5] then begin
+      if wbGameMode in [gmTES5, gmSSE] then begin
         slKeywords := TwbFastStringListCS.CreateSorted;
         for i := 0 to Pred(CheckListBox1.Count) do
           if CheckListBox1.Checked[i] then begin
@@ -13405,7 +13409,7 @@ var
   i, j                        : Integer;
 const
   SiteName : array[TwbGameMode] of string =
-    ('Fallout3', 'NewVegas', 'Oblivion', 'Oblivion', 'Skyrim', 'Fallout4');
+    ('Fallout3', 'NewVegas', 'Oblivion', 'Oblivion', 'Skyrim', 'Skyrim', 'Fallout4');
 begin
   if not wbLoaderDone then
     Exit;
@@ -15853,7 +15857,7 @@ begin
   end
   else if SameText(Identifier, 'GenerateLODTES5Trees') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-      if wbGameMode = gmTES5 then
+      if wbGameMode in [gmTES5, gmSSE] then
         GenerateLODTES5(MainRecord, [lodTrees]);
       Done := True;
     end else
@@ -15861,7 +15865,7 @@ begin
   end
   else if SameText(Identifier, 'GenerateLODTES5Objects') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-      if wbGameMode = gmTES5 then
+      if wbGameMode in [gmTES5, gmSSE] then
         GenerateLODTES5(MainRecord, [lodObjects]);
       Done := True;
     end else
@@ -16172,7 +16176,7 @@ begin
 
   vstNav.PopupMenu := pmuNav;
 
-  if wbGameMode = gmTES5 then begin
+  if wbGameMode in [gmTES5, gmSSE] then begin
     with vstSpreadSheetWeapon.Header.Columns[9] do
       Options := Options - [coVisible];
     for i := 12 to 20 do
@@ -16201,9 +16205,9 @@ begin
   SetupTreeView(vstSpreadsheetArmor);
   SetupTreeView(vstSpreadSheetAmmo);
 
-  tbsWEAPSpreadsheet.TabVisible := wbGameMode in [gmTES4, gmTES5];
-  tbsARMOSpreadsheet.TabVisible := wbGameMode in [gmTES4, gmTES5];
-  tbsAMMOSpreadsheet.TabVisible := wbGameMode in [gmTES4, gmTES5];
+  tbsWEAPSpreadsheet.TabVisible := wbGameMode in [gmTES4, gmTES5, gmSSE];
+  tbsARMOSpreadsheet.TabVisible := wbGameMode in [gmTES4, gmTES5, gmSSE];
+  tbsAMMOSpreadsheet.TabVisible := wbGameMode in [gmTES4, gmTES5, gmSSE];
 
   tmrCheckUnsaved.Enabled := wbEditAllowed and
     not (wbToolMode in wbAutoModes) and
@@ -16393,7 +16397,7 @@ begin
                 // All games except Skyrim load BSA files with partial matching, Skyrim requires exact names match and
                 //   can use a private ini to specify the bsa to use.
                 if HasBSAs(ChangeFileExt(ltLoadList[i], ''), ltDataPath,
-                    wbGameMode in [gmTES5], wbGameMode in [gmTES5], n, m)>0 then begin
+                    wbGameMode in [gmTES5, gmSSE], wbGameMode in [gmTES5, gmSSE], n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do
                         if wbLoadBSAs then begin
                           LoaderProgress('[' + n[j] + '] Loading Resources.');

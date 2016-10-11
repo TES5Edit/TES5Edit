@@ -1715,6 +1715,7 @@ begin
     AddConst(cUnit, 'gmFO3', ord(gmFO3));
     AddConst(cUnit, 'gmFNV', ord(gmFNV));
     AddConst(cUnit, 'gmFO4', ord(gmFO4));
+    AddConst(cUnit, 'gmSSE', ord(gmSSE));
 
     { TwbElementType }
     AddConst(cUnit, 'etFile', ord(etFile));

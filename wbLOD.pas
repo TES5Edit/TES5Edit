@@ -246,7 +246,7 @@ end;
 
 function wbLODTreeBlockFileExt: string;
 begin
-  if wbGameMode = gmTES5 then
+  if wbGameMode in [ gmTES5, gmSSE ] then
     Result := 'btt'
   else if wbGameMode in [gmFO3, gmFNV] then
     Result := 'dtl'
@@ -258,7 +258,7 @@ function wbDefaultNormalTexture(aGameMode: TwbGameMode): string;
 begin
   if aGameMode = gmFO4 then
     Result := 'textures\shared\flatflat_n.dds'
-  else if aGameMode = gmTES5 then
+  else if aGameMode in [ gmTES5, gmSSE ] then
     Result := 'textures\default_n.dds'
   else if aGameMode in [gmFO3, gmFNV] then
     Result := 'textures\shared\shadefade01_n.dds'
@@ -447,7 +447,7 @@ end;
 
 function TwbLodTES5TreeList.GetListFileName: string;
 begin
-  if wbGameMode = gmTES5 then
+  if wbGameMode in [ gmTES5, gmSSE ] then
     Result := 'Meshes\Terrain\' + fWorldspaceID + '\Trees\' + fWorldspaceID + '.lst'
   else if wbGameMode in [gmFO3, gmFNV] then
     Result := 'Meshes\Landscape\LOD\' + fWorldspaceID + '\Trees\TreeTypes.lst'
@@ -457,7 +457,7 @@ end;
 
 function TwbLodTES5TreeList.GetAtlasFileName: string;
 begin
-  if wbGameMode = gmTES5 then
+  if wbGameMode in [ gmTES5, gmSSE ] then
     Result := 'Textures\Terrain\' + fWorldspaceID + '\Trees\' + fWorldspaceID + 'TreeLod.dds'
   else if wbGameMode in [gmFO3, gmFNV] then begin
     if SameText(Copy(fWorldspaceID, 1, 4), 'DLC4') then
@@ -731,7 +731,7 @@ function TwbLodTES5TreeBlock.GetBlockFileName: string;
 begin
   Result := '';
 
-  if wbGameMode = gmTES5 then
+  if wbGameMode in [ gmTES5, gmSSE ] then
     Result := 'meshes\terrain\%s\trees\%s.%d.%d.%d.' + wbLODTreeBlockFileExt
   else if wbGameMode in [gmFO3, gmFNV] then
     Result := 'meshes\landscape\lod\%s\trees\%s.level%d.x%d.y%d.' + wbLODTreeBlockFileExt
