@@ -1024,7 +1024,7 @@ begin
       with TStringList.Create do try
         if wbGameMode in [gmTES4, gmFO3, gmFNV] then
           Text := StringReplace(ReadString('Archive', 'sArchiveList', ''), ',' ,#10, [rfReplaceAll])
-        else if wbGameMode = gmTES5 then
+        else if wbGameMode in [ gmTES5, gmSSE ] then
           Text := StringReplace(
             ReadString('Archive', 'sResourceArchiveList', '') + ',' +
             ReadString('Archive', 'sResourceArchiveList2', ''),

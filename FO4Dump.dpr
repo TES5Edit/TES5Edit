@@ -745,7 +745,7 @@ function CheckAppPath: string;
 const
   //gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmFO4
   ExeName : array[TwbGameMode] of string =
-    ('Fallout3.exe', 'FalloutNV.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe', 'Fallout4.exe');
+    ('Fallout3.exe', 'FalloutNV.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe', 'TESV.exe', 'Fallout4.exe');
 var
   s: string;
 begin
@@ -794,7 +794,7 @@ begin
       if not OpenKeyReadOnly(sBethRegKey + wbGameName + '\') then
         if not OpenKeyReadOnly(sBethRegKey64 + wbGameName + '\') then begin
           ReportProgress('Fatal: Could not open registry key: ' + sBethRegKey + wbGameName + '\');
-          if wbGameMode = gmTES5 then
+//          if wbGameMode = gmTES5 then
             ReportProgress('This can happen after Steam updates, run game''s launcher to restore registry settings');
           Exit;
         end;
@@ -803,7 +803,7 @@ begin
 
       if DataPath = '' then begin
         ReportProgress('Fatal: Could not determine '+wbGameName+' installation path, no "Installed Path" registry key');
-        if wbGameMode = gmTES5 then
+//        if wbGameMode = gmTES5 then
           ReportProgress('This can happen after Steam updates, run game''s launcher to restore registry settings');
       end;
     finally
@@ -839,6 +839,7 @@ begin
     gmFO3:  SwitchToFO3CoSave;
     gmTES4: SwitchToTES4CoSave;
     gmTES5: SwitchToTES5CoSave;
+    gmSSE:  SwitchToTES5CoSave;
   end;
 end;
 
@@ -969,6 +970,23 @@ begin
         tsSaves:   DefineTES5Saves;
         tsPlugins: DefineTES5;
       end;
+    end else if isMode('SSE') then begin
+      wbGameMode := gmSSE;
+      wbAppName := 'SSE';
+      wbGameName := 'Skyrim Special Edition';
+      wbLoadBSAs := true;
+      if not (wbToolMode in [tmDump, tmExport]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
+        Exit;
+      end;
+      if not (wbToolSource in [tsPlugins, tsSaves]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
+        Exit;
+      end;
+      case wbToolSource of
+        tsSaves:   DefineTES5Saves;
+        tsPlugins: DefineTES5;
+      end;
     end else if isMode('FO4') then begin
       wbGameMode := gmFO4;
       wbAppName := 'FO4';
@@ -988,7 +1006,7 @@ begin
         tsPlugins: DefineFO4;
       end;
     end else begin
-      WriteLn(ErrOutput, 'Application name must contain FNV, FO3, FO4, TES4 or TES5 to select game.');
+      WriteLn(ErrOutput, 'Application name must contain FNV, FO3, FO4, SSE, TES4 or TES5 to select game.');
       Exit;
     end;
 
@@ -1102,11 +1120,11 @@ begin
       DumpForms.Free;
     end;
 
-    if wbFindCmdLineParam('l', s) and (wbGameMode in [gmTES5, gmFO4]) then
+    if wbFindCmdLineParam('l', s) and (wbGameMode in [gmTES5, gmSSE, gmFO4]) then
       wbLanguage := s
     else
       case wbGameMode of
-        gmTES5:
+        gmTES5, gmSSE:
           wbLanguage := 'English';
         gmFO4:
           wbLanguage := 'En';
@@ -1151,6 +1169,7 @@ begin
           else
             WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
         gmTES5: if SameText(ExtractFileExt(s), '.skse') then SwitchToCoSave;
+        gmSSE:  if SameText(ExtractFileExt(s), '.skse') then SwitchToCoSave;
       else
           WriteLn(ErrOutput, 'CoSave are not supported yet "',s,'". Please check the command line parameters.');
       end;
@@ -1174,7 +1193,7 @@ begin
       WriteLn(ErrOutput, '-q           ', 'Suppress version message');
       WriteLn(ErrOutput, '-more        ', 'Displays aditional information on Unknowns');
       WriteLn(ErrOutput, '-l:language  ', 'Specifies language for localization files (since TES5)');
-      WriteLn(ErrOutput, '             ', '  Default language is English for TES5 and En for FO4');
+      WriteLn(ErrOutput, '             ', '  Default language is English for TES5 or SSE and En for FO4');
       WriteLn(ErrOutput, '-bsa         ', 'Loads default associated BSAs');
       WriteLn(ErrOutput, '             ', ' (plugin.bsa and plugin - interface.bsa)');
       WriteLn(ErrOutput, '-allbsa      ', 'Loads all associated BSAs (plugin*.bsa)');
@@ -1208,7 +1227,7 @@ begin
       WriteLn(ErrOutput, '             ', '  -xc:1001');
       WriteLn(ErrOutput, '             ', '    1001 is the ID of Papyrus data the largest part of the save.');
       WriteLn(ErrOutput, '             ', '');
-      WriteLn(ErrOutput, 'Example: full dump of Skyrim.esm excluding "bloated" records');
+      WriteLn(ErrOutput, 'Example: full dump of Fallout4.esm excluding "bloated" records');
       WriteLn(ErrOutput, '  TES5Dump.exe -FO4 -xr:NAVI,NAVM,WRLD,CELL,LAND,REFR,ACHR Fallout4.esm');
       WriteLn(ErrOutput, '             ', '');
       WriteLn(ErrOutput, 'Currently supported export formats:');
@@ -1290,7 +1309,7 @@ begin
             m := TStringList.Create;
             try
               if HasBSAs(ChangeFileExt(Masters[i], ''), wbDataPath,
-                  wbGameMode in [gmTES5], wbGameMode in [gmTES5], n, m)>0 then begin
+                  wbGameMode in [gmTES5, gmSSE], wbGameMode in [gmTES5, gmSSE], n, m)>0 then begin
                 for j := 0 to Pred(n.Count) do begin
                   ReportProgress('[' + n[j] + '] Loading Resources.');
                   wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));

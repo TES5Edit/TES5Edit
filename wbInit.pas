@@ -222,9 +222,9 @@ end;
 
 function CheckAppPath: string;
 const
-  //gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmFO4
+  //gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmSSE, gmFO4
   ExeName : array[TwbGameMode] of string =
-    ('FalloutNV.exe', 'Fallout3.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe', 'Fallout4.exe');
+    ('FalloutNV.exe', 'Fallout3.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe', 'TESV.exe', 'Fallout4.exe');
 var
   s: string;
 begin
@@ -324,7 +324,7 @@ begin
       if not OpenKeyReadOnly(sBethRegKey + wbGameName + '\') then
         if not OpenKeyReadOnly(sBethRegKey64 + wbGameName + '\') then begin
           s := 'Fatal: Could not open registry key: ' + sBethRegKey + wbGameName + '\';
-          if wbGameMode = gmTES5 then
+//          if wbGameMode = gmTES5 then // All game exists on steam now
             ShowMessage(s+#13+#10+'This can happen after Steam updates, run game''s launcher to restore registry settings');
           wbDontSave := True;
           Exit;
@@ -334,7 +334,7 @@ begin
 
       if wbDataPath = '' then begin
         s := 'Fatal: Could not determine '+wbGameName+' installation path, no "Installed Path" registry key';
-        if wbGameMode = gmTES5 then
+//        if wbGameMode = gmTES5 then
           ShowMessage(s+#13+#10+'This can happen after Steam updates, run game''s launcher to restore registry settings');
         wbDontSave := True;
       end;
@@ -427,7 +427,7 @@ var
 procedure DetectAppMode;
 const
   SourceModes : array [1..2] of string = ('plugins', 'saves');
-  GameModes: array [1..5] of string = ('tes4', 'tes5', 'fo3', 'fnv', 'fo4');
+  GameModes: array [1..6] of string = ('tes4', 'tes5', 'sse', 'fo3', 'fnv', 'fo4');
   ToolModes: array [1..12] of string = (
     'edit', 'view', 'lodgen', 'script', 'translate',
     'setesm', 'clearesm', 'sortandclean', 'sortandcleanmasters',
@@ -644,6 +644,18 @@ begin
       ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName);
       Exit;
     end;
+  end else if isMode('SSE') then begin
+    wbGameMode := gmSSE;
+    wbAppName := 'SSE';
+    wbGameName := 'Skyrim Special Edition';
+    if not (wbToolMode in wbAlwaysMode) and not (wbToolMode in [tmTranslate]) then begin
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
+      Exit;
+    end;
+    if not (wbToolSource in [tsPlugins, tsSaves]) then begin
+      ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName);
+      Exit;
+    end;
   end else if isMode('FO4') then begin
     wbGameMode := gmFO4;
     wbAppName := 'FO4';
@@ -658,7 +670,7 @@ begin
       Exit;
     end;
   end else begin
-    ShowMessage('Application name must contain FNV, FO3, FO4, TES4 or TES5 to select game.');
+    ShowMessage('Application name must contain FNV, FO3, FO4, SSE, TES4 or TES5 to select game.');
     Exit;
   end;
   if (wbToolSource = tsSaves) and (wbToolMode = tmEdit) then begin
@@ -685,6 +697,11 @@ begin
     wbAllowInternalEdit := false;
     ReadSettings;
   end else if wbGameMode = gmTES5 then begin
+    wbVWDInTemporary := True;
+    wbLoadBSAs := True; // localization won't work otherwise
+    wbHideIgnored := False; // to show Form Version
+    ReadSettings;
+  end else if wbGameMode = gmSSE then begin
     wbVWDInTemporary := True;
     wbLoadBSAs := True; // localization won't work otherwise
     wbHideIgnored := False; // to show Form Version
@@ -722,14 +739,18 @@ begin
     gmTES5: case wbToolSource of
       tsSaves:   DefineTES5Saves;
       tsPlugins: DefineTES5;
+    end;
+    gmSSE: case wbToolSource of
+      tsSaves:   DefineTES5Saves;
+      tsPlugins: DefineTES5;
     end
   else
-    ShowMessage('Application name must contain FNV, FO3, FO4, TES4 or TES5 to select game.');
+    ShowMessage('Application name must contain FNV, FO3, FO4, SSE, TES4 or TES5 to select game.');
     Exit;
   end;
 
   case wbGameMode of
-    gmTES5:
+    gmTES5, gmSSE:
       wbLanguage := 'English';
     gmFO4:
       wbLanguage := 'En';
@@ -851,6 +872,7 @@ begin
     gmFO3:  SwitchToFO3CoSave;
     gmTES4: SwitchToTES4CoSave;
     gmTES5: SwitchToTES5CoSave;
+    gmSSE:  SwitchToTES5CoSave;
   end;
 end;
 
