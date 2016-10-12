@@ -745,7 +745,7 @@ function CheckAppPath: string;
 const
   //gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmFO4
   ExeName : array[TwbGameMode] of string =
-    ('Fallout3.exe', 'FalloutNV.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe', 'TESV.exe', 'Fallout4.exe');
+    ('Fallout3.exe', 'FalloutNV.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe', 'SkyrimSE.exe', 'Fallout4.exe');
 var
   s: string;
 begin
