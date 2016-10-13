@@ -974,7 +974,7 @@ begin
       wbGameMode := gmSSE;
       wbAppName := 'SSE';
       wbGameName := 'Skyrim Special Edition';
-      wbLoadBSAs := true;
+      wbLoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
       if not (wbToolMode in [tmDump, tmExport]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
