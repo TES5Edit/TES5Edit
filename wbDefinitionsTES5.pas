@@ -9858,7 +9858,8 @@ begin
         wbFloat('Green', cpNormal, True, 255, 0),
         wbFloat('Blue', cpNormal, True, 255, 0)
       ]),
-      wbInteger('Flags', itU32, wbFlags(['Single Pass']))
+      wbInteger('Flags', itU32, wbFlags(['Single Pass'])),
+      wbUnknown
     ], cpNormal, True, nil, 5)
   ]);
 
@@ -10422,7 +10423,8 @@ begin
       wbInteger('Restitution', itU8)
     ], cpNormal, True),
     wbInteger(SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True),
-    wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
+    wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS])),
+    wbUnknown(INAM)
   ]);
 
   wbRecord(LVLN, 'Leveled NPC', [
@@ -12717,7 +12719,8 @@ begin
     wbMODL,
     wbStruct(DNAM, 'Direction Material', [
       wbFloat('Max Angle (30-120)'),
-      wbFormIDCk('Material', [MATO, NULL])
+      wbFormIDCk('Material', [MATO, NULL]),
+      wbUnknown
     ], cpNormal, True),
     wbArray(MNAM, 'Distant LOD',
       wbStruct('LOD', [
@@ -12904,7 +12907,8 @@ begin
       wbFloat('Depth Properties - Refraction'),
       wbFloat('Depth Properties - Normals'),
       wbFloat('Depth Properties - Specular Lighting'),
-      wbFloat('Specular Properties - Sun Sparkle Power')
+      wbFloat('Specular Properties - Sun Sparkle Power'),
+      wbUnknown
     ]),
     wbByteArray(GNAM, 'Unused', 0, cpNormal, True),  // leftover
     wbStruct(NAM0, 'Linear Velocity', [
@@ -12919,7 +12923,8 @@ begin
     ], cpNormal, False),
     wbString(NAM2, 'Noise Texture', 0, cpNormal, False),
     wbString(NAM3, 'Unused', 0, cpNormal),  // leftover
-    wbString(NAM4, 'Unused', 0, cpNormal)  // leftover
+    wbString(NAM4, 'Unused', 0, cpNormal),  // leftover
+    wbUnknown(NAM5)
   ], False, nil, cpNormal, False);
 
   wbRecord(WEAP, 'Weapon',
@@ -13029,7 +13034,8 @@ begin
         'On Death'
       ])),
       wbByteArray('Unused', 3, cpIgnore),
-      wbFormIDCk('Effect', [SPEL, NULL])
+      wbFormIDCk('Effect', [SPEL, NULL]),
+      wbUnknown
     ]),
     wbInteger(VNAM, 'Detection Sound Level', itU32, wbSoundlevelEnum),
     wbFormIDCk(CNAM, 'Template', [WEAP])
@@ -13376,6 +13382,7 @@ begin
       wbFormIDCK('Sunset', [IMGS, NULL]),
       wbFormIDCK('Night', [IMGS, NULL])
     ]),
+    wbUnknown(HNAM),
     wbRArray('Directional Ambient Lighting Colors',
       wbStruct(DALC, 'Sunrise/Day/Sunset/Night Order', [wbAmbientColors], cpNormal, True)
     ),
