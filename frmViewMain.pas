@@ -3335,7 +3335,7 @@ procedure TfrmMain.DoInit;
         sl2 := TStringList.Create;
         try
           RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl, sl2); // remove comments
-          useBOSS := (sl2.Count = 0) and (wbGameMode in [ gmTES5, gmSSE ]); // FO4 doesn't use loadorder.txt anymore
+          useBOSS := (sl2.Count = 0) and (wbGameMode in [ gmTES5 ]); // FO4 and SSE don't use loadorder.txt anymore
         finally
           sl2.Free;
         end;
