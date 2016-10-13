@@ -703,7 +703,7 @@ begin
     ReadSettings;
   end else if wbGameMode = gmSSE then begin
     wbVWDInTemporary := True;
-    wbLoadBSAs := True; // localization won't work otherwise
+    wbLoadBSAs := False; // localization won't work otherwise
     wbHideIgnored := False; // to show Form Version
     ReadSettings;
   end else if wbGameMode = gmFO4 then begin
