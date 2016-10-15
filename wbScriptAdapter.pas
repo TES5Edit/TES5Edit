@@ -1466,20 +1466,8 @@ begin
 end;
 
 procedure IwbContainerHandler_ResourceOpenData(var Value: Variant; Args: TJvInterpreterArgs);
-var
-  Res           : TDynResources;
-  ResContainer  : string;
-  i             : integer;
 begin
-  Res := wbContainerHandler.OpenResource(Args.Values[1]);
-  if Length(Res) = 0 then
-    Exit;
-  ResContainer := string(Args.Values[0]);
-  if ResContainer = '' then
-    ResContainer := Res[High(Res)].Container.Name;
-  for i := Low(Res) to High(Res) do
-    if SameText(Res[i].Container.Name, ResContainer) then
-      Value := Res[i].GetData;
+  Value := wbContainerHandler.OpenResourceData(Args.Values[0], Args.Values[1]);
 end;
 
 procedure IwbContainerHandler_ResourceCopy(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1508,6 +1496,11 @@ begin
   Value := NifTextures(TBytes(Args.Values[0]), TStrings(V2O(Args.Values[1])));
 end;
 
+procedure NifUtils_NifTextureListResource(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := NifTextures(wbContainerHandler.OpenResourceData(Args.Values[0], Args.Values[1]), TStrings(V2O(Args.Values[2])));
+end;
+
 procedure NifUtils_NifTextureListUVRange(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := NifTexturesUVRange(TBytes(Args.Values[0]), Single(Args.Values[1]), TStrings(V2O(Args.Values[2])));
@@ -1527,15 +1520,8 @@ begin
 end;
 
 procedure DDSUtils_wbDDSResourceToBitmap(var Value: Variant; Args: TJvInterpreterArgs);
-var
-  res: TDynResources;
 begin
-  if not Assigned(wbContainerHandler) then
-    Exit;
-
-  res := wbContainerHandler.OpenResource(string(Args.Values[0]));
-  if Length(res) <> 0 then
-    Value := wbDDSDataToBitmap(res[High(res)].GetData, TBitmap(V2O(Args.Values[1])));
+  Value := wbDDSDataToBitmap(wbContainerHandler.OpenResourceData('', Args.Values[0]), TBitmap(V2O(Args.Values[1])));
 end;
 
 
@@ -1963,6 +1949,7 @@ begin
     { Nif routines }
     AddFunction(cUnit, 'NifBlockList', NifUtils_NifBlockList, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'NifTextureList', NifUtils_NifTextureList, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'NifTextureListResource', NifUtils_NifTextureListResource, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'NifTextureListUVRange', NifUtils_NifTextureListUVRange, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
 
     { DDS routines }
