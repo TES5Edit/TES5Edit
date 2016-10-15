@@ -1735,6 +1735,7 @@ type
     procedure AddBA2(const aFileName: string);
 
     function OpenResource(const aFileName: string): TDynResources;
+    function OpenResourceData(const aContainerName, aFileName: string): TBytes;
     function ResolveHash(const aHash: Int64): TDynStrings;
     function ContainerExists(aContainerName: string): Boolean;
     procedure ContainerList(const aList: TStrings);

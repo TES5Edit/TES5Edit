@@ -54,6 +54,7 @@ type
     procedure AddBA2(const aFileName: string);
 
     function OpenResource(const aFileName: string): TDynResources;
+    function OpenResourceData(const aContainerName, aFileName: string): TBytes;
     function ContainerExists(aContainerName: string): Boolean;
     procedure ContainerList(const aList: TStrings);
     procedure ContainerResourceList(const aContainerName: string; const aList: TStrings;
@@ -283,6 +284,23 @@ begin
       Inc(j);
   end;
   SetLength(Result, j);
+end;
+
+function TwbContainerHandler.OpenResourceData(const aContainerName, aFileName: string): TBytes;
+var
+  Res : TDynResources;
+  i   : Integer;
+begin
+  Res := OpenResource(aFileName);
+
+  if Length(Res) = 0 then
+    Exit;
+
+  for i := High(Res) downto Low(Res) do
+    if (aContainerName = '') or SameText(Res[i].Container.Name, aContainerName) then begin
+      Result := Res[i].GetData;
+      Break;
+    end;
 end;
 
 procedure TwbContainerHandler.ContainerList(const aList: TStrings);

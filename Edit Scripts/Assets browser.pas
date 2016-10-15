@@ -176,7 +176,7 @@ begin
   ext := ExtractFileExt(f);
   if SameText(ext, '.nif') then begin
     try
-      NifTextureList(ResourceOpenData('', f), sl);
+      NifTextureListResource('', f, sl);
     except end;
     slTextures.AddStrings(sl); // remove duplicates
     mInfo.Lines.BeginUpdate;
