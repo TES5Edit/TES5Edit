@@ -714,6 +714,10 @@ var
   i, j: integer;
 begin
   Result := False;
+
+  if Length(aNifData) = 0 then
+    Exit;
+
   if Assigned(aTextures) then
     aTextures.Clear
   else
@@ -759,6 +763,10 @@ var
   tiled: Boolean;
 begin
   Result := False;
+
+  if Length(aNifData) = 0 then
+    Exit;
+
   if Assigned(aTextures) then
     aTextures.Clear
   else

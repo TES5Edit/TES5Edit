@@ -459,7 +459,7 @@ var
 begin
   // suppress possible errors for invalid meshes
   try
-    NifTextureList(ResourceOpenData(aContainer, aMesh), sl);
+    NifTextureListResource(aContainer, aMesh, sl);
   except on E: Exception do
     AddMessage('NIF: ' + E.Message + ' ' + aMesh);
   end;
@@ -603,9 +603,10 @@ function Initialize: integer;
 begin
   if (wbGameMode <> gmFO3) and
      (wbGameMode <> gmFNV) and
+     (wbGameMode <> gmTES4) and
      (wbGameMode <> gmTES5)
   then begin
-    MessageDlg('Sorry, script supports Skyrim and Fallouts only for now.', mtInformation, [mbOk], 0);
+    MessageDlg('Sorry, script supports Skyrim, Oblivion and Fallouts only for now.', mtInformation, [mbOk], 0);
     Result := 1;
     Exit;
   end;
@@ -833,6 +834,16 @@ begin
     end;
     
   end
+
+  // Oblivion
+  else if wbGameMode = gmTES4 then begin
+  
+    if (sig = 'WTHR') then begin
+      ProcessAsset(ElementByPath(e, 'DNAM'));
+      ProcessAsset(ElementByPath(e, 'CNAM'));
+    end;
+  
+  end
   
   // Fallout 3 and New Vegas
   else if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then begin
@@ -954,6 +965,11 @@ begin
       ProcessAsset(ElementByPath(e, 'ANAM'));
       ProcessAsset(ElementByPath(e, 'BNAM'));
     end;
+  end
+
+  // Fallout 4
+  else if wbGameMode = gmFO4 then begin
+  
   end;
 end;
 
