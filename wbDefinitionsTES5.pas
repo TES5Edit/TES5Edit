@@ -597,6 +597,7 @@ const
   VMAD : TwbSignature = 'VMAD';
   VNAM : TwbSignature = 'VNAM';
   VNML : TwbSignature = 'VNML';
+  VOLI : TwbSignature = 'VOLI'; { New To Skyrim X }
   VTCK : TwbSignature = 'VTCK';
   VTEX : TwbSignature = 'VTEX';
   VTXT : TwbSignature = 'VTXT';
@@ -13390,6 +13391,23 @@ begin
     wbByteArray(NAM3, 'Unused', 0, cpIgnore),
     wbRStruct('Aurora', [wbMODL], [])
   ]);
+
+  wbRecord(VOLI, 'Volumetric Lighting', [
+    wbEDID,
+    wbFloat(CNAM, 'Intensity'),
+    wbFloat(DNAM, 'Custom Color - Contribution'),
+    wbFloat(ENAM, 'Red', cpNormal, False, 255, 0),
+    wbFloat(FNAM, 'Green', cpNormal, False, 255, 0),
+    wbFloat(GNAM, 'Blue', cpNormal, False, 255, 0),
+    wbFloat(HNAM, 'Density - Contribution'),
+    wbFloat(INAM, 'Density - Size'),
+    wbFloat(JNAM, 'Density - Wind Speed'),
+    wbFloat(KNAM, 'Density - Falling Speed'),
+    wbFloat(LNAM, 'Phase Function - Contribution'),
+    wbFloat(MNAM, 'Phase Function - Scattering'),
+    wbFloat(NNAM, 'Sampling Repartition - Range Factor') { can't be less then 1.0000 CK will always round up to 1.0000 }
+  ]);
+
 end;
 
 {>>> Unused records, they have empty GRUP in skyrim.esm <<<}
@@ -13526,6 +13544,7 @@ begin
    wbAddGroupOrder(OTFT);
    wbAddGroupOrder(ARTO);
    wbAddGroupOrder(MATO);
+   wbAddGroupOrder(VOLI); {New to Skyrim}
    wbAddGroupOrder(MOVT);
    wbAddGroupOrder(SNDR);
    wbAddGroupOrder(DUAL);
