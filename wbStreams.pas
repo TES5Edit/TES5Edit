@@ -65,7 +65,7 @@ type
     function ReadWord: Word; inline;
     function ReadCardinal: Cardinal; inline;
     function ReadInt64: Int64; inline;
-    function ReadStringLen: string; inline;
+    function ReadStringLen(Term: Boolean = True): string; inline;
     function ReadStringLen16: string; inline;
     function ReadStringTerm: string; inline;
 
@@ -306,7 +306,7 @@ begin
   ReadBuffer(Result, SizeOf(Result));
 end;
 
-function TwbBaseCachedFileStream.ReadStringLen: string;
+function TwbBaseCachedFileStream.ReadStringLen(Term: Boolean = True): string;
 var
   Len : Byte;
   s   : AnsiString;
@@ -315,7 +315,8 @@ begin
   SetLength(s, Len);
   if Len > 0 then begin
     ReadBuffer(s[1], Len);
-    SetLength(s, Pred(Length(s)));
+    if Term then
+      SetLength(s, Pred(Length(s)));
   end;
   Result := s;
 end;
