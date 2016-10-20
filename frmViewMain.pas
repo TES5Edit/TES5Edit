@@ -2649,7 +2649,7 @@ var
   i               : Integer;
 begin
   if wbGameMode in [gmTES5, gmSSE, gmFO4] then begin
-    if MessageDlg('Merged patch is unsupported for ' + wbGameName +
+    if MessageDlg('Merged patch is unsupported for ' + wbGameName2 +
       '. Create it only if you know what you are doing and can troubleshoot possible issues yourself. ' +
       'Do you want to continue?',
       mtWarning, mbYesNo, 0) <> mrYes
@@ -3342,8 +3342,8 @@ procedure TfrmMain.DoInit;
 
         // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
         // even if not present in plugins.txt
-        j := FindMatchText(sl, wbGameName+'.esm');
-        if j = -1 then sl.Insert(0, wbGameName+'.esm');
+        j := FindMatchText(sl, 'Skyrim.esm');
+        if j = -1 then sl.Insert(0, 'Skyrim.esm');
         if wbGameMode in [ gmTES5, gmSSE ] then begin
           j := FindMatchText(sl, 'Update.esm');
           if j = -1 then sl.Insert(1, 'Update.esm');
@@ -3491,7 +3491,7 @@ begin
     end;
   end;
 
-  AddMessage('Using '+wbGameName+' Data Path: ' + wbDataPath);
+  AddMessage('Using '+wbGameName2+' Data Path: ' + wbDataPath);
 
 
   AddMessage('Using ini: ' + wbTheGameIniFileName);
@@ -3517,8 +3517,8 @@ begin
 
   AddMessage('Using plugin list: ' + wbPluginsFileName);
   if not FileExists(wbPluginsFileName) then begin
-    // plugins file could be missing in Fallout 4 since DLCs are loaded automatically
-    if (wbToolSource in [tsPlugins]) and not (wbGameMode in [gmFO4]) then begin
+    // plugins file could be missing in Fallout 4 and SSE since DLCs are loaded automatically
+    if (wbToolSource in [tsPlugins]) and not (wbGameMode in [gmFO4, gmSSE]) then begin
       AddMessage('Fatal: Could not find plugin list');
       Exit;
     end else

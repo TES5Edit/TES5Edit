@@ -321,8 +321,8 @@ begin
     if wbDataPath = '' then with TRegistry.Create do try
       RootKey := HKEY_LOCAL_MACHINE;
 
-      if not OpenKeyReadOnly(sBethRegKey + wbGameName + '\') then
-        if not OpenKeyReadOnly(sBethRegKey64 + wbGameName + '\') then begin
+      if not OpenKeyReadOnly(sBethRegKey + wbGameName2 + '\') then
+        if not OpenKeyReadOnly(sBethRegKey64 + wbGameName2 + '\') then begin
           s := 'Fatal: Could not open registry key: ' + sBethRegKey + wbGameName + '\';
 //          if wbGameMode = gmTES5 then // All game exists on steam now
             ShowMessage(s+#13+#10+'This can happen after Steam updates, run game''s launcher to restore registry settings');
@@ -333,7 +333,7 @@ begin
       wbDataPath := ReadString('Installed Path');
 
       if wbDataPath = '' then begin
-        s := 'Fatal: Could not determine '+wbGameName+' installation path, no "Installed Path" registry key';
+        s := 'Fatal: Could not determine '+wbGameName2+' installation path, no "Installed Path" registry key';
 //        if wbGameMode = gmTES5 then
           ShowMessage(s+#13+#10+'This can happen after Steam updates, run game''s launcher to restore registry settings');
         wbDontSave := True;
@@ -363,7 +363,7 @@ begin
       ShowMessage('Fatal: Could not determine my documents folder');
       Exit;
     end;
-    wbMyGamesTheGamePath := wbMyProfileName + 'My Games\'+ wbGameName +'\';
+    wbMyGamesTheGamePath := wbMyProfileName + 'My Games\'+ wbGameName2 +'\';
 
     if wbGameMode in [gmFO3, gmFNV] then
       wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
@@ -402,7 +402,7 @@ begin
         Exit;
       end;
 
-      wbPluginsFileName := wbPluginsFileName + wbGameName + '\Plugins.txt';
+      wbPluginsFileName := wbPluginsFileName + wbGameName2 + '\Plugins.txt';
     end;
 
   // settings in the ini file next to app, or in the same folder with plugins.txt
@@ -647,7 +647,8 @@ begin
   end else if isMode('SSE') then begin
     wbGameMode := gmSSE;
     wbAppName := 'SSE';
-    wbGameName := 'Skyrim Special Edition';
+    wbGameName := 'Skyrim';
+    wbGameName2 := 'Skyrim Special Edition';
     if not (wbToolMode in wbAlwaysMode) and not (wbToolMode in [tmTranslate]) then begin
       ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
@@ -678,6 +679,9 @@ begin
     Exit;
   end;
 
+  if wbGameName2 = '' then
+    wbGameName2 := wbGameName;
+
   DoInitPath(wbParamIndex);
 
   if wbGameMode = gmFNV then begin
@@ -703,12 +707,13 @@ begin
     ReadSettings;
   end else if wbGameMode = gmSSE then begin
     wbVWDInTemporary := True;
-    wbLoadBSAs := False; // localization won't work otherwise
+    wbLoadBSAs := True; // localization won't work otherwise
     wbHideIgnored := False; // to show Form Version
     ReadSettings;
   end else if wbGameMode = gmFO4 then begin
     wbVWDInTemporary := True;
     wbVWDAsQuestChildren := True;
+    wbLoadBSAs := True; // localization won't work otherwise
     wbHideIgnored := False; // to show Form Version
     ReadSettings;
     //wbCreateContainedIn := False;

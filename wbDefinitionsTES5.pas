@@ -597,7 +597,7 @@ const
   VMAD : TwbSignature = 'VMAD';
   VNAM : TwbSignature = 'VNAM';
   VNML : TwbSignature = 'VNML';
-  VOLI : TwbSignature = 'VOLI'; { New To Skyrim X }
+  VOLI : TwbSignature = 'VOLI'; { New To SSE }
   VTCK : TwbSignature = 'VTCK';
   VTEX : TwbSignature = 'VTEX';
   VTXT : TwbSignature = 'VTXT';
@@ -806,14 +806,17 @@ var
   wbNull: IwbValueDef;
   wbTimeInterpolator: IwbStructDef;
   wbColorInterpolator: IwbStructDef;
+  wbCELLDATA: IwbSubRecordDef;
+
+
+function IsSSE: Boolean; inline;
+begin
+  Result := wbGameMode = gmSSE;
+end;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
   Result := PCardinal(@aSignature)^;
-{  Result := Ord(aSignature[3]) shl 24 +
-            Ord(aSignature[2]) shl 16 +
-            Ord(aSignature[1]) shl  8 +
-            Ord(aSignature[0]);}
 end;
 
 function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -6589,6 +6592,33 @@ begin
   ReferenceRecord(PHZD, 'Placed Hazard');
   ReferenceRecord(PMIS, 'Placed Missile');
 
+  if IsSSE then
+    wbCELLDATA :=
+      wbInteger(DATA, 'Flags', itU16, wbFlags([
+        {0x0001} 'Is Interior Cell',
+        {0x0002} 'Has Water',
+        {0x0004} 'Can''t Travel From Here',
+        {0x0008} 'No LOD Water',
+        {0x0010} 'Unknown 5',
+        {0x0020} 'Public Area',
+        {0x0040} 'Hand Changed',
+        {0x0080} 'Show Sky',
+        {0x0100} 'Use Sky Lighting'
+      ]), cpNormal, True, False, nil, wbCELLDATAAfterSet)
+  else
+    wbCELLDATA :=
+      wbInteger(DATA, 'Flags', itU32, wbFlags([
+        {0x0001} 'Is Interior Cell',
+        {0x0002} 'Has Water',
+        {0x0004} 'Can''t Travel From Here',
+        {0x0008} 'No LOD Water',
+        {0x0010} 'Unknown 5',
+        {0x0020} 'Public Area',
+        {0x0040} 'Hand Changed',
+        {0x0080} 'Show Sky',
+        {0x0100} 'Use Sky Lighting'
+      ]), cpNormal, True, False, nil, wbCELLDATAAfterSet);
+
   if wbSimpleRecords then begin
 
     wbRecord(CELL, 'Cell',
@@ -6605,17 +6635,7 @@ begin
       and replacing it with wbUnion generates error when setting for example persistent flag in REFR.
       So let it be always itU16
       <<<}
-      wbInteger(DATA, 'Flags', itU16, wbFlags([
-        {0x0001} 'Is Interior Cell',
-        {0x0002} 'Has Water',
-        {0x0004} 'Can''t Travel From Here',
-        {0x0008} 'No LOD Water',
-        {0x0010} 'Unknown 5',
-        {0x0020} 'Public Area',
-        {0x0040} 'Hand Changed',
-        {0x0080} 'Show Sky',
-        {0x0100} 'Use Sky Lighting'
-      ]), cpNormal, True, False, nil, wbCELLDATAAfterSet),
+      wbCELLDATA,
       wbStruct(XCLC, 'Grid', [
         wbInteger('X', itS32),
         wbInteger('Y', itS32),
@@ -9860,6 +9880,7 @@ begin
         wbFloat('Blue', cpNormal, True, 255, 0)
       ]),
       wbInteger('Flags', itU32, wbFlags(['Single Pass'])),
+      // SSE
       wbUnknown
     ], cpNormal, True, nil, 5)
   ]);
@@ -10425,6 +10446,7 @@ begin
     ], cpNormal, True),
     wbInteger(SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True),
     wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS])),
+    // SSE
     wbUnknown(INAM)
   ]);
 
@@ -12721,6 +12743,7 @@ begin
     wbStruct(DNAM, 'Direction Material', [
       wbFloat('Max Angle (30-120)'),
       wbFormIDCk('Material', [MATO, NULL]),
+      // SSE
       wbUnknown
     ], cpNormal, True),
     wbArray(MNAM, 'Distant LOD',
@@ -12909,6 +12932,7 @@ begin
       wbFloat('Depth Properties - Normals'),
       wbFloat('Depth Properties - Specular Lighting'),
       wbFloat('Specular Properties - Sun Sparkle Power'),
+      // SSE
       wbUnknown
     ]),
     wbByteArray(GNAM, 'Unused', 0, cpNormal, True),  // leftover
@@ -12925,6 +12949,7 @@ begin
     wbString(NAM2, 'Noise Texture', 0, cpNormal, False),
     wbString(NAM3, 'Unused', 0, cpNormal),  // leftover
     wbString(NAM4, 'Unused', 0, cpNormal),  // leftover
+    // SSE
     wbUnknown(NAM5)
   ], False, nil, cpNormal, False);
 
@@ -13036,6 +13061,7 @@ begin
       ])),
       wbByteArray('Unused', 3, cpIgnore),
       wbFormIDCk('Effect', [SPEL, NULL]),
+      // SSE
       wbUnknown
     ]),
     wbInteger(VNAM, 'Detection Sound Level', itU32, wbSoundlevelEnum),
@@ -13383,6 +13409,7 @@ begin
       wbFormIDCK('Sunset', [IMGS, NULL]),
       wbFormIDCK('Night', [IMGS, NULL])
     ]),
+    // SSE
     wbUnknown(HNAM),
     wbRArray('Directional Ambient Lighting Colors',
       wbStruct(DALC, 'Sunrise/Day/Sunset/Night Order', [wbAmbientColors], cpNormal, True)
@@ -13392,6 +13419,7 @@ begin
     wbRStruct('Aurora', [wbMODL], [])
   ]);
 
+  if IsSSE then
   wbRecord(VOLI, 'Volumetric Lighting', [
     wbEDID,
     wbFloat(CNAM, 'Intensity'),
@@ -13405,7 +13433,7 @@ begin
     wbFloat(KNAM, 'Density - Falling Speed'),
     wbFloat(LNAM, 'Phase Function - Contribution'),
     wbFloat(MNAM, 'Phase Function - Scattering'),
-    wbFloat(NNAM, 'Sampling Repartition - Range Factor') { can't be less then 1.0000 CK will always round up to 1.0000 }
+    wbFloat(NNAM, 'Sampling Repartition - Range Factor') { max 1.0 }
   ]);
 
 end;
@@ -13544,7 +13572,7 @@ begin
    wbAddGroupOrder(OTFT);
    wbAddGroupOrder(ARTO);
    wbAddGroupOrder(MATO);
-   wbAddGroupOrder(VOLI); {New to Skyrim}
+   if IsSSE then wbAddGroupOrder(VOLI); {New to SSE}
    wbAddGroupOrder(MOVT);
    wbAddGroupOrder(SNDR);
    wbAddGroupOrder(DUAL);
@@ -13574,6 +13602,14 @@ begin
   DefineTES5o;
   DefineTES5p;
   DefineTES5q;
+
+  if IsSSE then begin
+    SetLength(wbOfficialDLC, 3);
+    wbOfficialDLC[0] := 'Dawnguard.esm';
+    wbOfficialDLC[1] := 'Hearthfires.esm';
+    wbOfficialDLC[2] := 'Dragonborn.esm';
+  end;
+
 end;
 
 initialization

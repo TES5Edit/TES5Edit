@@ -5938,7 +5938,7 @@ begin
   case wbGameMode of
     gmFO4 : BasePtr.mrsVersion := 131;
     gmTES5: BasePtr.mrsVersion := 43;
-    gmSSE : BasePtr.mrsVersion := 43;
+    gmSSE : BasePtr.mrsVersion := 44;
     gmFNV : BasePtr.mrsVersion := 15;
     gmFO3 : BasePtr.mrsVersion := 15;
     else    BasePtr.mrsVersion := 15;

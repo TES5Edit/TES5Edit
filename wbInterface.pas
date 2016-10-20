@@ -3097,6 +3097,7 @@ var
   wbToolSource  : TwbToolSource;
   wbAppName     : string;
   wbGameName    : string;
+  wbGameName2   : string; // game title name
   wbToolName    : string;
   wbSourceName  : String;
   wbLanguage    : string;
