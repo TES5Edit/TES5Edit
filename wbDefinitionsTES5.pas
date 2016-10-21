@@ -12887,9 +12887,9 @@ begin
         {0x00000040}'Not Used in Normal Combat',
         {0x00000080}'Unknown 8',
         {0x00000100}'Don''t Use 3rd Person IS Anim (unused)',
-        {0x00000200}'Unknown 10',
+        {0x00000200}'Burst Shot', {Skyrim SE}
         {0x00000400}'Rumble - Alternate',
-        {0x00000800}'Unknown 12',
+        {0x00000800}'Long Bursts', {Skyrim SE}
         {0x00001000}'Non-hostile',
         {0x00002000}'Bound Weapon'
       ], [2, 8])),
