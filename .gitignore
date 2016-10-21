@@ -227,3 +227,5 @@ FO4Dump/*
 __history/*
 __history
 FO4Dump
+/SSEDump
+SSEDump/*
