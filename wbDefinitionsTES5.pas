@@ -12585,7 +12585,7 @@ begin
       wbFloat('Max Angle (30-120)'),
       wbFormIDCk('Material', [MATO, NULL]),
       // SSE
-      wbUnknown
+      wbByteArray('Unused', 4, cpIgnore)
     ], cpNormal, True),
     wbArray(MNAM, 'Distant LOD',
       wbStruct('LOD', [
