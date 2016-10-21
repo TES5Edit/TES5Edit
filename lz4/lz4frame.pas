@@ -197,7 +197,7 @@ end;
 function LZ4F_getErrorName(code : LZ4F_errorCode_t ): pAnsiChar;
 begin
       result:=  'Unspecified error code';
-      if LZ4F_isError(code) then exit (pAnsiChar(LZ4F_errorStrings[-integer(code)]);
+      if LZ4F_isError(code) then exit (pAnsiChar(LZ4F_errorStrings[-integer(code)]));
 end;
 
 function LZ4F_compressFrameBound(srcSize: size_t; const preferencesPtr: PLZ4F_preferences_t): size_t;
