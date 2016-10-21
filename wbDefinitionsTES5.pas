@@ -368,6 +368,9 @@ const
   LCSR : TwbSignature = 'LCSR'; { New to Skyrim }
   LCTN : TwbSignature = 'LCTN';
   LCUN : TwbSignature = 'LCUN'; { New to Skyrim }
+  LENS : TwbSignature = 'LENS'; { New to SSE }
+  LFSD : TwbSignature = 'LFSD'; { New to SSE }
+  LFSP : TwbSignature = 'LFSP'; { New to SSE }
   LGTM : TwbSignature = 'LGTM';
   LIGH : TwbSignature = 'LIGH';
   LLCT : TwbSignature = 'LLCT'; {New to Skyrim, part of LVLI 'Count'}
@@ -788,7 +791,6 @@ var
   wbMODT: IwbSubRecordDef;
   wbDMDT: IwbSubRecordDef;
   wbOwnership: IwbSubRecordStructDef;
-  wbAmbientColors: IwbStructDef;
   wbRACE_DATAFlags01: IwbIntegerDef;
   wbPhonemeTargets: IwbSubRecordDef;
   wbNoseMorphFlags: IwbIntegerDef;
@@ -806,18 +808,44 @@ var
   wbNull: IwbValueDef;
   wbTimeInterpolator: IwbStructDef;
   wbColorInterpolator: IwbStructDef;
+  wbYNAM: IwbSubRecordDef;
+  wbZNAM: IwbSubRecordDef;
   wbMHDT: IwbSubRecordDef;
   wbTVDT: IwbSubRecordDef;
   wbOFST: IwbSubRecordDef;
   wbNVNM: IwbSubRecordDef;
   wbNAVIslandData: IwbStructDef;
-  wbCELLDATA: IwbSubRecordDef;
 
 
-function IsSSE: Boolean; inline;
+function IsSSE: Boolean; inline; overload;
 begin
   Result := wbGameMode = gmSSE;
 end;
+
+function IsSSE(const aDef1, aDef2: TwbIntType): TwbIntType; inline; overload;
+begin
+  if IsSSE then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
+function IsSSE(const aDef1, aDef2: String): String; inline; overload;
+begin
+  if IsSSE then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
+function IsSSE(const aDef1, aDef2: IwbSubRecordDef): IwbSubRecordDef; inline; overload;
+begin
+  if IsSSE then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -4138,6 +4166,11 @@ begin
   wbCounterContainerByPathAfterSet('Magic Effect Data\DATA - Data\Counter effect count', 'Counter Effects', aElement);
 end;
 
+procedure wbLENSAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('LFSP - Count', aElement);
+end;
+
 procedure wbIDLAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   Element         : IwbElement;
@@ -4257,6 +4290,68 @@ begin
   then
     Result := 7;
 end;
+
+function wbByteColors(const aName: string = 'Color'): IwbStructDef;
+begin
+  Result := wbStruct(aName, [
+    wbInteger('Red', itU8),
+    wbInteger('Green', itU8),
+    wbInteger('Blue', itU8),
+    wbByteArray('Unused', 1)
+  ]);
+end;
+
+function wbFloatColors(const aName: string = 'Color'): IwbStructDef;
+begin
+  Result := wbStruct(aName, [
+    wbFloat('Red', cpNormal, True, 255, 0),
+    wbFloat('Green', cpNormal, True, 255, 0),
+    wbFloat('Blue', cpNormal, True, 255, 0)
+  ]);
+end;
+
+function wbWeatherColors(const aName: string): IwbStructDef;
+begin
+  Result := wbStruct(aName, [
+    wbByteColors('Sunrise'),
+    wbByteColors('Day'),
+    wbByteColors('Sunset'),
+    wbByteColors('Night')
+  ], cpNormal, True);
+end;
+
+function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'): IwbSubRecordDef; overload;
+begin
+  Result := wbStruct(aSignature, aName, [
+    wbStruct('Directional', [
+      wbByteColors('X+'),
+      wbByteColors('X-'),
+      wbByteColors('Y+'),
+      wbByteColors('Y-'),
+      wbByteColors('Z+'),
+      wbByteColors('Z-')
+    ]),
+    wbByteColors('Specular'),
+    wbFloat('Scale')
+  ], cpNormal, False, nil, 1)
+end;
+
+function wbAmbientColors(const aName: string = 'Directional Ambient Lighting Colors'): IwbStructDef; overload;
+begin
+  Result := wbStruct(aName, [
+    wbStruct('Directional', [
+      wbByteColors('X+'),
+      wbByteColors('X-'),
+      wbByteColors('Y+'),
+      wbByteColors('Y-'),
+      wbByteColors('Z+'),
+      wbByteColors('Z-')
+    ]),
+    wbByteColors('Specular'),
+    wbFloat('Scale', cpIgnore)
+  ], cpNormal, False, nil, 1);
+end;
+
 
 var
   wbRecordFlagsFlags : IwbFlagsDef;
@@ -4471,12 +4566,7 @@ begin
       {0x08}'No Subtextures'
     ], True)),
     wbByteArray('Unknown', 2),
-    wbStruct('Color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbByteArray('Unknown', 1)
-    ])
+    wbByteColors('Color')
   ]);
 
 //  wbRecordFlagsFlags := wbFlags([
@@ -5385,29 +5475,7 @@ begin
     wbInteger(XRNK, 'Faction rank', itS32)
   ], []);
 
-  wbAmbientColors := wbStruct('Ambient Colors', [
-    wbArray('Colors',
-      wbStruct('Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      ['X+', 'X-', 'Y+', 'Y-', 'Z+', 'Z-']
-    ),
-    wbStruct('Specular', [
-      wbStruct('Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbFloat('Fresnel Power')
-    ])
-  ], cpNormal, False, nil, 1);
-
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
-
 end;
 
 procedure DefineTES5b;
@@ -5479,18 +5547,8 @@ begin
 
     {--- Linked Ref ---}
     wbStruct(XCLP, 'Linked Reference Color', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ])
+      wbByteColors('Link Start Color'),
+      wbByteColors('Link End Color')
     ]),
 
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
@@ -5551,8 +5609,8 @@ begin
       wbInteger('Blue', itU8),
       wbInteger('Unused', itU8)
     ]),
-    wbFormIDCk(SNAM, 'Sound - Looping', [SNDR, SOUN]),
-    wbFormIDCk(VNAM, 'Sound - Activation', [SNDR, SOUN]),
+    wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
+    wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
     wbLString(RNAM, 'Activate Text Override', 0, cpTranslate),
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
@@ -5577,7 +5635,7 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbUnknown(PNAM, cpIgnore, True),
-    wbFormIDCk(SNAM, 'Looping Sound', [SNDR, SOUN]),
+    wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
     wbUnknown(FNAM, cpIgnore, True),
     wbFormIDCk(VNAM, 'Voice Type', [VTYP])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
@@ -6311,6 +6369,8 @@ begin
   wbCTDAsCount := wbRArray('Conditions', wbCTDA, cpNormal, False, nil, wbCTDAsAfterSet);
   wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
   wbCTDAsReqCount := wbRArray('Conditions', wbCTDA, cpNormal, True, nil, wbCTDAsAfterSet);
+  wbYNAM := wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]);
+  wbZNAM := wbFormIDCk(ZNAM, 'Sound - Put Down', [SNDR]);
 
   wbEffectsReq :=
     wbRStructs('Effects', 'Effect', [
@@ -6332,8 +6392,8 @@ begin
     wbMODL,
     wbDEST,
     wbICON,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
+    wbYNAM,
+    wbZNAM,
     wbETYP,
     wbFloat(DATA, 'Weight', cpNormal, True),
     wbStruct(ENIT, 'Effect Data', [
@@ -6375,8 +6435,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
+    wbYNAM,
+    wbZNAM,
     wbDESC,
     wbKSIZ,
     wbKWDAs,
@@ -6429,8 +6489,8 @@ begin
     wbICO2,
     wbBODTBOD2,
     wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
+    wbYNAM,
+    wbZNAM,
     wbString(BMCT, 'Ragdoll Constraint Template'),
     wbETYP,
     wbFormIDCk(BIDS, 'Bash Impact Data Set', [IPDS]),
@@ -6507,8 +6567,8 @@ begin
     wbICON,
     wbLStringKC(DESC, 'Book Text', 0, cpTranslate, True),
     wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
+    wbYNAM,
+    wbZNAM,
     wbKSIZ,
     wbKWDAs,
     wbStruct(DATA, 'Data', [
@@ -6615,33 +6675,6 @@ begin
   ReferenceRecord(PHZD, 'Placed Hazard');
   ReferenceRecord(PMIS, 'Placed Missile');
 
-  if IsSSE then
-    wbCELLDATA :=
-      wbInteger(DATA, 'Flags', itU16, wbFlags([
-        {0x0001} 'Is Interior Cell',
-        {0x0002} 'Has Water',
-        {0x0004} 'Can''t Travel From Here',
-        {0x0008} 'No LOD Water',
-        {0x0010} 'Unknown 5',
-        {0x0020} 'Public Area',
-        {0x0040} 'Hand Changed',
-        {0x0080} 'Show Sky',
-        {0x0100} 'Use Sky Lighting'
-      ]), cpNormal, True, False, nil, wbCELLDATAAfterSet)
-  else
-    wbCELLDATA :=
-      wbInteger(DATA, 'Flags', itU32, wbFlags([
-        {0x0001} 'Is Interior Cell',
-        {0x0002} 'Has Water',
-        {0x0004} 'Can''t Travel From Here',
-        {0x0008} 'No LOD Water',
-        {0x0010} 'Unknown 5',
-        {0x0020} 'Public Area',
-        {0x0040} 'Hand Changed',
-        {0x0080} 'Show Sky',
-        {0x0100} 'Use Sky Lighting'
-      ]), cpNormal, True, False, nil, wbCELLDATAAfterSet);
-
   wbRecord(CELL, 'Cell',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000400} 10, 'Persistent',
@@ -6654,9 +6687,19 @@ begin
     {>>>
     Flags can be itU8, but CELL\DATA has a critical role in various wbImplementation.pas routines
     and replacing it with wbUnion generates error when setting for example persistent flag in REFR.
-    So let it be always itU16
+    So let it always be an integer
     <<<}
-    wbCELLDATA,
+    wbInteger(DATA, 'Flags', IsSSE(itU32, itU16), wbFlags([
+      {0x0001} 'Is Interior Cell',
+      {0x0002} 'Has Water',
+      {0x0004} 'Can''t Travel From Here',
+      {0x0008} 'No LOD Water',
+      {0x0010} 'Unknown 5',
+      {0x0020} 'Public Area',
+      {0x0040} 'Hand Changed',
+      {0x0080} 'Show Sky',
+      {0x0100} 'Use Sky Lighting'
+    ]), cpNormal, True, False, nil, wbCELLDATAAfterSet),
     wbStruct(XCLC, 'Grid', [
       wbInteger('X', itS32),
       wbInteger('Y', itS32),
@@ -6668,24 +6711,9 @@ begin
       ], True))
     ], cpNormal, False, nil, 2),
     wbStruct(XCLL, 'Lighting', [
-      wbStruct('Ambient Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Directional Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Fog Color Near', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
+      wbByteColors('Ambient Color'),
+      wbByteColors('Directional Color'),
+      wbByteColors('Fog Color Near'),
       wbFloat('Fog Near'),
       wbFloat('Fog Far'),
       wbInteger('Directional Rotation XY', itS32),
@@ -6693,13 +6721,8 @@ begin
       wbFloat('Directional Fade'),
       wbFloat('Fog Clip Distance'),
       wbFloat('Fog Power'),
-      wbAmbientColors,
-      wbStruct('Fog Color Far', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
+      wbAmbientColors('Ambient Colors'),
+      wbByteColors('Fog Color Far'),
       wbFloat('Fog Max'),
       wbFloat('Light Fade Begin'),
       wbFloat('Light Fade End'),
@@ -6896,8 +6919,8 @@ begin
       ])),
       wbFloat('Weight')
     ], cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]),
-    wbFormIDCk(QNAM, 'Sound - Close', [SOUN, SNDR])
+    wbFormIDCk(SNAM, 'Sound - Open', [SNDR]),
+    wbFormIDCk(QNAM, 'Sound - Close', [SNDR])
   ], True, nil, cpNormal, False, nil, wbContainerAfterSet);
 
   wbCSDT := wbRStructSK([0], 'Sound Type', [
@@ -6927,7 +6950,7 @@ begin
       {21} 'PlayRandom/Loop'
     ])),
     wbRArrayS('Sounds', wbRStructSK([0], 'Sound', [
-      wbFormIDCk(CSDI, 'Sound', [SOUN, SNDR, NULL], False, cpNormal, True),
+      wbFormIDCk(CSDI, 'Sound', [SNDR, NULL], False, cpNormal, True),
       wbInteger(CSDC, 'Sound Chance', itU8, nil, cpNormal, True)
     ], []), cpNormal, True)
   ], []);
@@ -7204,9 +7227,9 @@ begin
     wbFULL,
     wbMODL,
     wbDEST,
-    wbFormIDCk(SNAM, 'Sound - Open', [SOUN, SNDR]),
-    wbFormIDCk(ANAM, 'Sound - Close', [SOUN, SNDR]),
-    wbFormIDCk(BNAM, 'Sound - Loop', [SOUN, SNDR]),
+    wbFormIDCk(SNAM, 'Sound - Open', [SNDR]),
+    wbFormIDCk(ANAM, 'Sound - Close', [SNDR]),
+    wbFormIDCk(BNAM, 'Sound - Loop', [SNDR]),
     wbInteger(FNAM, 'Flags', itU8, wbFlags([
       '',
       'Automatic',
@@ -7265,12 +7288,7 @@ begin
       wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
       wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
       wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
-      wbStruct('Fill/Texture Effect - Color Key 1', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
+      wbByteColors('Fill/Texture Effect - Color Key 1'),
       wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
       wbFloat('Fill/Texture Effect - Full Alpha Time'),
       wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
@@ -7280,12 +7298,7 @@ begin
       wbFloat('Fill/Texture Effect - Texture Animation Speed (U)'),
       wbFloat('Fill/Texture Effect - Texture Animation Speed (V)'),
       wbFloat('Edge Effect - Fall Off'),
-      wbStruct('Edge Effect - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
+      wbByteColors('Edge Effect - Color'),
       wbFloat('Edge Effect - Alpha Fade In Time'),
       wbFloat('Edge Effect - Full Alpha Time'),
       wbFloat('Edge Effect - Alpha Fade Out Time'),
@@ -7318,24 +7331,9 @@ begin
       wbFloat('Particle Shader - Scale Key 2'),
       wbFloat('Particle Shader - Scale Key 1 Time'),
       wbFloat('Particle Shader - Scale Key 2 Time'),
-      wbStruct('Color Key 1 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Color Key 2 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Color Key 3 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
+      wbByteColors('Color Key 1 - Color'),
+      wbByteColors('Color Key 2 - Color'),
+      wbByteColors('Color Key 3 - Color'),
       wbFloat('Color Key 1 - Color Alpha'),
       wbFloat('Color Key 2 - Color Alpha'),
       wbFloat('Color Key 3 - Color Alpha'),
@@ -7353,12 +7351,7 @@ begin
       wbFloat('Holes - Start Val'),
       wbFloat('Holes - End Val'),
       wbFloat('Edge Width (alpha units)'),
-      wbStruct('Edge Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
+      wbByteColors('Edge Color'),
       wbFloat('Explosion Wind Speed'),
       wbInteger('Texture Count U', itU32),
       wbInteger('Texture Count V', itU32),
@@ -7368,19 +7361,9 @@ begin
       wbFloat('Addon Models - Scale End'),
       wbFloat('Addon Models - Scale In Time'),
       wbFloat('Addon Models - Scale Out Time'),
-      wbFormIDCk('Ambient Sound', [SNDR, SOUN, NULL]),
-      wbStruct('Fill/Texture Effect - Color Key 2', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Fill/Texture Effect - Color Key 3', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
+      wbFormIDCk('Ambient Sound', [SNDR, NULL]),
+      wbByteColors('Fill/Texture Effect - Color Key 2'),
+      wbByteColors('Fill/Texture Effect - Color Key 3'),
       wbStruct('Fill/Texture Effect - Color Key Scale/Time', [
         wbFloat('Color Key 1 - Scale'),
         wbFloat('Color Key 2 - Scale'),
@@ -7848,12 +7831,12 @@ begin
       {28} wbFloat('Explosion - Alt. Trigger - Proximity'),
       {32} wbFloat('Explosion - Alt. Trigger - Timer'),
       {36} wbFormIDCk('Explosion', [EXPL, NULL]),
-      {40} wbFormIDCk('Sound', [SOUN, SNDR, NULL]),
+      {40} wbFormIDCk('Sound', [SNDR, NULL]),
       {44} wbFloat('Muzzle Flash - Duration'),
       {48} wbFloat('Fade Duration'),
       {52} wbFloat('Impact Force'),
-      {56} wbFormIDCk('Sound - Countdown', [SOUN, SNDR, NULL]),
-      {60} wbFormIDCk('Sound - Disable', [SOUN, SNDR, NULL]),
+      {56} wbFormIDCk('Sound - Countdown', [SNDR, NULL]),
+      {60} wbFormIDCk('Sound - Disable', [SNDR, NULL]),
       {64} wbFormIDCk('Default Weapon Source', [WEAP, NULL]),
       {68} wbFloat('Cone Spread'),
       {72} wbFloat('Collision Radius'),
@@ -7914,8 +7897,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
+    wbYNAM,
+    wbZNAM,
     wbKSIZ,
     wbKWDAs,
     wbStruct(DATA, '', [
@@ -8210,11 +8193,7 @@ begin
     ]),
     wbStruct(TNAM, 'Tint', [
       wbFloat('Amount'),
-      wbStruct('Color', [
-        wbFloat('Red', cpNormal, True, 255, 0),
-        wbFloat('Green', cpNormal, True, 255, 0),
-        wbFloat('Blue', cpNormal, True, 255, 0)
-      ])
+      wbFloatColors('Color')
     ]),
     wbStruct(DNAM, 'Depth of Field', [
       wbFloat('Strength'),
@@ -8590,7 +8569,7 @@ begin
     wbOBNDReq,
     wbMODL,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SOUN, SNDR, NULL]),
+    wbFormIDCk(SNAM, 'Sound', [SNDR, NULL]),
     wbStruct(DNAM, 'Data', [
       wbInteger('Master Particle System Cap', itU16),
       wbInteger('Flags', itU16, wbEnum([], [
@@ -8742,8 +8721,8 @@ begin
     wbDODT,
     wbFormIDCk(DNAM, 'Texture Set', [TXST]),
     wbFormIDCk(ENAM, 'Secondary Texture Set', [TXST]),
-    wbFormIDCk(SNAM, 'Sound 1', [SNDR, SOUN, NULL]),
-    wbFormIDCk(NAM1, 'Sound 2', [SNDR, SOUN, NULL]),
+    wbFormIDCk(SNAM, 'Sound 1', [SNDR, NULL]),
+    wbFormIDCk(NAM1, 'Sound 2', [SNDR, NULL]),
     wbFormIDCk(NAM2, 'Hazard', [HAZD, NULL])
   ]);
 
@@ -9296,24 +9275,9 @@ begin
   wbRecord(LGTM, 'Lighting Template', [
     wbEDID,
     wbStruct(DATA, 'Lighting', [
-      wbStruct('Ambient Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Directional Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Fog Color Near', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
+      wbByteColors('Ambient Color'),
+      wbByteColors('Directional Color'),
+      wbByteColors('Fog Color Near'),
       wbFloat('Fog Near'),
       wbFloat('Fog Far'),
       wbInteger('Directional Rotation XY', itS32),
@@ -9321,13 +9285,8 @@ begin
       wbFloat('Directional Fade'),
       wbFloat('Fog Clip Dist'),
       wbFloat('Fog Power'),
-      wbAmbientColors, // wbByteArray('Unknown', 32),		// WindhelmLightingTemplate [LGTM:0007BA87] only find 24 !
-      wbStruct('Fog Color Far', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
+      wbAmbientColors('Ambient Colors'), // WindhelmLightingTemplate [LGTM:0007BA87] only find 24 !
+      wbByteColors('Fog Color Far'),
       wbFloat('Fog Max'),
       wbStruct('Light Fade Distances', [
         wbFloat('Start'),
@@ -9335,7 +9294,7 @@ begin
       ]),
       wbByteArray('Unknown', 4)
     ], cpNormal, True, nil, 11),
-    wbStruct(DALC, 'Directional Ambient Lighting Colors', [wbAmbientColors], cpNormal, True)
+    wbAmbientColors(DALC)
   ]);
 
   wbRecord(MUSC, 'Music Type', [
@@ -9715,11 +9674,7 @@ begin
         wbFloat('Z')
       ]),
       wbFloat('Normal Dampener'),
-      wbStruct('Single Pass Color', [
-        wbFloat('Red', cpNormal, True, 255, 0),
-        wbFloat('Green', cpNormal, True, 255, 0),
-        wbFloat('Blue', cpNormal, True, 255, 0)
-      ]),
+      wbFloatColors('Single Pass Color'),
       wbInteger('Flags', itU32, wbFlags(['Single Pass'])),
       // SSE
       wbUnknown
@@ -10050,8 +10005,8 @@ begin
     wbICON,
     wbDEST,
     wbETYP,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
+    wbYNAM,
+    wbZNAM,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -10084,8 +10039,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
+    wbYNAM,
+    wbZNAM,
     wbKSIZ,
     wbKWDAs,
     wbStruct(DATA, '', [
@@ -10209,12 +10164,7 @@ begin
     wbStruct(DATA, '', [
       wbInteger('Time', itS32),
       wbInteger('Radius', itU32),
-      wbStruct('Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbInteger('Unknown', itU8)
-      ]),
+      wbByteColors,
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Dynamic',
         {0x00000002} 'Can be Carried',
@@ -10543,8 +10493,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
+    wbYNAM,
+    wbZNAM,
     wbKSIZ,
     wbKWDAs,
     wbStruct(DATA, 'Data', [
@@ -10561,8 +10511,8 @@ begin
     wbMODL,
     wbICON,
     wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
+    wbYNAM,
+    wbZNAM,
     wbInteger(QUAL, 'Quality', itS32, wbEnum([], [
       0, 'Novice',
       1, 'Apprentice',
@@ -10767,9 +10717,10 @@ begin
     wbFormIDCk(CRIF, 'Crime faction', [FACT], False, cpNormal, False),
     wbFormIDCk(FTST, 'Head texture', [TXST], False, cpNormal, False),
     wbStruct(QNAM, 'Texture lighting', [
-      wbFloat('Red'),
-      wbFloat('Green'),
-      wbFloat('Blue')
+      wbFloat('Red', cpNormal, True, 255, 0),
+      wbFloat('Green', cpNormal, True, 255, 0),
+      wbFloat('Blue', cpNormal, True, 255, 0),
+      wbFloat('Alpha')
     ]),
     wbStruct(NAM9, 'Face morph', [
       wbFloat('Nose Long/Short'),
@@ -12377,7 +12328,7 @@ begin
       {--- Sound ---}
       wbFormIDCk(RDMO, 'Music', [MUSC], False, cpNormal, False, wbREGNSoundDontShow),
       wbArrayS(RDSA, 'Sounds', wbStructSK([0], 'Sound', [
-        wbFormIDCk('Sound', [SOUN, SNDR, NULL]),
+        wbFormIDCk('Sound', [SNDR, NULL]),
         wbInteger('Flags', itU32, wbFlags([
           {0x00000001}'Pleasant',
           {0x00000002}'Cloudy',
@@ -12533,8 +12484,8 @@ begin
     wbDESC,
     wbMODL,
     wbDEST,
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
+    wbYNAM,
+    wbZNAM,
     wbStruct(DATA, 'Item', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
@@ -12581,15 +12532,20 @@ begin
     wbEDID,
     wbOBNDReq,
     wbMODL,
-    wbStruct(DNAM, 'Direction Material', [
-      wbFloat('Max Angle (30-120)'),
-      wbFormIDCk('Material', [MATO, NULL]),
-      // SSE
-      wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'Considered Snow'
-      ])),
-      wbByteArray('Unused', 3, cpIgnore)
-    ], cpNormal, True),
+    IsSSE(
+      wbStruct(DNAM, 'Direction Material', [
+        wbFloat('Max Angle (30-120)'),
+        wbFormIDCk('Material', [MATO, NULL]),
+        wbInteger('Flags', itU8, wbFlags([
+          {0x01} 'Considered Snow'
+        ])),
+        wbByteArray('Unused', 3, cpIgnore)
+      ], cpNormal, True, nil, 2),
+      wbStruct(DNAM, 'Direction Material', [
+        wbFloat('Max Angle (30-120)'),
+        wbFormIDCk('Material', [MATO, NULL])
+      ], cpNormal, True)
+    ),
     wbArray(MNAM, 'Distant LOD',
       wbStruct('LOD', [
         {>>> Contains null-terminated mesh filename followed by random data up to 260 bytes <<<}
@@ -12682,7 +12638,7 @@ begin
     wbLString(RNAM, 'Activate Text Override', 0, cpTranslate),
     wbUnknown(FNAM),
     wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, LVLI, MISC, NULL]),
-    wbFormIDCK(SNAM, 'Sound', [SNDR, SOUN, NULL]),
+    wbFormIDCK(SNAM, 'Sound', [SNDR, NULL]),
     wbStruct(PFPC, 'Seasonal ingredient production', [
       wbInteger('Spring', itU8),
       wbInteger('Summer ', itU8),
@@ -12697,14 +12653,14 @@ begin
     wbRArray('Unused', wbString(NNAM, 'Noise Map', 0, cpIgnore, False)), // leftover
     wbInteger(ANAM, 'Opacity', itU8, nil, cpNormal, True),
     wbInteger(FNAM, 'Flags', itU8, wbFlags([
-      {0x00000001} 'Causes Damage',
-      {0x00000002} 'Unknown 2',
-      {0x00000004} 'Unknown 3',
-      {0x00000008} 'Enable Flowmap', {Skyrim SSE}
-      {0x00000010} 'Blend Normals', {Skyrim SSE}
-      {0x00000020} 'Unknown 7',
-      {0x00000040} 'Unknown 8',
-      {0x00000080} 'Unknown 8'
+      {0x01} 'Causes Damage',
+      {0x02} 'Unknown 1',
+      {0x04} 'Unknown 2',
+      {0x08} IsSSE('Enable Flowmap', 'Unknown 3'),
+      {0x10} IsSSE('Blend Normals', 'Unknown 4'),
+      {0x20} 'Unknown 5',
+      {0x40} 'Unknown 6',
+      {0x80} 'Unknown 7'
     ]), cpNormal, True),
     wbByteArray(MNAM, 'Unused', 0, cpIgnore, False),  // leftover
     wbFormIDCk(TNAM, 'Material', [MATT]),
@@ -12712,82 +12668,128 @@ begin
     wbFormIDCk(XNAM, 'Spell', [SPEL]),
     wbFormIDCk(INAM, 'Image Space', [IMGS]),
     wbInteger(DATA, 'Damage Per Second', itU16, nil, cpNormal, True, True),
-    wbStruct(DNAM, 'Visual Data', [
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Specular Properties - Sun Specular Power'),
-      wbFloat('Water Properties - Reflectivity Amount'),
-      wbFloat('Water Properties - Fresnel Amount'),
-      wbByteArray('Unknown', 4),
-      wbFloat('Fog Properties - Above Water - Fog Distance - Near Plane'),
-      wbFloat('Fog Properties - Above Water - Fog Distance - Far Plane'),
-      wbStruct('Shallow Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Deep Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbStruct('Reflection Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unknown', 1)
-      ]),
-      wbByteArray('Unknown', 4),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Displacement Simulator - Starting Size'),
-      wbFloat('Displacement Simulator - Force'),
-      wbFloat('Displacement Simulator - Velocity'),
-      wbFloat('Displacement Simulator - Falloff'),
-      wbFloat('Displacement Simulator - Dampner'),
-      wbFloat('Unknown'),
-      wbFloat('Noise Properties - Noise Falloff'),
-      wbFloat('Noise Properties - Layer One - Wind Direction'),
-      wbFloat('Noise Properties - Layer Two - Wind Direction'),
-      wbFloat('Noise Properties - Layer Three - Wind Direction'),
-      wbFloat('Noise Properties - Layer One - Wind Speed'),
-      wbFloat('Noise Properties - Layer Two - Wind Speed'),
-      wbFloat('Noise Properties - Layer Three - Wind Speed'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Fog Properties - Above Water - Fog Amount'),
-      wbFloat('Unknown'),
-      wbFloat('Fog Properties - Under Water - Fog Amount'),
-      wbFloat('Fog Properties - Under Water - Fog Distance - Near Plane'),
-      wbFloat('Fog Properties - Under Water - Fog Distance - Far Plane'),
-      wbFloat('Water Properties - Refraction Magnitude'),
-      wbFloat('Specular Properties - Specular Power'),
-      wbFloat('Unknown'),
-      wbFloat('Specular Properties - Specular Radius'),
-      wbFloat('Specular Properties - Specular Brightness'),
-      wbFloat('Noise Properties - Layer One - UV Scale'),
-      wbFloat('Noise Properties - Layer Two - UV Scale'),
-      wbFloat('Noise Properties - Layer Three - UV Scale'),
-      wbFloat('Noise Properties - Layer One - Amplitude Scale'),
-      wbFloat('Noise Properties - Layer Two - Amplitude Scale'),
-      wbFloat('Noise Properties - Layer Three - Amplitude Scale'),
-      wbFloat('Water Properties - Reflection Magnitude'),
-      wbFloat('Specular Properties - Sun Sparkle Magnitude'),
-      wbFloat('Specular Properties - Sun Specular Magnitude'),
-      wbFloat('Depth Properties - Reflections'),
-      wbFloat('Depth Properties - Refraction'),
-      wbFloat('Depth Properties - Normals'),
-      wbFloat('Depth Properties - Specular Lighting'),
-      wbFloat('Specular Properties - Sun Sparkle Power'),
-      // SSE
-      wbFloat('Noise Properties - Flowmap Scale')
-    ]),
+    IsSSE(
+      wbStruct(DNAM, 'Visual Data', [
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Specular Properties - Sun Specular Power'),
+        wbFloat('Water Properties - Reflectivity Amount'),
+        wbFloat('Water Properties - Fresnel Amount'),
+        wbByteArray('Unknown', 4),
+        wbFloat('Fog Properties - Above Water - Fog Distance - Near Plane'),
+        wbFloat('Fog Properties - Above Water - Fog Distance - Far Plane'),
+        wbByteColors('Shallow Color'),
+        wbByteColors('Deep Color'),
+        wbByteColors('Reflection Color'),
+        wbByteArray('Unknown', 4),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Displacement Simulator - Starting Size'),
+        wbFloat('Displacement Simulator - Force'),
+        wbFloat('Displacement Simulator - Velocity'),
+        wbFloat('Displacement Simulator - Falloff'),
+        wbFloat('Displacement Simulator - Dampner'),
+        wbFloat('Unknown'),
+        wbFloat('Noise Properties - Noise Falloff'),
+        wbFloat('Noise Properties - Layer One - Wind Direction'),
+        wbFloat('Noise Properties - Layer Two - Wind Direction'),
+        wbFloat('Noise Properties - Layer Three - Wind Direction'),
+        wbFloat('Noise Properties - Layer One - Wind Speed'),
+        wbFloat('Noise Properties - Layer Two - Wind Speed'),
+        wbFloat('Noise Properties - Layer Three - Wind Speed'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Fog Properties - Above Water - Fog Amount'),
+        wbFloat('Unknown'),
+        wbFloat('Fog Properties - Under Water - Fog Amount'),
+        wbFloat('Fog Properties - Under Water - Fog Distance - Near Plane'),
+        wbFloat('Fog Properties - Under Water - Fog Distance - Far Plane'),
+        wbFloat('Water Properties - Refraction Magnitude'),
+        wbFloat('Specular Properties - Specular Power'),
+        wbFloat('Unknown'),
+        wbFloat('Specular Properties - Specular Radius'),
+        wbFloat('Specular Properties - Specular Brightness'),
+        wbFloat('Noise Properties - Layer One - UV Scale'),
+        wbFloat('Noise Properties - Layer Two - UV Scale'),
+        wbFloat('Noise Properties - Layer Three - UV Scale'),
+        wbFloat('Noise Properties - Layer One - Amplitude Scale'),
+        wbFloat('Noise Properties - Layer Two - Amplitude Scale'),
+        wbFloat('Noise Properties - Layer Three - Amplitude Scale'),
+        wbFloat('Water Properties - Reflection Magnitude'),
+        wbFloat('Specular Properties - Sun Sparkle Magnitude'),
+        wbFloat('Specular Properties - Sun Specular Magnitude'),
+        wbFloat('Depth Properties - Reflections'),
+        wbFloat('Depth Properties - Refraction'),
+        wbFloat('Depth Properties - Normals'),
+        wbFloat('Depth Properties - Specular Lighting'),
+        wbFloat('Specular Properties - Sun Sparkle Power'),
+        // SSE
+        wbFloat('Noise Properties - Flowmap Scale')
+      ], cpNormal, True, nil, 57),
+      wbStruct(DNAM, 'Visual Data', [
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Specular Properties - Sun Specular Power'),
+        wbFloat('Water Properties - Reflectivity Amount'),
+        wbFloat('Water Properties - Fresnel Amount'),
+        wbByteArray('Unknown', 4),
+        wbFloat('Fog Properties - Above Water - Fog Distance - Near Plane'),
+        wbFloat('Fog Properties - Above Water - Fog Distance - Far Plane'),
+        wbByteColors('Shallow Color'),
+        wbByteColors('Deep Color'),
+        wbByteColors('Reflection Color'),
+        wbByteArray('Unknown', 4),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Displacement Simulator - Starting Size'),
+        wbFloat('Displacement Simulator - Force'),
+        wbFloat('Displacement Simulator - Velocity'),
+        wbFloat('Displacement Simulator - Falloff'),
+        wbFloat('Displacement Simulator - Dampner'),
+        wbFloat('Unknown'),
+        wbFloat('Noise Properties - Noise Falloff'),
+        wbFloat('Noise Properties - Layer One - Wind Direction'),
+        wbFloat('Noise Properties - Layer Two - Wind Direction'),
+        wbFloat('Noise Properties - Layer Three - Wind Direction'),
+        wbFloat('Noise Properties - Layer One - Wind Speed'),
+        wbFloat('Noise Properties - Layer Two - Wind Speed'),
+        wbFloat('Noise Properties - Layer Three - Wind Speed'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Fog Properties - Above Water - Fog Amount'),
+        wbFloat('Unknown'),
+        wbFloat('Fog Properties - Under Water - Fog Amount'),
+        wbFloat('Fog Properties - Under Water - Fog Distance - Near Plane'),
+        wbFloat('Fog Properties - Under Water - Fog Distance - Far Plane'),
+        wbFloat('Water Properties - Refraction Magnitude'),
+        wbFloat('Specular Properties - Specular Power'),
+        wbFloat('Unknown'),
+        wbFloat('Specular Properties - Specular Radius'),
+        wbFloat('Specular Properties - Specular Brightness'),
+        wbFloat('Noise Properties - Layer One - UV Scale'),
+        wbFloat('Noise Properties - Layer Two - UV Scale'),
+        wbFloat('Noise Properties - Layer Three - UV Scale'),
+        wbFloat('Noise Properties - Layer One - Amplitude Scale'),
+        wbFloat('Noise Properties - Layer Two - Amplitude Scale'),
+        wbFloat('Noise Properties - Layer Three - Amplitude Scale'),
+        wbFloat('Water Properties - Reflection Magnitude'),
+        wbFloat('Specular Properties - Sun Sparkle Magnitude'),
+        wbFloat('Specular Properties - Sun Specular Magnitude'),
+        wbFloat('Depth Properties - Reflections'),
+        wbFloat('Depth Properties - Refraction'),
+        wbFloat('Depth Properties - Normals'),
+        wbFloat('Depth Properties - Specular Lighting'),
+        wbFloat('Specular Properties - Sun Sparkle Power')
+      ])
+    ),
     wbByteArray(GNAM, 'Unused', 0, cpNormal, True),  // leftover
     wbStruct(NAM0, 'Linear Velocity', [
       wbFloat('X'),
@@ -12800,8 +12802,8 @@ begin
       wbFloat('Z')
     ], cpNormal, False),
     wbString(NAM2, 'Noise Layer One - Noise Texture', 0, cpNormal, False),
-    wbString(NAM3, 'Noise Layer Two - Noise Texture', 0, cpNormal, False),  // leftover
-    wbString(NAM4, 'Noise Layer Three - Noise Texture', 0, cpNormal, False),  // leftover
+    wbString(NAM3, 'Noise Layer Two - Noise Texture', 0, cpNormal, False),
+    wbString(NAM4, 'Noise Layer Three - Noise Texture', 0, cpNormal, False),
     // SSE
     wbString(NAM5, 'Flow Normals - Noise Texture', 0, cpNormal, False)
   ], False, nil, cpNormal, False);
@@ -12822,8 +12824,8 @@ begin
     wbETYP,
     wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
-    wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR, SOUN]),
-    wbFormIDCk(ZNAM, 'Sound - Drop', [SNDR, SOUN]),
+    wbYNAM,
+    wbZNAM,
     wbKSIZ,
     wbKWDAs,
     wbDESC,
@@ -12878,20 +12880,20 @@ begin
         'No dismember/explode'
       ])),
       wbInteger('Flags2', itU32, wbFlags([
-        {0x00000001}'Player Only',
-        {0x00000002}'NPCs Use Ammo',
-        {0x00000004}'No Jam After Reload (unused)',
-        {0x00000008}'Unknown 4',
-        {0x00000010}'Minor Crime',
-        {0x00000020}'Range Fixed',
-        {0x00000040}'Not Used in Normal Combat',
-        {0x00000080}'Unknown 8',
-        {0x00000100}'Don''t Use 3rd Person IS Anim (unused)',
-        {0x00000200}'Burst Shot', {Skyrim SE}
-        {0x00000400}'Rumble - Alternate',
-        {0x00000800}'Long Bursts', {Skyrim SE}
-        {0x00001000}'Non-hostile',
-        {0x00002000}'Bound Weapon'
+        {0x00000001} 'Player Only',
+        {0x00000002} 'NPCs Use Ammo',
+        {0x00000004} 'No Jam After Reload (unused)',
+        {0x00000008} 'Unknown 4',
+        {0x00000010} 'Minor Crime',
+        {0x00000020} 'Range Fixed',
+        {0x00000040} 'Not Used in Normal Combat',
+        {0x00000080} 'Unknown 8',
+        {0x00000100} 'Don''t Use 3rd Person IS Anim (unused)',
+        {0x00000200} 'Burst Shot',
+        {0x00000400} 'Rumble - Alternate',
+        {0x00000800} 'Long Bursts',
+        {0x00001000} 'Non-hostile',
+        {0x00002000} 'Bound Weapon'
       ], [2, 8])),
       wbFloat('Animation Attack Mult'),
       wbFloat('Unknown'),
@@ -12905,19 +12907,30 @@ begin
       wbByteArray('Unknown', 4),
       wbFloat('Stagger')
     ]),
-    wbStruct(CRDT, 'Critical Data', [
-      wbInteger('Damage', itU16),
-      wbByteArray('Unknown', 2),
-      wbFloat('% Mult'),
-      wbInteger('Flags', itU8, wbFlags([
-        'On Death'
-      ])),
-      wbByteArray('Unknown', 3),
-      wbByteArray('Unknown', 4),
-      // SSE
-      wbFormIDCk('Effect', [SPEL, NULL]),
-      wbByteArray('Unknown', 4)
-    ]),
+    IsSSE(
+      wbStruct(CRDT, 'Critical Data', [
+        wbInteger('Damage', itU16),
+        wbByteArray('Unknown', 2),
+        wbFloat('% Mult'),
+        wbInteger('Flags', itU8, wbFlags([
+          'On Death'
+        ])),
+        wbByteArray('Unused', 3, cpIgnore),
+        wbByteArray('Unknown', 4),
+        wbFormIDCk('Effect', [SPEL, NULL]),
+        wbByteArray('Unknown', 4)
+      ]),
+      wbStruct(CRDT, 'Critical Data', [
+        wbInteger('Damage', itU16),
+        wbByteArray('Unknown', 2),
+        wbFloat('% Mult'),
+        wbInteger('Flags', itU8, wbFlags([
+          'On Death'
+        ])),
+        wbByteArray('Unused', 3, cpIgnore),
+        wbFormIDCk('Effect', [SPEL, NULL])
+      ])
+    ),
     wbInteger(VNAM, 'Detection Sound Level', itU32, wbSoundlevelEnum),
     wbFormIDCk(CNAM, 'Template', [WEAP])
   ], False, nil, cpNormal, False, wbWEAPAfterLoad, wbKeywordsAfterSet);
@@ -13065,17 +13078,7 @@ begin
       wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)),
       wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt))
     ], []),
-    wbArray(PNAM, 'Cloud Colors', wbStruct('Layer', [
-      wbArray('Colors',
-        wbStruct('Time', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        ['Sunrise', 'Day', 'Sunset', 'Night']
-      )
-    ])),
+    wbArray(PNAM, 'Cloud Colors', wbWeatherColors('Layer')),
     wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
       wbFloat('Sunrise'),
       wbFloat('Day'),
@@ -13084,23 +13087,23 @@ begin
     ])),
     {>>> not as an array since last entries are omitted in skyrim.esm <<<}
     wbStruct(NAM0, 'Weather Colors', [
-      wbArray('Sky-Upper',         wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Fog Near',          wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Unknown',           wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Ambient',           wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Sunlight',          wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Sun',               wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Stars',             wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Sky-Lower',         wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Horizon',           wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Effect Lighting',   wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Cloud LOD Diffuse', wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Cloud LOD Ambient', wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Fog Far',           wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Sky Statics',       wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Water Multiplier',  wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Sun Glare',         wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night']),
-      wbArray('Moon Glare',        wbStruct('Color', [wbInteger('Red', itU8), wbInteger('Green', itU8), wbInteger('Blue', itU8), wbByteArray('Unknown', 1)]), ['Sunrise', 'Day', 'Sunset', 'Night'])
+      wbWeatherColors('Sky-Upper'),
+      wbWeatherColors('Fog Near'),
+      wbWeatherColors('Unknown'),
+      wbWeatherColors('Ambient'),
+      wbWeatherColors('Sunlight'),
+      wbWeatherColors('Sun'),
+      wbWeatherColors('Stars'),
+      wbWeatherColors('Sky-Lower'),
+      wbWeatherColors('Horizon'),
+      wbWeatherColors('Effect Lighting'),
+      wbWeatherColors('Cloud LOD Diffuse'),
+      wbWeatherColors('Cloud LOD Ambient'),
+      wbWeatherColors('Fog Far'),
+      wbWeatherColors('Sky Statics'),
+      wbWeatherColors('Water Multiplier'),
+      wbWeatherColors('Sun Glare'),
+      wbWeatherColors('Moon Glare')
     ], cpNormal, True, nil, 13),
     wbStruct(FNAM, 'Fog Distance', [
       wbFloat('Day - Near'),
@@ -13144,7 +13147,7 @@ begin
     wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
     wbRArray('Sounds',
       wbStruct(SNAM, 'Sound', [
-        wbFormIDCK('Sound', [SOUN, SNDR, NULL]),
+        wbFormIDCK('Sound', [SNDR, NULL]),
         wbInteger('Type', itU32, wbEnum([
           {0x01} 'Default',
           {0x02} 'Precipitation',
@@ -13160,33 +13163,68 @@ begin
       wbFormIDCK('Sunset', [IMGS, NULL]),
       wbFormIDCK('Night', [IMGS, NULL])
     ]),
-    // SSE
-    wbUnknown(HNAM),
-    wbRArray('Directional Ambient Lighting Colors',
-      wbStruct(DALC, 'Sunrise/Day/Sunset/Night Order', [wbAmbientColors], cpNormal, True)
-    ),
+    wbStruct(HNAM, 'Volumetric Lighting', [
+      wbFormIDCK('Sunrise', [VOLI, NULL]),
+      wbFormIDCK('Day', [VOLI, NULL]),
+      wbFormIDCK('Sunset', [VOLI, NULL]),
+      wbFormIDCK('Night', [VOLI, NULL])
+    ]),
+    wbRStruct('Directional Ambient Lighting Colors', [
+      wbAmbientColors(DALC, 'Sunrise'),
+      wbAmbientColors(DALC, 'Day'),
+      wbAmbientColors(DALC, 'Sunset'),
+      wbAmbientColors(DALC, 'Night')
+    ], [], cpNormal, True),
     wbByteArray(NAM2, 'Unused', 0, cpIgnore),
     wbByteArray(NAM3, 'Unused', 0, cpIgnore),
-    wbRStruct('Aurora', [wbMODL], [])
+    wbRStruct('Aurora', [wbMODL], []),
+    wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS])
   ]);
 
-  if IsSSE then
-  wbRecord(VOLI, 'Volumetric Lighting', [
-    wbEDID,
-    wbFloat(CNAM, 'Intensity'),
-    wbFloat(DNAM, 'Custom Color - Contribution'),
-    wbFloat(ENAM, 'Red', cpNormal, False, 255, 0),
-    wbFloat(FNAM, 'Green', cpNormal, False, 255, 0),
-    wbFloat(GNAM, 'Blue', cpNormal, False, 255, 0),
-    wbFloat(HNAM, 'Density - Contribution'),
-    wbFloat(INAM, 'Density - Size'),
-    wbFloat(JNAM, 'Density - Wind Speed'),
-    wbFloat(KNAM, 'Density - Falling Speed'),
-    wbFloat(LNAM, 'Phase Function - Contribution'),
-    wbFloat(MNAM, 'Phase Function - Scattering'),
-    wbFloat(NNAM, 'Sampling Repartition - Range Factor') { max 1.0 }
-  ]);
+  if IsSSE then begin
+    wbRecord(VOLI, 'Volumetric Lighting', [
+      wbEDID,
+      wbFloat(CNAM, 'Intensity'),
+      wbFloat(DNAM, 'Custom Color - Contribution'),
+      wbFloat(ENAM, 'Red', cpNormal, False, 255, 0),
+      wbFloat(FNAM, 'Green', cpNormal, False, 255, 0),
+      wbFloat(GNAM, 'Blue', cpNormal, False, 255, 0),
+      wbFloat(HNAM, 'Density - Contribution'),
+      wbFloat(INAM, 'Density - Size'),
+      wbFloat(JNAM, 'Density - Wind Speed'),
+      wbFloat(KNAM, 'Density - Falling Speed'),
+      wbFloat(LNAM, 'Phase Function - Contribution'),
+      wbFloat(MNAM, 'Phase Function - Scattering'),
+      wbFloat(NNAM, 'Sampling Repartition - Range Factor') { max 1.0 }
+    ]);
 
+    wbRecord(LENS, 'Lens Flare', [
+      wbEDID,
+      wbFloat(CNAM, 'Color Influence'),
+      wbFloat(DNAM, 'Fade Distance Radius Scale'),
+      wbInteger(LFSP, 'Count', itU32, nil, cpBenign),
+      wbRArray('Lens Flare Sprites',
+        wbRStruct('Flare', [
+          wbString(DNAM, 'Lens Flare Sprite ID'),
+          wbString(FNAM, 'Texture'),
+          wbStruct(LFSD, 'Lens Flare Data', [
+            wbFloatColors('Tint'),
+            wbFloat('Width'),
+            wbFloat('Height'),
+            wbFloat('Position'),
+            wbFloat('Angular Fade'),
+            wbFloat('Opacity'),
+            wbInteger('Flags', itU32, wbFlags([
+              {0x01} 'Rotates',
+              {0x02} 'Shrinks When Occluded'
+            ]))
+          ])
+        ], []),
+        cpNormal, False, nil, wbLENSAfterSet
+      )
+    ]);
+
+  end;
 end;
 
 {>>> Unused records, they have empty GRUP in skyrim.esm <<<}
@@ -13332,6 +13370,7 @@ begin
    wbAddGroupOrder(COLL);
    wbAddGroupOrder(CLFM);
    wbAddGroupOrder(REVB);
+   if IsSSE then wbAddGroupOrder(LENS); {New to SSE}
 end;
 
 procedure DefineTES5;
