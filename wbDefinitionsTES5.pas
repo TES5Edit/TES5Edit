@@ -12693,7 +12693,16 @@ begin
     wbFULL,
     wbRArray('Unused', wbString(NNAM, 'Noise Map', 0, cpIgnore, False)), // leftover
     wbInteger(ANAM, 'Opacity', itU8, nil, cpNormal, True),
-    wbInteger(FNAM, 'Flags', itU8, wbFlags(['Causes Damage']), cpNormal, True),
+    wbInteger(FNAM, 'Flags', itU8, wbFlags([
+      {0x00000001} 'Causes Damage',
+      {0x00000002} 'Unknown 2',
+      {0x00000004} 'Unknown 3',
+      {0x00000008} 'Enable Flowmap', {Skyrim SSE}
+      {0x00000010} 'Blend Normals', {Skyrim SSE}
+      {0x00000020} 'Unknown 7',
+      {0x00000040} 'Unknown 8',
+      {0x00000080} 'Unknown 8'
+    ]), cpNormal, True),
     wbByteArray(MNAM, 'Unused', 0, cpIgnore, False),  // leftover
     wbFormIDCk(TNAM, 'Material', [MATT]),
     wbFormIDCk(SNAM, 'Open Sound', [SNDR, NULL]),
@@ -12774,7 +12783,7 @@ begin
       wbFloat('Depth Properties - Specular Lighting'),
       wbFloat('Specular Properties - Sun Sparkle Power'),
       // SSE
-      wbUnknown
+      wbFloat('Noise Properties - Flowmap Scale')
     ]),
     wbByteArray(GNAM, 'Unused', 0, cpNormal, True),  // leftover
     wbStruct(NAM0, 'Linear Velocity', [
@@ -12787,11 +12796,11 @@ begin
       wbFloat('Y'),
       wbFloat('Z')
     ], cpNormal, False),
-    wbString(NAM2, 'Noise Texture', 0, cpNormal, False),
-    wbString(NAM3, 'Unused', 0, cpNormal),  // leftover
-    wbString(NAM4, 'Unused', 0, cpNormal),  // leftover
+    wbString(NAM2, 'Noise Layer One - Noise Texture', 0, cpNormal, False),
+    wbString(NAM3, 'Noise Layer Two - Noise Texture', 0, cpNormal, False),  // leftover
+    wbString(NAM4, 'Noise Layer Three - Noise Texture', 0, cpNormal, False),  // leftover
     // SSE
-    wbUnknown(NAM5)
+    wbString(NAM5, 'Flow Normals - Noise Texture', 0, cpNormal, False)
   ], False, nil, cpNormal, False);
 
   wbRecord(WEAP, 'Weapon',
