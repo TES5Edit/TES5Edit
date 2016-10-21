@@ -12585,7 +12585,10 @@ begin
       wbFloat('Max Angle (30-120)'),
       wbFormIDCk('Material', [MATO, NULL]),
       // SSE
-      wbByteArray('Unused', 4, cpIgnore)
+      wbInteger('Flags', itU8, wbFlags([
+        {0x01} 'Considered Snow'
+      ])),
+      wbByteArray('Unused', 3, cpIgnore)
     ], cpNormal, True),
     wbArray(MNAM, 'Distant LOD',
       wbStruct('LOD', [
