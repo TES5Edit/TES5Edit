@@ -12907,15 +12907,16 @@ begin
     ]),
     wbStruct(CRDT, 'Critical Data', [
       wbInteger('Damage', itU16),
-      wbByteArray('Unused', 2, cpIgnore),
+      wbByteArray('Unknown', 2),
       wbFloat('% Mult'),
       wbInteger('Flags', itU8, wbFlags([
         'On Death'
       ])),
-      wbByteArray('Unused', 3, cpIgnore),
-      wbFormIDCk('Effect', [SPEL, NULL]),
+      wbByteArray('Unknown', 3),
+      wbByteArray('Unknown', 4),
       // SSE
-      wbUnknown
+      wbFormIDCk('Effect', [SPEL, NULL]),
+      wbByteArray('Unknown', 4)
     ]),
     wbInteger(VNAM, 'Detection Sound Level', itU32, wbSoundlevelEnum),
     wbFormIDCk(CNAM, 'Template', [WEAP])
