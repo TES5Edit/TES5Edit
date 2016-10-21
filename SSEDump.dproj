@@ -1,7 +1,7 @@
 	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 		<PropertyGroup>
 			<ProjectGuid>{8CD0A7C7-3B98-4D5D-892F-E91C7E50D144}</ProjectGuid>
-			<MainSource>FO4Dump.dpr</MainSource>
+			<MainSource>SSEDump.dpr</MainSource>
 			<Base>True</Base>
 			<Config Condition="'$(Config)'==''">Debug</Config>
 			<TargetedPlatforms>1</TargetedPlatforms>
@@ -25,8 +25,14 @@
 			<CfgParent>Base</CfgParent>
 			<Base>true</Base>
 		</PropertyGroup>
+		<PropertyGroup Condition="'$(Platform)'=='Win32' and '$(Cfg_2)'=='true' or '$(Cfg_2_Win32)'!=''">
+			<Cfg_2_Win32>true</Cfg_2_Win32>
+			<CfgParent>Cfg_2</CfgParent>
+			<Cfg_2>true</Cfg_2>
+			<Base>true</Base>
+		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_UnitSearchPath>Imaging;Imaging\ZLib;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_UnitSearchPath>Imaging;Imaging\ZLib;zlib;lz4;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_COMPARING_SIGNED_UNSIGNED>false</DCC_COMPARING_SIGNED_UNSIGNED>
 			<DCC_SYMBOL_DEPRECATED>false</DCC_SYMBOL_DEPRECATED>
 			<DCC_COMBINING_SIGNED_UNSIGNED>false</DCC_COMBINING_SIGNED_UNSIGNED>
@@ -56,8 +62,11 @@
 			<DCC_Optimize>false</DCC_Optimize>
 			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
 		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+			<DCC_ExeOutput>.\SSEDump</DCC_ExeOutput>
+		</PropertyGroup>
 		<ItemGroup>
-			<DelphiCompile Include="FO4Dump.dpr">
+			<DelphiCompile Include="SSEDump.dpr">
 				<MainSource>MainSource</MainSource>
 			</DelphiCompile>
 			<DCCReference Include="Zlibex.pas"/>
@@ -99,7 +108,7 @@
 			<BorlandProject>
 				<Delphi.Personality>
 					<Source>
-						<Source Name="MainSource">FO4Dump.dpr</Source>
+						<Source Name="MainSource">SSEDump.dpr</Source>
 					</Source>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
@@ -134,7 +143,7 @@
 						<Excluded_Packages Name="$(BDSBIN)\dclofficexp170.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
 					</Excluded_Packages>
 					<Parameters_Win32>
-						<Parameters_Win32 Name="RunParams"></Parameters_Win32>
+						<Parameters_Win32 Name="RunParams">-dg:LVLN -xr:TES4 &quot;d:\games\fallout4\data\1.esp&quot;</Parameters_Win32>
 					</Parameters_Win32>
 				</Delphi.Personality>
 				<Platforms>

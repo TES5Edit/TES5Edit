@@ -16,7 +16,7 @@
 // JCL_DEBUG_EXPERT_GENERATEJDBG ON
 // JCL_DEBUG_EXPERT_DELETEMAPFILE ON
 
-program FO4Dump;
+program SSEDump;
 
 {$I Compilers.inc}
 
@@ -973,7 +973,7 @@ begin
     end else if isMode('SSE') then begin
       wbGameMode := gmSSE;
       wbAppName := 'SSE';
-      wbGameName := 'Skyrim Special Edition';
+      wbGameName := 'Skyrim';
       wbLoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
       if not (wbToolMode in [tmDump, tmExport]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
