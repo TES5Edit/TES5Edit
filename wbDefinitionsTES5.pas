@@ -806,6 +806,11 @@ var
   wbNull: IwbValueDef;
   wbTimeInterpolator: IwbStructDef;
   wbColorInterpolator: IwbStructDef;
+  wbMHDT: IwbSubRecordDef;
+  wbTVDT: IwbSubRecordDef;
+  wbOFST: IwbSubRecordDef;
+  wbNVNM: IwbSubRecordDef;
+  wbNAVIslandData: IwbStructDef;
   wbCELLDATA: IwbSubRecordDef;
 
 
@@ -5357,6 +5362,24 @@ begin
     'Very Hard'
   ]));
 
+  wbTVDT := wbByteArray(TVDT, 'Occlusion Data', 0, cpNormal);
+//  wbTVDT := wbArray(TVDT, 'Occlusion Data', wbInteger('Unknown', itS32)),
+
+  wbMHDT := wbByteArray(MHDT, 'Max Height Data', 0, cpNormal);
+//  wbMHDT :=  wbStruct(MHDT, 'Max Height Data', [ // Rolled back temporarily due to issues while copying.
+//         wbUnion('Unknown', wbMHDTDecider, [
+//           wbArray('Unknown', wbInteger('Data', itS8)),
+//           wbStruct('Unknown', [
+//             wbInteger('Unknown', itU32)]), // First DWord is Endian swapped if the record size is 1028
+//             wbArray('Unknown', wbInteger('Data', itS8))
+//           ])
+//      ]),
+
+  if wbSimpleRecords then
+    wbOFST := wbByteArray(OFST, 'Offset Data')
+  else
+    wbOFST := wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0);
+
   wbOwnership := wbRStruct('Ownership', [
     wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]),
     wbInteger(XRNK, 'Faction rank', itS32)
@@ -6619,256 +6642,116 @@ begin
         {0x0100} 'Use Sky Lighting'
       ]), cpNormal, True, False, nil, wbCELLDATAAfterSet);
 
-  if wbSimpleRecords then begin
-
-    wbRecord(CELL, 'Cell',
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00000400} 10, 'Persistent',
-        {0x00020000} 17, 'Off Limits',
-        {0x00040000} 18, 'Compressed',
-        {0x00080000} 19, 'Can''t Wait'
-      ]), [18]), [
-      wbEDID,
-      wbFULL,
-      {>>>
-      Flags can be itU8, but CELL\DATA has a critical role in various wbImplementation.pas routines
-      and replacing it with wbUnion generates error when setting for example persistent flag in REFR.
-      So let it be always itU16
-      <<<}
-      wbCELLDATA,
-      wbStruct(XCLC, 'Grid', [
-        wbInteger('X', itS32),
-        wbInteger('Y', itS32),
-        wbInteger('Force Hide Land', itU32, wbFlags([
-          'Quad 1',
-          'Quad 2',
-          'Quad 3',
-          'Quad 4'
-        ], True))
-      ], cpNormal, False, nil, 2),
-      wbStruct(XCLL, 'Lighting', [
-        wbStruct('Ambient Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbStruct('Directional Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbStruct('Fog Color Near', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbFloat('Fog Near'),
-        wbFloat('Fog Far'),
-        wbInteger('Directional Rotation XY', itS32),
-        wbInteger('Directional Rotation Z', itS32),
-        wbFloat('Directional Fade'),
-        wbFloat('Fog Clip Distance'),
-        wbFloat('Fog Power'),
-        wbAmbientColors,
-        wbStruct('Fog Color Far', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbFloat('Fog Max'),
-        wbFloat('Light Fade Begin'),
-        wbFloat('Light Fade End'),
-        wbInteger('Inherits', itU32, wbFlags([
-          {0x00000001}'Ambient Color',
-          {0x00000002}'Directional Color',
-          {0x00000004}'Fog Color',
-          {0x00000008}'Fog Near',
-          {0x00000010}'Fog Far',
-          {0x00000020}'Directional Rotation',
-          {0x00000040}'Directional Fade',
-          {0x00000080}'Clip Distance',
-          {0x00000100}'Fog Power',
-          {0x00000200}'Fog Max',
-          {0x00000400}'Light Fade Distances'
-        ]))
-      ], cpNormal, False, nil, 11),
-
-      wbByteArray(TVDT, 'Unknown', 0, cpNormal),
-      wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
-      wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
-      wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
-
-      {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
-      wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
-      //wbByteArray(XCLW, 'Water Height', 4),
-      wbString(XNAM, 'Water Noise Texture'),
-      wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
-      wbFormIDCk(XLCN, 'Location', [LCTN]),
-      wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
-      wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
-      wbStruct(XWCU, 'Water Velocity', [
-        wbFloat('X Offset'),
-        wbFloat('Y Offset'),
-        wbFloat('Z Offset'),
-        wbByteArray('Unknown', 4),
-        wbFloat('X Angle'),
-        wbFloat('Y Angle'),
-        wbFloat('Z Angle'),
-        wbByteArray('Unknown', 0)
+  wbRecord(CELL, 'Cell',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000400} 10, 'Persistent',
+      {0x00020000} 17, 'Off Limits',
+      {0x00040000} 18, 'Compressed',
+      {0x00080000} 19, 'Can''t Wait'
+    ]), [18]), [
+    wbEDID,
+    wbFULL,
+    {>>>
+    Flags can be itU8, but CELL\DATA has a critical role in various wbImplementation.pas routines
+    and replacing it with wbUnion generates error when setting for example persistent flag in REFR.
+    So let it be always itU16
+    <<<}
+    wbCELLDATA,
+    wbStruct(XCLC, 'Grid', [
+      wbInteger('X', itS32),
+      wbInteger('Y', itS32),
+      wbInteger('Force Hide Land', itU32, wbFlags([
+        'Quad 1',
+        'Quad 2',
+        'Quad 3',
+        'Quad 4'
+      ], True))
+    ], cpNormal, False, nil, 2),
+    wbStruct(XCLL, 'Lighting', [
+      wbStruct('Ambient Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
       ]),
-      wbFormIDCk(XCWT, 'Water', [WATR]),
-
-      {--- Ownership ---}
-      wbOwnership,
-      wbFormIDCk(XILL, 'Lock List', [FLST, NPC_]),
-
-      wbString(XWEM, 'Water Environment Map'),
-      wbFormIDCk(XCCM, 'Sky/Weather from Region', [REGN]),
-      wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-      wbFormIDCk(XCMO, 'Music Type', [MUSC]),
-      wbFormIDCk(XCIM, 'Image Space', [IMGS])
-    ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad)
-
-  end else begin
-
-    wbRecord(CELL, 'Cell',
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00000400} 10, 'Persistent',
-        {0x00020000} 17, 'Off Limits',
-        {0x00040000} 18, 'Compressed',
-        {0x00080000} 19, 'Can''t Wait'
-      ]), [18]), [
-      wbEDID,
-      wbFULL,
-      {>>>
-      Flags can be itU8, but CELL\DATA has a critical role in various wbImplementation.pas routines
-      and replacing it with wbUnion generates error when setting for example persistent flag in REFR.
-      So let it be always itU16
-      <<<}
-      wbInteger(DATA, 'Flags', itU16, wbFlags([
-        {0x0001} 'Is Interior Cell',
-        {0x0002} 'Has Water',
-        {0x0004} 'Can''t Travel From Here',
-        {0x0008} 'No LOD Water',
-        {0x0010} 'Unknown 5',
-        {0x0020} 'Public Area',
-        {0x0040} 'Hand Changed',
-        {0x0080} 'Show Sky',
-        {0x0100} 'Use Sky Lighting'
-      ]), cpNormal, True, False, nil, wbCELLDATAAfterSet),
-      wbStruct(XCLC, 'Grid', [
-        wbInteger('X', itS32),
-        wbInteger('Y', itS32),
-        wbInteger('Force Hide Land', itU32, wbFlags([
-          'Quad 1',
-          'Quad 2',
-          'Quad 3',
-          'Quad 4'
-        ], True))
-      ], cpNormal, False, nil, 2),
-      wbStruct(XCLL, 'Lighting', [
-        wbStruct('Ambient Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbStruct('Directional Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbStruct('Fog Color Near', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbFloat('Fog Near'),
-        wbFloat('Fog Far'),
-        wbInteger('Directional Rotation XY', itS32),
-        wbInteger('Directional Rotation Z', itS32),
-        wbFloat('Directional Fade'),
-        wbFloat('Fog Clip Distance'),
-        wbFloat('Fog Power'),
-        wbAmbientColors,
-        wbStruct('Fog Color Far', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unknown', 1)
-        ]),
-        wbFloat('Fog Max'),
-        wbFloat('Light Fade Begin'),
-        wbFloat('Light Fade End'),
-        wbInteger('Inherits', itU32, wbFlags([
-          {0x00000001}'Ambient Color',
-          {0x00000002}'Directional Color',
-          {0x00000004}'Fog Color',
-          {0x00000008}'Fog Near',
-          {0x00000010}'Fog Far',
-          {0x00000020}'Directional Rotation',
-          {0x00000040}'Directional Fade',
-          {0x00000080}'Clip Distance',
-          {0x00000100}'Fog Power',
-          {0x00000200}'Fog Max',
-          {0x00000400}'Light Fade Distances'
-        ]))
-      ], cpNormal, False, nil, 11),
-
-      wbByteArray(TVDT, 'Unknown', 0, cpNormal),
-      wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
-//      wbArray(TVDT, 'Unknown', wbInteger('Unknown', itS32)),
-//      wbStruct(MHDT, 'Max Height Data', [ // Rolled back temporarily due to issues while copying.
-//         wbUnion('Unknown', wbMHDTDecider, [
-//           wbArray('Unknown', wbInteger('Data', itS8)),
-//           wbStruct('Unknown', [
-//             wbInteger('Unknown', itU32)]), // First DWord is Endian swapped if the record size is 1028
-//             wbArray('Unknown', wbInteger('Data', itS8))
-//           ])
-//      ]),
-      wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
-      wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
-
-      {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
-      wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
-      //wbByteArray(XCLW, 'Water Height', 4),
-      wbString(XNAM, 'Water Noise Texture'),
-      wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
-      wbFormIDCk(XLCN, 'Location', [LCTN]),
-      wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
-      wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
-      wbStruct(XWCU, 'Water Velocity', [
-        wbFloat('X Offset'),
-        wbFloat('Y Offset'),
-        wbFloat('Z Offset'),
-        wbByteArray('Unknown', 4),
-        wbFloat('X Angle'),
-        wbFloat('Y Angle'),
-        wbFloat('Z Angle'),
-        wbByteArray('Unknown', 0)
+      wbStruct('Directional Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
       ]),
-      wbFormIDCk(XCWT, 'Water', [WATR]),
+      wbStruct('Fog Color Near', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
+      ]),
+      wbFloat('Fog Near'),
+      wbFloat('Fog Far'),
+      wbInteger('Directional Rotation XY', itS32),
+      wbInteger('Directional Rotation Z', itS32),
+      wbFloat('Directional Fade'),
+      wbFloat('Fog Clip Distance'),
+      wbFloat('Fog Power'),
+      wbAmbientColors,
+      wbStruct('Fog Color Far', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Unknown', 1)
+      ]),
+      wbFloat('Fog Max'),
+      wbFloat('Light Fade Begin'),
+      wbFloat('Light Fade End'),
+      wbInteger('Inherits', itU32, wbFlags([
+        {0x00000001}'Ambient Color',
+        {0x00000002}'Directional Color',
+        {0x00000004}'Fog Color',
+        {0x00000008}'Fog Near',
+        {0x00000010}'Fog Far',
+        {0x00000020}'Directional Rotation',
+        {0x00000040}'Directional Fade',
+        {0x00000080}'Clip Distance',
+        {0x00000100}'Fog Power',
+        {0x00000200}'Fog Max',
+        {0x00000400}'Light Fade Distances'
+      ]))
+    ], cpNormal, False, nil, 11),
 
-      {--- Ownership ---}
-      wbOwnership,
-      wbFormIDCk(XILL, 'Lock List', [FLST, NPC_]),
+    wbTVDT,
+    wbMHDT,
+    wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
+    wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
 
-      wbString(XWEM, 'Water Environment Map'),
-      wbFormIDCk(XCCM, 'Sky/Weather from Region', [REGN]),
-      wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-      wbFormIDCk(XCMO, 'Music Type', [MUSC]),
-      wbFormIDCk(XCIM, 'Image Space', [IMGS])
-    ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
+    {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
+    wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
+    //wbByteArray(XCLW, 'Water Height', 4),
+    wbString(XNAM, 'Water Noise Texture'),
+    wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
+    wbFormIDCk(XLCN, 'Location', [LCTN]),
+    wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
+    wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
+    wbStruct(XWCU, 'Water Velocity', [
+      wbFloat('X Offset'),
+      wbFloat('Y Offset'),
+      wbFloat('Z Offset'),
+      wbByteArray('Unknown', 4),
+      wbFloat('X Angle'),
+      wbFloat('Y Angle'),
+      wbFloat('Z Angle'),
+      wbByteArray('Unknown', 0)
+    ]),
+    wbFormIDCk(XCWT, 'Water', [WATR]),
+    wbOwnership,
+    wbFormIDCk(XILL, 'Lock List', [FLST, NPC_]),
+    wbString(XWEM, 'Water Environment Map'),
+    wbFormIDCk(XCCM, 'Sky/Weather from Region', [REGN]),
+    wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
+    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbFormIDCk(XCMO, 'Music Type', [MUSC]),
+    wbFormIDCk(XCIM, 'Image Space', [IMGS])
+  ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
 
-  end;
 
   wbRecord(CLAS, 'Class', [
     wbEDID,
@@ -8044,58 +7927,9 @@ begin
     wbFormIDCk(NAM0, 'Linked To', [SLGM])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-  if wbSimpleRecords then begin
 
-    wbRecord(NAVI, 'Navigation Mesh Info Map', [
-      wbEDID,
-      wbInteger(NVER, 'Version', itU32),
-      wbRArray('Navigation Map Infos',
-        wbStruct(NVMI, 'Navigation Map Info', [
-          wbFormIDCk('Navigation Mesh', [NAVM]),
-          wbByteArray('Data', 20),
-          wbArray('Merged To', wbFormIDCk('Mesh', [NAVM]), -1),
-          wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1),
-          wbArray('Linked Doors', wbStruct('Door', [
-            wbByteArray('Unknown', 4),
-            wbFormIDCk('Door Ref', [REFR])
-          ]), -1),
-          wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
-          wbUnion('Island', wbNAVIIslandDataDecider, [
-            wbNull,
-            wbStruct('Island Data', [
-              wbByteArray('Unknown', 24),
-              wbArray('Triangles', wbByteArray('Triangle', 6), -1),
-              wbArray('Vertices', wbByteArray('Vertex', 12), -1)
-            ])
-          ]),
-          wbByteArray('Unknown', 4),
-          wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-          wbUnion('Parent', wbNAVIParentDecider, [
-            wbStruct('Coordinates', [
-              wbInteger('Grid Y', itS16),
-              wbInteger('Grid X', itS16)
-            ]),
-            wbFormIDCk('Parent Cell', [CELL])
-          ])
-        ])
-      ),
-      wbStruct(NVPP, 'Preferred Pathing', [
-        wbArray('NavMeshes', wbArray('Set', wbFormIDCk('', [NAVM]), -1), -1),
-        wbArray('NavMesh Tree?', wbStruct('', [
-          wbFormIDCk('NavMesh', [NAVM]),
-          wbInteger('Index/Node', itU32)
-        ]), -1)
-      ]),
-      //wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
-      wbUnknown(NVSI)
-    ]);
-
-    wbRecord(NAVM, 'Navigation Mesh',
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00040000} 18, 'Compressed',
-        {0x04000000} 26, 'AutoGen'
-      ]), [18]), [
-      wbEDID,
+  if wbSimpleRecords then
+    wbNVNM :=
       wbStruct(NVNM, 'Geometry', [
         wbByteArray('Unknown', 8),
         wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
@@ -8123,80 +7957,9 @@ begin
           ])
         , -1),
         wbUnknown
-      ]),
-      wbUnknown(ONAM),
-      wbUnknown(PNAM),
-      wbUnknown(NNAM)
-    ], False, wbNAVMAddInfo);
-
-  end else begin
-
-    wbRecord(NAVI, 'Navigation Mesh Info Map', [
-      wbEDID,
-      wbInteger(NVER, 'Version', itU32),
-      wbRArray('Navigation Map Infos',
-        wbStruct(NVMI, 'Navigation Map Info', [
-          wbFormIDCk('Navigation Mesh', [NAVM]),
-          wbByteArray('Unknown', 4),
-          wbFloat('X'),
-          wbFloat('Y'),
-          wbFloat('Z'),
-          wbInteger('Preferred Merges Flag', itU32),
-          wbArray('Merged To', wbFormIDCk('Mesh', [NAVM]), -1),
-          wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1),
-          wbArray('Linked Doors', wbStruct('Door', [
-            wbByteArray('Unknown', 4),
-            wbFormIDCk('Door Ref', [REFR])
-          ]), -1),
-          wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
-          wbUnion('Island', wbNAVIIslandDataDecider, [
-            wbNull,
-            wbStruct('Island Data', [
-              wbFloat('Min X'),
-              wbFloat('Min Y'),
-              wbFloat('Min Z'),
-              wbFloat('Max X'),
-              wbFloat('Max Y'),
-              wbFloat('Max Z'),
-              wbArray('Triangles',
-                wbStruct('Triangle', [
-                  wbArray('Vertices', wbInteger('Vertex', itS16), 3)
-                ])
-              , -1),
-              wbArray('Vertices', wbStruct('Vertex', [
-                wbFloat('X'),
-                wbFloat('Y'),
-                wbFloat('Z')
-              ]), -1)
-            ])
-          ]),
-          wbByteArray('Unknown', 4),
-          wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-          wbUnion('Parent', wbNAVIParentDecider, [
-            wbStruct('Coordinates', [
-              wbInteger('Grid Y', itS16),
-              wbInteger('Grid X', itS16)
-            ]),
-            wbFormIDCk('Parent Cell', [CELL])
-          ])
-        ])
-      ),
-      wbStruct(NVPP, 'Preferred Pathing', [
-        wbArray('NavMeshes', wbArray('Set', wbFormIDCk('', [NAVM]), -1), -1),
-        wbArray('NavMesh Tree?', wbStruct('', [
-          wbFormIDCk('NavMesh', [NAVM]),
-          wbInteger('Index/Node', itU32)
-        ]), -1)
-      ]),
-      wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
-    ]);
-
-    wbRecord(NAVM, 'Navigation Mesh',
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00040000} 18, 'Compressed',
-        {0x04000000} 26, 'AutoGen'
-      ]), [18]), [
-      wbEDID,
+      ])
+  else
+    wbNVNM :=
       wbStruct(NVNM, 'Geometry', [
         wbInteger('Unknown', itU32),
         wbByteArray('Unknown', 4),
@@ -8286,13 +8049,91 @@ begin
         wbFloat('Max Y'),
         wbFloat('Max Z'),
         wbArray('NavMeshGrid', wbArray('NavMeshGridCell', wbInteger('Triangle', itS16), -1))
-      ]),
-      wbUnknown(ONAM),
-      wbUnknown(PNAM),
-      wbUnknown(NNAM)
-    ], False, wbNAVMAddInfo);
+      ]);
 
-  end;
+  wbRecord(NAVM, 'Navigation Mesh',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00040000} 18, 'Compressed',
+      {0x04000000} 26, 'AutoGen'
+    ]), [18]), [
+    wbEDID,
+    wbNVNM,
+    wbUnknown(ONAM),
+    wbUnknown(PNAM),
+    wbUnknown(NNAM)
+  ], False, wbNAVMAddInfo);
+
+
+  if wbSimpleRecords then
+    wbNAVIslandData :=
+      wbStruct('Island Data', [
+        wbByteArray('Unknown', 24),
+        wbArray('Triangles', wbByteArray('Triangle', 6), -1),
+        wbArray('Vertices', wbByteArray('Vertex', 12), -1)
+      ])
+  else
+    wbNAVIslandData :=
+      wbStruct('Island Data', [
+        wbFloat('Min X'),
+        wbFloat('Min Y'),
+        wbFloat('Min Z'),
+        wbFloat('Max X'),
+        wbFloat('Max Y'),
+        wbFloat('Max Z'),
+        wbArray('Triangles',
+          wbStruct('Triangle', [
+            wbArray('Vertices', wbInteger('Vertex', itS16), 3)
+          ])
+        , -1),
+        wbArray('Vertices', wbStruct('Vertex', [
+          wbFloat('X'),
+          wbFloat('Y'),
+          wbFloat('Z')
+        ]), -1)
+      ]);
+
+  wbRecord(NAVI, 'Navigation Mesh Info Map', [
+    wbEDID,
+    wbInteger(NVER, 'Version', itU32),
+    wbRArray('Navigation Map Infos',
+      wbStruct(NVMI, 'Navigation Map Info', [
+        wbFormIDCk('Navigation Mesh', [NAVM]),
+        wbByteArray('Unknown', 4),
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z'),
+        wbInteger('Preferred Merges Flag', itU32),
+        wbArray('Merged To', wbFormIDCk('Mesh', [NAVM]), -1),
+        wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1),
+        wbArray('Linked Doors', wbStruct('Door', [
+          wbByteArray('Unknown', 4),
+          wbFormIDCk('Door Ref', [REFR])
+        ]), -1),
+        wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
+        wbUnion('Island', wbNAVIIslandDataDecider, [
+          wbNull,
+          wbNAVIslandData
+        ]),
+        wbByteArray('Unknown', 4),
+        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+        wbUnion('Parent', wbNAVIParentDecider, [
+          wbStruct('Coordinates', [
+            wbInteger('Grid Y', itS16),
+            wbInteger('Grid X', itS16)
+          ]),
+          wbFormIDCk('Parent Cell', [CELL])
+        ])
+      ])
+    ),
+    wbStruct(NVPP, 'Preferred Pathing', [
+      wbArray('NavMeshes', wbArray('Set', wbFormIDCk('', [NAVM]), -1), -1),
+      wbArray('NavMesh Tree?', wbStruct('', [
+        wbFormIDCk('NavMesh', [NAVM]),
+        wbInteger('Index/Node', itU32)
+      ]), -1)
+    ]),
+    wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
+  ]);
 
 end;
 
@@ -13068,208 +12909,105 @@ begin
     wbFormIDCk(CNAM, 'Template', [WEAP])
   ], False, nil, cpNormal, False, wbWEAPAfterLoad, wbKeywordsAfterSet);
 
-  if wbSimpleRecords then
-    wbRecord(WRLD, 'Worldspace',
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00080000} 19, 'Can''t Wait'
-      ])), [
-      wbEDID,
-      {>>> BEGIN leftover from earlier CK versions <<<}
-      wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False{, wbNeverShow}),
-      {>>> END leftover from earlier CK versions <<<}
-      wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
-      wbFULL,
-      wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
-        wbInteger('X', itS16),
-        wbInteger('Y', itS16)
+  wbRecord(WRLD, 'Worldspace',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00080000} 19, 'Can''t Wait'
+    ])), [
+    wbEDID,
+    {>>> leftover from earlier CK versions <<<}
+    wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False{, wbNeverShow}),
+    wbMHDT,
+    wbFULL,
+    wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
+      wbInteger('X', itS16),
+      wbInteger('Y', itS16)
+    ]),
+    wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
+    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
+    wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
+    wbRStruct('Parent', [
+      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
+      wbStruct(PNAM, '', [
+        wbInteger('Flags', itU8, wbFlags([
+          {0x0001}'Use Land Data',
+          {0x0002}'Use LOD Data',
+          {0x0004}'Don''t Use Map Data',
+          {0x0008}'Use Water Data',
+          {0x0010}'Use Climate Data',
+          {0x0020}'Use Image Space Data (unused)',
+          {0x0040}'Use Sky Cell'
+        ], [5])),
+        wbByteArray('Unknown', 1)
+      ], cpNormal, True)
+    ], []),
+    wbFormIDCk(CNAM, 'Climate', [CLMT]),
+    wbFormIDCk(NAM2, 'Water', [WATR]),
+    wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
+    wbFloat(NAM4, 'LOD Water Height'),
+    wbStruct(DNAM, 'Land Data', [
+      wbFloat('Default Land Height'),
+      wbFloat('Default Water Height')
+    ]),
+    wbString(ICON, 'Map Image'),
+    wbRStruct('Cloud Model', [wbMODL], []),
+    wbStruct(MNAM, 'Map Data', [
+      wbStruct('Usable Dimensions', [
+        wbInteger('X', itS32),
+        wbInteger('Y', itS32)
       ]),
-      wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
-      wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
-      wbRStruct('Parent', [
-        wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-        wbStruct(PNAM, '', [
-          wbInteger('Flags', itU8, wbFlags([
-            {0x0001}'Use Land Data',
-            {0x0002}'Use LOD Data',
-            {0x0004}'Don''t Use Map Data',
-            {0x0008}'Use Water Data',
-            {0x0010}'Use Climate Data',
-            {0x0020}'Use Image Space Data (unused)',
-            {0x0040}'Use Sky Cell'
-          ], [5])),
-          wbByteArray('Unknown', 1)
-        ], cpNormal, True)
-      ], []),
-      wbFormIDCk(CNAM, 'Climate', [CLMT]),
-      wbFormIDCk(NAM2, 'Water', [WATR]),
-      wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
-      wbFloat(NAM4, 'LOD Water Height'),
-      wbStruct(DNAM, 'Land Data', [
-        wbFloat('Default Land Height'),
-        wbFloat('Default Water Height')
-      ]),
-      wbString(ICON, 'Map Image'),
-      wbRStruct('Cloud Model', [wbMODL], []),
-      wbStruct(MNAM, 'Map Data', [
-        wbStruct('Usable Dimensions', [
-          wbInteger('X', itS32),
-          wbInteger('Y', itS32)
+      wbStruct('Cell Coordinates', [
+        wbStruct('NW Cell', [
+          wbInteger('X', itS16),
+          wbInteger('Y', itS16)
         ]),
-        wbStruct('Cell Coordinates', [
-          wbStruct('NW Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ]),
-          wbStruct('SE Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ])
-        ]),
-        wbStruct('Camera Data', [
-          wbFloat('Min Height'),
-          wbFloat('Max Height'),
-          wbFloat('Initial Pitch')
+        wbStruct('SE Cell', [
+          wbInteger('X', itS16),
+          wbInteger('Y', itS16)
         ])
-        //wbByteArray('Unknown')
-      ], cpNormal, False, nil, 2),
-      wbStruct(ONAM, 'World Map Offset Data', [
-        wbFloat('World Map Scale'),
-        wbFloat('Cell X Offset'),
-        wbFloat('Cell Y Offset'),
-        wbFloat('Cell Z Offset')
-      ], cpNormal, True),
-      wbFloat(NAMA, 'Distant LOD Multiplier'),
-      wbInteger(DATA, 'Flags', itU8, wbFlags([
-        {0x01} 'Small World',
-        {0x02} 'Can''t Fast Travel',
-        {0x04} 'Unknown 3',
-        {0x08} 'No LOD Water',
-        {0x10} 'No Landscape',
-        {0x20} 'No Sky',
-        {0x40} 'Fixed Dimensions',
-        {0x80} 'No Grass'
-      ]), cpNormal, True),
-      {>>> Object Bounds doesn't show up in CK <<<}
-      wbRStruct('Object Bounds', [
-        wbStruct(NAM0, 'Min', [
-          wbFloat('X', cpNormal, False, 1/4096),
-          wbFloat('Y', cpNormal, False, 1/4096)
-        ], cpIgnore, True),
-        wbStruct(NAM9, 'Max', [
-          wbFloat('X', cpNormal, False, 1/4096),
-          wbFloat('Y', cpNormal, False, 1/4096)
-        ], cpIgnore, True)
-      ], []),
-      wbFormIDCk(ZNAM, 'Music', [MUSC]),
-      wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
-      wbString(XNAM, 'Water Noise Texture'),
-      wbString(TNAM, 'HD LOD Diffuse Texture'),
-      wbString(UNAM, 'HD LOD Normal Texture'),
-      wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
-      wbByteArray(OFST, 'Offset Data')
-    ], False, nil, cpNormal, False, wbWRLDAfterLoad)
-  else
-    wbRecord(WRLD, 'Worldspace',
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00080000} 19, 'Can''t Wait'
-      ])), [
-      wbEDID,
-      {>>> BEGIN leftover from earlier CK versions <<<}
-      wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False{, wbNeverShow}),
-      {>>> END leftover from earlier CK versions <<<}
-      wbByteArray(MHDT, 'Max Height Data', 0, cpNormal),
-      wbFULL,
-      wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
-        wbInteger('X', itS16),
-        wbInteger('Y', itS16)
       ]),
-      wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
-      wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
-      wbRStruct('Parent', [
-        wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-        wbStruct(PNAM, '', [
-          wbInteger('Flags', itU8, wbFlags([
-            {0x0001}'Use Land Data',
-            {0x0002}'Use LOD Data',
-            {0x0004}'Don''t Use Map Data',
-            {0x0008}'Use Water Data',
-            {0x0010}'Use Climate Data',
-            {0x0020}'Use Image Space Data (unused)',
-            {0x0040}'Use Sky Cell'
-          ], [5])),
-          wbByteArray('Unknown', 1)
-        ], cpNormal, True)
-      ], []),
-      wbFormIDCk(CNAM, 'Climate', [CLMT]),
-      wbFormIDCk(NAM2, 'Water', [WATR]),
-      wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
-      wbFloat(NAM4, 'LOD Water Height'),
-      wbStruct(DNAM, 'Land Data', [
-        wbFloat('Default Land Height'),
-        wbFloat('Default Water Height')
-      ]),
-      wbString(ICON, 'Map Image'),
-      wbRStruct('Cloud Model', [wbMODL], []),
-      wbStruct(MNAM, 'Map Data', [
-        wbStruct('Usable Dimensions', [
-          wbInteger('X', itS32),
-          wbInteger('Y', itS32)
-        ]),
-        wbStruct('Cell Coordinates', [
-          wbStruct('NW Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ]),
-          wbStruct('SE Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ])
-        ]),
-        wbStruct('Camera Data', [
-          wbFloat('Min Height'),
-          wbFloat('Max Height'),
-          wbFloat('Initial Pitch')
-        ])
-        //wbByteArray('Unknown')
-      ], cpNormal, False, nil, 2),
-      wbStruct(ONAM, 'World Map Offset Data', [
-        wbFloat('World Map Scale'),
-        wbFloat('Cell X Offset'),
-        wbFloat('Cell Y Offset'),
-        wbFloat('Cell Z Offset')
-      ], cpNormal, True),
-      wbFloat(NAMA, 'Distant LOD Multiplier'),
-      wbInteger(DATA, 'Flags', itU8, wbFlags([
-        {0x01} 'Small World',
-        {0x02} 'Can''t Fast Travel',
-        {0x04} 'Unknown 3',
-        {0x08} 'No LOD Water',
-        {0x10} 'No Landscape',
-        {0x20} 'No Sky',
-        {0x40} 'Fixed Dimensions',
-        {0x80} 'No Grass'
-      ]), cpNormal, True),
-      {>>> Object Bounds doesn't show up in CK <<<}
-      wbRStruct('Object Bounds', [
-        wbStruct(NAM0, 'Min', [
-          wbFloat('X', cpNormal, False, 1/4096),
-          wbFloat('Y', cpNormal, False, 1/4096)
-        ], cpIgnore, True),
-        wbStruct(NAM9, 'Max', [
-          wbFloat('X', cpNormal, False, 1/4096),
-          wbFloat('Y', cpNormal, False, 1/4096)
-        ], cpIgnore, True)
-      ], []),
-      wbFormIDCk(ZNAM, 'Music', [MUSC]),
-      wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
-      wbString(XNAM, 'Water Noise Texture'),
-      wbString(TNAM, 'HD LOD Diffuse Texture'),
-      wbString(UNAM, 'HD LOD Normal Texture'),
-      wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
-      wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0)
-    ], False, nil, cpNormal, False, wbWRLDAfterLoad);
+      wbStruct('Camera Data', [
+        wbFloat('Min Height'),
+        wbFloat('Max Height'),
+        wbFloat('Initial Pitch')
+      ])
+    ], cpNormal, False, nil, 2),
+    wbStruct(ONAM, 'World Map Offset Data', [
+      wbFloat('World Map Scale'),
+      wbFloat('Cell X Offset'),
+      wbFloat('Cell Y Offset'),
+      wbFloat('Cell Z Offset')
+    ], cpNormal, True),
+    wbFloat(NAMA, 'Distant LOD Multiplier'),
+    wbInteger(DATA, 'Flags', itU8, wbFlags([
+      {0x01} 'Small World',
+      {0x02} 'Can''t Fast Travel',
+      {0x04} 'Unknown 3',
+      {0x08} 'No LOD Water',
+      {0x10} 'No Landscape',
+      {0x20} 'No Sky',
+      {0x40} 'Fixed Dimensions',
+      {0x80} 'No Grass'
+    ]), cpNormal, True),
+    {>>> Object Bounds doesn't show up in CK <<<}
+    wbRStruct('Object Bounds', [
+      wbStruct(NAM0, 'Min', [
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True),
+      wbStruct(NAM9, 'Max', [
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True)
+    ], []),
+    wbFormIDCk(ZNAM, 'Music', [MUSC]),
+    wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
+    wbString(XNAM, 'Water Noise Texture'),
+    wbString(TNAM, 'HD LOD Diffuse Texture'),
+    wbString(UNAM, 'HD LOD Normal Texture'),
+    wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
+    wbOFST
+  ], False, nil, cpNormal, False, wbWRLDAfterLoad);
+
 
   wbRecord(WTHR, 'Weather', [
     wbEDID,
