@@ -12547,6 +12547,7 @@ begin
       wbStruct(DNAM, 'Direction Material', [
         wbFloat('Max Angle (30-120)'),
         wbFormIDCk('Material', [MATO, NULL]),
+        // SSE
         wbInteger('Flags', itU8, wbFlags([
           {0x01} 'Considered Snow'
         ])),
@@ -12926,6 +12927,7 @@ begin
         wbInteger('Flags', itU8, wbFlags([
           'On Death'
         ])),
+		// SSE
         wbByteArray('Unused', 3, cpIgnore),
         wbByteArray('Unknown', 4),
         wbFormIDCk('Effect', [SPEL, NULL]),
@@ -13174,6 +13176,7 @@ begin
       wbFormIDCK('Sunset', [IMGS, NULL]),
       wbFormIDCK('Night', [IMGS, NULL])
     ]),
+    // SSE
     wbStruct(HNAM, 'Volumetric Lighting', [
       wbFormIDCK('Sunrise', [VOLI, NULL]),
       wbFormIDCK('Day', [VOLI, NULL]),
