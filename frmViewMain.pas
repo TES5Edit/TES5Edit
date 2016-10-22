@@ -3261,9 +3261,9 @@ procedure TfrmMain.DoInit;
       slNew := TStringList.Create;
       slDlc := TStringList.Create;
       try
-        if wbGameMode >= gmFO4 then // allows using string list search rather than for loop comparison
-          for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
-            slDLC.Add(wbOfficialDLC[i]);
+        // allows using string list search rather than for loop comparison
+        for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
+          slDLC.Add(wbOfficialDLC[i]);
         repeat
           if IsFileESM(F.Name) or IsFileESP(F.Name) then begin
             if SameText(F.Name, wbGameName + '.hardcoded.esp') then
@@ -3335,30 +3335,33 @@ procedure TfrmMain.DoInit;
         sl2 := TStringList.Create;
         try
           RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl, sl2); // remove comments
-          useBOSS := (sl2.Count = 0) and (wbGameMode in [ gmTES5 ]); // FO4 and SSE don't use loadorder.txt anymore
+          useBOSS := (sl2.Count = 0) and (wbGameMode in [gmTES5]); // use loadorder.txt in Skyrim
         finally
           sl2.Free;
         end;
 
-        // Skyrim always loads Skyrim.esm and Update.esm first and second no matter what
+        // Skyrim and SSE always load Skyrim.esm and Update.esm first and second no matter what
         // even if not present in plugins.txt
-        j := FindMatchText(sl, 'Skyrim.esm');
-        if j = -1 then sl.Insert(0, 'Skyrim.esm');
-        if wbGameMode in [ gmTES5, gmSSE ] then begin
+        if wbGameMode in [gmTES5, gmSSE] then begin
+          j := FindMatchText(sl, 'Skyrim.esm');
+          if j = -1 then sl.Insert(0, 'Skyrim.esm');
           j := FindMatchText(sl, 'Update.esm');
           if j = -1 then sl.Insert(1, 'Update.esm');
         end;
 
-        // Fallout 4: add official DLCs right after the game master file
-        if wbGameMode = gmFO4 then
-          for i := High(wbOfficialDLC) downto Low(wbOfficialDLC) do begin
-            // delete DLC from list if already there, no matter where it is located since we hardcode their order
-            j := FindMatchText(sl, wbOfficialDLC[i]);
-            if j <> -1 then
-              sl.Delete(j);
+        // add official DLCs right after the game master file
+        for i := High(wbOfficialDLC) downto Low(wbOfficialDLC) do begin
+          // delete DLC from list if already there, no matter where it is located since we hardcode their order
+          j := FindMatchText(sl, wbOfficialDLC[i]);
+          if j <> -1 then
+            sl.Delete(j);
 
+          // for Skyrim and SSE insert after Update.esm
+          if wbGameMode in [gmTES5, gmSSE] then
+            sl.Insert(2, wbOfficialDLC[i])
+          else
             sl.Insert(1, wbOfficialDLC[i]);
-          end;
+        end;
 
         // remove nonexisting files (including optional DLC)
         RemoveMissingFiles(sl);
