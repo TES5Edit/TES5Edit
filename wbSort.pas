@@ -1048,6 +1048,7 @@ begin
   else begin
     GetMem(Buffer, aCount * SizeOf(Pointer));
     MergeSort(aList, 0, Pred(aCount), aCompare, Buffer);
+    FreeMem(Buffer, aCount * SizeOf(Pointer));
   end;
 end;
 {$ENDIF WIN64}
