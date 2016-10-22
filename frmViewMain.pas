@@ -3340,11 +3340,13 @@ procedure TfrmMain.DoInit;
           sl2.Free;
         end;
 
-        // Skyrim and SSE always load Skyrim.esm and Update.esm first and second no matter what
+        // always load the game master first even if missing
+        j := FindMatchText(sl, wbGameName + '.esm');
+        if j = -1 then sl.Insert(0, wbGameName + '.esm');
+
+        // Skyrim and SSE always load Update.esm second no matter what
         // even if not present in plugins.txt
         if wbGameMode in [gmTES5, gmSSE] then begin
-          j := FindMatchText(sl, 'Skyrim.esm');
-          if j = -1 then sl.Insert(0, 'Skyrim.esm');
           j := FindMatchText(sl, 'Update.esm');
           if j = -1 then sl.Insert(1, 'Update.esm');
         end;
