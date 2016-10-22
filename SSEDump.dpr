@@ -979,7 +979,7 @@ begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
       end;
-      if not (wbToolSource in [tsPlugins, tsSaves]) then begin
+      if not (wbToolSource in [tsPlugins { Needs better decoding , tsSaves}]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
         Exit;
       end;
