@@ -32,6 +32,14 @@ var
   CountWeatherColors: integer; // a total number of weather colors
   CountLightingColors: integer; // a total number of lighting colors
 
+
+//============================================================================
+// weather records format for Skyrim, SSE and Fallout 4
+function IsFormat3: Boolean;
+begin
+  Result := (wbGameMode = gmTES5) or (wbGameMode = gmSSE) or (wbGameMode = gmFO4);
+end;
+  
 //============================================================================
 function CheckEditable(e: IInterface): Boolean;
 begin
@@ -219,7 +227,7 @@ begin
   Layer := lbCloudLayers.ItemIndex;
   SetElementEditValues(Weather, slCloudSignatures[Layer], cmbCloudTexture.Text);
 
-  if (wbGameMode = gmTES5) or (wbGameMode = gmFO4) then begin
+  if IsFormat3 then begin
     SetElementEditValues(Weather, Format('Cloud Speed\QNAM - X Speed\Layer #%d', [Layer]), edCloudXSpeed.Text);
     SetElementEditValues(Weather, Format('Cloud Speed\RNAM - Y Speed\Layer #%d', [Layer]), edCloudYSpeed.Text);
     SetElementEditValues(Weather, Format('JNAM\Layer #%d\Sunrise', [Layer]), edCloudAlpha1.Text);
@@ -262,7 +270,7 @@ begin
     imgCloud.Picture := nil;
 
   // fill layer parameters
-  if (wbGameMode = gmTES5) or (wbGameMode = gmFO4) then begin
+  if IsFormat3 then begin
     edCloudXSpeed.Text := GetElementEditValues(Weather, Format('Cloud Speed\QNAM - X Speed\Layer #%d', [Layer]));
     edCloudYSpeed.Text := GetElementEditValues(Weather, Format('Cloud Speed\RNAM - Y Speed\Layer #%d', [Layer]));
     edCloudAlpha1.Text := GetElementEditValues(Weather, Format('JNAM\Layer #%d\Sunrise', [Layer]));
@@ -282,8 +290,9 @@ begin
     edCloudXSpeed.Text := GetEditValue(ElementByIndex(ElementByPath(Weather, 'DATA'), Layer + 1));
 
   // fill layer colors
-  if (wbGameMode = gmTES5) or (wbGameMode = gmFO4) then
-    elColors := ElementByName(ElementByIndex(ElementByPath(Weather, 'PNAM'), Layer), 'Colors')
+  if IsFormat3 then
+    //elColors := ElementByName(ElementByIndex(ElementByPath(Weather, 'PNAM'), Layer), 'Colors')
+    elColors := ElementByIndex(ElementByPath(Weather, 'PNAM'), Layer)
   else if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then
     elColors := ElementByIndex(ElementByPath(Weather, 'PNAM'), Layer)
   else if wbGameMode = gmTES4 then begin
@@ -362,7 +371,7 @@ begin
     CopyElement(WeatherFrom, Weather, slCloudSignatures[i]);
   
   // copy clouds speed, alpha, colors
-  if (wbGameMode = gmTES5) or (wbGameMode = gmFO4) then begin
+  if IsFormat3 then begin
     CopyElement(WeatherFrom, Weather, 'NAM1');
     CopyElement(WeatherFrom, Weather, 'Cloud Speed');
     CopyElement(WeatherFrom, Weather, 'JNAM');
@@ -647,7 +656,7 @@ begin
     btnApplyWeatherColors.OnClick := btnApplyWeatherColorsClick;
 
     // LIGHTING COLORS TABSHEET
-    if (wbGameMode = gmTES5) or (wbGameMode = gmFO4) then begin
+    if IsFormat3 then begin
       tsLightingColors := TTabSheet.Create(pgcWeather);
       tsLightingColors.PageControl := pgcWeather;
       tsLightingColors.Caption := 'Directional Ambient Lighting Colors';
@@ -661,7 +670,7 @@ begin
 
       e1 := ElementByName(Weather, 'Directional Ambient Lighting Colors');
       for i := 0 to Pred(CountTimes) do begin
-        e2 := ElementByPath(ElementByIndex(e1, i), 'Ambient Colors\Colors');
+        e2 := ElementByPath(ElementByIndex(e1, i), 'Directional');
         for j := 0 to Pred(ElementCount(e2)) do begin
           if j = 0 then begin
             lbl := CreateLabel(sbx, 120 + i*iColorEditorWidth, 8, slColorTimes[i]);
@@ -706,7 +715,7 @@ begin
     btnCopyWeatherColors.Caption := 'Copy weather colors from';
     btnCopyWeatherColors.OnClick := btnCopyWeatherColorsClick;
 
-    if (wbGameMode = gmTES5) or (wbGameMode = gmFO4) then begin
+    if IsFormat3 then begin
       btnCopyLightingColors := TButton.Create(frm);
       btnCopyLightingColors.Parent := tsTools;
       btnCopyLightingColors.Left := 16; btnCopyLightingColors.Top := 76; btnCopyLightingColors.Width := 200;
@@ -776,7 +785,7 @@ end;
 function Initialize: integer;
 begin
   // game specific settings
-  if (wbGameMode = gmTES5) or (wbGameMode = gmFO4) then begin
+  if IsFormat3 then begin
     sCloudLayerSignatures := '00TX,10TX,20TX,30TX,40TX,50TX,60TX,70TX,80TX,90TX,:0TX,;0TX,<0TX,=0TX,>0TX,?0TX,@0TX,A0TX,B0TX,C0TX,D0TX,E0TX,F0TX,G0TX,H0TX,I0TX,J0TX,K0TX,L0TX';
   end
   else if (wbGameMode = gmFO3) or (wbGameMode = gmFNV) then begin
@@ -786,13 +795,13 @@ begin
     sCloudLayerSignatures := 'CNAM,DNAM';
   end
   else begin
-    MessageDlg(Format('Weather Editor for %s is not supported', [wbGameName]), mtInformation, [mbOk], 0)
+    MessageDlg(Format('Weather Editor for %s is not supported', [wbGameName]), mtInformation, [mbOk], 0);
     Result := 1;
     Exit;
   end;
   // time spans for colors
   if wbGameMode = gmFO4 then
-    sColorTimes := 'Sunrise,Day,Sunset,Night,Unknown,Unknown,Unknown,Unknown'
+    sColorTimes := 'Sunrise,Day,Sunset,Night,EarlySunrise,LateSunrise,EarlySunset,LateSunset'
   else
     sColorTimes := 'Sunrise,Day,Sunset,Night';
 end;

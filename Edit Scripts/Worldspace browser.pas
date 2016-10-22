@@ -96,7 +96,7 @@ begin
     Result := Format(texname, [aEditorID, aEditorID, aLODLevel, x, y]);
   end
   // Skyrim
-  else if aGame = gmTES5 then begin
+  else if (aGame = gmTES5) or (aGame = gmSSE) then begin
     if not aNormals then texname := 'textures\terrain\%s\%s.%d.%d.%d.dds'
                     else texname := 'textures\terrain\%s\%s.%d.%d.%d_n.dds';
     Result := Format(texname, [aEditorID, aEditorID, aLODLevel, x, y]);

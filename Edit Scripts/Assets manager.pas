@@ -604,9 +604,10 @@ begin
   if (wbGameMode <> gmFO3) and
      (wbGameMode <> gmFNV) and
      (wbGameMode <> gmTES4) and
-     (wbGameMode <> gmTES5)
+     (wbGameMode <> gmTES5) and
+     (wbGameMode <> gmSSE)
   then begin
-    MessageDlg('Sorry, script supports Skyrim, Oblivion and Fallouts only for now.', mtInformation, [mbOk], 0);
+    MessageDlg('Sorry, script supports Skyrim, SSE, Oblivion and Fallouts only for now.', mtInformation, [mbOk], 0);
     Result := 1;
     Exit;
   end;
@@ -697,8 +698,8 @@ begin
   ScanForAssets(ElementByPath(e, 'Destructable'));
   
   // GAME SPECIFIC ELEMENTS
-  // Skyrim (and later games?)
-  if wbGameMode = gmTES5 then begin
+  // Skyrim and SSE
+  if (wbGameMode = gmTES5) or (wbGameMode = gmSSE) then begin
   
     // papyrus scripts
     if optAsset and atPapyrusScript > 0 then
@@ -759,6 +760,9 @@ begin
 
     else if (sig = 'FURN') then
       ProcessAsset(ElementByPath(e, 'XMRK'))
+
+    else if (sig = 'LSCR') then
+      ProcessAsset(ElementByPath(e, 'MOD2'))
 
     else if (sig = 'MUST') then begin
       ProcessAsset(ElementByPath(e, 'ANAM'));
