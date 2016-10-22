@@ -653,7 +653,7 @@ begin
       ShowMessage('Application '+wbGameName+' does not currently support '+wbToolName);
       Exit;
     end;
-    if not (wbToolSource in [tsPlugins, tsSaves]) then begin
+    if not (wbToolSource in [tsPlugins { Needs better decoding , tsSaves}]) then begin
       ShowMessage('Application '+wbGameName+' does not currently support '+wbSourceName);
       Exit;
     end;
