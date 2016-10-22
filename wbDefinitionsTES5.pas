@@ -3822,7 +3822,8 @@ var
 //  Container2   : IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
   DataSubRec   : IwbSubrecord;
-  Flags        : Byte;
+  Flags8       : Byte;
+  Flags16      : Word;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -3838,11 +3839,21 @@ begin
       Exit;
 
     if Supports(Container.ElementBySignature['DATA'] , IwbSubRecord, DataSubRec) then begin
-      // expand itU8 flags to itU16
-      if DataSubRec.SubRecordHeaderSize = 1 then begin
-        Flags := PByte(DataSubRec.DataBasePtr)^;
-        DataSubRec.SetToDefault;
-        DataSubRec.NativeValue := Flags;
+      if IsSSE then begin
+        // expand itU16 flags to itU32 for SSE
+        if DataSubRec.SubRecordHeaderSize = 2 then begin
+          Flags16 := PWord(DataSubRec.DataBasePtr)^;
+          DataSubRec.SetToDefault;
+          DataSubRec.NativeValue := Flags16;
+        end
+      end
+      else begin
+        // expand itU8 flags to itU16 for Skyrim
+        if DataSubRec.SubRecordHeaderSize = 1 then begin
+          Flags8 := PByte(DataSubRec.DataBasePtr)^;
+          DataSubRec.SetToDefault;
+          DataSubRec.NativeValue := Flags8;
+        end;
       end;
       // 'Default' water height for exterior cells if not set (so water height will be taken from WRLD by game)
       if (not Container.ElementExists['XCLW']) and ((Integer(DataSubRec.NativeValue) and $02) <> 0) then begin
