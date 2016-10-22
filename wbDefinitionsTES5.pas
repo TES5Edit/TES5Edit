@@ -10238,6 +10238,7 @@ begin
     wbString(MOD2, 'Camera Path', 0, cpNormal, False)
   ]);
 
+if IsSSE then
   wbRecord(LTEX, 'Landscape Texture', [
     wbEDID,
     wbFormIDCk(TNAM, 'Texture Set', [TXST], False, cpNormal, False),
@@ -10250,6 +10251,18 @@ begin
     wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS])),
     // SSE
     wbUnknown(INAM)
+  ])
+else
+  wbRecord(LTEX, 'Landscape Texture', [
+    wbEDID,
+    wbFormIDCk(TNAM, 'Texture Set', [TXST], False, cpNormal, False),
+    wbFormIDCk(MNAM, 'Material Type', [MATT, NULL], False, cpNormal, True),
+    wbStruct(HNAM, 'Havok Data', [
+      wbInteger('Friction', itU8),
+      wbInteger('Restitution', itU8)
+    ], cpNormal, True),
+    wbInteger(SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True),
+    wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
   ]);
 
   wbRecord(LVLN, 'Leveled NPC', [
