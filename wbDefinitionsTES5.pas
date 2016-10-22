@@ -9674,22 +9674,38 @@ begin
     wbRArray('Property Data',
       wbByteArray(DNAM, 'Data', 0, cpIgnore, False, False, wbNeverShow)
     ),
-    wbStruct(DATA, 'Directional Material Data', [
-      wbFloat('Falloff Scale'),
-      wbFloat('Falloff Bias'),
-      wbFloat('Noise UV Scale'),
-      wbFloat('Material UV Scale'),
-      wbStruct('Projection Vector', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]),
-      wbFloat('Normal Dampener'),
-      wbFloatColors('Single Pass Color'),
-      wbInteger('Flags', itU32, wbFlags(['Single Pass'])),
-      // SSE
-      wbUnknown
-    ], cpNormal, True, nil, 5)
+    IsSSE(
+      wbStruct(DATA, 'Directional Material Data', [
+        wbFloat('Falloff Scale'),
+        wbFloat('Falloff Bias'),
+        wbFloat('Noise UV Scale'),
+        wbFloat('Material UV Scale'),
+        wbStruct('Projection Vector', [
+          wbFloat('X'),
+          wbFloat('Y'),
+          wbFloat('Z')
+        ]),
+        wbFloat('Normal Dampener'),
+        wbFloatColors('Single Pass Color'),
+        wbInteger('Flags', itU32, wbFlags(['Single Pass'])),
+        // SSE
+        wbUnknown
+      ], cpNormal, True, nil, 5),
+      wbStruct(DATA, 'Directional Material Data', [
+        wbFloat('Falloff Scale'),
+        wbFloat('Falloff Bias'),
+        wbFloat('Noise UV Scale'),
+        wbFloat('Material UV Scale'),
+        wbStruct('Projection Vector', [
+          wbFloat('X'),
+          wbFloat('Y'),
+          wbFloat('Z')
+        ]),
+        wbFloat('Normal Dampener'),
+        wbFloatColors('Single Pass Color'),
+        wbInteger('Flags', itU32, wbFlags(['Single Pass']))
+      ], cpNormal, True, nil, 5)
+    )
   ]);
 
   wbRecord(MOVT, 'Movement Type', [
