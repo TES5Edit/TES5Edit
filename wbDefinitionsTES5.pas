@@ -9689,7 +9689,10 @@ begin
         wbFloatColors('Single Pass Color'),
         wbInteger('Flags', itU32, wbFlags(['Single Pass'])),
         // SSE
-        wbUnknown
+        wbInteger('Flags', itU8, wbFlags([
+          {0x01} 'Snow'
+        ])),
+        wbByteArray('Unused', 3, cpIgnore)
       ], cpNormal, True, nil, 5),
       wbStruct(DATA, 'Directional Material Data', [
         wbFloat('Falloff Scale'),
@@ -10266,7 +10269,12 @@ if IsSSE then
     wbInteger(SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True),
     wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS])),
     // SSE
-    wbUnknown(INAM)
+    wbStruct(INAM, 'Direction Material', [
+      wbInteger('Flags', itU8, wbFlags([
+        {0x01} 'Is Snow'
+      ])),
+      wbByteArray('Unused', 3, cpIgnore)
+    ], cpNormal, True, nil, 2)
   ])
 else
   wbRecord(LTEX, 'Landscape Texture', [
