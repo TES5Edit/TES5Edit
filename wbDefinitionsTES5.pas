@@ -3840,9 +3840,12 @@ begin
 
     if Supports(Container.ElementBySignature['DATA'] , IwbSubRecord, DataSubRec) then begin
       if IsSSE then begin
-        // expand itU16 flags to itU32 for SSE
-        if DataSubRec.SubRecordHeaderSize = 2 then begin
-          Flags16 := PWord(DataSubRec.DataBasePtr)^;
+        // expand itU8 and itU16 flags to itU32 for SSE
+        if DataSubRec.SubRecordHeaderSize <= 2 then begin
+          if DataSubRec.SubRecordHeaderSize = 2 then
+            Flags16 := PWord(DataSubRec.DataBasePtr)^
+          else
+            Flags16 := PByte(DataSubRec.DataBasePtr)^;
           DataSubRec.SetToDefault;
           DataSubRec.NativeValue := Flags16;
         end
@@ -10257,7 +10260,6 @@ begin
     wbString(MOD2, 'Camera Path', 0, cpNormal, False)
   ]);
 
-if IsSSE then
   wbRecord(LTEX, 'Landscape Texture', [
     wbEDID,
     wbFormIDCk(TNAM, 'Texture Set', [TXST], False, cpNormal, False),
@@ -10269,24 +10271,9 @@ if IsSSE then
     wbInteger(SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True),
     wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS])),
     // SSE
-    wbStruct(INAM, 'Direction Material', [
-      wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'Is Snow'
-      ])),
-      wbByteArray('Unused', 3, cpIgnore)
-    ], cpNormal, True, nil, 2)
-  ])
-else
-  wbRecord(LTEX, 'Landscape Texture', [
-    wbEDID,
-    wbFormIDCk(TNAM, 'Texture Set', [TXST], False, cpNormal, False),
-    wbFormIDCk(MNAM, 'Material Type', [MATT, NULL], False, cpNormal, True),
-    wbStruct(HNAM, 'Havok Data', [
-      wbInteger('Friction', itU8),
-      wbInteger('Restitution', itU8)
-    ], cpNormal, True),
-    wbInteger(SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True),
-    wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
+    wbInteger(INAM, IsSSE('Flags', 'Unused'), itU32, wbFlags([
+      {0x01} 'Is Snow'
+    ]))
   ]);
 
   wbRecord(LVLN, 'Leveled NPC', [
