@@ -822,14 +822,6 @@ begin
   Result := wbGameMode = gmSSE;
 end;
 
-function IsSSE(const aDef1, aDef2: TwbIntType): TwbIntType; inline; overload;
-begin
-  if IsSSE then
-    Result := aDef1
-  else
-    Result := aDef2;
-end;
-
 function IsSSE(const aDef1, aDef2: String): String; inline; overload;
 begin
   if IsSSE then
@@ -3823,7 +3815,6 @@ var
   MainRecord   : IwbMainRecord;
   DataSubRec   : IwbSubrecord;
   Flags8       : Byte;
-  Flags16      : Word;
 begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -3839,24 +3830,11 @@ begin
       Exit;
 
     if Supports(Container.ElementBySignature['DATA'] , IwbSubRecord, DataSubRec) then begin
-      if IsSSE then begin
-        // expand itU8 and itU16 flags to itU32 for SSE
-        if DataSubRec.SubRecordHeaderSize <= 2 then begin
-          if DataSubRec.SubRecordHeaderSize = 2 then
-            Flags16 := PWord(DataSubRec.DataBasePtr)^
-          else
-            Flags16 := PByte(DataSubRec.DataBasePtr)^;
-          DataSubRec.SetToDefault;
-          DataSubRec.NativeValue := Flags16;
-        end
-      end
-      else begin
-        // expand itU8 flags to itU16 for Skyrim
-        if DataSubRec.SubRecordHeaderSize = 1 then begin
-          Flags8 := PByte(DataSubRec.DataBasePtr)^;
-          DataSubRec.SetToDefault;
-          DataSubRec.NativeValue := Flags8;
-        end;
+      // expand legacy itU8 flags to itU16
+      if DataSubRec.SubRecordHeaderSize = 1 then begin
+        Flags8 := PByte(DataSubRec.DataBasePtr)^;
+        DataSubRec.SetToDefault;
+        DataSubRec.NativeValue := Flags8;
       end;
       // 'Default' water height for exterior cells if not set (so water height will be taken from WRLD by game)
       if (not Container.ElementExists['XCLW']) and ((Integer(DataSubRec.NativeValue) and $02) <> 0) then begin
@@ -6703,7 +6681,7 @@ begin
     and replacing it with wbUnion generates error when setting for example persistent flag in REFR.
     So let it always be an integer
     <<<}
-    wbInteger(DATA, 'Flags', IsSSE(itU32, itU16), wbFlags([
+    wbInteger(DATA, 'Flags', itU16, wbFlags([
       {0x0001} 'Is Interior Cell',
       {0x0002} 'Has Water',
       {0x0004} 'Can''t Travel From Here',
