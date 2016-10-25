@@ -4344,6 +4344,173 @@ begin
   ], cpNormal, False, nil, 1);
 end;
 
+function wbStrToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  s: string;
+  i: integer;
+begin
+  // ignore anything after space or :
+  i := Pos(' ', aString);
+  if i = 0 then
+    i := Pos(':', aString);
+
+  if i <> 0 then
+    s := Copy(aString, 1, i - 1)
+  else
+    s := aString;
+
+  try
+    Result := StrToInt64(s)
+  except
+    Result := 0;
+  end;
+end;
+
+type
+  TFaceGenFeature = record
+    RaceID  : String;
+    Female  : Boolean;
+    Entries : array of record
+      Index: Cardinal;
+      Name : String;
+    end;
+  end;
+  PFaceGenFeature = ^TFaceGenFeature;
+
+var
+  // cache of race specific tint layers
+  TintLayers: array of TFaceGenFeature;
+
+function wbTintLayerToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+
+  function GetCached(const aRaceID: string; aFemale: boolean): PFaceGenFeature;
+  var
+    i: integer;
+  begin
+    Result := nil;
+    if Length(TintLayers) <> 0 then
+      for i := Low(TintLayers) to High(TintLayers) do
+        if (TintLayers[i].Female = aFemale) and (TintLayers[i].RaceID = aRaceID) then begin
+          Result := @TintLayers[i];
+          Break;
+        end;
+  end;
+
+var
+  Actor, Race       : IwbMainRecord;
+  Element           : IwbElement;
+  Container, Entry  : IwbContainerElementRef;
+  Female, Female2   : Boolean;
+  RaceID, EntryName : string;
+  s                 : string;
+  Cache             : PFaceGenFeature;
+  Index             : Cardinal;
+  i, j              : integer;
+begin
+  // defaults
+  case aType of
+    ctToStr, ctToEditValue: Result := IntToStr(aInt);
+    ctToSortKey: begin
+      Result := IntToHex64(aInt, 8);
+      Exit;
+    end;
+    ctCheck: Result := '<Warning: Could not resolve tint layer index ' + IntToStr(aInt) + '>';
+    ctEditType: Result := '';
+    ctEditInfo: Result := '';
+  end;
+
+  Actor := aElement.ContainingMainRecord;
+  if not Assigned(Actor) then
+    Exit;
+
+  Female := Actor.ElementEditValues['ACBS\Flags\Female'] = '1';
+
+  Element := Actor.ElementBySignature['RNAM'];
+  if not Assigned(Element) then
+    Exit;
+
+  Element := Element.LinksTo;
+  if not Supports(Element, IwbMainRecord, Race) then
+    Exit;
+
+  RaceID := Race.EditorID;
+
+  Cache := GetCached(RaceID, Female);
+
+  // cache not found, fill with data from RACE
+  if not Assigned(Cache) then begin
+
+    for i := 0 to 1 do begin
+
+      Female2 := i = 1;
+      SetLength(TintLayers, Succ(Length(TintLayers)));
+      Cache := @TintLayers[Pred(Length(TintLayers))];
+      Cache.RaceID := RaceID;
+      Cache.Female := Female2;
+
+      if not Female2 then
+        Element := Race.ElementByPath['Head Data\Male Head Data\Tint Masks']
+      else
+        Element := Race.ElementByPath['Head Data\Female Head Data\Tint Masks'];
+
+      if not Supports(Element, IwbContainerElementRef, Container) then
+        Continue;
+
+      SetLength(Cache.Entries, Container.ElementCount);
+
+      for j := 0 to Pred(Container.ElementCount) do begin
+        if not Supports(Container.Elements[j], IwbContainerElementRef, Entry) then
+          Break;
+        Cache.Entries[j].Index := Entry.ElementNativeValues['Tint Layer\Texture\TINI'];
+        s := Entry.ElementEditValues['Tint Layer\Texture\TINP'];
+        // add texture name
+        if s <> '' then
+          s := '[' + s + '] ';
+        s := s + ChangeFileExt(ExtractFileName(Entry.ElementEditValues['Tint Layer\Texture\TINT']), '');
+        Cache.Entries[j].Name := s;
+      end;
+    end;
+
+    Cache := GetCached(RaceID, Female);
+  end;
+
+  if not Assigned(Cache) then
+    Exit;
+
+  EntryName := '';
+  Index := Cardinal(aInt);
+  if Length(Cache.Entries) <> 0 then
+    for i := Low(Cache.Entries) to High(Cache.Entries) do
+      if Cache.Entries[i].Index = Index then begin
+        EntryName := Cache.Entries[i].Name;
+        Break;
+      end;
+
+  case aType of
+    ctToStr: begin
+      if EntryName <> '' then
+        Result := IntToStr(aInt) + ' ' + EntryName
+      else
+        Result := IntToStr(aInt) + ' <Tint layer index not found in ' + Race.Name + '>';
+    end;
+    ctCheck: begin
+      if EntryName = '' then
+        Result := '<Tint layer index ' + IntToStr(aInt) + ' not found in ' + Race.Name + '>'
+      else
+        Result := '';
+    end;
+    ctEditType: Result := 'ComboBox';
+    ctEditInfo: begin
+      Result := '';
+      if Length(Cache.Entries) <> 0 then
+        for i := Low(Cache.Entries) to High(Cache.Entries) do begin
+          if Result <> '' then Result := Result + ',';
+          Result := Result + '"' + IntToStr(Cache.Entries[i].Index) + ' ' + Cache.Entries[i].Name + '"';
+        end;
+    end;
+  end;
+end;
+
 
 var
   wbRecordFlagsFlags : IwbFlagsDef;
@@ -10732,8 +10899,7 @@ begin
     wbStruct(QNAM, 'Texture lighting', [
       wbFloat('Red', cpNormal, True, 255, 0),
       wbFloat('Green', cpNormal, True, 255, 0),
-      wbFloat('Blue', cpNormal, True, 255, 0),
-      wbFloat('Alpha')
+      wbFloat('Blue', cpNormal, True, 255, 0)
     ]),
     wbStruct(NAM9, 'Face morph', [
       wbFloat('Nose Long/Short'),
@@ -10764,7 +10930,7 @@ begin
     ]),
     wbRArrayS('Tint Layers',
       wbRStructSK([0], 'Layer', [
-        wbInteger(TINI, 'Tint Index', itU16),
+        wbInteger(TINI, 'Tint Index', itU16, wbTintLayerToStr, wbStrToInt),
         wbStruct(TINC, 'Tint Color', [
           wbInteger('Red', itU8),
           wbInteger('Green', itU8),
@@ -11461,7 +11627,7 @@ begin
 
   wbTints := wbRArray('Tint Masks', wbRStruct('Tint Assets', [
     wbRArray('Tint Layer', wbRStruct('Texture', [
-      wbInteger(TINI, 'Unknown', itU16),
+      wbInteger(TINI, 'Index', itU16),
       wbString(TINT, 'File Name'),
       {>>> When set to None TINP does not exist Needs routine to add when
       changing the Mask Type <<<}
@@ -11471,7 +11637,7 @@ begin
     wbRArray('Presets', wbRStruct('Preset', [
       wbFormIDCk(TINC, 'Color', [CLFM, NULL]),
 			wbFloat(TINV, 'Default Value'),
-      wbInteger(TIRS, 'Unknown', itU16)
+      wbInteger(TIRS, 'Index', itU16)
     ], []))
   ], []));
 
