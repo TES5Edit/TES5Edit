@@ -5597,9 +5597,8 @@ begin
       if Length(Cache.Entries) <> 0 then
         for i := Low(Cache.Entries) to High(Cache.Entries) do begin
           if Result <> '' then Result := Result + ',';
-          Result := Result + IntToHex(Cache.Entries[i].Index, 8) + ':' + Cache.Entries[i].Name;
+          Result := Result +  '"' + IntToHex(Cache.Entries[i].Index, 8) + ' ' + Cache.Entries[i].Name + '"';
         end;
-      Result := StringReplace(Result, ' ', '', [rfReplaceAll]);
     end;
   end;
 end;
@@ -5724,9 +5723,8 @@ begin
       if Length(Cache.Entries) <> 0 then
         for i := Low(Cache.Entries) to High(Cache.Entries) do begin
           if Result <> '' then Result := Result + ',';
-          Result := Result + IntToHex(Cache.Entries[i].Index, 8) + ':' + Cache.Entries[i].Name;
+          Result := Result +  '"' + IntToHex(Cache.Entries[i].Index, 8) + ' ' + Cache.Entries[i].Name + '"';
         end;
-      Result := StringReplace(Result, ' ', '', [rfReplaceAll]);
     end;
   end;
 end;
@@ -5867,9 +5865,8 @@ begin
       if Length(Cache.Entries) <> 0 then
         for i := Low(Cache.Entries) to High(Cache.Entries) do begin
           if Result <> '' then Result := Result + ',';
-          Result := Result + IntToStr(Cache.Entries[i].Index) + ':' + Cache.Entries[i].Name;
+          Result := Result + '"' + IntToStr(Cache.Entries[i].Index) + ' ' + Cache.Entries[i].Name + '"';
         end;
-      Result := StringReplace(Result, ' ', '', [rfReplaceAll]);
     end;
   end;
 end;
