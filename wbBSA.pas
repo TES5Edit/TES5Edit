@@ -446,7 +446,8 @@ begin
     IsCompressed := not IsCompressed;
   bfStream.Position := aOffset;
   if (bfVersion >= BSAHEADER_VERSION_SK) and ((bfFlags and BSAARCHIVE_PREFIXFULLFILENAMES) <> 0) then
-    aSize := aSize - Length(bfStream.ReadStringLen) - 1; // size - file name length - string length prefix
+    // size - file name length (no terminator) - string length prefix
+    aSize := aSize - Length(bfStream.ReadStringLen(False)) - 1;
   if IsCompressed then begin
     SetLength(Result, bfStream.ReadCardinal);
     aSize := aSize - 4;
