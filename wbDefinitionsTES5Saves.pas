@@ -342,33 +342,6 @@ end;
 
 { TES5saves }
 
-function SaveVersionDecider(aMinimum: Integer; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  aType : Integer;
-  Element : IwbElement;
-  Container: IwbDataContainer;
-begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Element := aElement;
-  while Assigned(Element.Container) do
-    Element := Element.Container;
-
-  if Supports(Element, IwbContainer, Container) then begin
-    Element := Container.ElementByPath['Save File Header\Header\Version'];
-    if Assigned(Element) then begin
-      aType := Element.NativeValue;
-      if aType>aMinimum then
-        Result := 1;
-    end;
-  end;
-end;
-
-function SaveVersionGreaterThan11Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := SaveVersionDecider(11, aBasePtr, aEndPtr, aElement);
-end;
-
 function SaveFormVersionDecider(aMinimum: Integer; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aType : Integer;
@@ -434,14 +407,8 @@ function ScreenShotDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aEleme
 var
   Element : IwbElement;
   Container: IwbDataContainer;
-  BitSize: Integer;
 begin
   Result := 0;
-  if 1 = SaveVersionGreaterThan11Decider(aBasePtr, aEndPtr, aElement) then
-    BitSize := 4
-  else
-    BitSize := 3;
-
   if not Assigned(aElement) then Exit;
   Element := aElement;
   while Assigned(Element.Container) do
@@ -453,7 +420,7 @@ begin
       Result := Element.NativeValue;
       Element := Container.ElementByPath['Save File Header\Header\Screenshot Height'];
       if Assigned(Element) then begin
-        Result := BitSize * Result * Element.NativeValue;
+        Result := 3 * Result * Element.NativeValue;
       end;
     end;
   end;
@@ -2035,27 +2002,6 @@ begin
     if aType in [1] then  // Actor or descendant
       if ChangedFlagXXDecider($0A6061840, aBasePtr, aEndPtr, aElement)<>0 then
         Result := 1;
-  end;
-end;
-
-function SaveHeaderUnk3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  aType : Integer;
-  Element : IwbElement;
-  Container: IwbDataContainer;
-begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Element := aElement;
-  Element := Element.Container;
-
-  if Supports(Element, IwbContainer, Container) then begin
-    Element := Container.ElementByName['Unk3'];
-    if Assigned(Element) then begin
-      aType := Element.NativeValue;
-      if aType = -1 then
-        Result := 1;
-    end;
   end;
 end;
 
@@ -6018,8 +5964,7 @@ begin
     wbFloat('Player LevelUp Experience'),
     wbByteArray('Save Time', 8),
     wbInteger('Screenshot Width', itU32),
-    wbInteger('Screenshot Height', itU32),
-    wbUnion('', SaveVersionGreaterThan11Decider, [wbNull, wbInteger('Unknown', itU16)])
+    wbInteger('Screenshot Height', itU32)
   ]);
 
   wbFileLocationTable := wbStruct('File Location Table', [
@@ -6041,26 +5986,10 @@ begin
     ,wbInteger('Header Size', itU32)
     ,wbHeader
     ,wbByteArray('Hidden: Screenshot Data', ScreenShotDataCounter)
-    ,wbUnion('', SaveVersionGreaterThan11Decider, [wbInteger('Form Version', itU8),
-      wbStruct('Unknown', [
-         wbByteArray('Unknown', 8)
-        ,wbByteArray('Unknown', 1)
-        ,wbInteger('Unk3', itS8)  // SSE ! with the 3 deviant saves I have, this works.
-        ,wbByteArray('Unknown', 1)
-        ,wbUnion('Unknown', SaveHeaderUnk3Decider, [ wbNull, wbInteger('Unknown', itU8) ])
-      ])
-     ])
-    ,wbUnion('', SaveVersionGreaterThan11Decider, [
-       wbStruct('', [
-         wbInteger('PluginInfo Size', itU32)
-        ,wbArray(wbFilePlugins, wbLenString('PluginName',  2), -4) // SSE ! There are non printable character where the plugin name should show.
-        ,wbFileLocationTable
-       ])
-      ,wbByteArray('PluginInfo', -1)  // SSE ! skip over the array of plugin names
-     ])
-    // SSE ! There is most likely something before FileLocationTable or the file location table elements have changed
-    ,wbByteArray('Unused', SkipCounter) // Lets you skip an arbitrary number of byte, Setable from CommandLine -bts:n
-    ,wbArray('Remaining',  WbByteArray('Unknown', wbBytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
+    ,wbInteger('Form Version', itU8)
+    ,wbInteger('PluginInfo Size', itU32)
+    ,wbArray(wbFilePlugins, wbLenString('PluginName', 2), -4)
+    ,wbFileLocationTable
   ]);
 
   wbSaveChapters := wbStruct('Save File Chapters', [
