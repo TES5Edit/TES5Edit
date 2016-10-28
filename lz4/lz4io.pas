@@ -454,7 +454,7 @@ end;
 function TPreallocatedMemoryStream.Write(const Buffer; Count: Integer): Longint;
 begin
   Result := Min(Count, Size-Position);
-  System.Move(Buffer, Pointer(Longint(Memory) + Position)^, Result);
+  System.Move(Buffer, Pointer(PByte(Memory) + Position)^, Result);
   Seek(Result, soCurrent);
 end;
 
