@@ -2391,6 +2391,20 @@ begin
     end;
 end;
 
+function wbSPGDFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  MainRecord: IwbMainRecord;
+begin
+  Result := 0;
+  if not Assigned(aElement) then
+    Exit;
+  if not Supports(aElement.Container, IwbMainRecord, MainRecord) then
+    Exit;
+  if MainRecord.Version < 44 then
+    Result := 1;
+end;
+
+
 {>>> For VMAD <<<}
 function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -7020,23 +7034,55 @@ begin
 
   wbRecord(SPGD, 'Shader Particle Geometry', [
     wbEDID,
-    wbStruct(DATA, 'Data', [
-      wbFloat('Gravity Velocity'),
-      wbFloat('Rotation Velocity'),
-      wbFloat('Particle Size X'),
-      wbFloat('Particle Size Y'),
-      wbFloat('Center Offset Min'),
-      wbFloat('Center Offset Max'),
-      wbFloat('Initial Rotation Range'),
-      wbInteger('# of Subtextures X', itU32),
-      wbInteger('# of Subtextures Y', itU32),
-      wbInteger('Type', itU32, wbEnum([
-        'Rain',
-        'Snow'
-      ])),
-      wbInteger('Box Size', itU32),
-      wbFloat('Particle Density')
-    ], cpNormal, True, nil, 10),
+    // FO4 SPGD format for Form Version 44
+    wbUnion(DATA, '', wbSPGDFormatDecider, [
+      wbStruct('Data', [
+        wbFloat('Gravity Velocity'),
+        wbByteArray('Unknown', 4),
+        wbFloat('Rotation Velocity'),
+        wbByteArray('Unknown', 4),
+        wbFloat('Particle Size X'),
+        wbFloat('Center Offset Min'),
+        wbFloat('Particle Size Y'),
+        wbByteArray('Unknown', 4),
+        wbFloat('Center Offset Min'),
+        wbByteArray('Unknown', 4),
+        wbFloat('Center Offset Max'),
+        wbByteArray('Unknown', 4),
+        wbFloat('Initial Rotation'),
+        wbByteArray('Unknown', 4),
+        wbInteger('# of Subtextures X', itU32),
+        wbByteArray('Unknown', 4),
+        wbInteger('# of Subtextures Y', itU32),
+        wbByteArray('Unknown', 4),
+        wbInteger('Type', itU32, wbEnum([
+          'Rain',
+          'Snow'
+        ])),
+        wbByteArray('Unknown', 4),
+        wbInteger('Box Size', itU32),
+        wbByteArray('Unknown', 4),
+        wbFloat('Particle Density'),
+        wbByteArray('Unknown', 4)
+      ], cpNormal, True),
+      wbStruct('Data', [
+        wbFloat('Gravity Velocity'),
+        wbFloat('Rotation Velocity'),
+        wbFloat('Particle Size X'),
+        wbFloat('Particle Size Y'),
+        wbFloat('Center Offset Min'),
+        wbFloat('Center Offset Max'),
+        wbFloat('Initial Rotation Range'),
+        wbInteger('# of Subtextures X', itU32),
+        wbInteger('# of Subtextures Y', itU32),
+        wbInteger('Type', itU32, wbEnum([
+          'Rain',
+          'Snow'
+        ])),
+        wbInteger('Box Size', itU32),
+        wbFloat('Particle Density')
+      ], cpNormal, True, nil, 10)
+    ]),
     wbString(ICON, 'Particle Texture')
   ]);
 

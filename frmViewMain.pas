@@ -3558,6 +3558,15 @@ begin
     WindowState := TWindowState(Settings.ReadInteger(Name, 'WindowState', Integer(WindowState)));
   end;
 
+  i := Settings.ReadInteger(Name, 'pnlNavWidth', pnlNav.Width);
+  if i < 50 then i := 50;
+  if i >= ClientWidth then i := ClientWidth - 50;
+  pnlNav.Width := i;
+
+  for i := 0 to Pred(vstNav.Header.Columns.Count) do
+    vstNav.Header.Columns[i].Width := Settings.ReadInteger(Name, 'vstNavColumnWidth' + IntToStr(i), vstNav.Header.Columns[i].Width);
+
+
   if wbToolSource in [tsSaves] then
     AddMessage('Loading saves list from : ' + wbSavePath)
   else if wbToolSource in [tsPlugins] then
@@ -4463,6 +4472,9 @@ procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
     end;
   end;
 
+var
+  i: Integer;
+
 begin
   Action := caFree;
   if LoaderStarted and not wbLoaderDone then begin
@@ -4486,6 +4498,10 @@ begin
   SaveChanged;
 
   if Assigned(Settings) then begin
+    Settings.WriteInteger(Name, 'pnlNavWidth', pnlNav.Width);
+    for i := 0 to Pred(vstNav.Header.Columns.Count) do
+      Settings.WriteInteger(Name, 'vstNavColumnWidth' + IntToStr(i), vstNav.Header.Columns[i].Width);
+
     if WindowState <> wsMinimized then
       Settings.WriteInteger(Name, 'WindowState', Integer(WindowState));
     if WindowState = wsNormal then begin
