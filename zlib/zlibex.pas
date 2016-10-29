@@ -1648,7 +1648,7 @@ end;
 
 {** stream routines *****************************************************************************}
 
-procedure ZCompressStream(inStream, outStream: TStream;
+{procedure ZCompressStream(inStream, outStream: TStream;
   level: TZCompressionLevel);
 var
   zstream: TZStreamRec;
@@ -1658,7 +1658,61 @@ begin
   ZCompressCheck(ZDeflateInit(zstream, level));
 
   ZInternalCompressStream(zstream, inStream, outStream);
+end;}
+
+procedure ZCompressStream(inStream, outStream: TStream;
+  level: TZCompressionLevel);
+const
+  bufferSize = 32768;
+var
+  zstream: TZStreamRec;
+  zresult: Integer;
+  inBuffer: array[0..bufferSize - 1] of Char;
+  outBuffer: array[0..bufferSize - 1] of Char;
+  inSize: Integer;
+  outSize: Integer;
+begin
+  FillChar(zstream, SizeOf(TZStreamRec), 0);
+
+  ZCompressCheck(DeflateInit(zstream, ZLevels[level]));
+
+  inSize := inStream.Read(inBuffer, bufferSize);
+
+  while inSize > 0 do
+  begin
+    zstream.next_in := @inBuffer[0];
+    zstream.avail_in := inSize;
+
+    repeat
+      zstream.next_out := @outBuffer[0];
+      zstream.avail_out := bufferSize;
+
+      ZCompressCheck(deflate(zstream, Z_NO_FLUSH));
+
+      // outSize := zstream.next_out - outBuffer;
+      outSize := bufferSize - zstream.avail_out;
+
+      outStream.Write(outBuffer, outSize);
+    until (zstream.avail_in = 0) and (zstream.avail_out > 0);
+
+    inSize := inStream.Read(inBuffer, bufferSize);
+  end;
+
+  repeat
+    zstream.next_out := @outBuffer[0];
+    zstream.avail_out := bufferSize;
+
+    zresult := ZCompressCheck(deflate(zstream, Z_FINISH));
+
+    // outSize := zstream.next_out - outBuffer;
+    outSize := bufferSize - zstream.avail_out;
+
+    outStream.Write(outBuffer, outSize);
+  until (zresult = Z_STREAM_END) and (zstream.avail_out > 0);
+
+  ZCompressCheck(deflateEnd(zstream));
 end;
+
 
 procedure ZCompressStream2(inStream, outStream: TStream;
   level: TZCompressionLevel; windowBits, memLevel: Integer;
