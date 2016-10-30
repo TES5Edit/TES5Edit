@@ -5331,7 +5331,7 @@ var
   end;
 
 var
-  LODPath, AtlasName, AtlasMapName: string;
+  LODPath, AtlasName, AtlasMapName, TexturesListFile: string;
   Section             : string;
   s, mat, m4, m8, m16, scl: string;
   F                   : TSearchRec;
@@ -5354,7 +5354,7 @@ var
   slLODMeshes, slLODTextures: TStringList;
   RefPos, RefRot      : TwbVector;
   RefCell, RefBlock   : TwbGridCell;
-  Scale, UVRange      : Single;
+  Scale, UVRange, LargeRefMinSize: Single;
   LOD4                : array of TwbLodTES5TreeBlock;
 begin
   Master := aWorldspace.MasterOrSelf;
@@ -5660,6 +5660,13 @@ begin
     slLODTextures := TStringList.Create;
     slLODTextures.Sorted := True;
     slLODTextures.Duplicates := dupIgnore;
+
+    if wbGameMode in [ gmSSE ] then
+      //read game setting fLargeRefMinSize from SSE Skyrim.esm
+      LargeRefMinSize := (Files[0].GetRecordByFormID($00000F92, True).ElementNativeValues['DATA - Value\Float'])
+    else
+      LargeRefMinSize := 512;
+
     try
     try
       for i := Low(REFRs) to High(REFRs) do begin
@@ -5703,6 +5710,11 @@ begin
         if (RefBlock.x < Lodset.SWCell.x) or (RefBlock.y < Lodset.SWCell.y) then
           Continue;
 
+        if REFRs[i].ElementExists['XSCL'] then
+          scl := REFRs[i].ElementEditValues['XSCL']
+        else
+          scl := '1.0';
+
         k := slCache.IndexOfObject(Pointer(StatRec.LoadOrderFormID));
         if k = -1 then begin
           s := '';
@@ -5727,6 +5739,18 @@ begin
                     if Pos('passthru', mat) > 0 then mat := 'PassThru';
               end else
                 mat := '';
+              // SSE adds -LargeRef to shape name and adds BSDistantObjectLargeRefExtraData with 1 byte = 1 for new uLargeRefLODGridSize
+              // a large reference is determined by OBND values, STAT and MSTT are known to be used for this feature
+              if wbGameMode in [ gmSSE ] then begin
+                RefPos.x := (StatRec.ElementNativeValues['OBND\X2'] - StatRec.ElementNativeValues['OBND\X1']) * scl;
+                RefPos.y := (StatRec.ElementNativeValues['OBND\Y2'] - StatRec.ElementNativeValues['OBND\Y1']) * scl;
+                RefPos.z := (StatRec.ElementNativeValues['OBND\Z2'] - StatRec.ElementNativeValues['OBND\Z1']) * scl;
+                if ((RefPos.x >= LargeRefMinSize) and (RefPos.y >= LargeRefMinSize) and (RefPos.z >= LargeRefMinSize)) or
+                   (RefPos.x >= 1024) or (RefPos.y >= 1024) or (RefPos.z >= 1024)
+                then
+                  mat := mat + '-LargeRef';
+              end;
+
               // a tab separated string of Editor ID, flags, material, full mesh and lod files
               s := StatRec.EditorID + #9 + IntToHex(StatRec.Flags._Flags, 8) + #9 +
                    mat + #9 + GetLODMeshName(StatRec, -1) + #9 +
@@ -5755,11 +5779,6 @@ begin
         else
           s := slCache[k];
 
-        if REFRs[i].ElementExists['XSCL'] then
-          scl := REFRs[i].ElementEditValues['XSCL']
-        else
-          scl := '1.0';
-
         s := IntToHex(REFRs[i].LoadOrderFormID , 8) + #9 +
              IntToHex(REFRs[i].Flags._Flags, 8) + #9 +
              REFRs[i].ElementEditValues['DATA\Position\X'] + #9 +
@@ -5785,49 +5804,40 @@ begin
       if slRefs.Count = 0 then
         PostAddMessage('<Note: Can not build Objects LOD for ' + aWorldspace.EditorID + ', no valid references found>')
       else begin
-        // creating lod textures atlas
+        // creating lod textures atlas part 1 - set file paths to be used in export file
         if Settings.ReadBool(Section, 'BuildAtlas', True) then begin
           UVRange := StrToFloatDef(Settings.ReadString(Section, 'AtlasTextureUVRange', '1.5'), 1.5);
-          wbGetUVRangeTexturesList(slLODMeshes, slLODTextures, UVRange);
-          if slLODTextures.Count > 1 then begin
-            // remove HD LOD texture if there
-            if wbGameMode in [ gmTES5, gmSSE ] then begin
-              i := slLODTextures.IndexOf(wbNormalizeResourceName(aWorldspace.WinningOverride.ElementEditValues['TNAM'], resTexture));
-              if i <> -1 then slLODTextures.Delete(i);
-            end;
-            // atlas file name and map name
-            if wbGameMode in [ gmTES5, gmSSE ] then
-              AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds'
-            else if wbGameMode in [gmFO3, gmFNV] then
-              AtlasName := wbOutputPath + 'textures\landscape\lod\' + aWorldspace.EditorID  + '\Blocks\' + aWorldspace.EditorID + 'ObjectsLOD.dds';
-            AtlasMapName := wbScriptsPath + 'LODGenAtlasMap.txt';
-            // make sure atlas folder exists
-            if not DirectoryExists(ExtractFilePath(AtlasName)) then
-              if not ForceDirectories(ExtractFilePath(AtlasName)) then
-                raise Exception.Create('Can not create output folder for atlas ' + ExtractFilePath(AtlasName));
-            PostAddMessage('[' + aWorldspace.EditorID + '] Building LOD textures atlas: ' + AtlasName);
-            Application.ProcessMessages;
-            wbBuildAtlasFromTexturesList(
-              slLODTextures,
-              Settings.ReadInteger(Section, 'AtlasTextureSize', 512),
-              Settings.ReadInteger(Section, 'AtlasTextureSize', 512), // tile size, same as texture size
-              Settings.ReadInteger(Section, 'AtlasWidth', 2048),
-              Settings.ReadInteger(Section, 'AtlasHeight', 2048),
-              AtlasName,
-              AtlasMapName
-            );
-          end;
+
+          // atlas file name and map name
+          if wbGameMode in [ gmTES5, gmSSE ] then
+            AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds'
+          else if wbGameMode in [gmFO3, gmFNV] then
+            AtlasName := wbOutputPath + 'textures\landscape\lod\' + aWorldspace.EditorID  + '\Blocks\' + aWorldspace.EditorID + 'ObjectsLOD.dds';
+          AtlasMapName := wbScriptsPath + 'LODGenAtlasMap.txt';
+          // textures list file name
+          if wbGameMode in [ gmSSE ] then
+            TexturesListFile := wbScriptsPath + 'LODGenTexturesList.txt';
+          // make sure atlas folder exists
+          if not DirectoryExists(ExtractFilePath(AtlasName)) then
+            if not ForceDirectories(ExtractFilePath(AtlasName)) then
+              raise Exception.Create('Can not create output folder for atlas ' + ExtractFilePath(AtlasName));
         end;
 
         // creating lodgen data file
+        // use same Export file for gathering textures list for texture atlas and to generate static LOD
         slExport.Add('GameMode=' + wbAppName);
         slExport.Add('Worldspace=' + aWorldspace.EditorID);
         slExport.Add('CellSW=' + Format('%d %d', [Lodset.SWCell.x, Lodset.SWCell.y]));
         if wbGameMode in [ gmTES5, gmSSE ] then begin
+          // LODGen ignores this texture when building textures list for atlas
           slExport.Add('TextureDiffuseHD=' + aWorldspace.WinningOverride.ElementEditValues['TNAM']);
           slExport.Add('TextureNormalHD=' + aWorldspace.WinningOverride.ElementEditValues['UNAM']);
         end;
-        if (AtlasMapName <> '') and FileExists(AtlasMapName) then begin
+
+        // list file that will be created by LODGen containing all textures that have UV inside UVRange, uses AtlasTolerance=
+        if (TexturesListFile <> '') then
+          slExport.Add('TexturesListFile=' + TexturesListFile);
+        if (AtlasMapName <> '') then begin
           slExport.Add('TextureAtlasMap=' + AtlasMapName);
           slExport.Add('AtlasTolerance=' + Format('%1.1f', [UVRange - 1.0]));
         end;
@@ -5868,6 +5878,54 @@ begin
         PostAddMessage('[' + aWorldspace.EditorID + '] Saving LODGen data: ' + s);
         slExport.SaveToFile(s);
 
+        // creating lod textures atlas part 2 - gather list of used textures and create atlas textures
+        if Settings.ReadBool(Section, 'BuildAtlas', True) then begin
+          if wbGameMode in [ gmSSE ] then begin
+	    // use LODGen.exe to build texture list, output file defined by TexturesListFile= in export file
+            PostAddMessage('[' + aWorldspace.EditorID + '] Gathering list of textures for atlas');
+            Application.ProcessMessages;
+            s := Format(wbScriptsPath + 'LODGen.exe "%s"', [s]);
+            // this overwrites GameMode set in export file
+            s := s + ' --GameMode textureslist';
+
+            Caption := 'Running LODGen, press ESC to abort';
+            PostAddMessage('[' + aWorldspace.EditorID + '] Running ' + s);
+            Application.ProcessMessages;
+
+            // execute LODGen.exe to generate texture list
+            k := ExecuteCaptureConsoleOutput(s);
+            if k <> 0 then
+              raise Exception.Create('LODGen process error, exit code ' + IntToStr(k));
+
+            // load textures from file created by LODGen.exe
+            if (TexturesListFile <> '') and FileExists(TexturesListFile) then
+              slLODTextures.LoadFromFile(TexturesListFile);
+          end
+          else
+            wbGetUVRangeTexturesList(slLODMeshes, slLODTextures, UVRange);
+
+          if slLODTextures.Count > 1 then begin
+            // remove HD LOD texture if there
+            if wbGameMode in [ gmTES5, gmSSE ] then begin
+              i := slLODTextures.IndexOf(wbNormalizeResourceName(aWorldspace.WinningOverride.ElementEditValues['TNAM'], resTexture));
+              if i <> -1 then slLODTextures.Delete(i);
+            end;
+
+            PostAddMessage('[' + aWorldspace.EditorID + '] Building LOD textures atlas: ' + AtlasName);
+            Application.ProcessMessages;
+            wbBuildAtlasFromTexturesList(
+              slLODTextures,
+              Settings.ReadInteger(Section, 'AtlasTextureSize', 512),
+              Settings.ReadInteger(Section, 'AtlasTextureSize', 512), // tile size, same as texture size
+              Settings.ReadInteger(Section, 'AtlasWidth', 2048),
+              Settings.ReadInteger(Section, 'AtlasHeight', 2048),
+              AtlasName,
+              AtlasMapName
+            );
+          end;
+        end;
+
+        s := wbScriptsPath + 'LODGen.txt';
         s := Format(wbScriptsPath + 'LODGen.exe "%s"', [s]);
         s := s + ' --dontFixTangents';
         s := s + ' --removeUnseenFaces';
