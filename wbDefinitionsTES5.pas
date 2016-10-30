@@ -7566,7 +7566,7 @@ begin
       wbFloat('Addon Models - Scale End'),
       wbFloat('Addon Models - Scale In Time'),
       wbFloat('Addon Models - Scale Out Time'),
-      wbFormIDCk('Ambient Sound', [SNDR, NULL]),
+      wbFormIDCk('Ambient Sound', [SNDR, SOUN, NULL]),
       wbByteColors('Fill/Texture Effect - Color Key 2'),
       wbByteColors('Fill/Texture Effect - Color Key 3'),
       wbStruct('Fill/Texture Effect - Color Key Scale/Time', [
@@ -7970,6 +7970,7 @@ begin
     wbDEST,
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       'On Local Map',
+      'Unknown 1',
       'Unknown 2'
     ]), cpNormal, True),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR])
@@ -8242,7 +8243,8 @@ begin
   wbRecord(NAVM, 'Navigation Mesh',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00040000} 18, 'Compressed',
-      {0x04000000} 26, 'AutoGen'
+      {0x04000000} 26, 'AutoGen',
+      {0x80000000} 31, 'NavmeshGenCell'
     ]), [18]), [
     wbEDID,
     wbNVNM,
@@ -8926,8 +8928,8 @@ begin
     wbDODT,
     wbFormIDCk(DNAM, 'Texture Set', [TXST]),
     wbFormIDCk(ENAM, 'Secondary Texture Set', [TXST]),
-    wbFormIDCk(SNAM, 'Sound 1', [SNDR, NULL]),
-    wbFormIDCk(NAM1, 'Sound 2', [SNDR, NULL]),
+    wbFormIDCk(SNAM, 'Sound 1', [SNDR, SOUN, NULL]),
+    wbFormIDCk(NAM1, 'Sound 2', [SNDR, SOUN, NULL]),
     wbFormIDCk(NAM2, 'Hazard', [HAZD, NULL])
   ]);
 
@@ -9379,6 +9381,7 @@ begin
           Sig2Int('HBFM'), 'Help - Flying Mount',
           Sig2Int('HBTL'), 'Help - Target Lock',
           Sig2Int('HBAT'), 'Help - Attack Target',
+          Sig2Int('MHFL'), 'Help - Mods',
           Sig2Int('LSIS'), 'Imagespace: Load screen',
           Sig2Int('WMDA'), 'Keyword - Weapon Material Daedric',
           Sig2Int('WMDR'), 'Keyword - Weapon Material Draugr',
@@ -9509,8 +9512,9 @@ begin
       {0x02} 'Abrupt Transition',
       {0x04} 'Cycle Tracks',
       {0x08} 'Maintain Track Order',
-      {0x10} 'Unknown 5',
-      {0x20} 'Ducks Current Track'
+      {0x10} 'Unknown 4',
+      {0x20} 'Ducks Current Track',
+      {0x40} IsSSE('Doesn''t Queue', 'Unknown 6')
     ]), cpNormal, True),
     wbStruct(PNAM, 'Data', [
       wbInteger('Priority', itU16),
@@ -13374,7 +13378,7 @@ begin
     wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
     wbRArray('Sounds',
       wbStruct(SNAM, 'Sound', [
-        wbFormIDCK('Sound', [SNDR, NULL]),
+        wbFormIDCK('Sound', [SNDR, SOUN, NULL]),
         wbInteger('Type', itU32, wbEnum([
           {0x01} 'Default',
           {0x02} 'Precipitation',
