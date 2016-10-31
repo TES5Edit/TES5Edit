@@ -531,7 +531,7 @@ begin
   if bfStream.ReadSignature <> 'BSA' then
     raise Exception.Create(bfFileName + ' is not a valid BSA file');
   bfVersion := bfStream.ReadCardinal;
-  if not bfVersion in [BSAHEADER_VERSION_OB, BSAHEADER_VERSION_SK] then
+  if not (bfVersion in [BSAHEADER_VERSION_OB, BSAHEADER_VERSION_SK, BSAHEADER_VERSION_SSE]) then
     raise Exception.Create(bfFileName + ' has unknown version: ' + IntToStr(bfVersion) );
   bfOffset := bfStream.ReadCardinal;
   if bfOffset <> $24 then
