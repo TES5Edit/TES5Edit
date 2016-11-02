@@ -1518,8 +1518,18 @@ type
     function GetChapterName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
   end;
 
+  TwbStructCompression = (
+    scNone,
+    scZComp,
+    scLZComp
+  );
+
   IwbStructZDef = interface(IwbStructCDef) // Compressible structure !!! NOT SAFE FOR EDIT AT THE MOMEMNT !!!
     ['{8ED8E461-E4BB-494E-8A3B-B352A245B9A0}']
+  end;
+
+  IwbStructLZDef = interface(IwbStructZDef) // Compressible structure using LZ4 !!! NOT SAFE FOR EDIT AT THE MOMEMNT !!!
+    ['{A5AB100F-83CA-4B53-B3CD-2BF926210900}']
   end;
 
   IwbIntegerDefFormater = interface(IwbDef)
@@ -2728,6 +2738,21 @@ function wbStructZ(const aName                : string;
                          aAfterSet            : TwbAfterSetCallback = nil;
                          aGetCP               : TwbGetConflictPriority = nil)
                                               : IwbStructDef; overload;
+
+function wbStructLZ(const aName                : string;
+                          aSizing              : TwbSizeCallback;
+                          aGetChapterType      : TwbGetChapterTypeCallback;
+                          aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
+                          aGetChapterName      : TwbGetChapterNameCallback;
+                    const aMembers             : array of IwbValueDef;
+                          aPriority            : TwbConflictPriority = cpNormal;
+                          aRequired            : Boolean = False;
+                          aDontShow            : TwbDontShowCallback = nil;
+                          aOptionalFromElement : Integer = -1;
+                          aAfterLoad           : TwbAfterLoadCallback = nil;
+                          aAfterSet            : TwbAfterSetCallback = nil;
+                          aGetCP               : TwbGetConflictPriority = nil)
+                                               : IwbStructDef; overload;
 
 function wbRStruct(const aName           : string;
                    const aMembers        : array of IwbRecordMemberDef;
@@ -4570,6 +4595,9 @@ type
   TwbStructZDef = class(TwbStructCDef, IwbStructZDef)
   end;
 
+  TwbStructLZDef = class(TwbStructCDef, IwbStructLZDef)
+  end;
+
   TwbIntegerDefFormater = class(TwbDef, IwbIntegerDefFormater)
   protected
     constructor Clone(const aSource: TwbDef); override;
@@ -6282,6 +6310,24 @@ function wbStructZ(const aName                : string;
                                               : IwbStructDef; overload;
 begin
   Result := TwbStructZDef.Create(aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName, agetChapterName, aGetCP);
+end;
+
+function wbStructLZ(const aName                : string;
+                          aSizing              : TwbSizeCallback;
+                          aGetChapterType      : TwbGetChapterTypeCallback;
+                          aGetChapterTypeName  : TwbGetChapterTypeNameCallback;
+                          aGetChapterName      : TwbGetChapterNameCallback;
+                    const aMembers             : array of IwbValueDef;
+                          aPriority            : TwbConflictPriority = cpNormal;
+                          aRequired            : Boolean = False;
+                          aDontShow            : TwbDontShowCallback = nil;
+                          aOptionalFromElement : Integer = -1;
+                          aAfterLoad           : TwbAfterLoadCallback = nil;
+                          aAfterSet            : TwbAfterSetCallback = nil;
+                          aGetCP               : TwbGetConflictPriority = nil)
+                                               : IwbStructDef; overload;
+begin
+  Result := TwbStructLZDef.Create(aPriority, aRequired, aName, aMembers, [], [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aSizing, aGetChapterType, aGetChapterTypeName, agetChapterName, aGetCP);
 end;
 
 function wbRStruct(const aName           : string;
