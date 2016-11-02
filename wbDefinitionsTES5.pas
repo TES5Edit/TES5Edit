@@ -3391,8 +3391,14 @@ begin
     if not Supports(aElement, IwbMainRecord, MainRecord) then
       Exit;
 
+    // not used in Skyrim
     if MainRecord.ElementExists['Unused RNAM'] then
       MainRecord.RemoveElement('Unused RNAM');
+
+    // used in SSE but remove from the game master to speed up worldspace browsing since it is huge
+    // and the game master is never saved anyway
+    if IsSSE and (MainRecord._File.LoadOrder = 0) then
+      MainRecord.RemoveElement('Large References');
 
     // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
     // CK can occasionally set them wrong, so make a warning
@@ -12811,7 +12817,7 @@ begin
     ], [ONAM])),
     wbArray(ONAM, 'Overridden Forms',
       wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-      0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
+      0, nil, nil, cpNormal, False{, wbTES4ONAMDontShow}),
     wbByteArray(SCRN, 'Screenshot'),
     wbUnknown(INTV),
     wbUnknown(INCC)
@@ -13171,19 +13177,18 @@ begin
       {0x00080000} 19, 'Can''t Wait'
     ])), [
     wbEDID,
-    wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False),
-    {wbRArray(IsSSE('Large References', 'Unused RNAM'),
+    wbRArray(IsSSE('Large References', 'Unused RNAM'),
       wbStruct(RNAM, 'Grid', [
-        wbInteger('Y', itS16),
-        wbInteger('X', itS16),
+        wbInteger('Y', itS16, nil, cpIgnore),
+        wbInteger('X', itS16, nil, cpIgnore),
         wbArray('References', wbStruct('Reference', [
-          wbFormIDCk('Ref', [REFR]),
-          wbInteger('Y', itS16),
-          wbInteger('X', itS16)
+          wbFormIDCk('Ref', [REFR], False, cpIgnore),
+          wbInteger('Y', itS16, nil, cpIgnore),
+          wbInteger('X', itS16, nil, cpIgnore)
         ]), -1)
       ]),
-      cpIgnore, False
-    ),}
+      cpIgnore, False, nil, nil, wbNeverShow
+    ),
     wbMHDT,
     wbFULL,
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
