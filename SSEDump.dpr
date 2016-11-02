@@ -45,7 +45,8 @@ uses
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
   wbDefinitionsTES4Saves in 'wbDefinitionsTES4Saves.pas',
   wbDefinitionsTES5 in 'wbDefinitionsTES5.pas',
-  wbDefinitionsTES5Saves in 'wbDefinitionsTES5Saves.pas';
+  wbDefinitionsTES5Saves in 'wbDefinitionsTES5Saves.pas',
+  lz4 in 'lz4\lz4.pas';
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
