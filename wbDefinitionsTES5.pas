@@ -13171,8 +13171,19 @@ begin
       {0x00080000} 19, 'Can''t Wait'
     ])), [
     wbEDID,
-    {>>> leftover from earlier CK versions <<<}
-    wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False{, wbNeverShow}),
+    wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False),
+    {wbRArray(IsSSE('Large References', 'Unused RNAM'),
+      wbStruct(RNAM, 'Grid', [
+        wbInteger('Y', itS16),
+        wbInteger('X', itS16),
+        wbArray('References', wbStruct('Reference', [
+          wbFormIDCk('Ref', [REFR]),
+          wbInteger('Y', itS16),
+          wbInteger('X', itS16)
+        ]), -1)
+      ]),
+      cpIgnore, False
+    ),}
     wbMHDT,
     wbFULL,
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
