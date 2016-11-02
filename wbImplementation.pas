@@ -31,7 +31,8 @@ uses
   {$IFDEF USE_CODESITE}
   CodeSiteLogging,
   {$ENDIF}
-  Zlibex;
+  Zlibex,
+  lz4;
 
 const
   DefaultVCS1 = 0;
@@ -1267,13 +1268,14 @@ type
   protected
     szCompressedSize   : Integer;
     szUncompressedSize : Cardinal;
+    szCompressedType   : TwbStructCompression;
     procedure Init; override;
     procedure Reset; override;
 
     function GetElementType: TwbElementType; override;
     procedure DecompressIfNeeded;
-    function GetIsCompressed: Boolean;
-    property IsCompressed: Boolean read GetIsCompressed;
+    function GetIsCompressed: TwbStructCompression;
+    property IsCompressed: TwbStructCompression read GetIsCompressed;
   end;
 
   TwbFileHeader = class(TwbStruct, IwbFileHeader)
@@ -14334,18 +14336,29 @@ begin
 end;
 
 procedure TwbStruct.DecompressIfNeeded;
+var
+  sc : TwbStructCompression;
 begin
-  if IsCompressed then try
+  sc := IsCompressed;
+  if sc <> scNone then try
     InitDataPtr; // reset...
 
     SetLength(dcDataStorage, szUncompressedSize );
 
-    DecompressToUserBuf(
-      Pointer(Cardinal(dcDataBasePtr)),
-      GetDataSize,
-      @dcDataStorage[0],
-      PCardinal(dcDataBasePtr)^
-    );
+    case sc of
+      scNone: Assert(False);  // Getting there would be very funny :)
+      scZComp:
+        DecompressToUserBuf(
+          Pointer(Cardinal(dcDataBasePtr)),
+          GetDataSize,
+          @dcDataStorage[0],
+          PCardinal(dcDataBasePtr)^
+        );
+      scLZComp:
+        LZ4_decompress_safe(Pointer(Cardinal(dcDataBasePtr)), @dcDataStorage[0], GetDataSize, szUncompressedSize);
+      else
+        Assert(False);  // Something hasn't been updated yet.
+    end;
 
     dcDataEndPtr := Pointer( Cardinal(@dcDataStorage[0]) + szUncompressedSize );
     dcDataBasePtr := @dcDataStorage[0];
@@ -14355,16 +14368,21 @@ begin
   end;
 end;
 
-function TwbStruct.GetIsCompressed: Boolean;
+function TwbStruct.GetIsCompressed: TwbStructCompression;
 var
   szDef : IwbStructZDef;
+  lzDef : IwbStructLZDef;
 begin
   if (szCompressedSize = 0) then
-    if Supports(vbValueDef, IwbStructZDef, szDef)  then
-      szUncompressedSize := szDef.GetSizing(GetDataBasePtr, GetDataEndPtr, Self, szCompressedSize)
-    else
+    if Supports(vbValueDef, IwbStructZDef, szDef)  then begin
+      szUncompressedSize := szDef.GetSizing(GetDataBasePtr, GetDataEndPtr, Self, szCompressedSize);
+      if szUncompressedSize <> 0 then szCompressedType := scZComp;
+    end else if Supports(vbValueDef, IwbStructLZDef, lzDef)  then begin
+      szUncompressedSize := lzDef.GetSizing(GetDataBasePtr, GetDataEndPtr, Self, szCompressedSize);
+      if szUncompressedSize <> 0 then szCompressedType := scLZComp;
+    end else
       szCompressedSize := -1;
-  Result := szUncompressedSize <> 0
+  Result := szCompressedType;
 end;
 
 { TwbUnion }

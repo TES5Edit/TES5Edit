@@ -342,6 +342,33 @@ end;
 
 { TES5saves }
 
+function SaveVersionDecider(aMinimum: Integer; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aType : Integer;
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := aElement;
+  while Assigned(Element.Container) do
+    Element := Element.Container;
+
+  if Supports(Element, IwbContainer, Container) then begin
+    Element := Container.ElementByPath['Save File Header\Header\Version'];
+    if Assigned(Element) then begin
+      aType := Element.NativeValue;
+      if aType>aMinimum then
+        Result := 1;
+    end;
+  end;
+end;
+
+function SaveVersionGreaterThan11Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := SaveVersionDecider(11, aBasePtr, aEndPtr, aElement);
+end;
+
 function SaveFormVersionDecider(aMinimum: Integer; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aType : Integer;
@@ -407,8 +434,14 @@ function ScreenShotDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aEleme
 var
   Element : IwbElement;
   Container: IwbDataContainer;
+  BitSize: Integer;
 begin
   Result := 0;
+  if 1 = SaveVersionGreaterThan11Decider(aBasePtr, aEndPtr, aElement) then
+    BitSize := 4
+  else
+    BitSize := 3;
+
   if not Assigned(aElement) then Exit;
   Element := aElement;
   while Assigned(Element.Container) do
@@ -420,7 +453,7 @@ begin
       Result := Element.NativeValue;
       Element := Container.ElementByPath['Save File Header\Header\Screenshot Height'];
       if Assigned(Element) then begin
-        Result := 3 * Result * Element.NativeValue;
+        Result := BitSize * Result * Element.NativeValue;
       end;
     end;
   end;
@@ -1356,6 +1389,76 @@ function GlobalDataSizer(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: Iw
 begin
   CompressedSize := PCardinal(Pointer(Cardinal(aBasePtr)+SizeOf(cardinal)))^ + 2*SizeOf(Cardinal);
   Result := CompressedSize;
+end;
+
+function SaveDataSizer(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; var CompressedSize: Integer): Cardinal;
+const
+  OffsetLength = -8;
+var
+  Element    : IwbElement;
+  Container  : IwbDataContainer;
+  BasePtr    : Pointer;
+begin
+  Result := 0;
+  Element := aElement;
+
+  if Supports(Element, IwbDataContainer, Container) then begin
+    BasePtr := Container.DataBasePtr;
+    Element := Container.ElementByPath['Uncompressed Size'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue;
+    end else with Container do if IsValidOffset(BasePtr, DataEndPtr, OffsetLength) then begin // we are part a proper structure
+      aBasePtr := Pointer(Cardinal(BasePtr) + OffsetLength);
+      Result := PCardinal(aBasePtr)^;
+    end;
+    Element := Container.ElementByPath['Compressed Size'];
+    if Assigned(Element) then begin
+      CompressedSize := Element.NativeValue;
+    end else with Container do if IsValidOffset(BasePtr, DataEndPtr, OffsetLength + 4) then begin // we are part a proper structure
+      aBasePtr := Pointer(Cardinal(BasePtr) + OffsetLength + 4);
+      CompressedSize := PCardinal(aBasePtr)^;
+    end;
+  end else
+    CompressedSize := 0;
+end;
+
+function LZSaveSizer(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; var CompressedSize: Integer): Cardinal;
+var
+  Struct : IwbStructCDef;
+  i      : Integer;
+  Size   : Int64;
+begin
+  CompressedSize := 0;
+  if Assigned(aElement) and Supports(aElement.ValueDef, IwbStructCDef, Struct) then
+    for i := 0 to Pred(Struct.MemberCount) do begin
+      Size := Struct.Members[i].Size[aBasePtr, aEndPtr, aElement];
+      if Size<>High(Integer) then begin
+        aBasePtr := Pointer(Cardinal(aBasePtr) + Size);
+        Inc(CompressedSize, Size);
+      end;
+    end;
+  Result := 0;
+end;
+
+function SaveDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+const
+  OffsetLength = -10;
+var
+  Element    : IwbElement;
+  Container  : IwbDataContainer;
+begin
+  Result := 0;
+  Element := aElement;
+  while Assigned(Element.Container) do
+    Element := Element.Container;
+
+  if Supports(Element, IwbContainer, Container) then begin
+    Element := Container.ElementByPath['Save File Header\Header\Compression Type'];
+    if Assigned(Element) then begin
+      Result := Element.NativeValue;
+      if not (Result = 1) and not (Result = 2) then Result := 0;
+    end;
+   end;
 end;
 
 function ChangedFormDataSizer(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; var CompressedSize: Integer): Cardinal;
@@ -2310,6 +2413,7 @@ end;
 procedure DefineTES5SavesS;  // This is all based on current UESP, and HexDump, Triria TESSaveLib and the Runtime
 var
   wbHeader                   : IwbStructDef;
+  wbSaveContent              : IwbStructDef;
   wbFileLocationTable        : IwbStructDef;
   wbGlobalData               : IwbStructDef;
   wbChangedForm              : IwbStructDef;
@@ -5964,7 +6068,10 @@ begin
     wbFloat('Player LevelUp Experience'),
     wbByteArray('Save Time', 8),
     wbInteger('Screenshot Width', itU32),
-    wbInteger('Screenshot Height', itU32)
+    wbInteger('Screenshot Height', itU32),
+    wbUnion('', SaveVersionGreaterThan11Decider, [wbNull,
+      wbInteger('Compression Type', itU16, wbEnum(['None', 'ZLib', 'LZ4']))
+    ])
   ]);
 
   wbFileLocationTable := wbStruct('File Location Table', [
@@ -5979,18 +6086,7 @@ begin
     wbInteger('Global Data Table 3 Count', itU32),
     wbInteger('Changed Forms Count', itU32),
     wbByteArray('Unused', 15 * 4)
-  ]);
-
-  wbSaveHeader := wbStruct('Save File Header', [
-     wbString('Magic', 13)
-    ,wbInteger('Header Size', itU32)
-    ,wbHeader
-    ,wbByteArray('Hidden: Screenshot Data', ScreenShotDataCounter)
-    ,wbInteger('Form Version', itU8)
-    ,wbInteger('PluginInfo Size', itU32)
-    ,wbArray(wbFilePlugins, wbLenString('PluginName', 2), -4)
-    ,wbFileLocationTable
-  ]);
+  ]); // SSE : still 100 bytes total, so should not have changed
 
   wbSaveChapters := wbStruct('Save File Chapters', [
      wbArray('Global Data 1', wbGlobalData, [], GlobalData1Counter)
@@ -6003,6 +6099,40 @@ begin
     ,wbArray('Unknown Table', wbLenString('Unknown', 2), -1)
 //    ,wbByteArray('Unused', SkipCounter) // Lets you skip an arbitrary number of byte, Setable from CommandLine -bts:n
 //    ,wbArray('Remaining',  WbByteArray('Unknown', wbBytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
+  ]);
+
+  wbSaveContent := wbStruct('Content', [
+     wbInteger('Form Version', itU8)
+    ,wbInteger('PluginInfo Size', itU32)
+    ,wbArray(wbFilePlugins, wbLenString('PluginName',  2), -4) // SSE ! There are non printable character where the plugin name should show.
+    ,wbFileLocationTable
+    ,wbSaveChapters
+  ]);
+
+  wbSaveHeader := wbStruct('Save File Header', [
+     wbString('Magic', 13)
+    ,wbInteger('Header Size', itU32)
+    ,wbHeader
+    ,wbByteArray('Hidden: Screenshot Data', ScreenShotDataCounter)
+    ,wbUnion('', SaveVersionGreaterThan11Decider, [
+       wbSaveContent
+      ,wbStructC('Compressed',
+         LZSaveSizer
+        ,nil
+        ,nil
+        ,nil
+        ,[
+           wbInteger('Uncompressed Size', itU32)
+          ,wbInteger('Compressed Size', itU32)
+          ,wbUnion('Data', SaveDataDecider, [
+             wbSaveContent
+            ,wbStructZ ('Data', SaveDataSizer, nil, nil, nil, [ wbSaveContent ])
+            ,wbStructLZ('Data', SaveDataSizer, nil, nil, nil, [ wbSaveContent ])
+           ])
+         ])
+     ])
+    ,wbByteArray('Unused', SkipCounter) // Lets you skip an arbitrary number of byte, Setable from CommandLine -bts:n
+    ,wbArray('Remaining',  WbByteArray('Unknown', wbBytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
   ]);
 
   wbCoSaveHeader := wbStruct('CoSave File Header', [
