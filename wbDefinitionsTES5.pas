@@ -5652,7 +5652,7 @@ begin
   wbOwnership := wbRStruct('Ownership', [
     wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]),
     wbInteger(XRNK, 'Faction rank', itS32)
-  ], []);
+  ], [XRGD]);
 
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 end;
