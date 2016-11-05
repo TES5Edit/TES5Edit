@@ -3642,18 +3642,21 @@ begin
                 end else
                   CheckListBox1.Checked[j] := True;
               end;
-          end else if wbToolSource in [tsPlugins] then begin
+          end
+
+          else if wbToolSource in [tsPlugins] then begin
             sl2 := TStringList.Create;
             try
               // check active files using the game's plugins list
               if FileExists(wbPluginsFileName) then
                 sl.LoadFromFile(wbPluginsFileName);
               RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl, sl2);
-              if (wbGameMode >= gmFO4) and (sl2.Count > 0) then begin // use starred files as active files...
+              // use starred files as active files in FO4 and SSE
+              // if no starred files present, then nothing will be checked
+              if (wbGameMode in [gmFO4, gmSSE]){ and (sl2.Count > 0)} then begin
                 sl.Clear;
-                for i := 0 to Pred(sl2.Count) do
-                  sl.Add(sl2[i]);
-                end;
+                sl.AddStrings(sl2);
+              end;
             finally
               sl2.Free;
             end;
@@ -15673,6 +15676,10 @@ begin
   end
   else if SameText(Identifier, 'wbGameName') and (Args.Count = 0) then begin
     Value := wbGameName;
+    Done := True;
+  end
+  else if SameText(Identifier, 'wbGameName2') and (Args.Count = 0) then begin
+    Value := wbGameName2;
     Done := True;
   end
   else if SameText(Identifier, 'wbAppName') and (Args.Count = 0) then begin

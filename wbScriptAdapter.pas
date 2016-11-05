@@ -654,6 +654,15 @@ begin
     Element.MarkModifiedRecursive;
 end;
 
+procedure IwbElement_SetToDefault(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Element.SetToDefault;
+end;
+
+
 procedure _wbCopyElementToFile(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -1579,6 +1588,11 @@ begin
   Value := wbCRC32Data(Args.Values[0]);
 end;
 
+procedure Misc_wbCRC32Resource(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbCRC32Data(wbContainerHandler.OpenResourceData(Args.Values[0], Args.Values[1]));
+end;
+
 procedure Misc_wbCRC32File(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := wbCRC32File(string(Args.Values[0]));
@@ -1841,6 +1855,7 @@ begin
     AddFunction(cUnit, 'ReportRequiredMasters', IwbElement_ReportRequiredMasters, 4, [varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'BuildRef', IwbElement_BuildRef, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'MarkModifiedRecursive', IwbElement_MarkModifiedRecursive, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'SetToDefault', IwbElement_SetToDefault, 1, [varEmpty], varEmpty);
 
     { IwbContainer }
     AddFunction(cUnit, 'GetElementEditValues', IwbContainer_GetElementEditValues, 2, [varEmpty, varString], varEmpty);
@@ -1966,6 +1981,7 @@ begin
     AddFunction(cUnit, 'wbGridCellToGroupLabel', Misc_wbGridCellToGroupLabel, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbIsInGridCell', Misc_wbIsInGridCell, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbCRC32Data', Misc_wbCRC32Data, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbCRC32Resource', Misc_wbCRC32Resource, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbCRC32File', Misc_wbCRC32File, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbSHA1Data', Misc_wbSHA1Data, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbSHA1File', Misc_wbSHA1File, 1, [varEmpty], varEmpty);
