@@ -46,7 +46,12 @@ uses Windows;
 
 type
     ppByte = ^pByte;
+    {$IFDEF WIN32}
     size_t = Cardinal;
+    {$ENDIF WIN32}
+    {$IFDEF WIN64}
+    size_t = UInt64;
+    {$ENDIF WIN64}
     psize_t = ^size_t;
 
 const
