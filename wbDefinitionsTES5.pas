@@ -10497,8 +10497,7 @@ begin
           wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
         ]),
 				wbCOED
-      ], []),
-    cpNormal, True, nil, wbLVLOsAfterSet),
+      ], []), cpNormal, False, nil, wbLVLOsAfterSet),
     wbMODL
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
