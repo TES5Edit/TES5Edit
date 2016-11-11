@@ -12831,8 +12831,7 @@ begin
           wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
         ]),
 				wbCOED
-      ], []),
-    cpNormal, True, nil, wbLVLOsAfterSet),
+      ], []), cpNormal, False, nil, wbLVLOsAfterSet),
     wbArrayS(LLKC, 'Filter Keyword Chances',
       wbStructSK([0], 'Filter', [
         wbFormIDCk('Keyword', [KYWD]),
