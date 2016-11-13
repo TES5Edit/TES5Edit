@@ -8142,7 +8142,7 @@ begin
         wbInteger('Unused', itU32, nil, cpIgnore),
         wbFormIDCkNoReach('Reference', sigReferences, False)
       ]),
-      wbInteger('Parameter #3', itS32)
+      wbInteger('Parameter #3', itS32, nil, cpNormal, False, nil, nil, -1)
     ], cpNormal, False{, nil, 0, wbCTDAAfterLoad}),
     wbString(CIS1, 'Parameter #1'),
     wbString(CIS2, 'Parameter #2')
