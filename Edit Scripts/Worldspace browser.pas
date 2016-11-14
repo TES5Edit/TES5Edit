@@ -1,5 +1,5 @@
 {
-  Worldspace Browser v0.3 for Oblivion, Fallout 3, New Vegas, Skyrim and Fallout 4
+  Worldspace Browser v0.4 for Oblivion, Fallout 3, New Vegas, Skyrim and Fallout 4
   Hotkey: Alt+F3
   
   Reconstructs worldspace map from distand LOD (level of detail) landscape textures.
@@ -12,6 +12,7 @@
     Worldspace \ Filter LOD Tiles - remove unused LOD textures in specified folder that don't have a corresponding LOD mesh
     Overlay \ Region - draw selected regions
     Overlay \ Regional Weather - draw regions with selected weathers
+    Overlay \ Location - draw cells assigned to selected locations and their child locations
     Overlay \ Map Marker - draw selected map marker types
     Overlay \ Base Object References - draw references of selected objects in the current worldspace
     Overlay \ Cell Overrides - draw worldspace overrides for selected plugins
@@ -52,7 +53,7 @@ var
   mnMain: TMainMenu;
   mnMapPopup: TPopupMenu;
   mi, miWorldspace, miOverlay, miRegion, miRegionalWeather: TMenuItem;
-  miCell, miMapMarker, miReferences: TMenuItem;
+  miLocation, miCell, miMapMarker, miReferences: TMenuItem;
   sbInfo: TStatusBar;
   sbxMap: TScrollBox;
   imgMap, imgOver: TImage;
@@ -686,7 +687,7 @@ begin
         if GetIsPersistent(cell) then Continue;
         // skip cells without grid position
         if not ElementExists(cell, 'XCLC') then Continue;
-        // calculation cell's rectangle on overlay
+        // calculate cell's rectangle on overlay
         x := OverX(GetElementNativeValues(cell, 'XCLC\X')*CellSize);
         y := OverY(GetElementNativeValues(cell, 'XCLC\Y')*CellSize);
         x1 := x + CellSizePx*MapViewScale;
@@ -711,6 +712,48 @@ begin
         end;
       end;
     end;
+  end;
+end;
+
+//============================================================================
+// draw location's cells on overlay
+procedure OverlayLocation(loc: IInterface);
+var
+  i: integer;
+  ref: IInterface;
+  x, y, x1, y1: real;
+begin
+  if ContainerStates(GetFile(CurrentWorld)) and (1 shl csRefsBuild) = 0 then
+    MessageDlg(Format('References are not built for %s, this function won''t work properly. Please use right click "Other\Build Reference Info" menu of %sEdit', [
+      GetFileName(GetFile(CurrentWorld)),
+      wbAppName
+    ]), mtInformation, [mbOk], 0);
+
+  imgOver.Canvas.Pen.Style := psDot;
+  imgOver.Canvas.Pen.Color := ColorOverlay;
+  for i := 0 to Pred(ReferencedByCount(loc)) do begin
+    ref := ReferencedByIndex(loc, i);
+    if Signature(ref) = 'CELL' then begin
+      // draw only exterior cells of the current worldspace
+      if GetElementEditValues(ref, 'Worldspace') <> Name(CurrentWorld) then
+        Continue;
+      //AddMessage(Name(ref));
+      // calculate cell's rectangle on overlay
+      x := OverX(GetElementNativeValues(ref, 'XCLC\X')*CellSize);
+      y := OverY(GetElementNativeValues(ref, 'XCLC\Y')*CellSize);
+      x1 := x + CellSizePx*MapViewScale;
+      y1 := y - CellSizePx*MapViewScale;
+      imgOver.Canvas.MoveTo(x, y);
+      imgOver.Canvas.LineTo(x1, y);
+      imgOver.Canvas.LineTo(x1, y1);
+      imgOver.Canvas.LineTo(x, y1);
+      imgOver.Canvas.LineTo(x, y);
+    end
+    else if Signature(ref) = 'LCTN' then
+      if GetElementEditValues(ref, 'PNAM') = Name(loc) then begin
+        //AddMessage('Processing child location of ' + Name(loc) + ' : ' + Name(ref));
+        OverlayLocation(ref);
+      end;
   end;
 end;
 
@@ -1117,6 +1160,46 @@ begin
 end;
 
 //============================================================================
+// click event for overlay location menu
+procedure miLocationClick(Sender: TObject);
+var
+  frm: TForm;
+  clb: TCheckListBox;
+  i, j: integer;
+  f, g, loc: IInterface;
+  slLocation: TStringList;
+begin
+  slLocation := TStringList.Create;
+  slLocation.Duplicates := dupIgnore;
+  slLocation.Sorted := True;
+
+  frm := frmFileSelect;
+  try
+    frm.Width := 500;
+    frm.Caption := 'Locations';
+    clb := TCheckListBox(frm.FindComponent('CheckListBox1'));
+    // list of all locations
+    for i := 0 to Pred(FileCount) do begin
+      f := FileByIndex(i);
+      g := GroupBySignature(f, 'LCTN');
+      for j := 0 to Pred(ElementCount(g)) do begin
+        loc := ElementByIndex(g, j);
+        if IsMaster(loc) {and (GetElementEditValues(loc, 'PNAM') = 'TamrielLocation "Tamriel" [LCTN:000130FF]')} then
+          slLocation.AddObject(Name(loc), loc);
+      end;
+    end;
+    clb.Items.Assign(slLocation);
+    if frm.ShowModal <> mrOk then Exit;
+    for i := 0 to Pred(clb.Items.Count) do
+      if clb.Checked[i] then
+        OverlayLocation(ObjectToElement(slLocation.Objects[i]));
+  finally
+    frm.Free;
+    slLocation.Free;
+  end;
+end;
+
+//============================================================================
 // click event for overlay cell overrides menu
 procedure miCellClick(Sender: TObject);
 var
@@ -1319,7 +1402,7 @@ var
 begin
   frmMain := TForm.Create(nil);
   frmMain.Caption := wbAppName + 'Edit Worldspace Browser';
-  frmMain.Width := 900;
+  frmMain.Width := 1024;
   frmMain.Height := 650;
   frmMain.Position := poMainFormCenter;
   frmMain.PopupMode := pmAuto;
@@ -1374,6 +1457,12 @@ begin
   miRegionalWeather.ShortCut := TextToShortCut('Alt+W');
   miRegionalWeather.OnClick := miRegionalWeatherClick;
   miOverlay.Add(miRegionalWeather);
+
+  miLocation := TMenuItem.Create(mnMain);
+  miLocation.Caption := 'Location';
+  miLocation.ShortCut := TextToShortCut('Alt+L');
+  miLocation.OnClick := miLocationClick;
+  miOverlay.Add(miLocation);
 
   miMapMarker := TMenuItem.Create(mnMain);
   miMapMarker.Caption := 'Map Marker';
