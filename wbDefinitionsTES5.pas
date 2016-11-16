@@ -13643,7 +13643,7 @@ begin
   if IsSSE then begin
     SetLength(wbOfficialDLC, 3);
     wbOfficialDLC[0] := 'Dawnguard.esm';
-    wbOfficialDLC[1] := 'Hearthfires.esm';
+    wbOfficialDLC[1] := 'HearthFires.esm';
     wbOfficialDLC[2] := 'Dragonborn.esm';
   end;
 
