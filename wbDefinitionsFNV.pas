@@ -10084,9 +10084,9 @@ begin
       wbEmpty(MMRK, 'Audio Marker'),
       wbUnknown(FULL),
       wbFormIDCk(CNAM, 'Audio Location', [ALOC]),
-      wbUnknown(BNAM),
-      wbFloat(MNAM),
-      wbFloat(NNAM)
+      wbInteger(BNAM, 'Flags', itU32, wbFlags(['Use Controller Values'])),
+      wbFloat(MNAM, 'Layer 2 Trigger %', cpNormal, True, 100),
+      wbFloat(NNAM, 'Layer 3 Trigger %', cpNormal, True, 100)
     ], []),
 
     wbInteger(XSRF, 'Special Rendering Flags', itU32, wbFlags([
