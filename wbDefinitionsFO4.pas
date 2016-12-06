@@ -1045,7 +1045,8 @@ var
   //wbRaceFRMI: IwbSubrecordArrayDef;
   wbRaceRBPC: IwbSubRecordDef;
   wbNVNM: IwbSubRecordDef;
-  wbMHDT: IwbSubRecordDef;
+  wbMaxHeightDataCELL: IwbSubRecordDef;
+  wbMaxHeightDataWRLD: IwbSubRecordDef;
   wbOFST: IwbSubRecordDef;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
@@ -2556,17 +2557,6 @@ begin
         'b': Result := 3; {Boolean}
       end;
   end;
-end;
-
-function wbMHDTDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  rMHDT : IwbRecord;
-begin
-  Result := 0;
-  if Supports(aElement.Container, IwbRecord, rMHDT) then
-    if Assigned(aBasePtr) then  // if not assigned we cannot conclude anyway
-      if rMHDT.DataSize = 1028 then
-          Result := 1;
 end;
 
 function wbFLSTLNAMIsSorted(const aContainer: IwbContainer): Boolean;
@@ -7078,15 +7068,36 @@ begin
     'Very Hard'
   ]));
 
-  wbMHDT := wbByteArray(MHDT, 'Max Height Data', 0, cpNormal);
-//      wbStruct(MHDT, 'Max Height Data', [ // Rolled back temporarily due to issues while copying.
-//         wbUnion('Unknown', wbMHDTDecider, [
-//           wbArray('Unknown', wbInteger('Data', itS8)),
-//           wbStruct('Unknown', [
-//             wbInteger('Unknown', itU32)]), // First DWord is Endian swapped if the record size is 1028
-//             wbArray('Unknown', wbInteger('Data', itS8))
-//           ])
-//      ]),
+  if wbSimpleRecords then begin
+    wbMaxHeightDataCELL := wbByteArray(MHDT, 'Max Height Data', 0, cpNormal);
+    wbMaxHeightDataWRLD := wbByteArray(MHDT, 'Max Height Data', 0, cpNormal);
+  end
+  else begin
+    wbMaxHeightDataCELL := wbStruct(MHDT, 'Max Height Data', [
+      wbFloat('Offset'),
+      wbArray('Rows', wbStruct('Row', [
+        wbArray('Columns', wbInteger('Column', itU8), 32)
+      ]), 32)
+    ]);
+    wbMaxHeightDataWRLD := wbStruct(MHDT, 'Max Height Data', [
+      wbStruct('Min', [
+        wbInteger('X', itS16),
+        wbInteger('Y', itS16)
+      ]),
+      wbStruct('Max', [
+        wbInteger('X', itS16),
+        wbInteger('Y', itS16)
+      ]),
+      wbByteArray('Cell Data', 0)
+      // way too verbose for no practical use
+      {wbArray('Cell Data', wbStruct('Quad Height', [
+        wbInteger('Bottom Left', itU8),
+        wbInteger('Bottom Right', itU8),
+        wbInteger('Top Left', itU8),
+        wbInteger('Top Right', itU8)
+      ]))}
+    ]);
+  end;
 
   if wbSimpleRecords then
     wbOFST := wbByteArray(OFST, 'Offset Data')
@@ -8970,7 +8981,7 @@ begin
     wbInteger(CNAM, 'Precombined Object Level XY', itU8),
     wbInteger(ZNAM, 'Precombined Object Level Z', itU8),
     wbByteArray(TVDT, 'Unknown', 0, cpNormal),
-    wbMHDT,
+    wbMaxHeightDataCELL,
     wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
 
     {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
@@ -15363,7 +15374,7 @@ begin
     ])), [
     wbEDID,
     wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False{, wbNeverShow}),
-    wbMHDT,
+    wbMaxHeightDataWRLD,
     wbFULL,
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
       wbInteger('X', itS16),
