@@ -810,7 +810,8 @@ var
   wbColorInterpolator: IwbStructDef;
   wbYNAM: IwbSubRecordDef;
   wbZNAM: IwbSubRecordDef;
-  wbMHDT: IwbSubRecordDef;
+  wbMaxHeightDataCELL: IwbSubRecordDef;
+  wbMaxHeightDataWRLD: IwbSubRecordDef;
   wbTVDT: IwbSubRecordDef;
   wbOFST: IwbSubRecordDef;
   wbNVNM: IwbSubRecordDef;
@@ -2329,17 +2330,6 @@ begin
         'b': Result := 3; {Boolean}
       end;
   end;
-end;
-
-function wbMHDTDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  rMHDT : IwbRecord;
-begin
-  Result := 0;
-  if Supports(aElement.Container, IwbRecord, rMHDT) then
-    if Assigned(aBasePtr) then  // if not assigned we cannot conclude anyway
-      if rMHDT.DataSize = 1028 then
-          Result := 1;
 end;
 
 function wbFLSTLNAMIsSorted(const aContainer: IwbContainer): Boolean;
@@ -5634,15 +5624,36 @@ begin
   wbTVDT := wbByteArray(TVDT, 'Occlusion Data', 0, cpNormal);
 //  wbTVDT := wbArray(TVDT, 'Occlusion Data', wbInteger('Unknown', itS32)),
 
-  wbMHDT := wbByteArray(MHDT, 'Max Height Data', 0, cpNormal);
-//  wbMHDT :=  wbStruct(MHDT, 'Max Height Data', [ // Rolled back temporarily due to issues while copying.
-//         wbUnion('Unknown', wbMHDTDecider, [
-//           wbArray('Unknown', wbInteger('Data', itS8)),
-//           wbStruct('Unknown', [
-//             wbInteger('Unknown', itU32)]), // First DWord is Endian swapped if the record size is 1028
-//             wbArray('Unknown', wbInteger('Data', itS8))
-//           ])
-//      ]),
+  if wbSimpleRecords then begin
+    wbMaxHeightDataCELL := wbByteArray(MHDT, 'Max Height Data', 0, cpNormal);
+    wbMaxHeightDataWRLD := wbByteArray(MHDT, 'Max Height Data', 0, cpNormal);
+  end
+  else begin
+    wbMaxHeightDataCELL := wbStruct(MHDT, 'Max Height Data', [
+      wbFloat('Offset'),
+      wbArray('Rows', wbStruct('Row', [
+        wbArray('Columns', wbInteger('Column', itU8), 32)
+      ]), 32)
+    ]);
+    wbMaxHeightDataWRLD := wbStruct(MHDT, 'Max Height Data', [
+      wbStruct('Min', [
+        wbInteger('X', itS16),
+        wbInteger('Y', itS16)
+      ]),
+      wbStruct('Max', [
+        wbInteger('X', itS16),
+        wbInteger('Y', itS16)
+      ]),
+      wbByteArray('Cell Data', 0)
+      // way too verbose for no practical use
+      {wbArray('Cell Data', wbStruct('Quad Height', [
+        wbInteger('Bottom Left', itU8),
+        wbInteger('Bottom Right', itU8),
+        wbInteger('Top Left', itU8),
+        wbInteger('Top Right', itU8)
+      ]))}
+    ]);
+  end;
 
   if wbSimpleRecords then
     wbOFST := wbByteArray(OFST, 'Offset Data')
@@ -6921,7 +6932,7 @@ begin
     ], cpNormal, False, nil, 11),
 
     wbTVDT,
-    wbMHDT,
+    wbMaxHeightDataCELL,
     wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
     wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
 
@@ -13188,7 +13199,7 @@ begin
       ]),
       cpIgnore, False, nil, nil, wbNeverShow
     ),
-    wbMHDT,
+    wbMaxHeightDataWRLD,
     wbFULL,
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
       wbInteger('X', itS16),
