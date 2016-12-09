@@ -1768,15 +1768,11 @@ begin
     s := IncludeTrailingPathDelimiter(s);
 
   flProgress('Adding master "' + t + '"');
-  try
-    _File := wbFile(s + t, -1, '', IsTemporary, False);
-    if wbRequireLoadOrder and (_File.LoadOrder < 0) then
-      raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.');
+  _File := wbFile(s + t, -1, '', IsTemporary, False);
+  if not (wbToolMode in [tmDump, tmExport]) and (wbRequireLoadOrder and (_File.LoadOrder < 0)) then
+    raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.')
+  else
     AddMaster(_File);
-  except
-    if not (wbToolMode in [tmDump, tmExport]) then
-      raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.');
-  end;
 end;
 
 function TwbFile.Add(const aName: string; aSilent: Boolean): IwbElement;
@@ -14829,16 +14825,25 @@ begin
   FilesMap.Clear;
 end;
 
+function wbExpandFileName(const aFileName: string): string;
+begin
+  if ExtractFilePath(aFileName) = '' then
+    Result := wbDataPath + ExtractFileName(aFileName)
+  else
+    Result := aFileName;
+end;
+
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
   IsTemporary: Boolean = False; aOnlyHeader: Boolean = False): IwbFile;
 var
   FileName: string;
   i: Integer;
 begin
-  if ExtractFilePath(aFileName) = '' then
+  FileName := wbExpandFileName(aFileName);
+  {if ExtractFilePath(aFileName) = '' then
     FileName := ExpandFileName('.\'+aFileName)
   else
-    FileName := ExpandFileName(aFileName);
+    FileName := ExpandFileName(aFileName);}
 
   if FilesMap.Find(FileName, i) then
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
@@ -14859,10 +14864,11 @@ var
   i        : Integer;
   _File    : IwbFileInternal;
 begin
-  if ExtractFilePath(aFileName) = '' then
+  FileName := wbExpandFileName(aFileName);
+  {if ExtractFilePath(aFileName) = '' then
     FileName := ExpandFileName('.\'+aFileName)
   else
-    FileName := ExpandFileName(aFileName);
+    FileName := ExpandFileName(aFileName);}
 
   try
     if FilesMap.Find(FileName, i) then
@@ -14884,10 +14890,11 @@ var
   FileName: string;
   i: Integer;
 begin
-  if ExtractFilePath(aFileName) = '' then
+  FileName := wbExpandFileName(aFileName);
+  {if ExtractFilePath(aFileName) = '' then
     FileName := ExpandFileName('.\'+aFileName)
   else
-    FileName := ExpandFileName(aFileName);
+    FileName := ExpandFileName(aFileName);}
 
   if FilesMap.Find(FileName, i) then
     raise Exception.Create(FileName + ' exists already')

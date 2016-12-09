@@ -8978,13 +8978,13 @@ begin
     wbEDID,
 
     wbArray(ACPR, 'Actor Cell Persistent Reference', wbStruct('', [
-      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Actor', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
     ])),
     wbArray(LCPR, 'Location Cell Persistent Reference', wbStruct('', [
-      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Actor', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
@@ -9007,14 +9007,14 @@ begin
 
     wbArray(ACSR, 'Actor Cell Static Reference', wbStruct('', [
       wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
-      wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Marker', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
     ])),
     wbArray(LCSR, 'Location Cell Static Reference', wbStruct('', [
       wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
-      wbFormIDCk('Marker', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Marker', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
@@ -9051,18 +9051,18 @@ begin
       ])
     ),
 
-    wbArray(ACID, 'Actor Cell Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign)),
-    wbArray(LCID, 'Location Cell Marker Reference', wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign)),
+    wbArray(ACID, 'Actor Cell Marker Reference', wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign)),
+    wbArray(LCID, 'Location Cell Marker Reference', wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign)),
 
     wbArray(ACEP, 'Actor Cell Enable Point', wbStruct('', [
-      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
-      wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Actor', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
     ])),
     wbArray(LCEP, 'Location Cell Enable Point', wbStruct('', [
-      wbFormIDCk('Actor', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
-      wbFormIDCk('Ref', [ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Actor', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
     ])),
