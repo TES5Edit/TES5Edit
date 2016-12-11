@@ -1,0 +1,14 @@
+textures\lod\dirt02lod.dds	128	128	1024	256	textures\terrain\blackreach\objects\blackreach.objects.dds	2048	2048
+textures\lod\dweruins01_lod.dds	256	256	0	512	textures\terrain\blackreach\objects\blackreach.objects.dds	2048	2048
+textures\lod\dweruins02_lod.dds	256	256	256	512	textures\terrain\blackreach\objects\blackreach.objects.dds	2048	2048
+textures\lod\fxwatertile01lod.dds	128	128	1152	256	textures\terrain\blackreach\objects\blackreach.objects.dds	2048	2048
+textures\lod\mountainpeak01lod.dds	256	256	0	768	textures\terrain\blackreach\objects\blackreach.objects.dds	2048	2048
+textures\lod\mountainslablod.dds	256	256	256	768	textures\terrain\blackreach\objects\blackreach.objects.dds	2048	2048
+textures\lod\mtncliff01lod.dds	512	256	0	0	textures\terrain\blackreach\objects\blackreach.objects.dds	2048	2048
+textures\lod\mtncliff02lod.dds	256	256	512	512	textures\terrain\blackreach\objects\blackreach.objects.dds	2048	2048
+textures\lod\mtncliff03lod.dds	256	256	768	512	textures\terrain\blackreach\objects\blackreach.objects.dds	2048	2048
+textures\lod\mtncliff04lod.dds	256	256	512	768	textures\terrain\blackreach\objects\blackreach.objects.dds	2048	2048
+textures\lod\mtncliffsm01lod.dds	256	256	768	768	textures\terrain\blackreach\objects\blackreach.objects.dds	2048	2048
+textures\lod\mtnpeak02lod.dds	512	256	512	0	textures\terrain\blackreach\objects\blackreach.objects.dds	2048	2048
+textures\lod\mtnridge03lod.dds	256	256	1024	0	textures\terrain\blackreach\objects\blackreach.objects.dds	2048	2048
+textures\lod\mtntrimslablod.dds	256	256	1280	0	textures\terrain\blackreach\objects\blackreach.objects.dds	2048	2048

@@ -1,0 +1,8 @@
+textures\lod\glacierendlg01lod.dds	512	256	0	0	textures\terrain\japhetsfollyworld\objects\japhetsfollyworld.objects.dds	2048	2048
+textures\lod\glacierpillarlod.dds	256	256	512	0	textures\terrain\japhetsfollyworld\objects\japhetsfollyworld.objects.dds	2048	2048
+textures\lod\glacierslablod.dds	128	128	256	512	textures\terrain\japhetsfollyworld\objects\japhetsfollyworld.objects.dds	2048	2048
+textures\lod\glacierstraightlg01lod.dds	256	256	768	0	textures\terrain\japhetsfollyworld\objects\japhetsfollyworld.objects.dds	2048	2048
+textures\lod\iceberglargelod.dds	256	256	512	256	textures\terrain\japhetsfollyworld\objects\japhetsfollyworld.objects.dds	2048	2048
+textures\lod\icefloessolid02lod.dds	128	128	384	512	textures\terrain\japhetsfollyworld\objects\japhetsfollyworld.objects.dds	2048	2048
+textures\lod\imperialforticelod.dds	256	256	768	256	textures\terrain\japhetsfollyworld\objects\japhetsfollyworld.objects.dds	2048	2048
+textures\lod\shiplod.dds	256	256	0	512	textures\terrain\japhetsfollyworld\objects\japhetsfollyworld.objects.dds	2048	2048
