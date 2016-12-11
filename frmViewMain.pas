@@ -5333,6 +5333,57 @@ var
       Result^.Index := -1;
   end;
 
+  procedure GetLargeRerferencesPlugin(aElement: IwbElement; var sl: TStringList);
+  var
+    i, j: integer;
+    Grids, GridEntry, References, ReferenceEntry: IwbContainerElementRef;
+    Reference: IwbMainRecord;
+    Pos: TwbVector;
+    Grid, Cell: TwbGridCell;
+  begin
+    if not Assigned(aElement) then
+      Exit;
+    // RNAM data working in ESM only for now
+    if not aElement._File.IsESM then
+      Exit;
+    if Supports(aElement, IwbContainerElementRef, Grids) then
+      for i := 0 to Pred(Grids.ElementCount) do
+        if Supports(Grids.Elements[i], IwbContainerElementRef, GridEntry) then begin
+          Grid.x :=  GridEntry.ElementByPath['X'].NativeValue;
+          Grid.y :=  GridEntry.ElementByPath['Y'].NativeValue;
+          if Supports(GridEntry.ElementByPath['References'], IwbContainerElementRef, References) then
+            for j := 0 to Pred(References.ElementCount) do
+              if Supports(References.Elements[j], IwbContainerElementRef, ReferenceEntry) then
+                if Supports(ReferenceEntry.ElementByPath['Ref'].LinksTo, IwbMainRecord, Reference) then begin
+                  Reference.GetPosition(Pos);
+                  Cell := wbPositionToGridCell(Pos);
+                  // the origin of reference needs to be in the grids cell
+                  // references listed in other grids has no effect
+                  // ToDo test Overrides moving reference out of cell
+                  if (Grid.x = Cell.x) and (Grid.y = Cell.y) then
+                    sl.AddObject(IntToHex64(Reference.MasterOrSelf.LoadOrderFormID, 8), Pointer(Reference.MasterOrSelf));
+                end;
+          if StartTick + 500 < GetTickCount then begin
+            Caption := 'Gathering Large References: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(i) +
+              ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+            Application.ProcessMessages;
+            StartTick := GetTickCount;
+          end;
+        end;
+  end;
+
+  procedure GetLargeReferences(Wrld: IwbMainRecord; var sl: TStringList);
+  var
+    i: integer;
+  begin
+    Wrld := Wrld.MasterOrSelf;
+    // RNAM data merges accross all plugins
+    GetLargeRerferencesPlugin(Wrld.ElementByPath['RNAM'], sl);
+    for i := 0 to Pred(Wrld.OverrideCount) do begin
+      GetLargeRerferencesPlugin(Wrld.Overrides[i].ElementByPath['RNAM'], sl);
+    end;
+  end;
+
 var
   LODPath, AtlasName, AtlasMapName, TexturesListFile: string;
   Section             : string;
@@ -5353,7 +5404,7 @@ var
   LodSet              : TwbLodSettings;
   Res                 : TDynResources;
   PTree               : PwbLodTES5Tree;
-  slLog, slCache, slCacheHPLod, slRefs, slExport, sl: TStringList;
+  slLog, slCache, slCacheHPLod, slRefs, slExport, sl, slLargeReferences: TStringList;
   slLODMeshes, slLODTextures: TStringList;
   RefPos, RefRot      : TwbVector;
   RefCell, RefBlock   : TwbGridCell;
@@ -5663,12 +5714,12 @@ begin
     slLODTextures := TStringList.Create;
     slLODTextures.Sorted := True;
     slLODTextures.Duplicates := dupIgnore;
+    slLargeReferences := TStringList.Create;
+    slLargeReferences.Sorted := True;
+    slLargeReferences.Duplicates := dupIgnore;
 
     if wbGameMode in [ gmSSE ] then
-      //read game setting fLargeRefMinSize from SSE Skyrim.esm
-      LargeRefMinSize := (Files[0].GetRecordByFormID($00000F92, True).ElementNativeValues['DATA - Value\Float'])
-    else
-      LargeRefMinSize := 512;
+      GetLargeReferences(Master, slLargeReferences);
 
     try
     try
@@ -5693,7 +5744,8 @@ begin
 
         // skip parent enabled refs except FO3 Megaton town
         // Fallout 3 is hardcoded to use 'apocalypse' LOD meshes when it is destroyed
-        if REFRs[i].ElementExists['XESP'] and (Pos('MegatonToggle', REFRs[i].ElementEditValues['XESP\Reference']) = 0) then
+        // If VWD is set on reference it gets static LOD regardless of XESP
+        if not REFRs[i].IsVisibleWhenDistant and REFRs[i].ElementExists['XESP'] and (Pos('MegatonToggle', REFRs[i].ElementEditValues['XESP\Reference']) = 0) then
           Continue;
 
         StatRec := StatRec.WinningOverride;
@@ -5742,17 +5794,6 @@ begin
                     if Pos('passthru', mat) > 0 then mat := 'PassThru';
               end else
                 mat := '';
-              // SSE adds -LargeRef to shape name and adds BSDistantObjectLargeRefExtraData with 1 byte = 1 for new uLargeRefLODGridSize
-              // a large reference is determined by OBND values, STAT and MSTT are known to be used for this feature
-              if wbGameMode in [ gmSSE ] then begin
-                RefPos.x := (StatRec.ElementNativeValues['OBND\X2'] - StatRec.ElementNativeValues['OBND\X1']) * scl;
-                RefPos.y := (StatRec.ElementNativeValues['OBND\Y2'] - StatRec.ElementNativeValues['OBND\Y1']) * scl;
-                RefPos.z := (StatRec.ElementNativeValues['OBND\Z2'] - StatRec.ElementNativeValues['OBND\Z1']) * scl;
-                if ((RefPos.x >= LargeRefMinSize) and (RefPos.y >= LargeRefMinSize) and (RefPos.z >= LargeRefMinSize)) or
-                   (RefPos.x >= 1024) or (RefPos.y >= 1024) or (RefPos.z >= 1024)
-                then
-                  mat := mat + '-LargeRef';
-              end;
 
               // a tab separated string of Editor ID, flags, material, full mesh and lod files
               s := StatRec.EditorID + #9 + IntToHex(StatRec.Flags._Flags, 8) + #9 +
@@ -5782,6 +5823,28 @@ begin
         else
           s := slCache[k];
 
+        // SSE adds -LargeRef to shape name and adds BSDistantObjectLargeRefExtraData with 1 byte = 1 in BTO for new uLargeRefLODGridSize
+        // add -LargeRef to material for LODGen.exe
+        if (wbGameMode in [ gmSSE ]) and (slLargeReferences.IndexOfObject(Pointer(REFRs[i].MasterOrSelf)) <> -1) then begin
+          sl := TStringList.Create;
+          sl.Delimiter := #9;
+          sl.StrictDelimiter := True;
+          try
+            sl.DelimitedText := s;
+            s := '';
+            for j := 0 to Pred(sl.Count) do begin
+              if j <> 2 then
+                s := s + sl[j]
+              else
+                s := s + sl[j] + '-LargeRef';
+              if j < Pred(sl.Count) then
+                s := s + #9;
+            end;
+          finally
+            sl.Free;
+          end;
+        end;
+
         s := IntToHex(REFRs[i].LoadOrderFormID , 8) + #9 +
              IntToHex(REFRs[i].Flags._Flags, 8) + #9 +
              REFRs[i].ElementEditValues['DATA\Position\X'] + #9 +
@@ -5810,12 +5873,12 @@ begin
         // creating lod textures atlas part 1 - set file paths to be used in export file
         if Settings.ReadBool(Section, 'BuildAtlas', True) then begin
           UVRange := StrToFloatDef(Settings.ReadString(Section, 'AtlasTextureUVRange', '1.5'), 1.5);
-
-          // atlas file name and map name
+          // atlas file name
           if wbGameMode in [ gmTES5, gmSSE ] then
             AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds'
           else if wbGameMode in [gmFO3, gmFNV] then
             AtlasName := wbOutputPath + 'textures\landscape\lod\' + aWorldspace.EditorID  + '\Blocks\' + aWorldspace.EditorID + 'ObjectsLOD.dds';
+          // atlas map name
           AtlasMapName := wbScriptsPath + 'LODGenAtlasMap.txt';
           // textures list file name
           if wbGameMode in [ gmSSE ] then
@@ -5824,7 +5887,13 @@ begin
           if not DirectoryExists(ExtractFilePath(AtlasName)) then
             if not ForceDirectories(ExtractFilePath(AtlasName)) then
               raise Exception.Create('Can not create output folder for atlas ' + ExtractFilePath(AtlasName));
-        end;
+        end
+        else
+          // use vanilla atlas if build atlas is not selected
+          if wbGameMode in [ gmSSE ] then begin
+            AtlasMapName := wbScriptsPath + wbAppName + '-AtlasMap-' + aWorldspace.EditorID + '.txt';
+            UVRange := 10000;
+          end;
 
         // creating lodgen data file
         // use same Export file for gathering textures list for texture atlas and to generate static LOD
@@ -5884,10 +5953,15 @@ begin
         // creating lod textures atlas part 2 - gather list of used textures and create atlas textures
         if Settings.ReadBool(Section, 'BuildAtlas', True) then begin
           if wbGameMode in [ gmSSE ] then begin
-	    // use LODGen.exe to build texture list, output file defined by TexturesListFile= in export file
+            // use LODGen.exe to build texture list, output file defined by TexturesListFile= in export file
             PostAddMessage('[' + aWorldspace.EditorID + '] Gathering list of textures for atlas');
             Application.ProcessMessages;
+            {$IFDEF WIN32}
             s := Format(wbScriptsPath + 'LODGen.exe "%s"', [s]);
+            {$ENDIF WIN32}
+            {$IFDEF WIN64}
+            s := Format(wbScriptsPath + 'LODGenx64.exe "%s"', [s]);
+            {$ENDIF WIN32}
             // this overwrites GameMode set in export file
             s := s + ' --GameMode textureslist';
 
@@ -5929,7 +6003,12 @@ begin
         end;
 
         s := wbScriptsPath + 'LODGen.txt';
+        {$IFDEF WIN32}
         s := Format(wbScriptsPath + 'LODGen.exe "%s"', [s]);
+        {$ENDIF WIN32}
+        {$IFDEF WIN64}
+        s := Format(wbScriptsPath + 'LODGenx64.exe "%s"', [s]);
+        {$ENDIF WIN32}
         s := s + ' --dontFixTangents';
         s := s + ' --removeUnseenFaces';
         // if "No LOD Water" flag is set for a worldspace, then don't remove underwater meshes
@@ -5970,6 +6049,7 @@ begin
       slRefs.Free;
       slLODMeshes.Free;
       slLODTextures.Free;
+      slLargeReferences.Free;
       slExport.Free;
       Caption := Application.Title;
     end;
