@@ -211,7 +211,7 @@ object frmLODGen: TfrmLODGen
     end
     object cbBuildAtlas: TCheckBox
       Left = 16
-      Top = 5
+      Top = 8
       Width = 81
       Height = 17
       Hint = 'Put LOD textures on texture atlas(es) for better performance'
