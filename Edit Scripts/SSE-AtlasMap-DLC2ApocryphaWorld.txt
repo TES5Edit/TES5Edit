@@ -1,0 +1,2 @@
+textures\dlc02\lod\dlc02_bookwalllod01.dds	256	256	0	0	textures\terrain\dlc2apocryphaworld\objects\dlc2apocryphaworld.objects.dds	2048	2048
+textures\dlc02\lod\dlc02_platformlod01.dds	256	256	256	0	textures\terrain\dlc2apocryphaworld\objects\dlc2apocryphaworld.objects.dds	2048	2048
