@@ -5333,7 +5333,7 @@ var
       Result^.Index := -1;
   end;
 
-  procedure GetLargeRerferencesPlugin(aElement: IwbElement; var sl: TStringList);
+  procedure GetLargeReferencesPlugin(aElement: IwbElement; var sl: TStringList);
   var
     i, j: integer;
     Grids, GridEntry, References, ReferenceEntry: IwbContainerElementRef;
@@ -5349,8 +5349,8 @@ var
     if Supports(aElement, IwbContainerElementRef, Grids) then
       for i := 0 to Pred(Grids.ElementCount) do
         if Supports(Grids.Elements[i], IwbContainerElementRef, GridEntry) then begin
-          Grid.x :=  GridEntry.ElementByPath['X'].NativeValue;
-          Grid.y :=  GridEntry.ElementByPath['Y'].NativeValue;
+          Grid.x := GridEntry.ElementByPath['X'].NativeValue;
+          Grid.y := GridEntry.ElementByPath['Y'].NativeValue;
           if Supports(GridEntry.ElementByPath['References'], IwbContainerElementRef, References) then
             for j := 0 to Pred(References.ElementCount) do
               if Supports(References.Elements[j], IwbContainerElementRef, ReferenceEntry) then
@@ -5378,9 +5378,9 @@ var
   begin
     Wrld := Wrld.MasterOrSelf;
     // RNAM data merges accross all plugins
-    GetLargeRerferencesPlugin(Wrld.ElementByPath['RNAM'], sl);
+    GetLargeReferencesPlugin(Wrld.ElementByPath['RNAM'], sl);
     for i := 0 to Pred(Wrld.OverrideCount) do begin
-      GetLargeRerferencesPlugin(Wrld.Overrides[i].ElementByPath['RNAM'], sl);
+      GetLargeReferencesPlugin(Wrld.Overrides[i].ElementByPath['RNAM'], sl);
     end;
   end;
 
