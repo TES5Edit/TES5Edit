@@ -63,6 +63,12 @@ uses
 
 const
   DefaultInterval             = 1 / 24 / 6;
+  {$IFDEF WIN64}
+  sLODGenName = 'LODGenx64.exe';
+  {$ELSE}
+  sLODGenName = 'LODGen.exe';
+  {$ENDIF}
+
 
 type
   TDynBooleans = array of Boolean;
@@ -4712,7 +4718,7 @@ function TfrmMain.ExecuteCaptureConsoleOutput(const aCommandLine: string): Cardi
 type
   OemString = type AnsiString(CP_OEMCP);
 const
-  CReadBuffer = 2400;
+  CReadBuffer = 4096;
 var
   saSecurity: TSecurityAttributes;
   hRead: THandle;
@@ -4720,7 +4726,7 @@ var
   suiStartup: TStartupInfo;
   piProcess: TProcessInformation;
   pBuffer: array [0..CReadBuffer] of AnsiChar;
-  dBuffer: array [0 .. CReadBuffer] of Char;
+  dBuffer: array [0..CReadBuffer] of Char;
   pCmdLine: array [0..MAX_PATH] of Char;
   dRead, dRunning, dw: DWord;
   s: string;
@@ -5394,7 +5400,7 @@ var
   Group               : IwbGroupRecord;
   Sigs                : TwbSignatures;
   REFRs               : TDynMainRecords;
-  RefFormID           : Cardinal;
+  RefFormID, ErrCode  : Cardinal;
   Count, TreesCount   : Integer;
   TreesDupCount       : Integer;
   TotalCount          : Integer;
@@ -5956,12 +5962,7 @@ begin
             // use LODGen.exe to build texture list, output file defined by TexturesListFile= in export file
             PostAddMessage('[' + aWorldspace.EditorID + '] Gathering list of textures for atlas');
             Application.ProcessMessages;
-            {$IFDEF WIN32}
-            s := Format(wbScriptsPath + 'LODGen.exe "%s"', [s]);
-            {$ENDIF WIN32}
-            {$IFDEF WIN64}
-            s := Format(wbScriptsPath + 'LODGenx64.exe "%s"', [s]);
-            {$ENDIF WIN32}
+            s := Format(wbScriptsPath + sLODGenName + ' "%s"', [s]);
             // this overwrites GameMode set in export file
             s := s + ' --GameMode textureslist';
 
@@ -5970,9 +5971,9 @@ begin
             Application.ProcessMessages;
 
             // execute LODGen.exe to generate texture list
-            k := ExecuteCaptureConsoleOutput(s);
-            if k <> 0 then
-              raise Exception.Create('LODGen process error, exit code ' + IntToStr(k));
+            ErrCode := ExecuteCaptureConsoleOutput(s);
+            if ErrCode <> 0 then
+              raise Exception.Create('LODGen process error, exit code ' + IntToHex(ErrCode, 8));
 
             // load textures from file created by LODGen.exe
             if (TexturesListFile <> '') and FileExists(TexturesListFile) then
@@ -6003,12 +6004,7 @@ begin
         end;
 
         s := wbScriptsPath + 'LODGen.txt';
-        {$IFDEF WIN32}
-        s := Format(wbScriptsPath + 'LODGen.exe "%s"', [s]);
-        {$ENDIF WIN32}
-        {$IFDEF WIN64}
-        s := Format(wbScriptsPath + 'LODGenx64.exe "%s"', [s]);
-        {$ENDIF WIN32}
+        s := Format(wbScriptsPath + sLODGenName + ' "%s"', [s]);
         s := s + ' --dontFixTangents';
         s := s + ' --removeUnseenFaces';
         // if "No LOD Water" flag is set for a worldspace, then don't remove underwater meshes
@@ -6025,9 +6021,9 @@ begin
         PostAddMessage('[' + aWorldspace.EditorID + '] Running ' + s);
         Application.ProcessMessages;
 
-        k := ExecuteCaptureConsoleOutput(s);
-        if k <> 0 then
-          raise Exception.Create('LODGen process error, exit code ' + IntToStr(k));
+        ErrCode := ExecuteCaptureConsoleOutput(s);
+        if ErrCode <> 0 then
+          raise Exception.Create('LODGen process error, exit code ' + IntToHex(ErrCode, 8));
         PostAddMessage('[' + aWorldspace.EditorID + '] Objects LOD Done.');
 
         // DynDOLOD reference message, tribute to Sheson who made TES5LODGen possible
