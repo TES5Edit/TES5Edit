@@ -7075,9 +7075,11 @@ begin
   else begin
     wbMaxHeightDataCELL := wbStruct(MHDT, 'Max Height Data', [
       wbFloat('Offset'),
-      wbArray('Rows', wbStruct('Row', [
-        wbArray('Columns', wbInteger('Column', itU8), 32)
-      ]), 32)
+      wbArray('Rows',
+        wbByteArray('Columns', 32)
+        // way too verbose for no practical use
+        //wbStruct('Row', [ wbArray('Columns', wbInteger('Column', itU8), 32) ])
+      , 32)
     ]);
     wbMaxHeightDataWRLD := wbStruct(MHDT, 'Max Height Data', [
       wbStruct('Min', [
