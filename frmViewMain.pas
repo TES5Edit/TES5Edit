@@ -5339,7 +5339,7 @@ var
       Result^.Index := -1;
   end;
 
-  procedure GetLargeReferencesPlugin(aElement: IwbElement; var sl: TStringList);
+  procedure GetLargeReferencesPlugin(aElement: IwbElement; var sl: TStringList; ChunkSW, ChunkNE: TwbGridCell);
   var
     i, j: integer;
     Grids, GridEntry, References, ReferenceEntry: IwbContainerElementRef;
@@ -5357,6 +5357,13 @@ var
         if Supports(Grids.Elements[i], IwbContainerElementRef, GridEntry) then begin
           Grid.x := GridEntry.ElementByPath['X'].NativeValue;
           Grid.y := GridEntry.ElementByPath['Y'].NativeValue;
+          // skip references not in specific chunk
+          if ChunkSW.x <> Low(Integer) then
+            if (Grid.x < ChunkSW.x) or (Grid.x > ChunkNE.x) then
+              Continue;
+          if ChunkSW.y <> Low(Integer) then
+            if (Grid.y < ChunkSW.y) or (Grid.y > ChunkNE.y) then
+              Continue;
           if Supports(GridEntry.ElementByPath['References'], IwbContainerElementRef, References) then
             for j := 0 to Pred(References.ElementCount) do
               if Supports(References.Elements[j], IwbContainerElementRef, ReferenceEntry) then
@@ -5378,15 +5385,15 @@ var
         end;
   end;
 
-  procedure GetLargeReferences(Wrld: IwbMainRecord; var sl: TStringList);
+  procedure GetLargeReferences(Wrld: IwbMainRecord; var sl: TStringList; ChunkSW, ChunkNE: TwbGridCell);
   var
     i: integer;
   begin
     Wrld := Wrld.MasterOrSelf;
     // RNAM data merges accross all plugins
-    GetLargeReferencesPlugin(Wrld.ElementByPath['RNAM'], sl);
+    GetLargeReferencesPlugin(Wrld.ElementByPath['RNAM'], sl, ChunkSW, ChunkNE);
     for i := 0 to Pred(Wrld.OverrideCount) do begin
-      GetLargeReferencesPlugin(Wrld.Overrides[i].ElementByPath['RNAM'], sl);
+      GetLargeReferencesPlugin(Wrld.Overrides[i].ElementByPath['RNAM'], sl, ChunkSW, ChunkNE);
     end;
   end;
 
@@ -5404,7 +5411,7 @@ var
   Count, TreesCount   : Integer;
   TreesDupCount       : Integer;
   TotalCount          : Integer;
-  LodLevel            : Integer;
+  LodLevel, ChunkSize : Integer;
   i, j, k, l          : Integer;
   Lst                 : TwbLodTES5TreeList;
   LodSet              : TwbLodSettings;
@@ -5413,7 +5420,7 @@ var
   slLog, slCache, slCacheHPLod, slRefs, slExport, sl, slLargeReferences: TStringList;
   slLODMeshes, slLODTextures: TStringList;
   RefPos, RefRot      : TwbVector;
-  RefCell, RefBlock   : TwbGridCell;
+  RefCell, RefBlock, ChunkSW, ChunkNE: TwbGridCell;
   Scale, UVRange, LargeRefMinSize: Single;
   LOD4                : array of TwbLodTES5TreeBlock;
 begin
@@ -5724,8 +5731,28 @@ begin
     slLargeReferences.Sorted := True;
     slLargeReferences.Duplicates := dupIgnore;
 
-    if wbGameMode in [ gmSSE ] then
-      GetLargeReferences(Master, slLargeReferences);
+    // calculate SW and NE corners for building specific chunk
+    ChunkSW.x := Low(Integer);
+    ChunkSW.y := Low(Integer);
+    if (wbGameMode in [ gmFO4 ]) then
+      ChunkSize  := 32
+    else
+      ChunkSize  := 16;
+    if Settings.ReadBool(Section, 'Chunk', False) then begin
+      if Settings.ReadString(Section, 'LODLevel', '') <> '' then
+        ChunkSize  := StrToInt(Settings.ReadString(Section, 'LODLevel', ''));
+      if Settings.ReadString(Section, 'LODX', IntToStr(Low(Integer))) <> '' then
+        ChunkSW.x := StrToInt(Settings.ReadString(Section, 'LODX', IntToStr(Low(Integer))));
+      if Settings.ReadString(Section, 'LODY', IntToStr(Low(Integer))) <> '' then
+        ChunkSW.y := StrToInt(Settings.ReadString(Section, 'LODY', IntToStr(Low(Integer))));
+    end;
+    ChunkNE.x := ChunkSW.x + ChunkSize;
+    ChunkNE.y := ChunkSW.y + ChunkSize;
+
+    // gather large references if LOD level 4 is generated
+    if (wbGameMode in [ gmSSE ]) then
+      if (Settings.ReadString(Section, 'LODLevel', '') = '') or (Settings.ReadString(Section, 'LODLevel', '') = '4') then
+        GetLargeReferences(Master, slLargeReferences, ChunkSW, ChunkNE);
 
     try
     try
@@ -5770,6 +5797,16 @@ begin
         // reference is out of lod range
         if (RefBlock.x < Lodset.SWCell.x) or (RefBlock.y < Lodset.SWCell.y) then
           Continue;
+
+        // reference not in specific chunk - only skip references if no atlas needs to be build
+        if Settings.ReadBool(Section, 'Chunk', False) and not Settings.ReadBool(Section, 'BuildAtlas', True) then begin
+          if ChunkSW.x <> Low(Integer) then
+            if (RefCell.x < ChunkSW.x) or (RefCell.x > ChunkNE.x) then
+              Continue;
+          if ChunkSW.y <> Low(Integer) then
+            if (RefCell.y < ChunkSW.y) or (RefCell.y > ChunkNE.y) then
+              Continue;
+        end;
 
         if REFRs[i].ElementExists['XSCL'] then
           scl := REFRs[i].ElementEditValues['XSCL']
@@ -5962,7 +5999,7 @@ begin
             // use LODGen.exe to build texture list, output file defined by TexturesListFile= in export file
             PostAddMessage('[' + aWorldspace.EditorID + '] Gathering list of textures for atlas');
             Application.ProcessMessages;
-            s := Format(wbScriptsPath + sLODGenName + ' "%s"', [s]);
+            s := Format('"%s" "%s"', [wbScriptsPath + sLODGenName, s]);
             // this overwrites GameMode set in export file
             s := s + ' --GameMode textureslist';
 
@@ -6004,7 +6041,7 @@ begin
         end;
 
         s := wbScriptsPath + 'LODGen.txt';
-        s := Format(wbScriptsPath + sLODGenName + ' "%s"', [s]);
+        s := Format('"%s" "%s"', [wbScriptsPath + sLODGenName, s]);
         s := s + ' --dontFixTangents';
         s := s + ' --removeUnseenFaces';
         // if "No LOD Water" flag is set for a worldspace, then don't remove underwater meshes
@@ -6015,7 +6052,14 @@ begin
           s := s + ' --dontGenerateVertexColors';
         if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoTangents', False) then
           s := s + ' --dontGenerateTangents';
-
+        if Settings.ReadBool(Section, 'Chunk', False) then begin
+          if Settings.ReadString(Section, 'LODLevel', '') <> '' then
+            s := s + ' --lodLevel ' + Settings.ReadString(Section, 'LODLevel', '');
+          if Settings.ReadString(Section, 'LODX', '') <> '' then
+            s := s + ' --x ' + Settings.ReadString(Section, 'LODX', '');
+          if Settings.ReadString(Section, 'LODY', '') <> '' then
+            s := s + ' --y ' + Settings.ReadString(Section, 'LODY', '');
+        end;
 
         Caption := 'Running LODGen, press ESC to abort';
         PostAddMessage('[' + aWorldspace.EditorID + '] Running ' + s);
@@ -8814,6 +8858,10 @@ begin
       cmbAtlasTextureUVRange.ItemIndex := IndexOf(cmbAtlasTextureUVRange.Items, Settings.ReadString(Section, 'AtlasTextureUVRange', '1.5'));
       cbNoTangents.Checked := Settings.ReadBool(Section, 'ObjectsNoTangents', False);
       cbNoVertexColors.Checked := Settings.ReadBool(Section, 'ObjectsNoVertexColors', False);
+      cbChunk.Checked := Settings.ReadBool(Section, 'Chunk', False);
+      cmbLODLevel.ItemIndex := IndexOf(cmbLODLevel.Items, Settings.ReadString(Section, 'LODLevel', ''));
+      edLODX.Text := Settings.ReadString(Section, 'LODX', '');
+      edLODY.Text := Settings.ReadString(Section, 'LODY', '');
       cbTreesLOD.Checked := Settings.ReadBool(Section, 'TreesLOD', True);
       cmbTreesLODBrightness.ItemIndex := IndexOf(cmbTreesLODBrightness.Items, Settings.ReadString(Section, 'TreesBrightness', '0'));
 
@@ -8834,6 +8882,10 @@ begin
       Settings.WriteString(Section, 'AtlasTextureUVRange', cmbAtlasTextureUVRange.Text);
       Settings.WriteBool(Section, 'ObjectsNoTangents', cbNoTangents.Checked);
       Settings.WriteBool(Section, 'ObjectsNoVertexColors', cbNoVertexColors.Checked);
+      Settings.WriteBool(Section, 'Chunk', cbChunk.Checked);
+      Settings.WriteString(Section, 'LODLevel', cmbLODLevel.Text);
+      Settings.WriteString(Section, 'LODX', edLODX.Text);
+      Settings.WriteString(Section, 'LODY', edLODY.Text);
       // Fallouts can have only a single atlas, so no options here
       if wbGameMode in [gmFO3, gmFNV] then begin
         Settings.WriteBool(Section, 'BuildAtlas', True);
