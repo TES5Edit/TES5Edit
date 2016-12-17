@@ -59,7 +59,7 @@ object frmLODGen: TfrmLODGen
   end
   object Label4: TLabel
     Left = 376
-    Top = 232
+    Top = 256
     Width = 401
     Height = 50
     AutoSize = False
@@ -71,7 +71,7 @@ object frmLODGen: TfrmLODGen
   end
   object Label8: TLabel
     Left = 376
-    Top = 292
+    Top = 316
     Width = 73
     Height = 13
     Caption = 'LOD brightness'
@@ -150,7 +150,7 @@ object frmLODGen: TfrmLODGen
   end
   object cbTreesLOD: TCheckBox
     Left = 360
-    Top = 210
+    Top = 234
     Width = 97
     Height = 17
     Caption = 'Trees LOD'
@@ -167,7 +167,7 @@ object frmLODGen: TfrmLODGen
   end
   object btnSplitTreesLOD: TButton
     Left = 672
-    Top = 288
+    Top = 312
     Width = 105
     Height = 25
     Caption = 'Split LOD Atlas'
@@ -177,41 +177,55 @@ object frmLODGen: TfrmLODGen
   end
   object gbObjectsOptions: TGroupBox
     Left = 376
-    Top = 80
+    Top = 72
     Width = 401
-    Height = 119
+    Height = 148
     TabOrder = 5
     object Label5: TLabel
-      Left = 32
-      Top = 28
+      Left = 40
+      Top = 33
       Width = 45
       Height = 13
       Caption = 'Atlas size'
     end
     object Label6: TLabel
-      Left = 32
-      Top = 52
+      Left = 40
+      Top = 56
       Width = 80
       Height = 13
       Caption = 'Max texture size'
     end
     object Label7: TLabel
       Left = 192
-      Top = 52
+      Top = 55
       Width = 55
       Height = 13
       Caption = 'in UV range'
     end
     object Label9: TLabel
-      Left = 145
-      Top = 28
+      Left = 147
+      Top = 33
       Width = 6
       Height = 13
       Caption = 'x'
     end
+    object Label10: TLabel
+      Left = 170
+      Top = 120
+      Width = 6
+      Height = 13
+      Caption = 'X'
+    end
+    object Label11: TLabel
+      Left = 228
+      Top = 120
+      Width = 6
+      Height = 13
+      Caption = 'Y'
+    end
     object cbBuildAtlas: TCheckBox
       Left = 16
-      Top = 8
+      Top = 13
       Width = 81
       Height = 17
       Hint = 'Put LOD textures on texture atlas(es) for better performance'
@@ -221,6 +235,7 @@ object frmLODGen: TfrmLODGen
       ShowHint = True
       State = cbChecked
       TabOrder = 0
+      OnClick = cbBuildAtlasClick
     end
     object cbNoTangents: TCheckBox
       Left = 16
@@ -233,7 +248,7 @@ object frmLODGen: TfrmLODGen
       Caption = 'No tangents'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 1
+      TabOrder = 6
     end
     object cbNoVertexColors: TCheckBox
       Left = 16
@@ -246,33 +261,78 @@ object frmLODGen: TfrmLODGen
       Caption = 'No vertex colors'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 2
+      TabOrder = 5
+    end
+    object cbChunk: TCheckBox
+      Left = 16
+      Top = 120
+      Width = 91
+      Height = 17
+      Hint = 'Create LOD for specific chunk only'
+      Caption = 'Specific chunk'
+      Checked = True
+      ParentShowHint = False
+      ShowHint = True
+      State = cbChecked
+      TabOrder = 7
+      OnClick = cbChunkClick
+    end
+    object cmbLODLevel: TComboBox
+      Left = 113
+      Top = 116
+      Width = 46
+      Height = 21
+      Hint = 'Dimension - number of cells'
+      Style = csDropDownList
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 8
+    end
+    object edLODX: TEdit
+      Left = 182
+      Top = 116
+      Width = 40
+      Height = 21
+      Hint = 'Lower left cell X'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 9
+    end
+    object edLODY: TEdit
+      Left = 240
+      Top = 116
+      Width = 40
+      Height = 21
+      Hint = 'Lower left cell Y'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 10
     end
     object cmbAtlasWidth: TComboBox
       Left = 91
-      Top = 24
+      Top = 29
       Width = 50
       Height = 21
       Hint = 'Atlas width in pixels'
       Style = csDropDownList
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 3
+      TabOrder = 1
     end
     object cmbAtlasHeight: TComboBox
-      Left = 154
-      Top = 24
+      Left = 159
+      Top = 28
       Width = 50
       Height = 21
-      Hint = 'Atlas width in pixels'
+      Hint = 'Atlas height in pixels'
       Style = csDropDownList
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 4
+      TabOrder = 2
     end
     object cmbAtlasTextureSize: TComboBox
       Left = 126
-      Top = 48
+      Top = 52
       Width = 50
       Height = 21
       Hint = 
@@ -281,11 +341,11 @@ object frmLODGen: TfrmLODGen
       Style = csDropDownList
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 5
+      TabOrder = 3
     end
     object cmbAtlasTextureUVRange: TComboBox
       Left = 253
-      Top = 48
+      Top = 52
       Width = 44
       Height = 21
       Hint = 
@@ -295,12 +355,12 @@ object frmLODGen: TfrmLODGen
       DropDownCount = 16
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 6
+      TabOrder = 4
     end
   end
   object cmbTreesLODBrightness: TComboBox
     Left = 455
-    Top = 288
+    Top = 312
     Width = 43
     Height = 21
     Hint = 
