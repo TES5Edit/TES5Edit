@@ -27,6 +27,10 @@ type
     cbBuildAtlas: TCheckBox;
     cbNoTangents: TCheckBox;
     cbNoVertexColors: TCheckBox;
+    cbChunk: TCheckBox;
+    cmbLODLevel: TComboBox;
+    edLODX: TEdit;
+    edLODY: TEdit;
     cmbAtlasWidth: TComboBox;
     cmbAtlasHeight: TComboBox;
     Label5: TLabel;
@@ -37,6 +41,8 @@ type
     Label8: TLabel;
     cmbTreesLODBrightness: TComboBox;
     Label9: TLabel;
+    Label10: TLabel;
+    Label11: TLabel;
     procedure cbObjectsLODClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnSplitTreesLODClick(Sender: TObject);
@@ -44,6 +50,8 @@ type
     procedure SelectAll1Click(Sender: TObject);
     procedure SelectNone1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure cbChunkClick(Sender: TObject);
+    procedure cbBuildAtlasClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -70,6 +78,26 @@ begin
       SplitTreesLOD(IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])));
 end;
 
+procedure TfrmLODGen.cbBuildAtlasClick(Sender: TObject);
+begin
+  cmbAtlasWidth.Enabled := cbBuildAtlas.Checked;
+  cmbAtlasHeight.Enabled := cbBuildAtlas.Checked;
+  cmbAtlasTextureSize.Enabled := cbBuildAtlas.Checked;
+  cmbAtlasTextureUVRange.Enabled := cbBuildAtlas.Checked;
+  Label5.Enabled := cbBuildAtlas.Checked;
+  Label6.Enabled := cbBuildAtlas.Checked;
+  Label7.Enabled := cbBuildAtlas.Checked;
+end;
+
+procedure TfrmLODGen.cbChunkClick(Sender: TObject);
+begin
+  cmbLODLevel.Enabled := cbChunk.Checked;
+  edLODX.Enabled := cbChunk.Checked;
+  edLODY.Enabled := cbChunk.Checked;
+  Label10.Enabled := cbChunk.Checked;
+  Label11.Enabled := cbChunk.Checked;
+end;
+
 procedure TfrmLODGen.cbObjectsLODClick(Sender: TObject);
 begin
   gbObjectsOptions.Enabled := cbObjectsLOD.Checked;
@@ -79,6 +107,7 @@ begin
     gbObjectsOptions.Visible := False;
   end;
   cmbTreesLODBrightness.Enabled := cbTreesLOD.Checked;
+  Label8.Enabled := cbTreesLOD.Checked;
 end;
 
 procedure TfrmLODGen.FormCreate(Sender: TObject);
@@ -107,6 +136,7 @@ begin
     cmbTreesLODBrightness.Items.Add(IntToStr(i));
     Inc(i);
   end;
+  cmbLODLevel.Items.Text := ''#13'4'#13'8'#13'16';
 end;
 
 procedure TfrmLODGen.FormKeyDown(Sender: TObject; var Key: Word;
@@ -150,3 +180,4 @@ begin
 end;
 
 end.
+
