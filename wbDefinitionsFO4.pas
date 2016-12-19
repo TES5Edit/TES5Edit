@@ -5488,6 +5488,7 @@ begin
   if not Supports(Element, IwbMainRecord, Race) then
     Exit;
 
+  Race := Race.WinningOverride;
   RaceID := Race.EditorID;
 
   Cache := GetCached(RaceID, Female);
@@ -5646,6 +5647,7 @@ begin
   if not Supports(Element, IwbMainRecord, Race) then
     Exit;
 
+  Race := Race.WinningOverride;
   RaceID := Race.EditorID;
 
   Cache := GetCached(RaceID, Female);
@@ -5772,6 +5774,7 @@ begin
   if not Supports(Element, IwbMainRecord, Race) then
     Exit;
 
+  Race := Race.WinningOverride;
   RaceID := Race.EditorID;
 
   Cache := GetCached(RaceID, Female);
