@@ -8850,7 +8850,17 @@ begin
       end;
 
       Section := wbAppName + ' LOD Options';
-      cbObjectsLOD.Checked := Settings.ReadBool(Section, 'ObjectsLOD', True);
+      if Assigned(Sender) and (wbGameMode = gmSSE) then begin
+        cbObjectsLOD.Checked := False;
+        cbObjectsLOD.Enabled := False;
+        Application.MessageBox(
+          'Objects LOD generation for Skyrim Special Edition is possible only in xLODGen mode either ' +
+          'by renaming executable to SSELODGen.exe or running with -lodgen command line parameter.',
+          'Warning',
+          MB_ICONINFORMATION + MB_OK
+        );
+      end else
+        cbObjectsLOD.Checked := Settings.ReadBool(Section, 'ObjectsLOD', True);
       cbBuildAtlas.Checked := Settings.ReadBool(Section, 'BuildAtlas', True);
       cmbAtlasWidth.ItemIndex := IndexOf(cmbAtlasWidth.Items, Settings.ReadString(Section, 'AtlasWidth', '2048'));
       cmbAtlasHeight.ItemIndex := IndexOf(cmbAtlasHeight.Items, Settings.ReadString(Section, 'AtlasHeight', '2048'));
