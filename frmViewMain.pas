@@ -6252,6 +6252,7 @@ begin
            MainRecord.WinningOverride.HasVisibleWhenDistantMesh and
            Supports(REFRs[i].RecordBySignature['DATA'], IwbContainerElementRef, DataRec) and
            (DataRec.ElementCount = 2) and
+           (REFRs[i].FormID <> 0) and // Some Oblivion worldspace mods have refs with zero FormID
            not REFRs[i].Flags.IsInitiallyDisabled and
            not REFRs[i].Flags.IsDeleted then begin
           try
