@@ -1040,6 +1040,38 @@ begin
     MainRecord.Version := Args.Values[1];
 end;
 
+procedure IwbMainRecord_GetFormVCS1(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    Value := MainRecord.VCS1;
+end;
+
+procedure IwbMainRecord_SetFormVCS1(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    MainRecord.VCS1 := Args.Values[1];
+end;
+
+procedure IwbMainRecord_GetFormVCS2(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    Value := MainRecord.VCS2;
+end;
+
+procedure IwbMainRecord_SetFormVCS2(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    MainRecord.VCS2 := Args.Values[1];
+end;
+
 procedure IwbMainRecord_OverrideCount(var Value: Variant; Args: TJvInterpreterArgs);
 var
   MainRecord: IwbMainRecord;
@@ -1898,6 +1930,10 @@ begin
     AddFunction(cUnit, 'SetIsVisibleWhenDistant', IwbMainRecord_SetIsVisibleWhenDistant, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'GetFormVersion', IwbMainRecord_GetFormVersion, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetFormVersion', IwbMainRecord_SetFormVersion, 2, [varEmpty, varInteger], varEmpty);
+    AddFunction(cUnit, 'GetFormVCS1', IwbMainRecord_GetFormVCS1, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'SetFormVCS1', IwbMainRecord_SetFormVCS1, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetFormVCS2', IwbMainRecord_GetFormVCS2, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'SetFormVCS2', IwbMainRecord_SetFormVCS2, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'OverrideCount', IwbMainRecord_OverrideCount, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'OverrideByIndex', IwbMainRecord_OverrideByIndex, 2, [varEmpty, varInteger], varEmpty);
     AddFunction(cUnit, 'ReferencedByCount', IwbMainRecord_ReferencedByCount, 1, [varEmpty], varEmpty);
