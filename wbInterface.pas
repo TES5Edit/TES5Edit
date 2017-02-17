@@ -24,7 +24,7 @@ uses
   Graphics;
 
 const
-  VersionString  = '3.2';
+  VersionString  = '3.2.1';
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
   wbHardcodedDat = '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
@@ -1005,6 +1005,10 @@ type
 
     function GetFormVersion: Cardinal;
     procedure SetFormVersion(aFormVersion: Cardinal);
+    function GetFormVCS1: Cardinal;
+    procedure SetFormVCS1(aVCS: Cardinal);
+    function GetFormVCS2: Cardinal;
+    procedure SetFormVCS2(aVCS: Cardinal);
 
     procedure ChangeFormSignature(aSignature: TwbSignature);
     procedure ClampFormID(aIndex: Cardinal);
@@ -1012,6 +1016,12 @@ type
     property Version: Cardinal
       read GetFormVersion
       write SetFormVersion;
+    property VCS1: Cardinal
+      read GetFormVCS1
+      write SetFormVCS1;
+    property VCS2: Cardinal
+      read GetFormVCS2
+      write SetFormVCS2;
 
     property BaseRecord: IwbMainRecord
       read GetBaseRecord;

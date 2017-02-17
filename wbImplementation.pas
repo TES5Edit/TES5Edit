@@ -1029,6 +1029,10 @@ type
     function GetGridCell(out aGridCell: TwbGridCell): Boolean;
     function GetFormVersion: Cardinal; {>>> Form Version access <<<}
     procedure SetFormVersion(aFormVersion: Cardinal); {>>> Form Version access <<<}
+    function GetFormVCS1: Cardinal;
+    procedure SetFormVCS1(aVCS: Cardinal);
+    function GetFormVCS2: Cardinal;
+    procedure SetFormVCS2(aVCS: Cardinal);
     procedure ChangeFormSignature(aSignature: TwbSignature);
     procedure ClampFormID(aIndex: Cardinal);
 
@@ -6840,6 +6844,28 @@ procedure TwbMainRecord.SetFormVersion(aFormVersion: Cardinal);
 begin
   MakeHeaderWriteable;
   mrStruct.mrsVersion := aFormVersion;
+end;
+
+function TwbMainRecord.GetFormVCS1: Cardinal;
+begin
+  Result := mrStruct.mrsVCS1;
+end;
+
+procedure TwbMainRecord.SetFormVCS1(aVCS: Cardinal);
+begin
+  MakeHeaderWriteable;
+  mrStruct.mrsVCS1 := aVCS;
+end;
+
+function TwbMainRecord.GetFormVCS2: Cardinal;
+begin
+  Result := mrStruct.mrsVCS2;
+end;
+
+procedure TwbMainRecord.SetFormVCS2(aVCS: Cardinal);
+begin
+  MakeHeaderWriteable;
+  mrStruct.mrsVCS2 := aVCS;
 end;
 
 procedure TwbMainRecord.ChangeFormSignature(aSignature: TwbSignature);
