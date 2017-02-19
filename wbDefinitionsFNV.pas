@@ -1870,6 +1870,22 @@ begin
   end;
 end;
 
+function wbCTDARunOnDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbContainer;
+  i             : Integer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then Exit;
+
+  i := Container.ElementNativeValues['Function'];
+  // IsFacingUp, IsLeftUp
+  if (i = 106) or (i = 285) then
+    Result := 1;
+end;
+
 procedure wbCTDARunOnAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   if aOldValue <> aNewValue then
@@ -5612,13 +5628,28 @@ begin
         {50} wbFormIDCkNoReach('Casino', [CSNO]),
         {51} wbFormID('Form')
       ]),
-      wbInteger('Run On', itU32, wbEnum([
-        'Subject',
-        'Target',
-        'Reference',
-        'Combat Target',
-        'Linked Reference'
-      ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
+      wbUnion('Run On', wbCTDARunOnDecider, [
+        wbInteger('Run On', itU32, wbEnum([
+          {0} 'Subject',
+          {1} 'Target',
+          {2} 'Reference',
+          {3} 'Combat Target',
+          {4} 'Linked Reference'
+        ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
+        { Idle Animations }
+        wbInteger('Run On', itU32, wbEnum([], [
+          0, 'Idle',
+          1, 'Movement',
+          2, 'Left Arm',
+          3, 'Left Hand',
+          4, 'Weapon',
+          5, 'Weapon Up',
+          6, 'Weapon Down',
+          7, 'Special Idle',
+          20, 'Whole Body',
+          21, 'Upper Body'
+        ]))
+      ]),
       wbUnion('Reference', wbCTDAReferenceDecider, [
         wbInteger('Unused', itU32, nil, cpIgnore),
         wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PBEA, PGRE, NULL], True)    // Can end up NULL if the original function requiring a reference is replaced by another who has no Run on prerequisite
