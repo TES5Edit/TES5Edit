@@ -923,6 +923,9 @@ begin
   num := 0;
   aName := ChangeFileExt(aName, '');
 
+  InitImage(atlas);
+  InitImage(crop);
+
   with TwbBinPacker.Create do try
     Width := aWidth;
     Height := aHeight;
