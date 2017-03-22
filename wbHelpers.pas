@@ -886,7 +886,7 @@ end;
 function wbExtractNameFromPath(aPathName: String): String;
 begin
   Result := aPathName;
-  while Pos('\', Result)>0 do
+  while Pos('\', Result) > 0 do
     Delete(Result, 1, Pos('\', Result))
 end;
 
@@ -898,13 +898,13 @@ var
 begin
   Result := False;
   if wbBeginInternalEdit then try
-    if (Length(aCounterName)>=4) and Supports(aElement.Container, IwbContainer, Container) and
-       Supports(aElement, IwbContainer, SelfAsContainer) then begin
+    if (Length(aCounterName) >= 4) and Supports(aElement.Container, IwbContainer, Container) and
+      Supports(aElement, IwbContainer, SelfAsContainer) then begin
       Element := Container.ElementByName[aCounterName];
       if not Assigned(Element) then  // Signatures not listed in mrDef cannot be added
         Element := Container.Add(Copy(aCounterName, 1, 4));
       if Assigned(Element) and (SameText(Element.Name, aCounterName)) then try
-        if (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
+        if (Element.GetNativeValue <> SelfAsContainer.GetElementCount) then
           Element.SetNativeValue(SelfAsContainer.GetElementCount);
         Result := True;
       except
@@ -924,13 +924,13 @@ var
 begin
   Result := False;
   if wbBeginInternalEdit then try
-    if (Length(aCounterName)>=4) and Supports(aElement.Container, IwbContainer, Container) and
-       Supports(aElement, IwbContainer, SelfAsContainer) then begin
+    if (Length(aCounterName) >= 4) and Supports(aElement.Container, IwbContainer, Container) and
+      Supports(aElement, IwbContainer, SelfAsContainer) then begin
       Element := Container.ElementByPath[aCounterName];
 //      if not Assigned(Element) then  // Signatures not listed in mrDef cannot be added
 //        Element := Container.Add(Copy(aCounterName, 1, 4));
       if Assigned(Element) and (SameText(Element.Name, wbExtractNameFromPath(aCounterName))) then try
-        if (Element.GetNativeValue<>SelfAsContainer.GetElementCount) then
+        if (Element.GetNativeValue <> SelfAsContainer.GetElementCount) then
           Element.SetNativeValue(SelfAsContainer.GetElementCount);
         Result := True;
       except
@@ -955,7 +955,7 @@ begin
       Elems   := Container.ElementByName[anArrayName];
       if Assigned(Element) then begin
         if not Assigned(Elems) then
-          if Element.GetNativeValue<>0 then
+          if Element.GetNativeValue <> 0 then
             Element.SetNativeValue(0)
           else if DeleteOnEmpty then
             Container.RemoveElement(aCounterName);
@@ -980,7 +980,7 @@ begin
       Elems   := Container.ElementByName[anArrayName];
       if Assigned(Element) then begin
         if not Assigned(Elems) then
-          if Element.GetNativeValue<>0 then
+          if Element.GetNativeValue <> 0 then
             Element.SetNativeValue(0);
         Result := True; // Counter member exists
       end;

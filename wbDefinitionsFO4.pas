@@ -4797,6 +4797,11 @@ begin
   wbCounterAfterSet('COCT - Count', aElement);
 end;
 
+procedure wbTERMCNTOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('COCT - Holds Holotape (Count)', aElement);
+end;
+
 procedure wbContainerAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   wbCounterContainerAfterSet('COCT - Count', 'Items', aElement);
@@ -16158,8 +16163,8 @@ begin
     wbUnknown(PNAM),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
     wbUnknown(FNAM),
-    wbCOCT,
-    wbCNTOs,
+    wbInteger(COCT, 'Holds Holotape (Count)', itU32),
+    wbRArrayS('Holotape', wbCNTO, cpNormal, False, nil, wbTERMCNTOsAfterSet),
     wbMNAMFurnitureMarker,
     wbByteArray(WBDT, 'Workbench Data (unused)', 0),
     wbString(XMRK, 'Marker Model'),
