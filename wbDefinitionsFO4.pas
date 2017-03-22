@@ -16164,7 +16164,13 @@ begin
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
     wbUnknown(FNAM),
     wbInteger(COCT, 'Holds Holotape (Count)', itU32),
-    wbRArrayS('Holotape', wbCNTO, cpNormal, False, nil, wbTERMCNTOsAfterSet),
+    wbRArray('Holotapes',
+      wbStruct(CNTO, 'Holotape', [
+        wbFormIDCk('Item', [NULL, NOTE]),
+        wbInteger('Count', itS32, nil, cpNormal, False, nil, nil, 1)
+      ]),
+      cpNormal, False, nil, wbTERMCNTOsAfterSet
+    ),
     wbMNAMFurnitureMarker,
     wbByteArray(WBDT, 'Workbench Data (unused)', 0),
     wbString(XMRK, 'Marker Model'),
