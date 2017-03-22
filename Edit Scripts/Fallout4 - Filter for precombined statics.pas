@@ -56,11 +56,11 @@ begin
 
         // check if any reference is precombined and add to the list if so
         for k := 0 to Pred(ReferencedByCount(e)) do
-          if HasPrecombinedMesh(ReferencedByIndex(e, k)) then
-            if slStatics.IndexOf(GetLoadOrderFormID(e)) = -1 then begin
+          if HasPrecombinedMesh(ReferencedByIndex(e, k)) then begin
+            if slStatics.IndexOf(GetLoadOrderFormID(e)) = -1 then
               slStatics.Add(GetLoadOrderFormID(e));
-              Break;
-            end;
+            Break;
+          end;
       end;
     end;
     
