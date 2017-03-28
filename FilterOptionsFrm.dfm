@@ -25,6 +25,8 @@ object frmFilterOptions: TfrmFilterOptions
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 1
+    ExplicitLeft = 24
+    ExplicitTop = -3
     object Label1: TLabel
       Left = 12
       Top = 10
@@ -51,15 +53,15 @@ object frmFilterOptions: TfrmFilterOptions
     object cbByBaseEditorID: TCheckBox
       Left = 643
       Top = 531
-      Width = 234
+      Width = 282
       Height = 17
-      Caption = 'Base Record EditorID contains'
+      Caption = 'Base Record EditorID contains / or FormID'
       TabOrder = 6
     end
     object cbByBaseName: TCheckBox
       Left = 643
       Top = 587
-      Width = 234
+      Width = 282
       Height = 17
       Caption = 'Base Record Name contains'
       TabOrder = 7
@@ -253,7 +255,7 @@ object frmFilterOptions: TfrmFilterOptions
     object cbScaledActors: TCheckBox
       Left = 643
       Top = 637
-      Width = 90
+      Width = 161
       Height = 17
       Caption = 'Scaled Actors'
       TabOrder = 31
