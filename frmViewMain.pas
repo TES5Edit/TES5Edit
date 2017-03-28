@@ -10833,6 +10833,11 @@ var
 //  ConflictThis                : TConflictThis;
   Signatures                  : TStringList;
   BaseSignatures              : TStringList;
+
+  // temp settings if provided base Editor ID is a hex FormID number
+  FilterByBaseFormID          : Boolean;
+  FilterBaseFormID            : Cardinal;
+
   Dummy                       : Integer;
   Rec                         : IwbRecord;
   GroupRecord                 : IwbGroupRecord;
@@ -10951,6 +10956,17 @@ begin
     BaseSignatures.Sorted := True;
   end else
     BaseSignatures := nil;
+
+  FilterByBaseFormID := False;
+  FilterBaseFormID := 0;
+  if Length(FilterBaseEditorID) = 8 then try
+    FilterBaseFormID := StrToInt('$' + FilterBaseEditorID);
+    // passed conversion, filter by base FormID
+    FilterByBaseFormID := True;
+  except
+    // suppress conversion error
+  end;
+
 
   vstNav.Visible:= False;
   vstNav.BeginUpdate;
@@ -11258,7 +11274,8 @@ begin
                     ) or
                 not Supports(MainRecord.RecordBySignature['NAME'], IwbRecord, Rec) or
                 not Supports(Rec.LinksTo, IwbMainRecord, MainRecord) or
-                (FilterByBaseEditorID and (Pos(AnsiUpperCase(FilterBaseEditorID), AnsiUpperCase(MainRecord.EditorID)) < 1)) or
+                (FilterByBaseEditorID and not FilterByBaseFormID and (Pos(AnsiUpperCase(FilterBaseEditorID), AnsiUpperCase(MainRecord.EditorID)) < 1)) or
+                (FilterByBaseFormID and (MainRecord.LoadOrderFormID <> FilterBaseFormID)) or
                 (FilterByBaseName and (Pos(AnsiUpperCase(FilterBaseName), AnsiUpperCase(MainRecord.DisplayName)) < 1))
               )
             ) or
