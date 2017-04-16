@@ -649,7 +649,7 @@ begin
         Result := aType + 1
       else if (aType >= 100) and (aType <= 117) then  // 100 to 117 = 18
         Result := aType - 100 + 12 + 1
-      else  if (aType >= 1000) and (aType <= 1007) then // 1000 to 1007 = 8
+      else  if (aType >= 1000) and (aType <= 1008) then // 1000 to 1007 = 8
         Result := aType - 1000 + 12 + 18 + 1;
     end;
 //    if (aType > 100) and (aType < 1000) then Result := 0; //Others are not decoded yet
@@ -2762,6 +2762,7 @@ var
   wbChangeFlags046        : IwbIntegerDef;
   wbChangeFlags047        : IwbIntegerDef;
   wbChangeFlags048        : IwbIntegerDef;
+  wbChangeFlags049        : IwbIntegerDef;
   wbChangedActorBase      : IwbStructDef;
   wbChangedNPC            : IwbStructDef;
   wbChangedExtra          : IwbUnionDef;
@@ -2856,6 +2857,7 @@ var
   wbUnionCHANGE_RELATIONSHIP_DATA : IwbUnionDef;
   wbUnionCHANGE_FORM_LIST_ADDED_FORM : IwbUnionDef;
   wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT : IwbUnionDef;
+  wbUnionCHANGE_INR_MERGE_TARGET : IwbUnionDef;
 
   // (re)added until decoding properly
   wbUnionCHANGE_REFR_EXTRA_OWNERSHIP : IwbUnionDef;
@@ -3710,7 +3712,7 @@ begin
         wbInteger('Unknown', itU8)
       ]),
       wbArray('ReservedIDs', wbRefID('ReservedID'), -254),
-      // 100 to 114
+      // 100 to 117
       wbStruct('Process List', [
         wbInteger('Unknown', itU32),
         wbInteger('Unknown', itU32),
@@ -3817,7 +3819,7 @@ begin
       wbByteArray('Range Formations'),
       wbByteArray('Anim Objects'),
       wbByteArray('Radio Manager'),
-      // 1000 to 1005
+      // 1000 to 1007
       wbStruct('Temp Effect', [
         wbArray('Unknown array 01', wbBSTempEffectScreenSpaceDecal, -254),
         wbArray('Unknown array 02', wbStruct('Unknown 02 struct', [
@@ -4200,7 +4202,8 @@ begin
     '45 (055 : LVSP)',
     '46 (043 : PARW)',
     '47 (018 : ENCH)',
-    '48 (037 : TERM)'
+    '48 (037 : TERM)',
+    '49 (093 : INNR)'
   ]);
 
   // changeType: 000 = formType: 064 : REFR
@@ -5967,6 +5970,42 @@ begin
     {31} 'UnnamedFlag31'
   ]));
 
+  // changeType: 049 = formType: 147 : INNR
+  wbChangeFlags049 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'UnnamedFlag01',
+    {02} 'UnnamedFlag02',
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'CHANGE_INR_MERGE_TARGET' // Merge Target
+  ]));
+
   wbChangeDefaultFlags := wbInteger('Change Flags', itU32 , wbFlags([
     {00} 'UnnamedFlag00',
     {01} 'UnnamedFlag01',
@@ -6052,7 +6091,8 @@ begin
     wbChangeFlags045,
     wbChangeFlags046,
     wbChangeFlags047,
-    wbChangeFlags048
+    wbChangeFlags048,
+    wbChangeFlags049
   ]);
 
   wbPosition := wbArray('Position', wbFloat('Pos'), [ 'X', 'Y', 'Z' ]);
@@ -6061,7 +6101,7 @@ begin
   wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull,
     wbStruct('Change Form Flags', [
       wbInteger('Mask Invert Flags', itU32, wbRecordFlagsFlags),
-      wbInteger('Mask Set unk010', itU16)
+      wbInteger('Mask Set unk018', itU16)
     ])
   ]);
 
@@ -6337,6 +6377,8 @@ begin
   wbUnionCHANGE_FORM_LIST_ADDED_FORM := wbUnion('Added Form', ChangedFlag31Decider, [wbNull, wbNull]);
 
   wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT := wbUnion('Added Object', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_INR_MERGE_TARGET := wbUnion('Merge Target', ChangedFlag31Decider, [wbNull, wbNull]);
 
   wbChangedActorBase := wbStruct('Changed Actor Base', [
     wbUnionCHANGE_FORM_FLAGS,
@@ -7163,6 +7205,10 @@ begin
          wbUnionCHANGE_FORM_FLAGS
         ,wbUnionCHANGE_BASE_OBJECT_VALUE
         ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change INNR Data', [ {093}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_INR_MERGE_TARGET
        ])
     ]),
     wbByteArray('Undecoded Data', ChangedFormRemainingDataCounter)
