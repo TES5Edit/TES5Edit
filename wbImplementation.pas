@@ -6965,9 +6965,12 @@ var
   Cell        : IwbMainRecord;
   CombinedRefs, CombinedRef: IwbContainerElementRef;
   cnt, i      : Cardinal;
-  s: string;
+  MasterFolder, s: string;
 begin
   Result := '';
+
+  if wbGameMode <> gmFO4 then
+    Exit;
 
   if not (mrsHasPrecombinedMeshChecked in mrStates) then begin
 
@@ -6978,9 +6981,6 @@ begin
     Include(mrStates, mrsHasPrecombinedMeshChecked);
     Self.mrPrecombinedCellID := 0;
     Self.mrPrecombinedID := 0;
-
-    if wbGameMode <> gmFO4 then
-      Exit;
 
     Signature := Self.GetSignature;
 
@@ -7039,8 +7039,19 @@ begin
         end;
   end;
 
-  if mrsHasPrecombinedMesh in mrStates then
-    Result := 'Precombined\' + IntToHex(Self.mrPrecombinedCellID, 8) + '_' + IntToHex(Self.mrPrecombinedID, 8) + '_OC.nif';
+  if mrsHasPrecombinedMesh in mrStates then begin
+
+    MasterFolder := '';
+    SelfRef := Self as IwbContainerElementRef;
+    if Supports(SelfRef.Container, IwbGroupRecord, Group) then
+      if Supports(Group.ChildrenOf, IwbMainRecord, Cell) then begin
+        Cell := Cell.MasterOrSelf;
+        if Assigned(Cell) and Assigned(Cell._File) and (Cell._File.LoadOrder > 0) then
+          MasterFolder := Cell._File.FileName + '\';
+      end;
+
+    Result := 'Precombined\' + MasterFolder + IntToHex(Self.mrPrecombinedCellID, 8) + '_' + IntToHex(Self.mrPrecombinedID, 8) + '_OC.nif';
+  end;
 end;
 
 function TwbMainRecord.GetHasVisibleWhenDistantMesh: Boolean;
