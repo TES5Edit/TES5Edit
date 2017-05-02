@@ -5209,16 +5209,22 @@ end;
 function wbCombinedMeshIDToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Cell: IwbMainRecord;
+  MasterFolder: string;
 begin
   Result := IntToHex(aInt, 8);
 
-  Cell := aElement.ContainingMainRecord;
-  if not Assigned(Cell) then
-    Exit;
-
   case aType of
     ctToStr, ctToEditValue: begin
-      Result := 'Precombined\' + IntToHex(Cell.FormID and $00FFFFFF, 8) + '_' + Result + '_OC.nif';
+      Cell := aElement.ContainingMainRecord;
+      if not Assigned(Cell) then
+        Exit;
+
+      Cell := Cell.MasterOrSelf;
+      MasterFolder := '';
+      if Assigned(Cell._File) and (Cell._File.LoadOrder > 0) then
+        MasterFolder := Cell._File.FileName + '\';
+
+      Result := 'Precombined\' + MasterFolder + IntToHex(Cell.FormID and $00FFFFFF, 8) + '_' + Result + '_OC.nif';
     end;
     ctCheck: Result := '';
   end;
@@ -5230,7 +5236,7 @@ var
   i: Integer;
 begin
   Result := 0;
-  // hex number between first and second underscope
+  // hex number between first and second underscore
   i := Pos('_', aString);
   if i <> 0 then begin
     s := Copy(aString, i + 1, Length(aString) - i);
