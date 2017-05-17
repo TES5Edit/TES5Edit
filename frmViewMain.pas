@@ -14185,7 +14185,7 @@ begin
       if Assigned(ActiveMaster) then
         Caption := ActiveMaster.Name + '\' + Caption;
 
-      ModalEdit := GetKeyState(VK_SHIFT) < 0;
+      ModalEdit := wbIKnowWhatImDoing or (GetKeyState(VK_SHIFT) < 0);
 
       for i := Low(ActiveRecords) to High(ActiveRecords) do
         AddElement(NodeDatas[i].Element, vstView.FocusedColumn = Succ(i),
