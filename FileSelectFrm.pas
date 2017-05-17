@@ -99,6 +99,7 @@ end;
 procedure TfrmFileSelect.FormCreate(Sender: TObject);
 begin
   Font := Screen.IconFont;
+  CheckListBox1.MultiSelect := True;
 end;
 
 procedure TfrmFileSelect.FormKeyDown(Sender: TObject; var Key: Word;
@@ -124,7 +125,7 @@ begin
   CheckListBox1.Items.BeginUpdate;
   try
     for i := 0 to Pred(CheckListBox1.Items.Count) do
-      if CheckListBox1.ItemEnabled[i] then
+      if CheckListBox1.ItemEnabled[i] and ((CheckListBox1.SelCount < 2) or CheckListBox1.Selected[i]) then
         CheckListBox1.Checked[i] := not CheckListBox1.Checked[i];
   finally
     CheckListBox1.Items.EndUpdate;
@@ -138,7 +139,7 @@ begin
   CheckListBox1.Items.BeginUpdate;
   try
     for i := 0 to Pred(CheckListBox1.Items.Count) do
-      if CheckListBox1.ItemEnabled[i] then
+      if CheckListBox1.ItemEnabled[i] and ((CheckListBox1.SelCount < 2) or CheckListBox1.Selected[i]) then
         CheckListBox1.Checked[i] := True;
   finally
     CheckListBox1.Items.EndUpdate;
@@ -152,7 +153,7 @@ begin
   CheckListBox1.Items.BeginUpdate;
   try
     for i := 0 to Pred(CheckListBox1.Items.Count) do
-      if CheckListBox1.ItemEnabled[i] then
+      if CheckListBox1.ItemEnabled[i] and ((CheckListBox1.SelCount < 2) or CheckListBox1.Selected[i]) then
         CheckListBox1.Checked[i] := False;
   finally
     CheckListBox1.Items.EndUpdate;
