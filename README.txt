@@ -12,15 +12,16 @@ Updated for Skyrim by Hlp, Zilav and Sharlikran.
 Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available.  Starting from 3.1.0 we need to remind you that we only support version 1.9.0.32 of Skyrim. Update TES5Edit and Skyrim before you post in the forum.  If you see any references to xEdit that is a short way of saying all versions of the program which would cover FO3Edit, FNVEdit, TES4Edit and TES5Edit.
 
 TES5Edit Cleaning Guides:
-TES5Edit: http://www.creationkit.com/Category:TES5Edit
-TES5Edit Cleaning Guide (Fewer Details): http://www.creationkit.com/TES5Edit_Cleaning_Guide_-_TES5Edit
-TES5Edit Mod Cleaning Tutorial (Detailed Instructions with Pictures): http://www.creationkit.com/TES5Edit_Mod_Cleaning_Tutorial
+TES5Edit: http://www.creationkit.com/index.php?title=Category:TES5Edit
+TES5Edit Cleaning Guide (Fewer Details): http://www.creationkit.com/index.php?title=TES5Edit_Cleaning_Guide_-_TES5Edit
+TES5Edit Mod Cleaning Tutorial (Detailed Instructions with Pictures): http://www.creationkit.com/index.php?title=TES5Edit_Mod_Cleaning_Tutorial
 
 Current Official Threads:
-Plugin-cleaning-emporium (Unrelated to development of Edit): http://forums.bethsoft.com/topic/1425445-relz-tes5edit-plugin-cleaning-emporium/
-Official Bethesda Developmental Thread: http://forums.bethsoft.com/topic/1529894-relz-tes5edit
+Bethesda.net: https://bethesda.net/community/topic/57570/relz-sseedit
 
 Rename to TES4Edit.exe to work with Oblivion.
+Rename to TES5Edit.exe to work with Skyrim.
+Rename to SSEEdit to work with Skyrim SE.
 Rename to FO3Edit.exe to work with Fallout3.
 Rename to FNVEdit.exe to work with New Vegas.
 Rename to FO4Edit.exe to work with Fallout 4.
@@ -33,16 +34,20 @@ http://www.nexusmods.com/newvegas/mods/38413
 Check for new versions here:
 FO3Edit: http://www.nexusmods.com/fallout3/mods/637
 FNVEdit: http://www.nexusmods.com/newvegas/mods/34703
+FO4Edit: http://www.nexusmods.com/fallout4/mods/2737/?
 TES4Edit: http://www.nexusmods.com/oblivion/mods/11536
 TES5Edit: http://www.nexusmods.com/skyrim/mods/25859
+SSEEdit: http://www.nexusmods.com/skyrimspecialedition/mods/164/?
 Mirror: https://github.com/TES5Edit/TES5Edit/releases
 
 xLODGen Versions:
 
 FO3LODGen: http://www.nexusmods.com/fallout3/mods/21174
 FNVLODGen: http://www.nexusmods.com/newvegas/mods/58562
+FO4LODGen: http://www.nexusmods.com/oblivion/mods/15781/?
 TES4LODGen: http://www.nexusmods.com/oblivion/mods/15781
 TES5LODGen: http://www.nexusmods.com/skyrim/mods/62698
+SSELODGen: http://www.nexusmods.com/skyrimspecialedition/mods/6642/?
 
 Future of xEdit:
 
@@ -55,6 +60,15 @@ We understand that sometimes updates to programs break things.  Please use the u
 xEdit Updates:
 
 With each new version of xEdit it is recommended to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect.
+
+Version 3.2 contains the following changes:
+
+- [SSE] Skyrim Special Edition support
+- [SSE] SSELODGen mode
+- [FO4] Fallout 4 support
+- improved record definitions and error checking
+- various bug fixes and optimizations
+- new scripts
 
 Version 3.1.3 contains the following changes:
 - [FO4] Fallout 4 support
