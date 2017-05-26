@@ -7,6 +7,7 @@
 #include "f4se/PluginAPI.h"
 #include "f4se/ObScript.h"
 //#include "f4se/GameAPI.h"
+#include "f4se/GameData.h"
 //#include "f4se/ParamInfos.h"
 #include "f4se/GameForms.h"
 //#include "f4se/GameObjects.h"
@@ -57,7 +58,7 @@ bool xEditCommand()
 		static const UInt32 s_FormToChangeType = 0x059FEC10;					// after initialisation Skyrim: 01B2E4D0	Fallout3: 01079BD0	FalloutNV: 0x011DE360
 		static const UInt32 s_nickNames = 0x02C03C44;							// Array of form signatures
 		static const UInt32 s_formTypeNicknames = 0x03667780;					// Skyrim: 0123F2C4							Fallout3: 00F4A74C	FalloutNV: 0x01187004
-		static const UInt32 s_GlobalData1Names = 0x03719B00;					// Skyrim: 01272310, 01272334, 01272370,	Fallout3: 00F6CED8	FalloutNV: 0x011A216C Fallout4 7FF6ED787DD0 - 07FF6E92D0000
+		static const UInt32 s_GlobalData1Names = 0x03719B00;					// Skyrim: 01272310, 01272334, 01272370,	Fallout3: 00F6CED8	FalloutNV: 0x011A216C
 		static const UInt32 s_GlobalData2Names = s_GlobalData1Names + 12;		// 100 + index
 		static const UInt32 s_GlobalData3Names = s_GlobalData2Names + 18;		// 1000 + index
 		static const UInt32 s_GlobalData3NamesEnd = s_GlobalData3Names + 8;
@@ -378,6 +379,23 @@ bool xEditCommand()
 	_MESSAGE("*****************************************************************************************************");
 	_MESSAGE("\n\n\n");
 
+	_MESSAGE("formType;formSignature;formID;");
+	DataHandler* theDH = *g_dataHandler.GetPtr();
+	UnkFormArray* unkFormArrays = &(theDH->arrNONE);
+	for (UInt8 i = 0; i < kFormType_Max; i++)
+	{
+		UnkFormArray* a = (UnkFormArray*) ((uintptr_t)unkFormArrays + i * sizeof(UnkFormArray));
+		for (UInt64 j = 0; j < a->count; j++)
+		{
+			TESForm* f = (*a)[j];
+			if (f && !f->mods)
+				_MESSAGE("%04d;%s;%08X;", f->formType, formTypeNicknames[f->formType].nickname, f->formID);
+		}
+	}
+
+	_MESSAGE("*****************************************************************************************************");
+	_MESSAGE("\n\n\n");
+
 	return true;
 }
   
@@ -424,7 +442,8 @@ void xEdit_ObScript_Commit()
 	_MESSAGE("xEdit console command '%s' installed as 0x%08x", cmd.longName, cmd.opcode);
 }
 
-extern "C" {
+extern "C"
+{
 
 bool F4SEPlugin_Query(const F4SEInterface * f4se, PluginInfo * info)
 {
