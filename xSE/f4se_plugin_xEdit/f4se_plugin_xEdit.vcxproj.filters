@@ -26,6 +26,9 @@
     <ClCompile Include="..\f4se\f4se\ObScript.cpp">
       <Filter>f4se\api</Filter>
     </ClCompile>
+    <ClCompile Include="..\f4se\f4se\GameData.cpp">
+      <Filter>f4se\api</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />
@@ -44,6 +47,9 @@
       <Filter>f4se\api</Filter>
     </ClInclude>
     <ClInclude Include="..\f4se\f4se\ObScript.h">
+      <Filter>f4se\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\f4se\f4se\GameData.h">
       <Filter>f4se\api</Filter>
     </ClInclude>
   </ItemGroup>
