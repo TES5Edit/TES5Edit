@@ -176,6 +176,11 @@ begin
   Value := SameText(string(Args.Values[0]), string(Args.Values[1]));
 end;
 
+procedure JvInterpreter_SameValue(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := SameValue(Single(Args.Values[0]), Single(Args.Values[1]));
+end;
+
 procedure JvInterpreter_StringReplace(var Value: Variant; Args: TJvInterpreterArgs);
 var
   rf: TReplaceFlags;
@@ -1051,6 +1056,7 @@ begin
     AddFunction('Math', 'Floor', JvInterpreter_Floor, 1, [varEmpty], varEmpty);
     AddFunction('Math', 'Ceil', JvInterpreter_Ceil, 1, [varEmpty], varEmpty);
     AddFunction('SysUtils', 'SameText', JvInterpreter_SameText, 2, [varString, varString], varEmpty);
+    AddFunction('SysUtils', 'SameValue', JvInterpreter_SameValue, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('SysUtils', 'StringReplace', JvInterpreter_StringReplace, 4, [varString, varString, varString, varEmpty], varEmpty);
     AddFunction('SysUtils', 'IntToHex64', JvInterpreter_IntToHex64, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('SysUtils', 'StrToInt64', JvInterpreter_StrToInt64, 1, [varEmpty], varEmpty);
