@@ -7099,7 +7099,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbMODLReq,
-    wbRStructsSK('Parts', 'Part', [0], [
+    wbRStructs('Parts', 'Part', [
       wbFormIDCk(ONAM, 'Static', [STAT]),
       wbArrayS(DATA, 'Placements', wbStruct('Placement', [
         wbStruct('Position', [
