@@ -16103,7 +16103,7 @@ begin
     wbMODL,
     wbFULL,
     wbFLTR,
-    wbRStructsSK('Parts', 'Part', [0], [
+    wbRStructs('Parts', 'Part', [
       wbFormIDCk(ONAM, 'Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP]),
       wbArrayS(DATA, 'Placements', wbStruct('Placement', [
         wbStruct('Position', [
