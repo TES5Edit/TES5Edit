@@ -947,6 +947,7 @@ type
     procedure SetEditorID(const aValue: string);
     function GetFullName: string;
     function GetDisplayNameKey: string;
+    function GetSubrecordErrors: string;
     function GetMaster: IwbMainRecord;
     function GetIsMaster: Boolean;
     function GetMasterOrSelf: IwbMainRecord;
@@ -1043,6 +1044,8 @@ type
       read GetFullName;
     property DisplayNameKey: string
       read GetDisplayNameKey;
+    property SubrecordErrors: string
+      read GetSubrecordErrors;
 
     property Flags: TwbMainRecordStructFlags
       read GetFlags;
