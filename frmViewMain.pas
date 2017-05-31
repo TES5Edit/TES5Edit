@@ -4025,7 +4025,7 @@ begin
       mniModGroupsEnabled.Checked := ModGroupsEnabled;
       mniModGroupsDisabled.Checked := not ModGroupsEnabled;
 
-      // hold shift to skip bulding references
+      // hold shift to skip building references
       if (GetKeyState(VK_SHIFT) < 0) then begin
         wbBuildRefs := False;
         AddMessage('The SHIFT key is pressed, skip building references for all plugins!');
@@ -4077,17 +4077,24 @@ begin
     wbColorConflictThis[ConflictThis] := Settings.ReadInteger('ColorConflictThis', GetEnumName(TypeInfo(TConflictThis), Integer(ConflictThis)), Integer(wbColorConflictThis[ConflictThis]));
   for ConflictAll := Low(TConflictAll) to High(TConflictAll) do
     wbColorConflictAll[ConflictAll] := Settings.ReadInteger('ColorConflictAll', GetEnumName(TypeInfo(TConflictAll), Integer(ConflictAll)), Integer(wbColorConflictAll[ConflictAll]));
+
   Settings.ReadSection('DoNotBuildRefsFor', wbDoNotBuildRefsFor);
-  // do not build refs for fallout3.esm in FNVEdit by default for TTW
-  if (wbDoNotBuildRefsFor.Count = 0) and (wbGameMode = gmFNV) then begin
-    sl := TStringList.Create;
-    try
-      Settings.ReadSections(sl);
-      if sl.IndexOf('DoNotBuildRefsFor') = -1 then
-        wbDoNotBuildRefsFor.Add('Fallout3.esm');
-    finally
-      sl.Free;
-    end;
+
+  // add the game master file into wbDoNotBuildRefsFor list by default
+  if not Settings.ReadBool('Options', 'NoBuildRefsGameMasterAdded', False) then begin
+    wbDoNotBuildRefsFor.Add(wbGameName + '.esm');
+
+    // also do not build refs for TTW's fallout3.esm in FNVEdit
+    if wbGameMode = gmFNV then
+      wbDoNotBuildRefsFor.Add('Fallout3.esm');
+
+    // make master file addition only once so it can be manually removed in Options later if needed
+    Settings.WriteBool('Options', 'NoBuildRefsGameMasterAdded', True);
+
+    // save updated list
+    Settings.EraseSection('DoNotBuildRefsFor');
+    for i := 0 to Pred(wbDoNotBuildRefsFor.Count) do
+      Settings.WriteInteger('DoNotBuildRefsFor', wbDoNotBuildRefsFor[i], 1);
   end;
 
   HideNoConflict := Settings.ReadBool('View', 'HodeNoConflict', False);
@@ -16705,7 +16712,7 @@ begin
 
         if wbBuildRefs then
           for i := Low(ltFiles) to High(ltFiles) do
-            if not SameText(ltFiles[i].FileName, wbGameName + '.esm') and
+            if {not SameText(ltFiles[i].FileName, wbGameName + '.esm') and} // game master is handled by wbDoNotBuildRefsFor list
                not wbDoNotBuildRefsFor.Find(ltFiles[i].FileName, dummy) and
                not ltFiles[i].IsNotPlugin then begin
               LoaderProgress('[' + ltFiles[i].FileName + '] Building reference info.');
