@@ -101,8 +101,7 @@ begin
     sl.Assign(lbDoNotBuildRef.Items);
 
     for i := Low(_Files^) to High(_Files^) do
-      if _Files^[i].IsEditable then
-        CheckListBox1.Items.Add(_Files^[i].FileName);
+      CheckListBox1.Items.Add(_Files^[i].FileName);
 
     if ShowModal <> mrOK then
       Exit;
