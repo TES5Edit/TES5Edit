@@ -4,12 +4,15 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, IOUtils;
+  Dialogs, StdCtrls, ExtCtrls, IOUtils, JvHLEditor, JvExControls, JvEditorCommon, JvEditor, Vcl.ComCtrls;
 
 const
   sNewScript = '<new script>';
   sNewScriptName = '_newscript_';
   sScriptExt = '.pas';
+
+type
+  TExecuteEvent = procedure(Output: TMemo; Input: TStrings) of object;
 
 type
   TfrmScript = class(TForm)
@@ -23,26 +26,40 @@ type
     lblPosition: TLabel;
     btnSave: TButton;
     dlgSave: TSaveDialog;
-    Editor: TMemo;
+    Editor: TJvHLEditor;
     chkScriptsSubDir: TCheckBox;
+    pgScriptTabs: TPageControl;
+    tabFileLoader: TTabSheet;
+    tabInteractive: TTabSheet;
+    btnExecute: TButton;
+    InterpInput: TJvHLEditor;
+    InterpOutput: TMemo;
     procedure FormShow(Sender: TObject);
     procedure cmbScriptsChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnSaveClick(Sender: TObject);
+    procedure btnExecuteClick(Sender: TObject);
     procedure EditorKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure EditorMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure chkScriptsSubDirClick(Sender: TObject);
+    procedure pgScriptTabsChange(Sender: TObject);
   private
     { Private declarations }
+    FExecuteEvent : TExecuteEvent;
+  protected
+    procedure RaiseExecute;
+    function isInterpreterActive: Boolean;
   public
     { Public declarations }
     Path: string;
-    LastUsedScript: string;
     Script: string;
+    LastUsedScript: string;
     procedure UpdateCaretPos;
     procedure ReadScriptsList;
+    property InterpreterActive: Boolean read isInterpreterActive;
+    property ExecuteEvent: TExecuteEvent read FExecuteEvent write FExecuteEvent;
   end;
 
 var
@@ -77,7 +94,6 @@ begin
   end else
     s := Path + s + sScriptExt;
 
-
   with TStringList.Create do try
     Text := Editor.Lines.Text;
     SaveToFile(s);
@@ -85,6 +101,11 @@ begin
   finally
     Free;
   end;
+end;
+
+procedure TfrmScript.btnExecuteClick(Sender: TObject);
+begin
+  RaiseExecute;
 end;
 
 procedure TfrmScript.cmbScriptsChange(Sender: TObject);
@@ -189,12 +210,35 @@ procedure TfrmScript.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   if Key = VK_ESCAPE then
-    ModalResult := mrCancel;
+    ModalResult := mrCancel
+  else if (Key = VK_RETURN) and (Shift = [ ssCtrl ]) and InterpreterActive then
+    RaiseExecute;
 end;
 
 procedure TfrmScript.FormShow(Sender: TObject);
 begin
   ReadScriptsList;
+end;
+
+procedure TfrmScript.pgScriptTabsChange(Sender: TObject);
+begin
+  btnExecute.Enabled := InterpreterActive;
+  btnOK.Enabled := not btnExecute.Enabled;
+  if btnExecute.Enabled then
+    InterpInput.SetFocus
+  else
+    cmbScripts.SetFocus;
+end;
+
+procedure TfrmScript.RaiseExecute;
+begin
+  if Assigned(FExecuteEvent) then
+    FExecuteEvent(InterpOutput, InterpInput.Lines);
+end;
+
+function TfrmScript.isInterpreterActive: Boolean;
+begin
+  Result := (pgScriptTabs.ActivePageIndex = 1);
 end;
 
 end.

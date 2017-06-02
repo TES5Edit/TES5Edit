@@ -615,9 +615,11 @@ type
     function SetAllToMaster: Boolean;
     function RestorePluginsFromMaster: Boolean;
     procedure ApplyScript(aScript: string);
+    procedure OnScriptExecute(Output: TMemo; Input: TStrings);
     procedure CreateActionsForScripts;
     function LOManagersDirtyInfo(aInfo: TPluginDirtyInfo): string;
   private
+    InterpreterOutput: TMemo;
     procedure WMUser(var Message: TMessage); message WM_USER;
     procedure WMUser1(var Message: TMessage); message WM_USER + 1;
     procedure WMUser2(var Message: TMessage); message WM_USER + 2;
@@ -7443,6 +7445,7 @@ var
 begin
   with TfrmScript.Create(Self) do try
     Path := wbScriptsPath;
+    ExecuteEvent := OnScriptExecute;
     LastUsedScript := Settings.ReadString('View', 'LastUsedScript', '');
     chkScriptsSubDir.Checked := Settings.ReadBool('View', 'IncludeScriptsFromSubDir', False);
     if ShowModal <> mrOK then
@@ -7456,6 +7459,25 @@ begin
     Free;
   end;
   ApplyScript(Scr);
+end;
+
+procedure TfrmMain.OnScriptExecute(Output: TMemo; Input: TStrings);
+begin
+  if Assigned(Input) then begin
+    with TStringList.Create do try
+      if Assigned(Output) then begin
+        InterpreterOutput := Output;
+        InterpreterOutput.Lines.Clear;
+      end;
+      Add('unit userscript;');
+      AddStrings(Input);
+      Append('end.');
+      ApplyScript(Text);
+    finally
+      Free;
+      InterpreterOutput := nil;
+    end;
+  end;
 end;
 
 procedure TfrmMain.CreateActionsForScripts;
@@ -15832,6 +15854,7 @@ var
   ConflictAll         : TConflictAll;
   List                : TList;
   i                   : Integer;
+  ArgsString          : string;
 begin
   if SameText(Identifier, 'wbGameMode') and (Args.Count = 0) then begin
     Value := wbGameMode;
@@ -15908,6 +15931,19 @@ begin
   else if SameText(Identifier, 'AddMessage') then begin
     if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
       AddMessage(Args.Values[0]);
+      Done := True;
+      Application.ProcessMessages;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end
+  else if SameText(Identifier, 'Print') and Assigned(InterpreterOutput) then begin
+    if Args.Count > 1 then begin
+      ArgsString := '';
+      for i := 0 to (Args.Count - 1) do begin
+        ArgsString := ArgsString + ' ' + VarToStr(Args.Values[i]);
+      end;
+      InterpreterOutput.Lines.Add(TrimLeft(ArgsString));
+      SendMessage(InterpreterOutput.Handle, WM_VSCROLL, SB_LINEDOWN, 0);
       Done := True;
       Application.ProcessMessages;
     end else
