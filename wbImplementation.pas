@@ -1610,7 +1610,7 @@ type
     function GetSignature: TwbSignature;
   end;
 
-  TSearchCompare = reference to function(Item1, Item2: Pointer): Integer;
+  TSearchCompare = reference to function(Item, Value: Pointer): Integer;
 
 const
   NONE : TwbSignature = #0#0#0#0;
@@ -1751,29 +1751,29 @@ begin
     Result := CmpW32(IwbFile(Item1).ElementID, IwbFile(Item2).ElementID);
 end;
 
-function SearchRecordsByEditorID(Item1, Item2: Pointer): Integer;
+function SearchRecordsByEditorID(Item, Value: Pointer): Integer;
 begin
-  Result := CompareText(IwbMainRecord(Item1).EditorID, String(Item2^));
+  Result := CompareText(IwbMainRecord(Item).EditorID, PString(Value)^);
 end;
 
-function SearchRecordsByFixedFormID(Item1, Item2: Pointer): Integer;
+function SearchRecordsByFixedFormID(Item, Value: Pointer): Integer;
 begin
-  Result := CmpW32(IwbMainRecord(Item1).FixedFormID, Cardinal(Item2^));
+  Result := CmpW32(IwbMainRecord(Item).FixedFormID, PCardinal(Value)^);
 end;
 
-function SearchRecordsByFormID(Item1, Item2: Pointer): Integer;
+function SearchRecordsByFormID(Item, Value: Pointer): Integer;
 begin
-  Result := CmpW32(IwbMainRecord(Item1).FormID and $00FFFFFF, Cardinal(Item2^));
+  Result := CmpW32(IwbMainRecord(Item).FormID and $00FFFFFF, PCardinal(Value)^);
 end;
 
-function SearchBySortKey(Item1, Item2: Pointer): Integer;
+function SearchBySortKey(Item, Value: Pointer): Integer;
 begin
-  Result := CompareStr(IwbElement(Item1).SortKey[False], string(Item2^));
+  Result := CompareStr(IwbElement(Item).SortKey[False], PString(Value)^);
 end;
 
-function SearchByExtendedSortKey(Item1, Item2: Pointer): Integer;
+function SearchByExtendedSortKey(Item, Value: Pointer): Integer;
 begin
-  Result := CompareStr(IwbElement(Item1).SortKey[True], string(Item2^));
+  Result := CompareStr(IwbElement(Item).SortKey[True], PString(Value)^);
 end;
 
 function SearchByRecord(Item1, Item2: Pointer): Integer;
