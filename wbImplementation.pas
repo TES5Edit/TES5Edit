@@ -1610,6 +1610,8 @@ type
     function GetSignature: TwbSignature;
   end;
 
+  TSearchCompare = reference to function(Item, Value: Pointer): Integer;
+
 const
   NONE : TwbSignature = #0#0#0#0;
 
@@ -1747,6 +1749,59 @@ begin
   Result := CmpI32(LoadOrder1, LoadOrder2);
   if Result = 0 then
     Result := CmpW32(IwbFile(Item1).ElementID, IwbFile(Item2).ElementID);
+end;
+
+function SearchRecordsByEditorID(Item, Value: Pointer): Integer;
+begin
+  Result := CompareText(IwbMainRecord(Item).EditorID, PString(Value)^);
+end;
+
+function SearchRecordsByFixedFormID(Item, Value: Pointer): Integer;
+begin
+  Result := CmpW32(IwbMainRecord(Item).FixedFormID, PCardinal(Value)^);
+end;
+
+function SearchRecordsByFormID(Item, Value: Pointer): Integer;
+begin
+  Result := CmpW32(IwbMainRecord(Item).FormID and $00FFFFFF, PCardinal(Value)^);
+end;
+
+function SearchBySortKey(Item, Value: Pointer): Integer;
+begin
+  Result := CompareStr(IwbElement(Item).SortKey[False], PString(Value)^);
+end;
+
+function SearchByExtendedSortKey(Item, Value: Pointer): Integer;
+begin
+  Result := CompareStr(IwbElement(Item).SortKey[True], PString(Value)^);
+end;
+
+function SearchByRecord(Item1, Item2: Pointer): Integer;
+begin
+  Result := CmpW32(IwbMainRecord(Item1).LoadOrderFormID , IwbMainRecord(Item2).LoadOrderFormID);
+  if Result = 0 then
+    Result := CmpW32(IwbMainRecord(Item1)._File.LoadOrder, IwbMainRecord(Item2)._File.LoadOrder);
+end;
+
+function wbBinarySearch(aList: PwbPointerArray; L, H: Integer; aValue: Pointer; aCompare: TSearchCompare; var Index: Integer): Boolean; overload;
+var
+  I, C: Integer;
+begin
+  Result := False;
+  while L <= H do begin
+    I := (L + H) shr 1;
+    C := aCompare(aList[I], aValue);
+    if C < 0 then
+      L := I + 1
+    else begin
+      H := I - 1;
+      if C = 0 then begin
+        Result := True;
+        L := I;
+      end;
+    end;
+  end;
+  Index := L;
 end;
 
 { TwbFile }
@@ -2348,92 +2403,37 @@ begin
 end;
 
 function TwbFile.FindEditorID(const aEditorID: string; var Index: Integer): Boolean;
-var
-  L, H, I, C: Integer;
 begin
   Result := False;
   if not flLoadFinished then
     Exit;
-
-  L := Low(flRecordsByEditorID);
-  H := High(flRecordsByEditorID);
-  while L <= H do begin
-    I := (L + H) shr 1;
-    C := CompareText(flRecordsByEditorID[I].EditorID, aEditorID);
-    if C < 0 then
-      L := I + 1
-    else begin
-      H := I - 1;
-      if C = 0 then begin
-        Result := True;
-        L := I;
-      end;
-    end;
-  end;
-  Index := L;
+  Result := wbBinarySearch(@flRecordsByEditorID[0], Low(flRecordsByEditorID), High(flRecordsByEditorID), @aEditorID, SearchRecordsByEditorID, Index);
 end;
 
 function TwbFile.FindFormID(aFormID: Cardinal; var Index: Integer): Boolean;
 var
-  L, H, I, C: Integer;
+  i: Integer;
 begin
   Result := False;
-  if not flFormIDsSorted then begin
-    Exit;
-
+  if flFormIDsSorted then begin
+    if (aFormID shr 24) > Cardinal(GetMasterCount) then
+      aFormID := (aFormID and $00FFFFFF) or (Cardinal(GetMasterCount) shl 24);
+    Result := wbBinarySearch(@flRecords[0], Low(flRecords), High(flRecords), @aFormID, SearchRecordsByFixedFormID, Index);
+  end
+  else if wbAllowSlowSearching then begin
     for i := 0 to Pred(flRecordsCount) do
-      if flRecords[I].FixedFormID = aFormID then begin
+      if flRecords[i].FixedFormID = aFormID then begin
         Index := i;
         Result := True;
         Exit;
       end;
-    Exit;
   end;
-
-  if (aFormID shr 24) > Cardinal(GetMasterCount) then
-    aFormID := (aFormID and $00FFFFFF) or (Cardinal(GetMasterCount) shl 24);
-
-  L := Low(flRecords);
-  H := High(flRecords);
-  while L <= H do begin
-    I := (L + H) shr 1;
-    C := CmpW32(flRecords[I].FixedFormID, aFormID);
-    if C < 0 then
-      L := I + 1
-    else begin
-      H := I - 1;
-      if C = 0 then begin
-        Result := True;
-        L := I;
-      end;
-    end;
-  end;
-  Index := L;
 end;
 
 function TwbFile.FindInjectedID(aFormID: Cardinal; var Index: Integer): Boolean;
-var
-  L, H, I, C: Integer;
 begin
-  Result := False;
   aFormID := aFormID and $00FFFFFF;
-
-  L := Low(flInjectedRecords);
-  H := High(flInjectedRecords);
-  while L <= H do begin
-    I := (L + H) shr 1;
-    C := CmpW32(flInjectedRecords[I].FormID and $00FFFFFF, aFormID);
-    if C < 0 then
-      L := I + 1
-    else begin
-      H := I - 1;
-      if C = 0 then begin
-        Result := True;
-        L := I;
-      end;
-    end;
-  end;
-  Index := L;
+  Result := wbBinarySearch(@flInjectedRecords[0], Low(flInjectedRecords), High(flInjectedRecords), @aFormID, SearchRecordsByFormID, Index);
 end;
 
 procedure TwbFile.flCloseFile;
@@ -4142,27 +4142,11 @@ end;
 {$D+}
 
 function TwbContainer.FindBySortKey(const aSortKey: string; aExtended: Boolean; out aIndex: Integer): Boolean;
-var
-  L, H, I, C: Integer;
 begin
-  Result := False;
-
-  L := Low(cntElements);
-  H := High(cntElements);
-  while L <= H do begin
-    I := (L + H) shr 1;
-    C := CompareStr(cntElements[I].SortKey[aExtended], aSortKey);
-    if C < 0 then
-      L := I + 1
-    else begin
-      H := I - 1;
-      if C = 0 then begin
-        Result := True;
-        L := I;
-      end;
-    end;
-  end;
-  aIndex := L;
+  if not aExtended then
+    Result := wbBinarySearch(@cntElements[0], Low(cntElements), High(cntElements), @aSortKey, SearchBySortKey, aIndex)
+  else
+    Result := wbBinarySearch(@cntElements[0], Low(cntElements), High(cntElements), @aSortKey, SearchByExtendedSortKey, aIndex);
 end;
 
 procedure TwbContainer.FindUsedMasters(aMasters: PwbUsedMasters);
@@ -6366,31 +6350,8 @@ begin
 end;
 
 function TwbMainRecord.FindReferencedBy(const aMainRecord: IwbMainRecord; var Index: Integer): Boolean;
-var
-  L, H, I, C: Integer;
 begin
-  Result := False;
-
-  L := Low(mrReferencedBy);
-  H := High(mrReferencedBy);
-  while L <= H do begin
-    I := (L + H) shr 1;
-
-    C := CmpW32(mrReferencedBy[I].LoadOrderFormID , aMainRecord.LoadOrderFormID);
-    if C = 0 then
-      C := CmpW32(mrReferencedBy[I]._File.LoadOrder, aMainRecord._File.LoadOrder);
-
-    if C < 0 then
-      L := I + 1
-    else begin
-      H := I - 1;
-      if C = 0 then begin
-        Result := True;
-        L := I;
-      end;
-    end;
-  end;
-  Index := L;
+  Result := wbBinarySearch(@mrReferencedBy[0], Low(mrReferencedBy), High(mrReferencedBy), @aMainRecord, SearchByRecord, Index);
 end;
 
 procedure TwbMainRecord.FindUsedMasters(aMasters: PwbUsedMasters);
