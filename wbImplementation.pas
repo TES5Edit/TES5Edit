@@ -1785,21 +1785,23 @@ end;
 
 function wbBinarySearch(aList: PwbPointerArray; L, H: Integer; aValue: Pointer; aCompare: TSearchCompare; var Index: Integer): Boolean; overload;
 var
-  C: Integer;
+  I, C: Integer;
 begin
+  Result := False;
   while L <= H do begin
-    Index := (L + H) shr 1;
-    C := aCompare(aList[Index], aValue);
+    I := (L + H) shr 1;
+    C := aCompare(aList[I], aValue);
     if C < 0 then
-      L := Index + 1
+      L := I + 1
     else begin
-      H := Index - 1;
+      H := I - 1;
       if C = 0 then begin
         Result := True;
-        Exit;
+        L := I;
       end;
     end;
   end;
+  Index := L;
 end;
 
 { TwbFile }
