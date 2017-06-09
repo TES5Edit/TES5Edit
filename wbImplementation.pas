@@ -672,6 +672,8 @@ type
     procedure SortRecords;
     procedure SortRecordsByEditorID;
 
+    procedure RecordsBySignature(var aList: TDynMainRecords; aSignature: String; var len: Integer);
+
     procedure AddMaster(const aFileName: string; isTemporary: Boolean = False); overload;
     procedure AddMaster(const aFile: IwbFile); overload;
 
@@ -3428,6 +3430,55 @@ end;
 function CompareRecordsByEditorID(Item1, Item2: Pointer): Integer;
 begin
   Result := CompareText(IwbMainRecord(Item1).EditorID, IwbMainRecord(Item2).EditorID);
+end;
+
+function IsTopLevelSignature(aSignature: String): Boolean;
+begin
+  Result := wbGroupOrder.IndexOf(aSignature) > -1;
+end;
+
+procedure TwbFile.RecordsBySignature(var aList: TDynMainRecords; aSignature: String; var len: Integer);
+var
+  sig: TwbSignature;
+  group: IwbGroupRecord;
+  count, aLen, i: Integer;
+  rec: IwbMainRecord;
+begin
+  sig := StrToSignature(aSignature);
+  // iterate through group record for top level groups
+  if IsTopLevelSignature(aSignature) then begin
+    group := GetGroupBySignature(sig);
+    if not Assigned(group) then exit;
+    count := group.ElementCount;
+    if count = 0 then exit;
+    aLen := len + count;
+    // allocate enough positions for the full group size and resize later
+    SetLength(aList, aLen);
+    for i := 0 to Pred(count) do
+      if Supports(group.Elements[i], IwbMainRecord, rec) then begin
+        aList[len] := rec;
+        Inc(len);
+      end;
+  end
+  // else iterate through all records in file
+  else begin
+    aLen := len;
+    for i := 0 to Pred(GetRecordCount) do begin
+      rec := GetRecord(i);
+      if rec.Signature = sig then begin
+        // allocate additonal memory as needed in 1KB blocks
+        if len >= aLen then begin
+          SetLength(aList, aLen + 256);
+          Inc(aLen, 256);
+        end;
+        aList[len] := rec;
+        Inc(len);
+      end;
+    end;
+  end;
+  // if allocated length is less than length, trim excess
+  if len < aLen then
+    SetLength(aList, len);
 end;
 
 procedure TwbFile.SortMasters;

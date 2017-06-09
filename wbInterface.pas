@@ -802,6 +802,8 @@ type
     function GetHasNoFormID: Boolean;
     procedure SetHasNoFormID(Value: Boolean);
 
+    procedure RecordsBySignature(var aList: TDynMainRecords; aSignature: String; var len: Integer);
+
     property FileName: string
       read GetFileName;
     property UnsavedSince: TDateTime
