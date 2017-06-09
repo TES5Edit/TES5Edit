@@ -73,6 +73,7 @@ var
   wbResolveAlias           : Boolean  = True;
   wbActorTemplateHide      : Boolean  = True;
   wbClampFormID            : Boolean  = True;
+  wbSortEditorIDsOnDemand  : Boolean  = True;
   wbDoNotBuildRefsFor      : TStringList;
   wbCopyIsRunning          : Integer  = 0;
 
@@ -806,6 +807,7 @@ type
 
     procedure SortEditorIDs(aSignature: String);
     procedure RecordsBySignature(var aList: TDynMainRecords; aSignature: String; var len: Integer);
+    function SignatureIsSorted(aSignature: String): Boolean;
 
     property FileName: string
       read GetFileName;

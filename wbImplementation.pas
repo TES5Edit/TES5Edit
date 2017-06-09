@@ -676,6 +676,7 @@ type
     procedure CreateEditorIDSignatures;
     procedure RecordsBySignature(var aList: TDynMainRecords; aSignature: String; var len: Integer);
     procedure SortEditorIDs(aSignature: String);
+    function SignatureIsSorted(aSignature: String): Boolean;
 
     procedure AddMaster(const aFileName: string; isTemporary: Boolean = False); overload;
     procedure AddMaster(const aFile: IwbFile); overload;
@@ -1528,6 +1529,7 @@ type
     function Reached: Boolean; override;
 
     function FindChildGroup(aType: Integer; aMainRecord: IwbMainRecord): IwbGroupRecord;
+    function FindEditorID(const aEditorID: string): IwbMainRecord;
 
     function GetMainRecordByEditorID(const aEditorID: string): IwbMainRecord;
     function GetMainRecordByFormID(const aFormID: Cardinal): IwbMainRecord;
@@ -3504,6 +3506,11 @@ begin
   RecordsBySignature(TDynMainRecords(flRecordsByEditorID), aSignature, flRecordsByEditorIDCount);
   if flRecordsByEditorIDCount > len then
     wbMergeSort(@flRecordsByEditorID[0], flRecordsByEditorIDCount, CompareRecordsByEditorID);
+end;
+
+function TwbFile.SignatureIsSorted(aSignature: string): Boolean;
+begin
+  Result := flEditorIDSignatures.IndexOf(aSignature) > -1;
 end;
 
 procedure TwbFile.SortMasters;
@@ -11243,20 +11250,46 @@ begin
   Result := grStruct.grsGroupType;
 end;
 
-function TwbGroupRecord.GetMainRecordByEditorID(const aEditorID: string): IwbMainRecord;
+function TwbGroupRecord.FindEditorID(const aEditorID: string): IwbMainRecord;
 var
-  SelfRef : IwbContainerElementRef;
-  i       : Integer;
+  i: Integer;
 begin
-  Result := nil;
-
-  SelfRef := Self;
-  DoInit;
   for i := Low(cntElements) to High(cntElements) do
     if Supports(cntElements[i], IwbMainRecord, Result) then
       if SameText(Result.EditorID, aEditorID) then
         Exit;
   Result := nil;
+end;
+
+function TwbGroupRecord.GetMainRecordByEditorID(const aEditorID: string): IwbMainRecord;
+var
+  SelfRef    : IwbContainerElementRef;
+  aSignature : String;
+  _File      : IwbFile;
+  bIsSorted  : Boolean;
+begin
+  Result := nil;
+
+  SelfRef := Self;
+  DoInit;
+
+  if grStruct.grsGroupType = 0 then begin
+    aSignature := AnsiString(TwbSignature(grStruct.grsLabel));
+    _File := GetFile;
+    bIsSorted := _File.SignatureIsSorted(aSignature);
+    if not bIsSorted and wbSortEditorIDsOnDemand then begin
+      _File.SortEditorIDs(aSignature);
+      bIsSorted := True;
+    end;
+    if bIsSorted then begin
+      Result := _File.RecordByEditorID[aEditorID];
+      if Result.Signature <> aSignature then
+        Result := nil;
+    end;
+  end;
+
+  if not Assigned(Result) then
+    Result := FindEditorID(aEditorID);
 end;
 
 function TwbGroupRecord.GetMainRecordByFormID(const aFormID: Cardinal): IwbMainRecord;
