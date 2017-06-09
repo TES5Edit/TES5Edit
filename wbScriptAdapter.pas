@@ -1483,6 +1483,16 @@ begin
   end;
 end;
 
+procedure IwbFile_SortEditorIDs(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File : IwbFile;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then begin
+    _File.SortEditorIDs(Args.Values[1]);
+    Value := True;
+  end;
+end;
+
 procedure IwbFile_RecordsBySignature(var Value: Variant; Args: TJvInterpreterArgs);
 var
   _File   : IwbFile;
@@ -2001,6 +2011,7 @@ begin
     AddFunction(cUnit, 'LoadOrderFormIDtoFileFormID', IwbFile_LoadOrderFormIDtoFileFormID, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'FileFormIDtoLoadOrderFormID', IwbFile_FileFormIDtoLoadOrderFormID, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'FileWriteToStream', IwbFile_WriteToStream, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'SortEditorIDs', IwbFile_SortEditorIDs, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'RecordsBySignature', IwbFile_RecordsBySignature, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
 
     { IwbContainerHandler }
