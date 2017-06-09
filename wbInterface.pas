@@ -757,6 +757,8 @@ type
   TwbFileStates = set of TwbFileState;
   TwbPluginExtensions = TDynStrings;
 
+  TDynMainRecords = array of IwbMainRecord;
+
   IwbFile = interface(IwbContainer)
     ['{38AA15A6-F652-45C7-B875-9CB502E5DA92}']
     function GetFileName: string;
@@ -802,6 +804,7 @@ type
     function GetHasNoFormID: Boolean;
     procedure SetHasNoFormID(Value: Boolean);
 
+    procedure SortEditorIDs(aSignature: String);
     procedure RecordsBySignature(var aList: TDynMainRecords; aSignature: String; var len: Integer);
 
     property FileName: string
@@ -935,8 +938,6 @@ type
   TwbGridCell = record
     x, y: Integer;
   end;
-
-  TDynMainRecords = array of IwbMainRecord;
 
   IwbMainRecord = interface(IwbRecord)
     ['{F06FD5E2-621D-4422-BA00-CB3CA72B3691}']

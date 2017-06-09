@@ -574,6 +574,7 @@ type
 
     flRecordsByEditorID      : array of IwbMainRecord;
     flRecordsByEditorIDCount : Integer; {only used during loading}
+    flEditorIDSignatures     : TwbFastStringList;
 
     flLoadFinished           : Boolean;
     flFormIDsSorted          : Boolean;
@@ -672,7 +673,9 @@ type
     procedure SortRecords;
     procedure SortRecordsByEditorID;
 
+    procedure CreateEditorIDSignatures;
     procedure RecordsBySignature(var aList: TDynMainRecords; aSignature: String; var len: Integer);
+    procedure SortEditorIDs(aSignature: String);
 
     procedure AddMaster(const aFileName: string; isTemporary: Boolean = False); overload;
     procedure AddMaster(const aFile: IwbFile); overload;
@@ -2261,6 +2264,13 @@ begin
   end;
 end;
 
+procedure TwbFile.CreateEditorIDSignatures;
+begin
+  flEditorIDSignatures := TwbFastStringList.Create;
+  flEditorIDSignatures.Add('GMST');
+  flEditorIDSignatures.Add('MGEF');
+end;
+
 constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aOnlyHeader: Boolean; IsTemporary: Boolean = False);
 begin
   if IsTemporary then
@@ -2276,6 +2286,7 @@ begin
   flCompareTo := aCompareTo;
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
+  CreateEditorIDSignatures;
   flOpenFile;
   Scan;
 end;
@@ -2308,6 +2319,7 @@ end;
 
 destructor TwbFile.Destroy;
 begin
+  flEditorIDSignatures.Free;
   flCloseFile;
   inherited;
 end;
@@ -3479,6 +3491,19 @@ begin
   // if allocated length is less than length, trim excess
   if len < aLen then
     SetLength(aList, len);
+end;
+
+procedure TwbFile.SortEditorIDs(aSignature: String);
+var
+  len: Integer;
+begin
+  if flEditorIDSignatures.IndexOf(aSignature) > -1 then
+    exit;
+  flEditorIDSignatures.Add(aSignature);
+  len := flRecordsByEditorIDCount;
+  RecordsBySignature(TDynMainRecords(flRecordsByEditorID), aSignature, flRecordsByEditorIDCount);
+  if flRecordsByEditorIDCount > len then
+    wbMergeSort(@flRecordsByEditorID[0], flRecordsByEditorIDCount, CompareRecordsByEditorID);
 end;
 
 procedure TwbFile.SortMasters;
