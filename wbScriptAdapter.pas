@@ -670,13 +670,17 @@ var
   intDef: IwbIntegerDef;
   formDef: IwbFormIDChecked;
 begin
+  Value := '';
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
     def := Element.Def;
     if Supports(def, IwbSubrecordDef, subDef) then
       def := subDef.Value;
-    if Supports(def, IwbIntegerDef, intDef)
-    and Supports(intDef.Formater[element], IwbFormIDChecked, formDef) then
-      Value := formDef.SignaturesText;
+    if Supports(def, IwbIntegerDef, intDef) then begin
+      if Supports(intDef.Formater[element], IwbFormIDChecked, formDef) then
+        Value := formDef.SignaturesText
+      else if Supports(intDef.Formater[element], IwbFormID) then
+        Value := '*';
+    end;
   end;
 end;
 
