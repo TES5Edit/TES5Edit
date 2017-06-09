@@ -1483,6 +1483,23 @@ begin
   end;
 end;
 
+procedure IwbFile_RecordsBySignature(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File   : IwbFile;
+  records : TDynMainRecords;
+  lst     : TList;
+  len, i  : Integer;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then begin
+    len := 0;
+    _File.RecordsBySignature(records, Args.Values[1], len);
+    lst := TList(V2O(Args.Values[2]));
+    for i := Low(records) to High(records) do
+      lst.Add(Pointer(records[i]));
+    Value := True;
+  end;
+end;
+
 
 { wbContainerHandler }
 
@@ -1984,6 +2001,7 @@ begin
     AddFunction(cUnit, 'LoadOrderFormIDtoFileFormID', IwbFile_LoadOrderFormIDtoFileFormID, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'FileFormIDtoLoadOrderFormID', IwbFile_FileFormIDtoLoadOrderFormID, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'FileWriteToStream', IwbFile_WriteToStream, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'RecordsBySignature', IwbFile_RecordsBySignature, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
 
     { IwbContainerHandler }
     AddFunction(cUnit, 'ResourceContainerList', IwbContainerHandler_ResourceContainerList, 1, [varEmpty], varEmpty);
