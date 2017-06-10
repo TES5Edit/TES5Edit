@@ -662,6 +662,28 @@ begin
     Element.SetToDefault;
 end;
 
+procedure IwbElement_GetExpectedSignatures(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+  def: IwbNamedDef;
+  subDef: IwbSubrecordDef;
+  intDef: IwbIntegerDef;
+  formDef: IwbFormIDChecked;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+    def := Element.Def;
+    if Supports(def, IwbSubrecordDef, subDef) then
+      def := subDef.Value;
+    if Supports(def, IwbIntegerDef, intDef) then begin
+      if Supports(intDef.Formater[element], IwbFormIDChecked, formDef) then
+        Value := formDef.SignaturesText
+      else if Supports(intDef.Formater[element], IwbFormID) then
+        Value := '*';
+    end;
+  end;
+end;
+
 
 procedure _wbCopyElementToFile(var Value: Variant; Args: TJvInterpreterArgs);
 var
@@ -1888,6 +1910,7 @@ begin
     AddFunction(cUnit, 'BuildRef', IwbElement_BuildRef, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'MarkModifiedRecursive', IwbElement_MarkModifiedRecursive, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetToDefault', IwbElement_SetToDefault, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetExpectedSignatures', IwbElement_GetExpectedSignatures, 1, [varEmpty], varEmpty);
 
     { IwbContainer }
     AddFunction(cUnit, 'GetElementEditValues', IwbContainer_GetElementEditValues, 2, [varEmpty, varString], varEmpty);

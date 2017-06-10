@@ -1609,11 +1609,14 @@ type
     ['{DC7CBC9F-07EC-430B-94EE-ECE1867A2660}']
     function GetSignature(aIndex: Integer): TwbSignature;
     function GetSignatureCount: Integer;
+    function GetSignaturesText: String;
 
     property Signatures[aIndex: Integer]: TwbSignature
       read GetSignature;
     property SignatureCount: Integer
       read GetSignatureCount;
+    property SignaturesText: String
+      read GetSignaturesText;
   end;
 
   IwbChar4 = interface(IwbIntegerDefFormater)
@@ -4779,6 +4782,7 @@ type
     {---IwbFormIDChecked---}
     function GetSignature(aIndex: Integer): TwbSignature;
     function GetSignatureCount: Integer;
+    function GetSignaturesText: String;
   end;
 
   TwbChar4 = class(TwbIntegerDefFormater, IwbChar4)
@@ -12808,6 +12812,11 @@ end;
 function TwbFormIDChecked.GetSignatureCount: Integer;
 begin
   Result := fidcValidRefs.Count;
+end;
+
+function TwbFormIDChecked.GetSignaturesText: String;
+begin
+  Result := fidcValidRefs.CommaText;
 end;
 
 function TwbFormIDChecked.IsValid(const aSignature: TwbSignature): Boolean;
