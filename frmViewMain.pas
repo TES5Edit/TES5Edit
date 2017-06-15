@@ -3249,9 +3249,14 @@ procedure TfrmMain.DoInit;
   procedure RemoveMissingFiles(sl: TStrings);
   var
     i: integer;
+    F: TSearchRec;
   begin
     for i := Pred(sl.Count) downto 0 do
-      if not FileExists(wbDataPath + sl.Strings[i]) then
+      // replace with real case sensitive file name (it matters for Wrye Bash?)
+      if FindFirst(wbDataPath + sl[i], faAnyFile, F) = 0 then begin
+        sl[i] := ExtractFileName(F.Name);
+        FindClose(F);
+      end else
         sl.Delete(i);
   end;
 
