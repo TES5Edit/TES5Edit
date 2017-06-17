@@ -462,8 +462,8 @@ procedure lz4DecompressToUserBuf(const InBuf: Pointer; InBytes: Integer;
   const OutBuf: Pointer; BufSize: Integer);
 var
   stin, stout: TPreallocatedMemoryStream;
-  decodedSize: int64;
-  decompressedSize: int64;
+  decodedSize: uint64;
+  decompressedSize: uint64;
 begin
   stin := TPreallocatedMemoryStream.Create(InBuf, InBytes);
   stout := TPreallocatedMemoryStream.Create(OutBuf, BufSize);
