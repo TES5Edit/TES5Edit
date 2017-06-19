@@ -10694,8 +10694,8 @@ begin
         wbFloat('Scale')
       ]),
       wbFormIDCk('Enchant Art', [ARTO, NULL]),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
+      wbFormID('Unknown'),  // BGSReferenceEffect
+      wbFormID('Unknown'),  // BGSReferenceEffect
       wbFormIDCk('Equip Ability', [SPEL, NULL]),
       wbFormIDCk('Image Space Modifier', [IMAD, NULL]),
       wbFormIDCk('Perk to Apply', [PERK, NULL]),
