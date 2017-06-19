@@ -975,8 +975,8 @@ var
   wbScriptEntry: IwbStructDef;
   wbScriptFlags: IwbIntegerDef;
   wbScriptPropertyObject: IwbUnionDef;
-	wbScriptPropertyStruct: IwbArrayDef;
-	wbScriptProperties: IwbArrayDef;
+  wbScriptPropertyStruct: IwbArrayDef;
+  wbScriptProperties: IwbArrayDef;
   wbScriptFragments: IwbStructDef;
   wbScriptFragmentsQuest: IwbStructDef;
   wbScriptFragmentsInfo: IwbStructDef;

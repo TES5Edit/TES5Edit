@@ -2221,7 +2221,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..288] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..312] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -2510,17 +2510,41 @@ const
     (Index: 4420; Name: 'NX_GetEVFl'; ParamType1: ptNone; ),  // Actually ptString, but it cannot be used in GECK
     (Index: 4426; Name: 'NX_GetQVEVFl'; ParamType1: ptQuest; ParamType2: ptInteger;),
 
-    // Added by lutana_nvse
+    // Added by lutana_nvse - now in JIP NVSE Plugin
+    (Index: 4612; Name: 'IsButtonPressed'; ParamType1: ptInteger; ),
+    (Index: 4613; Name: 'GetLeftStickX'; ),
+    (Index: 4614; Name: 'GetLeftStickY'; ),
+    (Index: 4615; Name: 'GetRightStickX'; ),
+    (Index: 4616; Name: 'GetRightStickY'; ),
+    (Index: 4617; Name: 'GetLeftTrigger'; ),
+    (Index: 4618; Name: 'GetRightTrigger'; ),
     (Index: 4708; Name: 'GetArmorClass'; ParamType1: ptAnyForm; ),
     (Index: 4709; Name: 'IsRaceInList'; ParamType1: ptFormList; ),
     (Index: 4822; Name: 'GetReferenceFlag'; ParamType1: ptInteger; ),
+    (Index: 4832; Name: 'GetDistance2D'; ParamType1: ptObjectReference; ),
+    (Index: 4833; Name: 'GetDistance3D'; ParamType1: ptObjectReference; ),
+    (Index: 4843; Name: 'PlayerHasKey'; ),
 
-    // Added by JIP NVSE Plugin
+    // Added by JIP NVSE Plugin  - up to v48
     (Index: 5637; Name: 'GetIsPoisoned'; ),
     (Index: 5708; Name: 'IsEquippedWeaponSilenced'; ),
     (Index: 5709; Name: 'IsEquippedWeaponScoped'; ),
     (Index: 5953; Name: 'GetPCInRegion'; ParamType1: ptRegion; ),
-    (Index: 5962; Name: 'GetPCDetectionState'; )
+    (Index: 5962; Name: 'GetPCDetectionState'; ),
+    (Index: 5993; Name: 'IsAttacking'; ),
+    (Index: 5994; Name: 'GetPCUsingScope'; ),
+    (Index: 6010; Name: 'GetPCUsingIronSights'; ),
+    (Index: 6012; Name: 'GetRadiationLevelAlt'; ),
+    (Index: 6013; Name: 'IsInWater'; ),
+    (Index: 6058; Name: 'GetAlwaysRun'; ),
+    (Index: 6059; Name: 'GetAutoMove'; ),
+    (Index: 6061; Name: 'GetIsRagdolled'; ),
+    (Index: 6065; Name: 'AuxVarGetFltCond'; ParamType1: ptQuest; ParamType2: ptInteger;),
+    (Index: 6069; Name: 'IsInAir'; ),
+    (Index: 6070; Name: 'GetHasContact'; ParamType1: ptAnyForm; ),
+    (Index: 6072; Name: 'GetHasContactBase'; ParamType1: ptAnyForm; ),
+    (Index: 6073; Name: 'GetHasContactType'; ParamType1: ptInteger; ),
+    (Index: 6124; Name: 'IsSpellTargetAlt'; ParamType1: ptMagicItem; )
   );
 
 var
