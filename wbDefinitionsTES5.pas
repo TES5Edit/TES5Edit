@@ -11390,7 +11390,7 @@ begin
         wbCTDAs
       ], []))
     ], [])),
-    wbByteArray(ANAM, 'Aliases Marker', 4),
+    wbInteger(ANAM, 'Next Alias ID', itU32),
     wbRArray('Aliases',
       wbRUnion('Alias', [
 
