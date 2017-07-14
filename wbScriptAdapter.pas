@@ -1835,7 +1835,7 @@ begin
     AddConst(cUnit, 'resTexture', ord(resTexture));
     AddConst(cUnit, 'resSound', ord(resSound));
     AddConst(cUnit, 'resMusic', ord(resMusic));
-
+    AddConst(cUnit, 'resMaterial', ord(resMaterial));
 
     AddFunction(cUnit, 'Assigned', _Assigned, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ObjectToElement', ObjectToElement, 1, [varEmpty], varEmpty);

@@ -83,7 +83,7 @@ type
     property Size: Integer read GetSize;
   end;
 
-  TGameResourceType = (resMesh, resTexture, resSound, resMusic);
+  TGameResourceType = (resMesh, resTexture, resSound, resMusic, resMaterial);
 
   // source texture for atlas builder
   TSourceAtlasTexture = record
@@ -192,9 +192,10 @@ type
     property FileName: string read GetBlockFileName;
   end;
 
-function wbLODSettingsFileName(WorldspaceID: string): string;
+function wbLODExtraOptionsFileName(const PluginName, WorldspaceID: string): string;
+function wbLODSettingsFileName(const WorldspaceID: string): string;
 function wbLODTreeBlockFileExt: string;
-function wbNormalizeResourceName(aName: string; aResType: TGameResourceType): string;
+function wbNormalizeResourceName(const aName: string; aResType: TGameResourceType): string;
 function wbDefaultNormalTexture(aGameMode: TwbGameMode): string;
 procedure wbPrepareImageAlpha(img: TImageData; fmt: TImageFormat);
 procedure wbBuildAtlas(var Images: TSourceAtlasTextures; aWidth, aHeight: Integer;
@@ -234,7 +235,12 @@ implementation
 uses
   Math;
 
-function wbLODSettingsFileName(WorldspaceID: string): string;
+function wbLODExtraOptionsFileName(const PluginName, WorldspaceID: string): string;
+begin
+  Result := wbAppName + 'LODGen_' + PluginName + '_' + WorldSpaceID + '_Options.txt';
+end;
+
+function wbLODSettingsFileName(const WorldspaceID: string): string;
 begin
   if wbGameMode = gmTES4 then
     Result := ''
@@ -850,7 +856,7 @@ begin
   Result := True;
 end;
 
-function wbNormalizeResourceName(aName: string; aResType: TGameResourceType): string;
+function wbNormalizeResourceName(const aName: string; aResType: TGameResourceType): string;
 var
   i: integer;
 begin
@@ -878,7 +884,9 @@ begin
   else if (aResType = resSound) and (Copy(Result, 1, 6) <> 'sound\') then
     Result := 'sound\' + Result
   else if (aResType = resMusic) and (Copy(Result, 1, 6) <> 'music\') then
-    Result := 'music\' + Result;
+    Result := 'music\' + Result
+  else if (aResType = resMaterial) and (Copy(Result, 1, 10) <> 'materials\') then
+    Result := 'materials\' + Result;
 end;
 
 procedure wbPrepareImageAlpha(img: TImageData; fmt: TImageFormat);

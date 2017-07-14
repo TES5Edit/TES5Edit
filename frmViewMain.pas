@@ -5284,8 +5284,10 @@ var
       // use MNAM data of STAT record for lod meshes if exists
       if aStat.ElementExists['MNAM'] then
         Result := aStat.ElementEditValues[Format('MNAM\LOD #%d (Level %d)\Mesh', [aLODLevel, aLODLevel])]
+
       // otherwise meshes with the same path and name as full one with _lod_0, _lod_1 and _lod_2 suffixes
-      else
+      // can be used to generate objects LOD for TREE records which don't have MNAM
+      else if aStat.Signature = 'TREE' then
         Result := ChangeFileExt(aStat.ElementEditValues['Model\MODL'], '') + '_lod_' + IntToStr(aLODLevel) + '.nif';
     end
     else if (wbGameMode in [gmFO3, gmFNV]) and (aLODLevel = 0) then
@@ -5986,7 +5988,8 @@ begin
             sl.Free;
           end;
         end;
-        // list of meshes to ignore translation/rotation
+
+        // adding list of meshes to ignore translation/rotation
         with TStringList.Create do try
           Delimiter := ',';
           StrictDelimiter := True;
@@ -6000,7 +6003,27 @@ begin
           Free;
         end;
 
+        // adding Extra Options
+        s := wbScriptsPath + wbLODExtraOptionsFileName(
+          ChangeFileExt(ExtractFileName(aWorldspace._File.FileName), ''),
+          aWorldspace.EditorID
+        );
+        if FileExists(s) then begin
+          sl := TStringList.Create;
+          try
+            sl.LoadFromFile(s);
+            slExport.AddStrings(sl);
+            PostAddMessage('[' + aWorldspace.EditorID + '] Using options file: ' + s);
+          finally
+            sl.Free;
+          end;
+        end else
+          PostAddMessage('[' + aWorldspace.EditorID + '] No options file found: ' + s);
+
+        // adding references list
         slExport.AddStrings(slRefs);
+
+        // saving export file
         s := wbScriptsPath + 'LODGen.txt';
         PostAddMessage('[' + aWorldspace.EditorID + '] Saving LODGen data: ' + s);
         slExport.SaveToFile(s);
@@ -8259,7 +8282,9 @@ begin
 //  NewFileID := -1;
   NewFormID := 0;
   Nodes := vstNav.GetSortedSelection(True);
-  if Length(Nodes)>1 then begin
+
+  // renumber to destination file if several records were selected or Shift is pressed
+  if (Length(Nodes) > 1) or (GetKeyState(VK_SHIFT) >= 0) then begin
     NodeData := vstNav.GetNodeData(Nodes[0]);
     if not Assigned(NodeData) then
       Exit;
