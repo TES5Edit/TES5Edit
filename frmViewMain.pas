@@ -5421,6 +5421,8 @@ var
   Group               : IwbGroupRecord;
   Sigs                : TwbSignatures;
   REFRs               : TDynMainRecords;
+  XESPRef             : IwbElement;
+  XESPLink            : IwbMainRecord;
   RefFormID, ErrCode  : Cardinal;
   Count, TreesCount   : Integer;
   TreesDupCount       : Integer;
@@ -5437,6 +5439,7 @@ var
   RefCell, RefBlock, ChunkSW, ChunkNE: TwbGridCell;
   Scale, UVRange, LargeRefMinSize: Single;
   LOD4                : array of TwbLodTES5TreeBlock;
+  bChunk, bBuildAtlas : Boolean;
 begin
   Master := aWorldspace.MasterOrSelf;
 
@@ -5745,6 +5748,8 @@ begin
     slLargeReferences.Sorted := True;
     slLargeReferences.Duplicates := dupIgnore;
 
+    bChunk := Settings.ReadBool(Section, 'Chunk', False);
+    bBuildAtlas := Settings.ReadBool(Section, 'BuildAtlas', True);
     // calculate SW and NE corners for building specific chunk
     ChunkSW.x := Low(Integer);
     ChunkSW.y := Low(Integer);
@@ -5752,7 +5757,7 @@ begin
       ChunkSize  := 32
     else
       ChunkSize  := 16;
-    if Settings.ReadBool(Section, 'Chunk', False) then begin
+    if bChunk then begin
       if Settings.ReadString(Section, 'LODLevel', '') <> '' then
         ChunkSize  := StrToInt(Settings.ReadString(Section, 'LODLevel', ''));
       if Settings.ReadString(Section, 'LODX', IntToStr(Low(Integer))) <> '' then
@@ -5789,11 +5794,18 @@ begin
         then
           Continue;
 
-        // skip parent enabled refs except FO3 Megaton town
-        // Fallout 3 is hardcoded to use 'apocalypse' LOD meshes when it is destroyed
+        // Skip parent enabled refs which have XESP element
         // If VWD is set on reference it gets static LOD regardless of XESP
-        if not REFRs[i].IsVisibleWhenDistant and REFRs[i].ElementExists['XESP'] and (Pos('MegatonToggle', REFRs[i].ElementEditValues['XESP\Reference']) = 0) then
-          Continue;
+        if not REFRs[i].IsVisibleWhenDistant then begin
+          XESPRef := REFRs[i].ElementByPath['XESP\Reference'];
+          if Assigned(XESPRef) and not (wbGameMode in [gmFO3, gmFNV]) then
+            Continue;
+          // The only exception is Fallout 3 (and TTW?) Megaton refs hardcoded to use separate 'apocalypse' LOD meshes when destroyed
+          // enabled by MS11MegatonToggle [REFR:0006D4AE]
+          // We can generate LOD for them regardless of parent enabled state, the game won't use it after Megaton was destroyed
+          if Assigned(XESPRef) and (wbGameMode in [gmFO3, gmFNV]) and Supports(XESPRef.LinksTo, IwbMainRecord, XESPLink) and (XESPLink.EditorID <> 'MS11MegatonToggle') then
+            Continue;
+        end;
 
         StatRec := StatRec.WinningOverride;
 
@@ -5813,7 +5825,7 @@ begin
           Continue;
 
         // reference not in specific chunk - only skip references if no atlas needs to be build
-        if Settings.ReadBool(Section, 'Chunk', False) and not Settings.ReadBool(Section, 'BuildAtlas', True) then begin
+        if bChunk and not bBuildAtlas then begin
           if ChunkSW.x <> Low(Integer) then
             if (RefCell.x < ChunkSW.x) or (RefCell.x > ChunkNE.x) then
               Continue;
@@ -5830,8 +5842,8 @@ begin
         k := slCache.IndexOfObject(Pointer(StatRec.LoadOrderFormID));
         if k = -1 then begin
           s := '';
-          // Skyrim: process only VWD statics, Fallouts: process all statics
-          if ((wbGameMode in [ gmTES5, gmSSE ]) and StatRec.Flags.IsVisibleWhenDistant) or
+          // Skyrim: process only VWD statics and trees, Fallouts: process all statics
+          if ((wbGameMode in [gmTES5, gmSSE]) and ((StatRec.Signature = 'TREE') or StatRec.Flags.IsVisibleWhenDistant)) or
              (wbGameMode in [gmFO3, gmFNV])
           then begin
             // getting lod models
@@ -5928,7 +5940,7 @@ begin
         PostAddMessage('<Note: Can not build Objects LOD for ' + aWorldspace.EditorID + ', no valid references found>')
       else begin
         // creating lod textures atlas part 1 - set file paths to be used in export file
-        if Settings.ReadBool(Section, 'BuildAtlas', True) then begin
+        if bBuildAtlas then begin
           UVRange := StrToFloatDef(Settings.ReadString(Section, 'AtlasTextureUVRange', '1.5'), 1.5);
           // atlas file name
           if wbGameMode in [ gmTES5, gmSSE ] then

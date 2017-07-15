@@ -3,7 +3,7 @@ object frmLODGen: TfrmLODGen
   Top = 0
   BorderStyle = bsDialog
   Caption = 'LODGen Options'
-  ClientHeight = 437
+  ClientHeight = 438
   ClientWidth = 791
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -29,8 +29,8 @@ object frmLODGen: TfrmLODGen
       'Only worldspaces that have existing lodsettings file "LODSetting' +
       's\<Worldspace>.lod" (.dlodsettings for Fallout3 and New Vegas) a' +
       're shown either in the Data folder, or in BSA archives. Archives' +
-      ' are loaded similar to the game itself - the ones specified in S' +
-      'kyrim.ini and those that match loaded plugins names.'
+      ' are loaded similar to the game itself - the ones specified in t' +
+      'he game ini file and those that match loaded plugins names.'
     WordWrap = True
   end
   object Label2: TLabel
@@ -87,13 +87,14 @@ object frmLODGen: TfrmLODGen
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 396
+    Top = 397
     Width = 791
     Height = 41
     Align = alBottom
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 0
+    ExplicitTop = 396
     DesignSize = (
       791
       41)
@@ -177,7 +178,7 @@ object frmLODGen: TfrmLODGen
   end
   object gbObjectsOptions: TGroupBox
     Left = 376
-    Top = 72
+    Top = 76
     Width = 401
     Height = 148
     TabOrder = 5
