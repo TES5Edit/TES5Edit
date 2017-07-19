@@ -26,6 +26,11 @@ uses
   ImagingCanvases,
   Imaging;
 
+const
+  iDefaultAtlasDiffuseFormat: TImageFormat = ifDXT3;
+  iDefaultAtlasNormalFormat: TImageFormat = ifDXT1;
+  iDefaultAtlasSpecularFormat: TImageFormat = ifATI2n;
+
 type
   PBinNode = ^TBinNode;
 

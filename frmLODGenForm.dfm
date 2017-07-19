@@ -3,8 +3,8 @@ object frmLODGen: TfrmLODGen
   Top = 0
   BorderStyle = bsDialog
   Caption = 'LODGen Options'
-  ClientHeight = 438
-  ClientWidth = 791
+  ClientHeight = 487
+  ClientWidth = 834
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,6 +14,7 @@ object frmLODGen: TfrmLODGen
   KeyPreview = True
   OldCreateOrder = False
   Position = poMainFormCenter
+  OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   OnShow = FormShow
@@ -21,8 +22,8 @@ object frmLODGen: TfrmLODGen
   TextHeight = 13
   object Label1: TLabel
     Left = 8
-    Top = 351
-    Width = 769
+    Top = 401
+    Width = 816
     Height = 39
     AutoSize = False
     Caption = 
@@ -49,8 +50,8 @@ object frmLODGen: TfrmLODGen
   object Label3: TLabel
     Left = 376
     Top = 46
-    Width = 401
-    Height = 33
+    Width = 448
+    Height = 24
     AutoSize = False
     Caption = 
       'Create distant LOD for static objects like mountains, rocks, hou' +
@@ -59,9 +60,9 @@ object frmLODGen: TfrmLODGen
   end
   object Label4: TLabel
     Left = 376
-    Top = 256
-    Width = 401
-    Height = 50
+    Top = 304
+    Width = 448
+    Height = 33
     AutoSize = False
     Caption = 
       'Create distant LOD for trees. Requires 2D billboard images to be' +
@@ -71,7 +72,7 @@ object frmLODGen: TfrmLODGen
   end
   object Label8: TLabel
     Left = 376
-    Top = 316
+    Top = 356
     Width = 73
     Height = 13
     Caption = 'LOD brightness'
@@ -80,26 +81,27 @@ object frmLODGen: TfrmLODGen
     Left = 8
     Top = 24
     Width = 329
-    Height = 321
+    Height = 371
     ItemHeight = 13
     PopupMenu = PopupMenu1
     TabOrder = 1
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 397
-    Width = 791
+    Top = 446
+    Width = 834
     Height = 41
     Align = alBottom
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 0
-    ExplicitTop = 396
+    ExplicitTop = 397
+    ExplicitWidth = 791
     DesignSize = (
-      791
+      834
       41)
     object btnOk: TButton
-      Left = 593
+      Left = 636
       Top = 10
       Width = 91
       Height = 25
@@ -107,9 +109,10 @@ object frmLODGen: TfrmLODGen
       Caption = 'Generate'
       ModalResult = 1
       TabOrder = 0
+      ExplicitLeft = 593
     end
     object btnCancel: TButton
-      Left = 690
+      Left = 733
       Top = 10
       Width = 91
       Height = 25
@@ -117,12 +120,13 @@ object frmLODGen: TfrmLODGen
       Caption = 'Cancel'
       ModalResult = 2
       TabOrder = 1
+      ExplicitLeft = 690
     end
     object pnlBevel: TPanel
       AlignWithMargins = True
       Left = 4
       Top = 0
-      Width = 783
+      Width = 826
       Height = 1
       Margins.Left = 4
       Margins.Top = 0
@@ -130,6 +134,7 @@ object frmLODGen: TfrmLODGen
       Margins.Bottom = 0
       Align = alTop
       TabOrder = 2
+      ExplicitWidth = 783
     end
   end
   object cbObjectsLOD: TCheckBox
@@ -151,7 +156,7 @@ object frmLODGen: TfrmLODGen
   end
   object cbTreesLOD: TCheckBox
     Left = 360
-    Top = 234
+    Top = 282
     Width = 97
     Height = 17
     Caption = 'Trees LOD'
@@ -167,8 +172,8 @@ object frmLODGen: TfrmLODGen
     OnClick = cbObjectsLODClick
   end
   object btnSplitTreesLOD: TButton
-    Left = 672
-    Top = 312
+    Left = 719
+    Top = 352
     Width = 105
     Height = 25
     Caption = 'Split LOD Atlas'
@@ -177,10 +182,10 @@ object frmLODGen: TfrmLODGen
     OnClick = btnSplitTreesLODClick
   end
   object gbObjectsOptions: TGroupBox
-    Left = 376
+    Left = 378
     Top = 76
-    Width = 401
-    Height = 148
+    Width = 448
+    Height = 189
     TabOrder = 5
     object Label5: TLabel
       Left = 40
@@ -212,17 +217,38 @@ object frmLODGen: TfrmLODGen
     end
     object Label10: TLabel
       Left = 170
-      Top = 120
+      Top = 160
       Width = 6
       Height = 13
       Caption = 'X'
     end
     object Label11: TLabel
       Left = 228
-      Top = 120
+      Top = 160
       Width = 6
       Height = 13
       Caption = 'Y'
+    end
+    object Label12: TLabel
+      Left = 40
+      Top = 83
+      Width = 102
+      Height = 13
+      Caption = 'Compression: Diffuse'
+    end
+    object Label13: TLabel
+      Left = 216
+      Top = 83
+      Width = 33
+      Height = 13
+      Caption = 'Normal'
+    end
+    object Label14: TLabel
+      Left = 323
+      Top = 82
+      Width = 23
+      Height = 13
+      Caption = 'Spec'
     end
     object cbBuildAtlas: TCheckBox
       Left = 16
@@ -240,7 +266,7 @@ object frmLODGen: TfrmLODGen
     end
     object cbNoTangents: TCheckBox
       Left = 16
-      Top = 93
+      Top = 133
       Width = 145
       Height = 17
       Hint = 
@@ -253,7 +279,7 @@ object frmLODGen: TfrmLODGen
     end
     object cbNoVertexColors: TCheckBox
       Left = 16
-      Top = 75
+      Top = 115
       Width = 145
       Height = 17
       Hint = 
@@ -266,7 +292,7 @@ object frmLODGen: TfrmLODGen
     end
     object cbChunk: TCheckBox
       Left = 16
-      Top = 120
+      Top = 160
       Width = 91
       Height = 17
       Hint = 'Create LOD for specific chunk only'
@@ -280,7 +306,7 @@ object frmLODGen: TfrmLODGen
     end
     object cmbLODLevel: TComboBox
       Left = 113
-      Top = 116
+      Top = 156
       Width = 46
       Height = 21
       Hint = 'Dimension - number of cells'
@@ -291,7 +317,7 @@ object frmLODGen: TfrmLODGen
     end
     object edLODX: TEdit
       Left = 182
-      Top = 116
+      Top = 156
       Width = 40
       Height = 21
       Hint = 'Lower left cell X'
@@ -301,7 +327,7 @@ object frmLODGen: TfrmLODGen
     end
     object edLODY: TEdit
       Left = 240
-      Top = 116
+      Top = 156
       Width = 40
       Height = 21
       Hint = 'Lower left cell Y'
@@ -358,10 +384,43 @@ object frmLODGen: TfrmLODGen
       ShowHint = True
       TabOrder = 4
     end
+    object cmbCompDiffuse: TComboBox
+      Left = 148
+      Top = 79
+      Width = 61
+      Height = 21
+      Hint = 'Compression of diffuse atlas texture'
+      Style = csDropDownList
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 11
+    end
+    object cmbCompNormal: TComboBox
+      Left = 252
+      Top = 79
+      Width = 61
+      Height = 21
+      Hint = 'Compression of normal atlas texture'
+      Style = csDropDownList
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 12
+    end
+    object cmbCompSpecular: TComboBox
+      Left = 352
+      Top = 79
+      Width = 61
+      Height = 21
+      Hint = 'Compression of specular atlas texture'
+      Style = csDropDownList
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 13
+    end
   end
   object cmbTreesLODBrightness: TComboBox
     Left = 455
-    Top = 312
+    Top = 352
     Width = 43
     Height = 21
     Hint = 

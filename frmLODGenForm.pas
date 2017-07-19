@@ -43,6 +43,12 @@ type
     Label9: TLabel;
     Label10: TLabel;
     Label11: TLabel;
+    Label12: TLabel;
+    cmbCompDiffuse: TComboBox;
+    Label13: TLabel;
+    Label14: TLabel;
+    cmbCompNormal: TComboBox;
+    cmbCompSpecular: TComboBox;
     procedure cbObjectsLODClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnSplitTreesLODClick(Sender: TObject);
@@ -52,6 +58,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure cbChunkClick(Sender: TObject);
     procedure cbBuildAtlasClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     { Private declarations }
   public
@@ -110,6 +117,19 @@ begin
   Label8.Enabled := cbTreesLOD.Checked;
 end;
 
+procedure TfrmLODGen.FormClose(Sender: TObject; var Action: TCloseAction);
+var
+  i: integer;
+begin
+  if ModalResult = mrOk then begin
+    for i := 0 to Pred(clbWorldspace.Items.Count) do
+      if clbWorldspace.Checked[i] then
+        Exit;
+    ShowMessage('Select worldspace(s) for LOD generation');
+    Action := caNone;
+  end;
+end;
+
 procedure TfrmLODGen.FormCreate(Sender: TObject);
 var
   i: integer;
@@ -137,6 +157,9 @@ begin
     Inc(i);
   end;
   cmbLODLevel.Items.Text := ''#13'4'#13'8'#13'16';
+  cmbCompDiffuse.Items.Text := '888'#13'8888'#13'DXT1'#13'DXT3'#13'DXT5'#13'BC4'#13'BC5';
+  cmbCompNormal.Items.Assign(cmbCompDiffuse.Items);
+  cmbCompSpecular.Items.Assign(cmbCompDiffuse.Items);
 end;
 
 procedure TfrmLODGen.FormKeyDown(Sender: TObject; var Key: Word;
