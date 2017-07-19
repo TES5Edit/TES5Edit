@@ -5077,8 +5077,8 @@ begin
   slMap := TStringList.Create;
   try
     if Length(Images) <> 0 then begin
-      fmtDiffuse := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasDiffuseFormat', Integer(ifDXT3)));
-      fmtNormal := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(ifDXT1)));
+      fmtDiffuse := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasDiffuseFormat', Integer(iDefaultAtlasDiffuseFormat)));
+      fmtNormal := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(iDefaultAtlasNormalFormat)));
       wbBuildAtlas(Images, aWidth, aHeight, aName, fmtDiffuse, fmtNormal);
       for i := Low(Images) to High(Images) do
         if Images[i].AtlasName <> '' then begin
@@ -5184,8 +5184,8 @@ begin
     end;
 
     SetOption(ImagingMipMapFilter, Ord(sfLanczos));
-    fmtDiffuse := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasDiffuseFormat', Integer(ifDXT3)));
-    fmtNormal := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(ifDXT1)));
+    fmtDiffuse := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasDiffuseFormat', Integer(iDefaultAtlasDiffuseFormat)));
+    fmtNormal := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(iDefaultAtlasNormalFormat)));
 
     for i := 0 to Pred(slAtlas.Count) do begin
       // change brightness or gamma
@@ -8780,9 +8780,36 @@ end;
 
 procedure TfrmMain.mniNavGenerateLODClick(Sender: TObject);
 
-  function IndexOf(Items: TStrings; Item: string): integer;
+  function IndexOf(Items: TStrings; const Item: string): integer;
   begin
     Result := Max(Items.IndexOf(item), 0);
+  end;
+
+  function ImageFormatToStr(aFormat: TImageFormat): string;
+  begin
+    case aFormat of
+      ifR8G8B8: Result := '888';
+      ifA8R8G8B8: Result := '8888';
+      ifDXT1: Result := 'DXT1';
+      ifDXT3: Result := 'DXT3';
+      ifDXT5: Result := 'DXT5';
+      ifATI1n: Result := 'BC4';
+      ifATI2n: Result := 'BC5';
+    else
+      Result := 'DXT5';
+    end;
+  end;
+
+  function StrToImageFormat(const aName: string): TImageFormat;
+  begin
+    if aName = '888' then Result := ifR8G8B8 else
+    if aName = '8888' then Result := ifA8R8G8B8 else
+    if aName = 'DXT1' then Result := ifDXT1 else
+    if aName = 'DXT3' then Result := ifDXT3 else
+    if aName = 'DXT5' then Result := ifDXT5 else
+    if aName = 'BC4' then Result := ifATI1n else
+    if aName = 'BC5' then Result := ifATI2n else
+    Result := ifDXT5;
   end;
 
 var
@@ -8899,6 +8926,10 @@ begin
         clbWorldspace.Checked[0] := True;
       end;
 
+      // if only a single worldspace available - check it
+      if clbWorldspace.Items.Count = 1 then
+        clbWorldspace.Checked[0] := True;
+
       Section := wbAppName + ' LOD Options';
       if Assigned(Sender) and (wbGameMode = gmSSE) then begin
         cbObjectsLOD.Checked := False;
@@ -8916,6 +8947,11 @@ begin
       cmbAtlasHeight.ItemIndex := IndexOf(cmbAtlasHeight.Items, Settings.ReadString(Section, 'AtlasHeight', '2048'));
       cmbAtlasTextureSize.ItemIndex := IndexOf(cmbAtlasTextureSize.Items, Settings.ReadString(Section, 'AtlasTextureSize', '512'));
       cmbAtlasTextureUVRange.ItemIndex := IndexOf(cmbAtlasTextureUVRange.Items, Settings.ReadString(Section, 'AtlasTextureUVRange', '1.5'));
+      cmbCompDiffuse.ItemIndex := IndexOf(cmbCompDiffuse.Items, ImageFormatToStr(TImageFormat(Settings.ReadInteger(Section, 'AtlasDiffuseFormat', Integer(iDefaultAtlasDiffuseFormat)))));
+      cmbCompNormal.ItemIndex := IndexOf(cmbCompNormal.Items, ImageFormatToStr(TImageFormat(Settings.ReadInteger(Section, 'AtlasNormalFormat', Integer(iDefaultAtlasNormalFormat)))));
+      cmbCompSpecular.ItemIndex := IndexOf(cmbCompSpecular.Items, ImageFormatToStr(TImageFormat(Settings.ReadInteger(Section, 'AtlasSpecularFormat', Integer(iDefaultAtlasSpecularFormat)))));
+      if not (wbGameMode in [gmFO4]) then
+        cmbCompSpecular.Enabled := False;
       cbNoTangents.Checked := Settings.ReadBool(Section, 'ObjectsNoTangents', False);
       cbNoVertexColors.Checked := Settings.ReadBool(Section, 'ObjectsNoVertexColors', False);
       cbChunk.Checked := Settings.ReadBool(Section, 'Chunk', False);
@@ -8940,6 +8976,9 @@ begin
       Settings.WriteString(Section, 'AtlasHeight', cmbAtlasHeight.Text);
       Settings.WriteString(Section, 'AtlasTextureSize', cmbAtlasTextureSize.Text);
       Settings.WriteString(Section, 'AtlasTextureUVRange', cmbAtlasTextureUVRange.Text);
+      Settings.WriteInteger(Section, 'AtlasDiffuseFormat', Integer(StrToImageFormat(cmbCompDiffuse.Text)));
+      Settings.WriteInteger(Section, 'AtlasNormalFormat', Integer(StrToImageFormat(cmbCompNormal.Text)));
+      Settings.WriteInteger(Section, 'AtlasSpecularFormat', Integer(StrToImageFormat(cmbCompSpecular.Text)));
       Settings.WriteBool(Section, 'ObjectsNoTangents', cbNoTangents.Checked);
       Settings.WriteBool(Section, 'ObjectsNoVertexColors', cbNoVertexColors.Checked);
       Settings.WriteBool(Section, 'Chunk', cbChunk.Checked);
