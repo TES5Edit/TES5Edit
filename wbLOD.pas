@@ -900,7 +900,7 @@ var
   c: TColor32Rec;
 begin
   // Max alpha for formats saved without alpha, otherwise they will become black
-  if fmt in [ifDXT1, ifR8G8B8] then begin
+  if fmt in [ifDXT1, ifR5G6B5, ifR8G8B8] then begin
     for x := 0 to Pred(img.Width) do
       for y := 0 to Pred(img.Height) do begin
         c := GetPixel32(img, x, y);

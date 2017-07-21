@@ -157,7 +157,7 @@ begin
     Inc(i);
   end;
   cmbLODLevel.Items.Text := ''#13'4'#13'8'#13'16';
-  cmbCompDiffuse.Items.Text := '888'#13'8888'#13'DXT1'#13'DXT3'#13'DXT5'#13'BC4'#13'BC5';
+  cmbCompDiffuse.Items.Text := '888'#13'8888'#13'565'#13'DXT1'#13'DXT3'#13'DXT5'#13'BC4'#13'BC5';
   cmbCompNormal.Items.Assign(cmbCompDiffuse.Items);
   cmbCompSpecular.Items.Assign(cmbCompDiffuse.Items);
 end;

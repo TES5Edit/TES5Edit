@@ -65,8 +65,10 @@ const
   DefaultInterval             = 1 / 24 / 6;
   {$IFDEF WIN64}
   sLODGenName = 'LODGenx64.exe';
+  sTexconv = 'Texconvx64.exe';
   {$ELSE}
   sLODGenName = 'LODGen.exe';
+  sTexconv = 'Texconv.exe';
   {$ENDIF}
 
 
@@ -544,6 +546,7 @@ type
     function GetRefBySelectionAsElements: TDynElements;
 
     function ExecuteCaptureConsoleOutput(const aCommandLine: string): Cardinal;
+    function wbLoadImageFromMemory(Data: Pointer; Size: LongInt; var Image: TImageData): Boolean;
     procedure wbBuildAtlasFromTexturesList(slTextures: TStrings; aMaxTextureSize, aMaxTileSize, aWidth, aHeight: integer; aName, aMapName: string);
     procedure wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer; GammaR, GammaG, GammaB: Single);
     procedure SplitLOD(const aWorldspace: IwbMainRecord);
@@ -4987,6 +4990,58 @@ begin
   end;
 end;
 
+function TfrmMain.wbLoadImageFromMemory(Data: Pointer; Size: LongInt; var Image: TImageData): Boolean;
+type
+  TMagic = array [0..3] of AnsiChar;
+  PMagic = ^TMagic;
+const
+  sDDSMagic: TMagic = 'DDS ';
+var
+  s, c: string;
+  b: TBytes;
+  ErrCode: cardinal;
+begin
+  // native function
+  Result := LoadImageFromMemory(Data, Size, Image);
+
+  // image loaded without problem?
+  if Result then
+    Exit;
+
+  // try to convert unknown format DDS texture to the known one and load again
+  if not ( (Size > Length(sDDSMagic)) and (PMagic(Data)^ = sDDSMagic) ) then
+    Exit;
+
+  // temp file
+  s := wbTempPath + 'Temp-Texture.dds'; // better to use TPath.GetGUIDFileName if multithreaded
+
+  // check temp path
+  if not ForceDirectories(wbTempPath) then
+    Exit;
+
+  // write image to temp file
+  with TFileStream.Create(s, fmCreate) do try
+    WriteBuffer(Data, Size);
+  finally
+    Free;
+  end;
+
+  // command line
+  c := '"' + wbScriptsPath + sTexconv + '" -nologo -y -f R32G32B32A32_FLOAT -o "' + ExcludeTrailingPathDelimiter(wbTempPath) + '" "' + s + '"';
+  // execute command
+  ErrCode := ExecuteCaptureConsoleOutput(c);
+
+  // load the converted image from temp file if no error reported
+  if (ErrCode = 0) and FileExists(s) then begin
+    b := TFile.ReadAllBytes(s);
+    Result := wbLoadImageFromMemory(@b[0], Length(b), Image);
+  end;
+
+  // remove temp file
+  if FileExists(s) then
+    DeleteFile(s);
+end;
+
 procedure TfrmMain.wbBuildAtlasFromTexturesList(
   slTextures: TStrings;
   aMaxTextureSize,
@@ -5023,7 +5078,7 @@ begin
     SetLength(Images, Succ(Length(Images)));
     // load diffuse
     InitImage(Images[Pred(Length(Images))].Image);
-    if not LoadImageFromMemory(@data[0], Length(data), Images[Pred(Length(Images))].Image) then begin
+    if not wbLoadImageFromMemory(@data[0], Length(data), Images[Pred(Length(Images))].Image) then begin
       SetLength(Images, Pred(Length(Images)));
       Continue;
     end;
@@ -5055,7 +5110,7 @@ begin
     res := wbContainerHandler.OpenResource(s);
     if Length(res) <> 0 then
       data := res[High(res)].GetData;
-    if (Length(res) <> 0) and LoadImageFromMemory(@data[0], Length(data), Images[Pred(Length(Images))].Image_n) then begin
+    if (Length(res) <> 0) and wbLoadImageFromMemory(@data[0], Length(data), Images[Pred(Length(Images))].Image_n) then begin
       // resize normals to match diffuse
       if ((Images[Pred(Length(Images))].Image.Width <> Images[Pred(Length(Images))].Image_n.Width) or (Images[Pred(Length(Images))].Image.Height <> Images[Pred(Length(Images))].Image_n.Height)) then
         ResizeImage(
@@ -5142,7 +5197,7 @@ begin
         raise Exception.Create('Source tile not found ' + sl[0]);
 
       data := res[High(res)].GetData;
-      if not LoadImageFromMemory(@data[0], Length(data), img) then
+      if not wbLoadImageFromMemory(@data[0], Length(data), img) then
         raise Exception.Create('Error loading tile ' + sl[0]);
 
       // load normal tile
@@ -5158,7 +5213,7 @@ begin
       end;
 
       data := res[High(res)].GetData;
-      if not LoadImageFromMemory(@data[0], Length(data), img_n) then
+      if not wbLoadImageFromMemory(@data[0], Length(data), img_n) then
         raise Exception.Create('Error loading tile normal map for ' + sl[0]);
 
       // resize diffuse as set in atlas map
@@ -8790,6 +8845,7 @@ procedure TfrmMain.mniNavGenerateLODClick(Sender: TObject);
     case aFormat of
       ifR8G8B8: Result := '888';
       ifA8R8G8B8: Result := '8888';
+      ifR5G6B5: Result := '565';
       ifDXT1: Result := 'DXT1';
       ifDXT3: Result := 'DXT3';
       ifDXT5: Result := 'DXT5';
@@ -8804,6 +8860,7 @@ procedure TfrmMain.mniNavGenerateLODClick(Sender: TObject);
   begin
     if aName = '888' then Result := ifR8G8B8 else
     if aName = '8888' then Result := ifA8R8G8B8 else
+    if aName = '565' then Result := ifR5G6B5 else
     if aName = 'DXT1' then Result := ifDXT1 else
     if aName = 'DXT3' then Result := ifDXT3 else
     if aName = 'DXT5' then Result := ifDXT5 else
@@ -16695,6 +16752,7 @@ begin
         if not Assigned(wbContainerHandler) then begin
           wbContainerHandler := wbCreateContainerHandler;
 
+          // Load archives defined in the game ini
           n := TStringList.Create;
           try
             m := TStringList.Create;
@@ -16719,15 +16777,16 @@ begin
             FreeAndNil(n);
           end;
 
+          // Load archives associated with plugins
           for i := 0 to Pred(ltLoadList.Count) do begin
             n := TStringList.Create;
             try
               m := TStringList.Create;
               try
-                // All games except Skyrim load BSA files with partial matching, Skyrim requires exact names match and
-                //   can use a private ini to specify the bsa to use.
+                // all games except old Skyrim load BSA files with partial matching, Skyrim requires exact names match
+                // and can use a private ini to specify the bsa to use.
                 if HasBSAs(ChangeFileExt(ltLoadList[i], ''), ltDataPath,
-                    wbGameMode in [gmTES5, gmSSE], wbGameMode in [gmTES5, gmSSE], n, m)>0 then begin
+                    wbGameMode in [gmTES5], wbGameMode in [gmTES5, gmSSE], n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do
                         if wbLoadBSAs then begin
                           LoaderProgress('[' + n[j] + '] Loading Resources.');
