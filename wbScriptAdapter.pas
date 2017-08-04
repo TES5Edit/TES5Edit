@@ -54,7 +54,8 @@ uses
   JvInterpreter_Menus,
   JvInterpreter,
   JvInterpreterFm,
-  wbScriptAdapterMisc;
+  wbScriptAdapterMisc,
+  wbScriptAdapterDF;
 
 const
   cUnit = 'Dummy';
@@ -2051,6 +2052,7 @@ begin
   JvInterpreter_Menus.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   //JvInterpreter_JvEditor.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   wbScriptAdapterMisc.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
+  wbScriptAdapterDF.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
 end;
 
 initialization

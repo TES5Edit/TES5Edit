@@ -25,12 +25,6 @@
 			<CfgParent>Base</CfgParent>
 			<Base>true</Base>
 		</PropertyGroup>
-		<PropertyGroup Condition="'$(Platform)'=='Win32' and '$(Cfg_2)'=='true' or '$(Cfg_2_Win32)'!=''">
-			<Cfg_2_Win32>true</Cfg_2_Win32>
-			<CfgParent>Cfg_2</CfgParent>
-			<Cfg_2>true</Cfg_2>
-			<Base>true</Base>
-		</PropertyGroup>
 		<PropertyGroup Condition="'$(Config)'=='DebugLite' or '$(Cfg_4)'!=''">
 			<Cfg_4>true</Cfg_4>
 			<CfgParent>Base</CfgParent>
@@ -74,12 +68,8 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
 			<DCC_Define>DEBUG;NX_EXCEPTION_LOG_IN_APP_FOLDER;$(DCC_Define)</DCC_Define>
-			<DCC_MapFile>3</DCC_MapFile>
 			<ILINK_MapFileType>DetailedSegments</ILINK_MapFileType>
 			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-			<DCC_Define>madExcept;$(DCC_Define)</DCC_Define>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_4)'!=''">
 			<DCC_ExeOutput>.\DebugLite</DCC_ExeOutput>
@@ -102,6 +92,7 @@
 			<DCCReference Include="wbInterface.pas"/>
 			<DCCReference Include="wbImplementation.pas"/>
 			<DCCReference Include="wbScriptAdapterMisc.pas"/>
+			<DCCReference Include="wbScriptAdapterDF.pas"/>
 			<DCCReference Include="wbNifScanner.pas"/>
 			<DCCReference Include="wbStreams.pas"/>
 			<DCCReference Include="wbSort.pas"/>
@@ -154,6 +145,13 @@
 			<DCCReference Include="wbDefinitionsTES5.pas"/>
 			<DCCReference Include="wbDefinitionsTES5Saves.pas"/>
 			<DCCReference Include="wbSaveInterface.pas"/>
+			<DCCReference Include="wbDataFormat.pas"/>
+			<DCCReference Include="wbDataFormatMisc.pas"/>
+			<DCCReference Include="wbDataFormatMaterial.pas"/>
+			<DCCReference Include="wbDataFormatNif.pas"/>
+			<DCCReference Include="wbDataFormatNifTypes.pas"/>
+			<DCCReference Include="wbNifMath.pas"/>
+			<DCCReference Include="wbHalfFloat.pas"/>
 			<BuildConfiguration Include="Debug">
 				<Key>Cfg_2</Key>
 				<CfgParent>Base</CfgParent>
@@ -212,7 +210,7 @@
 						<Parameters Name="RunParams">-sse -edit</Parameters>
 					</Parameters>
 					<Parameters_Win32>
-						<Parameters_Win32 Name="RunParams">-sse -edit</Parameters_Win32>
+						<Parameters_Win32 Name="RunParams">-tes5 -edit</Parameters_Win32>
 					</Parameters_Win32>
 				</Delphi.Personality>
 				<Platforms>

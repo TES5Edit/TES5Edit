@@ -59,7 +59,8 @@ uses
   wbLOD,
   wbHelpers,
   wbInit,
-  wbLocalization;
+  wbLocalization,
+  wbDataFormat;
 
 const
   DefaultInterval             = 1 / 24 / 6;
@@ -2697,6 +2698,9 @@ begin
     CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT']);
     CheckGroup(GroupBySignature['FLST'], ['FormIDs'], [], True);
     CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT']);
+    // FNV doesn't merge DIAL quests properly at runtine
+    if wbGameMode in [gmFNV] then
+      CheckGroup(GroupBySignature['DIAL'], ['Added Quests'], []);
     // exclude Head Parts for Skyrim, causes issues
     if wbGameMode >= gmTES5 then
       CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT', '', 'SPCT', 'PRKZ', 'KSIZ'])
@@ -3426,6 +3430,11 @@ procedure TfrmMain.DoInit;
     end;
   end;
 
+  function ResourceOpenData(const aContainerName, aFileName: string): TBytes;
+  begin
+    Result := wbContainerHandler.OpenResourceData(aContainerName, aFileName);
+  end;
+
 var
   i, j, k, l    : Integer;
   e             : Boolean;
@@ -4125,6 +4134,7 @@ begin
   end;
 
   CreateActionsForScripts;
+  wbDataFormat.dfResourceGetDataCallback := @ResourceOpenData;
 end;
 
 procedure TfrmMain.edEditorIDSearchChange(Sender: TObject);
@@ -16287,6 +16297,10 @@ begin
       Args.Values[4]                 // GammaB
     );
     Done := True;
+  end
+  else if SameText(Identifier, 'dfFloatDecimalDigits') and (Args.Count = 0) then begin
+    Value := dfFloatDecimalDigits;
+    Done := True;
   end;
 end;
 
@@ -16480,6 +16494,11 @@ begin
   end else
   if SameText(Identifier, 'InheritConflictByParent') then begin
     InheritConflictByParent := Value;
+    Done := True;
+  end
+  else if SameText(Identifier, 'dfFloatDecimalDigits') then begin
+    Assert(dfFloatDecimalDigits > 0, 'dfFloatDecimalDigits must be greater than 0');
+    dfFloatDecimalDigits := Value;
     Done := True;
   end;
 end;
