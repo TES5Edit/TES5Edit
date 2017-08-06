@@ -138,25 +138,23 @@ var
     'fSoftDepth', 'SoftDepth'
   );
 
-procedure wbDefineMaterial;
 
-  function wbLenStringZ(const aName: string): TdfDef;
+procedure LenStringZ_SetText(const aElement: TdfElement; var aText: string);
+begin
+  // file names should be using '/' slashes only
+  // and not start with 'materials'
+  // at least vanilla materials follow such rules
+  aText := StringReplace(aText, '\', '/', [rfReplaceAll]);
 
-    procedure SetText(const aElement: TdfElement; var aText: string);
-    begin
-      // file names should be using '/' slashes only
-      // and not start with 'materials'
-      // at least vanilla materials follow such rules
-      aText := StringReplace(aText, '\', '/', [rfReplaceAll]);
+  if SameText(Copy(aText, 1, 10), 'materials/') then
+    aText := Copy(aText, 11, Length(aText));
+end;
 
-      if SameText(Copy(aText, 1, 10), 'materials/') then
-        aText := Copy(aText, 11, Length(aText));
-    end;
-
-  begin
-    Result := dfChars(aName, -4, '', #0, True, []);
-    Result.OnSetText := @SetText;
-  end;
+function wbLenStringZ(const aName: string): TdfDef;
+begin
+  Result := dfChars(aName, -4, '', #0, True, []);
+  Result.OnSetText := @LenStringZ_SetText;
+end;
 
 {
 http://www.andersriggelsen.dk/glblendfunc.php
@@ -169,47 +167,48 @@ Blend DstColor Zero // Multiplicative
 Blend DstColor SrcColor // 2x Multiplicative
 I don't know if "Multiplicative" in the options is One OneMinusSrcAlpha or DstColor Zero
 }
-  procedure BGSMGetAlphaBlendValue(const aElement: TdfElement; var aValue: Variant);
-  var
-    a, b, c: Integer;
-  begin
-    a := aElement.NativeValues['..\AlphaBlendMode0'];
-    b := aElement.NativeValues['..\AlphaBlendMode1'];
-    c := aElement.NativeValues['..\AlphaBlendMode2'];
+procedure BGSMGetAlphaBlendValue(const aElement: TdfElement; var aValue: Variant);
+var
+  a, b, c: Integer;
+begin
+  a := aElement.NativeValues['..\AlphaBlendMode0'];
+  b := aElement.NativeValues['..\AlphaBlendMode1'];
+  c := aElement.NativeValues['..\AlphaBlendMode2'];
 
-    if (a = 0) and (b = 6) and (c = 7) then aValue := 0 else
-    if (a = 0) and (b = 0) and (c = 0) then aValue := 1 else
-    if (a = 1) and (b = 6) and (c = 7) then aValue := 2 else
-    if (a = 1) and (b = 6) and (c = 0) then aValue := 3 else
-    if (a = 1) and (b = 4) and (c = 1) then aValue := 4;
-  end;
+  if (a = 0) and (b = 6) and (c = 7) then aValue := 0 else
+  if (a = 0) and (b = 0) and (c = 0) then aValue := 1 else
+  if (a = 1) and (b = 6) and (c = 7) then aValue := 2 else
+  if (a = 1) and (b = 6) and (c = 0) then aValue := 3 else
+  if (a = 1) and (b = 4) and (c = 1) then aValue := 4;
+end;
 
-  procedure BGSMSetAlphaBlendValue(const aElement: TdfElement; var aValue: Variant);
-  var
-    i, a, b, c: Integer;
-  begin
-    i := aValue; a := 0; b := 0; c := 0;
-    if i = 0 then begin a := 0; b := 6; c := 7; end else
-    if i = 1 then begin a := 0; b := 0; c := 0; end else
-    if i = 2 then begin a := 1; b := 6; c := 7; end else
-    if i = 3 then begin a := 1; b := 6; c := 0; end else
-    if i = 4 then begin a := 1; b := 4; c := 1; end;
+procedure BGSMSetAlphaBlendValue(const aElement: TdfElement; var aValue: Variant);
+var
+  i, a, b, c: Integer;
+begin
+  i := aValue; a := 0; b := 0; c := 0;
+  if i = 0 then begin a := 0; b := 6; c := 7; end else
+  if i = 1 then begin a := 0; b := 0; c := 0; end else
+  if i = 2 then begin a := 1; b := 6; c := 7; end else
+  if i = 3 then begin a := 1; b := 6; c := 0; end else
+  if i = 4 then begin a := 1; b := 4; c := 1; end;
 
-    aElement.NativeValues['..\AlphaBlendMode0'] := a;
-    aElement.NativeValues['..\AlphaBlendMode1'] := b;
-    aElement.NativeValues['..\AlphaBlendMode2'] := c;
-  end;
+  aElement.NativeValues['..\AlphaBlendMode0'] := a;
+  aElement.NativeValues['..\AlphaBlendMode1'] := b;
+  aElement.NativeValues['..\AlphaBlendMode2'] := c;
+end;
 
-  function BGSMEmittanceEnabled(const aElement: TdfElement): Boolean;
-  begin
-    Result := aElement.NativeValues['..\EmitEnabled'] <> 0;
-  end;
+function BGSMEmittanceEnabled(const aElement: TdfElement): Boolean;
+begin
+  Result := aElement.NativeValues['..\EmitEnabled'] <> 0;
+end;
 
-  function BGSMSkewAlphaEnabled(const aElement: TdfElement): Boolean;
-  begin
-    Result := aElement.NativeValues['.\Version'] >= 1;
-  end;
+function BGSMSkewAlphaEnabled(const aElement: TdfElement): Boolean;
+begin
+  Result := aElement.NativeValues['.\Version'] >= 1;
+end;
 
+procedure wbDefineMaterial;
 var
   dfBaseMaterial: TdfStructDef;
 begin

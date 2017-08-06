@@ -3344,7 +3344,7 @@ begin
   end
   else if Size = 0 then begin
     if Enabled then
-      if Assigned(FDef.OnGetCount) then
+      if Assigned(FDef.OnGetCount) and not Updating then
         FDef.OnGetCount(Self, Result)
       else
         Result := PByte(aDataEnd) - PByte(aDataStart);

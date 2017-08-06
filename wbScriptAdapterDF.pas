@@ -107,6 +107,16 @@ begin
   Value := TdfElement(Args.Obj).DataSize;
 end;
 
+procedure TdfElement_BeginUpdate(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TdfElement(Args.Obj).BeginUpdate;
+end;
+
+procedure TdfElement_EndUpdate(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TdfElement(Args.Obj).EndUpdate;
+end;
+
 procedure TdfElement_Read_Enabled(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := TdfElement(Args.Obj).Enabled;
@@ -710,6 +720,8 @@ begin
     AddGet(TdfElement, 'Parent', TdfElement_Read_Parent, 0, [varEmpty], varEmpty);
     AddSet(TdfElement, 'Parent', TdfElement_Write_Parent, 0, [varEmpty]);
     AddGet(TdfElement, 'DataSize', TdfElement_DataSize, 0, [varEmpty], varEmpty);
+    AddGet(TdfElement, 'BeginUpdate', TdfElement_BeginUpdate, 0, [varEmpty], varEmpty);
+    AddGet(TdfElement, 'EndUpdate', TdfElement_EndUpdate, 0, [varEmpty], varEmpty);
     AddGet(TdfElement, 'Enabled', TdfElement_Read_Enabled, 0, [varEmpty], varEmpty);
     AddSet(TdfElement, 'Enabled', TdfElement_Write_Enabled, 0, [varEmpty]);
     AddGet(TdfElement, 'Count', TdfElement_Read_Count, 0, [varEmpty], varEmpty);
