@@ -30,11 +30,10 @@ var
   dfLODTreeBTT: TdfArrayDef;
   dfFUZ: TdfStructDef;
 
+procedure FUZ_GetLIPSize(const e: TdfElement; var aCount: Integer); begin aCount := e.NativeValues['..\LIP Size']; end;
+procedure FUZ_BeforeSaveLIPSize(const e: TdfElement); begin e.NativeValue := e.Elements['..\LIP Data'].DataSize; end;
+
 procedure wbDefineMisc;
-
-  procedure GetLIPSize(const e: TdfElement; var aCount: Integer); begin aCount := e.NativeValues['..\LIP Size']; end;
-  procedure BeforeSaveLIPSize(const e: TdfElement); begin e.NativeValue := e.Elements['..\LIP Data'].DataSize; end;
-
 begin
   if Assigned(dfLODTreeLst) then
     Exit;
@@ -76,8 +75,8 @@ begin
     dfChars('Magic', 4, 'FUZE', #0, False, []),
     dfInteger('Version', dtU32, '1'),
     // keeping LIP Size separate from data so LoadFromFile/SaveToFile can be used directly on LIP Data
-    dfInteger('LIP Size', dtU32, [DF_OnBeforeSave, @BeforeSaveLIPSize]),
-    dfBytes('LIP Data', 0, [DF_OnGetCount, @GetLIPSize]),
+    dfInteger('LIP Size', dtU32, [DF_OnBeforeSave, @FUZ_BeforeSaveLIPSize]),
+    dfBytes('LIP Data', 0, [DF_OnGetCount, @FUZ_GetLIPSize]),
     dfBytes('XWM Data', 0)
   ]);
 end;

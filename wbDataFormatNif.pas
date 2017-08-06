@@ -1873,15 +1873,16 @@ end;
 
 { Bool Type }
 
+function wbBool_Decider(const e: TdfElement): Integer; begin if nif(e).Version < v4101 then Result := 1 else Result := 0; end;
+procedure wbBool_GetValue(const aElement: TdfElement; var aValue: Variant); begin if aValue <> 0 then aValue := 1; end;
+
 function wbBool(const aName: string; const aDefaultValue: string; const aEvents: array of const): TdfDef; overload;
-  function Decider(const e: TdfElement): Integer; begin if nif(e).Version < v4101 then Result := 1 else Result := 0; end;
-  procedure GetValue(const aElement: TdfElement; var aValue: Variant); begin if aValue <> 0 then aValue := 1; end;
 begin
   Result := dfUnion([
     dfEnum(aName,  dtU8, [0, 'no', 1, 'yes'], aDefaultValue, []),
-    dfEnum(aName, dtU32, [0, 'no', 1, 'yes'], aDefaultValue, [DF_OnGetValue, @GetValue])
+    dfEnum(aName, dtU32, [0, 'no', 1, 'yes'], aDefaultValue, [DF_OnGetValue, @wbBool_GetValue])
   ], aEvents);
-  Result.OnDecide := @Decider;
+  Result.OnDecide := @wbBool_Decider;
 end;
 
 function wbBool(const aName: string; const aEvents: array of const): TdfDef; overload;
@@ -1897,80 +1898,80 @@ end;
 
 { String Type }
 
-function wbString(const aName: string; const aDefaultValue: string; const aEvents: array of const): TdfDef; overload;
-  function Decider(const e: TdfElement): Integer; begin if nif(e).Version < v20103 then Result := 1 else Result := 0; end;
+function wbString_Decider(const e: TdfElement): Integer; begin if nif(e).Version < v20103 then Result := 1 else Result := 0; end;
 
-  procedure StringOnCreate(const aElement: TdfElement);
-  begin
-    nifblk(aElement).AddString(aElement);
+procedure wbString_OnCreate(const aElement: TdfElement);
+begin
+  nifblk(aElement).AddString(aElement);
+end;
+
+procedure wbString_OnDestroy(const aElement: TdfElement);
+begin
+  nifblk(aElement).RemoveString(aElement);
+end;
+
+procedure wbString_AfterLoad(const aElement: TdfElement; const aDataStart: Pointer; aDataSize: Integer);
+begin
+  if aDataStart = nil then
+    aElement.NativeValue := -1;
+end;
+
+procedure wbString_Get(const aElement: TdfElement; var aText: string);
+var
+  i: integer;
+  Strings: TdfElement;
+begin
+  i := aElement.NativeValue;
+  if i = -1 then
+    aText := ''
+  else begin
+    Strings := nif(aElement).Header.Elements['Strings'];
+    if Assigned(Strings) and (i < Strings.Count) then
+      aText := Strings[i].EditValue
+    else
+      aText := '<Error: Invalid string index ' + aText + '>';
+  end;
+end;
+
+procedure wbString_Set(const aElement: TdfElement; var aText: string);
+var
+  Strings: TdfElement;
+  i: integer;
+begin
+  // empty string
+  if aText = '' then begin
+    aText := IntToStr(-1);
+    Exit;
   end;
 
-  procedure StringOnDestroy(const aElement: TdfElement);
-  begin
-    nifblk(aElement).RemoveString(aElement);
-  end;
+  Strings := nif(aElement).Header.Elements['Strings'];
+  if not Assigned(Strings) then
+    aElement.DoException('Strings table not found in NiHeader');
 
-  procedure StringAfterLoad(const aElement: TdfElement; const aDataStart: Pointer; aDataSize: Integer);
-  begin
-    if aDataStart = nil then
-      aElement.NativeValue := -1;
-  end;
-
-  procedure GetString(const aElement: TdfElement; var aText: string);
-  var
-    i: integer;
-    Strings: TdfElement;
-  begin
-    i := aElement.NativeValue;
-    if i = -1 then
-      aText := ''
-    else begin
-      Strings := nif(aElement).Header.Elements['Strings'];
-      if Assigned(Strings) and (i < Strings.Count) then
-        aText := Strings[i].EditValue
-      else
-        aText := '<Error: Invalid string index ' + aText + '>';
-    end;
-  end;
-
-  procedure SetString(const aElement: TdfElement; var aText: string);
-  var
-    Strings: TdfElement;
-    i: integer;
-  begin
-    // empty string
-    if aText = '' then begin
-      aText := IntToStr(-1);
+  // reuse existing string
+  for i := 0 to Pred(Strings.Count) do
+    if Strings[i].EditValue = aText then begin
+      aText := IntToStr(i);
       Exit;
     end;
+  // or add a new one
+  Strings.Add.EditValue := aText;
+  aText := IntToStr(Pred(Strings.Count));
+end;
 
-    Strings := nif(aElement).Header.Elements['Strings'];
-    if not Assigned(Strings) then
-      aElement.DoException('Strings table not found in NiHeader');
-
-    // reuse existing string
-    for i := 0 to Pred(Strings.Count) do
-      if Strings[i].EditValue = aText then begin
-        aText := IntToStr(i);
-        Exit;
-      end;
-    // or add a new one
-    Strings.Add.EditValue := aText;
-    aText := IntToStr(Pred(Strings.Count));
-  end;
-
+function wbString(const aName: string; const aDefaultValue: string; const aEvents: array of const): TdfDef; overload;
 begin
   Result := dfUnion([
     dfInteger(aName, dtS32, aDefaultValue, [
-      DF_OnCreate,  @StringOnCreate,
-      DF_OnDestroy, @StringOnDestroy,
-      DF_OnAfterLoad,  @StringAfterLoad,
-      DF_OnGetText, @GetString,
-      DF_OnSetText, @SetString
+      DF_OnCreate,  @wbString_OnCreate,
+      DF_OnDestroy, @wbString_OnDestroy,
+      DF_OnAfterLoad,  @wbString_AfterLoad,
+      DF_OnGetText, @wbString_Get,
+      DF_OnSetText, @wbString_Set
     ]),
     wbSizedString(aName, aDefaultValue, [])
   ], aEvents);
-  Result.OnDecide := @Decider;
+  Result.OnDecide := @wbString_Decider;
 end;
 
 function wbString(const aName: string; const aEvents: array of const): TdfDef; overload;
@@ -2016,67 +2017,67 @@ begin
   Result := TwbNiRefDef(Def).Ptr;
 end;
 
-function wbNiRef(const aName, aTemplate: string; const aEvents: array of const): TwbNiRefDef; overload;
 
-  procedure NiRefOnCreate(const aElement: TdfElement);
-  begin
-    nifblk(aElement).AddRef(aElement);
-  end;
+procedure wbNiRef_OnCreate(const aElement: TdfElement);
+begin
+  nifblk(aElement).AddRef(aElement);
+end;
 
-  procedure NiRefOnDestroy(const aElement: TdfElement);
-  begin
-    nifblk(aElement).RemoveRef(aElement);
-  end;
+procedure wbNiRef_OnDestroy(const aElement: TdfElement);
+begin
+  nifblk(aElement).RemoveRef(aElement);
+end;
 
-  function NiRefGetLinksTo(const aElement: TdfElement): TdfElement;
-  var
-    BlockIndex: Integer;
-  begin
-    Result := nil;
-    BlockIndex := aElement.NativeValue;
-    if (BlockIndex >= 0) and (BlockIndex < nif(aElement).BlocksCount) then
-      Result := nif(aElement).Blocks[BlockIndex];
-  end;
+function wbNiRef_GetLinksTo(const aElement: TdfElement): TdfElement;
+var
+  BlockIndex: Integer;
+begin
+  Result := nil;
+  BlockIndex := aElement.NativeValue;
+  if (BlockIndex >= 0) and (BlockIndex < nif(aElement).BlocksCount) then
+    Result := nif(aElement).Blocks[BlockIndex];
+end;
 
-  procedure NiRefGetText(const aElement: TdfElement; var aText: string);
-  var
-    BlockIndex: Integer;
-    Block: TwbNifBlock;
-    Name: string;
-  begin
-    BlockIndex := aElement.NativeValue;
-    if BlockIndex = -1 then
-      aText := 'None'
-    else begin
-      Block := TwbNifBlock(aElement.LinksTo);
-      if Assigned(Block) then begin
-        Name := Block.EditValues['Name'];
-        aText := aText + ' ' + Block.BlockType;
-        if Name <> '' then
-          aText := aText + ' "' + Name + '"';
-      end;
+procedure wbNiRef_GetText(const aElement: TdfElement; var aText: string);
+var
+  BlockIndex: Integer;
+  Block: TwbNifBlock;
+  Name: string;
+begin
+  BlockIndex := aElement.NativeValue;
+  if BlockIndex = -1 then
+    aText := 'None'
+  else begin
+    Block := TwbNifBlock(aElement.LinksTo);
+    if Assigned(Block) then begin
+      Name := Block.EditValues['Name'];
+      aText := aText + ' ' + Block.BlockType;
+      if Name <> '' then
+        aText := aText + ' "' + Name + '"';
     end;
-      //aText := '<Error: Invalid block index' + aText + '>';
   end;
+    //aText := '<Error: Invalid block index' + aText + '>';
+end;
 
-  procedure NiRefSetText(const aElement: TdfElement; var aText: string);
-  begin
-    if aText <> '' then
-      aText := SplitString(aText, ' ')[0];
-    if (aText = '') or (aText = 'None') then
-      aText := '-1';
-  end;
+procedure wbNiRef_SetText(const aElement: TdfElement; var aText: string);
+begin
+  if aText <> '' then
+    aText := SplitString(aText, ' ')[0];
+  if (aText = '') or (aText = 'None') then
+    aText := '-1';
+end;
 
+function wbNiRef(const aName, aTemplate: string; const aEvents: array of const): TwbNiRefDef; overload;
 begin
   Result := TwbNiRefDef.Create(aName, dtS32, []);
   Result.Template := aTemplate;
   Result.DefaultValue := '-1';
   Result.AssignEvents(aEvents);
-  Result.OnCreate := @NiRefOnCreate;
-  Result.OnDestroy := @NiRefOnDestroy;
-  Result.OnLinksTo := @NiRefGetLinksTo;
-  Result.OnGetText := @NiRefGetText;
-  Result.OnSetText := @NiRefSetText;
+  Result.OnCreate := @wbNiRef_OnCreate;
+  Result.OnDestroy := @wbNiRef_OnDestroy;
+  Result.OnLinksTo := @wbNiRef_GetLinksTo;
+  Result.OnGetText := @wbNiRef_GetText;
+  Result.OnSetText := @wbNiRef_SetText;
 end;
 
 function wbNiRef(const aName, aTemplate: string): TwbNiRefDef; overload;
@@ -2150,8 +2151,9 @@ begin
   ], aEvents);
 end;
 
+function wbTexDesc_EnTranslation(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v10100) and (e.NativeValues['..\Has Texture Transform'] <> 0); end;
+
 function wbTexDesc(const aName: string; const aEvents: array of const): TdfDef;
-  function EnTranslation(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v10100) and (e.NativeValues['..\Has Texture Transform'] <> 0); end;
 begin
   Result := dfStruct(aName, [
     wbNiRef('Source', 'NiSourceTexture'),
@@ -2163,21 +2165,22 @@ begin
     dfInteger('PS2 K', dtS16, '-75', [DF_OnGetEnabled, @EnBefore10401]),
     dfInteger('Unknown1', dtU16, [DF_OnGetEnabled, @EnBefore41012]),
     wbBool('Has Texture Transform', [DF_OnGetEnabled, @EnSince10100]),
-    wbTexCoord('Translation', [DF_OnGetEnabled, @EnTranslation]),
-    wbTexCoord('Tiling', [DF_OnGetEnabled, @EnTranslation]),
-    dfFloat('W Rotation', '', [DF_OnGetEnabled, @EnTranslation]),
-    dfInteger('Transform Type?', dtU32, [DF_OnGetEnabled, @EnTranslation]),
-    wbTexCoord('Center Offset', [DF_OnGetEnabled, @EnTranslation])
+    wbTexCoord('Translation', [DF_OnGetEnabled, @wbTexDesc_EnTranslation]),
+    wbTexCoord('Tiling', [DF_OnGetEnabled, @wbTexDesc_EnTranslation]),
+    dfFloat('W Rotation', '', [DF_OnGetEnabled, @wbTexDesc_EnTranslation]),
+    dfInteger('Transform Type?', dtU32, [DF_OnGetEnabled, @wbTexDesc_EnTranslation]),
+    wbTexCoord('Center Offset', [DF_OnGetEnabled, @wbTexDesc_EnTranslation])
   ], aEvents);
 end;
 
+function wbShaderTexDesc_EnTextureData(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v10100) and (e.NativeValues['..\Is Used'] <> 0); end;
+
 function wbShaderTexDesc(const aName: string; const aEvents: array of const): TdfDef;
-  function EnTextureData(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v10100) and (e.NativeValues['..\Is Used'] <> 0); end;
 begin
   Result := dfStruct(aName, [
    wbBool('Is Used'),
-   wbTexDesc('Texture Data', [DF_OnGetEnabled, @EnTextureData]),
-   dfInteger('Map Index', dtU32, [DF_OnGetEnabled, @EnTextureData])
+   wbTexDesc('Texture Data', [DF_OnGetEnabled, @wbShaderTexDesc_EnTextureData]),
+   dfInteger('Map Index', dtU32, [DF_OnGetEnabled, @wbShaderTexDesc_EnTextureData])
   ], aEvents);
 end;
 
@@ -2194,100 +2197,101 @@ const
   VF_EYEDATA = 1 shl 12;
   VF_FULLPREC = 1 shl 14;
 
-function wbVertexDesc(const aName: string; const aEvents: array of const): TdfDef;
-  procedure SetValue(const e: TdfElement; var aValue: Variant);
-  const
-    szByte = 1;
-    szFloat = 4;
-    szHalfFloat = 2;
-  var
-    VF: Word;
-    bFullPrec: Boolean;
-    el: TdfElement;
-    ofst           : Byte;
-    //szVertexData   : Byte;
-    //szVertex       : Byte;
-    oTexCoord0     : Byte;
-    oTexCoord1     : Byte;
-    oNormal        : Byte;
-    oTangent       : Byte;
-    oColor         : Byte;
-    oSkinningData  : Byte;
-    oLandscapeData : Byte;
-    oEyeData       : Byte;
-  begin
-    VF := aValue;
-    bFullPrec := (VF and VF_FULLPREC > 0) or (nif(e).NifVersion = nfSSE);
+procedure wbVertexDesc_SetValue(const e: TdfElement; var aValue: Variant);
+const
+  szByte = 1;
+  szFloat = 4;
+  szHalfFloat = 2;
+var
+  VF: Word;
+  bFullPrec: Boolean;
+  el: TdfElement;
+  ofst           : Byte;
+  //szVertexData   : Byte;
+  //szVertex       : Byte;
+  oTexCoord0     : Byte;
+  oTexCoord1     : Byte;
+  oNormal        : Byte;
+  oTangent       : Byte;
+  oColor         : Byte;
+  oSkinningData  : Byte;
+  oLandscapeData : Byte;
+  oEyeData       : Byte;
+begin
+  VF := aValue;
+  bFullPrec := (VF and VF_FULLPREC > 0) or (nif(e).NifVersion = nfSSE);
 
-    ofst := 0;
-    if VF and VF_VERTEX > 0 then begin
-      // either Bitangent X or unknown int/short is present with vertex
-      if bFullPrec then Inc(ofst, szFloat * 3 + szFloat) else Inc(ofst, szHalfFloat * 3 + szHalfFloat);
-    end;
-
-    // offset to UVs
-    oTexCoord0 := 0;
-    if VF and VF_UV > 0 then begin
-      oTexCoord0 := ofst div 4;
-      Inc(ofst, szHalfFloat * 2);
-    end;
-
-    // offset to second UVs, always 0
-    oTexCoord1 := 0;
-
-    // offset to Normal
-    oNormal := 0;
-    if VF and VF_NORMAL > 0 then begin
-      oNormal := ofst div 4;
-      // Bitangent Y is present with normal
-      Inc(ofst, szByte * 3 + szByte);
-    end;
-
-    // offset to Tangent
-    oTangent := 0;
-    if (VF and VF_NORMAL > 0) and (VF and VF_TANGENT > 0) then begin
-      oTangent := ofst div 4;
-      // Bitangent Z is present with tangent
-      Inc(ofst, szByte * 3 + szByte);
-    end;
-
-    // offset to Color
-    oColor := 0;
-    if VF and VF_COLORS > 0 then begin
-      oColor := ofst div 4;
-      Inc(ofst, szByte * 4);
-    end;
-
-    // offset to skinning data
-    oSkinningData := 0;
-    if VF and VF_SKINNED > 0 then begin
-      oSkinningData := ofst div 4;
-      Inc(ofst, szHalfFloat * 4 + szByte * 4); // bone weights and indices
-    end;
-
-    // offset to landscape data, always 0
-    oLandscapeData := 0;
-
-    // offset to eye data
-    oEyeData := 0;
-    if VF and VF_EYEDATA > 0 then begin
-      oEyeData := ofst div 4;
-      Inc(ofst, szFloat);
-    end;
-
-    // ofst has the full vertex size at this point
-    e.NativeValues['..\VF1'] := ofst div 4;
-    // SSE has a separate Vertex Size field holding size in bytes
-    e.NativeValues['..\..\Vertex Size'] := ofst;
-    // update cached VF value on Vertex Data array
-    el := e.Elements['..\..\Vertex Data'];
-    if Assigned(el) then el.UserData := VF;
-    e.NativeValues['..\VF2'] := oTexCoord0 or (oTexCoord1 shl 4);
-    e.NativeValues['..\VF3'] := oNormal or (oTangent shl 4);
-    e.NativeValues['..\VF4'] := oColor or (oSkinningData shl 4);
-    e.NativeValues['..\VF5'] := oLandscapeData or (oEyeData shl 4);
-    e.NativeValues['..\VF8'] := 0;
+  ofst := 0;
+  if VF and VF_VERTEX > 0 then begin
+    // either Bitangent X or unknown int/short is present with vertex
+    if bFullPrec then Inc(ofst, szFloat * 3 + szFloat) else Inc(ofst, szHalfFloat * 3 + szHalfFloat);
   end;
+
+  // offset to UVs
+  oTexCoord0 := 0;
+  if VF and VF_UV > 0 then begin
+    oTexCoord0 := ofst div 4;
+    Inc(ofst, szHalfFloat * 2);
+  end;
+
+  // offset to second UVs, always 0
+  oTexCoord1 := 0;
+
+  // offset to Normal
+  oNormal := 0;
+  if VF and VF_NORMAL > 0 then begin
+    oNormal := ofst div 4;
+    // Bitangent Y is present with normal
+    Inc(ofst, szByte * 3 + szByte);
+  end;
+
+  // offset to Tangent
+  oTangent := 0;
+  if (VF and VF_NORMAL > 0) and (VF and VF_TANGENT > 0) then begin
+    oTangent := ofst div 4;
+    // Bitangent Z is present with tangent
+    Inc(ofst, szByte * 3 + szByte);
+  end;
+
+  // offset to Color
+  oColor := 0;
+  if VF and VF_COLORS > 0 then begin
+    oColor := ofst div 4;
+    Inc(ofst, szByte * 4);
+  end;
+
+  // offset to skinning data
+  oSkinningData := 0;
+  if VF and VF_SKINNED > 0 then begin
+    oSkinningData := ofst div 4;
+    Inc(ofst, szHalfFloat * 4 + szByte * 4); // bone weights and indices
+  end;
+
+  // offset to landscape data, always 0
+  oLandscapeData := 0;
+
+  // offset to eye data
+  oEyeData := 0;
+  if VF and VF_EYEDATA > 0 then begin
+    oEyeData := ofst div 4;
+    Inc(ofst, szFloat);
+  end;
+
+  // ofst has the full vertex size at this point
+  e.NativeValues['..\VF1'] := ofst div 4;
+  // SSE has a separate Vertex Size field holding size in bytes
+  e.NativeValues['..\..\Vertex Size'] := ofst;
+  // update cached VF value on Vertex Data array
+  el := e.Elements['..\..\Vertex Data'];
+  if Assigned(el) then el.UserData := VF;
+  e.NativeValues['..\VF2'] := oTexCoord0 or (oTexCoord1 shl 4);
+  e.NativeValues['..\VF3'] := oNormal or (oTangent shl 4);
+  e.NativeValues['..\VF4'] := oColor or (oSkinningData shl 4);
+  e.NativeValues['..\VF5'] := oLandscapeData or (oEyeData shl 4);
+  e.NativeValues['..\VF8'] := 0;
+end;
+
+function wbVertexDesc(const aName: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfStruct(aName, [
     dfInteger('VF1', dtU8),
@@ -2295,49 +2299,54 @@ begin
     dfInteger('VF3', dtU8),
     dfInteger('VF4', dtU8),
     dfInteger('VF5', dtU8),
-    wbVertexFlags('VF', 'VF_VERTEX | VF_UV | VF_NORMAL | VF_TANGENT', [DF_OnSetValue, @SetValue]),
+    wbVertexFlags('VF', 'VF_VERTEX | VF_UV | VF_NORMAL | VF_TANGENT', [DF_OnSetValue, @wbVertexDesc_SetValue]),
     dfInteger('VF8', dtU8)
   ], aEvents);
 end;
 
+// VF is cached on the array itself (Vertex Data OnEnabled event and VF's OnSetValue)
+function VF(const e: TdfElement): Word; inline; begin Result := e.Parent.Parent.UserData; end;
+function wbBSVertexData_DecideFullPrecision(const e: TdfElement): Integer; begin if (VF(e) and VF_FULLPREC <> 0) or (nif(e).NifVersion = nfSSE) then Result := 1 else Result := 0; end;
+function wbBSVertexData_EnVertex(const e: TdfElement): Boolean;     var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_VERTEX <> 0); end;
+function wbBSVertexData_EnBitangentX(const e: TdfElement): Boolean; var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_VERTEX <> 0) and (ARG and VF_TANGENT <> 0); end;
+function wbBSVertexData_EnUnknown(const e: TdfElement): Boolean;    var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_VERTEX <> 0) and (ARG and VF_TANGENT = 0); end;
+function wbBSVertexData_EnUV(const e: TdfElement): Boolean;         var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_UV <> 0); end;
+function wbBSVertexData_EnNormal(const e: TdfElement): Boolean;     var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_NORMAL <> 0); end;
+function wbBSVertexData_EnTangent(const e: TdfElement): Boolean;    var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_NORMAL <> 0) and (ARG and VF_TANGENT <> 0); end;
+function wbBSVertexData_EnColors(const e: TdfElement): Boolean;     var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_COLORS <> 0); end;
+function wbBSVertexData_EnSkinned(const e: TdfElement): Boolean;    var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_SKINNED <> 0); end;
+function wbBSVertexData_EnEyeData(const e: TdfElement): Boolean;    var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_EYEDATA <> 0); end;
+
 function wbBSVertexData(const aName: string): TdfDef;
-  // VF is cached on the array itself (Vertex Data OnEnabled event and VF's OnSetValue)
-  function VF(const e: TdfElement): Word; inline; begin Result := e.Parent.Parent.UserData; end;
-  function DecideFullPrecision(const e: TdfElement): Integer; begin if (VF(e) and VF_FULLPREC <> 0) or (nif(e).NifVersion = nfSSE) then Result := 1 else Result := 0; end;
-  function EnVertex(const e: TdfElement): Boolean;     var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_VERTEX <> 0); end;
-  function EnBitangentX(const e: TdfElement): Boolean; var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_VERTEX <> 0) and (ARG and VF_TANGENT <> 0); end;
-  function EnUnknown(const e: TdfElement): Boolean;    var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_VERTEX <> 0) and (ARG and VF_TANGENT = 0); end;
-  function EnUV(const e: TdfElement): Boolean;         var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_UV <> 0); end;
-  function EnNormal(const e: TdfElement): Boolean;     var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_NORMAL <> 0); end;
-  function EnTangent(const e: TdfElement): Boolean;    var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_NORMAL <> 0) and (ARG and VF_TANGENT <> 0); end;
-  function EnColors(const e: TdfElement): Boolean;     var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_COLORS <> 0); end;
-  function EnSkinned(const e: TdfElement): Boolean;    var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_SKINNED <> 0); end;
-  function EnEyeData(const e: TdfElement): Boolean;    var ARG: Word; begin ARG := VF(e); Result := (ARG and VF_EYEDATA <> 0); end;
 begin
   Result := dfStruct(aName, [
     {0} dfUnion([
       wbHalfVector3('Vertex'),
       wbVector3('Vertex')
-    ], [DF_OnGetEnabled, @EnVertex, DF_OnDecide, @DecideFullPrecision]),
+    ], [DF_OnGetEnabled, @wbBSVertexData_EnVertex, DF_OnDecide, @wbBSVertexData_DecideFullPrecision]),
     {1} dfUnion([
       dfFloat('Bitangent X', dtFloat16),
       dfFloat('Bitangent X')
-    ], [DF_OnGetEnabled, @EnBitangentX, DF_OnDecide, @DecideFullPrecision]),
+    ], [DF_OnGetEnabled, @wbBSVertexData_EnBitangentX, DF_OnDecide, @wbBSVertexData_DecideFullPrecision]),
     {2} dfUnion([
       dfInteger('Unknown Short', dtU16),
       dfInteger('Unknown Int', dtS32)
-    ], [DF_OnGetEnabled, @EnUnknown, DF_OnDecide, @DecideFullPrecision]),
-    {3} wbHalfTexCoord('UV', [DF_OnGetEnabled, @EnUV]),
-    {4} wbByteVector3('Normal', [DF_OnGetEnabled, @EnNormal]),
-    {5} wbByteFloat('Bitangent Y', [DF_OnGetEnabled, @EnNormal]),
-    {6} wbByteVector3('Tangent', [DF_OnGetEnabled, @EnTangent]),
-    {7} wbByteFloat('Bitangent Z', [DF_OnGetEnabled, @EnTangent]),
-    {8} wbByteColor4('Vertex Colors', [DF_OnGetEnabled, @EnColors]),
-    {9} dfArray('Bone Weights', dfFloat('Bone Weights', dtFloat16), 4, '', [DF_OnGetEnabled, @EnSkinned]),
-   {10} dfArray('Bone Indices', dfInteger('Bone Indices', dtU8), 4, '', [DF_OnGetEnabled, @EnSkinned]),
-   {11} dfFloat('Eye Data', [DF_OnGetEnabled, @EnEyeData])
+    ], [DF_OnGetEnabled, @wbBSVertexData_EnUnknown, DF_OnDecide, @wbBSVertexData_DecideFullPrecision]),
+    {3} wbHalfTexCoord('UV', [DF_OnGetEnabled, @wbBSVertexData_EnUV]),
+    {4} wbByteVector3('Normal', [DF_OnGetEnabled, @wbBSVertexData_EnNormal]),
+    {5} wbByteFloat('Bitangent Y', [DF_OnGetEnabled, @wbBSVertexData_EnNormal]),
+    {6} wbByteVector3('Tangent', [DF_OnGetEnabled, @wbBSVertexData_EnTangent]),
+    {7} wbByteFloat('Bitangent Z', [DF_OnGetEnabled, @wbBSVertexData_EnTangent]),
+    {8} wbByteColor4('Vertex Colors', [DF_OnGetEnabled, @wbBSVertexData_EnColors]),
+    {9} dfArray('Bone Weights', dfFloat('Bone Weights', dtFloat16), 4, '', [DF_OnGetEnabled, @wbBSVertexData_EnSkinned]),
+   {10} dfArray('Bone Indices', dfInteger('Bone Indices', dtU8), 4, '', [DF_OnGetEnabled, @wbBSVertexData_EnSkinned]),
+   {11} dfFloat('Eye Data', [DF_OnGetEnabled, @wbBSVertexData_EnEyeData])
   ]);
 end;
+
+function wbKeyGroup_EnInterpolation(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Num Keys'] <> 0; end;
+function wbKeyGroup_EnForward(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\..\..\Interpolation'] = 2; end;
+function wbKeyGroup_EnTBC(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\..\..\Interpolation'] = 3; end;
 
 function wbKeyGroup(const aName, aTemplate: string; const aEvents: array of const): TdfDef;
   function wbKeyValue(const aName, aTemplate: string; const aEvents: array of const): TdfDef;
@@ -2359,27 +2368,25 @@ function wbKeyGroup(const aName, aTemplate: string; const aEvents: array of cons
     else
       raise Exception.Create('Unknown KeyGroup template: ' + aTemplate);
   end;
-  function EnInterpolation(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Num Keys'] <> 0; end;
-  function EnForward(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\..\..\Interpolation'] = 2; end;
-  function EnTBC(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\..\..\Interpolation'] = 3; end;
 begin
   Result := dfStruct(aName, [
     dfInteger('Num Keys', dtU32),
-    wbKeyType('Interpolation', '', [DF_OnGetEnabled, @EnInterpolation]),
+    wbKeyType('Interpolation', '', [DF_OnGetEnabled, @wbKeyGroup_EnInterpolation]),
     dfArray('Keys', dfStruct('Keys', [
       dfFloat('Time'),
       wbKeyValue('Value', aTemplate, []),
-      wbKeyValue('Forward', aTemplate, [DF_OnGetEnabled, @EnForward]),
-      wbKeyValue('Backward', aTemplate, [DF_OnGetEnabled, @EnForward]),
-      wbTBC('TBC', [DF_OnGetEnabled, @EnTBC])
+      wbKeyValue('Forward', aTemplate, [DF_OnGetEnabled, @wbKeyGroup_EnForward]),
+      wbKeyValue('Backward', aTemplate, [DF_OnGetEnabled, @wbKeyGroup_EnForward]),
+      wbTBC('TBC', [DF_OnGetEnabled, @wbKeyGroup_EnTBC])
     ]), 0, 'Num Keys', [])
   ], aEvents);
 end;
 
+function wbControllerLink_EnPriority(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v1010106) and (UserVersion >= 10); end;
+function wbControllerLink_EnStringPalette(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v10200) and (Version <= v20005); end;
+function wbControllerLink_EnNodeName(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20103) or (Version = v1010106); end;
+
 function wbControllerLink(const aName: string; const aEvents: array of const): TdfDef;
-  function EnPriority(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v1010106) and (UserVersion >= 10); end;
-  function EnStringPalette(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v10200) and (Version <= v20005); end;
-  function EnNodeName(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20103) or (Version = v1010106); end;
 begin
   Result := dfStruct(aName, [
     wbString('Target Name', [DF_OnGetEnabled, @EnBefore10100]),
@@ -2388,30 +2395,31 @@ begin
     wbNiRef('Controller', 'NiTimeController', [DF_OnGetEnabled, @EnSince1010106]),
     wbNiRef('Unknown Link 2', 'NiObject', [DF_OnGetEnabled, @En1010106]),
     dfInteger('Unknown Short 0', dtU16, [DF_OnGetEnabled, @En1010106]),
-    dfInteger('Priority', dtU8, [DF_OnGetEnabled, @EnPriority]),
-    wbNiRef('String Palette', 'NiStringPalette', [DF_OnGetEnabled, @EnStringPalette]),
-    wbString('Node Name', [DF_OnGetEnabled, @EnNodeName]),
-    dfInteger('Node Name Offset', dtU32, [DF_OnGetEnabled, @EnStringPalette]),
-    wbString('Property Type', [DF_OnGetEnabled, @EnNodeName]),
-    dfInteger('Property Type Offset', dtU32, [DF_OnGetEnabled, @EnStringPalette]),
-    wbString('Controller Type', [DF_OnGetEnabled, @EnNodeName]),
-    dfInteger('Controller Type Offset', dtU32, [DF_OnGetEnabled, @EnStringPalette]),
-    wbString('Variable 1', [DF_OnGetEnabled, @EnNodeName]),
-    dfInteger('Variable 1 Offset', dtU32, [DF_OnGetEnabled, @EnStringPalette]),
-    wbString('Variable 2', [DF_OnGetEnabled, @EnNodeName]),
-    dfInteger('Variable 2 Offset', dtU32, [DF_OnGetEnabled, @EnStringPalette])
+    dfInteger('Priority', dtU8, [DF_OnGetEnabled, @wbControllerLink_EnPriority]),
+    wbNiRef('String Palette', 'NiStringPalette', [DF_OnGetEnabled, @wbControllerLink_EnStringPalette]),
+    wbString('Node Name', [DF_OnGetEnabled, @wbControllerLink_EnNodeName]),
+    dfInteger('Node Name Offset', dtU32, [DF_OnGetEnabled, @wbControllerLink_EnStringPalette]),
+    wbString('Property Type', [DF_OnGetEnabled, @wbControllerLink_EnNodeName]),
+    dfInteger('Property Type Offset', dtU32, [DF_OnGetEnabled, @wbControllerLink_EnStringPalette]),
+    wbString('Controller Type', [DF_OnGetEnabled, @wbControllerLink_EnNodeName]),
+    dfInteger('Controller Type Offset', dtU32, [DF_OnGetEnabled, @wbControllerLink_EnStringPalette]),
+    wbString('Variable 1', [DF_OnGetEnabled, @wbControllerLink_EnNodeName]),
+    dfInteger('Variable 1 Offset', dtU32, [DF_OnGetEnabled, @wbControllerLink_EnStringPalette]),
+    wbString('Variable 2', [DF_OnGetEnabled, @wbControllerLink_EnNodeName]),
+    dfInteger('Variable 2 Offset', dtU32, [DF_OnGetEnabled, @wbControllerLink_EnStringPalette])
   ], aEvents);
 end;
 
+function wbSkinPartition_EnVertexMap(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version <= v10012) or ((Version >= v10100) and (e.NativeValues['..\Has Vertex Map'] <> 0)); end;
+function wbSkinPartition_EnVertexWeights(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version <= v10012) or ((Version >= v10100) and (e.NativeValues['..\Has Vertex Weights'] <> 0)); end;
+function wbSkinPartition_EnStrips(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version <= v10012) or ((Version >= v10100) and (e.NativeValues['..\Has Faces'] <> 0))) and (e.NativeValues['..\Num Strips'] <> 0); end;
+procedure wbSkinPartition_GetCountStrips(const e: TdfElement; var aCount: Integer); begin aCount := e.NativeValues['..\..\Strip Lengths\Strip Lengths #' + IntToStr(e.Index)]; end;
+procedure wbSkinPartition_SetCountStrips(const e: TdfElement; var aCount: Integer); begin e.NativeValues['..\..\Strip Lengths\Strip Lengths #' + IntToStr(e.Index)] := aCount; end;
+function wbSkinPartition_EnTriangles(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version <= v10012) or ((Version >= v10100) and (e.NativeValues['..\Has Faces'] <> 0))) and (e.NativeValues['..\Num Strips'] = 0); end;
+function wbSkinPartition_EnBoneIndices(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Bone Indices'] <> 0; end;
+function wbSkinPartition_EnUnknownShort(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion >= 12; end;
+
 function wbSkinPartition(const aName: string; const aEvents: array of const): TdfDef;
-  function EnVertexMap(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version <= v10012) or ((Version >= v10100) and (e.NativeValues['..\Has Vertex Map'] <> 0)); end;
-  function EnVertexWeights(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version <= v10012) or ((Version >= v10100) and (e.NativeValues['..\Has Vertex Weights'] <> 0)); end;
-  function EnStrips(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version <= v10012) or ((Version >= v10100) and (e.NativeValues['..\Has Faces'] <> 0))) and (e.NativeValues['..\Num Strips'] <> 0); end;
-  procedure GetCountStrips(const e: TdfElement; var aCount: Integer); begin aCount := e.NativeValues['..\..\Strip Lengths\Strip Lengths #' + IntToStr(e.Index)]; end;
-  procedure SetCountStrips(const e: TdfElement; var aCount: Integer); begin e.NativeValues['..\..\Strip Lengths\Strip Lengths #' + IntToStr(e.Index)] := aCount; end;
-  function EnTriangles(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version <= v10012) or ((Version >= v10100) and (e.NativeValues['..\Has Faces'] <> 0))) and (e.NativeValues['..\Num Strips'] = 0); end;
-  function EnBoneIndices(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Bone Indices'] <> 0; end;
-  function EnUnknownShort(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion >= 12; end;
 begin
   Result := dfStruct(aName, [
     dfInteger('Num Vertices', dtU16),
@@ -2421,22 +2429,25 @@ begin
     dfInteger('Num Weights Per Vertex', dtU16),
     dfArray('Bones', dfInteger('Bones', dtU16), 0, 'Num Bones', []),
     wbBool('Has Vertex Map', [DF_OnGetEnabled, @EnSince10100]),
-    dfArray('Vertex Map', dfInteger('Vertex Map', dtU16), 0, 'Num Vertices', [DF_OnGetEnabled, @EnVertexMap]),
+    dfArray('Vertex Map', dfInteger('Vertex Map', dtU16), 0, 'Num Vertices', [DF_OnGetEnabled, @wbSkinPartition_EnVertexMap]),
     wbBool('Has Vertex Weights', [DF_OnGetEnabled, @EnSince10100]),
     dfArray('Vertex Weights',
       dfArray('Vertex Weights', dfFloat('Vertex Weights'), 0, '..\Num Weights Per Vertex', []),
-      0, 'Num Vertices', [DF_OnGetEnabled, @EnVertexWeights]),
+      0, 'Num Vertices', [DF_OnGetEnabled, @wbSkinPartition_EnVertexWeights]),
     dfArray('Strip Lengths', dfInteger('Strip Lengths', dtU16), 0, 'Num Strips', []),
     wbBool('Has Faces', [DF_OnGetEnabled, @EnSince10100]),
     dfArray('Strips',
-      dfArray('Strips', dfInteger('Points', dtU16), 0, '', [DF_OnGetCount, @GetCountStrips, DF_OnSetCount, @SetCountStrips]),
-      0, 'Num Strips', [DF_OnGetEnabled, @EnStrips]),
-    dfArray('Triangles', wbTriangle('Triangles'), 0, 'Num Triangles', [DF_OnGetEnabled, @EnTriangles]),
+      dfArray('Strips', dfInteger('Points', dtU16), 0, '', [
+        DF_OnGetCount, @wbSkinPartition_GetCountStrips,
+        DF_OnSetCount, @wbSkinPartition_SetCountStrips
+      ]),
+      0, 'Num Strips', [DF_OnGetEnabled, @wbSkinPartition_EnStrips]),
+    dfArray('Triangles', wbTriangle('Triangles'), 0, 'Num Triangles', [DF_OnGetEnabled, @wbSkinPartition_EnTriangles]),
     wbBool('Has Bone Indices'),
     dfArray('Bone Indices',
       dfArray('Bone Indices', dfInteger('Bone Indices', dtU8), 0, '..\Num Weights Per Vertex', []),
-      0, 'Num Vertices', [DF_OnGetEnabled, @EnBoneIndices]),
-    dfInteger('Unknown Short', dtU16, [DF_OnGetEnabled, @EnUnknownShort]),
+      0, 'Num Vertices', [DF_OnGetEnabled, @wbSkinPartition_EnBoneIndices]),
+    dfInteger('Unknown Short', dtU16, [DF_OnGetEnabled, @wbSkinPartition_EnUnknownShort]),
     wbVertexDesc('VertexDesc', [DF_OnGetEnabled, @EnSSE]),
     dfArray('Triangles Copy', wbTriangle('Triangles Copy'), 0, 'Num Triangles', [DF_OnGetEnabled, @EnSSE])
   ], aEvents);
@@ -2478,16 +2489,17 @@ begin
   ], aEvents);
 end;
 
+function wbMotorDescriptor_EnType1(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 1; end;
+function wbMotorDescriptor_EnType2(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 2; end;
+function wbMotorDescriptor_EnType3(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 3; end;
+
 function wbMotorDescriptor(const aName: string; const aEvents: array of const): TdfDef;
-  function EnType1(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 1; end;
-  function EnType2(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 2; end;
-  function EnType3(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 3; end;
 begin
   Result := dfStruct(aName, [
     wbMotorType('Type', 'MOTOR_NONE', []),
-    wbbhkPositionConstraintMotor('Position Motor', [DF_OnGetEnabled, @EnType1]),
-    wbbhkVelocityConstraintMotor('Velocity Motor', [DF_OnGetEnabled, @EnType2]),
-    wbbhkSpringDamperConstraintMotor('Spring Damper Motor', [DF_OnGetEnabled, @EnType3])
+    wbbhkPositionConstraintMotor('Position Motor', [DF_OnGetEnabled, @wbMotorDescriptor_EnType1]),
+    wbbhkVelocityConstraintMotor('Velocity Motor', [DF_OnGetEnabled, @wbMotorDescriptor_EnType2]),
+    wbbhkSpringDamperConstraintMotor('Spring Damper Motor', [DF_OnGetEnabled, @wbMotorDescriptor_EnType3])
   ], aEvents);
 end;
 
@@ -2508,32 +2520,33 @@ begin
   ], aEvents);
 end;
 
+function wbRagdollDescriptor_En1(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version <= v20005) or ((Version >= v20207) and (UserVersion2 = 16)); end;
+function wbRagdollDescriptor_En2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion2 > 16); end;
+
 function wbRagdollDescriptor(const aName: string; const aEvents: array of const): TdfDef;
-  function En1(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version <= v20005) or ((Version >= v20207) and (UserVersion2 = 16)); end;
-  function En2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion2 > 16); end;
 begin
   Result := dfStruct(aName, [
-    wbVector4('Pivot A', [DF_OnGetEnabled, @En1]),
-    wbVector4('Plane A', [DF_OnGetEnabled, @En1]),
-    wbVector4('Twist A', [DF_OnGetEnabled, @En1]),
-    wbVector4('Pivot B', [DF_OnGetEnabled, @En1]),
-    wbVector4('Plane B', [DF_OnGetEnabled, @En1]),
-    wbVector4('Twist B', [DF_OnGetEnabled, @En1]),
-    wbVector4('Twist A', [DF_OnGetEnabled, @En2]),
-    wbVector4('Plane A', [DF_OnGetEnabled, @En2]),
-    wbVector4('Motor A', [DF_OnGetEnabled, @En2]),
-    wbVector4('Pivot A', [DF_OnGetEnabled, @En2]),
-    wbVector4('Twist B', [DF_OnGetEnabled, @En2]),
-    wbVector4('Plane B', [DF_OnGetEnabled, @En2]),
-    wbVector4('Motor B', [DF_OnGetEnabled, @En2]),
-    wbVector4('Pivot B', [DF_OnGetEnabled, @En2]),
+    wbVector4('Pivot A', [DF_OnGetEnabled, @wbRagdollDescriptor_En1]),
+    wbVector4('Plane A', [DF_OnGetEnabled, @wbRagdollDescriptor_En1]),
+    wbVector4('Twist A', [DF_OnGetEnabled, @wbRagdollDescriptor_En1]),
+    wbVector4('Pivot B', [DF_OnGetEnabled, @wbRagdollDescriptor_En1]),
+    wbVector4('Plane B', [DF_OnGetEnabled, @wbRagdollDescriptor_En1]),
+    wbVector4('Twist B', [DF_OnGetEnabled, @wbRagdollDescriptor_En1]),
+    wbVector4('Twist A', [DF_OnGetEnabled, @wbRagdollDescriptor_En2]),
+    wbVector4('Plane A', [DF_OnGetEnabled, @wbRagdollDescriptor_En2]),
+    wbVector4('Motor A', [DF_OnGetEnabled, @wbRagdollDescriptor_En2]),
+    wbVector4('Pivot A', [DF_OnGetEnabled, @wbRagdollDescriptor_En2]),
+    wbVector4('Twist B', [DF_OnGetEnabled, @wbRagdollDescriptor_En2]),
+    wbVector4('Plane B', [DF_OnGetEnabled, @wbRagdollDescriptor_En2]),
+    wbVector4('Motor B', [DF_OnGetEnabled, @wbRagdollDescriptor_En2]),
+    wbVector4('Pivot B', [DF_OnGetEnabled, @wbRagdollDescriptor_En2]),
     dfFloat('Cone Max Angle'),
     dfFloat('Plane Min Angle'),
     dfFloat('Plane Max Angle'),
     dfFloat('Twist Min Angle'),
     dfFloat('Twist Max Angle'),
     dfFloat('Max Friction'),
-    wbMotorDescriptor('Motor', [DF_OnGetEnabled, @En2])
+    wbMotorDescriptor('Motor', [DF_OnGetEnabled, @wbRagdollDescriptor_En2])
   ], aEvents);
 end;
 
@@ -2556,35 +2569,37 @@ begin
   ], aEvents);
 end;
 
+function wbLimitedHingeDescriptor_En1(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version <= v20005) or ((Version >= v20207) and (UserVersion2 = 16)); end;
+function wbLimitedHingeDescriptor_En2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion2 > 16); end;
+
 function wbLimitedHingeDescriptor(const aName: string; const aEvents: array of const): TdfDef;
-  function En1(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version <= v20005) or ((Version >= v20207) and (UserVersion2 = 16)); end;
-  function En2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion2 > 16); end;
 begin
   Result := dfStruct(aName, [
-    wbVector4('Pivot A', [DF_OnGetEnabled, @En1]),
-    wbVector4('Axle A', [DF_OnGetEnabled, @En1]),
-    wbVector4('Perp2 Axle In A1', [DF_OnGetEnabled, @En1]),
-    wbVector4('Perp2 Axle In A2', [DF_OnGetEnabled, @En1]),
-    wbVector4('Pivot B', [DF_OnGetEnabled, @En1]),
-    wbVector4('Axle B', [DF_OnGetEnabled, @En1]),
-    wbVector4('Perp2 Axle In B2', [DF_OnGetEnabled, @En1]),
-    wbVector4('Axle A', [DF_OnGetEnabled, @En2]),
-    wbVector4('Perp2 Axle In A1', [DF_OnGetEnabled, @En2]),
-    wbVector4('Perp2 Axle In A2', [DF_OnGetEnabled, @En2]),
-    wbVector4('Pivot A', [DF_OnGetEnabled, @En2]),
-    wbVector4('Axle B', [DF_OnGetEnabled, @En2]),
-    wbVector4('Perp2 Axle In B1', [DF_OnGetEnabled, @En2]),
-    wbVector4('Perp2 Axle In B2', [DF_OnGetEnabled, @En2]),
-    wbVector4('Pivot B', [DF_OnGetEnabled, @En2]),
+    wbVector4('Pivot A', [DF_OnGetEnabled, @wbLimitedHingeDescriptor_En1]),
+    wbVector4('Axle A', [DF_OnGetEnabled, @wbLimitedHingeDescriptor_En1]),
+    wbVector4('Perp2 Axle In A1', [DF_OnGetEnabled, @wbLimitedHingeDescriptor_En1]),
+    wbVector4('Perp2 Axle In A2', [DF_OnGetEnabled, @wbLimitedHingeDescriptor_En1]),
+    wbVector4('Pivot B', [DF_OnGetEnabled, @wbLimitedHingeDescriptor_En1]),
+    wbVector4('Axle B', [DF_OnGetEnabled, @wbLimitedHingeDescriptor_En1]),
+    wbVector4('Perp2 Axle In B2', [DF_OnGetEnabled, @wbLimitedHingeDescriptor_En1]),
+    wbVector4('Axle A', [DF_OnGetEnabled, @wbLimitedHingeDescriptor_En2]),
+    wbVector4('Perp2 Axle In A1', [DF_OnGetEnabled, @wbLimitedHingeDescriptor_En2]),
+    wbVector4('Perp2 Axle In A2', [DF_OnGetEnabled, @wbLimitedHingeDescriptor_En2]),
+    wbVector4('Pivot A', [DF_OnGetEnabled, @wbLimitedHingeDescriptor_En2]),
+    wbVector4('Axle B', [DF_OnGetEnabled, @wbLimitedHingeDescriptor_En2]),
+    wbVector4('Perp2 Axle In B1', [DF_OnGetEnabled, @wbLimitedHingeDescriptor_En2]),
+    wbVector4('Perp2 Axle In B2', [DF_OnGetEnabled, @wbLimitedHingeDescriptor_En2]),
+    wbVector4('Pivot B', [DF_OnGetEnabled, @wbLimitedHingeDescriptor_En2]),
     dfFloat('Min Angle'),
     dfFloat('Max Angle'),
     dfFloat('Max Friction'),
-    wbMotorDescriptor('Motor', [DF_OnGetEnabled, @En2])
+    wbMotorDescriptor('Motor', [DF_OnGetEnabled, @wbLimitedHingeDescriptor_En2])
   ], aEvents);
 end;
 
+function wbPrismaticDescriptor_En2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion2 > 16); end;
+
 function wbPrismaticDescriptor(const aName: string; const aEvents: array of const): TdfDef;
-  function En2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion2 > 16); end;
 begin
   Result := dfStruct(aName, [
     wbVector4('Pivot A', [DF_OnGetEnabled, @EnBefore20005]),
@@ -2604,54 +2619,56 @@ begin
     dfFloat('Min Distance'),
     dfFloat('Max Distance'),
     dfFloat('Friction'),
-    wbMotorDescriptor('Motor', [DF_OnGetEnabled, @En2])
+    wbMotorDescriptor('Motor', [DF_OnGetEnabled, @wbPrismaticDescriptor_En2])
   ], aEvents);
 end;
 
+function wbMalleableDescriptor_EnType0(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 0; end;
+function wbMalleableDescriptor_EnType1(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 1; end;
+function wbMalleableDescriptor_EnType2(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 2; end;
+function wbMalleableDescriptor_EnType6(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 6; end;
+function wbMalleableDescriptor_EnType7(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 7; end;
+function wbMalleableDescriptor_EnType8(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 8; end;
+
 function wbMalleableDescriptor(const aName: string; const aEvents: array of const): TdfDef;
-  function EnType0(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 0; end;
-  function EnType1(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 1; end;
-  function EnType2(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 2; end;
-  function EnType6(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 6; end;
-  function EnType7(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 7; end;
-  function EnType8(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 8; end;
 begin
   Result := dfStruct(aName, [
     wbhkConstraintType('Type', '', []),
     dfArray('Entities', wbNiPtr('Entities', 'bhkEntity'), -4, '', [DF_OnBeforeSave, @RemoveNoneLinks]),
     dfInteger('Priority', dtU32, '1'),
-    wbBallAndSocketDescriptor('Ball and Socket', [DF_OnGetEnabled, @EnType0]),
-    wbHingeDescriptor('Hinge', [DF_OnGetEnabled, @EnType1]),
-    wbLimitedHingeDescriptor('Limited Hinge', [DF_OnGetEnabled, @EnType2]),
-    wbPrismaticDescriptor('Prismatic', [DF_OnGetEnabled, @EnType6]),
-    wbRagdollDescriptor('Ragdoll', [DF_OnGetEnabled, @EnType7]),
-    wbStiffSpringDescriptor('StiffSpring', [DF_OnGetEnabled, @EnType8]),
+    wbBallAndSocketDescriptor('Ball and Socket', [DF_OnGetEnabled, @wbMalleableDescriptor_EnType0]),
+    wbHingeDescriptor('Hinge', [DF_OnGetEnabled, @wbMalleableDescriptor_EnType1]),
+    wbLimitedHingeDescriptor('Limited Hinge', [DF_OnGetEnabled, @wbMalleableDescriptor_EnType2]),
+    wbPrismaticDescriptor('Prismatic', [DF_OnGetEnabled, @wbMalleableDescriptor_EnType6]),
+    wbRagdollDescriptor('Ragdoll', [DF_OnGetEnabled, @wbMalleableDescriptor_EnType7]),
+    wbStiffSpringDescriptor('StiffSpring', [DF_OnGetEnabled, @wbMalleableDescriptor_EnType8]),
     dfFloat('Tau', [DF_OnGetEnabled, @EnBefore20005]),
     dfFloat('Damping', [DF_OnGetEnabled, @EnBefore20005]),
     dfFloat('Strength', [DF_OnGetEnabled, @EnSince20207])
   ], aEvents);
 end;
 
+function wbConstraintData_EnType0(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 0; end;
+function wbConstraintData_EnType1(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 1; end;
+function wbConstraintData_EnType2(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 2; end;
+function wbConstraintData_EnType6(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 6; end;
+function wbConstraintData_EnType7(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 7; end;
+function wbConstraintData_EnType8(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 8; end;
+function wbConstraintData_EnType13(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 13; end;
+
 function wbConstraintData(const aName: string; const aEvents: array of const): TdfDef;
-  function EnType0(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 0; end;
-  function EnType1(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 1; end;
-  function EnType2(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 2; end;
-  function EnType6(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 6; end;
-  function EnType7(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 7; end;
-  function EnType8(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 8; end;
-  function EnType13(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 13; end;
 begin
   Result := dfStruct(aName, [
     wbhkConstraintType('Type', '', []),
     dfArray('Entities', wbNiPtr('Entities', 'bhkEntity'), -4, '', [DF_OnBeforeSave, @RemoveNoneLinks]),
     dfInteger('Priority', dtU32, '1'),
-    wbBallAndSocketDescriptor('Ball and Socket', [DF_OnGetEnabled, @EnType0]),
-    wbHingeDescriptor('Hinge', [DF_OnGetEnabled, @EnType1]),
-    wbLimitedHingeDescriptor('Limited Hinge', [DF_OnGetEnabled, @EnType2]),
-    wbPrismaticDescriptor('Prismatic', [DF_OnGetEnabled, @EnType6]),
-    wbRagdollDescriptor('Ragdoll', [DF_OnGetEnabled, @EnType7]),
-    wbStiffSpringDescriptor('StiffSpring', [DF_OnGetEnabled, @EnType8]),
-    wbMalleableDescriptor('Ragdoll', [DF_OnGetEnabled, @EnType13])
+    wbBallAndSocketDescriptor('Ball and Socket', [DF_OnGetEnabled, @wbConstraintData_EnType0]),
+    wbHingeDescriptor('Hinge', [DF_OnGetEnabled, @wbConstraintData_EnType1]),
+    wbLimitedHingeDescriptor('Limited Hinge', [DF_OnGetEnabled, @wbConstraintData_EnType2]),
+    wbPrismaticDescriptor('Prismatic', [DF_OnGetEnabled, @wbConstraintData_EnType6]),
+    wbRagdollDescriptor('Ragdoll', [DF_OnGetEnabled, @wbConstraintData_EnType7]),
+    wbStiffSpringDescriptor('StiffSpring', [DF_OnGetEnabled, @wbConstraintData_EnType8]),
+    wbMalleableDescriptor('Ragdoll', [DF_OnGetEnabled, @wbConstraintData_EnType13])
   ], aEvents);
 end;
 
@@ -2659,50 +2676,57 @@ end;
 
 //===========================================================================
 { Basic NIF data structures: NIF, Header, Footer }
+
+function NiHeader_EnSince20004(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Version'] >= v20004; end;
+function NiHeader_EnSince10010(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Version'] >= v10010; end;
+
+function NiHeader_EnUserVersion2(const e: TdfElement): Boolean;
+var
+  Version, UserVersion: Cardinal;
+begin
+  Version := e.NativeValues['..\Version'];
+  UserVersion := e.NativeValues['..\User Version'];
+  Result := (Version >= v10010) and ((UserVersion >= 10) or ((UserVersion = 1) and (Version <> v10200)));
+end;
+
+function NiHeader_EnBefore10012(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\..\Version'] <= v10012; end;
+function NiHeader_EnExportInfo3(const e: TdfElement): Boolean; begin Result := (e.NativeValues['..\Version'] = v20207) and (e.NativeValues['..\User Version 2'] = 130); end;
+function NiHeader_EnSince20207(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Version'] >= v20207; end;
+function NiHeader_EnSince20103(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Version'] >= v20103; end;
+procedure NiHeader_GetTextVersion(const e: TdfElement; var aText: string); begin aText := wbIntToNifVersion(e.NativeValue); end;
+procedure NiHeader_SetTextVersion(const e: TdfElement; var aText: string); begin aText := IntToStr(wbNifVersionToInt(aText)); end;
+
+procedure NiHeader_GetTextBlockType(const e: TdfElement; var aText: string);
+var
+  BlockTypes: TdfElement;
+  i: Integer;
+begin
+  BlockTypes := e.Elements['..\..\Block Types'];
+  i := StrToInt(aText);
+  if Assigned(BlockTypes) and (i >= 0) and (i < BlockTypes.Count) then
+    aText := BlockTypes[i].EditValue
+  else
+    e.DoException('Invalid block type index ' + aText);
+end;
+
+procedure NiHeader_SetTextBlockType(const e: TdfElement; var aText: string);
+var
+  BlockTypes: TdfElement;
+  i: integer;
+begin
+  BlockTypes := e.Elements['..\..\Block Types'];
+  if Assigned(BlockTypes) then
+    for i := 0 to Pred(BlockTypes.Count) do
+      if BlockTypes[i].EditValue = aText then begin
+        aText := IntToStr(i);
+        Exit;
+      end;
+  e.DoException('Block type not found in NiHeader: ' + aText);
+end;
+
+procedure NiHeader_AfterLoad(const e: TdfElement; const aDataStart: Pointer; aDataSize: Integer); begin nif(e).UpdateNifVersion; end;
+
 procedure wbDefineNifHeaderFooter;
-  function EnSince20004(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Version'] >= v20004; end;
-  function EnSince10010(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Version'] >= v10010; end;
-  function EnUserVersion2(const e: TdfElement): Boolean;
-  var
-    Version, UserVersion: Cardinal;
-  begin
-    Version := e.NativeValues['..\Version'];
-    UserVersion := e.NativeValues['..\User Version'];
-    Result := (Version >= v10010) and ((UserVersion >= 10) or ((UserVersion = 1) and (Version <> v10200)));
-  end;
-  function EnBefore10012(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\..\Version'] <= v10012; end;
-  function EnExportInfo3(const e: TdfElement): Boolean; begin Result := (e.NativeValues['..\Version'] = v20207) and (e.NativeValues['..\User Version 2'] = 130); end;
-  function EnSince20207(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Version'] >= v20207; end;
-  function EnSince20103(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Version'] >= v20103; end;
-  procedure AfterLoadHeader(const e: TdfElement; const aDataStart: Pointer; aDataSize: Integer); begin nif(e).UpdateNifVersion; end;
-  procedure GetTextVersion(const e: TdfElement; var aText: string); begin aText := wbIntToNifVersion(e.NativeValue); end;
-  procedure SetTextVersion(const e: TdfElement; var aText: string); begin aText := IntToStr(wbNifVersionToInt(aText)); end;
-  procedure GetTextBlockType(const e: TdfElement; var aText: string);
-  var
-    BlockTypes: TdfElement;
-    i: Integer;
-  begin
-    BlockTypes := e.Elements['..\..\Block Types'];
-    i := StrToInt(aText);
-    if Assigned(BlockTypes) and (i >= 0) and (i < BlockTypes.Count) then
-      aText := BlockTypes[i].EditValue
-    else
-      e.DoException('Invalid block type index ' + aText);
-  end;
-  procedure SetTextBlockType(const e: TdfElement; var aText: string);
-  var
-    BlockTypes: TdfElement;
-    i: integer;
-  begin
-    BlockTypes := e.Elements['..\..\Block Types'];
-    if Assigned(BlockTypes) then
-      for i := 0 to Pred(BlockTypes.Count) do
-        if BlockTypes[i].EditValue = aText then begin
-          aText := IntToStr(i);
-          Exit;
-        end;
-    e.DoException('Block type not found in NiHeader: ' + aText);
-  end;
 begin
   { NIF File }
   wbNiObject(TdfStructDef.Create('NIF', dtStruct, []));
@@ -2711,45 +2735,46 @@ begin
   wbNiObject(wbNifBlock('NiHeader', [
     dfChars('Magic', 0, sNifMagicGamebryo + '20.2.0.7', #$0A, True, []),
     dfInteger('Version', dtU32, '20.2.0.7', [
-        DF_OnGetText, @GetTextVersion,
-        DF_OnSetText, @SetTextVersion
+        DF_OnGetText, @NiHeader_GetTextVersion,
+        DF_OnSetText, @NiHeader_SetTextVersion
     ]),
     dfEnum('Endian Type', dtU8, [
       0, 'ENDIAN_BIG',
       1, 'ENDIAN_LITTLE'
-    ], 'ENDIAN_LITTLE', [DF_OnGetEnabled, @EnSince20004]),
-    dfInteger('User Version', dtU32, '12', [DF_OnGetEnabled, @EnSince10010]),
+    ], 'ENDIAN_LITTLE', [DF_OnGetEnabled, @NiHeader_EnSince20004]),
+    dfInteger('User Version', dtU32, '12', [DF_OnGetEnabled, @NiHeader_EnSince10010]),
     dfInteger('Num Blocks', dtU32),
-    dfInteger('User Version 2', dtU32, '83', [DF_OnGetEnabled, @EnUserVersion2]),
+    dfInteger('User Version 2', dtU32, '83', [DF_OnGetEnabled, @NiHeader_EnUserVersion2]),
     dfStruct('Export Info', [
-      dfInteger('Unknown Int', dtU32, '3', [DF_OnGetEnabled, @EnBefore10012]),
+      dfInteger('Unknown Int', dtU32, '3', [DF_OnGetEnabled, @NiHeader_EnBefore10012]),
       wbShortString('Creator'),
       wbShortString('Export Info 1'),
       wbShortString('Export Info 2')
-    ], [DF_OnGetEnabled, @EnSince10010]),
-    wbShortString('Export Info 3', [DF_OnGetEnabled, @EnExportInfo3]),
-    dfArray('Block Types', wbSizedString('Type'), -2, '', [DF_OnGetEnabled, @EnSince10010]),
+    ], [DF_OnGetEnabled, @NiHeader_EnSince10010]),
+    wbShortString('Export Info 3', [DF_OnGetEnabled, @NiHeader_EnExportInfo3]),
+    dfArray('Block Types', wbSizedString('Type'), -2, '', [DF_OnGetEnabled, @NiHeader_EnSince10010]),
     dfArray(
       'Block Type Index',
       dfInteger('Block', dtU16, [
-        DF_OnGetText, @GetTextBlockType,
-        DF_OnSetText, @SetTextBlockType
+        DF_OnGetText, @NiHeader_GetTextBlockType,
+        DF_OnSetText, @NiHeader_SetTextBlockType
       ]),
       0, 'Num Blocks',
-      [DF_OnGetEnabled, @EnSince10010]
+      [DF_OnGetEnabled, @NiHeader_EnSince10010]
     ),
-    dfArray('Block Size', dfInteger('Size', dtU32), 0, 'Num Blocks', [DF_OnGetEnabled, @EnSince20207]),
-    dfInteger('Num Strings', dtU32, [DF_OnGetEnabled, @EnSince20103]),
-    dfInteger('Max String Length', dtU32, [DF_OnGetEnabled, @EnSince20103]),
-    dfArray('Strings', wbSizedString('String'), 0, 'Num Strings', [DF_OnGetEnabled, @EnSince20103]),
-    dfInteger('Unknown Int 2', dtU32, [DF_OnGetEnabled, @EnSince10010])
-  ], [DF_OnAfterLoad, @AfterLoadHeader]));
+    dfArray('Block Size', dfInteger('Size', dtU32), 0, 'Num Blocks', [DF_OnGetEnabled, @NiHeader_EnSince20207]),
+    dfInteger('Num Strings', dtU32, [DF_OnGetEnabled, @NiHeader_EnSince20103]),
+    dfInteger('Max String Length', dtU32, [DF_OnGetEnabled, @NiHeader_EnSince20103]),
+    dfArray('Strings', wbSizedString('String'), 0, 'Num Strings', [DF_OnGetEnabled, @NiHeader_EnSince20103]),
+    dfInteger('Unknown Int 2', dtU32, [DF_OnGetEnabled, @NiHeader_EnSince10010])
+  ], [DF_OnAfterLoad, @NiHeader_AfterLoad]));
 
   { NiFooter }
   wbNiObject(wbNifBlock('NiFooter', [
     dfArray('Roots', wbNiRef('Roots', 'NiObject'), -4, '', [DF_OnBeforeSave, @RemoveNoneLinks])
   ]));
 end;
+
 
 //===========================================================================
 { NiObject }
@@ -2775,20 +2800,21 @@ end;
 
 //===========================================================================
 { NiAVObject }
+function NiAVObject_DecideFlags(const e: TdfElement): Integer; begin with nif(e) do if (Version = v20207) and (UserVersion >= 11) and (UserVersion2 > 26) then Result := 1 else Result := 0; end;
+function NiAVObject_EnProperties(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version < v20207) or (UserVersion <= 11); end;
+function NiAVObject_EnBoundingBox(const e: TdfElement): Boolean; begin Result := (nif(e).Version <= v4220) and (e.NativeValues['..\Has Bounding Box'] <> 0); end;
+
 procedure wbDefineNiAVObject;
-  function DecideFlags(const e: TdfElement): Integer; begin with nif(e) do if (Version = v20207) and (UserVersion >= 11) and (UserVersion2 > 26) then Result := 1 else Result := 0; end;
-  function EnProperties(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version < v20207) or (UserVersion <= 11); end;
-  function EnBoundingBox(const e: TdfElement): Boolean; begin Result := (nif(e).Version <= v4220) and (e.NativeValues['..\Has Bounding Box'] <> 0); end;
 begin
   wbNiObject(wbNifBlock('NiAVObject', [
     dfUnion([
       dfInteger('Flags', dtU16),
       dfInteger('Flags', dtU32, '14')
-    ], [DF_OnDecide, @DecideFlags]),
+    ], [DF_OnDecide, @NiAVObject_DecideFlags]),
     wbMTransform('Transform'),
     wbVector3('Velocity', [DF_OnGetEnabled, @EnBefore4220]),
     dfArray('Properties', wbNiRef('Properties', 'NiProperty'), -4, '', [
-      DF_OnGetEnabled, @EnProperties,
+      DF_OnGetEnabled, @NiAVObject_EnProperties,
       DF_OnBeforeSave, @RemoveNoneLinks
     ]),
     wbBool('Has Bounding Box', [DF_OnGetEnabled, @EnBefore4220]),
@@ -2797,7 +2823,7 @@ begin
       wbVector3('Translation'),
       wbRotMatrix33('Rotation'),
       wbVector3('Radius')
-    ], [DF_OnGetEnabled, @EnBoundingBox]),
+    ], [DF_OnGetEnabled, @NiAVObject_EnBoundingBox]),
     wbNiRef('Collision Object', 'NiCollisionObject', [DF_OnGetEnabled, @EnSince10010])
   ]), 'NiObjectNET', True);
 end;
@@ -2824,16 +2850,17 @@ end;
 
 //===========================================================================
 { NiPalette * }
+procedure NiPalette_SetNumEntries(const e: TdfElement; var aValue: Variant);
+begin
+  if (aValue <> 16) and (aValue <> 256) then
+    e.DoException('Can be 16 or 256 only');
+end;
+
 procedure wbDefineNiPalette;
-  procedure SetNumEntries(const e: TdfElement; var aValue: Variant);
-  begin
-    if (aValue <> 16) and (aValue <> 256) then
-      e.DoException('Can be 16 or 256 only');
-  end;
 begin
   wbNiObject(wbNifBlock('NiPalette', [
     dfInteger('Unknown Byte', dtU8),
-    dfInteger('Num Entries', dtU32, '256', [DF_OnSetValue, @SetNumEntries]),
+    dfInteger('Num Entries', dtU32, '256', [DF_OnSetValue, @NiPalette_SetNumEntries]),
     dfArray('Palette', wbByteColor4('Palette'), 0, 'Num Entries', [])
   ]), 'NiObject', False);
 end;
@@ -2857,13 +2884,14 @@ end;
 
 //===========================================================================
 { NiNode }
+function NiNode_EnEffects(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 < 130; end;
+
 procedure wbDefineNiNode;
-  function EnEffects(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 < 130; end;
 begin
   wbNiObject(wbNifBlock('NiNode', [
     dfArray('Children', wbNiRef('Children', 'NiAVObject'), -4, '', [DF_OnBeforeSave, @RemoveNoneLinks]),
     dfArray('Effects', wbNiRef('Effects', 'NiDynamicEffect'), -4, '', [
-      DF_OnGetEnabled, @EnEffects,
+      DF_OnGetEnabled, @NiNode_EnEffects,
       DF_OnBeforeSave, @RemoveNoneLinks
     ])
   ]), 'NiAVObject', False);
@@ -3007,12 +3035,13 @@ end;
 
 //===========================================================================
 { BSMultiBoundNode }
+function BSMultiBoundNode_EnCullingNode(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 >= 83; end;
+
 procedure wbDefineBSMultiBoundNode;
-  function EnCullingNode(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 >= 83; end;
 begin
   wbNiObject(wbNifBlock('BSMultiBoundNode', [
     wbNiRef('Multi Bound', 'BSMultiBound'),
-    wbBSCPCullingType('Culling Node', '', [DF_OnGetEnabled, @EnCullingNode])
+    wbBSCPCullingType('Culling Node', '', [DF_OnGetEnabled, @BSMultiBoundNode_EnCullingNode])
   ]), 'NiNode', False);
 end;
 
@@ -3075,11 +3104,12 @@ end;
 
 //===========================================================================
 { NiLODNode * }
+function NiLODNode_EnLODCenter(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v4002) and (Version <= v10010); end;
+
 procedure wbDefineNiLODNode;
-  function EnLODCenter(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v4002) and (Version <= v10010); end;
 begin
   wbNiObject(wbNifBlock('NiLODNode', [
-    wbVector3('LOD Center', [DF_OnGetEnabled, @EnLODCenter]),
+    wbVector3('LOD Center', [DF_OnGetEnabled, @NiLODNode_EnLODCenter]),
     dfArray('LOD Levels', dfStruct('LOD Levels', [
       dfFloat('Near Extent'),
       dfFloat('Far Extent')
@@ -3123,11 +3153,12 @@ end;
 
 //===========================================================================
 { NiExtraData }
+function NiExtraData_EnName(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v10010) and not wbIsNiObject(e, 'BSExtraData'); end;
+
 procedure wbDefineNiExtraData;
-  function EnName(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v10010) and not wbIsNiObject(e, 'BSExtraData'); end;
 begin
   wbNiObject(wbNifBlock('NiExtraData', [
-    wbString('Name', [DF_OnGetEnabled, @EnName]),
+    wbString('Name', [DF_OnGetEnabled, @NiExtraData_EnName]),
     wbNiRef('Next Extra Data', 'NiExtraData', [DF_OnGetEnabled, @EnBefore4220])
   ]), 'NiObject', False);
 end;
@@ -3179,8 +3210,9 @@ end;
 
 //===========================================================================
 { NiIntegerExtraData }
+function NiIntegerExtraData_DecideFlags(const e: TdfElement): Integer; begin if wbIsNiObject(e, 'BSXFlags') then Result := 1 else Result := 0; end;
+
 procedure wbDefineNiIntegerExtraData;
-  function DecideFlags(const e: TdfElement): Integer; begin if wbIsNiObject(e, 'BSXFlags') then Result := 1 else Result := 0; end;
 begin
   wbNiObject(wbNifBlock('NiIntegerExtraData', [
     dfUnion(nil, [
@@ -3197,7 +3229,7 @@ begin
         8, 'Needs Transform Updates',
         9, 'External Emit'
       ])
-    ], [DF_OnDecide, @DecideFlags])
+    ], [DF_OnDecide, @NiIntegerExtraData_DecideFlags])
   ]), 'NiExtraData', False);
 end;
 
@@ -3264,51 +3296,54 @@ end;
 
 //===========================================================================
 { BSXFlags }
-procedure wbDefineBSXFlags;
-  procedure AfterLoad(const aElement: TdfElement; const aDataStart: Pointer; aDataSize: Integer);
-  begin
-    // Must have BSX name
-    if aDataStart = nil then
-      aElement.EditValues['Name'] := 'BSX';
-  end;
+procedure BSXFlags_AfterLoad(const aElement: TdfElement; const aDataStart: Pointer; aDataSize: Integer);
 begin
-  wbNiObject(wbNifBlock('BSXFlags', [], [DF_OnAfterLoad, @AfterLoad]), 'NiIntegerExtraData', False);
+  // Must have BSX name
+  if aDataStart = nil then
+    aElement.EditValues['Name'] := 'BSX';
+end;
+
+procedure wbDefineBSXFlags;
+begin
+  wbNiObject(wbNifBlock('BSXFlags', [], [DF_OnAfterLoad, @BSXFlags_AfterLoad]), 'NiIntegerExtraData', False);
 end;
 
 //===========================================================================
 { BSInvMarker }
+procedure BSInvMarker_AfterLoad(const aElement: TdfElement; const aDataStart: Pointer; aDataSize: Integer);
+begin
+  // Must have INV name
+  if aDataStart = nil then
+    aElement.EditValues['Name'] := 'INV';
+end;
+
 procedure wbDefineBSInvMarker;
-  procedure AfterLoad(const aElement: TdfElement; const aDataStart: Pointer; aDataSize: Integer);
-  begin
-    // Must have INV name
-    if aDataStart = nil then
-      aElement.EditValues['Name'] := 'INV';
-  end;
 begin
   wbNiObject(wbNifBlock('BSInvMarker', [
     dfInteger('Rotation X', dtU16, '4712'),
     dfInteger('Rotation Y', dtU16, '6283'),
     dfInteger('Rotation Z', dtU16, '0'),
     dfFloat('Zoom', '1.0')
-  ], [DF_OnAfterLoad, @AfterLoad]),
+  ], [DF_OnAfterLoad, @BSInvMarker_AfterLoad]),
   'NiExtraData', False);
 end;
 
 //===========================================================================
 { BSFurnitureMarker }
+function BSFurnitureMarker_EnOrientation(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion <= 11; end;
+function BSFurnitureMarker_EnHeading(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 12); end;
+
 procedure wbDefineBSFurnitureMarker;
-  function EnOrientation(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion <= 11; end;
-  function EnHeading(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 12); end;
 begin
   wbNiObject(wbNifBlock('BSFurnitureMarker', [
     dfArray('Positions', dfStruct('Positions', [
       wbVector3('Offset'),
-      dfInteger('Orientation', dtU16, [DF_OnGetEnabled, @EnOrientation]),
-      dfInteger('Position Ref 1', dtU8, [DF_OnGetEnabled, @EnOrientation]),
-      dfInteger('Position Ref 2', dtU8, [DF_OnGetEnabled, @EnOrientation]),
-      dfFloat('Heading', [DF_OnGetEnabled, @EnHeading]),
-      wbAnimationType('Animation Type', '', [DF_OnGetEnabled, @EnHeading]),
-      wbFurnitureEntryPoints('Entry Properties', '', [DF_OnGetEnabled, @EnHeading])
+      dfInteger('Orientation', dtU16, [DF_OnGetEnabled, @BSFurnitureMarker_EnOrientation]),
+      dfInteger('Position Ref 1', dtU8, [DF_OnGetEnabled, @BSFurnitureMarker_EnOrientation]),
+      dfInteger('Position Ref 2', dtU8, [DF_OnGetEnabled, @BSFurnitureMarker_EnOrientation]),
+      dfFloat('Heading', [DF_OnGetEnabled, @BSFurnitureMarker_EnHeading]),
+      wbAnimationType('Animation Type', '', [DF_OnGetEnabled, @BSFurnitureMarker_EnHeading]),
+      wbFurnitureEntryPoints('Entry Properties', '', [DF_OnGetEnabled, @BSFurnitureMarker_EnHeading])
     ]), -4)
   ]), 'NiExtraData', False);
 end;
@@ -3344,18 +3379,19 @@ end;
 
 //===========================================================================
 { BSBehaviorGraphExtraData }
+procedure BSBehaviorGraphExtraData_AfterLoad(const aElement: TdfElement; const aDataStart: Pointer; aDataSize: Integer);
+begin
+  // Must have BGED name
+  if aDataStart = nil then
+    aElement.EditValues['Name'] := 'BGED';
+end;
+
 procedure wbDefineBSBehaviorGraphExtraData;
-  procedure AfterLoad(const aElement: TdfElement; const aDataStart: Pointer; aDataSize: Integer);
-  begin
-    // Must have BGED name
-    if aDataStart = nil then
-      aElement.EditValues['Name'] := 'BGED';
-  end;
 begin
   wbNiObject(wbNifBlock('BSBehaviorGraphExtraData', [
     wbString('Behavior Graph File'),
     wbBool('Controls Base Skeleton')
-  ], [DF_OnAfterLoad, @AfterLoad]), 'NiExtraData', False);
+  ], [DF_OnAfterLoad, @BSBehaviorGraphExtraData_AfterLoad]), 'NiExtraData', False);
 end;
 
 //===========================================================================
@@ -3466,13 +3502,14 @@ end;
 
 //===========================================================================
 { BSConnectPoint::Parents }
+procedure BSConnectPointParents_AfterLoad(const aElement: TdfElement; const aDataStart: Pointer; aDataSize: Integer);
+begin
+  // Must have CPA name
+  if aDataStart = nil then
+    aElement.EditValues['Name'] := 'CPA';
+end;
+
 procedure wbDefineBSConnectPoint__Parents;
-  procedure AfterLoad(const aElement: TdfElement; const aDataStart: Pointer; aDataSize: Integer);
-  begin
-    // Must have CPA name
-    if aDataStart = nil then
-      aElement.EditValues['Name'] := 'CPA';
-  end;
 begin
   wbNiObject(wbNifBlock('BSConnectPoint::Parents', [
     dfArray('Connect Points', dfStruct('Connect Points', [
@@ -3482,7 +3519,7 @@ begin
       wbVector3('Translation'),
       dfFloat('Scale', '1.0')
     ]), -4)
-  ], [DF_OnAfterLoad, @AfterLoad]),
+  ], [DF_OnAfterLoad, @BSConnectPointParents_AfterLoad]),
   'NiExtraData', False);
 end;
 
@@ -3498,9 +3535,10 @@ end;
 
 //===========================================================================
 { BSAnimNote }
+function BSAnimNote_EnType1(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 1; end;
+function BSAnimNote_EnType2(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 2; end;
+
 procedure wbDefineBSAnimNote;
-  function EnType1(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 1; end;
-  function EnType2(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Type'] = 2; end;
 begin
   wbNiObject(wbNifBlock('BSAnimNote', [
     dfEnum('Type', dtU32, [
@@ -3509,9 +3547,9 @@ begin
       2, 'ANT_LOOKIK'
     ]),
     dfFloat('Time'),
-    dfInteger('Arm', dtU32, [DF_OnGetEnabled, @EnType1]),
-    dfFloat('Gain', [DF_OnGetEnabled, @EnType2]),
-    dfInteger('State', dtU32, [DF_OnGetEnabled, @EnType2])
+    dfInteger('Arm', dtU32, [DF_OnGetEnabled, @BSAnimNote_EnType1]),
+    dfFloat('Gain', [DF_OnGetEnabled, @BSAnimNote_EnType2]),
+    dfInteger('State', dtU32, [DF_OnGetEnabled, @BSAnimNote_EnType2])
   ]), 'NiObject', False);
 end;
 
@@ -3563,19 +3601,20 @@ end;
 
 //===========================================================================
 { NiMaterialProperty }
+function NiMaterialProperty_EnAmbientColor(const e: TdfElement): Boolean; begin with nif(e) do Result := not ((Version = v20207) and (UserVersion >= 11) and (UserVersion2 > 21)); end;
+function NiMaterialProperty_EnEmitMult(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion >= 11) and (UserVersion2 > 21); end;
+
 procedure wbDefineNiMaterialProperty;
-  function EnAmbientColor(const e: TdfElement): Boolean; begin with nif(e) do Result := not ((Version = v20207) and (UserVersion >= 11) and (UserVersion2 > 21)); end;
-  function EnEmitMult(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion >= 11) and (UserVersion2 > 21); end;
 begin
   wbNiObject(wbNifBlock('NiMaterialProperty', [
     dfInteger('Flags', dtU16, [DF_OnGetEnabled, @EnBefore10012]),
-    wbColor3('Ambient Color', [DF_OnGetEnabled, @EnAmbientColor]),
-    wbColor3('Diffuse Color', [DF_OnGetEnabled, @EnAmbientColor]),
+    wbColor3('Ambient Color', [DF_OnGetEnabled, @NiMaterialProperty_EnAmbientColor]),
+    wbColor3('Diffuse Color', [DF_OnGetEnabled, @NiMaterialProperty_EnAmbientColor]),
     wbColor3('Specular Color'),
     wbColor3('Emissive Color'),
     dfFloat('Glossiness'),
     dfFloat('Alpha'),
-    dfFloat('Emit Mult', '1.0', [DF_OnGetEnabled, @EnEmitMult])
+    dfFloat('Emit Mult', '1.0', [DF_OnGetEnabled, @NiMaterialProperty_EnEmitMult])
   ]), 'NiProperty', False);
 end;
 
@@ -3619,57 +3658,58 @@ end;
 
 //===========================================================================
 { NiTexturingProperty }
+function NiTexturingProperty_EnFlags(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version <= v10012) or (Version >= v20103); end;
+function NiTexturingProperty_EnAmbientColor(const e: TdfElement): Boolean; begin with nif(e) do Result := not ((Version = v20207) and (UserVersion >= 11) and (UserVersion2 > 21)); end;
+function NiTexturingProperty_EnEmitMult(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion >= 11) and (UserVersion2 > 21); end;
+function NiTexturingProperty_EnBaseTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Base Texture'] <> 0; end;
+function NiTexturingProperty_EnDarkTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Dark Texture'] <> 0; end;
+function NiTexturingProperty_EnDetailTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Detail Texture'] <> 0; end;
+function NiTexturingProperty_EnGlossTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Gloss Texture'] <> 0; end;
+function NiTexturingProperty_EnGlowTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Glow Texture'] <> 0; end;
+function NiTexturingProperty_EnBumpMapTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Bump Map Texture'] <> 0; end;
+function NiTexturingProperty_EnNormalTexture(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v20207) and (e.NativeValues['..\Has Normal Texture'] <> 0); end;
+function NiTexturingProperty_EnUnknown2Texture(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v20207) and (e.NativeValues['..\Has Unknown2 Texture'] <> 0); end;
+function NiTexturingProperty_EnDecal0Texture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Decal 0 Texture'] <> 0; end;
+function NiTexturingProperty_EnHasDecal1Texture(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version <= v20103) and (e.NativeValues['..\Texture Count'] >= 8)) or ((Version >= v20207) and (e.NativeValues['..\Texture Count'] >= 10)); end;
+function NiTexturingProperty_EnDecal1Texture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Decal 1 Texture'] <> 0; end;
+function NiTexturingProperty_EnHasDecal2Texture(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version <= v20103) and (e.NativeValues['..\Texture Count'] >= 9)) or ((Version >= v20207) and (e.NativeValues['..\Texture Count'] >= 11)); end;
+function NiTexturingProperty_EnDecal2Texture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Decal 2 Texture'] <> 0; end;
+function NiTexturingProperty_EnHasDecal3Texture(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version <= v20103) and (e.NativeValues['..\Texture Count'] >= 10)) or ((Version >= v20207) and (e.NativeValues['..\Texture Count'] >= 12)); end;
+function NiTexturingProperty_EnDecal3Texture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Decal 3 Texture'] <> 0; end;
+
 procedure wbDefineNiTexturingProperty;
-  function EnFlags(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version <= v10012) or (Version >= v20103); end;
-  function EnAmbientColor(const e: TdfElement): Boolean; begin with nif(e) do Result := not ((Version = v20207) and (UserVersion >= 11) and (UserVersion2 > 21)); end;
-  function EnEmitMult(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion >= 11) and (UserVersion2 > 21); end;
-  function EnBaseTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Base Texture'] <> 0; end;
-  function EnDarkTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Dark Texture'] <> 0; end;
-  function EnDetailTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Detail Texture'] <> 0; end;
-  function EnGlossTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Gloss Texture'] <> 0; end;
-  function EnGlowTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Glow Texture'] <> 0; end;
-  function EnBumpMapTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Bump Map Texture'] <> 0; end;
-  function EnNormalTexture(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v20207) and (e.NativeValues['..\Has Normal Texture'] <> 0); end;
-  function EnUnknown2Texture(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v20207) and (e.NativeValues['..\Has Unknown2 Texture'] <> 0); end;
-  function EnDecal0Texture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Decal 0 Texture'] <> 0; end;
-  function EnHasDecal1Texture(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version <= v20103) and (e.NativeValues['..\Texture Count'] >= 8)) or ((Version >= v20207) and (e.NativeValues['..\Texture Count'] >= 10)); end;
-  function EnDecal1Texture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Decal 1 Texture'] <> 0; end;
-  function EnHasDecal2Texture(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version <= v20103) and (e.NativeValues['..\Texture Count'] >= 9)) or ((Version >= v20207) and (e.NativeValues['..\Texture Count'] >= 11)); end;
-  function EnDecal2Texture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Decal 2 Texture'] <> 0; end;
-  function EnHasDecal3Texture(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version <= v20103) and (e.NativeValues['..\Texture Count'] >= 10)) or ((Version >= v20207) and (e.NativeValues['..\Texture Count'] >= 12)); end;
-  function EnDecal3Texture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Decal 3 Texture'] <> 0; end;
 begin
   wbNiObject(wbNifBlock('NiTexturingProperty', [
-    dfInteger('Flags', dtU16, '', [DF_OnGetEnabled, @EnFlags]),
+    dfInteger('Flags', dtU16, '', [DF_OnGetEnabled, @NiTexturingProperty_EnFlags]),
     wbApplyMode('Apply Mode', 'APPLY_MODULATE', [DF_OnGetEnabled, @EnBefore20005]),
     dfInteger('Texture Count', dtU32),
     wbBool('Has Base Texture'),
-    wbTexDesc('Base Texture', [DF_OnGetEnabled, @EnBaseTexture]),
+    wbTexDesc('Base Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnBaseTexture]),
     wbBool('Has Dark Texture'),
-    wbTexDesc('Dark Texture', [DF_OnGetEnabled, @EnDarkTexture]),
+    wbTexDesc('Dark Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnDarkTexture]),
     wbBool('Has Detail Texture'),
-    wbTexDesc('Detail Texture', [DF_OnGetEnabled, @EnDetailTexture]),
+    wbTexDesc('Detail Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnDetailTexture]),
     wbBool('Has Gloss Texture'),
-    wbTexDesc('Gloss Texture', [DF_OnGetEnabled, @EnGlossTexture]),
+    wbTexDesc('Gloss Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnGlossTexture]),
     wbBool('Has Glow Texture'),
-    wbTexDesc('Glow Texture', [DF_OnGetEnabled, @EnGlowTexture]),
+    wbTexDesc('Glow Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnGlowTexture]),
     wbBool('Has Bump Map Texture'),
-    wbTexDesc('Bump Map Texture', [DF_OnGetEnabled, @EnBumpMapTexture]),
-    dfFloat('Bump Map Luma Scale', [DF_OnGetEnabled, @EnBumpMapTexture]),
-    dfFloat('Bump Map Luma Offset', [DF_OnGetEnabled, @EnBumpMapTexture]),
-    wbMatrix22('Bump Map Matrix', [DF_OnGetEnabled, @EnBumpMapTexture]),
+    wbTexDesc('Bump Map Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnBumpMapTexture]),
+    dfFloat('Bump Map Luma Scale', [DF_OnGetEnabled, @NiTexturingProperty_EnBumpMapTexture]),
+    dfFloat('Bump Map Luma Offset', [DF_OnGetEnabled, @NiTexturingProperty_EnBumpMapTexture]),
+    wbMatrix22('Bump Map Matrix', [DF_OnGetEnabled, @NiTexturingProperty_EnBumpMapTexture]),
     wbBool('Has Normal Texture', [DF_OnGetEnabled, @EnSince20207]),
-    wbTexDesc('Normal Texture', [DF_OnGetEnabled, @EnNormalTexture]),
+    wbTexDesc('Normal Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnNormalTexture]),
     wbBool('Has Unknown2 Texture', [DF_OnGetEnabled, @EnSince20207]),
-    wbTexDesc('Unknown2 Texture', [DF_OnGetEnabled, @EnUnknown2Texture]),
+    wbTexDesc('Unknown2 Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnUnknown2Texture]),
     wbBool('Has Decal 0 Texture'),
-    wbTexDesc('Decal 0 Texture', [DF_OnGetEnabled, @EnDecal0Texture]),
-    wbBool('Has Decal 1 Texture', [DF_OnGetEnabled, @EnHasDecal1Texture]),
-    wbTexDesc('Decal 1 Texture', [DF_OnGetEnabled, @EnDecal1Texture]),
-    wbBool('Has Decal 2 Texture', [DF_OnGetEnabled, @EnHasDecal2Texture]),
-    wbTexDesc('Decal 2 Texture', [DF_OnGetEnabled, @EnDecal2Texture]),
-    wbBool('Has Decal 3 Texture', [DF_OnGetEnabled, @EnHasDecal3Texture]),
-    wbTexDesc('Decal 3 Texture', [DF_OnGetEnabled, @EnDecal3Texture]),
+    wbTexDesc('Decal 0 Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnDecal0Texture]),
+    wbBool('Has Decal 1 Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnHasDecal1Texture]),
+    wbTexDesc('Decal 1 Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnDecal1Texture]),
+    wbBool('Has Decal 2 Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnHasDecal2Texture]),
+    wbTexDesc('Decal 2 Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnDecal2Texture]),
+    wbBool('Has Decal 3 Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnHasDecal3Texture]),
+    wbTexDesc('Decal 3 Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnDecal3Texture]),
     dfArray('Shader Textures', wbShaderTexDesc('Shader Textures', []), -4, '', [DF_OnGetEnabled, @EnSince10010])
   ]), 'NiProperty', False);
 end;
@@ -3696,85 +3736,91 @@ end;
 
 //===========================================================================
 { NiZBufferProperty }
+function NiZBufferProperty_EnFunction(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v41012) and (Version <= v20005); end;
+
 procedure wbDefineNiZBufferProperty;
-  function EnFunction(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v41012) and (Version <= v20005); end;
 begin
   wbNiObject(wbNifBlock('NiZBufferProperty', [
     dfInteger('Flags', dtU16, '3'),
-    wbZCompareMode('Function', 'ZCOMP_LESS_EQUAL', [DF_OnGetEnabled, @EnFunction])
+    wbZCompareMode('Function', 'ZCOMP_LESS_EQUAL', [DF_OnGetEnabled, @NiZBufferProperty_EnFunction])
   ]), 'NiProperty', False);
 end;
 
 //===========================================================================
 { BSShaderProperty }
+function BSShaderProperty_EnEnvMapScale(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion = 11; end;
+
 procedure wbDefineBSShaderProperty;
-  function EnEnvMapScale(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion = 11; end;
 begin
   wbNiObject(wbNifBlock('BSShaderProperty', [
     dfInteger('Flags', dtU16),
     wbBSShaderType('Shader Type', 'SHADER_DEFAULT', []),
     wbBSShaderFlags('Shader Flags', 'SF_Specular | SF_Remappable_Textures | SF_ZBuffer_Test', []),
     wbBSShaderFlags2('Shader Flags 2', 'SF2_ZBuffer_Write', []),
-    dfFloat('Environment Map Scale', '1.0', [DF_OnGetEnabled, @EnEnvMapScale])
+    dfFloat('Environment Map Scale', '1.0', [DF_OnGetEnabled, @BSShaderProperty_EnEnvMapScale])
   ]), 'NiProperty', False);
 end;
 
 //===========================================================================
 { BSShaderLightingProperty }
+function BSShaderLightingProperty_EnClampMode(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion <= 11; end;
+
 procedure wbDefineBSShaderLightingProperty;
-  function EnClampMode(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion <= 11; end;
 begin
   wbNiObject(wbNifBlock('BSShaderLightingProperty', [
-    wbTexClampMode('Texture Clamp Mode', '', [DF_OnGetEnabled, @EnClampMode])
+    wbTexClampMode('Texture Clamp Mode', '', [DF_OnGetEnabled, @BSShaderLightingProperty_EnClampMode])
   ]), 'BSShaderProperty', True);
 end;
 
 //===========================================================================
 { BSShaderNoLightingProperty }
+function BSShaderNoLightingProperty_En(const e: TdfElement): Boolean; begin with nif(e) do Result := (UserVersion >= 11) and (UserVersion2 > 26); end;
+
 procedure wbDefineBSShaderNoLightingProperty;
-  function En(const e: TdfElement): Boolean; begin with nif(e) do Result := (UserVersion >= 11) and (UserVersion2 > 26); end;
 begin
   wbNiObject(wbNifBlock('BSShaderNoLightingProperty', [
     wbSizedString('File Name'),
-    dfFloat('Falloff Start Angle', '1.0', [DF_OnGetEnabled, @En]),
-    dfFloat('Falloff Stop Angle', '0.0', [DF_OnGetEnabled, @En]),
-    dfFloat('Falloff Start Opacity', '1.0', [DF_OnGetEnabled, @En]),
-    dfFloat('Falloff Stop Opacity', '0.0', [DF_OnGetEnabled, @En])
+    dfFloat('Falloff Start Angle', '1.0', [DF_OnGetEnabled, @BSShaderNoLightingProperty_En]),
+    dfFloat('Falloff Stop Angle', '0.0', [DF_OnGetEnabled, @BSShaderNoLightingProperty_En]),
+    dfFloat('Falloff Start Opacity', '1.0', [DF_OnGetEnabled, @BSShaderNoLightingProperty_En]),
+    dfFloat('Falloff Stop Opacity', '0.0', [DF_OnGetEnabled, @BSShaderNoLightingProperty_En])
   ]), 'BSShaderLightingProperty', False);
 end;
 
 //===========================================================================
 { BSShaderPPLightingProperty }
+function BSShaderPPLightingProperty_EnRefraction(const e: TdfElement): Boolean; begin with nif(e) do Result := (UserVersion = 11) and (UserVersion2 > 14); end;
+function BSShaderPPLightingProperty_EnParallax(const e: TdfElement): Boolean; begin with nif(e) do Result := (UserVersion = 11) and (UserVersion2 > 24); end;
+function BSShaderPPLightingProperty_EnEmissive(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion >= 12; end;
+
 procedure wbDefineBSShaderPPLightingProperty;
-  function EnRefraction(const e: TdfElement): Boolean; begin with nif(e) do Result := (UserVersion = 11) and (UserVersion2 > 14); end;
-  function EnParallax(const e: TdfElement): Boolean; begin with nif(e) do Result := (UserVersion = 11) and (UserVersion2 > 24); end;
-  function EnEmissive(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion >= 12; end;
 begin
   wbNiObject(wbNifBlock('BSShaderPPLightingProperty', [
     wbNiRef('Texture Set', 'BSShaderTextureSet'),
-    dfFloat('Refraction Strength', [DF_OnGetEnabled, @EnRefraction]),
-    dfInteger('Refraction File Period', dtS32, [DF_OnGetEnabled, @EnRefraction]),
-    dfFloat('Parallax Max Passes', '4.0', [DF_OnGetEnabled, @EnParallax]),
-    dfFloat('Parallax Scale', '0.4', [DF_OnGetEnabled, @EnParallax]),
-    wbColor4('Emissive Color', [DF_OnGetEnabled, @EnEmissive])
+    dfFloat('Refraction Strength', [DF_OnGetEnabled, @BSShaderPPLightingProperty_EnRefraction]),
+    dfInteger('Refraction File Period', dtS32, [DF_OnGetEnabled, @BSShaderPPLightingProperty_EnRefraction]),
+    dfFloat('Parallax Max Passes', '4.0', [DF_OnGetEnabled, @BSShaderPPLightingProperty_EnParallax]),
+    dfFloat('Parallax Scale', '0.4', [DF_OnGetEnabled, @BSShaderPPLightingProperty_EnParallax]),
+    wbColor4('Emissive Color', [DF_OnGetEnabled, @BSShaderPPLightingProperty_EnEmissive])
   ]), 'BSShaderLightingProperty', False);
 end;
 
 //===========================================================================
 { BSEffectShaderProperty }
+function BSEffectShaderProperty_DecideShaderFlags(const e: TdfElement): Integer; begin if nif(e).UserVersion2 <> 130 then Result := 0 else Result := 1; end;
+function BSEffectShaderProperty_EnEnvMap(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion2 = 130); end;
+
 procedure wbDefineBSEffectShaderProperty;
-  function DecideShaderFlags(const e: TdfElement): Integer; begin if nif(e).UserVersion2 <> 130 then Result := 0 else Result := 1; end;
-  function EnEnvMap(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion2 = 130); end;
 begin
   wbNiObject(wbNifBlock('BSEffectShaderProperty', [
     dfUnion([
       wbSkyrimShaderPropertyFlags1('Shader Flags 1', '2185233153', []),
       wbFallout4ShaderPropertyFlags1('Shader Flags 1', '2151678465', [])
-    ], [DF_OnDecide, @DecideShaderFlags]),
+    ], [DF_OnDecide, @BSEffectShaderProperty_DecideShaderFlags]),
     dfUnion([
       wbSkyrimShaderPropertyFlags2('Shader Flags 2', '32801', []),
       wbFallout4ShaderPropertyFlags2('Shader Flags 2', '129', [])
-    ], [DF_OnDecide, @DecideShaderFlags]),
+    ], [DF_OnDecide, @BSEffectShaderProperty_DecideShaderFlags]),
     wbTexCoord('UV Offset'),
     wbTexCoord('UV Scale', '1 1', []),
     wbSizedString('Source Texture'),
@@ -3790,58 +3836,59 @@ begin
     dfFloat('Emissive Multiple'),
     dfFloat('Soft Falloff Depth'),
     wbSizedString('Grayscale Texture'),
-    wbSizedString('Env Map Texture', [DF_OnGetEnabled, @EnEnvMap]),
-    wbSizedString('Normal Texture', [DF_OnGetEnabled, @EnEnvMap]),
-    wbSizedString('Env Mask Texture', [DF_OnGetEnabled, @EnEnvMap]),
-    dfFloat('Environment Map Scale', [DF_OnGetEnabled, @EnEnvMap])
+    wbSizedString('Env Map Texture', [DF_OnGetEnabled, @BSEffectShaderProperty_EnEnvMap]),
+    wbSizedString('Normal Texture', [DF_OnGetEnabled, @BSEffectShaderProperty_EnEnvMap]),
+    wbSizedString('Env Mask Texture', [DF_OnGetEnabled, @BSEffectShaderProperty_EnEnvMap]),
+    dfFloat('Environment Map Scale', [DF_OnGetEnabled, @BSEffectShaderProperty_EnEnvMap])
   ]), 'NiProperty', False);
 end;
 
   //===========================================================================
 { BSLightingShaderProperty }
+function BSLightingShaderProperty_DecideShaderFlags(const e: TdfElement): Integer; begin if nif(e).UserVersion2 <> 130 then Result := 0 else Result := 1; end;
+function BSLightingShaderProperty_EnWet(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion2 = 130); end;
+function BSLightingShaderProperty_EnLightingEffect(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 < 130; end;
+function BSLightingShaderProperty_EnEnvMapScale(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 1; end;
+function BSLightingShaderProperty_EnUnknownEnvMapShort(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion2 = 130) and (e.NativeValues['..\Shader Type'] = 1); end;
+function BSLightingShaderProperty_EnSkinTintColor(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 5; end;
+function BSLightingShaderProperty_EnUnknownSkinTintInt(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion2 = 130) and (e.NativeValues['..\Shader Type'] = 5); end;
+function BSLightingShaderProperty_EnHairTintColor(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 6; end;
+function BSLightingShaderProperty_EnMaxPasses(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 7; end;
+function BSLightingShaderProperty_EnParallax(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 11; end;
+function BSLightingShaderProperty_EnSparkleParameters(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 14; end;
+function BSLightingShaderProperty_EnEyes(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 16; end;
+
 procedure wbDefineBSLightingShaderProperty;
-  function DecideShaderFlags(const e: TdfElement): Integer; begin if nif(e).UserVersion2 <> 130 then Result := 0 else Result := 1; end;
-  function EnWet(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion2 = 130); end;
-  function EnLightingEffect(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 < 130; end;
-  function EnEnvMapScale(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 1; end;
-  function EnUnknownEnvMapShort(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion2 = 130) and (e.NativeValues['..\Shader Type'] = 1); end;
-  function EnSkinTintColor(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 5; end;
-  function EnUnknownSkinTintInt(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion2 = 130) and (e.NativeValues['..\Shader Type'] = 5); end;
-  function EnHairTintColor(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 6; end;
-  function EnMaxPasses(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 7; end;
-  function EnParallax(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 11; end;
-  function EnSparkleParameters(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 14; end;
-  function EnEyes(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Shader Type'] = 16; end;
 begin
   wbNiObject(wbNifBlock('BSLightingShaderProperty', [
     wbBSLightingShaderPropertyShaderType('Shader Type', '', []),
     dfUnion([
       wbSkyrimShaderPropertyFlags1('Shader Flags 1', '2185233153', []),
       wbFallout4ShaderPropertyFlags1('Shader Flags 1', '2151678465', [])
-    ], [DF_OnDecide, @DecideShaderFlags]),
+    ], [DF_OnDecide, @BSLightingShaderProperty_DecideShaderFlags]),
     dfUnion([
       wbSkyrimShaderPropertyFlags2('Shader Flags 2', '32801', []),
       wbFallout4ShaderPropertyFlags2('Shader Flags 2', '129', [])
-    ], [DF_OnDecide, @DecideShaderFlags]),
+    ], [DF_OnDecide, @BSLightingShaderProperty_DecideShaderFlags]),
     wbTexCoord('UV Offset'),
     wbTexCoord('UV Scale', '1 1', []),
     wbNiRef('Texture Set', 'BSShaderTextureSet'),
     wbColor3('Emissive Color'),
     dfFloat('Emissive Multiple'),
-    wbString('Wet Material', [DF_OnGetEnabled, @EnWet]),
+    wbString('Wet Material', [DF_OnGetEnabled, @BSLightingShaderProperty_EnWet]),
     wbTexClampMode('Texture Clamp Mode', '', []),
     dfFloat('Alpha', '1.0'),
     dfFloat('Refraction Strength'),
     dfFloat('Glossiness', '80.0'),
     wbColor3('Specular Color'),
     dfFloat('Specular Strength', '1.0'),
-    dfFloat('Lighting Effect 1', '0.3', [DF_OnGetEnabled, @EnLightingEffect]),
-    dfFloat('Lighting Effect 2', '2.0', [DF_OnGetEnabled, @EnLightingEffect]),
-    dfFloat('Subsurface Rolloff', [DF_OnGetEnabled, @EnWet]),
-    dfFloat('Unknown Float 1', [DF_OnGetEnabled, @EnWet]),
-    dfFloat('Backlight Power', [DF_OnGetEnabled, @EnWet]),
-    dfFloat('Grayscale to Palette Scale', [DF_OnGetEnabled, @EnWet]),
-    dfFloat('Fresnel Power', [DF_OnGetEnabled, @EnWet]),
+    dfFloat('Lighting Effect 1', '0.3', [DF_OnGetEnabled, @BSLightingShaderProperty_EnLightingEffect]),
+    dfFloat('Lighting Effect 2', '2.0', [DF_OnGetEnabled, @BSLightingShaderProperty_EnLightingEffect]),
+    dfFloat('Subsurface Rolloff', [DF_OnGetEnabled, @BSLightingShaderProperty_EnWet]),
+    dfFloat('Unknown Float 1', [DF_OnGetEnabled, @BSLightingShaderProperty_EnWet]),
+    dfFloat('Backlight Power', [DF_OnGetEnabled, @BSLightingShaderProperty_EnWet]),
+    dfFloat('Grayscale to Palette Scale', [DF_OnGetEnabled, @BSLightingShaderProperty_EnWet]),
+    dfFloat('Fresnel Power', [DF_OnGetEnabled, @BSLightingShaderProperty_EnWet]),
     dfStruct('Wetness', [
       dfFloat('Spec Scale', '-1.0'),
       dfFloat('Spec Power', '-1.0'),
@@ -3849,26 +3896,26 @@ begin
       dfFloat('Env Map Scale', '-1.0'),
       dfFloat('Fresnel Power', '-1.0'),
       dfFloat('Metalness', '-1.0')
-    ], [DF_OnGetEnabled, @EnWet]),
-    dfFloat('Environment Map Scale', [DF_OnGetEnabled, @EnEnvMapScale]),
-    dfInteger('Unknown EnvMap Short', dtU16, [DF_OnGetEnabled, @EnUnknownEnvMapShort]),
-    wbColor3('Skin Tint Color', [DF_OnGetEnabled, @EnSkinTintColor]),
-    dfInteger('Unknown SkinTint Int', dtU32, [DF_OnGetEnabled, @EnUnknownSkinTintInt]),
-    wbColor3('Hair Tint Color', [DF_OnGetEnabled, @EnHairTintColor]),
-    dfFloat('Max Passes', [DF_OnGetEnabled, @EnMaxPasses]),
-    dfFloat('Scale', [DF_OnGetEnabled, @EnMaxPasses]),
+    ], [DF_OnGetEnabled, @BSLightingShaderProperty_EnWet]),
+    dfFloat('Environment Map Scale', [DF_OnGetEnabled, @BSLightingShaderProperty_EnEnvMapScale]),
+    dfInteger('Unknown EnvMap Short', dtU16, [DF_OnGetEnabled, @BSLightingShaderProperty_EnUnknownEnvMapShort]),
+    wbColor3('Skin Tint Color', [DF_OnGetEnabled, @BSLightingShaderProperty_EnSkinTintColor]),
+    dfInteger('Unknown SkinTint Int', dtU32, [DF_OnGetEnabled, @BSLightingShaderProperty_EnUnknownSkinTintInt]),
+    wbColor3('Hair Tint Color', [DF_OnGetEnabled, @BSLightingShaderProperty_EnHairTintColor]),
+    dfFloat('Max Passes', [DF_OnGetEnabled, @BSLightingShaderProperty_EnMaxPasses]),
+    dfFloat('Scale', [DF_OnGetEnabled, @BSLightingShaderProperty_EnMaxPasses]),
     dfStruct('Parallax', [
       dfFloat('Inner Layer Thickness'),
       dfFloat('Refraction Scale'),
       wbTexCoord('Inner Layer Texture Scale'),
       dfFloat('Envmap Strength')
-    ], [DF_OnGetEnabled, @EnParallax]),
-    wbVector4('Sparkle Parameters', [DF_OnGetEnabled, @EnSparkleParameters]),
+    ], [DF_OnGetEnabled, @BSLightingShaderProperty_EnParallax]),
+    wbVector4('Sparkle Parameters', [DF_OnGetEnabled, @BSLightingShaderProperty_EnSparkleParameters]),
     dfStruct('Eyes', [
       dfFloat('Cubemap Scale'),
       wbVector3('Left Eye Reflection Center', []),
       wbVector3('Right Eye Reflection Center', [])
-    ], [DF_OnGetEnabled, @EnEyes])
+    ], [DF_OnGetEnabled, @BSLightingShaderProperty_EnEyes])
   ]), 'NiProperty', False, 1);
 end;
 
@@ -3973,16 +4020,17 @@ end;
 
 //===========================================================================
 { BSShaderTextureSet }
+procedure BSShaderTextureSet_AfterLoad(const aElement: TdfElement; const aDataStart: Pointer; aDataSize: Integer);
+begin
+  if aElement.Elements['Textures'].Count = 0 then
+    aElement.Elements['Textures'].Count := 6;
+end;
+
 procedure wbDefineBSShaderTextureSet;
-  procedure AfterLoad(const aElement: TdfElement; const aDataStart: Pointer; aDataSize: Integer);
-  begin
-    if aElement.Elements['Textures'].Count = 0 then
-      aElement.Elements['Textures'].Count := 6;
-  end;
 begin
   wbNiObject(wbNifBlock('BSShaderTextureSet', [
     dfArray('Textures', wbSizedString('Textures'), -4)
-  ], [{DF_OnAfterLoad, @AfterLoad}]), 'NiObject', False);
+  ], [{DF_OnAfterLoad, @BSShaderTextureSet__AfterLoad}]), 'NiObject', False);
 end;
 
 //===========================================================================
@@ -3994,20 +4042,21 @@ end;
 
 //===========================================================================
 { NiSourceTexture }
+function NiSourceTexture_EnFileName(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Use External'] = 1; end;
+function NiSourceTexture_EnUnknownLink(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v10100) and (e.NativeValues['..\Use External'] = 1); end;
+function NiSourceTexture_EnUnknownByte(const e: TdfElement): Boolean; begin Result := (nif(e).Version <= v10010) and (e.NativeValues['..\Use External'] = 0); end;
+function NiSourceTexture_EnFileName2(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v10100) and (e.NativeValues['..\Use External'] = 0); end;
+function NiSourceTexture_EnPixelData(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Use External'] = 0; end;
+
 procedure wbDefineNiSourceTexture;
-  function EnFileName(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Use External'] = 1; end;
-  function EnUnknownLink(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v10100) and (e.NativeValues['..\Use External'] = 1); end;
-  function EnUnknownByte(const e: TdfElement): Boolean; begin Result := (nif(e).Version <= v10010) and (e.NativeValues['..\Use External'] = 0); end;
-  function EnFileName2(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v10100) and (e.NativeValues['..\Use External'] = 0); end;
-  function EnPixelData(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Use External'] = 0; end;
 begin
   wbNiObject(wbNifBlock('NiSourceTexture', [
     dfInteger('Use External', dtU8, '1'),
-    wbString('File Name', [DF_OnGetEnabled, @EnFileName]),
-    wbNiRef('Unknown Link', 'NiObject', [DF_OnGetEnabled, @EnUnknownLink]),
-    dfInteger('Unknown Byte', dtU8, '1', [DF_OnGetEnabled, @EnUnknownByte]),
-    wbString('File Name', [DF_OnGetEnabled, @EnFileName2]),
-    wbNiRef('Pixel Data', 'ATextureRenderData', [DF_OnGetEnabled, @EnPixelData]),
+    wbString('File Name', [DF_OnGetEnabled, @NiSourceTexture_EnFileName]),
+    wbNiRef('Unknown Link', 'NiObject', [DF_OnGetEnabled, @NiSourceTexture_EnUnknownLink]),
+    dfInteger('Unknown Byte', dtU8, '1', [DF_OnGetEnabled, @NiSourceTexture_EnUnknownByte]),
+    wbString('File Name', [DF_OnGetEnabled, @NiSourceTexture_EnFileName2]),
+    wbNiRef('Pixel Data', 'ATextureRenderData', [DF_OnGetEnabled, @NiSourceTexture_EnPixelData]),
     wbPixelLayout('Pixel Layout', 'PIX_LAY_PALETTISED_4', []),
     wbMipMapFormat('Use Mipmaps', 'MIP_FMT_DEFAULT', []),
     wbAlphaFormat('Alpha Format', 'ALPHA_DEFAULT', []),
@@ -4026,35 +4075,36 @@ end;
 
 //===========================================================================
 { NiGeometry }
+function NiGeometry_DecideData(const e: TdfElement): Integer; begin with nif(e) do if (Version = v20207) and (UserVersion2 >= 100) and wbIsNiObject(e, 'NiParticleSystem') then Result := 1 else Result := 0; end;
+function NiGeometry_EnHasShader(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v10010) and (Version <= v20103); end;
+function NiGeometry_EnShaderName(const e: TdfElement): Boolean; begin Result := NiGeometry_EnHasShader(e) and (e.NativeValues['..\Has Shader'] <> 0); end;
+function NiGeometry_EnDirtyFlag1(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion2 < 100); end;
+function NiGeometry_EnDirtyFlag2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion2 = 100) and wbIsNiObject(e, 'NiTriBasedGeom'); end;
+function NiGeometry_EnUnknownInteger3(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion2 >= 100) and wbIsNiObject(e, 'NiParticleSystem'); end;
+function NiGeometry_EnBSProperties(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion = 12); end;
+
 procedure wbDefineNiGeometry;
-  function DecideData(const e: TdfElement): Integer; begin with nif(e) do if (Version = v20207) and (UserVersion2 >= 100) and wbIsNiObject(e, 'NiParticleSystem') then Result := 1 else Result := 0; end;
-  function EnHasShader(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v10010) and (Version <= v20103); end;
-  function EnShaderName(const e: TdfElement): Boolean; begin Result := EnHasShader(e) and (e.NativeValues['..\Has Shader'] <> 0); end;
-  function EnDirtyFlag1(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion2 < 100); end;
-  function EnDirtyFlag2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion2 = 100) and wbIsNiObject(e, 'NiTriBasedGeom'); end;
-  function EnUnknownInteger3(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion2 >= 100) and wbIsNiObject(e, 'NiParticleSystem'); end;
-  function EnBSProperties(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion = 12); end;
 begin
   wbNiObject(wbNifBlock('NiGeometry', [
     dfUnion([
       wbNiRef('Data', 'NiGeometryData'),
       dfInteger('Data', dtU32)
-    ], [DF_OnDecide, @DecideData]),
+    ], [DF_OnDecide, @NiGeometry_DecideData]),
     dfUnion([
       wbNiRef('Skin Instance', 'NiSkinInstance'),
       dfInteger('Skin Instance', dtU32)
-    ], [DF_OnDecide, @DecideData]),
+    ], [DF_OnDecide, @NiGeometry_DecideData]),
     dfInteger('Num Materials', dtU32, [DF_OnGetEnabled, @EnSince20207]),
     dfArray('Material Name', wbString('Material Name'), 0, 'Num Materials', [DF_OnGetEnabled, @EnSince20207]),
     dfArray('Material Extra Data', dfInteger('Material Extra Data', dtS32, '-1'), 0, 'Num Materials', [DF_OnGetEnabled, @EnSince20207]),
     dfInteger('Active Material', dtS32, '-1', [DF_OnGetEnabled, @EnSince20207]),
-    wbBool('Has Shader', [DF_OnGetEnabled, @EnHasShader]),
-    wbSizedString('Shader Name', [DF_OnGetEnabled, @EnShaderName]),
-    dfInteger('Unknown Integer', dtS32, '-1', [DF_OnGetEnabled, @EnShaderName]),
-    wbBool('Dirty Flag', [DF_OnGetEnabled, @EnDirtyFlag1]),
-    wbBool('Dirty Flag', [DF_OnGetEnabled, @EnDirtyFlag2]),
-    dfInteger('Unknown Integer 3', dtS32, [DF_OnGetEnabled, @EnUnknownInteger3]),
-    dfArray('BS Properties', wbNiRef('BS Properties', 'NiProperty'), 2, '', [DF_OnGetEnabled, @EnBSProperties])
+    wbBool('Has Shader', [DF_OnGetEnabled, @NiGeometry_EnHasShader]),
+    wbSizedString('Shader Name', [DF_OnGetEnabled, @NiGeometry_EnShaderName]),
+    dfInteger('Unknown Integer', dtS32, '-1', [DF_OnGetEnabled, @NiGeometry_EnShaderName]),
+    wbBool('Dirty Flag', [DF_OnGetEnabled, @NiGeometry_EnDirtyFlag1]),
+    wbBool('Dirty Flag', [DF_OnGetEnabled, @NiGeometry_EnDirtyFlag2]),
+    dfInteger('Unknown Integer 3', dtS32, [DF_OnGetEnabled, @NiGeometry_EnUnknownInteger3]),
+    dfArray('BS Properties', wbNiRef('BS Properties', 'NiProperty'), 2, '', [DF_OnGetEnabled, @NiGeometry_EnBSProperties])
   ]), 'NiAVObject', False);
 end;
 
@@ -4067,79 +4117,86 @@ end;
 
 //===========================================================================
 { NiGeometryData }
+function NiGeometryData_EnNumVertices(const e: TdfElement): Boolean;
+begin
+  Result := not wbIsNiObject(e, 'NiPSysData');
+  if not Result then with nif(e) do
+    Result := ((Version < v20207) or (UserVersion < 11));
+end;
+
+function NiGeometryData_EnBSMaxVertices(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 11) and wbIsNiObject(e, 'NiPSysData'); end;
+function NiGeometryData_EnVertices(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Vertices'] <> 0; end;
+function NiGeometryData_DecideVectorFlags(const e: TdfElement): Integer; begin if nif(e).Version = v20207 then Result := 1 else Result := 0; end;
+function NiGeometryData_EnUnknownInt2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion = 12) and not wbIsNiObject(e, 'NiPSysData'); end;
+function NiGeometryData_EnNormals(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Normals'] <> 0; end;
+function NiGeometryData_EnTangents(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v10100) and (e.NativeValues['..\Has Normals'] <> 0) and (e.NativeValues['..\Vector Flags'] and 4096 <> 0); end;
+function NiGeometryData_EnVertexColors(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Vertex Colors'] <> 0; end;
+
+procedure NiGeometryData_GetCountUVSets(const e: TdfElement; var aCount: Integer);
+var vfmask: Cardinal;
+begin
+  if nif(e).Version = v20207 then vfmask := 1 else vfmask := 63;
+  aCount := (e.NativeValues['..\Num UV Sets'] and 63) or (e.NativeValues['..\Vector Flags'] and vfmask);
+end;
+
+procedure NiGeometryData_SetCountUVSets(const e: TdfElement; var aCount: Integer);
+begin
+  e.NativeValues['..\Num UV Sets'] := e.NativeValues['..\Num UV Sets'] and not 63 + aCount;
+  e.NativeValues['..\Vector Flags'] := e.NativeValues['..\Vector Flags'] and not 63 + aCount;
+end;
+
+function NiGeometryData_EnConsistencyFlags(const e: TdfElement): Boolean;
+begin
+  with nif(e) do Result := (Version >= v10010) and ((UserVersion < 12) or ((UserVersion >= 12) and not wbIsNiObject(e, 'NiPSysData')));
+end;
+
+function NiGeometryData_EnAdditionalData(const e: TdfElement): Boolean;
+begin
+  with nif(e) do Result := (Version >= v20004) and ((UserVersion < 12) or ((UserVersion >= 12) and not wbIsNiObject(e, 'NiPSysData')));
+end;
+
 procedure wbDefineNiGeometryData;
-  function EnNumVertices(const e: TdfElement): Boolean;
-  begin
-    Result := not wbIsNiObject(e, 'NiPSysData');
-    if not Result then with nif(e) do
-      Result := ((Version < v20207) or (UserVersion < 11));
-  end;
-  function EnBSMaxVertices(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 11) and wbIsNiObject(e, 'NiPSysData'); end;
-  function EnVertices(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Vertices'] <> 0; end;
-  function DecideVectorFlags(const e: TdfElement): Integer; begin if nif(e).Version = v20207 then Result := 1 else Result := 0; end;
-  function EnUnknownInt2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion = 12) and not wbIsNiObject(e, 'NiPSysData'); end;
-  function EnNormals(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Normals'] <> 0; end;
-  function EnTangents(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v10100) and (e.NativeValues['..\Has Normals'] <> 0) and (e.NativeValues['..\Vector Flags'] and 4096 <> 0); end;
-  function EnVertexColors(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Vertex Colors'] <> 0; end;
-  procedure GetCountUVSets(const e: TdfElement; var aCount: Integer);
-  var vfmask: Cardinal;
-  begin
-    if nif(e).Version = v20207 then vfmask := 1 else vfmask := 63;
-    aCount := (e.NativeValues['..\Num UV Sets'] and 63) or (e.NativeValues['..\Vector Flags'] and vfmask);
-  end;
-  procedure SetCountUVSets(const e: TdfElement; var aCount: Integer);
-  begin
-    e.NativeValues['..\Num UV Sets'] := e.NativeValues['..\Num UV Sets'] and not 63 + aCount;
-    e.NativeValues['..\Vector Flags'] := e.NativeValues['..\Vector Flags'] and not 63 + aCount;
-  end;
-  function EnConsistencyFlags(const e: TdfElement): Boolean;
-  begin
-    with nif(e) do Result := (Version >= v10010) and ((UserVersion < 12) or ((UserVersion >= 12) and not wbIsNiObject(e, 'NiPSysData')));
-  end;
-  function EnAdditionalData(const e: TdfElement): Boolean;
-  begin
-    with nif(e) do Result := (Version >= v20004) and ((UserVersion < 12) or ((UserVersion >= 12) and not wbIsNiObject(e, 'NiPSysData')));
-  end;
 begin
   wbNiObject(wbNifBlock('NiGeometryData', [
     dfInteger('Unknown Int', dtS32, [DF_OnGetEnabled, @EnSince10200]),
-    dfInteger('Num Vertices', dtU16, [DF_OnGetEnabled, @EnNumVertices]),
-    dfInteger('BS Max Vertices', dtU16, [DF_OnGetEnabled, @EnBSMaxVertices]),
+    dfInteger('Num Vertices', dtU16, [DF_OnGetEnabled, @NiGeometryData_EnNumVertices]),
+    dfInteger('BS Max Vertices', dtU16, [DF_OnGetEnabled, @NiGeometryData_EnBSMaxVertices]),
     dfInteger('Keep Flags', dtU8, [DF_OnGetEnabled, @EnSince10100]),
     dfInteger('Compress Flags', dtU8, [DF_OnGetEnabled, @EnSince10100]),
     wbBool('Has Vertices', '1', []),
-    dfArray('Vertices', wbVector3('Vertices'), 0, 'Num Vertices', [DF_OnGetEnabled, @EnVertices]),
+    dfArray('Vertices', wbVector3('Vertices'), 0, 'Num Vertices', [DF_OnGetEnabled, @NiGeometryData_EnVertices]),
     dfUnion([
       wbVectorFlags('Vector Flags', '', []),
       wbBSVectorFlags('Vector Flags', '', [])
-    ], [DF_OnGetEnabled, @EnSince10010, DF_OnDecide, @DecideVectorFlags]),
-    dfInteger('Unknown Int2', dtU32, [DF_OnGetEnabled, @EnUnknownInt2]),
+    ], [DF_OnGetEnabled, @EnSince10010, DF_OnDecide, @NiGeometryData_DecideVectorFlags]),
+    dfInteger('Unknown Int2', dtU32, [DF_OnGetEnabled, @NiGeometryData_EnUnknownInt2]),
     wbBool('Has Normals', '', []),
-    dfArray('Normals', wbVector3('Tangents'), 0, 'Num Vertices', [DF_OnGetEnabled, @EnNormals]),
-    dfArray('Tangents', wbVector3('Tangents'), 0, 'Num Vertices', [DF_OnGetEnabled, @EnTangents]),
-    dfArray('Bitangents', wbVector3('Bitangents'), 0, 'Num Vertices', [DF_OnGetEnabled, @EnTangents]),
+    dfArray('Normals', wbVector3('Tangents'), 0, 'Num Vertices', [DF_OnGetEnabled, @NiGeometryData_EnNormals]),
+    dfArray('Tangents', wbVector3('Tangents'), 0, 'Num Vertices', [DF_OnGetEnabled, @NiGeometryData_EnTangents]),
+    dfArray('Bitangents', wbVector3('Bitangents'), 0, 'Num Vertices', [DF_OnGetEnabled, @NiGeometryData_EnTangents]),
     wbVector3('Center'),
     dfFloat('Radius'),
     wbBool('Has Vertex Colors', '', []),
-    dfArray('Vertex Colors', wbColor4('Vertex Colors'), 0, 'Num Vertices', [DF_OnGetEnabled, @EnVertexColors]),
+    dfArray('Vertex Colors', wbColor4('Vertex Colors'), 0, 'Num Vertices', [DF_OnGetEnabled, @NiGeometryData_EnVertexColors]),
     dfInteger('Num UV Sets', dtU16, [DF_OnGetEnabled, @EnBefore4220]),
     wbBool('Has UV', [DF_OnGetEnabled, @EnBefore4002]),
     dfArray('UV Sets',
       dfArray('Set', wbTexCoord('UV'), 0, '..\Num Vertices', []),
-      0, '', [DF_OnGetCount, @GetCountUVSets, DF_OnSetCount, @SetCountUVSets]
+      0, '', [DF_OnGetCount, @NiGeometryData_GetCountUVSets, DF_OnSetCount, @NiGeometryData_SetCountUVSets]
     ),
-    wbConsistencyType('Consistency Flags', 'CT_MUTABLE', [DF_OnGetEnabled, @EnConsistencyFlags]),
-    wbNiRef('Additional Data', 'AbstractAdditionalGeometryData', [DF_OnGetEnabled, @EnAdditionalData])
+    wbConsistencyType('Consistency Flags', 'CT_MUTABLE', [DF_OnGetEnabled, @NiGeometryData_EnConsistencyFlags]),
+    wbNiRef('Additional Data', 'AbstractAdditionalGeometryData', [DF_OnGetEnabled, @NiGeometryData_EnAdditionalData])
   ]), 'NiObject', True);
 end;
 
 //===========================================================================
 { NiTriBasedGeomData }
+procedure NiTriBasedGeomData_SetNumTriangles(const e: TdfElement; var aValue: Variant); begin e.NativeValues['..\Num Triangle Points'] := aValue*3; end;
+
 procedure wbDefineNiTriBasedGeomData;
-  procedure SetNumTriangles(const e: TdfElement; var aValue: Variant); begin e.NativeValues['..\Num Triangle Points'] := aValue*3; end;
 begin
   wbNiObject(wbNifBlock('NiTriBasedGeomData', [
-    dfInteger('Num Triangles', dtU16, [DF_OnSetValue, @SetNumTriangles])
+    dfInteger('Num Triangles', dtU16, [DF_OnSetValue, @NiTriBasedGeomData_SetNumTriangles])
   ]), 'NiGeometryData', True);
 end;
 
@@ -4166,17 +4223,18 @@ end;
 
 //===========================================================================
 { NiTriShapeData }
+function NiTriShapeData_EnTriangles(const e: TdfElement): Boolean;
+begin
+  with nif(e) do
+    Result := (nif(e).Version <= v10012) or ((nif(e).Version >= v10013) and (e.NativeValues['..\Has Triangles'] <> 0));
+end;
+
 procedure wbDefineNiTriShapeData;
-  function EnTriangles(const e: TdfElement): Boolean;
-  begin
-    with nif(e) do
-      Result := (nif(e).Version <= v10012) or ((nif(e).Version >= v10013) and (e.NativeValues['..\Has Triangles'] <> 0));
-  end;
 begin
   wbNiObject(wbNifBlock('NiTriShapeData', [
     dfInteger('Num Triangle Points', dtU32),
     wbBool('Has Triangles', [DF_OnGetEnabled, @EnSince10100]),
-    dfArray('Triangles', wbTriangle('Triangles'), 0, 'Num Triangles', [DF_OnGetEnabled, @EnTriangles]),
+    dfArray('Triangles', wbTriangle('Triangles'), 0, 'Num Triangles', [DF_OnGetEnabled, @NiTriShapeData_EnTriangles]),
     dfInteger('Num Match Groups', dtU16),
     dfArray('Match Groups', wbMatchGroup('Match Groups'), 0, 'Num Match Groups', [])
   ]), 'NiTriBasedGeomData', False);
@@ -4191,28 +4249,34 @@ end;
 
 //===========================================================================
 { NiTriStripsData }
+function NiTriStripsData_EnPoints(const e: TdfElement): Boolean;
+begin
+  with nif(e) do
+    Result := (nif(e).Version <= v10012) or ((nif(e).Version >= v10013) and (e.NativeValues['..\Has Points'] <> 0));
+end;
+
+procedure NiTriStripsData_GetCountStrips(const e: TdfElement; var aCount: Integer);
+begin
+  aCount := e.NativeValues['..\..\Strip Lengths\Strip Lengths #' + IntToStr(e.Index)];
+end;
+
+procedure NiTriStripsData_SetCountStrips(const e: TdfElement; var aCount: Integer);
+begin
+  e.NativeValues['..\..\Strip Lengths\Strip Lengths #' + IntToStr(e.Index)] := aCount;
+end;
+
 procedure wbDefineNiTriStripsData;
-  function EnPoints(const e: TdfElement): Boolean;
-  begin
-    with nif(e) do
-      Result := (nif(e).Version <= v10012) or ((nif(e).Version >= v10013) and (e.NativeValues['..\Has Points'] <> 0));
-  end;
-  procedure GetCountStrips(const e: TdfElement; var aCount: Integer);
-  begin
-    aCount := e.NativeValues['..\..\Strip Lengths\Strip Lengths #' + IntToStr(e.Index)];
-  end;
-  procedure SetCountStrips(const e: TdfElement; var aCount: Integer);
-  begin
-    e.NativeValues['..\..\Strip Lengths\Strip Lengths #' + IntToStr(e.Index)] := aCount;
-  end;
 begin
   wbNiObject(wbNifBlock('NiTriStripsData', [
     dfInteger('Num Strips', dtU16),
     dfArray('Strip Lengths', dfInteger('Strip Lengths', dtU16), 0, 'Num Strips', []),
     wbBool('Has Points', [DF_OnGetEnabled, @EnSince10013]),
     dfArray('Strips',
-      dfArray('Strips', dfInteger('Points', dtU16), 0, '', [DF_OnGetCount, @GetCountStrips, DF_OnSetCount, @SetCountStrips]),
-      0, 'Num Strips', [DF_OnGetEnabled, @EnPoints])
+      dfArray('Strips', dfInteger('Points', dtU16), 0, '', [
+        DF_OnGetCount, @NiTriStripsData_GetCountStrips,
+        DF_OnSetCount, @NiTriStripsData_SetCountStrips
+      ]),
+      0, 'Num Strips', [DF_OnGetEnabled, @NiTriStripsData_EnPoints])
   ]), 'NiTriBasedGeomData', False);
 end;
 
@@ -4267,40 +4331,45 @@ end;
 
 //===========================================================================
 { BSTriShape }
+function BSTriShape_DecideNumTriangles(const e: TdfElement): Integer; begin if nif(e).UserVersion2 = 130 then Result := 0 else Result := 1; end;
+
+function BSTriShape_EnVertexData(const e: TdfElement): Boolean;
+begin
+  Result := (nif(e).UserVersion2 in [100, 130]) and (e.NativeValues['..\Data Size'] > 0);
+  if Result then e.UserData := e.NativeValues['..\VertexDesc\VF']; // cache VF here
+ end;
+
+function BSTriShape_EnTriangles(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Data Size'] > 0; end;
+function BSTriShape_EnParticleDataSize(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 = 100; end;
+function BSTriShape_EnVertices(const e: TdfElement): Boolean; begin Result := (nif(e).UserVersion2 = 100) and (e.NativeValues['..\Particle Data Size'] > 0); end;
+
+procedure BSTriShape_BeforeSaveDataSize(const e: TdfElement);
+var
+  el: TdfElement;
+  size: Cardinal;
+begin
+  size := 0;
+  el := e.Elements['..\Vertex Data'];
+  if Assigned(el) then Inc(size, el.DataSize);
+  el := e.Elements['..\Triangles'];
+  if Assigned(el) then Inc(size, el.DataSize);
+  e.NativeValue := size;
+end;
+
+procedure BSTriShape_BeforeSaveParticleDataSize(const e: TdfElement);
+var
+  el: TdfElement;
+  size: Cardinal;
+begin
+  size := 0;
+  el := e.Elements['..\Vertices'];
+  if Assigned(el) then Inc(size, el.DataSize);
+  el := e.Elements['..\Triangles Copy'];
+  if Assigned(el) then Inc(size, el.DataSize);
+  e.NativeValue := size;
+end;
+
 procedure wbDefineBSTriShape;
-  function DecideNumTriangles(const e: TdfElement): Integer; begin if nif(e).UserVersion2 = 130 then Result := 0 else Result := 1; end;
-  function EnVertexData(const e: TdfElement): Boolean;
-  begin
-    Result := (nif(e).UserVersion2 in [100, 130]) and (e.NativeValues['..\Data Size'] > 0);
-    if Result then e.UserData := e.NativeValues['..\VertexDesc\VF']; // cache VF here
-   end;
-  function EnTriangles(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Data Size'] > 0; end;
-  function EnParticleDataSize(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 = 100; end;
-  function EnVertices(const e: TdfElement): Boolean; begin Result := (nif(e).UserVersion2 = 100) and (e.NativeValues['..\Particle Data Size'] > 0); end;
-  procedure BeforeSaveDataSize(const e: TdfElement);
-  var
-    el: TdfElement;
-    size: Cardinal;
-  begin
-    size := 0;
-    el := e.Elements['..\Vertex Data'];
-    if Assigned(el) then Inc(size, el.DataSize);
-    el := e.Elements['..\Triangles'];
-    if Assigned(el) then Inc(size, el.DataSize);
-    e.NativeValue := size;
-  end;
-  procedure BeforeSaveParticleDataSize(const e: TdfElement);
-  var
-    el: TdfElement;
-    size: Cardinal;
-  begin
-    size := 0;
-    el := e.Elements['..\Vertices'];
-    if Assigned(el) then Inc(size, el.DataSize);
-    el := e.Elements['..\Triangles Copy'];
-    if Assigned(el) then Inc(size, el.DataSize);
-    e.NativeValue := size;
-  end;
 begin
   wbNiObject(wbNifBlock('BSTriShape', [
     wbNiBound('Bounding Sphere'),
@@ -4310,36 +4379,38 @@ begin
     dfUnion([
       dfInteger('Num Triangles', dtU32),
       dfInteger('Num Triangles', dtU16)
-    ], [DF_OnDecide, @DecideNumTriangles]),
+    ], [DF_OnDecide, @BSTriShape_DecideNumTriangles]),
     dfInteger('Num Vertices', dtU16),
     // nonzero value so other elements are enabled by default
-    dfInteger('Data Size', dtU32, '1', [DF_OnBeforeSave, @BeforeSaveDataSize]),
-    dfArray('Vertex Data', wbBSVertexData('Vertex Data'), 0, 'Num Vertices', [DF_OnGetEnabled, @EnVertexData]),
-    dfArray('Triangles', wbTriangle('Triangles'), 0, 'Num Triangles', [DF_OnGetEnabled, @EnTriangles]),
+    dfInteger('Data Size', dtU32, '1', [DF_OnBeforeSave, @BSTriShape_BeforeSaveDataSize]),
+    dfArray('Vertex Data', wbBSVertexData('Vertex Data'), 0, 'Num Vertices', [DF_OnGetEnabled, @BSTriShape_EnVertexData]),
+    dfArray('Triangles', wbTriangle('Triangles'), 0, 'Num Triangles', [DF_OnGetEnabled, @BSTriShape_EnTriangles]),
     dfInteger('Particle Data Size', dtU32, '1', [
-      DF_OnGetEnabled, @EnParticleDataSize,
-      DF_OnBeforeSave, @BeforeSaveParticleDataSize
+      DF_OnGetEnabled, @BSTriShape_EnParticleDataSize,
+      DF_OnBeforeSave, @BSTriShape_BeforeSaveParticleDataSize
     ]),
-    dfArray('Vertices', wbVector3('Vertices'), 0, 'Num Vertices', [DF_OnGetEnabled, @EnVertices]),
-    dfArray('Triangles Copy', wbTriangle('Triangles'), 0, 'Num Triangles', [DF_OnGetEnabled, @EnVertices])
+    dfArray('Vertices', wbVector3('Vertices'), 0, 'Num Vertices', [DF_OnGetEnabled, @BSTriShape_EnVertices]),
+    dfArray('Triangles Copy', wbTriangle('Triangles'), 0, 'Num Triangles', [DF_OnGetEnabled, @BSTriShape_EnVertices])
   ]), 'NiAVObject', False);
 end;
 
 //===========================================================================
 { BSDynamicTriShape }
+function BSDynamicTriShape_EnVertices(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Dynamic Data Size'] > 0; end;
+
+procedure BSDynamicTriShape_BeforeSaveVertexDataSize(const e: TdfElement);
+var
+  el: TdfElement;
+begin
+  el := e.Elements['..\Dynamic Vertices'];
+  if Assigned(el) then e.NativeValue := el.DataSize;
+end;
+
 procedure wbDefineBSDynamicTriShape;
-  function EnVertices(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Dynamic Data Size'] > 0; end;
-  procedure BeforeSaveVertexDataSize(const e: TdfElement);
-  var
-    el: TdfElement;
-  begin
-    el := e.Elements['..\Dynamic Vertices'];
-    if Assigned(el) then e.NativeValue := el.DataSize;
-  end;
 begin
   wbNiObject(wbNifBlock('BSDynamicTriShape', [
-    dfInteger('Dynamic Data Size', dtU32, '1', [DF_OnBeforeSave, @BeforeSaveVertexDataSize]),
-    dfArray('Dynamic Vertices', wbVector4('Dynamic Vertices'), 0, 'Num Vertices', [DF_OnGetEnabled, @EnVertices])
+    dfInteger('Dynamic Data Size', dtU32, '1', [DF_OnBeforeSave, @BSDynamicTriShape_BeforeSaveVertexDataSize]),
+    dfArray('Dynamic Vertices', wbVector4('Dynamic Vertices'), 0, 'Num Vertices', [DF_OnGetEnabled, @BSDynamicTriShape_EnVertices])
   ]), 'BSTriShape', False);
 end;
 
@@ -4356,18 +4427,21 @@ end;
 
 //===========================================================================
 { BSSubIndexTriShape }
+function BSSubIndexTriShape_EnNumPrimitives(const e: TdfElement): Boolean; begin Result := (nif(e).UserVersion2 = 130) and (e.NativeValues['..\Data Size'] > 0); end;
+
+function BSSubIndexTriShape_EnSubSegmentData(const e: TdfElement): Boolean;
+begin
+   Result := (nif(e).UserVersion2 = 130) and (e.NativeValues['..\Data Size'] > 0) and (e.NativeValues['..\Num Segments'] < e.NativeValues['..\Total Segments']);
+end;
+
+function BSSubIndexTriShape_EnSegmentSSE(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 = 100; end;
+
 procedure wbDefineBSSubIndexTriShape;
-  function EnNumPrimitives(const e: TdfElement): Boolean; begin Result := (nif(e).UserVersion2 = 130) and (e.NativeValues['..\Data Size'] > 0); end;
-  function EnSubSegmentData(const e: TdfElement): Boolean;
-  begin
-     Result := (nif(e).UserVersion2 = 130) and (e.NativeValues['..\Data Size'] > 0) and (e.NativeValues['..\Num Segments'] < e.NativeValues['..\Total Segments']);
-  end;
-  function EnSegmentSSE(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 = 100; end;
 begin
   wbNiObject(wbNifBlock('BSSubIndexTriShape', [
-    dfInteger('Num Primitives', dtU32, [DF_OnGetEnabled, @EnNumPrimitives]),
-    dfInteger('Num Segments', dtU32, [DF_OnGetEnabled, @EnNumPrimitives]),
-    dfInteger('Total Segments', dtU32, [DF_OnGetEnabled, @EnNumPrimitives]),
+    dfInteger('Num Primitives', dtU32, [DF_OnGetEnabled, @BSSubIndexTriShape_EnNumPrimitives]),
+    dfInteger('Num Segments', dtU32, [DF_OnGetEnabled, @BSSubIndexTriShape_EnNumPrimitives]),
+    dfInteger('Total Segments', dtU32, [DF_OnGetEnabled, @BSSubIndexTriShape_EnNumPrimitives]),
     dfArray('Segment', dfStruct('Segment', [
       dfInteger('Start Index', dtU32),
       dfInteger('Num Primitives', dtU32),
@@ -4378,7 +4452,7 @@ begin
         dfInteger('Parent Array Index', dtU32),
         dfInteger('Unknown Int 1', dtU32)
       ]), -4)
-    ]), 0, 'Num Segments', [DF_OnGetEnabled, @EnNumPrimitives]),
+    ]), 0, 'Num Segments', [DF_OnGetEnabled, @BSSubIndexTriShape_EnNumPrimitives]),
     dfStruct('Sub Segment Data', [
       dfInteger('Num Segments', dtU32),
       dfInteger('Total Segments', dtU32),
@@ -4389,13 +4463,13 @@ begin
         dfArray('Extra Data', dfFloat('Extra Data'), -4)
       ]), 0, 'Total Segments', []),
       dfChars('SSF File', -2, '', #0, False, [])
-    ], [DF_OnGetEnabled, @EnSubSegmentData]),
+    ], [DF_OnGetEnabled, @BSSubIndexTriShape_EnSubSegmentData]),
     // SSE
     dfArray('Segment', dfStruct('Segment', [
       dfInteger('Flags', dtU8),
       dfInteger('Index', dtU32),
       dfInteger('Num Tris in Segment', dtU32)
-    ]), -4, '', [DF_OnGetEnabled, @EnSegmentSSE])
+    ]), -4, '', [DF_OnGetEnabled, @BSSubIndexTriShape_EnSegmentSSE])
   ]), 'BSTriShape', False);
 end;
 
@@ -4451,8 +4525,9 @@ end;
 
 //===========================================================================
 { NiSkinData }
+function NiSkinData_EnVertexWeights(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version <= v4210) or ((Version >= v4220) and (nifblk(e).NativeValues['Has Vertex Weights'] <> 0)); end;
+
 procedure wbDefineNiSkinData;
-  function EnVertexWeights(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version <= v4210) or ((Version >= v4220) and (nifblk(e).NativeValues['Has Vertex Weights'] <> 0)); end;
 begin
   wbNiObject(wbNifBlock('NiSkinData', [
     wbSkinTransform('Skin Transform'),
@@ -4467,34 +4542,40 @@ begin
       dfArray('Vertex Weights', dfStruct('Vertex Weights', [
         dfInteger('Index', dtU16),
         dfFloat('Weight')
-      ]), 0, 'Num Vertices', [DF_OnGetEnabled, @EnVertexWeights])
+      ]), 0, 'Num Vertices', [DF_OnGetEnabled, @NiSkinData_EnVertexWeights])
     ]), 0, 'Num Bones', [])
   ]), 'NiObject', False);
 end;
 
 //===========================================================================
 { NiSkinPartition }
+function NiSkinPartition_EnVertexData(const e: TdfElement): Boolean;
+begin
+  Result := enSSE(e) and (e.NativeValues['..\Data Size'] > 0);
+  if Result then e.UserData := e.NativeValues['..\VertexDesc\VF']; // cache VF
+ end;
+
+procedure NiSkinPartition_GetCountVertexData(const e: TdfElement; var aCount: Integer);
+begin
+  try aCount := e.NativeValues['..\Data Size'] / e.NativeValues['..\Vertex Size']; except aCount := 0; end;
+end;
+
+procedure NiSkinPartition_BeforeSaveDataSize(const e: TdfElement);
+begin
+  e.NativeValue := e.Elements['..\Vertex Data'].Count * e.NativeValues['..\Vertex Size'];
+end;
+
 procedure wbDefineNiSkinPartition;
-  function EnVertexData(const e: TdfElement): Boolean;
-  begin
-    Result := enSSE(e) and (e.NativeValues['..\Data Size'] > 0);
-    if Result then e.UserData := e.NativeValues['..\VertexDesc\VF']; // cache VF
-   end;
-  procedure GetCountVertexData(const e: TdfElement; var aCount: Integer);
-  begin
-    try aCount := e.NativeValues['..\Data Size'] / e.NativeValues['..\Vertex Size']; except aCount := 0; end;
-  end;
-  procedure BeforeSaveDataSize(const e: TdfElement);
-  begin
-    e.NativeValue := e.Elements['..\Vertex Data'].Count * e.NativeValues['..\Vertex Size'];
-  end;
 begin
   wbNiObject(wbNifBlock('NiSkinPartition', [
     dfInteger('Num Partitions', dtU32),
-    dfInteger('Data Size', dtU32, '1', [DF_OnGetEnabled, @EnSSE, DF_OnBeforeSave, @BeforeSaveDataSize]),
+    dfInteger('Data Size', dtU32, '1', [DF_OnGetEnabled, @EnSSE, DF_OnBeforeSave, @NiSkinPartition_BeforeSaveDataSize]),
     dfInteger('Vertex Size', dtU32, [DF_OnGetEnabled, @EnSSE]),
     wbVertexDesc('VertexDesc', [DF_OnGetEnabled, @EnSSE]),
-    dfArray('Vertex Data', wbBSVertexData('Vertex Data'), 0, '', [DF_OnGetEnabled, @EnVertexData, DF_OnGetCount, @GetCountVertexData]),
+    dfArray('Vertex Data', wbBSVertexData('Vertex Data'), 0, '', [
+      DF_OnGetEnabled, @NiSkinPartition_EnVertexData,
+      DF_OnGetCount, @NiSkinPartition_GetCountVertexData
+    ]),
     dfArray('Partitions', wbSkinPartition('Partitions', []), 0, 'Num Partitions', [])
   ]), 'NiObject', False);
 end;
@@ -4510,18 +4591,19 @@ end;
 
 //===========================================================================
 { NiCollisionData * }
+function NiCollisionData_EnBoundingVolume(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Use ABV'] = 1; end;
+function NiCollisionData_EnType0(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Collision Type'] = 0; end;
+function NiCollisionData_EnType1(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Collision Type'] = 1; end;
+function NiCollisionData_EnType2(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Collision Type'] = 2; end;
+function NiCollisionData_EnType4(const e: TdfElement): Boolean;
+begin
+  Result := False;
+  if e.NativeValues['..\Collision Type'] = 4 then
+    e.DoException('NiCollisionData UnionBV type is not supported');
+end;
+function NiCollisionData_EnType5(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Collision Type'] = 5; end;
+
 procedure wbDefineNiCollisionData;
-  function EnBoundingVolume(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Use ABV'] = 1; end;
-  function EnType0(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Collision Type'] = 0; end;
-  function EnType1(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Collision Type'] = 1; end;
-  function EnType2(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Collision Type'] = 2; end;
-  function EnType4(const e: TdfElement): Boolean;
-  begin
-    Result := False;
-    if e.NativeValues['..\Collision Type'] = 4 then
-      e.DoException('NiCollisionData UnionBV type is not supported');
-  end;
-  function EnType5(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Collision Type'] = 5; end;
 begin
   wbNiObject(wbNifBlock('NiCollisionData', [
     wbPropagationMode('Propagation Mode', '', []),
@@ -4532,26 +4614,26 @@ begin
       dfStruct('Sphere', [
         wbVector3('Center'),
         dfFloat('Radius')
-      ], [DF_OnGetEnabled, @EnType0]),
+      ], [DF_OnGetEnabled, @NiCollisionData_EnType0]),
       dfStruct('Box', [
         wbVector3('Center'),
         dfArray('Axis', wbVector3('Axis'), 3),
         dfArray('Extent', dfFloat('Extent'), 3)
-      ], [DF_OnGetEnabled, @EnType1]),
+      ], [DF_OnGetEnabled, @NiCollisionData_EnType1]),
       dfStruct('Capsule', [
         wbVector3('Center'),
         wbVector3('Origin'),
         dfFloat('Radius'),
         dfFloat('Unknown Float 1'),
         dfFloat('Unknown Float 2')
-      ], [DF_OnGetEnabled, @EnType2]),
-      dfInteger('Union BV', dtU32, [DF_OnGetEnabled, @EnType4]),
+      ], [DF_OnGetEnabled, @NiCollisionData_EnType2]),
+      dfInteger('Union BV', dtU32, [DF_OnGetEnabled, @NiCollisionData_EnType4]),
       dfStruct('HalfSpace', [
         wbVector3('Normal'),
         wbVector3('Center'),
         dfFloat('Unknown Float 1')
-      ], [DF_OnGetEnabled, @EnType5])
-    ], [DF_OnGetEnabled, @EnBoundingVolume])
+      ], [DF_OnGetEnabled, @NiCollisionData_EnType5])
+    ], [DF_OnGetEnabled, @NiCollisionData_EnBoundingVolume])
   ]), 'NiCollisionObject', False);
 end;
 
@@ -4668,10 +4750,11 @@ end;
 
 //===========================================================================
 { bhkRigidBody }
+function bhkRigidBody_EnUserVersion2gt34(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 > 34; end;
+function bhkRigidBody_EnUserVersion2lte34(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 <= 34; end;
+function bhkRigidBody_DecideBodyFlags(const e: TdfElement): Integer; begin if nif(e).UserVersion2 < 76 then Result := 0 else Result := 1; end;
+
 procedure wbDefinebhkRigidBody;
-  function EnUserVersion2gt34(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 > 34; end;
-  function EnUserVersion2lte34(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 <= 34; end;
-  function DecideBodyFlags(const e: TdfElement): Integer; begin if nif(e).UserVersion2 < 76 then Result := 0 else Result := 1; end;
 begin
   wbNiObject(wbNifBlock('bhkRigidBody', [
     wbhkResponseType('Collision Response', 'RESPONSE_SIMPLE_CONTACT', []),
@@ -4680,11 +4763,11 @@ begin
     dfInteger('Unknown Int 1', dtU32),
     wbHavokColFilter('Havok Col Filter Copy', []),
     dfBytes('Unused 3', 4),
-    dfInteger('Unknown Int 2', dtU32, [DF_OnGetEnabled, @EnUserVersion2gt34]),
+    dfInteger('Unknown Int 2', dtU32, [DF_OnGetEnabled, @bhkRigidBody_EnUserVersion2gt34]),
     wbhkResponseType('Collision Response 2', 'RESPONSE_SIMPLE_CONTACT', []),
     dfInteger('Unused Byte 2', dtU8),
     dfInteger('Process Contact Callback Delay 2', dtU16, '65535'),
-    dfInteger('Unknown Int 2', dtU32, [DF_OnGetEnabled, @EnUserVersion2lte34]),
+    dfInteger('Unknown Int 2', dtU32, [DF_OnGetEnabled, @bhkRigidBody_EnUserVersion2lte34]),
     wbVector4('Translation'),
     wbQuaternionXYZW('Rotation'),
     wbVector4('Linear Velocity'),
@@ -4694,26 +4777,26 @@ begin
     dfFloat('Mass', '1.0'),
     dfFloat('Linear Dumping', '0.1'),
     dfFloat('Angular Dumping', '0.05'),
-    dfFloat('Time Factor', '1.0', [DF_OnGetEnabled, @EnUserVersion2gt34]),
-    dfFloat('Gravity Factor', '1.0', [DF_OnGetEnabled, @EnUserVersion2gt34]),
+    dfFloat('Time Factor', '1.0', [DF_OnGetEnabled, @bhkRigidBody_EnUserVersion2gt34]),
+    dfFloat('Gravity Factor', '1.0', [DF_OnGetEnabled, @bhkRigidBody_EnUserVersion2gt34]),
     dfFloat('Friction', '0.5'),
-    dfFloat('Rolling Friction Multiplier', '', [DF_OnGetEnabled, @EnUserVersion2gt34]),
+    dfFloat('Rolling Friction Multiplier', '', [DF_OnGetEnabled, @bhkRigidBody_EnUserVersion2gt34]),
     dfFloat('Restitution', '0.4'),
     dfFloat('Max Linear Velocity', '104.4'),
     dfFloat('Max Angular Velocity', '31.57'),
     dfFloat('Penetration Depth', '0.15'),
     wbMotionSystem('Motion System', 'MO_SYS_DYNAMIC', []),
-    wbDeactivatorType('Deactivator Type', 'DEACTIVATOR_NEVER', [DF_OnGetEnabled, @EnUserVersion2lte34]),
-    wbBool('Enable Deactivation', [DF_OnGetEnabled, @EnUserVersion2gt34]),
+    wbDeactivatorType('Deactivator Type', 'DEACTIVATOR_NEVER', [DF_OnGetEnabled, @bhkRigidBody_EnUserVersion2lte34]),
+    wbBool('Enable Deactivation', [DF_OnGetEnabled, @bhkRigidBody_EnUserVersion2gt34]),
     wbSolverDeactivation('Solver Deactivation', 'SOLVER_DEACTIVATION_OFF', []),
     wbMotionQuality('Motion Quality', 'MO_QUAL_FIXED', []),
     dfBytes('Unknown Bytes 1', 12),
-    dfBytes('Unknown Bytes 2', 4, [DF_OnGetEnabled, @EnUserVersion2gt34]),
+    dfBytes('Unknown Bytes 2', 4, [DF_OnGetEnabled, @bhkRigidBody_EnUserVersion2gt34]),
     dfArray('Constraints', wbNiRef('Constraints', 'bhkSerializable'), -4, '', [DF_OnBeforeSave, @RemoveNoneLinks]),
     dfUnion([
       dfEnum('Body Flags', dtU32, [1, 'Respond to wind']),
       dfEnum('Body Flags', dtU16, [1, 'Respond to wind'])
-    ], [DF_OnDecide, @DecideBodyFlags])
+    ], [DF_OnDecide, @bhkRigidBody_DecideBodyFlags])
   ]), 'bhkEntity', False);
 end;
 
@@ -5005,31 +5088,34 @@ end;
 
 //===========================================================================
 { bhkMoppBvTreeShape }
+function bhkMoppBvTreeShape_EnBuildType(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 12); end;
+
+procedure bhkMoppBvTreeShape_GetSizeMOPP(const e: TdfElement; var aCount: Integer);
+begin
+  aCount := e.NativeValues['..\MOPP Data Size'];
+  if (nif(e).Version <= v10010) and (aCount > 0) then Dec(aCount);
+end;
+
+procedure bhkMoppBvTreeShape_BeforeSaveMOPPDataSize(const e: TdfElement);
+var
+  size: Cardinal;
+begin
+  size := e.Elements['..\MOPP Data'].DataSize;
+  if (nif(e).Version <= v10010) and (size > 0) then Dec(size);
+  e.NativeValue := size;
+end;
+
 procedure wbDefinebhkMoppBvTreeShape;
-  function EnBuildType(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 12); end;
-  procedure GetSizeMOPP(const e: TdfElement; var aCount: Integer);
-  begin
-    aCount := e.NativeValues['..\MOPP Data Size'];
-    if (nif(e).Version <= v10010) and (aCount > 0) then Dec(aCount);
-  end;
-  procedure BeforeSaveMOPPDataSize(const e: TdfElement);
-  var
-    size: Cardinal;
-  begin
-    size := e.Elements['..\MOPP Data'].DataSize;
-    if (nif(e).Version <= v10010) and (size > 0) then Dec(size);
-    e.NativeValue := size;
-  end;
 begin
   wbNiObject(wbNifBlock('bhkMoppBvTreeShape', [
     wbNiRef('Shape', 'bhkShape'),
     dfBytes('Unused', 12),
     dfFloat('Shape Scale', '1.0'),
-    dfInteger('MOPP Data Size', dtU32, [DF_OnBeforeSave, @BeforeSaveMOPPDataSize]),
+    dfInteger('MOPP Data Size', dtU32, [DF_OnBeforeSave, @bhkMoppBvTreeShape_BeforeSaveMOPPDataSize]),
     wbVector3('Origin'),
     dfFloat('Scale'),
-    wbMOPPDataBuildType('Build Type', '', [DF_OnGetEnabled, @EnBuildType]),
-    dfBytes('MOPP Data', 0, [DF_OnGetCount, @GetSizeMOPP])
+    wbMOPPDataBuildType('Build Type', '', [DF_OnGetEnabled, @bhkMoppBvTreeShape_EnBuildType]),
+    dfBytes('MOPP Data', 0, [DF_OnGetCount, @bhkMoppBvTreeShape_GetSizeMOPP])
   ]), 'bhkBvTreeShape', False);
 end;
 
@@ -5227,15 +5313,16 @@ end;
 
 //===========================================================================
 { NiDynamicEffect }
+function NiDynamicEffect_EnSwitchState(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v1010106) and (UserVersion2 < 130); end;
+function NiDynamicEffect_EnNodes(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v10100) and (UserVersion2 < 130); end;
+
 procedure wbDefineNiDynamicEffect;
-  function EnSwitchState(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v1010106) and (UserVersion2 < 130); end;
-  function EnNodes(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v10100) and (UserVersion2 < 130); end;
 begin
   wbNiObject(wbNifBlock('NiDynamicEffect', [
-    wbBool('Switch State', [DF_OnGetEnabled, @EnSwitchState]),
+    wbBool('Switch State', [DF_OnGetEnabled, @NiDynamicEffect_EnSwitchState]),
     dfArray('Affected Node List Pointers', dfInteger('Pointer', dtU32), -4, '', [DF_OnGetEnabled, @EnBefore4002]),
     dfArray('Affected Nodes', wbNiRef('Node', 'NiAVObject'), -4, '', [
-      DF_OnGetEnabled, @EnNodes,
+      DF_OnGetEnabled, @NiDynamicEffect_EnNodes,
       DF_OnBeforeSave, @RemoveNoneLinks
     ])
   ]), 'NiAVObject', True);
@@ -5339,11 +5426,12 @@ end;
 
 //===========================================================================
 { NiMorphData }
+function NiMorphData_EnForward(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\..\..\Interpolation'] = 2; end;
+function NiMorphData_EnTBC(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\..\..\Interpolation'] = 3; end;
+function NiMorphData_EnUnknownInt(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v1010106) and (Version <= v10200); end;
+function NiMorphData_EnUnknownInt2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20004) and (Version <= v20005) and (UserVersion = 0); end;
+
 procedure wbDefineNiMorphData;
-  function EnForward(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\..\..\Interpolation'] = 2; end;
-  function EnTBC(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\..\..\Interpolation'] = 3; end;
-  function EnUnknownInt(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v1010106) and (Version <= v10200); end;
-  function EnUnknownInt2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20004) and (Version <= v20005) and (UserVersion = 0); end;
 begin
   wbNiObject(wbNifBlock('NiMorphData', [
     dfInteger('Num Morphs', dtU32),
@@ -5356,12 +5444,12 @@ begin
       dfArray('Keys', dfStruct('Keys', [
         dfFloat('Time'),
         dfFloat('Value'),
-        dfFloat('Forward', [DF_OnGetEnabled, @EnForward]),
-        dfFloat('Backward', [DF_OnGetEnabled, @EnForward]),
-        wbTBC('TBC', [DF_OnGetEnabled, @EnTBC])
+        dfFloat('Forward', [DF_OnGetEnabled, @NiMorphData_EnForward]),
+        dfFloat('Backward', [DF_OnGetEnabled, @NiMorphData_EnForward]),
+        wbTBC('TBC', [DF_OnGetEnabled, @NiMorphData_EnTBC])
       ]), 0, 'Num Keys', [DF_OnGetEnabled, @EnBefore10100]),
-      dfInteger('Unknown Int', dtU32, [DF_OnGetEnabled, @EnUnknownInt]),
-      dfInteger('Unknown Int', dtU32, [DF_OnGetEnabled, @EnUnknownInt2]),
+      dfInteger('Unknown Int', dtU32, [DF_OnGetEnabled, @NiMorphData_EnUnknownInt]),
+      dfInteger('Unknown Int', dtU32, [DF_OnGetEnabled, @NiMorphData_EnUnknownInt2]),
       dfArray('Vectors', wbVector3('Vectors'), 0, '..\..\Num Vertices', [])
     ]), 0, 'Num Morphs', [])
   ]), 'NiObject', False);
@@ -5369,20 +5457,21 @@ end;
 
 //===========================================================================
 { NiPosData }
+function NiPosData_EnInterpolation(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Num Keys'] <> 0; end;
+function NiPosData_EnForward(const e: TdfElement): Boolean; begin Result := nifblk(e).NativeValues['Interpolation'] = 2; end;
+function NiPosData_EnTBC(const e: TdfElement): Boolean; begin Result := nifblk(e).NativeValues['Interpolation'] = 3; end;
+
 procedure wbDefineNiPosData;
-  function EnInterpolation(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Num Keys'] <> 0; end;
-  function EnForward(const e: TdfElement): Boolean; begin Result := nifblk(e).NativeValues['Interpolation'] = 2; end;
-  function EnTBC(const e: TdfElement): Boolean; begin Result := nifblk(e).NativeValues['Interpolation'] = 3; end;
 begin
   wbNiObject(wbNifBlock('NiPosData', [
     dfInteger('Num Keys', dtU32),
-    wbKeyType('Interpolation', '', [DF_OnGetEnabled, @EnInterpolation]),
+    wbKeyType('Interpolation', '', [DF_OnGetEnabled, @NiPosData_EnInterpolation]),
     dfArray('Keys', dfStruct('Keys', [
       dfFloat('Time'),
       wbVector3('Value'),
-      wbVector3('Forward', [DF_OnGetEnabled, @EnForward]),
-      wbVector3('Backward', [DF_OnGetEnabled, @EnForward]),
-      wbTBC('TBC', [DF_OnGetEnabled, @EnTBC])
+      wbVector3('Forward', [DF_OnGetEnabled, @NiPosData_EnForward]),
+      wbVector3('Backward', [DF_OnGetEnabled, @NiPosData_EnForward]),
+      wbTBC('TBC', [DF_OnGetEnabled, @NiPosData_EnTBC])
     ]), 0, 'Num Keys', [])
   ]), 'NiObject', False);
 end;
@@ -5446,14 +5535,15 @@ end;
 
 //===========================================================================
 { NiPixelData }
+procedure NiPixelData_GetNumPixels(const e: TdfElement; var aCount: Integer); begin aCount := e.NativeValues['..\..\Num Pixels']; end;
+procedure NiPixelData_GetNumFaces(const e: TdfElement; var aCount: Integer); begin aCount := e.NativeValues['..\Num Faces']; if aCount = 0 then aCount := 1; end;
+
 procedure wbDefineNiPixelData;
-  procedure GetNumPixels(const e: TdfElement; var aCount: Integer); begin aCount := e.NativeValues['..\..\Num Pixels']; end;
-  procedure GetNumFaces(const e: TdfElement; var aCount: Integer); begin aCount := e.NativeValues['..\Num Faces']; if aCount = 0 then aCount := 1; end;
 begin
   wbNiObject(wbNifBlock('NiPixelData', [
     dfInteger('Num Pixels', dtU32),
     dfInteger('Num Faces', dtU32, [DF_OnGetEnabled, @EnSince20004]),
-    dfArray('Pixel Data', dfBytes('Pixel Data', 0, [DF_OnGetCount, @GetNumPixels]), 0, '', [DF_OnGetCount, @GetNumFaces])
+    dfArray('Pixel Data', dfBytes('Pixel Data', 0, [DF_OnGetCount, @NiPixelData_GetNumPixels]), 0, '', [DF_OnGetCount, @NiPixelData_GetNumFaces])
   ]), 'ATextureRenderData', False);
 end;
 
@@ -5536,8 +5626,9 @@ end;
 
 //===========================================================================
 { NiBlendInterpolator }
+function NiBlendInterpolator_EnData(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Flags'] and 1 = 0; end;
+
 procedure wbDefineNiBlendInterpolator;
-  function EnData(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Flags'] and 1 = 0; end;
 begin
   wbNiObject(wbNifBlock('NiBlendInterpolator', [
     wbInterpBlendFlags('Flags', '', []),
@@ -5559,7 +5650,7 @@ begin
         dfInteger('Priority', dtU8),
         dfFloat('Ease Spinner')
       ]), 0, '..\Array Size', [])
-    ], [DF_OnGetEnabled, @EnData])
+    ], [DF_OnGetEnabled, @NiBlendInterpolator_EnData])
   ]), 'NiInterpolator', False);
 end;
 
@@ -5845,8 +5936,9 @@ end;
 
 //===========================================================================
 { NiBoneLODController }
+function NiBoneLODController_EnShapeGroups(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v4220) and (UserVersion = 0); end;
+
 procedure wbDefineNiBoneLODController;
-  function EnShapeGroups(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v4220) and (UserVersion = 0); end;
 begin
   wbNiObject(wbNifBlock('NiBoneLODController', [
     dfInteger('LOD', dtU32),
@@ -5859,10 +5951,10 @@ begin
         wbNiPtr('Shape', 'NiTriBasedGeom'),
         wbNiRef('Skin Instnce', 'NiSkinInstance')
       ]), -4),
-    -4, '', [DF_OnGetEnabled, @EnShapeGroups]),
+    -4, '', [DF_OnGetEnabled, @NiBoneLODController_EnShapeGroups]),
     dfArray('Shade Groups 2',
       dfArray('Shade Groups 2', wbNiRef('Nodes', 'NiTriBasedGeom'), -4, '', [DF_OnBeforeSave, @RemoveNoneLinks]),
-    -4, '', [DF_OnGetEnabled, @EnShapeGroups])
+    -4, '', [DF_OnGetEnabled, @NiBoneLODController_EnShapeGroups])
   ]), 'NiTimeController', False);
 end;
 
@@ -5902,25 +5994,26 @@ end;
 
 //===========================================================================
 { NiKeyframeData }
+function NiKeyframeData_EnRotationType(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Num Rotation Keys'] <> 0; end;
+function NiKeyframeData_EnQuatKeys(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Rotation Type'] <> 4; end;
+function NiKeyframeData_EnQuatKeysTime(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version <= v10100) or ((Version >= v1010106) and (e.NativeValues['..\Rotation Type'] <> 4)); end;
+function NiKeyframeData_EnQuatKeysValue(const e: TdfElement): Boolean; begin Result := nifblk(e).NativeValues['Rotation Type'] <> 4; end;
+function NiKeyframeData_EnQuatKeysTBC(const e: TdfElement): Boolean; begin Result := nifblk(e).NativeValues['Rotation Type'] = 3; end;
+function NiKeyframeData_EnUnknownFloat(const e: TdfElement): Boolean; begin Result := (nif(e).Version <= v10100) and (e.NativeValues['..\Rotation Type'] = 4); end;
+function NiKeyframeData_EnXYZRotations(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Rotation Type'] = 4; end;
+
 procedure wbDefineNiKeyframeData;
-  function EnRotationType(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Num Rotation Keys'] <> 0; end;
-  function EnQuatKeys(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Rotation Type'] <> 4; end;
-  function EnQuatKeysTime(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version <= v10100) or ((Version >= v1010106) and (e.NativeValues['..\Rotation Type'] <> 4)); end;
-  function EnQuatKeysValue(const e: TdfElement): Boolean; begin Result := nifblk(e).NativeValues['Rotation Type'] <> 4; end;
-  function EnQuatKeysTBC(const e: TdfElement): Boolean; begin Result := nifblk(e).NativeValues['Rotation Type'] = 3; end;
-  function EnUnknownFloat(const e: TdfElement): Boolean; begin Result := (nif(e).Version <= v10100) and (e.NativeValues['..\Rotation Type'] = 4); end;
-  function EnXYZRotations(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Rotation Type'] = 4; end;
 begin
   wbNiObject(wbNifBlock('NiKeyframeData', [
     dfInteger('Num Rotation Keys', dtU32),
-    wbKeyType('Rotation Type', '', [DF_OnGetEnabled, @EnRotationType]),
+    wbKeyType('Rotation Type', '', [DF_OnGetEnabled, @NiKeyframeData_EnRotationType]),
     dfArray('Quaternion Keys', dfStruct('Quaternion Keys', [
-      dfFloat('Time', [DF_OnGetEnabled, @EnQuatKeysTime]),
-      wbQuaternion('Value', [DF_OnGetEnabled, @EnQuatKeysValue]),
-      wbTBC('TBC', [DF_OnGetEnabled, @EnQuatKeysTBC])
-    ]), 0, 'Num Rotation Keys', [DF_OnGetEnabled, @EnQuatKeys]),
-    dfFloat('Unknown Float', [DF_OnGetEnabled, @EnUnknownFloat]),
-    dfArray('XYZ Rotations', wbKeyGroup('XYZ Rotations', 'float', []), 3, '', [DF_OnGetEnabled, @EnXYZRotations]),
+      dfFloat('Time', [DF_OnGetEnabled, @NiKeyframeData_EnQuatKeysTime]),
+      wbQuaternion('Value', [DF_OnGetEnabled, @NiKeyframeData_EnQuatKeysValue]),
+      wbTBC('TBC', [DF_OnGetEnabled, @NiKeyframeData_EnQuatKeysTBC])
+    ]), 0, 'Num Rotation Keys', [DF_OnGetEnabled, @NiKeyframeData_EnQuatKeys]),
+    dfFloat('Unknown Float', [DF_OnGetEnabled, @NiKeyframeData_EnUnknownFloat]),
+    dfArray('XYZ Rotations', wbKeyGroup('XYZ Rotations', 'float', []), 3, '', [DF_OnGetEnabled, @NiKeyframeData_EnXYZRotations]),
     wbKeyGroup('Translations', 'vector3', []),
     wbKeyGroup('Scales', 'float', [])
   ]), 'NiObject', False);
@@ -6019,23 +6112,24 @@ end;
 
 //===========================================================================
 { NiGeomMorpherController }
+function NiGeomMorpherController_EnUnknown2(const e: TdfElement): Boolean; begin Result := nif(e).Version = v1010106; end;
+function NiGeomMorpherController_EnInterpolators(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v1010106) and (Version <= v20005); end;
+function NiGeomMorpherController_EnUnknownInts(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20004) and (Version <= v20005) and (UserVersion >= 10); end;
+
 procedure wbDefineNiGeomMorpherController;
-  function EnUnknown2(const e: TdfElement): Boolean; begin Result := nif(e).Version = v1010106; end;
-  function EnInterpolators(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v1010106) and (Version <= v20005); end;
-  function EnUnknownInts(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20004) and (Version <= v20005) and (UserVersion >= 10); end;
 begin
   wbNiObject(wbNifBlock('NiGeomMorpherController', [
     dfInteger('Extra Flags', dtU16, [DF_OnGetEnabled, @EnSince10012]),
-    dfInteger('Unknown 2', dtU8, [DF_OnGetEnabled, @EnUnknown2]),
+    dfInteger('Unknown 2', dtU8, [DF_OnGetEnabled, @NiGeomMorpherController_EnUnknown2]),
     wbNiRef('Data', 'NiMorphData'),
     dfInteger('Always Update', dtU8),
     dfInteger('Num Interpolators', dtU32, [DF_OnGetEnabled, @EnSince1010106]),
-    dfArray('Interpolators', wbNiRef('Interpolators', 'NiInterpolator'), 0, 'Num Interpolators', [DF_OnGetEnabled, @EnInterpolators]),
+    dfArray('Interpolators', wbNiRef('Interpolators', 'NiInterpolator'), 0, 'Num Interpolators', [DF_OnGetEnabled, @NiGeomMorpherController_EnInterpolators]),
     dfArray('Interpolator Weights', dfStruct('Interpolator Weights', [
       wbNiRef('Interpolator', 'NiInterpolator'),
       dfFloat('Weight')
     ]), 0, 'Num Interpolators', [DF_OnGetEnabled, @EnSince20103]),
-    dfArray('Unknown Ints', dfInteger('Unknown Ints', dtU32), -4, '', [DF_OnGetEnabled, @EnUnknownInts])
+    dfArray('Unknown Ints', dfInteger('Unknown Ints', dtU32), -4, '', [DF_OnGetEnabled, @NiGeomMorpherController_EnUnknownInts])
   ]), 'NiInterpController', False);
 end;
 
@@ -6487,11 +6581,12 @@ end;
 
 //===========================================================================
 { NiControllerSequence }
+function NiControllerSequence_EnUnknownFloat2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v10200) and (Version <= v10401); end;
+function NiControllerSequence_EnStringPalette(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v10200) and (Version <= v20005); end;
+function NiControllerSequence_EnAnimNotes(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 11) and (UserVersion2 >= 24) and (UserVersion2 <= 28); end;
+function NiControllerSequence_EnAnimNotesArray(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 11) and (UserVersion2 > 28); end;
+
 procedure wbDefineNiControllerSequence;
-  function EnUnknownFloat2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v10200) and (Version <= v10401); end;
-  function EnStringPalette(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v10200) and (Version <= v20005); end;
-  function EnAnimNotes(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 11) and (UserVersion2 >= 24) and (UserVersion2 <= 28); end;
-  function EnAnimNotesArray(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 11) and (UserVersion2 > 28); end;
 begin
   wbNiObject(wbNifBlock('NiControllerSequence', [
     dfFloat('Weight', '1.0', [DF_OnGetEnabled, @EnSince1010106]),
@@ -6500,15 +6595,15 @@ begin
     dfInteger('Unknown Int', dtU32, [DF_OnGetEnabled, @En1010106]),
     dfFloat('Frequency', [DF_OnGetEnabled, @EnSince1010106]),
     dfFloat('Start Time', [DF_OnGetEnabled, @EnSince1010106]),
-    dfFloat('Unknown Float 2', [DF_OnGetEnabled, @EnUnknownFloat2]),
+    dfFloat('Unknown Float 2', [DF_OnGetEnabled, @NiControllerSequence_EnUnknownFloat2]),
     dfFloat('Stop Time', [DF_OnGetEnabled, @EnSince1010106]),
     dfInteger('Unknown Byte', dtU8, [DF_OnGetEnabled, @En1010106]),
     wbNiRef('Manager', 'NiControllerManager', [DF_OnGetEnabled, @EnSince1010106]),
     wbString('Target Name', [DF_OnGetEnabled, @EnSince1010106]),
-    wbNiRef('String Palette', 'NiStringPalette', [DF_OnGetEnabled, @EnStringPalette]),
-    wbNiRef('Anim Notes', 'BSAnimNotes', [DF_OnGetEnabled, @EnAnimNotes]),
+    wbNiRef('String Palette', 'NiStringPalette', [DF_OnGetEnabled, @NiControllerSequence_EnStringPalette]),
+    wbNiRef('Anim Notes', 'BSAnimNotes', [DF_OnGetEnabled, @NiControllerSequence_EnAnimNotes]),
     dfArray('Anim Notes Array', wbNiRef('Anim Notes', 'BSAnimNotes'), -2, '', [
-      DF_OnGetEnabled, @EnAnimNotesArray,
+      DF_OnGetEnabled, @NiControllerSequence_EnAnimNotesArray,
       DF_OnBeforeSave, @RemoveNoneLinks
     ])
   ]), 'NiSequence', False);
@@ -6544,17 +6639,18 @@ end;
 
 //===========================================================================
 { NiParticleSystem }
+function NiParticleSystem_EnUnknownShort(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion >= 12; end;
+function NiParticleSystem_EnData(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion2 >= 100); end;
+
 procedure wbDefineNiParticleSystem;
-  function EnUnknownShort(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion >= 12; end;
-  function EnData(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion2 >= 100); end;
 begin
   wbNiObject(wbNifBlock('NiParticleSystem', [
-    dfInteger('Unknown Short 2', dtU16, [DF_OnGetEnabled, @EnUnknownShort]),
-    dfInteger('Unknown Short 3', dtU16, [DF_OnGetEnabled, @EnUnknownShort]),
-    dfInteger('Unknown Int 1', dtU32, [DF_OnGetEnabled, @EnUnknownShort]),
-    dfInteger('Unknown Int 2', dtS32, [DF_OnGetEnabled, @EnData]),
-    dfInteger('Unknown Int 3', dtS32, [DF_OnGetEnabled, @EnData]),
-    wbNiRef('Data', 'NiPSysData', [DF_OnGetEnabled, @EnData]),
+    dfInteger('Unknown Short 2', dtU16, [DF_OnGetEnabled, @NiParticleSystem_EnUnknownShort]),
+    dfInteger('Unknown Short 3', dtU16, [DF_OnGetEnabled, @NiParticleSystem_EnUnknownShort]),
+    dfInteger('Unknown Int 1', dtU32, [DF_OnGetEnabled, @NiParticleSystem_EnUnknownShort]),
+    dfInteger('Unknown Int 2', dtS32, [DF_OnGetEnabled, @NiParticleSystem_EnData]),
+    dfInteger('Unknown Int 3', dtS32, [DF_OnGetEnabled, @NiParticleSystem_EnData]),
+    wbNiRef('Data', 'NiPSysData', [DF_OnGetEnabled, @NiParticleSystem_EnData]),
     wbBool('World Space', [DF_OnGetEnabled, @EnSince10100]),
     dfArray('Modifiers', wbNiRef('Modifiers', 'NiPSysModifier'), -4, '', [
       DF_OnGetEnabled, @EnSince10100,
@@ -6572,37 +6668,38 @@ end;
 
 //===========================================================================
 { NiParticlesData }
+function NiParticlesData_EnRadii(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version >= v10100) and (e.NativeValues['..\Has Radii'] <> 0)) and not ((Version >= v20207) and (UserVersion >= 11)); end;
+function NiParticlesData_EnSizes(const e: TdfElement): Boolean; begin with nif(e) do Result := (e.NativeValues['..\Has Sizes'] <> 0) and not ((Version >= v20207) and (UserVersion >= 11)); end;
+function NiParticlesData_EnRotations(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version >= v10010) and (e.NativeValues['..\Has Rotations'] <> 0)) and not ((Version >= v20207) and (UserVersion >= 11)); end;
+function NiParticlesData_EnUnknownByte1(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 12); end;
+function NiParticlesData_EnRotationAngles(const e: TdfElement): Boolean; begin with nif(e) do Result := (e.NativeValues['..\Has Rotation Angles'] <> 0) and not ((Version >= v20207) and (UserVersion >= 11)); end;
+function NiParticlesData_EnRotationAxes(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version >= v20004) and (e.NativeValues['..\Has Rotation Axes'] <> 0)) and not ((Version >= v20207) and (UserVersion >= 11)); end;
+function NiParticlesData_EnHasUVQuadrants(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion = 11); end;
+function NiParticlesData_EnUVQuadrants(const e: TdfElement): Boolean; begin with nif(e) do Result := (e.NativeValues['..\Has UV Quadrants'] <> 0) and (Version >= v20207) and (UserVersion = 11); end;
+function NiParticlesData_EnUnknownByte2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 11); end;
+
 procedure wbDefineNiParticlesData;
-  function EnRadii(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version >= v10100) and (e.NativeValues['..\Has Radii'] <> 0)) and not ((Version >= v20207) and (UserVersion >= 11)); end;
-  function EnSizes(const e: TdfElement): Boolean; begin with nif(e) do Result := (e.NativeValues['..\Has Sizes'] <> 0) and not ((Version >= v20207) and (UserVersion >= 11)); end;
-  function EnRotations(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version >= v10010) and (e.NativeValues['..\Has Rotations'] <> 0)) and not ((Version >= v20207) and (UserVersion >= 11)); end;
-  function EnUnknownByte1(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 12); end;
-  function EnRotationAngles(const e: TdfElement): Boolean; begin with nif(e) do Result := (e.NativeValues['..\Has Rotation Angles'] <> 0) and not ((Version >= v20207) and (UserVersion >= 11)); end;
-  function EnRotationAxes(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version >= v20004) and (e.NativeValues['..\Has Rotation Axes'] <> 0)) and not ((Version >= v20207) and (UserVersion >= 11)); end;
-  function EnHasUVQuadrants(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion = 11); end;
-  function EnUVQuadrants(const e: TdfElement): Boolean; begin with nif(e) do Result := (e.NativeValues['..\Has UV Quadrants'] <> 0) and (Version >= v20207) and (UserVersion = 11); end;
-  function EnUnknownByte2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 11); end;
 begin
   wbNiObject(wbNifBlock('NiParticlesData', [
     dfInteger('Num Particles', dtU16, [DF_OnGetEnabled, @EnBefore4002]),
     dfFloat('Particle Radius', [DF_OnGetEnabled, @EnBefore10010]),
     wbBool('Has Radii', [DF_OnGetEnabled, @EnSince10100]),
-    dfArray('Radii', dfFloat('Radii'), 0, 'Num Vertices', [DF_OnGetEnabled, @EnRadii]),
+    dfArray('Radii', dfFloat('Radii'), 0, 'Num Vertices', [DF_OnGetEnabled, @NiParticlesData_EnRadii]),
     dfInteger('Num Active', dtU16),
     wbBool('Has Sizes'),
-    dfArray('Sizes', dfFloat('Sizes'), 0, 'Num Vertices', [DF_OnGetEnabled, @EnSizes]),
+    dfArray('Sizes', dfFloat('Sizes'), 0, 'Num Vertices', [DF_OnGetEnabled, @NiParticlesData_EnSizes]),
     wbBool('Has Rotations', [DF_OnGetEnabled, @EnSince10010]),
-    dfArray('Rotations', wbQuaternion('Rotations'), 0, 'Num Vertices', [DF_OnGetEnabled, @EnRotations]),
-    dfInteger('Unknown Byte 1', dtU8, [DF_OnGetEnabled, @EnUnknownByte1]),
-    wbNiRef('Unknown Link', 'NiObject', [DF_OnGetEnabled, @EnUnknownByte1]),
+    dfArray('Rotations', wbQuaternion('Rotations'), 0, 'Num Vertices', [DF_OnGetEnabled, @NiParticlesData_EnRotations]),
+    dfInteger('Unknown Byte 1', dtU8, [DF_OnGetEnabled, @NiParticlesData_EnUnknownByte1]),
+    wbNiRef('Unknown Link', 'NiObject', [DF_OnGetEnabled, @NiParticlesData_EnUnknownByte1]),
     wbBool('Has Rotation Angles', [DF_OnGetEnabled, @EnSince20004]),
-    dfArray('Rotation Angles', dfFloat('Rotation Angles'), 0, 'Num Vertices', [DF_OnGetEnabled, @EnRotationAngles]),
+    dfArray('Rotation Angles', dfFloat('Rotation Angles'), 0, 'Num Vertices', [DF_OnGetEnabled, @NiParticlesData_EnRotationAngles]),
     wbBool('Has Rotation Axes', [DF_OnGetEnabled, @EnSince20004]),
-    dfArray('Rotation Axes', wbVector3('Rotation Axes'), 0, 'Num Vertices', [DF_OnGetEnabled, @EnRotationAxes]),
-    wbBool('Has UV Quadrants', [DF_OnGetEnabled, @EnHasUVQuadrants]),
-    dfInteger('Num UV Quadrants', dtU8, [DF_OnGetEnabled, @EnHasUVQuadrants]),
-    dfArray('UV Quadrants', wbVector4('UV Quadrants'), 0, 'Num UV Quadrants', [DF_OnGetEnabled, @EnUVQuadrants]),
-    dfInteger('Unknown Byte 2', dtU8, [DF_OnGetEnabled, @EnUnknownByte2])
+    dfArray('Rotation Axes', wbVector3('Rotation Axes'), 0, 'Num Vertices', [DF_OnGetEnabled, @NiParticlesData_EnRotationAxes]),
+    wbBool('Has UV Quadrants', [DF_OnGetEnabled, @NiParticlesData_EnHasUVQuadrants]),
+    dfInteger('Num UV Quadrants', dtU8, [DF_OnGetEnabled, @NiParticlesData_EnHasUVQuadrants]),
+    dfArray('UV Quadrants', wbVector4('UV Quadrants'), 0, 'Num UV Quadrants', [DF_OnGetEnabled, @NiParticlesData_EnUVQuadrants]),
+    dfInteger('Unknown Byte 2', dtU8, [DF_OnGetEnabled, @NiParticlesData_EnUnknownByte2])
   ]), 'NiGeometryData', False);
 end;
 
@@ -6615,12 +6712,13 @@ end;
 
 //===========================================================================
 { NiRotatingParticlesData }
+function NiRotatingParticlesData_EnRotations2(const e: TdfElement): Boolean; begin Result := (nif(e).Version <= v4220) and (e.NativeValues['..\Has Rotations 2'] <> 0); end;
+
 procedure wbDefineNiRotatingParticlesData;
-  function EnRotations2(const e: TdfElement): Boolean; begin Result := (nif(e).Version <= v4220) and (e.NativeValues['..\Has Rotations 2'] <> 0); end;
 begin
   wbNiObject(wbNifBlock('NiRotatingParticlesData', [
     wbBool('Has Rotations 2', [DF_OnGetEnabled, @EnBefore4220]),
-    dfArray('Rotations 2', wbQuaternion('Rotations 2'), 0, 'Num Vertices', [DF_OnGetEnabled, @EnRotations2])
+    dfArray('Rotations 2', wbQuaternion('Rotations 2'), 0, 'Num Vertices', [DF_OnGetEnabled, @NiRotatingParticlesData_EnRotations2])
   ]), 'NiParticlesData', False);
 end;
 
@@ -6645,8 +6743,9 @@ end;
 
 //===========================================================================
 { NiParticleBomb * }
+function NiParticleBomb_EnSymmetryType(const e: TdfElement): Boolean; begin Result := nif(e).Version >=v41012; end;
+
 procedure wbDefineNiParticleBomb;
-  function EnSymmetryType(const e: TdfElement): Boolean; begin Result := nif(e).Version >=v41012; end;
 begin
   wbNiObject(wbNifBlock('NiParticleBomb', [
     dfFloat('Decay'),
@@ -6654,7 +6753,7 @@ begin
     dfFloat('DeltaV'),
     dfFloat('Start'),
     wbDecayType('Decay Type', '', []),
-    wbSymmetryType('Symmetry Type', '', [DF_OnGetEnabled, @EnSymmetryType]),
+    wbSymmetryType('Symmetry Type', '', [DF_OnGetEnabled, @NiParticleBomb_EnSymmetryType]),
     wbVector3('Position'),
     wbVector3('Direction')
   ]), 'NiParticleModifier', False);
@@ -6662,14 +6761,15 @@ end;
 
 //===========================================================================
 { NiSphericalCollider * }
+function NiSphericalCollider_EnShort2(const e: TdfElement): Boolean; begin Result := nif(e).Version <= v4202; end;
+
 procedure wbDefineNiSphericalCollider;
-  function EnShort2(const e: TdfElement): Boolean; begin Result := nif(e).Version <= v4202; end;
 begin
   wbNiObject(wbNifBlock('NiSphericalCollider', [
     dfFloat('Unknown Float 1'),
     dfInteger('Unknown Short 1', dtU16),
     dfFloat('Unknown Float 2'),
-    dfInteger('Unknown Short 2',  dtU16, [DF_OnGetEnabled, @EnShort2]),
+    dfInteger('Unknown Short 2',  dtU16, [DF_OnGetEnabled, @NiSphericalCollider_EnShort2]),
     dfFloat('Unknown Float 3', [DF_OnGetEnabled, @EnSince4210]),
     dfFloat('Unknown Float 4'),
     dfFloat('Unknown Float 5')
@@ -6730,14 +6830,15 @@ end;
 
 //===========================================================================
 { NiPlanarCollider }
+function NiPlanarCollider_En4220(const e: TdfElement): Boolean; begin Result := nif(e).Version = v4220; end;
+
 procedure wbDefineNiPlanarCollider;
-  function En4220(const e: TdfElement): Boolean; begin Result := nif(e).Version = v4220; end;
 begin
   wbNiObject(wbNifBlock('NiPlanarCollider', [
     dfInteger('Unknown Short', dtU16, [DF_OnGetEnabled, @EnSince10010]),
     dfFloat('Unknown Float 1'),
     dfFloat('Unknown Float 2'),
-    dfInteger('Unknown Short 2', dtU16, [DF_OnGetEnabled, @En4220]),
+    dfInteger('Unknown Short 2', dtU16, [DF_OnGetEnabled, @NiPlanarCollider_En4220]),
     dfFloat('Unknown Float 3'),
     dfFloat('Unknown Float 4'),
     dfFloat('Unknown Float 5'),
@@ -6793,14 +6894,14 @@ end;
 
 //===========================================================================
 { NiPSysData }
+function NiPSysData_EnDescriptions(const e: TdfElement): Boolean; begin with nif(e) do Result := not ((Version >= v20207) and (UserVersion >= 11)); end;
+function NiPSysData_EnHasUnknownFloats3(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20004) and not ((Version >= v20207) and (UserVersion >= 11)); end;
+function NiPSysData_EnUnknownFloats3(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version >= v20004) and (e.NativeValues['..\Has Unknown Floats 3'] <> 0)) and not ((Version >= v20207) and (UserVersion >= 11)); end;
+function NiPSysData_EnUnknownShort(const e: TdfElement): Boolean; begin with nif(e) do Result := not ((Version >= v20207) and (UserVersion = 11)); end;
+function NiPSysData_EnHasSubtexture(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 12); end;
+function NiPSysData_EnSubtextures(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 12)  and (e.NativeValues['..\Has Subtexture Offset UVs'] <> 0); end;
+
 procedure wbDefineNiPSysData;
-  function EnDescriptions(const e: TdfElement): Boolean; begin with nif(e) do Result := not ((Version >= v20207) and (UserVersion >= 11)); end;
-  function EnHasUnknownFloats3(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20004) and not ((Version >= v20207) and (UserVersion >= 11)); end;
-  function EnUnknownFloats3(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version >= v20004) and (e.NativeValues['..\Has Unknown Floats 3'] <> 0)) and not ((Version >= v20207) and (UserVersion >= 11)); end;
-  function EnUnknownShort(const e: TdfElement): Boolean; begin with nif(e) do Result := not ((Version >= v20207) and (UserVersion = 11)); end;
-  function EnHasSubtexture(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 12); end;
-  function EnSubtextures(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 12)  and (e.NativeValues['..\Has Subtexture Offset UVs'] <> 0);
-  end;
 begin
   wbNiObject(wbNifBlock('NiPSysData', [
     dfArray('Particle Descriptions', dfStruct('Particle Descriptions', [
@@ -6810,20 +6911,20 @@ begin
       dfFloat('Uknown Float 2', '0.9'),
       dfFloat('Uknown Float 3', '3.0'),
       dfInteger('Unknown Int', dtS32)
-    ]), 0, 'Num Vertices', [DF_OnGetEnabled, @EnDescriptions]),
-    wbBool('Has Unknown Floats 3', [DF_OnGetEnabled, @EnHasUnknownFloats3]),
-    dfArray('Unknown Floats 3', dfFloat('Unknown Floats 3'), 0, 'Num Vertices', [DF_OnGetEnabled, @EnUnknownFloats3]),
-    dfInteger('Unknown Short 1', dtU16, [DF_OnGetEnabled, @EnUnknownShort]),
-    dfInteger('Unknown Short 2', dtU16, [DF_OnGetEnabled, @EnUnknownShort]),
-    wbBool('Has Subtexture Offset UVs', [DF_OnGetEnabled, @EnHasSubtexture]),
-    dfInteger('Num Subtexture Offset UVs', dtU32, [DF_OnGetEnabled, @EnHasSubtexture]),
-    dfFloat('Aspect Ratio', [DF_OnGetEnabled, @EnHasSubtexture]),
-    dfArray('Subtexture Offset UVs', wbVector4('Subtexture Offset UVs'), 0, 'Num Subtexture Offset UVs', [DF_OnGetEnabled, @EnSubtextures]),
-    dfInteger('Unknown Int 4', dtU32, [DF_OnGetEnabled, @EnHasSubtexture]),
-    dfInteger('Unknown Int 5', dtU32, [DF_OnGetEnabled, @EnHasSubtexture]),
-    dfInteger('Unknown Int 6', dtU32, [DF_OnGetEnabled, @EnHasSubtexture]),
-    dfInteger('Unknown Short 3', dtU16, [DF_OnGetEnabled, @EnHasSubtexture]),
-    dfInteger('Unknown Byte 4', dtU8, [DF_OnGetEnabled, @EnHasSubtexture])
+    ]), 0, 'Num Vertices', [DF_OnGetEnabled, @NiPSysData_EnDescriptions]),
+    wbBool('Has Unknown Floats 3', [DF_OnGetEnabled, @NiPSysData_EnHasUnknownFloats3]),
+    dfArray('Unknown Floats 3', dfFloat('Unknown Floats 3'), 0, 'Num Vertices', [DF_OnGetEnabled, @NiPSysData_EnUnknownFloats3]),
+    dfInteger('Unknown Short 1', dtU16, [DF_OnGetEnabled, @NiPSysData_EnUnknownShort]),
+    dfInteger('Unknown Short 2', dtU16, [DF_OnGetEnabled, @NiPSysData_EnUnknownShort]),
+    wbBool('Has Subtexture Offset UVs', [DF_OnGetEnabled, @NiPSysData_EnHasSubtexture]),
+    dfInteger('Num Subtexture Offset UVs', dtU32, [DF_OnGetEnabled, @NiPSysData_EnHasSubtexture]),
+    dfFloat('Aspect Ratio', [DF_OnGetEnabled, @NiPSysData_EnHasSubtexture]),
+    dfArray('Subtexture Offset UVs', wbVector4('Subtexture Offset UVs'), 0, 'Num Subtexture Offset UVs', [DF_OnGetEnabled, @NiPSysData_EnSubtextures]),
+    dfInteger('Unknown Int 4', dtU32, [DF_OnGetEnabled, @NiPSysData_EnHasSubtexture]),
+    dfInteger('Unknown Int 5', dtU32, [DF_OnGetEnabled, @NiPSysData_EnHasSubtexture]),
+    dfInteger('Unknown Int 6', dtU32, [DF_OnGetEnabled, @NiPSysData_EnHasSubtexture]),
+    dfInteger('Unknown Short 3', dtU16, [DF_OnGetEnabled, @NiPSysData_EnHasSubtexture]),
+    dfInteger('Unknown Byte 4', dtU8, [DF_OnGetEnabled, @NiPSysData_EnHasSubtexture])
   ]), 'NiRotatingParticlesData', False);
 end;
 
@@ -6917,8 +7018,9 @@ end;
 
 //===========================================================================
 { NiPSysGravityModifier }
+function NiPSysGravityModifier_EnWorldAligned(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 11); end;
+
 procedure wbDefineNiPSysGravityModifier;
-  function EnWorldAligned(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 11); end;
 begin
   wbNiObject(wbNifBlock('NiPSysGravityModifier', [
     wbNiPtr('Gravity Object', 'NiNode'),
@@ -6928,21 +7030,22 @@ begin
     wbForceType('Force Type', '', []),
     dfFloat('Turbulence'),
     dfFloat('Turbulence Scale', '1.0'),
-    wbBool('World Aligned', [DF_OnGetEnabled, @EnWorldAligned])
+    wbBool('World Aligned', [DF_OnGetEnabled, @NiPSysGravityModifier_EnWorldAligned])
   ]), 'NiPSysModifier', False);
 end;
 
 //===========================================================================
 { NiPSysGrowFadeModifier }
+function NiPSysGrowFadeModifier_EnBaseScale(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion = 11); end;
+
 procedure wbDefineNiPSysGrowFadeModifier;
-  function EnBaseScale(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion = 11); end;
 begin
   wbNiObject(wbNifBlock('NiPSysGrowFadeModifier', [
     dfFloat('Grow Time'),
     dfInteger('Grow Generation', dtU16),
     dfFloat('Fade Time'),
     dfInteger('Fade Generation', dtU16),
-    dfFloat('Base Scale', [DF_OnGetEnabled, @EnBaseScale])
+    dfFloat('Base Scale', [DF_OnGetEnabled, @NiPSysGrowFadeModifier_EnBaseScale])
   ]), 'NiPSysModifier', False);
 end;
 

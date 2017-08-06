@@ -182,21 +182,22 @@ begin
   aText := '';
 end;
 
+procedure ByteFloatGetText(const aElement: TdfElement; var aText: string);
+begin
+  aText := dfFloatToStr(StrToInt(aText) / 127.5 - 1.0);
+end;
+
+procedure ByteFloatSetText(const aElement: TdfElement; var aText: string);
+begin
+  aText := IntToStr(Round((dfStrToFloat(aText) + 1.0) * 127.5));
+end;
 
 // a byte represented as a float value [-1.0, 1.0]
 function wbByteFloat(const aName: string; const aEvents: array of const): TdfDef;
-  procedure GetText(const aElement: TdfElement; var aText: string);
-  begin
-    aText := dfFloatToStr(StrToInt(aText) / 127.5 - 1.0);
-  end;
-  procedure SetText(const aElement: TdfElement; var aText: string);
-  begin
-    aText := IntToStr(Round((dfStrToFloat(aText) + 1.0) * 127.5));
-  end;
 begin
   Result := dfInteger(aName, dtU8, '0.0', aEvents);
-  Result.OnGetText := @GetText;
-  Result.OnSetText := @SetText;
+  Result.OnGetText := @ByteFloatGetText;
+  Result.OnSetText := @ByteFloatSetText;
 end;
 
 function wbByteFloat(const aName: string): TdfDef;
@@ -206,15 +207,17 @@ end;
 
 
 // a byte represented as hex value 00..FF
+procedure GetTextHexByte(const aElement: TdfElement; var aText: string);
+begin
+  aText := IntToHex(StrToInt(aText), 2);
+end;
+
+procedure SetTextHexByte(const aElement: TdfElement; var aText: string);
+begin
+  aText := IntToStr(StrToInt('$' + aText));
+end;
+
 function wbHexByte(const aName: string): TdfDef;
-  procedure GetTextHexByte(const aElement: TdfElement; var aText: string);
-  begin
-    aText := IntToHex(StrToInt(aText), 2);
-  end;
-  procedure SetTextHexByte(const aElement: TdfElement; var aText: string);
-  begin
-    aText := IntToStr(StrToInt('$' + aText));
-  end;
 begin
   Result := dfInteger(aName, dtU8, [
     DF_OnGetText, @GetTextHexByte,
@@ -223,23 +226,25 @@ begin
 end;
 
 // a float32 represented as a byte hex value 00..FF
+procedure GetTextHexFloat(const aElement: TdfElement; var aText: string);
+var
+  v: Extended;
+begin
+  v := dfStrToFloat(aText) * 255;
+  if v < 0.0 then v := 0.0
+  else if v > 255.0 then v := 255.0;
+  aText := IntToHex(Round(v), 2);
+end;
+
+procedure SetTextHexFloat(const aElement: TdfElement; var aText: string);
+var
+  v: Extended;
+begin
+  v := StrToInt('$' + aText) / 255;
+  aText := FloatToStr(v);
+end;
+
 function wbHexFloat(const aName: string): TdfDef;
-  procedure GetTextHexFloat(const aElement: TdfElement; var aText: string);
-  var
-    v: Extended;
-  begin
-    v := dfStrToFloat(aText) * 255;
-    if v < 0.0 then v := 0.0
-    else if v > 255.0 then v := 255.0;
-    aText := IntToHex(Round(v), 2);
-  end;
-  procedure SetTextHexFloat(const aElement: TdfElement; var aText: string);
-  var
-    v: Extended;
-  begin
-    v := StrToInt('$' + aText) / 255;
-    aText := FloatToStr(v);
-  end;
 begin
   Result := dfFloat(aName, [
     DF_OnGetText, @GetTextHexFloat,
@@ -492,7 +497,6 @@ end;
 
 function wbQuaternion(const aName: string; const aEvents: array of const): TdfDef; overload;
 begin
-  //Result := dfStruct(aName, [
   Result := dfMerge(aName, [
     dfFloat('W', '1.0'),
     dfFloat('X'),
@@ -510,7 +514,6 @@ end;
 
 function wbQuaternionXYZW(const aName: string; const aEvents: array of const): TdfDef; overload;
 begin
-  //Result := dfStruct(aName, [
   Result := dfMerge(aName, [
     dfFloat('X'),
     dfFloat('Y'),
@@ -561,60 +564,62 @@ begin
   Result := wbMatrix33(aName, []);
 end;
 
+procedure RotMatrix33_GetText(const e: TdfElement; var aText: string);
+var
+  m: TMatrix33;
+  i, j: integer;
+  a, x, y, z: Extended;
+begin
+  for i := 0 to 2 do
+    for j := 0 to 2 do
+      m[j, i] := e.NativeValues['m' + IntToStr(i+1) + IntToStr(j+1)];
+
+  if wbRotationEuler then begin
+    M33ToEuler(m, x, y, z);
+    aText := dfFloatToStr(RadToDeg(x)) + ' ' +
+             dfFloatToStr(RadToDeg(y)) + ' ' +
+             dfFloatToStr(RadToDeg(z));
+  end
+  else begin
+    M33ToAxisAngle(m, a, x, y, z);
+    aText := dfFloatToStr(RadToDeg(a)) + ' ' +
+             dfFloatToStr(x) + ' ' +
+             dfFloatToStr(y) + ' ' +
+             dfFloatToStr(z);
+  end;
+end;
+
+procedure RotMatrix33_SetText(const e: TdfElement; var aText: string);
+var
+  m: TMatrix33;
+  i, j: integer;
+  a, x, y, z: Extended;
+  s: TStringDynArray;
+begin
+  s := SplitString(aText, ' ');
+  if wbRotationEuler then begin
+    if Length(s) < 3 then Exit;
+    x := DegToRad(dfStrToFloat(s[0]));
+    y := DegToRad(dfStrToFloat(s[1]));
+    z := DegToRad(dfStrToFloat(s[2]));
+    EulerToM33(x, y, z, m);
+  end
+  else begin
+    if Length(s) < 4 then Exit;
+    a := DegToRad(dfStrToFloat(s[0]));
+    x := dfStrToFloat(s[1]);
+    y := dfStrToFloat(s[2]);
+    z := dfStrToFloat(s[3]);
+    AxisAngleToM33(a, x, y, z, m);
+  end;
+
+  for i := 0 to 2 do
+    for j := 0 to 2 do
+      e.NativeValues['m' + IntToStr(i+1) + IntToStr(j+1)] := m[j, i];
+  aText := '';
+end;
+
 function wbRotMatrix33(const aName: string; const aEvents: array of const): TdfDef;
-  procedure GetText(const e: TdfElement; var aText: string);
-  var
-    m: TMatrix33;
-    i, j: integer;
-    a, x, y, z: Extended;
-  begin
-    for i := 0 to 2 do
-      for j := 0 to 2 do
-        m[j, i] := e.NativeValues['m' + IntToStr(i+1) + IntToStr(j+1)];
-
-    if wbRotationEuler then begin
-      M33ToEuler(m, x, y, z);
-      aText := dfFloatToStr(RadToDeg(x)) + ' ' +
-               dfFloatToStr(RadToDeg(y)) + ' ' +
-               dfFloatToStr(RadToDeg(z));
-    end
-    else begin
-      M33ToAxisAngle(m, a, x, y, z);
-      aText := dfFloatToStr(RadToDeg(a)) + ' ' +
-               dfFloatToStr(x) + ' ' +
-               dfFloatToStr(y) + ' ' +
-               dfFloatToStr(z);
-    end;
-  end;
-  procedure SetText(const e: TdfElement; var aText: string);
-  var
-    m: TMatrix33;
-    i, j: integer;
-    a, x, y, z: Extended;
-    s: TStringDynArray;
-  begin
-    s := SplitString(aText, ' ');
-    if wbRotationEuler then begin
-      if Length(s) < 3 then Exit;
-      x := DegToRad(dfStrToFloat(s[0]));
-      y := DegToRad(dfStrToFloat(s[1]));
-      z := DegToRad(dfStrToFloat(s[2]));
-      EulerToM33(x, y, z, m);
-    end
-    else begin
-      if Length(s) < 4 then Exit;
-      a := DegToRad(dfStrToFloat(s[0]));
-      x := dfStrToFloat(s[1]);
-      y := dfStrToFloat(s[2]);
-      z := dfStrToFloat(s[3]);
-      AxisAngleToM33(a, x, y, z, m);
-    end;
-
-    for i := 0 to 2 do
-      for j := 0 to 2 do
-        e.NativeValues['m' + IntToStr(i+1) + IntToStr(j+1)] := m[j, i];
-    aText := '';
-  end;
 begin
   Result := dfMerge(aName, [
     dfFloat('m11', '1.0'),
@@ -627,8 +632,8 @@ begin
     dfFloat('m23'),
     dfFloat('m33', '1.0')
   ], aEvents);
-  Result.OnGetText := @GetText;
-  Result.OnSetText := @SetText;
+  Result.OnGetText := @RotMatrix33_GetText;
+  Result.OnSetText := @RotMatrix33_SetText;
 end;
 
 function wbRotMatrix33(const aName: string): TdfDef;
@@ -2332,9 +2337,10 @@ begin
   ])
 end;
 
+function AdditionalDataBlock_EnData(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Data'] <> 0; end;
+procedure AdditionalDataBlock_GetCountData(const e: TdfElement; var aCount: Integer); begin aCount := e.NativeValues['..\..\Block Size']; end;
+
 function wbAdditionalDataBlock(const aName: string; const aEvents: array of const): TdfDef;
-  function EnData(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Data'] <> 0; end;
-  procedure GetCountData(const e: TdfElement; var aCount: Integer); begin aCount := e.NativeValues['..\..\Block Size']; end;
 begin
   Result := dfStruct(aName, [
     dfBool('Has Data', dtU8),
@@ -2343,13 +2349,14 @@ begin
       dfArray('Block Offsets', dfInteger('Block Offsets', dtS32), -4),
       dfInteger('Num Data', dtS32),
       dfArray('Data Sizes', dfInteger('Data Sizes', dtS32), 0, 'Num Data', []),
-      dfArray('Data', dfBytes('Data', 0, [DF_OnGetCount, @GetCountData]), 0, 'Num Data', [])
-    ], [DF_OnGetEnabled, @EnData])
+      dfArray('Data', dfBytes('Data', 0, [DF_OnGetCount, @AdditionalDataBlock_GetCountData]), 0, 'Num Data', [])
+    ], [DF_OnGetEnabled, @AdditionalDataBlock_EnData])
   ], aEvents);
 end;
 
+function BSPackedAdditionalDataBlock_EnData(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Data'] <> 0; end;
+
 function wbBSPackedAdditionalDataBlock(const aName: string; const aEvents: array of const): TdfDef;
-  function EnData(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Data'] <> 0; end;
 begin
   Result := dfStruct(aName, [
     dfBool('Has Data', dtU8),
@@ -2360,7 +2367,7 @@ begin
       dfArray('Data', dfInteger('Data', dtU8), 0, 'Num Total Bytes', []),
       dfInteger('Unknown Int', dtS32),
       dfInteger('Num Total Bytes Per Element', dtU32)
-    ], [DF_OnGetEnabled, @EnData])
+    ], [DF_OnGetEnabled, @BSPackedAdditionalDataBlock_EnData])
   ], aEvents);
 end;
 

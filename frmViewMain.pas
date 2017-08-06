@@ -3220,6 +3220,11 @@ begin
   PostAddMessage('You can close this application now.');
 end;
 
+function dfResourceOpenData(const aContainerName, aFileName: string): TBytes;
+begin
+  Result := wbContainerHandler.OpenResourceData(aContainerName, aFileName);
+end;
+
 procedure TfrmMain.DoInit;
 
   // remove comments and empty lines from list. Also handles star activation
@@ -3428,11 +3433,6 @@ procedure TfrmMain.DoInit;
         end;
       end;
     end;
-  end;
-
-  function ResourceOpenData(const aContainerName, aFileName: string): TBytes;
-  begin
-    Result := wbContainerHandler.OpenResourceData(aContainerName, aFileName);
   end;
 
 var
@@ -4134,7 +4134,7 @@ begin
   end;
 
   CreateActionsForScripts;
-  wbDataFormat.dfResourceGetDataCallback := @ResourceOpenData;
+  wbDataFormat.dfResourceGetDataCallback := @dfResourceOpenData;
 end;
 
 procedure TfrmMain.edEditorIDSearchChange(Sender: TObject);
