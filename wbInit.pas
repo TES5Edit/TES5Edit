@@ -23,12 +23,7 @@ uses
 
 var
   wbApplicationTitle   : string;
-  wbScriptsPath        : string;
   wbScriptToRun        : string;
-  wbBackupPath         : string;
-  wbTempPath           : string;
-  wbSavePath           : string;
-  wbMyGamesTheGamePath : string;
   wbPluginsFileName    : String;
   wbSettingsFileName   : string;
   wbModGroupFileName   : string;
