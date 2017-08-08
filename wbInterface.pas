@@ -40,6 +40,7 @@ threadvar
   wbCurrentAction    : string;
   wbStartTime        : TDateTime;
   wbShowStartTime    : Integer;
+  wbForceTerminate   : Boolean;
 
 var
   wbDisplayLoadOrderFormID : Boolean  = False;
@@ -121,6 +122,11 @@ var
   wbProgramPath        : string;
   wbDataPath           : string;
   wbOutputPath         : string;
+  wbScriptsPath        : string;
+  wbBackupPath         : string;
+  wbTempPath           : string;
+  wbSavePath           : string;
+  wbMyGamesTheGamePath : string;
   wbTheGameIniFileName : string;
 
   wbShouldLoadMOHookFile : Boolean;

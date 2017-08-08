@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, CheckLst, Menus, wbInterface;
+  Dialogs, StdCtrls, ExtCtrls, CheckLst, Menus, IniFiles, wbInterface;
 
 type
   TfrmLODGen = class(TForm)
@@ -63,7 +63,7 @@ type
     { Private declarations }
   public
     { Public declarations }
-    SplitTreesLOD: procedure (const aWorldspace: IwbMainRecord) of object;
+    _Files: ^TDynFiles;
   end;
 
 var
@@ -73,16 +73,16 @@ implementation
 
 {$R *.dfm}
 
+uses
+  wbLOD;
+
 procedure TfrmLODGen.btnSplitTreesLODClick(Sender: TObject);
 var
   i: integer;
 begin
-  if not Assigned(SplitTreesLOD) then
-    Exit;
-
   for i := 0 to Pred(clbWorldspace.Count) do
     if clbWorldspace.Checked[i] then
-      SplitTreesLOD(IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])));
+      wbSplitTreeLOD(IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), _Files^);
 end;
 
 procedure TfrmLODGen.cbBuildAtlasClick(Sender: TObject);
