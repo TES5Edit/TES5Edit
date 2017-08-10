@@ -25,19 +25,18 @@ uses
   IOUtils,
   wbInterface,
   wbImplementation,
-  wbNifScanner,
   wbHelpers,
   wbSort,
   wbStreams,
+  wbDataFormat,
+  wbDataFormatNif,
+  wbDataFormatMaterial,
   ImagingTypes,
   ImagingFormats,
   ImagingCanvases,
   Imaging;
 
 const
-  iDefaultAtlasDiffuseFormat: TImageFormat = ifDXT3;
-  iDefaultAtlasNormalFormat: TImageFormat = ifDXT1;
-  iDefaultAtlasSpecularFormat: TImageFormat = ifATI2n;
   {$IFDEF WIN64}
   sLODGenName = 'LODGenx64.exe';
   sTexconv = 'Texconvx64.exe';
@@ -45,6 +44,14 @@ const
   sLODGenName = 'LODGen.exe';
   sTexconv = 'Texconv.exe';
   {$ENDIF}
+
+var
+  iDefaultAtlasWidth: Integer = 2048;
+  iDefaultAtlasHeight: Integer = 2048;
+  fDefaultUVRange: Single = 1.5;
+  iDefaultAtlasDiffuseFormat: TImageFormat = ifDXT3;
+  iDefaultAtlasNormalFormat: TImageFormat = ifDXT1;
+  iDefaultAtlasSpecularFormat: TImageFormat = ifATI2n;
 
 type
   PBinNode = ^TBinNode;
@@ -109,8 +116,10 @@ type
   TSourceAtlasTexture = record
     Name: string;
     Name_n: string;
+    Name_s: string;
     Image: TImageData;
     Image_n: TImageData;
+    Image_s: TImageData;
     AtlasName: string;
     X, Y, W, H: integer;
   end;
@@ -221,8 +230,12 @@ procedure wbPrepareImageAlpha(img: TImageData; fmt: TImageFormat);
 
 procedure wbGetUVRangeTexturesList(slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
 
-procedure wbBuildAtlas(var Images: TSourceAtlasTextures; aWidth, aHeight: Integer;
-  aName: string; fmtDiffuse, fmtNormal: TImageFormat);
+procedure wbBuildAtlas(
+  var Images: TSourceAtlasTextures;
+  aWidth, aHeight: Integer;
+  aName: string;
+  fmtDiffuse, fmtNormal, fmtSpecular: TImageFormat
+);
 
 procedure wbBuildAtlasFromTexturesList(
   slTextures: TStrings;
@@ -237,6 +250,7 @@ procedure wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer;
   GammaR, GammaG, GammaB: Single; const Settings: TCustomIniFile);
 
 procedure wbGenerateLODTES4(const aWorldspace: IwbMainRecord; const Settings: TCustomIniFile);
+
 procedure wbSplitTreeLOD(const aWorldspace: IwbMainRecord; const Files: TDynFiles);
 
 procedure wbGenerateLODTES5(
@@ -246,6 +260,11 @@ procedure wbGenerateLODTES5(
   const Settings: TCustomIniFile
 );
 
+procedure wbGenerateLODFO4(
+  const aWorldspace: IwbMainRecord;
+  const Files: TDynFiles;
+  const Settings: TCustomIniFile
+);
 
 const
   // vanilla lOD meshes having translation/rotation that must be ignored
@@ -274,6 +293,16 @@ const
     'meshes\lod\windhelm\whvalunstrad_lod.nif';
 
   sMeshIgnoreTranslationFNV = 'nif'; // all LOD meshes
+
+  // vanilla lOD meshes to treat as untiled even though they have large UV values
+  sMeshForceUntiled =
+    // Skyrim
+     'meshes\lod\whiterun\wrplainsdistrictterrainlod_lod.nif' +
+    ',meshes\lod\whiterun\wrplainsdistrictterrainlod_lod_2.nif' +
+    // Fallout 4
+    ',meshes\lod\landscape\roads\bridge\roadstrbridgemidend02_lod_0.nif' +
+    ',meshes\lod\neighborhoods\esplanade\esplanade_bld20lod.nif';
+
 
 implementation
 
@@ -316,6 +345,15 @@ begin
   else
     Result := '';
 end;
+
+function wbDefaultSpecularTexture(aGameMode: TwbGameMode): string;
+begin
+  if aGameMode = gmFO4 then
+    Result := 'textures\shared\white01_s.dds'
+  else
+    Result := '';
+end;
+
 
 { TwbLodSettings }
 
@@ -952,8 +990,233 @@ begin
   end;
 end;
 
-procedure wbBuildAtlas(var Images: TSourceAtlasTextures; aWidth, aHeight: Integer;
-  aName: string; fmtDiffuse, fmtNormal: TImageFormat
+procedure wbGetUVRangeTexturesList(slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
+const
+  // UV values outside of this +/- range will be considered an error and ignored
+  fCheckRange = 100.0;
+
+  procedure AddTexture(const s: string);
+  var
+    t: string;
+  begin
+    if s <> '' then begin
+      t := wbNormalizeResourceName(s, resTexture);
+      if slTextures.IndexOf(t) = -1 then
+        slTextures.Add(t);
+    end;
+  end;
+
+  function Tiled(u, v: single): Boolean;
+  begin
+    Result := False;
+    // there are NaN UVs in FO4: meshes\lod\landscape\roads\bridge\roadstrbridgemidend01_lod_0.nif
+    if not (IsNan(u) or IsNan(v)) then
+      // check only UVs that fall into checking range, others are errors in meshes which can be ignored
+      if (u > -fCheckRange) and (u < fCheckRange) and (v > -fCheckRange) and (v < fCheckRange) then
+        if (u < -UVRange) or (u > UVRange) or (v < -UVRange) or (v > UVRange) then
+          Result := True;
+  end;
+
+var
+  i, b, j: integer;
+  nif: TwbNifFile;
+  bgsm: TwbBGSMFile;
+  Shape, ShapeData, Shader, TextureSet: TwbNifBlock;
+  Entries, Entry: TdfElement;
+  u, v: Single;
+  bTiled: Boolean;
+  nifname, s: string;
+begin
+  if not Assigned(slMeshes) or not Assigned(slTextures) then
+    Exit;
+
+  nif := TwbNifFile.Create;
+  bgsm := TwbBGSMFile.Create;
+  try
+    for i := 0 to Pred(slMeshes.Count) do begin
+      nifname := wbNormalizeResourceName(slMeshes[i], resMesh);
+      if ExtractFileExt(nifname) <> '.nif' then
+        Continue;
+
+      //WriteLn(nifname);
+      //if nifname <> 'meshes\lod\whiterun\wrplainsdistrictterrainlod_lod.nif' then Continue;
+
+      if not wbContainerHandler.ResourceExists(nifname) then begin
+        wbProgressCallback('<Warning: LOD mesh not found "' + nifname + '">');
+        Continue;
+      end;
+
+      try
+        nif.LoadFromResource(nifname);
+      except
+        on E: Exception do begin
+          wbProgressCallback('<Warning: Error when loading "' + nifname + '": ' + E.Message + '>');
+          Continue;
+        end;
+      end;
+
+      for b := 0 to Pred(nif.BlocksCount) do begin
+        Shape := nif.Blocks[b];
+
+        // BSTriShape and inherited blocks
+        if Shape.IsNiObject('BSTriShape', True) then begin
+          // skip if no shader
+          Shader := Shape.PropertyByType('BSLightingShaderProperty');
+          if not Assigned(Shader) then
+            Continue;
+
+          // skip if no UVs
+          if not Shape.NativeValues['VertexDesc\VF\VF_UV'] then
+            Continue;
+
+          Entries := Shape.Elements['Vertex Data'];
+          if not Assigned(Entries) then
+            Continue;
+
+          bTiled := Entries.Count = 0;
+          if Pos(nifname, sMeshForceUntiled) = 0 then
+            for j := 0 to Pred(Entries.Count) do begin
+              Entry := Entries[j].Elements['UV'];
+              u := Entry.NativeValues['U'];
+              v := Entry.NativeValues['V'];
+              bTiled := Tiled(u, v);
+              if bTiled then
+                Break;
+            end;
+
+          if not bTiled then begin
+            s := wbNormalizeResourceName(Shader.EditValues['Name'], resMaterial);
+            // getting textures from material first, it has priority over textureset
+            if (ExtractFileExt(s) = '.bgsm') and wbContainerHandler.ResourceExists(s) then begin
+              try
+                bgsm.LoadFromResource(s);
+                AddTexture(bgsm.EditValues['Textures\Diffuse']);
+              except
+                on E: Exception do
+                  wbProgressCallback('<Warning: Error when loading "' + s + '": ' + E.Message + '>');
+              end;
+            end
+            // getting textures from textureset
+            else begin
+              TextureSet := TwbNifBlock(Shader.Elements['Texture Set'].LinksTo);
+              if not Assigned(TextureSet) then
+                Continue;
+              Entries := TextureSet.Elements['Textures'];
+              if Entries.Count <> 0 then
+                AddTexture(Entries[0].EditValue);
+            end;
+          end;// else WriteLn('Tiled: ' + nifname);
+        end
+
+        // NiTriShape/NiTriStrips
+        else if Shape.IsNiObject('NiTriBasedGeom', True) then begin
+          // skip if no shader
+          Shader := Shape.PropertyByType('BSLightingShaderProperty');
+          // FO3 shader
+          if not Assigned(Shader) then
+            Shader := Shape.PropertyByType('BSShaderPPLightingProperty');
+          if not Assigned(Shader) then
+            Continue;
+
+          // skip if no textureset
+          TextureSet := TwbNifBlock(Shader.Elements['Texture Set'].LinksTo);
+          if not Assigned(TextureSet) then
+            Continue;
+
+          // skip if no Data
+          ShapeData := TwbNifBlock(Shape.Elements['Data'].LinksTo);
+          if not Assigned(ShapeData) then
+            Continue;
+
+          // skip if no UVs
+          Entries := ShapeData.Elements['UV Sets'];
+          if not Assigned(Entries) or (Entries.Count = 0) then
+            Continue;
+
+          Entries := Entries[0];
+          bTiled := Entries.Count = 0;
+
+          if Pos(nifname, sMeshForceUntiled) = 0 then
+            for j := 0 to Pred(Entries.Count) do begin
+              u := Entries[j].NativeValues['U'];
+              v := Entries[j].NativeValues['V'];
+              bTiled := Tiled(u, v);
+              if bTiled then
+                Break;
+            end;
+
+          if not bTiled then begin
+            Entries := TextureSet.Elements['Textures'];
+            if Entries.Count <> 0 then
+              AddTexture(Entries[0].EditValue);
+          end;// else WriteLn('Tiled: ' + nifname);
+        end;
+
+      end;
+    end;
+  finally
+    nif.Free;
+    bgsm.Free;
+  end;
+end;
+
+function wbLoadImageFromMemory(Data: Pointer; Size: LongInt; var Image: TImageData): Boolean;
+type
+  TMagic = array [0..3] of AnsiChar;
+  PMagic = ^TMagic;
+const
+  sDDSMagic: TMagic = 'DDS ';
+var
+  s, c: string;
+  b: TBytes;
+  ErrCode: cardinal;
+begin
+  // native function
+  Result := LoadImageFromMemory(Data, Size, Image);
+
+  // image loaded without problem?
+  if Result then
+    Exit;
+
+  // try to convert unknown format DDS texture to the known one and load again
+  if not ( (Size > Length(sDDSMagic)) and (PMagic(Data)^ = sDDSMagic) ) then
+    Exit;
+
+  // temp file
+  s := wbTempPath + 'Temp-Texture.dds'; // better to use TPath.GetGUIDFileName if multithreaded
+
+  // check temp path
+  if not ForceDirectories(wbTempPath) then
+    Exit;
+
+  // write image to temp file
+  with TFileStream.Create(s, fmCreate) do try
+    WriteBuffer(Data, Size);
+  finally
+    Free;
+  end;
+
+  // command line
+  c := '"' + wbScriptsPath + sTexconv + '" -nologo -y -f R32G32B32A32_FLOAT -o "' + ExcludeTrailingPathDelimiter(wbTempPath) + '" "' + s + '"';
+  // execute command
+  ErrCode := ExecuteCaptureConsoleOutput(c);
+
+  // load the converted image from temp file if no error reported
+  if (ErrCode = 0) and FileExists(s) then begin
+    b := TFile.ReadAllBytes(s);
+    Result := wbLoadImageFromMemory(@b[0], Length(b), Image);
+  end;
+
+  // remove temp file
+  if FileExists(s) then
+    DeleteFile(s);
+end;
+
+procedure wbBuildAtlas(
+  var Images: TSourceAtlasTextures;
+  aWidth, aHeight: Integer;
+  aName: string;
+  fmtDiffuse, fmtNormal, fmtSpecular: TImageFormat
 );
 var
   i, num, maxw, maxh: integer;
@@ -1093,6 +1356,44 @@ begin
         FreeImage(atlas);
       end;
 
+      // speculars atlas
+      if (Length(Blocks2) <> 0) or (num <> 0) then
+        fname := aName + Format('%.2d', [num]) + '_s.dds'
+      else
+        fname := aName + '_s.dds';
+
+      NewImage(aWidth, aHeight, ifDefault, atlas);
+      try
+        for i := Low(Blocks) to High(Blocks) do
+          CopyRect(
+            Images[Blocks[i].Index].Image_s, 0, 0, Blocks[i].w, Blocks[i].h,
+            atlas, Blocks[i].x, Blocks[i].y
+          );
+
+        if (maxw < aWidth) or (maxh < aHeight) then begin
+          NewImage(maxw, maxh, ifDefault, crop);
+          try
+            CopyRect(atlas, 0, 0, maxw, maxh, crop, 0, 0);
+            CloneImage(crop, atlas);
+          finally
+            FreeImage(crop);
+          end;
+        end;
+
+        wbPrepareImageAlpha(atlas, fmtSpecular);
+        if not ConvertImage(atlas, fmtSpecular) then
+          raise Exception.Create('Image convertion error');
+
+        try
+          GenerateMipMaps(atlas, 0, mipmap);
+          SaveMultiImageToFile(fname, mipmap);
+        finally
+          FreeImagesInArray(mipmap);
+        end;
+      finally
+        FreeImage(atlas);
+      end;
+
       // copy remaining blocks back
       SetLength(Blocks, Length(Blocks2));
       if Length(Blocks) <> 0 then
@@ -1104,99 +1405,6 @@ begin
   finally
     Free;
   end;
-end;
-
-procedure wbGetUVRangeTexturesList(slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
-var
-  i, j: integer;
-  res: TDynResources;
-  slNifTextures: TStringList;
-begin
-  if not Assigned(slMeshes) or not Assigned(slTextures) then
-    Exit;
-
-  slNifTextures := TStringList.Create;
-  try
-    for i := 0 to Pred(slMeshes.Count) do begin
-      res := wbContainerHandler.OpenResource(wbNormalizeResourceName(slMeshes[i], resMesh));
-
-      if Length(res) = 0 then
-        Continue;
-
-      try
-        if wbGameMode in [ gmTES5, gmSSE ] then
-          NifTexturesUVRange(res[High(res)].GetData, UVRange, slNifTextures)
-        else
-          // fallouts nif scanner doesn't support them fully, grab all textures for now
-          NifTextures(res[High(res)].GetData, slNifTextures);
-      except
-        on E: Exception do
-          raise Exception.Create(E.Message + ' in ' + slMeshes[i]);
-      end;
-
-      for j := 0 to Pred(slNifTextures.Count) do begin
-        // get only texture at index 0 in BSTextureSet nodes (diffuse texture)
-        if Integer(slNifTextures.Objects[j]) <> 0 then
-          Continue;
-
-        slTextures.Add(wbNormalizeResourceName(slNifTextures[j], resTexture))
-      end;
-    end;
-  finally
-    slNifTextures.Free;
-  end;
-end;
-
-function wbLoadImageFromMemory(Data: Pointer; Size: LongInt; var Image: TImageData): Boolean;
-type
-  TMagic = array [0..3] of AnsiChar;
-  PMagic = ^TMagic;
-const
-  sDDSMagic: TMagic = 'DDS ';
-var
-  s, c: string;
-  b: TBytes;
-  ErrCode: cardinal;
-begin
-  // native function
-  Result := LoadImageFromMemory(Data, Size, Image);
-
-  // image loaded without problem?
-  if Result then
-    Exit;
-
-  // try to convert unknown format DDS texture to the known one and load again
-  if not ( (Size > Length(sDDSMagic)) and (PMagic(Data)^ = sDDSMagic) ) then
-    Exit;
-
-  // temp file
-  s := wbTempPath + 'Temp-Texture.dds'; // better to use TPath.GetGUIDFileName if multithreaded
-
-  // check temp path
-  if not ForceDirectories(wbTempPath) then
-    Exit;
-
-  // write image to temp file
-  with TFileStream.Create(s, fmCreate) do try
-    WriteBuffer(Data, Size);
-  finally
-    Free;
-  end;
-
-  // command line
-  c := '"' + wbScriptsPath + sTexconv + '" -nologo -y -f R32G32B32A32_FLOAT -o "' + ExcludeTrailingPathDelimiter(wbTempPath) + '" "' + s + '"';
-  // execute command
-  ErrCode := ExecuteCaptureConsoleOutput(c);
-
-  // load the converted image from temp file if no error reported
-  if (ErrCode = 0) and FileExists(s) then begin
-    b := TFile.ReadAllBytes(s);
-    Result := wbLoadImageFromMemory(@b[0], Length(b), Image);
-  end;
-
-  // remove temp file
-  if FileExists(s) then
-    DeleteFile(s);
 end;
 
 procedure wbBuildAtlasFromTexturesList(
@@ -1215,7 +1423,7 @@ var
   data: TBytes;
   Images: TSourceAtlasTextures;
   slMap: TStringList;
-  fmtDiffuse, fmtNormal: TImageFormat;
+  fmtDiffuse, fmtNormal, fmtSpecular: TImageFormat;
 begin
   for i := 0 to Pred(slTextures.Count) do begin
     s := slTextures[i];
@@ -1232,8 +1440,8 @@ begin
       Continue;
 
     data := res[High(res)].GetData;
-
     SetLength(Images, Succ(Length(Images)));
+
     // load diffuse
     InitImage(Images[Pred(Length(Images))].Image);
     if not wbLoadImageFromMemory(@data[0], Length(data), Images[Pred(Length(Images))].Image) then begin
@@ -1255,11 +1463,16 @@ begin
         rfLanczos
       );
     end;
+    Images[Pred(Length(Images))].Name := slTextures[i];
 
-    // load normals
+    // load normal
     InitImage(Images[Pred(Length(Images))].Image_n);
     s := slTextures[i];
-    s := ChangeFileExt(slTextures[i], '') + '_n.dds';
+    if Pos('_d.dds', s) <> 0 then
+      s := StringReplace(s, '_d.dds', '_n.dds', [rfIgnoreCase])
+    else
+      s := ChangeFileExt(slTextures[i], '') + '_n.dds';
+
     if not wbContainerHandler.ResourceExists(s) then begin
       wbProgressCallback('<Note: ' + s + ' normal map not found, using flat replacement>');
       // default normals texture to use
@@ -1278,13 +1491,45 @@ begin
           rfLanczos
         );
     end
-    // error loading normals
+    // error loading normal
     else begin
       SetLength(Images, Pred(Length(Images)));
       Continue;
     end;
-    Images[Pred(Length(Images))].Name := slTextures[i];
     Images[Pred(Length(Images))].Name_n := s;
+
+    // load specular
+    if wbGameMode = gmFO4 then begin
+      InitImage(Images[Pred(Length(Images))].Image_s);
+      s := slTextures[i];
+      if Pos('_d.dds', s) <> 0 then
+        s := StringReplace(s, '_d.dds', '_s.dds', [rfIgnoreCase])
+      else
+        s := ChangeFileExt(slTextures[i], '') + '_s.dds';
+
+      if not wbContainerHandler.ResourceExists(s) then begin
+        wbProgressCallback('<Note: ' + s + ' specular map not found, using flat replacement>');
+        s := wbDefaultSpecularTexture(wbGameMode);
+      end;
+
+      res := wbContainerHandler.OpenResource(s);
+      if Length(res) <> 0 then
+        data := res[High(res)].GetData;
+      if (Length(res) <> 0) and wbLoadImageFromMemory(@data[0], Length(data), Images[Pred(Length(Images))].Image_s) then begin
+        if ((Images[Pred(Length(Images))].Image.Width <> Images[Pred(Length(Images))].Image_s.Width) or (Images[Pred(Length(Images))].Image.Height <> Images[Pred(Length(Images))].Image_s.Height)) then
+          ResizeImage(
+            Images[Pred(Length(Images))].Image_s,
+            Images[Pred(Length(Images))].Image.Width,
+            Images[Pred(Length(Images))].Image.Height,
+            rfLanczos
+          );
+      end
+      else begin
+        SetLength(Images, Pred(Length(Images)));
+        Continue;
+      end;
+      Images[Pred(Length(Images))].Name_s := s;
+    end;
   end;
 
   slMap := TStringList.Create;
@@ -1292,7 +1537,8 @@ begin
     if Length(Images) <> 0 then begin
       fmtDiffuse := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasDiffuseFormat', Integer(iDefaultAtlasDiffuseFormat)));
       fmtNormal := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(iDefaultAtlasNormalFormat)));
-      wbBuildAtlas(Images, aWidth, aHeight, aName, fmtDiffuse, fmtNormal);
+      fmtSpecular := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasSpecularFormat', Integer(iDefaultAtlasSpecularFormat)));
+      wbBuildAtlas(Images, aWidth, aHeight, aName, fmtDiffuse, fmtNormal, fmtSpecular);
       for i := Low(Images) to High(Images) do
         if Images[i].AtlasName <> '' then begin
           // atlas name in map file must be relative to data folder
@@ -1317,6 +1563,8 @@ begin
       for i := Low(Images) to High(Images) do begin
         FreeImage(Images[i].Image);
         FreeImage(Images[i].Image_n);
+        if wbGameMode = gmFO4 then
+          FreeImage(Images[i].Image_s);
       end;
   end;
 end;
@@ -1454,63 +1702,6 @@ begin
       for i := Low(Atlases_n) to High(Atlases_n) do
         FreeImage(Atlases_n[i]);
   end;
-end;
-
-procedure wbFindREFRs(
-  const aWorldspace: IwbMainRecord;
-  const aElement: IwbElement;
-  var REFRs: TDynMainRecords;
-  var TotalCount, Count: Integer;
-  var StartTick: Cardinal
-);
-var
-  MainRecord : IwbMainRecord;
-  Container  : IwbContainerElementRef;
-  i          : Integer;
-begin
-  if StartTick + 500 < GetTickCount then begin
-    Application.MainForm.Caption := 'Scanning References: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(TotalCount) +
-      ' References Found: ' + IntToStr(Count) +
-      ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-    Application.ProcessMessages;
-    StartTick := GetTickCount;
-  end;
-
-  if Supports(aElement, IwbMainRecord, MainRecord) then begin
-    if MainRecord.Signature = 'REFR' then begin
-      if High(REFRs) < Count then
-        SetLength(REFRs, Length(REFRs) * 2);
-      REFRs[Count] := MainRecord;
-      Inc(Count);
-    end;
-  end else if Supports(aElement, IwbContainerElementRef, Container) then
-    for i := 0 to Pred(Container.ElementCount) do
-      wbFindREFRs(aWorldspace, Container.Elements[i], REFRs, TotalCount, Count, StartTick);
-end;
-
-function wbGetLODMeshName(const aStat: IwbMainRecord; const aLODLevel: Integer): string;
-begin
-  Result := '';
-  // full mesh
-  if aLODLevel = -1 then
-    Result := aStat.ElementEditValues['Model\MODL']
-  else if wbGameMode in [ gmTES5, gmSSE ] then begin
-    // use MNAM data of STAT record for lod meshes if exists
-    if aStat.ElementExists['MNAM'] then
-      Result := aStat.ElementEditValues[Format('MNAM\LOD #%d (Level %d)\Mesh', [aLODLevel, aLODLevel])]
-
-    // otherwise meshes with the same path and name as full one with _lod_0, _lod_1 and _lod_2 suffixes
-    // can be used to generate objects LOD for TREE records which don't have MNAM
-    else if aStat.Signature = 'TREE' then
-      Result := ChangeFileExt(aStat.ElementEditValues['Model\MODL'], '') + '_lod_' + IntToStr(aLODLevel) + '.nif';
-  end
-  else if (wbGameMode in [gmFO3, gmFNV]) and (aLODLevel = 0) then
-    // fallouts always use _lod mesh only
-    Result := ChangeFileExt(aStat.ElementEditValues['Model\MODL'], '') + '_lod.nif';
-
-  Result := wbNormalizeResourceName(Result, resMesh);
-  if (aLODLevel <> -1) and not wbContainerHandler.ResourceExists(Result) then
-    Result := '';
 end;
 
 procedure wbSplitTreeLOD(const aWorldspace: IwbMainRecord; const Files: TDynFiles);
@@ -1656,6 +1847,126 @@ begin
   end;
 end;
 
+procedure wbFindREFRs(
+  const aWorldspace: IwbMainRecord;
+  const aElement: IwbElement;
+  var REFRs: TDynMainRecords;
+  var TotalCount, Count: Integer;
+  var StartTick: Cardinal
+);
+var
+  MainRecord : IwbMainRecord;
+  Container  : IwbContainerElementRef;
+  i          : Integer;
+begin
+  if StartTick + 500 < GetTickCount then begin
+    Application.MainForm.Caption := 'Scanning References: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(TotalCount) +
+      ' References Found: ' + IntToStr(Count) +
+      ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+    Application.ProcessMessages;
+    StartTick := GetTickCount;
+  end;
+
+  if Supports(aElement, IwbMainRecord, MainRecord) then begin
+    if MainRecord.Signature = 'REFR' then begin
+      if High(REFRs) < Count then
+        SetLength(REFRs, Length(REFRs) * 2);
+      REFRs[Count] := MainRecord;
+      Inc(Count);
+    end;
+  end else if Supports(aElement, IwbContainerElementRef, Container) then
+    for i := 0 to Pred(Container.ElementCount) do
+      wbFindREFRs(aWorldspace, Container.Elements[i], REFRs, TotalCount, Count, StartTick);
+end;
+
+procedure wbFindUniqueWorldspaceREFRs(
+  const aWorldspace: IwbMainRecord;
+  var REFRs: TDynMainRecords
+);
+var
+  StartTick: Cardinal;
+  Master     : IwbMainRecord;
+  Count      : Integer;
+  TotalCount : Integer;
+  i, j       : Integer;
+begin
+  Application.MainForm.Caption := 'Scanning References: ' + aWorldspace.Name + ' Processed Records: 0 '+
+    'References Found: 0 Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+  Application.ProcessMessages;
+  StartTick := GetTickCount;
+
+  Master := aWorldspace.MasterOrSelf;
+  Count := 0;
+  TotalCount := 0;
+  REFRs := nil;
+  SetLength(REFRs, 1024);
+
+  wbFindREFRs(aWorldspace, Master.ChildGroup, REFRs, TotalCount, Count, StartTick);
+  for i := 0 to Pred(Master.OverrideCount) do
+    wbFindREFRs(aWorldspace, Master.Overrides[i].ChildGroup, REFRs, TotalCount, Count, StartTick);
+  SetLength(REFRs, Count);
+
+  {only keep the newest version of each}
+  if Length(REFRs) > 1 then begin
+    Application.MainForm.Caption := 'Sorting References: ' + aWorldspace.Name +
+      ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+    Application.ProcessMessages;
+
+    wbMergeSort(@REFRs[0], Length(REFRs), CompareElementsFormIDAndLoadOrder);
+
+    Application.MainForm.Caption := 'Removing duplicates: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(0) +
+      ' Unique References Found: ' + IntToStr(0) +
+      ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+    Application.ProcessMessages;
+    StartTick := GetTickCount;
+
+    j := 0;
+    for i := Succ(Low(REFRs)) to High(REFRs) do begin
+      if REFRs[j].LoadOrderFormID <> REFRs[i].LoadOrderFormID then
+        Inc(j);
+      if j <> i then
+        REFRs[j] := REFRs[i];
+
+      if wbForceTerminate then
+        Abort;
+      if StartTick + 500 < GetTickCount then begin
+        Application.MainForm.Caption := 'Removing duplicates: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(i) +
+          ' Unique References Found: ' + IntToStr(j) +
+          ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+        Application.ProcessMessages;
+        StartTick := GetTickCount;
+      end;
+    end;
+    SetLength(REFRs, Succ(j));
+  end;
+end;
+
+function wbGetLODMeshName(const aStat: IwbMainRecord; const aLODLevel: Integer): string;
+begin
+  Result := '';
+  // full mesh
+  if aLODLevel = -1 then
+    Result := aStat.ElementEditValues['Model\MODL']
+  else if wbGameMode in [ gmTES5, gmSSE, gmFO4 ] then begin
+    // use MNAM data of STAT record for lod meshes if exists
+    if aStat.ElementExists['MNAM'] then
+      Result := aStat.ElementEditValues[Format('MNAM\LOD #%d (Level %d)\Mesh', [aLODLevel, aLODLevel])]
+
+    // otherwise meshes with the same path and name as full one with _lod_0, _lod_1 and _lod_2 suffixes
+    // can be used to generate objects LOD for TREE records which don't have MNAM
+    else if aStat.Signature = 'TREE' then
+      Result := ChangeFileExt(aStat.ElementEditValues['Model\MODL'], '') + '_lod_' + IntToStr(aLODLevel) + '.nif';
+  end
+  else if (wbGameMode in [gmFO3, gmFNV]) and (aLODLevel = 0) then
+    // fallouts always use _lod mesh only
+    Result := ChangeFileExt(aStat.ElementEditValues['Model\MODL'], '') + '_lod.nif';
+
+  Result := wbNormalizeResourceName(Result, resMesh);
+  if (aLODLevel <> -1) and not wbContainerHandler.ResourceExists(Result) then
+    Result := '';
+end;
+
+
 type
   TCoords = TwbVector;
 
@@ -1739,53 +2050,7 @@ begin
     Exit;
 
   if Rule > rClear then begin
-    Application.MainForm.Caption := 'Scanning References: ' + aWorldspace.Name + ' Processed Records: 0 '+
-      'References Found: 0 Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-    Application.ProcessMessages;
-    StartTick := GetTickCount;
-
-    Count := 0;
-    TotalCount := 0;
-    REFRs := nil;
-    SetLength(REFRs, 1024);
-    wbFindREFRs(aWorldspace, Master.ChildGroup, REFRs, TotalCount, Count, StartTick);
-    for i := 0 to Pred(Master.OverrideCount) do
-      wbFindREFRs(aWorldspace, Master.Overrides[i].ChildGroup, REFRs, TotalCount, Count, StartTick);
-    SetLength(REFRs, Count);
-
-    {only keep the newest version of each}
-    if Length(REFRs) > 1 then begin
-      Application.MainForm.Caption := 'Sorting References: ' + aWorldspace.Name +
-        ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-      Application.ProcessMessages;
-
-      wbMergeSort(@REFRs[0], Length(REFRs), CompareElementsFormIDAndLoadOrder);
-
-      Application.MainForm.Caption := 'Removing duplicates: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(0) +
-        ' Unique References Found: ' + IntToStr(0) +
-        ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-      Application.ProcessMessages;
-      StartTick := GetTickCount;
-
-      j := 0;
-      for i := Succ(Low(REFRs)) to High(REFRs) do begin
-        if REFRs[j].LoadOrderFormID <> REFRs[i].LoadOrderFormID then
-          Inc(j);
-        if j <> i then
-          REFRs[j] := REFRs[i];
-
-        if wbForceTerminate then
-          Abort;
-        if StartTick + 500 < GetTickCount then begin
-          Application.MainForm.Caption := 'Removing duplicates: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(i) +
-            ' Unique References Found: ' + IntToStr(j) +
-            ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-          Application.ProcessMessages;
-          StartTick := GetTickCount;
-        end;
-      end;
-      SetLength(REFRs, Succ(j));
-    end;
+    wbFindUniqueWorldspaceREFRs(aWorldspace, REFRs);
 
     MinX := MaxSingle;
     MaxX := -MaxSingle;
@@ -2054,7 +2319,7 @@ procedure wbGenerateLODTES5(
 var
   StartTick: Cardinal;
 
-  function LoadBillboard(Lst: TwbLodTES5TreeList; TreeRec: IwbMainRecord): PwbLodTES5Tree;
+  function LoadBillboard(Lst: TwbLodTES5TreeList; const TreeRec: IwbMainRecord): PwbLodTES5Tree;
   var
     Ovr: IwbMainRecord;
     Res: TDynResources;
@@ -2108,7 +2373,7 @@ var
       Result^.Index := -1;
   end;
 
-  procedure GetLargeReferencesPlugin(aElement: IwbElement; var sl: TStringList; ChunkSW, ChunkNE: TwbGridCell);
+  procedure GetLargeReferencesPlugin(const aElement: IwbElement; sl: TStringList; ChunkSW, ChunkNE: TwbGridCell);
   var
     i, j: integer;
     Grids, GridEntry, References, ReferenceEntry: IwbContainerElementRef;
@@ -2154,7 +2419,7 @@ var
         end;
   end;
 
-  procedure GetLargeReferences(Wrld: IwbMainRecord; var sl: TStringList; ChunkSW, ChunkNE: TwbGridCell);
+  procedure GetLargeReferences(Wrld: IwbMainRecord; sl: TStringList; ChunkSW, ChunkNE: TwbGridCell);
   var
     i: integer;
   begin
@@ -2167,7 +2432,7 @@ var
   end;
 
 var
-  LODPath, AtlasName, AtlasMapName, TexturesListFile: string;
+  LODPath, AtlasName, AtlasMapName{, TexturesListFile}: string;
   Section             : string;
   s, mat, m4, m8, m16, scl: string;
   F                   : TSearchRec;
@@ -2210,55 +2475,7 @@ begin
   // settings file LOD options section
   Section := wbAppName + ' LOD Options';
 
-  Application.MainForm.Caption := 'Scanning References: ' + aWorldspace.Name + ' References Found: 0' +
-    ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-  Application.ProcessMessages;
-  StartTick := GetTickCount;
-
-  // getting all refs in worldspace
-  Count := 0;
-  TotalCount := 0;
-  REFRs := nil;
-  SetLength(REFRs, 1024);
-  wbFindREFRs(aWorldspace, Master.ChildGroup, REFRs, TotalCount, Count, StartTick);
-  for i := 0 to Pred(Master.OverrideCount) do
-    wbFindREFRs(aWorldspace, Master.Overrides[i].ChildGroup, REFRs, TotalCount, Count, StartTick);
-  SetLength(REFRs, Count);
-
-  // removing duplicates
-  if Length(REFRs) > 1 then begin
-    Application.MainForm.Caption := 'Sorting References: ' + aWorldspace.Name +
-      ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-    Application.ProcessMessages;
-
-    wbMergeSort(@REFRs[0], Length(REFRs), CompareElementsFormIDAndLoadOrder);
-
-    Application.MainForm.Caption := 'Removing duplicates: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(0) +
-      ' Unique References Found: ' + IntToStr(0) +
-      ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-    Application.ProcessMessages;
-    StartTick := GetTickCount;
-
-    j := 0;
-    for i := Succ(Low(REFRs)) to High(REFRs) do begin
-      if REFRs[j].LoadOrderFormID <> REFRs[i].LoadOrderFormID then
-        Inc(j);
-      if j <> i then
-        REFRs[j] := REFRs[i];
-
-      if wbForceTerminate then
-        Abort;
-      if StartTick + 500 < GetTickCount then begin
-        Application.MainForm.Caption := 'Removing duplicates: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(i) +
-          ' Unique References Found: ' + IntToStr(j) +
-          ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-        Application.ProcessMessages;
-        StartTick := GetTickCount;
-      end;
-    end;
-    SetLength(REFRs, Succ(j));
-  end;
-
+  wbFindUniqueWorldspaceREFRs(aWorldspace, REFRs);
   if Length(REFRs) = 0 then
     Exit;
 
@@ -2704,8 +2921,8 @@ begin
           // atlas map name
           AtlasMapName := wbScriptsPath + 'LODGenAtlasMap.txt';
           // textures list file name
-          if wbGameMode in [ gmSSE ] then
-            TexturesListFile := wbScriptsPath + 'LODGenTexturesList.txt';
+          //if wbGameMode in [ gmSSE ] then
+          //  TexturesListFile := wbScriptsPath + 'LODGenTexturesList.txt';
           // make sure atlas folder exists
           if not DirectoryExists(ExtractFilePath(AtlasName)) then
             if not ForceDirectories(ExtractFilePath(AtlasName)) then
@@ -2730,8 +2947,8 @@ begin
         end;
 
         // list file that will be created by LODGen containing all textures that have UV inside UVRange, uses AtlasTolerance=
-        if (TexturesListFile <> '') then
-          slExport.Add('TexturesListFile=' + TexturesListFile);
+        //if (TexturesListFile <> '') then
+        //  slExport.Add('TexturesListFile=' + TexturesListFile);
         if (AtlasMapName <> '') then begin
           slExport.Add('TextureAtlasMap=' + AtlasMapName);
           slExport.Add('AtlasTolerance=' + Format('%1.1f', [UVRange - 1.0]));
@@ -2795,8 +3012,8 @@ begin
         slExport.SaveToFile(s);
 
         // creating lod textures atlas part 2 - gather list of used textures and create atlas textures
-        if Settings.ReadBool(Section, 'BuildAtlas', True) then begin
-          if wbGameMode in [ gmSSE ] then begin
+        if bBuildAtlas then begin
+          {if wbGameMode in [ gmSSE ] then begin
             // use LODGen.exe to build texture list, output file defined by TexturesListFile= in export file
             wbProgressCallback('[' + aWorldspace.EditorID + '] Gathering list of textures for atlas');
             Application.ProcessMessages;
@@ -2816,9 +3033,13 @@ begin
             // load textures from file created by LODGen.exe
             if (TexturesListFile <> '') and FileExists(TexturesListFile) then
               slLODTextures.LoadFromFile(TexturesListFile);
-          end
-          else
-            wbGetUVRangeTexturesList(slLODMeshes, slLODTextures, UVRange);
+          end}
+
+          // Fallout 3 and FNV don't support several shapes in LOD quads, treat all meshes as untiled
+          if wbGameMode in [gmFO3, gmFNV] then
+            UVRange := 10000;
+
+          wbGetUVRangeTexturesList(slLODMeshes, slLODTextures, UVRange);
 
           if slLODTextures.Count > 1 then begin
             // remove HD LOD texture if there
@@ -2828,7 +3049,6 @@ begin
             end;
 
             wbProgressCallback('[' + aWorldspace.EditorID + '] Building LOD textures atlas: ' + AtlasName);
-            Application.ProcessMessages;
             wbBuildAtlasFromTexturesList(
               slLODTextures,
               Settings.ReadInteger(Section, 'AtlasTextureSize', 512),
@@ -2898,6 +3118,351 @@ begin
   end;
 end;
 
+procedure wbGenerateLODFO4(
+  const aWorldspace: IwbMainRecord;
+  const Files: TDynFiles;
+  const Settings: TCustomIniFile
+);
+var
+  StartTick, ErrCode  : Cardinal;
+  AtlasName, AtlasMapName: string;
+  Section, s          : string;
+  REFRs               : TDynMainRecords;
+  ChunkSize, i        : Integer;
+  LodSet              : TwbLodSettings;
+  Res                 : TDynResources;
+  ChunkSW, ChunkNE    : TwbGridCell;
+  slCache, slRefs, slExport, sl: TStringList;
+  slLODMeshes, slLODTextures, slBGSM: TStringList;
+  bChunk, bBuildAtlas : Boolean;
+  UVRange             : Single;
+  bgsm                : TwbBGSMFile;
+
+    procedure ProcessReference(const e: IwbMainRecord; iPart: Integer = 0; iPlacement: Integer = 0);
+    var
+      StatRec, MSWP: IwbMainRecord;
+      s, mat, m4, m8, m16, m32, scl: string;
+      RefPos: TwbVector;
+      RefCell, RefBlock: TwbGridCell;
+      k, n: Integer;
+      Entries, Entry: IwbContainer;
+    begin
+      // skip invisible references
+      if e.Flags.IsInitiallyDisabled or e.Flags.IsDeleted then
+        Exit;
+
+      StatRec := e.BaseRecord;
+      if not Assigned(StatRec) then
+        Exit;
+
+      if (StatRec.Signature <> 'STAT') and (StatRec.Signature <> 'SCOL') then
+        Exit;
+
+      StatRec := StatRec.WinningOverride;
+
+      if e.IsPersistent and ((StatRec.Flags._Flags and $00000004 <> 0) or (e.Flags._Flags and $00010000 <> 0)) then
+        Exit;
+
+      if not e.GetPosition(RefPos) then
+        Exit;
+
+      RefCell := wbPositionToGridCell(RefPos);
+      RefBlock := Lodset.BlockForCell(RefCell, 4);
+
+      // reference is out of lod range
+      if (RefBlock.x < Lodset.SWCell.x) or (RefBlock.y < Lodset.SWCell.y) then
+        Exit;
+
+      // reference not in specific chunk - only skip references if no atlas needs to be build
+      if bChunk and not bBuildAtlas then begin
+        if ChunkSW.x <> Low(Integer) then
+          if (RefCell.x < ChunkSW.x) or (RefCell.x > ChunkNE.x) then
+            Exit;
+        if ChunkSW.y <> Low(Integer) then
+          if (RefCell.y < ChunkSW.y) or (RefCell.y > ChunkNE.y) then
+            Exit;
+      end;
+
+      scl := e.ElementEditValues['XSCL'];
+      if scl = '' then
+        scl := '1.0';
+
+      // material swap on a reference
+      if e.ElementExists['XMSP'] then begin
+        MSWP := e.ElementBySignature['XMSP'].LinksTo as IwbMainRecord;
+        if Assigned(MSWP) and Supports(MSWP.WinningOverride.ElementByName['Material Substitutions'], IwbContainer, Entries) then
+          for n := 0 to Pred(Entries.ElementCount) do begin
+            Entry := Entries.Elements[n] as IwbContainer;
+            s := wbNormalizeResourceName(Entry.ElementEditValues['SNAM'], resMaterial);
+            if Pos('\lod\', s) <> 0 then
+              slBGSM.Add(s);
+          end;
+      end;
+
+      k := slCache.IndexOfObject(Pointer(StatRec.LoadOrderFormID));
+
+      if k = -1 then begin
+        s := '';
+        // process only VWD statics
+        if StatRec.Flags.IsVisibleWhenDistant then begin
+          // getting lod models
+          m4 := wbGetLODMeshName(StatRec, 0);
+          m8 := wbGetLODMeshName(StatRec, 1);
+          m16 := wbGetLODMeshName(StatRec, 2);
+          m32 := wbGetLODMeshName(StatRec, 3);
+          if (m4 <> '') or (m8 <> '') or (m16 <> '') or (m32 <> '') then begin
+            mat := '';
+            // a tab separated string of Editor ID, flags, material, full mesh and lod files
+            s := StatRec.EditorID + #9 + IntToHex(StatRec.Flags._Flags, 8) + #9 +
+                 mat + #9 + wbGetLODMeshName(StatRec, -1) + #9 +
+                 m4 + #9 + m8 + #9 + m16 + #9 + m32;
+          end;
+        end;
+        k := slCache.Count;
+        slCache.AddObject(s, Pointer(StatRec.LoadOrderFormID));
+      end;
+
+      s := slCache[k];
+
+      if s = '' then
+        Exit;
+
+      s := IntToHex(e.LoadOrderFormID , 8) + #9 +
+           IntToHex(e.Flags._Flags, 8) + #9 +
+           e.ElementEditValues['DATA\Position\X'] + #9 +
+           e.ElementEditValues['DATA\Position\Y'] + #9 +
+           e.ElementEditValues['DATA\Position\Z'] + #9 +
+           e.ElementEditValues['DATA\Rotation\X'] + #9 +
+           e.ElementEditValues['DATA\Rotation\Y'] + #9 +
+           e.ElementEditValues['DATA\Rotation\Z'] + #9 +
+           scl + #9 + s;
+
+      slRefs.Add(s);
+
+      // list of used LOD meshes
+      if m4 <> '' then slLODMeshes.Add(m4);
+      if m8 <> '' then slLODMeshes.Add(m8);
+      if m16 <> '' then slLODMeshes.Add(m16);
+      if m32 <> '' then slLODMeshes.Add(m16);
+
+      if wbForceTerminate then
+        Abort;
+      if StartTick + 500 < GetTickCount then begin
+        Application.MainForm.Caption := 'Building Objects LOD: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(i) +
+          ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+        Application.ProcessMessages;
+        StartTick := GetTickCount;
+      end;
+    end;
+
+begin
+  // need an existing lodsettings file to align lod blocks
+  Res := wbContainerHandler.OpenResource(wbLODSettingsFileName(aWorldspace.EditorID));
+  if Length(Res) > 0 then
+    LodSet.LoadFromData(Res[High(Res)].GetData)
+  else begin
+    wbProgressCallback('[' + aWorldspace.EditorID + '] Lodsettings file not found for worldspace.');
+    Exit;
+  end;
+
+  // settings file LOD options section
+  Section := wbAppName + ' LOD Options';
+
+  wbFindUniqueWorldspaceREFRs(aWorldspace, REFRs);
+  if Length(REFRs) = 0 then
+    Exit;
+
+  wbProgressCallback('[' + aWorldspace.EditorID + '] Generating LOD');
+  Application.MainForm.Caption := 'Building Objects LOD: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(0) +
+    ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+  Application.ProcessMessages;
+  StartTick := GetTickCount;
+
+  slCache := TStringList.Create;
+  slRefs := TStringList.Create;
+  slExport := TStringList.Create;
+  slLODMeshes := TStringList.Create; slLODMeshes.Sorted := True; slLODMeshes.Duplicates := dupIgnore;
+  slLODTextures := TStringList.Create; slLODTextures.Sorted := True; slLODTextures.Duplicates := dupIgnore;
+  slBGSM := TStringList.Create; slBGSM.Sorted := True; slBGSM.Duplicates := dupIgnore;
+
+  bChunk := Settings.ReadBool(Section, 'Chunk', False);
+  bBuildAtlas := Settings.ReadBool(Section, 'BuildAtlas', True);
+  // calculate SW and NE corners for building specific chunk
+  ChunkSW.x := Low(Integer);
+  ChunkSW.y := Low(Integer);
+  ChunkSize := 32;
+
+  if bChunk then begin
+    if Settings.ReadString(Section, 'LODLevel', '') <> '' then
+      ChunkSize  := StrToInt(Settings.ReadString(Section, 'LODLevel', ''));
+    if Settings.ReadString(Section, 'LODX', IntToStr(Low(Integer))) <> '' then
+      ChunkSW.x := StrToInt(Settings.ReadString(Section, 'LODX', IntToStr(Low(Integer))));
+    if Settings.ReadString(Section, 'LODY', IntToStr(Low(Integer))) <> '' then
+      ChunkSW.y := StrToInt(Settings.ReadString(Section, 'LODY', IntToStr(Low(Integer))));
+  end;
+  ChunkNE.x := ChunkSW.x + ChunkSize;
+  ChunkNE.y := ChunkSW.y + ChunkSize;
+
+  try
+    try
+      for i := Low(REFRs) to High(REFRs) do
+        ProcessReference(REFRs[i]);
+
+      // nothing to export for LODGen
+      if slRefs.Count = 0 then begin
+        wbProgressCallback('<Note: Can not build Objects LOD for ' + aWorldspace.EditorID + ', no valid references found>');
+        Exit;
+      end;
+
+      UVRange := StrToFloatDef(Settings.ReadString(Section, 'AtlasTextureUVRange', '1.5'), 1.5);
+
+      // creating lod textures atlas part 1 - set file paths to be used in export file
+      if bBuildAtlas then begin
+        // atlas file name
+        AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds';
+        // atlas map name
+        AtlasMapName := wbScriptsPath + 'LODGenAtlasMap.txt';
+        // make sure atlas folder exists
+        if not DirectoryExists(ExtractFilePath(AtlasName)) then
+          if not ForceDirectories(ExtractFilePath(AtlasName)) then
+            raise Exception.Create('Can not create output folder for atlas ' + ExtractFilePath(AtlasName));
+      end
+      else begin
+        // use vanilla atlas if build atlas is not selected
+        AtlasMapName := wbScriptsPath + wbAppName + '-AtlasMap-' + aWorldspace.EditorID + '.txt';
+        UVRange := 10000;
+      end;
+
+      // creating lodgen data file
+      slExport.Add('GameMode=' + wbAppName);
+      slExport.Add('Worldspace=' + aWorldspace.EditorID);
+      slExport.Add('CellSW=' + Format('%d %d', [Lodset.SWCell.x, Lodset.SWCell.y]));
+      if AtlasMapName <> '' then begin
+        slExport.Add('TextureAtlasMap=' + AtlasMapName);
+        slExport.Add('AtlasTolerance=' + Format('%1.1f', [UVRange - 1.0]));
+      end;
+      slExport.Add('PathData=' + wbDataPath);
+      slExport.Add('PathOutput=' + wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects');
+
+      // list of archives
+      if Assigned(wbContainerHandler) then begin
+        sl := TStringList.Create;
+        try
+          wbContainerHandler.ContainerList(sl);
+          for i := 0 to sl.Count - 2 do  // exclude the last Data folder
+            slExport.Add('Resource=' + sl[i]);
+        finally
+          sl.Free;
+        end;
+      end;
+
+      // adding Extra Options
+      s := wbScriptsPath + wbLODExtraOptionsFileName(
+        ChangeFileExt(ExtractFileName(aWorldspace._File.FileName), ''),
+        aWorldspace.EditorID
+      );
+      if FileExists(s) then begin
+        sl := TStringList.Create;
+        try
+          sl.LoadFromFile(s);
+          slExport.AddStrings(sl);
+          wbProgressCallback('[' + aWorldspace.EditorID + '] Using options file: ' + s);
+        finally
+          sl.Free;
+        end;
+      end else
+        wbProgressCallback('[' + aWorldspace.EditorID + '] No options file found: ' + s);
+
+      // adding references list
+      slExport.AddStrings(slRefs);
+
+      // saving export file
+      s := wbScriptsPath + 'LODGen.txt';
+      wbProgressCallback('[' + aWorldspace.EditorID + '] Saving LODGen data: ' + s);
+      slExport.SaveToFile(s);
+
+      // creating lod textures atlas part 2 - gather list of used textures and create atlas textures
+      if bBuildAtlas then begin
+        // textures from LOD meshes
+        wbGetUVRangeTexturesList(slLODMeshes, slLODTextures, UVRange);
+
+        // textures from LOD material swaps
+        if slBGSM.Count > 0 then begin
+          bgsm := TwbBGSMFile.Create;
+          try
+            for i := 0 to Pred(slBGSM.Count) do begin
+              try
+                if not wbContainerHandler.ResourceExists(slBGSM[i]) then
+                  raise Exception.Create('Not found');
+
+                bgsm.LoadFromResource(slBGSM[i]);
+              except on E: Exception do
+                wbProgressCallback('<Warning: Error reading "' + slBGSM[i] + '": ' + E.Message + '>');
+              end;
+              slLODTextures.Add(wbNormalizeResourceName(bgsm.EditValues['Textures\Diffuse'], resTexture));
+            end;
+          finally
+            bgsm.Free;
+          end;
+        end;
+
+        if slLODTextures.Count > 1 then begin
+          wbProgressCallback('[' + aWorldspace.EditorID + '] Building LOD textures atlas: ' + AtlasName);
+          wbBuildAtlasFromTexturesList(
+            slLODTextures,
+            Settings.ReadInteger(Section, 'AtlasTextureSize', 512),
+            Settings.ReadInteger(Section, 'AtlasTextureSize', 512), // tile size, same as texture size
+            Settings.ReadInteger(Section, 'AtlasWidth', 4096),
+            Settings.ReadInteger(Section, 'AtlasHeight', 4096),
+            AtlasName,
+            AtlasMapName,
+            Settings
+          );
+        end;
+      end;
+
+      s := wbScriptsPath + 'LODGen.txt';
+      s := Format('"%s" "%s"', [wbScriptsPath + sLODGenName, s]);
+      s := s + ' --dontFixTangents';
+      s := s + ' --removeUnseenFaces';
+      if aWorldspace.ElementEditValues['DATA\No LOD Water'] = '1' then
+        s := s + ' --ignoreWater';
+      if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False) then
+        s := s + ' --dontGenerateVertexColors';
+      if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoTangents', False) then
+        s := s + ' --dontGenerateTangents';
+      if Settings.ReadBool(Section, 'Chunk', False) then begin
+        if Settings.ReadString(Section, 'LODLevel', '') <> '' then
+          s := s + ' --lodLevel ' + Settings.ReadString(Section, 'LODLevel', '');
+        if Settings.ReadString(Section, 'LODX', '') <> '' then
+          s := s + ' --x ' + Settings.ReadString(Section, 'LODX', '');
+        if Settings.ReadString(Section, 'LODY', '') <> '' then
+          s := s + ' --y ' + Settings.ReadString(Section, 'LODY', '');
+      end;
+
+      Application.MainForm.Caption := 'Running LODGen, press ESC to abort';
+      wbProgressCallback('[' + aWorldspace.EditorID + '] Running ' + s);
+      Application.ProcessMessages;
+
+      ErrCode := ExecuteCaptureConsoleOutput(s);
+      if ErrCode <> 0 then
+        raise Exception.Create('LODGen process error, exit code ' + IntToHex(ErrCode, 8));
+      wbProgressCallback('[' + aWorldspace.EditorID + '] Objects LOD Done.');
+
+    except on E: Exception do
+      wbProgressCallback('[' + aWorldspace.EditorID + '] Objects LOD generation error: ' + E.Message);
+    end;
+
+  finally
+    slCache.Free;
+    slRefs.Free;
+    slLODMeshes.Free;
+    slLODTextures.Free;
+    slBGSM.Free;
+    slExport.Free;
+    Application.MainForm.Caption := Application.Title;
+  end;
+end;
 
 
 
