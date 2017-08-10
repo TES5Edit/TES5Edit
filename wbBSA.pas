@@ -514,7 +514,7 @@ begin
     Exit;
   Folder := ExcludeTrailingPathDelimiter(aFolder);
   for i := Low(bfFolders) to High(bfFolders) do with bfFolders[i] do
-    if (aFolder = '') or SameText(Folder, Name) then
+    if (Folder = '') or SameText(Copy(Name, 1, Length(Folder)), Folder) then
       for j := Low(Files) to High(Files) do
         aList.Add(Name + '\' + Files[j].Name);
 end;
@@ -768,7 +768,8 @@ begin
   if not Assigned(aList) then
     Exit;
   for i := Low(bfFiles) to High(bfFiles) do
-    aList.Add(LowerCase(bfFiles[i].Name));
+    if (aFolder = '') or ( SameText(aFolder, Copy(bfFiles[i].Name, 1, Length(aFolder))) ) then
+      aList.Add(LowerCase(bfFiles[i].Name));
 end;
 
 

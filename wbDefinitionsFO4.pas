@@ -1879,6 +1879,61 @@ begin
   Result := EventMember shl 16 + EventFunction;
 end;
 
+function wbOBTEAddonIndexToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  MainRecord, OMOD: IwbMainRecord;
+  Includes, Include: IwbContainer;
+  Entries, Entry: IwbContainerElementRef;
+  i, j, AddonIndex: Integer;
+  bFoundOverride: Boolean;
+begin
+  Result := '';
+  case aType of
+    ctToStr, ctToEditValue: Result := IntToStr(aInt);
+    ctCheck: begin
+
+      AddonIndex := aInt;
+
+      // check index override from "AddonIndex" property of Includes
+      bFoundOverride := False;
+      if Assigned(aElement.Container) and Supports(aElement.Container.ElementByName['Includes'], IwbContainer, Includes) then
+        for i := 0 to Pred(Includes.ElementCount) do begin
+          if not Supports(Includes.Elements[i], IwbContainer, Include) then
+            Continue;
+          if not Supports(Include.ElementByName['Mod'].LinksTo, IwbMainRecord, OMOD) then
+            Continue;
+          if not Supports(OMOD.ElementByPath['DATA\Properties'], IwbContainerElementRef, Entries) then
+            Continue;
+          for j := 0 to Pred(Entries.ElementCount) do
+            if Supports(Entries.Elements[j], IwbContainerElementRef, Entry) then
+              if Entry.ElementEditValues['Property'] = 'AddonIndex' then begin
+                AddonIndex := Entry.ElementNativeValues['Value 1 - Int'];
+                bFoundOverride := True;
+                Break;
+              end;
+
+          if bFoundOverride then
+            Break;
+        end;
+
+      if AddonIndex = -1 then
+        Exit;
+
+      MainRecord := aElement.ContainingMainRecord;
+      if not Assigned(MainRecord) then
+        Exit;
+
+      if Supports(MainRecord.ElementByName['Models'], IwbContainerElementRef, Entries) then
+        for i := 0 to Pred(Entries.ElementCount) do
+          if Supports(Entries.Elements[i], IwbContainerElementRef, Entry) then
+            if Entry.ElementNativeValues['INDX'] = AddonIndex then
+              Exit;
+
+      Result := '<Warning: Invalid Addon Index ' + IntToStr(AddonIndex) + '>';
+    end;
+  end;
+end;
+
 procedure wbMESGDNAMAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   OldValue, NewValue : Integer;
@@ -8422,7 +8477,7 @@ begin
     wbByteArray('Unused', 1),
     wbInteger('Level Max', itU8),
     wbByteArray('Unused', 1),
-    wbInteger('ID', itS16),
+    wbInteger('Addon Index', itS16{, wbOBTEAddonIndexToStr, nil, cpNormal, True, nil, nil, -1}),
     wbInteger('Default', itU8, wbBoolEnum),
     wbArray('Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), -4),
     wbInteger('Min Level For Ranks', itU8),

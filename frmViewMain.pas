@@ -3070,8 +3070,8 @@ var
   MainRecord  : IwbMainRecord;
   Worldspaces : TDynMainRecords;
 begin
-  // TES5LODGen: selective lodgenning, no need to regenerate lod for all worldspaces like in Oblivion
-  if wbGameMode in [gmTES5, gmSSE, gmFO3, gmFNV] then begin
+  // xLODGen: selective lodgenning, no need to regenerate lod for all worldspaces like in Oblivion
+  if wbGameMode in [gmTES5, gmSSE, gmFO3, gmFNV, gmFO4] then begin
     try
       mniNavGenerateLODClick(nil);
     finally
@@ -7001,7 +7001,7 @@ begin
           for j := 0 to Pred(Group.ElementCount) do
             if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbGameMode in [gmTES5, gmSSE, gmFNV, gmFO3]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (wbGameMode in [gmTES5, gmSSE, gmFNV, gmFO3, gmFO4]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
                 Continue;
               if Mainrecord.Signature = 'WRLD' then begin
                 SetLength(Worldspaces, Succ(Length(Worldspaces)));
@@ -7023,7 +7023,7 @@ begin
           if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
             if Mainrecord.Signature = 'WRLD' then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbGameMode in [gmTES5, gmSSE, gmFNV, gmFO3]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (wbGameMode in [gmTES5, gmSSE, gmFNV, gmFO3, gmFO4]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
                 Continue;
               SetLength(Worldspaces, Succ(Length(Worldspaces)));
               Worldspaces[High(Worldspaces)] := MainRecord;
@@ -7074,8 +7074,8 @@ begin
     end;
   end;
 
-  // TES5LODGen
-  if wbGameMode in [gmTES5, gmSSE, gmFO3, gmFNV] then begin
+  // xLODGen
+  if wbGameMode in [gmTES5, gmSSE, gmFO3, gmFNV, gmFO4] then begin
     with TfrmLODGen.Create(Self) do try
       j := -1;
       for i := Low(WorldSpaces) to High(WorldSpaces) do begin
@@ -7095,6 +7095,15 @@ begin
         clbWorldspace.Checked[0] := True;
 
       Section := wbAppName + ' LOD Options';
+
+      // FO4 settings
+      if wbGameMode = gmFO4 then begin
+        iDefaultAtlasWidth := 4096;
+        iDefaultAtlasHeight := 4096;
+        fDefaultUVRange := 5.0; // a lot of vanilla meshes with tiled UVs
+        iDefaultAtlasNormalFormat := ifATI2n;
+      end;
+
       if Assigned(Sender) and (wbGameMode = gmSSE) then begin
         cbObjectsLOD.Checked := False;
         cbObjectsLOD.Enabled := False;
@@ -7106,11 +7115,12 @@ begin
         );
       end else
         cbObjectsLOD.Checked := Settings.ReadBool(Section, 'ObjectsLOD', True);
+
       cbBuildAtlas.Checked := Settings.ReadBool(Section, 'BuildAtlas', True);
-      cmbAtlasWidth.ItemIndex := IndexOf(cmbAtlasWidth.Items, Settings.ReadString(Section, 'AtlasWidth', '2048'));
-      cmbAtlasHeight.ItemIndex := IndexOf(cmbAtlasHeight.Items, Settings.ReadString(Section, 'AtlasHeight', '2048'));
+      cmbAtlasWidth.ItemIndex := IndexOf(cmbAtlasWidth.Items, Settings.ReadString(Section, 'AtlasWidth', IntToStr(iDefaultAtlasWidth)));
+      cmbAtlasHeight.ItemIndex := IndexOf(cmbAtlasHeight.Items, Settings.ReadString(Section, 'AtlasHeight', IntToStr(iDefaultAtlasHeight)));
       cmbAtlasTextureSize.ItemIndex := IndexOf(cmbAtlasTextureSize.Items, Settings.ReadString(Section, 'AtlasTextureSize', '512'));
-      cmbAtlasTextureUVRange.ItemIndex := IndexOf(cmbAtlasTextureUVRange.Items, Settings.ReadString(Section, 'AtlasTextureUVRange', '1.5'));
+      cmbAtlasTextureUVRange.ItemIndex := IndexOf(cmbAtlasTextureUVRange.Items, Settings.ReadString(Section, 'AtlasTextureUVRange', FloatToStrF(fDefaultUVRange, ffFixed, 99, 1)));
       cmbCompDiffuse.ItemIndex := IndexOf(cmbCompDiffuse.Items, ImageFormatToStr(TImageFormat(Settings.ReadInteger(Section, 'AtlasDiffuseFormat', Integer(iDefaultAtlasDiffuseFormat)))));
       cmbCompNormal.ItemIndex := IndexOf(cmbCompNormal.Items, ImageFormatToStr(TImageFormat(Settings.ReadInteger(Section, 'AtlasNormalFormat', Integer(iDefaultAtlasNormalFormat)))));
       cmbCompSpecular.ItemIndex := IndexOf(cmbCompSpecular.Items, ImageFormatToStr(TImageFormat(Settings.ReadInteger(Section, 'AtlasSpecularFormat', Integer(iDefaultAtlasSpecularFormat)))));
@@ -7124,7 +7134,10 @@ begin
       edLODY.Text := Settings.ReadString(Section, 'LODY', '');
       cbTreesLOD.Checked := Settings.ReadBool(Section, 'TreesLOD', True);
       cmbTreesLODBrightness.ItemIndex := IndexOf(cmbTreesLODBrightness.Items, Settings.ReadString(Section, 'TreesBrightness', '0'));
-
+      if wbGameMode = gmFO4 then begin
+        cbTreesLOD.Checked := False;
+        cbTreesLOD.Enabled := False;
+      end else
       // hidden option to split trees lod atlases when Shift is pressed
       if GetAsyncKeyState(VK_SHIFT) <> 0 then begin
         _Files := @Files;
@@ -7173,7 +7186,10 @@ begin
       try
         for i := 0 to Pred(clbWorldspace.Count) do
           if clbWorldspace.Checked[i] then
-            wbGenerateLODTES5(IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), lodTypes, Files, Settings);
+            if wbGameMode in [gmTES5, gmSSE, gmFO3, gmFNV] then
+              wbGenerateLODTES5(IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), lodTypes, Files, Settings)
+            else if wbGameMode in [gmFO4] then
+              wbGenerateLODFO4(IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), Files, Settings);
       finally
         Self.Enabled := True;
         Self.Caption := Application.Title
@@ -10251,7 +10267,7 @@ begin
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
   mniNavApplyScript.Visible := mniNavCheckForErrors.Visible;
-  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmSSE]);
+  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmSSE, gmFO4]);
 
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;
