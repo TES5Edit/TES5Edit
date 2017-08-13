@@ -58,4 +58,4 @@ textures\lod\wrbuildingslod01.dds	256	256	1536	1024	textures\terrain\tamriel\obj
 textures\lod\wrbuildingslod02.dds	256	256	1792	1024	textures\terrain\tamriel\objects\tamriel.objects.dds	2048	2048
 textures\lod\wrcastlelod01.dds	256	256	1536	1280	textures\terrain\tamriel\objects\tamriel.objects.dds	2048	2048
 textures\lod\wrwallslod01.dds	256	256	1792	1280	textures\terrain\tamriel\objects\tamriel.objects.dds	2048	2048
-textures\dlc01\lod\dlc01_casscportalexitlod01.dds	256	256	1536	1536	textures\terrain\tamriel\objects\tamriel.objects.dds	2048	2048
+textures\dlc01\lod\dlc01_castleextlod01.dds	256	256	1536	1536	textures\terrain\tamriel\objects\tamriel.objects.dds	2048	2048
