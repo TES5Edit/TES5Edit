@@ -7304,7 +7304,7 @@ begin
       {76}   wbFloat('Z')
            ]),
       {80} wbFloat('Bouncy Mult')
-    ], cpNormal, True),
+    ], cpNormal, True, nil, 18),
     wbRStructSK([0], 'Muzzle Flash Model', [
       wbString(NAM1, 'Model Filename'),
       wbByteArray(NAM2, 'Texture Files Hashes', 0, cpIgnore)
