@@ -1364,7 +1364,7 @@ end;
 
 procedure TJsonArray_Read_O(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := O2V(TJsonObject(Args.Obj).O[Args.Values[0]]);
+  Value := O2V(TJsonArray(Args.Obj).O[Args.Values[0]]);
 end;
 
 procedure TJsonArray_Write_O(const Value: Variant; Args: TJvInterpreterArgs);
