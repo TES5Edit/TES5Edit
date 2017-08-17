@@ -95,8 +95,6 @@ object frmLODGen: TfrmLODGen
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 0
-    ExplicitTop = 397
-    ExplicitWidth = 791
     DesignSize = (
       834
       41)
@@ -109,7 +107,6 @@ object frmLODGen: TfrmLODGen
       Caption = 'Generate'
       ModalResult = 1
       TabOrder = 0
-      ExplicitLeft = 593
     end
     object btnCancel: TButton
       Left = 733
@@ -120,7 +117,6 @@ object frmLODGen: TfrmLODGen
       Caption = 'Cancel'
       ModalResult = 2
       TabOrder = 1
-      ExplicitLeft = 690
     end
     object pnlBevel: TPanel
       AlignWithMargins = True
@@ -134,7 +130,6 @@ object frmLODGen: TfrmLODGen
       Margins.Bottom = 0
       Align = alTop
       TabOrder = 2
-      ExplicitWidth = 783
     end
   end
   object cbObjectsLOD: TCheckBox
@@ -177,7 +172,7 @@ object frmLODGen: TfrmLODGen
     Width = 105
     Height = 25
     Caption = 'Split LOD Atlas'
-    TabOrder = 4
+    TabOrder = 5
     Visible = False
     OnClick = btnSplitTreesLODClick
   end
@@ -186,7 +181,7 @@ object frmLODGen: TfrmLODGen
     Top = 76
     Width = 448
     Height = 189
-    TabOrder = 5
+    TabOrder = 6
     object Label5: TLabel
       Left = 40
       Top = 33
@@ -250,6 +245,13 @@ object frmLODGen: TfrmLODGen
       Height = 13
       Caption = 'Spec'
     end
+    object Label15: TLabel
+      Left = 224
+      Top = 33
+      Width = 113
+      Height = 13
+      Caption = 'Default Alpha threshold'
+    end
     object cbBuildAtlas: TCheckBox
       Left = 16
       Top = 13
@@ -275,7 +277,7 @@ object frmLODGen: TfrmLODGen
       Caption = 'No tangents'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 6
+      TabOrder = 10
     end
     object cbNoVertexColors: TCheckBox
       Left = 16
@@ -288,7 +290,61 @@ object frmLODGen: TfrmLODGen
       Caption = 'No vertex colors'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 5
+      TabOrder = 9
+    end
+    object cbUseAlphaThreshold: TCheckBox
+      Left = 128
+      Top = 115
+      Width = 153
+      Height = 17
+      Hint = 
+        'Set transparency threshold to value from source LOD model/materi' +
+        'al instead of default alpha threshold - can improve static tree ' +
+        'LOD'
+      Caption = 'Use source alpha threshold'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 11
+      Visible = False
+    end
+    object cbUseBacklightPower: TCheckBox
+      Left = 128
+      Top = 133
+      Width = 121
+      Height = 17
+      Hint = 
+        'Set backlight power to value from source LOD model/material inst' +
+        'ead of default 0 - improves static tree LOD that uses doubleside' +
+        'd flag, requires custom models/materials setting backlight power'
+      Caption = 'Use backlight power'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 12
+      Visible = False
+    end
+    object cmbDefaultAlphaThreshold: TComboBox
+      Left = 343
+      Top = 28
+      Width = 46
+      Height = 21
+      Hint = 
+        'Default alpha threshold to use for transparancy - lower = "thick' +
+        'er", higher = "thinner"'
+      Style = csDropDownList
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 3
+    end
+    object cmbLODLevel: TComboBox
+      Left = 113
+      Top = 156
+      Width = 46
+      Height = 21
+      Hint = 'Dimension - number of cells'
+      Style = csDropDownList
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 16
     end
     object cbChunk: TCheckBox
       Left = 16
@@ -301,19 +357,8 @@ object frmLODGen: TfrmLODGen
       ParentShowHint = False
       ShowHint = True
       State = cbChecked
-      TabOrder = 7
+      TabOrder = 13
       OnClick = cbChunkClick
-    end
-    object cmbLODLevel: TComboBox
-      Left = 113
-      Top = 156
-      Width = 46
-      Height = 21
-      Hint = 'Dimension - number of cells'
-      Style = csDropDownList
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 8
     end
     object edLODX: TEdit
       Left = 182
@@ -323,7 +368,7 @@ object frmLODGen: TfrmLODGen
       Hint = 'Lower left cell X'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 9
+      TabOrder = 14
     end
     object edLODY: TEdit
       Left = 240
@@ -333,7 +378,7 @@ object frmLODGen: TfrmLODGen
       Hint = 'Lower left cell Y'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 10
+      TabOrder = 15
     end
     object cmbAtlasWidth: TComboBox
       Left = 91
@@ -368,7 +413,7 @@ object frmLODGen: TfrmLODGen
       Style = csDropDownList
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 3
+      TabOrder = 4
     end
     object cmbAtlasTextureUVRange: TComboBox
       Left = 253
@@ -382,7 +427,7 @@ object frmLODGen: TfrmLODGen
       DropDownCount = 16
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 4
+      TabOrder = 5
     end
     object cmbCompDiffuse: TComboBox
       Left = 148
@@ -393,7 +438,8 @@ object frmLODGen: TfrmLODGen
       Style = csDropDownList
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 11
+      TabOrder = 6
+      OnChange = cmbCompDiffuseChange
     end
     object cmbCompNormal: TComboBox
       Left = 252
@@ -404,7 +450,7 @@ object frmLODGen: TfrmLODGen
       Style = csDropDownList
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 12
+      TabOrder = 7
     end
     object cmbCompSpecular: TComboBox
       Left = 352
@@ -415,7 +461,7 @@ object frmLODGen: TfrmLODGen
       Style = csDropDownList
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 13
+      TabOrder = 8
     end
   end
   object cmbTreesLODBrightness: TComboBox
@@ -430,7 +476,7 @@ object frmLODGen: TfrmLODGen
     DropDownCount = 16
     ParentShowHint = False
     ShowHint = True
-    TabOrder = 6
+    TabOrder = 4
   end
   object PopupMenu1: TPopupMenu
     Left = 168

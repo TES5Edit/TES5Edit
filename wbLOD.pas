@@ -23,6 +23,7 @@ uses
   IniFiles,
   Forms,
   IOUtils,
+  System.Masks,
   wbInterface,
   wbImplementation,
   wbHelpers,
@@ -44,6 +45,7 @@ const
   sLODGenName = 'LODGen.exe';
   sTexconv = 'Texconv.exe';
   {$ENDIF}
+  BooleanText: array[boolean] of string = ('False', 'True');
 
 var
   iDefaultAtlasWidth: Integer = 2048;
@@ -52,6 +54,7 @@ var
   iDefaultAtlasDiffuseFormat: TImageFormat = ifDXT3;
   iDefaultAtlasNormalFormat: TImageFormat = ifDXT1;
   iDefaultAtlasSpecularFormat: TImageFormat = ifATI2n;
+  iDefaultAlphaThreshold: Integer = 128;
 
 type
   PBinNode = ^TBinNode;
@@ -226,7 +229,8 @@ function wbLODSettingsFileName(const WorldspaceID: string): string;
 function wbLODTreeBlockFileExt: string;
 function wbNormalizeResourceName(const aName: string; aResType: TGameResourceType): string;
 function wbDefaultNormalTexture(aGameMode: TwbGameMode): string;
-procedure wbPrepareImageAlpha(img: TImageData; fmt: TImageFormat);
+function wbDefaultSpecularTexture(aGameMode: TwbGameMode): string;
+procedure wbPrepareImageAlpha(img: TImageData; fmt: TImageFormat; threshold: Integer = 0);
 
 procedure wbGetUVRangeTexturesList(slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
 
@@ -234,7 +238,8 @@ procedure wbBuildAtlas(
   var Images: TSourceAtlasTextures;
   aWidth, aHeight: Integer;
   aName: string;
-  fmtDiffuse, fmtNormal, fmtSpecular: TImageFormat
+  fmtDiffuse, fmtNormal, fmtSpecular: TImageFormat;
+  alphaThreshold: Integer
 );
 
 procedure wbBuildAtlasFromTexturesList(
@@ -972,22 +977,30 @@ begin
     Result := 'materials\' + Result;
 end;
 
-procedure wbPrepareImageAlpha(img: TImageData; fmt: TImageFormat);
+procedure wbPrepareImageAlpha(img: TImageData; fmt: TImageFormat; threshold: Integer = 0);
 var
   x, y: integer;
   c: TColor32Rec;
+  fmtInfo: TImageFormatInfo;
 begin
-  // Max alpha for formats saved without alpha, otherwise they will become black
-  if fmt in [ifDXT1, ifR5G6B5, ifR8G8B8] then begin
-    for x := 0 to Pred(img.Width) do
-      for y := 0 to Pred(img.Height) do begin
-        c := GetPixel32(img, x, y);
-        if c.A <> 255 then begin
-          c.A := 255;
-          SetPixel32(img, x, y, c);
-        end;
-      end;
-  end;
+  // threshold = 0, convert to max alpha for formats saved without alpha, otherwise they will become black
+  // threshold <> 0, convert alpha to 0/1 transparency
+  GetImageFormatInfo(fmt, fmtInfo);
+  // do not convert formats that support alpha (DXT1 supports 0/1 transparancy)
+  if fmtINfo.HasAlphaChannel and not (fmt in [ifDXT1]) then
+    Exit;
+  // always convert formats that do not support alpha to max alpha
+  if not fmtINfo.HasAlphaChannel then
+    threshold := 0;
+  for x := 0 to Pred(img.Width) do
+    for y := 0 to Pred(img.Height) do begin
+      c := GetPixel32(img, x, y);
+      if c.A >= threshold then
+        c.A := 255
+      else
+        c.A := 0;
+      SetPixel32(img, x, y, c);
+    end;
 end;
 
 procedure wbGetUVRangeTexturesList(slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
@@ -1160,7 +1173,7 @@ begin
   end;
 end;
 
-function wbLoadImageFromMemory(Data: Pointer; Size: LongInt; var Image: TImageData): Boolean;
+function wbLoadImageFromMemory(Data: Pointer; aSize: LongInt; var Image: TImageData): Boolean;
 type
   TMagic = array [0..3] of AnsiChar;
   PMagic = ^TMagic;
@@ -1172,18 +1185,18 @@ var
   ErrCode: cardinal;
 begin
   // native function
-  Result := LoadImageFromMemory(Data, Size, Image);
+  Result := LoadImageFromMemory(Data, aSize, Image);
 
   // image loaded without problem?
   if Result then
     Exit;
 
   // try to convert unknown format DDS texture to the known one and load again
-  if not ( (Size > Length(sDDSMagic)) and (PMagic(Data)^ = sDDSMagic) ) then
+  if not ( (aSize > Length(sDDSMagic)) and (PMagic(Data)^ = sDDSMagic) ) then
     Exit;
 
-  // temp file
-  s := wbTempPath + 'Temp-Texture.dds'; // better to use TPath.GetGUIDFileName if multithreaded
+  // temp file - better to use TPath.GetGUIDFileName if multithreaded
+  s := wbTempPath + TPath.GetGUIDFileName + '.dds';
 
   // check temp path
   if not ForceDirectories(wbTempPath) then
@@ -1191,7 +1204,7 @@ begin
 
   // write image to temp file
   with TFileStream.Create(s, fmCreate) do try
-    WriteBuffer(Data, Size);
+    WriteBuffer(Data^, aSize);
   finally
     Free;
   end;
@@ -1216,7 +1229,8 @@ procedure wbBuildAtlas(
   var Images: TSourceAtlasTextures;
   aWidth, aHeight: Integer;
   aName: string;
-  fmtDiffuse, fmtNormal, fmtSpecular: TImageFormat
+  fmtDiffuse, fmtNormal, fmtSpecular: TImageFormat;
+  alphaThreshold: Integer
 );
 var
   i, num, maxw, maxh: integer;
@@ -1303,7 +1317,7 @@ begin
           Images[Blocks[i].Index].H := maxh;
         end;
 
-        wbPrepareImageAlpha(atlas, fmtDiffuse);
+        wbPrepareImageAlpha(atlas, fmtDiffuse, alphaThreshold);
         if not ConvertImage(atlas, fmtDiffuse) then
           raise Exception.Create('Image convertion error');
 
@@ -1424,6 +1438,7 @@ var
   Images: TSourceAtlasTextures;
   slMap: TStringList;
   fmtDiffuse, fmtNormal, fmtSpecular: TImageFormat;
+  alphaThreshold: Integer;
 begin
   for i := 0 to Pred(slTextures.Count) do begin
     s := slTextures[i];
@@ -1511,7 +1526,6 @@ begin
         wbProgressCallback('<Note: ' + s + ' specular map not found, using flat replacement>');
         s := wbDefaultSpecularTexture(wbGameMode);
       end;
-
       res := wbContainerHandler.OpenResource(s);
       if Length(res) <> 0 then
         data := res[High(res)].GetData;
@@ -1538,7 +1552,8 @@ begin
       fmtDiffuse := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasDiffuseFormat', Integer(iDefaultAtlasDiffuseFormat)));
       fmtNormal := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(iDefaultAtlasNormalFormat)));
       fmtSpecular := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasSpecularFormat', Integer(iDefaultAtlasSpecularFormat)));
-      wbBuildAtlas(Images, aWidth, aHeight, aName, fmtDiffuse, fmtNormal, fmtSpecular);
+      alphaThreshold := Settings.ReadInteger(wbAppName + ' LOD Options', 'DefaultAlphaThreshold', iDefaultAlphaThreshold);
+      wbBuildAtlas(Images, aWidth, aHeight, aName, fmtDiffuse, fmtNormal, fmtSpecular, alphaThreshold);
       for i := Low(Images) to High(Images) do
         if Images[i].AtlasName <> '' then begin
           // atlas name in map file must be relative to data folder
@@ -2930,7 +2945,7 @@ begin
         end
         else
           // use vanilla atlas if build atlas is not selected
-          if wbGameMode in [ gmSSE ] then begin
+          if wbGameMode in [ gmTES5, gmSSE ] then begin
             AtlasMapName := wbScriptsPath + wbAppName + '-AtlasMap-' + aWorldspace.EditorID + '.txt';
             UVRange := 10000;
           end;
@@ -3128,43 +3143,61 @@ var
   AtlasName, AtlasMapName: string;
   Section, s          : string;
   REFRs               : TDynMainRecords;
-  ChunkSize, i        : Integer;
+  ChunkSize, i, j     : Integer;
   LodSet              : TwbLodSettings;
   Res                 : TDynResources;
   ChunkSW, ChunkNE    : TwbGridCell;
   slCache, slRefs, slExport, sl: TStringList;
   slLODMeshes, slLODTextures, slBGSM: TStringList;
+  slCont, slList      : TwbFastStringList;
   bChunk, bBuildAtlas : Boolean;
   UVRange             : Single;
   bgsm                : TwbBGSMFile;
 
-    procedure ProcessReference(const e: IwbMainRecord; iPart: Integer = 0; iPlacement: Integer = 0);
+    procedure ProcessReference(const e: IwbMainRecord; iPart: Integer = 0; iPlacement: Integer = 0; bRecursive: Boolean = False);
     var
-      StatRec, MSWP: IwbMainRecord;
-      s, mat, m4, m8, m16, m32, scl: string;
+      StatRec, XESP, MSWP, StatMultiRefLOD: IwbMainRecord;
+      s, mat, m4, m8, m16, m32, scl, xespid, basemat, swapmat, transrot: string;
       RefPos: TwbVector;
       RefCell, RefBlock: TwbGridCell;
-      k, n: Integer;
+      k, n, iMaxPlacement: Integer;
       Entries, Entry: IwbContainer;
+      sl, slBaseMat, slSwapMat: TStringList;
+      bInitiallyDisabled: Boolean;
     begin
-      // skip invisible references
-      if e.Flags.IsInitiallyDisabled or e.Flags.IsDeleted then
+      // skip deleted references
+      if e.Flags.IsDeleted then
         Exit;
 
-      StatRec := e.BaseRecord;
+      StatRec := e.BaseRecord.WinningOverride;
       if not Assigned(StatRec) then
         Exit;
 
       if (StatRec.Signature <> 'STAT') and (StatRec.Signature <> 'SCOL') then
         Exit;
 
-      StatRec := StatRec.WinningOverride;
-
-      if e.IsPersistent and ((StatRec.Flags._Flags and $00000004 <> 0) or (e.Flags._Flags and $00010000 <> 0)) then
-        Exit;
-
       if not e.GetPosition(RefPos) then
         Exit;
+
+      // skip markers, markers with VWD are MultiRef LODs and need to be kept
+      if e.IsPersistent and not e.Flags.IsVisibleWhenDistant and (StatRec.Flags._Flags and $00000004 <> 0) then
+        Exit;
+
+      // get form id of XESP marker and check if flag LOD Respects Enable State
+      // this potentially has the same duplicate form id problem as 2D tree LOD in Skyrim
+      if e.ElementExists['XESP'] then begin
+        XESP := e.ElementLinksTo['XESP\Reference'] as IwbMainRecord;
+        if Assigned(XESP) and (XESP.Flags._Flags and $100 = $100) then
+          xespid := IntToHex(XESP.FormID, 8)
+        // if the reference is inititally enabled it gets LOD, VWD always gets LOD
+        else if Assigned(XESP) and not e.Flags.IsVisibleWhenDistant then begin
+          bInitiallyDisabled := XESP.Flags.IsInitiallyDisabled;
+          if e.ElementNativeValues['XESP\Flags'] and $1 = $1 then
+            bInitiallyDisabled := not bInitiallyDisabled;
+          if bInitiallyDisabled then
+            Exit;
+        end;
+      end;
 
       RefCell := wbPositionToGridCell(RefPos);
       RefBlock := Lodset.BlockForCell(RefCell, 4);
@@ -3183,25 +3216,41 @@ var
             Exit;
       end;
 
-      scl := e.ElementEditValues['XSCL'];
-      if scl = '' then
-        scl := '1.0';
-
-      // material swap on a reference
-      if e.ElementExists['XMSP'] then begin
-        MSWP := e.ElementBySignature['XMSP'].LinksTo as IwbMainRecord;
-        if Assigned(MSWP) and Supports(MSWP.WinningOverride.ElementByName['Material Substitutions'], IwbContainer, Entries) then
-          for n := 0 to Pred(Entries.ElementCount) do begin
-            Entry := Entries.Elements[n] as IwbContainer;
-            s := wbNormalizeResourceName(Entry.ElementEditValues['SNAM'], resMaterial);
-            if Pos('\lod\', s) <> 0 then
-              slBGSM.Add(s);
-          end;
+    // SCOL static collection
+    // get transformation and rotation of a part in relation to reference for export file
+    transrot := #9#9#9#9#9#9;
+    iMaxPlacement := -1;
+    if StatRec.Signature = 'SCOL' then
+      if StatRec.ElementExists['Parts'] and Supports(StatRec.ElementByName['Parts'], IwbContainer, Entries) then begin
+        // get current part
+        Entry := Entries[iPart] as IwbContainer;
+        // process the next part
+        if (iPlacement = 0) and (iPart < Pred(Entries.ElementCount)) then
+          ProcessReference(e, iPart + 1, iPlacement, False);
+        // get STAT for current part
+        StatRec := (Entry.ElementLinksTo['ONAM - Static'] as IwbMainRecord);
+        if not Assigned(StatRec) then
+          Exit;
+        StatRec := StatRec.WinningOverride;
+        if Entry.ElementExists['DATA - Placements'] and Supports(Entry.ElementByName['DATA - Placements'], IwbContainer, Entries) then begin
+          iMaxPlacement := Pred(Entries.ElementCount);
+          // get current placement
+          Entry := Entries.Elements[iPlacement] as IwbContainer;
+          transrot := Format('%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s', [
+            Entry.ElementEditValues['Position\X'],
+            Entry.ElementEditValues['Position\Y'],
+            Entry.ElementEditValues['Position\Z'],
+            Entry.ElementEditValues['Rotation\X'],
+            Entry.ElementEditValues['Rotation\Y'],
+            Entry.ElementEditValues['Rotation\Z'],
+            Entry.ElementEditValues['Scale']
+          ]);
+        end;
       end;
 
       k := slCache.IndexOfObject(Pointer(StatRec.LoadOrderFormID));
 
-      if k = -1 then begin
+      if (k = -1) then begin
         s := '';
         // process only VWD statics
         if StatRec.Flags.IsVisibleWhenDistant then begin
@@ -3210,7 +3259,9 @@ var
           m8 := wbGetLODMeshName(StatRec, 1);
           m16 := wbGetLODMeshName(StatRec, 2);
           m32 := wbGetLODMeshName(StatRec, 3);
+
           if (m4 <> '') or (m8 <> '') or (m16 <> '') or (m32 <> '') then begin
+            // snow shaders and snow LOD are still defined in esm, need to test if it works
             mat := '';
             // a tab separated string of Editor ID, flags, material, full mesh and lod files
             s := StatRec.EditorID + #9 + IntToHex(StatRec.Flags._Flags, 8) + #9 +
@@ -3224,8 +3275,83 @@ var
 
       s := slCache[k];
 
-      if s = '' then
+      if s = '' then begin
         Exit;
+      end;
+
+      // check for KYWD 0x00195411 MultirefLOD
+      // LOD4 uses traditional LOD models for each full model of the group
+      // LOD8/16/32 uses 1 simple LOD model for entire group, defined by the linked reference (it is a persistent marker with VWD)
+      if e.ElementExists['Linked References'] and Supports(e.ElementByName['Linked References'], IwbContainer, Entries) then begin
+        for n := 0 to Pred(Entries.ElementCount) do begin
+          Entry := Entries[n] as IwbContainer;
+          if Assigned(Entry.ElementLinksTo['Keyword/Ref']) and ((Entry.ElementLinksTo['Keyword/Ref'] as IwbMainRecord).EditorID = 'MultirefLOD') then begin
+            // get the base record of the linked reference
+            StatMultiRefLOD := (Entry.ElementLinksTo['Ref'] as IwbMainRecord).WinningOverride.BaseRecord.WinningOverride;
+            Break;
+          end;
+        end;
+        if Assigned(StatMultiRefLOD) then begin
+          sl := TStringList.Create;
+          try
+            sl.Delimiter := #9;
+            sl.StrictDelimiter := True;
+            sl.DelimitedText := s;
+            // remove level if it has LOD in linked base record
+            if (sl.Count = 8) and Assigned(StatMultiRefLOD) then begin
+              if wbGetLODMeshName(StatMultiRefLOD, 0) <> '' then
+                sl[4] := '';
+              if wbGetLODMeshName(StatMultiRefLOD, 1) <> '' then
+                sl[5] := '';
+              if wbGetLODMeshName(StatMultiRefLOD, 2) <> '' then
+                sl[6] := '';
+              if wbGetLODMeshName(StatMultiRefLOD, 3) <> '' then
+                sl[7] := '';
+            end;
+            s := StringReplace(sl.CommaText, ',', #9, [rfReplaceAll]);
+          finally
+            sl.Free;
+          end;
+        end;
+      end;
+
+      scl := e.ElementEditValues['XSCL'];
+      if scl = '' then
+        scl := '1.0';
+
+      // material swap on a reference
+      if e.ElementExists['XMSP'] then
+        MSWP := e.ElementLinksTo['XMSP'] as IwbMainRecord
+      // material swap on a base record (this could be added to slCache, but then would have to replaced in case of XMSP
+      else if StatRec.ElementExists['Model'] and Supports(StatRec.ElementByName['Model'], IwbContainer, Entries) then
+        if Entries.ElementExists['MODS'] then
+          MSWP := Entries.ElementLinksTo['MODS'] as IwbMainRecord;
+      // build a list of base and swap materials for export file for LODGen
+      if Assigned(MSWP) and Supports(MSWP.WinningOverride.ElementByName['Material Substitutions'], IwbContainer, Entries) then begin
+        slBaseMat := TStringList.Create;
+        slSwapMat := TStringList.Create;
+        try
+          for n := 0 to Pred(Entries.ElementCount) do begin
+            Entry := Entries.Elements[n] as IwbContainer;
+            // export everything in case full model is used for LOD - there may be a wild card * for base
+            basemat := Lowercase(wbNormalizeResourceName(Entry.ElementEditValues['BNAM'], resMaterial));
+            swapmat := Lowercase(wbNormalizeResourceName(Entry.ElementEditValues['SNAM'], resMaterial));
+            slSwapMat.Add(swapmat);
+            slBaseMat.Add(basemat);
+            // list of swap materials for atlas
+            if Pos('lod\', swapmat) > 0 then
+              slBGSM.Add(swapmat);
+          end;
+          basemat := slBaseMat.DelimitedText;
+          swapmat := slSwapMat.DelimitedText;
+          // there are quite a lot of "missing" LOD swaps for vanilla, but this would be a helpful debug message for mod authors for other plugins
+          //if (Pos('lod\', basemat) = 0) and (Pos('lod\', swapmat) = 0) then
+          //  wbProgressCallback('<Note: Material swap did not define substitutions for LOD, using default texture [' + IntToHex(MSWP.FormID, 8) + '] ' + MSWP.EditorID + '>');
+        finally
+          slBaseMat.Free;
+          slSwapMat.Free;
+        end;
+      end;
 
       s := IntToHex(e.LoadOrderFormID , 8) + #9 +
            IntToHex(e.Flags._Flags, 8) + #9 +
@@ -3235,11 +3361,15 @@ var
            e.ElementEditValues['DATA\Rotation\X'] + #9 +
            e.ElementEditValues['DATA\Rotation\Y'] + #9 +
            e.ElementEditValues['DATA\Rotation\Z'] + #9 +
-           scl + #9 + s;
-
+           scl + #9 +
+           s + #9 +
+           xespid + #9 +
+           basemat + #9 +
+           swapmat + #9 +
+           transrot;
       slRefs.Add(s);
 
-      // list of used LOD meshes
+      // list of used LOD meshes for atlas
       if m4 <> '' then slLODMeshes.Add(m4);
       if m8 <> '' then slLODMeshes.Add(m8);
       if m16 <> '' then slLODMeshes.Add(m16);
@@ -3253,6 +3383,12 @@ var
         Application.ProcessMessages;
         StartTick := GetTickCount;
       end;
+
+      // process the next placements of this part of a SCOL
+      if not bRecursive and (iPlacement < iMaxPlacement) then
+        for n := iPlacement to Pred(iMaxPlacement) do
+          ProcessReference(e, iPart, n + 1, True);
+
     end;
 
 begin
@@ -3337,6 +3473,20 @@ begin
       slExport.Add('GameMode=' + wbAppName);
       slExport.Add('Worldspace=' + aWorldspace.EditorID);
       slExport.Add('CellSW=' + Format('%d %d', [Lodset.SWCell.x, Lodset.SWCell.y]));
+      slExport.Add('RemoveUnseenFaces=True');
+      slExport.Add('IgnoreWater=' + BooleanText[Boolean(aWorldspace.ElementNativeValues['DATA\No LOD Water'])]);
+      // most of FO4 LOD models have no vertex colors/all white, vanilla BTO never have any vertex colors, but they are supported
+      // LODGen.exe optimizes all white away so not
+      slExport.Add('DontGenerateVertexColors=' + BooleanText[Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False)]);
+      slExport.Add('DontGenerateTangents=' + BooleanText[Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoTangents', False)]);
+      // FO4 sets alpha threshold on shapes, the default is 128
+      slExport.Add('DefaultAlphaThreshold=' + IntToStr(Settings.ReadInteger(wbAppName + ' LOD Options', 'DefaultAlphaThreshold', iDefaultAlphaThreshold)));
+      // LODGen uses the alpha threshold found in source model / material instead of the defaut value
+      slExport.Add('UseAlphaThreshold=' + BooleanText[Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsUseAlphaThreshold', False)]);
+      // LODGen applies the BacklightPower found on source model / material instead of default 0.0 - useful for double sided
+      // vanilla models / materials have 0 defined, while tree LOD with double sided leafs *should* have >=1.0 like their full models, so front/back side are equally lit
+      slExport.Add('UseBacklightPower=' + BooleanText[Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsUseBacklightPower', False)]);
+
       if AtlasMapName <> '' then begin
         slExport.Add('TextureAtlasMap=' + AtlasMapName);
         slExport.Add('AtlasTolerance=' + Format('%1.1f', [UVRange - 1.0]));
@@ -3388,26 +3538,54 @@ begin
 
         // textures from LOD material swaps
         if slBGSM.Count > 0 then begin
+
           bgsm := TwbBGSMFile.Create;
+          slCont := TwbFastStringList.Create;
+          slList := TwbFastStringList.Create;
           try
-            for i := 0 to Pred(slBGSM.Count) do begin
+            // get list of all files in materials\lod\ for wildcard replacements
+            wbContainerHandler.ContainerList(slCont);
+            for i := Pred(slCont.Count) downto 0 do
+              wbContainerHandler.ContainerResourceList(slCont[i], slList, 'materials\lod\');
+            slList.Duplicates := dupIgnore;
+            slList.Sorted := True;
+
+            i := -1;
+            while i < Pred(slBGSM.Count) do begin
+              inc(i);
+              // replace wildcard swaps with matching files
+              if Pos('*', slBGSM[i]) > 0 then begin
+                for j := 0 to Pred(slList.Count) do
+                  if MatchesMask(slList[j], slBGSM[i]) then
+                    slBGSM.Add(slList[j]);
+                Continue;
+              end;
+              // textures from LOD material swaps
               try
-                if not wbContainerHandler.ResourceExists(slBGSM[i]) then
+                s := slBGSM[i];
+                // fix bug in dlcnukaworld xx01F5B3
+                if s = 'materials\dlc04\lod\architecture\galacticzone\metalpaneltrim01_lod__black17.bgsm' then
+                  s := 'materials\dlc04\lod\architecture\galacticzone\metalpaneltrim01_lod_black17.bgsm';
+
+                if not wbContainerHandler.ResourceExists(s) then
                   raise Exception.Create('Not found');
 
-                bgsm.LoadFromResource(slBGSM[i]);
+                bgsm.LoadFromResource(s);
               except on E: Exception do
-                wbProgressCallback('<Warning: Error reading "' + slBGSM[i] + '": ' + E.Message + '>');
+                wbProgressCallback('<Warning: Error reading "' + s + '": ' + E.Message + '>');
               end;
               slLODTextures.Add(wbNormalizeResourceName(bgsm.EditValues['Textures\Diffuse'], resTexture));
             end;
           finally
             bgsm.Free;
+            slCont.Free;
+            slList.Free;
           end;
         end;
 
         if slLODTextures.Count > 1 then begin
           wbProgressCallback('[' + aWorldspace.EditorID + '] Building LOD textures atlas: ' + AtlasName);
+          Application.ProcessMessages;
           wbBuildAtlasFromTexturesList(
             slLODTextures,
             Settings.ReadInteger(Section, 'AtlasTextureSize', 512),
@@ -3423,14 +3601,6 @@ begin
 
       s := wbScriptsPath + 'LODGen.txt';
       s := Format('"%s" "%s"', [wbScriptsPath + sLODGenName, s]);
-      s := s + ' --dontFixTangents';
-      s := s + ' --removeUnseenFaces';
-      if aWorldspace.ElementEditValues['DATA\No LOD Water'] = '1' then
-        s := s + ' --ignoreWater';
-      if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoVertexColors', False) then
-        s := s + ' --dontGenerateVertexColors';
-      if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoTangents', False) then
-        s := s + ' --dontGenerateTangents';
       if Settings.ReadBool(Section, 'Chunk', False) then begin
         if Settings.ReadString(Section, 'LODLevel', '') <> '' then
           s := s + ' --lodLevel ' + Settings.ReadString(Section, 'LODLevel', '');

@@ -7004,6 +7004,9 @@ begin
               if (wbGameMode in [gmTES5, gmSSE, gmFNV, gmFO3, gmFO4]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
                 Continue;
               if Mainrecord.Signature = 'WRLD' then begin
+                // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
+                if Mainrecord.ElementExists['Parent\WNAM'] and (Mainrecord.ElementNativeValues['Parent\PNAM\Flags'] and $2 = $2) then
+                  Continue;
                 SetLength(Worldspaces, Succ(Length(Worldspaces)));
                 Worldspaces[High(Worldspaces)] := MainRecord;
               end;
@@ -7024,6 +7027,9 @@ begin
             if Mainrecord.Signature = 'WRLD' then begin
               // TES5LODGen works only for worldspaces with lodsettings file
               if (wbGameMode in [gmTES5, gmSSE, gmFNV, gmFO3, gmFO4]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+                Continue;
+              // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
+              if Mainrecord.ElementExists['Parent\WNAM'] and (Mainrecord.ElementNativeValues['Parent\PNAM\Flags'] and $2 = $2) then
                 Continue;
               SetLength(Worldspaces, Succ(Length(Worldspaces)));
               Worldspaces[High(Worldspaces)] := MainRecord;
@@ -7101,6 +7107,7 @@ begin
         iDefaultAtlasWidth := 4096;
         iDefaultAtlasHeight := 4096;
         fDefaultUVRange := 5.0; // a lot of vanilla meshes with tiled UVs
+        iDefaultAtlasDiffuseFormat := ifDXT5; //DXT5 generally seems better with tree LOD
         iDefaultAtlasNormalFormat := ifATI2n;
       end;
 
@@ -7122,21 +7129,41 @@ begin
       cmbAtlasTextureSize.ItemIndex := IndexOf(cmbAtlasTextureSize.Items, Settings.ReadString(Section, 'AtlasTextureSize', '512'));
       cmbAtlasTextureUVRange.ItemIndex := IndexOf(cmbAtlasTextureUVRange.Items, Settings.ReadString(Section, 'AtlasTextureUVRange', FloatToStrF(fDefaultUVRange, ffFixed, 99, 1)));
       cmbCompDiffuse.ItemIndex := IndexOf(cmbCompDiffuse.Items, ImageFormatToStr(TImageFormat(Settings.ReadInteger(Section, 'AtlasDiffuseFormat', Integer(iDefaultAtlasDiffuseFormat)))));
+      // this is a repeat of TfrmLODGen.cmbCompDiffuseChange
+      if not (wbGameMode in [gmFO4]) and (cmbCompDiffuse.Text <> 'DXT1') then begin
+        Label15.Enabled := False;
+        cmbDefaultAlphaThreshold.Enabled := False;
+      end
+      else begin
+        Label15.Enabled := True;
+        cmbDefaultAlphaThreshold.Enabled := True;
+      end;
+      // FO4 supports setting alpha threshold in BTO, all others are hardcoded to 128
+      // it can be used to make transparant LOD appear thinner or thicker, usefull for tree LOD
+      if (wbGameMode in [gmFO4]) and MatchStr(cmbCompDiffuse.Text, ['8888', 'DXT3', 'DXT5']) then
+        cbUseAlphaThreshold.Enabled := True
+      else
+        cbUseAlphaThreshold.Enabled := False;
       cmbCompNormal.ItemIndex := IndexOf(cmbCompNormal.Items, ImageFormatToStr(TImageFormat(Settings.ReadInteger(Section, 'AtlasNormalFormat', Integer(iDefaultAtlasNormalFormat)))));
       cmbCompSpecular.ItemIndex := IndexOf(cmbCompSpecular.Items, ImageFormatToStr(TImageFormat(Settings.ReadInteger(Section, 'AtlasSpecularFormat', Integer(iDefaultAtlasSpecularFormat)))));
       if not (wbGameMode in [gmFO4]) then
         cmbCompSpecular.Enabled := False;
+      cmbDefaultAlphaThreshold.ItemIndex := IndexOf(cmbDefaultAlphaThreshold.Items, Settings.ReadString(Section, 'DefaultAlphaThreshold', IntToStr(iDefaultAlphaThreshold)));
       cbNoTangents.Checked := Settings.ReadBool(Section, 'ObjectsNoTangents', False);
       cbNoVertexColors.Checked := Settings.ReadBool(Section, 'ObjectsNoVertexColors', False);
+      cbUseAlphaThreshold.Checked := Settings.ReadBool(Section, 'ObjectsUseAlphaThreshold', False);
+      cbUseBacklightPower.Checked := Settings.ReadBool(Section, 'ObjectsUseBacklightPower', False);
       cbChunk.Checked := Settings.ReadBool(Section, 'Chunk', False);
       cmbLODLevel.ItemIndex := IndexOf(cmbLODLevel.Items, Settings.ReadString(Section, 'LODLevel', ''));
       edLODX.Text := Settings.ReadString(Section, 'LODX', '');
       edLODY.Text := Settings.ReadString(Section, 'LODY', '');
       cbTreesLOD.Checked := Settings.ReadBool(Section, 'TreesLOD', True);
       cmbTreesLODBrightness.ItemIndex := IndexOf(cmbTreesLODBrightness.Items, Settings.ReadString(Section, 'TreesBrightness', '0'));
-      if wbGameMode = gmFO4 then begin
+      if wbGameMode in [gmFO4] then begin
         cbTreesLOD.Checked := False;
         cbTreesLOD.Enabled := False;
+        cbUseAlphaThreshold.Visible := True;
+        cbUseBacklightPower.Visible := True;
       end else
       // hidden option to split trees lod atlases when Shift is pressed
       if GetAsyncKeyState(VK_SHIFT) <> 0 then begin
@@ -7156,8 +7183,11 @@ begin
       Settings.WriteInteger(Section, 'AtlasDiffuseFormat', Integer(StrToImageFormat(cmbCompDiffuse.Text)));
       Settings.WriteInteger(Section, 'AtlasNormalFormat', Integer(StrToImageFormat(cmbCompNormal.Text)));
       Settings.WriteInteger(Section, 'AtlasSpecularFormat', Integer(StrToImageFormat(cmbCompSpecular.Text)));
+      Settings.WriteString(Section, 'DefaultAlphaThreshold', cmbDefaultAlphaThreshold.Text);
       Settings.WriteBool(Section, 'ObjectsNoTangents', cbNoTangents.Checked);
       Settings.WriteBool(Section, 'ObjectsNoVertexColors', cbNoVertexColors.Checked);
+      Settings.WriteBool(Section, 'ObjectsUseAlphaThreshold', cbUseAlphaThreshold.Checked);
+      Settings.WriteBool(Section, 'ObjectsUseBacklightPower', cbUseBacklightPower.Checked);
       Settings.WriteBool(Section, 'Chunk', cbChunk.Checked);
       Settings.WriteString(Section, 'LODLevel', cmbLODLevel.Text);
       Settings.WriteString(Section, 'LODX', edLODX.Text);
