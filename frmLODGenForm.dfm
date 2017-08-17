@@ -29,9 +29,9 @@ object frmLODGen: TfrmLODGen
     Caption = 
       'Only worldspaces that have existing lodsettings file "LODSetting' +
       's\<Worldspace>.lod" (.dlodsettings for Fallout3 and New Vegas) a' +
-      're shown either in the Data folder, or in BSA archives. Archives' +
-      ' are loaded similar to the game itself - the ones specified in t' +
-      'he game ini file and those that match loaded plugins names.'
+      're shown either in the Data folder, or in BSA/BA2 archives. Arch' +
+      'ives are loaded similar to the game itself - the ones specified ' +
+      'in the game ini file and those that match loaded plugins names.'
     WordWrap = True
   end
   object Label2: TLabel

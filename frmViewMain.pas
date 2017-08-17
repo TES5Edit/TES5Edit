@@ -7106,7 +7106,7 @@ begin
       if wbGameMode = gmFO4 then begin
         iDefaultAtlasWidth := 4096;
         iDefaultAtlasHeight := 4096;
-        fDefaultUVRange := 5.0; // a lot of vanilla meshes with tiled UVs
+        fDefaultUVRange := 1.1;
         iDefaultAtlasDiffuseFormat := ifDXT5; //DXT5 generally seems better with tree LOD
         iDefaultAtlasNormalFormat := ifATI2n;
       end;
@@ -7129,21 +7129,7 @@ begin
       cmbAtlasTextureSize.ItemIndex := IndexOf(cmbAtlasTextureSize.Items, Settings.ReadString(Section, 'AtlasTextureSize', '512'));
       cmbAtlasTextureUVRange.ItemIndex := IndexOf(cmbAtlasTextureUVRange.Items, Settings.ReadString(Section, 'AtlasTextureUVRange', FloatToStrF(fDefaultUVRange, ffFixed, 99, 1)));
       cmbCompDiffuse.ItemIndex := IndexOf(cmbCompDiffuse.Items, ImageFormatToStr(TImageFormat(Settings.ReadInteger(Section, 'AtlasDiffuseFormat', Integer(iDefaultAtlasDiffuseFormat)))));
-      // this is a repeat of TfrmLODGen.cmbCompDiffuseChange
-      if not (wbGameMode in [gmFO4]) and (cmbCompDiffuse.Text <> 'DXT1') then begin
-        Label15.Enabled := False;
-        cmbDefaultAlphaThreshold.Enabled := False;
-      end
-      else begin
-        Label15.Enabled := True;
-        cmbDefaultAlphaThreshold.Enabled := True;
-      end;
-      // FO4 supports setting alpha threshold in BTO, all others are hardcoded to 128
-      // it can be used to make transparant LOD appear thinner or thicker, usefull for tree LOD
-      if (wbGameMode in [gmFO4]) and MatchStr(cmbCompDiffuse.Text, ['8888', 'DXT3', 'DXT5']) then
-        cbUseAlphaThreshold.Enabled := True
-      else
-        cbUseAlphaThreshold.Enabled := False;
+      cmbCompDiffuseChange(nil);
       cmbCompNormal.ItemIndex := IndexOf(cmbCompNormal.Items, ImageFormatToStr(TImageFormat(Settings.ReadInteger(Section, 'AtlasNormalFormat', Integer(iDefaultAtlasNormalFormat)))));
       cmbCompSpecular.ItemIndex := IndexOf(cmbCompSpecular.Items, ImageFormatToStr(TImageFormat(Settings.ReadInteger(Section, 'AtlasSpecularFormat', Integer(iDefaultAtlasSpecularFormat)))));
       if not (wbGameMode in [gmFO4]) then
