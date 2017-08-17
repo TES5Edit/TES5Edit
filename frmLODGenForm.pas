@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, CheckLst, Menus, IniFiles, wbInterface;
+  Dialogs, StdCtrls, ExtCtrls, CheckLst, Menus, IniFiles, wbInterface, StrUtils;
 
 type
   TfrmLODGen = class(TForm)
@@ -27,6 +27,9 @@ type
     cbBuildAtlas: TCheckBox;
     cbNoTangents: TCheckBox;
     cbNoVertexColors: TCheckBox;
+    cbUseAlphaThreshold: TCheckBox;
+    cbUseBacklightPower: TCheckBox;
+    cmbDefaultAlphaThreshold: TComboBox;
     cbChunk: TCheckBox;
     cmbLODLevel: TComboBox;
     edLODX: TEdit;
@@ -49,6 +52,7 @@ type
     Label14: TLabel;
     cmbCompNormal: TComboBox;
     cmbCompSpecular: TComboBox;
+    Label15: TLabel;
     procedure cbObjectsLODClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnSplitTreesLODClick(Sender: TObject);
@@ -59,6 +63,7 @@ type
     procedure cbChunkClick(Sender: TObject);
     procedure cbBuildAtlasClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure cmbCompDiffuseChange(Sender: TObject);
   private
     { Private declarations }
   public
@@ -117,6 +122,22 @@ begin
   Label8.Enabled := cbTreesLOD.Checked;
 end;
 
+procedure TfrmLODGen.cmbCompDiffuseChange(Sender: TObject);
+begin
+  if not (wbGameMode in [gmFO4]) and (cmbCompDiffuse.Text <> 'DXT1') then begin
+    Label15.Enabled := False;
+    cmbDefaultAlphaThreshold.Enabled := False;
+  end
+  else begin
+    Label15.Enabled := True;
+    cmbDefaultAlphaThreshold.Enabled := True;
+  end;
+  if (wbGameMode in [gmFO4]) and MatchStr(cmbCompDiffuse.Text, ['8888', 'DXT3', 'DXT5']) then
+    cbUseAlphaThreshold.Enabled := True
+  else
+    cbUseAlphaThreshold.Enabled := False;
+end;
+
 procedure TfrmLODGen.FormClose(Sender: TObject; var Action: TCloseAction);
 var
   i: integer;
@@ -160,6 +181,8 @@ begin
   cmbCompDiffuse.Items.Text := '888'#13'8888'#13'565'#13'DXT1'#13'DXT3'#13'DXT5'#13'BC4'#13'BC5';
   cmbCompNormal.Items.Assign(cmbCompDiffuse.Items);
   cmbCompSpecular.Items.Assign(cmbCompDiffuse.Items);
+  for i := 0 to 255 do
+    cmbDefaultAlphaThreshold.Items.Add(IntToStr(i));
 end;
 
 procedure TfrmLODGen.FormKeyDown(Sender: TObject; var Key: Word;
