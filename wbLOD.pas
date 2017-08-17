@@ -23,7 +23,7 @@ uses
   IniFiles,
   Forms,
   IOUtils,
-  System.Masks,
+  Masks,
   wbInterface,
   wbImplementation,
   wbHelpers,
