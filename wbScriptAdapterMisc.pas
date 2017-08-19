@@ -1423,12 +1423,12 @@ end;
 
 procedure TJsonObject_IndexOf(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TJsonObject(Args.Obj).IndexOf(Args.Values[0]);
+  Value := TJsonObject(Args.Obj).IndexOf(Args.Values[0]);
 end;
 
 procedure TJsonObject_Contains(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TJsonObject(Args.Obj).Contains(Args.Values[0]);
+  Value := TJsonObject(Args.Obj).Contains(Args.Values[0]);
 end;
 
 procedure TJsonObject_Extract(var Value: Variant; Args: TJvInterpreterArgs);
