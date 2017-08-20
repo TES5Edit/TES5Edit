@@ -6458,7 +6458,7 @@ begin
   Nodes := vstNav.GetSortedSelection(True);
 
   // renumber to destination file if several records were selected or Shift is pressed
-  if (Length(Nodes) > 1) or (GetKeyState(VK_SHIFT) >= 0) then begin
+  if (Length(Nodes) > 1) or (GetKeyState(VK_SHIFT) < 0) then begin
     NodeData := vstNav.GetNodeData(Nodes[0]);
     if not Assigned(NodeData) then
       Exit;
