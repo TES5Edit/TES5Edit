@@ -71,9 +71,9 @@ textures\lod\hittechextblod06_d.dds	256	256	1280	1024	textures\terrain\commonwea
 textures\lod\hittechstreaks01_lod_d.dds	256	256	1536	1024	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
 textures\lod\hwoverpasslod_d.dds	256	256	1792	1024	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
 textures\lod\trees\elmset02lodlv2_d.dds	256	256	2048	1024	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
-textures\lod\elmtrunkslod_d.dds	256	256	2304	1024	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
-textures\lod\maplepostwarset01lodlv2_d.dds	256	256	2560	1024	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
-textures\lod\maplepostwarset02lodlv2_d.dds	256	256	2816	1024	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
+textures\lod\trees\elmtrunkslod_d.dds	256	256	2304	1024	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
+textures\lod\trees\maplepostwarset01lodlv2_d.dds	256	256	2560	1024	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
+textures\lod\trese\maplepostwarset02lodlv2_d.dds	256	256	2816	1024	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
 textures\lod\landscape\ground\driedgrass01_lod_d.dds	128	128	3072	1024	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
 textures\lod\metalkitbaremetalloda_d.dds	128	128	3200	1024	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
 textures\lod\metalkitbaremetallodb_d.dds	128	128	3072	1152	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
@@ -82,8 +82,8 @@ textures\lod\metalkitlod01_d.dds	128	128	3328	1024	textures\terrain\commonwealth
 textures\lod\metalkitlod02_d.dds	128	128	3456	1024	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
 textures\lod\ncalargelod_d.dds	128	128	3328	1152	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
 textures\lod\oldnorthchurchlod_d.dds	128	128	3456	1152	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
-textures\lod\machinekitquad02c_lod_blk_d.dds	128	128	3584	1024	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
-textures\lod\machinekitquad02c_lod_red_d.dds	128	128	3712	1024	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
+textures\lod\setdressing\machinekit\machinekitquad02c_lod_blk_d.dds	128	128	3584	1024	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
+textures\lod\setdressing\machinekit\machinekitquad02c_lod_red_d.dds	128	128	3712	1024	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
 textures\lod\neoclassicalwindowslod_d.dds	64	64	3584	1152	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
 textures\lod\hittechext03lod_d.dds	256	256	0	1280	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
 textures\lod\hittechextalargelod_d.dds	256	256	256	1280	textures\terrain\commonwealth\objects\commonwealth.objects.dds	4096	2048
