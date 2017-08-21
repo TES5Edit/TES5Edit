@@ -1371,41 +1371,45 @@ begin
       end;
 
       // speculars atlas
-      if (Length(Blocks2) <> 0) or (num <> 0) then
-        fname := aName + Format('%.2d', [num]) + '_s.dds'
-      else
-        fname := aName + '_s.dds';
+      if wbGameMode in [gmFO4] then begin
 
-      NewImage(aWidth, aHeight, ifDefault, atlas);
-      try
-        for i := Low(Blocks) to High(Blocks) do
-          CopyRect(
-            Images[Blocks[i].Index].Image_s, 0, 0, Blocks[i].w, Blocks[i].h,
-            atlas, Blocks[i].x, Blocks[i].y
-          );
+        if (Length(Blocks2) <> 0) or (num <> 0) then
+          fname := aName + Format('%.2d', [num]) + '_s.dds'
+        else
+          fname := aName + '_s.dds';
 
-        if (maxw < aWidth) or (maxh < aHeight) then begin
-          NewImage(maxw, maxh, ifDefault, crop);
-          try
-            CopyRect(atlas, 0, 0, maxw, maxh, crop, 0, 0);
-            CloneImage(crop, atlas);
-          finally
-            FreeImage(crop);
-          end;
-        end;
-
-        wbPrepareImageAlpha(atlas, fmtSpecular);
-        if not ConvertImage(atlas, fmtSpecular) then
-          raise Exception.Create('Image convertion error');
-
+        NewImage(aWidth, aHeight, ifDefault, atlas);
         try
-          GenerateMipMaps(atlas, 0, mipmap);
-          SaveMultiImageToFile(fname, mipmap);
+          for i := Low(Blocks) to High(Blocks) do
+            CopyRect(
+              Images[Blocks[i].Index].Image_s, 0, 0, Blocks[i].w, Blocks[i].h,
+              atlas, Blocks[i].x, Blocks[i].y
+            );
+
+          if (maxw < aWidth) or (maxh < aHeight) then begin
+            NewImage(maxw, maxh, ifDefault, crop);
+            try
+              CopyRect(atlas, 0, 0, maxw, maxh, crop, 0, 0);
+              CloneImage(crop, atlas);
+            finally
+              FreeImage(crop);
+            end;
+          end;
+
+          wbPrepareImageAlpha(atlas, fmtSpecular);
+          if not ConvertImage(atlas, fmtSpecular) then
+            raise Exception.Create('Image convertion error');
+
+          try
+            GenerateMipMaps(atlas, 0, mipmap);
+            SaveMultiImageToFile(fname, mipmap);
+          finally
+            FreeImagesInArray(mipmap);
+          end;
         finally
-          FreeImagesInArray(mipmap);
+          FreeImage(atlas);
         end;
-      finally
-        FreeImage(atlas);
+
       end;
 
       // copy remaining blocks back
@@ -1483,9 +1487,12 @@ begin
     // load normal
     InitImage(Images[Pred(Length(Images))].Image_n);
     s := slTextures[i];
-    if Pos('_d.dds', s) <> 0 then
-      s := StringReplace(s, '_d.dds', '_n.dds', [rfIgnoreCase])
-    else
+    if Pos('_d.dds', s) <> 0 then begin
+      s := StringReplace(s, '_d.dds', '_n.dds', [rfIgnoreCase]);
+      // fallback to simple _n addition if not found
+      if not wbContainerHandler.ResourceExists(s) then
+        s := ChangeFileExt(slTextures[i], '') + '_n.dds';
+    end else
       s := ChangeFileExt(slTextures[i], '') + '_n.dds';
 
     if not wbContainerHandler.ResourceExists(s) then begin
@@ -1514,7 +1521,7 @@ begin
     Images[Pred(Length(Images))].Name_n := s;
 
     // load specular
-    if wbGameMode = gmFO4 then begin
+    if wbGameMode in [gmFO4] then begin
       InitImage(Images[Pred(Length(Images))].Image_s);
       s := slTextures[i];
       if Pos('_d.dds', s) <> 0 then
@@ -1578,7 +1585,7 @@ begin
       for i := Low(Images) to High(Images) do begin
         FreeImage(Images[i].Image);
         FreeImage(Images[i].Image_n);
-        if wbGameMode = gmFO4 then
+        if wbGameMode in [gmFO4] then
           FreeImage(Images[i].Image_s);
       end;
   end;
