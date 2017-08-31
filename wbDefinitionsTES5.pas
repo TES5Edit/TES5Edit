@@ -12813,7 +12813,8 @@ begin
   wbRecord(TES4, 'Main File Header',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000001}  0, 'ESM',
-      {0x00000080}  7, 'Localized'
+      {0x00000080}  7, 'Localized',
+      {0x00000200}  9, IsSSE('ESL', '')
     ], False), True), [
     wbStruct(HEDR, 'Header', [
       wbFloat('Version'),

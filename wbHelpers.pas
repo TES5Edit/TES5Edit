@@ -89,6 +89,7 @@ function wbGetSiblingRecords(const aElement: IwbElement; aSignatures: TwbSignatu
 function FindMatchText(Strings: TStrings; const Str: string): Integer;
 function IsFileESM(const aFileName: string): Boolean;
 function IsFileESP(const aFileName: string): Boolean;
+function IsFileESL(const aFileName: string): Boolean;
 procedure DeleteDirectory(const DirName: string);
 function FullPathToFilename(aString: string): string;
 procedure wbFlipBitmap(aBitmap: TBitmap; MirrorType: Integer); // MirrorType: 1 - horizontal, 2 - vertical, 0 - both
@@ -415,6 +416,14 @@ const
 begin
   Result := SameText(ExtractFileExt(aFileName), '.esp') or
     SameText(Copy(aFileName, Length(aFileName) - Length(ghostesp) + 1, Length(ghostesp)), ghostesp)
+end;
+
+function IsFileESL(const aFileName: string): Boolean;
+const
+  ghostesl = '.esl.ghost';
+begin
+  Result := SameText(ExtractFileExt(aFileName), '.esl') or
+    SameText(Copy(aFileName, Length(aFileName) - Length(ghostesl) + 1, Length(ghostesl)), ghostesl)
 end;
 
 procedure DeleteDirectory(const DirName: string);
