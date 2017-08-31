@@ -988,7 +988,7 @@ begin
       else begin
         // restore timestamp on a new file
         e := ExtractFileExt(t);
-        if SameText(e, '.esp') or SameText(e, '.esm') or SameText(e, '.ghost') then
+        if SameText(e, '.esp') or SameText(e, '.esm') or SameText(e, '.esl') or SameText(e, '.ghost') then
           FileSetDate(t, OrgDate);
       end;
     end;
@@ -3260,7 +3260,7 @@ procedure TfrmMain.DoInit;
         for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
           slDLC.Add(wbOfficialDLC[i]);
         repeat
-          if IsFileESM(F.Name) or IsFileESP(F.Name) then begin
+          if IsFileESM(F.Name) or IsFileESP(F.Name) or ((wbGameMode in [gmSSE, gmFO4]) and IsFileESL(F.Name)) then begin
             if SameText(F.Name, wbGameName + '.hardcoded.esp') then
               DeleteFile(wbDataPath + F.Name)
             else
@@ -4568,8 +4568,7 @@ begin
   Caption := Application.Title;
   ColumnWidth := 200;
   RowHeight := vstNav.DefaultNodeHeight;
-  // Script mode is semiautomated - needs user interaction but no UI
-  if (wbToolMode in wbAutoModes) or (wbToolMode in [tmScript]) then begin
+  if wbToolMode in wbAutoModes then begin
     mmoMessages.Parent := Self;
     pnlNav.Visible := False;
     pnlTop.Visible := False;

@@ -7001,8 +7001,8 @@ begin
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename', 0, cpNormal, True),
       wbMODT,
-      wbMODS,
       wbMODC,
+      wbMODS,
       wbMODF
     ], [], cpNormal, False, nil, True);
 
@@ -7017,8 +7017,8 @@ begin
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename', 0, cpNormal, True),
       wbMODT,
-      wbMODS,
       wbMODC,
+      wbMODS,
       wbMODF
     ], [], cpNormal, True, nil, True);
 
@@ -8717,6 +8717,7 @@ begin
     wbRStruct('Male world model', [
       wbString(MOD2, 'Model Filename'),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbMODC,
       wbMO2S
     ], []),
     wbString(ICON, 'Male Inventory Image'),
@@ -8724,6 +8725,7 @@ begin
     wbRStruct('Female world model', [
       wbString(MOD4, 'Model Filename'),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbMODC,
       wbMO4S
     ], []),
     wbString(ICO2, 'Female Inventory Image'),
@@ -8795,29 +8797,29 @@ begin
     wbRStruct('Male world model', [
       wbString(MOD2, 'Model Filename'),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO2S,
       wbMO2C,
+      wbMO2S,
       wbMO2F
     ], [], cpNormal, False),
     wbRStruct('Female world model', [
       wbString(MOD3, 'Model Filename'),
       wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO3S,
       wbMO3C,
+      wbMO3S,
       wbMO3F
     ], []),
     wbRStruct('Male 1st Person', [
       wbString(MOD4, 'Model Filename'),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO4S,
       wbMO4C,
+      wbMO4S,
       wbMO4F
     ], []),
     wbRStruct('Female 1st Person', [
       wbString(MOD5, 'Model Filename'),
       wbByteArray(MO5T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO5S,
       wbMO5C,
+      wbMO5S,
       wbMO5F
     ], []),
     wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),
@@ -15089,7 +15091,8 @@ begin
   wbRecord(TES4, 'Main File Header',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000001}  0, 'ESM',
-      {0x00000080}  7, 'Localized'
+      {0x00000080}  7, 'Localized',
+      {0x00000200}  9, 'ESL'
     ], False), True), [
     wbStruct(HEDR, 'Header', [
       wbFloat('Version'),
