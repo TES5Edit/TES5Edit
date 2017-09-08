@@ -16512,10 +16512,10 @@ begin
 
   SetLength(wbOfficialDLC, 6);
   wbOfficialDLC[0] := 'DLCRobot.esm';
-  wbOfficialDLC[1] := 'DLCWorkshop01.esm';
+  wbOfficialDLC[1] := 'DLCworkshop01.esm';
   wbOfficialDLC[2] := 'DLCCoast.esm';
-  wbOfficialDLC[3] := 'DLCWorkshop02.esm';
-  wbOfficialDLC[4] := 'DLCWorkshop03.esm';
+  wbOfficialDLC[3] := 'DLCworkshop02.esm';
+  wbOfficialDLC[4] := 'DLCworkshop03.esm';
   wbOfficialDLC[5] := 'DLCNukaWorld.esm';
 end;
 
