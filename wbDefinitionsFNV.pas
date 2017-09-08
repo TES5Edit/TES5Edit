@@ -5086,7 +5086,7 @@ begin
         {30} 'Right Mobility Condition',
         {31} 'Brain Condition',
         {32} 'Barter',
-        {33} 'Big Guns (obsolete)',
+        {33} 'Big Guns',
         {34} 'Energy Weapons',
         {35} 'Explosives',
         {36} 'Lockpick',
@@ -5158,7 +5158,7 @@ begin
   wbSkillEnum :=
     wbEnum([
       'Barter',
-      'Big Guns (obsolete)',
+      'Big Guns',
       'Energy Weapons',
       'Explosives',
       'Lockpick',
@@ -9314,7 +9314,7 @@ begin
     wbStruct(DNAM, '', [
       {00} wbArray('Skill Values', wbInteger('Skill', itU8), [
              'Barter',
-             'Big Guns (obsolete)',
+             'Big Guns',
              'Energy Weapons',
              'Explosives',
              'Lockpick',
@@ -9330,7 +9330,7 @@ begin
            ]),
       {14} wbArray('Skill Offsets', wbInteger('Skill', itU8), [
              'Barter',
-             'Big Guns (obsolete)',
+             'Big Guns',
              'Energy Weapons',
              'Explosives',
              'Lockpick',
@@ -11250,8 +11250,8 @@ begin
     wbFormIDCk(_1_IAD, 'Day Image Space Modifier', [IMAD]),
     wbFormIDCk(_2_IAD, 'Sunset Image Space Modifier', [IMAD]),
     wbFormIDCk(_3_IAD, 'Night Image Space Modifier', [IMAD]),
-    wbFormIDCk(_4_IAD, 'Unknown', [IMAD]),
-    wbFormIDCk(_5_IAD, 'Unknown', [IMAD]),
+    wbFormIDCk(_4_IAD, 'High Noon Image Space Modifier', [IMAD]),
+    wbFormIDCk(_5_IAD, 'Midnight Image Space Modifier', [IMAD]),
     wbString(DNAM, 'Cloud Textures - Layer 0', 0, cpNormal, True),
     wbString(CNAM, 'Cloud Textures - Layer 1', 0, cpNormal, True),
     wbString(ANAM, 'Cloud Textures - Layer 2', 0, cpNormal, True),
