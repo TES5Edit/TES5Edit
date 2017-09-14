@@ -320,6 +320,33 @@ end;
 
 { TES5saves }
 
+function SaveVersionDecider(aMinimum: Integer; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  aType : Integer;
+  Element : IwbElement;
+  Container: IwbDataContainer;
+begin
+  Result := 0;
+  if not Assigned(aElement) then Exit;
+  Element := aElement;
+  while Assigned(Element.Container) do
+    Element := Element.Container;
+
+  if Supports(Element, IwbContainer, Container) then begin
+    Element := Container.ElementByPath['Save File Header\Header\Version'];
+    if Assigned(Element) then begin
+      aType := Element.NativeValue;
+      if aType>aMinimum then
+        Result := 1;
+    end;
+  end;
+end;
+
+function SaveVersionGreaterThan14Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+    Result := SaveVersionDecider(14, aBasePtr, aEndPtr, aElement);
+end;
+
 function SaveFormVersionDecider(aMinimum: Integer; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aType : Integer;
@@ -7286,6 +7313,7 @@ begin
     ,wbLenString('Runtime version', 2)
     ,wbInteger('PluginInfo Size (?)', itU32)
     ,wbArray(wbFilePlugins, wbLenString('PluginName', 2), -4)
+    ,wbUnion('', SaveVersionGreaterThan14Decider, [wbNull, wbArray('Light plugins', wbLenString('LightPluginName', 2), -2)])
     ,wbFileLocationTable
   ]);
 
