@@ -190,6 +190,8 @@ var
   v20004   : Cardinal;
   v20005   : Cardinal;
   v20007   : Cardinal;
+  v20101   : Cardinal;
+  v20205   : Cardinal;
   v20207   : Cardinal;
 
 procedure wbDefineNif; forward;
@@ -1853,6 +1855,7 @@ function EnSince10401(const e: TdfElement): Boolean; begin Result := nif(e).Vers
 function EnSince20004(const e: TdfElement): Boolean; begin Result := nif(e).Version >= v20004; end;
 function EnBefore20005(const e: TdfElement): Boolean; begin Result := nif(e).Version <= v20005; end;
 function EnSince20103(const e: TdfElement): Boolean; begin Result := nif(e).Version >= v20103; end;
+function EnSince20205(const e: TdfElement): Boolean; begin Result := nif(e).Version >= v20205; end;
 function EnSince20207(const e: TdfElement): Boolean; begin Result := nif(e).Version >= v20207; end;
 function EnSSE(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion2 = 100); end;
 
@@ -2133,7 +2136,7 @@ begin
   ], aEvents);
 end;
 
-function wbHavokColFilter(const aName: string; const aEvents: array of const): TdfDef;
+function wbHavokFilter(const aName: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfStruct(aName, [
     wbHavokLayer('Layer', '1', []),
@@ -2142,10 +2145,18 @@ begin
   ], aEvents);
 end;
 
+function wbbhkCMSDMaterial(const aName: string; const aEvents: array of const): TdfDef;
+begin
+  Result := dfStruct(aName, [
+    wbSkyrimHavokMaterial('Material', '', []),
+    wbHavokFilter('Havok Filter', [])
+  ], aEvents);
+end;
+
 function wbOblivionSubShape(const aName: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfStruct(aName, [
-    wbHavokColFilter('Havok Col Filter', []),
+    wbHavokFilter('Havok Filter', []),
     dfInteger('Num Vertices', dtU32),
     wbHavokMaterial('Material', '', [])
   ], aEvents);
@@ -2168,19 +2179,23 @@ begin
     wbTexCoord('Translation', [DF_OnGetEnabled, @wbTexDesc_EnTranslation]),
     wbTexCoord('Tiling', [DF_OnGetEnabled, @wbTexDesc_EnTranslation]),
     dfFloat('W Rotation', '', [DF_OnGetEnabled, @wbTexDesc_EnTranslation]),
-    dfInteger('Transform Type?', dtU32, [DF_OnGetEnabled, @wbTexDesc_EnTranslation]),
+    dfEnum('Transform Method', dtU32, [
+      0, 'Maya Deprecated',
+      1, 'Max',
+      2, 'Maya'
+    ], 'Maya Deprecated', [DF_OnGetEnabled, @wbTexDesc_EnTranslation]),
     wbTexCoord('Center Offset', [DF_OnGetEnabled, @wbTexDesc_EnTranslation])
   ], aEvents);
 end;
 
-function wbShaderTexDesc_EnTextureData(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v10100) and (e.NativeValues['..\Is Used'] <> 0); end;
+function wbShaderTexDesc_EnMapData(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v10100) and (e.NativeValues['..\Has Map'] <> 0); end;
 
 function wbShaderTexDesc(const aName: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfStruct(aName, [
-   wbBool('Is Used'),
-   wbTexDesc('Texture Data', [DF_OnGetEnabled, @wbShaderTexDesc_EnTextureData]),
-   dfInteger('Map Index', dtU32, [DF_OnGetEnabled, @wbShaderTexDesc_EnTextureData])
+   wbBool('Has Map'),
+   wbTexDesc('Map', [DF_OnGetEnabled, @wbShaderTexDesc_EnMapData]),
+   dfInteger('Map ID', dtU32, [DF_OnGetEnabled, @wbShaderTexDesc_EnMapData])
   ], aEvents);
 end;
 
@@ -2382,31 +2397,36 @@ begin
   ], aEvents);
 end;
 
-function wbControllerLink_EnPriority(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v1010106) and (UserVersion >= 10); end;
-function wbControllerLink_EnStringPalette(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v10200) and (Version <= v20005); end;
-function wbControllerLink_EnNodeName(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20103) or (Version = v1010106); end;
+function wbControlledBlock_EnPriority(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v1010106) and (UserVersion2 > 0); end;
+function wbControlledBlock_EnStringPalette(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v10200) and (Version <= v20005); end;
+function wbControlledBlock_EnNodeName(const e: TdfElement): Boolean; begin Result := nif(e).Version >= v20101; end;
 
-function wbControllerLink(const aName: string; const aEvents: array of const): TdfDef;
+function wbControlledBlock(const aName: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfStruct(aName, [
     wbString('Target Name', [DF_OnGetEnabled, @EnBefore10100]),
-    wbNiRef('Controller', 'NiTimeController', [DF_OnGetEnabled, @EnBefore10100]),
+    // NiControllerSequence::InterpArrayItem
     wbNiRef('Interpolator', 'NiInterpolator', [DF_OnGetEnabled, @EnSince1010106]),
-    wbNiRef('Controller', 'NiTimeController', [DF_OnGetEnabled, @EnSince1010106]),
-    wbNiRef('Unknown Link 2', 'NiObject', [DF_OnGetEnabled, @En1010106]),
-    dfInteger('Unknown Short 0', dtU16, [DF_OnGetEnabled, @En1010106]),
-    dfInteger('Priority', dtU8, [DF_OnGetEnabled, @wbControllerLink_EnPriority]),
-    wbNiRef('String Palette', 'NiStringPalette', [DF_OnGetEnabled, @wbControllerLink_EnStringPalette]),
-    wbString('Node Name', [DF_OnGetEnabled, @wbControllerLink_EnNodeName]),
-    dfInteger('Node Name Offset', dtU32, [DF_OnGetEnabled, @wbControllerLink_EnStringPalette]),
-    wbString('Property Type', [DF_OnGetEnabled, @wbControllerLink_EnNodeName]),
-    dfInteger('Property Type Offset', dtU32, [DF_OnGetEnabled, @wbControllerLink_EnStringPalette]),
-    wbString('Controller Type', [DF_OnGetEnabled, @wbControllerLink_EnNodeName]),
-    dfInteger('Controller Type Offset', dtU32, [DF_OnGetEnabled, @wbControllerLink_EnStringPalette]),
-    wbString('Variable 1', [DF_OnGetEnabled, @wbControllerLink_EnNodeName]),
-    dfInteger('Variable 1 Offset', dtU32, [DF_OnGetEnabled, @wbControllerLink_EnStringPalette]),
-    wbString('Variable 2', [DF_OnGetEnabled, @wbControllerLink_EnNodeName]),
-    dfInteger('Variable 2 Offset', dtU32, [DF_OnGetEnabled, @wbControllerLink_EnStringPalette])
+    wbNiRef('Controller', 'NiTimeController'{, [DF_OnGetEnabled, @EnSince1010106]}),
+    wbNiRef('Blend Interpolator', 'NiObject', [DF_OnGetEnabled, @En1010106]),
+    dfInteger('Blend Index', dtU16, [DF_OnGetEnabled, @En1010106]),
+    // Bethesda-only
+    dfInteger('Priority', dtU8, [DF_OnGetEnabled, @wbControlledBlock_EnPriority]),
+    // Until 10.2
+    // skipped several fields, not for Beth games
+    // From 10.2 to 20.1
+    wbNiRef('String Palette', 'NiStringPalette', [DF_OnGetEnabled, @wbControlledBlock_EnStringPalette]),
+    dfInteger('Node Name Offset', dtU32, [DF_OnGetEnabled, @wbControlledBlock_EnStringPalette]),
+    dfInteger('Property Type Offset', dtU32, [DF_OnGetEnabled, @wbControlledBlock_EnStringPalette]),
+    dfInteger('Controller Type Offset', dtU32, [DF_OnGetEnabled, @wbControlledBlock_EnStringPalette]),
+    dfInteger('Controller ID Offset', dtU32, [DF_OnGetEnabled, @wbControlledBlock_EnStringPalette]),
+    dfInteger('Interpolator ID Offset', dtU32, [DF_OnGetEnabled, @wbControlledBlock_EnStringPalette]),
+    // After 20.1
+    wbString('Node Name', [DF_OnGetEnabled, @wbControlledBlock_EnNodeName]),
+    wbString('Property Type', [DF_OnGetEnabled, @wbControlledBlock_EnNodeName]),
+    wbString('Controller Type', [DF_OnGetEnabled, @wbControlledBlock_EnNodeName]),
+    wbString('Controller ID', [DF_OnGetEnabled, @wbControlledBlock_EnNodeName]),
+    wbString('Interpolator ID', [DF_OnGetEnabled, @wbControlledBlock_EnNodeName])
   ], aEvents);
 end;
 
@@ -2859,7 +2879,7 @@ end;
 procedure wbDefineNiPalette;
 begin
   wbNiObject(wbNifBlock('NiPalette', [
-    dfInteger('Unknown Byte', dtU8),
+    dfInteger('Has Alpha', dtU8),
     dfInteger('Num Entries', dtU32, '256', [DF_OnSetValue, @NiPalette_SetNumEntries]),
     dfArray('Palette', wbByteColor4('Palette'), 0, 'Num Entries', [])
   ]), 'NiObject', False);
@@ -2922,7 +2942,7 @@ begin
       0, 'SORTING_INHERIT',
       1, 'SORTING_OFF'
     ], 'SORTING_INHERIT', []),
-    dfInteger('Unknown Int 2', dtS32, '-1', [DF_OnGetEnabled, @EnBefore10200])
+    wbNiRef('Accumulator', 'NiObject', [DF_OnGetEnabled, @EnBefore10200])
   ]), 'NiNode', False);
 end;
 
@@ -3143,10 +3163,8 @@ end;
 procedure wbDefineNiScreenLODData;
 begin
   wbNiObject(wbNifBlock('NiScreenLODData', [
-    wbVector3('Bound Center'),
-    dfFloat('Bound Radius'),
-    wbVector3('World Center'),
-    dfFloat('World Radius'),
+    wbNiBound('Bound'),
+    wbNiBound('World Bound'),
     dfArray('Proportion Levels', dfFloat('Proportion Levels'), -4)
   ]), 'NiLODData', False);
 end;
@@ -3279,8 +3297,7 @@ end;
 procedure wbDefineNiVectorExtraData;
 begin
   wbNiObject(wbNifBlock('NiVectorExtraData', [
-    wbVector3('Vector Data'),
-    dfFloat('Unknown Float')
+    wbVector4('Vector Data')
   ]), 'NiExtraData', False);
 end;
 
@@ -3640,7 +3657,7 @@ begin
     wbStencilAction('Fail Action', 'ACTION_KEEP', [DF_OnGetEnabled, @EnBefore20005]),
     wbStencilAction('Z Fail Action', 'ACTION_KEEP', [DF_OnGetEnabled, @EnBefore20005]),
     wbStencilAction('Pass Action', 'ACTION_INCREMENT', [DF_OnGetEnabled, @EnBefore20005]),
-    wbFaceDrawMode('Draw Mode', 'DRAW_BOTH', [DF_OnGetEnabled, @EnBefore20005]),
+    wbStencilDrawMode('Draw Mode', 'DRAW_BOTH', [DF_OnGetEnabled, @EnBefore20005]),
     dfInteger('Flags', dtU16, '19840', [DF_OnGetEnabled, @EnSince20103]),
     dfInteger('Stencil Ref', dtU32, [DF_OnGetEnabled, @EnSince20103]),
     dfInteger('Stencil Mask', dtU32, '4294967295', [DF_OnGetEnabled, @EnSince20103])
@@ -4300,12 +4317,12 @@ begin
       dfInteger('Triangle Offset', dtU16)
     ]), 0, 'Max Polygons', []),
     dfArray('Polygon Indices', dfInteger('Polygon Indices', dtU16), 0, 'Max Polygons', []),
-    dfInteger('Unknown UShort 1', dtU16, '1'),
+    dfInteger('Polygon Grow By', dtU16, '1'),
     dfInteger('Num Polygons', dtU16),
-    dfInteger('Used Vertices', dtU16),
-    dfInteger('Unknown UShort 2', dtU16, '1'),
-    dfInteger('Used Triangle Points', dtU16),
-    dfInteger('Unknown UShort 4', dtU16, '1')
+    dfInteger('Max Vertices', dtU16),
+    dfInteger('Vertices Grow By', dtU16, '1'),
+    dfInteger('Max Indices', dtU16),
+    dfInteger('Indices Grow By', dtU16, '1')
   ]), 'NiTriShapeData', False);
 end;
 
@@ -4530,12 +4547,12 @@ function NiSkinData_EnVertexWeights(const e: TdfElement): Boolean; begin with ni
 procedure wbDefineNiSkinData;
 begin
   wbNiObject(wbNifBlock('NiSkinData', [
-    wbSkinTransform('Skin Transform'),
+    wbNiTransform('Skin Transform'),
     dfInteger('Num Bones', dtU32),
     wbNiRef('Skin Partition', 'NiSkinPartition', [DF_OnGetEnabled, @EnBefore10100]),
     dfInteger('Has Vertex Weights', dtU8, '1', [DF_OnGetEnabled, @EnSince4210]),
     dfArray('Bone List', dfStruct('Bone List', [
-      wbSkinTransform('Skin Transform'),
+      wbNiTransform('Skin Transform'),
       wbVector3('Bounding Sphere Offset'),
       dfFloat('Bounding Sphere Radius'),
       dfInteger('Num Vertices', dtU16),
@@ -4623,15 +4640,13 @@ begin
       dfStruct('Capsule', [
         wbVector3('Center'),
         wbVector3('Origin'),
-        dfFloat('Radius'),
-        dfFloat('Unknown Float 1'),
-        dfFloat('Unknown Float 2')
+        dfFloat('Extent'),
+        dfFloat('Radius')
       ], [DF_OnGetEnabled, @NiCollisionData_EnType2]),
       dfInteger('Union BV', dtU32, [DF_OnGetEnabled, @NiCollisionData_EnType4]),
       dfStruct('HalfSpace', [
-        wbVector3('Normal'),
-        wbVector3('Center'),
-        dfFloat('Unknown Float 1')
+        wbNiPlane('Plane'),
+        wbVector3('Center')
       ], [DF_OnGetEnabled, @NiCollisionData_EnType5])
     ], [DF_OnGetEnabled, @NiCollisionData_EnBoundingVolume])
   ]), 'NiCollisionObject', False);
@@ -4698,7 +4713,7 @@ procedure wbDefinebhkWorldObject;
 begin
   wbNiObject(wbNifBlock('bhkWorldObject', [
     wbNiRef('Shape', 'bhkShape'),
-    wbHavokColFilter('Havok Col Filter', []),
+    wbHavokFilter('Havok Filter', []),
     dfBytes('Unused 1', 4),
     wbBroadPhaseType('Broad Phase Type', 'BROAD_PHASE_ENTITY', []),
     dfBytes('Unused 2', 3),
@@ -4761,7 +4776,7 @@ begin
     dfInteger('Unused Byte 1', dtU8),
     dfInteger('Process Contact Callback Delay', dtU16, '65535'),
     dfInteger('Unknown Int 1', dtU32),
-    wbHavokColFilter('Havok Col Filter Copy', []),
+    wbHavokFilter('Havok Filter Copy', []),
     dfBytes('Unused 3', 4),
     dfInteger('Unknown Int 2', dtU32, [DF_OnGetEnabled, @bhkRigidBody_EnUserVersion2gt34]),
     wbhkResponseType('Collision Response 2', 'RESPONSE_SIMPLE_CONTACT', []),
@@ -5165,7 +5180,7 @@ begin
     dfInteger('Grow By', dtU32, '1'),
     wbVector4('Scale'),
     dfArray('Strips Data', wbNiRef('Strips Data', 'NiTriStripsData'), -4, '', [DF_OnBeforeSave, @RemoveNoneLinks]),
-    dfArray('Data Layers', wbHavokColFilter('Data Layers', []), -4)
+    dfArray('Data Layers', wbHavokFilter('Data Layers', []), -4)
   ]), 'bhkShapeCollection', False);
 end;
 
@@ -5370,8 +5385,8 @@ end;
 procedure wbDefineNiSpotLight;
 begin
   wbNiObject(wbNifBlock('NiSpotLight', [
-    dfFloat('Cutoff Angle'),
-    dfFloat('Unknown Float', [DF_OnGetEnabled, @EnSince20207]),
+    dfFloat('Outer Spot Angle'),
+    dfFloat('Inner Spot Angle', [DF_OnGetEnabled, @EnSince20205]),
     dfFloat('Exponent')
   ]), 'NiPointLight', False);
 end;
@@ -5385,12 +5400,11 @@ begin
     wbVector3('Model Projection Transform'),
     wbTexFilterMode('Texture Filtering', 'FILTER_TRILERP', []),
     wbTexClampMode('Texture Clamping', 'WRAP_S_WRAP_T', []),
-    wbEffectType('Texture Type', 'EFFECT_ENVIRONMENT_MAP', []),
+    wbTextureType('Texture Type', 'TEX_ENVIRONMENT_MAP', []),
     wbCoordGenType('Coordinate Generation Type', 'CG_SPHERE_MAP', []),
     wbNiRef('Source Texture', 'NiSourceTexture'),
-    dfInteger('Clipping Plane', dtU8),
-    wbVector3('Unknown Vector'),
-    dfFloat('Unknown Float'),
+    dfInteger('Enable Plane', dtU8),
+    wbNiPlane('Plane'),
     dfInteger('PS2 L', dtS16, '0', [DF_OnGetEnabled, @EnBefore10200]),
     dfInteger('PS2 K', dtS16, '-75', [DF_OnGetEnabled, @EnBefore10200]),
     dfInteger('Unknown Short', dtU16, [DF_OnGetEnabled, @EnBefore41012])
@@ -5576,7 +5590,7 @@ end;
 procedure wbDefineNiTransformInterpolator;
 begin
   wbNiObject(wbNifBlock('NiTransformInterpolator', [
-    wbQTransform('Transform'),
+    wbNiQuatTransform('Transform'),
     dfBytes('Unknown Bytes', 3, [DF_OnGetEnabled, @En1010106]),
     wbNiRef('Data', 'NiTransformData')
   ]), 'NiKeyBasedInterpolator', False);
@@ -5696,7 +5710,7 @@ begin
     wbLookAtFlags('Flags', '', []),
     wbNiPtr('Look At', 'NiNode'),
     wbString('Look At Name'),
-    wbQTransform('Transform'),
+    wbNiQuatTransform('Transform'),
     wbNiRef('Interpolator: Translation', 'NiPoint3Interpolator'),
     wbNiRef('Interpolator: Roll', 'NiFloatInterpolator'),
     wbNiRef('Interpolator: Scale', 'NiFloatInterpolator')
@@ -5719,7 +5733,10 @@ end;
 { NiBSplineFloatInterpolator }
 procedure wbDefineNiBSplineFloatInterpolator;
 begin
-  wbNiObject(wbNifBlock('NiBSplineFloatInterpolator'), 'NiBSplineInterpolator', True);
+  wbNiObject(wbNifBlock('NiBSplineFloatInterpolator', [
+    dfFloat('Value'),
+    dfInteger('Handle', dtU32)
+  ]), 'NiBSplineInterpolator', True);
 end;
 
 //===========================================================================
@@ -5727,10 +5744,8 @@ end;
 procedure wbDefineNiBSplineCompFloatInterpolator;
 begin
   wbNiObject(wbNifBlock('NiBSplineCompFloatInterpolator', [
-    dfFloat('Base'),
-    dfInteger('Offset', dtU32),
-    dfFloat('Bias'),
-    dfFloat('Multiplier')
+    dfFloat('Float Offset'),
+    dfFloat('Float Half Range')
   ]), 'NiBSplineFloatInterpolator', False);
 end;
 
@@ -5739,7 +5754,8 @@ end;
 procedure wbDefineNiBSplinePoint3Interpolator;
 begin
   wbNiObject(wbNifBlock('NiBSplinePoint3Interpolator', [
-    dfArray('Unknown Floats', dfFloat('Unknown Floats'), 6)
+    wbVector3('Value'),
+    dfInteger('Handle', dtU32)
   ]), 'NiBSplineInterpolator', True);
 end;
 
@@ -5747,7 +5763,10 @@ end;
 { NiBSplineCompPoint3Interpolator }
 procedure wbDefineNiBSplineCompPoint3Interpolator;
 begin
-  wbNiObject(wbNifBlock('NiBSplineCompPoint3Interpolator'), 'NiBSplinePoint3Interpolator', False);
+  wbNiObject(wbNifBlock('NiBSplineCompPoint3Interpolator', [
+    dfFloat('Position Offset'),
+    dfFloat('Position Half Range')
+  ]), 'NiBSplinePoint3Interpolator', False);
 end;
 
 //===========================================================================
@@ -5755,10 +5774,10 @@ end;
 procedure wbDefineNiBSplineTransformInterpolator;
 begin
   wbNiObject(wbNifBlock('NiBSplineTransformInterpolator', [
-    wbQTransform('Transform'),
-    dfInteger('Translation Offset', dtU32),
-    dfInteger('Rotation Offset', dtU32),
-    dfInteger('Scale Offset', dtU32)
+    wbNiQuatTransform('Transform'),
+    dfInteger('Translation Handle', dtU32),
+    dfInteger('Rotation Handle', dtU32),
+    dfInteger('Scale Handle', dtU32)
   ]), 'NiBSplineInterpolator', False);
 end;
 
@@ -5767,12 +5786,12 @@ end;
 procedure wbDefineNiBSplineCompTransformInterpolator;
 begin
   wbNiObject(wbNifBlock('NiBSplineCompTransformInterpolator', [
-    dfFloat('Translation Bias'),
-    dfFloat('Translation Multiplier'),
-    dfFloat('Rotation Bias'),
-    dfFloat('Rotation Multiplier'),
-    dfFloat('Scale Bias'),
-    dfFloat('Scale Multiplier')
+    dfFloat('Translation Offset'),
+    dfFloat('Translation Half Range'),
+    dfFloat('Rotation Offset'),
+    dfFloat('Rotation Half Range'),
+    dfFloat('Scale Offset'),
+    dfFloat('Scale Half Range')
   ]), 'NiBSplineTransformInterpolator', False);
 end;
 
@@ -5782,7 +5801,7 @@ procedure wbDefineNiBSplineData;
 begin
   wbNiObject(wbNifBlock('NiBSplineData', [
     dfArray('Float Control Points', dfFloat('Float Control Points'), -4),
-    dfArray('Short Control Points', dfInteger('Float Control Points', dtU16), -4)
+    dfArray('Compact Control Points', dfInteger('Compact Control Points', dtU16), -4)
   ]), 'NiObject', False);
 end;
 
@@ -5809,8 +5828,8 @@ begin
   wbNiObject(wbNifBlock('BSTreadTransfInterpolator', [
     dfArray('Tread Transforms', dfStruct('Tread Transforms', [
       wbString('Name'),
-      wbQTransform('Transform 1'),
-      wbQTransform('Transform 2')
+      wbNiQuatTransform('Transform 1'),
+      wbNiQuatTransform('Transform 2')
     ]), -4),
     wbNiRef('Data', 'NiFloatData')
   ]), 'NiInterpolator', False);
@@ -5836,7 +5855,7 @@ end;
 procedure wbDefineNiLookAtController;
 begin
   wbNiObject(wbNifBlock('NiLookAtController', [
-    dfInteger('Unknown 1', dtU16, [DF_OnGetEnabled, @EnSince10100]),
+    wbLookAtFlags('Flags', '', [DF_OnGetEnabled, @EnSince10100]),
     wbNiPtr('Look At Node', 'NiNode')
   ]), 'NiTimeController', False);
 end;
@@ -5895,7 +5914,9 @@ end;
 { NiExtraDataController }
 procedure wbDefineNiExtraDataController;
 begin
-  wbNiObject(wbNifBlock('NiExtraDataController'), 'NiSingleInterpController', True);
+  wbNiObject(wbNifBlock('NiExtraDataController', [
+    wbString('Extra Data Name', [DF_OnGetEnabled, @EnSince10200])
+  ]), 'NiSingleInterpController', True);
 end;
 
 //===========================================================================
@@ -5903,10 +5924,29 @@ end;
 procedure wbDefineNiFloatExtraDataController;
 begin
   wbNiObject(wbNifBlock('NiFloatExtraDataController', [
-    wbString('Controller Data', [DF_OnGetEnabled, @EnSince10200]),
     dfInteger('Num Extra Bytes', dtU8, [DF_OnGetEnabled, @EnBefore10100]),
     dfBytes('Unknown Bytes', 7, [DF_OnGetEnabled, @EnBefore10100]),
-    dfArray('Unknown Extra Bytes', dfInteger('Unknown Extra Bytes', dtU8), 0, 'Num Extra Bytes', [DF_OnGetEnabled, @EnBefore10100])
+    dfArray('Unknown Extra Bytes', dfInteger('Unknown Extra Bytes', dtU8), 0, 'Num Extra Bytes', [DF_OnGetEnabled, @EnBefore10100]),
+    wbNiRef('Data', 'NiFloatData', [DF_OnGetEnabled, @EnBefore10100])
+  ]), 'NiExtraDataController', False);
+end;
+
+//===========================================================================
+{ NiFloatsExtraDataController }
+procedure wbDefineNiFloatsExtraDataController;
+begin
+  wbNiObject(wbNifBlock('NiFloatsExtraDataController', [
+    dfInteger('Floats Extra Data Index', dtS32),
+    wbNiRef('Data', 'NiFloatData', [DF_OnGetEnabled, @EnBefore10100])
+  ]), 'NiExtraDataController', False);
+end;
+
+//===========================================================================
+{ NiFloatsExtraDataPoint3Controller }
+procedure wbDefineNiFloatsExtraDataPoint3Controller;
+begin
+  wbNiObject(wbNifBlock('NiFloatsExtraDataPoint3Controller', [
+    dfInteger('Floats Extra Data Index', dtS32)
   ]), 'NiExtraDataController', False);
 end;
 
@@ -5914,24 +5954,27 @@ end;
 { NiPoint3InterpController }
 procedure wbDefineNiPoint3InterpController;
 begin
-  wbNiObject(wbNifBlock('NiPoint3InterpController', [
-    wbTargetColor('Target Color', '', [DF_OnGetEnabled, @EnSince10100]),
-    wbNiRef('Data', 'NiPosData', [DF_OnGetEnabled, @EnBefore10100])
-  ]), 'NiSingleInterpController', True);
-end;
-
-//===========================================================================
-{ NiLightColorController }
-procedure wbDefineNiLightColorController;
-begin
-  wbNiObject(wbNifBlock('NiLightColorController'), 'NiPoint3InterpController', False);
+  wbNiObject(wbNifBlock('NiPoint3InterpController'), 'NiSingleInterpController', True);
 end;
 
 //===========================================================================
 { NiMaterialColorController }
 procedure wbDefineNiMaterialColorController;
 begin
-  wbNiObject(wbNifBlock('NiMaterialColorController'), 'NiPoint3InterpController', False);
+  wbNiObject(wbNifBlock('NiMaterialColorController', [
+    wbMaterialColor('Target Color', '', [DF_OnGetEnabled, @EnSince10100]),
+    wbNiRef('Data', 'NiPosData', [DF_OnGetEnabled, @EnBefore10100])
+  ]), 'NiPoint3InterpController', False);
+end;
+
+//===========================================================================
+{ NiLightColorController }
+procedure wbDefineNiLightColorController;
+begin
+  wbNiObject(wbNifBlock('NiLightColorController', [
+    wbLightColor('Target Color', '', [DF_OnGetEnabled, @EnSince10100]),
+    wbNiRef('Data', 'NiPosData', [DF_OnGetEnabled, @EnBefore10100])
+  ]), 'NiPoint3InterpController', False);
 end;
 
 //===========================================================================
@@ -5947,9 +5990,9 @@ begin
       dfArray('Node Groups', wbNiPtr('Nodes', 'NiNode'), -4, '', [DF_OnBeforeSave, @RemoveNoneLinks]),
     -4),
     dfArray('Shape Groups',
-      dfArray('Shape Groups', dfStruct('Link Pairs', [
+      dfArray('Shape Groups', dfStruct('Skin Info', [
         wbNiPtr('Shape', 'NiTriBasedGeom'),
-        wbNiRef('Skin Instnce', 'NiSkinInstance')
+        wbNiRef('Skin Instance', 'NiSkinInstance')
       ]), -4),
     -4, '', [DF_OnGetEnabled, @NiBoneLODController_EnShapeGroups]),
     dfArray('Shade Groups 2',
@@ -6012,7 +6055,7 @@ begin
       wbQuaternion('Value', [DF_OnGetEnabled, @NiKeyframeData_EnQuatKeysValue]),
       wbTBC('TBC', [DF_OnGetEnabled, @NiKeyframeData_EnQuatKeysTBC])
     ]), 0, 'Num Rotation Keys', [DF_OnGetEnabled, @NiKeyframeData_EnQuatKeys]),
-    dfFloat('Unknown Float', [DF_OnGetEnabled, @NiKeyframeData_EnUnknownFloat]),
+    dfFloat('Order', [DF_OnGetEnabled, @NiKeyframeData_EnUnknownFloat]),
     dfArray('XYZ Rotations', wbKeyGroup('XYZ Rotations', 'float', []), 3, '', [DF_OnGetEnabled, @NiKeyframeData_EnXYZRotations]),
     wbKeyGroup('Translations', 'vector3', []),
     wbKeyGroup('Scales', 'float', [])
@@ -6100,13 +6143,13 @@ end;
 procedure wbDefineNiPathController;
 begin
   wbNiObject(wbNifBlock('NiPathController', [
-    dfInteger('Unknown Short 2', dtU16, [DF_OnGetEnabled, @EnSince10100]),
-    dfInteger('Unknown Int', dtU32),
-    dfFloat('Unknown Float 2'),
-    dfFloat('Unknown Float 3'),
-    dfInteger('Unknown Short', dtU16),
-    wbNiRef('Pos Data', 'NiPosData'),
-    wbNiRef('Float Data', 'NiFloatData')
+    wbPathFlags('Path Flags', '', [DF_OnGetEnabled, @EnSince10100]),
+    dfInteger('Bank Dir', dtS32),
+    dfFloat('Max Bank Angle'),
+    dfFloat('Smoothing'),
+    dfInteger('Follow Axis', dtS16),
+    wbNiRef('Path Data', 'NiPosData'),
+    wbNiRef('Percent Data', 'NiFloatData')
   ]), 'NiTimeController', False);
 end;
 
@@ -6345,11 +6388,9 @@ end;
 procedure wbDefineBSPSysMultiTargetEmitterCtlr;
 begin
   wbNiObject(wbNifBlock('BSPSysMultiTargetEmitterCtlr', [
-    wbNiRef('Data', 'NiPSysEmitterCtrlData', [DF_OnGetEnabled, @EnBefore10100]),
-    wbNiRef('Visibility Interpolator', 'NiInterpolator', [DF_OnGetEnabled, @EnSince10200]),
     dfInteger('Max Emitters', dtU16),
     wbNiRef('Master Particle System', 'BSMasterParticleSystem')
-  ]), 'NiPSysModifierCtlr', False);
+  ]), 'NiPSysEmitterCtlr', False);
 end;
 
 //===========================================================================
@@ -6365,7 +6406,7 @@ procedure wbDefineNiFlipController;
 begin
   wbNiObject(wbNifBlock('NiFlipController', [
     wbTexType('Texture Slot', '', []),
-    dfInteger('Unknown Int 2', dtU32, [DF_OnGetEnabled, @EnBefore10100]),
+    dfInteger('Start Time', dtU32, [DF_OnGetEnabled, @EnBefore10100]),
     dfFloat('Delta', [DF_OnGetEnabled, @EnBefore10100]),
     dfArray('Sources', wbNiRef('Sources', 'NiSourceTexture'), -4, '', [DF_OnBeforeSave, @RemoveNoneLinks])
   ]), 'NiFloatInterpController', False);
@@ -6399,9 +6440,9 @@ end;
 procedure wbDefineNiTextureTransformController;
 begin
   wbNiObject(wbNifBlock('NiTextureTransformController', [
-    dfInteger('Unknown2', dtU8),
+    dfInteger('Shader Map', dtU8),
     wbTexType('Texture Slot', '', []),
-    wbTexTransform('Operation', '', []),
+    wbTransformMember('Operation', '', []),
     wbNiRef('Data', 'NiFloatData', [DF_OnGetEnabled, @EnBefore10100])
   ]), 'NiFloatInterpController', False);
 end;
@@ -6571,17 +6612,17 @@ procedure wbDefineNiSequence;
 begin
   wbNiObject(wbNifBlock('NiSequence', [
     wbString('Name'),
-    wbString('Text Keys Name', [DF_OnGetEnabled, @EnBefore10100]),
+    wbString('Accum Root Name', [DF_OnGetEnabled, @EnBefore10100]),
     wbNiRef('Text Keys', 'NiTextKeyExtraData', [DF_OnGetEnabled, @EnBefore10100]),
     dfInteger('Num Controlled Blocks', dtU32),
     dfInteger('Array Grow By', dtU32, [DF_OnGetEnabled, @EnSince1010106]),
-    dfArray('Controlled Blocks', wbControllerLink('Controlled Blocks', []), 0, 'Num Controlled Blocks', [])
+    dfArray('Controlled Blocks', wbControlledBlock('Controlled Blocks', []), 0, 'Num Controlled Blocks', [])
   ]), 'NiObject', False);
 end;
 
 //===========================================================================
 { NiControllerSequence }
-function NiControllerSequence_EnUnknownFloat2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v10200) and (Version <= v10401); end;
+function NiControllerSequence_EnPhase(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v1010106) and (Version <= v10401); end;
 function NiControllerSequence_EnStringPalette(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v10200) and (Version <= v20005); end;
 function NiControllerSequence_EnAnimNotes(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 11) and (UserVersion2 >= 24) and (UserVersion2 <= 28); end;
 function NiControllerSequence_EnAnimNotesArray(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion >= 11) and (UserVersion2 > 28); end;
@@ -6592,14 +6633,13 @@ begin
     dfFloat('Weight', '1.0', [DF_OnGetEnabled, @EnSince1010106]),
     wbNiRef('Text Keys', 'NiTextKeyExtraData', [DF_OnGetEnabled, @EnSince1010106]),
     wbCycleType('Cycle Type', '', [DF_OnGetEnabled, @EnSince1010106]),
-    dfInteger('Unknown Int', dtU32, [DF_OnGetEnabled, @En1010106]),
     dfFloat('Frequency', [DF_OnGetEnabled, @EnSince1010106]),
+    dfFloat('Phase', [DF_OnGetEnabled, @NiControllerSequence_EnPhase]),
     dfFloat('Start Time', [DF_OnGetEnabled, @EnSince1010106]),
-    dfFloat('Unknown Float 2', [DF_OnGetEnabled, @NiControllerSequence_EnUnknownFloat2]),
     dfFloat('Stop Time', [DF_OnGetEnabled, @EnSince1010106]),
-    dfInteger('Unknown Byte', dtU8, [DF_OnGetEnabled, @En1010106]),
-    wbNiRef('Manager', 'NiControllerManager', [DF_OnGetEnabled, @EnSince1010106]),
-    wbString('Target Name', [DF_OnGetEnabled, @EnSince1010106]),
+    dfInteger('Play Backwards', dtU8, [DF_OnGetEnabled, @En1010106]),
+    wbNiPtr('Manager', 'NiControllerManager', [DF_OnGetEnabled, @EnSince1010106]),
+    wbString('Accum Root Name', [DF_OnGetEnabled, @EnSince1010106]),
     wbNiRef('String Palette', 'NiStringPalette', [DF_OnGetEnabled, @NiControllerSequence_EnStringPalette]),
     wbNiRef('Anim Notes', 'BSAnimNotes', [DF_OnGetEnabled, @NiControllerSequence_EnAnimNotes]),
     dfArray('Anim Notes Array', wbNiRef('Anim Notes', 'BSAnimNotes'), -2, '', [
@@ -6925,7 +6965,7 @@ begin
     dfInteger('Unknown Int 6', dtU32, [DF_OnGetEnabled, @NiPSysData_EnHasSubtexture]),
     dfInteger('Unknown Short 3', dtU16, [DF_OnGetEnabled, @NiPSysData_EnHasSubtexture]),
     dfInteger('Unknown Byte 4', dtU8, [DF_OnGetEnabled, @NiPSysData_EnHasSubtexture])
-  ]), 'NiRotatingParticlesData', False);
+  ]), 'NiParticlesData', False);
 end;
 
 //===========================================================================
@@ -7115,12 +7155,12 @@ procedure wbDefineNiPSysAirFieldModifier;
 begin
   wbNiObject(wbNifBlock('NiPSysAirFieldModifier', [
     wbVector3('Direction'),
-    dfFloat('Unknown Float 2'),
-    dfFloat('Unknown Float 3'),
-    wbBool('Unknown Boolean 1'),
-    wbBool('Unknown Boolean 2'),
-    wbBool('Unknown Boolean 3'),
-    dfFloat('Unknown Float 4')
+    dfFloat('Air Friction'),
+    dfFloat('Inherit Velocity'),
+    wbBool('Inherit Rotation'),
+    wbBool('Component Only'),
+    wbBool('Enable Spread'),
+    dfFloat('Spread')
   ]), 'NiPSysFieldModifier', False);
 end;
 
@@ -7434,6 +7474,8 @@ begin
   v20004   := wbNifVersionToInt('20.0.0.4');
   v20005   := wbNifVersionToInt('20.0.0.5');
   v20007   := wbNifVersionToInt('20.0.0.7');
+  v20101   := wbNifVersionToInt('20.1.0.1');
+  v20205   := wbNifVersionToInt('20.2.0.5');
   v20207   := wbNifVersionToInt('20.2.0.7');
 
 
@@ -7676,9 +7718,11 @@ begin
   wbDefineNiVisController;
   wbDefineNiExtraDataController;
   wbDefineNiFloatExtraDataController;
+  wbDefineNiFloatsExtraDataController;
+  wbDefineNiFloatsExtraDataPoint3Controller;
   wbDefineNiPoint3InterpController;
-  wbDefineNiLightColorController;
   wbDefineNiMaterialColorController;
+  wbDefineNiLightColorController;
   wbDefineNiBoneLODController;
   wbDefineNiBSBoneLODController;
   wbDefinebhkBlendController;

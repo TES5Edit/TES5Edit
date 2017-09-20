@@ -57,10 +57,11 @@ function wbMatrix44(const aName: string): TdfDef; overload;
 function wbhkMatrix3(const aName: string; const aEvents: array of const): TdfDef; overload;
 function wbhkMatrix3(const aName: string): TdfDef; overload;
 function wbTBC(const aName: string; const aEvents: array of const): TdfDef;
+function wbNiPlane(const aName: string): TdfDef;
 function wbNiBound(const aName: string): TdfDef;
-function wbQTransform(const aName: string): TdfDef;
+function wbNiQuatTransform(const aName: string): TdfDef;
 function wbMTransform(const aName: string): TdfDef;
-function wbSkinTransform(const aName: string): TdfDef;
+function wbNiTransform(const aName: string): TdfDef;
 function wbTexCoord(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef; overload;
 function wbTexCoord(const aName: string; const aEvents: array of const): TdfDef; overload;
 function wbTexCoord(const aName: string): TdfDef; overload;
@@ -100,7 +101,6 @@ function wbFallout3Layer(const aName, aDefaultValue: string; const aEvents: arra
 function wbSkyrimLayer(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbhkWorldObjCinfoProperty(const aName: string; const aEvents: array of const): TdfDef;
 function wbbhkCOFlags(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
-function wbbhkCMSDMaterial(const aName: string; const aEvents: array of const): TdfDef;
 function wbbhkCMSDTransform(const aName: string; const aEvents: array of const): TdfDef;
 function wbbhkCMSDBigTris(const aName: string; const aEvents: array of const): TdfDef;
 function wbbhkCMSDChunk(const aName: string; const aEvents: array of const): TdfDef;
@@ -117,20 +117,21 @@ function wbFieldType(const aName, aDefaultValue: string; const aEvents: array of
 function wbZCompareMode(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbStencilCompareMode(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbStencilAction(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
-function wbFaceDrawMode(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbStencilDrawMode(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbMotionSystem(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbDeactivatorType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbSolverDeactivation(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbMotionQuality(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbForceType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
-function wbTexTransform(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbTransformMember(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbDecayType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbSymmetryType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbVelocityType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbEmitFrom(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
-function wbEffectType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbTextureType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbCoordGenType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
-function wbTargetColor(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbMaterialColor(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbLightColor(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbConsistencyType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbBoundVolumeType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbCollisionMode(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
@@ -700,6 +701,14 @@ begin
   ], aEvents);
 end;
 
+function wbNiPlane(const aName: string): TdfDef;
+begin
+  Result := dfStruct(aName, [
+    wbVector3('Normal'),
+    dfFloat('Constant')
+  ]);
+end;
+
 function wbNiBound(const aName: string): TdfDef;
 begin
   Result := dfStruct(aName, [
@@ -708,7 +717,7 @@ begin
   ]);
 end;
 
-function wbQTransform(const aName: string): TdfDef;
+function wbNiQuatTransform(const aName: string): TdfDef;
 begin
   Result := dfStruct(aName, [
     wbVector3('Translation'),
@@ -717,20 +726,21 @@ begin
   ]);
 end;
 
-function wbMTransform(const aName: string): TdfDef;
-begin
-  Result := dfStruct(aName, [
-    wbVector3('Translation'),
-    wbRotMatrix33('Rotation', []),
-    dfFloat('Scale', '1.0')
-  ]);
-end;
-
-function wbSkinTransform(const aName: string): TdfDef;
+function wbNiTransform(const aName: string): TdfDef;
 begin
   Result := dfStruct(aName, [
     wbMatrix33('Rotation'),
     wbVector3('Translation'),
+    dfFloat('Scale', '1.0')
+  ]);
+end;
+
+function wbMTransform(const aName: string): TdfDef;
+begin
+  // NiTransform in reverse order, used only in NiAVObject
+  Result := dfStruct(aName, [
+    wbVector3('Translation'),
+    wbRotMatrix33('Rotation', []),
     dfFloat('Scale', '1.0')
   ]);
 end;
@@ -1019,19 +1029,19 @@ begin
     0, 'Default',
     1, 'Environment Map',
     2, 'Glow Shader',
-    3, 'Heightmap',
+    3, 'Parallax',
     4, 'Face Tint',
     5, 'Skin Tint',
     6, 'Hair Tint',
     7, 'Parallax Occ Material',
-    8, 'World Multitexture',
-    9, 'WorldMap1',
-    10, 'Unknown 10',
+    8, 'Multitexture Landscape',
+    9, 'LOD Landscape',
+    10, 'Snow',
     11, 'MultiLayer Parallax',
-    12, 'Unknown 12',
-    13, 'WorldMap2',
+    12, 'Tree Anim',
+    13, 'LOD Objects',
     14, 'Sparkle Snow',
-    15, 'WorldMap3',
+    15, 'LOD Objects HD',
     16, 'Eye Envmap',
     17, 'Unknown 17',
     18, 'WorldMap4',
@@ -1624,15 +1634,6 @@ begin
   ], aDefaultValue, aEvents);
 end;
 
-function wbbhkCMSDMaterial(const aName: string; const aEvents: array of const): TdfDef;
-begin
-  Result := dfStruct(aName, [
-    wbSkyrimHavokMaterial('Material', '', []),
-    wbSkyrimLayer('Layer', '', []),
-    dfBytes('Unused', 3)
-  ], aEvents);
-end;
-
 function wbbhkCMSDTransform(const aName: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfStruct(aName, [
@@ -1687,9 +1688,10 @@ end;
 function wbPixelFormat(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfEnum(aName, dtU32, [
-    0, 'PX_FMT_RGB8',
-    1, 'PX_FMT_RGBA8',
-    2, 'PX_FMT_PAL8',
+    0, 'PX_FMT_RGB',
+    1, 'PX_FMT_RGBA',
+    2, 'PX_FMT_PAL',
+    3, 'PX_FMT_PALA',
     4, 'PX_FMT_DXT1',
     5, 'PX_FMT_DXT5',
     6, 'PX_FMT_DXT5_ALT'
@@ -1727,7 +1729,8 @@ begin
     2, 'FILTER_TRILERP',
     3, 'FILTER_NEAREST_MIPNEAREST',
     4, 'FILTER_NEAREST_MIPLERP',
-    5, 'FILTER_BILERP_MIPNEAREST'
+    5, 'FILTER_BILERP_MIPNEAREST',
+    6, 'FILTER_ANISOTROPIC'
   ], aDefaultValue, aEvents);
 end;
 
@@ -1810,7 +1813,7 @@ begin
   ], aDefaultValue, aEvents);
 end;
 
-function wbFaceDrawMode(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbStencilDrawMode(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfEnum(aName, dtU32, [
     0, 'DRAW_CCW_OR_BOTH',
@@ -1882,7 +1885,7 @@ begin
   ], aDefaultValue, aEvents);
 end;
 
-function wbTexTransform(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbTransformMember(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfEnum(aName, dtU32, [
     0, 'TT_TRANSLATE_U',
@@ -1931,13 +1934,13 @@ begin
   ], aDefaultValue, aEvents);
 end;
 
-function wbEffectType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbTextureType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfEnum(aName, dtU32, [
-    0, 'EFFECT_PROJECTED_LIGHT',
-    1, 'EFFECT_PROJECTED_SHADOW',
-    2, 'EFFECT_ENVIRONMENT_MAP',
-    3, 'EFFECT_FOG_MAP'
+    0, 'TEX_PROJECTED_LIGHT',
+    1, 'TEX_PROJECTED_SHADOW',
+    2, 'TEX_ENVIRONMENT_MAP',
+    3, 'TEX_FOG_MAP'
   ], aDefaultValue, aEvents);
 end;
 
@@ -1952,13 +1955,21 @@ begin
   ], aDefaultValue, aEvents);
 end;
 
-function wbTargetColor(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbMaterialColor(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfEnum(aName, dtU16, [
     0, 'TC_AMBIENT',
     1, 'TC_DIFFUSE',
     2, 'TC_SPECULAR',
     3, 'TC_SELF_ILLUM'
+  ], aDefaultValue, aEvents);
+end;
+
+function wbLightColor(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+begin
+  Result := dfEnum(aName, dtU16, [
+    0, 'LC_DIFFUSE',
+    1, 'LC_AMBIENT'
   ], aDefaultValue, aEvents);
 end;
 
@@ -2316,11 +2327,10 @@ end;
 
 function wbLookAtFlags(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
-  Result := dfEnum(aName, dtU16, [
-    0, 'LOOK_X_AXIS',
-    1, 'LOOK_FLIP',
-    2, 'LOOK_Y_AXIS',
-    4, 'LOOK_Z_AXIS'
+  Result := dfFlags(aName, dtU16, [
+    0, 'LOOK_FLIP',
+    1, 'LOOK_Y_AXIS',
+    2, 'LOOK_Z_AXIS'
   ], aDefaultValue, aEvents);
 end;
 
