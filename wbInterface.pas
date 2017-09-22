@@ -3248,6 +3248,7 @@ var
   wbPlayerRefID       : Cardinal = $14;
   wbChangedFormOffset : Integer = 10000;
   wbOfficialDLC       : array of string;
+  wbOfficialCC        : array of string;
 
 type
   {$IFDEF WIN32}
