@@ -50,11 +50,13 @@ var
 	wbFunctionsEnum: IwbEnumDef;
 	wbFurnitureAnimTypeEnum: IwbEnumDef;
 	wbLocationEnum: IwbEnumDef;
+	wbMapMarkerEnum: IwbEnumDef;
 	wbMiscStatEnum: IwbEnumDef;
 	wbMusicEnum: IwbEnumDef;
 	wbObjectTypeEnum: IwbEnumDef;
 	wbPropTypeEnum: IwbEnumDef;
 	wbQuadrantEnum: IwbEnumDef;
+	wbQuestTypeEnum: IwbEnumDef;
 	wbSexEnum: IwbEnumDef;
 	wbSkillEnum: IwbEnumDef;
 	wbSoulGemEnum: IwbEnumDef;
@@ -76,6 +78,7 @@ uses
   SysUtils,
   Math,
   Variants,
+  IOUtils,
   wbHelpers;
 
 const
@@ -9110,7 +9113,99 @@ end;
 procedure DefineTES5i;
 var
   a, b, c : TVarRecs;
+  s: string;
 begin
+  // load map markes list from external file if present
+  s := ExtractFilePath(ParamStr(0)) + wbAppName + 'MapMarkers.txt';
+  if FileExists(s) then try
+    wbMapMarkerEnum := wbEnum(TFile.ReadAllLines(s));
+  except end;
+
+  if not Assigned(wbMapMarkerEnum) then
+    wbMapMarkerEnum := wbEnum([
+      { 0} 'None',
+      { 1} 'City',
+      { 2} 'Town',
+      { 3} 'Settlement',
+      { 4} 'Cave',
+      { 5} 'Camp',
+      { 6} 'Fort',
+      { 7} 'Nordic Ruins',
+      { 8} 'Dwemer Ruin',
+      { 9} 'Shipwreck',
+      {10} 'Grove',
+      {11} 'Landmark',
+      {12} 'Dragon Lair',
+      {13} 'Farm',
+      {14} 'Wood Mill',
+      {15} 'Mine',
+      {16} 'Imperial Camp',
+      {17} 'Stormcloak Camp',
+      {18} 'Doomstone',
+      {19} 'Wheat Mill',
+      {20} 'Smelter',
+      {21} 'Stable',
+      {22} 'Imperial Tower',
+      {23} 'Clearing',
+      {24} 'Pass',
+      {25} 'Altar',
+      {26} 'Rock',
+      {27} 'Lighthouse',
+      {28} 'Orc Stronghold',
+      {29} 'Giant Camp',
+      {30} 'Shack',
+      {31} 'Nordic Tower',
+      {32} 'Nordic Dwelling',
+      {33} 'Docks',
+      {34} 'Shrine',
+      {35} 'Riften Castle',
+      {36} 'Riften Capitol',
+      {37} 'Windhelm Castle',
+      {38} 'Windhelm Capitol',
+      {39} 'Whiterun Castle',
+      {40} 'Whiterun Capitol',
+      {41} 'Solitude Castle',
+      {42} 'Solitude Capitol',
+      {43} 'Markarth Castle',
+      {44} 'Markarth Capitol',
+      {45} 'Winterhold Castle',
+      {46} 'Winterhold Capitol',
+      {47} 'Morthal Castle',
+      {48} 'Morthal Capitol',
+      {49} 'Falkreath Castle',
+      {50} 'Falkreath Capitol',
+      {51} 'Dawnstar Castle',
+      {52} 'Dawnstar Capitol',
+      {53} 'DLC02 - Temple of Miraak',
+      {54} 'DLC02 - Raven Rock',
+      {55} 'DLC02 - Beast Stone',
+      {56} 'DLC02 - Tel Mithryn',
+      {57} 'DLC02 - To Skyrim',
+      {58} 'DLC02 - To Solstheim'
+    ]);
+
+  // load quest types list from external file if present
+  s := ExtractFilePath(ParamStr(0)) + wbAppName + 'QuestTypes.txt';
+  if FileExists(s) then try
+    wbQuestTypeEnum := wbEnum(TFile.ReadAllLines(s));
+  except end;
+
+  if not Assigned(wbQuestTypeEnum) then
+    wbQuestTypeEnum := wbEnum([
+      {0} 'None',
+      {1} 'Main Quest',
+      {2} 'Mages'' Guild',
+      {3} 'Thieves'' Guild',
+      {4} 'Dark Brotherhood',
+      {5} 'Companion Quests',
+      {6} 'Miscellaneous',
+      {7} 'Daedric',
+      {8} 'Side Quest',
+      {9} 'Civil War',
+     {10} 'DLC01 - Vampire',
+     {11} 'DLC02 - Dragonborn'
+    ]);
+
   wbRecord(MESG, 'Message', [
     wbEDID,
     wbDESCReq,
@@ -11328,20 +11423,7 @@ begin
       wbInteger('Priority', itU8),
       wbInteger('Form Version', itU8, nil, cpIgnore),
       wbByteArray('Unknown', 4),
-      wbInteger('Type', itU32, wbEnum([
-        {0} 'None',
-        {1} 'Main Quest',
-        {2} 'Mages'' Guild',
-        {3} 'Thieves'' Guild',
-        {4} 'Dark Brotherhood',
-        {5} 'Companion Quests',
-        {6} 'Miscellaneous',
-        {7} 'Daedric',
-        {8} 'Side Quest',
-        {9} 'Civil War',
-       {10} 'DLC01 - Vampire',
-       {11} 'DLC02 - Dragonborn'
-      ]))
+      wbInteger('Type', itU32, wbQuestTypeEnum)
     ]),
     wbString(ENAM, 'Event', 4),
     wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
@@ -12411,108 +12493,7 @@ begin
       ]), cpNormal, True),
       wbFULLReq,
       wbStruct(TNAM, '', [
-        wbInteger('Type', itU8, wbEnum([], [
-          0, 'None',
-          1, 'City',
-          2, 'Town',
-          3, 'Settlement',
-          4, 'Cave',
-          5, 'Camp',
-          6, 'Fort',
-          7, 'Nordic Ruins',
-          8, 'Dwemer Ruin',
-          9, 'Shipwreck',
-          10, 'Grove',
-          11, 'Landmark',
-          12, 'Dragon Lair',
-          13, 'Farm',
-          14, 'Wood Mill',
-          15, 'Mine',
-          16, 'Imperial Camp',
-          17, 'Stormcloak Camp',
-          18, 'Doomstone',
-          19, 'Wheat Mill',
-          20, 'Smelter',
-          21, 'Stable',
-          22, 'Imperial Tower',
-          23, 'Clearing',
-          24, 'Pass',
-          25, 'Altar',
-          26, 'Rock',
-          27, 'Lighthouse',
-          28, 'Orc Stronghold',
-          29, 'Giant Camp',
-          30, 'Shack',
-          31, 'Nordic Tower',
-          32, 'Nordic Dwelling',
-          33, 'Docks',
-          34, 'Shrine',
-          35, 'Riften Castle',
-          36, 'Riften Capitol',
-          37, 'Windhelm Castle',
-          38, 'Windhelm Capitol',
-          39, 'Whiterun Castle',
-          40, 'Whiterun Capitol',
-          41, 'Solitude Castle',
-          42, 'Solitude Capitol',
-          43, 'Markarth Castle',
-          44, 'Markarth Capitol',
-          45, 'Winterhold Castle',
-          46, 'Winterhold Capitol',
-          47, 'Morthal Castle',
-          48, 'Morthal Capitol',
-          49, 'Falkreath Castle',
-          50, 'Falkreath Capitol',
-          51, 'Dawnstar Castle',
-          52, 'Dawnstar Capitol',
-          53, 'DLC02 - Temple of Miraak',
-          54, 'DLC02 - Raven Rock',
-          55, 'DLC02 - Beast Stone',
-          56, 'DLC02 - Tel Mithryn',
-          57, 'DLC02 - To Skyrim',
-          58, 'DLC02 - To Solstheim',
-          59, 'Custom 59',
-          60, 'Custom 60',
-          61, 'Custom 61',
-          62, 'Custom 62',
-          63, 'Custom 63',
-          64, 'Custom 64',
-          65, 'Custom 65',
-          66, 'Custom 66',
-          67, 'Custom 67',
-          68, 'Custom 68',
-          69, 'Custom 69',
-          70, 'Custom 70',
-          71, 'Custom 71',
-          72, 'Custom 72',
-          73, 'Custom 73',
-          74, 'Custom 74',
-          75, 'Custom 75',
-          76, 'Custom 76',
-          77, 'Custom 77',
-          78, 'Custom 78',
-          79, 'Custom 79',
-          80, 'Custom 80',
-          81, 'Custom 81',
-          82, 'Custom 82',
-          83, 'Custom 83',
-          84, 'Custom 84',
-          85, 'Custom 85',
-          86, 'Custom 86',
-          87, 'Custom 87',
-          88, 'Custom 88',
-          89, 'Custom 89',
-          90, 'Custom 90',
-          91, 'Custom 91',
-          92, 'Custom 92',
-          93, 'Custom 93',
-          94, 'Custom 94',
-          95, 'Custom 95',
-          96, 'Custom 96',
-          97, 'Custom 97',
-          98, 'Custom 98',
-          99, 'Custom 99'
-        ])),
+        wbInteger('Type', itU8, wbMapMarkerEnum),
         wbByteArray('Unused', 1)
       ], cpNormal, True)
     ], []),
