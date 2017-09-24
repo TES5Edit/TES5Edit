@@ -2221,7 +2221,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..314] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..313] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -2529,7 +2529,7 @@ const
     (Index: 5637; Name: 'GetIsPoisoned'; ),
     (Index: 5708; Name: 'IsEquippedWeaponSilenced'; ),
     (Index: 5709; Name: 'IsEquippedWeaponScoped'; ),
-    (Index: 5953; Name: 'GetPCInRegion'; ParamType1: ptRegion; ),
+    // No longer in the sources.(Index: 5953; Name: 'GetPCInRegion'; ParamType1: ptRegion; ),
     (Index: 5962; Name: 'GetPCDetectionState'; ),
     (Index: 5993; Name: 'IsAttacking'; ),
     (Index: 5994; Name: 'GetPCUsingScope'; ),
