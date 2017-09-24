@@ -1,0 +1,4 @@
+LIBRARY	"nvse_plugin_xEdit"
+EXPORTS
+NVSEPlugin_Query
+NVSEPlugin_Load
