@@ -2602,6 +2602,11 @@ begin
   if i and $00000004 <> 0 then Result := 1;
 end;
 
+function wbDeciderFormVersion44(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 44);
+end;
+
 
 type
   TCTDAFunctionParamType = (
@@ -6638,13 +6643,17 @@ begin
     wbKWDAs,
     wbStruct(DATA, 'Data', [
       wbFormIDCk('Projectile', [PROJ, NULL]),
-        wbInteger('Flags', itU32, wbFlags([
-          'Ignores Normal Weapon Resistance',
-          'Non-Playable',
-          'Non-Bolt'
-        ])),
+      wbInteger('Flags', itU32, wbFlags([
+        'Ignores Normal Weapon Resistance',
+        'Non-Playable',
+        'Non-Bolt'
+      ])),
       wbFloat('Damage'),
-      wbInteger('Value', itU32)
+      wbInteger('Value', itU32),
+      wbUnion('Unknown', wbDeciderFormVersion44, [
+        wbEmpty('Unused'),
+        wbFloat('Unknown')
+      ])
     ], cpNormal, True),
     wbString(ONAM, 'Short Name')
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
