@@ -308,6 +308,7 @@ type
     mniViewStick: TMenuItem;
     mniViewStickAuto: TMenuItem;
     mniViewStickSelected: TMenuItem;
+    mniViewSetToDefault: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -519,6 +520,7 @@ type
     procedure mniNavLOManagersDirtyInfoClick(Sender: TObject);
     procedure mniViewStickAutoClick(Sender: TObject);
     procedure mniViewStickSelectedClick(Sender: TObject);
+    procedure mniViewSetToDefaultClick(Sender: TObject);
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -6690,6 +6692,30 @@ begin
   end;
 end;
 
+procedure TfrmMain.mniViewSetToDefaultClick(Sender: TObject);
+var
+  NodeDatas                   : PViewNodeDatas;
+  Element                     : IwbElement;
+begin
+  if not wbEditAllowed then
+    Exit;
+
+  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  if Assigned(NodeDatas) then begin
+    Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+    if Assigned(Element) then begin
+      if not EditWarn then
+        Exit;
+
+      Element.SetToDefault;
+      ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
+      Element := nil;
+      PostResetActiveTree;
+      InvalidateElementsTreeView(NoNodes);
+    end;
+  end;
+end;
+
 procedure TfrmMain.mniViewHeaderCopyIntoClick(Sender: TObject);
 var
   Column                      : TColumnIndex;
@@ -10519,6 +10545,7 @@ procedure TfrmMain.pmuViewPopup(Sender: TObject);
 var
   NodeDatas     : PViewNodeDatas;
   Element       : IwbElement;
+  StructDef     : IwbStructDef;
   TargetNode    : PVirtualNode;
   TargetIndex   : Integer;
   TargetElement : IwbElement;
@@ -10527,6 +10554,7 @@ begin
   mniViewHideNoConflict.Visible := not ComparingSiblings;
   mniViewStick.Visible := False;
   mniViewEdit.Visible := False;
+  mniViewSetToDefault.Visible := False;
   mniViewAdd.Visible := False;
   mniViewNextMember.Visible := False;
   mniViewPreviousMember.Visible := False;
@@ -10567,6 +10595,8 @@ begin
     if Assigned(NodeDatas) then begin
       Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
       mniViewEdit.Visible := Assigned(Element) and Element.IsEditable;
+      mniViewSetToDefault.Visible := not wbTranslationMode and Assigned(Element) and Element._File.IsEditable and
+        (Supports(Element.ValueDef, IwbStructDef, StructDef) and (StructDef.OptionalFromElement <> -1));
       mniViewRemove.Visible := not wbTranslationMode and Assigned(Element) and Element.IsRemoveable;
       mniViewMoveUp.Visible := not wbTranslationMode and Assigned(Element) and Element.CanMoveUp;
       mniViewMoveDown.Visible := not wbTranslationMode and Assigned(Element) and Element.CanMoveDown;
