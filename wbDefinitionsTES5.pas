@@ -6650,11 +6650,8 @@ begin
       ])),
       wbFloat('Damage'),
       wbInteger('Value', itU32),
-      wbUnion('Unknown', wbDeciderFormVersion44, [
-        wbEmpty('Unused'),
-        wbFloat('Unknown')
-      ])
-    ], cpNormal, True),
+      wbFloat('Weight')
+    ], cpNormal, True, nil, 4),
     wbString(ONAM, 'Short Name')
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
