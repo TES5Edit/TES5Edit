@@ -6641,17 +6641,29 @@ begin
     wbDESC,
     wbKSIZ,
     wbKWDAs,
-    wbStruct(DATA, 'Data', [
-      wbFormIDCk('Projectile', [PROJ, NULL]),
-      wbInteger('Flags', itU32, wbFlags([
-        'Ignores Normal Weapon Resistance',
-        'Non-Playable',
-        'Non-Bolt'
-      ])),
-      wbFloat('Damage'),
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
-    ], cpNormal, True, nil, 4),
+    IsSSE(
+      wbStruct(DATA, 'Data', [
+        wbFormIDCk('Projectile', [PROJ, NULL]),
+        wbInteger('Flags', itU32, wbFlags([
+          'Ignores Normal Weapon Resistance',
+          'Non-Playable',
+          'Non-Bolt'
+        ])),
+        wbFloat('Damage'),
+        wbInteger('Value', itU32),
+        wbFloat('Weight')
+      ], cpNormal, True, nil, 4),
+      wbStruct(DATA, 'Data', [
+        wbFormIDCk('Projectile', [PROJ, NULL]),
+        wbInteger('Flags', itU32, wbFlags([
+          'Ignores Normal Weapon Resistance',
+          'Non-Playable',
+          'Non-Bolt'
+        ])),
+        wbFloat('Damage'),
+        wbInteger('Value', itU32)
+      ], cpNormal, True)
+    ),
     wbString(ONAM, 'Short Name')
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
