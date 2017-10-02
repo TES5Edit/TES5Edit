@@ -430,6 +430,11 @@ begin
     Result := SaveFormVersionDecider(73, aBasePtr, aEndPtr, aElement);
 end;
 
+function SaveFormVersionGreaterThan77Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+    Result := SaveFormVersionDecider(78, aBasePtr, aEndPtr, aElement);
+end;
+
 function ScreenShotDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   Element : IwbElement;
@@ -2375,16 +2380,17 @@ begin
     if Assigned(Element) then begin
       EValue := Element.Value;
            if EValue = 'MODS' then Result := 1
-      else if EValue = 'REGS' then Result := 2
-      else if EValue = 'REGE' then Result := 3
-      else if EValue = 'MENR' then begin Result :=  4; LastRegistrationStart := Result; end
-      else if EValue = 'KEYR' then begin Result :=  5; LastRegistrationStart := Result; end
-      else if EValue = 'CTLR' then begin Result :=  6; LastRegistrationStart := Result; end
-      else if EValue = 'MCBR' then begin Result :=  7; LastRegistrationStart := Result; end
-      else if EValue = 'CHRR' then Result :=  8
-      else if EValue = 'CAMR' then Result :=  9
-      else if EValue = 'AACT' then begin Result := 10; LastRegistrationStart := Result; end
-      else Result := 11;
+      else if EValue = 'LMOD' then Result := 2
+      else if EValue = 'REGS' then Result := 3
+      else if EValue = 'REGE' then Result := 4
+      else if EValue = 'MENR' then begin Result :=  5; LastRegistrationStart := Result; end
+      else if EValue = 'KEYR' then begin Result :=  6; LastRegistrationStart := Result; end
+      else if EValue = 'CTLR' then begin Result :=  7; LastRegistrationStart := Result; end
+      else if EValue = 'MCBR' then begin Result :=  8; LastRegistrationStart := Result; end
+      else if EValue = 'CHRR' then begin Result :=  9; LastRegistrationStart := Result; end
+      else if EValue = 'CAMR' then begin Result := 10; LastRegistrationStart := Result; end
+      else if EValue = 'AACT' then begin Result := 11; LastRegistrationStart := Result; end
+      else Result := 12;
     end;
   end;
 end;
@@ -2393,9 +2399,9 @@ function SKSERegKeyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: 
 begin
   Result := 0;
   case LastRegistrationStart of
-    4, 6, 7 : Result := 1;  // String
-    5, 10:    Result := 2;  // UInt32
-    8, 9:     Result := 3;  // Null
+    5, 7, 8 : Result := 1;  // String
+    6, 11:    Result := 2;  // UInt32
+    9, 10:    Result := 3;  // Null
   end;
 end;
 
@@ -2403,9 +2409,9 @@ function SKSERegDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement:
 begin
   Result := 0;
   case LastRegistrationStart of
-    7:
+    8:
       Result := 1;  // String
-    4, 5, 6, 8, 9, 10:
+    5, 6, 7, 9, 10, 11:
       Result := 0;  // Null
   end;
 end;
@@ -6104,7 +6110,8 @@ begin
   wbSaveContent := wbStruct('Content', [
      wbInteger('Form Version', itU8)
     ,wbInteger('PluginInfo Size', itU32)
-    ,wbArray(wbFilePlugins, wbLenString('PluginName',  2), -4) // SSE ! There are non printable character where the plugin name should show.
+    ,wbArray(wbFilePlugins, wbLenString('PluginName',  2), -4)
+    ,wbUnion('', SaveFormVersionGreaterThan77Decider, [wbNull, wbArray('Light plugins', wbLenString('LightPluginName', 2), -2)])
     ,wbFileLocationTable
     ,wbSaveChapters
   ]);
@@ -6151,6 +6158,7 @@ begin
     wbUnion('Data', SKSEChaptersDecider, [
       wbNull,
       wbArray('Modules', wbLenString('PluginName', 2), -4),
+      wbArray('Light Modules', wbLenString('Light PluginName', 2), -2),
       wbStruct('Registered Event', [
         wbUnion('Key', SKSERegKeyDecider, [
           wbNull,
