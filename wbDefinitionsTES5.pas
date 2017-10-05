@@ -9598,7 +9598,24 @@ begin
           Sig2Int('AHNC'), 'Keyword - Armor Material Heavy Nordic',
           Sig2Int('AHSM'), 'Keyword - Armor Material Heavy Stalhrim',
           Sig2Int('WPNC'), 'Keyword - Weapon Material Nordic',
-          Sig2Int('WPSM'), 'Keyword - Weapon Material Stalhrim'
+          Sig2Int('WPSM'), 'Keyword - Weapon Material Stalhrim',
+          Sig2Int('SKAB'), 'Survival - Keyword Armor Body',
+          Sig2Int('SKAF'), 'Survival - Keyword Armor Feet',
+          Sig2Int('SKAH'), 'Survival - Keyword Armor Hands',
+          Sig2Int('SKAO'), 'Survival - Keyword Armor Head',
+          Sig2Int('SKCB'), 'Survival - Keyword Clothing Body',
+          Sig2Int('SKCD'), 'Survival - Keyword Cold',
+          Sig2Int('SKCF'), 'Survival - Keyword Clothing Feet',
+          Sig2Int('SKCH'), 'Survival - Keyword Clothing Hands',
+          Sig2Int('SKCO'), 'Survival - Keyword Clothing Head',
+          Sig2Int('SKWM'), 'Survival - Keyword Warm',
+          Sig2Int('SRCP'), 'Survival - Cold Penalty',
+          Sig2Int('SRHP'), 'Survival - Hunger Penalty',
+          Sig2Int('SRSP'), 'Survival - Sleep Penalty',
+          Sig2Int('SRTP'), 'Survival - Temperature',
+          Sig2Int('SRVE'), 'Survival Mode Enabled',
+          Sig2Int('SRVS'), 'Survival Mode - Show Option',
+          Sig2Int('SRVT'), 'Survival Mode - Toggle'
         ]);
 
   c := CombineVarRecs(a, b);
