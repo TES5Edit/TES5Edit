@@ -44,8 +44,8 @@ function wbByteColor4(const aName: string; const aEvents: array of const): TdfDe
 function wbByteColor4(const aName: string): TdfDef; overload;
 function wbQuaternion(const aName: string; const aEvents: array of const): TdfDef; overload;
 function wbQuaternion(const aName: string): TdfDef; overload;
-function wbQuaternionXYZW(const aName: string; const aEvents: array of const): TdfDef; overload;
-function wbQuaternionXYZW(const aName: string): TdfDef; overload;
+function wbhkQuaternion(const aName: string; const aEvents: array of const): TdfDef; overload;
+function wbhkQuaternion(const aName: string): TdfDef; overload;
 function wbMatrix22(const aName: string; const aEvents: array of const): TdfDef; overload;
 function wbMatrix22(const aName: string): TdfDef; overload;
 function wbMatrix33(const aName: string; const aEvents: array of const): TdfDef; overload;
@@ -58,7 +58,8 @@ function wbhkMatrix3(const aName: string; const aEvents: array of const): TdfDef
 function wbhkMatrix3(const aName: string): TdfDef; overload;
 function wbTBC(const aName: string; const aEvents: array of const): TdfDef;
 function wbNiPlane(const aName: string): TdfDef;
-function wbNiBound(const aName: string): TdfDef;
+function wbNiBound(const aName: string; const aEvents: array of const): TdfDef; overload;
+function wbNiBound(const aName: string): TdfDef; overload;
 function wbNiQuatTransform(const aName: string): TdfDef;
 function wbMTransform(const aName: string): TdfDef;
 function wbNiTransform(const aName: string): TdfDef;
@@ -118,10 +119,10 @@ function wbZCompareMode(const aName, aDefaultValue: string; const aEvents: array
 function wbStencilCompareMode(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbStencilAction(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbStencilDrawMode(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
-function wbMotionSystem(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
-function wbDeactivatorType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
-function wbSolverDeactivation(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
-function wbMotionQuality(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbhkMotionType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbhkDeactivatorType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbhkSolverDeactivation(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbhkQualityType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbForceType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbTransformMember(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbDecayType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
@@ -513,7 +514,7 @@ begin
   Result := wbQuaternion(aName, []);
 end;
 
-function wbQuaternionXYZW(const aName: string; const aEvents: array of const): TdfDef; overload;
+function wbhkQuaternion(const aName: string; const aEvents: array of const): TdfDef; overload;
 begin
   Result := dfMerge(aName, [
     dfFloat('X'),
@@ -525,9 +526,9 @@ begin
   Result.OnSetText := @QuaternionSetText;
 end;
 
-function wbQuaternionXYZW(const aName: string): TdfDef; overload;
+function wbhkQuaternion(const aName: string): TdfDef; overload;
 begin
-  Result := wbQuaternionXYZW(aName, []);
+  Result := wbhkQuaternion(aName, []);
 end;
 
 function wbMatrix22(const aName: string; const aEvents: array of const): TdfDef; overload;
@@ -709,12 +710,17 @@ begin
   ]);
 end;
 
-function wbNiBound(const aName: string): TdfDef;
+function wbNiBound(const aName: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfStruct(aName, [
     wbVector3('Center'),
     dfFloat('Radius')
-  ]);
+  ], aEvents);
+end;
+
+function wbNiBound(const aName: string): TdfDef;
+begin
+  Result := wbNiBound(aName, []);
 end;
 
 function wbNiQuatTransform(const aName: string): TdfDef;
@@ -1638,7 +1644,7 @@ function wbbhkCMSDTransform(const aName: string; const aEvents: array of const):
 begin
   Result := dfStruct(aName, [
     wbVector4('Translation'),
-    wbQuaternionXYZW('Rotation')
+    wbhkQuaternion('Rotation')
   ], aEvents);
 end;
 
@@ -1663,7 +1669,7 @@ begin
     dfArray('Vertices', dfInteger('Vertices', dtU16), -4),
     dfArray('Indices', dfInteger('Indices', dtU16), -4),
     dfArray('Strips', dfInteger('Strips', dtU16), -4),
-    dfArray('Indices 2', dfInteger('Indices 2', dtU16), -4)
+    dfArray('Welding Info', dfInteger('Welding Info', dtU16), -4)
   ], aEvents);
 end;
 
@@ -1823,14 +1829,14 @@ begin
   ], aDefaultValue, aEvents);
 end;
 
-function wbMotionSystem(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbhkMotionType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfEnum(aName, dtU8, [
     0, 'MO_SYS_INVALID',
     1, 'MO_SYS_DYNAMIC',
-    2, 'MO_SYS_SPHERE',
-    3, 'MO_SYS_SPHERE_INERTIA',
-    4, 'MO_SYS_BOX',
+    2, 'MO_SYS_SPHERE_INERTIA',
+    3, 'MO_SYS_SPHERE_STABILIZED',
+    4, 'MO_SYS_BOX_INERTIA',
     5, 'MO_SYS_BOX_STABILIZED',
     6, 'MO_SYS_KEYFRAMED',
     7, 'MO_SYS_FIXED',
@@ -1839,7 +1845,7 @@ begin
   ], aDefaultValue, aEvents);
 end;
 
-function wbDeactivatorType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbhkDeactivatorType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfEnum(aName, dtU8, [
     0, 'DEACTIVATOR_INVALID',
@@ -1848,7 +1854,7 @@ begin
   ], aDefaultValue, aEvents);
 end;
 
-function wbSolverDeactivation(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbhkSolverDeactivation(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfEnum(aName, dtU8, [
     0, 'SOLVER_DEACTIVATION_INVALID',
@@ -1860,7 +1866,7 @@ begin
   ], aDefaultValue, aEvents);
 end;
 
-function wbMotionQuality(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
+function wbhkQualityType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfEnum(aName, dtU8, [
     0, 'MO_QUAL_INVALID',
