@@ -1,0 +1,4 @@
+LIBRARY	"plugin_modInfoDump"
+EXPORTS
+F4SEPlugin_Query
+F4SEPlugin_Load
