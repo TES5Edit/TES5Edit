@@ -1,0 +1,4 @@
+LIBRARY	"plugin_modInfoDump"
+EXPORTS
+SKSEPlugin_Query
+SKSEPlugin_Load
