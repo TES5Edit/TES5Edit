@@ -642,12 +642,27 @@ var
   Props, Prop: TdfElement;
   i: integer;
 begin
-  Props := Elements['BS Properties'];
-  if not Assigned(Props) then
-    Props := Elements['Properties'];
+  Prop := Elements['Shader Property'];
+  if Assigned(Prop) and wbIsNiObject(aBlockType, 'BSShaderProperty') then begin
+    if Prop.LinksTo <> nil then
+      raise Exception.Create('Block already has a shader property, can not add a new one');
+    Result := NifFile.AddBlock(aBlockType);
+    Prop.NativeValue := Result.Index;
+    Exit;
+  end;
 
+  Prop := Elements['Alpha Property'];
+  if Assigned(Prop) and wbIsNiObject(aBlockType, 'NiAlphaProperty') then begin
+    if Prop.LinksTo <> nil then
+      raise Exception.Create('Block already has an alpha property, can not add a new one');
+    Result := NifFile.AddBlock(aBlockType);
+    Prop.NativeValue := Result.Index;
+    Exit;
+  end;
+
+  Props := Elements['Properties'];
   if not Assigned(Props) then
-    DoException('Can not have properties');
+    DoException('Block can not have properties');
 
   // find existing None entry if any
   Prop := nil;
@@ -657,12 +672,9 @@ begin
       Break;
     end;
 
-  // or add a new one if properties list is of variable size (BS Properties has fixed size)
+  // or add a new one
   if not Assigned(Prop) then
-    if not (Props.Def.Size > 0) then
-      Prop := Props.Add
-    else
-      DoException('Can not add more properties');
+    Prop := Props.Add;
 
   Result := NifFile.AddBlock(aBlockType);
   Prop.NativeValue := Result.Index;
@@ -673,10 +685,19 @@ var
   Props: TdfElement;
   i: integer;
 begin
-  Props := Elements['BS Properties'];
-  if not Assigned(Props) then
-    Props := Elements['Properties'];
+  Props := Elements['Shader Property'];
+  if Assigned(Props) and (Props.LinksTo <> nil) and (Props.LinksTo.EditValues['Name'] = aName) then begin
+    Result := TwbNifBlock(Props.LinksTo);
+    Exit;
+  end;
 
+  Props := Elements['Alpha Property'];
+  if Assigned(Props) and (Props.LinksTo <> nil) and (Props.LinksTo.EditValues['Name'] = aName) then begin
+    Result := TwbNifBlock(Props.LinksTo);
+    Exit;
+  end;
+
+  Props := Elements['Properties'];
   if Assigned(Props) then
     for i := 0 to Pred(Props.Count) do begin
       Result := TwbNifBlock(Props[i].LinksTo);
@@ -748,20 +769,33 @@ var
   Prop: TwbNifBlock;
   i: integer;
 begin
-  Props := Elements['BS Properties'];
-  if not Assigned(Props) then
-    Props := Elements['Properties'];
-
-  if not Assigned(Props) then
-    Exit;
-
-  for i := 0 to Pred(Props.Count) do begin
-    Prop := TwbNifBlock(Props[i].LinksTo);
+  Props := Elements['Shader Property'];
+  if Assigned(Props) then begin
+    Prop := TwbNifBlock(Props.LinksTo);
     if Assigned(Prop) and Prop.IsNiObject(aBlockType, aInherited) then begin
       SetLength(Result, Succ(Length(Result)));
       Result[Pred(Length(Result))] := Prop;
     end;
   end;
+
+  Props := Elements['Alpha Property'];
+  if Assigned(Props) then begin
+    Prop := TwbNifBlock(Props.LinksTo);
+    if Assigned(Prop) and Prop.IsNiObject(aBlockType, aInherited) then begin
+      SetLength(Result, Succ(Length(Result)));
+      Result[Pred(Length(Result))] := Prop;
+    end;
+  end;
+
+  Props := Elements['Properties'];
+  if Assigned(Props) then
+    for i := 0 to Pred(Props.Count) do begin
+      Prop := TwbNifBlock(Props[i].LinksTo);
+      if Assigned(Prop) and Prop.IsNiObject(aBlockType, aInherited) then begin
+        SetLength(Result, Succ(Length(Result)));
+        Result[Pred(Length(Result))] := Prop;
+      end;
+    end;
 end;
 
 function TwbNifBlock.PropertyByType(const aBlockType: string; aInherited: Boolean = False): TwbNifBlock;
@@ -2620,12 +2654,16 @@ function wbPrismaticDescriptor_En2(const e: TdfElement): Boolean; begin with nif
 function wbPrismaticDescriptor(const aName: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfStruct(aName, [
+    // TES4
     wbVector4('Pivot A', [DF_OnGetEnabled, @EnBefore20005]),
-    dfArray('Rotating Matrix A', wbVector4('Rotating Matrix A'), 4, '', [DF_OnGetEnabled, @EnBefore20005]),
+    wbVector4('Rotation A', [DF_OnGetEnabled, @EnBefore20005]),
+    wbVector4('Plane A', [DF_OnGetEnabled, @EnBefore20005]),
+    wbVector4('Sliding A', [DF_OnGetEnabled, @EnBefore20005]),
     wbVector4('Pivot B', [DF_OnGetEnabled, @EnBefore20005]),
-    wbVector4('Sliding B', [DF_OnGetEnabled, @EnBefore20005]),
+    wbVector4('Rotation B', [DF_OnGetEnabled, @EnBefore20005]),
     wbVector4('Plane B', [DF_OnGetEnabled, @EnBefore20005]),
-
+    wbVector4('Sliding B', [DF_OnGetEnabled, @EnBefore20005]),
+    // FO3+
     wbVector4('Sliding A', [DF_OnGetEnabled, @EnSince20207]),
     wbVector4('Rotation A', [DF_OnGetEnabled, @EnSince20207]),
     wbVector4('Plane A', [DF_OnGetEnabled, @EnSince20207]),
@@ -3477,14 +3515,7 @@ end;
 procedure wbDefineBSPackedCombinedSharedGeomDataExtra;
 begin
   wbNiObject(wbNifBlock('BSPackedCombinedSharedGeomDataExtra', [
-    dfInteger('VF1', dtU8),
-    dfInteger('VF2', dtU8),
-    dfInteger('VF3', dtU8),
-    dfInteger('VF4', dtU8),
-    dfInteger('VF5', dtU8),
-    dfInteger('VF6', dtU8),
-    dfInteger('VF7', dtU8),
-    dfInteger('VF8', dtU8),
+    wbVertexDesc('VertexDesc', []),
     dfInteger('Num Vertices', dtU32),
     dfInteger('Num Triangles', dtU32),
     dfInteger('Unknown Flags 1', dtU32),
@@ -3642,10 +3673,12 @@ end;
 
 //===========================================================================
 { NiShadeProperty }
+function NiShadeProperty_EnFlags(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 <= 34; end;
+
 procedure wbDefineNiShadeProperty;
 begin
   wbNiObject(wbNifBlock('NiShadeProperty', [
-    dfInteger('Flags', dtU16)
+    dfInteger('Flags', dtU16, '1', [DF_OnGetEnabled, @NiShadeProperty_EnFlags])
   ]), 'NiProperty', False);
 end;
 
@@ -3770,17 +3803,16 @@ end;
 
 //===========================================================================
 { BSShaderProperty }
-function BSShaderProperty_EnEnvMapScale(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 <= 34; end;
+function BSShaderProperty_EnShaderType(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 <= 34; end;
 
 procedure wbDefineBSShaderProperty;
 begin
   wbNiObject(wbNifBlock('BSShaderProperty', [
-    dfInteger('Flags', dtU16),
-    wbBSShaderType('Shader Type', 'SHADER_DEFAULT', []),
-    wbBSShaderFlags('Shader Flags', 'SF_Specular | SF_Remappable_Textures | SF_ZBuffer_Test', []),
-    wbBSShaderFlags2('Shader Flags 2', 'SF2_ZBuffer_Write', []),
-    dfFloat('Environment Map Scale', '1.0', [DF_OnGetEnabled, @BSShaderProperty_EnEnvMapScale])
-  ]), 'NiProperty', False);
+    wbBSShaderType('Shader Type', 'SHADER_DEFAULT', [DF_OnGetEnabled, @BSShaderProperty_EnShaderType]),
+    wbBSShaderFlags('Shader Flags', 'SF_Specular | SF_Remappable_Textures | SF_ZBuffer_Test', [DF_OnGetEnabled, @BSShaderProperty_EnShaderType]),
+    wbBSShaderFlags2('Shader Flags 2', 'SF2_ZBuffer_Write', [DF_OnGetEnabled, @BSShaderProperty_EnShaderType]),
+    dfFloat('Environment Map Scale', '1.0', [DF_OnGetEnabled, @BSShaderProperty_EnShaderType])
+  ]), 'NiShadeProperty', False);
 end;
 
 //===========================================================================
@@ -3836,12 +3868,12 @@ procedure wbDefineBSEffectShaderProperty;
 begin
   wbNiObject(wbNifBlock('BSEffectShaderProperty', [
     dfUnion([
-      wbSkyrimShaderPropertyFlags1('Shader Flags 1', '2185233153', []),
-      wbFallout4ShaderPropertyFlags1('Shader Flags 1', '2151678465', [])
+      wbSkyrimShaderPropertyFlags1('Shader Flags 1', '2147483648', []),
+      wbFallout4ShaderPropertyFlags1('Shader Flags 1', '2147483648', [])
     ], [DF_OnDecide, @BSEffectShaderProperty_DecideShaderFlags]),
     dfUnion([
-      wbSkyrimShaderPropertyFlags2('Shader Flags 2', '32801', []),
-      wbFallout4ShaderPropertyFlags2('Shader Flags 2', '129', [])
+      wbSkyrimShaderPropertyFlags2('Shader Flags 2', '32', []),
+      wbFallout4ShaderPropertyFlags2('Shader Flags 2', '32', [])
     ], [DF_OnDecide, @BSEffectShaderProperty_DecideShaderFlags]),
     wbTexCoord('UV Offset'),
     wbTexCoord('UV Scale', '1 1', []),
@@ -3862,11 +3894,12 @@ begin
     wbSizedString('Normal Texture', [DF_OnGetEnabled, @BSEffectShaderProperty_EnEnvMap]),
     wbSizedString('Env Mask Texture', [DF_OnGetEnabled, @BSEffectShaderProperty_EnEnvMap]),
     dfFloat('Environment Map Scale', [DF_OnGetEnabled, @BSEffectShaderProperty_EnEnvMap])
-  ]), 'NiProperty', False);
+  ]), 'BSShaderProperty', False);
 end;
 
   //===========================================================================
 { BSLightingShaderProperty }
+function BSLightingShaderProperty_EnShaderType(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 >= 83; end;
 function BSLightingShaderProperty_DecideShaderFlags(const e: TdfElement): Integer; begin if nif(e).UserVersion2 <> 130 then Result := 0 else Result := 1; end;
 function BSLightingShaderProperty_EnWet(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 = 130; end;
 function BSLightingShaderProperty_EnLightingEffect(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 < 130; end;
@@ -3883,7 +3916,7 @@ function BSLightingShaderProperty_EnEyes(const e: TdfElement): Boolean; begin Re
 procedure wbDefineBSLightingShaderProperty;
 begin
   wbNiObject(wbNifBlock('BSLightingShaderProperty', [
-    wbBSLightingShaderPropertyShaderType('Shader Type', '', []),
+    wbBSLightingShaderPropertyShaderType('Shader Type', '', [DF_OnGetEnabled, @BSLightingShaderProperty_EnShaderType]),
     dfUnion([
       wbSkyrimShaderPropertyFlags1('Shader Flags 1', '2185233153', []),
       wbFallout4ShaderPropertyFlags1('Shader Flags 1', '2151678465', [])
@@ -3938,7 +3971,7 @@ begin
       wbVector3('Left Eye Reflection Center', []),
       wbVector3('Right Eye Reflection Center', [])
     ], [DF_OnGetEnabled, @BSLightingShaderProperty_EnEyes])
-  ]), 'NiProperty', False, 1);
+  ]), 'BSShaderProperty', False, 1);
 end;
 
 //===========================================================================
@@ -3952,7 +3985,7 @@ begin
     wbTexCoord('UV Scale', '1 1', []),
     wbSizedString('Source Texture'),
     wbSkyObjectType('Sky Object Type', '', [])
-  ]), 'NiProperty', False);
+  ]), 'BSShaderProperty', False);
 end;
 
 //===========================================================================
@@ -3967,7 +4000,7 @@ begin
     wbSkyrimWaterShaderFlags('Water Shader Flags', '', []),
     dfInteger('Water Direction', dtU8, '3'),
     dfInteger('Unknown Short 3', dtU16)
-  ]), 'NiProperty', False);
+  ]), 'BSShaderProperty', False);
 end;
 
 //===========================================================================
@@ -4125,7 +4158,8 @@ begin
     ], [DF_OnGetEnabled, @NiGeometry_EnMaterialData]),
     wbBool('Dirty Flag', [DF_OnGetEnabled, @NiGeometry_EnDirtyFlag]),
     // Bethesda
-    dfArray('BS Properties', wbNiRef('BS Properties', 'NiProperty'), 2, '', [DF_OnGetEnabled, @NiGeometry_EnBSProperties])
+    wbNiRef('Shader Property', 'BSShaderProperty', [DF_OnGetEnabled, @NiGeometry_EnBSProperties]),
+    wbNiRef('Alpha Property', 'NiAlphaProperty', [DF_OnGetEnabled, @NiGeometry_EnBSProperties])
   ]), 'NiAVObject', False);
 end;
 
@@ -4385,7 +4419,8 @@ begin
   wbNiObject(wbNifBlock('BSTriShape', [
     wbNiBound('Bounding Sphere'),
     wbNiRef('Skin', 'NiObject'),
-    dfArray('BS Properties', wbNiRef('BS Properties', 'NiProperty'), 2),
+    wbNiRef('Shader Property', 'BSShaderProperty'),
+    wbNiRef('Alpha Property', 'NiAlphaProperty'),
     wbVertexDesc('VertexDesc', []),
     dfUnion([
       dfInteger('Num Triangles', dtU32),
@@ -4438,9 +4473,9 @@ end;
 
 //===========================================================================
 { BSSubIndexTriShape }
-function BSSubIndexTriShape_EnNumPrimitives(const e: TdfElement): Boolean; begin Result := (nif(e).UserVersion2 = 130) and (e.NativeValues['..\Data Size'] > 0); end;
+function BSSubIndexTriShape_EnFO4HasData(const e: TdfElement): Boolean; begin Result := (nif(e).UserVersion2 = 130) and (e.NativeValues['..\Data Size'] > 0); end;
 
-function BSSubIndexTriShape_EnSubSegmentData(const e: TdfElement): Boolean;
+function BSSubIndexTriShape_EnFO4SubSegmentData(const e: TdfElement): Boolean;
 begin
    Result := (nif(e).UserVersion2 = 130) and (e.NativeValues['..\Data Size'] > 0) and (e.NativeValues['..\Num Segments'] < e.NativeValues['..\Total Segments']);
 end;
@@ -4450,9 +4485,10 @@ function BSSubIndexTriShape_EnSegmentSSE(const e: TdfElement): Boolean; begin Re
 procedure wbDefineBSSubIndexTriShape;
 begin
   wbNiObject(wbNifBlock('BSSubIndexTriShape', [
-    dfInteger('Num Primitives', dtU32, [DF_OnGetEnabled, @BSSubIndexTriShape_EnNumPrimitives]),
-    dfInteger('Num Segments', dtU32, [DF_OnGetEnabled, @BSSubIndexTriShape_EnNumPrimitives]),
-    dfInteger('Total Segments', dtU32, [DF_OnGetEnabled, @BSSubIndexTriShape_EnNumPrimitives]),
+    // FO4
+    dfInteger('Num Primitives', dtU32, [DF_OnGetEnabled, @BSSubIndexTriShape_EnFO4HasData]),
+    dfInteger('Num Segments', dtU32, [DF_OnGetEnabled, @BSSubIndexTriShape_EnFO4HasData]),
+    dfInteger('Total Segments', dtU32, [DF_OnGetEnabled, @BSSubIndexTriShape_EnFO4HasData]),
     dfArray('Segment', dfStruct('Segment', [
       dfInteger('Start Index', dtU32),
       dfInteger('Num Primitives', dtU32),
@@ -4463,24 +4499,20 @@ begin
         dfInteger('Parent Array Index', dtU32),
         dfInteger('Unknown Int 1', dtU32)
       ]), -4)
-    ]), 0, 'Num Segments', [DF_OnGetEnabled, @BSSubIndexTriShape_EnNumPrimitives]),
-    dfStruct('Sub Segment Data', [
+    ]), 0, 'Num Segments', [DF_OnGetEnabled, @BSSubIndexTriShape_EnFO4HasData]),
+    dfStruct('Segment Data', [
       dfInteger('Num Segments', dtU32),
       dfInteger('Total Segments', dtU32),
-      dfArray('Array Indices', dfInteger('Array Indices', dtU32), 0, 'Num Segments', []),
-      dfArray('Sub Segments', dfStruct('Sub Segments', [
-        dfInteger('Segment/User', dtU32),
-        dfInteger('Unknown Int 2', dtU32),
-        dfArray('Extra Data', dfFloat('Extra Data'), -4)
+      dfArray('Segment Starts', dfInteger('Segment Starts', dtU32), 0, 'Num Segments', []),
+      dfArray('Per Segment Data', dfStruct('Per Segment Data', [
+        dfInteger('User Index', dtU32),
+        dfInteger('Bone ID', dtU32),
+        dfArray('Cut Offsets', dfFloat('Cut Offsets'), -4)
       ]), 0, 'Total Segments', []),
       dfChars('SSF File', -2, '', #0, False, [])
-    ], [DF_OnGetEnabled, @BSSubIndexTriShape_EnSubSegmentData]),
+    ], [DF_OnGetEnabled, @BSSubIndexTriShape_EnFO4SubSegmentData]),
     // SSE
-    dfArray('Segment', dfStruct('Segment', [
-      dfInteger('Flags', dtU8),
-      dfInteger('Index', dtU32),
-      dfInteger('Num Tris in Segment', dtU32)
-    ]), -4, '', [DF_OnGetEnabled, @BSSubIndexTriShape_EnSegmentSSE])
+    dfArray('Segment', wbBSGeometrySegmentData('Segment', []), -4, '', [DF_OnGetEnabled, @BSSubIndexTriShape_EnSegmentSSE])
   ]), 'BSTriShape', False);
 end;
 
@@ -4652,7 +4684,7 @@ procedure wbDefinebhkNiCollisionObject;
 begin
   wbNiObject(wbNifBlock('bhkNiCollisionObject', [
     wbbhkCOFlags('Flags', 'BHKCO_ACTIVE', []),
-    wbNiPtr('Body', 'NiObject')
+    wbNiPtr('Body', 'bhkWorldObject')
   ]), 'NiCollisionObject', True);
 end;
 
@@ -4856,9 +4888,10 @@ begin
     dfFloat('Damping', '0.6'),
     dfFloat('Constraint Force Mixing', '0.0001'),
     dfFloat('Max Error Distance', '0.1'),
-    dfArray('Entities A', wbNiPtr('Entities A', 'NiObject'), -4, '', [DF_OnBeforeSave, @RemoveNoneLinks]),
-    dfInteger('Num Entities B', dtU32, '2'),
-    dfArray('Entities B', wbNiPtr('Entities B', 'NiObject'), 2),
+    dfArray('Entities A', wbNiPtr('Entities A', 'bhkRigidBody'), -4, '', [DF_OnBeforeSave, @RemoveNoneLinks]),
+    dfInteger('Num Entities', dtU32, '2'),
+    wbNiPtr('Entity A', 'bhkRigidBody'),
+    wbNiPtr('Entity B', 'bhkRigidBody'),
     dfInteger('Priority', dtU32)
   ]), 'bhkSerializable', False);
 end;
@@ -5232,7 +5265,7 @@ end;
 procedure wbDefinebhkOrientHingedBodyAction;
 begin
   wbNiObject(wbNifBlock('bhkOrientHingedBodyAction', [
-    wbNiPtr('Body', 'NiObject'),
+    wbNiPtr('Body', 'bhkRigidBody'),
     dfInteger('Unknown Int 1', dtU32),
     dfInteger('Unknown Int 2', dtU32),
     dfBytes('Unused 1', 8),
@@ -6545,7 +6578,7 @@ begin
     wbBool('Fade Main Bolt'),
     wbBool('Fade Child Bolts'),
     wbBool('Animate Arc Offset'),
-    wbNiRef('Shader Property', 'NiProperty')
+    wbNiRef('Shader Property', 'BSShaderProperty')
   ]), 'NiTimeController', False);
 end;
 
@@ -6907,9 +6940,9 @@ begin
     wbBool('Spawn on Collide'),
     wbBool('Die on Collide'),
     wbNiRef('Spawn Modifier', 'NiPSysSpawnModifier'),
-    wbNiPtr('Parent', 'NiObject'),
-    wbNiRef('Next Collider', 'NiObject'),
-    wbNiRef('Collider Object', 'NiObject')
+    wbNiPtr('Parent', 'NiPSysColliderManager'),
+    wbNiRef('Next Collider', 'NiPSysCollider'),
+    wbNiPtr('Collider Object', 'NiAVObject')
   ]), 'NiObject', True);
 end;
 
@@ -7038,7 +7071,7 @@ end;
 procedure wbDefineNiPSysDragModifier;
 begin
   wbNiObject(wbNifBlock('NiPSysDragModifier', [
-    wbNiPtr('Parent', 'NiObject'),
+    wbNiPtr('Drag Object', 'NiAVObject'),
     wbVector3('Drag Axis'),
     dfFloat('Percentage'),
     dfFloat('Range'),
@@ -7053,7 +7086,7 @@ function NiPSysGravityModifier_EnWorldAligned(const e: TdfElement): Boolean; beg
 procedure wbDefineNiPSysGravityModifier;
 begin
   wbNiObject(wbNifBlock('NiPSysGravityModifier', [
-    wbNiPtr('Gravity Object', 'NiNode'),
+    wbNiPtr('Gravity Object', 'NiAVObject'),
     wbVector3('Gravity Axis'),
     dfFloat('Decay'),
     dfFloat('Strength'),
