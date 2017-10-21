@@ -1,12 +1,12 @@
 #Our GitHub Issue Tracker
- 
+
 Our [GitHub issue tracker](https://github.com/TES5Edit/TES5Edit/issues) offers a place to submit and discuss feature requests and bug reports. When using it, please ensure that any criticism you provide is constructive.
- 
+
 Please do not use the tracker for general help and support on how to use xEdit.
 
 #summary TES5Edit Readme
 
-TES5Edit 3.1.2 EXPERIMENTAL by ElminsterAU
+TES5Edit 3.2.1 EXPERIMENTAL by ElminsterAU
 Updated for Skyrim by Hlp, Zilav and Sharlikran.
 
 Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available.  Starting from 3.1.0 we need to remind you that we only support version 1.9.0.32 of Skyrim. Update TES5Edit and Skyrim before you post in the forum.  If you see any references to xEdit that is a short way of saying all versions of the program which would cover FO3Edit, FNVEdit, TES4Edit and TES5Edit.
@@ -18,6 +18,7 @@ TES5Edit Mod Cleaning Tutorial (Detailed Instructions with Pictures): http://www
 
 Current Official Threads:
 Bethesda.net: https://bethesda.net/community/topic/57570/relz-sseedit
+AFK Mods: https://afkmods.iguanadons.net/index.php?/topic/3750-wipz-tes5edit/
 
 Rename to TES4Edit.exe to work with Oblivion.
 Rename to TES5Edit.exe to work with Skyrim.
@@ -61,6 +62,14 @@ xEdit Updates:
 
 With each new version of xEdit it is recommended to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect.
 
+Version 3.2.1 contains the following changes:
+- [SSE/FO4] CC club support (ESL plugins)
+- [FO4] FO4LODGen mode
+- filtering: if 8-digits hexadecimal FormID number is provided in "Base Record EditorID contains" field, then FormID will be checked instead
+- multiselection in plugins window and similar ones, right click menu options apply to selection only
+- improved record definitions
+- new scripts
+
 Version 3.2 contains the following changes:
 
 - [SSE] Skyrim Special Edition support
@@ -71,13 +80,16 @@ Version 3.2 contains the following changes:
 - new scripts
 
 Version 3.1.3 contains the following changes:
+- [SSE] Skyrim Special Edition support
 - [FO4] Fallout 4 support
-
-** NOTE ** Not all records are fully decoded for Fallout 4.  Some FormIDs may not be accounted for and when making a plugin will not be renumbered properly at runtime.  This will cause game instability and crashes.  Please remember to load any plugins made with this experimental pre-release into the GECK once it's released and repair the plugin once our first official release is available.
+- utf-8 support for translatable strings with -cp:utf-8 command line parameter
+- "Stick to" right click menu in the right view pane
+- improved record definitions
 
 Version 3.1.2 contains the following changes:
-- improved record definitions
+- improved record definitions and error checking
 - [TES5] LODGen support for glowing meshes
+- [FO3/FNV] Fixed possible error when reading LOD meshes
 - [TES5] TES5LODGen avoids generating trees LOD for duplicate FormID ref numbers, bug in Skyrim causes them to not switch off properly in the game
 
 Version 3.1.1 contains the following changes:
@@ -189,7 +201,7 @@ Misc:
 
 Version 3.0.29 contains the following changes:
 
-- new icon provided by moiman100 http://moiman100.deviantart.com/art/Tes5edit-Icons-467927896
+- new icon provided by moiman100 https://moiman100.deviantart.com/art/Tes5edit-Icons-467927896
 - [TES5] more information is decoded (Records ARMA, NVSI, MOD2, LVLO).
 - [TES5] Every string value gets own ID when localizing plugin
 - [TES5] Fixed error when copying VMAD scripts using drag&drop
