@@ -41,12 +41,7 @@ procedure Register;
 implementation
 
 uses
-  {$ifdef COMPILER_5_UP}
-    StrEdit,
-  {$else}
-    StrEditD4,
-  {$endif COMPILER_5_UP}
-  Dialogs, TypInfo, SysUtils, Graphics, CommCtrl, ImgList, Controls;
+  StrEdit, Dialogs, TypInfo, SysUtils, Graphics, CommCtrl, ImgList, Controls;
 
 type
   // The usual trick to make a protected property accessible in the ShowCollectionEditor call below.
