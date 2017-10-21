@@ -1047,6 +1047,12 @@ begin
   bgsm := TwbBGSMFile.Create;
   try
     for i := 0 to Pred(slMeshes.Count) do begin
+      // if dds is passed then use it as is (billboard for 3D Trees LOD)
+      if SameText(ExtractFileExt(slMeshes[i]), '.dds') then begin
+        slTextures.Add(slMeshes[i]);
+        Continue;
+      end;
+
       nifname := wbNormalizeResourceName(slMeshes[i], resMesh);
       if ExtractFileExt(nifname) <> '.nif' then
         Continue;
@@ -1963,7 +1969,7 @@ begin
   end;
 end;
 
-function wbGetLODMeshName(const aStat: IwbMainRecord; const aLODLevel: Integer): string;
+function wbGetLODMeshName(const aStat: IwbMainRecord; const aLODLevel: Integer; aTrees3D: Boolean = False): string;
 begin
   Result := '';
   // full mesh
@@ -1976,7 +1982,7 @@ begin
 
     // otherwise meshes with the same path and name as full one with _lod_0, _lod_1 and _lod_2 suffixes
     // can be used to generate objects LOD for TREE records which don't have MNAM
-    else if aStat.Signature = 'TREE' then
+    else if aTrees3D and (aStat.Signature = 'TREE') then
       Result := ChangeFileExt(aStat.ElementEditValues['Model\MODL'], '') + '_lod_' + IntToStr(aLODLevel) + '.nif';
   end
   else if (wbGameMode in [gmFO3, gmFNV]) and (aLODLevel = 0) then
@@ -2481,7 +2487,8 @@ var
   RefCell, RefBlock, ChunkSW, ChunkNE: TwbGridCell;
   Scale, UVRange, LargeRefMinSize: Single;
   LOD4                : array of TwbLodTES5TreeBlock;
-  bChunk, bBuildAtlas : Boolean;
+  bChunk, bBuildAtlas, bTrees3D : Boolean;
+  Bytes               : TBytes;
 begin
   Master := aWorldspace.MasterOrSelf;
 
@@ -2496,6 +2503,7 @@ begin
 
   // settings file LOD options section
   Section := wbAppName + ' LOD Options';
+  bTrees3D := Settings.ReadBool(Section, 'Trees3D', True);
 
   wbFindUniqueWorldspaceREFRs(aWorldspace, REFRs);
   if Length(REFRs) = 0 then
@@ -2503,8 +2511,8 @@ begin
 
   wbProgressCallback('[' + aWorldspace.EditorID + '] Generating LOD');
 
-  // Trees LOD
-  if lodTrees in LODTypes then begin
+  // Trees LOD, only if not generated as 3D objects LOD
+  if (lodTrees in LODTypes) and not bTrees3D then begin
     Application.MainForm.Caption := 'Building Trees LOD blocks: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(0) +
       ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
     Application.ProcessMessages;
@@ -2740,9 +2748,11 @@ begin
     slLargeReferences := TStringList.Create;
     slLargeReferences.Sorted := True;
     slLargeReferences.Duplicates := dupIgnore;
+    Lst := TwbLodTES5TreeList.Create(aWorldspace.EditorID);
 
     bChunk := Settings.ReadBool(Section, 'Chunk', False);
     bBuildAtlas := Settings.ReadBool(Section, 'BuildAtlas', True);
+
     // calculate SW and NE corners for building specific chunk
     ChunkSW.x := Low(Integer);
     ChunkSW.y := Low(Integer);
@@ -2841,11 +2851,36 @@ begin
           then begin
             // getting lod models
             m4 := wbGetLODMeshName(StatRec, 0);
+            // notify about 3D tree mesh or fallback to billboard
+            if bTrees3D and (StatRec.Signature = 'TREE') then
+              if m4 <> '' then
+                wbProgressCallback(StatRec.Name + ' using 3D mesh in LOD4 ' + m4)
+              else begin
+                PTree := LoadBillboard(Lst, StatRec);
+                if PTree^.Index <> -1 then begin
+                  m4 := PTree^.Billboard;
+                  wbProgressCallback(StatRec.Name + ' using 3D flat billboard in LOD4 ' + m4);
+                end;
+              end;
             if m4 <> '' then slLODMeshes.Add(m4);
+
             m8 := wbGetLODMeshName(StatRec, 1);
+            // notify about 3D tree mesh or fallback to billboard
+            if bTrees3D and (StatRec.Signature = 'TREE') then
+              if m8 <> '' then
+                wbProgressCallback(StatRec.Name + ' using 3D mesh in LOD8 ' + m8)
+              else begin
+                PTree := Lst.TreeByFormID[StatRec.LoadOrderFormID];
+                if PTree^.Index <> -1 then begin
+                  m8 := PTree^.Billboard;
+                  wbProgressCallback(StatRec.Name + ' using 3D flat billboard in LOD8 ' + m8);
+                end;
+              end;
             if m8 <> '' then slLODMeshes.Add(m8);
+
             m16 := wbGetLODMeshName(StatRec, 2);
             if m16 <> '' then slLODMeshes.Add(m16);
+
             if (m4 <> '') or (m8 <> '') or (m16 <> '') then begin
               // detecting LOD material
               if (wbGameMode in [ gmTES5, gmSSE ]) and StatRec.ElementExists['DNAM\Material'] and Supports(StatRec.ElementByPath['DNAM\Material'].LinksTo, IwbMainRecord, Ovr) then begin
@@ -3008,6 +3043,33 @@ begin
           Free;
         end;
 
+        // billboards list for 3D trees LOD
+        if bTrees3D then begin
+          sl := TStringList.Create;
+          try
+            for i := Low(Lst.fTrees) to High(Lst.fTrees) do
+              if Lst.fTrees[i].Index <> -1 then begin
+                sl.Add(
+                  Lst.fTrees[i].Billboard + #9 +
+                  FloatToStr(Lst.fTrees[i].Width) + #9 +
+                  FloatToStr(Lst.fTrees[i].Height) + #9 +
+                  FloatToStr(Lst.fTrees[i].ShiftZ) + #9 +
+                  FloatToStr(Lst.fTrees[i].ScaleFactor) + #9 +
+                  '1' + #9 +  // float for BillboardsEffectLighting
+                  wbScriptsPath + 'LODGen_flat_lod.nif' + #9 +
+                  '' + #9 + // glow texture
+                  '-1' + #9 + // float vertex color
+                  '-1' // float vertexcolor range
+                );
+              end;
+            s := wbScriptsPath + 'LODGenFlatTextures.txt';
+            sl.SaveToFile(s);
+            slExport.Add('FlatTextures=' + s);
+          finally
+            sl.Free;
+          end;
+        end;
+
         // adding Extra Options
         s := wbScriptsPath + wbLODExtraOptionsFileName(
           ChangeFileExt(ExtractFileName(aWorldspace._File.FileName), ''),
@@ -3071,6 +3133,8 @@ begin
             end;
 
             wbProgressCallback('[' + aWorldspace.EditorID + '] Building LOD textures atlas: ' + AtlasName);
+            Application.ProcessMessages;
+
             wbBuildAtlasFromTexturesList(
               slLODTextures,
               Settings.ReadInteger(Section, 'AtlasTextureSize', 512),
@@ -3112,6 +3176,19 @@ begin
         ErrCode := ExecuteCaptureConsoleOutput(s);
         if ErrCode <> 0 then
           raise Exception.Create('LODGen process error, exit code ' + IntToHex(ErrCode, 8));
+
+        // disable traditional Trees LOD if trees are generated as objects
+        if bTrees3D and (ErrCode = 0) then begin
+          s := wbDataPath + lst.ListFileName;
+          if FileExists(s) then DeleteFile(s);
+          if wbContainerHandler.ResourceExists(lst.ListFileName) then begin
+            ForceDirectories(ExtractFilePath(s));
+            SetLength(Bytes, 4);
+            TFile.WriteAllBytes(s, Bytes);
+            wbProgressCallback('<Note: Trees LOD list file exists in archives, creating an empty loose one to disable native LOD: ' + lst.ListFileName + '>');
+          end;
+        end;
+
         wbProgressCallback('[' + aWorldspace.EditorID + '] Objects LOD Done.');
 
         // DynDOLOD reference message, tribute to Sheson who made TES5LODGen possible
@@ -3135,6 +3212,7 @@ begin
       slLODTextures.Free;
       slLargeReferences.Free;
       slExport.Free;
+      Lst.Free;
       Application.MainForm.Caption := Application.Title;
     end;
   end;

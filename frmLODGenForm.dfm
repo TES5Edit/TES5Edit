@@ -167,8 +167,8 @@ object frmLODGen: TfrmLODGen
     OnClick = cbObjectsLODClick
   end
   object btnSplitTreesLOD: TButton
-    Left = 719
-    Top = 352
+    Left = 721
+    Top = 350
     Width = 105
     Height = 25
     Caption = 'Split LOD Atlas'
@@ -269,7 +269,7 @@ object frmLODGen: TfrmLODGen
     object cbNoTangents: TCheckBox
       Left = 16
       Top = 133
-      Width = 145
+      Width = 113
       Height = 17
       Hint = 
         'Reduces size of generated LOD and frees memory for the game at t' +
@@ -282,7 +282,7 @@ object frmLODGen: TfrmLODGen
     object cbNoVertexColors: TCheckBox
       Left = 16
       Top = 115
-      Width = 145
+      Width = 113
       Height = 17
       Hint = 
         'Reduces size of generated LOD and frees memory for the game at t' +
@@ -295,7 +295,7 @@ object frmLODGen: TfrmLODGen
     object cbUseAlphaThreshold: TCheckBox
       Left = 128
       Top = 115
-      Width = 153
+      Width = 169
       Height = 17
       Hint = 
         'Set transparency threshold to value from source LOD model/materi' +
@@ -310,7 +310,7 @@ object frmLODGen: TfrmLODGen
     object cbUseBacklightPower: TCheckBox
       Left = 128
       Top = 133
-      Width = 121
+      Width = 169
       Height = 17
       Hint = 
         'Set backlight power to value from source LOD model/material inst' +
@@ -477,6 +477,28 @@ object frmLODGen: TfrmLODGen
     ParentShowHint = False
     ShowHint = True
     TabOrder = 4
+  end
+  object cbTrees3D: TCheckBox
+    Left = 469
+    Top = 282
+    Width = 169
+    Height = 17
+    Hint = 
+      'Insert trees into Objects LOD by using provided LOD nifs or plac' +
+      'ing billboard image on a flat mesh. This allows distant trees to' +
+      ' be affected by lighting at the small performance cost.'
+    Caption = 'Generate as Objects LOD'
+    Checked = True
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    ParentShowHint = False
+    ShowHint = True
+    State = cbChecked
+    TabOrder = 7
   end
   object PopupMenu1: TPopupMenu
     Left = 168

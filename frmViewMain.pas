@@ -3054,6 +3054,7 @@ begin
     Result := 1;
 end;
 
+
 destructor TfrmMain.Destroy;
 begin
   inherited;
@@ -3647,16 +3648,24 @@ begin
               // check active files using the game's plugins list
               if FileExists(wbPluginsFileName) then
                 sl.LoadFromFile(wbPluginsFileName);
+
               RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl, sl2);
+
               // use starred files as active files in FO4 and SSE
-              // if no starred files present, then nothing will be checked
-              if (wbGameMode in [gmFO4, gmSSE]){ and (sl2.Count > 0)} then begin
+              if wbGameMode in [gmFO4, gmSSE] then begin
                 sl.Clear;
                 sl.AddStrings(sl2);
+                // [SSE] select official files by default, they are always present and loaded
+                if wbGameMode in [gmSSE] then begin
+                  sl.Add('Update.esm');
+                  for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
+                    sl.Add(wbOfficialDLC[i]);
+                end;
               end;
             finally
               sl2.Free;
             end;
+
             for i := Pred(sl.Count) downto 0 do begin
               s := sl.Strings[i];
 
@@ -7169,6 +7178,7 @@ begin
       edLODX.Text := Settings.ReadString(Section, 'LODX', '');
       edLODY.Text := Settings.ReadString(Section, 'LODY', '');
       cbTreesLOD.Checked := Settings.ReadBool(Section, 'TreesLOD', True);
+      cbTrees3D.Checked := Settings.ReadBool(Section, 'Trees3D', wbGameMode in [gmSSE]);
       cmbTreesLODBrightness.ItemIndex := IndexOf(cmbTreesLODBrightness.Items, Settings.ReadString(Section, 'TreesBrightness', '0'));
       if wbGameMode in [gmFO4] then begin
         cbTreesLOD.Checked := False;
@@ -7206,14 +7216,16 @@ begin
       // Fallouts can have only a single atlas, so no options here
       if wbGameMode in [gmFO3, gmFNV] then begin
         Settings.WriteBool(Section, 'BuildAtlas', True);
-        Settings.WriteString(Section, 'AtlasWidth', '4096');
-        Settings.WriteString(Section, 'AtlasHeight', '4096');
+        // atlas size can be overridden by changing ini settings, for advanced users only
+        Settings.WriteString(Section, 'AtlasWidth', Settings.ReadString(Section, 'AtlasWidth', '4096'));
+        Settings.WriteString(Section, 'AtlasHeight', Settings.ReadString(Section, 'AtlasHeight', '4096'));
         Settings.WriteString(Section, 'AtlasTextureSize', '1024');
         Settings.WriteString(Section, 'AtlasTextureUVRange', '10000');
         Settings.WriteBool(Section, 'ObjectsNoTangents', False);
         Settings.WriteBool(Section, 'ObjectsNoVertexColors', True);
       end;
       Settings.WriteBool(Section, 'TreesLOD', cbTreesLOD.Checked);
+      Settings.WriteBool(Section, 'Trees3D', cbTreesLOD.Checked and cbTrees3D.Checked);
       Settings.WriteString(Section, 'TreesBrightness', cmbTreesLODBrightness.Text);
       Settings.UpdateFile;
 

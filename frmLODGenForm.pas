@@ -53,6 +53,7 @@ type
     cmbCompNormal: TComboBox;
     cmbCompSpecular: TComboBox;
     Label15: TLabel;
+    cbTrees3D: TCheckBox;
     procedure cbObjectsLODClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnSplitTreesLODClick(Sender: TObject);
@@ -119,6 +120,7 @@ begin
     gbObjectsOptions.Visible := False;
   end;
   cmbTreesLODBrightness.Enabled := cbTreesLOD.Checked;
+  cbTrees3D.Enabled := (wbGameMode in [gmTES5, gmSSE]) and cbTreesLOD.Checked;
   Label8.Enabled := cbTreesLOD.Checked;
 end;
 
