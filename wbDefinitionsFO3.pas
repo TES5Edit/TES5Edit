@@ -4284,11 +4284,11 @@ begin
 
   wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
   wbEDIDReq := wbString(EDID, 'Editor ID', 0, cpNormal, True); // not cpBenign according to Arthmoor
-  wbFULL := wbString(FULL, 'Name', 0, cpTranslate);
-  wbFULLActor := wbString(FULL, 'Name', 0, cpTranslate, False, wbActorTemplateUseBaseData);
-  wbFULLReq := wbString(FULL, 'Name', 0, cpNormal, True);
-  wbDESC := wbString(DESC, 'Description', 0, cpTranslate);
-  wbDESCReq := wbString(DESC, 'Description', 0, cpTranslate, True);
+  wbFULL := wbStringKC(FULL, 'Name', 0, cpTranslate);
+  wbFULLActor := wbStringKC(FULL, 'Name', 0, cpTranslate, False, wbActorTemplateUseBaseData);
+  wbFULLReq := wbStringKC(FULL, 'Name', 0, cpNormal, True);
+  wbDESC := wbStringKC(DESC, 'Description', 0, cpTranslate);
+  wbDESCReq := wbStringKC(DESC, 'Description', 0, cpTranslate, True);
   wbXSCL := wbFloat(XSCL, 'Scale');
   wbOBND := wbStruct(OBND, 'Object Bounds', [
     wbInteger('X1', itS16),
@@ -5422,7 +5422,7 @@ begin
       wbInteger('Value', itS32),
       wbInteger('Clip Rounds', itU8)
     ], cpNormal, True),
-    wbString(ONAM, 'Short Name')
+    wbStringKC(ONAM, 'Short Name')
   ]);
 
   wbRecord(ANIO, 'Animated Object', [
@@ -6714,8 +6714,8 @@ begin
     ], cpNormal, True),
     wbRArray('Menu Items',
       wbRStruct('Menu Item', [
-        wbString(ITXT, 'Item Text'),
-        wbString(RNAM, 'Result Text', 0, cpNormal, True),
+        wbStringKC(ITXT, 'Item Text'),
+        wbStringKC(RNAM, 'Result Text', 0, cpNormal, True),
         wbInteger(ANAM, 'Flags', itU8, wbFlags([
           'Add Note',
           'Force Redraw'
@@ -6838,7 +6838,7 @@ begin
     ),
     wbString(XNAM, 'Texture'),
     wbUnion(TNAM, 'Text / Topic', wbNOTETNAMDecide, [
-      wbString('Text'),
+      wbStringKC('Text'),
       wbFormIDCk('Topic', [DIAL])
     ]),
     wbUnion(SNAM, 'Sound / NPC', wbNOTESNAMDecide, [
@@ -7711,7 +7711,7 @@ begin
             wbFloat('Float')
           ])
         ], cpNormal, False, wbEPFDDontShow),
-        wbString(EPF2, 'Button Label', 0, cpNormal, False, wbEPF2DontShow),
+        wbStringKC(EPF2, 'Button Label', 0, cpNormal, False, wbEPF2DontShow),
         wbInteger(EPF3, 'Script Flags', itU16, wbFlags([
           'Run Immediately'
         ]), cpNormal, False, False, wbEPF2DontShow),
@@ -7815,7 +7815,7 @@ begin
     wbFULL,
     wbDESCReq,
     wbICON,
-    wbString(ANAM, 'Short Name')
+    wbStringKC(ANAM, 'Short Name')
   ]);
 
   wbRecord(RADS, 'Radiation Stage', [
@@ -7962,7 +7962,7 @@ begin
     ]), cpNormal, True, False, nil, wbMESGDNAMAfterSet),
     wbInteger(TNAM, 'Display Time', itU32, nil, cpNormal, False, False, wbMESGTNAMDontShow),
     wbRStructs('Menu Buttons', 'Menu Button', [
-      wbString(ITXT, 'Button Text'),
+      wbStringKC(ITXT, 'Button Text'),
       wbCTDAs
     ], [])
   ], False, nil, cpNormal, False, wbMESGAfterLoad);
@@ -8229,7 +8229,7 @@ begin
       wbEmbeddedScriptReq
     ], [], cpNormal, True),
     wbFormIDCk(SNDD, 'Unused', [SOUN]),
-    wbString(RNAM, 'Prompt'),
+    wbStringKC(RNAM, 'Prompt'),
     wbFormIDCk(ANAM, 'Speaker', [CREA, NPC_]),
     wbFormIDCk(KNAM, 'ActorValue/Perk', [AVIF, PERK]),
     wbInteger(DNAM, 'Speech Challenge', itU32, wbEnum([
@@ -9320,14 +9320,14 @@ begin
           {0x02} 'Fail Quest'
         ])),
         wbCTDAs,
-        wbString(CNAM, 'Log Entry', 0, cpTranslate),
+        wbStringKC(CNAM, 'Log Entry', 0, cpTranslate),
         wbEmbeddedScriptReq,
         wbFormIDCk(NAM0, 'Next Quest', [QUST])
       ], []))
     ], [])),
     wbRArray('Objectives', wbRStruct('Objective', [
       wbInteger(QOBJ, 'Objective Index', itS32),
-      wbString(NNAM, 'Description', 0, cpNormal, True),
+      wbStringKC(NNAM, 'Description', 0, cpNormal, True),
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
           wbFormIDCkNoReach('Target', [REFR, PGRE, PMIS, PBEA, ACRE, ACHR], True),
