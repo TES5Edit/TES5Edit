@@ -563,6 +563,7 @@ type
 
     flFileHandle             : THandle;
     flMapHandle              : THandle;
+    flBuffer                 : array of Byte;
 
     flView                   : Pointer;
     flEndPtr                 : Pointer;
@@ -581,6 +582,7 @@ type
     flInjectedRecords        : array of IwbMainRecord;
 
     procedure flOpenFile; virtual;
+    procedure flReadFile; virtual;
     procedure flCloseFile; virtual;
     procedure flProgress(const aStatus: string);
 
@@ -675,7 +677,8 @@ type
     procedure AddMaster(const aFileName: string; isTemporary: Boolean = False); overload;
     procedure AddMaster(const aFile: IwbFile); overload;
 
-    constructor Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aOnlyHeader: Boolean; IsTemporary: Boolean = False);
+    constructor Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string;
+      aOnlyHeader: Boolean; IsTemporary: Boolean = False; ReadIntoMemory: Boolean = False);
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
   public
     destructor Destroy; override;
@@ -2259,7 +2262,8 @@ begin
   end;
 end;
 
-constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aOnlyHeader: Boolean; IsTemporary: Boolean = False);
+constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string;
+  aOnlyHeader: Boolean; IsTemporary: Boolean = False; ReadIntoMemory: Boolean = False);
 begin
   if IsTemporary then
     Include(flStates, fsIsTemporary);
@@ -2274,7 +2278,10 @@ begin
   flCompareTo := aCompareTo;
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
-  flOpenFile;
+  if ReadIntoMemory then
+    flReadFile
+  else
+    flOpenFile;
   Scan;
 end;
 
@@ -2438,7 +2445,11 @@ end;
 
 procedure TwbFile.flCloseFile;
 begin
-  if Assigned(flView) then begin
+  if Assigned(flBuffer) then begin
+    SetLength(flBuffer, 0);
+    flBuffer := nil;
+  end
+  else if Assigned(flView) then begin
     UnmapViewOfFile(flView);
     flView := nil;
   end;
@@ -2504,7 +2515,51 @@ begin
   if not Assigned(flView) then
     RaiseLastOSError;
 
-  flEndPtr := Pointer( Cardinal(flView) + GetFileSize(flFileHandle, nil) );
+  flEndPtr := Pointer(NativeInt(flView) + GetFileSize(flFileHandle, nil));
+
+  flProgress('File loaded');
+end;
+
+procedure TwbFile.flReadFile;
+const
+  FileAccessMode: array[Boolean] of Cardinal = (GENERIC_READ, GENERIC_READ or GENERIC_WRITE);
+  FileShareMode: array[Boolean] of Cardinal = (FILE_SHARE_READ, 0);
+var
+  readSuccess: Boolean;
+  bytesRead, aFileSize: Cardinal;
+begin
+  flProgress('Loading file');
+
+  flFileHandle := CreateFile(
+    PChar(flFileName),
+    FileAccessMode[False],
+    FileShareMode[False],
+    nil,
+    OPEN_EXISTING,
+    FILE_FLAG_RANDOM_ACCESS,
+    0
+  );
+  if (flFileHandle = INVALID_HANDLE_VALUE) or (flFileHandle = 0) then
+    RaiseLastOSError;
+
+  aFileSize := GetFileSize(flFileHandle, nil);
+  SetLength(flBuffer, aFileSize);
+
+  readSuccess := ReadFile(
+    flFileHandle,
+    flBuffer,
+    aFileSize,
+    @bytesRead,
+    nil
+  );
+  if not readSuccess then
+    RaiseLastOSError;
+
+  flView := @flBuffer;
+  flEndPtr := Pointer(NativeInt(flView) + aFileSize);
+
+  CloseHandle(flFileHandle);
+  flFileHandle := INVALID_HANDLE_VALUE;
 
   flProgress('File loaded');
 end;
