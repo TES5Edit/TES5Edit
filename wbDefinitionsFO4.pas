@@ -1029,6 +1029,7 @@ var
   wbCUSD: IwbSubRecordDef;
   wbINRD: IwbSubRecordDef;
   wbPTRN: IwbSubRecordDef;
+  wbSTCP: IwbSubRecordDef;
   wbNTRM: IwbSubRecordDef;
   wbPRPS: IwbSubRecordDef;
   wbFLTR: IwbSubRecordDef;
@@ -8236,6 +8237,7 @@ begin
   wbICON := wbString(ICON, 'Inventory Image');
   wbMICO := wbString(MICO, 'Message Icon');
   wbPTRN := wbFormIDCk(PTRN, 'Preview Transform', [TRNS]);
+  wbSTCP := wbFormIDCk(STCP, 'Animation Sound', [STAG]);
   wbNTRM := wbFormIDCk(NTRM, 'Native Terminal', [TERM]);
   wbYNAM := wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]);
   wbZNAM := wbFormIDCk(ZNAM, 'Sound - Put Down', [SNDR]);
@@ -8548,7 +8550,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbPTRN,
-    wbFormIDCk(STCP, 'Sound', [STAG]),
+    wbSTCP,
     wbFULL,
     wbMODL,
     wbDEST,
@@ -13200,7 +13202,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbPTRN,
-    wbFormIDCk(STCP, 'Unknown', [STAG]),
+    wbSTCP,
     wbStruct(ACBS, 'Configuration', [
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Female',
@@ -14027,7 +14029,7 @@ begin
       {0x00080000} 19, 'Unknown 19'
     ])), [
     wbEDID,
-    wbFormIDCk(STCP, 'Sound', [STAG]),
+    wbSTCP,
     wbFULL,
     wbDESCReq,
     wbSPCT,
