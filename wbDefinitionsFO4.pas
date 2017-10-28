@@ -15290,6 +15290,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbPTRN,
+    wbSTCP,
     wbFULL,
     wbMODL,
     wbICON,
