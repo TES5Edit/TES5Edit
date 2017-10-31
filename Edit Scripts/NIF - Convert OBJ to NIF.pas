@@ -129,7 +129,7 @@ begin
     else begin
       Prop := TriShape.AddProperty('BSLightingShaderProperty');
       // OBJ doesn't have vertex colors
-      Prop.NativeValues['Shader Flags 2\SLSF2_Vertex_Colors'] := 0;
+      Prop.NativeValues['Shader Flags 2\Vertex_Colors'] := 0;
     end;
     
     //-----------------------------------

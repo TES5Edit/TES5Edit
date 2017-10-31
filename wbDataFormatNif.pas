@@ -2858,7 +2858,7 @@ end;
 { NiAVObject }
 function NiAVObject_DecideFlags(const e: TdfElement): Integer; begin if nif(e).UserVersion2 > 26 then Result := 1 else Result := 0; end;
 function NiAVObject_EnProperties(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 <= 34; end;
-function NiAVObject_EnBoundingBox(const e: TdfElement): Boolean; begin Result := (nif(e).Version <= v4220) and (e.NativeValues['..\Has Bounding Box'] <> 0); end;
+function NiAVObject_EnBoundingVolume(const e: TdfElement): Boolean; begin Result := (nif(e).Version <= v4220) and (e.NativeValues['..\Has Bounding Volume'] <> 0); end;
 
 procedure wbDefineNiAVObject;
 begin
@@ -2873,13 +2873,8 @@ begin
       DF_OnGetEnabled, @NiAVObject_EnProperties,
       DF_OnBeforeSave, @RemoveNoneLinks
     ]),
-    wbBool('Has Bounding Box', [DF_OnGetEnabled, @EnBefore4220]),
-    dfStruct('Bounding Box', [
-      dfInteger('Unknown Int', dtU32),
-      wbVector3('Translation'),
-      wbRotMatrix33('Rotation'),
-      wbVector3('Radius')
-    ], [DF_OnGetEnabled, @NiAVObject_EnBoundingBox]),
+    wbBool('Has Bounding Volume', [DF_OnGetEnabled, @EnBefore4220]),
+    wbBoundingVolume('Bounding Volume', [DF_OnGetEnabled, @NiAVObject_EnBoundingVolume]),
     wbNiRef('Collision Object', 'NiCollisionObject', [DF_OnGetEnabled, @EnSince10010])
   ]), 'NiObjectNET', True);
 end;
@@ -3809,8 +3804,8 @@ procedure wbDefineBSShaderProperty;
 begin
   wbNiObject(wbNifBlock('BSShaderProperty', [
     wbBSShaderType('Shader Type', 'SHADER_DEFAULT', [DF_OnGetEnabled, @BSShaderProperty_EnShaderType]),
-    wbBSShaderFlags('Shader Flags', 'SF_Specular | SF_Remappable_Textures | SF_ZBuffer_Test', [DF_OnGetEnabled, @BSShaderProperty_EnShaderType]),
-    wbBSShaderFlags2('Shader Flags 2', 'SF2_ZBuffer_Write', [DF_OnGetEnabled, @BSShaderProperty_EnShaderType]),
+    wbBSShaderFlags('Shader Flags', 'Specular | Remappable_Textures | ZBuffer_Test', [DF_OnGetEnabled, @BSShaderProperty_EnShaderType]),
+    wbBSShaderFlags2('Shader Flags 2', 'ZBuffer_Write', [DF_OnGetEnabled, @BSShaderProperty_EnShaderType]),
     dfFloat('Environment Map Scale', '1.0', [DF_OnGetEnabled, @BSShaderProperty_EnShaderType])
   ]), 'NiShadeProperty', False);
 end;
@@ -4635,16 +4630,6 @@ end;
 //===========================================================================
 { NiCollisionData * }
 function NiCollisionData_EnBoundingVolume(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Use ABV'] = 1; end;
-function NiCollisionData_EnType0(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Collision Type'] = 0; end;
-function NiCollisionData_EnType1(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Collision Type'] = 1; end;
-function NiCollisionData_EnType2(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Collision Type'] = 2; end;
-function NiCollisionData_EnType4(const e: TdfElement): Boolean;
-begin
-  Result := False;
-  if e.NativeValues['..\Collision Type'] = 4 then
-    e.DoException('NiCollisionData UnionBV type is not supported');
-end;
-function NiCollisionData_EnType5(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Collision Type'] = 5; end;
 
 procedure wbDefineNiCollisionData;
 begin
@@ -4652,29 +4637,7 @@ begin
     wbPropagationMode('Propagation Mode', '', []),
     wbCollisionMode('Collision Mode', '', [DF_OnGetEnabled, @EnSince10100]),
     dfInteger('Use ABV', dtU8),
-    dfStruct('Bounding Volume', [
-      wbBoundVolumeType('Collision Type', '', []),
-      dfStruct('Sphere', [
-        wbVector3('Center'),
-        dfFloat('Radius')
-      ], [DF_OnGetEnabled, @NiCollisionData_EnType0]),
-      dfStruct('Box', [
-        wbVector3('Center'),
-        dfArray('Axis', wbVector3('Axis'), 3),
-        wbVector3('Extent')
-      ], [DF_OnGetEnabled, @NiCollisionData_EnType1]),
-      dfStruct('Capsule', [
-        wbVector3('Center'),
-        wbVector3('Origin'),
-        dfFloat('Extent'),
-        dfFloat('Radius')
-      ], [DF_OnGetEnabled, @NiCollisionData_EnType2]),
-      dfInteger('Union BV', dtU32, [DF_OnGetEnabled, @NiCollisionData_EnType4]),
-      dfStruct('Half Space', [
-        wbNiPlane('Plane'),
-        wbVector3('Center')
-      ], [DF_OnGetEnabled, @NiCollisionData_EnType5])
-    ], [DF_OnGetEnabled, @NiCollisionData_EnBoundingVolume])
+    wbBoundingVolume('Bounding Volume', [DF_OnGetEnabled, @NiCollisionData_EnBoundingVolume])
   ]), 'NiCollisionObject', False);
 end;
 
@@ -4683,7 +4646,7 @@ end;
 procedure wbDefinebhkNiCollisionObject;
 begin
   wbNiObject(wbNifBlock('bhkNiCollisionObject', [
-    wbbhkCOFlags('Flags', 'BHKCO_ACTIVE', []),
+    wbbhkCOFlags('Flags', 'ACTIVE', []),
     wbNiPtr('Body', 'bhkWorldObject')
   ]), 'NiCollisionObject', True);
 end;
@@ -6489,7 +6452,7 @@ procedure wbDefineBSEffectShaderPropertyColorController;
 begin
   wbNiObject(wbNifBlock('BSEffectShaderPropertyColorController', [
     wbEffectShaderControlledColor('Type of Controlled Color', '', [])
-  ]), 'NiFloatInterpController', False);
+  ]), 'NiPoint3InterpController', False);
 end;
 
 //===========================================================================
@@ -6507,7 +6470,7 @@ procedure wbDefineBSLightingShaderPropertyColorController;
 begin
   wbNiObject(wbNifBlock('BSLightingShaderPropertyColorController', [
     wbLightingShaderControlledColor('Type of Controlled Color', '', [])
-  ]), 'NiFloatInterpController', False);
+  ]), 'NiPoint3InterpController', False);
 end;
 
 //===========================================================================
@@ -6525,7 +6488,7 @@ procedure wbDefineBSFrustumFOVController;
 begin
   wbNiObject(wbNifBlock('BSFrustumFOVController', [
     wbNiRef('Interpolator', 'NiFloatInterpolator')
-  ]), 'NiTimeController', False);
+  ]), 'NiFloatInterpController', False);
 end;
 
 //===========================================================================
@@ -6550,7 +6513,7 @@ end;
 { BSNiAlphaPropertyTestRefController }
 procedure wbDefineBSNiAlphaPropertyTestRefController;
 begin
-  wbNiObject(wbNifBlock('BSNiAlphaPropertyTestRefController'), 'NiAlphaController', False);
+  wbNiObject(wbNifBlock('BSNiAlphaPropertyTestRefController'), 'NiFloatInterpController', False);
 end;
 
 //===========================================================================
