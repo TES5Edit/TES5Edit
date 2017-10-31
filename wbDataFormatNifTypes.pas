@@ -134,7 +134,6 @@ function wbCoordGenType(const aName, aDefaultValue: string; const aEvents: array
 function wbMaterialColor(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbLightColor(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbConsistencyType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
-function wbBoundVolumeType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbCollisionMode(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbPropagationMode(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 function wbPathFlags(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
@@ -157,6 +156,7 @@ function wbLookAtFlags(const aName, aDefaultValue: string; const aEvents: array 
 function wbAdditionalDataInfo(const aName: string; const aEvents: array of const): TdfDef;
 function wbAdditionalDataBlock(const aName: string; const aEvents: array of const): TdfDef;
 function wbBSPackedAdditionalDataBlock(const aName: string; const aEvents: array of const): TdfDef;
+function wbBoundingVolume(const aName: string; const aEvents: array of const): TdfDef;
 
 
 implementation
@@ -956,76 +956,76 @@ end;
 function wbBSShaderFlags(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfFlags(aName, dtU32, [
-    0, 'SF_Specular',
-    1, 'SF_Skinned',
-    2, 'SF_LowDetail',
-    3, 'SF_Vertex_Alpha',
-    4, 'SF_Unknown_1',
-    5, 'SF_Single_Pass',
-    6, 'SF_Empty',
-    7, 'SF_Environment_Mapping',
-    8, 'SF_Alpha_Texture',
-    9, 'SF_Unknown_2',
-    10, 'SF_FaceGen',
-    11, 'SF_Parallax_Shader_Index_15',
-    12, 'SF_Unknown_3',
-    13, 'SF_Non_Projective_Shadows',
-    14, 'SF_Unknown_4',
-    15, 'SF_Refraction',
-    16, 'SF_Fire_Refraction',
-    17, 'SF_Eye_Environment_Mapping',
-    18, 'SF_Hair',
-    19, 'SF_Dynamic_Alpha',
-    20, 'SF_Localmap_Hide_Secret',
-    21, 'SF_Window_Environment_Mapping',
-    22, 'SF_Tree_Billboard',
-    23, 'SF_Shadow_Frustum',
-    24, 'SF_Multiple_Textures',
-    25, 'SF_Remappable_Textures',
-    26, 'SF_Decal_Single_Pass',
-    27, 'SF_Dynamic_Decal_Single_Pass',
-    28, 'SF_Parallax_Occulsion',
-    29, 'SF_External_Emittance',
-    30, 'SF_Shadow_Map',
-    31, 'SF_ZBuffer_Test'
+    0, 'Specular',
+    1, 'Skinned',
+    2, 'LowDetail',
+    3, 'Vertex_Alpha',
+    4, 'Unknown_1',
+    5, 'Single_Pass',
+    6, 'Empty',
+    7, 'Environment_Mapping',
+    8, 'Alpha_Texture',
+    9, 'Unknown_2',
+    10, 'FaceGen',
+    11, 'Parallax_Shader_Index_15',
+    12, 'Unknown_3',
+    13, 'Non_Projective_Shadows',
+    14, 'Unknown_4',
+    15, 'Refraction',
+    16, 'Fire_Refraction',
+    17, 'Eye_Environment_Mapping',
+    18, 'Hair',
+    19, 'Dynamic_Alpha',
+    20, 'Localmap_Hide_Secret',
+    21, 'Window_Environment_Mapping',
+    22, 'Tree_Billboard',
+    23, 'Shadow_Frustum',
+    24, 'Multiple_Textures',
+    25, 'Remappable_Textures',
+    26, 'Decal_Single_Pass',
+    27, 'Dynamic_Decal_Single_Pass',
+    28, 'Parallax_Occulsion',
+    29, 'External_Emittance',
+    30, 'Shadow_Map',
+    31, 'ZBuffer_Test'
   ], aDefaultValue, aEvents);
 end;
 
 function wbBSShaderFlags2(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfFlags(aName, dtU32, [
-    0, 'SF2_ZBuffer_Write',
-    1, 'SF2_LOD_Landscape',
-    2, 'SF2_LOD_Building',
-    3, 'SF2_No_Fade',
-    4, 'SF2_Refraction_Tint',
-    5, 'SF2_Vertex_Colors',
-    6, 'SF2_Unknown1',
-    7, 'SF2_1st_Light_is_Point_Light',
-    8, 'SF2_2nd_Light',
-    9, 'SF2_3rd_Light',
-    10, 'SF2_Vertex_Lighting',
-    11, 'SF2_Uniform_Scale',
-    12, 'SF2_Fit_Slope',
-    13, 'SF2_Billboard_and_Envmap_Light_Fade',
-    14, 'SF2_No_LOD_Land_Blend',
-    15, 'SF2_Envmap_Light_Fade',
-    16, 'SF2_Wireframe',
-    17, 'SF2_VATS_Selection',
-    18, 'SF2_Show_in_Local_Map',
-    19, 'SF2_Premult_Alpha',
-    20, 'SF2_Skip_Normal_Maps',
-    21, 'SF2_Alpha_Decal',
-    22, 'SF2_No_Transparecny_Multisampling',
-    23, 'SF2_Unknown2',
-    24, 'SF2_Unknown3',
-    25, 'SF2_Unknown4',
-    26, 'SF2_Unknown5',
-    27, 'SF2_Unknown6',
-    28, 'SF2_Unknown7',
-    29, 'SF2_Unknown8',
-    30, 'SF2_Unknown9',
-    31, 'SF2_Unknown10'
+    0, 'ZBuffer_Write',
+    1, 'LOD_Landscape',
+    2, 'LOD_Building',
+    3, 'No_Fade',
+    4, 'Refraction_Tint',
+    5, 'Vertex_Colors',
+    6, 'Unknown1',
+    7, '1st_Light_is_Point_Light',
+    8, '2nd_Light',
+    9, '3rd_Light',
+    10, 'Vertex_Lighting',
+    11, 'Uniform_Scale',
+    12, 'Fit_Slope',
+    13, 'Billboard_and_Envmap_Light_Fade',
+    14, 'No_LOD_Land_Blend',
+    15, 'Envmap_Light_Fade',
+    16, 'Wireframe',
+    17, 'VATS_Selection',
+    18, 'Show_in_Local_Map',
+    19, 'Premult_Alpha',
+    20, 'Skip_Normal_Maps',
+    21, 'Alpha_Decal',
+    22, 'No_Transparecny_Multisampling',
+    23, 'Unknown2',
+    24, 'Unknown3',
+    25, 'Unknown4',
+    26, 'Unknown5',
+    27, 'Unknown6',
+    28, 'Unknown7',
+    29, 'Unknown8',
+    30, 'Unknown9',
+    31, 'Unknown10'
   ], aDefaultValue, aEvents);
 end;
 
@@ -1628,15 +1628,15 @@ end;
 function wbbhkCOFlags(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfFlags(aName, dtU16, [
-    0, 'BHKCO_ACTIVE',
-    2, 'BHKCO_NOTIFY',
-    3, 'BHKCO_SET_LOCAL',
-    4, 'BHKCO_DBG_DISPLAY',
-    5, 'BHKCO_USE_VEL',
-    6, 'BHKCO_RESET',
-    7, 'BHKCO_SYNC_ON_UPDATE',
-    10, 'BHKCO_ANIM_TARGETED',
-    11, 'BHKCO_DISMEMBERED_LIMB'
+    0, 'ACTIVE',
+    2, 'NOTIFY',
+    3, 'SET_LOCAL',
+    4, 'DBG_DISPLAY',
+    5, 'USE_VEL',
+    6, 'RESET',
+    7, 'SYNC_ON_UPDATE',
+    10, 'ANIM_TARGETED',
+    11, 'DISMEMBERED_LIMB'
   ], aDefaultValue, aEvents);
 end;
 
@@ -2009,18 +2009,6 @@ begin
   ], aDefaultValue, aEvents);
 end;
 
-function wbBoundVolumeType(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
-begin
-  Result := dfEnum(aName, dtS32, [
-   -1, 'BASE_BV',
-    0, 'SPHERE_BV',
-    1, 'BOX_BV',
-    2, 'CAPSULE_BV',
-    4, 'UNION_BV',
-    5, 'HALFSPACE_BV'
-  ], aDefaultValue, aEvents);
-end;
-
 function wbPathFlags(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfEnum(aName, dtU16, [
@@ -2088,152 +2076,152 @@ end;
 function wbSkyrimShaderPropertyFlags1(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfFlags(aName, dtU32, [
-    0, 'SLSF1_Specular',
-    1, 'SLSF1_Skinned',
-    2, 'SLSF1_Temp_Refraction',
-    3, 'SLSF1_Vertex_Alpha',
-    4, 'SLSF1_Greyscale_To_PaletteColor',
-    5, 'SLSF1_Greyscale_To_PaletteAlpha',
-    6, 'SLSF1_Use_Falloff',
-    7, 'SLSF1_Environment_Mapping',
-    8, 'SLSF1_Recieve_Shadows',
-    9, 'SLSF1_Cast_Shadows',
-    10, 'SLSF1_Facegen_Detail_Map',
-    11, 'SLSF1_Parallax',
-    12, 'SLSF1_Model_Space_Normals',
-    13, 'SLSF1_Non_Projective_Shadows',
-    14, 'SLSF1_Landscape',
-    15, 'SLSF1_Refraction',
-    16, 'SLSF1_Fire_Refraction',
-    17, 'SLSF1_Eye_Environment_Mapping',
-    18, 'SLSF1_Hair_Soft_Lighting',
-    19, 'SLSF1_Screendoor_Alpha_Fade',
-    20, 'SLSF1_Localmap_Hide_Secret',
-    21, 'SLSF1_FaceGen_RGB_Tint',
-    22, 'SLSF1_Own_Emit',
-    23, 'SLSF1_Projected_UV',
-    24, 'SLSF1_Multiple_Textures',
-    25, 'SLSF1_Remappable_Textures',
-    26, 'SLSF1_Decal',
-    27, 'SLSF1_Dynamic_Decal',
-    28, 'SLSF1_Parallax_Occlusion',
-    29, 'SLSF1_External_Emittance',
-    30, 'SLSF1_Soft_Effect',
-    31, 'SLSF1_ZBuffer_Test'
+    0, 'Specular',
+    1, 'Skinned',
+    2, 'Temp_Refraction',
+    3, 'Vertex_Alpha',
+    4, 'Greyscale_To_PaletteColor',
+    5, 'Greyscale_To_PaletteAlpha',
+    6, 'Use_Falloff',
+    7, 'Environment_Mapping',
+    8, 'Recieve_Shadows',
+    9, 'Cast_Shadows',
+    10, 'Facegen_Detail_Map',
+    11, 'Parallax',
+    12, 'Model_Space_Normals',
+    13, 'Non_Projective_Shadows',
+    14, 'Landscape',
+    15, 'Refraction',
+    16, 'Fire_Refraction',
+    17, 'Eye_Environment_Mapping',
+    18, 'Hair_Soft_Lighting',
+    19, 'Screendoor_Alpha_Fade',
+    20, 'Localmap_Hide_Secret',
+    21, 'FaceGen_RGB_Tint',
+    22, 'Own_Emit',
+    23, 'Projected_UV',
+    24, 'Multiple_Textures',
+    25, 'Remappable_Textures',
+    26, 'Decal',
+    27, 'Dynamic_Decal',
+    28, 'Parallax_Occlusion',
+    29, 'External_Emittance',
+    30, 'Soft_Effect',
+    31, 'ZBuffer_Test'
   ], aDefaultValue, aEvents);
 end;
 
 function wbSkyrimShaderPropertyFlags2(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfFlags(aName, dtU32, [
-    0, 'SLSF2_ZBuffer_Write',
-    1, 'SLSF2_LOD_Landscape',
-    2, 'SLSF2_LOD_Objects',
-    3, 'SLSF2_No_Fade',
-    4, 'SLSF2_Double_Sided',
-    5, 'SLSF2_Vertex_Colors',
-    6, 'SLSF2_Glow_Map',
-    7, 'SLSF2_Assume_Shadowmask',
-    8, 'SLSF2_Packed_Tangent',
-    9, 'SLSF2_Multi_Index_Snow',
-    10, 'SLSF2_Vertex_Lighting',
-    11, 'SLSF2_Uniform_Scale',
-    12, 'SLSF2_Fit_Slope',
-    13, 'SLSF2_Billboard',
-    14, 'SLSF2_No_LOD_Land_Blend',
-    15, 'SLSF2_EnvMap_Light_Fade',
-    16, 'SLSF2_Wireframe',
-    17, 'SLSF2_Weapon_Blood',
-    18, 'SLSF2_Hide_On_Local_Map',
-    19, 'SLSF2_Premult_Alpha',
-    20, 'SLSF2_Cloud_LOD',
-    21, 'SLSF2_Anisotropic_Lighting',
-    22, 'SLSF2_No_Transparency_Multisampling',
-    23, 'SLSF2_Unused01',
-    24, 'SLSF2_Multi_Layer_Parallax',
-    25, 'SLSF2_Soft_Lighting',
-    26, 'SLSF2_Rim_Lighting',
-    27, 'SLSF2_Back_Lighting',
-    28, 'SLSF2_Unused02',
-    29, 'SLSF2_Tree_Anim',
-    30, 'SLSF2_Effect_Lighting',
-    31, 'SLSF2_HD_LOD_Objects'
+    0, 'ZBuffer_Write',
+    1, 'LOD_Landscape',
+    2, 'LOD_Objects',
+    3, 'No_Fade',
+    4, 'Double_Sided',
+    5, 'Vertex_Colors',
+    6, 'Glow_Map',
+    7, 'Assume_Shadowmask',
+    8, 'Packed_Tangent',
+    9, 'Multi_Index_Snow',
+    10, 'Vertex_Lighting',
+    11, 'Uniform_Scale',
+    12, 'Fit_Slope',
+    13, 'Billboard',
+    14, 'No_LOD_Land_Blend',
+    15, 'EnvMap_Light_Fade',
+    16, 'Wireframe',
+    17, 'Weapon_Blood',
+    18, 'Hide_On_Local_Map',
+    19, 'Premult_Alpha',
+    20, 'Cloud_LOD',
+    21, 'Anisotropic_Lighting',
+    22, 'No_Transparency_Multisampling',
+    23, 'Unused01',
+    24, 'Multi_Layer_Parallax',
+    25, 'Soft_Lighting',
+    26, 'Rim_Lighting',
+    27, 'Back_Lighting',
+    28, 'Unused02',
+    29, 'Tree_Anim',
+    30, 'Effect_Lighting',
+    31, 'HD_LOD_Objects'
   ], aDefaultValue, aEvents);
 end;
 
 function wbFallout4ShaderPropertyFlags1(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfFlags(aName, dtU32, [
-    0, 'FSF1_Specular',
-    1, 'FSF1_Skinned',
-    2, 'FSF1_Temp_Refraction',
-    3, 'FSF1_Vertex_Alpha',
-    4, 'FSF1_GreyscaleToPalette_Color',
-    5, 'FSF1_GreyscaleToPalette_Alpha',
-    6, 'FSF1_Use_Falloff',
-    7, 'FSF1_Environment_Mapping',
-    8, 'FSF1_RGB_Falloff',
-    9, 'FSF1_Cast_Shadows',
-    10, 'FSF1_Face',
-    11, 'FSF1_UI_Mask_Rects',
-    12, 'FSF1_Model_Space_Normals',
-    13, 'FSF1_Non_Projective_Shadows',
-    14, 'FSF1_Landscape',
-    15, 'FSF1_Refraction',
-    16, 'FSF1_Fire_Refraction',
-    17, 'FSF1_Eye_Environment_Mapping',
-    18, 'FSF1_Hair',
-    19, 'FSF1_Screendoor_Alpha_Fade',
-    20, 'FSF1_Localmap_Hide_Secret',
-    21, 'FSF1_Skin_Tint',
-    22, 'FSF1_Own_Emit',
-    23, 'FSF1_Projected_UV',
-    24, 'FSF1_Multiple_Textures',
-    25, 'FSF1_Tessellate',
-    26, 'FSF1_Decal',
-    27, 'FSF1_Dynamic_Decal',
-    28, 'FSF1_Character_Lighting',
-    29, 'FSF1_External_Emittance',
-    30, 'FSF1_Soft_Effect',
-    31, 'FSF1_ZBuffer_Test'
+    0, 'Specular',
+    1, 'Skinned',
+    2, 'Temp_Refraction',
+    3, 'Vertex_Alpha',
+    4, 'GreyscaleToPalette_Color',
+    5, 'GreyscaleToPalette_Alpha',
+    6, 'Use_Falloff',
+    7, 'Environment_Mapping',
+    8, 'RGB_Falloff',
+    9, 'Cast_Shadows',
+    10, 'Face',
+    11, 'UI_Mask_Rects',
+    12, 'Model_Space_Normals',
+    13, 'Non_Projective_Shadows',
+    14, 'Landscape',
+    15, 'Refraction',
+    16, 'Fire_Refraction',
+    17, 'Eye_Environment_Mapping',
+    18, 'Hair',
+    19, 'Screendoor_Alpha_Fade',
+    20, 'Localmap_Hide_Secret',
+    21, 'Skin_Tint',
+    22, 'Own_Emit',
+    23, 'Projected_UV',
+    24, 'Multiple_Textures',
+    25, 'Tessellate',
+    26, 'Decal',
+    27, 'Dynamic_Decal',
+    28, 'Character_Lighting',
+    29, 'External_Emittance',
+    30, 'Soft_Effect',
+    31, 'ZBuffer_Test'
   ], aDefaultValue, aEvents);
 end;
 
 function wbFallout4ShaderPropertyFlags2(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
   Result := dfFlags(aName, dtU32, [
-    0, 'FSF2_ZBuffer_Write',
-    1, 'FSF2_LOD_Landscape',
-    2, 'FSF2_LOD_Objects',
-    3, 'FSF2_No_Fade',
-    4, 'FSF2_Double_Sided',
-    5, 'FSF2_Vertex_Colors',
-    6, 'FSF2_Glow_Map',
-    7, 'FSF2_Transform_Changed',
-    8, 'FSF2_Dismemberment_Meatcuff',
-    9, 'FSF2_Tint',
-    10, 'FSF2_Grass_Vertex_Lighting',
-    11, 'FSF2_Grass_Uniform_Scale',
-    12, 'FSF2_Grass_Fit_Slope',
-    13, 'FSF2_Grass_Billboard',
-    14, 'FSF2_No_LOD_Land_Blend',
-    15, 'FSF2_Dismemberment',
-    16, 'FSF2_Wireframe',
-    17, 'FSF2_Weapon_Blood',
-    18, 'FSF2_Hide_On_Local_Map',
-    19, 'FSF2_Premult_Alpha',
-    20, 'FSF2_VATS_Target',
-    21, 'FSF2_Anisotropic_Lighting',
-    22, 'FSF2_Skew_Specular_Alpha',
-    23, 'FSF2_Menu_Screen',
-    24, 'FSF2_Multi_Layer_Parallax',
-    25, 'FSF2_Alpha_Test',
-    26, 'FSF2_Gradient_Remap',
-    27, 'FSF2_VATS_Target_Draw_All',
-    28, 'FSF2_Pipboy_Screen',
-    29, 'FSF2_Tree_Anim',
-    30, 'FSF2_Effect_Lighting',
-    31, 'FSF2_Refraction_Writes_Depth'
+    0, 'ZBuffer_Write',
+    1, 'LOD_Landscape',
+    2, 'LOD_Objects',
+    3, 'No_Fade',
+    4, 'Double_Sided',
+    5, 'Vertex_Colors',
+    6, 'Glow_Map',
+    7, 'Transform_Changed',
+    8, 'Dismemberment_Meatcuff',
+    9, 'Tint',
+    10, 'Grass_Vertex_Lighting',
+    11, 'Grass_Uniform_Scale',
+    12, 'Grass_Fit_Slope',
+    13, 'Grass_Billboard',
+    14, 'No_LOD_Land_Blend',
+    15, 'Dismemberment',
+    16, 'Wireframe',
+    17, 'Weapon_Blood',
+    18, 'Hide_On_Local_Map',
+    19, 'Premult_Alpha',
+    20, 'VATS_Target',
+    21, 'Anisotropic_Lighting',
+    22, 'Skew_Specular_Alpha',
+    23, 'Menu_Screen',
+    24, 'Multi_Layer_Parallax',
+    25, 'Alpha_Test',
+    26, 'Gradient_Remap',
+    27, 'VATS_Target_Draw_All',
+    28, 'Pipboy_Screen',
+    29, 'Tree_Anim',
+    30, 'Effect_Lighting',
+    31, 'Refraction_Writes_Depth'
   ], aDefaultValue, aEvents);
 end;
 
@@ -2387,7 +2375,50 @@ begin
   ], aEvents);
 end;
 
+function BoundingVolume_EnType0(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Collision Type'] = 0; end;
+function BoundingVolume_EnType1(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Collision Type'] = 1; end;
+function BoundingVolume_EnType2(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Collision Type'] = 2; end;
+function BoundingVolume_EnType4(const e: TdfElement): Boolean;
+begin
+  Result := False;
+  if e.NativeValues['..\Collision Type'] = 4 then
+    e.DoException('BoundingVolume UnionBV type is not supported');
+end;
+function BoundingVolume_EnType5(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Collision Type'] = 5; end;
 
+function wbBoundingVolume(const aName: string; const aEvents: array of const): TdfDef;
+begin
+  Result := dfStruct(aName, [
+    dfEnum('Collision Type', dtS32, [
+     -1, 'BASE_BV',
+      0, 'SPHERE_BV',
+      1, 'BOX_BV',
+      2, 'CAPSULE_BV',
+      4, 'UNION_BV',
+      5, 'HALFSPACE_BV'
+    ], 'BOX_BV', []),
+    dfStruct('Sphere', [
+      wbVector3('Center'),
+      dfFloat('Radius')
+    ], [DF_OnGetEnabled, @BoundingVolume_EnType0]),
+    dfStruct('Box', [
+      wbVector3('Center'),
+      dfArray('Axis', wbVector3('Axis'), 3),
+      wbVector3('Extent')
+    ], [DF_OnGetEnabled, @BoundingVolume_EnType1]),
+    dfStruct('Capsule', [
+      wbVector3('Center'),
+      wbVector3('Origin'),
+      dfFloat('Extent'),
+      dfFloat('Radius')
+    ], [DF_OnGetEnabled, @BoundingVolume_EnType2]),
+    dfInteger('Union BV', dtU32, [DF_OnGetEnabled, @BoundingVolume_EnType4]),
+    dfStruct('Half Space', [
+      wbNiPlane('Plane'),
+      wbVector3('Center')
+    ], [DF_OnGetEnabled, @BoundingVolume_EnType5])
+  ], aEvents);
+end;
 
 
 end.
