@@ -3389,6 +3389,7 @@ procedure TfrmMain.DoInit;
             end;
           end;
         end;
+
       end;
 
       {
@@ -3397,6 +3398,20 @@ procedure TfrmMain.DoInit;
          Add files missing in plugins.txt and loadorder.txt for Skyrim and later games.
       }
       AddMissingToLoadList(sl);
+
+      // move Creation Club plugins right after the last ESM
+      if wbGameMode in [gmSSE, gmFO4] then begin
+        for j := Pred(sl.Count) downto 0 do
+          if IsFileESM(sl[j]) then
+            Break;
+        Inc(j);
+        for i := Succ(j) to Pred(sl.Count) do
+          if IsFileCC(sl[i]) then begin
+            AddMessage('Detected Creation Club plugin, forcing it to load after the last ESM: ' + sl[i]);
+            sl.Move(i, j);
+            Inc(j);
+          end;
+      end;
 
       if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (sl.Count > 1) and (wbGameMode in [gmFO3, gmFNV]) then begin
         Age := Integer(sl.Objects[0]);
@@ -3644,6 +3659,13 @@ begin
 
           else if wbToolSource in [tsPlugins] then begin
             sl2 := TStringList.Create;
+
+            // activate Creation Club mods
+            if wbGameMode in [gmFO4, gmSSE] then
+              for i := 0 to Pred(sl.Count) do
+                if IsFileCC(sl[i]) then
+                  sl2.Add(sl[i]);
+
             try
               // check active files using the game's plugins list
               if FileExists(wbPluginsFileName) then
