@@ -28,6 +28,7 @@ uses
   ShlObj,
   IniFiles,
   Registry,
+  RegularExpressionsCore,
   wbInterface,
   Imaging,
   ImagingTypes;
@@ -90,6 +91,7 @@ function FindMatchText(Strings: TStrings; const Str: string): Integer;
 function IsFileESM(const aFileName: string): Boolean;
 function IsFileESP(const aFileName: string): Boolean;
 function IsFileESL(const aFileName: string): Boolean;
+function IsFileCC(const aFileName: string): Boolean;
 procedure DeleteDirectory(const DirName: string);
 function FullPathToFilename(aString: string): string;
 procedure wbFlipBitmap(aBitmap: TBitmap; MirrorType: Integer); // MirrorType: 1 - horizontal, 2 - vertical, 0 - both
@@ -425,6 +427,21 @@ begin
   Result := SameText(ExtractFileExt(aFileName), '.esl') or
     SameText(Copy(aFileName, Length(aFileName) - Length(ghostesl) + 1, Length(ghostesl)), ghostesl)
 end;
+
+function IsFileCC(const aFileName: string): Boolean;
+const
+  ccFileMask = 'cc([a-z]{3})(sse|fo4)(\d{3})\-(\S+)\.(esp|esm|esl)';
+begin
+  with TPerlRegEx.Create do try
+    Subject := aFileName;
+    RegEx := ccFileMask;
+    Options := [preCaseLess, preSingleLine];
+    Result := MatchAgain;
+  finally
+    Free;
+  end;
+end;
+
 
 procedure DeleteDirectory(const DirName: string);
 var
