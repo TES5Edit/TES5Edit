@@ -14449,6 +14449,25 @@ begin
       wbFormIDCk('Destination', [REFR, NULL])
     ])),
 
+    // not seen in FO4 vanilla files, but can be added in CK
+    wbStruct(XPTL, 'Room Portal', [
+      wbStruct('Size', [
+        wbFloat('Width', cpNormal, False, 2),
+        wbFloat('Height', cpNormal, False, 2)
+      ]),
+      wbStruct('Position', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ]),
+      wbStruct('Rotation (Quaternion?)', [
+        wbFloat('q1'),
+        wbFloat('q2'),
+        wbFloat('q3'),
+        wbFloat('q4')
+      ])
+    ]),
+
     wbUnknown(XORD),
 
     wbStruct(XOCP, 'Occlusion Plane Data', [
