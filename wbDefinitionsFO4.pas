@@ -4496,7 +4496,6 @@ begin
         Container.ElementNativeValues['XLOC - Lock Data\Level'] := 1;
     end;
 
-    Container.RemoveElement('XPTL');
   finally
     wbEndInternalEdit;
   end;
