@@ -13631,6 +13631,8 @@ begin
     wbOfficialDLC[0] := 'Dawnguard.esm';
     wbOfficialDLC[1] := 'HearthFires.esm';
     wbOfficialDLC[2] := 'Dragonborn.esm';
+
+    wbCreationClubContentFileName := 'Skyrim.ccc';
   end;
 
 end;

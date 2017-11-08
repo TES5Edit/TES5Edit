@@ -158,6 +158,7 @@ function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames
 implementation
 
 uses
+  StrUtils,
   wbSort;
 
 procedure wbLeveledListCheckCircular(const aMainRecord: IwbMainRecord; aStack: PnxLeveledListCheckCircularStack);
@@ -432,6 +433,9 @@ function IsFileCC(const aFileName: string): Boolean;
 const
   ccFileMask = 'cc([a-z]{3})(sse|fo4)(\d{3})\-(\S+)\.(esp|esm|esl)';
 begin
+  if Length(wbCreationClubContent) <> 0 then
+    Result := MatchText(aFileName, wbCreationClubContent)
+  else
   with TPerlRegEx.Create do try
     Subject := aFileName;
     RegEx := ccFileMask;
@@ -441,7 +445,6 @@ begin
     Free;
   end;
 end;
-
 
 procedure DeleteDirectory(const DirName: string);
 var
