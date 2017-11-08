@@ -16539,32 +16539,7 @@ begin
   wbOfficialDLC[4] := 'DLCworkshop03.esm';
   wbOfficialDLC[5] := 'DLCNukaWorld.esm';
 
-  SetLength(wbOfficialCC, 0);
-//  wbOfficialDLC[00] := 'ccBGSFO4001-PipBoy(Black).esl';
-//  wbOfficialDLC[01] := 'ccBGSFO4002-PipBoy(Blue).esl';
-//  wbOfficialDLC[02] := 'ccBGSFO4003-PipBoy(Camo01).esl';
-//  wbOfficialDLC[03] := 'ccBGSFO4004-PipBoy(Camo02).esl';
-//  wbOfficialDLC[04] := 'ccBGSFO4006-PipBoy(Chrome).esl';
-//  wbOfficialDLC[05] := 'ccBGSFO4012-PipBoy(Red).esl';
-//  wbOfficialDLC[06] := 'ccBGSFO4014-PipBoy(White).esl';
-//  wbOfficialDLC[07] := 'ccBGSFO4016-Prey.esl';
-//  wbOfficialDLC[08] := 'ccBGSFO4017-Mauler.esl';
-//  wbOfficialDLC[09] := 'ccBGSFO4018-GaussRiflePrototype.esl';
-//  wbOfficialDLC[10] := 'ccBGSFO4019-ChineseStealthArmor.esl';
-//  wbOfficialDLC[11] := 'ccBGSFO4020-PowerArmorSkin(Black).esl';
-//  wbOfficialDLC[12] := 'ccBGSFO4020-PowerArmorSkin(Camo01).esl';
-//  wbOfficialDLC[13] := 'ccBGSFO4020-PowerArmorSkin(Camo02).esl';
-//  wbOfficialDLC[14] := 'ccBGSFO4020-PowerArmorSkin(Chrome).esl';
-//  wbOfficialDLC[15] := 'ccBGSFO4038-HorseArmor.esl';
-//  wbOfficialDLC[16] := 'ccBGSFO4039-TunnelSnakes.esl';
-//  wbOfficialDLC[17] := 'ccBGSFO4041-DoomMarineArmor.esl';
-//  wbOfficialDLC[18] := 'ccBGSFO4042-BFG.esl';
-//  wbOfficialDLC[19] := 'ccBGSFO4043-DoomChainsaw.esl';
-//  wbOfficialDLC[20] := 'ccBGSFO4044-HellfirePowerArmor.esl';
-//  wbOfficialDLC[21] := 'ccFSVFO4001-ModularMilitaryBackpack.esl';
-//  wbOfficialDLC[22] := 'ccFSVFO4002-MidCenturyModern.esl';
-//  wbOfficialDLC[23] := 'ccFRSFO4001-HandmadeShotgun.esl';
-//  wbOfficialDLC[24] := 'ccEEJFO4001-DecorationPack.esl';
+  wbCreationClubContentFileName := 'Fallout4.ccc';
 end;
 
 initialization

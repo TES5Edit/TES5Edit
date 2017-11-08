@@ -129,6 +129,10 @@ var
   wbMyGamesTheGamePath : string;
   wbTheGameIniFileName : string;
 
+  wbCreationClubContentFileName : string;
+  wbCreationClubContent: array of string;
+  wbOfficialDLC        : array of string;
+
   wbShouldLoadMOHookFile : Boolean;
   wbMOProfile            : string;
   wbMOHookFile           : string;
@@ -3247,8 +3251,6 @@ var
   wbTerminator        : Byte = Ord('|');
   wbPlayerRefID       : Cardinal = $14;
   wbChangedFormOffset : Integer = 10000;
-  wbOfficialDLC       : array of string;
-  wbOfficialCC        : array of string;
 
 type
   {$IFDEF WIN32}

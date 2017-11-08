@@ -3533,6 +3533,21 @@ begin
       Exit;
     end;
 
+  if wbCreationClubContentFileName <> '' then begin
+    wbCreationClubContentFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)) + wbCreationClubContentFileName;
+    if FileExists(wbCreationClubContentFileName) then begin
+      with TStringList.Create do try
+        LoadFromFile(wbCreationClubContentFileName);
+        SetLength(wbCreationClubContent, Count);
+        for i := 0 to Pred(Count) do
+          wbCreationClubContent[i] := Strings[i];
+      finally
+        Free;
+      end;
+      AddMessage('Using Creation Club Content list: ' + wbCreationClubContentFileName);
+    end;
+  end;
+
   AddMessage('Using plugin list: ' + wbPluginsFileName);
   if not FileExists(wbPluginsFileName) then begin
     // plugins file could be missing in Fallout 4 and SSE since DLCs are loaded automatically
