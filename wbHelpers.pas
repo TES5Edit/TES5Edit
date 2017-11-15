@@ -166,11 +166,12 @@ var
   Stack    : TnxLeveledListCheckCircularStack;
   s          : string;
   CER        : IwbContainerElementRef;
-  LLE        : IwbContainerElementRef;
+  Entries    : IwbContainerElementRef;
+  Entry      : IwbContainerElementRef;
   i          : Integer;
-  LVLO       : IwbContainerElementRef;
-  Reference  : IwbContainerElementRef;
+  Reference  : IwbElement;
   MainRecord : IwbMainRecord;
+  RefPath    : string;
 begin
   Stack.rllcLast := aStack;
   Stack.rllcMainRecord := aMainRecord;
@@ -196,11 +197,16 @@ begin
     Exit;
   aMainRecord.Tag;
 
+  if wbGameMode = gmTES4 then
+    RefPath := 'Reference'
+  else
+    RefPath := 'LVLO\Reference';
+
   if Supports(aMainRecord, IwbContainerElementRef, CER) then begin
-    if Supports(CER.ElementByName['Leveled List Entries'], IwbContainerElementRef, LLE) then begin
-      for i := 0 to Pred(LLE.ElementCount) do
-        if Supports(LLE.Elements[i], IwbContainerElementRef, LVLO) then begin
-          if Supports(LVLO.ElementByName['Reference'], IwbContainerElementRef, Reference) then begin
+    if Supports(CER.ElementByName['Leveled List Entries'], IwbContainerElementRef, Entries) then begin
+      for i := 0 to Pred(Entries.ElementCount) do
+        if Supports(Entries.Elements[i], IwbContainerElementRef, Entry) then begin
+          if Supports(Entry.ElementByPath[RefPath], IwbElement, Reference) then begin
             if Supports(Reference.LinksTo, IwbMainRecord, MainRecord) then begin
               if (MainRecord.Signature = aMainRecord.Signature) then begin
                 MainRecord := MainRecord.WinningOverride;
