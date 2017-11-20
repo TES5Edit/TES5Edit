@@ -724,6 +724,8 @@ begin
   if Assigned(BaseRecord) then
     MainRecord := BaseRecord;
 
+  MainRecord := MainRecord.WinningOverride;
+
   ScriptRef := MainRecord.RecordBySignature['SCRI'];
 
   if not Assigned(ScriptRef) then begin
@@ -821,6 +823,8 @@ begin
   BaseRecord := MainRecord.BaseRecord;
   if Assigned(BaseRecord) then
     MainRecord := BaseRecord;
+
+  MainRecord := MainRecord.WinningOverride;
 
   ScriptRef := MainRecord.RecordBySignature['SCRI'];
 
