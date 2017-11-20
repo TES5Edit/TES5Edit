@@ -227,14 +227,17 @@ begin
   ]);
 end;
 
-// a float32 represented as a byte hex value 00..FF
+// a float32 represented as a byte hex value 00..FF or a float value when < -1.0 or > 1.0
 procedure GetTextHexFloat(const aElement: TdfElement; var aText: string);
 var
   v: Extended;
 begin
-  v := dfStrToFloat(aText) * 255;
-  if v < 0.0 then v := 0.0
-  else if v > 255.0 then v := 255.0;
+  v := dfStrToFloat(aText);
+  if (v < -1.0) or (v > 1.0) then
+    Exit;
+
+  v := v * 255.0;
+  if v < 0.0 then v := 0.0 else if v > 255.0 then v := 255.0;
   aText := IntToHex(Round(v), 2);
 end;
 
