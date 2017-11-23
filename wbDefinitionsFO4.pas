@@ -8249,7 +8249,7 @@ begin
   wbFLTR := wbString(FLTR, 'Filter');
   wbAPPR := wbArray(APPR, 'Attach Parent Slots', wbFormIDCk('Keyword', [KYWD]));
   wbFTYP := wbFormIDCk(FTYP, 'Forced Loc Ref Type', [LCRT]);
-  wbATTX := wbLString(ATTX, 'Activate Text Override', 0, cpTranslate);
+  wbATTX := wbLStringKC(ATTX, 'Activate Text Override', 0, cpTranslate);
 
   wbMNAMFurnitureMarker := wbInteger(MNAM, 'Active Markers / Flags', itU32, wbFlags([
     {0x00000001} 'Interaction Point 0',
@@ -8654,7 +8654,7 @@ begin
       wbFloat('Addiction Chance'),
       wbFormIDCk('Sound - Consume', [SNDR, NULL])
     ], cpNormal, True),
-    wbLString(DNAM, 'Addiction Name', 0, cpTranslate),
+    wbLStringKC(DNAM, 'Addiction Name', 0, cpTranslate),
     wbEffectsReq
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
@@ -8872,7 +8872,7 @@ begin
         wbInteger('Y', itU32)
       ])
     ], cpNormal, True),
-    wbLString(CNAM, 'Description', 0, cpTranslate),
+    wbLStringKC(CNAM, 'Description', 0, cpTranslate),
     wbFormIDCk(INAM, 'Inventory Art', [STAT])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 end;
@@ -11370,9 +11370,9 @@ begin
     ]), cpNormal, True, False, nil, wbMESGDNAMAfterSet),
     wbInteger(TNAM, 'Display Time', itU32, nil, cpNormal, False, False, wbMESGTNAMDontShow),
     wbString(SNAM, 'SWF'),
-    wbLString(NNAM, 'Short Title', 0, cpTranslate),
+    wbLStringKC(NNAM, 'Short Title', 0, cpTranslate),
     wbRStructs('Menu Buttons', 'Menu Button', [
-      wbLString(ITXT, 'Button Text', 0, cpTranslate),
+      wbLStringKC(ITXT, 'Button Text', 0, cpTranslate),
       wbCTDAs
     ], [])
   ], False, nil, cpNormal, False, wbMESGAfterLoad);
@@ -12596,7 +12596,7 @@ begin
     ], [])),
 
     wbCTDAs,
-    wbLString(RNAM, 'Prompt', 0, cpTranslate),
+    wbLStringKC(RNAM, 'Prompt', 0, cpTranslate),
     wbFormIDCk(ANAM, 'Speaker', [NPC_]),
     wbFormIDCk(TSCE, 'Start Scene', [SCEN]),
     wbInteger(ALFA, 'Forced Alias', itS32),
@@ -13323,7 +13323,7 @@ begin
     wbObjectTemplate,
     wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
     wbFULL,
-    wbLString(SHRT, 'Short Name', 0, cpTranslate),
+    wbLStringKC(SHRT, 'Short Name', 0, cpTranslate),
     wbByteArray(DATA, 'Marker'),
     wbStruct(DNAM, '', [
       wbInteger('Unknown', itU16),
@@ -13794,7 +13794,7 @@ begin
         ])),
         wbCTDAs,
         wbString(NAM2, 'Note'),
-        wbLString(CNAM, 'Log Entry', 0, cpTranslate),
+        wbLStringKC(CNAM, 'Log Entry', 0, cpTranslate),
         wbFormIDCk(NAM0, 'Next Quest', [QUST])
       ], []))
     ], [])),
@@ -13804,7 +13804,7 @@ begin
         {0x01} 'ORed With Previous',
         {0x02} 'No Stats Tracking'
       ])),
-      wbLString(NNAM, 'Display Text', 0, cpTranslate, True),
+      wbLStringKC(NNAM, 'Display Text', 0, cpTranslate, True),
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
           wbInteger('Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
@@ -15191,7 +15191,7 @@ begin
     wbPRPS,
     wbUnknown(PNAM),
     wbATTX,
-    wbLString(RNAM, 'Activate Text Override', 0, cpTranslate),
+    wbLStringKC(RNAM, 'Activate Text Override', 0, cpTranslate),
     wbUnknown(FNAM),
     wbFormIDCk(PFIG, 'Ingredient', sigBaseObjects),
     wbFormIDCK(SNAM, 'Harvest Sound', [SNDR]),
@@ -15914,7 +15914,7 @@ begin
         // should not be sorted
         wbRArray('Names',
           wbRStruct('Name', [
-            wbLString(WNAM, 'Text', 0, cpTranslate),
+            wbLStringKC(WNAM, 'Text', 0, cpTranslate),
             wbKSIZ,
             wbKWDAs,
             wbStruct(XNAM, 'Property', [
@@ -16236,8 +16236,8 @@ begin
     wbVMADFragmentedPERK, // same fragments format as in PERK
     wbOBNDReq,
     wbPTRN,
-    wbLString(NAM0, 'Header Text'),
-    wbLString(WNAM, 'Welcome Text'),
+    wbLStringKC(NAM0, 'Header Text'),
+    wbLStringKC(WNAM, 'Welcome Text'),
     wbFULL,
     wbMODL,
     wbKSIZ,
@@ -16261,7 +16261,7 @@ begin
     wbInteger(BSIZ, 'Count', itU32, nil, cpBenign),
     wbRArray('Body Text',
       wbRStruct('Item', [
-        wbLString(BTXT, 'Text', 0, cpTranslate),
+        wbLStringKC(BTXT, 'Text', 0, cpTranslate),
         wbCTDAs
       ], []),
       cpNormal, False, nil, wbTERMDisplayItemsAfterSet
@@ -16269,8 +16269,8 @@ begin
     wbInteger(ISIZ, 'Count', itU32, nil, cpBenign),
     wbRArray('Menu Items',
       wbRStruct('Menu Item', [
-        wbLString(ITXT, 'Item Text', 0, cpTranslate),
-        wbLString(RNAM, 'Response Text', 0, cpTranslate),
+        wbLStringKC(ITXT, 'Item Text', 0, cpTranslate),
+        wbLStringKC(RNAM, 'Response Text', 0, cpTranslate),
         wbInteger(ANAM, 'Type', itU8, wbEnum([
           {0} 'Unknown 0',
           {1} 'Unknown 1',
@@ -16283,7 +16283,7 @@ begin
           {8} 'Display Text'
         ]), cpNormal, True),
         wbInteger(ITID, 'Item ID', itU16),
-        wbLString(UNAM, 'Display Text', 0, cpTranslate),
+        wbLStringKC(UNAM, 'Display Text', 0, cpTranslate),
         wbString(VNAM, 'Show Image'),
         wbFormIDCk(TNAM, 'Submenu', [TERM]),
         wbCTDAs
