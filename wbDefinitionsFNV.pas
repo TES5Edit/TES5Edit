@@ -5526,7 +5526,7 @@ begin
         {12} wbInteger('Form Type', itU32, wbFormTypeEnum),
         {13} wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
         {14} wbFormIDCkNoReach('Object Reference', [PLYR, REFR, ACHR, ACRE, PGRE, PMIS, PBEA, TRGT], True),
-        {16} wbFormIDCkNoReach('Inventory Object', [ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY, IMOD]),
+        {16} wbFormIDCkNoReach('Inventory Object', [NULL, ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, NOTE, FLST, CHIP, CMNY, IMOD]),
         {17} wbFormIDCkNoReach('Actor', [PLYR, ACHR, ACRE, TRGT], True),
         {18} wbFormIDCkNoReach('Voice Type', [VTYP]),
         {19} wbFormIDCkNoReach('Idle', [IDLE]),
@@ -5592,7 +5592,7 @@ begin
         {25} wbFormIDCkNoReach('Cell', [CELL]),
         {26} wbFormIDCkNoReach('Class', [CLAS]),
         {27} wbFormIDCkNoReach('Race', [RACE]),
-        {28} wbFormIDCkNoReach('Actor Base', [NPC_, CREA, ACTI, TACT]),
+        {28} wbFormIDCkNoReach('Actor Base', [NULL, NPC_, CREA, ACTI, TACT]),
         {29} wbFormIDCkNoReach('Global', [GLOB]),
         {30} wbFormIDCkNoReach('Weather', [WTHR]),
         {31} wbFormIDCkNoReach('Package', [PACK]),
@@ -8450,7 +8450,7 @@ begin
       ]),
       wbByteArray('Unused', 1)
     ], cpNormal, True),
-    wbFormIDCk(XNAM, 'Actor Base', [CREA, NPC_], False, cpNormal, True),
+    wbFormIDCk(XNAM, 'Actor Base', [NULL, CREA, NPC_], False, cpNormal, True),
     wbFormIDCk(TNAM, 'Body Part Data', [BPTD], False, cpNormal, True),
     wbStruct(RAFD, 'Feedback Data', [
     {00} wbFloat('Dynamic/Keyframe Blend Amount'),
