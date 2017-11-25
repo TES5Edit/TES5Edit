@@ -14311,7 +14311,7 @@ begin
   ], False, nil, cpNormal, False, nil, wbRACEAfterSet);
 
 
-  wbRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
+  wbRecord(REFR, 'Placed Object', wbFormatterUnion(wbREFRRecordFlagsDecider, [
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
       {0x00000100}  8, 'LOD Respects Enable State',

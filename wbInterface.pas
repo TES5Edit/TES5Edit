@@ -277,8 +277,8 @@ type
     dtLenString,
     dtByteArray,
     dtInteger,
-    dtIntegerFormater,
-    dtIntegerFormaterUnion,
+    dtIntegerFormatter,
+    dtIntegerFormatterUnion,
     dtFlag,
     dtFloat,
     dtArray,
@@ -1218,7 +1218,7 @@ type
   TwbStrToIntCallback = function(const aString: string; const aElement: IwbElement): Int64;
   TwbAddInfoCallback = function(const aMainRecord: IwbMainRecord): string;
   TwbUnionDecider = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-  TwbIntegerDefFormaterUnionDecider = function(const aElement: IwbElement): Integer;
+  TwbIntegerDefFormatterUnionDecider = function(const aElement: IwbElement): Integer;
   TwbIsSortedCallback = function(const aContainer: IwbContainer): Boolean;
   TwbCountCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
   TwbSizeCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement;var CompressedSize: Integer): Cardinal;
@@ -1446,22 +1446,22 @@ type
       read GetSorted;
   end;
 
-  IwbIntegerDefFormater = interface;
+  IwbIntegerDefFormatter = interface;
 
   IwbIntegerDef = interface(IwbValueDef)
     ['{00A270B0-ACFC-444C-A7E8-A577BD40704E}']
     function ToInt(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Int64;
     procedure FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
 
-    function GetFormater(const aElement: IwbElement): IwbIntegerDefFormater;
-    function GetFormaterCanChange: Boolean;
+    function GetFormatter(const aElement: IwbElement): IwbIntegerDefFormatter;
+    function GetFormatterCanChange: Boolean;
     function GetIntType: TwbIntType;
     function GetExpectedLength(aValue: Int64 = 0): Integer;
 
-    property Formater[const aElement: IwbElement]: IwbIntegerDefFormater
-      read GetFormater;
-    property FormaterCanChange: Boolean
-      read GetFormaterCanChange;
+    property Formatter[const aElement: IwbElement]: IwbIntegerDefFormatter
+      read GetFormatter;
+    property FormatterCanChange: Boolean
+      read GetFormatterCanChange;
     property IntType: TwbIntType
       read GetIntType;
 
@@ -1471,7 +1471,7 @@ type
 
   IwbInternalIntegerDef = interface(IwbIntegerDef)
     ['{16A15EF7-6295-4817-BA94-CDD7E8C1CF8B}']
-    procedure ReplaceFormater(const aFormater: IwbIntegerDefFormater);
+    procedure ReplaceFormatter(const aFormatter: IwbIntegerDefFormatter);
   end;
 
   IwbFloatDef = interface(IwbValueDef)
@@ -1552,7 +1552,7 @@ type
     ['{A5AB100F-83CA-4B53-B3CD-2BF926210900}']
   end;
 
-  IwbIntegerDefFormater = interface(IwbDef)
+  IwbIntegerDefFormatter = interface(IwbDef)
     ['{56A6EB7B-3A90-4F09-8E80-D7399569DFCC}']
 
     function ToString(aInt: Int64; const aElement: IwbElement): string;
@@ -1591,22 +1591,22 @@ type
       read GetRequiresKey;
   end;
 
-  IwbIntegerDefFormaterUnion = interface(IwbIntegerDefFormater)
+  IwbIntegerDefFormatterUnion = interface(IwbIntegerDefFormatter)
     ['{C04B1181-A570-41AE-A31E-7977B722EE0A}']
-    function Decide(const aElement: IwbElement): IwbIntegerDefFormater;
+    function Decide(const aElement: IwbElement): IwbIntegerDefFormatter;
 
-    function GetMember(aIndex: Integer): IwbIntegerDefFormater;
+    function GetMember(aIndex: Integer): IwbIntegerDefFormatter;
     function GetMemberCount: Integer;
 
-    property Members[aIndex: Integer]: IwbIntegerDefFormater read GetMember;
+    property Members[aIndex: Integer]: IwbIntegerDefFormatter read GetMember;
     property MemberCount: Integer read GetMemberCount;
   end;
 
-  IwbDumpIntegerDefFormater = interface(IwbIntegerDefFormater)
+  IwbDumpIntegerDefFormatter = interface(IwbIntegerDefFormatter)
     ['{9767F3EF-0E6F-45FB-AC9F-31A9B4312760}']
   end;
 
-  IwbFormID = interface(IwbIntegerDefFormater)
+  IwbFormID = interface(IwbIntegerDefFormatter)
     ['{71C4A255-B983-488C-9837-0A720132348A}']
     function GetMainRecord(aInt: Int64; const aElement: IwbElement): IwbMainRecord;
   end;
@@ -1626,11 +1626,11 @@ type
       read GetSignatureCount;
   end;
 
-  IwbChar4 = interface(IwbIntegerDefFormater)
+  IwbChar4 = interface(IwbIntegerDefFormatter)
     ['{CF657B3A-E7A6-48FE-AC68-8DF15962A531}']
   end;
 
-  IwbStr4 = interface(IwbIntegerDefFormater)	// 4 bytes strings stored as itU32 
+  IwbStr4 = interface(IwbIntegerDefFormatter)	// 4 bytes strings stored as itU32
     ['{2DC5200E-C1F1-47e7-A927-3D110D59F55A}']
   end;  // The interface handles swaping the character in readable order
 
@@ -1647,7 +1647,7 @@ type
       read GetFlagIndex;
   end;
 
-  IwbFlagsDef = interface(IwbIntegerDefFormater)
+  IwbFlagsDef = interface(IwbIntegerDefFormatter)
     ['{EF564466-A671-453A-88CF-42A0AA32D849}']
     function GetBaseFlagsDef: IwbFlagsDef;
     function GetFlag(aIndex: Integer): string;
@@ -1681,7 +1681,7 @@ type
       read GetFlagDef;
   end;
 
-  IwbEnumDef = interface(IwbIntegerDefFormater)
+  IwbEnumDef = interface(IwbIntegerDefFormatter)
     ['{A3AFE02E-F72D-4E0E-BC56-219F7EE2B564}']
 
     function GetName(aIndex: Integer): string;
@@ -1701,7 +1701,7 @@ type
     ['{AC7F99C9-9DF1-43BB-9052-6AD4B69E706F}']
   end;
 
-  IwbCallbackDef = interface(IwbIntegerDefFormater)
+  IwbCallbackDef = interface(IwbIntegerDefFormatter)
     ['{BF6A0830-F981-4E0A-B4F2-2A09D575CD19}']
     function GetCallback: TwbIntToStrCallback;
 
@@ -1800,7 +1800,7 @@ function wbRecord(const aSignature      : TwbSignature;
 
 function wbRecord(const aSignature      : TwbSignature;
                   const aName           : string;
-                  const aRecordFlags    : IwbIntegerDefFormater;
+                  const aRecordFlags    : IwbIntegerDefFormatter;
                   const aMembers        : array of IwbRecordMemberDef;
                         aAllowUnordered : Boolean = False;
                         aAddInfoCallback: TwbAddInfoCallback = nil;
@@ -2110,7 +2110,7 @@ function wbUnknown(aPriority : TwbConflictPriority = cpNormal;
 function wbInteger(const aSignature : TwbSignature;
                    const aName      : string;
                    const aIntType   : TwbIntType;
-                   const aFormater  : IwbIntegerDefFormater = nil;
+                   const aFormatter  : IwbIntegerDefFormatter = nil;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
                          aMatchSize : Boolean = False;
@@ -2122,7 +2122,7 @@ function wbInteger(const aSignature : TwbSignature;
 
 function wbInteger(const aName     : string;
                    const aIntType  : TwbIntType;
-                   const aFormater : IwbIntegerDefFormater = nil;
+                   const aFormatter : IwbIntegerDefFormatter = nil;
                          aPriority : TwbConflictPriority = cpNormal;
                          aRequired : Boolean = False;
                          aDontShow : TwbDontShowCallback = nil;
@@ -2160,7 +2160,7 @@ function wbInteger(const aName     : string;
 function wbIntegerT(const aSignature : TwbSignature;
                     const aName      : string;
                     const aIntType   : TwbIntType;
-                    const aFormater  : IwbIntegerDefFormater = nil;
+                    const aFormatter  : IwbIntegerDefFormatter = nil;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
                           aMatchSize : Boolean = False;
@@ -2172,7 +2172,7 @@ function wbIntegerT(const aSignature : TwbSignature;
 
 function wbIntegerT(const aName     : string;
                     const aIntType  : TwbIntType;
-                    const aFormater : IwbIntegerDefFormater = nil;
+                    const aFormatter : IwbIntegerDefFormatter = nil;
                           aPriority : TwbConflictPriority = cpNormal;
                           aRequired : Boolean = False;
                           aDontShow : TwbDontShowCallback = nil;
@@ -2899,7 +2899,7 @@ function wbRefIDT(const aName      : string;
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbIntegerDef; overload;
 
-function wbDumpInteger : IwbIntegerDefFormater; overload;
+function wbDumpInteger : IwbIntegerDefFormatter; overload;
 
 function wbKey2Data6Enum(const aNames : array of string)
                                       : IwbKey2Data6EnumDef; overload;
@@ -3056,16 +3056,16 @@ function wbEnum(const aNames       : array of string;
 
 
 function wbDiv(aValue : Integer)
-                      : IwbIntegerDefFormater;
+                      : IwbIntegerDefFormatter;
 function wbMul(aValue : Integer)
-                      : IwbIntegerDefFormater;
+                      : IwbIntegerDefFormatter;
 function wbCallback(const aToStr : TwbIntToStrCallback;
                     const aToInt : TwbStrToIntCallback)
-                                 : IwbIntegerDefFormater;
+                                 : IwbIntegerDefFormatter;
 
-function wbFormaterUnion(aDecider : TwbIntegerDefFormaterUnionDecider;
-                         aMembers : array of IwbIntegerDefFormater)
-                                  : IwbIntegerDefFormaterUnion;
+function wbFormatterUnion(aDecider : TwbIntegerDefFormatterUnionDecider;
+                         aMembers : array of IwbIntegerDefFormatter)
+                                  : IwbIntegerDefFormatterUnion;
 
 function wbIsPlugin(aFileName: string): Boolean;
 
@@ -3759,7 +3759,7 @@ type
 
   TwbRecordDef = class(TwbSignatureDef, IwbRecordDef)
   private
-    recRecordFlags        : IwbIntegerDefFormater;
+    recRecordFlags        : IwbIntegerDefFormatter;
     recRecordHeaderStruct : IwbStructDef;
     recMembers            : array of IwbRecordMemberDef;
     recSignatures         : TStringList;
@@ -3774,7 +3774,7 @@ type
                        aRequired        : Boolean;
                  const aSignature       : TwbSignature;
                  const aName            : string;
-                 const aRecordFlags     : IwbIntegerDefFormater;
+                 const aRecordFlags     : IwbIntegerDefFormatter;
                  const aMembers         : array of IwbRecordMemberDef;
                        aAllowUnordered  : Boolean;
                        aAddInfoCallback : TwbAddInfoCallback;
@@ -4358,7 +4358,7 @@ type
   TwbIntegerDef = class(TwbValueDef, IwbIntegerDef, IwbInternalIntegerDef)
   private
     inType     : TwbIntType;
-    inFormater : IwbIntegerDefFormater;
+    inFormatter : IwbIntegerDefFormatter;
     inDefault  : Int64;
   protected
     constructor Clone(const aSource: TwbDef); override;
@@ -4366,7 +4366,7 @@ type
                        aRequired   : Boolean;
                  const aName       : string;
                  const aIntType    : TwbIntType;
-                 const aFormater   : IwbIntegerDefFormater;
+                 const aFormatter   : IwbIntegerDefFormatter;
                        aDontShow   : TwbDontShowCallback;
                        aAfterSet   : TwbAfterSetCallback;
                        aDefault    : Int64;
@@ -4407,13 +4407,13 @@ type
     {---IwbIntegerDef---}
     function ToInt(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Int64;
     procedure FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
-    function GetFormater(const aElement: IwbElement): IwbIntegerDefFormater;
-    function GetFormaterCanChange: Boolean;
+    function GetFormatter(const aElement: IwbElement): IwbIntegerDefFormatter;
+    function GetFormatterCanChange: Boolean;
     function GetIntType: TwbIntType;
     function GetExpectedLength(aValue: Int64 = 0): Integer;
 
     {---IwbInternalIntegerDef---}
-    procedure ReplaceFormater(const aFormater: IwbIntegerDefFormater);
+    procedure ReplaceFormatter(const aFormatter: IwbIntegerDefFormatter);
   end;
 
   TwbFloatDef = class(TwbValueDef, IwbFloatDef)
@@ -4617,7 +4617,7 @@ type
   TwbStructLZDef = class(TwbStructCDef, IwbStructLZDef)
   end;
 
-  TwbIntegerDefFormater = class(TwbDef, IwbIntegerDefFormater)
+  TwbIntegerDefFormatter = class(TwbDef, IwbIntegerDefFormatter)
   protected
     constructor Clone(const aSource: TwbDef); override;
 
@@ -4625,7 +4625,7 @@ type
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
 
-    {---IwbIntegerDefFormater---}
+    {---IwbIntegerDefFormatter---}
     function ToString(aInt: Int64; const aElement: IwbElement): string; reintroduce; virtual; abstract;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; virtual; abstract;
     function Check(aInt: Int64; const aElement: IwbElement): string; virtual;
@@ -4649,17 +4649,17 @@ type
     function GetRequiresKey: Boolean; virtual;
   end;
 
-  TwbIntegerDefFormaterUnion = class(TwbIntegerDefFormater, IwbIntegerDefFormaterUnion)
+  TwbIntegerDefFormatterUnion = class(TwbIntegerDefFormatter, IwbIntegerDefFormatterUnion)
   private
-    idfuDecider: TwbIntegerDefFormaterUnionDecider;
-    idfuMembers: array of IwbIntegerDefFormater;
+    idfuDecider: TwbIntegerDefFormatterUnionDecider;
+    idfuMembers: array of IwbIntegerDefFormatter;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority : TwbConflictPriority;
                        aRequired : Boolean;
                        aGetCP    : TwbGetConflictPriority;
-                       aDecider  : TwbIntegerDefFormaterUnionDecider;
-                 const aMembers  : array of IwbIntegerDefFormater);
+                       aDecider  : TwbIntegerDefFormatterUnionDecider;
+                 const aMembers  : array of IwbIntegerDefFormatter);
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -4667,7 +4667,7 @@ type
     procedure Report(const aParents: TwbDefPath); override;
     function GetNoReach: Boolean; override;
 
-    {---IwbIntegerDefFormater---}
+    {---IwbIntegerDefFormatter---}
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
     function Check(aInt: Int64; const aElement: IwbElement): string; override;
@@ -4688,23 +4688,23 @@ type
     procedure FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement); override;
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: Cardinal; aNewFormID: Cardinal; const aElement: IwbElement): Boolean; override;
 
-    {---IwbIntegerDefFormaterUnion---}
-    function Decide(const aElement: IwbElement): IwbIntegerDefFormater;
+    {---IwbIntegerDefFormatterUnion---}
+    function Decide(const aElement: IwbElement): IwbIntegerDefFormatter;
 
-    function GetMember(aIndex: Integer): IwbIntegerDefFormater;
+    function GetMember(aIndex: Integer): IwbIntegerDefFormatter;
     function GetMemberCount: Integer;
 
-    property Members[aIndex: Integer]: IwbIntegerDefFormater read GetMember;
+    property Members[aIndex: Integer]: IwbIntegerDefFormatter read GetMember;
     property MemberCount: Integer read GetMemberCount;
   end;
 
-  TwbDumpIntegerDefFormater = class(TwbIntegerDefFormater, IwbDumpIntegerDefFormater)
+  TwbDumpIntegerDefFormatter = class(TwbIntegerDefFormatter, IwbDumpIntegerDefFormatter)
   protected
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
   end;
 
-  TwbFormID = class(TwbIntegerDefFormater, IwbFormID)
+  TwbFormID = class(TwbIntegerDefFormatter, IwbFormID)
   protected
     FoundSignatures: TStringList;
     FoundNotAllowedReferences: TStringList;
@@ -4722,7 +4722,7 @@ type
     {---IwbDef---}
     procedure Report(const aParents: TwbDefPath); override;
 
-    {---IwbIntegerDefFormater---}
+    {---IwbIntegerDefFormatter---}
     function Check(aInt: Int64; const aElement: IwbElement): string; override;
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
@@ -4750,7 +4750,7 @@ type
 
   TwbRefID = class(TwbFormID, IwbRefID)
   protected
-    {---IwbIntegerDefFormater---}
+    {---IwbIntegerDefFormatter---}
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     procedure BuildRef(aInt: Int64; const aElement: IwbElement); override;
   end;
@@ -4780,7 +4780,7 @@ type
     procedure Report(const aParents: TwbDefPath); override;
     function GetNoReach: Boolean; override;
 
-    {---IwbIntegerDefFormater---}
+    {---IwbIntegerDefFormatter---}
     function Check(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
@@ -4790,11 +4790,11 @@ type
     function GetSignatureCount: Integer;
   end;
 
-  TwbChar4 = class(TwbIntegerDefFormater, IwbChar4)
+  TwbChar4 = class(TwbIntegerDefFormatter, IwbChar4)
   protected
     constructor Clone(const aSource: TwbDef); override;
 
-    {---IwbIntegerDefFormater---}
+    {---IwbIntegerDefFormatter---}
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
     procedure BuildRef(aInt: Int64; const aElement: IwbElement); override;
@@ -4807,11 +4807,11 @@ type
     function CanContainFormIDs: Boolean; override;
   end;
 
-  TwbStr4 = class(TwbIntegerDefFormater, IwbStr4)
+  TwbStr4 = class(TwbIntegerDefFormatter, IwbStr4)
   protected
     constructor Clone(const aSource: TwbDef); override;
 
-    {---IwbIntegerDefFormater---}
+    {---IwbIntegerDefFormatter---}
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
@@ -4822,7 +4822,7 @@ type
     function CanContainFormIDs: Boolean; override;
   end;
 
-  TwbFlagsDef = class(TwbIntegerDefFormater, IwbFlagsDef)
+  TwbFlagsDef = class(TwbIntegerDefFormatter, IwbFlagsDef)
   private
     flgBaseFlagsDef    : IwbFlagsDef;
     flgNames           : array of string;
@@ -4850,7 +4850,7 @@ type
     procedure Report(const aParents: TwbDefPath); override;
     function GetDefTypeName: string; override;
 
-    {---IwbIntegerDefFormater---}
+    {---IwbIntegerDefFormatter---}
     function Check(aInt: Int64; const aElement: IwbElement): string; override;
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
@@ -4920,7 +4920,7 @@ type
     snName  : string;
   end;
 
-  TwbEnumDef = class(TwbIntegerDefFormater, IwbEnumDef)
+  TwbEnumDef = class(TwbIntegerDefFormatter, IwbEnumDef)
   private
     enNames          : array of string;
     enSparseNames    : array of TwbSparseName;
@@ -4941,7 +4941,7 @@ type
     procedure Report(const aParents: TwbDefPath); override;
     function GetDefTypeName: string; override;
 
-    {---IwbIntegerDefFormater---}
+    {---IwbIntegerDefFormatter---}
     function Check(aInt: Int64; const aElement: IwbElement): string; override;
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
@@ -4961,19 +4961,19 @@ type
 
   TwbKey2Data6EnumDef = class(TwbEnumDef, IwbKey2Data6EnumDef)
   protected
-    {---IwbIntegerDefFormater---}
+    {---IwbIntegerDefFormatter---}
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
   end;
 
   TwbData6Key2EnumDef = class(TwbEnumDef, IwbData6Key2EnumDef)
   protected
-    {---IwbIntegerDefFormater---}
+    {---IwbIntegerDefFormatter---}
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
   end;
 
-  TwbDivDef = class(TwbIntegerDefFormater)
+  TwbDivDef = class(TwbIntegerDefFormatter)
   private
     ddValue: Integer;
   protected
@@ -4982,7 +4982,7 @@ type
 
     function CanContainFormIDs: Boolean; override;
 
-    {---IwbIntegerDefFormater---}
+    {---IwbIntegerDefFormatter---}
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
@@ -4992,7 +4992,7 @@ type
     function GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean; override;
   end;
 
-  TwbMulDef = class(TwbIntegerDefFormater)
+  TwbMulDef = class(TwbIntegerDefFormatter)
   private
     mdValue: Integer;
   protected
@@ -5001,7 +5001,7 @@ type
 
     function CanContainFormIDs: Boolean; override;
 
-    {---IwbIntegerDefFormater---}
+    {---IwbIntegerDefFormatter---}
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
@@ -5011,7 +5011,7 @@ type
     function GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean; override;
   end;
 
-  TwbCallbackDef = class(TwbIntegerDefFormater, IwbCallbackDef)
+  TwbCallbackDef = class(TwbIntegerDefFormatter, IwbCallbackDef)
   private
     cdToStr: TwbIntToStrCallback;
     cdToInt: TwbStrToIntCallback;
@@ -5022,7 +5022,7 @@ type
 
     function CanContainFormIDs: Boolean; override;
 
-    {---IwbIntegerDefFormater---}
+    {---IwbIntegerDefFormatter---}
     function Check(aInt: Int64; const aElement: IwbElement): string; override;
     function ToString(aInt: Int64; const aElement: IwbElement): string; override;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
@@ -5056,7 +5056,7 @@ end;
 
 function wbRecord(const aSignature       : TwbSignature;
                   const aName            : string;
-                  const aRecordFlags     : IwbIntegerDefFormater;
+                  const aRecordFlags     : IwbIntegerDefFormatter;
                   const aMembers         : array of IwbRecordMemberDef;
                         aAllowUnordered  : Boolean = False;
                         aAddInfoCallback : TwbAddInfoCallback = nil;
@@ -5494,7 +5494,7 @@ end;
 function wbInteger(const aSignature : TwbSignature;
                    const aName      : string;
                    const aIntType   : TwbIntType;
-                   const aFormater  : IwbIntegerDefFormater = nil;
+                   const aFormatter  : IwbIntegerDefFormatter = nil;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
                          aMatchSize : Boolean = False;
@@ -5504,13 +5504,13 @@ function wbInteger(const aSignature : TwbSignature;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbInteger('', aIntType, aFormater, aPriority, False, nil, nil, aDefault), nil, aAfterSet, aPriority, aRequired, aMatchSize, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbInteger('', aIntType, aFormatter, aPriority, False, nil, nil, aDefault), nil, aAfterSet, aPriority, aRequired, aMatchSize, aDontShow, aGetCP);
 end;
 
 function wbIntegerT(const aSignature : TwbSignature;
                     const aName      : string;
                     const aIntType   : TwbIntType;
-                    const aFormater  : IwbIntegerDefFormater = nil;
+                    const aFormatter  : IwbIntegerDefFormatter = nil;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
                           aMatchSize : Boolean = False;
@@ -5520,12 +5520,12 @@ function wbIntegerT(const aSignature : TwbSignature;
                           aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbIntegerT('', aIntType, aFormater, aPriority, False, nil, nil, aDefault), nil, aAfterSet, aPriority, aRequired, aMatchSize, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbIntegerT('', aIntType, aFormatter, aPriority, False, nil, nil, aDefault), nil, aAfterSet, aPriority, aRequired, aMatchSize, aDontShow, aGetCP);
 end;
 
 function wbInteger(const aName     : string;
                    const aIntType  : TwbIntType;
-                   const aFormater : IwbIntegerDefFormater = nil;
+                   const aFormatter : IwbIntegerDefFormatter = nil;
                          aPriority : TwbConflictPriority = cpNormal;
                          aRequired : Boolean = False;
                          aDontShow : TwbDontShowCallback = nil;
@@ -5534,12 +5534,12 @@ function wbInteger(const aName     : string;
                          aGetCP    : TwbGetConflictPriority = nil)
                                    : IwbIntegerDef; overload;
 begin
-  Result := TwbIntegerDef.Create(aPriority, aRequired, aName, aIntType, aFormater, aDontShow, aAfterSet, aDefault, aGetCP, False);
+  Result := TwbIntegerDef.Create(aPriority, aRequired, aName, aIntType, aFormatter, aDontShow, aAfterSet, aDefault, aGetCP, False);
 end;
 
 function wbIntegerT(const aName     : string;
                     const aIntType  : TwbIntType;
-                    const aFormater : IwbIntegerDefFormater = nil;
+                    const aFormatter : IwbIntegerDefFormatter = nil;
                           aPriority : TwbConflictPriority = cpNormal;
                           aRequired : Boolean = False;
                           aDontShow : TwbDontShowCallback = nil;
@@ -5548,7 +5548,7 @@ function wbIntegerT(const aName     : string;
                           aGetCP    : TwbGetConflictPriority = nil)
                                     : IwbIntegerDef; overload;
 begin
-  Result := TwbIntegerDef.Create(aPriority, aRequired, aName, aIntType, aFormater, aDontShow, aAfterSet, aDefault, aGetCP, True);
+  Result := TwbIntegerDef.Create(aPriority, aRequired, aName, aIntType, aFormatter, aDontShow, aAfterSet, aDefault, aGetCP, True);
 end;
 
 function wbInteger(const aSignature : TwbSignature;
@@ -5564,7 +5564,7 @@ function wbInteger(const aSignature : TwbSignature;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordDef; overload;
 var
-  Callback: IwbIntegerDefFormater;
+  Callback: IwbIntegerDefFormatter;
 begin
   if Assigned(aToStr) then
     Callback := wbCallback(aToStr, aToInt);
@@ -5584,7 +5584,7 @@ function wbIntegerT(const aSignature : TwbSignature;
                           aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 var
-  Callback: IwbIntegerDefFormater;
+  Callback: IwbIntegerDefFormatter;
 begin
   if Assigned(aToStr) then
     Callback := wbCallback(aToStr, aToInt);
@@ -5603,7 +5603,7 @@ function wbInteger(const aName     : string;
                          aGetCP    : TwbGetConflictPriority = nil)
                                    : IwbIntegerDef; overload;
 var
-  Callback: IwbIntegerDefFormater;
+  Callback: IwbIntegerDefFormatter;
 begin
   if Assigned(aToStr) then
     Callback := wbCallback(aToStr, aToInt);
@@ -5622,7 +5622,7 @@ function wbIntegerT(const aName     : string;
                           aGetCP    : TwbGetConflictPriority = nil)
                                     : IwbIntegerDef; overload;
 var
-  Callback: IwbIntegerDefFormater;
+  Callback: IwbIntegerDefFormatter;
 begin
   if Assigned(aToStr) then
     Callback := wbCallback(aToStr, aToInt);
@@ -6486,9 +6486,9 @@ begin
   Result := TwbEmptyDef.Create(aPriority, aRequired, aName, nil, nil, aDontShow, aSorted, aGetCP);
 end;
 
-function wbDumpInteger : IwbIntegerDefFormater;
+function wbDumpInteger : IwbIntegerDefFormatter;
 begin
-  Result := TwbDumpIntegerDefFormater.Create(cpNormal, False, nil);
+  Result := TwbDumpIntegerDefFormatter.Create(cpNormal, False, nil);
 end;
 
 function wbKey2Data6Enum(const aNames : array of string) : IwbKey2Data6EnumDef;
@@ -6801,29 +6801,29 @@ end;
 
 
 function wbDiv(aValue : Integer)
-                      : IwbIntegerDefFormater;
+                      : IwbIntegerDefFormatter;
 begin
   Result := TwbDivDef.Create(aValue);
 end;
 
 function wbMul(aValue : Integer)
-                      : IwbIntegerDefFormater;
+                      : IwbIntegerDefFormatter;
 begin
   Result := TwbMulDef.Create(aValue);
 end;
 
 function wbCallback(const aToStr : TwbIntToStrCallback;
                     const aToInt : TwbStrToIntCallback)
-                                 : IwbIntegerDefFormater;
+                                 : IwbIntegerDefFormatter;
 begin
   Result := TwbCallbackDef.Create(aToStr, aToInt);
 end;
 
-function wbFormaterUnion(aDecider : TwbIntegerDefFormaterUnionDecider;
-                         aMembers : array of IwbIntegerDefFormater)
-                                  : IwbIntegerDefFormaterUnion;
+function wbFormatterUnion(aDecider : TwbIntegerDefFormatterUnionDecider;
+                         aMembers : array of IwbIntegerDefFormatter)
+                                  : IwbIntegerDefFormatterUnion;
 begin
-  Result := TwbIntegerDefFormaterUnion.Create(cpNormal, False, nil, aDecider, aMembers);
+  Result := TwbIntegerDefFormatterUnion.Create(cpNormal, False, nil, aDecider, aMembers);
 end;
 
 { TwbDef }
@@ -7270,7 +7270,7 @@ constructor TwbRecordDef.Create(aPriority        : TwbConflictPriority;
                                 aRequired        : Boolean;
                           const aSignature       : TwbSignature;
                           const aName            : string;
-                          const aRecordFlags     : IwbIntegerDefFormater;
+                          const aRecordFlags     : IwbIntegerDefFormatter;
                           const aMembers         : array of IwbRecordMemberDef;
                                 aAllowUnordered  : Boolean;
                                 aAddInfoCallback : TwbAddInfoCallback;
@@ -7287,7 +7287,7 @@ begin
 
   if Assigned(recRecordFlags) and Assigned(wbRecordFlags) and Assigned(wbMainRecordHeader) then begin
     recRecordHeaderStruct := (wbMainRecordHeader as IwbDefInternal).SetParent(Self, True) as IwbStructDef;
-    (recRecordHeaderStruct.MembersByName[wbRecordFlags.Name] as IwbInternalIntegerDef).ReplaceFormater(recRecordFlags);
+    (recRecordHeaderStruct.MembersByName[wbRecordFlags.Name] as IwbInternalIntegerDef).ReplaceFormatter(recRecordFlags);
   end;
 
   recSignatures := TwbFastStringListCS.CreateSorted(dupAccept);
@@ -8244,8 +8244,8 @@ function TwbIntegerDef.Assign(const aTarget : IwbElement;
                                     aOnlySK : Boolean)
                                             : IwbElement;
 begin
-  if Assigned(inFormater) then
-    Result := inFormater.Assign(aTarget, aIndex, aSource, aOnlySK)
+  if Assigned(inFormatter) then
+    Result := inFormatter.Assign(aTarget, aIndex, aSource, aOnlySK)
   else
     Result := inherited Assign(aTarget, aIndex, aSource, aOnlySK)
 end;
@@ -8254,7 +8254,7 @@ procedure TwbIntegerDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: Iwb
 var
   Value       : Int64;
 begin
-  if Assigned(inFormater) then
+  if Assigned(inFormatter) then
     if (Cardinal(aEndPtr) - Cardinal(aBasePtr)) >= GetExpectedLength then begin
       case inType of
         itU8:  Value := PByte(aBasePtr)^;
@@ -8270,7 +8270,7 @@ begin
       else
         {it0:}  Value := 0;
       end;
-      inFormater.BuildRef(Value, aElement);
+      inFormatter.BuildRef(Value, aElement);
     end;
 end;
 
@@ -8280,18 +8280,18 @@ var
 begin
   Result := Supports(aDef, IwbIntegerDef, IntegerDef);
   if Result then begin
-    if Assigned(inFormater) then
-      Result := inFormater.CanAssign(aElement, aIndex, IntegerDef.Formater[aElement])
-    else if Assigned(IntegerDef.Formater[aElement]) then
-      Result := IntegerDef.Formater[aElement].CanAssign(aElement, aIndex, GetFormater(aElement));
+    if Assigned(inFormatter) then
+      Result := inFormatter.CanAssign(aElement, aIndex, IntegerDef.Formatter[aElement])
+    else if Assigned(IntegerDef.Formatter[aElement]) then
+      Result := IntegerDef.Formatter[aElement].CanAssign(aElement, aIndex, GetFormatter(aElement));
   end else
-    if Assigned(inFormater) then
-      Result := inFormater.CanAssign(aElement, aIndex, aDef);
+    if Assigned(inFormatter) then
+      Result := inFormatter.CanAssign(aElement, aIndex, aDef);
 end;
 
 function TwbIntegerDef.CanContainFormIDs: Boolean;
 begin
-  Result := Assigned(inFormater) and (inFormater.CanContainFormIDs);
+  Result := Assigned(inFormatter) and (inFormatter.CanContainFormIDs);
 end;
 
 function TwbIntegerDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
@@ -8319,8 +8319,8 @@ begin
     else
       {itU0:}  Value := 0;
     end;
-    if Assigned(inFormater) then
-      Result := inFormater.Check(Value, aElement)
+    if Assigned(inFormatter) then
+      Result := inFormatter.Check(Value, aElement)
     else
       Result := '';
   end;
@@ -8329,16 +8329,16 @@ end;
 constructor TwbIntegerDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbIntegerDef do
-    Self.Create(defPriority, defRequired, noName, inType, inFormater, noDontShow, noAfterSet, inDefault, defGetCP, noTerminator).defSource := aSource;
+    Self.Create(defPriority, defRequired, noName, inType, inFormatter, noDontShow, noAfterSet, inDefault, defGetCP, noTerminator).defSource := aSource;
 end;
 
 function TwbIntegerDef.CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID, aNewFormID: Cardinal): Boolean;
 var
   i: Int64;
 begin
-  if Assigned(inFormater) then begin
+  if Assigned(inFormatter) then begin
     i := ToInt(aBasePtr, aEndPtr, aElement);
-    Result := inFormater.CompareExchangeFormID(i, aOldFormID, aNewFormID, aElement);
+    Result := inFormatter.CompareExchangeFormID(i, aOldFormID, aNewFormID, aElement);
     if Result then
       FromInt(i, aBasePtr, aEndPtr, aElement);
   end else
@@ -8349,7 +8349,7 @@ constructor TwbIntegerDef.Create(aPriority   : TwbConflictPriority;
                                  aRequired   : Boolean;
                            const aName       : string;
                            const aIntType    : TwbIntType;
-                           const aFormater   : IwbIntegerDefFormater;
+                           const aFormatter   : IwbIntegerDefFormatter;
                                  aDontShow   : TwbDontShowCallback;
                                  aAfterSet   : TwbAfterSetCallback;
                                  aDefault    : Int64;
@@ -8358,15 +8358,15 @@ constructor TwbIntegerDef.Create(aPriority   : TwbConflictPriority;
 begin
   inDefault := aDefault;
   inType := aIntType;
-  if Assigned(aFormater) then
-  inFormater := (aFormater as IwbDefInternal).SetParent(Self, False) as IwbIntegerDefFormater;
+  if Assigned(aFormatter) then
+  inFormatter := (aFormatter as IwbDefInternal).SetParent(Self, False) as IwbIntegerDefFormatter;
   inherited Create(aPriority, aRequired, aName, nil, aAfterSet, aDontShow, aGetCP, aTerminator);
 end;
 
 procedure TwbIntegerDef.FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters);
 begin
-  if Assigned(inFormater) then
-    inFormater.FindUsedMasters(ToInt(aBasePtr, aEndPtr, aElement), aMasters, aElement)
+  if Assigned(inFormatter) then
+    inFormatter.FindUsedMasters(ToInt(aBasePtr, aEndPtr, aElement), aMasters, aElement)
   else
     inherited FindUsedMasters(aBasePtr, aEndPtr, aElement, aMasters);
 end;
@@ -8377,8 +8377,8 @@ var
 begin
   if aValue = '' then
     i := 0
-  else if Assigned(inFormater) then
-    i := inFormater.FromEditValue(aValue, aElement)
+  else if Assigned(inFormatter) then
+    i := inFormatter.FromEditValue(aValue, aElement)
   else
     i := StrToInt64(aValue);
   FromInt(i, aBasePtr, aEndPtr, aElement);
@@ -8428,8 +8428,8 @@ end;
 
 function TwbIntegerDef.GetDefTypeName: string;
 begin
-  if Assigned(inFormater) then
-    Result := inFormater.GetDefTypeName
+  if Assigned(inFormatter) then
+    Result := inFormatter.GetDefTypeName
   else case inType of
     itS8:  Result := 'Signed Byte';
     itU16: Result := 'Unsigned Word';
@@ -8447,16 +8447,16 @@ end;
 
 function TwbIntegerDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
-  if Assigned(inFormater) then
-    Result := inFormater.EditInfo[ToInt(aBasePtr, aEndPtr, aElement), aElement]
+  if Assigned(inFormatter) then
+    Result := inFormatter.EditInfo[ToInt(aBasePtr, aEndPtr, aElement), aElement]
   else
     Result := inherited GetEditInfo(aBasePtr, aEndPtr, aElement);
 end;
 
 function TwbIntegerDef.GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType;
 begin
-  if Assigned(inFormater) then
-    Result := inFormater.EditType[ToInt(aBasePtr, aEndPtr, aElement), aElement]
+  if Assigned(inFormatter) then
+    Result := inFormatter.EditType[ToInt(aBasePtr, aEndPtr, aElement), aElement]
   else
     Result := inherited GetEditType(aBasePtr, aEndPtr, aElement);
 end;
@@ -8480,18 +8480,18 @@ begin
   end;
 end;
 
-function TwbIntegerDef.GetFormater(const aElement: IwbElement): IwbIntegerDefFormater;
+function TwbIntegerDef.GetFormatter(const aElement: IwbElement): IwbIntegerDefFormatter;
 var
-  Union: IwbIntegerDefFormaterUnion;
+  Union: IwbIntegerDefFormatterUnion;
 begin
-  Result := inFormater;
-  while Supports(Result, IwbIntegerDefFormaterUnion, Union) do
+  Result := inFormatter;
+  while Supports(Result, IwbIntegerDefFormatterUnion, Union) do
     Result := Union.Decide(aElement);
 end;
 
-function TwbIntegerDef.GetFormaterCanChange: Boolean;
+function TwbIntegerDef.GetFormatterCanChange: Boolean;
 begin
-  Result := Supports(inFormater, IwbIntegerDefFormaterUnion);
+  Result := Supports(inFormatter, IwbIntegerDefFormatterUnion);
 end;
 
 function TwbIntegerDef.GetIntType: TwbIntType;
@@ -8501,7 +8501,7 @@ end;
 
 function TwbIntegerDef.GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 begin
-  Result := wbIsInternalEdit or (not Assigned(inFormater) or inFormater.IsEditable[ToInt(aBasePtr, aEndPtr, aElement), aElement]);
+  Result := wbIsInternalEdit or (not Assigned(inFormatter) or inFormatter.IsEditable[ToInt(aBasePtr, aEndPtr, aElement), aElement]);
 end;
 
 function TwbIntegerDef.GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement;
@@ -8509,7 +8509,7 @@ var
   Value       : Int64;
 begin
   Result := nil;
-  if Assigned(inFormater) then
+  if Assigned(inFormatter) then
     if (Cardinal(aEndPtr) - Cardinal(aBasePtr)) >= GetExpectedLength then begin
       case inType of
         itU8:  Value := PByte(aBasePtr)^;
@@ -8525,13 +8525,13 @@ begin
       else
         {it0:}  Value := 0;
       end;
-      Result := inFormater.LinksTo[Value, aElement];
+      Result := inFormatter.LinksTo[Value, aElement];
     end;
 end;
 
 function TwbIntegerDef.GetNoReach: Boolean;
 begin
-  Result := Assigned(inFormater) and inFormater.NoReach;
+  Result := Assigned(inFormatter) and inFormatter.NoReach;
 end;
 
 function TwbIntegerDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -8580,9 +8580,9 @@ var
   OldValue : Int64;
   NewValue : Int64;
 begin
-  if Assigned(inFormater) then begin
+  if Assigned(inFormatter) then begin
     OldValue := ToInt(aBasePtr, aEndPtr, aElement);
-    NewValue := inFormater.MasterCountUpdated(OldValue, aOld, aNew, aElement);
+    NewValue := inFormatter.MasterCountUpdated(OldValue, aOld, aNew, aElement);
     if OldValue <> NewValue then
       FromInt(NewValue, aBasePtr, aEndPtr, aElement)
   end else
@@ -8594,22 +8594,22 @@ var
   OldValue : Int64;
   NewValue : Int64;
 begin
-  if Assigned(inFormater) then begin
+  if Assigned(inFormatter) then begin
     OldValue := ToInt(aBasePtr, aEndPtr, aElement);
-    NewValue := inFormater.MasterIndicesUpdated(OldValue, aOld, aNew, aElement);
+    NewValue := inFormatter.MasterIndicesUpdated(OldValue, aOld, aNew, aElement);
     if OldValue <> NewValue then
       FromInt(NewValue, aBasePtr, aEndPtr, aElement)
   end else
     inherited MasterIndicesUpdated(aBasePtr, aEndPtr, aElement, aOld, aNew);
 end;
 
-procedure TwbIntegerDef.ReplaceFormater(const aFormater: IwbIntegerDefFormater);
+procedure TwbIntegerDef.ReplaceFormatter(const aFormatter: IwbIntegerDefFormatter);
 begin
   defSource := nil;
-  if Assigned(aFormater) then
-    inFormater := (aFormater as IwbDefInternal).SetParent(Self, True) as IwbIntegerDefFormater
+  if Assigned(aFormatter) then
+    inFormatter := (aFormatter as IwbDefInternal).SetParent(Self, True) as IwbIntegerDefFormatter
   else
-    inFormater := nil
+    inFormatter := nil
 end;
 
 procedure TwbIntegerDef.Report(const aParents: TwbDefPath);
@@ -8620,12 +8620,12 @@ begin
     Exit;
 
   inherited;
-  if Assigned(inFormater) then begin
+  if Assigned(inFormatter) then begin
     Parents := aParents;
     SetLength(Parents, Succ(Length(Parents)));
     Parents[High(Parents)].Def := Self;
     Parents[High(Parents)].Index := -1;
-    inFormater.Report(aParents);
+    inFormatter.Report(aParents);
   end;
 
   defReported := True;
@@ -8672,8 +8672,8 @@ begin
     end;
 
     Result := '';
-    if Assigned(inFormater) then
-      Result := inFormater.ToEditValue(Value, aElement);
+    if Assigned(inFormatter) then
+      Result := inFormatter.ToEditValue(Value, aElement);
 
     if Result = '' then
       Result := IntToStr(Value);
@@ -8734,8 +8734,8 @@ const
 begin
   Len := Cardinal(aEndPtr) - Cardinal(aBasePtr);
   if Len < GetExpectedLength then
-    if Assigned(inFormater) and inFormater.RequiresKey then
-      Result := inFormater.ToSortKey(0, aElement)
+    if Assigned(inFormatter) and inFormatter.RequiresKey then
+      Result := inFormatter.ToSortKey(0, aElement)
     else
       Result := ''
   else begin
@@ -8755,8 +8755,8 @@ begin
     end;
 
     Result := '';
-    if Assigned(inFormater) then
-      Result := inFormater.ToSortKey(Value, aElement);
+    if Assigned(inFormatter) then
+      Result := inFormatter.ToSortKey(Value, aElement);
 
     if Result = '' then begin
       case inType of
@@ -8799,8 +8799,8 @@ begin
     else
       {it0:}  Value := 0;
     end;
-    if Assigned(inFormater) then
-      Result := inFormater.ToString(Value, aElement)
+    if Assigned(inFormatter) then
+      Result := inFormatter.ToString(Value, aElement)
     else
       Result := IntToStr(Value);
     if (Len > GetExpectedLength) and not (inType in [itU6to30]) then begin
@@ -11572,7 +11572,7 @@ begin
     if wbReportFormIDs then begin
       if Assigned(FoundSignatures) then
         if ClassType = TwbFormID then begin
-          WriteLn('Unchecked FormID Formater: ', wbDefsToPath(aParents), wbDefToName(Self));
+          WriteLn('Unchecked FormID Formatter: ', wbDefsToPath(aParents), wbDefToName(Self));
           WriteLn('  ', FoundSignatures.CommaText);
           for i := 0 to Pred(FoundSignatures.Count) do
             WriteLn('  ', FoundSignatures.Strings[i], ' (', Integer(FoundSignatures.Objects[i]),')');
@@ -12863,7 +12863,7 @@ begin
           s := '';
 
         if (s <> '') or (Sigs.Count > 0) then begin
-          WriteLn('Differences in Checked FormID Formater: ', wbDefsToPath(aParents), wbDefToName(Self));
+          WriteLn('Differences in Checked FormID Formatter: ', wbDefsToPath(aParents), wbDefToName(Self));
           if s <> '' then
             WriteLn('  Not found but allowed: ', s);
           if Sigs.Count > 0 then begin
@@ -12880,94 +12880,94 @@ begin
   defReported := True;
 end;
 
-{ TwbIntegerDefFormater }
+{ TwbIntegerDefFormatter }
 
-procedure TwbIntegerDefFormater.BuildRef(aInt: Int64;
+procedure TwbIntegerDefFormatter.BuildRef(aInt: Int64;
   const aElement: IwbElement);
 begin
   { nothing }
 end;
 
-function TwbIntegerDefFormater.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
+function TwbIntegerDefFormatter.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 begin
   Result := False;
 end;
 
-function TwbIntegerDefFormater.Check(aInt: Int64;
+function TwbIntegerDefFormatter.Check(aInt: Int64;
   const aElement: IwbElement): string;
 begin
   Result := '';
 end;
 
-constructor TwbIntegerDefFormater.Clone(const aSource: TwbDef);
+constructor TwbIntegerDefFormatter.Clone(const aSource: TwbDef);
 begin
-  with aSource as TwbIntegerDefFormater do
+  with aSource as TwbIntegerDefFormatter do
     Self.Create(defPriority, defRequired, defGetCP).defSource := aSource;
 end;
 
-function TwbIntegerDefFormater.CompareExchangeFormID(var aInt: Int64;
+function TwbIntegerDefFormatter.CompareExchangeFormID(var aInt: Int64;
   aOldFormID, aNewFormID: Cardinal; const aElement: IwbElement): Boolean;
 begin
   Result := False; // ? Should be overriden
 end;
 
-procedure TwbIntegerDefFormater.FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement);
+procedure TwbIntegerDefFormatter.FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement);
 begin
   {can be overriden}
 end;
 
-function TwbIntegerDefFormater.FromEditValue(const aValue: string;
+function TwbIntegerDefFormatter.FromEditValue(const aValue: string;
   const aElement: IwbElement): Int64;
 begin
   raise Exception.Create(Classname + ' does not support editing');
 end;
 
-function TwbIntegerDefFormater.GetDefType: TwbDefType;
+function TwbIntegerDefFormatter.GetDefType: TwbDefType;
 begin
-  Result := dtIntegerFormater;
+  Result := dtIntegerFormatter;
 end;
 
-function TwbIntegerDefFormater.GetDefTypeName: string;
+function TwbIntegerDefFormatter.GetDefTypeName: string;
 begin
   Result := ClassName;
 end;
 
-function TwbIntegerDefFormater.GetEditInfo(aInt: Int64; const aElement: IwbElement): string;
+function TwbIntegerDefFormatter.GetEditInfo(aInt: Int64; const aElement: IwbElement): string;
 begin
   Result := '';
 end;
 
-function TwbIntegerDefFormater.GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType;
+function TwbIntegerDefFormatter.GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType;
 begin
   Result := etDefault;
 end;
 
-function TwbIntegerDefFormater.GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean;
+function TwbIntegerDefFormatter.GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean;
 begin
   Result := wbIsInternalEdit;
 end;
 
-function TwbIntegerDefFormater.GetLinksTo(aInt: Int64; const aElement: IwbElement): IwbElement;
+function TwbIntegerDefFormatter.GetLinksTo(aInt: Int64; const aElement: IwbElement): IwbElement;
 begin
   Result := nil;
 end;
 
-function TwbIntegerDefFormater.GetRequiresKey: Boolean;
+function TwbIntegerDefFormatter.GetRequiresKey: Boolean;
 begin
   Result := False;
 end;
 
-function TwbIntegerDefFormater.MasterCountUpdated(aInt: Int64; aOld, aNew: Byte; const aElement: IwbElement): Int64;
+function TwbIntegerDefFormatter.MasterCountUpdated(aInt: Int64; aOld, aNew: Byte; const aElement: IwbElement): Int64;
 begin
   Result := aInt;
 end;
 
-function TwbIntegerDefFormater.MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes; const aElement: IwbElement): Int64;
+function TwbIntegerDefFormatter.MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TBytes; const aElement: IwbElement): Int64;
 begin
   Result := aInt;
 end;
 
-function TwbIntegerDefFormater.ToEditValue(aInt: Int64;
+function TwbIntegerDefFormatter.ToEditValue(aInt: Int64;
   const aElement: IwbElement): string;
 begin
   Result := '';
@@ -14169,14 +14169,14 @@ begin
   Used(aElement, Result);
 end;
 
-{ TwbDumpIntegerDefFormater }
+{ TwbDumpIntegerDefFormatter }
 
-function TwbDumpIntegerDefFormater.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
+function TwbDumpIntegerDefFormatter.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
 begin
   Result := IntToHex64(aInt, 8);
 end;
 
-function TwbDumpIntegerDefFormater.ToString(aInt: Int64; const aElement: IwbElement): string;
+function TwbDumpIntegerDefFormatter.ToString(aInt: Int64; const aElement: IwbElement): string;
 begin
   Result := IntToStr(aInt) + ' [' + IntToHex64(aInt, 8) + '] ['+IntToStr(aInt and $03)+':'+IntToStr(aInt shr 2)+']';
 end;
@@ -14314,24 +14314,24 @@ begin
   end;
 end;
 
-{ TwbIntegerDefFormaterUnion }
+{ TwbIntegerDefFormatterUnion }
 
-procedure TwbIntegerDefFormaterUnion.BuildRef(aInt     : Int64;
+procedure TwbIntegerDefFormatterUnion.BuildRef(aInt     : Int64;
                                         const aElement : IwbElement);
 var
-  IntegerDef: IwbIntegerDefFormater;
+  IntegerDef: IwbIntegerDefFormatter;
 begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
     IntegerDef.BuildRef(aInt, aElement);
 end;
 
-function TwbIntegerDefFormaterUnion.CanAssign(const aElement : IwbElement;
+function TwbIntegerDefFormatterUnion.CanAssign(const aElement : IwbElement;
                                                     aIndex   : Integer;
                                               const aDef     : IwbDef)
                                                              : Boolean;
 var
-  IntegerDef: IwbIntegerDefFormater;
+  IntegerDef: IwbIntegerDefFormatter;
 begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
@@ -14340,7 +14340,7 @@ begin
     Result := False;
 end;
 
-function TwbIntegerDefFormaterUnion.CanContainFormIDs: Boolean;
+function TwbIntegerDefFormatterUnion.CanContainFormIDs: Boolean;
 var
   i: Integer;
 begin
@@ -14350,26 +14350,26 @@ begin
   Result := False;
 end;
 
-function TwbIntegerDefFormaterUnion.Check(aInt     : Int64;
+function TwbIntegerDefFormatterUnion.Check(aInt     : Int64;
                                     const aElement : IwbElement)
                                                    : string;
 begin
   Result := Decide(aElement).Check(aInt, aElement);
 end;
 
-constructor TwbIntegerDefFormaterUnion.Clone(const aSource: TwbDef);
+constructor TwbIntegerDefFormatterUnion.Clone(const aSource: TwbDef);
 begin
-  with aSource as TwbIntegerDefFormaterUnion do
+  with aSource as TwbIntegerDefFormatterUnion do
     Self.Create(defPriority, defRequired, defGetCP, idfuDecider, idfuMembers).defSource := aSource;
 end;
 
-function TwbIntegerDefFormaterUnion.CompareExchangeFormID(var aInt       : Int64;
+function TwbIntegerDefFormatterUnion.CompareExchangeFormID(var aInt       : Int64;
                                                               aOldFormID : Cardinal;
                                                               aNewFormID : Cardinal;
                                                         const aElement   : IwbElement)
                                                                          : Boolean;
 var
-  IntegerDef: IwbIntegerDefFormater;
+  IntegerDef: IwbIntegerDefFormatter;
 begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
@@ -14378,11 +14378,11 @@ begin
     Result := False;
 end;
 
-constructor TwbIntegerDefFormaterUnion.Create(aPriority : TwbConflictPriority;
+constructor TwbIntegerDefFormatterUnion.Create(aPriority : TwbConflictPriority;
                                               aRequired : Boolean;
                                               aGetCP    : TwbGetConflictPriority;
-                                              aDecider  : TwbIntegerDefFormaterUnionDecider;
-                                        const aMembers  : array of IwbIntegerDefFormater);
+                                              aDecider  : TwbIntegerDefFormatterUnionDecider;
+                                        const aMembers  : array of IwbIntegerDefFormatter);
 var
   i: Integer;
 begin
@@ -14390,11 +14390,11 @@ begin
   idfuDecider := aDecider;
   SetLength(idfuMembers, Length(aMembers));
   for i := Low(aMembers) to High(aMembers) do
-    idfuMembers[i] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbIntegerDefFormater;
+    idfuMembers[i] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbIntegerDefFormatter;
 end;
 
-function TwbIntegerDefFormaterUnion.Decide(const aElement : IwbElement)
-                                                          : IwbIntegerDefFormater;
+function TwbIntegerDefFormatterUnion.Decide(const aElement : IwbElement)
+                                                          : IwbIntegerDefFormatter;
 var
   i: Integer;
 begin
@@ -14405,22 +14405,22 @@ begin
     Result := nil;
 end;
 
-procedure TwbIntegerDefFormaterUnion.FindUsedMasters(aInt     : Int64;
+procedure TwbIntegerDefFormatterUnion.FindUsedMasters(aInt     : Int64;
                                                      aMasters : PwbUsedMasters;
                                                const aElement : IwbElement);
 var
-  IntegerDef: IwbIntegerDefFormater;
+  IntegerDef: IwbIntegerDefFormatter;
 begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
     IntegerDef.FindUsedMasters(aInt, aMasters, aElement);
 end;
 
-function TwbIntegerDefFormaterUnion.FromEditValue(const aValue   : string;
+function TwbIntegerDefFormatterUnion.FromEditValue(const aValue   : string;
                                                   const aElement : IwbElement)
                                                                  : Int64;
 var
-  IntegerDef: IwbIntegerDefFormater;
+  IntegerDef: IwbIntegerDefFormatter;
 begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
@@ -14429,16 +14429,16 @@ begin
     Result := 0;
 end;
 
-function TwbIntegerDefFormaterUnion.GetDefType: TwbDefType;
+function TwbIntegerDefFormatterUnion.GetDefType: TwbDefType;
 begin
-  Result := dtIntegerFormaterUnion;
+  Result := dtIntegerFormatterUnion;
 end;
 
-function TwbIntegerDefFormaterUnion.GetEditInfo(aInt     : Int64;
+function TwbIntegerDefFormatterUnion.GetEditInfo(aInt     : Int64;
                                           const aElement : IwbElement)
                                                          : string;
 var
-  IntegerDef: IwbIntegerDefFormater;
+  IntegerDef: IwbIntegerDefFormatter;
 begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
@@ -14447,11 +14447,11 @@ begin
     Result := '';
 end;
 
-function TwbIntegerDefFormaterUnion.GetEditType(aInt     : Int64;
+function TwbIntegerDefFormatterUnion.GetEditType(aInt     : Int64;
                                           const aElement : IwbElement)
                                                          : TwbEditType;
 var
-  IntegerDef: IwbIntegerDefFormater;
+  IntegerDef: IwbIntegerDefFormatter;
 begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
@@ -14460,11 +14460,11 @@ begin
     Result := etDefault;
 end;
 
-function TwbIntegerDefFormaterUnion.GetIsEditable(aInt     : Int64;
+function TwbIntegerDefFormatterUnion.GetIsEditable(aInt     : Int64;
                                             const aElement : IwbElement)
                                                            : Boolean;
 var
-  IntegerDef: IwbIntegerDefFormater;
+  IntegerDef: IwbIntegerDefFormatter;
 begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
@@ -14473,11 +14473,11 @@ begin
     Result := False;
 end;
 
-function TwbIntegerDefFormaterUnion.GetLinksTo(aInt     : Int64;
+function TwbIntegerDefFormatterUnion.GetLinksTo(aInt     : Int64;
                                          const aElement : IwbElement)
                                                         : IwbElement;
 var
-  IntegerDef: IwbIntegerDefFormater;
+  IntegerDef: IwbIntegerDefFormatter;
 begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
@@ -14486,18 +14486,18 @@ begin
     Result := nil;
 end;
 
-function TwbIntegerDefFormaterUnion.GetMember(aIndex: Integer): IwbIntegerDefFormater;
+function TwbIntegerDefFormatterUnion.GetMember(aIndex: Integer): IwbIntegerDefFormatter;
 begin
   if (aIndex>=0) and (aIndex<Length(idfuMembers)) then
     Result := idfuMembers[aIndex];
 end;
 
-function TwbIntegerDefFormaterUnion.GetMemberCount: Integer;
+function TwbIntegerDefFormatterUnion.GetMemberCount: Integer;
 begin
   Result := Length(idfuMembers);
 end;
 
-function TwbIntegerDefFormaterUnion.GetNoReach: Boolean;
+function TwbIntegerDefFormatterUnion.GetNoReach: Boolean;
 var
   i: Integer;
 begin
@@ -14507,13 +14507,13 @@ begin
   Result := False;
 end;
 
-function TwbIntegerDefFormaterUnion.MasterCountUpdated(aInt     : Int64;
+function TwbIntegerDefFormatterUnion.MasterCountUpdated(aInt     : Int64;
                                                        aOld     : Byte;
                                                        aNew     : Byte;
                                                  const aElement : IwbElement)
                                                                 : Int64;
 var
-  IntegerDef: IwbIntegerDefFormater;
+  IntegerDef: IwbIntegerDefFormatter;
 begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
@@ -14522,13 +14522,13 @@ begin
     Result := 0;
 end;
 
-function TwbIntegerDefFormaterUnion.MasterIndicesUpdated(aInt     : Int64;
+function TwbIntegerDefFormatterUnion.MasterIndicesUpdated(aInt     : Int64;
                                                    const aOld     : TBytes;
                                                    const aNew     : TBytes;
                                                    const aElement : IwbElement)
                                                                   : Int64;
 var
-  IntegerDef: IwbIntegerDefFormater;
+  IntegerDef: IwbIntegerDefFormatter;
 begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
@@ -14537,17 +14537,17 @@ begin
     Result := 0;
 end;
 
-procedure TwbIntegerDefFormaterUnion.Report(const aParents: TwbDefPath);
+procedure TwbIntegerDefFormatterUnion.Report(const aParents: TwbDefPath);
 begin
   inherited;
 
 end;
 
-function TwbIntegerDefFormaterUnion.ToEditValue(aInt     : Int64;
+function TwbIntegerDefFormatterUnion.ToEditValue(aInt     : Int64;
                                           const aElement : IwbElement)
                                                          : string;
 var
-  IntegerDef: IwbIntegerDefFormater;
+  IntegerDef: IwbIntegerDefFormatter;
 begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
@@ -14556,11 +14556,11 @@ begin
     Result := '';
 end;
 
-function TwbIntegerDefFormaterUnion.ToSortKey(aInt     : Int64;
+function TwbIntegerDefFormatterUnion.ToSortKey(aInt     : Int64;
                                         const aElement : IwbElement)
                                                        : string;
 var
-  IntegerDef: IwbIntegerDefFormater;
+  IntegerDef: IwbIntegerDefFormatter;
 begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
@@ -14569,11 +14569,11 @@ begin
     Result := '';
 end;
 
-function TwbIntegerDefFormaterUnion.ToString(aInt     : Int64;
+function TwbIntegerDefFormatterUnion.ToString(aInt     : Int64;
                                        const aElement : IwbElement)
                                                       : string;
 var
-  IntegerDef: IwbIntegerDefFormater;
+  IntegerDef: IwbIntegerDefFormatter;
 begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
