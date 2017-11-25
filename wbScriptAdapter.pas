@@ -1793,6 +1793,8 @@ begin
     AddConst(cUnit, 'dtByteArray', ord(dtByteArray));
     AddConst(cUnit, 'dtInteger', ord(dtInteger));
     AddConst(cUnit, 'dtIntegerFormatter', ord(dtIntegerFormatter));
+    AddConst(cUnit, 'dtIntegerFormatterUnion', ord(dtIntegerFormatterUnion));
+    AddConst(cUnit, 'dtFlag', ord(dtFlag));
     AddConst(cUnit, 'dtFloat', ord(dtFloat));
     AddConst(cUnit, 'dtArray', ord(dtArray));
     AddConst(cUnit, 'dtStruct', ord(dtStruct));
