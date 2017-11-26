@@ -35,17 +35,16 @@ http://www.nexusmods.com/newvegas/mods/38413
 Check for new versions here:
 FO3Edit: http://www.nexusmods.com/fallout3/mods/637
 FNVEdit: http://www.nexusmods.com/newvegas/mods/34703
-FO4Edit: http://www.nexusmods.com/fallout4/mods/2737/?
+FO4Edit: http://www.nexusmods.com/fallout4/mods/2737
 TES4Edit: http://www.nexusmods.com/oblivion/mods/11536
 TES5Edit: http://www.nexusmods.com/skyrim/mods/25859
-SSEEdit: http://www.nexusmods.com/skyrimspecialedition/mods/164/?
+SSEEdit: http://www.nexusmods.com/skyrimspecialedition/mods/164
 Mirror: https://github.com/TES5Edit/TES5Edit/releases
 
 xLODGen Versions:
 
 FO3LODGen: http://www.nexusmods.com/fallout3/mods/21174
 FNVLODGen: http://www.nexusmods.com/newvegas/mods/58562
-FO4LODGen: http://www.nexusmods.com/oblivion/mods/15781/?
 TES4LODGen: http://www.nexusmods.com/oblivion/mods/15781
 TES5LODGen: http://www.nexusmods.com/skyrim/mods/62698
 SSELODGen: http://www.nexusmods.com/skyrimspecialedition/mods/6642/?
