@@ -79,6 +79,7 @@ begin
   if VarType(Args.Values[1]) = VarType(Args.Values[2]) then
     case VarType(Args.Values[1]) of
       varString  : Value := StrUtils.IfThen(Boolean(Args.Values[0]), String(Args.Values[1]), String(Args.Values[2]));
+      varUString : Value := StrUtils.IfThen(Boolean(Args.Values[0]), UTF8String(Args.Values[1]), UTF8String(Args.Values[2]));
       varInteger : Value := Math.IfThen(Boolean(Args.Values[0]), Integer(Args.Values[1]), Integer(Args.Values[2]));
       varSingle  : Value := Math.IfThen(Boolean(Args.Values[0]), Single(Args.Values[1]), Single(Args.Values[2]));
       varDouble  : Value := Math.IfThen(Boolean(Args.Values[0]), Double(Args.Values[1]), Double(Args.Values[2]));
