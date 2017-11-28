@@ -695,7 +695,7 @@ begin
   ScanForAssets(ElementByName(e, 'Icon'));
 
   // generic destruction models common for all records
-  ScanForAssets(ElementByPath(e, 'Destructable'));
+  ScanForAssets(ElementByPath(e, 'Destructible'));
   
   // GAME SPECIFIC ELEMENTS
   // Skyrim and SSE

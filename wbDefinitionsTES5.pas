@@ -5518,7 +5518,7 @@ begin
     ]),
   -1);
 
-  wbDEST := wbRStruct('Destructable', [
+  wbDEST := wbRStruct('Destructible', [
     wbStruct(DEST, 'Header', [
       wbInteger('Health', itS32),
       wbInteger('DEST Count', itU8),
@@ -5552,7 +5552,7 @@ begin
     )
   ], [], cpNormal, False, nil);
 
-  wbDESTActor := wbRStruct('Destructable', [
+  wbDESTActor := wbRStruct('Destructible', [
     wbStruct(DEST, 'Header', [
       wbInteger('Health', itS32),
       wbInteger('Count', itU8),
@@ -9788,7 +9788,7 @@ begin
         'Ally',
         'Confidant',
         'Friend',
-        'Acquaitance',
+        'Acquaintance',
         'Rival',
         'Foe',
         'Enemy',
@@ -9855,7 +9855,7 @@ begin
         'No Player Activation',
         'Optional'
       ])),
-      wbInteger(DNAM, 'Behaviour Flags', itU32, wbFlags([
+      wbInteger(DNAM, 'Behavior Flags', itU32, wbFlags([
         'Death Pause (unsused)',
         'Death End',
         'Combat Pause',
@@ -12121,7 +12121,7 @@ begin
   ], False, nil, cpNormal, False, wbRACEAfterLoad, wbRACEAfterSet);
 
 
-  wbRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
+  wbRecord(REFR, 'Placed Object', wbFormatterUnion(wbREFRRecordFlagsDecider, [
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
@@ -13095,7 +13095,7 @@ begin
       wbFloat('Range Min'),
       wbFloat('Range Max'),
       wbInteger('On Hit', itU32, wbEnum([
-        'No formula behaviour',
+        'No formula behavior',
         'Dismember only',
         'Explode only',
         'No dismember/explode'

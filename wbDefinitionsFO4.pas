@@ -68,7 +68,7 @@ var
 	wbZTestFuncEnum: IwbEnumDef;
   wbKeywordTypeEnum: IwbEnumDef;
   wbReverbClassEnum: IwbEnumDef;
-  wbHitBehaviourEnum: IwbEnumDef;
+  wbHitBehaviorEnum: IwbEnumDef;
   wbBoolEnum: IwbEnumDef;
 
 procedure DefineFO4;
@@ -5177,7 +5177,7 @@ begin
     5: begin
       if PropName = 'SoundLevel'    then Result := 6 else
       if PropName = 'StaggerValue'  then Result := 7 else
-      if PropName = 'HitBehaviour'  then Result := 8 else
+      if PropName = 'HitBehavior'  then Result := 8 else
       Result := 5;
     end;
   end;
@@ -6474,8 +6474,8 @@ begin
     'Class E'
   ]);
 
-  wbHitBehaviourEnum := wbEnum([
-    'Normal formula behaviour',
+  wbHitBehaviorEnum := wbEnum([
+    'Normal formula behavior',
     'Dismember only',
     'Explode only',
     'No dismember/explode'
@@ -8342,7 +8342,7 @@ begin
     { 6} 'OutOfRangeDamageMult',
     { 7} 'SecondaryDamage',
     { 8} 'CriticalChargeBonus',
-    { 9} 'HitBehaviour',
+    { 9} 'HitBehavior',
     {10} 'Rank',
     {11} 'Unknown 11',
     {12} 'AmmoCapacity',
@@ -8460,7 +8460,7 @@ begin
         { 5} wbInteger('Value 1 - Enum', itU32),
         { 6} wbInteger('Sound Level', itU32, wbSoundLevelEnum),
         { 7} wbInteger('Stagger Value', itU32, wbStaggerEnum),
-        { 8} wbInteger('Hit Behaviour', itU32, wbHitBehaviourEnum)
+        { 8} wbInteger('Hit Behavior', itU32, wbHitBehaviorEnum)
       ]),
       wbUnion('Value 2', wbOMODDataPropertyValue2Decider, [
         wbByteArray('Unused', 4, cpIgnore),
@@ -11990,7 +11990,7 @@ begin
         'Ally',
         'Confidant',
         'Friend',
-        'Acquaitance',
+        'Acquaintance',
         'Rival',
         'Foe',
         'Enemy',
@@ -12058,7 +12058,7 @@ begin
         'Run Only Scene Packages',
         'No Command State'
       ])),
-      wbInteger(DNAM, 'Behaviour Flags', itU32, wbFlags([
+      wbInteger(DNAM, 'Behavior Flags', itU32, wbFlags([
         'Death Pause',
         'Death End',
         'Combat Pause',
@@ -14274,7 +14274,7 @@ begin
     wbFormIDCk(SADD, 'Subgraph Additive Race', [RACE]),
     wbRArray('Subgraph Data',
       wbRStruct('Data', [
-        wbString(SGNM, 'Behaviour Graph'),
+        wbString(SGNM, 'Behavior Graph'),
         wbRArray('Actor Keywords', wbFormIDCk(SAKD, 'Keyword', [KYWD])),
         wbRArray('Target Keywords', wbFormIDCk(STKD, 'Keyword', [KYWD])),
         wbRArray('Animation Paths', wbString(SAPT, 'Path'), cpNormal, True),
@@ -14311,7 +14311,7 @@ begin
   ], False, nil, cpNormal, False, nil, wbRACEAfterSet);
 
 
-  wbRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
+  wbRecord(REFR, 'Placed Object', wbFormatterUnion(wbREFRRecordFlagsDecider, [
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
       {0x00000100}  8, 'LOD Respects Enable State',
@@ -15345,7 +15345,7 @@ begin
       wbFloat('Attack Delay'),
       wbByteArray('Unknown', 4),
       wbFloat('Damage - OutOfRange Mult'),
-      wbInteger('On Hit', itU32, wbHitBehaviourEnum),
+      wbInteger('On Hit', itU32, wbHitBehaviorEnum),
       wbFormIDCk('Skill', [AVIF, NULL]),
       wbFormIDCk('Resist', [AVIF, NULL]),
       wbInteger('Flags', itU32, wbFlags([
