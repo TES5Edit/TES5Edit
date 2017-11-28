@@ -34,8 +34,10 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure chkScriptsSubDirClick(Sender: TObject);
+    procedure cmbScriptsDropdown(Sender: TObject);
   private
     { Private declarations }
+    DropdownPopulatedByFormInit: boolean;
   public
     { Public declarations }
     Path: string;
@@ -110,6 +112,16 @@ begin
   end;
 end;
 
+procedure TfrmScript.cmbScriptsDropdown(Sender: TObject);
+begin
+  if not Self.Active or not DropdownPopulatedByFormInit then
+    exit;
+  // checking TComboBox.Items.Count won't work because user could have only
+  // one script available legitimately, so boolean used
+  ReadScriptsList;
+  DropdownPopulatedByFormInit := False;
+end;
+
 procedure TfrmScript.UpdateCaretPos;
 var
   l, c: Word;
@@ -172,7 +184,8 @@ begin
   i := cmbScripts.Items.IndexOf(LastUsedScript);
   if i = -1 then i := 0;
   cmbScripts.ItemIndex := i;
-  cmbScriptsChange(Self);
+  if not DropdownPopulatedByFormInit then
+    cmbScriptsChange(Self);
 end;
 
 procedure TfrmScript.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -194,7 +207,28 @@ end;
 
 procedure TfrmScript.FormShow(Sender: TObject);
 begin
-  ReadScriptsList;
+  // instead of populated dropdown here, which can cause delay the form
+  // from showing with large lists, show only the last used script
+  DropdownPopulatedByFormInit := False;
+  if Length(LastUsedScript) > 0 then begin
+    with TStringList.Create do try
+      try LoadFromFile(Path + LastUsedScript + sScriptExt); except end;
+      Editor.Lines.Text := Text;
+      Editor.Modified := False;
+      Editor.SetFocus;
+      UpdateCaretPos;
+
+      // update TComboBox
+      cmbScripts.Items.Clear;
+      cmbScripts.Items.Add(LastUsedScript);
+      cmbScripts.ItemIndex := 0;
+
+      // track whether this procedure loaded a script
+      DropdownPopulatedByFormInit := True;
+    finally
+      Free;
+    end;
+  end;
 end;
 
 end.
