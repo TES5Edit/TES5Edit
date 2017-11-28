@@ -418,7 +418,7 @@ begin
       NamedDef := Element.Def;
 
     if Supports(NamedDef, IwbIntegerDef, IntegerDef) and
-      Supports(IntegerDef.Formater[Element], IwbEnumDef, Enums) then begin
+      Supports(IntegerDef.Formatter[Element], IwbEnumDef, Enums) then begin
 
       for i := 0 to Pred(Enums.NameCount) do begin
         if i > 0 then s := s + #13#10;
@@ -447,7 +447,7 @@ begin
       NamedDef := Element.Def;
 
     if Supports(NamedDef, IwbIntegerDef, IntegerDef) and
-      Supports(IntegerDef.Formater[Element], IwbFlagsDef, Flags) then begin
+      Supports(IntegerDef.Formatter[Element], IwbFlagsDef, Flags) then begin
 
       for i := 0 to Pred(Flags.FlagCount) do begin
         if i > 0 then s := s + #13#10;
@@ -1792,7 +1792,7 @@ begin
     AddConst(cUnit, 'dtLenString', ord(dtLenString));
     AddConst(cUnit, 'dtByteArray', ord(dtByteArray));
     AddConst(cUnit, 'dtInteger', ord(dtInteger));
-    AddConst(cUnit, 'dtIntegerFormater', ord(dtIntegerFormater));
+    AddConst(cUnit, 'dtIntegerFormatter', ord(dtIntegerFormatter));
     AddConst(cUnit, 'dtFloat', ord(dtFloat));
     AddConst(cUnit, 'dtArray', ord(dtArray));
     AddConst(cUnit, 'dtStruct', ord(dtStruct));

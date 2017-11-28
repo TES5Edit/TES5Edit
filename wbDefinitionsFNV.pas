@@ -4667,7 +4667,7 @@ begin
     ], [], cpNormal, True, nil, True);
 
 
-  wbDEST := wbRStruct('Destructable', [
+  wbDEST := wbRStruct('Destructible', [
     wbStruct(DEST, 'Header', [
       wbInteger('Health', itS32),
       wbInteger('Count', itU8),
@@ -4704,7 +4704,7 @@ begin
     )
   ], []);
 
-  wbDESTActor := wbRStruct('Destructable', [
+  wbDESTActor := wbRStruct('Destructible', [
     wbStruct(DEST, 'Header', [
       wbInteger('Health', itS32),
       wbInteger('Count', itU8),
@@ -9400,7 +9400,7 @@ begin
           {0x02000000} 'Pretend In Combat',
           {0x04000000} 'Continue During Combat',
           {0x08000000} 'No Combat Alert',
-          {0x10000000} 'No Warn/Attack Behaviour',
+          {0x10000000} 'No Warn/Attack Behavior',
           {0x20000000} '',
           {0x40000000} '',
           {0x80000000} ''
