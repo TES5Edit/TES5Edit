@@ -325,7 +325,7 @@ var
   wbSCRI: IwbSubRecordDef;
   wbFaceGen: IwbSubRecordStructDef;
   wbENAM: IwbSubRecordDef;
-  wbFGGS: IwbSubRecordDef;
+//  wbFGGS: IwbSubRecordDef;
   wbXLOD: IwbSubRecordDef;
   wbXESP: IwbSubRecordDef;
   wbICON: IwbSubRecordDef;
