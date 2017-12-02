@@ -1,0 +1,4 @@
+LIBRARY	"f4se_plugin_xEdit"
+EXPORTS
+F4SEPlugin_Query
+F4SEPlugin_Load
