@@ -622,7 +622,7 @@ var
   wbCTDAs: IwbSubRecordArrayDef;
   wbCTDAsReq: IwbSubRecordArrayDef;
   wbSCROs: IwbSubRecordArrayDef;
-  wbPGRP: IwbSubRecordDef;
+//  wbPGRP: IwbSubRecordDef;
   wbEmbeddedScript: IwbSubRecordStructDef;
   wbEmbeddedScriptPerk: IwbSubRecordStructDef;
   wbEmbeddedScriptReq: IwbSubRecordStructDef;
@@ -631,7 +631,7 @@ var
   wbFaceGen: IwbSubRecordStructDef;
   wbFaceGenNPC: IwbSubRecordStructDef;
   wbENAM: IwbSubRecordDef;
-  wbFGGS: IwbSubRecordDef;
+//  wbFGGS: IwbSubRecordDef;
   wbXLOD: IwbSubRecordDef;
   wbXESP: IwbSubRecordDef;
   wbICON: IwbSubRecordStructDef;
