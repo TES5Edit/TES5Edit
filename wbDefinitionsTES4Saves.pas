@@ -37,7 +37,7 @@ var
   wbActorValueLabels : array of string;
 
 var // forward type directives
-  wbChangeTypes    : IwbEnumDef;
+//  wbChangeTypes    : IwbEnumDef;
   wbSaveChapters   : IwbStructDef;
   wbCoSaveChapters : IwbStructDef;
   wbSaveHeader     : IwbStructDef;

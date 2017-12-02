@@ -382,7 +382,7 @@ begin
     Element := Element.Container;
 
   if Supports(Element, IwbContainer, Container) then begin
-    Element := Container.ElementByPath['Save File Header\Form Version'];
+    Element := Container.ElementByPath['Save File Header\Content\Form Version'];
     if Assigned(Element) then begin
       aType := Element.NativeValue;
       if aType>aMinimum then
