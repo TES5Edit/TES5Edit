@@ -2665,7 +2665,7 @@ type
 
 const
   {>> N means New, V means verified that the name has not changed <<<}
-  wbCTDAFunctions : array[0..399] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..401] of TCTDAFunction = (
 {N} (Index:   0; Name: 'GetWantBlocking'),
 {V} (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
 {V} (Index:   5; Name: 'GetLocked'),
@@ -3061,6 +3061,8 @@ const
 {N} (Index: 731; Name: 'CanFlyHere'),
 {N} (Index: 732; Name: 'IsFlyingMountPatrolQueud'),
 {N} (Index: 733; Name: 'IsFlyingMountFastTravelling'),
+{N} (Index: 734; Name: 'IsOverEncumbered'),
+{N} (Index: 735; Name: 'GetActorWarmth'),
 
     // Added by SKSE
     (Index: 1024; Name: 'GetSKSEVersion'; ),
