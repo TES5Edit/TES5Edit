@@ -250,9 +250,9 @@ extern "C"
 
       return false;
     }
-    else if(skse->runtimeVersion != RUNTIME_VERSION_1_5_3)
+    else if(skse->runtimeVersion != RUNTIME_VERSION_1_5_23)
     {
-      _MESSAGE("unsupported runtime version %08X (expected %08X)", skse->runtimeVersion, RUNTIME_VERSION_1_5_3);
+      _MESSAGE("unsupported runtime version %08X (expected %08X)", skse->runtimeVersion, RUNTIME_VERSION_1_5_23);
 
       return false;
     }
