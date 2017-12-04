@@ -159,7 +159,7 @@ bool F4SEPlugin_Query(const F4SEInterface * f4se, PluginInfo * info)
 
 		return false;
 	}
-	else if(f4se->runtimeVersion != RUNTIME_VERSION_1_10_26)
+	else if(f4se->runtimeVersion != RUNTIME_VERSION_1_10_50)
 	{
 		_MESSAGE("unsupported runtime version %08X (expected %08X)", f4se->runtimeVersion, RUNTIME_VERSION_1_10_26);
 
