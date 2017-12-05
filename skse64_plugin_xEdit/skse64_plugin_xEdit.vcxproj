@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{9506919C-696D-421D-9421-95DB0BBEE29E}</ProjectGuid>
+    <RootNamespace>plugin_modInfoDump</RootNamespace>
+    <Keyword>x64Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+    <TargetName>$(ProjectName)_1_5_23</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+    <TargetName>$(ProjectName)_1_5_23</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\skse64;$(SolutionDir)\..\skse64\skse64;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;PLUGIN_MODINFODUMP_EXPORTS;RUNTIME;RUNTIME_VERSION=0x01050170;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader />
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ForcedIncludeFiles>common/IPrefix.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <Link>
+      <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention />
+      <TargetMachine>MachineX64</TargetMachine>
+      <AdditionalLibraryDirectories>$(SolutionDir)\$(Platform)_v140\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>common_vc14.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Message>Installing DLL...</Message>
+      <Command>if not "$(Skyrim64DPath)"=="" copy "$(TargetPath)" "$(Skyrim64DPath)\Data\SKSE\Plugins\$(TargetFileName)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\skse64;$(SolutionDir)\..\skse64\skse64;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;PLUGIN_MODINFODUMP_EXPORTS;RUNTIME;RUNTIME_VERSION=0x01050170;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PrecompiledHeader />
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ForcedIncludeFiles>common/IPrefix.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+    </ClCompile>
+    <Link>
+      <ModuleDefinitionFile>exports.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention />
+      <TargetMachine>MachineX64</TargetMachine>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)_v140\$(Configuration)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>common_vc14.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Message>Installing DLL...</Message>
+      <Command>if not "$(Skyrim64Path)"=="" copy "$(TargetPath)" "$(Skyrim64Path)\Data\skse\Plugins\$(TargetFileName)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\skse64\skse64\GameAPI.cpp" />
+    <ClCompile Include="..\skse64\skse64\GameBSExtraData.cpp" />
+    <ClCompile Include="..\skse64\skse64\GameData.cpp" />
+    <ClCompile Include="..\skse64\skse64\GameEvents.cpp" />
+    <ClCompile Include="..\skse64\skse64\GameExtraData.cpp" />
+    <ClCompile Include="..\skse64\skse64\GameFormComponents.cpp" />
+    <ClCompile Include="..\skse64\skse64\GameForms.cpp" />
+    <ClCompile Include="..\skse64\skse64\GameReferences.cpp" />
+    <ClCompile Include="..\skse64\skse64\GameRTTI.cpp" />
+    <ClCompile Include="..\skse64\skse64\GameTypes.cpp" />
+    <ClCompile Include="..\skse64\skse64\GameUtilities.cpp" />
+    <ClCompile Include="..\skse64\skse64\HashUtil.cpp" />
+    <ClCompile Include="..\skse64\skse64\ObScript.cpp" />
+    <ClCompile Include="..\skse64\skse64\PapyrusArgs.cpp" />
+    <ClCompile Include="..\skse64\skse64\PapyrusInterfaces.cpp" />
+    <ClCompile Include="..\skse64\skse64\PapyrusNativeFunctions.cpp" />
+    <ClCompile Include="..\skse64\skse64\PapyrusValue.cpp" />
+    <ClCompile Include="..\skse64\skse64\PapyrusVM.cpp" />
+    <ClCompile Include="..\skse64\skse64\ScaleformAPI.cpp" />
+    <ClCompile Include="..\skse64\skse64\ScaleformCallbacks.cpp" />
+    <ClCompile Include="..\skse64\skse64\ScaleformValue.cpp" />
+    <ClCompile Include="..\skse64\skse64_common\Relocation.cpp" />
+    <ClCompile Include="..\skse64\skse64_common\SafeWrite.cpp" />
+    <ClCompile Include="..\skse64\skse64_common\Utilities.cpp" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\common\common_vc14.vcxproj">
+      <Project>{d4c128a1-73dc-4941-a453-ce55af239ba8}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\skse64\skse64\GameRTTI.inl" />
+    <None Include="exports.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\skse64\skse64\GameAPI.h" />
+    <ClInclude Include="..\skse64\skse64\GameBSExtraData.h" />
+    <ClInclude Include="..\skse64\skse64\GameData.h" />
+    <ClInclude Include="..\skse64\skse64\GameEvents.h" />
+    <ClInclude Include="..\skse64\skse64\GameExtraData.h" />
+    <ClInclude Include="..\skse64\skse64\GameFormComponents.h" />
+    <ClInclude Include="..\skse64\skse64\GameForms.h" />
+    <ClInclude Include="..\skse64\skse64\GameReferences.h" />
+    <ClInclude Include="..\skse64\skse64\GameRTTI.h" />
+    <ClInclude Include="..\skse64\skse64\GameTypes.h" />
+    <ClInclude Include="..\skse64\skse64\GameUtilities.h" />
+    <ClInclude Include="..\skse64\skse64\HashUtil.h" />
+    <ClInclude Include="..\skse64\skse64\ObScript.h" />
+    <ClInclude Include="..\skse64\skse64\PapyrusArgs.h" />
+    <ClInclude Include="..\skse64\skse64\PapyrusInterfaces.h" />
+    <ClInclude Include="..\skse64\skse64\PapyrusNativeFunctions.h" />
+    <ClInclude Include="..\skse64\skse64\PapyrusValue.h" />
+    <ClInclude Include="..\skse64\skse64\PapyrusVM.h" />
+    <ClInclude Include="..\skse64\skse64\ScaleformAPI.h" />
+    <ClInclude Include="..\skse64\skse64\ScaleformCallbacks.h" />
+    <ClInclude Include="..\skse64\skse64\ScaleformValue.h" />
+    <ClInclude Include="..\skse64\skse64_common\Relocation.h" />
+    <ClInclude Include="..\skse64\skse64_common\SafeWrite.h" />
+    <ClInclude Include="..\skse64\skse64_common\Utilities.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
