@@ -309,6 +309,7 @@ type
     mniViewStickAuto: TMenuItem;
     mniViewStickSelected: TMenuItem;
     mniViewSetToDefault: TMenuItem;
+    mniNavApplyLastScript: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -521,6 +522,7 @@ type
     procedure mniViewStickAutoClick(Sender: TObject);
     procedure mniViewStickSelectedClick(Sender: TObject);
     procedure mniViewSetToDefaultClick(Sender: TObject);
+    procedure mniNavApplyLastScriptClick(Sender: TObject);
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -5686,6 +5688,21 @@ begin
   end;
 end;
 
+procedure TfrmMain.mniNavApplyLastScriptClick(Sender: TObject);
+var
+  LastUsedScript: String;
+  slScript: TStringList;
+begin
+  LastUsedScript := Settings.ReadString('View', 'LastUsedScript', '');
+  if FileExists(wbScriptsPath + LastUsedScript + '.pas') then try
+    slScript := TStringList.Create;
+    slScript.LoadFromFile(wbScriptsPath + LastUsedScript + '.pas');
+    ApplyScript(slScript.Text);
+  finally
+    FreeAndNil(slScript);
+  end;
+end;
+
 procedure TfrmMain.mniNavApplyScriptClick(Sender: TObject);
 var
   Scr: string;
@@ -10292,6 +10309,7 @@ var
   i                           : Integer;
   Nodes                       : TNodeArray;
   sl                          : TStringList;
+  LastUsedScript              : String;
 begin
   mniNavTest.Visible := DebugHook <> 0;
 
@@ -10357,7 +10375,14 @@ begin
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
   mniNavApplyScript.Visible := mniNavCheckForErrors.Visible;
+  mniNavApplyLastScript.Visible := mniNavApplyScript.Visible;
   mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmSSE, gmFO4]);
+
+  LastUsedScript := Settings.ReadString('View', 'LastUsedScript', '');
+  if FileExists(wbScriptsPath + LastUsedScript + '.pas') then
+    mniNavApplyLastScript.Caption := 'Apply Last Script < ' + LastUsedScript + ' >'
+  else
+    mniNavApplyLastScript.Visible := False;
 
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;

@@ -44,9 +44,12 @@ object frmScript: TfrmScript
       Height = 21
       Style = csDropDownList
       Anchors = [akLeft, akTop, akRight]
+      DoubleBuffered = True
       DropDownCount = 30
+      ParentDoubleBuffered = False
       TabOrder = 0
       OnChange = cmbScriptsChange
+      OnDropDown = cmbScriptsDropdown
     end
     object btnSave: TButton
       Left = 600
