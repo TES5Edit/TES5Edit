@@ -9355,7 +9355,7 @@ begin
 
         if not aDeepCopy then
           if Supports(Result.ValueDef, IwbIntegerDef, IntegerDef) then
-            if Supports(IntegerDef.Formater[Result], IwbFlagsDef, FlagsDef) then
+            if Supports(IntegerDef.Formatter[Result], IwbFlagsDef, FlagsDef) then
               Exit(Result);
 
         Result.Assign(Low(Integer), aElement, not aDeepCopy);
@@ -14329,7 +14329,7 @@ begin
       if over then begin
         aEndPtr := aBasePtr;
         ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
-        if Supports(ValueDef, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formater[aContainer], IwbFlagsDef) then
+        if Supports(ValueDef, IwbIntegerDef, IntegerDef) and Supports(IntegerDef.Formatter[aContainer], IwbFlagsDef) then
           ValueDef := wbEmpty(ValueDef.Name, cpIgnore, False, nil, True)
         else
           ValueDef := wbEmpty(ValueDef.Name, cpIgnore);
@@ -14580,7 +14580,7 @@ var
 begin
   if vIsFlags and Supports(aElement, IwbFlag, Flag) then
     if Supports(vbValueDef, IwbIntegerDef, IntegerDef) then
-      if Supports(IntegerDef.Formater[Self], IwbFlagsDef, FlagsDef) then
+      if Supports(IntegerDef.Formatter[Self], IwbFlagsDef, FlagsDef) then
         if FlagsDef.CanAssign(Self, Low(Integer), Flag.FlagsDef) then begin
           s := GetEditValue;
           s := s + StringOfChar('0', 64 - Length(s));
@@ -14629,7 +14629,7 @@ begin
   begin
     if wbFlagsAsArray then
       if Supports(ValueDef, IwbIntegerDef, IntegerDef) then
-        if Supports(IntegerDef.Formater[aElement], IwbFlagsDef, FlagsDef) then begin
+        if Supports(IntegerDef.Formatter[aElement], IwbFlagsDef, FlagsDef) then begin
           if Assigned(aBasePtr) and (FlagsDef.FlagCount > 0) then begin
             j := IntegerDef.ToInt(aBasePtr, aEndPtr, aContainer);
             if j <> 0 then
@@ -14798,7 +14798,7 @@ begin
  {
  if vIsFlags then begin
    Result := '';
-   with (vbValueDef as IwbIntegerDef), (Formater as IwbFlagsDef) do begin
+   with (vbValueDef as IwbIntegerDef), (Formatter as IwbFlagsDef) do begin
      j := ToInt(GetDataBasePtr, dcDataEndPtr, Self);
      for i := 0 to 63 do
        if (j and (Int64(1) shl i)) <> 0 then
@@ -15018,7 +15018,7 @@ begin
   fBasePtr    := aBasePtr;
   fEndPtr     := aEndPtr;
   fIntegerDef := aIntegerDef;
-  if not fIntegerDef.FormaterCanChange then
+  if not fIntegerDef.FormatterCanChange then
     fFlagsDef := aFlagsDef;
   fIndex      := aIndex;
   inherited Create(aContainer);
@@ -15088,7 +15088,7 @@ begin
   if Assigned(fFlagsDef) then
     Result := fFlagsDef
   else
-    Result := fIntegerDef.Formater[IwbContainer(eContainer)] as IwbFlagsDef;
+    Result := fIntegerDef.Formatter[IwbContainer(eContainer)] as IwbFlagsDef;
 end;
 
 function TwbFlag.GetIsEditable: Boolean;

@@ -12,11 +12,11 @@ var
     dtArray
   ];
 
-function wbVMType              : IwbIntegerDefFormater;
-function wbVMHandle            : IwbIntegerDefFormater;
-function wbVMObjectHandle      : IwbIntegerDefFormater;
-function wbVMArrayHandle       : IwbIntegerDefFormater;
-function wbSaveWorldspaceIndex : IwbIntegerDefFormater;
+function wbVMType              : IwbIntegerDefFormatter;
+function wbVMHandle            : IwbIntegerDefFormatter;
+function wbVMObjectHandle      : IwbIntegerDefFormatter;
+function wbVMArrayHandle       : IwbIntegerDefFormatter;
+function wbSaveWorldspaceIndex : IwbIntegerDefFormatter;
 
 procedure InitializeVMTypeArray(aContainer: IwbContainer);
 procedure InitializeVMObjectArray(aContainer: IwbContainer);
@@ -71,7 +71,7 @@ begin
   end;
 end;
 
-function TwbVMTypeFormaterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function TwbVMTypeFormatterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   if aType = ctToSortKey then
     Result := IntToHex64(aInt, 8)
@@ -143,12 +143,12 @@ begin
     Result := '[' + IntToHex64(aInt, 8) + '] '+ sifVMTypeArray[VMType];
 end;
 
-function TwbHandleFormaterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function TwbHandleFormatterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := IntToHex64(aInt, 16)
 end;
 
-function TwbObjectHandleFormaterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function TwbObjectHandleFormatterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   if aType = ctToSortKey then
     Result := IntToHex64(aInt, 8)
@@ -202,7 +202,7 @@ begin
     result := 0;
 end;
 
-function TwbVMArrayHandleFormaterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function TwbVMArrayHandleFormatterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Count : Int64;
 begin
@@ -230,7 +230,7 @@ begin
   end;
 end;
 
-function TwbSaveWorldspaceIndexFormaterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function TwbSaveWorldspaceIndexFormatterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   if aType = ctToSortKey then
     Result := IntToHex64(aInt, 8)
@@ -263,29 +263,29 @@ begin
     Result := 0;
 end;
 
-function wbVMType : IwbIntegerDefFormater;
+function wbVMType : IwbIntegerDefFormatter;
 begin
-  Result := wbCallback(@TwbVMTypeFormaterToString, nil);
+  Result := wbCallback(@TwbVMTypeFormatterToString, nil);
 end;
 
-function wbVMHandle : IwbIntegerDefFormater; overload;
+function wbVMHandle : IwbIntegerDefFormatter; overload;
 begin
-  Result := wbCallback(@TwbHandleFormaterToString, nil);
+  Result := wbCallback(@TwbHandleFormatterToString, nil);
 end;
 
-function wbVMObjectHandle : IwbIntegerDefFormater; overload;
+function wbVMObjectHandle : IwbIntegerDefFormatter; overload;
 begin
-  Result := wbCallback(@TwbObjectHandleFormaterToString, nil);
+  Result := wbCallback(@TwbObjectHandleFormatterToString, nil);
 end;
 
-function wbVMArrayHandle : IwbIntegerDefFormater;
+function wbVMArrayHandle : IwbIntegerDefFormatter;
 begin
-  Result := wbCallback(@TwbVMArrayHandleFormaterToString, nil);
+  Result := wbCallback(@TwbVMArrayHandleFormatterToString, nil);
 end;
 
-function wbSaveWorldspaceIndex : IwbIntegerDefFormater;
+function wbSaveWorldspaceIndex : IwbIntegerDefFormatter;
 begin
-  Result := wbCallback(@TwbSaveWorldspaceIndexFormaterToString, nil);
+  Result := wbCallback(@TwbSaveWorldspaceIndexFormatterToString, nil);
 end;
 
 function wbFindSaveElement(aName: String; aElement: IwbElement): IwbElement;

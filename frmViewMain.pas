@@ -6687,7 +6687,7 @@ begin
 
       // flags editor
       if Supports(NamedDef, IwbIntegerDef, IntegerDef) and
-        Supports(IntegerDef.Formater[Element], IwbFlagsDef, Flags) then begin
+        Supports(IntegerDef.Formatter[Element], IwbFlagsDef, Flags) then begin
 
         with TfrmFileSelect.Create(Self) do try
           Caption := 'Edit Value';

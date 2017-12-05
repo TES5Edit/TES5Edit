@@ -7910,7 +7910,7 @@ begin
 
   wbSexEnum := wbEnum(['Male','Female']);
 
-  wbEFID := wbFormIDCk(EFID, 'Base Effect', [MGEF]);
+  wbEFID := wbFormIDCk(EFID, 'Base Effect', [NULL, MGEF]);
 
   wbEFIT :=
     wbStructSK(EFIT, [3, 4], '', [
@@ -8039,7 +8039,7 @@ begin
         {52 ptWardState}
         wbInteger('Ward State', itU32, wbWardStateEnum),
         {53 ptWeather}
-        wbFormIDCkNoReach('Weather', [WTHR]),
+        wbFormIDCkNoReach('Weather', [NULL, WTHR]),
         {54 ptWorldspace}
         wbFormIDCkNoReach('Worldspace', [WRLD, FLST]),
         {55 ptDamageType}
@@ -13178,7 +13178,7 @@ begin
     wbDESC,
     wbCTDAs,
     wbFormIDCk(CNAM, 'Created Object', sigBaseObjects),
-    wbFormIDCk(BNAM, 'Workbench Keyword', [KYWD]),
+    wbFormIDCk(BNAM, 'Workbench Keyword', [NULL, KYWD]),
     wbByteArray(NAM1, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
     wbByteArray(NAM2, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
     wbByteArray(NAM3, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
@@ -14311,7 +14311,7 @@ begin
   ], False, nil, cpNormal, False, nil, wbRACEAfterSet);
 
 
-  wbRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
+  wbRecord(REFR, 'Placed Object', wbFormatterUnion(wbREFRRecordFlagsDecider, [
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
       {0x00000100}  8, 'LOD Respects Enable State',
