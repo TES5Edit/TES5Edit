@@ -1,0 +1,175 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="..\skse64\skse64\ScaleformValue.cpp">
+      <Filter>skse64\ScaleForm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\ScaleformCallbacks.cpp">
+      <Filter>skse64\ScaleForm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\GameAPI.cpp">
+      <Filter>skse64\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\GameTypes.cpp">
+      <Filter>skse64\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64_common\SafeWrite.cpp">
+      <Filter>skse64_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64_common\Relocation.cpp">
+      <Filter>skse64_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\PapyrusArgs.cpp">
+      <Filter>skse64\papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\PapyrusInterfaces.cpp">
+      <Filter>skse64\papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\PapyrusNativeFunctions.cpp">
+      <Filter>skse64\papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\PapyrusValue.cpp">
+      <Filter>skse64\papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\PapyrusVM.cpp">
+      <Filter>skse64\papyrus</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\GameExtraData.cpp">
+      <Filter>skse64\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\GameUtilities.cpp">
+      <Filter>skse64\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64_common\Utilities.cpp">
+      <Filter>skse64_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\GameData.cpp">
+      <Filter>skse64\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\GameForms.cpp">
+      <Filter>skse64\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\ObScript.cpp">
+      <Filter>skse64\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\GameEvents.cpp">
+      <Filter>skse64\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\GameReferences.cpp">
+      <Filter>skse64\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\GameBSExtraData.cpp">
+      <Filter>skse64\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\GameFormComponents.cpp">
+      <Filter>skse64\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\GameRTTI.cpp">
+      <Filter>skse64\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\HashUtil.cpp">
+      <Filter>skse64_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\skse64\skse64\ScaleformAPI.cpp">
+      <Filter>skse64\ScaleForm</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="exports.def" />
+    <None Include="..\skse64\skse64\GameRTTI.inl">
+      <Filter>skse64\api</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="skse64">
+      <UniqueIdentifier>{234946e8-363f-4a1d-a4d5-2387dfaaae0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="skse64\api">
+      <UniqueIdentifier>{78d8aced-68d1-4c27-82f1-f9b84fc0cf6c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="skse64\ScaleForm">
+      <UniqueIdentifier>{f8cf80af-dc3c-4a8d-ad19-7c53a2242027}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="skse64_common">
+      <UniqueIdentifier>{35a886fb-e97c-43e4-8228-b6ea1a1735e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="skse64\papyrus">
+      <UniqueIdentifier>{d0b04649-2fca-44b9-a2ea-71246c16083a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\skse64\skse64\ScaleformCallbacks.h">
+      <Filter>skse64\ScaleForm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\ScaleformValue.h">
+      <Filter>skse64\ScaleForm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\GameAPI.h">
+      <Filter>skse64\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64_common\Relocation.h">
+      <Filter>skse64_common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64_common\SafeWrite.h">
+      <Filter>skse64_common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\GameTypes.h">
+      <Filter>skse64\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\PapyrusArgs.h">
+      <Filter>skse64\papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\PapyrusInterfaces.h">
+      <Filter>skse64\papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\PapyrusNativeFunctions.h">
+      <Filter>skse64\papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\PapyrusValue.h">
+      <Filter>skse64\papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\PapyrusVM.h">
+      <Filter>skse64\papyrus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\GameExtraData.h">
+      <Filter>skse64\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\GameUtilities.h">
+      <Filter>skse64\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64_common\Utilities.h">
+      <Filter>skse64_common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\GameData.h">
+      <Filter>skse64\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\GameForms.h">
+      <Filter>skse64\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\ObScript.h">
+      <Filter>skse64\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\GameEvents.h">
+      <Filter>skse64\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\GameReferences.h">
+      <Filter>skse64\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\GameBSExtraData.h">
+      <Filter>skse64\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\GameFormComponents.h">
+      <Filter>skse64\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\GameRTTI.h">
+      <Filter>skse64\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\HashUtil.h">
+      <Filter>skse64_common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\skse64\skse64\ScaleformAPI.h">
+      <Filter>skse64\ScaleForm</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

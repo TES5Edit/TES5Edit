@@ -1,0 +1,4 @@
+LIBRARY	"skse64_plugin_xEdit"
+EXPORTS
+SKSEPlugin_Query
+SKSEPlugin_Load
