@@ -11365,7 +11365,14 @@ begin
     end;
   end;
 
-  inherited;
+  // do not sort records while we are updating
+  Include(grStates, gsSorting);
+  try
+    inherited;
+  finally
+    Exclude(grStates, gsSorting);
+  end;
+
 end;
 
 procedure TwbGroupRecord.MasterIndicesUpdated(const aOld, aNew: TBytes);
@@ -11373,7 +11380,17 @@ var
   OldFormID: Cardinal;
   NewFormID: Cardinal;
 begin
-  inherited;
+  // do not sort records while we are updating
+  Include(grStates, gsSorting);
+  try
+    inherited;
+  finally
+    Exclude(grStates, gsSorting);
+  end;
+
+  // sort INFOs afterwards if group is a DIAL children
+  if grStruct.grsGroupType = 7 then
+    Sort;
 
   if grStruct.grsGroupType in [1, 6..10] then begin
     if grStruct.grsLabel <> 0 then begin
