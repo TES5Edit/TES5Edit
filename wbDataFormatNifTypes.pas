@@ -165,15 +165,26 @@ uses
   wbNifMath;
 
 procedure GetTextHexColor(const aElement: TdfElement; var aText: string);
+var
+  i: integer;
 begin
-  aText := '#' + aText;
+  // if there are no float values, then remove spaces between hex values and insert #
+  if Pos('.', aText) = 0 then begin
+    for i := Length(aText) downto 1 do
+      if aText[i] = ' ' then Delete(aText, i, 1);
+    aText := '#' + aText;
+  end;
 end;
 
 procedure SetTextHexColor(const aElement: TdfElement; var aText: string);
 begin
-  if Copy(aText, 1, 1) = '#' then
-    Delete(aText, 1, 1);
+  // if value doesn't start with # then it is not a html hex color value
+  if Copy(aText, 1, 1) <> '#' then
+    Exit;
 
+  Delete(aText, 1, 1);
+
+  // extend values if needed FFF -> FFFFFF
   if Length(aText) = 3 then
     aText := Copy(aText, 1, 1) + Copy(aText, 1, 1) + Copy(aText, 2, 1) + Copy(aText, 2, 1) + Copy(aText, 3, 1) + Copy(aText, 3, 1);
 
@@ -227,26 +238,20 @@ begin
   ]);
 end;
 
-// a float32 represented as a byte hex value 00..FF or a float value when < -1.0 or > 1.0
+// a float32 represented as a byte hex value 00..FF or when in 0..1 range
 procedure GetTextHexFloat(const aElement: TdfElement; var aText: string);
 var
   v: Extended;
 begin
   v := dfStrToFloat(aText);
-  if (v < -1.0) or (v > 1.0) then
-    Exit;
-
-  v := v * 255.0;
-  if v < 0.0 then v := 0.0 else if v > 255.0 then v := 255.0;
-  aText := IntToHex(Round(v), 2);
+  if (v >= 0.0) and (v <= 1.0) then
+    aText := IntToHex(Round(v * 255.0), 2);
 end;
 
 procedure SetTextHexFloat(const aElement: TdfElement; var aText: string);
-var
-  v: Extended;
 begin
-  v := StrToInt('$' + aText) / 255;
-  aText := FloatToStr(v);
+  if (Length(aText) = 2) and (aText[1] <> '.') and (aText[2] <> '.') then
+    aText := FloatToStr( StrToInt('$' + aText) / 255);
 end;
 
 function wbHexFloat(const aName: string): TdfDef;
@@ -386,7 +391,7 @@ begin
     wbHexFloat('G'),
     wbHexFloat('B')
   ], aDefaultValue, aEvents);
-  TdfMergeDef(Result).Delimiter := '';
+  //TdfMergeDef(Result).Delimiter := ' ';
   Result.OnGetText := @GetTextHexColor;
   Result.OnSetText := @SetTextHexColor;
 end;
@@ -409,7 +414,7 @@ begin
     wbHexFloat('B'),
     wbHexFloat('A')
   ], aDefaultValue, aEvents);
-  TdfMergeDef(Result).Delimiter := '';
+  //TdfMergeDef(Result).Delimiter := ' ';
   Result.OnGetText := @GetTextHexColor;
   Result.OnSetText := @SetTextHexColor;
 end;
