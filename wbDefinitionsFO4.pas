@@ -13520,7 +13520,7 @@ procedure DefineFO4n;
             cpNormal, False, nil, wbMorphPresetsAfterSet
           ),
           wbUnknown(MPPK),
-          wbUnknown(MPGS)
+          wbArray(MPGS, 'Unknown', wbInteger('Index', itU32, wbIntToHexStr, wbHexStrToInt))
         ], [])
       );
   end;
@@ -14303,7 +14303,7 @@ begin
         wbString(MSM1, 'Max Name')
       ], [])
     ),
-    wbUnknown(MLSI),
+    wbInteger(MLSI, 'Morph Last Index', itU32, wbIntToHexStr, wbHexStrToInt),
     wbString(HNAM, 'Hair Color Lookup Texture'),
     wbString(HLTX, 'Hair Color Extended Lookup Texture'),
     wbFormIDCk(QSTI, 'Dialogue Quest', [QUST]),
