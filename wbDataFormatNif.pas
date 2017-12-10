@@ -3536,8 +3536,60 @@ begin
         dfFloat('Scale', '1.0'),
         wbNiBound('Bounding Sphere')
       ]), -4),
-      dfInteger('Unknown Int 1', dtU32),
-      dfInteger('Unknown Int 2', dtU32)
+      wbVertexDesc('VertexDesc', [])
+    ]), 0, 'Num Data', [])
+  ]), 'NiExtraData', False);
+end;
+
+//===========================================================================
+{ BSPackedCombinedGeomDataExtra }
+function wbDefineBSPackedCombinedGeomDataExtra_EnVertexData(const e: TdfElement): Boolean;
+begin
+  Result := True;
+  e.UserData := e.NativeValues['..\VertexDesc\VF']; // cache VF here
+end;
+
+procedure wbDefineBSPackedCombinedGeomDataExtra_GetCountTriangles(const e: TdfElement; var aCount: Integer);
+var
+  el: TdfElement;
+  i: integer;
+begin
+  // sum of LOD Triangle Count
+  el := e.Elements['..\LOD'];
+  if Assigned(el) then
+    for i := 0 to Pred(el.Count) do
+      Inc(aCount, Integer(el[i][0].NativeValue));
+end;
+
+procedure wbDefineBSPackedCombinedGeomDataExtra;
+begin
+  wbNiObject(wbNifBlock('BSPackedCombinedGeomDataExtra', [
+    wbVertexDesc('VertexDesc', []),
+    dfInteger('Num Vertices', dtU32),
+    dfInteger('Num Triangles', dtU32),
+    dfInteger('Unknown Flags 1', dtU32),
+    dfInteger('Unknown Flags 2', dtU32),
+    dfInteger('Num Data', dtU32),
+    dfArray('Object Data', dfStruct('Object Data', [
+      dfInteger('Num Verts', dtU32),
+      dfArray('LOD', dfStruct('LOD', [
+        dfInteger('Triangle Count', dtU32),
+        dfInteger('Triangle Offset', dtU32)
+      ]), -4),
+      dfArray('Combined', dfStruct('Combined', [
+        dfFloat('Grayscale to Palette Scale'),
+        wbRotMatrix33('Rotation'),
+        wbVector3('Translation'),
+        dfFloat('Scale', '1.0'),
+        wbNiBound('Bounding Sphere')
+      ]), -4),
+      wbVertexDesc('VertexDesc', []),
+      dfArray('Vertex Data', wbBSVertexData('Vertex Data'), 0, 'Num Verts', [
+        DF_OnGetEnabled, @wbDefineBSPackedCombinedGeomDataExtra_EnVertexData
+      ]),
+      dfArray('Triangles', wbTriangle('Triangles'), 0, '', [
+        DF_OnGetCount, @wbDefineBSPackedCombinedGeomDataExtra_GetCountTriangles
+      ])
     ]), 0, 'Num Data', [])
   ]), 'NiExtraData', False);
 end;
@@ -4382,7 +4434,7 @@ function BSTriShape_EnVertexData(const e: TdfElement): Boolean;
 begin
   Result := (nif(e).UserVersion2 in [100, 130]) and (e.NativeValues['..\Data Size'] > 0);
   if Result then e.UserData := e.NativeValues['..\VertexDesc\VF']; // cache VF here
- end;
+end;
 
 function BSTriShape_EnTriangles(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Data Size'] > 0; end;
 function BSTriShape_EnParticleDataSize(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 = 100; end;
@@ -7538,6 +7590,7 @@ begin
   wbDefineBSClothExtraData;
   wbDefineBSEyeCenterExtraData;
   wbDefineBSPackedCombinedSharedGeomDataExtra;
+  wbDefineBSPackedCombinedGeomDataExtra;
   wbDefineBSPositionData;
   wbDefineBSConnectPoint__Parents;
   wbDefineBSConnectPoint__Children;
