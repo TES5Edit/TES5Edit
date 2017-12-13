@@ -8075,7 +8075,7 @@ begin
         {0x08} 'Inherit Radius from Spawn Spell',
         {0x10} 'Drop to Ground'
       ])),
-      wbFormIDCk('Spell', [SPEL, NULL]),
+      wbFormIDCk('Spell', [SPEL, ENCH, NULL]),
       wbFormIDCk('Light', [LIGH, NULL]),
       wbFormIDCk('Impact Data Set', [IPDS, NULL]),
       wbFormIDCk('Sound', [SNDR, NULL])
