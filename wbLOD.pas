@@ -3268,6 +3268,10 @@ var
       if e.IsPersistent and not e.Flags.IsVisibleWhenDistant and (StatRec.Flags._Flags and $00000004 <> 0) then
         Exit;
 
+      // skip initially disabled without XESP and without VWD
+      if e.Flags.IsInitiallyDisabled and not e.ElementExists['XESP'] and not e.Flags.IsVisibleWhenDistant then
+        Exit;
+
       // get form id of XESP marker and check if flag LOD Respects Enable State
       // this potentially has the same duplicate form id problem as 2D tree LOD in Skyrim
       if e.ElementExists['XESP'] then begin
