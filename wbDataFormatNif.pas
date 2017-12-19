@@ -1114,6 +1114,7 @@ begin
     Exit;
 
   CalculateTangentsBitangents(verts, norms, texco, triangles, tan, bin);
+  //CalculateTangentsBitangents2(verts, norms, texco, triangles, tan, bin);
 
   if Length(tan) = 0 then
     Exit;
@@ -1628,7 +1629,8 @@ var
 begin
   Result := False;
   for i := 0 to Pred(BlocksCount) do
-    Result := Result or Blocks[i].UpdateNormals(True);
+    if Blocks[i].UpdateNormals(True) then
+      Result := True;
 end;
 
 function TwbNifFile.SpellUpdateTangents: Boolean;
@@ -1637,7 +1639,8 @@ var
 begin
   Result := False;
   for i := 0 to Pred(BlocksCount) do
-    Result := Result or Blocks[i].UpdateTangents(False);
+    if Blocks[i].UpdateTangents(False) then
+      Result := True;
 end;
 
 function TwbNifFile.SpellAddUpdateTangents: Boolean;
@@ -1646,7 +1649,8 @@ var
 begin
   Result := False;
   for i := 0 to Pred(BlocksCount) do
-    Result := Result or Blocks[i].UpdateTangents(True);
+    if Blocks[i].UpdateTangents(True) then
+      Result := True;
 end;
 
 function TwbNifFile.GetHeader: TwbNifBlock;
