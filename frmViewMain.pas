@@ -43,6 +43,7 @@ uses
   IOUtils,
   Actions,
   pngimage,
+  RegularExpressionsCore,
   VirtualTrees,
   VTEditors,
   VirtualEditTree,
@@ -5558,8 +5559,10 @@ var
   StartTick                   : Cardinal;
   jvi                         : TJvInterpreterProgram;
   i, p                        : Integer;
+  s                           : string;
   bCheckUnsaved               : Boolean;
   bShowMessages               : Boolean;
+  regexp                      : TPerlRegEx;
 begin
   // prevent execution of new scripts if already executing
   if Assigned(ScriptEngine) then begin
@@ -5570,6 +5573,28 @@ begin
   if Trim(aScript) = '' then
     Exit;
 
+  // Try to remove namespaces from unit names in uses clause if script is written in newer Delphi version
+  // jvInterpreter doesn't support them (causes syntax error)
+  regexp := TPerlRegEx.Create;
+  try
+    regexp.Subject := aScript;
+    regexp.RegEx := '^\s*uses\s+(.+?);';
+    regexp.Options := [preCaseLess, preMultiLine];
+    if regexp.Match then begin
+      s := regexp.MatchedText;
+      s := StringReplace(s, 'system.', '', [rfReplaceAll, rfIgnoreCase]);
+      s := StringReplace(s, 'vcl.',    '', [rfReplaceAll, rfIgnoreCase]);
+      s := StringReplace(s, 'winapi.', '', [rfReplaceAll, rfIgnoreCase]);
+      s := StringReplace(s, 'data.',   '', [rfReplaceAll, rfIgnoreCase]);
+      s := StringReplace(s, 'web.',    '', [rfReplaceAll, rfIgnoreCase]);
+      if s <> regexp.MatchedText then
+        aScript := StringReplace(aScript, regexp.MatchedText, s, []);
+    end;
+  finally
+    regexp.Free;
+  end;
+
+  // check for the Silent mode keyword
   p := Pos('Mode:', aScript);
   bShowMessages := not ContainsText(Copy(aScript, p, PosEx(#10, aScript, p) - p), 'Silent');
 
@@ -5610,6 +5635,8 @@ begin
         end;
       end;
 
+      // skip selected records iteration if Process() function doesn't exist
+      if jvi.FunctionExists('', 'Process') then
       for i := Low(Selection) to High(Selection) do begin
         StartNode := Selection[i];
         if Assigned(StartNode) then begin
@@ -5624,16 +5651,11 @@ begin
 
           if Assigned(NodeData.Element) then
             if NodeData.Element.ElementType in ScriptProcessElements then begin
-
-              if jvi.FunctionExists('', 'Process') then begin
-                jvi.CallFunction('Process', nil, [NodeData.Element]);
-                if jvi.VResult <> 0 then begin
-                  if bShowMessages then PostAddMessage(sTerminated + IntToStr(jvi.VResult));
-                  Exit;
-                end;
-              end else
-                Break;
-
+              jvi.CallFunction('Process', nil, [NodeData.Element]);
+              if jvi.VResult <> 0 then begin
+                if bShowMessages then PostAddMessage(sTerminated + IntToStr(jvi.VResult));
+                Exit;
+              end;
               Inc(Count);
             end;
 
@@ -14713,12 +14735,48 @@ begin
   end;
 end;
 
+
+type
+  PUnitInfo = ^TUnitInfo;
+  TUnitInfo = record
+    UnitName: string;
+    Found: PBoolean;
+  end;
+
+procedure HasUnitProc(const Name: string; NameType: TNameType; Flags: Byte; Param: Pointer);
+begin
+  case NameType of
+    ntContainsUnit:
+      with PUnitInfo(Param)^ do
+        if SameText(Name, UnitName) then
+          Found^ := True;
+  end;
+end;
+
+function IsUnitCompiledIn(Module: HMODULE; const UnitName: string): Boolean;
+var
+  Info: TUnitInfo;
+  Flags: Integer;
+begin
+  Result := False;
+  Info.UnitName := UnitName;
+  Info.Found := @Result;
+  GetPackageInfo(Module, @Info, Flags, HasUnitProc);
+end;
+
 procedure TfrmMain.JvInterpreterProgram1GetUnitSource(UnitName: string;
   var Source: string; var Done: Boolean);
 var
   sl: TStringList;
   UnitFile: string;
 begin
+  // return empty unit source code if the standard one is used
+  if SameText(UnitName, 'xEditAPI') or IsUnitCompiledIn(HInstance, UnitName) then begin
+    Source := 'unit ' + UnitName + '; end.';
+    Done := True;
+    Exit;
+  end;
+
   UnitFile := wbScriptsPath + UnitName + '.pas';
   sl := TStringList.Create;
   try
