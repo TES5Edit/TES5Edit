@@ -499,8 +499,6 @@ begin
   // go into 'script' tool mode and detect game mode by script's extension
   i := 1;
   if wbFindCmdLineParam('script', s) or wbFindNextValidCmdLineFileName(i, s) then begin
-    if not FileExists(s) then
-      Exit;
     wbScriptToRun := s;
     s := ExtractFileExt(s);
     i := Pos(UpperCase('pas'), UpperCase(s));
@@ -853,6 +851,9 @@ begin
   {$IFDEF WIN64}
   wbApplicationTitle := wbApplicationTitle + ' x64';
   {$ENDIF WIN64}
+
+  if FindCmdLineSwitch('nobuildrefs') then
+    wbBuildRefs := False;
 
   if FindCmdLineSwitch('fixuppgrd') then
     wbFixupPGRD := True;

@@ -3161,14 +3161,9 @@ procedure TfrmMain.DoRunScript;
 
 begin
   if wbScriptToRun = '' then
-    wbScriptToRun := wbProgramPath + wbAppName + 'Script.pas';
-
-  {if wbFindCmdLineParam('script', s) and (Length(s) > 0) then begin
-    // relative script name, use app's folder
-    if not TPath.IsPathRooted(s) then
-      s := wbProgramPath + s;
-  end else
-    s := wbProgramPath + wbAppName + 'Script.pas';}
+    wbScriptToRun := wbProgramPath + wbAppName + 'Script.pas'
+  else if not TPath.IsPathRooted(ExtractFilePath(wbScriptToRun)) then
+    wbScriptToRun := wbScriptsPath + wbScriptToRun;
 
   if not FileExists(wbScriptToRun) then
     with TOpenDialog.Create(Self) do try
