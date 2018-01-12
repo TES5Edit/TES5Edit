@@ -7232,7 +7232,7 @@ begin
       edLODX.Text := Settings.ReadString(Section, 'LODX', '');
       edLODY.Text := Settings.ReadString(Section, 'LODY', '');
       cbTreesLOD.Checked := Settings.ReadBool(Section, 'TreesLOD', True);
-      cbTrees3D.Checked := Settings.ReadBool(Section, 'Trees3D', wbGameMode in [gmSSE]);
+      cbTrees3D.Checked := Settings.ReadBool(Section, 'Trees3D', False {wbGameMode in [gmSSE]});
       cmbTreesLODBrightness.ItemIndex := IndexOf(cmbTreesLODBrightness.Items, Settings.ReadString(Section, 'TreesBrightness', '0'));
       if wbGameMode in [gmFO4] then begin
         cbTreesLOD.Checked := False;
@@ -7241,7 +7241,7 @@ begin
         cbUseBacklightPower.Visible := True;
       end else
       // hidden option to split trees lod atlases when Shift is pressed
-      if GetAsyncKeyState(VK_SHIFT) <> 0 then begin
+      if GetKeyState(VK_SHIFT) < 0 then begin
         _Files := @Files;
         btnSplitTreesLOD.Visible := True;
       end;
