@@ -46,6 +46,7 @@ const
   sTexconv = 'Texconv.exe';
   {$ENDIF}
   BooleanText: array[boolean] of string = ('False', 'True');
+  iBillboardFlag = 4096; // mark texture as a tree billboard in atlas images
 
 var
   iDefaultAtlasWidth: Integer = 2048;
@@ -1049,7 +1050,7 @@ begin
     for i := 0 to Pred(slMeshes.Count) do begin
       // if dds is passed then use it as is (billboard for 3D Trees LOD)
       if SameText(ExtractFileExt(slMeshes[i]), '.dds') then begin
-        slTextures.Add(slMeshes[i]);
+        slTextures.AddObject(slMeshes[i], Pointer(iBillboardFlag)); // flag as billboard
         Continue;
       end;
 
@@ -1440,7 +1441,7 @@ procedure wbBuildAtlasFromTexturesList(
   const Settings: TCustomIniFile
 );
 var
-  i: integer;
+  i, j: integer;
   s: string;
   scl: double;
   res: TDynResources;
@@ -1449,6 +1450,7 @@ var
   slMap: TStringList;
   fmtDiffuse, fmtNormal, fmtSpecular: TImageFormat;
   alphaThreshold: Integer;
+  Canvas: TImagingCanvas;
 begin
   for i := 0 to Pred(slTextures.Count) do begin
     s := slTextures[i];
@@ -1489,6 +1491,20 @@ begin
       );
     end;
     Images[Pred(Length(Images))].Name := slTextures[i];
+
+    // change brightness if it is a billboard
+    if Integer(slTextures.Objects[i]) = iBillboardFlag then begin
+      j := Settings.ReadInteger(wbAppName + ' LOD Options', 'TreesBrightness', 0);
+      if j <> 0 then begin
+        ConvertImage(Images[Pred(Length(Images))].Image, ifA8R8G8B8);
+        Canvas := TImagingCanvas.CreateForData(@Images[Pred(Length(Images))].Image);
+        try
+          Canvas.ModifyContrastBrightness(j / 10, j);
+        finally
+          Canvas.Free;
+        end;
+      end;
+    end;
 
     // load normal
     InitImage(Images[Pred(Length(Images))].Image_n);
@@ -2849,8 +2865,10 @@ begin
           if ((wbGameMode in [gmTES5, gmSSE]) and ((StatRec.Signature = 'TREE') or StatRec.Flags.IsVisibleWhenDistant)) or
              (wbGameMode in [gmFO3, gmFNV])
           then begin
+
             // getting lod models
-            m4 := wbGetLODMeshName(StatRec, 0);
+
+            m4 := wbGetLODMeshName(StatRec, 0, bTrees3D);
             // notify about 3D tree mesh or fallback to billboard
             if bTrees3D and (StatRec.Signature = 'TREE') then
               if m4 <> '' then
@@ -2860,11 +2878,12 @@ begin
                 if PTree^.Index <> -1 then begin
                   m4 := PTree^.Billboard;
                   wbProgressCallback(StatRec.Name + ' using 3D flat billboard in LOD4 ' + m4);
-                end;
+                end else
+                  wbProgressCallback('<Note: ' + StatRec.Name + ' LOD4 not found ' + PTree^.Billboard + '>');
               end;
             if m4 <> '' then slLODMeshes.Add(m4);
 
-            m8 := wbGetLODMeshName(StatRec, 1);
+            m8 := wbGetLODMeshName(StatRec, 1, bTrees3D);
             // notify about 3D tree mesh or fallback to billboard
             if bTrees3D and (StatRec.Signature = 'TREE') then
               if m8 <> '' then
@@ -2874,10 +2893,12 @@ begin
                 if PTree^.Index <> -1 then begin
                   m8 := PTree^.Billboard;
                   wbProgressCallback(StatRec.Name + ' using 3D flat billboard in LOD8 ' + m8);
-                end;
+                end else
+                  wbProgressCallback('<Note: ' + StatRec.Name + ' LOD8 not found ' + PTree^.Billboard + '>');
               end;
             if m8 <> '' then slLODMeshes.Add(m8);
 
+            // LOD16 is used for the map, don't include trees
             m16 := wbGetLODMeshName(StatRec, 2);
             if m16 <> '' then slLODMeshes.Add(m16);
 
@@ -3072,7 +3093,7 @@ begin
 
         // adding Extra Options
         s := wbScriptsPath + wbLODExtraOptionsFileName(
-          ChangeFileExt(ExtractFileName(aWorldspace._File.FileName), ''),
+          ChangeFileExt(ExtractFileName(aWorldspace.MasterOrSelf._File.FileName), ''),
           aWorldspace.EditorID
         );
         if FileExists(s) then begin
