@@ -2898,8 +2898,11 @@ begin
               end;
             if m8 <> '' then slLODMeshes.Add(m8);
 
-            // LOD16 is used for the map, don't include trees
-            m16 := wbGetLODMeshName(StatRec, 2);
+            m16 := wbGetLODMeshName(StatRec, 2, bTrees3D);
+            // don't fallback to billboards in LOD16 since it is used for the map
+            if bTrees3D and (StatRec.Signature = 'TREE') then
+              if m16 <> '' then
+                wbProgressCallback(StatRec.Name + ' using 3D mesh in LOD16 ' + m16);
             if m16 <> '' then slLODMeshes.Add(m16);
 
             if (m4 <> '') or (m8 <> '') or (m16 <> '') then begin
