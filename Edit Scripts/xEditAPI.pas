@@ -56,7 +56,7 @@ unit xEditAPI;
 
 interface
 
-uses Classes, System.SysUtils, Vcl.Graphics;
+uses SysUtils, Classes, UITypes, Vcl.Graphics;
 
 // ********************************************************************
 // xEdit Global Constants
@@ -89,7 +89,7 @@ type
   IwbRecord = IInterface;
   /// <summary>A plugin file's top-level groups. Each group holds a different type of record.</summary>
   IwbGroupRecord = IInterface;
-  /// <summary>A plugin file's main record.</summary>
+  /// <summary>A any of a plugin file's records.</summary>
   IwbMainRecord = IInterface;
   /// <summary>All other records in a plugin's file that are not main or top-level group records.</summary>
   IwbSubRecord = IInterface;
@@ -127,7 +127,7 @@ type
 // ********************************************************************
 
 /// <summary>Provides the file path to the game's data folder as a String</summary>
-function DataPath:String;
+function DataPath: String;
 /// <summary>Provides the file path to Tes5edit's installation folder as a String</summary>
 function ProgramPath:	String;
 /// <summary>Provides the file path to Tes5Edit's 'Edit Scripts' folder as a String.</summary>
@@ -138,6 +138,8 @@ function ScriptsPath:	String;
 function FileCount:	Integer;
 /// <summary>xEdit app name. Examples: 'TES5','TES4','FNV','FO3','FO4'</summary>
 function wbAppName: String;
+/// <summary>xEdit game name</summary>
+function wbGameName: String;
 /// <summary>xEdit version number.</summary>
 function wbVersionNumber:	Integer;
 
@@ -155,12 +157,16 @@ function Assigned(aObject: TObject): Boolean; overload;
 function ObjectToElement(akObject: TObject): IInterface;
 /// <summary>Find a file by index. See also: <see cref="xEditAPI|FileCount"/>.</summary>
 function FileByIndex(aiFile: integer): IwbFile;
+/// <summary>Find a file by load order.</summary>
+function FileByLoadOrder(aiLoadOrder: integer): IwbFile;
 /// <summary>Returns the full path to the filename asFilename.</summary>
 function FullPathToFilename(asFilename: string): string;
 /// <summary>As of xEdit 3.1.2, calling this function will corrupt saved plugins until xEdit is restarted.</summary>
 procedure EnableSkyrimSaveFormat();
 /// <summary>Unverified: Modifies akList by adding entries based on the contents of the global wbRecordDefs.</summary>
 procedure GetRecordDefNames(akList: TStrings);
+/// <summary>Scroll to an element in the xEdit window</summary>
+procedure JumpTo(aeElement: IwbElement; unknown: boolean);
 /// <summary>Modifies akListOut, adding every entry in akListIn that contains the substring asFilter.</summary>
 procedure wbFilterStrings(akListIn: TStrings; akListOut: TStrings; asFilter: String);
 /// <summary>Modifies akList, removing any duplicate entries that it contains.</summary>
@@ -583,6 +589,11 @@ begin
   Result := '';
 end;
 
+function wbGameName: String;
+begin
+  Result := '';
+end;
+
 function wbVersionNumber:	Integer;
 begin
   Result := 0;
@@ -616,6 +627,11 @@ begin
   Result := Nil;
 end;
 
+function FileByLoadOrder(aiLoadOrder: integer): IwbFile;
+begin
+  Result := Nil;
+end;
+
 function FullPathToFilename(asFilename: string): string;
 begin
   Result := '';
@@ -626,6 +642,10 @@ begin
 end;
 
 procedure GetRecordDefNames(akList: TStrings);
+begin
+end;
+
+procedure JumpTo(aeElement: IwbElement; unknown: boolean);
 begin
 end;
 
