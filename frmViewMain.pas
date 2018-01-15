@@ -5574,16 +5574,20 @@ begin
   try
     regexp.Subject := aScript;
     regexp.RegEx := '^\s*uses\s+(.+?);';
-    regexp.Options := [preCaseLess, preMultiLine];
-    if regexp.Match then begin
+    regexp.Options := [preCaseLess, preSingleLine, preMultiLine];
+    while regexp.MatchAgain do begin
+      i := regexp.MatchedOffset;
       s := regexp.MatchedText;
       s := StringReplace(s, 'system.', '', [rfReplaceAll, rfIgnoreCase]);
       s := StringReplace(s, 'vcl.',    '', [rfReplaceAll, rfIgnoreCase]);
       s := StringReplace(s, 'winapi.', '', [rfReplaceAll, rfIgnoreCase]);
       s := StringReplace(s, 'data.',   '', [rfReplaceAll, rfIgnoreCase]);
       s := StringReplace(s, 'web.',    '', [rfReplaceAll, rfIgnoreCase]);
-      if s <> regexp.MatchedText then
-        aScript := StringReplace(aScript, regexp.MatchedText, s, []);
+      if s <> regexp.MatchedText then begin
+        aScript := Copy(aScript, 1, i-1) + s + Copy(aScript, i + Length(regexp.MatchedText), Length(aScript));
+        regexp.Subject := aScript;
+      end;
+      regexp.Start := i + Length(s);
     end;
   finally
     regexp.Free;
@@ -14762,24 +14766,22 @@ end;
 procedure TfrmMain.JvInterpreterProgram1GetUnitSource(UnitName: string;
   var Source: string; var Done: Boolean);
 var
-  sl: TStringList;
   UnitFile: string;
 begin
   // return empty unit source code if the standard one is used
-  if SameText(UnitName, 'xEditAPI') or IsUnitCompiledIn(HInstance, UnitName) then begin
+  if SameText(UnitName, 'xEditAPI') or SameText(UnitName, 'UITypes') or IsUnitCompiledIn(HInstance, UnitName) then begin
     Source := 'unit ' + UnitName + '; end.';
     Done := True;
     Exit;
   end;
 
   UnitFile := wbScriptsPath + UnitName + '.pas';
-  sl := TStringList.Create;
-  try
-    sl.LoadFromFile(UnitFile);
-    Source := sl.Text;
+  with TStringList.Create do try
+    LoadFromFile(UnitFile);
+    Source := Text;
     Done := True;
   finally
-    sl.Free;
+    Free;
   end;
 end;
 
