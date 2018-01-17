@@ -2874,7 +2874,9 @@ begin
               if m4 <> '' then
                 wbProgressCallback(StatRec.Name + ' using 3D mesh in LOD4 ' + m4)
               else begin
-                PTree := LoadBillboard(Lst, StatRec);
+                PTree := Lst.TreeByFormID[StatRec.LoadOrderFormID];
+                if not Assigned(PTree) then
+                  PTree := LoadBillboard(Lst, StatRec);
                 if PTree^.Index <> -1 then begin
                   m4 := PTree^.Billboard;
                   wbProgressCallback(StatRec.Name + ' using 3D flat billboard in LOD4 ' + m4);
@@ -2890,6 +2892,8 @@ begin
                 wbProgressCallback(StatRec.Name + ' using 3D mesh in LOD8 ' + m8)
               else begin
                 PTree := Lst.TreeByFormID[StatRec.LoadOrderFormID];
+                if not Assigned(PTree) then
+                  PTree := LoadBillboard(Lst, StatRec);
                 if PTree^.Index <> -1 then begin
                   m8 := PTree^.Billboard;
                   wbProgressCallback(StatRec.Name + ' using 3D flat billboard in LOD8 ' + m8);
