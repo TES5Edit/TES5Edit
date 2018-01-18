@@ -2819,11 +2819,16 @@ begin
           XESPRef := REFRs[i].ElementByPath['XESP\Reference'];
           if Assigned(XESPRef) and not (wbGameMode in [gmFO3, gmFNV]) then
             Continue;
-          // The only exception is Fallout 3 (and TTW?) Megaton refs hardcoded to use separate 'apocalypse' LOD meshes when destroyed
+          // The only exception is Fallout 3 (and TTW) Megaton refs hardcoded to use separate 'apocalypse' LOD meshes when destroyed
           // enabled by MS11MegatonToggle [REFR:0006D4AE]
-          // We can generate LOD for them regardless of parent enabled state, the game won't use it after Megaton was destroyed
-          if Assigned(XESPRef) and (wbGameMode in [gmFO3, gmFNV]) and Supports(XESPRef.LinksTo, IwbMainRecord, XESPLink) and (XESPLink.EditorID <> 'MS11MegatonToggle') then
-            Continue;
+          if Assigned(XESPRef) and (wbGameMode in [gmFO3, gmFNV]) and Supports(XESPRef.LinksTo, IwbMainRecord, XESPLink) then begin
+            // skip ordinary enabled refs
+            if XESPLink.EditorID <> 'MS11MegatonToggle' then
+              Continue
+            // but if it is hardcoded engine toggle, then skip only if ref is opposite enabled
+            else if REFRs[i].ElementNativeValues['XESP\Flags'] and 1 = 1 then
+              Continue;
+          end;
         end;
 
         StatRec := StatRec.WinningOverride;
