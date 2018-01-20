@@ -211,18 +211,18 @@ object frmLODGen: TfrmLODGen
       Caption = 'x'
     end
     object Label10: TLabel
-      Left = 170
+      Left = 186
       Top = 160
-      Width = 6
+      Width = 10
       Height = 13
-      Caption = 'X'
+      Caption = 'W'
     end
     object Label11: TLabel
-      Left = 228
+      Left = 244
       Top = 160
       Width = 6
       Height = 13
-      Caption = 'Y'
+      Caption = 'S'
     end
     object Label12: TLabel
       Left = 40
@@ -251,6 +251,22 @@ object frmLODGen: TfrmLODGen
       Width = 113
       Height = 13
       Caption = 'Default Alpha threshold'
+    end
+    object lblLODX2: TLabel
+      Left = 304
+      Top = 160
+      Width = 6
+      Height = 13
+      Caption = 'E'
+      Visible = False
+    end
+    object lblLODY2: TLabel
+      Left = 363
+      Top = 160
+      Width = 7
+      Height = 13
+      Caption = 'N'
+      Visible = False
     end
     object cbBuildAtlas: TCheckBox
       Left = 16
@@ -336,7 +352,7 @@ object frmLODGen: TfrmLODGen
       TabOrder = 3
     end
     object cmbLODLevel: TComboBox
-      Left = 113
+      Left = 129
       Top = 156
       Width = 46
       Height = 21
@@ -349,7 +365,7 @@ object frmLODGen: TfrmLODGen
     object cbChunk: TCheckBox
       Left = 16
       Top = 160
-      Width = 91
+      Width = 107
       Height = 17
       Hint = 'Create LOD for specific chunk only'
       Caption = 'Specific chunk'
@@ -361,7 +377,7 @@ object frmLODGen: TfrmLODGen
       OnClick = cbChunkClick
     end
     object edLODX: TEdit
-      Left = 182
+      Left = 198
       Top = 156
       Width = 40
       Height = 21
@@ -371,7 +387,7 @@ object frmLODGen: TfrmLODGen
       TabOrder = 14
     end
     object edLODY: TEdit
-      Left = 240
+      Left = 256
       Top = 156
       Width = 40
       Height = 21
@@ -462,6 +478,28 @@ object frmLODGen: TfrmLODGen
       ParentShowHint = False
       ShowHint = True
       TabOrder = 8
+    end
+    object edLODX2: TEdit
+      Left = 316
+      Top = 156
+      Width = 40
+      Height = 21
+      Hint = 'Upper right cell X, calculated using selected dimension if empty'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 17
+      Visible = False
+    end
+    object edLODY2: TEdit
+      Left = 376
+      Top = 156
+      Width = 40
+      Height = 21
+      Hint = 'Upper right cell Y, calculated using selected dimension if empty'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 18
+      Visible = False
     end
   end
   object cmbTreesLODBrightness: TComboBox

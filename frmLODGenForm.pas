@@ -54,6 +54,10 @@ type
     cmbCompSpecular: TComboBox;
     Label15: TLabel;
     cbTrees3D: TCheckBox;
+    lblLODX2: TLabel;
+    edLODX2: TEdit;
+    lblLODY2: TLabel;
+    edLODY2: TEdit;
     procedure cbObjectsLODClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnSplitTreesLODClick(Sender: TObject);
@@ -93,13 +97,10 @@ end;
 
 procedure TfrmLODGen.cbBuildAtlasClick(Sender: TObject);
 begin
-  cmbAtlasWidth.Enabled := cbBuildAtlas.Checked;
-  cmbAtlasHeight.Enabled := cbBuildAtlas.Checked;
-  cmbAtlasTextureSize.Enabled := cbBuildAtlas.Checked;
-  cmbAtlasTextureUVRange.Enabled := cbBuildAtlas.Checked;
-  Label5.Enabled := cbBuildAtlas.Checked;
-  Label6.Enabled := cbBuildAtlas.Checked;
-  Label7.Enabled := cbBuildAtlas.Checked;
+  if not cbBuildAtlas.Checked and (wbGameMode in [gmFO3, gmFNV]) then begin
+    cbBuildAtlas.Checked := True;
+    ShowMessage('Fallout 3 and New Vegas LODs won''t work without combined atlas of LOD textures');
+  end;
 end;
 
 procedure TfrmLODGen.cbChunkClick(Sender: TObject);
@@ -107,8 +108,8 @@ begin
   cmbLODLevel.Enabled := cbChunk.Checked;
   edLODX.Enabled := cbChunk.Checked;
   edLODY.Enabled := cbChunk.Checked;
-  Label10.Enabled := cbChunk.Checked;
-  Label11.Enabled := cbChunk.Checked;
+  edLODX2.Enabled := cbChunk.Checked;
+  edLODY2.Enabled := cbChunk.Checked;
 end;
 
 procedure TfrmLODGen.cbObjectsLODClick(Sender: TObject);
@@ -116,12 +117,18 @@ begin
   gbObjectsOptions.Enabled := cbObjectsLOD.Checked;
   gbObjectsOptions.Visible := cbObjectsLOD.Checked;
   if wbGameMode in [gmFO3, gmFNV] then begin
-    gbObjectsOptions.Enabled := False;
-    gbObjectsOptions.Visible := False;
+    cmbAtlasTextureSize.Enabled := False;
+    cmbAtlasTextureUVRange.Enabled := False;
+    cbNoTangents.Enabled := False;
+    cbNoVertexColors.Enabled := False;
+    cmbDefaultAlphaThreshold.Enabled := False;
+    lblLODX2.Visible := True; edLODX2.Visible := True;
+    lblLODY2.Visible := True; edLODY2.Visible := True;
   end;
+  if not (wbGameMode in [gmFO4]) then
+    cmbCompSpecular.Enabled := False;
   cmbTreesLODBrightness.Enabled := cbTreesLOD.Checked;
   cbTrees3D.Enabled := (wbGameMode in [gmTES5, gmSSE]) and cbTreesLOD.Checked;
-  Label8.Enabled := cbTreesLOD.Checked;
 end;
 
 procedure TfrmLODGen.cmbCompDiffuseChange(Sender: TObject);

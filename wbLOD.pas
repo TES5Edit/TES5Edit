@@ -2503,7 +2503,7 @@ var
   RefCell, RefBlock, ChunkSW, ChunkNE: TwbGridCell;
   Scale, UVRange, LargeRefMinSize: Single;
   LOD4                : array of TwbLodTES5TreeBlock;
-  bChunk, bBuildAtlas, bTrees3D : Boolean;
+  bChunk, bArea, bBuildAtlas, bTrees3D : Boolean;
   Bytes               : TBytes;
 begin
   Master := aWorldspace.MasterOrSelf;
@@ -2767,25 +2767,28 @@ begin
     Lst := TwbLodTES5TreeList.Create(aWorldspace.EditorID);
 
     bChunk := Settings.ReadBool(Section, 'Chunk', False);
+    // chunk option will work as an area limiter if upper boundaries are set
+    // to build destroyed Megaton LOD area in FO3
+    bArea := (Settings.ReadString(Section, 'LODX2', '') <> '') and (Settings.ReadString(Section, 'LODY2', '') <> '');
     bBuildAtlas := Settings.ReadBool(Section, 'BuildAtlas', True);
 
     // calculate SW and NE corners for building specific chunk
     ChunkSW.x := Low(Integer);
     ChunkSW.y := Low(Integer);
-    if (wbGameMode in [ gmFO4 ]) then
-      ChunkSize  := 32
-    else
-      ChunkSize  := 16;
+    if (wbGameMode in [ gmFO4 ]) then ChunkSize := 32 else ChunkSize := 16;
+
     if bChunk then begin
-      if Settings.ReadString(Section, 'LODLevel', '') <> '' then
-        ChunkSize  := StrToInt(Settings.ReadString(Section, 'LODLevel', ''));
-      if Settings.ReadString(Section, 'LODX', IntToStr(Low(Integer))) <> '' then
-        ChunkSW.x := StrToInt(Settings.ReadString(Section, 'LODX', IntToStr(Low(Integer))));
-      if Settings.ReadString(Section, 'LODY', IntToStr(Low(Integer))) <> '' then
-        ChunkSW.y := StrToInt(Settings.ReadString(Section, 'LODY', IntToStr(Low(Integer))));
+      ChunkSize := StrToIntDef(Settings.ReadString(Section, 'LODLevel', ''), ChunkSize);
+      ChunkSW.x := StrToIntDef(Settings.ReadString(Section, 'LODX', IntToStr(Low(Integer))), Low(Integer));
+      ChunkSW.y := StrToIntDef(Settings.ReadString(Section, 'LODY', IntToStr(Low(Integer))), Low(Integer));
+      ChunkNE.x := ChunkSW.x + ChunkSize;
+      ChunkNE.y := ChunkSW.y + ChunkSize;
     end;
-    ChunkNE.x := ChunkSW.x + ChunkSize;
-    ChunkNE.y := ChunkSW.y + ChunkSize;
+    // if building in area, then read upper right cell
+    if bArea then begin
+      ChunkNE.x := StrToIntDef(Settings.ReadString(Section, 'LODX2', IntToStr(High(Integer))), High(Integer));
+      ChunkNE.y := StrToIntDef(Settings.ReadString(Section, 'LODY2', IntToStr(High(Integer))), High(Integer));
+    end;
 
     // gather large references if LOD level 4 is generated
     if (wbGameMode in [ gmSSE ]) then
@@ -2848,8 +2851,10 @@ begin
         if (RefBlock.x < Lodset.SWCell.x) or (RefBlock.y < Lodset.SWCell.y) then
           Continue;
 
-        // reference not in specific chunk - only skip references if no atlas needs to be build
-        if bChunk and not bBuildAtlas then begin
+        // reference not in specific chunk
+        // skip references only if no atlas needs to be build
+        // or skip if building in area only
+        if bArea or (bChunk and not bBuildAtlas) then begin
           if ChunkSW.x <> Low(Integer) then
             if (RefCell.x < ChunkSW.x) or (RefCell.x > ChunkNE.x) then
               Continue;
@@ -3193,7 +3198,7 @@ begin
           s := s + ' --dontGenerateVertexColors';
         if Settings.ReadBool(wbAppName + ' LOD Options', 'ObjectsNoTangents', False) then
           s := s + ' --dontGenerateTangents';
-        if Settings.ReadBool(Section, 'Chunk', False) then begin
+        if bChunk and not bArea then begin
           if Settings.ReadString(Section, 'LODLevel', '') <> '' then
             s := s + ' --lodLevel ' + Settings.ReadString(Section, 'LODLevel', '');
           if Settings.ReadString(Section, 'LODX', '') <> '' then
@@ -3630,7 +3635,7 @@ begin
 
       // adding Extra Options
       s := wbScriptsPath + wbLODExtraOptionsFileName(
-        ChangeFileExt(ExtractFileName(aWorldspace._File.FileName), ''),
+        ChangeFileExt(ExtractFileName(aWorldspace.MasterOrSelf._File.FileName), ''),
         aWorldspace.EditorID
       );
       if FileExists(s) then begin
@@ -3723,7 +3728,7 @@ begin
 
       s := wbScriptsPath + 'LODGen.txt';
       s := Format('"%s" "%s"', [wbScriptsPath + sLODGenName, s]);
-      if Settings.ReadBool(Section, 'Chunk', False) then begin
+      if bChunk then begin
         if Settings.ReadString(Section, 'LODLevel', '') <> '' then
           s := s + ' --lodLevel ' + Settings.ReadString(Section, 'LODLevel', '');
         if Settings.ReadString(Section, 'LODX', '') <> '' then
