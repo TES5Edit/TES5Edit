@@ -7224,8 +7224,6 @@ begin
       cmbCompDiffuseChange(nil);
       cmbCompNormal.ItemIndex := IndexOf(cmbCompNormal.Items, ImageFormatToStr(TImageFormat(Settings.ReadInteger(Section, 'AtlasNormalFormat', Integer(iDefaultAtlasNormalFormat)))));
       cmbCompSpecular.ItemIndex := IndexOf(cmbCompSpecular.Items, ImageFormatToStr(TImageFormat(Settings.ReadInteger(Section, 'AtlasSpecularFormat', Integer(iDefaultAtlasSpecularFormat)))));
-      if not (wbGameMode in [gmFO4]) then
-        cmbCompSpecular.Enabled := False;
       cmbDefaultAlphaThreshold.ItemIndex := IndexOf(cmbDefaultAlphaThreshold.Items, Settings.ReadString(Section, 'DefaultAlphaThreshold', IntToStr(iDefaultAlphaThreshold)));
       cbNoTangents.Checked := Settings.ReadBool(Section, 'ObjectsNoTangents', False);
       cbNoVertexColors.Checked := Settings.ReadBool(Section, 'ObjectsNoVertexColors', False);
@@ -7235,6 +7233,8 @@ begin
       cmbLODLevel.ItemIndex := IndexOf(cmbLODLevel.Items, Settings.ReadString(Section, 'LODLevel', ''));
       edLODX.Text := Settings.ReadString(Section, 'LODX', '');
       edLODY.Text := Settings.ReadString(Section, 'LODY', '');
+      edLODX2.Text := Settings.ReadString(Section, 'LODX2', '');
+      edLODY2.Text := Settings.ReadString(Section, 'LODY2', '');
       cbTreesLOD.Checked := Settings.ReadBool(Section, 'TreesLOD', True);
       cbTrees3D.Checked := Settings.ReadBool(Section, 'Trees3D', False {wbGameMode in [gmSSE]});
       cmbTreesLODBrightness.ItemIndex := IndexOf(cmbTreesLODBrightness.Items, Settings.ReadString(Section, 'TreesBrightness', '0'));
@@ -7274,13 +7274,13 @@ begin
       // Fallouts can have only a single atlas, so no options here
       if wbGameMode in [gmFO3, gmFNV] then begin
         Settings.WriteBool(Section, 'BuildAtlas', True);
-        // atlas size can be overridden by changing ini settings, for advanced users only
-        Settings.WriteString(Section, 'AtlasWidth', Settings.ReadString(Section, 'AtlasWidth', '4096'));
-        Settings.WriteString(Section, 'AtlasHeight', Settings.ReadString(Section, 'AtlasHeight', '4096'));
         Settings.WriteString(Section, 'AtlasTextureSize', '1024');
         Settings.WriteString(Section, 'AtlasTextureUVRange', '10000');
         Settings.WriteBool(Section, 'ObjectsNoTangents', False);
         Settings.WriteBool(Section, 'ObjectsNoVertexColors', True);
+        // area settings are for FO3/FNV only
+        Settings.WriteString(Section, 'LODX2', edLODX2.Text);
+        Settings.WriteString(Section, 'LODY2', edLODY2.Text);
       end;
       Settings.WriteBool(Section, 'TreesLOD', cbTreesLOD.Checked);
       Settings.WriteBool(Section, 'Trees3D', cbTreesLOD.Checked and cbTrees3D.Checked);
