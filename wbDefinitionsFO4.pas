@@ -7223,7 +7223,7 @@ begin
           wbInteger('Edge 1-2', itS16),
           wbInteger('Edge 2-0', itS16),
           wbFloat('Height'), // this and next if form ver > 57
-          wbInteger('Unknown', itU8, wbFlags([])), // flags
+          wbInteger('Unknown', itU8), // flags
           wbInteger('Unknown', itU32) // encoding or flags
         ])
       , -1),
@@ -10474,7 +10474,7 @@ begin
         wbStruct('Unknown', [
           wbFormID('Unknown'),
           wbInteger('Unknown', itU16),
-          wbInteger('Unused', itU16),
+          //wbInteger('Unused', itU16),
           wbUnknown
         ])
       ])
