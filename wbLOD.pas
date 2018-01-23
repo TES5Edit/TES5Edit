@@ -105,8 +105,8 @@ type
   end;
 
   TwbLodSettings = record
-    SWCell: TwbGridCell;
-    Stride, LODLevelMin, LODLevelMax: Integer;
+    SWCell, NECell: TwbGridCell;
+    Stride, LODLevelMin, LODLevelMax, ObjectLevel: Integer;
     procedure Init;
     function GetSize: Integer;
     function BlockForCell(Cell: TwbGridCell; LODLevel: Integer): TwbGridCell;
@@ -393,6 +393,9 @@ begin
     Stride := PInteger(@aData[8])^;
     SWCell.x := PSmallInt(@aData[12])^;
     SWCell.y := PSmallInt(@aData[14])^;
+    NECell.x := PSmallInt(@aData[16])^;
+    NECell.y := PSmallInt(@aData[18])^;
+    ObjectLevel := PInteger(@aData[20])^;
   end
   // Skyrim
   else begin
@@ -3040,6 +3043,10 @@ begin
           slExport.Add('TextureDiffuseHD=' + aWorldspace.WinningOverride.ElementEditValues['TNAM']);
           slExport.Add('TextureNormalHD=' + aWorldspace.WinningOverride.ElementEditValues['UNAM']);
         end;
+
+        // which LOD level to generate depending on dlodsettings
+        if (wbGameMode in [ gmFO3, gmFNV ]) and (LodSet.ObjectLevel = 8) then
+          slExport.Add('Level8=True');
 
         // list file that will be created by LODGen containing all textures that have UV inside UVRange, uses AtlasTolerance=
         //if (TexturesListFile <> '') then
