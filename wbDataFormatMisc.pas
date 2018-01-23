@@ -6,6 +6,16 @@ uses
   SysUtils, wbDataFormat;
 
 type
+  // LOD settings file *.lod for Skyrim, SSE and FO4
+  TwbLODSettingsTES5File = class(TdfStruct)
+    constructor Create; reintroduce; overload;
+  end;
+
+  // LOD settings file *.dlossettings for FO3 and FNV
+  TwbLODSettingsFO3File = class(TdfStruct)
+    constructor Create; reintroduce; overload;
+  end;
+
   // Tree LOD index file (*.LST in Skyrim, SSE, Fallout3 and New Vegas)
   TwbLODTreeLSTFile = class(TdfArray)
     constructor Create; reintroduce; overload;
@@ -26,6 +36,8 @@ type
 implementation
 
 var
+  dfLODSettingsTES5: TdfStructDef;
+  dfLODSettingsFO3: TdfStructDef;
   dfLODTreeLST: TdfArrayDef;
   dfLODTreeBTT: TdfArrayDef;
   dfFUZ: TdfStructDef;
@@ -37,6 +49,25 @@ procedure wbDefineMisc;
 begin
   if Assigned(dfLODTreeLst) then
     Exit;
+
+  dfLODSettingsTES5 := dfStruct('LOD', [
+    dfInteger('Min X', dtS16),
+    dfInteger('Min Y', dtS16),
+    dfInteger('Stride', dtU16),
+    dfInteger('Min Level', dtU16),
+    dfInteger('Max Level', dtU16)
+  ]);
+
+  dfLODSettingsFO3 := dfStruct('LOD', [
+    dfInteger('Min Terrain Level', dtU32),
+    dfInteger('Max Terrain Level', dtU32),
+    dfInteger('Unknown', dtU32),
+    dfInteger('Min X', dtS16),
+    dfInteger('Min Y', dtS16),
+    dfInteger('Max X', dtS16),
+    dfInteger('Max Y', dtS16),
+    dfInteger('Object Level', dtU32)
+  ]);
 
   dfLODTreeLST :=
     dfArray('Trees', dfStruct('Tree', [
@@ -81,6 +112,17 @@ begin
   ]);
 end;
 
+constructor TwbLODSettingsTES5File.Create;
+begin
+  wbDefineMisc;
+  inherited Create(dfLODSettingsTES5, nil);
+end;
+
+constructor TwbLODSettingsFO3File.Create;
+begin
+  wbDefineMisc;
+  inherited Create(dfLODSettingsFO3, nil);
+end;
 
 constructor TwbLODTreeLSTFile.Create;
 begin
@@ -120,6 +162,8 @@ initialization
 
 finalization
 
+  FreeAndNil(dfLODSettingsTES5);
+  FreeAndNil(dfLODSettingsFO3);
   FreeAndNil(dfLODTreeLST);
   FreeAndNil(dfLODTreeBTT);
   FreeAndNil(dfFUZ);
