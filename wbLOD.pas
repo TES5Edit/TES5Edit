@@ -3015,7 +3015,7 @@ begin
           if wbGameMode in [ gmTES5, gmSSE ] then
             AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds'
           else if wbGameMode in [gmFO3, gmFNV] then
-            AtlasName := wbOutputPath + 'textures\landscape\lod\' + aWorldspace.EditorID  + '\Blocks\' + aWorldspace.EditorID + 'ObjectsLOD.dds';
+            AtlasName := wbOutputPath + 'textures\landscape\lod\' + aWorldspace.EditorID  + '\Blocks\' + aWorldspace.EditorID + '.Buildings.dds';
           // atlas map name
           AtlasMapName := wbScriptsPath + 'LODGenAtlasMap.txt';
           // textures list file name
