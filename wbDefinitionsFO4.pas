@@ -11227,7 +11227,10 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(LCTN, 'Location', [
+  wbRecord(LCTN, 'Location',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00004000} 14, 'Partial Form'
+    ])), [
     wbEDID,
 
     wbArray(ACPR, 'Actor Cell Persistent Reference', wbStruct('', [
