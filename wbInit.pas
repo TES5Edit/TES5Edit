@@ -406,12 +406,9 @@ begin
     wbSettingsFileName := ChangeFileExt(wbPluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
 
   wbBackupPath := '';
-  if not (wbDontSave or wbFindCmdLineParam('B', wbBackupPath)) then begin
+  if not (wbDontSave or wbFindCmdLineParam('B', wbBackupPath)) then
     wbBackupPath := wbDataPath + wbAppName + 'Edit Backups\';
-    if not DirectoryExists(wbBackupPath) then
-      if not ForceDirectories(wbBackupPath) then
-        wbBackupPath := wbDataPath;
-  end;
+
   wbFindCmdLineParam('R', wbLogFile);
 end;
 
