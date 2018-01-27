@@ -963,38 +963,46 @@ begin
   if wbDontSave then
     Exit;
 
-  if Assigned(FilesToRename) then
-    for i := 0 to Pred(FilesToRename.Count) do begin
-      // create backup file
-      s := FilesToRename.Names[i];
-      f := wbDataPath + s;
-      OrgDate := FileAge(f);
-      t := wbBackupPath + ExtractFileName(s) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
-      if not wbDontBackup then begin
-        // backup original file
-        if not RenameFile(f, t) then begin
-          MessageBox(0, PChar('Could not rename "' + f + '" to "' + t + '".'), 'Error', 0);
-          Continue;
-        end;
-      end else
-        // remove original file
-        if not SysUtils.DeleteFile(f) then begin
-          MessageBox(0, PChar('Could not delete "' + f + '".'), 'Error', 0);
-          Continue;
-        end;
-      // rename temp save file to original
-      t := f;
-      s := FilesToRename.ValueFromIndex[i];
-      f := wbDataPath + s;
-      if not RenameFile(f, t) then
-        MessageBox(0, PChar('Could not rename "' + f + '" to "' + t + '".'), 'Error', 0)
-      else begin
-        // restore timestamp on a new file
-        e := ExtractFileExt(t);
-        if SameText(e, '.esp') or SameText(e, '.esm') or SameText(e, '.esl') or SameText(e, '.ghost') then
-          FileSetDate(t, OrgDate);
+  if not Assigned(FilesToRename) then
+    Exit;
+
+  if not wbDontBackup and not DirectoryExists(wbBackupPath) then
+    if not ForceDirectories(wbBackupPath) then
+      wbBackupPath := wbDataPath;
+
+  for i := 0 to Pred(FilesToRename.Count) do begin
+    // create backup file
+    s := FilesToRename.Names[i];
+    f := wbDataPath + s;
+    OrgDate := FileAge(f);
+    t := wbBackupPath + ExtractFileName(s) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+    if not wbDontBackup then begin
+      // backup original file
+      if not RenameFile(f, t) then begin
+        MessageBox(0, PChar('Could not rename "' + f + '" to "' + t + '".'), 'Error', 0);
+        Continue;
       end;
+    end else
+      // remove original file
+      if not SysUtils.DeleteFile(f) then begin
+        MessageBox(0, PChar('Could not delete "' + f + '".'), 'Error', 0);
+        Continue;
+      end;
+    // rename temp save file to original
+    t := f;
+    s := FilesToRename.ValueFromIndex[i];
+    f := wbDataPath + s;
+    if not RenameFile(f, t) then
+      MessageBox(0, PChar('Could not rename "' + f + '" to "' + t + '".'), 'Error', 0)
+    else
+    // restore timestamp on a new file for the games that use timestamps for load order
+    // all games for now for legacy reasons
+    {if wbGameMode in [gmTES4, gmFO3, gmFNV] then }begin
+      e := ExtractFileExt(t);
+      if SameText(e, '.esp') or SameText(e, '.esm') or SameText(e, '.esl') or SameText(e, '.ghost') then
+        FileSetDate(t, OrgDate);
     end;
+  end;
 end;
 
 procedure TfrmMain.acBackExecute(Sender: TObject);
