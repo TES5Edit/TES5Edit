@@ -310,6 +310,7 @@ type
     mniViewStickAuto: TMenuItem;
     mniViewStickSelected: TMenuItem;
     mniViewSetToDefault: TMenuItem;
+    mniRefByCompareSelected: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -522,6 +523,7 @@ type
     procedure mniViewStickAutoClick(Sender: TObject);
     procedure mniViewStickSelectedClick(Sender: TObject);
     procedure mniViewSetToDefaultClick(Sender: TObject);
+    procedure mniRefByCompareSelectedClick(Sender: TObject);
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -5864,6 +5866,20 @@ begin
     MainRecord.IsInitiallyDisabled := True;
 end;
 
+procedure TfrmMain.mniRefByCompareSelectedClick(Sender: TObject);
+var
+  MainRecords: TDynMainRecords;
+begin
+  MainRecords := GetRefBySelectionAsMainRecords;
+
+  if Length(MainRecords) < 2 then
+    Exit;
+
+  pgMain.ActivePage := tbsView;
+  Application.ProcessMessages;
+  SetActiveRecord(MainRecords);
+end;
+
 procedure TfrmMain.mniRefByCopyDisabledOverrideIntoClick(Sender: TObject);
 var
   Elements                    : TDynElements;
@@ -10520,6 +10536,7 @@ var
   AnyNotVWD : Boolean;
   i         : Integer;
   Rec       : IwbMainRecord;
+  sig       : TwbSignature;
 begin
   Selected := GetRefBySelectionAsMainRecords;
 
@@ -10546,6 +10563,21 @@ begin
 
   if Length(Selected) < 1 then
     Exit;
+
+  mniRefByCompareSelected.Visible := False;
+
+  if Length(Selected) > 1 then begin
+    mniRefByCompareSelected.Visible := True;
+    sig := Selected[Low(Selected)].Signature;
+    for i := Succ(Low(Selected)) to High(Selected) do begin
+      Rec := Selected[i];
+      if sig <> Rec.Signature then begin
+        mniRefByCompareSelected.Visible := False;
+        Break;
+      end else
+        sig := Rec.Signature;
+    end;
+  end;
 
   AnyVWD    := False;
   AnyNotVWD := False;
