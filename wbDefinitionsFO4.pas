@@ -7193,7 +7193,24 @@ begin
         ]),
         wbFormIDCk('Parent Cell', [CELL])
       ]),
-      wbByteArray('Vertices and Triangles')
+      wbArray('Vertices', wbByteArray('Vertex', 12), -1),
+      wbArray('Triangles', wbByteArray('Triangle', 21), -1),
+      wbArray('Edge Links',
+        wbStruct('Edge Link', [
+          wbInteger('Unknown', itU32),
+          wbFormIDCk('Mesh', [NAVM]),
+          wbInteger('Triangle', itS16),
+          wbInteger('Unknown', itU8)
+        ])
+      , -1),
+      wbArray('Door Triangles',
+        wbStruct('Door Triangle', [
+          wbInteger('Triangle before door', itU16),
+          wbInteger('DTUnknown', itU32),
+          wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
+        ])
+      , -1),
+      wbUnknown
     ])
   else
     wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
