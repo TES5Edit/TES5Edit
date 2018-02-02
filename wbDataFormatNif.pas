@@ -1187,7 +1187,7 @@ begin
   inherited Create(wbNiObjectDef('NIF'), nil);
   FInternalUpdates := True;
   FStopAtIndex := -1;
-  FOptions := [nfoCollapseLinkArrays, nfoRemoveUnusedStrings];
+  FOptions := [nfoRemoveUnusedStrings];
 end;
 
 function TwbNifFile.DataSize: Integer;
@@ -6132,7 +6132,7 @@ end;
 procedure wbDefineNiMultiTargetTransformController;
 begin
   wbNiObject(wbNifBlock('NiMultiTargetTransformController', [
-    dfArray('Extra Targets', wbNiPtr('Extra Targets', 'NiAVObject'), -2, '', [DF_OnBeforeSave, @RemoveNoneLinks])
+    dfArray('Extra Targets', wbNiPtr('Extra Targets', 'NiAVObject'), -2)
   ]), 'NiInterpController', False);
 end;
 
