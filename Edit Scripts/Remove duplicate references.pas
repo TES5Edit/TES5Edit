@@ -2,10 +2,10 @@
   Remove duplicate reference records that have the same scale, position and rotation.
   
   When bDetectByModel = False, base record will be used for detection, in case when duplicated references
-    put the same record in the same spot.
+    place the same record in the same spot.
   
   When bDetectByModel = True, base record model file name will be used, in case when duplicated references
-    put different records in the same spot, however the put model is the same.
+    place different records in the same spot, however the placed model is the same.
   
   When bDetectSpecial = True, both duplicate refs will be checked for having additional data like enabled parents,
     linked refs, door teleport, attached scripts, etc. The record with less significance (without such data)
@@ -16,6 +16,7 @@ unit RemoveDuplicateReferences;
 const
   bDetectByModel = False;
   bDetectSpecial = True;
+  bRemove = True; // False to not perform any deletions, report only
 
 var
   slRefs: TStringList;
@@ -119,16 +120,24 @@ begin
       AddMessage('One of the dups is special:');
       AddMessage(#9'Removing: ' + Name(dup));
       AddMessage(#9'Remaining: ' + Name(e));
-      RemoveNode(dup);
+      if bRemove then RemoveNode(dup);
       slRefs.Objects[i] := e; // replace deleted dup with ourselves
     end
     
     // dup is special, current record is not - delete the current record
-    else begin
+    else if specialdup then begin
       AddMessage('One of the dups is special:');
       AddMessage(#9'Removing: ' + Name(e));
       AddMessage(#9'Remaining: ' + Name(dup));
-      RemoveNode(e);
+      if bRemove then RemoveNode(e);
+    end
+    
+    // both are not special
+    else begin
+      AddMessage('Found duplicates:');
+      AddMessage(#9'Removing: ' + Name(e));
+      AddMessage(#9'Remaining: ' + Name(dup));
+      if bRemove then RemoveNode(e);
     end;
   end
   
@@ -137,7 +146,7 @@ begin
     AddMessage('Found duplicates:');
     AddMessage(#9'Removing: ' + Name(e));
     AddMessage(#9'Remaining: ' + Name(dup));
-    RemoveNode(e);
+    if bRemove then RemoveNode(e);
   end;
   
   AddMessage('');
