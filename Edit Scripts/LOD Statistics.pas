@@ -11,7 +11,7 @@
   LOD0 Total Tris - total number of triangles in LOD Level 0
   ... repeats for other LOD Levels
 
-  Supported games: Skyrim, SSE, Fallout4 (partially, no SCOL info)
+  Supported games: Fallout 3, Fallout New Vegas, Skyrim, SSE, Fallout4 (partially, no SCOL info)
 }
 
 unit LODStatistics;
@@ -20,6 +20,18 @@ var
   slLOD: TStringList;
 
 
+// getting _lod.nif file for a record
+function FalloutLODMesh(rec: IInterface): string;
+begin
+  Result := GetElementEditValues(rec, 'Model\MODL');
+  Result := Copy(Result, 1, Length(Result) - 4) + '_lod.nif';
+  if Result <> '' then begin
+    Result := wbNormalizeResourceName(Result, resMesh);
+    if not ResourceExists(Result) then Result := '';
+  end;
+end;
+
+// getting a total number of triangles in a nif mesh
 function NifTrisCount(aMesh: string): Integer;
 var
   nif: TwbNifFile;
@@ -48,12 +60,17 @@ end;
   
 function Initialize: integer;
 begin
+  if wbGameMode = gmTES4 then begin
+    AddMessage('Oblivion is not supported.');
+    Result := 1;
+    Exit;
+  end;
   slLOD := TStringList.Create;
 end;
 
 function Process(e: IInterface): integer;
 var
-  stat: IInterface;
+  base: IInterface;
   idx: Integer;
 begin
   if Signature(e) <> 'REFR' then
@@ -62,19 +79,29 @@ begin
   //if not GetIsVisibleWhenDistant(e) then
   //  Exit;
 
-  stat := WinningOverride(BaseRecord(e));
-  
-  if Signature(stat) <> 'STAT' then
-    Exit;
+  base := WinningOverride(BaseRecord(e));
+  idx := slLOD.IndexOfObject(base);
 
-  if not ElementExists(stat, 'MNAM') then
-    Exit;
+  // check that the base record have LOD if not checked yet
+  if idx = -1 then begin
+    
+    if wbGameMode >= gmTES5 then begin
+      if Signature(base) <> 'STAT' then
+        Exit;
+      if not ElementExists(base, 'MNAM') then
+        Exit;
+    end
+    else begin
+      if Pos(Signature(base), 'STAT SCOL ACTI') = 0 then
+        Exit;
+      if FalloutLODMesh(base) = '' then
+        Exit;
+    end
+    
+    slLOD.AddObject('1', base);
   
-  idx := slLOD.IndexOfObject(stat);
-  if idx <> -1 then
+  end else
     slLOD[idx] := Format('%.4d', [StrToInt(slLOD[idx]) + 1])
-  else
-    slLOD.AddObject('1', stat);
 end;
 
 function Finalize: integer;
@@ -90,11 +117,18 @@ begin
     totalfaces := 0;
     s := Name(stat) + #9 + IntToStr(cnt) + #9 + '{TOTALFACES}';
     for j := 0 to 3 do begin
-      mesh := GetElementEditValues(stat, 'MNAM\[' + IntToStr(j) + ']\Mesh');
+      if wbGameMode >= gmTES5 then
+        mesh := GetElementEditValues(stat, 'MNAM\[' + IntToStr(j) + ']\Mesh')
+      else if j = 0 then
+        mesh := FalloutLODMesh(stat)
+      else
+        mesh := '';
+      
       if mesh = '' then begin
         s := s + #9#9#9;
         Continue;
       end;
+      
       mesh := wbNormalizeResourceName(mesh, resMesh);
       faces := NifTrisCount(mesh);
       totalfaces := totalfaces + faces * cnt;
