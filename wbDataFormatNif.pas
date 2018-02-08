@@ -1113,8 +1113,8 @@ begin
   if Length(triangles) = 0 then
     Exit;
 
-  CalculateTangentsBitangents(verts, norms, texco, triangles, tan, bin);
-  //CalculateTangentsBitangents2(verts, norms, texco, triangles, tan, bin);
+  //CalculateTangentsBitangents(verts, norms, texco, triangles, tan, bin); // nifskope
+  CalculateTangentsBitangents2(verts, norms, texco, triangles, tan, bin); // nifskope + unity
 
   if Length(tan) = 0 then
     Exit;
@@ -2704,7 +2704,7 @@ begin
     wbLimitedHingeDescriptor('Limited Hinge', [DF_OnGetEnabled, @wbMalleableDescriptor_EnType2]),
     wbPrismaticDescriptor('Prismatic', [DF_OnGetEnabled, @wbMalleableDescriptor_EnType6]),
     wbRagdollDescriptor('Ragdoll', [DF_OnGetEnabled, @wbMalleableDescriptor_EnType7]),
-    wbStiffSpringDescriptor('StiffSpring', [DF_OnGetEnabled, @wbMalleableDescriptor_EnType8]),
+    wbStiffSpringDescriptor('Stiff Spring', [DF_OnGetEnabled, @wbMalleableDescriptor_EnType8]),
     dfFloat('Tau', [DF_OnGetEnabled, @EnBefore20005]),
     dfFloat('Damping', [DF_OnGetEnabled, @EnBefore20005]),
     dfFloat('Strength', [DF_OnGetEnabled, @EnSince20207])
@@ -2730,7 +2730,7 @@ begin
     wbLimitedHingeDescriptor('Limited Hinge', [DF_OnGetEnabled, @wbConstraintData_EnType2]),
     wbPrismaticDescriptor('Prismatic', [DF_OnGetEnabled, @wbConstraintData_EnType6]),
     wbRagdollDescriptor('Ragdoll', [DF_OnGetEnabled, @wbConstraintData_EnType7]),
-    wbStiffSpringDescriptor('StiffSpring', [DF_OnGetEnabled, @wbConstraintData_EnType8]),
+    wbStiffSpringDescriptor('Stiff Spring', [DF_OnGetEnabled, @wbConstraintData_EnType8]),
     wbMalleableDescriptor('Ragdoll', [DF_OnGetEnabled, @wbConstraintData_EnType13])
   ], aEvents);
 end;
@@ -2753,7 +2753,7 @@ begin
 end;
 
 function NiHeader_EnBefore10012(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\..\Version'] <= v10012; end;
-function NiHeader_EnExportInfo3(const e: TdfElement): Boolean; begin Result := (e.NativeValues['..\Version'] = v20207) and (e.NativeValues['..\User Version 2'] = 130); end;
+function NiHeader_EnMaxFilepath(const e: TdfElement): Boolean; begin Result := (e.NativeValues['..\Version'] = v20207) and (e.NativeValues['..\User Version 2'] = 130); end;
 function NiHeader_EnSince20207(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Version'] >= v20207; end;
 function NiHeader_EnSince20103(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Version'] >= v20103; end;
 procedure NiHeader_GetTextVersion(const e: TdfElement; var aText: string); begin aText := wbIntToNifVersion(e.NativeValue); end;
@@ -2807,14 +2807,16 @@ begin
     ], 'ENDIAN_LITTLE', [DF_OnGetEnabled, @NiHeader_EnSince20004]),
     dfInteger('User Version', dtU32, '12', [DF_OnGetEnabled, @NiHeader_EnSince10010]),
     dfInteger('Num Blocks', dtU32),
+    // BSStreamHeader
     dfInteger('User Version 2', dtU32, '83', [DF_OnGetEnabled, @NiHeader_EnUserVersion2]),
     dfStruct('Export Info', [
       dfInteger('Unknown Int', dtU32, '3', [DF_OnGetEnabled, @NiHeader_EnBefore10012]),
-      wbShortString('Creator'),
-      wbShortString('Export Info 1'),
-      wbShortString('Export Info 2')
+      wbShortString('Author'),
+      wbShortString('Process Script'),
+      wbShortString('Export Script')
     ], [DF_OnGetEnabled, @NiHeader_EnSince10010]),
-    wbShortString('Export Info 3', [DF_OnGetEnabled, @NiHeader_EnExportInfo3]),
+    wbShortString('Max Filepath', [DF_OnGetEnabled, @NiHeader_EnMaxFilepath]),
+    // BSStreamHeader
     dfArray('Block Types', wbSizedString('Type'), -2, '', [DF_OnGetEnabled, @NiHeader_EnSince10010]),
     dfArray(
       'Block Type Index',
@@ -2829,7 +2831,7 @@ begin
     dfInteger('Num Strings', dtU32, [DF_OnGetEnabled, @NiHeader_EnSince20103]),
     dfInteger('Max String Length', dtU32, [DF_OnGetEnabled, @NiHeader_EnSince20103]),
     dfArray('Strings', wbSizedString('String'), 0, 'Num Strings', [DF_OnGetEnabled, @NiHeader_EnSince20103]),
-    dfInteger('Unknown Int 2', dtU32, [DF_OnGetEnabled, @NiHeader_EnSince10010])
+    dfInteger('Num Groups', dtU32, [DF_OnGetEnabled, @NiHeader_EnSince10010])
   ], [DF_OnAfterLoad, @NiHeader_AfterLoad]));
 
   { NiFooter }
@@ -4191,7 +4193,7 @@ function NiGeometry_EnBSNoParticles(const e: TdfElement): Boolean; begin with ni
 function NiGeometry_EnHasShader(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v10010) and (Version <= v20103); end;
 function NiGeometry_EnShaderName(const e: TdfElement): Boolean; begin Result := NiGeometry_EnHasShader(e) and (e.NativeValues['..\Has Shader'] <> 0); end;
 function NiGeometry_EnMaterialData(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v10010) and ( (UserVersion2 < 100) or ( (UserVersion2 >= 100) and not wbIsNiObject(e, 'NiParticleSystem') ) ); end;
-function NiGeometry_EnDirtyFlag(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and ( (UserVersion2 < 100) or ( (UserVersion2 >= 100) and not wbIsNiObject(e, 'NiParticleSystem') ) ); end;
+function NiGeometry_EnMaterialUpdateFlag(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and ( (UserVersion2 < 100) or ( (UserVersion2 >= 100) and not wbIsNiObject(e, 'NiParticleSystem') ) ); end;
 function NiGeometry_EnBSProperties(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20207) and (UserVersion = 12); end;
 
 procedure wbDefineNiGeometry;
@@ -4206,13 +4208,13 @@ begin
     dfStruct('Material Data', [
       wbBool('Has Shader', [DF_OnGetEnabled, @NiGeometry_EnHasShader]),
       wbSizedString('Shader Name', [DF_OnGetEnabled, @NiGeometry_EnShaderName]),
-      dfInteger('Unknown Integer', dtS32, [DF_OnGetEnabled, @NiGeometry_EnShaderName]),
+      dfInteger('Shader Extra Data', dtS32, [DF_OnGetEnabled, @NiGeometry_EnShaderName]),
       dfInteger('Num Materials', dtU32, [DF_OnGetEnabled, @EnSince20207]),
       dfArray('Material Name', wbString('Material Name'), 0, 'Num Materials', [DF_OnGetEnabled, @EnSince20207]),
       dfArray('Material Extra Data', dfInteger('Material Extra Data', dtS32, '-1'), 0, 'Num Materials', [DF_OnGetEnabled, @EnSince20207]),
-      dfInteger('Active Material', dtS32, '-1', [DF_OnGetEnabled, @EnSince20207])
+      dfInteger('Active Material', dtS32, '-1', [DF_OnGetEnabled, @EnSince20207]),
+      wbBool('Material Needs Update', [DF_OnGetEnabled, @NiGeometry_EnMaterialUpdateFlag])
     ], [DF_OnGetEnabled, @NiGeometry_EnMaterialData]),
-    wbBool('Dirty Flag', [DF_OnGetEnabled, @NiGeometry_EnDirtyFlag]),
     // Bethesda
     wbNiRef('Shader Property', 'BSShaderProperty', [DF_OnGetEnabled, @NiGeometry_EnBSProperties]),
     wbNiRef('Alpha Property', 'NiAlphaProperty', [DF_OnGetEnabled, @NiGeometry_EnBSProperties])
@@ -4259,7 +4261,7 @@ end;
 procedure wbDefineNiGeometryData;
 begin
   wbNiObject(wbNifBlock('NiGeometryData', [
-    dfInteger('Unknown Int', dtS32, [DF_OnGetEnabled, @EnSince10200]),
+    dfInteger('Group ID', dtS32, [DF_OnGetEnabled, @EnSince10200]),
     dfInteger('Num Vertices', dtU16, [DF_OnGetEnabled, @NiGeometryData_EnNumVertices]),
     dfInteger('BS Max Vertices', dtU16, [DF_OnGetEnabled, @NiGeometryData_EnBSMaxVertices]),
     dfInteger('Keep Flags', dtU8, [DF_OnGetEnabled, @EnSince10100]),
@@ -4415,9 +4417,9 @@ end;
 procedure wbDefineBSLODTriShape;
 begin
   wbNiObject(wbNifBlock('BSLODTriShape', [
-    dfInteger('LOD 0 Size', dtU32),
-    dfInteger('LOD 1 Size', dtU32),
-    dfInteger('LOD 2 Size', dtU32)
+    dfInteger('LOD0 Size', dtU32),
+    dfInteger('LOD1 Size', dtU32),
+    dfInteger('LOD2 Size', dtU32)
   ]), 'NiTriBasedGeom', False);
 end;
 
@@ -5154,7 +5156,7 @@ end;
 
 //===========================================================================
 { bhkMoppBvTreeShape }
-function bhkMoppBvTreeShape_EnBuildType(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 >34; end;
+function bhkMoppBvTreeShape_EnBuildType(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 > 34; end;
 
 procedure bhkMoppBvTreeShape_GetSizeMOPP(const e: TdfElement; var aCount: Integer);
 begin
@@ -5336,7 +5338,7 @@ begin
     dfFloat('Restitution', '0.8'),
     dfFloat('Friction', '0.3'),
     dfFloat('Radius', '1.0'),
-    wbHavokMaterial('Material', '7', []),
+    wbHavokMaterial('Material', '', []),
     dfArray('Constraint Data', wbConstraintData('Constraint Data', []), -4)
   ]), 'NiObject', False);
 end;
@@ -5677,7 +5679,7 @@ end;
 procedure wbDefineNiBoolInterpolator;
 begin
   wbNiObject(wbNifBlock('NiBoolInterpolator', [
-    wbBool('Pose Value', '2', []),
+    wbBool('Value', '2', []),
     wbNiRef('Data', 'NiBoolData')
   ]), 'NiKeyBasedInterpolator', False);
 end;
@@ -5806,7 +5808,7 @@ procedure wbDefineNiBSplinePoint3Interpolator;
 begin
   wbNiObject(wbNifBlock('NiBSplinePoint3Interpolator', [
     wbVector3('Value'),
-    dfInteger('Handle', dtU32)
+    dfInteger('Handle', dtU32, '65535')
   ]), 'NiBSplineInterpolator', True);
 end;
 
@@ -5815,8 +5817,8 @@ end;
 procedure wbDefineNiBSplineCompPoint3Interpolator;
 begin
   wbNiObject(wbNifBlock('NiBSplineCompPoint3Interpolator', [
-    dfFloat('Position Offset'),
-    dfFloat('Position Half Range')
+    dfFloat('Position Offset', 'Min'),
+    dfFloat('Position Half Range', 'Min')
   ]), 'NiBSplinePoint3Interpolator', False);
 end;
 
@@ -5826,9 +5828,9 @@ procedure wbDefineNiBSplineTransformInterpolator;
 begin
   wbNiObject(wbNifBlock('NiBSplineTransformInterpolator', [
     wbNiQuatTransform('Transform'),
-    dfInteger('Translation Handle', dtU32),
-    dfInteger('Rotation Handle', dtU32),
-    dfInteger('Scale Handle', dtU32)
+    dfInteger('Translation Handle', dtU32, '65535'),
+    dfInteger('Rotation Handle', dtU32, '65535'),
+    dfInteger('Scale Handle', dtU32, '65535')
   ]), 'NiBSplineInterpolator', False);
 end;
 
@@ -5892,7 +5894,16 @@ procedure wbDefineNiTimeController;
 begin
   wbNiObject(wbNifBlock('NiTimeController', [
     wbNiRef('Next Controller', 'NiTimeController'),
-    dfInteger('Flags', dtU16),
+    dfFlags('Flags', dtU16, [
+      0, 'Anim Bit',
+      1, 'Cycle Bit1',
+      2, 'Cycle Bit2',
+      3, 'Active',
+      4, 'Play Backwards',
+      5, 'Is manager controlled',
+      6, 'Compute scaled time',
+      7, 'Force update'
+    ]),
     dfFloat('Frequency', '1.0'),
     dfFloat('Phase'),
     dfFloat('Start Time', 'Min'),
@@ -7035,7 +7046,7 @@ begin
     wbString('Name'),
     dfInteger('Order', dtU32),
     wbNiPtr('Target', 'NiParticleSystem'),
-    wbBool('Active')
+    wbBool('Active', '1', [])
   ]), 'NiObject', True);
 end;
 

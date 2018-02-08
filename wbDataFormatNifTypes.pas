@@ -681,17 +681,17 @@ end;
 function wbhkMatrix3(const aName: string; const aEvents: array of const): TdfDef; overload;
 begin
   Result := dfStruct(aName, [
-    dfFloat('m11'),
+    dfFloat('m11', '1.0'),
     dfFloat('m12'),
     dfFloat('m13'),
     dfFloat('Unused m14'),
     dfFloat('m21'),
-    dfFloat('m22'),
+    dfFloat('m22', '1.0'),
     dfFloat('m23'),
     dfFloat('Unused m24'),
     dfFloat('m31'),
     dfFloat('m32'),
-    dfFloat('m33'),
+    dfFloat('m33', '1.0'),
     dfFloat('Unused m34')
   ], aEvents);
 end;
@@ -1047,7 +1047,7 @@ begin
     4, 'Face Tint',
     5, 'Skin Tint',
     6, 'Hair Tint',
-    7, 'Parallax Occ Material',
+    7, 'Parallax Occ',
     8, 'Multitexture Landscape',
     9, 'LOD Landscape',
     10, 'Snow',
@@ -1057,9 +1057,10 @@ begin
     14, 'Sparkle Snow',
     15, 'LOD Objects HD',
     16, 'Eye Envmap',
-    17, 'Unknown 17',
-    18, 'WorldMap4',
-    19, 'World LOD Multitexture'
+    17, 'Cloud',
+    18, 'LOD Landscape Noise',
+    19, 'Multitexture Landscape LOD Blend',
+    20, 'FO4 Dismemberment'
   ], aDefaultValue, aEvents);
 end;
 
@@ -1190,7 +1191,7 @@ begin
     4, 'GLOW_MAP',
     5, 'BUMP_MAP',
     6, 'NORMAL_MAP',
-    7, 'UNKNOWN2_MAP',
+    7, 'PARALLAX_MAP',
     8, 'DECAL_0_MAP',
     9, 'DECAL_1_MAP',
     10, 'DECAL_2_MAP',
@@ -2019,14 +2020,14 @@ end;
 
 function wbPathFlags(const aName, aDefaultValue: string; const aEvents: array of const): TdfDef;
 begin
-  Result := dfEnum(aName, dtU16, [
-    $01, 'NIPI_CVDataNeedsUpdate',
-    $02, 'NIPI_CurveTypeOpen',
-    $04, 'NIPI_AllowFlip',
-    $08, 'NIPI_Bank',
-    $10, 'NIPI_ConstantVelocity',
-    $20, 'NIPI_Follow',
-    $40, 'NIPI_Flip'
+  Result := dfFlags(aName, dtU16, [
+    0, 'NIPI_CVDataNeedsUpdate',
+    1, 'NIPI_CurveTypeOpen',
+    2, 'NIPI_AllowFlip',
+    3, 'NIPI_Bank',
+    4, 'NIPI_ConstantVelocity',
+    5, 'NIPI_Follow',
+    6, 'NIPI_Flip'
   ], aDefaultValue, aEvents);
 end;
 
@@ -2249,7 +2250,7 @@ begin
     10, 'VF_SKINNED',
     11, 'VF_LANDDATA',
     12, 'VF_EYEDATA',
-    13, 'VF_Unknown_13',
+    13, 'VF_INSTANCE',
     14, 'VF_FULLPREC',
     15, 'VF_Unknown_15'
   ], aDefaultValue, aEvents);

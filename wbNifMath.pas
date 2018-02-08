@@ -15,6 +15,7 @@ type
     class operator Add(const A, B: TVector2): TVector2; inline;
     class operator Subtract(const A, B: TVector2): TVector2; inline;
     class operator Multiply(const A, B: TVector2): TVector2; inline;
+    procedure ValidateNan;
     case Integer of
       0: (v: array [0..1] of Extended);
       1: (x, y: Extended)
@@ -31,7 +32,9 @@ type
     class operator Divide(const A: TVector3; const B: Extended): TVector3; inline;
     function IsZero: Boolean;
     function Length: Extended;
-    procedure Normalize;
+    procedure Normalize; overload;
+    procedure Normalize(aLength: Extended); overload;
+    procedure ValidateNan;
     case Integer of
       0: (v: array [0..2] of Extended);
       1: (x, y, z: Extended)
@@ -116,6 +119,12 @@ begin
   Result.Y := A.Y * B.Y;
 end;
 
+procedure TVector2.ValidateNan;
+begin
+  if Math.IsNan(x) then x := 0;
+  if Math.IsNan(y) then y := 0;
+end;
+
 class operator TVector3.Multiply(const A: TVector3; const B: Extended): TVector3;
 begin
   Result.X := A.X * B;
@@ -180,6 +189,21 @@ begin
   end;
 end;
 
+procedure TVector3.Normalize(aLength: Extended);
+begin
+  if aLength > 0.0 then begin
+    x := x / aLength;
+    y := y / aLength;
+    z := z / aLength;
+  end;
+end;
+
+procedure TVector3.ValidateNan;
+begin
+  if Math.IsNan(x) then x := 0;
+  if Math.IsNan(y) then y := 0;
+  if Math.IsNan(z) then z := 0;
+end;
 
 procedure Normalize(var x, y, z: Extended);
 var
@@ -519,6 +543,74 @@ begin
     norms[i].Normalize;
 end;
 
+procedure OrthogonalizeTangent(var tangent, binormal, normal: TVector3);
+const
+  kNormalizeEpsilon = 1e-6;
+  xAxis: TVector3 = (x: 1; y: 0; z: 0);
+  yAxis: TVector3 = (x: 0; y: 1; z: 0);
+  zAxis: TVector3 = (x: 0; y: 0; z: 1);
+var
+  NdotT, NdotB, TdotB, magT, magB, dpXN, dpYN, dpZN: Extended;
+  newTangent, newBinormal, axis1, axis2: TVector3;
+begin
+	// Try Gram-Schmidt orthonormalize.
+  // This might fail in degenerate cases which we all handle seperately.
+
+  NdotT := Vector3Dot(normal, tangent);
+  newTangent.x := tangent.x - NdotT * normal.x;
+  newTangent.y := tangent.y - NdotT * normal.y;
+  newTangent.z := tangent.z - NdotT * normal.z;
+
+  magT := newTangent.Length;
+  newTangent.Normalize(magT);
+
+  NdotB := Vector3Dot(normal, binormal);
+  TdotB := Vector3Dot(newTangent, binormal) * magT;
+
+  newBinormal.x := binormal.x - NdotB * normal.x - TdotB * newTangent.x;
+  newBinormal.y := binormal.y - NdotB * normal.y - TdotB * newTangent.y;
+  newBinormal.z := binormal.z - NdotB * normal.z - TdotB * newTangent.z;
+
+  magB := newBinormal.Length;
+  newBinormal.Normalize(magB);
+
+  if (magT <= kNormalizeEpsilon) or (magB <= kNormalizeEpsilon) then begin
+    // Create tangent basis from scratch
+
+    dpXN := Vector3Dot(xAxis, normal);
+    if dpXN < 0 then dpXN := -dpXN;
+		dpYN := Vector3Dot(yAxis, normal);
+    if dpYN < 0 then dpYN := -dpYN;
+    dpZN := Vector3Dot(zAxis, normal);
+    if dpZN < 0 then dpZN := -dpZN;
+
+    if (dpXN <= dpYN) and (dpXN <= dpZN) then begin
+			axis1 := xAxis;
+			if dpYN <= dpZN then axis2 := yAxis else axis2 := zAxis;
+    end
+		else if (dpYN <= dpXN) and (dpYN <= dpZN) then begin
+      axis1 := yAxis;
+			if dpXN <= dpZN then axis2 := xAxis else axis2 := zAxis;
+		end
+		else begin
+      axis1 := zAxis;
+			if dpXN <= dpYN then axis2 := xAxis else axis2 := yAxis;
+    end;
+
+    newTangent := axis1 - normal * Vector3Dot(normal, axis1);
+    tangent := newTangent;
+    tangent.Normalize;
+    newBinormal := axis2 - normal * Vector3Dot(normal, axis2) - tangent * Vector3Dot(newTangent, axis2);
+    binormal := newBinormal;
+    binormal.Normalize;
+  end
+  else begin
+    tangent := newTangent;
+    binormal := newBinormal;
+  end;
+end;
+
+// NifSkope version
 procedure CalculateTangentsBitangents(
   const verts, norms: TVector3Array;
   const texco: TVector2Array;
@@ -533,7 +625,7 @@ var
   v2v1, v3v1: TVector3;
   w2w1, w3w1: TVector2;
   sdir, tdir: TVector3;
-  r: Extended;
+  r, d, areaMult: Extended;
 begin
   SetLength(tan, Length(verts));
   SetLength(bin, Length(verts));
@@ -546,9 +638,9 @@ begin
     v1 := @verts[i1];
     v2 := @verts[i2];
     v3 := @verts[i3];
-    w1 := @texco[i1];
-    w2 := @texco[i2];
-    w3 := @texco[i3];
+    w1 := @texco[i1]; w1.ValidateNan;
+    w2 := @texco[i2]; w2.ValidateNan;
+    w3 := @texco[i3]; w3.ValidateNan;
 
 		v2v1 := v2^ - v1^;
 		v3v1 := v3^ - v1^;
@@ -557,8 +649,7 @@ begin
 		w3w1 := w3^ - w1^;
 
     r := w2w1.v[0] * w3w1.v[1] - w3w1.v[0] * w2w1.v[1];
-
-    if r >= 0 then r := r + 1 else r := r - 1;
+    if r >= 0 then r := 1 else r := -1;
 
     sdir.v[0] := ( w3w1.v[1] * v2v1.v[0] - w2w1.v[1] * v3v1.v[0] ) * r;
 		sdir.v[1] := ( w3w1.v[1] * v2v1.v[1] - w2w1.v[1] * v3v1.v[1] ) * r;
@@ -598,10 +689,12 @@ begin
 			b.Normalize;
     end;
   end;
+
 end;
 
-
-// Unity version https://gist.github.com/aras-p/2843984
+// NifSkopes' equation + Unity's weightings by area/angle and orthonormalization
+// Weighting: http://www.bytehazard.com/articles/vertnorm.html
+// Unity code: https://gist.github.com/aras-p/2843984
 procedure CalculateTangentsBitangents2(
   const verts, norms: TVector3Array;
   const texco: TVector2Array;
@@ -613,12 +706,13 @@ const
 var
   tri: PTriangle;
   triVertex: array [0..2] of PVector3;
+  v1, v2, v3, n, t, b: PVector3;
   w1, w2, w3: PVector2;
-  p, q, edge1, edge2, tangent, binormal: TVector3;
-  s, t: TVector2;
-  d, r, areamult, angle, w: Extended;
+  v2v1, v3v1: TVector3;
+  w2w1, w3w1: TVector2;
+  tangent, binormal, edge1, edge2: TVector3;
+  r, areamult, angle, w: Extended;
   i, v: integer;
-  n, tn, bn: PVector3;
 begin
   SetLength(tan, Length(verts));
   SetLength(bin, Length(verts));
@@ -628,33 +722,31 @@ begin
     triVertex[0] := @verts[tri[0]];
     triVertex[1] := @verts[tri[1]];
     triVertex[2] := @verts[tri[2]];
-    w1 := @texco[tri[0]];
-    w2 := @texco[tri[1]];
-    w3 := @texco[tri[2]];
+    w1 := @texco[tri[0]]; w1.ValidateNan;
+    w2 := @texco[tri[1]]; w2.ValidateNan;
+    w3 := @texco[tri[2]]; w3.ValidateNan;
 
-    p := triVertex[1]^ - triVertex[0]^;
-    q := triVertex[2]^ - triVertex[0]^;
-    s.x := w2.x - w1.x; s.y := w3.y - w1.y;
-    t.x := w2.x - w1.x; t.y := w3.y - w1.y;
+		v2v1 := triVertex[1]^ - triVertex[0]^;
+		v3v1 := triVertex[2]^ - triVertex[0]^;
 
-    d := s.v[0]*t.v[1] - s.v[1]*t.v[0];
-    areaMult := Abs(d);
+		w2w1 := w2^ - w1^;
+		w3w1 := w3^ - w1^;
 
-    FillChar(tangent, SizeOf(tangent), 0);
-    FillChar(binormal, SizeOf(binormal), 0);
+    r := w2w1.v[0] * w3w1.v[1] - w3w1.v[0] * w2w1.v[1];
+
+    if r < 0 then areaMult := -r
+      else areaMult := r;
 
     if areaMult >= 1e-8 then begin
-      r := 1.0 / d;
-      s.v[0] := s.v[0] * r; s.v[1] := s.v[1] * r;
-      t.v[0] := t.v[0] * r; t.v[1] := t.v[1] * r;
+      r := 1.0 / r;
 
-      tangent.x := t.v[1] * p.v[0] - t.v[0] * q.v[0];
-      tangent.y := t.v[1] * p.v[1] - t.v[0] * q.v[1];
-      tangent.z := t.v[1] * p.v[2] - t.v[0] * q.v[2];
+      tangent.v[0] := ( w2w1.v[0] * v3v1.v[0] - w3w1.v[0] * v2v1.v[0] ) * r;
+      tangent.v[1] := ( w2w1.v[0] * v3v1.v[1] - w3w1.v[0] * v2v1.v[1] ) * r;
+      tangent.v[2] := ( w2w1.v[0] * v3v1.v[2] - w3w1.v[0] * v2v1.v[2] ) * r;
 
-      binormal.x := s.v[0] * q.v[0] - s.v[1] * p.v[0];
-      binormal.y := s.v[0] * q.v[1] - s.v[1] * p.v[1];
-      binormal.z := s.v[0] * q.v[2] - s.v[1] * p.v[2];
+      binormal.v[0] := ( w3w1.v[1] * v2v1.v[0] - w2w1.v[1] * v3v1.v[0] ) * r;
+      binormal.v[1] := ( w3w1.v[1] * v2v1.v[1] - w2w1.v[1] * v3v1.v[1] ) * r;
+      binormal.v[2] := ( w3w1.v[1] * v2v1.v[2] - w2w1.v[1] * v3v1.v[2] ) * r;
 
       // weight by area
       tangent.Normalize;
@@ -662,6 +754,10 @@ begin
 
       binormal.Normalize;
       binormal := binormal * areaMult;
+    end
+    else begin
+      FillChar(tangent, SizeOf(tangent), 0);
+      FillChar(binormal, SizeOf(binormal), 0);
     end;
 
     for v := 0 to 2 do begin
@@ -685,33 +781,111 @@ begin
 		  tan[tri[v]].y := tan[tri[v]].y + w * tangent.y;
 		  tan[tri[v]].z := tan[tri[v]].z + w * tangent.z;
 
-		  bin[tri[v]].x := bin[tri[v]].x + w * tangent.x;
-		  bin[tri[v]].y := bin[tri[v]].y + w * tangent.y;
-		  bin[tri[v]].z := bin[tri[v]].z + w * tangent.z;
+		  bin[tri[v]].x := bin[tri[v]].x + w * binormal.x;
+		  bin[tri[v]].y := bin[tri[v]].y + w * binormal.y;
+		  bin[tri[v]].z := bin[tri[v]].z + w * binormal.z;
     end;
   end;
 
-  for i := Low(verts) to High(verts) do begin
-    n := @norms[i];
-    tn := @tan[i];
-    bn := @bin[i];
-
-    if tn.IsZero or bn.IsZero then begin
-      tn.v[0] := n.v[1]; tn.v[1] := n.v[2]; tn.v[2] := n.v[0];
-      bn^ := Vector3Cross( n^, tn^ );
-    end
-    else begin
-			tn.Normalize;
-			tn^ := ( tn^ - n^ * Vector3Dot( n^, tn^ ) );
-			tn.Normalize;
-
-			bn.Normalize;
-			bn^ := ( bn^ - n^ * Vector3Dot( n^, bn^ ) );
-			bn^ := ( bn^ - tn^ * Vector3Dot( tn^, bn^ ) );
-			bn.Normalize;
-    end;
-  end;
+  for i := Low(verts) to High(verts) do
+    OrthogonalizeTangent(tan[i], bin[i], norms[i]);
 end;
 
+// Unity version https://gist.github.com/aras-p/2843984
+{
+procedure CalculateTangentsBitangents3(
+  const verts, norms: TVector3Array;
+  const texco: TVector2Array;
+  const triangles: TTriangleArray;
+  var tan, bin: TVector3Array
+);
+const
+  kNextIndex: array [0..2, 0..1] of integer = ( (2,1), (0,2), (1,0) );
+var
+  tri: PTriangle;
+  triVertex: array [0..2] of PVector3;
+  w1, w2, w3: PVector2;
+  p, q, edge1, edge2, tangent, binormal: TVector3;
+  sdir, tdir: TVector2;
+  d, r, areamult, angle, w: Extended;
+  i, v: integer;
+  n, t, b: PVector3;
+begin
+  SetLength(tan, Length(verts));
+  SetLength(bin, Length(verts));
+
+  for i := Low(triangles) to High(triangles) do begin
+    tri := @triangles[i];
+    triVertex[0] := @verts[tri[0]];
+    triVertex[1] := @verts[tri[1]];
+    triVertex[2] := @verts[tri[2]];
+    w1 := @texco[tri[0]]; w1.ValidateNan;
+    w2 := @texco[tri[1]]; w2.ValidateNan;
+    w3 := @texco[tri[2]]; w3.ValidateNan;
+
+    p := triVertex[1]^ - triVertex[0]^;
+    q := triVertex[2]^ - triVertex[0]^;
+    sdir.x := w2.x - w1.x; sdir.y := w3.x - w1.x;
+    tdir.x := w2.y - w1.y; tdir.y := w3.y - w1.y;
+
+    d := sdir.x * tdir.y - sdir.y * tdir.x;
+    if d < 0 then areaMult := -d
+      else areaMult := d;
+
+    if areaMult >= 1e-8 then begin
+      r := 1.0 / d;
+
+      tangent.x := (tdir.v[1] * p.v[0] - tdir.v[0] * q.v[0]) * r;
+      tangent.y := (tdir.v[1] * p.v[1] - tdir.v[0] * q.v[1]) * r;
+      tangent.z := (tdir.v[1] * p.v[2] - tdir.v[0] * q.v[2]) * r;
+
+      binormal.x := (sdir.v[0] * q.v[0] - sdir.v[1] * p.v[0]) * r;
+      binormal.y := (sdir.v[0] * q.v[1] - sdir.v[1] * p.v[1]) * r;
+      binormal.z := (sdir.v[0] * q.v[2] - sdir.v[1] * p.v[2]) * r;
+
+      // weight by area
+      tangent.Normalize;
+      tangent := tangent * areaMult;
+
+      binormal.Normalize;
+      binormal := binormal * areaMult;
+    end
+    else begin
+      FillChar(tangent, SizeOf(tangent), 0);
+      FillChar(binormal, SizeOf(binormal), 0);
+    end;
+
+    for v := 0 to 2 do begin
+      edge1.x := triVertex[ kNextIndex[v][0] ].x - triVertex[v].x;
+      edge1.y := triVertex[ kNextIndex[v][0] ].y - triVertex[v].y;
+      edge1.z := triVertex[ kNextIndex[v][0] ].z - triVertex[v].z;
+
+      edge2.x := triVertex[ kNextIndex[v][1] ].x - triVertex[v].x;
+      edge2.y := triVertex[ kNextIndex[v][1] ].y - triVertex[v].y;
+      edge2.z := triVertex[ kNextIndex[v][1] ].z - triVertex[v].z;
+
+      // weight by angle
+      edge1.Normalize;
+      edge2.Normalize;
+      angle := edge1.x * edge2.x + edge1.y * edge2.y + edge1.z * edge2.z;
+      if angle < -1.0 then angle := -1.0
+        else if angle > 1.0 then angle := 1.0;
+      w := ArcCos(angle);
+
+		  tan[tri[v]].x := tan[tri[v]].x + w * tangent.x;
+		  tan[tri[v]].y := tan[tri[v]].y + w * tangent.y;
+		  tan[tri[v]].z := tan[tri[v]].z + w * tangent.z;
+
+		  bin[tri[v]].x := bin[tri[v]].x + w * binormal.x;
+		  bin[tri[v]].y := bin[tri[v]].y + w * binormal.y;
+		  bin[tri[v]].z := bin[tri[v]].z + w * binormal.z;
+    end;
+  end;
+
+  for i := Low(verts) to High(verts) do
+    OrthogonalizeTangent(tan[i], bin[i], norms[i]);
+
+end;
+}
 
 end.
