@@ -371,6 +371,8 @@ object frmMain: TfrmMain
           Margins.Top = 0
           Margins.Right = 0
           Align = alClient
+          HideSelection = False
+          PopupMenu = pmuMessages
           ScrollBars = ssBoth
           TabOrder = 0
           WordWrap = False
@@ -2004,5 +2006,25 @@ object frmMain: TfrmMain
     OnTimer = tmrGeneratorTimer
     Left = 56
     Top = 448
+  end
+  object pmuMessages: TPopupMenu
+    Left = 760
+    Top = 272
+    object mniMessagesClear: TMenuItem
+      Caption = 'Clear'
+      OnClick = mniMessagesClearClick
+    end
+    object mniMessagesSaveSelected: TMenuItem
+      Caption = 'Save selected text'
+      OnClick = mniMessagesSaveSelectedClick
+    end
+    object N21: TMenuItem
+      Caption = '-'
+    end
+    object mniMessagesAutoscroll: TMenuItem
+      AutoCheck = True
+      Caption = 'Autoscroll to the last message'
+      Checked = True
+    end
   end
 end
