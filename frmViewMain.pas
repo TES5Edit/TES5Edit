@@ -3026,38 +3026,44 @@ begin
     end;
 end;
 
+function GetFileModSortKey(const aFileName: string): Cardinal;
+const
+  DateOmitYears = 60;
+  DatePrecision = 100000;
+var
+  F: TSearchRec;
+begin
+  // Try to fit a meaningful modified date of a file into 32 bits integer value
+  // For relative load order sorting only
+  // Oblivion GOG version has dates from 1969 year and FileAge() doesn't support them
+  if FindFirst(aFileName, faAnyFile, F) = 0 then begin
+    Result := Round((F.TimeStamp - 364 * DateOmitYears) * DatePrecision);
+    FindClose(F);
+  end else
+    Result := 0;
+end;
+
 function PluginListCompare(List: TStringList; Index1, Index2: Integer): Integer;
 var
-  IsESM1                      : Boolean;
-  IsESM2                      : Boolean;
-  FileAge1                    : Integer;
-  FileAge2                    : Integer;
-  FileDateTime1               : TDateTime;
-  FileDateTime2               : TDateTime;
+  IsESM1   : Boolean;
+  IsESM2   : Boolean;
+  FileSK1  : Integer;
+  FileSK2  : Integer;
 begin
   IsESM1 := IsFileESM(List[Index1]);
   IsESM2 := IsFileESM(List[Index2]);
 
   if IsESM1 = IsESM2 then begin
 
-    FileAge1 := Integer(List.Objects[Index1]);
-    FileAge2 := Integer(List.Objects[Index2]);
+    FileSK1 := Cardinal(List.Objects[Index1]);
+    FileSK2 := Cardinal(List.Objects[Index2]);
 
-    if FileAge1 < FileAge2 then
+    if FileSK1 < FileSK2 then
       Result := -1
-    else if FileAge1 > FileAge2 then
+    else if FileSK1 > FileSK2 then
       Result := 1
-    else begin
-      if not SameText(List[Index1], List[Index1]) and FileAge(List[Index1], FileDateTime1) and FileAge(List[Index2], FileDateTime2) then begin
-        if FileDateTime1 < FileDateTime2 then
-          Result := -1
-        else if FileDateTime1 > FileDateTime2 then
-          Result := 1
-        else
-          Result := 0;
-      end else
-        Result := 0;
-    end;
+    else
+      Result := 0;
 
   end else if IsESM1 then
     Result := -1
@@ -3274,7 +3280,7 @@ procedure TfrmMain.DoInit;
               DeleteFile(wbDataPath + F.Name)
             else
             if (FindMatchText(sl, F.Name) < 0) and (FindMatchText(slDLC, F.Name) < 0) then
-              slNew.AddObject(F.Name, TObject(FileAge(wbDataPath + F.Name)));
+              slNew.AddObject(F.Name, TObject(GetFileModSortKey(wbDataPath + F.Name)));
           end;
         until FindNext(F) <> 0;
         slNew.CustomSort(PluginListCompare);
