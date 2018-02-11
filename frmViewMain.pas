@@ -311,6 +311,11 @@ type
     mniViewStickSelected: TMenuItem;
     mniViewSetToDefault: TMenuItem;
     mniRefByCompareSelected: TMenuItem;
+    pmuMessages: TPopupMenu;
+    mniMessagesAutoscroll: TMenuItem;
+    mniMessagesClear: TMenuItem;
+    N21: TMenuItem;
+    mniMessagesSaveSelected: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -524,6 +529,8 @@ type
     procedure mniViewStickSelectedClick(Sender: TObject);
     procedure mniViewSetToDefaultClick(Sender: TObject);
     procedure mniRefByCompareSelectedClick(Sender: TObject);
+    procedure mniMessagesClearClick(Sender: TObject);
+    procedure mniMessagesSaveSelectedClick(Sender: TObject);
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -748,6 +755,7 @@ type
     destructor Destroy; override;
 
     procedure AddMessage(const s: string);
+    procedure ScrollToTheLastMessage;
     procedure AddFile(const aFile: IwbFile);
     procedure AddFileInternal(const aFile: IwbFile);
 
@@ -1102,14 +1110,21 @@ begin
   aFile._AddRef;
 end;
 
+procedure TfrmMain.ScrollToTheLastMessage;
+begin
+  if mniMessagesAutoscroll.Checked then begin
+    mmoMessages.CaretPos := Point(0, mmoMessages.Lines.Count - 1);
+    mmoMessages.SelLength := 1;
+    mmoMessages.SelLength := 0;
+  end;
+end;
+
 procedure TfrmMain.AddMessage(const s: string);
 begin
   mmoMessages.Lines.Add(s);
   stbMain.Panels[0].Text := s;
 
-  mmoMessages.CaretPos := Point(0, mmoMessages.Lines.Count - 1);
-  mmoMessages.SelLength := 1;
-  mmoMessages.SelLength := 0;
+  ScrollToTheLastMessage;
 
   if pgMain.ActivePage <> tbsMessages then
     tbsMessages.Highlighted := True;
@@ -6016,6 +6031,39 @@ begin
   edFormIDSearch.Text := s;
   Key := VK_RETURN;
   edFormIDSearchKeyDown(edFormIDSearch, Key, []);
+end;
+
+procedure TfrmMain.mniMessagesClearClick(Sender: TObject);
+begin
+  mmoMessages.Clear;
+end;
+
+procedure TfrmMain.mniMessagesSaveSelectedClick(Sender: TObject);
+var
+  s: string;
+begin
+  s := Trim(mmoMessages.SelText);
+  if s = '' then
+    Exit;
+
+  with TStringList.Create do try
+    Text := s;
+    with TSaveDialog.Create(nil) do try
+      Title := 'Save selected text';
+      Filter := 'Text files (*.txt)|*.txt';
+      InitialDir := wbProgramPath;
+      if Execute then begin
+        s := FileName;
+        if ExtractFileExt(s) = '' then
+          s := s + '.txt';
+        SaveToFile(FileName);
+      end;
+    finally
+      Free;
+    end;
+  finally
+    Free;
+  end;
 end;
 
 procedure TfrmMain.mniModGroupsClick(Sender: TObject);
@@ -11748,9 +11796,7 @@ end;
 
 procedure TfrmMain.tbsMessagesShow(Sender: TObject);
 begin
-  mmoMessages.CaretPos := Point(0, mmoMessages.Lines.Count - 1);
-  mmoMessages.SelLength := 1;
-  mmoMessages.SelLength := 0;
+  ScrollToTheLastMessage;
   tbsMessages.Highlighted := False;
 end;
 
@@ -12152,9 +12198,7 @@ begin
   if Assigned(NewMessages) and (NewMessages.Count > 0) then begin
     mmoMessages.Lines.AddStrings(NewMessages);
     NewMessages.Clear;
-    mmoMessages.CaretPos := Point(0, mmoMessages.Lines.Count - 1);
-    mmoMessages.SelLength := 1;
-    mmoMessages.SelLength := 0;
+    ScrollToTheLastMessage;
     stbMain.Panels[0].Text := mmoMessages.Lines[Pred(mmoMessages.Lines.Count)];
     if pgMain.ActivePage <> tbsMessages then
       tbsMessages.Highlighted := True;
