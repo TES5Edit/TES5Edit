@@ -674,6 +674,13 @@ begin
 end;
 
 
+{ TwbDDSFile }
+
+procedure TwbDDSFile_Create(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(TwbDDSFile.Create);
+end;
+
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 begin
@@ -903,6 +910,10 @@ begin
     { TwbFUZFile }
     AddClass(sDFUnitName, TwbFUZFile, 'TwbFUZFile');
     AddGet(TwbFUZFile, 'Create', TwbFUZFile_Create, 0, [varEmpty], varEmpty);
+
+    { TwbDDSFile }
+    AddClass(sDFUnitName, TwbDDSFile, 'TwbDDSFile');
+    AddGet(TwbDDSFile, 'Create', TwbDDSFile_Create, 0, [varEmpty], varEmpty);
 
   end;
 end;

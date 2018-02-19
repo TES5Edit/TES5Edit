@@ -831,17 +831,17 @@ begin
                           or DDSCAPS2_CUBEMAP;
     hdr.Desc.PixelFormat.Size := SizeOf(hdr.Desc.PixelFormat);
     case TDXGIFormat(brFileRec.DXGIFormat) of
-      DXGI_FORMAT_BC1_UNORM: begin
+      DXGI_FORMAT_BC1_UNORM, DXGI_FORMAT_BC1_UNORM_SRGB: begin
         hdr.Desc.PixelFormat.Flags := DDPF_FOURCC;
         hdr.Desc.PixelFormat.FourCC := FOURCC_DXT1;
         hdr.Desc.PitchOrLinearSize := brFileRec.Width * brFileRec.Height div 4;
       end;
-      DXGI_FORMAT_BC2_UNORM: begin
+      DXGI_FORMAT_BC2_UNORM, DXGI_FORMAT_BC2_UNORM_SRGB: begin
         hdr.Desc.PixelFormat.Flags := DDPF_FOURCC;
         hdr.Desc.PixelFormat.FourCC := FOURCC_DXT3;
         hdr.Desc.PitchOrLinearSize := brFileRec.Width * brFileRec.Height;
       end;
-      DXGI_FORMAT_BC3_UNORM: begin
+      DXGI_FORMAT_BC3_UNORM, DXGI_FORMAT_BC3_UNORM_SRGB: begin
         hdr.Desc.PixelFormat.Flags := DDPF_FOURCC;
         hdr.Desc.PixelFormat.FourCC := FOURCC_DXT5;
         hdr.Desc.PitchOrLinearSize := brFileRec.Width * brFileRec.Height;
@@ -851,12 +851,12 @@ begin
         hdr.Desc.PixelFormat.FourCC := FOURCC_ATI2;
         hdr.Desc.PitchOrLinearSize := brFileRec.Width * brFileRec.Height;
       end;
-      DXGI_FORMAT_BC7_UNORM: begin
+      DXGI_FORMAT_BC7_UNORM, DXGI_FORMAT_BC7_UNORM_SRGB: begin
         hdr.Desc.PixelFormat.Flags := DDPF_FOURCC;
         hdr.Desc.PixelFormat.FourCC := FOURCC_BC7;
         hdr.Desc.PitchOrLinearSize := brFileRec.Width * brFileRec.Height;
       end;
-      DXGI_FORMAT_B8G8R8A8_UNORM: begin
+      DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM_SRGB: begin
         hdr.Desc.PixelFormat.Flags := DDPF_RGB;
         hdr.Desc.PixelFormat.BitCount := 32;
         hdr.Desc.PixelFormat.RedMask   := $00FF0000;
