@@ -7305,6 +7305,7 @@ begin
       {0x00000200}  9, 'Starts Dead',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
+      {0x00002000} 13, 'Starts Unconscious',
       {0x02000000} 25, 'No AI Acquire',
       {0x20000000} 29, 'Don''t Havok Settle'
     ], True, True)), [
