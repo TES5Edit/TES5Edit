@@ -318,7 +318,7 @@ begin
 
       if not OpenKeyReadOnly(sBethRegKey + wbGameName2 + '\') then
         if not OpenKeyReadOnly(sBethRegKey64 + wbGameName2 + '\') then begin
-          s := 'Fatal: Could not open registry key: ' + sBethRegKey + wbGameName + '\';
+          s := 'Fatal: Could not open registry key: ' + sBethRegKey + wbGameName2 + '\';
 //          if wbGameMode = gmTES5 then // All game exists on steam now
             ShowMessage(s+#13+#10+'This can happen after Steam updates, run game''s launcher to restore registry settings');
           wbDontSave := True;
@@ -857,8 +857,9 @@ begin
 
   wbShouldLoadMOHookFile := wbFindCmdLineParam('moprofile', wbMOProfile);
 
-  if (wbToolMode = tmEdit) and not wbIsAssociatedWithExtension('.' + wbAppName + 'pas') then try
-    wbAssociateWithExtension('.' + wbAppName + 'pas', wbAppName + 'Script', wbAppName + wbToolName + ' script');
+  try
+    if (wbToolMode = tmEdit) and not wbIsAssociatedWithExtension('.' + wbAppName + 'pas') then
+      wbAssociateWithExtension('.' + wbAppName + 'pas', wbAppName + 'Script', wbAppName + wbToolName + ' script');
   except end;
 
 end;
