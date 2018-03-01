@@ -2,7 +2,16 @@
   Assets manager.
 
   Allows to check existence of used assets including textures, materials, etc. in meshes,
-  and copy assets used by a plugin to separate folder or create list files of different format.
+  and copy assets used by a plugin to separate folder or create a list of files in different formats
+  including the CK assets list used for packaging using CK.
+  
+  Please keep in mind that the script checks only explicitly used assets defined in records.
+  Implicitly used assets are not processed and you need to handle them yourself, for example:
+    - voice files
+    - facegen files
+    - worldspace LOD files
+    - animations *.kf and behaviours *.hkx
+    - race models
 }
 unit AssetsManager;
 
@@ -1138,8 +1147,31 @@ begin
     else if (sig = 'RGDL') then
       ProcessAsset(ElementByPath(e, 'ANAM'))
 
-    else if (sig = 'SOUN') then
-      ProcessAsset(ElementByPath(e, 'FNAM'))
+    else if (sig = 'SOUN') then begin
+      el := ElementBySignature(e, 'FNAM');
+      s := GetEditValue(el);
+      // single sound file
+      if ExtractFileName(s) <> '' then
+        ProcessAsset(el)
+      // folder with sounds
+      else if s <> '' then begin
+        s := wbNormalizeResourceName(s, resSound);
+        sl := TStringList.Create; sl.Sorted := True; sl.Duplicates := dupIgnore;
+        ResourceList('', sl, s);
+        // remove files from subdirectories
+        for i := Pred(sl.Count) downto 0 do
+          if ExtractFilePath(sl[i]) <> s then
+            sl.Delete(i);
+        // report missing files in folder when checking for missing assets
+        if sl.Count = 0 then begin
+          if optMode = wmCheck then
+            ProcessAssetEx(el, s, 'Folder is empty for ' + Name(e), atSound);
+        end else
+          for i := 0 to Pred(sl.Count) do
+            ProcessAssetEx(el, sl[i], '', atSound);
+        sl.Free;
+      end;
+    end
 
     // Statics LOD
     // we don't know if a mesh must have lod or not since it is not referenced directly from record, so skip it in "check missing" mode
