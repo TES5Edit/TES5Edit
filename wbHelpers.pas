@@ -35,7 +35,7 @@ uses
 
 Const
   CRCSeed = $ffffffff;
-{$IFDEF WIN64}
+//{$IFDEF WIN64}
   CRC32tab : Array[0..255] of DWord = (
       $00000000, $77073096, $ee0e612c, $990951ba, $076dc419, $706af48f,
       $e963a535, $9e6495a3, $0edb8832, $79dcb8a4, $e0d5e91e, $97d2d988,
@@ -80,7 +80,7 @@ Const
       $bdbdf21c, $cabac28a, $53b39330, $24b4a3a6, $bad03605, $cdd70693,
       $54de5729, $23d967bf, $b3667a2e, $c4614ab8, $5d681b02, $2a6f2b94,
       $b40bbe37, $c30c8ea1, $5a05df1b, $2d02ef8d  );
-{$ENDIF}
+//{$ENDIF}
 
 function wbDistance(const a, b: TwbVector): Single; overload
 function wbDistance(const a, b: IwbMainRecord): Single; overload;
@@ -103,6 +103,7 @@ function wbDDSDataToBitmap(aData: TBytes; Bitmap: TBitmap): Boolean;
 function wbDDSStreamToBitmap(aStream: TStream; Bitmap: TBitmap): Boolean;
 function wbCRC32Data(aData: TBytes): Cardinal;
 function wbCRC32File(aFileName: string): Cardinal;
+function bscrc32(const aText: string): Cardinal; // hashing func used in Fallout 4
 function wbDecodeCRCList(const aList: string): TDynCardinalArray;
 function wbSHA1Data(aData: TBytes): string;
 function wbSHA1File(aFileName: string): string;
@@ -778,6 +779,16 @@ begin
     Result[0] := $FFFFFFFF;
   end;
 end;
+
+function bscrc32(const aText: string): Cardinal;
+var
+  i: Integer;
+begin
+  Result := 0;
+  for i := 1 to Length(aText) do
+    Result := (Result shr 8) xor CRC32tab[(Result xor Byte(AnsiChar(aText[i]))) and $FF];
+end;
+
 
 function CryptAcquireContext(var phProv: DWORD;
   pszContainer, pszProvider: LPCSTR; dwProvType, dwFlags: DWORD): BOOL;

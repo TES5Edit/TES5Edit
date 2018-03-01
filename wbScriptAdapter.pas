@@ -1494,7 +1494,13 @@ end;
 
 procedure IwbContainerHandler_ResourceList(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  wbContainerHandler.ContainerResourceList(Args.Values[0], TStrings(V2O(Args.Values[1])));
+  case Args.Count of
+    0, 1: JvInterpreterError(ieNotEnoughParams, -1);
+    2: wbContainerHandler.ContainerResourceList(Args.Values[0], TStrings(V2O(Args.Values[1])));
+    3: wbContainerHandler.ContainerResourceList(Args.Values[0], TStrings(V2O(Args.Values[1])), string(Args.Values[2]));
+    else
+     JvInterpreterError(ieTooManyParams, -1);
+  end;
 end;
 
 procedure IwbContainerHandler_ResourceExists(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1629,6 +1635,11 @@ end;
 procedure Misc_wbCRC32File(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := wbCRC32File(string(Args.Values[0]));
+end;
+
+procedure Misc_bscrc32(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := bscrc32(string(Args.Values[0]));
 end;
 
 procedure Misc_wbSHA1Data(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1990,7 +2001,7 @@ begin
     AddFunction(cUnit, 'ResourceContainerList', IwbContainerHandler_ResourceContainerList, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ResourceExists', IwbContainerHandler_ResourceExists, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ResourceCount', IwbContainerHandler_ResourceCount, 2, [varEmpty, varEmpty], varEmpty);
-    AddFunction(cUnit, 'ResourceList', IwbContainerHandler_ResourceList, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'ResourceList', IwbContainerHandler_ResourceList, -1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ResourceOpenData', IwbContainerHandler_ResourceOpenData, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'ResourceCopy', IwbContainerHandler_ResourceCopy, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
 
@@ -2020,6 +2031,7 @@ begin
     AddFunction(cUnit, 'wbCRC32Data', Misc_wbCRC32Data, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbCRC32Resource', Misc_wbCRC32Resource, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbCRC32File', Misc_wbCRC32File, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'bscrc32', Misc_bscrc32, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbSHA1Data', Misc_wbSHA1Data, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbSHA1File', Misc_wbSHA1File, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbMD5Data', Misc_wbMD5Data, 1, [varEmpty], varEmpty);

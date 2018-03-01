@@ -322,9 +322,10 @@ var
   i: Integer;
 begin
   for i := Low(chContainers) to High(chContainers) do
-    if SameText(chContainers[i].Name, aContainerName) then begin
+    if (aContainerName = '') or SameText(chContainers[i].Name, aContainerName) then begin
       chContainers[i].ResourceList(aList, aFolder);
-      Break;
+      if aContainerName <> '' then
+        Break;
     end;
 end;
 
