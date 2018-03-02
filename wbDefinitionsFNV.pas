@@ -573,6 +573,7 @@ var
   wbPKDTSpecificFlagsUnused : Boolean;
   wbEDID: IwbSubRecordDef;
   wbEDIDReq: IwbSubRecordDef;
+  wbEDIDReqKC: IwbSubRecordDef;
   wbBMDT: IwbSubRecordDef;
   wbYNAM: IwbSubRecordDef;
   wbZNAM: IwbSubRecordDef;
@@ -611,6 +612,7 @@ var
   wbMODD: IwbSubRecordDef;
   wbMOSD: IwbSubRecordDef;
   wbMODL: IwbSubRecordStructDef;
+  wbMODT: IwbSubRecordDef;
   wbMODS: IwbSubRecordDef;
   wbMO2S: IwbSubRecordDef;
   wbMO3S: IwbSubRecordDef;
@@ -1548,6 +1550,8 @@ begin
       Result := Result + Strings[i] + ', ';
     SetLength(Result, Length(Result) -2 );
   end;
+  if Result = '' then
+    Result := 'Unresolved: ' + IntToHex64(aInt, 16);
 end;
 
 
@@ -4513,6 +4517,7 @@ begin
 
   wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
   wbEDIDReq := wbString(EDID, 'Editor ID', 0, cpNormal, True); // not cpBenign according to Arthmoor
+  wbEDIDReqKC := wbStringKC(EDID, 'Editor ID', 0, cpNormal, True); // not cpBenign according to Arthmoor
   wbFULL := wbStringKC(FULL, 'Name', 0, cpTranslate);
   wbFULLActor := wbStringKC(FULL, 'Name', 0, cpTranslate, False, wbActorTemplateUseBaseData);
   wbFULLReq := wbStringKC(FULL, 'Name', 0, cpNormal, True);
@@ -4627,15 +4632,21 @@ begin
       'Left Hand'
     ]));
 
+  wbMODT := wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore);
+
+  {wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
+    wbArray('Textures', wbStruct('Texture', [
+      wbInteger('File', itU64, wbMODTCallback),
+      wbByteArray('Unknown', 8),
+      wbInteger('Folder', itU64, wbMODTCallback)
+    ]))]
+  );}
+
   wbMODL :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename', 0, cpNormal, True),
       wbByteArray(MODB, 'Unknown', 4, cpIgnore),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
-//      wbArray(MODT, 'Texture Files Hashes',
-//        wbByteArray('Unknown', 24, cpBenign),
-//        wbArray('Hashes', wbInteger('Hash', itU64, wbMODTCallback), 3),
-//      0, nil, nil, cpBenign),
+      wbMODT,
       wbMODS,
       wbMODD
     ], [], cpNormal, False, nil, True);
@@ -4644,11 +4655,7 @@ begin
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename', 0, cpNormal, True),
       wbByteArray(MODB, 'Unknown', 4, cpIgnore),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
-//      wbArray(MODT, 'Texture Files Hashes',
-//        wbByteArray('Unknown', 24, cpBenign),
-//        wbArray('Hashes', wbInteger('Hash', itU64, wbMODTCallback), 3),
-//      0, nil, nil, cpBenign),
+      wbMODT,
       wbMODS,
       wbMODD
     ], [], cpNormal, False, wbActorTemplateUseModelAnimation, True);
@@ -4657,11 +4664,7 @@ begin
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename', 0, cpNormal, True),
       wbByteArray(MODB, 'Unknown', 4, cpIgnore),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
-//      wbArray(MODT, 'Texture Files',
-//        wbByteArray('Unknown', 24, cpBenign),
-//        wbArray('Hashes', wbInteger('Hash', itU64, wbMODTCallback), 3),
-//      0, nil, nil, cpBenign),
+      wbMODT,
       wbMODS,
       wbMODD
     ], [], cpNormal, True, nil, True);
@@ -6623,7 +6626,7 @@ begin
   ]);
 
   wbRecord(DIAL, 'Dialog Topic', [
-    wbEDIDReq,
+    wbEDIDReqKC,
     wbRArrayS('Added Quests', wbRStructSK([0], 'Added Quest', [
       wbFormIDCkNoReach(QSTI, 'Quest', [QUST], False, cpBenign),
       wbRArray('Shared Infos', wbRStruct('Shared Info', [
