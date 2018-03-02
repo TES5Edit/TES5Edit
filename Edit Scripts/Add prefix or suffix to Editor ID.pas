@@ -1,6 +1,8 @@
 {
   This script will prepend or append supplied value to the EditorID field
   of every selected record.
+  
+  Doesn't modify records that already have the same prefix/suffix.
 }
 unit UserScript;
 
@@ -34,15 +36,17 @@ function Process(e: IInterface): integer;
 var
   elEditorID: IInterface;
 begin
-  Result := 0;
-  //AddMessage('Processing: ' + Name(e));
-  elEditorID := ElementByName(e, 'EDID - Editor ID');
-  if Assigned(elEditorID) then begin
-    if DoPrepend then
-      SetEditValue(elEditorID, s + GetEditValue(elEditorID))
-    else
-      SetEditValue(elEditorID, GetEditValue(elEditorID) + s);
-  end;
+  elEditorID := ElementBySignature(e, 'EDID');
+  
+  if Assigned(elEditorID) then
+    if DoPrepend then begin
+      if not StartsText(s, GetEditValue(elEditorID)) then
+        SetEditValue(elEditorID, s + GetEditValue(elEditorID));
+    end 
+    else begin
+      if not EndsText(s, GetEditValue(elEditorID)) then
+        SetEditValue(elEditorID, GetEditValue(elEditorID) + s);
+    end;
 end;
 
 end.
