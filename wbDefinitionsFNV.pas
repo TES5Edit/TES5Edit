@@ -2229,7 +2229,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..313] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..316] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -2554,8 +2554,11 @@ const
     (Index: 6073; Name: 'GetHasContactType'; ParamType1: ptInteger; ),
     (Index: 6124; Name: 'IsSpellTargetAlt'; ParamType1: ptMagicItem; ),
     (Index: 6167; Name: 'IsIdlePlayingEx'; ParamType1: ptAnyForm; ),
-    (Index: 6186; Name: 'IsInCharGen'; )
- );
+    (Index: 6186; Name: 'IsInCharGen'; ),
+    (Index: 6192; Name: 'GetWaterImmersionPerc'; ),
+    (Index: 6204; Name: 'IsFleeing'; ),
+    (Index: 6217; Name: 'GetTargetUnreachable'; )
+);
 
 var
   wbCTDAFunctionEditInfo: string;
