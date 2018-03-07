@@ -1,5 +1,6 @@
 {
-  Export selected quest dialogues
+  Export selected quest dialogues for Fallout 3 and Fallout New Vegas
+  Apply to quest record(s)
 }
 unit FNVExportDialogue;
 
@@ -27,24 +28,24 @@ begin
 end;
 
 //============================================================================
-function InfoFileName(QuestID, DialID: string; InfoFormID, RespNumber: integer): string;
+function InfoFileName(QuestID, DialID: string; InfoFormID, RespNum: integer): string;
 var
   qlen, dlen: integer;
 begin
-  if Length(QuestID) > 25 then
-    QuestID := Copy(QuestID, 1, 25);
-  dlen := 15 + Max(0, 10 - Length(QuestID));
-  DialID := Copy(DialID, 1, dlen);
-  qlen := Min(Length(QuestID), 25 - Length(DialID));
-  // for some reason the limit is 24 chars, otherwise truncated to 10
-  // example DialogueSolitudeWellScene3 "Noster Begging" [QUST:000367BB]
-  if qlen >= 25 then qlen := 10;
-  QuestID := Copy(QuestID, 1, qlen);
+  qlen := Length(QuestID);
+  dlen := Length(DialID);
+  if qlen + dlen > 25 then begin
+    if qlen > 10 then begin
+      qlen := 10;
+      dlen := 15;
+    end else
+      dlen := 10 - qlen + 15;
+  end;
   Result := Format('%s_%s_%s_%d', [
-    QuestID,
-    DialID,
+    Copy(QuestID, 1, qlen),
+    Copy(DialID, 1, dlen),
     IntToHex(InfoFormID and $FFFFFF, 8),
-    RespNumber
+    RespNum
   ]);
 end;
 

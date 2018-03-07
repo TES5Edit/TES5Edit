@@ -1,5 +1,6 @@
 {
-  Export selected quest dialogues
+  Export selected quest dialogues for Skyrim and Skyrim SE
+  Apply to quest record(s)
 }
 unit ExportDialogue;
 
@@ -27,24 +28,24 @@ begin
 end;
 
 //============================================================================
-function InfoFileName(QuestID, DialID: string; InfoFormID, RespNumber: integer): string;
+function InfoFileName(QuestID, DialID: string; InfoFormID, RespNum: integer): string;
 var
   qlen, dlen: integer;
 begin
-  if Length(QuestID) > 25 then
-    QuestID := Copy(QuestID, 1, 25);
-  dlen := 15 + Max(0, 10 - Length(QuestID));
-  DialID := Copy(DialID, 1, dlen);
-  qlen := Min(Length(QuestID), 25 - Length(DialID));
-  // for some reason the limit is 24 chars, otherwise truncated to 10
-  // example DialogueSolitudeWellScene3 "Noster Begging" [QUST:000367BB]
-  if qlen >= 25 then qlen := 10;
-  QuestID := Copy(QuestID, 1, qlen);
+  qlen := Length(QuestID);
+  dlen := Length(DialID);
+  if qlen + dlen > 25 then begin
+    if qlen > 10 then begin
+      qlen := 10;
+      dlen := 15;
+    end else
+      dlen := 10 - qlen + 15;
+  end;
   Result := Format('%s_%s_%s_%d', [
-    QuestID,
-    DialID,
+    Copy(QuestID, 1, qlen),
+    Copy(DialID, 1, dlen),
     IntToHex(InfoFormID and $FFFFFF, 8),
-    RespNumber
+    RespNum
   ]);
 end;
 
@@ -413,7 +414,7 @@ begin
       for r := 0 to Pred(ElementCount(Responses)) do begin
         Response := ElementByIndex(Responses, r);
         ResponseNumber := GetElementNativeValues(Response, 'TRDT\Response number');
-        if lstVoice.Count>0 then
+        if lstVoice.Count > 0 then
 					for v := 0 to Pred(lstVoice.Count) do begin
 						VoiceFileName := InfoFileName(EditorID(Quest), EditorID(Dialogue), GetLoadOrderFormID(Info), ResponseNumber);
 						VoiceFilePath := Format('Data\Sound\Voice\%s\%s\', [GetFileName(Quest), lstVoice[v]]);
