@@ -551,6 +551,7 @@ begin
   slWorldspaces.AddObject(IntToHex(FormID(wrld), 8), wrld);
   for k := 0 to Pred(OverrideCount(wrld)) do begin
     w := OverrideByIndex(wrld, k);
+    slWorldspaces.AddObject(IntToHex(FormID(wrld), 8), w);
     slPlugin.AddObject(Name(GetFile(w)), w);
   end;
   for i := 0 to Pred(FileCount) do begin
@@ -1277,7 +1278,7 @@ begin
     if sl.IndexOf(s) <> - 1 then
       Continue;
     MenuItem := TMenuItem.Create(mnMapPopup);
-    MenuItem.Caption := Format('Jump to [CELL:%s] at <%d, %d> in %s', [s, SelectedCellX, SelectedCellY, EditorID(w)]);
+    MenuItem.Caption := Format('[CELL:%s] at <%d, %d> "%s" in %s', [s, SelectedCellX, SelectedCellY, EditorID(w), GetFileName(w)]);
     MenuItem.OnClick := miJumpToClick;
     MenuItem.Tag := i;
     mnMapPopup.Items.Add(MenuItem);
@@ -1617,7 +1618,7 @@ function Initialize: integer;
 begin
   InitBrowser;
   try
-    slWorldspaces := TStringList.Create; slWorldspaces.Duplicates := dupIgnore; slWorldspaces.Sorted := True;
+    slWorldspaces := TStringList.Create; slWorldspaces.Duplicates := dupAccept; slWorldspaces.Sorted := True;
     slRegion := TStringList.Create; slRegion.Duplicates := dupIgnore; slRegion.Sorted := True;
     slPlugin := TStringList.Create;
     BuildForms;
