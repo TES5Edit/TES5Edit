@@ -14,24 +14,23 @@ const
   
   sDefaultSourcePath = ''; // Data folder will be used if empty
   sDefaultDestinationPath = ''; // Data folder will be used if empty
-  sDefaultFindWhat = 'Textures\';
-  sDefaultReplaceWith = 'Textures\New\';
+  sDefaultReplacement = 'Textures\'#13'Textures\New\'; // default replacements
 
 var
   bMaterial, bInMaterial, bReportOnly: Boolean;
 
 
 //============================================================================
-procedure BatchReplace(aSrcPath, aDstPath, aFindWhat, aReplaceWith: string);
+procedure BatchReplace(aSrcPath, aDstPath: string; aFind, aReplace: TStringList);
 var
   TDirectory: TDirectory; // to access member functions
-  i, j, p, Processed, Updated: integer;
+  i, j, k, p, Processed, Updated: integer;
   Elements: TList;
   el: TdfElement;
   Nif: TwbNifFile;
   Block: TwbNifBlock;
   BGSM: TwbBGSMFile;
-  BGEM: TwbBGSMFile;
+  BGEM: TwbBGEMFile;
   files: TStringDynArray;
   f, f2, ext: string;
   s, s2: WideString;
@@ -146,12 +145,16 @@ begin
         // skip to the next element if empty
         if s = '' then Continue;
       
-        if aFindWhat <> '' then
-          // replace if FindWhat is not empty, trim whitespaces just in case
-          s2 := StringReplace(Trim(s), aFindWhat, aReplaceWith, [rfIgnoreCase, rfReplaceAll])
-        else
-          // prepend if empty
-          s2 := aReplaceWith + Trim(s);
+        // perform replacements, trim whitespaces just in case
+        s2 := Trim(s);
+        for k := 0 to Pred(aFind.Count) do begin
+          if aFind[k] <> '' then
+            // replace if text to find is not empty
+            s2 := StringReplace(s2, aFind[k], aReplace[k], [rfIgnoreCase, rfReplaceAll])
+          else
+            // prepend if empty
+            s2 := aReplace[k] + s2;
+        end;
         
         if bFixAbsolutePaths then
           // detect an absolute path
@@ -242,16 +245,23 @@ end;
 function Initialize: Integer;
 var
   frm: TForm;
-  edSrc, edDst, edFindWhat, edReplaceWith: TLabeledEdit;
+  edSrc, edDst: TLabeledEdit;
+  lblReplace: TLabel;
+  memoReplace: TMemo;
   btnOk, btnCancel, btnSrc, btnDst: TButton;
   chkMaterial, chkInMaterial, chkReportOnly: TCheckBox;
   pnl: TPanel;
+  slFind, slReplace: TStringList;
+  i: integer;
 begin
+  slFind := TStringList.Create;
+  slReplace := TStringList.Create;
+
   frm := TForm.Create(nil);
   try
     frm.Caption := 'NIF/BGSM/BGEM Batch Textures Replacement';
     frm.Width := 500;
-    frm.Height := 370;
+    frm.Height := 400;
     frm.Position := poMainFormCenter;
     frm.BorderStyle := bsDialog;
     
@@ -313,21 +323,22 @@ begin
     chkReportOnly.Width := frm.Width - 60;
     chkReportOnly.Caption := 'Report only, do not save any changes';
 
-    edFindWhat := TLabeledEdit.Create(frm); edFindWhat.Parent := frm;
-    edFindWhat.Left := 12;
-    edFindWhat.Top := chkReportOnly.Top + 60;
-    edFindWhat.Width := frm.Width - 70;
-    edFindWhat.LabelPosition := lpAbove;
-    edFindWhat.EditLabel.Caption := 'Find what (if empty then prepend "Replace with" to all textures)';
-    edFindWhat.Text := sDefaultFindWhat;
+    lblReplace := TLabel.Create(frm); lblReplace.Parent := frm;
+    lblReplace.Left := 12;
+    lblReplace.Top := chkReportOnly.Top + 34;
+    lblReplace.AutoSize := False;
+    lblReplace.WordWrap := True;
+    lblReplace.Width := frm.Width - 34;
+    lblReplace.Height := 30;
+    lblReplace.Caption := 'Replacement pair(s): odd lines specify what text to replace, even lines text to replace with. If odd line is empty then replacement text is prepended to all textures.';
 
-    edReplaceWith := TLabeledEdit.Create(frm); edReplaceWith.Parent := frm;
-    edReplaceWith.Left := 12;
-    edReplaceWith.Top := edFindWhat.Top + 46;
-    edReplaceWith.Width := frm.Width - 70;
-    edReplaceWith.LabelPosition := lpAbove;
-    edReplaceWith.EditLabel.Caption := 'Replace with';
-    edReplaceWith.Text := sDefaultReplaceWith;
+    memoReplace := TMemo.Create(frm); memoReplace.Parent := frm;
+    memoReplace.Left := 12;
+    memoReplace.Top := lblReplace.Top + lblReplace.Height + 8;
+    memoReplace.Height := 90;
+    memoReplace.Width := frm.Width - 34;
+    memoReplace.ScrollBars := ssVertical;
+    memoReplace.Lines.Text := sDefaultReplacement;
 
     btnOk := TButton.Create(frm); btnOk.Parent := frm;
     btnOk.Caption := 'OK';
@@ -347,11 +358,24 @@ begin
       bMaterial := chkMaterial.Checked;
       bInMaterial := chkInMaterial.Checked;
       bReportOnly := chkReportOnly.Checked;
-      BatchReplace( edSrc.Text, edDst.Text, edFindWhat.Text, edReplaceWith.Text );
+      
+      for i := 0 to memoReplace.Lines.Count div 2 do
+        // skip if both odd and even lines are empty
+        if (memoReplace.Lines[i * 2] <> '') and (memoReplace.Lines[i * 2 + 1] <> '') then begin
+          slFind.Add(memoReplace.Lines[i * 2]);
+          slReplace.Add(memoReplace.Lines[i * 2 + 1]);
+        end;
+      
+      if slFind.Count <> 0 then
+        BatchReplace( edSrc.Text, edDst.Text, slFind, slReplace )
+      else
+        AddMessage('No replacements specified!');
     end;
     
   finally
     frm.Free;
+    slFind.Free;
+    slReplace.Free;
   end;
   
   Result := 1;
