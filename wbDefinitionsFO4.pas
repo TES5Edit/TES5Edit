@@ -16301,7 +16301,15 @@ begin
           {5} 'Submenu - Return to Top Level',
           {6} 'Submenu - Force Redraw',
           {7} 'Unknown 7',
-          {8} 'Display Text'
+          {8} 'Display Text',
+          {9} 'Unknown 9',
+         {10} 'Unknown 10',
+         {11} 'Unknown 11',
+         {12} 'Unknown 12',
+         {13} 'Unknown 13',
+         {14} 'Unknown 14',
+         {15} 'Unknown 15',
+         {16} 'Display Image'
         ]), cpNormal, True),
         wbInteger(ITID, 'Item ID', itU16),
         wbLStringKC(UNAM, 'Display Text', 0, cpTranslate),
