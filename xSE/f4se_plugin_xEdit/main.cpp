@@ -31,7 +31,7 @@
 PluginHandle	g_pluginHandle = kPluginHandle_Invalid;
 F4SEInterface * SaveF4SE;
 
-#define REQUIRED_RUNTIME RUNTIME_VERSION_1_9_4
+#define REQUIRED_RUNTIME RUNTIME_VERSION_1_10_50
 
 void OpenPluginLog()
 {
@@ -53,19 +53,19 @@ bool CheckParam(ObScriptCommand * iter, UInt32 paramIndex)
 bool xEditCommand()
 {
 	#if RUNTIME_VERSION == REQUIRED_RUNTIME
-		static const UInt32 s_doShowChangeFlagsName = 0x00CBD070;				// Skyrim 1.9.32: 00675DB0,					Fallout3: 006C9510	FalloutNV: 0x0083FEF0
-		static const UInt32 s_changeFormTypeArray = 0x0371A150;					// Skyrim: 012724C0							Fallout3: 00F6D1D0	FalloutNV: 0x011A2428
-		static const UInt32 s_FormToChangeType = 0x059FEC10;					// after initialisation Skyrim: 01B2E4D0	Fallout3: 01079BD0	FalloutNV: 0x011DE360
-		static const UInt32 s_nickNames = 0x02C03C44;							// Array of form signatures
-		static const UInt32 s_formTypeNicknames = 0x03667780;					// Skyrim: 0123F2C4							Fallout3: 00F4A74C	FalloutNV: 0x01187004
-		static const UInt32 s_GlobalData1Names = 0x03719B00;					// Skyrim: 01272310, 01272334, 01272370,	Fallout3: 00F6CED8	FalloutNV: 0x011A216C
+		static const UInt32 s_doShowChangeFlagsName = 0x00CD64C0;				// Skyrim 1.9.32: 00675DB0,					Fallout3: 006C9510	FalloutNV: 0x0083FEF0
+		static const UInt32 s_changeFormTypeArray = 0x037C0F10;					// Skyrim: 012724C0							Fallout3: 00F6D1D0	FalloutNV: 0x011A2428
+		static const UInt32 s_FormToChangeType = 0x05AAB730;					// after initialisation Skyrim: 01B2E4D0	Fallout3: 01079BD0	FalloutNV: 0x011DE360
+		static const UInt32 s_nickNames = 0x02C820D8;							// Array of form signatures
+		static const UInt32 s_formTypeNicknames = 0x0370D7D0;					// Skyrim: 0123F2C4							Fallout3: 00F4A74C	FalloutNV: 0x01187004
+		static const UInt32 s_GlobalData1Names = 0x037C08C0;					// Skyrim: 01272310, 01272334, 01272370,	Fallout3: 00F6CED8	FalloutNV: 0x011A216C
 		static const UInt32 s_GlobalData2Names = s_GlobalData1Names + 12;		// 100 + index
 		static const UInt32 s_GlobalData3Names = s_GlobalData2Names + 18;		// 1000 + index
 		static const UInt32 s_GlobalData3NamesEnd = s_GlobalData3Names + 8;
-		static const UInt64 s_DialogSubtypes = 0x036A73F0;						// First is CUST Custom
-		static const UInt64 s_DialogSubtypesEnd = 0x036A8778;				
-		static const UInt64 s_DefaultObjectManagerObjectArray = 0x0367CC00;		// First is UNUSED01, WWSP
-		static const UInt64 s_DefaultObjectManagerObjectArrayEnd = 0x0367FD40;	// ??_R0?AVBGSDefaultObjectManager@@@8
+		static const UInt64 s_DialogSubtypes = 0x0374D430;						// First is CUST Custom
+		static const UInt64 s_DialogSubtypesEnd = 0x0374E7B8;					//	past PlayerAquireFeaturedItem
+		static const UInt64 s_DefaultObjectManagerObjectArray = 0x03722C50;		// First is UNUSED01, WWSP
+		static const UInt64 s_DefaultObjectManagerObjectArrayEnd = 0x03725D90;	// ??_R0?AVBGSDefaultObjectManager@@@8
 	#else 
 	#error
 	#endif

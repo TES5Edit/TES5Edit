@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -46,18 +46,20 @@
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>true</LinkIncremental>
+    <TargetName>$(ProjectName)_1_10_50</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
+    <TargetName>$(ProjectName)_1_10_50</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\f4se;$(SolutionDir)\..\f4se\f4se;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;F4SE_PLUGIN_xEdit_EXPORTS;RUNTIME;RUNTIME_VERSION=0x01090040;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;F4SE_PLUGIN_xEdit_EXPORTS;RUNTIME;RUNTIME_VERSION=0x010A0320;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -77,13 +79,13 @@
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
-      <Command>copy "$(TargetPath)" "$(Fallout4DPath)\Data\F4SE\Plugins\$(TargetFileName)"</Command>
+      <Command>if not "$(Fallout4DPath)"=="" copy "$(TargetPath)" "$(Fallout4DPath)\Data\F4SE\Plugins\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;$(SolutionDir)\..\f4se;$(SolutionDir)\..\f4se\f4se;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;F4SE_PLUGIN_xEdit_EXPORTS;RUNTIME;RUNTIME_VERSION=0x01090040;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;F4SE_PLUGIN_xEdit_EXPORTS;RUNTIME;RUNTIME_VERSION=0x010A0320;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
@@ -104,15 +106,18 @@
     </Link>
     <PostBuildEvent>
       <Message>Installing DLL...</Message>
-      <Command>copy "$(TargetPath)" "$(Fallout4Path)\Data\F4SE\Plugins\$(TargetFileName)"</Command>
+      <Command>if not "$(Fallout4Path)"=="" copy "$(TargetPath)" "$(Fallout4Path)\Data\F4SE\Plugins\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\f4se\f4se\GameData.cpp" />
     <ClCompile Include="..\f4se\f4se\GameForms.cpp" />
+    <ClCompile Include="..\f4se\f4se\GameTypes.cpp" />
+    <ClCompile Include="..\f4se\f4se\GameUtilities.cpp" />
     <ClCompile Include="..\f4se\f4se\ObScript.cpp" />
     <ClCompile Include="..\f4se\f4se_common\Relocation.cpp" />
     <ClCompile Include="..\f4se\f4se_common\SafeWrite.cpp" />
+    <ClCompile Include="..\f4se\f4se_common\Utilities.cpp" />
     <ClCompile Include="dllmain.c">
       <ForcedIncludeFiles Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
       </ForcedIncludeFiles>
@@ -127,10 +132,13 @@
   <ItemGroup>
     <ClInclude Include="..\f4se\f4se\GameData.h" />
     <ClInclude Include="..\f4se\f4se\GameForms.h" />
+    <ClInclude Include="..\f4se\f4se\GameTypes.h" />
+    <ClInclude Include="..\f4se\f4se\GameUtilities.h" />
     <ClInclude Include="..\f4se\f4se\ObScript.h" />
     <ClInclude Include="..\f4se\f4se_common\f4se_version.h" />
     <ClInclude Include="..\f4se\f4se_common\Relocation.h" />
     <ClInclude Include="..\f4se\f4se_common\SafeWrite.h" />
+    <ClInclude Include="..\f4se\f4se_common\Utilities.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\f4se\f4se_common\f4se_version.rc" />
