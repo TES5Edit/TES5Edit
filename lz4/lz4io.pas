@@ -68,6 +68,7 @@ function LZ4IO_compressFilename(input_filename: string; output_filename: string;
 function LZ4IO_decompressFilename(input_filename: string; output_filename: string): integer;
 procedure lz4DecompressToUserBuf(const InBuf: Pointer; InBytes: Integer;
   const OutBuf: Pointer; BufSize: Integer);
+function lz4CompressStream(aSource, aCompressed: TStream; aCompressionLevel: Integer = 8): Integer;
 
 implementation
 
@@ -484,5 +485,80 @@ begin
     stout.Free;
   end;
 end;
+
+function lz4CompressStream(aSource, aCompressed: TStream; aCompressionLevel: Integer = 8): Integer;
+var
+  filesize: uint64;
+  errorCode: LZ4F_errorCode_t;
+  ctx: PLZ4F_compressionContext_t;
+  blockSize: integer;
+  prefs: LZ4F_preferences_t;
+  in_buff: pAnsiChar;
+  out_buff: pAnsiChar;
+  outBuffSize: size_t;
+  headerSize: size_t;
+  sizeCheck: size_t;
+  readSize: size_t;
+  outSize: size_t;
+begin
+  result := 0;
+  filesize := 0;
+  errorCode := LZ4F_createCompressionContext(ctx, LZ4F_VERSION);
+  if (LZ4F_isError(errorCode)) then
+    exit(reportError(format('Allocation error : can''t create LZ4F context: %s', [LZ4F_getErrorName(errorCode)])));
+  blockSize := 1 shl (8 + 2 * globalblockSizeID);
+  fillchar(prefs, sizeof(LZ4F_preferences_t), 0);
+
+  prefs.autoFlush := 1;
+  prefs.compressionLevel := aCompressionLevel;
+  prefs.frameInfo.blockMode := blockMode_t(blockIndependence);
+  prefs.frameInfo.blockSizeID := blockSizeID_t(globalblockSizeID);
+  prefs.frameInfo.contentChecksumFlag := contentChecksum_t(streamChecksum);
+
+  // Allocate Memory
+  in_buff := allocmem(blockSize);
+  outBuffSize := LZ4F_compressBound(blockSize, @prefs);
+  out_buff := allocmem(outBuffSize);
+  try
+    if (in_buff = nil) or (out_buff = nil) then
+      exit(reportError('Allocation error : not enough memory'));
+    // Write Archive Header
+    headerSize := LZ4F_compressBegin(ctx, out_buff, outBuffSize, @prefs);
+    if (LZ4F_isError(headerSize)) then
+      exit(reportError(format('File header generation failed: %s', [LZ4F_getErrorName(errorCode)])));
+    sizeCheck := aCompressed.Write(out_buff^, headerSize);
+    if sizeCheck <> headerSize then
+      exit(reportError('Write error : cannot write header'));
+
+    readSize := aSource.Read(in_buff^, blockSize);
+    inc(filesize, readSize);
+    while readSize > 0 do begin
+      outSize := LZ4F_compressUpdate(ctx, out_buff, outBuffSize, in_buff, readSize, Nil);
+      if (LZ4F_isError(outSize)) then
+        exit(reportError(format('Compression failed: %s', [LZ4F_getErrorName(errorCode)])));
+      sizeCheck := aCompressed.Write(out_buff^, outSize);
+      if sizeCheck <> outSize then
+        exit(reportError('Write error : cannot write compressed block'));
+      readSize := aSource.Read(in_buff^, blockSize);
+      inc(filesize, readSize);
+    end;
+    // End of Stream mark
+    headerSize := LZ4F_compressEnd(ctx, out_buff, outBuffSize, Nil);
+    if LZ4F_isError(headerSize) then
+      exit(reportError(format('End of file generation failed: %s', [LZ4F_getErrorName(errorCode)])));
+    sizeCheck := aCompressed.Write(out_buff^, headerSize);
+    if sizeCheck <> headerSize then
+      exit(reportError('Write error : cannot write end of stream'));
+    errorCode := LZ4F_freeCompressionContext(ctx);
+    if LZ4F_isError(errorCode) then
+      exit(reportError(format('Error : can''t free LZ4F context resource: %s', [LZ4F_getErrorName(errorCode)])));
+  finally
+    if in_buff <> nil then
+      freemem(in_buff);
+    if out_buff <> nil then
+      freemem(out_buff);
+  end;
+end;
+
 
 end.

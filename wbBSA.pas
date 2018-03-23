@@ -529,7 +529,7 @@ var
 //  totalFolderNameLength : Cardinal;
   totalFileNameLength : Cardinal;
 begin
-  if bfStream.ReadSignature <> 'BSA' then
+  if IntToSignature(bfStream.ReadCardinal) <> 'BSA' then
     raise Exception.Create(bfFileName + ' is not a valid BSA file');
   bfVersion := bfStream.ReadCardinal;
   if not (bfVersion in [BSAHEADER_VERSION_OB, BSAHEADER_VERSION_SK, BSAHEADER_VERSION_SSE]) then
@@ -642,12 +642,12 @@ var
   NumChunks: Byte;
   folder: string;
 begin
-  if bfStream.ReadSignature <> 'BTDX' then
+  if IntToSignature(bfStream.ReadCardinal) <> 'BTDX' then
     raise Exception.Create(bfFileName + ' is not a valid BA2 file');
   bfVersion := bfStream.ReadCardinal;
   if bfVersion <> BA2HEADER_VERSION_FO4 then
     raise Exception.Create(bfFileName + ' has unknown version: ' + IntToStr(bfVersion) );
-  bfType := bfStream.ReadSignature;
+  bfType := IntToSignature(bfStream.ReadCardinal);
   if (bfType <> 'GNRL') and (bfType <> 'DX10') then
     raise Exception.Create(bfFileName + ' has unknown type: ' + String(bfType));
   FileCount := bfStream.ReadCardinal;

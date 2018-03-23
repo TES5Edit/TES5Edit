@@ -3221,6 +3221,7 @@ procedure wbEndInternalEdit;
 function wbIsInternalEdit: Boolean;
 
 function StrToSignature(const s: string): TwbSignature;
+function IntToSignature(aInt: Cardinal): TwbSignature; inline;
 function wbStringToAnsi(const aString: string; const aElement: IwbElement): AnsiString;
 function wbAnsiToString(const aString: AnsiString; const aElement: IwbElement): string;
 
@@ -3293,6 +3294,11 @@ begin
     Result := PwbSignature(@t[1])^
   else
     raise Exception.Create('"'+t+'" is not a valid signature');
+end;
+
+function IntToSignature(aInt: Cardinal): TwbSignature; inline;
+begin
+  Result := PwbSignature(@aInt)^;
 end;
 
 function IsTranslatable(const aElement: IwbElement): Boolean;
