@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="f4se">
@@ -29,6 +29,15 @@
     <ClCompile Include="..\f4se\f4se\GameData.cpp">
       <Filter>f4se\api</Filter>
     </ClCompile>
+    <ClCompile Include="..\f4se\f4se_common\Utilities.cpp">
+      <Filter>f4se_common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\f4se\f4se\GameTypes.cpp">
+      <Filter>f4se\api</Filter>
+    </ClCompile>
+    <ClCompile Include="..\f4se\f4se\GameUtilities.cpp">
+      <Filter>f4se\api</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="exports.def" />
@@ -50,6 +59,15 @@
       <Filter>f4se\api</Filter>
     </ClInclude>
     <ClInclude Include="..\f4se\f4se\GameData.h">
+      <Filter>f4se\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\f4se\f4se_common\Utilities.h">
+      <Filter>f4se_common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\f4se\f4se\GameTypes.h">
+      <Filter>f4se\api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\f4se\f4se\GameUtilities.h">
       <Filter>f4se\api</Filter>
     </ClInclude>
   </ItemGroup>
