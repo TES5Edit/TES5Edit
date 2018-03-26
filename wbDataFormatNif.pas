@@ -84,6 +84,7 @@ type
     function UpdateBounds: Boolean;
     function UpdateNormals(aAddIfMissing: Boolean = True): Boolean;
     function UpdateTangents(aAddIfMissing: Boolean = True): Boolean;
+    function GetAssetsList: TStringDynArray;
     property BlockType: string read GetBlockType;
     property NifFile: TwbNifFile read GetNifFile;
     property RefsCount: Integer read GetRefsCount;
@@ -129,6 +130,7 @@ type
     function SpellFaceNormals: Boolean;
     function SpellUpdateTangents: Boolean;
     function SpellAddUpdateTangents: Boolean;
+    function GetAssetsList: TStringDynArray;
     property NifVersion: TwbNifVersion read FNifVersion write SetNifVersion;
     property Options: TwbNifOptions read FOptions write FOptions;
     property Header: TwbNifBlock read GetHeader;
@@ -996,7 +998,7 @@ begin
     Exit;
 
   CalculateCenterRadius(verts, center, r,
-    //Oblivion and volatile meshes require a different center algorithm
+    // Oblivion and volatile meshes require a different center algorithm
     (NifFile.NifVersion = nfTES4) or (EditValues['Consistency Flags'] = 'CT_VOLATILE')
   );
 
@@ -1178,6 +1180,65 @@ begin
   Result := True;
 end;
 
+function TwbNifBlock.GetAssetsList: TStringDynArray;
+
+  procedure AddAsset(const aFileName: string);
+  var
+    i: integer;
+  begin
+    if aFileName = '' then
+      Exit;
+
+    for i := Low(Result) to High(Result) do
+      if SameText(Result[i], aFileName) then
+        Exit;
+
+    SetLength(Result, Succ(Length(Result)));
+    Result[Pred(Length(Result))] := aFileName;
+  end;
+
+var
+  i: integer;
+  e: TdfElement;
+begin
+  // check for material file in the Name field of FO4 meshes
+  if (NifFile.NifVersion = nfFO4) and (BlockType = 'BSLightingShaderProperty') then
+    AddAsset(EditValues['Name'])
+
+  else if BlockType = 'BSEffectShaderProperty' then begin
+    if NifFile.NifVersion = nfFO4 then
+      AddAsset(EditValues['Name'])
+    else begin
+      AddAsset(EditValues['Source Texture']);
+      AddAsset(EditValues['Grayscale Texture']);
+      AddAsset(EditValues['Env Map Texture']);
+      AddAsset(EditValues['Normal Texture']);
+      AddAsset(EditValues['Env Mask Texture']);
+    end;
+  end
+
+  else if BlockType = 'BSShaderTextureSet' then begin
+    e := Elements['Textures'];
+    for i := 0 to Pred(e.Count) do
+      AddAsset(e[i].EditValue);
+  end
+
+  else if (BlockType = 'BSShaderNoLightingProperty') or
+          (BlockType = 'TallGrassShaderProperty') or
+          (BlockType = 'TileShaderProperty') or
+          IsNiObject('NiTexture', True)
+  then
+    AddAsset(EditValues['File Name'])
+
+  else if BlockType = 'BSSkyShaderProperty' then
+    AddAsset(EditValues['Source Name'])
+
+  else if BlockType = 'BSBehaviorGraphExtraData' then
+    AddAsset(EditValues['Behavior Graph File'])
+
+  else if BlockType = 'BSSubIndexTriShape' then
+    AddAsset(EditValues['Segment Data\SSF File']);
+end;
 
 
 { TwbNifFile }
@@ -1651,6 +1712,32 @@ begin
   for i := 0 to Pred(BlocksCount) do
     if Blocks[i].UpdateTangents(True) then
       Result := True;
+end;
+
+function TwbNifFile.GetAssetsList: TStringDynArray;
+var
+  i, j, k: integer;
+  a: TStringDynArray;
+  b: Boolean;
+begin
+  for i := 0 to Pred(BlocksCount) do begin
+    a := Blocks[i].GetAssetsList;
+
+    for j := Low(a) to High(a) do begin
+      b := False;
+      for k := Low(Result) to High(Result) do
+        if SameText(Result[k], a[j]) then begin
+          b := True;
+          Break;
+        end;
+
+      if not b then begin
+        SetLength(Result, Succ(Length(Result)));
+        Result[Pred(Length(Result))] := a[j];
+      end;
+    end;
+
+  end;
 end;
 
 function TwbNifFile.GetHeader: TwbNifBlock;
@@ -6558,9 +6645,7 @@ end;
 { BSFrustumFOVController }
 procedure wbDefineBSFrustumFOVController;
 begin
-  wbNiObject(wbNifBlock('BSFrustumFOVController', [
-    wbNiRef('Interpolator', 'NiFloatInterpolator')
-  ]), 'NiFloatInterpController', False);
+  wbNiObject(wbNifBlock('BSFrustumFOVController'), 'NiFloatInterpController', False);
 end;
 
 //===========================================================================

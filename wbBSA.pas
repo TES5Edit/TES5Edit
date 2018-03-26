@@ -379,7 +379,7 @@ begin
     raise Exception.Create('Resource doesn''t exist');
 
   residx := High(res);
-  for i := High(res) to Low(res) do
+  for i := High(res) downto Low(res) do
     if (aContainerName = '') or SameText(res[i].Container.Name, aContainerName) then begin
       residx := i;
       Break;

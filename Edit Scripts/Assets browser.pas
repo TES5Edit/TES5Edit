@@ -1,6 +1,6 @@
 {
   Assets browser.
-  Searches for files in Data folder and inside BSA archives.
+  Searches for files in Data folder and load BSA/BA2 archives.
   Allows to open files with associated apps, unpack single file
   and multifile unpack/copy preserving paths.
   
@@ -13,16 +13,16 @@ unit AssetsBrowser;
 var
   slContainers, slResList, sl: TStringList;
   slAssets, slItems, slTextures: TwbFastStringList;
+  SaveAsFolder: string;
   frm: TForm;
   edFilter: TLabeledEdit;
   edClipboard: TEdit;
-  lblItems, lblInfo, lblHelp: TLabel;
+  lblItems: TLabel;
   cmbContainer: TComboBox;
   lvAssets: TListView;
   mInfo: TMemo;
   mnPopup: TPopupMenu;
   MenuItem: TMenuItem;
-  btnClose: TButton;
 
 
 //===========================================================================
@@ -32,6 +32,16 @@ begin
   Result := ExtractFileName(aName);
   if Result = '' then
     Result := 'Data';
+end;
+
+//===========================================================================
+// reduce the current selected container
+function SelectedContainer: string;
+begin
+  if cmbContainer.ItemIndex = 0 then
+    Result := ''
+  else
+    Result := slContainers[Pred(cmbContainer.ItemIndex)];
 end;
 
 //===========================================================================
@@ -53,13 +63,11 @@ end;
 procedure AssetOpen(aContainerName, aFileName: string);
 var
   f: string;
-  bs: TBytesStream;
-  fs: TFileStream;
 begin
   // unpack file if not present
   ResourceCount(aFileName, slResList);
   if aContainerName = '' then
-   aContainerName := slResList[slResList.Count - 1];
+    aContainerName := slResList[slResList.Count - 1];
   if SimpleName(aContainerName) = 'Data' then
     // container name is the real path, so just append file name
     f := aContainerName + aFileName
@@ -88,9 +96,10 @@ begin
   dlgSave := TSaveDialog.Create(nil);
   try
     dlgSave.Options := dlgSave.Options + [ofOverwritePrompt];
-    dlgSave.InitialDir := DataPath;
+    dlgSave.InitialDir := SaveAsFolder;
     dlgSave.FileName := ExtractFileName(aFileName);
     if dlgSave.Execute then begin
+      SaveAsFolder := ExtractFilePath(dlgSave.FileName);
       try
         ResourceCopy(aContainerName, aFileName, dlgSave.FileName);
       except
@@ -145,8 +154,14 @@ end;
 // on key down event handler for form
 procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
+  // close on ESC
   if Key = VK_ESCAPE then
-    TForm(Sender).ModalResult := mrOk;
+    TForm(Sender).ModalResult := mrOk
+  // copy selected file name to clipboard on Ctr+C
+  else if (Shift = [ssCtrl]) and (Key = 67{C}) then begin
+    if lvAssets.Focused and Assigned(lvAssets.Selected) then
+      CopyClipboardClick(Sender);
+  end;
 end;
 
 //===========================================================================
@@ -155,6 +170,7 @@ procedure cmbContainerOnChange(Sender: TObject);
 begin
   LoadAssetsList(cmbContainer.ItemIndex);
   FilterAssets;
+  lvAssets.SetFocus;
 end;
   
 //===========================================================================
@@ -169,22 +185,106 @@ end;
 procedure lvAssetsSelectItem(Sender: TObject; Item: TListItem;
   Selected: Boolean);
 var
-  f, ext: string;
+  f, cont, ext, fname: string;
+  nif: TwbNifFile;
+  dds: TwbDDSFile;
+  bgsm: TwbBGSMFile;
+  bgem: TwbBGEMFile;
+  lodfo3: TwbLODSettingsFO3File;
+  lodtes5: TwbLODSettingsTES5File;
+  lst: TwbLODTreeLSTFile;
+  btt: TwbLODTreeBTTFile;
 begin
   if not Selected then Exit;
   f := Item.Caption;
   ext := ExtractFileExt(f);
+  cont := SelectedContainer;
+  fname := SimpleName(cont) + '\' + f;
+
   if SameText(ext, '.nif') then begin
+    nif := TwbNifFile.Create;
     try
-      NifTextureListResource('', f, sl);
-    except end;
-    slTextures.AddStrings(sl); // remove duplicates
+      nif.LoadFromResource(cont, f);
+      nif.GetAssetsList(slTextures);
+    finally
+      nif.Free;
+    end;
     mInfo.Lines.BeginUpdate;
     mInfo.Clear;
-    mInfo.Lines.Add('TEXTURES USED IN "' + ExtractFileName(f) + '" (only for Skyrim meshes):');
+    mInfo.Lines.Add('Assets used in "' + fname + '":'#13#10);
     mInfo.Lines.AddStrings(slTextures);
     mInfo.Lines.EndUpdate;
     slTextures.Clear;
+  end
+
+  else if SameText(ext, '.dds') then begin
+    dds := TwbDDSFile.Create;
+    try
+      dds.LoadFromResource(cont, f);
+      mInfo.Lines.Text := fname + #13#10 + dds.ToText;
+    finally
+      dds.Free;
+    end;
+  end
+  
+  else if SameText(ext, '.bgsm') then begin
+    bgsm := TwbBGSMFile.Create;
+    try
+      bgsm.LoadFromResource(cont, f);
+      mInfo.Lines.Text := fname + #13#10 + bgsm.ToText;
+    finally
+      bgsm.Free;
+    end;
+  end
+  
+  else if SameText(ext, '.bgem') then begin
+    bgem := TwbBGEMFile.Create;
+    try
+      bgem.LoadFromResource(cont, f);
+      mInfo.Lines.Text := fname + #13#10 + bgem.ToText;
+    finally
+      bgem.Free;
+    end;
+  end
+
+  else if SameText(ext, '.lod') then begin
+    lodtes5 := TwbLODSettingsTES5File.Create;
+    try
+      lodtes5.LoadFromResource(cont, f);
+      mInfo.Lines.Text := fname + #13#10 + lodtes5.ToText;
+    finally
+      lodtes5.Free;
+    end;
+  end
+
+  else if SameText(ext, '.dlodsettings') then begin
+    lodfo3 := TwbLODSettingsFO3File.Create;
+    try
+      lodfo3.LoadFromResource(cont, f);
+      mInfo.Lines.Text := fname + #13#10 + lodfo3.ToText;
+    finally
+      lodfo3.Free;
+    end;
+  end
+  
+  else if SameText(ext, '.lst') then begin
+    lst := TwbLODTreeLSTFile.Create;
+    try
+      lst.LoadFromResource(cont, f);
+      mInfo.Lines.Text := fname + #13#10 + lst.ToText;
+    finally
+      lst.Free;
+    end;
+  end
+  
+  else if SameText(ext, '.btt') or SameText(ext, '.dtl') then begin
+    btt := TwbLODTreeBTTFile.Create;
+    try
+      btt.LoadFromResource(cont, f);
+      mInfo.Lines.Text := fname + #13#10 + btt.ToText;
+    finally
+      btt.Free;
+    end;
   end;
 end;
 
@@ -192,10 +292,8 @@ end;
 // on double click event handler for assets
 procedure lvAssetsDblClick(Sender: TObject);
 begin
-  if not Assigned(lvAssets.Selected) then
-    Exit;
-  // open from last container
-  AssetOpen('', lvAssets.Selected.Caption);
+  if Assigned(lvAssets.Selected) then
+    AssetOpen(SelectedContainer, lvAssets.Selected.Caption);
 end;
 
 //===========================================================================
@@ -224,9 +322,9 @@ begin
   aPath := SelectDirectory('Destination path to copy files to', '', '', nil);
   if aPath = '' then
     Exit;
+
   // if container is selected, then copy files from that container
-  if cmbContainer.ItemIndex = 0 then aContainerName := '' else
-    aContainerName := slContainers[Pred(cmbContainer.ItemIndex)];
+  aContainerName := SelectedContainer;
   AddMessage('Copying files, please wait...');
   try
     for i := 0 to Pred(slItems.Count) do
@@ -290,18 +388,24 @@ end;
 procedure ShowBrowser;
 var
   i: integer;
+  pnl: TPanel;
+  sp: TSplitter;
 begin
   frm := TForm.Create(nil);
   try
     frm.Caption := wbGameName + ' Assets Browser';
-    frm.Width := 900;
-    frm.Height := 550;
+    frm.Width := 950;
+    frm.Height := 600;
     frm.Position := poScreenCenter;
     frm.KeyPreview := True;
     frm.OnKeyDown := FormKeyDown;
 
-    edFilter := TLabeledEdit.Create(frm);
-    edFilter.Parent := frm;
+    pnl := TPanel.Create(frm); pnl.Parent := frm;
+    pnl.Height := 38;
+    pnl.Align := alTop;
+    pnl.BevelOuter := bvNone;
+
+    edFilter := TLabeledEdit.Create(frm); edFilter.Parent := pnl;
     edFilter.LabelPosition := lpLeft;
     edFilter.EditLabel.Caption := 'Filter';
     edFilter.Left := 36;
@@ -310,22 +414,31 @@ begin
     edFilter.OnChange := edFilterOnChange;
 
     // invisible edit field used to copy to clipboard
-    edClipboard := TEdit.Create(frm);
-    edClipboard.Parent := frm;
+    edClipboard := TEdit.Create(frm); edClipboard.Parent := pnl;
     edClipboard.Visible := False;
 
-    lblItems := TLabel.Create(frm);
-    lblItems.Parent := frm;
+    lblItems := TLabel.Create(frm); lblItems.Parent := pnl;
     lblItems.Top := 12;
     lblItems.Left := edFilter.Left + edFilter.Width + 24;
 
-    lvAssets := TListView.Create(frm);
-    lvAssets.Parent := frm;
-    lvAssets.Left := 8;
-    lvAssets.Top := 34;
-    lvAssets.Width := frm.Width - 20;
-    lvAssets.Height := 330;
-    lvAssets.Anchors := [akLeft, akTop, akRight, akBottom];
+    cmbContainer := TComboBox.Create(frm); cmbContainer.Parent := pnl;
+    cmbContainer.Left := pnl.Width - 312;
+    cmbContainer.Top := edFilter.Top;
+    cmbContainer.Width := 300;
+    cmbContainer.Style := csDropDownList;
+    cmbContainer.DropDownCount := 20;
+    cmbContainer.Anchors := [akTop, akRight];
+    cmbContainer.OnChange := cmbContainerOnChange;
+    cmbContainer.Items.Add('All containers');
+    for i := 0 to Pred(slContainers.Count) do
+      cmbContainer.Items.Add(SimpleName(slContainers[i]));
+    cmbContainer.ItemIndex := 0;
+
+    lvAssets := TListView.Create(frm); lvAssets.Parent := frm;
+    lvAssets.Top := pnl.Top + pnl.Height + 10; // make sure it aligns after the top panel
+    lvAssets.Height := frm.Height - 300;
+    lvAssets.Align := alTop;
+    lvAssets.BorderStyle := bsNone;
     lvAssets.ReadOnly := True;
     lvAssets.ViewStyle := vsReport;
     lvAssets.DoubleBuffered := True;
@@ -338,58 +451,22 @@ begin
     lvAssets.OnData := lvAssetsData;
     lvAssets.OnSelectItem := lvAssetsSelectItem;
     lvAssets.OnDblClick := lvAssetsDblClick;
-   
-    cmbContainer := TComboBox.Create(frm);
-    cmbContainer.Parent := frm;
-    cmbContainer.Left := lvAssets.Left + lvAssets.Width - 300;
-    cmbContainer.Top := edFilter.Top;
-    cmbContainer.Width := 300;
-    cmbContainer.Style := csDropDownList;
-    cmbContainer.DropDownCount := 20;
-    cmbContainer.Anchors := [akTop, akRight];
-    cmbContainer.OnChange := cmbContainerOnChange;
-    cmbContainer.Items.Add('All containers');
-    for i := 0 to Pred(slContainers.Count) do
-      cmbContainer.Items.Add(SimpleName(slContainers[i]));
-    cmbContainer.ItemIndex := 0;
 
-    mInfo := TMemo.Create(frm);
-    mInfo.Parent := frm;
-    mInfo.Left := 8;
-    mInfo.Top := lvAssets.Top + lvAssets.Height + 24;
-    mInfo.Width := lvAssets.Width - 160;
-    mInfo.Height := 150;
-    mInfo.Anchors := [akLeft, akRight, akBottom];
+    sp := TSplitter.Create(frm); sp.Parent := frm;
+    sp.Align := alTop;
+    sp.Height := 5;
+
+    mInfo := TMemo.Create(frm); mInfo.Parent := frm;
+    mInfo.Align := alClient;
+    mInfo.BorderStyle := bsNone;
     mInfo.ScrollBars := ssVertical;
     mInfo.ReadOnly := True;
+    mInfo.Lines.Text := 'Additional information'#13#13'Usage:'#13'Right click - Actions menu'#13'Double click - Open action'#13'Ctrl+C - Copy selected file name to clipboard'#13'Esc - Exit';
 
-    lblInfo := TLabel.Create(frm);
-    lblInfo.Parent := frm;
-    lblInfo.Top := mInfo.Top - 16;
-    lblInfo.Left := mInfo.Left;
-    lblInfo.Anchors := [akLeft, akBottom];
-    lblInfo.Caption := 'Additional information';
-
-    lblHelp := TLabel.Create(frm);
-    lblHelp.Parent := frm;
-    lblHelp.Top := mInfo.Top;
-    lblHelp.Left := mInfo.Left + mInfo.Width + 16;
-    lblHelp.Anchors := [akRight, akBottom];
-    lblHelp.Caption := 'Usage:'#13'Right click - actions menu'#13'Double click - open action'#13'Esc - exit';
-
-    btnClose := TButton.Create(frm);
-    btnClose.Parent := frm;
-    btnClose.Top := mInfo.Top + mInfo.Height - btnClose.Height;
-    btnClose.Left := lblHelp.Left + 10;
-    btnClose.Width := 120;
-    btnClose.Caption := 'Close';
-    btnClose.Anchors := [akRight, akBottom];
-    btnClose.ModalResult := mrOk;
-    
     mnPopup := TPopupMenu.Create(frm);
     mnPopup.OnPopup := MenuPopup;
     lvAssets.PopupMenu := mnPopup;
-    
+   
     FilterAssets;
 
     frm.ShowModal;
@@ -411,6 +488,8 @@ begin
   slItems := TwbFastStringList.Create;
   slResList := TStringList.Create;
   sl := TStringList.Create;
+  
+  SaveAsFolder := wbDataPath;
 
   if not wbLoadBSAs then
     MessageDlg('Loading of BSA archives is disabled in xEdit options, only files in Data folder will be shown', mtInformation, [mbOk], 0);
@@ -418,9 +497,7 @@ begin
   ResourceContainerList(slContainers);
   AddMessage('Assets Browser: loading resources, please wait...');
   LoadAssetsList(0);
-  //AddMessage('Done.');
     
-  //AddMessage('Opening browser...');
   ShowBrowser;
   
   slAssets.Free;
