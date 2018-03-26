@@ -497,6 +497,18 @@ begin
   end;
 end;
 
+procedure TwbNifBlock_GetAssetsList(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  s: string;
+begin
+  case Args.Count of
+   0: Value := TwbNifBlock(Args.Obj).GetAssetsList;
+   1: for s in TwbNifBlock(Args.Obj).GetAssetsList do TStrings(V2O(Args.Values[0])).Add(s);
+   else
+     JvInterpreterError(ieTooManyParams, -1);
+  end;
+end;
+
 
 
 { TwbNifFile }
@@ -633,6 +645,20 @@ begin
   Value := TwbNifFile(Args.Obj).SpellAddUpdateTangents;
 end;
 
+procedure TwbNifFile_GetAssetsList(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  s: string;
+begin
+  case Args.Count of
+   0: Value := TwbNifFile(Args.Obj).GetAssetsList;
+   1: for s in TwbNifFile(Args.Obj).GetAssetsList do TStrings(V2O(Args.Values[0])).Add(s);
+   else
+     JvInterpreterError(ieTooManyParams, -1);
+  end;
+end;
+
+
+
 
 { TwbBGSMFile }
 
@@ -663,6 +689,22 @@ end;
 procedure TwbLODTreeBTTFile_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := O2V(TwbLODTreeBTTFile.Create);
+end;
+
+
+{ TwbLODSettingsFO3File }
+
+procedure TwbLODSettingsFO3File_Create(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(TwbLODSettingsFO3File.Create);
+end;
+
+
+{ TwbLODSettingsTES5File }
+
+procedure TwbLODSettingsTES5File_Create(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := O2V(TwbLODSettingsTES5File.Create);
 end;
 
 
@@ -862,6 +904,7 @@ begin
     AddGet(TwbNifBlock, 'UpdateBounds', TwbNifBlock_UpdateBounds, 0, [varEmpty], varEmpty);
     AddGet(TwbNifBlock, 'UpdateNormals', TwbNifBlock_UpdateNormals, -1, [varEmpty], varEmpty);
     AddGet(TwbNifBlock, 'UpdateTangents', TwbNifBlock_UpdateTangents, -1, [varEmpty], varEmpty);
+    AddGet(TwbNifBlock, 'GetAssetsList', TwbNifBlock_GetAssetsList, -1, [varEmpty], varEmpty);
 
     { TwbNifFile }
     AddClass(sDFUnitName, TwbNifFile, 'TwbNifFile');
@@ -887,6 +930,7 @@ begin
     AddGet(TwbNifFile, 'SpellFaceNormals', TwbNifFile_SpellFaceNormals, 0, [varEmpty], varEmpty);
     AddGet(TwbNifFile, 'SpellUpdateTangents', TwbNifFile_SpellUpdateTangents, 0, [varEmpty], varEmpty);
     AddGet(TwbNifFile, 'SpellAddUpdateTangents', TwbNifFile_SpellAddUpdateTangents, 0, [varEmpty], varEmpty);
+    AddGet(TwbNifFile, 'GetAssetsList', TwbNifFile_GetAssetsList, -1, [varEmpty], varEmpty);
 
 
     { Others }
@@ -906,6 +950,14 @@ begin
     { TwbLODTreeBTTFile }
     AddClass(sDFUnitName, TwbLODTreeBTTFile, 'TwbLODTreeBTTFile');
     AddGet(TwbLODTreeBTTFile, 'Create', TwbLODTreeBTTFile_Create, 0, [varEmpty], varEmpty);
+
+    { TwbLODSettingsFO3File }
+    AddClass(sDFUnitName, TwbLODSettingsFO3File, 'TwbLODSettingsFO3File');
+    AddGet(TwbLODSettingsFO3File, 'Create', TwbLODSettingsFO3File_Create, 0, [varEmpty], varEmpty);
+
+    { TwbLODSettingsTES5File }
+    AddClass(sDFUnitName, TwbLODSettingsTES5File, 'TwbLODSettingsTES5File');
+    AddGet(TwbLODSettingsTES5File, 'Create', TwbLODSettingsTES5File_Create, 0, [varEmpty], varEmpty);
 
     { TwbFUZFile }
     AddClass(sDFUnitName, TwbFUZFile, 'TwbFUZFile');

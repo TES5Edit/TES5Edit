@@ -51,6 +51,18 @@ procedure FUZ_GetLIPSize(const e: TdfElement; var aCount: Integer); begin aCount
 procedure FUZ_BeforeSaveLIPSize(const e: TdfElement); begin e.NativeValue := e.Elements['..\LIP Data'].DataSize; end;
 function DDS_EnDX10(const e: TdfElement): Boolean; begin Result := e.EditValues['..\HEADER\ddspf\dwFourCC'] = 'DX10'; end;
 
+procedure GetTextFourCC(const aElement: TdfElement; var aText: string);
+begin
+  if aText = #0#0#0#0 then
+    aText := '';
+end;
+
+procedure SetTextFourCC(const aElement: TdfElement; var aText: string);
+begin
+  if aText = '' then
+    aText := #0#0#0#0;
+end;
+
 procedure wbDefineMisc;
 begin
   if Assigned(dfLODTreeLst) then
@@ -67,7 +79,7 @@ begin
   dfLODSettingsFO3 := dfStruct('LOD', [
     dfInteger('Min Terrain Level', dtU32),
     dfInteger('Max Terrain Level', dtU32),
-    dfInteger('Unknown', dtU32),
+    dfInteger('Stride', dtU32),
     dfInteger('Min X', dtS16),
     dfInteger('Min Y', dtS16),
     dfInteger('Max X', dtS16),
@@ -102,7 +114,7 @@ begin
         dfFloat('Z'),
         dfFloat('Rotation'),
         dfFloat('Scale', '1.0'),
-        dfInteger('FormID', dtU32),
+        dfHexInteger('FormID', dtU32),
         dfInteger('Unknown 1', dtU32),
         dfInteger('Unknown 2', dtU32)
       ]), -4)
@@ -146,12 +158,15 @@ begin
            9, 'DDPF_YUV',
           17, 'DDPF_LUMINANCE'
         ]),
-        dfChars('dwFourCC', 4, '', #0, False, []),
+        dfChars('dwFourCC', 4, '', #0, False, [
+          DF_OnGetText, @GetTextFourCC,
+          DF_OnSetText, @SetTextFourCC
+        ]),
         dfInteger('dwRGBBitCount', dtU32),
-        dfInteger('dwRBitMask', dtU32),
-        dfInteger('dwGBitMask', dtU32),
-        dfInteger('dwBBitMask', dtU32),
-        dfInteger('dwABitMask', dtU32)
+        dfHexInteger('dwRBitMask', dtU32),
+        dfHexInteger('dwGBitMask', dtU32),
+        dfHexInteger('dwBBitMask', dtU32),
+        dfHexInteger('dwABitMask', dtU32)
       ]),
       dfFlags('dwCaps', dtU32, [
          3, 'DDSCAPS_COMPLEX',

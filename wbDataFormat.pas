@@ -620,6 +620,7 @@ function dfInteger(
 function dfInteger(const aName: string; aDataType: TdfDataType; const aDefaultValue: string): TdfIntegerDef; overload;
 function dfInteger(const aName: string; aDataType: TdfDataType; const aEvents: array of const): TdfIntegerDef; overload;
 function dfInteger(const aName: string; aDataType: TdfDataType): TdfIntegerDef; overload;
+function dfHexInteger(const aName: string; aDataType: TdfDataType): TdfDef;
 
 function dfFlags(
   const aName: string;
@@ -3719,6 +3720,30 @@ function dfInteger(const aName: string; aDataType: TdfDataType): TdfIntegerDef;
 begin
   Result := dfInteger(aName, aDataType, '', []);
 end;
+
+procedure GetTextHexInt(const aElement: TdfElement; var aText: string);
+begin
+  aText := IntToHex(StrToInt64(aText), aElement.DataSize * 2);
+end;
+
+procedure SetTextHexInt(const aElement: TdfElement; var aText: string);
+begin
+  try
+    aText := IntToStr(StrToInt64('$' + aText));
+  except
+    raise Exception.Create('Invalid hex value');
+  end;
+end;
+
+function dfHexInteger(const aName: string; aDataType: TdfDataType): TdfDef;
+begin
+  Result := dfInteger(aName, aDataType, [
+    DF_OnGetText, @GetTextHexInt,
+    DF_OnSetText, @SetTextHexInt
+  ]);
+end;
+
+
 
 function dfFlags(
   const aName: string;
