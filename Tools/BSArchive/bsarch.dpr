@@ -25,7 +25,7 @@ uses
   wbStreams in '..\..\wbStreams.pas';
 
 const
-  sVersion = '0.3';
+  sVersion = '0.4';
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
 
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
