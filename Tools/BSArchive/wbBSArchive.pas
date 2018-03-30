@@ -1717,8 +1717,13 @@ begin
           fStream.ReadBuffer(Buffer[0], Length(Buffer));
           if fType = baSSE then
             lz4DecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result))
-          else
+          else try
             DecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result));
+          except
+            // ignore zlib's Buffer error since it happens in vanilla "Fallout - Misc.bsa"
+            // Bethesda probably used old buggy zlib version when packing it
+            on E: Exception do if E.Message <> 'Buffer error' then raise;
+          end;
         end;
       end
       else begin
