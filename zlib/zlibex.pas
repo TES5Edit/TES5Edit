@@ -713,7 +713,7 @@ function DCheck(code: Integer): Integer;
 begin
   Result := code;
   if code < 0 then
-    raise EZDecompressionError.Create(64673);  //!!
+    raise EZDecompressionError.Create(code{64673});  //!!
 end;
 
 const
@@ -2306,8 +2306,8 @@ var
   strm: TZStreamRec;
 begin
   FillChar(strm, sizeof(strm), 0);
-//  strm.zalloc := zlibAllocMem;
-//  strm.zfree := zlibFreeMem;
+  //strm.zalloc := zlibAllocMem;
+  //strm.zfree := zlibFreeMem;
   strm.next_in := InBuf;
   strm.avail_in := InBytes;
   strm.next_out := OutBuf;
@@ -2315,7 +2315,7 @@ begin
   DCheck(inflateInit_(strm, zlib_version, sizeof(strm)));
   try
     if DCheck(inflate(strm, Z_FINISH)) <> Z_STREAM_END then
-      raise EZlibError.CreateRes(64672);
+      raise EZlibError.Create(Z_DATA_ERROR);
   finally
     DCheck(inflateEnd(strm));
   end;
