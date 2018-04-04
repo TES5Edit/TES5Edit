@@ -1756,9 +1756,11 @@ begin
     //AddIntfGet(IwbElement, 'Name', IwbElement_Name, 0, [VarEmpty], varEmpty);
     AddConst(cUnit, 'gmTES4', ord(gmTES4));
     AddConst(cUnit, 'gmTES5', ord(gmTES5));
+    AddConst(cUnit, 'gmTES5VR', ord(gmTES5VR));
     AddConst(cUnit, 'gmFO3', ord(gmFO3));
     AddConst(cUnit, 'gmFNV', ord(gmFNV));
     AddConst(cUnit, 'gmFO4', ord(gmFO4));
+    AddConst(cUnit, 'gmFO4VR', ord(gmFO4VR));
     AddConst(cUnit, 'gmSSE', ord(gmSSE));
 
     { TwbElementType }

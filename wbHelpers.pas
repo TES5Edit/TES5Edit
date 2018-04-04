@@ -1073,13 +1073,13 @@ begin
       with TStringList.Create do try
         if wbGameMode in [gmTES4, gmFO3, gmFNV] then
           Text := StringReplace(ReadString('Archive', 'sArchiveList', ''), ',' ,#10, [rfReplaceAll])
-        else if wbGameMode in [ gmTES5, gmSSE ] then
+        else if wbIsSkyrim then
           Text := StringReplace(
             ReadString('Archive', 'sResourceArchiveList', '') + ',' +
             ReadString('Archive', 'sResourceArchiveList2', ''),
             ',', #10, [rfReplaceAll]
           )
-        else if wbGameMode = gmFO4 then
+        else if wbIsFallout4 then
           Text := StringReplace(
             ReadString('Archive', 'sResourceIndexFileList', '') + ',' +
             ReadString('Archive', 'sResourceStartUpArchiveList', '') + ',' +

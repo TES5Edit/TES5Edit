@@ -37,7 +37,7 @@ var
 // weather records format for Skyrim, SSE and Fallout 4
 function IsFormat3: Boolean;
 begin
-  Result := (wbGameMode = gmTES5) or (wbGameMode = gmSSE) or (wbGameMode = gmFO4);
+  Result := (wbGameMode = gmTES5) or (wbGameMode = gmTES5VR) or (wbGameMode = gmSSE) or (wbGameMode = gmFO4) or (wbGameMode = gmFO4VR);
 end;
   
 //============================================================================
@@ -234,7 +234,7 @@ begin
     SetElementEditValues(Weather, Format('JNAM\Layer #%d\Day', [Layer]), edCloudAlpha2.Text);
     SetElementEditValues(Weather, Format('JNAM\Layer #%d\Sunset', [Layer]), edCloudAlpha3.Text);
     SetElementEditValues(Weather, Format('JNAM\Layer #%d\Night', [Layer]), edCloudAlpha4.Text);
-    if wbGameMode = gmFO4 then begin
+    if (wbGameMode = gmFO4) or (wbGameMode = gmFO4VR) then begin
       SetEditValue(ElementByIndex(ElementByPath(Weather, Format('JNAM\Layer #%d', [Layer])), 4), edCloudAlpha5.Text);
       SetEditValue(ElementByIndex(ElementByPath(Weather, Format('JNAM\Layer #%d', [Layer])), 5), edCloudAlpha6.Text);
       SetEditValue(ElementByIndex(ElementByPath(Weather, Format('JNAM\Layer #%d', [Layer])), 6), edCloudAlpha7.Text);
@@ -277,7 +277,7 @@ begin
     edCloudAlpha2.Text := GetElementEditValues(Weather, Format('JNAM\Layer #%d\Day', [Layer]));
     edCloudAlpha3.Text := GetElementEditValues(Weather, Format('JNAM\Layer #%d\Sunset', [Layer]));
     edCloudAlpha4.Text := GetElementEditValues(Weather, Format('JNAM\Layer #%d\Night', [Layer]));
-    if wbGameMode = gmFO4 then begin
+    if (wbGameMode = gmFO4) or (wbGameMode = gmFO4VR) then begin
       edCloudAlpha5.Text := GetEditValue(ElementByIndex(ElementByPath(Weather, Format('JNAM\Layer #%d', [Layer])), 4));
       edCloudAlpha6.Text := GetEditValue(ElementByIndex(ElementByPath(Weather, Format('JNAM\Layer #%d', [Layer])), 5));
       edCloudAlpha7.Text := GetEditValue(ElementByIndex(ElementByPath(Weather, Format('JNAM\Layer #%d', [Layer])), 6));
@@ -575,7 +575,7 @@ begin
       edCloudAlpha4 := TLabeledEdit.Create(frm); edCloudAlpha4.Parent := pnlCloudEdit;
       edCloudAlpha4.LabelPosition := lpLeft; edCloudAlpha4.EditLabel.Caption := 'Alpha';
       edCloudAlpha4.Left := 62 + 3*iColorEditorWidth; edCloudAlpha4.Top := 155; edCloudAlpha4.Width := iColorEditorWidth - 50;
-      if wbGameMode = gmFO4 then begin
+      if (wbGameMode = gmFO4) or (wbGameMode = gmFO4VR) then begin
         edCloudAlpha5 := TLabeledEdit.Create(frm); edCloudAlpha5.Parent := pnlCloudEdit;
         edCloudAlpha5.LabelPosition := lpLeft; edCloudAlpha5.EditLabel.Caption := 'Alpha';
         edCloudAlpha5.Left := 62 + 4*iColorEditorWidth; edCloudAlpha5.Top := 155; edCloudAlpha5.Width := iColorEditorWidth - 50;
@@ -800,7 +800,7 @@ begin
     Exit;
   end;
   // time spans for colors
-  if wbGameMode = gmFO4 then
+  if (wbGameMode = gmFO4) or (wbGameMode = gmFO4VR) then
     sColorTimes := 'Sunrise,Day,Sunset,Night,EarlySunrise,LateSunrise,EarlySunset,LateSunset'
   else
     sColorTimes := 'Sunrise,Day,Sunset,Night';

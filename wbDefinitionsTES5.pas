@@ -823,7 +823,7 @@ var
 
 function IsSSE: Boolean; inline; overload;
 begin
-  Result := wbGameMode = gmSSE;
+  Result := wbGameMode in [gmSSE, gmTES5VR];
 end;
 
 function IsSSE(const aDef1, aDef2: String): String; inline; overload;
@@ -13635,7 +13635,13 @@ begin
     wbOfficialDLC[2] := 'Dragonborn.esm';
 
     wbCreationClubContentFileName := 'Skyrim.ccc';
+  end
+
+  else if wbGameMode = gmTES5VR then begin
+    SetLength(wbOfficialDLC, 1);
+    wbOfficialDLC[0] := 'SkyrimVR.esm';
   end;
+
 
 end;
 

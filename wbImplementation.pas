@@ -2294,11 +2294,9 @@ begin
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.30'
   else if wbGameMode = gmTES4 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.0'
-  else if wbGameMode = gmTES5 then
+  else if wbIsSkyrim then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.7'
-  else if wbGameMode = gmSSE then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.7'
-  else if wbGameMode = gmFO4 then
+  else if wbIsFallout4 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.95';
   Header.RecordBySignature['HEDR'].Elements[2].EditValue := '2048';
   flLoadFinished := True;
@@ -3046,7 +3044,7 @@ begin
 
     j := 0;
     ONAMs := nil;
-    if wbGameMode in [gmFO3, gmFNV, gmTES5, gmSSE, gmFO4] then begin
+    if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 then begin
       Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
       while FileHeader.RemoveElement('ONAM') <> nil do
         ;
@@ -3054,7 +3052,7 @@ begin
         for i := 0 to Pred(MasterFiles.ElementCount) do begin
           if Supports(MasterFiles.Elements[i], IwbContainerElementRef, MasterFile) then begin
             // Fallout 4 CK creates ONAMs in ESP too
-            if FileHeader.IsESM or (wbGameMode = gmFO4) then
+            if FileHeader.IsESM or wbIsFallout4 then
               while j <= High(flRecords) do begin
                 Current := flRecords[j];
                 FormID := Current.FixedFormID;
@@ -3080,7 +3078,7 @@ begin
                    (Signature = 'PBAR') or {>>> Skyrim <<<}
                    (Signature = 'PHZD') or {>>> Skyrim <<<}
                    // Fallout 4 (and later games?)
-                   ((wbGameMode >= gmFO4) and (
+                   (wbIsFallout4 and (
                      (Signature = 'SCEN') or
                      (Signature = 'DLBR') or
                      (Signature = 'DIAL') or
@@ -3278,7 +3276,7 @@ begin
   SortRecordsByEditorID;
   flProgress('EditorID index built');
 
-  if wbGameMode in [gmFNV, gmTES5, gmSSE, gmFO4] then begin
+  if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 then begin
     IsInternal := not GetIsEditable and wbBeginInternalEdit(True);
     try
       SetLength(Groups, wbGroupOrder.Count);
@@ -5483,7 +5481,7 @@ begin
             with TwbMainRecord(MainRecord.ElementID) do begin
               Self.mrStruct.mrsFlags := mrStruct.mrsFlags;
               Self.mrStruct.mrsVCS1 := DefaultVCS1;
-              if wbGameMode in [gmFO3, gmFNV, gmTES5, gmSSE, gmFO4] then begin
+              if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 then begin
                 Self.mrStruct.mrsVersion := mrStruct.mrsVersion;
                 Self.mrStruct.mrsVCS2 := DefaultVCS2; //mrStruct.mrsVCS2;
               end;
@@ -5938,12 +5936,12 @@ begin
   BasePtr.mrsFormID := aFormID;
   BasePtr.mrsVCS1 := DefaultVCS1;
   case wbGameMode of
-    gmFO4 : BasePtr.mrsVersion := 131;
-    gmTES5: BasePtr.mrsVersion := 43;
-    gmSSE : BasePtr.mrsVersion := 44;
-    gmFNV : BasePtr.mrsVersion := 15;
-    gmFO3 : BasePtr.mrsVersion := 15;
-    else    BasePtr.mrsVersion := 15;
+    gmFO4, gmFO4VR   : BasePtr.mrsVersion := 131;
+    gmTES5, gmTES5VR : BasePtr.mrsVersion := 43;
+    gmSSE            : BasePtr.mrsVersion := 44;
+    gmFNV            : BasePtr.mrsVersion := 15;
+    gmFO3            : BasePtr.mrsVersion := 15;
+    else               BasePtr.mrsVersion := 15;
   end;
   BasePtr.mrsVCS2 := DefaultVCS2;
 
@@ -6969,7 +6967,7 @@ var
 begin
   Result := '';
 
-  if wbGameMode <> gmFO4 then
+  if not wbIsFallout4 then
     Exit;
 
   if not (mrsHasPrecombinedMeshChecked in mrStates) then begin
@@ -11738,7 +11736,7 @@ begin
   try
     ChildrenOf := GetChildrenOf;
     // there is no PNAM in Fallout 4, looks like INFOs are no longer linked lists
-    if (wbGameMode <> gmFO4) and Assigned(ChildrenOf) and (ChildrenOf.Signature = 'DIAL') then begin
+    if (not wbIsFallout4) and Assigned(ChildrenOf) and (ChildrenOf.Signature = 'DIAL') then begin
       {>>> Sorting DIAL group doesn't always work, and Skyrim.esm has a plenty of unsorted DIALs <<<}
       {>>> Also disabled for FNV, https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=59 <<<}
       if not wbSortGroupRecord then
@@ -11778,7 +11776,7 @@ begin
             else if not TargetRecord.IsDeleted then if wbBeginInternalEdit then try
               if not TargetRecord.ElementExists['PNAM'] then begin
                 {>>> No QSTI in Skyrim, using DIAL\QNAM <<<}
-                if wbGameMode in [ gmTES5, gmSSE ] then begin
+                if wbIsSkyrim then begin
                   Supports(TargetRecord.Container, IwbGroupRecord, g);
                   InfoQuest := g.ChildrenOf.ElementNativeValues['QNAM'];
                 end else
@@ -11786,7 +11784,7 @@ begin
                 InsertRecord := PrevRecord;
                 Inserted := False;
                 while Assigned(InsertRecord) do begin
-                  if wbGameMode in [ gmTES5, gmSSE ] then begin
+                  if wbIsSkyrim then begin
                     Supports(InsertRecord.Container, IwbGroupRecord, g);
                     InfoQuest2 := g.ChildrenOf.ElementNativeValues['QNAM'];
                   end else
