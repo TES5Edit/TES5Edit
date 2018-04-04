@@ -3129,12 +3129,13 @@ var
   wbSizeOfMainRecordStruct : Integer;
 
 type
-  TwbGameMode   = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmSSE, gmFO4);
+  TwbGameMode   = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmTES5VR, gmSSE, gmFO4, gmFO4VR);
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
                     tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
                     tmCheckForErrors, tmCheckForITM, tmCheckForDR);
   TwbToolSource = (tsPlugins, tsSaves);
   TwbSetOfMode  = set of TwbToolMode;
+  TwbSetOfSource  = set of TwbToolSource;
 
 var
   wbGameMode    : TwbGameMode;
@@ -3142,7 +3143,8 @@ var
   wbToolSource  : TwbToolSource;
   wbAppName     : string;
   wbGameName    : string;
-  wbGameName2   : string; // game title name
+  wbGameName2   : string; // game title name used for AppData and MyGames folders
+  wbGameNameReg : string; // registry name
   wbToolName    : string;
   wbSourceName  : String;
   wbLanguage    : string;
@@ -3156,6 +3158,10 @@ var
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
+function wbIsSkyrim: Boolean;
+function wbIsFallout3: Boolean;
+function wbIsFallout4: Boolean;
+function wbIsEslSupported: Boolean;
 
 procedure ReportDefs;
 
@@ -3467,6 +3473,26 @@ begin
     wbRecordDefs[i].rdeDef.Report(nil);
 end;
 
+function wbIsSkyrim: Boolean; inline;
+begin
+  Result := wbGameMode in [gmTES5, gmTES5VR, gmSSE];
+end;
+
+function wbIsFallout3: Boolean; inline;
+begin
+  Result := wbGameMode in [gmFO3, gmFNV];
+end;
+
+function wbIsFallout4: Boolean; inline;
+begin
+  Result := wbGameMode in [gmFO4, gmFO4VR];
+end;
+
+function wbIsEslSupported: Boolean; inline;
+begin
+  Result := wbGameMode in [gmSSE, gmTES5VR, gmFO4, gmFO4VR];
+end;
+
 function wbDefToName(const aDef: IwbDef): string;
 var
   SignatureDef : IwbSignatureDef;
@@ -3504,6 +3530,7 @@ begin
       Result := Result + '['+IntToStr(aDefs[i].Index)+'] ';
   end;
 end;
+
 function wbIsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell): Boolean;
 var
   GridCell : TwbGridCell;

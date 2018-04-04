@@ -97,13 +97,13 @@ begin
     Result := Format(texname, [aEditorID, aEditorID, aLODLevel, x, y]);
   end
   // Skyrim
-  else if (aGame = gmTES5) or (aGame = gmSSE) then begin
+  else if (aGame = gmTES5) or (aGame = gmTES5VR) or (aGame = gmSSE) then begin
     if not aNormals then texname := 'textures\terrain\%s\%s.%d.%d.%d.dds'
                     else texname := 'textures\terrain\%s\%s.%d.%d.%d_n.dds';
     Result := Format(texname, [aEditorID, aEditorID, aLODLevel, x, y]);
   end
   // FO4
-  else if aGame = gmFO4 then begin
+  else if (aGame = gmFO4) or (aGame = gmFO4VR) then begin
     if not aNormals then texname := 'textures\terrain\%s\%s.%d.%d.%d.dds'
                     else texname := 'textures\terrain\%s\%s.%d.%d.%d_msn.dds';
     Result := Format(texname, [aEditorID, aEditorID, aLODLevel, x, y]);
@@ -1605,7 +1605,7 @@ begin
     LODSize := 1024; // Oblivion uses 1024x1024 lod textures only
     MapViewScale := 0.25; // scale them down since they are huge
   end
-  else if wbGameMode = gmFO4 then begin
+  else if (wbGameMode = gmFO4) or (wbGameMode = gmFO4VR) then begin
     MapSizeX := 96;
     MapSizeY := 96;
     LODSize := 512; // FO4 uses 512 for all LOD levels

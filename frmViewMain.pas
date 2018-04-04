@@ -2658,7 +2658,7 @@ var
   LastLoadOrder   : Integer;
   i               : Integer;
 begin
-  if wbGameMode in [gmTES5, gmSSE, gmFO4] then begin
+  if wbIsSkyrim or wbIsFallout4 then begin
     if MessageDlg('Merged patch is unsupported for ' + wbGameName2 +
       '. Create it only if you know what you are doing and can troubleshoot possible issues yourself. ' +
       'Do you want to continue?',
@@ -3106,7 +3106,7 @@ var
   Worldspaces : TDynMainRecords;
 begin
   // xLODGen: selective lodgenning, no need to regenerate lod for all worldspaces like in Oblivion
-  if wbGameMode in [gmTES5, gmSSE, gmFO3, gmFNV, gmFO4] then begin
+  if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 then begin
     try
       mniNavGenerateLODClick(nil);
     finally
@@ -3290,7 +3290,7 @@ procedure TfrmMain.DoInit;
         for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
           slDLC.Add(wbOfficialDLC[i]);
         repeat
-          if IsFileESM(F.Name) or IsFileESP(F.Name) or ((wbGameMode in [gmSSE, gmFO4]) and IsFileESL(F.Name)) then begin
+          if IsFileESM(F.Name) or IsFileESP(F.Name) or (wbIsEslSupported and IsFileESL(F.Name)) then begin
             if SameText(F.Name, wbGameName + '.hardcoded.esp') then
               DeleteFile(wbDataPath + F.Name)
             else
@@ -3371,7 +3371,7 @@ procedure TfrmMain.DoInit;
 
         // Skyrim and SSE always load Update.esm second no matter what
         // even if not present in plugins.txt
-        if wbGameMode in [gmTES5, gmSSE] then begin
+        if wbIsSkyrim then begin
           j := FindMatchText(sl, 'Update.esm');
           if j = -1 then sl.Insert(1, 'Update.esm');
         end;
@@ -3384,7 +3384,7 @@ procedure TfrmMain.DoInit;
             sl.Delete(j);
 
           // for Skyrim and SSE insert after Update.esm
-          if wbGameMode in [gmTES5, gmSSE] then
+          if wbIsSkyrim then
             sl.Insert(2, wbOfficialDLC[i])
           else
             sl.Insert(1, wbOfficialDLC[i]);
@@ -3440,7 +3440,7 @@ procedure TfrmMain.DoInit;
           end;
       end;
 
-      if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (sl.Count > 1) and (wbGameMode in [gmFO3, gmFNV]) then begin
+      if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (sl.Count > 1) and wbIsFallout3 then begin
         Age := Integer(sl.Objects[0]);
         AgeDateTime := FileDateToDateTime(Age);
         for i := 1 to Pred(sl.Count) do begin
@@ -3578,7 +3578,7 @@ begin
   AddMessage('Using plugin list: ' + wbPluginsFileName);
   if not FileExists(wbPluginsFileName) then begin
     // plugins file could be missing in Fallout 4 and SSE since DLCs are loaded automatically
-    if (wbToolSource in [tsPlugins]) and not (wbGameMode in [gmFO4, gmSSE]) then begin
+    if (wbToolSource in [tsPlugins]) and not (wbGameMode in [gmFO4, gmFO4VR, gmTES5VR, gmSSE]) then begin
       AddMessage('Fatal: Could not find plugin list');
       Exit;
     end else
@@ -3640,12 +3640,11 @@ begin
           tsSaves: begin
             case wbGameMode of
               gmFO3:  begin saveExt := '.fos'; coSaveExt := '.fose'; end;
-              gmFO4:  begin saveExt := '.fos'; coSaveExt := '';      end;
+              gmFO4, gmFO4VR:  begin saveExt := '.fos'; coSaveExt := '';      end;
               gmFNV:  begin saveExt := '.fos'; coSaveExt := '.nvse'; end;
               gmTES3: begin saveExt := '.ess'; coSaveExt := '';      end;
               gmTES4: begin saveExt := '.ess'; coSaveExt := '.obse'; end;
-              gmTES5: begin saveExt := '.ess'; coSaveExt := '.skse'; end;
-              gmSSE:  begin saveExt := '.ess'; coSaveExt := '.skse'; end;
+              gmTES5, gmTES5VR, gmSSE: begin saveExt := '.ess'; coSaveExt := '.skse'; end;
             end;
 
             if FindFirst(ExpandFileName(wbSavePath+'\*'+saveExt), faAnyfile, R)=0 then try
@@ -3678,25 +3677,25 @@ begin
         end;
 
         if not wbQuickClean then
-          if (wbToolMode in wbPluginModes) and (sl.Count > 1) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFNV, gmTES5, gmSSE]) then begin
-              j := CheckListBox1.Items.IndexOf(wbPluginToUse);
+          if (wbToolMode in wbPluginModes) and (sl.Count > 1) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFNV, gmTES5, gmTES5VR, gmSSE]) then begin
+            j := CheckListBox1.Items.IndexOf(wbPluginToUse);
+            if j < 0 then begin
+              ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
+              frmMain.Close;
+              Exit;
+            end else
+              CheckListBox1.Checked[j] := True;
+
+            // More plugins requested ?
+            while wbFindNextValidCmdLinePlugin(wbParamIndex, s, wbDataPath) do begin
+              j := CheckListBox1.Items.IndexOf(s);
               if j < 0 then begin
-                ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
+                AddMessage('Note: Selected plugin "' + s + '" does not exist');
                 frmMain.Close;
                 Exit;
               end else
                 CheckListBox1.Checked[j] := True;
-
-              // More plugins requested ?
-              while wbFindNextValidCmdLinePlugin(wbParamIndex, s, wbDataPath) do begin
-                j := CheckListBox1.Items.IndexOf(s);
-                if j < 0 then begin
-                  AddMessage('Note: Selected plugin "' + s + '" does not exist');
-                  frmMain.Close;
-                  Exit;
-                end else
-                  CheckListBox1.Checked[j] := True;
-              end;
+            end;
           end
 
           else if wbToolSource in [tsPlugins] then begin
@@ -3715,12 +3714,12 @@ begin
 
               RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl, sl2);
 
-              // use starred files as active files in FO4 and SSE
-              if wbGameMode in [gmFO4, gmSSE] then begin
+              // use starred files as active files in FO4, SSE and VR
+              if wbGameMode in [gmFO4, gmFO4VR, gmTES5VR, gmSSE] then begin
                 sl.Clear;
                 sl.AddStrings(sl2);
                 // [SSE] select official files by default, they are always present and loaded
-                if wbGameMode in [gmSSE] then begin
+                if wbGameMode in [gmTES5VR, gmSSE] then begin
                   sl.Add('Update.esm');
                   for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
                     sl.Add(wbOfficialDLC[i]);
@@ -7171,7 +7170,7 @@ begin
           for j := 0 to Pred(Group.ElementCount) do
             if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbGameMode in [gmTES5, gmSSE, gmFNV, gmFO3, gmFO4]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
                 Continue;
               if Mainrecord.Signature = 'WRLD' then begin
                 // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
@@ -7196,7 +7195,7 @@ begin
           if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
             if Mainrecord.Signature = 'WRLD' then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbGameMode in [gmTES5, gmSSE, gmFNV, gmFO3, gmFO4]) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
                 Continue;
               // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
               if Mainrecord.ElementExists['Parent\WNAM'] and (Mainrecord.ElementNativeValues['Parent\PNAM\Flags'] and $2 = $2) then
@@ -7251,7 +7250,7 @@ begin
   end;
 
   // xLODGen
-  if wbGameMode in [gmTES5, gmSSE, gmFO3, gmFNV, gmFO4] then begin
+  if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 then begin
     with TfrmLODGen.Create(Self) do try
       j := -1;
       for i := Low(WorldSpaces) to High(WorldSpaces) do begin
@@ -7273,7 +7272,7 @@ begin
       Section := wbAppName + ' LOD Options';
 
       // FO4 settings
-      if wbGameMode = gmFO4 then begin
+      if wbIsFallout4 then begin
         iDefaultAtlasWidth := 4096;
         iDefaultAtlasHeight := 4096;
         fDefaultUVRange := 1.1;
@@ -7281,11 +7280,11 @@ begin
         iDefaultAtlasNormalFormat := ifATI2n;
       end;
 
-      if Assigned(Sender) and (wbGameMode = gmSSE) then begin
+      if Assigned(Sender) and (wbGameMode in [gmSSE, gmTES5VR]) then begin
         cbObjectsLOD.Checked := False;
         cbObjectsLOD.Enabled := False;
         Application.MessageBox(
-          'Objects LOD generation for Skyrim Special Edition is possible only in xLODGen mode either ' +
+          'Objects LOD generation for Skyrim Special Edition and Skyrim VR is possible only in xLODGen mode either ' +
           'by renaming executable to SSELODGen.exe or running with -lodgen command line parameter.',
           'Warning',
           MB_ICONINFORMATION + MB_OK
@@ -7316,7 +7315,7 @@ begin
       cbTreesLOD.Checked := Settings.ReadBool(Section, 'TreesLOD', True);
       cbTrees3D.Checked := Settings.ReadBool(Section, 'Trees3D', False {wbGameMode in [gmSSE]});
       cmbTreesLODBrightness.ItemIndex := IndexOf(cmbTreesLODBrightness.Items, Settings.ReadString(Section, 'TreesBrightness', '0'));
-      if wbGameMode in [gmFO4] then begin
+      if wbIsFallout4 then begin
         cbTreesLOD.Checked := False;
         cbTreesLOD.Enabled := False;
         cbUseAlphaThreshold.Visible := True;
@@ -7350,7 +7349,7 @@ begin
       Settings.WriteString(Section, 'LODX', edLODX.Text);
       Settings.WriteString(Section, 'LODY', edLODY.Text);
       // Fallouts can have only a single atlas, so no options here
-      if wbGameMode in [gmFO3, gmFNV] then begin
+      if wbIsFallout3 then begin
         Settings.WriteBool(Section, 'BuildAtlas', True);
         Settings.WriteString(Section, 'AtlasTextureSize', '1024');
         Settings.WriteString(Section, 'AtlasTextureUVRange', '10000');
@@ -7375,9 +7374,9 @@ begin
       try
         for i := 0 to Pred(clbWorldspace.Count) do
           if clbWorldspace.Checked[i] then
-            if wbGameMode in [gmTES5, gmSSE, gmFO3, gmFNV] then
+            if wbIsSkyrim or wbIsFallout3 then
               wbGenerateLODTES5(IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), lodTypes, Files, Settings)
-            else if wbGameMode in [gmFO4] then
+            else if wbIsFallout4 then
               wbGenerateLODFO4(IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), Files, Settings);
       finally
         Self.Enabled := True;
@@ -8269,7 +8268,7 @@ begin
             if not AutoModeCheckForDR then begin
               IsDeleted := True;
               IsDeleted := False;
-              if (wbGameMode in [gmFO3, gmFO4, gmFNV, gmTES5, gmSSE]) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
+              if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
                 IsPersistent := True
               else if wbGameMode = gmTES4 then
                 IsPersistent := False;
@@ -8293,7 +8292,7 @@ begin
                     Element.NativeValue := wbUDRSetScaleValue;
               end;
 
-              if wbUDRSetMSTT and (wbGameMode in [gmFO3, gmFNV]) then begin
+              if wbUDRSetMSTT and wbIsFallout3 then begin
                 Element := ElementBySignature['NAME'];
                 if Assigned(Element) then
                   if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
@@ -10456,7 +10455,7 @@ begin
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
   mniNavApplyScript.Visible := mniNavCheckForErrors.Visible;
-  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmSSE, gmFO4]);
+  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmTES5VR, gmSSE, gmFO4, gmFO4VR]);
 
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;
@@ -10526,11 +10525,11 @@ begin
     mniNavCellChildVWD.Checked := SelectionIncludesAnyVWD(NoNodes);
   end;
 
-  mniNavCreateSEQFile.Visible := (wbGameMode in [ gmTES5, gmSSE ]) and
+  mniNavCreateSEQFile.Visible := wbIsSkyrim and
      Assigned(Element) and
     (Element.ElementType = etFile);
 
-  mniNavLocalization.Visible := (wbGameMode in [gmTES5, gmSSE, gmFO4]);
+  mniNavLocalization.Visible := (wbIsSkyrim or wbIsFallout4);
   mniNavLocalizationSwitch.Visible :=
      Assigned(Element) and
     (Element.ElementType = etFile) and
@@ -10541,7 +10540,7 @@ begin
     else
       mniNavLocalizationSwitch.Caption := 'Localize plugin';
 
-  if wbGameMode in [gmTES5, gmSSE, gmFO4] then begin
+  if wbIsSkyrim or wbIsFallout4 then begin
     mniNavLocalizationLanguage.Clear;
     sl := wbLocalizationHandler.AvailableLanguages;
     for i := 0 to Pred(sl.Count) do begin
@@ -10556,9 +10555,9 @@ begin
     sl.Free;
   end;
 
-  mniNavLogAnalyzer.Visible := (wbGameMode in [gmTES4, gmTES5, gmSSE]);
+  mniNavLogAnalyzer.Visible := (wbGameMode = gmTES4) or wbIsSkyrim;
   mniNavLogAnalyzer.Clear;
-  if wbGameMode in [ gmTES5, gmSSE ] then begin
+  if wbIsSkyrim then begin
     MenuItem := TMenuItem.Create(mniNavLogAnalyzer);
     MenuItem.OnClick := mniNavLogAnalyzerClick;
     MenuItem.Caption := 'Papyrus Log';
@@ -11778,13 +11777,11 @@ begin
       ShellExecute(Handle, 'open', 'https://flattr.com/thing/77985/TES4Edit-Editor-for-The-Elder-Scrolls-IV-Oblivion', '', '', 0);
     gmFO3:
       ShellExecute(Handle, 'open', 'https://flattr.com/thing/77983/FO3Edit-Editor-for-Fallout-3', '', '', 0);
-    gmFO4:
+    gmFO4, gmFO4VR:
       ShellExecute(Handle, 'open', 'https://flattr.com/thing/77983/FO3Edit-Editor-for-Fallout-3', '', '', 0);
     gmFNV:
       ShellExecute(Handle, 'open', 'https://flattr.com/thing/77972/FNVEdit-Editor-for-Fallout-New-Vegas', '', '', 0);
-    gmTES5:
-      ShellExecute(Handle, 'open', 'https://flattr.com/thing/77985/TES4Edit-Editor-for-The-Elder-Scrolls-IV-Oblivion', '', '', 0);
-    gmSSE:
+    gmTES5, gmTES5VR, gmSSE:
       ShellExecute(Handle, 'open', 'https://flattr.com/thing/77985/TES4Edit-Editor-for-The-Elder-Scrolls-IV-Oblivion', '', '', 0);
   end;
 end;
@@ -11984,7 +11981,7 @@ begin
         FreeAndNil(sl2);
       end;
 
-      if wbGameMode in [gmTES5, gmSSE] then begin
+      if wbIsSkyrim then begin
         slKeywords := TwbFastStringListCS.CreateSorted;
         for i := 0 to Pred(CheckListBox1.Count) do
           if CheckListBox1.Checked[i] then begin
@@ -12123,7 +12120,9 @@ var
   i, j                        : Integer;
 const
   SiteName : array[TwbGameMode] of string =
-    ('Fallout3', 'NewVegas', 'Oblivion', 'Oblivion', 'Skyrim', 'Skyrim', 'Fallout4');
+    ('Fallout3', 'NewVegas', 'Oblivion', 'Oblivion',
+     'Skyrim', 'Skyrim', 'Skyrim Special Edition',
+     'Fallout4', 'Fallout4');
 begin
   if not wbLoaderDone then
     Exit;
@@ -14573,7 +14572,7 @@ begin
   end
   else if SameText(Identifier, 'GenerateLODTES5Trees') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-      if wbGameMode in [gmTES5, gmSSE] then
+      if wbIsSkyrim then
         wbGenerateLODTES5(MainRecord, [lodTrees], Files, Settings);
       Done := True;
     end else
@@ -14581,7 +14580,7 @@ begin
   end
   else if SameText(Identifier, 'GenerateLODTES5Objects') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-      if wbGameMode in [gmTES5, gmSSE] then
+      if wbIsSkyrim then
         wbGenerateLODTES5(MainRecord, [lodObjects], Files, Settings);
       Done := True;
     end else
@@ -14937,7 +14936,7 @@ begin
 
   vstNav.PopupMenu := pmuNav;
 
-  if wbGameMode in [gmTES5, gmSSE] then begin
+  if wbIsSkyrim then begin
     with vstSpreadSheetWeapon.Header.Columns[9] do
       Options := Options - [coVisible];
     for i := 12 to 20 do
@@ -14966,9 +14965,9 @@ begin
   SetupTreeView(vstSpreadsheetArmor);
   SetupTreeView(vstSpreadSheetAmmo);
 
-  tbsWEAPSpreadsheet.TabVisible := wbGameMode in [gmTES4, gmTES5, gmSSE];
-  tbsARMOSpreadsheet.TabVisible := wbGameMode in [gmTES4, gmTES5, gmSSE];
-  tbsAMMOSpreadsheet.TabVisible := wbGameMode in [gmTES4, gmTES5, gmSSE];
+  tbsWEAPSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim;
+  tbsARMOSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim;
+  tbsAMMOSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim;
 
   tmrCheckUnsaved.Enabled := wbEditAllowed and
     not (wbToolMode in wbAutoModes) and
@@ -15160,7 +15159,7 @@ begin
                 // all games except old Skyrim load BSA files with partial matching, Skyrim requires exact names match
                 // and can use a private ini to specify the bsa to use.
                 if HasBSAs(ChangeFileExt(ltLoadList[i], ''), ltDataPath,
-                    wbGameMode in [gmTES5], wbGameMode in [gmTES5, gmSSE], n, m)>0 then begin
+                    wbGameMode in [gmTES5], wbIsSkyrim, n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do
                         if wbLoadBSAs then begin
                           LoaderProgress('[' + n[j] + '] Loading Resources.');
