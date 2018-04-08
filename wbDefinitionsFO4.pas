@@ -16571,22 +16571,20 @@ begin
   DefineFO4t;
   DefineFO4u;
 
-  if wbGameMode = gmFO4 then begin
-    SetLength(wbOfficialDLC, 6);
-    wbOfficialDLC[0] := 'DLCRobot.esm';
-    wbOfficialDLC[1] := 'DLCworkshop01.esm';
-    wbOfficialDLC[2] := 'DLCCoast.esm';
-    wbOfficialDLC[3] := 'DLCworkshop02.esm';
-    wbOfficialDLC[4] := 'DLCworkshop03.esm';
-    wbOfficialDLC[5] := 'DLCNukaWorld.esm';
+  SetLength(wbOfficialDLC, 6);
+  wbOfficialDLC[0] := 'DLCRobot.esm';
+  wbOfficialDLC[1] := 'DLCworkshop01.esm';
+  wbOfficialDLC[2] := 'DLCCoast.esm';
+  wbOfficialDLC[3] := 'DLCworkshop02.esm';
+  wbOfficialDLC[4] := 'DLCworkshop03.esm';
+  wbOfficialDLC[5] := 'DLCNukaWorld.esm';
 
+  if wbGameMode = gmFO4VR then begin
+    // new VR esm is loaded after DLCs
+    SetLength(wbOfficialDLC, Succ(Length(wbOfficialDLC)));
+    wbOfficialDLC[Pred(Length(wbOfficialDLC))] := 'Fallout4_VR.esm';
+  end else
     wbCreationClubContentFileName := 'Fallout4.ccc';
-  end
-
-  else if wbGameMode = gmFO4VR then begin
-    SetLength(wbOfficialDLC, 1);
-    wbOfficialDLC[0] := 'Fallout4_VR.esm';
-  end;
 
 end;
 
