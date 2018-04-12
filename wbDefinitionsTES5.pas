@@ -783,6 +783,7 @@ var
   wbCNAM: IwbSubRecordDef;
   wbCNAMReq: IwbSubRecordDef;
   wbCITC: IwbSubRecordDef;
+  wbCITCReq: IwbSubRecordDef;
   wbMGEFData: IwbSubRecordStructDef;
   wbMGEFType: IwbIntegerDef;
   wbMDOB: IwbSubRecordDef;
@@ -4529,6 +4530,7 @@ begin
   wbNull := wbByteArray('Unused', -255);
   wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
   wbCITC := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign);
+  wbCITCReq := wbInteger( CITC, 'Condition Count', itU32, nil, cpBenign, True);
   wbLVLD := wbInteger(LVLD, 'Chance None', itU8, nil, cpNormal, True);
 
   wbSPCT := wbInteger(SPCT, 'Count', itU32, nil, cpBenign);
@@ -9686,7 +9688,7 @@ begin
     wbEDID,
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
-    wbCITC,
+    wbCITCReq,
     wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
     wbUnknown(XNAM)
@@ -9696,7 +9698,7 @@ begin
     wbEDID,
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
-    wbCITC,
+    wbCITCReq,
     wbCTDAsCount,
     wbStruct(DNAM, 'Flags', [
       wbInteger('Node Flags', itU16, wbSMNodeFlags),
@@ -9708,7 +9710,7 @@ begin
     ]),
     wbInteger(XNAM, 'Max concurrent quests', itU32),
     wbInteger(MNAM, 'Num quests to run', itU32),
-    wbInteger(QNAM, 'Quest Count', itU32, nil, cpBenign),
+    wbInteger(QNAM, 'Quest Count', itU32, nil, cpBenign, True),
     wbRArray('Quests', wbRStructSK([0], 'Quest', [
       wbFormIDCk(NNAM, 'Quest', [QUST]),
       wbUnknown(FNAM),
@@ -9720,7 +9722,7 @@ begin
     wbEDID,
     wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
-    wbCITC,
+    wbCITCReq,
     wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
     wbUnknown(XNAM),

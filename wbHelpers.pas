@@ -145,7 +145,7 @@ function wbExtractNameFromPath(aPathName: String): String;
 
 function wbCounterAfterSet(aCounterName: String; const aElement: IwbElement): Boolean;
 function wbCounterByPathAfterSet(aCounterName: String; const aElement: IwbElement): Boolean;
-function wbCounterContainerAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement; DeleteOnEmpty: Boolean = False): Boolean;
+function wbCounterContainerAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement): Boolean;
 function wbCounterContainerByPathAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement): Boolean;
 function wbFormVerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aMinimum: Integer): Integer;
 function wbFormVer78Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -953,8 +953,13 @@ begin
       if not Assigned(Element) then  // Signatures not listed in mrDef cannot be added
         Element := Container.Add(Copy(aCounterName, 1, 4));
       if Assigned(Element) and (SameText(Element.Name, aCounterName)) then try
-        if (Element.GetNativeValue <> SelfAsContainer.GetElementCount) then
-          Element.SetNativeValue(SelfAsContainer.GetElementCount);
+        if Element.GetNativeValue <> SelfAsContainer.GetElementCount then
+          // if count = 0 and counter element is not required, then just remove it
+          if (SelfAsContainer.GetElementCount = 0) and not Element.Def.Required then
+            Element.Remove
+          else
+            Element.SetNativeValue(SelfAsContainer.GetElementCount);
+
         Result := True;
       except
         // No exception if the value cannot be set, expected non value
@@ -979,8 +984,13 @@ begin
 //      if not Assigned(Element) then  // Signatures not listed in mrDef cannot be added
 //        Element := Container.Add(Copy(aCounterName, 1, 4));
       if Assigned(Element) and (SameText(Element.Name, wbExtractNameFromPath(aCounterName))) then try
-        if (Element.GetNativeValue <> SelfAsContainer.GetElementCount) then
-          Element.SetNativeValue(SelfAsContainer.GetElementCount);
+        if Element.GetNativeValue <> SelfAsContainer.GetElementCount then
+          // if count = 0 and counter element is not required, then just remove it
+          if (SelfAsContainer.GetElementCount = 0) and not Element.Def.Required then
+            Element.Remove
+          else
+            Element.SetNativeValue(SelfAsContainer.GetElementCount);
+
         Result := True;
       except
         // No exception if the value cannot be set, expected non value
@@ -991,26 +1001,30 @@ begin
   end;
 end;
 
-function wbCounterContainerAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement; DeleteOnEmpty: Boolean = False): Boolean;
+function wbCounterContainerAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement): Boolean;
 var
   Element         : IwbElement;
   Elems           : IwbElement;
   Container       : IwbContainer;
 begin
-  Result := False;  // You may need to check alterative counter name
+  Result := False;  // You may need to check alternative counter name
   if wbBeginInternalEdit then try
-    if Supports(aElement, IwbContainer, Container) then begin
-      Element := Container.ElementByName[aCounterName];
-      Elems   := Container.ElementByName[anArrayName];
-      if Assigned(Element) then begin
-        if not Assigned(Elems) then
-          if Element.GetNativeValue <> 0 then
-            Element.SetNativeValue(0)
-          else if DeleteOnEmpty then
-            Container.RemoveElement(aCounterName);
-        Result := True; // Counter member exists
-      end;
-    end;
+    if not Supports(aElement, IwbContainer, Container) then
+      Exit;
+
+    Element := Container.ElementByName[aCounterName];
+    if not Assigned(Element) then
+      Exit;
+
+    Elems   := Container.ElementByName[anArrayName];
+    if not Assigned(Elems) then
+      if Element.GetNativeValue <> 0 then
+        Element.SetNativeValue(0)
+      // if count = 0 and counter element is not required, then just remove it
+      else if not Element.Def.Required then
+        Container.RemoveElement(aCounterName);
+
+    Result := True; // Counter member exists
   finally
     wbEndInternalEdit;
   end;
