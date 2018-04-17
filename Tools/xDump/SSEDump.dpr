@@ -745,8 +745,18 @@ end;
 function CheckAppPath: string;
 const
   //gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmFO4
-  ExeName : array[TwbGameMode] of string =
-    ('Fallout3.exe', 'FalloutNV.exe', 'Morrowind.exe', 'Oblivion.exe', 'TESV.exe', 'SkyrimSE.exe', 'Fallout4.exe');
+  ExeName : array[TwbGameMode] of string =(
+    'FalloutNV.exe',  // gmFNV
+    'Fallout3.exe',   // gmFO3
+    'Morrowind.exe',  // gmTES3
+    'Oblivion.exe',   // gmTES4
+    'TESV.exe',       // gmTES5
+    'SkyrimVR.exe',   // gmTES5VR
+    'SkyrimSE.exe',   // gmSSE
+    'Fallout4.exe',   // gmFO4
+    'Fallout4VR.exe'  // gmFO4VR
+  );
+
 var
   s: string;
 begin
@@ -792,8 +802,8 @@ begin
     if DataPath = '' then with TRegistry.Create do try
       RootKey := HKEY_LOCAL_MACHINE;
 
-      if not OpenKeyReadOnly(sBethRegKey + wbGameName + '\') then
-        if not OpenKeyReadOnly(sBethRegKey64 + wbGameName + '\') then begin
+      if not OpenKeyReadOnly(sBethRegKey + wbGameNameReg + '\') then
+        if not OpenKeyReadOnly(sBethRegKey64 + wbGameNameReg + '\') then begin
           ReportProgress('Fatal: Could not open registry key: ' + sBethRegKey + wbGameName + '\');
 //          if wbGameMode = gmTES5 then
             ReportProgress('This can happen after Steam updates, run game''s launcher to restore registry settings');
@@ -836,11 +846,12 @@ end;
 procedure SwitchToCoSave;
 begin
   case wbGameMode of
-    gmFNV:  SwitchToFNVCoSave;
-    gmFO3:  SwitchToFO3CoSave;
-    gmTES4: SwitchToTES4CoSave;
-    gmTES5: SwitchToTES5CoSave;
-    gmSSE:  SwitchToTES5CoSave;
+    gmFNV:            SwitchToFNVCoSave;
+    gmFO3:            SwitchToFO3CoSave;
+    gmFO4, gmFO4vr:   SwitchToFO4CoSave;
+    gmTES4:           SwitchToTES4CoSave;
+    gmTES5, gmTES5vr: SwitchToTES5CoSave;
+    gmSSE:            SwitchToTES5CoSave;
   end;
 end;
 
@@ -988,6 +999,24 @@ begin
         tsSaves:   DefineTES5Saves;
         tsPlugins: DefineTES5;
       end;
+    end else if isMode('TES5vr') then begin
+      wbGameMode := gmTES5VR;
+      wbAppName := 'TES5VR';
+      wbGameName := 'Skyrim';
+      wbGameName2 := 'Skyrim VR';
+      wbLoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
+      if not (wbToolMode in [tmDump, tmExport]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
+        Exit;
+      end;
+      if not (wbToolSource in [tsPlugins]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
+        Exit;
+      end;
+      case wbToolSource of
+        tsSaves:   DefineTES5Saves;
+        tsPlugins: DefineTES5;
+      end;
     end else if isMode('FO4') then begin
       wbGameMode := gmFO4;
       wbAppName := 'FO4';
@@ -1006,10 +1035,36 @@ begin
         tsSaves:   DefineFO4Saves;
         tsPlugins: DefineFO4;
       end;
+    end else if isMode('FO4VR') then begin
+      wbGameMode := gmFO4VR;
+      wbAppName := 'FO4VR';
+      wbGameName := 'Fallout4';
+      wbGameName2 := 'Fallout4VR';
+      wbGameNameReg := 'Fallout 4 VR';
+      wbLoadBSAs := False;
+      wbCreateContainedIn := False;
+      if not (wbToolMode in [tmDump, tmExport]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
+        Exit;
+      end;
+      if not (wbToolSource in [tsPlugins]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
+        Exit;
+      end;
+      case wbToolSource of
+        tsSaves:   DefineFO4Saves;
+        tsPlugins: DefineFO4;
+      end;
     end else begin
-      WriteLn(ErrOutput, 'Application name must contain FNV, FO3, FO4, SSE, TES4 or TES5 to select game.');
+      WriteLn(ErrOutput, 'Application name must contain FNV, FO3, FO4, FO4vr, SSE, TES4, TES5 or TES5vr to select game.');
       Exit;
     end;
+
+    if wbGameName2 = '' then
+      wbGameName2 := wbGameName;
+
+    if wbGameNameReg = '' then
+      wbGameNameReg := wbGameName2;
 
     DoInitPath;
     if (wbToolMode in [tmDump]) and (wbDataPath = '') then // Dump can be run in any directory configuration
@@ -1121,13 +1176,13 @@ begin
       DumpForms.Free;
     end;
 
-    if wbFindCmdLineParam('l', s) and (wbGameMode in [gmTES5, gmSSE, gmFO4]) then
+    if wbFindCmdLineParam('l', s) and (wbGameMode in [gmTES5, gmTES5vr, gmSSE, gmFO4, gmFO4vr]) then
       wbLanguage := s
     else
       case wbGameMode of
-        gmTES5, gmSSE:
+        gmTES5, gmTES5vr, gmSSE:
           wbLanguage := 'English';
-        gmFO4:
+        gmFO4, gmFO4vr:
           wbLanguage := 'En';
       end;
     if wbFindCmdLineParam('bts', s) then
@@ -1161,16 +1216,18 @@ begin
     end;
     if wbToolSource = tsSaves then
       case wbGameMode of
-        gmFNV:  if SameText(ExtractFileExt(s), '.nvse') then SwitchToCoSave;
-        gmFO3:  if SameText(ExtractFileExt(s), '.fose') then SwitchToCoSave
+        gmFNV:    if SameText(ExtractFileExt(s), '.nvse') then SwitchToCoSave;
+        gmFO3:    if SameText(ExtractFileExt(s), '.fose') then SwitchToCoSave
           else
             WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
-        gmFO4:  if SameText(ExtractFileExt(s), '.f4se') then SwitchToCoSave;
-        gmTES4: if SameText(ExtractFileExt(s), '.obse') then SwitchToCoSave
+        gmFO4,
+        gmFO4vr:  if SameText(ExtractFileExt(s), '.f4se') then SwitchToCoSave;
+        gmTES4:   if SameText(ExtractFileExt(s), '.obse') then SwitchToCoSave
           else
             WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
-        gmTES5: if SameText(ExtractFileExt(s), '.skse') then SwitchToCoSave;
-        gmSSE:  if SameText(ExtractFileExt(s), '.skse') then SwitchToCoSave;
+        gmTES5,
+        gmTES5vr: if SameText(ExtractFileExt(s), '.skse') then SwitchToCoSave;
+        gmSSE:    if SameText(ExtractFileExt(s), '.skse') then SwitchToCoSave;
       else
           WriteLn(ErrOutput, 'CoSave are not supported yet "',s,'". Please check the command line parameters.');
       end;
@@ -1310,7 +1367,7 @@ begin
             m := TStringList.Create;
             try
               if HasBSAs(ChangeFileExt(Masters[i], ''), wbDataPath,
-                  wbGameMode in [gmTES5, gmSSE], wbGameMode in [gmTES5, gmSSE], n, m)>0 then begin
+                  wbGameMode in [gmTES5, gmTES5vr, gmSSE], wbGameMode in [gmTES5, gmTES5vr, gmSSE], n, m)>0 then begin
                 for j := 0 to Pred(n.Count) do begin
                   ReportProgress('[' + n[j] + '] Loading Resources.');
                   wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
