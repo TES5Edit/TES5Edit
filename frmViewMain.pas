@@ -8247,7 +8247,7 @@ begin
           if Assigned(MainRecord._File) then
             Plugin := MainRecord._File.FileName;
           if IsEditable and
-             (IsDeleted or (GetPosition(Position) and (Position.z = -30000.0)) and (MainRecord.ElementNativeValues['XESP\Reference'] <> $14) ) and
+             (IsDeleted {or (GetPosition(Position) and (Position.z = -30000.0)) and (MainRecord.ElementNativeValues['XESP\Reference'] <> $14)} ) and
              (
                (Signature = 'REFR') or
                (Signature = 'PGRE') or
