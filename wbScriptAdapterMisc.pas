@@ -1386,6 +1386,11 @@ begin
   TJsonArray(Args.Obj).Add(Args.Values[0]);
 end;
 
+procedure TJsonArray_Insert_V(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TJsonArray(Args.Obj).Insert(Args.Values[0], Args.Values[1]);
+end;
+
 procedure TJsonArray_Insert_Array(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := O2V(TJsonArray(Args.Obj).InsertArray(Args.Values[0]));
@@ -1393,12 +1398,18 @@ end;
 
 procedure TJsonArray_Insert_Object(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := O2V(TJsonArray(Args.Obj).InsertObject(Args.Values[0]));
+  case Args.Count of
+    0: JvInterpreterError(ieNotEnoughParams, -1);
+    1: Value := O2V(TJsonArray(Args.Obj).InsertObject(Args.Values[0]));
+    2: TJsonArray(Args.Obj).InsertObject( Args.Values[0], TJsonObject(V2O(Args.Values[1])) );
+    else
+     JvInterpreterError(ieTooManyParams, -1);
+  end;
 end;
 
-procedure TJsonArray_Insert_V(var Value: Variant; Args: TJvInterpreterArgs);
+procedure TJsonArray_IsNull(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TJsonArray(Args.Obj).Insert(Args.Values[0], Args.Values[1]);
+  Value := TJsonArray(Args.Obj).IsNull(Args.Values[0]);
 end;
 
 procedure TJsonArray_Read_S(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1568,6 +1579,11 @@ end;
 procedure TJsonObject_Assign(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   TJsonObject(Args.Obj).Assign(TJsonObject(V2O(Args.Values[0])));
+end;
+
+procedure TJsonObject_IsNull(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := TJsonObject(Args.Obj).IsNull(Args.Values[0]);
 end;
 
 procedure TJsonObject_Read_S(var Value: Variant; Args: TJvInterpreterArgs);
@@ -2065,9 +2081,10 @@ begin
     AddGet(TJsonArray, 'AddArray', TJsonArray_Add_Array, 0, [varEmpty], varEmpty);
     AddGet(TJsonArray, 'AddObject', TJsonArray_Add_Object, 0, [varEmpty], varEmpty);
     AddGet(TJsonArray, 'Add', TJsonArray_Add_V, 1, [varEmpty], varEmpty);
-    AddGet(TJsonArray, 'InsertArray', TJsonArray_Add_Array, 1, [varEmpty], varEmpty);
-    AddGet(TJsonArray, 'InsertObject', TJsonArray_Add_Object, 1, [varEmpty], varEmpty);
-    AddGet(TJsonArray, 'Insert', TJsonArray_Insert_V, 1, [varEmpty], varEmpty);
+    AddGet(TJsonArray, 'Insert', TJsonArray_Insert_V, 2, [varEmpty, varEmpty], varEmpty);
+    AddGet(TJsonArray, 'InsertArray', TJsonArray_Insert_Array, 1, [varEmpty], varEmpty);
+    AddGet(TJsonArray, 'InsertObject', TJsonArray_Insert_Object, -1, [varEmpty], varEmpty);
+    AddGet(TJsonArray, 'IsNull', TJsonArray_IsNull, 1, [varEmpty], varEmpty);
     AddIGet(TJsonArray, 'S', TJsonArray_Read_S, 1, [varEmpty], varEmpty);
     AddISet(TJsonArray, 'S', TJsonArray_Write_S, 1, [varEmpty]);
     AddIGet(TJsonArray, 'I', TJsonArray_Read_I, 1, [varEmpty], varEmpty);
@@ -2104,6 +2121,7 @@ begin
     AddGet(TJsonObject, 'ExtractArray', TJsonObject_ExtractArray, 1, [varEmpty], varEmpty);
     AddGet(TJsonObject, 'ExtractObject', TJsonObject_ExtractObject, 1, [varEmpty], varEmpty);
     AddGet(TJsonObject, 'Assign', TJsonObject_Assign, 1, [varEmpty], varEmpty);
+    AddGet(TJsonObject, 'IsNull', TJsonObject_IsNull, 1, [varEmpty], varEmpty);
     AddIGet(TJsonObject, 'S', TJsonObject_Read_S, 1, [varEmpty], varEmpty);
     AddISet(TJsonObject, 'S', TJsonObject_Write_S, 1, [varEmpty]);
     AddIGet(TJsonObject, 'I', TJsonObject_Read_I, 1, [varEmpty], varEmpty);

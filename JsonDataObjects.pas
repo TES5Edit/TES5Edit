@@ -309,6 +309,8 @@ type
     procedure Clear;
     procedure TypeCastError(ExpectedType: TJsonDataType);
   public
+    function IsNull: Boolean;
+
     property Typ: TJsonDataType read FTyp;
     property Value: string read GetValue write SetValue;
     property IntValue: Integer read GetIntValue write SetIntValue;
@@ -403,6 +405,8 @@ type
     class operator Implicit(const Value: TJsonDataValueHelper): Variant; overload;
     class operator Implicit(const Value: Variant): TJsonDataValueHelper; overload;
 
+    function IsNull: Boolean;
+    
     property Typ: TJsonDataType read GetTyp;
     property Value: string read GetValue write SetValue;
     property IntValue: Integer read GetIntValue write SetIntValue;
@@ -530,6 +534,8 @@ type
     // ToString() returns a compact JSON string
     function ToString: string; override;
 
+    function Clone: TJsonBaseObject; virtual; abstract;
+
     class function JSONToDateTime(const Value: string): TDateTime; static;
     class function DateTimeToJSON(const Value: TDateTime; UseUtcTime: Boolean): string; static;
   end;
@@ -602,6 +608,7 @@ type
     function ExtractArray(Index: Integer): TJsonArray;
     function ExtractObject(Index: Integer): TJsonObject;
     procedure Assign(ASource: TJsonArray);
+    function Clone: TJsonBaseObject; override;
 
     procedure Add(const AValue: string); overload;
     procedure Add(const AValue: Integer); overload;
@@ -632,6 +639,7 @@ type
     procedure InsertObject(Index: Integer; const Value: TJsonObject); overload; inline; // makes it easier to insert "null"
 
     function GetEnumerator: TJsonArrayEnumerator;
+    function IsNull(Index: Integer): Boolean;
 
     property Types[Index: Integer]: TJsonDataType read GetType;
     property Values[Index: Integer]: TJsonDataValueHelper read GetValue write SetValue; default;
@@ -744,6 +752,7 @@ type
   public
     destructor Destroy; override;
     procedure Assign(ASource: TJsonObject);
+    function Clone: TJsonBaseObject; override;
 
     // ToSimpleObject() maps the JSON object properties to the Delphi object by using the object's
     // TypeInfo.
@@ -764,6 +773,7 @@ type
     function ExtractObject(const Name: string): TJsonObject;
 
     function GetEnumerator: TJsonObjectEnumerator;
+    function IsNull(const Name: string): Boolean;
 
     property Types[const Name: string]: TJsonDataType read GetType;
     property Values[const Name: string]: TJsonDataValueHelper read GetValue write SetValue; default;
@@ -2114,6 +2124,18 @@ begin
       end;
   end;
   FTyp := jdtNone;
+end;
+
+function TJsonDataValue.IsNull: Boolean;
+begin
+  case FTyp of
+    jdtObject:
+      Result := FValue.O = nil;
+    jdtNone:
+      Result := True;
+  else
+    Result := False;
+  end;
 end;
 
 function TJsonDataValue.GetArrayValue: TJsonArray;
@@ -3912,6 +3934,15 @@ begin
   Result := TJsonArrayEnumerator.Create(Self);
 end;
 
+function TJsonArray.IsNull(Index: Integer): Boolean;
+begin
+  {$IFDEF CHECK_ARRAY_INDEX}
+  if Cardinal(Index) >= Cardinal(FCount) then
+    RaiseListError(Index);
+  {$ENDIF CHECK_ARRAY_INDEX}
+  Result := FItems[Index].IsNull
+end;
+
 procedure TJsonArray.SetString(Index: Integer; const Value: string);
 begin
   {$IFDEF CHECK_ARRAY_INDEX}
@@ -4069,6 +4100,17 @@ begin
   begin
     FreeMem(FItems);
     FCapacity := 0;
+  end;
+end;
+
+function TJsonArray.Clone: TJsonBaseObject;
+begin
+  Result := TJsonArray.Create;
+  try
+    TJsonArray(Result).Assign(Self);
+  except
+    Result.Free;
+    raise;
   end;
 end;
 
@@ -4242,6 +4284,16 @@ end;
 function TJsonObject.GetEnumerator: TJsonObjectEnumerator;
 begin
   Result := TJsonObjectEnumerator.Create(Self);
+end;
+
+function TJsonObject.IsNull(const Name: string): Boolean;
+var
+  Item: PJsonDataValue;
+begin
+  if FindItem(Name, Item) then
+    Result := Item.IsNull
+  else
+    Result := True;
 end;
 
 function TJsonObject.AddItem(const Name: string): PJsonDataValue;
@@ -4927,6 +4979,17 @@ begin
     FreeMem(FItems);
     FreeMem(FNames);
     FCapacity := 0;
+  end;
+end;
+
+function TJsonObject.Clone: TJsonBaseObject;
+begin
+  Result := TJsonObject.Create;
+  try
+    TJsonObject(Result).Assign(Self);
+  except
+    Result.Free;
+    raise;
   end;
 end;
 
@@ -7328,6 +7391,23 @@ begin
     Result := FData.FIntern.Typ
   else
     Result := FData.FTyp;
+end;
+
+function TJsonDataValueHelper.IsNull: Boolean;
+begin
+  if FData.FIntern <> nil then
+    Result := FData.FIntern.IsNull
+  else
+  begin
+    case FData.FTyp of
+      jdtNone:
+        Result := True;
+      jdtObject:
+        Result := FData.FObj = nil;
+    else
+      Result := False;
+    end;
+  end;
 end;
 
 class procedure TJsonDataValueHelper.SetInternValue(Item: PJsonDataValue;
