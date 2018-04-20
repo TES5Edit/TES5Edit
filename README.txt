@@ -6,8 +6,8 @@ Please do not use the tracker for general help and support on how to use xEdit.
 
 #summary TES5Edit Readme
 
-TES5Edit 3.2.1 EXPERIMENTAL by ElminsterAU
-Updated for Skyrim by Hlp, Zilav and Sharlikran.
+xEdit 3.2.1 by ElminsterAU
+Updated by Hlp, Zilav, Sharlikran, Sheson
 
 Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available.  Starting from 3.1.0 we need to remind you that we only support version 1.9.0.32 of Skyrim. Update TES5Edit and Skyrim before you post in the forum.  If you see any references to xEdit that is a short way of saying all versions of the program which would cover FO3Edit, FNVEdit, TES4Edit and TES5Edit.
 
@@ -22,10 +22,12 @@ AFK Mods: https://afkmods.iguanadons.net/index.php?/topic/3750-wipz-tes5edit/
 
 Rename to TES4Edit.exe to work with Oblivion.
 Rename to TES5Edit.exe to work with Skyrim.
+Rename to TES5VREdit.exe to work with Skyrim VR.
 Rename to SSEEdit to work with Skyrim SE.
 Rename to FO3Edit.exe to work with Fallout3.
 Rename to FNVEdit.exe to work with New Vegas.
 Rename to FO4Edit.exe to work with Fallout 4.
+Rename to FO4VREdit.exe to work with Fallout 4 VR.
 
 Fallout3 Training Manual for FO3Edit (applies to all game versions)
 http://fallout3.nexusmods.com/mods/8629
@@ -36,8 +38,10 @@ Check for new versions here:
 FO3Edit: http://www.nexusmods.com/fallout3/mods/637
 FNVEdit: http://www.nexusmods.com/newvegas/mods/34703
 FO4Edit: http://www.nexusmods.com/fallout4/mods/2737
+FO4VREdit: http://www.nexusmods.com/fallout4/mods/2737
 TES4Edit: http://www.nexusmods.com/oblivion/mods/11536
 TES5Edit: http://www.nexusmods.com/skyrim/mods/25859
+TES5VREdit: http://www.nexusmods.com/skyrim/mods/25859
 SSEEdit: http://www.nexusmods.com/skyrimspecialedition/mods/164
 Mirror: https://github.com/TES5Edit/TES5Edit/releases
 
@@ -47,6 +51,7 @@ FO3LODGen: http://www.nexusmods.com/fallout3/mods/21174
 FNVLODGen: http://www.nexusmods.com/newvegas/mods/58562
 TES4LODGen: http://www.nexusmods.com/oblivion/mods/15781
 TES5LODGen: http://www.nexusmods.com/skyrim/mods/62698
+TES5VRLODGen: http://www.nexusmods.com/skyrim/mods/62698
 SSELODGen: http://www.nexusmods.com/skyrimspecialedition/mods/6642/?
 
 Future of xEdit:
@@ -62,15 +67,21 @@ xEdit Updates:
 With each new version of xEdit it is recommended to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect.
 
 Version 3.2.1 contains the following changes:
-- [SSE/FO4] CC club support (ESL plugins)
+- [SSE/FO4] Creation Club support (ESL plugins), forced load order for plugins in *.ccc file
+- [TE5/SSE] "Generate as Objects" LODGen option
+- [FO3/FNV] LODGen Atlas options
 - [FO4] FO4LODGen mode
+- Skyrim VR and Fallout4 VR support: rename as TES5VREdit.exe or FO4VREdit.exe, or execute with -tes5vr or -fo4vr parameters
 - filtering: if 8-digits hexadecimal FormID number is provided in "Base Record EditorID contains" field, then FormID will be checked instead
 - multiselection in plugins window and similar ones, right click menu options apply to selection only
+- "Reset structure" right click menu in the right view pane to add missing fields if any
+- "Compare selected" right click menu in Referenced By tab when several records selected of the same type
+- read (TES5|SSE)MapMarkers.txt and (TES5|SSE)QuestTypes.txt if present to replace game values with custom ones including new values
 - improved record definitions
-- new scripts
+- various bug fixes and optimizations
+- new scripts and scripting APIs to work with json, nifs, materials, lod files
 
 Version 3.2 contains the following changes:
-
 - [SSE] Skyrim Special Edition support
 - [SSE] SSELODGen mode
 - [FO4] Fallout 4 support
