@@ -25,7 +25,7 @@ uses
   wbStreams in '..\..\wbStreams.pas';
 
 const
-  sVersion = '0.4';
+  sVersion = '0.5';
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
 
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
@@ -81,11 +81,13 @@ begin
   Result := StrToInt('$' + s);
 end;
 
-
+//======================================================================
 function IfThen(aCondition: Boolean; const aValue1, aValue2: string): string; inline;
 begin
   if aCondition then Result := aValue1 else Result := aValue2;
 end;
+
+
 
 //======================================================================
 // Info
@@ -294,8 +296,8 @@ begin
   sl := TStringList.Create;
   bsa := TwbBSArchive.Create;
   try
-    if FindCmdLineSwitch('z', s) then
-      bsa.Compress := True;
+    bsa.Compress := FindCmdLineSwitch('z', s);
+    bsa.ShareData := FindCmdLineSwitch('share', s);
 
     if atype = baFO4dds then begin
       mask := '*.dds';
@@ -482,6 +484,8 @@ begin
     WriteLn('              don''t work in compressed archives in all Bethesda games!');
     WriteLn('              Even if your archive contains a single sound/voice file');
     WriteLn('              out of thousands, it must be uncompressed.');
+    WriteLn('  -share      Binary identical files will share the same data');
+    WriteLn('              in archive to preserve space.');
     WriteLn('');
     WriteLn('EXAMPLES');
     WriteLn('    If <folder> or <archive> include spaces then embed them in quotes');
@@ -499,7 +503,7 @@ begin
     WriteLn('  * Create Fallout New Vegas uncompressed archive with custom flags');
     WriteLn('      bsarch pack "d:\my mod\data" "d:\my mod\new.bsa" -fnv -af:0x83 -ff:0x113');
     WriteLn('  * Create Fallout 4 uncompressed textures archive');
-    WriteLn('      bsarch pack "d:\my mod\data" "d:\my mod\new.ba2" -fo4dds');
+    WriteLn('      bsarch pack "d:\my mod\data" "d:\my mod\new.ba2" -fo4dds -share');
 
   end;
 end;
