@@ -20,7 +20,9 @@ uses
   SysUtils,
   Classes,
   Windows,
-  wbStreams;
+  wbStreams,
+  tfTypes,
+  tfMD5;
 
 type
   TMagic4 = array [0..3] of AnsiChar;
@@ -252,6 +254,7 @@ type
     StartMip   : Word;
     EndMip     : Word;
   end;
+  PwbBSTexChunkRec = ^TwbBSTexChunkRec;
 
   TwbBSFileFO4 = record
     NameHash: Cardinal;
@@ -278,6 +281,14 @@ type
   end;
   PwbBSFileFO4 = ^TwbBSFileFO4;
 
+  TPackedDataHash = TMD5Digest;
+  TPackedDataInfo = record
+    Size: Cardinal;
+    Hash: TPackedDataHash;
+    FileRecord: Pointer;
+  end;
+  PPackedDataInfo = ^TPackedDataInfo;
+
   TwbBSArchive = class
   private
     fStream: TwbBaseCachedFileStream;
@@ -287,6 +298,7 @@ type
     fMagic: TMagic4;
     fVersion: Cardinal;
     fCompress: Boolean;
+    fShareData: Boolean;
     fDDSInfoProc: TBSFileDDSInfoProc;
 
     fHeaderTES3: TwbBSHeaderTES3;
@@ -303,6 +315,10 @@ type
 
     fDataOffset: Int64;
 
+    fMD5: TMD5Alg;
+    fPackedData: array of TPackedDataInfo;
+    fPackedDataCount: Integer;
+
     function GetArchiveFormatName: string;
     function GetFileCount: Cardinal;
     procedure SetArchiveFlags(aFlags: Cardinal);
@@ -311,6 +327,9 @@ type
     function FindFileRecordFO4(const aFileName: string; var aFileIdx: Integer): Boolean;
     function FindFileRecord(const aFileName: string): Pointer;
     function GetDDSMipChunkNum(var aDDSInfo: TDDSInfo): Integer;
+    function CalcDataHash(aData: Pointer; aLen: Cardinal): TPackedDataHash;
+    function FindPackedData(aSize: Cardinal; aHash: TPackedDataHash; aFileRecord: Pointer): Boolean;
+    procedure AddPackedData(aSize: Cardinal; aHash: TPackedDataHash; aFileRecord: Pointer);
 
   public
     constructor Create;
@@ -338,6 +357,7 @@ type
     property ArchiveFlags: Cardinal read fHeaderTES4.Flags write SetArchiveFlags;
     property FileFlags: Cardinal read fHeaderTES4.FileFlags write fHeaderTES4.FileFlags;
     property Compress: Boolean read fCompress write fCompress;
+    property ShareData: Boolean read fShareData write fShareData;
     property DDSInfoProc: TBSFileDDSInfoProc read fDDSInfoProc write fDDSInfoProc;
   end;
 
@@ -850,6 +870,65 @@ begin
   end;
 end;
 
+function TwbBSArchive.CalcDataHash(aData: Pointer; aLen: Cardinal): TPackedDataHash;
+begin
+  fMD5.Update(@fMD5, aData, aLen);
+  fMD5.Done(@fMD5, @Result);
+end;
+
+function TwbBSArchive.FindPackedData(aSize: Cardinal; aHash: TPackedDataHash; aFileRecord: Pointer): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+
+  if not fShareData then
+    Exit;
+
+  for i := 0 to Pred(fPackedDataCount) do
+    if (aSize = fPackedData[i].Size) and CompareMem(@aHash, @fPackedData[i].Hash, SizeOf(aHash)) then begin
+      case fType of
+        baTES3: begin
+          PwbBSFileTES3(aFileRecord).Size := PwbBSFileTES3(fPackedData[i].FileRecord).Size;
+          PwbBSFileTES3(aFileRecord).Offset := PwbBSFileTES3(fPackedData[i].FileRecord).Offset;
+        end;
+        baTES4, baFO3, baSSE: begin
+          PwbBSFileTES4(aFileRecord).Size := PwbBSFileTES4(fPackedData[i].FileRecord).Size;
+          PwbBSFileTES4(aFileRecord).Offset := PwbBSFileTES4(fPackedData[i].FileRecord).Offset;
+        end;
+        baFO4: begin
+          PwbBSFileFO4(aFileRecord).Size := PwbBSFileFO4(fPackedData[i].FileRecord).Size;
+          PwbBSFileFO4(aFileRecord).PackedSize := PwbBSFileFO4(fPackedData[i].FileRecord).PackedSize;
+          PwbBSFileFO4(aFileRecord).Offset := PwbBSFileFO4(fPackedData[i].FileRecord).Offset;
+        end;
+        baFO4dds: begin
+          PwbBSTexChunkRec(aFileRecord).Size := PwbBSTexChunkRec(fPackedData[i].FileRecord).Size;
+          PwbBSTexChunkRec(aFileRecord).PackedSize := PwbBSTexChunkRec(fPackedData[i].FileRecord).PackedSize;
+          PwbBSTexChunkRec(aFileRecord).Offset := PwbBSTexChunkRec(fPackedData[i].FileRecord).Offset;
+        end;
+      end;
+      Result := True;
+      Exit;
+    end;
+end;
+
+procedure TwbBSArchive.AddPackedData(aSize: Cardinal; aHash: TPackedDataHash; aFileRecord: Pointer);
+begin
+  if not fShareData then
+    Exit;
+
+  if fPackedDataCount = Length(fPackedData) then
+    if Length(fPackedData) = 0 then
+      SetLength(fPackedData, 2048)
+    else
+      SetLength(fPackedData, Length(fPackedData) * 2);
+
+  fPackedData[fPackedDataCount].Size := aSize;
+  fPackedData[fPackedDataCount].Hash := aHash;
+  fPackedData[fPackedDataCount].FileRecord := aFileRecord;
+  Inc(fPackedDataCount);
+end;
+
 procedure TwbBSArchive.LoadFromFile(const aFileName: string);
 var
   i, j: Integer;
@@ -1278,6 +1357,8 @@ begin
   SetLength(Buffer, fDataOffset);
   fStream.Write(Buffer[0], Length(Buffer));
 
+  if fShareData then
+    fMD5.Init(@fMD5);
 end;
 
 procedure TwbBSArchive.Save;
@@ -1463,6 +1544,7 @@ var
   fdir, fname, name, ext: string;
   msData: TPreallocatedMemoryStream;
   wasCompressed: Boolean;
+  DataHash: TPackedDataHash;
   DDSHeader: PDDSHeader;
   DDSHeaderDX10: PDDSHeaderDX10;
   DDSInfo: TDDSInfo;
@@ -1470,19 +1552,30 @@ begin
   if not (stWriting in fStates) then
     raise Exception.Create('Archive is not in writing mode');
 
+  // FO4 dds mipmaps have their own partial hash calculation down below
+  if fShareData and (fType <> baFO4dds) then
+    DataHash := CalcDataHash(@aData[0], Length(aData));
+
   case fType of
     baTES3: begin
       if not FindFileRecordTES3(aFileName, i) then
         raise Exception.Create('File not found in files table: ' + aFileName);
 
-      fFilesTES3[i].Offset := fStream.Position;
+      if FindPackedData(Length(aData), DataHash, @fFilesTES3[i]) then
+        Exit;
+
       fFilesTES3[i].Size := Length(aData);
+      fFilesTES3[i].Offset := fStream.Position;
       fStream.Write(aData[0], Length(aData));
+      AddPackedData(Length(aData), DataHash, @fFilesTES3[i]);
     end;
 
     baTES4, baFO3, baSSE: begin
       if not FindFileRecordTES4(aFileName, i, j) then
         raise Exception.Create('File not found in files table: ' + aFileName);
+
+      if FindPackedData(Length(aData), DataHash, @fFoldersTES4[i].Files[j]) then
+        Exit;
 
       fFoldersTES4[i].Files[j].Offset := fStream.Position;
 
@@ -1515,6 +1608,8 @@ begin
       // set it if archive is flagged as compressed but file was not compressed
       if fCompress and not WasCompressed then
         fFoldersTES4[i].Files[j].Size := fFoldersTES4[i].Files[j].Size or FILE_SIZE_COMPRESS;
+
+      AddPackedData(Length(aData), DataHash, @fFoldersTES4[i].Files[j]);
     end;
 
     baFO4: begin
@@ -1534,6 +1629,9 @@ begin
       fFilesFO4[i].Offset := fStream.Position;
       fFilesFO4[i].Size := Length(aData);
 
+      if FindPackedData(Length(aData), DataHash, @fFilesFO4[i]) then
+        Exit;
+
       if fCompress and (Length(aData) >= 32) then begin
         msData := TPreallocatedMemoryStream.Create(@aData[0], Length(aData));
         try
@@ -1551,6 +1649,8 @@ begin
       end
       else
         fStream.Write(aData[0], Length(aData));
+
+      AddPackedData(Length(aData), DataHash, @fFilesFO4[i]);
     end;
 
     baFO4dds: begin
@@ -1648,20 +1748,24 @@ begin
           MipSize := Length(aData) - Off;
         end;
 
-        fFilesFO4[i].TexChunks[j].Offset := fStream.Position;
-        fFilesFO4[i].TexChunks[j].Size := MipSize;
-        if fCompress then begin
-          msData := TPreallocatedMemoryStream.Create(@aData[Off], MipSize);
-          try
-            ZCompressStream(msData, fStream);
-            fFilesFO4[i].TexChunks[j].PackedSize := fStream.Position - fFilesFO4[i].TexChunks[j].Offset;
-          finally
-            msData.Free;
-          end;
-        end
-        else
-          fStream.Write(aData[Off], MipSize);
+        DataHash := CalcDataHash(@aData[Off], MipSize);
+        if not FindPackedData(MipSize, DataHash, @fFilesFO4[i].TexChunks[j]) then begin
+          fFilesFO4[i].TexChunks[j].Offset := fStream.Position;
+          fFilesFO4[i].TexChunks[j].Size := MipSize;
+          if fCompress then begin
+            msData := TPreallocatedMemoryStream.Create(@aData[Off], MipSize);
+            try
+              ZCompressStream(msData, fStream);
+              fFilesFO4[i].TexChunks[j].PackedSize := fStream.Position - fFilesFO4[i].TexChunks[j].Offset;
+            finally
+              msData.Free;
+            end;
+          end
+          else
+            fStream.Write(aData[Off], MipSize);
 
+          AddPackedData(MipSize, DataHash, @fFilesFO4[i].TexChunks[j]);
+        end;
         Inc(Off, MipSize);
         MipSize := MipSize div 4;
       end;
@@ -1932,6 +2036,11 @@ begin
   SetLength(fFoldersTES4, 0);
   FillChar(fHeaderFO4, SizeOf(fHeaderFO4), 0);
   SetLength(fFilesFO4, 0);
+
+  if fShareData then begin
+    SetLength(fPackedData, 0);
+    fPackedDataCount := 0;
+  end;
 end;
 
 

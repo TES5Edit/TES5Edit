@@ -24,7 +24,7 @@
 			<Base>true</Base>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_UnitSearchPath>..\..\;..\..\zlib;..\..\lz4;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<DCC_UnitSearchPath>..\..\;..\..\zlib;..\..\lz4;TForge;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
 			<DCC_ImageBase>00400000</DCC_ImageBase>
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
 		</PropertyGroup>
@@ -95,7 +95,7 @@
 						<Source Name="MainSource">bsarch.dpr</Source>
 					</Source>
 					<Parameters>
-						<Parameters Name="RunParams">pack e:\3 e:\3\b.ba2 -fo4dds -z</Parameters>
+						<Parameters Name="RunParams">pack e:\2 e:\2\test.bsa -tes3 -z -share</Parameters>
 					</Parameters>
 				</Delphi.Personality>
 				<Platforms>
