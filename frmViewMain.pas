@@ -2657,6 +2657,7 @@ var
   sl              : TStringList;
   LastLoadOrder   : Integer;
   i               : Integer;
+  EditState       : Boolean;
 begin
   if wbIsSkyrim or wbIsFallout4 then begin
     if MessageDlg('Merged patch is unsupported for ' + wbGameName2 +
@@ -2688,40 +2689,50 @@ begin
   end;
 
   ResetAllTags;
-  for i := Succ(Low(Files)) to Pred(High(Files)) do with Files[i] do begin
-    CheckGroup(GroupBySignature['LVLI'], ['Leveled List Entries'], ['LLCT']);
-    CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries'], ['LLCT']);
-    CheckGroup(GroupBySignature['LVLN'], ['Leveled List Entries'], ['LLCT']);
-    CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries'], ['LLCT']);
-    CheckGroup(GroupBySignature['CONT'], ['Items'], ['COCT']);
-    CheckGroup(GroupBySignature['FACT'], ['Relations'], []);
-    CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT']);
-    CheckGroup(GroupBySignature['FLST'], ['FormIDs'], [], True);
-    CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT']);
-    // FNV doesn't merge DIAL quests properly at runtine
-    if wbGameMode in [gmFNV] then
-      CheckGroup(GroupBySignature['DIAL'], ['Added Quests'], []);
-    // exclude Head Parts for Skyrim, causes issues
-    if wbGameMode >= gmTES5 then
-      CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT', '', 'SPCT', 'PRKZ', 'KSIZ'])
-    else
-      CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
-    // keywords
-    if wbGameMode >= gmTES5 then begin
-      CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ']);
-      CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ']);
-      CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ']);
-      CheckGroup(GroupBySignature['BOOK'], ['KWDA - Keywords'], ['KSIZ']);
-      CheckGroup(GroupBySignature['FLOR'], ['KWDA - Keywords'], ['KSIZ']);
-      CheckGroup(GroupBySignature['FURN'], ['KWDA - Keywords'], ['KSIZ']);
-      CheckGroup(GroupBySignature['INGR'], ['KWDA - Keywords'], ['KSIZ']);
-      CheckGroup(GroupBySignature['MGEF'], ['KWDA - Keywords'], ['KSIZ']);
-      CheckGroup(GroupBySignature['MISC'], ['KWDA - Keywords'], ['KSIZ']);
-      CheckGroup(GroupBySignature['SCRL'], ['KWDA - Keywords'], ['KSIZ']);
-      CheckGroup(GroupBySignature['SLGM'], ['KWDA - Keywords'], ['KSIZ']);
-      CheckGroup(GroupBySignature['SPEL'], ['KWDA - Keywords'], ['KSIZ']);
-      CheckGroup(GroupBySignature['WEAP'], ['KWDA - Keywords'], ['KSIZ']);
+
+  EditState := wbAllowInternalEdit;
+  try
+    // do not dynamically update counter fields, they are set by merging code
+    wbAllowInternalEdit := False;
+
+    for i := Succ(Low(Files)) to Pred(High(Files)) do with Files[i] do begin
+      CheckGroup(GroupBySignature['LVLI'], ['Leveled List Entries'], ['LLCT']);
+      CheckGroup(GroupBySignature['LVLC'], ['Leveled List Entries'], ['LLCT']);
+      CheckGroup(GroupBySignature['LVLN'], ['Leveled List Entries'], ['LLCT']);
+      CheckGroup(GroupBySignature['LVSP'], ['Leveled List Entries'], ['LLCT']);
+      CheckGroup(GroupBySignature['CONT'], ['Items'], ['COCT']);
+      CheckGroup(GroupBySignature['FACT'], ['Relations'], []);
+      CheckGroup(GroupBySignature['RACE'], ['HNAM - Hairs', 'ENAM - Eyes', 'Actor Effects'], ['', '', 'SPCT']);
+      CheckGroup(GroupBySignature['FLST'], ['FormIDs'], [], True);
+      CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT']);
+      // FNV doesn't merge DIAL quests properly at runtime
+      if wbGameMode in [gmFNV] then
+        CheckGroup(GroupBySignature['DIAL'], ['Added Quests'], []);
+      // exclude Head Parts for Skyrim, causes issues
+      if wbGameMode >= gmTES5 then
+        CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT', '', 'SPCT', 'PRKZ', 'KSIZ'])
+      else
+        CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
+      // keywords
+      if wbGameMode >= gmTES5 then begin
+        CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ']);
+        CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ']);
+        CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ']);
+        CheckGroup(GroupBySignature['BOOK'], ['KWDA - Keywords'], ['KSIZ']);
+        CheckGroup(GroupBySignature['FLOR'], ['KWDA - Keywords'], ['KSIZ']);
+        CheckGroup(GroupBySignature['FURN'], ['KWDA - Keywords'], ['KSIZ']);
+        CheckGroup(GroupBySignature['INGR'], ['KWDA - Keywords'], ['KSIZ']);
+        CheckGroup(GroupBySignature['MGEF'], ['KWDA - Keywords'], ['KSIZ']);
+        CheckGroup(GroupBySignature['MISC'], ['KWDA - Keywords'], ['KSIZ']);
+        CheckGroup(GroupBySignature['SCRL'], ['KWDA - Keywords'], ['KSIZ']);
+        CheckGroup(GroupBySignature['SLGM'], ['KWDA - Keywords'], ['KSIZ']);
+        CheckGroup(GroupBySignature['SPEL'], ['KWDA - Keywords'], ['KSIZ']);
+        CheckGroup(GroupBySignature['WEAP'], ['KWDA - Keywords'], ['KSIZ']);
+      end;
     end;
+
+  finally
+    wbAllowInternalEdit := EditState;
   end;
 
   TargetFile.CleanMasters;

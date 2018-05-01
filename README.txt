@@ -6,7 +6,7 @@ Please do not use the tracker for general help and support on how to use xEdit.
 
 #summary TES5Edit Readme
 
-xEdit 3.2.1 by ElminsterAU
+xEdit 3.2.2 by ElminsterAU
 Updated by Hlp, Zilav, Sharlikran, Sheson
 
 Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available.  Starting from 3.1.0 we need to remind you that we only support version 1.9.0.32 of Skyrim. Update TES5Edit and Skyrim before you post in the forum.  If you see any references to xEdit that is a short way of saying all versions of the program which would cover FO3Edit, FNVEdit, TES4Edit and TES5Edit.
@@ -65,6 +65,10 @@ We understand that sometimes updates to programs break things.  Please use the u
 xEdit Updates:
 
 With each new version of xEdit it is recommended to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect.
+
+
+Version 3.2.2 contains the following changes:
+
 
 Version 3.2.1 contains the following changes:
 - [SSE/FO4] Creation Club support (ESL plugins), forced load order for plugins in *.ccc file
