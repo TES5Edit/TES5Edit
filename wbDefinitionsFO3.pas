@@ -1856,7 +1856,7 @@ begin
   else if Supports(Container, IwbDataContainer, DataContainer) and
           DataContainer.IsValidOffset(aBasePtr, aEndPtr, OffsetArchtype) then
   	begin // we are part of a proper structure
-      aBasePtr := Pointer(Cardinal(aBasePtr) + OffsetArchtype);
+      aBasePtr := PByte(aBasePtr) + OffsetArchtype;
       ArchType := PCardinal(aBasePtr)^;
     end;
 

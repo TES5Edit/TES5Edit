@@ -299,7 +299,7 @@ end;
 
 function GlobalDataSizer(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; var CompressedSize: Integer): Cardinal;
 begin
-  CompressedSize := PCardinal(Pointer(Cardinal(aBasePtr)+SizeOf(cardinal)))^ + 2*SizeOf(Cardinal);
+  CompressedSize := PCardinal(PByte(aBasePtr) + SizeOf(cardinal))^ + 2*SizeOf(Cardinal);
   Result := CompressedSize;
 end;
 
@@ -379,7 +379,7 @@ begin
 
   if Supports(aElement, IwbDataContainer, Container) then begin
     with Container do if IsValidOffset(DataBasePtr, DataEndPtr, OffsetType) then begin // we are part a proper structure
-      BasePtr := Pointer(Cardinal(DataBasePtr) + OffsetType);
+      BasePtr := PByte(DataBasePtr) + OffsetType;
       Result := PByte(BasePtr)^;
     end;
   end;
@@ -455,7 +455,7 @@ begin
       CompressedSize := Element.NativeValue;
       Result := 0;
     end else with Container do if IsValidOffset(BasePtr, DataEndPtr, OffsetLength) then begin // we are part a proper structure
-      aBasePtr := Pointer(Cardinal(BasePtr) + OffsetLength);
+      aBasePtr := PByte(BasePtr) + OffsetLength;
       case sizeLength of
         0: CompressedSize := PByte(aBasePtr)^;
         1: CompressedSize := PWord(aBasePtr)^;
@@ -478,7 +478,7 @@ begin
     for i := 0 to Pred(Struct.MemberCount) do begin
       Size := Struct.Members[i].Size[aBasePtr, aEndPtr, aElement];
       if Size<>High(Integer) then begin
-        aBasePtr := Pointer(Cardinal(aBasePtr) + Size);
+        aBasePtr := PByte(aBasePtr) + Size;
         Inc(CompressedSize, Size);
       end;
     end;
@@ -886,7 +886,7 @@ const
 begin
   Result := 0;
   // if we are in an Exterior cell, there will be a separor, 21 bytes down
-  aBasePtr := Pointer(Cardinal(aBasePtr) + ExteriorOffsetEnd);
+  aBasePtr := PByte(aBasePtr) + ExteriorOffsetEnd;
   if PByte(aBasePtr)^ <> wbTerminator then Result := 1;
 end;
 
