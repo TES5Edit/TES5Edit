@@ -1384,7 +1384,7 @@ begin
 
   if Supports(aElement, IwbDataContainer, Container) then begin
     with Container do if IsValidOffset(DataBasePtr, DataEndPtr, OffsetType) then begin // we are part a proper structure
-      BasePtr := Pointer(Cardinal(DataBasePtr) + OffsetType);
+      BasePtr := PByte(DataBasePtr) + OffsetType;
       Result := PByte(BasePtr)^;
     end;
   end;
@@ -1392,7 +1392,7 @@ end;
 
 function GlobalDataSizer(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; var CompressedSize: Integer): Cardinal;
 begin
-  CompressedSize := PCardinal(Pointer(Cardinal(aBasePtr)+SizeOf(cardinal)))^ + 2*SizeOf(Cardinal);
+  CompressedSize := PCardinal(PByte(aBasePtr) + SizeOf(cardinal))^ + 2*SizeOf(Cardinal);
   Result := CompressedSize;
 end;
 
@@ -1413,14 +1413,14 @@ begin
     if Assigned(Element) then begin
       Result := Element.NativeValue;
     end else with Container do if IsValidOffset(BasePtr, DataEndPtr, OffsetLength) then begin // we are part a proper structure
-      aBasePtr := Pointer(Cardinal(BasePtr) + OffsetLength);
+      aBasePtr := PByte(BasePtr) + OffsetLength;
       Result := PCardinal(aBasePtr)^;
     end;
     Element := Container.ElementByPath['Compressed Size'];
     if Assigned(Element) then begin
       CompressedSize := Element.NativeValue;
     end else with Container do if IsValidOffset(BasePtr, DataEndPtr, OffsetLength + 4) then begin // we are part a proper structure
-      aBasePtr := Pointer(Cardinal(BasePtr) + OffsetLength + 4);
+      aBasePtr := PByte(BasePtr) + OffsetLength + 4;
       CompressedSize := PCardinal(aBasePtr)^;
     end;
   end else
@@ -1438,7 +1438,7 @@ begin
     for i := 0 to Pred(Struct.MemberCount) do begin
       Size := Struct.Members[i].Size[aBasePtr, aEndPtr, aElement];
       if Size<>High(Integer) then begin
-        aBasePtr := Pointer(Cardinal(aBasePtr) + Size);
+        aBasePtr := PByte(aBasePtr) + Size;
         Inc(CompressedSize, Size);
       end;
     end;
@@ -1487,7 +1487,7 @@ begin
     if Assigned(Element) then begin
       Result := Element.NativeValue;
     end else with Container do if IsValidOffset(BasePtr, DataEndPtr, OffsetLength+SizeLength+1) then begin // we are part a proper structure
-      aBasePtr := Pointer(Cardinal(BasePtr) + OffsetLength + SizeLength + 1);
+      aBasePtr := PByte(BasePtr) + OffsetLength + SizeLength + 1;
       case SizeLength of
         0: Result := PByte(aBasePtr)^;
         1: Result := PWord(aBasePtr)^;
@@ -1498,7 +1498,7 @@ begin
     if Assigned(Element) then begin
       CompressedSize := Element.NativeValue;
     end else with Container do if IsValidOffset(BasePtr, DataEndPtr, OffsetLength) then begin // we are part a proper structure
-      aBasePtr := Pointer(Cardinal(BasePtr) + OffsetLength);
+      aBasePtr := PByte(BasePtr) + OffsetLength;
       case sizeLength of
         0: CompressedSize := PByte(aBasePtr)^;
         1: CompressedSize := PWord(aBasePtr)^;
@@ -1520,7 +1520,7 @@ begin
     for i := 0 to Pred(Struct.MemberCount) do begin
       Size := Struct.Members[i].Size[aBasePtr, aEndPtr, aElement];
       if Size<>High(Integer) then begin
-        aBasePtr := Pointer(Cardinal(aBasePtr) + Size);
+        aBasePtr := PByte(aBasePtr) + Size;
         Inc(CompressedSize, Size);
       end;
     end;
@@ -2232,11 +2232,11 @@ begin
   Element := wbFindSaveElement('Change CELL Data', aElement);
   Assert(Element.BaseName='Change CELL Data');
   if Supports(Element, IwbContainer, Container) then begin
-    BasePtr := Pointer(Cardinal(aBasePtr) + ExteriorSize);
+    BasePtr := PByte(aBasePtr) + ExteriorSize;
     if ChangedFlag02Decider(BasePtr, aEndPtr, aElement) = 1 then begin
       StringSize := 2 + PWord(BasePtr)^;
       RemainingBytes := RemainingBytes - StringSize;
-      BasePtr := Pointer(Cardinal(aBasePtr) + StringSize);
+      BasePtr := PByte(aBasePtr) + StringSize;
     end;
     if ChangedFlag03Decider(BasePtr, aEndPtr, aElement) = 1 then begin
       RemainingBytes := RemainingBytes - 3;
