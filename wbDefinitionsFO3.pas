@@ -1772,7 +1772,7 @@ end;
 function wbIPDSDATACount(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   if Assigned(aBasePtr) and Assigned(aEndPtr) then
-    Result := (Cardinal(aBasePtr) - Cardinal(aBasePtr)) div 4
+    Result := (NativeUInt(aBasePtr) - NativeUInt(aBasePtr)) div 4
   else
     Result := 12;
 end;
@@ -1788,7 +1788,7 @@ begin
       if not Supports(DataContainer.Container, IwbDataContainer, DataContainer) then
         Exit;
     Assert(DataContainer.Name = 'Data');
-    Result := PWord(Cardinal(DataContainer.DataBasePtr) + 3*3*4)^;
+    Result := PWord(NativeUInt(DataContainer.DataBasePtr) + 3*3*4)^;
   end;
 end;
 
@@ -1803,7 +1803,7 @@ begin
       if not Supports(DataContainer.Container, IwbDataContainer, DataContainer) then
         Exit;
     Assert(DataContainer.Name = 'Data');
-    Result := PWord(Cardinal(DataContainer.DataBasePtr) + 3*3*4 + 2)^;
+    Result := PWord(NativeUInt(DataContainer.DataBasePtr) + 3*3*4 + 2)^;
   end;
 end;
 

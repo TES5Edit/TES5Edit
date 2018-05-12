@@ -284,7 +284,7 @@ type
 
     procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True; Initial: Boolean = false); virtual;
 
-    function GetElementID: Cardinal;
+    function GetElementID: NativeUInt;
     function GetElementStates: TwbElementStates;
     procedure SetElementState(aState: TwbElementState; Clear: Boolean = false);
     function Equals(const aElement: IwbElement): Boolean; reintroduce;
@@ -1661,10 +1661,18 @@ begin
     Result := CmpW32(Ord(IwbElement(Item1).ElementType), Ord(IwbElement(Item2).ElementType));
     if Result = 0 then begin
       if IwbElement(Item1).ElementType = etSubRecord then
+        {$IFDEF WIN64}
+        Result := CmpI64(
+          UInt64((IwbElement(Item1) as IwbSubRecord).DataBasePtr),
+          UInt64((IwbElement(Item2) as IwbSubRecord).DataBasePtr)
+        );
+        {$ENDIF}
+        {$IFDEF WIN32}
         Result := CmpW32(
           Cardinal((IwbElement(Item1) as IwbSubRecord).DataBasePtr),
           Cardinal((IwbElement(Item2) as IwbSubRecord).DataBasePtr)
         );
+        {$ENDIF}
     end;
   end;
 end;
@@ -1696,11 +1704,19 @@ begin
       Result := CmpW32(Ord(IwbElement(Item1).ElementType), Ord(IwbElement(Item2).ElementType));
       if Result = 0 then begin
         if IwbElement(Item1).ElementType = etSubRecord then
+          {$IFDEF WIN64}
+          Result := CmpI64(
+            UInt64((IwbElement(Item1) as IwbSubRecord).DataBasePtr),
+            UInt64((IwbElement(Item2) as IwbSubRecord).DataBasePtr)
+          );
+          {$ENDIF}
+          {$IFDEF WIN32}
           Result := CmpW32(
             Cardinal((IwbElement(Item1) as IwbSubRecord).DataBasePtr),
             Cardinal((IwbElement(Item2) as IwbSubRecord).DataBasePtr)
-          ){
-        else try
+          );
+          {$ENDIF}
+        {else try
           if Supports(IwbElement(Item1), IwbContainer, Container1) and Supports(IwbElement(Item2), IwbContainer, Container2) then
             Result := CmpW32(
               Cardinal((Container1 as TwbContainer).cntElements),  // Arbitrary value that should not change during the sort
@@ -1708,7 +1724,7 @@ begin
             );
         except
           // If an Element supporting IwbContainer could NOT be a TwbContainer
-        end};
+        end;}
       end;
     end;
   end;
@@ -3256,7 +3272,7 @@ begin
 
   flProgress('Header processed. Expecting ' + IntToStr(Length(flRecords)) + ' records');
 
-  while Cardinal(CurrentPtr) < Cardinal(flEndPtr) do begin
+  while NativeUInt(CurrentPtr) < NativeUInt(flEndPtr) do begin
     Rec := TwbRecord.CreateForPtr(CurrentPtr, flEndPtr, Self, nil);
     flProgress(Rec.Name + ' processed');
   end;
@@ -6164,7 +6180,7 @@ begin
   s := '';
 {$ENDIF}
   CurrentPtr := GetDataBasePtr;
-  while Cardinal(CurrentPtr) < Cardinal(dcDataEndPtr) do begin
+  while NativeUInt(CurrentPtr) < NativeUInt(dcDataEndPtr) do begin
     Element := TwbRecord.CreateForPtr(CurrentPtr, dcDataEndPtr, Self, nil);
 {$IFDEF DBGSUBREC}
     if Supports(Element, IwbSubRecord, CurrentRec) then
@@ -7641,8 +7657,8 @@ var
   RecordDef : PwbRecordDef;
 begin
   if Assigned(dcEndPtr) then begin
-    dcDataBasePtr := PByte( dcBasePtr ) + wbSizeOfMainRecordStruct ;
-    dcDataEndPtr := PByte( dcDataBasePtr ) + mrStruct.mrsDataSize ;
+    dcDataBasePtr := PByte(dcBasePtr) + wbSizeOfMainRecordStruct;
+    dcDataEndPtr := PByte(dcDataBasePtr) + mrStruct.mrsDataSize;
     dcEndPtr := dcDataEndPtr;
   end;
 
@@ -9192,7 +9208,7 @@ begin
 
   end else begin
     CurrentPosition := aStream.Position;
-    aStream.WriteBuffer(dcBasePtr^, Cardinal(dcEndPtr) - Cardinal(dcBasePtr) );
+    aStream.WriteBuffer(dcBasePtr^, NativeUInt(dcEndPtr) - NativeUInt(dcBasePtr));
     if CurrentPosition + wbSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position then
       Assert(CurrentPosition + wbSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position);
   end;
@@ -9781,7 +9797,7 @@ begin
     HasUnusedData := not SameText(ValueDef.Name, 'Unused');
     if HasUnusedData and (ValueDef.DefType = dtString) then begin
       HasUnusedData := False;
-      while Cardinal(BasePtr) < Cardinal(dcDataEndPtr) do begin
+      while NativeUInt(BasePtr) < NativeUInt(dcDataEndPtr) do begin
         if PAnsiChar(BasePtr)^ <> #0 then begin
           HasUnusedData := True;
           Break;
@@ -10058,14 +10074,14 @@ begin
   Assert(Assigned(dcEndPtr));
 
   SizeNeeded := SizeOf(TwbSubRecordHeaderStruct);
-  SizeAvailable := Cardinal( aEndPtr ) - Cardinal( aBasePtr );
+  SizeAvailable := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
   Assert( SizeAvailable >= SizeNeeded );
 
   BasePtr := aBasePtr;
   Inc(PByte(aBasePtr), SizeNeeded );
   inherited;
 
-  Assert(srStruct.srsDataSize = Cardinal( dcDataEndPtr ) - Cardinal( dcDataBasePtr ));
+  Assert(srStruct.srsDataSize = NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr));
 
   dcBasePtr := BasePtr;
   dcEndPtr := dcDataEndPtr;
@@ -10165,7 +10181,7 @@ var
 begin
   Assert(Assigned(dcBasePtr));
   SizeNeeded := SizeOf(TwbSubRecordHeaderStruct);
-  SizeAvailable := Cardinal( aEndPtr ) - Cardinal( aBasePtr );
+  SizeAvailable := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
   Assert( SizeAvailable >= SizeNeeded );
 
   BasePtr := aBasePtr;
@@ -10178,7 +10194,7 @@ begin
 
   dcBasePtr := BasePtr;
   dcEndPtr := dcDataEndPtr;
-  srStruct.srsDataSize := Cardinal( dcDataEndPtr ) - Cardinal( dcDataBasePtr );
+  srStruct.srsDataSize := NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr);
 end;
 
 procedure TwbSubRecord.PrepareSave;
@@ -11482,7 +11498,7 @@ begin
 
   CurrentPtr := GetDataBasePtr;
   PrevMainRecord := nil;
-  while Cardinal(CurrentPtr) < Cardinal(dcDataEndPtr) do begin
+  while NativeUInt(CurrentPtr) < NativeUInt(dcDataEndPtr) do begin
     Rec := TwbRecord.CreateForPtr(CurrentPtr, dcDataEndPtr, Self, PrevMainRecord);
     if Supports(Rec, IwbMainRecord, MainRecord) then
       PrevMainRecord := MainRecord;
@@ -12409,9 +12425,9 @@ begin
   Result := '';
 end;
 
-function TwbElement.GetElementID: Cardinal;
+function TwbElement.GetElementID: NativeUInt;
 begin
-  Result := Cardinal(Self);
+  Result := NativeUInt(Self);
 end;
 
 function TwbElement.GetElementStates: TwbElementStates;
@@ -12793,8 +12809,8 @@ begin
       asm nop end;
     CodeSite.Send('Self.SortOrder', Self.eSortOrder);
     CodeSite.Send('Self.MemoryOrder', Self.eMemoryOrder);
-    CodeSite.Send('aBasePtr', Cardinal(aBasePtr), True);
-    CodeSite.Send('aEndPtr', Cardinal(aEndPtr), True);
+    CodeSite.Send('aBasePtr', NativeUInt(aBasePtr), True);
+    CodeSite.Send('aEndPtr', NativeUInt(aEndPtr), True);
   end;
   try
   {$ENDIF}
@@ -12803,8 +12819,8 @@ begin
   finally
     if Log then begin
       CodeSite.Send('Self.Value', Self.GetValue);
-      CodeSite.Send('aBasePtr', Cardinal(aBasePtr), True);
-      CodeSite.Send('aEndPtr', Cardinal(aEndPtr), True);
+      CodeSite.Send('aBasePtr', NativeUInt(aBasePtr), True);
+      CodeSite.Send('aEndPtr', NativeUInt(aEndPtr), True);
       CodeSite.ExitMethod(Self, 'MergeStorage');
     end;
   end;
@@ -13950,7 +13966,7 @@ begin
     Inc(PByte(aBasePtr), SizePrefix);
 
   if ArrSize > 0 then
-    while not VarSize or ((Cardinal(aBasePtr) < Cardinal(aEndPtr)) or (not Assigned(aBasePtr))) do begin
+    while not VarSize or ((NativeUInt(aBasePtr) < NativeUInt(aEndPtr)) or (not Assigned(aBasePtr))) do begin
       if Result then
         t := ''
       else begin
@@ -13985,7 +14001,7 @@ begin
       Dec(ArrSize);
       if ArrSize = 0 then
         Break
-      { else if not (not VarSize or ((Cardinal(aBasePtr) < Cardinal(aEndPtr)) or (not Assigned(aBasePtr)))) then
+      { else if not (not VarSize or ((NativeUInt(aBasePtr) < NativeUInt(aEndPtr)) or (not Assigned(aBasePtr)))) then
         wbProgressCallback('Error: not enough data for array. Elements remaining are '+IntToStr(ArrSize)) Silently fails = called at an invalid time };
     end;
 
@@ -14318,11 +14334,11 @@ begin
   for i := 0 to Pred(StructDef.MemberCount) do begin
     ValueDef := StructDef.Members[i];
     if Assigned(aBasePtr) and (i >= OptionalFromElement) then begin
-      over := (Cardinal(aBasePtr) >= Cardinal(aEndPtr));
+      over := (NativeUInt(aBasePtr) >= NativeUInt(aEndPtr));
       if not over then begin
         Size := ValueDef.Size[aBasePtr, aEndPtr, aContainer];
         over := (Size<High(Integer)) and  //Intercept multiple calls to Size[ during initialisation
-                ((Cardinal(aBasePtr) + Size) > Cardinal(aEndPtr));
+                ((NativeUInt(aBasePtr) + Size) > NativeUInt(aEndPtr));
       end;
       if over then begin
         aEndPtr := aBasePtr;
@@ -15189,7 +15205,7 @@ begin
   fBasePtr := aBasePtr;
   Size := fIntegerDef.Size[aBasePtr, aEndPtr, GetContainer];
   fEndPtr := PByte(fBasePtr) + Size;
-  if Cardinal(fEndPtr) > Cardinal(aEndPtr) then
+  if NativeUInt(fEndPtr) > NativeUInt(aEndPtr) then
     fEndPtr := aEndPtr;
 end;
 
@@ -15325,7 +15341,7 @@ begin
   if (dcfStorageInvalid in dcFlags) or not Assigned(dcDataBasePtr) or not Assigned(dcDataEndPtr) then
     Result := inherited GetDataSize + GetDataPrefixSize
   else
-    Result := Cardinal( dcDataEndPtr ) - Cardinal( dcDataBasePtr );
+    Result := NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr);
 end;
 
 function TwbDataContainer.GetDontCompare: Boolean;
@@ -15379,7 +15395,7 @@ begin
     Assert(Length(dcDataStorage) = 0);
   SizeNeeded := GetDataSize;
   if SizeNeeded > 0 then begin
-    SizeAvailable := Cardinal( aEndPtr ) - Cardinal( aBasePtr );
+    SizeAvailable := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
     if (SizeAvailable < SizeNeeded) then
       Assert( SizeAvailable >= SizeNeeded );
 
@@ -15391,8 +15407,8 @@ begin
       if not (dcfDontMerge in dcFlags) then
         Inc(PByte(aBasePtr), SizeNeeded);
     end else
-      if Cardinal(aBasePtr) - Cardinal(BasePtr) > SizeNeeded then // we overwrote something
-        Assert( Cardinal(aBasePtr) - Cardinal(BasePtr) = SizeNeeded)
+      if NativeUInt(aBasePtr) - NativeUInt(BasePtr) > SizeNeeded then // we overwrote something
+        Assert( NativeUInt(aBasePtr) - NativeUInt(BasePtr) = SizeNeeded )
       else // Adjust size of data not initialized yet
         aBasePtr := PByte(BasePtr) + SizeNeeded;
 
@@ -15415,17 +15431,17 @@ end;
 function TwbDataContainer.IsValidOffset(aBasePtr, aEndPtr: Pointer; anOffset: Integer): Boolean;
 begin
   Result := False;
-  if Cardinal(aBasePtr) >= Cardinal(dcBasePtr) then
-    if Cardinal(aBasePtr) < Cardinal(dcEndPtr) then
-      if Cardinal(aEndPtr) > Cardinal(dcBasePtr) then
-        if Cardinal(aEndPtr) <= Cardinal(dcEndPtr) then
-          if Cardinal(aBasePtr)+anOffset < Cardinal(dcEndPtr) then
+  if NativeUInt(aBasePtr) >= NativeUInt(dcBasePtr) then
+    if NativeUInt(aBasePtr) < NativeUInt(dcEndPtr) then
+      if NativeUInt(aEndPtr) > NativeUInt(dcBasePtr) then
+        if NativeUInt(aEndPtr) <= NativeUInt(dcEndPtr) then
+          if NativeUInt(aBasePtr) + anOffset < NativeUInt(dcEndPtr) then
             Result := True;
 end;
 
 function TwbDataContainer.IsLocalOffset(anOffset: Integer): Boolean;
 begin
-  if Cardinal(dcDataBasePtr)+anOffset < Cardinal(dcDataEndPtr) then
+  if NativeUInt(dcDataBasePtr) + anOffset < NativeUInt(dcDataEndPtr) then
     Result := True
   else
     Result := False;
@@ -15433,8 +15449,8 @@ end;
 
 procedure TwbDataContainer.MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer);
 var
-  SizeNeeded    : Cardinal;
-  SizeAvailable : Cardinal;
+  SizeNeeded    : NativeUInt;
+  SizeAvailable : NativeUInt;
   BasePtr       : Pointer;
   PrefixSize   : Integer;
 begin
@@ -15452,9 +15468,9 @@ begin
     dcDataBasePtr := BasePtr;
     dcDataEndPtr := aBasePtr;
   end else begin
-    SizeNeeded := Cardinal( dcDataEndPtr ) - Cardinal( dcDataBasePtr );
+    SizeNeeded := NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr);
     if SizeNeeded > 0 then begin
-      SizeAvailable := Cardinal( aEndPtr ) - Cardinal( aBasePtr );
+      SizeAvailable := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
       if SizeAvailable < SizeNeeded then
         Assert( SizeAvailable >= SizeNeeded );
 
@@ -15478,7 +15494,7 @@ end;
 procedure TwbDataContainer.RequestStorageChange(var aBasePtr, aEndPtr: Pointer; aNewSize: Cardinal);
 var
   BasePtr   : Pointer;
-  OldSize   : Cardinal;
+  OldSize   : NativeUInt;
   NeedsCopy : Boolean;
 begin
   if (dcfStorageInvalid in dcFlags) then
@@ -15491,7 +15507,7 @@ begin
     dcDataBasePtr := @EmptyPtr;
     dcDataEndPtr := @EmptyPtr;
   end else if Cardinal(Length(dcDataStorage)) <> aNewSize then begin
-    OldSize := Cardinal( dcDataEndPtr ) - Cardinal( dcDataBasePtr );
+    OldSize := NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr);
     NeedsCopy := (Length(dcDataStorage) = 0) and (OldSize > 0);
     SetLength(dcDataStorage, aNewSize);
     if NeedsCopy then
@@ -15588,7 +15604,7 @@ begin
   SetLength(NewStorage, inherited GetDataSize + GetDataPrefixSize);
   if Length(NewStorage) > 0 then begin
     BasePtr := @NewStorage[0];
-    EndPtr := PByte(BasePtr) + Cardinal(Length(NewStorage));
+    EndPtr := PByte(BasePtr) + Length(NewStorage);
     PrefixSize := GetDataPrefixSize;
     if (PrefixSize > 0) then
       Move(dcDataBasePtr^, BasePtr^, PrefixSize);
@@ -15597,7 +15613,7 @@ begin
 
     dcDataStorage := NewStorage;
     dcDataBasePtr := @NewStorage[0];
-    dcDataEndPtr := PByte(dcDataBasePtr) + Cardinal(Length(dcDataStorage));
+    dcDataEndPtr := PByte(dcDataBasePtr) + Length(dcDataStorage);
     Assert(dcDataEndPtr = EndPtr);
   end else begin
     dcDataStorage := nil;
@@ -15611,8 +15627,8 @@ end;
 procedure TwbDataContainer.WriteToStreamInternal(aStream: TStream; aResetModified: Boolean);
 var
   OldPosition  : Int64;
-  Size         : Cardinal;
-  ExpectedSize : Cardinal;
+  Size         : NativeUInt;
+  ExpectedSize : NativeUInt;
 begin
   if [dcfDontSave, dcfDontCompare] * dcFlags <> [] then
     Exit;
@@ -15622,7 +15638,7 @@ begin
 
   if (esModified in eStates) or wbTestWrite then begin
     if not (dcfStorageInvalid in dcFlags) and Assigned(dcDataEndPtr) and Assigned(dcDataBasePtr) then
-      Size := Cardinal( dcDataEndPtr ) - Cardinal( dcDataBasePtr )
+      Size := NativeUInt(dcDataEndPtr ) - NativeUInt(dcDataBasePtr)
     else
       Size := 0;
     if Size > 0 then begin
@@ -15765,11 +15781,12 @@ begin
   if Assigned(Resolved) then
   begin
     if (Resolved.DefType in dtNonValues) and (wbDumpOffset=1) then // simply display starting offset.
-      Result := Result + ' {' + IntToHex64(Cardinal(GetDataBasePtr)-wbBaseOffset, 8) + '}';
+      Result := Result + ' {' + IntToHex64(NativeUInt(GetDataBasePtr) - wbBaseOffset, 8) + '}';
     // something for Dump: Displaying the size in {} and the array count in []
     //  Triggers a lot of pre calculations
     if (Resolved.DefType in dtNonValues) and (wbDumpOffset>2) then
-      Result := Result + ' {' + IntToHex64(Cardinal(GetDataEndPtr)-wbBaseOffset, 8) + '-' + IntToHex64(Cardinal(GetDataBasePtr)-wbBaseOffset, 8) +
+      Result := Result + ' {' + IntToHex64(NativeUInt(GetDataEndPtr) - wbBaseOffset, 8) +
+        '-' + IntToHex64(NativeUInt(GetDataBasePtr) - wbBaseOffset, 8) +
         ' = ' +IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}';
     if (Resolved.DefType = dtArray) and (wbDumpOffset>1) and Supports(Self, IwbDataContainer, Container) then
       Result := Result + ' [' + IntToStr(Container.GetElementCount) + ']';
@@ -15895,11 +15912,11 @@ procedure TwbValueBase.InitDataPtr;
 var
   Size : Integer;
 begin
-  if (GetDataBasePtr <> nil) and (Cardinal(dcDataEndPtr)>=Cardinal(dcDataBasePtr)) then begin
+  if (GetDataBasePtr <> nil) and (NativeUInt(dcDataEndPtr) >= NativeUInt(dcDataBasePtr)) then begin
     Size := vbValueDef.Size[dcDataBasePtr, dcDataEndPtr, Self];
     if Size < High(Integer) then begin
-      dcDataEndPtr := PByte(dcDataBasePtr) + Cardinal(Size);
-      if Cardinal(dcDataEndPtr) > Cardinal(dcEndPtr) then
+      dcDataEndPtr := PByte(dcDataBasePtr) + Size;
+      if NativeUInt(dcDataEndPtr) > NativeUInt(dcEndPtr) then
         dcDataEndPtr := dcEndPtr
       else
         dcEndPtr := dcDataEndPtr;
@@ -16128,13 +16145,13 @@ end;
 
 procedure TwbStringListTerminator.InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
 begin
-  Assert( Cardinal(aBasePtr) < Cardinal(aEndPtr));
+  Assert( NativeUInt(aBasePtr) < NativeUInt(aEndPtr) );
   Inc(PByte(aBasePtr));
 end;
 
 procedure TwbStringListTerminator.MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer);
 begin
-  Assert( Cardinal(aBasePtr) < Cardinal(aEndPtr));
+  Assert( NativeUInt(aBasePtr) < NativeUInt(aEndPtr) );
   PAnsiChar(aBasePtr)^ := #0;
   Inc(PByte(aBasePtr));
 end;
@@ -16490,7 +16507,6 @@ var
   MasterFiles : IwbContainerElementRef;
   fPath       : String;
   i           : Integer;
-  modOffset   : Cardinal;
   modPtr      : Pointer;
   mods        : TwbArray;
 begin
@@ -16502,8 +16518,7 @@ begin
       [wbFileMagic, String(Header.FileMagic), flFileName]);
 
   if Pos('Absolute:', wbFilePlugins)=1 then begin
-    modOffset := Cardinal(flView)+StrToInt(Copy(wbFilePlugins, 10, Length(wbFilePlugins)));
-    modPtr := Pointer(modOffset);
+    modPtr := PByte(flView) + StrToInt(Copy(wbFilePlugins, 10, Length(wbFilePlugins)));
     mods := TwbArray.Create(nil, modPtr, flEndPtr, wbArray('Modules', wbLenString('PluginName', 2), -4), '', False);
     Supports(mods, IwbContainerElementRef, MasterFiles);
   end else
@@ -16580,7 +16595,7 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   flProgress('Start processing');
 
-  wbBaseOffset := Cardinal(flView);
+  wbBaseOffset := NativeUInt(flView);
 
   CurrentPtr := flView;
   TwbFileHeader.Create(Self, CurrentPtr, flEndPtr, wbFileHeader, '', False);
@@ -16596,8 +16611,7 @@ begin
     Exit;
 
   if Pos('Absolute:', wbFilePlugins)=1 then begin
-    modOffset := Cardinal(flView)+StrToInt(Copy(wbFilePlugins, 10, Length(wbFilePlugins)));
-    modPtr := Pointer(modOffset);
+    modPtr := PByte(flView) + StrToInt(Copy(wbFilePlugins, 10, Length(wbFilePlugins)));
     mods := TwbArray.Create(nil, modPtr, flEndPtr, wbArray('Modules', wbLenString('PluginName', 2), -4), '', False);
     Supports(mods, IwbContainerElementRef, MasterFiles);
   end else
