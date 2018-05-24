@@ -361,7 +361,7 @@ begin
       
       for i := 0 to memoReplace.Lines.Count div 2 do
         // skip if both odd and even lines are empty
-        if (memoReplace.Lines[i * 2] <> '') and (memoReplace.Lines[i * 2 + 1] <> '') then begin
+        if (memoReplace.Lines[i * 2] <> '') or (memoReplace.Lines[i * 2 + 1] <> '') then begin
           slFind.Add(memoReplace.Lines[i * 2]);
           slReplace.Add(memoReplace.Lines[i * 2 + 1]);
         end;

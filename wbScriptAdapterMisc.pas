@@ -1551,6 +1551,11 @@ begin
   TJsonObject(Args.Obj).Delete(Args.Values[0]);
 end;
 
+procedure TJsonObject_Remove(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  TJsonObject(Args.Obj).Remove(Args.Values[0]);
+end;
+
 procedure TJsonObject_IndexOf(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := TJsonObject(Args.Obj).IndexOf(Args.Values[0]);
@@ -2115,6 +2120,7 @@ begin
     AddIGet(TJsonObject, 'Names', TJsonObject_Read_Names, 1, [varEmpty], varEmpty);
     AddGet(TJsonObject, 'Clear', TJsonObject_Clear, 0, [varEmpty], varEmpty);
     AddGet(TJsonObject, 'Delete', TJsonObject_Delete, 1, [varEmpty], varEmpty);
+    AddGet(TJsonObject, 'Remove', TJsonObject_Remove, 1, [varEmpty], varEmpty);
     AddGet(TJsonObject, 'IndexOf', TJsonObject_IndexOf, 1, [varEmpty], varEmpty);
     AddGet(TJsonObject, 'Contains', TJsonObject_Contains, 1, [varEmpty], varEmpty);
     AddGet(TJsonObject, 'Extract', TJsonObject_Extract, 1, [varEmpty], varEmpty);

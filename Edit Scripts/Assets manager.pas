@@ -827,6 +827,7 @@ begin
   slAssetsExt.AddObject('.bgem', atMaterial);
   slAssetsExt.AddObject('.wav', atSound);
   slAssetsExt.AddObject('.mp3', atSound);
+  slAssetsExt.AddObject('.ogg', atSound);
   slAssetsExt.AddObject('.xwm', atSound);
   slAssetsExt.AddObject('.kf', atAnimation);
   slAssetsExt.AddObject('.hkx', atAnimation);
