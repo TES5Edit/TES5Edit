@@ -16587,7 +16587,6 @@ var
   Container   : IwbContainer;
   SelfRef     : IwbContainerElementRef;
   fPath       : String;
-  modOffset   : Cardinal;
   modPtr      : Pointer;
   mods        : TwbArray;
 
