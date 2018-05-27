@@ -6945,8 +6945,8 @@ begin
         ])}
       ])
     ),
-    wbRArray('Unknown',
-      wbStruct(NVCI, 'Unknown', [
+    wbRArray('Navigation Connection Infos',
+      wbStruct(NVCI, 'Navigation Connection Info', [
         wbFormIDCk('Unknown', [NAVM]),
         wbArray('Unknown', wbFormIDCk('Unknown', [NAVM]), -1),
         wbArray('Unknown', wbFormIDCk('Unknown', [NAVM]), -1),
