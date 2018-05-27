@@ -481,6 +481,7 @@ procedure IwbElement_SortKey(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
 begin
+  Value := '';
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     Value := Element.Sortkey[Args.Values[1]];
 end;
@@ -787,6 +788,7 @@ procedure IwbContainer_ElementExists(var Value: Variant; Args: TJvInterpreterArg
 var
   Container: IwbContainerElementRef;
 begin
+  Value := False;
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
     Value := Container.ElementExists[string(Args.Values[1])];
 end;
@@ -1168,6 +1170,7 @@ procedure IwbMainRecord_IsWinningOverride(var Value: Variant; Args: TJvInterpret
 var
   MainRecord: IwbMainRecord;
 begin
+  Value := false;
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
     Value := MainRecord.IsWinningOverride;
 end;
@@ -1344,6 +1347,7 @@ procedure IwbFile_GetIsESM(var Value: Variant; Args: TJvInterpreterArgs);
 var
   _File: IwbFile;
 begin
+  Value := False;
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
     Value := _File.IsESM;
 end;
