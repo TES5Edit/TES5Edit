@@ -8675,11 +8675,11 @@ begin
         // 7: EPFD=lstring
         wbLString(EPF2, 'Button Label', 0, cpTranslate),
         wbStruct(EPF3, 'Script Flags', [
-          wbInteger('Script Flags', itU8, wbFlags([
+          wbInteger('Script Flags', itU16, wbFlags([
             'Run Immediately',
             'Replace Default'
           ])),
-          wbByteArray('Unknown', 3)
+          wbInteger('Fragment Index', itU16)
         ]),
         wbUnion(EPFD, 'Data', wbEPFDDecider, [
           {0} wbByteArray('Unknown'),

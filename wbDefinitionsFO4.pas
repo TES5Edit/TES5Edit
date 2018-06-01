@@ -10888,12 +10888,12 @@ begin
 
         wbInteger(EPFB, 'Perk Entry ID (unique)', itU16),
         wbLString(EPF2, 'Button Label', 0, cpTranslate),
+        // keeping as struct to be similar to tes5 format
         wbStruct(EPF3, 'Script Flags', [
-          wbInteger('Script Flags', itU8, wbFlags([
+          wbInteger('Script Flags', itU16, wbFlags([
             'Run Immediately',
             'Replace Default'
-          ])),
-          wbByteArray('Unknown', 1)
+          ]))
         ]),
         wbUnion(EPFD, 'Data', wbEPFDDecider, [
           {0} wbByteArray('Unknown'),
