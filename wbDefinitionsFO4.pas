@@ -12602,7 +12602,7 @@ begin
     wbFormIDCk(TPIC, 'Topic', [DIAL]),
     wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL], False, cpBenign),
     wbFormIDCk(DNAM, 'Shared INFO', [INFO]),
-    wbFormIDCk(GNAM, 'Unknown', [INFO]),
+    wbFormIDCk(GNAM, 'INFO group', [INFO]),
     wbString(IOVR, 'Override Filename'),
 
     wbRArray('Responses', wbRStruct('Response', [
