@@ -3403,6 +3403,9 @@ procedure TfrmMain.DoInit;
 
         // add official CCs right after the last DLC
         if wbGameMode in [gmSSE, gmFO4] then begin
+          k := 0;
+          if wbIsSkyrim then
+           k := 1;
           // find position of highest DLC
           for i := High(wbOfficialDLC) downto Low(wbOfficialDLC) do begin
             k := FindMatchText(sl, wbOfficialDLC[i]);
