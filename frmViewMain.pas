@@ -3338,7 +3338,7 @@ procedure TfrmMain.DoInit;
 
   procedure LoadPluginListInternal(frmFileSelect: TfrmFileSelect; sl: TStringList);
   var
-    i, j        : Integer;
+    i, j, k     : Integer;
     s           : string;
     sl2         : TStringList;
     Age         : Integer;
@@ -3401,6 +3401,25 @@ procedure TfrmMain.DoInit;
             sl.Insert(1, wbOfficialDLC[i]);
         end;
 
+        // add official CCs right after the last DLC
+        if wbGameMode in [gmSSE, gmFO4] then begin
+          // find position of highest DLC
+          for i := High(wbOfficialDLC) downto Low(wbOfficialDLC) do begin
+            k := FindMatchText(sl, wbOfficialDLC[i]);
+            if k <> -1 then
+              Break;
+          end;
+          Inc(k);
+          // insert CC based on their order in *.CCC file
+          for i := High(wbCreationClubContent) downto Low(wbCreationClubContent) do begin
+            // delete CC from list if already there, no matter where it is located since we hardcode their order
+            j := FindMatchText(sl, wbCreationClubContent[i]);
+            if j <> -1 then
+              sl.Delete(j);
+            sl.Insert(k, wbCreationClubContent[i]);
+          end;
+        end;
+
         // remove nonexisting files (including optional DLC)
         RemoveMissingFiles(sl);
 
@@ -3437,15 +3456,15 @@ procedure TfrmMain.DoInit;
       }
       AddMissingToLoadList(sl);
 
-      // move Creation Club plugins right after the last ESM
+      // move non-CC ESL plugins right after the last ESM
       if wbGameMode in [gmSSE, gmFO4] then begin
         for j := Pred(sl.Count) downto 0 do
           if IsFileESM(sl[j]) then
             Break;
         Inc(j);
         for i := Succ(j) to Pred(sl.Count) do
-          if IsFileCC(sl[i]) then begin
-            AddMessage('Detected Creation Club plugin, forcing it to load after the last ESM: ' + sl[i]);
+          if IsFileESL(sl[i]) and not IsFileCC(sl[i]) then begin
+            AddMessage('Detected ESL plugin, forcing it to load after the last ESM: ' + sl[i]);
             sl.Move(i, j);
             Inc(j);
           end;
