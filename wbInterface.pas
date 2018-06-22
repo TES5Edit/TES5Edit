@@ -3107,6 +3107,7 @@ function CmpB8(a, b: Byte): Integer;
 function CmpI32(a, b : Integer) : Integer;
 function CmpW32(a, b: Cardinal): Integer;
 function CmpI64(const a, b : Int64) : Integer;
+function CmpW64(const a, b : UInt64) : Integer;
 function CompareElementsFormIDAndLoadOrder(Item1, Item2: Pointer): Integer;
 
 function ConflictAllToColor(aConflictAll: TConflictAll): TColor;
@@ -10122,14 +10123,6 @@ asm
 end;
 
 function CmpI64(const a, b : Int64) : Integer;
-//begin
-//  if a = b then
-//    Result := nxEqual
-//  else if a < b then
-//    Result := nxSmallerThan
-//  else
-//    Result := nxGreaterThan;
-//end;
 asm
 {$IFDEF WIN32}
   xor eax, eax
@@ -10152,6 +10145,39 @@ asm
   xor rax, rax
   cmp rcx, rdx
   jg @@GT
+  je @@EQ
+@@LT:
+  dec rax
+  dec rax
+@@GT:
+  inc rax
+@@EQ:
+{$ENDIF WIN64}
+end;
+
+function CmpW64(const a, b : UInt64) : Integer;
+asm
+{$IFDEF WIN32}
+  xor eax, eax
+  mov edx, [ebp+20]
+  cmp edx, [ebp+12]
+  ja @@GT
+  jb @@LT
+  mov edx, [ebp+16]
+  cmp edx, [ebp+8]
+  ja @@GT
+  je @@EQ
+@@LT:
+  dec eax
+  dec eax
+@@GT:
+  inc eax
+@@EQ:
+{$ENDIF WIN32}
+{$IFDEF WIN64}
+  xor rax, rax
+  cmp rcx, rdx
+  ja @@GT
   je @@EQ
 @@LT:
   dec rax
