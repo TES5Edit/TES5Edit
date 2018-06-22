@@ -1762,7 +1762,12 @@ begin
 
   Result := CmpI32(LoadOrder1, LoadOrder2);
   if Result = 0 then
+    {$IFDEF WIN32}
     Result := CmpW32(IwbFile(Item1).ElementID, IwbFile(Item2).ElementID);
+    {$ENDIF}
+    {$IFDEF WIN64}
+    Result := CmpW64(IwbFile(Item1).ElementID, IwbFile(Item2).ElementID);
+    {$ENDIF}
 end;
 
 { TwbFile }
@@ -7123,7 +7128,7 @@ var
   i, j, k : Integer;
   Rec     : IwbMainRecord;
   _File : IwbFile;
-  LastID  : Cardinal;
+  LastID  : NativeUInt;
 begin
   SetLength(Result, Length(mrReferences));
   if Length(Result) > 0 then begin
@@ -11659,7 +11664,12 @@ begin
               else
                 Result := CmpW32(MainRecord1.FixedFormID, MainRecord2.FixedFormID);
               if Result = 0 then
+                {$IFDEF WIN32}
                 Result := CmpW32(MainRecord1.ElementID, MainRecord2.ElementID);
+                {$ENDIF}
+                {$IFDEF WIN64}
+                Result := CmpW64(MainRecord1.ElementID, MainRecord2.ElementID);
+                {$ENDIF}
             end;
           end;
         end
