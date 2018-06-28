@@ -1,16 +1,13 @@
 #include <string>
-#include "nvse/PluginAPI.h"
+#include "common/IPrefix.h"
+#include "fose/PluginAPI.h"
+#include "fose_common/fose_version.h"
 
-#ifdef NOGORE
-IDebugLog		gLog("nvse_plugin_xEdit_ng.log");
-#else
-IDebugLog		gLog("nvse_plugin_xEdit.log");
-#endif
+IDebugLog		gLog("fose_plugin_xEdit.log");
 
 PluginHandle	g_pluginHandle = kPluginHandle_Invalid;
-NVSEInterface * SaveNVSE;
-NVSECommandTableInterface * SaveCT;
-NVSEMessagingInterface* SaveMsg;
+FOSEInterface * SaveFOSE;
+FOSECommandTableInterface * SaveCT;
 
 bool CheckParam(CommandInfo * iter, UInt32 paramIndex)
 {
@@ -62,61 +59,89 @@ UInt32 WBEncode(ParamInfo param)
 		case  31:	return    2; 	//	 1f 'MagicEffect' ()   0
 		case  32:	return    2; 	//	 20 'FormType' ()   0
 		case  33:	return    2; 	//	 21 'WeatherID' ()   0
-		case  34:	return    2; 	//	 22 'NPC' ()   0
 		case  35:	return    2; 	//	 23 'Owner' ()   0
 		case  36:	return    2; 	//	 24 'EffectShader' ()   0
 		case  37:	return    2; 	//	 25 'FormList' ()   0
-		case  38:	return    2; 	//	 26 'MenuIcon' ()   0
 		case  39:	return    2; 	//	 27 'Perk' ()   0
 		case  40:	return    2; 	//	 28 'Note' ()   0
 		case  41:	return    0; 	//	 29 'MiscellaneousStat' ()   0
 		case  42:	return    2; 	//	 2a 'ImageSpaceModifier' ()   0
 		case  43:	return    2; 	//	 2b 'ImageSpace' ()   0
-		case  44:	return    0; 	//	 2c 'Unhandled2C' ()   0
-		case  45:	return    0; 	//	 2d 'Unhandled2D' ()   0
-		case  46:	return    0; 	//	 2e 'Unhandled2E' ()   0
+		case  46:	return    0; 	//	 2e 'VoiceType' ()   0
 		case  47:	return    2; 	//	 2f 'EncounterZone' ()   0
-		case  48:	return    0; 	//	 30 'Unhandled30' ()   0
+		case  48:	return    2; 	//	 30 'IdleForm' ()   0
 		case  49:	return    2; 	//	 31 'Message' ()   0
-		case  50:	return    2; 	//	 32 'InvObjOrFormList' ()   0
-		case  51:	return    2; 	//	 33 'Alignment' ()   0
-		case  52:	return    2; 	//	 34 'EquipType' ()   0
-		case  53:	return    2; 	//	 35 'NonFormList' ()   0
-		case  54:	return    2; 	//	 36 'SoundFile' ()   0
-		case  55:	return    2; 	//	 37 'CriticalStage' ()   0
-		case  56:	return    2; 	//	 38 'LeveledOrBaseChar' ()   0
-		case  57:	return    2; 	//	 39 'LeveledOrBaseCreature' ()   0
-		case  58:	return    2; 	//	 3a 'LeveledChar' ()   0
+		case  50:	return    2; 	//	 32 'ObjectID_BIS' ()   0
+		case  51:	return    1; 	//	 33 'Alignment' ()   0
+		case  52:	return    1; 	//	 34 'EquipType' ()   0
+		case  53:	return    2; 	//	 35 'ObjectID_TBD' ()   0
+		case  54:	return    2; 	//	 36 'Music' ()   0
+		case  55:	return    1; 	//	 37 'CriticalStage' ()   0
+		case  56:	return    2; 	//	 38 'NPCorLeveledCharacter' ()   0
+		case  57:	return    2; 	//	 39 'CreatureOrLeveledCreature' ()   0
+		case  58:	return    2; 	//	 3a 'LeveledCharacter' ()   0
 		case  59:	return    2; 	//	 3b 'LeveledCreature' ()   0
 		case  60:	return    2; 	//	 3c 'LeveledItem' ()   0
 		case  61:	return    2; 	//	 3d 'AnyForm' ()   0
-		case  62:	return    1; 	//	 3e 'Reputation' ()   0
-		case  63:	return    1; 	//	 3f 'Casino' ()   0
-		case  64:	return    2; 	//	 40 'CasinoChip' ()   0
-		case  65:	return    2; 	//	 41 'Challenge' ()   0
-		case  66:	return    2; 	//	 42 'CaravanMoney' ()   0
-		case  67:	return    2; 	//	 43 'CaravanCard' ()   0
-		case  68:	return    2; 	//	 44 'CaravanDeck' ()   0
-		case  69:	return    2; 	//	 45 'Region' ()   0
 		default:	return 0;
 	}
 };
 
-bool DoTheWork()
+extern "C" {
+
+bool FOSEPlugin_Query(const FOSEInterface * fose, PluginInfo * info)
 {
-	#if RUNTIME_VERSION == RUNTIME_VERSION_1_4_0_525
-		static const UInt32 s_doShowChangeFlagsName = 0x0083FEF0;		// Skyrim 1.9.32: 00675DB0,					Fallout3: 006C9510
-		static const UInt32 s_ChangeToFormType = 0x011A2428;			// Skyrim: 012724C0							Fallout3: 00F6D1D0
-		static const UInt32 s_FormToChangeType = 0x011DE360;			// after initialisation Skyrim: 01B2E4D0	Fallout3: 01079BD0
-		static const UInt32 s_RecordType = 0x01187004;					// Skyrim: 0123F2C4							Fallout3: 00F4A74C
-		static const UInt32 s_GlobalDataNames = 0x011A216C;				// Skyrim: 01272310, 01272334, 01272370,	Fallout3: 00F6CED8
-	#elif RUNTIME_VERSION == RUNTIME_VERSION_1_4_0_525ng
-		static const UInt32 s_doShowChangeFlagsName = 0x0083FE40;
-		static const UInt32 s_ChangeToFormType = 0x011A2428;
-		static const UInt32 s_FormToChangeType = 0x011DE360;
-		static const UInt32 s_RecordType = 0x01187004;
-		static const UInt32 s_GlobalDataNames = 0x011A216C;
-	#elif EDITOR
+	// fill out the info structure
+	info->infoVersion = PluginInfo::kInfoVersion;
+	info->name = "fose_plugin_xEdit";
+	info->version = 1;
+
+	// version checks
+	if(fose->foseVersion < FOSE_VERSION_INTEGER)
+	{
+		_ERROR("FOSE version too old (got %08X expected at least %08X)", fose->foseVersion, FOSE_VERSION_INTEGER);
+		return false;
+	}
+
+	if(!fose->isEditor)
+	{
+		if(fose->runtimeVersion < FALLOUT_VERSION_1_7)
+		{
+			_ERROR("incorrect runtime version (got %08X need at least %08X)", fose->runtimeVersion, FALLOUT_VERSION_1_7);
+			return false;
+		}
+
+	}
+	else
+	{
+		return false;
+	}
+
+	// version checks pass
+
+	return true;
+}
+
+bool FOSEPlugin_Load(const FOSEInterface * fose)
+{
+	g_pluginHandle = fose->GetPluginHandle();
+
+	// save the FOSEinterface in cas we need it later
+	SaveFOSE = (FOSEInterface *)fose;
+	SaveCT = (FOSECommandTableInterface *)fose->QueryInterface(kInterface_CommandTable);
+
+	#if RUNTIME_VERSION == FALLOUT_VERSION_1_7
+		static const UInt32 s_doShowChangeFlagsName = 0x006C9510;		// Skyrim 1.9.32: 00675DB0,					Fallout3: 006C9510
+		static const UInt32 s_ChangeToFormType = 0x00F6D1D0;			// Skyrim: 012724C0							Fallout3: 00F6D1D0
+		static const UInt32 s_FormToChangeType = 0x01079BD0;			// after initialisation Skyrim: 01B2E4D0	Fallout3: 01079BD0
+		static const UInt32 s_RecordType = 0x00F4A74C;					// Skyrim: 0123F2C4							Fallout3: 00F4A74C
+		static const UInt32 s_GlobalDataNames = 0x00F6CED8;				// Skyrim: 01272310, 01272334, 01272370,	Fallout3: 00F6CED8
+	#elif RUNTIME_VERSION == FALLOUT_VERSION_1_7ng
+		static const UInt32 s_doShowChangeFlagsName = 0x006D8770;		// Skyrim 1.9.32: 00675DB0,					Fallout3: 006C9510
+		static const UInt32 s_ChangeToFormType = 0x00F6A1D0;			// Skyrim: 012724C0							Fallout3: 00F6D1D0
+		static const UInt32 s_FormToChangeType = 0x01076BD0;			// after initialisation Skyrim: 01B2E4D0	Fallout3: 01079BD0
+		static const UInt32 s_RecordType = 0x00F4774C;					// Skyrim: 0123F2C4							Fallout3: 00F4A74C
+		static const UInt32 s_GlobalDataNames = 0x00F69ED8;				// Skyrim: 01272310, 01272334, 01272370,	Fallout3: 00F6CED8
 	#else
 	#error
 	#endif
@@ -134,7 +159,7 @@ bool DoTheWork()
 	_MESSAGE("*****************************************************************************************************");
 
 	// create the Changed Form flags variables
-	UInt32 changeTypeCount = 55;
+	UInt32 changeTypeCount = 42;
 	for (UInt32 changeType = 0; changeType < changeTypeCount; changeType++) {
 		_MESSAGE("  wbChangeFlags%03u        : IwbIntegerDef;", changeType);
 	}
@@ -166,8 +191,6 @@ bool DoTheWork()
 	_MESSAGE("    '%02u (%03X : %s)'", changeTypeCount-1, formType, recordType[formType].signature );
 	_MESSAGE("  ]);\n");
 
-	_MESSAGE("*****************************************************************************************************");
-
 	// decode the Changed form flags
 	for (UInt32 changeType = 0; changeType < changeTypeCount; changeType++) {
 		UInt32 formType = changeToFormType[changeType];
@@ -198,8 +221,6 @@ bool DoTheWork()
 		_MESSAGE("  ]));\n");
 	}
 
-	_MESSAGE("*****************************************************************************************************");
-
 	// Build the Changed Form flags union
 	_MESSAGE("  wbChangeFlags := wbUnion('Change Flags', ChangedFormFlagsDecider, [");
 	for (UInt32 changeType = 0; changeType < changeTypeCount-1; changeType++) {
@@ -223,8 +244,6 @@ bool DoTheWork()
 		_MESSAGE("");
 	}
 	_MESSAGE("");
-
-	_MESSAGE("*****************************************************************************************************");
 
 	// Build the Changed Form Data struct
 	UInt32 flagValue = 1;
@@ -255,8 +274,34 @@ bool DoTheWork()
 	_MESSAGE("  ]);\n");
 
 	_MESSAGE("*****************************************************************************************************");
+
+	// create the list of condition commands for WB
+	UInt32 i = 0;
+	UInt32 j = 0;
+	_MESSAGE("conditionFunctionData = ( #--0: no param; 1: int param; 2: formid param; 3: float param");
+	for (const CommandInfo * CI = SaveCT->Start(); CI < SaveCT->End(); CI++, i++)
+	{
+		if (CI->eval)
+		{
+			_MESSAGE("    (%3d, '%s', %d, %d), # %3d", i, CI->longName,
+				CheckParam(CI, 0) ? WBEncode(CI->params[0]) : 0,
+				CheckParam(CI, 1) ? WBEncode(CI->params[1]) : 0,
+				j);
+			j++;
+		}
+	}
+	_MESSAGE("    )");	// Don't forget to add xSE functions
+
+	_MESSAGE("");
+
+	_MESSAGE("*****************************************************************************************************");
+
+	_MESSAGE("*****************************************************************************************************");
 	_MESSAGE("\n\n\n");
   
+	const UInt32 kFOSEOpcodeStart	= 0x1400;
+	const UInt32 kFOSEOpcodeTest	= 0x2000;
+
 	#define ALength 256
   
 	char ParamType1[ALength];
@@ -272,7 +317,7 @@ bool DoTheWork()
 	{
 		UInt32 i = CI->opcode;
 
-		if (i && CI && CI->eval && (kNVSEOpcodeTest>i || (kNVSEOpcodeTest+16-1)<i))
+		if (i && CI && CI->eval && (kFOSEOpcodeTest>i || (kFOSEOpcodeTest+16-1)<i))
 		{
 			if (PI != SaveCT->GetParentPlugin(CI))	// Ok, this is bugged !!!
 			{
@@ -292,109 +337,6 @@ bool DoTheWork()
 		}
 	}
 
-	_MESSAGE("*****************************************************************************************************");
-
-	// create the list of condition commands for WB
-	UInt32 i = 0;
-	UInt32 j = 0;
-	_MESSAGE("conditionFunctionData = ( #--0: no param; 1: int param; 2: formid param; 3: float param");
-	for (const CommandInfo * CI = SaveCT->Start(); CI < SaveCT->End(); CI++)
-	{
-		if (CI->eval)
-		{
-			_MESSAGE("    (%3d, '%s', %d, %d), # %3d", i, CI->longName,
-				CheckParam(CI, 0) ? WBEncode(CI->params[0]) : 0,
-				CheckParam(CI, 1) ? WBEncode(CI->params[1]) : 0,
-				j);
-			j++;
-		}
-		i++;
-	}
-	_MESSAGE("    )");	// Don't forget to add xSE functions
-
-	_MESSAGE("");
-
-	_MESSAGE("*****************************************************************************************************");
-	return true;
-}
-
-void MessageHandler(NVSEMessagingInterface::Message* msg)
-{
-	switch (msg->type)
-	{
-		case NVSEMessagingInterface::kMessage_PostPostLoad:
-			_MESSAGE("Received post post load message");  // So all possible functions are declared now
-			DoTheWork();
-			break;
-  }
-}
-
-extern "C" {
-
-bool NVSEPlugin_Query(const NVSEInterface * nvse, PluginInfo * info)
-{
-	// fill out the info structure
-	info->infoVersion = PluginInfo::kInfoVersion;
-	info->name = "nvse_plugin_xEdit";
-	info->version = 2;
-
-	// version checks
-	if(nvse->nvseVersion < NVSE_VERSION_INTEGER)
-	{
-		_ERROR("NVSE version too old (got %08X expected at least %08X)", nvse->nvseVersion, NVSE_VERSION_INTEGER);
-		return false;
-	}
-
-	if(!nvse->isEditor)
-	{
-		if(nvse->runtimeVersion < RUNTIME_VERSION_1_4_0_525)
-		{
-			_ERROR("incorrect runtime version (got %08X need at least %08X)", nvse->runtimeVersion, RUNTIME_VERSION_1_4_0_525);
-			return false;
-		}
-
-#ifdef NOGORE
-		if(!nvse->isNogore)
-		{
-			_ERROR("incorrect runtime edition (got %08X need %08X (nogore))", nvse->isNogore, 1);
-			return false;
-		}
-#else
-		if(nvse->isNogore)
-		{
-			_ERROR("incorrect runtime edition (got %08X need %08X (standard))", nvse->isNogore, 0);
-			return false;
-		}
-#endif
-	}
-	else
-	{
-		if(nvse->editorVersion < CS_VERSION_1_4_0_518)
-		{
-			_ERROR("incorrect editor version (got %08X need at least %08X)", nvse->editorVersion, CS_VERSION_1_4_0_518);
-			return false;
-		}
-#ifdef NOGORE
-		_ERROR("Editor only uses standard edition, closing.");
-		return false;
-#endif
-	}
-
-	// version checks pass
-
-	return true;
-}
-
-bool NVSEPlugin_Load(const NVSEInterface * nvse)
-{
-	g_pluginHandle = nvse->GetPluginHandle();
-
-	// save the NVSEinterface in case we need it later
-	SaveNVSE = (NVSEInterface *)nvse;
-	SaveCT = (NVSECommandTableInterface *)nvse->QueryInterface(kInterface_CommandTable);
-	SaveMsg = (NVSEMessagingInterface *)nvse->QueryInterface(kInterface_Messaging);
-	SaveMsg->RegisterListener(g_pluginHandle, "NVSE", MessageHandler);
-  
 	return true;
 }
 

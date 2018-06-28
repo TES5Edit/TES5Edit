@@ -1,0 +1,4 @@
+LIBRARY	"fose_plugin_xEdit"
+EXPORTS
+FOSEPlugin_Query
+FOSEPlugin_Load
