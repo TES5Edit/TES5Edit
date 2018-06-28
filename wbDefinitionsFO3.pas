@@ -2138,6 +2138,7 @@ type
 
 const
   wbCTDAFunctions : array[0..243] of TCTDAFunction = (
+    // Added by Fallout 3
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),

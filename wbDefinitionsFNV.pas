@@ -2229,7 +2229,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..316] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..320] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -2509,7 +2509,7 @@ const
     (Index: 1476; Name: 'GetAltPerkRank'; ParamType1: ptPerk; ParamType2: ptActor;),
     (Index: 1541; Name: 'GetActorFIKstatus'; ),
 
-    // Added by nvse_plugin_ExtendedActorVariable
+    // Added by nvse_plugin_ExtendedActorVariables
     (Index: 4352; Name: 'GetExtendedActorVariable'; ParamType1: ptInventoryObject; ),
     (Index: 4353; Name: 'GetBaseExtendedActorVariable'; ParamType1: ptInventoryObject; ),
     (Index: 4355; Name: 'GetModExtendedActorVariable'; ParamType1: ptInventoryObject; ),
@@ -2528,6 +2528,10 @@ const
     (Index: 4618; Name: 'GetRightTrigger'; ),
     (Index: 4708; Name: 'GetArmorClass'; ParamType1: ptAnyForm; ),
     (Index: 4709; Name: 'IsRaceInList'; ParamType1: ptFormList; ),
+    (Index: 4758; Name: 'IsButtonDisabled'; ParamType1: ptInteger; ),
+    (Index: 4761; Name: 'IsButtonHeld'; ParamType1: ptInteger; ),
+    (Index: 4774; Name: 'IsTriggerDisabled'; ParamType1: ptInteger; ),
+    (Index: 4777; Name: 'IsTriggerHeld'; ParamType1: ptInteger; ),
     (Index: 4822; Name: 'GetReferenceFlag'; ParamType1: ptInteger; ),
     (Index: 4832; Name: 'GetDistance2D'; ParamType1: ptObjectReference; ),
     (Index: 4833; Name: 'GetDistance3D'; ParamType1: ptObjectReference; ),
