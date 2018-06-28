@@ -31,7 +31,7 @@
 PluginHandle	g_pluginHandle = kPluginHandle_Invalid;
 F4SEInterface * SaveF4SE;
 
-#define REQUIRED_RUNTIME RUNTIME_VERSION_1_10_50
+#define REQUIRED_RUNTIME RUNTIME_VERSION_1_10_98
 
 void OpenPluginLog()
 {
@@ -42,6 +42,9 @@ void OpenPluginLog()
 	strcat_s(pluginLog, pluginExt);
 
 	gLog.OpenRelative(CSIDL_MYDOCUMENTS, pluginLog);
+#ifdef _DEBUG
+	gLog.SetLogLevel(IDebugLog::kLevel_DebugMessage);
+#endif
 }
 
 bool CheckParam(ObScriptCommand * iter, UInt32 paramIndex)
@@ -50,22 +53,294 @@ bool CheckParam(ObScriptCommand * iter, UInt32 paramIndex)
 	return iter && iter->params && iter->numParams>paramIndex;
 }
 
+UInt32 WBEncode(ObScriptParam param)
+{
+	switch (param.typeID)
+	{
+		case  00:	return    0; 	//	 00 'String' (String)
+		case  01:	return    1; 	//	 01 'Integer' (Count)
+		case  02:	return    3; 	//	 02 'Float' (Float)
+		case  03:	return    2; 	//	 03 'ObjectID' (ObjectID)
+		case  04:	return    2; 	//	 04 'ObjectRef' (ObjectReferenceID)
+		case  05:	return    2; 	//	 05 'ActorValue' (Actor Value)
+		case  06:	return    2; 	//	 06 'Actor' (Actor)
+		case  07:	return    2; 	//	 07 'SpellItem' (Spell Item)
+		case   8:	return    0; 	//	 08 'Axis' (Axis)
+		case   9:	return    2; 	//	 09 'Cell' (Cell)
+		case  10:	return    0; 	//	 0a 'AnimationGroup' (Animation Group)
+		case  11:	return    2; 	//	 0b 'MagicItem' (Magic Item)
+		case  12:	return    2; 	//	 0c 'Sound' (Sound)
+		case  13:	return    2; 	//	 0d 'Topic' (Topic)
+		case  14:	return    2; 	//	 0e 'Quest' (Quest)
+		case  15:	return    2; 	//	 0f 'Race' (Race)
+		case  16:	return    2; 	//	 10 'Class' (Class)
+		case  17:	return    2; 	//	 11 'Faction' (Faction)
+		case  18:	return    1; 	//	 12 'Sex' (Sex)
+		case  19:	return    2; 	//	 13 'Global' (Global)
+		case  20:	return    2; 	//	 14 'Furniture' (Furniture)
+		case  21:	return    2; 	//	 15 'TESObject' (ObjectID)
+		case  23:	return    1; 	//	 17 'QuestStage' (Stage)
+		case  24:	return    2; 	//	 18 'MapMarker' (Map Marker)
+		case  25:	return    2; 	//	 19 'ActorBase' (Actor Base)
+		case  26:	return    2; 	//	 1a 'Container' (Container (optional))
+		case  27:	return    2; 	//	 1b 'WorldSpace' (WorldSpace)
+		case  28:	return    1; 	//	 1c 'CrimeType' (Crime Type)
+		case  29:	return    2; 	//	 1d 'AIPackage' (Package)
+		case  30:	return    2; 	//	 1e 'CombatStyle' (Combat Style (optional))
+		case  31:	return    2; 	//	 1f 'MagicEffect' (Magic Effect)
+		case  32:	return    2; 	//	 20 'FormType' (Form Type)
+		case  33:	return    2; 	//	 21 'WeatherID' (Weather ID)
+		case  35:	return    2; 	//	 23 'Owner' (Owner(optional))
+		case  36:	return    2; 	//	 24 'EffectShader' (Effect Shader ID)
+		case  37:	return    2; 	//	 25 'FormList' (Form List)
+		case  39:	return    2; 	//	 27 'Perk' (Perk)
+		case  40:	return    2; 	//	 28 'Note' (Note)
+		case  41:	return    0; 	//	 29 'MiscellaneousStat' (Miscellaneous Stat)
+		case  42:	return    2; 	//	 2a 'ImageSpaceModifier' (Imagespace Modifier ID)
+		case  43:	return    2; 	//	 2b 'ImageSpace' (ImageSpace)
+		case  46:	return    0; 	//	 2e 'EventFunction' (Event Function)
+		case  47:	return    0; 	//	 2f 'EventMember' (Event Member)
+		case  48:	return    0; 	//	 30 'Data ' (Data (Optional))
+		case  49:	return    2; 	//	 31 'VoiceType' (VoiceType)
+		case  50:	return    2; 	//	 32 'EncounterZone' (EncounterZone)
+		case  51:	return    2; 	//	 33 'Idle Form' (Idle Form)
+		case  52:	return    2; 	//	 34 'Message' (Message)
+		case  53:	return    2; 	//	 35 'NonFormList' (ObjectID)
+		case  54:	return    1; 	//	 36 'Alignment' (Alignment)
+		case  55:	return    1; 	//	 37 'EquipType' (EquipType)
+		case  56:	return    2; 	//	 38 'ObjectID' (ObjectID)
+		case  57:	return    0; 	//	 39 'Music' (Music)
+		case  58:	return    0; 	//	 3a 'CriticalStage' (CriticalStage)
+		case  59:	return    2; 	//	 3b 'Keyword' (Keyword)
+		case  60:	return    0; 	//	 3c 'RefType' (RefType)
+		case  61:	return    2; 	//	 3d 'Location' (Location)
+		case  62:	return    2; 	//	 3e 'Form' (Form)
+		case  63:	return    0; 	//	 3f 'QuestAlias' (QuestAlias)
+		case  67:	return    2; 	//	 43 'Scene' (Scene)
+		case  68:	return    0; 	//	 44 'Source ' (Source (Optional))
+		case  69:	return    0; 	//	 45 'AssociationType' (AssociationType)
+		case  70:	return    0; 	//	 46 'WardState' (Ward State)
+		case  71:	return    0; 	//	 47 'PackageData ' (PackageData (Possibly Null))
+		case  72:	return    1; 	//	 48 'NumericPackageData' (PackageData (Numeric))
+		case  74:	return    0; 	//	 4a 'PapyrusVariableName' (Papyrus Variable Name)
+		case  75:	return    0; 	//	 4b 'ReferenceEffect' (Reference Effect)
+		case  76:	return    2; 	//	 4c 'PackageData ' (PackageData (Location))
+		case  77:	return    0; 	//	 4d 'SoundCategory' (SoundCategory)
+		case  78:	return    2; 	//	 4e 'KnowableForm' (Knowable Form)
+		case  79:	return    2; 	//	 4f 'Region' (Region)
+		case  80:	return    2; 	//	 50 'Action' (Action)
+		case  81:	return    0; 	//	 51 'MovementSelectIdleFromState' (MovementSelectIdleFromState)
+		case  82:	return    0; 	//	 52 'MovementSelectIdleToState' (MovementSelectIdleToState)
+		case  83:	return    0; 	//	 53 'PapyrusScript' (Papyrus Script)
+		case  84:	return    1; 	//	 54 'DamageType' (Damage Type)
+		case  85:	return    2; 	//	 55 'ActionTBD' (Action)
+		case  86:	return    2; 	//	 56 'KeywordTBD' (Keyword)
+		case  87:	return    0; 	//	 57 'FurnitureEntryType' (Furniture Entry Type)
+		default:	return 0;
+	}
+};
+
+class BGSLoadGameBuffer;
+
+// 20
+class TESForm_X : public BaseFormComponent
+{
+public:
+	enum { kTypeID = 0 };	// special-case
+
+	virtual void	Unk_07();
+	virtual void	Unk_08();
+	virtual bool	LoadForm(ModInfo* modInfo);		// 17 in CK, SaveForm is at 1B, make saveformbuffer is at 1A
+	virtual void	Unk_0A();
+	virtual bool	LoadForm2(ModInfo* modInfo);	// 1C in CK
+	virtual void	Unk_0C();
+	virtual bool	MarkChanged(UInt64 changed);
+	virtual void	Unk_0E();
+	virtual void	Unk_0F();
+	virtual void	Unk_10();
+	virtual void	WriteSave(); // Serialize
+	virtual void	ReadSave(BGSLoadGameBuffer* save);
+	virtual void	Unk_13();
+	virtual void	Unk_14();
+	virtual void	RevertSave();
+	virtual void	InitItem();						// 22 in CK
+	virtual ModInfo*	GetLastModifiedMod(); // 17 - Returns the ModInfo* of the mod that last modified the form.
+	virtual ModInfo*	GetLastModifiedMod_2(); // 18 - Returns the ModInfo* of the mod that last modified the form. Calls a helper function to do so.
+	virtual UInt8	GetFormType();  // 19
+	virtual void	Unk_1A(); // 1A - GetDebugName(TESForm * form, char * destBuffer, unsigned int bufferSize);
+	virtual bool	GetPlayerKnows(); // 1B - Gets flag bit 6.
+	virtual void	Unk_1C();
+	virtual void	Unk_1D();
+	virtual void	Unk_1E();
+	virtual void	Unk_1F();
+	virtual void	Unk_20();
+	virtual void	Unk_21();
+	virtual void	Unk_22();
+	virtual void	Unk_23();
+	virtual void	Unk_24();
+	virtual void	Unk_25();
+	virtual void	Unk_26();
+	virtual void	Unk_27();
+	virtual void	Unk_28();
+	virtual void	Unk_29();
+	virtual void	Unk_2A();
+	virtual void	LoadOBND();
+	virtual void	Unk_2C();
+	virtual void	LoadPTRN();
+	virtual void	Unk_2E();
+	virtual void	Unk_2F();
+	virtual void	Unk_30();
+	virtual void	Unk_31();
+	virtual void	Unk_32();	// This is also a Cast
+	virtual void	Unk_33();	// looks like CastAsReference
+	virtual void	Unk_34();
+	virtual const char *	GetFullName();  // 35
+	virtual void	Unk_36();
+	virtual void	Unk_37();
+	virtual void	Unk_38();
+	virtual void	Unk_39();
+	virtual const char *	GetEditorID(); // Only returns string for things that actually store the EDID ingame
+	virtual void	SetEditorID(char * editorID);
+	virtual void	Unk_3C();
+	virtual void	Unk_3D();
+	virtual void	Unk_3E();
+	virtual void	Unk_3F();
+	virtual void	Unk_40();
+	virtual void	Unk_41();
+	virtual void	Unk_42();
+	virtual void	Unk_43();
+	virtual void	Unk_44();
+	virtual void	Unk_45();
+	virtual void	Unk_46();
+	virtual void	Unk_47();
+// ???	virtual void	Unk_48();
+// ???	virtual void	Unk_49();
+
+	enum {
+		kFlag_IsDeleted     = 1 << 5,
+		kFlag_PlayerKnows   = 1 << 6,
+		kFlag_Persistent    = 1 << 10,
+		kFlag_IsDisabled    = 1 << 11,
+		kFlag_NoHavok       = 1 << 29,
+	};
+
+	struct Data
+	{
+		// Array of mods that contain this form (wether it is an original, a copy of an overwrite).
+		// The builtin forms (formID < 0x0800) not overwritten in the game esm have a null mods pointer.
+		// Those arrays are shared, as there is only one per combination of overwriting mods.
+		// It is the same in Skyrim and Skyrim SE
+		ModInfo ** entries;     // array of ModInfo* - mods that change this form.
+		UInt64  size;
+	};
+
+	Data	* mods;		// 08
+	UInt32	flags;		// 10	CK also
+	UInt32	formID;		// 14	CK also
+#ifdef EDITOR
+	BSFixedString*	editorID;	// 18	It's a string at least
+	UInt32			ckVCS1;		// 20	Version Control field 1
+	UInt16			ckVCS2;		// 24	Version Control field 2
+	UInt8			ckFormType;	// 26	some flags cannot be set if this is the Main Header:	Mask=11111110100110111010111111110100b
+	UInt8			pad27;		// 27
+#else
+	UInt16	unk18;		// 18 - last 7 bits saved as part of CHANGE_FORM_FLAGS
+	UInt8	formType;	// 1A
+	UInt8	unk1B;		// 1B
+	UInt32	pad1C;		// 1C
+#endif
+};
+typedef tArray<TESForm_X*>	UnkFormXArray;
+
+// 10
+class TESFullName_X : public BaseFormComponent
+{
+public:
+	virtual ~TESFullName_X();
+
+	virtual void	GetExternData(void);
+	virtual char *	Get(void);
+
+	BSFixedString name;	// 08 In CK it is a BGSLocalizedString which contains a BSFixedString at offset 8
+};
+
+// 190
+class ActorValueInfo_X : public TESForm
+{
+public:
+	enum { kTypeID = kFormType_AVIF };
+
+	TESFullName_X	fullName;             // 20
+	TESDescription	description;          // 30
+
+#if _MSC_VER == 1700
+	std::function<void(Actor *, ActorValueInfo_X&, float, float, Actor *)> calcFunction;	// 48
+#else
+	void            * func_vtable;			// 48 - vtable of the lambda function
+	void            * func;					// 50
+	UInt64            unk58;				// 58
+	void            * func_ptr;				// 60 - address of offset 48
+#endif
+
+	const char      * avName;               // 68
+	UInt64            unk70;                // 70
+	ActorValueInfo_X  * dependentAVs[0xF];    // 78
+
+#if _MSC_VER == 1700
+	std::function<float(ActorValueOwner*, ActorValueInfo_X&)> derivedFunction;	// F0
+#else
+	void            * derived_func_vtable;	// F0 - vtable of the lambda function
+	void            * derived_func;			// F8
+	UInt64            unk100;				// 100
+	void            * derived_func_ptr;		// 108 - address of offset F0
+#endif
+
+	UInt32    unk110[(0x16C - 0x110) / 4];  // 110
+
+	UInt32    avFlags;                      // 16C
+	enum AVFlags
+	{
+		kFlag_DefaultBase_0             = (1 << 10),    // 10 | Default Base: 0
+		kFlag_DefaultBase_1             = (1 << 11),    // 11 | Default Base: 1
+		kFlag_DefaultBase_100           = (1 << 12),    // 12 | Default Base: 100
+		kFlag_DefaultBase_UserDefined   = (1 << 13),    // 13 | Default Base: User Defined
+		kFlag_DefaultBase_Derived       = (1 << 15),    // 15 | Default Base: Derived (bits 10-13 must not be set)
+		kFlag_DamageIsPositive          = (1 << 26),    // 26 | Damage is Positive
+		kFlag_GodModeImmune             = (1 << 27),    // 27 | God Mode Immune
+		kFlag_Hardcoded                 = (1 << 31)     // 31 | Hardcoded
+	};
+
+	UInt32    avType;                       // 170
+	UInt32    numDependentAVs;              // 174
+	UInt32    unk178;                       // 178
+	UInt32    unk17C;                       // 17C
+	UInt32    unk180;                       // 180
+	float     defaultBase;                  // 184
+	UInt32    unk188;                       // 188
+	UInt32    unk18C;                       // 18C
+};
+STATIC_ASSERT(offsetof(ActorValueInfo_X, avName) == 0x68);
+
 bool xEditCommand()
 {
 	#if RUNTIME_VERSION == REQUIRED_RUNTIME
-		static const UInt32 s_doShowChangeFlagsName = 0x00CD64C0;				// Skyrim 1.9.32: 00675DB0,					Fallout3: 006C9510	FalloutNV: 0x0083FEF0
-		static const UInt32 s_changeFormTypeArray = 0x037C0F10;					// Skyrim: 012724C0							Fallout3: 00F6D1D0	FalloutNV: 0x011A2428
-		static const UInt32 s_FormToChangeType = 0x05AAB730;					// after initialisation Skyrim: 01B2E4D0	Fallout3: 01079BD0	FalloutNV: 0x011DE360
-		static const UInt32 s_nickNames = 0x02C820D8;							// Array of form signatures
-		static const UInt32 s_formTypeNicknames = 0x0370D7D0;					// Skyrim: 0123F2C4							Fallout3: 00F4A74C	FalloutNV: 0x01187004
-		static const UInt32 s_GlobalData1Names = 0x037C08C0;					// Skyrim: 01272310, 01272334, 01272370,	Fallout3: 00F6CED8	FalloutNV: 0x011A216C
+		static const UInt32 s_doShowChangeFlagsName = 0x00CD6940;				// Skyrim 1.9.32: 00675DB0,					Fallout3: 006C9510	FalloutNV: 0x0083FEF0
+		static const UInt32 s_changeFormTypeArray = 0x037C1F10;					// Skyrim: 012724C0							Fallout3: 00F6D1D0	FalloutNV: 0x011A2428
+		// xRef at second xRef to s_changeFormTypeArray, offset 0x0B
+		static const UInt32 s_FormToChangeType = 0x05AAC730;					// after initialisation Skyrim: 01B2E4D0	Fallout3: 01079BD0	FalloutNV: 0x011DE360
+		// first entry is NONE, then TES4
+		static const UInt32 s_nickNames = 0x02C830D8;							// Array of form signatures
+		// 4th to last xRef to s_nickNames. array of 159 FormTypeNickName
+		static const UInt32 s_formTypeNicknames = 0x0370E7D0;					// Skyrim: 0123F2C4							Fallout3: 00F4A74C	FalloutNV: 0x01187004
+		// Starts with "Misc Stats" as aMiscStats_0, first xref
+		static const UInt32 s_GlobalData1Names = 0x037C18C0;					// Skyrim: 01272310, 01272334, 01272370,	Fallout3: 00F6CED8	FalloutNV: 0x011A216C
 		static const UInt32 s_GlobalData2Names = s_GlobalData1Names + 12;		// 100 + index
 		static const UInt32 s_GlobalData3Names = s_GlobalData2Names + 18;		// 1000 + index
 		static const UInt32 s_GlobalData3NamesEnd = s_GlobalData3Names + 8;
-		static const UInt64 s_DialogSubtypes = 0x0374D430;						// First is CUST Custom
-		static const UInt64 s_DialogSubtypesEnd = 0x0374E7B8;					//	past PlayerAquireFeaturedItem
-		static const UInt64 s_DefaultObjectManagerObjectArray = 0x03722C50;		// First is UNUSED01, WWSP
-		static const UInt64 s_DefaultObjectManagerObjectArrayEnd = 0x03725D90;	// ??_R0?AVBGSDefaultObjectManager@@@8
+		static const UInt64 s_DialogSubtypes = 0x0374E430;						// First is CUST Custom as aCustom_0 xRef 2
+		static const UInt64 s_DialogSubtypesEnd = 0x0374F7B8;					//	past PlayerAquireFeaturedItem as aPlayeraquirefe xRef 1
+		static const UInt64 s_DefaultObjectManagerObjectArray = 0x03723C50;		// First is UNUSED01, WWSP as aUnused01 xRef 1
+		static const UInt64 s_DefaultObjectManagerObjectArrayEnd = 0x03726D90;	// ??_R0?AVBGSDefaultObjectManager@@@8 as BGSDefaultObjectManager `RTTI Type Descriptor'
 	#else 
 	#error
 	#endif
@@ -158,6 +433,28 @@ bool xEditCommand()
 		}
 	}
 	_MESSAGE("  );");	// Don't forget to remove the last ,
+
+	_MESSAGE("");
+
+	_MESSAGE("*****************************************************************************************************");
+
+	// create the list of condition commands for WB
+	i = 0;
+	j = 0;
+	_MESSAGE("conditionFunctionData = ( #--0: no param; 1: int param; 2: formid param; 3: float param");
+	for (ObScriptCommand * iter = g_firstObScriptCommand; iter->opcode < (kObScript_NumObScriptCommands + kObScript_ScriptOpBase); ++iter, i++)
+	{
+		if (iter->eval)
+		{
+			_MESSAGE("    (%3d, '%s', %d, %d, %d),", i, iter->longName,
+				CheckParam(iter, 0) ? WBEncode(iter->params[0]) : 0,
+				CheckParam(iter, 1) ? WBEncode(iter->params[1]) : 0,
+				CheckParam(iter, 2) ? WBEncode(iter->params[2]) : 0,
+				j);
+			j++;
+		}
+	}
+	_MESSAGE("    )");	// Don't forget to add xSE functions
 
 	_MESSAGE("");
 
@@ -293,10 +590,10 @@ bool xEditCommand()
 	do
 	{
 		TESForm* pForm = LookupFormByID(avID+firstAV);
-		ActorValueInfo* pActorValueInfo = NULL;
+		ActorValueInfo_X* pActorValueInfo = NULL;
 
 		if (pForm && pForm->formType == 98)
-			pActorValueInfo = (ActorValueInfo*)pForm;
+			pActorValueInfo = (ActorValueInfo_X*)pForm;
 		if (pActorValueInfo) {
 			_MESSAGE("%d;%s;%x;\"%s\";%x;%x;%x", avID, pActorValueInfo->avName, pActorValueInfo->formID, 
 				pActorValueInfo->fullName.Get(), 
@@ -379,15 +676,21 @@ bool xEditCommand()
 	_MESSAGE("*****************************************************************************************************");
 	_MESSAGE("\n\n\n");
 
+	DefaultObjectMap * domap = *(g_defaultObjectMap);
+	domap->Dump();
+
+	_MESSAGE("*****************************************************************************************************");
+	_MESSAGE("\n\n\n");
+
 	_MESSAGE("formType;formSignature;formID;");
 	DataHandler* theDH = *g_dataHandler.GetPtr();
-	UnkFormArray* unkFormArrays = &(theDH->arrNONE);
+	UnkFormXArray* unkFormArrays = (UnkFormXArray*)&(theDH->arrNONE);
 	for (UInt8 i = 0; i < kFormType_Max; i++)
 	{
-		UnkFormArray* a = (UnkFormArray*) ((uintptr_t)unkFormArrays + i * sizeof(UnkFormArray));
+		UnkFormXArray* a = (UnkFormXArray*) ((uintptr_t)unkFormArrays + i * sizeof(UnkFormXArray));
 		for (UInt64 j = 0; j < a->count; j++)
 		{
-			TESForm* f = (*a)[j];
+			TESForm_X* f = (*a)[j];
 			if (f && !f->mods)
 				_MESSAGE("%04d;%s;%08X;", f->formType, formTypeNicknames[f->formType].nickname, f->formID);
 		}
@@ -421,6 +724,10 @@ void xEdit_ObScript_Init()
 	}
 }
 
+#ifndef COMMAND_ARGS
+#define COMMAND_ARGS void * paramInfo, void * scriptData, TESObjectREFR * thisObj, void * containingObj, void * scriptObj, void * locals, double * result, void * opcodeOffsetPtr
+#endif
+
 bool xEditCommand_Execute(COMMAND_ARGS)
 {
 	return xEditCommand();
@@ -449,6 +756,8 @@ bool F4SEPlugin_Query(const F4SEInterface * f4se, PluginInfo * info)
 {
 
 	OpenPluginLog();
+
+	_MESSAGE(pluginName);
 
 	// fill out the info structure
 	info->infoVersion = PluginInfo::kInfoVersion;
