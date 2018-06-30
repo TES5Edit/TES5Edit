@@ -2549,3 +2549,505 @@
   ]);
 
 *****************************************************************************************************
+conditionFunctionData = ( #--0: no param; 1: int param; 2: formid param; 3: float param
+    (  1, 'GetDistance', 2, 0), #   0
+    (  5, 'GetLocked', 0, 0), #   1
+    (  6, 'GetPos', 0, 0), #   2
+    (  8, 'GetAngle', 0, 0), #   3
+    ( 10, 'GetStartingPos', 0, 0), #   4
+    ( 11, 'GetStartingAngle', 0, 0), #   5
+    ( 12, 'GetSecondsPassed', 0, 0), #   6
+    ( 14, 'GetActorValue', 2, 0), #   7
+    ( 18, 'GetCurrentTime', 0, 0), #   8
+    ( 24, 'GetScale', 0, 0), #   9
+    ( 25, 'IsMoving', 0, 0), #  10
+    ( 26, 'IsTurning', 0, 0), #  11
+    ( 27, 'GetLineOfSight', 2, 0), #  12
+    ( 32, 'GetInSameCell', 2, 0), #  13
+    ( 35, 'GetDisabled', 0, 0), #  14
+    ( 36, 'MenuMode', 1, 0), #  15
+    ( 39, 'GetDisease', 0, 0), #  16
+    ( 40, 'GetVampire', 0, 0), #  17
+    ( 41, 'GetClothingValue', 0, 0), #  18
+    ( 42, 'SameFaction', 2, 0), #  19
+    ( 43, 'SameRace', 2, 0), #  20
+    ( 44, 'SameSex', 2, 0), #  21
+    ( 45, 'GetDetected', 2, 0), #  22
+    ( 46, 'GetDead', 0, 0), #  23
+    ( 47, 'GetItemCount', 2, 0), #  24
+    ( 48, 'GetGold', 0, 0), #  25
+    ( 49, 'GetSleeping', 0, 0), #  26
+    ( 50, 'GetTalkedToPC', 0, 0), #  27
+    ( 53, 'GetScriptVariable', 2, 0), #  28
+    ( 56, 'GetQuestRunning', 2, 0), #  29
+    ( 58, 'GetStage', 2, 0), #  30
+    ( 59, 'GetStageDone', 2, 1), #  31
+    ( 60, 'GetFactionRankDifference', 2, 2), #  32
+    ( 61, 'GetAlarmed', 0, 0), #  33
+    ( 62, 'IsRaining', 0, 0), #  34
+    ( 63, 'GetAttacked', 0, 0), #  35
+    ( 64, 'GetIsCreature', 0, 0), #  36
+    ( 65, 'GetLockLevel', 0, 0), #  37
+    ( 66, 'GetShouldAttack', 2, 0), #  38
+    ( 67, 'GetInCell', 2, 0), #  39
+    ( 68, 'GetIsClass', 2, 0), #  40
+    ( 69, 'GetIsRace', 2, 0), #  41
+    ( 70, 'GetIsSex', 1, 0), #  42
+    ( 71, 'GetInFaction', 2, 0), #  43
+    ( 72, 'GetIsID', 2, 0), #  44
+    ( 73, 'GetFactionRank', 2, 0), #  45
+    ( 74, 'GetGlobalValue', 2, 0), #  46
+    ( 75, 'IsSnowing', 0, 0), #  47
+    ( 76, 'GetDisposition', 2, 0), #  48
+    ( 77, 'GetRandomPercent', 0, 0), #  49
+    ( 79, 'GetQuestVariable', 2, 0), #  50
+    ( 80, 'GetLevel', 0, 0), #  51
+    ( 81, 'GetArmorRating', 0, 0), #  52
+    ( 84, 'GetDeadCount', 2, 0), #  53
+    ( 91, 'GetIsAlerted', 0, 0), #  54
+    ( 98, 'GetPlayerControlsDisabled', 1, 1), #  55
+    ( 99, 'GetHeadingAngle', 2, 0), #  56
+    (101, 'IsWeaponOut', 0, 0), #  57
+    (102, 'IsTorchOut', 0, 0), #  58
+    (103, 'IsShieldOut', 0, 0), #  59
+    (106, 'IsFacingUp', 0, 0), #  60
+    (107, 'GetKnockedState', 0, 0), #  61
+    (108, 'GetWeaponAnimType', 0, 0), #  62
+    (109, 'IsWeaponSkillType', 2, 0), #  63
+    (110, 'GetCurrentAIPackage', 0, 0), #  64
+    (111, 'IsWaiting', 0, 0), #  65
+    (112, 'IsIdlePlaying', 0, 0), #  66
+    (116, 'GetMinorCrimeCount', 0, 0), #  67
+    (117, 'GetMajorCrimeCount', 0, 0), #  68
+    (118, 'GetActorAggroRadiusViolated', 0, 0), #  69
+    (122, 'GetCrime', 2, 1), #  70
+    (123, 'IsGreetingPlayer', 0, 0), #  71
+    (125, 'IsGuard', 0, 0), #  72
+    (127, 'HasBeenEaten', 0, 0), #  73
+    (128, 'GetFatiguePercentage', 0, 0), #  74
+    (129, 'GetPCIsClass', 2, 0), #  75
+    (130, 'GetPCIsRace', 2, 0), #  76
+    (131, 'GetPCIsSex', 1, 0), #  77
+    (132, 'GetPCInFaction', 2, 0), #  78
+    (133, 'SameFactionAsPC', 0, 0), #  79
+    (134, 'SameRaceAsPC', 0, 0), #  80
+    (135, 'SameSexAsPC', 0, 0), #  81
+    (136, 'GetIsReference', 2, 0), #  82
+    (141, 'IsTalking', 0, 0), #  83
+    (142, 'GetWalkSpeed', 0, 0), #  84
+    (143, 'GetCurrentAIProcedure', 0, 0), #  85
+    (144, 'GetTrespassWarningLevel', 0, 0), #  86
+    (145, 'IsTrespassing', 0, 0), #  87
+    (146, 'IsInMyOwnedCell', 0, 0), #  88
+    (147, 'GetWindSpeed', 0, 0), #  89
+    (148, 'GetCurrentWeatherPercent', 0, 0), #  90
+    (149, 'GetIsCurrentWeather', 2, 0), #  91
+    (150, 'IsContinuingPackagePCNear', 0, 0), #  92
+    (153, 'CanHaveFlames', 0, 0), #  93
+    (154, 'HasFlames', 0, 0), #  94
+    (157, 'GetOpenState', 0, 0), #  95
+    (159, 'GetSitting', 0, 0), #  96
+    (160, 'GetFurnitureMarkerID', 0, 0), #  97
+    (161, 'GetIsCurrentPackage', 2, 0), #  98
+    (162, 'IsCurrentFurnitureRef', 2, 0), #  99
+    (163, 'IsCurrentFurnitureObj', 2, 0), # 100
+    (170, 'GetDayOfWeek', 0, 0), # 101
+    (172, 'GetTalkedToPCParam', 2, 0), # 102
+    (175, 'IsPCSleeping', 0, 0), # 103
+    (176, 'IsPCAMurderer', 0, 0), # 104
+    (180, 'GetDetectionLevel', 2, 0), # 105
+    (182, 'GetEquipped', 2, 0), # 106
+    (185, 'IsSwimming', 0, 0), # 107
+    (190, 'GetAmountSoldStolen', 0, 0), # 108
+    (192, 'GetIgnoreCrime', 0, 0), # 109
+    (193, 'GetPCExpelled', 2, 0), # 110
+    (195, 'GetPCFactionMurder', 2, 0), # 111
+    (197, 'GetPCEnemyofFaction', 2, 0), # 112
+    (199, 'GetPCFactionAttack', 2, 0), # 113
+    (203, 'GetDestroyed', 0, 0), # 114
+    (214, 'HasMagicEffect', 2, 0), # 115
+    (215, 'GetDefaultOpen', 0, 0), # 116
+    (219, 'GetAnimAction', 0, 0), # 117
+    (223, 'IsSpellTarget', 2, 0), # 118
+    (224, 'GetVATSMode', 0, 0), # 119
+    (225, 'GetPersuasionNumber', 0, 0), # 120
+    (226, 'GetSandman', 0, 0), # 121
+    (227, 'GetCannibal', 0, 0), # 122
+    (228, 'GetIsClassDefault', 2, 0), # 123
+    (229, 'GetClassDefaultMatch', 0, 0), # 124
+    (230, 'GetInCellParam', 2, 2), # 125
+    (235, 'GetVatsTargetHeight', 0, 0), # 126
+    (237, 'GetIsGhost', 0, 0), # 127
+    (242, 'GetUnconscious', 0, 0), # 128
+    (244, 'GetRestrained', 0, 0), # 129
+    (246, 'GetIsUsedItem', 2, 0), # 130
+    (247, 'GetIsUsedItemType', 2, 0), # 131
+    (254, 'GetIsPlayableRace', 0, 0), # 132
+    (255, 'GetOffersServicesNow', 0, 0), # 133
+    (258, 'GetUsedItemLevel', 0, 0), # 134
+    (259, 'GetUsedItemActivate', 0, 0), # 135
+    (264, 'GetBarterGold', 0, 0), # 136
+    (265, 'IsTimePassing', 0, 0), # 137
+    (266, 'IsPleasant', 0, 0), # 138
+    (267, 'IsCloudy', 0, 0), # 139
+    (274, 'GetArmorRatingUpperBody', 0, 0), # 140
+    (277, 'GetBaseActorValue', 2, 0), # 141
+    (278, 'IsOwner', 2, 0), # 142
+    (280, 'IsCellOwner', 2, 2), # 143
+    (282, 'IsHorseStolen', 0, 0), # 144
+    (285, 'IsLeftUp', 0, 0), # 145
+    (286, 'IsSneaking', 0, 0), # 146
+    (287, 'IsRunning', 0, 0), # 147
+    (288, 'GetFriendHit', 0, 0), # 148
+    (289, 'IsInCombat', 0, 0), # 149
+    (300, 'IsInInterior', 0, 0), # 150
+    (304, 'IsWaterObject', 0, 0), # 151
+    (306, 'IsActorUsingATorch', 0, 0), # 152
+    (309, 'IsXBox', 0, 0), # 153
+    (310, 'GetInWorldspace', 2, 0), # 154
+    (312, 'GetPCMiscStat', 0, 0), # 155
+    (313, 'IsActorEvil', 0, 0), # 156
+    (314, 'IsActorAVictim', 0, 0), # 157
+    (315, 'GetTotalPersuasionNumber', 0, 0), # 158
+    (318, 'GetIdleDoneOnce', 0, 0), # 159
+    (320, 'GetNoRumors', 0, 0), # 160
+    (323, 'WhichServiceMenu', 0, 0), # 161
+    (327, 'IsRidingHorse', 0, 0), # 162
+    (332, 'IsInDangerousWater', 0, 0), # 163
+    (338, 'GetIgnoreFriendlyHits', 0, 0), # 164
+    (339, 'IsPlayersLastRiddenHorse', 0, 0), # 165
+    (353, 'IsActor', 0, 0), # 166
+    (354, 'IsEssential', 0, 0), # 167
+    (358, 'IsPlayerMovingIntoNewSpace', 0, 0), # 168
+    (361, 'GetTimeDead', 0, 0), # 169
+    (362, 'GetPlayerHasLastRiddenHorse', 0, 0), # 170
+    (365, 'IsChild', 0, 0), # 171
+    (367, 'GetLastPlayerAction', 0, 0), # 172
+    (368, 'IsPlayerActionActive', 1, 0), # 173
+    (370, 'IsTalkingActivatorActor', 2, 0), # 174
+    (372, 'IsInList', 2, 0), # 175
+    (382, 'GetHasNote', 2, 0), # 176
+    (391, 'GetHitLocation', 0, 0), # 177
+    (392, 'IsPC1stPerson', 0, 0), # 178
+    (397, 'GetCauseofDeath', 0, 0), # 179
+    (398, 'IsLimbGone', 1, 0), # 180
+    (399, 'IsWeaponInList', 2, 0), # 181
+    (403, 'HasFriendDisposition', 0, 0), # 182
+    (408, 'GetVATSValue', 1, 1), # 183
+    (409, 'IsKiller', 2, 0), # 184
+    (410, 'IsKillerObject', 2, 0), # 185
+    (411, 'GetFactionCombatReaction', 2, 2), # 186
+    (415, 'Exists', 2, 0), # 187
+    (416, 'GetGroupMemberCount', 0, 0), # 188
+    (417, 'GetGroupTargetCount', 0, 0), # 189
+    (427, 'GetIsVoiceType', 0, 0), # 190
+    (428, 'GetPlantedExplosive', 0, 0), # 191
+    (430, 'IsActorTalkingThroughActivator', 0, 0), # 192
+    (431, 'GetHealthPercentage', 0, 0), # 193
+    (433, 'GetIsObjectType', 2, 0), # 194
+    (435, 'GetDialogueEmotion', 0, 0), # 195
+    (436, 'GetDialogueEmotionValue', 0, 0), # 196
+    (438, 'GetIsCreatureType', 1, 0), # 197
+    (446, 'GetInZone', 2, 0), # 198
+    (449, 'HasPerk', 2, 0), # 199
+    (450, 'GetFactionRelation', 2, 0), # 200
+    (451, 'IsLastIdlePlayed', 2, 0), # 201
+    (454, 'GetPlayerTeammate', 0, 0), # 202
+    (455, 'GetPlayerTeammateCount', 0, 0), # 203
+    (459, 'GetActorCrimePlayerEnemy', 0, 0), # 204
+    (460, 'GetActorFactionPlayerEnemy', 0, 0), # 205
+    (464, 'IsPlayerGrabbedRef', 2, 0), # 206
+    (471, 'GetDestructionStage', 0, 0), # 207
+    (474, 'GetIsAlignment', 1, 0), # 208
+    (478, 'GetThreatRatio', 2, 0), # 209
+    (480, 'GetIsUsedItemEquipType', 1, 0), # 210
+    (489, 'GetConcussed', 0, 0), # 211
+    (492, 'GetMapMarkerVisible', 0, 0), # 212
+    (495, 'GetPermanentActorValue', 2, 0), # 213
+    (496, 'GetKillingBlowLimb', 0, 0), # 214
+    (500, 'GetWeaponHealthPerc', 0, 0), # 215
+    (503, 'GetRadiationLevel', 0, 0), # 216
+    (510, 'GetLastHitCritical', 0, 0), # 217
+    (515, 'IsCombatTarget', 2, 0), # 218
+    (518, 'GetVATSRightAreaFree', 2, 0), # 219
+    (519, 'GetVATSLeftAreaFree', 2, 0), # 220
+    (520, 'GetVATSBackAreaFree', 2, 0), # 221
+    (521, 'GetVATSFrontAreaFree', 2, 0), # 222
+    (522, 'GetIsLockBroken', 0, 0), # 223
+    (523, 'IsPS3', 0, 0), # 224
+    (524, 'IsWin32', 0, 0), # 225
+    (525, 'GetVATSRightTargetVisible', 2, 0), # 226
+    (526, 'GetVATSLeftTargetVisible', 2, 0), # 227
+    (527, 'GetVATSBackTargetVisible', 2, 0), # 228
+    (528, 'GetVATSFrontTargetVisible', 2, 0), # 229
+    (531, 'IsInCriticalStage', 1, 0), # 230
+    (533, 'GetXPForNextLevel', 0, 0), # 231
+    (546, 'GetQuestCompleted', 2, 0), # 232
+    (550, 'IsGoreDisabled', 0, 0), # 233
+    (555, 'GetSpellUsageNum', 2, 0), # 234
+    (557, 'GetActorsInHigh', 0, 0), # 235
+    (558, 'HasLoaded3D', 0, 0), # 236
+    (1024, 'GetFOSEVersion', 0, 0), # 237
+    (1025, 'GetFOSERevision', 0, 0), # 238
+    (1028, 'GetWeight', 2, 0), # 239
+    (1082, 'IsKeyPressed', 1, 0), # 240
+    (1165, 'GetWeaponHasScope', 2, 0), # 241
+    (1166, 'IsControlPressed', 1, 0), # 242
+    (1213, 'GetFOSEBeta', 0, 0), # 243
+    )
+
+*****************************************************************************************************
+*****************************************************************************************************
+
+
+
+
+*****************************************************************************************************
+
+    // Added by Fallout NV
+    (Index: 1; Name: 'GetDistance'; {ParamType1: ObjectReferenceID;} ),
+    (Index: 5; Name: 'GetLocked'; ),
+    (Index: 6; Name: 'GetPos'; {ParamType1: Axis;} ),
+    (Index: 8; Name: 'GetAngle'; {ParamType1: Axis;} ),
+    (Index: 10; Name: 'GetStartingPos'; {ParamType1: Axis;} ),
+    (Index: 11; Name: 'GetStartingAngle'; {ParamType1: Axis;} ),
+    (Index: 12; Name: 'GetSecondsPassed'; ),
+    (Index: 14; Name: 'GetActorValue'; {ParamType1: Actor Value;} ),
+    (Index: 18; Name: 'GetCurrentTime'; ),
+    (Index: 24; Name: 'GetScale'; ),
+    (Index: 25; Name: 'IsMoving'; ),
+    (Index: 26; Name: 'IsTurning'; ),
+    (Index: 27; Name: 'GetLineOfSight'; {ParamType1: ObjectReferenceID;} ),
+    (Index: 32; Name: 'GetInSameCell'; {ParamType1: ObjectReferenceID;} ),
+    (Index: 35; Name: 'GetDisabled'; ),
+    (Index: 36; Name: 'MenuMode'; {ParamType1: Integer (Optional);} ),
+    (Index: 39; Name: 'GetDisease'; ),
+    (Index: 40; Name: 'GetVampire'; ),
+    (Index: 41; Name: 'GetClothingValue'; ),
+    (Index: 42; Name: 'SameFaction'; {ParamType1: Actor;} ),
+    (Index: 43; Name: 'SameRace'; {ParamType1: Actor;} ),
+    (Index: 44; Name: 'SameSex'; {ParamType1: Actor;} ),
+    (Index: 45; Name: 'GetDetected'; {ParamType1: Actor;} ),
+    (Index: 46; Name: 'GetDead'; ),
+    (Index: 47; Name: 'GetItemCount'; {ParamType1: ObjectID;} ),
+    (Index: 48; Name: 'GetGold'; ),
+    (Index: 49; Name: 'GetSleeping'; ),
+    (Index: 50; Name: 'GetTalkedToPC'; ),
+    (Index: 53; Name: 'GetScriptVariable'; {ParamType1: ObjectReferenceID;} {ParamType2: Variable Name;}),
+    (Index: 56; Name: 'GetQuestRunning'; {ParamType1: Quest;} ),
+    (Index: 58; Name: 'GetStage'; {ParamType1: Quest;} ),
+    (Index: 59; Name: 'GetStageDone'; {ParamType1: Quest;} {ParamType2: Stage;}),
+    (Index: 60; Name: 'GetFactionRankDifference'; {ParamType1: Faction;} {ParamType2: Actor;}),
+    (Index: 61; Name: 'GetAlarmed'; ),
+    (Index: 62; Name: 'IsRaining'; ),
+    (Index: 63; Name: 'GetAttacked'; ),
+    (Index: 64; Name: 'GetIsCreature'; ),
+    (Index: 65; Name: 'GetLockLevel'; ),
+    (Index: 66; Name: 'GetShouldAttack'; {ParamType1: Actor;} ),
+    (Index: 67; Name: 'GetInCell'; {ParamType1: Cell;} ),
+    (Index: 68; Name: 'GetIsClass'; {ParamType1: Class;} ),
+    (Index: 69; Name: 'GetIsRace'; {ParamType1: Race;} ),
+    (Index: 70; Name: 'GetIsSex'; {ParamType1: Sex;} ),
+    (Index: 71; Name: 'GetInFaction'; {ParamType1: Faction;} ),
+    (Index: 72; Name: 'GetIsID'; {ParamType1: ObjectID;} ),
+    (Index: 73; Name: 'GetFactionRank'; {ParamType1: Faction;} ),
+    (Index: 74; Name: 'GetGlobalValue'; {ParamType1: Global;} ),
+    (Index: 75; Name: 'IsSnowing'; ),
+    (Index: 76; Name: 'GetDisposition'; {ParamType1: Actor;} ),
+    (Index: 77; Name: 'GetRandomPercent'; ),
+    (Index: 79; Name: 'GetQuestVariable'; {ParamType1: Quest;} {ParamType2: Variable Name;}),
+    (Index: 80; Name: 'GetLevel'; ),
+    (Index: 81; Name: 'GetArmorRating'; ),
+    (Index: 84; Name: 'GetDeadCount'; {ParamType1: Actor Base;} ),
+    (Index: 91; Name: 'GetIsAlerted'; ),
+    (Index: 98; Name: 'GetPlayerControlsDisabled'; {ParamType1: Integer (Optional);} {ParamType2: Integer (Optional);}),
+    (Index: 99; Name: 'GetHeadingAngle'; {ParamType1: ObjectReferenceID;} ),
+    (Index: 101; Name: 'IsWeaponOut'; ),
+    (Index: 102; Name: 'IsTorchOut'; ),
+    (Index: 103; Name: 'IsShieldOut'; ),
+    (Index: 106; Name: 'IsFacingUp'; ),
+    (Index: 107; Name: 'GetKnockedState'; ),
+    (Index: 108; Name: 'GetWeaponAnimType'; ),
+    (Index: 109; Name: 'IsWeaponSkillType'; {ParamType1: Actor Value;} ),
+    (Index: 110; Name: 'GetCurrentAIPackage'; ),
+    (Index: 111; Name: 'IsWaiting'; ),
+    (Index: 112; Name: 'IsIdlePlaying'; ),
+    (Index: 116; Name: 'GetMinorCrimeCount'; ),
+    (Index: 117; Name: 'GetMajorCrimeCount'; ),
+    (Index: 118; Name: 'GetActorAggroRadiusViolated'; ),
+    (Index: 122; Name: 'GetCrime'; {ParamType1: Actor;} {ParamType2: Crime Type (optional);}),
+    (Index: 123; Name: 'IsGreetingPlayer'; ),
+    (Index: 125; Name: 'IsGuard'; ),
+    (Index: 127; Name: 'HasBeenEaten'; ),
+    (Index: 128; Name: 'GetFatiguePercentage'; ),
+    (Index: 129; Name: 'GetPCIsClass'; {ParamType1: Class;} ),
+    (Index: 130; Name: 'GetPCIsRace'; {ParamType1: Race;} ),
+    (Index: 131; Name: 'GetPCIsSex'; {ParamType1: Sex;} ),
+    (Index: 132; Name: 'GetPCInFaction'; {ParamType1: Faction;} ),
+    (Index: 133; Name: 'SameFactionAsPC'; ),
+    (Index: 134; Name: 'SameRaceAsPC'; ),
+    (Index: 135; Name: 'SameSexAsPC'; ),
+    (Index: 136; Name: 'GetIsReference'; {ParamType1: ObjectReferenceID;} ),
+    (Index: 141; Name: 'IsTalking'; ),
+    (Index: 142; Name: 'GetWalkSpeed'; ),
+    (Index: 143; Name: 'GetCurrentAIProcedure'; ),
+    (Index: 144; Name: 'GetTrespassWarningLevel'; ),
+    (Index: 145; Name: 'IsTrespassing'; ),
+    (Index: 146; Name: 'IsInMyOwnedCell'; ),
+    (Index: 147; Name: 'GetWindSpeed'; ),
+    (Index: 148; Name: 'GetCurrentWeatherPercent'; ),
+    (Index: 149; Name: 'GetIsCurrentWeather'; {ParamType1: Weather ID;} ),
+    (Index: 150; Name: 'IsContinuingPackagePCNear'; ),
+    (Index: 153; Name: 'CanHaveFlames'; ),
+    (Index: 154; Name: 'HasFlames'; ),
+    (Index: 157; Name: 'GetOpenState'; ),
+    (Index: 159; Name: 'GetSitting'; ),
+    (Index: 160; Name: 'GetFurnitureMarkerID'; ),
+    (Index: 161; Name: 'GetIsCurrentPackage'; {ParamType1: Package;} ),
+    (Index: 162; Name: 'IsCurrentFurnitureRef'; {ParamType1: ObjectReferenceID;} ),
+    (Index: 163; Name: 'IsCurrentFurnitureObj'; {ParamType1: Furniture;} ),
+    (Index: 170; Name: 'GetDayOfWeek'; ),
+    (Index: 172; Name: 'GetTalkedToPCParam'; {ParamType1: Actor;} ),
+    (Index: 175; Name: 'IsPCSleeping'; ),
+    (Index: 176; Name: 'IsPCAMurderer'; ),
+    (Index: 180; Name: 'GetDetectionLevel'; {ParamType1: Actor;} ),
+    (Index: 182; Name: 'GetEquipped'; {ParamType1: ObjectID;} ),
+    (Index: 185; Name: 'IsSwimming'; ),
+    (Index: 190; Name: 'GetAmountSoldStolen'; ),
+    (Index: 192; Name: 'GetIgnoreCrime'; ),
+    (Index: 193; Name: 'GetPCExpelled'; {ParamType1: Faction;} ),
+    (Index: 195; Name: 'GetPCFactionMurder'; {ParamType1: Faction;} ),
+    (Index: 197; Name: 'GetPCEnemyofFaction'; {ParamType1: Faction;} ),
+    (Index: 199; Name: 'GetPCFactionAttack'; {ParamType1: Faction;} ),
+    (Index: 203; Name: 'GetDestroyed'; ),
+    (Index: 214; Name: 'HasMagicEffect'; {ParamType1: Magic Effect;} ),
+    (Index: 215; Name: 'GetDefaultOpen'; ),
+    (Index: 219; Name: 'GetAnimAction'; ),
+    (Index: 223; Name: 'IsSpellTarget'; {ParamType1: Magic Item;} ),
+    (Index: 224; Name: 'GetVATSMode'; ),
+    (Index: 225; Name: 'GetPersuasionNumber'; ),
+    (Index: 226; Name: 'GetSandman'; ),
+    (Index: 227; Name: 'GetCannibal'; ),
+    (Index: 228; Name: 'GetIsClassDefault'; {ParamType1: Class;} ),
+    (Index: 229; Name: 'GetClassDefaultMatch'; ),
+    (Index: 230; Name: 'GetInCellParam'; {ParamType1: Cell;} {ParamType2: ObjectReferenceID;}),
+    (Index: 235; Name: 'GetVatsTargetHeight'; ),
+    (Index: 237; Name: 'GetIsGhost'; ),
+    (Index: 242; Name: 'GetUnconscious'; ),
+    (Index: 244; Name: 'GetRestrained'; ),
+    (Index: 246; Name: 'GetIsUsedItem'; {ParamType1: ObjectID;} ),
+    (Index: 247; Name: 'GetIsUsedItemType'; {ParamType1: Form Type;} ),
+    (Index: 254; Name: 'GetIsPlayableRace'; ),
+    (Index: 255; Name: 'GetOffersServicesNow'; ),
+    (Index: 258; Name: 'GetUsedItemLevel'; ),
+    (Index: 259; Name: 'GetUsedItemActivate'; ),
+    (Index: 264; Name: 'GetBarterGold'; ),
+    (Index: 265; Name: 'IsTimePassing'; ),
+    (Index: 266; Name: 'IsPleasant'; ),
+    (Index: 267; Name: 'IsCloudy'; ),
+    (Index: 274; Name: 'GetArmorRatingUpperBody'; ),
+    (Index: 277; Name: 'GetBaseActorValue'; {ParamType1: Actor Value;} ),
+    (Index: 278; Name: 'IsOwner'; {ParamType1: Owner(optional);} ),
+    (Index: 280; Name: 'IsCellOwner'; {ParamType1: Cell;} {ParamType2: Owner(optional);}),
+    (Index: 282; Name: 'IsHorseStolen'; ),
+    (Index: 285; Name: 'IsLeftUp'; ),
+    (Index: 286; Name: 'IsSneaking'; ),
+    (Index: 287; Name: 'IsRunning'; ),
+    (Index: 288; Name: 'GetFriendHit'; ),
+    (Index: 289; Name: 'IsInCombat'; ),
+    (Index: 300; Name: 'IsInInterior'; ),
+    (Index: 304; Name: 'IsWaterObject'; ),
+    (Index: 306; Name: 'IsActorUsingATorch'; ),
+    (Index: 309; Name: 'IsXBox'; ),
+    (Index: 310; Name: 'GetInWorldspace'; {ParamType1: WorldSpace;} ),
+    (Index: 312; Name: 'GetPCMiscStat'; {ParamType1: Miscellaneous Stat;} ),
+    (Index: 313; Name: 'IsActorEvil'; ),
+    (Index: 314; Name: 'IsActorAVictim'; ),
+    (Index: 315; Name: 'GetTotalPersuasionNumber'; ),
+    (Index: 318; Name: 'GetIdleDoneOnce'; ),
+    (Index: 320; Name: 'GetNoRumors'; ),
+    (Index: 323; Name: 'WhichServiceMenu'; ),
+    (Index: 327; Name: 'IsRidingHorse'; ),
+    (Index: 332; Name: 'IsInDangerousWater'; ),
+    (Index: 338; Name: 'GetIgnoreFriendlyHits'; ),
+    (Index: 339; Name: 'IsPlayersLastRiddenHorse'; ),
+    (Index: 353; Name: 'IsActor'; ),
+    (Index: 354; Name: 'IsEssential'; ),
+    (Index: 358; Name: 'IsPlayerMovingIntoNewSpace'; ),
+    (Index: 361; Name: 'GetTimeDead'; ),
+    (Index: 362; Name: 'GetPlayerHasLastRiddenHorse'; ),
+    (Index: 365; Name: 'IsChild'; ),
+    (Index: 367; Name: 'GetLastPlayerAction'; ),
+    (Index: 368; Name: 'IsPlayerActionActive'; {ParamType1: Integer;} ),
+    (Index: 370; Name: 'IsTalkingActivatorActor'; {ParamType1: Actor;} ),
+    (Index: 372; Name: 'IsInList'; {ParamType1: Form List;} ),
+    (Index: 382; Name: 'GetHasNote'; {ParamType1: Note;} ),
+    (Index: 391; Name: 'GetHitLocation'; ),
+    (Index: 392; Name: 'IsPC1stPerson'; ),
+    (Index: 397; Name: 'GetCauseofDeath'; ),
+    (Index: 398; Name: 'IsLimbGone'; {ParamType1: Integer;} ),
+    (Index: 399; Name: 'IsWeaponInList'; {ParamType1: Form List;} ),
+    (Index: 403; Name: 'HasFriendDisposition'; ),
+    (Index: 408; Name: 'GetVATSValue'; {ParamType1: Integer;} {ParamType2: Integer (Optional);}),
+    (Index: 409; Name: 'IsKiller'; {ParamType1: Actor;} ),
+    (Index: 410; Name: 'IsKillerObject'; {ParamType1: Form List;} ),
+    (Index: 411; Name: 'GetFactionCombatReaction'; {ParamType1: Faction;} {ParamType2: Faction;}),
+    (Index: 415; Name: 'Exists'; {ParamType1: ObjectReferenceID;} ),
+    (Index: 416; Name: 'GetGroupMemberCount'; ),
+    (Index: 417; Name: 'GetGroupTargetCount'; ),
+    (Index: 427; Name: 'GetIsVoiceType'; {ParamType1: VoiceType;} ),
+    (Index: 428; Name: 'GetPlantedExplosive'; ),
+    (Index: 430; Name: 'IsActorTalkingThroughActivator'; ),
+    (Index: 431; Name: 'GetHealthPercentage'; ),
+    (Index: 433; Name: 'GetIsObjectType'; {ParamType1: Form Type;} ),
+    (Index: 435; Name: 'GetDialogueEmotion'; ),
+    (Index: 436; Name: 'GetDialogueEmotionValue'; ),
+    (Index: 438; Name: 'GetIsCreatureType'; {ParamType1: Integer;} ),
+    (Index: 446; Name: 'GetInZone'; {ParamType1: EncounterZone;} ),
+    (Index: 449; Name: 'HasPerk'; {ParamType1: Perk;} ),
+    (Index: 450; Name: 'GetFactionRelation'; {ParamType1: Actor;} ),
+    (Index: 451; Name: 'IsLastIdlePlayed'; {ParamType1: Idle Form;} ),
+    (Index: 454; Name: 'GetPlayerTeammate'; ),
+    (Index: 455; Name: 'GetPlayerTeammateCount'; ),
+    (Index: 459; Name: 'GetActorCrimePlayerEnemy'; ),
+    (Index: 460; Name: 'GetActorFactionPlayerEnemy'; ),
+    (Index: 464; Name: 'IsPlayerGrabbedRef'; {ParamType1: TESObjectREFR;} ),
+    (Index: 471; Name: 'GetDestructionStage'; ),
+    (Index: 474; Name: 'GetIsAlignment'; {ParamType1: Alignment;} ),
+    (Index: 478; Name: 'GetThreatRatio'; {ParamType1: Actor;} ),
+    (Index: 480; Name: 'GetIsUsedItemEquipType'; {ParamType1: EquipType;} ),
+    (Index: 489; Name: 'GetConcussed'; ),
+    (Index: 492; Name: 'GetMapMarkerVisible'; ),
+    (Index: 495; Name: 'GetPermanentActorValue'; {ParamType1: Actor Value;} ),
+    (Index: 496; Name: 'GetKillingBlowLimb'; ),
+    (Index: 500; Name: 'GetWeaponHealthPerc'; ),
+    (Index: 503; Name: 'GetRadiationLevel'; ),
+    (Index: 510; Name: 'GetLastHitCritical'; ),
+    (Index: 515; Name: 'IsCombatTarget'; {ParamType1: Actor;} ),
+    (Index: 518; Name: 'GetVATSRightAreaFree'; {ParamType1: TESObjectREFR;} ),
+    (Index: 519; Name: 'GetVATSLeftAreaFree'; {ParamType1: TESObjectREFR;} ),
+    (Index: 520; Name: 'GetVATSBackAreaFree'; {ParamType1: TESObjectREFR;} ),
+    (Index: 521; Name: 'GetVATSFrontAreaFree'; {ParamType1: TESObjectREFR;} ),
+    (Index: 522; Name: 'GetIsLockBroken'; ),
+    (Index: 523; Name: 'IsPS3'; ),
+    (Index: 524; Name: 'IsWin32'; ),
+    (Index: 525; Name: 'GetVATSRightTargetVisible'; {ParamType1: TESObjectREFR;} ),
+    (Index: 526; Name: 'GetVATSLeftTargetVisible'; {ParamType1: TESObjectREFR;} ),
+    (Index: 527; Name: 'GetVATSBackTargetVisible'; {ParamType1: TESObjectREFR;} ),
+    (Index: 528; Name: 'GetVATSFrontTargetVisible'; {ParamType1: TESObjectREFR;} ),
+    (Index: 531; Name: 'IsInCriticalStage'; {ParamType1: CriticalStage;} ),
+    (Index: 533; Name: 'GetXPForNextLevel'; ),
+    (Index: 546; Name: 'GetQuestCompleted'; {ParamType1: Quest;} ),
+    (Index: 550; Name: 'IsGoreDisabled'; ),
+    (Index: 555; Name: 'GetSpellUsageNum'; {ParamType1: Magic Item;} ),
+    (Index: 557; Name: 'GetActorsInHigh'; ),
+    (Index: 558; Name: 'HasLoaded3D'; ),
+
+    // Added by NVSE
+    (Index: 1024; Name: 'GetFOSEVersion'; ),
+    (Index: 1025; Name: 'GetFOSERevision'; ),
+    (Index: 1028; Name: 'GetWeight'; {ParamType1: item;} ),
+    (Index: 1082; Name: 'IsKeyPressed'; {ParamType1: int;} ),
+    (Index: 1165; Name: 'GetWeaponHasScope'; {ParamType1: item;} ),
+    (Index: 1166; Name: 'IsControlPressed'; {ParamType1: int;} ),
+    (Index: 1213; Name: 'GetFOSEBeta'; ),
