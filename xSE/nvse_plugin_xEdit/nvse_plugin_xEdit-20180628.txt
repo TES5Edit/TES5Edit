@@ -1,0 +1,3929 @@
+Received post post load message
+*****************************************************************************************************
+  wbChangeFlags000        : IwbIntegerDef;
+  wbChangeFlags001        : IwbIntegerDef;
+  wbChangeFlags002        : IwbIntegerDef;
+  wbChangeFlags003        : IwbIntegerDef;
+  wbChangeFlags004        : IwbIntegerDef;
+  wbChangeFlags005        : IwbIntegerDef;
+  wbChangeFlags006        : IwbIntegerDef;
+  wbChangeFlags007        : IwbIntegerDef;
+  wbChangeFlags008        : IwbIntegerDef;
+  wbChangeFlags009        : IwbIntegerDef;
+  wbChangeFlags010        : IwbIntegerDef;
+  wbChangeFlags011        : IwbIntegerDef;
+  wbChangeFlags012        : IwbIntegerDef;
+  wbChangeFlags013        : IwbIntegerDef;
+  wbChangeFlags014        : IwbIntegerDef;
+  wbChangeFlags015        : IwbIntegerDef;
+  wbChangeFlags016        : IwbIntegerDef;
+  wbChangeFlags017        : IwbIntegerDef;
+  wbChangeFlags018        : IwbIntegerDef;
+  wbChangeFlags019        : IwbIntegerDef;
+  wbChangeFlags020        : IwbIntegerDef;
+  wbChangeFlags021        : IwbIntegerDef;
+  wbChangeFlags022        : IwbIntegerDef;
+  wbChangeFlags023        : IwbIntegerDef;
+  wbChangeFlags024        : IwbIntegerDef;
+  wbChangeFlags025        : IwbIntegerDef;
+  wbChangeFlags026        : IwbIntegerDef;
+  wbChangeFlags027        : IwbIntegerDef;
+  wbChangeFlags028        : IwbIntegerDef;
+  wbChangeFlags029        : IwbIntegerDef;
+  wbChangeFlags030        : IwbIntegerDef;
+  wbChangeFlags031        : IwbIntegerDef;
+  wbChangeFlags032        : IwbIntegerDef;
+  wbChangeFlags033        : IwbIntegerDef;
+  wbChangeFlags034        : IwbIntegerDef;
+  wbChangeFlags035        : IwbIntegerDef;
+  wbChangeFlags036        : IwbIntegerDef;
+  wbChangeFlags037        : IwbIntegerDef;
+  wbChangeFlags038        : IwbIntegerDef;
+  wbChangeFlags039        : IwbIntegerDef;
+  wbChangeFlags040        : IwbIntegerDef;
+  wbChangeFlags041        : IwbIntegerDef;
+  wbChangeFlags042        : IwbIntegerDef;
+  wbChangeFlags043        : IwbIntegerDef;
+  wbChangeFlags044        : IwbIntegerDef;
+  wbChangeFlags045        : IwbIntegerDef;
+  wbChangeFlags046        : IwbIntegerDef;
+  wbChangeFlags047        : IwbIntegerDef;
+  wbChangeFlags048        : IwbIntegerDef;
+  wbChangeFlags049        : IwbIntegerDef;
+  wbChangeFlags050        : IwbIntegerDef;
+  wbChangeFlags051        : IwbIntegerDef;
+  wbChangeFlags052        : IwbIntegerDef;
+  wbChangeFlags053        : IwbIntegerDef;
+  wbChangeFlags054        : IwbIntegerDef;
+
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_REFR_MOVE : IwbUnionDef;
+  wbUnionCHANGE_REFR_HAVOK_MOVE : IwbUnionDef;
+  wbUnionCHANGE_REFR_CELL_CHANGED : IwbUnionDef;
+  wbUnionCHANGE_REFR_SCALE : IwbUnionDef;
+  wbUnionCHANGE_REFR_INVENTORY : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_AMMO : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_LOCK : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_OPEN_STATE : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN : IwbUnionDef;
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY : IwbUnionDef;
+  wbUnionCHANGE_REFR_ANIMATION : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_REFR_MOVE : IwbUnionDef;
+  wbUnionCHANGE_REFR_HAVOK_MOVE : IwbUnionDef;
+  wbUnionCHANGE_REFR_CELL_CHANGED : IwbUnionDef;
+  wbUnionCHANGE_REFR_SCALE : IwbUnionDef;
+  wbUnionCHANGE_REFR_INVENTORY : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_LIFESTATE : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_EXTRA_PACKAGE_DATA : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_EXTRA_MERCHANT_CONTAINER : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_EXTRA_DISMEMBERED_LIMBS : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_LEVELED_ACTOR : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_DISPOSITION_MODIFIERS : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_TEMP_MODIFIERS : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_DAMAGE_MODIFIERS : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_OVERRIDE_MODIFIERS : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_PERMANENT_MODIFIERS : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN : IwbUnionDef;
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY : IwbUnionDef;
+  wbUnionCHANGE_REFR_ANIMATION : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_REFR_MOVE : IwbUnionDef;
+  wbUnionCHANGE_REFR_HAVOK_MOVE : IwbUnionDef;
+  wbUnionCHANGE_REFR_CELL_CHANGED : IwbUnionDef;
+  wbUnionCHANGE_REFR_SCALE : IwbUnionDef;
+  wbUnionCHANGE_REFR_INVENTORY : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_LIFESTATE : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_EXTRA_PACKAGE_DATA : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_EXTRA_MERCHANT_CONTAINER : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_EXTRA_DISMEMBERED_LIMBS : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_LEVELED_ACTOR : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_DISPOSITION_MODIFIERS : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_TEMP_MODIFIERS : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_DAMAGE_MODIFIERS : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_OVERRIDE_MODIFIERS : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_PERMANENT_MODIFIERS : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN : IwbUnionDef;
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY : IwbUnionDef;
+  wbUnionCHANGE_REFR_ANIMATION : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_REFR_MOVE : IwbUnionDef;
+  wbUnionCHANGE_REFR_HAVOK_MOVE : IwbUnionDef;
+  wbUnionCHANGE_REFR_CELL_CHANGED : IwbUnionDef;
+  wbUnionCHANGE_REFR_SCALE : IwbUnionDef;
+  wbUnionCHANGE_REFR_INVENTORY : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_AMMO : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_LOCK : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_OPEN_STATE : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN : IwbUnionDef;
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY : IwbUnionDef;
+  wbUnionCHANGE_REFR_ANIMATION : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_REFR_MOVE : IwbUnionDef;
+  wbUnionCHANGE_REFR_HAVOK_MOVE : IwbUnionDef;
+  wbUnionCHANGE_REFR_CELL_CHANGED : IwbUnionDef;
+  wbUnionCHANGE_REFR_SCALE : IwbUnionDef;
+  wbUnionCHANGE_REFR_INVENTORY : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_AMMO : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_LOCK : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_OPEN_STATE : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN : IwbUnionDef;
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY : IwbUnionDef;
+  wbUnionCHANGE_REFR_ANIMATION : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_REFR_MOVE : IwbUnionDef;
+  wbUnionCHANGE_REFR_HAVOK_MOVE : IwbUnionDef;
+  wbUnionCHANGE_REFR_CELL_CHANGED : IwbUnionDef;
+  wbUnionCHANGE_REFR_SCALE : IwbUnionDef;
+  wbUnionCHANGE_REFR_INVENTORY : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_AMMO : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_LOCK : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_OPEN_STATE : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN : IwbUnionDef;
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY : IwbUnionDef;
+  wbUnionCHANGE_REFR_ANIMATION : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_REFR_MOVE : IwbUnionDef;
+  wbUnionCHANGE_REFR_HAVOK_MOVE : IwbUnionDef;
+  wbUnionCHANGE_REFR_CELL_CHANGED : IwbUnionDef;
+  wbUnionCHANGE_REFR_SCALE : IwbUnionDef;
+  wbUnionCHANGE_REFR_INVENTORY : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_AMMO : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_LOCK : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_OPEN_STATE : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN : IwbUnionDef;
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY : IwbUnionDef;
+  wbUnionCHANGE_REFR_ANIMATION : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_CELL_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_CELL_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_CELL_OWNERSHIP : IwbUnionDef;
+  wbUnionCHANGE_CELL_EXTERIOR_SHORT : IwbUnionDef;
+  wbUnionCHANGE_CELL_EXTERIOR_CHAR : IwbUnionDef;
+  wbUnionCHANGE_CELL_DETACHTIME : IwbUnionDef;
+  wbUnionCHANGE_CELL_SEENDATA : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_TOPIC_SAIDONCE : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_QUEST_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_QUEST_SCRIPT_DELAY : IwbUnionDef;
+  wbUnionCHANGE_QUEST_OBJECTIVES : IwbUnionDef;
+  wbUnionCHANGE_QUEST_SCRIPT : IwbUnionDef;
+  wbUnionCHANGE_QUEST_STAGES : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_BASE_DATA : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_BASE_ATTRIBUTES : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_BASE_AIDATA : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_BASE_SPELLLIST : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_BASE_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_NPC_SKILLS : IwbUnionDef;
+  wbUnionCHANGE_NPC_CLASS : IwbUnionDef;
+  wbUnionCHANGE_NPC_FACE : IwbUnionDef;
+  wbUnionCHANGE_NPC_GENDER : IwbUnionDef;
+  wbUnionCHANGE_NPC_RACE : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_BASE_DATA : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_BASE_ATTRIBUTES : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_BASE_AIDATA : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_BASE_SPELLLIST : IwbUnionDef;
+  wbUnionCHANGE_ACTOR_BASE_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_CREATURE_SKILLS : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_TALKING_ACTIVATOR_SPEAKER : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_BOOK_TEACHES_SKILL : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_NOTE_READ : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_ENCOUNTER_ZONE_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_ENCOUNTER_ZONE_GAME_DATA : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_CLASS_TAG_SKILLS : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_FACTION_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_FACTION_REACTIONS : IwbUnionDef;
+  wbUnionCHANGE_FACTION_CRIME_COUNTS : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_PACKAGE_WAITING : IwbUnionDef;
+  wbUnionCHANGE_PACKAGE_NEVER_RUN : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_FORM_LIST_ADDED_FORM : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_WATER_REMAPPED : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_REFR_MOVE : IwbUnionDef;
+  wbUnionCHANGE_REFR_HAVOK_MOVE : IwbUnionDef;
+  wbUnionCHANGE_REFR_CELL_CHANGED : IwbUnionDef;
+  wbUnionCHANGE_REFR_SCALE : IwbUnionDef;
+  wbUnionCHANGE_REFR_INVENTORY : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_AMMO : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_EXTRA_LOCK : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE : IwbUnionDef;
+  wbUnionCHANGE_OBJECT_OPEN_STATE : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN : IwbUnionDef;
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY : IwbUnionDef;
+  wbUnionCHANGE_REFR_ANIMATION : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY : IwbUnionDef;
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+  wbUnionCHANGE_FORM_FLAGS : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_VALUE : IwbUnionDef;
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME : IwbUnionDef;
+*****************************************************************************************************
+  wbChangeTypes := wbKey2Data6Enum([
+    '00 (03A : REFR)',
+    '01 (03B : ACHR)',
+    '02 (03C : ACRE)',
+    '03 (03D : PMIS)',
+    '04 (03E : PGRE)',
+    '05 (03F : PBEA)',
+    '06 (040 : PFLA)',
+    '07 (039 : CELL)',
+    '08 (046 : INFO)',
+    '09 (047 : QUST)',
+    '10 (02A : NPC_)',
+    '11 (02B : CREA)',
+    '12 (015 : ACTI)',
+    '13 (016 : TACT)',
+    '14 (017 : TERM)',
+    '15 (018 : ARMO)',
+    '16 (019 : BOOK)',
+    '17 (01A : CLOT)',
+    '18 (01B : CONT)',
+    '19 (01C : DOOR)',
+    '20 (01D : INGR)',
+    '21 (01E : LIGH)',
+    '22 (01F : MISC)',
+    '23 (020 : STAT)',
+    '24 (022 : MSTT)',
+    '25 (027 : FURN)',
+    '26 (028 : WEAP)',
+    '27 (029 : AMMO)',
+    '28 (02E : KEYM)',
+    '29 (02F : ALCH)',
+    '30 (030 : IDLM)',
+    '31 (031 : NOTE)',
+    '32 (061 : ECZN)',
+    '33 (007 : CLAS)',
+    '34 (008 : FACT)',
+    '35 (049 : PACK)',
+    '36 (043 : NAVM)',
+    '37 (055 : FLST)',
+    '38 (02C : LVLC)',
+    '39 (02D : LVLN)',
+    '40 (034 : LVLI)',
+    '41 (04E : WATR)',
+    '42 (067 : IMOD)',
+    '43 (068 : REPU)',
+    '44 (069 : PCBE)',
+    '45 (06A : RCPE)',
+    '46 (06B : RCCT)',
+    '47 (06C : CHIP)',
+    '48 (06D : CSNO)',
+    '49 (06E : LSCT)',
+    '50 (071 : CHAL)',
+    '51 (072 : AMEF)',
+    '52 (073 : CCRD)',
+    '53 (074 : CMNY)',
+    '54 (075 : CDCK)'
+  ]);
+
+*****************************************************************************************************
+  // changeType: 000 = formType: 058 : REFR
+  wbChangeFlags000 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_REFR_MOVE', // Moved
+    {02} 'CHANGE_REFR_HAVOK_MOVE', // Havok Moved
+    {03} 'CHANGE_REFR_CELL_CHANGED', // Cell Changed
+    {04} 'CHANGE_REFR_SCALE', // Scale
+    {05} 'CHANGE_REFR_INVENTORY', // Inventory
+    {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
+    {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
+    {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'CHANGE_OBJECT_OPEN_DEFAULT_STATE', // Open Default State
+    {23} 'CHANGE_OBJECT_OPEN_STATE', // Open State
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN', // Activating Children
+    {27} 'CHANGE_REFR_LEVELED_INVENTORY', // Leveled Inventory
+    {28} 'CHANGE_REFR_ANIMATION', // Animation
+    {29} 'CHANGE_REFR_EXTRA_ENCOUNTER_ZONE', // Enc Zone Extra
+    {30} 'CHANGE_REFR_EXTRA_CREATED_ONLY', // Created Only Extra
+    {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
+  ]));
+
+  // changeType: 001 = formType: 059 : ACHR
+  wbChangeFlags001 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_REFR_MOVE', // Moved
+    {02} 'CHANGE_REFR_HAVOK_MOVE', // Havok Moved
+    {03} 'CHANGE_REFR_CELL_CHANGED', // Cell Changed
+    {04} 'CHANGE_REFR_SCALE', // Scale
+    {05} 'CHANGE_REFR_INVENTORY', // Inventory
+    {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'CHANGE_ACTOR_LIFESTATE', // Life State
+    {11} 'CHANGE_ACTOR_EXTRA_PACKAGE_DATA', // Package Data Extra
+    {12} 'CHANGE_ACTOR_EXTRA_MERCHANT_CONTAINER', // Merchant Container
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'CHANGE_ACTOR_EXTRA_DISMEMBERED_LIMBS', // Dismembered Limbs
+    {18} 'CHANGE_ACTOR_LEVELED_ACTOR', // Leveled Actor
+    {19} 'CHANGE_ACTOR_DISPOSITION_MODIFIERS', // Disp Modifiers
+    {20} 'CHANGE_ACTOR_TEMP_MODIFIERS', // Temp Modifiers
+    {21} 'CHANGE_ACTOR_DAMAGE_MODIFIERS', // Damage Modifiers
+    {22} 'CHANGE_ACTOR_OVERRIDE_MODIFIERS', // Override Modifiers
+    {23} 'CHANGE_ACTOR_PERMANENT_MODIFIERS', // Permanent Modifiers
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN', // Activating Children
+    {27} 'CHANGE_REFR_LEVELED_INVENTORY', // Leveled Inventory
+    {28} 'CHANGE_REFR_ANIMATION', // Animation
+    {29} 'CHANGE_REFR_EXTRA_ENCOUNTER_ZONE', // Enc Zone Extra
+    {30} 'CHANGE_REFR_EXTRA_CREATED_ONLY', // Created Only Extra
+    {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
+  ]));
+
+  // changeType: 002 = formType: 060 : ACRE
+  wbChangeFlags002 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_REFR_MOVE', // Moved
+    {02} 'CHANGE_REFR_HAVOK_MOVE', // Havok Moved
+    {03} 'CHANGE_REFR_CELL_CHANGED', // Cell Changed
+    {04} 'CHANGE_REFR_SCALE', // Scale
+    {05} 'CHANGE_REFR_INVENTORY', // Inventory
+    {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'CHANGE_ACTOR_LIFESTATE', // Life State
+    {11} 'CHANGE_ACTOR_EXTRA_PACKAGE_DATA', // Package Data Extra
+    {12} 'CHANGE_ACTOR_EXTRA_MERCHANT_CONTAINER', // Merchant Container
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'CHANGE_ACTOR_EXTRA_DISMEMBERED_LIMBS', // Dismembered Limbs
+    {18} 'CHANGE_ACTOR_LEVELED_ACTOR', // Leveled Actor
+    {19} 'CHANGE_ACTOR_DISPOSITION_MODIFIERS', // Disp Modifiers
+    {20} 'CHANGE_ACTOR_TEMP_MODIFIERS', // Temp Modifiers
+    {21} 'CHANGE_ACTOR_DAMAGE_MODIFIERS', // Damage Modifiers
+    {22} 'CHANGE_ACTOR_OVERRIDE_MODIFIERS', // Override Modifiers
+    {23} 'CHANGE_ACTOR_PERMANENT_MODIFIERS', // Permanent Modifiers
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN', // Activating Children
+    {27} 'CHANGE_REFR_LEVELED_INVENTORY', // Leveled Inventory
+    {28} 'CHANGE_REFR_ANIMATION', // Animation
+    {29} 'CHANGE_REFR_EXTRA_ENCOUNTER_ZONE', // Enc Zone Extra
+    {30} 'CHANGE_REFR_EXTRA_CREATED_ONLY', // Created Only Extra
+    {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
+  ]));
+
+  // changeType: 003 = formType: 061 : PMIS
+  wbChangeFlags003 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_REFR_MOVE', // Moved
+    {02} 'CHANGE_REFR_HAVOK_MOVE', // Havok Moved
+    {03} 'CHANGE_REFR_CELL_CHANGED', // Cell Changed
+    {04} 'CHANGE_REFR_SCALE', // Scale
+    {05} 'CHANGE_REFR_INVENTORY', // Inventory
+    {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
+    {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
+    {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'CHANGE_OBJECT_OPEN_DEFAULT_STATE', // Open Default State
+    {23} 'CHANGE_OBJECT_OPEN_STATE', // Open State
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN', // Activating Children
+    {27} 'CHANGE_REFR_LEVELED_INVENTORY', // Leveled Inventory
+    {28} 'CHANGE_REFR_ANIMATION', // Animation
+    {29} 'CHANGE_REFR_EXTRA_ENCOUNTER_ZONE', // Enc Zone Extra
+    {30} 'CHANGE_REFR_EXTRA_CREATED_ONLY', // Created Only Extra
+    {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
+  ]));
+
+  // changeType: 004 = formType: 062 : PGRE
+  wbChangeFlags004 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_REFR_MOVE', // Moved
+    {02} 'CHANGE_REFR_HAVOK_MOVE', // Havok Moved
+    {03} 'CHANGE_REFR_CELL_CHANGED', // Cell Changed
+    {04} 'CHANGE_REFR_SCALE', // Scale
+    {05} 'CHANGE_REFR_INVENTORY', // Inventory
+    {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
+    {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
+    {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'CHANGE_OBJECT_OPEN_DEFAULT_STATE', // Open Default State
+    {23} 'CHANGE_OBJECT_OPEN_STATE', // Open State
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN', // Activating Children
+    {27} 'CHANGE_REFR_LEVELED_INVENTORY', // Leveled Inventory
+    {28} 'CHANGE_REFR_ANIMATION', // Animation
+    {29} 'CHANGE_REFR_EXTRA_ENCOUNTER_ZONE', // Enc Zone Extra
+    {30} 'CHANGE_REFR_EXTRA_CREATED_ONLY', // Created Only Extra
+    {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
+  ]));
+
+  // changeType: 005 = formType: 063 : PBEA
+  wbChangeFlags005 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_REFR_MOVE', // Moved
+    {02} 'CHANGE_REFR_HAVOK_MOVE', // Havok Moved
+    {03} 'CHANGE_REFR_CELL_CHANGED', // Cell Changed
+    {04} 'CHANGE_REFR_SCALE', // Scale
+    {05} 'CHANGE_REFR_INVENTORY', // Inventory
+    {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
+    {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
+    {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'CHANGE_OBJECT_OPEN_DEFAULT_STATE', // Open Default State
+    {23} 'CHANGE_OBJECT_OPEN_STATE', // Open State
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN', // Activating Children
+    {27} 'CHANGE_REFR_LEVELED_INVENTORY', // Leveled Inventory
+    {28} 'CHANGE_REFR_ANIMATION', // Animation
+    {29} 'CHANGE_REFR_EXTRA_ENCOUNTER_ZONE', // Enc Zone Extra
+    {30} 'CHANGE_REFR_EXTRA_CREATED_ONLY', // Created Only Extra
+    {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
+  ]));
+
+  // changeType: 006 = formType: 064 : PFLA
+  wbChangeFlags006 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_REFR_MOVE', // Moved
+    {02} 'CHANGE_REFR_HAVOK_MOVE', // Havok Moved
+    {03} 'CHANGE_REFR_CELL_CHANGED', // Cell Changed
+    {04} 'CHANGE_REFR_SCALE', // Scale
+    {05} 'CHANGE_REFR_INVENTORY', // Inventory
+    {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
+    {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
+    {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'CHANGE_OBJECT_OPEN_DEFAULT_STATE', // Open Default State
+    {23} 'CHANGE_OBJECT_OPEN_STATE', // Open State
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN', // Activating Children
+    {27} 'CHANGE_REFR_LEVELED_INVENTORY', // Leveled Inventory
+    {28} 'CHANGE_REFR_ANIMATION', // Animation
+    {29} 'CHANGE_REFR_EXTRA_ENCOUNTER_ZONE', // Enc Zone Extra
+    {30} 'CHANGE_REFR_EXTRA_CREATED_ONLY', // Created Only Extra
+    {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
+  ]));
+
+  // changeType: 007 = formType: 057 : CELL
+  wbChangeFlags007 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_CELL_FLAGS', // Flags
+    {02} 'CHANGE_CELL_FULLNAME', // Full name
+    {03} 'CHANGE_CELL_OWNERSHIP', // Ownership
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'CHANGE_CELL_EXTERIOR_SHORT', // Exterior Short
+    {29} 'CHANGE_CELL_EXTERIOR_CHAR', // Exterior Char
+    {30} 'CHANGE_CELL_DETACHTIME', // Detach Time
+    {31} 'CHANGE_CELL_SEENDATA' // Seen Data
+  ]));
+
+  // changeType: 008 = formType: 070 : INFO
+  wbChangeFlags008 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'UnnamedFlag01',
+    {02} 'UnnamedFlag02',
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'CHANGE_TOPIC_SAIDONCE' // Said Once
+  ]));
+
+  // changeType: 009 = formType: 071 : QUST
+  wbChangeFlags009 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_QUEST_FLAGS', // Quest Flags
+    {02} 'CHANGE_QUEST_SCRIPT_DELAY', // Quest Script Delay
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'CHANGE_QUEST_OBJECTIVES', // Quest Objectives
+    {30} 'CHANGE_QUEST_SCRIPT', // Quest Script
+    {31} 'CHANGE_QUEST_STAGES' // Quest Stages
+  ]));
+
+  // changeType: 010 = formType: 042 : NPC_
+  wbChangeFlags010 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_ACTOR_BASE_DATA', // Base Data
+    {02} 'CHANGE_ACTOR_BASE_ATTRIBUTES', // Attributes
+    {03} 'CHANGE_ACTOR_BASE_AIDATA', // AI Data
+    {04} 'CHANGE_ACTOR_BASE_SPELLLIST', // Spell List
+    {05} 'CHANGE_ACTOR_BASE_FULLNAME', // Full Name
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'CHANGE_NPC_SKILLS', // NPC Skills
+    {10} 'CHANGE_NPC_CLASS', // Class
+    {11} 'CHANGE_NPC_FACE', // Face
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'CHANGE_NPC_GENDER', // Gender
+    {25} 'CHANGE_NPC_RACE', // Race
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 011 = formType: 043 : CREA
+  wbChangeFlags011 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_ACTOR_BASE_DATA', // Base Data
+    {02} 'CHANGE_ACTOR_BASE_ATTRIBUTES', // Attributes
+    {03} 'CHANGE_ACTOR_BASE_AIDATA', // AI Data
+    {04} 'CHANGE_ACTOR_BASE_SPELLLIST', // Spell List
+    {05} 'CHANGE_ACTOR_BASE_FULLNAME', // Full Name
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'CHANGE_CREATURE_SKILLS', // Creature Skills
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 012 = formType: 021 : ACTI
+  wbChangeFlags012 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 013 = formType: 022 : TACT
+  wbChangeFlags013 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'CHANGE_TALKING_ACTIVATOR_SPEAKER', // Speaker
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 014 = formType: 023 : TERM
+  wbChangeFlags014 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 015 = formType: 024 : ARMO
+  wbChangeFlags015 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 016 = formType: 025 : BOOK
+  wbChangeFlags016 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'CHANGE_BOOK_TEACHES_SKILL', // Teaches Skill
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 017 = formType: 026 : CLOT
+  wbChangeFlags017 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 018 = formType: 027 : CONT
+  wbChangeFlags018 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 019 = formType: 028 : DOOR
+  wbChangeFlags019 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 020 = formType: 029 : INGR
+  wbChangeFlags020 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 021 = formType: 030 : LIGH
+  wbChangeFlags021 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 022 = formType: 031 : MISC
+  wbChangeFlags022 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 023 = formType: 032 : STAT
+  wbChangeFlags023 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 024 = formType: 034 : MSTT
+  wbChangeFlags024 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 025 = formType: 039 : FURN
+  wbChangeFlags025 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 026 = formType: 040 : WEAP
+  wbChangeFlags026 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 027 = formType: 041 : AMMO
+  wbChangeFlags027 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 028 = formType: 046 : KEYM
+  wbChangeFlags028 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 029 = formType: 047 : ALCH
+  wbChangeFlags029 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 030 = formType: 048 : IDLM
+  wbChangeFlags030 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 031 = formType: 049 : NOTE
+  wbChangeFlags031 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'UnnamedFlag01',
+    {02} 'UnnamedFlag02',
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'CHANGE_NOTE_READ' // Note Read
+  ]));
+
+  // changeType: 032 = formType: 097 : ECZN
+  wbChangeFlags032 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_ENCOUNTER_ZONE_FLAGS', // Zone Flags
+    {02} 'UnnamedFlag02',
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'CHANGE_ENCOUNTER_ZONE_GAME_DATA' // Game Data
+  ]));
+
+  // changeType: 033 = formType: 007 : CLAS
+  wbChangeFlags033 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_CLASS_TAG_SKILLS', // Tag Skills
+    {02} 'UnnamedFlag02',
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 034 = formType: 008 : FACT
+  wbChangeFlags034 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_FACTION_FLAGS', // Faction Flags
+    {02} 'CHANGE_FACTION_REACTIONS', // Faction Reactions
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'CHANGE_FACTION_CRIME_COUNTS' // Faction Crime Counts
+  ]));
+
+  // changeType: 035 = formType: 073 : PACK
+  wbChangeFlags035 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'UnnamedFlag01',
+    {02} 'UnnamedFlag02',
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'CHANGE_PACKAGE_WAITING', // Waiting Flag
+    {31} 'CHANGE_PACKAGE_NEVER_RUN' // Never Run Flag
+  ]));
+
+  // changeType: 036 = formType: 067 : NAVM
+  wbChangeFlags036 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 037 = formType: 085 : FLST
+  wbChangeFlags037 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'UnnamedFlag01',
+    {02} 'UnnamedFlag02',
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'CHANGE_FORM_LIST_ADDED_FORM' // Added Form
+  ]));
+
+  // changeType: 038 = formType: 044 : LVLC
+  wbChangeFlags038 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'UnnamedFlag01',
+    {02} 'UnnamedFlag02',
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'CHANGE_LEVELED_LIST_ADDED_OBJECT' // Added Object
+  ]));
+
+  // changeType: 039 = formType: 045 : LVLN
+  wbChangeFlags039 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'UnnamedFlag01',
+    {02} 'UnnamedFlag02',
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'CHANGE_LEVELED_LIST_ADDED_OBJECT' // Added Object
+  ]));
+
+  // changeType: 040 = formType: 052 : LVLI
+  wbChangeFlags040 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'UnnamedFlag01',
+    {02} 'UnnamedFlag02',
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'CHANGE_LEVELED_LIST_ADDED_OBJECT' // Added Object
+  ]));
+
+  // changeType: 041 = formType: 078 : WATR
+  wbChangeFlags041 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'UnnamedFlag01',
+    {02} 'UnnamedFlag02',
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'CHANGE_WATER_REMAPPED' // Remapped
+  ]));
+
+  // changeType: 042 = formType: 103 : IMOD
+  wbChangeFlags042 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 043 = formType: 104 : REPU
+  wbChangeFlags043 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 044 = formType: 105 : PCBE
+  wbChangeFlags044 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_REFR_MOVE', // Moved
+    {02} 'CHANGE_REFR_HAVOK_MOVE', // Havok Moved
+    {03} 'CHANGE_REFR_CELL_CHANGED', // Cell Changed
+    {04} 'CHANGE_REFR_SCALE', // Scale
+    {05} 'CHANGE_REFR_INVENTORY', // Inventory
+    {06} 'CHANGE_REFR_EXTRA_OWNERSHIP', // Ownership Extra
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'CHANGE_OBJECT_EXTRA_ITEM_DATA', // Item Data Extra
+    {11} 'CHANGE_OBJECT_EXTRA_AMMO', // Ammo Extra
+    {12} 'CHANGE_OBJECT_EXTRA_LOCK', // Lock Extra
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'CHANGE_OBJECT_OPEN_DEFAULT_STATE', // Open Default State
+    {23} 'CHANGE_OBJECT_OPEN_STATE', // Open State
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN', // Activating Children
+    {27} 'CHANGE_REFR_LEVELED_INVENTORY', // Leveled Inventory
+    {28} 'CHANGE_REFR_ANIMATION', // Animation
+    {29} 'CHANGE_REFR_EXTRA_ENCOUNTER_ZONE', // Enc Zone Extra
+    {30} 'CHANGE_REFR_EXTRA_CREATED_ONLY', // Created Only Extra
+    {31} 'CHANGE_REFR_EXTRA_GAME_ONLY' // Game Only Extra
+  ]));
+
+  // changeType: 045 = formType: 106 : RCPE
+  wbChangeFlags045 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 046 = formType: 107 : RCCT
+  wbChangeFlags046 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 047 = formType: 108 : CHIP
+  wbChangeFlags047 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 048 = formType: 109 : CSNO
+  wbChangeFlags048 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 049 = formType: 110 : LSCT
+  wbChangeFlags049 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 050 = formType: 113 : CHAL
+  wbChangeFlags050 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 051 = formType: 114 : AMEF
+  wbChangeFlags051 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 052 = formType: 115 : CCRD
+  wbChangeFlags052 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 053 = formType: 116 : CMNY
+  wbChangeFlags053 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+  // changeType: 054 = formType: 117 : CDCK
+  wbChangeFlags054 := wbInteger('Change Flags', itU32 , wbFlags([
+    {00} 'CHANGE_FORM_FLAGS', // Flags
+    {01} 'CHANGE_BASE_OBJECT_VALUE', // Object Value
+    {02} 'CHANGE_BASE_OBJECT_FULLNAME', // Object Full Name
+    {03} 'UnnamedFlag03',
+    {04} 'UnnamedFlag04',
+    {05} 'UnnamedFlag05',
+    {06} 'UnnamedFlag06',
+    {07} 'UnnamedFlag07',
+    {08} 'UnnamedFlag08',
+    {09} 'UnnamedFlag09',
+    {10} 'UnnamedFlag10',
+    {11} 'UnnamedFlag11',
+    {12} 'UnnamedFlag12',
+    {13} 'UnnamedFlag13',
+    {14} 'UnnamedFlag14',
+    {15} 'UnnamedFlag15',
+    {16} 'UnnamedFlag16',
+    {17} 'UnnamedFlag17',
+    {18} 'UnnamedFlag18',
+    {19} 'UnnamedFlag19',
+    {20} 'UnnamedFlag20',
+    {21} 'UnnamedFlag21',
+    {22} 'UnnamedFlag22',
+    {23} 'UnnamedFlag23',
+    {24} 'UnnamedFlag24',
+    {25} 'UnnamedFlag25',
+    {26} 'UnnamedFlag26',
+    {27} 'UnnamedFlag27',
+    {28} 'UnnamedFlag28',
+    {29} 'UnnamedFlag29',
+    {30} 'UnnamedFlag30',
+    {31} 'UnnamedFlag31'
+  ]));
+
+*****************************************************************************************************
+  wbChangeFlags := wbUnion('Change Flags', ChangedFormFlagsDecider, [
+    wbChangeFlags000,
+    wbChangeFlags001,
+    wbChangeFlags002,
+    wbChangeFlags003,
+    wbChangeFlags004,
+    wbChangeFlags005,
+    wbChangeFlags006,
+    wbChangeFlags007,
+    wbChangeFlags008,
+    wbChangeFlags009,
+    wbChangeFlags010,
+    wbChangeFlags011,
+    wbChangeFlags012,
+    wbChangeFlags013,
+    wbChangeFlags014,
+    wbChangeFlags015,
+    wbChangeFlags016,
+    wbChangeFlags017,
+    wbChangeFlags018,
+    wbChangeFlags019,
+    wbChangeFlags020,
+    wbChangeFlags021,
+    wbChangeFlags022,
+    wbChangeFlags023,
+    wbChangeFlags024,
+    wbChangeFlags025,
+    wbChangeFlags026,
+    wbChangeFlags027,
+    wbChangeFlags028,
+    wbChangeFlags029,
+    wbChangeFlags030,
+    wbChangeFlags031,
+    wbChangeFlags032,
+    wbChangeFlags033,
+    wbChangeFlags034,
+    wbChangeFlags035,
+    wbChangeFlags036,
+    wbChangeFlags037,
+    wbChangeFlags038,
+    wbChangeFlags039,
+    wbChangeFlags040,
+    wbChangeFlags041,
+    wbChangeFlags042,
+    wbChangeFlags043,
+    wbChangeFlags044,
+    wbChangeFlags045,
+    wbChangeFlags046,
+    wbChangeFlags047,
+    wbChangeFlags048,
+    wbChangeFlags049,
+    wbChangeFlags050,
+    wbChangeFlags051,
+    wbChangeFlags052,
+    wbChangeFlags053,
+    wbChangeFlags054
+  ]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_MOVE := wbUnion('Moved', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_HAVOK_MOVE := wbUnion('Havok Moved', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_CELL_CHANGED := wbUnion('Cell Changed', ChangedFlag03Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_SCALE := wbUnion('Scale', ChangedFlag04Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_INVENTORY := wbUnion('Inventory', ChangedFlag05Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP := wbUnion('Ownership Extra', ChangedFlag06Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA := wbUnion('Item Data Extra', ChangedFlag10Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_AMMO := wbUnion('Ammo Extra', ChangedFlag11Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_LOCK := wbUnion('Lock Extra', ChangedFlag12Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE := wbUnion('Open Default State', ChangedFlag22Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_OPEN_STATE := wbUnion('Open State', ChangedFlag23Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN := wbUnion('Activating Children', ChangedFlag26Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY := wbUnion('Leveled Inventory', ChangedFlag27Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_ANIMATION := wbUnion('Animation', ChangedFlag28Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE := wbUnion('Enc Zone Extra', ChangedFlag29Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY := wbUnion('Created Only Extra', ChangedFlag30Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY := wbUnion('Game Only Extra', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_MOVE := wbUnion('Moved', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_HAVOK_MOVE := wbUnion('Havok Moved', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_CELL_CHANGED := wbUnion('Cell Changed', ChangedFlag03Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_SCALE := wbUnion('Scale', ChangedFlag04Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_INVENTORY := wbUnion('Inventory', ChangedFlag05Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP := wbUnion('Ownership Extra', ChangedFlag06Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_LIFESTATE := wbUnion('Life State', ChangedFlag10Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_EXTRA_PACKAGE_DATA := wbUnion('Package Data Extra', ChangedFlag11Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_EXTRA_MERCHANT_CONTAINER := wbUnion('Merchant Container', ChangedFlag12Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_EXTRA_DISMEMBERED_LIMBS := wbUnion('Dismembered Limbs', ChangedFlag17Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_LEVELED_ACTOR := wbUnion('Leveled Actor', ChangedFlag18Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_DISPOSITION_MODIFIERS := wbUnion('Disp Modifiers', ChangedFlag19Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_TEMP_MODIFIERS := wbUnion('Temp Modifiers', ChangedFlag20Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_DAMAGE_MODIFIERS := wbUnion('Damage Modifiers', ChangedFlag21Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_OVERRIDE_MODIFIERS := wbUnion('Override Modifiers', ChangedFlag22Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_PERMANENT_MODIFIERS := wbUnion('Permanent Modifiers', ChangedFlag23Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN := wbUnion('Activating Children', ChangedFlag26Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY := wbUnion('Leveled Inventory', ChangedFlag27Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_ANIMATION := wbUnion('Animation', ChangedFlag28Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE := wbUnion('Enc Zone Extra', ChangedFlag29Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY := wbUnion('Created Only Extra', ChangedFlag30Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY := wbUnion('Game Only Extra', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_MOVE := wbUnion('Moved', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_HAVOK_MOVE := wbUnion('Havok Moved', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_CELL_CHANGED := wbUnion('Cell Changed', ChangedFlag03Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_SCALE := wbUnion('Scale', ChangedFlag04Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_INVENTORY := wbUnion('Inventory', ChangedFlag05Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP := wbUnion('Ownership Extra', ChangedFlag06Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_LIFESTATE := wbUnion('Life State', ChangedFlag10Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_EXTRA_PACKAGE_DATA := wbUnion('Package Data Extra', ChangedFlag11Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_EXTRA_MERCHANT_CONTAINER := wbUnion('Merchant Container', ChangedFlag12Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_EXTRA_DISMEMBERED_LIMBS := wbUnion('Dismembered Limbs', ChangedFlag17Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_LEVELED_ACTOR := wbUnion('Leveled Actor', ChangedFlag18Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_DISPOSITION_MODIFIERS := wbUnion('Disp Modifiers', ChangedFlag19Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_TEMP_MODIFIERS := wbUnion('Temp Modifiers', ChangedFlag20Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_DAMAGE_MODIFIERS := wbUnion('Damage Modifiers', ChangedFlag21Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_OVERRIDE_MODIFIERS := wbUnion('Override Modifiers', ChangedFlag22Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_PERMANENT_MODIFIERS := wbUnion('Permanent Modifiers', ChangedFlag23Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN := wbUnion('Activating Children', ChangedFlag26Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY := wbUnion('Leveled Inventory', ChangedFlag27Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_ANIMATION := wbUnion('Animation', ChangedFlag28Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE := wbUnion('Enc Zone Extra', ChangedFlag29Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY := wbUnion('Created Only Extra', ChangedFlag30Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY := wbUnion('Game Only Extra', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_MOVE := wbUnion('Moved', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_HAVOK_MOVE := wbUnion('Havok Moved', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_CELL_CHANGED := wbUnion('Cell Changed', ChangedFlag03Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_SCALE := wbUnion('Scale', ChangedFlag04Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_INVENTORY := wbUnion('Inventory', ChangedFlag05Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP := wbUnion('Ownership Extra', ChangedFlag06Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA := wbUnion('Item Data Extra', ChangedFlag10Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_AMMO := wbUnion('Ammo Extra', ChangedFlag11Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_LOCK := wbUnion('Lock Extra', ChangedFlag12Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE := wbUnion('Open Default State', ChangedFlag22Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_OPEN_STATE := wbUnion('Open State', ChangedFlag23Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN := wbUnion('Activating Children', ChangedFlag26Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY := wbUnion('Leveled Inventory', ChangedFlag27Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_ANIMATION := wbUnion('Animation', ChangedFlag28Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE := wbUnion('Enc Zone Extra', ChangedFlag29Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY := wbUnion('Created Only Extra', ChangedFlag30Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY := wbUnion('Game Only Extra', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_MOVE := wbUnion('Moved', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_HAVOK_MOVE := wbUnion('Havok Moved', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_CELL_CHANGED := wbUnion('Cell Changed', ChangedFlag03Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_SCALE := wbUnion('Scale', ChangedFlag04Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_INVENTORY := wbUnion('Inventory', ChangedFlag05Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP := wbUnion('Ownership Extra', ChangedFlag06Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA := wbUnion('Item Data Extra', ChangedFlag10Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_AMMO := wbUnion('Ammo Extra', ChangedFlag11Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_LOCK := wbUnion('Lock Extra', ChangedFlag12Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE := wbUnion('Open Default State', ChangedFlag22Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_OPEN_STATE := wbUnion('Open State', ChangedFlag23Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN := wbUnion('Activating Children', ChangedFlag26Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY := wbUnion('Leveled Inventory', ChangedFlag27Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_ANIMATION := wbUnion('Animation', ChangedFlag28Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE := wbUnion('Enc Zone Extra', ChangedFlag29Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY := wbUnion('Created Only Extra', ChangedFlag30Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY := wbUnion('Game Only Extra', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_MOVE := wbUnion('Moved', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_HAVOK_MOVE := wbUnion('Havok Moved', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_CELL_CHANGED := wbUnion('Cell Changed', ChangedFlag03Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_SCALE := wbUnion('Scale', ChangedFlag04Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_INVENTORY := wbUnion('Inventory', ChangedFlag05Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP := wbUnion('Ownership Extra', ChangedFlag06Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA := wbUnion('Item Data Extra', ChangedFlag10Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_AMMO := wbUnion('Ammo Extra', ChangedFlag11Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_LOCK := wbUnion('Lock Extra', ChangedFlag12Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE := wbUnion('Open Default State', ChangedFlag22Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_OPEN_STATE := wbUnion('Open State', ChangedFlag23Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN := wbUnion('Activating Children', ChangedFlag26Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY := wbUnion('Leveled Inventory', ChangedFlag27Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_ANIMATION := wbUnion('Animation', ChangedFlag28Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE := wbUnion('Enc Zone Extra', ChangedFlag29Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY := wbUnion('Created Only Extra', ChangedFlag30Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY := wbUnion('Game Only Extra', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_MOVE := wbUnion('Moved', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_HAVOK_MOVE := wbUnion('Havok Moved', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_CELL_CHANGED := wbUnion('Cell Changed', ChangedFlag03Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_SCALE := wbUnion('Scale', ChangedFlag04Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_INVENTORY := wbUnion('Inventory', ChangedFlag05Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP := wbUnion('Ownership Extra', ChangedFlag06Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA := wbUnion('Item Data Extra', ChangedFlag10Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_AMMO := wbUnion('Ammo Extra', ChangedFlag11Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_LOCK := wbUnion('Lock Extra', ChangedFlag12Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE := wbUnion('Open Default State', ChangedFlag22Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_OPEN_STATE := wbUnion('Open State', ChangedFlag23Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN := wbUnion('Activating Children', ChangedFlag26Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY := wbUnion('Leveled Inventory', ChangedFlag27Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_ANIMATION := wbUnion('Animation', ChangedFlag28Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE := wbUnion('Enc Zone Extra', ChangedFlag29Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY := wbUnion('Created Only Extra', ChangedFlag30Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY := wbUnion('Game Only Extra', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_CELL_FLAGS := wbUnion('Flags', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_CELL_FULLNAME := wbUnion('Full name', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_CELL_OWNERSHIP := wbUnion('Ownership', ChangedFlag03Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_CELL_EXTERIOR_SHORT := wbUnion('Exterior Short', ChangedFlag28Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_CELL_EXTERIOR_CHAR := wbUnion('Exterior Char', ChangedFlag29Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_CELL_DETACHTIME := wbUnion('Detach Time', ChangedFlag30Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_CELL_SEENDATA := wbUnion('Seen Data', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_TOPIC_SAIDONCE := wbUnion('Said Once', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_QUEST_FLAGS := wbUnion('Quest Flags', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_QUEST_SCRIPT_DELAY := wbUnion('Quest Script Delay', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_QUEST_OBJECTIVES := wbUnion('Quest Objectives', ChangedFlag29Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_QUEST_SCRIPT := wbUnion('Quest Script', ChangedFlag30Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_QUEST_STAGES := wbUnion('Quest Stages', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_BASE_DATA := wbUnion('Base Data', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_BASE_ATTRIBUTES := wbUnion('Attributes', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_BASE_AIDATA := wbUnion('AI Data', ChangedFlag03Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_BASE_SPELLLIST := wbUnion('Spell List', ChangedFlag04Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_BASE_FULLNAME := wbUnion('Full Name', ChangedFlag05Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_NPC_SKILLS := wbUnion('NPC Skills', ChangedFlag09Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_NPC_CLASS := wbUnion('Class', ChangedFlag10Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_NPC_FACE := wbUnion('Face', ChangedFlag11Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_NPC_GENDER := wbUnion('Gender', ChangedFlag24Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_NPC_RACE := wbUnion('Race', ChangedFlag25Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_BASE_DATA := wbUnion('Base Data', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_BASE_ATTRIBUTES := wbUnion('Attributes', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_BASE_AIDATA := wbUnion('AI Data', ChangedFlag03Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_BASE_SPELLLIST := wbUnion('Spell List', ChangedFlag04Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ACTOR_BASE_FULLNAME := wbUnion('Full Name', ChangedFlag05Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_CREATURE_SKILLS := wbUnion('Creature Skills', ChangedFlag09Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_TALKING_ACTIVATOR_SPEAKER := wbUnion('Speaker', ChangedFlag23Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BOOK_TEACHES_SKILL := wbUnion('Teaches Skill', ChangedFlag05Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_NOTE_READ := wbUnion('Note Read', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ENCOUNTER_ZONE_FLAGS := wbUnion('Zone Flags', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_ENCOUNTER_ZONE_GAME_DATA := wbUnion('Game Data', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_CLASS_TAG_SKILLS := wbUnion('Tag Skills', ChangedFlag01Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_FACTION_FLAGS := wbUnion('Faction Flags', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_FACTION_REACTIONS := wbUnion('Faction Reactions', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_FACTION_CRIME_COUNTS := wbUnion('Faction Crime Counts', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_PACKAGE_WAITING := wbUnion('Waiting Flag', ChangedFlag30Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_PACKAGE_NEVER_RUN := wbUnion('Never Run Flag', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_FORM_LIST_ADDED_FORM := wbUnion('Added Form', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT := wbUnion('Added Object', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT := wbUnion('Added Object', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT := wbUnion('Added Object', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_WATER_REMAPPED := wbUnion('Remapped', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_MOVE := wbUnion('Moved', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_HAVOK_MOVE := wbUnion('Havok Moved', ChangedFlag02Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_CELL_CHANGED := wbUnion('Cell Changed', ChangedFlag03Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_SCALE := wbUnion('Scale', ChangedFlag04Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_INVENTORY := wbUnion('Inventory', ChangedFlag05Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_OWNERSHIP := wbUnion('Ownership Extra', ChangedFlag06Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA := wbUnion('Item Data Extra', ChangedFlag10Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_AMMO := wbUnion('Ammo Extra', ChangedFlag11Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_EXTRA_LOCK := wbUnion('Lock Extra', ChangedFlag12Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE := wbUnion('Open Default State', ChangedFlag22Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_OBJECT_OPEN_STATE := wbUnion('Open State', ChangedFlag23Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN := wbUnion('Activating Children', ChangedFlag26Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_LEVELED_INVENTORY := wbUnion('Leveled Inventory', ChangedFlag27Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_ANIMATION := wbUnion('Animation', ChangedFlag28Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE := wbUnion('Enc Zone Extra', ChangedFlag29Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY := wbUnion('Created Only Extra', ChangedFlag30Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_REFR_EXTRA_GAME_ONLY := wbUnion('Game Only Extra', ChangedFlag31Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_VALUE := wbUnion('Object Value', ChangedFlag01Decider, [wbNull, wbNull]);
+  wbUnionCHANGE_BASE_OBJECT_FULLNAME := wbUnion('Object Full Name', ChangedFlag02Decider, [wbNull, wbNull]);
+
+
+*****************************************************************************************************
+  wbChangedFormData := wbStruct('Changed Form Data', [
+    wbInitialDataType,
+    wbUnion('CForm Union', ChangedFormDataDecider, [
+       wbNull
+      ,wbStruct('Change REFR Data', [ {03A}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA
+        ,wbUnionCHANGE_OBJECT_EXTRA_AMMO
+        ,wbUnionCHANGE_OBJECT_EXTRA_LOCK
+        ,wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE
+        ,wbUnionCHANGE_OBJECT_OPEN_STATE
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
+       ])
+      ,wbStruct('Change ACHR Data', [ {03B}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_ACTOR_LIFESTATE
+        ,wbUnionCHANGE_ACTOR_EXTRA_PACKAGE_DATA
+        ,wbUnionCHANGE_ACTOR_EXTRA_MERCHANT_CONTAINER
+        ,wbUnionCHANGE_ACTOR_EXTRA_DISMEMBERED_LIMBS
+        ,wbUnionCHANGE_ACTOR_LEVELED_ACTOR
+        ,wbUnionCHANGE_ACTOR_DISPOSITION_MODIFIERS
+        ,wbUnionCHANGE_ACTOR_TEMP_MODIFIERS
+        ,wbUnionCHANGE_ACTOR_DAMAGE_MODIFIERS
+        ,wbUnionCHANGE_ACTOR_OVERRIDE_MODIFIERS
+        ,wbUnionCHANGE_ACTOR_PERMANENT_MODIFIERS
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
+       ])
+      ,wbStruct('Change ACRE Data', [ {03C}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_ACTOR_LIFESTATE
+        ,wbUnionCHANGE_ACTOR_EXTRA_PACKAGE_DATA
+        ,wbUnionCHANGE_ACTOR_EXTRA_MERCHANT_CONTAINER
+        ,wbUnionCHANGE_ACTOR_EXTRA_DISMEMBERED_LIMBS
+        ,wbUnionCHANGE_ACTOR_LEVELED_ACTOR
+        ,wbUnionCHANGE_ACTOR_DISPOSITION_MODIFIERS
+        ,wbUnionCHANGE_ACTOR_TEMP_MODIFIERS
+        ,wbUnionCHANGE_ACTOR_DAMAGE_MODIFIERS
+        ,wbUnionCHANGE_ACTOR_OVERRIDE_MODIFIERS
+        ,wbUnionCHANGE_ACTOR_PERMANENT_MODIFIERS
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
+       ])
+      ,wbStruct('Change PMIS Data', [ {03D}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA
+        ,wbUnionCHANGE_OBJECT_EXTRA_AMMO
+        ,wbUnionCHANGE_OBJECT_EXTRA_LOCK
+        ,wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE
+        ,wbUnionCHANGE_OBJECT_OPEN_STATE
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
+       ])
+      ,wbStruct('Change PGRE Data', [ {03E}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA
+        ,wbUnionCHANGE_OBJECT_EXTRA_AMMO
+        ,wbUnionCHANGE_OBJECT_EXTRA_LOCK
+        ,wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE
+        ,wbUnionCHANGE_OBJECT_OPEN_STATE
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
+       ])
+      ,wbStruct('Change PBEA Data', [ {03F}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA
+        ,wbUnionCHANGE_OBJECT_EXTRA_AMMO
+        ,wbUnionCHANGE_OBJECT_EXTRA_LOCK
+        ,wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE
+        ,wbUnionCHANGE_OBJECT_OPEN_STATE
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
+       ])
+      ,wbStruct('Change PFLA Data', [ {040}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA
+        ,wbUnionCHANGE_OBJECT_EXTRA_AMMO
+        ,wbUnionCHANGE_OBJECT_EXTRA_LOCK
+        ,wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE
+        ,wbUnionCHANGE_OBJECT_OPEN_STATE
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
+       ])
+      ,wbStruct('Change CELL Data', [ {039}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_CELL_FLAGS
+        ,wbUnionCHANGE_CELL_FULLNAME
+        ,wbUnionCHANGE_CELL_OWNERSHIP
+        ,wbUnionCHANGE_CELL_EXTERIOR_SHORT
+        ,wbUnionCHANGE_CELL_EXTERIOR_CHAR
+        ,wbUnionCHANGE_CELL_DETACHTIME
+        ,wbUnionCHANGE_CELL_SEENDATA
+       ])
+      ,wbStruct('Change INFO Data', [ {046}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_TOPIC_SAIDONCE
+       ])
+      ,wbStruct('Change QUST Data', [ {047}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_QUEST_FLAGS
+        ,wbUnionCHANGE_QUEST_SCRIPT_DELAY
+        ,wbUnionCHANGE_QUEST_OBJECTIVES
+        ,wbUnionCHANGE_QUEST_SCRIPT
+        ,wbUnionCHANGE_QUEST_STAGES
+       ])
+      ,wbStruct('Change NPC_ Data', [ {02A}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_ACTOR_BASE_DATA
+        ,wbUnionCHANGE_ACTOR_BASE_ATTRIBUTES
+        ,wbUnionCHANGE_ACTOR_BASE_AIDATA
+        ,wbUnionCHANGE_ACTOR_BASE_SPELLLIST
+        ,wbUnionCHANGE_ACTOR_BASE_FULLNAME
+        ,wbUnionCHANGE_NPC_SKILLS
+        ,wbUnionCHANGE_NPC_CLASS
+        ,wbUnionCHANGE_NPC_FACE
+        ,wbUnionCHANGE_NPC_GENDER
+        ,wbUnionCHANGE_NPC_RACE
+       ])
+      ,wbStruct('Change CREA Data', [ {02B}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_ACTOR_BASE_DATA
+        ,wbUnionCHANGE_ACTOR_BASE_ATTRIBUTES
+        ,wbUnionCHANGE_ACTOR_BASE_AIDATA
+        ,wbUnionCHANGE_ACTOR_BASE_SPELLLIST
+        ,wbUnionCHANGE_ACTOR_BASE_FULLNAME
+        ,wbUnionCHANGE_CREATURE_SKILLS
+       ])
+      ,wbStruct('Change ACTI Data', [ {015}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change TACT Data', [ {016}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+        ,wbUnionCHANGE_TALKING_ACTIVATOR_SPEAKER
+       ])
+      ,wbStruct('Change TERM Data', [ {017}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change ARMO Data', [ {018}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change BOOK Data', [ {019}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+        ,wbUnionCHANGE_BOOK_TEACHES_SKILL
+       ])
+      ,wbStruct('Change CLOT Data', [ {01A}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change CONT Data', [ {01B}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change DOOR Data', [ {01C}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change INGR Data', [ {01D}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change LIGH Data', [ {01E}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change MISC Data', [ {01F}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change STAT Data', [ {020}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change MSTT Data', [ {022}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change FURN Data', [ {027}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change WEAP Data', [ {028}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change AMMO Data', [ {029}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change KEYM Data', [ {02E}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change ALCH Data', [ {02F}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change IDLM Data', [ {030}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change NOTE Data', [ {031}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_NOTE_READ
+       ])
+      ,wbStruct('Change ECZN Data', [ {061}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_ENCOUNTER_ZONE_FLAGS
+        ,wbUnionCHANGE_ENCOUNTER_ZONE_GAME_DATA
+       ])
+      ,wbStruct('Change CLAS Data', [ {007}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_CLASS_TAG_SKILLS
+       ])
+      ,wbStruct('Change FACT Data', [ {008}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_FACTION_FLAGS
+        ,wbUnionCHANGE_FACTION_REACTIONS
+        ,wbUnionCHANGE_FACTION_CRIME_COUNTS
+       ])
+      ,wbStruct('Change PACK Data', [ {049}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_PACKAGE_WAITING
+        ,wbUnionCHANGE_PACKAGE_NEVER_RUN
+       ])
+      ,wbStruct('Change NAVM Data', [ {043}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change FLST Data', [ {055}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_FORM_LIST_ADDED_FORM
+       ])
+      ,wbStruct('Change LVLC Data', [ {02C}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT
+       ])
+      ,wbStruct('Change LVLN Data', [ {02D}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT
+       ])
+      ,wbStruct('Change LVLI Data', [ {034}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_LEVELED_LIST_ADDED_OBJECT
+       ])
+      ,wbStruct('Change WATR Data', [ {04E}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_WATER_REMAPPED
+       ])
+      ,wbStruct('Change IMOD Data', [ {067}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change REPU Data', [ {068}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change PCBE Data', [ {069}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_REFR_MOVE
+        ,wbUnionCHANGE_REFR_HAVOK_MOVE
+        ,wbUnionCHANGE_REFR_CELL_CHANGED
+        ,wbUnionCHANGE_REFR_SCALE
+        ,wbUnionCHANGE_REFR_INVENTORY
+        ,wbUnionCHANGE_REFR_EXTRA_OWNERSHIP
+        ,wbUnionCHANGE_OBJECT_EXTRA_ITEM_DATA
+        ,wbUnionCHANGE_OBJECT_EXTRA_AMMO
+        ,wbUnionCHANGE_OBJECT_EXTRA_LOCK
+        ,wbUnionCHANGE_OBJECT_OPEN_DEFAULT_STATE
+        ,wbUnionCHANGE_OBJECT_OPEN_STATE
+        ,wbUnionCHANGE_REFR_EXTRA_ACTIVATING_CHILDREN
+        ,wbUnionCHANGE_REFR_LEVELED_INVENTORY
+        ,wbUnionCHANGE_REFR_ANIMATION
+        ,wbUnionCHANGE_REFR_EXTRA_ENCOUNTER_ZONE
+        ,wbUnionCHANGE_REFR_EXTRA_CREATED_ONLY
+        ,wbUnionCHANGE_REFR_EXTRA_GAME_ONLY
+       ])
+      ,wbStruct('Change RCPE Data', [ {06A}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change RCCT Data', [ {06B}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change CHIP Data', [ {06C}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change CSNO Data', [ {06D}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change LSCT Data', [ {06E}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change CHAL Data', [ {071}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change AMEF Data', [ {072}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change CCRD Data', [ {073}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change CMNY Data', [ {074}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+      ,wbStruct('Change CDCK Data', [ {075}
+         wbUnionCHANGE_FORM_FLAGS
+        ,wbUnionCHANGE_BASE_OBJECT_VALUE
+        ,wbUnionCHANGE_BASE_OBJECT_FULLNAME
+       ])
+    ]),
+    wbByteArray('Undecoded Data', ChangedFormRemainingDataCounter)
+  ]);
+
+*****************************************************************************************************
+
+
+
+
+*****************************************************************************************************
+
+    // Added by Fallout NV
+    (Index: 1; Name: 'GetDistance'; {ParamType1: ObjectReferenceID;} ),
+    (Index: 5; Name: 'GetLocked'; ),
+    (Index: 6; Name: 'GetPos'; {ParamType1: Axis;} ),
+    (Index: 8; Name: 'GetAngle'; {ParamType1: Axis;} ),
+    (Index: 10; Name: 'GetStartingPos'; {ParamType1: Axis;} ),
+    (Index: 11; Name: 'GetStartingAngle'; {ParamType1: Axis;} ),
+    (Index: 12; Name: 'GetSecondsPassed'; ),
+    (Index: 14; Name: 'GetActorValue'; {ParamType1: Actor Value;} ),
+    (Index: 18; Name: 'GetCurrentTime'; ),
+    (Index: 24; Name: 'GetScale'; ),
+    (Index: 25; Name: 'IsMoving'; ),
+    (Index: 26; Name: 'IsTurning'; ),
+    (Index: 27; Name: 'GetLineOfSight'; {ParamType1: ObjectReferenceID;} ),
+    (Index: 32; Name: 'GetInSameCell'; {ParamType1: ObjectReferenceID;} ),
+    (Index: 35; Name: 'GetDisabled'; ),
+    (Index: 36; Name: 'MenuMode'; {ParamType1: Integer (Optional);} ),
+    (Index: 39; Name: 'GetDisease'; ),
+    (Index: 40; Name: 'GetVampire'; ),
+    (Index: 41; Name: 'GetClothingValue'; ),
+    (Index: 42; Name: 'SameFaction'; {ParamType1: Actor;} ),
+    (Index: 43; Name: 'SameRace'; {ParamType1: Actor;} ),
+    (Index: 44; Name: 'SameSex'; {ParamType1: Actor;} ),
+    (Index: 45; Name: 'GetDetected'; {ParamType1: Actor;} ),
+    (Index: 46; Name: 'GetDead'; ),
+    (Index: 47; Name: 'GetItemCount'; {ParamType1: ObjectID;} ),
+    (Index: 48; Name: 'GetGold'; ),
+    (Index: 49; Name: 'GetSleeping'; ),
+    (Index: 50; Name: 'GetTalkedToPC'; ),
+    (Index: 53; Name: 'GetScriptVariable'; {ParamType1: ObjectReferenceID;} {ParamType2: Variable Name;}),
+    (Index: 56; Name: 'GetQuestRunning'; {ParamType1: Quest;} ),
+    (Index: 58; Name: 'GetStage'; {ParamType1: Quest;} ),
+    (Index: 59; Name: 'GetStageDone'; {ParamType1: Quest;} {ParamType2: Stage;}),
+    (Index: 60; Name: 'GetFactionRankDifference'; {ParamType1: Faction;} {ParamType2: Actor;}),
+    (Index: 61; Name: 'GetAlarmed'; ),
+    (Index: 62; Name: 'IsRaining'; ),
+    (Index: 63; Name: 'GetAttacked'; ),
+    (Index: 64; Name: 'GetIsCreature'; ),
+    (Index: 65; Name: 'GetLockLevel'; ),
+    (Index: 66; Name: 'GetShouldAttack'; {ParamType1: Actor;} ),
+    (Index: 67; Name: 'GetInCell'; {ParamType1: Cell;} ),
+    (Index: 68; Name: 'GetIsClass'; {ParamType1: Class;} ),
+    (Index: 69; Name: 'GetIsRace'; {ParamType1: Race;} ),
+    (Index: 70; Name: 'GetIsSex'; {ParamType1: Sex;} ),
+    (Index: 71; Name: 'GetInFaction'; {ParamType1: Faction;} ),
+    (Index: 72; Name: 'GetIsID'; {ParamType1: ObjectID;} ),
+    (Index: 73; Name: 'GetFactionRank'; {ParamType1: Faction;} ),
+    (Index: 74; Name: 'GetGlobalValue'; {ParamType1: Global;} ),
+    (Index: 75; Name: 'IsSnowing'; ),
+    (Index: 76; Name: 'GetDisposition'; {ParamType1: Actor;} ),
+    (Index: 77; Name: 'GetRandomPercent'; ),
+    (Index: 79; Name: 'GetQuestVariable'; {ParamType1: Quest;} {ParamType2: Variable Name;}),
+    (Index: 80; Name: 'GetLevel'; ),
+    (Index: 81; Name: 'GetArmorRating'; ),
+    (Index: 84; Name: 'GetDeadCount'; {ParamType1: Actor Base;} ),
+    (Index: 91; Name: 'GetIsAlerted'; ),
+    (Index: 98; Name: 'GetPlayerControlsDisabled'; {ParamType1: Integer (Optional);} {ParamType2: Integer (Optional);}),
+    (Index: 99; Name: 'GetHeadingAngle'; {ParamType1: ObjectReferenceID;} ),
+    (Index: 101; Name: 'IsWeaponOut'; ),
+    (Index: 102; Name: 'IsTorchOut'; ),
+    (Index: 103; Name: 'IsShieldOut'; ),
+    (Index: 106; Name: 'IsFacingUp'; ),
+    (Index: 107; Name: 'GetKnockedState'; ),
+    (Index: 108; Name: 'GetWeaponAnimType'; ),
+    (Index: 109; Name: 'IsWeaponSkillType'; {ParamType1: Actor Value;} ),
+    (Index: 110; Name: 'GetCurrentAIPackage'; ),
+    (Index: 111; Name: 'IsWaiting'; ),
+    (Index: 112; Name: 'IsIdlePlaying'; ),
+    (Index: 116; Name: 'GetMinorCrimeCount'; ),
+    (Index: 117; Name: 'GetMajorCrimeCount'; ),
+    (Index: 118; Name: 'GetActorAggroRadiusViolated'; ),
+    (Index: 122; Name: 'GetCrime'; {ParamType1: Actor;} {ParamType2: Crime Type (optional);}),
+    (Index: 123; Name: 'IsGreetingPlayer'; ),
+    (Index: 125; Name: 'IsGuard'; ),
+    (Index: 127; Name: 'HasBeenEaten'; ),
+    (Index: 128; Name: 'GetFatiguePercentage'; ),
+    (Index: 129; Name: 'GetPCIsClass'; {ParamType1: Class;} ),
+    (Index: 130; Name: 'GetPCIsRace'; {ParamType1: Race;} ),
+    (Index: 131; Name: 'GetPCIsSex'; {ParamType1: Sex;} ),
+    (Index: 132; Name: 'GetPCInFaction'; {ParamType1: Faction;} ),
+    (Index: 133; Name: 'SameFactionAsPC'; ),
+    (Index: 134; Name: 'SameRaceAsPC'; ),
+    (Index: 135; Name: 'SameSexAsPC'; ),
+    (Index: 136; Name: 'GetIsReference'; {ParamType1: ObjectReferenceID;} ),
+    (Index: 141; Name: 'IsTalking'; ),
+    (Index: 142; Name: 'GetWalkSpeed'; ),
+    (Index: 143; Name: 'GetCurrentAIProcedure'; ),
+    (Index: 144; Name: 'GetTrespassWarningLevel'; ),
+    (Index: 145; Name: 'IsTrespassing'; ),
+    (Index: 146; Name: 'IsInMyOwnedCell'; ),
+    (Index: 147; Name: 'GetWindSpeed'; ),
+    (Index: 148; Name: 'GetCurrentWeatherPercent'; ),
+    (Index: 149; Name: 'GetIsCurrentWeather'; {ParamType1: Weather ID;} ),
+    (Index: 150; Name: 'IsContinuingPackagePCNear'; ),
+    (Index: 153; Name: 'CanHaveFlames'; ),
+    (Index: 154; Name: 'HasFlames'; ),
+    (Index: 157; Name: 'GetOpenState'; ),
+    (Index: 159; Name: 'GetSitting'; ),
+    (Index: 160; Name: 'GetFurnitureMarkerID'; ),
+    (Index: 161; Name: 'GetIsCurrentPackage'; {ParamType1: Package;} ),
+    (Index: 162; Name: 'IsCurrentFurnitureRef'; {ParamType1: ObjectReferenceID;} ),
+    (Index: 163; Name: 'IsCurrentFurnitureObj'; {ParamType1: Furniture;} ),
+    (Index: 170; Name: 'GetDayOfWeek'; ),
+    (Index: 172; Name: 'GetTalkedToPCParam'; {ParamType1: Actor;} ),
+    (Index: 175; Name: 'IsPCSleeping'; ),
+    (Index: 176; Name: 'IsPCAMurderer'; ),
+    (Index: 180; Name: 'GetDetectionLevel'; {ParamType1: Actor;} ),
+    (Index: 182; Name: 'GetEquipped'; {ParamType1: ObjectID;} ),
+    (Index: 185; Name: 'IsSwimming'; ),
+    (Index: 190; Name: 'GetAmountSoldStolen'; ),
+    (Index: 192; Name: 'GetIgnoreCrime'; ),
+    (Index: 193; Name: 'GetPCExpelled'; {ParamType1: Faction;} ),
+    (Index: 195; Name: 'GetPCFactionMurder'; {ParamType1: Faction;} ),
+    (Index: 197; Name: 'GetPCEnemyofFaction'; {ParamType1: Faction;} ),
+    (Index: 199; Name: 'GetPCFactionAttack'; {ParamType1: Faction;} ),
+    (Index: 203; Name: 'GetDestroyed'; ),
+    (Index: 214; Name: 'HasMagicEffect'; {ParamType1: Magic Effect;} ),
+    (Index: 215; Name: 'GetDefaultOpen'; ),
+    (Index: 219; Name: 'GetAnimAction'; ),
+    (Index: 223; Name: 'IsSpellTarget'; {ParamType1: Magic Item;} ),
+    (Index: 224; Name: 'GetVATSMode'; ),
+    (Index: 225; Name: 'GetPersuasionNumber'; ),
+    (Index: 226; Name: 'GetSandman'; ),
+    (Index: 227; Name: 'GetCannibal'; ),
+    (Index: 228; Name: 'GetIsClassDefault'; {ParamType1: Class;} ),
+    (Index: 229; Name: 'GetClassDefaultMatch'; ),
+    (Index: 230; Name: 'GetInCellParam'; {ParamType1: Cell;} {ParamType2: ObjectReferenceID;}),
+    (Index: 235; Name: 'GetVatsTargetHeight'; ),
+    (Index: 237; Name: 'GetIsGhost'; ),
+    (Index: 242; Name: 'GetUnconscious'; ),
+    (Index: 244; Name: 'GetRestrained'; ),
+    (Index: 246; Name: 'GetIsUsedItem'; {ParamType1: ObjectID;} ),
+    (Index: 247; Name: 'GetIsUsedItemType'; {ParamType1: Form Type;} ),
+    (Index: 254; Name: 'GetIsPlayableRace'; ),
+    (Index: 255; Name: 'GetOffersServicesNow'; ),
+    (Index: 258; Name: 'GetUsedItemLevel'; ),
+    (Index: 259; Name: 'GetUsedItemActivate'; ),
+    (Index: 264; Name: 'GetBarterGold'; ),
+    (Index: 265; Name: 'IsTimePassing'; ),
+    (Index: 266; Name: 'IsPleasant'; ),
+    (Index: 267; Name: 'IsCloudy'; ),
+    (Index: 274; Name: 'GetArmorRatingUpperBody'; ),
+    (Index: 277; Name: 'GetBaseActorValue'; {ParamType1: Actor Value;} ),
+    (Index: 278; Name: 'IsOwner'; {ParamType1: Owner(optional);} ),
+    (Index: 280; Name: 'IsCellOwner'; {ParamType1: Cell;} {ParamType2: Owner(optional);}),
+    (Index: 282; Name: 'IsHorseStolen'; ),
+    (Index: 285; Name: 'IsLeftUp'; ),
+    (Index: 286; Name: 'IsSneaking'; ),
+    (Index: 287; Name: 'IsRunning'; ),
+    (Index: 288; Name: 'GetFriendHit'; ),
+    (Index: 289; Name: 'IsInCombat'; ),
+    (Index: 300; Name: 'IsInInterior'; ),
+    (Index: 304; Name: 'IsWaterObject'; ),
+    (Index: 306; Name: 'IsActorUsingATorch'; ),
+    (Index: 309; Name: 'IsXBox'; ),
+    (Index: 310; Name: 'GetInWorldspace'; {ParamType1: WorldSpace;} ),
+    (Index: 312; Name: 'GetPCMiscStat'; {ParamType1: Miscellaneous Stat;} ),
+    (Index: 313; Name: 'IsActorEvil'; ),
+    (Index: 314; Name: 'IsActorAVictim'; ),
+    (Index: 315; Name: 'GetTotalPersuasionNumber'; ),
+    (Index: 318; Name: 'GetIdleDoneOnce'; ),
+    (Index: 320; Name: 'GetNoRumors'; ),
+    (Index: 323; Name: 'WhichServiceMenu'; ),
+    (Index: 327; Name: 'IsRidingHorse'; ),
+    (Index: 332; Name: 'IsInDangerousWater'; ),
+    (Index: 338; Name: 'GetIgnoreFriendlyHits'; ),
+    (Index: 339; Name: 'IsPlayersLastRiddenHorse'; ),
+    (Index: 353; Name: 'IsActor'; ),
+    (Index: 354; Name: 'IsEssential'; ),
+    (Index: 358; Name: 'IsPlayerMovingIntoNewSpace'; ),
+    (Index: 361; Name: 'GetTimeDead'; ),
+    (Index: 362; Name: 'GetPlayerHasLastRiddenHorse'; ),
+    (Index: 365; Name: 'IsChild'; ),
+    (Index: 367; Name: 'GetLastPlayerAction'; ),
+    (Index: 368; Name: 'IsPlayerActionActive'; {ParamType1: Integer;} ),
+    (Index: 370; Name: 'IsTalkingActivatorActor'; {ParamType1: Actor;} ),
+    (Index: 372; Name: 'IsInList'; {ParamType1: Form List;} ),
+    (Index: 382; Name: 'GetHasNote'; {ParamType1: Note;} ),
+    (Index: 391; Name: 'GetHitLocation'; ),
+    (Index: 392; Name: 'IsPC1stPerson'; ),
+    (Index: 397; Name: 'GetCauseofDeath'; ),
+    (Index: 398; Name: 'IsLimbGone'; {ParamType1: Integer;} {ParamType2: Integer (Optional);}),
+    (Index: 399; Name: 'IsWeaponInList'; {ParamType1: Form List;} ),
+    (Index: 403; Name: 'HasFriendDisposition'; ),
+    (Index: 408; Name: 'GetVATSValue'; {ParamType1: Integer;} {ParamType2: Integer (Optional);}),
+    (Index: 409; Name: 'IsKiller'; {ParamType1: Actor;} ),
+    (Index: 410; Name: 'IsKillerObject'; {ParamType1: Form List;} ),
+    (Index: 411; Name: 'GetFactionCombatReaction'; {ParamType1: Faction;} {ParamType2: Faction;}),
+    (Index: 415; Name: 'Exists'; {ParamType1: ObjectReferenceID;} ),
+    (Index: 416; Name: 'GetGroupMemberCount'; ),
+    (Index: 417; Name: 'GetGroupTargetCount'; ),
+    (Index: 420; Name: 'GetObjectiveCompleted'; {ParamType1: Quest;} {ParamType2: ObjectiveIndex;}),
+    (Index: 421; Name: 'GetObjectiveDisplayed'; {ParamType1: Quest;} {ParamType2: ObjectiveIndex;}),
+    (Index: 427; Name: 'GetIsVoiceType'; {ParamType1: VoiceType;} ),
+    (Index: 428; Name: 'GetPlantedExplosive'; ),
+    (Index: 430; Name: 'IsActorTalkingThroughActivator'; ),
+    (Index: 431; Name: 'GetHealthPercentage'; ),
+    (Index: 433; Name: 'GetIsObjectType'; {ParamType1: Form Type;} ),
+    (Index: 435; Name: 'GetDialogueEmotion'; ),
+    (Index: 436; Name: 'GetDialogueEmotionValue'; ),
+    (Index: 438; Name: 'GetIsCreatureType'; {ParamType1: Integer;} ),
+    (Index: 446; Name: 'GetInZone'; {ParamType1: EncounterZone;} ),
+    (Index: 449; Name: 'HasPerk'; {ParamType1: Perk;} {ParamType2: Alt;}),
+    (Index: 450; Name: 'GetFactionRelation'; {ParamType1: Actor;} ),
+    (Index: 451; Name: 'IsLastIdlePlayed'; {ParamType1: Idle Form;} ),
+    (Index: 454; Name: 'GetPlayerTeammate'; ),
+    (Index: 455; Name: 'GetPlayerTeammateCount'; ),
+    (Index: 459; Name: 'GetActorCrimePlayerEnemy'; ),
+    (Index: 460; Name: 'GetActorFactionPlayerEnemy'; ),
+    (Index: 462; Name: 'IsPlayerTagSkill'; {ParamType1: Actor Value;} ),
+    (Index: 464; Name: 'IsPlayerGrabbedRef'; {ParamType1: TESObjectREFR;} ),
+    (Index: 471; Name: 'GetDestructionStage'; ),
+    (Index: 474; Name: 'GetIsAlignment'; {ParamType1: Alignment;} ),
+    (Index: 478; Name: 'GetThreatRatio'; {ParamType1: Actor;} ),
+    (Index: 480; Name: 'GetIsUsedItemEquipType'; {ParamType1: EquipType;} ),
+    (Index: 489; Name: 'GetConcussed'; ),
+    (Index: 492; Name: 'GetMapMarkerVisible'; ),
+    (Index: 495; Name: 'GetPermanentActorValue'; {ParamType1: Actor Value;} ),
+    (Index: 496; Name: 'GetKillingBlowLimb'; ),
+    (Index: 500; Name: 'GetWeaponHealthPerc'; ),
+    (Index: 503; Name: 'GetRadiationLevel'; ),
+    (Index: 510; Name: 'GetLastHitCritical'; ),
+    (Index: 515; Name: 'IsCombatTarget'; {ParamType1: Actor;} ),
+    (Index: 518; Name: 'GetVATSRightAreaFree'; {ParamType1: TESObjectREFR;} ),
+    (Index: 519; Name: 'GetVATSLeftAreaFree'; {ParamType1: TESObjectREFR;} ),
+    (Index: 520; Name: 'GetVATSBackAreaFree'; {ParamType1: TESObjectREFR;} ),
+    (Index: 521; Name: 'GetVATSFrontAreaFree'; {ParamType1: TESObjectREFR;} ),
+    (Index: 522; Name: 'GetIsLockBroken'; ),
+    (Index: 523; Name: 'IsPS3'; ),
+    (Index: 524; Name: 'IsWin32'; ),
+    (Index: 525; Name: 'GetVATSRightTargetVisible'; {ParamType1: TESObjectREFR;} ),
+    (Index: 526; Name: 'GetVATSLeftTargetVisible'; {ParamType1: TESObjectREFR;} ),
+    (Index: 527; Name: 'GetVATSBackTargetVisible'; {ParamType1: TESObjectREFR;} ),
+    (Index: 528; Name: 'GetVATSFrontTargetVisible'; {ParamType1: TESObjectREFR;} ),
+    (Index: 531; Name: 'IsInCriticalStage'; {ParamType1: CriticalStage;} ),
+    (Index: 533; Name: 'GetXPForNextLevel'; ),
+    (Index: 546; Name: 'GetQuestCompleted'; {ParamType1: Quest;} ),
+    (Index: 550; Name: 'IsGoreDisabled'; ),
+    (Index: 555; Name: 'GetSpellUsageNum'; {ParamType1: Magic Item;} ),
+    (Index: 557; Name: 'GetActorsInHigh'; ),
+    (Index: 558; Name: 'HasLoaded3D'; ),
+    (Index: 573; Name: 'GetReputation'; {ParamType1: Reputation;} {ParamType2: Int;}),
+    (Index: 574; Name: 'GetReputationPct'; {ParamType1: Reputation;} {ParamType2: Int;}),
+    (Index: 575; Name: 'GetReputationThreshold'; {ParamType1: Reputation;} {ParamType2: Int;}),
+    (Index: 586; Name: 'IsHardcore'; ),
+    (Index: 601; Name: 'GetForceHitReaction'; ),
+    (Index: 607; Name: 'ChallengeLocked'; {ParamType1: Challenge;} ),
+    (Index: 610; Name: 'GetCasinoWinningStage'; {ParamType1: Casino;} ),
+    (Index: 612; Name: 'PlayerInRegion'; {ParamType1: Region;} ),
+    (Index: 614; Name: 'GetChallengeCompleted'; {ParamType1: Challenge;} ),
+    (Index: 619; Name: 'IsAlwaysHardcore'; ),
+
+    // Added by NVSE
+    (Index: 1024; Name: 'GetNVSEVersion'; ),
+    (Index: 1025; Name: 'GetNVSERevision'; ),
+    (Index: 1026; Name: 'GetNVSEBeta'; ),
+    (Index: 1028; Name: 'GetWeight'; {ParamType1: item;} ),
+    (Index: 1076; Name: 'GetWeaponHasScope'; {ParamType1: item;} ),
+    (Index: 1089; Name: 'ListGetFormIndex'; {ParamType1: form list;} {ParamType2: form;}),
+    (Index: 1107; Name: 'IsKeyPressed'; {ParamType1: int;} {ParamType2: int;}),
+    (Index: 1131; Name: 'IsControlPressed'; {ParamType1: int;} {ParamType2: int;}),
+    (Index: 1271; Name: 'HasOwnership'; {ParamType1: ref;} ),
+    (Index: 1272; Name: 'IsOwned'; {ParamType1: actor reference;} ),
+    (Index: 1274; Name: 'GetDialogueTarget'; {ParamType1: actor reference;} ),
+    (Index: 1275; Name: 'GetDialogueSubject'; {ParamType1: actor reference;} ),
+    (Index: 1276; Name: 'GetDialogueSpeaker'; {ParamType1: actor reference;} ),
+    (Index: 1278; Name: 'GetAgeClass'; {ParamType1: actor;} ),
+    (Index: 1286; Name: 'GetTokenValue'; {ParamType1: form;} ),
+    (Index: 1288; Name: 'GetTokenRef'; {ParamType1: form;} ),
+    (Index: 1291; Name: 'GetPaired'; {ParamType1: item;} {ParamType2: actor;}),
+    (Index: 1292; Name: 'GetRespawn'; {ParamType1: actor;} ),
+    (Index: 1294; Name: 'GetPermanent'; {ParamType1: ref;} ),
+    (Index: 1297; Name: 'IsRefInList'; {ParamType1: form list;} {ParamType2: form;}),
+    (Index: 1301; Name: 'GetPackageCount'; {ParamType1: ref;} ),
+    (Index: 1440; Name: 'IsPlayerSwimming'; ),
+    (Index: 1441; Name: 'GetTFC'; ),
+    (Index: 1475; Name: 'GetPerkRank'; {ParamType1: perk;} {ParamType2: actor;}),
+    (Index: 1476; Name: 'GetAltPerkRank'; {ParamType1: perk;} {ParamType2: actor;}),
+    (Index: 1541; Name: 'GetActorFIKstatus'; ),
+
+    // Added by nvse_plugin_ExtendedActorVariables
+    (Index: 4352; Name: 'GetExtendedActorVariable'; {ParamType1: item;} ),
+    (Index: 4353; Name: 'GetBaseExtendedActorVariable'; {ParamType1: item;} ),
+    (Index: 4355; Name: 'GetModExtendedActorVariable'; {ParamType1: item;} ),
+
+    // Added by Extensions for NVSE
+    (Index: 4420; Name: 'NX_GetEVFl'; {ParamType1: key;} ),
+    (Index: 4426; Name: 'NX_GetQVEVFl'; {ParamType1: quest;} {ParamType2: variable;}),
+
+    // Added by JIP LN NVSE
+    (Index: 4612; Name: 'IsButtonPressed'; {ParamType1: int;} ),
+    (Index: 4613; Name: 'GetLeftStickX'; ),
+    (Index: 4614; Name: 'GetLeftStickY'; ),
+    (Index: 4615; Name: 'GetRightStickX'; ),
+    (Index: 4616; Name: 'GetRightStickY'; ),
+    (Index: 4617; Name: 'GetLeftTrigger'; ),
+    (Index: 4618; Name: 'GetRightTrigger'; ),
+    (Index: 4708; Name: 'GetArmorClass'; {ParamType1: item;} ),
+    (Index: 4709; Name: 'IsRaceInList'; {ParamType1: form list;} ),
+    (Index: 4758; Name: 'IsButtonDisabled'; {ParamType1: int;} ),
+    (Index: 4761; Name: 'IsButtonHeld'; {ParamType1: int;} ),
+    (Index: 4774; Name: 'IsTriggerDisabled'; {ParamType1: int;} ),
+    (Index: 4777; Name: 'IsTriggerHeld'; {ParamType1: int;} ),
+    (Index: 4822; Name: 'GetReferenceFlag'; {ParamType1: int;} ),
+    (Index: 4832; Name: 'GetDistance2D'; {ParamType1: Object Ref;} ),
+    (Index: 4833; Name: 'GetDistance3D'; {ParamType1: Object Ref;} ),
+    (Index: 4843; Name: 'PlayerHasKey'; ),
+    (Index: 5637; Name: 'GetIsPoisoned'; ),
+    (Index: 5708; Name: 'IsEquippedWeaponSilenced'; ),
+    (Index: 5709; Name: 'IsEquippedWeaponScoped'; ),
+    (Index: 5947; Name: 'GetActorLightAmount'; ),
+    (Index: 5951; Name: 'GetGameDifficulty'; ),
+    (Index: 5962; Name: 'GetPCDetectionState'; ),
+    (Index: 5993; Name: 'IsAttacking'; ),
+    (Index: 5994; Name: 'GetPCUsingScope'; ),
+    (Index: 6010; Name: 'GetPCUsingIronSights'; ),
+    (Index: 6012; Name: 'GetRadiationLevelAlt'; ),
+    (Index: 6013; Name: 'IsInWater'; ),
+    (Index: 6058; Name: 'GetAlwaysRun'; ),
+    (Index: 6059; Name: 'GetAutoMove'; ),
+    (Index: 6061; Name: 'GetIsRagdolled'; ),
+    (Index: 6065; Name: 'AuxVarGetFltCond'; {ParamType1: Quest;} {ParamType2: Integer;}),
+    (Index: 6069; Name: 'IsInAir'; ),
+    (Index: 6070; Name: 'GetHasContact'; {ParamType1: form;} ),
+    (Index: 6072; Name: 'GetHasContactBase'; {ParamType1: form;} ),
+    (Index: 6073; Name: 'GetHasContactType'; {ParamType1: int;} ),
+    (Index: 6124; Name: 'IsSpellTargetAlt'; {ParamType1: Magic Item;} ),
+    (Index: 6167; Name: 'IsIdlePlayingEx'; {ParamType1: form;} ),
+    (Index: 6186; Name: 'IsInCharGen'; ),
+    (Index: 6192; Name: 'GetWaterImmersionPerc'; ),
+    (Index: 6204; Name: 'IsFleeing'; ),
+    (Index: 6217; Name: 'GetTargetUnreachable'; ),
+*****************************************************************************************************
+conditionFunctionData = ( #--0: no param; 1: int param; 2: formid param; 3: float param
+    (  1, 'GetDistance', 2, 0), #   0
+    (  5, 'GetLocked', 0, 0), #   1
+    (  6, 'GetPos', 0, 0), #   2
+    (  8, 'GetAngle', 0, 0), #   3
+    ( 10, 'GetStartingPos', 0, 0), #   4
+    ( 11, 'GetStartingAngle', 0, 0), #   5
+    ( 12, 'GetSecondsPassed', 0, 0), #   6
+    ( 14, 'GetActorValue', 2, 0), #   7
+    ( 18, 'GetCurrentTime', 0, 0), #   8
+    ( 24, 'GetScale', 0, 0), #   9
+    ( 25, 'IsMoving', 0, 0), #  10
+    ( 26, 'IsTurning', 0, 0), #  11
+    ( 27, 'GetLineOfSight', 2, 0), #  12
+    ( 32, 'GetInSameCell', 2, 0), #  13
+    ( 35, 'GetDisabled', 0, 0), #  14
+    ( 36, 'MenuMode', 1, 0), #  15
+    ( 39, 'GetDisease', 0, 0), #  16
+    ( 40, 'GetVampire', 0, 0), #  17
+    ( 41, 'GetClothingValue', 0, 0), #  18
+    ( 42, 'SameFaction', 2, 0), #  19
+    ( 43, 'SameRace', 2, 0), #  20
+    ( 44, 'SameSex', 2, 0), #  21
+    ( 45, 'GetDetected', 2, 0), #  22
+    ( 46, 'GetDead', 0, 0), #  23
+    ( 47, 'GetItemCount', 2, 0), #  24
+    ( 48, 'GetGold', 0, 0), #  25
+    ( 49, 'GetSleeping', 0, 0), #  26
+    ( 50, 'GetTalkedToPC', 0, 0), #  27
+    ( 53, 'GetScriptVariable', 2, 0), #  28
+    ( 56, 'GetQuestRunning', 2, 0), #  29
+    ( 58, 'GetStage', 2, 0), #  30
+    ( 59, 'GetStageDone', 2, 1), #  31
+    ( 60, 'GetFactionRankDifference', 2, 2), #  32
+    ( 61, 'GetAlarmed', 0, 0), #  33
+    ( 62, 'IsRaining', 0, 0), #  34
+    ( 63, 'GetAttacked', 0, 0), #  35
+    ( 64, 'GetIsCreature', 0, 0), #  36
+    ( 65, 'GetLockLevel', 0, 0), #  37
+    ( 66, 'GetShouldAttack', 2, 0), #  38
+    ( 67, 'GetInCell', 2, 0), #  39
+    ( 68, 'GetIsClass', 2, 0), #  40
+    ( 69, 'GetIsRace', 2, 0), #  41
+    ( 70, 'GetIsSex', 1, 0), #  42
+    ( 71, 'GetInFaction', 2, 0), #  43
+    ( 72, 'GetIsID', 2, 0), #  44
+    ( 73, 'GetFactionRank', 2, 0), #  45
+    ( 74, 'GetGlobalValue', 2, 0), #  46
+    ( 75, 'IsSnowing', 0, 0), #  47
+    ( 76, 'GetDisposition', 2, 0), #  48
+    ( 77, 'GetRandomPercent', 0, 0), #  49
+    ( 79, 'GetQuestVariable', 2, 0), #  50
+    ( 80, 'GetLevel', 0, 0), #  51
+    ( 81, 'GetArmorRating', 0, 0), #  52
+    ( 84, 'GetDeadCount', 2, 0), #  53
+    ( 91, 'GetIsAlerted', 0, 0), #  54
+    ( 98, 'GetPlayerControlsDisabled', 1, 1), #  55
+    ( 99, 'GetHeadingAngle', 2, 0), #  56
+    (101, 'IsWeaponOut', 0, 0), #  57
+    (102, 'IsTorchOut', 0, 0), #  58
+    (103, 'IsShieldOut', 0, 0), #  59
+    (106, 'IsFacingUp', 0, 0), #  60
+    (107, 'GetKnockedState', 0, 0), #  61
+    (108, 'GetWeaponAnimType', 0, 0), #  62
+    (109, 'IsWeaponSkillType', 2, 0), #  63
+    (110, 'GetCurrentAIPackage', 0, 0), #  64
+    (111, 'IsWaiting', 0, 0), #  65
+    (112, 'IsIdlePlaying', 0, 0), #  66
+    (116, 'GetMinorCrimeCount', 0, 0), #  67
+    (117, 'GetMajorCrimeCount', 0, 0), #  68
+    (118, 'GetActorAggroRadiusViolated', 0, 0), #  69
+    (122, 'GetCrime', 2, 1), #  70
+    (123, 'IsGreetingPlayer', 0, 0), #  71
+    (125, 'IsGuard', 0, 0), #  72
+    (127, 'HasBeenEaten', 0, 0), #  73
+    (128, 'GetFatiguePercentage', 0, 0), #  74
+    (129, 'GetPCIsClass', 2, 0), #  75
+    (130, 'GetPCIsRace', 2, 0), #  76
+    (131, 'GetPCIsSex', 1, 0), #  77
+    (132, 'GetPCInFaction', 2, 0), #  78
+    (133, 'SameFactionAsPC', 0, 0), #  79
+    (134, 'SameRaceAsPC', 0, 0), #  80
+    (135, 'SameSexAsPC', 0, 0), #  81
+    (136, 'GetIsReference', 2, 0), #  82
+    (141, 'IsTalking', 0, 0), #  83
+    (142, 'GetWalkSpeed', 0, 0), #  84
+    (143, 'GetCurrentAIProcedure', 0, 0), #  85
+    (144, 'GetTrespassWarningLevel', 0, 0), #  86
+    (145, 'IsTrespassing', 0, 0), #  87
+    (146, 'IsInMyOwnedCell', 0, 0), #  88
+    (147, 'GetWindSpeed', 0, 0), #  89
+    (148, 'GetCurrentWeatherPercent', 0, 0), #  90
+    (149, 'GetIsCurrentWeather', 2, 0), #  91
+    (150, 'IsContinuingPackagePCNear', 0, 0), #  92
+    (153, 'CanHaveFlames', 0, 0), #  93
+    (154, 'HasFlames', 0, 0), #  94
+    (157, 'GetOpenState', 0, 0), #  95
+    (159, 'GetSitting', 0, 0), #  96
+    (160, 'GetFurnitureMarkerID', 0, 0), #  97
+    (161, 'GetIsCurrentPackage', 2, 0), #  98
+    (162, 'IsCurrentFurnitureRef', 2, 0), #  99
+    (163, 'IsCurrentFurnitureObj', 2, 0), # 100
+    (170, 'GetDayOfWeek', 0, 0), # 101
+    (172, 'GetTalkedToPCParam', 2, 0), # 102
+    (175, 'IsPCSleeping', 0, 0), # 103
+    (176, 'IsPCAMurderer', 0, 0), # 104
+    (180, 'GetDetectionLevel', 2, 0), # 105
+    (182, 'GetEquipped', 2, 0), # 106
+    (185, 'IsSwimming', 0, 0), # 107
+    (190, 'GetAmountSoldStolen', 0, 0), # 108
+    (192, 'GetIgnoreCrime', 0, 0), # 109
+    (193, 'GetPCExpelled', 2, 0), # 110
+    (195, 'GetPCFactionMurder', 2, 0), # 111
+    (197, 'GetPCEnemyofFaction', 2, 0), # 112
+    (199, 'GetPCFactionAttack', 2, 0), # 113
+    (203, 'GetDestroyed', 0, 0), # 114
+    (214, 'HasMagicEffect', 2, 0), # 115
+    (215, 'GetDefaultOpen', 0, 0), # 116
+    (219, 'GetAnimAction', 0, 0), # 117
+    (223, 'IsSpellTarget', 2, 0), # 118
+    (224, 'GetVATSMode', 0, 0), # 119
+    (225, 'GetPersuasionNumber', 0, 0), # 120
+    (226, 'GetSandman', 0, 0), # 121
+    (227, 'GetCannibal', 0, 0), # 122
+    (228, 'GetIsClassDefault', 2, 0), # 123
+    (229, 'GetClassDefaultMatch', 0, 0), # 124
+    (230, 'GetInCellParam', 2, 2), # 125
+    (235, 'GetVatsTargetHeight', 0, 0), # 126
+    (237, 'GetIsGhost', 0, 0), # 127
+    (242, 'GetUnconscious', 0, 0), # 128
+    (244, 'GetRestrained', 0, 0), # 129
+    (246, 'GetIsUsedItem', 2, 0), # 130
+    (247, 'GetIsUsedItemType', 2, 0), # 131
+    (254, 'GetIsPlayableRace', 0, 0), # 132
+    (255, 'GetOffersServicesNow', 0, 0), # 133
+    (258, 'GetUsedItemLevel', 0, 0), # 134
+    (259, 'GetUsedItemActivate', 0, 0), # 135
+    (264, 'GetBarterGold', 0, 0), # 136
+    (265, 'IsTimePassing', 0, 0), # 137
+    (266, 'IsPleasant', 0, 0), # 138
+    (267, 'IsCloudy', 0, 0), # 139
+    (274, 'GetArmorRatingUpperBody', 0, 0), # 140
+    (277, 'GetBaseActorValue', 2, 0), # 141
+    (278, 'IsOwner', 2, 0), # 142
+    (280, 'IsCellOwner', 2, 2), # 143
+    (282, 'IsHorseStolen', 0, 0), # 144
+    (285, 'IsLeftUp', 0, 0), # 145
+    (286, 'IsSneaking', 0, 0), # 146
+    (287, 'IsRunning', 0, 0), # 147
+    (288, 'GetFriendHit', 0, 0), # 148
+    (289, 'IsInCombat', 0, 0), # 149
+    (300, 'IsInInterior', 0, 0), # 150
+    (304, 'IsWaterObject', 0, 0), # 151
+    (306, 'IsActorUsingATorch', 0, 0), # 152
+    (309, 'IsXBox', 0, 0), # 153
+    (310, 'GetInWorldspace', 2, 0), # 154
+    (312, 'GetPCMiscStat', 0, 0), # 155
+    (313, 'IsActorEvil', 0, 0), # 156
+    (314, 'IsActorAVictim', 0, 0), # 157
+    (315, 'GetTotalPersuasionNumber', 0, 0), # 158
+    (318, 'GetIdleDoneOnce', 0, 0), # 159
+    (320, 'GetNoRumors', 0, 0), # 160
+    (323, 'WhichServiceMenu', 0, 0), # 161
+    (327, 'IsRidingHorse', 0, 0), # 162
+    (332, 'IsInDangerousWater', 0, 0), # 163
+    (338, 'GetIgnoreFriendlyHits', 0, 0), # 164
+    (339, 'IsPlayersLastRiddenHorse', 0, 0), # 165
+    (353, 'IsActor', 0, 0), # 166
+    (354, 'IsEssential', 0, 0), # 167
+    (358, 'IsPlayerMovingIntoNewSpace', 0, 0), # 168
+    (361, 'GetTimeDead', 0, 0), # 169
+    (362, 'GetPlayerHasLastRiddenHorse', 0, 0), # 170
+    (365, 'IsChild', 0, 0), # 171
+    (367, 'GetLastPlayerAction', 0, 0), # 172
+    (368, 'IsPlayerActionActive', 1, 0), # 173
+    (370, 'IsTalkingActivatorActor', 2, 0), # 174
+    (372, 'IsInList', 2, 0), # 175
+    (382, 'GetHasNote', 2, 0), # 176
+    (391, 'GetHitLocation', 0, 0), # 177
+    (392, 'IsPC1stPerson', 0, 0), # 178
+    (397, 'GetCauseofDeath', 0, 0), # 179
+    (398, 'IsLimbGone', 1, 1), # 180
+    (399, 'IsWeaponInList', 2, 0), # 181
+    (403, 'HasFriendDisposition', 0, 0), # 182
+    (408, 'GetVATSValue', 1, 1), # 183
+    (409, 'IsKiller', 2, 0), # 184
+    (410, 'IsKillerObject', 2, 0), # 185
+    (411, 'GetFactionCombatReaction', 2, 2), # 186
+    (415, 'Exists', 2, 0), # 187
+    (416, 'GetGroupMemberCount', 0, 0), # 188
+    (417, 'GetGroupTargetCount', 0, 0), # 189
+    (420, 'GetObjectiveCompleted', 2, 1), # 190
+    (421, 'GetObjectiveDisplayed', 2, 1), # 191
+    (427, 'GetIsVoiceType', 0, 0), # 192
+    (428, 'GetPlantedExplosive', 0, 0), # 193
+    (430, 'IsActorTalkingThroughActivator', 0, 0), # 194
+    (431, 'GetHealthPercentage', 0, 0), # 195
+    (433, 'GetIsObjectType', 2, 0), # 196
+    (435, 'GetDialogueEmotion', 0, 0), # 197
+    (436, 'GetDialogueEmotionValue', 0, 0), # 198
+    (438, 'GetIsCreatureType', 1, 0), # 199
+    (446, 'GetInZone', 2, 0), # 200
+    (449, 'HasPerk', 2, 1), # 201
+    (450, 'GetFactionRelation', 2, 0), # 202
+    (451, 'IsLastIdlePlayed', 0, 0), # 203
+    (454, 'GetPlayerTeammate', 0, 0), # 204
+    (455, 'GetPlayerTeammateCount', 0, 0), # 205
+    (459, 'GetActorCrimePlayerEnemy', 0, 0), # 206
+    (460, 'GetActorFactionPlayerEnemy', 0, 0), # 207
+    (462, 'IsPlayerTagSkill', 2, 0), # 208
+    (464, 'IsPlayerGrabbedRef', 2, 0), # 209
+    (471, 'GetDestructionStage', 0, 0), # 210
+    (474, 'GetIsAlignment', 2, 0), # 211
+    (478, 'GetThreatRatio', 2, 0), # 212
+    (480, 'GetIsUsedItemEquipType', 2, 0), # 213
+    (489, 'GetConcussed', 0, 0), # 214
+    (492, 'GetMapMarkerVisible', 0, 0), # 215
+    (495, 'GetPermanentActorValue', 2, 0), # 216
+    (496, 'GetKillingBlowLimb', 0, 0), # 217
+    (500, 'GetWeaponHealthPerc', 0, 0), # 218
+    (503, 'GetRadiationLevel', 0, 0), # 219
+    (510, 'GetLastHitCritical', 0, 0), # 220
+    (515, 'IsCombatTarget', 2, 0), # 221
+    (518, 'GetVATSRightAreaFree', 2, 0), # 222
+    (519, 'GetVATSLeftAreaFree', 2, 0), # 223
+    (520, 'GetVATSBackAreaFree', 2, 0), # 224
+    (521, 'GetVATSFrontAreaFree', 2, 0), # 225
+    (522, 'GetIsLockBroken', 0, 0), # 226
+    (523, 'IsPS3', 0, 0), # 227
+    (524, 'IsWin32', 0, 0), # 228
+    (525, 'GetVATSRightTargetVisible', 2, 0), # 229
+    (526, 'GetVATSLeftTargetVisible', 2, 0), # 230
+    (527, 'GetVATSBackTargetVisible', 2, 0), # 231
+    (528, 'GetVATSFrontTargetVisible', 2, 0), # 232
+    (531, 'IsInCriticalStage', 2, 0), # 233
+    (533, 'GetXPForNextLevel', 0, 0), # 234
+    (546, 'GetQuestCompleted', 2, 0), # 235
+    (550, 'IsGoreDisabled', 0, 0), # 236
+    (555, 'GetSpellUsageNum', 2, 0), # 237
+    (557, 'GetActorsInHigh', 0, 0), # 238
+    (558, 'HasLoaded3D', 0, 0), # 239
+    (573, 'GetReputation', 1, 1), # 240
+    (574, 'GetReputationPct', 1, 1), # 241
+    (575, 'GetReputationThreshold', 1, 1), # 242
+    (586, 'IsHardcore', 0, 0), # 243
+    (601, 'GetForceHitReaction', 0, 0), # 244
+    (607, 'ChallengeLocked', 2, 0), # 245
+    (610, 'GetCasinoWinningStage', 1, 0), # 246
+    (612, 'PlayerInRegion', 2, 0), # 247
+    (614, 'GetChallengeCompleted', 2, 0), # 248
+    (619, 'IsAlwaysHardcore', 0, 0), # 249
+    (1024, 'GetNVSEVersion', 0, 0), # 250
+    (1025, 'GetNVSERevision', 0, 0), # 251
+    (1026, 'GetNVSEBeta', 0, 0), # 252
+    (1028, 'GetWeight', 2, 0), # 253
+    (1076, 'GetWeaponHasScope', 2, 0), # 254
+    (1089, 'ListGetFormIndex', 2, 2), # 255
+    (1107, 'IsKeyPressed', 1, 1), # 256
+    (1131, 'IsControlPressed', 1, 1), # 257
+    (1271, 'HasOwnership', 2, 0), # 258
+    (1272, 'IsOwned', 2, 0), # 259
+    (1274, 'GetDialogueTarget', 2, 0), # 260
+    (1275, 'GetDialogueSubject', 2, 0), # 261
+    (1276, 'GetDialogueSpeaker', 2, 0), # 262
+    (1278, 'GetAgeClass', 2, 0), # 263
+    (1286, 'GetTokenValue', 2, 0), # 264
+    (1288, 'GetTokenRef', 2, 0), # 265
+    (1291, 'GetPaired', 2, 2), # 266
+    (1292, 'GetRespawn', 2, 0), # 267
+    (1294, 'GetPermanent', 2, 0), # 268
+    (1297, 'IsRefInList', 2, 2), # 269
+    (1301, 'GetPackageCount', 2, 0), # 270
+    (1440, 'IsPlayerSwimming', 0, 0), # 271
+    (1441, 'GetTFC', 0, 0), # 272
+    (1475, 'GetPerkRank', 2, 2), # 273
+    (1476, 'GetAltPerkRank', 2, 2), # 274
+    (1541, 'GetActorFIKstatus', 0, 0), # 275
+    (4352, 'GetExtendedActorVariable', 2, 0), # 276
+    (4353, 'GetBaseExtendedActorVariable', 2, 0), # 277
+    (4355, 'GetModExtendedActorVariable', 2, 0), # 278
+    (4420, 'NX_GetEVFl', 0, 0), # 279
+    (4426, 'NX_GetQVEVFl', 2, 1), # 280
+    (4612, 'IsButtonPressed', 1, 0), # 281
+    (4613, 'GetLeftStickX', 0, 0), # 282
+    (4614, 'GetLeftStickY', 0, 0), # 283
+    (4615, 'GetRightStickX', 0, 0), # 284
+    (4616, 'GetRightStickY', 0, 0), # 285
+    (4617, 'GetLeftTrigger', 0, 0), # 286
+    (4618, 'GetRightTrigger', 0, 0), # 287
+    (4708, 'GetArmorClass', 2, 0), # 288
+    (4709, 'IsRaceInList', 2, 0), # 289
+    (4758, 'IsButtonDisabled', 1, 0), # 290
+    (4761, 'IsButtonHeld', 1, 0), # 291
+    (4774, 'IsTriggerDisabled', 1, 0), # 292
+    (4777, 'IsTriggerHeld', 1, 0), # 293
+    (4822, 'GetReferenceFlag', 1, 0), # 294
+    (4832, 'GetDistance2D', 2, 0), # 295
+    (4833, 'GetDistance3D', 2, 0), # 296
+    (4843, 'PlayerHasKey', 0, 0), # 297
+    (5637, 'GetIsPoisoned', 0, 0), # 298
+    (5708, 'IsEquippedWeaponSilenced', 0, 0), # 299
+    (5709, 'IsEquippedWeaponScoped', 0, 0), # 300
+    (5947, 'GetActorLightAmount', 0, 0), # 301
+    (5951, 'GetGameDifficulty', 0, 0), # 302
+    (5962, 'GetPCDetectionState', 0, 0), # 303
+    (5993, 'IsAttacking', 0, 0), # 304
+    (5994, 'GetPCUsingScope', 0, 0), # 305
+    (6010, 'GetPCUsingIronSights', 0, 0), # 306
+    (6012, 'GetRadiationLevelAlt', 0, 0), # 307
+    (6013, 'IsInWater', 0, 0), # 308
+    (6058, 'GetAlwaysRun', 0, 0), # 309
+    (6059, 'GetAutoMove', 0, 0), # 310
+    (6061, 'GetIsRagdolled', 0, 0), # 311
+    (6065, 'AuxVarGetFltCond', 2, 1), # 312
+    (6069, 'IsInAir', 0, 0), # 313
+    (6070, 'GetHasContact', 2, 0), # 314
+    (6072, 'GetHasContactBase', 2, 0), # 315
+    (6073, 'GetHasContactType', 1, 0), # 316
+    (6124, 'IsSpellTargetAlt', 2, 0), # 317
+    (6167, 'IsIdlePlayingEx', 2, 0), # 318
+    (6186, 'IsInCharGen', 0, 0), # 319
+    (6192, 'GetWaterImmersionPerc', 0, 0), # 320
+    (6204, 'IsFleeing', 0, 0), # 321
+    (6217, 'GetTargetUnreachable', 0, 0), # 322
+    )
+
+*****************************************************************************************************
