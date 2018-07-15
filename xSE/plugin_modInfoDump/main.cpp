@@ -56,7 +56,7 @@ bool DoWork(void)
 {
 	_MESSAGE("Dumping DataHandler::modInfoList\n"); 
 	DataHandler* theDH = *g_dataHandler.GetPtr();
-	UInt16 loadOrder = 0;
+	UInt64 loadOrder = 0;
 	gLog.Indent();
 	_MESSAGE("LoadOrder\tPath\tName\tModIndex\tEslIndex"); 
 	for (tList<ModInfo>::Iterator modInfo = theDH->modList.modInfoList.Begin(); !modInfo.End(); ++modInfo)
@@ -68,7 +68,7 @@ bool DoWork(void)
 	gLog.Outdent();
 	gLog.Indent();
 	_MESSAGE("Standard Mods:"); 
-	for (UInt8 i = 0; i < theDH->modList.loadedMods.count; i++)
+	for (UInt32 i = 0; i < theDH->modList.loadedMods.count; i++)
 	{
 		ModInfo * modInfo = theDH->modList.loadedMods[i];
 		_MESSAGE("LoadOrder=%d\tPath='%s'\tname='%s'.", modInfo->modIndex, modInfo->directory, modInfo->name); 
@@ -78,7 +78,7 @@ bool DoWork(void)
 	gLog.Outdent();
 	gLog.Indent();
 	_MESSAGE("Light Mods:"); 
-	for (UInt8 i = 0; i < theDH->modList.lightMods.count; i++)
+	for (UInt32 i = 0; i < theDH->modList.lightMods.count; i++)
 	{
 		ModInfo * modInfo = theDH->modList.lightMods[i];
 		_MESSAGE("LoadOrder=%d\tPath='%s'\tname='%s'.", modInfo->eslIndex, modInfo->directory, modInfo->name); 
@@ -159,9 +159,9 @@ bool F4SEPlugin_Query(const F4SEInterface * f4se, PluginInfo * info)
 
 		return false;
 	}
-	else if(f4se->runtimeVersion != RUNTIME_VERSION_1_10_50)
+	else if(f4se->runtimeVersion != RUNTIME_VERSION_1_10_98)
 	{
-		_MESSAGE("unsupported runtime version %08X (expected %08X)", f4se->runtimeVersion, RUNTIME_VERSION_1_10_26);
+		_MESSAGE("unsupported runtime version %08X (expected %08X)", f4se->runtimeVersion, RUNTIME_VERSION_1_10_89);
 
 		return false;
 	}

@@ -142,7 +142,7 @@ bool DoWork(void)
 {
 	_MESSAGE("Dumping DataHandler::modInfoList\n"); 
 	DataHandler* theDH = *g_dataHandler.GetPtr();
-	UInt16 loadOrder = 0;
+	UInt64 loadOrder = 0;
 	gLog.Indent();
 	_MESSAGE("LoadOrder\tPath\tName\tModIndex\tEslIndex"); 
 	for (tList<ModInfo>::Iterator modInfo = theDH->modList.modInfoList.Begin(); !modInfo.End(); ++modInfo)
@@ -155,7 +155,7 @@ bool DoWork(void)
 	gLog.Outdent();
 	gLog.Indent();
 	_MESSAGE("Standard Mods:"); 
-	for (UInt8 i = 0; i < theDH->modList.loadedMods.count; i++)
+	for (UInt32 i = 0; i < theDH->modList.loadedMods.count; i++)
 	{
 		ModInfo * modInfo = theDH->modList.loadedMods[i];
 		ModInfo_hlp * m = (ModInfo_hlp *)(modInfo);
@@ -166,7 +166,7 @@ bool DoWork(void)
 	gLog.Outdent();
 	gLog.Indent();
 	_MESSAGE("Light Mods:"); 
-	for (UInt8 i = 0; i < theDH->modList.loadedCCMods.count; i++)
+	for (UInt32 i = 0; i < theDH->modList.loadedCCMods.count; i++)
 	{
 		ModInfo * modInfo = theDH->modList.loadedCCMods[i];
 		ModInfo_hlp * m = (ModInfo_hlp *)(modInfo);
@@ -178,7 +178,7 @@ bool DoWork(void)
 	return true;
 }
 
-// currently ToggleESRAM
+// currently ToggleSafeZone
 static ObScriptCommand * s_hijackedCommand = nullptr;
 
 void Dump_ObScript_Init()
