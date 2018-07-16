@@ -4318,7 +4318,7 @@ begin
           {0x01} 'Complete quest'
         ])),
         wbCTDAs,
-        wbString(CNAM, 'Log Entry', 0, cpTranslate),
+        wbStringKC(CNAM, 'Log Entry', 0, cpTranslate),
         wbResultScript
       ], []))
     ], [])),

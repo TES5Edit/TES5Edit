@@ -11468,7 +11468,7 @@ begin
           {0x02} 'Fail Quest'
         ])),
         wbCTDAs,
-        wbLString(CNAM, 'Log Entry', 0, cpTranslate),
+        wbLStringKC(CNAM, 'Log Entry', 0, cpTranslate),
         wbFormIDCk(NAM0, 'Next Quest', [QUST]),
         {>>> BEGIN leftover from earlier CK versions <<<}
         wbByteArray(SCHR, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
@@ -11480,7 +11480,7 @@ begin
     wbRArray('Objectives', wbRStruct('Objective', [
       wbInteger(QOBJ, 'Objective Index', itU16),
       wbInteger(FNAM, 'Flags', itU32, wbFlags(['ORed With Previous'])),
-      wbLString(NNAM, 'Display Text', 0, cpTranslate, True),
+      wbLStringKC(NNAM, 'Display Text', 0, cpTranslate, True),
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
           wbInteger('Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
