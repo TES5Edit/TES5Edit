@@ -22294,7 +22294,7 @@ begin
         begin
           if (suoRepaintHeader in Options) and (hoVisible in FHeader.FOptions) then
             FHeader.Invalidate(nil);
-          if not (tsSizing in FStates) and (FScrollBarOptions.ScrollBars in [ssHorizontal, ssBoth]) then
+          if not (tsSizing in FStates) and (FScrollBarOptions.ScrollBars in [TScrollStyle.ssHorizontal, TScrollStyle.ssBoth]) then
             UpdateHorizontalScrollBar(suoRepaintScrollbars in Options);
         end;
 
@@ -22302,7 +22302,7 @@ begin
         begin
           UpdateVerticalScrollBar(suoRepaintScrollbars in Options);
           if not (FHeader.UseColumns or IsMouseSelecting) and
-            (FScrollBarOptions.ScrollBars in [ssHorizontal, ssBoth]) then
+            (FScrollBarOptions.ScrollBars in [TScrollStyle.ssHorizontal, TScrollStyle.ssBoth]) then
             UpdateHorizontalScrollBar(suoRepaintScrollbars in Options);
         end;
       end;
@@ -32877,7 +32877,7 @@ begin
     else
       if (R.Bottom > ClientHeight) or Center then
       begin
-        HScrollBarVisible := (ScrollBarOptions.ScrollBars in [ssBoth, ssHorizontal]) and
+        HScrollBarVisible := (ScrollBarOptions.ScrollBars in [TScrollStyle.ssBoth, TScrollStyle.ssHorizontal]) and
           (ScrollBarOptions.AlwaysVisible or (Integer(FRangeX) > ClientWidth));
         if Center then
           SetOffsetY(FOffsetY - R.Bottom + ClientHeight div 2)
@@ -33790,7 +33790,7 @@ begin
   else
     FEffectiveOffsetX := -FOffsetX;
 
-  if FScrollBarOptions.ScrollBars in [ssHorizontal, ssBoth] then
+  if FScrollBarOptions.ScrollBars in [TScrollStyle.ssHorizontal, TScrollStyle.ssBoth] then
   begin
     ZeroMemory (@ScrollInfo, SizeOf(ScrollInfo));
     ScrollInfo.cbSize := SizeOf(ScrollInfo);
