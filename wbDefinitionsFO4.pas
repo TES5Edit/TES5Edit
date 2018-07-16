@@ -5244,7 +5244,7 @@ begin
       if Assigned(Cell._File) and (Cell._File.LoadOrder > 0) then
         MasterFolder := Cell._File.FileName + '\';
 
-      Result := 'Precombined\' + MasterFolder + IntToHex(Cell.FormID and $00FFFFFF, 8) + '_' + Result + '_OC.nif';
+      Result := 'Precombined\' + MasterFolder + IntToHex(Cell.FormID.ToInt and $00FFFFFF, 8) + '_' + Result + '_OC.nif';
     end;
     ctCheck: Result := '';
   end;

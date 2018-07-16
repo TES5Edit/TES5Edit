@@ -1834,7 +1834,7 @@ begin
             k := BTT.Refs[j][r].RefFormID shr 24;
             if not Assigned(loFiles[k]) then
               Continue;
-            Ref := loFiles[k].RecordByFormID[loFiles[k].LoadOrderFormIDtoFileFormID(BTT.Refs[j][r].RefFormID), False];
+            Ref := loFiles[k].RecordByFormID[loFiles[k].LoadOrderFormIDtoFileFormID(TwbFormID.CreateInt(BTT.Refs[j][r].RefFormID)), False];
             // found a matching reference of TREE
             if Assigned(Ref) and Assigned(Ref.BaseRecord) and ((Ref.BaseRecord.Signature = 'TREE') or (Ref.BaseRecord.Signature = 'STAT')) then begin
               LstIndex := BTT.Types[j].Index;
@@ -1865,7 +1865,7 @@ begin
           TreeFileName := Format('%s\%s_%s.dds', [
             TreeRecords[Index][n]._File.FileName,
             ChangeFileExt(ExtractFileName(TreeRecords[Index][n].WinningOverride.ElementEditValues['Model\MODL']), ''),
-            IntToHex(TreeRecords[Index][n].FormID and $FFFFFF, 8)
+            IntToHex(TreeRecords[Index][n].FormID.ToInt and $FFFFFF, 8)
           ])
         else
           TreeFileName := Format('Tree Type %d.dds', [Index]);
@@ -2019,7 +2019,7 @@ type
 
   PRefInfo = ^TRefInfo;
   TRefInfo = record
-    FormID : Cardinal;
+    FormID : TwbFormID;
     Pos    : TCoords;
     Rot    : TCoords;
     Scale  : Single;
@@ -2033,7 +2033,7 @@ begin
     Exit;
   end;
 
-  Result := CmpW32(PRefInfo(Item1).FormID, PRefInfo(Item2).FormID);
+  Result := TwbFormID.Compare(PRefInfo(Item1).FormID, PRefInfo(Item2).FormID);
 
   if wbForceTerminate then
     Abort;
@@ -2120,7 +2120,7 @@ begin
            MainRecord.WinningOverride.HasVisibleWhenDistantMesh and
            Supports(REFRs[i].RecordBySignature['DATA'], IwbContainerElementRef, DataRec) and
            (DataRec.ElementCount = 2) and
-           (REFRs[i].FormID <> 0) and // Some Oblivion worldspace mods have refs with zero FormID
+           (not REFRs[i].FormID.IsNull) and // Some Oblivion worldspace mods have refs with zero FormID
            not REFRs[i].Flags.IsInitiallyDisabled and
            not REFRs[i].Flags.IsDeleted then begin
           try
@@ -2308,7 +2308,7 @@ begin
 
               for l := Low(RefsInCell) to High(RefsInCell) do begin
                 RefInfo := RefsInCell[l];
-                WriteCardinal(RefInfo.FormID);
+                WriteCardinal(RefInfo.FormID.ToInt);
 
                 Count := 0;
                 while Assigned(RefInfo) do begin
@@ -2385,7 +2385,7 @@ var
       Width  := 0;
       Height := 0;
     end;
-    Result := Lst.AddTree(TreeRec._File.FileName, Ovr.ElementEditValues['Model\MODL'], TreeRec.LoadOrderFormID, Width, Height);
+    Result := Lst.AddTree(TreeRec._File.FileName, Ovr.ElementEditValues['Model\MODL'], TreeRec.LoadOrderFormID.ToInt, Width, Height);
     // load billboard texture
     Res := wbContainerHandler.OpenResource(Result^.Billboard);
     if (Length(Res) > 0) and Result^.LoadFromData(Res[High(Res)].GetData) then begin
@@ -2455,7 +2455,7 @@ var
                   // references listed in other grids has no effect
                   // ToDo test Overrides moving reference out of cell
                   if (Grid.x = Cell.x) and (Grid.y = Cell.y) then
-                    sl.AddObject(IntToHex64(Reference.MasterOrSelf.LoadOrderFormID, 8), Pointer(Reference.MasterOrSelf));
+                    sl.AddObject(IntToHex64(Reference.MasterOrSelf.LoadOrderFormID.ToInt, 8), Pointer(Reference.MasterOrSelf));
                 end;
           if StartTick + 500 < GetTickCount then begin
             Application.MainForm.Caption := 'Gathering Large References: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(i) +
@@ -2586,7 +2586,7 @@ begin
         end;
 
         // Fallouts: only for already added trees
-        if wbIsFallout3 and not Assigned(Lst.TreeByFormID[TreeRec.LoadOrderFormID]) then
+        if wbIsFallout3 and not Assigned(Lst.TreeByFormID[TreeRec.LoadOrderFormID.ToInt]) then
           Continue;
 
         if not REFRs[i].GetPosition(RefPos) then
@@ -2625,7 +2625,7 @@ begin
           if REFRs[i].IsPersistent and (REFRs[i].Flags._Flags and $00010000 <> 0) then
             Continue;
 
-        PTree := Lst.TreeByFormID[TreeRec.LoadOrderFormID];
+        PTree := Lst.TreeByFormID[TreeRec.LoadOrderFormID.ToInt];
         // adding a new tree to the list
         if not Assigned(PTree) then begin
           PTree := LoadBillboard(Lst, TreeRec);
@@ -2656,12 +2656,12 @@ begin
 
         // Skyrim
         if wbIsSkyrim then
-          RefFormID := REFRs[i].LoadOrderFormID
+          RefFormID := REFRs[i].LoadOrderFormID.ToInt
         // Fallouts
         else if REFRs[i].IsMaster then
-          RefFormID := REFRs[i].FixedFormID
+          RefFormID := REFRs[i].FixedFormID.ToInt
         else
-          RefFormID := (REFRs[i].FixedFormID and $00FFFFFF) or $01000000;
+          RefFormID := (REFRs[i].FixedFormID.ToInt and $00FFFFFF) or $01000000;
 
         if LOD4[k].AddReference(RefFormID, PTree^.Index, RefPos, Scale) then
           Inc(TreesCount)
@@ -2871,7 +2871,7 @@ begin
         else
           scl := '1.0';
 
-        k := slCache.IndexOfObject(Pointer(StatRec.LoadOrderFormID));
+        k := slCache.IndexOfObject(Pointer(StatRec.LoadOrderFormID.ToInt));
         if k = -1 then begin
           s := '';
           // Skyrim: process only VWD statics and trees, Fallouts: process all statics
@@ -2883,7 +2883,7 @@ begin
               if m4 <> '' then
                 wbProgressCallback(StatRec.Name + ' using 3D mesh in LOD4 ' + m4)
               else begin
-                PTree := Lst.TreeByFormID[StatRec.LoadOrderFormID];
+                PTree := Lst.TreeByFormID[StatRec.LoadOrderFormID.ToInt];
                 if not Assigned(PTree) then
                   PTree := LoadBillboard(Lst, StatRec);
                 if PTree^.Index <> -1 then begin
@@ -2900,7 +2900,7 @@ begin
               if m8 <> '' then
                 wbProgressCallback(StatRec.Name + ' using 3D mesh in LOD8 ' + m8)
               else begin
-                PTree := Lst.TreeByFormID[StatRec.LoadOrderFormID];
+                PTree := Lst.TreeByFormID[StatRec.LoadOrderFormID.ToInt];
                 if not Assigned(PTree) then
                   PTree := LoadBillboard(Lst, StatRec);
                 if PTree^.Index <> -1 then begin
@@ -2936,7 +2936,7 @@ begin
             end;
           end;
           k := slCache.Count;
-          slCache.AddObject(s, Pointer(StatRec.LoadOrderFormID));
+          slCache.AddObject(s, Pointer(StatRec.LoadOrderFormID.ToInt));
 
           // Fallouts: High Priority LOD info with m4 model for m8, at the same index as normal cache
           if wbIsFallout3 then begin
@@ -2979,7 +2979,7 @@ begin
           end;
         end;
 
-        s := IntToHex(REFRs[i].LoadOrderFormID , 8) + #9 +
+        s := IntToHex(REFRs[i].LoadOrderFormID.ToInt , 8) + #9 +
              IntToHex(REFRs[i].Flags._Flags, 8) + #9 +
              REFRs[i].ElementEditValues['DATA\Position\X'] + #9 +
              REFRs[i].ElementEditValues['DATA\Position\Y'] + #9 +
@@ -3318,7 +3318,7 @@ var
       if e.ElementExists['XESP'] then begin
         XESP := e.ElementLinksTo['XESP\Reference'] as IwbMainRecord;
         if Assigned(XESP) and (XESP.Flags._Flags and $100 = $100) then
-          xespid := IntToHex(XESP.FormID, 8)
+          xespid := IntToHex(XESP.FormID.ToInt, 8)
         // if the reference is inititally enabled it gets LOD, VWD always gets LOD
         else if Assigned(XESP) and not e.Flags.IsVisibleWhenDistant then begin
           bInitiallyDisabled := XESP.Flags.IsInitiallyDisabled;
@@ -3378,7 +3378,7 @@ var
         end;
       end;
 
-      k := slCache.IndexOfObject(Pointer(StatRec.LoadOrderFormID));
+      k := slCache.IndexOfObject(Pointer(StatRec.LoadOrderFormID.ToInt));
 
       if (k = -1) then begin
         s := '';
@@ -3400,7 +3400,7 @@ var
           end;
         end;
         k := slCache.Count;
-        slCache.AddObject(s, Pointer(StatRec.LoadOrderFormID));
+        slCache.AddObject(s, Pointer(StatRec.LoadOrderFormID.ToInt));
       end;
 
       s := slCache[k];
@@ -3483,7 +3483,7 @@ var
         end;
       end;
 
-      s := IntToHex(e.LoadOrderFormID , 8) + #9 +
+      s := IntToHex(e.LoadOrderFormID.ToInt , 8) + #9 +
            IntToHex(e.Flags._Flags, 8) + #9 +
            e.ElementEditValues['DATA\Position\X'] + #9 +
            e.ElementEditValues['DATA\Position\Y'] + #9 +

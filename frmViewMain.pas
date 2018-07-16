@@ -545,7 +545,7 @@ type
     ReferencedBySortColumn: TListColumn;
 
     EditInfoCache: string;
-    EditInfoCacheID: Cardinal;
+    EditInfoCacheID: Pointer;
 
     function GetRefBySelectionAsMainRecords: TDynMainRecords;
     function GetRefBySelectionAsElements: TDynElements;
@@ -573,7 +573,7 @@ type
     function NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
     function NodeDatasForContainer(const aContainer: IwbDataContainer): TDynViewNodeDatas;
 
-    procedure ShowChangeReferencedBy(OldFormID: Cardinal; NewFormID: Cardinal; const ReferencedBy: TDynMainRecords; aSilent: Boolean);
+    procedure ShowChangeReferencedBy(OldFormID: TwbFormID; NewFormID: TwbFormID; const ReferencedBy: TDynMainRecords; aSilent: Boolean);
     function GetDragElements(Target: TBaseVirtualTree; Source: TObject; out TargetNode: PVirtualNode; out TargetIndex: Integer; out TargetElement: IwbElement; out SourceElement: IwbElement): Boolean;
     function GetAddElement(out TargetNode: PVirtualNode; out TargetIndex: Integer; out TargetElement: IwbElement): Boolean;
 
@@ -588,8 +588,8 @@ type
     function CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord): IwbMainRecord;
     function CheckForErrors(const aIndent: Integer; const aElement: IwbElement): Boolean;
 
-    function AddNewFileName(aFileName: string): IwbFile;
-    function AddNewFile(out aFile: IwbFile): Boolean;
+    function AddNewFileName(aFileName: string; aIsESL: Boolean): IwbFile;
+    function AddNewFile(out aFile: IwbFile; aIsESL: Boolean): Boolean;
 
     procedure SaveChanged;
     procedure JumpTo(aInterface: IInterface; aBackward: Boolean);
@@ -919,6 +919,34 @@ uses
 var
   NoNodes                     : TNodeArray;
 
+var
+  wbDarkMode : Boolean = False;
+
+function wbLighter(Color: TColor; Amount: Double = 0.5): TColor;
+begin
+  if wbDarkMode then
+    Result := Darker(Color, Amount)
+  else
+    Result := Lighter(Color, Amount);
+end;
+
+function wbDarker(Color: TColor; Amount: Double = 0.25): TColor;
+begin
+  if wbDarkMode then
+    Result := Lighter(Color, Amount)
+  else
+    Result := Color;
+end;
+
+function wbIsDarkMode: Boolean;
+var
+  H, S, BkL, TxL: extended;
+begin
+  RGBtoHSL(ColToRGBTriple(clWindow), H, S, BkL);
+  RGBtoHSL(ColToRGBTriple(clWindowText), H, S, TxL);;
+  Result := BkL < TxL;
+end;
+
 function Displayable(aSignature: TwbSignature): String;
 var
   Sig : TwbSignature;
@@ -932,29 +960,29 @@ begin
   Result := Sig;
 end;
 
-function GetFormIDCallback(const aElement: IwbElement): Cardinal;
+function GetFormIDCallback(const aElement: IwbElement): TwbFormID;
 var
   s        : string;
   ObjectID : Cardinal;
 begin
-  Result := 0;
+  Result := TwbFormID.Null;
   ObjectID := 0;
 
   if Assigned(aElement) then begin
     ObjectID := aElement._File.NextObjectID; // remember ID
-    s := IntToHex64(aElement._File.FileFormIDtoLoadOrderFormID(aElement._File.NewFormID), 8);
+    s := aElement._File.FileFormIDtoLoadOrderFormID(aElement._File.NewFormID).ToString;
   end;
 
   try
     if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then try
-      Result := StrToInt64('$' + s);
+      Result := TwbFormID.CreateStr(s);
     except
       on E: Exception do
         Application.HandleException(E);
     end;
   finally
     // restore Next Object ID if failed
-    if (Result = 0) and (ObjectID <> 0) then
+    if (Result.IsNull) and (ObjectID <> 0) then
       aElement._File.NextObjectID := ObjectID;
   end;
 end;
@@ -1130,7 +1158,7 @@ begin
     tbsMessages.Highlighted := True;
 end;
 
-function TfrmMain.AddNewFileName(aFileName: string): IwbFile;
+function TfrmMain.AddNewFileName(aFileName: string; aIsESL: Boolean): IwbFile;
 var
   LoadOrder : Integer;
 begin
@@ -1144,20 +1172,20 @@ begin
   LoadOrder := 0;
   if Length(Files) > 0 then
     LoadOrder := Succ(Files[High(Files)].LoadOrder);
-
+{
   if LoadOrder > 254 then begin
     ShowMessage('Maximum plugins count already reached. Adding 1 more would exceed the maximum index of 254');
     Exit;
   end;
-
-  Result := wbNewFile(wbDataPath + aFileName, LoadOrder);
+}
+  Result := wbNewFile(wbDataPath + aFileName, LoadOrder, aIsESL);
   SetLength(Files, Succ(Length(Files)));
   Files[High(Files)] := Result;
   vstNav.AddChild(nil, Pointer(Result));
   Result._AddRef;
 end;
 
-function TfrmMain.AddNewFile(out aFile: IwbFile): Boolean;
+function TfrmMain.AddNewFile(out aFile: IwbFile; aIsESL: Boolean): Boolean;
 var
   s: string;
 begin
@@ -1167,8 +1195,11 @@ begin
   if InputQuery('New Module File', 'Filename without extension:', s) then begin
     if s = '' then
       Exit;
-    s := s + '.esp';
-    aFile := AddNewFileName(s);
+    if aIsESL then
+      s := s + '.esl'
+    else
+      s := s + '.esp';
+    aFile := AddNewFileName(s, aIsESL);
     Result := Assigned(aFile);
   end;
 end;
@@ -1754,6 +1785,7 @@ var
   LeveledListEntry     : IwbContainerElementRef;
   CopiedElement        : IwbElement;
   Container            : IwbContainer;
+  IsESL                : Boolean;
 begin
   if Assigned(aAfterCopyCallback) then begin
     Assert(not AsNew);
@@ -1792,7 +1824,8 @@ begin
 
       for i := j to High(Files) do
         if Files[i].IsEditable then
-          CheckListBox1.AddItem(Files[i].Name, Pointer(Files[i]));
+          if Files[i].LoadOrder > j then
+            CheckListBox1.AddItem(Files[i].Name, Pointer(Files[i]));
 
       Multiple := (Length(aElements) > 1) or (aElements[0].ElementType <> etMainRecord);
       EditorID := '';
@@ -1862,7 +1895,12 @@ begin
           until False;
       end;
 
-      CheckListBox1.AddItem('<new file>', nil);
+      if wbIsEslSupported then begin
+        CheckListBox1.AddItem('<new .esp>', nil);
+        CheckListBox1.AddItem('<new .esl>', nil);
+      end else begin
+        CheckListBox1.AddItem('<new file>', nil);
+      end;
 
       if Multiple then
         Caption := 'Which files do you want to add these records to?'
@@ -1876,9 +1914,12 @@ begin
       for i := 0 to Pred(CheckListBox1.Count) do
         if CheckListBox1.Checked[i] then begin
           ReferenceFile := IwbFile(Pointer(CheckListBox1.Items.Objects[i]));
-          while not Assigned(ReferenceFile) do
-            if not AddNewFile(ReferenceFile) then
-              Break;
+          if not Assigned(ReferenceFile) then begin
+            IsESL := wbIsEslSupported and (CheckListBox1.Items[i] = '<new .esl>');
+            while not Assigned(ReferenceFile) do
+              if not AddNewFile(ReferenceFile, IsESL) then
+                Break;
+          end;
 
           if Assigned(ReferenceFile) and AddRequiredMasters(sl, ReferenceFile) then begin
 
@@ -1972,8 +2013,8 @@ procedure TfrmMain.mniNavChangeReferencingRecordsClick(Sender: TObject);
 var
   s                           : string;
   i                           : Integer;
-  NewFormID                   : Cardinal;
-  OldFormID                   : Cardinal;
+  NewFormID                   : TwbFormID;
+  OldFormID                   : TwbFormID;
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
   ReferencedBy                : TDynMainRecords;
@@ -1994,10 +2035,10 @@ begin
     ReferencedBy[i] := ActiveMaster.ReferencedBy[i];
 
   if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then try
-    NewFormID := StrToInt64('$' + s);
-    if NewFormID = 0 then
+    NewFormID := TwbFormID.CreateStr(s);
+    if NewFormID.IsNull then
       raise Exception.Create('00000000 is not a valid FormID');
-    if NewFormID = $14 then
+    if NewFormID.ToInt = $14 then
       raise Exception.Create('00000014 is not a valid FormID');
 
     OldFormID := MainRecord.LoadOrderFormID;
@@ -2260,8 +2301,8 @@ var
   NewElements    : TDynElements;
   OldModelPrefix : string;
   NewModelPrefix : string;
-  OldFormIDs     : array of Cardinal;
-  NewFormIDs     : array of Cardinal;
+  OldFormIDs     : TwbFormIDs;
+  NewFormIDs     : TwbFormIDs;
   OldMainRecord  : IwbMainRecord;
   NewMainRecord  : IwbMainRecord;
 begin
@@ -2671,7 +2712,7 @@ begin
   TargetFile := nil;
 
   while not Assigned(TargetFile) do
-    if not AddNewFile(TargetFile) then
+    if not AddNewFile(TargetFile, False) then
       Exit;
 
   sl := TStringList.Create;
@@ -2747,7 +2788,7 @@ var
   i, n, j, Count : Integer;
   MainRecord     : IwbMainRecord;
   QustFlags      : IwbElement;
-  FormIDs        : array of Cardinal;
+  FormIDs        : TwbFormIDs;
   FileStream     : TFileStream;
   p, s           : string;
 begin
@@ -3238,6 +3279,16 @@ begin
   Result := wbContainerHandler.OpenResourceData(aContainerName, aFileName);
 end;
 
+type
+  TModuleInfo = class(TStringList)
+  public
+    IsESM      : Boolean;
+    IsESL      : Boolean;
+    IsOfficial : Boolean;
+    IsCC       : Boolean;
+    Taken      : Boolean;
+  end;
+
 procedure TfrmMain.DoInit;
 
   // remove comments and empty lines from list. Also handles star activation
@@ -3344,7 +3395,9 @@ procedure TfrmMain.DoInit;
     Age         : Integer;
     AgeDateTime : TDateTime;
     useBOSS     : Boolean;
-
+    ModuleInfo  : TModuleInfo;
+    slOfficial  : TStringList;
+    slCC        : TStringList;
   begin
     with frmFileSelect do begin
       {
@@ -3459,6 +3512,7 @@ procedure TfrmMain.DoInit;
       }
       AddMissingToLoadList(sl);
 
+      { This doesn't seem to be what the game engine does:
       // move non-CC ESL plugins right after the last ESM
       if wbGameMode in [gmSSE, gmFO4] then begin
         for j := Pred(sl.Count) downto 0 do
@@ -3471,6 +3525,57 @@ procedure TfrmMain.DoInit;
             sl.Move(i, j);
             Inc(j);
           end;
+      end;
+      }
+
+      // reorder according to https://forums.nexusmods.com/index.php?/topic/6043958-unofficial-skyrim-creation-club-content-patches/page-15#entry54334023
+      sl2 := TStringList.Create;
+      slOfficial := TStringList.Create;
+      slCC := TStringList.Create;
+      try
+        slOfficial.Add(wbGameName + '.esm');
+        if wbIsSkyrim then
+          slOfficial.Add('Update.esm');
+        for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
+          slOfficial.Add(wbOfficialDLC[i]);
+        slOfficial.Sorted := True;
+
+        for i := Low(wbCreationClubContent) to High(wbCreationClubContent) do
+          slCC.Add(wbCreationClubContent[i]);
+        slCC.Sorted := True;
+
+        sl2.OwnsObjects := True;
+        sl2.Assign(sl);
+        sl.Clear;
+        for i := 0 to Pred(sl2.Count) do begin
+          ModuleInfo := TModuleInfo.Create;
+          sl2.Objects[i] := ModuleInfo;
+          ModuleInfo.IsOfficial := slOfficial.Find(sl2[i], j);
+          ModuleInfo.IsCC := slCC.Find(sl2[i], j);
+          wbMastersForFile(wbDataPath + sl2[i] , ModuleInfo, ModuleInfo.IsESM, ModuleInfo.IsESL);
+        end;
+
+        for j := 1 to 4 do
+          for i := 0 to Pred(sl2.Count) do begin
+            ModuleInfo := sl2.Objects[i] as TModuleInfo;
+            with ModuleInfo do
+              if not Taken then begin
+                case j of
+                  1: Taken := IsOfficial;
+                  2: Taken := IsCC;
+                  3: Taken :=
+                          IsESM              //uses flag from header, not extension
+                       or IsFileESL(sl2[i]); //uses extension, not flag
+                  4: Taken := True;
+                end;
+                if Taken then
+                  sl.Add(sl2[i]);
+              end;
+          end;
+      finally
+        sl2.Free;
+        slOfficial.Free;
+        slCC.Free;
       end;
 
       if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (sl.Count > 1) and wbIsFallout3 then begin
@@ -3506,7 +3611,7 @@ var
   R             : TSearchRec;
   Rect          : TRect;
   frmFileSelect : TfrmFileSelect;
-
+  IsESM, IsESL  : Boolean;
 begin
   AutoDone := False;
   ErrorsCount := 0;
@@ -3841,16 +3946,16 @@ begin
               case wbToolSource of
                 tsSaves: begin
                   if not wbIsPlugin(sl[i]) then
-                    wbMastersForFile(wbSavePath + sl[i], sl2)
+                    wbMastersForFile(wbSavePath + sl[i], sl2, IsESM, IsESL)
                   else
-                    wbMastersForFile(wbDataPath + sl[i], sl2);
+                    wbMastersForFile(wbDataPath + sl[i], sl2, IsESM, IsESL);
                   for j := 0 to Pred(sl2.Count) do
                     if CheckListBox1.Items.IndexOf(sl2[j]) = -1 then begin
                       CheckListBox1.Items.Insert(k, sl2[j]);
                       Inc(k);
                     end;
                 end;
-                tsPlugins: wbMastersForFile(wbDataPath + sl[i], sl2);
+                tsPlugins: wbMastersForFile(wbDataPath + sl[i], sl2, IsESM, IsESL);
               end;
             {make sure messages for the memo have been processed}
             Application.ProcessMessages;
@@ -4236,7 +4341,7 @@ begin
     Key := 0;
     EditorID := Trim(edEditorIDSearch.Text);
     if EditorID = '' then begin
-      edEditorIDSearch.Color := Lighter(clRed, 0.85);
+      edEditorIDSearch.Color := wbLighter(clRed, 0.85);
       edEditorIDSearch.SelectAll;
       Exit;
     end;
@@ -4261,7 +4366,7 @@ begin
             Node := vstNav.NodeParent[Node];
           end
           else begin
-            edEditorIDSearch.Color := Lighter(clLime, 0.85);
+            edEditorIDSearch.Color := wbLighter(clLime, 0.85);
             vstNav.ClearSelection;
             vstNav.FocusedNode := Node;
             vstNav.Selected[vstNav.FocusedNode] := True;
@@ -4272,10 +4377,10 @@ begin
       Node := vstNav.GetNext(Node)
     end;
 
-    if edEditorIDSearch.Color = Lighter(clLime, 0.85) then
-      edEditorIDSearch.Color := Lighter(clYellow, 0.85)
+    if edEditorIDSearch.Color = wbLighter(clLime, 0.85) then
+      edEditorIDSearch.Color := wbLighter(clYellow, 0.85)
     else
-      edEditorIDSearch.Color := Lighter(clRed, 0.85);
+      edEditorIDSearch.Color := wbLighter(clRed, 0.85);
     edEditorIDSearch.SelectAll;
     Exit;
   end;
@@ -4294,8 +4399,8 @@ end;
 procedure TfrmMain.edFormIDSearchKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 var
   s                           : string;
-  FormID                      : Cardinal;
-  FileID                      : Integer;
+  FormID                      : TwbFormID;
+  FileID                      : TwbFileID;
   _File                       : IwbFile;
   MainRecord                  : IwbMainRecord;
   Node                        : PVirtualNode;
@@ -4306,18 +4411,18 @@ begin
     Key := 0;
 
     s := Trim(edFormIDSearch.Text);
-    FormID := StrToInt64Def('$' + s, 0);
-    FileID := FormID shr 24;
-    if FormID <> 0 then begin
+    FormID := TwbFormID.CreateStrDef(s, 0);
+    FileID := FormID.FileID;
+    if not FormID.IsNull then begin
       _File := nil;
       j := Low(Files);
       while (j <= High(Files)) and not Assigned(_File) do begin
-        if Files[j].LoadOrder = FileID then
+        if Files[j].FileID = FileID then
           _File := Files[j];
         Inc(j);
       end;
       while Assigned(_File) do begin
-        FormID := (FormID and $00FFFFFF) or (Cardinal(_File.MasterCount) shl 24);
+        FormID.FileID := TwbFileID.Create(_File.MasterCount);
         MainRecord := _File.RecordByFormID[FormID, True];
         if Assigned(MainRecord) then begin
           Node := FindNodeForElement(MainRecord);
@@ -4331,7 +4436,7 @@ begin
                 Break;
             end;
           if Assigned(Node) then begin
-            edFormIDSearch.Color := Lighter(clLime, 0.85);
+            edFormIDSearch.Color := wbLighter(clLime, 0.85);
             JumpTo(MainRecord, False);
   //          vstNav.ClearSelection;
   //          vstNav.FocusedNode := FindNodeForElement(MainRecord);
@@ -4339,7 +4444,7 @@ begin
   //          SetActiveRecord(MainRecord);
           end
           else begin
-            edFormIDSearch.Color := Lighter(clYellow, 0.85);
+            edFormIDSearch.Color := wbLighter(clYellow, 0.85);
             JumpTo(MainRecord, False);
   //          SetActiveRecord(MainRecord);
           end;
@@ -4348,13 +4453,13 @@ begin
         end;
         _File := nil;
         while (j <= High(Files)) and not Assigned(_File) do begin
-          if Files[j].LoadOrder = FileID then
+          if Files[j].FileID = FileID then
             _File := Files[j];
           Inc(j);
         end;
       end;
     end;
-    edFormIDSearch.Color := Lighter(clRed, 0.85);
+    edFormIDSearch.Color := wbLighter(clRed, 0.85);
     edFormIDSearch.SelectAll;
   end;
 end;
@@ -4947,7 +5052,7 @@ begin
     Exit;
   end;
 
-  Result := CmpW32(
+  Result := CmpPtr(
     IwbElement(Item1).ElementID,
     IwbElement(Item2).ElementID);
 end;
@@ -4956,7 +5061,7 @@ function TfrmMain.GetUniqueLinksTo(const aNodeDatas: PViewNodeDatas; aNodeCount:
 var
   i, j, k : Integer;
   Element : IwbElement;
-  LastID  : Cardinal;
+  LastID  : Pointer;
 begin
   SetLength(Result, aNodeCount);
   j := 0;
@@ -6189,10 +6294,10 @@ begin
   if not Assigned(CSNPC) then
     raise Exception.Create('Can''t find CSNPCBanditBoss script');
 
-  CSNPCID           := IntToHex64(CSNPC.LoadOrderFormID, 8);
-  CSNPCBossID       := IntToHex64(CSNPCBoss.LoadOrderFormID, 8);
-  CSNPCBanditID     := IntToHex64(CSNPCBandit.LoadOrderFormID, 8);
-  CSNPCBanditBossID := IntToHex64(CSNPCBanditBoss.LoadOrderFormID, 8);
+  CSNPCID           := CSNPC.LoadOrderFormID.ToString;
+  CSNPCBossID       := CSNPCBoss.LoadOrderFormID.ToString;
+  CSNPCBanditID     := CSNPCBandit.LoadOrderFormID.ToString;
+  CSNPCBanditBossID := CSNPCBanditBoss.LoadOrderFormID.ToString;
 
   for i := MMMESM to High(Files) do
     if (i = MMMESM) or Files[i].HasMaster('Mart''s Monster Mod.esm') then
@@ -6322,7 +6427,7 @@ begin
             AddMessage('Skipping line '+IntToStr(i+1)+': Old FormID "'+s+'" is not in the valid range.');
             Continue;
           end;
-          OldRecord := OldMaster.RecordByFormID[(Cardinal(OldMaster.LoadOrder) shl 24) or Cardinal(j), True];
+          OldRecord := OldMaster.RecordByFormID[TwbFormID.CreateInt(j).ChangeFileID(TwbFileID.Create(OldMaster.MasterCount)), True];
           if not Assigned(OldRecord) then begin
             AddMessage('Skipping line '+IntToStr(i+1)+': Old Record with FormID "'+s+'" was not found in old Master "'+OldMaster.FileName+'".');
             Continue;
@@ -6334,7 +6439,7 @@ begin
             AddMessage('Skipping line '+IntToStr(i+1)+': New FormID "'+s+'" is not in the valid range.');
             Continue;
           end;
-          NewRecord := NewMaster.RecordByFormID[(Cardinal(NewMaster.LoadOrder) shl 24) or Cardinal(j), True];
+          NewRecord := NewMaster.RecordByFormID[TwbFormID.CreateInt(j).ChangeFileID(TwbFileID.Create(NewMaster.MasterCount)), True];
           if not Assigned(NewRecord) then begin
             AddMessage('Skipping line '+IntToStr(i+1)+': New Record with FormID "'+s+'" was not found in new Master "'+NewMaster.FileName+'".');
             Continue;
@@ -6410,7 +6515,7 @@ begin
         ShowChangeReferencedBy(rlOldRecord.LoadOrderFormID, rlNewRecord.LoadOrderFormID, rlReferencedBy, True);
         RefRecord := _File.RecordByFormID[rlOldRecord.LoadOrderFormID, False];
         if Assigned(RefRecord) and _File.Equals(RefRecord._File) then begin
-          AddMessage('Changing FormID ['+IntToHex64(RefRecord.LoadOrderFormID, 8)+'] to ['+IntToHex(rlNewRecord.LoadOrderFormID, 8)+']');
+          AddMessage('Changing FormID ['+RefRecord.LoadOrderFormID.ToString+'] to ['+rlNewRecord.LoadOrderFormID.ToString+']');
           RefRecord.LoadOrderFormID := rlNewRecord.LoadOrderFormID;
         end;
       end;
@@ -6611,14 +6716,14 @@ procedure TfrmMain.mniNavChangeFormIDClick(Sender: TObject);
 var
   s                           : string;
   i, j, k                     : Integer;
-  NewFormID                   : Cardinal;
-  OldFormID                   : Cardinal;
+  NewFormID                   : TwbFormID;
+  OldFormID                   : TwbFormID;
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
   ReferencedBy, Overrides     : TDynMainRecords;
   Nodes                       : TNodeArray;
 //  NewFileID                   : Integer;
-  OldFileID                   : Integer;
+  OldFileID                   : TwbFileID;
   AnyErrors                   : Boolean;
   Master                      : IwbMainRecord;
   _File                       : IwbFile;
@@ -6632,7 +6737,7 @@ begin
   AnyErrors := False;
   _File := nil;
 //  NewFileID := -1;
-  NewFormID := 0;
+  NewFormID := TwbFormID.Null;
   Nodes := vstNav.GetSortedSelection(True);
 
   // renumber to destination file if several records were selected or Shift is pressed
@@ -6706,28 +6811,29 @@ begin
     OldFormID := MainRecord.LoadOrderFormID;
     if not Assigned(_File) then begin
 
-      s := IntToHex64(OldFormID, 8);
+      s := OldFormID.ToString;
       if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then begin
 
         if s = '' then begin
-          s := IntToHex64(MainRecord._File.FileFormIDtoLoadOrderFormID(MainRecord._File.NewFormID), 8);
+          s := MainRecord._File.FileFormIDtoLoadOrderFormID(MainRecord._File.NewFormID).ToString;
           if not InputQuery('New FormID generated', 'Please verify the newly generated FormID. The FormID needs to be a load order corrected form ID.', s) then
             Exit;
         end;
-        NewFormID := StrToInt64('$' + s);
-        if NewFormID = 0 then
+        NewFormID := TwbFormID.CreateStr(s);
+        if NewFormID.IsNull then
           raise Exception.Create('00000000 is not a valid FormID');
-        if NewFormID = $14 then
+        if NewFormID.ToInt = $14 then
           raise Exception.Create('00000014 is not a valid FormID');
       end else
         Exit;
 
     end else begin
 
-      OldFileID := OldFormID shr 24;
-      if OldFileID = _File.LoadOrder then
+      OldFileID := OldFormID.FileID;
+      if OldFileID = _File.FileID then
         Continue;
       NewFormID := _File.FileFormIDtoLoadOrderFormID(_File.NewFormID);
+
     end;
 
     if NewFormID = OldFormID then
@@ -6735,7 +6841,7 @@ begin
 
     pgMain.ActivePage := tbsMessages;
 
-    AddMessage('Changing FormID ['+IntToHex64(OldFormID, 8)+'] in file "'+MainRecord._File.FileName+'" to ['+IntToHex(NewFormID, 8)+']');
+    AddMessage('Changing FormID ['+OldFormID.ToString+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToString+']');
 
     Master := MainRecord.MasterOrSelf;
     SetLength(ReferencedBy, Master.ReferencedByCount);
@@ -6907,6 +7013,7 @@ var
   EditorID                    : string;
   LeveledListEntries          : IwbContainerElementRef;
   LeveledListEntry            : IwbContainerElementRef;
+  IsESL                       : Boolean;
 begin
   if not wbEditAllowed then
     Exit;
@@ -6987,7 +7094,12 @@ begin
         until False;
       end;
 
-      CheckListBox1.AddItem('<new file>', nil);
+      if wbIsEslSupported then begin
+        CheckListBox1.AddItem('<new .esp>', nil);
+        CheckListBox1.AddItem('<new .esl>', nil);
+      end else begin
+        CheckListBox1.AddItem('<new file>', nil);
+      end;
 
       Caption := 'Which files do you want to add this record to?';
 
@@ -6997,9 +7109,12 @@ begin
         if CheckListBox1.Checked[i] then begin
           ReferenceFile := IwbFile(Pointer(CheckListBox1.Items.Objects[i]));
 
-          while not Assigned(ReferenceFile) do
-            if not AddNewFile(ReferenceFile) then
-              Break;
+          if not Assigned(ReferenceFile) then begin
+            IsESL := wbIsEslSupported and (CheckListBox1.Items[i] = '<new .esl>');
+            while not Assigned(ReferenceFile) do
+              if not AddNewFile(ReferenceFile, IsESL) then
+                Break;
+          end;
 
           if Assigned(ReferenceFile) and AddRequiredMasters(MainRecord, ReferenceFile, AsNew) then begin
             MainRecord2 := wbCopyElementToFile(MainRecord, ReferenceFile, AsNew or AsWrapper, True, '', '', '') as IwbMainRecord;
@@ -7289,7 +7404,7 @@ begin
       for i := Low(WorldSpaces) to High(WorldSpaces) do begin
         clbWorldspace.AddItem(WorldSpaces[i].Name, TObject(Pointer(WorldSpaces[i])));
         // default selected worldspace at the top
-        if (WorldSpaces[i].LoadOrderFormID = $0000003C) or ((wbGameMode = gmFNV) and (WorldSpaces[i].LoadOrderFormID = $000DA726)) then
+        if (WorldSpaces[i].LoadOrderFormID.ToInt = $0000003C) or ((wbGameMode = gmFNV) and (WorldSpaces[i].LoadOrderFormID.ToInt = $000DA726)) then
           j := i;
       end;
 
@@ -7432,18 +7547,29 @@ var
   Container   : IwbContainerElementRef;
   Container2  : IwbContainerElementRef;
   Race        : string;
-  FormID      : Cardinal;
+  FormID      : TwbFormID;
+  FormIDs     : array of record
+                           FormID    : TwbFormID;
+                           LoadOrder : Integer;
+                         end;
 begin
   LVLIs := TStringList.Create;
   LVLIs.Sorted := True;
   LVLIs.Duplicates := dupIgnore;
 
+  FormIDs := nil;
   for i := Low(Files) to High(Files) do
     if Supports(Files[i].GroupBySignature['LVLI'], IwbContainerElementRef, Group) then
       for j := 0 to Pred(Group.ElementCount) do
         if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then
-          if MainRecord.IsMaster and (MainRecord.EditorID <> '') then
-            LVLIs.AddObject(MainRecord.EditorID, Pointer(MainRecord.LoadOrderFormID));
+          if MainRecord.IsMaster and (MainRecord.EditorID <> '') then begin
+            SetLength(FormIDs, Succ(Length(FormIDs)));
+            with FormIDs[High(FormIDs)] do begin
+              FormID := MainRecord.LoadOrderFormID;
+              LoadOrder := MainRecord._File.LoadOrder;
+            end;
+            LVLIs.AddObject(MainRecord.EditorID, Pointer(High(FormIDs)));
+          end;
 
   for i := Low(Files) to High(Files) do
     if Supports(Files[i].GroupBySignature['NPC_'], IwbContainerElementRef, Group) then
@@ -7465,12 +7591,12 @@ begin
                   if Supports(Container2.Elements[0].LinksTo, IwbMainRecord, MainRecord2) then begin
                     if MainRecord2.Signature = 'LVLI' then
                       if LVLIs.Find(MainRecord2.EditorID+Race, l) then begin
-                        FormID := Cardinal(LVLIs.Objects[l]);
-                        if Integer(FormID shr 24) <= Files[i].LoadOrder then try
-                          Container2.Elements[0].EditValue := IntToHex64(FormID, 8);
-                        except
-                          on E: Exception do
-                            PostAddMessage('Error updating Item '+MainRecord2.Name+' for '+MainRecord.Name+': '+ E.Message);
+                        with FormIDs[Cardinal(LVLIs.Objects[l])] do
+                          if LoadOrder <= Files[i].LoadOrder then try
+                            Container2.Elements[0].EditValue := FormID.ToString
+                          except
+                            on E: Exception do
+                              PostAddMessage('Error updating Item '+MainRecord2.Name+' for '+MainRecord.Name+': '+ E.Message);
                         end;
                       end;
                   end;
@@ -9052,8 +9178,8 @@ procedure TfrmMain.mniNavRenumberFormIDsFromClick(Sender: TObject);
 var
   s                           : string;
   i, j, k, l                  : Integer;
-  NewFormID                   : Cardinal;
-  OldFormID                   : Cardinal;
+  NewFormID                   : TwbFormID;
+  OldFormID                   : TwbFormID;
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
   ReferencedBy                : TDynMainRecords;
@@ -9067,8 +9193,8 @@ var
   MainRecords                 : TDynMainRecords;
   Overrides                   : TDynMainRecords;
 
-  StartFormID                 : Cardinal;
-  EndFormID                   : Cardinal;
+  StartFormID                 : TwbFormID;
+  EndFormID                   : TwbFormID;
   TakenFormIDs                : array of Boolean;
 
   StartTick                   : Cardinal;
@@ -9104,14 +9230,14 @@ begin
     if not InputQuery('Start from...', 'Please enter the new module specific start FormID in hex. e.g. 200000. Specify only the last 6 digits.', s) then
       Exit;
 
-    StartFormID := StrToInt64Def('$' + s, 0);
-  until ((StartFormID and $FF000000) = 0) and (StartFormID > $800);
+    StartFormID := TwbFormID.CreateStrDef(s, 0);
+  until (StartFormID.FileID.Major = 0) and not StartFormID.IsHardcoded;
 
   SetLength(MainRecords, _File.RecordCount);
   j := 0;
   for i := Pred(_File.RecordCount) downto 0 do begin
     MainRecords[j] := _File.Records[i];
-    if (MainRecords[j].LoadOrderFormID shr 24) = _File.LoadOrder then
+    if MainRecords[j].LoadOrderFormID.FileID = _File.FileID then
       Inc(j);
   end;
   if j < 1 then
@@ -9122,7 +9248,7 @@ begin
   TakenFormIDs := nil;
   SetLength(TakenFormIDs, j);
 
-  StartFormID := StartFormID or (Cardinal(_File.LoadOrder) shl 24);
+  StartFormID.FileID := _File.FileID;
   EndFormID := StartFormID + j;
 
   for i := Low(MainRecords) to High(MainRecords) do begin
@@ -9156,7 +9282,7 @@ begin
 
       pgMain.ActivePage := tbsMessages;
 
-      AddMessage('Changing FormID ['+IntToHex64(OldFormID, 8)+'] in file "'+MainRecord._File.FileName+'" to ['+IntToHex(NewFormID, 8)+']');
+      AddMessage('Changing FormID ['+OldFormID.ToString+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToString+']');
 
       Master := MainRecord.MasterOrSelf;
       SetLength(ReferencedBy, Master.ReferencedByCount);
@@ -9198,7 +9324,7 @@ begin
       end;
     end;
     if Supports(_File.Elements[0], IwbMainRecord, MainRecord) and (MainRecord.Signature = 'TES4') then
-      MainRecord.ElementNativeValues['HEDR\Next Object ID'] := (Succ(EndFormID) and $FFFFFF);
+      MainRecord.ElementNativeValues['HEDR\Next Object ID'] := (Succ(EndFormID.ToInt) and $FFFFFF);
     if AnyErrors then begin
       pgMain.ActivePage := tbsMessages;
       AddMessage('!!! Errors have occured. It is highly recommended to exit without saving as partial changes might have occured !!!');
@@ -9326,7 +9452,7 @@ var
 
   // temp settings if provided base Editor ID is a hex FormID number
   FilterByBaseFormID          : Boolean;
-  FilterBaseFormID            : Cardinal;
+  FilterBaseFormID            : TwbFormID;
 
   Dummy                       : Integer;
   Rec                         : IwbRecord;
@@ -9448,9 +9574,9 @@ begin
     BaseSignatures := nil;
 
   FilterByBaseFormID := False;
-  FilterBaseFormID := 0;
-  if Length(FilterBaseEditorID) = 8 then try
-    FilterBaseFormID := StrToInt('$' + FilterBaseEditorID);
+  FilterBaseFormID := TwbFormID.Null;
+  if Length(FilterBaseEditorID) in [8,9] then try
+    FilterBaseFormID := TwbFormID.CreateStr(FilterBaseEditorID);
     // passed conversion, filter by base FormID
     FilterByBaseFormID := True;
   except
@@ -10140,7 +10266,6 @@ begin
       Settings.WriteInteger('DoNotBuildRefsFor', wbDoNotBuildRefsFor[i], 1);
 
     Settings.UpdateFile;
-
   finally
     Free;
   end;
@@ -10226,7 +10351,7 @@ var
   AnyHidden     : Boolean;
   IsNonOverride : Boolean;
   EditorID      : string;
-  FormID        : Cardinal;
+  FormID        : TwbFormID;
   LoadOrder     : Integer;
   Group         : IwbGroupRecord;
   Signature     : TwbSignature;
@@ -11721,7 +11846,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.ShowChangeReferencedBy(OldFormID, NewFormID: Cardinal; const ReferencedBy: TDynMainRecords; aSilent: Boolean);
+procedure TfrmMain.ShowChangeReferencedBy(OldFormID, NewFormID: TwbFormID; const ReferencedBy: TDynMainRecords; aSilent: Boolean);
 var
   Counter    : Integer;
   i          : Integer;
@@ -11742,7 +11867,7 @@ begin
 
     if Counter <= 0 then begin
       if not aSilent then
-        ShowMessage('There are ' + IntToStr(Length(ReferencedBy)) + ' records referencing FormID ' + IntToHex64(OldFormID, 8) + ' but non of them are in editable files.');
+        ShowMessage('There are ' + IntToStr(Length(ReferencedBy)) + ' records referencing FormID ' + OldFormID.ToString + ' but non of them are in editable files.');
       Exit;
     end;
 
@@ -11771,7 +11896,7 @@ begin
         end;
       end;
 
-      AddMessage(IntToStr(Counter) + ' records out of '+IntToStr(Length(ReferencedBy))+' total records which reference FormID ['+IntToHex64(OldFormID, 8)+'] have been updated to ['+IntToHex64(NewFormID, 8)+']');
+      AddMessage(IntToStr(Counter) + ' records out of '+IntToStr(Length(ReferencedBy))+' total records which reference FormID [' + OldFormID.ToString + '] have been updated to [' + NewFormID.ToString + ']');
 
       if not aSilent then begin
         if Error then
@@ -11853,7 +11978,7 @@ var
 
     for i := 0 to Pred(Keywords.ElementCount) do
       if Supports(Keywords.Elements[i].LinksTo, IwbMainRecord, Keyword) then begin
-        s := IntToHex64(Keyword.LoadOrderFormID, 8);
+        s := Keyword.LoadOrderFormID.ToString;
         if slKeywords.IndexOf(s) < 0 then begin
           SetLength(arKeywords, Succ(Length(arKeywords)));
           arKeywords[High(arKeywords)] := Keyword;
@@ -11933,7 +12058,7 @@ var
         with CheckListBox1 do
           for i := 0 to Pred(Count) do
             if Checked[i] then
-              slKeywords.AddObject(IntToHex64(IwbMainRecord(Pointer(Items.Objects[i])).LoadOrderFormID, 8), Items.Objects[i]);
+              slKeywords.AddObject(IwbMainRecord(Pointer(Items.Objects[i])).LoadOrderFormID.ToString, Items.Objects[i]);
 
         slKeywords.Sorted := True;
 
@@ -12465,7 +12590,7 @@ begin
       end;
 
       if NodeDatas[Column].ConflictAll >= caNoConflict then
-        TargetCanvas.Brush.Color := Lighter(ConflictAllToColor(NodeDatas[Column].ConflictAll), Factor)
+        TargetCanvas.Brush.Color := wbLighter(ConflictAllToColor(NodeDatas[Column].ConflictAll), Factor)
       else
         Exit;
 
@@ -12486,7 +12611,7 @@ begin
     Assert(False);
 
   if NodeDatas[0].ConflictAll >= caNoConflict then
-    ItemColor := Lighter(ConflictAllToColor(NodeDatas[0].ConflictAll), 0.85)
+    ItemColor := wbLighter(ConflictAllToColor(NodeDatas[0].ConflictAll), 0.85)
   else
     Exit;
 
@@ -12990,10 +13115,10 @@ begin
       Assert(False);
 
     if ActiveRecords[0].ConflictAll >= caNoConflict then
-      Sender.Background := Lighter(ConflictAllToColor(ActiveRecords[0].ConflictAll), 0.85);
+      Sender.Background := wbLighter(ConflictAllToColor(ActiveRecords[0].ConflictAll), 0.85);
     PaintInfo.TargetCanvas.Brush.Color := Sender.Background;
-    Sender.Font.Color := ConflictThisToColor(
-      ActiveRecords[Pred(PaintInfo.Column.Index)].ConflictThis);
+    Sender.Font.Color := wbDarker(ConflictThisToColor(
+      ActiveRecords[Pred(PaintInfo.Column.Index)].ConflictThis));
   end;
 end;
 
@@ -13204,7 +13329,7 @@ begin
 
     end;
 
-  TargetCanvas.Font.Color := ConflictThisToColor(ConflictThis);
+  TargetCanvas.Font.Color := wbDarker(ConflictThisToColor(ConflictThis));
 
   if Modified then
     TargetCanvas.Font.Style := [fsBold];
@@ -13250,7 +13375,7 @@ begin
     end;
 
     if NodeData.ConflictAll >= caNoConflict then
-      ItemColor := Lighter(ConflictAllToColor(NodeData.ConflictAll), 0.85)
+      ItemColor := wbLighter(ConflictAllToColor(NodeData.ConflictAll), 0.85)
     else
       Exit;
 
@@ -13272,11 +13397,11 @@ begin
         Element := nil;
 
     if NodeData.ConflictAll >= caNoConflict then
-      lblPath.Color := Lighter(ConflictAllToColor(NodeData.ConflictAll), 0.85)
+      lblPath.Color := wbLighter(ConflictAllToColor(NodeData.ConflictAll), 0.85)
     else
       lblPath.Color := vstNav.Color;
 
-    lblPath.Font.Color := ConflictThisToColor(NodeData.ConflictThis);
+    lblPath.Font.Color := wbDarker(ConflictThisToColor(NodeData.ConflictThis));
 
     s := '';
     while Assigned(Node) do begin
@@ -13388,7 +13513,7 @@ begin
           case Column of
             1, 2: Result := CompareText((SortElement1 as IwbFile).FileName, (SortElement2 as IwbFile).FileName);
           else
-            Result := CmpB8((SortElement1 as IwbFile).LoadOrder, (SortElement2 as IwbFile).LoadOrder);
+            Result := CmpI32((SortElement1 as IwbFile).LoadOrder, (SortElement2 as IwbFile).LoadOrder);
           end;
 
           Exit;
@@ -13430,7 +13555,7 @@ begin
           if Result = 0 then begin
             Result := CmpI32(MainRecord1.SortPriority, MainRecord2.SortPriority);
             if Result = 0 then begin
-              Result := CmpW32(MainRecord1.LoadOrderFormID, MainRecord2.LoadOrderFormID);
+              Result := TwbFormID.Compare(MainRecord1.LoadOrderFormID, MainRecord2.LoadOrderFormID);
               if Result = 0 then
                 Result := CmpW32(Cardinal(Pointer(MainRecord1)), Cardinal(Pointer(MainRecord2)));
             end;
@@ -13527,7 +13652,7 @@ begin
               if MainRecord.Signature = wbHeaderSignature then
                 CellText := 'File Header'
               else
-                CellText := IntToHex64(MainRecord.LoadOrderFormID, 8)
+                CellText := MainRecord.LoadOrderFormID.ToString
             end;
           1: CellText := MainRecord.EditorID;
           2: CellText := MainRecord.DisplayName;
@@ -13616,7 +13741,7 @@ begin
             if MainRecord.Signature = 'TES4' then
               CompareText := 'File Header'
             else
-              CompareText := IntToHex64(MainRecord.LoadOrderFormID, 8)
+              CompareText := MainRecord.LoadOrderFormID.ToString
           end;
         1: CompareText := MainRecord.EditorID;
         2: CompareText := MainRecord.DisplayName;
@@ -13673,7 +13798,7 @@ begin
         if Integer(Succ(Node.Index)) < Container.ElementCount then begin
           if Supports(Container.Elements[Succ(Node.Index)], IwbGroupRecord, GroupRecord) then begin
             if (not (GroupRecord.GroupType in ParentedGroupRecordType)) or
-              ((Element as IwbMainRecord).FormID <> GroupRecord.GroupLabel) then
+              ((Element as IwbMainRecord).FormID.ToInt <> GroupRecord.GroupLabel) then
               GroupRecord := nil;
           end;
         end;
@@ -13715,7 +13840,7 @@ begin
       if Assigned(Container) and (Integer(Node.Index) < Container.ElementCount) then begin
         Element := Container.Elements[Pred(Node.Index)];
         if (Element.ElementType = etMainRecord) and
-          ((Element as IwbMainRecord).FormID = GroupRecord.GroupLabel) then begin
+          ((Element as IwbMainRecord).FormID.ToInt = GroupRecord.GroupLabel) then begin
           Include(InitialStates, ivsHidden);
           Exclude(InitialStates, ivsHasChildren);
           NodeData.Container := nil;
@@ -13805,7 +13930,7 @@ begin
         TargetCanvas.Font.Style := TargetCanvas.Font.Style - [fsUnderline];
     end;
 
-    TargetCanvas.Font.Color := ConflictThisToColor(NodeData.ConflictThis);
+    TargetCanvas.Font.Color := wbDarker(ConflictThisToColor(NodeData.ConflictThis));
   end;
 end;
 
@@ -13882,7 +14007,7 @@ begin
 
   case Column of
     0: Result := CompareText(Element1._File.FileName, Element2._File.FileName);
-    1: Result := CmpW32((Element1 as IwbMainRecord).LoadOrderFormID, (Element2 as IwbMainRecord).LoadOrderFormID);
+    1: Result := TwbFormID.Compare((Element1 as IwbMainRecord).LoadOrderFormID, (Element2 as IwbMainRecord).LoadOrderFormID);
   else
     Result := CompareStr(Element1.SortKey[True], Element2.SortKey[True]);
   end;
@@ -14054,7 +14179,7 @@ begin
 
   case Column of
     0: CellText := Element._File.Name;
-    1: CellText := IntToHex64((Element as IwbMainRecord).LoadOrderFormID, 8);
+    1: CellText := (Element as IwbMainRecord).LoadOrderFormID.ToString;
   else
     Element := NodeDatas[Column].Element;
     if not Assigned(Element) then
@@ -14064,7 +14189,7 @@ begin
       if Supports(Element, IwbMainRecord, MainRecord) then begin
         CellText := MainRecord.EditorID;
         if CellText = '' then
-          CellText := IntToHex64(MainRecord.LoadOrderFormID, 8);
+          CellText := MainRecord.LoadOrderFormID.ToString;
       end;
     end else
       CellText := Element.Value;
@@ -14447,12 +14572,21 @@ begin
       JvInterpreterError(ieDirectInvalidArgument, 0);
   end
   else if SameText(Identifier, 'AddNewFile') and (Args.Count = 0) then begin
-    AddNewFile(_File);
+    AddNewFile(_File, False);
+    Value := _File;
+    Done := True;
+  end
+  else if SameText(Identifier, 'AddNewFile') and (Args.Count = 1) then begin
+    AddNewFile(_File, Args.Values[0]);
     Value := _File;
     Done := True;
   end
   else if SameText(Identifier, 'AddNewFileName') and (Args.Count = 1) then begin
-    Value := AddNewFileName(Args.Values[0]);
+    Value := AddNewFileName(Args.Values[0], False);
+    Done := True;
+  end
+  else if SameText(Identifier, 'AddNewFileName') and (Args.Count = 2) then begin
+    Value := AddNewFileName(Args.Values[0], Args.Values[1]);
     Done := True;
   end
   else if SameText(Identifier, 'AddRequiredElementMasters') and (Args.Count = 3) then begin
@@ -15070,7 +15204,7 @@ begin
   if (FormID <> 0) and (FileID >= Low(Files)) and (FileID <= High(Files)) then begin
     _File := Files[FileID];
     FormID := (FormID and $00FFFFFF) or (Cardinal(_File.MasterCount) shl 24);
-    MainRecord := _File.RecordByFormID[FormID, True];
+    MainRecord := _File.RecordByFormID[TwbFormID.CreateInt(FormID), True];
     if Assigned(MainRecord) then begin
       MainRecord := MainRecord.WinningOverride;
 
@@ -15151,10 +15285,10 @@ begin
     frmMain.LoaderStarted := True;
     wbProgressCallback := LoaderProgress;
     try
-      if ltLoadOrderOffset + ltLoadList.Count >= 255 then begin
+      {if ltLoadOrderOffset + ltLoadList.Count >= 255 then begin
         LoaderProgress('Too many plugins selected. Adding '+IntToStr(ltLoadList.Count)+' files would exceed the maximum index of 254');
         wbLoaderError := True;
-      end else begin
+      end else} begin
         if not Assigned(wbContainerHandler) then begin
           wbContainerHandler := wbCreateContainerHandler;
 
@@ -15630,4 +15764,6 @@ begin  // Let's show from 1 to 32 lines to pick from
   inherited;
 end;
 
+initialization
+  wbDarkMode := wbIsDarkMode;
 end.
