@@ -4072,6 +4072,7 @@ begin
                                 ValidCRCs := wbDecodeCRCList(Copy(s, Succ(k), High(Integer)));
                                 Delete(s, k, High(Integer));
                                 s := Trim(s);
+                                sl2[j] := s;
                               end;
                             end;
                             if Length(s) > 0 then begin
