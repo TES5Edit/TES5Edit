@@ -3591,7 +3591,7 @@ procedure TfrmMain.DoInit;
   end;
 
 var
-  i, j, k, l    : Integer;
+  i, j, k, l, m : Integer;
   e             : Boolean;
   s             : string;
   sl, sl2, sl3  : TStringList;
@@ -4108,12 +4108,14 @@ begin
                           end else begin
                             k := Abs(Integer(sl2.Objects[0]));
                             for j := 1 to Pred(sl2.Count) do begin
-                              if Abs(Integer(sl2.Objects[j])) <= k then begin
+                              m := Abs(Integer(sl2.Objects[j]));
+                              if m <= k then begin
                                 sl2.Clear;
                                 MessageGiven := True;
                                 AddMessage(MessagePrefix + 'plugins are not in the correct order');
                                 Break;
                               end;
+                              k := m;
                             end;
                             for j := Pred(sl2.Count) downto 0 do
                               if Integer(sl2.Objects[j]) < 0 then
