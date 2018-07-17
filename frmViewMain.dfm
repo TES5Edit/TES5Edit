@@ -76,6 +76,7 @@ object frmMain: TfrmMain
       RaggedRight = True
       TabOrder = 0
       TabPosition = tpBottom
+      OnChange = pgMainChange
       object tbsView: TTabSheet
         Caption = 'View'
         OnShow = tbsViewShow
@@ -1309,7 +1310,7 @@ object frmMain: TfrmMain
           WideText = 'Name'
         end>
     end
-    object Panel5: TPanel
+    object pnlSearch: TPanel
       Left = 0
       Top = 0
       Width = 455
