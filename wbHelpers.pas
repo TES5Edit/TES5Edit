@@ -101,8 +101,10 @@ procedure SaveFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
 procedure LoadFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
 function wbDDSDataToBitmap(aData: TBytes; Bitmap: TBitmap): Boolean;
 function wbDDSStreamToBitmap(aStream: TStream; Bitmap: TBitmap): Boolean;
+function wbCRC32Ptr(aData: Pointer; aSize: Integer): Cardinal;
 function wbCRC32Data(aData: TBytes): Cardinal;
 function wbCRC32File(aFileName: string): Cardinal;
+function wbCRC32App: Cardinal;
 function bscrc32(const aText: string): Cardinal; // hashing func used in Fallout 4
 function wbDecodeCRCList(const aList: string): TDynCardinalArray;
 function wbSHA1Data(aData: TBytes): string;
@@ -159,6 +161,7 @@ function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames
 implementation
 
 uses
+  System.SyncObjs,
   StrUtils,
   wbSort;
 
@@ -731,6 +734,11 @@ asm
 {$ENDIF WIN32}
 end;
 
+function wbCRC32Ptr(aData: Pointer; aSize: Integer): Cardinal;
+begin
+  Result := not ShaCrcRefresh($FFFFFFFF, aData, aSize);
+end;
+
 function wbCRC32Data(aData: TBytes): Cardinal;
 begin
   Result := not ShaCrcRefresh($FFFFFFFF, @aData[0], Length(aData));
@@ -749,6 +757,30 @@ begin
     finally
       Free;
     end;
+end;
+
+var
+  _CRC32AppLock : TRTLCriticalSection;
+  _CRC32App     : Cardinal;
+
+function wbCRC32App: Cardinal;
+begin
+  if DebugHook <> 0 then
+    Exit($FFFFFFFF);
+
+  Result := _CRC32App;
+  if Result = 0 then begin
+    _CRC32AppLock.Enter;
+    try
+      Result := _CRC32App;
+      if Result = 0 then begin
+        Result := wbCRC32File(ParamStr(0));
+        _CRC32App := Result;
+      end;
+    finally
+      _CRC32AppLock.Leave;
+    end;
+  end;
 end;
 
 function wbDecodeCRCList(const aList: string): TDynCardinalArray;
@@ -1370,5 +1402,7 @@ end;
 
 initialization
   CRCInit;
-
+  _CRC32AppLock.Initialize;
+finalization
+  _CRC32AppLock.Destroy;
 end.

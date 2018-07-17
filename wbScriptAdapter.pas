@@ -911,7 +911,7 @@ var
 begin
   Value := 0;
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
-    Value := MainRecord.FormID.ToInt;
+    Value := MainRecord.FormID.ToCardinal;
 end;
 
 procedure IwbMainRecord_EditorID(var Value: Variant; Args: TJvInterpreterArgs);
@@ -939,7 +939,7 @@ var
 begin
   Value := 0;
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
-    Value := MainRecord.FixedFormID.ToInt;
+    Value := MainRecord.FixedFormID.ToCardinal;
 end;
 
 procedure IwbMainRecord_GetLoadOrderFormID(var Value: Variant; Args: TJvInterpreterArgs);
@@ -948,7 +948,7 @@ var
 begin
   Value := 0;
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
-    Value := MainRecord.LoadOrderFormID.ToInt;
+    Value := MainRecord.LoadOrderFormID.ToCardinal;
 end;
 
 procedure IwbMainRecord_SetLoadOrderFormID(var Value: Variant; Args: TJvInterpreterArgs);
@@ -956,7 +956,7 @@ var
   MainRecord: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
-    MainRecord.LoadOrderFormID := TwbFormID.CreateVar(Args.Values[1]);
+    MainRecord.LoadOrderFormID := TwbFormID.FromVar(Args.Values[1]);
 end;
 
 procedure IwbMainRecord_GetIsDeleted(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1122,7 +1122,7 @@ var
   MainRecord: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
-    Value := MainRecord.BaseRecordID.ToInt;
+    Value := MainRecord.BaseRecordID.ToCardinal;
 end;
 
 procedure IwbMainRecord_UpdateRefs(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1196,7 +1196,7 @@ var
   MainRecord: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
-    Value := MainRecord.CompareExchangeFormID(TwbFormID.CreateVar(Args.Values[1]), TwbFormID.CreateVar(Args.Values[2]));
+    Value := MainRecord.CompareExchangeFormID(TwbFormID.FromVar(Args.Values[1]), TwbFormID.FromVar(Args.Values[2]));
 end;
 
 procedure IwbMainRecord_ChangeFormSignature(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1340,7 +1340,7 @@ var
 begin
   Value := 0;
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    Value := _File.NewFormID.ToInt;
+    Value := _File.NewFormID.ToCardinal;
 end;
 
 procedure IwbFile_GetIsESM(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1425,7 +1425,7 @@ var
   _File: IwbFile;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    Value := _File.RecordByFormID[TwbFormID.CreateVar(Args.Values[1]), Args.Values[2]];
+    Value := _File.RecordByFormID[TwbFormID.FromVar(Args.Values[1]), Args.Values[2]];
 end;
 
 procedure IwbFile_RecordByEditorID(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1465,7 +1465,7 @@ var
   _File: IwbFile;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    Value := _File.LoadOrderFormIDtoFileFormID(TwbFormID.CreateVar(Args.Values[1])).ToInt;
+    Value := _File.LoadOrderFormIDtoFileFormID(TwbFormID.FromVar(Args.Values[1])).ToCardinal;
 end;
 
 procedure IwbFile_FileFormIDtoLoadOrderFormID(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1473,7 +1473,7 @@ var
   _File: IwbFile;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    Value := _File.FileFormIDtoLoadOrderFormID(TwbFormID.CreateVar(Args.Values[1])).ToInt;
+    Value := _File.FileFormIDtoLoadOrderFormID(TwbFormID.FromVar(Args.Values[1])).ToCardinal;
 end;
 
 procedure IwbFile_WriteToStream(var Value: Variant; Args: TJvInterpreterArgs);

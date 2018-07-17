@@ -424,35 +424,40 @@ type
 
   TwbFileID = record
   private
-    _Minor: SmallInt;
-    _Major: SmallInt;
+    _LightSlot : SmallInt;
+    _FullSlot  : SmallInt;
   public
-    constructor Create(aMajor: SmallInt; aMinor: SmallInt = -1);
+    class function Create(aFullSlot: SmallInt; aLightSlot: SmallInt = -1): TwbFileID; inline; static;
+    class function Null: TwbFileID; static; inline;
 
     class operator Equal(const A, B: TwbFileID): Boolean; inline;
 
     function ToString: string;
 
-    property Major: SmallInt read _Major;
-    property Minor: SmallInt read _Minor;
+    property FullSlot: SmallInt read _FullSlot;
+    property LightSlot: SmallInt read _LightSlot;
   end;
 
   TwbFileIDs = array of TwbFileID;
 
   TwbFormID = record
   private
+    //Can not have any other fields and field must remain Cardinal.
+    //There are implicit dependencies on this in multiple places in the code
+    //which will not cause compiler errors, but result in runtime failures
+    //if this is not observed.
     _FormID: Cardinal;
 
     function GetFileID: TwbFileID;
     procedure SetFileID(const Value: TwbFileID);
 
-    function GetObjectID: Integer;
-    procedure SetObjectID(const Value: Integer);
+    function GetObjectID: Cardinal;
+    procedure SetObjectID(const Value: Cardinal);
   public
-    constructor CreateInt(aValue: Cardinal); overload;
-    constructor CreateStr(const aValue: string); overload;
-    constructor CreateStrDef(const aValue: string; aDef: Cardinal); overload;
-    constructor CreateVar(const aValue: Variant); overload;
+    class function FromCardinal(const aValue: Cardinal): TwbFormID; static; inline;
+    class function FromStr(const aValue: string): TwbFormID; static; inline;
+    class function FromStrDef(const aValue: string; aDef: Cardinal = 0): TwbFormID; static; inline;
+    class function FromVar(const aValue: Variant): TwbFormID; static; inline;
 
     class function Null: TwbFormID; static; inline;
 
@@ -472,7 +477,6 @@ type
 
     function ChangeFileID(aFileID: TwbFileID): TwbFormID; inline;
     function ToString: string; inline;
-    function ToInt: Cardinal; inline;
 
     function IsNull   : Boolean; inline;
     function IsPlayer : Boolean; inline;
@@ -480,10 +484,12 @@ type
 
     function IsHardcoded: Boolean; inline;
 
+    property ToCardinal: Cardinal
+      read _FormID;
     property FileID: TwbFileID
       read GetFileID
       write SetFileID;
-    property ObjectID: Integer
+    property ObjectID: Cardinal
       read GetObjectID
       write SetObjectID;
   end;
@@ -829,7 +835,8 @@ type
     fsIsHardcoded,
     fsIsGameMaster,
     fsIsTemporary,
-    fsHasNoFormID
+    fsHasNoFormID,
+    fsRefsBuild
   );
 
   TwbFileStates = set of TwbFileState;
@@ -844,12 +851,15 @@ type
     function GetRecordByFormID(aFormID: TwbFormID; aAllowInjected: Boolean): IwbMainRecord;
     function GetRecordByEditorID(const aEditorID: string): IwbMainRecord;
     function GetLoadOrder: Integer;
-    function GetFileID: TwbFileID;
+    function GetLoadOrderFileID: TwbFileID;
+    function GetFileFileID: TwbFileID;
     procedure ForceLoadOrder(aValue: Integer);
     function GetGroupBySignature(const aSignature: TwbSignature): IwbGroupRecord;
     function HasGroup(const aSignature: TwbSignature): Boolean;
     function GetFileStates: TwbFileStates;
+    function GetCRC32: Cardinal;
     procedure BuildReachable;
+    procedure BuildOrLoadRef(aOnlyLoad: Boolean);
 
     function LoadOrderFormIDtoFileFormID(aFormID: TwbFormID): TwbFormID;
     function FileFormIDtoLoadOrderFormID(aFormID: TwbFormID): TwbFormID;
@@ -912,11 +922,16 @@ type
 
     property LoadOrder: Integer //do NOT use this to build FormIDs, use FileID instead
       read GetLoadOrder;
-    property FileID: TwbFileID
-      read GetFileID;
+    property LoadOrderFileID: TwbFileID
+      read GetLoadOrderFileID;
+    property FileFileID: TwbFileID
+      read GetFileFileID;
 
     property FileStates: TwbFileStates
       read GetFileStates;
+
+    property CRC32: Cardinal
+      read GetCRC32;
 
     property IsESM: Boolean
       read GetIsESM
@@ -3184,6 +3199,10 @@ var
   wbLoaderDone       : Boolean;
   wbLoaderError      : Boolean;
 
+{$IFDEF USE_PARALLEL_BUILD_REFS}
+  wbBuildingRefsParallel : Boolean = False;
+{$ENDIF}
+
 procedure wbAddGroupOrder(const aSignature: TwbSignature);
 function wbGetGroupOrder(const aSignature: TwbSignature): Integer;
 
@@ -3245,10 +3264,10 @@ var
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
-function wbIsSkyrim: Boolean;
-function wbIsFallout3: Boolean;
-function wbIsFallout4: Boolean;
-function wbIsEslSupported: Boolean;
+function wbIsSkyrim: Boolean; inline;
+function wbIsFallout3: Boolean; inline;
+function wbIsFallout4: Boolean; inline;
+function wbIsEslSupported: Boolean; inline;
 
 procedure ReportDefs;
 
@@ -11190,7 +11209,7 @@ begin
     Exit;
 
   if (aInt <> 0) and (aInt <> $14) then
-    aElement.AddReferencedFromID(TwbFormID.CreateInt(aInt));
+    aElement.AddReferencedFromID(TwbFormID.FromCardinal(aInt));
 end;
 
 function TwbFormIDDefFormater.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
@@ -11215,7 +11234,7 @@ begin
     _File := aElement._File;
     if Assigned(_File) then begin
       try
-        MainRecord := _File.RecordByFormID[TwbFormID.CreateInt(aInt), True];
+        MainRecord := _File.RecordByFormID[TwbFormID.FromCardinal(aInt), True];
         if Assigned(MainRecord) then
           Exit;
       except
@@ -11259,8 +11278,8 @@ begin
     if Assigned(_File) then begin
       //aInt is a file specific FormID
       //aOldFormID and aNewFormID are load order specific
-      if _File.FileFormIDtoLoadOrderFormID(TwbFormID.CreateInt(aInt)) = aOldFormID then begin
-        aInt := _File.LoadOrderFormIDtoFileFormID(aNewFormID).ToInt;
+      if _File.FileFormIDtoLoadOrderFormID(TwbFormID.FromCardinal(aInt)) = aOldFormID then begin
+        aInt := _File.LoadOrderFormIDtoFileFormID(aNewFormID).ToCardinal;
         Result := True;
       end;
     end;
@@ -11324,7 +11343,7 @@ begin
       CheckedFiles.Free;
     end;
   end else try
-    Result := _File.RecordByFormID[TwbFormID.CreateInt(aInt), True];
+    Result := _File.RecordByFormID[TwbFormID.FromCardinal(aInt), True];
   except end;
 end;
 
@@ -11396,7 +11415,7 @@ begin
     _File := aElement._File;
     if Assigned(_File) then begin
       //Result is a load order FormID right now, we need to store a file specific FormID
-      Result := _File.LoadOrderFormIDtoFileFormID(TwbFormID.CreateInt(Result)).ToInt;
+      Result := _File.LoadOrderFormIDtoFileFormID(TwbFormID.FromCardinal(Result)).ToCardinal;
     end;
   end;
 end;
@@ -11594,7 +11613,7 @@ begin
   if Assigned(aElement) then begin
     _File := aElement._File;
     if Assigned(_File) then try
-      Result := _File.RecordByFormID[TwbFormID.CreateInt(aInt), True];
+      Result := _File.RecordByFormID[TwbFormID.FromCardinal(aInt), True];
     except end;
   end;
 end;
@@ -11607,7 +11626,7 @@ begin
   if Assigned(aElement) then begin
     _File := aElement._File;
     if Assigned(_File) then
-      Result := _File.RecordByFormID[TwbFormID.CreateInt(aInt), True];
+      Result := _File.RecordByFormID[TwbFormID.FromCardinal(aInt), True];
   end;
 end;
 
@@ -11674,7 +11693,7 @@ begin
     Exit;
 
   if aInt <> 0 then
-    Result := FixupFormID(TwbFormID.CreateInt(aInt), aOld, aNew).ToInt;
+    Result := FixupFormID(TwbFormID.FromCardinal(aInt), aOld, aNew).ToCardinal;
 end;
 
 procedure TwbFormIDDefFormater.Report(const aParents: TwbDefPath);
@@ -11724,7 +11743,7 @@ var
   MainRecord: IwbMainRecord;
 begin
   if (aInt < $800) or (aInt = $FFFFFFFF) then begin
-    Result := TwbFormID.CreateInt(aInt).ToString;
+    Result := TwbFormID.FromCardinal(aInt).ToString;
     Exit;
   end;
 
@@ -11735,13 +11754,13 @@ begin
       Exit;
     except
       on E: Exception do begin
-        Result := TwbFormID.CreateInt(aInt).ToString;
+        Result := TwbFormID.FromCardinal(aInt).ToString;
         Exit;
       end;
     end;
   end;
 
-  Result := TwbFormID.CreateInt(aInt).ToString;
+  Result := TwbFormID.FromCardinal(aInt).ToString;
 end;
 
 function TwbFormIDDefFormater.ToString(aInt: Int64; const aElement: IwbElement): string;
@@ -11822,7 +11841,7 @@ begin
     _File := aElement._File;
     if Assigned(_File) then begin
       try
-        MainRecord := _File.RecordByFormID[TwbFormID.CreateInt(aInt), True];
+        MainRecord := _File.RecordByFormID[TwbFormID.FromCardinal(aInt), True];
         if Assigned(MainRecord) then begin
           Result := MainRecord.Name;
           if wbReportMode then
@@ -12260,7 +12279,7 @@ begin
           if (aInt <> $0) and (aInt <> $14) and ((Length(NotFoundFormIDAtOffSet) < Succ(OffSet)) or (NotFoundFormIDAtOffSet[Offset] < 1)) then begin
             MainRecord := nil;
             try
-              MainRecord := _File.RecordByFormID[TwbFormID.CreateInt(aInt), True];
+              MainRecord := _File.RecordByFormID[TwbFormID.FromCardinal(aInt), True];
             except
               on E: Exception do begin
                 MainRecord := nil;
@@ -12819,7 +12838,7 @@ begin
     _File := aElement._File;
     if Assigned(_File) then begin
       try
-        MainRecord := _File.RecordByFormID[TwbFormID.CreateInt(aInt), True];
+        MainRecord := _File.RecordByFormID[TwbFormID.FromCardinal(aInt), True];
         if Assigned(MainRecord) then begin
           Found := MainRecord.Signature;
           if fidcValidRefs.IndexOf(Found) < 0 then
@@ -14058,15 +14077,15 @@ begin
 
   MgefCode := PCardinal(@s[1]);
 
-  //aOld and aNew are file specific, so we only need to look at Major part.
+  //aOld and aNew are file specific, so we only need to look at FullSlot part.
 
   Assert(Length(aOld) = Length(aNew));
   if (MgefCode^ and $80000000) <> 0 then
     { yes, it's a dynamic code }
     for i := Low(aOld) to High(aOld) do
-      if (MgefCode^ and $000000FF) = aOld[i].Major then begin
+      if (MgefCode^ and $000000FF) = aOld[i].FullSlot then begin
         { yes, it refers to this file }
-        MgefCode^ := (MgefCode^ and $FFFFFF00) or aNew[i].Major;
+        MgefCode^ := (MgefCode^ and $FFFFFF00) or aNew[i].FullSlot;
         FromStringNative(aBasePtr, aEndPtr, aElement, s);
         aElement.NotifyChanged(Pointer(aElement.Container));
         Exit;
@@ -14086,7 +14105,7 @@ var
   i, j     : Integer;
   MgefCode : Cardinal;
   _File    : IwbFile;
-  FileID   : Byte;
+  FileID   : Cardinal;
   t        : AnsiString;
 begin
   case aTransformType of
@@ -14112,6 +14131,7 @@ begin
                 else
                   Result := AnsiString(_File.Masters[FileID].Name);
 
+                //TODO: should that be IntToHex instead?
                 Result := Result + ':' + AnsiString(IntToStr((MgefCode and not $800000FF) shr 8));
 
                 Exit;
@@ -14169,7 +14189,7 @@ begin
               if FileID = $FF then
                 FileID := _File.MasterCount
               else
-                FileID := _File.LoadOrderFileIDtoFileFileID(TwbFileID.Create(FileID)).Major;
+                FileID := _File.LoadOrderFileIDtoFileFileID(TwbFileID.Create(FileID)).FullSlot;
           end;
         end;
 
@@ -14938,27 +14958,27 @@ begin
   Result := CmpW32(A._FormID, B._FormID);
 end;
 
-constructor TwbFormID.CreateVar(const aValue: Variant);
+class function TwbFormID.FromVar(const aValue: Variant): TwbFormID;
 begin
   if VarIsOrdinal(aValue) then
-    CreateInt(Int64(aValue))
+    Result._FormID := Int64(aValue)
   else
-    CreateStr(string(aValue));
+    Result._FormID := StrToInt64('$' + string(aValue));
 end;
 
-constructor TwbFormID.CreateStrDef(const aValue: string; aDef: Cardinal);
+class function TwbFormID.FromStrDef(const aValue: string; aDef: Cardinal): TwbFormID;
 begin
-  CreateInt(StrToInt64Def('$' + aValue, aDef));
+  Result._FormID := StrToInt64Def('$' + aValue, aDef);
 end;
 
-constructor TwbFormID.CreateStr(const aValue: string);
+class function TwbFormID.FromStr(const aValue: string): TwbFormID;
 begin
-  CreateInt(StrToInt64('$' + aValue));
+  Result._FormID := StrToInt64('$' + aValue);
 end;
 
-constructor TwbFormID.CreateInt(aValue: Cardinal);
+class function TwbFormID.FromCardinal(const aValue: Cardinal): TwbFormID;
 begin
-  _FormID := aValue;
+  Result._FormID := aValue;
 end;
 
 class operator TwbFormID.Equal(const A, B: TwbFormID): Boolean;
@@ -14968,16 +14988,16 @@ end;
 
 function TwbFormID.GetFileID: TwbFileID;
 begin
-  Result._Major := _FormID shr 24;
-  if Result._Major = $FE then
-    Result._Minor := (_FormID shr 12) and $FFF
+  Result._FullSlot := _FormID shr 24;
+  if (Result._FullSlot = $FE) and wbIsEslSupported then
+    Result._LightSlot := (_FormID shr 12) and $FFF
   else
-    Result._Minor := -1;
+    Result._LightSlot := -1;
 end;
 
-function TwbFormID.GetObjectID: Integer;
+function TwbFormID.GetObjectID: Cardinal;
 begin
-  if FileID.Minor >= 0 then
+  if FileID._LightSlot >= 0 then
     Result := _FormID and $FFF
   else
     Result := _FormID and $FFFFFF;
@@ -14995,12 +15015,13 @@ end;
 
 class operator TwbFormID.Inc(const A: TwbFormID): TwbFormID;
 var
-  Mask: UInt64;
+  Mask: Cardinal;
 begin
-  if A.FileID.Minor >= 0 then begin
+  if A.FileID.LightSlot >= 0 then begin
     Mask := $FFF
   end else
     Mask := $FFFFFF;
+
   Result._FormID := (A._FormID and (not Mask)) or Max(Succ(A._FormID and Mask) and Mask, 2048);
 end;
 
@@ -15041,27 +15062,27 @@ end;
 
 class function TwbFormID.Null: TwbFormID;
 begin
-  Result := TwbFormID.CreateInt(0);
+  Result := TwbFormID.FromCardinal(0);
 end;
 
 procedure TwbFormID.SetFileID(const Value: TwbFileID);
 begin
-  if Value._Minor >= 0 then
-    _FormID := (_FormID and $FFF) or (Cardinal(Value._Minor) shl 12) or $FE000000
+  if Value.LightSlot >= 0 then
+    _FormID := (_FormID and $FFF) or (Cardinal(Value.LightSlot) shl 12) or $FE000000
   else begin
-    if FileID._Minor >= 0 then
-      _FormID := (_FormID and $FFF)
+    if FileID.LightSlot >= 0 then
+      _FormID := _FormID and $FFF
     else
-      _FormID := (_FormID and $FFFFFF);
-    _FormID := _FormID or (Cardinal(Value._Major) shl 24);
+      _FormID := _FormID and $FFFFFF;
+    _FormID := _FormID or (Cardinal(Value.FullSlot) shl 24);
   end;
 end;
 
-procedure TwbFormID.SetObjectID(const Value: Integer);
+procedure TwbFormID.SetObjectID(const Value: Cardinal);
 var
-  Mask: UInt64;
+  Mask: Cardinal;
 begin
-  if FileID.Minor >= 0 then begin
+  if FileID.LightSlot >= 0 then begin
     Mask := $FFF
   end else
     Mask := $FFFFFF;
@@ -15069,7 +15090,7 @@ begin
   if Value <> (Value and Mask) then
     raise ERangeError.Create('ObjectID out of bounds');
 
-  _FormID := (_FormID and (not Mask)) or UInt64(Value);
+  _FormID := (_FormID and (not Mask)) or Value;
 end;
 
 class operator TwbFormID.Subtract(const A, B: TwbFormID): Int64;
@@ -15082,11 +15103,6 @@ begin
   Result._FormID := A._FormID - B;
 end;
 
-function TwbFormID.ToInt: Cardinal;
-begin
-  Result := _FormID;
-end;
-
 function TwbFormID.ToString: string;
 begin
   Result := IntToHex64(_FormID, 8);
@@ -15094,26 +15110,34 @@ end;
 
 { TwbFileID }
 
-constructor TwbFileID.Create(aMajor, aMinor: SmallInt);
+class function TwbFileID.Create(aFullSlot, aLightSlot: SmallInt): TwbFileID;
 begin
-  _Major := aMajor;
-  _Minor := aMinor;
+  with Result do begin
+    _FullSlot := aFullSlot;
+    _LightSlot := aLightSlot;
+  end;
 end;
 
 class operator TwbFileID.Equal(const A, B: TwbFileID): Boolean;
 begin
-  if (A._Minor < 0) or (B._Minor < 0) then
-    Result := A.Major = B.Major
+  if (A._LightSlot < 0) or (B._LightSlot < 0) then
+    Result := A._FullSlot = B._FullSlot
   else
-    Result := A._Minor = B._Minor;
+    Result := A._LightSlot = B._LightSlot;
+end;
+
+class function TwbFileID.Null: TwbFileID;
+begin
+  Result._LightSlot := -1;
+  Result._FullSlot := 0;
 end;
 
 function TwbFileID.ToString: string;
 begin
-  if _Minor >= 0 then
-    Result := 'FE ' + IntToHex(_Minor, 3)
+  if _LightSlot >= 0 then
+    Result := 'FE ' + IntToHex(_LightSlot, 3)
   else
-    Result := IntToHex(_Major, 2);
+    Result := IntToHex(_FullSlot, 2);
 end;
 
 initialization

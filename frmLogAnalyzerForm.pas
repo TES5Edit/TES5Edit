@@ -58,7 +58,7 @@ type
     ProcessLog: function (const aFileName: String): Boolean of object;
 //    function FormIDFromString(s: String): String;
     function BracketedFormIDFromString(s: String; Brackets: string = '()'): String;
-    function RecordByFormID(FormID: TwbFormID): IwbMainRecord;
+    function RecordByLoadOrderFormID(FormID: TwbFormID): IwbMainRecord;
     procedure BuildPluginsList;
     function ParsePapyrusData(const aData: String): Boolean;
     function ReadPapyrusLog(const aFileName: String): Boolean;
@@ -184,7 +184,7 @@ end;
 
 { TfrmLogAnalyzer }
 
-function TfrmLogAnalyzer.RecordByFormID(FormID: TwbFormID): IwbMainRecord;
+function TfrmLogAnalyzer.RecordByLoadOrderFormID(FormID: TwbFormID): IwbMainRecord;
 var
   _File  : IwbFile;
   FileID : TwbFileID;
@@ -193,24 +193,24 @@ begin
   Result := nil;
   FileID := FormID.FileID;
 
-  if FileID.Major = $FF then
+  if FileID.FullSlot = $FF then
     Exit;
 
   _File := nil;
   j := Low(PFiles^);
   while (j <= High(PFiles^)) and not Assigned(_File) do begin
-    if PFiles^[j].FileID = FileID then
+    if PFiles^[j].LoadOrderFileID = FileID then
       _File := PFiles^[j];
     Inc(j);
   end;
   while Assigned(_File) do begin
-    Result := _File.RecordByFormID[FormID.ChangeFileID(TwbFileID.Create(_File.MasterCount)), True];
+    Result := _File.RecordByFormID[FormID.ChangeFileID(_File.FileFileID), True];
     if Assigned(Result) then
       Exit;
 
     _File := nil;
     while (j <= High(PFiles^)) and not Assigned(_File) do begin
-      if PFiles^[j].FileID = FileID then
+      if PFiles^[j].LoadOrderFileID = FileID then
         _File := PFiles^[j];
       Inc(j);
     end;
@@ -453,11 +453,11 @@ begin
       (Pos('in the type table in save', txt) > 0) or
       (Pos('referenced by the save game', txt) > 0)
     then
-      fid := TwbFormID.CreateInt($FF000000)
+      fid := TwbFormID.FromCardinal($FF000000)
     else
       Exit;
   end else
-    fid := TwbFormID.CreateStrDef(s, 0);
+    fid := TwbFormID.FromStrDef(s, 0);
 
   for i := Low(LogEntries) to High(LogEntries) do
     if LogEntries[i].FormID = fid then begin
@@ -468,8 +468,8 @@ begin
       Exit;
     end;
 
-  elem := RecordByFormID(fid);
-  if (fid.FileID.Major <> $FF) and not Assigned(elem) then begin
+  elem := RecordByLoadOrderFormID(fid);
+  if (fid.FileID.FullSlot <> $FF) and not Assigned(elem) then begin
     if FormIDErrors = 0 then
       memoText.Lines.Add('Unknown FormID [' + s + '], changed load order? All other unknown forms will be ignored.');
     Inc(FormIDErrors);
@@ -479,7 +479,7 @@ begin
   SetLength(LogEntries, Succ(Length(LogEntries)));
   with LogEntries[Pred(Length(LogEntries))] do begin
     FormID := fid;
-    LoadOrder := FormID.FileID.Major;
+    LoadOrder := FormID.FileID.FullSlot;
     Element := elem;
     Text := txt;
     if IsError then Value1 := 1 else Value1 := 0;
@@ -529,7 +529,7 @@ begin
   if s = '' then
     Exit;
 
-  fid := TwbFormID.CreateStrDef(s, 0);
+  fid := TwbFormID.FromStrDef(s, 0);
 
   sTime := Copy(aData, 18, Length(aData));
   sTime := Copy(sTime, 1, Pos(' ', sTime));
@@ -546,8 +546,8 @@ begin
       Exit;
     end;
 
-  elem := RecordByFormID(fid);
-  if (fid.FileID.Major <> $FF) and not Assigned(elem) then begin
+  elem := RecordByLoadOrderFormID(fid);
+  if (fid.FileID.FullSlot <> $FF) and not Assigned(elem) then begin
     if FormIDErrors = 0 then
       memoText.Lines.Add('Unknown FormID [' + s + '], changed load order? All other unknown forms will be ignored.');
     Inc(FormIDErrors);
@@ -557,7 +557,7 @@ begin
   SetLength(LogEntries, Succ(Length(LogEntries)));
   with LogEntries[Pred(Length(LogEntries))] do begin
     FormID := fid;
-    LoadOrder := FormID.FileID.Major;
+    LoadOrder := FormID.FileID.FullSlot;
     Element := elem;
     Text := txt;
     Value1 := 1;
