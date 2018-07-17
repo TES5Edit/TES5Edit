@@ -42,6 +42,10 @@ uses
   ShellAPI,
   IOUtils,
   Actions,
+{$IFDEF USE_PARALLEL_BUILD_REFS}
+  System.Threading,
+  System.SyncObjs,
+{$ENDIF}
   pngimage,
   RegularExpressionsCore,
   VirtualTrees,
@@ -203,7 +207,7 @@ type
     tmrCheckUnsaved: TTimer;
     mniViewRemoveFromSelected: TMenuItem;
     pnlNav: TPanel;
-    Panel5: TPanel;
+    pnlSearch: TPanel;
     Panel3: TPanel;
     edFormIDSearch: TLabeledEdit;
     Panel4: TPanel;
@@ -531,6 +535,7 @@ type
     procedure mniRefByCompareSelectedClick(Sender: TObject);
     procedure mniMessagesClearClick(Sender: TObject);
     procedure mniMessagesSaveSelectedClick(Sender: TObject);
+    procedure pgMainChange(Sender: TObject);
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -714,11 +719,11 @@ type
 //    STATsWithWindows: TStringList;
 
     PluggyLinkState: TwbPluggyLinkState;
-    PluggyFormID: Cardinal;
-    PluggyBaseFormID: Cardinal;
-    PluggyInventoryFormID: Cardinal;
-    PluggyEnchantmentFormID: Cardinal;
-    PluggySpellFormID: Cardinal;
+    PluggyFormID: TwbFormID;
+    PluggyBaseFormID: TwbFormID;
+    PluggyInventoryFormID: TwbFormID;
+    PluggyEnchantmentFormID: TwbFormID;
+    PluggySpellFormID: TwbFormID;
     PluggyLinkThread: TPluggyLinkThread;
 
     FileCRCs: TwbFastStringListIC;
@@ -765,7 +770,7 @@ type
     procedure SendAddFile(const aFile: IwbFile);
     procedure SendLoaderDone;
 
-    procedure PostPluggyChange(aFormID, aBaseFormID, aInventoryFormID, aEnchantmentFormID, aSpellFormID: Cardinal);
+    procedure PostPluggyChange(aFormID, aBaseFormID, aInventoryFormID, aEnchantmentFormID, aSpellFormID: TwbFormID);
   end;
 
   TLoaderThread = class(TThread)
@@ -787,11 +792,11 @@ type
   TPluggyLinkThread = class(TThread)
   private
     plFolder                : string;
-    plLastFormID            : Cardinal;
-    plLastBaseFormID        : Cardinal;
-    plLastInventoryFormID   : Cardinal;
-    plLastEnchantmentFormID : Cardinal;
-    plLastSpellFormID       : Cardinal;
+    plLastFormID            : TwbFormID;
+    plLastBaseFormID        : TwbFormID;
+    plLastInventoryFormID   : TwbFormID;
+    plLastEnchantmentFormID : TwbFormID;
+    plLastSpellFormID       : TwbFormID;
   protected
     procedure Execute; override;
     procedure ChangeDetected;
@@ -925,7 +930,7 @@ var
 function wbLighter(Color: TColor; Amount: Double = 0.5): TColor;
 begin
   if wbDarkMode then
-    Result := Darker(Color, Amount)
+    Result := Darker(Color, Amount * 0.95)
   else
     Result := Lighter(Color, Amount);
 end;
@@ -975,7 +980,7 @@ begin
 
   try
     if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then try
-      Result := TwbFormID.CreateStr(s);
+      Result := TwbFormID.FromStr(s);
     except
       on E: Exception do
         Application.HandleException(E);
@@ -2035,10 +2040,10 @@ begin
     ReferencedBy[i] := ActiveMaster.ReferencedBy[i];
 
   if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then try
-    NewFormID := TwbFormID.CreateStr(s);
+    NewFormID := TwbFormID.FromStr(s);
     if NewFormID.IsNull then
       raise Exception.Create('00000000 is not a valid FormID');
-    if NewFormID.ToInt = $14 then
+    if NewFormID.IsPlayer then
       raise Exception.Create('00000014 is not a valid FormID');
 
     OldFormID := MainRecord.LoadOrderFormID;
@@ -4414,13 +4419,13 @@ begin
     Key := 0;
 
     s := Trim(edFormIDSearch.Text);
-    FormID := TwbFormID.CreateStrDef(s, 0);
+    FormID := TwbFormID.FromStrDef(s, 0);
     FileID := FormID.FileID;
     if not FormID.IsNull then begin
       _File := nil;
       j := Low(Files);
       while (j <= High(Files)) and not Assigned(_File) do begin
-        if Files[j].FileID = FileID then
+        if Files[j].LoadOrderFileID = FileID then
           _File := Files[j];
         Inc(j);
       end;
@@ -4456,7 +4461,7 @@ begin
         end;
         _File := nil;
         while (j <= High(Files)) and not Assigned(_File) do begin
-          if Files[j].FileID = FileID then
+          if Files[j].LoadOrderFileID = FileID then
             _File := Files[j];
           Inc(j);
         end;
@@ -4909,6 +4914,8 @@ end;
 
 procedure TfrmMain.FormShow(Sender: TObject);
 begin
+  pnlTop.Height := Abs(lblPath.Font.Height) + 21;
+  pnlSearch.Height := Abs(edFormIDSearch.Font.Height) + 16;
   tmrStartup.Enabled := True;
 end;
 
@@ -6430,7 +6437,7 @@ begin
             AddMessage('Skipping line '+IntToStr(i+1)+': Old FormID "'+s+'" is not in the valid range.');
             Continue;
           end;
-          OldRecord := OldMaster.RecordByFormID[TwbFormID.CreateInt(j).ChangeFileID(TwbFileID.Create(OldMaster.MasterCount)), True];
+          OldRecord := OldMaster.RecordByFormID[TwbFormID.FromCardinal(j).ChangeFileID(OldMaster.FileFileID), True];
           if not Assigned(OldRecord) then begin
             AddMessage('Skipping line '+IntToStr(i+1)+': Old Record with FormID "'+s+'" was not found in old Master "'+OldMaster.FileName+'".');
             Continue;
@@ -6442,7 +6449,7 @@ begin
             AddMessage('Skipping line '+IntToStr(i+1)+': New FormID "'+s+'" is not in the valid range.');
             Continue;
           end;
-          NewRecord := NewMaster.RecordByFormID[TwbFormID.CreateInt(j).ChangeFileID(TwbFileID.Create(NewMaster.MasterCount)), True];
+          NewRecord := NewMaster.RecordByFormID[TwbFormID.FromCardinal(j).ChangeFileID(NewMaster.FileFileID), True];
           if not Assigned(NewRecord) then begin
             AddMessage('Skipping line '+IntToStr(i+1)+': New Record with FormID "'+s+'" was not found in new Master "'+NewMaster.FileName+'".');
             Continue;
@@ -6822,10 +6829,10 @@ begin
           if not InputQuery('New FormID generated', 'Please verify the newly generated FormID. The FormID needs to be a load order corrected form ID.', s) then
             Exit;
         end;
-        NewFormID := TwbFormID.CreateStr(s);
+        NewFormID := TwbFormID.FromStr(s);
         if NewFormID.IsNull then
           raise Exception.Create('00000000 is not a valid FormID');
-        if NewFormID.ToInt = $14 then
+        if NewFormID.IsPlayer then
           raise Exception.Create('00000014 is not a valid FormID');
       end else
         Exit;
@@ -6833,7 +6840,7 @@ begin
     end else begin
 
       OldFileID := OldFormID.FileID;
-      if OldFileID = _File.FileID then
+      if OldFileID = _File.LoadOrderFileID then
         Continue;
       NewFormID := _File.FileFormIDtoLoadOrderFormID(_File.NewFormID);
 
@@ -7407,7 +7414,7 @@ begin
       for i := Low(WorldSpaces) to High(WorldSpaces) do begin
         clbWorldspace.AddItem(WorldSpaces[i].Name, TObject(Pointer(WorldSpaces[i])));
         // default selected worldspace at the top
-        if (WorldSpaces[i].LoadOrderFormID.ToInt = $0000003C) or ((wbGameMode = gmFNV) and (WorldSpaces[i].LoadOrderFormID.ToInt = $000DA726)) then
+        if (WorldSpaces[i].LoadOrderFormID.ToCardinal = $0000003C) or ((wbGameMode = gmFNV) and (WorldSpaces[i].LoadOrderFormID.ToCardinal = $000DA726)) then
           j := i;
       end;
 
@@ -9233,14 +9240,14 @@ begin
     if not InputQuery('Start from...', 'Please enter the new module specific start FormID in hex. e.g. 200000. Specify only the last 6 digits.', s) then
       Exit;
 
-    StartFormID := TwbFormID.CreateStrDef(s, 0);
-  until (StartFormID.FileID.Major = 0) and not StartFormID.IsHardcoded;
+    StartFormID := TwbFormID.FromStrDef(s, 0);
+  until (StartFormID.FileID.FullSlot = 0) and not StartFormID.IsHardcoded;
 
   SetLength(MainRecords, _File.RecordCount);
   j := 0;
   for i := Pred(_File.RecordCount) downto 0 do begin
     MainRecords[j] := _File.Records[i];
-    if MainRecords[j].LoadOrderFormID.FileID = _File.FileID then
+    if MainRecords[j].LoadOrderFormID.FileID = _File.LoadOrderFileID then
       Inc(j);
   end;
   if j < 1 then
@@ -9251,7 +9258,7 @@ begin
   TakenFormIDs := nil;
   SetLength(TakenFormIDs, j);
 
-  StartFormID.FileID := _File.FileID;
+  StartFormID.FileID := _File.LoadOrderFileID;
   EndFormID := StartFormID + j;
 
   for i := Low(MainRecords) to High(MainRecords) do begin
@@ -9326,8 +9333,10 @@ begin
           Abort;
       end;
     end;
-    if Supports(_File.Elements[0], IwbMainRecord, MainRecord) and (MainRecord.Signature = 'TES4') then
-      MainRecord.ElementNativeValues['HEDR\Next Object ID'] := (Succ(EndFormID.ToInt) and $FFFFFF);
+    if Supports(_File.Elements[0], IwbMainRecord, MainRecord) and (MainRecord.Signature = 'TES4') then begin
+      Inc(EndFormID);
+      MainRecord.ElementNativeValues['HEDR\Next Object ID'] := EndFormID.ObjectID;
+    end;
     if AnyErrors then begin
       pgMain.ActivePage := tbsMessages;
       AddMessage('!!! Errors have occured. It is highly recommended to exit without saving as partial changes might have occured !!!');
@@ -9579,7 +9588,7 @@ begin
   FilterByBaseFormID := False;
   FilterBaseFormID := TwbFormID.Null;
   if Length(FilterBaseEditorID) in [8,9] then try
-    FilterBaseFormID := TwbFormID.CreateStr(FilterBaseEditorID);
+    FilterBaseFormID := TwbFormID.FromStr(FilterBaseEditorID);
     // passed conversion, filter by base FormID
     FilterByBaseFormID := True;
   except
@@ -10540,6 +10549,35 @@ begin
     end;
 end;
 
+procedure TfrmMain.pgMainChange(Sender: TObject);
+var
+  i: Integer;
+begin
+  if pgMain.ActivePage = tbsReferencedBy then begin
+    if lvReferencedBy.Tag <> lvReferencedBy.Items.Count then begin
+      lvReferencedBy.Items.BeginUpdate;
+      try
+        lvReferencedBy.Items.Clear;
+        if Assigned(ActiveMaster) then begin
+          lvReferencedBy.Tag := ActiveMaster.ReferencedByCount;
+           begin
+            for i := 0 to Pred(ActiveMaster.ReferencedByCount) do
+              with lvReferencedBy.Items.Add do begin
+                Caption := ActiveMaster.ReferencedBy[i].Name;
+                SubItems.Add(ActiveMaster.ReferencedBy[i].Signature);
+                SubItems.Add(ActiveMaster.ReferencedBy[i]._File.Name);
+                Data := Pointer(ActiveMaster.ReferencedBy[i]);
+              end;
+          end;
+        end else
+          lvReferencedBy.Tag := 0;
+      finally
+        lvReferencedBy.Items.EndUpdate;
+      end;
+    end;
+  end;
+end;
+
 procedure TfrmMain.pmuNavPopup(Sender: TObject);
 var
   NodeData                    : PNavNodeData;
@@ -10955,7 +10993,7 @@ begin
   PostMessage(Handle, WM_USER, Int64(p), 0);
 end;
 
-procedure TfrmMain.PostPluggyChange(aFormID, aBaseFormID, aInventoryFormID, aEnchantmentFormID, aSpellFormID: Cardinal);
+procedure TfrmMain.PostPluggyChange(aFormID, aBaseFormID, aInventoryFormID, aEnchantmentFormID, aSpellFormID: TwbFormID);
 begin
   PluggyFormID := aFormID;
   PluggyBaseFormID := aBaseFormID;
@@ -11832,18 +11870,23 @@ begin
       vstView.EndUpdate;
     end;
 
-    if Assigned(ActiveMaster) then
-      for i := 0 to Pred(ActiveMaster.ReferencedByCount) do
-        with lvReferencedBy.Items.Add do begin
-          Caption := ActiveMaster.ReferencedBy[i].Name;
-          SubItems.Add(ActiveMaster.ReferencedBy[i].Signature);
-          SubItems.Add(ActiveMaster.ReferencedBy[i]._File.Name);
-          Data := Pointer(ActiveMaster.ReferencedBy[i]);
-        end;
+    if Assigned(ActiveMaster) then begin
+      lvReferencedBy.Tag := ActiveMaster.ReferencedByCount;
+      if pgMain.ActivePage = tbsReferencedBy then begin
+        for i := 0 to Pred(ActiveMaster.ReferencedByCount) do
+          with lvReferencedBy.Items.Add do begin
+            Caption := ActiveMaster.ReferencedBy[i].Name;
+            SubItems.Add(ActiveMaster.ReferencedBy[i].Signature);
+            SubItems.Add(ActiveMaster.ReferencedBy[i]._File.Name);
+            Data := Pointer(ActiveMaster.ReferencedBy[i]);
+          end;
+      end;
+    end else
+      lvReferencedBy.Tag := 0;
 
-    tbsReferencedBy.TabVisible := wbLoaderDone and (lvReferencedBy.Items.Count > 0);
+    tbsReferencedBy.TabVisible := wbLoaderDone and (lvReferencedBy.Tag > 0);
     if tbsReferencedBy.TabVisible then
-      tbsReferencedBy.Caption := Format('Referenced By (%d)', [lvReferencedBy.Items.Count]);
+      tbsReferencedBy.Caption := Format('Referenced By (%d)', [lvReferencedBy.Tag]);
   finally
     lvReferencedBy.Items.EndUpdate;
   end;
@@ -13801,7 +13844,7 @@ begin
         if Integer(Succ(Node.Index)) < Container.ElementCount then begin
           if Supports(Container.Elements[Succ(Node.Index)], IwbGroupRecord, GroupRecord) then begin
             if (not (GroupRecord.GroupType in ParentedGroupRecordType)) or
-              ((Element as IwbMainRecord).FormID.ToInt <> GroupRecord.GroupLabel) then
+              ((Element as IwbMainRecord).FormID.ToCardinal <> GroupRecord.GroupLabel) then
               GroupRecord := nil;
           end;
         end;
@@ -13843,7 +13886,7 @@ begin
       if Assigned(Container) and (Integer(Node.Index) < Container.ElementCount) then begin
         Element := Container.Elements[Pred(Node.Index)];
         if (Element.ElementType = etMainRecord) and
-          ((Element as IwbMainRecord).FormID.ToInt = GroupRecord.GroupLabel) then begin
+          ((Element as IwbMainRecord).FormID.ToCardinal = GroupRecord.GroupLabel) then begin
           Include(InitialStates, ivsHidden);
           Exclude(InitialStates, ivsHasChildren);
           NodeData.Container := nil;
@@ -15175,8 +15218,8 @@ end;
 
 procedure TfrmMain.WMUser4(var Message: TMessage);
 var
-  FormID                      : Cardinal;
-  FileID                      : Integer;
+  FormID                      : TwbFormID;
+  FileID                      : TwbFileID;
   _File                       : IwbFile;
   MainRecord                  : IwbMainRecord;
   Node                        : PVirtualNode;
@@ -15185,7 +15228,7 @@ begin
   case PluggyLinkState of
     plsReference: begin
       FormID := PluggyFormID;
-      if (FormID and $FF000000) = $FF000000 then
+      if FormID.FileID.FullSlot = $FF then
         FormID := PluggyBaseFormID;
     end;
     plsBase:
@@ -15200,37 +15243,49 @@ begin
     Exit;
   end;
 
-  if FormID = 0 then
+  if FormID.IsNull then
     Exit;
 
-  FileID := FormID shr 24;
-  if (FormID <> 0) and (FileID >= Low(Files)) and (FileID <= High(Files)) then begin
-    _File := Files[FileID];
-    FormID := (FormID and $00FFFFFF) or (Cardinal(_File.MasterCount) shl 24);
-    MainRecord := _File.RecordByFormID[TwbFormID.CreateInt(FormID), True];
-    if Assigned(MainRecord) then begin
-      MainRecord := MainRecord.WinningOverride;
-
-      if MainRecord.Equals(ActiveRecord) then
-        Exit;
-
-      Node := FindNodeForElement(MainRecord);
-      if not Assigned(Node) then begin
-        MainRecord := MainRecord.MasterOrSelf;
-        for i := 0 to Pred(MainRecord.OverrideCount) do begin
-          Node := FindNodeForElement(MainRecord.Overrides[i]);
-          if Assigned(Node) then
-            Break;
-        end;
+  FileID := FormID.FileID;
+  if wbIsEslSupported then begin
+    _File := nil;
+    for i := Low(Files) to High(Files) do
+      if Files[i].LoadOrderFileID = FileID then begin
+        _File := Files[i];
+        break;
       end;
-      if Assigned(Node) then begin
-        vstNav.ClearSelection;
-        vstNav.FocusedNode := Node;
-        vstNav.Selected[vstNav.FocusedNode] := True;
-        SetActiveRecord(MainRecord);
-      end else
-        SetActiveRecord(MainRecord);
+    if not Assigned(_File) then
+      Exit;
+  end else begin
+    if (FileID.FullSlot < Low(Files)) or (FileID.FullSlot > High(Files)) then
+      Exit;
+    _File := Files[FileID.FullSlot];
+  end;
+
+  FormID.FileID := _File.FileFileID;
+  MainRecord := _File.RecordByFormID[FormID, True];
+  if Assigned(MainRecord) then begin
+    MainRecord := MainRecord.WinningOverride;
+
+    if MainRecord.Equals(ActiveRecord) then
+      Exit;
+
+    Node := FindNodeForElement(MainRecord);
+    if not Assigned(Node) then begin
+      MainRecord := MainRecord.MasterOrSelf;
+      for i := 0 to Pred(MainRecord.OverrideCount) do begin
+        Node := FindNodeForElement(MainRecord.Overrides[i]);
+        if Assigned(Node) then
+          Break;
+      end;
     end;
+    if Assigned(Node) then begin
+      vstNav.ClearSelection;
+      vstNav.FocusedNode := Node;
+      vstNav.Selected[vstNav.FocusedNode] := True;
+      SetActiveRecord(MainRecord);
+    end else
+      SetActiveRecord(MainRecord);
   end;
 end;
 
@@ -15281,8 +15336,10 @@ var
   s,t                         : string;
 //  F                           : TSearchRec;
   n,m                         : TStringList;
+  StartTime                   : TDateTime;
 begin
-  wbStartTime := Now;
+  StartTime := Now;
+  wbStartTime := StartTime;
   LoaderProgress('starting...');
   try
     frmMain.LoaderStarted := True;
@@ -15393,16 +15450,29 @@ begin
           end;
         end;
 
-        if wbBuildRefs then
-          for i := Low(ltFiles) to High(ltFiles) do
-            if {not SameText(ltFiles[i].FileName, wbGameName + '.esm') and} // game master is handled by wbDoNotBuildRefsFor list
-               not wbDoNotBuildRefsFor.Find(ltFiles[i].FileName, dummy) and
-               not ltFiles[i].IsNotPlugin then begin
-              LoaderProgress('[' + ltFiles[i].FileName + '] Building reference info.');
-              ltFiles[i].BuildRef;
-              if wbForceTerminate then
-                Exit;
-            end;
+        if wbBuildRefs then begin
+          {$IFDEF USE_PARALLEL_BUILD_REFS}
+          wbBuildingRefsParallel := True;
+          try
+            TParallel.&For(Low(ltFiles), High(ltFiles), procedure(i: Integer) begin
+              wbStartTime := StartTime;
+            {$ELSE}
+            for i := Low(ltFiles) to High(ltFiles) do
+            {$ENDIF}
+              if not ltFiles[i].IsNotPlugin then begin
+                  LoaderProgress('[' + ltFiles[i].FileName + '] Start building reference info.');
+                  ltFiles[i].BuildOrLoadRef(wbDoNotBuildRefsFor.Find(ltFiles[i].FileName, dummy));
+                  LoaderProgress('[' + ltFiles[i].FileName + '] Done building reference info.');
+                if wbForceTerminate then
+                  Exit;
+              end;
+              {$IFDEF USE_PARALLEL_BUILD_REFS}
+            end);
+          finally
+            wbBuildingRefsParallel := False;
+          end;
+          {$ENDIF}
+        end;
       end;
 
     except
@@ -15636,7 +15706,7 @@ end;
 procedure TPluggyLinkThread.ChangeDetected;
 var
   s                                                : string;
-  FormID, BaseFormID, InventoryFormID, EnchantmentFormID, SpellFormID : Cardinal;
+  FormID, BaseFormID, InventoryFormID, EnchantmentFormID, SpellFormID : TwbFormID;
 begin
   with TFileStream.Create(plFolder + 'Pluggy'+wbAppName+'ViewWorld.csv', fmOpenRead or fmShareDenyNone) do try
     Position := Size - 2024;
@@ -15652,8 +15722,8 @@ begin
     CommaText := Strings[Pred(Count)];
     if Count < 2 then
       Exit;
-    FormID := StrToInt64('$'+Strings[0]);
-    BaseFormID := StrToInt64('$'+Strings[1]);
+    FormID := TwbFormID.FromStr(Strings[0]);
+    BaseFormID := TwbFormID.FromStr(Strings[1]);
   finally
     Free;
   end;
@@ -15671,8 +15741,8 @@ begin
     CommaText := Strings[Pred(Count)];
     if Count < 2 then
       Exit;
-    InventoryFormID := StrToInt64('$'+Strings[0]);
-    EnchantmentFormID := StrToInt64('$'+Strings[1]);
+    InventoryFormID := TwbFormID.FromStr(Strings[0]);
+    EnchantmentFormID := TwbFormID.FromStr(Strings[1]);
   finally
     Free;
   end;
@@ -15690,7 +15760,7 @@ begin
     CommaText := Strings[Pred(Count)];
     if Count < 1 then
       Exit;
-    SpellFormID := StrToInt64('$'+Strings[0]);
+    SpellFormID := TwbFormID.FromStr(Strings[0]);
   finally
     Free;
   end;
