@@ -434,6 +434,9 @@ type
 
     function ToString: string;
 
+    function IsLightSlot: Boolean; inline;
+    function IsFullSlot: Boolean; inline;
+
     property FullSlot: SmallInt read _FullSlot;
     property LightSlot: SmallInt read _LightSlot;
   end;
@@ -15124,6 +15127,16 @@ begin
     Result := A._FullSlot = B._FullSlot
   else
     Result := A._LightSlot = B._LightSlot;
+end;
+
+function TwbFileID.IsLightSlot: Boolean;
+begin
+  Result := _LightSlot >= 0;
+end;
+
+function TwbFileID.IsFullSlot: Boolean;
+begin
+  Result := (not IsLightSlot) and (_FullSlot >= 0);
 end;
 
 class function TwbFileID.Null: TwbFileID;
