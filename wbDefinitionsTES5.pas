@@ -2510,7 +2510,7 @@ begin
   for i := 3 to 7 do begin
     if (F and 1) = 1 then begin
       Inc(Result);
-    if Assigned(wbProgressCallback) then
+    if wbHasProgressCallback then
       wbProgressCallback('==='+aElement.Name+'       ['+Container.Name+':'+Container.Path+'] = unknown info VMAD flag bit '+IntToStr(i));
   end;
     F := F shr 1;
@@ -2543,7 +2543,7 @@ begin
   for i := 3 to 7 do begin
     if (F and 1) = 1 then begin
       Inc(Result);
-  if Assigned(wbProgressCallback) then
+  if wbHasProgressCallback then
       wbProgressCallback('==='+aElement.Name+'       ['+Container.Name+':'+Container.Path+'] = unknown scene VMAD flag bit '+IntToStr(i));
   end;
     F := F shr 1;

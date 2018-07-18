@@ -33,6 +33,9 @@ var
 
   wbMasterUpdateDone   : Boolean;
   wbDontSave           : Boolean;
+  wbDontCache          : Boolean = False;
+  wbDontCacheLoad      : Boolean = False;
+  wbDontCacheSave      : Boolean = False;
   wbDontBackup         : Boolean = False;
   wbRemoveTempPath     : Boolean = True;
   wbQuickShowConflicts : Boolean;
@@ -420,6 +423,18 @@ begin
   if not (wbDontSave or wbFindCmdLineParam('B', wbBackupPath)) then
     wbBackupPath := wbDataPath + wbAppName + 'Edit Backups\';
 
+  wbCachePath := '';
+  if not (wbDontCache or wbFindCmdLineParam('C', wbCachePath)) then
+    wbCachePath := wbDataPath + wbAppName + 'Edit Cache\';
+  if wbCachePath = '' then
+    wbDontCache := True;
+  if not wbDontCache then
+    if not DirectoryExists(wbCachePath) then
+      if not ForceDirectories(wbCachePath) then
+        wbDontCache := True;
+  if wbDontCache then
+    wbCachePath := '';
+
   wbFindCmdLineParam('R', wbLogFile);
 end;
 
@@ -695,6 +710,15 @@ begin
 
   if wbGameNameReg = '' then
     wbGameNameReg := wbGameName2;
+
+  if FindCmdLineSwitch('DontCache') then
+    wbDontCache := True;
+  if FindCmdLineSwitch('DontCacheLoad') then
+    wbDontCacheLoad := True;
+  if FindCmdLineSwitch('DontCacheSave') then
+    wbDontCacheSave := True;
+  if wbDontCacheLoad and wbDontCacheSave then
+    wbDontCache := True;
 
   DoInitPath(wbParamIndex);
 
