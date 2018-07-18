@@ -2001,7 +2001,10 @@ var
   IsNew          : Boolean;
   rec            : IwbRecord;
   i, j           : Integer;
+  NotAllAdded    : Boolean;
+  MaxMasterCount : Integer;
 begin
+  NotAllAdded := False;
   OldMasterCount := GetMasterCount;
 
   if not IsElementEditable(nil) then
@@ -2022,7 +2025,16 @@ begin
     IsNew := True;
   end;
 
+  if wbIsEslSupported then
+    MaxMasterCount := $FD
+  else
+    MaxMasterCount := $FF;
+
   for i := 0 to Pred(aMasters.Count) do begin
+    if GetMasterCount >= MaxMasterCount then begin
+      NotAllAdded := True;
+      Break;
+    end;
     if IsNew then begin
       Assert(MasterFiles.ElementCount = 1);
       Rec := (MasterFiles[0] as IwbContainer).RecordBySignature['MAST'];
@@ -2041,8 +2053,13 @@ begin
     AddMaster(aMasters[i]);
   end;
 
-  MasterCountUpdated(OldMasterCount, GetMasterCount);
-  SortRecords;
+  if OldMasterCount <> GetMasterCount then begin
+    MasterCountUpdated(OldMasterCount, GetMasterCount);
+    SortRecords;
+  end;
+
+  if NotAllAdded then
+    raise Exception.Create('Only '+IntToStr(GetMasterCount - OldMasterCount)+' of '+IntToStr(aMasters.Count)+' masters could be added. Master list now contains '+IntToStr(GetMasterCount)+' entries and is full.');
 end;
 
 function TwbFile.BuildOrLoadRef(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
