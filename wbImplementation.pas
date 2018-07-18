@@ -47,7 +47,7 @@ var
   ChaptersToSkip     : TStringList;
   SubRecordOrderList : TStringList;
 
-procedure wbMastersForFile(const aFileName: string; aMasters: TStrings; out IsESM, IsESL: Boolean);
+function wbMastersForFile(const aFileName: string; aMasters: TStrings; out IsESM, IsESL: Boolean): Boolean;
 
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
   IsTemporary: Boolean = False; aOnlyHeader: Boolean = False): IwbFile;
@@ -70,6 +70,7 @@ function wbEndKeepAlive: Integer;
 implementation
 
 uses
+  wbInit,
   wbHelpers,
   wbSort;
 
@@ -603,7 +604,7 @@ type
     procedure SetModified(aValue: Boolean); override;
 
     procedure BuildRef; override;
-    procedure BuildOrLoadRef(aOnlyLoad: Boolean);
+    function BuildOrLoadRef(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
 
     function FindFormID(aFormID: TwbFormID; var Index: Integer): Boolean;
     function FindInjectedID(aFormID: TwbFormID; var Index: Integer): Boolean;
@@ -1932,7 +1933,7 @@ begin
     FileID := FormID.FileID.FullSlot;
     if FileID >= Cardinal(GetMasterCount) then begin
 
-      if Assigned(wbProgressCallback) then
+      if wbHasProgressCallback then
         if GetIsESL or flLoadOrderFileID.IsLightSlot then
           if (FormID.ToCardinal and $00FFF000) <> 0 then
             wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with ESL flag active.>');
@@ -1946,7 +1947,7 @@ begin
         (GetMaster(FileID) as IwbFileInternal).InjectMainRecord(aRecord);
     except
       on E: Exception do
-        if Assigned(wbProgressCallback) then
+        if wbHasProgressCallback then
           wbProgressCallback('Error: <'+e.Message+'> while trying to determine master record for ' + aRecord.Name);
     end;
   end;
@@ -2044,19 +2045,28 @@ begin
   SortRecords;
 end;
 
-procedure TwbFile.BuildOrLoadRef(aOnlyLoad: Boolean);
+function TwbFile.BuildOrLoadRef(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
 var
+  CachePath     : string;
   CacheFileName : string;
   FileStream    : TBufferedFileStream;
   i, j          : Integer;
+  StartTime,
+  EndTime       : TDateTime;
 begin
-  if (not (fsRefsBuild in flStates)) and ((not (esModified in eStates) or (esInternalModified in eStates))) then begin
+  Result := blrNone;
+  if not wbDontCache and (not (fsRefsBuild in flStates)) and ((not (esModified in eStates) or (esInternalModified in eStates))) then begin
+    CacheFileName := ExtractFileName(flFileName);
+    if CacheFileName.EndsWith('.ghost', True) then
+      SetLength(CacheFileName, Length(CacheFileName) - Length('.ghost'));
     CacheFileName :=
-      ChangeFileExt(flFileName, '') +
+            wbCachePath +
+            IntToHex64(wbCRC32App, 8) +
+      '_' + ChangeFileExt(CacheFileName, '') +
+      '_' + Copy(ExtractFileExt(CacheFileName), 2) +
       '_' + IntToHex64(GetCRC32, 8) +
-      '_' + IntToHex64(wbCRC32App, 8) +
       '.refcache';
-    if FileExists(CacheFileName) then begin
+    if not wbDontCacheLoad and FileExists(CacheFileName) then begin
       Include(flStates, fsRefsBuild);
       FileStream := TBufferedFileStream.Create(CacheFileName, fmOpenRead or fmShareDenyWrite);
       try
@@ -2067,18 +2077,29 @@ begin
       finally
         FileStream.Free;
       end;
+      Result := blrLoaded;
     end else begin
       if not aOnlyLoad then begin
         Include(flStates, fsRefsBuild);
+        StartTime := Now;
         inherited BuildRef;
-        FileStream := TBufferedFileStream.Create(CacheFileName, fmCreate);
-        try
+        EndTime := Now;
+        Result := blrBuilt;
+        if not wbDontCacheSave then begin
           flRecordsCount := Length(flRecords);
-          FileStream.Write(flRecordsCount, SizeOf(flRecordsCount));
-          for i := 0 to Pred(flRecordsCount) do
-            (flRecords[i] as IwbMainRecordInternal).SaveRefsToStream(FileStream);
-        finally
-          FileStream.Free;
+          if (flRecordsCount > wbCacheRecordsThreshold) or (EndTime - StartTime > wbCacheTimeThreshold) then try
+            FileStream := TBufferedFileStream.Create(CacheFileName, fmCreate);
+            try
+              FileStream.Write(flRecordsCount, SizeOf(flRecordsCount));
+              for i := 0 to Pred(flRecordsCount) do
+                (flRecords[i] as IwbMainRecordInternal).SaveRefsToStream(FileStream);
+            finally
+              FileStream.Free;
+            end;
+            Result := blrBuiltAndSaved;
+          except
+            //ignore errors when saving cache
+          end;
         end;
       end;
     end;
@@ -2086,6 +2107,7 @@ begin
     if not aOnlyLoad then begin
       Include(flStates, fsRefsBuild);
       inherited BuildRef;
+      Result := blrBuilt;
     end;
   end;
 end;
@@ -2609,12 +2631,12 @@ begin
   flSize := GetFileSize(flFileHandle, nil);
   flEndPtr := PByte(flView) + flSize;
 
-  flProgress('File loaded');
+  flProgress('File loaded (CRC32:'+IntToHex64(GetCRC32,8)+')');
 end;
 
 procedure TwbFile.flProgress(const aStatus: string);
 begin
-  if Assigned(wbProgressCallback) then
+  if wbHasProgressCallback then
     wbProgressCallback('['+GetFileName+'] ' + aStatus);
 end;
 
@@ -2983,7 +3005,7 @@ begin
   if Length(flInjectedRecords) > 0 then begin
     if FindInjectedID(aRecord.FormID, i) then begin
       if [fsIsHardcoded, fsIsCompareLoad] * flInjectedRecords[i]._File.FileStates = [] then begin
-        if Assigned(wbProgressCallback) then
+        if wbHasProgressCallback then
           wbProgressCallback('<Warning: ' + aRecord.Name + ' was injected into ' + GetFileName + ' which already has been injected with '+flInjectedRecords[i].Name+' from '+flInjectedRecords[i]._File.FileName+' >');
       end;
       (flInjectedRecords[i] as IwbMainRecordInternal).AddOverride(aRecord);
@@ -2993,7 +3015,7 @@ begin
     i := 0;
 
   if [fsIsHardcoded, fsIsCompareLoad] * aRecord._File.FileStates = [] then begin
-    if Assigned(wbProgressCallback) then
+    if wbHasProgressCallback then
       wbProgressCallback('<Note: ' + aRecord.Name + ' was injected into ' + GetFileName + '>');
   end;
 
@@ -3344,7 +3366,7 @@ begin
         (GetMaster(FileID) as IwbFileInternal).RemoveInjectedMainRecord(aRecord);
     except
       on E: Exception do
-        if Assigned(wbProgressCallback) then
+        if wbHasProgressCallback then
           wbProgressCallback('Error: <'+e.Message+'> while trying to determine master record for ' + aRecord.Name);
     end;
   end;
@@ -4403,7 +4425,7 @@ begin
 
   DoInit;
   if not Assigned(cntElements) or (aIndex>=Length(cntElements)) then begin // Using the wrong contained array at the time
-    if wbMoreInfoForIndex and (DebugHook <> 0) and Assigned(wbProgressCallback) then
+    if wbMoreInfoForIndex and (DebugHook <> 0) and wbHasProgressCallback then
       wbProgressCallback('Debugger: ['+ IwbElement(Self).Path +'] Index ' + IntToStr(aIndex) + ' greater than max '+
         IntToStr(Length(cntElements)-1));
     Result := nil
@@ -5578,7 +5600,7 @@ end;
 procedure TwbMainRecord.AddOverride(const aMainRecord: IwbMainRecord);
 begin
   if aMainRecord.Signature <> GetSignature then
-    if Assigned(wbProgressCallback) then
+    if wbHasProgressCallback then
       wbProgressCallback(Format('Warning: Record %s in file %s is being overridden by record %s in file %s.', [
         '['+ GetSignature + ':' + GetFormID.ToString + ']',
         GetFile.FileName,
@@ -5811,7 +5833,7 @@ begin
     DoBuildRef(False)
   else
     UseKAC;
-  if Assigned(wbProgressCallback) then
+  if wbHasProgressCallback then
     wbProgressCallback('');
 end;
 
@@ -6436,7 +6458,7 @@ begin
     if mrDef.AllowUnordered then begin
       CurrentDefPos := mrDef.GetMemberIndexFor(CurrentRec.Signature, CurrentRec);
       if CurrentDefPos < 0 then begin
-        if Assigned(wbProgressCallback) then
+        if wbHasProgressCallback then
           wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
         FoundError := True;
         Inc(CurrentRecPos);
@@ -6445,7 +6467,7 @@ begin
       CurrentDef := mrDef.Members[CurrentDefPos];
     end else begin
       if not mrDef.ContainsMemberFor(CurrentRec.Signature, CurrentRec) then begin
-        if Assigned(wbProgressCallback) then
+        if wbHasProgressCallback then
           wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
         FoundError := True;
         Inc(CurrentRecPos);
@@ -6459,7 +6481,7 @@ begin
           Continue;
         end;
       end else begin
-        if Assigned(wbProgressCallback) then
+        if wbHasProgressCallback then
           wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) );
         FoundError := True;
         Inc(CurrentRecPos);
@@ -6537,7 +6559,7 @@ begin
       Continue;
     end;
 
-    if Assigned(wbProgressCallback) then
+    if wbHasProgressCallback then
       wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) );
     FoundError := True;
 
@@ -6548,7 +6570,7 @@ begin
 //    FoundError := True;
 
   if FoundError then
-    if Assigned(wbProgressCallback) then begin
+    if wbHasProgressCallback then begin
       wbProgressCallback('Errors were found in: ' + GetName);
 {$IFDEF DBGSUBREC}
       wbProgressCallback('Contained subrecords: ' + s);
@@ -7627,7 +7649,7 @@ begin
     end;
   except
     on E: Exception do begin
-      if Assigned(wbProgressCallback) then
+      if wbHasProgressCallback then
         wbProgressCallback('Error getting position for "' + GetName + '": ' + E.Message);
       Result := False;
       Exit;
@@ -7861,7 +7883,7 @@ begin
     if wbFindRecordDef(PwbSignature(dcBasePtr)^, RecordDef) then
       mrDef := RecordDef^
     else begin
-      if Assigned(wbProgressCallback) then
+      if wbHasProgressCallback then
         wbProgressCallback('Error: unknown record type '+ String(PwbSignature(dcBasePtr)^));
     end;
   end;
@@ -10081,7 +10103,7 @@ begin
       if wbReportMode then
         srDef.HasUnusedData;
       {$IFDEF DBGSUBREC}
-      if Assigned(wbProgressCallback) then
+      if wbHasProgressCallback then
         wbProgressCallback('<Warning: Unused data in: ' + GetFullPath + '>');
       {$ENDIF}
     end;
@@ -11245,7 +11267,7 @@ begin
       if Rec._File.Equals(GetFile) then
         (Rec as IwbMainRecordInternal).SetChildGroup(Self)
       else begin
-        if Assigned(wbProgressCallback) then
+        if wbHasProgressCallback then
           wbProgressCallback('<Warning: File ' + GetFile.Name + ' with Group ' + GetName + ' is missing an overriden record for ' + Rec.Name);
       end;
     end;
@@ -14032,7 +14054,7 @@ begin
 
         CurrentDefPos := srcDef.GetMemberIndexFor(CurrentRec.Signature, CurrentRec);
         if CurrentDefPos < 0 then begin
-          if Assigned(wbProgressCallback) then
+          if wbHasProgressCallback then
             wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
           //FoundError := True;
           Inc(aPos);
@@ -15196,32 +15218,39 @@ begin
   end;
 end;
 
-procedure wbMastersForFile(const aFileName: string; aMasters: TStrings; out IsESM, IsESL: Boolean);
+function wbMastersForFile(const aFileName: string; aMasters: TStrings; out IsESM, IsESL: Boolean): Boolean;
 var
   FileName : string;
   i        : Integer;
   _File    : IwbFileInternal;
 begin
-  FileName := wbExpandFileName(aFileName);
-  {if ExtractFilePath(aFileName) = '' then
-    FileName := ExpandFileName('.\'+aFileName)
-  else
-    FileName := ExpandFileName(aFileName);}
-
+  Result := False;
+  if Assigned(aMasters) then
+    aMasters.Clear;
+  IsESM := False;
+  IsESL := False;
+  wbProgressLock;
   try
-    if FilesMap.Find(FileName, i) then
-      _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
-    else if not wbIsPlugin(FileName) then
-      _File := TwbFileSource.Create(FileName, -1, '', True)
-    else
-      _File := TwbFile.Create(FileName, -1, '', True);
+    FileName := wbExpandFileName(aFileName);
+    try
+      if FilesMap.Find(FileName, i) then
+        _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
+      else if not wbIsPlugin(FileName) then
+        _File := TwbFileSource.Create(FileName, -1, '', True)
+      else
+        _File := TwbFile.Create(FileName, -1, '', True);
 
-    _File.GetMasters(aMasters);
-    IsESM := _File.IsESM;
-    IsESL := _File.IsESL;
-  except
-    // File neither found nor replaced, ignore if in xDump
-    if not (wbToolMode in [tmDump, tmExport]) then Raise;
+      if Assigned(aMasters) then
+        _File.GetMasters(aMasters);
+      IsESM := _File.IsESM;
+      IsESL := _File.IsESL;
+      Result := True;
+    except
+      // File neither found nor replaced, ignore if in xDump
+      if not (wbToolMode in [tmDump, tmExport]) then Raise;
+    end;
+  finally
+    wbProgressUnlock;
   end;
 end;
 

@@ -3669,7 +3669,7 @@ begin
 
   ModGroups := TStringList.Create;
 
-  AddMessage(wbApplicationTitle + ' starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
+  AddMessage(wbApplicationTitle + ' ('+IntToHex64(wbCRC32App, 8)+') starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
 
   if wbShouldLoadMOHookFile then begin
     AddMessage('Using Mod Organizer Profile: ' + wbMOProfile);
@@ -3681,6 +3681,11 @@ begin
 
   AddMessage('Using '+wbGameName2+' Data Path: ' + wbDataPath);
 
+  if not (wbDontSave or wbDontBackup) then
+    AddMessage('Using Backup Path: ' + wbBackupPath);
+
+  if not wbDontCache then
+    AddMessage('Using Cache Path: ' + wbCachePath);
 
   AddMessage('Using ini: ' + wbTheGameIniFileName);
   if not FileExists(wbTheGameIniFileName) then begin
@@ -4755,7 +4760,7 @@ begin
   vstSpreadSheetAmmo.Free;
   pnlNav.Free;
   Files := nil;
-  wbProgressCallback := nil;
+  _wbProgressCallback := nil;
   ExitCode := CheckResult;
 end;
 
@@ -4782,7 +4787,7 @@ end;
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   _BlockInternalEdit := True;
-  wbProgressCallback := GeneralProgress;
+  _wbProgressCallback := GeneralProgress;
   LastUpdate := GetTickCount;
   Font := Screen.IconFont;
   Caption := Application.Title;
@@ -15337,13 +15342,16 @@ var
 //  F                           : TSearchRec;
   n,m                         : TStringList;
   StartTime                   : TDateTime;
+  {$IFNDEF USE_PARALLEL_BUILD_REFS}
+  OnlyLoad: Boolean;
+  {$ENDIF}
 begin
   StartTime := Now;
   wbStartTime := StartTime;
   LoaderProgress('starting...');
   try
     frmMain.LoaderStarted := True;
-    wbProgressCallback := LoaderProgress;
+    _wbProgressCallback := LoaderProgress;
     try
       {if ltLoadOrderOffset + ltLoadList.Count >= 255 then begin
         LoaderProgress('Too many plugins selected. Adding '+IntToStr(ltLoadList.Count)+' files would exceed the maximum index of 254');
@@ -15454,19 +15462,49 @@ begin
           {$IFDEF USE_PARALLEL_BUILD_REFS}
           wbBuildingRefsParallel := True;
           try
-            TParallel.&For(Low(ltFiles), High(ltFiles), procedure(i: Integer) begin
+            TParallel.&For(Low(ltFiles), High(ltFiles), procedure(i: Integer)
+            var
+              OnlyLoad: Boolean;
+            begin
               wbStartTime := StartTime;
-            {$ELSE}
-            for i := Low(ltFiles) to High(ltFiles) do
-            {$ENDIF}
-              if not ltFiles[i].IsNotPlugin then begin
-                  LoaderProgress('[' + ltFiles[i].FileName + '] Start building reference info.');
-                  ltFiles[i].BuildOrLoadRef(wbDoNotBuildRefsFor.Find(ltFiles[i].FileName, dummy));
-                  LoaderProgress('[' + ltFiles[i].FileName + '] Done building reference info.');
-                if wbForceTerminate then
-                  Exit;
+              _wbProgressCallback := LoaderProgress;
+              try
+                {$ELSE}
+                for i := Low(ltFiles) to High(ltFiles) do
+                {$ENDIF}
+                  if not ltFiles[i].IsNotPlugin then begin
+                      OnlyLoad := wbDoNotBuildRefsFor.Find(ltFiles[i].FileName, dummy);
+                      if not (OnlyLoad and (wbDontCache or wbDontCacheLoad)) then begin
+                        if OnlyLoad then
+                          s := 'loading'
+                        else begin
+                          s := 'building';
+                          if not (wbDontCache or wbDontCacheLoad) then
+                            s := 'loading or ' + s;
+                        end;
+                        LoaderProgress('[' + ltFiles[i].FileName + '] Start ' + s + ' reference info.');
+                        case ltFiles[i].BuildOrLoadRef(OnlyLoad) of
+                          blrBuilt:
+                            s := 'Done building reference info.';
+                          blrBuiltAndSaved:
+                            s := 'Done building and saving reference info.';
+                          blrLoaded:
+                            s := 'Done loading reference info.';
+                        else {blrNone:}
+                          if OnlyLoad then
+                            s := 'No cached reference info available.'
+                          else
+                            s := 'No reference info built or loaded.';
+                        end;
+                        LoaderProgress('[' + ltFiles[i].FileName + '] ' + s);
+                      end;
+                    if wbForceTerminate then
+                      Exit;
+                  end;
+                  {$IFDEF USE_PARALLEL_BUILD_REFS}
+              finally
+                _wbProgressCallback := nil;
               end;
-              {$IFDEF USE_PARALLEL_BUILD_REFS}
             end);
           finally
             wbBuildingRefsParallel := False;
@@ -15484,7 +15522,7 @@ begin
   finally
     frmMain.SendLoaderDone;
     LoaderProgress('finished');
-    wbProgressCallback := nil;
+    _wbProgressCallback := nil;
   end;
   {
     CELLList.Sorted := False;

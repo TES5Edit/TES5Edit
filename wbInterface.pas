@@ -35,12 +35,12 @@ type
   PwbPointerArray = ^TwbPointerArray;       {General array of pointer}
 
 threadvar
-  wbProgressCallback : TwbProgressCallback;
-  wbCurrentTick      : Integer;
-  wbCurrentAction    : string;
-  wbStartTime        : TDateTime;
-  wbShowStartTime    : Integer;
-  wbForceTerminate   : Boolean;
+  _wbProgressCallback : TwbProgressCallback;
+  wbCurrentTick       : Integer;
+  wbCurrentAction     : string;
+  wbStartTime         : TDateTime;
+  wbShowStartTime     : Integer;
+  wbForceTerminate    : Boolean;
 
 var
   wbDisplayLoadOrderFormID : Boolean  = False;
@@ -77,6 +77,9 @@ var
   wbDoNotBuildRefsFor      : TStringList;
   wbCopyIsRunning          : Integer  = 0;
   wbIgnoreESL              : Boolean  = False;
+
+  wbCacheRecordsThreshold  : Integer   = 500;
+  wbCacheTimeThreshold     : TDateTime = 2 * 1/24/60/60; //2 seconds
 
   wbUDRSetXESP       : Boolean = True;
   wbUDRSetScale      : Boolean = False;
@@ -125,6 +128,7 @@ var
   wbOutputPath         : string;
   wbScriptsPath        : string;
   wbBackupPath         : string;
+  wbCachePath          : string;
   wbTempPath           : string;
   wbSavePath           : string;
   wbMyGamesTheGamePath : string;
@@ -846,6 +850,8 @@ type
   TwbFileStates = set of TwbFileState;
   TwbPluginExtensions = TDynStrings;
 
+  TwbBuildOrLoadRefResult = (blrNone, blrBuilt, blrBuiltAndSaved, blrLoaded);
+
   IwbFile = interface(IwbContainer)
     ['{38AA15A6-F652-45C7-B875-9CB502E5DA92}']
     function GetFileName: string;
@@ -863,7 +869,7 @@ type
     function GetFileStates: TwbFileStates;
     function GetCRC32: Cardinal;
     procedure BuildReachable;
-    procedure BuildOrLoadRef(aOnlyLoad: Boolean);
+    function BuildOrLoadRef(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
 
     function LoadOrderFormIDtoFileFormID(aFormID: TwbFormID): TwbFormID;
     function FileFormIDtoLoadOrderFormID(aFormID: TwbFormID): TwbFormID;
@@ -3390,6 +3396,11 @@ function wbFindRecordDef(const aSignature : AnsiString;
 
 function _wbRecordDefMap: TStringList;
 
+function wbProgressLock: Integer;
+function wbProgressUnlock: Integer;
+function wbHasProgressCallback: Boolean;
+procedure wbProgressCallback(const aStatus: string);
+
 implementation
 
 uses
@@ -3400,6 +3411,33 @@ uses
   TypInfo,
   wbSort,
   wbLocalization;
+
+threadvar
+  _ProgressLockCount : Integer;
+
+function wbProgressLock: Integer;
+begin
+  Result := _ProgressLockCount;
+  Inc(_ProgressLockCount);
+end;
+
+function wbProgressUnlock: Integer;
+begin
+  Result := _ProgressLockCount;
+  Dec(_ProgressLockCount);
+end;
+
+function wbHasProgressCallback: Boolean;
+begin
+  Result := (_ProgressLockCount < 1) and Assigned(_wbProgressCallback);
+end;
+
+procedure wbProgressCallback(const aStatus: string);
+begin
+  if wbHasProgressCallback then
+    _wbProgressCallback(aStatus);
+end;
+
 
 function StrToSignature(const s: string): TwbSignature;
 var
@@ -3479,7 +3517,6 @@ function wbIsInternalEdit: Boolean;
 begin
   Result := _InternalEditCount > 0;
 end;
-
 
 var
   OnePi : Single = 3.1415927;//(2!) 653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067;
@@ -9255,7 +9292,7 @@ begin
         while (Count > Index) and (NativeUInt(BasePtr) < NativeUInt(aEndPtr)) do begin
           Element := ArrayContainer.Elements[Index];
           if not Assigned(Element) then begin
-            if wbMoreInfoForIndex and (DebugHook <> 0) and Assigned(wbProgressCallback) then
+            if wbMoreInfoForIndex and (DebugHook <> 0) and wbHasProgressCallback then
               wbProgressCallback('Debug: ['+ ArrayContainer.Path +'] Index ' + IntToStr(Index) + ' of ' + IntToStr(Count) + ' greater than max '+
                 IntToStr(ArrayContainer.ElementCount-1));
             Element := aElement; // If it is too soon, revert to previous way of doing things
