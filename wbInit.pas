@@ -812,6 +812,9 @@ begin
   if FindCmdLineSwitch('TrackAllEditorID') then
     wbTrackAllEditorID := True;
 
+  if FindCmdLineSwitch('IgnoreESL') then
+    wbIgnoreESL := True;
+
   if wbToolMode in wbPluginModes then // look for the file name
     if not wbFindNextValidCmdLinePlugin(wbParamIndex, wbPluginToUse, wbDataPath) then begin
       ShowMessage(wbToolName+' mode requires a valid plugin name!');
