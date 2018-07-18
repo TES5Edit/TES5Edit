@@ -1931,6 +1931,12 @@ begin
 
     FileID := FormID.FileID.FullSlot;
     if FileID >= Cardinal(GetMasterCount) then begin
+
+      if Assigned(wbProgressCallback) then
+        if GetIsESL or flLoadOrderFileID.IsLightSlot then
+          if (FormID.ToCardinal and $00FFF000) <> 0 then
+            wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with ESL flag active.>');
+
       {new record...}
     end else try
       Master := GetMasterRecordByFormID(FormID, True);
@@ -2396,7 +2402,7 @@ begin
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.7'
   else if wbIsFallout4 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.95';
-  Header.RecordBySignature['HEDR'].Elements[2].EditValue := '2048';
+  Header.RecordBySignature['HEDR'].Elements[2].EditValue := '$800';
   if aIsESL then
     Header.IsESL := True;
 
@@ -3044,11 +3050,13 @@ end;
 
 function TwbFile.NewFormID: TwbFormID;
 var
-  SelfRef    : IwbContainerElementRef;
-  FileHeader : IwbMainRecord;
-  HEDR       : IwbRecord;
-  Int        : Int64;
-  First      : TwbFormID;
+  SelfRef      : IwbContainerElementRef;
+  FileHeader   : IwbMainRecord;
+  HEDR         : IwbRecord;
+  NextObjectID : Cardinal;
+  First        : TwbFormID;
+  IsESL        : Boolean;
+  Mask         : Cardinal;
 begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit;
@@ -3067,24 +3075,36 @@ begin
   if not Assigned(HEDR) then
     raise Exception.Create('File '+GetFileName+' has a file header with missing HEDR subrecord');
 
-  Int := StrToInt64Def(HEDR.Elements[2].EditValue, 2048);
-  Int := Int and $00FFFFFF;
+  IsESL := GetIsESL or flLoadOrderFileID.IsLightSlot;
+  if IsESL then
+    Mask := $FFF
+  else
+    Mask := $FFFFFF;
 
-  if (Int = 0) or (Int = $00FFFFFF) then
-    Int := StrToInt64Def(HEDR.Elements[1].EditValue, 2048);
+  NextObjectID := StrToInt64Def(HEDR.Elements[2].EditValue, $800) and Mask;
 
-  if Int < 2048 then
-    Int := 2048;
+  if (NextObjectID = 0) or (NextObjectID = Mask) then
+    NextObjectID := StrToInt64Def(HEDR.Elements[1].EditValue, $800) and Mask;
 
-  Result := TwbFormID.FromCardinal(Int).ChangeFileID(GetFileFileID);
+  if NextObjectID < $800 then
+    NextObjectID := $800;
+
+  Result := TwbFormID.FromCardinal(NextObjectID).ChangeFileID(GetFileFileID);
   First := Result;
   while GetRecordByFormID(Result, True) <> nil do begin
-    Inc(Result);
+    Inc(NextObjectID);
+    if NextObjectID > Mask then
+      NextObjectID := $800;
+    Result := TwbFormID.FromCardinal(NextObjectID).ChangeFileID(GetFileFileID);
     if Result = First then //we've gone through all possible FormIDs once, no more space free
       raise ERangeError.Create('File '+GetFileName+' has no more space for a new FormID');
   end;
 
-  HEDR.Elements[2].EditValue := IntToStr(Succ(Result.ObjectID));
+  Inc(NextObjectID);
+  if NextObjectID > Mask then
+    NextObjectID := $800;
+
+  HEDR.Elements[2].EditValue := IntToStr(NextObjectID);
 end;
 
 procedure TwbFile.PrepareSave;
@@ -3106,6 +3126,7 @@ var
   FileID: Cardinal;
   Signature : TwbSignature;
   Master : IwbMainRecord;
+  FileFileID: TwbFileID;
 begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit;
@@ -3250,6 +3271,20 @@ begin
       for i := Low(flRecords) to High(flRecords) do
         flRecords[i].ClampFormID(k);
     end;
+
+    if GetIsESL then begin
+      FileFileID := GetFileFileID;
+      for i := High(flRecords) downto Low(flRecords) do begin
+        Current := flRecords[i];
+        FormID := Current.FixedFormID;
+        if FormID.FileID = FileFileID then begin
+          if (FormID.ToCardinal and $00FFF000) <> 0 then
+            raise Exception.Create('Record ' + Current.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with ESL flag active');
+        end else
+          Break;
+      end;
+    end;
+
   end else
     inherited;
 end;
