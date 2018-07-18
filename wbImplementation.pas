@@ -5816,7 +5816,6 @@ var
   end;
 
 var
-  //NewReferences : TwbFormIDs;
   LastFormID    : TwbFormID;
   i, j          : Integer;
   NewCount      : integer;
@@ -5861,7 +5860,7 @@ begin
         ProcessRef(mrTmpRefFormIDs[i], True);
         Inc(i);
       end else begin
-        ProcessRef(mrTmpRefFormIDs[j], False);
+        ProcessRef(mrReferences[j], False);
         Inc(j);
       end;
     end;
@@ -5870,7 +5869,7 @@ begin
       Inc(i);
     end;
     while j < Length(mrReferences) do begin
-      ProcessRef(mrTmpRefFormIDs[j], False);
+      ProcessRef(mrReferences[j], False);
       Inc(j);
     end;
 
