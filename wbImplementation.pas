@@ -2401,6 +2401,7 @@ begin
     Header.IsESL := True;
 
   flLoadFinished := True;
+  flFormIDsSorted := True;
 
   if flLoadOrder >= 0 then
     if wbIsEslSupported then begin
