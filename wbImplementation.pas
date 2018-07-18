@@ -2377,7 +2377,7 @@ end;
 
 var
   _NextFullSlot: Integer;
-  _NextLightMinor: Integer;
+  _NextLightSlot: Integer;
   Files : array of IwbFile;
   FilesMap: TStringList;
 
@@ -2411,11 +2411,11 @@ begin
 
   if flLoadOrder >= 0 then
     if wbIsEslSupported then begin
-      if Header.IsESL then begin
-        if _NextLightMinor >= $FFF then
+      if Header.IsESL and not wbIgnoreESL then begin
+        if _NextLightSlot >= $FFF then
           raise Exception.Create('Too many light modules');
-        flLoadOrderFileID := TwbFileID.Create($FE, _NextLightMinor);
-        Inc(_NextLightMinor);
+        flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
+        Inc(_NextLightSlot);
       end else begin
         if _NextFullSlot >= $FE then
           raise Exception.Create('Too many full modules');
@@ -3386,11 +3386,11 @@ begin
         if FilesMap.Find(flCompareTo, i) then
           flLoadOrderFileID := IwbFile(Pointer(FilesMap.Objects[i])).LoadOrderFileID;
       end else begin
-        if Header.IsESL then begin
-          if _NextLightMinor >= $FFF then
+        if Header.IsESL and not wbIgnoreESL then begin
+          if _NextLightSlot >= $FFF then
             raise Exception.Create('Too many light modules');
-          flLoadOrderFileID := TwbFileID.Create($FE, _NextLightMinor);
-          Inc(_NextLightMinor);
+          flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
+          Inc(_NextLightSlot);
         end else begin
           if _NextFullSlot >= $FE then
             raise Exception.Create('Too many full modules');
@@ -15160,7 +15160,7 @@ begin
   Files := nil;
   FilesMap.Clear;
   _NextFullSlot := 0;
-  _NextLightMinor := 0;
+  _NextLightSlot := 0;
 end;
 
 function wbExpandFileName(const aFileName: string): string;
