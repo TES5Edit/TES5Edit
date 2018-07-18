@@ -2648,7 +2648,8 @@ begin
   flSize := GetFileSize(flFileHandle, nil);
   flEndPtr := PByte(flView) + flSize;
 
-  flProgress('File loaded (CRC32:'+IntToHex64(GetCRC32,8)+')');
+  if wbHasProgressCallback then
+    flProgress('File loaded (CRC32:'+IntToHex64(GetCRC32,8)+')');
 end;
 
 procedure TwbFile.flProgress(const aStatus: string);
