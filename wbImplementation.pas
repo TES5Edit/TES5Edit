@@ -562,7 +562,7 @@ type
   protected
     flFileName               : string;
     flLoadOrder              : Integer;
-    flFileID                 : TwbFileID;
+    flLoadOrderFileID        : TwbFileID;
     flCompareTo              : string;
     flStates                 : TwbFileStates;
     flUnsavedSince           : TDateTime;
@@ -2351,7 +2351,7 @@ end;
 
 constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aOnlyHeader: Boolean; IsTemporary: Boolean = False);
 begin
-  flFileID := TwbFileID.Create(-1, -1);
+  flLoadOrderFileID := TwbFileID.Create(-1, -1);
   if IsTemporary then
     Include(flStates, fsIsTemporary);
   if aCompareTo <> '' then begin
@@ -2379,7 +2379,7 @@ constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aIsE
 var
   Header : IwbMainRecord;
 begin
-  flFileID := TwbFileID.Create(-1, -1);
+  flLoadOrderFileID := TwbFileID.Create(-1, -1);
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
@@ -2407,17 +2407,17 @@ begin
     if wbIsEslSupported then begin
       if Header.IsESL then begin
         if _NextLightMinor >= $FFF then
-          raise Exception.Create('Too many plugins');
-        flFileID := TwbFileID.Create($FE, _NextLightMinor);
+          raise Exception.Create('Too many light modules');
+        flLoadOrderFileID := TwbFileID.Create($FE, _NextLightMinor);
         Inc(_NextLightMinor);
       end else begin
         if _NextFullSlot >= $FE then
-          raise Exception.Create('Too many plugins');
-        flFileID := TwbFileID.Create(_NextFullSlot);
+          raise Exception.Create('Too many full modules');
+        flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
         Inc(_NextFullSlot);
       end;
     end else
-      flFileID := TwbFileID.Create(flLoadOrder);
+      flLoadOrderFileID := TwbFileID.Create(flLoadOrder);
 end;
 
 destructor TwbFile.Destroy;
@@ -2429,7 +2429,7 @@ end;
 function TwbFile.FileFileIDtoLoadOrderFileID(aFileID: TwbFileID): TwbFileID;
 begin
   if aFileID.FullSlot >= GetMasterCount then
-    Result := flFileID
+    Result := flLoadOrderFileID
   else
     Result := flMasters[aFileID.FullSlot].LoadOrderFileID;
 end;
@@ -2706,7 +2706,7 @@ end;
 
 function TwbFile.GetLoadOrderFileID: TwbFileID;
 begin
-  Result := flFileID;
+  Result := flLoadOrderFileID;
 end;
 
 function TwbFile.GetFileFileID: TwbFileID;
@@ -2900,7 +2900,7 @@ begin
   if fsIsHardcoded in flStates then
     Result := wbGameName + '.exe';
   if flLoadOrder >= 0 then
-    Result := '['+flFileID.ToString+'] ' + Result;
+    Result := '['+flLoadOrderFileID.ToString+'] ' + Result;
 end;
 
 function TwbFile.GetRecord(aIndex: Integer): IwbMainRecord;
@@ -3024,7 +3024,7 @@ function TwbFile.LoadOrderFileIDtoFileFileID(aFileID: TwbFileID): TwbFileID;
 var
   i         : Integer;
 begin
-  if aFileID = flFileID then
+  if aFileID = flLoadOrderFileID then
     Exit(TwbFileID.Create(GetMasterCount))
   else
     for i := Pred(GetMasterCount) downto 0 do
@@ -3349,24 +3349,24 @@ begin
     if wbIsEslSupported then begin
       if fsIsCompareLoad in flStates then begin
         if FilesMap.Find(flCompareTo, i) then
-          flFileID := IwbFile(Pointer(FilesMap.Objects[i])).LoadOrderFileID;
+          flLoadOrderFileID := IwbFile(Pointer(FilesMap.Objects[i])).LoadOrderFileID;
       end else begin
         if Header.IsESL then begin
           if _NextLightMinor >= $FFF then
             raise Exception.Create('Too many light modules');
-          flFileID := TwbFileID.Create($FE, _NextLightMinor);
+          flLoadOrderFileID := TwbFileID.Create($FE, _NextLightMinor);
           Inc(_NextLightMinor);
         end else begin
           if _NextFullSlot >= $FE then
             raise Exception.Create('Too many full modules');
-          flFileID := TwbFileID.Create(_NextFullSlot);
+          flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
           Inc(_NextFullSlot);
         end;
       end;
     end else begin
       if flLoadOrder > $FF then
         raise Exception.Create('Too many modules');
-      flFileID := TwbFileID.Create(flLoadOrder);
+      flLoadOrderFileID := TwbFileID.Create(flLoadOrder);
     end;
   end;
 
