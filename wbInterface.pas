@@ -76,6 +76,7 @@ var
   wbClampFormID            : Boolean  = True;
   wbDoNotBuildRefsFor      : TStringList;
   wbCopyIsRunning          : Integer  = 0;
+  wbIgnoreESL              : Boolean  = False;
 
   wbUDRSetXESP       : Boolean = True;
   wbUDRSetScale      : Boolean = False;
