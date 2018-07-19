@@ -4,3 +4,6 @@
 [submodule "vcl-styles-utils"]
 	path = vcl-styles-utils
 	url = https://github.com/eFrysTon/vcl-styles-utils.git
+[submodule "VirtualTrees"]
+	path = VirtualTrees
+	url = https://github.com/eFrysTon/Virtual-TreeView.git
