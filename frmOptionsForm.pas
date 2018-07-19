@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ComCtrls, ExtCtrls, wbInterface;
+  Dialogs, StdCtrls, ComCtrls, ExtCtrls, wbInterface,
+  Vcl.Styles.Utils.SystemMenu;
 
 type
   TfrmOptions = class(TForm)
@@ -160,6 +161,11 @@ var
   ct: TConflictThis;
   ca: TConflictAll;
 begin
+  with TVclStylesSystemMenu.Create(Self) do begin
+    ShowNativeStyle := True;
+    MenuCaption := 'Theme';
+  end;
+
   for ct := ctNotDefined to High(TConflictThis) do
     cbConflictThis.Items.AddObject(Copy(GetEnumName(TypeInfo(TConflictThis), Integer(ct)), 3, 100), Pointer(ct));
   cbConflictThis.ItemIndex := 0;

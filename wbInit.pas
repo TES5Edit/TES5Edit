@@ -602,6 +602,9 @@ begin
     Exit;
   end;
 
+  if not (wbToolMode in [tmView, tmEdit]) then
+    wbPrettyFormID := False;
+
   if isMode('FNV') then begin
     wbGameMode := gmFNV;
     wbAppName := 'FNV';
@@ -838,6 +841,9 @@ begin
 
   if FindCmdLineSwitch('IgnoreESL') then
     wbIgnoreESL := True;
+
+  if FindCmdLineSwitch('SimpleFormIDs') then
+    wbPrettyFormID := False;
 
   if wbToolMode in wbPluginModes then // look for the file name
     if not wbFindNextValidCmdLinePlugin(wbParamIndex, wbPluginToUse, wbDataPath) then begin

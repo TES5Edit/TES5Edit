@@ -18,7 +18,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, CheckLst, Menus;
+  Dialogs, StdCtrls, Buttons, CheckLst, Menus,
+  Vcl.Styles.Utils.SystemMenu;
 
 type
   TCheckListBox = class(CheckLst.TCheckListbox)
@@ -98,6 +99,11 @@ end;
 
 procedure TfrmFileSelect.FormCreate(Sender: TObject);
 begin
+  with TVclStylesSystemMenu.Create(Self) do begin
+    ShowNativeStyle := True;
+    MenuCaption := 'Theme';
+  end;
+
   Font := Screen.IconFont;
   CheckListBox1.MultiSelect := True;
 end;

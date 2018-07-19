@@ -1909,7 +1909,7 @@ begin
 
       if Length(flRecords) > 0 then begin
         if FindFormID(FormID, i) then
-          raise Exception.Create('Duplicate FormID ['+FormID.ToString+'] in file ' + GetName);
+          raise Exception.Create('Duplicate FormID ['+FormID.ToString(True)+'] in file ' + GetName);
       end else
         i := 0;
 
@@ -3364,7 +3364,7 @@ begin
     Assert(flLoadFinished);
 
     if (Length(flRecords) < 1) or not FindFormID(aRecord.FormID, i) then
-      raise Exception.Create('Can''t remove FormID ['+aRecord.FormID.ToString+'] from file '+GetName+': FormID not registered');
+      raise Exception.Create('Can''t remove FormID ['+aRecord.FormID.ToString(True)+'] from file '+GetName+': FormID not registered');
 
     flRecords[i] := nil;
     if i < High(flRecords) then begin
@@ -5620,9 +5620,9 @@ begin
   if aMainRecord.Signature <> GetSignature then
     if wbHasProgressCallback then
       wbProgressCallback(Format('Warning: Record %s in file %s is being overridden by record %s in file %s.', [
-        '['+ GetSignature + ':' + GetFormID.ToString + ']',
+        '['+ GetSignature + ':' + GetFormID.ToString(True) + ']',
         GetFile.FileName,
-        '['+ aMainRecord.Signature + ':' + aMainRecord.FormID.ToString + ']',
+        '['+ aMainRecord.Signature + ':' + aMainRecord.FormID.ToString(True) + ']',
         aMainRecord._File.FileName
       ]));
 
@@ -6611,7 +6611,7 @@ begin
         for i := 0 to Pred(mrDef.MemberCount) do
           if i in RequiredRecords then begin
             if wbMoreInfoForRequired  then
-              wbProgressCallback(' ['+mrFixedFormID.ToString+'] Adding missing record: ' + mrDef.Members[i].GetName);
+              wbProgressCallback(' ['+mrFixedFormID.ToString(True)+'] Adding missing record: ' + mrDef.Members[i].GetName);
             Assign(i, nil, False);
           end;
       finally
@@ -7037,9 +7037,9 @@ end;
 function TwbMainRecord.GetEditValue: string;
 begin
   if wbDisplayLoadOrderFormID then
-    Result := GetLoadOrderFormID.ToString
+    Result := GetLoadOrderFormID.ToString(False)
   else
-    Result := GetFormID.ToString
+    Result := GetFormID.ToString(False);
 end;
 
 function TwbMainRecord.GetElementType: TwbElementType;
@@ -7555,9 +7555,9 @@ begin
       Result := Result + ' ';
 
     if wbDisplayLoadOrderFormID then
-      Result := Result + '[' + GetSignature + ':' + GetLoadOrderFormID.ToString + ']'
+      Result := Result + '[' + GetSignature + ':' + GetLoadOrderFormID.ToString(True) + ']'
     else
-      Result := Result + '[' + GetSignature + ':' + GetFormID.ToString + ']';
+      Result := Result + '[' + GetSignature + ':' + GetFormID.ToString(True) + ']';
 
   end else begin
     Result := inherited GetName;
@@ -7566,9 +7566,9 @@ begin
       Result := Result + ' - ' + mrDef.GetName;
 
     if wbDisplayLoadOrderFormID then
-      Result := Result + ' [' + GetLoadOrderFormID.ToString + ']'
+      Result := Result + ' [' + GetLoadOrderFormID.ToString(True) + ']'
     else
-      Result := Result + ' [' + GetFormID.ToString + ']';
+      Result := Result + ' [' + GetFormID.ToString(True) + ']';
 
     s := GetEditorID;
     if s <> '' then
@@ -7843,7 +7843,7 @@ end;
 
 function TwbMainRecord.GetSortKeyInternal(aExtended: Boolean): string;
 begin
-  Result := mrStruct.mrsFormID.ToString
+  Result := mrStruct.mrsFormID.ToString(False)
 end;
 
 function TwbMainRecord.GetSortPriority: Integer;
@@ -8950,7 +8950,7 @@ begin
 
   Master := _File.RecordByFormID[aFormID, False];
   if Assigned(Master) and ((Master._File as IwbFileInternal) = _File) then
-    raise Exception.Create('FormID ['+aFormID.ToString+'] is already present in file ' + _File.Name);
+    raise Exception.Create('FormID ['+aFormID.ToString(True)+'] is already present in file ' + _File.Name);
 
   _File.RemoveMainRecord(Self);
 
@@ -10805,7 +10805,7 @@ begin
   MainRecord := _File.RecordByFormID[FormID, True];
   if Assigned(MainRecord) then begin
     if _File.Equals(MainRecord._File) then
-      raise Exception.Create('FormID ['+FormID.ToString+'] is already defined in file "'+_File.Name+'"');
+      raise Exception.Create('FormID ['+FormID.ToString(True)+'] is already defined in file "'+_File.Name+'"');
 
     IsInjected := FormID.FileID.FullSlot = _File.MasterCount;
 

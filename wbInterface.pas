@@ -24,7 +24,7 @@ uses
   Graphics;
 
 const
-  VersionString  = '3.2.3d EXPERIMENTAL';
+  VersionString  = '3.2.3e EXPERIMENTAL';
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
   wbHardcodedDat = '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
@@ -44,6 +44,7 @@ threadvar
 
 var
   wbDisplayLoadOrderFormID : Boolean  = False;
+  wbPrettyFormID           : Boolean  = True;
   wbSimpleRecords          : Boolean  = True;
   wbFixupPGRD              : Boolean  = False;
   wbIKnowWhatImDoing       : Boolean  = False;
@@ -463,8 +464,8 @@ type
     procedure SetObjectID(const Value: Cardinal);
   public
     class function FromCardinal(const aValue: Cardinal): TwbFormID; static; inline;
-    class function FromStr(const aValue: string): TwbFormID; static; inline;
-    class function FromStrDef(const aValue: string; aDef: Cardinal = 0): TwbFormID; static; inline;
+    class function FromStr(aValue: string): TwbFormID; static;
+    class function FromStrDef(aValue: string; aDef: Cardinal = 0): TwbFormID; static;
     class function FromVar(const aValue: Variant): TwbFormID; static; inline;
 
     class function Null: TwbFormID; static; inline;
@@ -484,7 +485,7 @@ type
     class operator Subtract(const A: TwbFormID; const B: TwbFormID): Int64; inline;
 
     function ChangeFileID(aFileID: TwbFileID): TwbFormID; inline;
-    function ToString: string; inline;
+    function ToString(aForDisplay: Boolean): string;
 
     function IsNull   : Boolean; inline;
     function IsPlayer : Boolean; inline;
@@ -11411,26 +11412,34 @@ var
 begin
   s := '';
   t := aValue;
+  if wbPrettyFormID then
+    t := StringReplace(t, ' ', '', [rfReplaceAll]);
   i := Pos('[', t);
-  while i > 0 do begin
-    Delete(t, 1, i);
-    i := Pos(']', t);
-    if i > 0 then begin
-      s := Copy(t, 1, Pred(i));
+  if i > 0 then begin
+    while i > 0 do begin
       Delete(t, 1, i);
-      if (Length(s) in [13,14]) and (s[5] = ':') then
-        Delete(s, 1, 5);
-    end;
+      i := Pos(']', t);
+      if i > 0 then begin
+        s := Copy(t, 1, Pred(i));
+        Delete(t, 1, i);
+        if (Length(s) in [13,14]) and (s[5] = ':') then
+          Delete(s, 1, 5);
+      end;
 
-    try
-      StrToInt64('$' + s);
-      if Length(s) in [8, 9] then
-        i := 0
-      else
+      try
+        StrToInt64('$' + s);
+        if Length(s) in [8, 9] then
+          i := 0
+        else
+          i := Pos('[', t);
+      except
         i := Pos('[', t);
-    except
-      i := Pos('[', t);
+      end;
     end;
+  end else begin
+    s := Trim(t);
+    if (Length(s) in [13,14]) and (s[5] = ':') then
+      Delete(s, 1, 5);
   end;
 
   if Length(s) in [8,9] then
@@ -11784,24 +11793,24 @@ var
   MainRecord: IwbMainRecord;
 begin
   if (aInt < $800) or (aInt = $FFFFFFFF) then begin
-    Result := TwbFormID.FromCardinal(aInt).ToString;
+    Result := TwbFormID.FromCardinal(aInt).ToString(False);
     Exit;
   end;
 
   MainRecord := GetMainRecord(aInt, aElement);
   if Assigned(MainRecord) then begin
     try
-      Result := MainRecord.LoadOrderFormID.ToString;
+      Result := MainRecord.LoadOrderFormID.ToString(False);
       Exit;
     except
       on E: Exception do begin
-        Result := TwbFormID.FromCardinal(aInt).ToString;
+        Result := TwbFormID.FromCardinal(aInt).ToString(False);
         Exit;
       end;
     end;
   end;
 
-  Result := TwbFormID.FromCardinal(aInt).ToString;
+  Result := TwbFormID.FromCardinal(aInt).ToString(False);
 end;
 
 function TwbFormIDDefFormater.ToString(aInt: Int64; const aElement: IwbElement): string;
@@ -15007,13 +15016,17 @@ begin
     Result._FormID := StrToInt64('$' + string(aValue));
 end;
 
-class function TwbFormID.FromStrDef(const aValue: string; aDef: Cardinal): TwbFormID;
+class function TwbFormID.FromStrDef(aValue: string; aDef: Cardinal): TwbFormID;
 begin
+  if wbPrettyFormID then
+    aValue := StringReplace(aValue, ' ', '', [rfReplaceAll]);
   Result._FormID := StrToInt64Def('$' + aValue, aDef);
 end;
 
-class function TwbFormID.FromStr(const aValue: string): TwbFormID;
+class function TwbFormID.FromStr(aValue: string): TwbFormID;
 begin
+  if wbPrettyFormID then
+    aValue := StringReplace(aValue, ' ', '', [rfReplaceAll]);
   Result._FormID := StrToInt64('$' + aValue);
 end;
 
@@ -15144,9 +15157,17 @@ begin
   Result._FormID := A._FormID - B;
 end;
 
-function TwbFormID.ToString: string;
+function TwbFormID.ToString(aForDisplay: Boolean): string;
 begin
   Result := IntToHex64(_FormID, 8);
+  if wbPrettyFormID and aForDisplay then begin
+    Insert(' ', Result, 3);
+    if FileID.LightSlot >= 0 then
+      Insert(' ', Result, 7)
+    {else
+      if (not wbIgnoreESL) and wbIsEslSupported then
+        Insert(' ', Result, 3);}
+  end;
 end;
 
 { TwbFileID }

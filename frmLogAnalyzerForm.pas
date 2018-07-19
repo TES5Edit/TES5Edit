@@ -302,7 +302,7 @@ begin
       if IsPlugin then
         CellText := Data.PEntry.Text
       else
-        CellText := Data.PEntry.FormID.ToString
+        CellText := Data.PEntry.FormID.ToString(True)
     end;
     1: begin
       if Supports(Data.PEntry.Element, IwbMainRecord, MainRecord) then

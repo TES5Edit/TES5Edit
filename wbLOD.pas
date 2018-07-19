@@ -606,7 +606,7 @@ begin
   Result := Format('Textures\Terrain\LODGen\%s\%s_%s.dds', [
     aFileName,
     ChangeFileExt(ExtractFileName(aModelName), ''),
-    aFormID.ChangeFileID(TwbFileID.Null).ToString
+    aFormID.ChangeFileID(TwbFileID.Null).ToString(False)
   ]);
 end;
 
@@ -1865,7 +1865,7 @@ begin
           TreeFileName := Format('%s\%s_%s.dds', [
             TreeRecords[Index][n]._File.FileName,
             ChangeFileExt(ExtractFileName(TreeRecords[Index][n].WinningOverride.ElementEditValues['Model\MODL']), ''),
-            TreeRecords[Index][n].FormID.ChangeFileID(TwbFileID.Null).ToString
+            TreeRecords[Index][n].FormID.ChangeFileID(TwbFileID.Null).ToString(False)
           ])
         else
           TreeFileName := Format('Tree Type %d.dds', [Index]);
@@ -2455,7 +2455,7 @@ var
                   // references listed in other grids has no effect
                   // ToDo test Overrides moving reference out of cell
                   if (Grid.x = Cell.x) and (Grid.y = Cell.y) then
-                    sl.AddObject(Reference.MasterOrSelf.LoadOrderFormID.ToString, Pointer(Reference.MasterOrSelf));
+                    sl.AddObject(Reference.MasterOrSelf.LoadOrderFormID.ToString(False), Pointer(Reference.MasterOrSelf));
                 end;
           if StartTick + 500 < GetTickCount then begin
             Application.MainForm.Caption := 'Gathering Large References: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(i) +
@@ -2980,7 +2980,7 @@ begin
           end;
         end;
 
-        s := REFRs[i].LoadOrderFormID.ToString + #9 +
+        s := REFRs[i].LoadOrderFormID.ToString(False) + #9 +
              IntToHex(REFRs[i].Flags._Flags, 8) + #9 +
              REFRs[i].ElementEditValues['DATA\Position\X'] + #9 +
              REFRs[i].ElementEditValues['DATA\Position\Y'] + #9 +
@@ -3319,7 +3319,7 @@ var
       if e.ElementExists['XESP'] then begin
         XESP := e.ElementLinksTo['XESP\Reference'] as IwbMainRecord;
         if Assigned(XESP) and (XESP.Flags._Flags and $100 = $100) then
-          xespid := XESP.FormID.ToString
+          xespid := XESP.FormID.ToString(False)
         // if the reference is inititally enabled it gets LOD, VWD always gets LOD
         else if Assigned(XESP) and not e.Flags.IsVisibleWhenDistant then begin
           bInitiallyDisabled := XESP.Flags.IsInitiallyDisabled;
@@ -3484,7 +3484,7 @@ var
         end;
       end;
 
-      s := e.LoadOrderFormID.ToString + #9 +
+      s := e.LoadOrderFormID.ToString(False) + #9 +
            IntToHex(e.Flags._Flags, 8) + #9 +
            e.ElementEditValues['DATA\Position\X'] + #9 +
            e.ElementEditValues['DATA\Position\Y'] + #9 +

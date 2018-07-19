@@ -1,189 +1,243 @@
-﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-		<PropertyGroup>
-			<ProjectGuid>{12317C9C-736E-45A4-8CB7-E43FF92DD93C}</ProjectGuid>
-			<MainSource>TES5Edit.dpr</MainSource>
-			<Base>True</Base>
-			<Config Condition="'$(Config)'==''">Debug</Config>
-			<AppType>Application</AppType>
-			<FrameworkType>VCL</FrameworkType>
-			<DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
-			<ProjectVersion>13.4</ProjectVersion>
-			<Platform Condition="'$(Platform)'==''">Win32</Platform>
-			<TargetedPlatforms>1</TargetedPlatforms>
-			<Platform>Win32</Platform>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
-			<Base>true</Base>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
-			<Cfg_1>true</Cfg_1>
-			<CfgParent>Base</CfgParent>
-			<Base>true</Base>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
-			<Cfg_2>true</Cfg_2>
-			<CfgParent>Base</CfgParent>
-			<Base>true</Base>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(Config)'=='DebugLite' or '$(Cfg_4)'!=''">
-			<Cfg_4>true</Cfg_4>
-			<CfgParent>Base</CfgParent>
-			<Base>true</Base>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(Base)'!=''">
-			<DCC_UsePackage>vclx;vcl;VclSmp;rtl;vclimg;svnui;svn;bdertl;TeeUI;TeeDB;Tee;vclactnband;vcldb;dbrtl;vcldbx;vcltouch;xmlrtl;dsnap;dsnapcon;vclib;ibxpress;adortl;IndyCore;IndySystem;IndyProtocols;inet;intrawebdb_110_150;Intraweb_110_150;vclie;websnap;webdsnap;inetdb;inetdbbde;inetdbxpress;soaprtl;dbexpress;DbxCommonDriver;DataSnapIndy10ServerTransport;DataSnapProviderClient;DbxClientDriver;DataSnapClient;dbxcds;DataSnapServer;AzureCloud;DBXInterBaseDriver;DBXMySQLDriver;DBXFirebirdDriver;DBXSybaseASEDriver;DBXSybaseASADriver;DBXOracleDriver;DBXMSSQLDriver;DBXInformixDriver;DBXDb2Driver;EhLib150;EhLibDataDrivers150;dxCoreD14;cxLibraryD14;cxEditorsD14;cxExtEditorsD14;VirtualTreesR;VTEditTree;JclDeveloperTools;Jcl;JclVcl;JclContainers;JvCore;JvStdCtrls;JvSystem;JvCustom;JvPascalInterpreter;fs15;fsDB15;fsADO15;frx15;frxDB15;frxADO15;frxTee15;frxe15;madBasic_;madDisAsm_;madExcept_;uniGUI15VCL</DCC_UsePackage>
-			<DCC_UnitSearchPath>Zlib;Imaging;Imaging\Zlib;lz4;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-			<DCC_SYMBOL_DEPRECATED>false</DCC_SYMBOL_DEPRECATED>
-			<DCC_WIDECHAR_REDUCED>false</DCC_WIDECHAR_REDUCED>
-			<DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
-			<DCC_UNIT_PLATFORM>false</DCC_UNIT_PLATFORM>
-			<DCC_COMBINING_SIGNED_UNSIGNED>false</DCC_COMBINING_SIGNED_UNSIGNED>
-			<Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
-			<DCC_IMPLICIT_STRING_CAST>false</DCC_IMPLICIT_STRING_CAST>
-			<DCC_COMPARING_SIGNED_UNSIGNED>false</DCC_COMPARING_SIGNED_UNSIGNED>
-			<Manifest_File>None</Manifest_File>
-			<VerInfo_Locale>3081</VerInfo_Locale>
-			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-			<DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;FMX;System.Win;$(DCC_Namespace)</DCC_Namespace>
-			<DCC_E>false</DCC_E>
-			<DCC_ImageBase>00400000</DCC_ImageBase>
-			<DCC_F>false</DCC_F>
-			<DCC_S>false</DCC_S>
-			<DCC_N>false</DCC_N>
-			<DCC_K>false</DCC_K>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(Cfg_1)'!=''">
-			<VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-			<VerInfo_Release>3</VerInfo_Release>
-			<Manifest_File>None</Manifest_File>
-			<Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
-			<VerInfo_MajorVer>3</VerInfo_MajorVer>
-			<UsePackages>true</UsePackages>
-			<VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.2.1.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=xxEdit by ElminsterAU;ProductVersion=3.2.1;Comments=</VerInfo_Keys>
-			<VerInfo_PreRelease>true</VerInfo_PreRelease>
-			<DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
-			<DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
-			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
-			<DCC_DebugInformation>false</DCC_DebugInformation>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(Cfg_2)'!=''">
-			<DCC_Define>DEBUG;NX_EXCEPTION_LOG_IN_APP_FOLDER;$(DCC_Define)</DCC_Define>
-			<ILINK_MapFileType>DetailedSegments</ILINK_MapFileType>
-		</PropertyGroup>
-		<PropertyGroup Condition="'$(Cfg_4)'!=''">
-			<DCC_ExeOutput>.\DebugLite</DCC_ExeOutput>
-			<DCC_Define>DEBUG;NX_EXCEPTION_LOG_IN_APP_FOLDER;LiteVersion;$(DCC_Define)</DCC_Define>
-			<DCC_MapFile>3</DCC_MapFile>
-			<ILINK_MapFileType>DetailedSegments</ILINK_MapFileType>
-			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
-		</PropertyGroup>
-		<ItemGroup>
-			<DelphiCompile Include="TES5Edit.dpr">
-				<MainSource>MainSource</MainSource>
-			</DelphiCompile>
-			<DCCReference Include="VirtualTrees.pas"/>
-			<DCCReference Include="VTEditors.pas"/>
-			<DCCReference Include="VirtualEditTree.pas"/>
-			<DCCReference Include="wbInit.pas"/>
-			<DCCReference Include="wbBSA.pas"/>
-			<DCCReference Include="wbHelpers.pas"/>
-			<DCCReference Include="wbScriptAdapter.pas"/>
-			<DCCReference Include="wbInterface.pas"/>
-			<DCCReference Include="wbImplementation.pas"/>
-			<DCCReference Include="wbScriptAdapterMisc.pas"/>
-			<DCCReference Include="wbScriptAdapterDF.pas"/>
-			<DCCReference Include="wbNifScanner.pas"/>
-			<DCCReference Include="wbStreams.pas"/>
-			<DCCReference Include="wbSort.pas"/>
-			<DCCReference Include="wbLOD.pas"/>
-			<DCCReference Include="wbLocalization.pas"/>
-			<DCCReference Include="frmViewMain.pas">
-				<Form>frmMain</Form>
-			</DCCReference>
-			<DCCReference Include="FilterOptionsFrm.pas">
-				<Form>frmFilterOptions</Form>
-			</DCCReference>
-			<DCCReference Include="FileSelectFrm.pas">
-				<Form>frmFileSelect</Form>
-			</DCCReference>
-			<DCCReference Include="ViewElementsFrm.pas">
-				<Form>frmViewElements</Form>
-			</DCCReference>
-			<DCCReference Include="EditWarningFrm.pas">
-				<Form>frmEditWarning</Form>
-			</DCCReference>
-			<DCCReference Include="frmWaitForm.pas">
-				<Form>frmWait</Form>
-			</DCCReference>
-			<DCCReference Include="frmLocalizationForm.pas">
-				<Form>frmLocalization</Form>
-			</DCCReference>
-			<DCCReference Include="frmLocalizePluginForm.pas">
-				<Form>frmLocalizePlugin</Form>
-			</DCCReference>
-			<DCCReference Include="frmScriptForm.pas">
-				<Form>frmScript</Form>
-			</DCCReference>
-			<DCCReference Include="frmOptionsForm.pas">
-				<Form>frmOptions</Form>
-			</DCCReference>
-			<DCCReference Include="frmLogAnalyzerForm.pas">
-				<Form>frmLogAnalyzer</Form>
-			</DCCReference>
-			<DCCReference Include="frmLODGenForm.pas"/>
-			<DCCReference Include="frmTipForm.pas"/>
-			<DCCReference Include="wbDefinitionsFNV.pas"/>
-			<DCCReference Include="wbDefinitionsFNVSaves.pas"/>
-			<DCCReference Include="wbDefinitionsFO3.pas"/>
-			<DCCReference Include="wbDefinitionsFO3Saves.pas"/>
-			<DCCReference Include="wbDefinitionsFO4.pas"/>
-			<DCCReference Include="wbDefinitionsFO4Saves.pas"/>
-			<DCCReference Include="wbDefinitionsTES3.pas"/>
-			<DCCReference Include="wbDefinitionsTES4.pas"/>
-			<DCCReference Include="wbDefinitionsTES4Saves.pas"/>
-			<DCCReference Include="wbDefinitionsTES5.pas"/>
-			<DCCReference Include="wbDefinitionsTES5Saves.pas"/>
-			<DCCReference Include="wbSaveInterface.pas"/>
-			<DCCReference Include="wbDataFormat.pas"/>
-			<DCCReference Include="wbDataFormatMisc.pas"/>
-			<DCCReference Include="wbDataFormatMaterial.pas"/>
-			<DCCReference Include="wbDataFormatNif.pas"/>
-			<DCCReference Include="wbDataFormatNifTypes.pas"/>
-			<DCCReference Include="wbNifMath.pas"/>
-			<DCCReference Include="wbHalfFloat.pas"/>
-			<BuildConfiguration Include="Debug">
-				<Key>Cfg_2</Key>
-				<CfgParent>Base</CfgParent>
-			</BuildConfiguration>
-			<BuildConfiguration Include="DebugLite">
-				<Key>Cfg_4</Key>
-				<CfgParent>Base</CfgParent>
-			</BuildConfiguration>
-			<BuildConfiguration Include="Base">
-				<Key>Base</Key>
-			</BuildConfiguration>
-			<BuildConfiguration Include="Release">
-				<Key>Cfg_1</Key>
-				<CfgParent>Base</CfgParent>
-			</BuildConfiguration>
-		</ItemGroup>
-		<Import Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')" Project="$(BDS)\Bin\CodeGear.Delphi.Targets"/>
-		<Import Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')" Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj"/>
-		<ProjectExtensions>
-			<Borland.Personality>Delphi.Personality.12</Borland.Personality>
-			<Borland.ProjectType>VCLApplication</Borland.ProjectType>
-			<BorlandProject>
-				<Delphi.Personality>
-					<Source>
-						<Source Name="MainSource">TES5Edit.dpr</Source>
-					</Source>
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <Base>True</Base>
+        <AppType>Application</AppType>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <FrameworkType>VCL</FrameworkType>
+        <MainSource>TES5Edit.dpr</MainSource>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <ProjectGuid>{BB5B51E2-CC9A-4404-A582-958449C5049E}</ProjectGuid>
+        <ProjectVersion>18.4</ProjectVersion>
+        <TargetedPlatforms>3</TargetedPlatforms>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+        <Base>true</Base>
+        <CfgParent>Base</CfgParent>
+        <Base_Win32>true</Base_Win32>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
+        <Base>true</Base>
+        <CfgParent>Base</CfgParent>
+        <Base_Win64>true</Base_Win64>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+        <Base>true</Base>
+        <CfgParent>Base</CfgParent>
+        <Cfg_1>true</Cfg_1>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Base>true</Base>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Cfg_1_Win32>true</Cfg_1_Win32>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win64)'!=''">
+        <Base>true</Base>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Cfg_1_Win64>true</Cfg_1_Win64>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+        <Base>true</Base>
+        <CfgParent>Base</CfgParent>
+        <Cfg_2>true</Cfg_2>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
+        <Base>true</Base>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Cfg_2_Win32>true</Cfg_2_Win32>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win64)'!=''">
+        <Base>true</Base>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Cfg_2_Win64>true</Cfg_2_Win64>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base)'!=''">
+        <SanitizedProjectName>TES5Edit</SanitizedProjectName>
+        <Custom_Styles>Amakrits|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Amakrits.vsf;&quot;Amethyst Kamri|VCLSTYLE|$(BDSCOMMONDIR)\Styles\AmethystKamri.vsf&quot;;&quot;Aqua Graphite|VCLSTYLE|$(BDSCOMMONDIR)\Styles\AquaGraphite.vsf&quot;;&quot;Aqua Light Slate|VCLSTYLE|$(BDSCOMMONDIR)\Styles\AquaLightSlate.vsf&quot;;Auric|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Auric.vsf;Carbon|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Carbon.vsf;&quot;Charcoal Dark Slate|VCLSTYLE|$(BDSCOMMONDIR)\Styles\CharcoalDarkSlate.vsf&quot;;&quot;Cobalt XEMedia|VCLSTYLE|$(BDSCOMMONDIR)\Styles\CobaltXEMedia.vsf&quot;;&quot;Cyan Dusk|VCLSTYLE|$(BDSCOMMONDIR)\Styles\CyanDusk.vsf&quot;;&quot;Cyan Night|VCLSTYLE|$(BDSCOMMONDIR)\Styles\CyanNight.vsf&quot;;&quot;Emerald Light Slate|VCLSTYLE|$(BDSCOMMONDIR)\Styles\EmeraldLightSlate.vsf&quot;;Glossy|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Glossy.vsf;Glow|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Glow.vsf;&quot;Golden Graphite|VCLSTYLE|$(BDSCOMMONDIR)\Styles\GoldenGraphite.vsf&quot;;&quot;Iceberg Classico|VCLSTYLE|$(BDSCOMMONDIR)\Styles\IcebergClassico.vsf&quot;;&quot;Lavender Classico|VCLSTYLE|$(BDSCOMMONDIR)\Styles\LavenderClassico.vsf&quot;;Light|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Light.vsf;Luna|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Luna.vsf;&quot;Metropolis UI Black|VCLSTYLE|$(BDSCOMMONDIR)\Styles\MetropolisUIBlack.vsf&quot;;&quot;Metropolis UI Blue|VCLSTYLE|$(BDSCOMMONDIR)\Styles\MetropolisUIBlue.vsf&quot;;&quot;Metropolis UI Dark|VCLSTYLE|$(BDSCOMMONDIR)\Styles\MetropolisUIDark.vsf&quot;;&quot;Metropolis UI Green|VCLSTYLE|$(BDSCOMMONDIR)\Styles\MetropolisUIGreen.vsf&quot;;Obsidian|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Obsidian.vsf;&quot;Onyx Blue|VCLSTYLE|$(BDSCOMMONDIR)\Styles\OnyxBlue.vsf&quot;;&quot;Ruby Graphite|VCLSTYLE|$(BDSCOMMONDIR)\Styles\RubyGraphite.vsf&quot;;&quot;Sapphire Kamri|VCLSTYLE|$(BDSCOMMONDIR)\Styles\SapphireKamri.vsf&quot;;Silver|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Silver.vsf;Sky|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Sky.vsf;&quot;Slate Classico|VCLSTYLE|$(BDSCOMMONDIR)\Styles\SlateClassico.vsf&quot;;&quot;Smokey Quartz Kamri|VCLSTYLE|$(BDSCOMMONDIR)\Styles\SmokeyQuartzKamri.vsf&quot;;&quot;Tablet Light|VCLSTYLE|$(BDSCOMMONDIR)\Styles\TabletLight.vsf&quot;;TabletDark|VCLSTYLE|$(BDSCOMMONDIR)\Styles\TabletDark.vsf;&quot;Turquoise Gray|VCLSTYLE|$(BDSCOMMONDIR)\Styles\TurquoiseGray.vsf&quot;;Windows10|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Windows10.vsf;&quot;Windows10 Blue|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Windows10Blue.vsf&quot;;&quot;Windows10 Dark|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Windows10Dark.vsf&quot;;&quot;Windows10 Green|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Windows10Green.vsf&quot;;&quot;Windows10 Purple|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Windows10Purple.vsf&quot;;&quot;Windows10 SlateGray|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Windows10SlateGray.vsf&quot;</Custom_Styles>
+        <DCC_E>false</DCC_E>
+        <DCC_ExeOutput>.</DCC_ExeOutput>
+        <DCC_F>false</DCC_F>
+        <DCC_ImageBase>00400000</DCC_ImageBase>
+        <DCC_K>false</DCC_K>
+        <DCC_N>false</DCC_N>
+        <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;FMX;Winapi;System.Win;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_S>false</DCC_S>
+        <DCC_UnitSearchPath>.\Imaging;.\Imaging\zlib;.\zlib;.\lz4;.\VirtualTrees\Source;.\delphi-detours-library\Source;.\vcl-styles-utils\Common;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=3.2.3.5;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
+        <VerInfo_Locale>3081</VerInfo_Locale>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win32)'!=''">
+        <AppEnableHighDPI>true</AppEnableHighDPI>
+        <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
+        <BT_BuildType>Debug</BT_BuildType>
+        <DCC_Namespace>Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+        <Icon_MainIcon>TES5Edit_Icon1.ico</Icon_MainIcon>
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
+        <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win64)'!=''">
+        <AppEnableHighDPI>true</AppEnableHighDPI>
+        <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
+        <BT_BuildType>Debug</BT_BuildType>
+        <DCC_Namespace>Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
+        <Icon_MainIcon>TES5Edit_Icon1.ico</Icon_MainIcon>
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
+        <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=3.2.3.5;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1)'!=''">
+        <DCC_DebugInformation>0</DCC_DebugInformation>
+        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <AppEnableHighDPI>true</AppEnableHighDPI>
+        <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
+        <Debugger_RunParams>-sse</Debugger_RunParams>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
+        <AppEnableHighDPI>true</AppEnableHighDPI>
+        <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
+        <Debugger_RunParams>-sse</Debugger_RunParams>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=3.2.3.5;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_Optimize>false</DCC_Optimize>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+        <AppEnableHighDPI>true</AppEnableHighDPI>
+        <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
+        <DCC_GenerateStackFrames>false</DCC_GenerateStackFrames>
+        <DCC_Optimize>true</DCC_Optimize>
+        <Debugger_RunParams>-sse -IKnowWhatImDoing -C:c:\Temp\</Debugger_RunParams>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=3.2.3.5;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
+        <AppEnableHighDPI>true</AppEnableHighDPI>
+        <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
+        <Debugger_RunParams>-sse</Debugger_RunParams>
+    </PropertyGroup>
+    <ItemGroup>
+        <DelphiCompile Include="$(MainSource)">
+            <MainSource>MainSource</MainSource>
+        </DelphiCompile>
+        <DCCReference Include="VirtualTrees.pas"/>
+        <DCCReference Include="VTEditors.pas"/>
+        <DCCReference Include="VirtualEditTree.pas"/>
+        <DCCReference Include="wbInit.pas"/>
+        <DCCReference Include="wbBSA.pas"/>
+        <DCCReference Include="wbHelpers.pas"/>
+        <DCCReference Include="wbScriptAdapter.pas"/>
+        <DCCReference Include="wbInterface.pas"/>
+        <DCCReference Include="wbImplementation.pas"/>
+        <DCCReference Include="wbScriptAdapterMisc.pas"/>
+        <DCCReference Include="wbScriptAdapterDF.pas"/>
+        <DCCReference Include="wbNifScanner.pas"/>
+        <DCCReference Include="wbStreams.pas"/>
+        <DCCReference Include="wbSort.pas"/>
+        <DCCReference Include="wbLOD.pas"/>
+        <DCCReference Include="wbLocalization.pas"/>
+        <DCCReference Include="frmViewMain.pas">
+            <Form>frmMain</Form>
+        </DCCReference>
+        <DCCReference Include="FilterOptionsFrm.pas">
+            <Form>frmFilterOptions</Form>
+        </DCCReference>
+        <DCCReference Include="FileSelectFrm.pas">
+            <Form>frmFileSelect</Form>
+        </DCCReference>
+        <DCCReference Include="ViewElementsFrm.pas">
+            <Form>frmViewElements</Form>
+        </DCCReference>
+        <DCCReference Include="EditWarningFrm.pas">
+            <Form>frmEditWarning</Form>
+        </DCCReference>
+        <DCCReference Include="frmWaitForm.pas">
+            <Form>frmWait</Form>
+        </DCCReference>
+        <DCCReference Include="frmLocalizationForm.pas">
+            <Form>frmLocalization</Form>
+        </DCCReference>
+        <DCCReference Include="frmLocalizePluginForm.pas">
+            <Form>frmLocalizePlugin</Form>
+        </DCCReference>
+        <DCCReference Include="frmScriptForm.pas">
+            <Form>frmScript</Form>
+        </DCCReference>
+        <DCCReference Include="frmOptionsForm.pas">
+            <Form>frmOptions</Form>
+        </DCCReference>
+        <DCCReference Include="frmLogAnalyzerForm.pas">
+            <Form>frmLogAnalyzer</Form>
+        </DCCReference>
+        <DCCReference Include="frmLODGenForm.pas"/>
+        <DCCReference Include="frmTipForm.pas"/>
+        <DCCReference Include="wbDefinitionsFNV.pas"/>
+        <DCCReference Include="wbDefinitionsFNVSaves.pas"/>
+        <DCCReference Include="wbDefinitionsFO3.pas"/>
+        <DCCReference Include="wbDefinitionsFO3Saves.pas"/>
+        <DCCReference Include="wbDefinitionsFO4.pas"/>
+        <DCCReference Include="wbDefinitionsFO4Saves.pas"/>
+        <DCCReference Include="wbDefinitionsTES3.pas"/>
+        <DCCReference Include="wbDefinitionsTES4.pas"/>
+        <DCCReference Include="wbDefinitionsTES4Saves.pas"/>
+        <DCCReference Include="wbDefinitionsTES5.pas"/>
+        <DCCReference Include="wbDefinitionsTES5Saves.pas"/>
+        <DCCReference Include="wbSaveInterface.pas"/>
+        <DCCReference Include="wbDataFormat.pas"/>
+        <DCCReference Include="wbDataFormatMisc.pas"/>
+        <DCCReference Include="wbDataFormatMaterial.pas"/>
+        <DCCReference Include="wbDataFormatNif.pas"/>
+        <DCCReference Include="wbDataFormatNifTypes.pas"/>
+        <DCCReference Include="wbNifMath.pas"/>
+        <DCCReference Include="wbHalfFloat.pas"/>
+        <BuildConfiguration Include="Base">
+            <Key>Base</Key>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Delphi.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Delphi.Personality>
+                <Source>
+                    <Source Name="MainSource">TES5Edit.dpr</Source>
+                </Source>
 					<VersionInfo>
 						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
 						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
 						<VersionInfo Name="MajorVer">3</VersionInfo>
 						<VersionInfo Name="MinorVer">2</VersionInfo>
-						<VersionInfo Name="Release">2</VersionInfo>
-						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Release">3</VersionInfo>
+						<VersionInfo Name="Build">5</VersionInfo>
 						<VersionInfo Name="Debug">True</VersionInfo>
 						<VersionInfo Name="PreRelease">True</VersionInfo>
 						<VersionInfo Name="Special">False</VersionInfo>
@@ -195,29 +249,30 @@
 					<VersionInfoKeys>
 						<VersionInfoKeys Name="CompanyName"/>
 						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">3.2.2.0</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">3.2.3.5</VersionInfoKeys>
 						<VersionInfoKeys Name="InternalName"/>
 						<VersionInfoKeys Name="LegalCopyright"/>
 						<VersionInfoKeys Name="LegalTrademarks"/>
 						<VersionInfoKeys Name="OriginalFilename"/>
 						<VersionInfoKeys Name="ProductName">xEdit by ElminsterAU</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductVersion">3.2.2</VersionInfoKeys>
+						<VersionInfoKeys Name="ProductVersion">3.2.3</VersionInfoKeys>
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
-					<Excluded_Packages/>
-					<Parameters>
-						<Parameters Name="RunParams">-sse -edit</Parameters>
-					</Parameters>
-					<Parameters_Win32>
-						<Parameters_Win32 Name="RunParams">-fo4 -edit</Parameters_Win32>
-					</Parameters_Win32>
-				</Delphi.Personality>
-				<Platforms>
-					<Platform value="Win64">False</Platform>
-					<Platform value="Win32">True</Platform>
-				</Platforms>
-				<ModelSupport>False</ModelSupport>
-			</BorlandProject>
-			<ProjectFileVersion>12</ProjectFileVersion>
-		</ProjectExtensions>
-	</Project>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\bcboffice2k250.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\bcbofficexp250.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k250.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp250.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                </Excluded_Packages>
+            </Delphi.Personality>
+            <Platforms>
+                <Platform value="Linux64">False</Platform>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">True</Platform>
+            </Platforms>
+        </BorlandProject>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+</Project>
