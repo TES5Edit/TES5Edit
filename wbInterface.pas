@@ -44,7 +44,7 @@ threadvar
 
 var
   wbDisplayLoadOrderFormID : Boolean  = False;
-  wbPrettyFormID           : Boolean  = True;
+  wbPrettyFormID           : Boolean  = False;
   wbSimpleRecords          : Boolean  = True;
   wbFixupPGRD              : Boolean  = False;
   wbIKnowWhatImDoing       : Boolean  = False;

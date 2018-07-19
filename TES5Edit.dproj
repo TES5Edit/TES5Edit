@@ -141,9 +141,6 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="VirtualTrees.pas"/>
-        <DCCReference Include="VTEditors.pas"/>
-        <DCCReference Include="VirtualEditTree.pas"/>
         <DCCReference Include="wbInit.pas"/>
         <DCCReference Include="wbBSA.pas"/>
         <DCCReference Include="wbHelpers.pas"/>
@@ -231,33 +228,33 @@
                 <Source>
                     <Source Name="MainSource">TES5Edit.dpr</Source>
                 </Source>
-					<VersionInfo>
-						<VersionInfo Name="IncludeVerInfo">True</VersionInfo>
-						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
-						<VersionInfo Name="MajorVer">3</VersionInfo>
-						<VersionInfo Name="MinorVer">2</VersionInfo>
-						<VersionInfo Name="Release">3</VersionInfo>
-						<VersionInfo Name="Build">5</VersionInfo>
-						<VersionInfo Name="Debug">True</VersionInfo>
-						<VersionInfo Name="PreRelease">True</VersionInfo>
-						<VersionInfo Name="Special">False</VersionInfo>
-						<VersionInfo Name="Private">False</VersionInfo>
-						<VersionInfo Name="DLL">False</VersionInfo>
-						<VersionInfo Name="Locale">1033</VersionInfo>
-						<VersionInfo Name="CodePage">1252</VersionInfo>
-					</VersionInfo>
-					<VersionInfoKeys>
-						<VersionInfoKeys Name="CompanyName"/>
-						<VersionInfoKeys Name="FileDescription"/>
-						<VersionInfoKeys Name="FileVersion">3.2.3.5</VersionInfoKeys>
-						<VersionInfoKeys Name="InternalName"/>
-						<VersionInfoKeys Name="LegalCopyright"/>
-						<VersionInfoKeys Name="LegalTrademarks"/>
-						<VersionInfoKeys Name="OriginalFilename"/>
-						<VersionInfoKeys Name="ProductName">xEdit by ElminsterAU</VersionInfoKeys>
-						<VersionInfoKeys Name="ProductVersion">3.2.3</VersionInfoKeys>
-						<VersionInfoKeys Name="Comments"/>
-					</VersionInfoKeys>
+                <VersionInfo>
+                    <VersionInfo Name="IncludeVerInfo">True</VersionInfo>
+                    <VersionInfo Name="AutoIncBuild">False</VersionInfo>
+                    <VersionInfo Name="MajorVer">3</VersionInfo>
+                    <VersionInfo Name="MinorVer">2</VersionInfo>
+                    <VersionInfo Name="Release">3</VersionInfo>
+                    <VersionInfo Name="Build">6</VersionInfo>
+                    <VersionInfo Name="Debug">True</VersionInfo>
+                    <VersionInfo Name="PreRelease">True</VersionInfo>
+                    <VersionInfo Name="Special">False</VersionInfo>
+                    <VersionInfo Name="Private">False</VersionInfo>
+                    <VersionInfo Name="DLL">False</VersionInfo>
+                    <VersionInfo Name="Locale">1033</VersionInfo>
+                    <VersionInfo Name="CodePage">1252</VersionInfo>
+                </VersionInfo>
+                <VersionInfoKeys>
+                    <VersionInfoKeys Name="CompanyName"/>
+                    <VersionInfoKeys Name="FileDescription"/>
+                    <VersionInfoKeys Name="FileVersion">3.2.3.6</VersionInfoKeys>
+                    <VersionInfoKeys Name="InternalName"/>
+                    <VersionInfoKeys Name="LegalCopyright"/>
+                    <VersionInfoKeys Name="LegalTrademarks"/>
+                    <VersionInfoKeys Name="OriginalFilename"/>
+                    <VersionInfoKeys Name="ProductName">xEdit by ElminsterAU</VersionInfoKeys>
+                    <VersionInfoKeys Name="ProductVersion">3.2.3</VersionInfoKeys>
+                    <VersionInfoKeys Name="Comments"/>
+                </VersionInfoKeys>
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\bcboffice2k250.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\bcbofficexp250.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
