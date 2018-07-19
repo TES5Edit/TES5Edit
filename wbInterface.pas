@@ -24,7 +24,7 @@ uses
   Graphics;
 
 const
-  VersionString  = '3.2.3e EXPERIMENTAL';
+  VersionString  = '3.2.3f EXPERIMENTAL';
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
   wbHardcodedDat = '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
@@ -44,7 +44,7 @@ threadvar
 
 var
   wbDisplayLoadOrderFormID : Boolean  = False;
-  wbPrettyFormID           : Boolean  = True;
+  wbPrettyFormID           : Boolean  = False;
   wbSimpleRecords          : Boolean  = True;
   wbFixupPGRD              : Boolean  = False;
   wbIKnowWhatImDoing       : Boolean  = False;
