@@ -1,0 +1,3 @@
+[submodule "delphi-detours-library"]
+	path = delphi-detours-library
+	url = https://github.com/eFrysTon/delphi-detours-library.git
