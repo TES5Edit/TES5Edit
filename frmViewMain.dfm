@@ -1243,6 +1243,7 @@ object frmMain: TfrmMain
       ReadOnly = True
       TabOrder = 0
       Visible = False
+      StyleElements = [seFont, seBorder]
     end
   end
   object pnlNav: TPanel
@@ -1340,6 +1341,7 @@ object frmMain: TfrmMain
           EditLabel.Caption = '&FormID'
           LabelPosition = lpLeft
           TabOrder = 0
+          StyleElements = [seFont, seBorder]
           OnChange = edFormIDSearchChange
           OnEnter = edFormIDSearchEnter
           OnKeyDown = edFormIDSearchKeyDown
@@ -1370,6 +1372,7 @@ object frmMain: TfrmMain
           EditLabel.Caption = '&Editor ID'
           LabelPosition = lpLeft
           TabOrder = 0
+          StyleElements = [seFont, seBorder]
           OnChange = edEditorIDSearchChange
           OnEnter = edEditorIDSearchEnter
           OnKeyDown = edEditorIDSearchKeyDown

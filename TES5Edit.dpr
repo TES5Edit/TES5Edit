@@ -72,7 +72,17 @@ uses
   wbDataFormatNif in 'wbDataFormatNif.pas',
   wbDataFormatNifTypes in 'wbDataFormatNifTypes.pas',
   wbNifMath in 'wbNifMath.pas',
-  wbHalfFloat in 'wbHalfFloat.pas';
+  wbHalfFloat in 'wbHalfFloat.pas',
+  Vcl.Themes,
+  Vcl.Styles,
+  Vcl.Styles.Hooks,
+  Vcl.Styles.Utils.Menus,      //Style Popup and Shell Menus (class #32768)
+  Vcl.Styles.Utils.Forms,      //Style dialogs box (class #32770)
+  Vcl.Styles.Utils.StdCtrls,   //Style buttons, static, and so on
+  Vcl.Styles.Utils.ComCtrls,   //Style SysTreeView32, SysListView32
+  Vcl.Styles.Utils.ScreenTips, //Style the tooltips_class32 class
+  Vcl.Styles.Utils.SysControls,
+  Vcl.Styles.Utils.SysStyleHook;
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -83,6 +93,7 @@ const
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
 
 begin
+  UseLatestCommonDialogs := True;
   SysUtils.FormatSettings.DecimalSeparator := '.';
   Application.Initialize;
   Application.MainFormOnTaskbar := True;

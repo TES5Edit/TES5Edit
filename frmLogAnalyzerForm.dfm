@@ -111,11 +111,6 @@ object frmLogAnalyzer: TfrmLogAnalyzer
       Colors.SelectionRectangleBorderColor = clBlack
       Colors.SelectionTextColor = clBlack
       Header.AutoSizeIndex = 1
-      Header.Font.Charset = DEFAULT_CHARSET
-      Header.Font.Color = clWindowText
-      Header.Font.Height = -11
-      Header.Font.Name = 'Tahoma'
-      Header.Font.Style = []
       Header.Height = 21
       Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
       Header.SortColumn = 0
@@ -144,7 +139,7 @@ object frmLogAnalyzer: TfrmLogAnalyzer
         end
         item
           Position = 1
-          Width = 469
+          Width = 473
           WideText = 'Name'
         end
         item
