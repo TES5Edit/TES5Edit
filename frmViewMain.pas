@@ -69,15 +69,7 @@ uses
   wbDataFormat,
   Vcl.Themes,
   Vcl.Styles,
-  Vcl.Styles.Ext,
-  Vcl.Styles.Hooks,
-  Vcl.Styles.Utils.Menus,      //Style Popup and Shell Menus (class #32768)
-  Vcl.Styles.Utils.Forms,      //Style dialogs box (class #32770)
-  Vcl.Styles.Utils.StdCtrls,   //Style buttons, static, and so on
-  Vcl.Styles.Utils.ComCtrls,   //Style SysTreeView32, SysListView32
-  Vcl.Styles.Utils.ScreenTips, //Style the tooltips_class32 class
-  Vcl.Styles.Utils.SysControls,
-  Vcl.Styles.Utils.SysStyleHook;
+  Vcl.Styles.Ext;
 
 const
   DefaultInterval             = 1 / 24 / 6;
