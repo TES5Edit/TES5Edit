@@ -1,3 +1,6 @@
 [submodule "delphi-detours-library"]
 	path = delphi-detours-library
 	url = https://github.com/eFrysTon/delphi-detours-library.git
+[submodule "vcl-styles-utils"]
+	path = vcl-styles-utils
+	url = https://github.com/eFrysTon/vcl-styles-utils.git
