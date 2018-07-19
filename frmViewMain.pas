@@ -51,6 +51,7 @@ uses
   VirtualTrees,
   VTEditors,
   VirtualEditTree,
+  Vcl.Styles.Utils.SystemMenu,
   JvComponentBase,
   JvInterpreter,
   ImagingTypes,
@@ -65,7 +66,18 @@ uses
   wbHelpers,
   wbInit,
   wbLocalization,
-  wbDataFormat;
+  wbDataFormat,
+  Vcl.Themes,
+  Vcl.Styles,
+  Vcl.Styles.Ext,
+  Vcl.Styles.Hooks,
+  Vcl.Styles.Utils.Menus,      //Style Popup and Shell Menus (class #32768)
+  Vcl.Styles.Utils.Forms,      //Style dialogs box (class #32770)
+  Vcl.Styles.Utils.StdCtrls,   //Style buttons, static, and so on
+  Vcl.Styles.Utils.ComCtrls,   //Style SysTreeView32, SysListView32
+  Vcl.Styles.Utils.ScreenTips, //Style the tooltips_class32 class
+  Vcl.Styles.Utils.SysControls,
+  Vcl.Styles.Utils.SysStyleHook;
 
 const
   DefaultInterval             = 1 / 24 / 6;
@@ -629,6 +641,7 @@ type
     procedure WMUser2(var Message: TMessage); message WM_USER + 2;
     procedure WMUser3(var Message: TMessage); message WM_USER + 3;
     procedure WMUser4(var Message: TMessage); message WM_USER + 4;
+    procedure WndProc(var Message: TMessage); override;
   private
     Files: TDynFiles;
     NewMessages: TStringList;
@@ -735,6 +748,7 @@ type
     AutoDone    : Boolean;
     ColumnWidth : Integer;
     RowHeight   : Integer;
+    MonospaceFontName: string;
 
     PluginDirtyInfos: array of TPluginDirtyInfo;
     StickViewNodeLabel: string;
@@ -975,7 +989,7 @@ begin
 
   if Assigned(aElement) then begin
     ObjectID := aElement._File.NextObjectID; // remember ID
-    s := aElement._File.FileFormIDtoLoadOrderFormID(aElement._File.NewFormID).ToString;
+    s := aElement._File.FileFormIDtoLoadOrderFormID(aElement._File.NewFormID).ToString(False);
   end;
 
   try
@@ -2981,7 +2995,7 @@ begin
           Clear;
           with Add do begin
             Text := '';
-            Width := ColumnWidth;
+            Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
             Options := Options - [coDraggable];
             Options := Options + [coFixed];
           end;
@@ -3735,7 +3749,10 @@ begin
 
   AddMessage('Using settings file: ' + wbSettingsFileName);
 
-  Settings := TMemIniFile.Create(wbSettingsFileName);
+  if not Assigned(Settings) then
+    Settings := TMemIniFile.Create(wbSettingsFileName);
+  (*
+  TStyleManager.TrySetStyle(Settings.ReadString('UI', 'Theme', TStyleManager.ActiveStyle.Name), False);
 
   LoadFont(Settings, 'UI', 'FontRecords', vstNav.Font);
   LoadFont(Settings, 'UI', 'FontRecords', vstView.Font);
@@ -3760,6 +3777,7 @@ begin
     end;
     WindowState := TWindowState(Settings.ReadInteger(Name, 'WindowState', Integer(WindowState)));
   end;
+  *)
 
   i := Settings.ReadInteger(Name, 'pnlNavWidth', pnlNav.Width);
   if i < 50 then i := 50;
@@ -3768,7 +3786,6 @@ begin
 
   for i := 0 to Pred(vstNav.Header.Columns.Count) do
     vstNav.Header.Columns[i].Width := Settings.ReadInteger(Name, 'vstNavColumnWidth' + IntToStr(i), vstNav.Header.Columns[i].Width);
-
 
   if wbToolSource in [tsSaves] then
     AddMessage('Loading saves list from : ' + wbSavePath)
@@ -4273,7 +4290,7 @@ begin
   wbActorTemplateHide := Settings.ReadBool('Options', 'ActorTemplateHide', wbActorTemplateHide);
   ColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', ColumnWidth);
   RowHeight := Settings.ReadInteger('Options', 'RowHeight', RowHeight);
-  SetDefaultNodeHeight(RowHeight);
+  SetDefaultNodeHeight(Trunc(RowHeight * (GetCurrentPPIScreen / PixelsPerInch)));
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
   wbSortGroupRecord := Settings.ReadBool('Options', 'SortGroupRecord', wbSortGroupRecord);
   wbRemoveOffsetData := Settings.ReadBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
@@ -4785,7 +4802,53 @@ begin
 end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
+var
+  i, j, k, l: Integer;
+  Rect: TRect;
 begin
+  //try to set the style and window position as early as possible to reduce flicker
+  try
+    if not Assigned(Settings) then
+      Settings := TMemIniFile.Create(wbSettingsFileName);
+
+    TStyleManager.TrySetStyle(Settings.ReadString('UI', 'Theme', TStyleManager.ActiveStyle.Name), False);
+
+    LoadFont(Settings, 'UI', 'FontRecords', vstNav.Font);
+    LoadFont(Settings, 'UI', 'FontRecords', vstView.Font);
+    LoadFont(Settings, 'UI', 'FontRecords', lblPath.Font);
+    LoadFont(Settings, 'UI', 'FontMessages', mmoMessages.Font);
+
+    // skip reading main form position if Shift is pressed
+    if GetKeyState(VK_SHIFT) >= 0 then begin
+      i := Settings.ReadInteger(Name, 'Left', 0);
+      j := Settings.ReadInteger(Name, 'Top', 0);
+      k := Settings.ReadInteger(Name, 'Width', 0);
+      l := Settings.ReadInteger(Name, 'Height', 0);
+      if (k > 100) and (l > 100) then begin
+        Rect := Screen.DesktopRect;
+        if (i+16 >= Rect.Left) and
+           (j+16 >= Rect.Top) and
+           ((i + k)-16 <= Rect.Right) and
+           ((j + l)-16 <= Rect.Bottom)
+        then begin
+          Left := i;
+          Top := j;
+          Width := k;
+          Height := l;
+          Position := poDesigned;
+        end;
+      end;
+      WindowState := TWindowState(Settings.ReadInteger(Name, 'WindowState', Integer(WindowState)));
+      if WindowState = wsMaximized then
+        Position := poDesigned;
+    end;
+  except end;
+
+  with TVclStylesSystemMenu.Create(Self) do begin
+    ShowNativeStyle := True;
+    MenuCaption := 'Theme';
+  end;
+  wbDarkMode := wbIsDarkMode;
   _BlockInternalEdit := True;
   _wbProgressCallback := GeneralProgress;
   LastUpdate := GetTickCount;
@@ -4793,6 +4856,23 @@ begin
   Caption := Application.Title;
   ColumnWidth := 200;
   RowHeight := vstNav.DefaultNodeHeight;
+
+  if Screen.Fonts.IndexOf('Consolas') >= 0 then
+    MonospaceFontName := 'Consolas'
+  else if Screen.Fonts.IndexOf('Courier New') >= 0 then
+    MonospaceFontName := 'Courier New'
+  else //give up
+    MonospaceFontName := '';
+
+  try
+    if not Assigned(Settings) then
+      Settings := TMemIniFile.Create(wbSettingsFileName);
+
+    ColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', ColumnWidth);
+    RowHeight := Settings.ReadInteger('Options', 'RowHeight', RowHeight);
+    SetDefaultNodeHeight(Trunc(RowHeight * (GetCurrentPPIScreen / PixelsPerInch)));
+  except end;
+
   if wbToolMode in wbAutoModes then begin
     mmoMessages.Parent := Self;
     pnlNav.Visible := False;
@@ -4918,9 +4998,14 @@ begin
 end;
 
 procedure TfrmMain.FormShow(Sender: TObject);
+var
+  i: Integer;
 begin
-  pnlTop.Height := Abs(lblPath.Font.Height) + 21;
-  pnlSearch.Height := Abs(edFormIDSearch.Font.Height) + 16;
+  pnlTop.Height := Abs(lblPath.Font.Height) + Trunc(20 * (GetCurrentPPIScreen/PixelsPerInch));
+  pnlSearch.Height := Abs(edFormIDSearch.Font.Height) + Trunc(16 * (GetCurrentPPIScreen/PixelsPerInch));
+  i := edEditorIDSearch.Left;
+  edEditorIDSearch.Left := Trunc(pnlSearch.Height * 2.5);
+  edEditorIDSearch.Width := edEditorIDSearch.Width - (edEditorIDSearch.Left - i);
   tmrStartup.Enabled := True;
 end;
 
@@ -5600,7 +5685,7 @@ begin
     i := 2
   else
     i := 0;
-  Settings.WriteInteger('View','ColumnWidth',i);
+  Settings.WriteInteger('View','ColumnWidth', i);
   Settings.UpdateFile;
   UpdateColumnWidths;
 end;
@@ -6309,10 +6394,10 @@ begin
   if not Assigned(CSNPC) then
     raise Exception.Create('Can''t find CSNPCBanditBoss script');
 
-  CSNPCID           := CSNPC.LoadOrderFormID.ToString;
-  CSNPCBossID       := CSNPCBoss.LoadOrderFormID.ToString;
-  CSNPCBanditID     := CSNPCBandit.LoadOrderFormID.ToString;
-  CSNPCBanditBossID := CSNPCBanditBoss.LoadOrderFormID.ToString;
+  CSNPCID           := CSNPC.LoadOrderFormID.ToString(False);
+  CSNPCBossID       := CSNPCBoss.LoadOrderFormID.ToString(False);
+  CSNPCBanditID     := CSNPCBandit.LoadOrderFormID.ToString(False);
+  CSNPCBanditBossID := CSNPCBanditBoss.LoadOrderFormID.ToString(False);
 
   for i := MMMESM to High(Files) do
     if (i = MMMESM) or Files[i].HasMaster('Mart''s Monster Mod.esm') then
@@ -6530,7 +6615,7 @@ begin
         ShowChangeReferencedBy(rlOldRecord.LoadOrderFormID, rlNewRecord.LoadOrderFormID, rlReferencedBy, True);
         RefRecord := _File.RecordByFormID[rlOldRecord.LoadOrderFormID, False];
         if Assigned(RefRecord) and _File.Equals(RefRecord._File) then begin
-          AddMessage('Changing FormID ['+RefRecord.LoadOrderFormID.ToString+'] to ['+rlNewRecord.LoadOrderFormID.ToString+']');
+          AddMessage('Changing FormID ['+RefRecord.LoadOrderFormID.ToString(True)+'] to ['+rlNewRecord.LoadOrderFormID.ToString(True)+']');
           RefRecord.LoadOrderFormID := rlNewRecord.LoadOrderFormID;
         end;
       end;
@@ -6826,11 +6911,11 @@ begin
     OldFormID := MainRecord.LoadOrderFormID;
     if not Assigned(_File) then begin
 
-      s := OldFormID.ToString;
+      s := OldFormID.ToString(False);
       if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then begin
 
         if s = '' then begin
-          s := MainRecord._File.FileFormIDtoLoadOrderFormID(MainRecord._File.NewFormID).ToString;
+          s := MainRecord._File.FileFormIDtoLoadOrderFormID(MainRecord._File.NewFormID).ToString(False);
           if not InputQuery('New FormID generated', 'Please verify the newly generated FormID. The FormID needs to be a load order corrected form ID.', s) then
             Exit;
         end;
@@ -6856,7 +6941,7 @@ begin
 
     pgMain.ActivePage := tbsMessages;
 
-    AddMessage('Changing FormID ['+OldFormID.ToString+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToString+']');
+    AddMessage('Changing FormID ['+OldFormID.ToString(True)+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToString(True)+']');
 
     Master := MainRecord.MasterOrSelf;
     SetLength(ReferencedBy, Master.ReferencedByCount);
@@ -7266,7 +7351,7 @@ begin
   Element := nil;
 
   if Assigned(Node) then
-    vstNav.DeleteNode(Node, False);
+    vstNav.DeleteNode(Node);
 
   SetActiveRecord(MainRecord);
   InvalidateElementsTreeView(NoNodes);
@@ -7608,7 +7693,7 @@ begin
                       if LVLIs.Find(MainRecord2.EditorID+Race, l) then begin
                         with FormIDs[Cardinal(LVLIs.Objects[l])] do
                           if LoadOrder <= Files[i].LoadOrder then try
-                            Container2.Elements[0].EditValue := FormID.ToString
+                            Container2.Elements[0].EditValue := FormID.ToString(False)
                           except
                             on E: Exception do
                               PostAddMessage('Error updating Item '+MainRecord2.Name+' for '+MainRecord.Name+': '+ E.Message);
@@ -7680,7 +7765,7 @@ begin
     NodeData.Element := nil;
     NodeData.Container := nil;
     Element := nil;
-    vstNav.DeleteNode(Selection[i], False);
+    vstNav.DeleteNode(Selection[i]);
   end;
   InvalidateElementsTreeView(NoNodes);
 end;
@@ -7771,7 +7856,7 @@ begin
             AddMessage('Setting VWD: ' + MainRecord.Name);
             MainRecord.IsVisibleWhenDistant := True;
             Inc(ChangeCount);
-            vstNav.DeleteNode(Node, False);
+            vstNav.DeleteNode(Node);
           end;
 
         end;
@@ -8635,7 +8720,7 @@ begin
                 NodeData.Element.Remove;
                 NodeData.Container := nil;
                 NodeData.Element := nil;
-                vstNav.DeleteNode(Node, False);
+                vstNav.DeleteNode(Node);
               end;
               Inc(RemovedCount);
             end;
@@ -9297,7 +9382,7 @@ begin
 
       pgMain.ActivePage := tbsMessages;
 
-      AddMessage('Changing FormID ['+OldFormID.ToString+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToString+']');
+      AddMessage('Changing FormID ['+OldFormID.ToString(True)+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToString(True)+']');
 
       Master := MainRecord.MasterOrSelf;
       SetLength(ReferencedBy, Master.ReferencedByCount);
@@ -9787,7 +9872,7 @@ begin
           end;
 
           if not (vsVisible in Node.States) then begin
-            vstNav.DeleteNode(Node, False)
+            vstNav.DeleteNode(Node)
           end else if Node.ChildCount > 0 then begin
             if
               (FlattenBlocks or FlattenCellChilds) and
@@ -9798,22 +9883,22 @@ begin
               ) then begin
 
               vstNav.MoveTo(Node, Node, amInsertBefore, True);
-              vstNav.DeleteNode(Node, False);
+              vstNav.DeleteNode(Node);
 
             end else
               if InheritConflictByParent and (PersCellNode <> Node) then
                 InheritStateFromChilds(Node, NodeData);
           end else if NodeData.Element.Skipped then begin
-            vstNav.DeleteNode(Node, False)
+            vstNav.DeleteNode(Node)
           end else if (FlattenBlocks or FlattenCellChilds) and
                   Supports(NodeData.Element, IwbGroupRecord, GroupRecord) and
                   (
                     (FlattenBlocks and (GroupRecord.GroupType in [2..5])) or
                     (FlattenCellChilds and (GroupRecord.GroupType in [8..10]))
                   ) then
-                    vstNav.DeleteNode(Node, False);
+                    vstNav.DeleteNode(Node);
         end else
-          vstNav.DeleteNode(Node, False);
+          vstNav.DeleteNode(Node);
 
         Node := NextNode;
         Inc(Count);
@@ -9997,7 +10082,7 @@ begin
                   if Files[i] = MainRecord._File then Break;
                 Inc(FileFiltered[i]);
               end;
-            vstNav.DeleteNode(Node, False);
+            vstNav.DeleteNode(Node);
           end;
 
         Node := NextNode;
@@ -10212,6 +10297,8 @@ begin
 
     vstNav.Font := pnlFontRecords.Font;
     vstView.Font := pnlFontRecords.Font;
+    lblPath.Font := pnlFontRecords.Font;
+    pnlTop.Height := Abs(lblPath.Font.Height) + Trunc(20 * (GetCurrentPPIScreen/PixelsPerInch));
     mmoMessages.Font := pnlFontMessages.Font;
     wbHideUnused := cbHideUnused.Checked;
     wbHideIgnored := cbHideIgnored.Checked;
@@ -10227,7 +10314,7 @@ begin
     wbClampFormID := cbClampFormID.Checked;
     ColumnWidth := StrToIntDef(edColumnWidth.Text, ColumnWidth);
     RowHeight := StrToIntDef(edRowHeight.Text, RowHeight);
-    SetDefaultNodeHeight(RowHeight);
+    SetDefaultNodeHeight(Trunc(RowHeight * (GetCurrentPPIScreen / PixelsPerInch)));
     AutoSave := cbAutoSave.Checked;
     //wbIKnowWhatImDoing := cbIKnow.Checked;
     wbShowTip := cbShowTip.Checked;
@@ -11525,7 +11612,7 @@ begin
             Clear;
             with Add do begin
               Text := '';
-              Width := ColumnWidth;
+              Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
               Options := Options - [coDraggable];
               Options := Options + [coFixed];
             end;
@@ -11533,7 +11620,7 @@ begin
               with Add do begin
                 Text := ActiveRecords[i].Element._File.Name;
                 Style := vsOwnerDraw;
-                Width := ColumnWidth;
+                Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
                 MinWidth := 5;
                 MaxWidth := 3000;
                 Options := Options - [coAllowclick, coDraggable];
@@ -11571,7 +11658,7 @@ begin
             Clear;
             with Add do begin
               Text := '';
-              Width := ColumnWidth;
+              Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
             end;
           finally
             EndUpdate;
@@ -11630,7 +11717,7 @@ begin
           Clear;
           with Add do begin
             Text := '';
-            Width := ColumnWidth;
+            Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
             Options := Options - [coDraggable];
             Options := Options + [coFixed];
           end;
@@ -11638,7 +11725,7 @@ begin
             with Add do begin
               Text := (ActiveRecords[i].Element as IwbMainRecord).EditorID;
               Style := vsOwnerDraw;
-              Width := ColumnWidth;
+              Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
               MinWidth := 5;
               MaxWidth := 3000;
               Options := Options - [coAllowclick, coDraggable];
@@ -11820,7 +11907,7 @@ begin
             Clear;
             with Add do begin
               Text := '';
-              Width := ColumnWidth;
+              Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
               Options := Options - [coDraggable];
               Options := Options + [coFixed];
             end;
@@ -11828,7 +11915,7 @@ begin
               with Add do begin
                 Text := ActiveRecords[i].Element._File.Name;
                 Style := vsOwnerDraw;
-                Width := ColumnWidth;
+                Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
                 MinWidth := 5;
                 MaxWidth := 3000;
                 Options := Options - [coAllowclick, coDraggable];
@@ -11864,7 +11951,7 @@ begin
             Clear;
             with Add do begin
               Text := '';
-              Width := ColumnWidth;
+              Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
             end;
           finally
             EndUpdate;
@@ -11918,7 +12005,7 @@ begin
 
     if Counter <= 0 then begin
       if not aSilent then
-        ShowMessage('There are ' + IntToStr(Length(ReferencedBy)) + ' records referencing FormID ' + OldFormID.ToString + ' but non of them are in editable files.');
+        ShowMessage('There are ' + IntToStr(Length(ReferencedBy)) + ' records referencing FormID ' + OldFormID.ToString(True) + ' but non of them are in editable files.');
       Exit;
     end;
 
@@ -11947,7 +12034,7 @@ begin
         end;
       end;
 
-      AddMessage(IntToStr(Counter) + ' records out of '+IntToStr(Length(ReferencedBy))+' total records which reference FormID [' + OldFormID.ToString + '] have been updated to [' + NewFormID.ToString + ']');
+      AddMessage(IntToStr(Counter) + ' records out of '+IntToStr(Length(ReferencedBy))+' total records which reference FormID [' + OldFormID.ToString(True) + '] have been updated to [' + NewFormID.ToString(True) + ']');
 
       if not aSilent then begin
         if Error then
@@ -12029,7 +12116,7 @@ var
 
     for i := 0 to Pred(Keywords.ElementCount) do
       if Supports(Keywords.Elements[i].LinksTo, IwbMainRecord, Keyword) then begin
-        s := Keyword.LoadOrderFormID.ToString;
+        s := Keyword.LoadOrderFormID.ToString(False);
         if slKeywords.IndexOf(s) < 0 then begin
           SetLength(arKeywords, Succ(Length(arKeywords)));
           arKeywords[High(arKeywords)] := Keyword;
@@ -12109,7 +12196,7 @@ var
         with CheckListBox1 do
           for i := 0 to Pred(Count) do
             if Checked[i] then
-              slKeywords.AddObject(IwbMainRecord(Pointer(Items.Objects[i])).LoadOrderFormID.ToString, Items.Objects[i]);
+              slKeywords.AddObject(IwbMainRecord(Pointer(Items.Objects[i])).LoadOrderFormID.ToString(False), Items.Objects[i]);
 
         slKeywords.Sorted := True;
 
@@ -12276,7 +12363,7 @@ begin
     end else if mniViewColumnWidthFitText.Checked then
       vstView.Header.AutoFitColumns(False)
     else begin
-      ColWidth := ColumnWidth;
+      ColWidth := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
       for i := 0 to Pred(vstView.Header.Columns.Count) do
         vstView.Header.Columns[i].Width := ColWidth;
     end;
@@ -12862,7 +12949,7 @@ begin
   NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
   if Assigned(NodeDatas) then begin
     with TfrmViewElements.Create(nil) do begin
-      Caption := vstView.Path(vstView.FocusedNode, 0, ttNormal, '\');
+      Caption := vstView.Path(vstView.FocusedNode, 0,{ ttNormal,} '\');
       Settings := Self.Settings;
       if Assigned(ActiveMaster) then
         Caption := ActiveMaster.Name + '\' + Caption;
@@ -13120,7 +13207,7 @@ begin
       Exit;
     if Column = 0 then
       if Shift = [ssShift] then begin
-        ColWidth := ColumnWidth;
+        ColWidth := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
         for i := 0 to Pred(vstView.Header.Columns.Count) do
           vstView.Header.Columns[i].Width := ColWidth;
       end else case Button of
@@ -13680,6 +13767,7 @@ var
   MainRecord   : IwbMainRecord;
   GroupRecord  : IwbGroupRecord;
   Chapter      : IwbChapter;
+  FormID       : TwbFormID;
 begin
   CellText := '';
 
@@ -13702,8 +13790,9 @@ begin
           -1, 0: begin
               if MainRecord.Signature = wbHeaderSignature then
                 CellText := 'File Header'
-              else
-                CellText := MainRecord.LoadOrderFormID.ToString
+              else begin
+                CellText := MainRecord.LoadOrderFormID.ToString(True);
+              end;
             end;
           1: CellText := MainRecord.EditorID;
           2: CellText := MainRecord.DisplayName;
@@ -13792,7 +13881,7 @@ begin
             if MainRecord.Signature = 'TES4' then
               CompareText := 'File Header'
             else
-              CompareText := MainRecord.LoadOrderFormID.ToString
+              CompareText := MainRecord.LoadOrderFormID.ToString(True);
           end;
         1: CompareText := MainRecord.EditorID;
         2: CompareText := MainRecord.DisplayName;
@@ -13964,6 +14053,11 @@ begin
           else
             Exclude(NodeData.Flags, nnfReferencesInjected);
         end;
+
+        if Column = 0 then
+          if MainRecord.Signature <> wbHeaderSignature then
+            if MonospaceFontName <> '' then
+              TargetCanvas.Font.Name := MonospaceFontName;
       end;
       if NodeData.Element.Modified then
         TargetCanvas.Font.Style := [fsBold];
@@ -14230,7 +14324,7 @@ begin
 
   case Column of
     0: CellText := Element._File.Name;
-    1: CellText := (Element as IwbMainRecord).LoadOrderFormID.ToString;
+    1: CellText := (Element as IwbMainRecord).LoadOrderFormID.ToString(True);
   else
     Element := NodeDatas[Column].Element;
     if not Assigned(Element) then
@@ -14240,7 +14334,7 @@ begin
       if Supports(Element, IwbMainRecord, MainRecord) then begin
         CellText := MainRecord.EditorID;
         if CellText = '' then
-          CellText := MainRecord.LoadOrderFormID.ToString;
+          CellText := MainRecord.LoadOrderFormID.ToString(True);
       end;
     end else
       CellText := Element.Value;
@@ -14666,7 +14760,7 @@ begin
         NodeData.Element := nil;
         NodeData.Container := nil;
         Element := nil;
-        vstNav.DeleteNode(Node, False);
+        vstNav.DeleteNode(Node);
         Value := True;
       end;
     end;
@@ -15294,6 +15388,21 @@ begin
   end;
 end;
 
+procedure TfrmMain.WndProc(var Message: TMessage);
+var
+  StyleName: string;
+begin
+  if Message.Msg = CM_CUSTOMSTYLECHANGED then begin
+    wbDarkMode := wbIsDarkMode;
+    StyleName := TStyleManager.ActiveStyle.Name;
+    if Settings.ReadString('UI', 'Theme', '') <> StyleName then begin
+      Settings.WriteString('UI', 'Theme', StyleName);
+      Settings.UpdateFile;
+    end;
+  end;
+  inherited;
+end;
+
 { TLoaderThread }
 
 constructor TLoaderThread.Create(var aList: TStringList; IsTemporary: Boolean = False);
@@ -15876,5 +15985,4 @@ begin  // Let's show from 1 to 32 lines to pick from
 end;
 
 initialization
-  wbDarkMode := wbIsDarkMode;
 end.
