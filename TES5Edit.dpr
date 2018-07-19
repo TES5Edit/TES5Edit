@@ -22,12 +22,12 @@ uses
   Dialogs,
   SysUtils,
   Colors,
-  VirtualTrees in 'VirtualTrees.pas',
-  VTEditors in 'VTEditors.pas',
-  VirtualEditTree in 'VirtualEditTree.pas',
-{$IFNDEF LiteVersion}
+  VirtualTrees,
+  VTEditors,
+  VirtualEditTree,
+  {$IFNDEF LiteVersion}
   cxVTEditors,
-{$ENDIF}
+  {$ENDIF}
   wbInit in 'wbInit.pas',
   wbBSA in 'wbBSA.pas',
   wbHelpers in 'wbHelpers.pas',
