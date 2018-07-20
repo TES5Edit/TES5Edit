@@ -51,7 +51,6 @@ uses
   VirtualTrees,
   VTEditors,
   VirtualEditTree,
-  Vcl.Styles.Utils.SystemMenu,
   JvComponentBase,
   JvInterpreter,
   ImagingTypes,
@@ -69,6 +68,7 @@ uses
   wbDataFormat,
   Vcl.Themes,
   Vcl.Styles,
+  Vcl.Styles.Utils.SystemMenu,
   Vcl.Styles.Ext;
 
 const
@@ -15411,10 +15411,11 @@ begin
   if Message.Msg = CM_CUSTOMSTYLECHANGED then begin
     wbDarkMode := wbIsDarkMode;
     StyleName := TStyleManager.ActiveStyle.Name;
-    if Settings.ReadString('UI', 'Theme', '') <> StyleName then begin
-      Settings.WriteString('UI', 'Theme', StyleName);
-      Settings.UpdateFile;
-    end;
+    if Assigned(Settings) then
+      if Settings.ReadString('UI', 'Theme', '') <> StyleName then begin
+        Settings.WriteString('UI', 'Theme', StyleName);
+        Settings.UpdateFile;
+      end;
   end;
   inherited;
 end;
