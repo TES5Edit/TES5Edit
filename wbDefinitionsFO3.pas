@@ -4960,8 +4960,8 @@ begin
         -1, 'None'
       ]);
 
-  wbETYP := wbInteger(ETYP, 'Equiptment Type', itS32, wbEquipTypeEnum);
-  wbETYPReq := wbInteger(ETYP, 'Equiptment Type', itS32, wbEquipTypeEnum, cpNormal, True);
+  wbETYP := wbInteger(ETYP, 'Equipment Type', itS32, wbEquipTypeEnum);
+  wbETYPReq := wbInteger(ETYP, 'Equipment Type', itS32, wbEquipTypeEnum, cpNormal, True);
 
   wbFormTypeEnum :=
     wbEnum([], [
