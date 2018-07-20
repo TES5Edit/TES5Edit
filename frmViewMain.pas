@@ -3780,8 +3780,9 @@ begin
 
   AddMessage('Using settings file: ' + wbSettingsFileName);
 
-  if not Assigned(Settings) then
+  if not Assigned(Settings) and (wbSettingsFileName <> '') then
     Settings := TMemIniFile.Create(wbSettingsFileName);
+
   (*
   TStyleManager.TrySetStyle(Settings.ReadString('UI', 'Theme', TStyleManager.ActiveStyle.Name), False);
 
@@ -4819,39 +4820,40 @@ var
 begin
   //try to set the style and window position as early as possible to reduce flicker
   try
-    if not Assigned(Settings) then
+    if not Assigned(Settings) and (wbSettingsFileName <> '')  then
       Settings := TMemIniFile.Create(wbSettingsFileName);
+    if Assigned(Settings) then begin
+      TStyleManager.TrySetStyle(Settings.ReadString('UI', 'Theme', TStyleManager.ActiveStyle.Name), False);
 
-    TStyleManager.TrySetStyle(Settings.ReadString('UI', 'Theme', TStyleManager.ActiveStyle.Name), False);
+      LoadFont(Settings, 'UI', 'FontRecords', vstNav.Font);
+      LoadFont(Settings, 'UI', 'FontRecords', vstView.Font);
+      LoadFont(Settings, 'UI', 'FontRecords', lblPath.Font);
+      LoadFont(Settings, 'UI', 'FontMessages', mmoMessages.Font);
 
-    LoadFont(Settings, 'UI', 'FontRecords', vstNav.Font);
-    LoadFont(Settings, 'UI', 'FontRecords', vstView.Font);
-    LoadFont(Settings, 'UI', 'FontRecords', lblPath.Font);
-    LoadFont(Settings, 'UI', 'FontMessages', mmoMessages.Font);
-
-    // skip reading main form position if Shift is pressed
-    if GetKeyState(VK_SHIFT) >= 0 then begin
-      i := Settings.ReadInteger(Name, 'Left', 0);
-      j := Settings.ReadInteger(Name, 'Top', 0);
-      k := Settings.ReadInteger(Name, 'Width', 0);
-      l := Settings.ReadInteger(Name, 'Height', 0);
-      if (k > 100) and (l > 100) then begin
-        Rect := Screen.DesktopRect;
-        if (i+16 >= Rect.Left) and
-           (j+16 >= Rect.Top) and
-           ((i + k)-16 <= Rect.Right) and
-           ((j + l)-16 <= Rect.Bottom)
-        then begin
-          Left := i;
-          Top := j;
-          Width := k;
-          Height := l;
-          Position := poDesigned;
+      // skip reading main form position if Shift is pressed
+      if GetKeyState(VK_SHIFT) >= 0 then begin
+        i := Settings.ReadInteger(Name, 'Left', 0);
+        j := Settings.ReadInteger(Name, 'Top', 0);
+        k := Settings.ReadInteger(Name, 'Width', 0);
+        l := Settings.ReadInteger(Name, 'Height', 0);
+        if (k > 100) and (l > 100) then begin
+          Rect := Screen.DesktopRect;
+          if (i+16 >= Rect.Left) and
+             (j+16 >= Rect.Top) and
+             ((i + k)-16 <= Rect.Right) and
+             ((j + l)-16 <= Rect.Bottom)
+          then begin
+            Left := i;
+            Top := j;
+            Width := k;
+            Height := l;
+            Position := poDesigned;
+          end;
         end;
+        WindowState := TWindowState(Settings.ReadInteger(Name, 'WindowState', Integer(WindowState)));
+        if WindowState = wsMaximized then
+          Position := poDesigned;
       end;
-      WindowState := TWindowState(Settings.ReadInteger(Name, 'WindowState', Integer(WindowState)));
-      if WindowState = wsMaximized then
-        Position := poDesigned;
     end;
   except end;
 
@@ -4876,12 +4878,13 @@ begin
     MonospaceFontName := '';
 
   try
-    if not Assigned(Settings) then
+    if not Assigned(Settings) and (wbSettingsFileName <> '')  then
       Settings := TMemIniFile.Create(wbSettingsFileName);
-
-    ColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', ColumnWidth);
-    RowHeight := Settings.ReadInteger('Options', 'RowHeight', RowHeight);
-    SetDefaultNodeHeight(Trunc(RowHeight * (GetCurrentPPIScreen / PixelsPerInch)));
+    if Assigned(Settings) then begin
+      ColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', ColumnWidth);
+      RowHeight := Settings.ReadInteger('Options', 'RowHeight', RowHeight);
+      SetDefaultNodeHeight(Trunc(RowHeight * (GetCurrentPPIScreen / PixelsPerInch)));
+    end;
   except end;
 
   if wbToolMode in wbAutoModes then begin
