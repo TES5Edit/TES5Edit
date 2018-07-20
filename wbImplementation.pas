@@ -152,9 +152,9 @@ var
 begin
   Inc(wbCopyIsRunning);
   try
-    if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount) then begin
+    if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount64) then begin
       wbProgressCallback('');
-      wbCurrentTick := GetTickCount;
+      wbCurrentTick := GetTickCount64;
     end;
     Container := aSource.Container;
     if Assigned(Container) then begin
@@ -260,6 +260,8 @@ type
     eContainerRef    : IwbContainerElementRef;
 
     eUpdateCount     : Integer;
+
+    eGeneration      : Integer;
 
     {---IInterface---}
     function _AddRef: Integer; virtual; stdcall;
@@ -433,6 +435,7 @@ type
     cntElementRefs   : Integer;
     cntStates        : TwbContainerStates;
     cntKeepAliveNext : IwbContainerElementRef;
+    cntRefsBuildAt   : Integer;
 
     function _AddRef: Integer; override; stdcall;
     function _Release: Integer; override; stdcall;
@@ -2094,6 +2097,7 @@ begin
       finally
         FileStream.Free;
       end;
+      inherited BuildRef;
       Result := blrLoaded;
     end else begin
       if not aOnlyLoad then begin
@@ -2319,6 +2323,8 @@ end;
 
 procedure TwbFile.BuildRef;
 begin
+  if (csRefsBuild in cntStates) and (cntRefsBuildAt >= eGeneration) then
+    Exit;
   BuildOrLoadRef(False);
 end;
 
@@ -4088,6 +4094,7 @@ begin
   for i := Low(cntElements) to High(cntElements) do
     if cntElements[i].CanContainFormIDs then
       cntElements[i].BuildRef;
+  cntRefsBuildAt := eGeneration;
 end;
 
 function TwbContainer.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
@@ -5847,6 +5854,9 @@ procedure TwbMainRecord.BuildRef;
   end;
 
 begin
+  if (csRefsBuild in cntStates) and (cntRefsBuildAt >= eGeneration) then
+    Exit;
+
   if wbSpeedOverMemory then
     DoBuildRef(False)
   else
@@ -5909,7 +5919,10 @@ begin
     mrTmpRefFormIDHigh := -1;
     mrTmpRefFormIDs := nil;
 
-    if not aRemove then
+    if aRemove then begin
+      Exclude(cntStates, csRefsBuild);
+      cntRefsBuildAt := 0;
+    end else
       inherited BuildRef;
 
     NewCount := 0;
@@ -8071,6 +8084,8 @@ begin
     for i := 0 to Length(mrReferences) do
       ProcessRef(mrReferences[i]);
   end;
+  Include(cntStates, csRefsBuild);
+  cntRefsBuildAt := eGeneration;
 end;
 
 procedure TwbMainRecord.MakeHeaderWriteable;
@@ -12224,9 +12239,9 @@ var
   Group : IwbGroupRecord;
 {$ENDIF}
 begin
-  if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount) then begin
+  if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount64) then begin
     wbProgressCallback('');
-    wbCurrentTick := GetTickCount;
+    wbCurrentTick := GetTickCount64;
   end;
 
   {$IFDEF USE_CODESITE}
@@ -12305,9 +12320,9 @@ var
   Log: Boolean;
 {$ENDIF}
 begin
-  if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount) then begin
+  if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount64) then begin
     wbProgressCallback('');
-    wbCurrentTick := GetTickCount;
+    wbCurrentTick := GetTickCount64;
   end;
 
   {$IFDEF USE_CODESITE}
@@ -12566,6 +12581,7 @@ end;
 
 constructor TwbElement.Create(const aContainer: IwbContainer);
 begin
+  eGeneration := 1;
   eSortOrder := High(Integer);
   eMemoryOrder := Low(Integer);
   inherited Create;
@@ -13347,6 +13363,8 @@ begin
 
 //    if wbIsInternalEdit and (Self is TwbMainRecord) then
 //      Exit;
+
+    Inc(eGeneration);
 
     if eUpdateCount > 0 then
       Include(eStates, esModifiedUpdated)

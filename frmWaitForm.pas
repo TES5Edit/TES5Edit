@@ -44,8 +44,8 @@ type
     fwShowDelay    : Integer;
     fwUpdateDelay  : Integer;
 
-    fwCreated      : Cardinal;
-    fwLastUpdate   : Cardinal;
+    fwCreated      : UInt64;
+    fwLastUpdate   : UInt64;
 
     procedure fwDoUpdate;
   protected
@@ -120,7 +120,7 @@ begin
   fwShowDelay := aShowDelay;
   fwUpdateDelay := aUpdateDelay;
 
-  fwCreated := GetTickCount;
+  fwCreated := GetTickCount64;
   fwLastUpdate := fwCreated;
 
   plCancel.Visible := fwCanCancel;
@@ -143,14 +143,14 @@ end;
 
 procedure TfrmWait.fwDoUpdate;
 begin
-  if (Int64(GetTickCount) - fwUpdateDelay) > fwLastUpdate then begin
+  if (GetTickCount64 - fwUpdateDelay) > fwLastUpdate then begin
 
     //!!!
 
-    fwLastUpdate := GetTickCount;
+    fwLastUpdate := GetTickCount64;
 
     if not Visible then
-      if (Int64(GetTickCount) - fwShowDelay) > fwCreated then
+      if (GetTickCount64 - fwShowDelay) > fwCreated then
         Show;
 
     Application.ProcessMessages;
