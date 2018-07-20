@@ -36,7 +36,7 @@ type
 
 threadvar
   _wbProgressCallback : TwbProgressCallback;
-  wbCurrentTick       : Integer;
+  wbCurrentTick       : UInt64;
   wbCurrentAction     : string;
   wbStartTime         : TDateTime;
   wbShowStartTime     : Integer;

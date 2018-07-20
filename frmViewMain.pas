@@ -928,6 +928,45 @@ uses
   frmTipForm;
 
 var
+  LastUpdate               : UInt64;
+  ProcessMessagesLockCount : Integer;
+
+procedure DoProcessMessages;
+begin
+  if ProcessMessagesLockCount < 1 then
+    Application.ProcessMessages;
+end;
+
+procedure GeneralProgress(const s: string);
+begin
+  if s <> '' then
+    if wbShowStartTime > 0 then
+      frmMain.PostAddMessage(FormatDateTime('[nn:ss] ', Now - wbStartTime) + s)
+    else
+      frmMain.PostAddMessage(s);
+  if LastUpdate + 500 < GetTickCount64 then begin
+    if wbCurrentAction <> '' then
+      frmMain.Caption := '['+wbCurrentAction+'] Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+    DoProcessMessages;
+    LastUpdate := GetTickCount64;
+  end;
+  if wbForceTerminate then
+    Abort;
+end;
+
+function LockProcessMessages: Integer;
+begin
+  Result := ProcessMessagesLockCount;
+  Inc(ProcessMessagesLockCount);
+end;
+
+function UnLockProcessMessages: Integer;
+begin
+  Result := ProcessMessagesLockCount;
+  Dec(ProcessMessagesLockCount);
+end;
+
+var
   NoNodes                     : TNodeArray;
 
 var
@@ -1363,7 +1402,7 @@ begin
         pgMain.ActivePage := tbsMessages;
         wbCurrentAction := 'Building reference information for ' + _File.Name;
         AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ' + wbCurrentAction);
-        Application.ProcessMessages;
+        DoProcessMessages;
         _File.BuildRef;
       end;
     end;
@@ -2442,7 +2481,7 @@ begin
     wbCurrentAction := 'Copying...';
     wbStartTime := now;
     wbShowStartTime := 1;
-    wbCurrentTick := GetTickCount;
+    wbCurrentTick := GetTickCount64;
 
     CopyInto(
       Sender = mniNavCopyAsNewRecord,
@@ -3977,7 +4016,7 @@ begin
                 tsPlugins: wbMastersForFile(wbDataPath + sl[i], sl2, IsESM, IsESL);
               end;
             {make sure messages for the memo have been processed}
-            Application.ProcessMessages;
+            DoProcessMessages;
             tmrMessagesTimer(nil);
 
             sl.Clear;
@@ -4723,7 +4762,7 @@ begin
     Enabled := False;
     try
       while not wbLoaderDone do begin
-        Application.ProcessMessages;
+        DoProcessMessages;
         Sleep(100);
       end;
     finally
@@ -4771,26 +4810,6 @@ begin
   Files := nil;
   _wbProgressCallback := nil;
   ExitCode := CheckResult;
-end;
-
-var
-  LastUpdate    : Cardinal;
-
-procedure GeneralProgress(const s: string);
-begin
-  if s <> '' then
-    if wbShowStartTime > 0 then
-      frmMain.PostAddMessage(FormatDateTime('[nn:ss] ', Now - wbStartTime) + s)
-    else
-      frmMain.PostAddMessage(s);
-  if LastUpdate + 500 < GetTickCount then begin
-    if wbCurrentAction <> '' then
-      frmMain.Caption := '['+wbCurrentAction+'] Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-    Application.ProcessMessages;
-    LastUpdate := GetTickCount;
-  end;
-  if wbForceTerminate then
-    Abort;
 end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
@@ -4843,7 +4862,7 @@ begin
   wbDarkMode := wbIsDarkMode;
   _BlockInternalEdit := True;
   _wbProgressCallback := GeneralProgress;
-  LastUpdate := GetTickCount;
+  LastUpdate := GetTickCount64;
   Font := Screen.IconFont;
   Caption := Application.Title;
   ColumnWidth := 200;
@@ -5811,7 +5830,7 @@ var
   StartNode, Node, NextNode   : PVirtualNode;
   NodeData                    : PNavNodeData;
   Count                       : Cardinal;
-  StartTick                   : Cardinal;
+  StartTick                   : UInt64;
   jvi                         : TJvInterpreterProgram;
   i, p                        : Integer;
   s                           : string;
@@ -5878,13 +5897,13 @@ begin
     try
 
     try
-      StartTick := GetTickCount;
+      StartTick := GetTickCount64;
       wbStartTime := Now;
 
       Enabled := False;
 
       if bShowMessages then AddMessage('Applying script...');
-      Application.ProcessMessages;
+      DoProcessMessages;
 
       if jvi.FunctionExists('', 'Initialize') then begin
         jvi.CallFunction('Initialize', nil, []);
@@ -5923,11 +5942,11 @@ begin
           else
             Node := NextNode;
 
-          if StartTick + 500 < GetTickCount then begin
+          if StartTick + 500 < GetTickCount64 then begin
             Caption := sJustWait + ' Processed Records: ' + IntToStr(Count) +
               ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-            Application.ProcessMessages;
-            StartTick := GetTickCount;
+            DoProcessMessages;
+            StartTick := GetTickCount64;
           end;
         end;
       end;
@@ -6126,7 +6145,7 @@ begin
     Exit;
 
   pgMain.ActivePage := tbsView;
-  Application.ProcessMessages;
+  DoProcessMessages;
   SetActiveRecord(MainRecords);
 end;
 
@@ -6632,7 +6651,7 @@ begin
       if not (csRefsBuild in _File.ContainerStates) then begin
         wbCurrentAction := 'Building reference information for ' + _File.Name;
         AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ' + wbCurrentAction);
-        Application.ProcessMessages;
+        DoProcessMessages;
         _File.BuildRef;
       end;
       _File.ResetReachable;
@@ -6641,7 +6660,7 @@ begin
       _File := Files[i];
       wbCurrentAction := 'Building reachable information for ' + _File.Name;
       AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ' + wbCurrentAction);
-      Application.ProcessMessages;
+      DoProcessMessages;
       _File.BuildReachable;
     end;
     AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] All done!');
@@ -6675,7 +6694,7 @@ begin
 
     wbStartTime := Now;
 
-    Application.ProcessMessages;
+    DoProcessMessages;
 
     Enabled := False;
     try
@@ -6685,7 +6704,7 @@ begin
           _File := IwbFile(Pointer(CheckListBox1.Items.Objects[i]));
           wbCurrentAction := 'Building reference information for ' + _File.Name;
           AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ' + wbCurrentAction);
-          Application.ProcessMessages;
+          DoProcessMessages;
           _File.BuildRef;
         end;
       AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] All done!');
@@ -7796,7 +7815,7 @@ var
   NameRec                     : IwbContainerElementRef;
   Count                       : Cardinal;
   ChangeCount                 : Cardinal;
-  StartTick                   : Cardinal;
+  StartTick                   : UInt64;
   i                           : Integer;
 begin
   if not wbEditAllowed then
@@ -7816,7 +7835,7 @@ begin
 
   vstNav.BeginUpdate;
   try
-    StartTick := GetTickCount;
+    StartTick := GetTickCount64;
     wbStartTime := Now;
 
     Enabled := False;
@@ -7855,12 +7874,12 @@ begin
 
         Node := NextNode;
         Inc(Count);
-        if StartTick + 500 < GetTickCount then begin
+        if StartTick + 500 < GetTickCount64 then begin
           Caption := sJustWait + ' Processed Records: ' + IntToStr(Count) +
             ' Change Records: ' + IntToStr(ChangeCount) +
             ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-          Application.ProcessMessages;
-          StartTick := GetTickCount;
+          DoProcessMessages;
+          StartTick := GetTickCount64;
         end;
         if Node = StartNode then
           Node := nil;
@@ -8396,7 +8415,7 @@ var
   UndeletedCount              : Cardinal;
   NotDeletedCount             : Cardinal;
   DeletedNAVM                 : Cardinal;
-  StartTick                   : Cardinal;
+  StartTick                   : UInt64;
   i {, n}                     : Integer;
   MainRecord, LinksToRecord   : IwbMainRecord;
   Element                     : IwbElement;
@@ -8474,7 +8493,7 @@ begin
 
   vstNav.BeginUpdate;
   try
-    StartTick := GetTickCount;
+    StartTick := GetTickCount64;
     wbStartTime := Now;
 
     Enabled := False;
@@ -8558,12 +8577,12 @@ begin
 
         Node := NextNode;
         Inc(Count);
-        if StartTick + 500 < GetTickCount then begin
+        if StartTick + 500 < GetTickCount64 then begin
           Caption := sJustWait + ' Processed Records: ' + IntToStr(Count) +
             ' '+Operation+'ed Records: ' + IntToStr(UndeletedCount) +
             ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-          Application.ProcessMessages;
-          StartTick := GetTickCount;
+          DoProcessMessages;
+          StartTick := GetTickCount64;
         end;
         if Node = StartNode then
           Node := nil;
@@ -8614,7 +8633,7 @@ var
   NodeData                    : PNavNodeData;
   Count                       : Cardinal;
   RemovedCount                : Cardinal;
-  StartTick                   : Cardinal;
+  StartTick                   : UInt64;
   i                           : Integer;
   MainRecord                  : IwbMainRecord;
   GroupRecord                 : IwbGroupRecord;
@@ -8667,7 +8686,7 @@ begin
 
   vstNav.BeginUpdate;
   try
-    StartTick := GetTickCount;
+    StartTick := GetTickCount64;
     wbStartTime := Now;
 
     Enabled := False;
@@ -8721,12 +8740,12 @@ begin
 
         Node := NextNode;
         Inc(Count);
-        if StartTick + 500 < GetTickCount then begin
+        if StartTick + 500 < GetTickCount64 then begin
           Caption := sJustWait + ' Processed Records: ' + IntToStr(Count) +
             ' '+Operation+'ed Records: ' + IntToStr(RemovedCount) +
             ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-          Application.ProcessMessages;
-          StartTick := GetTickCount;
+          DoProcessMessages;
+          StartTick := GetTickCount64;
         end;
         if Node = StartNode then
           Node := nil;
@@ -9062,7 +9081,8 @@ var
   NodeData            : PNavNodeData;
   _File               : IwbFile;
   i, j, Translated    : integer;
-  ID, StartTick       : Cardinal;
+  ID                  : Cardinal;
+  StartTick           : UInt64;
   Element             : IwbElement;
   lstrings            : TDynElements;
   fLocalize, ok       : boolean;
@@ -9128,7 +9148,7 @@ begin
       Caption := 'Delocalizing Records. Please wait...';
     pgMain.ActivePage := tbsMessages;
 
-    StartTick := GetTickCount;
+    StartTick := GetTickCount64;
     wbStartTime := Now;
     Enabled := false;
 
@@ -9187,9 +9207,9 @@ begin
         wbLocalizationHandler.NoTranslate := false;
       end;
 
-      if StartTick + 500 < GetTickCount then begin
-        Application.ProcessMessages;
-        StartTick := GetTickCount;
+      if StartTick + 500 < GetTickCount64 then begin
+        DoProcessMessages;
+        StartTick := GetTickCount64;
       end;
 
     end;
@@ -9289,7 +9309,7 @@ var
   EndFormID                   : TwbFormID;
   TakenFormIDs                : array of Boolean;
 
-  StartTick                   : Cardinal;
+  StartTick                   : UInt64;
 begin
   if not wbEditAllowed then
     Exit;
@@ -9349,7 +9369,7 @@ begin
       TakenFormIDs[OldFormID - StartFormID] := True;
   end;
 
-  StartTick := GetTickCount;
+  StartTick := GetTickCount64;
   wbStartTime := Now;
   Inc(wbShowStartTime);
   Enabled := False;
@@ -9406,11 +9426,11 @@ begin
         end;
       end;
 
-      if StartTick + 500 < GetTickCount then begin
+      if StartTick + 500 < GetTickCount64 then begin
         Caption := '[Changing FormIDs] Processed Records: ' + IntToStr(High(MainRecords) - k) +
           ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-        Application.ProcessMessages;
-        StartTick := GetTickCount;
+        DoProcessMessages;
+        StartTick := GetTickCount64;
         if wbForceTerminate then
           Abort;
       end;
@@ -9537,7 +9557,7 @@ var
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
   Count                       : Cardinal;
-  StartTick                   : Cardinal;
+  StartTick                   : UInt64;
   //  wbStartTime                   : TDateTime;
 //  ConflictAll                 : TConflictAll;
 //  ConflictThis                : TConflictThis;
@@ -9683,7 +9703,7 @@ begin
   try
     ReInitTree;
 
-    StartTick := GetTickCount;
+    StartTick := GetTickCount64;
     wbStartTime := Now;
 
     Enabled := False;
@@ -9894,11 +9914,11 @@ begin
 
         Node := NextNode;
         Inc(Count);
-        if StartTick + 500 < GetTickCount then begin
+        if StartTick + 500 < GetTickCount64 then begin
           Caption := sJustWait + ' [Pass 1] Processed Records: ' + IntToStr(Count) +
             ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-          Application.ProcessMessages;
-          StartTick := GetTickCount;
+          DoProcessMessages;
+          StartTick := GetTickCount64;
         end;
       end;
 
@@ -10079,11 +10099,11 @@ begin
 
         Node := NextNode;
         Inc(Count);
-        if StartTick + 500 < GetTickCount then begin
+        if StartTick + 500 < GetTickCount64 then begin
           Caption := sJustWait + ' [Pass 2] Processed Records: ' + IntToStr(Count) +
             ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-          Application.ProcessMessages;
-          StartTick := GetTickCount;
+          DoProcessMessages;
+          StartTick := GetTickCount64;
         end;
       end;
 
@@ -11225,7 +11245,7 @@ begin
     for i := Low(Files) to High(Files) do begin
       _File := Files[i];
       wbCurrentAction := 'Resetting tags for ' + _File.Name;
-      Application.ProcessMessages;
+      DoProcessMessages;
       _File.ResetTags;
     end;
   finally
@@ -11374,12 +11394,12 @@ begin
             FilesToRename.Values[u] := s;
           end;
 
-          Application.ProcessMessages;
+          DoProcessMessages;
           tmrMessagesTimer(nil);
         end;
 
     finally
-      Application.ProcessMessages;
+      DoProcessMessages;
       tmrMessagesTimer(nil);
       Dec(wbShowStartTime);
     end;
@@ -13370,13 +13390,14 @@ begin
         Exit;
 
       //      vstView.BeginUpdate;
+      LockProcessMessages;
       try
-
         Element.EditValue := NewText;
         ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
         Element := nil;
         PostResetActiveTree;
       finally
+        UnLockProcessMessages;
         //        vstView.EndUpdate;
       end;
 
@@ -14670,14 +14691,14 @@ begin
     if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
       AddMessage(Args.Values[0]);
       Done := True;
-      Application.ProcessMessages;
+      DoProcessMessages;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
   end
   else if SameText(Identifier, 'ClearMessages') and (Args.Count = 0) then begin
     mmoMessages.Clear;
     Done := True;
-    Application.ProcessMessages;
+    DoProcessMessages;
   end
   else if SameText(Identifier, 'FileCount') and (Args.Count = 0) then begin
     Value := Length(Files);
