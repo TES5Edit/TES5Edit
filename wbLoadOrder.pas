@@ -38,7 +38,7 @@ type
     mfIsESM,
     mfActiveInPluginsTxt,
     mfActive,
-    mfTaken,
+    mfHasIndex,
     mfLoaded,
     mfLoading
   );
@@ -47,23 +47,26 @@ type
 
   PwbModuleInfo = ^TwbModuleInfo;
   TwbModuleInfo = record
-    miName          : string;
-    miUnghostedName : string;
-    miDateTime      : TDateTime;
+    miName           : string;
+    miUnghostedName  : string;
+    miDateTime       : TDateTime;
 
-    miExtension     : TwbModuleExtension;
-    miIsGhost       : Boolean;
+    miExtension      : TwbModuleExtension;
+    miIsGhost        : Boolean;
 
-    miMasterNames   : TDynStrings;
-    miMasters       : array of PwbModuleInfo;
+    miMasterNames    : TDynStrings;
+    miMasters        : array of PwbModuleInfo;
 
-    miFlags         : TwbModuleFlags;
+    miFlags          : TwbModuleFlags;
 
-    miPluginsIndex  : Integer;
-    miOfficialIndex : Integer;
-    miCCIndex       : Integer;
+    miPluginsIndex   : Integer;
+    miOfficialIndex  : Integer;
+    miCCIndex        : Integer;
+
+    miLoadOrderIndex : Integer;
 
     function IsValid: Boolean;
+    function HasIndex: Boolean;
     function IsActive: Boolean;
     procedure ActivateMasters(aRecursive: Boolean);
     procedure Activate(aActivateMasters: Boolean = False);
@@ -149,15 +152,52 @@ begin
   end;
 end;
 
+function _ModulesLoadOrderCompareLoadOrder(Item1, Item2: Pointer): Integer;
+var
+  a, b: PwbModuleInfo;
+begin
+  if Item1 = Item2 then
+    Exit(0);
+
+  a := Item1;
+  b := Item2;
+  Result := CmpI32(a.miOfficialIndex, b.miOfficialIndex);
+  if Result = 0 then begin
+    Result := CmpI32(a.miCCIndex, b.miCCIndex);
+    if Result = 0 then begin
+      if (mfIsESM in a.miFlags) = (mfIsESM in b.miFlags) then begin
+        Result := CmpI32(a.miLoadOrderIndex, b.miLoadOrderIndex);
+        if Result = 0 then begin
+          Result := CmpI32(a.miPluginsIndex, b.miPluginsIndex);
+          if Result = 0 then begin
+            Result := CmpDouble(a.miDateTime, b.miDateTime);
+            if Result = 0 then begin
+              Result := CompareText(a.miName, b.miName);
+              if Result = 0 then
+                Result := CmpPtr(Item1, Item2);
+            end;
+          end;
+        end;
+      end else
+        if mfIsESM in a.miFlags then
+          Result := -1
+        else
+          Result := 1;
+    end;
+  end;
+end;
+
 procedure wbLoadModules;
 var
-  Files    : TStringDynArray;
-  i, j, k  : Integer;
-  s        : string;
-  IsESM    ,
-  IsESL    : Boolean;
-  lIsActive : Boolean;
-  sl       : TStringList;
+  Files      : TStringDynArray;
+  i, j, k    : Integer;
+  s          : string;
+  IsESM      ,
+  IsESL      : Boolean;
+  lIsActive  : Boolean;
+  sl         : TStringList;
+  ThisModule ,
+  PrevModule : PwbModuleInfo;
 begin
   if Assigned(_ModulesByName) then {already loaded}
     Exit;
@@ -231,30 +271,35 @@ begin
 
   sl := TStringList.Create;
   try
-    sl.LoadFromFile(wbPluginsFileName);
-    for i := 0 to Pred(sl.Count) do begin
-      s := sl[i];
-      j := Pos('#', s);
-      if j > 0 then
-        Delete(s, j, High(Integer));
-      s := Trim(s);
-      lIsActive := wbGameMode in wbSimplePluginsTxt;
-      if not lIsActive then begin
-        lIsActive := s.StartsWith('*');
-        if lIsActive then
-          Delete(s, 1, 1);
+    if FileExists(wbPluginsFileName) then begin
+      sl.LoadFromFile(wbPluginsFileName);
+      for i := 0 to Pred(sl.Count) do begin
+        s := sl[i];
+        j := Pos('#', s);
+        if j > 0 then
+          Delete(s, j, High(Integer));
         s := Trim(s);
-      end;
-      with wbModuleByName(s)^ do
-        if IsValid then begin
-          if not (wbGameMode in wbSimplePluginsTxt) then
-            miPluginsIndex := i;
-          if lIsActive then begin
-            Include(miFlags, mfActiveInPluginsTxt);
-            Include(miFlags, mfActive);
-          end;
+        lIsActive := wbGameMode in wbSimplePluginsTxt;
+        if not lIsActive then begin
+          lIsActive := s.StartsWith('*');
+          if lIsActive then
+            Delete(s, 1, 1);
+          s := Trim(s);
         end;
+        with wbModuleByName(s)^ do
+          if IsValid then begin
+            if wbGameMode in wbOrderFromPluginsTxt then begin
+              miPluginsIndex := i;
+              Include(miFlags, mfHasIndex);
+            end;
+            if lIsActive then begin
+              Include(miFlags, mfActiveInPluginsTxt);
+              Include(miFlags, mfActive);
+            end;
+          end;
+      end;
     end;
+
   finally
     sl.Free;
   end;
@@ -263,6 +308,7 @@ begin
     if IsValid then begin
       miOfficialIndex := Low(Integer);
       Include(miFlags, mfActive);
+      Include(miFlags, mfHasIndex);
     end;
 
   if wbIsSkyrim then
@@ -270,6 +316,7 @@ begin
       if IsValid then begin
         miOfficialIndex := -1;
         Include(miFlags, mfActive);
+        Include(miFlags, mfHasIndex);
       end;
 
   for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
@@ -277,6 +324,7 @@ begin
       if IsValid then begin
         miOfficialIndex := i;
         Include(miFlags, mfActive);
+        Include(miFlags, mfHasIndex);
       end;
 
   for i := Low(wbCreationClubContent) to High(wbCreationClubContent) do
@@ -284,11 +332,64 @@ begin
       if IsValid then begin
         miCCIndex := Succ(i);
         Include(miFlags, mfActive);
+        Include(miFlags, mfHasIndex);
       end;
 
   i := Length(_ModulesLoadOrder);
   if i > 1 then
     wbMergeSort(@_ModulesLoadOrder[0], i, _ModulesLoadOrderCompare);
+
+  if wbGameMode = gmTES5 then begin
+    s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
+    if FileExists(s) then begin
+      sl := TStringList.Create;
+      try
+        sl.LoadFromFile(s);
+        for i := Pred(sl.Count) downto 0  do begin
+          s := sl[i];
+          j := Pos('#', s);
+          if j > 0 then
+            Delete(s, j, High(Integer));
+          s := Trim(s);
+          ThisModule := wbModuleByName(s);
+          if ThisModule.IsValid then
+            sl[i] := s
+          else
+            sl.Delete(i);
+        end;
+        if sl.Count > 1 then begin
+          for i := Low(_ModulesLoadOrder) to High(_ModulesLoadOrder) do
+            with _ModulesLoadOrder[i]^ do
+              miLoadOrderIndex := Succ(i) * 1000;
+
+          for i := 1 to Pred(sl.Count) do begin
+            ThisModule := wbModuleByName(sl[i]);
+            if ThisModule.IsValid then begin
+              if not ThisModule.HasIndex then begin
+                PrevModule := @_InvalidModule;
+                for j := Pred(i) downto 0 do begin
+                  PrevModule := wbModuleByName(sl[j]);
+                  if PrevModule.HasIndex then
+                    Break;
+                end;
+                if PrevModule.HasIndex then begin
+                  ThisModule.miLoadOrderIndex := PrevModule.miLoadOrderIndex + 1;
+                  Include(ThisModule.miFlags, mfHasIndex);
+                end;
+              end;
+            end;
+          end;
+
+          wbMergeSort(@_ModulesLoadOrder[0], Length(_ModulesLoadOrder), _ModulesLoadOrderCompareLoadOrder);
+        end;
+      finally
+        sl.Free;
+      end;
+    end;
+  end;
+
+  for i := Low(_ModulesLoadOrder) to High(_ModulesLoadOrder) do
+    _ModulesLoadOrder[i].miLoadOrderIndex := i;
 end;
 
 function wbModulesByLoadOrder:  TwbModuleInfos;
@@ -315,6 +416,11 @@ begin
       with miMasters[i]^ do
         if not (mfActive in miFlags) then
           Activate(aRecursive);
+end;
+
+function TwbModuleInfo.HasIndex: Boolean;
+begin
+  Result := IsValid and (mfHasIndex in miFlags);
 end;
 
 function TwbModuleInfo.IsActive: Boolean;
