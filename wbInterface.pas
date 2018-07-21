@@ -3277,7 +3277,8 @@ var
                                    tmCheckForErrors, tmCheckForITM, tmCheckForDR ];  // Auto modes that require a specific plugin to be provided.
   wbAlwaysMode  : TwbSetOfMode = [ tmView, tmEdit, tmESMify, tmESPify, tmSortAndCleanMasters,
                     tmLODgen, tmScript, tmCheckForITM, tmCheckForDR, tmCheckForErrors ]; // Modes available to all decoded games
-  wbSimplePluginsTxt : TwbGameModes = [gmFNV, gmFO3, gmTES3, gmTES4]; //plugins.txt contains only the active plugins
+  wbSimplePluginsTxt : TwbGameModes = [gmFNV, gmFO3, gmTES3, gmTES4, gmTES5]; //plugins.txt contains only the active plugins
+  wbOrderFromPluginsTxt : TwbGameModes = [gmTES5, gmTES5VR, gmSSE, gmFO4, gmFO4VR]; //load order given by order in plugins.txt
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
