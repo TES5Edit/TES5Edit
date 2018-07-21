@@ -931,10 +931,28 @@ var
   LastUpdate               : UInt64;
   ProcessMessagesLockCount : Integer;
 
+function LockProcessMessages: Integer;
+begin
+  Result := ProcessMessagesLockCount;
+  Inc(ProcessMessagesLockCount);
+end;
+
+function UnLockProcessMessages: Integer;
+begin
+  Result := ProcessMessagesLockCount;
+  Dec(ProcessMessagesLockCount);
+end;
+
 procedure DoProcessMessages;
 begin
-  if ProcessMessagesLockCount < 1 then
-    Application.ProcessMessages;
+  if (ProcessMessagesLockCount < 1) and not frmMain.Enabled then begin
+    LockProcessMessages;
+    try
+      Application.ProcessMessages;
+    finally
+      UnLockProcessMessages;
+    end;
+  end;
 end;
 
 procedure GeneralProgress(const s: string);
@@ -952,18 +970,6 @@ begin
   end;
   if wbForceTerminate then
     Abort;
-end;
-
-function LockProcessMessages: Integer;
-begin
-  Result := ProcessMessagesLockCount;
-  Inc(ProcessMessagesLockCount);
-end;
-
-function UnLockProcessMessages: Integer;
-begin
-  Result := ProcessMessagesLockCount;
-  Dec(ProcessMessagesLockCount);
 end;
 
 var

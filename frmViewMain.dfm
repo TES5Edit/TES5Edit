@@ -80,6 +80,10 @@ object frmMain: TfrmMain
       object tbsView: TTabSheet
         Caption = 'View'
         OnShow = tbsViewShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object imgFlattr: TImage
           Left = 312
           Top = 520
@@ -261,7 +265,6 @@ object frmMain: TfrmMain
           Header.AutoSizeIndex = 1
           Header.Height = 21
           Header.Options = [hoAutoResize, hoColumnResize, hoDblClickResize, hoOwnerDraw, hoRestrictDrag, hoVisible]
-          Header.ParentFont = True
           Header.PopupMenu = pmuViewHeader
           HintMode = hmTooltip
           HotCursor = crHandPoint
@@ -310,7 +313,7 @@ object frmMain: TfrmMain
             end
             item
               Position = 1
-              Width = 233
+              Width = 235
               WideText = 'Values'
             end>
         end
@@ -320,6 +323,10 @@ object frmMain: TfrmMain
         ImageIndex = 3
         TabVisible = False
         OnShow = tbsViewShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object lvReferencedBy: TListView
           AlignWithMargins = True
           Left = 0
@@ -362,6 +369,10 @@ object frmMain: TfrmMain
         Caption = 'Messages'
         ImageIndex = 1
         OnShow = tbsMessagesShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object mmoMessages: TMemo
           AlignWithMargins = True
           Left = 0
@@ -555,6 +566,10 @@ object frmMain: TfrmMain
         Caption = 'Weapon Spreadsheet'
         ImageIndex = 4
         OnShow = tbsSpreadsheetShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object vstSpreadSheetWeapon: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -566,7 +581,6 @@ object frmMain: TfrmMain
           DragOperations = [doCopy]
           Header.AutoSizeIndex = 0
           Header.Options = [hoColumnResize, hoDblClickResize, hoRestrictDrag, hoShowSortGlyphs, hoVisible]
-          Header.ParentFont = True
           Header.SortColumn = 1
           HintMode = hmTooltip
           HotCursor = crHandPoint
@@ -762,6 +776,10 @@ object frmMain: TfrmMain
         Caption = 'Armor Spreadsheet'
         ImageIndex = 5
         OnShow = tbsSpreadsheetShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object vstSpreadsheetArmor: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -773,7 +791,6 @@ object frmMain: TfrmMain
           DragOperations = [doCopy]
           Header.AutoSizeIndex = 0
           Header.Options = [hoColumnResize, hoDblClickResize, hoRestrictDrag, hoShowSortGlyphs, hoVisible]
-          Header.ParentFont = True
           Header.SortColumn = 1
           HintMode = hmTooltip
           HotCursor = crHandPoint
@@ -905,6 +922,10 @@ object frmMain: TfrmMain
         Caption = 'Ammunition Spreadsheet'
         ImageIndex = 6
         OnShow = tbsSpreadsheetShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object vstSpreadSheetAmmo: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -916,7 +937,6 @@ object frmMain: TfrmMain
           DragOperations = [doCopy]
           Header.AutoSizeIndex = 0
           Header.Options = [hoColumnResize, hoDblClickResize, hoRestrictDrag, hoShowSortGlyphs, hoVisible]
-          Header.ParentFont = True
           Header.SortColumn = 1
           HintMode = hmTooltip
           HotCursor = crHandPoint
@@ -1027,6 +1047,10 @@ object frmMain: TfrmMain
         Caption = 'TabSheet2'
         ImageIndex = 7
         TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object DisplayPanel: TPanel
           Left = 0
           Top = 0
@@ -1266,7 +1290,6 @@ object frmMain: TfrmMain
       Header.AutoSizeIndex = 2
       Header.Height = 21
       Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
-      Header.ParentFont = True
       Header.PopupMenu = pmuNavHeaderPopup
       Header.SortColumn = 0
       HintMode = hmTooltip
@@ -1307,7 +1330,7 @@ object frmMain: TfrmMain
         end
         item
           Position = 2
-          Width = 125
+          Width = 129
           WideText = 'Name'
         end>
     end
