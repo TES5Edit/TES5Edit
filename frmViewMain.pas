@@ -59,6 +59,7 @@ uses
   Imaging,
   wbInterface,
   wbImplementation,
+  wbLoadOrder,
   wbBSA,
   wbNifScanner,
   wbLOD,
@@ -3348,306 +3349,6 @@ type
   end;
 
 procedure TfrmMain.DoInit;
-
-  // remove comments and empty lines from list. Also handles star activation
-  procedure RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl: TStrings; al: TStrings);
-  var
-    i, j: integer;
-    s: string;
-  begin
-    for i := Pred(sl.Count) downto 0 do begin
-      s := Trim(sl.Strings[i]);
-      j := Pos('#', s); // comments
-      if j > 0 then
-        System.Delete(s, j, High(Integer));
-      s := Trim(s);
-      if s = '' then
-        sl.Delete(i)
-      else begin
-        j := Pos('*', s); // active plugin
-        if j > 0 then begin
-          System.Delete(s, 1, j);
-          if Assigned(al) then
-            al.Add(s);
-        end;
-        s := Trim(s);
-        if s = '' then
-          sl.Delete(i)
-        else
-          sl[i] := s;
-      end;
-    end;
-  end;
-
-  // remove missing files from list
-  procedure RemoveMissingFiles(sl: TStrings);
-  var
-    i: integer;
-    F: TSearchRec;
-  begin
-    for i := Pred(sl.Count) downto 0 do
-      // replace with real case sensitive file name (it matters for Wrye Bash?)
-      if FindFirst(wbDataPath + sl[i], faAnyFile, F) = 0 then begin
-        sl[i] := ExtractFileName(F.Name);
-        FindClose(F);
-      end else
-        sl.Delete(i);
-  end;
-
-  // add missing plugin files to list sorted by timestamps
-  procedure AddMissingToLoadList(sl: TStrings);
-  var
-    F     : TSearchRec;
-    slDlc : TStringList;
-    slNew : TStringList;
-    i, j  : integer;
-  begin
-    if FindFirst(wbDataPath + '*.*', faAnyFile, F) = 0 then try
-      slNew := TStringList.Create;
-      slDlc := TStringList.Create;
-      try
-        // allows using string list search rather than for loop comparison
-        for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
-          slDLC.Add(wbOfficialDLC[i]);
-        repeat
-          if IsFileESM(F.Name) or IsFileESP(F.Name) or (wbIsEslSupported and IsFileESL(F.Name)) then begin
-            if SameText(F.Name, wbGameName + '.hardcoded.esp') then
-              DeleteFile(wbDataPath + F.Name)
-            else
-            if (FindMatchText(sl, F.Name) < 0) and (FindMatchText(slDLC, F.Name) < 0) then
-              slNew.AddObject(F.Name, TObject(GetFileModSortKey(wbDataPath + F.Name)));
-          end;
-        until FindNext(F) <> 0;
-        slNew.CustomSort(PluginListCompare);
-        // add esm masters after the last master, add esp plugins at the end
-        // find position of the last master
-        // The for loop won't initialize j if sl.count = 0, we must force it to -1 so inserting will happen at index 0
-        if sl.Count=0 then
-          j := -1
-        else
-          for j := Pred(sl.Count) downto 0 do
-            if IsFileESM(sl[j]) then
-              Break;
-        Inc(j);
-        for i := 0 to Pred(slNew.Count) do begin
-          if IsFileESM(slNew[i]) then begin
-            sl.InsertObject(j, slNew[i], slNew.Objects[i]);
-            Inc(j);
-          end else
-            sl.AddObject(slNew[i], slNew.Objects[i]);
-        end;
-      finally
-        slDlc.Free;
-        slNew.Free;
-      end;
-    finally
-      FindClose(F);
-    end;
-  end;
-
-  procedure LoadPluginListInternal(frmFileSelect: TfrmFileSelect; sl: TStringList);
-  var
-    i, j, k     : Integer;
-    s           : string;
-    sl2         : TStringList;
-    Age         : Integer;
-    AgeDateTime : TDateTime;
-    useBOSS     : Boolean;
-    ModuleInfo  : TModuleInfo;
-    slOfficial  : TStringList;
-    slCC        : TStringList;
-  begin
-    with frmFileSelect do begin
-      {
-         *** Load order handling for Skyrim and originaly FO4 ***
-         Plugins are sorted by the order in plugins.txt
-         1. Load plugins list from plugins file
-         2. Add missing files from BOSS list loadorder.txt
-      }
-      {
-         *** Load order handling for newer FO4 and later games ***
-         Plugins are sorted by the order in plugins.txt.
-          They are activated if they are preceded by a * in the file.
-          On the order of inactive plugins:
-            without a load manager inactive plugins shouldn't matter.
-            let's just list them in the order we find them to begin with
-            and assume the load manager will sort it out if needed.
-            false masters ??? To Be Tested
-         1. Load plugins list from plugins file
-         2. Add missing files from BOSS list loadorder.txt
-      }
-      if not (wbGameMode in [gmTES3, gmTES4, gmFO3, gmFNV]) then begin
-        if FileExists(wbPluginsFileName) then
-          sl.LoadFromFile(wbPluginsFileName);
-        sl2 := TStringList.Create;
-        try
-          RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl, sl2); // remove comments
-          useBOSS := (sl2.Count = 0) and (wbGameMode in [gmTES5]); // use loadorder.txt in Skyrim
-        finally
-          sl2.Free;
-        end;
-
-        // always load the game master first even if missing
-        j := FindMatchText(sl, wbGameName + '.esm');
-        if j = -1 then sl.Insert(0, wbGameName + '.esm');
-
-        // Skyrim and SSE always load Update.esm second no matter what
-        // even if not present in plugins.txt
-        if wbIsSkyrim then begin
-          j := FindMatchText(sl, 'Update.esm');
-          if j = -1 then sl.Insert(1, 'Update.esm');
-        end;
-
-        // add official DLCs right after the game master file
-        for i := High(wbOfficialDLC) downto Low(wbOfficialDLC) do begin
-          // delete DLC from list if already there, no matter where it is located since we hardcode their order
-          j := FindMatchText(sl, wbOfficialDLC[i]);
-          if j <> -1 then
-            sl.Delete(j);
-
-          // for Skyrim and SSE insert after Update.esm
-          if wbIsSkyrim then
-            sl.Insert(2, wbOfficialDLC[i])
-          else
-            sl.Insert(1, wbOfficialDLC[i]);
-        end;
-
-        // add official CCs right after the last DLC
-        if wbGameMode in [gmSSE, gmFO4] then begin
-          k := 0;
-          if wbIsSkyrim then
-           k := 1;
-          // find position of highest DLC
-          for i := High(wbOfficialDLC) downto Low(wbOfficialDLC) do begin
-            k := FindMatchText(sl, wbOfficialDLC[i]);
-            if k <> -1 then
-              Break;
-          end;
-          Inc(k);
-          // insert CC based on their order in *.CCC file
-          for i := High(wbCreationClubContent) downto Low(wbCreationClubContent) do begin
-            // delete CC from list if already there, no matter where it is located since we hardcode their order
-            j := FindMatchText(sl, wbCreationClubContent[i]);
-            if j <> -1 then
-              sl.Delete(j);
-            sl.Insert(k, wbCreationClubContent[i]);
-          end;
-        end;
-
-        // remove nonexisting files (including optional DLC)
-        RemoveMissingFiles(sl);
-
-        if useBOSS then begin
-          s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
-          if FileExists(s) then begin
-            AddMessage('Found BOSS load order list: ' + s);
-            sl2 := TStringList.Create;
-            try
-              sl2.LoadFromFile(s);
-              RemoveMissingFiles(sl2); // remove nonexisting files from BOSS list
-              // skip first line "Skyrim.esm" in BOSS list
-              for i := 1 to Pred(sl2.Count) do begin
-                j := FindMatchText(sl, sl2[i]);
-                // if plugin exists in plugins file, skip
-                if j <> -1 then Continue;
-                // otherwise insert it after position of previous plugin
-                j := FindMatchText(sl, sl2[i-1]);
-                if j <> -1 then
-                  sl.Insert(j+1, sl2[i]);
-              end;
-            finally
-              sl2.Free;
-            end;
-          end;
-        end;
-
-      end;
-
-      {
-         *** Load order handling for Oblivion, Fallout3 and New Vegas ***
-         Plugins are sorted by timestamps.
-         Add files missing in plugins.txt and loadorder.txt for Skyrim and later games.
-      }
-      AddMissingToLoadList(sl);
-
-      { This doesn't seem to be what the game engine does:
-      // move non-CC ESL plugins right after the last ESM
-      if wbGameMode in [gmSSE, gmFO4] then begin
-        for j := Pred(sl.Count) downto 0 do
-          if IsFileESM(sl[j]) then
-            Break;
-        Inc(j);
-        for i := Succ(j) to Pred(sl.Count) do
-          if IsFileESL(sl[i]) and not IsFileCC(sl[i]) then begin
-            AddMessage('Detected ESL plugin, forcing it to load after the last ESM: ' + sl[i]);
-            sl.Move(i, j);
-            Inc(j);
-          end;
-      end;
-      }
-
-      // reorder according to https://forums.nexusmods.com/index.php?/topic/6043958-unofficial-skyrim-creation-club-content-patches/page-15#entry54334023
-      sl2 := TStringList.Create;
-      slOfficial := TStringList.Create;
-      slCC := TStringList.Create;
-      try
-        slOfficial.Add(wbGameName + '.esm');
-        if wbIsSkyrim then
-          slOfficial.Add('Update.esm');
-        for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
-          slOfficial.Add(wbOfficialDLC[i]);
-        slOfficial.Sorted := True;
-
-        for i := Low(wbCreationClubContent) to High(wbCreationClubContent) do
-          slCC.Add(wbCreationClubContent[i]);
-        slCC.Sorted := True;
-
-        sl2.OwnsObjects := True;
-        sl2.Assign(sl);
-        sl.Clear;
-        for i := 0 to Pred(sl2.Count) do begin
-          ModuleInfo := TModuleInfo.Create;
-          sl2.Objects[i] := ModuleInfo;
-          ModuleInfo.IsOfficial := slOfficial.Find(sl2[i], j);
-          ModuleInfo.IsCC := slCC.Find(sl2[i], j);
-          wbMastersForFile(wbDataPath + sl2[i] , ModuleInfo, ModuleInfo.IsESM, ModuleInfo.IsESL);
-        end;
-
-        for j := 1 to 4 do
-          for i := 0 to Pred(sl2.Count) do begin
-            ModuleInfo := sl2.Objects[i] as TModuleInfo;
-            with ModuleInfo do
-              if not Taken then begin
-                case j of
-                  1: Taken := IsOfficial;
-                  2: Taken := IsCC;
-                  3: Taken :=
-                          IsESM              //uses flag from header, not extension
-                       or IsFileESL(sl2[i]); //uses extension, not flag
-                  4: Taken := True;
-                end;
-                if Taken then
-                  sl.Add(sl2[i]);
-              end;
-          end;
-      finally
-        sl2.Free;
-        slOfficial.Free;
-        slCC.Free;
-      end;
-
-      if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (sl.Count > 1) and wbIsFallout3 then begin
-        Age := Integer(sl.Objects[0]);
-        AgeDateTime := FileDateToDateTime(Age);
-        for i := 1 to Pred(sl.Count) do begin
-          AgeDateTime := AgeDateTime + (1/24/60);
-          Age := DateTimeToFileDate(AgeDateTime);
-          FileSetDate(wbDataPath + sl[i], Age);
-        end;
-      end;
-    end;
-  end;
-
 var
   i, j, k, l, m : Integer;
   e             : Boolean;
@@ -3669,7 +3370,9 @@ var
   R             : TSearchRec;
   Rect          : TRect;
   frmFileSelect : TfrmFileSelect;
-  IsESM, IsESL  : Boolean;
+  Modules       : TwbModuleInfos;
+  Module        : PwbModuleInfo;
+  AgeDateTime   : TDateTime;
 begin
   AutoDone := False;
   ErrorsCount := 0;
@@ -3791,34 +3494,6 @@ begin
   if not Assigned(Settings) and (wbSettingsFileName <> '') then
     Settings := TMemIniFile.Create(wbSettingsFileName);
 
-  (*
-  TStyleManager.TrySetStyle(Settings.ReadString('UI', 'Theme', TStyleManager.ActiveStyle.Name), False);
-
-  LoadFont(Settings, 'UI', 'FontRecords', vstNav.Font);
-  LoadFont(Settings, 'UI', 'FontRecords', vstView.Font);
-  LoadFont(Settings, 'UI', 'FontMessages', mmoMessages.Font);
-
-  // skip reading main form position if Shift is pressed
-  if GetKeyState(VK_SHIFT) >= 0 then begin
-    i := Settings.ReadInteger(Name, 'Left', Left);
-    j := Settings.ReadInteger(Name, 'Top', Top);
-    k := Settings.ReadInteger(Name, 'Width', Width);
-    l := Settings.ReadInteger(Name, 'Height', Height);
-    Rect := Screen.WorkAreaRect;
-    if (i >= Rect.Top) and
-       (j >= Rect.Left) and
-       (i + k <= Rect.Right) and
-       (j + l <= Rect.Bottom)
-    then begin
-      Left := i;
-      Top := j;
-      Width := k;
-      Height := l;
-    end;
-    WindowState := TWindowState(Settings.ReadInteger(Name, 'WindowState', Integer(WindowState)));
-  end;
-  *)
-
   i := Settings.ReadInteger(Name, 'pnlNavWidth', pnlNav.Width);
   if i < 50 then i := 50;
   if i >= ClientWidth then i := ClientWidth - 50;
@@ -3876,74 +3551,54 @@ begin
               end;
           end;
           tsPlugins: begin
-            LoadPluginListInternal(frmFileSelect, sl);
-            CheckListBox1.Items.Assign(sl);
+            Modules := wbModulesByLoadOrder;
+            CheckListBox1.Items.BeginUpdate;
+            try
+              CheckListBox1.Items.Clear;
+              CheckListBox1.Items.AddStrings(Modules.ToStrings);
+            finally
+              CheckListBox1.Items.EndUpdate;
+            end;
+
+            if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (Length(Modules)>1) and wbIsFallout3 then begin
+              AgeDateTime := Modules[0].miDateTime;
+              for i := 1 to High(Modules) do begin
+                AgeDateTime := AgeDateTime + (1/24/60);
+                TFile.SetLastWriteTime(wbDataPath + Modules[i].miName, AgeDateTime);
+              end;
+            end;
           end;
         end;
 
         if not wbQuickClean then
-          if (wbToolMode in wbPluginModes) and (sl.Count > 1) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFNV, gmTES5, gmTES5VR, gmSSE]) then begin
-            j := CheckListBox1.Items.IndexOf(wbPluginToUse);
-            if j < 0 then begin
-              ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
-              frmMain.Close;
-              Exit;
-            end else
-              CheckListBox1.Checked[j] := True;
+          if (wbToolMode in wbPluginModes) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFNV, gmTES5, gmTES5VR, gmSSE]) then begin
+            Modules.DeactivateAll;
+
+            with wbModuleByName(wbPluginToUse)^ do
+              if IsValid then
+                Activate
+              else begin
+                ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
+                frmMain.Close;
+                Exit;
+              end;
 
             // More plugins requested ?
             while wbFindNextValidCmdLinePlugin(wbParamIndex, s, wbDataPath) do begin
-              j := CheckListBox1.Items.IndexOf(s);
-              if j < 0 then begin
-                AddMessage('Note: Selected plugin "' + s + '" does not exist');
-                frmMain.Close;
-                Exit;
-              end else
-                CheckListBox1.Checked[j] := True;
-            end;
-          end
-
-          else if wbToolSource in [tsPlugins] then begin
-            sl2 := TStringList.Create;
-
-            // activate Creation Club mods
-            if wbGameMode in [gmFO4, gmSSE] then
-              for i := 0 to Pred(sl.Count) do
-                if IsFileCC(sl[i]) then
-                  sl2.Add(sl[i]);
-
-            try
-              // check active files using the game's plugins list
-              if FileExists(wbPluginsFileName) then
-                sl.LoadFromFile(wbPluginsFileName);
-
-              RemoveCommentsAndEmptyAndMemorizeActivePlugins(sl, sl2);
-
-              // use starred files as active files in FO4, SSE and VR
-              if wbGameMode in [gmFO4, gmFO4VR, gmTES5VR, gmSSE] then begin
-                sl.Clear;
-                sl.AddStrings(sl2);
-                // [SSE] select official files by default, they are always present and loaded
-                if wbGameMode in [gmTES5VR, gmSSE] then begin
-                  sl.Add('Update.esm');
-                  for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
-                    sl.Add(wbOfficialDLC[i]);
+              with wbModuleByName(s)^ do
+                if IsValid then
+                  Activate
+                else begin
+                  ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
+                  frmMain.Close;
+                  Exit;
                 end;
-              end;
-            finally
-              sl2.Free;
-            end;
-
-            for i := Pred(sl.Count) downto 0 do begin
-              s := sl.Strings[i];
-
-              j := CheckListBox1.Items.IndexOf(s);
-              if j < 0 then
-                AddMessage('Note: Active plugin List contains nonexisting file "' + s + '"')
-              else
-                CheckListBox1.Checked[j] := True;
             end;
           end;
+
+          if wbToolSource in [tsPlugins] then
+            for i := 0 to Pred(CheckListBox1.Items.Count) do
+              CheckListBox1.Checked[i] := (mfActive in Modules[i].miFlags);
 
         if not ((wbToolMode in wbAutoModes) or wbQuickShowConflicts) then begin
           ShowModal;
@@ -3953,264 +3608,230 @@ begin
           end;
         end;
 
-        k := -1;
-        sl2 := TStringList.Create;
-        try
-          sl.Clear;
-          for i := 0 to Pred(CheckListBox1.Count) do
-            if CheckListBox1.Checked[i] then
-              sl.Add(CheckListBox1.Items[i]);
-
-          if wbQuickClean or (wbToolSource in [tsSaves]) then
-            if sl.Count <> 1 then begin
-              if wbQuickClean then
-                MessageDlg('Exactly one plugin must be selected in QuickClean mode', mtError, [mbAbort], 0)
-              else
-                MessageDlg('Exactly one plugin must be selected with this source', mtError, [mbAbort], 0);
-              frmMain.Close;
-              Exit;
-            end;
-
-          if wbToolSource = tsSaves then begin
-            case wbGameMode of
-              gmFNV:  if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave;
-              gmFO3:  if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave
-                else begin
-                  MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
-                  frmMain.Close;
-                  Exit;
-                end;
-              gmFO4:  if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave;
-              gmTES4: if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave
-                else begin
-                  MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
-                  frmMain.Close;
-                  Exit;
-                end;
-              gmTES5: if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave;
-              gmSSE:  if SameText(ExtractFileExt(sl[0]), coSaveExt) then SwitchToCoSave;
-            else
-              MessageDlg('CoSave are not supported yet "'+s+'". Please check the the selection.', mtError, [mbAbort], 0);
-              frmMain.Close;
-              Exit;
-            end;
-            LoadPluginListInternal(frmFileSelect, sl2);
-            for i := Pred(sl2.Count) downto 0 do
-              if CheckListBox1.Items.IndexOf(sl2[i]) = -1 then
-                CheckListBox1.Items.Insert(0, sl2[i]);
-            for i := 0 to Pred(CheckListBox1.Count) do
-              if CheckListBox1.Checked[i] then begin
-                k := i;
-                break;
-              end;
-          end;
-
-          sl2.Sorted := True;
-          sl2.Duplicates := dupIgnore;
-          while sl.Count > 0 do begin
-            sl2.Clear;
-            for i := 0 to Pred(sl.Count) do
-              case wbToolSource of
-                tsSaves: begin
-                  if not wbIsPlugin(sl[i]) then
-                    wbMastersForFile(wbSavePath + sl[i], sl2, IsESM, IsESL)
-                  else
-                    wbMastersForFile(wbDataPath + sl[i], sl2, IsESM, IsESL);
-                  for j := 0 to Pred(sl2.Count) do
-                    if CheckListBox1.Items.IndexOf(sl2[j]) = -1 then begin
-                      CheckListBox1.Items.Insert(k, sl2[j]);
-                      Inc(k);
-                    end;
-                end;
-                tsPlugins: wbMastersForFile(wbDataPath + sl[i], sl2, IsESM, IsESL);
-              end;
-            {make sure messages for the memo have been processed}
-            DoProcessMessages;
-            tmrMessagesTimer(nil);
-
-            sl.Clear;
-            if sl2.Count > 0 then
-              for i := 0 to Pred(CheckListBox1.Count) do
-                if not CheckListBox1.Checked[i] then
-                  if sl2.Find(CheckListBox1.Items[i], j) then begin
-                    CheckListBox1.Checked[i] := True;
-                    sl.Add(CheckListBox1.Items[i]);
-                    sl2.Delete(j);
-                    if sl2.Count < 1 then
-                      Break;
-                  end;
-          end;
-
-        finally
-          FreeAndNil(sl2);
-        end;
-
         sl.Clear;
-        for i := 0 to Pred(CheckListBox1.Count) do
-          if CheckListBox1.Checked[i] then
+        Modules.DeactivateAll;
+        for i := 0 to Pred(CheckListBox1.Count) do begin
+          if CheckListBox1.Checked[i] then begin
             sl.Add(CheckListBox1.Items[i]);
-
+            if Length(Modules) > 0 then
+              Include(Modules[i].miFlags, mfActive);
+          end;
+        end;
       finally
         Free;
       end;
 
-      if not (wbToolMode in wbAutoModes) then
-        case wbToolSource of
-          tsSaves: { to be done };
-          tsPlugins: with TfrmFileSelect.Create(nil) do try
+      if sl.Count < 1 then begin
+        frmMain.Close;
+        Exit;
+      end;
 
-            if (not wbEditAllowed) or wbTranslationMode then begin
-              Caption := 'Skip these records:';
+      if wbQuickClean or (wbToolSource in [tsSaves]) then
+        if sl.Count <> 1 then begin
+          if wbQuickClean then
+            MessageDlg('Exactly one plugin must be selected in QuickClean mode', mtError, [mbAbort], 0)
+          else
+            MessageDlg('Exactly one plugin must be selected with this source', mtError, [mbAbort], 0);
+          frmMain.Close;
+          Exit;
+        end;
 
-              sl2 := TStringList.Create;
-              try
-                sl2.Sorted := True;
-                sl2.Duplicates := dupIgnore;
-                sl2.CommaText := Settings.ReadString('RecordsToSkip', 'Selection', 'LAND,ROAD,PGRD,REGN,NAVI,NAVM,IMAD');
-
-                for i := Low(wbRecordDefs) to High(wbRecordDefs) do
-                  with wbRecordDefs[i].rdeDef do begin
-                    j := CheckListBox1.Items.Add(DefaultSignature + ' - ' + GetName);
-                    if sl2.IndexOf(DefaultSignature) >= 0 then
-                      CheckListBox1.Checked[j] := True;
-                  end;
-                CheckListBox1.Sorted := True;
-
-                ShowModal;
-
-                sl2.Clear;
-                for i := 0 to Pred(CheckListBox1.Count) do
-                  if CheckListBox1.Checked[i] then begin
-                    RecordToSkip.Add(Copy(CheckListBox1.Items[i], 1, 4));
-                    sl2.Add(Copy(CheckListBox1.Items[i], 1, 4));
-                  end;
-                Settings.WriteString('RecordsToSkip', 'Selection', sl2.CommaText);
-                Settings.UpdateFile;
-              finally
-                FreeAndNil(sl2);
-              end;
+      if wbToolSource = tsSaves then begin
+        s := sl[0];
+        case wbGameMode of
+          gmFNV:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
+          gmFO3:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave
+            else begin
+              MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
+              frmMain.Close;
+              Exit;
             end;
+          gmFO4:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
+          gmTES4: if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave
+            else begin
+              MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
+              frmMain.Close;
+              Exit;
+            end;
+          gmTES5: if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
+          gmSSE:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
+        else
+          MessageDlg('CoSave are not supported yet "'+s+'". Please check the the selection.', mtError, [mbAbort], 0);
+          frmMain.Close;
+          Exit;
+        end;
+        sl.Clear;
+        //assumption: for a savegame, we should load exactly the listed masters in the listed order, followed by the savegame
+        wbMastersForFile(wbSavePath + s, sl);
+        sl.Add(s);
+      end else {wbToolSource = tsPlugins} begin
+        Modules.ActivateMasters;         //Activate all required masters in their current load order position first
+        Modules := Modules.SimulateLoad; //Simulate a load, which might re-order masters
+        sl.Clear;
+        sl.AddStrings(Modules.ToStrings);
+      end;
 
-            if not wbQuickClean then
-              for l := 0 to sl.Count do begin
-                if l >= sl.Count then
-                  ModGroupFile := wbModGroupFileName
-                else
-                  ModGroupFile := wbDataPath + ChangeFileExt(sl[l], '.modgroups');
+      {make sure messages for the memo have been processed}
+      DoProcessMessages;
+      tmrMessagesTimer(nil);
 
-                if FileExists(ModGroupFile) then
-                  with TMemIniFile.Create(ModGroupFile) do try
-                    ModGroupFile := ExtractFileName(ModGroupFile);
-                    sl3 := TStringList.Create;
+      if not (wbToolMode in wbAutoModes) then
+      case wbToolSource of
+        tsSaves: { to be done };
+        tsPlugins: with TfrmFileSelect.Create(nil) do try
+
+          if (not wbEditAllowed) or wbTranslationMode then begin
+            Caption := 'Skip these records:';
+
+            sl2 := TStringList.Create;
+            try
+              sl2.Sorted := True;
+              sl2.Duplicates := dupIgnore;
+              sl2.CommaText := Settings.ReadString('RecordsToSkip', 'Selection', 'LAND,ROAD,PGRD,REGN,NAVI,NAVM,IMAD');
+
+              for i := Low(wbRecordDefs) to High(wbRecordDefs) do
+                with wbRecordDefs[i].rdeDef do begin
+                  j := CheckListBox1.Items.Add(DefaultSignature + ' - ' + GetName);
+                  if sl2.IndexOf(DefaultSignature) >= 0 then
+                    CheckListBox1.Checked[j] := True;
+                end;
+              CheckListBox1.Sorted := True;
+
+              ShowModal;
+
+              sl2.Clear;
+              for i := 0 to Pred(CheckListBox1.Count) do
+                if CheckListBox1.Checked[i] then begin
+                  RecordToSkip.Add(Copy(CheckListBox1.Items[i], 1, 4));
+                  sl2.Add(Copy(CheckListBox1.Items[i], 1, 4));
+                end;
+              Settings.WriteString('RecordsToSkip', 'Selection', sl2.CommaText);
+              Settings.UpdateFile;
+            finally
+              FreeAndNil(sl2);
+            end;
+          end;
+
+          if not wbQuickClean then
+            for l := 0 to sl.Count do begin
+              if l >= sl.Count then
+                ModGroupFile := wbModGroupFileName
+              else
+                ModGroupFile := wbDataPath + ChangeFileExt(sl[l], '.modgroups');
+
+              if FileExists(ModGroupFile) then
+                with TMemIniFile.Create(ModGroupFile) do try
+                  ModGroupFile := ExtractFileName(ModGroupFile);
+                  sl3 := TStringList.Create;
+                  try
+                  ReadSections(sl3);
+                  for i := 0 to Pred(sl3.Count) do begin
+                    MessagePrefix := 'Ignoring ModGroup [' + sl3[i] + '] (from ' + ModGroupFile + '): ';
+                    sl2 := TStringList.Create;
                     try
-                    ReadSections(sl3);
-                    for i := 0 to Pred(sl3.Count) do begin
-                      MessagePrefix := 'Ignoring ModGroup [' + sl3[i] + '] (from ' + ModGroupFile + '): ';
-                      sl2 := TStringList.Create;
-                      try
-                        if ModGroups.IndexOf(sl3[i]) >= 0 then
-                          AddMessage(MessagePrefix + 'ModGroup of same name already defined')
-                        else begin
-                          MessageGiven := False;
-                          ReadSectionValues(sl3[i], sl2);
+                      if ModGroups.IndexOf(sl3[i]) >= 0 then
+                        AddMessage(MessagePrefix + 'ModGroup of same name already defined')
+                      else begin
+                        MessageGiven := False;
+                        ReadSectionValues(sl3[i], sl2);
 
-                          for j := Pred(sl2.Count) downto 0 do begin
-                            s := Trim(sl2[j]);
-                            k := Pos(';', s);
-                            if k > 0 then begin
+                        for j := Pred(sl2.Count) downto 0 do begin
+                          s := Trim(sl2[j]);
+                          k := Pos(';', s);
+                          if k > 0 then begin
+                            Delete(s, k, High(Integer));
+                            s := Trim(s);
+                          end;
+                          if Length(s) > 0 then begin
+                            IsOptional := s[1] = '+';
+                            IsRequired := s[1] = '-';
+                            if IsOptional or IsRequired then begin
+                              Delete(s, 1, 1);
+                              sl2[j] := s;
+                            end;
+                          end else begin // Only to quiet the compiler (W1036).
+                            IsOptional := False;
+                            IsRequired := False;
+                          end;
+                          ValidCRCs := nil;
+                          if Length(s) > 0 then begin
+                            k := Pos(':', s);
+                            if k > 1 then begin
+                              ValidCRCs := wbDecodeCRCList(Copy(s, Succ(k), High(Integer)));
                               Delete(s, k, High(Integer));
                               s := Trim(s);
+                              sl2[j] := s;
                             end;
-                            if Length(s) > 0 then begin
-                              IsOptional := s[1] = '+';
-                              IsRequired := s[1] = '-';
-                              if IsOptional or IsRequired then begin
-                                Delete(s, 1, 1);
-                                sl2[j] := s;
-                              end;
-                            end else begin // Only to quiet the compiler (W1036).
-                              IsOptional := False;
-                              IsRequired := False;
-                            end;
-                            ValidCRCs := nil;
-                            if Length(s) > 0 then begin
-                              k := Pos(':', s);
-                              if k > 1 then begin
-                                ValidCRCs := wbDecodeCRCList(Copy(s, Succ(k), High(Integer)));
-                                Delete(s, k, High(Integer));
-                                s := Trim(s);
-                                sl2[j] := s;
-                              end;
-                            end;
-                            if Length(s) > 0 then begin
-                              k := sl.IndexOf(s);
-                              if k >= 0 then begin
-                                if not ValidateCRC(s, ValidCRCs, FileCRC) then begin
-                                  AddMessage(MessagePrefix + 'CRC of plugin "' + s + '" ('+IntToHex(Int64(FileCRC), 8)+') is not in the list of valid CRCs');
-                                  MessageGiven := True;
-                                  sl2.Clear;
-                                  break;
-                                end else
-                                  if IsRequired then
-                                    sl2.Objects[j] := TObject(-k)
-                                  else
-                                    sl2.Objects[j] := TObject(k)
-                              end else begin
-                                if IsOptional then
-                                  sl2.Delete(j)
-                                else begin
-                                  AddMessage(MessagePrefix + 'required plugin "' + s + '" missing');
-                                  MessageGiven := True;
-                                  sl2.Clear;
-                                  break;
-                                end
-                              end;
-                            end else
-                              sl2.Delete(j);
                           end;
-
-                          if sl2.Count < 2 then begin
-                            if not MessageGiven then
-                              AddMessage(MessagePrefix + 'less then 2 plugins active');
-                          end else begin
-                            k := Abs(Integer(sl2.Objects[0]));
-                            for j := 1 to Pred(sl2.Count) do begin
-                              m := Abs(Integer(sl2.Objects[j]));
-                              if m <= k then begin
-                                sl2.Clear;
+                          if Length(s) > 0 then begin
+                            k := sl.IndexOf(s);
+                            if k >= 0 then begin
+                              if not ValidateCRC(s, ValidCRCs, FileCRC) then begin
+                                AddMessage(MessagePrefix + 'CRC of plugin "' + s + '" ('+IntToHex(Int64(FileCRC), 8)+') is not in the list of valid CRCs');
                                 MessageGiven := True;
-                                AddMessage(MessagePrefix + 'plugins are not in the correct order');
-                                Break;
-                              end;
-                              k := m;
+                                sl2.Clear;
+                                break;
+                              end else
+                                if IsRequired then
+                                  sl2.Objects[j] := TObject(-k)
+                                else
+                                  sl2.Objects[j] := TObject(k)
+                            end else begin
+                              if IsOptional then
+                                sl2.Delete(j)
+                              else begin
+                                AddMessage(MessagePrefix + 'required plugin "' + s + '" missing');
+                                MessageGiven := True;
+                                sl2.Clear;
+                                break;
+                              end
                             end;
-                            for j := Pred(sl2.Count) downto 0 do
-                              if Integer(sl2.Objects[j]) < 0 then
-                                sl2.Delete(j);
-                            if sl2.Count >= 2 then begin
-                              ModGroups.AddObject(sl3[i], sl2);
-                              sl2 := nil;
-                            end else
-                              if not MessageGiven then
-                                AddMessage(MessagePrefix + 'less then 2 plugins active');
-                          end;
+                          end else
+                            sl2.Delete(j);
                         end;
 
-                      finally
-                        FreeAndNil(sl2);
+                        if sl2.Count < 2 then begin
+                          if not MessageGiven then
+                            AddMessage(MessagePrefix + 'less then 2 plugins active');
+                        end else begin
+                          k := Abs(Integer(sl2.Objects[0]));
+                          for j := 1 to Pred(sl2.Count) do begin
+                            m := Abs(Integer(sl2.Objects[j]));
+                            if m <= k then begin
+                              sl2.Clear;
+                              MessageGiven := True;
+                              AddMessage(MessagePrefix + 'plugins are not in the correct order');
+                              Break;
+                            end;
+                            k := m;
+                          end;
+                          for j := Pred(sl2.Count) downto 0 do
+                            if Integer(sl2.Objects[j]) < 0 then
+                              sl2.Delete(j);
+                          if sl2.Count >= 2 then begin
+                            ModGroups.AddObject(sl3[i], sl2);
+                            sl2 := nil;
+                          end else
+                            if not MessageGiven then
+                              AddMessage(MessagePrefix + 'less then 2 plugins active');
+                        end;
                       end;
-                    end;
+
                     finally
-                      FreeAndNil(sl3);
+                      FreeAndNil(sl2);
                     end;
-                  finally
-                    Free;
                   end;
-              end;
-          finally
-            Free;
-          end;
+                  finally
+                    FreeAndNil(sl3);
+                  end;
+                finally
+                  Free;
+                end;
+            end;
+        finally
+          Free;
         end;
+      end;
 
       if wbQuickClean then
         Assert(ModGroups.Count = 0);

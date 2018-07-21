@@ -19,12 +19,13 @@ unit wbInterface;
 interface
 
 uses
+  Types,
   Classes,
   SysUtils,
   Graphics;
 
 const
-  VersionString  = '3.2.3g EXPERIMENTAL';
+  VersionString  = '3.2.3h EXPERIMENTAL';
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
   wbHardcodedDat = '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
@@ -729,7 +730,7 @@ type
 
   TwbContainerStates = set of TwbContainerState;
 
-  TDynStrings = array of string;
+  TDynStrings = TArray<string>;
 
   IwbContainerBase = interface(IwbElement)
     ['{1484D26A-0F67-41FA-9044-8772E68CBA56}']
@@ -3225,6 +3226,8 @@ function CmpI64(const a, b : Int64) : Integer;
 function CmpW64(const a, b : UInt64) : Integer;
 function CmpPtr(a, b: Pointer): Integer;
 function CompareElementsFormIDAndLoadOrder(Item1, Item2: Pointer): Integer;
+function CmpDouble(const a, b : Double) : Integer;
+
 
 function ConflictAllToColor(aConflictAll: TConflictAll): TColor;
 function ConflictThisToColor(aConflictThis: TConflictThis): TColor;
@@ -3247,6 +3250,8 @@ var
 
 type
   TwbGameMode   = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmTES5VR, gmSSE, gmFO4, gmFO4VR);
+  TwbGameModes  = set of TwbGameMode;
+
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
                     tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
                     tmCheckForErrors, tmCheckForITM, tmCheckForDR);
@@ -3272,6 +3277,7 @@ var
                                    tmCheckForErrors, tmCheckForITM, tmCheckForDR ];  // Auto modes that require a specific plugin to be provided.
   wbAlwaysMode  : TwbSetOfMode = [ tmView, tmEdit, tmESMify, tmESPify, tmSortAndCleanMasters,
                     tmLODgen, tmScript, tmCheckForITM, tmCheckForDR, tmCheckForErrors ]; // Modes available to all decoded games
+  wbSimplePluginsTxt : TwbGameModes = [gmFNV, gmFO3, gmTES3, gmTES4]; //plugins.txt contains only the active plugins
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
@@ -10363,6 +10369,14 @@ asm
 @@EQ:
 {$ENDIF WIN64}
 end;
+
+function CmpDouble(const a, b : Double) : Integer;
+begin
+  if      a > b then Result := 1
+  else if a < b then Result := -1
+  else               Result := 0;
+end;
+
 
 function TwbEnumDef.FindSparseName(aSearchIndex: Int64; var Index: Integer): Boolean;
 var

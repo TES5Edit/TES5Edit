@@ -47,7 +47,8 @@ var
   ChaptersToSkip     : TStringList;
   SubRecordOrderList : TStringList;
 
-function wbMastersForFile(const aFileName: string; aMasters: TStrings; out IsESM, IsESL: Boolean): Boolean;
+function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil): Boolean; overload;
+function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil): Boolean; overload;
 
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
   IsTemporary: Boolean = False; aOnlyHeader: Boolean = False): IwbFile;
@@ -15254,7 +15255,7 @@ begin
   end;
 end;
 
-function wbMastersForFile(const aFileName: string; aMasters: TStrings; out IsESM, IsESL: Boolean): Boolean;
+function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM, aIsESL: PBoolean): Boolean;
 var
   FileName : string;
   i        : Integer;
@@ -15263,8 +15264,10 @@ begin
   Result := False;
   if Assigned(aMasters) then
     aMasters.Clear;
-  IsESM := False;
-  IsESL := False;
+  if Assigned(aIsESM) then
+    aIsESM^ := False;
+  if Assigned(aIsESL) then
+    aIsESL^ := False;
   wbProgressLock;
   try
     FileName := wbExpandFileName(aFileName);
@@ -15278,8 +15281,10 @@ begin
 
       if Assigned(aMasters) then
         _File.GetMasters(aMasters);
-      IsESM := _File.IsESM;
-      IsESL := _File.IsESL;
+      if Assigned(aIsESM) then
+        aIsESM^ := _File.IsESM;
+      if Assigned(aIsESL) then
+        aIsESL^ := _File.IsESL;
       Result := True;
     except
       // File neither found nor replaced, ignore if in xDump
@@ -15287,6 +15292,21 @@ begin
     end;
   finally
     wbProgressUnlock;
+  end;
+end;
+
+function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM, aIsESL: PBoolean): Boolean; overload;
+var
+  sl : TStringList;
+begin
+  aMasters := nil;
+  sl := TStringList.Create;
+  try
+    Result := wbMastersForFile(aFileName, sl, aIsESM, aIsESL);
+    if Result then
+      aMasters := sl.ToStringArray;
+  finally
+    sl.Free;
   end;
 end;
 
