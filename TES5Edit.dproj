@@ -139,9 +139,7 @@
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <AppEnableHighDPI>true</AppEnableHighDPI>
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
-        <DCC_GenerateStackFrames>false</DCC_GenerateStackFrames>
-        <DCC_Optimize>true</DCC_Optimize>
-        <Debugger_RunParams>-sse -IKnowWhatImDoing -C:c:\Temp\</Debugger_RunParams>
+        <Debugger_RunParams>-sse -IKnowWhatImDoing</Debugger_RunParams>
         <VerInfo_Build>5</VerInfo_Build>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=3.2.3.5;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
