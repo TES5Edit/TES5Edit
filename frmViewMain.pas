@@ -204,6 +204,7 @@ type
     mniViewHeaderCopyAsWrapper: TMenuItem;
     mniNavCopyAsWrapper: TMenuItem;
     mniViewCopyToSelectedRecords: TMenuItem;
+    mniViewCopyMultipleToSelectedRecords: TMenuItem;
     N4: TMenuItem;
     N6: TMenuItem;
     mniNavCompareSelected: TMenuItem;
@@ -433,6 +434,7 @@ type
     procedure mniViewColumnWidthClick(Sender: TObject);
     procedure mniViewCompareReferencedRowClick(Sender: TObject);
     procedure mniViewCopyToSelectedRecordsClick(Sender: TObject);
+    procedure mniViewCopyMultipleToSelectedRecordsClick(Sender: TObject);
     procedure mniViewEditClick(Sender: TObject);
     procedure mniViewHideNoConflictClick(Sender: TObject);
     procedure mniViewMoveUpClick(Sender: TObject);
@@ -5727,9 +5729,13 @@ var
   NodeDatas                   : PViewNodeDatas;
   NodeData                    : PNavNodeData;
   Element                     : IwbElement;
+  TargetElement               : IwbElement;
   MainRecords                 : array of IwbMainRecord;
+  SourceMainRecord            : IwbMainRecord;
+  TargetMainRecord            : IwbMainRecord;
   SelectedNodes               : TNodeArray;
-  i, j                        : Integer;
+  i, j, k                     : Integer;
+  FoundOne                    : Boolean;
 begin
   if not wbEditAllowed then
     Exit;
@@ -5738,6 +5744,7 @@ begin
   if Assigned(NodeDatas) then begin
     Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
     if Assigned(Element) then begin
+      SourceMainRecord := Element.ContainingMainRecord;
 
       SelectedNodes := vstNav.GetSortedSelection(True);
       if Length(SelectedNodes) < 2 then
@@ -5746,7 +5753,7 @@ begin
       j := 0;
       for i := Low(SelectedNodes) to High(SelectedNodes) do begin
         NodeData := vstNav.GetNodeData(SelectedNodes[i]);
-        if Assigned(NodeData) and not Element.Equals(NodeData.Element) and
+        if Assigned(NodeData) and not SourceMainRecord.Equals(NodeData.Element) and
           Supports(NodeData.Element, IwbMainRecord, MainRecords[j]) then
           Inc(j);
       end;
@@ -5765,26 +5772,216 @@ begin
 
         ShowModal;
 
+        j := 0;
         for i := Low(MainRecords) to High(MainRecords) do
           if CheckListBox1.Checked[i] then begin
-            if not EditWarn then
-              Exit;
-
-            wbCopyElementToRecord(Element, MainRecords[i], False, True);
+            if j <> i then
+              MainRecords[j] := MainRecords[i];
+            Inc(j);
           end;
+        SetLength(MainRecords, j);
+        if j < 1 then
+          Exit;
+        if not EditWarn then
+          Exit;
 
+        try
+          j := 0;
+          for i := Low(MainRecords) to High(MainRecords) do begin
+            FoundOne := False;
+            for k := Low(ActiveRecords) to High(ActiveRecords) do begin
+              TargetElement := NodeDatas[k].Element;
+              if Assigned(TargetElement) then begin
+                TargetMainRecord := TargetElement.ContainingMainRecord;
+                if Assigned(TargetMainRecord) and TargetMainRecord.Equals(MainRecords[i]) then begin
+                  FoundOne := True;
+                  TargetElement.Assign(Low(Integer), Element, False);
+                  Break;
+                end;
+              end;
+            end;
+
+            if not FoundOne then begin
+              if j <> i then
+                MainRecords[j] := MainRecords[i];
+              Inc(j);
+            end;
+          end;
+          SetLength(MainRecords, j);
+          if j < 1 then
+            Exit;
+
+          wbCopyElementToRecord(Element, MainRecords[i], False, True);
+        finally
+          for i := Low(SelectedNodes) to High(SelectedNodes) do
+            vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
+          InvalidateElementsTreeView(SelectedNodes);
+          PostResetActiveTree;
+          vstNav.Invalidate;
+        end;
       finally
         Free;
       end;
 
     end;
   end;
+end;
 
-  for i := Low(SelectedNodes) to High(SelectedNodes) do
-    vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
-  InvalidateElementsTreeView(SelectedNodes);
-  PostResetActiveTree;
-  vstNav.Invalidate;
+
+procedure TfrmMain.mniViewCopyMultipleToSelectedRecordsClick(Sender: TObject);
+var
+  AllNodeDatas                : array of PViewNodeDatas;
+  NodeDatas                   : PViewNodeDatas;
+  NodeData                    : PNavNodeData;
+  Element                     : IwbElement;
+  Names                       : array of string;
+  MainRecords                 : array of IwbMainRecord;
+  MainRecordIndices           : array of Integer;
+  SourceMainRecord            : IwbMainRecord;
+  TargetMainRecord            : IwbMainRecord;
+  SelectedNodes               : TNodeArray;
+  i, j, k                     : Integer;
+  Node                        : PVirtualNode;
+begin
+  if not wbEditAllowed then
+    Exit;
+
+  SourceMainRecord := nil;
+  SetLength(AllNodeDatas, 0);
+  SetLength(Names, 0);
+  for Node in vstView.LevelNodes(0) do begin
+    NodeDatas := vstView.GetNodeData(Node);
+    if Assigned(NodeDatas) then begin
+      Element := nil;
+      if (vstView.FocusedColumn > 0) and (Pred(vstView.FocusedColumn) <= High(ActiveRecords)) then begin
+        Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+        if Assigned(Element) and not Assigned(SourceMainRecord) then
+          SourceMainRecord := Element.ContainingMainRecord;
+      end;
+      if not Assigned(Element) then
+        for i := Low(ActiveRecords) to High(ActiveRecords) do begin
+          Element := NodeDatas[i].Element;
+          if Assigned(Element) then
+            Break;
+        end;
+
+      if Assigned(Element) and (Element.Name <> 'Record Header') and not Element.Name.StartsWith('EDID') then begin
+        SetLength(AllNodeDatas, Succ(Length(AllNodeDatas)));
+        SetLength(Names, Length(AllNodeDatas));
+        AllNodeDatas[High(AllNodeDatas)] := NodeDatas;
+        Names[High(Names)] := Element.Name;
+      end;
+    end;
+  end;
+  if Length(AllNodeDatas) < 1 then
+    Exit;
+
+  SelectedNodes := vstNav.GetSortedSelection(True);
+  if Length(SelectedNodes) < 2 then
+    Exit;
+  SetLength(MainRecords, Length(SelectedNodes));
+  SetLength(MainRecordIndices, Length(SelectedNodes));
+  j := 0;
+  for i := Low(SelectedNodes) to High(SelectedNodes) do begin
+    NodeData := vstNav.GetNodeData(SelectedNodes[i]);
+    if Assigned(NodeData) and not SourceMainRecord.Equals(NodeData.Element) and
+      Supports(NodeData.Element, IwbMainRecord, MainRecords[j]) then begin
+        MainRecordIndices[j] := i;
+        Inc(j);
+      end;
+  end;
+  SetLength(MainRecords, j);
+  SetLength(MainRecordIndices, j);
+  if Length(MainRecords) < 1 then
+    Exit;
+
+  with TfrmFileSelect.Create(Self) do try
+
+    Caption := 'What subrecords do you want to copy?';
+
+    for i := Low(AllNodeDatas) to High(AllNodeDatas) do begin
+      CheckListBox1.AddItem(Names[i], nil);
+      CheckListBox1.Checked[Pred(CheckListBox1.Items.Count)] := True;
+    end;
+
+    ShowModal;
+
+    j := 0;
+    for i := 0 to Pred(CheckListBox1.Items.Count) do
+      if CheckListBox1.Checked[i] then begin
+        if j <> i then
+          AllNodeDatas[j] := AllNodeDatas[i];
+        Inc(j);
+      end;
+    SetLength(AllNodeDatas, j);
+    Names := nil; //not valid anymore
+  finally
+    Free;
+  end;
+  if Length(AllNodeDatas) < 1 then
+    Exit;
+
+  try
+    with TfrmFileSelect.Create(Self) do try
+
+      Caption := 'Which records should this value be copied to?';
+
+      for i := Low(MainRecords) to High(MainRecords) do begin
+        CheckListBox1.AddItem(MainRecords[i].Name, nil);
+        CheckListBox1.Checked[i] := True;
+      end;
+
+      ShowModal;
+
+      for j := Low(AllNodeDatas) to High(AllNodeDatas) do begin
+        NodeDatas := AllNodeDatas[j];
+
+        Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+        if Assigned(Element) then begin
+          for i := Low(MainRecords) to High(MainRecords) do begin
+            if CheckListBox1.Checked[i] then begin
+              if not EditWarn then
+                Exit;
+
+              wbCopyElementToRecord(Element, MainRecords[i], False, True)
+            end;
+          end;
+        end else begin
+          for k := Low(MainRecords) to High(MainRecords) do begin
+            if CheckListBox1.Checked[k] then begin
+              for i := Low(ActiveRecords) to High(ActiveRecords) do begin
+                Element := NodeDatas[i].Element;
+                if Assigned(Element) then begin
+                  TargetMainRecord := Element.ContainingMainRecord;
+                  if Assigned(TargetMainRecord) and MainRecords[k].Equals(TargetMainRecord) then begin
+                    if Element.IsRemoveable then begin
+                      if not EditWarn then
+                        Exit;
+                      Element.Remove;
+                      Element := nil;
+                      NodeDatas[i].Element := nil;
+                    end;
+                    Break;
+                  end;
+                end;
+              end;
+            end;
+          end;
+        end;
+      end;
+      for i := Low(MainRecords) to High(MainRecords) do
+        if CheckListBox1.Checked[i] then
+          MainRecords[i].UpdateRefs;
+    finally
+      Free;
+    end;
+  finally
+    for i := Low(SelectedNodes) to High(SelectedNodes) do
+      vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
+    InvalidateElementsTreeView(SelectedNodes);
+    PostResetActiveTree;
+    vstNav.Invalidate;
+  end;
 end;
 
 procedure TfrmMain.mniNavAddMastersClick(Sender: TObject);
@@ -11037,6 +11234,7 @@ begin
   mniViewRemoveFromSelected.Visible := False;
   mniViewSort.Visible := ComparingSiblings;
   mniViewCopyToSelectedRecords.Visible := False;
+  mniViewCopyMultipleToSelectedRecords.Visible := False;
   mniViewCompareReferencedRow.Visible := False;
 
   if not wbEditAllowed then
@@ -11085,6 +11283,7 @@ begin
         (Assigned(ActiveRecord) and (ActiveRecord._File.IsEditable)) or
         ((Length(CompareRecords) > 0) and (CompareRecords[0]._File.IsEditable))
         );
+      mniViewCopyMultipleToSelectedRecords.Visible := mniViewCopyToSelectedRecords.Visible;
       mniViewCompareReferencedRow.Visible := not wbTranslationMode and (Length(GetUniqueLinksTo(NodeDatas, Length(ActiveRecords))) > 1);
       mniViewNextMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
       mniViewPreviousMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;

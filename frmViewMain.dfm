@@ -80,10 +80,6 @@ object frmMain: TfrmMain
       object tbsView: TTabSheet
         Caption = 'View'
         OnShow = tbsViewShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object imgFlattr: TImage
           Left = 312
           Top = 520
@@ -313,7 +309,7 @@ object frmMain: TfrmMain
             end
             item
               Position = 1
-              Width = 235
+              Width = 233
               WideText = 'Values'
             end>
         end
@@ -394,6 +390,10 @@ object frmMain: TfrmMain
       object tbsInfo: TTabSheet
         Caption = 'Information'
         ImageIndex = 2
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object Memo1: TMemo
           AlignWithMargins = True
           Left = 3
@@ -1330,7 +1330,7 @@ object frmMain: TfrmMain
         end
         item
           Position = 2
-          Width = 129
+          Width = 125
           WideText = 'Name'
         end>
     end
@@ -1745,6 +1745,10 @@ object frmMain: TfrmMain
     object mniViewCopyToSelectedRecords: TMenuItem
       Caption = 'Copy to selected records'
       OnClick = mniViewCopyToSelectedRecordsClick
+    end
+    object mniViewCopyMultipleToSelectedRecords: TMenuItem
+      Caption = 'Copy multiple to selected records'
+      OnClick = mniViewCopyMultipleToSelectedRecordsClick
     end
     object N12: TMenuItem
       Caption = '-'
