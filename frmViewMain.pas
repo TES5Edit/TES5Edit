@@ -3958,6 +3958,7 @@ begin
   wbSortGroupRecord := Settings.ReadBool('Options', 'SortGroupRecord', wbSortGroupRecord);
   wbRemoveOffsetData := Settings.ReadBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
   wbShowGroupRecordCount := Settings.ReadBool('Options', 'ShowGroupRecordCount', wbShowGroupRecordCount);
+  wbAutoCompareSelectedLimit := Settings.ReadInteger('Options', 'AutoCompareSelectedLimit', wbAutoCompareSelectedLimit);
   wbClampFormID := Settings.ReadBool('Options', 'ClampFormID', wbClampFormID);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
@@ -10116,6 +10117,7 @@ begin
     cbRemoveOffsetData.Checked := wbRemoveOffsetData;
     cbShowFlagEnumValue.Checked := wbShowFlagEnumValue;
     cbShowGroupRecordCount.Checked := wbShowGroupRecordCount;
+    sedAutoCompareSelectedLimit.Value := wbAutoCompareSelectedLimit;
     cbSimpleRecords.Checked := wbSimpleRecords;
     cbClampFormID.Checked := wbClampFormID;
     edColumnWidth.Text := IntToStr(ColumnWidth);
@@ -10152,6 +10154,7 @@ begin
     wbRemoveOffsetData := cbRemoveOffsetData.Checked;
     wbShowFlagEnumValue := cbShowFlagEnumValue.Checked;
     wbShowGroupRecordCount := cbShowGroupRecordCount.Checked;
+    wbAutoCompareSelectedLimit := sedAutoCompareSelectedLimit.Value;
     wbSimpleRecords := cbSimpleRecords.Checked;
     wbClampFormID := cbClampFormID.Checked;
     ColumnWidth := StrToIntDef(edColumnWidth.Text, ColumnWidth);
@@ -10184,6 +10187,7 @@ begin
     Settings.WriteBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
     Settings.WriteBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
     Settings.WriteBool('Options', 'ShowGroupRecordCount', wbShowGroupRecordCount);
+    Settings.WriteInteger('Options', 'AutoCompareSelectedLimit', wbAutoCompareSelectedLimit);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
     Settings.WriteBool('Options', 'ClampFormID', wbClampFormID);
     Settings.WriteInteger('Options', 'ColumnWidth', ColumnWidth);
@@ -13363,6 +13367,10 @@ var
   NodeData                    : PNavNodeData;
   Element                     : IwbElement;
   s, t, u                     : string;
+
+  SelectedNodes               : TNodeArray;
+  MainRecords                 : TDynMainRecords;
+  i                           : Integer;
 begin
   NodeData := Sender.GetNodeData(Sender.FocusedNode);
   if Assigned(NodeData) then begin
@@ -13396,12 +13404,24 @@ begin
   else begin
     lblPath.Visible := False;
   end;
-  if Supports(Element, IwbMainRecord) then
-    SetActiveRecord(Element as IwbMainRecord)
-  else if Supports(Element, IwbDataContainer) then
-    SetActiveContainer(Element as IwbDataContainer)
-  else
-    ClearActiveContainer;
+
+  SelectedNodes := vstNav.GetSortedSelection(True);
+  if (Length(SelectedNodes) > 1) and (Length(SelectedNodes) < wbAutoCompareSelectedLimit) then begin
+    SetLength(MainRecords, Length(SelectedNodes));
+    for i := Low(SelectedNodes) to High(SelectedNodes) do begin
+      NodeData := vstNav.GetNodeData(SelectedNodes[i]);
+      MainRecords[i] := NodeData.Element as IwbMainRecord;
+    end;
+
+    SetActiveRecord(MainRecords);
+  end else begin
+    if Supports(Element, IwbMainRecord) then
+      SetActiveRecord(Element as IwbMainRecord)
+    else if Supports(Element, IwbDataContainer) then
+      SetActiveContainer(Element as IwbDataContainer)
+    else
+      ClearActiveContainer;
+  end;
 end;
 
 function FindSortElement(const aElement: IwbElement): IwbElement;
