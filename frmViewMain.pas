@@ -3555,7 +3555,7 @@ begin
             CheckListBox1.Items.BeginUpdate;
             try
               CheckListBox1.Items.Clear;
-              CheckListBox1.Items.AddStrings(Modules.ToStrings);
+              CheckListBox1.Items.AddStrings(Modules.ToStrings(True));
             finally
               CheckListBox1.Items.EndUpdate;
             end;
@@ -3668,7 +3668,7 @@ begin
         Modules.ActivateMasters;         //Activate all required masters in their current load order position first
         Modules := Modules.SimulateLoad; //Simulate a load, which might re-order masters
         sl.Clear;
-        sl.AddStrings(Modules.ToStrings);
+        sl.AddStrings(Modules.ToStrings(False));
       end;
 
       {make sure messages for the memo have been processed}

@@ -2948,12 +2948,29 @@ begin
 end;
 
 function TwbFile.GetName: string;
+var
+  s: string;
 begin
   Result := GetFileName;
   if fsIsHardcoded in flStates then
     Result := wbGameName + '.exe';
   if flLoadOrder >= 0 then
     Result := '['+flLoadOrderFileID.ToString+'] ' + Result;
+
+  s := '';
+  try
+    if GetIsESM then
+      s := s + '<ESM>';
+    if GetIsESL then
+      s := s + '<ESL>';
+    if GetIsLocalized then
+      s := s + '<Localized>';
+  except end;
+  if s <> '' then
+    Result := Result + ' ' + s;
+  if not (fsIsHardcoded in flStates) then
+    if flCRC32 <> 0 then
+      Result := Result + ' ('+IntToHex64(flCRC32, 8)+')';
 end;
 
 function TwbFile.GetRecord(aIndex: Integer): IwbMainRecord;

@@ -59,23 +59,28 @@ type
 
     miFlags          : TwbModuleFlags;
 
-    miPluginsIndex   : Integer;
     miOfficialIndex  : Integer;
     miCCIndex        : Integer;
-
+    miPluginsIndex   : Integer;
     miLoadOrderIndex : Integer;
+
+    miCombinedIndex  : Integer;
 
     function IsValid: Boolean;
     function HasIndex: Boolean;
     function IsActive: Boolean;
     procedure ActivateMasters(aRecursive: Boolean);
     procedure Activate(aActivateMasters: Boolean = False);
+    function LoadOrderDescription: string;
+    function FlagsDescription: string;
+    function Description: string;
+    function ToString(aInclDesc: Boolean): string;
   end;
 
   TwbModuleInfos = array of PwbModuleInfo;
 
   TwbModuleInfosHelper = record helper for TwbModuleInfos
-    function ToStrings: TDynStrings;
+    function ToStrings(aInclDesc: Boolean): TDynStrings;
     procedure DeactivateAll;
     procedure ActivateMasters;
     function SimulateLoad: TwbModuleInfos;
@@ -113,6 +118,8 @@ function wbModuleByName(const aName: string): PwbModuleInfo;
 var
   i: Integer;
 begin
+  if aName = '' then
+    Exit(@_InvalidModule);
   wbLoadModules;
   if _ModulesByName.Find(aName, i) then
     Result := Pointer(_ModulesByName.Objects[i])
@@ -152,7 +159,7 @@ begin
   end;
 end;
 
-function _ModulesLoadOrderCompareLoadOrder(Item1, Item2: Pointer): Integer;
+function _ModulesLoadOrderCompareCombined(Item1, Item2: Pointer): Integer;
 var
   a, b: PwbModuleInfo;
 begin
@@ -166,7 +173,7 @@ begin
     Result := CmpI32(a.miCCIndex, b.miCCIndex);
     if Result = 0 then begin
       if (mfIsESM in a.miFlags) = (mfIsESM in b.miFlags) then begin
-        Result := CmpI32(a.miLoadOrderIndex, b.miLoadOrderIndex);
+        Result := CmpI32(a.miCombinedIndex, b.miCombinedIndex);
         if Result = 0 then begin
           Result := CmpI32(a.miPluginsIndex, b.miPluginsIndex);
           if Result = 0 then begin
@@ -261,9 +268,10 @@ begin
           miMasters[j] := Pointer(_ModulesByName.Objects[k])
         else
           Include(miFlags, mfMastersMissing);
-      miPluginsIndex  := High(Integer);
-      miOfficialIndex := High(Integer);
-      miCCIndex       := High(Integer);
+      miOfficialIndex  := High(Integer);
+      miCCIndex        := High(Integer);
+      miPluginsIndex   := High(Integer);
+      miLoadOrderIndex := High(Integer);
     end;
 
   if Length(_Modules) < 1 then
@@ -352,19 +360,21 @@ begin
             Delete(s, j, High(Integer));
           s := Trim(s);
           ThisModule := wbModuleByName(s);
-          if ThisModule.IsValid then
-            sl[i] := s
-          else
+          if ThisModule.IsValid then begin
+            sl[i] := s;
+            sl.Objects[i] := Pointer(i);
+          end else
             sl.Delete(i);
         end;
         if sl.Count > 1 then begin
           for i := Low(_ModulesLoadOrder) to High(_ModulesLoadOrder) do
             with _ModulesLoadOrder[i]^ do
-              miLoadOrderIndex := Succ(i) * 1000;
+              miCombinedIndex := Succ(i) * 1000;
 
           for i := 1 to Pred(sl.Count) do begin
             ThisModule := wbModuleByName(sl[i]);
             if ThisModule.IsValid then begin
+              ThisModule.miLoadOrderIndex := Integer(sl.Objects[i]);
               if not ThisModule.HasIndex then begin
                 PrevModule := @_InvalidModule;
                 for j := Pred(i) downto 0 do begin
@@ -373,14 +383,14 @@ begin
                     Break;
                 end;
                 if PrevModule.HasIndex then begin
-                  ThisModule.miLoadOrderIndex := PrevModule.miLoadOrderIndex + 1;
+                  ThisModule.miCombinedIndex := PrevModule.miCombinedIndex + 1;
                   Include(ThisModule.miFlags, mfHasIndex);
                 end;
               end;
             end;
           end;
 
-          wbMergeSort(@_ModulesLoadOrder[0], Length(_ModulesLoadOrder), _ModulesLoadOrderCompareLoadOrder);
+          wbMergeSort(@_ModulesLoadOrder[0], Length(_ModulesLoadOrder), _ModulesLoadOrderCompareCombined);
         end;
       finally
         sl.Free;
@@ -389,7 +399,7 @@ begin
   end;
 
   for i := Low(_ModulesLoadOrder) to High(_ModulesLoadOrder) do
-    _ModulesLoadOrder[i].miLoadOrderIndex := i;
+    _ModulesLoadOrder[i].miCombinedIndex := i;
 end;
 
 function wbModulesByLoadOrder:  TwbModuleInfos;
@@ -418,6 +428,22 @@ begin
           Activate(aRecursive);
 end;
 
+function TwbModuleInfo.Description: string;
+begin
+  Result := Trim(LoadOrderDescription + ' ' + FlagsDescription);
+end;
+
+function TwbModuleInfo.FlagsDescription: string;
+begin
+  Result := '';
+  if mfHasESMFlag in miFlags then
+    Result := Result + '<ESM>';
+  if mfHasESLFlag in miFlags then
+    Result := Result + '<ESL>';
+  if mfMastersMissing in miFlags then
+    Result := Result + '<MissingMasters>';
+end;
+
 function TwbModuleInfo.HasIndex: Boolean;
 begin
   Result := IsValid and (mfHasIndex in miFlags);
@@ -431,6 +457,38 @@ end;
 function TwbModuleInfo.IsValid: Boolean;
 begin
   Result := not ((mfInvalid in miFlags) or (@Self = @_InvalidModule));
+end;
+
+function TwbModuleInfo.LoadOrderDescription: string;
+begin
+  Result := '';
+  if miOfficialIndex = Low(Integer) then
+    Result := Result + '[GameMaster]'
+  else if miOfficialIndex = -1 then
+    Result := Result + '[Update]'
+  else if miOfficialIndex < High(Integer) then
+    Result := Result + '[DLC:'+miOfficialIndex.ToString+']';
+  if miCCIndex < High(Integer) then
+    Result := Result + '[CC:'+miCCIndex.ToString+']';
+  if Result = '' then begin
+    if mfIsESM in miFlags then
+      Result := Result + '[ESM]';
+
+    if miPluginsIndex < High(Integer) then
+      Result := Result + '[Plugins.txt:'+miPluginsIndex.ToString+']';
+    if miLoadOrderIndex < High(Integer) then
+      Result := Result + '[LoadOrder.txt:'+miLoadOrderIndex.ToString+']';
+
+    if (Result = '') or (Result = '[ESM]') then
+      Result := Result + '[Time:'+FormatDateTime('yyyy-mm-dd hh:mm:ss', miDateTime)+']';
+  end;
+end;
+
+function TwbModuleInfo.ToString(aInclDesc: Boolean): string;
+begin
+  Result := miName;
+  if aInclDesc then
+    Result := Trim(Result + '    ' + Description);
 end;
 
 { TwbModuleInfosHelper }
@@ -502,13 +560,13 @@ begin
   Result := NewLoadOrder;
 end;
 
-function TwbModuleInfosHelper.ToStrings: TDynStrings;
+function TwbModuleInfosHelper.ToStrings(aInclDesc: Boolean): TDynStrings;
 var
   i: Integer;
 begin
   SetLength(Result ,Length(Self));
   for i := Low(Self) to High(Self) do
-    Result[i] := Self[i].miName;
+    Result[i] := Self[i].ToString(aInclDesc);
 end;
 
 initialization
