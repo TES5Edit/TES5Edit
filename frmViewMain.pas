@@ -948,7 +948,7 @@ end;
 
 procedure DoProcessMessages;
 begin
-  if (ProcessMessagesLockCount < 1) and not frmMain.Enabled then begin
+  if ProcessMessagesLockCount < 1 then begin
     LockProcessMessages;
     try
       Application.ProcessMessages;
@@ -2131,9 +2131,11 @@ begin
       Inc(ErrorsCount);
     end;
     wbProgressCallback('    ' + aElement.Path + ' -> ' + Error);
-  end else
+  end else begin
     // passing through last record with error
     Result := LastRecord;
+    wbProgressCallback('');
+  end;
   if Supports(aElement, IwbContainerElementRef, Container) then
     for i := 0 to Pred(Container.ElementCount) do
       Result := CheckForErrorsLinear(Container.Elements[i], Result);
