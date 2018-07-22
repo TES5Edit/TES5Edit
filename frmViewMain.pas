@@ -3566,7 +3566,7 @@ begin
               AgeDateTime := Modules[0].miDateTime;
               for i := 1 to High(Modules) do begin
                 AgeDateTime := AgeDateTime + (1/24/60);
-                TFile.SetLastWriteTime(wbDataPath + Modules[i].miName, AgeDateTime);
+                TFile.SetLastWriteTime(wbDataPath + Modules[i].miOriginalName, AgeDateTime);
               end;
             end;
           end;
@@ -11114,7 +11114,7 @@ begin
   with TfrmFileSelect.Create(nil) do try
     for i := Low(Files) to High(Files) do
       if (Files[i].IsEditable) and (esUnsaved in Files[i].ElementStates) or wbTestWrite then begin
-        CheckListBox1.AddItem(Files[i].FileName, Pointer(Files[i]));
+        CheckListBox1.AddItem(Files[i].FileNameOnDisk, Pointer(Files[i]));
         CheckListBox1.Checked[Pred(CheckListBox1.Count)] := esUnsaved in Files[i].ElementStates;
         SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 0;
       end;

@@ -158,12 +158,21 @@ function MakeDataFileName(FileName, DataPath: String): String;
 function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
 function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
 
+function wbStripDotGhost(const aFileName: string): string;
+
 implementation
 
 uses
   System.SyncObjs,
   StrUtils,
   wbSort;
+
+function wbStripDotGhost(const aFileName: string): string;
+begin
+  Result := aFileName;
+  if aFileName.EndsWith(csDotGhost, True) then
+    SetLength(Result, Length(Result) - Length(csDotGhost));
+end;
 
 procedure wbLeveledListCheckCircular(const aMainRecord: IwbMainRecord; aStack: PnxLeveledListCheckCircularStack);
 var

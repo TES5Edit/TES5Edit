@@ -566,6 +566,7 @@ type
   TwbFile = class(TwbContainer, IwbFile, IwbFileInternal)
   protected
     flFileName               : string;
+    flFileNameOnDisk         : string;
     flLoadOrder              : Integer;
     flLoadOrderFileID        : TwbFileID;
     flCompareTo              : string;
@@ -631,6 +632,7 @@ type
 
     {---IwbFile---}
     function GetFileName: string;
+    function GetFileNameOnDisk: string;
     function GetUnsavedSince: TDateTime; inline;
     function HasMaster(const aFileName: string): Boolean;
     function GetMaster(aIndex: Integer): IwbFile; inline;
@@ -2417,6 +2419,7 @@ begin
   flCompareTo := aCompareTo;
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
+  flFileNameOnDisk := flFileName;
   flOpenFile;
   Scan;
 end;
@@ -2435,6 +2438,7 @@ begin
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
+  flFileNameOnDisk := flFileName;
   Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
   if wbGameMode = gmFNV then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.34'
@@ -2614,6 +2618,8 @@ const
   FileShareMode: array[Boolean] of Cardinal = (FILE_SHARE_READ, 0);
   PageProtection: array[Boolean] of Cardinal = (PAGE_READONLY, PAGE_READWRITE);
   ViewAccessMode: array[Boolean] of Cardinal = (FILE_MAP_READ, FILE_MAP_READ or FILE_MAP_WRITE);
+var
+  s: string;
 begin
   flProgress('Loading file');
 
@@ -2626,8 +2632,31 @@ begin
     FILE_FLAG_RANDOM_ACCESS,
     0
   );
-  if (flFileHandle = INVALID_HANDLE_VALUE) or (flFileHandle = 0) then
-    RaiseLastOSError;
+  if (flFileHandle = INVALID_HANDLE_VALUE) or (flFileHandle = 0) then begin
+    if GetLastError = ERROR_FILE_NOT_FOUND then begin
+      s := flFileName + '.ghost';
+      if FileExists(s) then begin
+        flProgress('File is .ghost''ed, adjusting file name...');
+
+        flFileHandle := CreateFile(
+          PChar(s),
+          FileAccessMode[False],
+          FileShareMode[False],
+          nil,
+          OPEN_EXISTING,
+          FILE_FLAG_RANDOM_ACCESS,
+          0
+        );
+        if (flFileHandle <> INVALID_HANDLE_VALUE) and (flFileHandle <> 0) then begin
+          flFileNameOnDisk := s;
+          Include(flStates, fsIsGhost);
+        end;
+      end;
+    end;
+
+    if (flFileHandle = INVALID_HANDLE_VALUE) or (flFileHandle = 0) then
+      RaiseLastOSError;
+  end;
 
   flMapHandle := CreateFileMapping(
     flFileHandle,
@@ -2770,6 +2799,11 @@ end;
 function TwbFile.GetFileName: string;
 begin
   Result := ExtractFileName(flFileName);
+end;
+
+function TwbFile.GetFileNameOnDisk: string;
+begin
+  Result := ExtractFileName(flFileNameOnDisk);
 end;
 
 function TwbFile.GetFileStates: TwbFileStates;
@@ -2965,6 +2999,11 @@ begin
       s := s + '<ESL>';
     if GetIsLocalized then
       s := s + '<Localized>';
+    if fsIsGhost in flStates then begin
+      if s <> '' then
+        s := ' ' + s;
+      s := '[Ghost]' + s;
+    end;
   except end;
   if s <> '' then
     Result := Result + ' ' + s;
@@ -16873,6 +16912,7 @@ begin
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
+  flFileNameOnDisk := flFileName;
 end;
 
 procedure TwbFileSource.GetMasters(aMasters: TStrings);
