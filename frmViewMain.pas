@@ -10898,16 +10898,8 @@ begin
       mniViewMoveUp.Visible := not wbTranslationMode and Assigned(Element) and Element.CanMoveUp;
       mniViewMoveDown.Visible := not wbTranslationMode and Assigned(Element) and Element.CanMoveDown;
       mniViewRemoveFromSelected.Visible := not wbTranslationMode and mniViewRemove.Visible and ComparingSiblings;
-      mniViewCopyToSelectedRecords.Visible :=
-        (vstView.FocusedColumn > 0) and
-        not wbTranslationMode and
-        Assigned(Element) and
-        (Length(vstNav.GetSortedSelection(True)) > 1) and
-        (
-        (Assigned(ActiveRecord) and (ActiveRecord._File.IsEditable)) or
-        ((Length(CompareRecords) > 0) and (CompareRecords[0]._File.IsEditable))
-        );
-      mniViewCopyMultipleToSelectedRecords.Visible := mniViewCopyToSelectedRecords.Visible;
+      mniViewCopyMultipleToSelectedRecords.Visible := not wbTranslationMode and ComparingSiblings;
+      mniViewCopyToSelectedRecords.Visible := mniViewCopyMultipleToSelectedRecords.Visible and Assigned(Element);
       mniViewCompareReferencedRow.Visible := not wbTranslationMode and (Length(GetUniqueLinksTo(NodeDatas, Length(ActiveRecords))) > 1);
       mniViewNextMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
       mniViewPreviousMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
