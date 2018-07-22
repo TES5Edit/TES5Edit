@@ -459,6 +459,7 @@ begin
   Result.Tag := Pred(lstCEDElement.Count);
   Result.ParentBackground := False;
   Result.Color := ColorElementToColor(elColor);
+  Result.StyleElements := [];
   Result.OnClick := ColorEditorClick;
   // list of color editors, indexes are the same for editors and elements
   lstCED.Add(Result);
