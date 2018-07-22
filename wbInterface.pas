@@ -25,10 +25,16 @@ uses
   Graphics;
 
 const
-  VersionString  = '3.2.3h EXPERIMENTAL';
+  VersionString  = '3.2.3i EXPERIMENTAL';
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
   wbHardcodedDat = '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
+
+const
+  csDotGhost = '.ghost';
+  csDotEsm   = '.esm';
+  csDotEsl   = '.esl';
+  csDotEsp   = '.esp';
 
 type
   TwbProgressCallback = procedure(const aStatus: string);
@@ -846,7 +852,8 @@ type
     fsIsGameMaster,
     fsIsTemporary,
     fsHasNoFormID,
-    fsRefsBuild
+    fsRefsBuild,
+    fsIsGhost
   );
 
   TwbFileStates = set of TwbFileState;
@@ -857,6 +864,7 @@ type
   IwbFile = interface(IwbContainer)
     ['{38AA15A6-F652-45C7-B875-9CB502E5DA92}']
     function GetFileName: string;
+    function GetFileNameOnDisk: string;
     function GetUnsavedSince: TDateTime;
     function GetMaster(aIndex: Integer): IwbFile;
     function GetMasterCount: Integer;
@@ -908,6 +916,8 @@ type
 
     property FileName: string
       read GetFileName;
+    property FileNameOnDisk: string
+      read GetFileNameOnDisk;
     property UnsavedSince: TDateTime
       read GetUnsavedSince;
 

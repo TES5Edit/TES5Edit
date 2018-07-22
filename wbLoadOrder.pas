@@ -32,6 +32,7 @@ type
 
   TwbModuleFlag = (
     mfInvalid,
+    mfGhost,
     mfMastersMissing,
     mfHasESMFlag,
     mfHasESLFlag,
@@ -47,12 +48,11 @@ type
 
   PwbModuleInfo = ^TwbModuleInfo;
   TwbModuleInfo = record
+    miOriginalName   : string;
     miName           : string;
-    miUnghostedName  : string;
     miDateTime       : TDateTime;
 
     miExtension      : TwbModuleExtension;
-    miIsGhost        : Boolean;
 
     miMasterNames    : TDynStrings;
     miMasters        : array of PwbModuleInfo;
@@ -97,6 +97,8 @@ uses
   System.Classes,
   System.SysUtils,
   System.IOUtils,
+  System.Generics.Defaults,
+  System.Generics.Collections,
   wbImplementation,
   wbSort;
 
@@ -107,12 +109,6 @@ var
   _ModulesByName    : TStringList;
   _InvalidModule    : TwbModuleInfo = (miFlags: [mfInvalid]);
   _ModulesLoadOrder : TwbModuleInfos;
-
-const
-  csDotGhost = '.ghost';
-  csDotEsm   = '.esm';
-  csDotEsl   = '.esl';
-  csDotEsp   = '.esp';
 
 function wbModuleByName(const aName: string): PwbModuleInfo;
 var
@@ -210,23 +206,29 @@ begin
     Exit;
 
   Files := TDirectory.GetFiles(wbDataPath);
+  i := Length(Files);
+  if i > 1 then
+    wbMergeSort(@Files[0], i, TListSortCompare(@CompareText));
+
   SetLength(_Modules, Length(Files));
   j := 0;
   for i := Low(Files) to High(Files) do
     with _Modules[j] do begin
       miFlags := [];
-      miName := ExtractFileName(Files[i]);
-      miIsGhost := miName.EndsWith('.ghost', True);
-      if miIsGhost then
-        miUnghostedName := Copy(miName, 1, Length(miName) - Length(csDotGhost))
-      else
-        miUnghostedName := miName;
+      miOriginalName := ExtractFileName(Files[i]);
+      if miOriginalName.EndsWith('.ghost', True) then begin
+        miName := Copy(miOriginalName, 1, Length(miOriginalName) - Length(csDotGhost));
+        Include(miFlags, mfGhost);
+        if (j > 0) and SameText(miName, _Modules[Pred(j)].miName) then
+          Continue; {ignore ghost if original exists}
+      end else
+        miName := miOriginalName;
       miExtension := meUnknown;
-      if miUnghostedName.EndsWith(csDotEsm) then
+      if miName.EndsWith(csDotEsm, True) then
         miExtension := meESM
-      else if miUnghostedName.EndsWith(csDotEsp) then
+      else if miName.EndsWith(csDotEsp, True) then
         miExtension := meESP
-      else if miUnghostedName.EndsWith(csDotEsl) and wbIsEslSupported then
+      else if miName.EndsWith(csDotEsl, True) and wbIsEslSupported then
         miExtension := meESL;
       if miExtension = meUnknown then
         Continue;
@@ -234,9 +236,9 @@ begin
       if miExtension in [meESM, meESL] then
         Include(miFlags, mfIsESM);
 
-      miDateTime := TFile.GetLastWriteTime(wbDataPath + miName);
+      miDateTime := TFile.GetLastWriteTime(wbDataPath + miOriginalName);
 
-      if not wbMastersForFile(wbDataPath+miName, miMasterNames, @IsESM, @IsESL) then
+      if not wbMastersForFile(wbDataPath+miOriginalName, miMasterNames, @IsESM, @IsESL) then
         Continue;
 
       if IsESM then begin
@@ -436,6 +438,8 @@ end;
 function TwbModuleInfo.FlagsDescription: string;
 begin
   Result := '';
+  if mfGhost in miFlags then
+    Result := Result + '<Ghost>';
   if mfHasESMFlag in miFlags then
     Result := Result + '<ESM>';
   if mfHasESLFlag in miFlags then
