@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, ExtCtrls, wbInterface,
-  Vcl.Styles.Utils.SystemMenu;
+  Vcl.Styles.Utils.SystemMenu, Vcl.Samples.Spin;
 
 type
   TfrmOptions = class(TForm)
@@ -57,6 +57,9 @@ type
     edRowHeight: TEdit;
     Label6: TLabel;
     cbShowTip: TCheckBox;
+    sedAutoCompareSelectedLimit: TSpinEdit;
+    Label7: TLabel;
+    Label8: TLabel;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);

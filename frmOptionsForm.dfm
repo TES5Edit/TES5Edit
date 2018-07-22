@@ -315,6 +315,20 @@ object frmOptions: TfrmOptions
         Height = 13
         Caption = 'Row Height'
       end
+      object Label7: TLabel
+        Left = 16
+        Top = 235
+        Width = 267
+        Height = 13
+        Caption = 'Auto "Compare Selected" when multi-selecting less than'
+      end
+      object Label8: TLabel
+        Left = 359
+        Top = 235
+        Width = 36
+        Height = 13
+        Caption = 'records'
+      end
       object clbConflictThis: TColorBox
         Left = 223
         Top = 35
@@ -418,6 +432,16 @@ object frmOptions: TfrmOptions
         Width = 51
         Height = 21
         TabOrder = 8
+      end
+      object sedAutoCompareSelectedLimit: TSpinEdit
+        Left = 289
+        Top = 232
+        Width = 64
+        Height = 22
+        MaxValue = 999999
+        MinValue = 0
+        TabOrder = 9
+        Value = 0
       end
     end
   end
