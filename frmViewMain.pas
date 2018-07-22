@@ -5434,7 +5434,8 @@ begin
           if j < 1 then
             Exit;
 
-          wbCopyElementToRecord(Element, MainRecords[i], False, True);
+          for i := Low(MainRecords) to High(MainRecords) do
+            wbCopyElementToRecord(Element, MainRecords[i], False, True);
         finally
           for i := Low(SelectedNodes) to High(SelectedNodes) do
             vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
