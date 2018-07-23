@@ -570,6 +570,7 @@ type
     flLoadOrder              : Integer;
     flLoadOrderFileID        : TwbFileID;
     flCompareTo              : string;
+    flCompareToFile          : IwbFile;
     flStates                 : TwbFileStates;
     flUnsavedSince           : TDateTime;
 
@@ -2403,6 +2404,14 @@ begin
   end;
 end;
 
+function wbExpandFileName(const aFileName: string): string;
+begin
+  if ExtractFilePath(aFileName) = '' then
+    Result := wbDataPath + ExtractFileName(aFileName)
+  else
+    Result := aFileName;
+end;
+
 constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aOnlyHeader: Boolean; IsTemporary: Boolean = False);
 begin
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
@@ -2412,11 +2421,11 @@ begin
     Include(flStates, fsIsCompareLoad);
     if SameText(ExtractFileName(aFileName), wbGameName + wbHardcodedDat) then
       Include(flStates, fsIsHardcoded);
+    flCompareTo := wbExpandFileName(aCompareTo);
   end else if SameText(ExtractFileName(aFileName), wbGameName + '.esm') then
     Include(flStates, fsIsGameMaster);
   if aOnlyHeader then
     Include(flStates, fsOnlyHeader);
-  flCompareTo := aCompareTo;
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
   flFileNameOnDisk := flFileName;
@@ -3483,28 +3492,33 @@ begin
   if fsOnlyHeader in flStates then
     Exit;
 
-  if flLoadOrder >= 0 then begin
-    if wbIsEslSupported then begin
-      if fsIsCompareLoad in flStates then begin
-        if FilesMap.Find(flCompareTo, i) then
-          flLoadOrderFileID := IwbFile(Pointer(FilesMap.Objects[i])).LoadOrderFileID;
-      end else begin
-        if Header.IsESL and not wbIgnoreESL then begin
-          if _NextLightSlot >= $FFF then
-            raise Exception.Create('Too many light modules');
-          flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
-          Inc(_NextLightSlot);
-        end else begin
-          if _NextFullSlot >= $FE then
-            raise Exception.Create('Too many full modules');
-          flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
-          Inc(_NextFullSlot);
-        end;
-      end;
+  if fsIsCompareLoad in flStates then begin
+    if not Assigned(flCompareToFile) then
+      if FilesMap.Find(flCompareTo, i) then
+        flCompareToFile := IwbFile(Pointer(FilesMap.Objects[i]));
+    if Assigned(flCompareToFile) then
+      flLoadOrderFileID := flCompareToFile.LoadOrderFileID
+    else
+      flLoadOrderFileID := TwbFileID.Create($FF);
+  end else begin
+    if flLoadOrder >= 0 then begin
+      if wbIsEslSupported then begin
+          if Header.IsESL and not wbIgnoreESL then begin
+            if _NextLightSlot >= $FFF then
+              raise Exception.Create('Too many light modules');
+            flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
+            Inc(_NextLightSlot);
+          end else begin
+            if _NextFullSlot >= $FE then
+              raise Exception.Create('Too many full modules');
+            flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
+            Inc(_NextFullSlot);
+          end;
+       end;
     end else begin
-      if flLoadOrder > $FF then
-        raise Exception.Create('Too many modules');
-      flLoadOrderFileID := TwbFileID.Create(flLoadOrder);
+        if flLoadOrder > $FF then
+          raise Exception.Create('Too many modules');
+        flLoadOrderFileID := TwbFileID.Create(flLoadOrder);
     end;
   end;
 
@@ -15276,14 +15290,6 @@ begin
   FilesMap.Clear;
   _NextFullSlot := 0;
   _NextLightSlot := 0;
-end;
-
-function wbExpandFileName(const aFileName: string): string;
-begin
-  if ExtractFilePath(aFileName) = '' then
-    Result := wbDataPath + ExtractFileName(aFileName)
-  else
-    Result := aFileName;
 end;
 
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
