@@ -3500,8 +3500,8 @@ begin
       flLoadOrderFileID := flCompareToFile.LoadOrderFileID
     else
       flLoadOrderFileID := TwbFileID.Create($FF);
-  end else begin
-    if flLoadOrder >= 0 then begin
+  end else
+    if flLoadOrder >= 0 then
       if wbIsEslSupported then begin
           if Header.IsESL and not wbIgnoreESL then begin
             if _NextLightSlot >= $FFF then
@@ -3514,13 +3514,11 @@ begin
             flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
             Inc(_NextFullSlot);
           end;
-       end;
-    end else begin
+      end else begin
         if flLoadOrder > $FF then
           raise Exception.Create('Too many modules');
         flLoadOrderFileID := TwbFileID.Create(flLoadOrder);
-    end;
-  end;
+      end;
 
   MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
   if Assigned(MasterFiles) then
