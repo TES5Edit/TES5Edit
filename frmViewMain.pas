@@ -928,7 +928,8 @@ uses
   frmLogAnalyzerForm,
   frmLODGenForm,
   frmOptionsForm,
-  frmTipForm;
+  frmTipForm,
+  frmModuleSelectForm;
 
 var
   LastUpdate               : UInt64;
@@ -977,34 +978,6 @@ end;
 
 var
   NoNodes                     : TNodeArray;
-
-var
-  wbDarkMode : Boolean = False;
-
-function wbLighter(Color: TColor; Amount: Double = 0.5): TColor;
-begin
-  if wbDarkMode then
-    Result := Darker(Color, Amount * 0.95)
-  else
-    Result := Lighter(Color, Amount);
-end;
-
-function wbDarker(Color: TColor; Amount: Double = 0.25): TColor;
-begin
-  if wbDarkMode then
-    Result := Lighter(Color, Amount)
-  else
-    Result := Color;
-end;
-
-function wbIsDarkMode: Boolean;
-var
-  H, S, BkL, TxL: extended;
-begin
-  RGBtoHSL(ColToRGBTriple(clWindow), H, S, BkL);
-  RGBtoHSL(ColToRGBTriple(clWindowText), H, S, TxL);;
-  Result := BkL < TxL;
-end;
 
 function Displayable(aSignature: TwbSignature): String;
 var
@@ -3340,16 +3313,6 @@ begin
   Result := wbContainerHandler.OpenResourceData(aContainerName, aFileName);
 end;
 
-type
-  TModuleInfo = class(TStringList)
-  public
-    IsESM      : Boolean;
-    IsESL      : Boolean;
-    IsOfficial : Boolean;
-    IsCC       : Boolean;
-    Taken      : Boolean;
-  end;
-
 procedure TfrmMain.DoInit;
 var
   i, j, k, l, m : Integer;
@@ -3484,10 +3447,10 @@ begin
   AddMessage('Using plugin list: ' + wbPluginsFileName);
   if not FileExists(wbPluginsFileName) then begin
     // plugins file could be missing in Fallout 4 and SSE since DLCs are loaded automatically
-    if (wbToolSource in [tsPlugins]) and not (wbGameMode in [gmFO4, gmFO4VR, gmTES5VR, gmSSE]) then begin
+{    if (wbToolSource in [tsPlugins]) and not (wbGameMode in [gmFO4, gmFO4VR, gmTES5VR, gmSSE]) then begin
       AddMessage('Fatal: Could not find plugin list');
       Exit;
-    end else
+    end else}
       AddMessage('Warning: Could not find plugin list');
   end;
 
@@ -3598,25 +3561,39 @@ begin
             end;
           end;
 
+        if wbToolSource in [tsPlugins] then begin
+          with TfrmModuleSelect.Create(Self) do try
+            sl.Clear;
+            if ShowModal = mrOk then
+              sl.AddStrings(LoadedModules.ToStrings(False));
+            if sl.Count < 1 then begin
+              frmMain.Close;
+              Exit;
+            end;
+          finally
+            Free;
+          end;
+        end else begin
           if wbToolSource in [tsPlugins] then
             for i := 0 to Pred(CheckListBox1.Items.Count) do
               CheckListBox1.Checked[i] := (mfActive in Modules[i].miFlags);
 
-        if not ((wbToolMode in wbAutoModes) or wbQuickShowConflicts) then begin
-          ShowModal;
-          if ModalResult <> mrOk then begin
-            frmMain.Close;
-            Exit;
+          if not ((wbToolMode in wbAutoModes) or wbQuickShowConflicts) then begin
+            ShowModal;
+            if ModalResult <> mrOk then begin
+              frmMain.Close;
+              Exit;
+            end;
           end;
-        end;
 
-        sl.Clear;
-        Modules.DeactivateAll;
-        for i := 0 to Pred(CheckListBox1.Count) do begin
-          if CheckListBox1.Checked[i] then begin
-            sl.Add(CheckListBox1.Items[i]);
-            if Length(Modules) > 0 then
-              Include(Modules[i].miFlags, mfActive);
+          sl.Clear;
+          Modules.DeactivateAll;
+          for i := 0 to Pred(CheckListBox1.Count) do begin
+            if CheckListBox1.Checked[i] then begin
+              sl.Add(CheckListBox1.Items[i]);
+              if Length(Modules) > 0 then
+                Include(Modules[i].miFlags, mfActive);
+            end;
           end;
         end;
       finally
@@ -13371,13 +13348,17 @@ var
   SelectedNodes               : TNodeArray;
   MainRecords                 : TDynMainRecords;
   i                           : Integer;
+  HeaderType                  : TwbElementType;
 begin
+  HeaderType := etValue;
   NodeData := Sender.GetNodeData(Sender.FocusedNode);
   if Assigned(NodeData) then begin
     Element := NodeData.Element;
-    if Assigned(Element) then
+    if Assigned(Element) then begin
+      HeaderType := Element.ElementType;
       if not (Element.ElementType in [etMainRecord, etStructChapter]) and not Element.TreeHead then
         Element := nil;
+    end;
 
     if NodeData.ConflictAll >= caNoConflict then
       lblPath.Color := wbLighter(ConflictAllToColor(NodeData.ConflictAll), 0.85)
@@ -13421,6 +13402,26 @@ begin
       SetActiveContainer(Element as IwbDataContainer)
     else
       ClearActiveContainer;
+  end;
+  if not wbShowGroupRecordCount then
+    if HeaderType = etGroupRecord then
+      HeaderType := etValue;
+  case HeaderType of
+    etFile: begin
+      Sender.Header.Columns[1].Text := '';
+      Sender.Header.Columns[2].Text := 'CRC32';
+    end;
+    etGroupRecord: begin
+      Sender.Header.Columns[1].Text := '';
+      Sender.Header.Columns[2].Text := 'Child Count';
+    end;
+    etStructChapter: begin
+      Sender.Header.Columns[1].Text := 'Type';
+      Sender.Header.Columns[2].Text := 'Name';
+    end;
+  else
+    Sender.Header.Columns[1].Text := 'EditorID';
+    Sender.Header.Columns[2].Text := 'Name';
   end;
 end;
 
@@ -13624,7 +13625,9 @@ var
   MainRecord   : IwbMainRecord;
   GroupRecord  : IwbGroupRecord;
   Chapter      : IwbChapter;
+  _File        : IwbFile;
   FormID       : TwbFormID;
+  s            : string;
 begin
   CellText := '';
 
@@ -13662,6 +13665,28 @@ begin
           -1, 0: CellText := Element.Name;
           1: CellText := Chapter.ChapterTypeName;
           2: CellText := Chapter.ChapterName;
+        end;
+        Exit;
+      end else if Element.ElementType = etFile then begin
+        _File := Element as IwbFile;
+        case Column of
+          -1, 0: CellText := _File.Name;
+          1: begin
+            s := '';
+            {
+            if fsIsGhost in _File.FileStates then
+              s:= '<Ghost>';
+            if _File.IsESM then
+              s := s + '<ESM>';
+            if _File.IsESL then
+              s := s + '<ESL>';
+            if _File.IsLocalized then
+              s := s + '<Localized>';
+            }
+            CellText := s;
+          end;
+          2: if not (fsIsHardcoded in _File.FileStates) then
+            CellText := IntToHex64(_File.CRC32, 8);
         end;
         Exit;
       end;
@@ -13892,7 +13917,7 @@ begin
 
     MainRecord := nil;
     if Assigned(NodeData) and Assigned(NodeData.Element) then begin
-      if (NodeData.Element.ElementType = etMainRecord) then begin
+      if NodeData.Element.ElementType = etMainRecord then begin
         MainRecord := NodeData.Element as IwbMainRecord;
 
         if NodeData.ConflictThis = ctUnknown then begin
@@ -13915,6 +13940,10 @@ begin
           if MainRecord.Signature <> wbHeaderSignature then
             if MonospaceFontName <> '' then
               TargetCanvas.Font.Name := MonospaceFontName;
+      end else if NodeData.Element.ElementType = etFile then begin
+        if Column = 2 then
+          if MonospaceFontName <> '' then
+            TargetCanvas.Font.Name := MonospaceFontName;
       end;
       if NodeData.Element.Modified then
         TargetCanvas.Font.Style := [fsBold];
