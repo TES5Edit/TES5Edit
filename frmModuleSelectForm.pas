@@ -27,6 +27,7 @@ type
     btnOK: TButton;
     vstModules: TVirtualStringTree;
     pnlError: TPanel;
+    edFilter: TLabeledEdit;
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -42,6 +43,7 @@ type
     procedure vstModulesPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
     procedure vstModulesIncrementalSearch(Sender: TBaseVirtualTree; Node: PVirtualNode; const SearchText: string; var Result: Integer);
     procedure vstModulesNodeDblClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
+    procedure edFilterChange(Sender: TObject);
   private
     Modules         : TwbModuleInfos;
     ChangingChecked : Integer;
@@ -81,6 +83,27 @@ begin
         end;
 end;
 
+procedure TfrmModuleSelect.edFilterChange(Sender: TObject);
+var
+  SearchText : string;
+  Node       : PVirtualNode;
+  NodeData   : PModuleNodeData;
+begin
+  SearchText := edFilter.Text;
+  SearchText := SearchText.ToLowerInvariant;
+  Node := vstModules.RootNode.FirstChild;
+  while Assigned(Node) do
+    with Node^ do begin
+      NodeData := vstModules.GetNodeData(Node);
+      if (SearchText = '') or NodeData.mndName.ToLowerInvariant.Contains(SearchText) then
+        States := States + [vsVisible]
+      else
+        States := States - [vsVisible];
+      Node := NextSibling;
+    end;
+  vstModules.Invalidate;
+end;
+
 procedure TfrmModuleSelect.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   SimulateLoad;
@@ -106,10 +129,22 @@ begin
   SimulateLoad;
 end;
 
-procedure TfrmModuleSelect.FormKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
+procedure TfrmModuleSelect.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+  Node: PVirtualNode;
 begin
   if Key = VK_RETURN then begin
+    if edFilter.Focused then begin
+      vstModules.SetFocus;
+      Node := nil;
+      for Node in vstModules.VisibleNodes(nil) do begin
+        vstModules.FocusedNode := Node;
+        Break;
+      end;
+      if ssCtrl in Shift then
+        DoSingleModuleLoad(vstModules.FocusedNode);
+      Exit;
+    end;
     if ssCtrl in Shift then
       DoSingleModuleLoad(vstModules.FocusedNode)
     else begin
