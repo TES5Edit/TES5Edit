@@ -25,7 +25,7 @@ uses
   Graphics;
 
 const
-  VersionString  = '3.2.3i EXPERIMENTAL';
+  VersionString  = '3.2.3j EXPERIMENTAL';
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
   wbHardcodedDat = '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
@@ -153,6 +153,8 @@ var
   wbMOHookFile           : string;
 
   wbSpeedOverMemory : Boolean = False;
+
+  wbDarkMode : Boolean = False;
 
 {$IFDEF USE_CODESITE}
 type
@@ -3421,6 +3423,10 @@ function wbProgressUnlock: Integer;
 function wbHasProgressCallback: Boolean;
 procedure wbProgressCallback(const aStatus: string);
 
+function wbLighter(Color: TColor; Amount: Double = 0.5): TColor;
+function wbDarker(Color: TColor; Amount: Double = 0.25): TColor;
+function wbIsDarkMode: Boolean;
+
 implementation
 
 uses
@@ -3429,8 +3435,35 @@ uses
   Math,
   AnsiStrings,
   TypInfo,
+  Colors,
   wbSort,
   wbLocalization;
+
+function wbLighter(Color: TColor; Amount: Double = 0.5): TColor;
+begin
+  if wbDarkMode then
+    Result := Darker(Color, Amount * 0.95)
+  else
+    Result := Lighter(Color, Amount);
+end;
+
+function wbDarker(Color: TColor; Amount: Double = 0.25): TColor;
+begin
+  if wbDarkMode then
+    Result := Lighter(Color, Amount)
+  else
+    Result := Color;
+end;
+
+function wbIsDarkMode: Boolean;
+var
+  H, S, BkL, TxL: extended;
+begin
+  RGBtoHSL(ColToRGBTriple(clWindow), H, S, BkL);
+  RGBtoHSL(ColToRGBTriple(clWindowText), H, S, TxL);;
+  Result := BkL < TxL;
+end;
+
 
 threadvar
   _ProgressLockCount : Integer;

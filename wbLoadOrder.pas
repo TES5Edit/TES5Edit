@@ -59,12 +59,15 @@ type
 
     miFlags          : TwbModuleFlags;
 
-    miOfficialIndex  : Integer;
-    miCCIndex        : Integer;
-    miPluginsIndex   : Integer;
-    miLoadOrderIndex : Integer;
+    miOfficialIndex     : Integer;
+    miCCIndex           : Integer;
+    miPluginsTxtIndex   : Integer;
+    miLoadOrderTxtIndex : Integer;
 
-    miCombinedIndex  : Integer;
+    miCombinedIndex     : Integer;
+
+    miFileID         : TwbFileID;
+    miLoadOrder      : Integer;
 
     function IsValid: Boolean;
     function HasIndex: Boolean;
@@ -137,7 +140,7 @@ begin
     Result := CmpI32(a.miCCIndex, b.miCCIndex);
     if Result = 0 then begin
       if (mfIsESM in a.miFlags) = (mfIsESM in b.miFlags) then begin
-        Result := CmpI32(a.miPluginsIndex, b.miPluginsIndex);
+        Result := CmpI32(a.miPluginsTxtIndex, b.miPluginsTxtIndex);
         if Result = 0 then begin
           Result := CmpDouble(a.miDateTime, b.miDateTime);
           if Result = 0 then begin
@@ -171,7 +174,7 @@ begin
       if (mfIsESM in a.miFlags) = (mfIsESM in b.miFlags) then begin
         Result := CmpI32(a.miCombinedIndex, b.miCombinedIndex);
         if Result = 0 then begin
-          Result := CmpI32(a.miPluginsIndex, b.miPluginsIndex);
+          Result := CmpI32(a.miPluginsTxtIndex, b.miPluginsTxtIndex);
           if Result = 0 then begin
             Result := CmpDouble(a.miDateTime, b.miDateTime);
             if Result = 0 then begin
@@ -272,8 +275,8 @@ begin
           Include(miFlags, mfMastersMissing);
       miOfficialIndex  := High(Integer);
       miCCIndex        := High(Integer);
-      miPluginsIndex   := High(Integer);
-      miLoadOrderIndex := High(Integer);
+      miPluginsTxtIndex   := High(Integer);
+      miLoadOrderTxtIndex := High(Integer);
     end;
 
   if Length(_Modules) < 1 then
@@ -299,7 +302,7 @@ begin
         with wbModuleByName(s)^ do
           if IsValid then begin
             if wbGameMode in wbOrderFromPluginsTxt then begin
-              miPluginsIndex := i;
+              miPluginsTxtIndex := i;
               Include(miFlags, mfHasIndex);
             end;
             if lIsActive then begin
@@ -376,7 +379,7 @@ begin
           for i := 1 to Pred(sl.Count) do begin
             ThisModule := wbModuleByName(sl[i]);
             if ThisModule.IsValid then begin
-              ThisModule.miLoadOrderIndex := Integer(sl.Objects[i]);
+              ThisModule.miLoadOrderTxtIndex := Integer(sl.Objects[i]);
               if not ThisModule.HasIndex then begin
                 PrevModule := @_InvalidModule;
                 for j := Pred(i) downto 0 do begin
@@ -478,10 +481,10 @@ begin
     if mfIsESM in miFlags then
       Result := Result + '[ESM]';
 
-    if miPluginsIndex < High(Integer) then
-      Result := Result + '[Plugins.txt:'+miPluginsIndex.ToString+']';
-    if miLoadOrderIndex < High(Integer) then
-      Result := Result + '[LoadOrder.txt:'+miLoadOrderIndex.ToString+']';
+    if miPluginsTxtIndex < High(Integer) then
+      Result := Result + '[Plugins.txt:'+miPluginsTxtIndex.ToString+']';
+    if miLoadOrderTxtIndex < High(Integer) then
+      Result := Result + '[LoadOrder.txt:'+miLoadOrderTxtIndex.ToString+']';
 
     if (Result = '') or (Result = '[ESM]') then
       Result := Result + '[Time:'+FormatDateTime('yyyy-mm-dd hh:mm:ss', miDateTime)+']';
@@ -516,6 +519,10 @@ begin
       Exclude(miFlags, mfActive);
 end;
 
+var
+  _NextFullSlot: Integer;
+  _NextLightSlot: Integer;
+
 function TwbModuleInfosHelper.SimulateLoad: TwbModuleInfos;
 var
   NewLoadOrder      : TwbModuleInfos;
@@ -538,8 +545,20 @@ var
           else
             raise Exception.Create('Module "'+miName+'" requires master "'+miMasterNames[i]+'" which can not be found');
         Include(miFlags, mfLoaded);
+        miLoadOrder := NewLoadOrderCount;
         NewLoadOrder[NewLoadOrderCount] := aModule;
         Inc(NewLoadOrderCount);
+        if (mfHasESLFlag in miFlags) and not wbIgnoreESL then begin
+          if _NextLightSlot > $FFF then
+            raise Exception.Create('Too many light modules');
+          miFileID := TwbFileID.Create($FE, _NextLightSlot);
+          Inc(_NextLightSlot);
+        end else begin
+          if _NextLightSlot > $FD then
+            raise Exception.Create('Too many full modules');
+          miFileID := TwbFileID.Create(_NextFullSlot);
+          Inc(_NextFullSlot);
+        end;
       finally
         Exclude(miFlags, mfLoading);
       end;
@@ -553,7 +572,11 @@ begin
     with _Modules[i] do begin
       Exclude(miFlags, mfLoaded);
       Exclude(miFlags, mfLoading);
+      miFileID := TwbFileID.Create(-1);
+      miLoadOrder := High(Integer);
     end;
+  _NextFullSlot := 0;
+  _NextLightSlot := 0;
   SetLength(NewLoadOrder, Length(_Modules));
   NewLoadOrderCount := 0;
   for i := Low(Self) to High(Self) do
