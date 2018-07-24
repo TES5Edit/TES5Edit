@@ -26,13 +26,13 @@ object frmModuleSelect: TfrmModuleSelect
     Anchors = [akRight, akBottom]
     Caption = 'OK'
     ModalResult = 1
-    TabOrder = 0
+    TabOrder = 3
   end
   object vstModules: TVirtualStringTree
     Left = 8
-    Top = 8
+    Top = 35
     Width = 848
-    Height = 568
+    Height = 541
     Anchors = [akLeft, akTop, akRight, akBottom]
     Header.AutoSizeIndex = 0
     Header.Height = 21
@@ -109,5 +109,18 @@ object frmModuleSelect: TfrmModuleSelect
     BevelOuter = bvLowered
     BorderWidth = 3
     TabOrder = 2
+  end
+  object edFilter: TLabeledEdit
+    Left = 48
+    Top = 8
+    Width = 808
+    Height = 21
+    Anchors = [akLeft, akTop, akRight]
+    EditLabel.Width = 28
+    EditLabel.Height = 13
+    EditLabel.Caption = '&Filter:'
+    LabelPosition = lpLeft
+    TabOrder = 0
+    OnChange = edFilterChange
   end
 end
