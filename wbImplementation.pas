@@ -17012,6 +17012,8 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   flProgress('Start processing');
 
+  flLoadOrderFileID := TwbFileID.Create($FF);
+
   wbBaseOffset := NativeUInt(flView);
 
   CurrentPtr := flView;
