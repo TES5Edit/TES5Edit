@@ -894,9 +894,7 @@ type
 
 var
   frmMain                     : TfrmMain;
-  FilesToRename               : TStringList;
 
-procedure DoRename;
 
 implementation
 
@@ -1019,7 +1017,7 @@ begin
   end;
 end;
 
-procedure DoRename;
+function DoRenameModule(const aFrom, aTo: string): Boolean;
 var
   i       : Integer;
   s,
@@ -1028,51 +1026,54 @@ var
   e       : string;
   OrgDate : Integer;
 begin
-  wbFileForceClosed;
+  Result := False;
 
   if wbDontSave then
-    Exit;
-
-  if not Assigned(FilesToRename) then
     Exit;
 
   if not wbDontBackup and not DirectoryExists(wbBackupPath) then
     if not ForceDirectories(wbBackupPath) then
       wbBackupPath := wbDataPath;
 
-  for i := 0 to Pred(FilesToRename.Count) do begin
-    // create backup file
-    s := FilesToRename.Names[i];
-    f := wbDataPath + s;
-    OrgDate := FileAge(f);
-    t := wbBackupPath + ExtractFileName(s) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
-    if not wbDontBackup then begin
-      // backup original file
-      if not RenameFile(f, t) then begin
-        MessageBox(0, PChar('Could not rename "' + f + '" to "' + t + '".'), 'Error', 0);
-        Continue;
-      end;
-    end else
-      // remove original file
-      if not SysUtils.DeleteFile(f) then begin
-        MessageBox(0, PChar('Could not delete "' + f + '".'), 'Error', 0);
-        Continue;
-      end;
-    // rename temp save file to original
-    t := f;
-    s := FilesToRename.ValueFromIndex[i];
-    f := wbDataPath + s;
-    if not RenameFile(f, t) then
-      MessageBox(0, PChar('Could not rename "' + f + '" to "' + t + '".'), 'Error', 0)
-    else
-    // restore timestamp on a new file for the games that use timestamps for load order
-    // all games for now for legacy reasons
-    {if wbGameMode in [gmTES4, gmFO3, gmFNV] then }begin
-      e := ExtractFileExt(t);
-      if SameText(e, '.esp') or SameText(e, '.esm') or SameText(e, '.esl') or SameText(e, '.ghost') then
-        FileSetDate(t, OrgDate);
+  // create backup file
+  s := aTo;
+  f := wbDataPath + s;
+  OrgDate := FileAge(f);
+  t := wbBackupPath + ExtractFileName(s) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+  if not wbDontBackup then begin
+    // backup original file
+    wbProgressCallback('Renaming "' + f + '" to "' + t + '".');
+    if not RenameFile(f, t) then begin
+      MessageBox(0, PChar('Could not rename "' + f + '" to "' + t + '".'), 'Error', 0);
+      Exit;
+    end;
+  end else begin
+    // remove original file
+    wbProgressCallback('Deleting "' + f + '".');
+    if not SysUtils.DeleteFile(f) then begin
+      MessageBox(0, PChar('Could not delete "' + f + '".'), 'Error', 0);
+      Exit;
     end;
   end;
+  // rename temp save file to original
+  t := f;
+  s := aFrom;
+  f := wbDataPath + s;
+  wbProgressCallback('Renaming "' + f + '" to "' + t + '".');
+  if not RenameFile(f, t) then begin
+    MessageBox(0, PChar('Could not rename "' + f + '" to "' + t + '".'), 'Error', 0);
+    Exit;
+  end;
+
+  // restore timestamp on a new file for the games that use timestamps for load order
+  // all games for now for legacy reasons
+  {if wbGameMode in [gmTES4, gmFO3, gmFNV] then }begin
+    e := ExtractFileExt(t);
+    if SameText(e, '.esp') or SameText(e, '.esm') or SameText(e, '.esl') or SameText(e, '.ghost') then
+      FileSetDate(t, OrgDate);
+  end;
+
+  Result := True;
 end;
 
 procedure TfrmMain.acBackExecute(Sender: TObject);
@@ -1856,7 +1857,7 @@ begin
 
       for i := j to High(Files) do
         if Files[i].IsEditable then
-          if Files[i].LoadOrder > j then
+          if Files[i].LoadOrder >= j then
             CheckListBox1.AddItem(Files[i].Name, Pointer(Files[i]));
 
       Multiple := (Length(aElements) > 1) or (aElements[0].ElementType <> etMainRecord);
@@ -11142,7 +11143,7 @@ begin
               s := s + t;
 
             try
-              FileStream := TFileStream.Create(wbDataPath + s, fmCreate);
+              FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024*1024);
               try
                 PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
                 _LFile.WriteToStream(FileStream);
@@ -11173,7 +11174,7 @@ begin
               s := s + t;
 
             try
-              FileStream := TFileStream.Create(wbDataPath + s, fmCreate);
+              FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024 * 1024);
               try
                 PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
                 _File.WriteToStream(FileStream, False);
@@ -11191,13 +11192,10 @@ begin
 
           end;
 
-          if NeedsRename then begin
-            if not Assigned(FilesToRename) then
-              FilesToRename := TStringList.Create;
-            // s - rename from, relative to DataPath
-            // u - rename to, relative to DataPath
-            FilesToRename.Values[u] := s;
-          end;
+          if NeedsRename then try
+            if not DoRenameModule(s, u) then
+              AnyErrors := True;
+          except end;
 
           DoProcessMessages;
           tmrMessagesTimer(nil);
