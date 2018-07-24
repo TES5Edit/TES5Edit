@@ -574,9 +574,6 @@ type
     flStates                 : TwbFileStates;
     flUnsavedSince           : TDateTime;
 
-    flFileHandle             : THandle;
-    flMapHandle              : THandle;
-
     flView                   : Pointer;
     flSize                   : Cardinal;
     flEndPtr                 : Pointer;
@@ -2600,97 +2597,45 @@ end;
 procedure TwbFile.flCloseFile;
 begin
   if Assigned(flView) then begin
-    UnmapViewOfFile(flView);
+    VirtualFree(flView, 0 , MEM_RELEASE);
     flView := nil;
   end;
-
-  if (flMapHandle <> INVALID_HANDLE_VALUE) and (flMapHandle <> 0) then begin
-    CloseHandle(flMapHandle);
-    flMapHandle := INVALID_HANDLE_VALUE;
-  end;
-
-  if (flFileHandle <> INVALID_HANDLE_VALUE) and (flFileHandle <> 0) then begin
-    CloseHandle(flFileHandle);
-    flFileHandle := INVALID_HANDLE_VALUE;
-  end;
-  if fsIsTemporary in flStates then
-    try
-      DeleteFile(Self.flFileName);
-    except
-      wbProgressCallback('Could not delete temporary file '+flFileName);
-    end;
 end;
 
 procedure TwbFile.flOpenFile;
-const
-  FileAccessMode: array[Boolean] of Cardinal = (GENERIC_READ, GENERIC_READ or GENERIC_WRITE);
-  FileShareMode: array[Boolean] of Cardinal = (FILE_SHARE_READ, 0);
-  PageProtection: array[Boolean] of Cardinal = (PAGE_READONLY, PAGE_READWRITE);
-  ViewAccessMode: array[Boolean] of Cardinal = (FILE_MAP_READ, FILE_MAP_READ or FILE_MAP_WRITE);
 var
   s: string;
+  OldProtect : Cardinal;
 begin
   flProgress('Loading file');
 
-  flFileHandle := CreateFile(
-    PChar(flFileName),
-    FileAccessMode[False],
-    FileShareMode[False],
-    nil,
-    OPEN_EXISTING,
-    FILE_FLAG_RANDOM_ACCESS,
-    0
-  );
-  if (flFileHandle = INVALID_HANDLE_VALUE) or (flFileHandle = 0) then begin
-    if GetLastError = ERROR_FILE_NOT_FOUND then begin
-      s := flFileName + '.ghost';
-      if FileExists(s) then begin
-        flProgress('File is .ghost''ed, adjusting file name...');
-
-        flFileHandle := CreateFile(
-          PChar(s),
-          FileAccessMode[False],
-          FileShareMode[False],
-          nil,
-          OPEN_EXISTING,
-          FILE_FLAG_RANDOM_ACCESS,
-          0
-        );
-        if (flFileHandle <> INVALID_HANDLE_VALUE) and (flFileHandle <> 0) then begin
-          flFileNameOnDisk := s;
-          Include(flStates, fsIsGhost);
-        end;
-      end;
+  if not FileExists(flFileName) then begin
+    s := flFileName + '.ghost';
+    if FileExists(s) then begin
+      flProgress('File is .ghost''ed, adjusting file name...');
+      flFileNameOnDisk := s;
+      Include(flStates, fsIsGhost);
     end;
-
-    if (flFileHandle = INVALID_HANDLE_VALUE) or (flFileHandle = 0) then
-      RaiseLastOSError;
   end;
 
-  flMapHandle := CreateFileMapping(
-    flFileHandle,
-    nil,
-    PageProtection[False],
-    0,
-    0,
-    nil
-  );
-  if (flMapHandle = INVALID_HANDLE_VALUE) or (flMapHandle = 0) then
-    RaiseLastOSError;
+  with TFileStream.Create(flFileNameOnDisk, fmOpenRead or fmShareDenyWrite) do try
+    flSize := Size;
+    flView := VirtualAlloc(0, flSize, MEM_COMMIT, PAGE_READWRITE);
+    if not Assigned(flView) then
+      RaiseLastOSError;
+    Read(flView^, flSize);
+    if not VirtualProtect(flView, flSize, PAGE_READONLY, OldProtect) then
+      RaiseLastOSError;
+  finally
+    Free;
+  end;
 
-  flView := MapViewOfFileEx(
-    flMapHandle,
-    ViewAccessMode[False],
-    0,
-    0,
-    0,
-    nil
-  );
+  if fsIsTemporary in flStates then try
+    DeleteFile(flFileNameOnDisk);
+  except
+    wbProgressCallback('Could not delete temporary file ' + flFileNameOnDisk);
+  end;
 
-  if not Assigned(flView) then
-    RaiseLastOSError;
-
-  flSize := GetFileSize(flFileHandle, nil);
   flEndPtr := PByte(flView) + flSize;
 
   if wbHasProgressCallback then
@@ -2913,10 +2858,14 @@ end;
 function TwbFile.GetNextObjectID: Cardinal;
 var
   Header         : IwbContainerElementRef;
+  V              : Variant;
+  i              : Int64;
 begin
-  if (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then
-    Result := Cardinal(Header.ElementNativeValues['HEDR\Next Object ID'])
-  else
+  if (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then begin
+    V := Header.ElementNativeValues['HEDR\Next Object ID'];
+    i := V;
+    Result := i;
+  end else
     Result := 0;
 end;
 

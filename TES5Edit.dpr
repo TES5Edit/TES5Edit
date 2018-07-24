@@ -103,5 +103,5 @@ begin
   Application.Title := wbApplicationTitle;
   Application.CreateForm(TfrmMain, frmMain);
   Application.Run;
-  DoRename;
+  //DoRename;
 end.
