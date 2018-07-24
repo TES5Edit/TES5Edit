@@ -10266,7 +10266,7 @@ begin
 
   SetLength(Result, 0);
   l := 0;
-  p := Copy(aContainer.Path, Length(aContainer.GetFile.FileName)+Length(' \ [xx] '+' \ ') + 1);
+  p := Copy(aContainer.Path, Succ(Length(aContainer.GetFile.Path + ' \ ')));
   repeat
     i := Pos(' \ ', p);
     if i>0 then begin
