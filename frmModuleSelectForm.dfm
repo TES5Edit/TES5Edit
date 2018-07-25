@@ -35,9 +35,10 @@ object frmModuleSelect: TfrmModuleSelect
     Height = 541
     Anchors = [akLeft, akTop, akRight, akBottom]
     Header.AutoSizeIndex = 0
-    Header.Height = 21
+    Header.Height = 16
     Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
     Header.SortColumn = 0
+    PopupMenu = pmuModules
     TabOrder = 1
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning, toEditOnClick]
     TreeOptions.PaintOptions = [toPopupMode, toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseBlendedSelection]
@@ -122,5 +123,22 @@ object frmModuleSelect: TfrmModuleSelect
     LabelPosition = lpLeft
     TabOrder = 0
     OnChange = edFilterChange
+  end
+  object pmuModules: TPopupMenu
+    OnPopup = pmuModulesPopup
+    Left = 128
+    Top = 184
+    object mniSelectAll: TMenuItem
+      Caption = 'Select All'
+      OnClick = mniSelectAllClick
+    end
+    object mniSelectNone: TMenuItem
+      Caption = 'Select None'
+      OnClick = mniSelectNoneClick
+    end
+    object mniInvertSelection: TMenuItem
+      Caption = 'Invert Selection'
+      OnClick = mniInvertSelectionClick
+    end
   end
 end

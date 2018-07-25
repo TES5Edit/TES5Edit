@@ -24,6 +24,10 @@ uses
 
 type
   TfrmModuleSelect = class(TForm)
+    pmuModules: TPopupMenu;
+    mniSelectAll: TMenuItem;
+    mniSelectNone: TMenuItem;
+    mniInvertSelection: TMenuItem;
     btnOK: TButton;
     vstModules: TVirtualStringTree;
     pnlError: TPanel;
@@ -43,12 +47,19 @@ type
     procedure vstModulesPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
     procedure vstModulesIncrementalSearch(Sender: TBaseVirtualTree; Node: PVirtualNode; const SearchText: string; var Result: Integer);
     procedure vstModulesNodeDblClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
+
     procedure edFilterChange(Sender: TObject);
+
+    procedure mniSelectAllClick(Sender: TObject);
+    procedure mniSelectNoneClick(Sender: TObject);
+    procedure mniInvertSelectionClick(Sender: TObject);
+    procedure pmuModulesPopup(Sender: TObject);
   private
     Modules         : TwbModuleInfos;
     ChangingChecked : Integer;
     procedure SimulateLoad;
     procedure DoSingleModuleLoad(Node: PVirtualNode);
+    function GetSelectedOrAll: TNodeArray;
   public
     LoadedModules :TwbModuleInfos;
   end;
@@ -68,6 +79,84 @@ implementation
 uses
   StrUtils;
 
+procedure TfrmModuleSelect.mniInvertSelectionClick(Sender: TObject);
+var
+  Nodes    : TNodeArray;
+  Node     : PVirtualNode;
+  NodeData : PModuleNodeData;
+  i        : Integer;
+begin
+  Nodes := GetSelectedOrAll;
+  if Length(Nodes) < 1 then
+    Exit;
+
+  for Node in Nodes do
+    with Node^ do begin
+      NodeData := vstModules.GetNodeData(Node);
+      with NodeData^ do
+        if Assigned(mndModule) then
+          with mndModule^ do
+            if mfActive in miFlags then
+              Exclude(miFlags, mfActive)
+            else
+              Include(miFlags, mfActive);
+    end;
+
+  SimulateLoad;
+end;
+
+procedure TfrmModuleSelect.mniSelectAllClick(Sender: TObject);
+var
+  Nodes    : TNodeArray;
+  Node     : PVirtualNode;
+  NodeData : PModuleNodeData;
+  i        : Integer;
+begin
+  Nodes := GetSelectedOrAll;
+  if Length(Nodes) < 1 then
+    Exit;
+
+  for Node in Nodes do
+    with Node^ do begin
+      NodeData := vstModules.GetNodeData(Node);
+      with NodeData^ do
+        if Assigned(mndModule) then
+          with mndModule^ do
+            Include(miFlags, mfActive);
+    end;
+
+  SimulateLoad;
+end;
+
+procedure TfrmModuleSelect.mniSelectNoneClick(Sender: TObject);
+var
+  Nodes    : TNodeArray;
+  Node     : PVirtualNode;
+  NodeData : PModuleNodeData;
+  i        : Integer;
+begin
+  Nodes := GetSelectedOrAll;
+  if Length(Nodes) < 1 then
+    Exit;
+
+  for Node in Nodes do
+    with Node^ do begin
+      NodeData := vstModules.GetNodeData(Node);
+      with NodeData^ do
+        if Assigned(mndModule) then
+          with mndModule^ do
+            Exclude(miFlags, mfActive);
+    end;
+
+  SimulateLoad;
+end;
+
+procedure TfrmModuleSelect.pmuModulesPopup(Sender: TObject);
+begin
+  mniSelectAll.Enabled := Length(GetSelectedOrAll) > 0;
+  mniSelectNone.Enabled := mniSelectAll.Enabled;
+  mniInvertSelection.Enabled := mniSelectAll.Enabled;
+end;
 
 procedure TfrmModuleSelect.DoSingleModuleLoad(Node: PVirtualNode);
 begin
@@ -118,6 +207,14 @@ begin
     MenuCaption := 'Theme';
   end;
 
+  i := Font.Size;
+  Font := Screen.IconFont;
+  if Font.Size <> i then begin
+    Font.Size := i;
+    ScaleBy(Abs(Screen.IconFont.Size), Abs(i));
+    vstModules.Header.Height := vstModules.DefaultNodeHeight + 4;
+  end;
+
   Modules := wbModulesByLoadOrder;
   if not wbIsEslSupported then
     with vstModules.Header.Columns[3] do
@@ -152,7 +249,37 @@ begin
       if btnOK.Enabled then
         btnOK.Click;
     end;
+  end else if Key = VK_MULTIPLY then
+    mniInvertSelection.Click;
+end;
+
+function TfrmModuleSelect.GetSelectedOrAll: TNodeArray;
+var
+  Node : PVirtualNode;
+  i, j : Integer;
+begin
+  Result := vstModules.GetSortedSelection(True);
+  if Length(Result) < 2 then begin
+    SetLength(Result, vstModules.RootNode.ChildCount);
+    Node := vstModules.RootNode.FirstChild;
+    i := 0;
+    while Assigned(Node) do begin
+      Result[i] := Node;
+      Inc(i);
+      Node := Node.NextSibling;
+    end;
   end;
+  j := 0;
+  for i := Low(Result) to High(Result) do begin
+    Node := Result[i];
+    if (Node.Parent = nil) or (Node.Parent = vstModules.RootNode) then begin
+      if i <> j then
+        Result[j] := Result[i];
+      Inc(j);
+    end;
+  end;
+
+  SetLength(Result, j);
 end;
 
 function CheckStateForModule(aModule: PwbModuleInfo; aIsRootChild: Boolean): TCheckState;
