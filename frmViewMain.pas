@@ -1849,6 +1849,13 @@ begin
       Container := aElements[i].Container;
       while Assigned(Container) do begin
         Container.ReportRequiredMasters(sl, AsNew, False, True);
+        if Container.ElementType = etGroupRecord then
+          with Container as IwbGroupRecord do begin
+            MainRecord := ChildrenOf;
+            if Assigned(MainRecord) then
+              MainRecord.ReportRequiredMasters(sl, AsNew, False, True);
+          end;
+
         Container := Container.Container;
       end;
     end;
