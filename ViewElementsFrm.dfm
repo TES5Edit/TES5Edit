@@ -10,7 +10,6 @@ object frmViewElements: TfrmViewElements
   Position = poDefault
   OnClose = FormClose
   OnCreate = FormCreate
-  OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   OnShow = FormShow
   PixelsPerInch = 96
