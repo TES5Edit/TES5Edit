@@ -838,6 +838,9 @@ begin
   if FindCmdLineSwitch('IKnowWhatImDoing') then
     wbIKnowWhatImDoing := True;
 
+  if wbIKnowWhatImDoing and FindCmdLineSwitch('ImCrazy') then
+    wbAllowEditGameMaster := True;
+
   if FindCmdLineSwitch('quickclean') and (wbToolSource in [tsPlugins]) then
     wbQuickClean := wbIKnowWhatImDoing;
 

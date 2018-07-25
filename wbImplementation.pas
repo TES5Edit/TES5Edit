@@ -2874,7 +2874,7 @@ function TwbFile.GetIsEditable: Boolean;
 begin
   Result := wbIsInternalEdit or (
         wbEditAllowed and
-    not (fsIsGameMaster in flStates) and
+    ((not (fsIsGameMaster in flStates)) or wbAllowEditGameMaster) and
     not (fsIsHardcoded in flStates) and
     not (fsIsCompareLoad in flStates)
   );
