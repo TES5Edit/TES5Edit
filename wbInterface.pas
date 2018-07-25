@@ -89,7 +89,7 @@ var
   wbCacheRecordsThreshold  : Integer   = 500;
   wbCacheTimeThreshold     : TDateTime = 2 * 1/24/60/60; //2 seconds
 
-  wbAutoCompareSelectedLimit : Integer = 20;
+  wbAutoCompareSelectedLimit : Integer = 5;
 
   wbUDRSetXESP       : Boolean = True;
   wbUDRSetScale      : Boolean = False;
