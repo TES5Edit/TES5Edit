@@ -901,6 +901,9 @@ type
 var
   frmMain                     : TfrmMain;
 
+function LockProcessMessages: Integer;
+function UnLockProcessMessages: Integer;
+procedure DoProcessMessages;
 
 implementation
 

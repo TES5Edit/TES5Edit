@@ -21,6 +21,13 @@ uses
   Dialogs, wbInterface, ComCtrls, ExtCtrls, StdCtrls, Buttons, Menus, IniFiles;
 
 type
+  TwbEdit = record
+    eElement: IwbElement;
+    eMemo: TMemo;
+  end;
+
+  TwbEdits = TArray<TwbEdit>;
+
   TfrmViewElements = class(TForm)
     Panel1: TPanel;
     pcView: TPageControl;
@@ -39,10 +46,9 @@ type
     procedure mniCompareConfClick(Sender: TObject);
     procedure btnCancelClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
-    Edits: TList;
+    Edits: TwbEdits;
     procedure MemoChange(Sender: TObject);
     procedure MemoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   public
@@ -50,7 +56,7 @@ type
     CompareCmdLine: string;
     procedure AddElement(const aElement: IwbElement; aFocused, aEditable: Boolean);
     function ShowModal: Integer; override;
-    { Public declarations }
+    destructor Destroy; override;
   end;
 
   TwbTabSheet = class(TTabSheet)
@@ -58,17 +64,13 @@ type
 //    Element: IwbElement;
   end;
 
-  TwbEdit = class
-    eElement: IwbElement;
-    eMemo: TMemo;
-  end;
-
 implementation
 
 {$R *.dfm}
 
 uses
-  wbHelpers, ShellApi;
+  wbHelpers, ShellApi,
+  frmViewMain;
 
 { TfrmViewElements }
 
@@ -82,9 +84,6 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if not Assigned(Edits) then
-    Edits := TList.Create;
-
   TabSheet := TwbTabSheet.Create(Self);
   TabSheet.PageControl := pcView;
   TabSheet.Caption := aElement._File.Name;
@@ -97,10 +96,11 @@ begin
     Memo.Lines.Text := aElement.EditValue;
     btnOK.Visible := True;
     //btnCancel.Kind := bkAbort;
-    Edit := TwbEdit.Create;
-    Edit.eElement := aElement;
-    Edit.eMemo := Memo;
-    Edits.Add(Edit);
+    SetLength(Edits, Succ(Length(Edits)));
+    with Edits[High(Edits)] do begin
+      eElement := aElement;
+      eMemo := Memo;
+    end;
   end else
     Memo.Lines.Text := aElement.Value;
   Memo.Align := alClient;
@@ -201,6 +201,11 @@ begin
   end;
 end;
 
+destructor TfrmViewElements.Destroy;
+begin
+  inherited;
+end;
+
 procedure TfrmViewElements.mniCompareConfClick(Sender: TObject);
 var
   s: string;
@@ -225,17 +230,6 @@ end;
 procedure TfrmViewElements.FormCreate(Sender: TObject);
 begin
   //Font := Screen.IconFont;
-end;
-
-procedure TfrmViewElements.FormDestroy(Sender: TObject);
-var
-  i: Integer;
-begin
-  if Assigned(Edits) then begin
-    for i := 0 to Pred(Edits.Count) do
-      TwbEdit(Edits[i]).Free;
-    Edits.Free;
-  end;
 end;
 
 procedure TfrmViewElements.FormKeyDown(Sender: TObject; var Key: Word;
@@ -290,21 +284,21 @@ begin
   end else
     Result := mrAbort;
 
-  try
-
   if Result = mrOk then
-    for i := 0 to Pred(Edits.Count) do
-      with TwbEdit(Edits[i]) do
+    for i := Low(Edits) to High(Edits) do
+      with Edits[i] do
         if eMemo.Modified then try
+          LockProcessMessages;
+          try
             eElement.EditValue := eMemo.Text;
-          except
-            on E: Exception do
-              ShowMessage(Format('Assignment error: %s'#13#10'File: %s'#13#10'Element: %s',
-                [E.Message, eElement._File.FileName, eElement.Name]));
+          finally
+            UnLockProcessMessages;
           end;
-
-  finally
-  end;
+        except
+          on E: Exception do
+            ShowMessage(Format('Assignment error: %s'#13#10'File: %s'#13#10'Element: %s',
+              [E.Message, eElement._File.FileName, eElement.Name]));
+        end;
 end;
 
 end.

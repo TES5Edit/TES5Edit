@@ -693,6 +693,11 @@ begin
     Exit;
   end;
 
+  if wbGameMode <> gmTES4 then begin
+    wbUDRSetZ := False;
+    wbUDRSetZValue := -15000;
+  end;
+
   if not (wbToolMode in ToolModes) then begin
     ShowMessage('Application ' + wbGameName + ' does not currently support ' + wbToolName);
     Exit;
