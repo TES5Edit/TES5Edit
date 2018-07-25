@@ -47,6 +47,7 @@ type
     procedure vstModulesPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
     procedure vstModulesIncrementalSearch(Sender: TBaseVirtualTree; Node: PVirtualNode; const SearchText: string; var Result: Integer);
     procedure vstModulesNodeDblClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
+    procedure vstModulesKeyPress(Sender: TObject; var Key: Char);
 
     procedure edFilterChange(Sender: TObject);
 
@@ -54,6 +55,7 @@ type
     procedure mniSelectNoneClick(Sender: TObject);
     procedure mniInvertSelectionClick(Sender: TObject);
     procedure pmuModulesPopup(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     Modules         : TwbModuleInfos;
     ChangingChecked : Integer;
@@ -185,9 +187,9 @@ begin
     with Node^ do begin
       NodeData := vstModules.GetNodeData(Node);
       if (SearchText = '') or NodeData.mndName.ToLowerInvariant.Contains(SearchText) then
-        States := States + [vsVisible]
+        States := States - [vsFiltered]
       else
-        States := States - [vsVisible];
+        States := States + [vsFiltered];
       Node := NextSibling;
     end;
   vstModules.Invalidate;
@@ -233,9 +235,10 @@ begin
   if Key = VK_RETURN then begin
     if edFilter.Focused then begin
       vstModules.SetFocus;
-      Node := nil;
+      vstModules.ClearSelection;
       for Node in vstModules.VisibleNodes(nil) do begin
         vstModules.FocusedNode := Node;
+        vstModules.Selected[Node] := True;
         Break;
       end;
       if ssCtrl in Shift then
@@ -251,6 +254,11 @@ begin
     end;
   end else if Key = VK_MULTIPLY then
     mniInvertSelection.Click;
+end;
+
+procedure TfrmModuleSelect.FormShow(Sender: TObject);
+begin
+  vstModules.SetFocus;
 end;
 
 function TfrmModuleSelect.GetSelectedOrAll: TNodeArray;
@@ -506,6 +514,13 @@ begin
       if Length(mndModule.miMasters) > 0 then
         Include(InitialStates, ivsHasChildren);
     end;
+  end;
+end;
+
+procedure TfrmModuleSelect.vstModulesKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = '?' then begin
+    edFilter.SetFocus;
   end;
 end;
 
