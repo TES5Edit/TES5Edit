@@ -574,6 +574,9 @@ type
     flStates                 : TwbFileStates;
     flUnsavedSince           : TDateTime;
 
+    flFileHandle             : THandle;
+    flMapHandle              : THandle;
+
     flView                   : Pointer;
     flSize                   : Cardinal;
     flEndPtr                 : Pointer;
@@ -2596,13 +2599,40 @@ end;
 
 procedure TwbFile.flCloseFile;
 begin
-  if Assigned(flView) then begin
-    VirtualFree(flView, 0 , MEM_RELEASE);
-    flView := nil;
-  end;
+  if fsOnlyHeader in flStates then begin
+    if Assigned(flView) then begin
+      UnmapViewOfFile(flView);
+      flView := nil;
+    end;
+
+    if (flMapHandle <> INVALID_HANDLE_VALUE) and (flMapHandle <> 0) then begin
+      CloseHandle(flMapHandle);
+      flMapHandle := INVALID_HANDLE_VALUE;
+    end;
+
+    if (flFileHandle <> INVALID_HANDLE_VALUE) and (flFileHandle <> 0) then begin
+      CloseHandle(flFileHandle);
+      flFileHandle := INVALID_HANDLE_VALUE;
+    end;
+
+    if fsIsTemporary in flStates then try
+      DeleteFile(Self.flFileNameOnDisk);
+    except
+      flProgress('Could not delete temporary file '+flFileNameOnDisk);
+    end;
+  end else
+    if Assigned(flView) then begin
+      VirtualFree(flView, 0 , MEM_RELEASE);
+      flView := nil;
+    end;
 end;
 
 procedure TwbFile.flOpenFile;
+const
+  FileAccessMode: array[Boolean] of Cardinal = (GENERIC_READ, GENERIC_READ or GENERIC_WRITE);
+  FileShareMode: array[Boolean] of Cardinal = (FILE_SHARE_READ, 0);
+  PageProtection: array[Boolean] of Cardinal = (PAGE_READONLY, PAGE_READWRITE);
+  ViewAccessMode: array[Boolean] of Cardinal = (FILE_MAP_READ, FILE_MAP_READ or FILE_MAP_WRITE);
 var
   s: string;
   OldProtect : Cardinal;
@@ -2618,22 +2648,60 @@ begin
     end;
   end;
 
-  with TFileStream.Create(flFileNameOnDisk, fmOpenRead or fmShareDenyWrite) do try
-    flSize := Size;
-    flView := VirtualAlloc(0, flSize, MEM_COMMIT, PAGE_READWRITE);
-    if not Assigned(flView) then
+  if fsOnlyHeader in flStates then begin
+    flFileHandle := CreateFile(
+      PChar(flFileNameOnDisk),
+      FileAccessMode[False],
+      FileShareMode[False],
+      nil,
+      OPEN_EXISTING,
+      FILE_FLAG_RANDOM_ACCESS,
+      0
+    );
+    if (flFileHandle = INVALID_HANDLE_VALUE) or (flFileHandle = 0) then
       RaiseLastOSError;
-    Read(flView^, flSize);
-    if not VirtualProtect(flView, flSize, PAGE_READONLY, OldProtect) then
-      RaiseLastOSError;
-  finally
-    Free;
-  end;
 
-  if fsIsTemporary in flStates then try
-    DeleteFile(flFileNameOnDisk);
-  except
-    wbProgressCallback('Could not delete temporary file ' + flFileNameOnDisk);
+    flMapHandle := CreateFileMapping(
+      flFileHandle,
+      nil,
+      PageProtection[False],
+      0,
+      0,
+      nil
+    );
+    if (flMapHandle = INVALID_HANDLE_VALUE) or (flMapHandle = 0) then
+      RaiseLastOSError;
+
+    flView := MapViewOfFileEx(
+      flMapHandle,
+      ViewAccessMode[False],
+      0,
+      0,
+      0,
+      nil
+    );
+     if not Assigned(flView) then
+      RaiseLastOSError;
+
+    flSize := GetFileSize(flFileHandle, nil);
+  end else begin
+    with TFileStream.Create(flFileNameOnDisk, fmOpenRead or fmShareDenyWrite) do try
+      flSize := Size;
+      flView := VirtualAlloc(0, flSize, MEM_COMMIT, PAGE_READWRITE);
+      if not Assigned(flView) then
+        RaiseLastOSError;
+      Read(flView^, flSize);
+      if not VirtualProtect(flView, flSize, PAGE_READONLY, OldProtect) then
+        RaiseLastOSError;
+    finally
+      Free;
+    end;
+
+    if fsIsTemporary in flStates then try
+      DeleteFile(flFileNameOnDisk);
+    except
+      flProgress('Could not delete temporary file ' + flFileNameOnDisk);
+    end;
   end;
 
   flEndPtr := PByte(flView) + flSize;
