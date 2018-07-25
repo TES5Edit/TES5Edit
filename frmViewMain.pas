@@ -11826,7 +11826,7 @@ begin
       vstView.EndUpdate;
     end;
 
-    if Assigned(ActiveMaster) then begin
+    if wbLoaderDone and Assigned(ActiveMaster) and not wbBuildingRefsParallel then begin
       lvReferencedBy.Tag := ActiveMaster.ReferencedByCount;
       if pgMain.ActivePage = tbsReferencedBy then begin
         for i := 0 to Pred(ActiveMaster.ReferencedByCount) do
@@ -13393,8 +13393,9 @@ var
   s, t, u                     : string;
 
   SelectedNodes               : TNodeArray;
+  FirstNode                   : PVirtualNode;
   MainRecords                 : TDynMainRecords;
-  i                           : Integer;
+  i, j                        : Integer;
   HeaderType                  : TwbElementType;
 begin
   HeaderType := etValue;
@@ -13433,26 +13434,39 @@ begin
     lblPath.Visible := False;
   end;
 
+  MainRecords := nil;
+  FirstNode := nil;
   SelectedNodes := vstNav.GetSortedSelection(True);
   if (Length(SelectedNodes) > 1) and (Length(SelectedNodes) < wbAutoCompareSelectedLimit) then begin
     SetLength(MainRecords, Length(SelectedNodes));
+    j := 0;
     for i := Low(SelectedNodes) to High(SelectedNodes) do begin
       NodeData := vstNav.GetNodeData(SelectedNodes[i]);
-      MainRecords[i] := NodeData.Element as IwbMainRecord;
+      if Assigned(NodeData.Element) and (NodeData.Element.ElementType = etMainRecord) then begin
+        MainRecords[j] := NodeData.Element as IwbMainRecord;
+        if not Assigned(FirstNode) then begin
+          FirstNode := SelectedNodes[i];
+          Inc(j);
+        end else if FirstNode.Parent = SelectedNodes[i].Parent then
+          Inc(j);
+      end;
     end;
-
-    SetActiveRecord(MainRecords);
-  end else begin
-    if Supports(Element, IwbMainRecord) then
-      SetActiveRecord(Element as IwbMainRecord)
-    else if Supports(Element, IwbDataContainer) then
-      SetActiveContainer(Element as IwbDataContainer)
-    else
-      ClearActiveContainer;
+    SetLength(MainRecords, j);
   end;
+
+  if Length(MainRecords) > 1 then
+    SetActiveRecord(MainRecords)
+  else if Supports(Element, IwbMainRecord) then
+    SetActiveRecord(Element as IwbMainRecord)
+  else if Supports(Element, IwbDataContainer) then
+    SetActiveContainer(Element as IwbDataContainer)
+  else
+    ClearActiveContainer;
+
   if not wbShowGroupRecordCount then
     if HeaderType = etGroupRecord then
       HeaderType := etValue;
+
   case HeaderType of
     etFile: begin
       Sender.Header.Columns[1].Text := '';
