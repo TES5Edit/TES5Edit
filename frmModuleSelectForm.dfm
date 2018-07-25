@@ -13,6 +13,7 @@ object frmModuleSelect: TfrmModuleSelect
   OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
+  OnShow = FormShow
   DesignSize = (
     864
     615)
@@ -42,7 +43,7 @@ object frmModuleSelect: TfrmModuleSelect
     TabOrder = 1
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning, toEditOnClick]
     TreeOptions.PaintOptions = [toPopupMode, toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseBlendedSelection]
-    TreeOptions.SelectionOptions = [toFullRowSelect, toLevelSelectConstraint, toMultiSelect, toRightClickSelect]
+    TreeOptions.SelectionOptions = [toFullRowSelect, toLevelSelectConstraint, toMultiSelect, toRightClickSelect, toSiblingSelectConstraint, toAlwaysSelectNode]
     OnChecked = vstModulesChecked
     OnCompareNodes = vstModulesCompareNodes
     OnFreeNode = vstModulesFreeNode
@@ -52,6 +53,7 @@ object frmModuleSelect: TfrmModuleSelect
     OnIncrementalSearch = vstModulesIncrementalSearch
     OnInitChildren = vstModulesInitChildren
     OnInitNode = vstModulesInitNode
+    OnKeyPress = vstModulesKeyPress
     OnNodeDblClick = vstModulesNodeDblClick
     OnBeforeGetCheckState = vstModulesBeforeGetCheckState
     Columns = <

@@ -319,10 +319,6 @@ object frmMain: TfrmMain
         ImageIndex = 3
         TabVisible = False
         OnShow = tbsViewShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object lvReferencedBy: TListView
           AlignWithMargins = True
           Left = 0
@@ -365,10 +361,6 @@ object frmMain: TfrmMain
         Caption = 'Messages'
         ImageIndex = 1
         OnShow = tbsMessagesShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object mmoMessages: TMemo
           AlignWithMargins = True
           Left = 0
@@ -562,10 +554,6 @@ object frmMain: TfrmMain
         Caption = 'Weapon Spreadsheet'
         ImageIndex = 4
         OnShow = tbsSpreadsheetShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object vstSpreadSheetWeapon: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -772,10 +760,6 @@ object frmMain: TfrmMain
         Caption = 'Armor Spreadsheet'
         ImageIndex = 5
         OnShow = tbsSpreadsheetShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object vstSpreadsheetArmor: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -918,10 +902,6 @@ object frmMain: TfrmMain
         Caption = 'Ammunition Spreadsheet'
         ImageIndex = 6
         OnShow = tbsSpreadsheetShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object vstSpreadSheetAmmo: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -1043,10 +1023,6 @@ object frmMain: TfrmMain
         Caption = 'TabSheet2'
         ImageIndex = 7
         TabVisible = False
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object DisplayPanel: TPanel
           Left = 0
           Top = 0
@@ -1278,7 +1254,7 @@ object frmMain: TfrmMain
       Left = 0
       Top = 25
       Width = 455
-      Height = 570
+      Height = 541
       Align = alClient
       BevelInner = bvNone
       Colors.SelectionRectangleBlendColor = clGray
@@ -1313,6 +1289,7 @@ object frmMain: TfrmMain
       OnInitChildren = vstNavInitChildren
       OnInitNode = vstNavInitNode
       OnKeyDown = vstNavKeyDown
+      OnKeyPress = vstNavKeyPress
       Columns = <
         item
           Position = 0
@@ -1338,7 +1315,7 @@ object frmMain: TfrmMain
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 1
-      object Panel3: TPanel
+      object pnlNavTopFormID: TPanel
         Left = 0
         Top = 0
         Width = 123
@@ -1366,7 +1343,7 @@ object frmMain: TfrmMain
           OnKeyDown = edFormIDSearchKeyDown
         end
       end
-      object Panel4: TPanel
+      object pnlNavTopEditorID: TPanel
         Left = 123
         Top = 0
         Width = 332
@@ -1396,6 +1373,36 @@ object frmMain: TfrmMain
           OnEnter = edEditorIDSearchEnter
           OnKeyDown = edEditorIDSearchKeyDown
         end
+      end
+    end
+    object pnlNavBottom: TPanel
+      Left = 0
+      Top = 566
+      Width = 455
+      Height = 29
+      Align = alBottom
+      Alignment = taLeftJustify
+      BevelOuter = bvNone
+      BevelWidth = 3
+      TabOrder = 2
+      DesignSize = (
+        455
+        29)
+      object edFileNameFilter: TLabeledEdit
+        Left = 96
+        Top = 6
+        Width = 356
+        Height = 21
+        Anchors = [akLeft, akTop, akRight]
+        EditLabel.AlignWithMargins = True
+        EditLabel.Width = 86
+        EditLabel.Height = 13
+        EditLabel.Caption = 'F&ilter by filename:'
+        EditLabel.Layout = tlCenter
+        LabelPosition = lpLeft
+        TabOrder = 0
+        OnChange = edFileNameFilterChange
+        OnKeyDown = edFileNameFilterKeyDown
       end
     end
   end

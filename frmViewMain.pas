@@ -214,9 +214,9 @@ type
     mniViewRemoveFromSelected: TMenuItem;
     pnlNav: TPanel;
     pnlSearch: TPanel;
-    Panel3: TPanel;
+    pnlNavTopFormID: TPanel;
     edFormIDSearch: TLabeledEdit;
-    Panel4: TPanel;
+    pnlNavTopEditorID: TPanel;
     edEditorIDSearch: TLabeledEdit;
     mniSpreadsheetCompareSelected: TMenuItem;
     N7: TMenuItem;
@@ -326,6 +326,8 @@ type
     mniMessagesClear: TMenuItem;
     N21: TMenuItem;
     mniMessagesSaveSelected: TMenuItem;
+    pnlNavBottom: TPanel;
+    edFileNameFilter: TLabeledEdit;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -543,6 +545,10 @@ type
     procedure mniMessagesClearClick(Sender: TObject);
     procedure mniMessagesSaveSelectedClick(Sender: TObject);
     procedure pgMainChange(Sender: TObject);
+    procedure edFileNameFilterChange(Sender: TObject);
+    procedure edFileNameFilterKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure vstNavKeyPress(Sender: TObject; var Key: Char);
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -4058,6 +4064,43 @@ begin
   end;
 end;
 
+procedure TfrmMain.edFileNameFilterChange(Sender: TObject);
+var
+  SearchText : string;
+  NodeText   : string;
+  Node       : PVirtualNode;
+begin
+  SearchText := edFileNameFilter.Text;
+  SearchText := SearchText.ToLowerInvariant;
+  Node := vstNav.RootNode.FirstChild;
+  while Assigned(Node) do
+    with Node^ do begin
+      NodeText := '';
+      vstNavGetText(vstNav, Node, 0, ttNormal, NodeText);
+      if (SearchText = '') or NodeText.ToLowerInvariant.Contains(SearchText) then
+        States := States - [vsFiltered]
+      else
+        States := States + [vsFiltered];
+      Node := NextSibling;
+    end;
+  vstNav.Invalidate;
+end;
+
+procedure TfrmMain.edFileNameFilterKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+  Node : PVirtualNode;
+begin
+  if Key = VK_RETURN then begin
+    vstNav.ClearSelection;
+    for Node in vstNav.VisibleNodes(nil) do begin
+      vstNav.FocusedNode := Node;
+      vstNav.Selected[Node] := True;
+      Break;
+    end;
+    vstNav.SetFocus;
+  end;
+end;
+
 procedure TfrmMain.edFormIDSearchChange(Sender: TObject);
 begin
   edFormIDSearch.Color := clWindow;
@@ -4475,7 +4518,13 @@ begin
   _BlockInternalEdit := True;
   _wbProgressCallback := GeneralProgress;
   LastUpdate := GetTickCount64;
+  i := pnlNavBottom.Font.Size;
   Font := Screen.IconFont;
+  j := pnlNavBottom.Font.Size;
+  pnlNavBottom.Font.Size := i;
+  pnlNavBottom.ScaleBy(j, i);
+
+
   Caption := Application.Title;
   ColumnWidth := 200;
   RowHeight := vstNav.DefaultNodeHeight;
@@ -13900,6 +13949,12 @@ begin
         mniNavChangeFormID.Click;
     end;
   end;
+end;
+
+procedure TfrmMain.vstNavKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = '?' then
+    edFileNameFilter.SetFocus;
 end;
 
 procedure TfrmMain.vstNavPaintText(Sender: TBaseVirtualTree;
