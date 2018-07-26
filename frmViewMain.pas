@@ -313,6 +313,9 @@ type
     mniModGroups: TMenuItem;
     mniModGroupsEnabled: TMenuItem;
     mniModGroupsDisabled: TMenuItem;
+    mniMasterAndLeafs: TMenuItem;
+    mniMasterAndLeafsEnabled: TMenuItem;
+    mniMasterAndLeafsDisabled: TMenuItem;
     mniNavOtherCodeSiteLogging: TMenuItem;
     mniNavLOManagersDirtyInfo: TMenuItem;
     N19: TMenuItem;
@@ -534,6 +537,7 @@ type
     procedure acScriptExecute(Sender: TObject);
     procedure mniNavFilterConflictsClick(Sender: TObject);
     procedure mniModGroupsClick(Sender: TObject);
+    procedure mniMasterAndLeafsClick(Sender: TObject);
     procedure vstSpreadSheetCreateEditor(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
     procedure mniNavOtherCodeSiteLoggingClick(Sender: TObject);
@@ -596,10 +600,14 @@ type
     function GetAddElement(out TargetNode: PVirtualNode; out TargetIndex: Integer; out TargetElement: IwbElement): Boolean;
 
     procedure ClearConflict(Sender: TBaseVirtualTree; Node: PVirtualNode; Data: Pointer; var Abort: Boolean);
-    procedure InvalidateElementsTreeView(aNodes: TNodeArray);
+
+    procedure InvalidateElementsTreeView(aNodes: TNodeArray); overload;
+    procedure InvalidateElementsTreeView; overload;
+    procedure ResetAllConflict;
     procedure ResetActiveTree;
     procedure PostResetActiveTree;
 
+    function AddRequiredMaster(const aMasterFile: IwbFile; const aTargetFile: IwbFile): Boolean;
     function AddRequiredMasters(const aSourceElement: IwbElement; const aTargetFile: IwbFile; aAsNew: Boolean): Boolean; overload;
     function AddRequiredMasters(aMasters: TStrings; const aTargetFile: IwbFile): Boolean; overload;
 
@@ -654,6 +662,7 @@ type
     LoaderStarted: Boolean;
     ModGroups: TStringList;
     ModGroupsEnabled : Boolean;
+    OnlyShowMasterAndLeafs: Boolean;
     Settings: TMemIniFile;
     AutoSave: Boolean;
     ParentedGroupRecordType: set of Byte;
@@ -1258,10 +1267,28 @@ begin
     IwbFile(Pointer(List.Objects[Index2])).LoadOrder);
 end;
 
+function TfrmMain.AddRequiredMaster(const aMasterFile: IwbFile; const aTargetFile: IwbFile): Boolean;
+var
+  sl: TStringList;
+begin
+  if Assigned(aMasterFile) then begin
+    sl := TStringList.Create;
+    try
+      sl.AddObject(aMasterFile.FileName, Pointer(aMasterFile));
+      Result := AddRequiredMasters(sl, aTargetFile);
+    finally
+      sl.Free;
+    end;
+  end else
+    Result := True;
+end;
+
 function TfrmMain.AddRequiredMasters(aMasters: TStrings; const aTargetFile: IwbFile): Boolean;
 var
   sl                          : TStringList;
   i, j                        : Integer;
+  WasEnabled                  : Boolean;
+  PrevAction                  : string;
 begin
   Result := True;
 
@@ -1290,8 +1317,31 @@ begin
       sl.Sorted := False;
       sl.CustomSort(CompareLoadOrder);
 
-      if Result then
-        aTargetFile.AddMasters(sl);
+      if Result then begin
+        WasEnabled := Enabled;
+        Enabled := False;
+        try
+          if WasEnabled then
+            wbStartTime := Now;
+          PrevAction := wbCurrentAction;
+          if sl.Count = 1 then
+            wbCurrentAction := 'Adding '+IwbFile(Pointer(sl.Objects[i])).Name+' as new master to ' + aTargetFile.Name
+          else
+            wbCurrentAction := 'Adding '+sl.Count.ToString+' new masters to ' + aTargetFile.Name;
+          AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ' + wbCurrentAction);
+          DoProcessMessages;
+          aTargetFile.AddMasters(sl);
+          wbCurrentAction := 'Sorting masters for ' + aTargetFile.Name;
+          DoProcessMessages;
+          aTargetFile.SortMasters;
+          AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Done adding and sorting masters.');
+        finally
+          wbCurrentAction := PrevAction;
+          if WasEnabled then
+            Caption := Application.Title;
+          Enabled := WasEnabled;
+        end;
+      end;
     end else
       Result := True;
   finally
@@ -3908,10 +3958,14 @@ begin
         if not Assigned(ModGroups.Objects[i]) then
           ModGroups.Delete(i);
 
-      mniModGroups.Visible := ModGroups.Count > 0;
       ModGroupsEnabled := ModGroups.Count > 0;
+      mniModGroups.Visible := ModGroupsEnabled;
       mniModGroupsEnabled.Checked := ModGroupsEnabled;
       mniModGroupsDisabled.Checked := not ModGroupsEnabled;
+
+      mniMasterAndLeafs.Visible := True;
+      mniMasterAndLeafsEnabled.Checked := OnlyShowMasterAndLeafs;
+      mniMasterAndLeafsDisabled.Checked := not OnlyShowMasterAndLeafs;
 
       // hold shift to skip building references
       if (GetKeyState(VK_SHIFT) < 0) then begin
@@ -5215,6 +5269,48 @@ begin
     end;
 end;
 
+procedure TfrmMain.InvalidateElementsTreeView;
+var
+  Node                        : PVirtualNode;
+  NodeData                    : PNavNodeData;
+  MainRecord                  : IwbMainRecord;
+  i                           : Integer;
+begin
+  Node := vstNav.GetLastInitialized;
+  while Assigned(Node) do begin
+    NodeData := vstNav.GetNodeData(Node);
+    if Assigned(NodeData) then begin
+      with NodeData^ do begin
+        ConflictAll := caUnknown;
+        ConflictThis := ctUnknown;
+        Flags := [];
+      end;
+
+      if Assigned(NodeData.Element) and (NodeData.Element.ElementType = etMainRecord) then begin
+        MainRecord := (NodeData.Element as IwbMainRecord);
+        with MainRecord do begin
+          ConflictAll := caUnknown;
+          ConflictThis := ctUnknown;
+        end;
+        ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+        if MainRecord.IsInjected then
+          Include(NodeData.Flags, nnfInjected);
+        if MainRecord.IsNotReachable then
+          Include(NodeData.Flags, nnfNotReachable);
+        if MainRecord.ReferencesInjected then
+          Include(NodeData.Flags, nnfReferencesInjected);
+      end;
+
+      if InheritConflictByParent and (Node.ChildCount > 0) then
+        InheritStateFromChilds(Node, NodeData);
+
+      vstNav.InvalidateNode(Node);
+    end;
+    Node := vstNav.GetPreviousInitialized(Node);
+  end;
+end;
+
+
 procedure TfrmMain.InvalidateElementsTreeView(aNodes: TNodeArray);
 var
   Node                        : PVirtualNode;
@@ -6187,6 +6283,18 @@ begin
   (Sender as TMenuItem).Checked := True;
   if ModGroupsEnabled <> mniModGroupsEnabled.Checked then begin
     ModGroupsEnabled := mniModGroupsEnabled.Checked;
+    ResetAllConflict;
+    PostResetActiveTree;
+    InvalidateElementsTreeView(NoNodes);
+  end;
+end;
+
+procedure TfrmMain.mniMasterAndLeafsClick(Sender: TObject);
+begin
+  (Sender as TMenuItem).Checked := True;
+  if OnlyShowMasterAndLeafs <> mniMasterAndLeafsEnabled.Checked then begin
+    OnlyShowMasterAndLeafs := mniMasterAndLeafsEnabled.Checked;
+    ResetAllConflict;
     PostResetActiveTree;
     InvalidateElementsTreeView(NoNodes);
   end;
@@ -6701,11 +6809,13 @@ var
   MainRecord                  : IwbMainRecord;
   ReferencedBy, Overrides     : TDynMainRecords;
   Nodes                       : TNodeArray;
-//  NewFileID                   : Integer;
   OldFileID                   : TwbFileID;
+  NewFileID                   : TwbFileID;
   AnyErrors                   : Boolean;
   Master                      : IwbMainRecord;
   _File                       : IwbFile;
+  _OldFile                    : IwbFile;
+  _NewMasterFile              : IwbFile;
   FoundNone                   : Boolean;
 begin
   if not wbEditAllowed then
@@ -6821,6 +6931,26 @@ begin
     pgMain.ActivePage := tbsMessages;
 
     AddMessage('Changing FormID ['+OldFormID.ToString(True)+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToString(True)+']');
+
+    try
+      MainRecord._File.LoadOrderFormIDtoFileFormID(NewFormID);
+    except
+      NewFileID := NewFormID.FileID;
+      _OldFile := MainRecord._File;
+      _NewMasterFile := nil;
+      for i := Low(Files) to High(Files) do begin
+        if Files[i].LoadOrder >= _OldFile.LoadOrder then
+          Break;
+        if Files[i].LoadOrderFileID = NewFileID then begin
+          _NewMasterFile := Files[i];
+          Break;
+        end;
+      end;
+      if not Assigned(_NewMasterFile) then
+        raise;
+      if not AddRequiredMaster(_NewMasterFile, _OldFile) then
+        raise;
+    end;
 
     Master := MainRecord.MasterOrSelf;
     SetLength(ReferencedBy, Master.ReferencedByCount);
@@ -10342,6 +10472,7 @@ var
   LoadOrder     : Integer;
   Group         : IwbGroupRecord;
   Signature     : TwbSignature;
+  MasterAndLeafs: TDynMainRecords;
 begin
   Assert(wbLoaderDone);
   IsNonOverride := False;
@@ -10413,15 +10544,24 @@ begin
   end else begin
     Master := aMainRecord.MasterOrSelf;
 
-    SetLength(Result, Succ(Master.OverrideCount));
+    if OnlyShowMasterAndLeafs then begin
+      IsNonOverride := True;
+      MasterAndLeafs := Master.MasterAndLeafs;
+      Result := nil;
+      SetLength(Result, Length(MasterAndLeafs));
+      for i := Low(MasterAndLeafs) to High(MasterAndLeafs) do
+        Result[i].Element := MasterAndLeafs[i];
+    end else begin
+      SetLength(Result, Succ(Master.OverrideCount));
 
-    AnyHidden := Master.IsHidden;
-    if not AnyHidden then
-      for i := 0 to Pred(Master.OverrideCount) do begin
-        AnyHidden := Master.Overrides[i].IsHidden;
-        if AnyHidden then
-          Break;
-      end;
+      AnyHidden := Master.IsHidden;
+      if not AnyHidden then
+        for i := 0 to Pred(Master.OverrideCount) do begin
+          AnyHidden := Master.Overrides[i].IsHidden;
+          if AnyHidden then
+            Break;
+        end;
+    end;
   end;
 
   if (Length(Result) > 1) and (ModGroupsEnabled or AnyHidden) or IsNonOverride then begin
@@ -10508,20 +10648,20 @@ begin
     end;
 
     Exit;
+  end else begin
+    Result[0].Element := Master;
+    Result[0].Container := Master as IwbContainerElementRef;
+    if Master.ElementCount < 1 then
+      Result[0].Container := nil;
+
+    for i := 0 to Pred(Master.OverrideCount) do
+      with Result[Succ(i)] do begin
+        Container := Master.Overrides[i] as IwbContainerElementRef;
+        Element := Container;
+        if (Container.ElementCount = 0) or (Master.Overrides[i].Signature <> Master.Signature) then
+          Container := nil;
+      end;
   end;
-
-  Result[0].Element := Master;
-  Result[0].Container := Master as IwbContainerElementRef;
-  if Master.ElementCount < 1 then
-    Result[0].Container := nil;
-
-  for i := 0 to Pred(Master.OverrideCount) do
-    with Result[Succ(i)] do begin
-      Container := Master.Overrides[i] as IwbContainerElementRef;
-      Element := Container;
-      if (Container.ElementCount = 0) or (Master.Overrides[i].Signature <> Master.Signature) then
-        Container := nil;
-    end;
 end;
 
 procedure TfrmMain.pgMainChange(Sender: TObject);
@@ -11095,6 +11235,28 @@ begin
     vstView.OffsetXY := OffsetXY;
   finally
     vstView.EndUpdate;
+  end;
+end;
+
+procedure TfrmMain.ResetAllConflict;
+var
+  i     : Integer;
+  _File : IwbFile;
+begin
+  wbStartTime := Now;
+
+  Enabled := False;
+  try
+    for i := Low(Files) to High(Files) do begin
+      _File := Files[i];
+      wbCurrentAction := 'Resetting conflict status for ' + _File.Name;
+      DoProcessMessages;
+      _File.ResetConflict;
+    end;
+  finally
+    wbCurrentAction := '';
+    Caption := Application.Title;
+    Enabled := True;
   end;
 end;
 
