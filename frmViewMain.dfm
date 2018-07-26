@@ -244,9 +244,9 @@ object frmMain: TfrmMain
         object vstView: TVirtualEditTree
           AlignWithMargins = True
           Left = 0
-          Top = 0
+          Top = 25
           Width = 485
-          Height = 562
+          Height = 537
           Margins.Left = 0
           Margins.Top = 0
           Margins.Right = 0
@@ -271,7 +271,7 @@ object frmMain: TfrmMain
           SelectionBlendFactor = 24
           ShowHint = True
           TabOrder = 0
-          TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScroll, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes]
+          TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScroll, toAutoScrollOnExpand, toAutoSort, toAutoSpanColumns, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale, toAutoFreeOnCollapse]
           TreeOptions.MiscOptions = [toAcceptOLEDrop, toEditable, toGridExtensions, toInitOnSave, toToggleOnDblClick, toWheelPanning, toFullRowDrag, toEditOnClick]
           TreeOptions.PaintOptions = [toHotTrack, toShowHorzGridLines, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseBlendedSelection]
           TreeOptions.SelectionOptions = [toExtendedFocus, toFullRowSelect, toRightClickSelect, toSimpleDrawSelection]
@@ -298,8 +298,11 @@ object frmMain: TfrmMain
           OnInitChildren = vstViewInitChildren
           OnInitNode = vstViewInitNode
           OnKeyDown = vstViewKeyDown
+          OnKeyPress = vstViewKeyPress
           OnNewText = vstViewNewText
           OnResize = vstViewResize
+          ExplicitTop = 0
+          ExplicitHeight = 562
           Columns = <
             item
               Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coFixed]
@@ -313,16 +316,68 @@ object frmMain: TfrmMain
               WideText = 'Values'
             end>
         end
+        object pnlViewTop: TPanel
+          Left = 0
+          Top = 0
+          Width = 485
+          Height = 25
+          Align = alTop
+          BevelOuter = bvNone
+          TabOrder = 1
+          object edViewFilterName: TLabeledEdit
+            Left = 90
+            Top = 1
+            Width = 143
+            Height = 21
+            EditLabel.AlignWithMargins = True
+            EditLabel.Width = 76
+            EditLabel.Height = 13
+            EditLabel.Caption = 'Filter by Name: '
+            EditLabel.Layout = tlCenter
+            LabelPosition = lpLeft
+            TabOrder = 0
+            OnChange = edViewFilterChange
+            OnKeyDown = edViewFilterNameKeyDown
+          end
+          object edViewFilterValue: TLabeledEdit
+            Left = 337
+            Top = 1
+            Width = 143
+            Height = 21
+            EditLabel.AlignWithMargins = True
+            EditLabel.Width = 48
+            EditLabel.Height = 13
+            EditLabel.Caption = 'by Value: '
+            EditLabel.Layout = tlCenter
+            LabelPosition = lpLeft
+            TabOrder = 2
+            OnChange = edViewFilterChange
+            OnKeyDown = edViewFilterNameKeyDown
+          end
+          object cobViewFilter: TComboBox
+            Left = 239
+            Top = 1
+            Width = 41
+            Height = 21
+            AutoDropDown = True
+            AutoCloseUp = True
+            Style = csDropDownList
+            ItemIndex = 0
+            TabOrder = 1
+            Text = 'and'
+            OnChange = edViewFilterChange
+            OnKeyDown = edViewFilterNameKeyDown
+            Items.Strings = (
+              'and'
+              'or')
+          end
+        end
       end
       object tbsReferencedBy: TTabSheet
         Caption = 'Referenced By'
         ImageIndex = 3
         TabVisible = False
         OnShow = tbsViewShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object lvReferencedBy: TListView
           AlignWithMargins = True
           Left = 0
@@ -365,10 +420,6 @@ object frmMain: TfrmMain
         Caption = 'Messages'
         ImageIndex = 1
         OnShow = tbsMessagesShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object mmoMessages: TMemo
           AlignWithMargins = True
           Left = 0
@@ -390,10 +441,6 @@ object frmMain: TfrmMain
       object tbsInfo: TTabSheet
         Caption = 'Information'
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object Memo1: TMemo
           AlignWithMargins = True
           Left = 3
@@ -566,10 +613,6 @@ object frmMain: TfrmMain
         Caption = 'Weapon Spreadsheet'
         ImageIndex = 4
         OnShow = tbsSpreadsheetShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object vstSpreadSheetWeapon: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -776,10 +819,6 @@ object frmMain: TfrmMain
         Caption = 'Armor Spreadsheet'
         ImageIndex = 5
         OnShow = tbsSpreadsheetShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object vstSpreadsheetArmor: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -922,10 +961,6 @@ object frmMain: TfrmMain
         Caption = 'Ammunition Spreadsheet'
         ImageIndex = 6
         OnShow = tbsSpreadsheetShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object vstSpreadSheetAmmo: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -1047,10 +1082,6 @@ object frmMain: TfrmMain
         Caption = 'TabSheet2'
         ImageIndex = 7
         TabVisible = False
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object DisplayPanel: TPanel
           Left = 0
           Top = 0
@@ -1300,7 +1331,7 @@ object frmMain: TfrmMain
       SelectionCurveRadius = 3
       ShowHint = True
       TabOrder = 0
-      TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScroll, toAutoScrollOnExpand, toAutoSort, toAutoSpanColumns, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoFreeOnCollapse]
+      TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScroll, toAutoScrollOnExpand, toAutoSort, toAutoSpanColumns, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale, toAutoFreeOnCollapse]
       TreeOptions.MiscOptions = [toInitOnSave, toToggleOnDblClick, toWheelPanning]
       TreeOptions.PaintOptions = [toPopupMode, toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseBlendedSelection]
       TreeOptions.SelectionOptions = [toFullRowSelect, toLevelSelectConstraint, toMultiSelect, toRightClickSelect]
@@ -1417,7 +1448,7 @@ object frmMain: TfrmMain
         455
         29)
       object edFileNameFilter: TLabeledEdit
-        Left = 96
+        Left = 98
         Top = 6
         Width = 356
         Height = 21
@@ -1918,8 +1949,8 @@ object frmMain: TfrmMain
   end
   object pmuViewHeader: TPopupMenu
     OnPopup = pmuViewHeaderPopup
-    Left = 680
-    Top = 48
+    Left = 664
+    Top = 136
     object mniViewHeaderCopyAsOverride: TMenuItem
       Caption = 'Copy as override into....'
       OnClick = mniViewHeaderCopyIntoClick
@@ -2037,7 +2068,8 @@ object frmMain: TfrmMain
   end
   object pmuPath: TPopupMenu
     OnPopup = pmuPathPopup
-    Left = 512
+    Left = 416
+    Top = 8
     object mniPathPluggyLink: TMenuItem
       Caption = 'Pluggy Link'
       object mniPathPluggyLinkDisabled: TMenuItem

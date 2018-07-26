@@ -331,6 +331,10 @@ type
     mniMessagesSaveSelected: TMenuItem;
     pnlNavBottom: TPanel;
     edFileNameFilter: TLabeledEdit;
+    pnlViewTop: TPanel;
+    edViewFilterName: TLabeledEdit;
+    edViewFilterValue: TLabeledEdit;
+    cobViewFilter: TComboBox;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -553,6 +557,12 @@ type
     procedure edFileNameFilterKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure vstNavKeyPress(Sender: TObject; var Key: Char);
+    procedure edViewFilterChange(Sender: TObject);
+    procedure edViewFilterNameKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure vstViewKeyPress(Sender: TObject; var Key: Char);
+  protected
+    function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -4297,6 +4307,39 @@ begin
     end;
 end;
 
+procedure TfrmMain.edViewFilterChange(Sender: TObject);
+var
+  Node   : PVirtualNode;
+  Parent : PVirtualNode;
+begin
+  Node := vstView.GetFirst;
+  while Assigned(Node) do begin
+      if IsViewNodeFiltered(Node) then
+        Include(Node.States, vsFiltered)
+      else begin
+        Exclude(Node.States, vsFiltered);
+        Parent := Node.Parent;
+        while Assigned(Parent) and (vsFiltered in Parent.States) do begin
+          Exclude(Parent.States, vsFiltered);
+          Parent := Parent.Parent;
+        end;
+      end;
+    Node := vstView.GetNext(Node, True);
+  end;
+  vstView.Invalidate;
+end;
+
+procedure TfrmMain.edViewFilterNameKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_RETURN then
+    if (ssCtrl in Shift) or (Sender = edViewFilterValue) then
+      vstView.SetFocus
+    else if Sender = edViewFilterName then
+      cobViewFilter.SetFocus
+    else if Sender = cobViewFilter then
+      edViewFilterValue.SetFocus;
+end;
+
 function NormalizeRotation(const aRot: TwbVector): TwbVector;
 
   function NormalizeAxis(const aValue: Single): Single;
@@ -4528,6 +4571,11 @@ var
   i, j, k, l: Integer;
   Rect: TRect;
 begin
+  i := Font.Size;
+  Font := Screen.IconFont;
+  Font.Size := i;
+  ScaleBy(Abs(Screen.IconFont.Size), Abs(i));
+
   //try to set the style and window position as early as possible to reduce flicker
   try
     if not Assigned(Settings) and (wbSettingsFileName <> '')  then
@@ -4571,16 +4619,11 @@ begin
     ShowNativeStyle := True;
     MenuCaption := 'Theme';
   end;
+
   wbDarkMode := wbIsDarkMode;
   _BlockInternalEdit := True;
   _wbProgressCallback := GeneralProgress;
   LastUpdate := GetTickCount64;
-  i := pnlNavBottom.Font.Size;
-  Font := Screen.IconFont;
-  j := pnlNavBottom.Font.Size;
-  pnlNavBottom.Font.Size := i;
-  pnlNavBottom.ScaleBy(j, i);
-
 
   Caption := Application.Title;
   ColumnWidth := 200;
@@ -4731,11 +4774,13 @@ procedure TfrmMain.FormShow(Sender: TObject);
 var
   i: Integer;
 begin
+  {
   pnlTop.Height := Abs(lblPath.Font.Height) + Trunc(20 * (GetCurrentPPIScreen/PixelsPerInch));
   pnlSearch.Height := Abs(edFormIDSearch.Font.Height) + Trunc(16 * (GetCurrentPPIScreen/PixelsPerInch));
   i := edEditorIDSearch.Left;
   edEditorIDSearch.Left := Trunc(pnlSearch.Height * 2.5);
   edEditorIDSearch.Width := edEditorIDSearch.Width - (edEditorIDSearch.Left - i);
+  }
   tmrStartup.Enabled := True;
 end;
 
@@ -5303,6 +5348,62 @@ begin
   end;
 end;
 
+
+function TfrmMain.IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
+var
+  NameFilter  : string;
+  ValueFilter : string;
+
+  function FoundName: Boolean;
+  var
+    CellText    : string;
+  begin
+    if NameFilter = '' then
+      Exit(True);
+
+    CellText := '';
+    vstViewGetText(vstView, aNode, 0, ttNormal, CellText);
+    Result := CellText.ToLowerInvariant.Contains(NameFilter);
+  end;
+
+  function FoundValue: Boolean;
+  var
+    CellText    : string;
+    i           : Integer;
+  begin
+    if ValueFilter = '' then
+      Exit(True);
+
+    Result := False;
+    for i := 1 to Pred(vstView.Header.Columns.Count) do begin
+      CellText := '';
+      vstViewGetText(vstView, aNode, i, ttNormal, CellText);
+      Result := CellText.ToLowerInvariant.Contains(ValueFilter);
+      if Result then
+        Break;
+    end;
+  end;
+
+begin
+  NameFilter := edViewFilterName.Text;
+  NameFilter := NameFilter.ToLowerInvariant;
+  ValueFilter := edViewFilterValue.Text;
+  ValueFilter := ValueFilter.ToLowerInvariant;
+
+  if NameFilter <> '' then
+    if ValueFilter <> '' then
+      if cobViewFilter.ItemIndex = 0 then
+        Exit(not (FoundName and FoundValue))
+      else
+        Exit(not (FoundName or FoundValue))
+    else
+      Exit(not FoundName)
+  else
+    if ValueFilter <> '' then
+      Exit(not FoundValue)
+    else
+      Exit(False);
+end;
 
 procedure TfrmMain.InvalidateElementsTreeView(aNodes: TNodeArray);
 var
@@ -13393,12 +13494,22 @@ procedure TfrmMain.vstViewInitNode(Sender: TBaseVirtualTree; ParentNode,
 var
   NodeDatas                   : PViewNodeDatas;
   ParentDatas                 : PViewNodeDatas;
+  Parent                      : PVirtualNode;
 begin
   NodeDatas := Sender.GetNodeData(Node);
   ParentDatas := Sender.GetNodeData(ParentNode);
   if not Assigned(ParentDatas) then
     ParentDatas := @ActiveRecords[0];
   InitNodes(NodeDatas, ParentDatas, Length(ActiveRecords), Node.Index, InitialStates);
+  if IsViewNodeFiltered(Node) then
+    Include(InitialStates, ivsFiltered)
+  else begin
+    Parent := Node.Parent;
+    while Assigned(Parent) and (vsFiltered in Parent.States) do begin
+      Exclude(Parent.States, vsFiltered);
+      Parent := Parent.Parent;
+    end;
+  end;
 end;
 
 procedure TfrmMain.vstViewKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -13407,6 +13518,7 @@ var
   Element                     : IwbElement;
   Column                      : TColumnIndex;
 begin
+  OutputDebugString(PChar(Key.ToString));
   UserWasActive := True;
 
   if not wbEditAllowed then
@@ -13476,6 +13588,14 @@ begin
 
   end;
 
+end;
+
+procedure TfrmMain.vstViewKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = '?' then begin
+    Key := #0;
+    edViewFilterName.SetFocus;
+  end;
 end;
 
 procedure TfrmMain.vstViewNewText(Sender: TBaseVirtualTree;

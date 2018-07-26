@@ -54,6 +54,7 @@ procedure SwitchToCoSave;
 implementation
 
 uses
+  System.UITypes,
   SysUtils,
   Windows,
   Registry,
@@ -193,9 +194,23 @@ end;
 // and should be overridden by command line parameters
 procedure ReadSettings;
 var
+  ResetSettings: Boolean;
   Settings: TMemIniFile;
+  Shift,Ctrl,Alt: Boolean;
 begin
-  try
+  ResetSettings := FindCmdLineSwitch('resetsettings');
+  if not ResetSettings then begin
+    Shift := GetAsyncKeyState(VK_SHIFT) < 0;
+    Ctrl := GetAsyncKeyState(VK_CONTROL) < 0;
+    Alt := GetAsyncKeyState(VK_MENU) < 0;
+    if Shift and Ctrl and Alt then
+      ResetSettings := MessageDlg('Reset ALL settings?',
+        mtConfirmation, [mbYes, mbNo], 0, mbNo) = mrYes;
+  end;
+
+  if ResetSettings then
+    DeleteFile(PChar(wbSettingsFileName))
+  else try
     Settings := TMemIniFile.Create(wbSettingsFileName);
     try
       wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
