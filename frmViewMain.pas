@@ -8617,12 +8617,13 @@ end;
 function TfrmMain.LOManagersDirtyInfo(aInfo: TPluginDirtyInfo): string;
 // LOOT entry example
 {
-  - name: 'UDO.esp'
+  - name: 'DLCRobot.esm'
     dirty:
-      - crc: 0xd7d3445d
-        util: *dirtyUtil
-        itm: 15
-        udr: 4448
+      - <<: *dirtyPlugin
+        crc: 0xD69027EA
+        util: 'FO4Edit v3.2.1'
+        itm: 45
+        udr: 38
         nav: 1
 }
 // BOSS entry example
@@ -8647,8 +8648,9 @@ begin
     Result := Result + CRLF + 'LOOT Masterlist Entry';
     Result := Result + CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin]);
     Result := Result + CRLF + StringOfChar(' ', 4) + 'dirty:';
-    Result := Result + CRLF + Format(StringOfChar(' ', 6) + '- crc: 0x%s', [LowerCase(IntToHex(aInfo.CRC32, 8))]);
-    Result := Result + CRLF + StringOfChar(' ', 8) + 'util: *dirtyUtil';
+    Result := Result + CRLF + StringOfChar(' ', 6) + '- <<: *dirtyPlugin';
+    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
+    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: %sEdit v%s', [wbAppName, VersionString]);
     if aInfo.ITM <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'itm: %d', [aInfo.ITM]);
     if aInfo.UDR <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'udr: %d', [aInfo.UDR]);
     if aInfo.NAV <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'nav: %d', [aInfo.NAV]);
