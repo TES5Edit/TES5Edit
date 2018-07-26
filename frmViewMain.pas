@@ -1325,7 +1325,7 @@ begin
             wbStartTime := Now;
           PrevAction := wbCurrentAction;
           if sl.Count = 1 then
-            wbCurrentAction := 'Adding '+IwbFile(Pointer(sl.Objects[i])).Name+' as new master to ' + aTargetFile.Name
+            wbCurrentAction := 'Adding '+IwbFile(Pointer(sl.Objects[0])).Name+' as new master to ' + aTargetFile.Name
           else
             wbCurrentAction := 'Adding '+sl.Count.ToString+' new masters to ' + aTargetFile.Name;
           AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ' + wbCurrentAction);
