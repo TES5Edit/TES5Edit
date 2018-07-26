@@ -693,7 +693,7 @@ begin
     Exit;
   end;
 
-  if wbGameMode <> gmTES4 then begin
+  if wbGameMode in [gmFO3, gmFNV] then begin
     wbUDRSetZ := False;
     wbUDRSetZValue := -15000;
   end;
@@ -838,7 +838,7 @@ begin
   if FindCmdLineSwitch('IKnowWhatImDoing') then
     wbIKnowWhatImDoing := True;
 
-  if wbIKnowWhatImDoing and FindCmdLineSwitch('ImCrazy') then
+  if wbIKnowWhatImDoing and FindCmdLineSwitch('IKnowIllBreakMyGameWithThis') then
     wbAllowEditGameMaster := True;
 
   if FindCmdLineSwitch('quickclean') and (wbToolSource in [tsPlugins]) then
