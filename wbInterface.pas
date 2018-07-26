@@ -25,7 +25,7 @@ uses
   Graphics;
 
 const
-  VersionString  = '3.2.3l EXPERIMENTAL';
+  VersionString  = '3.2.3m EXPERIMENTAL';
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
   wbHardcodedDat = '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
@@ -1066,7 +1066,7 @@ type
     x, y: Integer;
   end;
 
-  TDynMainRecords = array of IwbMainRecord;
+  TDynMainRecords = TArray<IwbMainRecord>;
 
   IwbMainRecord = interface(IwbRecord)
     ['{F06FD5E2-621D-4422-BA00-CB3CA72B3691}']
@@ -1096,6 +1096,7 @@ type
     function EnsureChildGroup: IwbGroupRecord;
     function GetBaseRecord: IwbMainRecord;
     function GetBaseRecordID: TwbFormID;
+    function GetMasterAndLeafs: TDynMainRecords;
 
     function GetConflictAll: TConflictAll;
     procedure SetConflictAll(aValue: TConflictAll);
@@ -1201,6 +1202,8 @@ type
       read GetWinningOverride;
     property HighestOverrideOrSelf[aMaxLoadOrder: Integer]: IwbMainRecord
       read GetHighestOverrideOrSelf;
+    property MasterAndLeafs: TDynMainRecords
+      read GetMasterAndLeafs;
 
     property ReferencedBy[aIndex: Integer]: IwbMainRecord
       read GetReferencedBy;

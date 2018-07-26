@@ -879,7 +879,8 @@ type
     mrsHasMeshChecked,
     mrsHasMesh,
     mrsNoUpdateRefs,
-    mrBasePtrAllocated
+    mrsBasePtrAllocated,
+    mrsOverridesSorted
   );
 
   TwbMainRecordStates = set of TwbMainRecordState;
@@ -896,7 +897,7 @@ type
     mrFixedFormID       : TwbFormID;
     mrMaster            : Pointer{IwbMainRecord};
     mrOverrides         : TDynMainRecords;
-    mrOverridesSorted   : Boolean;
+    mrMasterAndLeafs    : array of Pointer{IwbMainRecord};
     mrEditorID          : string;
     mrFullName          : string;
     mrStates            : TwbMainRecordStates;
@@ -1025,6 +1026,7 @@ type
     function EnsureChildGroup: IwbGroupRecord;
     function GetBaseRecord: IwbMainRecord;
     function GetBaseRecordID: TwbFormID;
+    function GetMasterAndLeafs: TDynMainRecords;
 
     procedure MakeHeaderWriteable;
 
@@ -5702,7 +5704,8 @@ begin
   SetLength(mrOverrides, Succ(Length(mrOverrides)));
   mrOverrides[High(mrOverrides)] := aMainRecord;
   (aMainRecord as IwbMainRecordInternal).SetMaster(Self);
-  mrOverridesSorted := False;
+  Exclude(mrStates, mrsOverridesSorted);
+  mrMasterAndLeafs := nil;
 end;
 
 {$IFDEF USE_PARALLEL_BUILD_REFS}
@@ -6221,10 +6224,10 @@ begin
       DoReset(True);
       ReleaseElements;
 
-      if mrBasePtrAllocated in mrStates then
+      if mrsBasePtrAllocated in mrStates then
         FreeMem(dcBasePtr);
       GetMem(dcBasePtr, Stream.Size);
-      Include(mrStates, mrBasePtrAllocated);
+      Include(mrStates, mrsBasePtrAllocated);
 
       Move(Stream.Memory^, dcBasePtr^, Stream.Size);
 
@@ -6286,7 +6289,7 @@ begin
   IsInterior := False;
   lContainer := aContainer;
   New(BasePtr);
-  Include(mrStates, mrBasePtrAllocated);
+  Include(mrStates, mrsBasePtrAllocated);
   BasePtr.mrsSignature := aSignature;
   BasePtr.mrsDataSize := 0;
   BasePtr.mrsFlags._Flags := 0;
@@ -6458,7 +6461,7 @@ end;
 
 destructor TwbMainRecord.Destroy;
 begin
-  if mrBasePtrAllocated in mrStates then
+  if mrsBasePtrAllocated in mrStates then
     FreeMem(dcBasePtr);
   inherited;
 end;
@@ -7604,6 +7607,52 @@ begin
   Result := IwbMainRecord(mrMaster);
 end;
 
+function TwbMainRecord.GetMasterAndLeafs: TDynMainRecords;
+var
+  lMasters : TStringList;
+  i, j, k : Integer;
+  _File   : IwbFile;
+begin
+  if Assigned(mrMaster) then
+    Exit(IwbMainRecord(mrMaster).GetMasterAndLeafs);
+  if Length(mrMasterAndLeafs) < 1 then begin
+    k := Succ(Length(mrOverrides));
+    SetLength(mrMasterAndLeafs, k);
+    mrMasterAndLeafs[0] := GetMasterOrSelf;
+    if k > 2 {there is more than one override} then begin
+      k := 1;
+      lMasters := TStringList.Create;
+      lMasters.Sorted := True;
+      lMasters.Duplicates := dupIgnore;
+      try
+        if not (mrsOverridesSorted in mrStates) then
+          GetOverride(0); {forces sorting of overrides}
+
+        for i := Low(mrOverrides) to High(mrOverrides) do begin
+          _File := mrOverrides[i]._File;
+          for j := Pred(_File.MasterCount) downto 0 do
+            lMasters.Add(_File.Masters[j].FileName);
+        end;
+
+        for i := Low(mrOverrides) to High(mrOverrides) do begin
+          _File := mrOverrides[i]._File;
+          if lMasters.IndexOf(_File.FileName) < 0 then begin
+            mrMasterAndLeafs[k] := mrOverrides[i];
+            Inc(k);
+          end;
+        end;
+      finally
+        lMasters.Free;
+      end;
+      SetLength(mrMasterAndLeafs, k);
+    end else if k = 2 {there is exactly one override} then
+      mrMasterAndLeafs[1] := mrOverrides[0];
+  end;
+  SetLength(Result, Length(mrMasterAndLeafs));
+  for i := Low(mrMasterAndLeafs) to High(mrMasterAndLeafs) do
+    Result[i] := IwbMainRecord(mrMasterAndLeafs[i]);
+end;
+
 function TwbMainRecord.GetMasterOrSelf: IwbMainRecord;
 begin
   Result := GetMaster;
@@ -7691,9 +7740,9 @@ end;
 
 function TwbMainRecord.GetOverride(aIndex: Integer): IwbMainRecord;
 begin
-  if not mrOverridesSorted then begin
+  if not (mrsOverridesSorted in mrStates) then begin
     wbMergeSort(@mrOverrides[0], Length(mrOverrides), CompareOverrides);
-    mrOverridesSorted := True;
+    Include(mrStates, mrsOverridesSorted);
   end;
 
   Result := mrOverrides[aIndex];
@@ -8170,7 +8219,7 @@ begin
 
   if Assigned(dcEndPtr) then begin
     New(p);
-    Include(mrStates, mrBasePtrAllocated);
+    Include(mrStates, mrsBasePtrAllocated);
     p^ := mrStruct^;
     dcBasePtr := p;
     dcEndPtr := nil;
@@ -8674,6 +8723,7 @@ begin
     end;
   end;
   SetLength(mrOverrides, j);
+  mrMasterAndLeafs := nil;
 end;
 
 procedure TwbMainRecord.RemoveReferencedBy(aMainRecord: IwbMainRecord);
@@ -9615,7 +9665,8 @@ begin
   mrOverrides := Copy(aOverrides, 1, High(Integer));
   for i := Low(mrOverrides) to High(mrOverrides) do
     (mrOverrides[i] as IwbMainRecordInternal).SetMaster(Self);
-  mrOverridesSorted := False;
+  Exclude(mrStates, mrsOverridesSorted);
+  mrMasterAndLeafs := nil;
 
   mrReferencedBy := aReferencedBy;
   mrReferencedBySize := Length(mrReferencedBy);
@@ -9652,7 +9703,8 @@ begin
 
   for i := Low(mrOverrides) to High(mrOverrides) do
     (mrOverrides[i] as IwbMainRecordInternal).SetMaster(Self);
-  mrOverridesSorted := False;
+  Exclude(mrStates, mrsOverridesSorted);
+  mrMasterAndLeafs := nil;
 
   mrReferencedBy := aReferencedBy;
   mrReferencedBySize := Length(mrReferencedBy);
