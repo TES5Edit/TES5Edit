@@ -894,6 +894,7 @@ type
 
     function NewFormID: TwbFormID;
 
+    procedure GetMasters(aMasters: TStrings);
     procedure AddMasters(aMasters: TStrings);
     procedure AddMasterIfMissing(const aMaster: string);
     procedure SortMasters;
@@ -3425,7 +3426,8 @@ function _wbRecordDefMap: TStringList;
 function wbProgressLock: Integer;
 function wbProgressUnlock: Integer;
 function wbHasProgressCallback: Boolean;
-procedure wbProgressCallback(const aStatus: string);
+procedure wbProgressCallback(const aStatus: string = '');
+procedure wbTick;
 
 function wbLighter(Color: TColor; Amount: Double = 0.5): TColor;
 function wbDarker(Color: TColor; Amount: Double = 0.25): TColor;
@@ -3493,6 +3495,14 @@ procedure wbProgressCallback(const aStatus: string);
 begin
   if wbHasProgressCallback then
     _wbProgressCallback(aStatus);
+end;
+
+procedure wbTick;
+begin
+  if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount64) then begin
+    wbProgressCallback;
+    wbCurrentTick := GetTickCount64;
+  end;
 end;
 
 

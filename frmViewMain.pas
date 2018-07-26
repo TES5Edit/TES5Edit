@@ -381,13 +381,14 @@ type
     procedure pmuNavPopup(Sender: TObject);
     procedure mniNavAddClick(Sender: TObject);
     procedure mniNavAddMastersClick(Sender: TObject);
+    procedure mniNavCleanMastersClick(Sender: TObject);
+    procedure mniNavSortMastersClick(Sender: TObject);
     procedure mniNavBatchChangeReferencingRecordsClick(Sender: TObject);
     procedure mniNavBuildReachableClick(Sender: TObject);
     procedure mniNavBuildRefClick(Sender: TObject);
     procedure mniNavChangeFormIDClick(Sender: TObject);
     procedure mniNavChangeReferencingRecordsClick(Sender: TObject);
     procedure mniNavCheckForErrorsClick(Sender: TObject);
-    procedure mniNavCleanMastersClick(Sender: TObject);
     procedure mniNavCleanupInjectedClick(Sender: TObject);
     procedure mniNavCellChild(Sender: TObject);
     procedure mniNavCompareSelectedClick(Sender: TObject);
@@ -401,7 +402,6 @@ type
     procedure mniNavRemoveIdenticalToMasterClick(Sender: TObject);
     procedure mniNavSetVWDAutoClick(Sender: TObject);
     procedure mniNavSetVWDAutoIntoClick(Sender: TObject);
-    procedure mniNavSortMastersClick(Sender: TObject);
 
     {--- pmuNavHeaderPopup ---}
     procedure mniNavHeaderFilesClick(Sender: TObject);
@@ -644,6 +644,9 @@ type
     procedure ApplyScript(aScript: string);
     procedure CreateActionsForScripts;
     function LOManagersDirtyInfo(aInfo: TPluginDirtyInfo): string;
+
+    procedure PerformLongAction(const aDesc: string; const aAction: TProc);
+    procedure PerformActionOnSelectedFiles(const aDesc: string; const aAction: TProc<IwbFile>);
   private
     procedure WMUser(var Message: TMessage); message WM_USER;
     procedure WMUser1(var Message: TMessage); message WM_USER + 1;
@@ -2294,21 +2297,11 @@ begin
 end;
 
 procedure TfrmMain.mniNavCleanMastersClick(Sender: TObject);
-var
-  Nodes                       : TNodeArray;
-  NodeData                    : PNavNodeData;
-  _File                       : IwbFile;
-  i                           : Integer;
 begin
-  UserWasActive := True;
-
-  Nodes := vstNav.GetSortedSelection(True);
-  for i := Low(Nodes) to High(Nodes) do begin
-    NodeData := vstNav.GetNodeData(Nodes[i]);
-    if Assigned(NodeData) and Supports(NodeData.Element, IwbFile, _File) then
-      if _File.IsEditable then
-        _File.CleanMasters;
-  end;
+  PerformActionOnSelectedFiles('cleaning masters', procedure(aFile: IwbFile)
+  begin
+    aFile.CleanMasters;
+  end);
 end;
 
 procedure TfrmMain.mniNavCompareSelectedClick(Sender: TObject);
@@ -3632,7 +3625,7 @@ begin
           with TfrmModuleSelect.Create(Self) do try
             sl.Clear;
             if ShowModal = mrOk then
-              sl.AddStrings(LoadedModules.ToStrings(False));
+              sl.AddStrings(SelectedModules.ToStrings(False));
             if sl.Count < 1 then begin
               frmMain.Close;
               Exit;
@@ -5747,40 +5740,58 @@ var
   NodeData                    : PNavNodeData;
   _File                       : IwbFile;
   i, j                        : Integer;
+  sl                          : TStringList;
+  s                           : string;
 begin
   UserWasActive := True;
 
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
   if Assigned(NodeData) and Supports(NodeData.Element, IwbFile, _File) then begin
-    with TfrmFileSelect.Create(Self) do try
-
-      for i := Low(Files) to High(Files) do begin
-        if Files[i].LoadOrder >= _File.LoadOrder then
-          Break;
-        if not (fsIsHardcoded in Files[i].FileStates) then
-          CheckListBox1.AddItem(Files[i].FileName, Pointer(Files[i]));
-      end;
-
-      for i := 0 to Pred(_File.MasterCount) do begin
-        j := CheckListBox1.Items.IndexOf(_File.Masters[i].FileName);
-        if j >= 0 then
-          CheckListBox1.Items.Delete(j);
-      end;
-
-      Caption := 'Which masters do you want to add?';
-
-      ShowModal;
-
-      for i := Pred(CheckListBox1.Count) downto 0 do
-        if not CheckListBox1.Checked[i] then
-          CheckListBox1.Items.Delete(i);
-
-      if CheckListBox1.Count < 1 then
+    sl := TStringList.Create;
+    try
+      if not _File.IsEditable then
         Exit;
 
-      _File.AddMasters(CheckListBox1.Items);
+      with TfrmModuleSelect.Create(Self) do try
+        _File.GetMasters(sl);
+        sl.Sorted := True;
+        AllModules := wbModulesByLoadOrder.FilteredBy(function(a: PwbModuleInfo): Boolean
+          begin
+            Result := Assigned(a.miFile);
+            if Result then begin
+              Result := a._File.LoadOrder < _File.LoadOrder;
+              if Result then
+                Result := sl.IndexOf(a._File.FileName) < 0;
+            end;
+          end);
+        if Length(AllModules) < 1 then
+          Exit;
+        sl.Clear;
+        sl.Sorted := False;
+        FilterFlag := mfHasFile;
+        SelectFlag := mfTagged;
+        AllowCancel;
+        Caption := 'Which masters do you want to add?';
+        if ShowModal = mrOk then
+          sl.AddStrings(SelectedModules.ToStrings);
+      finally
+        Free;
+      end;
+
+      if sl.Count > 0 then begin
+        if not EditWarn then
+          Exit;
+
+        if sl.Count = 1 then
+          s := 'Add '+sl[0]+' as new master to ' + _File.Name
+        else
+          s := 'Add '+sl.Count.ToString+' new masters to ' + _File.Name;
+        PerformLongAction(s, procedure begin
+          _File.AddMasters(sl);
+        end);
+      end;
     finally
-      Free;
+      sl.Free;
     end;
   end;
 end;
@@ -8024,21 +8035,11 @@ begin
 end;
 
 procedure TfrmMain.mniNavSortMastersClick(Sender: TObject);
-var
-  Nodes                       : TNodeArray;
-  NodeData                    : PNavNodeData;
-  _File                       : IwbFile;
-  i                           : Integer;
 begin
-  UserWasActive := True;
-
-  Nodes := vstNav.GetSortedSelection(True);
-  for i := Low(Nodes) to High(Nodes) do begin
-    NodeData := vstNav.GetNodeData(Nodes[i]);
-    if Assigned(NodeData) and Supports(NodeData.Element, IwbFile, _File) then
-      if _File.IsEditable then
-        _File.SortMasters;
-  end;
+  PerformActionOnSelectedFiles('sorting masters', procedure(aFile: IwbFile)
+  begin
+    aFile.SortMasters;
+  end);
 end;
 {
 procedure TfrmMain.mniNavTestClick(Sender: TObject);
@@ -10661,6 +10662,92 @@ begin
         if (Container.ElementCount = 0) or (Master.Overrides[i].Signature <> Master.Signature) then
           Container := nil;
       end;
+  end;
+end;
+
+procedure TfrmMain.PerformActionOnSelectedFiles(const aDesc: string; const aAction: TProc<IwbFile>);
+var
+  Nodes                       : TNodeArray;
+  NodeData                    : PNavNodeData;
+  _File                       : IwbFile;
+  i, j                        : Integer;
+  Files                       : TDynFiles;
+begin
+  UserWasActive := True;
+
+  Nodes := vstNav.GetSortedSelection(True);
+  SetLength(Files, Length(Nodes));
+  j := 0;
+  for i := Low(Nodes) to High(Nodes) do begin
+    NodeData := vstNav.GetNodeData(Nodes[i]);
+    if Assigned(NodeData) and Supports(NodeData.Element, IwbFile, _File) then
+      if _File.IsEditable then begin
+        Files[j] := _File;
+        Inc(j);
+      end;
+  end;
+  SetLength(Files, j);
+
+  if Length(Files) > 0 then begin
+    if not EditWarn then
+      Exit;
+    PerformLongAction(aDesc, procedure
+    var
+      i: Integer;
+    begin
+      for i := Low(Files) to High(Files) do
+        aAction(Files[i]);
+    end);
+  end;
+end;
+
+procedure TfrmMain.PerformLongAction(const aDesc: string; const aAction: TProc);
+var
+  HadTick    : Boolean;
+  WasEnabled : Boolean;
+  PrevAction : string;
+begin
+  if wbShowStartTime < 1 then
+    wbStartTime := Now;
+  WasEnabled := Enabled;
+  HadTick := wbCurrentTick > 0;
+
+  wbCurrentTick := GetTickCount64;
+  Inc(wbShowStartTime);
+  PrevAction := wbCurrentAction;
+  Enabled := False;
+  try
+    pgMain.ActivePage := tbsMessages;
+    wbCurrentAction := aDesc;
+    if wbCurrentAction <> '' then
+      wbProgressCallback('Start: ' + wbCurrentAction);
+    try
+      aAction;
+    except
+      on E: EAbort do begin
+        if wbCurrentAction <> '' then
+          wbProgressCallback('Aborted: ' + wbCurrentAction);
+        raise;
+      end;
+      on E: Exception do begin
+        if wbCurrentAction <> '' then
+          wbProgressCallback('Error during ' + wbCurrentAction + ': ' + E.Message)
+        else
+          wbProgressCallback('Error: ' + E.Message);
+        raise;
+      end;
+    end;
+    if wbCurrentAction <> '' then
+      wbProgressCallback('Done: ' + wbCurrentAction);
+  finally
+    Enabled := WasEnabled;
+    wbCurrentAction := PrevAction;
+    Dec(wbShowStartTime);
+    if HadTick then
+      wbCurrentTick := GetTickCount64
+    else
+      wbCurrentTick := 0;
+    Caption := Application.Title;
   end;
 end;
 

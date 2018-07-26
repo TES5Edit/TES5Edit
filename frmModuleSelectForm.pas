@@ -32,9 +32,11 @@ type
     vstModules: TVirtualStringTree;
     pnlError: TPanel;
     edFilter: TLabeledEdit;
+    btnCancel: TButton;
     procedure FormCreate(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
 
     procedure vstModulesInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure vstModulesFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -51,19 +53,25 @@ type
 
     procedure edFilterChange(Sender: TObject);
 
+    procedure pmuModulesPopup(Sender: TObject);
     procedure mniSelectAllClick(Sender: TObject);
     procedure mniSelectNoneClick(Sender: TObject);
     procedure mniInvertSelectionClick(Sender: TObject);
-    procedure pmuModulesPopup(Sender: TObject);
-    procedure FormShow(Sender: TObject);
   private
-    Modules         : TwbModuleInfos;
     ChangingChecked : Integer;
     procedure SimulateLoad;
     procedure DoSingleModuleLoad(Node: PVirtualNode);
     function GetSelectedOrAll: TNodeArray;
+    function CheckStateForModule(aModule: PwbModuleInfo; aIsRootChild: Boolean): TCheckState;
   public
-    LoadedModules :TwbModuleInfos;
+    AllModules      : TwbModuleInfos;
+    SelectedModules : TwbModuleInfos;
+
+    SelectFlag      : TwbModuleFlag;
+    FilterFlag      : TwbModuleFlag;
+
+    procedure AllowCancel;
+    function ShowModal: Integer; override;
   end;
 
   PModuleNodeData = ^TModuleNodeData;
@@ -72,7 +80,6 @@ type
     mndIndex  : Integer;
     mndName   : string;
   end;
-
 
 implementation
 
@@ -98,10 +105,10 @@ begin
       with NodeData^ do
         if Assigned(mndModule) then
           with mndModule^ do
-            if mfActive in miFlags then
-              Exclude(miFlags, mfActive)
+            if SelectFlag in miFlags then
+              Exclude(miFlags, SelectFlag)
             else
-              Include(miFlags, mfActive);
+              Include(miFlags, SelectFlag);
     end;
 
   SimulateLoad;
@@ -124,7 +131,7 @@ begin
       with NodeData^ do
         if Assigned(mndModule) then
           with mndModule^ do
-            Include(miFlags, mfActive);
+            Include(miFlags, SelectFlag);
     end;
 
   SimulateLoad;
@@ -147,7 +154,7 @@ begin
       with NodeData^ do
         if Assigned(mndModule) then
           with mndModule^ do
-            Exclude(miFlags, mfActive);
+            Exclude(miFlags, SelectFlag);
     end;
 
   SimulateLoad;
@@ -166,8 +173,8 @@ begin
     with PModuleNodeData(vstModules.GetNodeData(Node))^ do
       if Assigned(mndModule) then
         with mndModule^ do begin
-          Modules.DeactivateAll;
-          Include(miFlags, mfActive);
+          AllModules.ExcludeAll(SelectFlag);
+          Include(miFlags, SelectFlag);
           SimulateLoad;
           if btnOK.Enabled then
             btnOK.Click;
@@ -217,15 +224,15 @@ begin
     vstModules.Header.Height := vstModules.DefaultNodeHeight + 4;
   end;
 
-  Modules := wbModulesByLoadOrder;
   if not wbIsEslSupported then
     with vstModules.Header.Columns[3] do
       Options := Options - [coVisible];
   vstModules.Header.SortColumn := 1;
   vstModules.IncrementalSearch := isVisibleOnly;
   vstModules.NodeDataSize := SizeOf(TModuleNodeData);
-  vstModules.ChildCount[nil] := Length(Modules);
-  SimulateLoad;
+
+  SelectFlag := mfActive;
+  FilterFlag := mfValid;
 end;
 
 procedure TfrmModuleSelect.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -252,12 +259,16 @@ begin
       if btnOK.Enabled then
         btnOK.Click;
     end;
+  end else if Key = VK_ESCAPE then begin
+    if btnCancel.Enabled then
+      btnCancel.Click;
   end else if Key = VK_MULTIPLY then
     mniInvertSelection.Click;
 end;
 
 procedure TfrmModuleSelect.FormShow(Sender: TObject);
 begin
+  SimulateLoad;
   vstModules.SetFocus;
 end;
 
@@ -290,24 +301,51 @@ begin
   SetLength(Result, j);
 end;
 
-function CheckStateForModule(aModule: PwbModuleInfo; aIsRootChild: Boolean): TCheckState;
+procedure TfrmModuleSelect.AllowCancel;
+begin
+  btnCancel.Enabled := True;
+  btnCancel.Visible := True;
+end;
+
+function TfrmModuleSelect.CheckStateForModule(aModule: PwbModuleInfo; aIsRootChild: Boolean): TCheckState;
 begin
   with aModule^ do
     if aIsRootChild then begin
-      if mfActive in miFlags then
+      if SelectFlag in miFlags then
         Result := csCheckedNormal
-      else if mfLoaded in miFlags then
+      else if (SelectFlag = mfActive) and (mfLoaded in miFlags) then
         Result := csMixedNormal
       else
         Result := csUncheckedNormal;
     end else begin
-      if mfActive in miFlags then
+      if SelectFlag in miFlags then
         Result := csCheckedDisabled
-      else if mfLoaded in miFlags then
+      else if (SelectFlag = mfActive) and (mfLoaded in miFlags) then
         Result := csMixedDisabled
       else
         Result := csUncheckedDisabled;
     end;
+end;
+
+function TfrmModuleSelect.ShowModal: Integer;
+begin
+  vstModules.Clear;
+  if Length(AllModules) < 1 then
+    AllModules := wbModulesByLoadOrder.FilteredByFlag(FilterFlag);
+  vstModules.ChildCount[nil] := Length(AllModules);
+
+  if Length(AllModules) < 1 then
+    Result := mrCancel
+  else
+    Result := inherited ShowModal;
+
+  if Result <> mrOk then
+    SelectedModules := nil
+  else
+    SimulateLoad;
+
+  if Length(SelectedModules) < 1 then
+    Result := mrCancel;
 end;
 
 procedure TfrmModuleSelect.SimulateLoad;
@@ -316,9 +354,13 @@ var
 begin
   Error := '';
   try
-    LoadedModules := Modules.SimulateLoad;
-    if Length(LoadedModules) < 1 then
-      Error := 'No modules selected';
+    if SelectFlag = mfActive then
+      SelectedModules := AllModules.SimulateLoad
+    else
+      SelectedModules := AllModules.FilteredByFlag(SelectFlag);
+
+    if Length(SelectedModules) < 1 then
+      Error := 'No AllModules selected';
   except
     on E: Exception do
       Error := E.Message;
@@ -354,10 +396,10 @@ begin
     with PModuleNodeData(Sender.GetNodeData(Node))^ do
       if Assigned(mndModule) then
         with mndModule^ do begin
-          if mfActive in miFlags then
-            Exclude(miFlags, mfActive)
+          if SelectFlag in miFlags then
+            Exclude(miFlags, SelectFlag)
           else
-            Include(miFlags, mfActive);
+            Include(miFlags, SelectFlag);
           SimulateLoad;
         end;
 end;
@@ -489,13 +531,15 @@ end;
 procedure TfrmModuleSelect.vstModulesInitNode(Sender: TBaseVirtualTree;
   ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
 var
+  NodeData: PModuleNodeData;
   ParentNodeData: PModuleNodeData;
 begin
-  with PModuleNodeData(Sender.GetNodeData(Node))^ do begin
+  NodeData := Sender.GetNodeData(Node);
+  with NodeData^ do begin
     mndIndex := Node.Index;
     if not Assigned(mndModule) then
       if not Assigned(ParentNode) or (ParentNode = Sender.RootNode) then begin
-        mndModule := Modules[Node.Index];
+        mndModule := AllModules[Node.Index];
       end else begin
         ParentNodeData := Sender.GetNodeData(ParentNode);
         if Assigned(ParentNodeData.mndModule) then
@@ -513,7 +557,10 @@ begin
       mndName := mndModule.miName;
       if Length(mndModule.miMasters) > 0 then
         Include(InitialStates, ivsHasChildren);
-    end;
+      if not (FilterFlag in mndModule.miFlags) then
+        Include(InitialStates, ivsDisabled);
+    end else
+      Include(InitialStates, ivsDisabled);
   end;
 end;
 

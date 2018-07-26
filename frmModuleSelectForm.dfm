@@ -105,7 +105,7 @@ object frmModuleSelect: TfrmModuleSelect
   object pnlError: TPanel
     Left = 8
     Top = 582
-    Width = 761
+    Width = 681
     Height = 25
     Alignment = taLeftJustify
     Anchors = [akLeft, akTop, akRight]
@@ -125,6 +125,17 @@ object frmModuleSelect: TfrmModuleSelect
     LabelPosition = lpLeft
     TabOrder = 0
     OnChange = edFilterChange
+  end
+  object btnCancel: TButton
+    Left = 700
+    Top = 582
+    Width = 75
+    Height = 25
+    Anchors = [akRight, akBottom]
+    Caption = 'Cancel'
+    ModalResult = 2
+    TabOrder = 4
+    Visible = False
   end
   object pmuModules: TPopupMenu
     OnPopup = pmuModulesPopup
