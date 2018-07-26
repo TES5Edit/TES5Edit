@@ -19,6 +19,9 @@ unit wbLoadOrder;
 interface
 
 uses
+  System.Types,
+  System.Classes,
+  System.SysUtils,
   wbInit,
   wbInterface;
 
@@ -32,6 +35,7 @@ type
 
   TwbModuleFlag = (
     mfInvalid,
+    mfValid,
     mfGhost,
     mfMastersMissing,
     mfHasESMFlag,
@@ -41,23 +45,25 @@ type
     mfActive,
     mfHasIndex,
     mfLoaded,
-    mfLoading
+    mfLoading,
+    mfTagged,
+    mfHasFile
   );
 
   TwbModuleFlags = set of TwbModuleFlag;
 
   PwbModuleInfo = ^TwbModuleInfo;
   TwbModuleInfo = record
-    miOriginalName   : string;
-    miName           : string;
-    miDateTime       : TDateTime;
+    miOriginalName      : string;
+    miName              : string;
+    miDateTime          : TDateTime;
 
-    miExtension      : TwbModuleExtension;
+    miExtension         : TwbModuleExtension;
 
-    miMasterNames    : TDynStrings;
-    miMasters        : array of PwbModuleInfo;
+    miMasterNames       : TDynStrings;
+    miMasters           : array of PwbModuleInfo;
 
-    miFlags          : TwbModuleFlags;
+    miFlags             : TwbModuleFlags;
 
     miOfficialIndex     : Integer;
     miCCIndex           : Integer;
@@ -66,8 +72,10 @@ type
 
     miCombinedIndex     : Integer;
 
-    miFileID         : TwbFileID;
-    miLoadOrder      : Integer;
+    miFileID            : TwbFileID;
+    miLoadOrder         : Integer;
+
+    miFile              : TObject;
 
     function IsValid: Boolean;
     function HasIndex: Boolean;
@@ -78,15 +86,19 @@ type
     function FlagsDescription: string;
     function Description: string;
     function ToString(aInclDesc: Boolean): string;
+    function _File: IwbFile;
   end;
 
   TwbModuleInfos = array of PwbModuleInfo;
 
   TwbModuleInfosHelper = record helper for TwbModuleInfos
-    function ToStrings(aInclDesc: Boolean): TDynStrings;
+    function ToStrings(aInclDesc: Boolean = False): TDynStrings;
     procedure DeactivateAll;
+    procedure ExcludeAll(aFlag: TwbModuleFlag);
     procedure ActivateMasters;
     function SimulateLoad: TwbModuleInfos;
+    function FilteredByFlag(aFlag: TwbModuleFlag): TwbModuleInfos;
+    function FilteredBy(const aFunc: TFunc<PwbModuleInfo, Boolean>): TwbModuleInfos;
   end;
 
 procedure wbLoadModules;
@@ -96,9 +108,6 @@ function wbModulesByLoadOrder: TwbModuleInfos;
 implementation
 
 uses
-  System.Types,
-  System.Classes,
-  System.SysUtils,
   System.IOUtils,
   System.Generics.Defaults,
   System.Generics.Collections,
@@ -254,6 +263,9 @@ begin
 
       if IsESL then
         Include(miFlags, mfHasESLFlag);
+
+      Include(miFlags, mfValid);
+
       Inc(j);
   end;
   SetLength(_Modules, j);
@@ -498,6 +510,12 @@ begin
     Result := Trim(Result + '    ' + Description);
 end;
 
+function TwbModuleInfo._File: IwbFile;
+begin
+  if not Supports(miFile, IwbFile, Result) then
+    Result := nil;
+end;
+
 { TwbModuleInfosHelper }
 
 procedure TwbModuleInfosHelper.ActivateMasters;
@@ -511,12 +529,45 @@ begin
 end;
 
 procedure TwbModuleInfosHelper.DeactivateAll;
+begin
+  ExcludeAll(mfActive);
+end;
+
+procedure TwbModuleInfosHelper.ExcludeAll(aFlag: TwbModuleFlag);
 var
   i: Integer;
 begin
   for i := Low(Self) to High(Self) do
     with Self[i]^ do
-      Exclude(miFlags, mfActive);
+      Exclude(miFlags, aFlag);
+end;
+
+function TwbModuleInfosHelper.FilteredBy(const aFunc: TFunc<PwbModuleInfo, Boolean>): TwbModuleInfos;
+var
+  i, j: Integer;
+begin
+  SetLength(Result, Length(_Modules));
+  j := 0;
+  for i := Low(Self) to High(Self) do
+    if aFunc(Self[i]) then begin
+      Result[j] := Self[i];
+      Inc(j);
+    end;
+  SetLength(Result, j);
+end;
+
+function TwbModuleInfosHelper.FilteredByFlag(aFlag: TwbModuleFlag): TwbModuleInfos;
+var
+  i, j: Integer;
+begin
+  SetLength(Result, Length(_Modules));
+  j := 0;
+  for i := Low(Self) to High(Self) do
+    if aFlag in Self[i]^.miFlags then begin
+      Result[j] := Self[i];
+      Inc(j);
+    end;
+  SetLength(Result, j);
 end;
 
 var

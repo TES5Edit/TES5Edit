@@ -28,6 +28,7 @@ uses
   Contnrs,
   Math,
   wbInterface,
+  wbLoadOrder,
   {$IFDEF USE_CODESITE}
   CodeSiteLogging,
   {$ENDIF}
@@ -153,10 +154,7 @@ var
 begin
   Inc(wbCopyIsRunning);
   try
-    if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount64) then begin
-      wbProgressCallback('');
-      wbCurrentTick := GetTickCount64;
-    end;
+    wbTick;
     Container := aSource.Container;
     if Assigned(Container) then begin
       if Supports(Container, IwbMainRecord, MainRecord) then
@@ -594,6 +592,8 @@ type
     flFormIDsSorted          : Boolean;
 
     flInjectedRecords        : array of IwbMainRecord;
+
+    flModule                 : PwbModuleInfo;
 
     procedure flOpenFile; virtual;
     procedure flCloseFile; virtual;
@@ -2450,6 +2450,9 @@ begin
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
   flFileNameOnDisk := flFileName;
+  flModule := wbModuleByName(GetFileName);
+  if not flModule.IsValid then
+    flModule := nil;
   Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
   if wbGameMode = gmFNV then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.34'
@@ -2470,7 +2473,7 @@ begin
   flLoadFinished := True;
   flFormIDsSorted := True;
 
-  if flLoadOrder >= 0 then
+  if flLoadOrder >= 0 then begin
     if wbIsEslSupported then begin
       if Header.IsESL and not wbIgnoreESL then begin
         if _NextLightSlot >= $FFF then
@@ -2485,10 +2488,19 @@ begin
       end;
     end else
       flLoadOrderFileID := TwbFileID.Create(flLoadOrder);
+    if Assigned(flModule) and not Assigned(flModule.miFile) then begin
+      flModule.miFile := Self;
+      Include(flModule.miFlags, mfHasFile);
+    end;
+  end;
 end;
 
 destructor TwbFile.Destroy;
 begin
+  if Assigned(flModule) and (flModule.miFile = Self) then begin
+    Exclude(flModule.miFlags, mfHasFile);
+    flModule.miFile := nil;
+  end;
   flCloseFile;
   inherited;
 end;
@@ -2993,20 +3005,24 @@ var
   Rec         : IwbRecord;
   i           : Integer;
 begin
-  if (GetElementCount <> 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
-    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+  if fsOnlyHeader in flStates then begin
+    if (GetElementCount <> 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
+      raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
-  if Header.Signature <> wbHeaderSignature then
-    raise Exception.CreateFmt('Expected header signature '+wbHeaderSignature+', found %s in file "%s"', [String(Header.Signature), flFileName]);
+    if Header.Signature <> wbHeaderSignature then
+      raise Exception.CreateFmt('Expected header signature '+wbHeaderSignature+', found %s in file "%s"', [String(Header.Signature), flFileName]);
 
-  MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
-  if Assigned(MasterFiles) then
-    for i := 0 to Pred(MasterFiles.ElementCount) do begin
-      Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
-      if not Assigned(Rec) then
-        raise Exception.CreateFmt('Unexpected error reading master list for file "%s"', [flFileName]);
-      aMasters.Add(Rec.Value);
-    end;
+    MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
+    if Assigned(MasterFiles) then
+      for i := 0 to Pred(MasterFiles.ElementCount) do begin
+        Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
+        if not Assigned(Rec) then
+          raise Exception.CreateFmt('Unexpected error reading master list for file "%s"', [flFileName]);
+        aMasters.Add(Rec.Value);
+      end;
+  end else
+    for i := Low(flMasters) to High(flMasters) do
+      aMasters.AddObject(flMasters[i].FileName, Pointer(flMasters[i]));
 end;
 
 function TwbFile.GetName: string;
@@ -3500,7 +3516,7 @@ begin
     else
       flLoadOrderFileID := TwbFileID.Create($FF);
   end else
-    if flLoadOrder >= 0 then
+    if flLoadOrder >= 0 then begin
       if wbIsEslSupported then begin
           if Header.IsESL and not wbIgnoreESL then begin
             if _NextLightSlot >= $FFF then
@@ -3518,6 +3534,15 @@ begin
           raise Exception.Create('Too many modules');
         flLoadOrderFileID := TwbFileID.Create(flLoadOrder);
       end;
+
+      flModule := wbModuleByName(GetFileName);
+      if not flModule.IsValid then
+        flModule := nil;
+      if Assigned(flModule) and not Assigned(flModule.miFile) then begin
+        flModule.miFile := Self;
+        Include(flModule.miFlags, mfHasFile);
+      end;
+    end;
 
   MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
   if Assigned(MasterFiles) then
@@ -5930,8 +5955,9 @@ begin
     DoBuildRef(False)
   else
     UseKAC;
+
   if wbHasProgressCallback then
-    wbProgressCallback('');
+    wbProgressCallback;
 end;
 
 procedure TwbMainRecord.DoBuildRef(aRemove: Boolean);
@@ -8254,6 +8280,8 @@ var
   SelfRef  : IwbContainerElementRef;
   NewFileID: TwbFileID;
 begin
+  wbTick;
+
   mrBaseRecordID := TwbFormID.Null;
   Exclude(mrStates, mrsBaseRecordChecked);
 
@@ -8297,6 +8325,8 @@ var
 
   SelfRef : IwbContainerElementRef;
 begin
+  wbTick;
+
   mrBaseRecordID := TwbFormID.Null;
   Exclude(mrStates, mrsBaseRecordChecked);
 
@@ -12357,10 +12387,7 @@ var
   Group : IwbGroupRecord;
 {$ENDIF}
 begin
-  if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount64) then begin
-    wbProgressCallback('');
-    wbCurrentTick := GetTickCount64;
-  end;
+  wbTick;
 
   {$IFDEF USE_CODESITE}
   Log := (laAddIfMissing in wbLoggingAreas) and wbCodeSiteLoggingEnabled;
@@ -12438,10 +12465,7 @@ var
   Log: Boolean;
 {$ENDIF}
 begin
-  if (wbCurrentTick>0) and (wbCurrentTick+500<GetTickCount64) then begin
-    wbProgressCallback('');
-    wbCurrentTick := GetTickCount64;
-  end;
+  wbTick;
 
   {$IFDEF USE_CODESITE}
   Log := (laElementAssign in wbLoggingAreas) and wbCodeSiteLoggingEnabled;
