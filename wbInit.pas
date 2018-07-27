@@ -877,7 +877,10 @@ begin
     wbTrackAllEditorID := True;
 
   if FindCmdLineSwitch('IgnoreESL') then
-    wbIgnoreESL := True;
+    wbIgnoreESL := True
+  else
+    if FindCmdLineSwitch('PseudoESL') then
+      wbPseudoESL := True;
 
   if FindCmdLineSwitch('SimpleFormIDs') then
     wbPrettyFormID := False;

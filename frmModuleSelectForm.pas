@@ -221,6 +221,10 @@ begin
   if not wbIsEslSupported then
     with vstModules.Header.Columns[3] do
       Options := Options - [coVisible];
+  if wbPseudoESL then
+    with vstModules.Header.Columns[5] do
+      Options := Options - [coVisible];
+
   vstModules.Header.SortColumn := 1;
   vstModules.IncrementalSearch := isVisibleOnly;
   vstModules.NodeDataSize := SizeOf(TModuleNodeData);
