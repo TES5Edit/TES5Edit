@@ -86,6 +86,8 @@ var
   wbCopyIsRunning          : Integer  = 0;
   wbIgnoreESL              : Boolean  = False;
   wbAllowEditGameMaster    : Boolean  = False;
+  wbAllowDirectSave        : Boolean  = False;
+  wbAllowDirectSaveFor     : TStringList;
 
   wbCacheRecordsThreshold  : Integer   = 500;
   wbCacheTimeThreshold     : TDateTime = 2 * 1/24/60/60; //2 seconds
@@ -858,7 +860,8 @@ type
     fsIsTemporary,
     fsHasNoFormID,
     fsRefsBuild,
-    fsIsGhost
+    fsIsGhost,
+    fsMemoryMapped
   );
 
   TwbFileStates = set of TwbFileState;

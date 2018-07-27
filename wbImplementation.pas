@@ -2406,14 +2406,6 @@ begin
   end;
 end;
 
-function wbExpandFileName(const aFileName: string): string;
-begin
-  if ExtractFilePath(aFileName) = '' then
-    Result := wbDataPath + ExtractFileName(aFileName)
-  else
-    Result := aFileName;
-end;
-
 constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aOnlyHeader: Boolean; IsTemporary: Boolean = False);
 begin
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
@@ -2428,9 +2420,31 @@ begin
     Include(flStates, fsIsGameMaster);
   if aOnlyHeader then
     Include(flStates, fsOnlyHeader);
+
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
   flFileNameOnDisk := flFileName;
+
+  if wbDontSave or (flStates * [fsIsHardcoded, fsOnlyHeader] <> []) then
+    Include(flStates, fsMemoryMapped)
+  else begin
+    if (not wbAllowDirectSave) or (fsIsGameMaster in flStates) then
+      Include(flStates, fsMemoryMapped)
+    else begin
+      flModule := wbModuleByName(GetFileName);
+      if not flModule.IsValid then
+        flModule := nil;
+      if Assigned(flModule) then
+        if (flModule.miOfficialIndex <> High(Integer)) or (flModule.miCCIndex <> High(Integer)) then
+          Include(flStates, fsMemoryMapped);
+    end;
+
+    if (fsMemoryMapped in flStates) and
+       Assigned(wbAllowDirectSaveFor) and
+       (wbAllowDirectSaveFor.IndexOf(GetFileName) >= 0) then
+      Exclude(flStates, fsMemoryMapped);
+  end;
+
   flOpenFile;
   Scan;
 end;
@@ -2613,7 +2627,7 @@ end;
 
 procedure TwbFile.flCloseFile;
 begin
-  if fsOnlyHeader in flStates then begin
+  if fsMemoryMapped in flStates then begin
     if Assigned(flView) then begin
       UnmapViewOfFile(flView);
       flView := nil;
@@ -2662,7 +2676,7 @@ begin
     end;
   end;
 
-  if fsOnlyHeader in flStates then begin
+  if fsMemoryMapped in flStates then begin
     flFileHandle := CreateFile(
       PChar(flFileNameOnDisk),
       FileAccessMode[False],
@@ -15355,8 +15369,10 @@ procedure wbFileForceClosed;
 var
   i: Integer;
 begin
-  for i := Low(Files) to High(Files) do
+  for i := Low(Files) to High(Files) do begin
     (Files[i] as IwbFileInternal).ForceClosed;
+    wbProgressCallback;
+  end;
   Files := nil;
   FilesMap.Clear;
   _NextFullSlot := 0;

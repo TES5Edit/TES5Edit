@@ -792,7 +792,9 @@ type
 
     procedure ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
     procedure vstCreateEditor(const aElement: IwbElement; out EditLink: IVTEditLink);
-//    procedure ScriptScanProgress(aTotalCount, aCount: Integer);
+
+    procedure SaveLog(const s: string; aAllowReplace: Boolean);
+    procedure SaveLogs(aAllowReplace: Boolean);
   public
     destructor Destroy; override;
 
@@ -922,6 +924,9 @@ type
 
 var
   frmMain                     : TfrmMain;
+  FilesToRename               : TStringList;
+
+procedure DoRename;
 
 function LockProcessMessages: Integer;
 function UnLockProcessMessages: Integer;
@@ -1050,14 +1055,13 @@ begin
   end;
 end;
 
-function DoRenameModule(const aFrom, aTo: string): Boolean;
+function DoRenameModule(const aFrom, aTo: string; aSilent: Boolean): Boolean;
 var
-  i       : Integer;
-  s,
-  f,
-  t,
-  e       : string;
-  OrgDate : Integer;
+  lFrom       : string;
+  lTo         : string;
+  lBackup     : string;
+  s           : string;
+  OldDateTime : TDateTime;
 begin
   Result := False;
 
@@ -1068,45 +1072,128 @@ begin
     if not ForceDirectories(wbBackupPath) then
       wbBackupPath := wbDataPath;
 
-  // create backup file
-  s := aTo;
-  f := wbDataPath + s;
-  OrgDate := FileAge(f);
-  t := wbBackupPath + ExtractFileName(s) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
-  if not wbDontBackup then begin
-    // backup original file
-    wbProgressCallback('Renaming "' + f + '" to "' + t + '".');
-    if not RenameFile(f, t) then begin
-      MessageBox(0, PChar('Could not rename "' + f + '" to "' + t + '".'), 'Error', 0);
-      Exit;
-    end;
-  end else begin
-    // remove original file
-    wbProgressCallback('Deleting "' + f + '".');
-    if not SysUtils.DeleteFile(f) then begin
-      MessageBox(0, PChar('Could not delete "' + f + '".'), 'Error', 0);
-      Exit;
-    end;
-  end;
-  // rename temp save file to original
-  t := f;
-  s := aFrom;
-  f := wbDataPath + s;
-  wbProgressCallback('Renaming "' + f + '" to "' + t + '".');
-  if not RenameFile(f, t) then begin
-    MessageBox(0, PChar('Could not rename "' + f + '" to "' + t + '".'), 'Error', 0);
+  lFrom := wbExpandFileName(aFrom);
+  if not FileExists(lFrom) then begin
+    s := 'Could not rename "'+lFrom+'". File not found.';
+    wbProgressCallback(s);
+    if not aSilent then
+      MessageBox(0, PChar(s), 'Error', 0);
     Exit;
   end;
 
-  // restore timestamp on a new file for the games that use timestamps for load order
-  // all games for now for legacy reasons
-  {if wbGameMode in [gmTES4, gmFO3, gmFNV] then }begin
-    e := ExtractFileExt(t);
-    if SameText(e, '.esp') or SameText(e, '.esm') or SameText(e, '.esl') or SameText(e, '.ghost') then
-      FileSetDate(t, OrgDate);
+  // create backup file
+  lTo := wbExpandFileName(aTo);
+  OldDateTime := 0;
+  if FileExists(lTo) then begin
+    try
+      OldDateTime := TFile.GetLastWriteTime(lTo);
+    except
+      s := 'Could not get last modified time of "' + lTo + '".';
+      wbProgressCallback(s);
+      if not aSilent then
+        MessageBox(0, PChar(s), 'Error', 0);
+    end;
+    lBackup := wbBackupPath + ExtractFileName(aTo) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+    if not wbDontBackup then begin
+      // backup original file
+      wbProgressCallback('Renaming "' + lTo + '" to "' + lBackup + '".');
+      if not RenameFile(lTo, lBackup) then begin
+        s := 'Could not rename "' + lTo + '" to "' + lBackup + '".';
+        wbProgressCallback(s);
+        if not aSilent then
+          MessageBox(0, PChar(s), 'Error', 0);
+        Exit;
+      end;
+    end else begin
+      // remove original file
+      wbProgressCallback('Deleting "' + lTo + '".');
+      if not SysUtils.DeleteFile(lTo) then begin
+        s := 'Could not delete "' + lTo + '".';
+        wbProgressCallback(s);
+        if not aSilent then
+          MessageBox(0, PChar(s), 'Error', 0);
+        Exit;
+      end;
+    end;
+  end;
+
+  // rename temp save file to original
+  wbProgressCallback('Renaming "' + lFrom + '" to "' + lTo + '".');
+  if not RenameFile(lFrom, lTo) then begin
+    s := 'Could not rename "' + lFrom + '" to "' + lTo + '".';
+    wbProgressCallback(s);
+    if not aSilent then
+      MessageBox(0, PChar('Could not rename "' + lFrom + '" to "' + lTo + '".'), 'Error', 0);
+    Exit;
+  end;
+
+  if OldDateTime <> 0 then
+    if lTo.EndsWith(csDotEsp, True) or
+       lTo.EndsWith(csDotEsm, True) or
+       lTo.EndsWith(csDotEsl, True) or
+       lTo.EndsWith(csDotGhost, True) then try
+    TFile.SetLastWriteTime(lTo, OldDateTime);
+  except
+    s := 'Could not set last modified time of "' + lTo + '".';
+    wbProgressCallback(s);
+    if not aSilent then
+      MessageBox(0, PChar(s), 'Error', 0);
   end;
 
   Result := True;
+end;
+
+var
+  _SaveProgress: Boolean;
+
+procedure SaveProgress(const s: string);
+begin
+  _SaveProgress := True;
+  if Assigned(frmMain) then
+    GeneralProgress(s);
+end;
+
+procedure DoRename;
+var
+  i        : Integer;
+  AnyError : Boolean;
+begin
+  _wbProgressCallback := SaveProgress;
+  wbShowStartTime := 1;
+  wbStartTime := Now;
+  wbCurrentTick := GetTickCount64;
+  wbCurrentAction := 'Closing files';
+  if Assigned(frmMain) then
+    frmMain.mmoMessages.Clear;
+  wbProgressCallback(wbCurrentAction);
+
+  wbFileForceClosed;
+
+  if wbDontSave then
+    Exit;
+
+  if not Assigned(FilesToRename) then
+    Exit;
+
+  if not wbDontBackup and not DirectoryExists(wbBackupPath) then
+    if not ForceDirectories(wbBackupPath) then
+      wbBackupPath := wbDataPath;
+
+  wbCurrentAction := 'Renaming previously saved files';
+  wbProgressCallback(wbCurrentAction);
+
+  _SaveProgress := False;
+  AnyError := False;
+  for i := 0 to Pred(FilesToRename.Count) do
+    if not DoRenameModule(FilesToRename.ValueFromIndex[i], FilesToRename.Names[i], False) then
+      AnyError := True;
+
+  if AnyError then begin
+    MessageBox(0, PChar('One or more errors occured during renaming of saved modules.'+#13#13+
+    'Please check the files in your data path: ' + wbDataPath), 'Error', 0);
+    if _SaveProgress and Assigned(frmMain) then
+      frmMain.SaveLogs(False);
+  end;
 end;
 
 procedure TfrmMain.acBackExecute(Sender: TObject);
@@ -2895,7 +2982,7 @@ var
   MainRecord     : IwbMainRecord;
   QustFlags      : IwbElement;
   FormIDs        : TwbFormIDs;
-  FileStream     : TFileStream;
+  FileStream     : TBufferedFileStream;
   p, s           : string;
 begin
   SelectedNodes := vstNav.GetSortedSelection(True);
@@ -2941,7 +3028,7 @@ begin
             if not ForceDirectories(p) then
               raise Exception.Create('Unable to create SEQ directory in game''s Data');
           s := p + ChangeFileExt(_File.FileName, '.seq');
-          FileStream := TFileStream.Create(s, fmCreate);
+          FileStream := TBufferedFileStream.Create(s, fmCreate);
           FileStream.WriteBuffer(FormIDs[0], Length(FormIDs)*SizeOf(Cardinal));
           PostAddMessage('Created: ' + s);
           Inc(j);
@@ -4480,32 +4567,39 @@ begin
     Result := nil;
 end;
 
-procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
-
-  procedure SaveLog(s: string);
-  var
-    txt      : AnsiString;
-    fs       : TFileStream;
-
-  begin
+procedure TfrmMain.SaveLog(const s: string; aAllowReplace: Boolean);
+var
+  txt      : AnsiString;
+  fs       : TBufferedFileStream;
+begin
+  try
     try
-      try
-        if FileExists(s) then begin
-          fs := TFileStream.Create(s, fmOpenReadWrite);
-          fs.Seek(0, soFromEnd);
-        end else
-          fs := TFileStream.Create(s, fmCreate);
+      if FileExists(s) then begin
+        fs := TBufferedFileStream.Create(s, fmOpenReadWrite);
+        fs.Seek(0, soFromEnd);
+      end else
+        fs := TBufferedFileStream.Create(s, fmCreate);
+      if aAllowReplace then
         if fs.Size > 3 * 1024 * 1024 then // truncate log file at 3MB
           fs.Size := 0;
-        txt := AnsiString(mmoMessages.Lines.Text) + #13#10;
-        fs.WriteBuffer(txt[1], Length(txt));
-      // suppress log saving errors, it is not critical for xEdit
-      except end;
-    finally
-      if Assigned(fs) then
-        FreeAndNil(fs);
-    end;
+      txt := AnsiString(mmoMessages.Lines.Text) + #13#10;
+      fs.WriteBuffer(txt[1], Length(txt));
+    // suppress log saving errors, it is not critical for xEdit
+    except end;
+  finally
+    if Assigned(fs) then
+      FreeAndNil(fs);
   end;
+end;
+
+procedure TfrmMain.SaveLogs(aAllowReplace: Boolean);
+begin
+  SaveLog(wbProgramPath + wbAppName + wbToolName + '_log.txt', aAllowReplace);
+  if wbLogFile <> '' then
+    SaveLog(wbLogFile, aAllowReplace);
+end;
+
+procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
 
 var
   i: Integer;
@@ -4548,8 +4642,7 @@ begin
     Settings.UpdateFile;
   end;
 
-  SaveLog(wbProgramPath + wbAppName + 'Edit_log.txt');
-  if wbLogFile<>'' then SaveLog(wbLogFile);
+  SaveLogs(True);
 
   if DirectoryExists(wbTempPath) and wbRemoveTempPath then
     DeleteDirectory(wbTempPath); // remove temp folder unless it existed
@@ -4563,6 +4656,10 @@ begin
   vstSpreadSheetArmor.Free;
   vstSpreadSheetAmmo.Free;
   pnlNav.Free;
+  pnlTop.Visible := False;
+  for i := 0 to Pred(pgMain.PageCount) do
+    pgMain.Pages[i].TabVisible := tbsMessages = pgMain.Pages[i];
+
   Files := nil;
   _wbProgressCallback := nil;
   ExitCode := CheckResult;
@@ -11542,7 +11639,7 @@ end;
 procedure TfrmMain.SaveChanged;
 var
   i                           : Integer;
-  FileStream                  : TFileStream;
+  FileStream                  : TBufferedFileStream;
   FileType                    : array of Byte;
   _File                       : IwbFile;
   _LFile                      : TwbLocalizationFile;
@@ -11552,6 +11649,7 @@ var
   t                           : string;
   SavedAny                    : Boolean;
   AnyErrors                   : Boolean;
+  TryDirectRename             : Boolean;
 begin
   if wbDontSave then
     Exit;
@@ -11596,6 +11694,7 @@ begin
 
       for i := 0 to Pred(CheckListBox1.Items.Count) do
         if CheckListBox1.Checked[i] then begin
+          TryDirectRename := False;
 
           // localization file
           if FileType[i] = 1 then begin
@@ -11613,6 +11712,7 @@ begin
                 PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
                 _LFile.WriteToStream(FileStream);
                 SavedAny := True;
+                TryDirectRename := True; //TODO: make sure this is ok?
               finally
                 FileStream.Free;
               end;
@@ -11644,6 +11744,8 @@ begin
                 PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
                 _File.WriteToStream(FileStream, False);
                 SavedAny := True;
+                if not (fsMemoryMapped in _File.FileStates) then
+                  TryDirectRename := True;
               finally
                 FileStream.Free;
               end;
@@ -11657,10 +11759,20 @@ begin
 
           end;
 
-          if NeedsRename then try
-            if not DoRenameModule(s, u) then
-              AnyErrors := True;
+          if NeedsRename and TryDirectRename then try
+            if not DoRenameModule(s, u, True) then
+              AnyErrors := True
+            else
+              NeedsRename := False;
           except end;
+
+          if NeedsRename then begin
+            if not Assigned(FilesToRename) then
+              FilesToRename := TStringList.Create;
+            // s - rename from, relative to DataPath
+            // u - rename to, relative to DataPath
+            FilesToRename.Values[u] := s;
+          end;
 
           DoProcessMessages;
           tmrMessagesTimer(nil);
@@ -13574,7 +13686,6 @@ var
   Element                     : IwbElement;
   Column                      : TColumnIndex;
 begin
-  OutputDebugString(PChar(Key.ToString));
   UserWasActive := True;
 
   if not wbEditAllowed then
@@ -16244,7 +16355,7 @@ var
   s                                                : string;
   FormID, BaseFormID, InventoryFormID, EnchantmentFormID, SpellFormID : TwbFormID;
 begin
-  with TFileStream.Create(plFolder + 'Pluggy'+wbAppName+'ViewWorld.csv', fmOpenRead or fmShareDenyNone) do try
+  with TBufferedFileStream.Create(plFolder + 'Pluggy'+wbAppName+'ViewWorld.csv', fmOpenRead or fmShareDenyNone) do try
     Position := Size - 2024;
     SetLength(s, 64 * 1024);
     SetLength(s, Read(s[1], 64 * 1024));
@@ -16263,7 +16374,7 @@ begin
   finally
     Free;
   end;
-  with TFileStream.Create(plFolder + 'Pluggy'+wbAppName+'ViewInventory.csv', fmOpenRead or fmShareDenyNone) do try
+  with TBufferedFileStream.Create(plFolder + 'Pluggy'+wbAppName+'ViewInventory.csv', fmOpenRead or fmShareDenyNone) do try
     Position := Size - 2024;
     SetLength(s, 64 * 1024);
     SetLength(s, Read(s[1], 64 * 1024));
@@ -16282,7 +16393,7 @@ begin
   finally
     Free;
   end;
-  with TFileStream.Create(plFolder + 'Pluggy'+wbAppName+'ViewSpells.csv', fmOpenRead or fmShareDenyNone) do try
+  with TBufferedFileStream.Create(plFolder + 'Pluggy'+wbAppName+'ViewSpells.csv', fmOpenRead or fmShareDenyNone) do try
     Position := Size - 2024;
     SetLength(s, 64 * 1024);
     SetLength(s, Read(s[1], 64 * 1024));

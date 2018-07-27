@@ -114,6 +114,7 @@ function wbMD5File(aFileName: string): string;
 function wbIsAssociatedWithExtension(aExt: string): Boolean;
 function wbAssociateWithExtension(aExt, aName, aDescr: string): Boolean;
 function ExecuteCaptureConsoleOutput(const aCommandLine: string): Cardinal;
+function wbExpandFileName(const aFileName: string): string;
 
 
 type
@@ -160,12 +161,46 @@ function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames
 
 function wbStripDotGhost(const aFileName: string): string;
 
+type
+  TPassThroughFunc<T> = reference to function (const a: T): T;
+
+  TStringArrayHelper = record helper for TArray<string>
+    function ForEach(const aFunc: TPassThroughFunc<string>): TArray<string>;
+    function RemoveEmpty: TArray<string>;
+  end;
+
 implementation
 
 uses
   System.SyncObjs,
   StrUtils,
   wbSort;
+
+function TStringArrayHelper.ForEach(const aFunc: TPassThroughFunc<string>): TArray<string>;
+var
+  i: Integer;
+begin
+  Result := nil;
+  SetLength(Result, Length(Self));
+  for i := Low(Self) to High(Self) do
+    Result[i] := aFunc(Self[i]);
+end;
+
+function TStringArrayHelper.RemoveEmpty: TArray<string>;
+var
+  i, j: Integer;
+begin
+  Result := Copy(Self);
+  j := 0;
+  for i := Low(Result) to High(Result) do begin
+    if Result[i] <> '' then begin
+      if i <> j then
+        Result[j] := Result[i];
+      Inc(j);
+    end;
+  end;
+  SetLength(Result, j);
+end;
 
 function wbStripDotGhost(const aFileName: string): string;
 begin
@@ -574,6 +609,15 @@ begin
   aFont.Size    := aIni.ReadInteger(aSection, aName + 'Size', aFont.Size);
   aFont.Style   := TFontStyles(Byte(aIni.ReadInteger(aSection, aName + 'Style', Byte(aFont.Style))));
 end;
+
+function wbExpandFileName(const aFileName: string): string;
+begin
+  if ExtractFilePath(aFileName) = '' then
+    Result := wbDataPath + ExtractFileName(aFileName)
+  else
+    Result := aFileName;
+end;
+
 
 var
   crctbl: array[0..7] of array[0..255] of cardinal;

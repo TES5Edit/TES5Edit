@@ -217,6 +217,7 @@ begin
       wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
       wbShowFlagEnumValue := Settings.ReadBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
       wbTrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
+      wbAllowDirectSave := Settings.ReadBool('Options', 'AllowDirectSave', wbAllowDirectSave);
     finally
       Settings.Free;
     end;
@@ -777,6 +778,19 @@ begin
   end else begin
     Exit;
   end;
+
+  if wbFindCmdLineParam('AllowDirectSaves', s) then begin
+    wbAllowDirectSaveFor := TStringList.Create;
+    wbAllowDirectSaveFor.Sorted := True;
+    wbAllowDirectSaveFor.Duplicates := dupIgnore;
+    wbAllowDirectSaveFor.AddStrings(s.Split([',']).ForEach(Trim).RemoveEmpty);
+    if wbAllowDirectSaveFor.Count < 1 then begin
+      FreeAndNil(wbAllowDirectSaveFor);
+      wbAllowDirectSave := True;
+    end;
+  end else
+    if FindCmdLineSwitch('AllowDirectSaves') then
+      wbAllowDirectSave := True;
 
   // definitions
   case wbGameMode of
