@@ -2490,7 +2490,7 @@ begin
   if flLoadOrder >= 0 then begin
     if wbIsEslSupported then begin
       if Header.IsESL and not wbIgnoreESL then begin
-        if _NextLightSlot >= $FFF then
+        if _NextLightSlot > $FFF then
           raise Exception.Create('Too many light modules');
         flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
         Inc(_NextLightSlot);
@@ -3533,7 +3533,7 @@ begin
     if flLoadOrder >= 0 then begin
       if wbIsEslSupported then begin
           if Header.IsESL and not wbIgnoreESL then begin
-            if _NextLightSlot >= $FFF then
+            if _NextLightSlot > $FFF then
               raise Exception.Create('Too many light modules');
             flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
             Inc(_NextLightSlot);

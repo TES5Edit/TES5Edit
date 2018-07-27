@@ -48,7 +48,7 @@ type
   private
     { Private declarations }
   public
-    { Public declarations }
+    NoEscape: Boolean;
   end;
 
 implementation
@@ -118,9 +118,10 @@ begin
 
   if Key = VK_RETURN then
     btnOK.Click
-  else if Key = VK_ESCAPE then
-    ModalResult := mrCancel
-  else if Key = VK_SUBTRACT then
+  else if Key = VK_ESCAPE then begin
+    if not NoEscape then
+      ModalResult := mrCancel;
+  end else if Key = VK_SUBTRACT then
     SelectNone1.Click
   else if Key = VK_ADD then
     SelectAll1.Click
