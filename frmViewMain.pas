@@ -619,13 +619,15 @@ type
 
     function AddRequiredMaster(const aMasterFile: IwbFile; const aTargetFile: IwbFile): Boolean;
     function AddRequiredMasters(const aSourceElement: IwbElement; const aTargetFile: IwbFile; aAsNew: Boolean): Boolean; overload;
-    function AddRequiredMasters(aMasters: TStrings; const aTargetFile: IwbFile): Boolean; overload;
+    function AddRequiredMasters(aMasters: TStrings; const aTargetFile: IwbFile; aSilent: Boolean = False): Boolean; overload;
 
     function CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord): IwbMainRecord;
     function CheckForErrors(const aIndent: Integer; const aElement: IwbElement): Boolean;
 
-    function AddNewFileName(aFileName: string; aIsESL: Boolean): IwbFile;
-    function AddNewFile(out aFile: IwbFile; aIsESL: Boolean): Boolean;
+    function AddNewFileName(aFileName: string; aIsESL: Boolean): IwbFile; overload;
+    function AddNewFileName(aFileName: string; aTemplate: PwbModuleInfo): IwbFile; overload;
+    function AddNewFile(out aFile: IwbFile; aIsESL: Boolean): Boolean; overload;
+    function AddNewFile(out aFile: IwbFile; aTemplate: PwbModuleInfo): Boolean; overload;
 
     procedure SaveChanged;
     procedure JumpTo(aInterface: IInterface; aBackward: Boolean);
@@ -1338,6 +1340,28 @@ begin
   Result._AddRef;
 end;
 
+function TfrmMain.AddNewFileName(aFileName: string; aTemplate: PwbModuleInfo): IwbFile;
+var
+  LoadOrder : Integer;
+begin
+  Result := nil;
+
+  if FileExists(wbDataPath + aFileName) then begin
+    ShowMessage('A file of that name exists already.');
+    Exit;
+  end;
+
+  LoadOrder := 0;
+  if Length(Files) > 0 then
+    LoadOrder := Succ(Files[High(Files)].LoadOrder);
+
+  Result := wbNewFile(wbDataPath + aFileName, LoadOrder, aTemplate);
+  SetLength(Files, Succ(Length(Files)));
+  Files[High(Files)] := Result;
+  vstNav.AddChild(nil, Pointer(Result));
+  Result._AddRef;
+end;
+
 function TfrmMain.AddNewFile(out aFile: IwbFile; aIsESL: Boolean): Boolean;
 var
   s: string;
@@ -1356,6 +1380,24 @@ begin
     Result := Assigned(aFile);
   end;
 end;
+
+function TfrmMain.AddNewFile(out aFile: IwbFile; aTemplate: PwbModuleInfo): Boolean;
+var
+  s: string;
+begin
+  aFile := nil;
+  Result := False;
+  s := '';
+  if InputQuery('New Module File', 'Filename without extension:', s) then begin
+    s := Trim(s);
+    if s = '' then
+      Exit;
+    s := s + aTemplate.miExtension.ToString;
+    aFile := AddNewFileName(s, aTemplate);
+    Result := Assigned(aFile);
+  end;
+end;
+
 
 function CompareLoadOrder(List: TStringList; Index1, Index2: Integer): Integer;
 begin
@@ -1385,7 +1427,7 @@ begin
     Result := True;
 end;
 
-function TfrmMain.AddRequiredMasters(aMasters: TStrings; const aTargetFile: IwbFile): Boolean;
+function TfrmMain.AddRequiredMasters(aMasters: TStrings; const aTargetFile: IwbFile; aSilent: Boolean = False): Boolean;
 var
   sl                          : TStringList;
   i, j                        : Integer;
@@ -1412,9 +1454,11 @@ begin
         if IwbFile(Pointer(sl.Objects[i])).LoadOrder >= aTargetFile.LoadOrder then
           raise Exception.Create('The required master "' + sl[i] + '" can not be added to "' + aTargetFile.FileName + '" as it has a higher load order');
 
-      Result := MessageDlg('To continue the following files need to be added to "' +
-        aTargetFile.FileName + '" as masters:'#13#13 + sl.Text +
-        #13'Do you want to continue?', mtConfirmation, [mbYes, mbNo], 0) = mrYes;
+      Result := aSilent;
+      if not Result then
+        Result := MessageDlg('To continue the following files need to be added to "' +
+          aTargetFile.FileName + '" as masters:'#13#13 + sl.Text +
+          #13'Do you want to continue?', mtConfirmation, [mbYes, mbNo], 0) = mrYes;
 
       sl.Sorted := False;
       sl.CustomSort(CompareLoadOrder);
@@ -2021,12 +2065,17 @@ begin
         if LoadOrder > j then
           j := LoadOrder;
 
-    with TfrmFileSelect.Create(Self) do try
+    with TfrmModuleSelect.Create(Self) do try
 
-      for i := j to High(Files) do
-        if Files[i].IsEditable then
-          if Files[i].LoadOrder >= j then
-            CheckListBox1.AddItem(Files[i].Name, Pointer(Files[i]));
+      AllModules := wbModulesByLoadOrder(True).FilteredBy(function(a: PwbModuleInfo): Boolean
+        begin
+          Result := mfTemplate in a.miFlags;
+          if not Result then begin
+            Result := Assigned(a.miFile);
+            if Result then
+              Result := a._File.LoadOrder >= j;
+          end;
+        end);
 
       Multiple := (Length(aElements) > 1) or (aElements[0].ElementType <> etMainRecord);
       EditorID := '';
@@ -2038,15 +2087,21 @@ begin
         MainRecord := (aElements[0] as IwbMainRecord);
         Master := MainRecord.MasterOrSelf;
         if not (AsNew or AsWrapper) then begin
-          j := CheckListBox1.Items.IndexOf(Master._File.Name);
-          if j >= 0 then
-            CheckListBox1.Items.Delete(j);
-
-          for i := 0 to Pred(Master.OverrideCount) do begin
-            j := CheckListBox1.Items.IndexOf(Master.Overrides[i]._File.Name);
-            if j >= 0 then
-              CheckListBox1.Items.Delete(j);
-          end;
+          AllModules := AllModules.FilteredBy(function(a: PwbModuleInfo): Boolean
+            var
+              i: Integer;
+            begin
+              Result := mfTemplate in a.miFlags;
+              if not Result then begin
+                Result := not a._File.Equals(Master._File);
+                if Result then
+                  for i := 0 to Pred(Master.OverrideCount) do begin
+                    Result := not a._File.Equals(Master.Overrides[i]._File);
+                    if not Result then
+                      Exit;
+                  end;
+              end;
+            end);
         end
         else begin
           EditorID := MainRecord.EditorID;
@@ -2096,34 +2151,34 @@ begin
           until False;
       end;
 
-      if wbIsEslSupported then begin
-        CheckListBox1.AddItem('<new .esp>', nil);
-        CheckListBox1.AddItem('<new .esl>', nil);
-      end else begin
-        CheckListBox1.AddItem('<new file>', nil);
-      end;
 
       if Multiple then
         Caption := 'Which files do you want to add these records to?'
       else
         Caption := 'Which files do you want to add this record to?';
 
+      FilterFlag := mfValid;
+      SelectFlag := mfTagged;
+      AllModules.ExcludeAll(mfTagged);
+      AllowCancel;
+
       if ShowModal <> mrOK then
         Exit;
 
       SetLength(Result, Length(aElements));
 
-      for i := 0 to Pred(CheckListBox1.Count) do
-        if CheckListBox1.Checked[i] then begin
-          ReferenceFile := IwbFile(Pointer(CheckListBox1.Items.Objects[i]));
-          if not Assigned(ReferenceFile) then begin
-            IsESL := wbIsEslSupported and (CheckListBox1.Items[i] = '<new .esl>');
+      for i := Low(SelectedModules) to High(SelectedModules) do
+        begin
+          if mfTemplate in SelectedModules[i].miFlags then begin
+            ReferenceFile := nil;
             while not Assigned(ReferenceFile) do
-              if not AddNewFile(ReferenceFile, IsESL) then
+              if not AddNewFile(ReferenceFile, SelectedModules[i]) then
                 Break;
-          end;
+          end else
+            ReferenceFile := SelectedModules[i]._File;
 
-          if Assigned(ReferenceFile) and AddRequiredMasters(sl, ReferenceFile) then begin
+          if Assigned(ReferenceFile) and AddRequiredMasters(sl, ReferenceFile,
+            mfTemplate in SelectedModules[i].miFlags) then begin
 
             if AsWrapper then begin
 
@@ -6030,6 +6085,7 @@ begin
         sl.Sorted := False;
         FilterFlag := mfHasFile;
         SelectFlag := mfTagged;
+        AllModules.ExcludeAll(mfTagged);
         AllowCancel;
         Caption := 'Which masters do you want to add?';
         if ShowModal = mrOk then

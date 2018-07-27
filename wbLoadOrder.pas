@@ -33,6 +33,10 @@ type
     meESP
   );
 
+  TwbModuleExtensionHelper = record helper for TwbModuleExtension
+    function ToString: string;
+  end;
+
   TwbModuleFlag = (
     mfInvalid,
     mfValid,
@@ -47,7 +51,9 @@ type
     mfLoaded,
     mfLoading,
     mfTagged,
-    mfHasFile
+    mfHasFile,
+    mfNew,
+    mfTemplate
   );
 
   TwbModuleFlags = set of TwbModuleFlag;
@@ -87,6 +93,7 @@ type
     function Description: string;
     function ToString(aInclDesc: Boolean): string;
     function _File: IwbFile;
+    class function AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo; static;
   end;
 
   TwbModuleInfos = array of PwbModuleInfo;
@@ -97,13 +104,14 @@ type
     procedure ExcludeAll(aFlag: TwbModuleFlag);
     procedure ActivateMasters;
     function SimulateLoad: TwbModuleInfos;
+    procedure DisableSimulatedLoad;
     function FilteredByFlag(aFlag: TwbModuleFlag): TwbModuleInfos;
     function FilteredBy(const aFunc: TFunc<PwbModuleInfo, Boolean>): TwbModuleInfos;
   end;
 
 procedure wbLoadModules;
 function wbModuleByName(const aName: string): PwbModuleInfo;
-function wbModulesByLoadOrder: TwbModuleInfos;
+function wbModulesByLoadOrder(aIncludeTemplates: Boolean = False): TwbModuleInfos;
 
 implementation
 
@@ -114,13 +122,26 @@ uses
   wbImplementation,
   wbSort;
 
+function TwbModuleExtensionHelper.ToString: string;
+begin
+  case Self of
+    meESM: Result := csDotEsm;
+    meESL: Result := csDotEsl;
+    meESP: Result := csDotEsp;
+  else
+    Result := '';
+  end;
+end;
+
 type
     TwbDynModuleInfos = array of TwbModuleInfo;
 var
-  _Modules          : TwbDynModuleInfos;
-  _ModulesByName    : TStringList;
-  _InvalidModule    : TwbModuleInfo = (miFlags: [mfInvalid]);
-  _ModulesLoadOrder : TwbModuleInfos;
+  _Modules           : TwbDynModuleInfos;
+  _ModulesByName     : TStringList;
+  _InvalidModule     : TwbModuleInfo = (miFlags: [mfInvalid]);
+  _ModulesLoadOrder  : TwbModuleInfos;
+  _AdditionalModules : TwbModuleInfos;
+  _TemplateModules   : TwbModuleInfos;
 
 function wbModuleByName(const aName: string): PwbModuleInfo;
 var
@@ -417,12 +438,53 @@ begin
 
   for i := Low(_ModulesLoadOrder) to High(_ModulesLoadOrder) do
     _ModulesLoadOrder[i].miCombinedIndex := i;
+
+  TwbModuleInfo.AddNewModule('<new file>.esp', True);
+  with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do begin
+    Include(miFlags, mfHasESMFlag);
+    Include(miFlags, mfIsESM);
+  end;
+  if wbIsEslSupported then begin
+    with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do
+      Include(miFlags, mfHasESLFlag);
+    with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do begin
+      Include(miFlags, mfHasESMFlag);
+      Include(miFlags, mfHasESLFlag);
+      Include(miFlags, mfIsESM);
+    end;
+  end;
+  with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
+    Include(miFlags, mfHasESMFlag);
+  end;
+  if wbIsEslSupported then
+    with TwbModuleInfo.AddNewModule('<new file>.esl', True)^ do begin
+      Include(miFlags, mfHasESMFlag);
+      Include(miFlags, mfHasESLFlag);
+    end;
 end;
 
-function wbModulesByLoadOrder:  TwbModuleInfos;
+function wbModulesByLoadOrder(aIncludeTemplates: Boolean = False):  TwbModuleInfos;
+var
+  i, j : Integer;
 begin
   wbLoadModules;
   Result := Copy(_ModulesLoadOrder);
+  i := Length(_AdditionalModules);
+  if i > 0 then begin
+    j := Length(Result);
+    SetLength(Result, j + i);
+    for i := 0 to Pred(i) do
+      Result[j + i] := _AdditionalModules[i];
+  end;
+  if aIncludeTemplates then begin
+    i := Length(_TemplateModules);
+    if i > 0 then begin
+      j := Length(Result);
+      SetLength(Result, j + i);
+      for i := 0 to Pred(i) do
+        Result[j + i] := _TemplateModules[i];
+    end;
+  end;
 end;
 
 { TwbModuleInfo }
@@ -443,6 +505,50 @@ begin
       with miMasters[i]^ do
         if not (mfActive in miFlags) then
           Activate(aRecursive);
+end;
+
+class function TwbModuleInfo.AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo;
+begin
+  Result := AllocMem(SizeOf(TwbModuleInfo));
+  with Result^ do begin
+    miOriginalName := aFileName;
+    miName := aFileName;
+
+    miExtension := meUnknown;
+    if miName.EndsWith(csDotEsm, True) then
+      miExtension := meESM
+    else if miName.EndsWith(csDotEsp, True) then
+      miExtension := meESP
+    else if miName.EndsWith(csDotEsl, True) and wbIsEslSupported then
+      miExtension := meESL;
+
+    if miExtension in [meESM, meESL] then
+      Include(miFlags, mfIsESM);
+
+    miDateTime := Now;
+    Include(miFlags, mfValid);
+    if aTemplate then
+      Include(miFlags, mfTemplate)
+    else
+      Include(miFlags, mfNew);
+
+    miOfficialIndex := High(Integer);
+    miCCIndex := High(Integer);
+    miPluginsTxtIndex := High(Integer);
+    miLoadOrderTxtIndex := High(Integer);
+    miCombinedIndex := High(Integer);
+
+    miFileID := TwbFileID.Create(-1);
+    miLoadOrder := High(Integer);
+  end;
+  if aTemplate then begin
+    SetLength(_TemplateModules, Succ(Length(_TemplateModules)));
+    _TemplateModules[High(_TemplateModules)] := Result;
+  end else begin
+    SetLength(_AdditionalModules, Succ(Length(_AdditionalModules)));
+    _AdditionalModules[High(_AdditionalModules)] := Result;
+    _ModulesByName.AddObject(aFileName, Pointer(Result));
+  end;
 end;
 
 function TwbModuleInfo.Description: string;
@@ -480,6 +586,9 @@ end;
 
 function TwbModuleInfo.LoadOrderDescription: string;
 begin
+  if mfTemplate in miFlags then
+    Exit('[Template]');
+
   Result := '';
   if miOfficialIndex = Low(Integer) then
     Result := Result + '[GameMaster]'
@@ -533,6 +642,29 @@ begin
   ExcludeAll(mfActive);
 end;
 
+var
+  _NextFullSlot: Integer;
+  _NextLightSlot: Integer;
+  _SimulatedLoadDisabled: Boolean;
+
+procedure TwbModuleInfosHelper.DisableSimulatedLoad;
+var
+  i: Integer;
+begin
+  if _SimulatedLoadDisabled then
+    Exit;
+  _SimulatedLoadDisabled := True;
+  for i := Low(_Modules) to High(_Modules) do
+    with _Modules[i] do begin
+      Exclude(miFlags, mfLoaded);
+      Exclude(miFlags, mfLoading);
+      miFileID := TwbFileID.Create(-1);
+      miLoadOrder := High(Integer);
+    end;
+  _NextFullSlot := 0;
+  _NextLightSlot := 0;
+end;
+
 procedure TwbModuleInfosHelper.ExcludeAll(aFlag: TwbModuleFlag);
 var
   i: Integer;
@@ -546,7 +678,7 @@ function TwbModuleInfosHelper.FilteredBy(const aFunc: TFunc<PwbModuleInfo, Boole
 var
   i, j: Integer;
 begin
-  SetLength(Result, Length(_Modules));
+  SetLength(Result, Length(Self));
   j := 0;
   for i := Low(Self) to High(Self) do
     if aFunc(Self[i]) then begin
@@ -560,7 +692,7 @@ function TwbModuleInfosHelper.FilteredByFlag(aFlag: TwbModuleFlag): TwbModuleInf
 var
   i, j: Integer;
 begin
-  SetLength(Result, Length(_Modules));
+  SetLength(Result, Length(Self));
   j := 0;
   for i := Low(Self) to High(Self) do
     if aFlag in Self[i]^.miFlags then begin
@@ -569,10 +701,6 @@ begin
     end;
   SetLength(Result, j);
 end;
-
-var
-  _NextFullSlot: Integer;
-  _NextLightSlot: Integer;
 
 function TwbModuleInfosHelper.SimulateLoad: TwbModuleInfos;
 var
@@ -620,6 +748,9 @@ var
 var
   i: Integer;
 begin
+  if _SimulatedLoadDisabled then
+    raise Exception.Create('Simulated Load has been disabled');
+
   for i := Low(_Modules) to High(_Modules) do
     with _Modules[i] do begin
       Exclude(miFlags, mfLoaded);
@@ -647,6 +778,9 @@ begin
   for i := Low(Self) to High(Self) do
     Result[i] := Self[i].ToString(aInclDesc);
 end;
+
+{ TwbModuleExtensionHelper }
+
 
 initialization
 finalization

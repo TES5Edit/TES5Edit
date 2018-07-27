@@ -250,7 +250,7 @@ begin
         DoSingleModuleLoad(vstModules.FocusedNode);
       Exit;
     end;
-    if ssCtrl in Shift then
+    if (ssCtrl in Shift) or (Length(SelectedModules)=0) then
       DoSingleModuleLoad(vstModules.FocusedNode)
     else begin
       SimulateLoad;
