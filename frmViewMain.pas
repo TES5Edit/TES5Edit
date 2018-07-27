@@ -2108,7 +2108,8 @@ begin
       else
         Caption := 'Which files do you want to add this record to?';
 
-      ShowModal;
+      if ShowModal <> mrOK then
+        Exit;
 
       SetLength(Result, Length(aElements));
 
@@ -2539,7 +2540,8 @@ begin
         CheckListBox1.Items.Assign(sl);
         Caption := 'Which Idles do you want to copy?';
 
-        ShowModal;
+        if ShowModal <> mrOK then
+          Exit;
 
         for i := 0 to Pred(CheckListBox1.Items.Count) do
           if CheckListBox1.Selected[i] then begin
@@ -3738,8 +3740,7 @@ begin
               CheckListBox1.Checked[i] := (mfActive in Modules[i].miFlags);
 
           if not ((wbToolMode in wbAutoModes) or wbQuickShowConflicts) then begin
-            ShowModal;
-            if ModalResult <> mrOk then begin
+            if ShowModal <> mrOk then begin
               frmMain.Close;
               Exit;
             end;
@@ -3990,7 +3991,8 @@ begin
                 CheckListBox1.Checked[i] := True;
 
             if not wbQuickShowConflicts then
-              ShowModal;
+              if ShowModal <> mrOK then
+                ModGroups.Clear;
 
             sl2.Clear;
             for i := Pred(ModGroups.Count) downto 0 do
@@ -5775,7 +5777,8 @@ begin
           CheckListBox1.Checked[i] := True;
         end;
 
-        ShowModal;
+        if ShowModal <> mrOk then
+          Exit;
 
         j := 0;
         for i := Low(MainRecords) to High(MainRecords) do
@@ -6934,7 +6937,8 @@ begin
       Exit;
     end;
 
-    ShowModal;
+    if ShowModal <> mrOK then
+      Exit;
 
     wbStartTime := Now;
 
@@ -7120,7 +7124,8 @@ begin
       CheckListBox1.AddItem(_File.Name, Pointer(_File));
 
       repeat
-        ShowModal;
+        if ShowModal <> mrOK then
+          Exit;
 
         _File := nil;
 
@@ -7310,13 +7315,14 @@ begin
             CheckListBox1.AddItem(Flags.Flags[i], nil);
             CheckListBox1.Checked[i] := (i < Length(EditValue)) and (EditValue[i+1] = '1');
           end;
-          ShowModal;
-          EditValue := StringOfChar('0', CheckListBox1.Items.Count);
-          for i := 0 to Pred(CheckListBox1.Items.Count) do begin
-            if CheckListBox1.Checked[i] then
-              EditValue[i+1] := '1';
-          end;
 
+          if ShowModal = mrOK then begin
+            EditValue := StringOfChar('0', CheckListBox1.Items.Count);
+            for i := 0 to Pred(CheckListBox1.Items.Count) do begin
+              if CheckListBox1.Checked[i] then
+                EditValue[i+1] := '1';
+            end;
+          end;
         finally
           Free;
         end;
@@ -7480,7 +7486,8 @@ begin
 
       Caption := 'Which files do you want to add this record to?';
 
-      ShowModal;
+      if ShowModal <> mrOK then
+        Exit;
 
       for i := 0 to Pred(CheckListBox1.Count) do
         if CheckListBox1.Checked[i] then begin
@@ -7757,7 +7764,8 @@ begin
         CheckListBox1.AddItem(WorldSpaces[i].Name, TObject(Pointer(WorldSpaces[i])));
       CheckListBox1.Sorted := True;
       Caption := 'Select Worldspaces';
-      ShowModal;
+      if ShowModal <> mrOK then
+        Exit;
 
       wbStartTime := Now;
       Self.Enabled := False;
@@ -11680,6 +11688,7 @@ begin
       cbBackup.Checked := not Settings.ReadBool(frmMain.Name, 'DontBackup', not cbBackup.Checked);
 
     if (CheckListBox1.Count > 0) and (not (wbToolMode in wbAutoModes)) then begin
+      NoEscape := True;
       ShowModal;
       wbDontBackup := not cbBackup.Checked;
       if Assigned(Settings) then begin
@@ -12405,7 +12414,8 @@ begin
     end;
 
     if not aSilent then begin
-      ShowModal;
+      if ShowModal <> mrOk then
+        Exit;
 
       for i := Pred(CheckListBox1.Count) downto 0 do
         if not CheckListBox1.Checked[i] then
@@ -12582,16 +12592,15 @@ var
         end;
         CheckListBox1.Sorted := True;
 
-        ShowModal;
-
         slKeywords.Clear;
         slKeywords.Sorted := False;
         NewKeywords := nil;
 
-        with CheckListBox1 do
-          for i := 0 to Pred(Count) do
-            if Checked[i] then
-              slKeywords.AddObject(IwbMainRecord(Pointer(Items.Objects[i])).LoadOrderFormID.ToString(False), Items.Objects[i]);
+        if ShowModal = mrOK then
+          with CheckListBox1 do
+            for i := 0 to Pred(Count) do
+              if Checked[i] then
+                slKeywords.AddObject(IwbMainRecord(Pointer(Items.Objects[i])).LoadOrderFormID.ToString(False), Items.Objects[i]);
 
         slKeywords.Sorted := True;
 
@@ -12659,15 +12668,17 @@ begin
           end;
         CheckListBox1.Sorted := True;
 
-        ShowModal;
-
         sl2.Clear;
-        for i := 0 to Pred(CheckListBox1.Count) do
-          if CheckListBox1.Checked[i] then
-            sl2.Add(CheckListBox1.Items[i]);
+        if ShowModal = mrOK then begin
+          for i := 0 to Pred(CheckListBox1.Count) do
+            if CheckListBox1.Checked[i] then
+              sl2.Add(CheckListBox1.Items[i]);
 
-        Settings.WriteString(Signature + ' Spreadsheet', 'Selection', sl2.CommaText);
-        Settings.UpdateFile;
+          Settings.WriteString(Signature + ' Spreadsheet', 'Selection', sl2.CommaText);
+          Settings.UpdateFile;
+        end else
+          for i := 0 to Pred(CheckListBox1.Count) do
+            CheckListBox1.Checked[i] := False;
       finally
         FreeAndNil(sl2);
       end;
