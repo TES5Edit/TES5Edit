@@ -56,6 +56,7 @@ implementation
 {$R *.dfm}
 
 uses
+  frmViewMain,
   StrUtils;
 
 procedure TCheckListBox.DrawItem(Index: Integer; Rect: TRect;
@@ -99,12 +100,13 @@ end;
 
 procedure TfrmFileSelect.FormCreate(Sender: TObject);
 begin
+  wbApplyFontAndScale(Self);
+
   with TVclStylesSystemMenu.Create(Self) do begin
     ShowNativeStyle := True;
     MenuCaption := 'Theme';
   end;
 
-  Font := Screen.IconFont;
   CheckListBox1.MultiSelect := True;
 end;
 

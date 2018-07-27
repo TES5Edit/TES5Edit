@@ -86,6 +86,7 @@ implementation
 {$R *.dfm}
 
 uses
+  frmViewMain,
   StrUtils;
 
 procedure TfrmModuleSelect.mniInvertSelectionClick(Sender: TObject);
@@ -208,20 +209,13 @@ begin
 end;
 
 procedure TfrmModuleSelect.FormCreate(Sender: TObject);
-var
-  i: Integer;
 begin
+  wbApplyFontAndScale(Self);
+  //vstModules.Header.Height := vstModules.DefaultNodeHeight + 4;
+
   with TVclStylesSystemMenu.Create(Self) do begin
     ShowNativeStyle := True;
     MenuCaption := 'Theme';
-  end;
-
-  i := Font.Size;
-  Font := Screen.IconFont;
-  if Font.Size <> i then begin
-    Font.Size := i;
-    ScaleBy(Abs(Screen.IconFont.Size), Abs(i));
-    vstModules.Header.Height := vstModules.DefaultNodeHeight + 4;
   end;
 
   if not wbIsEslSupported then

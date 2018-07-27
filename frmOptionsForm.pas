@@ -85,6 +85,7 @@ implementation
 {$R *.dfm}
 
 uses
+  frmViewMain,
   FileSelectFrm, TypInfo;
 
 var
@@ -164,6 +165,8 @@ var
   ct: TConflictThis;
   ca: TConflictAll;
 begin
+  wbApplyFontAndScale(Self);
+
   with TVclStylesSystemMenu.Create(Self) do begin
     ShowNativeStyle := True;
     MenuCaption := 'Theme';

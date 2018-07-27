@@ -32,6 +32,7 @@ type
     plCancel: TPanel;
     bnCancel: TBitBtn;
     procedure bnCancelClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   protected {private}
     fwRefCount: Integer;
 
@@ -94,6 +95,9 @@ implementation
 
 {$R *.dfm}
 
+uses
+  frmViewMain;
+
 function _CreateWaitForm(const aCaption     : string;
                          const aMessage     : string;
                                aCanCancel   : Boolean;
@@ -139,6 +143,11 @@ begin
     fwProgressHead := fwProgressHead.prgWaitNext;
   end;
   inherited;
+end;
+
+procedure TfrmWait.FormCreate(Sender: TObject);
+begin
+  wbApplyFontAndScale(Self);
 end;
 
 procedure TfrmWait.fwDoUpdate;

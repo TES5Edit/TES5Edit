@@ -115,6 +115,7 @@ implementation
 {$R *.dfm}
 
 uses
+  frmViewMain,
   TypInfo,
   wbInterface;
 
@@ -123,9 +124,7 @@ var
   i : Integer;
   s : string;
 begin
-  //Font := Screen.IconFont;
-  if Font.Size > 8 then
-    Font.Size := 8;
+  wbApplyFontAndScale(Self);
 
   clbConflictAll.Items.Add('Single Record');
   clbConflictAll.Items.Add('Multiple but no conflict');

@@ -927,6 +927,8 @@ function LockProcessMessages: Integer;
 function UnLockProcessMessages: Integer;
 procedure DoProcessMessages;
 
+procedure wbApplyFontAndScale(aForm: TForm);
+
 implementation
 
 {$R *.dfm}
@@ -4566,27 +4568,81 @@ begin
   ExitCode := CheckResult;
 end;
 
+procedure wbApplyFontAndScale(aForm: TForm);
+var
+  OldSize : Integer;
+  Font    : TFont;
+begin
+  OldSize := aForm.Font.Size;
+  if Screen.IconFont.Size <> OldSize then begin
+    Font := TFont.Create;
+    try
+      Font.Assign(Screen.IconFont);
+      Font.Size := OldSize;
+      aForm.Font := Font;
+    finally
+      Font.Free;
+    end;
+    aForm.ScaleBy(Abs(Screen.IconFont.Size), Abs(OldSize));
+  end else
+    aForm.Font := Screen.IconFont;
+end;
+
+type
+  TWinControlHacker=class(TWinControl);
+
+procedure wbLoadAndApplyFontAndScale(aIni: TMemIniFile; aSection, aName: string; aWinControl: TWinControl);
+var
+  OldSize : Integer;
+  NewSize : Integer;
+  lFont   : TFont;
+  cFont   : TFont;
+begin
+  cFont := TWinControlHacker(aWinControl).Font;
+  OldSize := cFont.Size;
+  lFont := TFont.Create;
+  try
+    lFont.Assign(cFont);
+    LoadFont(aIni, aSection, aName, lFont);
+    if
+      (lFont.Name <> cFont.Name) or
+      (lFont.CharSet <> cFont.CharSet) or
+      (lFont.Color <> cFont.Color) or
+      (lFont.Size <> cFont.Size) or
+      (lFont.Style <> cFont.Style) then begin
+      NewSize := lFont.Size;
+      lFont.Size := OldSize;
+      cFont.Assign(lFont);
+      TWinControlHacker(aWinControl).ScaleBy(NewSize, OldSize);
+    end;
+  finally
+    lFont.Free;
+  end;
+end;
+
 procedure TfrmMain.FormCreate(Sender: TObject);
 var
   i, j, k, l: Integer;
   Rect: TRect;
 begin
-  i := Font.Size;
-  Font := Screen.IconFont;
-  Font.Size := i;
-  ScaleBy(Abs(Screen.IconFont.Size), Abs(i));
+  try
+    if not Assigned(Settings) and (wbSettingsFileName <> '')  then
+      Settings := TMemIniFile.Create(wbSettingsFileName);
+    if Assigned(Settings) then
+      TStyleManager.TrySetStyle(Settings.ReadString('UI', 'Theme', TStyleManager.ActiveStyle.Name), False);
+  except end;
+
+  wbApplyFontAndScale(Self);
 
   //try to set the style and window position as early as possible to reduce flicker
   try
     if not Assigned(Settings) and (wbSettingsFileName <> '')  then
       Settings := TMemIniFile.Create(wbSettingsFileName);
     if Assigned(Settings) then begin
-      TStyleManager.TrySetStyle(Settings.ReadString('UI', 'Theme', TStyleManager.ActiveStyle.Name), False);
-
-      LoadFont(Settings, 'UI', 'FontRecords', vstNav.Font);
-      LoadFont(Settings, 'UI', 'FontRecords', vstView.Font);
-      LoadFont(Settings, 'UI', 'FontRecords', lblPath.Font);
-      LoadFont(Settings, 'UI', 'FontMessages', mmoMessages.Font);
+      wbLoadAndApplyFontAndScale(Settings, 'UI', 'FontRecords', vstNav);
+      wbLoadAndApplyFontAndScale(Settings, 'UI', 'FontRecords', vstView);
+      wbLoadAndApplyFontAndScale(Settings, 'UI', 'FontRecords', pnlTop);
+      wbLoadAndApplyFontAndScale(Settings, 'UI', 'FontMessages', mmoMessages);
 
       // skip reading main form position if Shift is pressed
       if GetKeyState(VK_SHIFT) >= 0 then begin

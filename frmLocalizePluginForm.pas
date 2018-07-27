@@ -19,6 +19,7 @@ type
     btnCancel: TButton;
     procedure cbTranslationClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
   public
@@ -30,7 +31,11 @@ var
 
 implementation
 
+uses
+  frmViewMain;
+
 {$R *.dfm}
+
 
 procedure TfrmLocalizePlugin.cbTranslationClick(Sender: TObject);
 begin
@@ -58,6 +63,11 @@ begin
       Action := caNone;
     end;
   end;
+end;
+
+procedure TfrmLocalizePlugin.FormCreate(Sender: TObject);
+begin
+  wbApplyFontAndScale(Self);
 end;
 
 end.

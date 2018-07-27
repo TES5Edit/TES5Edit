@@ -229,7 +229,7 @@ end;
 
 procedure TfrmViewElements.FormCreate(Sender: TObject);
 begin
-  //Font := Screen.IconFont;
+  wbApplyFontAndScale(Self);
 end;
 
 procedure TfrmViewElements.FormKeyDown(Sender: TObject; var Key: Word;
