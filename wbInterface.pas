@@ -499,7 +499,7 @@ type
     class operator Subtract(const A: TwbFormID; const B: TwbFormID): Int64; inline;
 
     function ChangeFileID(aFileID: TwbFileID): TwbFormID; inline;
-    function ToString(aForDisplay: Boolean): string;
+    function ToString(aForDisplay: Boolean = False): string;
 
     function IsNull   : Boolean; inline;
     function IsPlayer : Boolean; inline;
@@ -11341,13 +11341,15 @@ begin
   Result := True;
 end;
 
-function TwbFormIDDefFormater.Check(aInt: Int64;
-  const aElement: IwbElement): string;
+function TwbFormIDDefFormater.Check(aInt: Int64; const aElement: IwbElement): string;
 var
+  FormID : TwbFormID;
   _File: IwbFile;
   MainRecord: IwbMainRecord;
 begin
   Result := '';
+
+  FormID := TwbFormID.FromCardinal(aInt);
 
   if Assigned(aElement) then begin
     _File := aElement._File;
@@ -11356,6 +11358,8 @@ begin
         MainRecord := _File.RecordByFormID[TwbFormID.FromCardinal(aInt), True];
         if Assigned(MainRecord) then
           Exit;
+        if wbDisplayLoadOrderFormID then
+          FormID := _File.FileFormIDtoLoadOrderFormID(FormID);
       except
         on E: Exception do begin
           Result := E.Message;
@@ -11365,8 +11369,8 @@ begin
     end;
   end;
 
-  if aInt > $800 then
-    Result := '['+IntToHex64(aInt,8)+'] < Error: Could not be resolved >';
+  if not FormID.IsHardcoded then
+    Result := '['+FormID.ToString(False)+'] < Error: Could not be resolved >';
 end;
 
 function TwbFormIDDefFormater.CheckFlst(const aMainRecord: IwbMainRecord): Boolean;
@@ -11639,6 +11643,7 @@ var
   s     : string;
 begin
   Result := '';
+
   if not wbDisplayLoadOrderFormID then
     Exit;
 
@@ -11867,27 +11872,32 @@ end;
 
 function TwbFormIDDefFormater.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
 var
-  MainRecord: IwbMainRecord;
+  FormID     : TwbFormID;
+  MainRecord : IwbMainRecord;
+  _File      : IwbFile;
 begin
-  if (aInt < $800) or (aInt = $FFFFFFFF) then begin
-    Result := TwbFormID.FromCardinal(aInt).ToString(False);
-    Exit;
-  end;
+  FormID := TwbFormID.FromCardinal(aInt);
 
-  MainRecord := GetMainRecord(aInt, aElement);
-  if Assigned(MainRecord) then begin
-    try
-      Result := MainRecord.LoadOrderFormID.ToString(False);
-      Exit;
-    except
-      on E: Exception do begin
-        Result := TwbFormID.FromCardinal(aInt).ToString(False);
-        Exit;
+  if not (FormID.IsHardcoded or FormID.IsNone) then begin
+    MainRecord := GetMainRecord(aInt, aElement);
+    if Assigned(MainRecord) then
+      try
+        FormID := MainRecord.LoadOrderFormID;
+      except
+        MainRecord := nil;
       end;
-    end;
+
+    if not Assigned(MainRecord) then
+      if wbDisplayLoadOrderFormID then
+        if Assigned(aElement) then begin
+          _File := aElement._File;
+          if Assigned(_File) then
+            FormID := _File.FileFormIDtoLoadOrderFormID(FormID);
+        end;
+
   end;
 
-  Result := TwbFormID.FromCardinal(aInt).ToString(False);
+  Result := FormID.ToString(False);
 end;
 
 function TwbFormIDDefFormater.ToString(aInt: Int64; const aElement: IwbElement): string;
@@ -11895,9 +11905,12 @@ var
   _File      : IwbFile;
   i          : Integer;
   s          : string;
+  FormID     : TwbFormID;
   MainRecord : IwbMainRecord;
 begin
-  if ((aInt < $800) or (aInt = $FFFFFFFF)) and IsValid('ACVA') then begin
+  FormID := TwbFormID.FromCardinal(aInt);
+
+  if (FormID.IsHardcoded or FormID.IsNone) and IsValid('ACVA') then begin
     if (aInt = -1) or (aInt = $FF) or (aInt = $FFFFFFFF) then
       Result := ' None [ACVA:000000FF]'
     else if aInt = $48 then
@@ -11908,14 +11921,14 @@ begin
         Result := MainRecord.FullName
       else
         Result := wbActorValueEnum.ToString(aInt, aElement);
-      Result := Result + ' [ACVA:' + IntToHex64(aInt,8) + ']';
+      Result := Result + ' [ACVA:' + FormID.ToString(False) + ']';
     end;
     Exit;
   end;
 
   if aInt = 0 then begin
     if IsValid('TRGT') and not IsValid('NULL') then begin
-      Result := 'TARGET - Target Reference ['+IntToHex64(aInt,8)+']';
+      Result := 'TARGET - Target Reference ['+FormID.ToString(False)+']';
       if wbReportMode then
         if wbReportFormIDs then begin
           if not Assigned(FoundSignatures) then
@@ -11925,7 +11938,7 @@ begin
           FoundSignatures.Objects[i] := TObject(Succ(Integer(FoundSignatures.Objects[i])));
         end;
     end else begin
-      Result := 'NULL - Null Reference ['+IntToHex64(aInt,8)+']';
+      Result := 'NULL - Null Reference ['+FormID.ToString(False)+']';
       if wbReportMode then
         if wbReportFormIDs then begin
           if not Assigned(FoundSignatures) then
@@ -11937,8 +11950,8 @@ begin
     end;
     Used(aElement, Result);
     Exit;
-  end else if aInt = $FFFFFFFF then begin
-    Result := 'FFFF - None Reference ['+IntToHex64(aInt,8)+']';
+  end else if FormID.IsNone then begin
+    Result := 'FFFF - None Reference ['+FormID.ToString(False)+']';
     if wbReportMode then
       if wbReportFormIDs then begin
         if not Assigned(FoundSignatures) then
@@ -11949,7 +11962,7 @@ begin
       end;
     Used(aElement, Result);
     Exit;
-  end else if aInt = $14 then begin
+  end else if FormID.IsPlayer then begin
     if wbReportMode then
       if wbReportFormIDs then begin
         if not Assigned(FoundSignatures) then
@@ -11959,7 +11972,7 @@ begin
         FoundSignatures.Objects[i] := TObject(Succ(Integer(FoundSignatures.Objects[i])));
       end;
 
-    Result := 'Player ['+IntToHex64(aInt,8)+']';
+    Result := 'Player ['+FormID.ToString(False)+']';
     Used(aElement, Result);
     Exit;
   end;
@@ -11968,6 +11981,8 @@ begin
     _File := aElement._File;
     if Assigned(_File) then begin
       try
+        if wbDisplayLoadOrderFormID then
+          FormID := _File.FileFormIDtoLoadOrderFormID(FormID);
         MainRecord := _File.RecordByFormID[TwbFormID.FromCardinal(aInt), True];
         if Assigned(MainRecord) then begin
           Result := MainRecord.Name;
@@ -11995,7 +12010,7 @@ begin
         end;
       except
         on E: Exception do begin
-          Result := '['+IntToHex64(aInt,8)+'] <Error: '+E.Message+'>';
+          Result := '['+FormID.ToString(False)+'] <Error: '+E.Message+'>';
           if wbReportMode then
             if wbReportFormIDs then begin
               if not Assigned(FoundSignatures) then
@@ -12011,8 +12026,8 @@ begin
     end;
   end;
 
-  if aInt < $800 then begin
-    s := IntToHex64(aInt,8);
+  if FormID.IsHardcoded then begin
+    s := FormID.ToString(False);
     Result := '['+s+'] <Warning: Could not be resolved, but is possibly hardcoded in the engine>';
     if wbReportMode then
       if wbReportFormIDs then begin
@@ -12031,7 +12046,7 @@ begin
         end;
       end;
   end else begin
-    s := IntToHex64(aInt,8);
+    s := FormID.ToString(False);
     Result := '['+s+'] < Error: Could not be resolved >';
     if wbReportMode then
       if wbReportFormIDs then begin
@@ -12925,9 +12940,9 @@ begin
     Result := inherited CanAssign(aElement, aIndex, aDef);
 end;
 
-function TwbFormIDChecked.Check(aInt: Int64;
-  const aElement: IwbElement): string;
+function TwbFormIDChecked.Check(aInt: Int64; const aElement: IwbElement): string;
 var
+  FormID: TwbFormID;
   _File: IwbFile;
   MainRecord: IwbMainRecord;
   Found: TwbSignature;
@@ -12938,7 +12953,9 @@ begin
   if IsValid('ACVA') then
     Exit;
 
-  if aInt = 0 then begin
+  FormID := TwbFormID.FromCardinal(aInt);
+
+  if FormID.IsNull then begin
     if IsValid('TRGT') and not IsValid('NULL') then begin
       Found := 'TRGT';
       if fidcValidRefs.IndexOf(Found) < 0 then
@@ -12949,12 +12966,12 @@ begin
         Result := 'Found a NULL reference, expected: ' + fidcValidRefs.CommaText;
     end;
     Exit;
-  end else if aInt = $FFFFFFFF then begin
+  end else if FormID.IsNone then begin
     Found := 'FFFF';
     if fidcValidRefs.IndexOf(Found) < 0 then
       Result := 'Found a None (FFFFFFFF) reference, expected: ' + fidcValidRefs.CommaText;
     Exit;
-  end else if aInt = $14 then begin
+  end else if FormID.IsPlayer then begin
     Found := 'PLYR';
     if fidcValidRefs.IndexOf(Found) < 0 then
       Result := 'Found a PLYR reference, expected: ' + fidcValidRefs.CommaText;
@@ -12981,6 +12998,8 @@ begin
           end;
           Exit;
         end;
+        if wbDisplayLoadOrderFormID then
+          FormID := _File.FileFormIDtoLoadOrderFormID(FormID);
       except
         on E: Exception do begin
           Result := E.Message;
@@ -12991,7 +13010,7 @@ begin
   end;
 
   if aInt > $800 then
-    Result := '['+IntToHex64(aInt,8)+'] < Error: Could not be resolved >';
+    Result := '['+FormID.ToString+'] < Error: Could not be resolved >';
 end;
 
 function TwbFormIDChecked.CheckFlst(const aMainRecord: IwbMainRecord): Boolean;
