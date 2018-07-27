@@ -139,12 +139,12 @@ type
 
   TPluggyLinkThread = class;
 
-  TPluginDirtyInfo = record
+  TLOOTPluginInfo = record
     Plugin: string;
-    CRC32: integer;
+    CRC32: Cardinal;
     ITM, UDR, NAV: integer;
   end;
-  PPluginDirtyInfo = ^TPluginDirtyInfo;
+  PLOOTPluginInfo = ^TLOOTPluginInfo;
 
   TfrmMain = class(TForm)
     vstNav: TVirtualEditTree;
@@ -653,7 +653,7 @@ type
     function RestorePluginsFromMaster: Boolean;
     procedure ApplyScript(aScript: string);
     procedure CreateActionsForScripts;
-    function LOManagersDirtyInfo(aInfo: TPluginDirtyInfo): string;
+    function LOManagersDirtyInfo(const aInfo: TLOOTPluginInfo): string;
 
     procedure PerformLongAction(const aDesc: string; const aAction: TProc);
     procedure PerformActionOnSelectedFiles(const aDesc: string; const aAction: TProc<IwbFile>);
@@ -773,7 +773,7 @@ type
     RowHeight   : Integer;
     MonospaceFontName: string;
 
-    PluginDirtyInfos: array of TPluginDirtyInfo;
+    LOOTPluginInfos: array of TLOOTPluginInfo;
     StickViewNodeLabel: string;
 
     procedure DoInit;
@@ -8614,7 +8614,7 @@ begin
   end;
 end;
 
-function TfrmMain.LOManagersDirtyInfo(aInfo: TPluginDirtyInfo): string;
+function TfrmMain.LOManagersDirtyInfo(const aInfo: TLOOTPluginInfo): string;
 // LOOT dirty entry example
 {
   - name: 'DLCRobot.esm'
@@ -8643,20 +8643,11 @@ const
 begin
   Result := '';
   if (aInfo.ITM <> 0) or (aInfo.UDR <> 0) or (aInfo.NAV <> 0) then begin
-
-    if aInfo.CRC32 = 0 then try
-      aInfo.CRC32 := wbCRC32File(wbDataPath + aInfo.Plugin);
-    except
-      aInfo.CRC32 := 0;
-    end;
-    if aInfo.CRC32 = 0 then
-      Exit;
-
     Result := Result + CRLF + 'LOOT Masterlist Entry';
     Result := Result + CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin]);
     Result := Result + CRLF + StringOfChar(' ', 4) + 'dirty:';
     Result := Result + CRLF + StringOfChar(' ', 6) + '- <<: *dirtyPlugin';
-    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
+     Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
     Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: %sEdit v%s', [wbAppName, VersionString]);
     if aInfo.ITM <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'itm: %d', [aInfo.ITM]);
     if aInfo.UDR <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'udr: %d', [aInfo.UDR]);
@@ -8703,7 +8694,8 @@ var
   Cntr {, Cntr2}              : IwbContainerElementRef;
   AutoModeCheckForDR          : Boolean;
   Operation, Plugin           : String;
-  DirtyInfo                   : PPluginDirtyInfo;
+  PluginCRC32                 : Cardinal;
+  DirtyInfo                   : PLOOTPluginInfo;
 
   function canUndelete: Boolean;
   begin
@@ -8779,6 +8771,7 @@ begin
     Enabled := False;
 
     Plugin := '';
+    PluginCRC32 := 0;
     UndeletedCount := 0;
     NotDeletedCount := 0;
     DeletedNAVM := 0;
@@ -8795,7 +8788,10 @@ begin
 
         if Supports(NodeData.Element, IwbMainRecord, MainRecord) then with MainRecord do begin
           if Assigned(MainRecord._File) then
-            Plugin := MainRecord._File.FileName;
+            with MainRecord._File do begin
+              Plugin := FileName;
+              PluginCRC32 := CRC32;
+            end;
           if IsEditable and
              (IsDeleted {or (GetPosition(Position) and (Position.z = -30000.0)) and (MainRecord.ElementNativeValues['XESP\Reference'] <> $14)} ) and
              (
@@ -8881,18 +8877,19 @@ begin
       PostAddMessage('<Warning: Plugin contains ' + IntToStr(NotDeletedCount) + ' deleted references which can not be undeleted>');
 
     // store dirty information
-    if (Plugin <> '') and ((UndeletedCount <> 0) or (DeletedNAVM <> 0)) then begin
+    if Plugin <> '' then begin
       DirtyInfo := nil;
-      for i := Low(PluginDirtyInfos) to High(PluginDirtyInfos) do
-        if PluginDirtyInfos[i].Plugin = Plugin then begin
-          DirtyInfo := @PluginDirtyInfos[i];
+      for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
+        if LOOTPluginInfos[i].Plugin = Plugin then begin
+          DirtyInfo := @LOOTPluginInfos[i];
           Break;
         end;
       if not Assigned(DirtyInfo) then begin
-        SetLength(PluginDirtyInfos, Succ(Length(PluginDirtyInfos)));
-        DirtyInfo := @PluginDirtyInfos[Pred(Length(PluginDirtyInfos))];
+        SetLength(LOOTPluginInfos, Succ(Length(LOOTPluginInfos)));
+        DirtyInfo := @LOOTPluginInfos[Pred(Length(LOOTPluginInfos))];
       end;
       DirtyInfo.Plugin := Plugin;
+      DirtyInfo.CRC32 := PluginCRC32;
       DirtyInfo.UDR := UndeletedCount;
       DirtyInfo.NAV := DeletedNAVM;
     end;
@@ -8919,7 +8916,8 @@ var
   GroupRecord                 : IwbGroupRecord;
   AutoModeCheckForITM         : Boolean;
   Operation, Plugin           : String;
-  DirtyInfo                   : PPluginDirtyInfo;
+  PluginCRC32                 : Cardinal;
+  DirtyInfo                   : PLOOTPluginInfo;
 
 begin
   AutoModeCheckForITM := wbToolMode in [tmCheckForITM];
@@ -8999,7 +8997,10 @@ begin
             MainRecord := nil;
 
             if Assigned(NodeData.Element._File) then
-              Plugin := NodeData.Element._File.FileName;
+              with NodeData.Element._File do begin
+              Plugin := FileName;
+              PluginCRC32 := CRC32;
+            end;
 
             if not NodeData.Element.IsRemoveable then
               PostAddMessage('Can''t remove: ' + NodeData.Element.Name)
@@ -9040,18 +9041,19 @@ begin
       ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime)); // Does not show up if handling "a lot" of records !
 
     // store dirty information
-    if (Plugin <> '') and (RemovedCount <> 0) then begin
+    if Plugin <> '' then begin
       DirtyInfo := nil;
-      for i := Low(PluginDirtyInfos) to High(PluginDirtyInfos) do
-        if PluginDirtyInfos[i].Plugin = Plugin then begin
-          DirtyInfo := @PluginDirtyInfos[i];
+      for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
+        if LOOTPluginInfos[i].Plugin = Plugin then begin
+          DirtyInfo := @LOOTPluginInfos[i];
           Break;
         end;
       if not Assigned(DirtyInfo) then begin
-        SetLength(PluginDirtyInfos, Succ(Length(PluginDirtyInfos)));
-        DirtyInfo := @PluginDirtyInfos[Pred(Length(PluginDirtyInfos))];
+        SetLength(LOOTPluginInfos, Succ(Length(LOOTPluginInfos)));
+        DirtyInfo := @LOOTPluginInfos[Pred(Length(LOOTPluginInfos))];
       end;
       DirtyInfo.Plugin := Plugin;
+      DirtyInfo.CRC32 := PluginCRC32;
       DirtyInfo.ITM := RemovedCount;
     end;
 
@@ -9068,8 +9070,8 @@ var
   i: Integer;
 begin
   pgMain.ActivePage := tbsMessages;
-  for i := Low(PluginDirtyInfos) to High(PluginDirtyInfos) do
-    AddMessage(LOManagersDirtyInfo(PluginDirtyInfos[i]));
+  for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
+    AddMessage(LOManagersDirtyInfo(LOOTPluginInfos[i]));
   AddMessage('');
 end;
 
@@ -11120,7 +11122,7 @@ begin
   mniNavSetVWDAuto.Visible := mniNavCheckForErrors.Visible and (wbGameMode = gmTES4);
   mniNavSetVWDAutoInto.Visible := mniNavCheckForErrors.Visible and (wbGameMode = gmTES4);
   mniNavRemoveIdenticalToMaster.Visible := mniNavCheckForErrors.Visible;
-  mniNavLOManagersDirtyInfo.Visible := mniNavCheckForErrors.Visible and (Length(PluginDirtyInfos) <> 0);
+  mniNavLOManagersDirtyInfo.Visible := mniNavCheckForErrors.Visible and (Length(LOOTPluginInfos) <> 0);
 
   mniNavRemove.Visible :=
     not wbTranslationMode and
