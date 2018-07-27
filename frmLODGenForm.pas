@@ -84,6 +84,7 @@ implementation
 {$R *.dfm}
 
 uses
+  frmViewMain,
   wbLOD;
 
 procedure TfrmLODGen.btnSplitTreesLODClick(Sender: TObject);
@@ -165,6 +166,8 @@ var
   i: integer;
   v: double;
 begin
+  wbApplyFontAndScale(Self);
+
   i := 1024;
   while i <= 8192 do begin
     cmbAtlasWidth.Items.Add(IntToStr(i));

@@ -14,6 +14,7 @@ object frmLocalizePlugin: TfrmLocalizePlugin
   OldCreateOrder = False
   Position = poMainFormCenter
   OnClose = FormClose
+  OnCreate = FormCreate
   DesignSize = (
     592
     83)
@@ -90,7 +91,6 @@ object frmLocalizePlugin: TfrmLocalizePlugin
     Caption = 'Localize'
     ModalResult = 1
     TabOrder = 2
-    ExplicitTop = 319
   end
   object btnCancel: TButton
     Left = 304
@@ -101,6 +101,5 @@ object frmLocalizePlugin: TfrmLocalizePlugin
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 3
-    ExplicitTop = 319
   end
 end

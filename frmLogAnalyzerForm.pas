@@ -51,6 +51,7 @@ type
     procedure vstFormsCompareNodes(Sender: TBaseVirtualTree; Node1,
       Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
     procedure vstFormsHeaderClick(Sender: TVTHeader; HitInfo: TVTHeaderHitInfo);
+    procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
     LogEntries: array of TLogEntry;
@@ -96,10 +97,10 @@ type
     property Limit: Integer read FLimit write FLimit;
   end;
 
-var
-  frmLogAnalyzer: TfrmLogAnalyzer;
-
 implementation
+
+uses
+  frmViewMain;
 
 {$R *.dfm}
 
@@ -698,6 +699,11 @@ end;
 procedure TfrmLogAnalyzer.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action := caFree;
+end;
+
+procedure TfrmLogAnalyzer.FormCreate(Sender: TObject);
+begin
+  wbApplyFontAndScale(Self);
 end;
 
 procedure TfrmLogAnalyzer.FormShow(Sender: TObject);

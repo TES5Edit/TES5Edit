@@ -13,6 +13,7 @@ object frmLogAnalyzer: TfrmLogAnalyzer
   OldCreateOrder = False
   Position = poMainFormCenter
   OnClose = FormClose
+  OnCreate = FormCreate
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -118,7 +119,7 @@ object frmLogAnalyzer: TfrmLogAnalyzer
       SelectionBlendFactor = 32
       SelectionCurveRadius = 3
       TabOrder = 0
-      TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScroll, toAutoScrollOnExpand, toAutoSort, toAutoSpanColumns, toAutoTristateTracking, toAutoDeleteMovedNodes]
+      TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScroll, toAutoScrollOnExpand, toAutoSort, toAutoSpanColumns, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale]
       TreeOptions.MiscOptions = [toInitOnSave, toToggleOnDblClick, toWheelPanning]
       TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseBlendedSelection]
       TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect]
@@ -139,7 +140,7 @@ object frmLogAnalyzer: TfrmLogAnalyzer
         end
         item
           Position = 1
-          Width = 473
+          Width = 469
           WideText = 'Name'
         end
         item

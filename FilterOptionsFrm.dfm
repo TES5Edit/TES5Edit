@@ -25,8 +25,6 @@ object frmFilterOptions: TfrmFilterOptions
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 1
-    ExplicitLeft = 24
-    ExplicitTop = -3
     object Label1: TLabel
       Left = 12
       Top = 10

@@ -10,6 +10,7 @@ object frmWait: TfrmWait
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object plMessage: TPanel
@@ -51,10 +52,8 @@ object frmWait: TfrmWait
       Width = 141
       Height = 31
       Align = alClient
-      DoubleBuffered = True
       Kind = bkCancel
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 0
       OnClick = bnCancelClick
     end

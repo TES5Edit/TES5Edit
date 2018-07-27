@@ -49,6 +49,7 @@ implementation
 {$R *.dfm}
 
 uses
+  frmViewMain,
   wbLocalization;
 
 type
@@ -60,6 +61,8 @@ type
 
 procedure TfrmLocalization.FormCreate(Sender: TObject);
 begin
+  wbApplyFontAndScale(Self);
+
   vetStrings.NodeDataSize := SizeOf(TTreeData);
   vetStrings.RootNodeCount := wbLocalizationHandler.Count;
   pnlControls.Visible := false;
