@@ -4915,12 +4915,13 @@ end;
 
 procedure TfrmMain.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
-  vstView.UpdateHotTrack;
-  vstSpreadSheetWeapon.UpdateHotTrack;
-  vstSpreadsheetArmor.UpdateHotTrack;
-  vstSpreadSheetAmmo.UpdateHotTrack;
+  if Assigned(vstView) then vstView.UpdateHotTrack;
+  if Assigned(vstSpreadSheetWeapon) then vstSpreadSheetWeapon.UpdateHotTrack;
+  if Assigned(vstSpreadsheetArmor) then vstSpreadsheetArmor.UpdateHotTrack;
+  if Assigned(vstSpreadSheetAmmo) then vstSpreadSheetAmmo.UpdateHotTrack;
   if Key = VK_SHIFT then
-    vstView.Header.Options := vstView.Header.Options - [hoAutoSpring];
+    if Assigned(vstView) then
+      vstView.Header.Options := vstView.Header.Options - [hoAutoSpring];
 end;
 
 procedure TfrmMain.FormShow(Sender: TObject);
@@ -5909,7 +5910,8 @@ begin
       CheckListBox1.Checked[Pred(CheckListBox1.Items.Count)] := True;
     end;
 
-    ShowModal;
+    if ShowModal <> mrOk then
+      Exit;
 
     j := 0;
     for i := 0 to Pred(CheckListBox1.Items.Count) do
@@ -5926,18 +5928,19 @@ begin
   if Length(AllNodeDatas) < 1 then
     Exit;
 
-  try
-    with TfrmFileSelect.Create(Self) do try
+  with TfrmFileSelect.Create(Self) do try
 
-      Caption := 'Which records should this value be copied to?';
+    Caption := 'Which records should this value be copied to?';
 
-      for i := Low(MainRecords) to High(MainRecords) do begin
-        CheckListBox1.AddItem(MainRecords[i].Name, nil);
-        CheckListBox1.Checked[i] := True;
-      end;
+    for i := Low(MainRecords) to High(MainRecords) do begin
+      CheckListBox1.AddItem(MainRecords[i].Name, nil);
+      CheckListBox1.Checked[i] := True;
+    end;
 
-      ShowModal;
+    if ShowModal <> mrOk then
+      Exit;
 
+    try
       for j := Low(AllNodeDatas) to High(AllNodeDatas) do begin
         NodeDatas := AllNodeDatas[j];
 
@@ -5978,14 +5981,14 @@ begin
         if CheckListBox1.Checked[i] then
           MainRecords[i].UpdateRefs;
     finally
-      Free;
+      for i := Low(SelectedNodes) to High(SelectedNodes) do
+        vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
+      InvalidateElementsTreeView(SelectedNodes);
+      PostResetActiveTree;
+      vstNav.Invalidate;
     end;
   finally
-    for i := Low(SelectedNodes) to High(SelectedNodes) do
-      vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
-    InvalidateElementsTreeView(SelectedNodes);
-    PostResetActiveTree;
-    vstNav.Invalidate;
+    Free;
   end;
 end;
 

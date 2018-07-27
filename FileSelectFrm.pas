@@ -118,6 +118,8 @@ begin
 
   if Key = VK_RETURN then
     btnOK.Click
+  else if Key = VK_ESCAPE then
+    ModalResult := mrCancel
   else if Key = VK_SUBTRACT then
     SelectNone1.Click
   else if Key = VK_ADD then
