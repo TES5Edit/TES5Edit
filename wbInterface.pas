@@ -25,7 +25,7 @@ uses
   Graphics;
 
 const
-  VersionString  = '3.2.3q EXTRA EXPERIMENTAL';
+  VersionString  = '3.2.3r EXPERIMENTAL';
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
   wbHardcodedDat = '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
@@ -877,6 +877,7 @@ type
     ['{38AA15A6-F652-45C7-B875-9CB502E5DA92}']
     function GetFileName: string;
     function GetFileNameOnDisk: string;
+    function GetModuleInfo: Pointer;
     function GetUnsavedSince: TDateTime;
     function GetMaster(aIndex: Integer): IwbFile;
     function GetMasterCount: Integer;
@@ -931,6 +932,10 @@ type
       read GetFileName;
     property FileNameOnDisk: string
       read GetFileNameOnDisk;
+
+    property ModuleInfo: Pointer
+      read GetModuleInfo;
+
     property UnsavedSince: TDateTime
       read GetUnsavedSince;
 

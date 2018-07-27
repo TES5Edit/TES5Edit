@@ -53,7 +53,8 @@ function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aI
 
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
   IsTemporary: Boolean = False; aOnlyHeader: Boolean = False): IwbFile;
-function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsESL: Boolean): IwbFile;
+function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsESL: Boolean): IwbFile; overload;
+function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile; overload;
 procedure wbFileForceClosed;
 
 function StartsWith(const s, t: string): Boolean;
@@ -634,6 +635,7 @@ type
     {---IwbFile---}
     function GetFileName: string;
     function GetFileNameOnDisk: string;
+    function GetModuleInfo: Pointer;
     function GetUnsavedSince: TDateTime; inline;
     function HasMaster(const aFileName: string): Boolean;
     function GetMaster(aIndex: Integer): IwbFile; inline;
@@ -699,8 +701,11 @@ type
     procedure AddMaster(const aFileName: string; isTemporary: Boolean = False); overload;
     procedure AddMaster(const aFile: IwbFile); overload;
 
+    procedure UpdateModuleMasters;
+
     constructor Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aOnlyHeader: Boolean; IsTemporary: Boolean = False);
-    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aIsEsl: Boolean);
+    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aIsEsl: Boolean); overload;
+    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo); overload;
   public
     destructor Destroy; override;
   end;
@@ -1984,6 +1989,7 @@ procedure TwbFile.AddMaster(const aFile: IwbFile);
 begin
   SetLength(flMasters, Succ(Length(flMasters)));
   flMasters[High(flMasters)] := aFile;
+  UpdateModuleMasters;
 end;
 
 procedure TwbFile.AddMasterIfMissing(const aMaster: string);
@@ -2406,6 +2412,8 @@ begin
       SortRecords;
     end;
   end;
+
+  UpdateModuleMasters;
 end;
 
 constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aOnlyHeader: Boolean; IsTemporary: Boolean = False);
@@ -2469,6 +2477,9 @@ begin
   flModule := wbModuleByName(GetFileName);
   if not flModule.IsValid then
     flModule := nil;
+  if not Assigned(flModule) then
+    flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+
   Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
   if wbGameMode = gmFNV then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.34'
@@ -2483,8 +2494,11 @@ begin
   else if wbIsFallout4 then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.95';
   Header.RecordBySignature['HEDR'].Elements[2].EditValue := '$800';
-  if aIsESL then
+
+  if aIsESL then begin
     Header.IsESL := True;
+    Include(flModule.miFlags, mfHasESLFlag);
+  end;
 
   flLoadFinished := True;
   flFormIDsSorted := True;
@@ -2504,11 +2518,95 @@ begin
       end;
     end else
       flLoadOrderFileID := TwbFileID.Create(flLoadOrder);
+
     if Assigned(flModule) and not Assigned(flModule.miFile) then begin
       flModule.miFile := Self;
+      flModule.miLoadOrder := flLoadOrder;
+      flModule.miFileID := flLoadOrderFileID;
       Include(flModule.miFlags, mfHasFile);
+      Include(flModule.miFlags, mfLoaded);
     end;
   end;
+end;
+
+constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo);
+var
+  Header : IwbMainRecord;
+  i      : Integer;
+begin
+  flLoadOrderFileID := TwbFileID.Create(-1, -1);
+  Include(flStates, fsIsNew);
+  flLoadOrder := aLoadOrder;
+  flFileName := aFileName;
+  flFileNameOnDisk := flFileName;
+  flModule := wbModuleByName(GetFileName);
+  if not flModule.IsValid then
+    flModule := nil;
+  if not Assigned(flModule) then
+    flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+
+  Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
+  if wbGameMode = gmFNV then
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.34'
+  else if wbGameMode = gmFO3 then
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.94'
+  else if wbGameMode = gmTES3 then
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.30'
+  else if wbGameMode = gmTES4 then
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.0'
+  else if wbIsSkyrim then
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.7'
+  else if wbIsFallout4 then
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.95';
+  Header.RecordBySignature['HEDR'].Elements[2].EditValue := '$800';
+
+  if mfHasESLFlag in aTemplate.miFlags then begin
+    Header.IsESL := True;
+    Include(flModule.miFlags, mfHasESLFlag);
+  end;
+
+  if mfHasESMFlag in aTemplate.miFlags then begin
+    Header.IsESM := True;
+    Include(flModule.miFlags, mfHasESMFlag);
+  end;
+
+  if mfIsESM in aTemplate.miFlags then
+    Include(flModule.miFlags, mfIsESM);
+
+  flLoadFinished := True;
+  flFormIDsSorted := True;
+
+  if flLoadOrder >= 0 then begin
+    if wbIsEslSupported or wbPseudoESL then begin
+      if Header.IsESL and not wbIgnoreESL then begin
+        if _NextLightSlot > $FFF then
+          raise Exception.Create('Too many light modules');
+        flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
+        Inc(_NextLightSlot);
+      end else begin
+        if _NextFullSlot >= $FE then
+          raise Exception.Create('Too many full modules');
+        flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
+        Inc(_NextFullSlot);
+      end;
+    end else
+      flLoadOrderFileID := TwbFileID.Create(flLoadOrder);
+
+    if Assigned(flModule) and not Assigned(flModule.miFile) then begin
+      flModule.miFile := Self;
+      flModule.miLoadOrder := flLoadOrder;
+      flModule.miFileID := flLoadOrderFileID;
+      Include(flModule.miFlags, mfHasFile);
+      Include(flModule.miFlags, mfLoaded);
+    end;
+  end;
+
+  with aTemplate^ do
+    for i := Low(miMasters) to High(miMasters) do
+      if Assigned(miMasters[i]) then
+        with miMasters[i]^ do
+          if Assigned(miFile) then
+            AddMaster(_File);
 end;
 
 destructor TwbFile.Destroy;
@@ -3048,6 +3146,11 @@ begin
       aMasters.AddObject(flMasters[i].FileName, Pointer(flMasters[i]));
 end;
 
+function TwbFile.GetModuleInfo: Pointer;
+begin
+  Result := flModule;
+end;
+
 function TwbFile.GetName: string;
 var
   s: string;
@@ -3533,7 +3636,10 @@ var
         flModule := nil;
       if Assigned(flModule) and not Assigned(flModule.miFile) then begin
         flModule.miFile := Self;
+        flModule.miLoadOrder := flLoadOrder;
+        flModule.miFileID := flLoadOrderFileID;
         Include(flModule.miFlags, mfHasFile);
+        Include(flModule.miFlags, mfLoaded);
       end;
     end;
   end;
@@ -3857,6 +3963,7 @@ begin
     end;
     SortRecords;
   end;
+  UpdateModuleMasters;
 end;
 
 type
@@ -3917,6 +4024,21 @@ procedure TwbFile.SortRecordsByEditorID;
 begin
   if Length(flRecordsByEditorID) > 0 then
     wbMergeSort(@flRecordsByEditorID[0], Length(flRecordsByEditorID), CompareRecordsByEditorID);
+end;
+
+procedure TwbFile.UpdateModuleMasters;
+var
+  i: Integer;
+begin
+  if Assigned(flModule) then
+    with flModule^ do begin
+      SetLength(miMasterNames, Length(flMasters));
+      SetLength(miMasters, Length(flMasters));
+      for i := Low(flMasters) to High(flMasters) do begin
+        miMasterNames[i] := flMasters[i].FileName;
+        miMasters[i] := flMasters[i].ModuleInfo;
+      end;
+    end;
 end;
 
 procedure TwbFile.WriteToStreamInternal(aStream: TStream; aResetModified: Boolean);
@@ -15504,15 +15626,26 @@ var
   i: Integer;
 begin
   FileName := wbExpandFileName(aFileName);
-  {if ExtractFilePath(aFileName) = '' then
-    FileName := ExpandFileName('.\'+aFileName)
-  else
-    FileName := ExpandFileName(aFileName);}
-
   if FilesMap.Find(FileName, i) then
     raise Exception.Create(FileName + ' exists already')
   else begin
     Result := TwbFile.CreateNew(FileName, aLoadOrder, aIsESL);
+    SetLength(Files, Succ(Length(Files)));
+    Files[High(Files)] := Result;
+    FilesMap.AddObject(FileName, Pointer(Result));
+  end;
+end;
+
+function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile;
+var
+  FileName: string;
+  i: Integer;
+begin
+  FileName := wbExpandFileName(aFileName);
+  if FilesMap.Find(FileName, i) then
+    raise Exception.Create(FileName + ' exists already')
+  else begin
+    Result := TwbFile.CreateNew(FileName, aLoadOrder, aTemplate);
     SetLength(Files, Succ(Length(Files)));
     Files[High(Files)] := Result;
     FilesMap.AddObject(FileName, Pointer(Result));
