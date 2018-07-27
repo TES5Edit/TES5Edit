@@ -1942,10 +1942,12 @@ begin
     FileID := FormID.FileID.FullSlot;
     if FileID >= Cardinal(GetMasterCount) then begin
 
-      if wbHasProgressCallback then
-        if GetIsESL or flLoadOrderFileID.IsLightSlot then
-          if (FormID.ToCardinal and $00FFF000) <> 0 then
-            wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with ESL flag active.>');
+      if (FormID.ToCardinal and $00FFF000) <> 0 then begin
+        Exclude(flStates, fsPseudoESLCompatible);
+        if wbHasProgressCallback then
+          if GetIsESL or flLoadOrderFileID.IsLightSlot then
+              wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with ESL flag active.>');
+      end;
 
       {new record...}
     end else try
@@ -2034,7 +2036,7 @@ begin
     IsNew := True;
   end;
 
-  if wbIsEslSupported then
+  if wbIsEslSupported or wbPseudoESL then
     MaxMasterCount := $FD
   else
     MaxMasterCount := $FF;
@@ -2488,7 +2490,7 @@ begin
   flFormIDsSorted := True;
 
   if flLoadOrder >= 0 then begin
-    if wbIsEslSupported then begin
+    if wbIsEslSupported or wbPseudoESL then begin
       if Header.IsESL and not wbIgnoreESL then begin
         if _NextLightSlot > $FFF then
           raise Exception.Create('Too many light modules');
@@ -2521,9 +2523,11 @@ end;
 
 function TwbFile.FileFileIDtoLoadOrderFileID(aFileID: TwbFileID): TwbFileID;
 begin
-  if aFileID.FullSlot >= GetMasterCount then
-    Result := flLoadOrderFileID
-  else
+  if aFileID.FullSlot >= GetMasterCount then begin
+    Result := flLoadOrderFileID;
+    if Result.FullSlot < 0 then
+      raise Exception.Create('File has no slot assigned');
+  end else
     Result := flMasters[aFileID.FullSlot].LoadOrderFileID;
 end;
 
@@ -2839,6 +2843,8 @@ end;
 function TwbFile.GetLoadOrderFileID: TwbFileID;
 begin
   Result := flLoadOrderFileID;
+  if Result.FullSlot < 0 then
+    raise Exception.Create('File has no slot assigned');
 end;
 
 function TwbFile.GetFileFileID: TwbFileID;
@@ -2912,6 +2918,9 @@ function TwbFile.GetIsESL: Boolean;
 var
   Header         : IwbMainRecord;
 begin
+  if wbPseudoESL then
+    Exit(fsPseudoESL in flStates);
+
   if not wbIsEslSupported or GetIsNotPlugin then
     Exit(False);
 
@@ -3046,7 +3055,7 @@ begin
   Result := GetFileName;
   if fsIsHardcoded in flStates then
     Result := wbGameName + '.exe';
-  if flLoadOrder >= 0 then
+  if flLoadOrderFileID.FullSlot >= 0 then
     Result := '['+flLoadOrderFileID.ToString+'] ' + Result;
 end;
 
@@ -3493,56 +3502,26 @@ end;
 
 procedure TwbFile.Scan;
 var
-  CurrentPtr  : Pointer;
   Header      : IwbMainRecord;
-  HEDR        : IwbRecord;
-  MasterFiles : IwbContainerElementRef;
-  Rec         : IwbRecord;
-  i, j        : Integer;
-  SelfRef     : IwbContainerElementRef;
 
-  Groups      : array of IwbGroupRecord;
-  GroupRecord : IwbGroupRecord;
+  procedure AssignSlot;
+  begin
+    if flLoadOrderFileID.FullSlot >= 0 then
+      Exit;
 
-  IsInternal  : Boolean;
-begin
-  SelfRef := Self as IwbContainerElementRef;
-  flProgress('Start processing');
-
-  CurrentPtr := flView;
-  TwbRecord.CreateForPtr(CurrentPtr, flEndPtr, Self, nil);
-
-  if (GetElementCount <> 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
-    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
-
-  if Header.Signature <> wbHeaderSignature then
-    raise Exception.CreateFmt('Expected header signature TES4, found %s in file "%s"', [String(Header.Signature), flFileName]);
-
-  if fsOnlyHeader in flStates then
-    Exit;
-
-  if fsIsCompareLoad in flStates then begin
-    if not Assigned(flCompareToFile) then
-      if FilesMap.Find(flCompareTo, i) then
-        flCompareToFile := IwbFile(Pointer(FilesMap.Objects[i]));
-    if Assigned(flCompareToFile) then
-      flLoadOrderFileID := flCompareToFile.LoadOrderFileID
-    else
-      flLoadOrderFileID := TwbFileID.Create($FF);
-  end else
     if flLoadOrder >= 0 then begin
-      if wbIsEslSupported then begin
-          if Header.IsESL and not wbIgnoreESL then begin
-            if _NextLightSlot > $FFF then
-              raise Exception.Create('Too many light modules');
-            flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
-            Inc(_NextLightSlot);
-          end else begin
-            if _NextFullSlot >= $FE then
-              raise Exception.Create('Too many full modules');
-            flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
-            Inc(_NextFullSlot);
-          end;
+      if wbIsEslSupported or wbPseudoESL then begin
+        if (fsPseudoESL in flStates) or (Header.IsESL and not wbIgnoreESL) then begin
+          if _NextLightSlot > $FFF then
+            raise Exception.Create('Too many light modules');
+          flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
+          Inc(_NextLightSlot);
+        end else begin
+          if _NextFullSlot >= $FE then
+            raise Exception.Create('Too many full modules');
+          flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
+          Inc(_NextFullSlot);
+        end;
       end else begin
         if flLoadOrder > $FF then
           raise Exception.Create('Too many modules');
@@ -3557,34 +3536,94 @@ begin
         Include(flModule.miFlags, mfHasFile);
       end;
     end;
+  end;
 
-  MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
-  if Assigned(MasterFiles) then
-    for i := 0 to Pred(MasterFiles.ElementCount) do begin
-      Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
-      if not Assigned(Rec) then
-        raise Exception.CreateFmt('Unexpected error reading master list for file "%s"', [flFileName]);
-      AddMaster(Rec.Value);
+var
+  CurrentPtr  : Pointer;
+  HEDR        : IwbRecord;
+  MasterFiles : IwbContainerElementRef;
+  Rec         : IwbRecord;
+  i, j        : Integer;
+  SelfRef     : IwbContainerElementRef;
+
+  Groups      : array of IwbGroupRecord;
+  GroupRecord : IwbGroupRecord;
+
+  IsInternal  : Boolean;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+  flProgress('Start processing');
+
+  Include(flStates, fsScanning);
+  try
+    CurrentPtr := flView;
+    TwbRecord.CreateForPtr(CurrentPtr, flEndPtr, Self, nil);
+
+    if (GetElementCount <> 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
+      raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+    if Header.Signature <> wbHeaderSignature then
+      raise Exception.CreateFmt('Expected header signature TES4, found %s in file "%s"', [String(Header.Signature), flFileName]);
+
+    if fsOnlyHeader in flStates then
+      Exit;
+
+    { this one is easy, we can do it first }
+    if fsIsCompareLoad in flStates then begin
+      if not Assigned(flCompareToFile) then
+        if FilesMap.Find(flCompareTo, i) then
+          flCompareToFile := IwbFile(Pointer(FilesMap.Objects[i]));
+      if Assigned(flCompareToFile) then begin
+        flLoadOrderFileID := flCompareToFile.LoadOrderFileID
+      end else
+        flLoadOrderFileID := TwbFileID.Create($FF);
     end;
 
-  if flCompareTo <> '' then
-    AddMaster(flCompareTo);
+    { add required masters BEFORE deciding on the slot }
+    MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
+    if Assigned(MasterFiles) then
+      for i := 0 to Pred(MasterFiles.ElementCount) do begin
+        Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
+        if not Assigned(Rec) then
+          raise Exception.CreateFmt('Unexpected error reading master list for file "%s"', [flFileName]);
+        AddMaster(Rec.Value);
+      end;
 
-  flRecordsCount := 0;
-  HEDR := Header.RecordBySignature['HEDR'];
-  if Assigned(HEDR) then begin
-    SetLength(flRecords, StrToInt(HEDR.Elements[1].Value));
+    if flCompareTo <> '' then
+      AddMaster(flCompareTo);
+
+    if wbPseudoESL then
+      Include(flStates, fsPseudoESLCompatible);
+
+    if Header.IsESL then begin
+      if wbPseudoESL then
+        Include(flStates, fsPseudoESL);
+      AssignSlot;
+    end;
+
+    flRecordsCount := 0;
+    HEDR := Header.RecordBySignature['HEDR'];
+    if Assigned(HEDR) then begin
+      SetLength(flRecords, StrToInt(HEDR.Elements[1].Value));
+    end;
+
+    flProgress('Header processed. Expecting ' + IntToStr(Length(flRecords)) + ' records');
+
+    while NativeUInt(CurrentPtr) < NativeUInt(flEndPtr) do begin
+      Rec := TwbRecord.CreateForPtr(CurrentPtr, flEndPtr, Self, nil);
+      flProgress(Rec.Name + ' processed');
+    end;
+
+    if flRecordsCount < Length(flRecords) then
+      SetLength(flRecords, flRecordsCount);
+
+    if fsPseudoESLCompatible in flStates then
+      Include(flStates, fsPseudoESL);
+
+    AssignSlot;
+  finally
+    Include(flStates, fsScanning);
   end;
-
-  flProgress('Header processed. Expecting ' + IntToStr(Length(flRecords)) + ' records');
-
-  while NativeUInt(CurrentPtr) < NativeUInt(flEndPtr) do begin
-    Rec := TwbRecord.CreateForPtr(CurrentPtr, flEndPtr, Self, nil);
-    flProgress(Rec.Name + ' processed');
-  end;
-
-  if flRecordsCount < Length(flRecords) then
-    SetLength(flRecords, flRecordsCount);
 
   flProgress('Building FormID index');
   if flRecordsCount < Length(flRecords) then

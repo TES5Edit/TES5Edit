@@ -15875,7 +15875,7 @@ begin
     Exit;
 
   FileID := FormID.FileID;
-  if wbIsEslSupported then begin
+  if wbIsEslSupported or wbPseudoESL then begin
     _File := nil;
     for i := Low(Files) to High(Files) do
       if Files[i].LoadOrderFileID = FileID then begin

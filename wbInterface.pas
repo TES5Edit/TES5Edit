@@ -25,7 +25,7 @@ uses
   Graphics;
 
 const
-  VersionString  = '3.2.3p EXPERIMENTAL';
+  VersionString  = '3.2.3q EXTRA EXPERIMENTAL';
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
   wbHardcodedDat = '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
@@ -85,6 +85,7 @@ var
   wbDoNotBuildRefsFor      : TStringList;
   wbCopyIsRunning          : Integer  = 0;
   wbIgnoreESL              : Boolean  = False;
+  wbPseudoESL              : Boolean  = False;
   wbAllowEditGameMaster    : Boolean  = False;
   wbAllowDirectSave        : Boolean  = False;
   wbAllowDirectSaveFor     : TStringList;
@@ -861,7 +862,10 @@ type
     fsHasNoFormID,
     fsRefsBuild,
     fsIsGhost,
-    fsMemoryMapped
+    fsMemoryMapped,
+    fsScanning,
+    fsPseudoESL,
+    fsPseudoESLCompatible
   );
 
   TwbFileStates = set of TwbFileState;
@@ -3707,7 +3711,7 @@ end;
 
 function wbIsEslSupported: Boolean; inline;
 begin
-  Result := wbGameMode in [gmSSE, gmTES5VR, gmFO4, gmFO4VR];
+  Result := (wbGameMode in [gmSSE, gmTES5VR, gmFO4, gmFO4VR]);
 end;
 
 function wbDefToName(const aDef: IwbDef): string;
@@ -15139,7 +15143,7 @@ end;
 function TwbFormID.GetFileID: TwbFileID;
 begin
   Result._FullSlot := _FormID shr 24;
-  if (Result._FullSlot = $FE) and wbIsEslSupported then
+  if (Result._FullSlot = $FE) and (wbPseudoESL or wbIsEslSupported) then
     Result._LightSlot := (_FormID shr 12) and $FFF
   else
     Result._LightSlot := -1;
@@ -15260,9 +15264,6 @@ begin
     Insert(' ', Result, 3);
     if FileID.LightSlot >= 0 then
       Insert(' ', Result, 7)
-    {else
-      if (not wbIgnoreESL) and wbIsEslSupported then
-        Insert(' ', Result, 3);}
   end;
 end;
 

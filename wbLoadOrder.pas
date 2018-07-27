@@ -599,17 +599,18 @@ var
         miLoadOrder := NewLoadOrderCount;
         NewLoadOrder[NewLoadOrderCount] := aModule;
         Inc(NewLoadOrderCount);
-        if (mfHasESLFlag in miFlags) and not wbIgnoreESL then begin
-          if _NextLightSlot > $FFF then
-            raise Exception.Create('Too many light modules');
-          miFileID := TwbFileID.Create($FE, _NextLightSlot);
-          Inc(_NextLightSlot);
-        end else begin
-          if _NextLightSlot > $FD then
-            raise Exception.Create('Too many full modules');
-          miFileID := TwbFileID.Create(_NextFullSlot);
-          Inc(_NextFullSlot);
-        end;
+        if not wbPseudoESL then
+          if (mfHasESLFlag in miFlags) and not wbIgnoreESL then begin
+            if _NextLightSlot > $FFF then
+              raise Exception.Create('Too many light modules');
+            miFileID := TwbFileID.Create($FE, _NextLightSlot);
+            Inc(_NextLightSlot);
+          end else begin
+            if _NextLightSlot > $FD then
+              raise Exception.Create('Too many full modules');
+            miFileID := TwbFileID.Create(_NextFullSlot);
+            Inc(_NextFullSlot);
+          end;
       finally
         Exclude(miFlags, mfLoading);
       end;
