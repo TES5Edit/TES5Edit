@@ -265,9 +265,28 @@ begin
 end;
 
 procedure TfrmModuleSelect.FormShow(Sender: TObject);
+var
+  Node: PVirtualNode;
 begin
   SimulateLoad;
   vstModules.SetFocus;
+  vstModules.FocusedNode := nil;
+  vstModules.ClearSelection;
+  for Node in vstModules.CheckedNodes do begin
+    if not Assigned(vstModules.FocusedNode) then
+      vstModules.FocusedNode := Node;
+    vstModules.Selected[Node] := True;
+  end;
+  if not Assigned(vstModules.FocusedNode) then begin
+    vstModules.FocusedNode := vstModules.GetFirstVisible;
+    vstModules.Selected[vstModules.FocusedNode] := True;
+  end;
+  if vstModules.SelectedCount = 1 then begin
+    vstModules.CheckState[vstModules.FocusedNode] := csUncheckedNormal;
+    with PModuleNodeData(vstModules.GetNodeData(vstModules.FocusedNode))^ do
+      if Assigned(mndModule) then
+        Exclude(mndModule.miFlags, SelectFlag);
+  end;
 end;
 
 function TfrmModuleSelect.GetSelectedOrAll: TNodeArray;
@@ -358,7 +377,7 @@ begin
       SelectedModules := AllModules.FilteredByFlag(SelectFlag);
 
     if Length(SelectedModules) < 1 then
-      Error := 'No AllModules selected';
+      Error := 'No modules selected';
   except
     on E: Exception do
       Error := E.Message;
