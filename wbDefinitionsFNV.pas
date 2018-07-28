@@ -8905,7 +8905,10 @@ begin
     wbFormIDCk(SNAM, 'Sound', [SOUN])
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 
-  wbRecord(LSCR, 'Load Screen', [
+  wbRecord(LSCR, 'Load Screen',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000400} 10, 'Displays In Main Menu'
+    ])), [
     wbEDIDReq,
     wbICONReq,
     wbDESCReq,
