@@ -15121,7 +15121,7 @@ begin
     wbString(CNAM, 'Author', 0, cpTranslate, True),
     wbString(SNAM, 'Description', 0, cpTranslate),
     wbRArray('Master Files', wbRStruct('Master File', [
-      wbString(MAST, 'Filename', 0, cpNormal, True),
+      wbStringForward(MAST, 'Filename', 0, cpNormal, True),
       // wbInteger(DATA, 'Filesize', itU64, nil, nil, cpIgnore, True)  // Should be set by CK but usually null
       wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
     ], [ONAM])),

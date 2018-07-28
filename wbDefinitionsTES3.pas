@@ -4681,7 +4681,7 @@ begin
     wbString(CNAM, 'Author', 0, cpTranslate, True),
     wbString(SNAM, 'Description', 0, cpTranslate),
     wbRArray('Master Files', wbRStruct('Master File', [
-      wbString(MAST, 'Filename', 0, cpNormal, True),
+      wbStringForward(MAST, 'Filename', 0, cpNormal, True),
       wbByteArray(DATA, 'Unused', 8, cpIgnore, True)
     ], []))
   ], False, nil, cpNormal, True, wbRemoveOFST);
