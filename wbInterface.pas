@@ -25,7 +25,7 @@ uses
   Graphics;
 
 const
-  VersionString  = '3.2.3r EXPERIMENTAL';
+  VersionString  = '3.2.3s EXPERIMENTAL';
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
   wbHardcodedDat = '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
@@ -3439,6 +3439,7 @@ function wbProgressLock: Integer;
 function wbProgressUnlock: Integer;
 function wbHasProgressCallback: Boolean;
 procedure wbProgressCallback(const aStatus: string = '');
+procedure wbProgress(const aStatus: string = '');
 procedure wbTick;
 
 function wbLighter(Color: TColor; Amount: Double = 0.5): TColor;
@@ -3504,6 +3505,12 @@ begin
 end;
 
 procedure wbProgressCallback(const aStatus: string);
+begin
+  if wbHasProgressCallback then
+    _wbProgressCallback(aStatus);
+end;
+
+procedure wbProgress(const aStatus: string = '');
 begin
   if wbHasProgressCallback then
     _wbProgressCallback(aStatus);

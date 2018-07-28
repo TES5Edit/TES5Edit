@@ -60,7 +60,7 @@ type
   private
     ChangingChecked : Integer;
     procedure SimulateLoad;
-    procedure DoSingleModuleLoad(Node: PVirtualNode);
+    procedure DoSingleModuleLoad(Node: PVirtualNode = nil);
     function GetSelectedOrAll: TNodeArray;
     function CheckStateForModule(aModule: PwbModuleInfo; aIsRootChild: Boolean): TCheckState;
   public
@@ -69,6 +69,7 @@ type
 
     SelectFlag      : TwbModuleFlag;
     FilterFlag      : TwbModuleFlag;
+    MaxSelect       : Integer;
 
     procedure AllowCancel;
     function ShowModal: Integer; override;
@@ -170,16 +171,26 @@ end;
 
 procedure TfrmModuleSelect.DoSingleModuleLoad(Node: PVirtualNode);
 begin
+  AllModules.ExcludeAll(SelectFlag);
+
+  if not Assigned(Node) then
+    if MaxSelect > 1 then begin
+      if vstModules.SelectedCount > 1 then
+        for Node in vstModules.SelectedNodes do
+          with PModuleNodeData(vstModules.GetNodeData(Node))^ do
+            if Assigned(mndModule) then
+              Include(mndModule.miFlags, SelectFlag)
+    end else
+      Node := vstModules.FocusedNode;
+
   if Assigned(Node) then
     with PModuleNodeData(vstModules.GetNodeData(Node))^ do
       if Assigned(mndModule) then
-        with mndModule^ do begin
-          AllModules.ExcludeAll(SelectFlag);
-          Include(miFlags, SelectFlag);
-          SimulateLoad;
-          if btnOK.Enabled then
-            btnOK.Click;
-        end;
+        Include(mndModule.miFlags, SelectFlag);
+
+  SimulateLoad;
+  if btnOK.Enabled then
+    btnOK.Click;
 end;
 
 procedure TfrmModuleSelect.edFilterChange(Sender: TObject);
@@ -231,6 +242,7 @@ begin
 
   SelectFlag := mfActive;
   FilterFlag := mfValid;
+  MaxSelect := High(Integer);
 end;
 
 procedure TfrmModuleSelect.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -241,17 +253,18 @@ begin
     if edFilter.Focused then begin
       vstModules.SetFocus;
       vstModules.ClearSelection;
+      vstModules.FocusedNode := nil;
       for Node in vstModules.VisibleNodes(nil) do begin
-        vstModules.FocusedNode := Node;
+        if not Assigned(vstModules.FocusedNode) then
+          vstModules.FocusedNode := Node;
         vstModules.Selected[Node] := True;
-        Break;
       end;
       if ssCtrl in Shift then
-        DoSingleModuleLoad(vstModules.FocusedNode);
+        DoSingleModuleLoad;
       Exit;
     end;
     if (ssCtrl in Shift) or (Length(SelectedModules)=0) then
-      DoSingleModuleLoad(vstModules.FocusedNode)
+      DoSingleModuleLoad
     else begin
       SimulateLoad;
       if btnOK.Enabled then
@@ -378,6 +391,12 @@ begin
 
     if Length(SelectedModules) < 1 then
       Error := 'No modules selected';
+    if Length(SelectedModules) > MaxSelect then begin
+      if MaxSelect = 1 then
+        Error := 'More than 1 module selected'
+      else
+        Error := 'More than ' + MaxSelect.ToString + ' modules selected';
+    end;
   except
     on E: Exception do
       Error := E.Message;
@@ -486,8 +505,8 @@ begin
           1 : CellText := LoadOrderDescription;
           2 : if mfHasESMFlag in miFlags then Celltext := 'ESM';
           3 : if mfHasESLFlag in miFlags then Celltext := 'ESL';
-          4 : if miLoadOrder < High(Integer) then Celltext := miLoadOrder.ToString;
-          5 : if miLoadOrder < High(Integer) then Celltext := miFileID.ToString;
+          4 : if miLoadOrder < 10000 then Celltext := miLoadOrder.ToString;
+          5 : if miLoadOrder < 10000 then Celltext := miFileID.ToString;
         end
     else
       if Column = 0 then

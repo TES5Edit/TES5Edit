@@ -59,6 +59,7 @@ type
   TwbModuleFlags = set of TwbModuleFlag;
 
   PwbModuleInfo = ^TwbModuleInfo;
+  TwbModuleInfos = array of PwbModuleInfo;
   TwbModuleInfo = record
     miOriginalName      : string;
     miName              : string;
@@ -67,7 +68,7 @@ type
     miExtension         : TwbModuleExtension;
 
     miMasterNames       : TDynStrings;
-    miMasters           : array of PwbModuleInfo;
+    miMasters           : TwbModuleInfos;
 
     miFlags             : TwbModuleFlags;
 
@@ -86,6 +87,7 @@ type
     function IsValid: Boolean;
     function HasIndex: Boolean;
     function IsActive: Boolean;
+    function IsTemplate: Boolean;
     procedure ActivateMasters(aRecursive: Boolean);
     procedure Activate(aActivateMasters: Boolean = False);
     function LoadOrderDescription: string;
@@ -95,8 +97,6 @@ type
     function _File: IwbFile;
     class function AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo; static;
   end;
-
-  TwbModuleInfos = array of PwbModuleInfo;
 
   TwbModuleInfosHelper = record helper for TwbModuleInfos
     function ToStrings(aInclDesc: Boolean = False): TDynStrings;
@@ -545,6 +545,7 @@ begin
   if aTemplate then begin
     SetLength(_TemplateModules, Succ(Length(_TemplateModules)));
     _TemplateModules[High(_TemplateModules)] := Result;
+    Result.miLoadOrder := 10000 + High(_TemplateModules);
   end else begin
     SetLength(_AdditionalModules, Succ(Length(_AdditionalModules)));
     _AdditionalModules[High(_AdditionalModules)] := Result;
@@ -578,6 +579,11 @@ end;
 function TwbModuleInfo.IsActive: Boolean;
 begin
   Result := IsValid and (mfActive in miFlags);
+end;
+
+function TwbModuleInfo.IsTemplate: Boolean;
+begin
+  Result := IsValid and (mfTemplate in miFlags);
 end;
 
 function TwbModuleInfo.IsValid: Boolean;
