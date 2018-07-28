@@ -2006,6 +2006,9 @@ begin
   end;
 end;
 
+var
+  _PreviousCopyIntoSelectedModules: TwbModuleInfos;
+
 function TfrmMain.CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback): TDynElements;
 var
   MainRecord           : IwbMainRecord;
@@ -2160,10 +2163,16 @@ begin
       FilterFlag := mfValid;
       SelectFlag := mfTagged;
       AllModules.ExcludeAll(mfTagged);
+      _PreviousCopyIntoSelectedModules.IncludeAll(mfTagged);
       AllowCancel;
 
       if ShowModal <> mrOK then
         Exit;
+
+      if Length(SelectedModules) < 1 then
+        Exit;
+
+      _PreviousCopyIntoSelectedModules := SelectedModules;
 
       SetLength(Result, Length(aElements));
 

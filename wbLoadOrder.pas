@@ -102,6 +102,7 @@ type
     function ToStrings(aInclDesc: Boolean = False): TDynStrings;
     procedure DeactivateAll;
     procedure ExcludeAll(aFlag: TwbModuleFlag);
+    procedure IncludeAll(aFlag: TwbModuleFlag);
     procedure ActivateMasters;
     function SimulateLoad: TwbModuleInfos;
     procedure DisableSimulatedLoad;
@@ -700,6 +701,15 @@ begin
       Inc(j);
     end;
   SetLength(Result, j);
+end;
+
+procedure TwbModuleInfosHelper.IncludeAll(aFlag: TwbModuleFlag);
+var
+  i: Integer;
+begin
+  for i := Low(Self) to High(Self) do
+    with Self[i]^ do
+      Include(miFlags, aFlag);
 end;
 
 function TwbModuleInfosHelper.SimulateLoad: TwbModuleInfos;
