@@ -13401,6 +13401,9 @@ var
   NodeDatas                   : PViewNodeDatas;
   i                           : Integer;
   ModalEdit                   : Boolean;
+  Element                     : IwbElement;
+  Def                         : IwbNamedDef;
+  SubRecordDef                : IwbSubRecordDef;
 begin
   UserWasActive := True;
 
@@ -13411,6 +13414,26 @@ begin
 
   NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
   if Assigned(NodeDatas) then begin
+
+    Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+    if not Assigned(Element) then
+      for i := Low(ActiveRecords) to High(ActiveRecords) do begin
+        Element := NodeDatas[i].Element;
+        if Assigned(Element) then
+          Break;
+      end;
+
+    if Assigned(Element) then begin
+      Def := Element.Def;
+      if Supports(Def, IwbSubRecordDef, SubRecordDef) then
+        Def := SubRecordDef.Value;
+
+      if Def.DefType in [dtInteger, dtFlag, dtFloat] then begin
+        vstView.EditNode(vstView.FocusedNode, vstView.FocusedColumn);
+        Exit;
+      end;
+    end;
+
     with TfrmViewElements.Create(nil) do begin
       Caption := vstView.Path(vstView.FocusedNode, 0,{ ttNormal,} '\');
       Settings := Self.Settings;
