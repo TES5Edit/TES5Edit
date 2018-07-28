@@ -618,7 +618,7 @@ type
     procedure PostResetActiveTree;
 
     function AddRequiredMaster(const aMasterFile: IwbFile; const aTargetFile: IwbFile): Boolean;
-    function AddRequiredMasters(const aSourceElement: IwbElement; const aTargetFile: IwbFile; aAsNew: Boolean): Boolean; overload;
+    function AddRequiredMasters(const aSourceElement: IwbElement; const aTargetFile: IwbFile; aAsNew: Boolean; aSilent: Boolean = False): Boolean; overload;
     function AddRequiredMasters(aMasters: TStrings; const aTargetFile: IwbFile; aSilent: Boolean = False): Boolean; overload;
 
     function CheckForErrorsLinear(const aElement: IwbElement; LastRecord: IwbMainRecord): IwbMainRecord;
@@ -1077,7 +1077,7 @@ begin
   lFrom := wbExpandFileName(aFrom);
   if not FileExists(lFrom) then begin
     s := 'Could not rename "'+lFrom+'". File not found.';
-    wbProgressCallback(s);
+    wbProgress(s);
     if not aSilent then
       MessageBox(0, PChar(s), 'Error', 0);
     Exit;
@@ -1091,27 +1091,27 @@ begin
       OldDateTime := TFile.GetLastWriteTime(lTo);
     except
       s := 'Could not get last modified time of "' + lTo + '".';
-      wbProgressCallback(s);
+      wbProgress(s);
       if not aSilent then
         MessageBox(0, PChar(s), 'Error', 0);
     end;
     lBackup := wbBackupPath + ExtractFileName(aTo) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
     if not wbDontBackup then begin
       // backup original file
-      wbProgressCallback('Renaming "' + lTo + '" to "' + lBackup + '".');
+      wbProgress('Renaming "' + lTo + '" to "' + lBackup + '".');
       if not RenameFile(lTo, lBackup) then begin
         s := 'Could not rename "' + lTo + '" to "' + lBackup + '".';
-        wbProgressCallback(s);
+        wbProgress(s);
         if not aSilent then
           MessageBox(0, PChar(s), 'Error', 0);
         Exit;
       end;
     end else begin
       // remove original file
-      wbProgressCallback('Deleting "' + lTo + '".');
+      wbProgress('Deleting "' + lTo + '".');
       if not SysUtils.DeleteFile(lTo) then begin
         s := 'Could not delete "' + lTo + '".';
-        wbProgressCallback(s);
+        wbProgress(s);
         if not aSilent then
           MessageBox(0, PChar(s), 'Error', 0);
         Exit;
@@ -1120,10 +1120,10 @@ begin
   end;
 
   // rename temp save file to original
-  wbProgressCallback('Renaming "' + lFrom + '" to "' + lTo + '".');
+  wbProgress('Renaming "' + lFrom + '" to "' + lTo + '".');
   if not RenameFile(lFrom, lTo) then begin
     s := 'Could not rename "' + lFrom + '" to "' + lTo + '".';
-    wbProgressCallback(s);
+    wbProgress(s);
     if not aSilent then
       MessageBox(0, PChar('Could not rename "' + lFrom + '" to "' + lTo + '".'), 'Error', 0);
     Exit;
@@ -1137,7 +1137,7 @@ begin
     TFile.SetLastWriteTime(lTo, OldDateTime);
   except
     s := 'Could not set last modified time of "' + lTo + '".';
-    wbProgressCallback(s);
+    wbProgress(s);
     if not aSilent then
       MessageBox(0, PChar(s), 'Error', 0);
   end;
@@ -1167,7 +1167,7 @@ begin
   wbCurrentAction := 'Closing files';
   if Assigned(frmMain) then
     frmMain.mmoMessages.Clear;
-  wbProgressCallback(wbCurrentAction);
+  wbProgress(wbCurrentAction);
 
   wbFileForceClosed;
 
@@ -1182,7 +1182,7 @@ begin
       wbBackupPath := wbDataPath;
 
   wbCurrentAction := 'Renaming previously saved files';
-  wbProgressCallback(wbCurrentAction);
+  wbProgress(wbCurrentAction);
 
   _SaveProgress := False;
   AnyError := False;
@@ -1495,7 +1495,7 @@ begin
   end;
 end;
 
-function TfrmMain.AddRequiredMasters(const aSourceElement: IwbElement; const aTargetFile: IwbFile; aAsNew: Boolean): Boolean;
+function TfrmMain.AddRequiredMasters(const aSourceElement: IwbElement; const aTargetFile: IwbFile; aAsNew: Boolean; aSilent: Boolean = False): Boolean;
 var
   sl                          : TStringList;
   i, j                        : Integer;
@@ -1520,9 +1520,9 @@ begin
         if IwbFile(Pointer(sl.Objects[i])).LoadOrder >= aTargetFile.LoadOrder then
           raise Exception.Create('The required master "' + sl[i] + '" can not be added to "' + aTargetFile.FileName + '" as it has a higher load order');
 
-      Result := MessageDlg('To continue the following files need to be added to "' +
+      Result := aSilent or (MessageDlg('To continue the following files need to be added to "' +
         aTargetFile.FileName + '" as masters:'#13#13 + sl.Text +
-        #13'Do you want to continue?', mtConfirmation, [mbYes, mbNo], 0) = mrYes;
+        #13'Do you want to continue?', mtConfirmation, [mbYes, mbNo], 0) = mrYes);
 
       sl.Sorted := False;
       sl.CustomSort(CompareLoadOrder);
@@ -2193,10 +2193,10 @@ begin
 
               for j := Low(aElements) to High(aElements) do begin
                 MainRecord := aElements[j] as IwbMainRecord;
-                wbProgressCallback('Copying ' + MainRecord.Name);
+                wbProgress('Copying ' + MainRecord.Name);
 
                 MainRecord2 := wbCopyElementToFile(MainRecord, ReferenceFile, True, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix) as IwbMainRecord;
-                wbProgressCallback('');
+                wbProgress('');
 
                 Assert(Assigned(MainRecord2));
                 if not Multiple then
@@ -2204,7 +2204,7 @@ begin
 
                 EditorID := MainRecord.EditorID;
                 MainRecord := wbCopyElementToFile(MainRecord, ReferenceFile, False, False, '', '', '') as IwbMainRecord;
-                wbProgressCallback('');
+                wbProgress('');
                 Assert(Assigned(MainRecord));
                 MainRecord.Assign(Low(Integer), nil, False);
                 LeveledListEntries := MainRecord.ElementByName['Leveled List Entries'] as IwbContainerElementRef;
@@ -2217,7 +2217,7 @@ begin
                 LeveledListEntry.ElementByName['Level'].EditValue := '1';
                 MainRecord.EditorID := EditorID;
                 Result[j] := MainRecord;
-                wbProgressCallback('');
+                wbProgress('');
               end;
 
             end
@@ -2225,39 +2225,39 @@ begin
               for j := Low(aElements) to High(aElements) do
                 try
                   if DeepCopy and Supports(aElements[j], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
-                    wbProgressCallback('Copying ' + MainRecord.ChildGroup.Name);
+                    wbProgress('Copying ' + MainRecord.ChildGroup.Name);
                     Result[j] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix);
-                    wbProgressCallback('');
+                    wbProgress('');
                   end else begin
-                    wbProgressCallback('Copying ' + aElements[j].Name);
+                    wbProgress('Copying ' + aElements[j].Name);
                     CopiedElement := wbCopyElementToFile(aElements[j], ReferenceFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix);
-                    wbProgressCallback('');
+                    wbProgress('');
                     if Assigned(CopiedElement) then begin
                       if Assigned(aAfterCopyCallback) then
                         aAfterCopyCallback(CopiedElement);
                     end;
                     Result[j] := CopiedElement;
-                    wbProgressCallback('');
+                    wbProgress('');
                   end;
                 except
                   on E: Exception do
-                    wbProgressCallback('Error while copying '+aElements[j].Name+': '+E.Message);
+                    wbProgress('Error while copying '+aElements[j].Name+': '+E.Message);
                 end;
             end else begin
               MainRecord := nil;
               if DeepCopy and Supports(aElements[0], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
-                wbProgressCallback('Copying ' + MainRecord.ChildGroup.Name);
+                wbProgress('Copying ' + MainRecord.ChildGroup.Name);
                 Result[0] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, '', '', '');
-                wbProgressCallback('');
+                wbProgress('');
               end else begin
-                wbProgressCallback('Copying ' + aElements[0].Name);
+                wbProgress('Copying ' + aElements[0].Name);
                 CopiedElement := wbCopyElementToFile(aElements[0], ReferenceFile, AsNew, True, '', '', '');
-                wbProgressCallback('');
+                wbProgress('');
                 if Assigned(CopiedElement) then begin
                   if Assigned(aAfterCopyCallback) then
                     aAfterCopyCallback(CopiedElement);
                 end;
-                wbProgressCallback('');
+                wbProgress('');
                 Result[0] := CopiedElement;
                 if not Supports(CopiedElement, IwbMainRecord, MainRecord) then
                   MainRecord := nil;
@@ -2334,14 +2334,14 @@ begin
     Result := aElement.ContainingMainRecord;
     // first error in this record - show record's name
     if Assigned(Result) and (Result <> LastRecord) then begin
-      wbProgressCallback(Result.Name);
+      wbProgress(Result.Name);
       Inc(ErrorsCount);
     end;
-    wbProgressCallback('    ' + aElement.Path + ' -> ' + Error);
+    wbProgress('    ' + aElement.Path + ' -> ' + Error);
   end else begin
     // passing through last record with error
     Result := LastRecord;
-    wbProgressCallback('');
+    wbProgress('');
   end;
   if Supports(aElement, IwbContainerElementRef, Container) then
     for i := 0 to Pred(Container.ElementCount) do
@@ -2358,16 +2358,16 @@ begin
   Result := Error <> '';
   if Result then begin
     Error := aElement.Check;
-    wbProgressCallback(StringOfChar(' ', aIndent * 2) + aElement.Name + ' -> ' + Error);
+    wbProgress(StringOfChar(' ', aIndent * 2) + aElement.Name + ' -> ' + Error);
   end else
-    wbProgressCallback('');
+    wbProgress('');
 //!!!!
   if Supports(aElement, IwbContainerElementRef, Container) then
     for i := Pred(Container.ElementCount) downto 0 do
       Result := CheckForErrors(aIndent + 1, Container.Elements[i]) or Result;
 
   if Result and (Error = '') then begin
-    wbProgressCallback(StringOfChar(' ', aIndent * 2) + 'Above errors were found in :' + aElement.Name);
+    wbProgress(StringOfChar(' ', aIndent * 2) + 'Above errors were found in :' + aElement.Name);
   end;
 end;
 
@@ -2441,17 +2441,17 @@ begin
       if Assigned(NodeData) then
         if Assigned(NodeData.Container) then begin
           wbCurrentAction := 'Checking for Errors in ' + NodeData.Container.Name;
-          wbProgressCallback(wbCurrentAction);
+          wbProgress(wbCurrentAction);
           CheckForErrorsLinear(NodeData.Container, nil)
           //CheckForErrors(0, NodeData.Container)
         end else if Assigned(NodeData.Element) then begin
           wbCurrentAction := 'Checking for Errors in ' + NodeData.Element.Name;
-          wbProgressCallback(wbCurrentAction);
+          wbProgress(wbCurrentAction);
           CheckForErrorsLinear(NodeData.Element, nil)
           //CheckForErrors(0, NodeData.Element);
         end;
     end;
-    wbProgressCallback('All Done!');
+    wbProgress('All Done!');
   finally
     wbCurrentAction := '';
     Caption := Application.Title;
@@ -2525,7 +2525,7 @@ begin
           if not FileExists(s) then Break;
         end;
       if FileExists(s) then begin
-        wbProgressCallback('Could not copy '+FileName+' into '+fPath);
+        wbProgress('Could not copy '+FileName+' into '+fPath);
         Exit;
       end;
       CompareFile := s;
@@ -2706,7 +2706,7 @@ begin
     if (Length(Elements) > 1) or (Elements[0].ElementType <> etMainRecord) then
       vstNav.Invalidate;
   finally
-    wbProgressCallback('Copying done.');
+    wbProgress('Copying done.');
     wbCurrentAction := '';
     wbCurrentTick := 0;
     wbShowStartTime := 0;
@@ -6948,84 +6948,74 @@ begin
 end;
 
 procedure TfrmMain.mniNavBuildReachableClick(Sender: TObject);
-var
-  i     : Integer;
-  _File : IwbFile;
 begin
-  wbStartTime := Now;
-  pgMain.ActivePage := tbsMessages;
-  ReachableBuild := True;
-
-  Enabled := False;
-  try
-    for i := Low(Files) to High(Files) do begin
-      _File := Files[i];
+  PerformLongAction('Building reachable information', procedure
+  var
+    i       : Integer;
+    _File   : IwbFile;
+    Modules : TwbModuleInfos;
+  begin
+    Modules := wbModulesByLoadOrder.FilteredByFlag(mfHasFile);
+    for i := Low(Modules) to High(Modules) do begin
+      _File := Modules[i]._File;
       if not (csRefsBuild in _File.ContainerStates) then begin
         wbCurrentAction := 'Building reference information for ' + _File.Name;
-        AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ' + wbCurrentAction);
+        wbProgress(wbCurrentAction);
         DoProcessMessages;
         _File.BuildRef;
       end;
-      _File.ResetReachable;
     end;
-    for i := Low(Files) to High(Files) do begin
-      _File := Files[i];
+    for i := Low(Modules) to High(Modules) do begin
+      _File := Modules[i]._File;
       wbCurrentAction := 'Building reachable information for ' + _File.Name;
-      AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ' + wbCurrentAction);
+      wbProgress(wbCurrentAction);
       DoProcessMessages;
       _File.BuildReachable;
     end;
-    AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] All done!');
-  finally
-    wbCurrentAction := '';
-    Caption := Application.Title;
-    Enabled := True;
-  end;
+  end);
 end;
 
 procedure TfrmMain.mniNavBuildRefClick(Sender: TObject);
-var
-  i                           : Integer;
-  _File                       : IwbFile;
-  //  wbStartTime                   : TDateTime;
 begin
-  with TfrmFileSelect.Create(nil) do try
+  with TfrmModuleSelect.Create(nil) do try
     Caption := 'Build reference information for:';
 
-    for i := Low(Files) to High(Files) do
-      if not (csRefsBuild in Files[i].ContainerStates) then
-        CheckListBox1.AddItem(Files[i].FileName, Pointer(Files[i]));
-    CheckListBox1.Sorted := True;
+    AllModules := wbModulesByLoadOrder.FilteredBy(function(a: PwbModuleInfo): Boolean
+      begin
+        Result := Assigned(a.miFile);
+        if Result then
+          Result := not (csRefsBuild in a._File.ContainerStates);
+      end);
 
-    if CheckListBox1.Count = 0 then begin
+    if Length(AllModules) < 1 then begin
       ShowMessage('There are no files without reference information');
       Exit;
     end;
 
+    FilterFlag := mfHasFile;
+    SelectFlag := mfTagged;
+    AllModules.ExcludeAll(mfTagged);
+    AllowCancel;
+
     if ShowModal <> mrOK then
       Exit;
 
-    wbStartTime := Now;
+    if Length(SelectedModules) < 1 then
+      Exit;
 
-    DoProcessMessages;
-
-    Enabled := False;
-    try
-      for i := 0 to Pred(CheckListBox1.Count) do
-        if CheckListBox1.Checked[i] then begin
-          pgMain.ActivePage := tbsMessages;
-          _File := IwbFile(Pointer(CheckListBox1.Items.Objects[i]));
-          wbCurrentAction := 'Building reference information for ' + _File.Name;
-          AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ' + wbCurrentAction);
-          DoProcessMessages;
-          _File.BuildRef;
-        end;
-      AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] All done!');
-    finally
-      wbCurrentAction := '';
-      Caption := Application.Title;
-      Enabled := True;
-    end;
+    PerformLongAction('Building reference information', procedure
+    var
+      i: Integer;
+      _File                       : IwbFile;
+    begin
+      for i := Low(SelectedModules) to High(SelectedModules) do begin
+        _File := SelectedModules[i]._File;
+        wbCurrentAction := 'Building reference information for ' + _File.Name;
+        wbProgress(wbCurrentAction);
+        DoProcessMessages;
+        _File.BuildRef;
+      end;
+    end);
 
   finally
     Free;
@@ -7162,7 +7152,6 @@ begin
 
   AnyErrors := False;
   _File := nil;
-//  NewFileID := -1;
   NewFormID := TwbFormID.Null;
   Nodes := vstNav.GetSortedSelection(True);
 
@@ -7177,53 +7166,28 @@ begin
     if not EditWarn then
       Exit;
 
-    with TfrmFileSelect.Create(Self) do try
-
+    with TfrmModuleSelect.Create(Self) do try
       Caption := 'Select a single target file';
 
       _File := NodeData.Element._File;
 
-      for i := 0 to Pred(_File.MasterCount) do
-        CheckListBox1.AddItem(_File.Masters[i].Name, Pointer(_File.Masters[i]));
+      AllModules := Copy(PwbModuleInfo(_File.ModuleInfo).miMasters);
+      SetLength(AllModules, Succ(Length(AllModules)));
+      AllModules[High(AllModules)] := _File.ModuleInfo;
 
-      CheckListBox1.AddItem(_File.Name, Pointer(_File));
+      FilterFlag := mfHasFile;
+      SelectFlag := mfTagged;
+      AllModules.ExcludeAll(mfTagged);
+      MaxSelect := 1;
+      AllowCancel;
 
-      repeat
-        if ShowModal <> mrOK then
-          Exit;
-
-        _File := nil;
-
-        FoundNone := True;
-        for i := 0 to Pred(CheckListBox1.Count) do
-          if CheckListBox1.Checked[i] then begin
-            FoundNone := False;
-            if Assigned(_File) then begin
-              ShowMessage('Please select only a single target file.');
-              _File := nil;
-              Break;
-            end;
-            _File := IwbFile(Pointer(CheckListBox1.Items.Objects[i]));
-          end;
-        if FoundNone then
-          Exit;
-      until Assigned(_File);
+      if ShowModal <> mrOK then
+        Exit;
+      Assert(Length(SelectedModules)=1);
+      _File := SelectedModules[0]^._File;
     finally
       Free;
     end;
-{
-    s := IntToHex64(NodeData.Element._File.LoadOrder, 2);
-    if not InputQuery('New FileID', 'Please enter the load order of the file which '+
-      'these records should be attributed to in hex. e.g. 1C.'#13#13 +
-      'All selected records which currently have a FormID starting with a different file number '+
-      'will be changed and all references to these records will be automatically updated.', s) then
-      Exit;
-    NewFileID := StrToInt64('$'+s);
-
-    if (NewFileID < Low(Files)) or (NewFileID > High(Files)) then
-      raise Exception.Create('This is not a valid load order number');
-    NodeData.Element._File.LoadOrderFormIDtoFileFormID(Cardinal(NewFileID) shl 24);
-}
   end;
 
   for j := Low(Nodes) to High(Nodes) do begin
@@ -7495,27 +7459,42 @@ begin
       with IwbFile(Pointer(sl.Objects[i])) do
         if LoadOrder > j then
           j := LoadOrder;
+    ReferenceFile := nil;
 
-    with TfrmFileSelect.Create(Self) do try
+    with TfrmModuleSelect.Create(Self) do try
 
-      for i := j to High(Files) do
-        if Files[i].IsEditable then
-          CheckListBox1.AddItem(Files[i].Name, Pointer(Files[i]));
+      AllModules := wbModulesByLoadOrder(True).FilteredBy(function(a:PwbModuleInfo): Boolean
+        begin
+          Result := a.IsTemplate or
+            (Assigned(a.miFile) and a._File.IsEditable and (a._File.LoadOrder >= j));
+        end);
+
+      FilterFlag := mfValid;
+      SelectFlag := mfTagged;
+      AllModules.ExcludeAll(mfTagged);
+      AllowCancel;
 
       Master := MainRecord.MasterOrSelf;
 
       if not (AsNew or AsWrapper) then begin
-        j := CheckListBox1.Items.IndexOf(Master._File.Name);
-        if j >= 0 then
-          CheckListBox1.Items.Delete(j);
 
-        for i := 0 to Pred(Master.OverrideCount) do begin
-          j := CheckListBox1.Items.IndexOf(Master.Overrides[i]._File.Name);
-          if j >= 0 then
-            CheckListBox1.Items.Delete(j);
-        end;
-      end
-      else begin
+        AllModules := AllModules.FilteredBy(function(a:PwbModuleInfo): Boolean
+          var
+            i: Integer;
+          begin
+            if a.IsTemplate then
+              Exit(True);
+
+            Result := not a._File.Equals(Master._File);
+            if Result then
+              for i := 0 to Pred(Master.OverrideCount) do begin
+                Result := not a._File.Equals(Master.Overrides[i]._File);
+                if not Result then
+                  Exit;
+              end;
+          end);
+
+      end else begin
         EditorID := MainRecord.EditorID;
         repeat
           if AsWrapper then begin
@@ -7542,30 +7521,22 @@ begin
         until False;
       end;
 
-      if wbIsEslSupported then begin
-        CheckListBox1.AddItem('<new .esp>', nil);
-        CheckListBox1.AddItem('<new .esl>', nil);
-      end else begin
-        CheckListBox1.AddItem('<new file>', nil);
-      end;
-
       Caption := 'Which files do you want to add this record to?';
 
       if ShowModal <> mrOK then
         Exit;
 
-      for i := 0 to Pred(CheckListBox1.Count) do
-        if CheckListBox1.Checked[i] then begin
-          ReferenceFile := IwbFile(Pointer(CheckListBox1.Items.Objects[i]));
-
-          if not Assigned(ReferenceFile) then begin
-            IsESL := wbIsEslSupported and (CheckListBox1.Items[i] = '<new .esl>');
+      for i := Low(SelectedModules) to High(SelectedModules) do
+        begin
+          if SelectedModules[i].IsTemplate then begin
+            ReferenceFile := nil;
             while not Assigned(ReferenceFile) do
-              if not AddNewFile(ReferenceFile, IsESL) then
+              if not AddNewFile(ReferenceFile, SelectedModules[i]) then
                 Break;
-          end;
+          end else
+            ReferenceFile := SelectedModules[i]._File;
 
-          if Assigned(ReferenceFile) and AddRequiredMasters(MainRecord, ReferenceFile, AsNew) then begin
+          if Assigned(ReferenceFile) and AddRequiredMasters(MainRecord, ReferenceFile, AsNew, SelectedModules[i].IsTemplate) then begin
             MainRecord2 := wbCopyElementToFile(MainRecord, ReferenceFile, AsNew or AsWrapper, True, '', '', '') as IwbMainRecord;
             Assert(Assigned(MainRecord2));
             if AsNew or AsWrapper then
@@ -9417,7 +9388,7 @@ procedure TfrmMain.mniNavLocalizationSwitchClick(Sender: TObject);
     if Assigned(aElement.ValueDef) and (aElement.ValueDef.DefType = dtLString) then begin
       SetLength(lst, Succ(Length(lst)));
       lst[High(lst)] := aElement;
-      //wbProgressCallback('LString found in : ' + aElement.FullPath);
+      //wbProgress('LString found in : ' + aElement.FullPath);
     end;
     if Supports(aElement, IwbContainerElementRef, Container) then
       for i := Pred(Container.ElementCount) downto 0 do
@@ -11068,25 +11039,27 @@ begin
     pgMain.ActivePage := tbsMessages;
     wbCurrentAction := aDesc;
     if wbCurrentAction <> '' then
-      wbProgressCallback('Start: ' + wbCurrentAction);
+      wbProgress('Start: ' + wbCurrentAction);
     try
       aAction;
     except
       on E: EAbort do begin
         if wbCurrentAction <> '' then
-          wbProgressCallback('Aborted: ' + wbCurrentAction);
+          wbProgress('Aborted: ' + wbCurrentAction);
         raise;
       end;
       on E: Exception do begin
         if wbCurrentAction <> '' then
-          wbProgressCallback('Error during ' + wbCurrentAction + ': ' + E.Message)
+          wbProgress('Error during ' + wbCurrentAction + ': ' + E.Message)
+        else if aDesc <> '' then
+          wbProgress('Error during ' + aDesc + ': ' + E.Message)
         else
-          wbProgressCallback('Error: ' + E.Message);
+          wbProgress('Error: ' + E.Message);
         raise;
       end;
     end;
-    if wbCurrentAction <> '' then
-      wbProgressCallback('Done: ' + wbCurrentAction);
+    if aDesc <> '' then
+      wbProgress('Done: ' + aDesc);
   finally
     Enabled := WasEnabled;
     wbCurrentAction := PrevAction;
@@ -12733,6 +12706,7 @@ begin
       Exit;
 
     Signature := StrToSignature(Copy((Sender as TComponent).Name, 4, 4));
+    //!!!
     with TfrmFileSelect.Create(nil) do try
 
       Caption := 'Select files to compare';
