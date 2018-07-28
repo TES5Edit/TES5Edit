@@ -174,12 +174,11 @@ begin
   AllModules.ExcludeAll(SelectFlag);
 
   if not Assigned(Node) then
-    if MaxSelect > 1 then begin
-      if vstModules.SelectedCount > 1 then
-        for Node in vstModules.SelectedNodes do
-          with PModuleNodeData(vstModules.GetNodeData(Node))^ do
-            if Assigned(mndModule) then
-              Include(mndModule.miFlags, SelectFlag)
+    if (MaxSelect > 1) and (vstModules.SelectedCount > 1) then begin
+      for Node in vstModules.SelectedNodes do
+        with PModuleNodeData(vstModules.GetNodeData(Node))^ do
+          if Assigned(mndModule) then
+            Include(mndModule.miFlags, SelectFlag)
     end else
       Node := vstModules.FocusedNode;
 
