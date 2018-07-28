@@ -14862,8 +14862,14 @@ begin
   if Count <> Length(cntElements) then begin
     UpdateCount := eUpdateCount;
     for i := 1 to UpdateCount do EndUpdate;  // Stops optimisation
-    ArrayDef.SetPrefixCount(dcDataBasePtr, Length(cntElements));
-    for i := 1 to UpdateCount do BeginUpdate; // Restore optimisation
+    try
+      SetModified(True);
+      InvalidateStorage;
+      UpdateStorageFromElements;
+      ArrayDef.SetPrefixCount(dcDataBasePtr, Length(cntElements));
+    finally
+      for i := 1 to UpdateCount do BeginUpdate; // Restore optimisation
+    end;
   end;
 end;
 
