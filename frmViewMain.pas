@@ -3244,7 +3244,7 @@ begin
         end;
       end;
 
-      vstView.NodeDataSize := SizeOf(TNavNodeData) * Length(ActiveRecords);
+      vstView.NodeDataSize := SizeOf(TViewNodeData) * Length(ActiveRecords);
       vstView.RootNodeCount := 0;
       pgMain.ActivePage := tbsView;
     finally
@@ -12100,7 +12100,7 @@ begin
             EndUpdate;
           end;
         end;
-        vstView.NodeDataSize := SizeOf(TNavNodeData) * Length(ActiveRecords);
+        vstView.NodeDataSize := SizeOf(TViewNodeData) * Length(ActiveRecords);
         if Supports(ActiveContainer.Def, IwbStructDef) then
           vstView.RootNodeCount := (ActiveContainer.Def as IwbStructDef).MemberCount + ActiveContainer.AdditionalElementCount
         else
@@ -12204,7 +12204,7 @@ begin
         end;
       end;
 
-      vstView.NodeDataSize := SizeOf(TNavNodeData) * Length(ActiveRecords);
+      vstView.NodeDataSize := SizeOf(TViewNodeData) * Length(ActiveRecords);
       vstView.RootNodeCount := (aMainRecords[0].Def as IwbRecordDef).MemberCount + aMainRecords[0].AdditionalElementCount;
       InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
       vstView.FullExpand;
@@ -12395,7 +12395,7 @@ begin
             EndUpdate;
           end;
         end;
-        vstView.NodeDataSize := SizeOf(TNavNodeData) * Length(ActiveRecords);
+        vstView.NodeDataSize := SizeOf(TViewNodeData) * Length(ActiveRecords);
         vstView.RootNodeCount := (ActiveMaster.Def as IwbRecordDef).MemberCount + ActiveMaster.AdditionalElementCount;
         InitConflictStatus(vstView.RootNode, ActiveMaster.IsInjected and not (ActiveMaster.Signature = 'GMST'), @ActiveRecords[0]);
         vstView.FullExpand;
