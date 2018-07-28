@@ -231,6 +231,7 @@
         <DCCReference Include="wbDataFormatNifTypes.pas"/>
         <DCCReference Include="wbNifMath.pas"/>
         <DCCReference Include="wbHalfFloat.pas"/>
+        <DCCReference Include="frmModuleSelectForm.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
