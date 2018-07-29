@@ -447,161 +447,371 @@ object frmMain: TfrmMain
           Height = 559
           Align = alClient
           BorderStyle = bsNone
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Courier New'
+          Font.Style = []
           Lines.Strings = (
-            
-              'TES5Edit is an advanced graphical esp editor and conflict detect' +
-              'or.'
+            'xEdit is an advanced graphical esp editor and conflict detector.'
+            ''
+            'Discord: https://discord.gg/5t8RnNQ'
+            'Forum: https://afkmods.iguanadons.net/index.php?/topic/3750-'
+            'wipz-tes5edit/'
             ''
             
-              'The tree view on the left side shows all active masters and plug' +
-              'ins in their correct load '
-            'order.'
+              'The navigation treeview on the left side shows all active master' +
+              's '
+            'and plugins in their correct load order. By navigating that '
+            'treeview you can look at every single record in any of your '
             
-              'By navigating that tree view you can look at every single record' +
-              ' in any of your masters or '
-            'plugins.'
+              'masters or plugins. Once a record has been selected the detailed' +
+              ' '
+            'contents of that record is shown on the right side.'
             ''
             
-              'Once a record has been selected the detailed contents of that re' +
-              'cord is shown on the right '
-            'side.'
+              'The view treeview shows all versions of the selected record from' +
+              ' '
             
-              'The detail view shows all versions of the selected record from a' +
-              'll plugins which contain it. '
-            'The left most'
-            
-              'column is the master. The right most column is the plugin that "' +
-              'wins". This is the version of '
-            'the record that the game sees.'
+              'all plugins which contain it. The left most column is the master' +
+              '. '
+            'The right most column is the plugin that "wins". This is the '
+            'version of the record that the game sees.'
             ''
-            
-              'Both the detail view and the record list use the same color codi' +
-              'ng to signal the conflict state '
-            
-              'of individual fields (in the detail view) and the record overall' +
-              ' (in the record list).'
+            'The navigation and view treeview use the same color coding to '
+            'signal the conflict state of individual fields (in the view '
+            'treeview) and the record overall (in the navigation treeview).'
             ''
             'Background color:'
             'White - Single Record'
             'Green - Multiple but no conflict'
-            'Yellow - Override without conflict'#39');'
+            'Yellow - Override without conflict'
             'Red - Conflict'
             ''
             'Text color:'
             'Black - Single Record'
             'Purple - Master'
             'Gray - Identical to Master'
-            'Orange - Identical to Master but conflict Winner'#39');'
+            'Orange - Identical to Master but conflict Winner'
             'Green - Override without conflict'
             'Orange - Conflict winner'
             'Red - Conflict loser'
             ''
-            
-              'Conflict detection is not simply based on the existence of multi' +
-              'ple records for the same '
-            
-              'FormID in different plugins but instead performs a comparison of' +
-              ' the parsed subrecord '
-            'data.'
+            'Conflict detection is not simply based on the existence of '
+            'multiple records for the same FormID in different plugins but '
+            'instead performs a comparison of the parsed subrecord data.'
             ''
             
-              'The record tree view on the left side has a context menu where y' +
-              'ou can activate filtering.'
+              'The navigation treeview has a context menu where you can activat' +
+              'e '
             
-              'Filtering is based on the same conflict categorization as the ba' +
-              'ckground and text color.'
+              'filtering. Filtering is based on the same conflict categorizatio' +
+              'n '
+            'as the background and text color.'
+            ''
+            'Command Line Switches:'
+            ''
+            '-cp:<encoding> [utf-8 for UTF-8]'
+            '-l:sp For Fallout 4 [Set Language]'
+            '-l:spanish For Skyrim/SSE [Set Language]'
+            '-edit [Enable Edit Mode]'
+            '-view [Enable View Mode]'
+            '-saves [Enable Saves Mode / View Mode Only]'
+            '-IgnoreESL [Will load all modules as full modules, even if ESL '
+            'flagged]'
+            '-PseudoESL [xEdit will check if the module falls within ESL '
+            'constraints (not containing new records with ObjectIDs > $FFF) '
+            
+              'and load the file like an ESL (mapped into the FE xxx namespace)' +
+              ' '
+            'if possible]'
+            '-DontCache [Completely disables ref caching]'
+            '-DontCacheLoad [Don'#39't load cache files if present, but save if '
+            'possible]'
+            '-DontCacheSave [Don'#39't save cache files after building refs]'
+            
+              '-AllowDirectSaves:<filename list> [File may be an .esm, .esl, or' +
+              ' '
+            '.esp. Without a list of files, this will load non-official '
+            '(official = game master, official dlcs, CCs) modules without '
+            'using memory mapped files. Optionally you can specify a list of '
+            'files. Which will only load the listed modules without using '
+            'memory mapped files. This optional list may include official '
+            'modules.]'
+            
+              '-<gamemode> [Specifies which game mode to use. <gamemode> can be' +
+              ' '
+            'any of the following: '#39'tes5vr'#39', '#39'fo4vr'#39', '#39'tes4'#39', '#39'tes5'#39', '#39'sse'#39', '
+            #39'fo3'#39', '#39'fnv'#39', '#39'fo4'#39']'
+            '-moprofile:<profilename> Opens the plugin selection from the MO '
+            'profile named in the switch.'
+            '-setesm [Set ESM flag. Plugin selection screen will appear.]'
+            
+              '-clearesm [Remove ESM flag. Plugin selection screen will appear.' +
+              ']'
+            '-VeryQuickShowConflicts [loads all modules according to '
+            'plugins.txt without showing module selection, except if CTRL is '
+            'pressed on start]'
+            '-C:<path> [path to use for cache files]'
+            '-S:<path><filename> [Run specified script]'
+            '-T:<path> [Temporary Directory]'
+            '-D:<path> [Specify a Data Directory]'
+            '-O:<path> [Specify path for generated LOD files]'
+            '-I:<path> [Game INI Files]'
+            '-G:<path> [Save Game Path]'
+            '-P:<path><filename> [Custom Plugins.txt file]'
+            '-B:<path> [Backups path i.e. Edit Backups\]'
+            '-R:<path><filename> [Custom xEdit Log Filename]'
+            ''
+            'Keyboard Shortcuts:'
             ''
             
-              'Yes, filtering will take a while. It has to decode and compare t' +
-              'he contents of every single '
-            'record which turns up more then once.'
+              '- Holding Shift+Ctrl+Alt while starting shows a dialog asking if' +
+              ' '
+            'the setting file should be deleted.'
+            '- Holding Shift while starting to reset window position'
+            ''
+            'Module Selection Treeview:'
             ''
             
-              'Forum: http://www.bethsoft.com/bgsforums/index.php?showtopic=711' +
-              '936'
+              '- Hold SHIFT to skip building/loading references for all plugins' +
+              '.'
+            '- [UP/DOWN] arrow to navigate plugin list. If multiple plugins '
+            'are selected, this will deselect them.'
+            '- [Space] to check or uncheck selected plugins.'
+            ''
+            'Main Treeview:'
+            ''
+            '- Ctrl + S Create temporary save.'
+            '- Ctrl + F3 to open Assets Browser'
+            '- Alt + F3 to open Worldspace Browser'
+            ''
+            'Navagation treeview:'
+            ''
+            '- Ctrl + 1 through 5 to set a Bookmark.'
+            '- ALT + 1 through 5 to jump to a Bookmark.'
+            '- F2 to change FormID of a record'
+            
+              '- Ctrl or Shift while clicking to select several records/plugins' +
+              ' '
+            'at once'
+            '- Del To delete a record or a group of records'
+            
+              '- Alt + Click to fully expand a tree. This can take a lot of tim' +
+              'e '
+            'when expanding large trees.'
+            '- [Right Arrow] or + to expand current node'
+            '- [Left Arrow] or - to collapse current node'
+            '- * Expand treview (recursive)'
+            '- / Collapse treeview (recursive)'
+            ''
+            'View treeview:'
+            ''
+            '- Ctrl + UP/DOWN to move elements in unordered lists.'
+            '- F2 to activate inplace editor'
+            '- CTRL + Click on FormID to switch focus to that record'
+            '- [Double Click] on text field to open multiline viewer'
+            
+              '- [Double Click] on [Integer, Float, or FormID] to open In-Place' +
+              ' '
+            'Editor'
+            '- Shift + [Double Click] on text field to open multiline editor'
+            '- Ctrl + C to copy to clipboard'
+            '- Ctrl + W from a weather record to open the visual weather '
+            'editor'
+            '- Alt + CRSR while in view treeview to navigate within the '
+            'Navagation treeview'
+            ''
+            'Messages tab:'
+            ''
+            '- CTRL + [Double Click] on FormID to switch focus to that record'
+            ''
+            'Modgroups:'
             ''
             
-              'Be warned, this program uses a lot of memory. Performance on a s' +
-              'ystem with less then 2GB '
-            'of RAM will'
-            
-              'most likely be sub-optimal. Activating the filtering uses even m' +
-              'ore memory.'
+              'For a modgroup the be activateable, the order of the mods in the' +
+              ' '
+            'load order and modgroup must match.'
             ''
-            'What are Mod Groups?'
-            ''
-            
-              'The answer to the "I installed FCOM and everything is red! What ' +
-              'do I do now?" question.'
+            'If a modgroup is active, what it essentially means is that for '
+            'each record that is contained in more than one mod of the '
+            'modgroup, only the last (in load order) is visible. That'#39's it. '
+            'The invisible record versions simply don'#39't participate in the '
+            'normal conflict detection mechanisms at all.'
             ''
             
-              'There are groups of mods that, while raising heaps of conflict w' +
-              'arnings, should be '
+              'A modgroup does not perform any merge or make any changes to any' +
+              ' '
+            'mod. All it does it hide away version of records that you'#39've '
+            'stated (by defining the modgroup) that you'#39've already checked '
+            'them against each other and the hidden record is simply '
+            'irrelevant.'
+            ''
+            'Modgroups File and Syntax:'
+            ''
+            '[xEdit EXE Name].modgroups i.e. SSEEdit.modgroups for SSEEdit. '
+            'Save in the same folder as the EXE.'
+            '[Plugin Name].modgroups i.e. for Someplugin.esp, '
+            'Someplugin.modgroups. Save the file in your Data folder instead.'
+            ''
+            'Prefixes are processed from left to right. #@Plugin.esp is the '
+            'same -Plugin.esp. They combine "negatively" not positively.'
+            ''
+            'without prefix file is both a target and a source'
+            '+ The file is optional'
+            '- The file is neither a target nor a source.'
+            '} Ignore load order completely'
             
-              'considered as non-conflicting. e.g. if you'#39've installed FCOM the' +
-              'n you are not interested in '
-            'seeing conflicts'
+              '{ Ignore load order among a consecutive block of mods marked wit' +
+              'h '
+            'this.'
+            '@ File is not a source'
+            '# File is not a target'
             
-              'between the mods that make up FCOM. The solution for this is to ' +
-              'define a mod group. Mod '
+              '! File is forbidden. If the listed module is active, the modgrou' +
+              'p '
+            'is invalid.'
+            '<filename>:CRC32'
+            ''
             
-              'groups are stored in a TES4View.modgroups file in the same direc' +
-              'tory as TES4View.exe. '
+              'If a module is followed by a list of one or more CRC values, the' +
+              ' '
+            'modgroup is only available if the module has one of the listed '
             
-              'There already is such a file included with a few example mod gro' +
-              'ups defined. This is just an '
+              'CRCs. Source means that if a record in this mod is found, then i' +
+              't '
+            'will hide the versions of the same record from all mods listed '
+            'above it that are targets.'
+            ''
+            '[Modgroup Name]'
+            'MainPlugin.esm'
+            'MainPlugin - A.esp'
+            'MainPlugin - B.esp'
+            'MainPlugin - C.esp'
+            'MainPlugin - D.esp'
+            'MainPlugin - E.esp'
+            ''
             
-              'example and not meant as a guarantee that these specific mod gro' +
-              'ups are "clean" and '
-            'conflicts can safely be ignored.'
+              'The above example means that all in that particular order for th' +
+              'e '
+            'modgroup to be activateable.'
+            ''
+            '[Modgroup Name A]'
+            '-MainPlugin - C.esp'
+            'MainPlugin - D.esp'
+            'MainPlugin - E.esp'
+            ''
+            '[Modgroup Name B]'
+            'MainPlugin - C.esp'
+            '-MainPlugin - D.esp'
+            'MainPlugin - E.esp'
+            ''
+            'Group A) If a record is present in E and D, the records from '
+            'plugin D will be hidden.'
+            'Group B) If a record is present in E and C, the records from '
+            'plugin C will be hidden.'
+            ''
+            '[Modgroup Name]'
+            'MainPlugin - C.esp:12345678'
+            'MainPlugin - D.esp:A1B2C3D4,F9E8D7C6'
+            'MainPlugin - E.esp'
+            ''
             ''
             
               'Not all mod groups defined in that file will necessarily show up' +
-              ' in the selection list. Mod '
-            
-              'groups for which less then 2 plugins are currently active are fi' +
-              'ltered. If the load order of '
-            
-              'plugins doesn'#39't match the order in the mod group it is also filt' +
-              'ered.'
+              ' '
+            'in the selection list. Mod groups for which less then 2 plugins '
+            'are currently active are filtered. If the load order of plugins '
+            'doesn'#39't match the order in the mod group it is also filtered.'
             ''
             'What'#39's the effect of having a mod group active?'
             ''
+            'When a record for the view treeview is generated and multiple '
+            'files of the same mod group modify this record, then only the '
             
-              'When the detail view for a record is generated and multiple file' +
-              's of the same mod group '
+              'newest of the files in that modgroup will be shown. So instead o' +
+              'f '
+            'seeing 5 different files with numerous conflicts you are only '
+            'seeing the newest file in that mod group. This also affects '
+            'conflict classification.'
+            ''
+            'It'#39's worth pointing out here that if a record is overridden by '
+            'both plugins in a mod group and other plugins that normal '
+            'conflict detection will still work perfectly.'
+            ''
+            'Basically this system can be used to reduce a lot of noise from '
+            'the conflict reports.'
+            ''
+            'Reference Caching:'
+            ''
+            '[GameMode]\Data\FO4Edit Cache'
+            ''
+            'Cache files are based on the CRC of the xEdit EXE, then the '
+            'plugin filename. For example '
+            '3917E178_DLCNukaWorld_esm_43D25C56.refcache. Once built xEdit '
             
-              'modify this record, then only the newest of the files in that mo' +
-              'dgroup will be shown. So '
-            
-              'instead of seeing 5 different files with numerous conflicts you ' +
-              'are only seeing the newest '
-            
-              'file in that mod group. This also affects conflict classificatio' +
-              'n.'
+              'will load the cache file rather then build the references again.' +
+              ' '
+            'This reduces load time.'
+            ''
+            'xEdit Backup Files:'
+            ''
+            '[GameMode]\Data\FO4Edit Backups'
+            ''
+            'Backups are saved with the file name [PluginName].'
+            '[esm/esp/els].backup.[Date Stamp} For example '
+            'PluginName.esp.backup.2018_07_25_20_52_10. These can be renamed '
+            'and copied to the Data folder.'
+            ''
+            'Show Only Master and Leafs:'
             ''
             
-              'It'#39's worth pointing out here that if a record is overriden by bo' +
-              'th plugins in a mod group and '
-            
-              'other plugins that normal conflict detection will still work per' +
-              'fectly.'
+              'What this does is, similar to modgroups, reduce which records ar' +
+              'e '
+            'being show in the view treeview (and are taken into account for '
+            'calculating conflict information).'
+            ''
+            'Suppose you have the following mods:'
+            ''
+            ''
+            '+------------+'
+            '|            |'
+            '|   Master   |'
+            '|            |'
+            '+----^-------+'
+            '       |'
+            '       |       +--------------+                +-------------+'
+            '       |       |              <----------------+             |'
+            '       +-------+      A       |                |      D      |'
+            '       |       |              <-----+          |             |'
+            '       |       +--------------+     |          +-------------+'
+            '       |                            |'
+            '       |       +--------------+     |          +-------------+'
+            '       |       |              |     +----------+             |'
+            '       +-------+      B       |                |      E      |'
+            '       |       |              <----------------+             |'
+            '       |       +--------------+                +-------------+'
+            '       |'
+            '       |       +--------------+'
+            '       |       |              |'
+            '       +-------+      C       |'
+            '               |              |'
+            '               +--------------+'
             ''
             
-              'Basically this system can be used to reduce a lot of noise from ' +
-              'the conflict reports.'
+              'Then with active "Only Master and Leafs" only Master, D, E, and ' +
+              'C '
+            'will be shown. The assumption here being that whatever the '
+            'contents of A or B, it'#39's already being taken into account by D '
+            'and/or E.'
             ''
-            ''
-            'TES%Edit also has a little brother: TES5Dump'
-            ''
-            'http://www.tessource.net/files/file.php?id=11484'
-            ''
-            
-              'It'#39's based on the same parsing engine and converts any given esp' +
-              ' or esm into a text '
-            'representation.'
-            '(No conflict detection or funky colors here tho I'#39'm afraid).')
+            'This assumption is obviously only true if the author of mods D '
+            'and E did their job correctly, so this isn'#39't a good option to '
+            'have always enabled. As long as that assumption holds true, it '
+            'can declutter the reported conflicts significantly.'
+            '')
           ParentColor = True
+          ParentFont = False
           ReadOnly = True
           ScrollBars = ssVertical
           TabOrder = 0
