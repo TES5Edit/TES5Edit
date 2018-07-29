@@ -311,20 +311,22 @@ begin
     SetLength(Result, vstModules.RootNode.ChildCount);
     Node := vstModules.RootNode.FirstChild;
     i := 0;
-    while Assigned(Node) do begin
+    while Assigned(Node) and not (vsDisabled in Node.States) do begin
       Result[i] := Node;
       Inc(i);
       Node := Node.NextSibling;
     end;
+    SetLength(Result, i);
   end;
   j := 0;
   for i := Low(Result) to High(Result) do begin
     Node := Result[i];
-    if (Node.Parent = nil) or (Node.Parent = vstModules.RootNode) then begin
-      if i <> j then
-        Result[j] := Result[i];
-      Inc(j);
-    end;
+    if  not (vsDisabled in Node.States) then
+      if (Node.Parent = nil) or (Node.Parent = vstModules.RootNode) then begin
+        if i <> j then
+          Result[j] := Result[i];
+        Inc(j);
+      end;
   end;
 
   SetLength(Result, j);
@@ -362,7 +364,7 @@ begin
   if Length(AllModules) < 1 then
     AllModules := wbModulesByLoadOrder.FilteredByFlag(FilterFlag);
   vstModules.ChildCount[nil] := Length(AllModules);
-
+  vstModules.InitRecursive(nil, 100, False);
   if Length(AllModules) < 1 then
     Result := mrCancel
   else
@@ -594,7 +596,7 @@ begin
         Include(InitialStates, ivsHasChildren);
       if not (FilterFlag in mndModule.miFlags) then
         Include(InitialStates, ivsDisabled);
-      if mfMastersMissing in mndModule.miFlags then
+     if mfMastersMissing in mndModule.miFlags then
         Include(InitialStates, ivsDisabled);
     end else
       Include(InitialStates, ivsDisabled);

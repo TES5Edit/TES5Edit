@@ -326,7 +326,7 @@ begin
             if not Assigned(miMasters[j]) or (mfMastersMissing in miMasters[j].miFlags) then begin
               Include(miFlags, mfMastersMissing);
               MadeAChange := True;
-            end;
+            end
       end;
   until not MadeAChange;
 
@@ -364,6 +364,11 @@ begin
   finally
     sl.Free;
   end;
+
+  for i := Low(_Modules) to High(_Modules) do
+    with _Modules[i] do
+      if mfMastersMissing in miFlags then
+        Exclude(miFlags, mfActive);
 
   with wbModuleByName(wbGameName + csDotEsm)^ do
     if IsValid then begin
@@ -764,7 +769,7 @@ var
             miFileID := TwbFileID.Create($FE, _NextLightSlot);
             Inc(_NextLightSlot);
           end else begin
-            if _NextLightSlot > $FD then
+            if _NextFullSlot > $FD then
               raise Exception.Create('Too many full modules');
             miFileID := TwbFileID.Create(_NextFullSlot);
             Inc(_NextFullSlot);
@@ -794,7 +799,7 @@ begin
   NewLoadOrderCount := 0;
   for i := Low(Self) to High(Self) do
     with Self[i]^ do
-      if mfActive in miFlags then
+      if miFlags * [mfActive{, mfMastersMissing}] = [mfActive] then
         Load(Self[i]);
   SetLength(NewLoadOrder, NewLoadOrderCount);
   Result := NewLoadOrder;
