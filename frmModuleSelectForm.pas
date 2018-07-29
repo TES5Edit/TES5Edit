@@ -594,6 +594,8 @@ begin
         Include(InitialStates, ivsHasChildren);
       if not (FilterFlag in mndModule.miFlags) then
         Include(InitialStates, ivsDisabled);
+      if mfMastersMissing in mndModule.miFlags then
+        Include(InitialStates, ivsDisabled);
     end else
       Include(InitialStates, ivsDisabled);
   end;
@@ -628,7 +630,7 @@ begin
         end;
     end else
       TargetCanvas.Font.Color := vstModules.Colors.DisabledColor;
-    if not Assigned(mndModule) then
+    if not Assigned(mndModule) or (mfMastersMissing in mndModule.miFlags) then
       TargetCanvas.Font.Style := TargetCanvas.Font.Style + [fsStrikeOut]
     else
       TargetCanvas.Font.Style := TargetCanvas.Font.Style - [fsStrikeOut];

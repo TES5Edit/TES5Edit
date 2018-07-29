@@ -235,6 +235,7 @@ var
   sl         : TStringList;
   ThisModule ,
   PrevModule : PwbModuleInfo;
+  MadeAChange: Boolean;
 begin
   if Assigned(_ModulesByName) then {already loaded}
     Exit;
@@ -315,6 +316,19 @@ begin
 
   if Length(_Modules) < 1 then
     Exit;
+
+  repeat
+    MadeAChange := False;
+    for i := Low(_Modules) to High(_Modules) do
+      with _Modules[i] do begin
+        if not (mfMastersMissing in miFlags) then
+          for j := Low(miMasters) to High(miMasters) do
+            if not Assigned(miMasters[j]) or (mfMastersMissing in miMasters[j].miFlags) then begin
+              Include(miFlags, mfMastersMissing);
+              MadeAChange := True;
+            end;
+      end;
+  until not MadeAChange;
 
   sl := TStringList.Create;
   try
