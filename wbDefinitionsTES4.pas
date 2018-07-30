@@ -5168,6 +5168,9 @@ begin
   wbAddGroupOrder(ANIO);
   wbAddGroupOrder(WATR);
   wbAddGroupOrder(EFSH);
+  wbNexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/11536';
+  if wbToolMode = tmLODgen then
+    wbNexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/15781';
 end;
 
 initialization

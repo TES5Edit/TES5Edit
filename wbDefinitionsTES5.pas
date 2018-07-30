@@ -13638,6 +13638,16 @@ end;
 
 procedure DefineTES5;
 begin
+  if IsSSE then begin
+    wbNexusModsUrl := 'https://www.nexusmods.com/skyrimspecialedition/mods/164';
+    if wbToolMode = tmLODgen then
+      wbNexusModsUrl := 'https://www.nexusmods.com/skyrimspecialedition/mods/6642';
+  end else begin
+    wbNexusModsUrl := 'https://www.nexusmods.com/skyrim/mods/25859';
+    if wbToolMode = tmLODgen then
+      wbNexusModsUrl := 'https://www.nexusmods.com/skyrim/mods/62698';
+  end;
+
   DefineTES5a;
   DefineTES5b;
   DefineTES5c;

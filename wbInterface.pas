@@ -168,6 +168,8 @@ var
 
   wbDarkMode : Boolean = False;
 
+  wbNexusModsUrl: string;
+
 {$IFDEF USE_CODESITE}
 type
   TwbLoggingArea = (
