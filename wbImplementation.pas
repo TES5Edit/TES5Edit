@@ -73,7 +73,6 @@ function wbEndKeepAlive: Integer;
 implementation
 
 uses
-  wbInit,
   wbHelpers,
   wbSort;
 

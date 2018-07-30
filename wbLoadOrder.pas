@@ -22,7 +22,6 @@ uses
   System.Types,
   System.Classes,
   System.SysUtils,
-  wbInit,
   wbInterface;
 
 type
