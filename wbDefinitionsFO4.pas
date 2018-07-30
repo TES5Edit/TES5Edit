@@ -16514,6 +16514,9 @@ end;
 
 procedure DefineFO4;
 begin
+  wbNexusModsUrl := 'https://www.nexusmods.com/fallout4/mods/2737';
+  {if wbToolMode = tmLODgen then
+    wbNexusModsUrl := '';}
   DefineFO4a;
   DefineFO4b;
   DefineFO4c;

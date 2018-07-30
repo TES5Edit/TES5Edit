@@ -12522,25 +12522,17 @@ end;
 procedure TfrmMain.stbMainDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel;
   const Rect: TRect);
 begin
-  StatusBar.Canvas.Draw(Rect.Left, Rect.Top, imgFlattr.Picture.Graphic);
+  StatusBar.Canvas.StretchDraw(Rect, imgFlattr.Picture.Graphic);
 end;
 
 procedure TfrmMain.stbMainMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   if (Button = mbLeft) and (X > stbMain.Panels[0].Width) then
-  case wbGameMode of
-    gmTES4:
-      ShellExecute(Handle, 'open', 'https://flattr.com/thing/77985/TES4Edit-Editor-for-The-Elder-Scrolls-IV-Oblivion', '', '', 0);
-    gmFO3:
-      ShellExecute(Handle, 'open', 'https://flattr.com/thing/77983/FO3Edit-Editor-for-Fallout-3', '', '', 0);
-    gmFO4, gmFO4VR:
-      ShellExecute(Handle, 'open', 'https://flattr.com/thing/77983/FO3Edit-Editor-for-Fallout-3', '', '', 0);
-    gmFNV:
-      ShellExecute(Handle, 'open', 'https://flattr.com/thing/77972/FNVEdit-Editor-for-Fallout-New-Vegas', '', '', 0);
-    gmTES5, gmTES5VR, gmSSE:
-      ShellExecute(Handle, 'open', 'https://flattr.com/thing/77985/TES4Edit-Editor-for-The-Elder-Scrolls-IV-Oblivion', '', '', 0);
-  end;
+    if wbNexusModsUrl <> '' then begin
+      ShellExecute(Handle, 'open', PChar(wbNexusModsUrl), '', '', SW_SHOWNORMAL);
+      ShowMessage('Please use the NexusMods page for donations. Thank you.');
+    end;
 end;
 
 procedure TfrmMain.stbMainResize(Sender: TObject);
@@ -12879,9 +12871,9 @@ var
   i, j                        : Integer;
 const
   SiteName : array[TwbGameMode] of string =
-    ('Fallout3', 'NewVegas', 'Oblivion', 'Oblivion',
+    ('Fallout3', 'Fallout New Vegas', 'Oblivion', 'Oblivion',
      'Skyrim', 'Skyrim', 'Skyrim Special Edition',
-     'Fallout4', 'Fallout4');
+     'Fallout 4', 'Fallout 4');
 begin
   if not wbLoaderDone then
     Exit;

@@ -11866,6 +11866,9 @@ end;
 
 procedure DefineFNV;
 begin
+  wbNexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/34703';
+  if wbToolMode = tmLODgen then
+    wbNexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/58562';
   DefineFNVa;
   DefineFNVb;
   DefineFNVc;
