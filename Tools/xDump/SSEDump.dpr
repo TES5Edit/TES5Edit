@@ -18,8 +18,6 @@
 
 program SSEDump;
 
-{$I Compilers.inc}
-
 {$APPTYPE CONSOLE}
 
 uses
@@ -871,7 +869,8 @@ begin
   {$ELSE}
   SysUtils.DecimalSeparator := '.';
   {$IFEND}
-  wbProgressCallback := ReportProgress;
+  _wbProgressCallback := ReportProgress;
+  wbDontSave := True;
   wbAllowInternalEdit := False;
   wbMoreInfoForUnknown := False;
   wbSimpleRecords := False;

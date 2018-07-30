@@ -24,7 +24,6 @@ uses
 var
   wbApplicationTitle   : string;
   wbScriptToRun        : string;
-  wbPluginsFileName    : String;
   wbSettingsFileName   : string;
   wbModGroupFileName   : string;
   wbPluginToUse        : string;  // Passed a specific plugin as parameter
@@ -32,10 +31,6 @@ var
   wbMyProfileName      : string;
 
   wbMasterUpdateDone   : Boolean;
-  wbDontSave           : Boolean;
-  wbDontCache          : Boolean = False;
-  wbDontCacheLoad      : Boolean = False;
-  wbDontCacheSave      : Boolean = False;
   wbDontBackup         : Boolean = False;
   wbRemoveTempPath     : Boolean = True;
   wbQuickShowConflicts : Boolean;

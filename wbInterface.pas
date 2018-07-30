@@ -25,7 +25,7 @@ uses
   Graphics;
 
 const
-  VersionString  = '3.2.3v EXPERIMENTAL';
+  VersionString  = '3.2.3w EXPERIMENTAL';
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
   wbHardcodedDat = '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
@@ -89,6 +89,14 @@ var
   wbAllowEditGameMaster    : Boolean  = False;
   wbAllowDirectSave        : Boolean  = False;
   wbAllowDirectSaveFor     : TStringList;
+
+  wbPluginsFileName    : String;
+
+  wbDontSave           : Boolean;
+
+  wbDontCache          : Boolean = False;
+  wbDontCacheLoad      : Boolean = False;
+  wbDontCacheSave      : Boolean = False;
 
   wbCacheRecordsThreshold  : Integer   = 500;
   wbCacheTimeThreshold     : TDateTime = 2 * 1/24/60/60; //2 seconds
