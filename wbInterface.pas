@@ -25,7 +25,7 @@ uses
   Graphics;
 
 const
-  VersionString  = '3.2.3w EXPERIMENTAL';
+  VersionString  = '3.2.4 EXPERIMENTAL';
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
   wbHardcodedDat = '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
