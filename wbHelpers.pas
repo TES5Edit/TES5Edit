@@ -101,10 +101,10 @@ procedure SaveFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
 procedure LoadFont(aIni: TMemIniFile; aSection, aName: string; aFont: TFont);
 function wbDDSDataToBitmap(aData: TBytes; Bitmap: TBitmap): Boolean;
 function wbDDSStreamToBitmap(aStream: TStream; Bitmap: TBitmap): Boolean;
-function wbCRC32Ptr(aData: Pointer; aSize: Integer): Cardinal;
-function wbCRC32Data(aData: TBytes): Cardinal;
-function wbCRC32File(aFileName: string): Cardinal;
-function wbCRC32App: Cardinal;
+function wbCRC32Ptr(aData: Pointer; aSize: Integer): TwbCRC32;
+function wbCRC32Data(aData: TBytes): TwbCRC32;
+function wbCRC32File(aFileName: string): TwbCRC32;
+function wbCRC32App: TwbCRC32;
 function bscrc32(const aText: string): Cardinal; // hashing func used in Fallout 4
 function wbDecodeCRCList(const aList: string): TDynCardinalArray;
 function wbSHA1Data(aData: TBytes): string;
@@ -167,7 +167,7 @@ type
   TStringArrayHelper = record helper for TArray<string>
     function ForEach(const aFunc: TPassThroughFunc<string>): TArray<string>;
     function RemoveEmpty: TArray<string>;
-  end;
+  end;
 
 implementation
 
@@ -787,17 +787,17 @@ asm
 {$ENDIF WIN32}
 end;
 
-function wbCRC32Ptr(aData: Pointer; aSize: Integer): Cardinal;
+function wbCRC32Ptr(aData: Pointer; aSize: Integer): TwbCRC32;
 begin
   Result := not ShaCrcRefresh($FFFFFFFF, aData, aSize);
 end;
 
-function wbCRC32Data(aData: TBytes): Cardinal;
+function wbCRC32Data(aData: TBytes): TwbCRC32;
 begin
   Result := not ShaCrcRefresh($FFFFFFFF, @aData[0], Length(aData));
 end;
 
-function wbCRC32File(aFileName: string): Cardinal;
+function wbCRC32File(aFileName: string): TwbCRC32;
 var
   Data: TBytes;
 begin
@@ -816,7 +816,7 @@ var
   _CRC32AppLock : TRTLCriticalSection;
   _CRC32App     : Cardinal;
 
-function wbCRC32App: Cardinal;
+function wbCRC32App: TwbCRC32;
 begin
   if DebugHook <> 0 then
     Exit($FFFFFFFF);

@@ -542,6 +542,15 @@ type
 
   TwbFormIDs = array of TwbFormID;
 
+  TwbCRC32 = type Cardinal;
+  TwbCRC32s = array of TwbCRC32;
+
+  TwbCRC32Helper = record helper for TwbCRC32
+    function AssignFromString(const s: string): Boolean;
+    function ToString: string;
+  end;
+
+
   IwbElement = interface
     ['{F4B4637D-C794-415F-B5C7-587EAA4095B3}']
 
@@ -912,7 +921,7 @@ type
     function GetGroupBySignature(const aSignature: TwbSignature): IwbGroupRecord;
     function HasGroup(const aSignature: TwbSignature): Boolean;
     function GetFileStates: TwbFileStates;
-    function GetCRC32: Cardinal;
+    function GetCRC32: TwbCRC32;
     procedure BuildReachable;
     function BuildOrLoadRef(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
 
@@ -992,7 +1001,7 @@ type
     property FileStates: TwbFileStates
       read GetFileStates;
 
-    property CRC32: Cardinal
+    property CRC32: TwbCRC32
       read GetCRC32;
 
     property IsESM: Boolean
@@ -15455,6 +15464,23 @@ begin
     Result := 'FE ' + IntToHex(_LightSlot, 3)
   else
     Result := IntToHex(_FullSlot, 2);
+end;
+
+{ TwbCRC32Helper }
+
+function TwbCRC32Helper.AssignFromString(const s: string): Boolean;
+begin
+  Result := Length(s) = 8;
+  if Result then try
+    Self := StrToInt64('$' + s);
+  except
+    Exit(False);
+  end;
+end;
+
+function TwbCRC32Helper.ToString: string;
+begin
+  Result := IntToHex(Self, 8);
 end;
 
 initialization
