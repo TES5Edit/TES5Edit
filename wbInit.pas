@@ -787,6 +787,12 @@ begin
     if FindCmdLineSwitch('AllowDirectSaves') then
       wbAllowDirectSave := True;
 
+  if FindCmdLineSwitch('IKnowWhatImDoing') then
+    wbIKnowWhatImDoing := True;
+
+  if wbIKnowWhatImDoing and FindCmdLineSwitch('AllowMasterFilesEdit') then
+    wbAllowMasterFilesEdit := True;
+
   // definitions
   case wbGameMode of
     gmFNV: case wbToolSource of
@@ -858,9 +864,6 @@ begin
 
   if FindCmdLineSwitch('quickshowconflicts') then
     wbQuickShowConflicts := True;
-
-  if FindCmdLineSwitch('IKnowWhatImDoing') then
-    wbIKnowWhatImDoing := True;
 
   if wbIKnowWhatImDoing and FindCmdLineSwitch('IKnowIllBreakMyGameWithThis') then
     wbAllowEditGameMaster := True;

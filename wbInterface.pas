@@ -89,6 +89,7 @@ var
   wbAllowEditGameMaster    : Boolean  = False;
   wbAllowDirectSave        : Boolean  = False;
   wbAllowDirectSaveFor     : TStringList;
+  wbAllowMasterFilesEdit   : Boolean  = False; //must be set before DefineDefs
 
   wbPluginsFileName    : String;
 
@@ -348,6 +349,12 @@ type
 
   IwbElement = interface;
 
+  TwbDefFlag = (
+    dfInternalEditOnly
+  );
+
+  TwbDefFlags = set of TwbDefFlag;
+
   IwbDef = interface
     ['{C7739FBD-3B58-48A2-9DD0-8057D3496892}']
     function GetDefType: TwbDefType;
@@ -365,6 +372,7 @@ type
     function GetRoot: IwbDef;
     function GetNoReach: Boolean;
     function GetParent: IwbDef;
+    function GetDefFlags: TwbDefFlags;
 
     procedure Report(const aParents: TwbDefPath);
     procedure Used(const aElement: IwbElement = nil; const s: string = '');
@@ -372,12 +380,16 @@ type
     procedure NotRequired;
     function IsNotRequired: Boolean;
 
+    function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbDef{Self};
+
     property DefType: TwbDefType
       read GetDefType;
     property DefTypeName: string
       read GetDefTypeName;
     property DefID: NativeUInt
       read GetDefID;
+    property DefFlags: TwbDefFlags
+      read GetDefFlags;
     property ConflictPriority[const aElement: IwbElement]: TwbConflictPriority
       read GetConflictPriority;
     property ConflictPriorityCanChange: Boolean
@@ -1482,6 +1494,8 @@ type
 
   IwbRecordMemberDef = interface(IwbSignatureDef)
     ['{259F3F08-F4ED-439D-8C1A-48137C84E52A}']
+
+    function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
   end;
 
   TwbUsedMasters = array[Byte] of Boolean;
@@ -3918,6 +3932,7 @@ type
 
     defPriority : TwbConflictPriority;
     defGetCP    : TwbGetConflictPriority;
+    defFlags    : TwbDefFlags;
     defRequired : Boolean;
 
     defUsed     : Boolean;
@@ -3928,6 +3943,8 @@ type
     IsUnknown        : Boolean;
     IsUnknownChecked : Boolean;
     UnknownValues    : TStringList;
+
+    function defInternalEditOnly: Boolean;
   protected
     constructor Clone(const aSource: TwbDef); virtual;
     constructor Create(aPriority: TwbConflictPriority; aRequired: Boolean; aGetCP: TwbGetConflictPriority);
@@ -3947,6 +3964,7 @@ type
     function GetHasDontShow: Boolean; virtual;
     function GetRoot: IwbDef;
     function GetParent: IwbDef;
+    function GetDefFlags: TwbDefFlags;
 
     procedure Report(const aParents: TwbDefPath); virtual;
     procedure Used(const aElement: IwbElement; const s: string);
@@ -3954,6 +3972,8 @@ type
     procedure NotRequired;
     function IsNotRequired: Boolean;
     function GetNoReach: Boolean; virtual;
+
+    function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbDef{Self};
 
     {--- IwbDefInternal ---}
     function SetParent(const aParent: TwbDef; aForceDuplicate: Boolean): IwbDef; virtual;
@@ -4122,6 +4142,9 @@ type
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     procedure Report(const aParents: TwbDefPath); override;
 
+    {---IwbRecordMemberDef---}
+    function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
+
     {---IwbSubRecordDef---}
     function GetValue: IwbValueDef;
     function CanContainFormIDs: Boolean; override;
@@ -4168,6 +4191,9 @@ type
                  const aDataContainer : IwbDataContainer)
                                       : Boolean; virtual;
 
+    {---IwbRecordMemberDef---}
+    function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
+
     {---IwbSubRecordArrayDef---}
     function GetElement: IwbRecordMemberDef;
     function GetSorted(const aContainer: IwbContainer): Boolean;
@@ -4213,6 +4239,9 @@ type
     function CanHandle(aSignature     : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean; virtual;
+
+    {---IwbRecordMemberDef---}
+    function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
 
     {---IwbRecordDef---}
     function ContainsMemberFor(aSignature     : TwbSignature;
@@ -4268,6 +4297,9 @@ type
     function CanHandle(aSignature     : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean; virtual;
+
+    {---IwbRecordMemberDef---}
+    function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
 
     {---IwbRecordDef---}
     function ContainsMemberFor(aSignature     : TwbSignature;
@@ -7138,6 +7170,11 @@ begin
   inherited Create;
 end;
 
+function TwbDef.defInternalEditOnly: Boolean;
+begin
+  Result := dfInternalEditOnly in defFlags;
+end;
+
 function TwbDef.Duplicate: TwbDef;
 begin
   Result := TwbDefClass(ClassType).Clone(Self);
@@ -7158,6 +7195,11 @@ end;
 function TwbDef.GetConflictPriorityCanChange: Boolean;
 begin
   Result := Assigned(defGetCP);
+end;
+
+function TwbDef.GetDefFlags: TwbDefFlags;
+begin
+  Result := defFlags;
 end;
 
 function TwbDef.GetDefID: NativeUInt;
@@ -7197,6 +7239,12 @@ begin
     Result := Self
   else
     Result := Result.GetRoot;
+end;
+
+function TwbDef.IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbDef;
+begin
+  Result := Self;
+  if aOnlyWhenTrue then Include(defFlags, aFlag);
 end;
 
 function TwbDef.IsNotRequired: Boolean;
@@ -7792,6 +7840,12 @@ begin
   srHasUnusedData := True;
 end;
 
+function TwbSubRecordDef.IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef;
+begin
+  Result := Self;
+  if aOnlyWhenTrue then Include(defFlags, aFlag);
+end;
+
 procedure TwbSubRecordDef.Report(const aParents: TwbDefPath);
 var
   Parents : TwbDefPath;
@@ -7903,6 +7957,12 @@ begin
     Result := sraIsSorted(aContainer)
   else
     Result := sraSorted;
+end;
+
+function TwbSubRecordArrayDef.IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef;
+begin
+  Result := Self;
+  if aOnlyWhenTrue then Include(defFlags, aFlag);
 end;
 
 procedure TwbSubRecordArrayDef.Report(const aParents: TwbDefPath);
@@ -8165,6 +8225,12 @@ begin
   Result := Assigned(srsSkipSignatures) and srsSkipSignatures.Find(aSignature, Dummy);
 end;
 
+function TwbSubRecordStructDef.IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef;
+begin
+  Result := Self;
+  if aOnlyWhenTrue then Include(defFlags, aFlag);
+end;
+
 procedure TwbSubRecordStructDef.Report(const aParents: TwbDefPath);
 var
   Parents : TwbDefPath;
@@ -8405,6 +8471,12 @@ var
   Dummy: Integer;
 begin
   Result := Assigned(sruSkipSignatures) and sruSkipSignatures.Find(aSignature, Dummy);
+end;
+
+function TwbSubRecordUnionDef.IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef;
+begin
+  Result := Self;
+  if aOnlyWhenTrue then Include(defFlags, aFlag);
 end;
 
 procedure TwbSubRecordUnionDef.Report(const aParents: TwbDefPath);
@@ -8778,6 +8850,9 @@ end;
 function TwbIntegerDef.GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 begin
   Result := wbIsInternalEdit or (not Assigned(inFormater) or inFormater.IsEditable[ToInt(aBasePtr, aEndPtr, aElement), aElement]);
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbIntegerDef.GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement;
@@ -10061,6 +10136,9 @@ end;
 function TwbFlagsDef.GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean;
 begin
   Result := True;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 procedure TwbFlagsDef.Report(const aParents: TwbDefPath);
@@ -10547,6 +10625,9 @@ end;
 function TwbEnumDef.GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean;
 begin
   Result := True;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbEnumDef.GetName(aIndex: Integer): string;
@@ -10743,6 +10824,9 @@ end;
 function TwbStringDef.GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 begin
   Result := True;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbStringDef.GetIsVariableSizeInternal: Boolean;
@@ -11004,6 +11088,9 @@ end;
 function TwbFloatDef.GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 begin
   Result := True;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbFloatDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -11235,6 +11322,9 @@ end;
 function TwbChar4.GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean;
 begin
   Result := True;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbChar4.GetLinksTo(aInt: Int64; const aElement: IwbElement): IwbElement;
@@ -11328,6 +11418,9 @@ end;
 function TwbStr4.GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean;
 begin
   Result := True;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbStr4.ToEditValue(aInt: Int64; const aElement: IwbElement): string;
@@ -11750,6 +11843,9 @@ end;
 function TwbFormIDDefFormater.GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean;
 begin
   Result := True;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbFormIDDefFormater.GetLinksTo(aInt: Int64; const aElement: IwbElement): IwbElement;
@@ -12223,6 +12319,9 @@ end;
 function TwbByteArrayDef.GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 begin
   Result := True;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbByteArrayDef.GetIsVariableSizeInternal: Boolean;
@@ -12607,6 +12706,9 @@ end;
 function TwbDivDef.GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean;
 begin
   Result := True;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbDivDef.ToEditValue(aInt: Int64; const aElement: IwbElement): string;
@@ -12659,6 +12761,9 @@ end;
 function TwbMulDef.GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean;
 begin
   Result := True;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbMulDef.ToEditValue(aInt: Int64; const aElement: IwbElement): string;
@@ -12744,6 +12849,9 @@ end;
 function TwbCallbackDef.GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean;
 begin
   Result := True;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbCallbackDef.ToEditValue(aInt: Int64; const aElement: IwbElement): string;
@@ -12821,6 +12929,9 @@ end;
 function TwbValueDef.GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 begin
   Result := wbIsInternalEdit;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbValueDef.GetIsVariableSize: Boolean;
@@ -13253,6 +13364,9 @@ end;
 function TwbIntegerDefFormater.GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean;
 begin
   Result := wbIsInternalEdit;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbIntegerDefFormater.GetLinksTo(aInt: Int64; const aElement: IwbElement): IwbElement;
@@ -13423,6 +13537,9 @@ begin
     else
       Result := False;
   end;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbUnionDef.GetIsVariableSizeInternal: Boolean;
@@ -13654,6 +13771,9 @@ end;
 function TwbEmptyDef.GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 begin
   Result := True;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbEmptyDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -13924,6 +14044,9 @@ end;
 function TwbLenStringDef.GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 begin
   Result := True;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbLenStringDef.GetIsVariableSizeInternal: Boolean;
@@ -14797,6 +14920,9 @@ begin
     Result := IntegerDef.GetIsEditable(aInt, aElement)
   else
     Result := False;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbIntegerDefFormaterUnion.GetLinksTo(aInt     : Int64;

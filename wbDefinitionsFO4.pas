@@ -15124,7 +15124,7 @@ begin
       wbStringForward(MAST, 'Filename', 0, cpNormal, True),
       // wbInteger(DATA, 'Filesize', itU64, nil, nil, cpIgnore, True)  // Should be set by CK but usually null
       wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
-    ], [ONAM])),
+    ], [ONAM])).IncludeFlag(dfInternalEditOnly, not wbAllowMasterFilesEdit),
     wbArray(ONAM, 'Overridden Forms',                     // Valid in CK
       wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, DLBR, DIAL, INFO, SCEN]),
       0, nil, nil, cpNormal, False{, wbTES4ONAMDontShow}),
