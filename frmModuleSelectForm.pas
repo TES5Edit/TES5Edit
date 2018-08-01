@@ -288,12 +288,14 @@ begin
     if not Assigned(vstModules.FocusedNode) then
       vstModules.FocusedNode := Node;
     vstModules.Selected[Node] := True;
+    if SelectFlag = mfActive then
+      Break;
   end;
   if not Assigned(vstModules.FocusedNode) then begin
     vstModules.FocusedNode := vstModules.GetFirstVisible;
     vstModules.Selected[vstModules.FocusedNode] := True;
   end;
-  if vstModules.SelectedCount = 1 then begin
+  if Length(SelectedModules) = 1 then begin
     vstModules.CheckState[vstModules.FocusedNode] := csUncheckedNormal;
     with PModuleNodeData(vstModules.GetNodeData(vstModules.FocusedNode))^ do
       if Assigned(mndModule) then
