@@ -83,7 +83,8 @@ uses
   wbDataFormatNifTypes in 'wbDataFormatNifTypes.pas',
   wbNifMath in 'wbNifMath.pas',
   wbHalfFloat in 'wbHalfFloat.pas',
-  frmModuleSelectForm in 'frmModuleSelectForm.pas';
+  frmModuleSelectForm in 'frmModuleSelectForm.pas',
+  wbModGroups in 'wbModGroups.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
