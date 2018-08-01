@@ -10503,7 +10503,7 @@ begin
   FilterBaseSignatures := '';
 
   FilterConflictAllSet := [];
-  FilterConflictThisSet := [ctConflictLoses];
+  FilterConflictThisSet := [ctIdenticalToMasterWinsConflict, ctConflictWins, ctConflictLoses];
 
   FlattenBlocks := True;
   FlattenCellChilds := True;

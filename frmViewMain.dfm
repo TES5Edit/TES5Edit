@@ -1501,7 +1501,7 @@ object frmMain: TfrmMain
       OnClick = mniNavFilterForCleaningClick
     end
     object mniNavFilterConflicts: TMenuItem
-      Caption = 'Apply Filter to show Conflict Losers'
+      Caption = 'Apply Filter to show Conflicts'
       OnClick = mniNavFilterConflictsClick
     end
     object N1: TMenuItem
