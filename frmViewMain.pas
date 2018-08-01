@@ -141,7 +141,7 @@ type
 
   TLOOTPluginInfo = record
     Plugin: string;
-    CRC32: Cardinal;
+    CRC32: TwbCRC32;
     ITM, UDR, NAV: integer;
   end;
   PLOOTPluginInfo = ^TLOOTPluginInfo;

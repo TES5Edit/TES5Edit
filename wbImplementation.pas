@@ -578,7 +578,7 @@ type
     flView                   : Pointer;
     flSize                   : Cardinal;
     flEndPtr                 : Pointer;
-    flCRC32                  : Cardinal;
+    flCRC32                  : TwbCRC32;
 
     flMasters                : array of IwbFile;
 
@@ -644,7 +644,7 @@ type
     function GetGroupBySignature(const aSignature: TwbSignature): IwbGroupRecord;
     function HasGroup(const aSignature: TwbSignature): Boolean;
     function GetFileStates: TwbFileStates; inline;
-    function GetCRC32: Cardinal;
+    function GetCRC32: TwbCRC32;
     function GetRecord(aIndex: Integer): IwbMainRecord; inline;
     function GetRecordCount: Integer; inline;
     function GetHeader: IwbMainRecord;
@@ -2928,7 +2928,7 @@ begin
     Result := wbGameName + '.exe';
 end;
 
-function TwbFile.GetCRC32: Cardinal;
+function TwbFile.GetCRC32: TwbCRC32;
 begin
   Result := flCRC32;
   if Result = 0 then begin
