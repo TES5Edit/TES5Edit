@@ -8696,7 +8696,7 @@ begin
     Result := Result + CRLF + 'LOOT Masterlist Entry';
     Result := Result + CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin]);
     Result := Result + CRLF + StringOfChar(' ', 4) + 'clean:';
-    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
+    Result := Result + CRLF + Format(StringOfChar(' ', 6) + '- crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
     Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''%sEdit v%s''', [wbAppName, VersionString]);
   end;
   if Result <> '' then
