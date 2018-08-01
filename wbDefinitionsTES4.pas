@@ -4834,7 +4834,7 @@ begin
     wbRArray('Master Files', wbRStruct('Master File', [
       wbStringForward(MAST, 'Filename', 0, cpNormal, True),
       wbByteArray(DATA, 'Unused', 8, cpIgnore, True)
-    ], []))
+    ], [])).IncludeFlag(dfInternalEditOnly, not wbAllowMasterFilesEdit)
   ], False, nil, cpNormal, True, wbRemoveOFST);
 
   wbRecord(TREE, 'Tree', [

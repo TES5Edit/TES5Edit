@@ -2046,28 +2046,33 @@ begin
   else
     MaxMasterCount := $FF;
 
-  for i := 0 to Pred(aMasters.Count) do begin
-    if GetMasterCount >= MaxMasterCount then begin
-      NotAllAdded := True;
-      Break;
-    end;
-    if IsNew then begin
-      Assert(MasterFiles.ElementCount = 1);
-      Rec := (MasterFiles[0] as IwbContainer).RecordBySignature['MAST'];
-      IsNew := False;
-    end else begin
-      j := MasterFiles.ElementCount;
-      MasterFiles.Assign(High(Integer), nil, False);
-      Assert(MasterFiles.ElementCount = Succ(j));
-      Rec := (MasterFiles[j] as IwbContainer).RecordBySignature['MAST'];
-    end;
+  if wbBeginInternalEdit(True) then try
+    for i := 0 to Pred(aMasters.Count) do begin
+      if GetMasterCount >= MaxMasterCount then begin
+        NotAllAdded := True;
+        Break;
+      end;
+      if IsNew then begin
+        Assert(MasterFiles.ElementCount = 1);
+        Rec := (MasterFiles[0] as IwbContainer).RecordBySignature['MAST'];
+        IsNew := False;
+      end else begin
+        j := MasterFiles.ElementCount;
+        MasterFiles.Assign(High(Integer), nil, False);
+        Assert(MasterFiles.ElementCount = Succ(j));
+        Rec := (MasterFiles[j] as IwbContainer).RecordBySignature['MAST'];
+      end;
 
-    Assert(Assigned(Rec));
-    Assert(Rec.EditValue = '');
+      Assert(Assigned(Rec));
+      Assert(Rec.EditValue = '');
 
-    Rec.EditValue := aMasters[i];
-    AddMaster(aMasters[i]);
-  end;
+      Rec.EditValue := aMasters[i];
+      AddMaster(aMasters[i]);
+    end;
+  finally
+    wbEndInternalEdit;
+  end else
+    Assert(False);
 
   if OldMasterCount <> GetMasterCount then begin
     MasterCountUpdated(OldMasterCount, GetMasterCount);
@@ -2393,9 +2398,14 @@ begin
       SetLength(flMasters, j);
 
       (MasterFiles as IwbContainerInternal).SortBySortOrder;
-      for i := Pred(MasterFiles.ElementCount) downto 0 do
-        if MasterFiles[i].SortOrder = $100 then
-          MasterFiles.RemoveElement(i);
+      if wbBeginInternalEdit(True) then try
+        for i := Pred(MasterFiles.ElementCount) downto 0 do
+          if MasterFiles[i].SortOrder = $100 then
+            MasterFiles.RemoveElement(i);
+      finally
+        wbEndInternalEdit;
+      end else
+        Assert(False);
 
       Assert(Length(flMasters) = MasterFiles.ElementCount);
 
@@ -3954,7 +3964,12 @@ begin
         end;
       end;
       if Length(Old) > 0 then begin
-        (MasterFiles as IwbContainerInternal).SortBySortOrder;
+        if wbBeginInternalEdit(True) then try
+          (MasterFiles as IwbContainerInternal).SortBySortOrder;
+        finally
+          wbEndInternalEdit;
+        end else
+          Assert(False);
         MasterIndicesUpdated(Old, New);
       end;
     finally
@@ -4163,7 +4178,28 @@ begin
 end;
 
 function TwbContainer.IsElementEditable(const aElement: IwbElement): Boolean;
+var
+  Def      : IwbNamedDef;
+  ValueDef : IwbValueDef;
 begin
+  if not wbIsInternalEdit then begin
+    Def := GetDef;
+    if Assigned(Def) and (dfInternalEditOnly in Def.DefFlags) then
+        Exit(False);
+
+    ValueDef := GetValueDef;
+    if Assigned(ValueDef) and (dfInternalEditOnly in ValueDef.DefFlags) then
+      Exit(False);
+    if Assigned(aElement) then begin
+      Def := aElement.GetDef;
+      if Assigned(Def) and (dfInternalEditOnly in Def.DefFlags) then
+          Exit(False);
+
+      ValueDef := aElement.GetValueDef;
+      if Assigned(ValueDef) and (dfInternalEditOnly in ValueDef.DefFlags) then
+        Exit(False);
+    end;
+  end;
   if Assigned(eContainer) then
     Result := IwbContainer(eContainer).IsElementEditable(Self)
   else
@@ -4227,6 +4263,7 @@ var
   BasePtr    : Pointer;
   i, j       : Integer;
   SelfRef    : IwbContainerElementRef;
+  Def        : IwbDef;
   ValueDef   : IwbValueDef;
   UnionDef   : IwbUnionDef;
   HasMap     : Boolean;
@@ -4237,6 +4274,12 @@ begin
 
   if not wbEditAllowed then
     raise Exception.Create(GetName + ' can not be assigned.');
+
+  if not wbIsInternalEdit then begin
+    Def := GetDef;
+    if Assigned(Def) and (dfInternalEditOnly in Def.DefFlags) then
+      Exit;
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
 
@@ -4369,11 +4412,18 @@ var
   Container : IwbContainer;
   i         : Integer;
   SelfRef   : IwbContainerElementRef;
+  Def       : IwbDef;
   ValueDef  : IwbValueDef;
 begin
   Result := False;
   if not wbEditAllowed then
     Exit;
+
+  if not wbIsInternalEdit then begin
+    Def := GetDef;
+    if Assigned(Def) and (dfInternalEditOnly in Def.DefFlags) then
+      Exit;
+  end;
 
   if not Assigned(aElement) then
     Exit;
@@ -4416,7 +4466,18 @@ end;
 function TwbContainer.CanChangeElementMember(const aElement: IwbElement): Boolean;
 var
   SubRecordArrayDef : IwbSubRecordArrayDef;
+  Def               : IwbDef;
+  ValueDef          : IwbValueDef;
 begin
+  Result := False;
+  if not wbIsInternalEdit then begin
+    Def := GetDef;
+    if Assigned(Def) and (dfInternalEditOnly in Def.DefFlags) then
+      Exit;
+    ValueDef := GetValueDef;
+    if Assigned(ValueDef) and (dfInternalEditOnly in ValueDef.DefFlags) then
+      Exit;
+  end;
   Result := Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) and
     Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef) and
     IsElementEditable(Self);
@@ -4429,9 +4490,19 @@ end;
 
 function TwbContainer.CanMoveElementDown(const aElement: IwbElement): Boolean;
 var
-  i: Integer;
+  i        : Integer;
+  Def      : IwbDef;
+  ValueDef : IwbValueDef;
 begin
   Result := False;
+  if not wbIsInternalEdit then begin
+    Def := GetDef;
+    if Assigned(Def) and (dfInternalEditOnly in Def.DefFlags) then
+      Exit;
+    ValueDef := GetValueDef;
+    if Assigned(ValueDef) and (dfInternalEditOnly in ValueDef.DefFlags) then
+      Exit;
+  end;
   if Assigned(eContainer) and not IwbContainer(eContainer).IsElementEditable(Self) then
     Exit;
   if not CanMoveElement then
@@ -4450,8 +4521,18 @@ end;
 function TwbContainer.CanMoveElementUp(const aElement: IwbElement): Boolean;
 var
   i: Integer;
+  Def      : IwbDef;
+  ValueDef : IwbValueDef;
 begin
   Result := False;
+  if not wbIsInternalEdit then begin
+    Def := GetDef;
+    if Assigned(Def) and (dfInternalEditOnly in Def.DefFlags) then
+      Exit;
+    ValueDef := GetValueDef;
+    if Assigned(ValueDef) and (dfInternalEditOnly in ValueDef.DefFlags) then
+      Exit;
+  end;
   if Assigned(eContainer) and not IwbContainer(eContainer).IsElementEditable(Self) then
     Exit;
   if not CanMoveElement then
@@ -6324,6 +6405,9 @@ begin
   Result := False;
   if not wbEditAllowed then
     Exit;
+  if not wbIsInternalEdit then
+    if dfInternalEditOnly in mrDef.DefFlags then
+      Exit;
 
   if GetIsDeleted then
     Exit;
@@ -6340,6 +6424,9 @@ begin
     Result := (aIndex >= 0) and (aIndex < mrDef.MemberCount) and (GetElementBySortOrder(aIndex + GetAdditionalElementCount) = nil);
     if Result and aCheckDontShow then
       Result := not mrDef.Members[aIndex].DontShow[Self];
+    if Result and not wbIsInternalEdit then
+      if dfInternalEditOnly in mrDef.Members[aIndex].DefFlags then
+        Result := False;
     Exit;
   end;
 
@@ -7701,7 +7788,7 @@ end;
 function TwbMainRecord.GetIsEditable: Boolean;
 begin
   Result := wbIsInternalEdit;
-  if Result then
+  if Result or (dfInternalEditOnly in mrDef.DefFlags) then
     Exit;
 
   if Assigned(eContainer) and not IwbContainer(eContainer).IsElementEditable(Self) then
@@ -10160,6 +10247,9 @@ begin
   Result := False;
   if not wbEditAllowed then
     Exit;
+  if not wbIsInternalEdit then
+    if Assigned(srDef) and (dfInternalEditOnly in srDef.DefFlags) then
+      Exit;
 
   if Assigned(eContainer) then
     if not IwbContainer(eContainer).IsElementEditable(Self) then
@@ -10567,11 +10657,15 @@ begin
   if Result then
     Exit;
 
+  if not Assigned(srDef) then
+    Exit;
+
+  if dfInternalEditOnly in srDef.DefFlags then
+    Exit;
+
   if Assigned(eContainer) and not IwbContainer(eContainer).IsElementEditable(SelfRef) then
     Exit;
 
-  if not Assigned(srDef) then
-    Exit;
   DoInit;
 
   Result := Assigned(srValueDef) and
@@ -12785,6 +12879,9 @@ begin
   TargetValueDef := GetValueDef;
   if TargetValueDef = nil then
     Exit;
+  if not wbIsInternalEdit then
+    if dfInternalEditOnly in TargetValueDef.DefFlags then
+      Exit;
 
   SourceValueDef := aElement.ValueDef;
   if SourceValueDef = nil then
@@ -13989,6 +14086,9 @@ begin
   Result := False;
   if not wbEditAllowed then
     Exit;
+  if not wbIsInternalEdit then
+    if dfInternalEditOnly in arcDef.DefFlags then
+      Exit;
 
   if Assigned(eContainer) then
     if not IwbContainer(eContainer).IsElementEditable(Self) then
@@ -14330,6 +14430,9 @@ begin
   Result := False;
   if not wbEditAllowed then
     Exit;
+  if not wbIsInternalEdit then
+    if dfInternalEditOnly in srcDef.DefFlags then
+      Exit;
 
   if Assigned(eContainer) then
     if not IwbContainer(eContainer).IsElementEditable(Self) then
@@ -14338,15 +14441,18 @@ begin
   if aCheckDontShow and GetDontShow then
     Exit;
 
-  if not Assigned(aElement) then begin
-    Result := (aIndex >= 0) and (aIndex < srcDef.MemberCount) and (GetElementBySortOrder(aIndex + GetAdditionalElementCount) = nil);
-    if Result and aCheckDontShow then
-      if srcDef.Members[aIndex].DontShow[Self] then
-        Result := False;
-    Exit;
-  end;
-
   if Assigned(srcDef) then begin
+    if not Assigned(aElement) then begin
+      Result := (aIndex >= 0) and (aIndex < srcDef.MemberCount) and (GetElementBySortOrder(aIndex + GetAdditionalElementCount) = nil);
+      if Result and aCheckDontShow then
+        if srcDef.Members[aIndex].DontShow[Self] then
+          Result := False;
+        if Result and not wbIsInternalEdit then
+          if dfInternalEditOnly in srcDef.Members[aIndex].DefFlags then
+            Result := False;
+      Exit;
+    end;
+
     if aIndex = Low(Integer) then
       Result := srcDef.Equals(aElement.Def)
     else begin
@@ -14354,6 +14460,9 @@ begin
         srcDef.Members[aIndex].CanAssign(Self, Low(Integer), aElement.Def);
       if Result and aCheckDontShow then
         if srcDef.Members[aIndex].DontShow[Self] then
+          Result := False;
+      if Result and not wbIsInternalEdit then
+        if dfInternalEditOnly in srcDef.Members[aIndex].DefFlags then
           Result := False;
     end;
   end else
@@ -14819,6 +14928,9 @@ begin
   Result := False;
   if not wbEditAllowed then
     Exit;
+  if not wbIsInternalEdit then
+    if Assigned(vbValueDef) and (dfInternalEditOnly in vbValueDef.DefFlags) then
+      Exit;
 
   if Assigned(eContainer) then
     if not IwbContainer(eContainer).IsElementEditable(Self) then
@@ -15789,8 +15901,14 @@ begin
 end;
 
 function TwbFlag.GetIsEditable: Boolean;
+var
+  FlagsDef: IwbFlagsDef;
 begin
   Result := wbIsInternalEdit or GetContainer.IsEditable;
+  FlagsDef := GetFlagsDef;
+  if Assigned(FlagsDef) and (dfInternalEditOnly in FlagsDef.DefFlags) then
+    if not wbIsInternalEdit then
+      Result := False;
 end;
 
 function TwbFlag.GetIsRemoveable: Boolean;

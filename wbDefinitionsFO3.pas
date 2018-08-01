@@ -10047,7 +10047,7 @@ begin
     wbRArray('Master Files', wbRStruct('Master File', [
       wbStringForward(MAST, 'Filename', 0, cpNormal, True),
       wbByteArray(DATA, 'Unused', 8, cpIgnore, True)
-    ], [ONAM])),
+    ], [ONAM])).IncludeFlag(dfInternalEditOnly, not wbAllowMasterFilesEdit),
     wbArray(ONAM, 'Overriden Forms', wbFormIDCk('Form', [REFR, ACHR, ACRE, PMIS, PBEA, PGRE, LAND, NAVM]), 0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
     wbByteArray(SCRN, 'Screenshot')
   ], True, nil, cpNormal, True, wbRemoveOFST);

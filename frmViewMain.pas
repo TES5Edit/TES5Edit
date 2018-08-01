@@ -5037,6 +5037,8 @@ begin
   end;
   if not Assigned(TargetElement) then
     Exit;
+  if not TargetElement.IsEditable then
+    Exit;
 
   Result := True;
 end;
