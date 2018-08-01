@@ -92,6 +92,7 @@ var
   wbAllowMasterFilesEdit   : Boolean  = False; //must be set before DefineDefs
 
   wbPluginsFileName    : String;
+  wbModGroupFileName   : string;
 
   wbDontSave           : Boolean;
 
@@ -3274,6 +3275,7 @@ var
   wbContainerHandler : IwbContainerHandler;
   wbLoaderDone       : Boolean;
   wbLoaderError      : Boolean;
+  wbFirstLoadComplete: Boolean;
 
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   wbBuildingRefsParallel : Boolean = False;

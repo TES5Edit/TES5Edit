@@ -25,7 +25,6 @@ var
   wbApplicationTitle   : string;
   wbScriptToRun        : string;
   wbSettingsFileName   : string;
-  wbModGroupFileName   : string;
   wbPluginToUse        : string;  // Passed a specific plugin as parameter
   wbLogFile            : string;  // Optional log file for this session
   wbMyProfileName      : string;

@@ -67,6 +67,7 @@ uses
   wbInit,
   wbLocalization,
   wbDataFormat,
+  wbModGroups,
   Vcl.Themes,
   Vcl.Styles,
   Vcl.Styles.Utils.SystemMenu,
@@ -15894,6 +15895,18 @@ begin
     pgMain.ActivePage := tbsMessages;
     mniNavUndeleteAndDisableReferences.Click;
     mniNavRemoveIdenticalToMaster.Click;
+  end;
+
+  if wbForceTerminate then
+    Exit;
+
+  if wbFirstLoadComplete then
+    Exit;
+
+  wbFirstLoadComplete := True;
+
+  if wbToolMode in [tmView, tmEdit] then begin
+    wbLoadModGroups;
   end;
 end;
 
