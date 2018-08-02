@@ -1075,7 +1075,7 @@ begin
     if not ForceDirectories(wbBackupPath) then
       wbBackupPath := wbDataPath;
 
-  lFrom := wbExpandFileName(aFrom);
+  lFrom := wbDataPath + aFrom;
   if not FileExists(lFrom) then begin
     s := 'Could not rename "'+lFrom+'". File not found.';
     wbProgress(s);
@@ -1085,7 +1085,7 @@ begin
   end;
 
   // create backup file
-  lTo := wbExpandFileName(aTo);
+  lTo := wbDataPath + aTo;
   OldDateTime := 0;
   if FileExists(lTo) then begin
     try
