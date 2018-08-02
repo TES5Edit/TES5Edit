@@ -3714,7 +3714,9 @@ begin
       if wbPseudoESL then
         Include(flStates, fsPseudoESL);
       AssignSlot;
-    end;
+    end else
+      if not wbPseudoESL then
+        AssignSlot;
 
     flRecordsCount := 0;
     HEDR := Header.RecordBySignature['HEDR'];
