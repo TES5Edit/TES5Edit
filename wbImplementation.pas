@@ -383,6 +383,8 @@ type
     function CanMoveUp: Boolean;
     function CanMoveDown: Boolean;
 
+    function CanCopy: Boolean; virtual;
+
     procedure NextMember;
     procedure PreviousMember;
     function CanChangeMember: Boolean;
@@ -1541,6 +1543,8 @@ type
     function IsElementRemoveable(const aElement: IwbElement): Boolean; override;
     procedure Remove; override;
     procedure NotifyChangedInternal(aContainer: Pointer); override;
+
+    function CanCopy: Boolean; override;
 
     function GetAddList: TDynStrings; override;
     function Add(const aName: string; aSilent: Boolean): IwbElement; override;
@@ -2908,7 +2912,7 @@ begin
     Sorted := False;
 
     for i := Pred(Count) downto 0 do
-      if wbFindRecordDef(AnsiString(Strings[i]), RecordDef) then
+      if wbFindRecordDef(AnsiString(Strings[i]), RecordDef) and not (dfInternalEditOnly in RecordDef.DefFlags) then
         Strings[i] := Strings[i] + ' - ' + RecordDef.Name
       else
         Delete(i);
@@ -3803,6 +3807,14 @@ begin
     finally
       if IsInternal then
         wbEndInternalEdit;
+    end;
+  end;
+
+  if fsIsHardcoded in flStates then begin
+    if wbBeginInternalEdit(True) then try
+      ((Add('PLYR', True) as IwbGroupRecord).Add('PLYR', True) as IwbMainRecord).EditorID := 'PlayerRef';
+    finally
+      wbEndInternalEdit;
     end;
   end;
 
@@ -11228,7 +11240,10 @@ begin
     Exit;
 
   if aSilent then
-    FormID := _File.NewFormID
+    if Signature = 'PLYR' then
+      FormID := TwbFormID.FromCardinal($00000014)
+    else
+      FormID := _File.NewFormID
   else
     FormID := _File.LoadOrderFormIDtoFileFormID(wbGetFormID(Self));
   if FormID.IsNull then
@@ -11762,6 +11777,17 @@ begin
   InvalidateStorage;
   BuildRef;
   (aContainer as IwbGroupRecordInternal).Sort;
+end;
+
+function TwbGroupRecord.CanCopy: Boolean;
+var
+  RecordDef: PwbRecordDef;
+begin
+  Result := True;
+  if not wbIsInternalEdit then
+    if (grStruct.grsGroupType = 0) and wbFindRecordDef(PwbSignature(@grStruct.grsLabel)^, RecordDef) then
+      if dfInternalEditOnly in RecordDef.DefFlags then
+        Exit(False);
 end;
 
 constructor TwbGroupRecord.Create(const aContainer: IwbContainer; aType: Integer; aLabel: Cardinal);
@@ -12904,6 +12930,22 @@ end;
 function TwbElement.CanContainFormIDs: Boolean;
 begin
   Result := True;
+end;
+
+function TwbElement.CanCopy: Boolean;
+var
+  Def      : IwbNamedDef;
+  ValueDef : IwbValueDef;
+begin
+  Result := True;
+  if not wbIsInternalEdit then begin
+    Def := GetDef;
+    if Assigned(Def) and (dfInternalEditOnly in Def.DefFlags) then
+      Exit(False);
+    ValueDef := GetValueDef;
+    if Assigned(ValueDef) and (dfInternalEditOnly in ValueDef.DefFlags) then
+      Exit(False);
+  end;
 end;
 
 function TwbElement.CanMoveDown: Boolean;
