@@ -819,7 +819,7 @@ var
 function wbCRC32App: TwbCRC32;
 begin
   if DebugHook <> 0 then
-    Exit($FFFFFFFF);
+    Exit($FFFFFFFE);
 
   Result := _CRC32App;
   if Result = 0 then begin
