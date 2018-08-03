@@ -47,6 +47,8 @@ threadvar
   wbCurrentAction     : string;
   wbStartTime         : TDateTime;
   wbShowStartTime     : Integer;
+
+var
   wbForceTerminate    : Boolean;
 
 var

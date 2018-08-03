@@ -1000,7 +1000,7 @@ begin
   end;
 end;
 
-procedure GeneralProgress(const s: string);
+procedure GeneralProgressNoAbortCheck(const s: string);
 begin
   if s <> '' then
     if wbShowStartTime > 0 then
@@ -1013,9 +1013,15 @@ begin
     DoProcessMessages;
     LastUpdate := GetTickCount64;
   end;
+end;
+
+procedure GeneralProgress(const s: string);
+begin
+  GeneralProgressNoAbortCheck(s);
   if wbForceTerminate then
     Abort;
 end;
+
 
 var
   NoNodes                     : TNodeArray;
@@ -1163,6 +1169,7 @@ var
   i        : Integer;
   AnyError : Boolean;
 begin
+  wbForceTerminate := False;
   _wbProgressCallback := SaveProgress;
   wbShowStartTime := 1;
   wbStartTime := Now;
@@ -16009,8 +16016,10 @@ begin
     mniNavRemoveIdenticalToMaster.Click;
   end;
 
-  if wbForceTerminate then
+  if wbForceTerminate then begin
+    GeneralProgressNoAbortCheck('Loading of modules got terminated early. Editing is disabled.');
     Exit;
+  end;
 
   if wbFirstLoadComplete then
     Exit;
@@ -16147,10 +16156,15 @@ begin
   FreeAndNil(ltLoadList);
 end;
 
-procedure LoaderProgress(const s: string);
+procedure LoaderProgressNoAbortCheck(const s: string);
 begin
   if s <> '' then
     frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Background Loader: ' + s);
+end;
+
+procedure LoaderProgress(const s: string);
+begin
+  LoaderProgressNoAbortCheck(s);
   if wbForceTerminate then
     Abort;
 end;
@@ -16295,6 +16309,7 @@ begin
                 for i := Low(ltFiles) to High(ltFiles) do
                 {$ENDIF}
                   if not ltFiles[i].IsNotPlugin then begin
+                    try
                       OnlyLoad := wbDoNotBuildRefsFor.Find(ltFiles[i].FileName, dummy);
                       if not (OnlyLoad and (wbDontCache or wbDontCacheLoad)) then begin
                         if OnlyLoad then
@@ -16320,7 +16335,15 @@ begin
                         end;
                         LoaderProgress('[' + ltFiles[i].FileName + '] ' + s);
                       end;
-                    if wbForceTerminate then
+                    except
+                      on E: EAbort do
+                        wbForceTerminate := True;
+                      on E: Exception do begin
+                        LoaderProgressNoAbortCheck('Fatal: <' + e.ClassName + ': ' + e.Message + '>');
+                        wbLoaderError := True;
+                      end;
+                    end;
+                    if wbLoaderError or wbForceTerminate then
                       Exit;
                   end;
                   {$IFDEF USE_PARALLEL_BUILD_REFS}
@@ -16336,8 +16359,10 @@ begin
       end;
 
     except
+      on E: EAbort do
+        wbForceTerminate := True;
       on E: Exception do begin
-        LoaderProgress('Fatal: <' + e.ClassName + ': ' + e.Message + '>');
+        LoaderProgressNoAbortCheck('Fatal: <' + e.ClassName + ': ' + e.Message + '>');
         wbLoaderError := True;
       end;
     end;
