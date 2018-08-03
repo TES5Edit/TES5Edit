@@ -60,6 +60,7 @@ type
     sedAutoCompareSelectedLimit: TSpinEdit;
     Label7: TLabel;
     Label8: TLabel;
+    cbShowFileFlags: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);

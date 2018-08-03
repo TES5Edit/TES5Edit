@@ -63,6 +63,7 @@ var
   wbShowFormVersion        : Boolean  = False;
   wbShowFlagEnumValue      : Boolean  = False;
   wbShowGroupRecordCount   : Boolean  = False;
+  wbShowFileFlags          : Boolean  = False;
   wbDisplayShorterNames    : Boolean  = False;
   wbSortSubRecords         : Boolean  = False;
   wbSortFLST               : Boolean  = True;
