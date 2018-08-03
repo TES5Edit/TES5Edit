@@ -260,7 +260,7 @@ object frmMain: TfrmMain
           DragOperations = [doCopy]
           Header.AutoSizeIndex = 1
           Header.Height = 21
-          Header.Options = [hoAutoResize, hoColumnResize, hoDblClickResize, hoOwnerDraw, hoRestrictDrag, hoVisible]
+          Header.Options = [hoAutoResize, hoColumnResize, hoDblClickResize, hoDrag, hoOwnerDraw, hoVisible]
           Header.PopupMenu = pmuViewHeader
           HintMode = hmTooltip
           HotCursor = crHandPoint
