@@ -684,6 +684,7 @@ type
     FilterPreset: Boolean; // new: flag to skip filter window
     FilterScripted: Boolean; // new: flag to use scripted filtering function
     FilterApplied: Boolean;
+    FilterNoGameMaster: Boolean;
 
     FilterConflictAll: Boolean;
     FilterConflictAllSet: TConflictAllSet;
@@ -804,7 +805,7 @@ type
     procedure AddFile(const aFile: IwbFile);
     procedure AddFileInternal(const aFile: IwbFile);
 
-    procedure ReInitTree;
+    procedure ReInitTree(aNoGameMaster: Boolean = False);
 
     procedure PostAddMessage(const s: string);
     procedure SendAddFile(const aFile: IwbFile);
@@ -10027,7 +10028,7 @@ begin
   vstNav.Visible:= False;
   vstNav.BeginUpdate;
   try
-    ReInitTree;
+    ReInitTree(FilterNoGameMaster);
 
     StartTick := GetTickCount64;
     wbStartTime := Now;
@@ -10516,9 +10517,11 @@ begin
   InheritConflictByParent := True;
 
   FilterPreset := True;
+  FilterNoGameMaster := wbVeryQuickShowConflicts;
   try
     mniNavFilterApplyClick(Sender);
   finally
+    FilterNoGameMaster := False;
     FilterPreset := False;
   end;
 end;
@@ -11554,16 +11557,19 @@ begin
   end;
 end;
 
-procedure TfrmMain.ReInitTree;
+procedure TfrmMain.ReInitTree(aNoGameMaster: Boolean = False);
 var
-  i                           : Integer;
+  i, j                        : Integer;
   _File                       : IwbFile;
 begin
   FilterApplied := False;
   vstNav.BeginUpdate;
   try
     vstNav.Clear;
-    for i := Low(Files) to High(Files) do begin
+    j := Low(Files);
+    if aNoGameMaster then
+      Inc(j);
+    for i := j to High(Files) do begin
       _File := Files[i];
       vstNav.AddChild(nil, Pointer(_File));
       _File._AddRef;
