@@ -969,6 +969,9 @@ uses
   frmTipForm,
   frmModuleSelectForm;
 
+const
+  CRLF = #13#10;
+
 var
   LastUpdate               : UInt64;
   ProcessMessagesLockCount : Integer;
@@ -8695,8 +8698,6 @@ function TfrmMain.LOManagersDirtyInfo(const aInfo: TLOOTPluginInfo): string;
 WAC - NoMapMarker.esp
   IF CHECKSUM("WAC - NoMapMarker.esp", 9BD8F9C2) DIRTY: 16 ITM, 0 UDR records. Needs TES4Edit cleaning: "http://cs.elderscrolls.com/index.php?title=TES4Edit_Cleaning_Guide"
 }
-const
-  CRLF = #13#10;
 begin
   Result := '';
   if (aInfo.ITM <> 0) or (aInfo.UDR <> 0) or (aInfo.NAV <> 0) then begin
@@ -14429,16 +14430,6 @@ begin
           -1, 0: CellText := _File.Name;
           1: begin
             s := '';
-            {
-            if fsIsGhost in _File.FileStates then
-              s:= '<Ghost>';
-            if _File.IsESM then
-              s := s + '<ESM>';
-            if _File.IsESL then
-              s := s + '<ESL>';
-            if _File.IsLocalized then
-              s := s + '<Localized>';
-            }
             CellText := s;
           end;
           2: if not (fsIsHardcoded in _File.FileStates) then
@@ -14631,8 +14622,15 @@ end;
 
 procedure TfrmMain.vstNavKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 var
-  r: TRect;
-  p: TPoint;
+  r          : TRect;
+  p          : TPoint;
+  i          : Integer;
+  s, t       : string;
+  Nodes      : TNodeArray;
+  NodeData   : PNavNodeData;
+  MainRecord : IwbMainRecord;
+  Chapter    : IwbChapter;
+  _File      : IwbFile;
 begin
   case Key of
     VK_DELETE: begin
@@ -14656,6 +14654,60 @@ begin
       pmuNavPopup(nil);
       if mniNavChangeFormID.Enabled and mniNavChangeFormID.Visible then
         mniNavChangeFormID.Click;
+    end;
+  end;
+
+  if ssCtrl in Shift then begin
+    case Key of
+      Ord('C'): begin
+        Key := 0;
+        s := '';
+        Nodes := vstNav.GetSortedSelection(True);
+        for i := Low(Nodes) to High(Nodes) do begin
+          NodeData := vstNav.GetNodeData(Nodes[i]);
+          t := '';
+          if Assigned(NodeData.Element) then
+            with NodeData^ do
+              case Element.ElementType of
+                etMainRecord: begin
+                  MainRecord := Element as IwbMainRecord;
+                  if Shift * [ssShift, ssAlt] = [ssAlt] then
+                    t := MainRecord.Name
+                  else
+                    vstNavGetText(vstNav, Nodes[i], 0, ttNormal, t);
+                end;
+                etStructChapter: begin
+                  Chapter := Element as IwbChapter;
+                  if Shift * [ssShift, ssAlt] = [ssAlt] then
+                    t := Chapter.ChapterName
+                  else
+                    vstNavGetText(vstNav, Nodes[i], 0, ttNormal, t);
+                end;
+                etFile: begin
+                  _File := Element as IwbFile;
+                  if Shift * [ssShift, ssAlt] = [ssAlt] then
+                    t := _File.CRC32.ToString
+                  else
+                    t := _File.FileName;
+                end;
+              else
+                vstNavGetText(vstNav, Nodes[i], 0, ttNormal, t);
+              end;
+          if t <> '' then begin
+            if s <> '' then
+              s := s + CRLF;
+            s := s + t;
+          end;
+
+
+        end;
+
+        if s <> '' then
+          Clipboard.AsText := s;
+        Exit;
+      end;
+    else
+      Exit;
     end;
   end;
 end;
