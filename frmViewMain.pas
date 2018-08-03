@@ -3788,17 +3788,23 @@ begin
           end;
 
         if wbToolSource in [tsPlugins] then begin
-          with TfrmModuleSelect.Create(Self) do try
-            sl.Clear;
-            if ShowModal = mrOk then
-              sl.AddStrings(SelectedModules.ToStrings(False));
-            if sl.Count < 1 then begin
-              frmMain.Close;
-              Exit;
+          sl.Clear;
+
+          if wbVeryQuickShowConflicts and (GetAsyncKeyState(VK_CONTROL) >= 0) then try
+            sl.AddStrings(wbModulesByLoadOrder.SimulateLoad.ToStrings(False));
+          except end;
+
+          if sl.Count < 1 then
+            with TfrmModuleSelect.Create(Self) do try
+              if ShowModal = mrOk then
+                sl.AddStrings(SelectedModules.ToStrings(False));
+              if sl.Count < 1 then begin
+                frmMain.Close;
+                Exit;
+              end;
+            finally
+              Free;
             end;
-          finally
-            Free;
-          end;
         end else begin
           if wbToolSource in [tsPlugins] then
             for i := 0 to Pred(CheckListBox1.Items.Count) do
