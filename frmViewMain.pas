@@ -430,6 +430,7 @@ type
     procedure vstViewGetHint(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle; var HintText: string);
     procedure vstViewGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure vstViewHeaderClick(Sender: TVTHeader; HitInfo: TVTHeaderHitInfo);
+    procedure vstViewHeaderDropped(Sender: TVTHeader; SourceColumn, TargetColumn: TColumnIndex; var Handled: Boolean);
     procedure vstViewHeaderDrawQueryElements(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo; var Elements: THeaderPaintElements);
     procedure vstViewInitChildren(Sender: TBaseVirtualTree; Node: PVirtualNode; var ChildCount: Cardinal);
     procedure vstViewInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
@@ -438,6 +439,7 @@ type
     procedure vstViewPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
     procedure vstViewResize(Sender: TObject);
     procedure vstViewCreateEditor(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
+    procedure vstViewKeyPress(Sender: TObject; var Key: Char);
 
     {--- pmuViewPopup ---}
     procedure pmuViewPopup(Sender: TObject);
@@ -543,8 +545,7 @@ type
     procedure mniNavFilterConflictsClick(Sender: TObject);
     procedure mniModGroupsClick(Sender: TObject);
     procedure mniMasterAndLeafsClick(Sender: TObject);
-    procedure vstSpreadSheetCreateEditor(Sender: TBaseVirtualTree;
-      Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
+    procedure vstSpreadSheetCreateEditor(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
     procedure mniNavOtherCodeSiteLoggingClick(Sender: TObject);
     procedure mniNavLOManagersDirtyInfoClick(Sender: TObject);
     procedure mniViewStickAutoClick(Sender: TObject);
@@ -555,13 +556,10 @@ type
     procedure mniMessagesSaveSelectedClick(Sender: TObject);
     procedure pgMainChange(Sender: TObject);
     procedure edFileNameFilterChange(Sender: TObject);
-    procedure edFileNameFilterKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
+    procedure edFileNameFilterKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure vstNavKeyPress(Sender: TObject; var Key: Char);
     procedure edViewFilterChange(Sender: TObject);
-    procedure edViewFilterNameKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure vstViewKeyPress(Sender: TObject; var Key: Char);
+    procedure edViewFilterNameKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
   protected
@@ -3237,7 +3235,7 @@ begin
           with Add do begin
             Text := '';
             Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
-            Options := Options - [coDraggable];
+            Options := Options - [coDraggable, coShowDropMark];
             Options := Options + [coFixed];
           end;
         finally
@@ -3601,6 +3599,7 @@ begin
   vstView.TreeOptions.PaintOptions := vstView.TreeOptions.PaintOptions + [toAdvHotTrack];
   vstView.OnGetEditText := vstViewGetEditText;
   vstView.OnCheckHotTrack := vstViewCheckHotTrack;
+  vstView.OnHeaderDropped := vstViewHeaderDropped;
 
   vstSpreadSheetWeapon.OnGetEditText := vstSpreadSheetGetEditText;
   vstSpreadSheetWeapon.OnCheckHotTrack := vstSpreadSheetCheckHotTrack;
@@ -12082,7 +12081,7 @@ begin
             with Add do begin
               Text := '';
               Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
-              Options := Options - [coDraggable];
+              Options := Options - [coDraggable, coShowDropMark];
               Options := Options + [coFixed];
             end;
             for I := Low(ActiveRecords) to High(ActiveRecords) do
@@ -12092,8 +12091,8 @@ begin
                 Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
                 MinWidth := 5;
                 MaxWidth := 3000;
-                Options := Options - [coAllowclick, coDraggable];
-                Options := Options + [coAutoSpring];
+                Options := Options - [coAllowclick, coShowDropMark];
+                Options := Options + [coAutoSpring, coDraggable];
                 if ActiveContainer.Equals(ActiveRecords[i].Element) then
                   ActiveIndex := i;
               end;
@@ -12103,7 +12102,7 @@ begin
                 Width := 1;
                 MinWidth := 1;
                 MaxWidth := 3000;
-                Options := Options - [coAllowclick, coDraggable];
+                Options := Options - [coAllowclick, coDraggable, coShowDropMark];
               end;
           finally
             EndUpdate;
@@ -12187,7 +12186,7 @@ begin
           with Add do begin
             Text := '';
             Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
-            Options := Options - [coDraggable];
+            Options := Options - [coDraggable, coShowDropMark];
             Options := Options + [coFixed];
           end;
           for I := Low(ActiveRecords) to High(ActiveRecords) do
@@ -12197,8 +12196,8 @@ begin
               Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
               MinWidth := 5;
               MaxWidth := 3000;
-              Options := Options - [coAllowclick, coDraggable];
-              Options := Options + [coAutoSpring];
+              Options := Options - [coAllowclick, coShowDropMark];
+              Options := Options + [coAutoSpring, coDraggable];
             end;
           if Length(ActiveRecords) > 1 then
             with Add do begin
@@ -12206,7 +12205,7 @@ begin
               Width := 1;
               MinWidth := 1;
               MaxWidth := 3000;
-              Options := Options - [coAllowclick, coDraggable];
+              Options := Options - [coAllowclick, coDraggable, coShowDropMark];
             end;
         finally
           EndUpdate;
@@ -12377,7 +12376,7 @@ begin
             with Add do begin
               Text := '';
               Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
-              Options := Options - [coDraggable];
+              Options := Options - [coDraggable, coShowDropMark];
               Options := Options + [coFixed];
             end;
             for I := Low(ActiveRecords) to High(ActiveRecords) do
@@ -12387,8 +12386,8 @@ begin
                 Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
                 MinWidth := 5;
                 MaxWidth := 3000;
-                Options := Options - [coAllowclick, coDraggable];
-                Options := Options + [coAutoSpring];
+                Options := Options - [coAllowclick, coShowDropMark];
+                Options := Options + [coAutoSpring, coDraggable];
                 if ActiveRecord.Equals(ActiveRecords[i].Element) then
                   ActiveIndex := i;
               end;
@@ -12398,7 +12397,7 @@ begin
                 Width := 1;
                 MinWidth := 1;
                 MaxWidth := 3000;
-                Options := Options - [coAllowclick, coDraggable];
+                Options := Options - [coAllowclick, coDraggable, coShowDropMark];
               end;
           finally
             EndUpdate;
@@ -13706,6 +13705,43 @@ begin
         mbRight:
           vstView.Header.AutoFitColumns(False);
       end;
+  end;
+end;
+
+procedure TfrmMain.vstViewHeaderDropped(Sender: TVTHeader; SourceColumn, TargetColumn: TColumnIndex; var Handled: Boolean);
+var
+  TargetElement               : IwbElement;
+  SourceElement               : IwbElement;
+begin
+  Handled := True;
+
+  if not wbEditAllowed then
+    Exit;
+
+  UserWasActive := True;
+
+  SourceElement := ActiveRecords[Pred(SourceColumn)].Element;
+  TargetElement := ActiveRecords[Pred(TargetColumn)].Element;
+
+  if TargetElement.CanAssign(Low(Integer), SourceElement, False) then begin
+
+    if not EditWarn then
+      Exit;
+
+    if not AddRequiredMasters(SourceElement, TargetElement._File, False) then
+      Exit;
+
+    vstView.BeginUpdate;
+    try
+      TargetElement.Assign(Low(Integer), SourceElement, False);
+      ActiveRecords[Pred(TargetColumn)].UpdateRefs;
+      TargetElement := nil;
+      SourceElement := nil;
+      PostResetActiveTree;
+    finally
+      vstView.EndUpdate;
+    end;
+    InvalidateElementsTreeView(NoNodes);
   end;
 end;
 
