@@ -4212,6 +4212,7 @@ begin
   wbSortGroupRecord := Settings.ReadBool('Options', 'SortGroupRecord', wbSortGroupRecord);
   wbRemoveOffsetData := Settings.ReadBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
   wbShowGroupRecordCount := Settings.ReadBool('Options', 'ShowGroupRecordCount', wbShowGroupRecordCount);
+  wbShowFileFlags := Settings.ReadBool('Options', 'ShowFileFlags', wbShowFileFlags);
   wbAutoCompareSelectedLimit := Settings.ReadInteger('Options', 'AutoCompareSelectedLimit', wbAutoCompareSelectedLimit);
   wbClampFormID := Settings.ReadBool('Options', 'ClampFormID', wbClampFormID);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
@@ -10666,6 +10667,7 @@ begin
     cbRemoveOffsetData.Checked := wbRemoveOffsetData;
     cbShowFlagEnumValue.Checked := wbShowFlagEnumValue;
     cbShowGroupRecordCount.Checked := wbShowGroupRecordCount;
+    cbShowFileFlags.Checked := wbShowFileFlags;
     sedAutoCompareSelectedLimit.Value := wbAutoCompareSelectedLimit;
     cbSimpleRecords.Checked := wbSimpleRecords;
     cbClampFormID.Checked := wbClampFormID;
@@ -10703,6 +10705,7 @@ begin
     wbRemoveOffsetData := cbRemoveOffsetData.Checked;
     wbShowFlagEnumValue := cbShowFlagEnumValue.Checked;
     wbShowGroupRecordCount := cbShowGroupRecordCount.Checked;
+    wbShowFileFlags := cbShowFileFlags.Checked;
     wbAutoCompareSelectedLimit := sedAutoCompareSelectedLimit.Value;
     wbSimpleRecords := cbSimpleRecords.Checked;
     wbClampFormID := cbClampFormID.Checked;
@@ -10736,6 +10739,7 @@ begin
     Settings.WriteBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
     Settings.WriteBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
     Settings.WriteBool('Options', 'ShowGroupRecordCount', wbShowGroupRecordCount);
+    Settings.WriteBool('Options', 'ShowFileFlags', wbShowFileFlags);
     Settings.WriteInteger('Options', 'AutoCompareSelectedLimit', wbAutoCompareSelectedLimit);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
     Settings.WriteBool('Options', 'ClampFormID', wbClampFormID);
@@ -14154,9 +14158,16 @@ begin
       if s <> '' then
         s := ' \ ' + s;
       t := vstNav.Text[Node, 0, False];
-      u := vstNav.Text[Node, 1, False];
-      if u <> '' then
-        u := ' <' + u + '>';
+      NodeData := Sender.GetNodeData(Node);
+      if Assigned(NodeData.Element) and (NodeData.Element.ElementType = etFile) then begin
+        u := vstNav.Text[Node, 2, False];
+        if u <> '' then
+          u := ' (' + u + ')';
+      end else begin
+        u := vstNav.Text[Node, 1, False];
+        if u <> '' then
+          u := ' <' + u + '>';
+      end;
       s := t + u + s;
       Node := vstNav.NodeParent[Node];
     end;
@@ -14203,7 +14214,10 @@ begin
 
   case HeaderType of
     etFile: begin
-      Sender.Header.Columns[1].Text := '';
+      if wbShowFileFlags then
+        Sender.Header.Columns[1].Text := 'Flags'
+      else
+        Sender.Header.Columns[1].Text := '';
       Sender.Header.Columns[2].Text := 'CRC32';
     end;
     etGroupRecord: begin
@@ -14468,6 +14482,14 @@ begin
           -1, 0: CellText := _File.Name;
           1: begin
             s := '';
+            if wbShowFileFlags then begin
+              if _File.Header.IsESM then
+                s := '<ESM>';
+              if _File.Header.IsESL then
+                s := s + '<ESL>';
+              if _File.Header.IsLocalized then
+                s := s + '<Localized>';
+            end;
             CellText := s;
           end;
           2: if not (fsIsHardcoded in _File.FileStates) then

@@ -155,7 +155,7 @@ object frmOptions: TfrmOptions
       end
       object cbClampFormID: TCheckBox
         Left = 16
-        Top = 271
+        Top = 295
         Width = 105
         Height = 17
         Hint = 'Set FormID index to the number of masters if greater'
@@ -179,13 +179,17 @@ object frmOptions: TfrmOptions
         Caption = 'Show tip on start'
         TabOrder = 15
       end
+      object cbShowFileFlags: TCheckBox
+        Left = 16
+        Top = 270
+        Width = 233
+        Height = 17
+        Caption = 'Show file header flags'
+        TabOrder = 16
+      end
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label1: TLabel
         Left = 16
         Top = 9
@@ -253,10 +257,6 @@ object frmOptions: TfrmOptions
     object tsDoNotBuildRefs: TTabSheet
       Caption = 'References building'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label2: TLabel
         Left = 16
         Top = 13
@@ -295,10 +295,6 @@ object frmOptions: TfrmOptions
     object tsUISettings: TTabSheet
       Caption = 'UI Settings'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label3: TLabel
         Left = 16
         Top = 16
