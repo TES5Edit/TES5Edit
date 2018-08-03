@@ -2021,6 +2021,7 @@ var
 
 function TfrmMain.CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback): TDynElements;
 var
+  Elements             : TDynElements;
   MainRecord           : IwbMainRecord;
   MainRecord2          : IwbMainRecord;
   Master               : IwbMainRecord;
@@ -2038,6 +2039,9 @@ var
   Container            : IwbContainer;
   IsESL                : Boolean;
 begin
+  Result := nil;
+  Elements := aElements;
+
   if Assigned(aAfterCopyCallback) then begin
     Assert(not AsNew);
     Assert(not AsWrapper);
@@ -2056,21 +2060,39 @@ begin
   sl.Sorted := True;
   sl.Duplicates := dupIgnore;
   try
-    for i := Low(aElements) to High(aElements) do begin
-      aElements[i].ReportRequiredMasters(sl, AsNew);
-      Container := aElements[i].Container;
-      while Assigned(Container) do begin
-        Container.ReportRequiredMasters(sl, AsNew, False, True);
-        if Container.ElementType = etGroupRecord then
-          with Container as IwbGroupRecord do begin
-            MainRecord := ChildrenOf;
-            if Assigned(MainRecord) then
-              MainRecord.ReportRequiredMasters(sl, AsNew, False, True);
-          end;
+    j := -1;
+    for i := Low(Elements) to High(Elements) do begin
+      if not Elements[i].CanCopy then begin
+        if j <0 then begin
+          Elements := Copy(Elements);
+          j := i;
+        end;
+      end else begin
+        Elements[i].ReportRequiredMasters(sl, AsNew);
+        Container := Elements[i].Container;
+        while Assigned(Container) do begin
+          Container.ReportRequiredMasters(sl, AsNew, False, True);
+          if Container.ElementType = etGroupRecord then
+            with Container as IwbGroupRecord do begin
+              MainRecord := ChildrenOf;
+              if Assigned(MainRecord) then
+                MainRecord.ReportRequiredMasters(sl, AsNew, False, True);
+            end;
 
-        Container := Container.Container;
+          Container := Container.Container;
+        end;
+        if j >= 0 then begin
+          Elements[j] := Elements[i];
+          Inc(j);
+        end;
       end;
     end;
+
+    if j >= 0 then
+      SetLength(Elements, j);
+
+    if Length(Elements) < 1 then
+      Exit;
 
     j := 0;
     for i := 0 to Pred(sl.Count) do
@@ -2090,14 +2112,14 @@ begin
           end;
         end);
 
-      Multiple := (Length(aElements) > 1) or (aElements[0].ElementType <> etMainRecord);
+      Multiple := (Length(Elements) > 1) or (Elements[0].ElementType <> etMainRecord);
       EditorID := '';
       EditorIDPrefixRemove := '';
       EditorIDPrefix := '';
       EditorIDSuffix := '';
 
       if not Multiple then begin
-        MainRecord := (aElements[0] as IwbMainRecord);
+        MainRecord := (Elements[0] as IwbMainRecord);
         Master := MainRecord.MasterOrSelf;
         if not (AsNew or AsWrapper) then begin
           AllModules := AllModules.FilteredBy(function(a: PwbModuleInfo): Boolean
@@ -2142,7 +2164,7 @@ begin
       end
       else begin
         if AsWrapper then
-          if aElements[0].ElementType <> etMainRecord then
+          if Elements[0].ElementType <> etMainRecord then
             raise Exception.Create('Can not wrap complete groups');
 
         if AsNew or AsWrapper then
@@ -2185,7 +2207,7 @@ begin
 
       _PreviousCopyIntoSelectedModules := Copy(SelectedModules);
 
-      SetLength(Result, Length(aElements));
+      SetLength(Result, Length(Elements));
 
       for i := Low(SelectedModules) to High(SelectedModules) do
         begin
@@ -2203,8 +2225,8 @@ begin
 
             if AsWrapper then begin
 
-              for j := Low(aElements) to High(aElements) do begin
-                MainRecord := aElements[j] as IwbMainRecord;
+              for j := Low(Elements) to High(Elements) do begin
+                MainRecord := Elements[j] as IwbMainRecord;
                 wbProgress('Copying ' + MainRecord.Name);
 
                 MainRecord2 := wbCopyElementToFile(MainRecord, ReferenceFile, True, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix) as IwbMainRecord;
@@ -2234,15 +2256,15 @@ begin
 
             end
             else if Multiple then begin
-              for j := Low(aElements) to High(aElements) do
+              for j := Low(Elements) to High(Elements) do
                 try
-                  if DeepCopy and Supports(aElements[j], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
+                  if DeepCopy and Supports(Elements[j], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
                     wbProgress('Copying ' + MainRecord.ChildGroup.Name);
                     Result[j] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix);
                     wbProgress('');
                   end else begin
-                    wbProgress('Copying ' + aElements[j].Name);
-                    CopiedElement := wbCopyElementToFile(aElements[j], ReferenceFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix);
+                    wbProgress('Copying ' + Elements[j].Name);
+                    CopiedElement := wbCopyElementToFile(Elements[j], ReferenceFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix);
                     wbProgress('');
                     if Assigned(CopiedElement) then begin
                       if Assigned(aAfterCopyCallback) then
@@ -2253,17 +2275,17 @@ begin
                   end;
                 except
                   on E: Exception do
-                    wbProgress('Error while copying '+aElements[j].Name+': '+E.Message);
+                    wbProgress('Error while copying '+Elements[j].Name+': '+E.Message);
                 end;
             end else begin
               MainRecord := nil;
-              if DeepCopy and Supports(aElements[0], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
+              if DeepCopy and Supports(Elements[0], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
                 wbProgress('Copying ' + MainRecord.ChildGroup.Name);
                 Result[0] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, '', '', '');
                 wbProgress('');
               end else begin
-                wbProgress('Copying ' + aElements[0].Name);
-                CopiedElement := wbCopyElementToFile(aElements[0], ReferenceFile, AsNew, True, '', '', '');
+                wbProgress('Copying ' + Elements[0].Name);
+                CopiedElement := wbCopyElementToFile(Elements[0], ReferenceFile, AsNew, True, '', '', '');
                 wbProgress('');
                 if Assigned(CopiedElement) then begin
                   if Assigned(aAfterCopyCallback) then
@@ -2678,7 +2700,7 @@ var
   SelectedNodes               : TNodeArray;
   NodeData                    : PNavNodeData;
   Elements                    : TDynElements;
-  i                           : Integer;
+  i, j                        : Integer;
 begin
   if not wbEditAllowed then
     Exit;
@@ -2693,10 +2715,17 @@ begin
     Exit;
 
   SetLength(Elements, Length(SelectedNodes));
+  j := 0;
   for i := Low(SelectedNodes) to High(SelectedNodes) do begin
     NodeData := vstNav.GetNodeData(SelectedNodes[i]);
-    Elements[i] := NodeData.Element;
+    if NodeData.Element.CanCopy then begin
+      Elements[j] := NodeData.Element;
+      Inc(j);
+    end;
   end;
+  SetLength(Elements, j);
+  if j < 1 then
+    Exit;
 
   try
     wbCurrentAction := 'Copying...';
@@ -7466,6 +7495,8 @@ begin
   if Column > High(ActiveRecords) then
     Exit;
   if not Supports(ActiveRecords[Column].Element, IwbMainRecord, MainRecord) then
+    Exit;
+  if not MainRecord.CanCopy then
     Exit;
 
   ReferenceFile := MainRecord.ReferenceFile;

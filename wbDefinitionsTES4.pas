@@ -4837,6 +4837,10 @@ begin
     ], [])).IncludeFlag(dfInternalEditOnly, not wbAllowMasterFilesEdit)
   ], False, nil, cpNormal, True, wbRemoveOFST);
 
+  wbRecord(PLYR, 'Player Reference', [
+    wbEDID
+  ]).IncludeFlag(dfInternalEditOnly);
+
   wbRecord(TREE, 'Tree', [
     wbEDID,
     wbMODL,
@@ -5145,6 +5149,7 @@ begin
   wbAddGroupOrder(WEAP);
   wbAddGroupOrder(AMMO);
   wbAddGroupOrder(NPC_);
+  wbAddGroupOrder(PLYR);
   wbAddGroupOrder(CREA);
   wbAddGroupOrder(LVLC);
   wbAddGroupOrder(SLGM);

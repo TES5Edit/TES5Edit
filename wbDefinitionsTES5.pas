@@ -12837,6 +12837,10 @@ begin
     wbUnknown(INTV),
     wbUnknown(INCC)
   ], True, nil, cpNormal, True, wbRemoveOFST);
+
+  wbRecord(PLYR, 'Player Reference', [
+    wbEDID
+  ]).IncludeFlag(dfInternalEditOnly);
 end;
 
 procedure DefineTES5o;
@@ -13557,6 +13561,7 @@ begin
    wbAddGroupOrder(WEAP);
    wbAddGroupOrder(AMMO);
    wbAddGroupOrder(NPC_);
+   wbAddGroupOrder(PLYR);
    wbAddGroupOrder(LVLN);
    wbAddGroupOrder(KEYM);
    wbAddGroupOrder(ALCH);

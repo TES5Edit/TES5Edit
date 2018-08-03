@@ -10629,6 +10629,10 @@ begin
     wbByteArray(SCRN, 'Screenshot')
   ], True, nil, cpNormal, True, wbRemoveOFST);
 
+  wbRecord(PLYR, 'Player Reference', [
+    wbEDID
+  ]).IncludeFlag(dfInternalEditOnly);
+
   wbRecord(TREE, 'Tree', [
     wbEDIDReq,
     wbOBNDReq,
@@ -11797,6 +11801,7 @@ begin
   wbAddGroupOrder(WEAP);
   wbAddGroupOrder(AMMO);
   wbAddGroupOrder(NPC_);
+  wbAddGroupOrder(PLYR);
   wbAddGroupOrder(CREA);
   wbAddGroupOrder(LVLC);
   wbAddGroupOrder(LVLN);

@@ -15136,6 +15136,10 @@ begin
     wbInteger(INTV, 'Unknown', itU32),                    // Ignored by the runtime, 4 bytes loaded in CK
     wbInteger(INCC, 'Unknown', itU32)                     // Size of some array of 12 bytes elements
   ], True, nil, cpNormal, True, wbRemoveOFST);
+
+  wbRecord(PLYR, 'Player Reference', [
+    wbEDID
+  ]).IncludeFlag(dfInternalEditOnly);
 end;
 
 procedure DefineFO4o;
@@ -16397,6 +16401,7 @@ begin
    wbAddGroupOrder(WEAP);
    wbAddGroupOrder(AMMO);
    wbAddGroupOrder(NPC_);
+   wbAddGroupOrder(PLYR);
    wbAddGroupOrder(LVLN);
    wbAddGroupOrder(KEYM);
    wbAddGroupOrder(ALCH);

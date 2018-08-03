@@ -638,6 +638,8 @@ type
     function CanMoveUp: Boolean;
     function CanMoveDown: Boolean;
 
+    function CanCopy: Boolean;
+
     procedure NextMember;
     procedure PreviousMember;
     function CanChangeMember: Boolean;
@@ -11584,7 +11586,7 @@ begin
   if ((aInt < $800) or (aInt = $FFFFFFFF)) and IsValid('ACVA') then
     Exit;
 
-  if (aInt <> 0) and (aInt <> $14) then
+  if aInt <> 0 then
     aElement.AddReferencedFromID(TwbFormID.FromCardinal(aInt));
 end;
 
@@ -11954,7 +11956,7 @@ begin
           if IsValid('TRGT') then
             Strings.Add('TARGET - Target Reference [00000000]');
           if IsValid('PLYR') then
-            Strings.Add('Player [00000014]');
+            Strings.Add('PlayerRef [00000014]');
         end;
 
         Strings.Sort;
@@ -11993,8 +11995,6 @@ begin
   Result := nil;
 
   if aInt = 0 then
-    Exit;
-  if aInt = $14 then
     Exit;
   if (aInt = $FFFFFFFF) and IsValid('FFFF') then
     Exit;
@@ -12220,19 +12220,6 @@ begin
           i := FoundSignatures.Add('FFFF');
         FoundSignatures.Objects[i] := TObject(Succ(Integer(FoundSignatures.Objects[i])));
       end;
-    Used(aElement, Result);
-    Exit;
-  end else if FormID.IsPlayer then begin
-    if wbReportMode then
-      if wbReportFormIDs then begin
-        if not Assigned(FoundSignatures) then
-          FoundSignatures := TwbFastStringListCS.CreateSorted;
-        if not FoundSignatures.Find('PLYR', i) then
-          i := FoundSignatures.Add('PLYR');
-        FoundSignatures.Objects[i] := TObject(Succ(Integer(FoundSignatures.Objects[i])));
-      end;
-
-    Result := 'Player ['+FormID.ToString(False)+']';
     Used(aElement, Result);
     Exit;
   end;
