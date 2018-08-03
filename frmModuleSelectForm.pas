@@ -614,9 +614,10 @@ end;
 
 procedure TfrmModuleSelect.vstModulesNodeDblClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
 begin
-  with HitInfo do
-    if Assigned(HitNode) then
-      DoSingleModuleLoad(HitNode);
+  if GetKeyState(VK_CONTROL) < 0 then
+    with HitInfo do
+      if Assigned(HitNode) then
+        DoSingleModuleLoad(HitNode);
 end;
 
 procedure TfrmModuleSelect.vstModulesPaintText(Sender: TBaseVirtualTree;
