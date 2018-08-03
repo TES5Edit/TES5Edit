@@ -2172,7 +2172,8 @@ begin
       if Length(SelectedModules) < 1 then
         Exit;
 
-      _PreviousCopyIntoSelectedModules := SelectedModules;
+
+      _PreviousCopyIntoSelectedModules := Copy(SelectedModules);
 
       SetLength(Result, Length(aElements));
 
@@ -2183,6 +2184,7 @@ begin
             while not Assigned(ReferenceFile) do
               if not AddNewFile(ReferenceFile, SelectedModules[i]) then
                 Break;
+            _PreviousCopyIntoSelectedModules[i] := ReferenceFile.ModuleInfo;
           end else
             ReferenceFile := SelectedModules[i]._File;
 
@@ -7532,8 +7534,17 @@ begin
 
       Caption := 'Which files do you want to add this record to?';
 
+      AllModules.ExcludeAll(mfTagged);
+      _PreviousCopyIntoSelectedModules.IncludeAll(mfTagged);
+      AllowCancel;
+
       if ShowModal <> mrOK then
         Exit;
+
+      if Length(SelectedModules) < 1 then
+        Exit;
+
+      _PreviousCopyIntoSelectedModules := Copy(SelectedModules);
 
       for i := Low(SelectedModules) to High(SelectedModules) do
         begin
@@ -7542,6 +7553,7 @@ begin
             while not Assigned(ReferenceFile) do
               if not AddNewFile(ReferenceFile, SelectedModules[i]) then
                 Break;
+            _PreviousCopyIntoSelectedModules[i] := ReferenceFile.ModuleInfo;
           end else
             ReferenceFile := SelectedModules[i]._File;
 
