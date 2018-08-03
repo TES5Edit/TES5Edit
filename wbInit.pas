@@ -33,6 +33,7 @@ var
   wbDontBackup         : Boolean = False;
   wbRemoveTempPath     : Boolean = True;
   wbQuickShowConflicts : Boolean;
+  wbVeryQuickShowConflicts : Boolean;
   wbQuickClean         : Boolean;
 
   wbParamIndex         : integer = 1;     // First unused parameter
@@ -863,6 +864,12 @@ begin
 
   if FindCmdLineSwitch('quickshowconflicts') then
     wbQuickShowConflicts := True;
+
+  if FindCmdLineSwitch('veryquickshowconflicts') then begin
+    wbQuickShowConflicts := True;
+    wbVeryQuickShowConflicts := True;
+  end;
+
 
   if wbIKnowWhatImDoing and FindCmdLineSwitch('IKnowIllBreakMyGameWithThis') then
     wbAllowEditGameMaster := True;
