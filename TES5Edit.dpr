@@ -97,12 +97,20 @@ const
 begin
   UseLatestCommonDialogs := True;
   SysUtils.FormatSettings.DecimalSeparator := '.';
+
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.UpdateFormatSettings := False;
   Application.HintHidePause := 10000;
   Application.Title := wbApplicationTitle;
-  Application.CreateForm(TfrmMain, frmMain);
-  Application.Run;
-  DoRename;
+
+  if not wbDoInit then
+    Exit;
+
+  try
+    Application.CreateForm(TfrmMain, frmMain);
+    Application.Run;
+  finally
+    DoRename;
+  end;
 end.

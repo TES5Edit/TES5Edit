@@ -46,6 +46,8 @@ function wbFindCmdLineParam(const aSwitch : string; out aValue : string): Boolea
 function wbLoadMOHookFile: Boolean;
 procedure SwitchToCoSave;
 
+function wbDoInit: Boolean;
+
 implementation
 
 uses
@@ -543,12 +545,13 @@ begin
   end;
 end;
 
-procedure wbDoInit;
+function wbDoInit: Boolean;
 var
   s: string;
   ToolModes: TwbSetOfMode;
   ToolSources: TwbSetOfSource;
 begin
+  Result := True;
   wbReportMode := False;
   wbEditAllowed := True;
   wbDontSave    := False;
@@ -610,7 +613,7 @@ begin
     wbToolName    := 'Edit';
   end else begin
     ShowMessage('Application name must contain Edit, View, LODGen, MasterUpdate, MasterRestore, setESM, clearESM, sortAndCleanMasters, CheckForITM, CheckForDR or CheckForErrors to select mode.');
-    Exit;
+    Exit(False);
   end;
 
   if not (wbToolMode in [tmView, tmEdit]) then
@@ -701,7 +704,7 @@ begin
 
   else begin
     ShowMessage('Application name must contain FNV, FO3, FO4, FO4VR, SSE, TES4, TES5 or TES5VR to select game.');
-    Exit;
+    Exit(False);
   end;
 
   if wbGameMode in [gmFO3, gmFNV] then begin
@@ -711,17 +714,17 @@ begin
 
   if not (wbToolMode in ToolModes) then begin
     ShowMessage('Application ' + wbGameName + ' does not currently support ' + wbToolName);
-    Exit;
+    Exit(False);
   end;
 
   if not (wbToolSource in ToolSources) then begin
     ShowMessage('Application ' + wbGameName + ' does not currently support ' + wbSourceName);
-    Exit;
+    Exit(False);
   end;
 
   if (wbToolSource = tsSaves) and (wbToolMode = tmEdit) then begin
     ShowMessage('Application ' + wbGameName + ' does not currently support ' + wbSourceName + ' in ' + wbToolName + ' mode.');
-    Exit;
+    Exit(False);
   end;
 
   if wbGameName2 = '' then
@@ -742,37 +745,40 @@ begin
   DoInitPath(wbParamIndex);
 
   // specific Game settings
-  if wbGameMode = gmFNV then begin
-    wbVWDInTemporary := True;
-    wbLoadBSAs := False;
-    ReadSettings;
-  end else if wbGameMode = gmFO3 then begin
-    wbVWDInTemporary := True;
-    wbLoadBSAs := False;
-    ReadSettings;
-  end else if wbGameMode = gmTES3 then begin
-    wbLoadBSAs := False;
-    wbAllowInternalEdit := false;
-    ReadSettings;
-  end else if wbGameMode = gmTES4 then begin
-    wbLoadBSAs := True;
-    wbAllowInternalEdit := false;
-    ReadSettings;
-  end else if wbGameMode in [gmTES5, gmTES5VR, gmSSE] then begin
-    wbVWDInTemporary := True;
-    wbLoadBSAs := True; // localization won't work otherwise
-    wbHideIgnored := False; // to show Form Version
-    ReadSettings;
-  end else if wbGameMode in [gmFO4, gmFO4VR] then begin
-    wbVWDInTemporary := True;
-    wbVWDAsQuestChildren := True;
-    wbLoadBSAs := True; // localization won't work otherwise
-    wbHideIgnored := False; // to show Form Version
-    ReadSettings;
-    //wbCreateContainedIn := False;
-  end else begin
-    Exit;
+  case wbGameMode of
+    gmFNV: begin
+      wbVWDInTemporary := True;
+      wbLoadBSAs := False;
+    end;
+    gmFO3: begin
+      wbVWDInTemporary := True;
+      wbLoadBSAs := False;
+    end;
+    gmTES3: begin
+      wbLoadBSAs := False;
+      wbAllowInternalEdit := false;
+    end;
+    gmTES4: begin
+      wbLoadBSAs := True;
+      wbAllowInternalEdit := false;
+    end;
+    gmTES5, gmTES5VR, gmSSE: begin
+      wbVWDInTemporary := True;
+      wbLoadBSAs := True; // localization won't work otherwise
+      wbHideIgnored := False; // to show Form Version
+    end;
+    gmFO4, gmFO4VR: begin
+      wbVWDInTemporary := True;
+      wbVWDAsQuestChildren := True;
+      wbLoadBSAs := True; // localization won't work otherwise
+      wbHideIgnored := False; // to show Form Version
+    end;
+  else
+    ShowMessage('Unknown GameMode');
+    Exit(False);
   end;
+
+  ReadSettings;
 
   if wbFindCmdLineParam('AllowDirectSaves', s) then begin
     wbAllowDirectSaveFor := TStringList.Create;
@@ -892,7 +898,7 @@ begin
   if wbToolMode in wbPluginModes then // look for the file name
     if not wbFindNextValidCmdLinePlugin(wbParamIndex, wbPluginToUse, wbDataPath) then begin
       ShowMessage(wbToolName+' mode requires a valid plugin name!');
-      Exit;
+      Exit(False);
     end;
 
   // specific Tool Mode settings overrides
@@ -977,6 +983,4 @@ begin
 end;
 
 initialization
-  wbDoInit;
-
 end.
