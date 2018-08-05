@@ -5862,11 +5862,12 @@ begin
     ], cpNormal, True),
     wbStruct(DNAM, '', [
       wbInteger('AR', itS16, wbDiv(100)),
+      wbByteArray('Unused', 2),
+      wbFloat('DT'),
       wbInteger('Flags', itU16, wbFlags([
         'Modulates Voice'
       ])),
-      wbFloat('DT'),
-      wbByteArray('?', 4)
+      wbByteArray('Unused', 2)
     ], cpNormal, True, nil, 2),
     wbInteger(BNAM, 'Overrides Animation Sounds', itU32, wbEnum(['No', 'Yes'])),
     wbRArray('Animation Sounds',
