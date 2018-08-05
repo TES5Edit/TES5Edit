@@ -5932,7 +5932,6 @@ begin
         if not Assigned(Result) then begin
           Assign(i, nil, False);
           Result := GetElementBySortOrder(i + GetAdditionalElementCount);
-          Assert(Assigned(Result));
 
           if wbSortSubRecords and (Length(cntElements) > 1) then
             wbMergeSort(@cntElements[0], Length(cntElements), CompareSubRecords);
