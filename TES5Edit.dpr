@@ -102,11 +102,11 @@ begin
   Application.MainFormOnTaskbar := True;
   Application.UpdateFormatSettings := False;
   Application.HintHidePause := 10000;
-  Application.Title := wbApplicationTitle;
 
   if not wbDoInit then
     Exit;
 
+  Application.Title := wbApplicationTitle;
   try
     Application.CreateForm(TfrmMain, frmMain);
     Application.Run;
