@@ -10035,7 +10035,8 @@ begin
     i := i or (1 shl FlagDef.FlagIndex);
     aTarget.NativeValue := i;
   end else
-    Result := inherited Assign(aTarget, aIndex, aSource, aOnlySK);
+    if not aOnlySK then
+      Result := inherited Assign(aTarget, aIndex, aSource, aOnlySK);
 end;
 
 function TwbFlagsDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
