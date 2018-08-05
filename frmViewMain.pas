@@ -3831,7 +3831,7 @@ begin
         if wbToolSource in [tsPlugins] then begin
           sl.Clear;
 
-          if wbVeryQuickShowConflicts and (GetAsyncKeyState(VK_CONTROL) >= 0) then try
+          if (wbToolMode in wbPluginModes) or (wbVeryQuickShowConflicts and (GetAsyncKeyState(VK_CONTROL) >= 0)) then try
             sl.AddStrings(wbModulesByLoadOrder.SimulateLoad.ToStrings(False));
           except end;
 
