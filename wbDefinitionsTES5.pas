@@ -1123,6 +1123,120 @@ begin
   Result := StrToIntDef(aString, 0);
 end;
 
+function wbEdgeToStr(aEdge: Integer; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Triangle   : IwbContainerElementRef;
+  Flags      : Int64;
+  MainRecord : IwbMainRecord;
+  EdgeLinks  : IwbContainerElementRef;
+  EdgeLink   : IwbContainerElementRef;
+  FormID     : TwbFormID;
+begin
+  case aType of
+    ctToStr: begin
+      Result := aInt.ToString;
+      if not Assigned(aElement) then
+        Exit;
+
+      Triangle := aElement.Container as IwbContainerElementRef;
+      if not Assigned(Triangle) then
+        Exit;
+      MainRecord := aElement.ContainingMainRecord;
+      if not Assigned(MainRecord) then
+        Exit;
+
+      Flags := Triangle.ElementNativeValues['Flags'];
+      if Flags and (1 shl aEdge) <> 0 then begin
+        if not Supports(MainRecord.ElementByPath['NVNM\Edge Links'], IwbContainerElementRef, EdgeLinks) then
+          Exit;
+        if aInt >= EdgeLinks.ElementCount then
+          Exit;
+        EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
+
+        MainRecord := nil;
+        if not Supports(EdgeLink.ElementByPath['Mesh'].LinksTo, IwbMainRecord, MainRecord) then
+          Exit;
+        aInt := EdgeLink.ElementNativeValues['Triangle'];
+
+        Result := Result + ' (#' + aInt.ToString + ' in ' + MainRecord.Name + ')';
+      end;
+    end;
+    ctToSortKey: begin
+      Result := '00000000' + IntToHex(aInt, 4);
+      if not Assigned(aElement) then
+        Exit;
+
+      Triangle := aElement.Container as IwbContainerElementRef;
+      if not Assigned(Triangle) then
+        Exit;
+      MainRecord := aElement.ContainingMainRecord;
+      if not Assigned(MainRecord) then
+        Exit;
+
+      FormID := MainRecord.LoadOrderFormID;
+
+      Flags := Triangle.ElementNativeValues['Flags'];
+      if Flags and (1 shl aEdge) <> 0 then begin
+        if not Supports(MainRecord.ElementByPath['NVNM\Edge Links'], IwbContainerElementRef, EdgeLinks) then
+          Exit;
+        if aInt >= EdgeLinks.ElementCount then
+          Exit;
+        EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
+
+        MainRecord := nil;
+        if not Supports(EdgeLink.ElementByPath['Mesh'].LinksTo, IwbMainRecord, MainRecord) then
+          Exit;
+        if Assigned(MainRecord) then
+          FormID := MainRecord.LoadOrderFormID
+        else
+          FormID := TwbFormID.Null;
+        aInt := EdgeLink.ElementNativeValues['Triangle'];
+      end;
+
+      Result := FormID.ToString + IntToHex(aInt, 4);
+    end;
+    ctCheck: Result := '';
+    ctToEditValue: Result := aInt.ToString;
+    ctEditType: Result := '';
+    ctEditInfo: Result := '';
+  end;
+end;
+
+function wbEdgeToInt(aEdge: Integer; const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := StrToIntDef(aString, 0);
+end;
+
+function wbEdgeToStr0(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := wbEdgeToStr(0, aInt, aElement, aType);
+end;
+
+function wbEdgeToInt0(const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := wbEdgeToInt(0, aString, aElement);
+end;
+
+function wbEdgeToStr1(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := wbEdgeToStr(1, aInt, aElement, aType);
+end;
+
+function wbEdgeToInt1(const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := wbEdgeToInt(1, aString, aElement);
+end;
+
+function wbEdgeToStr2(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := wbEdgeToStr(2, aInt, aElement, aType);
+end;
+
+function wbEdgeToInt2(const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := wbEdgeToInt(2, aString, aElement);
+end;
+
 
 { Alias to string conversion, requires quest reference or quest record specific to record that references alias }
 function wbAliasToStr(aInt: Int64; const aQuestRef: IwbElement; aType: TwbCallbackType): string;
@@ -8168,9 +8282,9 @@ begin
             wbInteger('Vertex 0', itS16),
             wbInteger('Vertex 1', itS16),
             wbInteger('Vertex 2', itS16),
-            wbInteger('Edge 0-1', itS16),
-            wbInteger('Edge 1-2', itS16),
-            wbInteger('Edge 2-0', itS16),
+            wbInteger('Edge 0-1', itS16, wbEdgeToStr0, wbEdgeToInt0),
+            wbInteger('Edge 1-2', itS16, wbEdgeToStr1, wbEdgeToInt1),
+            wbInteger('Edge 2-0', itS16, wbEdgeToStr2, wbEdgeToInt1),
             wbInteger('Flags', itU16, wbFlags([
               'Edge 0-1 link',
               'Edge 1-2 link',
@@ -8213,11 +8327,11 @@ begin
         , -1),
         wbArray('Edge Links',
           wbStruct('Edge Link', [
-            wbByteArray('Unknown', 4),
-            wbFormIDCk('Mesh', [NAVM]),
-            wbInteger('Triangle', itS16)
-          ])
-        , -1),
+            wbByteArray('Unknown', 4, cpIgnore),
+            wbFormIDCk('Mesh', [NAVM], False, cpIgnore),
+            wbInteger('Triangle', itS16, nil, cpIgnore)
+          ], cpIgnore)
+        , -1, cpIgnore),
         wbArray('Door Triangles',
           wbStruct('Door Triangle', [
             wbInteger('Triangle before door', itS16),
