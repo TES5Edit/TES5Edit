@@ -28,11 +28,13 @@ uses
 type
   TwbModGroupItemFlag = (
     mgifOptional,
-    mgifDontHide,
-    mgifNotAllowed
+    mgifIsTarget,
+    mgifIsSource,
+    mgifForbidden
   );
   TwbModGroupItemFlags = set of TwbModGroupItemFlag;
 
+  PwbModGroupItem = ^TwbModGroupItem;
   TwbModGroupItem = record
   private
     function mgiLoad(aLine: string): Boolean;
@@ -54,36 +56,20 @@ type
   end;
   TwbModGroups = array of TwbModGroup;
 
+  PwbModGroupsFile = ^TwbModGroupsFile;
   TwbModGroupsFile = record
   private
     procedure mgfLoad;
+    procedure mgfCheckValid;
   public
-    mgfFileName: string;
-    mgfModGroups: TwbModGroups;
+    mgfFileName  : string;
+    mgfModules   : TwbModuleInfos;
+    mgfModGroups : TwbModGroups;
   end;
 
   TwbModGroupsFiles = array of TwbModGroupsFile;
 
 procedure wbLoadModGroups;
-
-type
-  TwbModGroupItemList = class(TStringList)
-  protected
-    mgilModGroup: PwbModGroup;
-  public
-    property ModGroup: PwbModGroup
-      read mgilModGroup;
-  end;
-
-  TwbModGroupList = class(TStringList)
-  protected
-    function mglGetModGroup(aIndex: Integer): TwbModGroupItemList;
-  public
-    property ModGroups[aIndex: Integer]: TwbModGroupItemList
-      read mglGetModGroup;
-  end;
-
-function wbProcessModGroups: TwbModGroupList;
 
 implementation
 
@@ -92,34 +78,66 @@ uses
   wbHelpers;
 
 var
-  _ModGroupFiles: TwbModGroupsFiles;
+  _ModGroupFiles : TwbModGroupsFiles;
 
 procedure wbLoadModGroups;
 var
-  Modules      : TwbModuleInfos;
-  i, j         : Integer;
-  ModGroupFile : string;
+  ModGroupFilesByName : TStringList;
+  Modules             : TwbModuleInfos;
+  i, j, k             : Integer;
+  ModGroupFileName    : string;
+  ModGroupFile        : PwbModGroupsFile;
 begin
   _ModGroupFiles := nil;
-  Modules := wbModulesByLoadOrder.FilteredByFlag(mfHasFile);
-  SetLength(_ModGroupFiles, Succ(Length(Modules)));
-  j := 0;
-  for i := Low(Modules) to Length(Modules) do begin
-    if i > High(Modules) then
-      ModGroupFile := wbModGroupFileName
-    else
-      ModGroupFile := wbExpandFileName(ChangeFileExt(Modules[i].miOriginalName, '.modgroups'));
-    if FileExists(ModGroupFile) then
-      with _ModGroupFiles[j] do begin
-        mgfFileName := ModGroupFile;
-        mgfLoad;
-        Inc(j);
+  try
+    ModGroupFilesByName := TStringList.Create;
+    try
+      ModGroupFilesByName.Sorted := True;
+      ModGroupFilesByName.Duplicates := dupError;
+      Modules := wbModulesByLoadOrder{.FilteredByFlag(mfHasFile)};
+      SetLength(_ModGroupFiles, Succ(Length(Modules)));
+      j := 0;
+      for i := Low(Modules) to Length(Modules) do begin
+        if i > High(Modules) then
+          ModGroupFileName := wbModGroupFileName
+        else
+          ModGroupFileName := wbExpandFileName(ChangeFileExt(Modules[i].miOriginalName, '.modgroups'));
+
+        ModGroupFile := nil;
+        if ModGroupFilesByName.Find(ModGroupFileName, k) then
+          ModGroupFile := Pointer(ModGroupFilesByName.Objects[k])
+        else
+          if FileExists(ModGroupFileName) then begin
+            ModGroupFile := @_ModGroupFiles[j];
+            with ModGroupFile^ do begin
+              mgfFileName := ModGroupFileName;
+              mgfLoad;
+              Inc(j);
+            end;
+
+          end;
+        if Assigned(ModGroupFile) and (i <= High(Modules)) then
+          with ModGroupFile^ do begin
+            SetLength(mgfModules, Succ(Length(mgfModules)));
+            mgfModules[High(mgfModules)] := Modules[i];
+          end;
       end;
+    finally
+      ModGroupFilesByName.Free;
+    end;
+    SetLength(_ModGroupFiles, j);
+  except
+    _ModGroupFiles := nil;
+    raise;
   end;
-  SetLength(_ModGroupFiles, j);
 end;
 
 { TwbModGroupsFile }
+
+procedure TwbModGroupsFile.mgfCheckValid;
+begin
+  //...
+end;
 
 procedure TwbModGroupsFile.mgfLoad;
 var
@@ -180,16 +198,28 @@ begin
   if aLine.IsEmpty or aLine.StartsWith(';') then
     Exit(False);
 
-  if aLine.StartsWith('+') then begin
-    Include(mgiFlags, mgifOptional);
-    Delete(aLine, 1, 1);
-  end else if aLine.StartsWith('-') then begin
-    Include(mgiFlags, mgifDontHide);
-    Delete(aLine, 1, 1);
-  end else if aLine.StartsWith('!') then begin
-    Include(mgiFlags, mgifNotAllowed);
-    Delete(aLine, 1, 1);
+  Include(mgiFlags, mgifIsTarget);
+  Include(mgiFlags, mgifIsSource);
+
+  j := 1;
+  while j <= Length(aLine) do begin
+    case aLine[1] of
+      ' ': {};
+      '+': Include(mgiFlags, mgifOptional);
+      '-': begin //neither hides nor is being hidden
+             Exclude(mgiFlags, mgifIsTarget);
+             Exclude(mgiFlags, mgifIsSource);
+           end;
+      '!': Include(mgiFlags, mgifForbidden);
+      '@': Exclude(mgiFlags, mgifIsSource); //being hidden, doesn't hide others
+      '#': Exclude(mgiFlags, mgifIsTarget); //hides others, isn't being hidden
+    else
+      Break;
+    end;
+    Inc(j);
   end;
+  if j > 1 then
+    Delete(aLine, 1, Pred(j));
 
   aLine := aLine.Trim;
   if aLine.IsEmpty then
@@ -212,26 +242,17 @@ begin
     for i := Low(Fragments) to High(Fragments) do
       if mgiCRC32s[j].AssignFromString(Fragments[i]) then
         Inc(j);
-    SetLength(mgiCRC32s, j);
+    if j = 0 then
+      mgiCRC32s := [$FFFFFFFF]
+    else
+      SetLength(mgiCRC32s, j);
   end;
 
   Result := True;
 end;
 
-{ TwbModGroupList }
 
-function TwbModGroupList.mglGetModGroup(aIndex: Integer): TwbModGroupItemList;
-begin
-  Result := Objects[aIndex] as TwbModGroupItemList;
-end;
-
-function wbProcessModGroups: TwbModGroupList;
-begin
-
-end;
-
-
-initialization
+initialization
 finalization
 end.
 
