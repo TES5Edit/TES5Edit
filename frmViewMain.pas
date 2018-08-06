@@ -13537,10 +13537,11 @@ begin
       if Supports(Def, IwbSubRecordDef, SubRecordDef) then
         Def := SubRecordDef.Value;
 
-      if Def.DefType in [dtInteger, dtFlag, dtFloat] then begin
-        vstView.EditNode(vstView.FocusedNode, vstView.FocusedColumn);
-        Exit;
-      end;
+      if Assigned(Def) and Element.IsEditable then
+        if Def.DefType in [dtInteger, dtFlag, dtFloat] then begin
+          vstView.EditNode(vstView.FocusedNode, vstView.FocusedColumn);
+          Exit;
+        end;
     end;
 
     with TfrmViewElements.Create(nil) do begin
