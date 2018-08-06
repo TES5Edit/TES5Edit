@@ -279,9 +279,6 @@ object frmFilterOptions: TfrmFilterOptions
       Top = 59
       Width = 258
       Height = 466
-      BevelKind = bkTile
-      BevelWidth = 3
-      BorderStyle = bsNone
       Color = clBtnFace
       ItemHeight = 13
       PopupMenu = pmuSelection
@@ -292,9 +289,6 @@ object frmFilterOptions: TfrmFilterOptions
       Top = 59
       Width = 318
       Height = 113
-      BevelKind = bkTile
-      BevelWidth = 3
-      BorderStyle = bsNone
       Color = clBtnFace
       ItemHeight = 13
       PopupMenu = pmuSelection
@@ -305,9 +299,6 @@ object frmFilterOptions: TfrmFilterOptions
       Top = 207
       Width = 318
       Height = 141
-      BevelKind = bkTile
-      BevelWidth = 3
-      BorderStyle = bsNone
       Color = clBtnFace
       ItemHeight = 13
       PopupMenu = pmuSelection
@@ -318,9 +309,6 @@ object frmFilterOptions: TfrmFilterOptions
       Top = 59
       Width = 258
       Height = 560
-      BevelKind = bkTile
-      BevelWidth = 3
-      BorderStyle = bsNone
       Color = clBtnFace
       ItemHeight = 13
       PopupMenu = pmuSelection
