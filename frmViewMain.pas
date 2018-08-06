@@ -630,7 +630,7 @@ type
     function AddNewFile(out aFile: IwbFile; aIsESL: Boolean): Boolean; overload;
     function AddNewFile(out aFile: IwbFile; aTemplate: PwbModuleInfo): Boolean; overload;
 
-    procedure SaveChanged;
+    function SaveChanged: Boolean;
     procedure JumpTo(aInterface: IInterface; aBackward: Boolean);
     function FindNodeForElement(const aElement: IwbElement): PVirtualNode;
     function EditWarn: Boolean;
@@ -4741,7 +4741,10 @@ begin
     PluggyLinkThread.Terminate;
   FreeAndNil(PluggyLinkThread);
 
-  SaveChanged;
+  if not SaveChanged then begin
+    Action := caNone;
+    Exit;
+  end;
 
   if Assigned(Settings) then begin
     Settings.WriteInteger(Name, 'pnlNavWidth', pnlNav.Width);
@@ -4764,18 +4767,23 @@ begin
   if DirectoryExists(wbTempPath) and wbRemoveTempPath then
     DeleteDirectory(wbTempPath); // remove temp folder unless it existed
 
-  BackHistory := nil;
-  ForwardHistory := nil;
-  SetActiveRecord(nil);
-  vstNav.Free;
-  vstView.Free;
-  vstSpreadSheetWeapon.Free;
-  vstSpreadSheetArmor.Free;
-  vstSpreadSheetAmmo.Free;
-  pnlNav.Free;
-  pnlTop.Visible := False;
-  for i := 0 to Pred(pgMain.PageCount) do
-    pgMain.Pages[i].TabVisible := tbsMessages = pgMain.Pages[i];
+  LockWindowUpdate(Handle);
+  try
+    BackHistory := nil;
+    ForwardHistory := nil;
+    SetActiveRecord(nil);
+    vstNav.Free;
+    vstView.Free;
+    vstSpreadSheetWeapon.Free;
+    vstSpreadSheetArmor.Free;
+    vstSpreadSheetAmmo.Free;
+    pnlNav.Free;
+    pnlTop.Visible := False;
+    for i := 0 to Pred(pgMain.PageCount) do
+      pgMain.Pages[i].TabVisible := tbsMessages = pgMain.Pages[i];
+  finally
+    LockWindowUpdate(0);
+  end;
 
   Files := nil;
   _wbProgressCallback := nil;
@@ -11820,7 +11828,7 @@ begin
     end;
 end;
 
-procedure TfrmMain.SaveChanged;
+function TfrmMain.SaveChanged: Boolean;
 var
   i                           : Integer;
   FileStream                  : TBufferedFileStream;
@@ -11835,138 +11843,148 @@ var
   AnyErrors                   : Boolean;
   TryDirectRename             : Boolean;
 begin
+  Result := True;
+
   if wbDontSave then
     Exit;
 
   pgMain.ActivePage := tbsMessages;
 
   with TfrmFileSelect.Create(nil) do try
-    for i := Low(Files) to High(Files) do
-      if (Files[i].IsEditable) and (esUnsaved in Files[i].ElementStates) or wbTestWrite then begin
-        CheckListBox1.AddItem(Files[i].FileNameOnDisk, Pointer(Files[i]));
-        CheckListBox1.Checked[Pred(CheckListBox1.Count)] := esUnsaved in Files[i].ElementStates;
-        SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 0;
-      end;
-
-    for i := 0 to Pred(wbLocalizationHandler.Count) do
-      if wbLocalizationHandler[i].Modified  or wbTestWrite then begin
-        CheckListBox1.AddItem(wbLocalizationHandler[i].Name, Pointer(wbLocalizationHandler[i]));
-        CheckListBox1.Checked[Pred(CheckListBox1.Count)] := wbLocalizationHandler[i].Modified;
-        SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 1;
-      end;
-
-    Caption := 'Save changed files:';
-    cbBackup.Visible := True;
-    if Assigned(Settings) then
-      cbBackup.Checked := not Settings.ReadBool(frmMain.Name, 'DontBackup', not cbBackup.Checked);
-
-    if (CheckListBox1.Count > 0) and (not (wbToolMode in wbAutoModes)) then begin
-      NoEscape := True;
-      ShowModal;
-      wbDontBackup := not cbBackup.Checked;
-      if Assigned(Settings) then begin
-        Settings.WriteBool(frmMain.Name, 'DontBackup', wbDontBackup);
-        Settings.UpdateFile;
-      end;
-      wbStartTime := Now;
-    end;
-
-    Inc(wbShowStartTime);
     try
-      SavedAny := False;
-      AnyErrors := False;
-      t := '.save.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
-
-      for i := 0 to Pred(CheckListBox1.Items.Count) do
-        if CheckListBox1.Checked[i] then begin
-          TryDirectRename := False;
-
-          // localization file
-          if FileType[i] = 1 then begin
-            _LFile := TwbLocalizationFile(CheckListBox1.Items.Objects[i]);
-            s := _LFile.FileName;
-            NeedsRename := FileExists(s);
-            s := Copy(s, length(wbDataPath) + 1, length(s)); // relative path to string file from Data folder
-            u := s;
-            if NeedsRename then
-              s := s + t;
-
-            try
-              FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024*1024);
-              try
-                PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
-                _LFile.WriteToStream(FileStream);
-                SavedAny := True;
-                TryDirectRename := True; //TODO: make sure this is ok?
-              finally
-                FileStream.Free;
-              end;
-
-            except
-              on E: Exception do begin
-                AnyErrors := True;
-                PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
-              end;
-            end;
-
-
-          end else
-
-          // plugin file
-          begin
-
-            _File := IwbFile(Pointer(CheckListBox1.Items.Objects[i]));
-
-            s := CheckListBox1.Items[i];
-            u := s;
-            NeedsRename := FileExists(wbDataPath + CheckListBox1.Items[i]);
-            if NeedsRename then
-              s := s + t;
-
-            try
-              FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024 * 1024);
-              try
-                PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
-                _File.WriteToStream(FileStream, False);
-                SavedAny := True;
-                if not (fsMemoryMapped in _File.FileStates) then
-                  TryDirectRename := True;
-              finally
-                FileStream.Free;
-              end;
-
-            except
-              on E: Exception do begin
-                AnyErrors := True;
-                PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
-              end;
-            end;
-
-          end;
-
-          if NeedsRename and TryDirectRename then try
-            if not DoRenameModule(s, u, True) then
-              AnyErrors := True
-            else
-              NeedsRename := False;
-          except end;
-
-          if NeedsRename then begin
-            if not Assigned(FilesToRename) then
-              FilesToRename := TStringList.Create;
-            // s - rename from, relative to DataPath
-            // u - rename to, relative to DataPath
-            FilesToRename.Values[u] := s;
-          end;
-
-          DoProcessMessages;
-          tmrMessagesTimer(nil);
+      for i := Low(Files) to High(Files) do
+        if (Files[i].IsEditable) and (esUnsaved in Files[i].ElementStates) or wbTestWrite then begin
+          CheckListBox1.AddItem(Files[i].FileNameOnDisk, Pointer(Files[i]));
+          CheckListBox1.Checked[Pred(CheckListBox1.Count)] := esUnsaved in Files[i].ElementStates;
+          SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 0;
         end;
 
-    finally
-      DoProcessMessages;
-      tmrMessagesTimer(nil);
-      Dec(wbShowStartTime);
+      for i := 0 to Pred(wbLocalizationHandler.Count) do
+        if wbLocalizationHandler[i].Modified  or wbTestWrite then begin
+          CheckListBox1.AddItem(wbLocalizationHandler[i].Name, Pointer(wbLocalizationHandler[i]));
+          CheckListBox1.Checked[Pred(CheckListBox1.Count)] := wbLocalizationHandler[i].Modified;
+          SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 1;
+        end;
+
+      Caption := 'Save changed files:';
+      cbBackup.Visible := True;
+      if Assigned(Settings) then
+        cbBackup.Checked := not Settings.ReadBool(frmMain.Name, 'DontBackup', not cbBackup.Checked);
+
+      if (CheckListBox1.Count > 0) and (not (wbToolMode in wbAutoModes)) then begin
+        NoEscape := True;
+        if ShowModal <> mrOk then
+          Exit(False);
+        wbDontBackup := not cbBackup.Checked;
+        if Assigned(Settings) then begin
+          Settings.WriteBool(frmMain.Name, 'DontBackup', wbDontBackup);
+          Settings.UpdateFile;
+        end;
+        wbStartTime := Now;
+      end;
+
+      Inc(wbShowStartTime);
+      try
+        SavedAny := False;
+        AnyErrors := False;
+        t := '.save.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+
+        for i := 0 to Pred(CheckListBox1.Items.Count) do
+          if CheckListBox1.Checked[i] then begin
+            TryDirectRename := False;
+
+            // localization file
+            if FileType[i] = 1 then begin
+              _LFile := TwbLocalizationFile(CheckListBox1.Items.Objects[i]);
+              s := _LFile.FileName;
+              NeedsRename := FileExists(s);
+              s := Copy(s, length(wbDataPath) + 1, length(s)); // relative path to string file from Data folder
+              u := s;
+              if NeedsRename then
+                s := s + t;
+
+              try
+                FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024*1024);
+                try
+                  PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
+                  _LFile.WriteToStream(FileStream);
+                  SavedAny := True;
+                  TryDirectRename := True; //TODO: make sure this is ok?
+                finally
+                  FileStream.Free;
+                end;
+
+              except
+                on E: Exception do begin
+                  AnyErrors := True;
+                  PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
+                end;
+              end;
+
+            end else
+
+            // plugin file
+            begin
+
+              _File := IwbFile(Pointer(CheckListBox1.Items.Objects[i]));
+
+              s := CheckListBox1.Items[i];
+              u := s;
+              NeedsRename := FileExists(wbDataPath + CheckListBox1.Items[i]);
+              if NeedsRename then
+                s := s + t;
+
+              try
+                FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024 * 1024);
+                try
+                  PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
+                  _File.WriteToStream(FileStream, False);
+                  SavedAny := True;
+                  if not (fsMemoryMapped in _File.FileStates) then
+                    TryDirectRename := True;
+                finally
+                  FileStream.Free;
+                end;
+
+              except
+                on E: Exception do begin
+                  AnyErrors := True;
+                  PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
+                end;
+              end;
+
+            end;
+
+            if NeedsRename and TryDirectRename then try
+              if not DoRenameModule(s, u, True) then
+                AnyErrors := True
+              else
+                NeedsRename := False;
+            except end;
+
+            if NeedsRename then begin
+              if not Assigned(FilesToRename) then
+                FilesToRename := TStringList.Create;
+              // s - rename from, relative to DataPath
+              // u - rename to, relative to DataPath
+              FilesToRename.Values[u] := s;
+            end;
+
+            DoProcessMessages;
+            tmrMessagesTimer(nil);
+          end;
+
+      finally
+        DoProcessMessages;
+        tmrMessagesTimer(nil);
+        Dec(wbShowStartTime);
+      end;
+    except
+      on E: Exception do begin
+        if not (E is EAbort) then
+          AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error "' + E.ClassName + '": "' + E.Message + '"');
+        AnyErrors := True;
+      end;
     end;
 
     if AnyErrors then
@@ -11974,7 +11992,7 @@ begin
     if SavedAny then
       AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Done saving.');
     if AnyErrors then
-      Abort;
+      Exit(False);
   finally
     Free;
   end;
