@@ -2083,6 +2083,8 @@ begin
     SortRecords;
   end;
 
+  SetModified(True);
+
   if NotAllAdded then
     raise Exception.Create('Only '+IntToStr(GetMasterCount - OldMasterCount)+' of '+IntToStr(aMasters.Count)+' masters could be added. Master list now contains '+IntToStr(GetMasterCount)+' entries and is full.');
 end;
@@ -2410,6 +2412,8 @@ begin
         wbEndInternalEdit;
       end else
         Assert(False);
+
+      SetModified(True);
 
       Assert(Length(flMasters) = MasterFiles.ElementCount);
 
@@ -3985,6 +3989,7 @@ begin
         end else
           Assert(False);
         MasterIndicesUpdated(Old, New);
+        SetModified(True);
       end;
     finally
       OldList.Free;
