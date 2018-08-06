@@ -57,7 +57,7 @@ object frmMain: TfrmMain
     OnDrawPanel = stbMainDrawPanel
     OnResize = stbMainResize
   end
-  object Panel1: TPanel
+  object pnlRight: TPanel
     Left = 461
     Top = 33
     Width = 497
@@ -1304,11 +1304,28 @@ object frmMain: TfrmMain
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 3
+    OnResize = pnlNavResize
+    object lblFilterHint: TLabel
+      AlignWithMargins = True
+      Left = 3
+      Top = 28
+      Width = 449
+      Height = 26
+      Margins.Bottom = 9
+      Align = alTop
+      Caption = 
+        'A filter has been applied. The treeview contents is fossilized a' +
+        'nd will not adjust structure to changes.  Please remove or re-ap' +
+        'ply the filter if necessary.'
+      Visible = False
+      WordWrap = True
+      ExplicitWidth = 440
+    end
     object vstNav: TVirtualEditTree
       Left = 0
-      Top = 25
+      Top = 63
       Width = 455
-      Height = 541
+      Height = 503
       Align = alClient
       BevelInner = bvNone
       Colors.SelectionRectangleBlendColor = clGray
@@ -1344,6 +1361,9 @@ object frmMain: TfrmMain
       OnInitNode = vstNavInitNode
       OnKeyDown = vstNavKeyDown
       OnKeyPress = vstNavKeyPress
+      ExplicitLeft = -1
+      ExplicitTop = 84
+      ExplicitHeight = 482
       Columns = <
         item
           Position = 0

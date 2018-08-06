@@ -158,7 +158,7 @@ type
     tmrMessages: TTimer;
     vstView: TVirtualEditTree;
     stbMain: TStatusBar;
-    Panel1: TPanel;
+    pnlRight: TPanel;
     pmuNav: TPopupMenu;
     mniNavFilterRemove: TMenuItem;
     mniNavFilterApply: TMenuItem;
@@ -336,6 +336,7 @@ type
     edViewFilterName: TLabeledEdit;
     edViewFilterValue: TLabeledEdit;
     cobViewFilter: TComboBox;
+    lblFilterHint: TLabel;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -560,6 +561,7 @@ type
     procedure vstNavKeyPress(Sender: TObject; var Key: Char);
     procedure edViewFilterChange(Sender: TObject);
     procedure edViewFilterNameKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure pnlNavResize(Sender: TObject);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
   protected
@@ -4803,6 +4805,16 @@ end;
 type
   TWinControlHacker=class(TWinControl);
 
+procedure wbSetDoubleBuffered(aControl: TWinControl);
+var
+  i: Integer;
+begin
+  TWinControlHacker(aControl).DoubleBuffered := True;
+  for i := 0 to Pred(aControl.ControlCount) do
+    if aControl.Controls[i] is TWinControl then
+      wbSetDoubleBuffered(TWinControl(aControl.Controls[i]));
+end;
+
 procedure wbLoadAndApplyFontAndScale(aIni: TMemIniFile; aSection, aName: string; aWinControl: TWinControl);
 var
   OldSize : Integer;
@@ -4845,6 +4857,8 @@ begin
   except end;
 
   wbApplyFontAndScale(Self);
+
+  wbSetDoubleBuffered(Self);
 
   //try to set the style and window position as early as possible to reduce flicker
   try
@@ -10502,6 +10516,7 @@ begin
     PostAddMessage('[Filtering done] ' + ' Processed Records: ' + IntToStr(Count) +
       ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
     FilterApplied := True;
+    lblFilterHint.Visible := True;
   finally
     vstNav.EndUpdate;
     Caption := Application.Title;
@@ -11581,6 +11596,21 @@ begin
   end;
 end;
 
+procedure TfrmMain.pnlNavResize(Sender: TObject);
+begin
+  if lblFilterHint.Visible then begin
+    LockWindowUpdate(pnlNav.Handle);
+    try
+      lblFilterHint.AutoSize := False;
+      vstNav.Align := alNone;
+      lblFilterHint.AutoSize := True;
+      vstNav.Align := alClient;
+    finally
+      LockWindowUpdate(0);
+    end;
+  end;
+end;
+
 procedure TfrmMain.PostAddMessage(const s: string);
 var
   t                           : string;
@@ -11635,6 +11665,7 @@ var
   _File                       : IwbFile;
 begin
   FilterApplied := False;
+  lblFilterHint.Visible := False;
   vstNav.BeginUpdate;
   try
     vstNav.Clear;
