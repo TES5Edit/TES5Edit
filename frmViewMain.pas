@@ -8849,9 +8849,12 @@ begin
     FlattenBlocks or
     FlattenCellChilds or
     AssignPersWrldChild or
+    (ModGroupsEnabled and (ModGroups.Count > 0)) or
+    OnlyShowMasterAndLeafs or
+    wbQuickShowConflicts or
     not InheritConflictByParent then begin
 
-    MessageDlg('To use this function you need to apply a filter with *only* the option "Conflict status inherited by parent" active.', mtError, [mbOk], 0);
+    MessageDlg('To use this function you need to apply a filter with *only* the option "Conflict status inherited by parent" active and ModGroups, "Show Master and Leafs", and "Quick Show Conflict" mode disabled.', mtError, [mbOk], 0);
     Exit;
   end;
 
@@ -9048,9 +9051,12 @@ begin
     FlattenBlocks or
     FlattenCellChilds or
     AssignPersWrldChild or
+    (ModGroupsEnabled and (ModGroups.Count > 0)) or
+    OnlyShowMasterAndLeafs or
+    wbQuickShowConflicts or
     not InheritConflictByParent then begin
 
-    MessageDlg('To use this function you need to apply a filter with *only* the option "Conflict status inherited by parent" active.', mtError, [mbOk], 0);
+    MessageDlg('To use this function you need to apply a filter with *only* the option "Conflict status inherited by parent" active and ModGroups, "Show Master and Leafs", and "Quick Show Conflict" mode disabled.', mtError, [mbOk], 0);
     Exit;
   end;
 
