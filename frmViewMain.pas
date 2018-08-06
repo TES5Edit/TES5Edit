@@ -13528,6 +13528,7 @@ var
   NodeDatas                   : PViewNodeDatas;
   i                           : Integer;
   ModalEdit                   : Boolean;
+  FocusedElement              : IwbElement;
   Element                     : IwbElement;
   Def                         : IwbNamedDef;
   SubRecordDef                : IwbSubRecordDef;
@@ -13542,7 +13543,11 @@ begin
   NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
   if Assigned(NodeDatas) then begin
 
-    Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+    if vstView.FocusedColumn > 0 then
+      FocusedElement := NodeDatas[Pred(vstView.FocusedColumn)].Element
+    else
+      FocusedElement := nil;
+    Element := FocusedElement;
     if not Assigned(Element) then
       for i := Low(ActiveRecords) to High(ActiveRecords) do begin
         Element := NodeDatas[i].Element;
@@ -13555,7 +13560,7 @@ begin
       if Supports(Def, IwbSubRecordDef, SubRecordDef) then
         Def := SubRecordDef.Value;
 
-      if Assigned(Def) and Element.IsEditable then
+      if Assigned(FocusedElement) and Assigned(Def) and FocusedElement.IsEditable then
         if Def.DefType in [dtInteger, dtFlag, dtFloat] then begin
           vstView.EditNode(vstView.FocusedNode, vstView.FocusedColumn);
           Exit;
