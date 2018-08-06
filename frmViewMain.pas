@@ -16092,6 +16092,21 @@ begin
   tmrCheckUnsaved.Enabled := wbEditAllowed and
     not (wbToolMode in wbAutoModes) and
     not wbIKnowWhatImDoing;
+
+  if wbForceTerminate then begin
+    GeneralProgressNoAbortCheck('Loading of modules got terminated early. Editing is disabled.');
+    Exit;
+  end;
+
+  if wbFirstLoadComplete then
+    Exit;
+
+  wbFirstLoadComplete := True;
+
+  if wbToolMode in [tmView, tmEdit] then begin
+    wbLoadModGroups;
+  end;
+
   if wbQuickShowConflicts then
     mniNavFilterConflicts.Click;
 
@@ -16115,20 +16130,6 @@ begin
     pgMain.ActivePage := tbsMessages;
     mniNavUndeleteAndDisableReferences.Click;
     mniNavRemoveIdenticalToMaster.Click;
-  end;
-
-  if wbForceTerminate then begin
-    GeneralProgressNoAbortCheck('Loading of modules got terminated early. Editing is disabled.');
-    Exit;
-  end;
-
-  if wbFirstLoadComplete then
-    Exit;
-
-  wbFirstLoadComplete := True;
-
-  if wbToolMode in [tmView, tmEdit] then begin
-    wbLoadModGroups;
   end;
 end;
 
