@@ -10642,6 +10642,19 @@ begin
   AssignPersWrldChild := False;
   InheritConflictByParent := True;
 
+  if ModGroupsEnabled or OnlyShowMasterAndLeafs or wbQuickShowConflicts then begin
+    if ModGroupsEnabled then
+      wbProgress('Disabling ModGroups');
+    if OnlyShowMasterAndLeafs then
+      wbProgress('Disabling "Only Show Master and Leafs"');
+    if wbQuickShowConflicts then
+      wbProgress('Disabling "Quick Show Conflict" mode');
+    ModGroupsEnabled := False;
+    OnlyShowMasterAndLeafs := False;
+    wbQuickShowConflicts := False;
+    ResetAllConflict;
+  end;
+
   FilterPreset := True;
   try
     mniNavFilterApplyClick(Sender);
