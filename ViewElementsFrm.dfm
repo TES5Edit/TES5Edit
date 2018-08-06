@@ -7,7 +7,7 @@ object frmViewElements: TfrmViewElements
   ParentFont = True
   KeyPreview = True
   OldCreateOrder = False
-  Position = poDefault
+  Position = poOwnerFormCenter
   OnClose = FormClose
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
