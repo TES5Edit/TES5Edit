@@ -186,9 +186,12 @@ begin
     Result[i] := aFunc(Self[i]);
 end;
 
-function TStringArrayHelper.RemoveEmpty: TArray<string>;
-var
-  i, j: Integer;
+
+function TStringArrayHelper.RemoveEmpty: TArray<string>;
+
+var
+
+  i, j: Integer;
 begin
   Result := Copy(Self);
   j := 0;
