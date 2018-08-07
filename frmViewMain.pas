@@ -10805,8 +10805,9 @@ begin
 
   if aMainRecord.Signature = 'GMST' then begin
     EditorID := aMainRecord.EditorID;
-    SetLength(Result, Length(Files));
+    SetLength(MainRecords, Length(Files));
     Master := nil;
+    j := 0;
     for i := Low(Files) to High(Files) do begin
       Group := Files[i].GroupBySignature['GMST'];
       if Assigned(Group) then begin
@@ -10814,37 +10815,41 @@ begin
         if Assigned(Rec) then begin
           if not Assigned(Master) then
             Master := Rec;
-          Result[i].Element := Rec;
+          MainRecords[j] := Rec;
+          Inc(j);
         end;
       end;
     end;
+    SetLength(MainRecords, j);
 
   end else if (aMainRecord.Signature = 'NAVI') (* or (aMainRecord.Signature = 'TES4') *) then begin
     Signature := aMainRecord.Signature;
     FormID := aMainRecord.FormID;
     LoadOrder := aMainRecord.GetFile.LoadOrder;
-    SetLength(MainRecords, 0);
+    SetLength(MainRecords, Length(Files));
     Master := nil;
+    j := 0;
     for i := Low(Files) to High(Files) do
       if Files[i].LoadOrder = LoadOrder then begin
         Group := Files[i].GroupBySignature[Signature];
         if Assigned(Group) then begin
           Rec := Group.MainRecordByFormID[FormID];
           if Assigned(Rec) then begin
-            j := Length(MainRecords);
-            SetLength(MainRecords, j+1);
             if not Assigned(Master) then
               Master := Rec;
             MainRecords[j] := Rec;
+            Inc(j);
           end;
         end;
       end;
+    SetLength(MainRecords, j);
 
   end else if (aMainRecord.Signature = 'TES4') then begin
     Signature := aMainRecord.Signature;
     LoadOrder := aMainRecord.GetFile.LoadOrder;
-    SetLength(MainRecords, 0);
+    SetLength(MainRecords, Length(Files));
     Master := nil;
+    j := 0;
     for i := Low(Files) to High(Files) do
       if Files[i].LoadOrder = LoadOrder then begin
         // header of .dat file, show only itself
@@ -10855,13 +10860,13 @@ begin
           Continue;
         Rec := Files[i].Elements[0] as IwbMainRecord;
         if Assigned(Rec) then begin
-          j := Length(MainRecords);
-          SetLength(MainRecords, j+1);
           if not Assigned(Master) then
             Master := Rec;
           MainRecords[j] := Rec;
+          Inc(j);
         end;
       end;
+    SetLength(MainRecords, j);
 
   end else begin
     Master := aMainRecord.MasterOrSelf;
@@ -10909,6 +10914,9 @@ begin
       Inc(j);
     end;
   SetLength(MainRecords, j);
+
+  if Length(MainRecords) < 1 then
+    MainRecords := [aMainRecord];
 
   SetLength(Result, Length(MainRecords));
   for i := Low(MainRecords) to High(MainRecords) do
