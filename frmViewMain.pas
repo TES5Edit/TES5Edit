@@ -3809,31 +3809,32 @@ begin
           end;
         end;
 
-        if not wbQuickClean then
-          if (wbToolMode in wbPluginModes) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFNV, gmTES5, gmTES5VR, gmSSE]) then begin
-            Modules.DeactivateAll;
+        if (wbToolMode in wbPluginModes) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFNV, gmTES5, gmTES5VR, gmSSE]) then begin
+          Modules.DeactivateAll;
 
-            with wbModuleByName(wbPluginToUse)^ do
-              if IsValid then
-                Activate
-              else begin
+          with wbModuleByName(wbPluginToUse)^ do
+            if IsValid then begin
+              Activate;
+              Include(miFlags, mfTaggedForPluginMode);
+            end else begin
+              ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
+              frmMain.Close;
+              Exit;
+            end;
+
+          // More plugins requested ?
+          while wbFindNextValidCmdLinePlugin(wbParamIndex, s, wbDataPath) do begin
+            with wbModuleByName(s)^ do
+              if IsValid then begin
+                Activate;
+                Include(miFlags, mfTaggedForPluginMode);
+              end else begin
                 ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
                 frmMain.Close;
                 Exit;
               end;
-
-            // More plugins requested ?
-            while wbFindNextValidCmdLinePlugin(wbParamIndex, s, wbDataPath) do begin
-              with wbModuleByName(s)^ do
-                if IsValid then
-                  Activate
-                else begin
-                  ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
-                  frmMain.Close;
-                  Exit;
-                end;
-            end;
           end;
+        end;
 
         if wbToolSource in [tsPlugins] then begin
           sl.Clear;
@@ -3844,8 +3845,10 @@ begin
 
           if sl.Count < 1 then
             with TfrmModuleSelect.Create(Self) do try
-              if ShowModal = mrOk then
+              if ShowModal = mrOk then begin
+                SelectedModules.FilteredByFlag(mfActive).IncludeAll(mfTaggedForPluginMode);
                 sl.AddStrings(SelectedModules.ToStrings(False));
+              end;
               if sl.Count < 1 then begin
                 frmMain.Close;
                 Exit;
@@ -3853,27 +3856,6 @@ begin
             finally
               Free;
             end;
-        end else begin
-          if wbToolSource in [tsPlugins] then
-            for i := 0 to Pred(CheckListBox1.Items.Count) do
-              CheckListBox1.Checked[i] := (mfActive in Modules[i].miFlags);
-
-          if not ((wbToolMode in wbAutoModes) or wbQuickShowConflicts) then begin
-            if ShowModal <> mrOk then begin
-              frmMain.Close;
-              Exit;
-            end;
-          end;
-
-          sl.Clear;
-          Modules.DeactivateAll;
-          for i := 0 to Pred(CheckListBox1.Count) do begin
-            if CheckListBox1.Checked[i] then begin
-              sl.Add(CheckListBox1.Items[i]);
-              if Length(Modules) > 0 then
-                Include(Modules[i].miFlags, mfActive);
-            end;
-          end;
         end;
       finally
         Free;
@@ -3884,12 +3866,15 @@ begin
         Exit;
       end;
 
-      if wbQuickClean or (wbToolSource in [tsSaves]) then
+      if wbQuickClean then begin
+        if Length(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
+          MessageDlg('Exactly one plugin must be selected in QuickClean mode', mtError, [mbAbort], 0);
+          frmMain.Close;
+          Exit;
+        end;
+      end else if (wbToolSource in [tsSaves]) then
         if sl.Count <> 1 then begin
-          if wbQuickClean then
-            MessageDlg('Exactly one plugin must be selected in QuickClean mode', mtError, [mbAbort], 0)
-          else
-            MessageDlg('Exactly one plugin must be selected with this source', mtError, [mbAbort], 0);
+          MessageDlg('Exactly one plugin must be selected with this source', mtError, [mbAbort], 0);
           frmMain.Close;
           Exit;
         end;
@@ -11513,22 +11498,72 @@ procedure TfrmMain.ReInitTree(aNoGameMaster: Boolean = False);
 var
   i, j                        : Integer;
   _File                       : IwbFile;
+  SelectFrm                   : TfrmFileSelect;
+  SelectedNodes               : TNodeArray;
+  NodeData                    : PNavNodeData;
 begin
-  FilterApplied := False;
-  lblFilterHint.Visible := False;
-  vstNav.BeginUpdate;
+  SelectFrm := nil;
   try
-    vstNav.Clear;
-    j := Low(Files);
-    if aNoGameMaster then
-      Inc(j);
-    for i := j to High(Files) do begin
-      _File := Files[i];
-      vstNav.AddChild(nil, Pointer(_File));
-      _File._AddRef;
+    if wbQuickClean or ((GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0)) then begin
+      SelectFrm := TfrmFileSelect.Create(Self);
+      with SelectFrm do begin
+        for i := Low(Files) to High(Files) do begin
+          CheckListBox1.Items.Add(Files[i].Name);
+          Files[i].ResetTags;
+        end;
+
+        if wbQuickClean then begin
+
+          wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode).FilteredBy(function(aModule: PwbModuleInfo): Boolean
+          begin
+            Result := False;
+            if Assigned(aModule.miFile) then
+              aModule._File.Tag;
+          end);
+
+        end else begin
+
+          SelectedNodes := vstNav.GetSortedSelection(True);
+          for i := Low(SelectedNodes) to High(SelectedNodes) do begin
+            NodeData := vstNav.GetNodeData(SelectedNodes[i]);
+            if Assigned(NodeData.Element) then
+              NodeData.Element._File.Tag;
+          end;
+
+        end;
+
+        for i := Low(Files) to High(Files) do
+          if Files[i].IsTagged then
+            CheckListBox1.Checked[i] := True;
+
+        Caption := 'What files should be added to the navigation treeview?';
+
+        if not wbQuickClean then
+          if ShowModal <> mrOk then
+            FreeAndNil(SelectFrm);
+      end;
+    end;
+
+    FilterApplied := False;
+    lblFilterHint.Visible := False;
+    vstNav.BeginUpdate;
+    try
+      vstNav.Clear;
+      j := Low(Files);
+      if aNoGameMaster then
+        Inc(j);
+      for i := j to High(Files) do begin
+        _File := Files[i];
+        if not Assigned(SelectFrm) or SelectFrm.CheckListBox1.Checked[i] then begin
+          vstNav.AddChild(nil, Pointer(_File));
+          _File._AddRef;
+        end;
+      end;
+    finally
+      vstNav.EndUpdate;
     end;
   finally
-    vstNav.EndUpdate;
+    SelectFrm.Free;
   end;
 end;
 
@@ -15989,20 +16024,20 @@ begin
 
   if wbQuickShowConflicts then
     ModGroups := wbModGroupsByName
-  else if not wbQuickClean then
-  if wbToolMode in [tmView, tmEdit] then begin
-    with TfrmModGroupSelect.Create(Self) do
-    try
-      AllModGroups := wbModGroupsByName;
-      LoadModGroupsSelection(AllModGroups);
-      if ShowModal = mrOk then begin
-        SaveModGroupsSelection(SelectedModGroups);
-        ModGroups := SelectedModGroups;
+  else if not (wbQuickClean or (wbToolMode in wbAutoModes)) then
+    if wbToolMode in [tmView, tmEdit] then begin
+      with TfrmModGroupSelect.Create(Self) do
+      try
+        AllModGroups := wbModGroupsByName;
+        LoadModGroupsSelection(AllModGroups);
+        if ShowModal = mrOk then begin
+          SaveModGroupsSelection(SelectedModGroups);
+          ModGroups := SelectedModGroups;
+        end;
+      finally
+        Free;
       end;
-    finally
-      Free;
     end;
-  end;
 
   ModGroupsExist := ModGroups.Activate;
   ModGroupsEnabled := ModGroupsExist;
@@ -16014,7 +16049,7 @@ begin
 
   if wbQuickClean then begin
     mniNavFilterForCleaning.Click;
-    JumpTo(Files[High(Files)].Header, False);
+    JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
     vstNav.ClearSelection;
     vstNav.FocusedNode := vstNav.FocusedNode.Parent;
     vstNav.Selected[vstNav.FocusedNode] := True;
@@ -16024,7 +16059,7 @@ begin
     mniNavRemoveIdenticalToMaster.Click;
 
     mniNavFilterForCleaning.Click;
-    JumpTo(Files[High(Files)].Header, False);
+    JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
     vstNav.ClearSelection;
     vstNav.FocusedNode := vstNav.FocusedNode.Parent;
     vstNav.Selected[vstNav.FocusedNode] := True;
@@ -16032,6 +16067,8 @@ begin
     pgMain.ActivePage := tbsMessages;
     mniNavUndeleteAndDisableReferences.Click;
     mniNavRemoveIdenticalToMaster.Click;
+    wbQuickClean := False;
+    wbProgress('Quick Clean mode finished.');
   end;
 end;
 
