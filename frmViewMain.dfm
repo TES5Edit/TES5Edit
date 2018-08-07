@@ -1361,9 +1361,6 @@ object frmMain: TfrmMain
       OnInitNode = vstNavInitNode
       OnKeyDown = vstNavKeyDown
       OnKeyPress = vstNavKeyPress
-      ExplicitLeft = -1
-      ExplicitTop = 84
-      ExplicitHeight = 482
       Columns = <
         item
           Position = 0
@@ -1890,18 +1887,28 @@ object frmMain: TfrmMain
     end
     object mniModGroups: TMenuItem
       Caption = 'ModGroups'
+      OnClick = mniModGroupsClick
       object mniModGroupsEnabled: TMenuItem
         Caption = 'Enabled'
         Checked = True
         GroupIndex = 1
         RadioItem = True
-        OnClick = mniModGroupsClick
+        OnClick = mniModGroupsAbleClick
       end
       object mniModGroupsDisabled: TMenuItem
         Caption = 'Disabled'
         GroupIndex = 1
         RadioItem = True
-        OnClick = mniModGroupsClick
+        OnClick = mniModGroupsAbleClick
+      end
+      object N22: TMenuItem
+        Caption = '-'
+        GroupIndex = 1
+      end
+      object mniViewModGroupsReload: TMenuItem
+        Caption = 'Reload ModGroups'
+        GroupIndex = 1
+        OnClick = mniViewModGroupsReloadClick
       end
     end
     object mniMasterAndLeafs: TMenuItem

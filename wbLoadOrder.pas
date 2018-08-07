@@ -52,7 +52,10 @@ type
     mfTagged,
     mfHasFile,
     mfNew,
-    mfTemplate
+    mfTemplate,
+    mfIsModGroupTarget,
+    mfIsModGroupSource,
+    mfEphemeralModGroupTagged
   );
 
   TwbModuleFlags = set of TwbModuleFlag;
@@ -82,6 +85,9 @@ type
     miLoadOrder         : Integer;
 
     miFile              : TObject;
+
+    miModGroupTargets   : TwbModuleInfos;
+    miModGroupSources   : TwbModuleInfos;
 
     function IsValid: Boolean;
     function HasIndex: Boolean;
@@ -645,7 +651,8 @@ begin
 end;
 
 function TwbModuleInfo._File: IwbFile;
-begin
+
+begin
   if not Supports(miFile, IwbFile, Result) then
     Result := nil;
 end;
