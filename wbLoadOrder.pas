@@ -55,7 +55,8 @@ type
     mfTemplate,
     mfIsModGroupTarget,
     mfIsModGroupSource,
-    mfEphemeralModGroupTagged
+    mfEphemeralModGroupTagged,
+    mfTaggedForPluginMode
   );
 
   TwbModuleFlags = set of TwbModuleFlag;
