@@ -31,6 +31,8 @@ type
     mgifIsTarget,
     mgifIsSource,
     mgifForbidden,
+    mgifIgnoreLoadOrderAlways,
+    mgifIgnoreLoadOrderInBlock,
 
     mgifValid,
     mgifValidChecked,
@@ -48,6 +50,8 @@ type
     mgiFileName : string;
     mgiModule   : PwbModuleInfo;
     mgiCRC32s   : TwbCRC32s;
+
+    function ToString: string;
   end;
   TwbModGroupItems = array of TwbModGroupItem;
 
@@ -71,6 +75,10 @@ type
     mgFlags : TwbModGroupFlags;
     mgName  : string;
     mgItems : TwbModGroupItems;
+
+    function IsValid: Boolean;
+    function ToString: string;
+    function ToStrings: TArray<string>;
   end;
   TwbModGroups = array of TwbModGroup;
 
@@ -257,6 +265,12 @@ end;
 
 { TwbModGroup }
 
+function TwbModGroup.IsValid: Boolean;
+begin
+  mgCheckValid(True);
+  Result := mgfValid in mgFlags;
+end;
+
 procedure TwbModGroup.mgAddSelfTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
 begin
   if aValidOnly then begin
@@ -271,11 +285,12 @@ end;
 
 procedure TwbModGroup.mgCheckValid(aForce: Boolean);
 var
-  i             : Integer;
-  AnyInvalid    : Boolean;
-  SourceCount   : Integer;
-  TargetCount   : Integer;
-  LastLoadOrder : Integer;
+  i                    : Integer;
+  AnyInvalid           : Boolean;
+  SourceCount          : Integer;
+  TargetCount          : Integer;
+  LastLoadOrder        : Integer;
+  HighLoadOrderInBlock : Integer;
 begin
   if (mgfValidChecked in mgFlags) and not aForce then
     Exit;
@@ -285,7 +300,8 @@ begin
   AnyInvalid := False;
   SourceCount := 0;
   TargetCount := 0;
-  LastLoadOrder := 1;
+  LastLoadOrder := -1;
+  HighLoadOrderInBlock := -1;
   for i := Low(mgItems) to High(mgItems) do
     with mgItems[i] do begin
       mgiCheckValid(aForce);
@@ -297,10 +313,27 @@ begin
 
           if mgifIsTarget in mgiFlags then
             Inc(TargetCount);
-          if LastLoadOrder >= 0 then
-            if mgiModule.miLoadOrder < LastLoadOrder then
-              AnyInvalid := True;
-          LastLoadOrder := mgiModule.miLoadOrder;
+
+          if not (mgifIgnoreLoadOrderAlways in mgiFlags) then begin
+
+            if mgifIgnoreLoadOrderInBlock in mgiFlags then begin
+              if mgiModule.miLoadOrder > HighLoadOrderInBlock then
+                HighLoadOrderInBlock := mgiModule.miLoadOrder;
+            end else
+              if HighLoadOrderInBlock >= 0 then begin
+                if HighLoadOrderInBlock > LastLoadOrder then
+                  LastLoadOrder := HighLoadOrderInBlock;
+                HighLoadOrderInBlock := -1;
+              end;
+
+            if LastLoadOrder >= 0 then
+              if mgiModule.miLoadOrder < LastLoadOrder then
+                AnyInvalid := True;
+
+            if not (mgifIgnoreLoadOrderInBlock in mgiFlags) then
+              LastLoadOrder := mgiModule.miLoadOrder;
+          end;
+
         end;
       end else
         AnyInvalid := True
@@ -332,15 +365,40 @@ begin
 
   for i := Low(mgItems) to High(mgItems) do
     if mgItems[i].mgiModule = aSource then
-      with mgItems[i] do begin
-        if mgiFlags * [mgifIsSource, mgifHasFile] <> [mgifIsSource, mgifHasFile] then
-          Exit;
-        for j := Pred(i) downto Low(mgItems) do
-          with mgItems[j] do
-            if Assigned(mgiModule) and (mgiFlags * [mgifIsTarget, mgifHasFile] = [mgifIsTarget, mgifHasFile]) then
-              Include(mgiModule.miFlags, mfIsModGroupTarget);
-        Exit;
-      end;
+      with mgItems[i] do
+        if mgiFlags * [mgifIsSource, mgifHasFile] = [mgifIsSource, mgifHasFile] then
+          for j := Pred(i) downto Low(mgItems) do
+            with mgItems[j] do
+              if Assigned(mgiModule) and (mgiFlags * [mgifIsTarget, mgifHasFile] = [mgifIsTarget, mgifHasFile]) then
+                Include(mgiModule.miFlags, mfIsModGroupTarget);
+end;
+
+function TwbModGroup.ToString: string;
+var
+  i: Integer;
+begin
+  with TStringList.Create do try
+    Add('[' + mgName + ']');
+    for i := Low(mgItems) to High(mgItems) do
+      Add(mgItems[i].ToString);
+    Result := Text;
+  finally
+    Free;
+  end;
+end;
+
+function TwbModGroup.ToStrings: TArray<string>;
+var
+  i: Integer;
+begin
+  with TStringList.Create do try
+    Add('[' + mgName + ']');
+    for i := Low(mgItems) to High(mgItems) do
+      Add(mgItems[i].ToString);
+    Result := ToStringArray;
+  finally
+    Free;
+  end;
 end;
 
 { TwbModGroupItem }
@@ -402,6 +460,8 @@ begin
             end;
       '@': Exclude(mgiFlags, mgifIsSource); //being hidden, doesn't hide others
       '#': Exclude(mgiFlags, mgifIsTarget); //hides others, isn't being hidden
+      '}': Include(mgiFlags, mgifIgnoreLoadOrderAlways);
+      '{': Include(mgiFlags, mgifIgnoreLoadOrderInBlock);
     else
       Break;
     end;
@@ -441,6 +501,44 @@ begin
 end;
 
 
+function TwbModGroupItem.ToString: string;
+var
+  i: Integer;
+begin
+  Result := '';
+  if mgifIgnoreLoadOrderAlways in mgiFlags then
+    Result := '}'
+  else if mgifIgnoreLoadOrderInBlock in mgiFlags then
+    Result := '{';
+
+  if mgifForbidden in mgiFlags then
+    Result := Result + '!'
+  else if mgifOptional in mgiFlags then
+    Result := Result + '+';
+
+  if mgifIsTarget in mgiFlags then
+    if mgifIsSource in mgiFlags then
+      Result := Result
+    else
+      Result := Result + '@'
+  else
+    if mgifIsSource in mgiFlags then
+      Result := Result + '#'
+    else
+      Result := Result + '-';
+
+  Result := Result + mgiFileName;
+
+  if Length(mgiCRC32s) > 0 then begin
+    Result := Result + ':';
+    for i := Low(mgiCRC32s) to High(mgiCRC32s) do begin
+      if i > Low(mgiCRC32s) then
+        Result := Result + ',';
+      Result := Result + mgiCRC32s[i].ToString;
+    end;
+  end;
+end;
+
 function CompareModGroupPtrsByName(Item1, Item2: Pointer): Integer;
 
 begin
@@ -479,6 +577,7 @@ var
   Modules : TwbModuleInfos;
   i, j, k    : Integer;
   Targets : TwbModuleInfos;
+  SourceReported : Boolean;
 begin
   Result := False;
   Modules := wbModulesByLoadOrder;
@@ -512,12 +611,18 @@ begin
     with Modules[i]^ do
       if Length(miModGroupTargets) > 0 then begin
         Include(miFlags, mfIsModGroupSource);
+        SourceReported := False;
         for j := Low(miModGroupTargets) to High(miModGroupTargets) do
           with miModGroupTargets[j]^ do begin
+            if not SourceReported then begin
+              wbProgress('Records in "'+Modules[i].miName+'" will hide records from:');
+              SourceReported := True;
+            end;
             Result := True;
             Include(miFlags, mfIsModGroupTarget);
             SetLength(miModGroupSources, Succ(Length(miModGroupSources)));
             miModGroupSources[High(miModGroupSources)] := Modules[i];
+            wbProgress(' - ' + miName);
           end;
       end;
 end;

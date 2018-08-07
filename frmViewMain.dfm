@@ -1643,6 +1643,15 @@ object frmMain: TfrmMain
       GroupIndex = 4
       OnClick = mniNavCleanMastersClick
     end
+    object N23: TMenuItem
+      Caption = '-'
+      GroupIndex = 4
+    end
+    object mniNavCreateModGroup: TMenuItem
+      Caption = 'Create ModGroup...'
+      GroupIndex = 4
+      OnClick = mniNavCreateModGroupClick
+    end
     object N4: TMenuItem
       Caption = '-'
       GroupIndex = 4

@@ -1,7 +1,7 @@
-object frmModGroupSelect: TfrmModGroupSelect
+object frmModGroupEdit: TfrmModGroupEdit
   Left = 0
   Top = 0
-  ActiveControl = vstModGroups
+  ActiveControl = vstModGroupItems
   BorderIcons = [biSystemMenu, biMaximize]
   Caption = 'ModGroup Selection'
   ClientHeight = 615
@@ -30,7 +30,7 @@ object frmModGroupSelect: TfrmModGroupSelect
     ModalResult = 1
     TabOrder = 3
   end
-  object vstModGroups: TVirtualStringTree
+  object vstModGroupItems: TVirtualStringTree
     Left = 8
     Top = 35
     Width = 848
@@ -40,21 +40,17 @@ object frmModGroupSelect: TfrmModGroupSelect
     Header.Height = 16
     Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowImages, hoShowSortGlyphs, hoVisible]
     Header.SortColumn = 0
-    PopupMenu = pmuModGroups
+    LineMode = lmSeparateTopNodes
     TabOrder = 1
-    TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning, toEditOnClick]
+    TreeOptions.MiscOptions = [toAcceptOLEDrop, toFullRepaintOnResize, toGridExtensions, toInitOnSave, toToggleOnDblClick, toWheelPanning, toEditOnClick]
     TreeOptions.PaintOptions = [toPopupMode, toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseBlendedSelection]
-    TreeOptions.SelectionOptions = [toFullRowSelect, toLevelSelectConstraint, toMultiSelect, toRightClickSelect, toSiblingSelectConstraint, toAlwaysSelectNode]
-    OnChecked = vstModGroupsChecked
-    OnCompareNodes = vstModGroupsCompareNodes
-    OnFreeNode = vstModGroupsFreeNode
-    OnGetText = vstModGroupsGetText
-    OnPaintText = vstModGroupsPaintText
-    OnIncrementalSearch = vstModGroupsIncrementalSearch
-    OnInitChildren = vstModGroupsInitChildren
-    OnInitNode = vstModGroupsInitNode
-    OnKeyPress = vstModGroupsKeyPress
-    OnBeforeGetCheckState = vstModGroupsBeforeGetCheckState
+    TreeOptions.SelectionOptions = [toExtendedFocus, toLevelSelectConstraint, toRightClickSelect, toSiblingSelectConstraint, toAlwaysSelectNode]
+    OnCompareNodes = vstModGroupItemsCompareNodes
+    OnGetText = vstModGroupItemsGetText
+    OnIncrementalSearch = vstModGroupItemsIncrementalSearch
+    OnInitNode = vstModGroupItemsInitNode
+    OnKeyDown = vstModGroupItemsKeyDown
+    OnNodeClick = vstModGroupItemsNodeClick
     Columns = <
       item
         Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
@@ -115,18 +111,18 @@ object frmModGroupSelect: TfrmModGroupSelect
     BorderWidth = 3
     TabOrder = 2
   end
-  object edFilter: TLabeledEdit
+  object edName: TLabeledEdit
     Left = 48
     Top = 8
     Width = 808
     Height = 21
     Anchors = [akLeft, akTop, akRight]
-    EditLabel.Width = 28
+    EditLabel.Width = 31
     EditLabel.Height = 13
-    EditLabel.Caption = '&Filter:'
+    EditLabel.Caption = '&Name:'
     LabelPosition = lpLeft
     TabOrder = 0
-    OnChange = edFilterChange
+    OnChange = edNameChange
   end
   object btnCancel: TButton
     Left = 700
@@ -138,22 +134,5 @@ object frmModGroupSelect: TfrmModGroupSelect
     ModalResult = 2
     TabOrder = 4
     Visible = False
-  end
-  object pmuModGroups: TPopupMenu
-    OnPopup = pmuModGroupsPopup
-    Left = 128
-    Top = 184
-    object mniSelectAll: TMenuItem
-      Caption = 'Select All'
-      OnClick = mniSelectAllClick
-    end
-    object mniSelectNone: TMenuItem
-      Caption = 'Select None'
-      OnClick = mniSelectNoneClick
-    end
-    object mniInvertSelection: TMenuItem
-      Caption = 'Invert Selection'
-      OnClick = mniInvertSelectionClick
-    end
   end
 end

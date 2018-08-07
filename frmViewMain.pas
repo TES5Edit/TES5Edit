@@ -339,6 +339,8 @@ type
     lblFilterHint: TLabel;
     N22: TMenuItem;
     mniViewModGroupsReload: TMenuItem;
+    N23: TMenuItem;
+    mniNavCreateModGroup: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -566,6 +568,7 @@ type
     procedure pnlNavResize(Sender: TObject);
     procedure mniViewModGroupsReloadClick(Sender: TObject);
     procedure mniModGroupsClick(Sender: TObject);
+    procedure mniNavCreateModGroupClick(Sender: TObject);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
   protected
@@ -685,6 +688,7 @@ type
     LoaderStarted: Boolean;
     ModGroupsExist : Boolean;
     ModGroupsEnabled : Boolean;
+    NewModGroupName: string;
     OnlyShowMasterAndLeafs: Boolean;
     Settings: TMemIniFile;
     AutoSave: Boolean;
@@ -977,7 +981,8 @@ uses
   frmOptionsForm,
   frmTipForm,
   frmModuleSelectForm,
-  frmModGroupSelectForm;
+  frmModGroupSelectForm,
+  frmModGroupEditForm;
 
 const
   CRLF = #13#10;
@@ -3087,6 +3092,96 @@ begin
   end;
 
   TargetFile.CleanMasters;
+end;
+
+procedure TfrmMain.mniNavCreateModGroupClick(Sender: TObject);
+var
+  SelectedNodes  : TNodeArray;
+  NodeData       : PNavNodeData;
+  lModGroup      : TwbModGroup;
+  i, j           : Integer;
+  _File          : IwbFile;
+  Modules        : TwbModuleInfos;
+  FileName       : string;
+begin
+  FillChar(lModGroup, SizeOf(TwbModGroup), 0);
+  SelectedNodes := vstNav.GetSortedSelection(True);
+  if Length(SelectedNodes) < 2 then
+    Exit;
+  SetLength(lModGroup.mgItems, Length(SelectedNodes));
+  SetLength(Modules, Length(SelectedNodes));
+  j := 0;
+  for i := Low(SelectedNodes) to High(SelectedNodes) do begin
+    NodeData := vstNav.GetNodeData(SelectedNodes[i]);
+    if Supports(NodeData.Element, IwbFile, _File) then
+      if Assigned(_File.ModuleInfo) then
+        with lModGroup.mgItems[j] do begin
+          mgiFileName := _File.FileName;
+          mgiModule := _File.ModuleInfo;
+          Modules[j] := mgiModule;
+          mgiFlags := [mgifIsTarget, mgifIsSource];
+          Inc(j);
+        end;
+  end;
+  if j < 2 then
+    Exit;
+  SetLength(lModGroup.mgItems, j);
+  SetLength(Modules, j);
+
+  with TfrmModGroupEdit.Create(Self) do try
+    ModGroup := @lModGroup;
+    AllowCancel;
+    Caption := 'Create ModGroup...';
+    if ShowModal <> mrOk then
+      Exit;
+  finally
+    Free;
+  end;
+
+  with TfrmModuleSelect.Create(Self) do try
+    AllModules := Modules;
+    SelectFlag := mfTagged;
+    FilterFlag := mfHasFile;
+    AllowCancel;
+    Caption := 'In the .modgroups file of which module should the new ModGroup be stored?';
+    MaxSelect := 1;
+    MinSelect := 1;
+    repeat
+      AllModules.ExcludeAll(mfTagged);
+
+      if ShowModal <> mrOK then
+        Exit;
+
+      if Length(SelectedModules) = 1 then
+        Break;
+
+      ShowMessage('Please select exactly 1 module');
+    until False;
+
+    FileName := wbDataPath + ChangeFileExt(SelectedModules[0].miName, '.modgroups');
+    with TStringList.Create do try
+      if FileExists(FileName) then
+        LoadFromFile(FileName);
+
+      if (Count > 0) and (Strings[Pred(Count)] <> '') then
+        Add('');
+
+      AddStrings(lModGroup.ToStrings);
+
+      SaveToFile(FileName);
+    finally
+      Free;
+    end;
+
+  finally
+    Free;
+  end;
+  NewModGroupName := lModGroup.mgName;
+  try
+    mniViewModGroupsReloadClick(Self);
+  finally
+    NewModGroupName := '';
+  end;
 end;
 
 procedure TfrmMain.mniNavCreateSEQFileClick(Sender: TObject);
@@ -6536,6 +6631,7 @@ procedure TfrmMain.mniModGroupsAbleClick(Sender: TObject);
 var
   WasModGroupsEnabled: Boolean;
 begin
+  (Sender as TMenuItem).Checked := True;
   WasModGroupsEnabled := ModGroupsEnabled;
   ModGroupsEnabled := ModGroupsExist and mniModGroupsEnabled.Checked;
   if WasModGroupsEnabled <> ModGroupsEnabled then begin
@@ -8598,6 +8694,8 @@ begin
     CommaText := Settings.ReadString('ModGroups', 'Selection', '');
     Duplicates := dupIgnore;
     Sorted := True;
+    if NewModGroupName <> '' then
+      Add(NewModGroupName);
     for i := Low(aModGroups) to High(aModGroups) do
       with aModGroups[i]^ do
         if Find(mgName, j) then
@@ -11042,6 +11140,7 @@ var
   AddList                     : TDynStrings;
   MenuItem                    : TMenuItem;
   MainRecord                  : IwbMainRecord;
+  _File                       : IwbFile;
   i                           : Integer;
   Nodes                       : TNodeArray;
   sl                          : TStringList;
@@ -11160,15 +11259,39 @@ begin
     Nodes := vstNav.GetSortedSelection(True);
     for i := Low(Nodes) to High(Nodes) do begin
       NodeData := vstNav.GetNodeData(Nodes[i]);
-      if not Assigned(NodeData) then
-        Exit;
+      if not Assigned(NodeData) then begin
+        Nodes := nil;
+        Break;
+      end;
       Element := NodeData.Element;
-      if Element.ElementType <> etMainRecord then
-        Exit;
-      if (Element as IwbMainRecord).Signature <> MainRecord.Signature then
-        Exit;
+      if Element.ElementType <> etMainRecord then begin
+        Nodes := nil;
+        Break;
+      end;
+      if (Element as IwbMainRecord).Signature <> MainRecord.Signature then begin
+        Nodes := nil;
+        Break;
+      end;
     end;
     mniNavCompareSelected.Visible := Length(Nodes) > 1;
+  end;
+
+  mniNavCreateModGroup.Visible := False;
+  if Supports(Element, IwbFile, _File) then begin
+    Nodes := vstNav.GetSortedSelection(True);
+    for i := Low(Nodes) to High(Nodes) do begin
+      NodeData := vstNav.GetNodeData(Nodes[i]);
+      if not Assigned(NodeData) then begin
+        Nodes := nil;
+        Break;
+      end;
+      Element := NodeData.Element;
+      if Element.ElementType <> etFile then begin
+        Nodes := nil;
+        Break;
+      end;
+    end;
+    mniNavCreateModGroup.Visible := Length(Nodes) > 1;
   end;
 
   mniNavCellChildPers.Visible := False;
@@ -13879,7 +14002,6 @@ begin
       end;
       Ord('C'): begin
         Clipboard.AsText := Element.EditValue;
-        //vstView.CopyToClipBoard;
         Exit;
       end;
     else
