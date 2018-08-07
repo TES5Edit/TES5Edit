@@ -13675,8 +13675,23 @@ begin
 
   UserWasActive := True;
 
+  if SourceColumn < 1 then
+    Exit;
+  if TargetColumn < 1 then
+    Exit;
+
+  if SourceColumn > Length(ActiveRecords) then
+    Exit;
+  if TargetColumn > Length(ActiveRecords)then
+    Exit;
+
   SourceElement := ActiveRecords[Pred(SourceColumn)].Element;
   TargetElement := ActiveRecords[Pred(TargetColumn)].Element;
+
+  if not Assigned(SourceElement) then
+    Exit;
+  if not Assigned(TargetElement) then
+    Exit;
 
   if TargetElement.CanAssign(Low(Integer), SourceElement, False) then begin
 
