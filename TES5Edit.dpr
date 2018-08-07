@@ -84,6 +84,7 @@ uses
   wbNifMath in 'wbNifMath.pas',
   wbHalfFloat in 'wbHalfFloat.pas',
   frmModuleSelectForm in 'frmModuleSelectForm.pas',
+  frmModGroupSelectForm in 'frmModGroupSelectForm.pas',
   wbModGroups in 'wbModGroups.pas';
 
 {$R *.res}

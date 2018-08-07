@@ -113,6 +113,9 @@
         <DCCReference Include="frmLogAnalyzerForm.pas">
             <Form>frmLogAnalyzer</Form>
         </DCCReference>
+        <DCCReference Include="frmModGroupSelectForm.pas">
+            <Form>frmModGroupSelectForm</Form>
+        </DCCReference>
         <DCCReference Include="frmLODGenForm.pas"/>
         <DCCReference Include="frmTipForm.pas"/>
         <DCCReference Include="wbDefinitionsFNV.pas"/>

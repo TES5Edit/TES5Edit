@@ -337,6 +337,8 @@ type
     edViewFilterValue: TLabeledEdit;
     cobViewFilter: TComboBox;
     lblFilterHint: TLabel;
+    N22: TMenuItem;
+    mniViewModGroupsReload: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -544,7 +546,7 @@ type
     procedure mniViewHeaderJumpToClick(Sender: TObject);
     procedure acScriptExecute(Sender: TObject);
     procedure mniNavFilterConflictsClick(Sender: TObject);
-    procedure mniModGroupsClick(Sender: TObject);
+    procedure mniModGroupsAbleClick(Sender: TObject);
     procedure mniMasterAndLeafsClick(Sender: TObject);
     procedure vstSpreadSheetCreateEditor(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
     procedure mniNavOtherCodeSiteLoggingClick(Sender: TObject);
@@ -562,6 +564,8 @@ type
     procedure edViewFilterChange(Sender: TObject);
     procedure edViewFilterNameKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure pnlNavResize(Sender: TObject);
+    procedure mniViewModGroupsReloadClick(Sender: TObject);
+    procedure mniModGroupsClick(Sender: TObject);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
   protected
@@ -660,6 +664,9 @@ type
 
     procedure PerformLongAction(const aDesc: string; const aAction: TProc);
     procedure PerformActionOnSelectedFiles(const aDesc: string; const aAction: TProc<IwbFile>);
+
+    procedure LoadModGroupsSelection(const aModGroups: TwbModGroupPtrs);
+    procedure SaveModGroupsSelection(const aModGroups: TwbModGroupPtrs);
   private
     procedure WMUser(var Message: TMessage); message WM_USER;
     procedure WMUser1(var Message: TMessage); message WM_USER + 1;
@@ -676,7 +683,7 @@ type
     ActiveRecords: TDynViewNodeDatas;
     ActiveContainer: IwbDataContainer;
     LoaderStarted: Boolean;
-    ModGroups: TStringList;
+    ModGroupsExist : Boolean;
     ModGroupsEnabled : Boolean;
     OnlyShowMasterAndLeafs: Boolean;
     Settings: TMemIniFile;
@@ -969,7 +976,8 @@ uses
   frmLODGenForm,
   frmOptionsForm,
   frmTipForm,
-  frmModuleSelectForm;
+  frmModuleSelectForm,
+  frmModGroupSelectForm;
 
 const
   CRLF = #13#10;
@@ -3446,7 +3454,6 @@ begin
   inherited;
   FreeAndNil(NewMessages);
   FreeAndNil(ScriptHotkeys);
-  FreeAndNil(ModGroups);
   FreeAndNil(Settings);
   FreeAndNil(FileCRCs);
 end;
@@ -3656,8 +3663,6 @@ begin
   vstSpreadSheetAmmo.OnGetEditText := vstSpreadSheetGetEditText;
   vstSpreadSheetAmmo.OnCheckHotTrack := vstSpreadSheetCheckHotTrack;
   vstSpreadSheetAmmo.TreeOptions.PaintOptions := vstSpreadSheetAmmo.TreeOptions.PaintOptions + [toZebra, toAdvHotTrack];
-
-  ModGroups := TStringList.Create;
 
   AddMessage(wbApplicationTitle + ' ('+IntToHex64(wbCRC32App, 8)+') starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
 
@@ -3964,212 +3969,10 @@ begin
               FreeAndNil(sl2);
             end;
           end;
-
-          if not wbQuickClean then
-            for l := 0 to sl.Count do begin
-              if l >= sl.Count then
-                ModGroupFile := wbModGroupFileName
-              else
-                ModGroupFile := wbDataPath + ChangeFileExt(sl[l], '.modgroups');
-
-              if FileExists(ModGroupFile) then
-                with TMemIniFile.Create(ModGroupFile) do try
-                  ModGroupFile := ExtractFileName(ModGroupFile);
-                  sl3 := TStringList.Create;
-                  try
-                  ReadSections(sl3);
-                  for i := 0 to Pred(sl3.Count) do begin
-                    MessagePrefix := 'Ignoring ModGroup [' + sl3[i] + '] (from ' + ModGroupFile + '): ';
-                    sl2 := TStringList.Create;
-                    try
-                      if ModGroups.IndexOf(sl3[i]) >= 0 then
-                        AddMessage(MessagePrefix + 'ModGroup of same name already defined')
-                      else begin
-                        MessageGiven := False;
-                        ReadSectionValues(sl3[i], sl2);
-
-                        for j := Pred(sl2.Count) downto 0 do begin
-                          s := Trim(sl2[j]);
-                          k := Pos(';', s);
-                          if k > 0 then begin
-                            Delete(s, k, High(Integer));
-                            s := Trim(s);
-                          end;
-                          if Length(s) > 0 then begin
-                            IsOptional := s[1] = '+';
-                            IsRequired := s[1] = '-';
-                            if IsOptional or IsRequired then begin
-                              Delete(s, 1, 1);
-                              sl2[j] := s;
-                            end;
-                          end else begin // Only to quiet the compiler (W1036).
-                            IsOptional := False;
-                            IsRequired := False;
-                          end;
-                          ValidCRCs := nil;
-                          if Length(s) > 0 then begin
-                            k := Pos(':', s);
-                            if k > 1 then begin
-                              ValidCRCs := wbDecodeCRCList(Copy(s, Succ(k), High(Integer)));
-                              Delete(s, k, High(Integer));
-                              s := Trim(s);
-                              sl2[j] := s;
-                            end;
-                          end;
-                          if Length(s) > 0 then begin
-                            k := sl.IndexOf(s);
-                            if k >= 0 then begin
-                              if not ValidateCRC(s, ValidCRCs, FileCRC) then begin
-                                AddMessage(MessagePrefix + 'CRC of plugin "' + s + '" ('+IntToHex(Int64(FileCRC), 8)+') is not in the list of valid CRCs');
-                                MessageGiven := True;
-                                sl2.Clear;
-                                break;
-                              end else
-                                if IsRequired then
-                                  sl2.Objects[j] := TObject(-k)
-                                else
-                                  sl2.Objects[j] := TObject(k)
-                            end else begin
-                              if IsOptional then
-                                sl2.Delete(j)
-                              else begin
-                                AddMessage(MessagePrefix + 'required plugin "' + s + '" missing');
-                                MessageGiven := True;
-                                sl2.Clear;
-                                break;
-                              end
-                            end;
-                          end else
-                            sl2.Delete(j);
-                        end;
-
-                        if sl2.Count < 2 then begin
-                          if not MessageGiven then
-                            AddMessage(MessagePrefix + 'less then 2 plugins active');
-                        end else begin
-                          k := Abs(Integer(sl2.Objects[0]));
-                          for j := 1 to Pred(sl2.Count) do begin
-                            m := Abs(Integer(sl2.Objects[j]));
-                            if m <= k then begin
-                              sl2.Clear;
-                              MessageGiven := True;
-                              AddMessage(MessagePrefix + 'plugins are not in the correct order');
-                              Break;
-                            end;
-                            k := m;
-                          end;
-                          for j := Pred(sl2.Count) downto 0 do
-                            if Integer(sl2.Objects[j]) < 0 then
-                              sl2.Delete(j);
-                          if sl2.Count >= 2 then begin
-                            ModGroups.AddObject(sl3[i], sl2);
-                            sl2 := nil;
-                          end else
-                            if not MessageGiven then
-                              AddMessage(MessagePrefix + 'less then 2 plugins active');
-                        end;
-                      end;
-
-                    finally
-                      FreeAndNil(sl2);
-                    end;
-                  end;
-                  finally
-                    FreeAndNil(sl3);
-                  end;
-                finally
-                  Free;
-                end;
-            end;
         finally
           Free;
         end;
       end;
-
-      if wbQuickClean then
-        Assert(ModGroups.Count = 0);
-
-      if ModGroups.Count > 0 then begin
-        with TfrmFileSelect.Create(nil) do try
-          Caption := 'Select ModGroups';
-
-          sl2 := TStringList.Create;
-          try
-            sl2.Sorted := True;
-            sl2.Duplicates := dupIgnore;
-            sl2.CommaText := Settings.ReadString('ModGroups', 'Selection', '');
-
-            CheckListBox1.Items.Assign(ModGroups);
-            for i := Pred(ModGroups.Count) downto 0 do
-              if wbQuickShowConflicts or (sl2.IndexOf(ModGroups[i]) >= 0) then
-                CheckListBox1.Checked[i] := True;
-
-            if not wbQuickShowConflicts then
-              if ShowModal <> mrOK then
-                ModGroups.Clear;
-
-            sl2.Clear;
-            for i := Pred(ModGroups.Count) downto 0 do
-              if not CheckListBox1.Checked[i] then
-                ModGroups.Delete(i)
-              else
-                sl2.Add(ModGroups[i]);
-
-            if not wbQuickShowConflicts then begin
-              Settings.WriteString('ModGroups', 'Selection', sl2.CommaText);
-              Settings.UpdateFile;
-            end;
-          finally
-            FreeAndNil(sl2);
-          end;
-
-        finally
-          Free;
-        end;
-      end;
-
-      for i := 0 to Pred(ModGroups.Count)-1 do begin
-        sl2 := ModGroups.Objects[i] as TStringList;
-        if Assigned(sl2) then
-          for j := Succ(i) to Pred(ModGroups.Count) do begin
-            sl3 := ModGroups.Objects[j] as TStringList;
-            if Assigned(sl3) then begin
-              FoundAll := True;
-              for k := 0 to Pred(sl3.Count) do
-                if sl2.IndexOf(sl3[k]) < 0 then begin
-                  FoundAll := False;
-                  break;
-                end;
-              if FoundAll then begin
-                AddMessage('Disabled ModGroup "' + ModGroups[j] + '" as it''s fully contained in ModGroup "' + ModGroups[i] + '"');
-                ModGroups.Objects[j] := nil;
-                FreeAndNil(sl3);
-              end else begin
-                FoundAll := True;
-                for k := 0 to Pred(sl2.Count) do
-                  if sl3.IndexOf(sl2[k]) < 0 then begin
-                    FoundAll := False;
-                    break;
-                  end;
-                if FoundAll then begin
-                  AddMessage('Disabled ModGroup "' + ModGroups[i] + '" as it''s fully contained in ModGroup "' + ModGroups[j] + '"');
-                  ModGroups.Objects[i] := nil;
-                  FreeAndNil(sl2);
-                  break;
-                end;
-              end;
-            end;
-          end;
-      end;
-
-      for i := Pred(ModGroups.Count) downto 0 do
-        if not Assigned(ModGroups.Objects[i]) then
-          ModGroups.Delete(i);
-
-      ModGroupsEnabled := ModGroups.Count > 0;
-      mniModGroups.Visible := ModGroupsEnabled;
-      mniModGroupsEnabled.Checked := ModGroupsEnabled;
-      mniModGroupsDisabled.Checked := not ModGroupsEnabled;
 
       mniMasterAndLeafs.Visible := True;
       mniMasterAndLeafsEnabled.Checked := OnlyShowMasterAndLeafs;
@@ -4181,7 +3984,7 @@ begin
         AddMessage('The SHIFT key is pressed, skip building references for all plugins!');
       end;
 
-      if wbQuickClean then
+      if wbQuickClean or wbQuickShowConflicts then
         wbBuildRefs := False;
 
       wbShowTip := Settings.ReadBool('Options', 'ShowTip', wbShowTip);
@@ -4714,6 +4517,23 @@ begin
   SaveLog(wbProgramPath + wbAppName + wbToolName + '_log.txt', aAllowReplace);
   if wbLogFile <> '' then
     SaveLog(wbLogFile, aAllowReplace);
+end;
+
+procedure TfrmMain.SaveModGroupsSelection(const aModGroups: TwbModGroupPtrs);
+var
+  i  : Integer;
+begin
+  with TStringList.Create do try
+    for i := Low(aModGroups) to High(aModGroups) do
+      with aModGroups[i]^ do
+        if mgfTagged in mgFlags then
+          Add(mgName);
+
+    Settings.WriteString('ModGroups', 'Selection', CommaText);
+    Settings.UpdateFile;
+  finally
+    Free;
+  end;
 end;
 
 procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -6456,6 +6276,30 @@ begin
   Settings.UpdateFile;
 end;
 
+procedure TfrmMain.mniViewModGroupsReloadClick(Sender: TObject);
+var
+  WasModGroupsExist: Boolean;
+begin
+  with TfrmModGroupSelect.Create(Self) do try
+    wbReloadModGroups;
+    AllModGroups := wbModGroupsByName;
+    LoadModGroupsSelection(AllModGroups);
+    if ShowModal = mrOk then begin
+      SaveModGroupsSelection(SelectedModGroups);
+      WasModGroupsExist := ModGroupsExist;
+      ModGroupsExist := SelectedModGroups.Activate;
+      if WasModGroupsExist or ModGroupsExist then begin
+        ModGroupsEnabled := ModGroupsExist;
+        ResetAllConflict;
+        PostResetActiveTree;
+        InvalidateElementsTreeView(NoNodes);
+      end;
+    end;
+  finally
+    Free;
+  end;
+end;
+
 procedure TfrmMain.mniViewMoveDownClick(Sender: TObject);
 var
   NodeDatas                   : PViewNodeDatas;
@@ -6685,15 +6529,25 @@ begin
   end;
 end;
 
-procedure TfrmMain.mniModGroupsClick(Sender: TObject);
+procedure TfrmMain.mniModGroupsAbleClick(Sender: TObject);
+var
+  WasModGroupsEnabled: Boolean;
 begin
-  (Sender as TMenuItem).Checked := True;
-  if ModGroupsEnabled <> mniModGroupsEnabled.Checked then begin
-    ModGroupsEnabled := mniModGroupsEnabled.Checked;
+  WasModGroupsEnabled := ModGroupsEnabled;
+  ModGroupsEnabled := ModGroupsExist and mniModGroupsEnabled.Checked;
+  if WasModGroupsEnabled <> ModGroupsEnabled then begin
     ResetAllConflict;
     PostResetActiveTree;
     InvalidateElementsTreeView(NoNodes);
   end;
+end;
+
+procedure TfrmMain.mniModGroupsClick(Sender: TObject);
+begin
+  mniModGroupsEnabled.Visible := ModGroupsExist;
+  mniModGroupsDisabled.Visible := ModGroupsExist;
+  mniModGroupsEnabled.Checked := ModGroupsEnabled and ModGroupsExist;
+  mniModGroupsDisabled.Checked := not mniModGroupsEnabled.Checked;
 end;
 
 procedure TfrmMain.mniMasterAndLeafsClick(Sender: TObject);
@@ -8733,6 +8587,25 @@ begin
   end;
 end;
 
+procedure TfrmMain.LoadModGroupsSelection(const aModGroups: TwbModGroupPtrs);
+var
+  i, j : Integer;
+begin
+  with TStringList.Create do try
+    CommaText := Settings.ReadString('ModGroups', 'Selection', '');
+    Duplicates := dupIgnore;
+    Sorted := True;
+    for i := Low(aModGroups) to High(aModGroups) do
+      with aModGroups[i]^ do
+        if Find(mgName, j) then
+          Include(mgFlags, mgfTagged)
+        else
+          Exclude(mgFlags, mgfTagged);
+  finally
+    Free;
+  end;
+end;
+
 function TfrmMain.LOManagersDirtyInfo(const aInfo: TLOOTPluginInfo): string;
 // LOOT dirty entry example
 {
@@ -8871,7 +8744,7 @@ begin
     FlattenBlocks or
     FlattenCellChilds or
     AssignPersWrldChild or
-    (ModGroupsEnabled and (ModGroups.Count > 0)) or
+    ModGroupsEnabled or
     OnlyShowMasterAndLeafs or
     wbQuickShowConflicts or
     not InheritConflictByParent then begin
@@ -9073,7 +8946,7 @@ begin
     FlattenBlocks or
     FlattenCellChilds or
     AssignPersWrldChild or
-    (ModGroupsEnabled and (ModGroups.Count > 0)) or
+    ModGroupsEnabled or
     OnlyShowMasterAndLeafs or
     wbQuickShowConflicts or
     not InheritConflictByParent then begin
@@ -10888,24 +10761,21 @@ var
   Master        : IwbMainRecord;
   Rec           : IwbMainRecord;
   i, j, k       : Integer;
-  sl            : TStringList;
-  Records       : TStringList;
   MadeChanges   : Boolean;
-  AnyHidden     : Boolean;
-  IsNonOverride : Boolean;
   EditorID      : string;
   FormID        : TwbFormID;
   LoadOrder     : Integer;
   Group         : IwbGroupRecord;
   Signature     : TwbSignature;
   MasterAndLeafs: TDynMainRecords;
+  MainRecords   : TDynMainRecords;
+  Modules       : TwbModuleInfos;
 begin
   Assert(wbLoaderDone);
-  IsNonOverride := False;
-  AnyHidden := False;
+  MainRecords := nil;
+  Result := nil;
 
   if aMainRecord.Signature = 'GMST' then begin
-    IsNonOverride := True;
     EditorID := aMainRecord.EditorID;
     SetLength(Result, Length(Files));
     Master := nil;
@@ -10922,11 +10792,10 @@ begin
     end;
 
   end else if (aMainRecord.Signature = 'NAVI') (* or (aMainRecord.Signature = 'TES4') *) then begin
-    IsNonOverride := True;
     Signature := aMainRecord.Signature;
     FormID := aMainRecord.FormID;
     LoadOrder := aMainRecord.GetFile.LoadOrder;
-    SetLength(Result, 0);
+    SetLength(MainRecords, 0);
     Master := nil;
     for i := Low(Files) to High(Files) do
       if Files[i].LoadOrder = LoadOrder then begin
@@ -10934,20 +10803,19 @@ begin
         if Assigned(Group) then begin
           Rec := Group.MainRecordByFormID[FormID];
           if Assigned(Rec) then begin
-            j := Length(Result);
-            SetLength(Result, j+1);
+            j := Length(MainRecords);
+            SetLength(MainRecords, j+1);
             if not Assigned(Master) then
               Master := Rec;
-            Result[j].Element := Rec;
+            MainRecords[j] := Rec;
           end;
         end;
       end;
 
   end else if (aMainRecord.Signature = 'TES4') then begin
-    IsNonOverride := True;
     Signature := aMainRecord.Signature;
     LoadOrder := aMainRecord.GetFile.LoadOrder;
-    SetLength(Result, 0);
+    SetLength(MainRecords, 0);
     Master := nil;
     for i := Low(Files) to High(Files) do
       if Files[i].LoadOrder = LoadOrder then begin
@@ -10959,11 +10827,11 @@ begin
           Continue;
         Rec := Files[i].Elements[0] as IwbMainRecord;
         if Assigned(Rec) then begin
-          j := Length(Result);
-          SetLength(Result, j+1);
+          j := Length(MainRecords);
+          SetLength(MainRecords, j+1);
           if not Assigned(Master) then
             Master := Rec;
-          Result[j].Element := Rec;
+          MainRecords[j] := Rec;
         end;
       end;
 
@@ -10971,123 +10839,61 @@ begin
     Master := aMainRecord.MasterOrSelf;
 
     if OnlyShowMasterAndLeafs then begin
-      IsNonOverride := True;
-      MasterAndLeafs := Master.MasterAndLeafs;
-      Result := nil;
-      SetLength(Result, Length(MasterAndLeafs));
-      for i := Low(MasterAndLeafs) to High(MasterAndLeafs) do
-        Result[i].Element := MasterAndLeafs[i];
+      MainRecords := Master.MasterAndLeafs;
     end else begin
-      SetLength(Result, Succ(Master.OverrideCount));
-
-      AnyHidden := Master.IsHidden;
-      if not AnyHidden then
-        for i := 0 to Pred(Master.OverrideCount) do begin
-          AnyHidden := Master.Overrides[i].IsHidden;
-          if AnyHidden then
-            Break;
-        end;
+      SetLength(MainRecords, Succ(Master.OverrideCount));
+      MainRecords[0] := Master;
+      for i := 0 to Pred(Master.OverrideCount) do
+        MainRecords[Succ(i)] := Master.Overrides[i];
     end;
   end;
 
-  if (Length(Result) > 1) and (ModGroupsEnabled or AnyHidden) or IsNonOverride then begin
-
-    Records := TStringList.Create;
-    try
-      if IsNonOverride then begin
-        for i := Low(Result) to High(Result) do
-          if Supports(Result[i].Element, IwbMainRecord, Rec) then
-             Records.AddObject(Rec._File.FileName, Pointer(Rec));
-        Result := nil;
-      end else begin
-        Records.AddObject(Master._File.FileName, Pointer(Master));
-        for i := 0 to Pred(Master.OverrideCount) do begin
-          Rec := Master.Overrides[i];
-          Records.AddObject(Rec._File.FileName, Pointer(Rec));
-        end;
-      end;
-
-      if ModGroupsEnabled then repeat
-        MadeChanges := False;
-        sl := TStringList.Create;
-        try
-          for i := 0 to Pred(ModGroups.Count) do begin
-            sl.Assign(TStrings(ModGroups.Objects[i]));
-            for j := Pred(sl.Count) downto 0 do begin
-              k := Records.IndexOf(sl[j]);
-              if K > 0 then { >, not >=, never hide the original master}
-                sl.Objects[j] := TObject(k)
-              else
-                sl.Delete(j);
-            end;
-            if sl.Count > 1 then begin
-              k := Integer(sl.Objects[0]);
-              j := 1;
-              if k = 0 then begin
-                while (j < sl.Count) and (Integer(sl.Objects[j]) = k + 1) do begin
-                  Records.Objects[Integer(sl.Objects[Pred(j)])] := nil;
-                  Inc(k);
-                  Inc(j);
-                end;
-                Inc(j);
-              end;
-              while (j < sl.Count) do begin
-                Records.Objects[Integer(sl.Objects[Pred(j)])] := nil;
-                Inc(j);
-              end;
-              for j := Pred(Records.Count) downto 0 do
-                if Records.Objects[j] = nil then begin
-                  Records.Delete(j);
-                  MadeChanges := True;
-                end;
-            end;
-            if Records.Count < 2 then
-              Break;
-          end;
-        finally
-          sl.Free;
-        end;
-      until not MadeChanges;
-
-      i := 0;
-      while (i < Records.Count) and (Records.Count > 1) do
-        if IwbElement(Pointer(Records.Objects[i])).IsHidden then
-          Records.Delete(i)
-        else
-          Inc(i);
-
-      SetLength(Result, Records.Count);
-      for i := 0 to Pred(Records.Count) do
-        with Result[i] do begin
-          Rec := IwbMainRecord(Pointer(Records.Objects[i]));
-          if i = 0 then
-            Master := Rec;
-
-          Container := Rec as IwbContainerElementRef;
-          Element := Container;
-          if (Container.ElementCount = 0) or (Rec.Signature <> Master.Signature) then
-            Container := nil;
-        end;
-
-    finally
-      FreeAndNil(Records);
+  if ModGroupsEnabled and (Length(MainRecords) > 2) then begin
+    SetLength(Modules, Length(MainRecords));
+    for i := Low(MainRecords) to High(MainRecords) do begin
+      Modules[i] := MainRecords[i]._File.ModuleInfo;
+      Exclude(Modules[i].miFlags, mfEphemeralModGroupTagged);
     end;
+    for i := Low(Modules) to High(Modules) do
+      with Modules[i]^ do
+        for j := Low(miModGroupTargets) to High(miModGroupTargets) do
+          Include(miModGroupTargets[j].miFlags, mfEphemeralModGroupTagged);
 
-    Exit;
-  end else begin
-    Result[0].Element := Master;
-    Result[0].Container := Master as IwbContainerElementRef;
-    if Master.ElementCount < 1 then
-      Result[0].Container := nil;
+    Exclude(Modules[Low(Modules)].miFlags, mfEphemeralModGroupTagged);
+    Exclude(Modules[High(Modules)].miFlags, mfEphemeralModGroupTagged);
 
-    for i := 0 to Pred(Master.OverrideCount) do
-      with Result[Succ(i)] do begin
-        Container := Master.Overrides[i] as IwbContainerElementRef;
-        Element := Container;
-        if (Container.ElementCount = 0) or (Master.Overrides[i].Signature <> Master.Signature) then
-          Container := nil;
-      end;
+    j := 0;
+    for i := Low(Modules) to High(Modules) do
+      with Modules[i]^ do
+        if not (mfEphemeralModGroupTagged in miFlags) then begin
+          if i <> j then
+            MainRecords[j] := MainRecords[i];
+          Inc(j);
+        end;
+    SetLength(MainRecords, j);
   end;
+
+  j := 0;
+  for i := Low(MainRecords) to High(MainRecords) do
+    if not MainRecords[i].IsHidden then begin
+      if i <> j then
+        MainRecords[j] := MainRecords[i];
+      Inc(j);
+    end;
+  SetLength(MainRecords, j);
+
+  SetLength(Result, Length(MainRecords));
+  for i := Low(MainRecords) to High(MainRecords) do
+    with Result[i] do begin
+      Rec := MainRecords[i];
+      if i = 0 then
+        Master := Rec;
+
+      Container := Rec as IwbContainerElementRef;
+      Element := Container;
+      if (Container.ElementCount = 0) or (Rec.Signature <> Master.Signature) then
+        Container := nil;
+    end;
 end;
 
 procedure TfrmMain.PerformActionOnSelectedFiles(const aDesc: string; const aAction: TProc<IwbFile>);
@@ -16052,7 +15858,8 @@ procedure TfrmMain.WMUser2(var Message: TMessage);
   end;
 
 var
-  i: Integer;
+  i         : Integer;
+  ModGroups : TwbModGroupPtrs;
 begin
   wbLoaderDone := True;
 
@@ -16127,9 +15934,29 @@ begin
 
   wbFirstLoadComplete := True;
 
+  ModGroups := nil;
+
+  if wbQuickShowConflicts then
+    ModGroups := wbModGroupsByName
+  else if not wbQuickClean then
   if wbToolMode in [tmView, tmEdit] then begin
-    wbLoadModGroups;
+    with TfrmModGroupSelect.Create(Self) do
+    try
+      AllModGroups := wbModGroupsByName;
+      LoadModGroupsSelection(AllModGroups);
+      if ShowModal = mrOk then begin
+        SaveModGroupsSelection(SelectedModGroups);
+        ModGroups := SelectedModGroups;
+      end;
+    finally
+      Free;
+    end;
   end;
+
+  ModGroupsExist := ModGroups.Activate;
+  ModGroupsEnabled := ModGroupsExist;
+  mniModGroupsEnabled.Checked := ModGroupsEnabled;
+  mniModGroupsDisabled.Checked := not ModGroupsEnabled;
 
   if wbQuickShowConflicts then
     mniNavFilterConflicts.Click;

@@ -554,6 +554,9 @@ type
     function ToString: string;
   end;
 
+  TwbCRC32sHelper = record helper for TwbCRC32s
+    function Contains(aCRC32: TwbCRC32): Boolean;
+  end;
 
   IwbElement = interface
     ['{F4B4637D-C794-415F-B5C7-587EAA4095B3}']
@@ -15599,6 +15602,18 @@ end;
 function TwbCRC32Helper.ToString: string;
 begin
   Result := IntToHex(Self, 8);
+end;
+
+{ TwbCRC32sHelper }
+
+function TwbCRC32sHelper.Contains(aCRC32: TwbCRC32): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  for i := Low(Self) to High(Self) do
+    if Self[i] = aCRC32 then
+      Exit(True);
 end;
 
 initialization

@@ -30,7 +30,11 @@ type
     mgifOptional,
     mgifIsTarget,
     mgifIsSource,
-    mgifForbidden
+    mgifForbidden,
+
+    mgifValid,
+    mgifValidChecked,
+    mgifHasFile
   );
   TwbModGroupItemFlags = set of TwbModGroupItemFlag;
 
@@ -38,30 +42,63 @@ type
   TwbModGroupItem = record
   private
     function mgiLoad(aLine: string): Boolean;
+    procedure mgiCheckValid(aForce: Boolean);
   public
+    mgiFlags    : TwbModGroupItemFlags;
     mgiFileName : string;
     mgiModule   : PwbModuleInfo;
-    mgiFlags    : TwbModGroupItemFlags;
     mgiCRC32s   : TwbCRC32s;
   end;
   TwbModGroupItems = array of TwbModGroupItem;
 
+  TwbModGroupFlag = (
+    mgfValid,
+    mgfValidChecked,
+    mgfTagged
+  );
+  TwbModGroupFlags = set of TwbModGroupFlag;
+
   PwbModGroup = ^TwbModGroup;
+  TwbModGroupPtrs = array of PwbModGroup;
+
   TwbModGroup = record
   private
     procedure mgLoad(aLines: TStrings);
+    procedure mgCheckValid(aForce: Boolean);
+    procedure mgAddSelfTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
+    procedure mgTagTargetFiles(aSource: PwbModuleInfo);
   public
+    mgFlags : TwbModGroupFlags;
     mgName  : string;
     mgItems : TwbModGroupItems;
   end;
   TwbModGroups = array of TwbModGroup;
 
+  TwbModGroupPtrsHelper = record helper for TwbModGroupPtrs
+  public
+    procedure ExcludeAll(aFlag: TwbModGroupFlag);
+    procedure IncludeAll(aFlag: TwbModGroupFlag);
+
+    function FilteredByFlag(aFlag: TwbModGroupFlag): TwbModGroupPtrs;
+    function FilteredBy(const aFunc: TFunc<PwbModGroup, Boolean>): TwbModGroupPtrs;
+
+    function Activate: Boolean;
+  end;
+
+  TwbModGroupFileFlag = (
+    mgffValid,
+    mgffValidChecked
+  );
+  TwbModGroupFileFlags = set of TwbModGroupFileFlag;
+
   PwbModGroupsFile = ^TwbModGroupsFile;
   TwbModGroupsFile = record
   private
     procedure mgfLoad;
-    procedure mgfCheckValid;
+    procedure mgfCheckValid(aForce: Boolean);
+    procedure mgfAddModGroupsTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
   public
+    mgfFlags     : TwbModGroupFileFlags;
     mgfFileName  : string;
     mgfModules   : TwbModuleInfos;
     mgfModGroups : TwbModGroups;
@@ -69,16 +106,24 @@ type
 
   TwbModGroupsFiles = array of TwbModGroupsFile;
 
-procedure wbLoadModGroups;
+  TwbModGroupsFilesHelper = record helper for TwbModGroupsFiles
+  private
+    procedure mgfsAddModGroupsTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
+  end;
+
+function wbModGroupsByName(aValidOnly: Boolean = True): TwbModGroupPtrs;
+procedure wbReloadModGroups;
 
 implementation
 
 uses
   System.IniFiles,
-  wbHelpers;
+  wbHelpers,
+  wbSort;
 
 var
-  _ModGroupFiles : TwbModGroupsFiles;
+  _ModGroupFiles       : TwbModGroupsFiles;
+  _ModGroupFilesLoaded : Boolean;
 
 procedure wbLoadModGroups;
 var
@@ -88,6 +133,10 @@ var
   ModGroupFileName    : string;
   ModGroupFile        : PwbModGroupsFile;
 begin
+  if _ModGroupFilesLoaded then
+    Exit;
+  _ModGroupFilesLoaded := True;
+
   _ModGroupFiles := nil;
   try
     ModGroupFilesByName := TStringList.Create;
@@ -132,11 +181,50 @@ begin
   end;
 end;
 
+procedure wbReloadModGroups;
+
+begin
+  _ModGroupFilesLoaded := False;
+  wbLoadModGroups;
+end;
+
+
 { TwbModGroupsFile }
 
-procedure TwbModGroupsFile.mgfCheckValid;
+procedure TwbModGroupsFile.mgfAddModGroupsTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
+var
+  i: Integer;
 begin
-  //...
+  if aValidOnly then begin
+    mgfCheckValid(False);
+    if not (mgffValid in mgfFlags) then
+      Exit;
+  end;
+  for i := Low(mgfModGroups) to High(mgfModGroups) do
+    mgfModGroups[i].mgAddSelfTo(aList, aValidOnly);
+end;
+
+procedure TwbModGroupsFile.mgfCheckValid(aForce: Boolean);
+var
+  i         : Integer;
+  AnyValid  : Boolean;
+  AnyModule : Boolean;
+begin
+  if (mgffValidChecked in mgfFlags) and not aForce then
+    Exit;
+  Include(mgfFlags, mgffValidChecked);
+
+  Exclude(mgfFlags, mgffValid);
+  AnyValid := False;
+  for i := Low(mgfModGroups) to High(mgfModGroups) do
+    with mgfModGroups[i] do begin
+      mgCheckValid(aForce);
+      AnyValid := AnyValid or (mgfValid in mgFlags);
+    end;
+
+  if (Length(mgfModules) < 1) or (Length(mgfModules.FilteredByFlag(mfHasFile)) > 0) then
+    if AnyValid then
+      Include(mgfFlags, mgffValid);
 end;
 
 procedure TwbModGroupsFile.mgfLoad;
@@ -169,6 +257,58 @@ end;
 
 { TwbModGroup }
 
+procedure TwbModGroup.mgAddSelfTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
+begin
+  if aValidOnly then begin
+    mgCheckValid(False);
+    if not (mgfValid in mgFlags) then
+      Exit;
+  end;
+
+  SetLength(aList, Succ(Length(aList)));
+  aList[High(aList)] := @Self;
+end;
+
+procedure TwbModGroup.mgCheckValid(aForce: Boolean);
+var
+  i             : Integer;
+  AnyInvalid    : Boolean;
+  SourceCount   : Integer;
+  TargetCount   : Integer;
+  LastLoadOrder : Integer;
+begin
+  if (mgfValidChecked in mgFlags) and not aForce then
+    Exit;
+  Include(mgFlags, mgfValidChecked);
+
+  Exclude(mgFlags, mgfValid);
+  AnyInvalid := False;
+  SourceCount := 0;
+  TargetCount := 0;
+  LastLoadOrder := 1;
+  for i := Low(mgItems) to High(mgItems) do
+    with mgItems[i] do begin
+      mgiCheckValid(aForce);
+      if mgifValid in mgiFlags then begin
+        if mgifHasFile in mgiFlags then begin
+          if mgifIsSource in mgiFlags then
+            if TargetCount > 0 then
+              Inc(SourceCount);
+
+          if mgifIsTarget in mgiFlags then
+            Inc(TargetCount);
+          if LastLoadOrder >= 0 then
+            if mgiModule.miLoadOrder < LastLoadOrder then
+              AnyInvalid := True;
+          LastLoadOrder := mgiModule.miLoadOrder;
+        end;
+      end else
+        AnyInvalid := True
+    end;
+  if not AnyInvalid and (SourceCount > 0) then
+    Include(mgFlags, mgfValid);
+end;
+
 procedure TwbModGroup.mgLoad(aLines: TStrings);
 var
   i, j: Integer;
@@ -182,7 +322,52 @@ begin
   SetLength(mgItems, j);
 end;
 
+procedure TwbModGroup.mgTagTargetFiles(aSource: PwbModuleInfo);
+var
+  i, j : Integer;
+begin
+  mgCheckValid(False);
+  if not (mgfValid in mgFlags) then
+    Exit;
+
+  for i := Low(mgItems) to High(mgItems) do
+    if mgItems[i].mgiModule = aSource then
+      with mgItems[i] do begin
+        if mgiFlags * [mgifIsSource, mgifHasFile] <> [mgifIsSource, mgifHasFile] then
+          Exit;
+        for j := Pred(i) downto Low(mgItems) do
+          with mgItems[j] do
+            if Assigned(mgiModule) and (mgiFlags * [mgifIsTarget, mgifHasFile] = [mgifIsTarget, mgifHasFile]) then
+              Include(mgiModule.miFlags, mfIsModGroupTarget);
+        Exit;
+      end;
+end;
+
 { TwbModGroupItem }
+
+procedure TwbModGroupItem.mgiCheckValid(aForce: Boolean);
+begin
+  if (mgifValidChecked in mgiFlags) and not aForce then
+    Exit;
+  Include(mgiFlags, mgifValidChecked);
+
+  mgiFlags := mgiFlags - [mgifValid, mgifHasFile];
+
+  if Assigned(mgiModule) then
+    if Assigned(mgiModule.miFile) then begin
+      if Length(mgiCRC32s) > 0 then begin
+        if mgiCRC32s.Contains(mgiModule._File.CRC32) then
+          Include(mgiFlags, mgifHasFile);
+      end else
+        Include(mgiFlags, mgifHasFile);
+    end;
+
+  if mgiFlags * [mgifHasFile, mgifForbidden] = [mgifHasFile, mgifForbidden]  then
+    Exit;
+
+  if mgiFlags * [mgifHasFile, mgifOptional] <> []  then
+    Include(mgiFlags, mgifValid);
+end;
 
 function TwbModGroupItem.mgiLoad(aLine: string): Boolean;
 var
@@ -203,14 +388,18 @@ begin
 
   j := 1;
   while j <= Length(aLine) do begin
-    case aLine[1] of
+    case aLine[j] of
       ' ': {};
       '+': Include(mgiFlags, mgifOptional);
       '-': begin //neither hides nor is being hidden
              Exclude(mgiFlags, mgifIsTarget);
              Exclude(mgiFlags, mgifIsSource);
            end;
-      '!': Include(mgiFlags, mgifForbidden);
+      '!': begin
+             Include(mgiFlags, mgifForbidden);
+             Exclude(mgiFlags, mgifIsTarget);
+             Exclude(mgiFlags, mgifIsSource);
+            end;
       '@': Exclude(mgiFlags, mgifIsSource); //being hidden, doesn't hide others
       '#': Exclude(mgiFlags, mgifIsTarget); //hides others, isn't being hidden
     else
@@ -252,7 +441,134 @@ begin
 end;
 
 
-initialization
+function CompareModGroupPtrsByName(Item1, Item2: Pointer): Integer;
+
+begin
+
+  Result := CompareText(PwbModGroup(Item1).mgName, PwbModGroup(Item2).mgName);
+end;
+
+
+function wbModGroupsByName(aValidOnly: Boolean = True): TwbModGroupPtrs;
+
+begin
+
+  wbLoadModGroups;
+  _ModGroupFiles.mgfsAddModGroupsTo(Result, aValidOnly);
+  if Length(Result) > 1 then
+    wbMergeSort(@Result[0], Length(Result), CompareModGroupPtrsByName);
+end;
+
+
+
+{ TwbModGroupsFilesHelper }
+
+procedure TwbModGroupsFilesHelper.mgfsAddModGroupsTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
+var
+  i: Integer;
+begin
+  aList := nil;
+  for i := Low(Self) to High(Self) do
+    Self[i].mgfAddModGroupsTo(aList, aValidOnly);
+end;
+
+{ TwbModGroupPtrsHelper }
+
+function TwbModGroupPtrsHelper.Activate: Boolean;
+var
+  Modules : TwbModuleInfos;
+  i, j, k    : Integer;
+  Targets : TwbModuleInfos;
+begin
+  Result := False;
+  Modules := wbModulesByLoadOrder;
+  for i := Low(Modules) to High(Modules) do
+    with Modules[i]^ do begin
+      miModGroupTargets := nil;
+      miModGroupSources := nil;
+    end;
+
+  for i := Low(Modules) to High(Modules) do begin
+    Modules.ExcludeAll(mfIsModGroupTarget);
+    for j := Low(Self) to High(Self) do
+      Self[j].mgTagTargetFiles(Modules[i]);
+
+    Targets := nil;
+    SetLength(Targets, i);
+    k := 0;
+    for j := Pred(i) downto 0 do
+      if mfIsModGroupTarget in Modules[j].miFlags then begin
+        Targets[k] := Modules[j];
+        Inc(k);
+      end;
+    SetLength(Targets, k);
+    Modules[i].miModGroupTargets := Targets;
+  end;
+
+  Modules.ExcludeAll(mfIsModGroupTarget);
+  Modules.ExcludeAll(mfIsModGroupSource);
+
+  for i := Low(Modules) to High(Modules) do
+    with Modules[i]^ do
+      if Length(miModGroupTargets) > 0 then begin
+        Include(miFlags, mfIsModGroupSource);
+        for j := Low(miModGroupTargets) to High(miModGroupTargets) do
+          with miModGroupTargets[j]^ do begin
+            Result := True;
+            Include(miFlags, mfIsModGroupTarget);
+            SetLength(miModGroupSources, Succ(Length(miModGroupSources)));
+            miModGroupSources[High(miModGroupSources)] := Modules[i];
+          end;
+      end;
+end;
+
+procedure TwbModGroupPtrsHelper.ExcludeAll(aFlag: TwbModGroupFlag);
+var
+  i: Integer;
+begin
+  for i := Low(Self) to High(Self) do
+    with Self[i]^ do
+      Exclude(mgFlags, aFlag);
+end;
+
+function TwbModGroupPtrsHelper.FilteredBy(const aFunc: TFunc<PwbModGroup, Boolean>): TwbModGroupPtrs;
+var
+  i, j: Integer;
+begin
+  SetLength(Result, Length(Self));
+  j := 0;
+  for i := Low(Self) to High(Self) do
+    if aFunc(Self[i]) then begin
+      Result[j] := Self[i];
+      Inc(j);
+    end;
+  SetLength(Result, j);
+end;
+
+function TwbModGroupPtrsHelper.FilteredByFlag(aFlag: TwbModGroupFlag): TwbModGroupPtrs;
+var
+  i, j: Integer;
+begin
+  SetLength(Result, Length(Self));
+  j := 0;
+  for i := Low(Self) to High(Self) do
+    if aFlag in Self[i]^.mgFlags then begin
+      Result[j] := Self[i];
+      Inc(j);
+    end;
+  SetLength(Result, j);
+end;
+
+procedure TwbModGroupPtrsHelper.IncludeAll(aFlag: TwbModGroupFlag);
+var
+  i: Integer;
+begin
+  for i := Low(Self) to High(Self) do
+    with Self[i]^ do
+      Include(mgFlags, aFlag);
+end;
+
+initialization
 finalization
 end.
 
