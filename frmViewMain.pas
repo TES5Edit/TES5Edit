@@ -4779,12 +4779,22 @@ var
 begin
   if (Key = Ord('S')) and (Shift = [ssCtrl]) then
     SaveChanged;
-  vstView.UpdateHotTrack;
-  vstSpreadSheetWeapon.UpdateHotTrack;
-  vstSpreadsheetArmor.UpdateHotTrack;
-  vstSpreadSheetAmmo.UpdateHotTrack;
-  if Key = VK_SHIFT then
-    vstView.Header.Options := vstView.Header.Options + [hoAutoSpring];
+  if Assigned(vstSpreadSheetWeapon) then vstSpreadSheetWeapon.UpdateHotTrack;
+  if Assigned(vstSpreadsheetArmor) then vstSpreadsheetArmor.UpdateHotTrack;
+  if Assigned(vstSpreadSheetAmmo) then vstSpreadSheetAmmo.UpdateHotTrack;
+
+  if Assigned(vstView) then begin
+    vstView.UpdateHotTrack;
+    if Key = VK_SHIFT then
+      vstView.Header.Options := vstView.Header.Options + [hoAutoSpring];
+  end;
+
+  if Assigned(vstNav) then begin
+    vstNav.UpdateHotTrack;
+    if Key = VK_SHIFT then
+      vstNav.Header.Options := vstNav.Header.Options + [hoAutoSpring];
+  end;
+
   if (Shift = [ssAlt]) and (Key in [VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT])then begin
     if not Assigned(vstView) then
       Exit;
@@ -4872,13 +4882,19 @@ end;
 
 procedure TfrmMain.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
-  if Assigned(vstView) then vstView.UpdateHotTrack;
   if Assigned(vstSpreadSheetWeapon) then vstSpreadSheetWeapon.UpdateHotTrack;
   if Assigned(vstSpreadsheetArmor) then vstSpreadsheetArmor.UpdateHotTrack;
   if Assigned(vstSpreadSheetAmmo) then vstSpreadSheetAmmo.UpdateHotTrack;
-  if Key = VK_SHIFT then
-    if Assigned(vstView) then
+  if Assigned(vstView) then begin
+    vstView.UpdateHotTrack;
+    if Key = VK_SHIFT then
       vstView.Header.Options := vstView.Header.Options - [hoAutoSpring];
+  end;
+  if Assigned(vstNav) then begin
+    vstNav.UpdateHotTrack;
+    if Key = VK_SHIFT then
+      vstNav.Header.Options := vstNav.Header.Options - [hoAutoSpring];
+  end;
 end;
 
 procedure TfrmMain.FormShow(Sender: TObject);
