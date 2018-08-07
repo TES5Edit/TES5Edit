@@ -64,6 +64,9 @@ uses
   frmLogAnalyzerForm in 'frmLogAnalyzerForm.pas' {frmLogAnalyzer},
   frmLODGenForm in 'frmLODGenForm.pas',
   frmTipForm in 'frmTipForm.pas',
+  frmModuleSelectForm in 'frmModuleSelectForm.pas',
+  frmModGroupSelectForm in 'frmModGroupSelectForm.pas',
+  frmModGroupEditForm in 'frmModGroupEditForm.pas',
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
   wbDefinitionsFNVSaves in 'wbDefinitionsFNVSaves.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
@@ -83,8 +86,6 @@ uses
   wbDataFormatNifTypes in 'wbDataFormatNifTypes.pas',
   wbNifMath in 'wbNifMath.pas',
   wbHalfFloat in 'wbHalfFloat.pas',
-  frmModuleSelectForm in 'frmModuleSelectForm.pas',
-  frmModGroupSelectForm in 'frmModGroupSelectForm.pas',
   wbModGroups in 'wbModGroups.pas';
 
 {$R *.res}

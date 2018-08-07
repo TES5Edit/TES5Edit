@@ -113,11 +113,11 @@
         <DCCReference Include="frmLogAnalyzerForm.pas">
             <Form>frmLogAnalyzer</Form>
         </DCCReference>
-        <DCCReference Include="frmModGroupSelectForm.pas">
-            <Form>frmModGroupSelectForm</Form>
-        </DCCReference>
         <DCCReference Include="frmLODGenForm.pas"/>
         <DCCReference Include="frmTipForm.pas"/>
+        <DCCReference Include="frmModuleSelectForm.pas"/>
+        <DCCReference Include="frmModGroupSelectForm.pas"/>
+        <DCCReference Include="frmModGroupEditForm.pas"/>
         <DCCReference Include="wbDefinitionsFNV.pas"/>
         <DCCReference Include="wbDefinitionsFNVSaves.pas"/>
         <DCCReference Include="wbDefinitionsFO3.pas"/>
@@ -137,7 +137,6 @@
         <DCCReference Include="wbDataFormatNifTypes.pas"/>
         <DCCReference Include="wbNifMath.pas"/>
         <DCCReference Include="wbHalfFloat.pas"/>
-        <DCCReference Include="frmModuleSelectForm.pas"/>
         <DCCReference Include="wbModGroups.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

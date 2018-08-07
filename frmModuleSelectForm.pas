@@ -70,6 +70,7 @@ type
     SelectFlag      : TwbModuleFlag;
     FilterFlag      : TwbModuleFlag;
     MaxSelect       : Integer;
+    MinSelect       : Integer;
 
     procedure AllowCancel;
     function ShowModal: Integer; override;
@@ -242,6 +243,7 @@ begin
   SelectFlag := mfActive;
   FilterFlag := mfValid;
   MaxSelect := High(Integer);
+  MinSelect := 0;
 end;
 
 procedure TfrmModuleSelect.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -392,14 +394,18 @@ begin
     else
       SelectedModules := AllModules.FilteredByFlag(SelectFlag);
 
-    if Length(SelectedModules) < 1 then
-      Error := 'No modules selected';
-    if Length(SelectedModules) > MaxSelect then begin
+    if Length(SelectedModules) < MinSelect then
+      if Length(SelectedModules) = 0 then
+        Error := 'No modules selected'
+      else
+        Error := 'Less than ' + MinSelect.ToString + ' modules selected';
+
+    if Length(SelectedModules) > MaxSelect then
       if MaxSelect = 1 then
         Error := 'More than 1 module selected'
       else
         Error := 'More than ' + MaxSelect.ToString + ' modules selected';
-    end;
+
   except
     on E: Exception do
       Error := E.Message;

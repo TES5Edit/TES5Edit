@@ -44,7 +44,6 @@ type
     procedure vstModGroupsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure vstModGroupsBeforeGetCheckState(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstModGroupsChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure vstModGroupsHeaderClick(Sender: TVTHeader; HitInfo: TVTHeaderHitInfo);
     procedure vstModGroupsCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
     procedure vstModGroupsPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
     procedure vstModGroupsIncrementalSearch(Sender: TBaseVirtualTree; Node: PVirtualNode; const SearchText: string; var Result: Integer);
@@ -448,25 +447,11 @@ begin
           2 : if mgifIsTarget in mgiFlags then Celltext := 'Target';
           3 : if mgifIsSource in mgiFlags then Celltext := 'Source';
           4 : if mgifForbidden in mgiFlags then Celltext := 'Forbidden';
+          5 : if mgifIgnoreLoadOrderAlways in mgiFlags then
+                Celltext := 'Always'
+              else if mgifIgnoreLoadOrderInBlock in mgiFlags then
+                Celltext := 'in Block';
         end
-  end;
-end;
-
-procedure TfrmModGroupSelect.vstModGroupsHeaderClick(Sender: TVTHeader; HitInfo: TVTHeaderHitInfo);
-begin
-  with HitInfo do begin
-    if Button <> mbLeft then
-      Exit;
-
-    if Sender.SortColumn = Column then
-      if Sender.SortDirection = sdAscending then
-        Sender.SortDirection := sdDescending
-      else
-        Sender.SortDirection := sdAscending
-    else begin
-      Sender.SortColumn := Column;
-    end;
-    vstModGroups.ScrollIntoView(vstModGroups.FocusedNode, True);
   end;
 end;
 
@@ -562,7 +547,7 @@ begin
       else
         TargetCanvas.Font.Style := TargetCanvas.Font.Style - [fsStrikeOut];
     end else if Assigned(mgndModGroupItem) then begin
-      if not (mgifValid in mgndModGroupItem.mgiFlags) then
+      if not (mgifHasFile in mgndModGroupItem.mgiFlags) then
         TargetCanvas.Font.Style := TargetCanvas.Font.Style + [fsStrikeOut]
       else
         TargetCanvas.Font.Style := TargetCanvas.Font.Style - [fsStrikeOut];
