@@ -945,6 +945,9 @@ begin
 
   else if wbToolMode = tmTranslate then begin
     wbTranslationMode := True;
+    wbHideUnused := True;
+    wbHideIgnored := True;
+    wbHideNeverShow := True;
   end;
 
 
