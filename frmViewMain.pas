@@ -4006,9 +4006,11 @@ begin
   TotalUsageTime := Settings.ReadFloat('Usage', 'TotalTime', 0);
   RateNoticeGiven := Settings.ReadInteger('Usage', 'RateNoticeGiven', 0);
   AutoSave := Settings.ReadBool('Options', 'AutoSave', AutoSave);
-  wbHideUnused := Settings.ReadBool('Options', 'HideUnused', wbHideUnused);
-  wbHideIgnored := Settings.ReadBool('Options', 'HideIgnored', wbHideIgnored);
-  wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
+  if not wbTranslationMode then begin
+    wbHideUnused := Settings.ReadBool('Options', 'HideUnused', wbHideUnused);
+    wbHideIgnored := Settings.ReadBool('Options', 'HideIgnored', wbHideIgnored);
+    wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
+  end;
   wbActorTemplateHide := Settings.ReadBool('Options', 'ActorTemplateHide', wbActorTemplateHide);
   ColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', ColumnWidth);
   RowHeight := Settings.ReadInteger('Options', 'RowHeight', RowHeight);
@@ -10586,9 +10588,15 @@ begin
     pnlFontRecords.Font := vstNav.Font;
     pnlFontMessages.Font := mmoMessages.Font;
     pnlFontViewer.Font := Self.Font; LoadFont(Settings, 'UI', 'FontViewer', pnlFontViewer.Font);
-    cbHideUnused.Checked := wbHideUnused;
-    cbHideIgnored.Checked := wbHideIgnored;
-    cbHideNeverShow.Checked := wbHideNeverShow;
+    if wbTranslationMode then begin
+      cbHideUnused.Visible := False;
+      cbHideIgnored.Visible := False;
+      cbHideNeverShow.Visible := False;
+    end else begin
+      cbHideUnused.Checked := wbHideUnused;
+      cbHideIgnored.Checked := wbHideIgnored;
+      cbHideNeverShow.Checked := wbHideNeverShow;
+    end;
     cbActorTemplateHide.Checked := wbActorTemplateHide;
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
@@ -10624,9 +10632,11 @@ begin
     lblPath.Font := pnlFontRecords.Font;
     pnlTop.Height := Abs(lblPath.Font.Height) + Trunc(20 * (GetCurrentPPIScreen/PixelsPerInch));
     mmoMessages.Font := pnlFontMessages.Font;
-    wbHideUnused := cbHideUnused.Checked;
-    wbHideIgnored := cbHideIgnored.Checked;
-    wbHideNeverShow := cbHideNeverShow.Checked;
+    if not wbTranslationMode then begin
+      wbHideUnused := cbHideUnused.Checked;
+      wbHideIgnored := cbHideIgnored.Checked;
+      wbHideNeverShow := cbHideNeverShow.Checked;
+    end;
     wbActorTemplateHide := cbActorTemplateHide.Checked;
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
@@ -10658,9 +10668,11 @@ begin
     SaveFont(Settings, 'UI', 'FontMessages', mmoMessages.Font);
     SaveFont(Settings, 'UI', 'FontViewer', pnlFontViewer.Font);
     Settings.WriteBool('Options', 'AutoSave', AutoSave);
-    Settings.WriteBool('Options', 'HideUnused', wbHideUnused);
-    Settings.WriteBool('Options', 'HideIgnored', wbHideIgnored);
-    Settings.WriteBool('Options', 'HideNeverShow', wbHideNeverShow);
+    if not wbTranslationMode then begin
+      Settings.WriteBool('Options', 'HideUnused', wbHideUnused);
+      Settings.WriteBool('Options', 'HideIgnored', wbHideIgnored);
+      Settings.WriteBool('Options', 'HideNeverShow', wbHideNeverShow);
+    end;
     Settings.WriteBool('Options', 'ActorTemplateHide', wbActorTemplateHide);
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
