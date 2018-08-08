@@ -11578,7 +11578,7 @@ begin
   UniqueString(t);
   p := Pointer(t);
   Pointer(t) := nil;
-  PostMessage(Handle, WM_USER, Int64(p), 0);
+  PostMessage(Handle, WM_USER, UInt64(p), 0);
 end;
 
 procedure TfrmMain.PostPluggyChange(aFormID, aBaseFormID, aInventoryFormID, aEnchantmentFormID, aSpellFormID: TwbFormID);
@@ -12158,7 +12158,7 @@ end;
 
 procedure TfrmMain.SendAddFile(const aFile: IwbFile);
 begin
-  SendMessage(Handle, WM_USER + 1, Int64(Pointer(aFile)), 0);
+  SendMessage(Handle, WM_USER + 1, UInt64(Pointer(aFile)), 0);
 end;
 
 procedure TfrmMain.SendLoaderDone;
