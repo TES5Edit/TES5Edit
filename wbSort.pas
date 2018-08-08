@@ -1104,7 +1104,7 @@ begin
   if aCompare(ptrList[mid], ptrList[Succ(mid)]) < 0 then
     exit;
   aCount := succ(mid - left);
-  Move(ptrList[left], Buffer[0], aCount * SizeOf(Pointer));
+  Move(ptrList[left], Buffer[0], aCount * SizeOf(Cardinal));
   i := 0;
   j := succ(mid);
   k := left;
@@ -1119,7 +1119,7 @@ begin
     inc(k);
   end;
   if (i < aCount) then begin
-    Move(Buffer[i], ptrList[k], (aCount - i) * SizeOf(Pointer));
+    Move(Buffer[i], ptrList[k], (aCount - i) * SizeOf(Cardinal));
   end;
 end;
 
@@ -1133,9 +1133,9 @@ begin
     InsertionSort32(aList, 0, Pred(aCount), aCompare);
   end
   else begin
-    GetMem(Buffer, aCount * SizeOf(Integer));
+    GetMem(Buffer, aCount * SizeOf(Cardinal));
     MergeSort32(aList, 0, Pred(aCount), aCompare, Buffer);
-    FreeMem(Buffer, aCount * SizeOf(Integer));
+    FreeMem(Buffer, aCount * SizeOf(Cardinal));
   end;
 end;
 {$ENDIF WIN64}
