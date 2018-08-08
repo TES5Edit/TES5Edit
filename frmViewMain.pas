@@ -5501,8 +5501,9 @@ begin
     end;
     if not ComparingSiblings then begin
       if HideNoConflict then
-        if ConflictThis < ctOverride then
-          vstView.IsVisible[aNode] := False;
+        if Length(ActiveRecords) > 1 then
+          if ConflictThis < ctOverride then
+            vstView.IsVisible[aNode] := False;
     end;
   end;
 end;
