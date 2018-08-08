@@ -554,7 +554,7 @@ begin
   wbLoadModGroups;
   _ModGroupFiles.mgfsAddModGroupsTo(Result, aValidOnly);
   if Length(Result) > 1 then
-    wbMergeSort(@Result[0], Length(Result), CompareModGroupPtrsByName);
+    wbMergeSortPtr(@Result[0], Length(Result), CompareModGroupPtrsByName);
 end;
 
 

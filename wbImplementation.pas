@@ -1659,9 +1659,8 @@ type
 const
   NONE : TwbSignature = #0#0#0#0;
 
-function CompareFormIDs(Item1, Item2: Pointer): Integer;
+function CompareFormIDs(Item1, Item2: Cardinal): Integer;
 asm
-{$IFDEF WIN32}
   xor ecx, ecx
   cmp eax, edx
   ja @@GT
@@ -1673,19 +1672,6 @@ asm
   inc ecx
 @@EQ:
   mov eax, ecx
-{$ENDIF WIN32}
-{$IFDEF WIN64}
-  xor rax, rax
-  cmp rcx, rdx
-  ja @@GT
-  je @@EQ
-@@LT:
-  dec rax
-  dec rax
-@@GT:
-  inc rax
-@@EQ:
-{$ENDIF WIN64}
 end;
 
 function CompareSubRecords(Item1, Item2: Pointer): Integer;
@@ -1871,7 +1857,7 @@ begin
   Result := TwbGroupRecord.Create(Self, Signature);
 
   if Length(cntElements) > 1 then
-    wbMergeSort(@cntElements[1], High(cntElements), CompareSortOrder);
+    wbMergeSortPtr(@cntElements[1], High(cntElements), CompareSortOrder);
 end;
 
 function TwbFile.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
@@ -1897,7 +1883,7 @@ begin
   if not Assigned(Result) then begin
     Result := TwbGroupRecord.Create(Self, Signature);
     if Length(cntElements) > 1 then
-      wbMergeSort(@cntElements[1],  High(cntElements), CompareSortOrder);
+      wbMergeSortPtr(@cntElements[1],  High(cntElements), CompareSortOrder);
   end;
 
   if aDeepCopy then
@@ -3434,7 +3420,7 @@ begin
     end;
 
     if Length(cntElements) > 1 then
-      wbMergeSort(@cntElements[1],  High(cntElements), CompareSortOrder);
+      wbMergeSortPtr(@cntElements[1],  High(cntElements), CompareSortOrder);
 
     RecordCount := GetCountedRecordCount;
     if RecordCount < 1 then
@@ -3967,7 +3953,7 @@ begin
         MasterFiles[i].SortOrder := i;
       end;
 
-      wbMergeSort(@flMasters[0], Length(flMasters), CompareLoadOrder);
+      wbMergeSortPtr(@flMasters[0], Length(flMasters), CompareLoadOrder);
 
       Old := nil;
       New := nil;
@@ -4046,7 +4032,7 @@ begin
       SortEntries[i].rseMainRecord := Pointer(flRecords[i]);
       SortEntryPtrs[i] := @SortEntries[i];
     end;
-    wbMergeSort(@SortEntryPtrs[0], Length(SortEntryPtrs), CompareSortEntryPtrs);
+    wbMergeSortPtr(@SortEntryPtrs[0], Length(SortEntryPtrs), CompareSortEntryPtrs);
     for i := Low(flRecords) to High(flRecords) do
       Pointer(flRecords[i]) := SortEntryPtrs[i].rseMainRecord;
   end;
@@ -4056,7 +4042,7 @@ end;
 procedure TwbFile.SortRecordsByEditorID;
 begin
   if Length(flRecordsByEditorID) > 0 then
-    wbMergeSort(@flRecordsByEditorID[0], Length(flRecordsByEditorID), CompareRecordsByEditorID);
+    wbMergeSortPtr(@flRecordsByEditorID[0], Length(flRecordsByEditorID), CompareRecordsByEditorID);
 end;
 
 procedure TwbFile.UpdateModuleMasters;
@@ -5704,7 +5690,7 @@ begin
   i := GetAdditionalElementCount;
   j := Length(cntElements) - i;
   if j > 1 then begin
-    wbMergeSort(@cntElements[i], j, CompareSortOrder);
+    wbMergeSortPtr(@cntElements[i], j, CompareSortOrder);
     InvalidateStorage;
   end;
 end;
@@ -5808,7 +5794,7 @@ procedure TwbRecord.SortBySortOrder;
 begin
   SetModified(True);
   if Length(cntElements) > 1 then begin
-    wbMergeSort(@cntElements[1],  High(cntElements), CompareSortOrder);
+    wbMergeSortPtr(@cntElements[1],  High(cntElements), CompareSortOrder);
     InvalidateStorage;
   end;
 end;
@@ -5939,7 +5925,7 @@ begin
           Result := GetElementBySortOrder(i + GetAdditionalElementCount);
 
           if wbSortSubRecords and (Length(cntElements) > 1) then
-            wbMergeSort(@cntElements[0], Length(cntElements), CompareSubRecords);
+            wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
         end;
 
         Exit;
@@ -5982,7 +5968,7 @@ begin
       Assert(Assigned(Result));
 
       if wbSortSubRecords and (Length(cntElements) > 1) then
-        wbMergeSort(@cntElements[0], Length(cntElements), CompareSubRecords);
+        wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
     end else
       Result.Assign(Low(Integer), aElement, not aDeepCopy);
   end;
@@ -6204,7 +6190,7 @@ begin
     end;
 
     if wbSortSubRecords and (Length(cntElements) > 1) then
-      wbMergeSort(@cntElements[0], Length(cntElements), CompareSubRecords);
+      wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
 
   end else
     Result := inherited AssignInternal(aIndex, aElement, aOnlySK);
@@ -6295,7 +6281,7 @@ begin
 
     NewCount := 0;
     if mrTmpRefFormIDHigh >= 0 then begin
-      wbMergeSort(@mrTmpRefFormIDs[0], Succ(mrTmpRefFormIDHigh), CompareFormIDs);
+      wbMergeSort32(@mrTmpRefFormIDs[0], Succ(mrTmpRefFormIDHigh), CompareFormIDs);
       LastFormID := TwbFormID.Null;
       for i := 0 to mrTmpRefFormIDHigh do
         if mrTmpRefFormIDs[i] <> LastFormID then begin
@@ -6983,7 +6969,7 @@ begin
     end;
 
   if wbSortSubRecords and (mrDef.AllowUnordered or (esModified in eStates)) and (Length(cntElements) > 1) then
-    wbMergeSort(@cntElements[0], Length(cntElements), CompareSubRecords);
+    wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
 
   mrDef.AfterLoad(Self);
 
@@ -7777,7 +7763,7 @@ begin
         end;
     end;
     if j > 1 then begin
-      wbMergeSort(@Result[0], j, CompareLoadOrder);
+      wbMergeSortPtr(@Result[0], j, CompareLoadOrder);
       k := 1;
       LastID := Result[0].ElementID;
       for i := 1 to Pred(j) do
@@ -8046,7 +8032,7 @@ end;
 function TwbMainRecord.GetOverride(aIndex: Integer): IwbMainRecord;
 begin
   if not (mrsOverridesSorted in mrStates) then begin
-    wbMergeSort(@mrOverrides[0], Length(mrOverrides), CompareOverrides);
+    wbMergeSortPtr(@mrOverrides[0], Length(mrOverrides), CompareOverrides);
     Include(mrStates, mrsOverridesSorted);
   end;
 
@@ -8637,7 +8623,7 @@ begin
     end;
 
     if FoundOne then begin
-      wbMergeSort(@mrReferences[0], Length(mrReferences), CompareFormIDs );
+      wbMergeSort32(@mrReferences[0], Length(mrReferences), CompareFormIDs );
       inherited;
     end;
 
@@ -9532,7 +9518,7 @@ begin
 
   Exclude(mrStates, mrsReferencedByUnsorted);
   if mrReferencedByCount > 1  then
-    wbMergeSort(@mrReferencedBy[0], mrReferencedByCount, CompareReferencedBy);
+    wbMergeSortPtr(@mrReferencedBy[0], mrReferencedByCount, CompareReferencedBy);
 end;
 
 procedure TwbMainRecord.UpdateCellChildGroup;
@@ -10454,7 +10440,7 @@ begin
   inherited;
   if srStates * [srsSorted, srsSortInvalid] = [srsSorted, srsSortInvalid] then begin
     if Length(cntElements) > 1 then
-      wbMergeSort(@cntElements[0], Length(cntElements), CompareSortKeys);
+      wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSortKeys);
     Exclude(srStates, srsSortInvalid);
   end;
 end;
@@ -12628,7 +12614,7 @@ begin
     end;
 
     if Length(cntElements) > 1 then
-      wbMergeSort(@cntElements[0], Length(cntElements), CompareGroupContents);
+      wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareGroupContents);
     Include(grStates, gsSorted);
   finally
     Exclude(grStates, gsSorting);
@@ -14124,7 +14110,7 @@ begin
   arcSorted := False;
   if wbSortSubRecords and arcDef.Sorted[IwbContainer(eContainer)] then begin
     if Length(cntElements) > 1 then
-      wbMergeSort(@cntElements[0], Length(cntElements), CompareSortKeys);
+      wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSortKeys);
     arcSorted := True;
   end;
 end;
@@ -14204,7 +14190,7 @@ begin
   inherited;
   if arcSorted and arcSortInvalid then begin
     if Length(cntElements) > 1 then
-      wbMergeSort(@cntElements[0], Length(cntElements), CompareSortKeys);
+      wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSortKeys);
     arcSortInvalid := False;
   end;
 end;
@@ -14369,7 +14355,7 @@ begin
     Assert(Assigned(Result));
 
     if wbSortSubRecords and (Length(cntElements) > 1) then
-      wbMergeSort(@cntElements[0], Length(cntElements), CompareSubRecords);
+      wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
   end else
     Result.Assign(Low(Integer), aElement, not aDeepCopy);
 end;
@@ -14470,7 +14456,7 @@ begin
   end;
 
   if wbSortSubRecords and (Length(cntElements) > 1) then
-    wbMergeSort(@cntElements[0], Length(cntElements), CompareSubRecords);
+    wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
 end;
 
 function TwbSubRecordStruct.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
@@ -15069,7 +15055,7 @@ begin
           Break;
         end;
         if not Sorting then begin
-          wbMergeSort(@cntElements[0], Length(cntElements), CompareSortKeys);
+          wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSortKeys);
           arrSortInvalid := False;
         end;
     end;
@@ -15538,7 +15524,7 @@ begin
 // flags should already have been created in the right order, no need to sort them
 //  if vIsFlags then
 //    if Length(cntElements) > 1 then
-//      wbMergeSort(@cntElements[0], Length(cntElements), CompareSortKeys);
+//      wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSortKeys);
 end;
 
 function TwbValue.IsFlags: Boolean;

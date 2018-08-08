@@ -249,7 +249,7 @@ begin
   Files := TDirectory.GetFiles(wbDataPath);
   i := Length(Files);
   if i > 1 then
-    wbMergeSort(@Files[0], i, TListSortCompare(@CompareText));
+    wbMergeSortPtr(@Files[0], i, TListSortCompare(@CompareText));
 
   SetLength(_Modules, Length(Files));
   j := 0;
@@ -409,7 +409,7 @@ begin
 
   i := Length(_ModulesLoadOrder);
   if i > 1 then
-    wbMergeSort(@_ModulesLoadOrder[0], i, _ModulesLoadOrderCompare);
+    wbMergeSortPtr(@_ModulesLoadOrder[0], i, _ModulesLoadOrderCompare);
 
   if wbGameMode = gmTES5 then begin
     s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
@@ -454,7 +454,7 @@ begin
             end;
           end;
 
-          wbMergeSort(@_ModulesLoadOrder[0], Length(_ModulesLoadOrder), _ModulesLoadOrderCompareCombined);
+          wbMergeSortPtr(@_ModulesLoadOrder[0], Length(_ModulesLoadOrder), _ModulesLoadOrderCompareCombined);
         end;
       finally
         sl.Free;

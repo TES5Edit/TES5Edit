@@ -3591,7 +3591,7 @@ begin
     end;
 
     if Length(WorldSpaces) > 1 then begin
-      wbMergeSort(@WorldSpaces[0], Length(WorldSpaces), CompareElementsFormIDAndLoadOrder);
+      wbMergeSortPtr(@WorldSpaces[0], Length(WorldSpaces), CompareElementsFormIDAndLoadOrder);
 
       j := 0;
       for i := Succ(Low(WorldSpaces)) to High(WorldSpaces) do begin
@@ -5162,7 +5162,7 @@ begin
     0: Result := nil;
     1: SetLength(Result, 1);
   else
-    wbMergeSort(@Result[0], j, CompareElementID);
+    wbMergeSortPtr(@Result[0], j, CompareElementID);
     k := 1;
     LastID := Result[0].ElementID;
     for i := 1 to Pred(j) do
@@ -7813,7 +7813,7 @@ begin
   end;
 
   if Length(WorldSpaces) > 1 then begin
-    wbMergeSort(@WorldSpaces[0], Length(WorldSpaces), CompareElementsFormIDAndLoadOrder);
+    wbMergeSortPtr(@WorldSpaces[0], Length(WorldSpaces), CompareElementsFormIDAndLoadOrder);
 
     j := 0;
     for i := Succ(Low(WorldSpaces)) to High(WorldSpaces) do begin
@@ -8325,7 +8325,7 @@ begin
     SetLength(Elements, j);
 
     if Length(Elements) > 1 then begin
-      wbMergeSort(@Elements[0], Length(Elements), CompareElementsFormIDAndLoadOrder);
+      wbMergeSortPtr(@Elements[0], Length(Elements), CompareElementsFormIDAndLoadOrder);
 
       j := 0;
       for i := Succ(Low(Elements)) to High(Elements) do begin
