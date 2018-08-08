@@ -2002,6 +2002,13 @@ object frmMain: TfrmMain
       Caption = 'Jump to'
       OnClick = mniViewHeaderJumpToClick
     end
+    object N24: TMenuItem
+      Caption = '-'
+    end
+    object mniViewCreateModGroup: TMenuItem
+      Caption = 'Create ModGroup...'
+      OnClick = mniNavCreateModGroupClick
+    end
     object N11: TMenuItem
       Caption = '-'
     end
