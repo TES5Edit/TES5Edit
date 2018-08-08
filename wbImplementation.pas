@@ -1661,6 +1661,7 @@ const
 
 function CompareFormIDs(Item1, Item2: Cardinal): Integer;
 asm
+{$IFDEF WIN32}
   xor ecx, ecx
   cmp eax, edx
   ja @@GT
@@ -1672,6 +1673,19 @@ asm
   inc ecx
 @@EQ:
   mov eax, ecx
+{$ENDIF WIN32}
+{$IFDEF WIN64}
+  xor eax, eax
+  cmp ecx, edx
+  ja @@GT
+  je @@EQ
+@@LT:
+  dec eax
+  dec eax
+@@GT:
+  inc eax
+@@EQ:
+{$ENDIF WIN64}
 end;
 
 function CompareSubRecords(Item1, Item2: Pointer): Integer;
