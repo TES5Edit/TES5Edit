@@ -11552,6 +11552,7 @@ begin
   mniViewCopyToSelectedRecords.Visible := False;
   mniViewCopyMultipleToSelectedRecords.Visible := False;
   mniViewCompareReferencedRow.Visible := False;
+  mniViewCreateModGroup.Visible := False;
 
   if not wbEditAllowed then
     Exit;
@@ -11578,6 +11579,9 @@ begin
     mniViewStickSelected.Visible := NodeLabel <> '';
     mniViewStickSelected.Caption := NodeLabel;
   end;
+
+  if Length(ActiveRecords) > 2 then
+    mniViewCreateModGroup.Visible := True;
 
   if vstView.FocusedColumn > 0 then begin
     NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
