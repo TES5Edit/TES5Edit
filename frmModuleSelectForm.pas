@@ -290,8 +290,7 @@ begin
     if not Assigned(vstModules.FocusedNode) then
       vstModules.FocusedNode := Node;
     vstModules.Selected[Node] := True;
-    if SelectFlag = mfActive then
-      Break;
+    Break;
   end;
   if not Assigned(vstModules.FocusedNode) then begin
     vstModules.FocusedNode := vstModules.GetFirstVisible;

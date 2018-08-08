@@ -341,6 +341,8 @@ type
     mniViewModGroupsReload: TMenuItem;
     N23: TMenuItem;
     mniNavCreateModGroup: TMenuItem;
+    N24: TMenuItem;
+    mniViewCreateModGroup: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -3105,28 +3107,73 @@ var
   FileName       : string;
 begin
   FillChar(lModGroup, SizeOf(TwbModGroup), 0);
-  SelectedNodes := vstNav.GetSortedSelection(True);
-  if Length(SelectedNodes) < 2 then
-    Exit;
-  SetLength(lModGroup.mgItems, Length(SelectedNodes));
-  SetLength(Modules, Length(SelectedNodes));
-  j := 0;
-  for i := Low(SelectedNodes) to High(SelectedNodes) do begin
-    NodeData := vstNav.GetNodeData(SelectedNodes[i]);
-    if Supports(NodeData.Element, IwbFile, _File) then
-      if Assigned(_File.ModuleInfo) then
-        with lModGroup.mgItems[j] do begin
-          mgiFileName := _File.FileName;
-          mgiModule := _File.ModuleInfo;
-          Modules[j] := mgiModule;
-          mgiFlags := [mgifIsTarget, mgifIsSource];
+
+  Modules := nil;
+  if Sender = mniViewCreateModGroup then begin
+    if Length(ActiveRecords) < 3 then
+      Exit;
+    with TfrmModuleSelect.Create(Self) do try
+      AllModules := nil;
+      SetLength(AllModules, Length(ActiveRecords));
+      j := 0;
+      for i := 1 {Ignore Master} to High(ActiveRecords) do
+        if Assigned(ActiveRecords[i].Element) then begin
+          _File := ActiveRecords[i].Element._File;
+          if Assigned(_File) then
+            if Assigned(_File.ModuleInfo) then begin
+              AllModules[j] := _File.ModuleInfo;
+              Inc(j);
+            end;
+        end;
+      SetLength(AllModules, j);
+      if j < 2 then
+        Exit;
+      AllModules.IncludeAll(mfTagged);
+
+      SelectFlag := mfTagged;
+      FilterFlag := mfHasFile;
+      AllowCancel;
+      MinSelect := 2;
+      Caption := 'What modules should be included in the ModGroup?';
+
+      if ShowModal <> mrOk then
+        Exit;
+
+      Modules := SelectedModules;
+    finally
+      Free;
+    end;
+  end else begin
+    SelectedNodes := vstNav.GetSortedSelection(True);
+    if Length(SelectedNodes) < 2 then
+      Exit;
+    SetLength(Modules, Length(SelectedNodes));
+    j := 0;
+    for i := Low(SelectedNodes) to High(SelectedNodes) do begin
+      NodeData := vstNav.GetNodeData(SelectedNodes[i]);
+      if Supports(NodeData.Element, IwbFile, _File) then
+        if Assigned(_File.ModuleInfo) then begin
+          Modules[j] := _File.ModuleInfo;
           Inc(j);
         end;
+    end;
+    SetLength(Modules, j);
   end;
+
+  j := Length(Modules);
   if j < 2 then
     Exit;
   SetLength(lModGroup.mgItems, j);
-  SetLength(Modules, j);
+  for i := Low(Modules) to High(Modules) do
+    with lModGroup.mgItems[i] do begin
+      mgiModule := Modules[i];
+      mgiFileName := mgiModule.miName;
+      mgiFlags := [];
+      if i > Low(Modules) then
+        Include(mgiFlags, mgifIsSource);
+      if i < High(Modules) then
+        Include(mgiFlags, mgifIsTarget);
+    end;
 
   with TfrmModGroupEdit.Create(Self) do try
     ModGroup := @lModGroup;
