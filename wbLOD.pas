@@ -1959,7 +1959,7 @@ begin
       ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
     Application.ProcessMessages;
 
-    wbMergeSort(@REFRs[0], Length(REFRs), CompareElementsFormIDAndLoadOrder);
+    wbMergeSortPtr(@REFRs[0], Length(REFRs), CompareElementsFormIDAndLoadOrder);
 
     Application.MainForm.Caption := 'Removing duplicates: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(0) +
       ' Unique References Found: ' + IntToStr(0) +
@@ -2290,7 +2290,7 @@ begin
               Inc(Count);
             end;
 
-            wbMergeSort(@RefsInCell[0], Length(RefsInCell), CompareRefInfos);
+            wbMergeSortPtr(@RefsInCell[0], Length(RefsInCell), CompareRefInfos);
 
             l := 0;
             for k := Succ(Low(RefsInCell)) to High(RefsInCell) do begin

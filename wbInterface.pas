@@ -38,8 +38,12 @@ const
 
 type
   TwbProgressCallback = procedure(const aStatus: string);
+
   TwbPointerArray = array [0..Pred(High(Integer) div SizeOf(Pointer))] of Pointer;
   PwbPointerArray = ^TwbPointerArray;       {General array of pointer}
+
+  TwbCardinalArray = array [0..Pred(High(Integer) div SizeOf(Cardinal))] of Cardinal;
+  PwbCardinalArray = ^TwbCardinalArray;       {General array of Cardinal}
 
 threadvar
   _wbProgressCallback : TwbProgressCallback;
@@ -10436,7 +10440,7 @@ begin
   for i := Low(enSparseNames) to High(enSparseNames) do
     enSparseNamesMap[i] := @enSparseNames[i];
   if Length(enSparseNames) > 0 then
-    wbMergeSort(@enSparseNamesMap[0], Length(enSparseNames), CompareSparseName);
+    wbMergeSortPtr(@enSparseNamesMap[0], Length(enSparseNames), CompareSparseName);
 end;
 
 constructor TwbEnumDef.Create(const aNames: array of string;
@@ -10495,7 +10499,7 @@ begin
   for i := Low(enSparseNames) to High(enSparseNames) do
     enSparseNamesMap[i] := @enSparseNames[i];
   if Length(enSparseNames) > 0 then
-    wbMergeSort(@enSparseNamesMap[0], Length(enSparseNames), CompareSparseName);
+    wbMergeSortPtr(@enSparseNamesMap[0], Length(enSparseNames), CompareSparseName);
 
   inherited Create(cpNormal, False, nil);
 end;

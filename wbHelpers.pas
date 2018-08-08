@@ -385,7 +385,7 @@ begin
 
 
   if Length(Result) > 1 then begin
-    wbMergeSort(@Result[0], Length(Result), CompareElementsFormIDAndLoadOrder);
+    wbMergeSortPtr(@Result[0], Length(Result), CompareElementsFormIDAndLoadOrder);
 
     j := 0;
     for i := Succ(Low(Result)) to High(Result) do begin
@@ -442,7 +442,7 @@ begin
   SetLength(Result, Count);
   // removing duplicates (overridden records)
   if aOverrides and (Length(Result) > 1) then begin
-    wbMergeSort(@Result[0], Length(Result), CompareElementsFormIDAndLoadOrder);
+    wbMergeSortPtr(@Result[0], Length(Result), CompareElementsFormIDAndLoadOrder);
     j := 0;
     for i := Succ(Low(Result)) to High(Result) do begin
       if Result[j].LoadOrderFormID <> Result[i].LoadOrderFormID then

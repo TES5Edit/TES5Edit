@@ -20,7 +20,13 @@ interface
 uses
   Classes, wbInterface;
 
-procedure wbMergeSort(aList: Pointer; aCount: Integer; aCompare: TListSortCompare);
+type
+  TListSortComparePtr = TListSortCompare;
+  TListSortCompare32 = function (Item1, Item2: Cardinal): Integer;
+
+
+procedure wbMergeSortPtr(aList: Pointer; aCount: Integer; aCompare: TListSortComparePtr);
+procedure wbMergeSort32(aList: Pointer; aCount: Integer; aCompare: TListSortCompare32);
 
 implementation
 
@@ -35,7 +41,7 @@ const
   MIN_SIZE = 32;
 
 {$IFDEF WIN32}
-function wbMergeSortInternal(_A, _B: PwbPointerArray; _Count : Integer; _Compare: TListSortCompare): PwbPointerArray; register;
+function wbMergeSortPtrInternal(_A, _B: PwbPointerArray; _Count : Integer; _Compare: TListSortCompare): PwbPointerArray; register;
 const
   SizeOfPointer  = SizeOf(Pointer);
   SizeOf2Pointer  = 2 * SizeOf(Pointer);
@@ -938,13 +944,13 @@ asm
 end;
 
 
-procedure wbMergeSort(aList: Pointer; aCount: Integer; aCompare: TListSortCompare);
+procedure wbMergeSortPtr(aList: Pointer; aCount: Integer; aCompare: TListSortComparePtr);
 
   procedure UseStackBufferLarge;
   var
     Buffer: array[0..Pred(4 * 1024)] of Pointer;
   begin
-    if wbMergeSortInternal(aList, @Buffer[0], aCount, aCompare) <> aList then
+    if wbMergeSortPtrInternal(aList, @Buffer[0], aCount, aCompare) <> aList then
       Move(Buffer, aList^, aCount * SizeOf(Pointer) );
   end;
 
@@ -952,7 +958,7 @@ procedure wbMergeSort(aList: Pointer; aCount: Integer; aCompare: TListSortCompar
   var
     Buffer: array[0..Pred(1024)] of Pointer;
   begin
-    if wbMergeSortInternal(aList, @Buffer[0], aCount, aCompare) <> aList then
+    if wbMergeSortPtrInternal(aList, @Buffer[0], aCount, aCompare) <> aList then
       Move(Buffer, aList^, aCount * SizeOf(Pointer) );
   end;
 
@@ -964,19 +970,24 @@ begin
 
   if aCount > 4 * 1024 then begin
     GetMem(Buffer, aCount * SizeOf(Pointer));
-    if wbMergeSortInternal(aList, Buffer, aCount, aCompare) <> aList then
+    if wbMergeSortPtrInternal(aList, Buffer, aCount, aCompare) <> aList then
       Move(Buffer^, aList^, aCount * SizeOf(Pointer));
     FreeMem(Buffer);
   end else if aCount > 1024 then
     UseStackBufferLarge
   else
     UseStackBufferSmall;
-
 end;
+
+procedure wbMergeSort32(aList: Pointer; aCount: Integer; aCompare: TListSortCompare32);
+begin
+  wbMergeSortPtr(aList, aCount, TListSortComparePtr(aCompare));
+end;
+
 {$ENDIF WIN32}
 
 {$IFDEF WIN64}
-procedure InsertionSort(aList: PwbPointerArray; left, right: integer; aCompare: TListSortCompare);
+procedure InsertionSortPtr(aList: PwbPointerArray; left, right: integer; aCompare: TListSortCompare);
 var
   i: Integer;
   j: integer;
@@ -993,25 +1004,25 @@ begin
  end;
 end;
 
-procedure MergeSort(ptrList: PwbPointerArray; left: Integer; right: Integer; aCompare: TListSortCompare; Buffer: PwbPointerArray);
+procedure MergeSortPtr(ptrList: PwbPointerArray; left: Integer; right: Integer; aCompare: TListSortCompare; Buffer: PwbPointerArray);
 var
   i, j, k, mid, aCount: Integer;
 begin
   mid := (left + right) div 2;
   if (left < mid) then begin
     if (mid - left) <= MIN_SIZE then begin
-      InsertionSort(ptrList, left, mid, aCompare)
+      InsertionSortPtr(ptrList, left, mid, aCompare)
     end
     else begin
-      MergeSort(ptrList, left, mid, aCompare, Buffer);
+      MergeSortPtr(ptrList, left, mid, aCompare, Buffer);
     end;
   end;
   if (succ(mid) < right) then begin
     if (right - succ(mid)) <= MIN_SIZE then begin
-      InsertionSort(ptrList, succ(mid), right, aCompare);
+      InsertionSortPtr(ptrList, succ(mid), right, aCompare);
     end
     else begin
-       MergeSort(ptrList, succ(mid), right, aCompare, Buffer);
+       MergeSortPtr(ptrList, succ(mid), right, aCompare, Buffer);
     end;
   end;
   if aCompare(ptrList[mid], ptrList[Succ(mid)]) < 0 then
@@ -1036,19 +1047,95 @@ begin
   end;
 end;
 
-procedure wbMergeSort(aList: Pointer; aCount: Integer; aCompare: TListSortCompare);
+procedure wbMergeSortPtr(aList: Pointer; aCount: Integer; aCompare: TListSortCompare);
 var
   Buffer: Pointer;
 begin
   if (aCount < 2) or (not Assigned(aList)) then
     Exit;
   if aCount <= MIN_SIZE then begin
-    InsertionSort(aList, 0, Pred(aCount), aCompare);
+    InsertionSortPtr(aList, 0, Pred(aCount), aCompare);
   end
   else begin
     GetMem(Buffer, aCount * SizeOf(Pointer));
-    MergeSort(aList, 0, Pred(aCount), aCompare, Buffer);
+    MergeSortPtr(aList, 0, Pred(aCount), aCompare, Buffer);
     FreeMem(Buffer, aCount * SizeOf(Pointer));
+  end;
+end;
+
+procedure InsertionSort32(aList: PwbCardinalArray; left, right: integer; aCompare: TListSortCompare32);
+var
+  i: Integer;
+  j: integer;
+  temp: Cardinal;
+begin
+  for i := Succ(left) to right do begin
+    j := i;
+    temp := aList[j];
+    while (j > left) AND (aCompare(temp, aList[Pred(j)]) < 0) do begin
+      aList[j] := aList[Pred(j)];
+      dec(j);
+    end;
+    aList[j] := temp;
+ end;
+end;
+
+procedure MergeSort32(ptrList: PwbCardinalArray; left: Integer; right: Integer; aCompare: TListSortCompare32; Buffer: PwbCardinalArray);
+var
+  i, j, k, mid, aCount: Integer;
+begin
+  mid := (left + right) div 2;
+  if (left < mid) then begin
+    if (mid - left) <= MIN_SIZE then begin
+      InsertionSort32(ptrList, left, mid, aCompare)
+    end
+    else begin
+      MergeSort32(ptrList, left, mid, aCompare, Buffer);
+    end;
+  end;
+  if (succ(mid) < right) then begin
+    if (right - succ(mid)) <= MIN_SIZE then begin
+      InsertionSort32(ptrList, succ(mid), right, aCompare);
+    end
+    else begin
+       MergeSort32(ptrList, succ(mid), right, aCompare, Buffer);
+    end;
+  end;
+  if aCompare(ptrList[mid], ptrList[Succ(mid)]) < 0 then
+    exit;
+  aCount := succ(mid - left);
+  Move(ptrList[left], Buffer[0], aCount * SizeOf(Pointer));
+  i := 0;
+  j := succ(mid);
+  k := left;
+  while (i < aCount) and (j <= right) do begin
+    if (aCompare(Buffer[i], ptrList[j]) <= 0) then begin
+      ptrList[k] := Buffer[i];
+      inc(i);
+    end else begin
+      ptrList[k] := ptrList[j];
+      inc(j);
+    end;
+    inc(k);
+  end;
+  if (i < aCount) then begin
+    Move(Buffer[i], ptrList[k], (aCount - i) * SizeOf(Pointer));
+  end;
+end;
+
+procedure wbMergeSort32(aList: Pointer; aCount: Integer; aCompare: TListSortCompare32);
+var
+  Buffer: Pointer;
+begin
+  if (aCount < 2) or (not Assigned(aList)) then
+    Exit;
+  if aCount <= MIN_SIZE then begin
+    InsertionSort32(aList, 0, Pred(aCount), aCompare);
+  end
+  else begin
+    GetMem(Buffer, aCount * SizeOf(Integer));
+    MergeSort32(aList, 0, Pred(aCount), aCompare, Buffer);
+    FreeMem(Buffer, aCount * SizeOf(Integer));
   end;
 end;
 {$ENDIF WIN64}
