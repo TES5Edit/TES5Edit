@@ -230,3 +230,9 @@ __history
 __history/*
 /SSEDump
 SSEDump/*
+*.stat
+/__recovery
+__recovery
+__recovery/*
+/Tools/xDump/SSEDump.exe
+/TES5Edit_log.txt
