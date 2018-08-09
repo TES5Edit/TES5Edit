@@ -38,14 +38,12 @@ object frmModGroupEdit: TfrmModGroupEdit
     Anchors = [akLeft, akTop, akRight, akBottom]
     Header.AutoSizeIndex = 0
     Header.Height = 16
-    Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowImages, hoShowSortGlyphs, hoVisible]
-    Header.SortColumn = 0
+    Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowImages, hoVisible]
     LineMode = lmSeparateTopNodes
     TabOrder = 1
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toFullRepaintOnResize, toGridExtensions, toInitOnSave, toToggleOnDblClick, toWheelPanning, toEditOnClick]
     TreeOptions.PaintOptions = [toPopupMode, toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseBlendedSelection]
     TreeOptions.SelectionOptions = [toExtendedFocus, toLevelSelectConstraint, toRightClickSelect, toSiblingSelectConstraint, toAlwaysSelectNode]
-    OnCompareNodes = vstModGroupItemsCompareNodes
     OnGetText = vstModGroupItemsGetText
     OnIncrementalSearch = vstModGroupItemsIncrementalSearch
     OnInitNode = vstModGroupItemsInitNode
@@ -53,15 +51,15 @@ object frmModGroupEdit: TfrmModGroupEdit
     OnNodeClick = vstModGroupItemsNodeClick
     Columns = <
       item
-        Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
+        Options = [coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
         Position = 0
-        Width = 494
+        Width = 424
         WideText = 'Name'
       end
       item
         Alignment = taCenter
         CaptionAlignment = taCenter
-        Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
+        Options = [coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
         Position = 1
         Width = 70
         WideText = 'Optional'
@@ -69,7 +67,7 @@ object frmModGroupEdit: TfrmModGroupEdit
       item
         Alignment = taCenter
         CaptionAlignment = taCenter
-        Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
+        Options = [coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
         Position = 2
         Width = 70
         WideText = 'Target'
@@ -77,7 +75,7 @@ object frmModGroupEdit: TfrmModGroupEdit
       item
         Alignment = taCenter
         CaptionAlignment = taCenter
-        Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
+        Options = [coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
         Position = 3
         Width = 70
         WideText = 'Source'
@@ -85,7 +83,7 @@ object frmModGroupEdit: TfrmModGroupEdit
       item
         Alignment = taCenter
         CaptionAlignment = taCenter
-        Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
+        Options = [coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
         Position = 4
         Width = 70
         WideText = 'Forbidden'
@@ -93,11 +91,18 @@ object frmModGroupEdit: TfrmModGroupEdit
       item
         Alignment = taCenter
         CaptionAlignment = taCenter
-        Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
+        Options = [coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
         Position = 5
-        Style = vsOwnerDraw
         Width = 70
         WideText = 'Ignore LO'
+      end
+      item
+        Alignment = taRightJustify
+        CaptionAlignment = taCenter
+        Options = [coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
+        Position = 6
+        Width = 70
+        WideText = 'Load Order'
       end>
   end
   object pnlError: TPanel
@@ -123,6 +128,8 @@ object frmModGroupEdit: TfrmModGroupEdit
     LabelPosition = lpLeft
     TabOrder = 0
     OnChange = edNameChange
+    OnKeyDown = edNameKeyDown
+    OnKeyPress = edNameKeyPress
   end
   object btnCancel: TButton
     Left = 700

@@ -55,9 +55,12 @@ type
     procedure mniSelectAllClick(Sender: TObject);
     procedure mniSelectNoneClick(Sender: TObject);
     procedure mniInvertSelectionClick(Sender: TObject);
+    procedure vstModGroupsNodeDblClick(Sender: TBaseVirtualTree;
+      const HitInfo: THitInfo);
   private
     ChangingChecked : Integer;
     procedure CollectSelected;
+    procedure DoSingleModGroupLoad(Node: PVirtualNode = nil);
     function GetSelectedOrAll: TNodeArray;
     function CheckStateForModGroup(aModGroup: PwbModGroup; aIsRootChild: Boolean): TCheckState;
   public
@@ -93,7 +96,6 @@ var
   Nodes    : TNodeArray;
   Node     : PVirtualNode;
   NodeData : PModGroupNodeData;
-  i        : Integer;
 begin
   Nodes := GetSelectedOrAll;
   if Length(Nodes) < 1 then
@@ -119,7 +121,6 @@ var
   Nodes    : TNodeArray;
   Node     : PVirtualNode;
   NodeData : PModGroupNodeData;
-  i        : Integer;
 begin
   Nodes := GetSelectedOrAll;
   if Length(Nodes) < 1 then
@@ -142,7 +143,6 @@ var
   Nodes    : TNodeArray;
   Node     : PVirtualNode;
   NodeData : PModGroupNodeData;
-  i        : Integer;
 begin
   Nodes := GetSelectedOrAll;
   if Length(Nodes) < 1 then
@@ -165,6 +165,29 @@ begin
   mniSelectAll.Enabled := Length(GetSelectedOrAll) > 0;
   mniSelectNone.Enabled := mniSelectAll.Enabled;
   mniInvertSelection.Enabled := mniSelectAll.Enabled;
+end;
+
+procedure TfrmModGroupSelect.DoSingleModGroupLoad(Node: PVirtualNode);
+begin
+  AllModGroups.ExcludeAll(SelectFlag);
+
+  if not Assigned(Node) then
+    if (MaxSelect > 1) and (vstModGroups.SelectedCount > 1) then begin
+      for Node in vstModGroups.SelectedNodes do
+        with PModGroupNodeData(vstModGroups.GetNodeData(Node))^ do
+          if Assigned(mgndModGroup) then
+            Include(mgndModGroup.mgFlags, SelectFlag)
+    end else
+      Node := vstModGroups.FocusedNode;
+
+  if Assigned(Node) then
+    with PModGroupNodeData(vstModGroups.GetNodeData(Node))^ do
+      if Assigned(mgndModGroup) then
+        Include(mgndModGroup.mgFlags, SelectFlag);
+
+  CollectSelected;
+  if btnOK.Enabled then
+    btnOK.Click;
 end;
 
 procedure TfrmModGroupSelect.edFilterChange(Sender: TObject);
@@ -226,11 +249,18 @@ begin
           vstModGroups.FocusedNode := Node;
         vstModGroups.Selected[Node] := True;
       end;
+      if ssCtrl in Shift then
+        DoSingleModGroupLoad;
       Exit;
     end;
-    CollectSelected;
-    if btnOK.Enabled then
-      btnOK.Click;
+
+    if (ssCtrl in Shift) or (Length(SelectedModGroups)=0) then
+      DoSingleModGroupLoad
+    else begin
+      CollectSelected;
+      if btnOK.Enabled then
+        btnOK.Click;
+    end;
   end else if Key = VK_ESCAPE then begin
     if btnCancel.Enabled then
       btnCancel.Click;
@@ -515,9 +545,7 @@ begin
     if Assigned(mgndModGroup) then begin
       if Length(mgndModGroup.mgItems) > 0 then
         Include(InitialStates, ivsHasChildren);
-      if not (FilterFlag in mgndModGroup.mgFlags) then
-        Include(InitialStates, ivsDisabled);
-     if not (mgfValid in mgndModGroup.mgFlags) then
+      if (FilterFlag <> mgfNone) and not (FilterFlag in mgndModGroup.mgFlags) then
         Include(InitialStates, ivsDisabled);
     end else
       Include(InitialStates, ivsDisabled);
@@ -529,6 +557,14 @@ begin
   if Key = '?' then begin
     edFilter.SetFocus;
   end;
+end;
+
+procedure TfrmModGroupSelect.vstModGroupsNodeDblClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
+begin
+  if GetKeyState(VK_CONTROL) < 0 then
+    with HitInfo do
+      if Assigned(HitNode) then
+        DoSingleModGroupLoad(HitNode);
 end;
 
 procedure TfrmModGroupSelect.vstModGroupsPaintText(Sender: TBaseVirtualTree;

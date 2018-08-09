@@ -54,6 +54,7 @@ object frmModGroupSelect: TfrmModGroupSelect
     OnInitChildren = vstModGroupsInitChildren
     OnInitNode = vstModGroupsInitNode
     OnKeyPress = vstModGroupsKeyPress
+    OnNodeDblClick = vstModGroupsNodeDblClick
     OnBeforeGetCheckState = vstModGroupsBeforeGetCheckState
     Columns = <
       item

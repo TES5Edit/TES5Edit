@@ -96,7 +96,6 @@ var
   Nodes    : TNodeArray;
   Node     : PVirtualNode;
   NodeData : PModuleNodeData;
-  i        : Integer;
 begin
   Nodes := GetSelectedOrAll;
   if Length(Nodes) < 1 then
@@ -122,7 +121,6 @@ var
   Nodes    : TNodeArray;
   Node     : PVirtualNode;
   NodeData : PModuleNodeData;
-  i        : Integer;
 begin
   Nodes := GetSelectedOrAll;
   if Length(Nodes) < 1 then
@@ -145,7 +143,6 @@ var
   Nodes    : TNodeArray;
   Node     : PVirtualNode;
   NodeData : PModuleNodeData;
-  i        : Integer;
 begin
   Nodes := GetSelectedOrAll;
   if Length(Nodes) < 1 then
@@ -393,7 +390,7 @@ begin
     if SelectFlag = mfActive then
       SelectedModules := AllModules.SimulateLoad
     else
-      SelectedModules := AllModules.FilteredByFlag(SelectFlag);
+      SelectedModules := AllModules.FilteredByFlag(SelectFlag).FilteredByFlag(FilterFlag);
 
     if Length(SelectedModules) < MinSelect then
       if Length(SelectedModules) = 0 then

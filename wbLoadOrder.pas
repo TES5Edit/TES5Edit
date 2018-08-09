@@ -112,7 +112,7 @@ type
     procedure ActivateMasters;
     function SimulateLoad: TwbModuleInfos;
     procedure DisableSimulatedLoad;
-    function FilteredByFlag(aFlag: TwbModuleFlag): TwbModuleInfos;
+    function FilteredByFlag(aFlag: TwbModuleFlag; aHasFlag: Boolean = True): TwbModuleInfos;
     function FilteredBy(const aFunc: TFunc<PwbModuleInfo, Boolean>): TwbModuleInfos;
   end;
 
@@ -721,14 +721,14 @@ begin
   SetLength(Result, j);
 end;
 
-function TwbModuleInfosHelper.FilteredByFlag(aFlag: TwbModuleFlag): TwbModuleInfos;
+function TwbModuleInfosHelper.FilteredByFlag(aFlag: TwbModuleFlag; aHasFlag: Boolean = True): TwbModuleInfos;
 var
   i, j: Integer;
 begin
   SetLength(Result, Length(Self));
   j := 0;
   for i := Low(Self) to High(Self) do
-    if aFlag in Self[i]^.miFlags then begin
+    if (not (aFlag in Self[i]^.miFlags)) xor aHasFlag then begin
       Result[j] := Self[i];
       Inc(j);
     end;
