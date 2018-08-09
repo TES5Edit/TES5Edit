@@ -362,6 +362,7 @@ type
     function GetDontShow: Boolean; virtual;
     procedure SetToDefault;
     procedure SetToDefaultInternal; virtual;
+    procedure SetToDefaultIfAsCreatedEmpty; virtual;
 
     function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; virtual;
@@ -479,6 +480,7 @@ type
     function GetIsInSK(aIndex: Integer): Boolean; virtual;
 
     procedure SetToDefaultInternal; override;
+    procedure SetToDefaultIfAsCreatedEmpty; override;
 
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); override;
 
@@ -5682,6 +5684,12 @@ begin
     Container.ElementNativeValues[Name] := aValue;
 end;
 
+procedure TwbContainer.SetToDefaultIfAsCreatedEmpty;
+begin
+  if csAsCreatedEmpty in cntStates then
+    SetToDefault;
+end;
+
 procedure TwbContainer.SetToDefaultInternal;
 var
   i         : Integer;
@@ -5694,6 +5702,8 @@ begin
 
   for i := Low(cntElements) to High(cntElements) do
     cntElements[i].SetToDefault;
+
+  Exclude(cntStates, csAsCreatedEmpty);
 end;
 
 procedure TwbContainer.SortBySortOrder;
@@ -13876,6 +13886,11 @@ begin
   end;
 end;
 
+procedure TwbElement.SetToDefaultIfAsCreatedEmpty;
+begin
+  {overriden in TwbContainer}
+end;
+
 procedure TwbElement.SetToDefaultInternal;
 begin
   { can be overriden }
@@ -14961,7 +14976,6 @@ begin
         end;
 
       Result := Element;
-
     end;
   end;
 
@@ -16425,7 +16439,7 @@ begin
         Reset;
         Init;
       end;
-    end;
+    end
   end;
 
   inherited;

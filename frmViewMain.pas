@@ -5779,6 +5779,7 @@ var
   TargetNode                  : PVirtualNode;
   TargetIndex                 : Integer;
   TargetElement               : IwbElement;
+  NewElement                  : IwbElement;
 begin
   if not wbEditAllowed then
     Exit;
@@ -5791,7 +5792,10 @@ begin
 
     //    vstView.BeginUpdate;
     try
-      TargetElement.Assign(TargetIndex, nil, False);
+      NewElement := TargetElement.Assign(TargetIndex, nil, False);
+      if Assigned(NewElement) then
+        NewElement.SetToDefaultIfAsCreatedEmpty;
+
       ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
       TargetElement := nil;
       PostResetActiveTree;
