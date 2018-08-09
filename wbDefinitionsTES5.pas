@@ -5392,8 +5392,8 @@ begin
       wbScriptPropertyObject,
       wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(5),
       wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2),
-	    wbArrayS('Alias Scripts', wbScriptEntry, -2)
-	  ]), -2)
+      wbArrayS('Alias Scripts', wbScriptEntry, -2)
+    ]), -2)
   ], cpNormal, False, nil, 3);
 
   wbVMADFragmentedSCEN := wbStruct(VMAD, 'Virtual Machine Adapter', [
