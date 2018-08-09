@@ -6504,7 +6504,7 @@ begin
   wbScriptPropertyObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
     wbStructSK([1], 'Object v2', [
       wbInteger('Unused', itU16, nil, cpIgnore),
-      wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
+      wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias).SetDefaultEditValue('None'),
       wbFormID('FormID')
     ], [2, 1, 0]),
     wbStructSK([1], 'Object v1', [
@@ -6523,7 +6523,7 @@ begin
         {0x01} 'Edited',
         {0x02} '',
         {0x03} 'Removed'
-      ])),
+      ])).SetDefaultEditValue('Edited'),
       wbUnion('Value', wbScriptPropertyStructMemberDecider, [
         {00} wbNull,
         {01} wbScriptPropertyObject,
@@ -6548,7 +6548,7 @@ begin
         {0x01} 'Edited',
         {0x02} '',
         {0x03} 'Removed'
-      ])),
+      ])).SetDefaultEditValue('Edited'),
       wbUnion('Value', wbScriptPropertyDecider, [
        {00} wbNull,
        {01} wbScriptPropertyObject,
@@ -6565,7 +6565,7 @@ begin
        {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbBoolEnum), -1),
        {17} wbArray('Array of Struct', wbScriptPropertyStruct, -1)
       ])
-    ]), -2, cpNormal, False, nil, nil, nil, False);
+    ]), -2, cpNormal, False, nil, nil, nil, wbCanAddScriptProperties);
 
   wbScriptEntry := wbStructSK([0], 'Script', [
     wbLenString('scriptName', 2),
@@ -6678,49 +6678,49 @@ begin
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
 
   wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore),
-    wbInteger('Object Format', itS16, nil, cpIgnore),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False)
+    wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(6),
+    wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2),
+    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, wbCanAddScripts)
   ]);
 
   wbVMADFragmentedPERK := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore),
-    wbInteger('Object Format', itS16, nil, cpIgnore),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+    wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(6),
+    wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2),
+    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, wbCanAddScripts),
     wbScriptFragments
   ], cpNormal, False, nil, 3);
 
   wbVMADFragmentedPACK := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore),
-    wbInteger('Object Format', itS16, nil, cpIgnore),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+    wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(6),
+    wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2),
+    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, wbCanAddScripts),
     wbScriptFragmentsPack
   ], cpNormal, False, nil, 3);
 
   wbVMADFragmentedQUST := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore),
-    wbInteger('Object Format', itS16, nil, cpIgnore),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+    wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(6),
+    wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2),
+    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, wbCanAddScripts),
     wbScriptFragmentsQuest,
     wbArrayS('Aliases', wbStructSK([0], 'Alias', [
       wbScriptPropertyObject,
-      wbInteger('Version', itS16, nil, cpIgnore),
-      wbInteger('Object Format', itS16, nil, cpIgnore),
+      wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(6),
+      wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2),
       wbArrayS('Alias Scripts', wbScriptEntry, -2)
     ]), -2)
   ], cpNormal, False, nil, 3);
 
   wbVMADFragmentedSCEN := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore),
-    wbInteger('Object Format', itS16, nil, cpIgnore),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+    wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(6),
+    wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2),
+    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, wbCanAddScripts),
     wbScriptFragmentsScen
   ], cpNormal, False, nil, 3);
 
   wbVMADFragmentedINFO := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore),
-    wbInteger('Object Format', itS16, nil, cpIgnore),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, False),
+    wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(6),
+    wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2),
+    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, wbCanAddScripts),
     wbScriptFragmentsInfo
   ], cpNormal, False, nil, 3);
 
