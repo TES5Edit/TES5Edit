@@ -97,6 +97,8 @@ var
   wbAllowDirectSave        : Boolean  = False;
   wbAllowDirectSaveFor     : TStringList;
   wbAllowMasterFilesEdit   : Boolean  = False; //must be set before DefineDefs
+  wbCanAddScripts          : Boolean  = True;
+  wbCanAddScriptProperties : Boolean  = True;
 
   wbPluginsFileName    : String;
   wbModGroupFileName   : string;
@@ -628,6 +630,7 @@ type
     function GetEditInfo: string;
     function GetDontShow: Boolean;
     procedure SetToDefault;
+    procedure SetToDefaultIfAsCreatedEmpty;
 
     procedure NotifyChanged(aContainer: Pointer);
 
@@ -1549,6 +1552,9 @@ type
     function CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean;
 
     function GetElementMap: TDynCardinalArray;
+
+    function SetDefaultEditValue(const aValue: string): IwbValueDef;
+    function SetDefaultNativeValue(const aValue: Variant): IwbValueDef;
 
     property Size[aBasePtr, aEndPtr: Pointer; const aElement: IwbElement]: Integer
       read GetSize;
@@ -4499,13 +4505,17 @@ type
 
   TwbValueDefState = (
     vdsIsVariableSize,
-    vdsIsVariableSizeChecked
+    vdsIsVariableSizeChecked,
+    vdsHasDefaultEditValue,
+    vdsHasDefaultNativeValue
   );
   TwbValueDefStates = set of TwbValueDefState;
 
   TwbValueDef = class(TwbNamedDef, IwbValueDef)
   protected
-    vdStates: TwbValueDefStates;
+    vdStates             : TwbValueDefStates;
+    vdDefaultEditValue   : string;
+    vdDefaultNativeValue : Variant;
     {---IwbValueDef---}
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; reintroduce; virtual; abstract;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; virtual;
@@ -4526,6 +4536,9 @@ type
     function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; virtual;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; virtual;
     function GetElementMap: TDynCardinalArray; virtual;
+
+    function SetDefaultEditValue(const aValue: string): IwbValueDef; virtual;
+    function SetDefaultNativeValue(const aValue: Variant): IwbValueDef; virtual;
 
     procedure MasterCountUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOld, aNew: Byte); virtual;
     procedure MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs); virtual;
@@ -4602,7 +4615,7 @@ type
                        aAfterLoad  : TwbAfterLoadCallback;
                        aAfterSet   : TwbAfterSetCallback;
                        aDontShow   : TwbDontShowCallback;
-                       aGetCP      : TwbGetConflictPriority; 
+                       aGetCP      : TwbGetConflictPriority;
                        aTerminator : Boolean;
                        aForward    : boolean = false); virtual;
     function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString; virtual;
@@ -4855,6 +4868,8 @@ type
     function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
 
+    function SetDefaultNativeValue(const aValue: Variant): IwbValueDef;
+
     procedure MasterCountUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOld, aNew: Byte); override;
     procedure MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs); override;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); override;
@@ -4898,6 +4913,8 @@ type
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
+
+    function SetDefaultNativeValue(const aValue: Variant): IwbValueDef; override;
 
     function ToValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Extended;
   public
@@ -8824,8 +8841,12 @@ end;
 
 constructor TwbIntegerDef.Clone(const aSource: TwbDef);
 begin
-  with aSource as TwbIntegerDef do
+  with aSource as TwbIntegerDef do begin
     Self.Create(defPriority, defRequired, noName, inType, inFormater, noDontShow, noAfterSet, inDefault, defGetCP, noTerminator).defSource := aSource;
+    Self.vdStates := Self.vdStates + (vdStates * [vdsHasDefaultEditValue, vdsHasDefaultNativeValue]);
+    Self.vdDefaultEditValue := vdDefaultEditValue;
+    Self.vdDefaultNativeValue := vdDefaultNativeValue;
+  end;
 end;
 
 function TwbIntegerDef.CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID, aNewFormID: TwbFormID): Boolean;
@@ -9130,11 +9151,23 @@ begin
   defReported := True;
 end;
 
+function TwbIntegerDef.SetDefaultNativeValue(const aValue: Variant): IwbValueDef;
+begin
+  Result := Self;
+  inDefault := aValue;
+end;
+
 function TwbIntegerDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 begin
-  Result := not Assigned(aBasePtr) or (ToInt(aBasePtr, aEndPtr, aElement) <> inDefault);
-  if Result then
-    FromInt(inDefault, aBasePtr, aEndPtr, aElement);
+  if vdsHasDefaultEditValue in vdStates then begin
+    Result := not Assigned(aBasePtr) or (ToEditValue(aBasePtr, aEndPtr, aElement) <> vdDefaultEditValue);
+    if Result then
+      FromEditValue(aBasePtr, aEndPtr, aElement, vdDefaultEditValue);
+  end else begin
+    Result := not Assigned(aBasePtr) or (ToInt(aBasePtr, aEndPtr, aElement) <> inDefault);
+    if Result then
+      FromInt(inDefault, aBasePtr, aEndPtr, aElement);
+  end;
 end;
 
 function IntToHex64(Value: Int64; Digits: Integer): string;
@@ -9361,13 +9394,17 @@ end;
 
 constructor TwbArrayDef.Clone(const aSource: TwbDef);
 begin
-  with aSource as TwbArrayDef do
+  with aSource as TwbArrayDef do begin
     if Assigned(arCountCallback) then
       Self.Create(defPriority, defRequired, noName, arElement, arCountCallback,
         arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, defGetCP, arCanAddTo, noTerminator, arTerminated).defSource := aSource
     else
       Self.Create(defPriority, defRequired, noName, arElement, arCount,
         arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, defGetCP, arCanAddTo, noTerminator, arTerminated).defSource := aSource;
+    Self.vdStates := Self.vdStates + (vdStates * [vdsHasDefaultEditValue, vdsHasDefaultNativeValue]);
+    Self.vdDefaultEditValue := vdDefaultEditValue;
+    Self.vdDefaultNativeValue := vdDefaultNativeValue;
+  end;
 end;
 
 constructor TwbArrayDef.Create(aPriority      : TwbConflictPriority;
@@ -9736,9 +9773,13 @@ end;
 
 constructor TwbStructDef.Clone(const aSource: TwbDef);
 begin
-  with aSource as TwbStructDef do
+  with aSource as TwbStructDef do begin
     Self.Create(defPriority, defRequired, noName, stMembers, stSortKey,
       stExSortKey, stElementMap, stOptionalFromElement, noDontShow, noAfterLoad, noAfterSet, defGetCP).defSource := aSource;
+    Self.vdStates := Self.vdStates + (vdStates * [vdsHasDefaultEditValue, vdsHasDefaultNativeValue]);
+    Self.vdDefaultEditValue := vdDefaultEditValue;
+    Self.vdDefaultNativeValue := vdDefaultNativeValue;
+  end;
 end;
 
 constructor TwbStructDef.Create(aPriority            : TwbConflictPriority;
@@ -10733,6 +10774,7 @@ begin
       if (i > 0) and TryStrToInt(Copy(Value, Succ(i), Length(Value) - Succ(i)), j) then
         Delete(Value, Pred(i), Length(Value));
     end;
+    {Try exact match first}
     for i := Low(enNames) to High(enNames) do
       if SameStr(enNames[i], Value) then begin
         Result := i;
@@ -10740,6 +10782,17 @@ begin
       end;
     for i := Low(enSparseNames) to High(enSparseNames) do with enSparseNames[i] do
       if SameStr(snName, Value) then begin
+        Result := snIndex;
+        Exit;
+      end;
+    {Now try case insensitive}
+    for i := Low(enNames) to High(enNames) do
+      if SameText(enNames[i], Value) then begin
+        Result := i;
+        Exit;
+      end;
+    for i := Low(enSparseNames) to High(enSparseNames) do with enSparseNames[i] do
+      if SameText(snName, Value) then begin
         Result := snIndex;
         Exit;
       end;
@@ -10899,8 +10952,12 @@ end;
 
 constructor TwbStringDef.Clone(const aSource: TwbDef);
 begin
-  with aSource as TwbStringDef do
+  with aSource as TwbStringDef do begin
     Self.Create(defPriority, defRequired, noName, sdSize, noAfterLoad, noAfterSet, noDontShow, defGetCP, noTerminator).defSource := aSource;
+    Self.vdStates := Self.vdStates + (vdStates * [vdsHasDefaultEditValue, vdsHasDefaultNativeValue]);
+    Self.vdDefaultEditValue := vdDefaultEditValue;
+    Self.vdDefaultNativeValue := vdDefaultNativeValue;
+  end;
 end;
 
 constructor TwbStringDef.Create(aPriority   : TwbConflictPriority;
@@ -10988,12 +11045,17 @@ begin
   Result := sdSize;
 end;
 
-function TwbStringDef.SetToDefault(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement): Boolean;
+function TwbStringDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 begin
-  Result := not Assigned(aBasePtr) or (ToString(aBasePtr, aEndPtr, aElement) <> '');
-  if Result then
-    FromEditValue(aBasePtr, aEndPtr, aElement, '');
+  if vdsHasDefaultNativeValue in vdStates then begin
+    Result := not Assigned(aBasePtr) or (ToNativeValue(aBasePtr, aEndPtr, aElement) <> vdDefaultNativeValue);
+    if Result then
+      FromNativeValue(aBasePtr, aEndPtr, aElement, vdDefaultNativeValue);
+  end else begin
+    Result := not Assigned(aBasePtr) or (ToEditValue(aBasePtr, aEndPtr, aElement) <> vdDefaultEditValue);
+    if Result then
+      FromEditValue(aBasePtr, aEndPtr, aElement, vdDefaultEditValue);
+  end;
 end;
 
 function TwbStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -11107,9 +11169,13 @@ end;
 
 constructor TwbFloatDef.Clone(const aSource: TwbDef);
 begin
-  with aSource as TwbFloatDef do
+  with aSource as TwbFloatDef do begin
     Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, fdScale, fdDigits, noDontShow,
       fdNormalizer, fdDefault, defGetCP, fdDouble, noTerminator).defSource := aSource;
+    Self.vdStates := Self.vdStates + (vdStates * [vdsHasDefaultEditValue, vdsHasDefaultNativeValue]);
+    Self.vdDefaultEditValue := vdDefaultEditValue;
+    Self.vdDefaultNativeValue := vdDefaultNativeValue;
+  end;
 end;
 
 constructor TwbFloatDef.Create(aPriority   : TwbConflictPriority;
@@ -11258,17 +11324,29 @@ begin
     Result := SizeOf(Single) + Ord(noTerminator);
 end;
 
+function TwbFloatDef.SetDefaultNativeValue(const aValue: Variant): IwbValueDef;
+begin
+  Result := Self;
+  fdDefault := aValue;
+end;
+
 function TwbFloatDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 var
   Value: Extended;
 begin
-  Value := ToNativeValue(aBasePtr, aEndPtr, aElement);
-  if fdDouble then
-    Result := not Assigned(aBasePtr) or not SameValue(Value, fdDefault)
-  else
-    Result := not Assigned(aBasePtr) or not SingleSameValue(Value, fdDefault);
-  if Result then
-    FromNativeValue(aBasePtr, aEndPtr, aElement, fdDefault);
+  if vdsHasDefaultEditValue in vdStates then begin
+    Result := not Assigned(aBasePtr) or (ToEditValue(aBasePtr, aEndPtr, aElement) <> vdDefaultEditValue);
+    if Result then
+      FromEditValue(aBasePtr, aEndPtr, aElement, vdDefaultEditValue);
+  end else begin
+    Value := ToNativeValue(aBasePtr, aEndPtr, aElement);
+    if fdDouble then
+      Result := not Assigned(aBasePtr) or not SameValue(Value, fdDefault)
+    else
+      Result := not Assigned(aBasePtr) or not SingleSameValue(Value, fdDefault);
+    if Result then
+      FromNativeValue(aBasePtr, aEndPtr, aElement, fdDefault);
+  end;
 end;
 
 function TwbFloatDef.ToValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Extended;
@@ -12343,8 +12421,12 @@ end;
 
 constructor TwbByteArrayDef.Clone(const aSource: TwbDef);
 begin
-  with aSource as TwbByteArrayDef do
+  with aSource as TwbByteArrayDef do begin
     Self.Create(defPriority, defRequired, noName, badSize, noDontShow, badCountCallBack, defGetCP, noTerminator).defSource := aSource;
+    Self.vdStates := Self.vdStates + (vdStates * [vdsHasDefaultEditValue, vdsHasDefaultNativeValue]);
+    Self.vdDefaultEditValue := vdDefaultEditValue;
+    Self.vdDefaultNativeValue := vdDefaultNativeValue;
+  end;
 end;
 
 constructor TwbByteArrayDef.Create(aPriority      : TwbConflictPriority;
@@ -12600,16 +12682,27 @@ var
   Size : Integer;
   Default : String;
 begin
-  Size := GetSize(aBasePtr, aEndPtr, aElement);
-  if (Size > 0) and (Size < High(Integer))  then begin
-    Default := '00';
-    while Length(Default)<(Size*3-1) do
-      Default := Default + ' 00';
-  end else
-    Default := '';
-  Result := not Assigned(aBasePtr) or (ToString(aBasePtr, aEndPtr, aElement) <> Default);
-  if Result then
-    FromEditValue(aBasePtr, aEndPtr, aElement, Default);
+  if vdsHasDefaultNativeValue in vdStates then begin
+    Result := not Assigned(aBasePtr) or (ToNativeValue(aBasePtr, aEndPtr, aElement) <> vdDefaultNativeValue);
+    if Result then
+      FromNativeValue(aBasePtr, aEndPtr, aElement, vdDefaultNativeValue);
+  end else begin
+    if vdsHasDefaultEditValue in vdStates then
+      Default := vdDefaultEditValue
+    else begin
+      Size := GetSize(aBasePtr, aEndPtr, aElement);
+      if (Size > 0) and (Size < High(Integer))  then begin
+        Default := '00';
+        while Length(Default)<(Size*3-1) do
+          Default := Default + ' 00';
+      end else
+        Default := '';
+    end;
+
+    Result := not Assigned(aBasePtr) or (ToString(aBasePtr, aEndPtr, aElement) <> Default);
+    if Result then
+      FromEditValue(aBasePtr, aEndPtr, aElement, Default);
+  end;
 end;
 
 function TwbByteArrayDef.ToEditValue(aBasePtr, aEndPtr: Pointer;
@@ -13100,6 +13193,20 @@ begin
   {can be overriden}
 end;
 
+function TwbValueDef.SetDefaultEditValue(const aValue: string): IwbValueDef;
+begin
+  vdDefaultEditValue := aValue;
+  Include(vdStates, vdsHasDefaultEditValue);
+  Result := Self;
+end;
+
+function TwbValueDef.SetDefaultNativeValue(const aValue: Variant): IwbValueDef;
+begin
+  vdDefaultNativeValue := aValue;
+  Include(vdStates, vdsHasDefaultNativeValue);
+  Result := Self;
+end;
+
 function TwbValueDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 begin
   Result := False;
@@ -13577,8 +13684,12 @@ end;
 
 constructor TwbUnionDef.Clone(const aSource: TwbDef);
 begin
-  with aSource as TwbUnionDef do
+  with aSource as TwbUnionDef do begin
     Self.Create(defPriority, defRequired, noName, udDecider, udMembers, noDontShow, noAfterSet, defGetCP).defSource := aSource;
+    Self.vdStates := Self.vdStates + (vdStates * [vdsHasDefaultEditValue, vdsHasDefaultNativeValue]);
+    Self.vdDefaultEditValue := vdDefaultEditValue;
+    Self.vdDefaultNativeValue := vdDefaultNativeValue;
+  end;
 end;
 
 constructor TwbUnionDef.Create(aPriority : TwbConflictPriority;
@@ -13867,8 +13978,12 @@ end;
 
 constructor TwbEmptyDef.Clone(const aSource: TwbDef);
 begin
-  with aSource as TwbEmptyDef do
+  with aSource as TwbEmptyDef do begin
     Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, noDontShow, edSorted, defGetCP).defSource := aSource;
+    Self.vdStates := Self.vdStates + (vdStates * [vdsHasDefaultEditValue, vdsHasDefaultNativeValue]);
+    Self.vdDefaultEditValue := vdDefaultEditValue;
+    Self.vdDefaultNativeValue := vdDefaultNativeValue;
+  end;
 end;
 
 constructor TwbEmptyDef.Create(aPriority  : TwbConflictPriority;
@@ -14115,8 +14230,12 @@ end;
 
 constructor TwbLenStringDef.Clone(const aSource: TwbDef);
 begin
-  with aSource as TwbLenStringDef do
+  with aSource as TwbLenStringDef do begin
     Self.Create(defPriority, defRequired, noName, Prefix, noAfterLoad, noAfterSet, noDontShow, defGetCP, noTerminator).defSource := aSource;
+    Self.vdStates := Self.vdStates + (vdStates * [vdsHasDefaultEditValue, vdsHasDefaultNativeValue]);
+    Self.vdDefaultEditValue := vdDefaultEditValue;
+    Self.vdDefaultNativeValue := vdDefaultNativeValue;
+  end;
 end;
 
 constructor TwbLenStringDef.Create(aPriority    : TwbConflictPriority;
@@ -14522,10 +14641,22 @@ begin
 end;
 
 function TwbStringMgefCodeDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
+var
+  Default: string;
 begin
-  Result := not Assigned(aBasePtr) or (ToString(aBasePtr, aEndPtr, aElement) <> '____');
-  if Result then
-    FromEditValue(aBasePtr, aEndPtr, aElement, '____');
+  if vdsHasDefaultNativeValue in vdStates then begin
+    Result := not Assigned(aBasePtr) or (ToNativeValue(aBasePtr, aEndPtr, aElement) <> vdDefaultNativeValue);
+    if Result then
+      FromNativeValue(aBasePtr, aEndPtr, aElement, vdDefaultNativeValue);
+  end else begin
+    if vdsHasDefaultEditValue in vdStates then
+      Default := vdDefaultEditValue
+    else
+      Default := '____';
+    Result := not Assigned(aBasePtr) or (ToEditValue(aBasePtr, aEndPtr, aElement) <> Default);
+    if Result then
+      FromEditValue(aBasePtr, aEndPtr, aElement, Default);
+  end;
 end;
 
 function TwbStringMgefCodeDef.TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString;
@@ -14768,10 +14899,14 @@ end;
 
 constructor TwbStructCDef.Clone(const aSource: TwbDef);
 begin
-  with aSource as TwbStructCDef do
+  with aSource as TwbStructCDef do begin
     Self.Create(defPriority, defRequired, noName, stMembers, stSortKey,
       stExSortKey, stOptionalFromElement, noDontShow, noAfterLoad, noAfterSet,
       scSizeCallback, scGetChapterType, scGetChapterTypeName, scGetChapterName, defGetCP).defSource := aSource;
+    Self.vdStates := Self.vdStates + (vdStates * [vdsHasDefaultEditValue, vdsHasDefaultNativeValue]);
+    Self.vdDefaultEditValue := vdDefaultEditValue;
+    Self.vdDefaultNativeValue := vdDefaultNativeValue;
+  end;
 end;
 
 constructor TwbStructCDef.Create(aPriority: TwbConflictPriority;
@@ -15252,9 +15387,13 @@ end;
 
 constructor TwbFlagDef.Clone(const aSource: TwbDef);
 begin
-  with (aSource as TwbFlagDef) do
+  with (aSource as TwbFlagDef) do begin
     Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet,
       noDontShow, defGetCP, noTerminator, fdFlagIndex).defSource := aSource;
+    Self.vdStates := Self.vdStates + (vdStates * [vdsHasDefaultEditValue, vdsHasDefaultNativeValue]);
+    Self.vdDefaultEditValue := vdDefaultEditValue;
+    Self.vdDefaultNativeValue := vdDefaultNativeValue;
+  end;
 end;
 
 constructor TwbFlagDef.Create(aPriority   : TwbConflictPriority;
