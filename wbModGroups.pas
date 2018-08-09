@@ -56,6 +56,7 @@ type
   TwbModGroupItems = array of TwbModGroupItem;
 
   TwbModGroupFlag = (
+    mgfNone,
     mgfValid,
     mgfValidChecked,
     mgfTagged
@@ -65,6 +66,8 @@ type
   PwbModGroup = ^TwbModGroup;
   TwbModGroupPtrs = array of PwbModGroup;
 
+  PwbModGroupsFile = ^TwbModGroupsFile;
+
   TwbModGroup = record
   private
     procedure mgLoad(aLines: TStrings);
@@ -72,9 +75,10 @@ type
     procedure mgAddSelfTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
     procedure mgTagTargetFiles(aSource: PwbModuleInfo);
   public
-    mgFlags : TwbModGroupFlags;
-    mgName  : string;
-    mgItems : TwbModGroupItems;
+    mgModGroupsFile : PwbModGroupsFile;
+    mgFlags         : TwbModGroupFlags;
+    mgName          : string;
+    mgItems         : TwbModGroupItems;
 
     function IsValid: Boolean;
     function ToString: string;
@@ -90,6 +94,8 @@ type
     function FilteredByFlag(aFlag: TwbModGroupFlag): TwbModGroupPtrs;
     function FilteredBy(const aFunc: TFunc<PwbModGroup, Boolean>): TwbModGroupPtrs;
 
+    function ToString: string;
+
     function Activate: Boolean;
   end;
 
@@ -99,7 +105,6 @@ type
   );
   TwbModGroupFileFlags = set of TwbModGroupFileFlag;
 
-  PwbModGroupsFile = ^TwbModGroupsFile;
   TwbModGroupsFile = record
   private
     procedure mgfLoad;
@@ -187,6 +192,8 @@ begin
     _ModGroupFiles := nil;
     raise;
   end;
+  for i := Low(_ModGroupFiles) to High(_ModGroupFiles) do
+    _ModGroupFiles[i].mgfCheckValid(True);
 end;
 
 procedure wbReloadModGroups;
@@ -226,6 +233,7 @@ begin
   AnyValid := False;
   for i := Low(mgfModGroups) to High(mgfModGroups) do
     with mgfModGroups[i] do begin
+      mgModGroupsFile := @Self;
       mgCheckValid(aForce);
       AnyValid := AnyValid or (mgfValid in mgFlags);
     end;
@@ -657,7 +665,7 @@ begin
   SetLength(Result, Length(Self));
   j := 0;
   for i := Low(Self) to High(Self) do
-    if aFlag in Self[i]^.mgFlags then begin
+    if (aFlag = mgfNone) or (aFlag in Self[i]^.mgFlags) then begin
       Result[j] := Self[i];
       Inc(j);
     end;
@@ -671,6 +679,19 @@ begin
   for i := Low(Self) to High(Self) do
     with Self[i]^ do
       Include(mgFlags, aFlag);
+end;
+
+function TwbModGroupPtrsHelper.ToString: string;
+var
+  i: Integer;
+begin
+  with TStringList.Create do try
+    for i := Low(Self) to High(Self) do
+      Add(Self[i].mgName);
+    Result := Text;
+  finally
+    Free;
+  end;
 end;
 
 initialization

@@ -1361,6 +1361,7 @@ object frmMain: TfrmMain
       OnInitNode = vstNavInitNode
       OnKeyDown = vstNavKeyDown
       OnKeyPress = vstNavKeyPress
+      ExplicitLeft = 3
       Columns = <
         item
           Position = 0
@@ -1474,6 +1475,7 @@ object frmMain: TfrmMain
         TabOrder = 0
         OnChange = edFileNameFilterChange
         OnKeyDown = edFileNameFilterKeyDown
+        OnKeyPress = edFileNameFilterKeyPress
       end
     end
   end
@@ -1651,6 +1653,16 @@ object frmMain: TfrmMain
       Caption = 'Create ModGroup...'
       GroupIndex = 4
       OnClick = mniNavCreateModGroupClick
+    end
+    object mniNavEditModGroup: TMenuItem
+      Caption = 'Edit ModGroup...'
+      GroupIndex = 4
+      OnClick = mniNavEditModGroupClick
+    end
+    object mniNavDeleteModGroups: TMenuItem
+      Caption = 'Delete ModGroups...'
+      GroupIndex = 4
+      OnClick = mniNavDeleteModGroupsClick
     end
     object N4: TMenuItem
       Caption = '-'

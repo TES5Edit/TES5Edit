@@ -343,6 +343,8 @@ type
     mniNavCreateModGroup: TMenuItem;
     N24: TMenuItem;
     mniViewCreateModGroup: TMenuItem;
+    mniNavEditModGroup: TMenuItem;
+    mniNavDeleteModGroups: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -571,6 +573,9 @@ type
     procedure mniViewModGroupsReloadClick(Sender: TObject);
     procedure mniModGroupsClick(Sender: TObject);
     procedure mniNavCreateModGroupClick(Sender: TObject);
+    procedure mniNavEditModGroupClick(Sender: TObject);
+    procedure mniNavDeleteModGroupsClick(Sender: TObject);
+    procedure edFileNameFilterKeyPress(Sender: TObject; var Key: Char);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
   protected
@@ -3308,6 +3313,99 @@ begin
   PostAddMessage('[Create SEQ file done] Processed Plugins: ' + IntToStr(Count) + ', Sequence Files Created: ' + IntToStr(j));
 end;
 
+procedure TfrmMain.mniNavDeleteModGroupsClick(Sender: TObject);
+var
+  pModGroup    : PwbModGroup;
+  lModGroup    : TwbModGroup;
+  ModGroupFile : TMemIniFile;
+  i            : Integer;
+begin
+  wbReloadModGroups;
+
+  with TfrmModGroupSelect.Create(Self) do try
+    AllModGroups := wbModGroupsByName(False);
+    AllModGroups.ExcludeAll(mgfTagged);
+    SelectFlag := mgfTagged;
+    FilterFlag := mgfNone;
+    MinSelect := 1;
+    AllowCancel;
+    Caption := 'Which ModGroups do you want to delete?';
+    if ShowModal <> mrOk then
+      Exit;
+
+    if MessageDlg('Are you sure you want to delete the following ModGroups?' + CRLF + CRLF +
+    SelectedModGroups.ToString + CRLF + CRLF +
+    'This can not be undone!' , mtConfirmation, mbYesNo, 0, mbNo) <> mrYes then
+      Exit;
+
+    for i := Low(SelectedModGroups) to High(SelectedModGroups) do
+      with SelectedModGroups[i]^ do
+        with TMemIniFile.Create(mgModGroupsFile.mgfFileName) do try
+          EraseSection(mgName);
+          UpdateFile;
+        finally
+          Free;
+        end;
+  finally
+    Free;
+  end;
+
+  mniViewModGroupsReloadClick(Self);
+end;
+
+procedure TfrmMain.mniNavEditModGroupClick(Sender: TObject);
+var
+  pModGroup    : PwbModGroup;
+  lModGroup    : TwbModGroup;
+  ModGroupFile : TMemIniFile;
+  sl           : TStringList;
+begin
+  wbReloadModGroups;
+
+  with TfrmModGroupSelect.Create(Self) do try
+    AllModGroups := wbModGroupsByName(False);
+    AllModGroups.ExcludeAll(mgfTagged);
+    SelectFlag := mgfTagged;
+    FilterFlag := mgfNone;
+    MinSelect := 1;
+    MaxSelect := 1;
+    AllowCancel;
+    Caption := 'Which ModGroup do you want to edit?';
+    if ShowModal <> mrOk then
+      Exit;
+    pModGroup := SelectedModGroups[0];
+  finally
+    Free;
+  end;
+
+  lModGroup := pModGroup^;
+  with TfrmModGroupEdit.Create(Self) do try
+    ModGroup := @lModGroup;
+    AllowCancel;
+    Caption := 'Editing ModGroup "'+ModGroup.mgName+'" from "'+ModGroup.mgModGroupsFile.mgfFileName+'"...';
+    if ShowModal <> mrOk then
+      Exit;
+  finally
+    Free;
+  end;
+
+  sl := TStringList.Create;
+  try
+    with TMemIniFile.Create(pModGroup.mgModGroupsFile.mgfFileName) do try
+      EraseSection(pModGroup.mgName);
+      GetStrings(sl);
+    finally
+      Free;
+    end;
+    sl.AddStrings(lModGroup.ToStrings);
+    sl.SaveToFile(pModGroup.mgModGroupsFile.mgfFileName);
+  finally
+    sl.Free;
+  end;
+
+  mniViewModGroupsReloadClick(Self);
+end;
+
 procedure TfrmMain.mniNavCleanupInjectedClick(Sender: TObject);
 var
   SelectedNodes               : TNodeArray;
@@ -4271,10 +4369,14 @@ end;
 
 procedure TfrmMain.edFileNameFilterChange(Sender: TObject);
 var
-  SearchText : string;
-  NodeText   : string;
-  Node       : PVirtualNode;
+  SearchText  : string;
+  NodeText    : string;
+  Node        : PVirtualNode;
+  FocusedNode : PVirtualNode;
+  NextNode    : PVirtualNode;
 begin
+  FocusedNode := vstNav.FocusedNode;
+
   SearchText := edFileNameFilter.Text;
   SearchText := SearchText.ToLowerInvariant;
   Node := vstNav.RootNode.FirstChild;
@@ -4288,22 +4390,38 @@ begin
         States := States + [vsFiltered];
       Node := NextSibling;
     end;
-  vstNav.Invalidate;
+
+
+  vstNav.BeginUpdate;
+  try
+    vstNav.FocusedNode := vstNav.GetFirstVisible;
+    vstNav.FocusedNode := FocusedNode;
+  finally
+    vstNav.EndUpdate;
+  end;
 end;
 
 procedure TfrmMain.edFileNameFilterKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 var
+  FocusedNode: PVirtualNode;
   Node : PVirtualNode;
 begin
   if Key = VK_RETURN then begin
-    vstNav.ClearSelection;
-    for Node in vstNav.VisibleNodes(nil) do begin
-      vstNav.FocusedNode := Node;
-      vstNav.Selected[Node] := True;
-      Break;
-    end;
+    FocusedNode := vstNav.FocusedNode;
+    if Assigned(FocusedNode) then
+      for Node in vstNav.VisibleNodes(nil) do begin
+        if Node = FocusedNode then
+          Exit;
+      end;
+    vstNav.FocusedNode := vstNav.GetFirstVisible;
     vstNav.SetFocus;
   end;
+end;
+
+procedure TfrmMain.edFileNameFilterKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = #13 then
+    Key := #0;
 end;
 
 procedure TfrmMain.edFormIDSearchChange(Sender: TObject);
@@ -6434,6 +6552,7 @@ begin
     wbReloadModGroups;
     AllModGroups := wbModGroupsByName;
     LoadModGroupsSelection(AllModGroups);
+    Caption := 'Reloading ModGroups - Which ModGroups do you want to activate?';
     if ShowModal = mrOk then begin
       SaveModGroupsSelection(SelectedModGroups);
       WasModGroupsExist := ModGroupsExist;
@@ -11346,6 +11465,9 @@ begin
     mniNavCreateModGroup.Visible := Length(Nodes) > 1;
   end;
 
+  mniNavEditModGroup.Visible := Length(wbModGroupsByName(False)) > 0;
+  mniNavDeleteModGroups.Visible := mniNavEditModGroup.Visible;
+
   mniNavCellChildPers.Visible := False;
   mniNavCellChildTemp.Visible := False;
   mniNavCellChildNotVWD.Visible := mniNavCheckForErrors.Visible and SelectionIncludesOnlyREFR(NoNodes);
@@ -14038,6 +14160,15 @@ begin
     Element := NodeDatas[Column].Element;
 
   if Shift = [ssCtrl] then begin
+    case Key of
+      Ord('M'): begin
+        pmuViewPopup(nil);
+        if mniViewCreateModGroup.Visible then
+          mniViewCreateModGroup.Click;
+        Exit;
+      end;
+    end;
+
     if not Assigned(Element) then
       Exit;
 
@@ -14857,6 +14988,11 @@ begin
       if mniNavChangeFormID.Enabled and mniNavChangeFormID.Visible then
         mniNavChangeFormID.Click;
     end;
+    Ord('M'): if Shift = [ssCtrl] then begin
+      pmuNavPopup(nil);
+      if mniNavCreateModGroup.Visible then
+        mniNavCreateModGroupClick(nil);
+    end;
   end;
 
   if ssCtrl in Shift then begin
@@ -14916,8 +15052,10 @@ end;
 
 procedure TfrmMain.vstNavKeyPress(Sender: TObject; var Key: Char);
 begin
-  if Key = '?' then
+  if Key = '?' then begin
+    Key := #0;
     edFileNameFilter.SetFocus;
+  end;
 end;
 
 procedure TfrmMain.vstNavPaintText(Sender: TBaseVirtualTree;
@@ -16208,6 +16346,7 @@ begin
       try
         AllModGroups := wbModGroupsByName;
         LoadModGroupsSelection(AllModGroups);
+        Caption := 'Which ModGroups do you want to activate?';
         if ShowModal = mrOk then begin
           SaveModGroupsSelection(SelectedModGroups);
           ModGroups := SelectedModGroups;
