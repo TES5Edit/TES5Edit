@@ -314,9 +314,11 @@ begin
     SetLength(Result, vstModules.RootNode.ChildCount);
     Node := vstModules.RootNode.FirstChild;
     i := 0;
-    while Assigned(Node) and not (vsDisabled in Node.States) do begin
-      Result[i] := Node;
-      Inc(i);
+    while Assigned(Node) do begin
+      if not (vsDisabled in Node.States) then begin
+        Result[i] := Node;
+        Inc(i);
+      end;
       Node := Node.NextSibling;
     end;
     SetLength(Result, i);
