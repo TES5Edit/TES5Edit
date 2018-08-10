@@ -714,7 +714,7 @@ begin
     ctCheck: Result := wbActorValueEnum.Check(aInt, aElement);
     ctToEditValue: Result := wbActorValueEnum.ToEditValue(aInt, aElement);
     ctEditType: Result := 'ComboBox';
-    ctEditInfo: Result := wbActorValueEnum.EditInfo[aInt, aElement];
+    ctEditInfo: Result := wbActorValueEnum.EditInfo[aInt, aElement].ToCommaText;
   end;
 end;
 

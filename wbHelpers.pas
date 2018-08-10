@@ -167,6 +167,7 @@ type
   TStringArrayHelper = record helper for TArray<string>
     function ForEach(const aFunc: TPassThroughFunc<string>): TArray<string>;
     function RemoveEmpty: TArray<string>;
+    function ToCommaText: string;
   end;
 
 implementation
@@ -186,11 +187,8 @@ begin
     Result[i] := aFunc(Self[i]);
 end;
 
-
 function TStringArrayHelper.RemoveEmpty: TArray<string>;
-
 var
-
   i, j: Integer;
 begin
   Result := Copy(Self);
@@ -203,6 +201,16 @@ begin
     end;
   end;
   SetLength(Result, j);
+end;
+
+function TStringArrayHelper.ToCommaText: string;
+begin
+  with TStringList.Create do try
+    AddStrings(Self);
+    Result := CommaText;
+  finally
+    Free;
+  end;
 end;
 
 function wbStripDotGhost(const aFileName: string): string;
@@ -822,7 +830,7 @@ var
 function wbCRC32App: TwbCRC32;
 begin
   if DebugHook <> 0 then
-    Exit($FFFFFFFE);
+    Exit(wbDevCRC32App);
 
   Result := _CRC32App;
   if Result = 0 then begin

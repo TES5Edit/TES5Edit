@@ -862,7 +862,7 @@ begin
     ctCheck: Result := wbActorValueEnum.Check(aInt, aElement);
     ctToEditValue: Result := wbActorValueEnum.ToEditValue(aInt, aElement);
     ctEditType: Result := 'ComboBox';
-    ctEditInfo: Result := wbActorValueEnum.EditInfo[aInt, aElement];
+    ctEditInfo: Result := wbActorValueEnum.EditInfo[aInt, aElement].ToCommaText;
   end;
 end;
 
@@ -1734,7 +1734,7 @@ begin
       Result := wbEventFunctionAndMemberEditInfo;
       if Result = '' then try
         slMember := TStringList.Create;
-        slMember.CommaText := wbEventMemberEnum.EditInfo[0, nil];
+        slMember.AddStrings(wbEventMemberEnum.EditInfo[0, nil]);
         with TStringList.Create do try
           for i := 0 to Pred(wbEventFunctionEnum.NameCount) do
             for j := 0 to Pred(slMember.Count) do
@@ -3510,7 +3510,6 @@ begin
          OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\Y'], 0))
       then
         wbProgressCallback('<Warning: Object Bounds in ' + MainRecord.Name + ' are abnormally large and can cause performance issues in game>');
-
   finally
     wbEndInternalEdit;
   end;

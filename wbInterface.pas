@@ -25,7 +25,9 @@ uses
   Graphics;
 
 const
-  VersionString  = '3.2.23 EXPERIMENTAL';
+  VersionString            = '3.2.23 EXPERIMENTAL';
+  wbDevCRC32App : Cardinal = $FFFFFFF9;
+
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
   wbHardcodedDat = '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
@@ -99,6 +101,7 @@ var
   wbAllowMasterFilesEdit   : Boolean  = False; //must be set before DefineDefs
   wbCanAddScripts          : Boolean  = True;
   wbCanAddScriptProperties : Boolean  = True;
+  wbEditInfoUseShortName   : Boolean  = True;
 
   wbPluginsFileName    : String;
   wbModGroupFileName   : string;
@@ -627,7 +630,7 @@ type
     procedure ResetReachable;
     function RemoveInjected(aCanRemove: Boolean): Boolean;
     function GetEditType: TwbEditType;
-    function GetEditInfo: string;
+    function GetEditInfo: TArray<string>;
     function GetDontShow: Boolean;
     procedure SetToDefault;
     procedure SetToDefaultIfAsCreatedEmpty;
@@ -764,7 +767,7 @@ type
 
     property EditType: TwbEditType
       read GetEditType;
-    property EditInfo: string
+    property EditInfo: TArray<string>
       read GetEditInfo;
 
     property DontShow: Boolean
@@ -912,7 +915,8 @@ type
     fsMemoryMapped,
     fsScanning,
     fsPseudoESL,
-    fsPseudoESLCompatible
+    fsPseudoESLCompatible,
+    fsIsOfficial
   );
 
   TwbFileStates = set of TwbFileState;
@@ -958,6 +962,9 @@ type
     function GetRecord(aIndex: Integer): IwbMainRecord;
     function GetRecordCount: Integer;
     function GetHeader: IwbMainRecord;
+
+    function GetCachedEditInfo(aIdent: Integer; var aEditInfo: TArray<string>): Boolean;
+    procedure SetCachedEditInfo(aIdent: Integer; const aEditInfo: TArray<string>);
 
     function GetIsESM: Boolean;
     procedure SetIsESM(Value: Boolean);
@@ -1136,6 +1143,8 @@ type
     procedure SetLoadOrderFormID(aFormID: TwbFormID);
     function GetEditorID: string;
     function GetCanHaveEditorID: Boolean;
+    function GetCanHaveFullName: Boolean;
+    function GetCanHaveBaseRecord: Boolean;
     procedure SetEditorID(const aValue: string);
     function GetFullName: string;
     function GetDisplayNameKey: string;
@@ -1222,6 +1231,8 @@ type
       read GetBaseRecord;
     property BaseRecordID: TwbFormID
       read GetBaseRecordID;
+    property CanHaveBaseRecord: Boolean
+      read GetCanHaveBaseRecord;
     property FormID: TwbFormID
       read GetFormID;
     property FixedFormID: TwbFormID
@@ -1236,6 +1247,8 @@ type
       read GetCanHaveEditorID;
     property FullName: string
       read GetFullName;
+    property CanHaveFullName: Boolean
+      read GetCanHaveFullName;
     property DisplayNameKey: string
       read GetDisplayNameKey;
 
@@ -1487,6 +1500,8 @@ type
 
     function GetQuickInitLimit: Integer;
     function GetContainsEditorID: Boolean;
+    function GetContainsFullName: Boolean;
+    function GetContainsBaseRecord: Boolean;
 
     function GetRecordHeaderStruct: IwbStructDef;
 
@@ -1500,6 +1515,10 @@ type
       read GetQuickInitLimit;
     property ContainsEditorID: Boolean
       read GetContainsEditorID;
+    property ContainsFullName: Boolean
+      read GetContainsFullName;
+    property ContainsBaseRecord: Boolean
+      read GetContainsBaseRecord;
 
     property RecordHeaderStruct: IwbStructDef
       read GetRecordHeaderStruct;
@@ -1543,7 +1562,7 @@ type
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant);
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
     function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType;
-    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 
     procedure MasterCountUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOld, aNew: Byte);
@@ -1577,7 +1596,7 @@ type
 
     property EditType[aBasePtr, aEndPtr: Pointer; const aElement: IwbElement]: TwbEditType
       read GetEditType;
-    property EditInfo[aBasePtr, aEndPtr: Pointer; const aElement: IwbElement]: string
+    property EditInfo[aBasePtr, aEndPtr: Pointer; const aElement: IwbElement]: TArray<string>
       read GetEditInfo;
   end;
 
@@ -1756,7 +1775,7 @@ type
     procedure BuildRef(aInt: Int64; const aElement: IwbElement);
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): string;
+    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -1779,7 +1798,7 @@ type
 
     property EditType[aInt: Int64; const aElement: IwbElement]: TwbEditType
       read GetEditType;
-    property EditInfo[aInt: Int64; const aElement: IwbElement]: string
+    property EditInfo[aInt: Int64; const aElement: IwbElement]: TArray<string>
       read GetEditInfo;
 
     property RequiresKey: Boolean
@@ -4207,17 +4226,24 @@ type
                                       : Boolean; virtual;
   end;
 
+  TwbRecordDefFlag = (
+    rdfAllowUnordered,
+    rdfCanContainFormIDs,
+    rdfContainsEditorID,
+    rdfContainsFullName,
+    rdfContainsBaseRecord
+  );
+  TwbRecordDefFlags = set of TwbRecordDefFlag;
+
   TwbRecordDef = class(TwbSignatureDef, IwbRecordDef)
   private
     recRecordFlags        : IwbIntegerDefFormater;
     recRecordHeaderStruct : IwbStructDef;
     recMembers            : array of IwbRecordMemberDef;
     recSignatures         : TStringList;
-    recAllowUnordered     : Boolean;
     recAddInfoCallback    : TwbAddInfoCallback;
-    recCanContainFormIDs  : Boolean;
     recQuickInitLimit     : Integer;
-    recContainsEditorID   : Boolean;
+    recDefFlags           : TwbRecordDefFlags;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority        : TwbConflictPriority;
@@ -4256,6 +4282,8 @@ type
     function GetSkipSignature(const aSignature: TwbSignature): Boolean; virtual;
     function GetQuickInitLimit: Integer;
     function GetContainsEditorID: Boolean;
+    function GetContainsFullName: Boolean;
+    function GetContainsBaseRecord: Boolean;
     function GetRecordHeaderStruct: IwbStructDef;
 
     procedure AfterLoad(const aElement: IwbElement); override;
@@ -4415,6 +4443,8 @@ type
     function GetSkipSignature(const aSignature: TwbSignature): Boolean; virtual;
     function GetQuickInitLimit: Integer; virtual;
     function GetContainsEditorID: Boolean;
+    function GetContainsFullName: Boolean;
+    function GetContainsBaseRecord: Boolean;
     function GetRecordHeaderStruct: IwbStructDef;
   end;
 
@@ -4473,6 +4503,8 @@ type
     function GetSkipSignature(const aSignature: TwbSignature): Boolean; virtual;
     function GetQuickInitLimit: Integer; virtual;
     function GetContainsEditorID: Boolean;
+    function GetContainsFullName: Boolean;
+    function GetContainsBaseRecord: Boolean;
     function GetRecordHeaderStruct: IwbStructDef;
   end;
 
@@ -4533,7 +4565,7 @@ type
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); virtual;
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; virtual;
     function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; virtual;
-    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; virtual;
+    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>; virtual;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; virtual;
     function GetElementMap: TDynCardinalArray; virtual;
 
@@ -4584,7 +4616,7 @@ type
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
     function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>; override;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
 
     {---IwbUnionDef---}
@@ -4865,7 +4897,7 @@ type
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
     function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>; override;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
 
     function SetDefaultNativeValue(const aValue: Variant): IwbValueDef;
@@ -5105,7 +5137,7 @@ type
     procedure BuildRef(aInt: Int64; const aElement: IwbElement); virtual;
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; virtual;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): string; virtual;
+    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>; virtual;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; virtual;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; virtual;
@@ -5147,7 +5179,7 @@ type
     procedure BuildRef(aInt: Int64; const aElement: IwbElement); override;
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): string; override;
+    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
@@ -5178,10 +5210,13 @@ type
   end;
 
   TwbFormIDDefFormater = class(TwbIntegerDefFormater, IwbFormID)
-  protected
+  private
+    {reporting mode only}
     FoundSignatures: TStringList;
     FoundNotAllowedReferences: TStringList;
     NotResolved: TStringList;
+  protected
+    fidExactIdent: Integer;
 
     constructor Clone(const aSource: TwbDef); override;
 
@@ -5189,6 +5224,9 @@ type
     function IsValidFlst(const aSignature: TwbSignature): Boolean; virtual;
     function CheckFlst(const aMainRecord: IwbMainRecord): Boolean; virtual;
     function IsValidMainRecord(const aMainRecord: IwbMainRecord): Boolean; virtual;
+
+    function GetExactIdentString: string; virtual;
+    function GetExactIdent: Integer;
 
     function FindRecordForAVCode(aInt: Int64; const aElement: IwbElement): IwbMainRecord;
 
@@ -5202,7 +5240,7 @@ type
     procedure BuildRef(aInt: Int64; const aElement: IwbElement); override;
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): string; override;
+    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
@@ -5248,6 +5286,8 @@ type
     function IsValidFlst(const aSignature: TwbSignature): Boolean; override;
     function CheckFlst(const aMainRecord: IwbMainRecord): Boolean; override;
     function IsValidMainRecord(const aMainRecord: IwbMainRecord): Boolean; override;
+
+    function GetExactIdentString: string; override;
 
     {---IwbDef---}
     procedure Report(const aParents: TwbDefPath); override;
@@ -5332,7 +5372,7 @@ type
     function CanContainFormIDs: Boolean; override;
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): string; override;
+    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
@@ -5398,7 +5438,7 @@ type
     enNames          : array of string;
     enSparseNames    : array of TwbSparseName;
     enSparseNamesMap : array of PwbSparseName;
-    enEditInfo       : string;
+    enEditInfo       : TArray<string>;
 
     UnknownEnums: TStringList;
   protected
@@ -5421,7 +5461,7 @@ type
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): string; override;
+    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
@@ -5502,7 +5542,7 @@ type
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): string; override;
+    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
@@ -7731,19 +7771,19 @@ end;
 
 function TwbRecordDef.AllowUnordered: Boolean;
 begin
-  Result := recAllowUnordered;
+  Result := rdfAllowUnordered in recDefFlags;
 end;
 
 function TwbRecordDef.CanContainFormIDs: Boolean;
 begin
-  Result := recCanContainFormIDs;
+  Result := rdfCanContainFormIDs in recDefFlags;
 end;
 
 constructor TwbRecordDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbRecordDef do
     Self.Create(defPriority, defRequired, GetDefaultSignature, noName, recRecordFlags, recMembers,
-      recAllowUnordered, recAddInfoCallback, noAfterLoad, noAfterSet).defSource := aSource;
+      AllowUnordered, recAddInfoCallback, noAfterLoad, noAfterSet).defSource := aSource;
 end;
 
 function TwbRecordDef.ContainsMemberFor(aSignature     : TwbSignature;
@@ -7771,7 +7811,9 @@ var
 begin
   recRecordFlags := aRecordFlags;
   recQuickInitLimit := -1;
-  recAllowUnordered := aAllowUnordered;
+  if aAllowUnordered then
+    Include(recDefFlags, rdfAllowUnordered);
+
   recAddInfoCallback := aAddInfoCallback;
 
   if Assigned(recRecordFlags) and Assigned(wbRecordFlags) and Assigned(wbMainRecordHeader) then begin
@@ -7786,7 +7828,8 @@ begin
   SetLength(recMembers, Length(aMembers));
   for i := Low(recMembers) to High(recMembers) do begin
     recMembers[i] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
-    recCanContainFormIDs := recCanContainFormIDs or aMembers[i].CanContainFormIDs;
+    if aMembers[i].CanContainFormIDs then
+      Include(recDefFlags, rdfCanContainFormIDs);
     for j := 0 to Pred(aMembers[i].SignatureCount) do begin
       Sig := aMembers[i].Signatures[j];
       if (Sig = 'EDID') or
@@ -7810,8 +7853,11 @@ begin
 
         recQuickInitLimit := i;
         if Sig = 'EDID' then
-          recContainsEditorID := True;
-
+          Include(recDefFlags, rdfContainsEditorID);
+        if Sig = 'FULL' then
+          Include(recDefFlags, rdfContainsFullName);
+        if Sig = 'NAME' then
+          Include(recDefFlags, rdfContainsBaseRecord);
       end;
       try
         recSignatures.AddObject(Sig, Pointer(i) );
@@ -7904,9 +7950,19 @@ begin
   FreeAndNil(recSignatures);
 end;
 
+function TwbRecordDef.GetContainsBaseRecord: Boolean;
+begin
+  Result := rdfContainsBaseRecord in recDefFlags;
+end;
+
 function TwbRecordDef.GetContainsEditorID: Boolean;
 begin
-  Result := recContainsEditorID;
+  Result := rdfContainsEditorID in recDefFlags;
+end;
+
+function TwbRecordDef.GetContainsFullName: Boolean;
+begin
+  Result := rdfContainsFullName in recDefFlags;
 end;
 
 function TwbRecordDef.GetDefType: TwbDefType;
@@ -8357,7 +8413,17 @@ begin
   Result := wbMainRecordHeader;
 end;
 
+function TwbSubRecordStructDef.GetContainsBaseRecord: Boolean;
+begin
+  Result := False;
+end;
+
 function TwbSubRecordStructDef.GetContainsEditorID: Boolean;
+begin
+  Result := False;
+end;
+
+function TwbSubRecordStructDef.GetContainsFullName: Boolean;
 begin
   Result := False;
 end;
@@ -8533,7 +8599,17 @@ begin
   FreeAndNil(sruSignatures);
 end;
 
+function TwbSubRecordUnionDef.GetContainsBaseRecord: Boolean;
+begin
+  Result := False;
+end;
+
 function TwbSubRecordUnionDef.GetContainsEditorID: Boolean;
+begin
+  Result := False;
+end;
+
+function TwbSubRecordUnionDef.GetContainsFullName: Boolean;
 begin
   Result := False;
 end;
@@ -8962,7 +9038,7 @@ begin
   end;
 end;
 
-function TwbIntegerDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbIntegerDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>;
 begin
   if Assigned(inFormater) then
     Result := inFormater.EditInfo[ToInt(aBasePtr, aEndPtr, aElement), aElement]
@@ -10222,7 +10298,7 @@ begin
   end;
 end;
 
-function TwbFlagsDef.GetEditInfo(aInt: Int64; const aElement: IwbElement): string;
+function TwbFlagsDef.GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>;
 var
   FlagCount  : Integer;
   IntegerDef : IwbIntegerDef;
@@ -10254,7 +10330,7 @@ begin
         s := s + ' (0x' + IntToHex(Int64(1) shl i, 8) + ')';
       Add(s);
     end;
-    Result := CommaText;
+    Result := ToStringArray;
   finally
     Free;
   end;
@@ -10531,7 +10607,7 @@ begin
       end;
     end;
     EditInfo.Sort;
-    enEditInfo := EditInfo.CommaText;
+    enEditInfo := EditInfo.ToStringArray;
   finally
     FreeAndNil(EditInfo);
   end;
@@ -10814,7 +10890,7 @@ begin
   end;
 end;
 
-function TwbEnumDef.GetEditInfo(aInt: Int64; const aElement: IwbElement): string;
+function TwbEnumDef.GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>;
 begin
   Result := enEditInfo;
 end;
@@ -11897,7 +11973,7 @@ begin
   end;
 end;
 
-function TwbFormIDDefFormater.GetEditInfo(aInt: Int64; const aElement: IwbElement): string;
+function TwbFormIDDefFormater.GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>;
 var
   ACVAIsValid : Boolean;
   Strings     : TStringList;
@@ -11921,7 +11997,10 @@ var
           if MainRecord.CanHaveEditorID and (MainRecord.EditorID = '') then
             Continue;
 
-          s := Trim(MainRecord.Name);
+          if wbEditInfoUseShortName then
+            s := Trim(MainRecord.ShortName)
+          else
+            s := Trim(MainRecord.Name);
           if s <> '' then begin
             if s[1] = '<' then
               Delete(s, 1, 1);
@@ -11957,7 +12036,10 @@ var
                     if MainRecord.CanHaveEditorID and (MainRecord.EditorID = '') then
                       Continue;
 
-                    s := Trim(MainRecord.Name);
+                    if wbEditInfoUseShortName then
+                      s := Trim(MainRecord.ShortName)
+                    else
+                      s := Trim(MainRecord.Name);
                     if s <> '' then begin
                       if s[1] = '<' then
                         Delete(s, 1, 1);
@@ -11988,7 +12070,7 @@ var
   i     : Integer;
   s     : string;
 begin
-  Result := '';
+  Result := nil;
 
   if not wbDisplayLoadOrderFormID then
     Exit;
@@ -11998,6 +12080,9 @@ begin
   if Assigned(aElement) then begin
     _File := aElement._File;
     if Assigned(_File) then begin
+      if _File.GetCachedEditInfo(GetExactIdent, Result) then
+        Exit;
+
       Strings := TwbFastStringListIC.Create;
       try
         CheckAll :=
@@ -12046,6 +12131,8 @@ begin
             Strings.Add('PlayerRef [00000014]');
         end;
 
+        {WARNING: always ensure the returned strings are sorted. Code in other
+                  places depends on it!}
         Strings.Sort;
         s := '';
         for i := Pred(Strings.Count) downto 0 do
@@ -12054,7 +12141,8 @@ begin
           else
             Strings.Delete(i);
 
-        Result := Strings.CommaText;
+        Result := Strings.ToStringArray;
+        _File.SetCachedEditInfo(GetExactIdent, Result);
       finally
         FreeAndNil(Strings);
       end;
@@ -12065,6 +12153,37 @@ end;
 function TwbFormIDDefFormater.GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType;
 begin
   Result := etComboBox;
+end;
+
+var
+  _ExactIdentMap: TStringList;
+
+function TwbFormIDDefFormater.GetExactIdent: Integer;
+var
+  ExactIdentString : string;
+  i                : Integer;
+begin
+  if fidExactIdent > 0 then
+    Exit(Pred(fidExactIdent));
+
+  if not Assigned(_ExactIdentMap) then begin
+    _ExactIdentMap := TStringList.Create;
+    _ExactIdentMap.Duplicates := dupError;
+    _ExactIdentMap.Sorted := True;
+  end;
+  ExactIdentString := GetExactIdentString;
+  if _ExactIdentMap.Find(ExactIdentString, i) then
+    Result := Integer(_ExactIdentMap.Objects[i])
+  else begin
+    Result := _ExactIdentMap.Count;
+    _ExactIdentMap.AddObject(ExactIdentString, Pointer(Result));
+  end;
+  fidExactIdent := Succ(Result);
+end;
+
+function TwbFormIDDefFormater.GetExactIdentString: string;
+begin
+  Result := ClassName;
 end;
 
 function TwbFormIDDefFormater.GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean;
@@ -13056,9 +13175,14 @@ begin
   Result := cdToStr;
 end;
 
-function TwbCallbackDef.GetEditInfo(aInt: Int64; const aElement: IwbElement): string;
+function TwbCallbackDef.GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>;
 begin
-  Result := cdToStr(aInt, aElement, ctEditInfo);
+  with TStringList.Create do try
+    CommaText := cdToStr(aInt, aElement, ctEditInfo);
+    Result := ToStringArray;
+  finally
+    Free;
+  end;
 end;
 
 function TwbCallbackDef.GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType;
@@ -13138,9 +13262,9 @@ begin
   Result := False;
 end;
 
-function TwbValueDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbValueDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>;
 begin
-  Result := '';
+  Result := nil;
 end;
 
 function TwbValueDef.GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType;
@@ -13464,6 +13588,11 @@ begin
     raise Exception.Create(Error);
 end;
 
+function TwbFormIDChecked.GetExactIdentString: string;
+begin
+  Result := inherited GetExactIdentString + '|' + fidcValidRefs.CommaText + '|' + fidcValidFlstRefs.CommaText;
+end;
+
 function TwbFormIDChecked.GetNoReach: Boolean;
 begin
   Result := fidcNoReach;
@@ -13592,9 +13721,9 @@ begin
   Result := ClassName;
 end;
 
-function TwbIntegerDefFormater.GetEditInfo(aInt: Int64; const aElement: IwbElement): string;
+function TwbIntegerDefFormater.GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>;
 begin
-  Result := '';
+  Result := nil;
 end;
 
 function TwbIntegerDefFormater.GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType;
@@ -13747,7 +13876,7 @@ begin
   Result := 'Union';
 end;
 
-function TwbUnionDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbUnionDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>;
 var
   ValueDef: IwbValueDef;
 begin
@@ -13755,7 +13884,7 @@ begin
   if Assigned(ValueDef) then
     Result := ValueDef.EditInfo[aBasePtr, aEndPtr, aElement]
   else
-    Result := '';
+    Result := nil;
 end;
 
 function TwbUnionDef.GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType;
@@ -15154,7 +15283,7 @@ end;
 
 function TwbIntegerDefFormaterUnion.GetEditInfo(aInt     : Int64;
                                           const aElement : IwbElement)
-                                                         : string;
+                                                         : TArray<string>;
 var
   IntegerDef: IwbIntegerDefFormater;
 begin
@@ -15162,7 +15291,7 @@ begin
   if Assigned(IntegerDef) then
     Result := IntegerDef.GetEditInfo(aInt, aElement)
   else
-    Result := '';
+    Result := nil;
 end;
 
 function TwbIntegerDefFormaterUnion.GetEditType(aInt     : Int64;

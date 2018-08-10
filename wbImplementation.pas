@@ -358,7 +358,7 @@ type
     procedure ResetReachable; virtual;
     function RemoveInjected(aCanRemove: Boolean): Boolean; virtual;
     function GetEditType: TwbEditType; virtual;
-    function GetEditInfo: string; virtual;
+    function GetEditInfo: TArray<string>; virtual;
     function GetDontShow: Boolean; virtual;
     procedure SetToDefault;
     procedure SetToDefaultInternal; virtual;
@@ -563,7 +563,16 @@ type
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
     procedure ForceClosed;
     procedure GetMasters(aMasters: TStrings);
+    procedure IncGeneration;
+    function GetFileGeneration: Integer;
   end;
+
+  TwbCachedEditInfo = record
+    ceiEditInfo   : TArray<string>;
+    ceiGeneration : Integer;
+  end;
+
+  TwbCachedEditInfos = TArray<TwbCachedEditInfo>;
 
   TwbFile = class(TwbContainer, IwbFile, IwbFileInternal)
   protected
@@ -598,6 +607,9 @@ type
     flInjectedRecords        : array of IwbMainRecord;
 
     flModule                 : PwbModuleInfo;
+
+    flCachedEditInfos        : TwbCachedEditInfos;
+    flGeneration             : Integer;
 
     procedure flOpenFile; virtual;
     procedure flCloseFile; virtual;
@@ -634,6 +646,8 @@ type
     function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement; override;
 
     function NewFormID: TwbFormID;
+
+    function GetHighestGenerationSelfAndMasters: Integer;
 
     {---IwbFile---}
     function GetFileName: string;
@@ -673,6 +687,9 @@ type
 
     procedure BuildReachable;
 
+    function GetCachedEditInfo(aIdent: Integer; var aEditInfo: TArray<string>): Boolean;
+    procedure SetCachedEditInfo(aIdent: Integer; const aEditInfo: TArray<string>);
+
     function GetIsESM: Boolean;
     procedure SetIsESM(Value: Boolean);
 
@@ -696,6 +713,8 @@ type
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
     procedure ForceClosed;
     procedure GetMasters(aMasters: TStrings); virtual;
+    procedure IncGeneration;
+    function GetFileGeneration: Integer;
 
     procedure Scan; virtual;
     procedure SortRecords;
@@ -766,7 +785,7 @@ type
     function IsFlags: Boolean; virtual;
 
     function GetEditType: TwbEditType; override;
-    function GetEditInfo: string; override;
+    function GetEditInfo: TArray<string>; override;
 
     function GetConflictPriority: TwbConflictPriority; override;
 
@@ -833,8 +852,8 @@ type
     procedure SetReferencesInjected(aValue: Boolean);
     procedure ClearForRelease;
 
-    procedure SaveRefsToStream(aStream: TStream);
-    procedure LoadRefsFromStream(aStream: TStream);
+    procedure SaveRefsToStream(aStream: TStream; aSaveNames: Boolean);
+    procedure LoadRefsFromStream(aStream: TStream; aLoadNames: Boolean);
 
     procedure MakeHeaderWriteable;
     function mrStruct: PwbMainRecordStruct;
@@ -888,7 +907,9 @@ type
     mrsHasMesh,
     mrsNoUpdateRefs,
     mrsBasePtrAllocated,
-    mrsOverridesSorted
+    mrsOverridesSorted,
+    mrsEditorIDFromCache,
+    mrsFullNameFromCache
   );
 
   TwbMainRecordStates = set of TwbMainRecordState;
@@ -928,6 +949,10 @@ type
     mreGeneration       : Integer;
     mrePrev             : Pointer;
     mreNext             : Pointer;
+
+    mrName              : string;
+    mrShortName         : string;
+    mrDisplayName       : string;
 
     function mrStruct: PwbMainRecordStruct; inline;
 
@@ -1011,6 +1036,8 @@ type
     procedure SetLoadOrderFormID(aFormID: TwbFormID);
     function GetEditorID: string;
     function GetCanHaveEditorID: Boolean;
+    function GetCanHaveFullName: Boolean;
+    function GetCanHaveBaseRecord: Boolean;
     procedure SetEditorID(const aValue: string);
     function GetFullName: string;
     function GetDisplayNameKey: string;
@@ -1096,8 +1123,8 @@ type
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
     procedure SetReferencesInjected(aValue: Boolean);
     procedure ClearForRelease;
-    procedure SaveRefsToStream(aStream: TStream);
-    procedure LoadRefsFromStream(aStream: TStream);
+    procedure SaveRefsToStream(aStream: TStream; aSaveNames: Boolean);
+    procedure LoadRefsFromStream(aStream: TStream; aLoadNames: Boolean);
 
     {---IwbMainRecordEntry---}
     procedure RemoveEntry;
@@ -1815,6 +1842,9 @@ end;
 
 { TwbFile }
 
+var
+  _FileGeneration: Integer;
+
 procedure TwbFile.AddMaster(const aFileName: string; IsTemporary: Boolean);
 var
   _File : IwbFile;
@@ -1973,6 +2003,8 @@ begin
     end;
   end;
 
+  IncGeneration;
+
   if flFormIDsSorted then
     Exit;
 
@@ -2118,8 +2150,10 @@ begin
       try
         FileStream.Read(flRecordsCount, SizeOf(flRecordsCount));
         Assert(flRecordsCount=Length(flRecords));
-        for i := 0 to Pred(flRecordsCount) do
-          (flRecords[i] as IwbMainRecordInternal).LoadRefsFromStream(FileStream);
+        for i := 0 to Pred(flRecordsCount) do begin
+          (flRecords[i] as IwbMainRecordInternal).LoadRefsFromStream(FileStream, fsIsOfficial in flStates);
+          wbTick;
+        end;
       finally
         FileStream.Free;
       end;
@@ -2138,8 +2172,10 @@ begin
             FileStream := TBufferedFileStream.Create(CacheFileName, fmCreate);
             try
               FileStream.Write(flRecordsCount, SizeOf(flRecordsCount));
-              for i := 0 to Pred(flRecordsCount) do
-                (flRecords[i] as IwbMainRecordInternal).SaveRefsToStream(FileStream);
+              for i := 0 to Pred(flRecordsCount) do begin
+                (flRecords[i] as IwbMainRecordInternal).SaveRefsToStream(FileStream, fsIsOfficial in flStates);
+                wbTick;
+              end;
             finally
               FileStream.Free;
             end;
@@ -2445,8 +2481,10 @@ begin
     if SameText(ExtractFileName(aFileName), wbGameName + wbHardcodedDat) then
       Include(flStates, fsIsHardcoded);
     flCompareTo := wbExpandFileName(aCompareTo);
-  end else if SameText(ExtractFileName(aFileName), wbGameName + '.esm') then
+  end else if SameText(ExtractFileName(aFileName), wbGameName + '.esm') then begin
     Include(flStates, fsIsGameMaster);
+    Include(flStates, fsIsOfficial);
+  end;
   if aOnlyHeader then
     Include(flStates, fsOnlyHeader);
 
@@ -2476,6 +2514,10 @@ begin
 
   flOpenFile;
   Scan;
+
+  if Assigned(flModule) then
+    if flModule.miOfficialIndex < High(Integer) then
+      Include(flStates, fsIsOfficial);
 end;
 
 var
@@ -2546,6 +2588,8 @@ begin
       Include(flModule.miFlags, mfLoaded);
     end;
   end;
+
+  BuildOrLoadRef(False);
 end;
 
 constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo);
@@ -2626,6 +2670,7 @@ begin
         with miMasters[i]^ do
           if Assigned(miFile) then
             AddMaster(_File);
+  BuildOrLoadRef(False);
 end;
 
 destructor TwbFile.Destroy;
@@ -2938,6 +2983,21 @@ begin
     Result := wbGameName + '.exe';
 end;
 
+function TwbFile.GetCachedEditInfo(aIdent: Integer; var aEditInfo: TArray<string>): Boolean;
+begin
+  if aIdent > High(flCachedEditInfos) then
+    Exit(False);
+  with flCachedEditInfos[aIdent] do begin
+    Result := ceiGeneration >= GetHighestGenerationSelfAndMasters;
+    if Result then
+      aEditInfo := ceiEditInfo
+    else begin
+      ceiEditInfo := nil;
+      ceiGeneration := 0;
+    end;
+  end;
+end;
+
 function TwbFile.GetCRC32: TwbCRC32;
 begin
   Result := flCRC32;
@@ -2967,6 +3027,11 @@ end;
 function TwbFile.GetFileFileID: TwbFileID;
 begin
   Result := TwbFileID.Create(GetMasterCount);
+end;
+
+function TwbFile.GetFileGeneration: Integer;
+begin
+  Result := flGeneration;
 end;
 
 function TwbFile.GetFileName: string;
@@ -3019,6 +3084,15 @@ begin
     {Result already set}
   end else
     Result := nil;
+end;
+
+function TwbFile.GetHighestGenerationSelfAndMasters: Integer;
+var
+  i: Integer;
+begin
+  Result := GetFileGeneration;
+  for i := Low(flMasters) to High(flMasters) do
+    Result := Max(Result, (flMasters[i] as IwbFileInternal).GetFileGeneration);
 end;
 
 function TwbFile.GetIsEditable: Boolean;
@@ -3248,6 +3322,12 @@ begin
   end;
 end;
 
+procedure TwbFile.IncGeneration;
+begin
+  Inc(_FileGeneration);
+  flGeneration := _FileGeneration;
+end;
+
 procedure TwbFile.InjectMainRecord(const aRecord: IwbMainRecord);
 var
   i: Integer;
@@ -3275,6 +3355,8 @@ begin
     Pointer(flInjectedRecords[i]) := nil;
   end;
   flInjectedRecords[i] := aRecord;
+
+  IncGeneration;
 end;
 
 function TwbFile.IsElementEditable(const aElement: IwbElement): Boolean;
@@ -3581,6 +3663,7 @@ begin
     end;
     SetLength(flInjectedRecords, Pred(Length(flInjectedRecords)));
 
+    IncGeneration;
   end;
 end;
 
@@ -3620,6 +3703,8 @@ begin
           wbProgressCallback('Error: <'+e.Message+'> while trying to determine master record for ' + aRecord.Name);
     end;
   end;
+
+  IncGeneration;
 end;
 
 procedure TwbFile.Scan;
@@ -3826,6 +3911,16 @@ begin
 
   flProgress('Processing completed');
   flLoadFinished := True;
+end;
+
+procedure TwbFile.SetCachedEditInfo(aIdent: Integer; const aEditInfo: TArray<string>);
+begin
+  if High(flCachedEditInfos) < aIdent then
+    SetLength(flCachedEditInfos, Succ(aIdent));
+  with flCachedEditInfos[aIdent] do begin
+    ceiEditInfo := aEditInfo;
+    ceiGeneration := _FileGeneration;
+  end;
 end;
 
 procedure TwbFile.SetHasNoFormID(Value: Boolean);
@@ -6383,14 +6478,25 @@ const
   FULL = $4C4C5546;
   NAME = $454D414E;
 var
-  SubRecord: IwbSubRecord;
+  SubRecord   : IwbSubRecord;
+  NotRelevant : Boolean;
 begin
-  if Supports(aElement, IwbSubRecord, SubRecord) then
+  if Supports(aElement, IwbSubRecord, SubRecord) then begin
+    NotRelevant := False;
     case Cardinal(SubRecord.Signature) of
       EDID: mrEditorID := SubRecord.Value;
       FULL: mrFullName := SubRecord.Value;
       NAME: Exclude(mrStates, mrsBaseRecordChecked);
+    else
+      NotRelevant := True;
     end;
+    if not NotRelevant then begin
+      (GetFile as IwbFileInternal).IncGeneration;
+      mrName := '';
+      mrShortName := '';
+      mrDisplayName := '';
+    end;
+  end;
   inherited;
   if not (mrsNoUpdateRefs in mrStates) then
     UpdateRefs;
@@ -7156,25 +7262,23 @@ var
 begin
   Result := nil;
 
-  if not ((mrsQuickInitDone in mrStates) or (csInitOnce in cntStates)) then begin
-    SelfRef := Self as IwbContainerElementRef;
-    Assert(not (csInit in cntStates));
-    Include(mrStates, mrsQuickInit);
-    Include(cntStates, csInit);
-    try
-      try
-        Init;
-      finally
-        DoReset(True);
-      end;
-    finally
-      Exclude(cntStates, csInit);
-      Exclude(mrStates, mrsQuickInit);
-    end;
-  end;
-
   if not (mrsBaseRecordChecked in mrStates) then begin
     SelfRef := Self as IwbContainerElementRef;
+    if not ((mrsQuickInitDone in mrStates) or (csInitOnce in cntStates)) then begin
+      Assert(not (csInit in cntStates));
+      Include(mrStates, mrsQuickInit);
+      Include(cntStates, csInit);
+      try
+        try
+          Init;
+        finally
+          DoReset(True);
+        end;
+      finally
+        Exclude(cntStates, csInit);
+        Exclude(mrStates, mrsQuickInit);
+      end;
+    end;
     mrBaseRecordID := TwbFormID.Null;
     Include(mrStates, mrsBaseRecordChecked);
     if Supports(GetRecordBySignature('NAME'), IwbContainerElementRef, NameRec) then
@@ -7183,6 +7287,7 @@ begin
       end;
     Exit;
   end;
+
   if not mrBaseRecordID.IsNull then
     with GetFile do
       Result := RecordByFormID[mrBaseRecordID, True];
@@ -7195,9 +7300,19 @@ begin
   Result := GetFile.FileFormIDtoLoadOrderFormID(mrBaseRecordID);
 end;
 
+function TwbMainRecord.GetCanHaveBaseRecord: Boolean;
+begin
+  Result := Assigned(mrDef) and mrDef.ContainsBaseRecord;
+end;
+
 function TwbMainRecord.GetCanHaveEditorID: Boolean;
 begin
   Result := Assigned(mrDef) and mrDef.ContainsEditorID;
+end;
+
+function TwbMainRecord.GetCanHaveFullName: Boolean;
+begin
+  Result := Assigned(mrDef) and mrDef.ContainsFullName;
 end;
 
 function TwbMainRecord.GetCheck: string;
@@ -7331,6 +7446,9 @@ var
   GroupRecord : IwbGroupRecord;
   MapMarker   : IwbContainerElementRef;
 begin
+  if mrDisplayName <> '' then
+    Exit(mrDisplayName);
+
   Result := GetFullName;
   if Result = '' then
     if
@@ -7362,6 +7480,9 @@ begin
     end else if (GetSignature = 'INFO') then begin
         Result := GetElementValue('Responses\Response\NAM1');
     end;
+
+  if fsIsOfficial in GetFile.FileStates then
+    mrDisplayName := Result;
 end;
 
 function TwbMainRecord.GetDisplayNameKey: string;
@@ -7407,26 +7528,30 @@ function TwbMainRecord.GetEditorID: string;
 var
   SelfRef: IwbContainerElementRef;
 begin
+  if mrsEditorIDFromCache in mrStates then
+    Exit(mrEditorID);
+
   SelfRef := Self as IwbContainerElementRef;
 
-  if not ((mrsQuickInitDone in mrStates) or (csInitOnce in cntStates)) then begin
-    if csInit in cntStates then begin
-      Result := '<EditorID not yet available: init still running>';
-      Exit;
-    end;
-    Include(mrStates, mrsQuickInit);
-    Include(cntStates, csInit);
-    try
-      try
-        Init;
-      finally
-        DoReset(True);
+  if not ((mrsQuickInitDone in mrStates) or (csInitOnce in cntStates)) then
+    if GetCanHaveEditorID then begin
+      if csInit in cntStates then begin
+        Result := '<EditorID not yet available: init still running>';
+        Exit;
       end;
-    finally
-      Exclude(cntStates, csInit);
-      Exclude(mrStates, mrsQuickInit);
+      Include(mrStates, mrsQuickInit);
+      Include(cntStates, csInit);
+      try
+        try
+          Init;
+        finally
+          DoReset(True);
+        end;
+      finally
+        Exclude(cntStates, csInit);
+        Exclude(mrStates, mrsQuickInit);
+      end;
     end;
-  end;
 
   Result := mrEditorID;
 end;
@@ -7470,26 +7595,30 @@ function TwbMainRecord.GetFullName: string;
 var
   SelfRef: IwbContainerElementRef;
 begin
+  if mrsFullNameFromCache in mrStates then
+    Exit(mrFullName);
+
   SelfRef := Self as IwbContainerElementRef;
 
-  if not ((mrsQuickInitDone in mrStates) or (csInitOnce in cntStates)) then begin
-    Include(mrStates, mrsQuickInit);
-    if csInit in cntStates then begin
-      Result := '<FullName not yet available: init still running>';
-      Exit;
-    end;
-    Include(cntStates, csInit);
-    try
-      try
-        Init;
-      finally
-        DoReset(True);
+  if not ((mrsQuickInitDone in mrStates) or (csInitOnce in cntStates)) then
+    if GetCanHaveFullName then begin
+      Include(mrStates, mrsQuickInit);
+      if csInit in cntStates then begin
+        Result := '<FullName not yet available: init still running>';
+        Exit;
       end;
-    finally
-      Exclude(cntStates, csInit);
-      Exclude(mrStates, mrsQuickInit);
+      Include(cntStates, csInit);
+      try
+        try
+          Init;
+        finally
+          DoReset(True);
+        end;
+      finally
+        Exclude(cntStates, csInit);
+        Exclude(mrStates, mrsQuickInit);
+      end;
     end;
-  end;
 
   Result := mrFullName;
 end;
@@ -7611,7 +7740,7 @@ type
     Ref, ID: Cardinal;
   end;
 
-var
+threadvar
   PrecombinedCacheFileName: string;
   PrecombinedCacheCellFormID: TwbFormID;
   PrecombinedCache: array of TwbPrecombinedInfo;
@@ -7981,6 +8110,9 @@ var
   s : string;
 begin
   if wbDisplayShorterNames then begin
+    if mrShortName <> '' then
+      Exit(mrShortName);
+
     Result := '';
 
     s := GetEditorID;
@@ -8002,6 +8134,8 @@ begin
     else
       Result := Result + '[' + GetSignature + ':' + GetFormID.ToString(True) + ']';
 
+    if fsIsOfficial in GetFile.FileStates then
+      mrShortName := Result;
   end else begin
     Result := inherited GetName;
 
@@ -8028,12 +8162,18 @@ function TwbMainRecord.GetName: string;
 var
   s : string;
 begin
+  if mrName <> '' then
+    Exit(mrName);
+
   Result := GetShortName;
   if Assigned(mrDef) then begin
     s := Trim(mrDef.AdditionalInfoFor(Self));
     if s <> '' then
       Result := Result + ' (' + s + ')';
   end;
+
+  if fsIsOfficial in GetFile.FileStates then
+    mrName := Result;
 end;
 
 function TwbMainRecord.GetNativeValue: Variant;
@@ -8467,7 +8607,7 @@ begin
       (wbVWDAsQuestChildren and ((Signature = 'DLBR') or (Signature = 'DIAL') or (Signature = 'SCEN')));
 end;
 
-procedure TwbMainRecord.LoadRefsFromStream(aStream: TStream);
+procedure TwbMainRecord.LoadRefsFromStream(aStream: TStream; aLoadNames: Boolean);
 var
   _File         : IwbFile;
   Files         : array of IwbFile;
@@ -8511,9 +8651,44 @@ begin
   if i>0 then begin
     SetLength(mrReferences, i);
     aStream.Read(mrReferences[0], SizeOf(TwbFormID) * i);
-    for i := 0 to Length(mrReferences) do
-      ProcessRef(mrReferences[i]);
   end;
+
+  aStream.Read(i, SizeOf(i));
+  SetLength(mrEditorID, i);
+  if i>0 then
+    aStream.Read(mrEditorID[1], SizeOf(Char) * i);
+  Include(mrStates, mrsEditorIDFromCache);
+
+  aStream.Read(i, SizeOf(i));
+  SetLength(mrFullName, i);
+  if i>0 then
+    aStream.Read(mrFullName[1], SizeOf(Char) * i);
+  Include(mrStates, mrsFullNameFromCache);
+
+  aStream.Read(mrBaseRecordID, SizeOf(mrBaseRecordID));
+  Include(mrStates, mrsBaseRecordChecked);
+
+  if aLoadNames then begin
+    (** )
+    aStream.Read(i, SizeOf(i));
+    SetLength(mrName, i);
+    if i>0 then
+      aStream.Read(mrName[1], SizeOf(Char) * i);
+    (**)
+    aStream.Read(i, SizeOf(i));
+    SetLength(mrShortName, i);
+    if i>0 then
+      aStream.Read(mrShortName[1], SizeOf(Char) * i);
+    (** )
+    aStream.Read(i, SizeOf(i));
+    SetLength(mrDisplayName, i);
+    if i>0 then
+      aStream.Read(mrDisplayName[1], SizeOf(Char) * i);
+    (**)
+  end;
+
+  for i := Low(mrReferences) to High(mrReferences) do
+    ProcessRef(mrReferences[i]);
   Include(cntStates, csRefsBuild);
   cntRefsBuildAt := eGeneration;
 end;
@@ -9127,15 +9302,48 @@ begin
   end;
 end;
 
-procedure TwbMainRecord.SaveRefsToStream(aStream: TStream);
+procedure TwbMainRecord.SaveRefsToStream(aStream: TStream; aSaveNames: Boolean);
 var
-  i: Integer;
+  i            : Integer;
 begin
   aStream.Write(mrStruct.mrsFormID, SizeOf(TwbFormID));
+
   i := Length(mrReferences);
   aStream.Write(i, SizeOf(i));
   if i>0 then
     aStream.Write(mrReferences[0], SizeOf(TwbFormID) * i);
+
+  i := Length(GetEditorID);
+  aStream.Write(i, SizeOf(i));
+  if i>0 then
+    aStream.Write(mrEditorID[1], SizeOf(Char) * i);
+
+  i := Length(GetFullName);
+  aStream.Write(i, SizeOf(i));
+  if i>0 then
+    aStream.Write(mrFullName[1], SizeOf(Char) * i);
+
+  GetBaseRecordID;
+  aStream.Write(mrBaseRecordID, SizeOf(mrBaseRecordID));
+
+  if aSaveNames then begin
+    (** )
+    i := Length(GetName);
+    aStream.Write(i, SizeOf(i));
+    if i>0 then
+      aStream.Write(mrName[1], SizeOf(Char) * i);
+    (**)
+    i := Length(GetShortName);
+    aStream.Write(i, SizeOf(i));
+    if i>0 then
+      aStream.Write(mrShortName[1], SizeOf(Char) * i);
+    (** )
+    i := Length(GetDisplayName);
+    aStream.Write(i, SizeOf(i));
+    if i>0 then
+      aStream.Write(mrDisplayName[1], SizeOf(Char) * i);
+    (**)
+  end;
 end;
 
 procedure TwbMainRecord.ScanData;
@@ -13209,9 +13417,9 @@ begin
   end;
 end;
 
-function TwbElement.GetEditInfo: string;
+function TwbElement.GetEditInfo: TArray<string>;
 begin
-  Result := '';
+  Result := nil;
 end;
 
 function TwbElement.GetEditType: TwbEditType;
@@ -16217,11 +16425,11 @@ begin
   Result := (dcfDontSave in dcFlags);
 end;
 
-function TwbDataContainer.GetEditInfo: string;
+function TwbDataContainer.GetEditInfo: TArray<string>;
 var
   ValueDef: IwbValueDef;
 begin
-  Result := '';
+  Result := nil;
   if Supports(GetValueDef, IwbValueDef, ValueDef) then
     Result := ValueDef.EditInfo[GetDataBasePtr, dcDataEndPtr, Self];
 end;

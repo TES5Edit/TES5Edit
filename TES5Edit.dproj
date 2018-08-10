@@ -138,6 +138,7 @@
         <DCCReference Include="wbNifMath.pas"/>
         <DCCReference Include="wbHalfFloat.pas"/>
         <DCCReference Include="wbModGroups.pas"/>
+        <DCCReference Include="wbBetterStringList.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
