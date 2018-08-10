@@ -591,7 +591,7 @@ type
     ReachableBuild: Boolean;
     ReferencedBySortColumn: TListColumn;
 
-    EditInfoCache: string;
+    EditInfoCache: TArray<string>;
     EditInfoCacheID: Pointer;
 
     function GetRefBySelectionAsMainRecords: TDynMainRecords;
@@ -13631,6 +13631,16 @@ begin
   vstCreateEditor(Element, EditLink);
 end;
 
+type
+  {WARNING: This is correct for Delphi 10.2 Tokyo. Might need to be adjusted for other Delphi versions.}
+  TStringListPrivateHacker = class(TStrings)
+  private
+    FList: TStringItemList;
+    FCount: Integer;
+    FCapacity: Integer;
+    FSorted: Boolean;
+  end;
+
 procedure TfrmMain.vstCreateEditor(const aElement: IwbElement; out EditLink: IVTEditLink);
 var
   {$IFNDEF LiteVersion}
@@ -13656,26 +13666,40 @@ begin
         EditInfoCacheID := aElement.ElementID;
         EditInfoCache := aElement.EditInfo;
       end;
-      ComboLink.Properties.Items.CommaText := EditInfoCache;
-      ComboLink.Properties.Sorted := True;
-      ComboLink.Properties.DropDownRows := 16;
+      with ComboLink.Properties do begin
+        with Items do begin
+          Clear;
+          AddStrings(EditInfoCache);
+        end;
+        if LookupItems.Count > 1000 then
+          {Bound to be a FormID list, they are guaranteed to be sorted already}
+          TStringListPrivateHacker(LookupItems).FSorted := True
+        else
+          Sorted := True;
+        DropDownRows := 16;
+      end;
     end;
     etCheckComboBox: begin
       CheckComboLink := TcxCheckComboEditLink.Create;
       EditLink := CheckComboLink;
-      with TStringList.Create do try
-        CommaText := aElement.EditInfo;
-        for i := 0 to Pred(Count) do
-          CheckComboLink.Properties.Items.AddCheckItem(Strings[i]);
-        CheckComboLink.Properties.DropDownRows := Count;
-        if CheckComboLink.Properties.DropDownRows > 32 then
-          CheckComboLink.Properties.DropDownRows := 32;
-      finally
-        Free;
+      if aElement.ElementID <> EditInfoCacheID then begin
+        EditInfoCacheID := aElement.ElementID;
+        EditInfoCache := aElement.EditInfo;
       end;
-      CheckComboLink.Properties.Delimiter := ', ';
-      CheckComboLink.Properties.ShowEmptyText := False;
-      CheckComboLink.Properties.DropDownAutoWidth := True;
+
+      with CheckComboLink.Properties do begin
+        with Items do begin
+          Clear;
+          for i := Low(EditInfoCache) to High(EditInfoCache) do
+            AddCheckItem(EditInfoCache[i]);
+        end;
+        DropDownRows := Length(EditInfoCache);
+        if DropDownRows > 32 then
+          DropDownRows := 32;
+        Delimiter := ', ';
+        ShowEmptyText := False;
+        DropDownAutoWidth := True;
+      end;
     end;
     {$ELSE}
     etComboBox: begin
@@ -16514,10 +16538,34 @@ begin
   FreeAndNil(ltLoadList);
 end;
 
+var
+  _LoaderProgressLock      : TRTLCriticalSection;
+  _LoaderProgressLastShown : TDateTime;
+  _LoaderProgressAction    : string;
+
 procedure LoaderProgressNoAbortCheck(const s: string);
+var
+  t: string;
+  lNow: TDateTime;
 begin
-  if s <> '' then
-    frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Background Loader: ' + s);
+  _LoaderProgressLock.Enter;
+  try
+    lNow := Now;
+    if _LoaderProgressLastShown = 0 then
+      _LoaderProgressLastShown := lNow;
+
+    t := s;
+    if (t = '') and (_LoaderProgressAction <> '') and ((lNow - _LoaderProgressLastShown) > 1/24/60/6 {10 seconds} ) then
+      t
+      := 'still ' + _LoaderProgressAction + '...';
+
+    if t <> '' then begin
+      frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', lNow - wbStartTime) + '] Background Loader: ' + t);
+      _LoaderProgressLastShown := lNow;
+    end;
+  finally
+    _LoaderProgressLock.Leave;
+  end;
 end;
 
 procedure LoaderProgress(const s: string);
@@ -16546,6 +16594,7 @@ begin
   try
     frmMain.LoaderStarted := True;
     _wbProgressCallback := LoaderProgress;
+    wbCurrentTick := GetTickCount64;
     try
       {if ltLoadOrderOffset + ltLoadList.Count >= 255 then begin
         LoaderProgress('Too many plugins selected. Adding '+IntToStr(ltLoadList.Count)+' files would exceed the maximum index of 254');
@@ -16553,6 +16602,9 @@ begin
       end else} begin
         if not Assigned(wbContainerHandler) then begin
           wbContainerHandler := wbCreateContainerHandler;
+
+          _LoaderProgressLastShown := Now;
+          _LoaderProgressAction := 'loading resources';
 
           // Load archives defined in the game ini
           n := TStringList.Create;
@@ -16613,6 +16665,8 @@ begin
           wbContainerHandler.AddFolder(ltDataPath);
         end;
 
+        _LoaderProgressAction := 'loading modules';
+
         for i := 0 to Pred(ltLoadList.Count) do begin
           LoaderProgress('loading "' + ltLoadList[i] + '"...');
           if FileExists(ltLoadList[i]) then
@@ -16653,6 +16707,7 @@ begin
         end;
 
         if wbBuildRefs then begin
+          _LoaderProgressAction := 'building references';
           {$IFDEF USE_PARALLEL_BUILD_REFS}
           wbBuildingRefsParallel := True;
           try
@@ -16662,6 +16717,7 @@ begin
             begin
               wbStartTime := StartTime;
               _wbProgressCallback := LoaderProgress;
+              wbCurrentTick := GetTickCount64;
               try
                 {$ELSE}
                 for i := Low(ltFiles) to High(ltFiles) do
@@ -16669,6 +16725,12 @@ begin
                   if not ltFiles[i].IsNotPlugin then begin
                     try
                       OnlyLoad := wbDoNotBuildRefsFor.Find(ltFiles[i].FileName, dummy);
+
+                      if OnlyLoad then
+                        if not (wbDontCache or wbDontCacheLoad) then
+                          if (wbToolMode = tmEdit) and not (wbQuickShowConflicts or wbQuickClean) then
+                            OnlyLoad := False;
+
                       if not (OnlyLoad and (wbDontCache or wbDontCacheLoad)) then begin
                         if OnlyLoad then
                           s := 'loading'
@@ -16707,6 +16769,7 @@ begin
                   {$IFDEF USE_PARALLEL_BUILD_REFS}
               finally
                 _wbProgressCallback := nil;
+                wbCurrentTick := 0;
               end;
             end);
           finally
@@ -16725,6 +16788,8 @@ begin
       end;
     end;
   finally
+    wbCurrentTick := 0;
+    _LoaderProgressAction := '';
     frmMain.SendLoaderDone;
     LoaderProgress('finished');
     _wbProgressCallback := nil;
@@ -17081,4 +17146,7 @@ begin  // Let's show from 1 to 32 lines to pick from
 end;
 
 initialization
+  _LoaderProgressLock.Initialize;
+finalization
+  _LoaderProgressLock.Free;
 end.

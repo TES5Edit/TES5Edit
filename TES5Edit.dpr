@@ -86,7 +86,8 @@ uses
   wbDataFormatNifTypes in 'wbDataFormatNifTypes.pas',
   wbNifMath in 'wbNifMath.pas',
   wbHalfFloat in 'wbHalfFloat.pas',
-  wbModGroups in 'wbModGroups.pas';
+  wbModGroups in 'wbModGroups.pas',
+  wbBetterStringList in 'wbBetterStringList.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
