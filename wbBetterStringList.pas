@@ -18,13 +18,16 @@ unit wbBetterStringList;
 
 interface
 
+implementation
+
 uses
   System.Types,
   System.Classes,
   System.SysUtils,
-  DDetours;
-
-implementation
+  System.Diagnostics,
+  DDetours,
+  wbInterface,
+  wbSort;
 
 type
   TAssign = procedure(Source: TPersistent) of object;
@@ -57,11 +60,15 @@ type
 
   TStringListProtectedHacker = class(TStringList);
 
+  TCompareStrings = function(const S1, S2: string): Integer of object;
+
 var
   CodePointer_TStringList_Assign : TAssign;
   Trampoline_TStringList_Assign  : procedure(Self: TObject; Source: TPersistent);
 
 procedure Detour_TStringList_Assign(Self: TStringListProtectedHacker; Source: TStringListPrivateHacker);
+var
+  CompareSelf, CompareSource: TCompareStrings;
 begin
   if TObject(Source) is TStringList then begin
     with TStringListPrivateHacker(Self), Self do begin
@@ -70,6 +77,8 @@ begin
         Clear;
         FCaseSensitive := Source.FCaseSensitive;
         FDuplicates := Source.FDuplicates;
+
+        { Don't sort during copying, will sort after if necessary }
         FSorted := False;
 
         DefaultEncoding := Source.FDefaultEncoding;
@@ -87,10 +96,19 @@ begin
           FCount := Source.FCount;
           FCapacity := Source.FCapacity;
         end else
-          { there may be overriden methods that need to be called... }
+          { there may be overriden methods that need to be called }
           AddStrings(TStrings(Source));
 
-        FSorted := Source.FSorted;
+        CompareSelf := Self.CompareStrings;
+        CompareSource := TStringListProtectedHacker(Source).CompareStrings;
+        if TMethod(CompareSelf).Code = TMethod(CompareSelf).Code then
+          { source and self are using the same compare method, so if source
+            was already sorted, self is now already correctly sorted too }
+          FSorted := Source.FSorted
+        else
+          { source and self are using different compare methods, we need to
+            actually sort the strings now }
+          Sorted := Source.FSorted;
       finally
         EndUpdate;
       end;
@@ -99,10 +117,147 @@ begin
     Trampoline_TStringList_Assign(Self, Source);
 end;
 
-initialization
+type
+  TSort = procedure of object;
 
-  with TStringList.Create do try
+var
+  CodePointer_TStringList_Sort           : TSort;
+  CodePointer_TStringList_CompareStrings : TCompareStrings;
+  Trampoline_TStringList_Sort            : procedure(Self: TStringListProtectedHacker);
+
+function ListSortCompareStringItemPtr_AnsiCompareStr(Item1, Item2: TwbMergeSort<TwbTwoPtr>.TPtr): Integer;
+{$IFDEF WIN32}
+asm
+  mov eax,[eax]
+  mov edx,[edx]
+  jmp AnsiCompareStr
+end;
+{$ENDIF}
+{$IFDEF WIN64}
+asm
+  mov rcx,[rcx]
+  mov rdx,[rdx]
+  jmp AnsiCompareStr
+end;
+{$ENDIF}
+
+function ListSortCompareStringItemPtr_AnsiCompareText(Item1, Item2: TwbMergeSort<TwbTwoPtr>.TPtr): Integer;
+{$IFDEF WIN32}
+asm
+  mov eax,[eax]
+  mov edx,[edx]
+  jmp AnsiCompareText
+end;
+{$ENDIF}
+{$IFDEF WIN64}
+asm
+  mov rcx,[rcx]
+  mov rdx,[rdx]
+  jmp AnsiCompareText
+end;
+{$ENDIF}
+
+function ListSortCompareStringItemPtr_CompareStr(Item1, Item2: TwbMergeSort<TwbTwoPtr>.TPtr): Integer;
+{$IFDEF WIN32}
+asm
+  mov eax,[eax]
+  mov edx,[edx]
+  jmp CompareStr
+end;
+{$ENDIF}
+{$IFDEF WIN64}
+asm
+  mov rcx,[rcx]
+  mov rdx,[rdx]
+  jmp CompareStr
+end;
+{$ENDIF}
+
+function ListSortCompareStringItemPtr_CompareText(Item1, Item2: TwbMergeSort<TwbTwoPtr>.TPtr): Integer;
+{$IFDEF WIN32}
+asm
+  mov eax,[eax]
+  mov edx,[edx]
+  jmp CompareText
+end;
+{$ENDIF}
+{$IFDEF WIN64}
+(**)
+asm
+  mov rcx,[rcx]
+  mov rdx,[rdx]
+  jmp CompareText
+end;
+(** )
+begin
+  Result := CompareText(String(Item1^.A), string(Item2^.A));
+end;
+(**)
+{$ENDIF}
+
+var
+  sw1, sw2: TStopwatch;
+
+procedure Detour_TStringList_Sort(Self: TStringListProtectedHacker);
+var
+  CompareSelf     : TCompareStrings;
+  CanHandle       : Boolean;
+  ListSortCompare : TwbMergeSort<TwbTwoPtr>.TListSortCompareTPtr;
+  //List: TStringItemList;
+  i: Integer;
+begin
+  with TStringListPrivateHacker(Self), Self do begin
+    if FSorted or (FCount < 2) then
+      Exit;
+    CanHandle := True;
+    if ClassType <> TStringList then begin
+      CompareSelf := CompareStrings;
+      if TMethod(CompareSelf).Code <> TMethod(CodePointer_TStringList_CompareStrings).Code then
+        CanHandle := False;
+    end;
+    if CanHandle then begin
+      if UseLocale then
+        if CaseSensitive then
+          ListSortCompare := ListSortCompareStringItemPtr_AnsiCompareStr
+        else
+          ListSortCompare := ListSortCompareStringItemPtr_AnsiCompareText
+      else
+        if CaseSensitive then
+          ListSortCompare := ListSortCompareStringItemPtr_CompareStr
+        else
+          ListSortCompare := ListSortCompareStringItemPtr_CompareText;
+
+      TwbMergeSort<TwbTwoPtr>.Sort(@FList[0], FCount, ListSortCompare);
+      {
+      List := Copy(FList);
+
+      sw1.Start;
+      TwbMergeSort<TwbTwoPtr>.Sort(@List[0], FCount, ListSortCompare);
+      sw1.Stop;
+
+      sw2.Start;
+      Trampoline_TStringList_Sort(Self);
+      sw2.Stop;
+
+      for i := 0 to Pred(FCount) do begin
+        Assert(FList[i].FString = List[i].FString);
+        Assert(FList[i].FObject = List[i].FObject);
+      end;
+      }
+    end else
+      Trampoline_TStringList_Sort(Self);
+  end;
+end;
+
+initialization
+  sw1 := TStopwatch.Create;
+  sw2 := TStopwatch.Create;
+
+
+  with TStringListProtectedHacker(TStringList.Create) do try
     CodePointer_TStringList_Assign := Assign;
+    CodePointer_TStringList_Sort := Sort;
+    CodePointer_TStringList_CompareStrings := CompareStrings;
   finally
     Free;
   end;
@@ -111,6 +266,7 @@ initialization
   try
 
     @Trampoline_TStringList_Assign := InterceptCreate(@CodePointer_TStringList_Assign, @Detour_TStringList_Assign);
+    @Trampoline_TStringList_Sort := InterceptCreate(@CodePointer_TStringList_Sort, @Detour_TStringList_Sort);
 
   finally
     EndHooks;
@@ -122,6 +278,7 @@ finalization
   try
 
     InterceptRemove(@Trampoline_TStringList_Assign);
+    InterceptRemove(@Trampoline_TStringList_Sort);
 
   finally
     EndUnHooks;
