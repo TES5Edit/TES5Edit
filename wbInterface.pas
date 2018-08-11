@@ -26,7 +26,7 @@ uses
 
 const
   VersionString            = '3.2.24 EXPERIMENTAL';
-  wbDevCRC32App : Cardinal = $FFFFFFF9;
+  wbDevCRC32App : Cardinal = $FFFFFFF7;
 
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
@@ -45,7 +45,18 @@ type
   PwbPointerArray = ^TwbPointerArray;       {General array of pointer}
 
   TwbCardinalArray = array [0..Pred(High(Integer) div SizeOf(Cardinal))] of Cardinal;
-  PwbCardinalArray = ^TwbCardinalArray;       {General array of Cardinal}
+  PwbCardinalArray = ^TwbCardinalArray;     {General array of Cardinal}
+
+  TwbUInt64Array = array [0..Pred(High(Integer) div SizeOf(UInt64))] of UInt64;
+  PwbUInt64Array = ^TwbUInt64Array;         {General array of UInt64}
+
+  TwbTwoPtr = record
+    A, B: Pointer;
+  end;
+  PwbTwoPtr = ^TwbTwoPtr;
+
+  TwbTwoPtrArray = array [0..Pred(High(Integer) div SizeOf(TwbTwoPtr))] of TwbTwoPtr;
+  PwbTwoPtrArray = ^TwbTwoPtrArray;         {General array of TwbTwoPtr}
 
 threadvar
   _wbProgressCallback : TwbProgressCallback;
@@ -101,7 +112,7 @@ var
   wbAllowMasterFilesEdit   : Boolean  = False; //must be set before DefineDefs
   wbCanAddScripts          : Boolean  = True;
   wbCanAddScriptProperties : Boolean  = True;
-  wbEditInfoUseShortName   : Boolean  = True;
+  wbEditInfoUseShortName   : Boolean  = False;
 
   wbPluginsFileName    : String;
   wbModGroupFileName   : string;
@@ -3431,9 +3442,8 @@ var
 
 type
   TwbFastStringList = class(TStringList)
-  protected
-    function CompareStrings(const S1, S2: string): Integer; override;
   public
+    procedure AfterConstruction; override;
     constructor CreateSorted(aDups : TDuplicates = dupError);
 
     procedure Clear(aFreeObjects: Boolean = False); reintroduce;
@@ -14544,6 +14554,12 @@ end;
 
 { TwbFastStringList }
 
+procedure TwbFastStringList.AfterConstruction;
+begin
+  inherited;
+  UseLocale := False;
+end;
+
 procedure TwbFastStringList.Clear(aFreeObjects: Boolean);
 var
   i: Integer;
@@ -14554,13 +14570,14 @@ begin
   inherited Clear;
 end;
 
+{ replaced by wbBetterStringList
 function TwbFastStringList.CompareStrings(const S1, S2: string): Integer;
 begin
   if CaseSensitive then
     Result := CompareStr(S1, S2)
   else
     Result := CompareText(S1, S2);
-end;
+end;}
 
 constructor TwbFastStringList.CreateSorted(aDups: TDuplicates);
 begin

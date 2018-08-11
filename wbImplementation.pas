@@ -8669,7 +8669,7 @@ begin
   Include(mrStates, mrsBaseRecordChecked);
 
   if aLoadNames then begin
-    (** )
+    (**)
     aStream.Read(i, SizeOf(i));
     SetLength(mrName, i);
     if i>0 then
@@ -9327,13 +9327,19 @@ begin
   aStream.Write(mrBaseRecordID, SizeOf(mrBaseRecordID));
 
   if aSaveNames then begin
-    (** )
-    i := Length(GetName);
+    (**)
+    if mrEditorID <> '' then
+      i := Length(GetName)
+    else
+      i := 0;
     aStream.Write(i, SizeOf(i));
     if i>0 then
       aStream.Write(mrName[1], SizeOf(Char) * i);
     (**)
-    i := Length(GetShortName);
+    if mrEditorID <> '' then
+      i := Length(GetShortName)
+    else
+      i := 0;
     aStream.Write(i, SizeOf(i));
     if i>0 then
       aStream.Write(mrShortName[1], SizeOf(Char) * i);
