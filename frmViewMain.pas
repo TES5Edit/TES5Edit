@@ -685,6 +685,7 @@ type
     procedure WMUser3(var Message: TMessage); message WM_USER + 3;
     procedure WMUser4(var Message: TMessage); message WM_USER + 4;
     procedure WndProc(var Message: TMessage); override;
+    procedure UpdateTreeLineColor;
   private
     Files: TDynFiles;
     NewMessages: TStringList;
@@ -4983,6 +4984,7 @@ begin
   _BlockInternalEdit := True;
   _wbProgressCallback := GeneralProgress;
   LastUpdate := GetTickCount64;
+  UpdateTreeLineColor;
 
   Caption := Application.Title;
   ColumnWidth := 200;
@@ -11773,6 +11775,20 @@ begin
   PostMessage(Handle, WM_USER + 4, 0, 0);
 end;
 
+procedure TfrmMain.UpdateTreeLineColor;
+begin
+  if wbIsDarkMode then
+  begin
+    vstNav.Colors.TreeLineColor := Darker(clWindowText);
+    vstView.Colors.TreeLineColor := Darker(clWindowText);
+  end
+  else
+  begin
+    vstNav.Colors.TreeLineColor := clBtnShadow;
+    vstView.Colors.TreeLineColor := clBtnShadow;
+  end;
+end;
+
 procedure TfrmMain.PostResetActiveTree;
 begin
   PostMessage(Handle, WM_USER + 3, 0, 0);
@@ -16565,6 +16581,7 @@ begin
         Settings.WriteString('UI', 'Theme', StyleName);
         Settings.UpdateFile;
       end;
+    UpdateTreeLineColor;
   end;
   inherited;
 end;
