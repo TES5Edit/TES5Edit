@@ -260,7 +260,7 @@ object frmMain: TfrmMain
           DragOperations = [doCopy]
           Header.AutoSizeIndex = 1
           Header.Height = 21
-          Header.Options = [hoAutoResize, hoColumnResize, hoDblClickResize, hoDrag, hoOwnerDraw, hoVisible]
+          Header.Options = [hoColumnResize, hoDblClickResize, hoDrag, hoOwnerDraw, hoVisible]
           Header.PopupMenu = pmuViewHeader
           HintMode = hmTooltip
           HotCursor = crHandPoint
@@ -1361,7 +1361,6 @@ object frmMain: TfrmMain
       OnInitNode = vstNavInitNode
       OnKeyDown = vstNavKeyDown
       OnKeyPress = vstNavKeyPress
-      ExplicitLeft = 3
       Columns = <
         item
           Position = 0
@@ -1902,6 +1901,12 @@ object frmMain: TfrmMain
       object mniViewColumnWidthFitText: TMenuItem
         AutoCheck = True
         Caption = 'Fit Text'
+        RadioItem = True
+        OnClick = mniViewColumnWidthClick
+      end
+      object mniViewColumnWidthFitSmart: TMenuItem
+        AutoCheck = True
+        Caption = 'Fit Smart'
         RadioItem = True
         OnClick = mniViewColumnWidthClick
       end

@@ -230,6 +230,7 @@ type
     mniViewColumnWidthStandard: TMenuItem;
     mniViewColumnWidthFitAll: TMenuItem;
     mniViewColumnWidthFitText: TMenuItem;
+    mniViewColumnWidthFitSmart: TMenuItem;
     N10: TMenuItem;
     mniNavHidden: TMenuItem;
     N11: TMenuItem;
@@ -4287,6 +4288,7 @@ begin
   case Settings.ReadInteger('View', 'ColumnWidth', 0) of
     1: mniViewColumnWidthFitAll.Checked := True;
     2: mniViewColumnWidthFitText.Checked := True;
+    3: mniViewColumnWidthFitSmart.Checked := True;
   else
     mniViewColumnWidthStandard.Checked := True;
   end;
@@ -5935,6 +5937,8 @@ begin
     i := 1
   else if mniViewColumnWidthFitText.Checked then
     i := 2
+  else if mniViewColumnWidthFitSmart.Checked then
+    i := 3
   else
     i := 0;
   Settings.WriteInteger('View','ColumnWidth', i);
@@ -13120,21 +13124,78 @@ end;
 
 procedure TfrmMain.UpdateColumnWidths;
 var
-  i        : Integer;
-  ColWidth : Integer;
+  i              : Integer;
+  ColWidth       : Integer;
+  AvailableWidth : Integer;
+  NewWidth       : Integer;
 begin
-  if vstView.Header.Columns.Count > 2 then
-    if mniViewColumnWidthFitAll.Checked then begin
-      ColWidth := (vstView.ClientWidth - vstView.Header.Columns[0].Width) div (vstView.Header.Columns.Count - 2);
-      for i := 1 to (vstView.Header.Columns.Count - 2) do
-        vstView.Header.Columns[i].Width := ColWidth;
-    end else if mniViewColumnWidthFitText.Checked then
-      vstView.Header.AutoFitColumns(False)
-    else begin
-      ColWidth := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
-      for i := 0 to Pred(vstView.Header.Columns.Count) do
-        vstView.Header.Columns[i].Width := ColWidth;
+  vstView.BeginUpdate;
+  vstView.Header.Columns.BeginUpdate;
+  try
+    with vstView.Header, Columns do begin
+      {always autofit column 0}
+      AutoFitColumns(False, smaNoColumn, 0, 0);
+
+      if Count > 2 then begin
+
+        repeat
+          if mniViewColumnWidthFitText.Checked or mniViewColumnWidthFitSmart.Checked then
+            AutoFitColumns(False, smaNoColumn);
+
+          ColWidth := 0;
+          if mniViewColumnWidthFitSmart.Checked then begin
+            for i := 0 to (Count - 2) do
+              Inc(ColWidth, Columns[i].Width);
+            if ColWidth > vstView.ClientWidth then begin
+              Dec(ColWidth, Columns[0].Width);
+              AvailableWidth := vstView.ClientWidth - Columns[0].Width;
+              if AvailableWidth > 0 then begin
+                NewWidth := 0;
+                for i := 1 to (Count - 3) do
+                  with Columns[i] do begin
+                    Width := MulDiv(Width, AvailableWidth, ColWidth);
+                    Inc(NewWidth, Width);
+                  end;
+                Columns[Count-2].Width := Pred(AvailableWidth - NewWidth);
+              end;
+            end;
+            Break;
+          end else if mniViewColumnWidthFitText.Checked then
+            Break;
+
+          if mniViewColumnWidthFitAll.Checked then begin
+            ColWidth := (vstView.ClientWidth - Columns[0].Width) div (Count - 2);
+            for i := 1 to (Count - 2) do
+              Columns[i].Width := ColWidth;
+          end else begin
+            ColWidth := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
+            for i := 1 to Pred(Count) do
+              Columns[i].Width := ColWidth;
+          end;
+
+        until True;
+
+      end;
+
+
+      if Count = 2 then begin
+        AutoFitColumns(False, smaNoColumn);
+        ColWidth := (vstView.ClientWidth - Columns[0].Width);
+        with Columns[1] do
+          Width := Min(Width, ColWidth);
+      end else if Count > 0 then begin
+        ColWidth := 0;
+        for i := 0 to (Count - 2) do
+          Inc(ColWidth, Columns[i].Width);
+        ColWidth := Min(ColWidth, vstView.ClientWidth);
+        with Columns, Items[Pred(Count)] do
+          Width := vstView.ClientWidth - ColWidth;
+      end;
     end;
+  finally
+    vstView.Header.Columns.EndUpdate;
+    vstView.EndUpdate;
+  end;
 end;
 
 procedure TfrmMain.SetDefaultNodeHeight(aHeight: Integer);
@@ -13466,8 +13527,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.vstViewAdvancedHeaderDraw(Sender: TVTHeader;
-  var PaintInfo: THeaderPaintInfo; const Elements: THeaderPaintElements);
+procedure TfrmMain.vstViewAdvancedHeaderDraw(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo; const Elements: THeaderPaintElements);
 begin
   //...
 end;
@@ -14102,25 +14162,27 @@ begin
     (PaintInfo.Column.Index > 0) and
     (PaintInfo.Column.Index <= Length(ActiveRecords)) then begin
 
-    if ActiveRecords[Pred(PaintInfo.Column.Index)].Element.Modified then
-      PaintInfo.TargetCanvas.Font.Style := [fsBold]
-    else
-      PaintInfo.TargetCanvas.Font.Style := [];
+    with PaintInfo.TargetCanvas.Font do begin
+      if ActiveRecords[Pred(PaintInfo.Column.Index)].Element.Modified then
+        Style := [fsBold]
+      else
+        Style := [];
 
-    if ActiveRecords[Pred(PaintInfo.Column.Index)].Element.IsInjected then
-      PaintInfo.TargetCanvas.Font.Style := PaintInfo.TargetCanvas.Font.Style + [fsItalic]
-    else
-      PaintInfo.TargetCanvas.Font.Style := PaintInfo.TargetCanvas.Font.Style - [fsItalic];
+      if ActiveRecords[Pred(PaintInfo.Column.Index)].Element.IsInjected then
+        Style := Style + [fsItalic]
+      else
+        Style := Style - [fsItalic];
 
-    if ActiveRecords[Pred(PaintInfo.Column.Index)].Element.IsNotReachable then
-      PaintInfo.TargetCanvas.Font.Style := PaintInfo.TargetCanvas.Font.Style + [fsStrikeOut]
-    else
-      PaintInfo.TargetCanvas.Font.Style := PaintInfo.TargetCanvas.Font.Style - [fsStrikeOut];
+      if ActiveRecords[Pred(PaintInfo.Column.Index)].Element.IsNotReachable then
+        Style := Style + [fsStrikeOut]
+      else
+        Style := Style - [fsStrikeOut];
 
-    if ActiveRecords[Pred(PaintInfo.Column.Index)].Element.ReferencesInjected then
-      PaintInfo.TargetCanvas.Font.Style := PaintInfo.TargetCanvas.Font.Style + [fsUnderline]
-    else
-      PaintInfo.TargetCanvas.Font.Style := PaintInfo.TargetCanvas.Font.Style - [fsUnderline];
+      if ActiveRecords[Pred(PaintInfo.Column.Index)].Element.ReferencesInjected then
+        Style := Style + [fsUnderline]
+      else
+        Style := Style - [fsUnderline];
+    end;
 
     if ActiveRecords[0].ConflictAll = caUnknown then
       Assert(False);
@@ -14377,7 +14439,7 @@ end;
 
 procedure TfrmMain.vstViewResize(Sender: TObject);
 begin
-  if mniViewColumnWidthFitAll.Checked then
+  if mniViewColumnWidthFitAll.Checked or mniViewColumnWidthFitSmart.Checked  then
     UpdateColumnWidths;
 end;
 
