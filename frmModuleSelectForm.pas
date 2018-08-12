@@ -335,9 +335,14 @@ begin
 end;
 
 procedure TfrmModuleSelect.AllowCancel;
+var
+  Left: Integer;
 begin
   btnCancel.Enabled := True;
   btnCancel.Visible := True;
+  Left := btnCancel.Left;
+  btnCancel.Left := btnOK.Left;
+  btnOK.Left := Left;
 end;
 
 function TfrmModuleSelect.CheckStateForModule(aModule: PwbModuleInfo; aIsRootChild: Boolean): TCheckState;
