@@ -3834,7 +3834,7 @@ begin
 
     AssignSlot;
   finally
-    Include(flStates, fsScanning);
+    Exclude(flStates, fsScanning);
   end;
 
   flProgress('Building FormID index');
