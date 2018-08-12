@@ -225,11 +225,52 @@ end;
 procedure TfrmViewElements.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action := caFree;
+  if Assigned(Settings) then begin
+    if WindowState <> wsMinimized then
+      Settings.WriteInteger(Name, 'WindowState', Integer(WindowState));
+    if WindowState = wsNormal then begin
+      Settings.WriteInteger(Name, 'Left', Left);
+      Settings.WriteInteger(Name, 'Top', Top);
+      Settings.WriteInteger(Name, 'Width', Width);
+      Settings.WriteInteger(Name, 'Height', Height);
+    end;
+    Settings.UpdateFile;
+  end;
 end;
 
 procedure TfrmViewElements.FormCreate(Sender: TObject);
+var
+  lLeft, lTop, lWidth, lHeight : Integer;
+  lRect: TRect;
 begin
   wbApplyFontAndScale(Self);
+
+  Settings := frmMain.Settings;
+
+  if Assigned(Settings) then begin
+  // skip reading main form position if Shift is pressed
+    lLeft := Settings.ReadInteger(Name, 'Left', 0);
+    lTop := Settings.ReadInteger(Name, 'Top', 0);
+    lWidth := Settings.ReadInteger(Name, 'Width', 0);
+    lHeight := Settings.ReadInteger(Name, 'Height', 0);
+    if (lWidth > 100) and (lHeight > 100) then begin
+      lRect := Screen.DesktopRect;
+      if (lLeft+16 >= lRect.Left) and
+         (lTop+16 >= lRect.Top) and
+         ((lLeft + lWidth)-16 <= lRect.Right) and
+         ((lTop + lHeight)-16 <= lRect.Bottom)
+      then begin
+        Left := lLeft;
+        Top := lTop;
+        Width := lWidth;
+        Height := lHeight;
+        Position := poDesigned;
+      end;
+    end;
+    WindowState := TWindowState(Settings.ReadInteger(Name, 'WindowState', Integer(WindowState)));
+    if WindowState = wsMaximized then
+      Position := poDesigned;
+  end;
 end;
 
 procedure TfrmViewElements.FormKeyDown(Sender: TObject; var Key: Word;
