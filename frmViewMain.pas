@@ -346,6 +346,7 @@ type
     mniViewCreateModGroup: TMenuItem;
     mniNavEditModGroup: TMenuItem;
     mniNavDeleteModGroups: TMenuItem;
+    tmrUpdateColumnWidths: TTimer;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -577,6 +578,8 @@ type
     procedure mniNavEditModGroupClick(Sender: TObject);
     procedure mniNavDeleteModGroupsClick(Sender: TObject);
     procedure edFileNameFilterKeyPress(Sender: TObject; var Key: Char);
+    procedure tmrUpdateColumnWidthsTimer(Sender: TObject);
+    procedure vstViewScroll(Sender: TBaseVirtualTree; DeltaX, DeltaY: Integer);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
   protected
@@ -13153,6 +13156,12 @@ begin
   DoInit;
 end;
 
+procedure TfrmMain.tmrUpdateColumnWidthsTimer(Sender: TObject);
+begin
+  tmrUpdateColumnWidths.Enabled := False;
+  UpdateColumnWidths;
+end;
+
 procedure TfrmMain.UpdateColumnWidths;
 var
   i              : Integer;
@@ -13165,13 +13174,13 @@ begin
   try
     with vstView.Header, Columns do begin
       {always autofit column 0}
-      AutoFitColumns(False, smaNoColumn, 0, 0);
+      AutoFitColumns(False, smaAllColumns, 0, 0);
 
       if Count > 2 then begin
 
         repeat
           if mniViewColumnWidthFitText.Checked or mniViewColumnWidthFitSmart.Checked then
-            AutoFitColumns(False, smaNoColumn);
+            AutoFitColumns(False, smaAllColumns);
 
           ColWidth := 0;
           if mniViewColumnWidthFitSmart.Checked then begin
@@ -13210,7 +13219,7 @@ begin
 
 
       if Count = 2 then begin
-        AutoFitColumns(False, smaNoColumn);
+        AutoFitColumns(False, smaAllColumns);
         ColWidth := (vstView.ClientWidth - Columns[0].Width);
         with Columns[1] do
           Width := Min(Width, ColWidth);
@@ -14472,6 +14481,14 @@ procedure TfrmMain.vstViewResize(Sender: TObject);
 begin
   if mniViewColumnWidthFitAll.Checked or mniViewColumnWidthFitSmart.Checked  then
     UpdateColumnWidths;
+end;
+
+procedure TfrmMain.vstViewScroll(Sender: TBaseVirtualTree; DeltaX, DeltaY: Integer);
+begin
+  if DeltaY <> 0 then begin
+    tmrUpdateColumnWidths.Enabled := False;
+    tmrUpdateColumnWidths.Enabled := True;
+  end;
 end;
 
 procedure TfrmMain.vstNavBeforeItemErase(Sender: TBaseVirtualTree;

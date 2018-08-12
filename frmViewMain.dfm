@@ -71,7 +71,7 @@ object frmMain: TfrmMain
       Top = 0
       Width = 493
       Height = 591
-      ActivePage = tbsInfo
+      ActivePage = tbsView
       Align = alClient
       RaggedRight = True
       TabOrder = 0
@@ -301,6 +301,7 @@ object frmMain: TfrmMain
           OnKeyPress = vstViewKeyPress
           OnNewText = vstViewNewText
           OnResize = vstViewResize
+          OnScroll = vstViewScroll
           Columns = <
             item
               Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coFixed]
@@ -2389,5 +2390,12 @@ object frmMain: TfrmMain
       Caption = 'Autoscroll to the last message'
       Checked = True
     end
+  end
+  object tmrUpdateColumnWidths: TTimer
+    Enabled = False
+    Interval = 1
+    OnTimer = tmrUpdateColumnWidthsTimer
+    Left = 192
+    Top = 408
   end
 end
