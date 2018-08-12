@@ -4581,19 +4581,25 @@ var
   Node   : PVirtualNode;
   Parent : PVirtualNode;
 begin
-  Node := vstView.GetFirst;
-  while Assigned(Node) do begin
-      if IsViewNodeFiltered(Node) then
-        Include(Node.States, vsFiltered)
-      else begin
-        Exclude(Node.States, vsFiltered);
-        Parent := Node.Parent;
-        while Assigned(Parent) and (vsFiltered in Parent.States) do begin
-          Exclude(Parent.States, vsFiltered);
-          Parent := Parent.Parent;
+  vstView.BeginUpdate;
+  try
+    Node := vstView.GetFirst;
+    while Assigned(Node) do begin
+        if IsViewNodeFiltered(Node) then
+          Include(Node.States, vsFiltered)
+        else begin
+          Exclude(Node.States, vsFiltered);
+          Parent := Node.Parent;
+          while Assigned(Parent) and (vsFiltered in Parent.States) do begin
+            Exclude(Parent.States, vsFiltered);
+            Parent := Parent.Parent;
+          end;
         end;
-      end;
-    Node := vstView.GetNext(Node, True);
+      Node := vstView.GetNext(Node);
+    end;
+    UpdateColumnWidths;
+  finally
+    vstView.EndUpdate;
   end;
   vstView.Invalidate;
 end;
