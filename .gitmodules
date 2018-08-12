@@ -1,9 +1,12 @@
 [submodule "delphi-detours-library"]
 	path = delphi-detours-library
 	url = https://github.com/eFrysTon/delphi-detours-library.git
+	ignore = dirty
 [submodule "vcl-styles-utils"]
 	path = vcl-styles-utils
 	url = https://github.com/eFrysTon/vcl-styles-utils.git
+	ignore = dirty
 [submodule "VirtualTrees"]
 	path = VirtualTrees
 	url = https://github.com/eFrysTon/Virtual-TreeView.git
+	ignore = dirty
