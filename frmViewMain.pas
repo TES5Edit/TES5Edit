@@ -699,7 +699,6 @@ type
     ModGroupsEnabled : Boolean;
     NewModGroupName: string;
     OnlyShowMasterAndLeafs: Boolean;
-    Settings: TMemIniFile;
     AutoSave: Boolean;
     ParentedGroupRecordType: set of Byte;
 
@@ -820,6 +819,7 @@ type
     procedure SaveLog(const s: string; aAllowReplace: Boolean);
     procedure SaveLogs(aAllowReplace: Boolean);
   public
+    Settings: TMemIniFile;
     destructor Destroy; override;
 
     procedure AddMessage(const s: string);
