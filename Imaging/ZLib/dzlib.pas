@@ -1,4 +1,4 @@
-{*******************************************************}
+ï»¿{*******************************************************}
 {                                                       }
 {       Delphi Supplemental Components                  }
 {       ZLIB Data Compression Interface Unit            }
@@ -28,7 +28,7 @@
   IMPASZLIB.
 
   There is a small speed comparison table of some of the
-  supported implementations (TGA image 28 311 570 bytes, compression level = 6,
+  supported implementations (TGA image 28Â 311Â 570 bytes, compression level = 6,
   Delphi 9, Win32, Athlon XP 1900).
 
                  ZLib version Decompression  Compression   Comp. Size
@@ -116,6 +116,8 @@ const
   Z_DEFLATED = 8;
 
 type
+  TZCompressionLevel = (zcNone, zcFastest, zcDefault, zcMax);
+
   { Abstract ancestor class }
   TCustomZlibStream = class(TStream)
   private
@@ -225,8 +227,6 @@ type
   ECompressionError = class(EZlibError);
   EDecompressionError = class(EZlibError);
 
-implementation
-
 const
   ZErrorMessages: array[0..9] of PAnsiChar = (
     'need dictionary',        // Z_NEED_DICT      (2)
@@ -239,6 +239,24 @@ const
     'buffer error',           // Z_BUF_ERROR      (-5)
     'incompatible version',   // Z_VERSION_ERROR  (-6)
     '');
+
+  ZLevels: array[TZCompressionLevel] of Shortint = (
+    Z_NO_COMPRESSION,
+    Z_BEST_SPEED,
+    Z_DEFAULT_COMPRESSION,
+    Z_BEST_COMPRESSION
+    );
+
+procedure zDecompressToUserBuf(const InBuf: Pointer; InBytes: Integer; const OutBuf: Pointer; BufSize: Integer);
+
+procedure ZCompressStream(inStream, outStream: TStream;
+  level: TZCompressionLevel = zcDefault); overload;
+// CG: Add overload to take old enum type
+procedure ZCompressStream(inStream, outStream: TStream;
+  level: TCompressionLevel); overload; inline;
+
+implementation
+
 
 function zlibAllocMem(AppData: Pointer; Items, Size: Cardinal): Pointer;
 begin
@@ -255,6 +273,14 @@ begin
   Result := code;
   if code < 0 then
     raise ECompressionError.Create('zlib: ' + ZErrorMessages[2 - code]);
+end;
+
+function CCheckWithoutBufferError(code: Integer): Integer;
+begin
+  Result := code;
+  if code < 0 then
+    if (code <> Z_BUF_ERROR) then
+      raise ECompressionError.Create('zlib: ' + ZErrorMessages[2 - code]);
 end;
 
 function DCheck(code: Integer): Integer;
@@ -519,5 +545,90 @@ begin
     raise EDecompressionError.Create('Invalid stream operation');
   Result := FZRec.total_out;
 end;
+
+procedure zDecompressToUserBuf(const InBuf: Pointer; InBytes: Integer; const OutBuf: Pointer; BufSize: Integer);
+var
+  strm: TZStreamRec;
+begin
+  FillChar(strm, sizeof(strm), 0);
+  //strm.zalloc := zlibAllocMem;
+  //strm.zfree := zlibFreeMem;
+  strm.next_in := InBuf;
+  strm.avail_in := InBytes;
+  strm.next_out := OutBuf;
+  strm.avail_out := BufSize;
+  DCheck(inflateInit_(strm, zlib_version, sizeof(strm)));
+  try
+    if DCheck(inflate(strm, Z_FINISH)) <> Z_STREAM_END then
+      DCheck(Z_DATA_ERROR);
+  finally
+    DCheck(inflateEnd(strm));
+  end;
+end;
+
+{** stream routines *********************************************************}
+
+procedure ZCompressStream(inStream, outStream: TStream;
+  level: TZCompressionLevel);
+const
+  bufferSize = 32768;
+var
+  zstream: TZStreamRec;
+  zresult: Integer;
+  inBuffer: TBytes;
+  outBuffer: TBytes;
+  inSize: Integer;
+  outSize: Integer;
+begin
+  SetLength(inBuffer, BufferSize);
+  SetLength(outBuffer, BufferSize);
+  FillChar(zstream, SizeOf(TZStreamRec), 0);
+
+  CCheck(DeflateInit(zstream, ZLevels[level]));
+
+  try
+    inSize := inStream.Read(inBuffer, bufferSize);
+    while inSize > 0 do
+    begin
+      zstream.next_in := @inBuffer[0];
+      zstream.avail_in := inSize;
+
+      repeat
+        zstream.next_out := @outBuffer[0];
+        zstream.avail_out := bufferSize;
+
+        CCheckWithoutBufferError(deflate(zstream, Z_NO_FLUSH));
+
+        // outSize := zstream.next_out - outBuffer;
+        outSize := bufferSize - zstream.avail_out;
+
+        outStream.Write(outBuffer, outSize);
+      until (zstream.avail_in = 0) and (zstream.avail_out > 0);
+
+      inSize := inStream.Read(inBuffer, bufferSize);
+    end;
+
+    repeat
+      zstream.next_out := @outBuffer[0];
+      zstream.avail_out := bufferSize;
+
+      zresult := CCheck(deflate(zstream, Z_FINISH));
+
+      // outSize := zstream.next_out - outBuffer;
+      outSize := bufferSize - zstream.avail_out;
+
+      outStream.Write(outBuffer, outSize);
+    until (zresult = Z_STREAM_END) and (zstream.avail_out > 0);
+  finally
+    CCheck(deflateEnd(zstream));
+  end;
+end;
+
+procedure ZCompressStream(inStream, outStream: TStream;
+  level: TCompressionLevel);
+begin
+  ZCompressStream(inStream, outStream, TZCompressionLevel(Integer(level)))
+end;
+
 
 end.

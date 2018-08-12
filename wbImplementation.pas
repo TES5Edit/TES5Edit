@@ -35,7 +35,7 @@ uses
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   System.SyncObjs,
 {$ENDIF}
-  Zlibex,
+  dZLib,
   lz4;
 
 const
@@ -6820,7 +6820,7 @@ begin
     if UncompressedLength > 0 then begin
       SetLength(mrDataStorage, UncompressedLength );
 
-      DecompressToUserBuf(
+      zDecompressToUserBuf(
         PByte(dcDataBasePtr) + SizeOf(Cardinal),
         mrStruct.mrsDataSize - SizeOf(Cardinal),
         @mrDataStorage[0],
@@ -6835,8 +6835,11 @@ begin
       dcDataEndPtr := @EmptyPtr;
     end;
   except
-    dcDataBasePtr := nil;
-    dcDataEndPtr := nil;
+    on E: Exception do begin
+      wbProgress('<Error decompressing [%s:%s]: [%s] %s>', [string(GetSignature), mrStruct.mrsFormID.ToString, E.ClassName, E.Message]);
+      dcDataBasePtr := nil;
+      dcDataEndPtr := nil;
+    end;
   end;
 end;
 
@@ -15452,7 +15455,7 @@ begin
     case sc of
       scNone: Assert(False);  // Getting there would be very funny :)
       scZComp:
-        DecompressToUserBuf(
+        zDecompressToUserBuf(
           PByte(dcDataBasePtr),
           GetDataSize,
           @dcDataStorage[0],
