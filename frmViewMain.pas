@@ -3973,7 +3973,14 @@ begin
   AddMessage('Using settings file: ' + wbSettingsFileName);
 
   if not Assigned(Settings) and (wbSettingsFileName <> '') then
-    Settings := TMemIniFile.Create(wbSettingsFileName);
+    if ForceDirectories(ExtractFilePath(wbSettingsFileName)) then
+      Settings := TMemIniFile.Create(wbSettingsFileName);
+
+  if not Assigned(Settings) then begin
+    ShowMessage('Could not open or create the settings file.');
+    AddMessage('Could not open or create the settings file.');
+    Exit;
+  end;
 
   i := Settings.ReadInteger(Name, 'pnlNavWidth', pnlNav.Width);
   if i < 50 then i := 50;
@@ -4929,7 +4936,8 @@ var
 begin
   try
     if not Assigned(Settings) and (wbSettingsFileName <> '')  then
-      Settings := TMemIniFile.Create(wbSettingsFileName);
+      if ForceDirectories(ExtractFilePath(wbSettingsFileName)) then
+        Settings := TMemIniFile.Create(wbSettingsFileName);
     if Assigned(Settings) then
       TStyleManager.TrySetStyle(Settings.ReadString('UI', 'Theme', TStyleManager.ActiveStyle.Name), False);
   except end;
@@ -4941,7 +4949,8 @@ begin
   //try to set the style and window position as early as possible to reduce flicker
   try
     if not Assigned(Settings) and (wbSettingsFileName <> '')  then
-      Settings := TMemIniFile.Create(wbSettingsFileName);
+      if ForceDirectories(ExtractFilePath(wbSettingsFileName)) then
+        Settings := TMemIniFile.Create(wbSettingsFileName);
     if Assigned(Settings) then begin
       wbLoadAndApplyFontAndScale(Settings, 'UI', 'FontRecords', vstNav);
       wbLoadAndApplyFontAndScale(Settings, 'UI', 'FontRecords', vstView);
@@ -5003,7 +5012,8 @@ begin
 
   try
     if not Assigned(Settings) and (wbSettingsFileName <> '')  then
-      Settings := TMemIniFile.Create(wbSettingsFileName);
+      if ForceDirectories(ExtractFilePath(wbSettingsFileName)) then
+        Settings := TMemIniFile.Create(wbSettingsFileName);
     if Assigned(Settings) then begin
       ColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', ColumnWidth);
       RowHeight := Settings.ReadInteger('Options', 'RowHeight', RowHeight);
