@@ -2724,11 +2724,17 @@ type
     epfpScript
   );
 
+  TPERKEntryPointFunctionTable = (
+    epftDefault,
+    epftSubtract
+  );
+
   PPERKEntryPoint = ^TPERKEntryPoint;
   TPERKEntryPoint = record
     Name         : string;
-    Condition   : TPERKEntryPointConditionType;
+    Condition    : TPERKEntryPointConditionType;
     FunctionType : TPERKEntryPointFunctionType;
+    FunctionTable: TPERKEntryPointFunctionTable;
   end;
 
   PPERKCondition = ^TPERKCondition;
@@ -2741,7 +2747,7 @@ type
 
   PPERKFunction = ^TPERKFunction;
   TPERKFunction = record
-    Name         : string;
+    //Name         : string;
     FunctionType : TPERKEntryPointFunctionType;
     ParamType    : TPERKEntryPointFunctionParamType;
   end;
@@ -2759,16 +2765,42 @@ const
   );
 
   wbPERKFunctions : array[0..9] of TPERKFunction = (
-    (Name: ''; FunctionType: epfUnknown; ParamType: epfpNone),
-    (Name: 'Set Value'; FunctionType: epfFloat; ParamType: epfpFloat),
-    (Name: 'Add Value'; FunctionType: epfFloat; ParamType: epfpFloat),
-    (Name: 'Multiply Value'; FunctionType: epfFloat; ParamType: epfpFloat),
-    (Name: 'Add Range To Value'; FunctionType: epfFloat; ParamType: epfpFloatFloat),
-    (Name: 'Add Actor Value Mult'; FunctionType: epfFloat; ParamType: epfpFloatFloat),
-    (Name: 'Absolute Value'; FunctionType: epfFloat; ParamType: epfpNone),
-    (Name: 'Negative Absolute Value'; FunctionType: epfFloat; ParamType: epfpNone),
-    (Name: 'Add Leveled List'; FunctionType: epfLeveledItem; ParamType: epfpLeveledItem),
-    (Name: 'Add Activate Choice'; FunctionType: epfScript; ParamType: epfpScript)
+    ({Name: '';} FunctionType: epfUnknown; ParamType: epfpNone),
+    ({Name: 'Set Value';} FunctionType: epfFloat; ParamType: epfpFloat),
+    ({Name: 'Add Value';} FunctionType: epfFloat; ParamType: epfpFloat),
+    ({Name: 'Multiply Value';} FunctionType: epfFloat; ParamType: epfpFloat),
+    ({Name: 'Add Range To Value';} FunctionType: epfFloat; ParamType: epfpFloatFloat),
+    ({Name: 'Add Actor Value Mult';} FunctionType: epfFloat; ParamType: epfpFloatFloat),
+    ({Name: 'Absolute Value';} FunctionType: epfFloat; ParamType: epfpNone),
+    ({Name: 'Negative Absolute Value';} FunctionType: epfFloat; ParamType: epfpNone),
+    ({Name: 'Add Leveled List';} FunctionType: epfLeveledItem; ParamType: epfpLeveledItem),
+    ({Name: 'Add Activate Choice';} FunctionType: epfScript; ParamType: epfpScript)
+  );
+
+  wbPERKFunctionNames : array[TPERKEntryPointFunctionTable, 0..9] of string = (
+    (
+      '',
+      'Set Value',
+      'Add Value',
+      'Multiply Value',
+      'Add Range To Value',
+      'Add Actor Value Mult',
+      'Absolute Value',
+      'Negative Absolute Value',
+      'Add Leveled List',
+      'Add Activate Choice'
+    ), (
+      '',
+      'Subtract Value',
+      'Add Value',
+      'Multiply Value',
+      'Add Range To Value',
+      'Add Actor Value Mult',
+      'Absolute Value',
+      'Negative Absolute Value',
+      'Add Leveled List',
+      'Add Activate Choice'
+    )
   );
 
   wbPERKEntryPoints : array[0..73] of TPERKEntryPoint = (
@@ -2825,12 +2857,12 @@ const
 {50}(Name: 'Modify Thread'; Condition: epcWeapon),
 {51}(Name: 'Has Fast Travel Always'; Condition: epcDefault),
 {52}(Name: 'Knockdown Chance'; Condition: epcWeapon),
-{53}(Name: 'Modify Weapon Strength Req'; Condition: epcWeapon),
+{53}(Name: 'Modify Weapon Strength Req'; Condition: epcWeapon; FunctionTable: epftSubtract),
 {54}(Name: 'Modify Aiming Move Speed'; Condition: epcWeapon),
 {55}(Name: 'Modify Light Items'; Condition: epcDefault),
-{56}(Name: 'Modify Damage Threshold (defender)'; Condition: epcWeaponTarget),
+{56}(Name: 'Modify Damage Threshold (defender)'; Condition: epcWeaponTarget; FunctionTable: epftSubtract),
 {57}(Name: 'Modify Chance for Ammo Item'; Condition: epcWeapon),
-{58}(Name: 'Modify Damage Threshold (attacker)'; Condition: epcWeaponTarget),
+{58}(Name: 'Modify Damage Threshold (attacker)'; Condition: epcWeaponTarget; FunctionTable: epftSubtract),
 {59}(Name: 'Modify Throwing Velocity'; Condition: epcWeapon),
 {60}(Name: 'Chance for Item on Fire'; Condition: epcWeapon),
 {61}(Name: 'Has Unarmed Forward Power Attack'; Condition: epcDefault),
@@ -3186,8 +3218,8 @@ begin
       ctEditInfo: with TStringList.Create do try
         for i := Low(wbPERKFunctions) to High(wbPERKFunctions) do
           if wbPERKFunctions[i].FunctionType = FunctionType then
-            if (wbPERKFunctions[i].Name <> '') then
-              Add(wbPERKFunctions[i].Name);
+            if (wbPERKFunctionNames[FunctionTable, i] <> '') then
+              Add(wbPERKFunctionNames[FunctionTable, i]);
         Sort;
         Result := CommaText;
       finally
@@ -3202,7 +3234,7 @@ begin
       else
         case aType of
           ctToStr, ctToEditValue: begin
-            Result := wbPERKFunctions[Integer(aInt)].Name;
+            Result := wbPERKFunctionNames[FunctionTable, Integer(aInt)];
             if (aType = ctToStr) and (wbPERKFunctions[Integer(aInt)].FunctionType <> FunctionType) then
               Result := Result + ' <Warning: Value out of Bounds for this Entry Point>';
           end;
@@ -3245,7 +3277,7 @@ begin
   with wbPERKEntryPoints[EntryPoint] do
     for i := Low(wbPERKFunctions) to High(wbPERKFunctions) do
       if wbPERKFunctions[i].FunctionType = FunctionType then
-        if SameText(s, wbPERKFunctions[i].Name) then begin
+        if SameText(s, wbPERKFunctionNames[FunctionTable,i]) then begin
           Result := i;
           Exit;
         end;
