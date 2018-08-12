@@ -68,7 +68,9 @@ function LZ4IO_compressFilename(input_filename: string; output_filename: string;
 function LZ4IO_decompressFilename(input_filename: string; output_filename: string): integer;
 procedure lz4DecompressToUserBuf(const InBuf: Pointer; InBytes: Integer;
   const OutBuf: Pointer; BufSize: Integer);
+
 function lz4CompressStream(aSource, aCompressed: TStream; aCompressionLevel: Integer = 8): Integer;
+function lz4DeCompressStream(aCompressed, aTarget: TStream): Integer;
 
 implementation
 
@@ -485,6 +487,21 @@ begin
     stout.Free;
   end;
 end;
+
+function lz4DeCompressStream(aCompressed, aTarget: TStream): Integer;
+var
+  decodedSize: uint64;
+  decompressedSize: uint64;
+begin
+  decompressedSize := 0;
+  repeat
+    decodedSize := selectDecoder(aCompressed, aTarget);
+    if decodedSize <> ENDOFSTREAM then
+      Inc(decompressedSize, decodedSize);
+  until decodedSize = ENDOFSTREAM;
+  Result := decompressedSize;
+end;
+
 
 function lz4CompressStream(aSource, aCompressed: TStream; aCompressionLevel: Integer = 8): Integer;
 var

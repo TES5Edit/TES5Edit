@@ -73,6 +73,7 @@ function wbEndKeepAlive: Integer;
 implementation
 
 uses
+  lz4io,
   wbHelpers,
   wbSort;
 
@@ -2128,6 +2129,7 @@ var
   CachePath     : string;
   CacheFileName : string;
   FileStream    : TBufferedFileStream;
+  MemoryStream  : TMemoryStream;
   i, j          : Integer;
   StartTime,
   EndTime       : TDateTime;
@@ -2146,16 +2148,23 @@ begin
       '.refcache';
     if not wbDontCacheLoad and FileExists(CacheFileName) then begin
       Include(flStates, fsRefsBuild);
-      FileStream := TBufferedFileStream.Create(CacheFileName, fmOpenRead or fmShareDenyWrite);
+      MemoryStream := TMemoryStream.Create;
       try
-        FileStream.Read(flRecordsCount, SizeOf(flRecordsCount));
+        FileStream := TBufferedFileStream.Create(CacheFileName, fmOpenRead or fmShareDenyWrite);
+        try
+          lz4DeCompressStream(FileStream, MemoryStream);
+        finally
+          FileStream.Free;
+      end;
+        MemoryStream.Position := 0;
+        MemoryStream.Read(flRecordsCount, SizeOf(flRecordsCount));
         Assert(flRecordsCount=Length(flRecords));
         for i := 0 to Pred(flRecordsCount) do begin
-          (flRecords[i] as IwbMainRecordInternal).LoadRefsFromStream(FileStream, fsIsOfficial in flStates);
+          (flRecords[i] as IwbMainRecordInternal).LoadRefsFromStream(MemoryStream, fsIsOfficial in flStates);
           wbTick;
         end;
       finally
-        FileStream.Free;
+        MemoryStream.Free;
       end;
       inherited BuildRef;
       Result := blrLoaded;
@@ -2169,15 +2178,22 @@ begin
         if not wbDontCacheSave then begin
           flRecordsCount := Length(flRecords);
           if (flRecordsCount > wbCacheRecordsThreshold) or (EndTime - StartTime > wbCacheTimeThreshold) then try
-            FileStream := TBufferedFileStream.Create(CacheFileName, fmCreate);
+            MemoryStream := TMemoryStream.Create;
             try
-              FileStream.Write(flRecordsCount, SizeOf(flRecordsCount));
+              MemoryStream.Write(flRecordsCount, SizeOf(flRecordsCount));
               for i := 0 to Pred(flRecordsCount) do begin
-                (flRecords[i] as IwbMainRecordInternal).SaveRefsToStream(FileStream, fsIsOfficial in flStates);
+                (flRecords[i] as IwbMainRecordInternal).SaveRefsToStream(MemoryStream, fsIsOfficial in flStates);
                 wbTick;
               end;
+              MemoryStream.Position := 0;
+              FileStream := TBufferedFileStream.Create(CacheFileName, fmCreate);
+              try
+                lz4CompressStream(MemoryStream, FileStream);
+              finally
+                FileStream.Free;
+              end;
             finally
-              FileStream.Free;
+              MemoryStream.Free;
             end;
             Result := blrBuiltAndSaved;
           except
