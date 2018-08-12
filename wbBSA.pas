@@ -21,6 +21,7 @@ interface
 uses
   Classes, SysUtils, IOUtils,
   wbInterface,
+  dzlib,
   ImagingDds;
 
 function wbCreateContainerHandler: IwbContainerHandler;
@@ -29,7 +30,7 @@ implementation
 
 uses
   wbStreams,
-  zlibEx,
+  wbHelpers,
   lz4io;
 
 const
@@ -458,7 +459,7 @@ begin
       if bfVersion = BSAHEADER_VERSION_SSE then
         lz4DecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result))
       else
-        DecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result));
+        zDecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result));
     end;
   end else begin
     SetLength(Result, aSize);
@@ -802,7 +803,7 @@ begin
       SetLength(Buffer, brFileRec.PackedSize);
       brFile.ReadData(Buffer[0], brFileRec.Offset, Length(Buffer));
       SetLength(Result, brFileRec.Size);
-      DecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result));
+      zDecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result));
     end
     else begin
       SetLength(Result, brFileRec.Size);
@@ -879,7 +880,7 @@ begin
       if PackedSize <> 0 then begin
         SetLength(Buffer, PackedSize);
         brFile.ReadData(Buffer[0], Offset, Length(Buffer));
-        DecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[TexSize], Size);
+        zDecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[TexSize], Size);
       end
       // uncompressed chunk
       else
