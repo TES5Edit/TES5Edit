@@ -35,7 +35,7 @@ uses
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   System.SyncObjs,
 {$ENDIF}
-  dZLib,
+  Zlibex,
   lz4;
 
 const
@@ -6836,7 +6836,7 @@ begin
     if UncompressedLength > 0 then begin
       SetLength(mrDataStorage, UncompressedLength );
 
-      zDecompressToUserBuf(
+      DecompressToUserBuf(
         PByte(dcDataBasePtr) + SizeOf(Cardinal),
         mrStruct.mrsDataSize - SizeOf(Cardinal),
         @mrDataStorage[0],
@@ -15471,7 +15471,7 @@ begin
     case sc of
       scNone: Assert(False);  // Getting there would be very funny :)
       scZComp:
-        zDecompressToUserBuf(
+        DecompressToUserBuf(
           PByte(dcDataBasePtr),
           GetDataSize,
           @dcDataStorage[0],
