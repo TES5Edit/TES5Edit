@@ -64,6 +64,9 @@ type
   PwbModuleInfo = ^TwbModuleInfo;
   TwbModuleInfos = array of PwbModuleInfo;
   TwbModuleInfo = record
+  private
+    miCRC32             : TwbCRC32;
+  public
     miOriginalName      : string;
     miName              : string;
     miDateTime          : TDateTime;
@@ -102,6 +105,8 @@ type
     function ToString(aInclDesc: Boolean): string;
     function _File: IwbFile;
     class function AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo; static;
+
+    function HasCRC32(aCRC32: TwbCRC32): Boolean;
   end;
 
   TwbModuleInfosHelper = record helper for TwbModuleInfos
@@ -126,6 +131,7 @@ uses
   System.IOUtils,
   System.Generics.Defaults,
   System.Generics.Collections,
+  wbHelpers,
   wbImplementation,
   wbSort;
 
@@ -594,6 +600,15 @@ begin
     Result := Result + '<ESL>';
   if mfMastersMissing in miFlags then
     Result := Result + '<MissingMasters>';
+end;
+
+function TwbModuleInfo.HasCRC32(aCRC32: TwbCRC32): Boolean;
+begin
+  if Assigned(miFile) then
+    Exit(_File.CRC32 = aCRC32);
+  if miCRC32 = 0 then
+    miCRC32 := wbCRC32File(wbDataPath + miOriginalName);
+  Result := aCRC32 = miCRC32;
 end;
 
 function TwbModuleInfo.HasIndex: Boolean;

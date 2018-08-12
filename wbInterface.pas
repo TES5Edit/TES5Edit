@@ -612,6 +612,7 @@ type
 
   TwbFormIDs = array of TwbFormID;
 
+  PwbCRC32 = ^TwbCRC32;
   TwbCRC32 = type Cardinal;
   TwbCRC32s = array of TwbCRC32;
 
