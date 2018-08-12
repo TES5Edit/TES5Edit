@@ -8270,7 +8270,7 @@ begin
   ]));
 
   wbSNAMMarkerParams :=
-    wbArray(SNAM, 'Marker Paramaters', wbStruct('Marker', [
+    wbArray(SNAM, 'Marker Parameters', wbStruct('Marker', [
       wbFloat('Offset X'),
       wbFloat('Offset Y'),
       wbFloat('Offset Z'),
