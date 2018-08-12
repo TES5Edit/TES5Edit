@@ -13247,14 +13247,19 @@ begin
   vstView.Header.Columns.BeginUpdate;
   try
     with vstView.Header, Columns do begin
-      {always autofit column 0}
-      AutoFitColumns(False, smaAllColumns, 0, 0);
+      if Count < 1 then
+        Exit;
+
+      if mniViewColumnWidthFitText.Checked or mniViewColumnWidthFitSmart.Checked then
+        AutoFitColumns(False, smaAllColumns, 0, 0)
+      else
+        Columns[0].Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
 
       if Count > 2 then begin
 
         repeat
           if mniViewColumnWidthFitText.Checked or mniViewColumnWidthFitSmart.Checked then
-            AutoFitColumns(False, smaAllColumns);
+            AutoFitColumns(False, smaAllColumns, 1);
 
           ColWidth := 0;
           if mniViewColumnWidthFitSmart.Checked then begin
@@ -13293,10 +13298,14 @@ begin
 
 
       if Count = 2 then begin
-        AutoFitColumns(False, smaAllColumns);
-        ColWidth := (vstView.ClientWidth - Columns[0].Width);
-        with Columns[1] do
-          Width := Min(Width, ColWidth);
+        if mniViewColumnWidthFitText.Checked or mniViewColumnWidthFitSmart.Checked then begin
+          AutoFitColumns(False, smaAllColumns, 1);
+          ColWidth := (vstView.ClientWidth - Columns[0].Width);
+          with Columns[1] do
+            Width := Min(Width, ColWidth);
+        end else
+          with Columns[1] do
+            Width := Pred(vstView.ClientWidth - Columns[0].Width);
       end else if Count > 0 then begin
         ColWidth := 0;
         for i := 0 to (Count - 2) do
