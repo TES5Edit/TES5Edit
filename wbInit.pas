@@ -555,6 +555,7 @@ begin
   wbReportMode := False;
   wbEditAllowed := True;
   wbDontSave    := False;
+  wbDevMode := FindCmdLineSwitch('devmode');
 
   CheckForcedMode;
   DetectAppMode;

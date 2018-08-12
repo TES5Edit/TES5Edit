@@ -166,8 +166,10 @@ type
 
   TStringArrayHelper = record helper for TArray<string>
     function ForEach(const aFunc: TPassThroughFunc<string>): TArray<string>;
+    function AddPrefix(const aPrefix: string): TArray<string>;
     function RemoveEmpty: TArray<string>;
     function ToCommaText: string;
+    procedure ReportAsProgress;
   end;
 
 implementation
@@ -176,6 +178,13 @@ uses
   System.SyncObjs,
   StrUtils,
   wbSort;
+
+function TStringArrayHelper.AddPrefix(const aPrefix: string): TArray<string>;
+begin
+  Result := Self.ForEach(function(const s: string): string begin
+    Result := aPrefix + s;
+  end);
+end;
 
 function TStringArrayHelper.ForEach(const aFunc: TPassThroughFunc<string>): TArray<string>;
 var
@@ -201,6 +210,14 @@ begin
     end;
   end;
   SetLength(Result, j);
+end;
+
+procedure TStringArrayHelper.ReportAsProgress;
+var
+  i: Integer;
+begin
+  for i := Low(Self) to High(Self) do
+    wbProgress(Self[i]);
 end;
 
 function TStringArrayHelper.ToCommaText: string;
@@ -829,7 +846,7 @@ var
 
 function wbCRC32App: TwbCRC32;
 begin
-  if DebugHook <> 0 then
+  if (DebugHook <> 0) or wbDevMode then
     Exit(wbDevCRC32App);
 
   Result := _CRC32App;

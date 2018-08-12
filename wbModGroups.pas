@@ -46,10 +46,11 @@ type
     function mgiLoad(aLine: string): Boolean;
     procedure mgiCheckValid(aForce: Boolean);
   public
-    mgiFlags    : TwbModGroupItemFlags;
-    mgiFileName : string;
-    mgiModule   : PwbModuleInfo;
-    mgiCRC32s   : TwbCRC32s;
+    mgiFlags     : TwbModGroupItemFlags;
+    mgiFileName  : string;
+    mgiModule    : PwbModuleInfo;
+    mgiCRC32s    : TwbCRC32s;
+    mgiValidMsgs : TwbMessages;
 
     function ToString: string;
   end;
@@ -79,10 +80,12 @@ type
     mgFlags         : TwbModGroupFlags;
     mgName          : string;
     mgItems         : TwbModGroupItems;
+    mgValidMsgs     : TwbMessages;
 
     function IsValid: Boolean;
     function ToString: string;
     function ToStrings: TArray<string>;
+    function GetValidationMessages: TwbMessagePtrs;
   end;
   TwbModGroups = array of TwbModGroup;
 
@@ -97,6 +100,7 @@ type
     function ToString: string;
 
     function Activate: Boolean;
+    procedure ShowValidationMessages;
   end;
 
   TwbModGroupFileFlag = (
@@ -273,6 +277,16 @@ end;
 
 { TwbModGroup }
 
+function TwbModGroup.GetValidationMessages: TwbMessagePtrs;
+var
+  i: Integer;
+begin
+  Result := nil;
+  for i := Low(mgItems) to High(mgItems) do
+    Result.AddMessages(mgItems[i].mgiValidMsgs);
+  Result.AddMessages(mgValidMsgs);
+end;
+
 function TwbModGroup.IsValid: Boolean;
 begin
   mgCheckValid(True);
@@ -293,16 +307,19 @@ end;
 
 procedure TwbModGroup.mgCheckValid(aForce: Boolean);
 var
-  i                    : Integer;
-  AnyInvalid           : Boolean;
-  SourceCount          : Integer;
-  TargetCount          : Integer;
-  LastLoadOrder        : Integer;
-  HighLoadOrderInBlock : Integer;
+  i                         : Integer;
+  AnyInvalid                : Boolean;
+  SourceCount               : Integer;
+  TargetCount               : Integer;
+  LastLoadOrder             : Integer;
+  LastLoadOrderIndex        : Integer;
+  HighLoadOrderInBlock      : Integer;
+  HighLoadOrderInBlockIndex : Integer;
 begin
   if (mgfValidChecked in mgFlags) and not aForce then
     Exit;
   Include(mgFlags, mgfValidChecked);
+  mgValidMsgs.Clear;
 
   Exclude(mgFlags, mgfValid);
   AnyInvalid := False;
@@ -310,6 +327,8 @@ begin
   TargetCount := 0;
   LastLoadOrder := -1;
   HighLoadOrderInBlock := -1;
+  LastLoadOrderIndex := -1;
+  HighLoadOrderInBlockIndex := -1;
   for i := Low(mgItems) to High(mgItems) do
     with mgItems[i] do begin
       mgiCheckValid(aForce);
@@ -317,7 +336,10 @@ begin
         if mgifHasFile in mgiFlags then begin
           if mgifIsSource in mgiFlags then
             if TargetCount > 0 then
-              Inc(SourceCount);
+              Inc(SourceCount)
+            else
+              if i > 0 then
+                mgValidMsgs.AddMessage(wbmtHint, Format('"%s" is ignored as a source as it has no valid targets above it', [mgiFileName]));
 
           if mgifIsTarget in mgiFlags then
             Inc(TargetCount);
@@ -325,27 +347,36 @@ begin
           if not (mgifIgnoreLoadOrderAlways in mgiFlags) then begin
 
             if mgifIgnoreLoadOrderInBlock in mgiFlags then begin
-              if mgiModule.miLoadOrder > HighLoadOrderInBlock then
+              if mgiModule.miLoadOrder > HighLoadOrderInBlock then begin
                 HighLoadOrderInBlock := mgiModule.miLoadOrder;
-            end else
+                HighLoadOrderInBlockIndex := i;
+            end end else
               if HighLoadOrderInBlock >= 0 then begin
-                if HighLoadOrderInBlock > LastLoadOrder then
+                if HighLoadOrderInBlock > LastLoadOrder then begin
                   LastLoadOrder := HighLoadOrderInBlock;
+                  LastLoadOrderIndex := HighLoadOrderInBlockIndex;
+                end;
                 HighLoadOrderInBlock := -1;
               end;
 
             if LastLoadOrder >= 0 then
-              if mgiModule.miLoadOrder < LastLoadOrder then
+              if mgiModule.miLoadOrder < LastLoadOrder then begin
                 AnyInvalid := True;
+                mgValidMsgs.AddMessage(wbmtError, Format('"%s" has a lower load order than "%s"', [mgiFileName, mgItems[LastLoadOrderIndex].mgiFileName]));
+              end;
 
-            if not (mgifIgnoreLoadOrderInBlock in mgiFlags) then
+            if not (mgifIgnoreLoadOrderInBlock in mgiFlags) then begin
               LastLoadOrder := mgiModule.miLoadOrder;
+              LastLoadOrderIndex := i;
+            end;
           end;
 
         end;
       end else
         AnyInvalid := True
     end;
+  if SourceCount < 1 then
+    mgValidMsgs.AddMessage(wbmtError, 'No active sources');
   if not AnyInvalid and (SourceCount > 0) then
     Include(mgFlags, mgfValid);
 end;
@@ -412,9 +443,12 @@ end;
 { TwbModGroupItem }
 
 procedure TwbModGroupItem.mgiCheckValid(aForce: Boolean);
+const
+  NoCRCMatch = '%s module "%s" is present, but will be ignored as it doesn''t match any of the specified CRC32s';
 begin
   if (mgifValidChecked in mgiFlags) and not aForce then
     Exit;
+  mgiValidMsgs.Clear;
   Include(mgiFlags, mgifValidChecked);
 
   mgiFlags := mgiFlags - [mgifValid, mgifHasFile];
@@ -423,7 +457,15 @@ begin
     if Assigned(mgiModule.miFile) then begin
       if Length(mgiCRC32s) > 0 then begin
         if mgiCRC32s.Contains(mgiModule._File.CRC32) then
-          Include(mgiFlags, mgifHasFile);
+          Include(mgiFlags, mgifHasFile)
+        else begin
+          if mgifForbidden in mgiFlags then
+            mgiValidMsgs.AddMessage(wbmtHint, Format(NoCRCMatch, ['Forbidden', mgiFileName]))
+          else if mgifOptional in mgiFlags then
+            mgiValidMsgs.AddMessage(wbmtWarning, Format(NoCRCMatch, ['Optional', mgiFileName]))
+          else
+            mgiValidMsgs.AddMessage(wbmtError, Format(NoCRCMatch, ['Required', mgiFileName]))
+        end;
       end else
         Include(mgiFlags, mgifHasFile);
     end;
@@ -679,6 +721,27 @@ begin
   for i := Low(Self) to High(Self) do
     with Self[i]^ do
       Include(mgFlags, aFlag);
+end;
+
+procedure TwbModGroupPtrsHelper.ShowValidationMessages;
+var
+  i, j     : Integer;
+  Messages : TwbMessagePtrs;
+  s        : string;
+begin
+  for i := Low(Self) to High(Self) do
+    with Self[i]^ do begin
+      if IsValid then
+        s := 'ModGroud "%s" is valid, but has messages:'
+      else
+        s := 'ModGroud "%s" is invalid.';
+      Messages := GetValidationMessages;
+      if Length(Messages) > 0 then begin
+        wbProgress(s, [mgName]);
+        Messages.ToStrings.AddPrefix(' - ').ReportAsProgress;
+      end;
+  end;
+
 end;
 
 function TwbModGroupPtrsHelper.ToString: string;

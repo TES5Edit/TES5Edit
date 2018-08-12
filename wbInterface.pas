@@ -113,6 +113,7 @@ var
   wbCanAddScripts          : Boolean  = True;
   wbCanAddScriptProperties : Boolean  = True;
   wbEditInfoUseShortName   : Boolean  = False;
+  wbDevMode                : Boolean  = True;
 
   wbPluginsFileName    : String;
   wbModGroupFileName   : string;
@@ -227,8 +228,52 @@ function wbBeginCodeSiteLogging: Integer;
 function wbEndCodeSiteLogging: Integer;
 {$ENDIF}
 
+type
+  TwbMessageType = (
+    wbmtDebug,
+    wbmtInfo,
+    wbmtHint,
+    wbmtWarning,
+    wbmtError
+  );
+
+const
+  wbMessageTypeString : array[TwbMessageType] of string = (
+    'Debug',
+    'Info',
+    'Hint',
+    'Warning',
+    'Error'
+  );
 
 type
+  TwbMessageTypeHelper = record helper for TwbMessageType
+    function ToString: string;
+  end;
+
+  PwbMessage = ^TwbMessage;
+  TwbMessage = record
+    msgType    : TwbMessageType;
+    msgMessage : string;
+
+    function ToString: string;
+  end;
+  TwbMessages = TArray<TwbMessage>;
+  TwbMessagePtrs = TArray<PwbMessage>;
+
+  TwbMessagesHelper = record helper for TwbMessages
+    procedure Clear;
+    procedure AddMessage(aType: TwbMessageType; const aMessage: string);
+    function ToPtrs: TwbMessagePtrs;
+  end;
+
+  TwbMessagePtrsHelper = record helper for TwbMessagePtrs
+    procedure AddMessages(const aMessages: TwbMessagePtrs); overload;
+    procedure AddMessages(const aMessages: TwbMessages); overload;
+    function ToStrings: TArray<string>;
+  end;
+
+
   TConflictAll = (
     caUnknown,
     caOnlyOne,
@@ -3521,7 +3566,8 @@ function wbProgressLock: Integer;
 function wbProgressUnlock: Integer;
 function wbHasProgressCallback: Boolean;
 procedure wbProgressCallback(const aStatus: string = '');
-procedure wbProgress(const aStatus: string = '');
+procedure wbProgress(const aStatus: string = ''); overload;
+procedure wbProgress(const aStatus: string; const aArgs: array of const); overload;
 procedure wbTick;
 
 function wbLighter(Color: TColor; Amount: Double = 0.5): TColor;
@@ -3722,6 +3768,13 @@ begin
   if wbHasProgressCallback then
     _wbProgressCallback(aStatus);
 end;
+
+procedure wbProgress(const aStatus: string; const aArgs: array of const);
+begin
+  if wbHasProgressCallback then
+    _wbProgressCallback(Format(aStatus, aArgs));
+end;
+
 
 procedure wbTick;
 begin
@@ -15903,6 +15956,86 @@ begin
   for i := Low(Self) to High(Self) do
     if Self[i] = aCRC32 then
       Exit(True);
+end;
+
+{ TwbMessageTypeHelper }
+
+function TwbMessageTypeHelper.ToString: string;
+begin
+  Result := wbMessageTypeString[Self];
+end;
+
+{ TwbMessage }
+
+function TwbMessage.ToString: string;
+begin
+  Result := msgType.ToString + ': ' + msgMessage;
+end;
+
+{ TwbMessagesHelper }
+
+procedure TwbMessagesHelper.AddMessage(aType: TwbMessageType; const aMessage: string);
+var
+  Len: Integer;
+begin
+  Len := Length(Self);
+  SetLength(Self, Succ(Len));
+  with Self[Len] do begin
+    msgType := aType;
+    msgMessage := aMessage;
+  end;
+end;
+
+procedure TwbMessagesHelper.Clear;
+begin
+  Self := nil;
+end;
+
+function TwbMessagesHelper.ToPtrs: TwbMessagePtrs;
+var
+  i: Integer;
+begin
+  SetLength(Result, Length(Self));
+  for i := Low(Self) to High(Self) do
+    Result[i] := @Self[i];
+end;
+
+{ TwbMessagePtrsHelper }
+
+procedure TwbMessagePtrsHelper.AddMessages(const aMessages: TwbMessagePtrs);
+var
+  Len: Integer;
+  i: Integer;
+begin
+  if Length(aMessages) < 1 then
+    Exit;
+  Len := Length(Self);
+  SetLength(Self, Len + Length(aMessages));
+  for i := Low(aMessages) to High(aMessages) do
+    Self[Len+i] := aMessages[i];
+end;
+
+procedure TwbMessagePtrsHelper.AddMessages(const aMessages: TwbMessages);
+var
+  Len: Integer;
+  i: Integer;
+begin
+  if Length(aMessages) < 1 then
+    Exit;
+  Len := Length(Self);
+  SetLength(Self, Len + Length(aMessages));
+  for i := Low(aMessages) to High(aMessages) do
+    Self[Len+i] := @aMessages[i];
+end;
+
+function TwbMessagePtrsHelper.ToStrings: TArray<string>;
+var
+  i: Integer;
+begin
+  Result := nil;
+  SetLength(Result, Length(Self));
+  for i := Low(Self) to High(Self) do
+    Result[i] := Self[i].ToString;
 end;
 
 initialization
