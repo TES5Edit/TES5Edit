@@ -4997,6 +4997,10 @@ begin
   else //give up
     MonospaceFontName := '';
 
+  if MonospaceFontName <> '' then
+    Memo1.Font.Name := MonospaceFontName;
+  Memo1.WordWrap := True;
+
   try
     if not Assigned(Settings) and (wbSettingsFileName <> '')  then
       Settings := TMemIniFile.Create(wbSettingsFileName);
@@ -6556,6 +6560,7 @@ var
 begin
   with TfrmModGroupSelect.Create(Self) do try
     wbReloadModGroups;
+    wbModGroupsByName(False).ShowValidationMessages;
     AllModGroups := wbModGroupsByName;
     LoadModGroupsSelection(AllModGroups);
     Caption := 'Reloading ModGroups - Which ModGroups do you want to activate?';
@@ -16440,13 +16445,15 @@ begin
 
   ModGroups := nil;
 
-  if wbQuickShowConflicts then
-    ModGroups := wbModGroupsByName
-  else if not (wbQuickClean or (wbToolMode in wbAutoModes)) then
+  if wbQuickShowConflicts then begin
+    ModGroups := wbModGroupsByName;
+    wbModGroupsByName(False).ShowValidationMessages;
+  end else if not (wbQuickClean or (wbToolMode in wbAutoModes)) then
     if wbToolMode in [tmView, tmEdit] then begin
       with TfrmModGroupSelect.Create(Self) do
       try
         AllModGroups := wbModGroupsByName;
+        wbModGroupsByName(False).ShowValidationMessages;
         LoadModGroupsSelection(AllModGroups);
         Caption := 'Which ModGroups do you want to activate?';
         if ShowModal = mrOk then begin
