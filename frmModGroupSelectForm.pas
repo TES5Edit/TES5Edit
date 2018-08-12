@@ -323,9 +323,14 @@ begin
 end;
 
 procedure TfrmModGroupSelect.AllowCancel;
+var
+  Left: Integer;
 begin
   btnCancel.Enabled := True;
   btnCancel.Visible := True;
+  Left := btnCancel.Left;
+  btnCancel.Left := btnOK.Left;
+  btnOK.Left := Left;
 end;
 
 function TfrmModGroupSelect.CheckStateForModGroup(aModGroup: PwbModGroup; aIsRootChild: Boolean): TCheckState;

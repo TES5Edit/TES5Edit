@@ -128,9 +128,14 @@ begin
 end;
 
 procedure TfrmModGroupEdit.AllowCancel;
+var
+  Left: Integer;
 begin
   btnCancel.Enabled := True;
   btnCancel.Visible := True;
+  Left := btnCancel.Left;
+  btnCancel.Left := btnOK.Left;
+  btnOK.Left := Left;
 end;
 
 function TfrmModGroupEdit.ShowModal: Integer;
