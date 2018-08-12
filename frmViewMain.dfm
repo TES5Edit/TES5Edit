@@ -1505,7 +1505,6 @@ object frmMain: TfrmMain
       TabOrder = 0
       Visible = False
       StyleElements = [seFont, seBorder]
-      ExplicitWidth = 860
     end
   end
   object pnlNav: TPanel
@@ -2406,9 +2405,16 @@ object frmMain: TfrmMain
   end
   object tmrUpdateColumnWidths: TTimer
     Enabled = False
-    Interval = 1
+    Interval = 50
     OnTimer = tmrUpdateColumnWidthsTimer
     Left = 192
     Top = 408
+  end
+  object tmrPendingSetActive: TTimer
+    Enabled = False
+    Interval = 50
+    OnTimer = tmrPendingSetActiveTimer
+    Left = 192
+    Top = 456
   end
 end

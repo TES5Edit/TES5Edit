@@ -347,6 +347,7 @@ type
     mniNavEditModGroup: TMenuItem;
     mniNavDeleteModGroups: TMenuItem;
     tmrUpdateColumnWidths: TTimer;
+    tmrPendingSetActive: TTimer;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -581,6 +582,7 @@ type
     procedure tmrUpdateColumnWidthsTimer(Sender: TObject);
     procedure vstViewScroll(Sender: TBaseVirtualTree; DeltaX, DeltaY: Integer);
     procedure bnHelpClick(Sender: TObject);
+    procedure tmrPendingSetActiveTimer(Sender: TObject);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
   protected
@@ -803,11 +805,20 @@ type
     LOOTPluginInfos: array of TLOOTPluginInfo;
     StickViewNodeLabel: string;
 
+    PendingContainer: IwbDataContainer;
+    PendingMainRecords: TDynMainRecords;
+
     procedure DoInit;
     procedure SetDoubleBuffered(aWinControl: TWinControl);
+
     procedure SetActiveRecord(const aMainRecord: IwbMainRecord); overload;
     procedure SetActiveRecord(const aMainRecords: TDynMainRecords); overload;
     procedure SetActiveContainer(const aContainer: IwbDataContainer); overload;
+
+    procedure DoSetActiveRecord(const aMainRecord: IwbMainRecord); overload;
+    procedure DoSetActiveRecord(const aMainRecords: TDynMainRecords); overload;
+    procedure DoSetActiveContainer(const aContainer: IwbDataContainer); overload;
+
     procedure ClearActiveContainer; overload;
     function GetViewNodePositionLabel(aNode: PVirtualNode = nil): string;
     procedure SetViewNodePositionLabel(aViewLabel: string);
@@ -12400,10 +12411,13 @@ begin
   SendMessage(Handle, WM_USER + 2, 0, 0);
 end;
 
-procedure TfrmMain.SetActiveContainer(const aContainer: IwbDataContainer);
+procedure TfrmMain.DoSetActiveContainer(const aContainer: IwbDataContainer);
 var
   i                           : Integer;
 begin
+  PendingContainer := nil;
+  PendingMainRecords := nil;
+
   UserWasActive := True;
 
   ComparingSiblings := False;
@@ -12505,17 +12519,20 @@ begin
     lvReferencedBy.Items.EndUpdate;
   end;
 end;
-procedure TfrmMain.SetActiveRecord(const aMainRecords: TDynMainRecords);
+procedure TfrmMain.DoSetActiveRecord(const aMainRecords: TDynMainRecords);
 var
   i                           : Integer;
 begin
+  PendingContainer := nil;
+  PendingMainRecords := nil;
+
   UserWasActive := True;
 
   if Length(aMainRecords) < 2 then begin
     if Length(aMainRecords) = 1 then
-      SetActiveRecord(aMainRecords[0])
+      DoSetActiveRecord(aMainRecords[0])
     else
-      SetActiveRecord(IwbMainRecord(nil));
+      DoSetActiveRecord(IwbMainRecord(nil));
     Exit;
   end;
 
@@ -12585,6 +12602,42 @@ begin
   finally
     lvReferencedBy.Items.EndUpdate;
   end;
+end;
+
+procedure TfrmMain.SetActiveContainer(const aContainer: IwbDataContainer);
+begin
+  UserWasActive := True;
+  if Assigned(aContainer) then begin
+    PendingContainer := aContainer;
+    PendingMainRecords := nil;
+    tmrPendingSetActive.Enabled := False;
+    tmrPendingSetActive.Enabled := True;
+  end else
+    DoSetActiveContainer(nil);
+end;
+
+procedure TfrmMain.SetActiveRecord(const aMainRecord: IwbMainRecord);
+begin
+  UserWasActive := True;
+  if Assigned(aMainRecord) then begin
+    PendingContainer := nil;
+    PendingMainRecords := [aMainRecord];
+    tmrPendingSetActive.Enabled := False;
+    tmrPendingSetActive.Enabled := True;
+  end else
+    DoSetActiveRecord(nil);
+end;
+
+procedure TfrmMain.SetActiveRecord(const aMainRecords: TDynMainRecords);
+begin
+  UserWasActive := True;
+  if Length(aMainRecords) > 0 then begin
+    PendingContainer := nil;
+    PendingMainRecords := aMainRecords;
+    tmrPendingSetActive.Enabled := False;
+    tmrPendingSetActive.Enabled := True;
+  end else
+    DoSetActiveRecord(nil);
 end;
 
 function TfrmMain.SetAllToMaster: Boolean;
@@ -12680,11 +12733,14 @@ begin
     vstView.TopNode := LabelNode;
 end;
 
-procedure TfrmMain.SetActiveRecord(const aMainRecord: IwbMainRecord);
+procedure TfrmMain.DoSetActiveRecord(const aMainRecord: IwbMainRecord);
 var
   i                           : Integer;
   ViewLabel: string;
 begin
+  PendingContainer := nil;
+  PendingMainRecords := nil;
+
   UserWasActive := True;
 
   ComparingSiblings := False;
@@ -13483,6 +13539,15 @@ begin
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] to get the original fixed.');
     end;
   end;
+end;
+
+procedure TfrmMain.tmrPendingSetActiveTimer(Sender: TObject);
+begin
+  tmrPendingSetActive.Enabled := False;
+  if Assigned(PendingContainer) then
+    DoSetActiveContainer(PendingContainer)
+  else if Assigned(PendingMainRecords) then
+    DoSetActiveRecord(Copy(PendingMainRecords));
 end;
 
 procedure TfrmMain.vstSpreadSheetAmmoInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
