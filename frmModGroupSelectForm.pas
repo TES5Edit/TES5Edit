@@ -81,6 +81,7 @@ type
     mgndModGroup     : PwbModGroup;
     mgndModGroupItem : PwbModGroupItem;
     mgndIndex        : Integer;
+    mgndCRC32        : PwbCRC32;
   end;
 
 implementation
@@ -401,6 +402,8 @@ begin
 end;
 
 procedure TfrmModGroupSelect.vstModGroupsBeforeGetCheckState(Sender: TBaseVirtualTree; Node: PVirtualNode);
+var
+  ParentNodeData : PModGroupNodeData;
 begin
   with PModGroupNodeData(Sender.GetNodeData(Node))^ do begin
     if Assigned(mgndModGroup) then begin
@@ -408,6 +411,21 @@ begin
       try
         vstModGroups.CheckState[Node] := CheckStateForModGroup(mgndModGroup,
           (Node.Parent = nil) or (Node.Parent = Sender.RootNode));
+      finally
+        Dec(ChangingChecked);
+      end;
+    end else if Assigned(mgndCRC32) then begin
+      Inc(ChangingChecked);
+      try
+        vstModGroups.CheckType[Node] := ctRadioButton;
+        ParentNodeData := Sender.GetNodeData(Node.Parent);
+        if Assigned(ParentNodeData) and
+           Assigned(ParentNodeData.mgndModGroupItem) and
+           Assigned(ParentNodeData.mgndModGroupItem.mgiModule) and
+           ParentNodeData.mgndModGroupItem.mgiModule.HasCRC32(mgndCRC32^) then
+          vstModGroups.CheckState[Node] := csCheckedDisabled
+        else
+          vstModGroups.CheckState[Node] := csUnCheckedDisabled;
       finally
         Dec(ChangingChecked);
       end;
@@ -484,6 +502,9 @@ begin
               else if mgifIgnoreLoadOrderInBlock in mgiFlags then
                 Celltext := 'in Block';
         end
+    else if Assigned(mgndCRC32) then
+      if Column = 0 then
+        CellText := mgndCRC32^.ToString;
   end;
 end;
 
@@ -515,7 +536,10 @@ procedure TfrmModGroupSelect.vstModGroupsInitChildren(Sender: TBaseVirtualTree;
 begin
   with PModGroupNodeData(Sender.GetNodeData(Node))^ do begin
     if Assigned(mgndModGroup) then
-      ChildCount := Length(mgndModGroup.mgItems);
+      ChildCount := Length(mgndModGroup.mgItems)
+    else if Assigned(mgndModGroupItem) then
+      ChildCount := Length(mgndModGroupItem.mgiCRC32s)
+    else
   end;
 end;
 
@@ -531,17 +555,34 @@ begin
     if not Assigned(mgndModGroup) then
       if not Assigned(ParentNode) or (ParentNode = Sender.RootNode) then begin
         mgndModGroup := AllModGroups[Node.Index];
+        vstModGroups.CheckType[Node] := ctCheckBox;
       end else begin
         ParentNodeData := Sender.GetNodeData(ParentNode);
         if Assigned(ParentNodeData.mgndModGroup) then begin
           with ParentNodeData.mgndModGroup^ do
             mgndModGroupItem := @mgItems[Node.Index];
+          if Length(mgndModGroupItem.mgiCRC32s) > 0 then
+            Include(InitialStates, ivsHasChildren);
+          Sender.CheckType[Node] := ctNone;
+        end else if Assigned(ParentNodeData.mgndModGroupItem) then begin
+          with ParentNodeData.mgndModGroupItem^ do
+            mgndCRC32 := @mgiCRC32s[Node.Index];
+          Inc(ChangingChecked);
+          try
+            Sender.CheckType[Node] := ctRadioButton;
+            if Assigned(ParentNodeData.mgndModGroupItem.mgiModule) and
+               ParentNodeData.mgndModGroupItem.mgiModule.HasCRC32(mgndCRC32^) then
+              Sender.CheckState[Node] := csCheckedDisabled
+            else
+              Sender.CheckState[Node] := csUnCheckedDisabled;
+          finally
+            Dec(ChangingChecked);
+          end;
         end else begin
           Include(InitialStates, ivsHidden);
           Exit;
         end;
       end;
-    vstModGroups.CheckType[Node] := ctCheckBox;
     if Assigned(mgndModGroup) then begin
       if Length(mgndModGroup.mgItems) > 0 then
         Include(InitialStates, ivsHasChildren);
