@@ -1298,7 +1298,7 @@ object frmMain: TfrmMain
     TabOrder = 2
     object bnBack: TSpeedButton
       AlignWithMargins = True
-      Left = 897
+      Left = 841
       Top = 3
       Width = 24
       Height = 24
@@ -1385,7 +1385,7 @@ object frmMain: TfrmMain
     end
     object bnForward: TSpeedButton
       AlignWithMargins = True
-      Left = 927
+      Left = 871
       Top = 3
       Width = 25
       Height = 24
@@ -1470,11 +1470,23 @@ object frmMain: TfrmMain
       NumGlyphs = 3
       ExplicitLeft = 916
     end
+    object bnHelp: TSpeedButton
+      AlignWithMargins = True
+      Left = 902
+      Top = 3
+      Width = 50
+      Height = 24
+      Align = alRight
+      Caption = 'Help'
+      Flat = True
+      OnClick = bnHelpClick
+      ExplicitLeft = 927
+    end
     object lblPath: TEdit
       AlignWithMargins = True
       Left = 0
       Top = 5
-      Width = 891
+      Width = 835
       Height = 20
       Margins.Left = 0
       Margins.Top = 5
@@ -1493,6 +1505,7 @@ object frmMain: TfrmMain
       TabOrder = 0
       Visible = False
       StyleElements = [seFont, seBorder]
+      ExplicitWidth = 860
     end
   end
   object pnlNav: TPanel

@@ -580,6 +580,7 @@ type
     procedure edFileNameFilterKeyPress(Sender: TObject; var Key: Char);
     procedure tmrUpdateColumnWidthsTimer(Sender: TObject);
     procedure vstViewScroll(Sender: TBaseVirtualTree; DeltaX, DeltaY: Integer);
+    procedure bnHelpClick(Sender: TObject);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
   protected
@@ -6471,6 +6472,17 @@ begin
     ScriptEngine := nil;
     jvi.Free;
     tmrCheckUnsaved.Enabled := bCheckUnsaved;
+  end;
+end;
+
+var
+  LastHelpClick: TDateTime;
+
+procedure TfrmMain.bnHelpClick(Sender: TObject);
+begin
+  if Now - LastHelpClick > 1/24/60/60 then begin
+    ShellExecute(Handle, 'open', PChar(wbHelpUrl), '', '', SW_SHOWNORMAL);
+    LastHelpClick := Now;
   end;
 end;
 

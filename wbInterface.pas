@@ -195,6 +195,7 @@ var
   wbDarkMode : Boolean = False;
 
   wbNexusModsUrl: string;
+  wbHelpUrl: string = 'https://tes5edit.github.io/docs';
 
 {$IFDEF USE_CODESITE}
 type
