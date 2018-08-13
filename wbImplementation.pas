@@ -418,7 +418,6 @@ type
 
     function ReleaseElements: TDynElementInternals;
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer);
-    procedure SortBySortOrder;
     procedure CreatedEmpty;
 
     procedure MoveElementUp(const aElement: IwbElement);

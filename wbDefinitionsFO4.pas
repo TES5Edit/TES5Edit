@@ -4433,9 +4433,95 @@ begin
   end;}
 end;
 
+procedure wbCheckMorphKeyOrder(const aElement: IwbElement);
+var
+  Container  : IwbContainerElementRef;
+  MainRecord : IwbMainRecord;
+  Master     : IwbMainRecord;
+  MasterContainer : IwbContainerElementRef;
+  lKeys       : IwbContainerElementRef;
+  lMasterKeys : IwbContainerElementRef;
+  lValues     : IwbContainerElementRef;
+  i, j, k    : Integer;
+  NeedsSort  : Boolean;
+begin
+  if wbBeginInternalEdit then try
+    if not Supports(aElement, IwbContainerElementRef, Container) then
+      Exit;
+
+    if Container.ElementCount < 1 then
+      Exit;
+
+    if not Supports(aElement, IwbMainRecord, MainRecord) then
+      Exit;
+
+    if MainRecord.IsDeleted then
+      Exit;
+
+    Master := MainRecord.Master;
+    if not Assigned(Master) then
+      Exit;
+
+    if not Supports(Master, IwbContainerElementRef, MasterContainer) then
+      Exit;
+
+    if not Supports(Container.ElementBySignature['MSDK'], IwbContainerElementRef, lKeys) then
+      Exit;
+
+    if not Supports(MasterContainer.ElementBySignature['MSDK'], IwbContainerElementRef, lMasterKeys) then
+      Exit;
+
+    if lKeys.ElementCount < lMasterKeys.ElementCount then
+      Exit;
+
+    if not Supports(Container.ElementBySignature['MSDV'], IwbContainerElementRef, lValues) then
+      Exit;
+
+    if lKeys.ElementCount <> lValues.ElementCount then
+      Exit;
+
+    with TStringList.Create do try
+      for i := 0 to Pred(lMasterKeys.ElementCount) do
+        AddObject(lMasterKeys.Elements[i].SortKey[True], Pointer(i));
+      Sorted := True;
+
+      NeedsSort := False;
+      j := lMasterKeys.ElementCount;
+      for i := 0 to Pred(lKeys.ElementCount) do
+        if Find(lKeys.Elements[i].SortKey[True], k) then begin
+          k := Integer(Objects[k]);
+          if k <> i then
+            NeedsSort := True;
+          lKeys.Elements[i].SortOrder := k;
+          lValues.Elements[i].SortOrder := k;
+        end else begin
+          lKeys.Elements[i].SortOrder := j;
+          lValues.Elements[i].SortOrder := j;
+          Inc(j);
+        end;
+
+      if not NeedsSort then
+        Exit;
+
+      if j <> lKeys.ElementCount then
+        Exit;
+
+      lKeys.SortBySortOrder;
+      lValues.SortBySortOrder;
+    finally
+      Free;
+    End;
+
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
+
 procedure wbNPCAfterLoad(const aElement: IwbElement);
 begin
   wbRemoveEmptyKWDA(aElement);
+  wbCheckMorphKeyOrder(aElement);
 end;
 
 procedure wbREFRAfterLoad(const aElement: IwbElement);

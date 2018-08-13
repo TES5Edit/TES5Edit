@@ -907,6 +907,8 @@ type
     property AdditionalElementCount: Integer
       read GetAdditionalElementCount;
 
+    procedure SortBySortOrder;
+
     property ElementByPath[const aPath: string]: IwbElement
       read GetElementByPath;
     property ElementValues[const aName: string]: string
