@@ -273,6 +273,11 @@ procedure TfrmModGroupSelect.FormShow(Sender: TObject);
 var
   Node: PVirtualNode;
 begin
+  if wbIsDarkMode then
+    vstModGroups.Colors.TreeLineColor := Darker(clWindowText)
+  else
+    vstModGroups.Colors.TreeLineColor := clBtnShadow;
+
   CollectSelected;
   vstModGroups.SetFocus;
   vstModGroups.FocusedNode := nil;

@@ -39,7 +39,7 @@ object frmModGroupEdit: TfrmModGroupEdit
     Header.AutoSizeIndex = 0
     Header.Height = 16
     Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowImages, hoVisible]
-    LineMode = lmSeparateTopNodes
+    LineStyle = lsCustomStyle
     TabOrder = 1
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toFullRepaintOnResize, toGridExtensions, toInitOnSave, toToggleOnDblClick, toWheelPanning, toEditOnClick]
     TreeOptions.PaintOptions = [toPopupMode, toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseBlendedSelection]
