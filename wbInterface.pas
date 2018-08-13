@@ -3572,6 +3572,8 @@ procedure wbProgress(const aStatus: string = ''); overload;
 procedure wbProgress(const aStatus: string; const aArgs: array of const); overload;
 procedure wbTick;
 
+function Lighter(Color: TColor; Amount: Double = 0.5): TColor;
+function Darker(Color: TColor; Amount: Double = 0.5): TColor;
 function wbLighter(Color: TColor; Amount: Double = 0.5): TColor;
 function wbDarker(Color: TColor; Amount: Double = 0.25): TColor;
 function wbIsDarkMode: Boolean;
