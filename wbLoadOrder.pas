@@ -107,6 +107,7 @@ type
     class function AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo; static;
 
     function HasCRC32(aCRC32: TwbCRC32): Boolean;
+    function GetCRC32(out aCRC32: TwbCRC32): Boolean;
   end;
 
   TwbModuleInfosHelper = record helper for TwbModuleInfos
@@ -153,6 +154,7 @@ var
   _ModulesByName     : TStringList;
   _InvalidModule     : TwbModuleInfo = (miFlags: [mfInvalid]);
   _ModulesLoadOrder  : TwbModuleInfos;
+
   _AdditionalModules : TwbModuleInfos;
   _TemplateModules   : TwbModuleInfos;
 
@@ -600,6 +602,18 @@ begin
     Result := Result + '<ESL>';
   if mfMastersMissing in miFlags then
     Result := Result + '<MissingMasters>';
+end;
+
+function TwbModuleInfo.GetCRC32(out aCRC32: TwbCRC32): Boolean;
+begin
+  if Assigned(miFile) then begin
+    aCRC32 := _File.CRC32;
+    Exit(True);
+  end;
+  if miCRC32 = 0 then
+    miCRC32 := wbCRC32File(wbDataPath + miOriginalName);
+  aCRC32 := miCRC32;
+  Result := True;
 end;
 
 function TwbModuleInfo.HasCRC32(aCRC32: TwbCRC32): Boolean;

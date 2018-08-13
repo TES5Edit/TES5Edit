@@ -33,6 +33,9 @@ const
   wbHardcodedDat = '.Hardcoded.dat';
 
 const
+  CRLF = #13#10;
+
+  const
   csDotGhost = '.ghost';
   csDotEsm   = '.esm';
   csDotEsl   = '.esl';
@@ -624,6 +627,7 @@ type
 
   TwbCRC32sHelper = record helper for TwbCRC32s
     function Contains(aCRC32: TwbCRC32): Boolean;
+    procedure Add(aCRC32: TwbCRC32);
   end;
 
   IwbElement = interface
@@ -15955,6 +15959,15 @@ begin
 end;
 
 { TwbCRC32sHelper }
+
+procedure TwbCRC32sHelper.Add(aCRC32: TwbCRC32);
+var
+  Len: Integer;
+begin
+  Len := Length(Self);
+  SetLength(Self, Succ(Len));
+  Self[Len] := aCRC32;
+end;
 
 function TwbCRC32sHelper.Contains(aCRC32: TwbCRC32): Boolean;
 var

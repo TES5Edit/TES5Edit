@@ -169,7 +169,9 @@ type
     function AddPrefix(const aPrefix: string): TArray<string>;
     function RemoveEmpty: TArray<string>;
     function ToCommaText: string;
+    function ToText: string;
     procedure ReportAsProgress;
+    procedure Add(const s: string);
   end;
 
 implementation
@@ -228,6 +230,25 @@ begin
   finally
     Free;
   end;
+end;
+
+function TStringArrayHelper.ToText: string;
+begin
+  with TStringList.Create do try
+    AddStrings(Self);
+    Result := Text;
+  finally
+    Free;
+  end;
+end;
+
+procedure TStringArrayHelper.Add(const s: string);
+var
+  Len: Integer;
+begin
+  Len := Length(Self);
+  SetLength(Self, Succ(Len));
+  Self[Len] := s;
 end;
 
 function wbStripDotGhost(const aFileName: string): string;
