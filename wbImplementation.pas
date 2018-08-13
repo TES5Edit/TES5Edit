@@ -8335,7 +8335,7 @@ var
   Rec     : IwbMainRecord;
   Found   : Boolean;
 begin
-  if not (mrsReferencesInjectedChecked in mrStates) and (csRefsBuild in cntStates) then begin
+  if not (mrsReferencesInjectedChecked in mrStates) and (csRefsBuild in cntStates) then try
     Include(mrStates, mrsReferencesInjectedChecked);
     Exclude(mrStates, mrsReferencesInjected);
     if Length(mrReferences) > 0 then begin
@@ -8361,6 +8361,11 @@ begin
           end;
         end;
       end;
+    end;
+  except
+    on E: Exception do begin
+      if wbHasProgressCallback then
+        wbProgress('<[%s] Error in GetReferencesInjected: [%s] %s>', [GetShortName, E.ClassName, E.Message]);
     end;
   end;
   Result := mrsReferencesInjected in mrStates;
