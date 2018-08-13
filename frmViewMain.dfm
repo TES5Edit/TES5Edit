@@ -2183,9 +2183,9 @@ object frmMain: TfrmMain
   end
   object odModule: TOpenDialog
     Filter = 
-      'Plugin Files (*.esm;*.esp;*.esu)|*.esm;*.esp;*.esu|Save Files (*' +
-      '.ess;*.fos)|*.ess;*.fos|CoSave Files (*.obse;*.fose;*.nvse;*.sks' +
-      'e)|*.obse;*.fose;*.nvse;*.skse|All Files (*.*)|*.*'
+      'Plugin Files (*.esm;*.esl;*.esp;*.esu)|*.esm;*.esl;*.esp;*.esu|S' +
+      'ave Files (*.ess;*.fos)|*.ess;*.fos|CoSave Files (*.obse;*.fose;' +
+      '*.nvse;*.skse)|*.obse;*.fose;*.nvse;*.skse|All Files (*.*)|*.*'
     Options = [ofReadOnly, ofPathMustExist, ofFileMustExist, ofNoTestFileCreate, ofEnableSizing]
     Left = 352
     Top = 384
