@@ -836,11 +836,19 @@ begin
     Result[i] := Self[i].ToString(aInclDesc);
 end;
 
-{ TwbModuleExtensionHelper }
-
+procedure FreeAllocatedModules(var aList: TwbModuleInfos);
+var
+  i: Integer;
+begin
+  for i := Low(aList) to High(aList) do
+    Dispose(aList[i]);
+  aList := nil;
+end;
 
 initialization
 finalization
   FreeAndNil(_ModulesByName);
+  FreeAllocatedModules(_TemplateModules);
+  FreeAllocatedModules(_AdditionalModules);
 end.
 
