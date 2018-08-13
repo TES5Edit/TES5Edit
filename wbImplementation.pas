@@ -1981,7 +1981,7 @@ begin
     end;
 
     FileID := FormID.FileID.FullSlot;
-    if FileID >= Cardinal(GetMasterCount) then begin
+    if (FileID >= Cardinal(GetMasterCount)) and not (fsIsCompareLoad in flStates) then begin
 
       if (FormID.ToCardinal and $00FFF000) <> 0 then begin
         Exclude(flStates, fsPseudoESLCompatible);
@@ -2702,7 +2702,10 @@ end;
 function TwbFile.FileFileIDtoLoadOrderFileID(aFileID: TwbFileID): TwbFileID;
 begin
   if aFileID.FullSlot >= GetMasterCount then begin
-    Result := flLoadOrderFileID;
+    if fsIsCompareLoad in flStates then
+      Result := flMasters[High(flMasters)].LoadOrderFileID
+    else
+      Result := flLoadOrderFileID;
     if Result.FullSlot < 0 then
       raise Exception.Create('File has no slot assigned');
   end else
@@ -3220,12 +3223,19 @@ var
   Master : IwbFile;
 begin
   FileID := aFormID.FileID.FullSlot;
-  if FileID >= GetMasterCount then begin
-    Result := nil;
-  end else begin
+
+  if FileID >= GetMasterCount then
+    if fsIsCompareLoad in flStates then
+      Master := flMasters[High(flMasters)]
+    else
+      Master := nil
+  else
     Master := flMasters[FileID];
-    Result := Master.RecordByFormID[aFormID.ChangeFileID(Master.FileFileID), aAllowInjected];
-  end;
+
+  if Assigned(Master) then
+    Result := Master.RecordByFormID[aFormID.ChangeFileID(Master.FileFileID), aAllowInjected]
+  else
+    Result := nil;
 end;
 
 procedure TwbFile.GetMasters(aMasters: TStrings);
@@ -3402,7 +3412,10 @@ var
   i         : Integer;
 begin
   if aFileID = flLoadOrderFileID then
-    Exit(TwbFileID.Create(GetMasterCount))
+    if fsIsCompareLoad in flStates then
+      Exit(TwbFileID.Create(Pred(GetMasterCount)))
+    else
+      Exit(TwbFileID.Create(GetMasterCount))
   else
     for i := Pred(GetMasterCount) downto 0 do
       if flMasters[i].LoadOrderFileID = aFileID then
