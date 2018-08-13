@@ -15291,14 +15291,13 @@ var
   MainRecord                  : IwbMainRecord;
 begin
   TargetCanvas.Font.Color := clWindowText;
-  if wbLoaderDone then begin
-    NodeData := Sender.GetNodeData(Node);
+  NodeData := Sender.GetNodeData(Node);
+  MainRecord := nil;
+  if Assigned(NodeData) and Assigned(NodeData.Element) then begin
+    if NodeData.Element.ElementType = etMainRecord then begin
+      MainRecord := NodeData.Element as IwbMainRecord;
 
-    MainRecord := nil;
-    if Assigned(NodeData) and Assigned(NodeData.Element) then begin
-      if NodeData.Element.ElementType = etMainRecord then begin
-        MainRecord := NodeData.Element as IwbMainRecord;
-
+      if wbLoaderDone then
         if NodeData.ConflictThis = ctUnknown then begin
           ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
           if MainRecord.IsInjected then
@@ -15315,15 +15314,17 @@ begin
             Exclude(NodeData.Flags, nnfReferencesInjected);
         end;
 
-        if Column = 0 then
-          if MainRecord.Signature <> wbHeaderSignature then
-            if MonospaceFontName <> '' then
-              TargetCanvas.Font.Name := MonospaceFontName;
-      end else if NodeData.Element.ElementType = etFile then begin
-        if Column = 2 then
+      if Column = 0 then
+        if MainRecord.Signature <> wbHeaderSignature then
           if MonospaceFontName <> '' then
             TargetCanvas.Font.Name := MonospaceFontName;
-      end;
+    end else if NodeData.Element.ElementType = etFile then begin
+      if Column = 2 then
+        if MonospaceFontName <> '' then
+          TargetCanvas.Font.Name := MonospaceFontName;
+    end;
+
+    if wbLoaderDone then begin
       if NodeData.Element.Modified then
         TargetCanvas.Font.Style := [fsBold];
       if nnfInjected in NodeData.Flags then
@@ -15339,9 +15340,10 @@ begin
       else
         TargetCanvas.Font.Style := TargetCanvas.Font.Style - [fsUnderline];
     end;
-
-    TargetCanvas.Font.Color := wbDarker(ConflictThisToColor(NodeData.ConflictThis));
   end;
+
+  if wbLoaderDone then
+    TargetCanvas.Font.Color := wbDarker(ConflictThisToColor(NodeData.ConflictThis));
 end;
 
 procedure TfrmMain.vstSpreadSheetCheckHotTrack(Sender: TBaseVirtualTree; HotNode: PVirtualNode; HotColumn: TColumnIndex; var Allow: Boolean);
