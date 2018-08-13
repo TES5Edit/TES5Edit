@@ -978,7 +978,6 @@ implementation
 {$R *.dfm}
 
 uses
-  Colors,
   Mask,
   {$IFNDEF LiteVersion}
   cxVTEditors,
