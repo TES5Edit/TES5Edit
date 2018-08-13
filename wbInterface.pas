@@ -11551,7 +11551,10 @@ begin
       end;
     end;
   except
-    Result := NaN;
+    on e: Exception do begin
+      Result := NaN;
+      wbProgress('<Error reading float in "%s": [%s] %s>', [aElement.FullPath, E.ClassName, E.Message]);
+    end;
   end;
 end;
 
