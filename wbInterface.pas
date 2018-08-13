@@ -30,7 +30,7 @@ const
 
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
-  wbHardcodedDat = '.Hardcoded.keep.this.with.the.exe.and.otherwise.ignore.it.I.really.mean.it.dat';
+  wbHardcodedDat = '.Hardcoded.dat';
 
 const
   csDotGhost = '.ghost';
