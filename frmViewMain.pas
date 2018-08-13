@@ -1241,6 +1241,8 @@ begin
     if _SaveProgress and Assigned(frmMain) then
       frmMain.SaveLogs(False);
   end;
+
+  wbCurrentAction := '';
 end;
 
 procedure TfrmMain.acBackExecute(Sender: TObject);
