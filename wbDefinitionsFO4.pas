@@ -16168,7 +16168,7 @@ begin
         Sig2Int(NPC_), 'Non-player character',
         Sig2Int(WEAP), 'Weapon',
         Sig2Int(NONE), 'None'
-      ])),
+      ])).SetDefaultEditValue('None'),
       wbByteArray('Unused', 2, cpIgnore),
       wbFormIDCk('Attach Point', [KYWD, NULL]),
       wbArray('Attach Parent Slots', wbFormIDCk('Keyword', [KYWD, NULL]), -1),
