@@ -114,6 +114,7 @@ var
   wbCanAddScriptProperties : Boolean  = True;
   wbEditInfoUseShortName   : Boolean  = False;
   wbDevMode                : Boolean  = True;
+  wbStripEmptyMasters      : Boolean  = False;
 
   wbPluginsFileName    : String;
   wbModGroupFileName   : string;

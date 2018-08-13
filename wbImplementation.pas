@@ -3248,7 +3248,8 @@ begin
         Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
         if not Assigned(Rec) then
           raise Exception.CreateFmt('Unexpected error reading master list for file "%s"', [flFileName]);
-        aMasters.Add(Rec.Value);
+        if not wbStripEmptyMasters or (Trim(Rec.Value) <> '') then
+          aMasters.Add(Rec.Value);
       end;
   end else
     for i := Low(flMasters) to High(flMasters) do
@@ -3812,7 +3813,8 @@ begin
         Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
         if not Assigned(Rec) then
           raise Exception.CreateFmt('Unexpected error reading master list for file "%s"', [flFileName]);
-        AddMaster(Rec.Value);
+        if not wbStripEmptyMasters or (Trim(Rec.Value) <> '') then
+          AddMaster(Rec.Value);
       end;
 
     if flCompareTo <> '' then
