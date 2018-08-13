@@ -41,11 +41,12 @@ object frmModGroupEdit: TfrmModGroupEdit
     Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowImages, hoVisible]
     LineStyle = lsCustomStyle
     TabOrder = 1
-    TreeOptions.MiscOptions = [toAcceptOLEDrop, toFullRepaintOnResize, toGridExtensions, toInitOnSave, toToggleOnDblClick, toWheelPanning, toEditOnClick]
+    TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toGridExtensions, toInitOnSave, toToggleOnDblClick, toWheelPanning, toEditOnClick]
     TreeOptions.PaintOptions = [toPopupMode, toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseBlendedSelection]
     TreeOptions.SelectionOptions = [toExtendedFocus, toLevelSelectConstraint, toRightClickSelect, toSiblingSelectConstraint, toAlwaysSelectNode]
     OnGetText = vstModGroupItemsGetText
     OnIncrementalSearch = vstModGroupItemsIncrementalSearch
+    OnInitChildren = vstModGroupItemsInitChildren
     OnInitNode = vstModGroupItemsInitNode
     OnKeyDown = vstModGroupItemsKeyDown
     OnNodeClick = vstModGroupItemsNodeClick

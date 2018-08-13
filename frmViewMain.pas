@@ -1007,9 +1007,6 @@ uses
   frmModGroupSelectForm,
   frmModGroupEditForm;
 
-const
-  CRLF = #13#10;
-
 var
   LastUpdate               : UInt64;
   ProcessMessagesLockCount : Integer;
@@ -3126,6 +3123,8 @@ var
   _File          : IwbFile;
   Modules        : TwbModuleInfos;
   FileName       : string;
+  AddCRCs        : Boolean;
+  CRC32          : TwbCRC32;
 begin
   FillChar(lModGroup, SizeOf(TwbModGroup), 0);
 
@@ -3184,6 +3183,8 @@ begin
   j := Length(Modules);
   if j < 2 then
     Exit;
+
+  AddCRCs := MessageDlg('Do you want to include the current CRC32s?', mtConfirmation, [mbYes, mbNo], 0) = mrYes;
   SetLength(lModGroup.mgItems, j);
   for i := Low(Modules) to High(Modules) do
     with lModGroup.mgItems[i] do begin
@@ -3194,6 +3195,8 @@ begin
         Include(mgiFlags, mgifIsSource);
       if i < High(Modules) then
         Include(mgiFlags, mgifIsTarget);
+      if AddCRCs and mgiModule.GetCRC32(CRC32) then
+        mgiCRC32s := [CRC32];
     end;
 
   with TfrmModGroupEdit.Create(Self) do try

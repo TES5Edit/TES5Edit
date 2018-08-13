@@ -55,6 +55,7 @@ type
     function ToString: string;
   end;
   TwbModGroupItems = array of TwbModGroupItem;
+  TwbModGroupItemPtrs = array of PwbModGroupItem;
 
   TwbModGroupFlag = (
     mgfNone,
