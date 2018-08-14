@@ -14581,10 +14581,11 @@ end;
 
 procedure TfrmMain.vstViewScroll(Sender: TBaseVirtualTree; DeltaX, DeltaY: Integer);
 begin
-  if DeltaY <> 0 then begin
-    tmrUpdateColumnWidths.Enabled := False;
-    tmrUpdateColumnWidths.Enabled := True;
-  end;
+  if DeltaY <> 0 then
+    if mniViewColumnWidthFitText.Checked or mniViewColumnWidthFitSmart.Checked then begin
+      tmrUpdateColumnWidths.Enabled := False;
+      tmrUpdateColumnWidths.Enabled := True;
+    end;
 end;
 
 procedure TfrmMain.vstNavBeforeItemErase(Sender: TBaseVirtualTree;
