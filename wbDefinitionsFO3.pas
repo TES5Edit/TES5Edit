@@ -564,7 +564,7 @@ var
   wbSCHRReq: IwbSubRecordDef;
   wbCTDAs: IwbSubRecordArrayDef;
   wbCTDAsReq: IwbSubRecordArrayDef;
-  wbSCROs: IwbSubRecordArrayDef;
+  wbSCROs: IwbRecordMemberDef;
 //  wbPGRP: IwbSubRecordDef;
   wbEmbeddedScript: IwbSubRecordStructDef;
   wbEmbeddedScriptPerk: IwbSubRecordStructDef;
@@ -4562,7 +4562,7 @@ begin
 //           WATR, ENCH, TREE, TERM, HAIR, EYES, ADDN, NULL]),
         wbInteger(SCRV, 'Local Variable', itU32)
       ], [])
-    );
+    ).IncludeFlag(dfNotAlignable);
 
   wbSLSD := wbStructSK(SLSD, [0], 'Local Variable Data', [
     wbInteger('Index', itU32),
@@ -5213,24 +5213,24 @@ begin
     ], cpNormal, True, nil, -1, wbEFITAfterLoad);
 
   wbCTDA :=
-    wbStruct(CTDA, 'Condition', [
-      wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
-      wbByteArray('Unused', 3),
-      wbUnion('Comparison Value', wbCTDACompValueDecider, [
+    wbStructSK(CTDA, [3, 4], 'Condition', [
+   {0}wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
+   {1}wbByteArray('Unused', 3),
+   {2}wbUnion('Comparison Value', wbCTDACompValueDecider, [
         wbFloat('Comparison Value - Float'),
         wbFormIDCk('Comparison Value - Global', [GLOB])
       ]),
-      wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),   // Limited to itu16
-      wbUnion('Parameter #1', wbCTDAParam1Decider, [
+   {3}wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),   // Limited to itu16
+   {4}wbUnion('Parameter #1', wbCTDAParam1Decider, [
         {00} wbByteArray('Unknown', 4),
-        {01} wbByteArray('None', 4, cpIgnore),
+        {01} wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
         {02} wbInteger('Integer', itS32),
-        {03} wbInteger('Variable Name (INVALID)', itS32),
+        {03} wbInteger('Variable Name (INVALID)', itS32).IncludeFlag(dfZeroSortKey),
         {04} wbInteger('Sex', itU32, wbSexEnum),
         {05} wbInteger('Actor Value', itS32, wbActorValueEnum),
         {06} wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
         {07} wbInteger('Axis', itU32, wbAxisEnum),
-        {08} wbInteger('Quest Stage (INVALID)', itS32),
+        {08} wbInteger('Quest Stage (INVALID)', itS32).IncludeFlag(dfZeroSortKey),
         {09} wbInteger('Misc Stat', itU32, wbMiscStatEnum),
         {10} wbInteger('Alignment', itU32, wbAlignmentEnum),
         {11} wbInteger('Equip Type', itU32, wbEquipTypeEnum),
@@ -5261,7 +5261,7 @@ begin
         {37} wbFormIDCkNoReach('Base Effect', [MGEF]),
         {38} wbFormIDCkNoReach('Worldspace', [WRLD]),
         {39} wbInteger('VATS Value Function', itU32, wbVATSValueFunctionEnum),
-        {40} wbInteger('VATS Value Param (INVALID)', itU32),
+        {40} wbInteger('VATS Value Param (INVALID)', itU32).IncludeFlag(dfZeroSortKey),
         {41} wbInteger('Creature Type', itU32, wbCreatureTypeEnum),
         {42} wbInteger('Menu Mode', itU32, wbMenuModeEnum),
         {43} wbInteger('Player Action', itU32, wbPlayerActionEnum),
@@ -5271,7 +5271,7 @@ begin
       ]),
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
         {00} wbByteArray('Unknown', 4),
-        {01} wbByteArray('None', 4, cpIgnore),
+        {01} wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
         {02} wbInteger('Integer', itS32),
         {03} wbInteger('Variable Name', itS32, wbCTDAParam2VariableNameToStr, wbCTDAParam2VariableNameToInt),
         {04} wbInteger('Sex', itU32, wbSexEnum),
@@ -5334,17 +5334,17 @@ begin
                  'Heal',
                  'Player Death'
                ])),
-               wbByteArray('Unused', 4, cpIgnore),
-               wbByteArray('Unused', 4, cpIgnore),
+               wbByteArray('Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+               wbByteArray('Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
                wbFormIDCkNoReach('Critical Effect', [SPEL]),
                wbFormIDCkNoReach('Critical Effect List', [FLST], [SPEL]),
-               wbByteArray('Unused', 4, cpIgnore),
-               wbByteArray('Unused', 4, cpIgnore),
-               wbByteArray('Unused', 4, cpIgnore),
-               wbByteArray('Unused', 4, cpIgnore),
+               wbByteArray('Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+               wbByteArray('Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+               wbByteArray('Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+               wbByteArray('Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
                wbInteger('Weapon Type', itU32, wbWeaponAnimTypeEnum),
-               wbByteArray('Unused', 4, cpIgnore),
-               wbByteArray('Unused', 4, cpIgnore)
+               wbByteArray('Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+               wbByteArray('Unused', 4, cpIgnore).IncludeFlag(dfZeroSortKey)
              ]),
         {41} wbInteger('Creature Type', itU32, wbCreatureTypeEnum),
         {42} wbInteger('Menu Mode', itU32, wbMenuModeEnum),

@@ -98,7 +98,10 @@ type
 
   TViewNodeFlag = (
     vnfDontShow,
-    vnfIgnore
+    vnfIgnore,
+    vnfUseSortOrder,
+    vnfIsSorted,
+    vnfIsAligned
   );
   TViewNodeFlags = set of TViewNodeFlag;
 
@@ -582,6 +585,7 @@ type
     procedure tmrUpdateColumnWidthsTimer(Sender: TObject);
     procedure vstViewScroll(Sender: TBaseVirtualTree; DeltaX, DeltaY: Integer);
     procedure bnHelpClick(Sender: TObject);
+    procedure bnDiscordClick(Sender: TObject);
     procedure tmrPendingSetActiveTimer(Sender: TObject);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
@@ -989,9 +993,11 @@ uses
   {$IFNDEF VER220}
   UITypes,
   {$ENDIF VER220}
+  Diff,
   wbSort,
   wbStreams,
   wbScriptAdapter,
+  wbBetterStringList,
   FilterOptionsFrm,
   FileSelectFrm,
   ViewElementsFrm,
@@ -1806,7 +1812,7 @@ var
   Element                : IwbElement;
   CompareElement         : IwbElement;
   i, j                   : Integer;
-  UniqueValues           : TnxFastStringListCS;
+  UniqueValues           : TwbFastStringListCS;
 
   MasterPosition         : Integer;
   FirstElement           : IwbElement;
@@ -1844,7 +1850,7 @@ begin
     LastElement := aNodeDatas[Pred(aNodeCount)].Element;
     FirstElement := aNodeDatas[0].Element;
 
-    UniqueValues := TnxFastStringListCS.Create;
+    UniqueValues := TwbFastStringListCS.Create;
     UniqueValues.Sorted := True;
     UniqueValues.Duplicates := dupIgnore;
     Priority := cpNormal;
@@ -4276,6 +4282,7 @@ begin
   wbShowFileFlags := Settings.ReadBool('Options', 'ShowFileFlags', wbShowFileFlags);
   wbAutoCompareSelectedLimit := Settings.ReadInteger('Options', 'AutoCompareSelectedLimit', wbAutoCompareSelectedLimit);
   wbClampFormID := Settings.ReadBool('Options', 'ClampFormID', wbClampFormID);
+  wbAlignArrayElements := Settings.ReadBool('Options', 'AlignArrayElements', wbAlignArrayElements);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
   wbUDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
@@ -5415,22 +5422,28 @@ end;
 procedure TfrmMain.InitChilds(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer;
   var aChildCount: Cardinal);
 var
-  NodeData                    : PNavNodeData;
-  Container                   : IwbContainer;
-  FirstContainer              : IwbContainer;
+  NodeData                    : PViewNodeData;
+  Container                   : IwbContainerElementRef;
+  FirstContainer              : IwbContainerElementRef;
   SortableContainer           : IwbSortableContainer;
   Element                     : IwbElement;
   i, j, k                     : Integer;
   SortedCount                 : Integer;
+  AlignableCount              : Integer;
   NonSortedCount              : Integer;
-  SortedKeys                  : array of TnxFastStringListCS;
+  SortedKeys                  : array of TwbFastStringListCS;
   Sortables                   : array of IwbSortableContainer;
   SortKey                     : string;
   LastSortKey                 : string;
   DupCounter                  : Integer;
+
+  AllKeys                     : TwbFastStringListCS;
+  LeftKeys,RightKeys          : array of integer;
+  KeyedElements               : array of array of Pointer;{skip the ref counting}
 begin
   SortedCount := 0;
   NonSortedCount := 0;
+  AlignableCount := 0;
   FirstContainer := nil;
   for i := 0 to Pred(aNodeCount) do begin
     NodeData := @aNodeDatas[i];
@@ -5438,16 +5451,27 @@ begin
     if not Assigned(FirstContainer) then
       FirstContainer := Container;
     if Assigned(Container) then
-      if Supports(Container, IwbSortableContainer, SortableContainer) and SortableContainer.Sorted then
-        Inc(SortedCount)
-      else
+      if Supports(Container, IwbSortableContainer, SortableContainer) then begin
+        if SortableContainer.Sorted then
+          Inc(SortedCount)
+        else if SortableContainer.Alignable then
+          Inc(AlignableCount)
+      end else
         Inc(NonSortedCount);
   end;
 
-  if (NonSortedCount > 0) and (SortedCount > 0) then begin
+  i := 0;
+  if SortedCount > 0 then
+    Inc(i);
+  if AlignableCount > 0 then
+    Inc(i);
+  if NonSortedCount > 0 then
+    Inc(i);
+  if i > 1 then begin
     if Assigned(FirstContainer) then
-      PostAddMessage('Warning: Comparing sorted and unsorted entrie for "' + FirstContainer.Path + '" in "'+FirstContainer.ContainingMainRecord.Name+'"');
+      PostAddMessage('Warning: Comparing a mix of sorted, unsorted, and/or alignable entries for "' + FirstContainer.Path + '" in "'+FirstContainer.ContainingMainRecord.Name+'"');
     SortedCount := 0;
+    AlignableCount := 0;
   end;
 
   if SortedCount > 0 then begin
@@ -5455,7 +5479,7 @@ begin
 
     SetLength(SortedKeys, Succ(aNodeCount));
     for i := Low(SortedKeys) to High(SortedKeys) do begin
-      SortedKeys[i] := TnxFastStringListCS.Create;
+      SortedKeys[i] := TwbFastStringListCS.Create;
       SortedKeys[i].Sorted := True;
       SortedKeys[i].Duplicates := dupError;
     end;
@@ -5465,8 +5489,10 @@ begin
 
       SetLength(Sortables, aNodeCount);
 
-      for i := 0 to Pred(aNodeCount) do
-        if Supports(aNodeDatas[i].Container, IwbSortableContainer, Sortables[i]) then begin
+      for i := 0 to Pred(aNodeCount) do begin
+        NodeData := @aNodeDatas[i];
+        Include(NodeData.ViewNodeFlags, vnfIsSorted);
+        if Supports(NodeData.Container, IwbSortableContainer, Sortables[i]) then begin
           SortableContainer := Sortables[i];
           DupCounter := 0;
           LastSortKey := '';
@@ -5486,6 +5512,7 @@ begin
             SortedKeys[aNodeCount].Add(SortKey);
           end;
         end;
+      end;
 
       aChildCount := SortedKeys[aNodeCount].Count;
 
@@ -5496,6 +5523,12 @@ begin
             IwbElement(Pointer(SortedKeys[i].Objects[k])).SortOrder := j;
       end;
 
+      for i := 0 to Pred(aNodeCount) do begin
+        NodeData := @aNodeDatas[i];
+        if Assigned(NodeData.Container) then
+          NodeData.Container.SetIsSortedBySortOrder(False);
+      end;
+
     finally
 
       for i := Low(SortedKeys) to High(SortedKeys) do
@@ -5503,30 +5536,136 @@ begin
 
     end;
 
-  end
-  else
-    for i := 0 to Pred(aNodeCount) do begin
-      NodeData := @aNodeDatas[i];
-      Container := NodeData.Container;
+  end else begin
+    if wbAlignArrayElements and (AlignableCount > 1) then
+      AllKeys := TwbFastStringListCS.Create
+    else
+      AllKeys := nil;
+    try
+      for i := 0 to Pred(aNodeCount) do begin
+        NodeData := @aNodeDatas[i];
+        Container := NodeData.Container;
 
-      if Assigned(Container) then begin
-        case Container.ElementType of
-          etMainRecord, etSubRecordStruct: begin
-              aChildCount := (Container.Def as IwbRecordDef).MemberCount;
-              Inc(aChildCount, Container.AdditionalElementCount);
-              if Cardinal(Container.ElementCount) > aChildCount then begin
-                PostAddMessage('Error: Container.ElementCount {'+IntToStr(Container.ElementCount)+'} > aChildCount {'+IntToStr(aChildCount)+'} for ' + Container.Path + ' in ' + Container.ContainingMainRecord.Name);
-                for j := 0 to Pred(Container.ElementCount) do
-                PostAddMessage('  #'+IntToStr(j)+': ' + Container.Elements[j].Name);
-                //Assert(Cardinal(Container.ElementCount) <= aChildCount);
+        if Assigned(Container) then begin
+          case Container.ElementType of
+            etMainRecord, etSubRecordStruct: begin
+                aChildCount := (Container.Def as IwbRecordDef).MemberCount;
+                Inc(aChildCount, Container.AdditionalElementCount);
+                if Cardinal(Container.ElementCount) > aChildCount then begin
+                  PostAddMessage('Error: Container.ElementCount {'+IntToStr(Container.ElementCount)+'} > aChildCount {'+IntToStr(aChildCount)+'} for ' + Container.Path + ' in ' + Container.ContainingMainRecord.Name);
+                  for j := 0 to Pred(Container.ElementCount) do
+                  PostAddMessage('  #'+IntToStr(j)+': ' + Container.Elements[j].Name);
+                  //Assert(Cardinal(Container.ElementCount) <= aChildCount);
+                end;
               end;
+            etSubRecordArray, etSubRecord, etArray: begin
+
+              with aNodeDatas[i].Container do begin
+                if ElementCount > wbAlignArrayLimit then
+                  FreeAndNil(AllKeys);
+                if Assigned(AllKeys) then
+                  for j := 0 to Pred(ElementCount) do
+                    AllKeys.Add(Elements[j].SortKey[False]);
+              end;
+              if aChildCount < Cardinal(Container.ElementCount) then
+                aChildCount := Container.ElementCount;
             end;
-          etSubRecordArray, etArray, etStruct, etSubRecord, etValue, etUnion, etStructChapter:
-            if aChildCount < Cardinal(Container.ElementCount) then
-              aChildCount := Container.ElementCount;
+            etStruct, etValue, etUnion, etStructChapter:
+              if aChildCount < Cardinal(Container.ElementCount) then
+                aChildCount := Container.ElementCount;
+          end;
         end;
       end;
+      if Assigned(AllKeys) then begin
+        AllKeys.Sorted := True;
+        AllKeys.RemoveDuplicates;
+        if AllKeys.Count > 1 then begin
+          KeyedElements := nil;
+          SetLength(KeyedElements, aNodeCount);
+          FirstContainer := nil;
+          if AllKeys.Count > 0 then begin
+            for i := 0 to Pred(aNodeCount) do begin
+              NodeData := @aNodeDatas[i];
+              Container := NodeData.Container;
+              if Assigned(Container) and (Container.ElementCount > 0) then begin
+                if not Assigned(FirstContainer) then begin
+                  FirstContainer := Container;
+                  with Container do begin
+                    SetLength(LeftKeys, ElementCount);
+                    SetLength(KeyedElements[i], ElementCount);
+                    for j := 0 to Pred(ElementCount) do begin
+                      if not AllKeys.Find(Elements[j].SortKey[False], LeftKeys[j]) then
+                        Assert(False);
+                      KeyedElements[i, j] := Elements[j];
+                    end;
+                  end;
+                end else begin
+                  with Container do begin
+                    SetLength(RightKeys, ElementCount);
+                    for j := 0 to Pred(ElementCount) do
+                      if not AllKeys.Find(Elements[j].SortKey[False], RightKeys[j]) then
+                        Assert(False);
+                  end;
+
+                  with TDiff.Create(nil) do try
+                    AllowModify := False;
+                    if not Execute(PInteger(@LeftKeys[0]), PInteger(@RightKeys[0]), Length(LeftKeys), Length(RightKeys)) then
+                      Assert(False);
+
+                    for j := Pred(i) downto 0 do
+                      if Length(KeyedElements[j]) > 0 then begin
+                        SetLength(KeyedElements[j], Count);
+                        for k := Pred(Count) downto 0 do
+                          with Compares[k] do
+                            if Kind in [ckNone, ckDelete] then
+                              if oldIndex1 <> k then begin
+                                KeyedElements[j, k] := KeyedElements[j, oldIndex1];
+                                KeyedElements[j, oldIndex1] := nil;
+                              end;
+                      end;
+
+                    with Container do begin
+                      SetLength(KeyedElements[i], Count);
+                      SetLength(LeftKeys, Count);
+                      RightKeys := nil;
+                      for k := Pred(Count) downto 0 do
+                        with Compares[k] do begin
+                          if Kind in [ckNone, ckAdd] then begin
+                            KeyedElements[i, k] := Elements[oldIndex2];
+                            LeftKeys[k] := int2;
+                          end else
+                            LeftKeys[k] := int1;
+                        end;
+                      if aChildCount < Count then
+                        aChildCount := Count;
+                    end;
+
+                  finally
+                    Free;
+                  end;
+
+                end;
+
+              end;
+            end;
+            for i := 0 to Pred(aNodeCount) do begin
+              NodeData := @aNodeDatas[i];
+              Include(NodeData.ViewNodeFlags, vnfUseSortOrder);
+              Include(NodeData.ViewNodeFlags, vnfIsAligned);
+              for j := Low(KeyedElements[i]) to High(KeyedElements[i]) do
+                if Assigned(KeyedElements[i, j]) then
+                  IwbElement(KeyedElements[i, j]).SortOrder := j;
+              if Assigned(NodeData.Container) then
+                NodeData.Container.SetIsSortedBySortOrder(True);
+            end;
+          end;
+        end;
+      end;
+
+    finally
+      AllKeys.Free;
     end;
+  end;
 end;
 
 procedure TfrmMain.InitConflictStatus(aNode: PVirtualNode; aInjected: Boolean; aNodeDatas: PViewNodeDatas = nil);
@@ -5689,7 +5828,7 @@ begin
 
     Container := ParentData.Container;
     if Assigned(Container) then begin
-      if Supports(Container, IwbSortableContainer, SortableContainer) and SortableContainer.Sorted then
+      if (vnfUseSortOrder in ParentData.ViewNodeFlags) or (Supports(Container, IwbSortableContainer, SortableContainer) and SortableContainer.Sorted) then
         NodeData.Element := Container.ElementBySortOrder[aIndex]
       else
         case Container.ElementType of
@@ -6500,6 +6639,17 @@ begin
   if Now - LastHelpClick > 1/24/60/60 then begin
     ShellExecute(Handle, 'open', PChar(wbHelpUrl), '', '', SW_SHOWNORMAL);
     LastHelpClick := Now;
+  end;
+end;
+
+var
+  LastDiscordClick: TDateTime;
+
+procedure TfrmMain.bnDiscordClick(Sender: TObject);
+begin
+  if Now - LastDiscordClick > 1/24/60/60 then begin
+    ShellExecute(Handle, 'open', PChar(wbDiscordUrl), '', '', SW_SHOWNORMAL);
+    LastDiscordClick := Now;
   end;
 end;
 
@@ -10922,6 +11072,7 @@ begin
     sedAutoCompareSelectedLimit.Value := wbAutoCompareSelectedLimit;
     cbSimpleRecords.Checked := wbSimpleRecords;
     cbClampFormID.Checked := wbClampFormID;
+    cbAlignArrayElements.Checked := wbAlignArrayElements;
     edColumnWidth.Text := IntToStr(ColumnWidth);
     edRowHeight.Text := IntToStr(RowHeight);
     cbAutoSave.Checked := AutoSave;
@@ -10962,6 +11113,7 @@ begin
     wbAutoCompareSelectedLimit := sedAutoCompareSelectedLimit.Value;
     wbSimpleRecords := cbSimpleRecords.Checked;
     wbClampFormID := cbClampFormID.Checked;
+    wbAlignArrayElements := cbAlignArrayElements.Checked;
     ColumnWidth := StrToIntDef(edColumnWidth.Text, ColumnWidth);
     RowHeight := StrToIntDef(edRowHeight.Text, RowHeight);
     SetDefaultNodeHeight(Trunc(RowHeight * (GetCurrentPPIScreen / PixelsPerInch)));
@@ -10998,6 +11150,7 @@ begin
     Settings.WriteInteger('Options', 'AutoCompareSelectedLimit', wbAutoCompareSelectedLimit);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
     Settings.WriteBool('Options', 'ClampFormID', wbClampFormID);
+    Settings.WriteBool('Options', 'AlignArrayElements', wbAlignArrayElements);
     Settings.WriteInteger('Options', 'ColumnWidth', ColumnWidth);
     Settings.WriteInteger('Options', 'RowHeight', RowHeight);
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
@@ -14026,9 +14179,13 @@ procedure TfrmMain.vstViewDragDrop(Sender: TBaseVirtualTree; Source: TObject;
   Pt: TPoint; var Effect: Integer; Mode: TDropMode);
 var
   TargetElement               : IwbElement;
+  TargetContainer             : IwbContainerElementRef;
   SourceElement               : IwbElement;
   TargetNode                  : PVirtualNode;
+  TargetNodeDatas             : PViewNodeDatas;
+  TargetNodeData              : PViewNodeData;
   TargetIndex                 : Integer;
+  NewElement                  : IwbElement;
 begin
   if not wbEditAllowed then
     Exit;
@@ -14045,8 +14202,19 @@ begin
 
     vstView.BeginUpdate;
     try
-      TargetElement.Assign(TargetIndex, SourceElement, False);
+      NewElement := TargetElement.Assign(TargetIndex, SourceElement, False);
+      if Assigned(NewElement) and (TargetIndex > 0) and (TargetIndex < High(Integer)) then begin
+        TargetNodeDatas := vstView.GetNodeData(TargetNode);
+        TargetNodeData := @TargetNodeDatas[Pred(Sender.DropTargetColumn)];
+        if vnfIsAligned in TargetNodeData.ViewNodeFlags then
+          if Supports(TargetElement, IwbContainerElementRef, TargetContainer) then begin
+            NewElement.SortOrder := TargetIndex;
+            TargetContainer.SortBySortOrder;
+          end;
+      end;
+
       ActiveRecords[Pred(Sender.DropTargetColumn)].UpdateRefs;
+      NewElement := nil;
       TargetElement := nil;
       SourceElement := nil;
       PostResetActiveTree;
@@ -14174,6 +14342,7 @@ procedure TfrmMain.vstViewGetText(Sender: TBaseVirtualTree;
   var CellText: string);
 var
   NodeDatas    : PViewNodeDatas;
+  NodeData     : PViewNodeData;
   Element      : IwbElement;
   ElementCount : Integer;
   i,j          : Integer;
@@ -14200,9 +14369,13 @@ begin
 
   if Assigned(Element) then begin
     if TextType = ttNormal then begin
-      if Column < 1 then
-        CellText := Element.DisplayName
-      else begin
+      if Column < 1 then begin
+        CellText := Element.DisplayName;
+        if vnfIsSorted in NodeDatas[0].ViewNodeFlags then
+          CellText := CellText + ' (sorted)'
+        else if vnfIsAligned in NodeDatas[0].ViewNodeFlags then
+          CellText := CellText + ' (aligned)';
+      end else begin
         if (Element.ConflictPriority <> cpIgnore) or not wbHideIgnored then
           CellText := Element.Value;
       end;

@@ -126,24 +126,6 @@ type
 
 procedure wbLeveledListCheckCircular(const aMainRecord: IwbMainRecord; aStack: PnxLeveledListCheckCircularStack);
 
-type
-  TnxFastStringList = class(TStringList)
-  protected
-    function CompareStrings(const S1, S2: string): Integer; override;
-  public
-    constructor CreateSorted(aDups : TDuplicates = dupError);
-
-    procedure Clear(aFreeObjects: Boolean = False); reintroduce;
-  end;
-
-  TnxFastStringListCS = class(TnxFastStringList)
-  public
-    procedure AfterConstruction; override;
-  end;
-
-  TnxFastStringListIC = class(TnxFastStringList)
-  end;
-
 function wbExtractNameFromPath(aPathName: String): String;
 
 function wbCounterAfterSet(aCounterName: String; const aElement: IwbElement): Boolean;
@@ -1024,46 +1006,6 @@ begin
     finally
       Free;
     end;
-end;
-
-
-{ TnxFastStringList }
-
-procedure TnxFastStringList.Clear(aFreeObjects: Boolean);
-var
-  i: Integer;
-begin
-  if aFreeObjects then
-    for i := 0 to Pred(Count) do
-      Objects[i].Free;
-  inherited Clear;
-end;
-
-function TnxFastStringList.CompareStrings(const S1, S2: string): Integer;
-begin
-  {x$IFDEF DCC6OrLater}
-  if CaseSensitive then
-    Result := CompareStr(S1, S2)
-  else
-  {x$ENDIF}
-    Result := CompareText(S1, S2);
-end;
-
-constructor TnxFastStringList.CreateSorted(aDups: TDuplicates);
-begin
-  Create;
-  Duplicates := aDups;
-  Sorted := True;
-end;
-
-{ TnxFastStringListCS }
-
-procedure TnxFastStringListCS.AfterConstruction;
-begin
-  inherited;
-  {x$IFDEF DCC6OrLater}
-  CaseSensitive := True;
-  {x$ENDIF}
 end;
 
 function wbExtractNameFromPath(aPathName: String): String;

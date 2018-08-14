@@ -18,13 +18,19 @@ unit wbBetterStringList;
 
 interface
 
-implementation
-
 uses
   System.Types,
   System.Classes,
-  System.SysUtils,
-  System.Diagnostics,
+  System.SysUtils;
+
+type
+  TStringListHelper = class helper for TStringList
+    procedure RemoveDuplicates;
+  end;
+
+implementation
+
+uses
   DDetours,
   wbInterface,
   wbSort;
@@ -195,13 +201,10 @@ end;
 (**)
 {$ENDIF}
 
-var
-  sw1, sw2: TStopwatch;
-
 procedure Detour_TStringList_Sort(Self: TStringListProtectedHacker);
 var
-  CompareSelf     : TCompareStrings;
   CanHandle       : Boolean;
+  CompareSelf     : TCompareStrings;
   ListSortCompare : TwbMergeSort<TwbTwoPtr>.TListSortCompareTPtr;
   //List: TStringItemList;
   i: Integer;
@@ -228,31 +231,67 @@ begin
           ListSortCompare := ListSortCompareStringItemPtr_CompareText;
 
       TwbMergeSort<TwbTwoPtr>.Sort(@FList[0], FCount, ListSortCompare);
-      {
-      List := Copy(FList);
-
-      sw1.Start;
-      TwbMergeSort<TwbTwoPtr>.Sort(@List[0], FCount, ListSortCompare);
-      sw1.Stop;
-
-      sw2.Start;
-      Trampoline_TStringList_Sort(Self);
-      sw2.Stop;
-
-      for i := 0 to Pred(FCount) do begin
-        Assert(FList[i].FString = List[i].FString);
-        Assert(FList[i].FObject = List[i].FObject);
-      end;
-      }
     end else
       Trampoline_TStringList_Sort(Self);
   end;
 end;
 
-initialization
-  sw1 := TStopwatch.Create;
-  sw2 := TStopwatch.Create;
+{ TStringListHelper }
 
+procedure TStringListHelper.RemoveDuplicates;
+var
+  CanHandle       : Boolean;
+  CompareSelf     : TCompareStrings;
+  ListSortCompare : function(const S1, S2: string): Integer;
+  i, j            : Integer;
+  Obj             : TObject;
+begin
+  if Count < 2 then
+    Exit;
+
+  CanHandle := True;
+  if ClassType <> TStringList then begin
+    CompareSelf := CompareStrings;
+    if TMethod(CompareSelf).Code <> TMethod(CodePointer_TStringList_CompareStrings).Code then
+      CanHandle := False;
+  end;
+
+  if CanHandle then begin
+    if UseLocale then
+      if CaseSensitive then
+        ListSortCompare := AnsiCompareStr
+      else
+        ListSortCompare := AnsiCompareText
+    else
+      if CaseSensitive then
+        ListSortCompare := CompareStr
+      else
+        ListSortCompare := CompareText;
+
+    with TStringListPrivateHacker(Self) do begin
+      j := 1;
+      for i := 1 to Pred(FCount) do
+        if ListSortCompare(FList[i].FString, FList[Pred(j)].FString) <> 0 then begin
+          if i <> j then begin
+            FList[j] := FList[i];
+          end;
+          Inc(j);
+        end else with FList[i] do begin
+          if OwnsObjects then
+            Obj := FObject
+          else
+            Obj := nil;
+          FString := '';
+          FObject := nil;
+          Obj.Free;
+        end;
+      FCount := j;
+    end;
+  end else
+    raise Exception.Create('Can''t handle RemoveDuplicates for this list.');
+end;
+
+initialization
 
   with TStringListProtectedHacker(TStringList.Create) do try
     CodePointer_TStringList_Assign := Assign;

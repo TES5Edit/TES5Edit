@@ -2,8 +2,8 @@ object frmMain: TfrmMain
   Left = 0
   Top = 0
   Caption = 'TES5View'
-  ClientHeight = 655
-  ClientWidth = 961
+  ClientHeight = 663
+  ClientWidth = 1019
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -27,7 +27,7 @@ object frmMain: TfrmMain
   object splElements: TSplitter
     Left = 458
     Top = 33
-    Height = 595
+    Height = 603
     AutoSnap = False
     MinSize = 250
     ResizeStyle = rsUpdate
@@ -38,8 +38,8 @@ object frmMain: TfrmMain
   object stbMain: TStatusBar
     AlignWithMargins = True
     Left = 3
-    Top = 631
-    Width = 955
+    Top = 639
+    Width = 1013
     Height = 21
     Margins.Left = 0
     Margins.Right = 0
@@ -60,8 +60,8 @@ object frmMain: TfrmMain
   object pnlRight: TPanel
     Left = 461
     Top = 33
-    Width = 497
-    Height = 595
+    Width = 555
+    Height = 603
     Align = alClient
     BevelOuter = bvNone
     BorderStyle = bsSingle
@@ -69,8 +69,8 @@ object frmMain: TfrmMain
     object pgMain: TPageControl
       Left = 0
       Top = 0
-      Width = 493
-      Height = 591
+      Width = 551
+      Height = 599
       ActivePage = tbsView
       Align = alClient
       RaggedRight = True
@@ -245,8 +245,8 @@ object frmMain: TfrmMain
           AlignWithMargins = True
           Left = 0
           Top = 25
-          Width = 485
-          Height = 537
+          Width = 543
+          Height = 545
           Margins.Left = 0
           Margins.Top = 0
           Margins.Right = 0
@@ -318,7 +318,7 @@ object frmMain: TfrmMain
         object pnlViewTop: TPanel
           Left = 0
           Top = 0
-          Width = 485
+          Width = 543
           Height = 25
           Align = alTop
           BevelOuter = bvNone
@@ -377,12 +377,16 @@ object frmMain: TfrmMain
         ImageIndex = 3
         TabVisible = False
         OnShow = tbsViewShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 485
+        ExplicitHeight = 565
         object lvReferencedBy: TListView
           AlignWithMargins = True
           Left = 0
           Top = 0
-          Width = 485
-          Height = 562
+          Width = 543
+          Height = 570
           Margins.Left = 0
           Margins.Top = 0
           Margins.Right = 0
@@ -413,18 +417,24 @@ object frmMain: TfrmMain
           OnColumnClick = lvReferencedByColumnClick
           OnCompare = lvReferencedByCompare
           OnDblClick = lvReferencedByDblClick
+          ExplicitWidth = 485
+          ExplicitHeight = 562
         end
       end
       object tbsMessages: TTabSheet
         Caption = 'Messages'
         ImageIndex = 1
         OnShow = tbsMessagesShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 485
+        ExplicitHeight = 565
         object mmoMessages: TMemo
           AlignWithMargins = True
           Left = 0
           Top = 0
-          Width = 485
-          Height = 562
+          Width = 543
+          Height = 570
           Margins.Left = 0
           Margins.Top = 0
           Margins.Right = 0
@@ -435,6 +445,8 @@ object frmMain: TfrmMain
           TabOrder = 0
           WordWrap = False
           OnDblClick = mmoMessagesDblClick
+          ExplicitWidth = 485
+          ExplicitHeight = 562
         end
       end
       object tbsInfo: TTabSheet
@@ -444,8 +456,8 @@ object frmMain: TfrmMain
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 479
-          Height = 559
+          Width = 537
+          Height = 567
           Align = alClient
           BorderStyle = bsNone
           Font.Charset = ANSI_CHARSET
@@ -810,12 +822,16 @@ object frmMain: TfrmMain
         Caption = 'Weapon Spreadsheet'
         ImageIndex = 4
         OnShow = tbsSpreadsheetShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 485
+        ExplicitHeight = 565
         object vstSpreadSheetWeapon: TVirtualEditTree
           Tag = 3
           Left = 0
           Top = 0
-          Width = 485
-          Height = 565
+          Width = 543
+          Height = 573
           Align = alClient
           Color = clInfoBk
           DragOperations = [doCopy]
@@ -849,6 +865,8 @@ object frmMain: TfrmMain
           OnIncrementalSearch = vstSpreadSheetIncrementalSearch
           OnInitNode = vstSpreadSheetWeaponInitNode
           OnNewText = vstSpreadSheetNewText
+          ExplicitWidth = 485
+          ExplicitHeight = 565
           Columns = <
             item
               MinWidth = 150
@@ -1015,12 +1033,16 @@ object frmMain: TfrmMain
         Caption = 'Armor Spreadsheet'
         ImageIndex = 5
         OnShow = tbsSpreadsheetShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 485
+        ExplicitHeight = 565
         object vstSpreadsheetArmor: TVirtualEditTree
           Tag = 3
           Left = 0
           Top = 0
-          Width = 485
-          Height = 565
+          Width = 543
+          Height = 573
           Align = alClient
           Color = clInfoBk
           DragOperations = [doCopy]
@@ -1054,6 +1076,8 @@ object frmMain: TfrmMain
           OnIncrementalSearch = vstSpreadSheetIncrementalSearch
           OnInitNode = vstSpreadSheetArmorInitNode
           OnNewText = vstSpreadSheetNewText
+          ExplicitWidth = 485
+          ExplicitHeight = 565
           Columns = <
             item
               MinWidth = 150
@@ -1156,12 +1180,16 @@ object frmMain: TfrmMain
         Caption = 'Ammunition Spreadsheet'
         ImageIndex = 6
         OnShow = tbsSpreadsheetShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 485
+        ExplicitHeight = 565
         object vstSpreadSheetAmmo: TVirtualEditTree
           Tag = 3
           Left = 0
           Top = 0
-          Width = 485
-          Height = 565
+          Width = 543
+          Height = 573
           Align = alClient
           Color = clInfoBk
           DragOperations = [doCopy]
@@ -1195,6 +1223,8 @@ object frmMain: TfrmMain
           OnIncrementalSearch = vstSpreadSheetIncrementalSearch
           OnInitNode = vstSpreadSheetAmmoInitNode
           OnNewText = vstSpreadSheetNewText
+          ExplicitWidth = 485
+          ExplicitHeight = 565
           Columns = <
             item
               MinWidth = 150
@@ -1276,14 +1306,20 @@ object frmMain: TfrmMain
         Caption = 'TabSheet2'
         ImageIndex = 7
         TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 485
+        ExplicitHeight = 565
         object DisplayPanel: TPanel
           Left = 0
           Top = 0
-          Width = 485
-          Height = 565
+          Width = 543
+          Height = 573
           Align = alClient
           BevelOuter = bvLowered
           TabOrder = 0
+          ExplicitWidth = 485
+          ExplicitHeight = 565
         end
       end
     end
@@ -1291,14 +1327,14 @@ object frmMain: TfrmMain
   object pnlTop: TPanel
     Left = 3
     Top = 3
-    Width = 955
+    Width = 1013
     Height = 30
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 2
     object bnBack: TSpeedButton
       AlignWithMargins = True
-      Left = 841
+      Left = 823
       Top = 3
       Width = 24
       Height = 24
@@ -1385,7 +1421,7 @@ object frmMain: TfrmMain
     end
     object bnForward: TSpeedButton
       AlignWithMargins = True
-      Left = 871
+      Left = 853
       Top = 3
       Width = 25
       Height = 24
@@ -1472,21 +1508,68 @@ object frmMain: TfrmMain
     end
     object bnHelp: TSpeedButton
       AlignWithMargins = True
-      Left = 902
+      Left = 884
       Top = 3
-      Width = 50
+      Width = 60
       Height = 24
       Align = alRight
       Caption = 'Help'
       Flat = True
+      Glyph.Data = {
+        36040000424D3604000000000000360000002800000010000000100000000100
+        2000000000000004000000000000000000000000000000000000000000000000
+        00001E1E1E81000000003C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF000000001E1E
+        1E813C3C3CFF000000003C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF1E1E1E813C3C
+        3CFF3C3C3CFF000000003C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF0000
+        0000000000003C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF3C3C3CFF000000003C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF0000
+        0000000000003C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF3C3C3CFF000000003C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF3C3C3CFF000000003C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF0000
+        000000000000383838EE3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF3C3C3CFF000000003C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3030
+        30CC0000000008080822383838EE3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF3C3C3CFF000000003C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF282828AA00000000181818663C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF3C3C3CFF000000003C3C3CFF3C3C3CFF3C3C3CFF20202088202020883C3C
+        3CFF383838EE000000000C0C0C333C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF3C3C3CFF000000003C3C3CFF3C3C3CFF3C3C3CFF08080822000000001818
+        186614141455000000001C1C1C773C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF3C3C3CFF000000003C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF080808220000
+        000000000000141414553C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF3C3C3CFF000000003C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF3C3C3CFF000000003C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF1E1E1E7E0000000000000000000000000000000000000000000000000000
+        00000000000000000000000000000000000000000000000000003C3C3CFF1E1E
+        1E7E000000000000000000000000000000000000000000000000000000000000
+        00000000000000000000000000000000000000000000000000003C3C3CFF3C3C
+        3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C3CFF3C3C
+        3CFF3C3C3CFF3C3C3CFF3C3C3CFF000000000000000000000000}
       OnClick = bnHelpClick
-      ExplicitLeft = 927
+      ExplicitLeft = 960
+    end
+    object bnDiscord: TSpeedButton
+      AlignWithMargins = True
+      Left = 950
+      Top = 3
+      Width = 60
+      Height = 24
+      Align = alRight
+      Caption = 'Discord'
+      Flat = True
+      OnClick = bnDiscordClick
+      ExplicitLeft = 960
     end
     object lblPath: TEdit
       AlignWithMargins = True
       Left = 0
       Top = 5
-      Width = 835
+      Width = 817
       Height = 20
       Margins.Left = 0
       Margins.Top = 5
@@ -1511,7 +1594,7 @@ object frmMain: TfrmMain
     Left = 3
     Top = 33
     Width = 455
-    Height = 595
+    Height = 603
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 3
@@ -1536,7 +1619,7 @@ object frmMain: TfrmMain
       Left = 0
       Top = 63
       Width = 455
-      Height = 503
+      Height = 511
       Align = alClient
       BevelInner = bvNone
       Colors.SelectionRectangleBlendColor = clGray
@@ -1659,7 +1742,7 @@ object frmMain: TfrmMain
     end
     object pnlNavBottom: TPanel
       Left = 0
-      Top = 566
+      Top = 574
       Width = 455
       Height = 29
       Align = alBottom

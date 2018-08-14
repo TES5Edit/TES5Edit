@@ -454,6 +454,7 @@ type
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
 
     procedure SortBySortOrder; virtual;
+    procedure SetIsSortedBySortOrder(aForce: Boolean);
     procedure CreatedEmpty;
 
     function Reached: Boolean; override;
@@ -545,6 +546,7 @@ type
     function CanChangeElementMember(const aElement: IwbElement): Boolean;
 
     function FindBySortKey(const aSortKey: string; aExtended: Boolean; out aIndex: Integer): Boolean;
+    function FindBySortOrder(const aSortOrder: Integer; out aIndex: Integer): Boolean;
 
     procedure AfterConstruction; override;
     procedure BeforeDestruction; override;
@@ -1258,6 +1260,7 @@ type
 
     {--- IwbSortableContainer ---}
     function GetSorted: Boolean;
+    function GetAlignable: Boolean;
   end;
 
   TwbValueBase = class(TwbDataContainer)
@@ -1339,6 +1342,9 @@ type
 
     {--- IwbSortableContainer ---}
     function GetSorted: Boolean;
+    function GetAlignable: Boolean;
+
+    function GetDisplayName: string; override;
   end;
 
   TwbStruct = class(TwbValueBase)
@@ -1422,6 +1428,7 @@ type
 
     {--- IwbSortableContainer ---}
     function GetSorted: Boolean;
+    function GetAlignable: Boolean;
   end;
 
   TwbContainedInElement = class(TwbValue, IwbContainedIn)
@@ -1650,6 +1657,9 @@ type
 
     {---IwbSortableContainer---}
     function GetSorted: Boolean;
+    function GetAlignable: Boolean;
+
+    function GetDisplayName: string; override;
 
     {--- IwbHasSignature ---}
     function GetSignature: TwbSignature;
@@ -4743,6 +4753,7 @@ begin
     Exit;
   if [csInitializing, csReseting] * cntStates <> [] then
     Exit;
+  Exclude(cntStates, csSortedBySortOrder);
   Include(cntStates, csInitializing);
   try
     cntElementsMap := nil;
@@ -4786,6 +4797,8 @@ begin
 
   if [csInitializing, csReseting] * cntStates <> [] then
     Exit;
+
+  Exclude(cntStates, csSortedBySortOrder);
 
   {$IFDEF WIN64}
   LockedInc(cntElementRefs);
@@ -4872,6 +4885,30 @@ begin
   while L <= H do begin
     I := (L + H) shr 1;
     C := CompareStr(cntElements[I].SortKey[aExtended], aSortKey);
+    if C < 0 then
+      L := I + 1
+    else begin
+      H := I - 1;
+      if C = 0 then begin
+        Result := True;
+        L := I;
+      end;
+    end;
+  end;
+  aIndex := L;
+end;
+
+function TwbContainer.FindBySortOrder(const aSortOrder: Integer; out aIndex: Integer): Boolean;
+var
+  L, H, I, C: Integer;
+begin
+  Result := False;
+
+  L := Low(cntElements);
+  H := High(cntElements);
+  while L <= H do begin
+    I := (L + H) shr 1;
+    C := CmpI32(cntElements[I].SortOrder, aSortOrder);
     if C < 0 then
       L := I + 1
     else begin
@@ -5038,12 +5075,17 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit;
   Dec(aSortOrder, GetAdditionalElementCount);
+
   Result := nil;
-  for i := Low(cntElements) to High(cntElements) do
-    if cntElements[i].SortOrder = aSortOrder then begin
+  if (csSortedBySortOrder in cntStates) and (Length(cntElements) > 8)  then begin
+    if FindBySortOrder(aSortOrder, i) then
       Result := IInterface(cntElements[i]) as IwbElement;
-      Exit;
-    end;
+  end else
+    for i := Low(cntElements) to High(cntElements) do
+      if cntElements[i].SortOrder = aSortOrder then begin
+        Result := IInterface(cntElements[i]) as IwbElement;
+        Exit;
+      end;
 end;
 
 function TwbContainer.GetElementCount: Integer;
@@ -5464,6 +5506,7 @@ begin
     Exit;
   if csAsCreatedEmpty in cntStates then
     Exclude(cntStates, csAsCreatedEmpty);
+  Exclude(cntStates, csSortedBySortOrder);
 
   inherited;
 
@@ -5573,6 +5616,7 @@ begin
   for i := Low(Result) to High(Result) do
     Result[i].SetContainer(nil);
   Exclude(cntStates, csAsCreatedEmpty);
+  Exclude(cntStates, csSortedBySortOrder);
 end;
 
 function TwbContainer.ReleaseKeepAlive: IwbContainerElementRef;
@@ -5767,6 +5811,7 @@ begin
   for i := Low(cntElements) to High(cntElements) do
     Temp[High(cntElements)-i] := cntElements[i];
   cntElements := Temp;
+  Exclude(cntStates, csSortedBySortOrder);
 end;
 
 procedure TwbContainer.SetElementEditValue(const aName, aValue: string);
@@ -5809,6 +5854,19 @@ begin
     Container.ElementNativeValues[Name] := aValue;
 end;
 
+procedure TwbContainer.SetIsSortedBySortOrder(aForce: Boolean);
+var
+  i: Integer;
+begin
+  if not aForce then
+    for i := 1 to High(cntElements) do
+      if cntElements[Pred(i)].SortOrder >= cntElements[i].SortOrder then begin
+        Exclude(cntStates, csSortedBySortOrder);
+        Exit;
+      end;
+  Include(cntStates, csSortedBySortOrder);
+end;
+
 procedure TwbContainer.SetToDefaultIfAsCreatedEmpty;
 begin
   if csAsCreatedEmpty in cntStates then
@@ -5842,6 +5900,7 @@ begin
     wbMergeSortPtr(@cntElements[i], j, CompareSortOrder);
     InvalidateStorage;
   end;
+  Include(cntStates, csSortedBySortOrder);
 end;
 
 procedure TwbContainer.WriteToStreamInternal(aStream: TStream; aResetModified: Boolean);
@@ -10837,6 +10896,27 @@ begin
   srDef.AfterLoad(Self);
 end;
 
+function TwbSubRecord.GetAlignable: Boolean;
+var
+  SelfRef  : IwbContainerElementRef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+  if GetSorted then
+    Exit(False);
+
+  if Assigned(srDef) and (dfNotAlignable in srDef.DefFlags) then
+    Exit(False);
+
+  if not Assigned(srValueDef) then
+    DoInit;
+
+  if Assigned(srValueDef) and (dfNotAlignable in srValueDef.DefFlags) then
+    Exit(False);
+
+  Result := srsIsArray in srStates;
+end;
+
 function TwbSubRecord.GetCheck: string;
 var
   SelfRef : IwbContainerElementRef;
@@ -14531,9 +14611,23 @@ begin
     arcSortInvalid := True;
 end;
 
+function TwbSubRecordArray.GetAlignable: Boolean;
+begin
+  if GetSorted then
+    Exit(False);
+  if Assigned(arcDef) and (dfNotAlignable in arcDef.DefFlags) then
+    Exit(False);
+  Result := True;
+end;
+
 function TwbSubRecordArray.GetDef: IwbNamedDef;
 begin
   Result := arcDef;
+end;
+
+function TwbSubRecordArray.GetDisplayName: string;
+begin
+  Result := inherited GetDisplayName;
 end;
 
 function TwbSubRecordArray.GetElementType: TwbElementType;
@@ -15348,9 +15442,26 @@ begin
     arrSortInvalid := True;
 end;
 
+function TwbArray.GetAlignable: Boolean;
+begin
+  if GetSorted then
+    Exit(False);
+  if not Assigned(vbValueDef) then
+    Exit(False);
+  if dfNotAlignable in vbValueDef.DefFlags then
+    Exit(False);
+
+  Result := ((vbValueDef as IwbArrayDef).ElementCount <= 0);
+end;
+
 function TwbArray.GetDataPrefixSize: Integer;
 begin
   Result := arrSizePrefix;
+end;
+
+function TwbArray.GetDisplayName: string;
+begin
+  Result := inherited GetDisplayName;
 end;
 
 function TwbArray.GetElementType: TwbElementType;
@@ -15858,6 +15969,11 @@ begin
   ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
   if Assigned(ResolvedDef) then
     ResolvedDef.FindUsedMasters(GetDataBasePtr, dcDataEndPtr, Self, aMasters);
+end;
+
+function TwbValue.GetAlignable: Boolean;
+begin
+  Result := False;
 end;
 
 function TwbValue.GetElementType: TwbElementType;

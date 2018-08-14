@@ -6533,7 +6533,7 @@ begin
     'No dismember/explode'
   ]);
 
-  wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
+  wbEDID := wbString(EDID, 'Editor ID', 0, cpBenign);
   wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
   wbFULLActor := wbLStringKC(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
   wbFULLReq := wbLStringKC(FULL, 'Name', 0, cpTranslate, True);
@@ -7989,19 +7989,19 @@ begin
       wbInteger('Duration', itU32)
     ], cpNormal, True, nil, -1, wbEFITAfterLoad);
 
-  wbCTDA := wbRStruct('Condition', [
-    wbStruct(CTDA, '', [
-      wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
-      wbByteArray('Unused', 3, cpIgnore, False, wbNeverShow),
-      wbUnion('Comparison Value', wbCTDACompValueDecider, [
+  wbCTDA := wbRStructSK([0], 'Condition', [
+    wbStructSK(CTDA, [3, 5], '', [
+   {0}wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
+   {1}wbByteArray('Unused', 3, cpIgnore, False, wbNeverShow),
+   {2}wbUnion('Comparison Value', wbCTDACompValueDecider, [
         wbFloat('Comparison Value - Float'),
         wbFormIDCk('Comparison Value - Global', [GLOB])
       ]),
-      wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
-      wbByteArray('Unused', 2, cpIgnore, False, wbNeverShow),
-      wbUnion('Parameter #1', wbCTDAParam1Decider, [
+   {3}wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
+   {4}wbByteArray('Unused', 2, cpIgnore, False, wbNeverShow),
+   {5}wbUnion('Parameter #1', wbCTDAParam1Decider, [
         { unknown }
-        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4).IncludeFlag(dfZeroSortKey),
         { 0 ptString}
         wbByteArray('String', 4),
         { 1 ptInteger}
@@ -8099,11 +8099,11 @@ begin
         {47 ptShout}
         wbFormIDCkNoReach('Shout', [SHOU]),
         {48 ptVariableName}
-        wbByteArray('Variable Name (unused)', 4, cpIgnore),
+        wbByteArray('Variable Name (unused)', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
         {49 ptVATSValueFunction}
         wbInteger('VATS Value Function', itU32, wbVATSValueFunctionEnum),
         {50 ptVATSValueParam}
-        wbInteger('VATS Value Param (unused)', itU32),
+        wbInteger('VATS Value Param (unused)', itU32).IncludeFlag(dfZeroSortKey),
         {51 ptVoiceType}
         wbFormIDCkNoReach('Voice Type', [VTYP, FLST]),
         {52 ptWardState}
@@ -8118,7 +8118,7 @@ begin
 
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
         { unknown }
-        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4).IncludeFlag(dfZeroSortKey),
         { 0 ptString}
         wbByteArray('String', 4),
         { 1 ptInteger}
@@ -8241,17 +8241,17 @@ begin
                 'Heal',
                 'Player Death'
           ])),
-         { 7} wbByteArray('Unknown', 4, cpIgnore),
-         { 8} wbByteArray('Unknown', 4, cpIgnore),
+         { 7} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         { 8} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
          { 9} wbFormIDCkNoReach('Critical Effect', [SPEL]),
          {10} wbFormIDCkNoReach('Critical Effect List', [FLST], [SPEL]),
-         {11} wbByteArray('Unknown', 4, cpIgnore),
-         {12} wbByteArray('Unknown', 4, cpIgnore),
-         {13} wbByteArray('Unknown', 4, cpIgnore),
-         {14} wbByteArray('Unknown', 4, cpIgnore),
+         {11} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         {12} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         {13} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         {14} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
          {15} wbInteger('Weapon Type', itU32, wbWeaponAnimTypeEnum),
-         {16} wbByteArray('Unknown', 4, cpIgnore),
-         {17} wbByteArray('Unknown', 4, cpIgnore),
+         {16} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         {17} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
          {18} wbInteger('Projectile Type', itU32, wbEnum([
                 'Missile',
                 'Lobber',
@@ -8577,9 +8577,9 @@ begin
     wbInteger(BSMP, 'Gender', itU32, wbEnum(['Male', 'Female'])),
     // should not be sorted!!!
     wbRArray('Bones',
-      wbRStruct('Bone', [
+      wbRStructSK([0], 'Bone', [
         wbString(BSMB, 'Name'),
-        wbArray(BSMS, 'Values', wbFloat('Value')),
+        wbArray(BSMS, 'Values', wbFloat('Value')).IncludeFlag(dfNotAlignable),
         wbUnknown(BMMP)
       ], [])
     )
