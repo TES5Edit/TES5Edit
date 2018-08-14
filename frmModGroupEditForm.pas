@@ -204,8 +204,8 @@ begin
         NodeData := vstModGroupItems.GetNodeData(Node);
         ModGroup.mgItems[i] := NodeData.mgindModGroupItem;
         with ModGroup.mgItems[i] do begin
-          SetLength(mgiCRC32s, vstModGroupItems.ChildCount[Node]);
           CRC32Node := vstModGroupItems.GetFirstChild(Node);
+          SetLength(mgiCRC32s, vstModGroupItems.ChildCount[Node]);
           j := 0;
           while Assigned(CRC32Node) do begin
             CRC32NodeData := vstModGroupItems.GetNodeData(CRC32Node);
