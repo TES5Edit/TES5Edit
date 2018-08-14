@@ -2556,7 +2556,7 @@ begin
     MainRecords[i] := NodeData.Element as IwbMainRecord;
   end;
 
-  SetActiveRecord(MainRecords);
+  DoSetActiveRecord(MainRecords);
 end;
 
 procedure TfrmMain.mniNavCompareToClick(Sender: TObject);
@@ -2611,7 +2611,7 @@ begin
   vstNav.PopupMenu := nil;
   wbLoaderDone := False;
   wbLoaderError := False;
-  SetActiveRecord(nil);
+  DoSetActiveRecord(nil);
   mniNavFilterRemoveClick(Sender);
   wbStartTime := Now;
   TLoaderThread.Create(CompareFile, _File.FileName, _File.LoadOrder, Temporary);
@@ -4873,7 +4873,8 @@ begin
   try
     BackHistory := nil;
     ForwardHistory := nil;
-    SetActiveRecord(nil);
+    tmrPendingSetActive.Enabled := False;
+    DoSetActiveRecord(nil);
     vstNav.Free;
     vstView.Free;
     vstSpreadSheetWeapon.Free;
@@ -6687,7 +6688,7 @@ begin
 
   pgMain.ActivePage := tbsView;
   DoProcessMessages;
-  SetActiveRecord(MainRecords);
+  DoSetActiveRecord(MainRecords);
 end;
 
 procedure TfrmMain.mniRefByCopyDisabledOverrideIntoClick(Sender: TObject);
@@ -6794,7 +6795,7 @@ begin
 
   lActiveRecord := ActiveRecord;
   ActiveRecord := nil;
-  SetActiveRecord(lActiveRecord);
+  DoSetActiveRecord(lActiveRecord);
 
   vstNav.Invalidate;
 end;
@@ -6909,9 +6910,9 @@ begin
       vstNav.Selected[vstNav.FocusedNode] := True;
 
       if Supports(Element, IwbMainRecord, MainRecord) then
-        SetActiveRecord(MainRecord)
+        DoSetActiveRecord(MainRecord)
       else
-        SetActiveRecord(nil);
+        DoSetActiveRecord(nil);
 
     end;
   end;
@@ -7930,14 +7931,14 @@ begin
   MainRecord := ActiveRecord;
   if Element.Equals(MainRecord) then
     MainRecord := nil;
-  SetActiveRecord(nil);
+  DoSetActiveRecord(nil);
 
   Element := nil;
 
   if Assigned(Node) then
     vstNav.DeleteNode(Node);
 
-  SetActiveRecord(MainRecord);
+  DoSetActiveRecord(MainRecord);
   InvalidateElementsTreeView(NoNodes);
 end;
 
@@ -8341,7 +8342,7 @@ begin
       CheckHistoryRemove(ForwardHistory, MainRecord);
     end;
 
-    SetActiveRecord(nil);
+    DoSetActiveRecord(nil);
     if Element.Equals(NodeData.Container) then
       NodeData.Container := nil;
     if Assigned(NodeData.Container) then
@@ -9570,7 +9571,7 @@ begin
   vstView.BeginUpdate;
   try
     OffsetXY := vstView.OffsetXY;
-    SetActiveRecord(Recs);
+    DoSetActiveRecord(Recs);
     vstView.OffsetXY := OffsetXY;
   finally
     vstView.EndUpdate;
@@ -11985,9 +11986,17 @@ var
   Column                      : TColumnIndex;
   Node                        : PVirtualNode;
   r                           : TRect;
+  ColumnWidths                : array of Integer;
+  i: Integer;
 begin
+  LockWindowUpdate(vstView.Handle);
   vstView.BeginUpdate;
   try
+    with vstView.Header, Columns do begin
+      SetLength(ColumnWidths, Count);
+      for i := 0 to Pred(Count) do
+        ColumnWidths[i] := Columns[i].Width;
+    end;
     OffsetXY := vstView.OffsetXY;
     Column := vstView.FocusedColumn;
     Node := vstView.FocusedNode;
@@ -11996,8 +12005,8 @@ begin
 
     if Assigned(ActiveRecord) then begin
       MainRecord := ActiveRecord;
-      SetActiveRecord(nil);
-      SetActiveRecord(MainRecord);
+      DoSetActiveRecord(nil);
+      DoSetActiveRecord(MainRecord);
     end
     else if Length(ActiveRecords) > 0 then begin
       RootNodeCount := vstView.RootNodeCount;
@@ -12015,8 +12024,17 @@ begin
     end;
     vstView.FocusedColumn := Column;
     vstView.OffsetXY := OffsetXY;
+    if mniViewColumnWidthFitText.Checked or mniViewColumnWidthFitSmart.Checked then
+      UpdateColumnWidths
+    else
+      with vstView.Header, Columns do begin
+        if Length(ColumnWidths) = Count then
+          for i := 0 to Pred(Count) do
+            Columns[i].Width := ColumnWidths[i];
+      end;
   finally
     vstView.EndUpdate;
+    LockWindowUpdate(0);
   end;
 end;
 
@@ -13494,7 +13512,7 @@ begin
         vstNav.ClearSelection;
         vstNav.FocusedNode := vstNav.FocusedNode.Parent;
         vstNav.Selected[vstNav.FocusedNode] := True;
-        SetActiveRecord(nil);
+        DoSetActiveRecord(nil);
         pgMain.ActivePage := tbsMessages;
         try
           if wbToolMode = tmCheckForErrors then begin
@@ -16024,7 +16042,7 @@ begin
           CheckHistoryRemove(BackHistory, MainRecord);
           CheckHistoryRemove(ForwardHistory, MainRecord);
         end;
-        SetActiveRecord(nil);
+        DoSetActiveRecord(nil);
         if Element.Equals(NodeData.Container) then
           NodeData.Container := nil;
         if Assigned(NodeData.Container) then
@@ -16131,7 +16149,7 @@ begin
     end;
   end
   else if SameText(Identifier, 'RemoveFilter') and (Args.Count = 0) then begin
-    SetActiveRecord(nil);
+    DoSetActiveRecord(nil);
     mniNavFilterRemoveClick(nil);
     Done := True;
   end
@@ -16605,7 +16623,7 @@ begin
     vstNav.ClearSelection;
     vstNav.FocusedNode := vstNav.FocusedNode.Parent;
     vstNav.Selected[vstNav.FocusedNode] := True;
-    SetActiveRecord(nil);
+    DoSetActiveRecord(nil);
     pgMain.ActivePage := tbsMessages;
     mniNavUndeleteAndDisableReferences.Click;
     mniNavRemoveIdenticalToMaster.Click;
@@ -16615,7 +16633,7 @@ begin
     vstNav.ClearSelection;
     vstNav.FocusedNode := vstNav.FocusedNode.Parent;
     vstNav.Selected[vstNav.FocusedNode] := True;
-    SetActiveRecord(nil);
+    DoSetActiveRecord(nil);
     pgMain.ActivePage := tbsMessages;
     mniNavUndeleteAndDisableReferences.Click;
     mniNavRemoveIdenticalToMaster.Click;
@@ -17073,7 +17091,7 @@ begin
       vstNav.FocusedNode := FindNodeForElement(crRecords[i]);
       vstNav.Selected[vstNav.FocusedNode] := True;
     end;
-    SetActiveRecord(crRecords);
+    DoSetActiveRecord(crRecords);
     pgMain.ActivePage := tbsView;
   end;
 end;
@@ -17209,7 +17227,7 @@ begin
     vstNav.ClearSelection;
     vstNav.FocusedNode := FindNodeForElement(mrRecord);
     vstNav.Selected[vstNav.FocusedNode] := True;
-    SetActiveRecord(mrRecord);
+    DoSetActiveRecord(mrRecord);
     pgMain.ActivePage := GetTabSheet;
   end;
 end;
