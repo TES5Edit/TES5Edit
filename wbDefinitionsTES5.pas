@@ -5177,7 +5177,7 @@ begin
     {9} 'Crossbow'
   ]);
 
-  wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
+  wbEDID := wbString(EDID, 'Editor ID', 0, cpBenign);
   wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
   wbFULLActor := wbLStringKC(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
   wbFULLReq := wbLStringKC(FULL, 'Name', 0, cpTranslate, True);
@@ -6480,27 +6480,27 @@ begin
       wbInteger('Duration', itU32)
     ], cpNormal, True, nil, -1, wbEFITAfterLoad);
 
-  wbCTDA := wbRStruct('Condition', [
-    wbStruct(CTDA, '', [
-      wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
-      wbByteArray('Unused', 3, cpIgnore, False, wbNeverShow),
-      wbUnion('Comparison Value', wbCTDACompValueDecider, [
+  wbCTDA := wbRStructSK([0], 'Condition', [
+    wbStructSK(CTDA, [{0, }3, 5{, 6, 7, 8, 9}], '', [
+   {0}wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
+   {1}wbByteArray('Unused', 3, cpIgnore, False, wbNeverShow),
+   {2}wbUnion('Comparison Value', wbCTDACompValueDecider, [
         wbFloat('Comparison Value - Float'),
         wbFormIDCk('Comparison Value - Global', [GLOB])
       ]),
-      wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
-      wbByteArray('Unused', 2, cpIgnore, False, wbNeverShow),
-      wbUnion('Parameter #1', wbCTDAParam1Decider, [
+   {3}wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
+   {4}wbByteArray('Unused', 2, cpIgnore, False, wbNeverShow),
+   {5}wbUnion('Parameter #1', wbCTDAParam1Decider, [
         wbByteArray('Unknown', 4),
-        wbByteArray('None', 4, cpIgnore),
+        wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
         wbInteger('Integer', itS32),
         wbFloat('Float'),
-        wbByteArray('Variable Name (unused)', 4, cpIgnore),
+        wbByteArray('Variable Name (unused)', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
         wbInteger('Sex', itU32, wbSexEnum),
         wbInteger('Actor Value', itS32, wbActorValueEnum),
         wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
         wbInteger('Axis', itU32, wbAxisEnum),
-        wbInteger('Quest Stage (unused)', itS32),
+        wbInteger('Quest Stage (unused)', itS32).IncludeFlag(dfZeroSortKey),
         wbInteger('Misc Stat', itU32, wbMiscStatEnum),
         wbInteger('Alignment', itU32, wbAlignmentEnum),
         wbFormIDCkNoReach('Equip Type', [EQUP]),
@@ -6529,7 +6529,7 @@ begin
         wbFormIDCkNoReach('Base Effect', [MGEF]),
         wbFormIDCkNoReach('Worldspace', [WRLD, FLST]),
         wbInteger('VATS Value Function', itU32, wbVATSValueFunctionEnum),
-        wbInteger('VATS Value Param (INVALID)', itU32),
+        wbInteger('VATS Value Param (INVALID)', itU32).IncludeFlag(dfZeroSortKey),
         wbFormIDCkNoReach('Referenceable Object', [NULL, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, FLST, LVLI, LVSP, SPEL, SCRL, SHOU, SLGM, ENCH], [NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, TACT, LVLI, LVSP, SPEL, SCRL, SHOU, SLGM, ENCH]),
         wbFormIDCkNoReach('Region', [REGN]),
         wbFormIDCkNoReach('Keyword', [KYWD, NULL]),
@@ -6548,12 +6548,12 @@ begin
         wbInteger('Event', itU32, wbEventFunctionAndMemberToStr, wbEventFunctionAndMemberToInt),
         wbFormID('Event Data')
       ]),
-      wbUnion('Parameter #2', wbCTDAParam2Decider, [
+   {6}wbUnion('Parameter #2', wbCTDAParam2Decider, [
         wbByteArray('Unknown', 4),
-        wbByteArray('None', 4, cpIgnore),
+        wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
         wbInteger('Integer', itS32),
         wbFloat('Float'),
-        wbByteArray('Variable Name (unused)', 4, cpIgnore),
+        wbByteArray('Variable Name (unused)', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
         wbInteger('Sex', itU32, wbSexEnum),
         wbInteger('Actor Value', itS32, wbActorValueEnum),
         wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
@@ -6608,17 +6608,17 @@ begin
                 'Heal',
                 'Player Death'
           ])),
-         { 7} wbByteArray('Unknown', 4, cpIgnore),
-         { 8} wbByteArray('Unknown', 4, cpIgnore),
+         { 7} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         { 8} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
          { 9} wbFormIDCkNoReach('Critical Effect', [SPEL]),
          {10} wbFormIDCkNoReach('Critical Effect List', [FLST], [SPEL]),
-         {11} wbByteArray('Unknown', 4, cpIgnore),
-         {12} wbByteArray('Unknown', 4, cpIgnore),
-         {13} wbByteArray('Unknown', 4, cpIgnore),
-         {14} wbByteArray('Unknown', 4, cpIgnore),
+         {11} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         {12} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         {13} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         {14} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
          {15} wbInteger('Weapon Type', itU32, wbWeaponAnimTypeEnum),
-         {16} wbByteArray('Unknown', 4, cpIgnore),
-         {17} wbByteArray('Unknown', 4, cpIgnore),
+         {16} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         {17} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
          {18} wbInteger('Projectile Type', itU32, wbEnum([
                 'Missile',
                 'Lobber',
@@ -6649,7 +6649,7 @@ begin
         wbInteger('Event', itU32, wbEventFunctionAndMemberToStr, wbEventFunctionAndMemberToInt),
         wbFormID('Event Data')
       ]),
-      wbInteger('Run On', itU32, wbEnum([
+   {7}wbInteger('Run On', itU32, wbEnum([
         {0} 'Subject',
         {1} 'Target',
         {2} 'Reference',
@@ -6659,11 +6659,11 @@ begin
         {6} 'Package Data',
         {7} 'Event Data'
       ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
-      wbUnion('Reference', wbCTDAReferenceDecider, [
+   {8}wbUnion('Reference', wbCTDAReferenceDecider, [
         wbInteger('Unused', itU32, nil, cpIgnore),
         wbFormIDCkNoReach('Reference', [NULL, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False)
       ]),
-      wbInteger('Parameter #3', itS32, nil, cpNormal, False, nil, nil, -1)
+   {9}wbInteger('Parameter #3', itS32, nil, cpNormal, False, nil, nil, -1)
     ], cpNormal, False{, nil, 0, wbCTDAAfterLoad}),
     wbString(CIS1, 'Parameter #1'),
     wbString(CIS2, 'Parameter #2')
@@ -12203,7 +12203,7 @@ begin
     wbFormIDCk(ONAM, 'Open Loot Sound', [SNDR, NULL]),
     wbFormIDCk(LNAM, 'Close Loot Sound', [SNDR, NULL]),
     {>>> When NAME is user defined wbBipedObjectEnum will be incorrect <<<}
-    wbRArray('Biped Object Names', wbString(NAME, 'Name')),
+    wbRArray('Biped Object Names', wbString(NAME, 'Name')).IncludeFlag(dfNotAlignable),
     wbRArrayS('Movement Types', wbRStructSK([0], 'Movement Types', [
       wbFormIDCk(MTYP, 'Movement Type', [MOVT, NULL]),
       wbStruct(SPED, 'Override Values', [

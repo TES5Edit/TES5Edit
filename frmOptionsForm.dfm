@@ -155,7 +155,7 @@ object frmOptions: TfrmOptions
       end
       object cbClampFormID: TCheckBox
         Left = 16
-        Top = 295
+        Top = 293
         Width = 105
         Height = 17
         Hint = 'Set FormID index to the number of masters if greater'
@@ -186,6 +186,14 @@ object frmOptions: TfrmOptions
         Height = 17
         Caption = 'Show file header flags'
         TabOrder = 16
+      end
+      object cbAlignArrayElements: TCheckBox
+        Left = 16
+        Top = 315
+        Width = 185
+        Height = 17
+        Caption = 'Align alignable array elements'
+        TabOrder = 17
       end
     end
     object tsCleaning: TTabSheet

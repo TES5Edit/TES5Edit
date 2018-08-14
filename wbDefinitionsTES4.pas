@@ -319,7 +319,7 @@ var
   wbCTDA: IwbSubRecordUnionDef;
   wbSCHR: IwbSubRecordUnionDef;
   wbCTDAs: IwbSubRecordArrayDef;
-  wbSCROs: IwbSubRecordArrayDef;
+  wbSCROs: IwbRecordMemberDef;
   wbPGRP: IwbSubRecordDef;
   wbResultScript: IwbSubRecordStructDef;
 //  wbResultScriptOld: IwbSubRecordStructDef;
@@ -3337,26 +3337,26 @@ begin
 
   wbCTDA :=
     wbRUnion('Condition', [
-      wbStruct(CTDA, 'Condition', [
-        wbInteger('Type', itU8, wbCtdaType),
-        wbByteArray('Unused', 3),
-        wbUnion('Comparison Value', wbCTDACompValueDecider, [
+      wbStructSK(CTDA, [3, 4], 'Condition', [
+     {0}wbInteger('Type', itU8, wbCtdaType),
+     {1}wbByteArray('Unused', 3),
+     {2}wbUnion('Comparison Value', wbCTDACompValueDecider, [
           wbFloat('Comparison Value - Float'),
           wbFormIDCk('Comparison Value - Global', [GLOB])
         ]),
-        wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
-        wbUnion('Parameter #1', wbCTDAParam1Decider, [
+     {3}wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
+     {4}wbUnion('Parameter #1', wbCTDAParam1Decider, [
           {00} wbByteArray('Unknown', 4),
-          {01} wbByteArray('None', 4, cpIgnore),
+          {01} wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
           {02} wbInteger('Integer', itS32),
-          {03} wbInteger('Variable Name (INVALID)', itS32),
+          {03} wbInteger('Variable Name (INVALID)', itS32).IncludeFlag(dfZeroSortKey),
           {04} wbInteger('Sex', itU32, wbSexEnum),
           {05} wbFormIDCk('Actor Value', [ACVA]),
 //          {05} wbInteger('Actor Value', itS32, wbActorValueEnum),
           {06} wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
           {07} wbInteger('Axis', itU32, wbAxisEnum),
           {08} wbInteger('Form Type', itU32, wbFormTypeEnum),
-          {09} wbInteger('Quest Stage (INVALID)', itS32),
+          {09} wbInteger('Quest Stage (INVALID)', itS32).IncludeFlag(dfZeroSortKey),
           {10} wbFormIDCk('Object Reference', [PLYR, REFR, ACHR, ACRE, TRGT]),
           {12} wbFormIDCk('Inventory Object', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
           {13} wbFormIDCk('Actor', [PLYR, ACHR, ACRE, TRGT]),
@@ -3379,7 +3379,7 @@ begin
         ]),
         wbUnion('Parameter #2', wbCTDAParam2Decider, [
           {00} wbByteArray('Unknown', 4),
-          {01} wbByteArray('None', 4, cpIgnore),
+          {01} wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
           {02} wbInteger('Integer', itS32),
           {03} wbInteger('Variable Name', itS32, wbCTDAParam2VariableNameToStr, wbCTDAParam2VariableNameToInt),
           {04} wbInteger('Sex', itU32, wbSexEnum),
@@ -3411,15 +3411,15 @@ begin
         ]),
         wbInteger('Unused', itU32, nil, cpIgnore)
       ], cpNormal, False, nil, 6),
-      wbStruct(CTDT, 'Condition (old format)', [
-        wbInteger('Type', itU8, wbCtdaType),
-        wbByteArray('Unused', 3),
-        wbUnion('Comparison Value', wbCTDACompValueDecider, [
+      wbStructSK(CTDT, [3, 4], 'Condition (old format)', [
+     {0}wbInteger('Type', itU8, wbCtdaType),
+     {1}wbByteArray('Unused', 3),
+     {2}wbUnion('Comparison Value', wbCTDACompValueDecider, [
           wbFloat('Comparison Value - Float'),
           wbFormIDCk('Comparison Value - Global', [GLOB])
         ]),
-        wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
-        wbUnion('Parameter #1', wbCTDAParam1Decider, [
+     {3}wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
+     {4}wbUnion('Parameter #1', wbCTDAParam1Decider, [
           {00} wbByteArray('Unknown', 4),
           {01} wbByteArray('None', 4, cpIgnore),
           {02} wbInteger('Integer', itS32),
@@ -3529,7 +3529,7 @@ begin
 //           LVLC, CSTY, WATR, WRLD, SCPT, BSGN, TREE, ENCH, NULL]),
         wbInteger(SCRV, 'Local Variable', itU32)
       ], [])
-    );
+    ).IncludeFlag(dfNotAlignable);
 
   wbResultScript := wbRStruct('Result Script', [
     wbSCHR,
