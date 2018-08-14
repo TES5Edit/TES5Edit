@@ -14078,8 +14078,10 @@ begin
         EditInfoCacheID := aElement.ElementID;
         EditInfoCache := aElement.EditInfo;
       end;
-      ComboLink.PickList.CommaText := EditInfoCache;
-      ComboLink.Sorted := True;
+      with ComboLink.PickList do begin
+        Clear;
+        AddStrings(EditInfoCache);
+      end;
     end;
     etCheckComboBox: begin
       CheckComboLink := TwbCheckComboEditLink.Create;
@@ -14088,7 +14090,10 @@ begin
         EditInfoCacheID := aElement.ElementID;
         EditInfoCache := aElement.EditInfo;
       end;
-      CheckComboLink.PickList.CommaText := EditInfoCache;
+      with CheckComboLink.PickList do begin
+        Clear;
+        AddStrings(EditInfoCache);
+      end;
     end;
   {$ENDIF}
   end;
