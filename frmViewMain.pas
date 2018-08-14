@@ -2253,7 +2253,8 @@ begin
             while not Assigned(ReferenceFile) do
               if not AddNewFile(ReferenceFile, SelectedModules[i]) then
                 Break;
-            _PreviousCopyIntoSelectedModules[i] := ReferenceFile.ModuleInfo;
+            if Assigned(ReferenceFile) then
+              _PreviousCopyIntoSelectedModules[i] := ReferenceFile.ModuleInfo;
           end else
             ReferenceFile := SelectedModules[i]._File;
 
@@ -7797,7 +7798,8 @@ begin
             while not Assigned(ReferenceFile) do
               if not AddNewFile(ReferenceFile, SelectedModules[i]) then
                 Break;
-            _PreviousCopyIntoSelectedModules[i] := ReferenceFile.ModuleInfo;
+            if Assigned(ReferenceFile) then
+              _PreviousCopyIntoSelectedModules[i] := ReferenceFile.ModuleInfo;
           end else
             ReferenceFile := SelectedModules[i]._File;
 
