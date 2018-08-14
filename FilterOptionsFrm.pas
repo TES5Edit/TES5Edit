@@ -99,9 +99,12 @@ type
     { Private declarations }
   public
     procedure SetSettings(aIni: TMemIniFile);
+
     procedure FilterListPresets(aStrings: TStrings);
     procedure FilterLoadPreset(aPresetName: string = '');
+    function FilterHasPresetChanged(aPresetName: string = ''): Boolean;
     procedure FilterSavePreset(aPresetName: string = '');
+
     property RecordSignatures: string
       read GetRecordSignatures
       write SetRecordSignatures;
@@ -179,7 +182,13 @@ procedure TfrmFilterOptions.FormClose(Sender: TObject;
 begin
   if ModalResult = mrOk then begin
     Settings.WriteString('View', 'LastUsedFilter', cmbPreset.Text);
-    FilterSavePreset(cmbPreset.Text);
+    if (cmbPreset.Text = '') or
+      (
+        FilterHasPresetChanged(cmbPreset.Text) and
+        (MessageDlg('The Filter has changed from the preset, do you want to save ' +
+          'the changes over the existing preset "'+cmbPreset.Text+'"?', mtConfirmation, mbYesNo, 0) = mrYes)
+      ) then
+      FilterSavePreset(cmbPreset.Text);
   end;
 end;
 
@@ -260,6 +269,92 @@ end;
 procedure TfrmFilterOptions.SetSettings(aIni: TMemIniFile);
 begin
   Settings := aIni;
+end;
+
+function TfrmFilterOptions.FilterHasPresetChanged(aPresetName: string): Boolean;
+var
+  i                    : integer;
+  Section              : string;
+  ConflictAll          : TConflictAll;
+  ConflictThis         : TConflictThis;
+  FilterConflictAllSet : TConflictAllSet;
+  FilterConflictThisSet: TConflictThisSet;
+begin
+  Result := True;
+  Section := Trim(sFilterSection + ' ' + aPresetName);
+
+  if cbConflictAll.Checked <> Settings.ReadBool(Section, 'ConflictAll', True) then Exit;
+  if cbConflictThis.Checked <> Settings.ReadBool(Section, 'ConflictThis', True) then Exit;
+
+  if cbByInjectionStatus.Checked <> Settings.ReadBool(Section, 'byInjectStatus', False) then Exit;
+  if cbInjected.Checked <> Settings.ReadBool(Section, 'InjectStatus', True) then Exit;
+
+  if cbByNotReachableStatus.Enabled <> Settings.ReadBool(Section, 'byNotReachableStatus', False) then Exit;
+  if cbNotReachable.Checked <> Settings.ReadBool(Section, 'NotReachableStatus', True) then Exit;
+
+  if cbByReferencesInjectedStatus.Checked <> Settings.ReadBool(Section, 'byReferencesInjectedStatus', False) then Exit;
+  if cbReferencesInjected.Checked <> Settings.ReadBool(Section, 'ReferencesInjectedStatus', True) then Exit;
+
+  if cbByEditorID.Checked <> Settings.ReadBool(Section, 'ByEditorID', False) then Exit;
+  if edEditorID.Text <> Settings.ReadString(Section, 'EditorID', '') then Exit;
+
+  if cbByName.Checked <> Settings.ReadBool(Section, 'ByName', False) then Exit;
+  if edName.Text <> Settings.ReadString(Section, 'Name', '') then Exit;
+
+  if cbByBaseEditorID.Checked <> Settings.ReadBool(Section, 'ByBaseEditorID', False) then Exit;
+  if edBaseEditorID.Text <> Settings.ReadString(Section, 'BaseEditorID', '') then Exit;
+
+  if cbByBaseName.Checked <> Settings.ReadBool(Section, 'ByBaseName', False) then Exit;
+  if edBaseName.Text <> Settings.ReadString(Section, 'BaseName', '') then Exit;
+
+  if cbScaledActors.Checked <> Settings.ReadBool(Section, 'ScaledActors', False) then Exit;
+
+  if cbRecordSignature.Checked <> Settings.ReadBool(Section, 'BySignature', False) then Exit;
+  if RecordSignatures <> Settings.ReadString(Section, 'Signatures', '') then Exit;
+
+  if cbBaseRecordSignature.Checked <> Settings.ReadBool(Section, 'ByBaseSignature', False) then Exit;
+  if BaseRecordSignatures <> Settings.ReadString(Section, 'BaseSignatures', '') then Exit;
+
+  if cbByPersistent.Checked <> Settings.ReadBool(Section, 'ByPersistent', False) then Exit;
+  if cbPersistent.Checked <> Settings.ReadBool(Section, 'Persistent', True) then Exit;
+  if cbUnnecessaryPersistent.Checked <> Settings.ReadBool(Section, 'UnnecessaryPersistent', False) then Exit;
+  if cbMasterIsTemporary.Checked <> Settings.ReadBool(Section, 'MasterIsTemporary', False) then Exit;
+  if cbIsMaster.Checked <> Settings.ReadBool(Section, 'IsMaster', False) then Exit;
+  if cbPersistentPosChanged.Checked <> Settings.ReadBool(Section, 'PersistentPosChanged', False) then Exit;
+
+  if cbDeleted.Checked <> Settings.ReadBool(Section, 'Deleted', False) then Exit;
+
+  if cbByVWD.Checked <> Settings.ReadBool(Section, 'ByVWD', False) then Exit;
+  if cbVWD.Checked <> Settings.ReadBool(Section, 'VWD', True) then Exit;
+
+  if cbByHasVWDMesh.Checked <> Settings.ReadBool(Section, 'ByHasVWDMesh', False) then Exit;
+  if cbHasVWDMesh.Checked <> Settings.ReadBool(Section, 'HasVWDMesh', True) then Exit;
+
+  if cbByHasPrecombinedMesh.Checked <> Settings.ReadBool(Section, 'ByHasPrecombinedMesh', False) then Exit;
+  if cbHasPrecombinedMesh.Checked <> Settings.ReadBool(Section, 'HasPrecombinedMesh', True) then Exit;
+
+  if cbFlattenBlocks.Checked <> Settings.ReadBool(Section, 'FlattenBlocks', False) then Exit;
+  if cbFlattenCellChilds.Checked <> Settings.ReadBool(Section, 'FlattenCellChilds', False) then Exit;
+  if cbAssignPersWrldChild.Checked <> Settings.ReadBool(Section, 'AssignPersWrldChild', False) then Exit;
+  if cbInherit.Checked <> Settings.ReadBool(Section, 'InheritConflictByParent', True) then Exit;
+
+  FilterConflictAllSet := [];
+  for i := 0 to Pred(clbConflictAll.Items.Count) do
+    if clbConflictAll.Checked[i] then
+      Include(FilterConflictAllSet, TConflictAll(Succ(i)));
+
+  FilterConflictThisSet := [];
+  for i := 0 to Pred(clbConflictThis.Items.Count) do
+    if clbConflictThis.Checked[i] then
+      Include(FilterConflictThisSet, TConflictThis(i + 2));
+
+  for ConflictAll := Low(ConflictAll) to High(ConflictAll) do
+    if Settings.ReadBool(Section, GetEnumName(TypeInfo(TConflictAll), Ord(ConflictAll)), True) <> (ConflictAll in FilterConflictAllSet) then Exit;
+
+  for ConflictThis := Low(ConflictThis) to High(ConflictThis) do
+    if Settings.ReadBool(Section, GetEnumName(TypeInfo(TConflictThis), Ord(ConflictThis)), True) <> (ConflictThis in FilterConflictThisSet) then Exit;
+
+  Result := False;
 end;
 
 procedure TfrmFilterOptions.FilterListPresets(aStrings: TStrings);
