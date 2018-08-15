@@ -632,7 +632,10 @@ type
     function NodeDatasForContainer(const aContainer: IwbDataContainer): TDynViewNodeDatas;
 
     procedure ShowChangeReferencedBy(OldFormID: TwbFormID; NewFormID: TwbFormID; const ReferencedBy: TDynMainRecords; aSilent: Boolean);
-    function GetDragElements(Target: TBaseVirtualTree; Source: TObject; out TargetNode: PVirtualNode; out TargetIndex: Integer; out TargetElement: IwbElement; out SourceElement: IwbElement): Boolean;
+    function GetTargetElement(Target: TBaseVirtualTree; var TargetNode: PVirtualNode; TargetColumn: Integer; out TargetIndex: Integer; out TargetElement: IwbElement): Boolean;
+    function PerformDrop(TargetTree: TBaseVirtualTree; TargetNode: PVirtualNode; TargetColumn: Integer; const SourceElement: IwbElement): Boolean;
+    function GetSourceElement(Source: TObject; out SourceElement: IwbElement): Boolean;
+
     function GetAddElement(out TargetNode: PVirtualNode; out TargetIndex: Integer; out TargetElement: IwbElement): Boolean;
 
     procedure ClearConflict(Sender: TBaseVirtualTree; Node: PVirtualNode; Data: Pointer; var Abort: Boolean);
@@ -5248,29 +5251,29 @@ begin
   Result := True;
 end;
 
-function TfrmMain.GetDragElements(Target: TBaseVirtualTree; Source: TObject;
-  out TargetNode: PVirtualNode; out TargetIndex: Integer; out TargetElement, SourceElement: IwbElement): Boolean;
+function TfrmMain.GetTargetElement(Target: TBaseVirtualTree;
+  var TargetNode: PVirtualNode; TargetColumn: Integer; out TargetIndex: Integer; out TargetElement: IwbElement): Boolean;
 var
   SourceTree                  : TVirtualEditTree;
   NodeDatas                   : PViewNodeDatas;
   Container                   : IwbContainerElementRef;
 begin
   TargetIndex := Low(Integer);
+  TargetElement := nil;
   Result := False;
 
-  if Target.DropTargetColumn < 1 then
+  if TargetColumn < 1 then
     Exit;
-  if Pred(Target.DropTargetColumn) > High(ActiveRecords) then
+  if Pred(TargetColumn) > High(ActiveRecords) then
     Exit;
 
-  TargetNode := Target.DropTargetNode;
   while Assigned(TargetNode) do begin
     if TargetNode = Target.RootNode then
       NodeDatas := @ActiveRecords[0]
     else
       NodeDatas := Target.GetNodeData(TargetNode);
     if Assigned(NodeDatas) then begin
-      TargetElement := NodeDatas[Pred(Target.DropTargetColumn)].Element;
+      TargetElement := NodeDatas[Pred(TargetColumn)].Element;
       if Assigned(TargetElement) then begin
         if (TargetIndex >= 0) and Supports(TargetElement, IwbContainerElementRef, Container) then
           Dec(TargetIndex, Container.AdditionalElementCount);
@@ -5283,29 +5286,6 @@ begin
     TargetNode := TargetNode.Parent;
   end;
   if not Assigned(TargetElement) then
-    Exit;
-
-  if not (Source is TVirtualEditTree) then
-    Exit;
-  SourceTree := TVirtualEditTree(Source);
-
-  if SourceTree.DragColumn < 1 then
-    Exit;
-  if Pred(SourceTree.DragColumn) > High(ActiveRecords) then
-    Exit;
-
-  if Length(SourceTree.DragSelection) <> 1 then
-    Exit;
-
-  NodeDatas := SourceTree.GetNodeData(SourceTree.DragSelection[0]);
-  if not Assigned(NodeDatas) then
-    Exit;
-
-  SourceElement := NodeDatas[Pred(SourceTree.DragColumn)].Element as IwbElement;
-  if not Assigned(SourceElement) then
-    Exit;
-
-  if SourceElement.Equals(TargetElement) then
     Exit;
 
   Result := True;
@@ -5345,6 +5325,37 @@ begin
     end;
   end;
   SetLength(Result, j);
+end;
+
+function TfrmMain.GetSourceElement(Source: TObject; out SourceElement: IwbElement): Boolean;
+var
+  SourceTree                  : TVirtualEditTree;
+  SourceNodeDatas             : PViewNodeDatas;
+begin
+  Result := False;
+  SourceElement := nil;
+
+  if not (Source is TVirtualEditTree) then
+    Exit;
+  SourceTree := TVirtualEditTree(Source);
+
+  if SourceTree.DragColumn < 1 then
+    Exit;
+  if Pred(SourceTree.DragColumn) > High(ActiveRecords) then
+    Exit;
+
+  if Length(SourceTree.DragSelection) <> 1 then
+    Exit;
+
+  SourceNodeDatas := SourceTree.GetNodeData(SourceTree.DragSelection[0]);
+  if not Assigned(SourceNodeDatas) then
+    Exit;
+
+  SourceElement := SourceNodeDatas[Pred(SourceTree.DragColumn)].Element as IwbElement;
+  if not Assigned(SourceElement) then
+    Exit;
+
+  Result := True;
 end;
 
 function CompareElementID(Item1, Item2: Pointer): Integer;
@@ -6143,120 +6154,71 @@ end;
 
 procedure TfrmMain.mniViewCopyToSelectedRecordsClick(Sender: TObject);
 var
-  NodeDatas                   : PViewNodeDatas;
-  ParentNodeDatas             : PViewNodeDatas;
-  NodeData                    : PNavNodeData;
-  Element                     : IwbElement;
-  TargetElement               : IwbElement;
-  NewElement                  : IwbElement;
-  NewElementContainer         : IwbContainerElementRef;
-  MainRecords                 : array of IwbMainRecord;
-  SourceMainRecord            : IwbMainRecord;
-  TargetMainRecord            : IwbMainRecord;
-  SelectedNodes               : TNodeArray;
-  i, j, k                     : Integer;
-  FoundOne                    : Boolean;
-  IsAligned                   : Boolean;
+  Node             : PVirtualNode;
+  NodeDatas        : PViewNodeDatas;
+  SourceColumn     : Integer;
+  SourceElement    : IwbElement;
+  SourceMainRecord : IwbMainRecord;
+  i, j             : Integer;
+  TargetColumns    : array of Integer;
 begin
   if not wbEditAllowed then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
-  if Assigned(NodeDatas) then begin
-    Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
-    ParentNodeDatas := vstView.GetNodeData(vstView.FocusedNode.Parent);
-    IsAligned := Assigned(ParentNodeDatas) and (vnfIsAligned in ParentNodeDatas[Pred(vstView.FocusedColumn)].ViewNodeFlags);
-    if Assigned(Element) then begin
-      SourceMainRecord := Element.ContainingMainRecord;
+  Node := vstView.FocusedNode;
+  if not Assigned(Node) then
+    Exit;
 
-      SelectedNodes := vstNav.GetSortedSelection(True);
-      if Length(SelectedNodes) < 2 then
-        Exit;
-      SetLength(MainRecords, Length(SelectedNodes));
-      j := 0;
-      for i := Low(SelectedNodes) to High(SelectedNodes) do begin
-        NodeData := vstNav.GetNodeData(SelectedNodes[i]);
-        if Assigned(NodeData) and not SourceMainRecord.Equals(NodeData.Element) and
-          Supports(NodeData.Element, IwbMainRecord, MainRecords[j]) then
-          Inc(j);
-      end;
-      SetLength(MainRecords, j);
-      if Length(MainRecords) < 1 then
-        Exit;
+  SourceColumn := vstView.FocusedColumn;
+  if (SourceColumn < 1) or (Pred(SourceColumn) > High(ActiveRecords)) then
+    Exit;
 
-      with TfrmFileSelect.Create(Self) do try
+  NodeDatas := vstView.GetNodeData(Node);
+  if not Assigned(NodeDatas) then
+    Exit;
 
-        Caption := 'Which records should this value be copied to?';
+  SourceElement := NodeDatas[Pred(SourceColumn)].Element;
 
-        for i := Low(MainRecords) to High(MainRecords) do begin
-          CheckListBox1.AddItem(MainRecords[i].Name, nil);
-          CheckListBox1.Checked[i] := True;
-        end;
+  if not Assigned(SourceElement) then
+    Exit;
 
-        if ShowModal <> mrOk then
-          Exit;
+  with TfrmFileSelect.Create(Self) do try
 
-        j := 0;
-        for i := Low(MainRecords) to High(MainRecords) do
-          if CheckListBox1.Checked[i] then begin
-            if j <> i then
-              MainRecords[j] := MainRecords[i];
-            Inc(j);
-          end;
-        SetLength(MainRecords, j);
-        if j < 1 then
-          Exit;
-        if not EditWarn then
-          Exit;
+    Caption := 'Which records should this value be copied to?';
 
-        try
-          j := 0;
-          for i := Low(MainRecords) to High(MainRecords) do begin
-            FoundOne := False;
-            for k := Low(ActiveRecords) to High(ActiveRecords) do begin
-              TargetElement := NodeDatas[k].Element;
-              if Assigned(TargetElement) then begin
-                TargetMainRecord := TargetElement.ContainingMainRecord;
-                if Assigned(TargetMainRecord) and TargetMainRecord.Equals(MainRecords[i]) then begin
-                  FoundOne := True;
-                  TargetElement.Assign(Low(Integer), Element, False);
-                  Break;
-                end;
-              end;
-            end;
+    for i := Low(ActiveRecords) to High(ActiveRecords) do
+      if i <> Pred(SourceColumn) then
+        if Assigned(ActiveRecords[i].Element) then
+          CheckListBox1.AddItem(ActiveRecords[i].Element.Name, Pointer(i));
+    CheckListBox1.CheckAll(cbChecked);
 
-            if not FoundOne then begin
-              if j <> i then
-                MainRecords[j] := MainRecords[i];
-              Inc(j);
-            end;
-          end;
-          SetLength(MainRecords, j);
-          if j < 1 then
-            Exit;
+    if ShowModal <> mrOk then
+      Exit;
 
-          for i := Low(MainRecords) to High(MainRecords) do begin
-            NewElement := wbCopyElementToRecord(Element, MainRecords[i], False, True);
-            if IsAligned and Assigned(NewElement) then
-              if Supports(NewElement.Container, IwbContainerElementRef, NewElementContainer) then
-                if csSortedBySortOrder in NewElementContainer.ContainerStates then begin
-                  NewElement.SortOrder := Element.SortOrder;
-                  NewElementContainer.SortBySortOrder;
-                end;
-          end;
-        finally
-          for i := Low(SelectedNodes) to High(SelectedNodes) do
-            vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
-          InvalidateElementsTreeView(SelectedNodes);
-          PostResetActiveTree;
-          vstNav.Invalidate;
-        end;
-      finally
-        Free;
+    j := 0;
+    SetLength(TargetColumns, CheckListBox1.Count);
+    for i := 0 to Pred(CheckListBox1.Count) do
+      if CheckListBox1.Checked[i] then begin
+        TargetColumns[i] := Integer(CheckListBox1.Items.Objects[i]) + 1;
+        Inc(j);
       end;
 
-    end;
+  finally
+    Free;
   end;
+
+  SetLength(TargetColumns, j);
+  if j < 1 then
+    Exit;
+  if not EditWarn then
+    Exit;
+
+  for i := Low(TargetColumns) to High(TargetColumns) do
+    PerformDrop(vstView, Node, TargetColumns[i], SourceElement);
+
+  InvalidateElementsTreeView(NoNodes);
+  PostResetActiveTree;
+  vstNav.Invalidate;
 end;
 
 
@@ -11502,6 +11464,57 @@ begin
   end;
 end;
 
+function TfrmMain.PerformDrop(TargetTree    : TBaseVirtualTree;
+                              TargetNode    : PVirtualNode;
+                              TargetColumn  : Integer;
+                        const SourceElement : IwbElement)
+                                            : Boolean;
+var
+  TargetIndex     : Integer;
+  TargetElement   : IwbElement;
+  NewElement      : IwbElement;
+  TargetNodeDatas : PViewNodeDatas;
+  TargetNodeData  : PViewNodeData;
+  TargetContainer : IwbContainerElementRef;
+begin
+  Result := False;
+
+  if GetTargetElement(TargetTree, TargetNode, TargetColumn, TargetIndex, TargetElement) then begin
+
+    if SourceElement.Equals(TargetElement) then
+      Exit;
+
+    if not EditWarn then
+      Exit;
+
+    if not AddRequiredMasters(SourceElement, TargetElement._File, False) then
+      Exit;
+
+    vstView.BeginUpdate;
+    try
+      NewElement := TargetElement.Assign(TargetIndex, SourceElement, False);
+      if Assigned(NewElement) and (TargetIndex >= 0) and (TargetIndex < High(Integer)) then begin
+        TargetNodeDatas := vstView.GetNodeData(TargetNode);
+        if Assigned(TargetNodeDatas) then begin
+          TargetNodeData := @TargetNodeDatas[Pred(TargetColumn)];
+          if vnfIsAligned in TargetNodeData.ViewNodeFlags then
+            if Supports(TargetElement, IwbContainerElementRef, TargetContainer) then begin
+              NewElement.SortOrder := TargetIndex;
+              TargetContainer.SortBySortOrder;
+            end;
+        end;
+      end;
+
+      ActiveRecords[Pred(TargetColumn)].UpdateRefs;
+      NewElement := nil;
+      TargetElement := nil;
+      Result := True;
+    finally
+      vstView.EndUpdate;
+    end;
+  end;
+end;
+
 procedure TfrmMain.PerformLongAction(const aDesc: string; const aAction: TProc);
 var
   HadTick    : Boolean;
@@ -14250,49 +14263,15 @@ procedure TfrmMain.vstViewDragDrop(Sender: TBaseVirtualTree; Source: TObject;
   DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
   Pt: TPoint; var Effect: Integer; Mode: TDropMode);
 var
-  TargetElement               : IwbElement;
-  TargetContainer             : IwbContainerElementRef;
   SourceElement               : IwbElement;
-  TargetNode                  : PVirtualNode;
-  TargetNodeDatas             : PViewNodeDatas;
-  TargetNodeData              : PViewNodeData;
-  TargetIndex                 : Integer;
-  NewElement                  : IwbElement;
 begin
   if not wbEditAllowed then
     Exit;
 
   UserWasActive := True;
 
-  if GetDragElements(Sender, Source, TargetNode, TargetIndex, TargetElement, SourceElement) then begin
-
-    if not EditWarn then
-      Exit;
-
-    if not AddRequiredMasters(SourceElement, TargetElement._File, False) then
-      Exit;
-
-    vstView.BeginUpdate;
-    try
-      NewElement := TargetElement.Assign(TargetIndex, SourceElement, False);
-      if Assigned(NewElement) and (TargetIndex >= 0) and (TargetIndex < High(Integer)) then begin
-        TargetNodeDatas := vstView.GetNodeData(TargetNode);
-        TargetNodeData := @TargetNodeDatas[Pred(Sender.DropTargetColumn)];
-        if vnfIsAligned in TargetNodeData.ViewNodeFlags then
-          if Supports(TargetElement, IwbContainerElementRef, TargetContainer) then begin
-            NewElement.SortOrder := TargetIndex;
-            TargetContainer.SortBySortOrder;
-          end;
-      end;
-
-      ActiveRecords[Pred(Sender.DropTargetColumn)].UpdateRefs;
-      NewElement := nil;
-      TargetElement := nil;
-      SourceElement := nil;
-      PostResetActiveTree;
-    finally
-      vstView.EndUpdate;
-    end;
+  if GetSourceElement(Source, SourceElement) and PerformDrop(Sender, Sender.DropTargetNode, Sender.DropTargetColumn, SourceElement) then begin
+    PostResetActiveTree;
     InvalidateElementsTreeView(NoNodes);
   end;
 end;
@@ -14300,6 +14279,7 @@ end;
 procedure TfrmMain.vstViewDragOver(Sender: TBaseVirtualTree; Source: TObject; Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode; var Effect: Integer; var Accept: Boolean);
 var
   TargetNode                  : PVirtualNode;
+  TargetColumn                : Integer;
   TargetIndex                 : Integer;
   TargetElement               : IwbElement;
   SourceElement               : IwbElement;
@@ -14309,7 +14289,10 @@ begin
   if not wbEditAllowed then
     Exit;
 
-  Accept := GetDragElements(Sender, Source, TargetNode, TargetIndex, TargetElement, SourceElement) and
+  TargetNode := Sender.DropTargetNode;
+  TargetColumn := Sender.DropTargetColumn;
+
+  Accept := GetSourceElement(Source, SourceElement) and GetTargetElement(Sender, TargetNode, TargetColumn, TargetIndex, TargetElement) and
     (TargetElement <> SourceElement) and
     TargetElement.CanAssign(TargetIndex, SourceElement, True);
 end;
