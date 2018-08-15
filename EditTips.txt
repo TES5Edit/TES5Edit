@@ -11,7 +11,7 @@ Pressing Ctrl+S saves the current plugin to a temp file which will replace the o
 When xEdit asks you save plugin(s), pressing OK or closing window with X has the same behaviour! You need to actually uncheck plugins you don't want to save
 To edit a plugin and test in game without restarting xEdit, create a copy, load it in xEdit and press F5 to save over the original after making changes
 xEdit creates backups of modified plugins in "Data\TES5Edit Backups" folder (TES5 is for Skyrim)
-Never change master files in TES4 plugin header manually, that will break plugin in majority of cases because internal FormID numbers are tied to this list. Use right click menu options "Add Masters", "Sort Masters" and "Clean Msters" instead
+Never change master files in TES4 plugin header manually, that will break plugin in majority of cases because internal FormID numbers are tied to this list. Use right click menu options "Add Masters", "Sort Masters" and "Clean Masters" instead
 Pressing F2 in the right pane activates inplace editor
 Pressing F2 in the left pane allows to change FormID of a record
 Filter is always applied to all plugins, so it doesn't matter where you right click
@@ -58,6 +58,6 @@ There are left and right arrow buttons in the right upper corner for your browsi
 [Placed Object] in square brackets in the left pane means that this object is a part of precombined meshes of it's cell
 All exterior persistent references are located in a single persistent cell of a worldspace, however if you double click on FormID field of a reference in the right pane, the real world grid (X,Y) coordinates are shown at the end of description
 Records override each other using "Rule of one", which means the winning record from the last loaded plugin fully discards all data from the previous ones (except for a few rare occasions)
-Modgroups feature allows to hide conflicts in selected plugins combinations for easier conflicts resolution. Google "reddit tes5dit modgroups" for more information and examples.
+Modgroups feature allows to hide conflicts in selected plugins combinations for easier conflicts resolution. Google "reddit tes5dit modgroups" for more information and examples
 xEdit supports scripting using Pascal language with right click -> Apply Script menu. Dozens of useful scripts are already provided for modding and learning
 Please always try the latest xEdit version from Nexus before reporting any issues
