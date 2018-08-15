@@ -6918,10 +6918,14 @@ end;
 procedure TfrmMain.mniRefByRemoveClick(Sender: TObject);
 var
   MainRecords                 : TDynMainRecords;
+  MainRecord                  : IwbMainRecord;
   i                           : Integer;
   lActiveRecord               : IwbMainRecord;
   Container                   : IwbContainerElementRef;
   NextContainer               : IwbContainerElementRef;
+  NodeData                    : PNavNodeData;
+  Node                        : PVirtualNode;
+  DialogResult                : Integer;
 begin
   if not wbEditAllowed then
     Exit;
@@ -6933,23 +6937,58 @@ begin
 
   MainRecords := GetRefBySelectionAsMainRecords;
 
+  if Length(MainRecords) < 1 then
+    Exit;
+
+  if Length(MainRecords) = 1 then
+    DialogResult := MessageDlg('Are you sure you want to permanently remove ' + MainRecords[0].Name + ' from file "' + MainRecords[0]._File.FileName + '"?', mtConfirmation, [mbYes, mbNo], 0)
+  else
+    DialogResult := MessageDlg('Are you sure you want to permanently remove the '+Length(MainRecords).ToString+' selected records from their containing file(s)?', mtConfirmation, [mbYes, mbNo], 0);
+
+  if DialogResult <> mrYes then
+    Exit;
+
+  lActiveRecord := ActiveRecord;
+
   for i := Low(MainRecords) to High(MainRecords) do begin
-    Supports(MainRecords[i].Container, IwbContainerElementRef, Container);
-    MainRecords[i].Remove;
+    MainRecord := MainRecords[i];
     MainRecords[i] := nil;
-    while Assigned(Container) and (Container.ElementCount = 0) do begin
-      Supports(Container.Container, IwbContainerElementRef, NextContainer);
-      Container.Remove;
-      Container := NextContainer;
+    if Assigned(MainRecord) then begin
+      if not Supports(MainRecord.Container, IwbContainerElementRef, Container) then
+        Container := nil;
+
+      CheckHistoryRemove(BackHistory, MainRecord);
+      CheckHistoryRemove(ForwardHistory, MainRecord);
+
+      if MainRecord.Equals(lActiveRecord) then
+        lActiveRecord := nil;
+
+      Node := FindNodeForElement(MainRecord);
+      NodeData := vstNav.GetNodeData(Node);
+
+      if Assigned(NodeData) then begin
+        if MainRecord.Equals(NodeData.Container) then
+          NodeData.Container := nil;
+        if Assigned(NodeData.Container) then
+          NodeData.Container.Remove;
+      end;
+      MainRecord.Remove;
+      if Assigned(NodeData) then begin
+        NodeData.Element := nil;
+        NodeData.Container := nil;
+      end;
+      MainRecord := nil;
+
+      if Assigned(Node) then
+        vstNav.DeleteNode(Node);
     end;
   end;
   MainRecords := nil;
 
-  lActiveRecord := ActiveRecord;
   ActiveRecord := nil;
   DoSetActiveRecord(lActiveRecord);
 
-  vstNav.Invalidate;
+  InvalidateElementsTreeView(NoNodes);
 end;
 
 procedure TfrmMain.mmoMessagesDblClick(Sender: TObject);
