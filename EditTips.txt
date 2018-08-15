@@ -58,6 +58,6 @@ There are left and right arrow buttons in the right upper corner for your browsi
 [Placed Object] in square brackets in the left pane means that this object is a part of precombined meshes of it's cell
 All exterior persistent references are located in a single persistent cell of a worldspace, however if you double click on FormID field of a reference in the right pane, the real world grid (X,Y) coordinates are shown at the end of description
 Records override each other using "Rule of one", which means the winning record from the last loaded plugin fully discards all data from the previous ones (except for a few rare occasions)
-Modgroups feature allows to hide conflicts in selected plugins combinations for easier conflicts resolution. Google "reddit tes5dit modgroups" for more information and examples.
+Modgroups feature allows to hide conflicts in selected plugins combinations for easier conflicts resolution. Google "reddit tes5dit modgroups" for more information and examples
 xEdit supports scripting using Pascal language with right click -> Apply Script menu. Dozens of useful scripts are already provided for modding and learning
 Please always try the latest xEdit version from Nexus before reporting any issues
