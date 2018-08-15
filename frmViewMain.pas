@@ -11269,6 +11269,8 @@ var
   MasterAndLeafs: TDynMainRecords;
   MainRecords   : TDynMainRecords;
   Modules       : TwbModuleInfos;
+  FirstModule   : PwbModuleInfo;
+  LastModule    : PwbModuleInfo;
 begin
   Assert(wbLoaderDone);
   MainRecords := nil;
@@ -11356,24 +11358,33 @@ begin
     SetLength(Modules, Length(MainRecords));
     for i := Low(MainRecords) to High(MainRecords) do begin
       Modules[i] := MainRecords[i]._File.ModuleInfo;
-      Exclude(Modules[i].miFlags, mfEphemeralModGroupTagged);
+      if Assigned(Modules[i]) then
+        Exclude(Modules[i].miFlags, mfEphemeralModGroupTagged);
     end;
+    FirstModule := nil;
+    LastModule := nil;
     for i := Low(Modules) to High(Modules) do
-      with Modules[i]^ do
-        for j := Low(miModGroupTargets) to High(miModGroupTargets) do
-          Include(miModGroupTargets[j].miFlags, mfEphemeralModGroupTagged);
+      if Assigned(Modules[i]) then begin
+        if not Assigned(FirstModule) then
+          FirstModule := Modules[i];
+        with Modules[i]^ do
+          for j := Low(miModGroupTargets) to High(miModGroupTargets) do
+            Include(miModGroupTargets[j].miFlags, mfEphemeralModGroupTagged);
+        LastModule := Modules[i];
+      end;
 
-    Exclude(Modules[Low(Modules)].miFlags, mfEphemeralModGroupTagged);
-    Exclude(Modules[High(Modules)].miFlags, mfEphemeralModGroupTagged);
+    if Assigned(FirstModule) then
+      Exclude(FirstModule.miFlags, mfEphemeralModGroupTagged);
+    if Assigned(LastModule) then
+      Exclude(LastModule.miFlags, mfEphemeralModGroupTagged);
 
     j := 0;
     for i := Low(Modules) to High(Modules) do
-      with Modules[i]^ do
-        if not (mfEphemeralModGroupTagged in miFlags) then begin
-          if i <> j then
-            MainRecords[j] := MainRecords[i];
-          Inc(j);
-        end;
+      if not Assigned(Modules[i]) or not (mfEphemeralModGroupTagged in Modules[i].miFlags) then begin
+        if i <> j then
+          MainRecords[j] := MainRecords[i];
+        Inc(j);
+      end;
     SetLength(MainRecords, j);
   end;
 
