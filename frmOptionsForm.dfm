@@ -303,6 +303,8 @@ object frmOptions: TfrmOptions
     object tsUISettings: TTabSheet
       Caption = 'UI Settings'
       ImageIndex = 2
+      ExplicitLeft = 8
+      ExplicitTop = 28
       object Label3: TLabel
         Left = 16
         Top = 16
@@ -344,6 +346,22 @@ object frmOptions: TfrmOptions
         Width = 36
         Height = 13
         Caption = 'records'
+      end
+      object Label9: TLabel
+        Left = 16
+        Top = 267
+        Width = 330
+        Height = 13
+        Caption = 
+          'Delay updating View when navigation treeview selection changes b' +
+          'y '
+      end
+      object Label10: TLabel
+        Left = 415
+        Top = 267
+        Width = 24
+        Height = 13
+        Caption = 'msec'
       end
       object clbConflictThis: TColorBox
         Left = 223
@@ -451,12 +469,22 @@ object frmOptions: TfrmOptions
       end
       object sedAutoCompareSelectedLimit: TSpinEdit
         Left = 289
-        Top = 232
+        Top = 236
         Width = 64
         Height = 22
         MaxValue = 999999
         MinValue = 0
         TabOrder = 9
+        Value = 0
+      end
+      object sedNavChangeDelay: TSpinEdit
+        Left = 345
+        Top = 264
+        Width = 64
+        Height = 22
+        MaxValue = 999999
+        MinValue = 0
+        TabOrder = 10
         Value = 0
       end
     end

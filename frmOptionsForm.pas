@@ -62,6 +62,9 @@ type
     Label8: TLabel;
     cbShowFileFlags: TCheckBox;
     cbAlignArrayElements: TCheckBox;
+    Label9: TLabel;
+    sedNavChangeDelay: TSpinEdit;
+    Label10: TLabel;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);

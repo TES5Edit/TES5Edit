@@ -4281,6 +4281,7 @@ begin
   wbShowGroupRecordCount := Settings.ReadBool('Options', 'ShowGroupRecordCount', wbShowGroupRecordCount);
   wbShowFileFlags := Settings.ReadBool('Options', 'ShowFileFlags', wbShowFileFlags);
   wbAutoCompareSelectedLimit := Settings.ReadInteger('Options', 'AutoCompareSelectedLimit', wbAutoCompareSelectedLimit);
+  tmrPendingSetActive.Interval := Settings.ReadInteger('Options', 'NavChangeDelay', tmrPendingSetActive.Interval);
   wbClampFormID := Settings.ReadBool('Options', 'ClampFormID', wbClampFormID);
   wbAlignArrayElements := Settings.ReadBool('Options', 'AlignArrayElements', wbAlignArrayElements);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
@@ -11070,6 +11071,7 @@ begin
     cbShowGroupRecordCount.Checked := wbShowGroupRecordCount;
     cbShowFileFlags.Checked := wbShowFileFlags;
     sedAutoCompareSelectedLimit.Value := wbAutoCompareSelectedLimit;
+    sedNavChangeDelay.Value := tmrPendingSetActive.Interval;
     cbSimpleRecords.Checked := wbSimpleRecords;
     cbClampFormID.Checked := wbClampFormID;
     cbAlignArrayElements.Checked := wbAlignArrayElements;
@@ -11111,6 +11113,7 @@ begin
     wbShowGroupRecordCount := cbShowGroupRecordCount.Checked;
     wbShowFileFlags := cbShowFileFlags.Checked;
     wbAutoCompareSelectedLimit := sedAutoCompareSelectedLimit.Value;
+    tmrPendingSetActive.Interval := sedNavChangeDelay.Value;
     wbSimpleRecords := cbSimpleRecords.Checked;
     wbClampFormID := cbClampFormID.Checked;
     wbAlignArrayElements := cbAlignArrayElements.Checked;
@@ -11148,6 +11151,7 @@ begin
     Settings.WriteBool('Options', 'ShowGroupRecordCount', wbShowGroupRecordCount);
     Settings.WriteBool('Options', 'ShowFileFlags', wbShowFileFlags);
     Settings.WriteInteger('Options', 'AutoCompareSelectedLimit', wbAutoCompareSelectedLimit);
+    Settings.WriteInteger('Options', 'NavChangeDelay', tmrPendingSetActive.Interval);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
     Settings.WriteBool('Options', 'ClampFormID', wbClampFormID);
     Settings.WriteBool('Options', 'AlignArrayElements', wbAlignArrayElements);
@@ -12784,37 +12788,37 @@ end;
 procedure TfrmMain.SetActiveContainer(const aContainer: IwbDataContainer);
 begin
   UserWasActive := True;
-  if Assigned(aContainer) then begin
+  if Assigned(aContainer) and (tmrPendingSetActive.Interval > 0) then begin
     PendingContainer := aContainer;
     PendingMainRecords := nil;
     tmrPendingSetActive.Enabled := False;
     tmrPendingSetActive.Enabled := True;
   end else
-    DoSetActiveContainer(nil);
+    DoSetActiveContainer(aContainer);
 end;
 
 procedure TfrmMain.SetActiveRecord(const aMainRecord: IwbMainRecord);
 begin
   UserWasActive := True;
-  if Assigned(aMainRecord) then begin
+  if Assigned(aMainRecord) and (tmrPendingSetActive.Interval > 0) then begin
     PendingContainer := nil;
     PendingMainRecords := [aMainRecord];
     tmrPendingSetActive.Enabled := False;
     tmrPendingSetActive.Enabled := True;
   end else
-    DoSetActiveRecord(nil);
+    DoSetActiveRecord(aMainRecord);
 end;
 
 procedure TfrmMain.SetActiveRecord(const aMainRecords: TDynMainRecords);
 begin
   UserWasActive := True;
-  if Length(aMainRecords) > 0 then begin
+  if (Length(aMainRecords) > 0) and (tmrPendingSetActive.Interval > 0) then begin
     PendingContainer := nil;
     PendingMainRecords := aMainRecords;
     tmrPendingSetActive.Enabled := False;
     tmrPendingSetActive.Enabled := True;
   end else
-    DoSetActiveRecord(nil);
+    DoSetActiveRecord(aMainRecords);
 end;
 
 function TfrmMain.SetAllToMaster: Boolean;
@@ -14933,6 +14937,12 @@ begin
   else
     Sender.Header.Columns[1].Text := 'EditorID';
     Sender.Header.Columns[2].Text := 'Name';
+  end;
+
+  if tmrPendingSetActive.Interval < 1 then begin
+    vstNav.Repaint;
+    vstView.Repaint;
+    Sleep(10);
   end;
 end;
 
