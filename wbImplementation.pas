@@ -5506,7 +5506,10 @@ begin
     Exit;
   if csAsCreatedEmpty in cntStates then
     Exclude(cntStates, csAsCreatedEmpty);
-  Exclude(cntStates, csSortedBySortOrder);
+  if csSortedBySortOrder in cntStates then begin
+    Exclude(cntStates, csSortedBySortOrder);
+    SetIsSortedBySortOrder(False);
+  end;
 
   inherited;
 
