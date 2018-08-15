@@ -11,7 +11,7 @@ Pressing Ctrl+S saves the current plugin to a temp file which will replace the o
 When xEdit asks you save plugin(s), pressing OK or closing window with X has the same behaviour! You need to actually uncheck plugins you don't want to save
 To edit a plugin and test in game without restarting xEdit, create a copy, load it in xEdit and press F5 to save over the original after making changes
 xEdit creates backups of modified plugins in "Data\TES5Edit Backups" folder (TES5 is for Skyrim)
-Never change master files in TES4 plugin header manually, that will break plugin in majority of cases because internal FormID numbers are tied to this list. Use right click menu options "Add Masters", "Sort Masters" and "Clean Msters" instead
+Never change master files in TES4 plugin header manually, that will break plugin in majority of cases because internal FormID numbers are tied to this list. Use right click menu options "Add Masters", "Sort Masters" and "Clean Masters" instead
 Pressing F2 in the right pane activates inplace editor
 Pressing F2 in the left pane allows to change FormID of a record
 Filter is always applied to all plugins, so it doesn't matter where you right click
