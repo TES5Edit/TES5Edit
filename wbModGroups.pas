@@ -733,9 +733,9 @@ begin
   for i := Low(Self) to High(Self) do
     with Self[i]^ do begin
       if IsValid then
-        s := 'ModGroud "%s" is valid, but has messages:'
+        s := 'ModGroup "%s" is valid, but has messages:'
       else
-        s := 'ModGroud "%s" is invalid.';
+        s := 'ModGroup "%s" is invalid:';
       Messages := GetValidationMessages;
       if Length(Messages) > 0 then begin
         wbProgress(s, [mgName]);
