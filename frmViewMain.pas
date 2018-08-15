@@ -6144,15 +6144,19 @@ end;
 procedure TfrmMain.mniViewCopyToSelectedRecordsClick(Sender: TObject);
 var
   NodeDatas                   : PViewNodeDatas;
+  ParentNodeDatas             : PViewNodeDatas;
   NodeData                    : PNavNodeData;
   Element                     : IwbElement;
   TargetElement               : IwbElement;
+  NewElement                  : IwbElement;
+  NewElementContainer         : IwbContainerElementRef;
   MainRecords                 : array of IwbMainRecord;
   SourceMainRecord            : IwbMainRecord;
   TargetMainRecord            : IwbMainRecord;
   SelectedNodes               : TNodeArray;
   i, j, k                     : Integer;
   FoundOne                    : Boolean;
+  IsAligned                   : Boolean;
 begin
   if not wbEditAllowed then
     Exit;
@@ -6160,6 +6164,8 @@ begin
   NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
   if Assigned(NodeDatas) then begin
     Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+    ParentNodeDatas := vstView.GetNodeData(vstView.FocusedNode.Parent);
+    IsAligned := Assigned(ParentNodeDatas) and (vnfIsAligned in ParentNodeDatas[Pred(vstView.FocusedColumn)].ViewNodeFlags);
     if Assigned(Element) then begin
       SourceMainRecord := Element.ContainingMainRecord;
 
@@ -6229,8 +6235,15 @@ begin
           if j < 1 then
             Exit;
 
-          for i := Low(MainRecords) to High(MainRecords) do
-            wbCopyElementToRecord(Element, MainRecords[i], False, True);
+          for i := Low(MainRecords) to High(MainRecords) do begin
+            NewElement := wbCopyElementToRecord(Element, MainRecords[i], False, True);
+            if IsAligned and Assigned(NewElement) then
+              if Supports(NewElement.Container, IwbContainerElementRef, NewElementContainer) then
+                if csSortedBySortOrder in NewElementContainer.ContainerStates then begin
+                  NewElement.SortOrder := Element.SortOrder;
+                  NewElementContainer.SortBySortOrder;
+                end;
+          end;
         finally
           for i := Low(SelectedNodes) to High(SelectedNodes) do
             vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
@@ -14262,7 +14275,7 @@ begin
     vstView.BeginUpdate;
     try
       NewElement := TargetElement.Assign(TargetIndex, SourceElement, False);
-      if Assigned(NewElement) and (TargetIndex > 0) and (TargetIndex < High(Integer)) then begin
+      if Assigned(NewElement) and (TargetIndex >= 0) and (TargetIndex < High(Integer)) then begin
         TargetNodeDatas := vstView.GetNodeData(TargetNode);
         TargetNodeData := @TargetNodeDatas[Pred(Sender.DropTargetColumn)];
         if vnfIsAligned in TargetNodeData.ViewNodeFlags then
