@@ -8032,47 +8032,49 @@ begin
       wbArray(_40_IAD, 'Eye Adapt Speed Add', wbTimeInterpolator),
       wbArray(_01_IAD, 'Bloom Blur Radius Mult', wbTimeInterpolator),
       wbArray(_41_IAD, 'Bloom Blur Radius Add', wbTimeInterpolator),
-      wbArray(_02_IAD, 'Bloom Threshold Mult', wbTimeInterpolator),
-      wbArray(_42_IAD, 'Bloom Threshold Add', wbTimeInterpolator),
-      wbArray(_03_IAD, 'Bloom Scale Mult', wbTimeInterpolator),
-      wbArray(_43_IAD, 'Bloom Scale Add', wbTimeInterpolator),
+      wbArray(_02_IAD, 'Bloom Threshold Mult', wbTimeInterpolator), // Skin Dimmer
+      wbArray(_42_IAD, 'Bloom Threshold Add', wbTimeInterpolator), // Skin Dimmer
+      wbArray(_03_IAD, 'Bloom Scale Mult', wbTimeInterpolator), // Emissive
+      wbArray(_43_IAD, 'Bloom Scale Add', wbTimeInterpolator), // Emissive
       wbArray(_04_IAD, 'Target Lum Min Mult', wbTimeInterpolator),
       wbArray(_44_IAD, 'Target Lum Min Add', wbTimeInterpolator),
       wbArray(_05_IAD, 'Target Lum Max Mult', wbTimeInterpolator),
       wbArray(_45_IAD, 'Target Lum Max Add', wbTimeInterpolator),
-      wbArray(_06_IAD, 'Sunlight Scale Mult', wbTimeInterpolator),
-      wbArray(_46_IAD, 'Sunlight Scale Add', wbTimeInterpolator),
-      wbArray(_07_IAD, 'Sky Scale Mult', wbTimeInterpolator),
-      wbArray(_47_IAD, 'Sky Scale Add', wbTimeInterpolator)
+      wbArray(_06_IAD, 'Sunlight Scale Mult', wbTimeInterpolator), // Birght Scale
+      wbArray(_46_IAD, 'Sunlight Scale Add', wbTimeInterpolator), // Birght Scale
+      wbArray(_07_IAD, 'Sky Scale Mult', wbTimeInterpolator), // Bright Clamp
+      wbArray(_47_IAD, 'Sky Scale Add', wbTimeInterpolator), // Bright Clamp
+      wbArray(_08_IAD, 'LUM Ramp No Tex Mult', wbTimeInterpolator),
+      wbArray(_48_IAD, 'LUM Ramp No Tex Add', wbTimeInterpolator),
+      wbArray(_09_IAD, 'LUM Ramp Min Mult', wbTimeInterpolator),
+      wbArray(_49_IAD, 'LUM Ramp Min Add', wbTimeInterpolator),
+      wbArray(_0A_IAD, 'LUM Ramp Max Mult', wbTimeInterpolator),
+      wbArray(_4A_IAD, 'LUM Ramp Max Add', wbTimeInterpolator),
+      wbArray(_0B_IAD, 'Sunlight Dimmer Mult', wbTimeInterpolator),
+      wbArray(_4B_IAD, 'Sunlight Dimmer Add', wbTimeInterpolator),
+      wbArray(_0C_IAD, 'Grass Dimmer Mult', wbTimeInterpolator),
+      wbArray(_4C_IAD, 'Grass Dimmer Add', wbTimeInterpolator),
+      wbArray(_0D_IAD, 'Tree Dimmer Mult', wbTimeInterpolator),
+      wbArray(_4D_IAD, 'Tree Dimmer Add', wbTimeInterpolator)
     ], []),
-    wbUnknown(_08_IAD),
-    wbUnknown(_48_IAD),
-    wbUnknown(_09_IAD),
-    wbUnknown(_49_IAD),
-    wbUnknown(_0A_IAD),
-    wbUnknown(_4A_IAD),
-    wbUnknown(_0B_IAD),
-    wbUnknown(_4B_IAD),
-    wbUnknown(_0C_IAD),
-    wbUnknown(_4C_IAD),
-    wbUnknown(_0D_IAD),
-    wbUnknown(_4D_IAD),
-    wbUnknown(_0E_IAD),
-    wbUnknown(_4E_IAD),
-    wbUnknown(_0F_IAD),
-    wbUnknown(_4F_IAD),
-    wbUnknown(_10_IAD),
-    wbUnknown(_50_IAD),
+    wbRStruct('Bloom', [
+      wbArray(_0E_IAD, 'Blur Radius Mult', wbTimeInterpolator),
+      wbArray(_4E_IAD, 'Blur Radius Add', wbTimeInterpolator),
+      wbArray(_0F_IAD, 'Alpha Mult Interior Mult', wbTimeInterpolator),
+      wbArray(_4F_IAD, 'Alpha Mult Interior Add', wbTimeInterpolator),
+      wbArray(_10_IAD, 'Alpha Mult Exterior Mult', wbTimeInterpolator),
+      wbArray(_50_IAD, 'Alpha Mult Exterior Add', wbTimeInterpolator)
+    ], []),
     wbRStruct('Cinematic', [
       wbArray(_11_IAD, 'Saturation Mult', wbTimeInterpolator),
       wbArray(_51_IAD, 'Saturation Add', wbTimeInterpolator),
-      wbArray(_12_IAD, 'Brightness Mult', wbTimeInterpolator),
-      wbArray(_52_IAD, 'Brightness Add', wbTimeInterpolator),
-      wbArray(_13_IAD, 'Contrast Mult', wbTimeInterpolator),
-      wbArray(_53_IAD, 'Contrast Add', wbTimeInterpolator)
+      wbArray(_12_IAD, 'Contrast Mult', wbTimeInterpolator),
+      wbArray(_52_IAD, 'Contrast Add', wbTimeInterpolator),
+      wbArray(_13_IAD, 'Contrast Avg Mult', wbTimeInterpolator),
+      wbArray(_53_IAD, 'Contrast Avg Add', wbTimeInterpolator),
+      wbArray(_14_IAD, 'Brightness Mult', wbTimeInterpolator),
+      wbArray(_54_IAD, 'Brightness Add', wbTimeInterpolator)
     ], []),
-    wbUnknown(_14_IAD),
-    wbUnknown(_54_IAD),
     wbFormIDCk(RDSD, 'Sound - Intro', [SOUN]),
     wbFormIDCk(RDSI, 'Sound - Outro', [SOUN])
   ]);
