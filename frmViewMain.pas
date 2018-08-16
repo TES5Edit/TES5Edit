@@ -16783,13 +16783,13 @@ begin
     Exit;
   end;
 
+  _BlockInternalEdit := False;
+
   if (wbToolMode in [tmLODgen, tmScript]) then begin
     if not wbForceTerminate then
       tmrGenerator.Enabled := True;
     Exit;
   end;
-
-  _BlockInternalEdit := False;
 
   vstNav.PopupMenu := pmuNav;
 
