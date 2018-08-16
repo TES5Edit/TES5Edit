@@ -1,9 +1,10 @@
 object frmMain: TfrmMain
   Left = 0
   Top = 0
+  ActiveControl = vstView
   Caption = 'TES5View'
   ClientHeight = 663
-  ClientWidth = 1019
+  ClientWidth = 1370
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -39,7 +40,7 @@ object frmMain: TfrmMain
     AlignWithMargins = True
     Left = 3
     Top = 639
-    Width = 1013
+    Width = 1364
     Height = 21
     Margins.Left = 0
     Margins.Right = 0
@@ -56,20 +57,22 @@ object frmMain: TfrmMain
     OnMouseDown = stbMainMouseDown
     OnDrawPanel = stbMainDrawPanel
     OnResize = stbMainResize
+    ExplicitWidth = 1013
   end
   object pnlRight: TPanel
     Left = 461
     Top = 33
-    Width = 555
+    Width = 906
     Height = 603
     Align = alClient
     BevelOuter = bvNone
     BorderStyle = bsSingle
     TabOrder = 1
+    ExplicitWidth = 555
     object pgMain: TPageControl
       Left = 0
       Top = 0
-      Width = 551
+      Width = 902
       Height = 599
       ActivePage = tbsView
       Align = alClient
@@ -77,9 +80,11 @@ object frmMain: TfrmMain
       TabOrder = 0
       TabPosition = tpBottom
       OnChange = pgMainChange
+      ExplicitWidth = 551
       object tbsView: TTabSheet
         Caption = 'View'
         OnShow = tbsViewShow
+        ExplicitWidth = 543
         object imgFlattr: TImage
           Left = 312
           Top = 520
@@ -245,7 +250,7 @@ object frmMain: TfrmMain
           AlignWithMargins = True
           Left = 0
           Top = 25
-          Width = 543
+          Width = 894
           Height = 545
           Margins.Left = 0
           Margins.Top = 0
@@ -302,6 +307,7 @@ object frmMain: TfrmMain
           OnNewText = vstViewNewText
           OnResize = vstViewResize
           OnScroll = vstViewScroll
+          ExplicitWidth = 543
           Columns = <
             item
               Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coFixed]
@@ -318,11 +324,12 @@ object frmMain: TfrmMain
         object pnlViewTop: TPanel
           Left = 0
           Top = 0
-          Width = 543
+          Width = 894
           Height = 25
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 1
+          ExplicitLeft = 32
           object edViewFilterName: TLabeledEdit
             Left = 90
             Top = 1
@@ -337,6 +344,7 @@ object frmMain: TfrmMain
             TabOrder = 0
             OnChange = edViewFilterChange
             OnKeyDown = edViewFilterNameKeyDown
+            OnKeyPress = edFilterNoBeepOnEnterKeyPress
           end
           object edViewFilterValue: TLabeledEdit
             Left = 337
@@ -352,6 +360,7 @@ object frmMain: TfrmMain
             TabOrder = 2
             OnChange = edViewFilterChange
             OnKeyDown = edViewFilterNameKeyDown
+            OnKeyPress = edFilterNoBeepOnEnterKeyPress
           end
           object cobViewFilter: TComboBox
             Left = 239
@@ -370,6 +379,15 @@ object frmMain: TfrmMain
               'and'
               'or')
           end
+          object cbNavFilterKeepChildren: TCheckBox
+            Left = 486
+            Top = 3
+            Width = 215
+            Height = 17
+            Caption = 'Keep children of nodes matching filter'
+            TabOrder = 3
+            OnClick = edViewFilterChange
+          end
         end
       end
       object tbsReferencedBy: TTabSheet
@@ -377,15 +395,11 @@ object frmMain: TfrmMain
         ImageIndex = 3
         TabVisible = False
         OnShow = tbsViewShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 485
-        ExplicitHeight = 565
         object lvReferencedBy: TListView
           AlignWithMargins = True
           Left = 0
           Top = 0
-          Width = 543
+          Width = 894
           Height = 570
           Margins.Left = 0
           Margins.Top = 0
@@ -417,23 +431,17 @@ object frmMain: TfrmMain
           OnColumnClick = lvReferencedByColumnClick
           OnCompare = lvReferencedByCompare
           OnDblClick = lvReferencedByDblClick
-          ExplicitWidth = 485
-          ExplicitHeight = 562
         end
       end
       object tbsMessages: TTabSheet
         Caption = 'Messages'
         ImageIndex = 1
         OnShow = tbsMessagesShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 485
-        ExplicitHeight = 565
         object mmoMessages: TMemo
           AlignWithMargins = True
           Left = 0
           Top = 0
-          Width = 543
+          Width = 894
           Height = 570
           Margins.Left = 0
           Margins.Top = 0
@@ -445,8 +453,6 @@ object frmMain: TfrmMain
           TabOrder = 0
           WordWrap = False
           OnDblClick = mmoMessagesDblClick
-          ExplicitWidth = 485
-          ExplicitHeight = 562
         end
       end
       object tbsInfo: TTabSheet
@@ -456,7 +462,7 @@ object frmMain: TfrmMain
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 537
+          Width = 888
           Height = 567
           Align = alClient
           BorderStyle = bsNone
@@ -822,15 +828,11 @@ object frmMain: TfrmMain
         Caption = 'Weapon Spreadsheet'
         ImageIndex = 4
         OnShow = tbsSpreadsheetShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 485
-        ExplicitHeight = 565
         object vstSpreadSheetWeapon: TVirtualEditTree
           Tag = 3
           Left = 0
           Top = 0
-          Width = 543
+          Width = 894
           Height = 573
           Align = alClient
           Color = clInfoBk
@@ -865,8 +867,6 @@ object frmMain: TfrmMain
           OnIncrementalSearch = vstSpreadSheetIncrementalSearch
           OnInitNode = vstSpreadSheetWeaponInitNode
           OnNewText = vstSpreadSheetNewText
-          ExplicitWidth = 485
-          ExplicitHeight = 565
           Columns = <
             item
               MinWidth = 150
@@ -1033,15 +1033,11 @@ object frmMain: TfrmMain
         Caption = 'Armor Spreadsheet'
         ImageIndex = 5
         OnShow = tbsSpreadsheetShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 485
-        ExplicitHeight = 565
         object vstSpreadsheetArmor: TVirtualEditTree
           Tag = 3
           Left = 0
           Top = 0
-          Width = 543
+          Width = 894
           Height = 573
           Align = alClient
           Color = clInfoBk
@@ -1076,8 +1072,6 @@ object frmMain: TfrmMain
           OnIncrementalSearch = vstSpreadSheetIncrementalSearch
           OnInitNode = vstSpreadSheetArmorInitNode
           OnNewText = vstSpreadSheetNewText
-          ExplicitWidth = 485
-          ExplicitHeight = 565
           Columns = <
             item
               MinWidth = 150
@@ -1180,15 +1174,11 @@ object frmMain: TfrmMain
         Caption = 'Ammunition Spreadsheet'
         ImageIndex = 6
         OnShow = tbsSpreadsheetShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 485
-        ExplicitHeight = 565
         object vstSpreadSheetAmmo: TVirtualEditTree
           Tag = 3
           Left = 0
           Top = 0
-          Width = 543
+          Width = 894
           Height = 573
           Align = alClient
           Color = clInfoBk
@@ -1223,8 +1213,6 @@ object frmMain: TfrmMain
           OnIncrementalSearch = vstSpreadSheetIncrementalSearch
           OnInitNode = vstSpreadSheetAmmoInitNode
           OnNewText = vstSpreadSheetNewText
-          ExplicitWidth = 485
-          ExplicitHeight = 565
           Columns = <
             item
               MinWidth = 150
@@ -1306,20 +1294,14 @@ object frmMain: TfrmMain
         Caption = 'TabSheet2'
         ImageIndex = 7
         TabVisible = False
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 485
-        ExplicitHeight = 565
         object DisplayPanel: TPanel
           Left = 0
           Top = 0
-          Width = 543
+          Width = 894
           Height = 573
           Align = alClient
           BevelOuter = bvLowered
           TabOrder = 0
-          ExplicitWidth = 485
-          ExplicitHeight = 565
         end
       end
     end
@@ -1327,14 +1309,15 @@ object frmMain: TfrmMain
   object pnlTop: TPanel
     Left = 3
     Top = 3
-    Width = 1013
+    Width = 1364
     Height = 30
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitWidth = 1013
     object bnBack: TSpeedButton
       AlignWithMargins = True
-      Left = 823
+      Left = 1174
       Top = 3
       Width = 24
       Height = 24
@@ -1421,7 +1404,7 @@ object frmMain: TfrmMain
     end
     object bnForward: TSpeedButton
       AlignWithMargins = True
-      Left = 853
+      Left = 1204
       Top = 3
       Width = 25
       Height = 24
@@ -1508,7 +1491,7 @@ object frmMain: TfrmMain
     end
     object bnHelp: TSpeedButton
       AlignWithMargins = True
-      Left = 884
+      Left = 1235
       Top = 3
       Width = 60
       Height = 24
@@ -1555,7 +1538,7 @@ object frmMain: TfrmMain
     end
     object bnDiscord: TSpeedButton
       AlignWithMargins = True
-      Left = 950
+      Left = 1301
       Top = 3
       Width = 60
       Height = 24
@@ -1569,7 +1552,7 @@ object frmMain: TfrmMain
       AlignWithMargins = True
       Left = 0
       Top = 5
-      Width = 817
+      Width = 1168
       Height = 20
       Margins.Left = 0
       Margins.Top = 5
@@ -1588,6 +1571,7 @@ object frmMain: TfrmMain
       TabOrder = 0
       Visible = False
       StyleElements = [seFont, seBorder]
+      ExplicitWidth = 817
     end
   end
   object pnlNav: TPanel
@@ -1768,7 +1752,7 @@ object frmMain: TfrmMain
         TabOrder = 0
         OnChange = edFileNameFilterChange
         OnKeyDown = edFileNameFilterKeyDown
-        OnKeyPress = edFileNameFilterKeyPress
+        OnKeyPress = edFilterNoBeepOnEnterKeyPress
       end
     end
   end

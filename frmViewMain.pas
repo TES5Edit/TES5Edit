@@ -351,6 +351,7 @@ type
     mniNavDeleteModGroups: TMenuItem;
     tmrUpdateColumnWidths: TTimer;
     tmrPendingSetActive: TTimer;
+    cbNavFilterKeepChildren: TCheckBox;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -581,7 +582,7 @@ type
     procedure mniNavCreateModGroupClick(Sender: TObject);
     procedure mniNavEditModGroupClick(Sender: TObject);
     procedure mniNavDeleteModGroupsClick(Sender: TObject);
-    procedure edFileNameFilterKeyPress(Sender: TObject; var Key: Char);
+    procedure edFilterNoBeepOnEnterKeyPress(Sender: TObject; var Key: Char);
     procedure tmrUpdateColumnWidthsTimer(Sender: TObject);
     procedure vstViewScroll(Sender: TBaseVirtualTree; DeltaX, DeltaY: Integer);
     procedure bnHelpClick(Sender: TObject);
@@ -4435,21 +4436,23 @@ var
   FocusedNode: PVirtualNode;
   Node : PVirtualNode;
 begin
-  if Key = VK_RETURN then begin
-    FocusedNode := vstNav.FocusedNode;
-    if Assigned(FocusedNode) then
-      for Node in vstNav.VisibleNodes(nil) do begin
-        if Node = FocusedNode then
-          Exit;
-      end;
-    vstNav.FocusedNode := vstNav.GetFirstVisible;
-    vstNav.SetFocus;
+  case Key of
+    VK_RETURN, VK_UP: begin
+      vstNav.SetFocus;
+      FocusedNode := vstNav.FocusedNode;
+      if Assigned(FocusedNode) then
+        for Node in vstNav.VisibleNodes(nil) do begin
+          if Node = FocusedNode then
+            Exit;
+        end;
+      vstNav.FocusedNode := vstNav.GetFirstVisible;
+    end;
   end;
 end;
 
-procedure TfrmMain.edFileNameFilterKeyPress(Sender: TObject; var Key: Char);
+procedure TfrmMain.edFilterNoBeepOnEnterKeyPress(Sender: TObject; var Key: Char);
 begin
-  if Key = #13 then
+  if Key in [#13, #27] then
     Key := #0;
 end;
 
@@ -4594,16 +4597,21 @@ end;
 
 procedure TfrmMain.edViewFilterChange(Sender: TObject);
 var
-  Node       : PVirtualNode;
-  ParentNode : PVirtualNode;
+  Node         : PVirtualNode;
+  ParentNode   : PVirtualNode;
+  KeepAllUntil : PVirtualNode;
 begin
   with vstView do begin
     BeginUpdate;
     try
       Node := GetFirst;
+      KeepAllUntil := nil;
       while Assigned(Node) do begin
-        IsFiltered[Node] := IsViewNodeFiltered(Node);
+        IsFiltered[Node] := not Assigned(KeepAllUntil) and IsViewNodeFiltered(Node);
         if not IsFiltered[Node] then begin
+          if not Assigned(KeepAllUntil) and cbNavFilterKeepChildren.Checked then
+            KeepAllUntil := GetNextNoChild(Node);
+
           ParentNode := Node.Parent;
           while Assigned(ParentNode) and IsFiltered[ParentNode] do begin
             IsFiltered[ParentNode] := False;
@@ -4611,6 +4619,8 @@ begin
           end;
         end;
         Node := GetNext(Node);
+        if KeepAllUntil = Node then
+          KeepAllUntil := nil;
       end;
       UpdateColumnWidths;
     finally
@@ -4620,14 +4630,34 @@ begin
 end;
 
 procedure TfrmMain.edViewFilterNameKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+
+  procedure FocusTreeView;
+  var
+    FocusedNode: PVirtualNode;
+    Node : PVirtualNode;
+  begin
+    vstView.SetFocus;
+    FocusedNode := vstView.FocusedNode;
+    if Assigned(FocusedNode) then
+      for Node in vstView.VisibleNodes(nil) do begin
+        if Node = FocusedNode then
+          Exit;
+      end;
+    vstView.FocusedNode := vstView.GetFirstVisible;
+  end;
+
 begin
-  if Key = VK_RETURN then
-    if (ssCtrl in Shift) or (Sender = edViewFilterValue) then
-      vstView.SetFocus
-    else if Sender = edViewFilterName then
-      cobViewFilter.SetFocus
-    else if Sender = cobViewFilter then
-      edViewFilterValue.SetFocus;
+  case Key of
+    VK_RETURN:
+      if (ssCtrl in Shift) or (Sender = edViewFilterValue) then
+        FocusTreeView
+      else if Sender = edViewFilterName then
+        cobViewFilter.SetFocus
+      else if Sender = cobViewFilter then
+        edViewFilterValue.SetFocus;
+    VK_DOWN:
+      FocusTreeView;
+  end;
 end;
 
 function NormalizeRotation(const aRot: TwbVector): TwbVector;
