@@ -4410,35 +4410,23 @@ end;
 
 procedure TfrmMain.edFileNameFilterChange(Sender: TObject);
 var
-  SearchText  : string;
-  NodeText    : string;
-  Node        : PVirtualNode;
-  FocusedNode : PVirtualNode;
-  NextNode    : PVirtualNode;
+  SearchText : string;
+  Node       : PVirtualNode;
 begin
-  FocusedNode := vstNav.FocusedNode;
-
   SearchText := edFileNameFilter.Text;
   SearchText := SearchText.ToLowerInvariant;
-  Node := vstNav.RootNode.FirstChild;
-  while Assigned(Node) do
-    with Node^ do begin
-      NodeText := '';
-      vstNavGetText(vstNav, Node, 0, ttNormal, NodeText);
-      if (SearchText = '') or NodeText.ToLowerInvariant.Contains(SearchText) then
-        States := States - [vsFiltered]
-      else
-        States := States + [vsFiltered];
-      Node := NextSibling;
+  with vstNav do begin
+    BeginUpdate;
+    try
+      Node := GetFirst;
+      while Assigned(Node) do begin
+        IsFiltered[Node] := (SearchText <> '') and
+          not Text[Node, 0, False].ToLowerInvariant.Contains(SearchText);
+        Node := GetNextSibling(Node);
+      end;
+    finally
+      EndUpdate;
     end;
-
-
-  vstNav.BeginUpdate;
-  try
-    vstNav.FocusedNode := vstNav.GetFirstVisible;
-    vstNav.FocusedNode := FocusedNode;
-  finally
-    vstNav.EndUpdate;
   end;
 end;
 
@@ -4606,30 +4594,29 @@ end;
 
 procedure TfrmMain.edViewFilterChange(Sender: TObject);
 var
-  Node   : PVirtualNode;
-  Parent : PVirtualNode;
+  Node       : PVirtualNode;
+  ParentNode : PVirtualNode;
 begin
-  vstView.BeginUpdate;
-  try
-    Node := vstView.GetFirst;
-    while Assigned(Node) do begin
-        if IsViewNodeFiltered(Node) then
-          Include(Node.States, vsFiltered)
-        else begin
-          Exclude(Node.States, vsFiltered);
-          Parent := Node.Parent;
-          while Assigned(Parent) and (vsFiltered in Parent.States) do begin
-            Exclude(Parent.States, vsFiltered);
-            Parent := Parent.Parent;
+  with vstView do begin
+    BeginUpdate;
+    try
+      Node := GetFirst;
+      while Assigned(Node) do begin
+        IsFiltered[Node] := IsViewNodeFiltered(Node);
+        if not IsFiltered[Node] then begin
+          ParentNode := Node.Parent;
+          while Assigned(ParentNode) and IsFiltered[ParentNode] do begin
+            IsFiltered[ParentNode] := False;
+            ParentNode := ParentNode.Parent;
           end;
         end;
-      Node := vstView.GetNext(Node);
+        Node := GetNext(Node);
+      end;
+      UpdateColumnWidths;
+    finally
+      EndUpdate;
     end;
-    UpdateColumnWidths;
-  finally
-    vstView.EndUpdate;
   end;
-  vstView.Invalidate;
 end;
 
 procedure TfrmMain.edViewFilterNameKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);

@@ -198,17 +198,20 @@ var
 begin
   SearchText := edFilter.Text;
   SearchText := SearchText.ToLowerInvariant;
-  Node := vstModules.RootNode.FirstChild;
-  while Assigned(Node) do
-    with Node^ do begin
-      NodeData := vstModules.GetNodeData(Node);
-      if (SearchText = '') or NodeData.mndName.ToLowerInvariant.Contains(SearchText) then
-        States := States - [vsFiltered]
-      else
-        States := States + [vsFiltered];
-      Node := NextSibling;
+  with vstModules do begin
+    BeginUpdate;
+    try
+      Node := GetFirst;
+      while Assigned(Node) do begin
+        NodeData := GetNodeData(Node);
+        IsFiltered[Node] := (SearchText <> '') and
+          not NodeData.mndName.ToLowerInvariant.Contains(SearchText);
+        Node := GetNextSibling(Node);
+      end;
+    finally
+      EndUpdate;
     end;
-  vstModules.Invalidate;
+  end;
 end;
 
 procedure TfrmModuleSelect.FormClose(Sender: TObject; var Action: TCloseAction);

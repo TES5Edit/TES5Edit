@@ -199,17 +199,20 @@ var
 begin
   SearchText := edFilter.Text;
   SearchText := SearchText.ToLowerInvariant;
-  Node := vstModGroups.RootNode.FirstChild;
-  while Assigned(Node) do
-    with Node^ do begin
-      NodeData := vstModGroups.GetNodeData(Node);
-      if (SearchText = '') or NodeData.mgndModGroup.mgName.ToLowerInvariant.Contains(SearchText) then
-        States := States - [vsFiltered]
-      else
-        States := States + [vsFiltered];
-      Node := NextSibling;
+  with vstModGroups do begin
+    BeginUpdate;
+    try
+      Node := GetFirst;
+      while Assigned(Node) do begin
+        NodeData := GetNodeData(Node);
+        IsFiltered[Node] := (SearchText <> '') and
+          not NodeData.mgndModGroup.mgName.ToLowerInvariant.Contains(SearchText);
+        Node := GetNextSibling(Node);
+      end;
+    finally
+      EndUpdate;
     end;
-  vstModGroups.Invalidate;
+  end;
 end;
 
 procedure TfrmModGroupSelect.FormClose(Sender: TObject; var Action: TCloseAction);
