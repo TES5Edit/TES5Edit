@@ -649,7 +649,7 @@ type
     function GetSortPriority: Integer;
     function GetName: string;
     function GetBaseName: string;
-    function GetDisplayName: string;
+    function GetDisplayName(aUseSuffix: Boolean): string;
     function GetShortName: string;
     function GetPath: string;
     function GetFullPath: string;
@@ -762,7 +762,7 @@ type
       read GetName;
     property BaseName: string
       read GetBaseName;
-    property DisplayName: string
+    property DisplayName[aUseSuffix: Boolean]: string
       read GetDisplayName;
     property ShortName: string
       read GetShortName;
@@ -869,6 +869,7 @@ type
     ['{1484D26A-0F67-41FA-9044-8772E68CBA56}']
 
     function GetElement(aIndex: Integer): IwbElement;
+    function GetAnyElement: IwbElement;
     function GetElementCount: Integer;
     function GetElementByName(const aName: string): IwbElement;
     function GetRecordBySignature(const aSignature: TwbSignature): IwbRecord;
@@ -908,6 +909,8 @@ type
 
     property Elements[aIndex: Integer]: IwbElement
       read GetElement; default;
+    property AnyElement: IwbElement
+      read GetAnyElement;
     property ElementCount: Integer
       read GetElementCount;
     property AdditionalElementCount: Integer
@@ -9839,9 +9842,13 @@ begin
         end;
 
     end else begin
-      if (Container <> nil) and (ArrayContainer.ElementCount > 0) then
-        Element := ArrayContainer.Elements[0]
-      else
+
+      Element := nil;
+
+      if Container <> nil then
+        Element := ArrayContainer.AnyElement;
+
+      if not Assigned(Element) then
         Element := aElement;
 
       Size := arElement.Size[BasePtr, aEndPtr, Element];

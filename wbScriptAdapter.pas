@@ -281,7 +281,7 @@ var
 begin
   Value := '';
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    Value := Element.DisplayName;
+    Value := Element.DisplayName[True];
 end;
 
 function IntToEsState(anInt: Integer): TwbElementState;

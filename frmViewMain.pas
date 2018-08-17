@@ -46,6 +46,7 @@ uses
   System.Threading,
   System.SyncObjs,
 {$ENDIF}
+  System.Diagnostics,
   pngimage,
   RegularExpressionsCore,
   VirtualTrees,
@@ -625,7 +626,7 @@ type
     function GetUniqueLinksTo(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer): TDynMainRecords;
 
     procedure InitChilds(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer; var aChildCount: Cardinal);
-    procedure InitNodes(const aNodeDatas, aParentDatas: PViewNodeDatas; aNodeCount: Integer; aIndex: Cardinal; var aInitialStates: TVirtualNodeInitStates);
+    procedure InitNodes(const aNode: PVirtualNode; const aNodeDatas, aParentDatas: PViewNodeDatas; aNodeCount: Integer; aIndex: Cardinal; var aInitialStates: TVirtualNodeInitStates);
     procedure InitConflictStatus(aNode: PVirtualNode; aInjected: Boolean; aNodeDatas: PViewNodeDatas = nil);
     procedure InheritStateFromChilds(Node: PVirtualNode; NodeData: PNavNodeData);
 
@@ -708,6 +709,9 @@ type
     ActiveMaster: IwbMainRecord;
     ActiveRecords: TDynViewNodeDatas;
     ActiveContainer: IwbDataContainer;
+    FocusedElement : IwbElement;
+    NodeForFocusedElement: PVirtualNode;
+    ColumnForFocusedElement: Integer;
     LoaderStarted: Boolean;
     ModGroupsExist : Boolean;
     ModGroupsEnabled : Boolean;
@@ -2085,6 +2089,7 @@ var
   CopiedElement        : IwbElement;
   Container            : IwbContainer;
   IsESL                : Boolean;
+  sw                   : TStopwatch;
 begin
   Result := nil;
   Elements := aElements;
@@ -2326,6 +2331,7 @@ begin
                     wbProgress('Error while copying '+Elements[j].Name+': '+E.Message);
                 end;
             end else begin
+              sw := TStopwatch.StartNew;
               MainRecord := nil;
               if DeepCopy and Supports(Elements[0], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
                 wbProgress('Copying ' + MainRecord.ChildGroup.Name);
@@ -2346,6 +2352,8 @@ begin
               end;
               if AsNew and Assigned(MainRecord) then
                 MainRecord.EditorID := EditorID;
+              sw.Stop;
+              wbProgress('Copied ' + Elements[0].Name + ' in ' + sw.ElapsedMilliseconds.ToString + 'msec');
             end;
           end;
         end;
@@ -3632,7 +3640,7 @@ begin
       NodeDatas := nil;
       SetLength(NodeDatas, Length(aNodeDatas));
       InitialStates := [];
-      InitNodes(@NodeDatas[0], @aNodeDatas[0], Length(aNodeDatas), i, InitialStates);
+      InitNodes(nil, @NodeDatas[0], @aNodeDatas[0], Length(aNodeDatas), i, InitialStates);
       if not (ivsDisabled in InitialStates) then begin
 
         if ivsHasChildren in InitialStates then
@@ -5839,7 +5847,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.InitNodes(const aNodeDatas: PViewNodeDatas;
+procedure TfrmMain.InitNodes(const aNode: PVirtualNode; const aNodeDatas: PViewNodeDatas;
   const aParentDatas: PViewNodeDatas;
   aNodeCount: Integer;
   aIndex: Cardinal;
@@ -5868,9 +5876,16 @@ begin
               NodeData.Element := Container.Elements[aIndex];
         end;
     end;
-    if Assigned(NodeData.Element) and NodeData.Element.DontShow then begin
-      NodeData.Element := nil;
-      Include(NodeData.ViewNodeFlags, vnfDontShow);
+    if Assigned(NodeData.Element) then begin
+      if Assigned(aNode) and Assigned(FocusedElement) and not Assigned(NodeForFocusedElement) then
+        if FocusedElement.Equals(NodeData.Element) then begin
+          NodeForFocusedElement := aNode;
+          ColumnForFocusedElement := Succ(i);
+        end;
+      if NodeData.Element.DontShow then begin
+        NodeData.Element := nil;
+        Include(NodeData.ViewNodeFlags, vnfDontShow);
+      end;
     end;
   end;
 
@@ -6129,6 +6144,7 @@ begin
 
       ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
       TargetElement := nil;
+      FocusedElement := NewElement;
       PostResetActiveTree;
     finally
       //      vstView.EndUpdate;
@@ -6234,6 +6250,7 @@ begin
     PerformDrop(vstView, Node, TargetColumns[i], SourceElement);
 
   InvalidateElementsTreeView(NoNodes);
+  FocusedElement := SourceElement;
   PostResetActiveTree;
   vstNav.Invalidate;
 end;
@@ -6787,6 +6804,7 @@ begin
         Exit;
 
       Element.MoveDown;
+      FocusedElement := Element;
       PostResetActiveTree;
     end;
   end;
@@ -6808,6 +6826,7 @@ begin
         Exit;
 
       Element.MoveUp;
+      FocusedElement := Element;
       PostResetActiveTree;
     end;
   end;
@@ -7816,6 +7835,7 @@ begin
 
       Element.EditValue := EditValue;
       ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
+      FocusedElement := Element;
       Element := nil;
       PostResetActiveTree;
       InvalidateElementsTreeView(NoNodes);
@@ -7840,6 +7860,7 @@ begin
 
       Element.SetToDefault;
       ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
+      FocusedElement := Element;
       Element := nil;
       PostResetActiveTree;
       InvalidateElementsTreeView(NoNodes);
@@ -10737,7 +10758,7 @@ begin
               (FilterByEditorID or FilterByName) and (
                 not Supports(NodeData.Element, IwbMainRecord, MainRecord) or
                 (FilterByEditorID and (Pos(AnsiUpperCase(FilterEditorID), AnsiUpperCase(MainRecord.EditorID)) < 1)) or
-                (FilterByName and (Pos(AnsiUpperCase(FilterName), AnsiUpperCase(MainRecord.DisplayName)) < 1))
+                (FilterByName and (Pos(AnsiUpperCase(FilterName), AnsiUpperCase(MainRecord.DisplayName[True])) < 1))
               )
             ) or
             (Assigned(Signatures) and
@@ -10798,7 +10819,7 @@ begin
                 not Supports(Rec.LinksTo, IwbMainRecord, MainRecord) or
                 (FilterByBaseEditorID and not FilterByBaseFormID and (Pos(AnsiUpperCase(FilterBaseEditorID), AnsiUpperCase(MainRecord.EditorID)) < 1)) or
                 (FilterByBaseFormID and (MainRecord.LoadOrderFormID <> FilterBaseFormID)) or
-                (FilterByBaseName and (Pos(AnsiUpperCase(FilterBaseName), AnsiUpperCase(MainRecord.DisplayName)) < 1))
+                (FilterByBaseName and (Pos(AnsiUpperCase(FilterBaseName), AnsiUpperCase(MainRecord.DisplayName[True])) < 1))
               )
             ) or
             (
@@ -11247,6 +11268,7 @@ begin
         Exit;
 
       Element.NextMember;
+      FocusedElement := Element;
       PostResetActiveTree;
     end;
   end;
@@ -11524,6 +11546,7 @@ begin
       end;
 
       ActiveRecords[Pred(TargetColumn)].UpdateRefs;
+      FocusedElement := NewElement;
       NewElement := nil;
       TargetElement := nil;
       Result := True;
@@ -12115,6 +12138,7 @@ begin
         Exit;
 
       Element.PreviousMember;
+      FocusedElement := Element;
       PostResetActiveTree;
     end;
   end;
@@ -12238,10 +12262,13 @@ var
   MainRecord                  : IwbMainRecord;
   Column                      : TColumnIndex;
   Node                        : PVirtualNode;
+  NodeDatas                   : PViewNodeDatas;
   r                           : TRect;
   ColumnWidths                : array of Integer;
-  i: Integer;
+  i                           : Integer;
+  sw                          : TStopwatch;
 begin
+  sw := TStopwatch.StartNew;
   LockWindowUpdate(vstView.Handle);
   vstView.BeginUpdate;
   try
@@ -12253,8 +12280,15 @@ begin
     OffsetXY := vstView.OffsetXY;
     Column := vstView.FocusedColumn;
     Node := vstView.FocusedNode;
-    if Assigned(Node) then
+    if Assigned(Node) then begin
       r := vstView.GetDisplayRect(Node, Column, False);
+      if not Assigned(FocusedElement) then
+        if (Column > 0) and (Pred(Column) <= High(ActiveRecords)) then begin
+          NodeDatas := vstView.GetNodeData(Node);
+          FocusedElement := NodeDatas[Pred(Column)].Element;
+        end;
+    end;
+    NodeForFocusedElement := nil;
 
     if Assigned(ActiveRecord) then begin
       MainRecord := ActiveRecord;
@@ -12271,12 +12305,16 @@ begin
     vstView.UpdateScrollBars(False);
     vstView.OffsetXY := OffsetXY;
     if Assigned(Node) then begin
-      Node := vstView.GetNodeAt(r.Left + 2, r.Top + 2);
+      if Assigned(NodeForFocusedElement) then begin
+        Node := NodeForFocusedElement;
+        Column := ColumnForFocusedElement;
+      end else
+        Node := vstView.GetNodeAt(r.Left + 2, r.Top + 2);
       if Assigned(Node) then
         vstView.FocusedNode := Node;
     end;
     vstView.FocusedColumn := Column;
-    vstView.OffsetXY := OffsetXY;
+//    vstView.OffsetXY := OffsetXY;
     if mniViewColumnWidthFitText.Checked or mniViewColumnWidthFitSmart.Checked then
       UpdateColumnWidths
     else
@@ -12286,9 +12324,14 @@ begin
             Columns[i].Width := ColumnWidths[i];
       end;
   finally
+    FocusedElement := nil;
+    NodeForFocusedElement := nil;
     vstView.EndUpdate;
     LockWindowUpdate(0);
   end;
+  sw.Stop;
+  if sw.ElapsedMilliseconds > 1000 then
+    wbProgress('ResetActiveTree took %d msec', [sw.ElapsedMilliseconds]);
 end;
 
 procedure TfrmMain.ResetAllConflict;
@@ -14419,6 +14462,7 @@ var
   Element      : IwbElement;
   ElementCount : Integer;
   i,j          : Integer;
+  UseSuffix    : Boolean;
 begin
   CellText := '';
   NodeDatas := Sender.GetNodeData(Node);
@@ -14426,11 +14470,17 @@ begin
   if Pred(Column) > High(ActiveRecords) then
     Exit;
 
+  UseSuffix := False;
+  Element := nil;
+
   if Column < 1 then begin
 
     if (vstView.FocusedColumn > 0) and (Pred(vstView.FocusedColumn) <= High(ActiveRecords)) then
       Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
-    if not Assigned(Element) then
+
+    UseSuffix := Assigned(Element);
+
+    if not UseSuffix then
       for i := Low(ActiveRecords) to High(ActiveRecords) do begin
         Element := NodeDatas[i].Element;
         if Assigned(Element) then
@@ -14443,7 +14493,7 @@ begin
   if Assigned(Element) then begin
     if TextType = ttNormal then begin
       if Column < 1 then begin
-        CellText := Element.DisplayName;
+        CellText := Element.DisplayName[UseSuffix];
         if vnfIsSorted in NodeDatas[0].ViewNodeFlags then
           CellText := CellText + ' (sorted)'
         else if vnfIsAligned in NodeDatas[0].ViewNodeFlags then
@@ -14613,13 +14663,13 @@ begin
   ParentDatas := Sender.GetNodeData(ParentNode);
   if not Assigned(ParentDatas) then
     ParentDatas := @ActiveRecords[0];
-  InitNodes(NodeDatas, ParentDatas, Length(ActiveRecords), Node.Index, InitialStates);
+  InitNodes(Node, NodeDatas, ParentDatas, Length(ActiveRecords), Node.Index, InitialStates);
   if IsViewNodeFiltered(Node) then
     Include(InitialStates, ivsFiltered)
   else begin
     Parent := Node.Parent;
-    while Assigned(Parent) and (vsFiltered in Parent.States) do begin
-      Exclude(Parent.States, vsFiltered);
+    while Assigned(Parent) and (Sender.IsFiltered[Parent]) do begin
+      Sender.IsFiltered[Parent] := False;
       Parent := Parent.Parent;
     end;
   end;
@@ -14666,14 +14716,14 @@ begin
           Exit;
         Key := 0;
         Element.MoveUp;
-        vstView.FocusedNode := vstView.GetPreviousSibling(vstView.FocusedNode);
+        FocusedElement := Element;
       end;
       VK_DOWN: begin
         if not Element.CanMoveDown then
           Exit;
         Key := 0;
         Element.MoveDown;
-        vstView.FocusedNode := vstView.GetNextSibling(vstView.FocusedNode);
+        FocusedElement := Element;
       end;
       Ord('C'): begin
         Clipboard.AsText := Element.EditValue;
@@ -14745,6 +14795,7 @@ begin
       try
         Element.EditValue := NewText;
         ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
+        FocusedElement := Element;
         Element := nil;
         PostResetActiveTree;
       finally
@@ -15240,7 +15291,7 @@ begin
               end;
             end;
           1: CellText := MainRecord.EditorID;
-          2: CellText := MainRecord.DisplayName;
+          2: CellText := MainRecord.DisplayName[True];
         end;
         Exit;
       end
@@ -15349,7 +15400,7 @@ begin
               CompareText := MainRecord.LoadOrderFormID.ToString(True);
           end;
         1: CompareText := MainRecord.EditorID;
-        2: CompareText := MainRecord.DisplayName;
+        2: CompareText := MainRecord.DisplayName[True];
       end;
     end
     else if Element.ElementType = etFile then begin

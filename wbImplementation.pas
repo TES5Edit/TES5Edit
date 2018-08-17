@@ -222,6 +222,8 @@ type
     procedure SetSortOrder(aIndex: Integer);
     procedure SetMemoryOrder(aIndex: Integer);
     function GetMemoryOrder: Integer;
+    procedure SetNameSuffix(const aSuffix: string);
+    function GetNameSuffix: string;
     procedure SetModified(aValue: Boolean);
     procedure SetInternalModified(aValue: Boolean);
     function GetCountedRecordCount: Cardinal;
@@ -242,6 +244,10 @@ type
     property MemoryOrder: Integer
       read GetMemoryOrder
       write SetMemoryOrder;
+
+    property NameSuffix: string
+      read GetNameSuffix
+      write SetNameSuffix;
 
     property InternalModified: Boolean
       write SetInternalModified;
@@ -283,6 +289,8 @@ type
     function LinksToParent: Boolean; virtual;
     procedure SetMemoryOrder(aIndex: Integer);
     function GetMemoryOrder: Integer;
+    procedure SetNameSuffix(const aSuffix: string); virtual;
+    function GetNameSuffix: string; virtual;
 
     function BeginDecide: Boolean;
     procedure EndDecide;
@@ -310,7 +318,7 @@ type
     function GetSortPriority: Integer; virtual;
     function GetName: string; virtual;
     function GetBaseName: string; virtual;
-    function GetDisplayName: string; virtual;
+    function GetDisplayName(aUseSuffix: Boolean): string; virtual;
     function GetShortName: string; virtual;
     function GetPath: string; virtual;
     function GetFullPath: string; virtual;
@@ -488,6 +496,7 @@ type
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); override;
 
     function GetElement(aIndex: Integer): IwbElement;
+    function GetAnyElement: IwbElement;
     function GetElementCount: Integer;
     function GetElementByName(const aName: string): IwbElement;
     function GetRecordBySignature(const aSignature: TwbSignature): IwbRecord;
@@ -820,7 +829,6 @@ type
     function GetSignature: TwbSignature;
     procedure ScanData; virtual; abstract;
     procedure InformPrevMainRecord(const aPrevMainRecord : IwbMainRecord); virtual;
-    procedure SortBySortOrder; override;
   public
     class function CreateForPtr(var aPtr            : Pointer;
                                     aEndPtr         : Pointer;
@@ -1160,7 +1168,7 @@ type
 
     function GetName: string; override;
     function GetShortName: string; override;
-    function GetDisplayName: string; override;
+    function GetDisplayName(aUseSuffix: Boolean): string; override;
   end;
 
   PwbSubRecordHeaderStruct = ^TwbSubRecordHeaderStruct;
@@ -1209,7 +1217,9 @@ type
     procedure CheckCount;
 
     function GetName: string; override;
-    function GetDisplayName: string; override;
+    function GetDisplayName(aUseSuffix: Boolean): string; override;
+
+    procedure ResetMemoryOrder; override;
 
     function IsFlags: Boolean; override;
 
@@ -1277,7 +1287,10 @@ type
 
     function GetName: string; override;
     function GetBaseName: string; override;
-    function GetDisplayName: string; override;
+    function GetDisplayName(aUseSuffix: Boolean): string; override;
+
+    procedure SetNameSuffix(const aSuffix: string); override;
+    function GetNameSuffix: string; override;
 
     function GetCheck: string; override;
     function GetValue: string; override;
@@ -1325,6 +1338,8 @@ type
     procedure Init; override;
     procedure Reset; override;
 
+    procedure ResetMemoryOrder; override;
+
     function GetElementType: TwbElementType; override;
     function IsElementRemoveable(const aElement: IwbElement): Boolean; override;
     procedure SetModified(aValue: Boolean); override;
@@ -1345,8 +1360,6 @@ type
     {--- IwbSortableContainer ---}
     function GetSorted: Boolean;
     function GetAlignable: Boolean;
-
-    function GetDisplayName: string; override;
   end;
 
   TwbStruct = class(TwbValueBase)
@@ -1660,8 +1673,6 @@ type
     {---IwbSortableContainer---}
     function GetSorted: Boolean;
     function GetAlignable: Boolean;
-
-    function GetDisplayName: string; override;
 
     {--- IwbHasSignature ---}
     function GetSignature: TwbSignature;
@@ -4761,7 +4772,8 @@ begin
     Include(cntStates, csInitOnce);
     Init;
     Include(cntStates, csInitDone);
-    ResetMemoryOrder;
+    for i := Low(cntElements) to High(cntElements) do
+      cntElements[i].MemoryOrder := i;
     ValueDef := GetValueDef;
     if Assigned(ValueDef) then
       cntElementsMap := ValueDef.GetElementMap;
@@ -4950,6 +4962,20 @@ begin
   Result := nil;
 end;
 
+function TwbContainer.GetAnyElement: IwbElement;
+var
+  SelfRef : IwbContainerElementRef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+//  if not (csInit in cntStates) then
+    DoInit;
+  if Length(cntElements) > 0 then
+    Result := cntElements[0]
+  else
+    Result := nil;
+end;
+
 function TwbContainer.GetContainerStates: TwbContainerStates;
 begin
   Result := cntStates;
@@ -5005,7 +5031,7 @@ begin
       Exit;
     end;
   for i := Low(cntElements) to High(cntElements) do
-    if SameText(cntElements[i].DisplayName, aName) then begin
+    if SameText(cntElements[i].DisplayName[True], aName) then begin
       Result := IInterface(cntElements[i]) as IwbElement;
       Exit;
     end;
@@ -5092,7 +5118,8 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+//  if not (csInit in cntStates) then
+    DoInit;
   Result := Length(cntElements);
 end;
 
@@ -6051,15 +6078,6 @@ end;
 procedure TwbRecord.InformPrevMainRecord(const aPrevMainRecord: IwbMainRecord);
 begin
   {can be overriden}
-end;
-
-procedure TwbRecord.SortBySortOrder;
-begin
-  SetModified(True);
-  if Length(cntElements) > 1 then begin
-    wbMergeSortPtr(@cntElements[1],  High(cntElements), CompareSortOrder);
-    InvalidateStorage;
-  end;
 end;
 
 function TwbRecord.GetSignature: TwbSignature;
@@ -7586,7 +7604,7 @@ begin
     Result := ' ' + Result;
 end;
 
-function TwbMainRecord.GetDisplayName: string;
+function TwbMainRecord.GetDisplayName(aUseSuffix: Boolean): string;
 var
   Rec         : IwbRecord;
   GridCoords  : IwbContainerElementRef;
@@ -10517,13 +10535,14 @@ end;
 
 function TwbSubRecord.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
 var
-  Element   : IwbElement;
-  ArrayDef  : IwbArrayDef;
-  Container : IwbContainer;
-  s         : string;
-  i         : Integer;
-  SelfRef   : IwbContainerElementRef;
-  p, q      : Pointer;
+  Element       : IwbElement;
+  ArrayDef      : IwbArrayDef;
+  Container     : IwbContainer;
+  s             : string;
+  i             : Integer;
+  SelfRef       : IwbContainerElementRef;
+  p, q          : Pointer;
+  AlignedCreate : Boolean;
 begin
   Result := nil;
 
@@ -10571,37 +10590,45 @@ begin
           end;
 
         end else begin
-          if (aIndex >= 0) and (ArrayDef.ElementCount <= 0) and ((aIndex = High(Integer)) or ArrayDef.Element.CanAssign(Self, Low(Integer), aElement.ValueDef)) then begin
-            {add one entry}
+          if (aIndex >= 0) and (ArrayDef.ElementCount <= 0) then begin
+            AlignedCreate := ( (aIndex < High(Integer)) and GetAlignable and (csSortedBySortOrder in cntStates) and not Assigned(GetElementBySortOrder(aIndex)) );
+            if AlignedCreate or ((aIndex = High(Integer)) or ArrayDef.Element.CanAssign(Self, Low(Integer), aElement.ValueDef)) then begin
+              {add one entry}
 
-            if srsSorted in srStates then
-              s := ''
-            else
-              s := '#' + IntToStr(Length(cntElements));
+              if srsSorted in srStates then
+                s := ''
+              else
+                s := '#' + IntToStr(Length(cntElements));
 
-            if (csAsCreatedEmpty in cntStates) then begin
-              SetModified(True);
-              Assert(Length(cntElements)=1);
-              Result := cntElements[0];
-              Exclude(cntStates, csAsCreatedEmpty);
-              try
-                Result.Assign(Low(Integer), aElement, aOnlySK);
-              except
-                Result := nil;
-                raise;
-              end;
-            end else begin
-              Element := nil;
-              if not Supports(aElement, IwbStringListTerminator) then
-                case ArrayDef.Element.DefType of
-                  dtArray: Element := TwbArray.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
-                  dtStruct: Element := TwbStruct.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
-                  dtStructChapter: Element := TwbChapter.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
-                  dtUnion: Element := TwbUnion.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
-                else
-                  Element := TwbValue.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+              if (csAsCreatedEmpty in cntStates) then begin
+                SetModified(True);
+                Assert(Length(cntElements)=1);
+                Result := cntElements[0];
+                Exclude(cntStates, csAsCreatedEmpty);
+                try
+                  Result.Assign(Low(Integer), aElement, aOnlySK);
+                except
+                  Result := nil;
+                  raise;
                 end;
-              Result := Element;
+              end else begin
+                Element := nil;
+                if not Supports(aElement, IwbStringListTerminator) then
+                  case ArrayDef.Element.DefType of
+                    dtArray: Element := TwbArray.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+                    dtStruct: Element := TwbStruct.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+                    dtStructChapter: Element := TwbChapter.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+                    dtUnion: Element := TwbUnion.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+                  else
+                    Element := TwbValue.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+                  end;
+                Result := Element;
+              end;
+              if AlignedCreate then begin
+                Result.SortOrder := aIndex;
+                SortBySortOrder;
+                ResetMemoryOrder;
+              end;
             end;
           end;
         end;
@@ -10655,7 +10682,7 @@ begin
   if srsIsArray in srStates then begin
     ArrayDef := srValueDef as IwbArrayDef;
     if not Assigned(aElement) then begin
-      if aIndex = High(Integer) then
+      if (aIndex = High(Integer)) or ((aIndex >= 0) and GetAlignable and (csSortedBySortOrder in cntStates) and not Assigned(GetElementBySortOrder(aIndex)) )  then
         Result := ArrayDef.ElementCount <= 0;
       Exit;
     end;
@@ -11013,7 +11040,7 @@ begin
   Result := srDef;
 end;
 
-function TwbSubRecord.GetDisplayName: string;
+function TwbSubRecord.GetDisplayName(aUseSuffix: Boolean): string;
 var
   s        : string;
   SelfRef  : IwbContainerElementRef;
@@ -11405,6 +11432,20 @@ begin
   srStates := srStates - [srsIsArray, srsIsFlags, srsSorted, srsSortInvalid];
   inherited;
 end;
+
+procedure TwbSubRecord.ResetMemoryOrder;
+var
+  SetSuffix : Boolean;
+  i         : Integer;
+begin
+  SetSuffix := [srsIsArray, srsSorted] * srStates = [srsIsArray];
+  for i := Low(cntElements) to High(cntElements) do begin
+    cntElements[i].MemoryOrder := i;
+    if SetSuffix then
+      cntElements[i].NameSuffix := '#' + i.ToString;
+  end;
+end;
+
 
 procedure TwbSubRecord.ScanData;
 begin
@@ -13576,7 +13617,7 @@ begin
   Result := nil;
 end;
 
-function TwbElement.GetDisplayName: string;
+function TwbElement.GetDisplayName(aUseSuffix: Boolean): string;
 begin
   Result := GetName;
 end;
@@ -13734,6 +13775,11 @@ begin
     if Assigned(Def) then
       Def.Used;
   end;
+  Result := '';
+end;
+
+function TwbElement.GetNameSuffix: string;
+begin
   Result := '';
 end;
 
@@ -14232,6 +14278,11 @@ begin
   end;
 end;
 
+procedure TwbElement.SetNameSuffix(const aSuffix: string);
+begin
+  {can be overriden}
+end;
+
 procedure TwbElement.SetNativeValue(const aValue: Variant);
 begin
   raise Exception.Create(GetName + ' can not be edited.');
@@ -14678,11 +14729,6 @@ end;
 function TwbSubRecordArray.GetDef: IwbNamedDef;
 begin
   Result := arcDef;
-end;
-
-function TwbSubRecordArray.GetDisplayName: string;
-begin
-  Result := inherited GetDisplayName;
 end;
 
 function TwbSubRecordArray.GetElementType: TwbElementType;
@@ -15514,11 +15560,6 @@ begin
   Result := arrSizePrefix;
 end;
 
-function TwbArray.GetDisplayName: string;
-begin
-  Result := inherited GetDisplayName;
-end;
-
 function TwbArray.GetElementType: TwbElementType;
 begin
   Result := etArray;
@@ -15547,6 +15588,19 @@ begin
   arrSorted := False;
   arrSortInvalid := False;
   inherited;
+end;
+
+procedure TwbArray.ResetMemoryOrder;
+var
+  SetSuffix : Boolean;
+  i         : Integer;
+begin
+  SetSuffix := not arrSorted;
+  for i := Low(cntElements) to High(cntElements) do begin
+    cntElements[i].MemoryOrder := i;
+    if SetSuffix then
+      cntElements[i].NameSuffix := '#' + i.ToString;
+  end;
 end;
 
 procedure TwbArray.SetModified(aValue: Boolean);
@@ -17054,7 +17108,7 @@ begin
   Result := vbValueDef;
 end;
 
-function TwbValueBase.GetDisplayName: string;
+function TwbValueBase.GetDisplayName(aUseSuffix: Boolean): string;
 var
   Resolved: IwbValueDef;
   Container: IwbDataContainer;
@@ -17077,7 +17131,7 @@ begin
     if (Resolved.DefType = dtArray) and (wbDumpOffset>1) and Supports(Self, IwbDataContainer, Container) then
       Result := Result + ' [' + IntToStr(Container.GetElementCount) + ']';
   end;
-  if vbNameSuffix <> '' then
+  if aUseSuffix and (vbNameSuffix <> '') then
     Result := Result + ' ' + vbNameSuffix;
 end;
 
@@ -17140,6 +17194,11 @@ begin
   Result := vbValueDef.Name;
   if vbNameSuffix <> '' then
     Result := Result + ' ' + vbNameSuffix;
+end;
+
+function TwbValueBase.GetNameSuffix: string;
+begin
+  Result := vbNameSuffix;
 end;
 
 function TwbValueBase.GetNativeValue: Variant;
@@ -17226,6 +17285,11 @@ begin
   end;
 end;
 
+
+procedure TwbValueBase.SetNameSuffix(const aSuffix: string);
+begin
+  vbNameSuffix := aSuffix;
+end;
 
 procedure TwbValueBase.SetNativeValue(const aValue: Variant);
 var
