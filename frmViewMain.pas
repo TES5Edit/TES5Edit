@@ -11518,6 +11518,7 @@ begin
             if Supports(TargetElement, IwbContainerElementRef, TargetContainer) then begin
               NewElement.SortOrder := TargetIndex;
               TargetContainer.SortBySortOrder;
+              TargetContainer.ResetMemoryOrder;
             end;
         end;
       end;

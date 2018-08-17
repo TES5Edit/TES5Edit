@@ -156,6 +156,11 @@ type
     procedure Add(const s: string);
   end;
 
+  TPointerArrayHelper = record helper for TArray<Pointer>
+    procedure Add(p: Pointer);
+  end;
+
+
 implementation
 
 uses
@@ -232,6 +237,16 @@ begin
   SetLength(Self, Succ(Len));
   Self[Len] := s;
 end;
+
+procedure TPointerArrayHelper.Add(p: Pointer);
+var
+  Len: Integer;
+begin
+  Len := Length(Self);
+  SetLength(Self, Succ(Len));
+  Self[Len] := p;
+end;
+
 
 function wbStripDotGhost(const aFileName: string): string;
 begin
