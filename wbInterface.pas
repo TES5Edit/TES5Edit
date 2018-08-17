@@ -25,7 +25,7 @@ uses
   Graphics;
 
 const
-  VersionString            = '3.2.36 EXTRA EXPERIMENTAL';
+  VersionString            = '3.2.37 EXTRA EXPERIMENTAL';
   wbDevCRC32App : Cardinal = $FFFFFFF6;
 
   clOrange       = $004080FF;
@@ -913,6 +913,7 @@ type
     property AdditionalElementCount: Integer
       read GetAdditionalElementCount;
 
+    procedure ResetMemoryOrder;
     procedure SortBySortOrder;
     procedure SetIsSortedBySortOrder(aForce: Boolean);
 
