@@ -453,6 +453,7 @@ type
     procedure MasterIndicesUpdated(const aOld, aNew: TwbFileIDs); override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
 
+    procedure ResetMemoryOrder; virtual;
     procedure SortBySortOrder; virtual;
     procedure SetIsSortedBySortOrder(aForce: Boolean);
     procedure CreatedEmpty;
@@ -473,6 +474,7 @@ type
     function GetDataSize: Integer; override;
     procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
+    function UpdateMemoryOrder(out aMemoryOrderElements: TArray<Pointer>): Boolean;
     procedure BuildRef; override;
     procedure MarkModifiedRecursive; override;
 
@@ -1830,6 +1832,22 @@ begin
   SortOrder2 := IwbElement(Item2).SortOrder;
 
   Result := CmpI32(SortOrder1, SortOrder2);
+end;
+
+function CompareMemoryOrder(Item1, Item2: Pointer): Integer;
+var
+  MemoryOrder1: Integer;
+  MemoryOrder2: Integer;
+begin
+  if Item1 = Item2 then begin
+    Result := 0;
+    Exit;
+  end;
+
+  MemoryOrder1 := IwbElement(Item1).MemoryOrder;
+  MemoryOrder2 := IwbElement(Item2).MemoryOrder;
+
+  Result := CmpI32(MemoryOrder1, MemoryOrder2);
 end;
 
 function CompareLoadOrder(Item1, Item2: Pointer): Integer;
@@ -4272,43 +4290,25 @@ end;
 
 procedure TwbContainer.InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
 var
-  i: Integer;
-  j: Integer;
-  k: Integer;
-  l: Integer;
-  m: Integer;
-  n: Integer;
-  SelfRef : IwbContainerElementRef;
+  SelfRef             : IwbContainerElementRef;
+  MemoryOrderElements : TArray<Pointer>;
+  ElementPtrs         : PwbPointerArray;
+  i                   : Integer;
 begin
   SelfRef := Self as IwbContainerElementRef;
 
   DoInit;
-  m := Low(Integer);
-  for l := Low(cntElements) to High(cntElements) do
-    if cntElements[l].MemoryOrder > m then
-      m := cntElements[l].MemoryOrder;
-  for l := Low(cntElements) to High(cntElements) do
-    if cntElements[l].MemoryOrder = Low(Integer) then begin
-      cntElements[l].MemoryOrder := m + 1;
-      Inc(m);
-    end;
-  m := Low(Integer);
-  k := Low(Integer);
-  for i := Low(cntElements) to High(cntElements) do begin
-    n := k;
-    j := High(Integer);
-    for l := Low(cntElements) to High(cntElements) do begin
-      if (m<cntElements[l].MemoryOrder) and (cntElements[l].MemoryOrder < j) then begin
-        k := l;
-        j := cntElements[l].MemoryOrder;
-      end;
-    end;
-    Assert(k <= High(cntElements));
-    Assert(k >= Low(cntElements));
-    Assert(k <> n);
-    m := cntElements[k].MemoryOrder;
-    cntElements[k].InformStorage(aBasePtr, aEndPtr);
-  end;
+
+  if Length(cntElements) < 1 then
+    Exit;
+
+  if UpdateMemoryOrder(MemoryOrderElements) then
+    ElementPtrs := @MemoryOrderElements[0]
+  else
+    ElementPtrs := @cntElements[0];
+
+  for i := Low(cntElements) to High(cntElements) do
+    IwbElement(ElementPtrs[i]).InformStorage(aBasePtr, aEndPtr);
 end;
 
 procedure TwbContainer.InsertElement(aPosition: Integer; const aElement: IwbElement);
@@ -4761,8 +4761,7 @@ begin
     Include(cntStates, csInitOnce);
     Init;
     Include(cntStates, csInitDone);
-    for i := Low(cntElements) to High(cntElements) do
-      cntElements[i].MemoryOrder := i;
+    ResetMemoryOrder;
     ValueDef := GetValueDef;
     if Assigned(ValueDef) then
       cntElementsMap := ValueDef.GetElementMap;
@@ -5349,53 +5348,25 @@ end;
 
 procedure TwbContainer.MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer);
 var
-  i: Integer;
-  j: Integer;
-  k: Integer;
-  l: Integer;
-  m: Integer;
-  n: Integer;
-  SelfRef : IwbContainerElementRef;
+  SelfRef             : IwbContainerElementRef;
+  MemoryOrderElements : TArray<Pointer>;
+  ElementPtrs         : PwbPointerArray;
+  i                   : Integer;
 begin
   SelfRef := Self as IwbContainerElementRef;
 
   DoInit;
-  If GetElementType in SortedElementTypes then
-    begin
-      m := Low(Integer);
-      for l := Low(cntElements) to High(cntElements) do
-        if (cntElements[l].MemoryOrder > m) and not Supports(cntElements[l], IwbStringListTerminator) then
-          m := cntElements[l].MemoryOrder;
-      for l := Low(cntElements) to High(cntElements) do
-        if cntElements[l].MemoryOrder = Low(Integer) then begin
-          cntElements[l].MemoryOrder := m + 1;
-          Inc(m);
-        end;
-      for l := Low(cntElements) to High(cntElements) do
-        if Supports(cntElements[l], IwbStringListTerminator) then
-          cntElements[l].MemoryOrder := m+1;
-      m := Low(Integer);
-      k := Low(Integer);
-      for i := Low(cntElements) to High(cntElements) do begin
-        n := k;
-        j := High(Integer);
-        for l := Low(cntElements) to High(cntElements) do begin
-          if (m<cntElements[l].MemoryOrder) and (cntElements[l].MemoryOrder < j) then begin
-            k := l;
-            j := cntElements[l].MemoryOrder;
-          end;
-        end;
-        Assert(k <= High(cntElements));
-        Assert(k >= Low(cntElements));
-        if k = n then
-          Assert(k <> n);
-        m := cntElements[k].MemoryOrder;
-        cntElements[k].MergeStorage(aBasePtr, aEndPtr);
-      end;
-    end
+
+  if Length(cntElements) < 1 then
+    Exit;
+
+  if UpdateMemoryOrder(MemoryOrderElements) then
+    ElementPtrs := @MemoryOrderElements[0]
   else
-    for l := Low(cntElements) to High(cntElements) do
-      cntElements[l].MergeStorage(aBasePtr, aEndPtr);
+    ElementPtrs := @cntElements[0];
+
+  for i := Low(cntElements) to High(cntElements) do
+    IwbElement(ElementPtrs[i]).MergeStorage(aBasePtr, aEndPtr);
 end;
 
 procedure TwbContainer.MoveElementDown(const aElement: IwbElement);
@@ -5416,6 +5387,7 @@ begin
       InvalidateStorage;
       cntElements[i] := cntElements[Succ(i)];
       cntElements[Succ(i)] := aElement as IwbElementInternal;
+      ResetMemoryOrder;
       Exit;
     end;
 end;
@@ -5438,6 +5410,7 @@ begin
       InvalidateStorage;
       cntElements[i] := cntElements[Pred(i)];
       cntElements[Pred(i)] := aElement as IwbElementInternal;
+      ResetMemoryOrder;
       Exit;
     end;
 end;
@@ -5760,6 +5733,14 @@ begin
     cntElements[i].ResetConflict;
 end;
 
+procedure TwbContainer.ResetMemoryOrder;
+var
+  i : Integer;
+begin
+  for i := Low(cntElements) to High(cntElements) do
+    cntElements[i].MemoryOrder := i;
+end;
+
 procedure TwbContainer.ResetReachable;
 var
   i       : Integer;
@@ -5904,6 +5885,77 @@ begin
     InvalidateStorage;
   end;
   Include(cntStates, csSortedBySortOrder);
+end;
+
+function TwbContainer.UpdateMemoryOrder(out aMemoryOrderElements: TArray<Pointer>): Boolean;
+var
+  i: Integer;
+  j: Integer;
+
+  l: Integer;
+  m: Integer;
+  n: Integer;
+
+  NeedsSort : Boolean;
+
+  Terminators : TArray<Pointer>;
+begin
+  Result := False;
+  aMemoryOrderElements := nil;
+  Terminators := nil;
+  if Length(cntElements) < 1 then
+    Exit;
+  If not (GetElementType in SortedElementTypes) then
+    Exit;
+
+  m := Low(Integer);
+  i := -1;
+  j := -2;
+  NeedsSort := False;
+  for l := Low(cntElements) to High(cntElements) do begin
+    if Supports(cntElements[l], IwbStringListTerminator) then
+      Terminators.Add(cntElements[l])
+    else begin
+      n := cntElements[l].MemoryOrder;
+      if n > m then
+        m := n
+      else begin
+        NeedsSort := True;
+        if n = Low(Integer) then begin
+          if i < 0 then
+            i := l;
+          j := l;
+        end;
+      end;
+    end;
+  end;
+
+  if m = Low(Integer) then
+    m := -1;
+
+  for l := i to j do
+    if cntElements[l].MemoryOrder = Low(Integer) then begin
+      Inc(m);
+      cntElements[l].MemoryOrder := m;
+    end;
+
+  for l := Low(Terminators) to High(Terminators) do begin
+    Inc(m);
+    if IwbElement(Terminators[i]).MemoryOrder <> m then
+      NeedsSort := True;
+    IwbElement(Terminators[i]).MemoryOrder := m;
+  end;
+
+  if Length(cntElements) < 2 then
+    NeedsSort := False;
+
+  if NeedsSort then begin
+    l := Length(cntElements);
+    SetLength(aMemoryOrderElements, l);
+    Move(cntElements[0], aMemoryOrderElements[0], l * SizeOf(Pointer));
+    wbMergeSortPtr(@aMemoryOrderElements[0], l, CompareMemoryOrder);
+    Result := True;
+  end;
 end;
 
 procedure TwbContainer.WriteToStreamInternal(aStream: TStream; aResetModified: Boolean);
