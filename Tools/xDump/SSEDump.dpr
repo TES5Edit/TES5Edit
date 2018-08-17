@@ -855,12 +855,12 @@ end;
 
 var
   NeedsSyntaxInfo : Boolean;
-  s, s2           : string;
+  s {, s2}        : string;
   i,j             : integer;
   c               : Integer;
   _File           : IwbFile;
   Masters         : TStringList;
-  F               : TSearchRec;
+//  F               : TSearchRec;
   n,m             : TStringList;
   Pass            : TwbExportPass;
 begin
