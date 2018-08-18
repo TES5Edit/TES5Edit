@@ -159,7 +159,7 @@ begin
     Container := aSource.Container;
     if Assigned(Container) then begin
       if Supports(Container, IwbMainRecord, MainRecord) then
-        Container := MainRecord.HighestOverrideOrSelf[aFile.LoadOrder];
+        Container := MainRecord.HighestOverrideVisibleForFile[aFile];
       Target := wbCopyElementToFile(Container, aFile, False, False, aPrefixRemove, aPrefix, aSuffix)
     end else begin
       Result := aFile;
@@ -672,6 +672,7 @@ type
     function GetMasterCount: Integer; inline;
     function GetRecordByFormID(aFormID: TwbFormID; aAllowInjected: Boolean): IwbMainRecord;
     function GetRecordByEditorID(const aEditorID: string): IwbMainRecord;
+    function GetContainedRecordByLoadOrderFormID(aFormID: TwbFormID): IwbMainRecord;
     function GetGroupBySignature(const aSignature: TwbSignature): IwbGroupRecord;
     function HasGroup(const aSignature: TwbSignature): Boolean;
     function GetFileStates: TwbFileStates; inline;
@@ -1067,6 +1068,7 @@ type
     function GetIsWinningOverride: Boolean;
     function GetWinningOverride: IwbMainRecord;
     function GetHighestOverrideOrSelf(aMaxLoadOrder: Integer): IwbMainRecord;
+    function GetHighestOverrideVisibleForFile(const aFile: IwbFile): IwbMainRecord;
     function GetFlags: TwbMainRecordStructFlags;
     function GetFlagsPtr: PwbMainRecordStructFlags;
     function GetChildGroup: IwbGroupRecord;
@@ -3054,6 +3056,42 @@ begin
       ceiGeneration := 0;
     end;
   end;
+end;
+
+function TwbFile.GetContainedRecordByLoadOrderFormID(aFormID: TwbFormID): IwbMainRecord;
+
+  function LoadOrderToFile(const aFileID: TwbFileID): TwbFileID;
+  var
+    i: Integer;
+  begin
+    if aFileID = flLoadOrderFileID then
+      if fsIsCompareLoad in flStates then
+        Exit(TwbFileID.Create(Pred(GetMasterCount)))
+      else
+        Exit(TwbFileID.Create(GetMasterCount))
+    else
+      for i := Pred(GetMasterCount) downto 0 do
+        if flMasters[i].LoadOrderFileID = aFileID then
+          Exit(TwbFileID.Create(i));
+    Result := TwbFileID.Invalid;
+  end;
+
+var
+  i          : Integer;
+  FileID     : TwbFileID;
+begin
+  Result := nil;
+
+  FileID :=  LoadOrderToFile(aFormID.FileID);
+  if not FileID.IsValid then
+    Exit;
+
+  aFormID.FileID := FileID;
+
+  if FindFormID(aFormID, i) then
+    Result := flRecords[i]
+  else if (FileID.FullSlot >= GetMasterCount) and FindInjectedID(aFormID, i) then
+    Result := flInjectedRecords[i];
 end;
 
 function TwbFile.GetCRC32: TwbCRC32;
@@ -8059,6 +8097,31 @@ begin
     end;
 end;
 
+function TwbMainRecord.GetHighestOverrideVisibleForFile(const aFile: IwbFile): IwbMainRecord;
+var
+  MainRecord : IwbMainRecord;
+  i          : Integer;
+  FormID     : TwbFormID;
+  _File      : IwbFile;
+begin
+  FormID := GetLoadOrderFormID;
+  Result := Self;
+  if aFile.LoadOrder > GetFile.LoadOrder then begin
+    MainRecord := aFile.ContainedRecordByLoadOrderFormID[FormID];
+    if Assigned(MainRecord) then
+      Result := MainRecord
+    else
+      for i := Pred(aFile.MasterCount) downto 0 do begin
+        _File := aFile.Masters[i];
+        if _File.LoadOrder > Result._File.LoadOrder then begin
+          MainRecord := _File.ContainedRecordByLoadOrderFormID[FormID];
+          if Assigned(MainRecord) then
+            Result := MainRecord;
+        end;
+      end;
+  end;
+end;
+
 function TwbMainRecord.GetInjectionSourceFiles: TDynFiles;
 var
   i, j, k : Integer;
@@ -11765,7 +11828,7 @@ begin
           MainRecord := GroupRecord.ChildrenOf;
           if not Assigned(MainRecord) then
             raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-          MainRecord := MainRecord.HighestOverrideOrSelf[GetFile.LoadOrder];
+          MainRecord := MainRecord.HighestOverrideVisibleForFile[GetFile];
           MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix) as IwbMainRecord;
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
@@ -11809,7 +11872,7 @@ begin
           MainRecord := GroupRecord.ChildrenOf;
           if not Assigned(MainRecord) then
             raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-          MainRecord := MainRecord.HighestOverrideOrSelf[GetFile.LoadOrder];
+          MainRecord := MainRecord.HighestOverrideVisibleForFile[GetFile];
           MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix) as IwbMainRecord;
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
@@ -11830,7 +11893,7 @@ begin
           MainRecord := GroupRecord.ChildrenOf;
           if not Assigned(MainRecord) then
             raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-          MainRecord := MainRecord.HighestOverrideOrSelf[GetFile.LoadOrder];
+          MainRecord := MainRecord.HighestOverrideVisibleForFile[GetFile];
           MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix) as IwbMainRecord;
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
@@ -11905,7 +11968,7 @@ begin
           MainRecord := GroupRecord.ChildrenOf;
           if not Assigned(MainRecord) then
             raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-          MainRecord := MainRecord.HighestOverrideOrSelf[GetFile.LoadOrder];
+          MainRecord := MainRecord.HighestOverrideVisibleForFile[GetFile];
           MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix) as IwbMainRecord;
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
@@ -11982,7 +12045,7 @@ begin
           MainRecord := GroupRecord.ChildrenOf;
           if not Assigned(MainRecord) then
             raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-          MainRecord := MainRecord.HighestOverrideOrSelf[GetFile.LoadOrder];
+          MainRecord := MainRecord.HighestOverrideVisibleForFile[GetFile];
           MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix) as IwbMainRecord;
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
@@ -12094,7 +12157,7 @@ begin
         MainRecord := GroupRecord.ChildrenOf;
         if not Assigned(MainRecord) then
           raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-        MainRecord := MainRecord.HighestOverrideOrSelf[GetFile.LoadOrder];
+        MainRecord := MainRecord.HighestOverrideVisibleForFile[GetFile];
         MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix) as IwbMainRecord;
         Assert(Assigned(MainRecord));
         Result := MainRecord.ChildGroup;
