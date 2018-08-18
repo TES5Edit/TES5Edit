@@ -703,6 +703,9 @@ type
     procedure SetToDefault;
     procedure SetToDefaultIfAsCreatedEmpty;
 
+    function BeginUpdate: Integer;
+    function EndUpdate: Integer;
+
     procedure NotifyChanged(aContainer: Pointer);
 
     function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
