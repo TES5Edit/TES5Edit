@@ -1354,6 +1354,7 @@ type
 
     function GetDataPrefixSize: Integer; override;
     procedure CheckCount;
+    procedure NotifyChangedInternal(aContainer: Pointer); override;
 
     function CanMoveElement: Boolean; override;
 
@@ -15471,6 +15472,9 @@ var
   UpdateCount : Integer;
   ArrayDef    : IwbArrayDef;
 begin
+  if eUpdateCount > 0 then
+    Exit; {will be checked in NotifyChangedInternal}
+
   if arrSizePrefix = 0 then
     Exit;
 
@@ -15498,6 +15502,9 @@ var
   i        : Integer;
   ArrayDef : IwbArrayDef;
 begin
+  if eUpdateCount > 0 then
+    Exit; {will be checked in NotifyChangedInternal}
+
   ArrayDef := vbValueDef as IwbArrayDef;
   if not ArrayDef.IsVariableSize then
     Exit;
@@ -15573,6 +15580,15 @@ end;
 function TwbArray.IsElementRemoveable(const aElement: IwbElement): Boolean;
 begin
   Result := IsElementEditable(aElement) and ((vbValueDef as IwbArrayDef).ElementCount <= 0) { and (Length(cntElements)>1)};
+end;
+
+procedure TwbArray.NotifyChangedInternal(aContainer: Pointer);
+begin
+  if esModified in eStates then begin
+    CheckCount;
+    CheckTerminator;
+  end;
+  inherited;
 end;
 
 procedure TwbArray.PrepareSave;
