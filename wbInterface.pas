@@ -65,6 +65,7 @@ threadvar
   _wbProgressCallback : TwbProgressCallback;
   wbCurrentTick       : UInt64;
   wbCurrentAction     : string;
+  wbCurrentProgress   : string;
   wbStartTime         : TDateTime;
   wbShowStartTime     : Integer;
 
@@ -3594,10 +3595,10 @@ function _wbRecordDefMap: TStringList;
 
 function wbProgressLock: Integer;
 function wbProgressUnlock: Integer;
-function wbHasProgressCallback: Boolean;
-procedure wbProgressCallback(const aStatus: string = '');
-procedure wbProgress(const aStatus: string = ''); overload;
-procedure wbProgress(const aStatus: string; const aArgs: array of const); overload;
+function wbHasProgressCallback(aForce: Boolean = False): Boolean;
+procedure wbProgressCallback(const aStatus: string = ''; aForce: Boolean = False);
+procedure wbProgress(const aStatus: string = ''; aForce: Boolean = False); overload;
+procedure wbProgress(const aStatus: string; const aArgs: array of const; aForce: Boolean = False); overload;
 procedure wbTick;
 
 function Lighter(Color: TColor; Amount: Double = 0.5): TColor;
@@ -3784,26 +3785,26 @@ begin
   Dec(_ProgressLockCount);
 end;
 
-function wbHasProgressCallback: Boolean;
+function wbHasProgressCallback(aForce: Boolean = False): Boolean;
 begin
-  Result := (_ProgressLockCount < 1) and Assigned(_wbProgressCallback);
+  Result := ((_ProgressLockCount < 1) or aForce) and Assigned(_wbProgressCallback);
 end;
 
-procedure wbProgressCallback(const aStatus: string);
+procedure wbProgressCallback(const aStatus: string; aForce: Boolean);
 begin
-  if wbHasProgressCallback then
+  if wbHasProgressCallback(aForce) then
     _wbProgressCallback(aStatus);
 end;
 
-procedure wbProgress(const aStatus: string = '');
+procedure wbProgress(const aStatus: string = ''; aForce: Boolean = False);
 begin
-  if wbHasProgressCallback then
+  if wbHasProgressCallback(aForce) then
     _wbProgressCallback(aStatus);
 end;
 
-procedure wbProgress(const aStatus: string; const aArgs: array of const);
+procedure wbProgress(const aStatus: string; const aArgs: array of const; aForce: Boolean = False);
 begin
-  if wbHasProgressCallback then
+  if wbHasProgressCallback(aForce) then
     _wbProgressCallback(Format(aStatus, aArgs));
 end;
 

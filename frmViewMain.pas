@@ -684,11 +684,11 @@ type
 
     function SetAllToMaster: Boolean;
     function RestorePluginsFromMaster: Boolean;
-    procedure ApplyScript(aScript: string);
+    procedure ApplyScript(const aScriptName: string; aScript: string);
     procedure CreateActionsForScripts;
     function LOManagersDirtyInfo(const aInfo: TLOOTPluginInfo): string;
 
-    procedure PerformLongAction(const aDesc: string; const aAction: TProc);
+    procedure PerformLongAction(const aDesc, aProgress: string; const aAction: TProc);
     procedure PerformActionOnSelectedFiles(const aDesc: string; const aAction: TProc<IwbFile>);
 
     procedure LoadModGroupsSelection(const aModGroups: TwbModGroupPtrs);
@@ -1050,6 +1050,8 @@ begin
 end;
 
 procedure GeneralProgressNoAbortCheck(const s: string);
+var
+  t: string;
 begin
   if s <> '' then
     if wbShowStartTime > 0 then
@@ -1057,8 +1059,24 @@ begin
     else
       frmMain.PostAddMessage(s);
   if LastUpdate + 500 < GetTickCount64 then begin
-    if wbCurrentAction <> '' then
-      frmMain.Caption := '['+wbCurrentAction+'] Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+    if (wbCurrentAction <> '') or (wbCurrentProgress <> '') or (wbShowStartTime > 0) then begin
+      t := wbCurrentProgress;
+      if wbShowStartTime > 0 then begin
+        if t <> '' then
+          t := t + ', ';
+        t := t + 'Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+      end;
+
+      if wbCurrentAction <> '' then begin
+        if t <> '' then
+          t := ' ' + t;
+        t := '['+wbCurrentAction+']' + t;
+      end;
+
+      if t <> '' then
+        frmMain.Caption := t;
+    end;
+
     DoProcessMessages;
     LastUpdate := GetTickCount64;
   end;
@@ -1294,7 +1312,7 @@ end;
 procedure TfrmMain.acScriptExecute(Sender: TObject);
 var
   i: integer;
-  s: string;
+  s, t: string;
 begin
   if not Assigned(Sender) then
     Exit;
@@ -1303,14 +1321,16 @@ begin
   if i >= ScriptHotkeys.Count then
     Exit;
 
+  t := ScriptHotkeys[i];
   with TStringList.Create do try
-    LoadFromFile(ScriptHotkeys[i]);
+    LoadFromFile(t);
     s := Text;
   finally
     Free;
   end;
 
-  ApplyScript(s);
+  t := ChangeFileExt(ExtractFileName(t), '');
+  ApplyScript(t, s);
 end;
 
 procedure TfrmMain.AddFile(const aFile: IwbFile);
@@ -3853,7 +3873,7 @@ begin
     with TStringList.Create do try
       LoadFromFile(wbScriptToRun);
       SelectRootNodes(vstNav);
-      ApplyScript(Text);
+      ApplyScript(ChangeFileExt(ExtractFileName(wbScriptToRun),''), Text);
     finally
       Free;
     end;
@@ -6466,7 +6486,7 @@ begin
           s := 'Add '+sl[0]+' as new master to ' + _File.Name
         else
           s := 'Add '+sl.Count.ToString+' new masters to ' + _File.Name;
-        PerformLongAction(s, procedure begin
+        PerformLongAction(s, '', procedure begin
           _File.AddMasters(sl);
         end);
       end;
@@ -6476,7 +6496,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.ApplyScript(aScript: string);
+procedure TfrmMain.ApplyScript(const aScriptName: string; aScript: string);
 const
   sJustWait                   = 'Applying script. Please wait...';
   sTerminated                 = 'Script terminated itself, Result=';
@@ -6546,90 +6566,97 @@ begin
     jvi.Pas.Text := aScript;
     jvi.Compile;
 
-    if bShowMessages then pgMain.ActivePage := tbsMessages;
+    if bShowMessages then
+      pgMain.ActivePage := tbsMessages;
+
     Selection := vstNav.GetSortedSelection(True);
-    vstNav.BeginUpdate;
+
+    if not bShowMessages then
+      wbProgressLock;
     try
-
-    try
-      StartTick := GetTickCount64;
-      wbStartTime := Now;
-
-      Enabled := False;
-
-      if bShowMessages then AddMessage('Applying script...');
-      DoProcessMessages;
-
-      if jvi.FunctionExists('', 'Initialize') then begin
-        jvi.CallFunction('Initialize', nil, []);
-        if jvi.VResult <> 0 then begin
-          if bShowMessages then PostAddMessage(sTerminated + IntToStr(jvi.VResult));
-          Exit;
-        end;
-      end;
-
-      // skip selected records iteration if Process() function doesn't exist
-      if jvi.FunctionExists('', 'Process') then
-      for i := Low(Selection) to High(Selection) do begin
-        StartNode := Selection[i];
-        if Assigned(StartNode) then begin
-          Node := vstNav.GetLast(StartNode);
-          if not Assigned(Node) then
-            Node := StartNode;
-        end else
-          Node := nil;
-        while Assigned(Node) do begin
-          NextNode := vstNav.GetPrevious(Node);
-          NodeData := vstNav.GetNodeData(Node);
-
-          if Assigned(NodeData.Element) then
-            if NodeData.Element.ElementType in ScriptProcessElements then begin
-              jvi.CallFunction('Process', nil, [NodeData.Element]);
+      if aScriptName <> '' then
+        s := 'Applying script "'+aScriptName+'"'
+      else
+        s := 'Applying script';
+      PerformLongAction(s, '', procedure
+      var
+        i: Integer;
+      begin
+        vstNav.BeginUpdate;
+        try
+          try
+            if jvi.FunctionExists('', 'Initialize') then begin
+              jvi.CallFunction('Initialize', nil, []);
               if jvi.VResult <> 0 then begin
-                if bShowMessages then PostAddMessage(sTerminated + IntToStr(jvi.VResult));
+                wbProgress(sTerminated + IntToStr(jvi.VResult));
                 Exit;
               end;
-              Inc(Count);
             end;
 
-          if Node = StartNode then
-            Node := nil
-          else
-            Node := NextNode;
+            // skip selected records iteration if Process() function doesn't exist
+            if jvi.FunctionExists('', 'Process') then
+              for i := Low(Selection) to High(Selection) do begin
+                StartNode := Selection[i];
+                if Assigned(StartNode) then begin
+                  Node := vstNav.GetLast(StartNode);
+                  if not Assigned(Node) then
+                    Node := StartNode;
+                end else
+                  Node := nil;
+                while Assigned(Node) do begin
+                  NextNode := vstNav.GetPrevious(Node);
+                  NodeData := vstNav.GetNodeData(Node);
 
-          if StartTick + 500 < GetTickCount64 then begin
-            Caption := sJustWait + ' Processed Records: ' + IntToStr(Count) +
-              ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-            DoProcessMessages;
-            StartTick := GetTickCount64;
+                  if Assigned(NodeData.Element) then
+                    if NodeData.Element.ElementType in ScriptProcessElements then begin
+                      if not bShowMessages then
+                        wbProgressUnlock;
+                      try
+                        jvi.CallFunction('Process', nil, [NodeData.Element]);
+                      finally
+                        if not bShowMessages then
+                          wbProgressLock;
+                      end;
+                      if jvi.VResult <> 0 then begin
+                        wbProgress(sTerminated + IntToStr(jvi.VResult));
+                        Exit;
+                      end;
+                      Inc(Count);
+                      wbCurrentProgress := 'Processed Records: ' + Count.ToString;
+                    end;
+
+                  if Node = StartNode then
+                    Node := nil
+                  else
+                    Node := NextNode;
+
+                  wbTick;
+                end;
+              end;
+
+            if jvi.FunctionExists('', 'Finalize') then begin
+              jvi.CallFunction('Finalize', nil, []);
+              if jvi.VResult <> 0 then begin
+                wbProgress(sTerminated + IntToStr(jvi.VResult));
+                Exit;
+              end;
+            end;
+
+          except
+            on E: Exception do begin
+              if Assigned(jvi.LastError) then
+                wbProgress('Exception in unit ' + jvi.LastError.ErrUnitName + ' line ' + IntToStr(jvi.LastError.ErrLine) + ': ' + E.Message, True);
+              raise;
+            end;
           end;
+
+        finally
+          vstNav.EndUpdate;
         end;
-      end;
-
-      if jvi.FunctionExists('', 'Finalize') then begin
-        jvi.CallFunction('Finalize', nil, []);
-        if jvi.VResult <> 0 then begin
-          if bShowMessages then PostAddMessage(sTerminated + IntToStr(jvi.VResult));
-          Exit;
-        end;
-      end;
-
-    except
-      on E: Exception do begin
-        if Assigned(jvi.LastError) then
-          PostAddMessage('Exception in unit ' + jvi.LastError.ErrUnitName + ' line ' + IntToStr(jvi.LastError.ErrLine) + ': ' + E.Message)
-        else
-          PostAddMessage(E.Message);
-        raise;
-      end;
-    end;
-
+      end);
     finally
-      vstNav.EndUpdate;
-      Enabled := True;
-      Caption := Application.Title;
-      if bShowMessages then PostAddMessage('[Apply Script done] ' + ' Processed Records: ' + IntToStr(Count) +
-        ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
+      if not bShowMessages then
+        wbProgressUnlock;
     end;
 
     InvalidateElementsTreeView(NoNodes);
@@ -6665,6 +6692,7 @@ end;
 
 procedure TfrmMain.mniNavApplyScriptClick(Sender: TObject);
 var
+  ScriptName: string;
   Scr: string;
 begin
   with TfrmScript.Create(Self) do try
@@ -6674,6 +6702,7 @@ begin
     if ShowModal <> mrOK then
       Exit;
     Scr := Script;
+    ScriptName := LastUsedScript;
     Settings.WriteString('View', 'LastUsedScript', LastUsedScript);
     Settings.WriteBool('View', 'IncludeScriptsFromSubDir', chkScriptsSubDir.Checked);
     Settings.UpdateFile;
@@ -6681,7 +6710,7 @@ begin
   finally
     Free;
   end;
-  ApplyScript(Scr);
+  ApplyScript(ScriptName, Scr);
 end;
 
 procedure TfrmMain.CreateActionsForScripts;
@@ -7404,7 +7433,7 @@ end;
 
 procedure TfrmMain.mniNavBuildReachableClick(Sender: TObject);
 begin
-  PerformLongAction('Building reachable information', procedure
+  PerformLongAction('Building reachable information', '', procedure
   var
     i       : Integer;
     _File   : IwbFile;
@@ -7458,7 +7487,7 @@ begin
     if Length(SelectedModules) < 1 then
       Exit;
 
-    PerformLongAction('Building reference information', procedure
+    PerformLongAction('Building reference information', '', procedure
     var
       i: Integer;
       _File                       : IwbFile;
@@ -11493,7 +11522,7 @@ begin
   if Length(Files) > 0 then begin
     if not EditWarn then
       Exit;
-    PerformLongAction(aDesc, procedure
+    PerformLongAction(aDesc, '', procedure
     var
       i: Integer;
     begin
@@ -11556,24 +11585,32 @@ begin
   end;
 end;
 
-procedure TfrmMain.PerformLongAction(const aDesc: string; const aAction: TProc);
+procedure TfrmMain.PerformLongAction(const aDesc, aProgress: string; const aAction: TProc);
 var
-  HadTick    : Boolean;
-  WasEnabled : Boolean;
-  PrevAction : string;
+  HadTick      : Boolean;
+  WasEnabled   : Boolean;
+  PrevCaption  : string;
+  PrevAction   : string;
+  PrevProgress : string;
+  lStartTime   : TDateTime;
+  s: string;
 begin
+  lStartTime := Now;
   if wbShowStartTime < 1 then
-    wbStartTime := Now;
+    wbStartTime := lStartTime;
   WasEnabled := Enabled;
   HadTick := wbCurrentTick > 0;
 
   wbCurrentTick := GetTickCount64;
   Inc(wbShowStartTime);
+  PrevCaption := Caption;
   PrevAction := wbCurrentAction;
+  PrevProgress := wbCurrentProgress;
   Enabled := False;
   try
     pgMain.ActivePage := tbsMessages;
     wbCurrentAction := aDesc;
+    wbCurrentProgress := aProgress;
     if wbCurrentAction <> '' then
       wbProgress('Start: ' + wbCurrentAction);
     try
@@ -11594,17 +11631,23 @@ begin
         raise;
       end;
     end;
-    if aDesc <> '' then
-      wbProgress('Done: ' + aDesc);
+    if aDesc <> '' then begin
+      s := 'Done: ' + aDesc;
+      if wbCurrentProgress <> '' then
+        s := s + ', ' + wbCurrentProgress;
+      s := s + ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - lStartTime);
+      wbProgress(s);
+    end;
   finally
     Enabled := WasEnabled;
     wbCurrentAction := PrevAction;
+    wbCurrentProgress := PrevProgress;
     Dec(wbShowStartTime);
     if HadTick then
       wbCurrentTick := GetTickCount64
     else
       wbCurrentTick := 0;
-    Caption := Application.Title;
+    Caption := PrevCaption;
   end;
 end;
 
@@ -16272,9 +16315,8 @@ begin
   end
   else if SameText(Identifier, 'AddMessage') then begin
     if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
-      AddMessage(Args.Values[0]);
+      wbProgress(Args.Values[0]);
       Done := True;
-      DoProcessMessages;
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
   end
