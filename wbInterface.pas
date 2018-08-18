@@ -120,6 +120,7 @@ var
   wbEditInfoUseShortName   : Boolean  = False;
   wbDevMode                : Boolean  = True;
   wbStripEmptyMasters      : Boolean  = False;
+  wbAlwaysSorted           : Boolean  = False;
 
   wbPluginsFileName    : String;
   wbModGroupFileName   : string;
