@@ -664,6 +664,21 @@ begin
     Element.SetToDefault;
 end;
 
+procedure IwbElement_BeginUpdate(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Value := Element.BeginUpdate;
+end;
+
+procedure IwbElement_EndUpdate(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Value := Element.EndUpdate;
+end;
 
 procedure _wbCopyElementToFile(var Value: Variant; Args: TJvInterpreterArgs);
 var
@@ -1906,6 +1921,8 @@ begin
     AddFunction(cUnit, 'BuildRef', IwbElement_BuildRef, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'MarkModifiedRecursive', IwbElement_MarkModifiedRecursive, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetToDefault', IwbElement_SetToDefault, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'BeginUpdate', IwbElement_BeginUpdate, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'EndUpdate', IwbElement_EndUpdate, 1, [varEmpty], varEmpty);
 
     { IwbContainer }
     AddFunction(cUnit, 'GetElementEditValues', IwbContainer_GetElementEditValues, 2, [varEmpty, varString], varEmpty);
