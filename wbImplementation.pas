@@ -474,7 +474,7 @@ type
     procedure ResetReachable; override;
 
     procedure DoReset(aForce: Boolean); override;
-    procedure DoInit; virtual;
+    procedure DoInit(aNeedSorted: Boolean); virtual;
 
     function HasErrors: Boolean; override;
 
@@ -1209,7 +1209,7 @@ type
     procedure InitDataPtr; override;
     procedure ScanData; override;
 
-    procedure DoInit; override;
+    procedure DoInit(aNeedSorted: Boolean); override;
     procedure Init; override;
     procedure Reset; override;
 
@@ -1334,7 +1334,7 @@ type
     arrSortInvalid   : Boolean;
     arrSizePrefix    : Integer;
   protected
-    procedure DoInit; override;
+    procedure DoInit(aNeedSorted: Boolean); override;
     procedure Init; override;
     procedure Reset; override;
 
@@ -1654,7 +1654,7 @@ type
     procedure DoProcess(const aContainer : IwbContainer;
                               aPos       : Integer);
 
-    procedure DoInit; override;
+    procedure DoInit(aNeedSorted: Boolean); override;
 
     function GetName: string; override;
     function GetDef: IwbNamedDef; override;
@@ -3113,7 +3113,7 @@ var
   i: Integer;
 begin
   SelfRef := Self;
-  DoInit;
+  DoInit(False);
 
   for i := Low(cntElements) to High(cntElements) do
     if Supports(cntElements[i], IwbGroupRecord, Result) and
@@ -3134,7 +3134,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self;
-  DoInit;
+  DoInit(True);
 
   if (Length(cntElements) > 0) and
      (Supports(cntElements[0], IwbMainRecord, Result)) and
@@ -3482,7 +3482,7 @@ var
   Mask         : Cardinal;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
 
   if Length(cntElements) < 1 then
     raise Exception.Create('File '+GetFileName+' has no file header');
@@ -3552,7 +3552,7 @@ var
   FileFileID: TwbFileID;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
 
   if Length(cntElements) < 1 then
     raise Exception.Create('File '+GetFileName+' has no file header');
@@ -4309,7 +4309,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit;
+  DoInit(True);
 
   if Length(cntElements) < 1 then
     Exit;
@@ -4455,7 +4455,7 @@ begin
     if not IwbContainer(eContainer).IsElementEditable(Self) then
       Exit;
 
-  DoInit;
+  DoInit(True);
 
   if inherited CanAssignInternal(aIndex, aElement, False) then
     Result := inherited AssignInternal(aIndex, aElement, aOnlySK);
@@ -4567,7 +4567,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
   Include(cntStates, csRefsBuild);
   for i := Low(cntElements) to High(cntElements) do
     if cntElements[i].CanContainFormIDs then
@@ -4604,7 +4604,7 @@ begin
 
   Result := inherited CanAssignInternal(aIndex, aElement, aCheckDontShow);
 
-  DoInit;
+  DoInit(True);
 
   if not Result and (aIndex = Low(Integer)) and (Length(cntElements) > 0) then begin
 
@@ -4730,7 +4730,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
   Result := False;
   for i := Low(cntElements) to High(cntElements) do
     if cntElements[i].CanContainFormIDs then
@@ -4753,7 +4753,7 @@ begin
   inherited;
 end;
 
-procedure TwbContainer.DoInit;
+procedure TwbContainer.DoInit(aNeedSorted: Boolean);
 var
   i        : Integer;
   ValueDef : IwbValueDef;
@@ -4941,7 +4941,7 @@ var
 begin
   inherited;
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
   for i := Low(cntElements) to High(cntElements) do
     if cntElements[i].CanContainFormIDs then
       cntElements[i].FindUsedMasters(aMasters);
@@ -4969,8 +4969,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-//  if not (csInit in cntStates) then
-    DoInit;
+  DoInit(False);
   if Length(cntElements) > 0 then
     Result := cntElements[0]
   else
@@ -4990,7 +4989,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
   Result := 0;
-  DoInit;
+  DoInit(False);
   for i := Low(cntElements) to High(cntElements) do begin
     if Supports(cntElements[i], IwbDataContainer, DataContainer) and DataContainer.DontSave then
       Continue;
@@ -5005,7 +5004,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit;
+  DoInit(True);
   if not Assigned(cntElements) or (aIndex>=Length(cntElements)) then begin // Using the wrong contained array at the time
     if wbMoreInfoForIndex and (DebugHook <> 0) and wbHasProgressCallback then
       wbProgressCallback('Debugger: ['+ IwbElement(Self).Path +'] Index ' + IntToStr(aIndex) + ' greater than max '+
@@ -5024,7 +5023,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
   Result := nil;
   for i := Low(cntElements) to High(cntElements) do
     if SameText(cntElements[i].Name, aName) then begin
@@ -5048,7 +5047,7 @@ begin
   Result := nil;
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   Element := ResolveElementName(aPath, Path);
   if not Assigned(Element) then
@@ -5066,7 +5065,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
   Dec(aSortOrder, GetAdditionalElementCount);
   Result := nil;
   for i := Low(cntElements) to High(cntElements) do
@@ -5083,8 +5082,9 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
   Result := nil;
+
   for i := Low(cntElements) to High(cntElements) do
     if Supports(cntElements[i], IwbHasSignature, HasSignature) then
       if HasSignature.Signature = aSignature then begin
@@ -5099,7 +5099,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
   Dec(aSortOrder, GetAdditionalElementCount);
 
   Result := nil;
@@ -5120,7 +5120,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 //  if not (csInit in cntStates) then
-    DoInit;
+    DoInit(False);
   Result := Length(cntElements);
 end;
 
@@ -5134,7 +5134,7 @@ begin
   Result := '';
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   Element := ResolveElementName(aName, Name);
   if not Assigned(Element) then
@@ -5156,7 +5156,7 @@ begin
   Result := False;
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   Element := ResolveElementName(aName, Name);
   if not Assigned(Element) then
@@ -5178,7 +5178,7 @@ begin
   Result := nil;
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   Element := ResolveElementName(aName, Name);
   if not Assigned(Element) then
@@ -5200,7 +5200,7 @@ begin
   VarClear(Result);
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   Element := ResolveElementName(aName, Name);
   if not Assigned(Element) then
@@ -5223,7 +5223,7 @@ begin
   Result := '';
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   Element := ResolveElementName(aName, Name);
   if not Assigned(Element) then
@@ -5245,7 +5245,7 @@ begin
   Result := '';
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   Element := ResolveElementName(aName, Name);
   if not Assigned(Element) then
@@ -5269,7 +5269,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
   Result := nil;
   for i := Low(cntElements) to High(cntElements) do
     if Supports(cntElements[i], IwbRecord, lRecord) then
@@ -5286,7 +5286,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
   Result := 0;
-  DoInit;
+  DoInit(False);
   for i := Low(cntElements) to High(cntElements) do
     Inc(Result, cntElements[i].GetCountedRecordCount);
 end;
@@ -5297,7 +5297,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
   Result := '';
   for i := Low(cntElements) to High(cntElements) do begin
     Result := Result + cntElements[i].SortKey[aExtended];
@@ -5312,7 +5312,7 @@ var
   i       : Integer;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   Result := inherited HasErrors;
   if Result then
@@ -5330,7 +5330,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
   if Length(cntElements) > 0 then
     Result := IInterface(cntElements[High(cntElements)]) as IwbElement
   else
@@ -5343,7 +5343,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
   for i := Low(cntElements) to High(cntElements) do
     cntElements[i].MarkModifiedRecursive;
   inherited;
@@ -5355,7 +5355,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
   for i := Low(cntElements) to High(cntElements) do
     if cntElements[i].CanContainFormIDs then
       cntElements[i].MasterCountUpdated(aOld, aNew);
@@ -5368,7 +5368,7 @@ var
 begin
   inherited;
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
   for i := Low(cntElements) to High(cntElements) do
     if cntElements[i].CanContainFormIDs then
       cntElements[i].MasterIndicesUpdated(aOld, aNew);
@@ -5383,7 +5383,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit;
+  DoInit(True);
 
   if Length(cntElements) < 1 then
     Exit;
@@ -5528,7 +5528,7 @@ begin
       Exit;
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
   for i := High(cntElements) downto Low(cntElements) do
     cntElements[i].PrepareSave;
 end;
@@ -5596,7 +5596,7 @@ begin
     Exit;
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   Result := inherited Reached;
   if not Result then
@@ -5663,7 +5663,7 @@ var
   Container : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   Result := ResolveElementName(aName, Name);
   if not Assigned(Result) then
@@ -5683,7 +5683,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   Result := GetReferencesInjected;
   if not Result then
@@ -5705,7 +5705,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
   inherited;
   if Recursive or (Initial and not Supports(Self, IwbGroupRecord)) then
     for i := Low(cntElements) to High(cntElements) do
@@ -5834,7 +5834,7 @@ var
   Container : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   Element := ResolveElementName(aName, Name, True);
   if not Assigned(Element) then
@@ -5854,7 +5854,7 @@ var
   Container : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   Element := ResolveElementName(aName, Name, True);
   if not Assigned(Element) then
@@ -5891,7 +5891,7 @@ var
   SelfRef   : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
 
   inherited;
 
@@ -5993,7 +5993,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit;
+  DoInit(True);
   inherited;
   for i := Low(cntElements) to High(cntElements) do
     cntElements[i].WriteToStream(aStream, aResetModified);
@@ -6197,7 +6197,7 @@ begin
   if Assigned(mrDef) then begin
 
     SelfRef := Self as IwbContainerElementRef;
-    DoInit;
+    DoInit(True);
 
     for i := 0 to Pred(mrDef.MemberCount) do
       if SameText(mrDef.Members[i].Name, aName) or SameText(mrDef.Members[i].DefaultSignature, aName) then begin
@@ -6228,7 +6228,7 @@ begin
   if Assigned(mrDef) then begin
 
     SelfRef := Self as IwbContainerElementRef;
-    DoInit;
+    DoInit(True);
 
     Assert(Assigned(aElement.Def));
     if aElement.SortOrder < 0 then begin
@@ -6354,7 +6354,7 @@ begin
     wbBeginKeepAlive;
     try
       SelfRef := Self as IwbContainerElementRef;
-      DoInit;
+      DoInit(True);
 
       if aIndex = Low(Integer) then begin
 
@@ -6942,7 +6942,7 @@ begin
   Create(lContainer, Pointer(BasePtr), nil, nil);
   Assert(Assigned(mrDef));
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
   SetModified(True);
   InvalidateStorage;
   for i := 0 to Pred(mrDef.MemberCount) do
@@ -7013,7 +7013,7 @@ var
   GroupRecord : IwbGroupRecord;
 begin
   SelfRef := Self;
-  DoInit;
+  DoInit(False);
 
   SetModified(True);
   InvalidateStorage;
@@ -7350,7 +7350,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   if not mrStruct.mrsFormID.IsNull then begin
     FileID := mrStruct.mrsFormID.FileID.FullSlot;
@@ -7851,7 +7851,7 @@ begin
     Exit;
 
   SelfRef := Self;
-  DoInit;
+  DoInit(False);
 
   if not Supports(GetRecordBySignature('XCLC'), IwbContainerElementRef, XCLCRec) then
     Exit;
@@ -8398,7 +8398,7 @@ begin
       Exit;
 
     SelfRef := Self;
-    DoInit;
+    DoInit(False);
 
     if not Supports(GetRecordBySignature('DATA'), IwbContainerElementRef, DataRec) then
       Exit;
@@ -8542,7 +8542,7 @@ begin
     Exit;
 
   SelfRef := Self;
-  DoInit;
+  DoInit(False);
 
   if not Supports(GetRecordBySignature('DATA'), IwbContainerElementRef, DataRec) then
     Exit;
@@ -8586,7 +8586,7 @@ begin
     Exit;
 
   SelfRef := Self;
-  DoInit;
+  DoInit(False);
 
   if not Supports(GetRecordBySignature('XSCL'), IwbContainerElementRef, XSclRec) then
     Exit;
@@ -8873,7 +8873,7 @@ var
 begin
   SelfPtr := Self as IwbContainerElementRef;
 
-  DoInit;
+  DoInit(True);
 
   SetModified(True);
   InvalidateParentStorage;
@@ -8900,7 +8900,7 @@ var
   Group   : IwbGroupRecord;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
   inherited;
   Group := GetChildGroup;
   if Assigned(Group) then
@@ -8921,7 +8921,7 @@ begin
   Exclude(mrStates, mrsBaseRecordChecked);
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   NewFileID := TwbFileID.Create(aNew);
 
@@ -8966,7 +8966,7 @@ begin
   Exclude(mrStates, mrsBaseRecordChecked);
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   OldFormID := GetFormID;
   if not OldFormID.IsNull then begin
@@ -9183,7 +9183,7 @@ begin
     Exit(False);
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   Signature := GetSignature;
   IsComplex := (Signature = 'DIAL') or (Signature = 'WRLD') or (Signature = 'CELL');
@@ -9329,7 +9329,7 @@ var
   Element   : IwbElement;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   Result := False;
   if GetReferencesInjected then begin
@@ -9529,7 +9529,7 @@ var
 begin
   if not wbDelayLoadRecords then begin
     SelfRef := Self as IwbContainerElementRef;
-    DoInit;
+    DoInit(True);
   end;
 end;
 
@@ -9583,7 +9583,7 @@ begin
     Exit;
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   Rec := GetRecordBySignature('EDID');
   if not Assigned(Rec) then begin
@@ -9639,7 +9639,7 @@ begin
       Delete
     else begin
       SelfRef := Self;
-      DoInit;
+      DoInit(False);
 
       SetModified(True);
       InvalidateStorage;
@@ -9870,7 +9870,7 @@ begin
     Exit;
 
   SelfRef := Self;
-  DoInit;
+  DoInit(False);
 
   if not Supports(GetRecordBySignature('DATA'), IwbContainerElementRef, DataRec) then
     Exit;
@@ -10298,7 +10298,7 @@ var
 begin
   if (esModified in eStates) or wbTestWrite then begin
     SelfRef := Self as IwbContainerElementRef;
-    DoInit;
+    DoInit(True);
 
     CurrentPosition := aStream.Position;
 
@@ -10455,7 +10455,7 @@ begin
 
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit;
+  DoInit(True);
 
   if Assigned(srValueDef) then begin
 
@@ -10551,7 +10551,7 @@ begin
     raise Exception.Create(GetName + ' can not be assigned.');
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
 
   if Assigned(srValueDef) then begin
 
@@ -10653,7 +10653,7 @@ begin
   SelfRef := Self as IwbContainerElementRef;
 
   if Assigned(srDef) then begin
-    DoInit;
+    DoInit(False);
 
     if Assigned(srValueDef) then
       srValueDef.BuildRef(GetDataBasePtr, dcDataEndPtr, Self);
@@ -10808,7 +10808,7 @@ begin
   if not Assigned(srDef) then
     Exit;
 
-  DoInit;
+  DoInit(False);
 
   Result := inherited CompareExchangeFormID(aOldFormID, aNewFormID);
 
@@ -10829,7 +10829,7 @@ begin
   BasePtr := nil;
   Create(aContainer, BasePtr, nil, nil);
 
-  DoInit;
+  DoInit(True);
 
   SaveAsCreatedEmpty := (csAsCreatedEmpty in cntStates);
   BasePtr := nil;
@@ -10853,14 +10853,15 @@ begin
   Result := True;
 end;
 
-procedure TwbSubRecord.DoInit;
+procedure TwbSubRecord.DoInit(aNeedSorted: Boolean);
 begin
   inherited;
-  if srStates * [srsSorted, srsSortInvalid] = [srsSorted, srsSortInvalid] then begin
-    if Length(cntElements) > 1 then
-      wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSortKeys);
-    Exclude(srStates, srsSortInvalid);
-  end;
+  if aNeedSorted or wbAlwaysSorted then
+    if srStates * [srsSorted, srsSortInvalid] = [srsSorted, srsSortInvalid] then begin
+      if Length(cntElements) > 1 then
+        wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSortKeys);
+      Exclude(srStates, srsSortInvalid);
+    end;
 end;
 
 procedure TwbSubRecord.ElementChanged(const aElement: IwbElement; aContainer: Pointer);
@@ -10880,7 +10881,7 @@ begin
   if not Assigned(srDef) then
     Exit;
 
-  DoInit;
+  DoInit(False);
 
   inherited FindUsedMasters(aMasters);
 
@@ -10992,7 +10993,7 @@ begin
     Exit(False);
 
   if not Assigned(srValueDef) then
-    DoInit;
+    DoInit(False);
 
   if Assigned(srValueDef) and (dfNotAlignable in srValueDef.DefFlags) then
     Exit(False);
@@ -11010,7 +11011,7 @@ begin
 
   if not Assigned(srDef) then
     Exit;
-  DoInit;
+  DoInit(False);
 
   if Assigned(srValueDef) then
     Result := srValueDef.Check(GetDataBasePtr, dcDataEndPtr, Self);
@@ -11027,7 +11028,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit;
+  DoInit(False);
 
   if not Assigned(dcDataBasePtr) and Assigned(srValueDef) and not (dcfStorageInvalid in dcFlags) then begin
     Result := srValueDef.DefaultSize[nil, nil, Self];
@@ -11077,7 +11078,7 @@ begin
 
   if not Assigned(srDef) then
     Exit;
-  DoInit;
+  DoInit(False);
 
   if Assigned(srValueDef) then
     Result := srValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self]
@@ -11109,7 +11110,7 @@ begin
   if Assigned(eContainer) and not IwbContainer(eContainer).IsElementEditable(SelfRef) then
     Exit;
 
-  DoInit;
+  DoInit(False);
 
   Result := Assigned(srValueDef) and
     srValueDef.IsEditable[GetDataBasePtr, dcDataEndPtr, Self];
@@ -11123,7 +11124,7 @@ begin
   Result := False;
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   if not Supports(srValueDef, IwbHasSortKeyDef, HasSortKey) then
     Exit;
@@ -11137,7 +11138,7 @@ var
 begin
   Result := nil;
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
   if not Assigned(srValueDef) then
     Exit;
   Result := srValueDef.LinksTo[dcDataBasePtr, dcDataEndPtr, Self];
@@ -11163,7 +11164,7 @@ begin
 
   if not Assigned(srDef) then
     Exit;
-  DoInit;
+  DoInit(False);
 
   if Assigned(srValueDef) then
     Result := srValueDef.NativeValue[GetDataBasePtr, dcDataEndPtr, Self]
@@ -11179,7 +11180,7 @@ begin
   SelfRef := Self as IwbContainerElementRef;
 
   if not Assigned(srValueDef) then
-    DoInit;
+    DoInit(True);
 
   Result := (srsSorted in srStates) or
     (Supports(Resolve(srValueDef, GetDataBasePtr, GetDataEndPtr, Self), IwbEmptyDef, EmptyDef) and EmptyDef.Sorted);
@@ -11195,7 +11196,7 @@ begin
 
   if not Assigned(srDef) then
     Exit;
-  DoInit;
+  DoInit(True);
 
   if Assigned(srValueDef) then
     Result := srValueDef.ToSortKey(GetDataBasePtr, dcDataEndPtr, Self, aExtended)
@@ -11233,7 +11234,7 @@ begin
 
   if not Assigned(srDef) then
     Exit;
-  DoInit;
+  DoInit(True);
 
   if Assigned(srValueDef) then
     Result := srValueDef.ToString(GetDataBasePtr, dcDataEndPtr, Self);
@@ -11245,7 +11246,7 @@ var
 begin
   if not Assigned(srValueDef) or ((srsIsUnion in srStates) and not (csInit in cntStates)) then begin
     SelfRef := Self as IwbContainerElementRef;
-    DoInit;
+    DoInit(False);
   end;
   Result := srValueDef;
 end;
@@ -11331,7 +11332,7 @@ begin
   if not Assigned(srDef) then
     Exit;
 
-  DoInit;
+  DoInit(False);
 
   inherited MasterCountUpdated(aOld, aNew);
 
@@ -11350,7 +11351,7 @@ begin
   if not Assigned(srDef) then
     Exit;
 
-  DoInit;
+  DoInit(False);
 
   inherited MasterIndicesUpdated(aOld, aNew);
 
@@ -11401,7 +11402,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
 
   Result := False;
   if {(GetSignature = 'PTDT') or} (GetSignature = 'PLDT') then begin
@@ -11474,7 +11475,7 @@ begin
     else
       Exit;
 
-  DoInit;
+  DoInit(False);
 
   if GetEditValue <> aValue then begin
     if Assigned(srValueDef) then begin
@@ -11511,7 +11512,7 @@ begin
   if not Assigned(srDef) then
     raise Exception.Create(GetName + ' can not be edited');
 
-  DoInit;
+  DoInit(False);
 
   if Assigned(srValueDef) then begin
     OldValue := GetNativeValue;
@@ -11541,7 +11542,7 @@ begin
   dcDataBasePtr := nil;
   dcDataEndPtr := nil;
   dcDataStorage := nil;
-  DoInit;
+  DoInit(True);
   if Assigned(srValueDef) then
     RequestStorageChange(BasePtr, EndPtr, srValueDef.DefaultSize[nil, nil, Self]);
   inherited;
@@ -11562,7 +11563,7 @@ var
 begin
   if (esModified in eStates) or wbTestWrite or (srStruct.srsDataSize = 0) then begin
     SelfRef := Self as IwbContainerElementRef;
-    DoInit;
+    DoInit(True);
 
     BigDataSize := GetDataSize;
     if BigDataSize > High(Word) then begin
@@ -12287,7 +12288,7 @@ begin
   Result := nil;
 
   SelfRef := Self;
-  DoInit;
+  DoInit(False);
   for i := Low(cntElements) to High(cntElements) do
     if Supports(cntElements[i], IwbGroupRecord, Result) then
       if Result.GroupType = aType then
@@ -12403,7 +12404,7 @@ begin
   Result := nil;
 
   SelfRef := Self;
-  DoInit;
+  DoInit(False);
   for i := Low(cntElements) to High(cntElements) do
     if Supports(cntElements[i], IwbMainRecord, Result) then
       if SameText(Result.EditorID, aEditorID) then
@@ -12419,7 +12420,7 @@ begin
   Result := nil;
 
   SelfRef := Self;
-  DoInit;
+  DoInit(False);
   for i := Low(cntElements) to High(cntElements) do
     if Supports(cntElements[i], IwbMainRecord, Result) then
       if Result.FormID = aFormID then
@@ -12565,7 +12566,7 @@ var
 begin
   SelfPtr := Self as IwbContainerElementRef;
 
-  DoInit;
+  DoInit(True);
 
   SetModified(True);
   InvalidateParentStorage;
@@ -12664,7 +12665,7 @@ begin
     Exit(False);
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   if GetGroupType in [0, 2, 3] then begin
     Result := False;
@@ -14457,7 +14458,7 @@ begin
     raise Exception.Create(GetName + ' can not be assigned.');
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
 
   Assert(Assigned(aElement.Def));
   Assert(arcDef.Element.Equals(aElement.Def));
@@ -14513,7 +14514,7 @@ begin
     raise Exception.Create(GetName + ' can not be assigned.');
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
 
   if (aIndex = Low(Integer)) and arcDef.CanAssign(Self, aIndex, aElement.Def) then begin
 
@@ -14653,14 +14654,15 @@ begin
   end;
 end;
 
-procedure TwbSubRecordArray.DoInit;
+procedure TwbSubRecordArray.DoInit(aNeedSorted: Boolean);
 begin
   inherited;
-  if arcSorted and arcSortInvalid then begin
-    if Length(cntElements) > 1 then
-      wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSortKeys);
-    arcSortInvalid := False;
-  end;
+  if aNeedSorted or wbAlwaysSorted then
+    if arcSorted and arcSortInvalid then begin
+      if Length(cntElements) > 1 then
+        wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSortKeys);
+      arcSortInvalid := False;
+    end;
 end;
 
 procedure TwbSubRecordArray.DoProcess(const aContainer : IwbContainer;
@@ -14750,6 +14752,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
+  DoInit(True);
 
   if GetElementCount > 0 then begin
     Assert(not arcSortInvalid);
@@ -14818,7 +14821,7 @@ begin
     raise Exception.Create(GetName + ' can not be assigned.');
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
 
   Assert(aElement.SortOrder >= 0);
   Assert(aElement.SortOrder < srcDef.MemberCount);
@@ -15094,7 +15097,7 @@ begin
   Result := False;
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   if not Supports(srcDef, IwbHasSortKeyDef, HasSortKey) then
     Exit;
@@ -15135,7 +15138,7 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   Result := '';
   if Supports(srcDef, IwbHasSortKeyDef, HasSortKey) then begin
-    DoInit;
+    DoInit(True);
     if HasSortKey.SortKeyCount[False] > 0 then
       for i := 0 to Pred(HasSortKey.SortKeyCount[aExtended]) do begin
         SortMember := HasSortKey.SortKeys[i, aExtended];
@@ -15167,7 +15170,7 @@ begin
     Result := False;
 
     SelfRef := Self as IwbContainerElementRef;
-    DoInit;
+    DoInit(False);
 
     if Supports(GetElementByName('References'), IwbContainerElementRef, Container) then
       for i := 0 to Pred(Container.ElementCount) do begin
@@ -15306,7 +15309,7 @@ begin
 
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit;
+  DoInit(True);
 
   ArrayDef := vbValueDef as IwbArrayDef;
 
@@ -15358,7 +15361,7 @@ begin
     raise Exception.Create(GetName + ' can not be assigned.');
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False); //function will only either replace all elements or add new elements, sort order is irrelevant
 
   ArrayDef := vbValueDef as IwbArrayDef;
 
@@ -15481,7 +15484,7 @@ begin
   ArrayDef := vbValueDef as IwbArrayDef;
   Count := arrayDef.PrefixCount[dcDataBasePtr];
 
-  DoInit;
+  DoInit(False);
 
   if Count <> Length(cntElements) then begin
     UpdateCount := eUpdateCount;
@@ -15522,25 +15525,26 @@ begin
     arrSortInvalid := True;
 end;
 
-procedure TwbArray.DoInit;
+procedure TwbArray.DoInit(aNeedSorted: Boolean);
 var
   i       : Integer;
   Sorting : Boolean;
 begin
   inherited;
-  if arrSorted and arrSortInvalid then
-    if (Length(cntElements) > 1) then begin
-      Sorting := False;
-      for i := 0 to Length(cntElements)-1 do
-        if (esSorting in (cntElements[i] as IwbElementInternal).ElementStates) then begin
-          Sorting := TRue;
-          Break;
-        end;
-        if not Sorting then begin
-          wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSortKeys);
-          arrSortInvalid := False;
-        end;
-    end;
+  if aNeedSorted or wbAlwaysSorted then
+    if arrSorted and arrSortInvalid then
+      if (Length(cntElements) > 1) then begin
+        Sorting := False;
+        for i := 0 to Length(cntElements)-1 do
+          if (esSorting in (cntElements[i] as IwbElementInternal).ElementStates) then begin
+            Sorting := TRue;
+            Break;
+          end;
+          if not Sorting then begin
+            wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSortKeys);
+            arrSortInvalid := False;
+          end;
+      end;
 end;
 
 procedure TwbArray.ElementChanged(const aElement: IwbElement; aContainer: Pointer);
@@ -15810,7 +15814,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit;
+  DoInit(False);
 
   Result := inherited CompareExchangeFormID(aOldFormID, aNewFormID);
 
@@ -15844,7 +15848,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit;
+  DoInit(False);
 
   inherited MasterCountUpdated(aOld, aNew);
 
@@ -15860,7 +15864,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit;
+  DoInit(False);
 
   inherited MasterIndicesUpdated(aOld, aNew);
 
@@ -15876,7 +15880,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit;
+  DoInit(False);
 
   inherited FindUsedMasters(aMasters);
 
@@ -15929,7 +15933,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit;
+  DoInit(False);
 
   Result := inherited CompareExchangeFormID(aOldFormID, aNewFormID);
 
@@ -16055,7 +16059,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit;
+  DoInit(False);
 
   inherited MasterCountUpdated(aOld, aNew);
 
@@ -16071,7 +16075,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit;
+  DoInit(False);
 
   inherited MasterIndicesUpdated(aOld, aNew);
 
@@ -16087,7 +16091,7 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit;
+  DoInit(False);
 
   inherited FindUsedMasters(aMasters);
 
@@ -16918,7 +16922,7 @@ var
   OldValue, NewValue : Variant;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
 
   ValueDef := GetValueDef;
   if Assigned(ValueDef) then begin
@@ -17107,7 +17111,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
   Result := vbValueDef.Check(GetDataBasePtr, dcDataEndPtr, Self);
 end;
 
@@ -17156,7 +17160,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
   Result := vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self]
 end;
 
@@ -17173,7 +17177,7 @@ begin
   if Assigned(eContainer) and not IwbContainer(eContainer).IsElementEditable(SelfRef) then
     Exit;
 
-  DoInit;
+  DoInit(False);
   Result := vbValueDef.IsEditable[GetDataBasePtr, dcDataEndPtr, Self];
 end;
 
@@ -17185,7 +17189,7 @@ begin
   Result := False;
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
 
   if not Supports(vbValueDef, IwbHasSortKeyDef, HasSortKey) then
     Exit;
@@ -17199,7 +17203,7 @@ var
 begin
   Result := nil;
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
   if not Assigned(vbValueDef) then
     Exit;
   Result := vbValueDef.LinksTo[dcDataBasePtr, dcDataEndPtr, Self];
@@ -17222,7 +17226,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(False);
   Result := vbValueDef.NativeValue[GetDataBasePtr, dcDataEndPtr, Self]
 end;
 
@@ -17234,7 +17238,7 @@ begin
   if (dcfDontCompare in dcFlags) then
     Result := ''
   else begin
-    DoInit;
+    DoInit(True);
     Result := vbValueDef.ToSortKey(GetDataBasePtr, dcDataEndPtr, Self, aExtended);
   end;
 end;
@@ -17255,7 +17259,7 @@ begin
   end;
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
   Result := vbValueDef.ToString(GetDataBasePtr, dcDataEndPtr, Self);
 end;
 
@@ -17335,7 +17339,7 @@ begin
   dcDataBasePtr := nil;
   dcDataEndPtr := nil;
   dcDataStorage := nil;
-  DoInit;
+  DoInit(True);
   RequestStorageChange(BasePtr, EndPtr, vbValueDef.DefaultSize[nil, nil, Self]);
   inherited;
 end;
@@ -17359,7 +17363,7 @@ begin
     raise Exception.Create(GetName + ' can not be assigned.');
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit;
+  DoInit(True);
 
   if not Supports(GetDef, IwbStructDef, StructDef) then
     Exit;
@@ -18017,7 +18021,7 @@ begin
       Element := TwbValue.Create(Self, currentPtr, flEndPtr, wbFileChapters.Members[i], '');
     end;
     if (i in ExtractInfo) and Supports(Element, IwbContainer, Container) then
-      with Element as TwbContainer do DoInit;
+      with Element as TwbContainer do DoInit(True);
   end;
 
   for i := 0 to Pred(GetElementCount) do
