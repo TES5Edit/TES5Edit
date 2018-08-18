@@ -553,6 +553,7 @@ type
   public
     class function Create(aFullSlot: SmallInt; aLightSlot: SmallInt = -1): TwbFileID; inline; static;
     class function Null: TwbFileID; static; inline;
+    class function Invalid: TwbFileID; static; inline;
 
     class operator Equal(const A, B: TwbFileID): Boolean; inline;
 
@@ -560,6 +561,7 @@ type
 
     function IsLightSlot: Boolean; inline;
     function IsFullSlot: Boolean; inline;
+    function IsValid: Boolean; inline;
 
     property FullSlot: SmallInt read _FullSlot;
     property LightSlot: SmallInt read _LightSlot;
@@ -1019,6 +1021,7 @@ type
     function GetMasterCount: Integer;
     function GetRecordByFormID(aFormID: TwbFormID; aAllowInjected: Boolean): IwbMainRecord;
     function GetRecordByEditorID(const aEditorID: string): IwbMainRecord;
+    function GetContainedRecordByLoadOrderFormID(aFormID: TwbFormID): IwbMainRecord;
     function GetLoadOrder: Integer;
     function GetLoadOrderFileID: TwbFileID;
     function GetFileFileID: TwbFileID;
@@ -1090,6 +1093,8 @@ type
       read GetRecordByEditorID;
      property GroupBySignature[const aSignature: TwbSignature]: IwbGroupRecord
       read GetGroupBySignature;
+    property ContainedRecordByLoadOrderFormID[aFormID: TwbFormID]: IwbMainRecord
+      read GetContainedRecordByLoadOrderFormID;
 
     property Records[aIndex: Integer]: IwbMainRecord
       read GetRecord;
@@ -1245,6 +1250,7 @@ type
     function GetIsWinningOverride: Boolean;
     function GetWinningOverride: IwbMainRecord;
     function GetHighestOverrideOrSelf(aMaxLoadOrder: Integer): IwbMainRecord;
+    function GetHighestOverrideVisibleForFile(const aFile: IwbFile): IwbMainRecord;
     function GetFlags: TwbMainRecordStructFlags;
     function GetChildGroup: IwbGroupRecord;
     function EnsureChildGroup: IwbGroupRecord;
@@ -1360,6 +1366,8 @@ type
       read GetWinningOverride;
     property HighestOverrideOrSelf[aMaxLoadOrder: Integer]: IwbMainRecord
       read GetHighestOverrideOrSelf;
+    property HighestOverrideVisibleForFile[const aFile: IwbFile]: IwbMainRecord
+      read GetHighestOverrideVisibleForFile;
     property MasterAndLeafs: TDynMainRecords
       read GetMasterAndLeafs;
 
@@ -15935,6 +15943,17 @@ end;
 function TwbFileID.IsLightSlot: Boolean;
 begin
   Result := _LightSlot >= 0;
+end;
+
+function TwbFileID.IsValid: Boolean;
+begin
+  Result := (_LightSlot >= 0) or (_FullSlot >= 0);
+end;
+
+class function TwbFileID.Invalid: TwbFileID;
+begin
+  Result._LightSlot := -1;
+  Result._FullSlot := -1;
 end;
 
 function TwbFileID.IsFullSlot: Boolean;
