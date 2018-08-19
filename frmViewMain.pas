@@ -2109,9 +2109,13 @@ var
   CopiedElement        : IwbElement;
   Container            : IwbContainer;
   IsESL                : Boolean;
-  sw                   : TStopwatch;
+  AllowOverwrite       : Boolean;
+  PrevOverwriteResult  : TModalResult;
+  lResult              : TDynElements;
+  Operation            : string;
 begin
   Result := nil;
+  lResult := nil;
   Elements := aElements;
 
   if Assigned(aAfterCopyCallback) then begin
@@ -2135,7 +2139,7 @@ begin
     j := -1;
     for i := Low(Elements) to High(Elements) do begin
       if not Elements[i].CanCopy then begin
-        if j <0 then begin
+        if j < 0 then begin
           Elements := Copy(Elements);
           j := i;
         end;
@@ -2172,213 +2176,267 @@ begin
         if LoadOrder > j then
           j := LoadOrder;
 
-    with TfrmModuleSelect.Create(Self) do try
+    AllowOverwrite := not (AsNew or AsWrapper or AsSpawnRate) and
+      (GetKeyState(VK_SHIFT) < 0) and
+      (GetKeyState(VK_CONTROL) < 0);
 
-      AllModules := wbModulesByLoadOrder(True).FilteredBy(function(a: PwbModuleInfo): Boolean
-        begin
-          Result := mfTemplate in a.miFlags;
-          if not Result then begin
-            Result := Assigned(a.miFile);
-            if Result then
-              Result := a._File.LoadOrder >= j;
+    PrevOverwriteResult := mrNone;
+
+    if AllowOverwrite then
+      _wbCanOverwriteCallback := function (const aTarget, aSource: IwbElement): Boolean
+      const
+        cAllowedDenied : array[Boolean] of string = ('Denied', 'Allowed');
+      begin
+        case PrevOverwriteResult of
+          mrYesToAll: Result := True;
+          mrNoToAll: Result := False;
+        else
+          PrevOverwriteResult := MessageDlg('Do you want to overwrite:' + CRLF + CRLF +
+            aTarget.FullPath + CRLF + CRLF +
+            'with' + CRLF + CRLF +
+            aSource.FullPath + '?',
+            mtConfirmation, mbYesNo + mbYesAllNoAllCancel, 0, mbNo);
+          Result := PrevOverwriteResult in [mrYes, mrYesToAll];
+          if PrevOverwriteResult = mrCancel then begin
+            wbProgress('Aborting...');
+            Abort;
           end;
-        end);
+        end;
+        wbProgress(cAllowedDenied[Result] + ' overwriting "%s" with "%s"', [aTarget.FullPath, aSource.FullPath]);
+      end;
+    try
+      with TfrmModuleSelect.Create(Self) do try
 
-      Multiple := (Length(Elements) > 1) or (Elements[0].ElementType <> etMainRecord);
-      EditorID := '';
-      EditorIDPrefixRemove := '';
-      EditorIDPrefix := '';
-      EditorIDSuffix := '';
+        AllModules := wbModulesByLoadOrder(True).FilteredBy(function(a: PwbModuleInfo): Boolean
+          begin
+            Result := mfTemplate in a.miFlags;
+            if not Result then begin
+              Result := Assigned(a.miFile) and a._File.IsEditable;
+              if Result then
+                Result := a._File.LoadOrder >= j;
+            end;
+          end);
 
-      if not Multiple then begin
-        MainRecord := (Elements[0] as IwbMainRecord);
-        Master := MainRecord.MasterOrSelf;
-        if not (AsNew or AsWrapper) then begin
-          AllModules := AllModules.FilteredBy(function(a: PwbModuleInfo): Boolean
-            var
-              i: Integer;
-            begin
-              Result := mfTemplate in a.miFlags;
-              if not Result then begin
-                Result := not a._File.Equals(Master._File);
-                if Result then
-                  for i := 0 to Pred(Master.OverrideCount) do begin
-                    Result := not a._File.Equals(Master.Overrides[i]._File);
-                    if not Result then
-                      Exit;
-                  end;
+        Multiple := (Length(Elements) > 1) or (Elements[0].ElementType <> etMainRecord);
+        EditorID := '';
+        EditorIDPrefixRemove := '';
+        EditorIDPrefix := '';
+        EditorIDSuffix := '';
+
+        if not Multiple then begin
+          MainRecord := (Elements[0] as IwbMainRecord);
+          Master := MainRecord.MasterOrSelf;
+          if not (AsNew or AsWrapper) then begin
+            AllModules := AllModules.FilteredBy(function(a: PwbModuleInfo): Boolean
+              var
+                i: Integer;
+              begin
+                Result := mfTemplate in a.miFlags;
+                if not Result then begin
+                  Result := not a._File.Equals(Master._File);
+                  if Result and not AllowOverwrite then
+                    for i := 0 to Pred(Master.OverrideCount) do begin
+                      Result := not a._File.Equals(Master.Overrides[i]._File);
+                      if not Result then
+                        Exit;
+                    end;
+                end;
+              end);
+          end else begin
+            EditorID := MainRecord.EditorID;
+            repeat
+              if AsWrapper then begin
+                if not InputQuery('EditorID', 'Please enter the EditorID for the wrapped copy', EditorID) then
+                  Exit;
+              end
+              else begin
+                if not InputQuery('EditorID', 'Please change the EditorID', EditorID) then
+                  Exit;
               end;
-            end);
+              if EditorID = '' then
+                Break;
+              if not SameText(EditorID, MainRecord.EditorID) then
+                Break;
+              if AsWrapper then
+                ShowMessage('You need to specify a different EditorID for the wrapped copy.')
+              else if MessageDlg('Are you sure you don''t want to change the EditorID?' +
+                ' EditorID conflicts will cause error messages in CS when loading.',
+                mtWarning, [mbYes, mbNo], 0, mbNo) = mrYes then
+                Break;
+            until False;
+          end;
         end
         else begin
-          EditorID := MainRecord.EditorID;
-          repeat
-            if AsWrapper then begin
-              if not InputQuery('EditorID', 'Please enter the EditorID for the wrapped copy', EditorID) then
+          if AsWrapper then
+            if Elements[0].ElementType <> etMainRecord then
+              raise Exception.Create('Can not wrap complete groups');
+
+          if AsNew or AsWrapper then
+            repeat
+              if not InputQuery('EditorID Prefix', 'Please enter the prefix that should be removed from the EditorIDs if present', EditorIDPrefixRemove) then
                 Exit;
-            end
-            else begin
-              if not InputQuery('EditorID', 'Please change the EditorID', EditorID) then
+              if not InputQuery('EditorID Prefix', 'Please enter the prefix that should be added to EditorIDs', EditorIDPrefix) then
                 Exit;
-            end;
-            if EditorID = '' then
-              Break;
-            if not SameText(EditorID, MainRecord.EditorID) then
-              Break;
-            if AsWrapper then
-              ShowMessage('You need to specify a different EditorID for the wrapped copy.')
-            else if MessageDlg('Are you sure you don''t want to change the EditorID?' +
-              ' EditorID conflicts will cause error messages in CS when loading.',
-              mtWarning, [mbYes, mbNo], 0, mbNo) = mrYes then
-              Break;
-          until False;
-        end;
-      end
-      else begin
-        if AsWrapper then
-          if Elements[0].ElementType <> etMainRecord then
-            raise Exception.Create('Can not wrap complete groups');
-
-        if AsNew or AsWrapper then
-          repeat
-            if not InputQuery('EditorID Prefix', 'Please enter the prefix that should be removed from the EditorIDs if present', EditorIDPrefixRemove) then
-              Exit;
-            if not InputQuery('EditorID Prefix', 'Please enter the prefix that should be added to EditorIDs', EditorIDPrefix) then
-              Exit;
-            if not InputQuery('EditorID Suffix', 'Please enter the suffix that should be added to EditorIDs', EditorIDSuffix) then
-              Exit;
-            if (EditorIDPrefix <> '') or (EditorIDSuffix <> '') then
-              Break;
-            if AsWrapper then
-              ShowMessage('You need to specify a prefix or suffix.')
-            else if MessageDlg('Are you sure you don''t want to change the EditorID?' +
-              ' EditorID conflicts will cause error messages in CS when loading.',
-              mtWarning, [mbYes, mbNo], 0, mbNo) = mrYes then
-              Break;
-          until False;
-      end;
-
-
-      if Multiple then
-        Caption := 'Which files do you want to add these records to?'
-      else
-        Caption := 'Which files do you want to add this record to?';
-
-      FilterFlag := mfValid;
-      SelectFlag := mfTagged;
-      AllModules.ExcludeAll(mfTagged);
-      _PreviousCopyIntoSelectedModules.IncludeAll(mfTagged);
-      AllowCancel;
-
-      if ShowModal <> mrOK then
-        Exit;
-
-      if Length(SelectedModules) < 1 then
-        Exit;
-
-
-      _PreviousCopyIntoSelectedModules := Copy(SelectedModules);
-
-      SetLength(Result, Length(Elements));
-
-      for i := Low(SelectedModules) to High(SelectedModules) do
-        begin
-          if mfTemplate in SelectedModules[i].miFlags then begin
-            ReferenceFile := nil;
-            while not Assigned(ReferenceFile) do
-              if not AddNewFile(ReferenceFile, SelectedModules[i]) then
+              if not InputQuery('EditorID Suffix', 'Please enter the suffix that should be added to EditorIDs', EditorIDSuffix) then
+                Exit;
+              if (EditorIDPrefix <> '') or (EditorIDSuffix <> '') then
                 Break;
-            if Assigned(ReferenceFile) then
-              _PreviousCopyIntoSelectedModules[i] := ReferenceFile.ModuleInfo;
-          end else
-            ReferenceFile := SelectedModules[i]._File;
+              if AsWrapper then
+                ShowMessage('You need to specify a prefix or suffix.')
+              else if MessageDlg('Are you sure you don''t want to change the EditorID?' +
+                ' EditorID conflicts will cause error messages in CS when loading.',
+                mtWarning, [mbYes, mbNo], 0, mbNo) = mrYes then
+                Break;
+            until False;
+        end;
 
-          if Assigned(ReferenceFile) and AddRequiredMasters(sl, ReferenceFile,
-            mfTemplate in SelectedModules[i].miFlags) then begin
 
-            if AsWrapper then begin
+        if Multiple then
+          Caption := 'Which files do you want to add these records to?'
+        else
+          Caption := 'Which files do you want to add this record to?';
 
-              for j := Low(Elements) to High(Elements) do begin
-                MainRecord := Elements[j] as IwbMainRecord;
-                wbProgress('Copying ' + MainRecord.Name);
+        FilterFlag := mfValid;
+        SelectFlag := mfTagged;
+        AllModules.ExcludeAll(mfTagged);
+        _PreviousCopyIntoSelectedModules.IncludeAll(mfTagged);
+        MinSelect := 1;
+        AllowCancel;
 
-                MainRecord2 := wbCopyElementToFile(MainRecord, ReferenceFile, True, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix) as IwbMainRecord;
-                wbProgress('');
+        if ShowModal <> mrOK then
+          Exit;
 
-                Assert(Assigned(MainRecord2));
-                if not Multiple then
-                  MainRecord2.EditorID := EditorID;
+        if Length(SelectedModules) < 1 then
+          Exit;
 
-                EditorID := MainRecord.EditorID;
-                MainRecord := wbCopyElementToFile(MainRecord, ReferenceFile, False, False, '', '', '') as IwbMainRecord;
-                wbProgress('');
-                Assert(Assigned(MainRecord));
-                MainRecord.Assign(Low(Integer), nil, False);
-                LeveledListEntries := MainRecord.ElementByName['Leveled List Entries'] as IwbContainerElementRef;
-                Assert(Assigned(LeveledListEntries));
-                Assert(LeveledListEntries.ElementCount = 1);
-                LeveledListEntry := LeveledListEntries.Elements[0] as IwbContainerElementRef;
-                Assert(Assigned(LeveledListEntry));
-                LeveledListEntry.ElementByName['Reference'].EditValue := MainRecord2.EditValue;
-                LeveledListEntry.ElementByName['Count'].EditValue := '1';
-                LeveledListEntry.ElementByName['Level'].EditValue := '1';
-                MainRecord.EditorID := EditorID;
-                Result[j] := MainRecord;
-                wbProgress('');
-              end;
+        _PreviousCopyIntoSelectedModules := Copy(SelectedModules);
 
-            end
-            else if Multiple then begin
-              for j := Low(Elements) to High(Elements) do
-                try
-                  if DeepCopy and Supports(Elements[j], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
-                    wbProgress('Copying ' + MainRecord.ChildGroup.Name);
-                    Result[j] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix);
+        Operation := 'Copying ';
+        if AsNew then
+          Operation := Operation + 'as new record'
+        else if AsWrapper then
+          Operation := Operation + 'as wrapper'
+        else if AsSpawnRate then
+          Operation := Operation + 'as spawn rate adjuster'
+        else begin
+          Operation := Operation + 'as override';
+          if AllowOverwrite then
+            Operation := Operation + ' (with overwrite)';
+        end;
+
+        SetLength(lResult, Length(Elements));
+
+        PerformLongAction(Operation, '', procedure
+        var
+          i, j: Integer;
+        begin
+          for i := Low(SelectedModules) to High(SelectedModules) do
+            begin
+              if mfTemplate in SelectedModules[i].miFlags then begin
+                ReferenceFile := nil;
+                while not Assigned(ReferenceFile) do
+                  if not AddNewFile(ReferenceFile, SelectedModules[i]) then
+                    Break;
+                if Assigned(ReferenceFile) then
+                  _PreviousCopyIntoSelectedModules[i] := ReferenceFile.ModuleInfo;
+              end else
+                ReferenceFile := SelectedModules[i]._File;
+
+              if Assigned(ReferenceFile) and AddRequiredMasters(sl, ReferenceFile,
+                mfTemplate in SelectedModules[i].miFlags) then begin
+
+                if AsWrapper then begin
+
+                  for j := Low(Elements) to High(Elements) do begin
+                    MainRecord := Elements[j] as IwbMainRecord;
+                    wbCurrentProgress := Format('[%s] into [%s]', [MainRecord.FullPath, ReferenceFile.FullPath]);
+                    wbProgress(Operation + ' ' + wbCurrentProgress);
+
+                    MainRecord2 := wbCopyElementToFile(MainRecord, ReferenceFile, True, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix, False) as IwbMainRecord;
+                    wbProgress('');
+
+                    Assert(Assigned(MainRecord2));
+                    if not Multiple then
+                      MainRecord2.EditorID := EditorID;
+
+                    EditorID := MainRecord.EditorID;
+                    MainRecord := wbCopyElementToFile(MainRecord, ReferenceFile, False, False, '', '', '', AllowOverwrite) as IwbMainRecord;
+                    wbProgress('');
+                    Assert(Assigned(MainRecord));
+                    MainRecord.Assign(Low(Integer), nil, False);
+                    LeveledListEntries := MainRecord.ElementByName['Leveled List Entries'] as IwbContainerElementRef;
+                    Assert(Assigned(LeveledListEntries));
+                    Assert(LeveledListEntries.ElementCount = 1);
+                    LeveledListEntry := LeveledListEntries.Elements[0] as IwbContainerElementRef;
+                    Assert(Assigned(LeveledListEntry));
+                    LeveledListEntry.ElementByName['Reference'].EditValue := MainRecord2.EditValue;
+                    LeveledListEntry.ElementByName['Count'].EditValue := '1';
+                    LeveledListEntry.ElementByName['Level'].EditValue := '1';
+                    MainRecord.EditorID := EditorID;
+                    lResult[j] := MainRecord;
+                    wbProgress('');
+                  end;
+
+                end
+                else if Multiple then begin
+                  for j := Low(Elements) to High(Elements) do
+                    try
+                      if DeepCopy and Supports(Elements[j], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
+                        wbProgress(Operation + ' ' + wbCurrentProgress);
+                        lResult[j] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix, AllowOverwrite);
+                        wbProgress('');
+                      end else begin
+                        wbCurrentProgress := Format('[%s] into [%s]', [Elements[j].FullPath, ReferenceFile.FullPath]);
+                        wbProgress(Operation + ' ' + wbCurrentProgress);
+                        CopiedElement := wbCopyElementToFile(Elements[j], ReferenceFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix, AllowOverwrite);
+                        wbProgress('');
+                        if Assigned(CopiedElement) then begin
+                          if Assigned(aAfterCopyCallback) then
+                            aAfterCopyCallback(CopiedElement);
+                        end;
+                        lResult[j] := CopiedElement;
+                        wbProgress('');
+                      end;
+                    except
+                      on E: EAbort do
+                        raise;
+                      on E: Exception do
+                        wbProgress('Error while copying [%s]: [%s] %s', [Elements[j].FullPath, E.ClassName, E.Message]);
+                    end;
+                end else begin
+                  MainRecord := nil;
+                  if DeepCopy and Supports(Elements[0], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
+                    wbCurrentProgress := Format('[%s] into [%s]', [MainRecord.ChildGroup.FullPath, ReferenceFile.FullPath]);
+                    wbProgress(Operation + ' ' + wbCurrentProgress);
+                    lResult[0] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, '', '', '', AllowOverwrite);
                     wbProgress('');
                   end else begin
-                    wbProgress('Copying ' + Elements[j].Name);
-                    CopiedElement := wbCopyElementToFile(Elements[j], ReferenceFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix);
+                    wbCurrentProgress := Format('[%s] into [%s]', [Elements[0].FullPath, ReferenceFile.FullPath]);
+                    wbProgress(Operation + ' ' + wbCurrentProgress);
+                    CopiedElement := wbCopyElementToFile(Elements[0], ReferenceFile, AsNew, True, '', '', '', AllowOverwrite);
                     wbProgress('');
                     if Assigned(CopiedElement) then begin
                       if Assigned(aAfterCopyCallback) then
                         aAfterCopyCallback(CopiedElement);
                     end;
-                    Result[j] := CopiedElement;
                     wbProgress('');
+                    lResult[0] := CopiedElement;
+                    if not Supports(CopiedElement, IwbMainRecord, MainRecord) then
+                      MainRecord := nil;
                   end;
-                except
-                  on E: Exception do
-                    wbProgress('Error while copying '+Elements[j].Name+': '+E.Message);
+                  if AsNew and Assigned(MainRecord) then
+                    MainRecord.EditorID := EditorID;
                 end;
-            end else begin
-              sw := TStopwatch.StartNew;
-              MainRecord := nil;
-              if DeepCopy and Supports(Elements[0], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
-                wbProgress('Copying ' + MainRecord.ChildGroup.Name);
-                Result[0] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, '', '', '');
-                wbProgress('');
-              end else begin
-                wbProgress('Copying ' + Elements[0].Name);
-                CopiedElement := wbCopyElementToFile(Elements[0], ReferenceFile, AsNew, True, '', '', '');
-                wbProgress('');
-                if Assigned(CopiedElement) then begin
-                  if Assigned(aAfterCopyCallback) then
-                    aAfterCopyCallback(CopiedElement);
-                end;
-                wbProgress('');
-                Result[0] := CopiedElement;
-                if not Supports(CopiedElement, IwbMainRecord, MainRecord) then
-                  MainRecord := nil;
               end;
-              if AsNew and Assigned(MainRecord) then
-                MainRecord.EditorID := EditorID;
-              sw.Stop;
-              wbProgress('Copied ' + Elements[0].Name + ' in ' + sw.ElapsedMilliseconds.ToString + 'msec');
             end;
-          end;
-        end;
+          wbCurrentProgress := '';
+        end);
+        Result := lResult;
+      finally
+        Free;
+      end;
     finally
-      Free;
+      _wbCanOverwriteCallback := nil;
     end;
   finally
     sl.Free;
@@ -2803,32 +2861,19 @@ begin
   if j < 1 then
     Exit;
 
-  try
-    wbCurrentAction := 'Copying...';
-    wbStartTime := now;
-    wbShowStartTime := 1;
-    wbCurrentTick := GetTickCount64;
+  CopyInto(
+    Sender = mniNavCopyAsNewRecord,
+    Sender = mniNavCopyAsWrapper,
+    Sender = mniNavCopyAsSpawnRateOverride,
+    Sender = mniNavDeepCopyAsOverride,
+    Elements);
 
-    CopyInto(
-      Sender = mniNavCopyAsNewRecord,
-      Sender = mniNavCopyAsWrapper,
-      Sender = mniNavCopyAsSpawnRateOverride,
-      Sender = mniNavDeepCopyAsOverride,
-      Elements);
-
-    for i := Low(SelectedNodes) to High(SelectedNodes) do
-      vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
-    InvalidateElementsTreeView(SelectedNodes);
-    PostResetActiveTree;
-    if (Length(Elements) > 1) or (Elements[0].ElementType <> etMainRecord) then
-      vstNav.Invalidate;
-  finally
-    wbProgress('Copying done.');
-    wbCurrentAction := '';
-    wbCurrentTick := 0;
-    wbShowStartTime := 0;
-    Caption := Application.Title;
-  end;
+  for i := Low(SelectedNodes) to High(SelectedNodes) do
+    vstNav.IterateSubtree(SelectedNodes[i], ClearConflict, nil);
+  InvalidateElementsTreeView(SelectedNodes);
+  PostResetActiveTree;
+  if (Length(Elements) > 1) or (Elements[0].ElementType <> etMainRecord) then
+    vstNav.Invalidate;
 end;
 
 procedure TfrmMain.mniNavCreateMergedPatchClick(Sender: TObject);
@@ -3039,7 +3084,7 @@ var
             if Assigned(TargetLists[l]) and Assigned(WinningLists[l]) then
               if not ListsEqual(TargetLists[l], WinningLists[l]) then begin
                 if not Assigned(TargetRecord) then
-                  TargetRecord := wbCopyElementToFile(MainRecord, TargetFile, False, True, '', '', '') as IwbMainRecord;
+                  TargetRecord := wbCopyElementToFile(MainRecord, TargetFile, False, True, '', '', '', False) as IwbMainRecord;
 
                 TargetRecord.RemoveElement(aListNames[l]);
                 for j := 0 to Pred(TargetLists[l].Count) do
@@ -3525,7 +3570,7 @@ begin
 
     if AddRequiredMasters(sl, ReferenceFile) then
       for j := Low(Elements) to High(Elements) do begin
-        wbCopyElementToFile(Elements[j], ReferenceFile, False, True, '', '','');
+        wbCopyElementToFile(Elements[j], ReferenceFile, False, True, '', '', '', False);
         if Elements[j].RemoveInjected(False) then begin
           pgMain.ActivePage := tbsMessages;
           AddMessage('Injected references in '+Elements[j].Name+' could not all be removed automatically.');
@@ -7935,138 +7980,9 @@ begin
   if not MainRecord.CanCopy then
     Exit;
 
-  ReferenceFile := MainRecord.ReferenceFile;
-  sl := TStringList.Create;
-  sl.Sorted := True;
-  sl.Duplicates := dupIgnore;
-  try
-    MainRecord.ReportRequiredMasters(sl, AsNew);
-
-    j := ReferenceFile.LoadOrder;
-    for i := 0 to Pred(sl.Count) do
-      with IwbFile(Pointer(sl.Objects[i])) do
-        if LoadOrder > j then
-          j := LoadOrder;
-    ReferenceFile := nil;
-
-    with TfrmModuleSelect.Create(Self) do try
-
-      AllModules := wbModulesByLoadOrder(True).FilteredBy(function(a:PwbModuleInfo): Boolean
-        begin
-          Result := a.IsTemplate or
-            (Assigned(a.miFile) and a._File.IsEditable and (a._File.LoadOrder >= j));
-        end);
-
-      FilterFlag := mfValid;
-      SelectFlag := mfTagged;
-      AllModules.ExcludeAll(mfTagged);
-      AllowCancel;
-
-      Master := MainRecord.MasterOrSelf;
-
-      if not (AsNew or AsWrapper) then begin
-
-        AllModules := AllModules.FilteredBy(function(a:PwbModuleInfo): Boolean
-          var
-            i: Integer;
-          begin
-            if a.IsTemplate then
-              Exit(True);
-
-            Result := not a._File.Equals(Master._File);
-            if Result then
-              for i := 0 to Pred(Master.OverrideCount) do begin
-                Result := not a._File.Equals(Master.Overrides[i]._File);
-                if not Result then
-                  Exit;
-              end;
-          end);
-
-      end else begin
-        EditorID := MainRecord.EditorID;
-        repeat
-          if AsWrapper then begin
-            if not InputQuery('EditorID', 'Please enter the EditorID for the wrapped copy', EditorID) then
-              Exit;
-          end
-          else begin
-            if not InputQuery('EditorID', 'Please change the EditorID', EditorID) then
-              Exit;
-          end;
-          if EditorID = '' then
-            Break;
-          if not SameText(EditorID, MainRecord.EditorID) then
-            Break;
-          if AsWrapper then begin
-            ShowMessage('You need to specify a different EditorID for the wrapped copy.');
-          end
-          else begin
-            if MessageDlg('Are you sure you don''t want to change the EditorID?' +
-              ' EditorID conflicts will cause error messages in CS when loading.',
-              mtWarning, [mbYes, mbNo], 0, mbNo) = mrYes then
-              Break;
-          end;
-        until False;
-      end;
-
-      Caption := 'Which files do you want to add this record to?';
-
-      AllModules.ExcludeAll(mfTagged);
-      _PreviousCopyIntoSelectedModules.IncludeAll(mfTagged);
-      AllowCancel;
-
-      if ShowModal <> mrOK then
-        Exit;
-
-      if Length(SelectedModules) < 1 then
-        Exit;
-
-      _PreviousCopyIntoSelectedModules := Copy(SelectedModules);
-
-      for i := Low(SelectedModules) to High(SelectedModules) do
-        begin
-          if SelectedModules[i].IsTemplate then begin
-            ReferenceFile := nil;
-            while not Assigned(ReferenceFile) do
-              if not AddNewFile(ReferenceFile, SelectedModules[i]) then
-                Break;
-            if Assigned(ReferenceFile) then
-              _PreviousCopyIntoSelectedModules[i] := ReferenceFile.ModuleInfo;
-          end else
-            ReferenceFile := SelectedModules[i]._File;
-
-          if Assigned(ReferenceFile) and AddRequiredMasters(MainRecord, ReferenceFile, AsNew, SelectedModules[i].IsTemplate) then begin
-            MainRecord2 := wbCopyElementToFile(MainRecord, ReferenceFile, AsNew or AsWrapper, True, '', '', '') as IwbMainRecord;
-            Assert(Assigned(MainRecord2));
-            if AsNew or AsWrapper then
-              MainRecord2.EditorID := EditorID;
-            if AsWrapper then begin
-              EditorID := MainRecord.EditorID;
-              MainRecord := wbCopyElementToFile(MainRecord, ReferenceFile, False, False, '', '', '') as IwbMainRecord;
-              Assert(Assigned(MainRecord));
-              MainRecord.Assign(Low(Integer), nil, False);
-              LeveledListEntries := MainRecord.ElementByName['Leveled List Entries'] as IwbContainerElementRef;
-              Assert(Assigned(LeveledListEntries));
-              Assert(LeveledListEntries.ElementCount = 1);
-              LeveledListEntry := LeveledListEntries.Elements[0] as IwbContainerElementRef;
-              Assert(Assigned(LeveledListEntry));
-              LeveledListEntry.ElementByName['Reference'].EditValue := MainRecord2.EditValue;
-              LeveledListEntry.ElementByName['Count'].EditValue := '1';
-              LeveledListEntry.ElementByName['Level'].EditValue := '1';
-              MainRecord.EditorID := EditorID;
-            end;
-          end;
-        end;
-
-      Master.ResetConflict;
-    finally
-      Free;
-    end;
-
-  finally
-    sl.Free;
-  end;
-
+  Master := MainRecord.MasterOrSelf;
+  CopyInto(AsNew, AsWrapper, False, True, [MainRecord]);
+  Master.ResetConflict;
   PostResetActiveTree;
   InvalidateElementsTreeView(NoNodes);
 end;
@@ -8718,7 +8634,7 @@ end;
 
 procedure TfrmMain.mniNavSetVWDAutoIntoClick(Sender: TObject);
 const
-  sJustWaitScan               = 'Scanning for REFR without VWD Flag but with VWD Mesh. Please wait...';
+  sJustWaitScan               = 'Scanning for REFR without VWD Flag but with VWD Mesh';
 var
   Selection                   : TNodeArray;
   StartNode, Node, NextNode   : PVirtualNode;
@@ -8746,86 +8662,86 @@ begin
 
   vstNav.BeginUpdate;
   try
-    Caption := sJustWaitScan;
-
-    wbStartTime := Now;
-
-    Enabled := False;
-    j := 0;
-    Elements := nil;
-    SetLength(Elements, 1024);
-    try
-      for i := Low(Selection) to High(Selection) do begin
-        StartNode := Selection[i];
-        if Assigned(StartNode) then
-          Node := vstNav.GetLast(StartNode)
-        else
-          Node := nil;
-
-        while Assigned(Node) do begin
-          NextNode := vstNav.GetPrevious(Node);
-          NodeData := vstNav.GetNodeData(Node);
-
-          if Supports(NodeData.Element, IwbMainRecord, MainRecord) and
-            (MainRecord.Signature = 'REFR') and IsExterior(MainRecord) then begin
-
-              if j > High(Elements) then
-                SetLength(Elements, Length(Elements)*2);
-              Elements[j] := MainRecord;
-              Inc(j);
-
-            end;
-
-          Node := NextNode;
-          if Node = StartNode then
+    PerformLongAction(sJustWaitScan, '', procedure
+    var
+      i, j : Integer;
+    begin
+      j := 0;
+      Elements := nil;
+      SetLength(Elements, 1024);
+      try
+        for i := Low(Selection) to High(Selection) do begin
+          StartNode := Selection[i];
+          if Assigned(StartNode) then
+            Node := vstNav.GetLast(StartNode)
+          else
             Node := nil;
-        end;
-      end;
-    finally
-      Enabled := True;
-    end;
 
-    SetLength(Elements, j);
+          while Assigned(Node) do begin
+            NextNode := vstNav.GetPrevious(Node);
+            NodeData := vstNav.GetNodeData(Node);
 
-    if Length(Elements) > 1 then begin
-      wbMergeSortPtr(@Elements[0], Length(Elements), CompareElementsFormIDAndLoadOrder);
+            if Supports(NodeData.Element, IwbMainRecord, MainRecord) and
+              (MainRecord.Signature = 'REFR') and IsExterior(MainRecord) then begin
 
-      j := 0;
-      for i := Succ(Low(Elements)) to High(Elements) do begin
-        if (Elements[j] as IwbMainRecord).LoadOrderFormID <> (Elements[i] as IwbMainRecord).LoadOrderFormID then
-          Inc(j);
-        if j <> i then
-          Elements[j] := Elements[i];
-      end;
-      SetLength(Elements, Succ(j));
-    end;
+                if j > High(Elements) then
+                  SetLength(Elements, Length(Elements)*2);
+                Elements[j] := MainRecord;
+                Inc(j);
 
-    if Length(Elements) > 0 then begin
+              end;
 
-      j := 0;
-      for i := Low(Elements) to High(Elements) do begin
-        MainRecord := Elements[i] as IwbMainRecord;
-        if not MainRecord.IsVisibleWhenDistant and
-          Supports(MainRecord.RecordBySignature['NAME'], IwbContainerElementRef, NameRec) and
-          Supports(NameRec.LinksTo, IwbMainRecord, MainRecord2) and
-          MainRecord2.HasVisibleWhenDistantMesh then begin
-
-          if MainRecord.HasErrors then
-            AddMessage('[Setting VWD for all REFR with VWD Mesh] Skipping: ' + MainRecord.Name)
-          else begin
-            if j <> i then
-              Elements[j] := Elements[i];
-            Inc(j);
+            Node := NextNode;
+            if Node = StartNode then
+              Node := nil;
           end;
-
         end;
+      finally
+        Enabled := True;
       end;
+
       SetLength(Elements, j);
 
-    end;
+      if Length(Elements) > 1 then begin
+        wbMergeSortPtr(@Elements[0], Length(Elements), CompareElementsFormIDAndLoadOrder);
 
-    if Length(Elements) > 0 then
-      CopyInto(False, False, False, False, Elements, SetVWDCallback);
+        j := 0;
+        for i := Succ(Low(Elements)) to High(Elements) do begin
+          if (Elements[j] as IwbMainRecord).LoadOrderFormID <> (Elements[i] as IwbMainRecord).LoadOrderFormID then
+            Inc(j);
+          if j <> i then
+            Elements[j] := Elements[i];
+        end;
+        SetLength(Elements, Succ(j));
+      end;
+
+      if Length(Elements) > 0 then begin
+
+        j := 0;
+        for i := Low(Elements) to High(Elements) do begin
+          MainRecord := Elements[i] as IwbMainRecord;
+          if not MainRecord.IsVisibleWhenDistant and
+            Supports(MainRecord.RecordBySignature['NAME'], IwbContainerElementRef, NameRec) and
+            Supports(NameRec.LinksTo, IwbMainRecord, MainRecord2) and
+            MainRecord2.HasVisibleWhenDistantMesh then begin
+
+            if MainRecord.HasErrors then
+              AddMessage('[Setting VWD for all REFR with VWD Mesh] Skipping: ' + MainRecord.Name)
+            else begin
+              if j <> i then
+                Elements[j] := Elements[i];
+              Inc(j);
+            end;
+
+          end;
+        end;
+        SetLength(Elements, j);
+
+      end;
+
+      if Length(Elements) > 0 then
+        CopyInto(False, False, False, False, Elements, SetVWDCallback);
+    end);
 
     vstNav.Invalidate;
   finally

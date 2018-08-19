@@ -62,12 +62,12 @@ type
   PwbTwoPtrArray = ^TwbTwoPtrArray;         {General array of TwbTwoPtr}
 
 threadvar
-  _wbProgressCallback : TwbProgressCallback;
-  wbCurrentTick       : UInt64;
-  wbCurrentAction     : string;
-  wbCurrentProgress   : string;
-  wbStartTime         : TDateTime;
-  wbShowStartTime     : Integer;
+  _wbProgressCallback     : TwbProgressCallback;
+  wbCurrentTick           : UInt64;
+  wbCurrentAction         : string;
+  wbCurrentProgress       : string;
+  wbStartTime             : TDateTime;
+  wbShowStartTime         : Integer;
 
 var
   wbForceTerminate    : Boolean;
@@ -697,7 +697,7 @@ type
     function GetLinksTo: IwbElement;
     function GetNoReach: Boolean;
     procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; recursive: Boolean = True; initial: Boolean = false);
-    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
+    function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
     procedure ResetConflict;
     procedure ResetReachable;
     function RemoveInjected(aCanRemove: Boolean): Boolean;
@@ -3615,6 +3615,14 @@ function wbLighter(Color: TColor; Amount: Double = 0.5): TColor;
 function wbDarker(Color: TColor; Amount: Double = 0.25): TColor;
 function wbIsDarkMode: Boolean;
 
+type
+  TwbCanOverwriteCallback = reference to function(const aTarget, aSource: IwbElement) : Boolean;
+
+threadvar
+  _wbCanOverwriteCallback : TwbCanOverwriteCallback;
+
+function wbCanOverwrite(const aTarget, aSource: IwbElement): Boolean;
+
 implementation
 
 uses
@@ -3625,6 +3633,12 @@ uses
   TypInfo,
   wbSort,
   wbLocalization;
+
+function wbCanOverwrite(const aTarget, aSource: IwbElement): Boolean;
+begin
+  Result := not Assigned(_wbCanOverwriteCallback) or
+    _wbCanOverwriteCallback(aTarget, aSource);
+end;
 
 function RGBTripleToCol(aCol: TRGBTriple ): TColor;
 begin
