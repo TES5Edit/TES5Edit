@@ -83,6 +83,8 @@ var
 begin
   if not Assigned(aElement) then
     Exit;
+  if not Assigned(aElement._File) then
+    Exit;
 
   TabSheet := TwbTabSheet.Create(Self);
   TabSheet.PageControl := pcView;
