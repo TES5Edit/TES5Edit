@@ -160,6 +160,7 @@ type
     procedure Add(p: Pointer);
   end;
 
+function  wbIsAeroEnabled: Boolean;
 
 implementation
 
@@ -1457,7 +1458,38 @@ begin
     RaiseLastOSError;
 end;
 
+function wbIsAeroEnabled: Boolean;
+type
+  _DwmIsCompositionEnabledFunc = function(var IsEnabled: BOOL): HRESULT; stdcall;
+var
+  Flag                       : BOOL;
+  DllHandle                  : THandle;
+  OsVersion                  : TOSVersionInfo;
+  DwmIsCompositionEnabledFunc: _DwmIsCompositionEnabledFunc;
+begin
+  Result:=False;
+  ZeroMemory(@OsVersion, SizeOf(OsVersion));
+  OsVersion.dwOSVersionInfoSize := SizeOf(TOSVERSIONINFO);
 
+  if ((GetVersionEx(OsVersion)) and (OsVersion.dwPlatformId = VER_PLATFORM_WIN32_NT) and (OsVersion.dwMajorVersion >= 6)) then //is Vista or Win7?
+  begin
+    DllHandle := LoadLibrary('dwmapi.dll');
+    try
+      if DllHandle <> 0 then
+      begin
+        @DwmIsCompositionEnabledFunc := GetProcAddress(DllHandle, 'DwmIsCompositionEnabled');
+        if (@DwmIsCompositionEnabledFunc <> nil) then
+        begin
+          if DwmIsCompositionEnabledFunc(Flag)= S_OK then
+           Result:=Flag;
+        end;
+      end;
+    finally
+      if DllHandle <> 0 then
+        FreeLibrary(DllHandle);
+    end;
+  end;
+end;
 
 initialization
   CRCInit;

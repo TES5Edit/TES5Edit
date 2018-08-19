@@ -80,10 +80,11 @@ procedure TfrmModGroupEdit.FormCreate(Sender: TObject);
 begin
   wbApplyFontAndScale(Self);
 
-  with TVclStylesSystemMenu.Create(Self) do begin
-    ShowNativeStyle := True;
-    MenuCaption := 'Theme';
-  end;
+  if wbThemesSupported then
+    with TVclStylesSystemMenu.Create(Self) do begin
+      ShowNativeStyle := True;
+      MenuCaption := 'Theme';
+    end;
 
   vstModGroupItems.IncrementalSearch := isVisibleOnly;
   vstModGroupItems.NodeDataSize := SizeOf(TModGroupNodeData);

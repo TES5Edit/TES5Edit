@@ -551,6 +551,9 @@ var
   ToolModes: TwbSetOfMode;
   ToolSources: TwbSetOfSource;
 begin
+  if not wbIsAeroEnabled then
+    wbThemesSupported := False;
+
   Result := True;
   wbReportMode := False;
   wbEditAllowed := True;

@@ -5062,7 +5062,7 @@ var
   i, j, k, l: Integer;
   Rect: TRect;
 begin
-  try
+  if wbThemesSupported then try
     if not Assigned(Settings) and (wbSettingsFileName <> '')  then
       if ForceDirectories(ExtractFilePath(wbSettingsFileName)) then
         Settings := TMemIniFile.Create(wbSettingsFileName);
@@ -5112,10 +5112,11 @@ begin
     end;
   except end;
 
-  with TVclStylesSystemMenu.Create(Self) do begin
-    ShowNativeStyle := True;
-    MenuCaption := 'Theme';
-  end;
+  if wbThemesSupported then
+    with TVclStylesSystemMenu.Create(Self) do begin
+      ShowNativeStyle := True;
+      MenuCaption := 'Theme';
+    end;
 
   wbDarkMode := wbIsDarkMode;
   _BlockInternalEdit := True;
