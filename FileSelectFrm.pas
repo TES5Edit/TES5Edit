@@ -56,6 +56,7 @@ implementation
 {$R *.dfm}
 
 uses
+  wbInterface,
   frmViewMain,
   StrUtils;
 
@@ -102,10 +103,11 @@ procedure TfrmFileSelect.FormCreate(Sender: TObject);
 begin
   wbApplyFontAndScale(Self);
 
-  with TVclStylesSystemMenu.Create(Self) do begin
-    ShowNativeStyle := True;
-    MenuCaption := 'Theme';
-  end;
+  if wbThemesSupported then
+    with TVclStylesSystemMenu.Create(Self) do begin
+      ShowNativeStyle := True;
+      MenuCaption := 'Theme';
+    end;
 
   CheckListBox1.MultiSelect := True;
 end;

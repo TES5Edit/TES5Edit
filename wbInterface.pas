@@ -122,6 +122,7 @@ var
   wbDevMode                : Boolean  = True;
   wbStripEmptyMasters      : Boolean  = False;
   wbAlwaysSorted           : Boolean  = False;
+  wbThemesSupported        : Boolean  = True;
 
   wbPluginsFileName    : String;
   wbModGroupFileName   : string;

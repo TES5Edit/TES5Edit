@@ -224,10 +224,11 @@ procedure TfrmModGroupSelect.FormCreate(Sender: TObject);
 begin
   wbApplyFontAndScale(Self);
 
-  with TVclStylesSystemMenu.Create(Self) do begin
-    ShowNativeStyle := True;
-    MenuCaption := 'Theme';
-  end;
+  if wbThemesSupported then
+    with TVclStylesSystemMenu.Create(Self) do begin
+      ShowNativeStyle := True;
+      MenuCaption := 'Theme';
+    end;
 
   vstModGroups.Header.SortColumn := 1;
   vstModGroups.IncrementalSearch := isVisibleOnly;

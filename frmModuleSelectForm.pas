@@ -224,10 +224,11 @@ begin
   wbApplyFontAndScale(Self);
   //vstModules.Header.Height := vstModules.DefaultNodeHeight + 4;
 
-  with TVclStylesSystemMenu.Create(Self) do begin
-    ShowNativeStyle := True;
-    MenuCaption := 'Theme';
-  end;
+  if wbThemesSupported then
+    with TVclStylesSystemMenu.Create(Self) do begin
+      ShowNativeStyle := True;
+      MenuCaption := 'Theme';
+    end;
 
   if not wbIsEslSupported then
     with vstModules.Header.Columns[3] do

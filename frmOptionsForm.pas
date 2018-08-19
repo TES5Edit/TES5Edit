@@ -172,10 +172,11 @@ var
 begin
   wbApplyFontAndScale(Self);
 
-  with TVclStylesSystemMenu.Create(Self) do begin
-    ShowNativeStyle := True;
-    MenuCaption := 'Theme';
-  end;
+  if wbThemesSupported then
+    with TVclStylesSystemMenu.Create(Self) do begin
+      ShowNativeStyle := True;
+      MenuCaption := 'Theme';
+    end;
 
   for ct := ctNotDefined to High(TConflictThis) do
     cbConflictThis.Items.AddObject(Copy(GetEnumName(TypeInfo(TConflictThis), Integer(ct)), 3, 100), Pointer(ct));
