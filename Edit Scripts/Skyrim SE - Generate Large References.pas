@@ -47,11 +47,16 @@ var
   stat: IInterface;
   Dimensions: TwbVector;
   fScale: float;
+  Cell: TwbGridCell;
 begin
+  // skip XESP
+  if ElementExists(e, 'XESP') then
+    Exit;
+
   stat := BaseRecord(e);
 
   // skip markers
-  if GetElementNativeValues(stat, 'Record Header\Record Flags') and $800000 = $800000 then
+  if GetElementNativeValues(stat, 'Record Header\Record Flags') and $00800000 = $00800000 then
     Exit;
 
   // skip no model
@@ -60,6 +65,10 @@ begin
 
   // skip no OBND
   if not ElementExists(stat, 'OBND') then
+    Exit;
+
+  // check MSTT has unkown2 flag set
+  if (Signature(stat) = 'MSTT') and (GetElementNativeValues(stat, 'DATA - Flags') and $4 <> $4) then
     Exit;
 
   if ElementExists(e, 'XSCL') then
@@ -77,11 +86,13 @@ begin
     Exit;
 
   // rules based on emperical evidence - could be incomplete
-  // technically anything can be added, but we leave that fancy stuff for DynDOLOD
-  if ((Dimensions.x >= fLargeRefMinSize) and (Dimensions.y >= fLargeRefMinSize) and (Dimensions.z >= fLargeRefMinSize)) or
-     (Dimensions.x >= fLargeRefMinSize * 2) or (Dimensions.y >= fLargeRefMinSize * 2) or (Dimensions.z >= fLargeRefMinSize * 2)
-  then
-    slLargeReferences.AddObject(IntToHex(GetLoadOrderFormID(e), 8), e);
+  // technically any reference can be added as large reference, but the game does check bounds and BASE signatures etc.
+  // if in-game checks fail -> LOD does not unload and reference might not load at all
+  // it seems adding up all bounds needs to be > 1743
+  if (Dimensions.x + Dimensions.y + Dimensions.z) > (fLargeRefMinSize * 3.405) then begin
+    Cell := wbPositionToGridCell(GetPosition(e));
+    slLargeReferences.AddObject(IntToStr(Cell.x) + ' ' + IntToStr(Cell.y), e);
+  end;
 
 end;
 
@@ -140,6 +151,7 @@ end;
 procedure UpdateWorldspace(wrld: IInterface);
 var
   i, j: integer;
+  s: string;
   e, rnam: IInterface;
   CurrentCell, Cell: TwbGridCell;
 begin
@@ -150,9 +162,9 @@ begin
   AddMessage('Adding ' + IntToStr(slLargeReferences.Count) + ' large references to ' + EditorID(wrld));
 
   i := Pred(slLargeReferences.Count);
-  while i > 0 do begin
+  while i >= 0 do begin
     e := ObjectToElement(slLargeReferences.Objects[i]);
-    CurrentCell := wbPositionToGridCell(GetPosition(e));
+    s := slLargeReferences[i];
 
     // add new RNAM
     rnam := AddRNAM(wrld, e);
@@ -162,13 +174,15 @@ begin
     // add all other references for same cell
     for j := Pred(i) downto 0 do begin
       e := ObjectToElement(slLargeReferences.Objects[j]);
-      Cell := wbPositionToGridCell(GetPosition(e));
-      if (CurrentCell.x = Cell.x) and (CurrentCell.y = Cell.y) then begin
+      // go through list sorted by coordinates
+      if (s = slLargeReferences[j]) then begin
         // add reference to existing RNAM
         AddRNAMItem(rnam, e);
         // remove reference from list
         slLargeReferences.Delete(j);
-      end;
+      end
+      else
+        break;
     end;
 
     i := Pred(slLargeReferences.Count);
@@ -360,6 +374,8 @@ begin
   Result := 0;
 
   slLargeReferences := TwbFastStringList.Create;
+  slLargeReferences.Duplicates := dupAccept;
+  slLargeReferences.Sorted := True;
 
   if (wbGameMode <> gmSSE) then begin
     AddMessage('Game not supported');
