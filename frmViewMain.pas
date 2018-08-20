@@ -3300,7 +3300,7 @@ begin
     SelectFlag := mfTagged;
     FilterFlag := mfHasFile;
     AllowCancel;
-    Caption := 'In the .modgroups file of which module should the new ModGroup be stored?';
+    Caption := 'In which .modgroups file should the new ModGroup be stored?';
     MaxSelect := 1;
     MinSelect := 1;
     repeat
