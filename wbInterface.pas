@@ -5378,6 +5378,7 @@ type
     function GetLinksTo(aInt: Int64; const aElement: IwbElement): IwbElement; override;
 
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement; override;
     function CanContainFormIDs: Boolean; override;
 
     function MasterCountUpdated(aInt: Int64; aOld, aNew: Byte; const aElement: IwbElement): Int64; override;
@@ -11866,6 +11867,30 @@ begin
 end;
 
 { TwbFormIDDefFormater }
+
+function TwbFormIDDefFormater.Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement;
+var
+  NativeValue : Int64;
+  FormID      : TwbFormID;
+  SourceFile  : IwbFile;
+  TargetFile  : IwbFile;
+begin
+  NativeValue := aSource.NativeValue;
+  FormID := TwbFormID.FromCardinal(NativeValue);
+
+  if not (FormID.IsHardcoded or FormID.IsNone) then begin
+    SourceFile := aSource._File;
+    TargetFile := aTarget._File;
+    if Assigned(SourceFile) and Assigned(TargetFile) then begin
+      FormID := SourceFile.FileFormIDtoLoadOrderFormID(FormID);
+      FormID := TargetFile.LoadOrderFormIDtoFileFormID(FormID);
+    end else
+      raise Exception.Create('Target or Source has no File');
+  end;
+
+  NativeValue := FormID.ToCardinal;
+  aTarget.NativeValue := NativeValue;
+end;
 
 procedure TwbFormIDDefFormater.BuildRef(aInt: Int64; const aElement: IwbElement);
 begin
