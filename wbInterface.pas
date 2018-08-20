@@ -633,6 +633,9 @@ type
   TwbCRC32Helper = record helper for TwbCRC32
     function AssignFromString(const s: string): Boolean;
     function ToString: string;
+    function IsNull: Boolean;
+    function IsNone: Boolean;
+    function IsValid: Boolean;
   end;
 
   TwbCRC32sHelper = record helper for TwbCRC32s
@@ -16000,6 +16003,21 @@ begin
   except
     Exit(False);
   end;
+end;
+
+function TwbCRC32Helper.IsNone: Boolean;
+begin
+  Result := Self = $FFFFFFFF;
+end;
+
+function TwbCRC32Helper.IsNull: Boolean;
+begin
+  Result := Self = 0;
+end;
+
+function TwbCRC32Helper.IsValid: Boolean;
+begin
+  Result := not (IsNull or IsNone);
 end;
 
 function TwbCRC32Helper.ToString: string;
