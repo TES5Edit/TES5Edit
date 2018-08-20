@@ -3620,12 +3620,13 @@ function wbDarker(Color: TColor; Amount: Double = 0.25): TColor;
 function wbIsDarkMode: Boolean;
 
 type
-  TwbCanOverwriteCallback = reference to function(const aTarget, aSource: IwbElement) : Boolean;
+  TwbCanOverwriteAction = (coCopy, coDelete, coSkip);
+  TwbCanOverwriteCallback = reference to function(const aTarget, aSource: IwbElement) : TwbCanOverwriteAction;
 
 threadvar
   _wbCanOverwriteCallback : TwbCanOverwriteCallback;
 
-function wbCanOverwrite(const aTarget, aSource: IwbElement): Boolean;
+function wbCanOverwrite(const aTarget, aSource: IwbElement): TwbCanOverwriteAction;
 
 implementation
 
@@ -3638,10 +3639,12 @@ uses
   wbSort,
   wbLocalization;
 
-function wbCanOverwrite(const aTarget, aSource: IwbElement): Boolean;
+function wbCanOverwrite(const aTarget, aSource: IwbElement): TwbCanOverwriteAction;
 begin
-  Result := not Assigned(_wbCanOverwriteCallback) or
-    _wbCanOverwriteCallback(aTarget, aSource);
+  if Assigned(_wbCanOverwriteCallback) then
+    Result := _wbCanOverwriteCallback(aTarget, aSource)
+  else
+    Result := coCopy;
 end;
 
 function RGBTripleToCol(aCol: TRGBTriple ): TColor;
