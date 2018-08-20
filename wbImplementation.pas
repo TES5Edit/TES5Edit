@@ -8356,7 +8356,6 @@ end;
 
 function TwbMainRecord.GetShortName: string;
 var
-//  Rec: IwbRecord;
   s : string;
 begin
   if wbDisplayShorterNames then begin
@@ -8371,6 +8370,7 @@ begin
 
     s := GetFullName;
     if s <> '' then begin
+      s := s.Replace('"', '""',[ rfReplaceAll]);
       if Result <> '' then
         Result := Result + ' ';
       Result := Result + '"' + s +'"';
@@ -8402,8 +8402,10 @@ begin
       Result := Result + ' <' + s +'>';
 
     s := GetFullName;
-    if s <> '' then
+    if s <> '' then begin
+      s := s.Replace('"', '""',[ rfReplaceAll]);
       Result := Result + ' "' + s +'"';
+    end;
 
   end;
 end;

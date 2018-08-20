@@ -12058,7 +12058,7 @@ end;
 function TwbFormIDDefFormater.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
 var
   _File     : IwbFile;
-  i         : Integer;
+  i, j      : Integer;
   s, t      : string;
 begin
   s := '';
@@ -12066,8 +12066,25 @@ begin
   if wbPrettyFormID then
     t := StringReplace(t, ' ', '', [rfReplaceAll]);
   i := Pos('[', t);
+  j := Pos('"', t);
   if i > 0 then begin
     while i > 0 do begin
+      if (j > 0) and (j < i) then begin
+        Inc(j);
+        if t[j] <> '"' then
+          while j < Pred(Length(t)) do begin
+            if t[j] = '"' then
+              if t[Succ(j)] = '"' then
+                Inc(j)
+              else
+                Break;
+            Inc(j);
+          end;
+        Delete(t, 1, j);
+        i := Pos('[', t);
+        j := Pos('"', t);
+        Continue;
+      end;
       Delete(t, 1, i);
       i := Pos(']', t);
       if i > 0 then begin
@@ -12086,6 +12103,7 @@ begin
       except
         i := Pos('[', t);
       end;
+      j := Pos('"', t);
     end;
   end else begin
     s := Trim(t);
