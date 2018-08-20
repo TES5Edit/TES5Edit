@@ -15280,7 +15280,8 @@ begin
             CellText := s;
           end;
           2: if not (fsIsHardcoded in _File.FileStates) then
-            CellText := IntToHex64(_File.CRC32, 8);
+               if _File.CRC32.IsValid then
+                  CellText := _File.CRC32.ToString;
         end;
         Exit;
       end;

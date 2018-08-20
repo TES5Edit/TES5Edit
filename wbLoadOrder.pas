@@ -606,14 +606,14 @@ end;
 
 function TwbModuleInfo.GetCRC32(out aCRC32: TwbCRC32): Boolean;
 begin
-  if Assigned(miFile) then begin
-    aCRC32 := _File.CRC32;
-    Exit(True);
+  if Assigned(miFile) then
+    aCRC32 := _File.CRC32
+  else begin
+    if miCRC32 = 0 then
+      miCRC32 := wbCRC32File(wbDataPath + miOriginalName);
+    aCRC32 := miCRC32;
   end;
-  if miCRC32 = 0 then
-    miCRC32 := wbCRC32File(wbDataPath + miOriginalName);
-  aCRC32 := miCRC32;
-  Result := True;
+  Result := aCRC32.IsValid;
 end;
 
 function TwbModuleInfo.HasCRC32(aCRC32: TwbCRC32): Boolean;

@@ -378,7 +378,7 @@ type
     function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; virtual;
 
-    procedure WriteToStream(aStream: TStream; aResetModified: Boolean);
+    procedure WriteToStream(aStream: TStream; aResetModified: Boolean); virtual;
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); virtual;
     function GetLinksTo: IwbElement; virtual;
     function GetNoReach: Boolean;
@@ -654,6 +654,7 @@ type
     function GetIsEditable: Boolean; override;
     function GetIsRemoveable: Boolean; override;
 
+    procedure WriteToStream(aStream: TStream; aResetModified: Boolean); override;
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); override;
 
     function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
@@ -2185,7 +2186,7 @@ begin
             IntToHex64(wbCRC32App, 8) +
       '_' + ChangeFileExt(CacheFileName, '') +
       '_' + Copy(ExtractFileExt(CacheFileName), 2) +
-      '_' + IntToHex64(GetCRC32, 8) +
+      '_' + GetCRC32.ToString +
       '.refcache';
     if not wbDontCacheLoad and FileExists(CacheFileName) then begin
       Include(flStates, fsRefsBuild);
@@ -2961,7 +2962,7 @@ begin
   flEndPtr := PByte(flView) + flSize;
 
   if wbHasProgressCallback then
-    flProgress('File loaded (CRC32:'+IntToHex64(GetCRC32,8)+')');
+    flProgress('File loaded (CRC32:'+GetCRC32.ToString+')');
 end;
 
 procedure TwbFile.flProgress(const aStatus: string);
@@ -4277,6 +4278,21 @@ begin
         miMasters[i] := flMasters[i].ModuleInfo;
       end;
     end;
+end;
+
+procedure TwbFile.WriteToStream(aStream: TStream; aResetModified: Boolean);
+var
+  MemoryStream: TMemoryStream;
+begin
+  MemoryStream := TMemoryStream.Create;
+  try
+    inherited WriteToStream(MemoryStream, aResetModified);
+    flCRC32 := wbCRC32Ptr(MemoryStream.Memory, MemoryStream.Size);
+    MemoryStream.Position := 0;
+    aStream.Write(MemoryStream.Memory^, MemoryStream.Size);
+  finally
+    MemoryStream.Free;
+  end;
 end;
 
 procedure TwbFile.WriteToStreamInternal(aStream: TStream; aResetModified: Boolean);
