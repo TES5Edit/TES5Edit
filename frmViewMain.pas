@@ -2111,6 +2111,7 @@ var
   IsESL                : Boolean;
   AllowOverwrite       : Boolean;
   PrevOverwriteResult  : TModalResult;
+  PrevDeleteResult     : TModalResult;
   lResult              : TDynElements;
   Operation            : string;
 begin
@@ -2181,28 +2182,79 @@ begin
       (GetKeyState(VK_CONTROL) < 0);
 
     PrevOverwriteResult := mrNone;
+    PrevDeleteResult := mrNone;
 
     if AllowOverwrite then
-      _wbCanOverwriteCallback := function (const aTarget, aSource: IwbElement): Boolean
-      const
-        cAllowedDenied : array[Boolean] of string = ('Denied', 'Allowed');
+      _wbCanOverwriteCallback := function (const aTarget, aSource: IwbElement): TwbCanOverwriteAction
+      var
+        MainRecord: IwbMainRecord;
+        s: string;
       begin
-        case PrevOverwriteResult of
-          mrYesToAll: Result := True;
-          mrNoToAll: Result := False;
-        else
-          PrevOverwriteResult := MessageDlg('Do you want to overwrite:' + CRLF + CRLF +
-            aTarget.FullPath + CRLF + CRLF +
-            'with' + CRLF + CRLF +
-            aSource.FullPath + '?',
-            mtConfirmation, mbYesNo + mbYesAllNoAllCancel, 0, mbNo);
-          Result := PrevOverwriteResult in [mrYes, mrYesToAll];
-          if PrevOverwriteResult = mrCancel then begin
-            wbProgress('Aborting...');
-            Abort;
+        if Assigned(aTarget) then begin
+          case PrevOverwriteResult of
+            mrYesToAll: Result := coCopy;
+            mrNoToAll: Result := coSkip;
+          else
+            PrevOverwriteResult := MessageDlg('Do you want to overwrite:' + CRLF + CRLF +
+              aTarget.FullPath + CRLF + CRLF +
+              'with' + CRLF + CRLF +
+              aSource.FullPath + '?',
+              mtConfirmation, mbYesNo + mbYesAllNoAllCancel, 0, mbNo);
+            if PrevOverwriteResult in [mrYes, mrYesToAll] then
+              Result := coCopy
+            else
+              Result := coSkip;
+            if PrevOverwriteResult = mrCancel then begin
+              wbProgress('Aborting...');
+              Abort;
+            end;
           end;
+        end else
+          Result := coCopy;
+
+        if Result = coCopy then begin
+          if Supports(aSource, IwbMainRecord, MainRecord) then
+            if MainRecord.IsDeleted then begin
+              case PrevDeleteResult of
+                mrYesToAll: Result := coDelete;
+              else
+                if Assigned(aTarget) then
+                  s := 'The source' + CRLF + CRLF +
+                    aSource.FullPath + CRLF + CRLF +
+                   'is flagged as deleted. Do you want to remove the target ' + CRLF + CRLF +
+                    aTarget.FullPath + CRLF + CRLF +
+                    'instead of copying the deleted record?'
+                else
+                  s := 'The source' + CRLF + CRLF +
+                    aSource.FullPath + CRLF + CRLF +
+                   'is flagged as deleted, and the target doesn''t exist.' + CRLF + CRLF +
+                   'Do you want to skip copying this record?';
+                PrevDeleteResult := MessageDlg(s,
+                  mtConfirmation, mbYesNo + mbYesAllNoAllCancel, 0, mbNo);
+                if PrevDeleteResult in [mrYes, mrYesToAll] then
+                  Result := coDelete;
+                if PrevDeleteResult = mrCancel then begin
+                  wbProgress('Aborting...');
+                  Abort;
+                end;
+              end;
+            end;
         end;
-        wbProgress(cAllowedDenied[Result] + ' overwriting "%s" with "%s"', [aTarget.FullPath, aSource.FullPath]);
+
+        if (Result = coDelete) and not Assigned(aTarget) then
+          Result := coSkip;
+
+        case Result of
+          coCopy:
+            if Assigned(aTarget) then
+              wbProgress('Overwriting "%s" with "%s"', [aTarget.FullPath, aSource.FullPath]);
+          coDelete:
+            if Assigned(aTarget) then
+              wbProgress('Removing "%s"', [aTarget.FullPath]);
+          coSkip:
+            wbProgress('Skipping "%s"', [aSource.FullPath]);
+        end;
+
       end;
     try
       with TfrmModuleSelect.Create(Self) do try
@@ -2227,21 +2279,22 @@ begin
           MainRecord := (Elements[0] as IwbMainRecord);
           Master := MainRecord.MasterOrSelf;
           if not (AsNew or AsWrapper) then begin
-            AllModules := AllModules.FilteredBy(function(a: PwbModuleInfo): Boolean
-              var
-                i: Integer;
-              begin
-                Result := mfTemplate in a.miFlags;
-                if not Result then begin
-                  Result := not a._File.Equals(Master._File);
-                  if Result and not AllowOverwrite then
-                    for i := 0 to Pred(Master.OverrideCount) do begin
-                      Result := not a._File.Equals(Master.Overrides[i]._File);
-                      if not Result then
-                        Exit;
-                    end;
-                end;
-              end);
+            if not AllowOverwrite then
+              AllModules := AllModules.FilteredBy(function(a: PwbModuleInfo): Boolean
+                var
+                  i: Integer;
+                begin
+                  Result := mfTemplate in a.miFlags;
+                  if not Result then begin
+                    Result := not a._File.Equals(Master._File);
+                    if Result then
+                      for i := 0 to Pred(Master.OverrideCount) do begin
+                        Result := not a._File.Equals(Master.Overrides[i]._File);
+                        if not Result then
+                          Exit;
+                      end;
+                  end;
+                end);
           end else begin
             EditorID := MainRecord.EditorID;
             repeat

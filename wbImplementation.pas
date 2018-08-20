@@ -11951,12 +11951,21 @@ begin
             end;
       end;
 
-      if not Assigned(Result) then
-        Result := TwbMainRecord.Create(Self, MainRecord.Signature, FormID)
-      else begin
-        Assert(aAllowOverwrite);
-        if not wbCanOverwrite(Result, aElement) then
+      if not Assigned(Result) then begin
+        if wbCanOverwrite(nil, aElement) <> coCopy then
           Exit;
+        Result := TwbMainRecord.Create(Self, MainRecord.Signature, FormID);
+      end else if aDeepCopy then begin
+        Assert(aAllowOverwrite);
+        case wbCanOverwrite(Result, aElement) of
+          coCopy: {continue below};
+          coDelete: begin
+            Result.Remove;
+            Exit;
+          end;
+          coSkip:
+            Exit;
+        end;
       end;
       if aDeepCopy then begin
         Result.Assign(Low(Integer), aElement, False);
