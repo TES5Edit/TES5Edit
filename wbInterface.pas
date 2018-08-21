@@ -348,6 +348,7 @@ type
     cpIgnore,
     cpBenignIfAdded,
     cpBenign,
+    cpOverride,
     cpTranslate,
     cpNormal,
     cpNormalIgnoreEmpty,

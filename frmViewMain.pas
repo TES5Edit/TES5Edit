@@ -1978,6 +1978,8 @@ begin
 
         if (ThisPriority = cpBenign) and (aNodeDatas[i].ConflictThis > ctConflictBenign) then
           aNodeDatas[i].ConflictThis := ctConflictBenign;
+        if (ThisPriority = cpOverride) and (aNodeDatas[i].ConflictThis > ctOverride) then
+          aNodeDatas[i].ConflictThis := ctOverride;
 
         if aNodeDatas[i].ConflictThis > OverallConflictThis then
           OverallConflictThis := aNodeDatas[i].ConflictThis;
@@ -2011,6 +2013,7 @@ begin
       if Result > caNoConflict then
         case Priority of
           cpBenign: Result := caConflictBenign;
+          cpOverride: Result := caOverride;
           cpCritical: begin
               if UniqueValues.Find('', i) then
                 UniqueValues.Delete(i);
