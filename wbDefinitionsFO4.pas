@@ -6533,7 +6533,7 @@ begin
     'No dismember/explode'
   ]);
 
-  wbEDID := wbString(EDID, 'Editor ID', 0, cpBenign);
+  wbEDID := wbStringKC(EDID, 'Editor ID', 0, cpOverride);
   wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
   wbFULLActor := wbLStringKC(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
   wbFULLReq := wbLStringKC(FULL, 'Name', 0, cpTranslate, True);
