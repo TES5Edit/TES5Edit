@@ -734,8 +734,8 @@ type
 
     function CanCopy: Boolean;
 
-    procedure NextMember;
-    procedure PreviousMember;
+    function NextMember: IwbElement;
+    function PreviousMember: IwbElement;
     function CanChangeMember: Boolean;
 
     procedure Tag;

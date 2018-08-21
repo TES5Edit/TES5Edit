@@ -11269,8 +11269,7 @@ begin
       if not EditWarn then
         Exit;
 
-      Element.NextMember;
-      FocusedElement := Element;
+      FocusedElement := Element.NextMember;
       PostResetActiveTree;
     end;
   end;
@@ -12153,8 +12152,7 @@ begin
       if not EditWarn then
         Exit;
 
-      Element.PreviousMember;
-      FocusedElement := Element;
+      FocusedElement := Element.PreviousMember;
       PostResetActiveTree;
     end;
   end;
