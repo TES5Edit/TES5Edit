@@ -11839,9 +11839,76 @@ var
   s            : string;
   GroupRecord  : IwbGroupRecord;
   GroupRecord2 : IwbGroupRecord;
+  _File        : IwbFile;
+
+  procedure CopyMainRecord;
+  begin
+    Result := nil;
+
+    if aAsNew then
+      FormID := _File.NewFormID
+    else begin
+      Result := _File.ContainedRecordByLoadOrderFormID[MainRecord.LoadOrderFormID];
+      if Assigned(Result) then
+        FormID := (Result as IwbMainRecord).FixedFormID
+      else
+        FormID := _File.LoadOrderFormIDtoFileFormID(MainRecord.LoadOrderFormID);
+    end;
+
+    if not Assigned(Result) then begin
+
+      Result := TwbMainRecord.Create(Self, MainRecord.Signature, FormID);
+
+    end else begin
+
+      if not aAllowOverwrite then
+        Exit;
+
+      if aDeepCopy then begin
+        case wbCanOverwrite(Result, aElement) of
+          coCopy: begin
+            if not Equals(Result.Container) then begin
+              Result.Remove;
+              Result := nil;
+              Result := TwbMainRecord.Create(Self, MainRecord.Signature, FormID);
+            end;
+          end;
+          coDelete: begin
+            Result.Remove;
+            Exit;
+          end;
+          coSkip:
+            Exit;
+        end;
+      end else
+        Exit;
+
+    end;
+
+    if aDeepCopy then begin
+      Result.Assign(Low(Integer), aElement, False);
+      if (aPrefix <> '') or (aSuffix <> '') then
+        with Result as IwbMainRecord do begin
+          s := EditorID;
+          s := RemovePrefix(s, aPrefixRemove);
+          if s <> '' then
+            EditorID := aPrefix + s + aSuffix;
+        end;
+    end;
+
+    if not aAsNew and MainRecord.IsMaster and (Result._File.LoadOrder <= MainRecord._File.LoadOrder) then
+      if Supports(Result, IwbMainRecord, MainRecord2) then
+        (MainRecord as IwbMainRecordInternal).YouGotAMaster(MainRecord2);
+
+    if Assigned(Result) and (csRefsBuild in Result._File.ContainerStates) then
+      Result.BuildRef;
+  end;
+
+
 begin
   Result := nil;
   SelfRef := Self as IwbContainerElementRef;
+  _File := GetFile;
   case grStruct.grsGroupType of
     0: begin
       if TwbSignature(grStruct.grsLabel) = 'DIAL' then begin
@@ -11851,7 +11918,7 @@ begin
           MainRecord := GroupRecord.ChildrenOf;
           if not Assigned(MainRecord) then
             raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-          MainRecord := MainRecord.HighestOverrideVisibleForFile[GetFile];
+          MainRecord := MainRecord.HighestOverrideVisibleForFile[_File];
           MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
@@ -11895,7 +11962,7 @@ begin
           MainRecord := GroupRecord.ChildrenOf;
           if not Assigned(MainRecord) then
             raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-          MainRecord := MainRecord.HighestOverrideVisibleForFile[GetFile];
+          MainRecord := MainRecord.HighestOverrideVisibleForFile[_File];
           MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
@@ -11916,7 +11983,7 @@ begin
           MainRecord := GroupRecord.ChildrenOf;
           if not Assigned(MainRecord) then
             raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-          MainRecord := MainRecord.HighestOverrideVisibleForFile[GetFile];
+          MainRecord := MainRecord.HighestOverrideVisibleForFile[_File];
           MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
@@ -11936,55 +12003,7 @@ begin
       if MainRecord.Signature <> TwbSignature(grStruct.grsLabel) then
         raise Exception.Create('Can''t add main record with signature '+MainRecord.Signature+' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
 
-      Result := nil;
-
-      if aAsNew then
-        FormID := GetFile.NewFormID
-      else begin
-        FormID := GetFile.LoadOrderFormIDtoFileFormID(MainRecord.LoadOrderFormID);
-        for i := Low(cntElements) to High(cntElements) do
-          if Supports(cntElements[i], IwbMainRecord, MainRecord2) then
-            if MainRecord2.FixedFormID = FormID then begin
-              Result := MainRecord2;
-              if aAllowOverwrite then
-                Break
-              else
-                Exit;
-            end;
-      end;
-
-      if not Assigned(Result) then begin
-        if wbCanOverwrite(nil, aElement) <> coCopy then
-          Exit;
-        Result := TwbMainRecord.Create(Self, MainRecord.Signature, FormID);
-      end else if aDeepCopy then begin
-        Assert(aAllowOverwrite);
-        case wbCanOverwrite(Result, aElement) of
-          coCopy: {continue below};
-          coDelete: begin
-            Result.Remove;
-            Exit;
-          end;
-          coSkip:
-            Exit;
-        end;
-      end;
-      if aDeepCopy then begin
-        Result.Assign(Low(Integer), aElement, False);
-        if (aPrefix <> '') or (aSuffix <> '') then
-          with Result as IwbMainRecord do begin
-            s := EditorID;
-            s := RemovePrefix(s, aPrefixRemove);
-            if s <> '' then
-              EditorID := aPrefix + s + aSuffix;
-          end;
-      end;
-
-      if not aAsNew and MainRecord.IsMaster and (Result._File.LoadOrder <= MainRecord._File.LoadOrder) then
-        if Supports(Result, IwbMainRecord, MainRecord2) then
-          (MainRecord as IwbMainRecordInternal).YouGotAMaster(MainRecord2);
-      if Assigned(Result) and (csRefsBuild in Result._File.ContainerStates) then
-        Result.BuildRef;
+      CopyMainRecord;
     end;
     1: begin
         if Supports(aElement, IwbGroupRecord, GroupRecord) then begin
@@ -12011,7 +12030,7 @@ begin
           MainRecord := GroupRecord.ChildrenOf;
           if not Assigned(MainRecord) then
             raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-          MainRecord := MainRecord.HighestOverrideVisibleForFile[GetFile];
+          MainRecord := MainRecord.HighestOverrideVisibleForFile[_File];
           MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
@@ -12031,32 +12050,9 @@ begin
         raise Exception.Create('Can''t add main record with signature '+MainRecord.Signature+' to ' + GetName);
 
       if aAsNew then
-        raise Exception.Create('Can''t copy record '+MainRecord.Name+' as new record.')
-      else begin
-        FormID := GetFile.LoadOrderFormIDtoFileFormID(MainRecord.LoadOrderFormID);
-        for i := Low(cntElements) to High(cntElements) do
-          if Supports(cntElements[i], IwbMainRecord, MainRecord2) then
-            if MainRecord2.FixedFormID = FormID then begin
-              Result := MainRecord2;
-              exit;
-            end;
-      end;
-      Result := TwbMainRecord.Create(Self, MainRecord.Signature, FormID);
-      if aDeepCopy then begin
-        Result.Assign(Low(Integer), aElement, False);
-        if (aPrefix <> '') or (aSuffix <> '') then
-          with Result as IwbMainRecord do begin
-            s := EditorID;
-            s := RemovePrefix(s, aPrefixRemove);
-            if s <> '' then
-              EditorID := aPrefix + s + aSuffix;
-          end;
-      end;
-      if not aAsNew and MainRecord.IsMaster and (Result._File.LoadOrder <= MainRecord._File.LoadOrder) then
-        if Supports(Result, IwbMainRecord, MainRecord2) then
-          (MainRecord as IwbMainRecordInternal).YouGotAMaster(MainRecord2);
-      if Assigned(Result) and (csRefsBuild in Result._File.ContainerStates) then
-        Result.BuildRef;
+        raise Exception.Create('Can''t copy record '+MainRecord.Name+' as new record.');
+
+      CopyMainRecord;
     end;
     2, 4: begin
       if Supports(aElement, IwbGroupRecord, GroupRecord) then begin
@@ -12088,7 +12084,7 @@ begin
           MainRecord := GroupRecord.ChildrenOf;
           if not Assigned(MainRecord) then
             raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-          MainRecord := MainRecord.HighestOverrideVisibleForFile[GetFile];
+          MainRecord := MainRecord.HighestOverrideVisibleForFile[_File];
           MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
           Assert(Assigned(MainRecord));
           Result := MainRecord.ChildGroup;
@@ -12108,32 +12104,9 @@ begin
         raise Exception.Create('Can''t add main record with signature '+MainRecord.Signature+' to ' + GetName);
 
       if aAsNew then
-        raise Exception.Create('Can''t copy record '+MainRecord.Name+' as new record.')
-      else begin
-        FormID := GetFile.LoadOrderFormIDtoFileFormID(MainRecord.LoadOrderFormID);
-        for i := Low(cntElements) to High(cntElements) do
-          if Supports(cntElements[i], IwbMainRecord, MainRecord2) then
-            if MainRecord2.FixedFormID = FormID then begin
-              Result := MainRecord2;
-              exit;
-            end;
-      end;
-      Result := TwbMainRecord.Create(Self, MainRecord.Signature, FormID);
-      if aDeepCopy then begin
-        Result.Assign(Low(Integer), aElement, False);
-        if (aPrefix <> '') or (aSuffix <> '') then
-          with Result as IwbMainRecord do begin
-            s := EditorID;
-            s := RemovePrefix(s, aPrefixRemove);
-            if s <> '' then
-              EditorID := aPrefix + s + aSuffix;
-          end;
-      end;
-      if not aAsNew and MainRecord.IsMaster and (Result._File.LoadOrder <= MainRecord._File.LoadOrder) then
-        if Supports(Result, IwbMainRecord, MainRecord2) then
-          (MainRecord as IwbMainRecordInternal).YouGotAMaster(MainRecord2);
-      if Assigned(Result) and (csRefsBuild in Result._File.ContainerStates) then
-        Result.BuildRef;
+        raise Exception.Create('Can''t copy record '+MainRecord.Name+' as new record.');
+
+      CopyMainRecord;
     end;
     6: begin
       if Supports(aElement, IwbGroupRecord, GroupRecord) then begin
@@ -12164,34 +12137,7 @@ begin
       if MainRecord.Signature <> 'INFO' then
         raise Exception.Create('Can''t add main record with signature '+MainRecord.Signature+' to ' + GetName);
 
-      if aAsNew then
-        FormID := GetFile.NewFormID
-      else begin
-        FormID := GetFile.LoadOrderFormIDtoFileFormID(MainRecord.LoadOrderFormID);
-        for i := Low(cntElements) to High(cntElements) do
-          if Supports(cntElements[i], IwbMainRecord, MainRecord2) then
-            if MainRecord2.FixedFormID = FormID then begin
-              Result := MainRecord2;
-              exit;
-            end;
-      end;
-
-      Result := TwbMainRecord.Create(Self, MainRecord.Signature, FormID);
-      if aDeepCopy then begin
-        Result.Assign(Low(Integer), aElement, False);
-        if (aPrefix <> '') or (aSuffix <> '') then
-          with Result as IwbMainRecord do begin
-            s := EditorID;
-            s := RemovePrefix(s, aPrefixRemove);
-            if s <> '' then
-              EditorID := aPrefix + s + aSuffix;
-          end;
-      end;
-      if not aAsNew and MainRecord.IsMaster and (Result._File.LoadOrder <= MainRecord._File.LoadOrder) then
-        if Supports(Result, IwbMainRecord, MainRecord2) then
-          (MainRecord as IwbMainRecordInternal).YouGotAMaster(MainRecord2);
-      if Assigned(Result) and (csRefsBuild in Result._File.ContainerStates) then
-        Result.BuildRef;
+      CopyMainRecord;
     end;
     8, 9, 10: begin
       if wbVWDAsQuestChildren and Supports(aElement, IwbGroupRecord, GroupRecord) then begin
@@ -12200,7 +12146,7 @@ begin
         MainRecord := GroupRecord.ChildrenOf;
         if not Assigned(MainRecord) then
           raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-        MainRecord := MainRecord.HighestOverrideVisibleForFile[GetFile];
+        MainRecord := MainRecord.HighestOverrideVisibleForFile[_File];
         MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
         Assert(Assigned(MainRecord));
         Result := MainRecord.ChildGroup;
@@ -12238,34 +12184,7 @@ begin
         ) then
           raise Exception.Create('Can''t add main record with signature '+MainRecord.Signature+' to ' + GetName);
 
-      if aAsNew then
-        FormID := GetFile.NewFormID
-      else begin
-        FormID := GetFile.LoadOrderFormIDtoFileFormID(MainRecord.LoadOrderFormID);
-        for i := Low(cntElements) to High(cntElements) do
-          if Supports(cntElements[i], IwbMainRecord, MainRecord2) then
-            if MainRecord2.FixedFormID = FormID then begin
-              Result := MainRecord2;
-              exit;
-            end;
-      end;
-
-      Result := TwbMainRecord.Create(Self, MainRecord.Signature, FormID);
-      if aDeepCopy then begin
-        Result.Assign(Low(Integer), aElement, False);
-        if (aPrefix <> '') or (aSuffix <> '') then
-          with Result as IwbMainRecord do begin
-            s := EditorID;
-            s := RemovePrefix(s, aPrefixRemove);
-            if s <> '' then
-              EditorID := aPrefix + s + aSuffix;
-          end;
-      end;
-      if not aAsNew and MainRecord.IsMaster and (Result._File.LoadOrder <= MainRecord._File.LoadOrder) then
-        if Supports(Result, IwbMainRecord, MainRecord2) then
-          (MainRecord as IwbMainRecordInternal).YouGotAMaster(MainRecord2);
-      if Assigned(Result) and (csRefsBuild in Result._File.ContainerStates) then
-        Result.BuildRef;
+      CopyMainRecord;
     end;
   else
     raise Exception.Create(ClassName + '.AddIfMissingInternal is not implemented for GroupType ' + IntToStr(grStruct.grsGroupType));
