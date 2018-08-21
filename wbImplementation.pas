@@ -6023,9 +6023,9 @@ begin
 
   for l := Low(Terminators) to High(Terminators) do begin
     Inc(m);
-    if IwbElement(Terminators[i]).MemoryOrder <> m then
+    if IwbElement(Terminators[l]).MemoryOrder <> m then
       NeedsSort := True;
-    IwbElement(Terminators[i]).MemoryOrder := m;
+    IwbElement(Terminators[l]).MemoryOrder := m;
   end;
 
   if Length(cntElements) < 2 then
