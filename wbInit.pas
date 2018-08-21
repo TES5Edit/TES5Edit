@@ -906,54 +906,51 @@ begin
     end;
 
   // specific Tool Mode settings overrides
-  if wbToolMode = tmLODgen then begin
-    wbIKnowWhatImDoing := True;
-    wbAllowInternalEdit := False;
-    wbShowInternalEdit := False;
-    wbLoadBSAs := True;
-    wbBuildRefs := False;
-  end
-
-  else if wbToolMode = tmScript then begin
-    wbIKnowWhatImDoing := True;
-    wbLoadBSAs := True;
-    wbBuildRefs := True;
-  end
-
-  else if wbToolMode in [tmMasterUpdate, tmESMify] then begin
-    wbIKnowWhatImDoing := True;
-    wbAllowInternalEdit := False;
-    wbShowInternalEdit := False;
-    wbLoadBSAs := False;
-    wbBuildRefs := False;
-    wbMasterUpdateFilterONAM := wbToolMode in [tmESMify];
-
-    if FindCmdLineSwitch('filteronam') then
-      wbMasterUpdateFilterONAM := True
-    else if FindCmdLineSwitch('noFilteronam') then
-      wbMasterUpdateFilterONAM := True;
-
-    if FindCmdLineSwitch('FixPersistence') then
-      wbMasterUpdateFixPersistence := True
-    else if FindCmdLineSwitch('NoFixPersistence') then
-      wbMasterUpdateFixPersistence := False;
-  end
-
-  else if wbToolMode in [tmMasterRestore, tmESPify, tmCheckForDR, tmCheckForITM, tmCheckForErrors] then begin
-    wbIKnowWhatImDoing := True;
-    wbAllowInternalEdit := False;
-    wbShowInternalEdit := False;
-    wbLoadBSAs := False;
-    wbBuildRefs := False;
-  end
-
-  else if wbToolMode = tmTranslate then begin
-    wbTranslationMode := True;
-    wbHideUnused := True;
-    wbHideIgnored := True;
-    wbHideNeverShow := True;
+  case wbToolMode of
+    tmLODgen: begin
+      wbIKnowWhatImDoing := True;
+      wbAllowInternalEdit := False;
+      wbShowInternalEdit := False;
+      wbLoadBSAs := True;
+      wbBuildRefs := False;
+    end;
+    tmScript: begin
+      wbIKnowWhatImDoing := True;
+      wbLoadBSAs := True;
+      wbBuildRefs := True;
+    end;
+    tmMasterUpdate, tmESMify: begin
+      wbIKnowWhatImDoing := True;
+      wbAllowInternalEdit := False;
+      wbShowInternalEdit := False;
+      wbLoadBSAs := False;
+      wbBuildRefs := False;
+      wbMasterUpdateFilterONAM := wbToolMode in [tmESMify];
+    end;
+    tmMasterRestore, tmESPify, tmCheckForDR, tmCheckForITM, tmCheckForErrors: begin
+      wbIKnowWhatImDoing := True;
+      wbAllowInternalEdit := False;
+      wbShowInternalEdit := False;
+      wbLoadBSAs := False;
+      wbBuildRefs := False;
+    end;
+    tmTranslate: begin
+      wbTranslationMode := True;
+      wbHideUnused := True;
+      wbHideIgnored := True;
+      wbHideNeverShow := True;
+    end;
   end;
 
+  if FindCmdLineSwitch('filteronam') then
+    wbMasterUpdateFilterONAM := True
+  else if FindCmdLineSwitch('noFilteronam') then
+    wbMasterUpdateFilterONAM := False;
+
+  if FindCmdLineSwitch('FixPersistence') then
+    wbMasterUpdateFixPersistence := True
+  else if FindCmdLineSwitch('NoFixPersistence') then
+    wbMasterUpdateFixPersistence := False;
 
   wbApplicationTitle := wbAppName + wbToolName + ' ' + VersionString;
   {$IFDEF LiteVersion}
