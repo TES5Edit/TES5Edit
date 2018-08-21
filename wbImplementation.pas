@@ -233,6 +233,7 @@ type
     procedure FindUsedMasters(aMasters: PwbUsedMasters);
     procedure InvalidateStorage;
     function Reached: Boolean;
+    procedure TryAssignMembers(const aSource: IwbElement);
 
     function BeginDecide: Boolean;
     procedure EndDecide;
@@ -291,6 +292,7 @@ type
     function GetMemoryOrder: Integer;
     procedure SetNameSuffix(const aSuffix: string); virtual;
     function GetNameSuffix: string; virtual;
+    procedure TryAssignMembers(const aSource: IwbElement); virtual;
 
     function BeginDecide: Boolean;
     procedure EndDecide;
@@ -395,8 +397,8 @@ type
 
     function CanCopy: Boolean; virtual;
 
-    procedure NextMember;
-    procedure PreviousMember;
+    function NextMember: IwbElement;
+    function PreviousMember: IwbElement;
     function CanChangeMember: Boolean;
 
     procedure Tag;
@@ -433,8 +435,7 @@ type
     function CanMoveElementUp(const aElement: IwbElement): Boolean;
     function CanMoveElementDown(const aElement: IwbElement): Boolean;
 
-    procedure NextElementMember(const aElement: IwbElement);
-    procedure PreviousElementMember(const aElement: IwbElement);
+    function ChangeElementMember(const aElement: IwbElement; aPrevious: Boolean): IwbElement;
     function CanChangeElementMember(const aElement: IwbElement): Boolean;
   end;
 
@@ -552,8 +553,7 @@ type
     function CanMoveElementDown(const aElement: IwbElement): Boolean;
     function CanMoveElement: Boolean; virtual;
 
-    procedure NextElementMember(const aElement: IwbElement);
-    procedure PreviousElementMember(const aElement: IwbElement);
+    function ChangeElementMember(const aElement: IwbElement; aPrevious: Boolean): IwbElement;
     function CanChangeElementMember(const aElement: IwbElement): Boolean;
 
     function FindBySortKey(const aSortKey: string; aExtended: Boolean; out aIndex: Integer): Boolean;
@@ -1690,6 +1690,8 @@ type
                        const aContainer : IwbContainer;
                              aPos       : Integer;
                        const aDef       : IwbSubRecordStructDef);
+
+    procedure TryAssignMembers(const aSource: IwbElement); override;
 
     procedure AddRequiredElements;
     function Add(const aName: string; aSilent: Boolean): IwbElement; override;
@@ -5503,58 +5505,6 @@ begin
   TwbContainer(Result).cntElementRefs := 1;
 end;
 
-procedure TwbContainer.NextElementMember(const aElement: IwbElement);
-var
-  ElementIndex      : Integer;
-  ElementDef        : IwbRecordMemberDef;
-  Element           : IwbElement;
-  Container         : IwbContainer;
-  SubRecordArrayDef : IwbSubRecordArrayDef;
-  SubRecordUnionDef : IwbSubRecordUnionDef;
-  RecordDef         : IwbRecordDef;
-  i                 : Integer;
-begin
-  if Assigned(eContainer) and not IwbContainer(eContainer).IsElementEditable(Self) then
-    Exit;
-  if not CanChangeElementMember(aElement) then
-    Exit;
-  if not Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) or
-     not Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef, SubRecordUnionDef) then
-    Exit;
-  if not Supports(SubRecordArrayDef.Element, IwbRecordDef, RecordDef) then
-    Exit;
-  if Supports(aElement.Container, IwbContainer, Container) then begin
-    for i := 0 to Pred(RecordDef.MemberCount) do
-      if RecordDef.Members[i].Equals(aElement.Def) then
-        break;
-    if i < RecordDef.MemberCount then begin
-      RemoveElement(aElement);
-      ElementIndex := (i + 1) mod RecordDef.MemberCount;
-      ElementDef := RecordDef.Members[ElementIndex];
-
-      case ElementDef.DefType of
-        dtSubRecord:
-          Element := TwbSubRecord.Create(Self, ElementDef as IwbSubRecordDef);
-        dtSubRecordArray:
-          Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordArrayDef);
-        dtSubRecordStruct:
-          Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordStructDef);
-      else
-        Assert(False);
-      end;
-
-      if Assigned(Element) and Assigned(aElement) then try
-        Element.Assign(Low(Integer), nil, False);
-        if csAsCreatedEmpty in cntStates then
-          Exclude(cntStates, csAsCreatedEmpty);
-      except
-        Element.Container.RemoveElement(Element);
-        raise;
-      end;
-    end;
-  end;
-end;
-
 procedure TwbContainer.NotifyChangedInternal(aContainer: Pointer);
 begin
   if [csInitializing, csReseting] * cntStates <> [] then
@@ -5587,55 +5537,130 @@ begin
     cntElements[i].PrepareSave;
 end;
 
-procedure TwbContainer.PreviousElementMember(const aElement: IwbElement);
+function TwbContainer.ChangeElementMember(const aElement: IwbElement; aPrevious: Boolean): IwbElement;
 var
-  ElementIndex      : Integer;
-  ElementDef        : IwbRecordMemberDef;
-  Element           : IwbElement;
-  Container         : IwbContainer;
-  SubRecordArrayDef : IwbSubRecordArrayDef;
-  SubRecordUnionDef : IwbSubRecordUnionDef;
-  RecordDef         : IwbRecordDef;
-  i                 : Integer;
+  SelfRef             : IwbContainerElementRef;
+  Container           : IwbContainer;
+
+  SubRecordArrayDef   : IwbSubRecordArrayDef;
+  SubRecordUnionDef   : IwbSubRecordUnionDef;
+  RecordDef           : IwbRecordDef;
+
+  MemoryOrderElements : TArray<Pointer>;
+
+  i                   : Integer;
+
+  OldElementIndex     : Integer;
+
+  OldMemberIndex      : Integer;
+  NewMemberIndex      : Integer;
+
+  NewElementDef       : IwbRecordMemberDef;
+  NewElement          : IwbElement;
+  NewElementIndex     : Integer;
 begin
+  Result := aElement;
+
+  SelfRef := Self as IwbContainerElementRef;
+
+  if not Assigned(aElement) then
+    Exit;
+  if not Supports(aElement.Container, IwbContainer, Container) then
+    Exit;
+  if not Equals(Container) then
+    Exit;
+
   if Assigned(eContainer) and not IwbContainer(eContainer).IsElementEditable(Self) then
     Exit;
+
   if not CanChangeElementMember(aElement) then
     Exit;
+
   if not Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) or
      not Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef, SubRecordUnionDef) then
     Exit;
+
   if not Supports(SubRecordArrayDef.Element, IwbRecordDef, RecordDef) then
     Exit;
-  if Supports(aElement.Container, IwbContainer, Container) then begin
-    for i := 0 to Pred(RecordDef.MemberCount) do
-      if RecordDef.Members[i].Equals(aElement.Def) then
-        break;
-    if i < RecordDef.MemberCount then begin
-      RemoveElement(aElement);
-      ElementIndex := (i - 1) mod RecordDef.MemberCount;
-      ElementDef := RecordDef.Members[ElementIndex];
 
-      case ElementDef.DefType of
-        dtSubRecord:
-          Element := TwbSubRecord.Create(Self, ElementDef as IwbSubRecordDef);
-        dtSubRecordArray:
-          Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordArrayDef);
-        dtSubRecordStruct:
-          Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordStructDef);
-      else
-        Assert(False);
-      end;
+  // Make sure memory order is updated properly
+  UpdateMemoryOrder(MemoryOrderElements);
 
-      if Assigned(Element) and Assigned(aElement) then try
-        Element.Assign(Low(Integer), nil, False);
-        if csAsCreatedEmpty in cntStates then
-          Exclude(cntStates, csAsCreatedEmpty);
-      except
-        Element.Container.RemoveElement(Element);
-        raise;
-      end;
+  OldElementIndex := -1;
+  for i := Low(cntElements) to High(cntElements) do
+    if aElement.Equals(cntElements[i]) then begin
+      OldElementIndex := i;
+      Break;
     end;
+
+  if OldElementIndex < 0 then
+    Exit;
+
+  OldMemberIndex := -1;
+  for i := 0 to Pred(RecordDef.MemberCount) do
+    if RecordDef.Members[i].Equals(aElement.Def) then begin
+      OldMemberIndex := i;
+      Break;
+    end;
+
+  if OldMemberIndex < 0 then
+    Exit;
+
+  if aPrevious then begin
+    NewMemberIndex := OldMemberIndex - 1;
+    if NewMemberIndex < 0 then
+      NewMemberIndex := Pred(RecordDef.MemberCount);
+  end else begin
+    NewMemberIndex := OldMemberIndex + 1;
+    if NewMemberIndex >= RecordDef.MemberCount then
+      NewMemberIndex := 0;
+  end;
+
+  if NewMemberIndex = OldMemberIndex then
+    Exit;
+
+  NewElementDef := RecordDef.Members[NewMemberIndex];
+
+  BeginUpdate;
+  try
+    case NewElementDef.DefType of
+      dtSubRecord:
+        NewElement := TwbSubRecord.Create(Self, NewElementDef as IwbSubRecordDef);
+      dtSubRecordArray:
+        NewElement := TwbSubRecordArray.Create(Self, nil, Low(Integer), NewElementDef as IwbSubRecordArrayDef);
+      dtSubRecordStruct:
+        NewElement := TwbSubRecordStruct.Create(Self, nil, Low(Integer), NewElementDef as IwbSubRecordStructDef);
+    else
+      Assert(False);
+    end;
+
+    NewElement.SetToDefault;
+
+    Assert(aElement.Equals(cntElements[OldElementIndex]));
+
+    NewElementIndex := -1;
+    for i := High(cntElements) downto Low(cntElements) do
+      if NewElement.Equals(cntElements[i]) then begin
+        NewElementIndex := i;
+        Break;
+      end;
+
+    Assert(NewElementIndex >= 0);
+
+    NewElement.MemoryOrder := aElement.MemoryOrder;
+    cntElements[OldElementIndex] := NewElement as IwbElementInternal;
+    cntElements[NewElementIndex] := aElement as IwbElementInternal;
+
+    if NewElement.CanAssign(Low(Integer), aElement, False) then
+      NewElement.Assign(Low(Integer), aElement, False)
+    else
+      (NewElement as IwbElementInternal).TryAssignMembers(aElement);
+
+
+    Result := NewElement;
+    aElement.Remove;
+  finally
+    EndUpdate;
   end;
 end;
 
@@ -14111,11 +14136,13 @@ begin
   TwbElement(Result).eExternalRefs := 1;
 end;
 
-procedure TwbElement.NextMember;
+function TwbElement.NextMember: IwbElement;
 begin
+  Result := Self;
   if not CanChangeMember then
     Exit;
-  IwbContainerInternal(eContainer).NextElementMember(Self);
+
+  Result := IwbContainerInternal(eContainer).ChangeElementMember(Self, False);
 end;
 
 procedure TwbElement.NotifyChanged(aContainer: Pointer);
@@ -14137,11 +14164,13 @@ begin
   {can be overriden}
 end;
 
-procedure TwbElement.PreviousMember;
+function TwbElement.PreviousMember: IwbElement;
 begin
+  Result := Self;
   if not CanChangeMember then
     Exit;
-  IwbContainerInternal(eContainer).PreviousElementMember(Self);
+
+  Result := IwbContainerInternal(eContainer).ChangeElementMember(Self, True);
 end;
 
 function TwbElement.Reached: Boolean;
@@ -14372,6 +14401,11 @@ end;
 procedure TwbElement.Tag;
 begin
   Include(eStates, esTagged);
+end;
+
+procedure TwbElement.TryAssignMembers(const aSource: IwbElement);
+begin
+  {can be overridden}
 end;
 
 procedure TwbElement.UpdatedEnded;
@@ -15224,6 +15258,84 @@ begin
     end;
   end else
     Result := inherited RemoveInjected(aCanRemove);
+end;
+
+procedure TwbSubRecordStruct.TryAssignMembers(const aSource: IwbElement);
+var
+  SelfRef           : IwbContainerElementRef;
+  SelfRecordDef     : IwbRecordDef;
+  SelfHasSortKey    : IwbHasSortKeyDef;
+
+  SourceContainer   : IwbContainerElementRef;
+  SourceRecordDef   : IwbRecordDef;
+  SourceHasSortKey  : IwbHasSortKeyDef;
+
+  i, j              : Integer;
+
+  SourceElement     : IwbElement;
+  TargetElement     : IwbElement;
+
+  SourceElementDef  : IwbNamedDef;
+  SourceMemberIndex : Integer;
+
+  TargetElementDef  : IwbNamedDef;
+  TargetMemberIndex : Integer;
+begin
+  if not Supports(aSource, IwbContainerElementRef, SourceContainer) then
+    Exit;
+
+  if not Supports(SourceContainer.Def, IwbRecordDef, SourceRecordDef) then
+    Exit;
+
+  SelfRef := Self as IwbContainerElementRef;
+  DoInit(True);
+
+  if not Supports(GetDef, IwbRecordDef, SelfRecordDef) then
+    Exit;
+
+  for i := 0 to Pred(SourceContainer.ElementCount) do begin
+    SourceElement := SourceContainer.Elements[i];
+    TargetElement := GetElementByName(SourceElement.Name);
+
+    if Assigned(TargetElement) and TargetElement.CanAssign(Low(Integer), SourceElement, False) then
+      TargetElement.Assign(Low(Integer), SourceElement, False)
+    else begin
+      SourceElementDef := SourceElement.Def;
+      TargetMemberIndex := -1;
+      for j := 0 to Pred(SelfRecordDef.MemberCount) do begin
+        TargetElementDef := SelfRecordDef.Members[j];
+        if SourceElementDef.Name = TargetElementDef.Name then
+          if TargetElementDef.CanAssign(nil, Low(Integer), SourceElementDef) then begin
+            TargetMemberIndex := j;
+            Break;
+          end;
+      end;
+      if TargetMemberIndex >= 0 then
+        TargetElement := Assign(TargetMemberIndex, SourceElement, False);
+    end;
+  end;
+
+  if not Supports(GetDef, IwbHasSortKeyDef, SelfHasSortKey) then
+    Exit;
+  if not Supports(SourceContainer.Def, IwbHasSortKeyDef, SourceHasSortKey) then
+    Exit;
+
+  if SelfHasSortKey.SortKeyCount[False] < 1 then
+    Exit;
+  if SourceHasSortKey.SortKeyCount[False] < 1 then
+    Exit;
+
+  TargetMemberIndex := SelfHasSortKey.SortKeys[0, False];
+  SourceMemberIndex := SourceHasSortKey.SortKeys[0, False];
+
+  TargetElementDef := SelfRecordDef.Members[TargetMemberIndex];
+  SourceElementDef := SourceRecordDef.Members[SourceMemberIndex];
+
+  if TargetElementDef.CanAssign(nil, Low(Integer), SourceElementDef) then begin
+    SourceElement := SourceContainer.ElementBySortOrder[SourceMemberIndex + SourceContainer.AdditionalElementCount];
+    if Assigned(SourceElement) then
+      Assign(TargetMemberIndex, SourceElement, False);
+  end;
 end;
 
 function ArrayDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; out SizePrefix: Integer): Boolean;
