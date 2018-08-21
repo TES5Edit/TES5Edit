@@ -13908,7 +13908,7 @@ begin
       wbRUnion('Alias', [
 
         // Reference Alias
-        wbRStruct('Alias', [
+        wbRStructSK([0], 'Alias', [
           wbInteger(ALST, 'Reference Alias ID', itU32),
           wbString(ALID, 'Alias Name'),
           wbQUSTAliasFlags,
@@ -13978,7 +13978,7 @@ begin
         ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet),
 
         // Location Alias
-        wbRStruct('Alias', [
+        wbRStructSK([0], 'Alias', [
           wbInteger(ALLS, 'Location Alias ID', itU32),
           wbString(ALID, 'Alias Name'),
           wbQUSTAliasFlags,
@@ -14002,7 +14002,7 @@ begin
         ], []),
 
         // Ref Collection Alias
-        wbRStruct('Alias', [
+        wbRStructSK([0], 'Alias', [
           wbInteger(ALCS, 'Collection Alias ID', itU32),
           wbInteger(ALMI, 'Max Initial Fill Count', itU8)
         ], [])
