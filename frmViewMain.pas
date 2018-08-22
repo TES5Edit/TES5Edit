@@ -5069,6 +5069,13 @@ begin
     aForm.ScaleBy(Abs(Screen.IconFont.Size), Abs(OldSize));
   end else
     aForm.Font := Screen.IconFont;
+
+  if aForm.BorderStyle <> bsSizeable then begin
+    if aForm.Height > Screen.WorkAreaHeight then
+      aForm.ScaleBy(Screen.WorkAreaHeight, aForm.Height);
+    if aForm.Width > Screen.WorkAreaWidth then
+      aForm.ScaleBy(Screen.WorkAreaWidth, aForm.Width);
+  end;
 end;
 
 type
