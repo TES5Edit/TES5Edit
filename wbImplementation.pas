@@ -11911,6 +11911,9 @@ var
     end;
 
     if aDeepCopy then begin
+      if not MainRecord.IsDeleted then
+        with Result as IwbMainRecord do
+          IsDeleted := False;
       Result.Assign(Low(Integer), aElement, False);
       if (aPrefix <> '') or (aSuffix <> '') then
         with Result as IwbMainRecord do begin
