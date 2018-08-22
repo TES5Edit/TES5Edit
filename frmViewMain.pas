@@ -5314,6 +5314,8 @@ begin
         Exit;
       end;
       if Assigned(NavNode) then begin
+        if tmrPendingSetActive.Enabled then
+          tmrPendingSetActiveTimer(tmrPendingSetActive);
         vstView.UpdateScrollBars(False);
         vstView.OffsetXY := OffsetXY;
         if Assigned(ViewNode) then begin
@@ -5321,6 +5323,7 @@ begin
           if Assigned(ViewNode) then
             vstView.FocusedNode := ViewNode;
         end;
+        Column := Min(Max(1, Column), Pred(vstView.Header.Columns.Count));
         vstView.FocusedColumn := Column;
         vstView.OffsetXY := OffsetXY;
       end;
