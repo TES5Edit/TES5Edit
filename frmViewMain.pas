@@ -17381,6 +17381,7 @@ end;
 procedure TTabHistoryEntry.Show;
 begin
   frmMain.pgMain.ActivePage := tiTabSheet;
+  frmMain.pgMainChange(frmMain.pgMain);
 end;
 
 { TCompareRecordsHistoryEntry }
@@ -17422,6 +17423,7 @@ begin
     end;
     DoSetActiveRecord(crRecords);
     pgMain.ActivePage := tbsView;
+    pgMainChange(pgMain);
   end;
 end;
 
@@ -17558,6 +17560,7 @@ begin
     vstNav.Selected[vstNav.FocusedNode] := True;
     DoSetActiveRecord(mrRecord);
     pgMain.ActivePage := GetTabSheet;
+    pgMainChange(pgMain);
   end;
 end;
 
