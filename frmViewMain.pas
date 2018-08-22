@@ -1049,9 +1049,30 @@ begin
   end;
 end;
 
-procedure GeneralProgressNoAbortCheck(const s: string);
+procedure UpdateCaption;
 var
   t: string;
+begin
+  if (wbCurrentAction <> '') or (wbCurrentProgress <> '') or (wbShowStartTime > 0) then begin
+    t := wbCurrentProgress;
+    if wbShowStartTime > 0 then begin
+      if t <> '' then
+        t := t + ', ';
+      t := t + 'Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+    end;
+
+    if wbCurrentAction <> '' then begin
+      if t <> '' then
+        t := ' ' + t;
+      t := '['+wbCurrentAction+']' + t;
+    end;
+
+    if t <> '' then
+      frmMain.Caption := t;
+  end;
+end;
+
+procedure GeneralProgressNoAbortCheck(const s: string);
 begin
   if s <> '' then
     if wbShowStartTime > 0 then
@@ -1059,24 +1080,7 @@ begin
     else
       frmMain.PostAddMessage(s);
   if LastUpdate + 500 < GetTickCount64 then begin
-    if (wbCurrentAction <> '') or (wbCurrentProgress <> '') or (wbShowStartTime > 0) then begin
-      t := wbCurrentProgress;
-      if wbShowStartTime > 0 then begin
-        if t <> '' then
-          t := t + ', ';
-        t := t + 'Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-      end;
-
-      if wbCurrentAction <> '' then begin
-        if t <> '' then
-          t := ' ' + t;
-        t := '['+wbCurrentAction+']' + t;
-      end;
-
-      if t <> '' then
-        frmMain.Caption := t;
-    end;
-
+    UpdateCaption;
     DoProcessMessages;
     LastUpdate := GetTickCount64;
   end;
@@ -10194,14 +10198,13 @@ begin
       TakenFormIDs[OldFormID - StartFormID] := True;
   end;
 
-  StartTick := GetTickCount64;
-  wbStartTime := Now;
-  Inc(wbShowStartTime);
-  Enabled := False;
-  try
+  PerformLongAction('Changing FormIDs', 'Processed Records: 0, Renumbered Records: 0', procedure
+  var
+    Counter: Integer;
+    i, j, k, l: Integer;
+  begin
+    Counter := 0;
     j := 0;
-    Caption := '[Changing FormIDs] Processed Records: ' + IntToStr(0) +
-      ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
     for k := High(MainRecords) downto Low(MainRecords) do begin
       MainRecord := MainRecords[k];
       OldFormID := MainRecord.LoadOrderFormID;
@@ -10214,27 +10217,31 @@ begin
       NewFormID := StartFormID + j;
       Inc(j);
 
-      if NewFormID = OldFormID then
+      if NewFormID = OldFormID then begin
+        wbCurrentProgress := 'Processed Records: ' + IntToStr(High(MainRecords) - k) + ', Renumbered Records: ' + Counter.ToString;
+        wbTick;
         Continue;
+      end;
 
-      pgMain.ActivePage := tbsMessages;
-
-      AddMessage('Changing FormID ['+OldFormID.ToString(True)+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToString(True)+']');
+      wbProgress('Changing FormID ['+OldFormID.ToString(True)+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToString(True)+']');
 
       Master := MainRecord.MasterOrSelf;
       SetLength(ReferencedBy, Master.ReferencedByCount);
       for i := 0 to Pred(Master.ReferencedByCount) do
         ReferencedBy[i] := Master.ReferencedBy[i];
 
-      AddMessage('Record is referenced by '+IntToStr(Length(ReferencedBy))+' other record(s)');
       try
         SetLength(Overrides, MainRecord.OverrideCount);
         for l := 0 to Pred(MainRecord.OverrideCount) do
           Overrides[l] := MainRecord.Overrides[l];
 
         MainRecord.LoadOrderFormID := NewFormID;
-        for l := Low(Overrides) to High(Overrides) do
-          Overrides[l].LoadOrderFormID := NewFormID;
+        Inc(Counter);
+        if Length(Overrides) > 0 then begin
+          wbProgress('Record has '+Length(Overrides).ToString+' override(s)');
+          for l := Low(Overrides) to High(Overrides) do
+            Overrides[l].LoadOrderFormID := NewFormID;
+        end;
 
         Overrides := nil;
 
@@ -10242,23 +10249,20 @@ begin
         NodeData.ConflictThis := ctUnknown;
         NodeData.Flags := [];
 
-        if Length(ReferencedBy) > 0 then
+        wbTick;
+
+        if Length(ReferencedBy) > 0 then begin
+          wbProgress('Record is referenced by '+Length(ReferencedBy).ToString+' other record(s)');
           ShowChangeReferencedBy(OldFormID, NewFormID, ReferencedBy, True );
+        end;
       except
         on E: Exception do begin
-          AddMessage('Error: ' + E.Message);
+          wbProgress('Error: ' + E.Message);
           AnyErrors := True;
         end;
       end;
 
-      if StartTick + 500 < GetTickCount64 then begin
-        Caption := '[Changing FormIDs] Processed Records: ' + IntToStr(High(MainRecords) - k) +
-          ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-        DoProcessMessages;
-        StartTick := GetTickCount64;
-        if wbForceTerminate then
-          Abort;
-      end;
+      wbCurrentProgress := 'Processed Records: ' + IntToStr(High(MainRecords) - k) + ', Renumbered Records: ' + Counter.ToString;
     end;
     if Supports(_File.Elements[0], IwbMainRecord, MainRecord) and (MainRecord.Signature = 'TES4') then begin
       Inc(EndFormID);
@@ -10266,14 +10270,9 @@ begin
     end;
     if AnyErrors then begin
       pgMain.ActivePage := tbsMessages;
-      AddMessage('!!! Errors have occured. It is highly recommended to exit without saving as partial changes might have occured !!!');
+      wbProgress('!!! Errors have occured. It is highly recommended to exit without saving as partial changes might have occured !!!');
     end;
-  finally
-    Dec(wbShowStartTime);
-    Caption := Application.Title;
-    Enabled := True;
-    vstNav.Invalidate;
-  end;
+  end);
 end;
 
 function IsMasterTemporary(MainRecord: IwbMainRecord): Boolean;
@@ -11585,22 +11584,25 @@ begin
 
   wbCurrentTick := GetTickCount64;
   Inc(wbShowStartTime);
+  UpdateCaption;
   PrevCaption := Caption;
   PrevAction := wbCurrentAction;
   PrevProgress := wbCurrentProgress;
   Enabled := False;
   try
     pgMain.ActivePage := tbsMessages;
-    wbCurrentAction := aDesc;
-    wbCurrentProgress := aProgress;
-    if wbCurrentAction <> '' then
-      wbProgress('Start: ' + wbCurrentAction);
+    if aDesc <> '' then
+      wbCurrentAction := aDesc;
+    if aProgress <> '' then
+      wbCurrentProgress := aProgress;
+    if aDesc <> '' then
+      wbProgress('Start: ' + aDesc);
     try
       aAction;
     except
       on E: EAbort do begin
-        if wbCurrentAction <> '' then
-          wbProgress('Aborted: ' + wbCurrentAction);
+        if aDesc <> '' then
+          wbProgress('Aborted: ' + aDesc);
         raise;
       end;
       on E: Exception do begin
@@ -11629,7 +11631,10 @@ begin
       wbCurrentTick := GetTickCount64
     else
       wbCurrentTick := 0;
-    Caption := PrevCaption;
+    if wbShowStartTime = 0 then
+      Caption := Application.Title
+    else
+      Caption := PrevCaption;
   end;
 end;
 
@@ -13216,6 +13221,7 @@ var
   Counter    : Integer;
   i          : Integer;
   Error      : Boolean;
+  s          : string;
 begin
   with TfrmFileSelect.Create(nil) do try
     Caption := 'Please select records to update';
@@ -13249,20 +13255,32 @@ begin
 
     if CheckListBox1.Count > 0 then begin
 
-      Counter := 0;
-      Error := False;
-      for i := 0 to Pred(CheckListBox1.Count) do try
-        CheckListBox1.Checked[i] := IwbMainRecord(Pointer(CheckListBox1.Items.Objects[i])).CompareExchangeFormID(OldFormID, NewFormID);
-        if CheckListBox1.Checked[i] then
-          Inc(Counter)
-      except
-        on E: Exception do begin
-          AddMessage('Error updating FormID for ' + CheckListBox1.Items[i] + ': ' + E.Message);
-          Error := True;
-        end;
-      end;
+      if wbCurrentAction = '' then
+        s := 'Updating referencing records'
+      else
+        s := '';
 
-      AddMessage(IntToStr(Counter) + ' records out of '+IntToStr(Length(ReferencedBy))+' total records which reference FormID [' + OldFormID.ToString(True) + '] have been updated to [' + NewFormID.ToString(True) + ']');
+      PerformLongAction(s, '', procedure
+      var
+        i       : Integer;
+        Counter : Integer;
+      begin
+        Counter := 0;
+        Error := False;
+        for i := 0 to Pred(CheckListBox1.Count) do try
+          CheckListBox1.Checked[i] := IwbMainRecord(Pointer(CheckListBox1.Items.Objects[i])).CompareExchangeFormID(OldFormID, NewFormID);
+          if CheckListBox1.Checked[i] then
+            Inc(Counter);
+          wbTick;
+        except
+          on E: Exception do begin
+            wbProgress('Error updating FormID for ' + CheckListBox1.Items[i] + ': ' + E.Message);
+            Error := True;
+          end;
+        end;
+
+        wbProgress(IntToStr(Counter) + ' records out of '+IntToStr(Length(ReferencedBy))+' total records which reference FormID [' + OldFormID.ToString(True) + '] have been updated to [' + NewFormID.ToString(True) + ']');
+      end);
 
       if not aSilent then begin
         if Error then
