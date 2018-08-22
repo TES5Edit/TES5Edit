@@ -15814,7 +15814,8 @@ end;
 
 class operator TwbFormID.Add(const A: TwbFormID; B: Int64): TwbFormID;
 begin
-  Result._FormID := A._FormID + B;
+  Result := A;
+  Result.ObjectID := Result.ObjectID + B;
 end;
 
 function TwbFormID.ChangeFileID(aFileID: TwbFileID): TwbFormID;
@@ -15974,7 +15975,8 @@ end;
 
 class operator TwbFormID.Subtract(const A: TwbFormID; B: Int64): TwbFormID;
 begin
-  Result._FormID := A._FormID - B;
+  Result := A;
+  Result.ObjectID := Result.ObjectID - B;
 end;
 
 function TwbFormID.ToString(aForDisplay: Boolean): string;
