@@ -297,6 +297,8 @@ type
     mniNavCreateMergedPatch: TMenuItem;
     mniNavCopyIdle: TMenuItem;
     mniNavRenumberFormIDsFrom: TMenuItem;
+    mniNavCompactFormIDs: TMenuItem;
+    mniNavRenumberFormIDsInject: TMenuItem;
     imgFlattr: TImage;
     tmrGenerator: TTimer;
     mniNavLocalizationEditor: TMenuItem;
@@ -10116,163 +10118,258 @@ begin
 end;
 
 procedure TfrmMain.mniNavRenumberFormIDsFromClick(Sender: TObject);
+
 var
-  s                           : string;
-  i, j, k, l                  : Integer;
-  NewFormID                   : TwbFormID;
-  OldFormID                   : TwbFormID;
-  NodeData                    : PNavNodeData;
-  MainRecord                  : IwbMainRecord;
-  ReferencedBy                : TDynMainRecords;
-  Nodes                       : TNodeArray;
-//  NewFileID                   : Integer;
-//  OldFileID                   : Integer;
-  AnyErrors                   : Boolean;
-  Master                      : IwbMainRecord;
-  _File                       : IwbFile;
-//  FoundNone                   : Boolean;
-  MainRecords                 : TDynMainRecords;
-  Overrides                   : TDynMainRecords;
+  SourceFile    : IwbFile;
+  TargetFile    : IwbFile;
+  MainRecords   : TDynMainRecords;
+  TargetFormIDs : TArray<TwbFormID>;
+  EndFormID     : TwbFormID;
 
-  StartFormID                 : TwbFormID;
-  EndFormID                   : TwbFormID;
-  TakenFormIDs                : array of Boolean;
+  function Prepare: Boolean;
+  var
+    s            : string;
+    Nodes        : TNodeArray;
+    NodeData     : PNavNodeData;
 
-  StartTick                   : UInt64;
-begin
-  if not wbEditAllowed then
-    Exit;
-  if wbTranslationMode then
-    Exit;
+    StartFormID  : TwbFormID;
+    EndFormID    : TwbFormID;
+    TakenFormIDs : array of Boolean;
+    i, j, k      : Integer;
 
-  AnyErrors := False;
-  _File := nil;
+    lMainRecords : TDynMainRecords;
+    MainRecord   : IwbMainRecord;
 
-  Nodes := vstNav.GetSortedSelection(True);
-  if (Length(Nodes) <> 1) then
-    Exit;
+    NewFormID    : TwbFormID;
+    OldFormID    : TwbFormID;
+  begin
+    Result := False;
 
-  NodeData := vstNav.GetNodeData(Nodes[0]);
-  if not Assigned(NodeData) then
-    Exit;
-  if not Assigned(NodeData.Element) then
-    Exit;
-  if not Supports(NodeData.Element, IwbFile, _File) then
-    Exit;
-
-  if not EditWarn then
-    Exit;
-
-  s := '';
-  repeat
-    if s <> '' then
-      ShowMessage('"'+s+'" is not a valid start FormID.');
-
-    if not InputQuery('Start from...', 'Please enter the new module specific start FormID in hex. e.g. 200000. Specify only the last 6 digits.', s) then
+    if not wbEditAllowed then
+      Exit;
+    if wbTranslationMode then
       Exit;
 
-    StartFormID := TwbFormID.FromStrDef(s, 0);
-  until (StartFormID.FileID.FullSlot = 0) and not StartFormID.IsHardcoded;
+    SourceFile := nil;
 
-  SetLength(MainRecords, _File.RecordCount);
-  j := 0;
-  for i := Pred(_File.RecordCount) downto 0 do begin
-    MainRecords[j] := _File.Records[i];
-    if MainRecords[j].LoadOrderFormID.FileID = _File.LoadOrderFileID then
-      Inc(j);
-  end;
-  if j < 1 then
-    Exit;
+    Nodes := vstNav.GetSortedSelection(True);
+    if (Length(Nodes) <> 1) then
+      Exit;
 
-  SetLength(MainRecords, j);
+    NodeData := vstNav.GetNodeData(Nodes[0]);
+    if not Assigned(NodeData) then
+      Exit;
+    if not Assigned(NodeData.Element) then
+      Exit;
+    if not Supports(NodeData.Element, IwbFile, SourceFile) then
+      Exit;
 
-  TakenFormIDs := nil;
-  SetLength(TakenFormIDs, j);
+    if not EditWarn then
+      Exit;
 
-  StartFormID.FileID := _File.LoadOrderFileID;
-  EndFormID := StartFormID + j;
+    if Sender = mniNavRenumberFormIDsInject then begin
+      with TfrmModuleSelect.Create(Self) do try
+        AllModules := wbModulesByLoadOrder;
+        AllModules.ExcludeAll(mfTagged);
+        for i := 0 to Pred(SourceFile.MasterCount) do
+          with SourceFile.Masters[i] do
+            include(PwbModuleInfo(ModuleInfo).miFlags, mfTagged);
+        AllModules := AllModules.FilteredByFlag(mfTagged);
+        AllModules.ExcludeAll(mfTagged);
+        SelectFlag := mfTagged;
+        FilterFlag := mfHasFile;
+        MinSelect := 1;
+        MaxSelect := 1;
+        AllowCancel;
+        Caption := 'Please select the master you want to inject new records into...';
+        if ShowModal <> mrOk then
+          Exit;
+        TargetFile := SelectedModules[0]._File;
+      finally
+        Free;
+      end;
+    end else
+      TargetFile := SourceFile;
 
-  for i := Low(MainRecords) to High(MainRecords) do begin
-    OldFormID := MainRecords[i].LoadOrderFormID;
-    if (OldFormID >= StartFormID) and (OldFormID <= EndFormID) then
-      TakenFormIDs[OldFormID - StartFormID] := True;
-  end;
+    if Sender = mniNavCompactFormIDs then
+      StartFormID := TwbFormID.FromCardinal($800)
+    else begin
+      s := '';
+      repeat
+        if s <> '' then
+          ShowMessage('"'+s+'" is not a valid start FormID.')
+        else
+          if Supports(TargetFile.Elements[0], IwbMainRecord, MainRecord) and (MainRecord.Signature = 'TES4') then
+            s := IntToHex(MainRecord.ElementNativeValues['HEDR\Next Object ID'] and $FFFFFF, 6);
 
-  PerformLongAction('Changing FormIDs', 'Processed Records: 0, Renumbered Records: 0', procedure
-  var
-    Counter: Integer;
-    i, j, k, l: Integer;
-  begin
-    Counter := 0;
+        if not InputQuery('Start from...', 'Please enter the new module specific start FormID in hex. e.g. 200000. Specify only the last 6 digits.', s) then
+          Exit;
+
+        StartFormID := TwbFormID.FromStrDef(s, 0);
+      until (StartFormID.FileID.FullSlot = 0) and not StartFormID.IsHardcoded;
+    end;
+
+    SetLength(MainRecords, SourceFile.RecordCount);
     j := 0;
+    for i := Pred(SourceFile.RecordCount) downto 0 do begin
+      MainRecords[j] := SourceFile.Records[i];
+      if MainRecords[j].LoadOrderFormID.FileID = SourceFile.LoadOrderFileID then
+        Inc(j);
+    end;
+    if j < 1 then begin
+      ShowMessage('Nothing to do.');
+      Exit;
+    end;
+
+    SetLength(MainRecords, j);
+
+    TakenFormIDs := nil;
+    SetLength(TakenFormIDs, j);
+
+    StartFormID.FileID := TargetFile.LoadOrderFileID;
+    if Sender = mniNavCompactFormIDs then
+      EndFormID := TwbFormID.FromCardinal($FFF).ChangeFileID(TargetFile.LoadOrderFileID)
+    else if not TargetFile.Equals(SourceFile) then begin
+      if TargetFile.IsESL then
+        EndFormID := TwbFormID.FromCardinal($FFF).ChangeFileID(TargetFile.LoadOrderFileID)
+      else
+        EndFormID := TwbFormID.FromCardinal($FFFFFF).ChangeFileID(TargetFile.LoadOrderFileID);
+    end else
+      EndFormID := StartFormID + j;
+
+    if TargetFile.Equals(SourceFile) then
+      for i := Low(MainRecords) to High(MainRecords) do begin
+        OldFormID := MainRecords[i].LoadOrderFormID;
+        if (OldFormID >= StartFormID) and (OldFormID <= EndFormID) then
+          TakenFormIDs[OldFormID - StartFormID] := True;
+      end;
+
+    SetLength(lMainRecords, Length(MainRecords));
+    SetLength(TargetFormIDs, Length(MainRecords));
+    j := 0;
+    i := 0;
     for k := High(MainRecords) downto Low(MainRecords) do begin
       MainRecord := MainRecords[k];
       OldFormID := MainRecord.LoadOrderFormID;
 
-      if (OldFormID >= StartFormID) and (OldFormID <= EndFormID) then
-        Continue;
+      if TargetFile.Equals(SourceFile) then begin
+        if (OldFormID >= StartFormID) and (OldFormID <= EndFormID) then
+          Continue;
 
-      while TakenFormIDs[j] do
+        while TakenFormIDs[j] do
+          Inc(j);
+        NewFormID := StartFormID + j;
         Inc(j);
-      NewFormID := StartFormID + j;
-      Inc(j);
+      end else begin
+        repeat
+          NewFormID := StartFormID + j;
+          Inc(j);
+        until not Assigned(TargetFile.ContainedRecordByLoadOrderFormID[NewFormID]);
+      end;
 
-      if NewFormID = OldFormID then begin
-        wbCurrentProgress := 'Processed Records: ' + IntToStr(High(MainRecords) - k) + ', Renumbered Records: ' + Counter.ToString;
-        wbTick;
+      if NewFormID > EndFormID then begin
+        ShowMessage('The file contains too many new records for this operation.');
+        Exit;
+      end;
+
+      if NewFormID = OldFormID then
         Continue;
+
+      lMainRecords[i] := MainRecord;
+      TargetFormIDs[i] := NewFormID;
+      Inc(i);
+    end;
+
+    SetLength(lMainRecords, i);
+    SetLength(TargetFormIDs, i);
+    MainRecords := lMainRecords;
+
+    Result := i > 0;
+    if not Result then
+      ShowMessage('Nothing to do.')
+    else
+      Result := MessageDlg('This operation will modify the FormID of '+i.ToString+' record(s).' + CRLF + CRLF +
+        'WARNING: This will break existing save games and any module which uses "'+ SourceFile.FileName +'" as master.' + CRLF + CRLF +
+        'Are you sure you wish to continue?', mtWarning, mbYesNo, 0, mbNo) = mrYes;
+  end;
+
+  procedure UpdateNextObjectID;
+  var
+    MainRecord   : IwbMainRecord;
+  begin
+    if TargetFile.IsEditable and Supports(TargetFile.Elements[0], IwbMainRecord, MainRecord) and (MainRecord.Signature = 'TES4') then begin
+      if Sender = mniNavCompactFormIDs then
+        MainRecord.ElementNativeValues['HEDR\Next Object ID'] := $800
+      else begin
+        Inc(EndFormID);
+        MainRecord.ElementNativeValues['HEDR\Next Object ID'] := EndFormID.ObjectID;
       end;
+    end;
+  end;
 
-      wbProgress('Changing FormID ['+OldFormID.ToString(True)+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToString(True)+']');
+begin
+  if Prepare then begin
+    PerformLongAction('Changing FormIDs', 'Processed Records: 0', procedure
+    var
+      AnyErrors                   : Boolean;
+      i, j, k, l: Integer;
+      MainRecord                  : IwbMainRecord;
+      ReferencedBy                : TDynMainRecords;
+      Master                      : IwbMainRecord;
+      Overrides                   : TDynMainRecords;
+      NewFormID                   : TwbFormID;
+      OldFormID                   : TwbFormID;
+    begin
+      AnyErrors := False;
+      j := 0;
+      for k := Low(MainRecords) to High(MainRecords) do begin
+        MainRecord := MainRecords[k];
+        OldFormID := MainRecord.LoadOrderFormID;
+        NewFormID := TargetFormIDs[k];
 
-      Master := MainRecord.MasterOrSelf;
-      SetLength(ReferencedBy, Master.ReferencedByCount);
-      for i := 0 to Pred(Master.ReferencedByCount) do
-        ReferencedBy[i] := Master.ReferencedBy[i];
+        wbProgress('Changing FormID ['+OldFormID.ToString(True)+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToString(True)+']');
 
-      try
-        SetLength(Overrides, MainRecord.OverrideCount);
-        for l := 0 to Pred(MainRecord.OverrideCount) do
-          Overrides[l] := MainRecord.Overrides[l];
+        Master := MainRecord.MasterOrSelf;
+        SetLength(ReferencedBy, Master.ReferencedByCount);
+        for i := 0 to Pred(Master.ReferencedByCount) do
+          ReferencedBy[i] := Master.ReferencedBy[i];
 
-        MainRecord.LoadOrderFormID := NewFormID;
-        Inc(Counter);
-        if Length(Overrides) > 0 then begin
-          wbProgress('Record has '+Length(Overrides).ToString+' override(s)');
-          for l := Low(Overrides) to High(Overrides) do
-            Overrides[l].LoadOrderFormID := NewFormID;
+        try
+          SetLength(Overrides, MainRecord.OverrideCount);
+          for l := 0 to Pred(MainRecord.OverrideCount) do
+            Overrides[l] := MainRecord.Overrides[l];
+
+          MainRecord.LoadOrderFormID := NewFormID;
+          if Length(Overrides) > 0 then begin
+            wbProgress('Record has '+Length(Overrides).ToString+' override(s)');
+            for l := Low(Overrides) to High(Overrides) do
+              Overrides[l].LoadOrderFormID := NewFormID;
+          end;
+
+          Overrides := nil;
+
+          wbTick;
+
+          if Length(ReferencedBy) > 0 then begin
+            wbProgress('Record is referenced by '+Length(ReferencedBy).ToString+' other record(s)');
+            ShowChangeReferencedBy(OldFormID, NewFormID, ReferencedBy, True );
+          end;
+        except
+          on E: Exception do begin
+            wbProgress('Error: ' + E.Message);
+            AnyErrors := True;
+          end;
         end;
 
-        Overrides := nil;
-
-        NodeData.ConflictAll := caUnknown;
-        NodeData.ConflictThis := ctUnknown;
-        NodeData.Flags := [];
-
-        wbTick;
-
-        if Length(ReferencedBy) > 0 then begin
-          wbProgress('Record is referenced by '+Length(ReferencedBy).ToString+' other record(s)');
-          ShowChangeReferencedBy(OldFormID, NewFormID, ReferencedBy, True );
-        end;
-      except
-        on E: Exception do begin
-          wbProgress('Error: ' + E.Message);
-          AnyErrors := True;
-        end;
+        wbCurrentProgress := 'Processed Records: ' + k.ToString;
       end;
-
-      wbCurrentProgress := 'Processed Records: ' + IntToStr(High(MainRecords) - k) + ', Renumbered Records: ' + Counter.ToString;
-    end;
-    if Supports(_File.Elements[0], IwbMainRecord, MainRecord) and (MainRecord.Signature = 'TES4') then begin
-      Inc(EndFormID);
-      MainRecord.ElementNativeValues['HEDR\Next Object ID'] := EndFormID.ObjectID;
-    end;
-    if AnyErrors then begin
-      pgMain.ActivePage := tbsMessages;
-      wbProgress('!!! Errors have occured. It is highly recommended to exit without saving as partial changes might have occured !!!');
-    end;
-  end);
+      if AnyErrors then begin
+        pgMain.ActivePage := tbsMessages;
+        wbProgress('!!! Errors have occured. It is highly recommended to exit without saving as partial changes might have occured !!!');
+      end;
+    end);
+    UpdateNextObjectID;
+  end;
 end;
 
 function IsMasterTemporary(MainRecord: IwbMainRecord): Boolean;
@@ -11711,6 +11808,17 @@ begin
     Assigned(Element) and
     (Element.ElementType = etFile) and
     Element.IsEditable;
+
+  mniNavCompactFormIDs.Visible :=
+    mniNavRenumberFormIDsFrom.Visible and
+    wbIsEslSupported and
+    Supports(Element, IwbFile, _File) and
+    not _File.IsESL;
+
+  mniNavRenumberFormIDsInject.Visible :=
+    mniNavRenumberFormIDsFrom.Visible and
+    Supports(Element, IwbFile, _File) and
+    (_File.MasterCount > 0);
 
   mniNavChangeReferencingRecords.Visible :=
     not wbTranslationMode and
