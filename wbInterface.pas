@@ -26,7 +26,7 @@ uses
 
 const
   VersionString            = '3.2.46 EXTRA EXPERIMENTAL';
-  wbDevCRC32App : Cardinal = $FFFFFFF6;
+  wbDevCRC32App : Cardinal = $FFFFFFF5;
 
   clOrange       = $004080FF;
   wbFloatDigits  = 6;

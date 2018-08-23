@@ -2204,7 +2204,7 @@ begin
         MemoryStream.Read(flRecordsCount, SizeOf(flRecordsCount));
         Assert(flRecordsCount=Length(flRecords));
         for i := 0 to Pred(flRecordsCount) do begin
-          (flRecords[i] as IwbMainRecordInternal).LoadRefsFromStream(MemoryStream, fsIsOfficial in flStates);
+          (flRecords[i] as IwbMainRecordInternal).LoadRefsFromStream(MemoryStream, fsIsGameMaster in flStates);
           wbTick;
         end;
       finally
@@ -2226,7 +2226,7 @@ begin
             try
               MemoryStream.Write(flRecordsCount, SizeOf(flRecordsCount));
               for i := 0 to Pred(flRecordsCount) do begin
-                (flRecords[i] as IwbMainRecordInternal).SaveRefsToStream(MemoryStream, fsIsOfficial in flStates);
+                (flRecords[i] as IwbMainRecordInternal).SaveRefsToStream(MemoryStream, fsIsGameMaster in flStates);
                 wbTick;
               end;
               MemoryStream.Position := 0;
