@@ -56,7 +56,9 @@ type
     mfIsModGroupTarget,
     mfIsModGroupSource,
     mfEphemeralModGroupTagged,
-    mfTaggedForPluginMode
+    mfTaggedForPluginMode,
+    mfModGroupMissingCurrentCRC,
+    mfModGroupMissingAnyCRC
   );
 
   TwbModuleFlags = set of TwbModuleFlag;
