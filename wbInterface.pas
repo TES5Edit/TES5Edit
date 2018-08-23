@@ -588,7 +588,7 @@ type
     class function FromCardinal(const aValue: Cardinal): TwbFormID; static; inline;
     class function FromStr(aValue: string): TwbFormID; static;
     class function FromStrDef(aValue: string; aDef: Cardinal = 0): TwbFormID; static;
-    class function FromVar(const aValue: Variant): TwbFormID; static; inline;
+    class function FromVar(const aValue: Variant): TwbFormID; static;
 
     class function Null: TwbFormID; static; inline;
 
@@ -3628,6 +3628,9 @@ threadvar
   _wbCanOverwriteCallback : TwbCanOverwriteCallback;
 
 function wbCanOverwrite(const aTarget, aSource: IwbElement): TwbCanOverwriteAction;
+
+var
+  wbVarPointer: TVarType = $7FF;
 
 implementation
 
@@ -15833,8 +15836,11 @@ class function TwbFormID.FromVar(const aValue: Variant): TwbFormID;
 begin
   if VarIsOrdinal(aValue) then
     Result._FormID := Int64(aValue)
-  else
-    Result._FormID := StrToInt64('$' + string(aValue));
+  else with FindVarData(aValue)^ do
+    if VType = wbVarPointer then
+      Result._FormID := NativeUInt(VPointer)
+    else
+      Result._FormID := StrToInt64('$' + string(aValue));
 end;
 
 class function TwbFormID.FromStrDef(aValue: string; aDef: Cardinal): TwbFormID;
