@@ -348,6 +348,7 @@ type
     mniViewModGroupsReload: TMenuItem;
     N23: TMenuItem;
     mniNavCreateModGroup: TMenuItem;
+    mniNavUpdateCRCModGroups: TMenuItem;
     N24: TMenuItem;
     mniViewCreateModGroup: TMenuItem;
     mniNavEditModGroup: TMenuItem;
@@ -583,6 +584,7 @@ type
     procedure mniViewModGroupsReloadClick(Sender: TObject);
     procedure mniModGroupsClick(Sender: TObject);
     procedure mniNavCreateModGroupClick(Sender: TObject);
+    procedure mniNavUpdateCRCModGroupsClick(Sender: TObject);
     procedure mniNavEditModGroupClick(Sender: TObject);
     procedure mniNavDeleteModGroupsClick(Sender: TObject);
     procedure edFilterNoBeepOnEnterKeyPress(Sender: TObject; var Key: Char);
@@ -9449,6 +9451,97 @@ begin
   end;
 end;
 
+procedure TfrmMain.mniNavUpdateCRCModGroupsClick(Sender: TObject);
+var
+  MissingAny       : TwbModuleInfos;
+  MissingCurrent   : TwbModuleInfos;
+  lSelectedModules : TwbModuleInfos;
+  UpdatedCount     : Integer;
+begin
+  with TfrmModuleSelect.Create(Self) do try
+    AllModules := wbModulesByLoadOrder;
+    AllModules.ExcludeAll(mfTagged);
+    AllModules.ExcludeAll(mfModGroupMissingAnyCRC);
+    AllModules.ExcludeAll(mfModGroupMissingCurrentCRC);
+    wbModGroupsByName(False).FlagFilesMissingCRC;
+
+    MissingAny := AllModules.FilteredByFlag(mfModGroupMissingAnyCRC);
+    MissingCurrent := AllModules.FilteredByFlag(mfModGroupMissingCurrentCRC);
+
+    if (Length(MissingAny) > 0) and (Length(MissingCurrent) > 0) then begin
+      if MessageDlg('Do you wish to add CRCs to ModGroup Items which currently do not contain any CRCs?', mtConfirmation, mbYesNo, 0) <> mrYes then
+        MissingAny := nil
+      else if MessageDlg('Do you wish to update CRCs in ModGroup Items which already contain CRCs, but are missing the current one?', mtConfirmation, mbYesNo, 0) <> mrYes then
+        MissingCurrent := nil;
+    end;
+
+    if Length(MissingAny) > 0 then begin
+      if Length(MissingCurrent) > 0 then begin
+        Caption := 'Please select the modules for which you want to add or update the current CRC to/in ModGroup Items...';
+        AllModules := AllModules.FilteredBy(function(aModule: PwbModuleInfo): Boolean begin
+          Result := aModule.miFlags * [mfModGroupMissingAnyCRC, mfModGroupMissingCurrentCRC] <> [];
+        end);
+      end else begin
+        Caption := 'Please select the modules for which you want to add the current CRC to ModGroups';
+        AllModules := MissingAny;
+      end;
+    end else begin
+      if Length(MissingCurrent) > 0 then begin
+        Caption := 'Please select the modules for which you want to update the current CRC in ModGroups...';
+        AllModules := MissingCurrent;
+      end else begin
+        ShowMessage('No ModGroups need updating.');
+        Exit;
+      end;
+    end;
+
+    SelectFlag := mfTagged;
+    MinSelect := 1;
+    AllowCancel;
+
+    if ShowModal <> mrOK then
+      Exit;
+
+    lSelectedModules := SelectedModules;
+  finally
+    Free;
+  end;
+
+  with TfrmModGroupSelect.Create(Self) do try
+    AllModGroups := wbModGroupsByName(False);
+    AllModGroups.ExcludeAll(mgfTagged);
+    AllModGroups.FlagModGroupsNeedingCRCUpdateForTaggedFiles(Length(MissingAny) > 0, Length(MissingCurrent) > 0);
+    AllModGroups := AllModGroups.FilteredByFlag(mgfNeedCRCUpdate);
+
+    if Length(AllModGroups) < 1 then begin
+      ShowMessage('Nothing to do.');
+      Exit;
+    end;
+
+    Caption := 'Please select the ModGroups you wish to update...';
+    SelectFlag := mgfTagged;
+    FilterFlag := mgfNone;
+    AllowCancel;
+
+    MinSelect := 1;
+
+    if ShowModal < mrOK then
+      Exit;
+
+    UpdatedCount := SelectedModGroups.UpdateCRC(Length(MissingAny) > 0, Length(MissingCurrent) > 0);
+    case UpdatedCount of
+      0: ShowMessage('No ModGroups have been updated.');
+      1: ShowMessage('One ModGroup has been updated.');
+    else
+      ShowMessage(UpdatedCount.ToString + ' ModGroups have been updated.');
+    end;
+  finally
+    Free;
+  end;
+
+  mniViewModGroupsReloadClick(Self);
+end;
+
 procedure TfrmMain.mniNavRemoveIdenticalToMasterClick(Sender: TObject);
 const
   sJustWait                   = 'Removing "Identical to Master" records. Please wait...';
@@ -11941,6 +12034,7 @@ begin
 
   mniNavEditModGroup.Visible := Length(wbModGroupsByName(False)) > 0;
   mniNavDeleteModGroups.Visible := mniNavEditModGroup.Visible;
+  mniNavUpdateCRCModGroups.Visible := mniNavEditModGroup.Visible;
 
   mniNavCellChildPers.Visible := False;
   mniNavCellChildTemp.Visible := False;

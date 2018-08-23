@@ -460,10 +460,6 @@ object frmMain: TfrmMain
       object tbsInfo: TTabSheet
         Caption = 'Information'
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object Memo1: TMemo
           AlignWithMargins = True
           Left = 3
@@ -1968,6 +1964,11 @@ object frmMain: TfrmMain
       Caption = 'Delete ModGroups...'
       GroupIndex = 4
       OnClick = mniNavDeleteModGroupsClick
+    end
+    object mniNavUpdateCRCModGroups: TMenuItem
+      Caption = 'Update CRC in ModGroups...'
+      GroupIndex = 4
+      OnClick = mniNavUpdateCRCModGroupsClick
     end
     object N4: TMenuItem
       Caption = '-'

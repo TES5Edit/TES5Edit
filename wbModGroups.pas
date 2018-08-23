@@ -45,6 +45,9 @@ type
   private
     function mgiLoad(aLine: string): Boolean;
     procedure mgiCheckValid(aForce: Boolean);
+    procedure mgiFlagFilesMissingCRC;
+    function mgiNeedsCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean): Boolean;
+    function mgiUpdateCRC(aAdd, aUpdate: Boolean): Boolean;
   public
     mgiFlags     : TwbModGroupItemFlags;
     mgiFileName  : string;
@@ -61,7 +64,8 @@ type
     mgfNone,
     mgfValid,
     mgfValidChecked,
-    mgfTagged
+    mgfTagged,
+    mgfNeedCRCUpdate
   );
   TwbModGroupFlags = set of TwbModGroupFlag;
 
@@ -76,6 +80,10 @@ type
     procedure mgCheckValid(aForce: Boolean);
     procedure mgAddSelfTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
     procedure mgTagTargetFiles(aSource: PwbModuleInfo);
+    procedure mgFlagFilesMissingCRC;
+    procedure mgFlagModGroupsNeedingCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean);
+    function mgUpdateCRC(aAdd, aUpdate: Boolean): Boolean;
+    procedure mgSaveToFile;
   public
     mgModGroupsFile : PwbModGroupsFile;
     mgFlags         : TwbModGroupFlags;
@@ -102,6 +110,9 @@ type
 
     function Activate: Boolean;
     procedure ShowValidationMessages;
+    procedure FlagFilesMissingCRC;
+    procedure FlagModGroupsNeedingCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean);
+    function UpdateCRC(aAdd, aUpdate: Boolean): Integer;
   end;
 
   TwbModGroupFileFlag = (
@@ -382,6 +393,25 @@ begin
     Include(mgFlags, mgfValid);
 end;
 
+procedure TwbModGroup.mgFlagFilesMissingCRC;
+var
+  i: Integer;
+begin
+  for i := Low(mgItems) to High(mgItems) do
+    mgItems[i].mgiFlagFilesMissingCRC;
+end;
+
+procedure TwbModGroup.mgFlagModGroupsNeedingCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean);
+var
+  i: Integer;
+begin
+  for i := Low(mgItems) to High(mgItems) do
+    if mgItems[i].mgiNeedsCRCUpdateForTaggedFiles(aAdd, aUpdate) then begin
+      Include(mgFlags, mgfNeedCRCUpdate);
+      Exit;
+    end;
+end;
+
 procedure TwbModGroup.mgLoad(aLines: TStrings);
 var
   i, j: Integer;
@@ -393,6 +423,28 @@ begin
     if mgItems[j].mgiLoad(aLines[i]) then
       Inc(j);
   SetLength(mgItems, j);
+end;
+
+procedure TwbModGroup.mgSaveToFile;
+var
+  sl: TStringList;
+begin
+  if not Assigned(mgModGroupsFile) then
+    Exit;
+
+  sl := TStringList.Create;
+  try
+    with TMemIniFile.Create(mgModGroupsFile.mgfFileName) do try
+      EraseSection(mgName);
+      GetStrings(sl);
+    finally
+      Free;
+    end;
+    sl.AddStrings(ToStrings);
+    sl.SaveToFile(mgModGroupsFile.mgfFileName);
+  finally
+    sl.Free;
+  end;
 end;
 
 procedure TwbModGroup.mgTagTargetFiles(aSource: PwbModuleInfo);
@@ -411,6 +463,17 @@ begin
             with mgItems[j] do
               if Assigned(mgiModule) and (mgiFlags * [mgifIsTarget, mgifHasFile] = [mgifIsTarget, mgifHasFile]) then
                 Include(mgiModule.miFlags, mfIsModGroupTarget);
+end;
+
+function TwbModGroup.mgUpdateCRC(aAdd, aUpdate: Boolean): Boolean;
+var
+  i        : Integer;
+begin
+  Result := False;
+  for i := Low(mgItems) to High(mgItems) do
+    Result := mgItems[i].mgiUpdateCRC(aAdd, aUpdate) or Result;
+  if Result then
+    mgSaveToFile;
 end;
 
 function TwbModGroup.ToString: string;
@@ -442,6 +505,22 @@ begin
 end;
 
 { TwbModGroupItem }
+
+procedure TwbModGroupItem.mgiFlagFilesMissingCRC;
+var
+  CRC32: TwbCRC32;
+begin
+  if mgifForbidden in mgiFlags then
+    Exit;
+  if not Assigned(mgiModule) then
+    Exit;
+  if mgiModule.GetCRC32(CRC32) then
+    if Length(mgiCRC32s) > 0 then begin
+      if not mgiCRC32s.Contains(CRC32) then
+        Include(mgiModule.miFlags, mfModGroupMissingCurrentCRC);
+    end else
+      Include(mgiModule.miFlags, mfModGroupMissingAnyCRC);
+end;
 
 procedure TwbModGroupItem.mgiCheckValid(aForce: Boolean);
 const
@@ -551,6 +630,46 @@ begin
   Result := True;
 end;
 
+function TwbModGroupItem.mgiNeedsCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean): Boolean;
+var
+  CRC32: TwbCRC32;
+begin
+  Result := False;
+  if mgifForbidden in mgiFlags then
+    Exit;
+  if not Assigned(mgiModule) then
+    Exit;
+  if not (mfTagged in mgiModule.miFlags) then
+    Exit;
+  if mgiModule.GetCRC32(CRC32) then
+    if Length(mgiCRC32s) > 0 then begin
+      if not mgiCRC32s.Contains(CRC32) then
+        Result := aUpdate
+    end else
+      Result := aAdd;
+end;
+
+function TwbModGroupItem.mgiUpdateCRC(aAdd, aUpdate: Boolean): Boolean;
+var
+  CRC32: TwbCRC32;
+begin
+  Result := False;
+  if mgifForbidden in mgiFlags then
+    Exit;
+  if not Assigned(mgiModule) then
+    Exit;
+  if not mgiModule.GetCRC32(CRC32) then
+    Exit;
+
+  if Length(mgiCRC32s) > 0 then begin
+    if not mgiCRC32s.Contains(CRC32) then
+      Result := aUpdate
+  end else
+    Result := aAdd;
+
+  if Result then
+    mgiCRC32s.Add(CRC32);
+end;
 
 function TwbModGroupItem.ToString: string;
 var
@@ -715,6 +834,23 @@ begin
   SetLength(Result, j);
 end;
 
+procedure TwbModGroupPtrsHelper.FlagFilesMissingCRC;
+var
+  i: Integer;
+begin
+  for i := Low(Self) to High(Self) do
+    Self[i].mgFlagFilesMissingCRC;
+end;
+
+procedure TwbModGroupPtrsHelper.FlagModGroupsNeedingCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean);
+var
+  i: Integer;
+begin
+  ExcludeAll(mgfNeedCRCUpdate);
+  for i := Low(Self) to High(Self) do
+    Self[i].mgFlagModGroupsNeedingCRCUpdateForTaggedFiles(aAdd, aUpdate);
+end;
+
 procedure TwbModGroupPtrsHelper.IncludeAll(aFlag: TwbModGroupFlag);
 var
   i: Integer;
@@ -756,6 +892,16 @@ begin
   finally
     Free;
   end;
+end;
+
+function TwbModGroupPtrsHelper.UpdateCRC(aAdd, aUpdate: Boolean): Integer;
+var
+  i: Integer;
+begin
+  Result := 0;
+  for i := Low(Self) to High(Self) do
+    if Self[i].mgUpdateCRC(aAdd, aUpdate) then
+      Inc(Result);
 end;
 
 initialization
