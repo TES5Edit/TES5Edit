@@ -1213,18 +1213,19 @@ begin
     Exit;
   end;
 
-  if OldDateTime <> 0 then
-    if lTo.EndsWith(csDotEsp, True) or
-       lTo.EndsWith(csDotEsm, True) or
-       lTo.EndsWith(csDotEsl, True) or
-       lTo.EndsWith(csDotGhost, True) then try
-    TFile.SetLastWriteTime(lTo, OldDateTime);
-  except
-    s := 'Could not set last modified time of "' + lTo + '".';
-    wbProgress(s);
-    if not aSilent then
-      MessageBox(0, PChar(s), 'Error', 0);
-  end;
+  if not (wbGameMode in wbOrderFromPluginsTxt) then
+    if OldDateTime <> 0 then
+      if lTo.EndsWith(csDotEsp, True) or
+         lTo.EndsWith(csDotEsm, True) or
+         lTo.EndsWith(csDotEsl, True) or
+         lTo.EndsWith(csDotGhost, True) then try
+      TFile.SetLastWriteTime(lTo, OldDateTime);
+    except
+      s := 'Could not set last modified time of "' + lTo + '".';
+      wbProgress(s);
+      if not aSilent then
+        MessageBox(0, PChar(s), 'Error', 0);
+    end;
 
   Result := True;
 end;
