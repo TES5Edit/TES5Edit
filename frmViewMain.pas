@@ -5131,6 +5131,8 @@ var
   i, j, k, l: Integer;
   Rect: TRect;
 begin
+  wbVarPointer := varPointer;
+
   if wbThemesSupported then try
     if not Assigned(Settings) and (wbSettingsFileName <> '')  then
       if ForceDirectories(ExtractFilePath(wbSettingsFileName)) then
