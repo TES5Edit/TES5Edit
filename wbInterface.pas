@@ -25,7 +25,7 @@ uses
   Graphics;
 
 const
-  VersionString            = '3.2.46 EXTRA EXPERIMENTAL';
+  VersionString            = '3.2.47 EXTRA EXPERIMENTAL';
   wbDevCRC32App : Cardinal = $FFFFFFF5;
 
   clOrange       = $004080FF;
