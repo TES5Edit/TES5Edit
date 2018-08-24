@@ -69,6 +69,7 @@ threadvar
   wbCurrentProgress       : string;
   wbStartTime             : TDateTime;
   wbShowStartTime         : Integer;
+  wbHideStartTime         : Integer;
 
 var
   wbForceTerminate    : Boolean;

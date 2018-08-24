@@ -554,6 +554,7 @@ type
       var Value: Variant; Args: TJvInterpreterArgs; var Done: Boolean);
     procedure JvInterpreterProgram1GetUnitSource(UnitName: string; var Source: string;
       var Done: Boolean);
+    procedure JvInterpreterProgram1Statement(Sender: TObject);
     procedure mniNavLogAnalyzerClick(Sender: TObject);
     procedure mniRefByMarkModifiedClick(Sender: TObject);
     procedure JvInterpreterProgram1SetValue(Sender: TObject; Identifier: string;
@@ -1080,7 +1081,7 @@ end;
 procedure GeneralProgressNoAbortCheck(const s: string);
 begin
   if s <> '' then
-    if wbShowStartTime > 0 then
+    if (wbShowStartTime > 0) and (wbHideStartTime < 1) then
       frmMain.PostAddMessage(FormatDateTime('[nn:ss] ', Now - wbStartTime) + s)
     else
       frmMain.PostAddMessage(s);
@@ -6707,6 +6708,7 @@ begin
     jvi.OnGetValue := JvInterpreterProgram1GetValue;
     jvi.OnSetValue := JvInterpreterProgram1SetValue;
     jvi.OnGetUnitSource := JvInterpreterProgram1GetUnitSource;
+    jvi.OnStatement := JvInterpreterProgram1Statement;
     jvi.Pas.Text := aScript;
     jvi.Compile;
 
@@ -6730,7 +6732,12 @@ begin
         try
           try
             if jvi.FunctionExists('', 'Initialize') then begin
-              jvi.CallFunction('Initialize', nil, []);
+              Inc(wbHideStartTime);
+              try
+                jvi.CallFunction('Initialize', nil, []);
+              finally
+                Dec(wbHideStartTime);
+              end;
               if jvi.VResult <> 0 then begin
                 wbProgress(sTerminated + IntToStr(jvi.VResult));
                 Exit;
@@ -6756,7 +6763,12 @@ begin
                       if not bShowMessages then
                         wbProgressUnlock;
                       try
-                        jvi.CallFunction('Process', nil, [NodeData.Element]);
+                        Inc(wbHideStartTime);
+                        try
+                          jvi.CallFunction('Process', nil, [NodeData.Element]);
+                        finally
+                          Dec(wbHideStartTime);
+                        end;
                       finally
                         if not bShowMessages then
                           wbProgressLock;
@@ -6779,7 +6791,12 @@ begin
               end;
 
             if jvi.FunctionExists('', 'Finalize') then begin
-              jvi.CallFunction('Finalize', nil, []);
+              Inc(wbHideStartTime);
+              try
+                jvi.CallFunction('Finalize', nil, []);
+              finally
+                Dec(wbHideStartTime);
+              end;
               if jvi.VResult <> 0 then begin
                 wbProgress(sTerminated + IntToStr(jvi.VResult));
                 Exit;
@@ -16989,6 +17006,11 @@ begin
   end;
 end;
 
+
+procedure TfrmMain.JvInterpreterProgram1Statement(Sender: TObject);
+begin
+  wbTick;
+end;
 
 type
   PUnitInfo = ^TUnitInfo;
