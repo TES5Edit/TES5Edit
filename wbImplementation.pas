@@ -2189,7 +2189,7 @@ begin
       '_' + ChangeFileExt(CacheFileName, '') +
       '_' + Copy(ExtractFileExt(CacheFileName), 2) +
       '_' + GetCRC32.ToString +
-      '.refcache';
+      wbRefCacheExt;
     if not wbDontCacheLoad and FileExists(CacheFileName) then begin
       Include(flStates, fsRefsBuild);
       MemoryStream := TMemoryStream.Create;
