@@ -673,7 +673,7 @@ type
     function GetMasterCount: Integer; inline;
     function GetRecordByFormID(aFormID: TwbFormID; aAllowInjected: Boolean): IwbMainRecord;
     function GetRecordByEditorID(const aEditorID: string): IwbMainRecord;
-    function GetContainedRecordByLoadOrderFormID(aFormID: TwbFormID): IwbMainRecord;
+    function GetContainedRecordByLoadOrderFormID(aFormID: TwbFormID; aAllowInjected: Boolean): IwbMainRecord;
     function GetGroupBySignature(const aSignature: TwbSignature): IwbGroupRecord;
     function HasGroup(const aSignature: TwbSignature): Boolean;
     function GetFileStates: TwbFileStates; inline;
@@ -3061,7 +3061,7 @@ begin
   end;
 end;
 
-function TwbFile.GetContainedRecordByLoadOrderFormID(aFormID: TwbFormID): IwbMainRecord;
+function TwbFile.GetContainedRecordByLoadOrderFormID(aFormID: TwbFormID; aAllowInjected: Boolean): IwbMainRecord;
 
   function LoadOrderToFile(const aFileID: TwbFileID): TwbFileID;
   var
@@ -3093,7 +3093,7 @@ begin
 
   if FindFormID(aFormID, i) then
     Result := flRecords[i]
-  else if (FileID.FullSlot >= GetMasterCount) and FindInjectedID(aFormID, i) then
+  else if aAllowInjected and (FileID.FullSlot >= GetMasterCount) and FindInjectedID(aFormID, i) then
     Result := flInjectedRecords[i];
 end;
 
@@ -8153,14 +8153,14 @@ begin
   FormID := GetLoadOrderFormID;
   Result := Self;
   if aFile.LoadOrder > GetFile.LoadOrder then begin
-    MainRecord := aFile.ContainedRecordByLoadOrderFormID[FormID];
+    MainRecord := aFile.ContainedRecordByLoadOrderFormID[FormID, True];
     if Assigned(MainRecord) then
       Result := MainRecord
     else
       for i := Pred(aFile.MasterCount) downto 0 do begin
         _File := aFile.Masters[i];
         if _File.LoadOrder > Result._File.LoadOrder then begin
-          MainRecord := _File.ContainedRecordByLoadOrderFormID[FormID];
+          MainRecord := _File.ContainedRecordByLoadOrderFormID[FormID, True];
           if Assigned(MainRecord) then
             Result := MainRecord;
         end;
@@ -11873,7 +11873,7 @@ var
     if aAsNew then
       FormID := _File.NewFormID
     else begin
-      Result := _File.ContainedRecordByLoadOrderFormID[MainRecord.LoadOrderFormID];
+      Result := _File.ContainedRecordByLoadOrderFormID[MainRecord.LoadOrderFormID, False];
       if Assigned(Result) then
         FormID := (Result as IwbMainRecord).FixedFormID
       else

@@ -10381,7 +10381,7 @@ var
         repeat
           NewFormID := StartFormID + j;
           Inc(j);
-        until not Assigned(TargetFile.ContainedRecordByLoadOrderFormID[NewFormID]);
+        until not Assigned(TargetFile.ContainedRecordByLoadOrderFormID[NewFormID, True]);
       end;
 
       if NewFormID > EndFormID then begin
