@@ -40,11 +40,6 @@ type
     cbTrackAllEditorID: TCheckBox;
     cbSortGroupRecord: TCheckBox;
     cbShowFlagEnumValue: TCheckBox;
-    tsDoNotBuildRefs: TTabSheet;
-    lbDoNotBuildRef: TListBox;
-    Label2: TLabel;
-    btnDoNotBuildRefAdd: TButton;
-    btnDoNotBuildRefDel: TButton;
     cbRemoveOffsetData: TCheckBox;
     pnlFontRecords: TPanel;
     pnlFontMessages: TPanel;
@@ -72,8 +67,6 @@ type
     procedure cbConflictAllChange(Sender: TObject);
     procedure clbConflictAllChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure btnDoNotBuildRefAddClick(Sender: TObject);
-    procedure btnDoNotBuildRefDelClick(Sender: TObject);
     procedure pnlFontRecordsClick(Sender: TObject);
   private
     { Private declarations }
@@ -96,46 +89,6 @@ uses
 var
   wbColorConflictAllDefault: TConflictAllColors;
   wbColorConflictThisDefault: TConflictThisColors;
-
-procedure TfrmOptions.btnDoNotBuildRefAddClick(Sender: TObject);
-var
-  i: integer;
-  sl: TStringList;
-begin
-  with TfrmFileSelect.Create(Self) do try
-
-    sl := TStringList.Create;
-    sl.Sorted := True;
-    sl.Duplicates := dupIgnore;
-
-    sl.Assign(lbDoNotBuildRef.Items);
-
-    for i := Low(_Files^) to High(_Files^) do
-      CheckListBox1.Items.Add(_Files^[i].FileName);
-
-    if ShowModal <> mrOK then
-      Exit;
-
-    for i := 0 to Pred(CheckListBox1.Count) do
-      if CheckListBox1.Checked[i] then
-        sl.Add(CheckListBox1.Items[i]);
-
-    lbDoNotBuildRef.Items.Assign(sl);
-
-  finally
-    FreeAndNil(sl);
-    Free;
-  end;
-end;
-
-procedure TfrmOptions.btnDoNotBuildRefDelClick(Sender: TObject);
-var
-  i: integer;
-begin
-  for i := Pred(lbDoNotBuildRef.Count) downto 0 do
-    if lbDoNotBuildRef.Selected[i] then
-      lbDoNotBuildRef.Items.Delete(i);
-end;
 
 procedure TfrmOptions.cbConflictAllChange(Sender: TObject);
 begin

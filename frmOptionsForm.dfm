@@ -262,49 +262,9 @@ object frmOptions: TfrmOptions
         TabOrder = 6
       end
     end
-    object tsDoNotBuildRefs: TTabSheet
-      Caption = 'References building'
-      ImageIndex = 3
-      object Label2: TLabel
-        Left = 16
-        Top = 13
-        Width = 187
-        Height = 13
-        Caption = 'Do not autobuild references for plugins'
-      end
-      object lbDoNotBuildRef: TListBox
-        Left = 16
-        Top = 32
-        Width = 329
-        Height = 257
-        ItemHeight = 13
-        MultiSelect = True
-        TabOrder = 0
-      end
-      object btnDoNotBuildRefAdd: TButton
-        Left = 367
-        Top = 32
-        Width = 75
-        Height = 25
-        Caption = 'Add'
-        TabOrder = 1
-        OnClick = btnDoNotBuildRefAddClick
-      end
-      object btnDoNotBuildRefDel: TButton
-        Left = 367
-        Top = 63
-        Width = 75
-        Height = 25
-        Caption = 'Delete'
-        TabOrder = 2
-        OnClick = btnDoNotBuildRefDelClick
-      end
-    end
     object tsUISettings: TTabSheet
       Caption = 'UI Settings'
       ImageIndex = 2
-      ExplicitLeft = 8
-      ExplicitTop = 28
       object Label3: TLabel
         Left = 16
         Top = 16

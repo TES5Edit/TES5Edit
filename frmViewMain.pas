@@ -4439,25 +4439,6 @@ begin
   for ConflictAll := Low(TConflictAll) to High(TConflictAll) do
     wbColorConflictAll[ConflictAll] := Settings.ReadInteger('ColorConflictAll', GetEnumName(TypeInfo(TConflictAll), Integer(ConflictAll)), Integer(wbColorConflictAll[ConflictAll]));
 
-  Settings.ReadSection('DoNotBuildRefsFor', wbDoNotBuildRefsFor);
-
-  // add the game master file into wbDoNotBuildRefsFor list by default
-  if not Settings.ReadBool('Options', 'NoBuildRefsGameMasterAdded', False) then begin
-    wbDoNotBuildRefsFor.Add(wbGameName + '.esm');
-
-    // also do not build refs for TTW's fallout3.esm in FNVEdit
-    if wbGameMode = gmFNV then
-      wbDoNotBuildRefsFor.Add('Fallout3.esm');
-
-    // make master file addition only once so it can be manually removed in Options later if needed
-    Settings.WriteBool('Options', 'NoBuildRefsGameMasterAdded', True);
-
-    // save updated list
-    Settings.EraseSection('DoNotBuildRefsFor');
-    for i := 0 to Pred(wbDoNotBuildRefsFor.Count) do
-      Settings.WriteInteger('DoNotBuildRefsFor', wbDoNotBuildRefsFor[i], 1);
-  end;
-
   HideNoConflict := Settings.ReadBool('View', 'HodeNoConflict', False);
   mniViewHideNoConflict.Checked := HideNoConflict;
 
@@ -11344,7 +11325,6 @@ begin
     edUDRSetZValue.Text := FloatToStrF(wbUDRSetZValue, ffFixed, 99, wbFloatDigits);
     cbUDRSetMSTT.Checked := wbUDRSetMSTT;
     edUDRSetMSTTValue.Text := IntToHex(wbUDRSetMSTTValue, 8);
-    lbDoNotBuildRef.Items.Assign(wbDoNotBuildRefsFor);
     _Files := @Files;
 
     if ShowModal <> mrOK then
@@ -11387,7 +11367,6 @@ begin
     wbUDRSetZValue := StrToFloatDef(edUDRSetZValue.Text, wbUDRSetZValue);
     wbUDRSetMSTT := cbUDRSetMSTT.Checked;
     wbUDRSetMSTTValue := StrToInt64Def('$' + edUDRSetMSTTValue.Text, wbUDRSetMSTTValue);
-    wbDoNotBuildRefsFor.Assign(lbDoNotBuildRef.Items);
 
     SaveFont(Settings, 'UI', 'FontRecords', vstNav.Font);
     SaveFont(Settings, 'UI', 'FontMessages', mmoMessages.Font);
@@ -11427,14 +11406,6 @@ begin
       Settings.WriteInteger('ColorConflictThis', GetEnumName(TypeInfo(TConflictThis), Integer(ct)), Integer(wbColorConflictThis[ct]));
     for ca := Low(TConflictAll) to High(TConflictAll) do
       Settings.WriteInteger('ColorConflictAll', GetEnumName(TypeInfo(TConflictAll), Integer(ca)), Integer(wbColorConflictAll[ca]));
-    // if donotbuildrefs section exists, then clear it
-    if Settings.SectionExists('DoNotBuildRefsFor') then begin
-      Settings.EraseSection('DoNotBuildRefsFor');
-      Settings.WriteString('DoNotBuildRefsFor', 'dummy', '');
-      Settings.DeleteKey('DoNotBuildRefsFor', 'dummy');
-    end;
-    for i := 0 to Pred(wbDoNotBuildRefsFor.Count) do
-      Settings.WriteInteger('DoNotBuildRefsFor', wbDoNotBuildRefsFor[i], 1);
 
     Settings.UpdateFile;
   finally
@@ -17506,12 +17477,8 @@ begin
                 {$ENDIF}
                   if not ltFiles[i].IsNotPlugin then begin
                     try
-                      OnlyLoad := wbDoNotBuildRefsFor.Find(ltFiles[i].FileName, dummy);
+                      OnlyLoad := False;
 
-                      if OnlyLoad then
-                        if not (wbDontCache or wbDontCacheLoad) then
-                          if (wbToolMode = tmEdit) and not (wbQuickShowConflicts or wbQuickClean) then
-                            OnlyLoad := False;
 
                       if not (OnlyLoad and (wbDontCache or wbDontCacheLoad)) then begin
                         if OnlyLoad then

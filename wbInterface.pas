@@ -108,7 +108,6 @@ var
   wbClampFormID            : Boolean  = True;
   wbAlignArrayElements     : Boolean  = True;
   wbAlignArrayLimit        : Integer  = 5000;
-  wbDoNotBuildRefsFor      : TStringList;
   wbCopyIsRunning          : Integer  = 0;
   wbIgnoreESL              : Boolean  = False;
   wbPseudoESL              : Boolean  = False;
@@ -16190,9 +16189,6 @@ initialization
   wbIgnoreRecords := TStringList.Create;
   wbIgnoreRecords.Sorted := True;
   wbIgnoreRecords.Duplicates := dupIgnore;
-  wbDoNotBuildRefsFor := TStringList.Create;
-  wbDoNotBuildRefsFor.Sorted := True;
-  wbDoNotBuildRefsFor.Duplicates := dupIgnore;
 
   wbProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
 
@@ -16204,7 +16200,6 @@ initialization
 
 finalization
   FreeAndNil(wbIgnoreRecords);
-  FreeAndNil(wbDoNotBuildRefsFor);
   FreeAndNil(wbGroupOrder);
   FreeAndNil(wbRecordDefMap);
   wbRecordDefs := nil;
