@@ -26,11 +26,12 @@ uses
 
 const
   VersionString            = '3.2.47 EXTRA EXPERIMENTAL';
-  wbDevCRC32App : Cardinal = $FFFFFFF5;
+  wbDevCRC32App : Cardinal = $FFFFFFF0;
 
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
   wbHardcodedDat = '.Hardcoded.dat';
+  wbRefCacheExt  = '.refcache';
 
 const
   CRLF = #13#10;

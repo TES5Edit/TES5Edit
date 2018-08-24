@@ -826,6 +826,7 @@ type
 
     procedure DoInit;
     procedure SetDoubleBuffered(aWinControl: TWinControl);
+    procedure CleanupRefCache;
 
     procedure SetActiveRecord(const aMainRecord: IwbMainRecord); overload;
     procedure SetActiveRecord(const aMainRecords: TDynMainRecords); overload;
@@ -3652,6 +3653,43 @@ begin
   vstNav.Invalidate;
 end;
 
+procedure TfrmMain.CleanupRefCache;
+var
+  Files : TStringDynArray
+  ;
+  i     : Integer;
+  Size  : Int64;
+begin
+  if not wbBuildRefs then
+    Exit;
+  if wbDontCache then
+    Exit;
+  if wbDontCacheSave then
+    Exit;
+  if not (wbToolMode in [tmView, tmEdit, tmTranslate]) then
+    Exit;
+
+  if not TDirectory.Exists(wbCachePath) then
+    Exit;
+
+  if Length(TDirectory.GetFiles(wbCachePath, IntToHex64(wbCRC32App, 8) + '_*' + wbRefCacheExt)) > 0 then
+    Exit;
+
+  Size := 0;
+  Files := TDirectory.GetFiles(wbCachePath, '*' + wbRefCacheExt);
+
+  i := Length(Files);
+  if i < 1 then
+    Exit;
+
+  if MessageDlg('The Reference Cache contains ' + i.ToString +
+    ' files from a different version of ' + wbAppName + wbToolName +
+    '. Do you want to remove them?', mtConfirmation, mbYesNo, 0) = mrYes then
+    for i := Low(Files) to High(Files) do try
+      TFile.Delete(Files[i]);
+    except end;
+end;
+
 procedure TfrmMain.ClearActiveContainer;
 var
   aMainrecords : TDynMainRecords;
@@ -4388,6 +4426,8 @@ begin
 
       if wbQuickClean or wbQuickShowConflicts then
         wbBuildRefs := False;
+
+      CleanupRefCache;
 
       wbShowTip := Settings.ReadBool('Options', 'ShowTip', wbShowTip);
       if wbShowTip and (wbToolMode in [tmEdit]) then
