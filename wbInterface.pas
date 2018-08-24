@@ -1026,7 +1026,7 @@ type
     function GetMasterCount: Integer;
     function GetRecordByFormID(aFormID: TwbFormID; aAllowInjected: Boolean): IwbMainRecord;
     function GetRecordByEditorID(const aEditorID: string): IwbMainRecord;
-    function GetContainedRecordByLoadOrderFormID(aFormID: TwbFormID): IwbMainRecord;
+    function GetContainedRecordByLoadOrderFormID(aFormID: TwbFormID; aAllowInjected: Boolean): IwbMainRecord;
     function GetLoadOrder: Integer;
     function GetLoadOrderFileID: TwbFileID;
     function GetFileFileID: TwbFileID;
@@ -1098,7 +1098,7 @@ type
       read GetRecordByEditorID;
      property GroupBySignature[const aSignature: TwbSignature]: IwbGroupRecord
       read GetGroupBySignature;
-    property ContainedRecordByLoadOrderFormID[aFormID: TwbFormID]: IwbMainRecord
+    property ContainedRecordByLoadOrderFormID[aFormID: TwbFormID; aAllowInjected: Boolean]: IwbMainRecord
       read GetContainedRecordByLoadOrderFormID;
 
     property Records[aIndex: Integer]: IwbMainRecord
