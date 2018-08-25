@@ -21,15 +21,19 @@ uses
   Types,
   SysUtils,
   IOUtils,
+  Threading,
+  Diagnostics,
   wbBSArchive in 'wbBSArchive.pas',
   wbStreams in '..\..\wbStreams.pas';
 
 const
-  sVersion = '0.5';
+  sVersion = '0.6';
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
 
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
 
+var
+  bMultiThreaded: Boolean = False;
 
 //======================================================================
 function wbFindCmdLineParam(const aSwitch     : string;
@@ -279,7 +283,10 @@ var
   atype: TBSArchiveType;
   sl: TStringList;
   bsa: TwbBSArchive;
+  Completed: Integer;
+  sw: TStopwatch;
 begin
+  sw := TStopwatch.StartNew;
   root := IncludeTrailingPathDelimiter(aFolderName);
 
   if FindCmdLineSwitch('tes3') then atype := baTES3 else
@@ -343,16 +350,38 @@ begin
     DoShowArchiveInfo(bsa);
     WriteLn;
 
-    for i := 0 to Pred(sl.Count) do begin
-      try
-        bsa.AddFile(root, root + sl[i]);
-      except
-        on E: Exception do
-          raise Exception.Create('File packing error "' + root + sl[i] + '": ' + E.Message);
+    if bMultiThreaded then
+      bsa.Sync := TSimpleRWSync.Create;
+    Completed := 0;
+    if Assigned(bsa.Sync) then
+      TParallel.&For(0, Pred(sl.Count), procedure(i:Integer) begin
+        try
+          bsa.AddFile(root, root + sl[i]);
+        except
+          on E: Exception do
+            raise Exception.Create('File packing error "' + root + sl[i] + '": ' + E.Message);
+        end;
+        bsa.Sync.BeginWrite;
+        try
+          Inc(Completed);
+          if (Completed mod 10 = 0) or (Completed = Pred(sl.Count)) then
+            Write(#13'[' + IntToStr(Round((Completed+1)/sl.Count*100)) + '%]');
+        finally
+          bsa.Sync.EndWrite;
+        end;
+      end)
+    else
+      for i := 0 to Pred(sl.Count) do begin
+        try
+          bsa.AddFile(root, root + sl[i]);
+        except
+          on E: Exception do
+            raise Exception.Create('File packing error "' + root + sl[i] + '": ' + E.Message);
+        end;
+        Inc(Completed);
+        if (Completed mod 10 = 0) or (Completed = Pred(sl.Count)) then
+          Write(#13'[' + IntToStr(Round((Completed+1)/sl.Count*100)) + '%]');
       end;
-      if (i mod 10 = 0) or (i = Pred(sl.Count)) then
-        Write(#13'[' + IntToStr(Round((i+1)/sl.Count*100)) + '%]');
-    end;
 
     try
       bsa.Save;
@@ -361,8 +390,10 @@ begin
         raise Exception.Create('Archive saving error: ' + E.Message);
     end;
 
+    sw.Stop;
+
     WriteLn;
-    WriteLn('Done.');
+    WriteLn('Done in ', sw.Elapsed.ToString, '.');
   finally
     bsa.Free;
     sl.Free;
@@ -375,6 +406,10 @@ end;
 var
   UnpackDir: string; // store root folder for unpacking
 
+var
+  Completed: Integer;
+  bQuiet : Boolean = False;
+
 function IterUnpackFile(bsa: TwbBSArchive; const aFileName: string;
   aFileRecord: Pointer; aFolderRecord: Pointer): Boolean;
 var
@@ -385,9 +420,18 @@ begin
   fname := StringReplace(aFileName, '/', '\', [rfReplaceAll]);
 
   dir := UnpackDir + ExtractFilePath(fname);
-  if not DirectoryExists(dir) then
-    if not ForceDirectories(dir) then
-      raise Exception.Create('Can not create destination folder: ' + dir);
+  if not DirectoryExists(dir) then begin
+    if Assigned(bsa.Sync) then
+      bsa.Sync.BeginWrite;
+    try
+      if not ForceDirectories(dir) then
+        if not DirectoryExists(dir) then
+          raise Exception.Create('Can not create destination folder: ' + dir);
+    finally
+      if Assigned(bsa.Sync) then
+        bsa.Sync.EndWrite;
+    end;
+  end;
 
   try
     FileData := bsa.ExtractFileData(aFileRecord);
@@ -402,14 +446,30 @@ begin
     Free;
   end;
 
-  WriteLn(fname);
+  if Assigned(bsa.Sync) then
+    bsa.Sync.BeginWrite;
+  try
+    if bQuiet then begin
+      Inc(Completed);
+      if (Completed mod 10 = 0) or (Completed = Pred(bsa.FileCount)) then
+        Write(#13'[' + IntToStr(Round((Completed+1)/bsa.FileCount*100)) + '%]');
+    end else
+      WriteLn(fname);
+  finally
+    if Assigned(bsa.Sync) then
+      bsa.Sync.EndWrite;
+  end;
   Result := False;
 end;
 
 procedure DoUnpack(const aArchiveName, aFolderName: string);
 var
   bsa: TwbBSArchive;
+  sw: TStopwatch;
 begin
+  if FindCmdLineSwitch('quiet') or FindCmdLineSwitch('q') then
+    bQuiet := True;
+
   UnpackDir := IncludeTrailingPathDelimiter(aFolderName);
   if not DirectoryExists(UnpackDir) then
     raise Exception.Create('Folder does not exist: ' + UnpackDir);
@@ -417,12 +477,16 @@ begin
   WriteLn('Unpacking archive: "' + aArchiveName + '" into "' + UnpackDir + '"');
   WriteLn;
 
+  sw := TStopwatch.StartNew;
   bsa := TwbBSArchive.Create;
   try
     bsa.LoadFromFile(aArchiveName);
+    if bMultiThreaded then
+      bsa.Sync := TSimpleRWSync.Create;
     bsa.IterateFiles(@IterUnpackFile);
-    WriteLn('');
-    WriteLn('Done.');
+    sw.Stop;
+    WriteLn;
+    WriteLn('Done in ', sw.Elapsed.ToString, '.');
   finally
     bsa.Free;
   end;
@@ -432,7 +496,7 @@ end;
 procedure Main;
 begin
   WriteLn('');
-  WriteLn('BSArch v' + sVersion + ' by zilav');
+  WriteLn('BSArch v' + sVersion + ' by zilav and ElminsterAU');
   WriteLn('Packer and unpacker for Bethesda Game Studios archive files');
   WriteLn;
 
@@ -460,6 +524,8 @@ begin
     WriteLn('  <archive> - archive file name to unpack');
     WriteLn('  <folder>  - path to the existing destination folder to unpack into');
     WriteLn('              When not set unpack into the folder where archive is located');
+    WriteLn('  Parameters:');
+    WriteLn('  -q[uiet]    Don''t list extracted files');
     WriteLn('');
     WriteLn('CREATING ARCHIVES');
     WriteLn('  bsarch.exe pack <folder> <archive> [parameters]');
@@ -659,5 +725,6 @@ begin
       System.ExitCode := 1;
     end;
   end;
-  //ReadLn;
+  if DebugHook <> 0 then
+    ReadLn;
 end.
