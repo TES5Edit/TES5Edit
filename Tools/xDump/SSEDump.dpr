@@ -932,17 +932,15 @@ begin
         tsPlugins: DefineFO3;
       end;
     end else if isMode('TES3') then begin
-      WriteLn(ErrOutput, 'TES3 - Morrowind is not supported yet.');
-      Exit;
       wbGameMode := gmTES3;
       wbAppName := 'TES3';
       wbGameName := 'Morrowind';
       wbLoadBSAs := false;
-      if not (wbToolMode in []) then begin
+      if not (wbToolMode in [tmDump]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
         Exit;
       end;
-      if not (wbToolSource in []) then begin
+      if not (wbToolSource in [tsPlugins]) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
         Exit;
       end;
