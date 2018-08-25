@@ -7425,13 +7425,13 @@ begin
         wbFormIDCk('Reference', [REFR]),
         wbInteger('Triangle', itU16),
         wbByteArray('Unused', 2)
-      ])),
+      ])).IncludeFlag(dfNotAlignable),
       wbByteArray(NVGD, 'Unknown'),
       wbArray(NVEX, 'External Connections', wbStruct('Connection', [
         wbByteArray('Unknown', 4),
         wbFormIDCk('Navigation Mesh', [NAVM], False, cpNormal),
         wbInteger('Triangle', itU16, nil, cpNormal)
-      ]))
+      ])).IncludeFlag(dfNotAlignable)
     ], False, wbNAVMAddInfo);
 
   end else begin
@@ -7451,7 +7451,7 @@ begin
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
-      ])),
+      ])).IncludeFlag(dfNotAlignable),
       wbArray(NVTR, 'Triangles', wbStruct('Triangle', [
         wbArray('Vertices', wbInteger('Vertex', itS16), 3),
         wbArray('Edges', wbInteger('Triangle', itS16, wbNVTREdgeToStr, wbNVTREdgeToInt), [
@@ -7493,13 +7493,13 @@ begin
           'Unknown 31',
           'Unknown 32'
         ]))
-      ])),
+      ])).IncludeFlag(dfNotAlignable),
       wbArray(NVCA, 'Unknown', wbInteger('Triangle', itS16)),  // Assumed triangle as the value fits the triangle id's
       wbArray(NVDP, 'Doors', wbStruct('Door', [
         wbFormIDCk('Reference', [REFR]),
         wbInteger('Triangle', itU16),
         wbByteArray('Unused', 2)
-      ])),
+      ])).IncludeFlag(dfNotAlignable),
       wbStruct(NVGD, 'NavMesh Grid', [
         wbInteger('NavMeshGrid Divisor', itU32),
         wbFloat('Max X Distance'),                // Floats named after TES5 definition
@@ -7510,13 +7510,13 @@ begin
         wbFloat('Max X'),
         wbFloat('Max Y'),
         wbFloat('Max Z'),
-        wbArray('Cells', wbArray('Cell', wbInteger('Triangle', itS16), -2)) // Divisor is row count² , assumed triangle as the values fit the triangle id's
+        wbArray('Cells', wbArray('Cell', wbInteger('Triangle', itS16).IncludeFlag(dfNotAlignable), -2)).IncludeFlag(dfNotAlignable) // Divisor is row count² , assumed triangle as the values fit the triangle id's
       ]),
       wbArray(NVEX, 'External Connections', wbStruct('Connection', [
         wbByteArray('Unknown', 4),  // absent in ver<9, not endian swap in ver>=9, so char or byte array
         wbFormIDCk('Navigation Mesh', [NAVM, NULL], False, cpNormal),  // NULL values are ignored silently.
         wbInteger('Triangle', itU16, nil, cpNormal)
-      ]))  // Different if ver<5: Length = $2E/$30 and contains other data between NavMesh and Triangle
+      ])).IncludeFlag(dfNotAlignable)  // Different if ver<5: Length = $2E/$30 and contains other data between NavMesh and Triangle
     ], False, wbNAVMAddInfo);
 
   end;

@@ -6976,13 +6976,13 @@ begin
         wbFormIDCk('Reference', [REFR]),
         wbInteger('Triangle', itU16),
         wbByteArray('Unused', 2)
-      ])),
+      ])).IncludeFlag(dfNotAlignable),
       wbByteArray(NVGD, 'Unknown'),
       wbArray(NVEX, 'External Connections', wbStruct('Connection', [
         wbByteArray('Unknown', 4),
         wbFormIDCk('Navigation Mesh', [NAVM], False, cpNormal),
         wbInteger('Triangle', itU16, nil, cpNormal)
-      ]))
+      ])).IncludeFlag(dfNotAlignable)
     ], False, wbNAVMAddInfo);
 
   end else begin
@@ -7002,7 +7002,7 @@ begin
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
-      ])),
+      ])).IncludeFlag(dfNotAlignable),
       wbArray(NVTR, 'Triangles', wbStruct('Triangle', [
         wbArray('Vertices', wbInteger('Vertex', itS16), 3),
         wbArray('Edges', wbInteger('Triangle', itS16, wbNVTREdgeToStr, wbNVTREdgeToInt), [
@@ -7044,13 +7044,13 @@ begin
           'Unknown 31',
           'Unknown 32'
         ]))
-      ])),
-      wbArray(NVCA, 'Unknown', wbInteger('Unknown', itS16)),
+      ])).IncludeFlag(dfNotAlignable),
+      wbArray(NVCA, 'Unknown', wbInteger('Unknown', itS16)).IncludeFlag(dfNotAlignable),
       wbArray(NVDP, 'Doors', wbStruct('Door', [
         wbFormIDCk('Reference', [REFR]),
         wbInteger('Triangle', itU16),
         wbByteArray('Unused', 2)
-      ])),
+      ])).IncludeFlag(dfNotAlignable),
       wbStruct(NVGD, 'Unknown', [
         wbByteArray('Unknown', 4),
         wbFloat('Unknown'),
@@ -7067,7 +7067,7 @@ begin
         wbByteArray('Unknown', 4),
         wbFormIDCk('Navigation Mesh', [NAVM], False, cpNormal),
         wbInteger('Triangle', itU16, nil, cpNormal)
-      ]))
+      ])).IncludeFlag(dfNotAlignable)
     ], False, wbNAVMAddInfo);
 
   end;

@@ -7248,8 +7248,8 @@ begin
         ]),
         wbFormIDCk('Parent Cell', [CELL])
       ]),
-      wbArray('Vertices', wbByteArray('Vertex', 12), -1),
-      wbArray('Triangles', wbByteArray('Triangle', 21), -1),
+      wbArray('Vertices', wbByteArray('Vertex', 12), -1).IncludeFlag(dfNotAlignable),
+      wbArray('Triangles', wbByteArray('Triangle', 21), -1).IncludeFlag(dfNotAlignable),
       wbArray('Edge Links',
         wbStruct('Edge Link', [
           wbInteger('Unknown', itU32),
@@ -7257,14 +7257,14 @@ begin
           wbInteger('Triangle', itS16),
           wbInteger('Unknown', itU8)
         ])
-      , -1),
+      , -1).IncludeFlag(dfNotAlignable),
       wbArray('Door Triangles',
         wbStruct('Door Triangle', [
           wbInteger('Triangle before door', itU16),
           wbInteger('DTUnknown', itU32),
           wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
         ])
-      , -1),
+      , -1).IncludeFlag(dfNotAlignable),
       wbUnknown
     ])
   else
@@ -7285,7 +7285,7 @@ begin
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
-      ]), -1),
+      ]), -1).IncludeFlag(dfNotAlignable),
       wbArray('Triangles',
         wbStruct('Triangle', [
           wbInteger('Vertex 0', itS16),
@@ -7298,7 +7298,7 @@ begin
           wbInteger('Unknown', itU8), // flags
           wbInteger('Unknown', itU32) // encoding or flags
         ])
-      , -1),
+      , -1).IncludeFlag(dfNotAlignable),
       wbArray('Edge Links',
         wbStruct('Edge Link', [
           wbInteger('Unknown', itU32),
@@ -7306,27 +7306,27 @@ begin
           wbInteger('Triangle', itS16),
           wbInteger('Unknown', itU8) // if form ver > 127
         ])
-      , -1),
+      , -1).IncludeFlag(dfNotAlignable),
       wbArray('Door Triangles',
         wbStruct('Door Triangle', [
           wbInteger('Triangle before door', itU16), // I would say itU16
           wbInteger('DTUnknown', itU32),  // used as a key to lookup in a map of PathingDoor
           wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
         ])
-      , -1),
+      , -1).IncludeFlag(dfNotAlignable),
       wbArray('Unknown 5',  // if navmesh version gt 12
         wbStruct('Unknown', [
           wbInteger('Unknown', itU16),
           wbInteger('Unknown', itU16),
           wbInteger('Unknown', itU32 {, wbFlags([]) ? })
         ])
-      , -1),
+      , -1).IncludeFlag(dfNotAlignable),
       wbArray('Unknown 6',
         wbStruct('Uknown', [
           wbInteger('Unknown', itU16),
           wbInteger('Unknown', itU16)
         ])
-      , -1),
+      , -1).IncludeFlag(dfNotAlignable),
       wbArray('Unknown 7',  // if navmesh version gt 11
         wbStruct('Unknown', [
           wbFloat('Unknown'),
@@ -7335,7 +7335,7 @@ begin
           wbInteger('Unknown', itU16),
           wbInteger('Unknown', itU32)
         ])
-      , -1),
+      , -1).IncludeFlag(dfNotAlignable),
       wbStruct('Navmesh Grid', [
         wbInteger('Navmesh Grid Size', itU32),  // max 12
         wbFloat('Max X Distance'),
@@ -7346,7 +7346,7 @@ begin
         wbFloat('Max X'),
         wbFloat('Max Y'),
         wbFloat('Max Z'),
-        wbArray('NavMesh Grid Arrays', wbArray('NavMeshGridCell', wbInteger('Triangle', itS16), -1)) // There are NavMeshGridSize^2 arrays to load
+        wbArray('NavMesh Grid Arrays', wbArray('NavMeshGridCell', wbInteger('Triangle', itS16).IncludeFlag(dfNotAlignable), -1)).IncludeFlag(dfNotAlignable) // There are NavMeshGridSize^2 arrays to load
       ])
     ]);
 
