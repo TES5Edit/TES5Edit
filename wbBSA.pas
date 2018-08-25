@@ -420,7 +420,7 @@ end;
 constructor TwbBSAFile.Create(const aFileName: string);
 begin
   bfFileName := aFileName;
-  bfStream := TwbReadOnlyCachedFileStream.Create(aFileName);
+  bfStream := TwbReadOnlyCachedFileStream.Create(aFileName, fmOpenRead or fmShareDenyWrite);
   ReadDirectory;
 end;
 
@@ -618,7 +618,7 @@ end;
 constructor TwbBA2File.Create(const aFileName: string);
 begin
   bfFileName := aFileName;
-  bfStream := TwbReadOnlyCachedFileStream.Create(aFileName);
+  bfStream := TwbReadOnlyCachedFileStream.Create(aFileName, fmOpenRead or fmShareDenyWrite);
   ReadDirectory;
 end;
 
