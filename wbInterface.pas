@@ -78,6 +78,7 @@ var
   wbDisplayLoadOrderFormID : Boolean  = False;
   wbPrettyFormID           : Boolean  = False;
   wbSimpleRecords          : Boolean  = True;
+  wbDecodeTextureHashes    : Boolean  = False;
   wbFixupPGRD              : Boolean  = False;
   wbIKnowWhatImDoing       : Boolean  = False;
   wbHideUnused             : Boolean  = True;
