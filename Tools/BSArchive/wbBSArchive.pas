@@ -1604,7 +1604,7 @@ begin
 
         fFoldersTES4[i].Files[j].Offset := fStream.Position;
 
-        if fHeaderTES4.Flags and ARCHIVE_EMBEDNAME <> 0 then
+        if (fType in [baFO3, baSSE]) and (fHeaderTES4.Flags and ARCHIVE_EMBEDNAME <> 0) then
           fStream.WriteStringLen(fFoldersTES4[i].Name + '\' + fFoldersTES4[i].Files[j].Name, False);
 
         if Assigned(MemoryStream) then begin
@@ -1846,7 +1846,7 @@ begin
           bCompressed := not bCompressed;
 
         // skip embedded file name + length prefix
-        if (fType in [baFO3, baSSE]) and (fHeaderTES4.Flags and fHeaderTES4.Flags and ARCHIVE_EMBEDNAME <> 0) then
+        if (fType in [baFO3, baSSE]) and (fHeaderTES4.Flags and ARCHIVE_EMBEDNAME <> 0) then
           size := size - (Length(fStream.ReadStringLen(False)) + 1);
 
         if bCompressed then begin
