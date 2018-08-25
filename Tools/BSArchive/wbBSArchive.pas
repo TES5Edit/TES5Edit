@@ -1600,6 +1600,8 @@ begin
           finally
             Sync.BeginWrite;
           end;
+          if FindPackedData(Length(aData), DataHash, @fFoldersTES4[i].Files[j]) then
+            Exit;
         end;
 
         fFoldersTES4[i].Files[j].Offset := fStream.Position;
