@@ -8240,22 +8240,22 @@ begin
           ]),
           wbFormIDCk('Parent Cell', [CELL])
         ]),
-        wbArray('Vertices', wbByteArray('Vertex', 12), -1),
-        wbArray('Triangles', wbByteArray('Triangle', 16), -1),
+        wbArray('Vertices', wbByteArray('Vertex', 12), -1).IncludeFlag(dfNotAlignable),
+        wbArray('Triangles', wbByteArray('Triangle', 16), -1).IncludeFlag(dfNotAlignable),
         wbArray('External Connections',
           wbStruct('Connection', [
             wbByteArray('Unknown', 4),
             wbFormIDCk('Mesh', [NAVM]),
             wbInteger('Triangle', itS16)
           ])
-        , -1),
+        , -1).IncludeFlag(dfNotAlignable),
         wbArray('Door Triangles',
           wbStruct('Door Triangle', [
             wbInteger('Triangle before door', itS16),
             wbByteArray('Unknown', 4),
             wbFormIDCk('Door', [REFR])
           ])
-        , -1),
+        , -1).IncludeFlag(dfNotAlignable),
         wbUnknown
       ])
   else
@@ -8275,7 +8275,7 @@ begin
           wbFloat('X'),
           wbFloat('Y'),
           wbFloat('Z')
-        ]), -1),
+        ]), -1).IncludeFlag(dfNotAlignable),
         wbArray('Triangles',
           wbStruct('Triangle', [
             wbInteger('Vertex 0', itS16),
@@ -8323,22 +8323,22 @@ begin
             //wbInteger('Cover Edge #1 Flags', itU8),
             //wbInteger('Cover Edge #2 Flags', itU8)
           ])
-        , -1),
+        , -1).IncludeFlag(dfNotAlignable),
         wbArray('Edge Links',
           wbStruct('Edge Link', [
             wbByteArray('Unknown', 4, cpIgnore),
             wbFormIDCk('Mesh', [NAVM], False, cpIgnore),
             wbInteger('Triangle', itS16, nil, cpIgnore)
           ], cpIgnore)
-        , -1, cpIgnore),
+        , -1, cpIgnore).IncludeFlag(dfNotAlignable),
         wbArray('Door Triangles',
           wbStruct('Door Triangle', [
             wbInteger('Triangle before door', itS16),
             wbByteArray('Unknown', 4),
             wbFormIDCk('Door', [REFR])
           ])
-        , -1),
-        wbArray('Cover Triangles', wbInteger('Triangle', itS16), -1),
+        , -1).IncludeFlag(dfNotAlignable),
+        wbArray('Cover Triangles', wbInteger('Triangle', itS16), -1).IncludeFlag(dfNotAlignable),
         wbInteger('NavMeshGrid Divisor', itU32),
         wbFloat('Max X Distance'),
         wbFloat('Max Y Distance'),
@@ -8348,7 +8348,7 @@ begin
         wbFloat('Max X'),
         wbFloat('Max Y'),
         wbFloat('Max Z'),
-        wbArray('NavMeshGrid', wbArray('NavMeshGridCell', wbInteger('Triangle', itS16), -1))
+        wbArray('NavMeshGrid', wbArray('NavMeshGridCell', wbInteger('Triangle', itS16), -1).IncludeFlag(dfNotAlignable)).IncludeFlag(dfNotAlignable)
       ]);
 
   wbRecord(NAVM, 'Navigation Mesh',
@@ -8383,14 +8383,14 @@ begin
         wbFloat('Max Z'),
         wbArray('Triangles',
           wbStruct('Triangle', [
-            wbArray('Vertices', wbInteger('Vertex', itS16), 3)
+            wbArray('Vertices', wbInteger('Vertex', itS16), 3).IncludeFlag(dfNotAlignable)
           ])
-        , -1),
+        , -1).IncludeFlag(dfNotAlignable),
         wbArray('Vertices', wbStruct('Vertex', [
           wbFloat('X'),
           wbFloat('Y'),
           wbFloat('Z')
-        ]), -1)
+        ]), -1).IncludeFlag(dfNotAlignable)
       ]);
 
   wbRecord(NAVI, 'Navigation Mesh Info Map', [
