@@ -300,6 +300,9 @@ begin
   else
     raise Exception.Create('Archive type is not provided for packing!');
 
+  if FindCmdLineSwitch('mt') then
+    bMultiThreaded := True;
+
   sl := TStringList.Create;
   bsa := TwbBSArchive.Create;
   try
@@ -470,6 +473,9 @@ begin
   if FindCmdLineSwitch('quiet') or FindCmdLineSwitch('q') then
     bQuiet := True;
 
+  if FindCmdLineSwitch('mt') then
+    bMultiThreaded := True;
+
   UnpackDir := IncludeTrailingPathDelimiter(aFolderName);
   if not DirectoryExists(UnpackDir) then
     raise Exception.Create('Folder does not exist: ' + UnpackDir);
@@ -526,6 +532,7 @@ begin
     WriteLn('              When not set unpack into the folder where archive is located');
     WriteLn('  Parameters:');
     WriteLn('  -q[uiet]    Don''t list extracted files');
+    WriteLn('  -mt         Run multi-threaded');
     WriteLn('');
     WriteLn('CREATING ARCHIVES');
     WriteLn('  bsarch.exe pack <folder> <archive> [parameters]');
@@ -552,6 +559,7 @@ begin
     WriteLn('              out of thousands, it must be uncompressed.');
     WriteLn('  -share      Binary identical files will share the same data');
     WriteLn('              in archive to preserve space.');
+    WriteLn('  -mt         Run multi-threaded');
     WriteLn('');
     WriteLn('EXAMPLES');
     WriteLn('    If <folder> or <archive> include spaces then embed them in quotes');
