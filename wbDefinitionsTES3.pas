@@ -4673,18 +4673,16 @@ begin
   wbRecord(TES3, 'Main File Header', [
     wbStruct(HEDR, 'Header', [
       wbFloat('Version'),
-      wbInteger('Number of Records', itU32),
-      wbInteger('Next Object ID', itU32)
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 32),
+      wbByteArray('Unknown', 256),
+      wbInteger('Number of Records', its32)
     ], cpNormal, True),
-    wbByteArray(OFST, 'Unknown', 0, cpIgnore),
-    wbByteArray(DELE, 'Unknown', 0, cpIgnore),
-    wbString(CNAM, 'Author', 0, cpTranslate, True),
-    wbString(SNAM, 'Description', 0, cpTranslate),
     wbRArray('Master Files', wbRStruct('Master File', [
-      wbStringForward(MAST, 'Filename', 0, cpNormal, True),
-      wbByteArray(DATA, 'Unused', 8, cpIgnore, True)
+      wbString(MAST, 'Filename', 0, cpNormal, True),
+      wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
     ], []))
-  ], False, nil, cpNormal, True, wbRemoveOFST);
+  ], False, nil, cpNormal, True);
 
   wbRecord(TREE, 'Tree', [
     wbEDID,
