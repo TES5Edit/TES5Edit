@@ -39,7 +39,7 @@ const
   wmCopy = 5;
 
   // records to skip without assets
-  sSkipSignatures = 'REFR,ACHR,ACRE,PGRE,LAND,NAVM,PGRD,PACK';
+  sSkipSignatures = 'REFR,ACHR,ACRE,PGRE,LAND,NAVM,PGRD';
 
   // music record signature
   sMusicSignatures = 'MUSC,MUST,MSET';
@@ -512,6 +512,7 @@ begin
       else if rbModeCopy.Checked then begin
         optMode := wmCopy;
         optPath := IncludeTrailingBackslash(edPath.Text);
+        bSkipChecksum := chkSkipChecksums.Checked;
       end;
     
     end else
@@ -794,7 +795,7 @@ begin
   // skip VMAD properties
   if Name(e) = 'Properties' then 
     Exit;
-
+  
   if Name(e) = 'scriptName' then begin
     s := StringReplace(GetEditValue(e), ':', '\', [rfReplaceAll]);
     ProcessAssetEx(e, 'scripts\' + s + '.pex', 'Papyrus script attached to ' + Name(CurrentRecord), atPapyrusScript);
@@ -875,7 +876,6 @@ begin
   else if optMode = wmList then
     AddMessage('LIST OF USED ASSET FILES:')
   else if optMode = wmCopy then begin
-    bSkipChecksum := chkSkipChecksums.Checked;
     if bSkipChecksum and (slChecksum.Count = 0) and FileExists(ChecksumsFileName) then
       slChecksum.LoadFromFile(ChecksumsFileName);
     AddMessage('COPYING USED ASSET FILES:');
