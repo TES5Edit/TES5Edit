@@ -7034,20 +7034,23 @@ begin
   wbMO4C := wbFloat(MO4C, 'Color Remapping Index');
   wbMO5C := wbFloat(MO5C, 'Color Remapping Index');
 
-	wbMODT := wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
 	wbDMDT := wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
-  {wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
-    wbInteger('Number of headers', itU32),
-    wbInteger('Textures count', itU32),
-    wbByteArray('Unused', 4),
-    wbInteger('Unique textures count', itU32),
-    wbInteger('Materials count', itU32),
-    wbArray('Hashes', wbStruct('Hash', [
-      wbByteArray('Flags', 4),
-      wbString('Type', 4),
-      wbByteArray('Texture hash', 4)
-    ]))
-  ]);}
+
+  if wbDecodeTextureHashes then
+    wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
+      wbInteger('Number of headers', itU32),
+      wbInteger('Textures count', itU32),
+      wbByteArray('Unused', 4),
+      wbInteger('Unique textures count', itU32),
+      wbInteger('Materials count', itU32),
+      wbArray('Hashes', wbStruct('Hash', [
+        wbByteArray('Flags', 4),
+        wbString('Type', 4),
+        wbByteArray('Texture hash', 4)
+      ]))
+    ])
+  else
+    wbMODT := wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
 
   wbMODL :=
     wbRStructSK([0], 'Model', [
