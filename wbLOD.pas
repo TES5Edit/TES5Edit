@@ -2241,7 +2241,7 @@ begin
   end;
 
   if Rule > rClear then begin
-    CmpStream := TwbWriteCachedFileStream.Create(LODPath + aWorldspace.EditorID + '.cmp');
+    CmpStream := TwbWriteCachedFileStream.Create(LODPath + aWorldspace.EditorID + '.cmp', fmCreate);
     try
       Application.MainForm.Caption := 'Assigning References to Cells: ' + aWorldspace.Name + ' Processed References: ' + IntToStr(0) +
         ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
@@ -2303,7 +2303,7 @@ begin
             end;
             SetLength(RefsInCell, Succ(l));
 
-            with TwbWriteCachedFileStream.Create(LODPath + aWorldspace.EditorID + '_' + IntToStr(i+MinCell.x) + '_' + IntToStr(j+MinCell.y) + '.lod') do try
+            with TwbWriteCachedFileStream.Create(LODPath + aWorldspace.EditorID + '_' + IntToStr(i+MinCell.x) + '_' + IntToStr(j+MinCell.y) + '.lod', fmCreate) do try
               WriteCardinal(Length(RefsInCell));
 
               for l := Low(RefsInCell) to High(RefsInCell) do begin
