@@ -12382,7 +12382,8 @@ end;
 
 procedure TfrmMain.PostResetActiveTree;
 begin
-  PostMessage(Handle, WM_USER + 3, 0, 0);
+  if Length(PendingMainRecords) < 1 then
+    PostMessage(Handle, WM_USER + 3, 0, 0);
 end;
 
 procedure TfrmMain.mniViewPreviousMemberClick(Sender: TObject);
@@ -17229,7 +17230,10 @@ end;
 
 procedure TfrmMain.WMUser3(var Message: TMessage);
 begin
-  ResetActiveTree;
+  if tmrPendingSetActive.Enabled then
+    tmrPendingSetActiveTimer(tmrPendingSetActive)
+  else
+    ResetActiveTree;
 end;
 
 procedure TfrmMain.WMUser4(var Message: TMessage);
