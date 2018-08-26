@@ -107,6 +107,8 @@ begin
     Memo.Lines.Text := aElement.Value;
   Memo.Align := alClient;
   Memo.ReadOnly := not aEditable;
+  if not Memo.ReadOnly then
+    Memo.WantReturns := True;
   if not aEditable then
     Memo.ParentColor := True;
 //  Memo.BorderStyle := bsNone;
