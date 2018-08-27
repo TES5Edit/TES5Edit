@@ -492,11 +492,11 @@ begin
                 Mode := amInsertBefore;
                 Break;
               end;
-          HitInfo.HitNode := vstModGroupItems.GetNext(HitInfo.HitNode);
+          HitInfo.HitNode := vstModGroupItems.GetNextSibling(HitInfo.HitNode);
         end;
 
         if Mode = amNoWhere then begin
-          HitInfo.HitNode := vstModGroupItems.GetLast;
+          HitInfo.HitNode := vstModGroupItems.GetLastChild(nil);
           Mode := amInsertAfter;
         end;
 
