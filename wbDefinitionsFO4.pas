@@ -6816,7 +6816,7 @@ begin
 
   wbScriptPropertyObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
     wbStructSK([1], 'Object v2', [
-      wbInteger('Unused', itU16, nil, cpIgnore),
+      wbInteger('Unused', itU16, nil, cpIgnore, False, wbNeverShow),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias).SetDefaultEditValue('None'),
       wbFormID('FormID')
     ], [2, 1, 0]),
@@ -6981,7 +6981,7 @@ begin
     wbArrayS('Fragments',
       wbStructSK([0], 'Fragment', [
         wbInteger('Fragment Index', itU16),
-        wbInteger('Unknown', itS16),
+        wbInteger('Unused', itS16, nil, cpIgnore, False, wbNeverShow),
         wbInteger('Unknown', itS8),
         wbLenString('scriptName', 2),
         wbLenString('fragmentName', 2)
@@ -9092,7 +9092,7 @@ begin
       wbInteger('Armor Rating', itU16),
       wbInteger('Base Addon Index', itU16),
       wbInteger('Stagger Rating', itU8, wbStaggerEnum),
-      wbUnknown
+      wbUnknown(cpIgnore, False, wbNeverShow, nil)
     ]),
     wbArrayS(DAMA, 'Resistances', wbStructSK([0], 'Resistance', [
       wbFormIDCk('Damage Type', [DMGT]),
