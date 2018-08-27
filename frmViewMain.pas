@@ -10270,12 +10270,20 @@ var
     EndFormID    : TwbFormID;
     TakenFormIDs : array of Boolean;
     i, j, k      : Integer;
+    c            : Cardinal;
 
-    lMainRecords : TDynMainRecords;
-    MainRecord   : IwbMainRecord;
+    lMainRecords     : TDynMainRecords;
+    MainRecord       : IwbMainRecord;
+    TargetMainRecord : IwbMainRecord;
 
     NewFormID    : TwbFormID;
     OldFormID    : TwbFormID;
+
+    PreserveObjectID : Boolean;
+    AllOrNothing     : Boolean;
+    AnyDelayed       : Boolean;
+    TargetIsESL      : Boolean;
+    PreservedCount   : Integer;
   begin
     Result := False;
 
@@ -10301,6 +10309,9 @@ var
     if not EditWarn then
       Exit;
 
+    PreserveObjectID := False;
+    AllOrNothing := False;
+
     if Sender = mniNavRenumberFormIDsInject then begin
       with TfrmModuleSelect.Create(Self) do try
         AllModules := wbModulesByLoadOrder;
@@ -10319,28 +10330,51 @@ var
         if ShowModal <> mrOk then
           Exit;
         TargetFile := SelectedModules[0]._File;
+
+        if MessageDlg('Do you want to try and preserve ObjectIDs?', mtConfirmation, mbYesNo, 0, mbNo) = mrYes then
+          PreserveObjectID := True;
+        if PreserveObjectID then
+          if MessageDlg('Do you want to abort if not all ObjectIDs can be preserved?', mtConfirmation, mbYesNo, 0, mbYes) = mrYes then
+            AllOrNothing := True;
       finally
         Free;
       end;
+
+
     end else
       TargetFile := SourceFile;
 
-    if Sender = mniNavCompactFormIDs then
+    if AllOrNothing or (Sender = mniNavCompactFormIDs) then
       StartFormID := TwbFormID.FromCardinal($800)
     else begin
       s := '';
+      TargetIsESL := TargetFile.IsESL or TargetFile.LoadOrderFileID.IsLightSlot;
       repeat
         if s <> '' then
           ShowMessage('"'+s+'" is not a valid start FormID.')
         else
-          if Supports(TargetFile.Elements[0], IwbMainRecord, MainRecord) and (MainRecord.Signature = 'TES4') then
-            s := IntToHex(MainRecord.ElementNativeValues['HEDR\Next Object ID'] and $FFFFFF, 6);
+          if Supports(TargetFile.Elements[0], IwbMainRecord, MainRecord) and (MainRecord.Signature = 'TES4') then begin
+            c := MainRecord.ElementNativeValues['HEDR\Next Object ID'] and $FFFFFF;
+            if TargetIsESL then
+              c := c and $FFF;
+            if c < $800 then
+              c := $800;
+            if TargetIsESL then
+              s := IntToHex(c, 3)
+            else
+              s := IntToHex(c, 6);
+          end;
 
-        if not InputQuery('Start from...', 'Please enter the new module specific start FormID in hex. e.g. 200000. Specify only the last 6 digits.', s) then
-          Exit;
+        if TargetIsESL then begin
+          if not InputQuery('Start from...', 'Please enter the new module specific start FormID in hex. e.g. 800. Specify only the last 3 digits. (Target is ESL)', s) then
+            Exit;
+        end else begin
+          if not InputQuery('Start from...', 'Please enter the new module specific start FormID in hex. e.g. 200000. Specify only the last 6 digits.', s) then
+            Exit;
+        end;
 
         StartFormID := TwbFormID.FromStrDef(s, 0);
-      until (StartFormID.FileID.FullSlot = 0) and not StartFormID.IsHardcoded;
+      until (StartFormID.FileID.FullSlot = 0) and not StartFormID.IsHardcoded and (not TargetIsESL or (StartFormID.ObjectID <= $FFF));
     end;
 
     SetLength(MainRecords, SourceFile.RecordCount);
@@ -10378,6 +10412,8 @@ var
           TakenFormIDs[OldFormID - StartFormID] := True;
       end;
 
+    AnyDelayed := False;
+    PreservedCount := 0;
     SetLength(lMainRecords, Length(MainRecords));
     SetLength(TargetFormIDs, Length(MainRecords));
     j := 0;
@@ -10395,10 +10431,32 @@ var
         NewFormID := StartFormID + j;
         Inc(j);
       end else begin
+        NewFormID := TwbFormID.Null;
+        TargetMainRecord := nil;
         repeat
-          NewFormID := StartFormID + j;
-          Inc(j);
-        until not Assigned(TargetFile.ContainedRecordByLoadOrderFormID[NewFormID, True]);
+          if PreserveObjectID then begin
+            if NewFormID.IsNull then
+              NewFormID := OldFormID.ChangeFileID(TargetFile.LoadOrderFileID)
+            else
+              if AllOrNothing then begin
+                ShowMessage(Format('The FormID [%s] which should be assigned to: ' + CRLF + CRLF +
+                  '%s' + CRLF + CRLF +
+                  'is already in use by:' + CRLF + CRLF +
+                  '%s' + CRLF + CRLF +
+                  'Operation aborted.', [NewFormID.ToString, MainRecord.Name, TargetMainRecord.Name]));
+                Exit;
+              end else begin
+                NewFormID := TwbFormID.Null;
+                AnyDelayed := True;
+                Break;
+              end;
+          end else begin
+            NewFormID := StartFormID + j;
+            Inc(j);
+          end;
+          TargetMainRecord := TargetFile.ContainedRecordByLoadOrderFormID[NewFormID, True];
+        until not Assigned(TargetMainRecord);
+        TargetMainRecord := nil;
       end;
 
       if NewFormID > EndFormID then begin
@@ -10409,6 +10467,9 @@ var
       if NewFormID = OldFormID then
         Continue;
 
+      if PreserveObjectID and not NewFormID.IsNull then
+        Inc(PreservedCount);
+
       lMainRecords[i] := MainRecord;
       TargetFormIDs[i] := NewFormID;
       Inc(i);
@@ -10418,13 +10479,44 @@ var
     SetLength(TargetFormIDs, i);
     MainRecords := lMainRecords;
 
+    if AnyDelayed then
+      for k := Low(MainRecords) to High(MainRecords) do begin
+        if not TargetFormIDs[k].IsNull then
+          Continue;
+
+        repeat
+          NewFormID := StartFormID + j;
+          Inc(j);
+        until not Assigned(TargetFile.ContainedRecordByLoadOrderFormID[NewFormID, True]);
+
+        if NewFormID > EndFormID then begin
+          ShowMessage('The file contains too many new records for this operation.');
+          Exit;
+        end;
+
+        TargetFormIDs[k] := NewFormID;
+      end;
+
     Result := i > 0;
     if not Result then
       ShowMessage('Nothing to do.')
-    else
-      Result := MessageDlg('This operation will modify the FormID of '+i.ToString+' record(s).' + CRLF + CRLF +
-        'WARNING: This will break existing save games and any module which uses "'+ SourceFile.FileName +'" as master.' + CRLF + CRLF +
+    else begin
+      s := '';
+      if PreserveObjectID and not AllOrNothing then begin
+        case PreservedCount of
+          0 : s := ' No ObjectIDs could be preserved.';
+          1 : s := ' 1 ObjectID could be preserved.';
+        else
+          if PreservedCount = Length(MainRecords) then
+            s := ' All ObjectIDs could be preserved.'
+          else
+            s := ' ' + PreservedCount.ToString + ' ObjectIDs could be preserved.';
+        end;
+      end;
+      Result := MessageDlg('This operation will modify the FormID of '+i.ToString+' record(s).' + s + CRLF + CRLF +
+        'WARNING: This can potentially break existing save games that contain these FormID(s) and any module which uses "'+ SourceFile.FileName +'" as master and references them.' + CRLF + CRLF +
         'Are you sure you wish to continue?', mtWarning, mbYesNo, 0, mbNo) = mrYes;
+    end;
   end;
 
   procedure UpdateNextObjectID;
@@ -10503,6 +10595,7 @@ begin
       end;
     end);
     UpdateNextObjectID;
+    vstNav.Invalidate;
   end;
 end;
 
