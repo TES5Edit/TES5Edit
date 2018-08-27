@@ -996,6 +996,7 @@ implementation
 {$R *.dfm}
 
 uses
+  DDetours,
   Mask,
   {$IFNDEF LiteVersion}
   cxVTEditors,
@@ -10514,7 +10515,7 @@ var
         end;
       end;
       Result := MessageDlg('This operation will modify the FormID of '+i.ToString+' record(s).' + s + CRLF + CRLF +
-        'WARNING: This can potentially break existing save games that contain these FormID(s) and any module which uses "'+ SourceFile.FileName +'" as master and references them.' + CRLF + CRLF +
+        'WARNING: This will break existing save games that contain these FormID(s) and any module which uses "'+ SourceFile.FileName +'" as master and references them.' + CRLF + CRLF +
         'Are you sure you wish to continue?', mtWarning, mbYesNo, 0, mbNo) = mrYes;
     end;
   end;
@@ -18056,8 +18057,60 @@ begin  // Let's show from 1 to 32 lines to pick from
   inherited;
 end;
 
+type
+  TWinControlProtectedHacker = class(TWinControl);
+  TMainWndProc = procedure(var Message: TMessage) of object;
+
+var
+  CodePointer_TWinControl_MainWndProc : TMainWndProc;
+  Trampoline_TWinControl_MainWndProc : procedure(Self: TWinControlProtectedHacker; var Message: TMessage);
+
+procedure Detour_TWinControl_MainWndProc(Self: TWinControlProtectedHacker; var Message: TMessage);
+begin
+  case Message.Msg of
+    WM_PAINT: begin
+      LockProcessMessages;
+      try
+        Trampoline_TWinControl_MainWndProc(Self, Message);
+      finally
+        UnLockProcessMessages;
+      end;
+    end;
+  else
+    Trampoline_TWinControl_MainWndProc(Self, Message);
+  end;
+end;
+
+
 initialization
   _LoaderProgressLock.Initialize;
+
+  with TWinControlProtectedHacker(TWinControl.Create(nil)) do try
+    CodePointer_TWinControl_MainWndProc := MainWndProc;
+  finally
+    Free;
+  end;
+
+  BeginHooks;
+  try
+
+    @Trampoline_TWinControl_MainWndProc := InterceptCreate(@CodePointer_TWinControl_MainWndProc, @Detour_TWinControl_MainWndProc);
+
+  finally
+    EndHooks;
+  end;
+
+
 finalization
   _LoaderProgressLock.Free;
+
+  BeginUnHooks;
+  try
+
+    InterceptRemove(@Trampoline_TWinControl_MainWndProc);
+
+  finally
+    EndUnHooks;
+  end;
+
 end.
