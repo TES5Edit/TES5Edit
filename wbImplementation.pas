@@ -375,6 +375,8 @@ type
     procedure SetToDefaultInternal; virtual;
     procedure SetToDefaultIfAsCreatedEmpty; virtual;
 
+    function ShouldReportError(aErrorType: TwbElementErrorType): Boolean;
+
     function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; virtual;
     function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
@@ -11082,8 +11084,9 @@ begin
       if wbReportMode then
         srDef.HasUnusedData;
       {$IFDEF DBGSUBREC}
-      if wbHasProgressCallback then
-        wbProgressCallback('<Warning: Unused data in: ' + GetFullPath + '>');
+      if ShouldReportError(eeUnusedData) then
+        if wbHasProgressCallback then
+          wbProgressCallback('<Warning: Unused data in: ' + GetFullPath + '>');
       {$ENDIF}
     end;
   end;
@@ -13552,6 +13555,8 @@ begin
     NamedDef.AfterSet(Self, aOldValue, aNewValue);
   if Supports(GetDef, IwbNamedDef, NamedDef) then
     NamedDef.AfterSet(Self, aOldValue, aNewValue);
+
+  Exclude(eStates, esReportedErrorReading);
 end;
 
 procedure TwbElement.DoReset(aForce: Boolean);
@@ -14391,6 +14396,15 @@ end;
 procedure TwbElement.SetToDefaultInternal;
 begin
   { can be overriden }
+end;
+
+function TwbElement.ShouldReportError(aErrorType: TwbElementErrorType): Boolean;
+var
+  State: TwbElementState;
+begin
+  State := TwbElementState(Ord(esReportedErrorReading) + Ord(aErrorType));
+  Result := not (State in eStates);
+  Include(eStates, State);
 end;
 
 procedure TwbElement.Show;

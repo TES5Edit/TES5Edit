@@ -537,7 +537,11 @@ type
     esDestroying,
     esChangeNotified,
     esModifiedUpdated,
-    esSorting
+    esSorting,
+
+    //the following entries must match TwbElementErrorType:
+    esReportedErrorReading,
+    esReportedErrorUnusedData
   );
 
   TwbElementStates = set of TwbElementState;
@@ -646,6 +650,11 @@ type
     procedure Add(aCRC32: TwbCRC32);
   end;
 
+  TwbElementErrorType = (
+    eeReading,
+    eeUnusedData
+  );
+
   IwbElement = interface
     ['{F4B4637D-C794-415F-B5C7-587EAA4095B3}']
 
@@ -713,6 +722,8 @@ type
     function GetDontShow: Boolean;
     procedure SetToDefault;
     procedure SetToDefaultIfAsCreatedEmpty;
+
+    function ShouldReportError(aErrorType: TwbElementErrorType): Boolean;
 
     function BeginUpdate: Integer;
     function EndUpdate: Integer;
@@ -11556,6 +11567,7 @@ function TwbFloatDef.ToValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElem
 var
   Len   : Cardinal;
   Value : Extended;
+  ExceptionMask : TArithmeticExceptionMask;
 begin
   Len := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
   if Len < GetDefaultSize(aBasePtr, aEndPtr, aElement) then
@@ -11587,33 +11599,48 @@ begin
   except
     Result := NaN;
   end else try
-    if PCardinal(aBasePtr)^ = $7F7FFFFF then
-      Result := maxSingle
-    else if PCardinal(aBasePtr)^ = $FF7FFFFF then
-      Result := -maxSingle
-    else begin
-      Value := PSingle(aBasePtr)^;
-      if IsInfinite(Value) or IsNan(Value) then
-        Result := Value
-      else begin
-        try
-          if Value <> 0.0 then
-            if SingleSameValue(Value, 0.0) then
-              Value := 0.0;
-        except
-          Value := 0.0;
-        end;
+    ClearExceptions(False);
+    ExceptionMask := GetExceptionMask;
+    try
+      SetExceptionMask(exAllArithmeticExceptions);
 
-        if Assigned(fdNormalizer) then
-          Value := fdNormalizer(aElement, Value);
-        Value := Value * fdScale;
-        Result := RoundToEx(Value, -fdDigits);
+      if PCardinal(aBasePtr)^ = $7F7FFFFF then
+        Result := maxSingle
+      else if PCardinal(aBasePtr)^ = $FF7FFFFF then
+        Result := -maxSingle
+      else begin
+        Value := PSingle(aBasePtr)^;
+        if IsInfinite(Value) or IsNan(Value) then
+          Result := Value
+        else begin
+          try
+            if Value <> 0.0 then
+              if SingleSameValue(Value, 0.0) then
+                Value := 0.0;
+          except
+            Value := 0.0;
+          end;
+
+          if Assigned(fdNormalizer) then
+            Value := fdNormalizer(aElement, Value);
+          Value := Value * fdScale;
+          Result := RoundToEx(Value, -fdDigits);
+        end;
       end;
+      if SetExceptions([]) * DefaultExceptionFlags <> [] then begin
+        Result := NaN;
+        if aElement.ShouldReportError(eeReading) then
+          wbProgress('<Error reading float in "%s">', [aElement.FullPath]);
+      end;
+    finally
+      SetExceptionMask(ExceptionMask)
     end;
   except
     on e: Exception do begin
+      ClearExceptions(False);
       Result := NaN;
-      wbProgress('<Error reading float in "%s": [%s] %s>', [aElement.FullPath, E.ClassName, E.Message]);
+      if aElement.ShouldReportError(eeReading) then
+        wbProgress('<Error reading float in "%s": [%s] %s>', [aElement.FullPath, E.ClassName, E.Message]);
     end;
   end;
 end;
