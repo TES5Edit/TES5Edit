@@ -1134,6 +1134,8 @@ var
 begin
   case aType of
     ctToStr: begin
+      if aInt < 0 then
+        Exit('None');
       Result := aInt.ToString;
       if not Assigned(aElement) then
         Exit;
@@ -1198,7 +1200,10 @@ begin
       Result := FormID.ToString + IntToHex(aInt, 4);
     end;
     ctCheck: Result := '';
-    ctToEditValue: Result := aInt.ToString;
+    ctToEditValue: if aInt < 0 then
+                     Result := ''
+                   else
+                     Result := aInt.ToString;
     ctEditType: Result := '';
     ctEditInfo: Result := '';
   end;
@@ -1302,10 +1307,15 @@ begin
   Result := wbVertexToInt(2, aString, aElement);
 end;
 
-
 function wbEdgeToInt(aEdge: Integer; const aString: string; const aElement: IwbElement): Int64;
+var
+  s: string;
 begin
-  Result := StrToIntDef(aString, 0);
+  s := Trim(aString);
+  if (s = '')  or SameText(s, 'None') then
+    Result := -1
+  else
+    Result := StrToIntDef(aString, 0);
 end;
 
 function wbEdgeToStr0(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
