@@ -16895,13 +16895,14 @@ begin
   DefineFO4t;
   DefineFO4u;
 
-  SetLength(wbOfficialDLC, 6);
+  SetLength(wbOfficialDLC, 7);
   wbOfficialDLC[0] := 'DLCRobot.esm';
   wbOfficialDLC[1] := 'DLCworkshop01.esm';
   wbOfficialDLC[2] := 'DLCCoast.esm';
   wbOfficialDLC[3] := 'DLCworkshop02.esm';
   wbOfficialDLC[4] := 'DLCworkshop03.esm';
   wbOfficialDLC[5] := 'DLCNukaWorld.esm';
+  wbOfficialDLC[6] := 'DLCUltraHighResolution.esm';
 
   if wbGameMode = gmFO4VR then begin
     // new VR esm is loaded after DLCs
