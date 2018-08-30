@@ -1151,6 +1151,8 @@ begin
           Exit;
         if aInt >= EdgeLinks.ElementCount then
           Exit;
+        if aInt < 0 then
+          Exit;
         EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
 
         MainRecord := nil;
@@ -1202,6 +1204,105 @@ begin
   end;
 end;
 
+function wbVertexToStr(aVertex: Integer; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Triangle   : IwbContainerElementRef;
+  Flags      : Int64;
+  MainRecord : IwbMainRecord;
+  Vertices  : IwbContainerElementRef;
+  Vertex   : IwbContainerElementRef;
+  FormID     : TwbFormID;
+begin
+  case aType of
+    ctToStr: begin
+      Result := aInt.ToString;
+      if not Assigned(aElement) then
+        Exit;
+
+      Triangle := aElement.Container as IwbContainerElementRef;
+      if not Assigned(Triangle) then
+        Exit;
+      MainRecord := aElement.ContainingMainRecord;
+      if not Assigned(MainRecord) then
+        Exit;
+
+      if not Supports(MainRecord.ElementByPath['NVNM\Vertices'], IwbContainerElementRef, Vertices) then
+        Exit;
+      if aInt >= Vertices.ElementCount then
+        Exit;
+      if aInt < 0 then
+        Exit;
+      Vertex := Vertices.Elements[aInt] as IwbContainerElementRef;
+
+      with Vertex do try
+        Result := Result + Format(' (%s, %s, %s)', [ElementEditValues['X'], ElementEditValues['Y'], ElementEditValues['Z']]);
+      except end;
+    end;
+    ctToSortKey: begin
+      Result := IntToHex(aInt, 4);
+      if not Assigned(aElement) then
+        Exit;
+
+      Triangle := aElement.Container as IwbContainerElementRef;
+      if not Assigned(Triangle) then
+        Exit;
+      MainRecord := aElement.ContainingMainRecord;
+      if not Assigned(MainRecord) then
+        Exit;
+
+      if not Supports(MainRecord.ElementByPath['NVNM\Vertices'], IwbContainerElementRef, Vertices) then
+        Exit;
+      if aInt >= Vertices.ElementCount then
+        Exit;
+      Vertex := Vertices.Elements[aInt] as IwbContainerElementRef;
+
+      with Vertex do try
+        Result := SortKey[False];
+      except end;
+    end;
+    ctCheck: Result := '';
+    ctToEditValue: Result := aInt.ToString;
+    ctEditType: Result := '';
+    ctEditInfo: Result := '';
+  end;
+end;
+
+function wbVertexToInt(aVertex: Integer; const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := StrToIntDef(aString, 0);
+end;
+
+function wbVertexToStr0(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := wbVertexToStr(0, aInt, aElement, aType);
+end;
+
+function wbVertexToInt0(const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := wbVertexToInt(0, aString, aElement);
+end;
+
+function wbVertexToStr1(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := wbVertexToStr(1, aInt, aElement, aType);
+end;
+
+function wbVertexToInt1(const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := wbVertexToInt(1, aString, aElement);
+end;
+
+function wbVertexToStr2(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := wbVertexToStr(2, aInt, aElement, aType);
+end;
+
+function wbVertexToInt2(const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := wbVertexToInt(2, aString, aElement);
+end;
+
+
 function wbEdgeToInt(aEdge: Integer; const aString: string; const aElement: IwbElement): Int64;
 begin
   Result := StrToIntDef(aString, 0);
@@ -1236,6 +1337,7 @@ function wbEdgeToInt2(const aString: string; const aElement: IwbElement): Int64;
 begin
   Result := wbEdgeToInt(2, aString, aElement);
 end;
+
 
 
 { Alias to string conversion, requires quest reference or quest record specific to record that references alias }
@@ -8231,7 +8333,8 @@ begin
   if wbSimpleRecords then
     wbNVNM :=
       wbStruct(NVNM, 'Geometry', [
-        wbByteArray('Unknown', 8),
+        wbInteger('Version', itU32).SetDefaultNativeValue(12),
+        wbByteArray('Magic', 4).SetDefaultEditValue('3C A0 E9 A5'),
         wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
         wbUnion('Parent', wbNVNMParentDecider, [
           wbStruct('Coordinates', [
@@ -8242,27 +8345,27 @@ begin
         ]),
         wbArray('Vertices', wbByteArray('Vertex', 12), -1).IncludeFlag(dfNotAlignable),
         wbArray('Triangles', wbByteArray('Triangle', 16), -1).IncludeFlag(dfNotAlignable),
-        wbArray('External Connections',
-          wbStruct('Connection', [
+        wbArray('Edge Links',
+          wbStruct('Edge Link', [
             wbByteArray('Unknown', 4),
             wbFormIDCk('Mesh', [NAVM]),
             wbInteger('Triangle', itS16)
           ])
         , -1).IncludeFlag(dfNotAlignable),
-        wbArray('Door Triangles',
-          wbStruct('Door Triangle', [
+        wbArrayS('Door Triangles',
+          wbStructSK([0, 2], 'Door Triangle', [
             wbInteger('Triangle before door', itS16),
             wbByteArray('Unknown', 4),
             wbFormIDCk('Door', [REFR])
           ])
-        , -1).IncludeFlag(dfNotAlignable),
-        wbUnknown
+        , -1),
+        wbByteArray('NavMeshGrid')
       ])
   else
     wbNVNM :=
       wbStruct(NVNM, 'Geometry', [
-        wbInteger('Unknown', itU32),
-        wbByteArray('Unknown', 4),
+        wbInteger('Version', itU32).SetDefaultNativeValue(12),
+        wbByteArray('Magic', 4).SetDefaultEditValue('3C A0 E9 A5'),
         wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
         wbUnion('Parent', wbNVNMParentDecider, [
           wbStruct('Coordinates', [
@@ -8271,16 +8374,16 @@ begin
           ]),
           wbFormIDCk('Parent Cell', [CELL])
         ]),
-        wbArray('Vertices', wbStruct('Vertex', [
+        wbArray('Vertices', wbStructSK([0, 1, 2], 'Vertex', [
           wbFloat('X'),
           wbFloat('Y'),
           wbFloat('Z')
         ]), -1).IncludeFlag(dfNotAlignable),
         wbArray('Triangles',
           wbStruct('Triangle', [
-            wbInteger('Vertex 0', itS16),
-            wbInteger('Vertex 1', itS16),
-            wbInteger('Vertex 2', itS16),
+            wbInteger('Vertex 0', itS16, wbVertexToStr0, wbVertexToInt0),
+            wbInteger('Vertex 1', itS16, wbVertexToStr1, wbVertexToInt1),
+            wbInteger('Vertex 2', itS16, wbVertexToStr2, wbVertexToInt2),
             wbInteger('Edge 0-1', itS16, wbEdgeToStr0, wbEdgeToInt0),
             wbInteger('Edge 1-2', itS16, wbEdgeToStr1, wbEdgeToInt1),
             wbInteger('Edge 2-0', itS16, wbEdgeToStr2, wbEdgeToInt1),
@@ -8320,8 +8423,6 @@ begin
               'Unknown 15',
               'Unknown 16'
             ]))
-            //wbInteger('Cover Edge #1 Flags', itU8),
-            //wbInteger('Cover Edge #2 Flags', itU8)
           ])
         , -1).IncludeFlag(dfNotAlignable),
         wbArray('Edge Links',
@@ -8331,13 +8432,13 @@ begin
             wbInteger('Triangle', itS16, nil, cpIgnore)
           ], cpIgnore)
         , -1, cpIgnore).IncludeFlag(dfNotAlignable),
-        wbArray('Door Triangles',
-          wbStruct('Door Triangle', [
+        wbArrayS('Door Triangles',
+          wbStructSK([0, 2], 'Door Triangle', [
             wbInteger('Triangle before door', itS16),
             wbByteArray('Unknown', 4),
             wbFormIDCk('Door', [REFR])
           ])
-        , -1).IncludeFlag(dfNotAlignable),
+        , -1),
         wbArray('Cover Triangles', wbInteger('Triangle', itS16), -1).IncludeFlag(dfNotAlignable),
         wbInteger('NavMeshGrid Divisor', itU32),
         wbFloat('Max X Distance'),
