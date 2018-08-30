@@ -5338,14 +5338,15 @@ end;
 
 function wbCombinedMeshIDToInt(const aString: string; const aElement: IwbElement): Int64;
 var
-  s: string;
+  s, f: string;
   i: Integer;
 begin
   Result := 0;
-  // hex number between first and second underscore
-  i := Pos('_', aString);
+  // hex number between first and second underscore in the file name
+  f := ExtractFileName(aString);
+  i := Pos('_', f);
   if i <> 0 then begin
-    s := Copy(aString, i + 1, Length(aString) - i);
+    s := Copy(f, i + 1, Length(f) - i);
     i := Pos('_', s);
     if i <> 0 then begin
       s := Copy(s, 1, i - 1);
