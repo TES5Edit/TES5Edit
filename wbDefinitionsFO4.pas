@@ -7238,8 +7238,8 @@ begin
 
   if wbSimpleRecords then
     wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
-      wbInteger('Version', itU32),
-      wbByteArray('Magic', 4),
+      wbInteger('Version', itU32).SetDefaultNativeValue(15),
+      wbByteArray('Magic', 4).SetDefaultEditValue('3C A0 E9 A5'),
       wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
       wbUnion('Parent', wbNVNMParentDecider, [
         wbStruct('Coordinates', [
@@ -7269,9 +7269,9 @@ begin
     ])
   else
     wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
-      wbInteger('Version', itU32),  // Changes how the struct is loaded, should be 15 in FO4
+      wbInteger('Version', itU32).SetDefaultNativeValue(15),  // Changes how the struct is loaded, should be 15 in FO4
       wbStruct('Pathing Cell', [
-        wbInteger('Magic', itU32),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
+        wbInteger('Magic', itU32).SetDefaultEditValue('3C A0 E9 A5'),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
         wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
         wbUnion('Parent', wbNVNMParentDecider, [  // same as TES5 cell if worldspace is null or Grid X Y
           wbStruct('Coordinates', [
@@ -7322,7 +7322,7 @@ begin
         ])
       , -1).IncludeFlag(dfNotAlignable),
       wbArray('Unknown 6',
-        wbStruct('Uknown', [
+        wbStruct('Unknown', [
           wbInteger('Unknown', itU16),
           wbInteger('Unknown', itU16)
         ])
