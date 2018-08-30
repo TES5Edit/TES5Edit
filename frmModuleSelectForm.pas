@@ -66,6 +66,7 @@ type
   public
     AllModules      : TwbModuleInfos;
     SelectedModules : TwbModuleInfos;
+    FilteredModules : TwbModuleInfos;
 
     SelectFlag      : TwbModuleFlag;
     FilterFlag      : TwbModuleFlag;
@@ -386,33 +387,37 @@ begin
   else
     Result := inherited ShowModal;
 
-  if Result <> mrOk then
-    SelectedModules := nil
-  else
+  if Result <> mrOk then begin
+    SelectedModules := nil;
+    FilteredModules := nil;
+  end else
     SimulateLoad;
 
-  if Length(SelectedModules) < 1 then
+  if Length(FilteredModules) < 1 then
     Result := mrCancel;
 end;
 
 procedure TfrmModuleSelect.SimulateLoad;
 var
-  Error         : string;
+  Error           : string;
 begin
   Error := '';
   try
-    if SelectFlag = mfActive then
-      SelectedModules := AllModules.SimulateLoad
-    else
+    if SelectFlag = mfActive then begin
+      SelectedModules := AllModules.SimulateLoad;
+      FilteredModules := SelectedModules.FilteredByFlag(SelectFlag).FilteredByFlag(FilterFlag);
+    end else begin
       SelectedModules := AllModules.FilteredByFlag(SelectFlag).FilteredByFlag(FilterFlag);
+      FilteredModules := SelectedModules;
+    end;
 
-    if Length(SelectedModules) < MinSelect then
-      if Length(SelectedModules) = 0 then
+    if Length(FilteredModules) < MinSelect then
+      if Length(FilteredModules) = 0 then
         Error := 'No modules selected'
       else
         Error := 'Less than ' + MinSelect.ToString + ' modules selected';
 
-    if Length(SelectedModules) > MaxSelect then
+    if Length(FilteredModules) > MaxSelect then
       if MaxSelect = 1 then
         Error := 'More than 1 module selected'
       else

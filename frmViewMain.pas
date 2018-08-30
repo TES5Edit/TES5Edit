@@ -4302,8 +4302,15 @@ begin
 
           if sl.Count < 1 then
             with TfrmModuleSelect.Create(Self) do try
+              if wbQuickClean then begin
+                MinSelect := 1;
+                MaxSelect := 1;
+                AllModules := wbModulesByLoadOrder(False).FilteredByFlag(mfValid);
+                AllModules.ExcludeAll(mfActive);
+              end;
+
               if ShowModal = mrOk then begin
-                SelectedModules.FilteredByFlag(mfActive).IncludeAll(mfTaggedForPluginMode);
+                FilteredModules.IncludeAll(mfTaggedForPluginMode);
                 sl.AddStrings(SelectedModules.ToStrings(False));
               end;
               if sl.Count < 1 then begin
