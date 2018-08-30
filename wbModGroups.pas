@@ -785,14 +785,16 @@ begin
         for j := Low(miModGroupTargets) to High(miModGroupTargets) do
           with miModGroupTargets[j]^ do begin
             if not SourceReported then begin
-              wbProgress('Records in "'+Modules[i].miName+'" will hide records from:');
+              if wbReportModGroups then
+                wbProgress('Records in "'+Modules[i].miName+'" will hide records from:');
               SourceReported := True;
             end;
             Result := True;
             Include(miFlags, mfIsModGroupTarget);
             SetLength(miModGroupSources, Succ(Length(miModGroupSources)));
             miModGroupSources[High(miModGroupSources)] := Modules[i];
-            wbProgress(' - ' + miName);
+            if wbReportModGroups then
+              wbProgress(' - ' + miName);
           end;
       end;
 end;

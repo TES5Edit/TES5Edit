@@ -125,6 +125,7 @@ var
   wbStripEmptyMasters      : Boolean  = False;
   wbAlwaysSorted           : Boolean  = False;
   wbThemesSupported        : Boolean  = True;
+  wbReportModGroups        : Boolean  = False;
 
   wbPluginsFileName    : String;
   wbModGroupFileName   : string;
