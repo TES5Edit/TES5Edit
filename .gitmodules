@@ -9,4 +9,4 @@
 [submodule "VirtualTrees"]
 	path = VirtualTrees
 	url = https://github.com/eFrysTon/Virtual-TreeView.git
-	branch = master	
+	branch = master
