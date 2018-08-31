@@ -12819,6 +12819,7 @@ begin
         for i := 0 to Pred(CheckListBox1.Items.Count) do
           if CheckListBox1.Checked[i] then begin
             TryDirectRename := False;
+            NeedsRename := False;
 
             // localization file
             if FileType[i] = 1 then begin
@@ -12844,6 +12845,7 @@ begin
               except
                 on E: Exception do begin
                   AnyErrors := True;
+                  NeedsRename := False;
                   PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
                 end;
               end;
@@ -12861,8 +12863,8 @@ begin
               if NeedsRename then
                 s := s + t;
 
+              FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024 * 1024);
               try
-                FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024 * 1024);
                 try
                   PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
                   _File.WriteToStream(FileStream, False);
@@ -12875,7 +12877,9 @@ begin
 
               except
                 on E: Exception do begin
+                  DeleteFile(wbDataPath + s);
                   AnyErrors := True;
+                  NeedsRename := False;
                   PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
                 end;
               end;
