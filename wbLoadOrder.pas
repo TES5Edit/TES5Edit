@@ -264,7 +264,7 @@ begin
   SetLength(_Modules, Length(Files));
   j := 0;
   for i := Low(Files) to High(Files) do
-    with _Modules[j] do begin
+    with _Modules[j] do try
       miFlags := [];
       miOriginalName := ExtractFileName(Files[i]);
       if miOriginalName.EndsWith('.ghost', True) then begin
@@ -306,7 +306,10 @@ begin
       Include(miFlags, mfValid);
 
       Inc(j);
-  end;
+    except
+      on E: Exception do
+      wbProgress('Error loading module information for "%s": [%s] %s', [Files[i], E.ClassName, E.Message]);
+    end;
   SetLength(_Modules, j);
   {do NOT perform SetLength on _Modules after this, it could invalidate pointer into the array}
   _ModulesByName := TStringList.Create;
