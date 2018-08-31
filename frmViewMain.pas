@@ -665,7 +665,7 @@ type
     function AddNewFile(out aFile: IwbFile; aIsESL: Boolean): Boolean; overload;
     function AddNewFile(out aFile: IwbFile; aTemplate: PwbModuleInfo): Boolean; overload;
 
-    function SaveChanged: Boolean;
+    function SaveChanged(aSilent: Boolean = False): Boolean;
     procedure JumpTo(aInterface: IInterface; aBackward: Boolean);
     function FindNodeForElement(const aElement: IwbElement): PVirtualNode;
     function EditWarn: Boolean;
@@ -9256,17 +9256,18 @@ begin
   end;
   if Result <> '' then
     Result := Result + CRLF;
-  if (aInfo.ITM <> 0) or (aInfo.UDR <> 0) then begin
-    Result := Result + CRLF + 'BOSS Masterlist Entry';
-    Result := Result + CRLF + aInfo.Plugin;
-    Result := Result + CRLF + Format('  IF CHECKSUM("%s", %s) DIRTY: %d ITM, %d UDR records. Needs %sEdit cleaning: "http://cs.elderscrolls.com/index.php?title=TES4Edit_Cleaning_Guide"', [
-      aInfo.Plugin,
-      IntToHex(aInfo.CRC32, 8),
-      aInfo.ITM,
-      aInfo.UDR,
-      wbAppName
-    ]);
-  end;
+  if wbGameMode = gmTES4 then
+    if (aInfo.ITM <> 0) or (aInfo.UDR <> 0) then begin
+      Result := Result + CRLF + 'BOSS Masterlist Entry';
+      Result := Result + CRLF + aInfo.Plugin;
+      Result := Result + CRLF + Format('  IF CHECKSUM("%s", %s) DIRTY: %d ITM, %d UDR records. Needs %sEdit cleaning: "http://cs.elderscrolls.com/index.php?title=TES4Edit_Cleaning_Guide"', [
+        aInfo.Plugin,
+        IntToHex(aInfo.CRC32, 8),
+        aInfo.ITM,
+        aInfo.UDR,
+        wbAppName
+      ]);
+    end;
 end;
 
 procedure TfrmMain.mniNavUndeleteAndDisableReferencesClick(Sender: TObject);
@@ -9477,7 +9478,7 @@ begin
     if Plugin <> '' then begin
       DirtyInfo := nil;
       for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
-        if LOOTPluginInfos[i].Plugin = Plugin then begin
+        if (LOOTPluginInfos[i].Plugin = Plugin) and (LOOTPluginInfos[i].CRC32 = PluginCRC32) then begin
           DirtyInfo := @LOOTPluginInfos[i];
           Break;
         end;
@@ -9735,7 +9736,7 @@ begin
     if Plugin <> '' then begin
       DirtyInfo := nil;
       for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
-        if LOOTPluginInfos[i].Plugin = Plugin then begin
+        if (LOOTPluginInfos[i].Plugin = Plugin) and (LOOTPluginInfos[i].CRC32 = PluginCRC32) then begin
           DirtyInfo := @LOOTPluginInfos[i];
           Break;
         end;
@@ -9762,8 +9763,8 @@ var
 begin
   pgMain.ActivePage := tbsMessages;
   for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
-    AddMessage(LOManagersDirtyInfo(LOOTPluginInfos[i]));
-  AddMessage('');
+    PostAddMessage(LOManagersDirtyInfo(LOOTPluginInfos[i]));
+  PostAddMessage('');
 end;
 
 procedure TfrmMain.mniSpreadsheetCompareSelectedClick(Sender: TObject);
@@ -12756,7 +12757,7 @@ begin
     end;
 end;
 
-function TfrmMain.SaveChanged: Boolean;
+function TfrmMain.SaveChanged(aSilent: Boolean = False): Boolean;
 var
   i                           : Integer;
   FileStream                  : TBufferedFileStream;
@@ -12801,8 +12802,9 @@ begin
 
       if (CheckListBox1.Count > 0) and (not (wbToolMode in wbAutoModes)) then begin
         NoEscape := True;
-        if ShowModal <> mrOk then
-          Exit(False);
+        if not aSilent then
+          if ShowModal <> mrOk then
+            Exit(False);
         wbDontBackup := not cbBackup.Checked;
         if Assigned(Settings) then begin
           Settings.WriteBool(frmMain.Name, 'DontBackup', wbDontBackup);
@@ -17320,6 +17322,10 @@ begin
     mniNavUndeleteAndDisableReferences.Click;
     mniNavRemoveIdenticalToMaster.Click;
 
+    if wbQuickCleanAutoSave then
+      if not SaveChanged(True) then
+        Exit;
+
     mniNavFilterForCleaning.Click;
     JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
     vstNav.ClearSelection;
@@ -17329,6 +17335,24 @@ begin
     pgMain.ActivePage := tbsMessages;
     mniNavUndeleteAndDisableReferences.Click;
     mniNavRemoveIdenticalToMaster.Click;
+
+    if wbQuickCleanAutoSave then begin
+      if not SaveChanged(True) then
+        Exit;
+
+      mniNavFilterForCleaning.Click;
+      JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
+      vstNav.ClearSelection;
+      vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+      vstNav.Selected[vstNav.FocusedNode] := True;
+      DoSetActiveRecord(nil);
+      pgMain.ActivePage := tbsMessages;
+      mniNavUndeleteAndDisableReferences.Click;
+      mniNavRemoveIdenticalToMaster.Click;
+
+      mniNavLOManagersDirtyInfoClick(mniNavLOManagersDirtyInfo);
+    end;
+
     wbQuickClean := False;
     wbProgress('Quick Clean mode finished.');
   end;

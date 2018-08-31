@@ -35,6 +35,7 @@ var
   wbQuickShowConflicts : Boolean;
   wbVeryQuickShowConflicts : Boolean;
   wbQuickClean         : Boolean;
+  wbQuickCleanAutoSave : Boolean;
 
   wbParamIndex         : integer = 1;     // First unused parameter
   wbPluginsToUse       : TStringList;
@@ -886,6 +887,11 @@ begin
 
   if FindCmdLineSwitch('quickclean') and (wbToolSource in [tsPlugins]) then
     wbQuickClean := wbIKnowWhatImDoing;
+
+  if FindCmdLineSwitch('quickautoclean') and (wbToolSource in [tsPlugins]) then begin
+    wbQuickClean := wbIKnowWhatImDoing;
+    wbQuickCleanAutoSave := wbQuickClean;
+  end;
 
   if FindCmdLineSwitch('TrackAllEditorID') then
     wbTrackAllEditorID := True;
