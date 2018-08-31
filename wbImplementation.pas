@@ -604,7 +604,7 @@ type
     flMapHandle              : THandle;
 
     flView                   : Pointer;
-    flSize                   : Cardinal;
+    flSize                   : Int64;
     flEndPtr                 : Pointer;
     flCRC32                  : TwbCRC32;
 
@@ -2920,6 +2920,13 @@ begin
     if (flFileHandle = INVALID_HANDLE_VALUE) or (flFileHandle = 0) then
       RaiseLastOSError;
 
+    flSize := 0;
+    if not GetFileSizeEx(flFileHandle, flSize) then
+      RaiseLastOSError;
+
+    if flSize < 1 then
+      raise Exception.CreateFmt('"%s" is 0 bytes in size', [flFileName]);
+
     flMapHandle := CreateFileMapping(
       flFileHandle,
       nil,
@@ -2941,8 +2948,6 @@ begin
     );
      if not Assigned(flView) then
       RaiseLastOSError;
-
-    flSize := GetFileSize(flFileHandle, nil);
   end else begin
     with TFileStream.Create(flFileNameOnDisk, fmOpenRead or fmShareDenyWrite) do try
       flSize := Size;
