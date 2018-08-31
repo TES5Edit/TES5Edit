@@ -10543,6 +10543,7 @@ var
 
 begin
   if Prepare then begin
+    SourceFile.BuildOrLoadRef(False);
     PerformLongAction('Changing FormIDs', 'Processed Records: 0', procedure
     var
       AnyErrors                   : Boolean;
