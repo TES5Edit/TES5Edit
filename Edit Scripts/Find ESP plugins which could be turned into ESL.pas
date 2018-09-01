@@ -42,7 +42,7 @@ begin
   if RecMaxFormID <= iESLMaxFormID then
     AddMessage(#9'Can be turned into ESL by adding ESL flag in TES4 header and changing extension to *.ESL')
   else
-    AddMessage(#9'Can be turned into ESL by using ESL convertion in Creation Kit (requires FormID renumbering)');
+    AddMessage(#9'Can be turned into ESL by using ESL conversion in Creation Kit (requires FormID renumbering)');
     
   // check if plugin has ESP masters
   for i := 0 to Pred(MasterCount(f)) do
