@@ -10800,6 +10800,8 @@ begin
     with TfrmFilterOptions.Create(nil) do try
       SetSettings(Settings);
 
+      cbByNotReachableStatus.Enabled := ReachableBuild;
+
       if ShowModal <> mrOk then
         Exit;
 

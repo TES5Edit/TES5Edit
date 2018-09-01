@@ -289,7 +289,8 @@ begin
   if cbByInjectionStatus.Checked <> Settings.ReadBool(Section, 'byInjectStatus', False) then Exit;
   if cbInjected.Checked <> Settings.ReadBool(Section, 'InjectStatus', True) then Exit;
 
-  if cbByNotReachableStatus.Enabled <> Settings.ReadBool(Section, 'byNotReachableStatus', False) then Exit;
+  if cbByNotReachableStatus.Enabled then
+    if cbByNotReachableStatus.Checked <> Settings.ReadBool(Section, 'byNotReachableStatus', False) then Exit;
   if cbNotReachable.Checked <> Settings.ReadBool(Section, 'NotReachableStatus', True) then Exit;
 
   if cbByReferencesInjectedStatus.Checked <> Settings.ReadBool(Section, 'byReferencesInjectedStatus', False) then Exit;
@@ -434,7 +435,7 @@ begin
   cbByInjectionStatus.Checked := Settings.ReadBool(Section, 'byInjectStatus', False);
   cbInjected.Checked := Settings.ReadBool(Section, 'InjectStatus', True);
 
-  cbByNotReachableStatus.Enabled := Settings.ReadBool(Section, 'byNotReachableStatus', False);
+  cbByNotReachableStatus.Checked := cbByNotReachableStatus.Enabled and Settings.ReadBool(Section, 'byNotReachableStatus', False);
   cbNotReachable.Checked := Settings.ReadBool(Section, 'NotReachableStatus', True);
 
   cbByReferencesInjectedStatus.Checked := Settings.ReadBool(Section, 'byReferencesInjectedStatus', False);
@@ -516,7 +517,8 @@ begin
   Settings.WriteBool(Section, 'ByInjectStatus', cbByInjectionStatus.Checked);
   Settings.WriteBool(Section, 'InjectStatus', cbInjected.Checked);
 
-  Settings.WriteBool(Section, 'ByNotReachableStatus', cbByNotReachableStatus.Enabled);
+  if cbByNotReachableStatus.Enabled then
+    Settings.WriteBool(Section, 'ByNotReachableStatus', cbByNotReachableStatus.Checked);
   Settings.WriteBool(Section, 'NotReachableStatus', cbNotReachable.Checked);
 
   Settings.WriteBool(Section, 'ByReferencesInjectedStatus', cbByReferencesInjectedStatus.Checked);
