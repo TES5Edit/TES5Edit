@@ -439,7 +439,8 @@ begin
 
   wbCachePath := '';
   if not (wbDontCache or wbFindCmdLineParam('C', wbCachePath)) then
-    wbCachePath := wbDataPath + wbAppName + 'Edit Cache\';
+    if wbDataPath <> '' then
+      wbCachePath := wbDataPath + wbAppName + 'Edit Cache\';
   if wbCachePath = '' then
     wbDontCache := True;
   if not wbDontCache then
