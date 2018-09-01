@@ -2579,9 +2579,17 @@ begin
   flOpenFile;
   Scan;
 
-  if Assigned(flModule) then
+  if Assigned(flModule) then begin
     if flModule.miOfficialIndex < High(Integer) then
-      Include(flStates, fsIsOfficial);
+      Include(flStates, fsIsOfficial)
+  end else if not aOnlyHeader then begin
+    flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+    flModule.miFile := Self;
+    flModule.miLoadOrder := flLoadOrder;
+    flModule.miFileID := flLoadOrderFileID;
+    Include(flModule.miFlags, mfHasFile);
+    Include(flModule.miFlags, mfLoaded);
+  end;
 end;
 
 var
