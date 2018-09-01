@@ -70,6 +70,8 @@ threadvar
   wbStartTime             : TDateTime;
   wbShowStartTime         : Integer;
   wbHideStartTime         : Integer;
+  wbLastMessageAt         : UInt64;
+  wbMaxMessageInterval    : UInt64;
 
 var
   wbForceTerminate    : Boolean;

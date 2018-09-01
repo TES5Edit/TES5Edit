@@ -1081,13 +1081,32 @@ begin
 end;
 
 procedure GeneralProgressNoAbortCheck(const s: string);
+var
+  CurrentTick        : UInt64;
+  MaxMessageInterval : UInt64;
 begin
-  if s <> '' then
+  if s <> '' then begin
     if (wbShowStartTime > 0) and (wbHideStartTime < 1) then
       frmMain.PostAddMessage(FormatDateTime('[nn:ss] ', Now - wbStartTime) + s)
     else
       frmMain.PostAddMessage(s);
-  if LastUpdate + 500 < GetTickCount64 then begin
+    if wbLastMessageAt <> 0 then
+      wbLastMessageAt := GetTickCount64;
+  end;
+
+  CurrentTick := GetTickCount64;
+  if LastUpdate + 500 < CurrentTick then begin
+    if s = '' then
+      if wbLastMessageAt <> 0 then
+        if wbCurrentAction <> '' then begin
+          MaxMessageInterval := wbMaxMessageInterval;
+          if MaxMessageInterval < 1 then
+            MaxMessageInterval := 10000;
+          if wbLastMessageAt + MaxMessageInterval < CurrentTick then begin
+            GeneralProgressNoAbortCheck('still ' + wbCurrentAction);
+            Exit;
+          end;
+        end;
     UpdateCaption;
     DoProcessMessages;
     LastUpdate := GetTickCount64;
@@ -11908,6 +11927,7 @@ end;
 procedure TfrmMain.PerformLongAction(const aDesc, aProgress: string; const aAction: TProc);
 var
   HadTick      : Boolean;
+  HadLastMsg   : Boolean;
   WasEnabled   : Boolean;
   PrevCaption  : string;
   PrevAction   : string;
@@ -11920,8 +11940,11 @@ begin
     wbStartTime := lStartTime;
   WasEnabled := Enabled;
   HadTick := wbCurrentTick > 0;
+  HadLastMsg := wbLastMessageAt > 0;
 
   wbCurrentTick := GetTickCount64;
+  if not HadLastMsg then
+    wbLastMessageAt := wbCurrentTick;
   Inc(wbShowStartTime);
   UpdateCaption;
   PrevCaption := Caption;
@@ -11970,6 +11993,8 @@ begin
       wbCurrentTick := GetTickCount64
     else
       wbCurrentTick := 0;
+    if not HadLastMsg then
+      wbLastMessageAt := 0;
     if wbShowStartTime = 0 then
       Caption := Application.Title
     else
