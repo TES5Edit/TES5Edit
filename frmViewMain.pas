@@ -691,7 +691,7 @@ type
     function RestorePluginsFromMaster: Boolean;
     procedure ApplyScript(const aScriptName: string; aScript: string);
     procedure CreateActionsForScripts;
-    function LOOTDirtyInfo(const aInfo: TLOOTPluginInfo): string;
+    function LOOTDirtyInfo(const aInfo: TLOOTPluginInfo; aFileChanged: Boolean): string;
     function BOSSDirtyInfo(const aInfo: TLOOTPluginInfo): string;
 
     procedure PerformLongAction(const aDesc, aProgress: string; const aAction: TProc);
@@ -9230,7 +9230,7 @@ begin
   end;
 end;
 
-function TfrmMain.LOOTDirtyInfo(const aInfo: TLOOTPluginInfo): string;
+function TfrmMain.LOOTDirtyInfo(const aInfo: TLOOTPluginInfo; aFileChanged: Boolean): string;
 // LOOT dirty entry example
 {
   - name: 'DLCRobot.esm'
@@ -9252,8 +9252,9 @@ function TfrmMain.LOOTDirtyInfo(const aInfo: TLOOTPluginInfo): string;
 begin
   Result := '';
   if (aInfo.ITM <> 0) or (aInfo.UDR <> 0) or (aInfo.NAV <> 0) then begin
-    Result := Result + CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin]);
-    Result := Result + CRLF + StringOfChar(' ', 4) + 'dirty:';
+    if aFileChanged then
+      Result := CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin]) + CRLF;
+    Result := Result + StringOfChar(' ', 4) + 'dirty:';
     Result := Result + CRLF + StringOfChar(' ', 6) + '- <<: *dirtyPlugin';
     Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
     Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''%sEdit v%s''', [wbAppName, VersionString]);
@@ -9262,13 +9263,12 @@ begin
     if aInfo.NAV <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'nav: %d', [aInfo.NAV]);
   end
   else if (aInfo.ITM = 0) and (aInfo.UDR = 0) and (aInfo.NAV = 0) then begin
-    Result := Result + CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin]);
-    Result := Result + CRLF + StringOfChar(' ', 4) + 'clean:';
+    if aFileChanged then
+      Result := CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin]) + CRLF;
+    Result := Result + StringOfChar(' ', 4) + 'clean:';
     Result := Result + CRLF + Format(StringOfChar(' ', 6) + '- crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
     Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''%sEdit v%s''', [wbAppName, VersionString]);
   end;
-  if Result <> '' then
-    Result := Result + CRLF;
 end;
 
 function TfrmMain.BOSSDirtyInfo(const aInfo: TLOOTPluginInfo): string;
@@ -9780,25 +9780,34 @@ end;
 
 procedure TfrmMain.mniNavLOManagersDirtyInfoClick(Sender: TObject);
 var
-  i    : Integer;
-  BOSS : Boolean;
+  i           : Integer;
+  BOSS        : Boolean;
+  FileChanged : Boolean;
 begin
+  if Length(LOOTPluginInfos) < 1 then
+    Exit;
+
   BOSS := False;
   pgMain.ActivePage := tbsMessages;
+
   // There will always be a LOOT message,
   // since a plugin will always either be clean or it will be dirty
+  PostAddMessage('');
   PostAddMessage('LOOT Masterlist Entries');
+  FileChanged := True;
   for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do begin
-    PostAddMessage(LOOTDirtyInfo(LOOTPluginInfos[i]));
+    FileChanged := (i=0) or not SameText(LOOTPluginInfos[i].Plugin, LOOTPluginInfos[Pred(i)].Plugin);
+    PostAddMessage(LOOTDirtyInfo(LOOTPluginInfos[i], FileChanged));
     if (LOOTPluginInfos[i].ITM <> 0) or (LOOTPluginInfos[i].UDR <> 0) then
-      BOSS := True;
+      BOSS := wbGameMode = gmTES4;
   end;
-  if wbGameMode = gmTES4 and BOSS then begin
+
+  if BOSS then begin
+    PostAddMessage('');
     PostAddMessage('BOSS Masterlist Entries');
     for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
       PostAddMessage(BOSSDirtyInfo(LOOTPluginInfos[i]));
   end;
-  PostAddMessage('');
 end;
 
 procedure TfrmMain.mniSpreadsheetCompareSelectedClick(Sender: TObject);
