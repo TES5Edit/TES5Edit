@@ -9261,7 +9261,6 @@ WAC - NoMapMarker.esp
 begin
   Result := '';
   if (aInfo.ITM <> 0) or (aInfo.UDR <> 0) then begin
-    Result := Result + CRLF + 'BOSS Masterlist Entry';
     Result := Result + CRLF + aInfo.Plugin;
     Result := Result + CRLF + Format('  IF CHECKSUM("%s", %s) DIRTY: %d ITM, %d UDR records. Needs %sEdit cleaning: "http://cs.elderscrolls.com/index.php?title=TES4Edit_Cleaning_Guide"', [
       aInfo.Plugin,
@@ -9762,15 +9761,21 @@ end;
 
 procedure TfrmMain.mniNavLOManagersDirtyInfoClick(Sender: TObject);
 var
-  i: Integer;
+  i    : Integer;
+  BOSS : Boolean;
 begin
+  BOSS := False;
   pgMain.ActivePage := tbsMessages;
   // There will always be a LOOT message,
   // since a plugin will always either be clean or it will be dirty
   PostAddMessage('LOOT Masterlist Entries');
-  for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
+  for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do begin
     PostAddMessage(LOOTDirtyInfo(LOOTPluginInfos[i]));
-  if wbGameMode = gmTES4 then begin
+    if (LOOTPluginInfos[i].ITM <> 0) or (LOOTPluginInfos[i].UDR <> 0) then
+      BOSS := True;
+  end;
+  if wbGameMode = gmTES4 and BOSS then begin
+    PostAddMessage('BOSS Masterlist Entries');
     for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
       PostAddMessage(BOSSDirtyInfo(LOOTPluginInfos[i]));
   end;
