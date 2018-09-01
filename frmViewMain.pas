@@ -7640,11 +7640,16 @@ begin
     end;
     for i := Low(Modules) to High(Modules) do begin
       _File := Modules[i]._File;
+      _File.ResetReachable;
+    end;
+    for i := Low(Modules) to High(Modules) do begin
+      _File := Modules[i]._File;
       wbCurrentAction := 'Building reachable information for ' + _File.Name;
       wbProgress(wbCurrentAction);
       DoProcessMessages;
       _File.BuildReachable;
     end;
+    ReachableBuild := True;
   end);
 end;
 
