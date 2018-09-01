@@ -9233,7 +9233,6 @@ function TfrmMain.LOOTDirtyInfo(const aInfo: TLOOTPluginInfo): string;
 begin
   Result := '';
   if (aInfo.ITM <> 0) or (aInfo.UDR <> 0) or (aInfo.NAV <> 0) then begin
-    Result := Result + CRLF + 'LOOT Masterlist Entry';
     Result := Result + CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin]);
     Result := Result + CRLF + StringOfChar(' ', 4) + 'dirty:';
     Result := Result + CRLF + StringOfChar(' ', 6) + '- <<: *dirtyPlugin';
@@ -9244,7 +9243,6 @@ begin
     if aInfo.NAV <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'nav: %d', [aInfo.NAV]);
   end
   else if (aInfo.ITM = 0) and (aInfo.UDR = 0) and (aInfo.NAV = 0) then begin
-    Result := Result + CRLF + 'LOOT Masterlist Entry';
     Result := Result + CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin]);
     Result := Result + CRLF + StringOfChar(' ', 4) + 'clean:';
     Result := Result + CRLF + Format(StringOfChar(' ', 6) + '- crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
@@ -9767,6 +9765,9 @@ var
   i: Integer;
 begin
   pgMain.ActivePage := tbsMessages;
+  // There will always be a LOOT message,
+  // since a plugin will always either be clean or it will be dirty
+  PostAddMessage('LOOT Masterlist Entries');
   for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
     PostAddMessage(LOOTDirtyInfo(LOOTPluginInfos[i]));
   if wbGameMode = gmTES4 then begin
