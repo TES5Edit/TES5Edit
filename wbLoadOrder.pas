@@ -255,6 +255,8 @@ var
 begin
   if Assigned(_ModulesByName) then {already loaded}
     Exit;
+  if wbDataPath = '' then
+    Exit;
 
   Files := TDirectory.GetFiles(wbDataPath);
   i := Length(Files);
