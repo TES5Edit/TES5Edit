@@ -691,7 +691,8 @@ type
     function RestorePluginsFromMaster: Boolean;
     procedure ApplyScript(const aScriptName: string; aScript: string);
     procedure CreateActionsForScripts;
-    function LOManagersDirtyInfo(const aInfo: TLOOTPluginInfo): string;
+    function LOOTDirtyInfo(const aInfo: TLOOTPluginInfo): string;
+    function BOSSDirtyInfo(const aInfo: TLOOTPluginInfo): string;
 
     procedure PerformLongAction(const aDesc, aProgress: string; const aAction: TProc);
     procedure PerformActionOnSelectedFiles(const aDesc: string; const aAction: TProc<IwbFile>);
@@ -9210,7 +9211,7 @@ begin
   end;
 end;
 
-function TfrmMain.LOManagersDirtyInfo(const aInfo: TLOOTPluginInfo): string;
+function TfrmMain.LOOTDirtyInfo(const aInfo: TLOOTPluginInfo): string;
 // LOOT dirty entry example
 {
   - name: 'DLCRobot.esm'
@@ -9229,15 +9230,9 @@ function TfrmMain.LOManagersDirtyInfo(const aInfo: TLOOTPluginInfo): string;
       - crc: 0x6A5FC68B
         util: 'FO4Edit v3.2'
 }
-// BOSS entry example
-{
-WAC - NoMapMarker.esp
-  IF CHECKSUM("WAC - NoMapMarker.esp", 9BD8F9C2) DIRTY: 16 ITM, 0 UDR records. Needs TES4Edit cleaning: "http://cs.elderscrolls.com/index.php?title=TES4Edit_Cleaning_Guide"
-}
 begin
   Result := '';
   if (aInfo.ITM <> 0) or (aInfo.UDR <> 0) or (aInfo.NAV <> 0) then begin
-    Result := Result + CRLF + 'LOOT Masterlist Entry';
     Result := Result + CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin]);
     Result := Result + CRLF + StringOfChar(' ', 4) + 'dirty:';
     Result := Result + CRLF + StringOfChar(' ', 6) + '- <<: *dirtyPlugin';
@@ -9248,7 +9243,6 @@ begin
     if aInfo.NAV <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'nav: %d', [aInfo.NAV]);
   end
   else if (aInfo.ITM = 0) and (aInfo.UDR = 0) and (aInfo.NAV = 0) then begin
-    Result := Result + CRLF + 'LOOT Masterlist Entry';
     Result := Result + CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin]);
     Result := Result + CRLF + StringOfChar(' ', 4) + 'clean:';
     Result := Result + CRLF + Format(StringOfChar(' ', 6) + '- crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
@@ -9256,18 +9250,26 @@ begin
   end;
   if Result <> '' then
     Result := Result + CRLF;
-  if wbGameMode = gmTES4 then
-    if (aInfo.ITM <> 0) or (aInfo.UDR <> 0) then begin
-      Result := Result + CRLF + 'BOSS Masterlist Entry';
-      Result := Result + CRLF + aInfo.Plugin;
-      Result := Result + CRLF + Format('  IF CHECKSUM("%s", %s) DIRTY: %d ITM, %d UDR records. Needs %sEdit cleaning: "http://cs.elderscrolls.com/index.php?title=TES4Edit_Cleaning_Guide"', [
-        aInfo.Plugin,
-        IntToHex(aInfo.CRC32, 8),
-        aInfo.ITM,
-        aInfo.UDR,
-        wbAppName
-      ]);
-    end;
+end;
+
+function TfrmMain.BOSSDirtyInfo(const aInfo: TLOOTPluginInfo): string;
+// BOSS entry example
+{
+WAC - NoMapMarker.esp
+  IF CHECKSUM("WAC - NoMapMarker.esp", 9BD8F9C2) DIRTY: 16 ITM, 0 UDR records. Needs TES4Edit cleaning: "http://cs.elderscrolls.com/index.php?title=TES4Edit_Cleaning_Guide"
+}
+begin
+  Result := '';
+  if (aInfo.ITM <> 0) or (aInfo.UDR <> 0) then begin
+    Result := Result + CRLF + aInfo.Plugin;
+    Result := Result + CRLF + Format('  IF CHECKSUM("%s", %s) DIRTY: %d ITM, %d UDR records. Needs %sEdit cleaning: "http://cs.elderscrolls.com/index.php?title=TES4Edit_Cleaning_Guide"', [
+      aInfo.Plugin,
+      IntToHex(aInfo.CRC32, 8),
+      aInfo.ITM,
+      aInfo.UDR,
+      wbAppName
+    ]);
+  end;
 end;
 
 procedure TfrmMain.mniNavUndeleteAndDisableReferencesClick(Sender: TObject);
@@ -9759,11 +9761,24 @@ end;
 
 procedure TfrmMain.mniNavLOManagersDirtyInfoClick(Sender: TObject);
 var
-  i: Integer;
+  i    : Integer;
+  BOSS : Boolean;
 begin
+  BOSS := False;
   pgMain.ActivePage := tbsMessages;
-  for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
-    PostAddMessage(LOManagersDirtyInfo(LOOTPluginInfos[i]));
+  // There will always be a LOOT message,
+  // since a plugin will always either be clean or it will be dirty
+  PostAddMessage('LOOT Masterlist Entries');
+  for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do begin
+    PostAddMessage(LOOTDirtyInfo(LOOTPluginInfos[i]));
+    if (LOOTPluginInfos[i].ITM <> 0) or (LOOTPluginInfos[i].UDR <> 0) then
+      BOSS := True;
+  end;
+  if wbGameMode = gmTES4 and BOSS then begin
+    PostAddMessage('BOSS Masterlist Entries');
+    for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
+      PostAddMessage(BOSSDirtyInfo(LOOTPluginInfos[i]));
+  end;
   PostAddMessage('');
 end;
 
