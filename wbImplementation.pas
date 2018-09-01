@@ -2267,7 +2267,9 @@ var
   Flg   : IwbElement;
   s     : string;
 begin
-  Assert(Length(cntElements) > 0);
+  if Length(cntElements) < 1 then
+    Exit;
+
   cntElements[0].Reached;
 
   for i := Low(flRecords) to High(flRecords) do
@@ -9297,6 +9299,8 @@ var
 
   SelfRef   : IwbContainerElementRef;
 begin
+  wbTick;
+
   if esReachable in eStates then
     Exit(False);
 
@@ -12722,6 +12726,8 @@ var
   Rec     : IwbMainRecord;
   SelfRef : IwbContainerElementRef;
 begin
+  wbTick;
+
   if esReachable in eStates then
     Exit(False);
 
