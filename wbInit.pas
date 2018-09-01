@@ -973,6 +973,12 @@ begin
   if FindCmdLineSwitch('fixuppgrd') then
     wbFixupPGRD := True;
 
+  if wbQuickClean then begin
+    wbAllowInternalEdit := True;
+    wbFixupPGRD := True;
+    wbSimpleRecords := False;
+  end;
+
   wbShouldLoadMOHookFile := wbFindCmdLineParam('moprofile', wbMOProfile);
 
   try
