@@ -66,9 +66,40 @@ xEdit Updates:
 
 With each new version of xEdit it is recommended to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect.
 
+Experimental Version 3.2.xx contains the following changes:
+
+There are too many changes to list, please review the GitHub page: https://github.com/TES5Edit/TES5Edit/releases
+
+Additional Testing Feature (Optional):
+
+Do not install this for regular use it is not required!
+
+For 3.2.61 there is an additional file included, FO4EditLink.zip which contains a Data folder and two sub-folders F4SE and xEdit. Extract the files to a temp folder and copy the Data folder to your Fallout 4 game folder.
 
 Version 3.2.2 contains the following changes:
 
+- Updated version of modInfoDump xSE plugins.
+- Update of the CTDA functions 
+- Update condition functons for FO3, FNV, and xSE plugins
+- LODGen 2.2.0 
+- x64 fixes
+- Remove unused variable after x64 updates
+- Scripting updates
+- New scripts 
+  * Add selected items into container.
+  * Find ESP plugins which technically can be made ESL.
+- [FO4] GNAM are INFO Group
+- define position in case there is no CC list
+- CC load order update
+  * Sort CC plugins right after last DLC, Other ESL after last ESM
+- [TES5/FO4] Updated PERK
+- [FO3/FNV] NAVM update
+- Ensure a return value in some scripting functions 
+- fixed terrain water segments for odd origins
+- Bumped version to 3.2.2 
+- Disable dynamic counter fields update when creating a merged patch. With built-in removal of counter fields if zero, it causes assertions while copying list elements to the merged record. It is also not needed since merging code updates all counters itself when merging is done.
+- BSArch v0.5 
+- New -share parameter when packing archives to make binary identical files use the same data in archive. Data hashes are calculated using MD5 from TForge library.
 
 Version 3.2.1 contains the following changes:
 - [SSE/FO4] Creation Club support (ESL plugins), forced load order for plugins in *.ccc file
