@@ -1424,6 +1424,104 @@ begin
   end;
 end;
 
+function wbEdgeLinksTo(aEdge: Integer; const aElement: IwbElement): IwbElement;
+var
+  aInt       : Int64;
+  Triangle   : IwbContainerElementRef;
+  Triangles  : IwbContainerElementRef;
+  Flags      : Int64;
+  MainRecord : IwbMainRecord;
+  EdgeLinks  : IwbContainerElementRef;
+  EdgeLink   : IwbContainerElementRef;
+begin
+  Result := nil;
+  if not Assigned(aElement) then
+    Exit;
+
+  Triangle := aElement.Container as IwbContainerElementRef;
+  if not Assigned(Triangle) then
+    Exit;
+  MainRecord := aElement.ContainingMainRecord;
+  if not Assigned(MainRecord) then
+    Exit;
+
+  aInt := aElement.NativeValue;
+
+  Flags := Triangle.ElementNativeValues['Flags'];
+  if Flags and (1 shl aEdge) <> 0 then begin
+    if not Supports(MainRecord.ElementByPath['NVNM\Edge Links'], IwbContainerElementRef, EdgeLinks) then
+      Exit;
+    if aInt >= EdgeLinks.ElementCount then
+      Exit;
+    if aInt < 0 then
+      Exit;
+    EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
+
+    MainRecord := nil;
+    if not Supports(EdgeLink.ElementByPath['Mesh'].LinksTo, IwbMainRecord, MainRecord) then
+      Exit;
+    aInt := EdgeLink.ElementNativeValues['Triangle'];
+  end;
+
+  if not Supports(MainRecord.ElementByPath['NVNM\Triangles'], IwbContainerElementRef, Triangles) then
+    Exit;
+
+  if aInt >= Triangles.ElementCount then
+    Exit;
+  if aInt < 0 then
+    Exit;
+  Triangle := Triangles.Elements[aInt] as IwbContainerElementRef;
+
+  Result := Triangle;
+end;
+
+function wbEdgeLinksTo0(const aElement: IwbElement): IwbElement;
+begin
+  Result := wbEdgeLinksTo(0, aElement);
+end;
+
+function wbEdgeLinksTo1(const aElement: IwbElement): IwbElement;
+begin
+  Result := wbEdgeLinksTo(1, aElement);
+end;
+
+function wbEdgeLinksTo2(const aElement: IwbElement): IwbElement;
+begin
+  Result := wbEdgeLinksTo(2, aElement);
+end;
+
+function wbTriangleLinksTo(const aElement: IwbElement): IwbElement;
+var
+  aInt       : Int64;
+  Triangle   : IwbContainerElementRef;
+  Triangles  : IwbContainerElementRef;
+  MainRecord : IwbMainRecord;
+begin
+  Result := nil;
+  if not Assigned(aElement) then
+    Exit;
+
+  Triangle := aElement.Container as IwbContainerElementRef;
+  if not Assigned(Triangle) then
+    Exit;
+  MainRecord := aElement.ContainingMainRecord;
+  if not Assigned(MainRecord) then
+    Exit;
+
+  aInt := aElement.NativeValue;
+
+  if not Supports(MainRecord.ElementByPath['NVNM\Triangles'], IwbContainerElementRef, Triangles) then
+    Exit;
+
+  if aInt >= Triangles.ElementCount then
+    Exit;
+  if aInt < 0 then
+    Exit;
+  Triangle := Triangles.Elements[aInt] as IwbContainerElementRef;
+
+  Result := Triangle;
+end;
+
 function wbVertexToStr(aVertex: Integer; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Triangle   : IwbContainerElementRef;
@@ -1485,6 +1583,41 @@ begin
     ctEditType: Result := '';
     ctEditInfo: Result := '';
   end;
+end;
+
+
+function wbVertexLinksTo(const aElement: IwbElement): IwbElement;
+var
+  aInt       : Int64;
+  Triangle   : IwbContainerElementRef;
+  MainRecord : IwbMainRecord;
+  Vertices   : IwbContainerElementRef;
+  Vertex     : IwbContainerElementRef;
+begin
+  Result := nil;
+  if not Assigned(aElement) then
+    Exit;
+
+  Triangle := aElement.Container as IwbContainerElementRef;
+  if not Assigned(Triangle) then
+    Exit;
+  MainRecord := aElement.ContainingMainRecord;
+  if not Assigned(MainRecord) then
+    Exit;
+
+  if not Supports(MainRecord.ElementByPath['NVNM\Vertices'], IwbContainerElementRef, Vertices) then
+    Exit;
+
+  aInt := aElement.NativeValue;
+
+  if aInt >= Vertices.ElementCount then
+    Exit;
+  if aInt < 0 then
+    Exit;
+
+  Vertex := Vertices.Elements[aInt] as IwbContainerElementRef;
+
+  Result := Vertex;
 end;
 
 function wbVertexToInt(aVertex: Integer; const aString: string; const aElement: IwbElement): Int64;
@@ -7515,12 +7648,12 @@ begin
       ]), -1).IncludeFlag(dfNotAlignable),
       wbArray('Triangles',
         wbStruct('Triangle', [
-          wbInteger('Vertex 0', itS16, wbVertexToStr0, wbVertexToInt0),
-          wbInteger('Vertex 1', itS16, wbVertexToStr1, wbVertexToInt1),
-          wbInteger('Vertex 2', itS16, wbVertexToStr2, wbVertexToInt2),
-          wbInteger('Edge 0-1', itS16, wbEdgeToStr0, wbEdgeToInt0),
-          wbInteger('Edge 1-2', itS16, wbEdgeToStr1, wbEdgeToInt1),
-          wbInteger('Edge 2-0', itS16, wbEdgeToStr2, wbEdgeToInt1),
+          wbInteger('Vertex 0', itS16, wbVertexToStr0, wbVertexToInt0).SetLinksToCallback(wbVertexLinksTo),
+          wbInteger('Vertex 1', itS16, wbVertexToStr1, wbVertexToInt1).SetLinksToCallback(wbVertexLinksTo),
+          wbInteger('Vertex 2', itS16, wbVertexToStr2, wbVertexToInt2).SetLinksToCallback(wbVertexLinksTo),
+          wbInteger('Edge 0-1', itS16, wbEdgeToStr0, wbEdgeToInt0).SetLinksToCallback(wbEdgeLinksTo0),
+          wbInteger('Edge 1-2', itS16, wbEdgeToStr1, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo1),
+          wbInteger('Edge 2-0', itS16, wbEdgeToStr2, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo2),
           wbFloat('Height'), // this and next if form ver > 57
           wbInteger('Unknown', itU8), // flags
           wbInteger('Flags', itU16, wbFlags([
@@ -7571,7 +7704,7 @@ begin
       , -1, cpIgnore).IncludeFlag(dfNotAlignable),
       wbArrayS('Door Triangles',
         wbStructSK([0, 2], 'Door Triangle', [
-          wbInteger('Triangle before door', itU16), // I would say itU16
+          wbInteger('Triangle before door', itU16).SetLinksToCallback(wbTriangleLinksTo),
           wbInteger('DTUnknown', itU32),  // used as a key to lookup in a map of PathingDoor
           wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
         ])
@@ -7608,7 +7741,11 @@ begin
         wbFloat('Max X'),
         wbFloat('Max Y'),
         wbFloat('Max Z'),
-        wbArray('NavMesh Grid Arrays', wbArray('NavMeshGridCell', wbInteger('Triangle', itS16).IncludeFlag(dfNotAlignable), -1)).IncludeFlag(dfNotAlignable) // There are NavMeshGridSize^2 arrays to load
+        wbArray('NavMesh Grid Arrays',
+          wbArray('NavMeshGridCell',
+            wbInteger('Triangle', itS16).SetLinksToCallback(wbTriangleLinksTo)
+          , -1).IncludeFlag(dfNotAlignable)
+        ).IncludeFlag(dfNotAlignable) // There are NavMeshGridSize^2 arrays to load
       ])
     ]);
 
