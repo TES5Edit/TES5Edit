@@ -51,6 +51,7 @@ type
     mfLoading,
     mfTagged,
     mfHasFile,
+    mfIsHardcoded,
     mfNew,
     mfTemplate,
     mfIsModGroupTarget,
@@ -263,8 +264,18 @@ begin
   if i > 1 then
     wbMergeSortPtr(@Files[0], i, TListSortCompare(@CompareText));
 
-  SetLength(_Modules, Length(Files));
-  j := 0;
+  SetLength(_Modules, Succ(Length(Files)));
+  with _Modules[0] do begin
+    miFlags := [];
+    miOriginalName := wbGameName + wbHardcodedDat;
+    miName := miOriginalName;
+    miExtension := meESM;
+
+    Include(miFlags, mfHasESMFlag);
+    Include(miFlags, mfIsESM);
+    Include(miFlags, mfIsHardcoded);
+  end;
+  j := 1;
   for i := Low(Files) to High(Files) do
     with _Modules[j] do try
       miFlags := [];
@@ -397,6 +408,10 @@ begin
       Include(miFlags, mfActive);
       Include(miFlags, mfHasIndex);
     end;
+  with wbModuleByName(wbGameName + wbHardcodedDat)^ do begin
+    miOfficialIndex := Succ(Low(Integer));
+    Include(miFlags, mfHasIndex);
+  end;
 
   if wbIsSkyrim then
     with wbModuleByName('Update.esm')^ do
@@ -660,6 +675,8 @@ begin
   Result := '';
   if miOfficialIndex = Low(Integer) then
     Result := Result + '[GameMaster]'
+  else if miOfficialIndex = Succ(Low(Integer)) then
+    Result := Result + '[Hardcoded]'
   else if miOfficialIndex = -1 then
     Result := Result + '[Update]'
   else if miOfficialIndex < High(Integer) then

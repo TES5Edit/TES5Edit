@@ -2582,13 +2582,17 @@ begin
   if Assigned(flModule) then begin
     if flModule.miOfficialIndex < High(Integer) then
       Include(flStates, fsIsOfficial)
-  end else if not aOnlyHeader then begin
-    flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+  end else if fsIsHardcoded in flStates then begin
+    flModule := wbModuleByName(GetFileName);
+    if not Assigned(flModule) then
+      flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
     flModule.miFile := Self;
     flModule.miLoadOrder := flLoadOrder;
     flModule.miFileID := flLoadOrderFileID;
     Include(flModule.miFlags, mfHasFile);
     Include(flModule.miFlags, mfLoaded);
+    Include(flModule.miFlags, mfIsHardcoded);
+    Exclude(flModule.miFlags, mfValid);
   end;
 end;
 
