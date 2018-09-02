@@ -1721,6 +1721,9 @@ type
     function GetValue: IwbValueDef;
     procedure HasUnusedData;
 
+    function SetDefaultEditValue(const aValue: string): IwbSubRecordDef;
+    function SetDefaultNativeValue(const aValue: Variant): IwbSubRecordDef;
+
     property Value: IwbValueDef read GetValue;
   end;
 
@@ -4480,6 +4483,9 @@ type
     function CanHandle(aSignature     : TwbSignature;
                  const aDataContainer : IwbDataContainer)
                                       : Boolean; override;
+
+    function SetDefaultEditValue(const aValue: string): IwbSubRecordDef;
+    function SetDefaultNativeValue(const aValue: Variant): IwbSubRecordDef;
   end;
 
   TwbSubRecordArrayDef = class(TwbNamedDef, IwbRecordMemberDef, IwbSubRecordArrayDef)
@@ -5050,7 +5056,7 @@ type
     function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>; override;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
 
-    function SetDefaultNativeValue(const aValue: Variant): IwbValueDef;
+    function SetDefaultNativeValue(const aValue: Variant): IwbValueDef; override;
 
     procedure MasterCountUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOld, aNew: Byte); override;
     procedure MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs); override;
@@ -8244,6 +8250,20 @@ begin
       WriteLn('Has Unused Data: ', wbDefsToPath(aParents), wbDefToName(Self));
 
   defReported := True;
+end;
+
+function TwbSubRecordDef.SetDefaultEditValue(const aValue: string): IwbSubRecordDef;
+begin
+  if Assigned(srValue) then
+    srValue := srValue.SetDefaultEditValue(aValue);
+  Result := Self;
+end;
+
+function TwbSubRecordDef.SetDefaultNativeValue(const aValue: Variant): IwbSubRecordDef;
+begin
+  if Assigned(srValue) then
+    srValue := srValue.SetDefaultNativeValue(aValue);
+  Result := Self;
 end;
 
 { TwbSubRecordArrayDef }
