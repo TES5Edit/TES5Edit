@@ -379,7 +379,7 @@ function TfrmModuleSelect.ShowModal: Integer;
 begin
   vstModules.Clear;
   if Length(AllModules) < 1 then
-    AllModules := wbModulesByLoadOrder.FilteredByFlag(FilterFlag);
+    AllModules := wbModulesByLoadOrder.FilteredByFlag(mfValid).FilteredByFlag(FilterFlag);
   vstModules.ChildCount[nil] := Length(AllModules);
   vstModules.InitRecursive(nil, 100, False);
   if Length(AllModules) < 1 then

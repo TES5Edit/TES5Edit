@@ -2294,7 +2294,7 @@ begin
     try
       with TfrmModuleSelect.Create(Self) do try
 
-        AllModules := wbModulesByLoadOrder(True).FilteredBy(function(a: PwbModuleInfo): Boolean
+        AllModules := wbModulesByLoadOrder(True).FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
           begin
             Result := mfTemplate in a.miFlags;
             if not Result then begin
@@ -6627,7 +6627,7 @@ begin
       with TfrmModuleSelect.Create(Self) do try
         _File.GetMasters(sl);
         sl.Sorted := True;
-        AllModules := wbModulesByLoadOrder.FilteredBy(function(a: PwbModuleInfo): Boolean
+        AllModules := wbModulesByLoadOrder.FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
           begin
             Result := Assigned(a.miFile);
             if Result then begin
@@ -7658,7 +7658,7 @@ begin
   with TfrmModuleSelect.Create(nil) do try
     Caption := 'Build reference information for:';
 
-    AllModules := wbModulesByLoadOrder.FilteredBy(function(a: PwbModuleInfo): Boolean
+    AllModules := wbModulesByLoadOrder.FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
       begin
         Result := Assigned(a.miFile);
         if Result then
@@ -9533,7 +9533,7 @@ var
   UpdatedCount     : Integer;
 begin
   with TfrmModuleSelect.Create(Self) do try
-    AllModules := wbModulesByLoadOrder;
+    AllModules := wbModulesByLoadOrder.FilteredByFlag(mfValid);
     AllModules.ExcludeAll(mfTagged);
     AllModules.ExcludeAll(mfModGroupMissingAnyCRC);
     AllModules.ExcludeAll(mfModGroupMissingCurrentCRC);
@@ -10371,7 +10371,7 @@ var
 
     if Sender = mniNavRenumberFormIDsInject then begin
       with TfrmModuleSelect.Create(Self) do try
-        AllModules := wbModulesByLoadOrder;
+        AllModules := wbModulesByLoadOrder.FilteredByFlag(mfValid);
         AllModules.ExcludeAll(mfTagged);
         for i := 0 to Pred(SourceFile.MasterCount) do
           with SourceFile.Masters[i] do
@@ -17684,10 +17684,8 @@ begin
                   s := wbSavePath + ltLoadList[i];
           end;
           _File := wbFile(s, i + ltLoadOrderOffset, ltMaster, ltTemporary);
-          if wbEditAllowed and not wbTranslationMode then begin
-            SetLength(ltFiles, Succ(Length(ltFiles)));
-            ltFiles[High(ltFiles)] := _File;
-          end;
+          SetLength(ltFiles, Succ(Length(ltFiles)));
+          ltFiles[High(ltFiles)] := _File;
           frmMain.SendAddFile(_File);
 
           if wbForceTerminate then
@@ -17699,6 +17697,8 @@ begin
             if FileExists(s) then begin
               LoaderProgress('loading "' + t + '"...');
               _File := wbFile(s, 0, ltDataPath + ltLoadList[i]);
+              SetLength(ltFiles, Succ(Length(ltFiles)));
+              ltFiles[High(ltFiles)] := _File;
               frmMain.SendAddFile(_File);
               if wbForceTerminate then
                 Exit;
@@ -17718,7 +17718,8 @@ begin
           try
             TParallel.&For(Low(ltFiles), High(ltFiles), procedure(i: Integer)
             var
-              OnlyLoad: Boolean;
+              OnlyLoad : Boolean;
+              _File    : IwbFile;
             begin
               wbStartTime := StartTime;
               _wbProgressCallback := LoaderProgress;
@@ -17727,10 +17728,11 @@ begin
                 {$ELSE}
                 for i := Low(ltFiles) to High(ltFiles) do
                 {$ENDIF}
-                  if not ltFiles[i].IsNotPlugin then begin
+                begin
+                  _File := ltFiles[i];
+                  if (fsIsHardcoded in _File.FileStates) or not _File.IsNotPlugin then begin
                     try
                       OnlyLoad := False;
-
 
                       if not (OnlyLoad and (wbDontCache or wbDontCacheLoad)) then begin
                         if OnlyLoad then
@@ -17740,8 +17742,8 @@ begin
                           if not (wbDontCache or wbDontCacheLoad) then
                             s := 'loading or ' + s;
                         end;
-                        LoaderProgress('[' + ltFiles[i].FileName + '] Start ' + s + ' reference info.');
-                        case ltFiles[i].BuildOrLoadRef(OnlyLoad) of
+                        LoaderProgress('[' + _File.FileName + '] Start ' + s + ' reference info.');
+                        case _File.BuildOrLoadRef(OnlyLoad) of
                           blrBuilt:
                             s := 'Done building reference info.';
                           blrBuiltAndSaved:
@@ -17754,7 +17756,7 @@ begin
                           else
                             s := 'No reference info built or loaded.';
                         end;
-                        LoaderProgress('[' + ltFiles[i].FileName + '] ' + s);
+                        LoaderProgress('[' + _File.FileName + '] ' + s);
                       end;
                     except
                       on E: EAbort do
@@ -17767,6 +17769,7 @@ begin
                     if wbLoaderError or wbForceTerminate then
                       Exit;
                   end;
+                end;
                   {$IFDEF USE_PARALLEL_BUILD_REFS}
               finally
                 _wbProgressCallback := nil;
