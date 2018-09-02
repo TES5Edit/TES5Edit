@@ -3873,52 +3873,6 @@ begin
     end;
 end;
 
-function GetFileModSortKey(const aFileName: string): Cardinal;
-const
-  DateOmitYears = 60;
-  DatePrecision = 100000;
-var
-  F: TSearchRec;
-begin
-  // Try to fit a meaningful modified date of a file into 32 bits integer value
-  // For relative load order sorting only
-  // Oblivion GOG version has dates from 1969 year and FileAge() doesn't support them
-  if FindFirst(aFileName, faAnyFile, F) = 0 then begin
-    Result := Round((F.TimeStamp - 364 * DateOmitYears) * DatePrecision);
-    FindClose(F);
-  end else
-    Result := 0;
-end;
-
-function PluginListCompare(List: TStringList; Index1, Index2: Integer): Integer;
-var
-  IsESM1   : Boolean;
-  IsESM2   : Boolean;
-  FileSK1  : Integer;
-  FileSK2  : Integer;
-begin
-  IsESM1 := IsFileESM(List[Index1]);
-  IsESM2 := IsFileESM(List[Index2]);
-
-  if IsESM1 = IsESM2 then begin
-
-    FileSK1 := Cardinal(List.Objects[Index1]);
-    FileSK2 := Cardinal(List.Objects[Index2]);
-
-    if FileSK1 < FileSK2 then
-      Result := -1
-    else if FileSK1 > FileSK2 then
-      Result := 1
-    else
-      Result := 0;
-
-  end else if IsESM1 then
-    Result := -1
-  else
-    Result := 1;
-end;
-
-
 destructor TfrmMain.Destroy;
 begin
   inherited;
@@ -12280,9 +12234,6 @@ begin
     mniNavLogAnalyzer.Add(MenuItem);
   end;
 
-  //if wbGameMode = gmTES5 then begin
-  //  mniNavCreateMergedPatch.Visible := False;
-  //end;
 end;
 
 procedure TfrmMain.pmuPathPopup(Sender: TObject);
