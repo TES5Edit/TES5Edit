@@ -162,10 +162,13 @@ type
 
 function  wbIsAeroEnabled: Boolean;
 
+function wbGetLastWriteTime(const s: string): TDateTime;
+
 implementation
 
 uses
   System.SyncObjs,
+  System.IOUtils,
   StrUtils,
   wbSort;
 
@@ -1490,6 +1493,19 @@ begin
     end;
   end;
 end;
+
+function wbGetLastWriteTime(const s: string): TDateTime;
+var
+  F: TSearchRec;
+begin
+  if FindFirst(s, faAnyFile, F) = 0 then try
+    Result := F.TimeStamp;
+  finally
+    FindClose(F);
+  end else
+    Result := TFile.GetLastWriteTime(s);
+end;
+
 
 initialization
   CRCInit;
