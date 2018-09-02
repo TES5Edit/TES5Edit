@@ -974,6 +974,17 @@ type
     constructor Create(const aMainRecord: IwbMainRecord);
   end;
 
+  TMainRecordElementHistoryEntry = class(TMainRecordHistoryEntry)
+  private
+    mreElement: IwbElement;
+  protected
+    {--- IHistoryEntry ---}
+    procedure Show; override;
+  public
+    constructor Create(const aMainRecord: IwbMainRecord; const aElement: IwbElement);
+  end;
+
+
   TMainRecordRefByHistoryEntry = class(TMainRecordHistoryEntry)
   protected
     function GetTabSheet: TTabSheet; override;
@@ -6227,6 +6238,7 @@ procedure TfrmMain.JumpTo(aInterface: IInterface; aBackward: Boolean);
 var
   Current                     : IInterface;
   MainRecord                  : IwbMainRecord;
+  Element                     : IwbElement;
   HistoryEntry                : IHistoryEntry;
 begin
   UserWasActive := True;
@@ -6256,8 +6268,17 @@ begin
     end;
   end;
 
-  if Supports(aInterface, IwbMainRecord, MainRecord) then
-    aInterface := TMainRecordHistoryEntry.Create(MainRecord);
+  MainRecord := nil;
+  Element := nil;
+  if not Supports(aInterface, IwbMainRecord, MainRecord) then
+    if Supports(aInterface, IwbElement, Element) then
+      MainRecord := Element.ContainingMainRecord;
+
+  if Assigned(MainRecord) then
+    if Assigned(Element) then
+      aInterface := TMainRecordElementHistoryEntry.Create(MainRecord, Element)
+    else
+      aInterface := TMainRecordHistoryEntry.Create(MainRecord);
 
   if Supports(aInterface, IHistoryEntry, HistoryEntry) then
     HistoryEntry.Show;
@@ -13494,6 +13515,8 @@ begin
       ActiveMaster := nil;
       ActiveIndex := NoColumn;
       ActiveRecord := aMainRecord;
+      NodeForFocusedElement := nil;
+      ColumnForFocusedElement := NoColumn;
 
       if Assigned(ActiveRecord) then begin
         ActiveMaster := nil;
@@ -13548,6 +13571,7 @@ begin
         vstView.RootNodeCount := (ActiveMaster.Def as IwbRecordDef).MemberCount + ActiveMaster.AdditionalElementCount;
         InitConflictStatus(vstView.RootNode, ActiveMaster.IsInjected and not (ActiveMaster.Signature = 'GMST'), @ActiveRecords[0]);
         vstView.FullExpand;
+
         UpdateColumnWidths;
         SetViewNodePositionLabel(ViewLabel);
         if pgMain.ActivePage <> tbsReferencedBy then
@@ -14480,8 +14504,6 @@ begin
     Exit;
 
   Element := Element.LinksTo;
-  while Assigned(Element) and (Element.ElementType <> etMainRecord) do
-    Element := Element.Container;
 
   Allow := Assigned(Element) and not Element.Equals(ActiveRecord);
 end;
@@ -14510,12 +14532,10 @@ begin
     Exit;
 
   Element := Element.LinksTo;
-  while Assigned(Element) and (Element.ElementType <> etMainRecord) do
-    Element := Element.Container;
 
   if Assigned(Element) and not Element.Equals(ActiveRecord) then begin
     ForwardHistory := nil;
-    JumpTo(Element as IwbMainRecord, False);
+    JumpTo(Element, False);
   end;
 end;
 
@@ -18239,6 +18259,37 @@ begin
   end;
   frmMain.PostAddMessage('[GameLink] terminated');
 
+end;
+
+{ TMainRecordElementHistoryEntry }
+
+constructor TMainRecordElementHistoryEntry.Create(const aMainRecord: IwbMainRecord; const aElement: IwbElement);
+begin
+  inherited Create(aMainRecord);
+  mreElement := aElement;
+end;
+
+procedure TMainRecordElementHistoryEntry.Show;
+begin
+  with frmMain do begin
+    FocusedElement := mreElement;
+    NodeForFocusedElement := nil;
+    ColumnForFocusedElement := NoColumn;
+
+    inherited;
+
+    if not Assigned(NodeForFocusedElement) and Assigned(FocusedElement) and FocusedElement.Equals(mreElement) then
+      ResetActiveTree;
+
+    FocusedElement := nil;
+    if Assigned(NodeForFocusedElement) then begin
+      vstView.FocusedNode := NodeForFocusedElement;
+      if ColumnForFocusedElement <> NoColumn then
+        vstView.FocusedColumn := ColumnForFocusedElement;
+      vstView.TopNode := vstView.FocusedNode;
+      vstView.ScrollIntoView(vstView.FocusedColumn, True, vstView.FocusedNode);
+    end;
+  end;
 end;
 
 initialization
