@@ -1542,6 +1542,7 @@ type
   TwbGetChapterTypeCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
   TwbGetChapterTypeNameCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
   TwbGetChapterNameCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
+  TwbLinksToCallback = function(const aElement: IwbElement): IwbElement;
 
   IwbNamedDef = interface(IwbDef)
     ['{F8FEDE89-C089-42C5-B587-49A7D87055F0}']
@@ -1690,6 +1691,7 @@ type
 
     function SetDefaultEditValue(const aValue: string): IwbValueDef;
     function SetDefaultNativeValue(const aValue: Variant): IwbValueDef;
+    function SetLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef;
 
     property Size[aBasePtr, aEndPtr: Pointer; const aElement: IwbElement]: Integer
       read GetSize;
@@ -4700,6 +4702,7 @@ type
     vdStates             : TwbValueDefStates;
     vdDefaultEditValue   : string;
     vdDefaultNativeValue : Variant;
+    vdLinksToCallback    : TwbLinksToCallback;
     procedure AfterClone(const aSource: TwbDef); virtual;
 
     {---IwbValueDef---}
@@ -4725,6 +4728,7 @@ type
 
     function SetDefaultEditValue(const aValue: string): IwbValueDef; virtual;
     function SetDefaultNativeValue(const aValue: Variant): IwbValueDef; virtual;
+    function SetLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef; virtual;
 
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbValueDef{Self};
 
@@ -9277,6 +9281,9 @@ function TwbIntegerDef.GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: Iw
 var
   Value       : Int64;
 begin
+  if Assigned(vdLinksToCallback) then
+    Exit(vdLinksToCallback(aElement));
+
   Result := nil;
   if Assigned(inFormater) then
     if (NativeUInt(aEndPtr) - NativeUInt(aBasePtr)) >= GetExpectedLength then begin
@@ -13451,6 +13458,7 @@ begin
     Self.vdStates := Self.vdStates + (vdStates * [vdsHasDefaultEditValue, vdsHasDefaultNativeValue]);
     Self.vdDefaultEditValue := vdDefaultEditValue;
     Self.vdDefaultNativeValue := vdDefaultNativeValue;
+    Self.vdLinksToCallback := vdLinksToCallback;
   end;
 end;
 
@@ -13533,6 +13541,9 @@ end;
 
 function TwbValueDef.GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement;
 begin
+  if Assigned(vdLinksToCallback) then
+    Exit(vdLinksToCallback(aElement));
+
   Result := nil;
 end;
 
@@ -13564,6 +13575,12 @@ begin
   vdDefaultNativeValue := aValue;
   Include(vdStates, vdsHasDefaultNativeValue);
   Result := Self;
+end;
+
+function TwbValueDef.SetLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef;
+begin
+  Result := Self;
+  vdLinksToCallback := aCallback;
 end;
 
 function TwbValueDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
@@ -14176,6 +14193,9 @@ function TwbUnionDef.GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbE
 var
   ValueDef: IwbValueDef;
 begin
+  if Assigned(vdLinksToCallback) then
+    Exit(vdLinksToCallback(aElement));
+
   ValueDef := Decide(aBasePtr, aEndPtr, aElement);
   if Assigned(ValueDef) then
     Result := ValueDef.LinksTo[aBasePtr, aEndPtr, aElement]
@@ -14946,6 +14966,9 @@ function TwbStringMgefCodeDef.GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElem
 var
   _File : IwbFile;
 begin
+  if Assigned(vdLinksToCallback) then
+    Exit(vdLinksToCallback(aElement));
+
   Result := nil;
   _File := aElement._File;
   if Assigned(_File) then
