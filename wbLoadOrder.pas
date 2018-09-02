@@ -289,7 +289,7 @@ begin
       if miExtension in [meESM, meESL] then
         Include(miFlags, mfIsESM);
 
-      miDateTime := TFile.GetLastWriteTime(wbDataPath + miOriginalName);
+      miDateTime := wbGetLastWriteTime(wbDataPath + miOriginalName);
 
       if not wbMastersForFile(wbDataPath+miOriginalName, miMasterNames, @IsESM, @IsESL) then
         Continue;

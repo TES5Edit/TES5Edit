@@ -1195,7 +1195,7 @@ begin
   OldDateTime := 0;
   if FileExists(lTo) then begin
     try
-      OldDateTime := TFile.GetLastWriteTime(lTo);
+      OldDateTime := wbGetLastWriteTime(lTo);
     except
       s := 'Could not get last modified time of "' + lTo + '".';
       wbProgress(s);
