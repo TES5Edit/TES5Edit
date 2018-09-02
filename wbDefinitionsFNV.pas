@@ -10665,7 +10665,8 @@ begin
   ], True, nil, cpNormal, True, wbRemoveOFST);
 
   wbRecord(PLYR, 'Player Reference', [
-    wbEDID
+    wbEDID,
+    wbFormID(PLYR, 'Player', cpNormal, True).SetDefaultNativeValue($7)
   ]).IncludeFlag(dfInternalEditOnly);
 
   wbRecord(TREE, 'Tree', [
