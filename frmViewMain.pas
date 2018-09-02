@@ -144,6 +144,8 @@ type
 
   TPluggyLinkThread = class;
 
+  TwbThread = class(TThread);
+
   TLOOTPluginInfo = record
     Plugin: string;
     CRC32: TwbCRC32;
@@ -807,7 +809,7 @@ type
     PluggyInventoryFormID: TwbFormID;
     PluggyEnchantmentFormID: TwbFormID;
     PluggySpellFormID: TwbFormID;
-    PluggyLinkThread: TPluggyLinkThread;
+    PluggyLinkThread: TwbThread;
 
     FileCRCs: TwbFastStringListIC;
 
@@ -852,6 +854,7 @@ type
 
     procedure SaveLog(const s: string; aAllowReplace: Boolean);
     procedure SaveLogs(aAllowReplace: Boolean);
+    procedure UpdateActiveFromPluggyLink;
   public
     Settings: TMemIniFile;
     destructor Destroy; override;
@@ -886,7 +889,7 @@ type
     destructor Destroy; override;
   end;
 
-  TPluggyLinkThread = class(TThread)
+  TPluggyLinkThread = class(TwbThread)
   private
     plFolder                : string;
     plLastFormID            : TwbFormID;
@@ -894,6 +897,16 @@ type
     plLastInventoryFormID   : TwbFormID;
     plLastEnchantmentFormID : TwbFormID;
     plLastSpellFormID       : TwbFormID;
+  protected
+    procedure Execute; override;
+    procedure ChangeDetected;
+  end;
+
+  TGameLinkThread = class(TwbThread)
+  private
+    glFolder         : string;
+    glLastFormID     : TwbFormID;
+    glLastBaseFormID : TwbFormID;
   protected
     procedure Execute; override;
     procedure ChangeDetected;
@@ -1683,8 +1696,14 @@ begin
   if (PluggyLinkState = plsNone) or Assigned(PluggyLinkThread) and (PluggyLinkThread.Terminated) then
     FreeAndNil(PluggyLinkThread);
 
-  if (PluggyLinkState <> plsNone) and not Assigned(PluggyLinkThread) then
-    PluggyLinkThread := TPluggyLinkThread.Create(False);
+  if (PluggyLinkState <> plsNone) then
+    if not Assigned(PluggyLinkThread) then begin
+      if wbGameMode = gmTES4 then
+        PluggyLinkThread := TPluggyLinkThread.Create(False)
+      else
+        PluggyLinkThread := TGameLinkThread.Create(False);
+    end else
+      UpdateActiveFromPluggyLink;
 end;
 
 procedure TfrmMain.BuildAllRef;
@@ -12238,7 +12257,16 @@ end;
 
 procedure TfrmMain.pmuPathPopup(Sender: TObject);
 begin
-  mniPathPluggyLink.Visible := wbGameMode = gmTES4;
+  mniPathPluggyLink.Visible := (wbGameMode = gmTES4) or FileExists(wbDataPath + 'xEdit\xEditLink.ini');
+  if wbGameMode <> gmTES4 then
+    mniPathPluggyLink.Caption := 'GameLink';
+
+  mniPathPluggyLinkDisabled.Visible := mniPathPluggyLink.Visible;
+  mniPathPluggyLinkReference.Visible := mniPathPluggyLink.Visible;
+  mniPathPluggyLinkBaseObject.Visible := mniPathPluggyLink.Visible;
+  mniPathPluggyLinkInventory.Visible := mniPathPluggyLink.Visible and (wbGameMode = gmTES4);
+  mniPathPluggyLinkSpell.Visible := mniPathPluggyLink.Visible and (wbGameMode = gmTES4);
+  mniPathPluggyLinkEnchantment.Visible := mniPathPluggyLink.Visible and (wbGameMode = gmTES4);
 end;
 
 procedure TfrmMain.pmuRefByPopup(Sender: TObject);
@@ -17374,6 +17402,11 @@ begin
 end;
 
 procedure TfrmMain.WMUser4(var Message: TMessage);
+begin
+  UpdateActiveFromPluggyLink;
+end;
+
+procedure TfrmMain.UpdateActiveFromPluggyLink;
 var
   FormID                      : TwbFormID;
   FileID                      : TwbFileID;
@@ -18054,6 +18087,7 @@ var
 begin
   plFolder := wbMyGamesTheGamePath + 'Pluggy\User Files\';
   frmMain.PostAddMessage('[PluggyLink] Starting for: ' + plFolder);
+  ChangeDetected;
   try
     WaitHandle := FindFirstChangeNotification(
       PChar(plFolder),
@@ -18127,6 +18161,85 @@ begin
   end;
 end;
 
+
+{ TGameLinkThread }
+
+procedure TGameLinkThread.ChangeDetected;
+var
+  Stream : TBufferedFileStream;
+  sl     : TStringList;
+
+  SelectedRefID: TwbFormID;
+  SelectedBaseID: TwbFormID;
+begin
+  Stream := TBufferedFileStream.Create(glFolder + 'xEditLink.ini', fmOpenRead or fmShareDenyNone);
+  try
+    sl := TStringList.Create;
+    try
+      sl.LoadFromStream(Stream);
+      with TMemIniFile.Create('') do try
+        SetStrings(sl);
+        SelectedRefID := TwbFormID.FromStrDef(ReadString('Console', 'selectedRefID', '00000000'));
+        SelectedBaseID := TwbFormID.FromStrDef(ReadString('Console', 'selectedBaseID', '00000000'));
+      finally
+        Free;
+      end;
+    finally
+      sl.Free;
+    end;
+  finally
+    Stream.Free;
+  end;
+
+  if not SelectedRefID.IsNull then
+    if (SelectedRefID <> glLastFormID) or
+       (SelectedBaseID <> glLastBaseFormID) then begin
+
+      glLastFormID := SelectedRefID;
+      glLastBaseFormID := SelectedBaseID;
+
+      frmMain.PostPluggyChange(SelectedRefID, SelectedBaseID, TwbFormID.Null, TwbFormID.Null, TwbFormID.Null);
+    end;
+end;
+
+procedure TGameLinkThread.Execute;
+var
+  WaitHandle : THandle;
+begin
+  glFolder := wbDataPath + 'xEdit\';
+  frmMain.PostAddMessage('[GameLink] Starting for: ' + glFolder);
+  ChangeDetected;
+  try
+    WaitHandle := FindFirstChangeNotification(
+      PChar(glFolder),
+      False,
+      FILE_NOTIFY_CHANGE_FILE_NAME or FILE_NOTIFY_CHANGE_LAST_WRITE
+    );
+    if WaitHandle = INVALID_HANDLE_VALUE then
+      RaiseLastOSError;
+    try
+      repeat
+        case WaitForSingleObject(WaitHandle, 1000) of
+          WAIT_OBJECT_0: begin
+            ChangeDetected;
+            if not FindNextChangeNotification(WaitHandle) then
+              RaiseLastOSError;
+          end;
+          WAIT_FAILED:
+            RaiseLastOSError;
+        end;
+      until Terminated or wbForceTerminate;
+    finally
+      if not FindCloseChangeNotification(WaitHandle) then
+        RaiseLastOSError;
+    end;
+  except
+    on E: Exception do
+      frmMain.PostAddMessage('[GameLink] Error: ' + E.Message);
+  end;
+  frmMain.PostAddMessage('[GameLink] terminated');
+
+end;
 
 initialization
   _LoaderProgressLock.Initialize;
