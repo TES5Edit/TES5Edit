@@ -56,11 +56,11 @@ SSELODGen: http://www.nexusmods.com/skyrimspecialedition/mods/6642/?
 
 Future of xEdit:
 
-We appreciate all the thanks and support from the community.  We would like to thank all the users that made bug reports on the Nexus or in the Bug Tracker.  Zilav and Hlp continue to make various bug fixes and improvements.  Zilav has added more scripting functions while Hlp is still working on having a working Save game editor.  Currently early testing only allows you to view save games.  We were very excited recently when ElminsterAU had some time to make some optimizations to the code.  The program loads plugins faster then before and uses less memory.
+We appreciate all the thanks and support from the community.  We would like to thank all the users that made bug reports on the Nexus or in the Bug Tracker.  Zilav and Hlp continue to make various bug fixes and improvements.  Zilav has added more scripting functions while Hlp is still working on having a working Save game editor.  Currently early testing only allows you to view save games.  We were very excited recently when ElminsterAU had some time to make some optimizations to the code.  The program loads plugins faster than before and uses less memory.
 
 Previous versions such as FO3Edit, FNVEdit, TES4Edit:
 
-We understand that sometimes updates to programs break things.  Please use the updates with caution.  However, please use them and then report issues so we can improve the program.  Our goal is to make all versions as bug free as possible and introduce new features that are useful for the modding community for all the Bethesda games this utility supports.
+We understand that sometimes updates to programs break things.  Please use the updates with caution.  However, please use them and then report issues so we can improve the program.  Our goal is to make all versions as bug-free as possible and introduce new features that are useful for the modding community for all the Bethesda games this utility supports.
 
 xEdit Updates:
 
