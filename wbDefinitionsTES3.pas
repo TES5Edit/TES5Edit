@@ -4687,14 +4687,14 @@ begin
     wbRStruct('Header Info', [
       wbStruct(HEDR, 'Header', [
         wbFloat('Version'),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 32),
-        wbByteArray('Unknown', 256),
+        wbRecordFlags,
+        wbString('Author', 32),
+        wbString('Description', 256),
         wbInteger('Number of Records', itU32)
       ], cpNormal, True),
       wbRArray('Master Files', wbRStruct('Master File', [
         wbString(MAST, 'Filename', 0, cpNormal, True),
-        wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
+        wbInteger(DATA, 'Master Size', itU64)
       ], []))
     ], [])
   ], False, nil, cpNormal, True);
