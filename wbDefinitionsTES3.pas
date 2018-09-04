@@ -646,6 +646,24 @@ begin
   end;
 end;
 
+function wbGLOBUnionDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  rValue: IwbRecord;
+  s: string;
+begin
+  Result := 0;
+  rValue := aElement.Container.RecordBySignature[FNAM];
+  if Assigned(rValue) then begin
+    s := rValue.Value;
+    if Length(s) > 0 then
+      case s[1] of
+        's': Result := 0;
+        'l': Result := 1;
+        'f': Result := 2;
+      end;
+  end;
+end;
+
 function wbMISCActorValueDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   MainRecord : IwbMainRecord;
@@ -3063,9 +3081,13 @@ begin
   ]);
 
   wbRecord(GLOB, 'Global', [
-    wbEDID,
-    wbInteger(FNAM, 'Type', itU8, wbGLOBFNAM, nil, cpNormal, True),
-    wbFloat(FLTV, 'Value', cpNormal, True)
+    wbString(NAME, 'NameID'),
+    wbString(FNAM, 'Type', 1),
+    wbUnion(FLTV, 'Value', wbGLOBUnionDecider, [
+      wbFloat('Comparison Value - Short'),
+      wbFloat('Comparison Value - Long'),
+      wbFloat('Comparison Value - Float')
+    ])
   ]);
 
   wbRecord(GMST, 'Game Setting', [
