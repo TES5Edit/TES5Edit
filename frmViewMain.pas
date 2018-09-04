@@ -83,7 +83,8 @@ type
   TNavNodeFlag = (
     nnfInjected,
     nnfNotReachable,
-    nnfReferencesInjected
+    nnfReferencesInjected,
+    nnfFilterChecked
   );
 
   TNavNodeFlags = set of TNavNodeFlag;
@@ -732,6 +733,7 @@ type
     FilterScripted: Boolean; // new: flag to use scripted filtering function
     FilterApplied: Boolean;
     FilterNoGameMaster: Boolean;
+    FilterConflictOnly: Boolean;
 
     FilterConflictAll: Boolean;
     FilterConflictAllSet: TConflictAllSet;
@@ -10764,24 +10766,28 @@ const
   sJustWait                   = 'Filtering. Please wait... (yes, this takes a while, just wait!)';
 var
   Node, NextNode              : PVirtualNode;
+  FileNode, NextFileNode      : PVirtualNode;
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
+  BaseRecord                  : IwbMainRecord;
+  _File                       : IwbFile;
   Count                       : Cardinal;
+  Count2                      : Cardinal;
+  MainRecordCount             : Cardinal;
   StartTick                   : UInt64;
-  //  wbStartTime                   : TDateTime;
-//  ConflictAll                 : TConflictAll;
-//  ConflictThis                : TConflictThis;
   Signatures                  : TStringList;
+  SignaturesCreated           : Boolean;
   BaseSignatures              : TStringList;
 
-  // temp settings if provided base Editor ID is a hex FormID number
+  TopLevelGroups              : TStringList;
+
   FilterByBaseFormID          : Boolean;
   FilterBaseFormID            : TwbFormID;
 
   Dummy                       : Integer;
   Rec                         : IwbRecord;
   GroupRecord                 : IwbGroupRecord;
-  i                           : Integer;
+  i, j                        : Integer;
 
   PersCellChecked             : Boolean;
   PersCellNode                : PVirtualNode;
@@ -10795,7 +10801,117 @@ var
 
   Cells                       : array of array of array of PVirtualNode;
   FileFiltered                : array of Integer;
+
+  PotentiallyUnfilteredRefs : Boolean;
+
+  FilterRequiresMainRecord    : Boolean;
+  FilterRequiresBaseRecord    : Boolean;
+  FilterRequiresReference     : Boolean;
+  FilterByStatus              : Boolean;
+  FilterByAnythingNotConflict : Boolean;
+
+  function CheckFilterNode(aCheckConflict: Boolean): Boolean;
+  var
+    i: Integer;
+  begin
+    Result := False;
+    if Node.ChildCount = 0 then begin
+      if nnfFilterChecked in NodeData.Flags then
+        Exit;
+      Include(NodeData.Flags, nnfFilterChecked);
+      if
+        (aCheckConflict and
+          (
+            (FilterConflictAll and not (NodeData.ConflictAll in FilterConflictAllSet)) or
+            (FilterConflictThis and not (NodeData.ConflictThis in FilterConflictThisSet))
+          )
+        ) or
+        (FilterByAnythingNotConflict and
+          (
+            (FilterByStatus and
+              (
+                (FilterByInjectStatus and ((nnfInjected in NodeData.Flags) <> FilterInjectStatus)) or
+                (FilterByReferencesInjectedStatus and ((nnfReferencesInjected in NodeData.Flags) <> FilterReferencesInjectedStatus)) or
+                (FilterByNotReachableStatus and ReachableBuild and ((nnfNotReachable in NodeData.Flags) <> FilterNotReachableStatus))
+              )
+            ) or
+
+            (FilterRequiresMainRecord and
+              (
+                not Supports(NodeData.Element, IwbMainRecord, MainRecord) or
+                (FilterRequiresReference and not MainRecord.Def.IsReference) or
+                (FilterRequiresBaseRecord and not Supports(MainRecord.BaseRecord, IwbMainRecord, BaseRecord)) or
+
+                (FilterDeleted and not MainRecord.IsDeleted) or
+                (Assigned(Signatures) and not Signatures.Find(MainRecord.Signature, Dummy)) or
+                (FilterByEditorID and (Pos(AnsiUpperCase(FilterEditorID), AnsiUpperCase(MainRecord.EditorID)) < 1)) or
+                (FilterByName and (Pos(AnsiUpperCase(FilterName), AnsiUpperCase(MainRecord.DisplayName[True])) < 1)) or
+
+                (FilterRequiresReference and
+                  (
+                    (FilterByVWD and (MainRecord.IsVisibleWhenDistant <> FilterVWD)) or
+                    (FilterByBaseFormID and (MainRecord.BaseRecordID <> FilterBaseFormID)) or
+                    (Assigned(BaseSignatures) and not BaseSignatures.Find(MainRecord.BaseRecordSignature, Dummy)) or
+                    (FilterScaledActors and //BaseSignatures will have been set that only actors get this far
+                      (
+                        not Supports(MainRecord.RecordBySignature['XSCL'], IwbRecord, Rec) or
+                        SameValue(Rec.NativeValue, 1)
+                      )
+                    ) or
+
+                    (FilterRequiresBaseRecord and
+                      (
+                        (FilterByBaseEditorID and (Pos(AnsiUpperCase(FilterBaseEditorID), AnsiUpperCase(BaseRecord.EditorID)) < 1)) or
+                        (FilterByBaseName and (Pos(AnsiUpperCase(FilterBaseName), AnsiUpperCase(BaseRecord.DisplayName[True])) < 1)) or
+                        (FilterByHasVWDMesh and (BaseRecord.HasVisibleWhenDistantMesh <> FilterHasVWDMesh))
+                      )
+                    ) or
+
+                    (FilterByPersistent and
+                      (
+                        (MainRecord.IsPersistent <> FilterPersistent) or
+                        (
+                          FilterUnnecessaryPersistent and
+                          (
+                            not IsUnnecessaryPersistent(MainRecord) or
+                            (
+                              FilterMasterIsTemporary and
+                              (
+                                not IsMasterTemporary(MainRecord) and
+                                not (FilterIsMaster and MainRecord.IsMaster)
+                              )
+                            )
+                          )
+                        ) or
+                        (
+                          FilterPersistentPosChanged and
+                          not IsPositionChanged(MainRecord)
+                        )
+                      )
+                    ) or
+                    (FilterByHasPrecombinedMesh and (MainRecord.HasPrecombinedMesh <> FilterHasPrecombinedMesh))
+                  )
+                ) or
+                (FilterScripted and not CustomScriptFilter(MainRecord))
+              )
+            )
+          )
+        )
+        then begin
+        vstNav.DeleteNode(Node);
+        Result := True;
+      end;
+    end;
+  end;
+
+var
+  MainRecordDef: PwbMainRecordDef;
+  HasACHR, HasACRE, HasREFR: Boolean;
 begin
+  Signatures := nil;
+  BaseSignatures := nil;
+  TopLevelGroups := nil;
+
   PersCellNode := nil;
   PersCellChecked := False;
 
@@ -10862,8 +10978,8 @@ begin
       FilterConflictAllSet := [];
       for i := 0 to Pred(clbConflictAll.Items.Count) do
         if clbConflictAll.Checked[i] then
-          Include(FilterConflictAllSet, TConflictAll(Succ(i)));
-
+          Include(FilterConflictAllSet, TConflictAll(Succ(i)));      
+      
       FilterConflictThisSet := [];
       for i := 0 to Pred(clbConflictThis.Items.Count) do
         if clbConflictThis.Checked[i] then
@@ -10879,6 +10995,14 @@ begin
 
   end;
 
+  if FilterConflictAll then
+    if FilterConflictAllSet = [Low(TConflictAll)..High(TConflictAll)] then
+      FilterConflictAll := False;
+
+  if FilterConflictThis then
+    if FilterConflictThisSet = [Low(TConflictThis)..High(TConflictThis)] then
+      FilterConflictThis := False;
+
   Caption := sJustWait;
 
   SetLength(FileFiltered, Length(Files));
@@ -10890,30 +11014,185 @@ begin
     Signatures := TStringList.Create;
     Signatures.CommaText := FilterSignatures;
     Signatures.Sorted := True;
-  end else
-    Signatures := nil;
+    Signatures.Duplicates := dupIgnore;
+  end;
+
   if FilterByBaseSignature then begin
     BaseSignatures := TStringList.Create;
     BaseSignatures.CommaText := FilterBaseSignatures;
     BaseSignatures.Sorted := True;
-  end else
-    BaseSignatures := nil;
-
-  FilterByBaseFormID := False;
-  FilterBaseFormID := TwbFormID.Null;
-  if Length(FilterBaseEditorID) in [8,9] then try
-    FilterBaseFormID := TwbFormID.FromStr(FilterBaseEditorID);
-    // passed conversion, filter by base FormID
-    FilterByBaseFormID := True;
-  except
-    // suppress conversion error
+    BaseSignatures.Duplicates := dupIgnore;
   end;
 
+  FilterByBaseFormID := False;
+  if FilterByBaseEditorID  then begin
+    FilterBaseFormID := TwbFormID.Null;
+    if Length(FilterBaseEditorID) in [8,9] then try
+      FilterBaseFormID := TwbFormID.FromStr(FilterBaseEditorID);
+      // passed conversion, filter by base FormID
+      FilterByBaseFormID := True;
+      FilterByBaseEditorID := False;
+    except
+      // suppress conversion error
+    end;
+  end;
+
+  if FilterScaledActors then
+    if Assigned(BaseSignatures) then begin
+      HasACHR := BaseSignatures.Find('ACHR', Dummy);
+      HasACRE := BaseSignatures.Find('ACRE', Dummy);
+      BaseSignatures.Clear;
+      if HasACHR then
+        BaseSignatures.Add('ACHR');
+      if HasACRE then
+        BaseSignatures.Add('ACRE');
+    end else begin
+      BaseSignatures := TStringList.Create;
+      BaseSignatures.Add('ACHR');
+      BaseSignatures.Add('ACRE');
+      BaseSignatures.Sorted := True;
+      BaseSignatures.Duplicates := dupIgnore;
+    end;
+
+  if FilterByHasVWDMesh then
+    if Assigned(BaseSignatures) then begin
+      HasREFR := BaseSignatures.Find('REFR', Dummy);
+      BaseSignatures.Clear;
+      if HasREFR then
+        BaseSignatures.Add('REFR');
+    end else begin
+      BaseSignatures := TStringList.Create;
+      BaseSignatures.Add('REFR');
+      BaseSignatures.Sorted := True;
+      BaseSignatures.Duplicates := dupIgnore;
+    end;
+
+  if Assigned(Signatures) or Assigned(BaseSignatures) then begin
+    PotentiallyUnfilteredRefs := False;
+    TopLevelGroups := TStringList.Create;
+    TopLevelGroups.Sorted := True;
+    TopLevelGroups.Duplicates := dupIgnore;
+
+    if Assigned(BaseSignatures) then begin
+      SignaturesCreated := not Assigned(Signatures);
+      if SignaturesCreated then begin
+        Signatures := TStringList.Create;
+        Signatures.Sorted := True;
+        Signatures.Duplicates := dupIgnore;
+        for i := Pred(BaseSignatures.Count) downto 0 do
+          if wbFindRecordDef(BaseSignatures[i], MainRecordDef) then
+            for j := 0 to Pred(MainRecordDef^.ReferenceSignatureCount) do
+              Signatures.Add(MainRecordDef^.ReferenceSignatures[j]);
+      end else
+        for i := Pred(Signatures.Count) downto 0 do begin
+          FoundAny := False;
+          if wbFindRecordDef(Signatures[i], MainRecordDef) then
+            for j := 0 to Pred(MainRecordDef^.BaseSignatureCount) do
+              if BaseSignatures.Find(MainRecordDef^.BaseSignatures[j], Dummy) then begin
+                FoundAny := True;
+                Break;
+              end;
+          if not FoundAny then
+            Signatures.Delete(i);
+        end;
+
+      if Signatures.Count > 0 then begin
+        PotentiallyUnfilteredRefs := True;
+        TopLevelGroups.Add('CELL');
+        TopLevelGroups.Add('WRLD');
+      end;
+    end else {Signatures must be assigned} begin
+      TopLevelGroups.Assign(Signatures);
+
+      //this could be done nicer if information about what groups contain which records is added to the definitions
+      if not TopLevelGroups.Find('CELL', Dummy) then
+        if TopLevelGroups.Find('LAND', Dummy) or
+           TopLevelGroups.Find('PGRD', Dummy) or
+           TopLevelGroups.Find('NAVM', Dummy) or
+           TopLevelGroups.Find('REFR', Dummy) or
+           TopLevelGroups.Find('PGRE', Dummy) or
+           TopLevelGroups.Find('PMIS', Dummy) or
+           TopLevelGroups.Find('ACRE', Dummy) or
+           TopLevelGroups.Find('ACHR', Dummy) or
+           TopLevelGroups.Find('PHZD', Dummy) or
+           TopLevelGroups.Find('PARW', Dummy) or
+           TopLevelGroups.Find('PBAR', Dummy) or
+           TopLevelGroups.Find('PBEA', Dummy) or
+           TopLevelGroups.Find('PCON', Dummy) or
+           TopLevelGroups.Find('PFLA', Dummy) then
+          TopLevelGroups.Add('CELL');
+
+      if not TopLevelGroups.Find('WRLD', Dummy) then
+        if TopLevelGroups.Find('ROAD', Dummy) or
+           TopLevelGroups.Find('CELL', Dummy) then
+          TopLevelGroups.Add('WRLD');
+
+      if not TopLevelGroups.Find('DIAL', Dummy) then
+        if TopLevelGroups.Find('INFO', Dummy) then
+          TopLevelGroups.Add('DIAL');
+
+      if wbVWDAsQuestChildren and not TopLevelGroups.Find('QUST', Dummy) then
+        if TopLevelGroups.Find('DIAL', Dummy) or
+           TopLevelGroups.Find('DLBR', Dummy) or
+           TopLevelGroups.Find('SCEN', Dummy) then
+          TopLevelGroups.Add('QUST');
+    end;
+
+    for i := Pred(TopLevelGroups.Count) downto 0 do
+      if wbFindRecordDef(TopLevelGroups[i], MainRecordDef) then begin
+        if MainRecordDef^.IsReference then
+          PotentiallyUnfilteredRefs := True;
+        //remove entries here that don't occur in top level groups, will require definitions update to have that information
+      end;
+  end else
+    PotentiallyUnfilteredRefs := True;
+
+  if not PotentiallyUnfilteredRefs then
+    AssignPersWrldChild := False;
+
+  FilterRequiresBaseRecord :=
+    FilterByBaseEditorID or
+    FilterByBaseName or
+    FilterByHasVWDMesh;
+
+  FilterRequiresReference :=
+    FilterByBaseFormID or
+    FilterRequiresBaseRecord or
+    FilterScaledActors or
+    FilterByPersistent or
+    FilterByVWD or
+    FilterByHasPrecombinedMesh or
+    Assigned(BaseSignatures);
+
+  FilterRequiresMainRecord :=
+    FilterRequiresReference or
+    FilterByEditorID or
+    FilterByName or
+    Assigned(Signatures) or
+    FilterDeleted or
+    FilterScripted;
+
+  FilterByStatus :=
+    FilterByInjectStatus or
+    FilterByReferencesInjectedStatus or
+    FilterByNotReachableStatus;
+
+  FilterByAnythingNotConflict :=
+    FilterByStatus or
+    FilterRequiresMainRecord;
 
   vstNav.Visible:= False;
   vstNav.BeginUpdate;
   try
-    ReInitTree(FilterNoGameMaster);
+    if (FilterConflictAll and (FilterConflictAllSet = [])) or
+       (FilterConflictThis and (FilterConflictThisSet = [])) or
+       (FilterRequiresBaseRecord and not PotentiallyUnfilteredRefs) or
+       (Assigned(Signatures) and (Signatures.Count < 1)) or
+       (Assigned(BaseSignatures) and (BaseSignatures.Count < 1)) or
+       (Assigned(TopLevelGroups) and (TopLevelGroups.Count < 1)) then
+      vstNav.Clear
+    else
+      ReInitTree(FilterNoGameMaster);  
 
     StartTick := GetTickCount64;
     wbStartTime := Now;
@@ -10932,8 +11211,40 @@ begin
             vstNav.DeleteNode(Node);
       end;
 
+      if Assigned(TopLevelGroups) then begin
+        FileNode := vstNav.GetLastChild(nil);
+        while Assigned(FileNode) do begin
+          NextFileNode := vstNav.GetPreviousSibling(FileNode);
+          NodeData := vstNav.GetNodeData(FileNode);
+          if Assigned(NodeData) and Assigned(NodeData.Element) and (NodeData.Element.ElementType = etFile) then begin
+            Node := vstNav.GetLastChild(FileNode);
+            while Assigned(Node) do begin
+              NextNode := vstNav.GetPreviousSibling(Node);
+              NodeData := vstNav.GetNodeData(Node);
+              if Assigned(NodeData) and Assigned(NodeData.Element) and (NodeData.Element.ElementType = etGroupRecord) then begin
+                GroupRecord := NodeData.Element as IwbGroupRecord;
+                if GroupRecord.GroupType = 0 then begin
+                  if not TopLevelGroups.Find(GroupRecord.GroupLabelSignature, Dummy) then
+                    vstNav.DeleteNode(Node);
+                end;
+              end;
+              Node := NextNode;
+            end;           
+          end;
+          FileNode := NextFileNode;          
+        end;     
+      end;      
+
       Node := vstNav.GetLast(nil);
       while Assigned(Node) do begin
+        if StartTick + 500 < GetTickCount64 then begin
+          Caption := sJustWait + ' [Pass 1] Processed Records: ' + IntToStr(Count) +
+            ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+          DoProcessMessages;
+          StartTick := GetTickCount64;
+        end;
+        Inc(Count);
+
         NextNode := vstNav.GetPrevious(Node);
         NodeData := vstNav.GetNodeData(Node);
         FoundAny := False;
@@ -10942,13 +11253,43 @@ begin
 
           if NodeData.Element.ElementType = etMainRecord then begin
             MainRecord := NodeData.Element as IwbMainRecord;
-            ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+
+            if FilterConflictOnly then
+              if MainRecord.MasterOrSelf.OverrideCount < 2 then begin
+                //filter early, can't possibly have a conflict
+                vstNav.DeleteNode(Node);
+                Node := NextNode;
+                Continue;
+              end;
+
             if MainRecord.IsInjected then
               Include(NodeData.Flags, nnfInjected);
             if MainRecord.IsNotReachable then
               Include(NodeData.Flags, nnfNotReachable);
             if MainRecord.ReferencesInjected then
               Include(NodeData.Flags, nnfReferencesInjected);
+
+            Exclude(NodeData.Flags, nnfFilterChecked);
+
+            if not (FlattenCellChilds and AssignPersWrldChild and (MainRecord.Signature = 'CELL')) then
+              if CheckFilterNode(False) then begin
+                //filter early
+                Node := NextNode;
+                Continue;
+              end;
+
+            if FilterConflictAll or FilterConflictThis or InheritConflictByParent then begin
+              ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+              if not (FlattenCellChilds and AssignPersWrldChild and (MainRecord.Signature = 'CELL')) then
+                if Node.ChildCount = 0 then
+                  if (FilterConflictAll and not (NodeData.ConflictAll in FilterConflictAllSet)) or
+                     (FilterConflictThis and not (NodeData.ConflictThis in FilterConflictThisSet)) then begin
+                    //filter early
+                    vstNav.DeleteNode(Node);
+                    Node := NextNode;
+                    Continue;
+                  end;
+            end;
 
             if FlattenCellChilds and AssignPersWrldChild then
               if (MainRecord.Signature = 'WRLD') then begin
@@ -11078,8 +11419,7 @@ begin
                     end;
 
                   end;
-                end;
-
+              end;
           end else if NodeData.Element.ElementType = etGroupRecord then
             if Supports(NodeData.Element, IwbGroupRecord, GroupRecord) then
               if GroupRecord.GroupType = 1 then begin
@@ -11125,194 +11465,34 @@ begin
           vstNav.DeleteNode(Node);
 
         Node := NextNode;
-        Inc(Count);
-        if StartTick + 500 < GetTickCount64 then begin
-          Caption := sJustWait + ' [Pass 1] Processed Records: ' + IntToStr(Count) +
-            ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-          DoProcessMessages;
-          StartTick := GetTickCount64;
-        end;
       end;
 
-    finally
-      Enabled := True;
-    end;
 
-    Count := 0;
-    try
+      Count2 := 0;
+      MainRecordCount := 0;
+
       vstNav.TreeOptions.AutoOptions := vstNav.TreeOptions.AutoOptions - [toAutoFreeOnCollapse];
       Node := vstNav.GetLast(nil);
       while Assigned(Node) do begin
         NextNode := vstNav.GetPrevious(Node);
         NodeData := vstNav.GetNodeData(Node);
-
-        if Node.ChildCount = 0 then
-          if
-            (FilterConflictAll and not (NodeData.ConflictAll in FilterConflictAllSet)) or
-            (FilterConflictThis and not (NodeData.ConflictThis in FilterConflictThisSet)) or
-            (FilterByInjectStatus and ((nnfInjected in NodeData.Flags) <> FilterInjectStatus)) or
-            (FilterByReferencesInjectedStatus and ((nnfReferencesInjected in NodeData.Flags) <> FilterReferencesInjectedStatus)) or
-            (FilterByNotReachableStatus and ReachableBuild and ((nnfNotReachable in NodeData.Flags) <> FilterNotReachableStatus)) or
-            (
-              (FilterByEditorID or FilterByName) and (
-                not Supports(NodeData.Element, IwbMainRecord, MainRecord) or
-                (FilterByEditorID and (Pos(AnsiUpperCase(FilterEditorID), AnsiUpperCase(MainRecord.EditorID)) < 1)) or
-                (FilterByName and (Pos(AnsiUpperCase(FilterName), AnsiUpperCase(MainRecord.DisplayName[True])) < 1))
-              )
-            ) or
-            (Assigned(Signatures) and
-              (
-              not Supports(NodeData.Element, IwbMainRecord, MainRecord) or
-              not Signatures.Find(MainRecord.Signature, Dummy)
-              )
-            ) or
-            (Assigned(BaseSignatures) and
-              (
-              not Supports(NodeData.Element, IwbMainRecord, MainRecord) or
-              not (
-                    (MainRecord.Signature = 'REFR') or
-                    (MainRecord.Signature = 'PGRE') or
-                    (MainRecord.Signature = 'PMIS') or
-                    (MainRecord.Signature = 'ACHR') or
-                    (MainRecord.Signature = 'ACRE') or
-                    (MainRecord.Signature = 'PHZD') or
-                    (MainRecord.Signature = 'PARW') or
-                    (MainRecord.Signature = 'PBAR') or
-                    (MainRecord.Signature = 'PBEA') or
-                    (MainRecord.Signature = 'PCON') or
-                    (MainRecord.Signature = 'PFLA')
-                  ) or
-              not Supports(MainRecord.RecordBySignature['NAME'], IwbRecord, Rec) or
-              not Supports(Rec.LinksTo, IwbMainRecord, MainRecord) or
-              not BaseSignatures.Find(MainRecord.Signature, Dummy)
-              )
-            ) or
-            (
-              (FilterScaledActors) and (
-                not Supports(NodeData.Element, IwbMainRecord, MainRecord) or
-                not (
-                      (MainRecord.Signature = 'ACHR') or
-                      (MainRecord.Signature = 'ACRE')
-                    ) or
-                not Supports(MainRecord.RecordBySignature['XSCL'], IwbRecord, Rec) or
-                SameValue(Rec.NativeValue, 1)
-              )
-            ) or
-            (
-              (FilterByBaseEditorID or FilterByBaseName) and (
-                not Supports(NodeData.Element, IwbMainRecord, MainRecord) or
-                not (
-                      (MainRecord.Signature = 'REFR') or
-                      (MainRecord.Signature = 'PGRE') or
-                      (MainRecord.Signature = 'PMIS') or
-                      (MainRecord.Signature = 'ACHR') or
-                      (MainRecord.Signature = 'ACRE') or
-                      (MainRecord.Signature = 'PHZD') or
-                      (MainRecord.Signature = 'PARW') or
-                      (MainRecord.Signature = 'PBAR') or
-                      (MainRecord.Signature = 'PBEA') or
-                      (MainRecord.Signature = 'PCON') or
-                      (MainRecord.Signature = 'PFLA')
-                    ) or
-                not Supports(MainRecord.RecordBySignature['NAME'], IwbRecord, Rec) or
-                not Supports(Rec.LinksTo, IwbMainRecord, MainRecord) or
-                (FilterByBaseEditorID and not FilterByBaseFormID and (Pos(AnsiUpperCase(FilterBaseEditorID), AnsiUpperCase(MainRecord.EditorID)) < 1)) or
-                (FilterByBaseFormID and (MainRecord.LoadOrderFormID <> FilterBaseFormID)) or
-                (FilterByBaseName and (Pos(AnsiUpperCase(FilterBaseName), AnsiUpperCase(MainRecord.DisplayName[True])) < 1))
-              )
-            ) or
-            (
-              (FilterDeleted) and (
-                not Supports(NodeData.Element, IwbMainRecord, MainRecord) or
-                not MainRecord.IsDeleted
-              )
-            ) or
-            (
-              (FilterByPersistent or FilterByVWD or FilterByHasVWDMesh or FilterByHasPrecombinedMesh) and (
-                not Supports(NodeData.Element, IwbMainRecord, MainRecord) or
-                (
-                  (MainRecord.Signature <> 'REFR') and
-                  (MainRecord.Signature <> 'PGRE') and
-                  (MainRecord.Signature <> 'PMIS') and
-                  (MainRecord.Signature <> 'ACRE') and
-                  (MainRecord.Signature <> 'ACHR') and
-                  (MainRecord.Signature <> 'PHZD') and
-                  (MainRecord.Signature <> 'PARW') and
-                  (MainRecord.Signature <> 'PBAR') and
-                  (MainRecord.Signature <> 'PBEA') and
-                  (MainRecord.Signature <> 'PCON') and
-                  (MainRecord.Signature <> 'PFLA')
-                ) or
-                (
-                  FilterByPersistent and
-                  (
-                    (MainRecord.IsPersistent <> FilterPersistent) or
-                    (
-                      FilterUnnecessaryPersistent and
-                      (
-                        not IsUnnecessaryPersistent(MainRecord) or
-                        (
-                          FilterMasterIsTemporary and
-                          (
-                            not IsMasterTemporary(MainRecord) and
-                            not (FilterIsMaster and MainRecord.IsMaster)
-                          )
-                        )
-                      )
-                    ) or
-                    (
-                      FilterPersistentPosChanged and
-                      not IsPositionChanged(MainRecord)
-                    )
-                  )
-                ) or
-                (
-                  FilterByVWD and
-                  (
-                    MainRecord.IsVisibleWhenDistant <> FilterVWD
-                  )
-                ) or
-                (
-                  FilterByHasVWDMesh and
-                  (
-                    (
-                      (MainRecord.Signature = 'REFR') and
-                      Supports(MainRecord.RecordBySignature['NAME'], IwbRecord, Rec) and
-                      Supports(Rec.LinksTo, IwbMainRecord, MainRecord) and
-                      MainRecord.HasVisibleWhenDistantMesh
-                    ) <> FilterHasVWDMesh
-                  )
-                ) or
-                (
-                  FilterByHasPrecombinedMesh and
-                  (
-                    MainRecord.HasPrecombinedMesh <> FilterHasPrecombinedMesh
-                  )
-                )
-              )
-            ) or
-            (
-              (FilterScripted) and
-              (
-                not Assigned(ScriptEngine) or
-                not Supports(NodeData.Element, IwbMainRecord, MainRecord) or
-                not CustomScriptFilter(MainRecord)
-              )
-            )
-            then begin
-            if Supports(NodeData.Element, IwbMainRecord, MainRecord) then
-              if Assigned(MainRecord._File) {and (MainRecord.Signature <> 'TES4')} then begin
-                for i := Low(Files) to High(Files) do
-                  if Files[i] = MainRecord._File then Break;
-                Inc(FileFiltered[i]);
-              end;
-            vstNav.DeleteNode(Node);
+        if Assigned(NodeData) and Assigned(NodeData.Element) and (NodeData.Element.ElementType = etFile) then begin
+          if MainRecordCount > 0 then begin
+            _File := NodeData.Element._File;
+            for i := Low(Files) to High(Files) do
+              if Files[i].Equals(_File) then
+                Break;
+            FileFiltered[i] := _File.RecordCount - MainRecordCount;
           end;
-
+          MainRecordCount := 0;
+        end;
+        if not CheckFilterNode(True) then
+          if Assigned(NodeData) and Assigned(NodeData.Element) and (NodeData.Element.ElementType = etMainRecord) then
+            Inc(MainRecordCount);
         Node := NextNode;
-        Inc(Count);
+        Inc(Count2);
         if StartTick + 500 < GetTickCount64 then begin
-          Caption := sJustWait + ' [Pass 2] Processed Records: ' + IntToStr(Count) +
+          Caption := sJustWait + ' [Pass 2] Processed Records: ' + IntToStr(Count2) +
             ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
           DoProcessMessages;
           StartTick := GetTickCount64;
@@ -11330,6 +11510,7 @@ begin
 
     PostAddMessage('[Filtering done] ' + ' Processed Records: ' + IntToStr(Count) +
       ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
+
     FilterApplied := True;
     lblFilterHint.Visible := True;
   finally
@@ -11337,6 +11518,7 @@ begin
     Caption := Application.Title;
     Signatures.Free;
     BaseSignatures.Free;
+    TopLevelGroups.Free;
     vstNav.Visible:= True;
     FilterScripted := False;
   end;
@@ -11404,10 +11586,12 @@ begin
 
   FilterPreset := True;
   FilterNoGameMaster := wbVeryQuickShowConflicts;
+  FilterConflictOnly := wbVeryQuickShowConflicts;
   try
     mniNavFilterApplyClick(Sender);
   finally
     FilterNoGameMaster := False;
+    FilterConflictOnly := False;
     FilterPreset := False;
   end;
 end;
