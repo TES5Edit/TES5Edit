@@ -1646,6 +1646,7 @@ type
 
     function GetGroupType: Integer; inline;
     function GetGroupLabel: Cardinal; inline;
+    function GetGroupLabelSignature: string;
     procedure SetGroupLabel(aLabel: Cardinal);
     function GetChildrenOf: IwbMainRecord;
 
@@ -12497,6 +12498,14 @@ end;
 function TwbGroupRecord.GetGroupLabel: Cardinal;
 begin
   Result := grStruct.grsLabel;
+end;
+
+function TwbGroupRecord.GetGroupLabelSignature: string;
+begin
+  if grStruct.grsGroupType = 0 then
+    Result := PwbSignature(@grStruct.grsLabel)^
+  else
+    Result := '';
 end;
 
 function TwbGroupRecord.GetGroupType: Integer;
