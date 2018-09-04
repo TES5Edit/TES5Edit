@@ -1880,36 +1880,47 @@ begin
   
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {0x00000001}'ESM',
-    {0x00000002}'',
-    {0x00000004}'',
-    {0x00000008}'',
-    {0x00000010}'',
-    {0x00000020}'Deleted',
-    {0x00000040}'Border Region / Actor Value',
-    {0x00000080}'Turn Off Fire / Actor Value',
-    {0x00000100}'',
-    {0x00000200}'Casts shadows',
-    {0x00000400}'Quest item / Persistent reference / Show in Menu',
-    {0x00000800}'Initially disabled',
-    {0x00001000}'Ignored',
-    {0x00002000}'',
-    {0x00004000}'',
-    {0x00008000}'Visible when distant',
-    {0x00010000}'',
-    {0x00020000}'Dangerous / Off limits (Interior cell)',
-    {0x00040000}'Compressed ',
-    {0x00080000}'Can''t wait'
+    {0x00000002}'Unknown 2',
+    {0x00000004}'Unknown 3',
+    {0x00000008}'Unknown 4',
+    {0x00000010}'Unknown 5',
+    {0x00000020}'Unknown 6',
+    {0x00000040}'Unknown 7',
+    {0x00000080}'Unknown 8',
+    {0x00000100}'Unknown 9',
+    {0x00000200}'Unknown 10',
+    {0x00000400}'PersistentReference', {TES3}
+    {0x00000800}'Unknown 12',
+    {0x00001000}'Unknown 13',
+    {0x00002000}'Blocked', {TES3}
+    {0x00004000}'Unknown 15',
+    {0x00008000}'Unknown 16',
+    {0x00010000}'Unknown 17',
+    {0x00020000}'Unknown 18',
+    {0x00040000}'Unknown 19',
+    {0x00080000}'Unknown 20',
+    {0x00100000}'Unknown 21',
+    {0x00200000}'Unknown 22',
+    {0x00400000}'Unknown 23',
+    {0x00800000}'Unknown 24',
+    {0x01000000}'Unknown 25',
+    {0x02000000}'Unknown 26',
+    {0x04000000}'Unknown 27',
+    {0x08000000}'Unknown 28',
+    {0x10000000}'Unknown 29',
+    {0x20000000}'Unknown 30',
+    {0x40000000}'Unknown 31',
+    {0x80000000}'Unknown 32'
   ]));
 
   wbMainRecordHeader := wbStruct('Record Header', [
     wbString('Signature', 4, cpCritical),
     wbInteger('Data Size', itU32, nil, cpIgnore),
-    wbRecordFlags,
-    wbFormID('FormID', cpFormID),
-    wbByteArray('Unknown', 4, cpIgnore)
+    wbByteArray('Version Control Info', 4, cpIgnore),
+    wbRecordFlags
   ]);
 
-  wbSizeOfMainRecordStruct := 20;
+  wbSizeOfMainRecordStruct := 16;
 
   wbIgnoreRecords.Add(XXXX);
 
