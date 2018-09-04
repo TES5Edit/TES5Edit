@@ -3539,7 +3539,8 @@ var
   wbSizeOfMainRecordStruct : Integer;
 
 type
-  TwbGameMode   = (gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmTES5VR, gmSSE, gmFO4, gmFO4VR);
+  //keep ordered by release date
+  TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR);
   TwbGameModes  = set of TwbGameMode;
 
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
