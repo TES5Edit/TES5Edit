@@ -62,7 +62,7 @@ const
   AIDT : TwbSignature = 'AIDT';
   ALCH : TwbSignature = 'ALCH';
   AMMO : TwbSignature = 'AMMO';
-  ANAM : TwbSignature = 'ANAM';
+  ANAM : TwbSignature = 'ANAM'; { Morrowind }
   ANIO : TwbSignature = 'ANIO';
   APPA : TwbSignature = 'APPA';
   ARMO : TwbSignature = 'ARMO';
@@ -74,7 +74,8 @@ const
   BSGN : TwbSignature = 'BSGN';
   BTXT : TwbSignature = 'BTXT';
   CELL : TwbSignature = 'CELL';
-  CLAS : TwbSignature = 'CLAS';
+  CLAS : TwbSignature = 'CLAS'; { Morrowind }
+  CLDT : TwbSignature = 'CLDT'; { Morrowind }
   CLMT : TwbSignature = 'CLMT';
   CLOT : TwbSignature = 'CLOT';
   CNAM : TwbSignature = 'CNAM';
@@ -93,7 +94,7 @@ const
   DATA : TwbSignature = 'DATA';
   DATX : TwbSignature = 'DATX';
   DELE : TwbSignature = 'DELE';
-  DESC : TwbSignature = 'DESC';
+  DESC : TwbSignature = 'DESC'; { Morrowind }
   DIAL : TwbSignature = 'DIAL';
   DNAM : TwbSignature = 'DNAM';
   DOOR : TwbSignature = 'DOOR';
@@ -112,17 +113,18 @@ const
   ENIT : TwbSignature = 'ENIT';
   ESCE : TwbSignature = 'ESCE';
   EYES : TwbSignature = 'EYES';
-  FACT : TwbSignature = 'FACT';
+  FACT : TwbSignature = 'FACT'; { Morrowind }
+  FADT : TwbSignature = 'FADT'; { Morrowind }
   FGGA : TwbSignature = 'FGGA';
   FGGS : TwbSignature = 'FGGS';
   FGTS : TwbSignature = 'FGTS';
   FLOR : TwbSignature = 'FLOR';
-  FLTV : TwbSignature = 'FLTV';
-  FNAM : TwbSignature = 'FNAM';
+  FLTV : TwbSignature = 'FLTV'; { Morrowind }
+  FNAM : TwbSignature = 'FNAM'; { Morrowind }
   FULL : TwbSignature = 'FULL';
   FURN : TwbSignature = 'FURN';
-  GLOB : TwbSignature = 'GLOB';
-  GMST : TwbSignature = 'GMST';
+  GLOB : TwbSignature = 'GLOB'; { Morrowind }
+  GMST : TwbSignature = 'GMST'; { Morrowind }
   GNAM : TwbSignature = 'GNAM';
   GRAS : TwbSignature = 'GRAS';
   HAIR : TwbSignature = 'HAIR';
@@ -172,7 +174,7 @@ const
   NAM1 : TwbSignature = 'NAM1';
   NAM2 : TwbSignature = 'NAM2';
   NAM9 : TwbSignature = 'NAM9';
-  NAME : TwbSignature = 'NAME';
+  NAME : TwbSignature = 'NAME'; { Morrowind }
   NIFT : TwbSignature = 'NIFT';
   NIFZ : TwbSignature = 'NIFZ';
   NPC_ : TwbSignature = 'NPC_';
@@ -213,7 +215,7 @@ const
   REFR : TwbSignature = 'REFR';
   PLYR : TwbSignature = 'PLYR';
   REGN : TwbSignature = 'REGN';
-  RNAM : TwbSignature = 'RNAM';
+  RNAM : TwbSignature = 'RNAM'; { Morrowind }
   ROAD : TwbSignature = 'ROAD';
   RPLD : TwbSignature = 'RPLD';
   RPLI : TwbSignature = 'RPLI';
@@ -2483,38 +2485,44 @@ begin
       {0x00000004} 'Clothing',
       {0x00000008} 'Books',
       {0x00000010} 'Ingredients',
-      {0x00000020} '',
-      {0x00000040} '',
+      {0x00000020} 'Picks',
+      {0x00000040} 'Probes',
       {0x00000080} 'Lights',
       {0x00000100} 'Apparatus',
-      {0x00000200} '',
+      {0x00000200} 'Repair',
       {0x00000400} 'Miscellaneous',
       {0x00000800} 'Spells',
       {0x00001000} 'Magic Items',
       {0x00002000} 'Potions',
       {0x00004000} 'Training',
-      {0x00008000} '',
-      {0x00010000} 'Recharge',
-      {0x00020000} 'Repair'
+      {0x00008000} 'Spellmaking',
+      {0x00010000} 'Enchanting',
+      {0x00020000} 'Repair Item'
     ]);
 
   wbSpecializationEnum := wbEnum(['Combat', 'Magic', 'Stealth']);
 
   wbRecord(CLAS, 'Class', [
-    wbEDID,
-    wbFULL,
-    wbDESC,
-    wbICON,
-    wbStruct(DATA, '', [
-      wbArrayS('Primary Attributes', wbInteger('Primary Attribute', itS32, wbActorValueEnum), 2),
-      wbInteger('Specialization', itU32, wbSpecializationEnum),
-      wbArrayS('Major Skills', wbInteger('Major Skill', itS32, wbActorValueEnum), 7),
-      wbInteger('Flags', itU32, wbFlags(['Playable', 'Guard'])),
-      wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
-      wbInteger('Teaches', itS8, wbSkillEnum),
-      wbInteger('Maximum training level', itU8),
-      wbInteger('Unused', itU16)
-    ], cpNormal, True, nil, 5)
+    wbString(NAME, 'NameID'),
+    wbString(FNAM, 'Class name string'),
+    wbStruct(CLDT, '', [
+      wbInteger('AttributeID1', itS32),
+      wbInteger('AttributeID1', its32),
+      wbInteger('AttributeID1', its32, wbSpecializationEnum),
+      wbInteger('MinorID1', its32),
+      wbInteger('MajorID1', its32),
+      wbInteger('MinorID2', its32),
+      wbInteger('MajorID2', its32),
+      wbInteger('MinorID3', its32),
+      wbInteger('MajorID3', its32),
+      wbInteger('MinorID4', its32),
+      wbInteger('MajorID4', its32),
+      wbInteger('MinorID5', its32),
+      wbInteger('MajorID5', its32),
+      wbInteger('Flags', its32, wbFlags(['Playable'])),
+      wbInteger('AutoCalcFlags', its32, wbServiceFlags)
+    ]),
+    wbString(DESC, 'Description')
   ]);
 
   wbRecord(CLMT, 'Climate', [
@@ -3045,16 +3053,74 @@ begin
   wbXNAMs := wbRArrayS('Relations', wbXNAM);
 
   wbRecord(FACT, 'Faction', [
-    wbEDID,
-    wbFULL,
-    wbXNAMs,
-    wbInteger(DATA, 'Flags', itU8, wbFlags(['Hidden from Player', 'Evil', 'Special Combat']), cpNormal, True),
-    wbFloat(CNAM, 'Crime Gold Multiplier', cpNormal, True, 1, -1, nil, nil, 1.0),
-    wbRStructsSK('Ranks', 'Rank', [0], [
-      wbInteger(RNAM, 'Rank#', itS32),
-      wbString(MNAM, 'Male', 0, cpTranslate),
-      wbString(FNAM, 'Female', 0, cpTranslate),
-      wbString(INAM, 'Insignia')
+    wbString(NAME, 'NameID'),
+    wbString(FNAM, 'Class name string'),
+    wbRArray('Ranks', wbStringForward(RNAM, 'Rank')),
+    wbStruct(FADT, '', [
+      wbInteger('AttributeID1', itS32),
+      wbInteger('AttributeID1', its32),
+      wbInteger('AttributeID1', its32, wbSpecializationEnum),
+      wbInteger('MinorID1', its32),
+      wbInteger('MajorID1', its32),
+      wbInteger('MinorID2', its32),
+      wbInteger('MajorID2', its32),
+      wbInteger('MinorID3', its32),
+      wbInteger('MajorID3', its32),
+      wbInteger('MinorID4', its32),
+      wbInteger('MajorID4', its32),
+      wbInteger('MinorID5', its32),
+      wbInteger('MajorID5', its32),
+      wbInteger('Flags', its32, wbFlags(['Playable'])),
+      wbInteger('AutoCalcFlags', its32, wbServiceFlags),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
+    ]),
+    wbRStructs('Relations','Relation', [
+      wbString(ANAM, 'Faction name string'),
+      wbInteger(INTV, 'Faction reaction value', its32)
     ], [])
   ]);
 
@@ -4610,50 +4676,13 @@ begin
   ]);
 
   wbRecord(SOUN, 'Sound', [
-    wbEDID,
+    wbString(NAME, 'NameID'),
     wbString(FNAM, 'Sound Filename'),
-    wbRUnion('Sound Data', [
-      wbStruct(SNDX, 'Sound Data', [
-        wbInteger('Minimum attentuation distance', itU8, wbMul(5)),
-        wbInteger('Maximum attentuation distance', itU8, wbMul(100)),
-        wbInteger('Frequency adjustment %', itS8),
-        wbByteArray('Unused', 1),
-        wbInteger('Flags', itU16, wbFlags([
-          {0x0001} 'Random Frequency Shift',
-          {0x0002} 'Play At Random',
-          {0x0004} 'Environment Ignored',
-          {0x0008} 'Random Location',
-          {0x0010} 'Loop',
-          {0x0020} 'Menu Sound',
-          {0x0040} '2D',
-          {0x0080} '360 LFE'
-        ])),
-        wbByteArray('Unused', 2),
-        wbInteger('Static attentuation cdB', itS16),
-        wbInteger('Stop time ', itU8),
-        wbInteger('Start time ', itU8)
-      ], cpNormal, True),
-      wbStruct(SNDD, 'Sound Data', [
-        wbInteger('Minimum attentuation distance', itU8, wbMul(5)),
-        wbInteger('Maximum attentuation distance', itU8, wbMul(100)),
-        wbInteger('Frequency adjustment %', itS8),
-        wbByteArray('Unused', 1),
-        wbInteger('Flags', itU16, wbFlags([
-          {0x0001} 'Random Frequency Shift',
-          {0x0002} 'Play At Random',
-          {0x0004} 'Environment Ignored',
-          {0x0008} 'Random Location',
-          {0x0010} 'Loop',
-          {0x0020} 'Menu Sound',
-          {0x0040} '2D',
-          {0x0080} '360 LFE'
-        ])),
-        wbByteArray('Unused', 2),
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused')
-      ], cpNormal, True)
-    ], [], cpNormal, True)
+    wbStruct(DATA, 'Sound Data', [
+      wbInteger('Volume', itU8),
+      wbInteger('MinRange', itS8),
+      wbInteger('MaxRange', itS8)
+    ])
   ]);
 
   wbRecord(SPEL, 'Spell', [
