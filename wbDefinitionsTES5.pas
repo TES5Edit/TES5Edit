@@ -13870,8 +13870,32 @@ begin
   wbRecord(RGDL, 'RGDL', [
     wbEDID
   ]);
+  {
   wbRecord(SCOL, 'SCOL', [
     wbEDID
+  ]);
+  }
+
+  wbRecord(SCOL, 'Static Collection', [
+    wbEDID,
+    wbOBNDReq,
+    wbMODLReq,
+    wbRStructs('Parts', 'Part', [
+      wbFormIDCk(ONAM, 'Static', [STAT]),
+      wbArrayS(DATA, 'Placements', wbStruct('Placement', [
+        wbStruct('Position', [
+          wbFloat('X'),
+          wbFloat('Y'),
+          wbFloat('Z')
+        ]),
+        wbStruct('Rotation', [
+          wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+          wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+          wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+        ]),
+        wbFloat('Scale')
+      ]), 0, cpNormal, True)
+    ], [], cpNormal, True)
   ]);
   wbRecord(SCPT, 'SCPT', [
     wbEDID
