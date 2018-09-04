@@ -1480,6 +1480,7 @@ type
     ['{BFF16E47-4E66-4EAD-9BEF-364728AE0A6B}']
     function GetGroupType: Integer;
     function GetGroupLabel: Cardinal;
+    function GetGroupLabelSignature: string;
     procedure SetGroupLabel(aLabel: Cardinal);
     function GetChildrenOf: IwbMainRecord;
 
@@ -1495,6 +1496,9 @@ type
     property GroupLabel: Cardinal
       read GetGroupLabel
       write SetGroupLabel;
+    property GroupLabelSignature: string
+      read GetGroupLabelSignature;
+
 
     property ChildrenOf: IwbMainRecord
       read GetChildrenOf;
