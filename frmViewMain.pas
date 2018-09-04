@@ -7216,12 +7216,22 @@ end;
 
 procedure TfrmMain.mmoMessagesDblClick(Sender: TObject);
 var
+  i: Integer;
   s: string;
   Key: Word;
 begin
   s := Trim(mmoMessages.SelText);
   if Length(s) < 8 then
     Exit;
+
+  i := Pos('[', s);
+  if i > 1 then
+    Delete(s, 1, Pred(i));
+
+  i := Pos(']', s);
+  if i > 0 then
+    Delete(s, Succ(i), High(Integer));
+
   if (s[1] = '[') and (s[Length(s)] = ']') then
     s := Copy(s, 2, Length(s) - 2);
   if Length(s) < 8 then
