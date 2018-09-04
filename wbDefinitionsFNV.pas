@@ -4872,7 +4872,7 @@ begin
 
   wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32);
 
-  wbRecord(ACHR, 'Placed NPC', [
+  wbRefRecord(ACHR, 'Placed NPC', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -4961,7 +4961,7 @@ begin
   wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, CREA, NPC_]); // Ghouls can own too aparently !
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 
-  wbRecord(ACRE, 'Placed Creature', [
+  wbRefRecord(ACRE, 'Placed Creature', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [CREA], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -7521,7 +7521,7 @@ begin
 
   end;
 
-  wbRecord(PGRE, 'Placed Grenade', [
+  wbRefRecord(PGRE, 'Placed Grenade', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [PROJ], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -7617,7 +7617,7 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
-  wbRecord(PMIS, 'Placed Missile', [
+  wbRefRecord(PMIS, 'Placed Missile', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [PROJ], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -7713,7 +7713,7 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
-  wbRecord(PBEA, 'Placed Beam', [
+  wbRefRecord(PBEA, 'Placed Beam', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [PROJ], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -10044,7 +10044,7 @@ begin
     ], [], cpNormal, True)
   ]);
 
-  wbRecord(REFR, 'Placed Object', [
+  wbRefRecord(REFR, 'Placed Object', [
     wbEDID,
     {
     wbStruct(RCLR, 'Linked Reference Color (Old Format?)', [

@@ -2077,7 +2077,7 @@ begin
     wbByteArray('Unused', 3)
   ]);
 
-  wbRecord(ACHR, 'Placed NPC', [
+  wbRefRecord(ACHR, 'Placed NPC', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
     wbRStruct('Unused', [
@@ -2096,7 +2096,7 @@ begin
   wbXOWN := wbFormIDCk(XOWN, 'Owner', [FACT, NPC_]);
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 
-  wbRecord(ACRE, 'Placed Creature', [
+  wbRefRecord(ACRE, 'Placed Creature', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [CREA], False, cpNormal, True),
     wbRStruct('Ownership', [
@@ -4437,7 +4437,7 @@ begin
     wbByteArray(SNAM, 'Unknown', 2, cpNormal, True)
   ], True);
 
-  wbRecord(REFR, 'Placed Object', [
+  wbRefRecord(REFR, 'Placed Object', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS], False, cpNormal, True),
     wbStruct(XTEL, 'Teleport Destination', [

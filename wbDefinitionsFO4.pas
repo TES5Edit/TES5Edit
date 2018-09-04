@@ -895,13 +895,14 @@ const
   ZOOM : TwbSignature = 'ZOOM'; { New To Fallout 4 }
 
   // signatures of reference records
-  sigReferences : array [0..11] of TwbSignature = (
+  sigReferences : TwbSignatures = [
     'NULL', 'PLYR', 'ACHR', 'REFR', 'PGRE', 'PHZD',
     'PMIS', 'PARW', 'PBAR', 'PBEA', 'PCON', 'PFLA'
-  );
+  ]
+  ;
 
   // signatures of referenceable records (placed by references or constructable)
-  sigBaseObjects : array [0..43] of TwbSignature = (
+  sigBaseObjects : TwbSignatures = [
     'NULL', 'ACTI', 'ADDN', 'ALCH', 'AMMO', 'ARMO',
     'ARTO', 'ASPC', 'BNDS', 'BOOK', 'CMPO', 'COBJ',
     'CONT', 'DEBR', 'DOOR', 'EXPL', 'FLST', 'FLOR',
@@ -910,7 +911,7 @@ const
     'NPC_', 'OMOD', 'PROJ', 'SCOL', 'SCRL', 'SOUN',
     'SPEL', 'STAT', 'TACT', 'TERM', 'TREE', 'TXST',
     'WATR', 'WEAP'
-  );
+  ];
 
 var
   wbPKDTSpecificFlagsUnused : Boolean;
@@ -7753,8 +7754,7 @@ end;
 
 procedure DefineFO4b;
 begin
-
-  wbRecord(ACHR, 'Placed NPC',
+  wbRefRecord(ACHR, 'Placed NPC',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Starts Dead',
       {0x00000400} 10, 'Persistent',
@@ -9352,7 +9352,7 @@ procedure DefineFO4c;
 
   procedure ReferenceRecord(aSignature: TwbSignature; const aName: string);
   begin
-    wbRecord(aSignature, aName,
+    wbRefRecord(aSignature, aName,
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00000080}  7, 'Turn Off Fire',
         {0x00000400} 10, 'Persistent',
@@ -14796,7 +14796,7 @@ begin
   ], False, nil, cpNormal, False, nil, wbRACEAfterSet);
 
 
-  wbRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
+  wbRefRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
       {0x00000100}  8, 'LOD Respects Enable State',
