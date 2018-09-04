@@ -1178,8 +1178,22 @@ type
 
   PwbSubRecordHeaderStruct = ^TwbSubRecordHeaderStruct;
   TwbSubRecordHeaderStruct = packed record
+  private
+    function srsGetDataSize: Cardinal;
+    procedure srsSetDataSize(const Value: Cardinal);
+  public
     srsSignature : TwbSignature;
-    srsDataSize  : Word;
+    property srsDataSize: Cardinal
+      read srsGetDataSize
+      write srsSetDataSize;
+
+    class function SizeOf: NativeInt; static;
+    //not allowed, so assignments can try to copy too much data! WARNING!
+    //class operator Implicit(const aSource : TwbSubRecordHeaderStruct): TwbSubRecordHeaderStruct;
+  private
+    case Integer of
+      0: (_DataSizeCardinal : Cardinal);
+      1: (_DataSizeWord     : Word);
   end;
 
   IwbSubRecordInternal = interface(IwbSubRecord)
@@ -10978,7 +10992,7 @@ end;
 destructor TwbSubRecord.Destroy;
 begin
   if not Assigned(dcEndPtr) and Assigned(dcBasePtr) then
-    FreeMem(dcBasePtr, SizeOf(TwbSubRecordHeaderStruct) );
+    FreeMem(dcBasePtr, TwbSubRecordHeaderStruct.SizeOf );
   inherited;
 end;
 
@@ -11395,7 +11409,7 @@ begin
   Assert(Assigned(dcBasePtr));
   Assert(Assigned(dcEndPtr));
 
-  SizeNeeded := SizeOf(TwbSubRecordHeaderStruct);
+  SizeNeeded := TwbSubRecordHeaderStruct.SizeOf;
   SizeAvailable := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
   Assert( SizeAvailable >= SizeNeeded );
 
@@ -11416,7 +11430,7 @@ var
   Container  : IwbContainer;
 begin
   if Assigned(dcBasePtr) then begin
-    dcDataBasePtr := PByte(dcBasePtr) + SizeOf(TwbSubRecordHeaderStruct);
+    dcDataBasePtr := PByte(dcBasePtr) + TwbSubRecordHeaderStruct.SizeOf;
 
     lDataSize := srStruct.srsDataSize;
 
@@ -11436,7 +11450,7 @@ begin
     dcDataEndPtr := PByte(dcDataBasePtr) + lDataSize;
     dcEndPtr := dcDataEndPtr;
   end else begin
-    GetMem(dcBasePtr, SizeOf(TwbSubRecordHeaderStruct) );
+    GetMem(dcBasePtr, TwbSubRecordHeaderStruct.SizeOf );
     if Assigned(srDef) then
       srStruct.srsSignature := srDef.DefaultSignature
     else
@@ -11500,9 +11514,10 @@ var
   SizeNeeded    : Cardinal;
   SizeAvailable : Cardinal;
   BasePtr       : Pointer;
+  lDataSize     : Cardinal;
 begin
   Assert(Assigned(dcBasePtr));
-  SizeNeeded := SizeOf(TwbSubRecordHeaderStruct);
+  SizeNeeded := TwbSubRecordHeaderStruct.SizeOf;
   SizeAvailable := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
   Assert( SizeAvailable >= SizeNeeded );
 
@@ -11516,7 +11531,12 @@ begin
 
   dcBasePtr := BasePtr;
   dcEndPtr := dcDataEndPtr;
-  srStruct.srsDataSize := NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr);
+  lDataSize := NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr);
+  if (lDataSize <= High(Word)) or (wbGameMode = gmTES3) then
+    srStruct.srsDataSize := lDataSize
+  else
+    //will need to write XXXX subrecord on save
+    srStruct.srsDataSize := 0;
 end;
 
 procedure TwbSubRecord.PrepareSave;
@@ -11701,10 +11721,10 @@ begin
     DoInit(True);
 
     BigDataSize := GetDataSize;
-    if BigDataSize > High(Word) then begin
+    if (BigDataSize > High(Word)) and (wbGameMode <> gmTES3) then begin
       SubHeader.srsSignature := 'XXXX';
       SubHeader.srsDataSize := SizeOf(Cardinal);
-      aStream.WriteBuffer(SubHeader, SizeOf(TwbSubRecordHeaderStruct) );
+      aStream.WriteBuffer(SubHeader, TwbSubRecordHeaderStruct.SizeOf );
       aStream.WriteBuffer(BigDataSize, SizeOf(BigDataSize) );
       SubHeader.srsSignature := srStruct.srsSignature;
       SubHeader.srsDataSize := 0;
@@ -11713,7 +11733,7 @@ begin
       SubHeader.srsDataSize := BigDataSize;
     end;
 
-    aStream.WriteBuffer(SubHeader, SizeOf(TwbSubRecordHeaderStruct) );
+    aStream.WriteBuffer(SubHeader, TwbSubRecordHeaderStruct.SizeOf );
     CurrentPosition := aStream.Position;
     inherited;
     NewPosition := aStream.Position;
@@ -11721,7 +11741,7 @@ begin
       Assert(BigDataSize = NewPosition - CurrentPosition );
 
   end else begin
-    aStream.WriteBuffer(dcBasePtr^, SizeOf(TwbSubRecordHeaderStruct) );
+    aStream.WriteBuffer(dcBasePtr^, TwbSubRecordHeaderStruct.SizeOf );
     CurrentPosition := aStream.Position;
     inherited;
     if CurrentPosition + srStruct.srsDataSize <> aStream.Position then
@@ -18324,6 +18344,40 @@ begin
     Dispose(KAC);
     KAC := wbKeepAliveContext;
   end;
+end;
+
+{ TwbSubRecordHeaderStruct }
+
+{
+class operator TwbSubRecordHeaderStruct.Implicit(const aSource : TwbSubRecordHeaderStruct)
+                                                               : TwbSubRecordHeaderStruct;
+begin
+  Result.srsSignature := aSource.srsSignature;
+  Result.srsDataSize := aSource.srsDataSize;
+end;
+}
+class function TwbSubRecordHeaderStruct.SizeOf: NativeInt;
+begin
+  if wbGameMode = gmTES3 then
+    Result := System.SizeOf(TwbSignature) + System.SizeOf(Cardinal)
+  else
+    Result := System.SizeOf(TwbSignature) + System.SizeOf(Word);
+end;
+
+function TwbSubRecordHeaderStruct.srsGetDataSize: Cardinal;
+begin
+  if wbGameMode = gmTES3 then
+    Result := _DataSizeCardinal
+  else
+    Result := _DataSizeWord;
+end;
+
+procedure TwbSubRecordHeaderStruct.srsSetDataSize(const Value: Cardinal);
+begin
+  if wbGameMode = gmTES3 then
+    _DataSizeCardinal := Value
+  else
+    _DataSizeWord := Value;
 end;
 
 initialization
