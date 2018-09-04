@@ -1250,8 +1250,10 @@ type
     procedure Add(const aMainRecord: IwbMainRecord);
   end;
 
+  IwbMainRecordDef = interface;
   IwbMainRecord = interface(IwbRecord)
     ['{F06FD5E2-621D-4422-BA00-CB3CA72B3691}']
+    function GetMainRecordDef: IwbMainRecordDef;
     function GetFormID: TwbFormID;
     function GetFixedFormID: TwbFormID;
     function GetLoadOrderFormID: TwbFormID;
@@ -1281,6 +1283,7 @@ type
     function EnsureChildGroup: IwbGroupRecord;
     function GetBaseRecord: IwbMainRecord;
     function GetBaseRecordID: TwbFormID;
+    function GetBaseRecordSignature: TwbSignature;
     function GetMasterAndLeafs: TDynMainRecords;
 
     function GetConflictAll: TConflictAll;
@@ -1333,6 +1336,9 @@ type
     procedure ChangeFormSignature(aSignature: TwbSignature);
     procedure ClampFormID(aIndex: Cardinal);
 
+    property Def: IwbMainRecordDef
+      read GetMainRecordDef;
+
     property Version: Cardinal
       read GetFormVersion
       write SetFormVersion;
@@ -1347,6 +1353,8 @@ type
       read GetBaseRecord;
     property BaseRecordID: TwbFormID
       read GetBaseRecordID;
+    property BaseRecordSignature: TwbSignature
+      read GetBaseRecordSignature;
     property CanHaveBaseRecord: Boolean
       read GetCanHaveBaseRecord;
     property FormID: TwbFormID

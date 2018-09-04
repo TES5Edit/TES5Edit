@@ -1043,6 +1043,7 @@ type
 
     {---IwbMainRecord---}
     function GetDef: IwbNamedDef; override;
+    function GetMainRecordDef: IwbMainRecordDef;
     function GetElementType: TwbElementType; override;
     function GetFormID: TwbFormID; inline;
     function GetFixedFormID: TwbFormID; inline;
@@ -1078,6 +1079,7 @@ type
     function EnsureChildGroup: IwbGroupRecord;
     function GetBaseRecord: IwbMainRecord;
     function GetBaseRecordID: TwbFormID;
+    function GetBaseRecordSignature: TwbSignature;
     function GetMasterAndLeafs: TDynMainRecords;
 
     procedure MakeHeaderWriteable;
@@ -7547,29 +7549,35 @@ begin
   Result := nil;
 
   if not (mrsBaseRecordChecked in mrStates) then begin
-    SelfRef := Self as IwbContainerElementRef;
-    if not ((mrsQuickInitDone in mrStates) or (csInitOnce in cntStates)) then begin
-      Assert(not (csInit in cntStates));
-      Include(mrStates, mrsQuickInit);
-      Include(cntStates, csInit);
-      try
+    if mrDef.ContainsBaseRecord then begin
+      SelfRef := Self as IwbContainerElementRef;
+      if not ((mrsQuickInitDone in mrStates) or (csInitOnce in cntStates)) then begin
+        Assert(not (csInit in cntStates));
+        Include(mrStates, mrsQuickInit);
+        Include(cntStates, csInit);
         try
-          Init;
+          try
+            Init;
+          finally
+            DoReset(True);
+          end;
         finally
-          DoReset(True);
+          Exclude(cntStates, csInit);
+          Exclude(mrStates, mrsQuickInit);
         end;
-      finally
-        Exclude(cntStates, csInit);
-        Exclude(mrStates, mrsQuickInit);
       end;
+      mrBaseRecordID := TwbFormID.Null;
+      Include(mrStates, mrsBaseRecordChecked);
+      if Supports(GetRecordBySignature('NAME'), IwbContainerElementRef, NameRec) then
+        if Supports(NameRec.LinksTo, IwbMainRecord, Result) then begin
+          mrBaseRecordID := TwbFormID.FromCardinal(NameRec.NativeValue);
+        end;
+      Exit;
+    end else begin
+      mrBaseRecordID := TwbFormID.Null;
+      Include(mrStates, mrsBaseRecordChecked);
+      Exit(nil);
     end;
-    mrBaseRecordID := TwbFormID.Null;
-    Include(mrStates, mrsBaseRecordChecked);
-    if Supports(GetRecordBySignature('NAME'), IwbContainerElementRef, NameRec) then
-      if Supports(NameRec.LinksTo, IwbMainRecord, Result) then begin
-        mrBaseRecordID := TwbFormID.FromCardinal(NameRec.NativeValue);
-      end;
-    Exit;
   end;
 
   if not mrBaseRecordID.IsNull then
@@ -7582,6 +7590,17 @@ begin
   if not (mrsBaseRecordChecked in mrStates) then
     GetBaseRecord;
   Result := GetFile.FileFormIDtoLoadOrderFormID(mrBaseRecordID);
+end;
+
+function TwbMainRecord.GetBaseRecordSignature: TwbSignature;
+var
+  BaseRecord: IwbMainRecord;
+begin
+  BaseRecord := GetBaseRecord;
+  if Assigned(BaseRecord) then
+    Result := BaseRecord.Signature
+  else
+    Result := 'NULL';
 end;
 
 function TwbMainRecord.GetCanHaveBaseRecord: Boolean;
@@ -8355,6 +8374,11 @@ begin
   Result := mrLoadOrderFormID;
   if Result.IsNull then
     Result := DoGetLoadOrderFormID;
+end;
+
+function TwbMainRecord.GetMainRecordDef: IwbMainRecordDef;
+begin
+  Result := mrDef;
 end;
 
 function TwbMainRecord.GetMaster: IwbMainRecord;
