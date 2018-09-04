@@ -9313,67 +9313,78 @@ begin
   inherited;
 end;
 
+type
+  PwbMainRecordCollector = ^TwbMainRecordCollector;
+  TwbMainRecordCollector = record
+    mrcMainRecords : TDynMainRecords;
+  end;
+
+var
+  _Collector       : PwbMainRecordCollector;
+  _IgnoreCollector : Boolean;
+
 function TwbMainRecord.Reached: Boolean;
 var
   Signature : TwbSignature;
   i         : Integer;
   IsComplex : Boolean;
-{
-  _File     : IwbFile;
-  Rec       : IwbMainRecord;
-}
-
   SelfRef   : IwbContainerElementRef;
+  Collector : TwbMainRecordCollector;
 begin
   wbTick;
 
   if esReachable in eStates then
     Exit(False);
 
-  SelfRef := Self as IwbContainerElementRef;
-  DoInit(False);
+  if _IgnoreCollector then
+    _IgnoreCollector := False
+  else if Assigned(_Collector) then begin
+    _Collector.mrcMainRecords.Add(Self);
+    Exit(False);
+  end;
 
-  Signature := GetSignature;
-  IsComplex := (Signature = 'DIAL') or (Signature = 'WRLD') or (Signature = 'CELL');
-  if GetIsWinningOverride or IsComplex then begin
-    {if csRefsBuild in cntStates then begin
-      Result := esNotReachable in eStates;
-      Exclude(eStates, esNotReachable);
-      if Result and (Length(mrReferences) > 0) then begin
-        _File := GetFile;
-        for i := Low(mrReferences) to High(mrReferences) do begin
-          Rec := _File.RecordByFormID[mrReferences[i], True];
-          if Assigned(Rec) then
-            (Rec as IwbElementInternal).Reached;
-        end;
+  if not Assigned(_Collector) then
+    _Collector := @Collector;
+
+  try
+    SelfRef := Self as IwbContainerElementRef;
+    DoInit(False);
+
+    Signature := GetSignature;
+    IsComplex := (Signature = 'DIAL') or (Signature = 'WRLD') or (Signature = 'CELL');
+    if GetIsWinningOverride or IsComplex then begin
+      Result := inherited Reached;
+
+      if Result then begin
+        if not Assigned(eContainer) then
+          Exit;
+        if LinksToParent then
+          Exit;
+        if not IsComplex then
+          Exit;
+
+        if Assigned(mrMaster) then
+          (IwbMainRecord(mrMaster) as IwbElementInternal).Reached
+        else
+          for i := 0 to Pred(GetOverrideCount) do
+            (GetOverride(i) as IwbElementInternal).Reached;
+
+        if Assigned(mrGroup) then
+          (mrGroup as IwbElementInternal).Reached;
       end;
-      if LinksToParent then begin
-        if Assigned(eContainer) then
-          (IwbContainer(eContainer) as IwbElementInternal).Reached;
-        Exit;
-      end;
-    end else}
-    Result := inherited Reached;
+    end else
+      Result := (GetWinningOverride as IwbElementInternal).Reached;
 
-    if Result then begin
-      if not Assigned(eContainer) then
-        Exit;
-      if LinksToParent then
-        Exit;
-      if not IsComplex then
-        Exit;
-
-      if Assigned(mrMaster) then
-        (IwbMainRecord(mrMaster) as IwbElementInternal).Reached
-      else
-        for i := 0 to Pred(GetOverrideCount) do
-          (GetOverride(i) as IwbElementInternal).Reached;
-
-      if Assigned(mrGroup) then
-        (mrGroup as IwbElementInternal).Reached;
+    i := 0;
+    while i <= High(Collector.mrcMainRecords) do begin
+      _IgnoreCollector := True;
+      (Collector.mrcMainRecords[i] as IwbElementInternal).Reached;
+      Inc(i);
     end;
-  end else
-    Result := (GetWinningOverride as IwbElementInternal).Reached;
+  finally
+    if _Collector = @Collector then
+      _Collector := nil;
+  end;
 end;
 
 procedure TwbMainRecord.Remove;
