@@ -151,7 +151,8 @@ begin
     with wbRecordDefs[i].rdeDef do begin
       s := DefaultSignature + ' - ' + GetName;
       clbRecordSignatures.Items.Add(s);
-      clbBaseRecordSignatures.Items.Add(s);
+      if ReferenceSignatureCount > 0 then
+        clbBaseRecordSignatures.Items.Add(s);
     end;
   clbRecordSignatures.Sorted := True;
   clbBaseRecordSignatures.Sorted := True;
