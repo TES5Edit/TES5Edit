@@ -937,7 +937,7 @@ type
 
   TwbMainRecord = class(TwbRecord, IwbMainRecord, IwbMainRecordInternal, IwbMainRecordEntry, IwbContainedIn)
   protected
-    mrDef               : IwbRecordDef;
+    mrDef               : IwbMainRecordDef;
     mrLoadOrderFormID   : TwbFormID;
     mrFixedFormID       : TwbFormID;
     mrMaster            : Pointer{IwbMainRecord};
@@ -3034,7 +3034,7 @@ function TwbFile.GetAddList: TDynStrings;
 var
   i, j        : Integer;
   GroupRecord : IwbGroupRecord;
-  RecordDef   : PwbRecordDef;
+  RecordDef   : PwbMainRecordDef;
 begin
   Result := nil;
 
@@ -7499,7 +7499,7 @@ end;
 function TwbMainRecord.GetAddList: TDynStrings;
 var
   i, j      : Integer;
-  RecordDef : PwbRecordDef;
+  RecordDef : PwbMainRecordDef;
 begin
   Result := nil;
 
@@ -8790,7 +8790,7 @@ end;
 
 procedure TwbMainRecord.InitDataPtr;
 var
-  RecordDef : PwbRecordDef;
+  RecordDef : PwbMainRecordDef;
 begin
   if Assigned(dcEndPtr) then begin
     dcDataBasePtr := PByte(dcBasePtr) + wbSizeOfMainRecordStruct;
@@ -12334,7 +12334,7 @@ end;
 
 function TwbGroupRecord.CanCopy: Boolean;
 var
-  RecordDef: PwbRecordDef;
+  RecordDef: PwbMainRecordDef;
 begin
   Result := True;
   if not wbIsInternalEdit then
@@ -12423,7 +12423,7 @@ end;
 function TwbGroupRecord.GetAddList: TDynStrings;
 var
   i, j      : Integer;
-  RecordDef : PwbRecordDef;
+  RecordDef : PwbMainRecordDef;
 begin
   Result := nil;
   case grStruct.grsGroupType of
@@ -12597,7 +12597,7 @@ end;
 
 function TwbGroupRecord.GetShortName: string;
 var
-  RecordDef : PwbRecordDef;
+  RecordDef : PwbMainRecordDef;
 begin
   case grStruct.grsGroupType of
     0: begin

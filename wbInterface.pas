@@ -1246,6 +1246,10 @@ type
 
   TDynMainRecords = TArray<IwbMainRecord>;
 
+  TDynMainRecordsHelper = record helper for TDynMainRecords
+    procedure Add(const aMainRecord: IwbMainRecord);
+  end;
+
   IwbMainRecord = interface(IwbRecord)
     ['{F06FD5E2-621D-4422-BA00-CB3CA72B3691}']
     function GetFormID: TwbFormID;
@@ -1576,7 +1580,7 @@ type
     ['{EF20E1A2-8719-4934-AC36-C91DC72C3F70}']
     function GetDefaultSignature: TwbSignature;
 
-    function GetSignatures(const aIndex: Integer): TwbSignature;
+    function GetSignature(const aIndex: Integer): TwbSignature;
     function GetSignatureCount: Integer;
 
     function CanHandle(aSignature     : TwbSignature;
@@ -1587,7 +1591,7 @@ type
       read GetDefaultSignature;
 
     property Signatures[const aIndex: Integer]: TwbSignature
-      read GetSignatures;
+      read GetSignature;
     property SignatureCount: Integer
       read GetSignatureCount;
   end;
@@ -1596,7 +1600,6 @@ type
 
   IwbStructDef = interface;
 
-  PwbRecordDef = ^IwbRecordDef;
   IwbRecordDef = interface(IwbSignatureDef)
     ['{89FE380F-7A0B-493C-AA9E-08957A4C167B}']
     function ContainsMemberFor(aSignature     : TwbSignature;
@@ -1617,11 +1620,6 @@ type
 
     function GetSkipSignature(const aSignature: TwbSignature): Boolean;
 
-    function GetQuickInitLimit: Integer;
-    function GetContainsEditorID: Boolean;
-    function GetContainsFullName: Boolean;
-    function GetContainsBaseRecord: Boolean;
-
     function GetRecordHeaderStruct: IwbStructDef;
 
     property Members[aIndex: Integer]: IwbRecordMemberDef read GetMember;
@@ -1630,8 +1628,35 @@ type
     property SkipSignature[const aSignature: TwbSignature]: Boolean
       read GetSkipSignature;
 
+    property RecordHeaderStruct: IwbStructDef
+      read GetRecordHeaderStruct;
+  end;
+
+  PwbMainRecordDef = ^IwbMainRecordDef;
+  IwbMainRecordDef = interface(IwbRecordDef)
+    ['{B9559BE2-705B-43BF-A1B2-5B7829F65B53}']
+    function GetIsReference: Boolean;
+
+    function GetQuickInitLimit: Integer;
+
+    function GetContainsEditorID: Boolean;
+    function GetContainsFullName: Boolean;
+    function GetContainsBaseRecord: Boolean;
+
+    function GetBaseSignature(const aIndex: Integer): TwbSignature;
+    function GetBaseSignatureCount: Integer;
+    function IsValidBaseSignature(const aSignature: TwbSignature): Boolean;
+
+    function GetReferenceSignature(const aIndex: Integer): TwbSignature;
+    function GetReferenceSignatureCount: Integer;
+    function IsValidReferenceSignature(const aSignature: TwbSignature): Boolean;
+
+    property IsReference: Boolean
+      read GetIsReference;
+
     property QuickInitLimit: Integer
       read GetQuickInitLimit;
+
     property ContainsEditorID: Boolean
       read GetContainsEditorID;
     property ContainsFullName: Boolean
@@ -1639,8 +1664,15 @@ type
     property ContainsBaseRecord: Boolean
       read GetContainsBaseRecord;
 
-    property RecordHeaderStruct: IwbStructDef
-      read GetRecordHeaderStruct;
+    property BaseSignatures[const aIndex: Integer]: TwbSignature
+      read GetBaseSignature;
+    property BaseSignatureCount: Integer
+      read GetBaseSignatureCount;
+
+    property ReferenceSignatures[const aIndex: Integer]: TwbSignature
+      read GetReferenceSignature;
+    property ReferenceSignatureCount: Integer
+      read GetReferenceSignatureCount;
   end;
 
   IwbHasSortKeyDef = interface(IwbRecordDef)
@@ -1808,11 +1840,6 @@ type
       read GetExpectedLength;
   end;
 
-  IwbInternalIntegerDef = interface(IwbIntegerDef)
-    ['{16A15EF7-6295-4817-BA94-CDD7E8C1CF8B}']
-    procedure ReplaceFormater(const aFormater: IwbIntegerDefFormater);
-  end;
-
   IwbFloatDef = interface(IwbValueDef)
     ['{29F116C6-0208-4D55-ACA7-2A9BB17BF80B}']
   end;
@@ -1956,6 +1983,11 @@ type
 
   IwbFormIDChecked = interface(IwbFormID)
     ['{DC7CBC9F-07EC-430B-94EE-ECE1867A2660}']
+    function IsValid(const aSignature: TwbSignature): Boolean;
+    function IsValidFlst(const aSignature: TwbSignature): Boolean;
+    function CheckFlst(const aMainRecord: IwbMainRecord): Boolean;
+    function IsValidMainRecord(const aMainRecord: IwbMainRecord): Boolean;
+
     function GetSignature(aIndex: Integer): TwbSignature;
     function GetSignatureCount: Integer;
 
@@ -2135,7 +2167,7 @@ function wbRecord(const aSignature      : TwbSignature;
                         aRequired       : Boolean = False;
                         aAfterLoad      : TwbAfterLoadCallback = nil;
                         aAfterSet       : TwbAfterSetCallback = nil)
-                                        : IwbRecordDef; overload;
+                                        : IwbMainRecordDef; overload;
 
 function wbRecord(const aSignature      : TwbSignature;
                   const aName           : string;
@@ -2147,7 +2179,30 @@ function wbRecord(const aSignature      : TwbSignature;
                         aRequired       : Boolean = False;
                         aAfterLoad      : TwbAfterLoadCallback = nil;
                         aAfterSet       : TwbAfterSetCallback = nil)
-                                        : IwbRecordDef; overload;
+                                        : IwbMainRecordDef; overload;
+
+function wbRefRecord(const aSignature      : TwbSignature;
+                     const aName           : string;
+                     const aMembers        : array of IwbRecordMemberDef;
+                           aAllowUnordered : Boolean = False;
+                           aAddInfoCallback: TwbAddInfoCallback = nil;
+                           aPriority       : TwbConflictPriority = cpNormal;
+                           aRequired       : Boolean = False;
+                           aAfterLoad      : TwbAfterLoadCallback = nil;
+                           aAfterSet       : TwbAfterSetCallback = nil)
+                                           : IwbMainRecordDef; overload;
+
+function wbRefRecord(const aSignature      : TwbSignature;
+                     const aName           : string;
+                     const aRecordFlags    : IwbIntegerDefFormater;
+                     const aMembers        : array of IwbRecordMemberDef;
+                           aAllowUnordered : Boolean = False;
+                           aAddInfoCallback: TwbAddInfoCallback = nil;
+                           aPriority       : TwbConflictPriority = cpNormal;
+                           aRequired       : Boolean = False;
+                           aAfterLoad      : TwbAfterLoadCallback = nil;
+                           aAfterSet       : TwbAfterSetCallback = nil)
+                                           : IwbMainRecordDef; overload;
 
 function wbSubRecord(const aSignature : TwbSignature;
                      const aName      : string;
@@ -2161,7 +2216,7 @@ function wbSubRecord(const aSignature : TwbSignature;
                            aGetCP     : TwbGetConflictPriority = nil)
                                       : IwbSubRecordDef; overload;
 
-function wbSubRecord(const aSignatures : array of TwbSignature;
+function wbSubRecord(const aSignatures : TwbSignatures;
                      const aName       : string;
                      const aValue      : IwbValueDef;
                            aAfterLoad  : TwbAfterLoadCallback = nil;
@@ -3005,7 +3060,7 @@ function wbStructSK(const aSignature           : TwbSignature;
                           aGetCP               : TwbGetConflictPriority = nil)
                                                : IwbSubRecordDef; overload;
 
-function wbMultiStructSK(const aSignatures          : array of TwbSignature;
+function wbMultiStructSK(const aSignatures          : TwbSignatures;
                          const aSortKey             : array of Integer;
                          const aName                : string;
                          const aMembers             : array of IwbValueDef;
@@ -3115,7 +3170,7 @@ function wbStructLZ(const aName                : string;
 
 function wbRStruct(const aName           : string;
                    const aMembers        : array of IwbRecordMemberDef;
-                   const aSkipSigs       : array of TwbSignature;
+                   const aSkipSigs       : TwbSignatures;
                          aPriority       : TwbConflictPriority = cpNormal;
                          aRequired       : Boolean = False;
                          aDontShow       : TwbDontShowCallback = nil;
@@ -3128,7 +3183,7 @@ function wbRStruct(const aName           : string;
 function wbRStructSK(const aSortKey        : array of Integer;
                      const aName           : string;
                      const aMembers        : array of IwbRecordMemberDef;
-                     const aSkipSigs       : array of TwbSignature;
+                     const aSkipSigs       : TwbSignatures;
                            aPriority       : TwbConflictPriority = cpNormal;
                            aRequired       : Boolean = False;
                            aDontShow       : TwbDontShowCallback = nil;
@@ -3142,7 +3197,7 @@ function wbRStructExSK(const aSortKey        : array of Integer;
                        const aExSortKey      : array of Integer;
                        const aName           : string;
                        const aMembers        : array of IwbRecordMemberDef;
-                       const aSkipSigs       : array of TwbSignature;
+                       const aSkipSigs       : TwbSignatures;
                              aPriority       : TwbConflictPriority = cpNormal;
                              aRequired       : Boolean = False;
                              aDontShow       : TwbDontShowCallback = nil;
@@ -3154,7 +3209,7 @@ function wbRStructExSK(const aSortKey        : array of Integer;
 
 function wbRUnion(const aName     : string;
                   const aMembers  : array of IwbRecordMemberDef;
-                  const aSkipSigs : array of TwbSignature;
+                  const aSkipSigs : TwbSignatures;
                         aPriority : TwbConflictPriority = cpNormal;
                         aRequired : Boolean = False;
                         aDontShow : TwbDontShowCallback = nil;
@@ -3184,7 +3239,7 @@ function wbStructS(const aName        : string;
 function wbRStructS(const aName        : string;
                     const aElementName : string;
                     const aMembers     : array of IwbRecordMemberDef;
-                    const aSkipSigs    : array of TwbSignature;
+                    const aSkipSigs    : TwbSignatures;
                           aPriority    : TwbConflictPriority = cpNormal;
                           aRequired    : Boolean = False;
                           aDontShow    : TwbDontShowCallback = nil;
@@ -3195,7 +3250,7 @@ function wbRStructsSK(const aName        : string;
                       const aElementName : string;
                       const aSortKey     : array of Integer;
                       const aMembers     : array of IwbRecordMemberDef;
-                      const aSkipSigs    : array of TwbSignature;
+                      const aSkipSigs    : TwbSignatures;
                             aPriority    : TwbConflictPriority = cpNormal;
                             aRequired    : Boolean = False;
                             aAfterLoad   : TwbAfterLoadCallback = nil;
@@ -3248,21 +3303,21 @@ function wbData6Key2Enum(const aNames : array of string)
 
 function wbFormID: IwbFormID; overload;
 
-function wbFormID(const aValidRefs : array of TwbSignature;
+function wbFormID(const aValidRefs : TwbSignatures;
                         aPersistent: Boolean)
                                    : IwbFormID; overload;
 
-function wbFormIDNoReach(const aValidRefs  : array of TwbSignature;
+function wbFormIDNoReach(const aValidRefs  : TwbSignatures;
                                aPersistent : Boolean)
                                            : IwbFormID; overload;
 
-function wbFormID(const aValidRefs     : array of TwbSignature;
-                  const aValidFlstRefs : array of TwbSignature;
+function wbFormID(const aValidRefs     : TwbSignatures;
+                  const aValidFlstRefs : TwbSignatures;
                         aPersistent    : Boolean)
                                        : IwbFormID; overload;
 
-function wbFormIDNoReach(const aValidRefs     : array of TwbSignature;
-                         const aValidFlstRefs : array of TwbSignature;
+function wbFormIDNoReach(const aValidRefs     : TwbSignatures;
+                         const aValidFlstRefs : TwbSignatures;
                                aPersistent    : Boolean)
                                               : IwbFormID; overload;
 
@@ -3291,7 +3346,7 @@ function wbFormIDT(const aName      : string;
 
 function wbFormIDCk(const aSignature : TwbSignature;
                     const aName      : string;
-                    const aValidRefs : array of TwbSignature;
+                    const aValidRefs : TwbSignatures;
                           aPersistent: Boolean = False;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
@@ -3301,7 +3356,7 @@ function wbFormIDCk(const aSignature : TwbSignature;
 
 function wbFormIDCkNoReach(const aSignature : TwbSignature;
                            const aName      : string;
-                           const aValidRefs : array of TwbSignature;
+                           const aValidRefs : TwbSignatures;
                                  aPersistent: Boolean = False;
                                  aPriority  : TwbConflictPriority = cpNormal;
                                  aRequired  : Boolean = False;
@@ -3310,7 +3365,7 @@ function wbFormIDCkNoReach(const aSignature : TwbSignature;
                                             : IwbSubRecordDef; overload;
 
 function wbFormIDCk(const aName      : string;
-                    const aValidRefs : array of TwbSignature;
+                    const aValidRefs : TwbSignatures;
                           aPersistent: Boolean = False;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
@@ -3319,7 +3374,7 @@ function wbFormIDCk(const aName      : string;
                                      : IwbIntegerDef; overload;
 
 function wbFormIDCkNoReach(const aName      : string;
-                           const aValidRefs : array of TwbSignature;
+                           const aValidRefs : TwbSignatures;
                                  aPersistent: Boolean = False;
                                  aPriority  : TwbConflictPriority = cpNormal;
                                  aRequired  : Boolean = False;
@@ -3329,8 +3384,8 @@ function wbFormIDCkNoReach(const aName      : string;
 
 function wbFormIDCk(const aSignature     : TwbSignature;
                     const aName          : string;
-                    const aValidRefs     : array of TwbSignature;
-                    const aValidFlstRefs : array of TwbSignature;
+                    const aValidRefs     : TwbSignatures;
+                    const aValidFlstRefs : TwbSignatures;
                           aPersistent    : Boolean = False;
                           aPriority      : TwbConflictPriority = cpNormal;
                           aRequired      : Boolean = False;
@@ -3339,8 +3394,8 @@ function wbFormIDCk(const aSignature     : TwbSignature;
                                          : IwbSubRecordDef; overload;
 
 function wbFormIDCk(const aName          : string;
-                    const aValidRefs     : array of TwbSignature;
-                    const aValidFlstRefs : array of TwbSignature;
+                    const aValidRefs     : TwbSignatures;
+                    const aValidFlstRefs : TwbSignatures;
                           aPersistent    : Boolean = False;
                           aPriority      : TwbConflictPriority = cpNormal;
                           aRequired      : Boolean = False;
@@ -3349,8 +3404,8 @@ function wbFormIDCk(const aName          : string;
                                          : IwbIntegerDef; overload;
 
 function wbFormIDCkNoReach(const aName          : string;
-                           const aValidRefs     : array of TwbSignature;
-                           const aValidFlstRefs : array of TwbSignature;
+                           const aValidRefs     : TwbSignatures;
+                           const aValidFlstRefs : TwbSignatures;
                                  aPersistent    : Boolean = False;
                                  aPriority      : TwbConflictPriority = cpNormal;
                                  aRequired      : Boolean = False;
@@ -3415,17 +3470,24 @@ type
   TwbRecordDefEntry = record
     rdeSignature : TwbSignature;
     rdeHash      : Integer;
-    rdeDef       : IwbRecordDef;
+    rdeDef       : IwbMainRecordDef;
     rdeNext      : Integer;
   end;
 
   TwbRecordDefEntries = array of TwbRecordDefEntry;
+
+  TwbMainRecordDefs = TArray<IwbMainRecordDef>;
+
+  TwbMainRecordDefsHelper = record helper for TwbMainRecordDefs
+    procedure Add(const aMainRecordDef: IwbMainRecordDef);
+  end;
 
 const
   RecordDefHashMapSize = 1546;
 
 var
   wbRecordDefs       : TwbRecordDefEntries;
+  wbRefRecordDefs    : TwbMainRecordDefs;
   wbRecordDefHashMap : array[0..Pred(RecordDefHashMapSize)] of Integer;
 
   wbIgnoreRecords    : TStringList;
@@ -3597,6 +3659,7 @@ function GetElementFromUnion(const aElement: IwbElement): IwbElement;
 
 var
   wbHeaderSignature   : TwbSignature = 'TES4';
+  wbNullSignature     : TwbSignature = #0#0#0#0;
   wbFileMagic         : TwbFileMagic;
   wbFilePlugins       : String = 'Master Files';
   wbUseFalsePlugins   : Boolean = False;
@@ -3622,11 +3685,11 @@ function wbReadInteger24(aBasePtr: pointer): Int64;
 procedure InitializeRefIDArray(anArray: TwbRefIDArray);
 
 function wbFindRecordDef(const aSignature : TwbSignature;
-                           out aRecordDef : PwbRecordDef)
+                           out aRecordDef : PwbMainRecordDef)
                                           : Boolean; overload;
 
 function wbFindRecordDef(const aSignature : AnsiString;
-                           out aRecordDef : PwbRecordDef)
+                           out aRecordDef : PwbMainRecordDef)
                                           : Boolean; overload;
 
 function _wbRecordDefMap: TStringList;
@@ -3667,6 +3730,16 @@ uses
   TypInfo,
   wbSort,
   wbLocalization;
+
+type
+  IwbIntegerDefInternal = interface(IwbIntegerDef)
+    ['{16A15EF7-6295-4817-BA94-CDD7E8C1CF8B}']
+    procedure ReplaceFormater(const aFormater: IwbIntegerDefFormater);
+  end;
+
+  IwbMainRecordDefInternal = interface(IwbMainRecordDef)
+    ['{4EC86F13-A1B7-4FDF-B073-84DC6FA00158}']
+  end;
 
 function wbCanOverwrite(const aTarget, aSource: IwbElement): TwbCanOverwriteAction;
 begin
@@ -4363,7 +4436,7 @@ type
                        aGetCP     : TwbGetConflictPriority); overload;
     constructor Create(aPriority   : TwbConflictPriority;
                        aRequired   : Boolean;
-                 const aSignatures : array of TwbSignature;
+                 const aSignatures : TwbSignatures;
                  const aName       : string;
                        aAfterLoad  : TwbAfterLoadCallback;
                        aAfterSet   : TwbAfterSetCallback;
@@ -4373,7 +4446,7 @@ type
     {---IwbSignatureDef---}
     function GetDefaultSignature: TwbSignature;
 
-    function GetSignatures(const aIndex: Integer): TwbSignature;
+    function GetSignature(const aIndex: Integer): TwbSignature;
     function GetSignatureCount: Integer;
 
     function CanHandle(aSignature     : TwbSignature;
@@ -4386,11 +4459,12 @@ type
     rdfCanContainFormIDs,
     rdfContainsEditorID,
     rdfContainsFullName,
-    rdfContainsBaseRecord
+    rdfContainsBaseRecord,
+    rdfIsReference
   );
   TwbRecordDefFlags = set of TwbRecordDefFlag;
 
-  TwbRecordDef = class(TwbSignatureDef, IwbRecordDef)
+  TwbMainRecordDef = class(TwbSignatureDef, IwbRecordDef, IwbMainRecordDef, IwbMainRecordDefInternal)
   private
     recRecordFlags        : IwbIntegerDefFormater;
     recRecordHeaderStruct : IwbStructDef;
@@ -4399,6 +4473,10 @@ type
     recAddInfoCallback    : TwbAddInfoCallback;
     recQuickInitLimit     : Integer;
     recDefFlags           : TwbRecordDefFlags;
+    recBaseRecordFormID   : IwbFormIDChecked;
+    recReferences         : TStringList;
+
+    procedure recBuildReferences;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority        : TwbConflictPriority;
@@ -4410,7 +4488,8 @@ type
                        aAllowUnordered  : Boolean;
                        aAddInfoCallback : TwbAddInfoCallback;
                        aAfterLoad       : TwbAfterLoadCallback;
-                       aAfterSet        : TwbAfterSetCallback);
+                       aAfterSet        : TwbAfterSetCallback;
+                       aIsReference     : Boolean);
     destructor Destroy; override;
 
     {---IwbDef---}
@@ -4435,13 +4514,26 @@ type
     function GetMemberCount: Integer;
     function CanContainFormIDs: Boolean; override;
     function GetSkipSignature(const aSignature: TwbSignature): Boolean; virtual;
+    function GetRecordHeaderStruct: IwbStructDef;
+
+    procedure AfterLoad(const aElement: IwbElement); override;
+
+    {--- IwbMainRecordDef ---}
+    function GetIsReference: Boolean;
+
     function GetQuickInitLimit: Integer;
     function GetContainsEditorID: Boolean;
     function GetContainsFullName: Boolean;
     function GetContainsBaseRecord: Boolean;
-    function GetRecordHeaderStruct: IwbStructDef;
 
-    procedure AfterLoad(const aElement: IwbElement); override;
+    function GetBaseSignature(const aIndex: Integer): TwbSignature;
+    function GetBaseSignatureCount: Integer;
+    function IsValidBaseSignature(const aSignature: TwbSignature): Boolean;
+
+    function GetReferenceSignature(const aIndex: Integer): TwbSignature;
+    function GetReferenceSignatureCount: Integer;
+    function IsValidReferenceSignature(const aSignature: TwbSignature): Boolean;
+    {--- IwbMainRecordDefInternal ---}
   end;
 
   TwbSubRecordDef = class(TwbSignatureDef, IwbRecordMemberDef, IwbSubRecordDef)
@@ -4464,7 +4556,7 @@ type
                        aGetCP     : TwbGetConflictPriority); overload;
     constructor Create(aPriority   : TwbConflictPriority;
                        aRequired   : Boolean;
-                 const aSignatures : array of TwbSignature;
+                 const aSignatures : TwbSignatures;
                  const aName       : string;
                  const aValue      : IwbValueDef;
                        aAfterLoad  : TwbAfterLoadCallback;
@@ -4524,7 +4616,7 @@ type
     {---IwbSignatureDef---}
     function GetDefaultSignature: TwbSignature;
 
-    function GetSignatures(const aIndex: Integer): TwbSignature;
+    function GetSignature(const aIndex: Integer): TwbSignature;
     function GetSignatureCount: Integer;
 
     function CanHandle(aSignature     : TwbSignature;
@@ -4552,7 +4644,7 @@ type
                        aRequired       : Boolean;
                  const aName           : string;
                  const aMembers        : array of IwbRecordMemberDef;
-                 const aSkipSigs       : array of TwbSignature;
+                 const aSkipSigs       : TwbSignatures;
                        aDontShow       : TwbDontShowCallback;
                        aAllowUnordered : Boolean;
                        aAfterLoad      : TwbAfterLoadCallback;
@@ -4573,7 +4665,7 @@ type
     {---IwbSignatureDef---}
     function GetDefaultSignature: TwbSignature;
 
-    function GetSignatures(const aIndex: Integer): TwbSignature;
+    function GetSignature(const aIndex: Integer): TwbSignature;
     function GetSignatureCount: Integer;
 
     function CanHandle(aSignature     : TwbSignature;
@@ -4599,10 +4691,6 @@ type
     function GetMember(aIndex: Integer): IwbRecordMemberDef;
     function GetMemberCount: Integer;
     function GetSkipSignature(const aSignature: TwbSignature): Boolean; virtual;
-    function GetQuickInitLimit: Integer; virtual;
-    function GetContainsEditorID: Boolean;
-    function GetContainsFullName: Boolean;
-    function GetContainsBaseRecord: Boolean;
     function GetRecordHeaderStruct: IwbStructDef;
   end;
 
@@ -4618,7 +4706,7 @@ type
                        aRequired : Boolean;
                  const aName     : string;
                  const aMembers  : array of IwbRecordMemberDef;
-                 const aSkipSigs : array of TwbSignature;
+                 const aSkipSigs : TwbSignatures;
                        aDontShow : TwbDontShowCallback;
                        aGetCP    : TwbGetConflictPriority);
     destructor Destroy; override;
@@ -4633,7 +4721,7 @@ type
     {---IwbSignatureDef---}
     function GetDefaultSignature: TwbSignature;
 
-    function GetSignatures(const aIndex: Integer): TwbSignature;
+    function GetSignature(const aIndex: Integer): TwbSignature;
     function GetSignatureCount: Integer;
 
     function CanHandle(aSignature     : TwbSignature;
@@ -4659,10 +4747,6 @@ type
     function GetMember(aIndex: Integer): IwbRecordMemberDef;
     function GetMemberCount: Integer;
     function GetSkipSignature(const aSignature: TwbSignature): Boolean; virtual;
-    function GetQuickInitLimit: Integer; virtual;
-    function GetContainsEditorID: Boolean;
-    function GetContainsFullName: Boolean;
-    function GetContainsBaseRecord: Boolean;
     function GetRecordHeaderStruct: IwbStructDef;
   end;
 
@@ -4678,7 +4762,7 @@ type
                        aRequired       : Boolean;
                  const aName           : string;
                  const aMembers        : array of IwbRecordMemberDef;
-                 const aSkipSigs       : array of TwbSignature;
+                 const aSkipSigs       : TwbSignatures;
                  const aSortKey        : array of Integer;
                  const aExSortKey      : array of Integer;
                        aDontShow       : TwbDontShowCallback;
@@ -5020,7 +5104,7 @@ type
     function GetSorted: Boolean;
   end;
 
-  TwbIntegerDef = class(TwbValueDef, IwbIntegerDef, IwbInternalIntegerDef)
+  TwbIntegerDef = class(TwbValueDef, IwbIntegerDef, IwbIntegerDefInternal)
   private
     inType     : TwbIntType;
     inFormater : IwbIntegerDefFormater;
@@ -5079,7 +5163,7 @@ type
     function GetIntType: TwbIntType;
     function GetExpectedLength(aValue: Int64 = 0): Integer;
 
-    {---IwbInternalIntegerDef---}
+    {---IwbIntegerDefInternal---}
     procedure ReplaceFormater(const aFormater: IwbIntegerDefFormater);
   end;
 
@@ -5433,16 +5517,16 @@ type
 
   TwbFormIDChecked = class(TwbFormIDDefFormater, IwbFormIDChecked)
   protected {private}
-    fidcValidRefsArr     : array of TwbSignature;
+    fidcValidRefsArr     : TwbSignatures;
     fidcValidRefs        : TStringList;
-    fidcValidFlstRefsArr : array of TwbSignature;
+    fidcValidFlstRefsArr : TwbSignatures;
     fidcValidFlstRefs    : TStringList;
     fidcPersistent       : Boolean;
     fidcNoReach          : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(const aValidRefs     : array of TwbSignature;
-                       const aValidFlstRefs : array of TwbSignature;
+    constructor Create(const aValidRefs     : TwbSignatures;
+                       const aValidFlstRefs : TwbSignatures;
                              aPersistent    : Boolean;
                              aNoReach       : Boolean = False);
     destructor Destroy; override;
@@ -5727,7 +5811,7 @@ function wbRecord(const aSignature       : TwbSignature;
                         aRequired        : Boolean = False;
                         aAfterLoad       : TwbAfterLoadCallback = nil;
                         aAfterSet        : TwbAfterSetCallback = nil)
-                                         : IwbRecordDef;
+                                         : IwbMainRecordDef;
 begin
   Result := wbRecord(aSignature, aName, nil, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet);
 end;
@@ -5736,13 +5820,14 @@ function wbRecord(const aSignature       : TwbSignature;
                   const aName            : string;
                   const aRecordFlags     : IwbIntegerDefFormater;
                   const aMembers         : array of IwbRecordMemberDef;
-                        aAllowUnordered  : Boolean = False;
-                        aAddInfoCallback : TwbAddInfoCallback = nil;
-                        aPriority        : TwbConflictPriority = cpNormal;
-                        aRequired        : Boolean = False;
-                        aAfterLoad       : TwbAfterLoadCallback = nil;
-                        aAfterSet        : TwbAfterSetCallback = nil)
-                                         : IwbRecordDef;
+                        aAllowUnordered  : Boolean;
+                        aAddInfoCallback : TwbAddInfoCallback;
+                        aPriority        : TwbConflictPriority;
+                        aRequired        : Boolean;
+                        aAfterLoad       : TwbAfterLoadCallback;
+                        aAfterSet        : TwbAfterSetCallback;
+                        aIsReference     : Boolean)
+                                         : IwbMainRecordDef; overload;
 var
   Hash     : Integer;
   Index    : Integer;
@@ -5763,7 +5848,7 @@ begin
     end;
   end;
 
-  Result := TwbRecordDef.Create(aPriority, aRequired, aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aAfterLoad, aAfterSet);
+  Result := TwbMainRecordDef.Create(aPriority, aRequired, aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aAfterLoad, aAfterSet, aIsReference);
   NewIndex := Length(wbRecordDefs);
   SetLength(wbRecordDefs, Succ(NewIndex));
   with wbRecordDefs[NewIndex] do begin
@@ -5773,6 +5858,51 @@ begin
     rdeNext := Index;
   end;
   wbRecordDefHashMap[Hash] := Succ(NewIndex);
+end;
+
+function wbRecord(const aSignature       : TwbSignature;
+                  const aName            : string;
+                  const aRecordFlags     : IwbIntegerDefFormater;
+                  const aMembers         : array of IwbRecordMemberDef;
+                        aAllowUnordered  : Boolean = False;
+                        aAddInfoCallback : TwbAddInfoCallback = nil;
+                        aPriority        : TwbConflictPriority = cpNormal;
+                        aRequired        : Boolean = False;
+                        aAfterLoad       : TwbAfterLoadCallback = nil;
+                        aAfterSet        : TwbAfterSetCallback = nil)
+                                         : IwbMainRecordDef;
+begin
+  Result := wbRecord(aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet, False);
+end;
+
+function wbRefRecord(const aSignature       : TwbSignature;
+                     const aName            : string;
+                     const aMembers         : array of IwbRecordMemberDef;
+                           aAllowUnordered  : Boolean = False;
+                           aAddInfoCallback : TwbAddInfoCallback = nil;
+                           aPriority        : TwbConflictPriority = cpNormal;
+                           aRequired        : Boolean = False;
+                           aAfterLoad       : TwbAfterLoadCallback = nil;
+                           aAfterSet        : TwbAfterSetCallback = nil)
+                                            : IwbMainRecordDef;
+begin
+  Result := wbRefRecord(aSignature, aName, nil, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet);
+end;
+
+function wbRefRecord(const aSignature       : TwbSignature;
+                     const aName            : string;
+                     const aRecordFlags     : IwbIntegerDefFormater;
+                     const aMembers         : array of IwbRecordMemberDef;
+                           aAllowUnordered  : Boolean = False;
+                           aAddInfoCallback : TwbAddInfoCallback = nil;
+                           aPriority        : TwbConflictPriority = cpNormal;
+                           aRequired        : Boolean = False;
+                           aAfterLoad       : TwbAfterLoadCallback = nil;
+                           aAfterSet        : TwbAfterSetCallback = nil)
+                                            : IwbMainRecordDef;
+begin
+  Result := wbRecord(aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet, True);
+  wbRefRecordDefs.Add(Result);
 end;
 
 function wbSubRecord(const aSignature : TwbSignature;
@@ -5790,7 +5920,7 @@ begin
   Result := TwbSubRecordDef.Create(aPriority, aRequired, aSignature, aName, aValue, aAfterLoad, aAfterSet, aSizeMatch, aDontShow, aGetCP);
 end;
 
-function wbSubRecord(const aSignatures : array of TwbSignature;
+function wbSubRecord(const aSignatures : TwbSignatures;
                      const aName       : string;
                      const aValue      : IwbValueDef;
                            aAfterLoad  : TwbAfterLoadCallback = nil; aAfterSet: TwbAfterSetCallback = nil;
@@ -6858,7 +6988,7 @@ begin
   Result := wbSubRecord(aSignature, aName, wbStructSK(aSortKey, '', aMembers, aPriority, False, nil, aOptionalFromElement), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbMultiStructSK(const aSignatures          : array of TwbSignature;
+function wbMultiStructSK(const aSignatures          : TwbSignatures;
                          const aSortKey             : array of Integer;
                          const aName                : string;
                          const aMembers             : array of IwbValueDef;
@@ -7029,7 +7159,7 @@ end;
 
 function wbRStruct(const aName           : string;
                    const aMembers        : array of IwbRecordMemberDef;
-                   const aSkipSigs       : array of TwbSignature;
+                   const aSkipSigs       : TwbSignatures;
                          aPriority       : TwbConflictPriority = cpNormal;
                          aRequired       : Boolean = False;
                          aDontShow       : TwbDontShowCallback = nil;
@@ -7045,7 +7175,7 @@ end;
 function wbRStructSK(const aSortKey        : array of Integer;
                      const aName           : string;
                      const aMembers        : array of IwbRecordMemberDef;
-                     const aSkipSigs       : array of TwbSignature;
+                     const aSkipSigs       : TwbSignatures;
                            aPriority       : TwbConflictPriority = cpNormal;
                            aRequired       : Boolean = False;
                            aDontShow       : TwbDontShowCallback = nil;
@@ -7062,7 +7192,7 @@ function wbRStructExSK(const aSortKey        : array of Integer;
                        const aExSortKey      : array of Integer;
                        const aName           : string;
                        const aMembers        : array of IwbRecordMemberDef;
-                       const aSkipSigs       : array of TwbSignature;
+                       const aSkipSigs       : TwbSignatures;
                              aPriority       : TwbConflictPriority = cpNormal;
                              aRequired       : Boolean = False;
                              aDontShow       : TwbDontShowCallback = nil;
@@ -7077,7 +7207,7 @@ end;
 
 function wbRUnion(const aName     : string;
                   const aMembers  : array of IwbRecordMemberDef;
-                  const aSkipSigs : array of TwbSignature;
+                  const aSkipSigs : TwbSignatures;
                         aPriority : TwbConflictPriority = cpNormal;
                         aRequired : Boolean = False;
                         aDontShow : TwbDontShowCallback = nil;
@@ -7116,7 +7246,7 @@ end;
 function wbRStructS(const aName        : string;
                     const aElementName : string;
                     const aMembers     : array of IwbRecordMemberDef;
-                    const aSkipSigs    : array of TwbSignature;
+                    const aSkipSigs    : TwbSignatures;
                           aPriority    : TwbConflictPriority = cpNormal;
                           aRequired    : Boolean = False;
                           aDontShow    : TwbDontShowCallback = nil;
@@ -7130,7 +7260,7 @@ function wbRStructsSK(const aName        : string;
                       const aElementName : string;
                       const aSortKey     : array of Integer;
                       const aMembers     : array of IwbRecordMemberDef;
-                      const aSkipSigs    : array of TwbSignature;
+                      const aSkipSigs    : TwbSignatures;
                             aPriority    : TwbConflictPriority = cpNormal;
                             aRequired    : Boolean = False;
                             aAfterLoad   : TwbAfterLoadCallback = nil;
@@ -7229,30 +7359,30 @@ begin
   end;
 end;
 
-function wbFormID(const aValidRefs : array of TwbSignature;
+function wbFormID(const aValidRefs : TwbSignatures;
                         aPersistent: Boolean)
                                    : IwbFormID;
 begin
   Result := TwbFormIDChecked.Create(aValidRefs, [], aPersistent);
 end;
 
-function wbFormID(const aValidRefs     : array of TwbSignature;
-                  const aValidFlstRefs : array of TwbSignature;
+function wbFormID(const aValidRefs     : TwbSignatures;
+                  const aValidFlstRefs : TwbSignatures;
                         aPersistent    : Boolean)
                                        : IwbFormID;
 begin
   Result := TwbFormIDChecked.Create(aValidRefs, aValidFlstRefs, aPersistent);
 end;
 
-function wbFormIDNoReach(const aValidRefs : array of TwbSignature;
+function wbFormIDNoReach(const aValidRefs : TwbSignatures;
                                aPersistent: Boolean)
                                           : IwbFormID;
 begin
   Result := TwbFormIDChecked.Create(aValidRefs, [], aPersistent, True);
 end;
 
-function wbFormIDNoReach(const aValidRefs     : array of TwbSignature;
-                         const aValidFlstRefs : array of TwbSignature;
+function wbFormIDNoReach(const aValidRefs     : TwbSignatures;
+                         const aValidFlstRefs : TwbSignatures;
                                aPersistent    : Boolean)
                                               : IwbFormID;
 begin
@@ -7315,7 +7445,7 @@ end;
 
 function wbFormIDCk(const aSignature : TwbSignature;
                     const aName      : string;
-                    const aValidRefs : array of TwbSignature;
+                    const aValidRefs : TwbSignatures;
                           aPersistent: Boolean = False;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
@@ -7328,7 +7458,7 @@ end;
 
 function wbFormIDCkNoReach(const aSignature : TwbSignature;
                            const aName      : string;
-                           const aValidRefs : array of TwbSignature;
+                           const aValidRefs : TwbSignatures;
                                  aPersistent: Boolean = False;
                                  aPriority  : TwbConflictPriority = cpNormal;
                                  aRequired  : Boolean = False;
@@ -7340,7 +7470,7 @@ begin
 end;
 
 function wbFormIDCk(const aName      : string;
-                    const aValidRefs : array of TwbSignature;
+                    const aValidRefs : TwbSignatures;
                           aPersistent: Boolean = False;
                           aPriority  : TwbConflictPriority = cpNormal;
                           aRequired  : Boolean = False;
@@ -7352,7 +7482,7 @@ begin
 end;
 
 function wbFormIDCkNoReach(const aName      : string;
-                           const aValidRefs : array of TwbSignature;
+                           const aValidRefs : TwbSignatures;
                                  aPersistent: Boolean = False;
                                  aPriority  : TwbConflictPriority = cpNormal;
                                  aRequired  : Boolean = False;
@@ -7366,8 +7496,8 @@ end;
 
 function wbFormIDCk(const aSignature     : TwbSignature;
                     const aName          : string;
-                    const aValidRefs     : array of TwbSignature;
-                    const aValidFlstRefs : array of TwbSignature;
+                    const aValidRefs     : TwbSignatures;
+                    const aValidFlstRefs : TwbSignatures;
                           aPersistent    : Boolean = False;
                           aPriority      : TwbConflictPriority = cpNormal;
                           aRequired      : Boolean = False;
@@ -7379,8 +7509,8 @@ begin
 end;
 
 function wbFormIDCk(const aName          : string;
-                    const aValidRefs     : array of TwbSignature;
-                    const aValidFlstRefs : array of TwbSignature;
+                    const aValidRefs     : TwbSignatures;
+                    const aValidFlstRefs : TwbSignatures;
                           aPersistent    : Boolean = False;
                           aPriority      : TwbConflictPriority = cpNormal;
                           aRequired      : Boolean = False;
@@ -7392,8 +7522,8 @@ begin
 end;
 
 function wbFormIDCkNoReach(const aName          : string;
-                           const aValidRefs     : array of TwbSignature;
-                           const aValidFlstRefs : array of TwbSignature;
+                           const aValidRefs     : TwbSignatures;
+                           const aValidFlstRefs : TwbSignatures;
                                  aPersistent    : Boolean = False;
                                  aPriority      : TwbConflictPriority = cpNormal;
                                  aRequired      : Boolean = False;
@@ -7873,7 +8003,7 @@ end;
 
 constructor TwbSignatureDef.Create(aPriority   : TwbConflictPriority;
                                    aRequired   : Boolean;
-                             const aSignatures : array of TwbSignature;
+                             const aSignatures : TwbSignatures;
                              const aName       : string;
                                    aAfterLoad  : TwbAfterLoadCallback;
                                    aAfterSet   : TwbAfterSetCallback;
@@ -7900,14 +8030,14 @@ begin
   Result := Length(soSignatures);
 end;
 
-function TwbSignatureDef.GetSignatures(const aIndex: Integer): TwbSignature;
+function TwbSignatureDef.GetSignature(const aIndex: Integer): TwbSignature;
 begin
   Result := soSignatures[aIndex];
 end;
 
-{ TwbRecordDef }
+{ TwbMainRecordDef }
 
-function TwbRecordDef.AdditionalInfoFor(const aMainRecord: IwbMainRecord): string;
+function TwbMainRecordDef.AdditionalInfoFor(const aMainRecord: IwbMainRecord): string;
 begin
   if (wbCopyIsRunning = 0) and Assigned(recAddInfoCallback) then
     Result := recAddInfoCallback(aMainRecord)
@@ -7915,7 +8045,7 @@ begin
     Result := '';
 end;
 
-procedure TwbRecordDef.AfterLoad(const aElement: IwbElement);
+procedure TwbMainRecordDef.AfterLoad(const aElement: IwbElement);
 var
   Found     : Boolean;
   Container : IwbContainerElementRef;
@@ -7940,24 +8070,24 @@ begin
   end;
 end;
 
-function TwbRecordDef.AllowUnordered: Boolean;
+function TwbMainRecordDef.AllowUnordered: Boolean;
 begin
   Result := rdfAllowUnordered in recDefFlags;
 end;
 
-function TwbRecordDef.CanContainFormIDs: Boolean;
+function TwbMainRecordDef.CanContainFormIDs: Boolean;
 begin
   Result := rdfCanContainFormIDs in recDefFlags;
 end;
 
-constructor TwbRecordDef.Clone(const aSource: TwbDef);
+constructor TwbMainRecordDef.Clone(const aSource: TwbDef);
 begin
-  with aSource as TwbRecordDef do
+  with aSource as TwbMainRecordDef do
     Self.Create(defPriority, defRequired, GetDefaultSignature, noName, recRecordFlags, recMembers,
-      AllowUnordered, recAddInfoCallback, noAfterLoad, noAfterSet).AfterClone(aSource);
+      AllowUnordered, recAddInfoCallback, noAfterLoad, noAfterSet, rdfIsReference in recDefFlags).AfterClone(aSource);
 end;
 
-function TwbRecordDef.ContainsMemberFor(aSignature     : TwbSignature;
+function TwbMainRecordDef.ContainsMemberFor(aSignature     : TwbSignature;
                                   const aDataContainer : IwbDataContainer)
                                                        : Boolean;
 var
@@ -7966,20 +8096,26 @@ begin
   Result := recSignatures.Find(aSignature, Dummy);
 end;
 
-constructor TwbRecordDef.Create(aPriority        : TwbConflictPriority;
-                                aRequired        : Boolean;
-                          const aSignature       : TwbSignature;
-                          const aName            : string;
-                          const aRecordFlags     : IwbIntegerDefFormater;
-                          const aMembers         : array of IwbRecordMemberDef;
-                                aAllowUnordered  : Boolean;
-                                aAddInfoCallback : TwbAddInfoCallback;
-                                aAfterLoad       : TwbAfterLoadCallback;
-                                aAfterSet        : TwbAfterSetCallback);
+constructor TwbMainRecordDef.Create(aPriority        : TwbConflictPriority;
+                                    aRequired        : Boolean;
+                              const aSignature       : TwbSignature;
+                              const aName            : string;
+                              const aRecordFlags     : IwbIntegerDefFormater;
+                              const aMembers         : array of IwbRecordMemberDef;
+                                    aAllowUnordered  : Boolean;
+                                    aAddInfoCallback : TwbAddInfoCallback;
+                                    aAfterLoad       : TwbAfterLoadCallback;
+                                    aAfterSet        : TwbAfterSetCallback;
+                                    aIsReference     : Boolean);
 var
   i, j : Integer;
   Sig  : TwbSignature;
+  sRec : IwbSubRecordDef;
+  iDef : IwbIntegerDef;
 begin
+  if aIsReference then
+    Include(recDefFlags, rdfIsReference);
+
   recRecordFlags := aRecordFlags;
   recQuickInitLimit := -1;
   if aAllowUnordered then
@@ -7989,7 +8125,7 @@ begin
 
   if Assigned(recRecordFlags) and Assigned(wbRecordFlags) and Assigned(wbMainRecordHeader) then begin
     recRecordHeaderStruct := (wbMainRecordHeader as IwbDefInternal).SetParent(Self, True) as IwbStructDef;
-    (recRecordHeaderStruct.MembersByName[wbRecordFlags.Name] as IwbInternalIntegerDef).ReplaceFormater(recRecordFlags);
+    (recRecordHeaderStruct.MembersByName[wbRecordFlags.Name] as IwbIntegerDefInternal).ReplaceFormater(recRecordFlags);
   end;
 
   recSignatures := TwbFastStringListCS.CreateSorted(dupAccept);
@@ -8007,19 +8143,7 @@ begin
          (Sig = 'FULL') or
          (
            (Sig = 'NAME') and
-           (
-             (aSignature = 'REFR') or
-             (aSignature = 'ACHR') or
-             (aSignature = 'ACRE') or
-             (aSignature = 'PGRE') or
-             (aSignature = 'PMIS') or
-             (aSignature = 'PARW') or {>>> Skyrim <<<}
-             (aSignature = 'PBEA') or {>>> Skyrim <<<}
-             (aSignature = 'PFLA') or {>>> Skyrim <<<}
-             (aSignature = 'PCON') or {>>> Skyrim <<<}
-             (aSignature = 'PBAR') or {>>> Skyrim <<<}
-             (aSignature = 'PHZD')    {>>> Skyrim <<<}
-           )
+           (rdfIsReference in recDefFlags)
          ) then begin
 
         recQuickInitLimit := i;
@@ -8027,8 +8151,17 @@ begin
           Include(recDefFlags, rdfContainsEditorID);
         if Sig = 'FULL' then
           Include(recDefFlags, rdfContainsFullName);
-        if Sig = 'NAME' then
+        if Sig = 'NAME' then begin
           Include(recDefFlags, rdfContainsBaseRecord);
+          if not Supports(aMembers[i], IwbSubRecordDef, sRec) then
+            Assert(False);
+          if not Supports(sRec.Value, IwbIntegerDef, iDef) then
+            Assert(False);
+          if iDef.FormaterCanChange then
+            Assert(False);
+          if not Supports(iDef.Formater[nil], IwbFormIDChecked, recBaseRecordFormID) then
+            Assert(False);
+        end;
       end;
       try
         recSignatures.AddObject(Sig, Pointer(i) );
@@ -8039,20 +8172,23 @@ begin
     end;
   end;
 
+  if aIsReference and not Assigned(recBaseRecordFormID) then
+    raise Exception.Create('Reference MainRecord must have BaseRecordFormID');
+
   inherited Create(aPriority, aRequired, aSignature, aName, aAfterLoad, aAfterSet, nil, nil);
 end;
 
-function TwbRecordDef.GetMember(aIndex: Integer): IwbRecordMemberDef;
+function TwbMainRecordDef.GetMember(aIndex: Integer): IwbRecordMemberDef;
 begin
   Result := recMembers[aIndex];
 end;
 
-function TwbRecordDef.GetMemberCount: Integer;
+function TwbMainRecordDef.GetMemberCount: Integer;
 begin
   Result := Length(recMembers);
 end;
 
-function TwbRecordDef.GetMemberFor(aSignature     : TwbSignature;
+function TwbMainRecordDef.GetMemberFor(aSignature     : TwbSignature;
                              const aDataContainer : IwbDataContainer)
                                                   : IwbRecordMemberDef;
 var
@@ -8064,7 +8200,7 @@ begin
     Result := nil;
 end;
 
-function TwbRecordDef.GetMemberIndexFor(aSignature     : TwbSignature;
+function TwbMainRecordDef.GetMemberIndexFor(aSignature     : TwbSignature;
                                   const aDataContainer : IwbDataContainer)
                                                        : Integer;
 var
@@ -8076,12 +8212,12 @@ begin
     Result := -1;
 end;
 
-function TwbRecordDef.GetQuickInitLimit: Integer;
+function TwbMainRecordDef.GetQuickInitLimit: Integer;
 begin
   Result := recQuickInitLimit;
 end;
 
-function TwbRecordDef.GetRecordHeaderStruct: IwbStructDef;
+function TwbMainRecordDef.GetRecordHeaderStruct: IwbStructDef;
 begin
   if Assigned(recRecordHeaderStruct) then
     Result := recRecordHeaderStruct
@@ -8089,12 +8225,53 @@ begin
     Result := wbMainRecordHeader;
 end;
 
-function TwbRecordDef.GetSkipSignature(const aSignature: TwbSignature): Boolean;
+function TwbMainRecordDef.GetReferenceSignature(const aIndex: Integer): TwbSignature;
+begin
+  recBuildReferences;
+  Result := StrToSignature(recReferences[aIndex]);
+end;
+
+function TwbMainRecordDef.GetReferenceSignatureCount: Integer;
+begin
+  recBuildReferences;
+  Result := recReferences.Count;
+end;
+
+function TwbMainRecordDef.GetSkipSignature(const aSignature: TwbSignature): Boolean;
 begin
   Result := False;
 end;
 
-procedure TwbRecordDef.Report(const aParents: TwbDefPath);
+function TwbMainRecordDef.IsValidBaseSignature(const aSignature: TwbSignature): Boolean;
+begin
+  Result := Assigned(recBaseRecordFormID) and recBaseRecordFormID.IsValid(aSignature);
+end;
+
+function TwbMainRecordDef.IsValidReferenceSignature(const aSignature: TwbSignature): Boolean;
+var
+  Dummy: Integer;
+begin
+  recBuildReferences;
+  Result := recReferences.Find(aSignature, Dummy);
+end;
+
+procedure TwbMainRecordDef.recBuildReferences;
+var
+  i: Integer;
+begin
+  if Assigned(recReferences) then
+    Exit;
+
+  recReferences := TStringList.Create;
+  recReferences.Sorted := True;
+  recReferences.Duplicates := dupIgnore;
+
+  for i := Low(wbRefRecordDefs) to High(wbRefRecordDefs) do
+    if wbRefRecordDefs[i].IsValidBaseSignature(soSignatures[0]) then
+      recReferences.Add(wbRefRecordDefs[i].DefaultSignature);
+end;
+
+procedure TwbMainRecordDef.Report(const aParents: TwbDefPath);
 var
   Parents : TwbDefPath;
   i       : Integer;
@@ -8115,35 +8292,57 @@ begin
   defReported := True;
 end;
 
-destructor TwbRecordDef.Destroy;
+destructor TwbMainRecordDef.Destroy;
 begin
   inherited;
   FreeAndNil(recSignatures);
+  FreeAndNil(recReferences);
 end;
 
-function TwbRecordDef.GetContainsBaseRecord: Boolean;
+function TwbMainRecordDef.GetBaseSignature(const aIndex: Integer): TwbSignature;
+begin
+  if Assigned(recBaseRecordFormID) then
+    Result := recBaseRecordFormID.Signatures[aIndex]
+  else
+    raise Exception.Create('Invalid index');
+end;
+
+function TwbMainRecordDef.GetBaseSignatureCount: Integer;
+begin
+  if Assigned(recBaseRecordFormID) then
+    Result := recBaseRecordFormID.SignatureCount
+  else
+    Result := 0;
+end;
+
+function TwbMainRecordDef.GetContainsBaseRecord: Boolean;
 begin
   Result := rdfContainsBaseRecord in recDefFlags;
 end;
 
-function TwbRecordDef.GetContainsEditorID: Boolean;
+function TwbMainRecordDef.GetContainsEditorID: Boolean;
 begin
   Result := rdfContainsEditorID in recDefFlags;
 end;
 
-function TwbRecordDef.GetContainsFullName: Boolean;
+function TwbMainRecordDef.GetContainsFullName: Boolean;
 begin
   Result := rdfContainsFullName in recDefFlags;
 end;
 
-function TwbRecordDef.GetDefType: TwbDefType;
+function TwbMainRecordDef.GetDefType: TwbDefType;
 begin
   Result := dtRecord;
 end;
 
-function TwbRecordDef.GetDefTypeName: string;
+function TwbMainRecordDef.GetDefTypeName: string;
 begin
   Result := 'Record';
+end;
+
+function TwbMainRecordDef.GetIsReference: Boolean;
+begin
+  Result := rdfIsReference in recDefFlags;
 end;
 
 { TwbSubRecordDef }
@@ -8197,7 +8396,7 @@ end;
 
 constructor TwbSubRecordDef.Create(aPriority   : TwbConflictPriority;
                                    aRequired   : Boolean;
-                             const aSignatures : array of TwbSignature;
+                             const aSignatures : TwbSignatures;
                              const aName       : string;
                              const aValue      : IwbValueDef;
                                    aAfterLoad  : TwbAfterLoadCallback;
@@ -8352,9 +8551,9 @@ begin
   Result := sraElement.GetSignatureCount;
 end;
 
-function TwbSubRecordArrayDef.GetSignatures(const aIndex: Integer): TwbSignature;
+function TwbSubRecordArrayDef.GetSignature(const aIndex: Integer): TwbSignature;
 begin
-  Result := sraElement.GetSignatures(aIndex);
+  Result := sraElement.GetSignature(aIndex);
 end;
 
 function TwbSubRecordArrayDef.GetSorted(const aContainer: IwbContainer): Boolean;
@@ -8476,7 +8675,7 @@ end;
 
 constructor TwbSubRecordStructDef.Clone(const aSource: TwbDef);
 var
-  SkipSigs : array of TwbSignature;
+  SkipSigs : TwbSignatures;
   i        : Integer;
 begin
   with aSource as TwbSubRecordStructDef do begin
@@ -8502,7 +8701,7 @@ constructor TwbSubRecordStructDef.Create(aPriority       : TwbConflictPriority;
                                          aRequired       : Boolean;
                                    const aName           : string;
                                    const aMembers        : array of IwbRecordMemberDef;
-                                   const aSkipSigs       : array of TwbSignature;
+                                   const aSkipSigs       : TwbSignatures;
                                          aDontShow       : TwbDontShowCallback;
                                          aAllowUnordered : Boolean;
                                          aAfterLoad      : TwbAfterLoadCallback;
@@ -8588,29 +8787,9 @@ begin
     Result := -1;
 end;
 
-function TwbSubRecordStructDef.GetQuickInitLimit: Integer;
-begin
-  Result := -1;
-end;
-
 function TwbSubRecordStructDef.GetRecordHeaderStruct: IwbStructDef;
 begin
   Result := wbMainRecordHeader;
-end;
-
-function TwbSubRecordStructDef.GetContainsBaseRecord: Boolean;
-begin
-  Result := False;
-end;
-
-function TwbSubRecordStructDef.GetContainsEditorID: Boolean;
-begin
-  Result := False;
-end;
-
-function TwbSubRecordStructDef.GetContainsFullName: Boolean;
-begin
-  Result := False;
 end;
 
 function TwbSubRecordStructDef.GetDefaultSignature: TwbSignature;
@@ -8626,12 +8805,12 @@ begin
     Result := srsMembers[0].GetSignatureCount;
 end;
 
-function TwbSubRecordStructDef.GetSignatures(const aIndex: Integer): TwbSignature;
+function TwbSubRecordStructDef.GetSignature(const aIndex: Integer): TwbSignature;
 begin
   if srsAllowUnordered then
     Result := StrToSignature(srsSignatures[aIndex])
   else
-    Result := srsMembers[0].GetSignatures(aIndex);
+    Result := srsMembers[0].GetSignature(aIndex);
 end;
 
 function TwbSubRecordStructDef.GetSkipSignature(const aSignature: TwbSignature): Boolean;
@@ -8729,7 +8908,7 @@ end;
 
 constructor TwbSubRecordUnionDef.Clone(const aSource: TwbDef);
 var
-  SkipSigs : array of TwbSignature;
+  SkipSigs : TwbSignatures;
   i        : Integer;
 begin
   with aSource as TwbSubRecordUnionDef do begin
@@ -8753,7 +8932,7 @@ constructor TwbSubRecordUnionDef.Create(aPriority : TwbConflictPriority;
                                         aRequired : Boolean;
                                   const aName     : string;
                                   const aMembers  : array of IwbRecordMemberDef;
-                                  const aSkipSigs : array of TwbSignature;
+                                  const aSkipSigs : TwbSignatures;
                                         aDontShow : TwbDontShowCallback;
                                         aGetCP    : TwbGetConflictPriority);
 var
@@ -8782,21 +8961,6 @@ destructor TwbSubRecordUnionDef.Destroy;
 begin
   inherited;
   FreeAndNil(sruSignatures);
-end;
-
-function TwbSubRecordUnionDef.GetContainsBaseRecord: Boolean;
-begin
-  Result := False;
-end;
-
-function TwbSubRecordUnionDef.GetContainsEditorID: Boolean;
-begin
-  Result := False;
-end;
-
-function TwbSubRecordUnionDef.GetContainsFullName: Boolean;
-begin
-  Result := False;
 end;
 
 function TwbSubRecordUnionDef.GetDefaultSignature: TwbSignature;
@@ -8854,11 +9018,6 @@ begin
   end;
 end;
 
-function TwbSubRecordUnionDef.GetQuickInitLimit: Integer;
-begin
-  Result := -1;
-end;
-
 function TwbSubRecordUnionDef.GetRecordHeaderStruct: IwbStructDef;
 begin
   Result := wbMainRecordHeader;
@@ -8873,7 +9032,7 @@ begin
     Inc(Result, sruMembers[i].GetSignatureCount);
 end;
 
-function TwbSubRecordUnionDef.GetSignatures(const aIndex: Integer): TwbSignature;
+function TwbSubRecordUnionDef.GetSignature(const aIndex: Integer): TwbSignature;
 var
   i, j, k: Integer;
 begin
@@ -8884,7 +9043,7 @@ begin
       if j >= k then
         Dec(j, k)
       else begin
-        Result := sruMembers[i].GetSignatures(Pred(k));
+        Result := sruMembers[i].GetSignature(Pred(k));
         Exit;
       end;
     end;
@@ -13616,7 +13775,7 @@ end;
 
 constructor TwbSubRecordStructSKDef.Clone(const aSource: TwbDef);
 var
-  SkipSigs : array of TwbSignature;
+  SkipSigs : TwbSignatures;
   i        : Integer;
 begin
   with aSource as TwbSubRecordStructSKDef do begin
@@ -13633,7 +13792,7 @@ constructor TwbSubRecordStructSKDef.Create(aPriority       : TwbConflictPriority
                                            aRequired       : Boolean;
                                      const aName           : string;
                                      const aMembers        : array of IwbRecordMemberDef;
-                                     const aSkipSigs       : array of TwbSignature;
+                                     const aSkipSigs       : TwbSignatures;
                                      const aSortKey        : array of Integer;
                                      const aExSortKey      : array of Integer;
                                            aDontShow       : TwbDontShowCallback;
@@ -13803,8 +13962,8 @@ begin
     Self.Create(fidcValidRefsArr, fidcValidFlstRefsArr, fidcPersistent, fidcNoReach).AfterClone(aSource);
 end;
 
-constructor TwbFormIDChecked.Create(const aValidRefs     : array of TwbSignature;
-                                    const aValidFlstRefs : array of TwbSignature;
+constructor TwbFormIDChecked.Create(const aValidRefs     : TwbSignatures;
+                                    const aValidFlstRefs : TwbSignatures;
                                           aPersistent    : Boolean;
                                           aNoReach       : Boolean);
 var
@@ -15689,7 +15848,7 @@ begin
 end;
 
 function wbFindRecordDef(const aSignature : TwbSignature;
-                           out aRecordDef : PwbRecordDef)
+                           out aRecordDef : PwbMainRecordDef)
                                           : Boolean;
 var
   Hash     : Integer;
@@ -15717,7 +15876,7 @@ begin
 end;
 
 function wbFindRecordDef(const aSignature : AnsiString;
-                           out aRecordDef : PwbRecordDef)
+                           out aRecordDef : PwbMainRecordDef)
                                           : Boolean;
 begin
   Result := (Length(aSignature) = 4) and
@@ -16258,6 +16417,28 @@ begin
   SetLength(Result, Length(Self));
   for i := Low(Self) to High(Self) do
     Result[i] := Self[i].ToString;
+end;
+
+{ TwbRecordDefsHelper }
+
+procedure TwbMainRecordDefsHelper.Add(const aMainRecordDef: IwbMainRecordDef);
+var
+  Len: Integer;
+begin
+  Len := Length(Self);
+  SetLength(Self, Succ(Len));
+  Self[Len] := aMainRecordDef;
+end;
+
+{ TDynMainRecordsHelper }
+
+procedure TDynMainRecordsHelper.Add(const aMainRecord: IwbMainRecord);
+var
+  Len: Integer;
+begin
+  Len := Length(Self);
+  SetLength(Self, Succ(Len));
+  Self[Len] := aMainRecord;
 end;
 
 initialization

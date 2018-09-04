@@ -6027,7 +6027,7 @@ end;
 procedure DefineTES5b;
 begin
 
-  wbRecord(ACHR, 'Placed NPC',
+  wbRefRecord(ACHR, 'Placed NPC',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Starts Dead',
       {0x00000400} 10, 'Persistent',
@@ -7160,7 +7160,7 @@ procedure DefineTES5c;
 
   procedure ReferenceRecord(aSignature: TwbSignature; const aName: string);
   begin
-    wbRecord(aSignature, aName,
+    wbRefRecord(aSignature, aName,
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00000080}  7, 'Turn Off Fire',
         {0x00000400} 10, 'Persistent',
@@ -12511,7 +12511,7 @@ begin
   ], False, nil, cpNormal, False, wbRACEAfterLoad, wbRACEAfterSet);
 
 
-  wbRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
+  wbRefRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
@@ -13897,6 +13897,7 @@ begin
       ]), 0, cpNormal, True)
     ], [], cpNormal, True)
   ]);
+
   wbRecord(SCPT, 'SCPT', [
     wbEDID
   ]);
