@@ -3759,31 +3759,9 @@ begin
   ]);
 
   wbRecord(LTEX, 'Landscape Texture', [
-    wbEDID,
-    wbICON,
-    wbStruct(HNAM, 'Havok Data', [
-      wbInteger('Material Type', itU8, wbEnum([
-        {00} 'STONE',
-        {01} 'CLOTH',
-        {02} 'DIRT',
-        {03} 'GLASS',
-        {04} 'GRASS',
-        {05} 'METAL',
-        {06} 'ORGANIC',
-        {07} 'SKIN',
-        {08} 'WATER',
-        {09} 'WOOD',
-        {10} 'HEAVY STONE',
-        {11} 'HEAVY METAL',
-        {12} 'HEAVY WOOD',
-        {13} 'CHAIN',
-        {14} 'SNOW'
-      ]), cpNormal, True, nil, nil, 2),
-      wbInteger('Friction', itU8, nil, cpNormal, True, nil, nil, 30),
-      wbInteger('Restitution', itU8, nil, cpNormal, True, nil, nil, 30)
-    ], cpNormal, True),
-    wbInteger(SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True, False, nil, nil, 30),
-    wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
+    wbString(NAME, 'NameID'),
+    wbInteger(INTV, 'Landscape ID Number', itU32),
+    wbString(DATA, 'FileName')
   ]);
 
   wbRecord(LVLC, 'Leveled Creature', [
