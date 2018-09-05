@@ -140,6 +140,7 @@ const
   INFO : TwbSignature = 'INFO';
   INGR : TwbSignature = 'INGR';
   INTV : TwbSignature = 'INTV'; { Morrowind }
+  ITEX : TwbSignature = 'ITEX'; { Morrowind }
   JNAM : TwbSignature = 'JNAM';
   KEYM : TwbSignature = 'KEYM';
   KFFZ : TwbSignature = 'KFFZ';
@@ -155,6 +156,7 @@ const
   LVLO : TwbSignature = 'LVLO';
   LVSP : TwbSignature = 'LVSP';
   MAST : TwbSignature = 'MAST';
+  MCDT : TwbSignature = 'MCDT'; { Morrowind }
   MGEF : TwbSignature = 'MGEF';
   MISC : TwbSignature = 'MISC';
   MNAM : TwbSignature = 'MNAM';
@@ -3934,30 +3936,17 @@ begin
   ], False, nil, cpNormal, False, wbMGEFAfterLoad);
 
   wbRecord(MISC, 'Misc. Item', [
-    wbEDID,
-    wbFULL,
-    wbMODL,
-    wbICON,
-    wbSCRI,
-    wbStruct(DATA, '', [
-      wbUnion('', wbMISCActorValueDecider, [
-        wbInteger('Value', itS32),
-        wbFormIDCk('Actor Value', [ACVA])
-      ]),
-      wbUnion('', wbMISCActorValueDecider, [
-        wbFloat('Weight'),
-        wbInteger('Group', itU32, wbEnum([], [
-          $40E00000, ' [NONE]',
-          $40400000, 'AI',
-          $00000000, 'Attribute',
-          $40C00000, 'Combat',
-          $40A00000, 'Misc',
-          $40000000, 'Skill',
-          $40800000, 'Social',
-          $3F800000, 'Stat'
-        ]))
-      ])
-    ], cpNormal, True)
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(FNAM, 'Item Name'),
+    wbStruct(MCDT, '', [
+      wbFloat('Weight'),
+      wbInteger('Value', itU32),
+      wbInteger('Unknown', itS32)
+    ]),
+    wbString(SCRI, 'Script ID'),
+    wbString(ITEX, 'Iventory Icon Filename'),
+    wbString(ENAM, 'EnchantID')
   ]);
 
   wbFaceGen := wbRStruct('FaceGen Data', [
