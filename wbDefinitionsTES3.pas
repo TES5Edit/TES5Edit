@@ -59,6 +59,11 @@ const
   ACRE : TwbSignature = 'ACRE';
   TRGT : TwbSignature = 'TRGT';
   ACTI : TwbSignature = 'ACTI';
+  AI_A : TwbSignature = 'AI'#$5F'A'; { Morrowind }
+  AI_E : TwbSignature = 'AI'#$5F'E'; { Morrowind }
+  AI_F : TwbSignature = 'AI'#$5F'F'; { Morrowind }
+  AI_T : TwbSignature = 'AI'#$5F'T'; { Morrowind }
+  AI_W : TwbSignature = 'AI'#$5F'W'; { Morrowind }
   AIDT : TwbSignature = 'AIDT';
   ALCH : TwbSignature = 'ALCH';
   AMMO : TwbSignature = 'AMMO';
@@ -98,6 +103,7 @@ const
   DESC : TwbSignature = 'DESC'; { Morrowind }
   DIAL : TwbSignature = 'DIAL';
   DNAM : TwbSignature = 'DNAM';
+  DODT : TwbSignature = 'DODT'; { Morrowind }
   DOOR : TwbSignature = 'DOOR';
   EDID : TwbSignature = 'EDID';
   EDDX : TwbSignature = 'EDDX';
@@ -146,6 +152,7 @@ const
   JNAM : TwbSignature = 'JNAM';
   KEYM : TwbSignature = 'KEYM';
   KFFZ : TwbSignature = 'KFFZ';
+  KNAM : TwbSignature = 'KNAM'; { Morrowind }
   LAND : TwbSignature = 'LAND';
   LIGH : TwbSignature = 'LIGH';
   LNAM : TwbSignature = 'LNAM';
@@ -183,6 +190,8 @@ const
   NIFZ : TwbSignature = 'NIFZ';
   NPC_ : TwbSignature = 'NPC_';
   NPCO : TwbSignature = 'NPCO'; { Morrowind }
+  NPCS : TwbSignature = 'NPCS'; { Morrowind }
+  NPDT : TwbSignature = 'NPDT'; { Morrowind }
   OFST : TwbSignature = 'OFST';
   OBME : TwbSignature = 'OBME';
   ONAM : TwbSignature = 'ONAM';
@@ -656,6 +665,16 @@ begin
         'f': Result := 2;
       end;
   end;
+end;
+
+function wbNPCDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  SubRecord: IwbSubRecord;
+begin
+  Result := 0;
+  if Assigned(aElement) and Supports(aElement.Container, IwbSubRecord, SubRecord) then
+    if SubRecord.SubRecordHeaderSize = 12 then
+      Result := 1;
 end;
 
 function wbGLOBUnionDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -3968,111 +3987,149 @@ begin
   ], [], cpNormal, True);
 
   wbRecord(NPC_, 'Non-Player Character', [
-    wbEDID,
-    wbFULL,
-    wbMODL,
-    wbStruct(ACBS, 'Configuration', [
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(FNAM, 'NPC Name'),
+    wbString(RNAM, 'Race Name', 0, cpNormal, True),
+    wbString(CNAM, 'Class name'),
+    wbString(ANAM, 'Faction name', 0, cpNormal, True),
+    wbString(BNAM, 'Head model', 0, cpNormal, True),
+    wbString(KNAM, 'Hair model', 0, cpNormal, True),
+    wbString(SCRI, 'ScriptID'),
+    wbStruct(NPDT, 'NPC Data', [
+      wbUnion('Data', wbNPCDataDecider, [
+        wbStruct('Data 52', [
+          wbInteger('Level', itU16),
+          wbInteger('Strength', itU8),
+          wbInteger('Intelligence', itU8),
+          wbInteger('Willpower', itU8),
+          wbInteger('Agility', itU8),
+          wbInteger('Speed', itU8),
+          wbInteger('Endurance', itU8),
+          wbInteger('Personality', itU8),
+          wbInteger('Luck', itU8),
+          wbArray('Skills', wbInteger('Value', itU8), 27),
+          wbInteger('Reputation', itU8),
+          wbInteger('Health', itU16),
+          wbInteger('SpellPts', itU16),
+          wbInteger('Fatigue', itU16),
+          wbInteger('Disposition', itU8),
+          wbInteger('FactionID', itU8),
+          wbInteger('Rank', itU8),
+          wbInteger('Unknown1', itU8),
+          wbInteger('Gold', itU32)
+        ]),
+        wbStruct('Data 12', [
+          wbInteger('Level', itU16),
+          wbInteger('Disposition', itU8),
+          wbInteger('FactionID', itU8),
+          wbInteger('Rank', itU8),
+          wbInteger('Unknown1', itU8),
+          wbInteger('Unknown2', itU8),
+          wbInteger('Unknown3', itU8),
+          wbInteger('Gold', itU32)
+        ])
+      ])
+    ]),
+    wbStruct(FLAG, 'NPC Flags', [
       wbInteger('Flags', itU32, wbFlags([
         {0x000001} 'Female',
         {0x000002} 'Essential',
-        {0x000004} '',
-        {0x000008} 'Respawn',
-        {0x000010} 'Auto-calc stats',
-        {0x000020} '',
-        {0x000040} '',
-        {0x000080} 'PC Level Offset',
-        {0x000100} '',
-        {0x000200} 'No Low Level Processing',
-        {0x000400} '',
-        {0x000800} '',
-        {0x001000} '',
-        {0x002000} 'No Rumors',
-        {0x004000} 'Summonable',
-        {0x008000} 'No Persuasion',
-        {0x010000} '',
-        {0x020000} '',
-        {0x040000} '',
-        {0x080000} '',
-        {0x100000} 'Can Corpse Check'
-      ])),
-      wbInteger('Base spell points', itU16),
-      wbInteger('Fatigue', itU16),
-      wbInteger('Barter gold', itU16),
-      wbInteger('Level (offset)', itS16),
-      wbInteger('Calc min', itU16),
-      wbInteger('Calc max', itU16)
-    ], cpNormal, True),
-    wbRArrayS('Factions',
-      wbStructSK(SNAM, [0], 'Faction', [
-        wbFormIDCk('Faction', [FACT]),
-        wbInteger('Rank', itU8),
-        wbByteArray('Unused', 3)
+        {0x000004} 'Respawn',
+        {0x000008} 'None',
+        {0x000010} 'Autocalc',
+        {0x000020} 'Blood Skel',
+        {0x000040} 'Blood Metal'
+      ]))
+    ]),
+    wbRArray('NPC Items',
+      wbStruct(NPCO, 'Item', [
+        wbInteger('Count', itU32),
+        wbString('Name', 32)
       ])
     ),
-    wbFormIDCk(INAM, 'Death item', [LVLI]),
-    wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True),
-    wbCNTOs,
-    wbSPLOs,
-    wbSCRI,
-    wbStruct(AIDT, 'AI Data', [
-      wbInteger('Aggression', itU8),
-      wbInteger('Confidence', itU8),
-      wbInteger('Energy Level', itU8),
-      wbInteger('Responsibility', itU8),
-      wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
-      wbInteger('Teaches', itS8, wbSkillEnum),
-      wbInteger('Maximum training level', itU8),
-      wbByteArray('Unused', 2)
-    ], cpNormal, True),
-    wbRArray('AI Packages', wbFormIDCk(PKID, 'AI Package', [PACK])),
-    wbArrayS(KFFZ, 'Animations', wbString('Animation')),
-    wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
-    wbStruct(DATA, 'Stats', [
-      wbInteger('Armorer', itU8),
-      wbInteger('Athletics', itU8),
-      wbInteger('Blade', itU8),
-      wbInteger('Block', itU8),
-      wbInteger('Blunt', itU8),
-      wbInteger('Hand to Hand', itU8),
-      wbInteger('Heavy Armor', itU8),
-      wbInteger('Alchemy', itU8),
-      wbInteger('Alteration', itU8),
-      wbInteger('Conjuration', itU8),
-      wbInteger('Destruction', itU8),
-      wbInteger('Illusion', itU8),
-      wbInteger('Mysticism', itU8),
-      wbInteger('Restoration', itU8),
-      wbInteger('Acrobatics', itU8),
-      wbInteger('Light Armor', itU8),
-      wbInteger('Marksman', itU8),
-      wbInteger('Mercantile', itU8),
-      wbInteger('Security', itU8),
-      wbInteger('Sneak', itU8),
-      wbInteger('Speechcraft', itU8),
-      wbInteger('Health', itU16),
-      wbByteArray('Unused', 2),
-      wbInteger('Strength', itU8),
-      wbInteger('Intelligence', itU8),
-      wbInteger('Willpower', itU8),
-      wbInteger('Agility', itU8),
-      wbInteger('Speed', itU8),
-      wbInteger('Endurance', itU8),
-      wbInteger('Personality', itU8),
-      wbInteger('Luck', itU8)
-    ], cpNormal, True),
-    wbFormIDCk(HNAM, 'Hair', [HAIR]),
-    wbFloat(LNAM, 'Hair length'),
-    wbArray(ENAM, 'Eyes', wbFormIDCk('Eyes', [EYES])),
-    wbStruct(HCLR, 'Hair color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbByteArray('Unused', 1)
-    ], cpNormal, True),
-    wbFormIDCk(ZNAM, 'Combat Style', [CSTY]),
-    wbFaceGen,
-    wbByteArray(FNAM, 'Unknown', 0, cpBenign)
-  ], True);
+    wbRArray('NPC Spell',
+      wbStruct(NPCS, 'Spell', [
+        wbString('Name', 32)
+      ])
+    ),
+    wbStruct(AIDT, 'AI data', [
+      wbInteger('Hello', itU8),
+      wbInteger('Unknown1', itU8),
+      wbInteger('Fight', itU8),
+      wbInteger('Flee)', itU8),
+      wbInteger('Alarm', itU8),
+      wbInteger('Unknown2', itU8),
+      wbInteger('Unknown3', itU8),
+      wbInteger('Unknown4', itU8),
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001} 'Weapon',
+        {0x00000002} 'Armor',
+        {0x00000004} 'Clothing',
+        {0x00000008} 'Books',
+        {0x00000010} 'Ingrediant',
+        {0x00000020} 'Picks',
+        {0x00000040} 'Probes',
+        {0x00000080} 'Lights',
+        {0x00000100} 'Apparatus',
+        {0x00000200} 'Repair',
+        {0x00000400} 'Misc',
+        {0x00000800} 'Spells',
+        {0x00001000} 'Magic Items',
+        {0x00002000} 'Potions',
+        {0x00004000} 'Training',
+        {0x00008000} 'Spellmaking',
+        {0x00010000} 'Enchanting',
+        {0x00020000} 'Repair Item',
+        {0x00040000} 'Unknown 19',
+        {0x00080000} 'Unknown 20'
+      ]))
+    ]),
+    wbStruct(AI_W, 'AI Wander', [
+      wbInteger('Distance', itU16),
+      wbInteger('Duration', itU16),
+      wbInteger('TimeOfDay', itU8),
+      wbInteger('Idle', itU8),
+      wbInteger('Unknown', itU8)
+    ]),
+    wbStruct(AI_T, 'AI Travel', [
+      wbFloat('X'),
+      wbFloat('Y'),
+      wbFloat('Z'),
+      wbInteger('Unknown', itU32)
+    ]),
+    wbStruct(AI_F, 'AI Follow', [
+      wbFloat('X'),
+      wbFloat('Y'),
+      wbFloat('Z'),
+      wbInteger('Duration', itU16),
+      wbString('ID', 32),
+      wbInteger('Unknown', itU16)
+    ]),
+    wbStruct(AI_E, 'AI Escort', [
+      wbFloat('X'),
+      wbFloat('Y'),
+      wbFloat('Z'),
+      wbInteger('Duration', itU16),
+      wbString('ID', 32),
+      wbInteger('Unknown', itU16)
+    ]),
+    wbString(CNDT, 'Cell escort/follow to'),
+    wbStruct(AI_A, 'AI Activate', [
+      wbString('ID', 32),
+      wbInteger('Unknown', itU8)
+    ]),
+    wbStruct(DODT, 'Cell Travel Destination', [
+      wbFloat('XPos'),
+      wbFloat('YPos'),
+      wbFloat('ZPos'),
+      wbFloat('XRot'),
+      wbFloat('YRot'),
+      wbFloat('ZRot')
+    ]),
+    wbString(DNAM, 'Cell escort/follow to'),
+    wbFloat(XSCL, 'Scale')
+  ]);
 
   wbPKDTFlags := wbFlags([
           {0x00000001} 'Offers services',
