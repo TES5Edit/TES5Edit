@@ -543,7 +543,7 @@ end;
 
 procedure ProfileHeader(aFormat: TExportFormat; Pass: TwbExportPass);
 var
-  RecordDef : PwbRecordDef;
+  RecordDef : PwbMainRecordDef;
   Profile   : String;
 begin
   Profile := '';
@@ -561,7 +561,7 @@ end;
 procedure ProfileArray(aFormat: TExportFormat; Pass: TwbExportPass);
 var
   i         : Integer;
-  RecordDef : PwbRecordDef;
+  RecordDef : PwbMainRecordDef;
   Profile   : String;
 begin
   case wbToolSource of
