@@ -221,15 +221,16 @@ const
   RPLI : TwbSignature = 'RPLI';
   SBSP : TwbSignature = 'SBSP';
   SCDA : TwbSignature = 'SCDA';
-  SCHD : TwbSignature = 'SCHD';
+  SCDT : TwbSignature = 'SCDT'; { Morrowind }
+  SCHD : TwbSignature = 'SCHD'; { Morrowind }
   SCHR : TwbSignature = 'SCHR';
   SCIT : TwbSignature = 'SCIT';
-  SCPT : TwbSignature = 'SCPT';
+  SCPT : TwbSignature = 'SCPT'; { Morrowind }
   SCRI : TwbSignature = 'SCRI';
   SCRO : TwbSignature = 'SCRO';
   SCRV : TwbSignature = 'SCRV';
-  SCTX : TwbSignature = 'SCTX';
-  SCVR : TwbSignature = 'SCVR';
+  SCTX : TwbSignature = 'SCTX'; { Morrowind }
+  SCVR : TwbSignature = 'SCVR'; { Morrowind }
   SGST : TwbSignature = 'SGST';
   SKIL : TwbSignature = 'SKIL';
   SLCP : TwbSignature = 'SLCP';
@@ -4609,16 +4610,17 @@ begin
   ]);
 
   wbRecord(SCPT, 'Script', [
-    wbEDID,
-    wbByteArray(SCHD, 'Unknown (Script Header?)'),
-    wbSCHR,
-    wbByteArray(SCDA, 'Compiled Script'),
-    wbStringScript(SCTX, 'Script Source', 0, cpNormal, True),
-    wbRArrayS('Local Variables', wbRStructSK([0], 'Local Variable', [
-      wbSLSD,
-      wbString(SCVR, 'Name', 0, cpCritical)
-    ], [])),
-    wbSCROs
+    wbStruct(SCHD, 'Script Header', [
+      wbString('Name', 32),
+      wbInteger('NumShorts', itS32),
+      wbInteger('NumLongs', itS32),
+      wbInteger('NumFloats', itS32),
+      wbInteger('ScriptDataSize', itS32),
+      wbInteger('LocalVarSize', itS32)
+    ]),
+    wbArray(SCVR, 'Script Variables', wbString('Script Variables')),
+    wbByteArray(SCDT, 'Compiled Script'),
+    wbStringScript(SCTX, 'Script Source', 0, cpNormal, True)
   ]);
 
   wbRecord(SGST, 'Sigil Stone', [
