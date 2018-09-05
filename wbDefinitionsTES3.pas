@@ -226,6 +226,7 @@ const
   SCDT : TwbSignature = 'SCDT'; { Morrowind }
   SCHD : TwbSignature = 'SCHD'; { Morrowind }
   SCHR : TwbSignature = 'SCHR';
+  SCIP : TwbSignature = 'SCIP'; { Morrowind }
   SCIT : TwbSignature = 'SCIT';
   SCPT : TwbSignature = 'SCPT'; { Morrowind }
   SCRI : TwbSignature = 'SCRI';
@@ -2868,20 +2869,14 @@ begin
   ], True);
 
   wbRecord(DOOR, 'Door', [
-    wbEDID,
-    wbFULL,
-    wbMODL,
-    wbSCRI,
-    wbFormIDCk(SNAM, 'Open sound', [SOUN]),
-    wbFormIDCk(ANAM, 'Close sound', [SOUN]),
-    wbFormIDCk(BNAM, 'Loop sound', [SOUN]),
-    wbInteger(FNAM, 'Flags', itU8, wbFlags([
-      {0x01} 'Oblivion gate',
-      {0x02} 'Automatic door',
-      {0x04} 'Hidden',
-      {0x08} 'Minimal use'
-    ]), cpNormal, True),
-    wbRArrayS('Random teleport destinations', wbFormIDCk(TNAM, 'Destination', [CELL, WRLD]))
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(FNAM, 'Door Name'),
+    wbString(SCRI, 'ScriptID'),
+	  {Needs verification, may not have an SCIP record}
+    wbStringScript(SCIP, 'Script Source', 0),
+    wbString(SNAM, 'Sound name open'),
+    wbString(ANAM, 'Sound name close')
   ]);
 
   wbBlendModeEnum := wbEnum([
