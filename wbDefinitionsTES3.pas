@@ -79,6 +79,7 @@ const
   CLMT : TwbSignature = 'CLMT';
   CLOT : TwbSignature = 'CLOT';
   CNAM : TwbSignature = 'CNAM';
+  CNDT : TwbSignature = 'CNDT'; { Morrowind }
   CNTO : TwbSignature = 'CNTO';
   CONT : TwbSignature = 'CONT';
   CREA : TwbSignature = 'CREA';
@@ -118,6 +119,7 @@ const
   FGGA : TwbSignature = 'FGGA';
   FGGS : TwbSignature = 'FGGS';
   FGTS : TwbSignature = 'FGTS';
+  FLAG : TwbSignature = 'FLAG'; { Morrowind }
   FLOR : TwbSignature = 'FLOR';
   FLTV : TwbSignature = 'FLTV'; { Morrowind }
   FNAM : TwbSignature = 'FNAM'; { Morrowind }
@@ -180,6 +182,7 @@ const
   NIFT : TwbSignature = 'NIFT';
   NIFZ : TwbSignature = 'NIFZ';
   NPC_ : TwbSignature = 'NPC_';
+  NPCO : TwbSignature = 'NPCO'; { Morrowind }
   OFST : TwbSignature = 'OFST';
   OBME : TwbSignature = 'OBME';
   ONAM : TwbSignature = 'ONAM';
@@ -2629,17 +2632,30 @@ begin
   wbCNTOs := wbRArrayS('Items', wbCNTO);
 
   wbRecord(CONT, 'Container', [
-    wbEDID,
-    wbFULL,
-    wbMODL,
-    wbSCRI,
-    wbCNTOs,
-    wbStruct(DATA, '', [
-      wbInteger('Flags', itU8, wbFlags(['', 'Respawns'])),
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(FNAM, 'Container Name'),
+    wbStruct(CNDT, 'Container Data', [
       wbFloat('Weight')
-    ], cpNormal, True),
-    wbFormIDCk(SNAM, 'Open sound', [SOUN]),
-    wbFormIDCk(QNAM, 'Close sound', [SOUN])
+    ]),
+    wbStruct(FLAG, 'Container Flags', [
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001} 'Organic',
+        {0x00000002} 'Respawns, organic only',
+        {0x00000004} 'Unknown3',
+        {0x00000008} 'Default, unknown',
+        {0x00000010} 'Unknown5',
+        {0x00000020} 'Unknown6',
+        {0x00000040} 'Unknown7',
+        {0x00000080} 'Unknown8'
+      ]))
+    ]),
+    wbRArray('Referenced Items',
+      wbStruct(NPCO, 'Item', [
+        wbInteger('Count', itU32),
+        wbString('Item Name', 32)
+      ])
+    )
   ]);
 
   wbCSDT := wbRStructSK([0], 'Sound Type', [
