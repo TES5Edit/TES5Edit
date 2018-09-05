@@ -243,6 +243,7 @@ const
   SNDX : TwbSignature = 'SNDX';
   SOUL : TwbSignature = 'SOUL';
   SOUN : TwbSignature = 'SOUN';
+  SPDT : TwbSignature = 'SPDT'; { Morrowind }
   SPEL : TwbSignature = 'SPEL';
   SPIT : TwbSignature = 'SPIT';
   SPLO : TwbSignature = 'SPLO';
@@ -4603,47 +4604,27 @@ begin
   ]);
 
   wbRecord(SPEL, 'Spell', [
-    wbEDID,
-    wbStruct(OBME, 'Oblivion Magic Extender', [
-      wbInteger('Record Version', itU8),
-      wbStruct('OBME Version', [
-        wbInteger('Beta', itU8),
-        wbInteger('Minor', itU8),
-        wbInteger('Major', itU8)
-      ]),
-      wbByteArray('Unused', $1C)
-    ], cpNormal, False, wbOBMEDontShow),
-    wbFULL,
-    wbStruct(SPIT, '', [
+    wbString(NAME, 'NameID'),
+    wbString(FNAM, 'Spell Name'),
+    wbStruct(SPDT, 'Spell Data', [
       wbInteger('Type', itU32, wbEnum([
         {0} 'Spell',
-        {1} 'Disease',
-        {2} 'Power',
-        {3} 'Lesser Power',
-        {4} 'Ability',
-        {5} 'Poison'
+        {1} 'Ability',
+        {2} 'Blight',
+        {3} 'Disease',
+        {4} 'Curse',
+        {5} 'Power'
       ])),
-      wbInteger('Cost', itU32),
-      wbInteger('Level', itU32, wbEnum([
-        {0} 'Novice',
-        {1} 'Apprentice',
-        {2} 'Journeyman',
-        {3} 'Expert',
-        {4} 'Master'
-      ])),
-      wbInteger('Flags', itU8, wbFlags([
-        {0x00000001} 'Manual Spell Cost',
-        {0x00000002} 'Immune to Silence 1',
-        {0x00000004} 'Player Start Spell',
-        {0x00000008} 'Immune to Silence 2',
-        {0x00000010} 'Area Effect Ignores LOS',
-        {0x00000020} 'Script Effect Always Applies',
-        {0x00000040} 'Disallow Spell Absorb/Reflect',
-        {0x00000080} 'Touch Spell Explodes w/ no Target'
-      ])),
-      wbByteArray('Unused', 3)
-    ], cpNormal, True),
-    wbEffects
+      wbInteger('SpellCost', itU32),
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001} 'AutoCalc',
+        {0x00000002} 'PC Start',
+        {0x00000004} 'Always Succeeds'
+      ]))
+    ]),
+    wbRArray('Enchantment Data',
+      wbByteArray(ENAM, 'Unknown', 0)
+    )
   ]);
 
   wbRecord(SSCR, 'Start Script', [
