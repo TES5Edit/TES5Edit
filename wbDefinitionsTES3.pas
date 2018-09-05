@@ -4632,9 +4632,10 @@ begin
     wbString(NAME, 'NameID')
   ]);
 
+  {Done}
   wbRecord(STAT, 'Static', [
-    wbEDID,
-    wbMODL
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename')
   ]);
 
   wbRecord(TES3, 'Main File Header', [
