@@ -244,6 +244,7 @@ const
   SPEL : TwbSignature = 'SPEL';
   SPIT : TwbSignature = 'SPIT';
   SPLO : TwbSignature = 'SPLO';
+  SSCR : TwbSignature = 'SSCR'; { Morrowind }
   STAT : TwbSignature = 'STAT';
   STRV : TwbSignature = 'STRV'; { Morrowind }
   TCLF : TwbSignature = 'TCLF';
@@ -4676,6 +4677,11 @@ begin
       wbByteArray('Unused', 3)
     ], cpNormal, True),
     wbEffects
+  ]);
+
+  wbRecord(SSCR, 'Start Script', [
+    wbString(DATA, 'Digits'),
+    wbString(NAME, 'NameID')
   ]);
 
   wbRecord(STAT, 'Static', [
