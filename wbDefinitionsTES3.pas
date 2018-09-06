@@ -154,6 +154,7 @@ const
   INFO : TwbSignature = 'INFO';
   INGR : TwbSignature = 'INGR';
   INTV : TwbSignature = 'INTV'; { Morrowind }
+  IRDT : TwbSignature = 'IRDT'; { Morrowind }
   ITEX : TwbSignature = 'ITEX'; { Morrowind }
   JNAM : TwbSignature = 'JNAM';
   KEYM : TwbSignature = 'KEYM';
@@ -3637,39 +3638,18 @@ begin
   ]);
 
   wbRecord(INGR, 'Ingredient', [
-    wbEDID,
-    wbStruct(OBME, 'Oblivion Magic Extender', [
-      wbInteger('Record Version', itU8),
-      wbStruct('OBME Version', [
-        wbInteger('Beta', itU8),
-        wbInteger('Minor', itU8),
-        wbInteger('Major', itU8)
-      ]),
-      wbByteArray('Unused', $1C)
-    ], cpNormal, False, wbOBMEDontShow),
-    wbFULL,
-    wbMODL,
-    wbICON,
-    wbSCRI,
-    wbFloat(DATA, 'Weight', cpNormal, True),
-    wbStruct(ENIT, '', [
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(FNAM, 'Activator Name'),
+    wbStruct(IRDT, 'Ingrediant Data', [
+      wbFloat('Weight'),
       wbInteger('Value', itS32),
-      wbInteger('Flags', itU8, wbFlags(['No auto-calculation', 'Food item'])),
-      wbByteArray('Unused', 3)
-    ], cpNormal, True),
-    wbEffects
-  ]);
-
-  wbRecord(KEYM, 'Key', [
-    wbEDID,
-    wbFULL,
-    wbMODL,
-    wbICON,
-    wbSCRI,
-    wbStruct(DATA, '', [
-      wbInteger('Value', itS32),
-      wbFloat('Weight')
-    ], cpNormal, True)
+      wbInteger('EffectID', itS32),
+      wbInteger('SkillID', itS32),
+      wbInteger('AttributeID', itS32)
+    ]),
+    wbString(ITEX, 'Inventory icon'),
+    wbString(SCRI, 'ScriptID')
   ]);
 
   wbQuadrantEnum := wbEnum([
