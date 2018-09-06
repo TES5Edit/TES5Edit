@@ -79,9 +79,11 @@ const
   BKDT : TwbSignature = 'BKDT'; { Morrowind }
   BMDT : TwbSignature = 'BMDT';
   BNAM : TwbSignature = 'BNAM';
+  BODY : TwbSignature = 'BODY'; { Morrowind }
   BOOK : TwbSignature = 'BOOK';
   BSGN : TwbSignature = 'BSGN';
   BTXT : TwbSignature = 'BTXT';
+  BYDT : TwbSignature = 'BYDT'; { Morrowind }
   CELL : TwbSignature = 'CELL';
   CLAS : TwbSignature = 'CLAS'; { Morrowind }
   CLDT : TwbSignature = 'CLDT'; { Morrowind }
@@ -4340,6 +4342,45 @@ begin
       'Foot',
       'Tail'
     ]));
+
+  {Done}
+  wbRecord(BODY, 'Body Parts', [
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(FNAM, 'Racial Skin Type'),
+    wbStruct(BYDT, 'Body Part Data', [
+      wbInteger('Part', itU8, wbEnum([
+        'Head',
+        'Hair',
+        'Neck',
+        'Chest',
+        'Groin',
+        'Hand',
+        'Wrist',
+        'Forearm',
+        'Upperarm',
+        'Foot',
+        'Ankle',
+        'Knee',
+        'Upperleg',
+        'Clavicle',
+        'Tail'
+      ])),
+      wbInteger('Skin Type', itU8, wbEnum([
+        'None',
+        'Vampire'
+      ])),
+      wbInteger('Flags', itU8, wbFlags([
+        'Female',
+        'Not Playable'
+      ])),
+      wbInteger('Body Part Type', itU8, wbEnum([
+        'Skin',
+        'Clothing',
+        'Armor'
+      ]))
+    ])
+  ]);
 
   wbRecord(RACE, 'Race', [
     wbEDID,
