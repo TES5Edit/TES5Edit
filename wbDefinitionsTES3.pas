@@ -2073,12 +2073,12 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
+  {Done}
   wbRecord(ACTI, 'Activator', [
-    wbEDID,
-    wbFULL,
-    wbMODL,
-    wbSCRI,
-    wbFormIDCk(SNAM, 'Sound', [SOUN])
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(FNAM, 'Activator Name'),
+    wbString(SCRI, 'ScriptID')
   ]);
 
   wbICON := wbString(ICON, 'Icon filename');
