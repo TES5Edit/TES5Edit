@@ -1981,10 +1981,10 @@ begin
     {0x00000080}'Unknown 8',
     {0x00000100}'Unknown 9',
     {0x00000200}'Unknown 10',
-    {0x00000400}'PersistentReference', {TES3}
+    {Confirmed} {0x00000400}'PersistentReference', {TES3} {ACTI}
     {0x00000800}'Unknown 12',
     {0x00001000}'Unknown 13',
-    {0x00002000}'Blocked', {TES3}
+    {Confirmed} {0x00002000}'Blocked', {TES3} {ACTI}
     {0x00004000}'Unknown 15',
     {0x00008000}'Unknown 16',
     {0x00010000}'Unknown 17',
