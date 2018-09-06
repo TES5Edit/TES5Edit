@@ -69,6 +69,7 @@ const
   AMMO : TwbSignature = 'AMMO';
   ANAM : TwbSignature = 'ANAM'; { Morrowind }
   ANIO : TwbSignature = 'ANIO';
+  AODT : TwbSignature = 'AODT'; { Morrowind }
   APPA : TwbSignature = 'APPA';
   ARMO : TwbSignature = 'ARMO';
   ATTR : TwbSignature = 'ATTR';
@@ -2357,71 +2358,69 @@ begin
     ], cpNormal, True)
   ]);
 
+  {Done}
   wbRecord(ARMO, 'Armor', [
-    wbEDID,
-    wbFULL,
-    wbSCRI,
-    wbENAM,
-    wbInteger(ANAM, 'Enchantment Points', itU16),
-    wbStruct(BMDT, '', [
-      wbInteger('Biped Flags', itU16, wbFlags([
-        {0x00000001} 'Head',
-        {0x00000002} 'Hair',
-        {0x00000004} 'Upper Body',
-        {0x00000008} 'Lower Body',
-        {0x00000010} 'Hand',
-        {0x00000020} 'Foot',
-        {0x00000040} 'Right Ring',
-        {0x00000080} 'Left Ring',
-        {0x00000100} 'Amulet',
-        {0x00000200} 'Weapon',
-        {0x00000400} 'Back Weapon',
-        {0x00000800} 'Side Weapon',
-        {0x00001000} 'Quiver',
-        {0x00002000} 'Shield',
-        {0x00004000} 'Torch',
-        {0x00008000} 'Tail'
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(FNAM, 'Item Name'),
+    wbString(SCRI, 'ScriptID'),
+    wbStruct(AODT, 'Armour Data', [
+      wbInteger('Armour', itU32, wbEnum([
+        'Helmet',
+        'Cuirass',
+        'L. Pauldron',
+        'R. Pauldron',
+        'Greaves',
+        'Boots',
+        'L. Gauntlet',
+        'R. Gauntlet',
+        'Shield',
+        'L. Bracer',
+        'R. Bracer'
       ])),
-      wbInteger('General Flags', itU8, wbFlags([
-        {0x0001} 'Hide Rings',
-        {0x0002} 'Hide Amulets',
-        {0x0004} '',
-        {0x0008} '',
-        {0x0010} '',
-        {0x0020} '',
-        {0x0040} 'Non-Playable',
-        {0x0080} 'Heavy armor'
-      ])),
-      wbByteArray('Unused', 1)
-    ], cpNormal, True),
-    wbRStruct('Male biped model', [
-      wbString(MODL, 'Model Filename'),
-      wbFloat(MODB, 'Bound Radius', cpBenign),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
-    ], []),
-    wbRStruct('Male world model', [
-      wbString(MOD2, 'Model Filename'),
-      wbFloat(MO2B, 'Bound Radius', cpBenign),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore)
-    ], []),
-    wbString(ICON, 'Male icon filename'),
-    wbRStruct('Female biped model', [
-      wbString(MOD3, 'Model Filename'),
-      wbFloat(MO3B, 'Bound Radius', cpBenign),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore)
-    ], []),
-    wbRStruct('Female world model', [
-      wbString(MOD4, 'Model Filename'),
-      wbFloat(MO4B, 'Bound Radius', cpBenign),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore)
-    ], []),
-    wbString(ICO2, 'Female icon filename'),
-    wbStruct(DATA, '', [
-      wbInteger('Armor', itU16, wbDiv(100)),
+      wbFloat('Weight'),
       wbInteger('Value', itU32),
       wbInteger('Health', itU32),
-      wbFloat('Weight')
-    ], cpNormal, True)
+      wbInteger('EnchantPts', itU32),
+      wbInteger('Armour', itU32)
+    ]),
+    wbString(ITEX, 'Icon Filename'),
+    wbRArray('Armour Data',
+      wbRStruct('Armour', [
+        wbInteger(INDX, 'Body Part Index', itU8, wbEnum([
+          'Head',
+          'Hair',
+          'Neck',
+          'Cuirass',
+          'Groin',
+          'Skirt',
+          'Right Hand',
+          'Left Hand',
+          'Right Wrist',
+          'Left Wrist',
+          'Shield',
+          'Right Forearm',
+          'Left Forearm',
+          'Right Upper Arm',
+          'Left Upper Arm',
+          'Right Foot',
+          'Left Foot',
+          'Right Ankle',
+          'Left Ankle',
+          'Right Knee',
+          'Left Knee',
+          'Right Upper Leg',
+          'Left Upper Leg',
+          'Right Pauldron',
+          'Left Pauldron',
+          'Weapon',
+          'Tail'
+        ])),
+        wbString(BNAM, 'Male Part Name'),
+        wbString(CNAM, 'Female Body Part Name')
+      ], [])
+    ),
+    wbString(ENAM, 'EnchantID')
   ]);
 
   wbRecord(BOOK, 'Book', [
