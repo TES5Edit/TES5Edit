@@ -248,6 +248,7 @@ const
   TPIC : TwbSignature = 'TPIC';
   QUST : TwbSignature = 'QUST';
   RACE : TwbSignature = 'RACE';
+  RADT : TwbSignature = 'RADT'; { Morrowind }
   RCLR : TwbSignature = 'RCLR';
   RDAT : TwbSignature = 'RDAT';
   RDGS : TwbSignature = 'RDGS';
@@ -4383,7 +4384,7 @@ begin
     wbInteger(CNAM, 'Default Hair Color', itU8, nil, cpNormal, True),
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
     wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
-    wbStruct(ATTR, 'Base Attributes', [
+    wbStruct(RADT, 'Base Attributes', [
       wbStruct('Male', [
         wbInteger('Strength', itU8),
         wbInteger('Intelligence', itU8),
@@ -4419,14 +4420,14 @@ begin
           'Eye (Left)',
           'Eye (Right)'
         ])),
-        wbMODL,
+        wbString(MODL, 'Model Filename'),
         wbICON
       ], []))
     ], [], cpNormal, True),
     wbEmpty(NAM1, 'Body Data Marker', cpNormal, True),
     wbRStruct('Male Body Data', [
       wbEmpty(MNAM, 'Male Body Data Marker'),
-      wbMODL,
+      wbString(MODL, 'Model Filename'),
       wbRArrayS('Parts', wbRStructSK([0], 'Part', [
         wbBodyDataIndex,
         wbICON
@@ -4434,7 +4435,7 @@ begin
     ], [], cpNormal, True),
     wbRStruct('Female Body Data', [
       wbEmpty(FNAM, 'Female Body Data Marker'),
-      wbMODL,
+      wbString(MODL, 'Model Filename'),
       wbRArrayS('Parts', wbRStructSK([0], 'Part', [
         wbBodyDataIndex,
         wbICON
