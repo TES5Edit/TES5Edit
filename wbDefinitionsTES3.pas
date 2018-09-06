@@ -228,7 +228,9 @@ const
   QNAM : TwbSignature = 'QNAM';
   QSDT : TwbSignature = 'QSDT';
   QSTA : TwbSignature = 'QSTA';
+  QSTF : TwbSignature = 'QSTF'; { Morrowind }
   QSTI : TwbSignature = 'QSTI';
+  QSTN : TwbSignature = 'QSTN'; { Morrowind }
   QSTR : TwbSignature = 'QSTR';
   TPIC : TwbSignature = 'TPIC';
   QUST : TwbSignature = 'QUST';
@@ -2925,21 +2927,53 @@ begin
     ])
   ]);
 
+{ What follows in the ESP/ESM are all the INFO records that belong to the
+	DIAL record.  One of the few cases where order is important
+}
+
   wbRecord(DIAL, 'Dialog Topic', [
-    wbEDID,
-    wbRArrayS('Quests', wbFormIDCk(QSTI, 'Quest', [QUST], False, cpBenign)),
-    wbRArrayS('Quests?', wbFormIDCk(QSTR, 'Quest?', [QUST], False, cpBenign)),
-    wbFULL,
+    wbString(NAME, 'NameID'),
     wbInteger(DATA, 'Type', itU8, wbEnum([
-      {0} 'Topic',
-      {1} 'Conversation',
-      {2} 'Combat',
-      {3} 'Persuasion',
-      {4} 'Detection',
-      {5} 'Service',
-      {6} 'Miscellaneous'
-    ]), cpNormal, True)
-  ], True);
+      {0} 'Regular Topic',
+      {1} 'Voice?',
+      {2} 'Greeting?',
+      {3} 'Persuasion?',
+      {4} 'Journal'
+    ]))
+  ]);
+
+  wbRecord(INFO, 'Dialog response', [
+    wbString(INAM, 'Info name string'),
+    wbString(PNAM, 'Previous info ID'),
+    wbString(NNAM, 'Next info ID'),
+    wbStruct(DATA, 'Info data', [
+      wbInteger('Unknown', itU8),
+      wbInteger('Disposition', itU8),
+      wbInteger('Rank', itU8),
+      wbInteger('Gender', itU8, wbEnum([], [
+       $00, 'Male',
+       $01, 'Female',
+       $FF, 'None'
+      ])),
+      wbInteger('PCRank', itU8),
+      wbInteger('Unknown', itU8)
+    ]),
+    wbString(ONAM, 'Actor string'),
+    wbString(RNAM, 'Race string'),
+    wbString(CNAM, 'Class string'),
+    wbString(FNAM, 'Faction string'),
+    wbString(ANAM, 'Cell string'),
+    wbString(DNAM, 'PC Faction string'),
+    wbString(NAME, 'NameID'),
+    wbString(SNAM, 'Sound filename'),
+    wbByteArray(QSTN, 'Journal Name', 4),
+    wbByteArray(QSTF, 'Journal Finished', 4),
+    wbByteArray(QSTR, 'Journal Restart', 4),
+    wbByteArray(SNAM, 'String for the function/variable', 4),
+    wbByteArray(INTV, 'Unknown', 4),
+    wbByteArray(FLTV, 'The function/variable result for the previous SCVR', 4),
+    wbByteArray(BNAM, 'Result text (not compiled)', 4)
+  ]);
 
   wbRecord(DOOR, 'Door', [
     wbString(NAME, 'NameID'),
@@ -3591,59 +3625,6 @@ begin
     wbCTDAs,
     wbInteger(ANAM, 'Animation Group Section', itU8, wbIdleAnam, nil, cpNormal, True),
     wbArray(DATA, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [IDLE, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True)
-  ]);
-
-  wbRecord(INFO, 'Dialog response', [
-    wbStruct(DATA, '', [
-      wbInteger('Type', itU8, wbEnum([
-        {0} 'Topic',
-        {1} 'Conversation',
-        {2} 'Combat',
-        {3} 'Persuasion',
-        {4} 'Detection',
-        {5} 'Service',
-        {6} 'Miscellaneous'
-      ])),
-      wbInteger('Flags', itU8, wbFlags([
-        {0x0001} 'Goodbye',
-        {0x0002} 'Random',
-        {0x0004} 'Say Once',
-        {0x0008} '',
-        {0x0010} 'Info Refusal',
-        {0x0020} 'Random End',
-        {0x0040} 'Run for Rumors'
-      ])),
-      wbByteArray('Unused', 1)
-    ], cpNormal, True),
-    wbFormIDCk(QSTI, 'Quest', [QUST], False, cpNormal, True),
-    wbFormIDCk(TPIC, 'Topic', [DIAL]),
-    wbFormIDCk(PNAM, 'Previous INFO', [INFO, NULL]),
-    wbRArray('Add topics', wbFormIDCk(NAME, 'Topic', [DIAL])),
-    wbRArray('Responses',
-      wbRStruct('Response', [
-        wbStruct(TRDT, 'Response Data', [
-          wbInteger('Emotion Type', itU32, wbEnum([
-            {0} 'Neutral',
-            {1} 'Anger',
-            {2} 'Disgust',
-            {3} 'Fear',
-            {4} 'Sad',
-            {5} 'Happy',
-            {6} 'Surprise'
-          ])),
-          wbInteger('Emotion Value', itS32),
-          wbByteArray('Unused', 4),
-          wbInteger('Response number', itU8),
-          wbByteArray('Unused', 3)
-        ]),
-        wbString(NAM1, 'Response Text', 0, cpTranslate),
-        wbString(NAM2, 'Actor notes', 0, cpTranslate)
-      ], [])
-    ),
-    wbCTDAs,
-    wbRArray('Choices', wbFormIDCk(TCLT, 'Choice', [DIAL])),
-    wbRArray('Link From', wbFormIDCk(TCLF, 'Topic', [DIAL])),
-    wbResultScript
   ]);
 
   wbRecord(INGR, 'Ingredient', [
