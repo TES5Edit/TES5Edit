@@ -2472,12 +2472,15 @@ begin
   wbSPLO := wbFormIDCk(SPLO, 'Spell', [SPEL, LVSP]);
   wbSPLOs := wbRArrayS('Spells', wbSPLO);
 
+  {Done}
   wbRecord(BSGN, 'Birthsign', [
-    wbEDID,
-    wbFULL,
-    wbICON,
-    wbDESC,
-    wbSPLOs
+    wbString(NAME, 'NameID'),
+    wbString(FNAM, 'Book Name'),
+    wbString(TNAM, 'Texture filename'),
+    wbString(DESC, 'Description'),
+    wbRArray('Spells',
+      wbStringForward(NPCS, 'SpellID', 32)
+    )
   ]);
 
   wbRecord(CELL, 'Cell', [
