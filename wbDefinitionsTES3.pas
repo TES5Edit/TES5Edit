@@ -66,6 +66,7 @@ const
   AI_W : TwbSignature = 'AI'#$5F'W'; { Morrowind }
   AIDT : TwbSignature = 'AIDT';
   ALCH : TwbSignature = 'ALCH';
+  ALDT : TwbSignature = 'ALDT'; { Morrowind }
   AMMO : TwbSignature = 'AMMO';
   ANAM : TwbSignature = 'ANAM'; { Morrowind }
   ANIO : TwbSignature = 'ANIO';
@@ -2301,50 +2302,28 @@ begin
     ], []);
 
   wbRecord(ALCH, 'Potion', [
-    wbEDID,
-    wbStruct(OBME, 'Oblivion Magic Extender', [
-      wbInteger('Record Version', itU8),
-      wbStruct('OBME Version', [
-        wbInteger('Beta', itU8),
-        wbInteger('Minor', itU8),
-        wbInteger('Major', itU8)
-      ]),
-      wbByteArray('Unused', $1C)
-    ], cpNormal, False, wbOBMEDontShow),
-    wbFULL,
-    wbMODL,
-    wbICON,
-    wbSCRI,
-    wbFloat(DATA, 'Weight', cpNormal, True),
-    wbStruct(ENIT, '', [
-      wbInteger('Value', itS32),
-      wbInteger('Flags', itU8, wbFlags(['No auto-calculation', 'Food item'])),
-      wbByteArray('Unused', 3)
-    ], cpNormal, True),
-    wbEffects
-  ]);
-
-  wbRecord(AMMO, 'Ammunition', [
-    wbEDID,
-    wbFULL,
-    wbMODL,
-    wbICON,
-    wbFormIDCk(ENAM, 'Enchantment', [ENCH]),
-    wbInteger(ANAM, 'Enchantment Points', itU16),
-    wbStruct(DATA, '', [
-      wbFloat('Speed'),
-      wbInteger('Flags', itU8, wbFlags(['Ignores Normal Weapon Resistance'])),
-      wbByteArray('Unused', 3),
-      wbInteger('Value', itU32),
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(TEXT, 'Inventory Icon'),
+    wbString(FNAM, 'Potion Name'),
+    wbStruct(ALDT, '', [
       wbFloat('Weight'),
-      wbInteger('Damage', itU16)
-    ], cpNormal, True)
-  ]);
-
-  wbRecord(ANIO, 'Animated Object', [
-    wbEDID,
-    wbMODL,
-    wbFormIDCk(DATA, 'IDLE animation', [IDLE], False, cpNormal, True)
+      wbInteger('Value', itU32),
+      wbInteger('AutoCalc', itU32)
+    ]),
+    wbRarray('Enchantments',
+      wbStruct(ENAM, 'Enchantment', [
+        wbInteger('short EffectID', itU16),
+        wbInteger('byte  SkillID', itS8),
+        wbInteger('byte  AttributeID', itS8),
+        wbInteger('long  Unknown1', itU32),
+        wbInteger('long  Unknown2', itU32),
+        wbInteger('long  Duration', itU32),
+        wbInteger('long  Magnitude', itU32),
+        wbInteger('long  Unknown4', itU32)
+      ])
+    ),
+    wbString(SCRI, 'ScriptID')
   ]);
 
   wbRecord(APPA, 'Alchemical Apparatus', [
