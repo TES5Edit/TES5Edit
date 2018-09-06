@@ -284,6 +284,7 @@ const
   WEAT : TwbSignature = 'WEAT'; { Morrowind }
   WLST : TwbSignature = 'WLST';
   WNAM : TwbSignature = 'WNAM';
+  WPDT : TwbSignature = 'WPDT'; { Morrowind }
   WRLD : TwbSignature = 'WRLD';
   WTHR : TwbSignature = 'WTHR';
   XACT : TwbSignature = 'XACT';
@@ -4858,135 +4859,46 @@ begin
   ]);
 
   wbRecord(WEAP, 'Weapon', [
-    wbEDID,
-    wbFULL,
-    wbMODL,
-    wbICON,
-    wbSCRI,
-    wbENAM,
-    wbInteger(ANAM, 'Enchantment Points', itU16),
-    wbStruct(DATA, '', [
-      wbInteger('Type', itU32, wbEnum([
-        {0} 'Blade One Hand',
-        {1} 'Blade Two Hand',
-        {2} 'Blunt One Hand',
-        {3} 'Blunt Two Hand',
-        {4} 'Staff',
-        {5} 'Bow'
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(FNAM, 'Item Name'),
+    wbStruct(WPDT, 'Weapon Data', [
+      wbFloat('Weight'),
+      wbInteger('Value', itU32),
+      wbInteger('Type', itU16, wbEnum([
+        {0} 'ShortBladeOneHand',
+        {1} 'LongBladeOneHand',
+        {2} 'LongBladeTwoClose',
+        {3} 'BluntOneHand',
+        {4} 'BluntTwoClose',
+        {5} 'BluntTwoWide',
+        {6} 'SpearTwoWide',
+        {7} 'AxeOneHand',
+        {8} 'AxeTwoHand',
+        {9} 'MarksmanBow',
+        {10} 'MarksmanCrossbow',
+        {11} 'MarksmanThrown',
+        {12} 'Arrow',
+        {13} 'Bolt'
       ])),
+      wbInteger('Health', itU16),
       wbFloat('Speed'),
       wbFloat('Reach'),
-      wbInteger('Flags', itU32, wbFlags(['Ignores Normal Weapon Resistance'])),
-      wbInteger('Value', itU32),
-      wbInteger('Health', itU32),
-      wbFloat('Weight'),
-      wbInteger('Damage', itU16)
-    ], cpNormal, True)
-  ]);
-
-  wbRecord(WRLD, 'Worldspace', [
-    wbEDID,
-    wbFULL,
-    wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),
-    wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbFormIDCk(NAM2, 'Water', [WATR]),
-    wbICON,
-    wbStruct(MNAM, 'Map Data', [
-      wbStruct('Uable Dimensions', [
-        wbInteger('X', itS32),
-        wbInteger('Y', itS32)
-      ]),
-      wbStruct('Cell Coordinates', [
-        wbStruct('NW Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
-        ]),
-        wbStruct('SE Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
-        ])
-      ])
-    ]),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Small world',
-      {0x02} 'Can''t fast travel',
-      {0x04} 'Oblivion worldspace',
-      {0x08} '',
-      {0x10} 'No LOD water'
-    ]), cpNormal, True),
-    wbArray(NAM0, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-    wbArray(NAM9, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-    wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
-    wbByteArray(OFST, 'Unknown')
-  ], False, nil, cpNormal, False, wbRemoveOFST);
-
-  wbRecord(WTHR, 'Weather', [
-    wbEDID,
-    wbString(CNAM, 'Texture Lower Layer'),
-    wbString(DNAM, 'Texture Upper Layer'),
-    wbMODL,
-    wbArray(NAM0, 'Colors by Types/Times',
-      wbArray('Type',
-        wbStruct('Time', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
-        ]),
-        ['Sunrise', 'Day', 'Sunset', 'Night']
-      ),
-      ['Sky-Upper','Fog','Clouds-Lower','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Clouds-Upper']
-    , cpNormal, True),
-    wbStruct(FNAM, 'Fog Distance', [
-      wbFloat('Day Near'),
-      wbFloat('Day Far'),
-      wbFloat('Night Near'),
-      wbFloat('Night Far')
-    ], cpNormal, True),
-    wbStruct(HNAM, 'HDR Data', [
-      wbFloat('Eye Adapt Speed'),
-      wbFloat('Blur Radius'),
-      wbFloat('Blur Passes'),
-      wbFloat('Emissive Mult'),
-      wbFloat('Target LUM'),
-      wbFloat('Upper LUM Clamp'),
-      wbFloat('Bright Scale'),
-      wbFloat('Bright Clamp'),
-      wbFloat('LUM Ramp No Tex'),
-      wbFloat('LUM Ramp Min'),
-      wbFloat('LUM Ramp Max'),
-      wbFloat('Sunlight Dimmer'),
-      wbFloat('Grass Dimmer'),
-      wbFloat('Tree Dimmer')
-    ], cpNormal, True),
-    wbStruct(DATA, '', [
-      wbInteger('Wind Speed', itU8),
-      wbInteger('Cloud Speed (Lower)', itU8),
-      wbInteger('Cloud Speed (Upper)', itU8),
-      wbInteger('Trans Delta', itU8),
-      wbInteger('Sun Glare', itU8),
-      wbInteger('Sun Damage', itU8),
-      wbInteger('Precipitation - Begin Fade In', itU8),
-      wbInteger('Precipitation - End Fade Out', itU8),
-      wbInteger('Thunder/Lightning - Begin Fade In', itU8),
-      wbInteger('Thunder/Lightning - End Fade Out', itU8),
-      wbInteger('Thunder/Lightning - Frequency', itU8),
-      wbInteger('Weather Classification', itU8, wbWthrDataClassification),
-      wbStruct('Lightning Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8)
-      ])
-    ], cpNormal, True),
-    wbRArray('Sounds', wbStruct(SNAM, 'Sound', [
-      wbFormIDCk('Sound', [SOUN]),
-      wbInteger('Type', itU32, wbEnum([
-       {0}'Default',
-       {1}'Precip',
-       {2}'Wind',
-       {3}'Thunder'
+      wbInteger('EnchantPts', itU16),
+      wbInteger('ChopMin', itU8),
+      wbInteger('ChopMax', itU8),
+      wbInteger('SlashMin', itU8),
+      wbInteger('SlashMax', itU8),
+      wbInteger('ThrustMin', itU8),
+      wbInteger('ThrustMax', itU8),
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001} 'Unknown1',
+        {0x00000002} 'Ignore Normal Weapon Resistance'
       ]))
-    ]))
+    ]),
+    wbString(ITEX, 'Iventory Icon Filename'),
+    wbString(ENAM, 'Enchantment ID string'),
+    wbString(SCRI, 'ScriptID')
   ]);
 
   wbAddGroupOrder(GMST);
