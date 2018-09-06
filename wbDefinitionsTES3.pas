@@ -2717,101 +2717,145 @@ begin
   ]);
 
   wbRecord(CREA, 'Creature', [
-    wbEDID,
-    wbFULL,
-    wbMODL,
-    wbCNTOs,
-    wbSPLOs,
-    wbArrayS(NIFZ, 'Models', wbStringLC('Model')),
-    wbByteArray(NIFT, 'Texture Files Hashes', 0, cpIgnore),
-    wbStruct(ACBS, 'Configuration', [
-      wbInteger('Flags', itU32, wbFlags([
-        {0x000001} 'Biped',
-        {0x000002} 'Essential',
-        {0x000004} 'Weapon & Shield',
-        {0x000008} 'Respawn',
-        {0x000010} 'Swims',
-        {0x000020} 'Flies',
-        {0x000040} 'Walks',
-        {0x000080} 'PC Level Offset',
-        {0x000100} 'Unused', //??
-        {0x000200} 'No Low Level Processing',
-        {0x000400} 'Unused', //??
-        {0x000800} 'No Blood Spray',
-        {0x001000} 'No Blood Decal',
-        {0x002000} '',
-        {0x004000} '',
-        {0x008000} 'No Head',
-        {0x010000} 'No Right Arm',
-        {0x020000} 'No Left Arm',
-        {0x040000} 'No Combat in Water',
-        {0x080000} 'No Shadow',
-        {0x100000} 'No Corpse Check'
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(CNAM, 'Creatures Naming'),
+    wbString(FNAM, 'Creature Name'),
+    wbString(SCRI, 'ScriptID'),
+    wbStruct(NPDT, 'Creature Data', [
+      wbInteger('Type', itU32, wbEnum([
+        {0} 'Creature',
+        {1} 'Daedra',
+        {2} 'Undead',
+        {3} 'Humanoid'
       ])),
-      wbInteger('Base spell points', itU16),
-      wbInteger('Fatigue', itU16),
-      wbInteger('Barter gold', itU16),
-      wbInteger('Level (offset)', itS16),
-      wbInteger('Calc min', itU16),
-      wbInteger('Calc max', itU16)
-    ], cpNormal, True),
-    wbRArrayS('Factions',
-      wbStructSK(SNAM, [0], 'Faction', [
-        wbFormIDCk('Faction', [FACT]),
-        wbInteger('Rank', itU8),
-        wbByteArray('Unused', 3)
+      wbInteger('Level', itU32),
+      wbInteger('Strength', itU32),
+      wbInteger('Intelligence', itU32),
+      wbInteger('Willpower', itU32),
+      wbInteger('Agility', itU32),
+      wbInteger('Speed', itU32),
+      wbInteger('Endurance', itU32),
+      wbInteger('Personality', itU32),
+      wbInteger('Luck', itU32),
+      wbInteger('Health', itU32),
+      wbInteger('SpellPts', itU32),
+      wbInteger('Fatigue', itU32),
+      wbInteger('Soul', itU32),
+      wbInteger('Combat', itU32),
+      wbInteger('Magic', itU32),
+      wbInteger('Stealth', itU32),
+      wbInteger('AttackMin1', itU32),
+      wbInteger('AttackMax1', itU32),
+      wbInteger('AttackMin2', itU32),
+      wbInteger('AttackMax2', itU32),
+      wbInteger('AttackMin3', itU32),
+      wbInteger('AttackMax3', itU32),
+      wbInteger('Gold', itU32)
+    ]),
+    wbStruct(FLAG, 'Creature Flags', [
+      {All these flage need verified}
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001} 'Biped',
+        {0x00000002} 'Respawn',
+        {0x00000004} 'Weapon and shield',
+        {0x00000008} 'None',
+        {0x00000010} 'Swims',
+        {0x00000020} 'Flies',
+        {0x00000040} 'Walks',
+        {0x00000080} 'Default',
+        {0x00000100} 'Unknown9',
+        {0x00000200} 'Essential',
+        {0x00000400} 'Skeleton Blood',
+        {0x00000800} 'Metal Blood',
+        {0x00001000} 'Unknown13',
+        {0x00002000} 'Unknown14',
+        {0x00004000} 'Unknown15',
+        {0x00008000} 'Unknown16'
+      ]))
+    ]),
+    wbByteArray(XSCL, 'Unknown'),
+    wbRArray('Creature Items',
+      wbStruct(NPCO, 'Item', [
+        wbInteger('Count', itU32),
+        wbString('Name', 32)
       ])
     ),
-    wbFormIDCk(INAM, 'Death item', [LVLI]),
-    wbSCRI,
-    wbStruct(AIDT, 'AI Data', [
-      wbInteger('Aggression', itU8),
-      wbInteger('Confidence', itU8),
-      wbInteger('Energy Level', itU8),
-      wbInteger('Responsibility', itU8),
-      wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
-      wbInteger('Teaches', itS8, wbSkillEnum),
-      wbInteger('Maximum training level', itU8),
-      wbByteArray('Unused', 2)
-    ], cpNormal, True),
-    wbRArray('AI Packages', wbFormIDCk(PKID, 'AI Package', [PACK])),
-    wbArrayS(KFFZ, 'Animations', wbStringLC('Animation')),
-    wbStruct(DATA, 'Creature Data', [
-      wbInteger('Type', itU8, wbEnum([
-        'Creature',
-        'Daedra',
-        'Undead',
-        'Humanoid',
-        'Horse',
-        'Giant'
-      ])),
-      wbInteger('Combat Skill', itU8),
-      wbInteger('Magic Skill', itU8),
-      wbInteger('Stealth Skill', itU8),
-      wbInteger('Soul', itU8, wbSoulGemEnum),
-      wbByteArray('Unused', 1),
-      wbInteger('Health', itU16),
-      wbByteArray('Unused', 2),
-      wbInteger('Attack Damage', itU16),
-      wbInteger('Strength', itU8),
-      wbInteger('Intelligence', itU8),
-      wbInteger('Willpower', itU8),
-      wbInteger('Agility', itU8),
-      wbInteger('Speed', itU8),
-      wbInteger('Endurance', itU8),
-      wbInteger('Personality', itU8),
-      wbInteger('Luck', itU8)
-    ], cpNormal, True),
-    wbInteger(RNAM, 'Attack reach', itU8, nil, cpNormal, True),
-    wbFormIDCk(ZNAM, 'Combat Style', [CSTY]),
-    wbFloat(TNAM, 'Turning Speed', cpNormal, True),
-    wbFloat(BNAM, 'Base Scale', cpNormal, True),
-    wbFloat(WNAM, 'Foot Weight', cpNormal, True),
-    wbString(NAM0, 'Blood Spray'),
-    wbString(NAM1, 'Blood Decal'),
-    wbFormIDCk(CSCR, 'Inherits Sounds from', [CREA]),
-    wbCSDTs
-  ], True);
+    wbRArray('Creature Spell',
+      wbStruct(NPCS, 'Spell', [
+        wbString('Name', 32)
+      ])
+    ),
+    wbStruct(AIDT, 'AI data', [
+      wbInteger('Hello', itU8),
+      wbInteger('Unknown1', itU8),
+      wbInteger('Fight', itU8),
+      wbInteger('Flee', itU8),
+      wbInteger('Alarm', itU8),
+      wbInteger('Unknown2', itU8),
+      wbInteger('Unknown3', itU8),
+      wbInteger('Unknown4', itU8),
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001} 'Weapon',
+        {0x00000002} 'Armor',
+        {0x00000004} 'Clothing',
+        {0x00000008} 'Books',
+        {0x00000010} 'Ingrediant',
+        {0x00000020} 'Picks',
+        {0x00000040} 'Probes',
+        {0x00000080} 'Lights',
+        {0x00000100} 'Apparatus',
+        {0x00000200} 'Repair',
+        {0x00000400} 'Misc',
+        {0x00000800} 'Spells',
+        {0x00001000} 'Magic Items',
+        {0x00002000} 'Potions',
+        {0x00004000} 'Training',
+        {0x00008000} 'Spellmaking',
+        {0x00010000} 'Enchanting',
+        {0x00020000} 'Repair Item',
+        {0x00040000} 'Unknown 19',
+        {0x00080000} 'Unknown 20'
+      ]))
+    ]),
+    wbStruct(AI_W, 'AI Wander', [
+      wbInteger('Distance', itU16),
+      wbInteger('Duration', itU8),
+      wbInteger('TimeOfDay', itU8),
+      wbInteger('Idle', itU8),
+      wbByteArray('Unknown' , 1),
+      wbByteArray('Unknown' , 4),
+      wbByteArray('Unknown' , 4),
+      wbByteArray('Unknown')
+    ], cpNormal, False, nil, 3),
+    wbStruct(AI_T, 'AI Travel', [
+      wbFloat('X'),
+      wbFloat('Y'),
+      wbFloat('Z'),
+      wbInteger('Unknown', itU32)
+    ]),
+    wbStruct(AI_F, 'AI Follow', [
+      wbFloat('X'),
+      wbFloat('Y'),
+      wbFloat('Z'),
+      wbInteger('Duration', itU16),
+      wbString('ID', 32),
+      wbInteger('Unknown', itU16)
+    ]),
+    wbStruct(AI_E, 'AI Escort', [
+      wbFloat('X'),
+      wbFloat('Y'),
+      wbFloat('Z'),
+      wbInteger('Duration', itU16),
+      wbString('ID', 32),
+      wbInteger('Unknown', itU16)
+    ]),
+    wbStruct(AI_A, 'AI Activate', [
+      wbString('ID', 32),
+      wbInteger('Unknown', itU8)
+    ]),
+    wbFloat(XSCL, 'Scale')
+  ]);
 
   wbRecord(CSTY, 'Combat Style', [
     wbEDID,
