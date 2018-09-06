@@ -222,6 +222,7 @@ const
   OBME : TwbSignature = 'OBME';
   ONAM : TwbSignature = 'ONAM';
   PACK : TwbSignature = 'PACK';
+  PBDT : TwbSignature = 'PBDT'; { Morrowind }
   PFIG : TwbSignature = 'PFIG';
   PFPC : TwbSignature = 'PFPC';
   PGAG : TwbSignature = 'PGAG';
@@ -235,6 +236,7 @@ const
   PKID : TwbSignature = 'PKID';
   PLDT : TwbSignature = 'PLDT';
   PNAM : TwbSignature = 'PNAM';
+  PROB : TwbSignature = 'PROB'; { Morrowind }
   PSDT : TwbSignature = 'PSDT';
   PTDT : TwbSignature = 'PTDT';
   PTEX : TwbSignature = 'PTEX'; { Morrowind }
@@ -4616,6 +4618,26 @@ begin
       wbFloat('Y'),
       wbFloat('Z')
     ], cpNormal, True)
+  ]);
+
+  wbRecord(PROB, 'Probe Items', [
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(FNAM, 'Activator Name'),
+    wbStruct(PBDT, 'Weather Type', [
+      wbInteger('Clear', itU8),
+      wbInteger('Cloudy', itU8),
+      wbInteger('Foggy', itU8),
+      wbInteger('Overcast', itU8),
+      wbInteger('Rain', itU8),
+      wbInteger('Thunder', itU8),
+      wbInteger('Ash', itU8),
+      wbInteger('Blight', itU8),
+      wbByteArray('Unknonw', 1),
+      wbByteArray('Unknonw', 1)
+    ]),
+    wbString(ITEX, 'Book Name'),
+    wbString(SCRI, 'ScriptID')
   ]);
 
   wbSLSD := wbStructSK(SLSD, [0], 'Local Variable Data', [
