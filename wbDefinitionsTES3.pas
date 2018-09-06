@@ -54,6 +54,7 @@ uses
   Variants;
 
 const
+  AADT : TwbSignature = 'AADT'; { Morrowind }
   ACBS : TwbSignature = 'ACBS';
   ACHR : TwbSignature = 'ACHR';
   ACRE : TwbSignature = 'ACRE';
@@ -2358,18 +2359,24 @@ begin
     wbString(SCRI, 'ScriptID')
   ]);
 
+  {Done}
   wbRecord(APPA, 'Alchemical Apparatus', [
-    wbEDID,
-    wbFULL,
-    wbMODL,
-    wbICON,
-    wbSCRI,
-    wbStruct(DATA, '', [
-      wbInteger('Type', itU8, wbEnum(['Mortar and Pestle', 'Alembic', 'Calcinator', 'Retort'])),
-      wbInteger('Value', itU32),
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(FNAM, 'Item Name'),
+    wbString(SCRI, 'ScriptID'),
+    wbStruct(AADT, '', [
+      wbInteger('Type', itU32, wbEnum([
+        'Mortar and Pestle',
+        'Alembic',
+        'Calcinator',
+        'Retort'
+      ])),
+      wbFloat('Quality'),
       wbFloat('Weight'),
-      wbFloat('Quality')
-    ], cpNormal, True)
+      wbInteger('Value', itU32)
+    ], cpNormal, True),
+    wbString(ITEX, 'Icon Filename')
   ]);
 
   {Done}
