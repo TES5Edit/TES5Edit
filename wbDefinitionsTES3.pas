@@ -2567,68 +2567,36 @@ begin
   ]);
 
   wbRecord(CLOT, 'Clothing', [
-    wbEDID,
-    wbFULL,
-    wbSCRI,
-    wbENAM,
-    wbInteger(ANAM, 'Enchantment Points', itU16),
-    wbStruct(BMDT, '', [
-      wbInteger('Biped Flags', itU16, wbFlags([
-        {0x00000001} 'Head',
-        {0x00000002} 'Hair',
-        {0x00000004} 'Upper Body',
-        {0x00000008} 'Lower Body',
-        {0x00000010} 'Hand',
-        {0x00000020} 'Foot',
-        {0x00000040} 'Right Ring',
-        {0x00000080} 'Left Ring',
-        {0x00000100} 'Amulet',
-        {0x00000200} 'Weapon',
-        {0x00000400} 'Back Weapon',
-        {0x00000800} 'Side Weapon',
-        {0x00001000} 'Quiver',
-        {0x00002000} 'Shield',
-        {0x00004000} 'Torch',
-        {0x00008000} 'Tail'
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(FNAM, 'Clothing Name'),
+    wbStruct(CTDT, '', [
+      wbInteger('Biped Flags', itU32, wbEnum([
+        {0} 'Pants',
+        {1} 'Shoes',
+        {2} 'Shirt',
+        {3} 'Belt',
+        {4} 'Robe',
+        {5} 'Right Glove',
+        {6} 'Left Glove',
+        {7} 'Skirt',
+        {8} 'Ring',
+        {9} 'Amulet'
       ])),
-      wbInteger('General Flags', itU8, wbFlags([
-        {0x0001} 'Hide Rings',
-        {0x0002} 'Hide Amulets',
-        {0x0004} '',
-        {0x0008} '',
-        {0x0010} '',
-        {0x0020} '',
-        {0x0040} 'Non-Playable',
-        {0x0080} '' {Heavy armor}
-      ])),
-      wbByteArray('Unused', 1)
+      wbFloat('Weight'),
+      wbInteger('Value', itU16),
+      wbInteger('EnchantPts', itU16)
     ], cpNormal, True),
-    wbRStruct('Male biped model', [
-      wbString(MODL, 'Model Filename'),
-      wbFloat(MODB, 'Bound Radius', cpBenign),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
-    ], []),
-    wbRStruct('Male world model', [
-      wbString(MOD2, 'Model Filename'),
-      wbFloat(MO2B, 'Bound Radius', cpBenign),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore)
-    ], []),
-    wbString(ICON, 'Male icon filename'),
-    wbRStruct('Female biped model', [
-      wbString(MOD3, 'Model Filename'),
-      wbFloat(MO3B, 'Bound Radius', cpBenign),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore)
-    ], []),
-    wbRStruct('Female world model', [
-      wbString(MOD4, 'Model Filename'),
-      wbFloat(MO4B, 'Bound Radius', cpBenign),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore)
-    ], []),
-    wbString(ICO2, 'Female icon filename'),
-    wbStruct(DATA, '', [
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
-    ], cpNormal, True)
+    wbString(ITEX, 'Inventory Icon'),
+    wbRArray('Clothing Worn',
+      wbRStruct('Clothes', [
+        wbInteger(INDX, 'Body Part Index', itU8),
+        wbString(BNAM, 'Male Body Part Name'),
+        wbString(CNAM, 'Female Body Part Name')
+      ], [])
+    ),
+    wbString(ENAM, 'EnchantID'),
+    wbString(SCRI, 'ScriptID')
   ]);
 
   wbCNTO :=
