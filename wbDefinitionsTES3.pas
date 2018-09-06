@@ -120,6 +120,7 @@ const
   EFSH : TwbSignature = 'EFSH';
   ENAM : TwbSignature = 'ENAM';
   ENCH : TwbSignature = 'ENCH';
+  ENDT : TwbSignature = 'ENDT'; { Morrowind }
   ENIT : TwbSignature = 'ENIT';
   ESCE : TwbSignature = 'ESCE';
   EYES : TwbSignature = 'EYES';
@@ -3048,30 +3049,33 @@ begin
   ]);
 
   wbRecord(ENCH, 'Enchantment', [
-    wbEDID,
-    wbStruct(OBME, 'Oblivion Magic Extender', [
-      wbInteger('Record Version', itU8),
-      wbStruct('OBME Version', [
-        wbInteger('Beta', itU8),
-        wbInteger('Minor', itU8),
-        wbInteger('Major', itU8)
-      ]),
-      wbByteArray('Unused', $1C)
-    ], cpNormal, False, wbOBMEDontShow),
-    wbFULL,
-    wbStruct(ENIT, '', [
+    wbString(NAME, 'NameID'),
+    wbStruct(ENDT, 'Enchant Data', [
       wbInteger('Type', itU32, wbEnum([
+        {0} 'Cast Once',
+        {1} 'Cast Strikes',
+        {2} 'Cast when Used',
+        {3} 'Constant Effect'
+      ])),
+      wbInteger('Enchant Cost', itU32),
+      wbInteger('Charge Amount', itU32),
+      wbInteger('Auto Calc', itU32)
+    ]),
+    wbStruct(ENAM, 'Enchant Data', [
+      wbInteger('EffectID', itU16),
+      wbInteger('SkillID', itU8),
+      wbInteger('AttributeID', itU8),
+      wbInteger('RangeType', itU32, wbEnum([
         {0} 'Scroll',
         {1} 'Staff',
         {2} 'Weapon',
         {3} 'Apparel'
       ])),
-      wbInteger('Charge Amount', itU32),
-      wbInteger('Enchant Cost', itU32),
-      wbInteger('Flags', itU8, wbFlags(['Manual Enchant Cost (Autocalc Off)'])),
-      wbByteArray('Unused', 3)
-    ], cpNormal, True),
-    wbEffects
+      wbInteger('Area', itU32),
+      wbInteger('Duration', itU32),
+      wbInteger('MagMin', itU32),
+      wbInteger('MagMax', itU32)
+    ])
   ]);
 
   wbRecord(EYES, 'Eyes', [
