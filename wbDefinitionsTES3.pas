@@ -55,50 +55,40 @@ uses
 
 const
   AADT : TwbSignature = 'AADT'; { Morrowind }
-  ACBS : TwbSignature = 'ACBS';
-  ACHR : TwbSignature = 'ACHR';
-  ACRE : TwbSignature = 'ACRE';
-  TRGT : TwbSignature = 'TRGT';
-  ACTI : TwbSignature = 'ACTI';
+  ACTI : TwbSignature = 'ACTI'; { Morrowind }
   AI_A : TwbSignature = 'AI'#$5F'A'; { Morrowind }
   AI_E : TwbSignature = 'AI'#$5F'E'; { Morrowind }
   AI_F : TwbSignature = 'AI'#$5F'F'; { Morrowind }
   AI_T : TwbSignature = 'AI'#$5F'T'; { Morrowind }
   AI_W : TwbSignature = 'AI'#$5F'W'; { Morrowind }
-  AIDT : TwbSignature = 'AIDT';
-  ALCH : TwbSignature = 'ALCH';
+  AIDT : TwbSignature = 'AIDT'; { Morrowind }
+  ALCH : TwbSignature = 'ALCH'; { Morrowind }
   ALDT : TwbSignature = 'ALDT'; { Morrowind }
   AMBI : TwbSignature = 'AMBI'; { Morrowind }
-  AMMO : TwbSignature = 'AMMO';
   ANAM : TwbSignature = 'ANAM'; { Morrowind }
-  ANIO : TwbSignature = 'ANIO';
   AODT : TwbSignature = 'AODT'; { Morrowind }
-  APPA : TwbSignature = 'APPA';
-  ARMO : TwbSignature = 'ARMO';
+  APPA : TwbSignature = 'APPA'; { Morrowind }
+  ARMO : TwbSignature = 'ARMO'; { Morrowind }
   ASND : TwbSignature = 'ASND'; { Morrowind }
-  ATTR : TwbSignature = 'ATTR';
-  ATXT : TwbSignature = 'ATXT';
   AVFX : TwbSignature = 'AVFX'; { Morrowind }
   BKDT : TwbSignature = 'BKDT'; { Morrowind }
-  BMDT : TwbSignature = 'BMDT';
-  BNAM : TwbSignature = 'BNAM';
+  BNAM : TwbSignature = 'BNAM'; { Morrowind }
   BODY : TwbSignature = 'BODY'; { Morrowind }
-  BOOK : TwbSignature = 'BOOK';
-  BSGN : TwbSignature = 'BSGN';
+  BOOK : TwbSignature = 'BOOK'; { Morrowind }
+  BSGN : TwbSignature = 'BSGN'; { Morrowind }
   BSND : TwbSignature = 'BSND'; { Morrowind }
-  BTXT : TwbSignature = 'BTXT';
   BVFX : TwbSignature = 'BVFX'; { Morrowind }
   BYDT : TwbSignature = 'BYDT'; { Morrowind }
-  CELL : TwbSignature = 'CELL';
+  CELL : TwbSignature = 'CELL'; { Morrowind }
   CLAS : TwbSignature = 'CLAS'; { Morrowind }
   CLDT : TwbSignature = 'CLDT'; { Morrowind }
   CLMT : TwbSignature = 'CLMT';
-  CLOT : TwbSignature = 'CLOT';
-  CNAM : TwbSignature = 'CNAM';
+  CLOT : TwbSignature = 'CLOT'; { Morrowind }
+  CNAM : TwbSignature = 'CNAM'; { Morrowind }
   CNDT : TwbSignature = 'CNDT'; { Morrowind }
-  CNTO : TwbSignature = 'CNTO';
-  CONT : TwbSignature = 'CONT';
-  CREA : TwbSignature = 'CREA';
+  CNTO : TwbSignature = 'CNTO'; { Morrowind }
+  CONT : TwbSignature = 'CONT'; { Morrowind }
+  CREA : TwbSignature = 'CREA'; { Morrowind }
   CSAD : TwbSignature = 'CSAD';
   CSCR : TwbSignature = 'CSCR';
   CSDC : TwbSignature = 'CSDC';
@@ -107,31 +97,30 @@ const
   CSND : TwbSignature = 'CSND'; { Morrowind }
   CSTD : TwbSignature = 'CSTD';
   CSTY : TwbSignature = 'CSTY';
-  CTDA : TwbSignature = 'CTDA';
-  CTDT : TwbSignature = 'CTDT';
+  CTDA : TwbSignature = 'CTDA'; { Not Morrowind but keep it }
+  CTDT : TwbSignature = 'CTDT'; { Morrowind }
   CVFX : TwbSignature = 'CVFX'; { Morrowind }
-  DATA : TwbSignature = 'DATA';
+  DATA : TwbSignature = 'DATA'; { Morrowind }
   DATX : TwbSignature = 'DATX';
-  DELE : TwbSignature = 'DELE';
+  DELE : TwbSignature = 'DELE'; { Morrowind }
   DESC : TwbSignature = 'DESC'; { Morrowind }
-  DIAL : TwbSignature = 'DIAL';
-  DNAM : TwbSignature = 'DNAM';
+  DIAL : TwbSignature = 'DIAL'; { Morrowind }
+  DNAM : TwbSignature = 'DNAM'; { Morrowind }
   DODT : TwbSignature = 'DODT'; { Morrowind }
-  DOOR : TwbSignature = 'DOOR';
-  EDID : TwbSignature = 'EDID';
+  DOOR : TwbSignature = 'DOOR'; { Morrowind }
   EDDX : TwbSignature = 'EDDX';
+  EDID : TwbSignature = 'EDID';
   EFID : TwbSignature = 'EFID';
-  EFIT : TwbSignature = 'EFIT';
-  ACVA : TwbSignature = 'ACVA';
   EFII : TwbSignature = 'EFII';
-  EFXX : TwbSignature = 'EFXX';
+  EFIT : TwbSignature = 'EFIT';
   EFIX : TwbSignature = 'EFIX';
   EFME : TwbSignature = 'EFME';
   EFSH : TwbSignature = 'EFSH';
-  ENAM : TwbSignature = 'ENAM';
-  ENCH : TwbSignature = 'ENCH';
+  EFXX : TwbSignature = 'EFXX';
+  ENAM : TwbSignature = 'ENAM'; { Morrowind }
+  ENCH : TwbSignature = 'ENCH'; { Morrowind }
   ENDT : TwbSignature = 'ENDT'; { Morrowind }
-  ENIT : TwbSignature = 'ENIT';
+  ENIT : TwbSignature = 'ENIT'; { Morrowind }
   ESCE : TwbSignature = 'ESCE';
   EYES : TwbSignature = 'EYES';
   FACT : TwbSignature = 'FACT'; { Morrowind }
@@ -152,18 +141,17 @@ const
   GRAS : TwbSignature = 'GRAS';
   HAIR : TwbSignature = 'HAIR';
   HCLR : TwbSignature = 'HCLR';
-  HEDR : TwbSignature = 'HEDR';
+  HEDR : TwbSignature = 'HEDR'; { Morrowind }
   HNAM : TwbSignature = 'HNAM';
   HSND : TwbSignature = 'HSND'; { Morrowind }
   HVFX : TwbSignature = 'HVFX'; { Morrowind }
   ICO2 : TwbSignature = 'ICO2';
   ICON : TwbSignature = 'ICON';
   IDLE : TwbSignature = 'IDLE';
-  NULL : TwbSignature = 'NULL';
-  INAM : TwbSignature = 'INAM';
-  INDX : TwbSignature = 'INDX';
-  INFO : TwbSignature = 'INFO';
-  INGR : TwbSignature = 'INGR';
+  INAM : TwbSignature = 'INAM'; { Morrowind }
+  INDX : TwbSignature = 'INDX'; { Morrowind }
+  INFO : TwbSignature = 'INFO'; { Morrowind }
+  INGR : TwbSignature = 'INGR'; { Morrowind }
   INTV : TwbSignature = 'INTV'; { Morrowind }
   IRDT : TwbSignature = 'IRDT'; { Morrowind }
   ITEX : TwbSignature = 'ITEX'; { Morrowind }
@@ -171,28 +159,28 @@ const
   KEYM : TwbSignature = 'KEYM';
   KFFZ : TwbSignature = 'KFFZ';
   KNAM : TwbSignature = 'KNAM'; { Morrowind }
-  LAND : TwbSignature = 'LAND';
+  LAND : TwbSignature = 'LAND'; { Morrowind }
   LEVC : TwbSignature = 'LEVC'; { Morrowind }
   LEVI : TwbSignature = 'LEVI'; { Morrowind }
   LHDT : TwbSignature = 'LHDT'; { Morrowind }
-  LIGH : TwbSignature = 'LIGH';
+  LIGH : TwbSignature = 'LIGH'; { Morrowind }
   LKDT : TwbSignature = 'LKDT'; { Morrowind }
   LNAM : TwbSignature = 'LNAM';
   LOCK : TwbSignature = 'LOCK'; { Morrowind }
   LSCR : TwbSignature = 'LSCR';
-  LTEX : TwbSignature = 'LTEX';
+  LTEX : TwbSignature = 'LTEX'; { Morrowind }
   LVLC : TwbSignature = 'LVLC';
   LVLD : TwbSignature = 'LVLD';
   LVLF : TwbSignature = 'LVLF';
   LVLI : TwbSignature = 'LVLI';
   LVLO : TwbSignature = 'LVLO';
   LVSP : TwbSignature = 'LVSP';
-  MAST : TwbSignature = 'MAST';
+  MAST : TwbSignature = 'MAST'; { Morrowind }
   MCDT : TwbSignature = 'MCDT'; { Morrowind }
   MEDT : TwbSignature = 'MEDT'; { Morrowind }
-  MGEF : TwbSignature = 'MGEF';
-  MISC : TwbSignature = 'MISC';
-  MNAM : TwbSignature = 'MNAM';
+  MGEF : TwbSignature = 'MGEF'; { Morrowind }
+  MISC : TwbSignature = 'MISC'; { Morrowind }
+  MNAM : TwbSignature = 'MNAM'; { Morrowind }
   MO2B : TwbSignature = 'MO2B';
   MO2T : TwbSignature = 'MO2T';
   MO3B : TwbSignature = 'MO3B';
@@ -203,9 +191,9 @@ const
   MOD3 : TwbSignature = 'MOD3';
   MOD4 : TwbSignature = 'MOD4';
   MODB : TwbSignature = 'MODB';
-  MODL : TwbSignature = 'MODL';
+  MODL : TwbSignature = 'MODL'; { Morrowind }
   MODT : TwbSignature = 'MODT';
-  NAM0 : TwbSignature = 'NAM0';
+  NAM0 : TwbSignature = 'NAM0'; { Morrowind }
   NAM1 : TwbSignature = 'NAM1';
   NAM2 : TwbSignature = 'NAM2';
   NAM5 : TwbSignature = 'NAM5'; { Morrowind }
@@ -214,18 +202,19 @@ const
   NIFT : TwbSignature = 'NIFT';
   NIFZ : TwbSignature = 'NIFZ';
   NNAM : TwbSignature = 'NNAM'; { Morrowind }
-  NPC_ : TwbSignature = 'NPC_';
+  NPC_ : TwbSignature = 'NPC_'; { Morrowind }
   NPCO : TwbSignature = 'NPCO'; { Morrowind }
   NPCS : TwbSignature = 'NPCS'; { Morrowind }
   NPDT : TwbSignature = 'NPDT'; { Morrowind }
-  OFST : TwbSignature = 'OFST';
+  NULL : TwbSignature = 'NULL';
   OBME : TwbSignature = 'OBME';
-  ONAM : TwbSignature = 'ONAM';
+  OFST : TwbSignature = 'OFST';
+  ONAM : TwbSignature = 'ONAM'; { Morrowind }
   PACK : TwbSignature = 'PACK';
   PBDT : TwbSignature = 'PBDT'; { Morrowind }
   PFIG : TwbSignature = 'PFIG';
   PFPC : TwbSignature = 'PFPC';
-  PGAG : TwbSignature = 'PGAG';
+  PGAG : TwbSignature = 'PGAG'; { Morrowind }
   PGRC : TwbSignature = 'PGRC'; { Morrowind }
   PGRD : TwbSignature = 'PGRD'; { Morrowind }
   PGRI : TwbSignature = 'PGRI';
@@ -235,7 +224,8 @@ const
   PKDT : TwbSignature = 'PKDT';
   PKID : TwbSignature = 'PKID';
   PLDT : TwbSignature = 'PLDT';
-  PNAM : TwbSignature = 'PNAM';
+  PLYR : TwbSignature = 'PLYR';
+  PNAM : TwbSignature = 'PNAM'; { Morrowind }
   PROB : TwbSignature = 'PROB'; { Morrowind }
   PSDT : TwbSignature = 'PSDT';
   PTDT : TwbSignature = 'PTDT';
@@ -246,10 +236,9 @@ const
   QSTF : TwbSignature = 'QSTF'; { Morrowind }
   QSTI : TwbSignature = 'QSTI';
   QSTN : TwbSignature = 'QSTN'; { Morrowind }
-  QSTR : TwbSignature = 'QSTR';
-  TPIC : TwbSignature = 'TPIC';
+  QSTR : TwbSignature = 'QSTR'; { Morrowind }
   QUST : TwbSignature = 'QUST';
-  RACE : TwbSignature = 'RACE';
+  RACE : TwbSignature = 'RACE'; { Morrowind }
   RADT : TwbSignature = 'RADT'; { Morrowind }
   RCLR : TwbSignature = 'RCLR';
   RDAT : TwbSignature = 'RDAT';
@@ -260,8 +249,7 @@ const
   RDSD : TwbSignature = 'RDSD';
   RDWT : TwbSignature = 'RDWT';
   REFR : TwbSignature = 'REFR';
-  PLYR : TwbSignature = 'PLYR';
-  REGN : TwbSignature = 'REGN';
+  REGN : TwbSignature = 'REGN'; { Morrowind }
   REPA : TwbSignature = 'REPA'; { Morrowind }
   RGNN : TwbSignature = 'RGNN'; { Morrowind }
   RIDT : TwbSignature = 'RIDT'; { Morrowind }
@@ -277,46 +265,48 @@ const
   SCIP : TwbSignature = 'SCIP'; { Morrowind }
   SCIT : TwbSignature = 'SCIT';
   SCPT : TwbSignature = 'SCPT'; { Morrowind }
-  SCRI : TwbSignature = 'SCRI';
+  SCRI : TwbSignature = 'SCRI'; { Morrowind }
   SCRO : TwbSignature = 'SCRO';
   SCRV : TwbSignature = 'SCRV';
   SCTX : TwbSignature = 'SCTX'; { Morrowind }
   SCVR : TwbSignature = 'SCVR'; { Morrowind }
   SGST : TwbSignature = 'SGST';
   SKDT : TwbSignature = 'SKDT'; { Morrowind }
-  SKIL : TwbSignature = 'SKIL';
+  SKIL : TwbSignature = 'SKIL'; { Morrowind }
   SLCP : TwbSignature = 'SLCP';
   SLGM : TwbSignature = 'SLGM';
   SLSD : TwbSignature = 'SLSD';
-  SNAM : TwbSignature = 'SNAM';
+  SNAM : TwbSignature = 'SNAM'; { Morrowind }
   SNDD : TwbSignature = 'SNDD';
   SNDG : TwbSignature = 'SNDG'; { Morrowind }
   SNDX : TwbSignature = 'SNDX';
   SOUL : TwbSignature = 'SOUL';
-  SOUN : TwbSignature = 'SOUN';
+  SOUN : TwbSignature = 'SOUN'; { Morrowind }
   SPDT : TwbSignature = 'SPDT'; { Morrowind }
-  SPEL : TwbSignature = 'SPEL';
+  SPEL : TwbSignature = 'SPEL'; { Morrowind }
   SPIT : TwbSignature = 'SPIT';
   SPLO : TwbSignature = 'SPLO';
   SSCR : TwbSignature = 'SSCR'; { Morrowind }
-  STAT : TwbSignature = 'STAT';
+  STAT : TwbSignature = 'STAT'; { Morrowind }
   STRV : TwbSignature = 'STRV'; { Morrowind }
   TCLF : TwbSignature = 'TCLF';
   TCLT : TwbSignature = 'TCLT';
-  TES3 : TwbSignature = 'TES3';
+  TES3 : TwbSignature = 'TES3'; { Morrowind }
   TEXT : TwbSignature = 'TEXT'; { Morrowind }
-  TNAM : TwbSignature = 'TNAM';
+  TNAM : TwbSignature = 'TNAM'; { Morrowind }
+  TPIC : TwbSignature = 'TPIC';
   TRDT : TwbSignature = 'TRDT';
   TREE : TwbSignature = 'TREE';
-  UNAM : TwbSignature = 'UNAM';
-  VCLR : TwbSignature = 'VCLR';
-  VHGT : TwbSignature = 'VHGT';
+  TRGT : TwbSignature = 'TRGT';
+  UNAM : TwbSignature = 'UNAM'; { Morrowind }
+  VCLR : TwbSignature = 'VCLR'; { Morrowind }
+  VHGT : TwbSignature = 'VHGT'; { Morrowind }
   VNAM : TwbSignature = 'VNAM';
   VNML : TwbSignature = 'VNML';
-  VTEX : TwbSignature = 'VTEX';
+  VTEX : TwbSignature = 'VTEX'; { Morrowind }
   VTXT : TwbSignature = 'VTXT';
   WATR : TwbSignature = 'WATR';
-  WEAP : TwbSignature = 'WEAP';
+  WEAP : TwbSignature = 'WEAP'; { Morrowind }
   WEAT : TwbSignature = 'WEAT'; { Morrowind }
   WHGT : TwbSignature = 'WHGT'; { Morrowind }
   WLST : TwbSignature = 'WLST';
@@ -326,7 +316,7 @@ const
   WTHR : TwbSignature = 'WTHR';
   XACT : TwbSignature = 'XACT';
   XCCM : TwbSignature = 'XCCM';
-  XCHG : TwbSignature = 'XCHG';
+  XCHG : TwbSignature = 'XCHG'; { Morrowind }
   XCLC : TwbSignature = 'XCLC';
   XCLL : TwbSignature = 'XCLL';
   XCLR : TwbSignature = 'XCLR';
@@ -349,9 +339,9 @@ const
   XRGD : TwbSignature = 'XRGD';
   XRNK : TwbSignature = 'XRNK';
   XRTM : TwbSignature = 'XRTM';
-  XSCL : TwbSignature = 'XSCL';
+  XSCL : TwbSignature = 'XSCL'; { Morrowind }
   XSED : TwbSignature = 'XSED';
-  XSOL : TwbSignature = 'XSOL';
+  XSOL : TwbSignature = 'XSOL'; { Morrowind }
   XTEL : TwbSignature = 'XTEL';
   XTRG : TwbSignature = 'XTRG';
   XXXX : TwbSignature = 'XXXX';
@@ -390,15 +380,12 @@ var
   wbSCRI: IwbSubRecordDef;
   wbFaceGen: IwbSubRecordStructDef;
   wbENAM: IwbSubRecordDef;
-//  wbFGGS: IwbSubRecordDef;
+  wbFGGS: IwbSubRecordDef;
   wbXLOD: IwbSubRecordDef;
-  wbXESP: IwbSubRecordDef;
   wbICON: IwbSubRecordDef;
   wbEFID: IwbSubRecordDef;
   wbEFIDOBME: IwbSubRecordDef;
   wbEFIT: IwbSubRecordDef;
-  wbEFITOBME: IwbSubRecordDef;
-  wbEFIX: IwbSubRecordDef;
   wbSCIT: IwbSubRecordStructDef;
   wbSCITOBME: IwbSubRecordStructDef;
   wbEffects: IwbSubRecordUnionDef;
@@ -690,23 +677,6 @@ begin
         s := s + ' ';
       Result := 'in ' + s + Result;
     end;
-  end;
-end;
-
-function wbGMSTUnionDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  rEDID: IwbRecord;
-  s: string;
-begin
-  Result := 1;
-  rEDID := aElement.Container.RecordBySignature[EDID];
-  if Assigned(rEDID) then begin
-    s := rEDID.Value;
-    if Length(s) > 0 then
-      case s[1] of
-        's': Result := 0;
-        'f': Result := 2;
-      end;
   end;
 end;
 
@@ -1046,38 +1016,6 @@ begin
 
   if Integer(Container.ElementByName['Type'].NativeValue) and $04 <> 0 then
     Result := 1;
-end;
-
-function wbEFITOBMEParamDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  ParamInfo: Variant;
-  Container: IwbContainer;
-begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
-
-  ParamInfo := Container.ElementNativeValues['..\EFME\EFIT Param Info'];
-  if VarIsNull(ParamInfo) or VarIsEmpty(ParamInfo) then
-  else
-    Result := ParamInfo;
-end;
-
-function wbEFIXParamDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  ParamInfo: Variant;
-  Container: IwbContainer;
-begin
-  Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
-
-  ParamInfo := Container.ElementNativeValues['..\EFME\EFIX Param Info'];
-  if VarIsNull(ParamInfo) or VarIsEmpty(ParamInfo) then
-  else
-    Result := ParamInfo;
 end;
 
 function wbCTDAParam1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -2070,46 +2008,8 @@ begin
   wbENAM := wbFormIDCk(ENAM, 'Enchantment', [ENCH]);
 
   wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
-  wbXESP := wbStruct(XESP, 'Enable Parent', [
-    wbFormIDCk('Reference', [PLYR, REFR, ACRE, ACHR]),
-    wbInteger('Flags', itU8, wbFlags([
-      'Set Enable State to Opposite of Parent'
-    ])),
-    wbByteArray('Unused', 3)
-  ]);
-
-  wbRecord(ACHR, 'Placed NPC', [
-    wbEDID,
-    wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
-    wbRStruct('Unused', [
-      wbFormIDCk(XPCI, 'Unused', [CELL]),
-      wbString(FULL, 'Unused')
-    ], []),
-    wbXLOD,
-    wbXESP,
-    wbFormIDCk(XMRC, 'Merchant container', [REFR], True),
-    wbFormIDCk(XHRS, 'Horse', [ACRE], True),
-    wbXRGD,
-    wbXSCL,
-    wbDATAPosRot
-  ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
-
   wbXOWN := wbFormIDCk(XOWN, 'Owner', [FACT, NPC_]);
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
-
-  wbRecord(ACRE, 'Placed Creature', [
-    wbEDID,
-    wbFormIDCk(NAME, 'Base', [CREA], False, cpNormal, True),
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32),
-      wbXGLB
-    ], []),
-    wbXESP,
-    wbXRGD,
-    wbXSCL,
-    wbDATAPosRot
-  ], True, wbPlacedAddInfo);
 
   {Done}
   wbRecord(ACTI, 'Activator', [
@@ -2244,34 +2144,6 @@ begin
       wbInteger('Duration', itU32),
       wbInteger('Type', itU32, wbEnum(['Self', 'Touch', 'Target'])),
       wbInteger('Actor Value', itS32, wbActorValueEnum)
-    ], cpNormal, True, nil, -1, wbEFITAfterLoad);
-
-  wbEFITOBME :=
-    wbStructSK(EFIT, [4, 5], '', [
-      wbStringMgefCode('Magic Effect Code', 4),
-      wbInteger('Magnitude', itU32),
-      wbInteger('Area', itU32),
-      wbInteger('Duration', itU32),
-      wbInteger('Type', itU32, wbEnum(['Self', 'Touch', 'Target'])),
-      wbUnion('Param #1', wbEFITOBMEParamDecider, [
-        wbByteArray('Param #1 - Unknown Type', 4),
-        wbFormID('Param #1 - FormID'),
-        wbStringMgefCode('Param #1 - Magic Effect Code', 4),
-        wbFormIDCk('Param #1 - Actor Value', [ACVA])
-      ])
-    ], cpNormal, True, nil, -1{, wbEFITAfterLoad});
-
-  wbEFIX :=
-    wbStructSK(EFIX, [3], '', [
-      wbInteger('Override Mask', itU32, wbFlags([])),
-      wbInteger('Flags', itU32, wbFlags([])),
-      wbFloat('Base Cost'),
-      wbUnion('Param #2', wbEFIXParamDecider, [
-        wbByteArray('Param #2 - Unknown Type', 4),
-        wbFormID('Param #2 - FormID'),
-        wbStringMgefCode('Param #2 - Magic Effect Code', 4),
-        wbFormIDCk('Param #2 - Actor Value', [ACVA])
-      ])
     ], cpNormal, True, nil, -1, wbEFITAfterLoad);
 
   wbMagicSchoolEnum :=
@@ -2614,29 +2486,6 @@ begin
     wbString(DESC, 'Description')
   ]);
 
-  wbRecord(CLMT, 'Climate', [
-    wbEDID,
-    wbArrayS(WLST, 'Weather Types', wbStructSK([0], 'Weather Type', [
-      wbFormIDCk('Weather', [WTHR]),
-      wbInteger('Chance', itS32)
-    ])),
-    wbString(FNAM, 'Sun Texture'),
-    wbString(GNAM, 'Sun Glare Texture'),
-    wbMODL,
-    wbStruct(TNAM, 'Timing', [
-      wbStruct('Sunrise', [
-        wbInteger('Begin', itU8, wbClmtTime),
-        wbInteger('End', itU8, wbClmtTime)
-      ]),
-      wbStruct('Sunset', [
-        wbInteger('Begin', itU8, wbClmtTime),
-        wbInteger('End', itU8, wbClmtTime)
-      ]),
-      wbInteger('Volatility', itU8),
-      wbInteger('Moons / Phase Length', itU8, wbClmtMoonsPhaseLength)
-    ], cpNormal, True)
-  ]);
-
   wbRecord(CLOT, 'Clothing', [
     wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
@@ -2876,89 +2725,6 @@ begin
     wbFloat(XSCL, 'Scale')
   ]);
 
-  wbRecord(CSTY, 'Combat Style', [
-    wbEDID,
-    wbStruct(CSTD, 'Standard', [
-      {000}wbInteger('Dodge % Chance', itU8),
-      {001}wbInteger('Left/Right % Chance', itU8),
-      {002}wbByteArray('Unused', 2),
-      {004}wbFloat('Dodge L/R Timer (min)'),
-      {008}wbFloat('Dodge L/R Timer (max)'),
-      {012}wbFloat('Dodge Forward Timer (min)'),
-      {016}wbFloat('Dodge Forward Timer (max)'),
-      {020}wbFloat('Dodge Back Timer Min'),
-      {024}wbFloat('Dodge Back Timer Max'),
-      {028}wbFloat('Idle Timer min'),
-      {032}wbFloat('Idle Timer max'),
-      {036}wbInteger('Block % Chance', itU8),
-      {037}wbInteger('Attack % Chance', itU8),
-      {038}wbByteArray('Unused', 2),
-      {040}wbFloat('Recoil/Stagger Bonus to Attack'),
-      {044}wbFloat('Unconscious Bonus to Attack'),
-      {048}wbFloat('Hand-To-Hand Bonus to Attack'),
-      {052}wbInteger('Power Attack % Chance', itU8),
-      {053}wbByteArray('Unused', 3),
-      {056}wbFloat('Recoil/Stagger Bonus to Power'),
-      {060}wbFloat('Unconscious Bonus to Power Attack'),
-      {064}wbInteger('Power Attack - Normal', itU8),
-      {065}wbInteger('Power Attack - Forward', itU8),
-      {066}wbInteger('Power Attack - Back', itU8),
-      {067}wbInteger('Power Attack - Left', itU8),
-      {068}wbInteger('Power Attack - Right', itU8),
-      {069}wbByteArray('Unused', 3),
-      {072}wbFloat('Hold Timer (min)'),
-      {076}wbFloat('Hold Timer (max)'),
-      {080}wbInteger('Flags 1', itU8, wbFlags([
-             'Advanced',
-             'Choose Attack using % Chance',
-             'Ignore Allies in Area',
-             'Will Yield',
-             'Rejects Yields',
-             'Fleeing Disabled',
-             'Prefers Ranged',
-             'Melee Alert OK'
-           ])),
-      {081}wbInteger('Acrobatic Dodge % Chance', itU8),
-      {082}wbByteArray('Unused', 2),
-      {084}wbFloat('Range Mult (Optimal)'),
-      {088}wbFloat('Range Mult (Max)'),
-      {092}wbFloat('Switch Distance (Melee)'),
-      {096}wbFloat('Switch Distance (Ranged)'),
-      {100}wbFloat('Buff standoff Distance'),
-      {104}wbFloat('Ranged standoff Distance'),
-      {108}wbFloat('Group standoff Distance'),
-      {112}wbInteger('Rushing Attack % Chance', itU8),
-      {113}wbByteArray('Unused', 3),
-      {116}wbFloat('Rushing Attack Distance Mult'),
-      {120}wbInteger('Flags 2', itU32, wbFlags([
-             'Do Not Acquire'
-           ]))
-    ], cpNormal, True, nil, 31),
-    wbStruct(CSAD, 'Advanced', [
-      wbFloat('Dodge Fatigue Mod Mult'),
-      wbFloat('Dodge Fatigue Mod Base'),
-      wbFloat('Encumb. Speed Mod Base'),
-      wbFloat('Encumb. Speed Mod Mult'),
-      wbFloat('Dodge While Under Attack Mult'),
-      wbFloat('Dodge Not Under Attack Mult'),
-      wbFloat('Dodge Back While Under Attack Mult'),
-      wbFloat('Dodge Back Not Under Attack Mult'),
-      wbFloat('Dodge Forward While Attacking Mult'),
-      wbFloat('Dodge Forward Not Attacking Mult'),
-      wbFloat('Block Skill Modifier Mult'),
-      wbFloat('Block Skill Modifier Base'),
-      wbFloat('Block While Under Attack Mult'),
-      wbFloat('Block Not Under Attack Mult'),
-      wbFloat('Attack Skill Modifier Mult'),
-      wbFloat('Attack Skill Modifier Base'),
-      wbFloat('Attack While Under Attack Mult'),
-      wbFloat('Attack Not Under Attack Mult'),
-      wbFloat('Attack During Block Mult'),
-      wbFloat('Power Att. Fatigue Mod Base'),
-      wbFloat('Power Att. Fatigue Mod Mult')
-    ])
-  ]);
-
 { What follows in the ESP/ESM are all the INFO records that belong to the
 	DIAL record.  One of the few cases where order is important
 }
@@ -3053,103 +2819,6 @@ begin
     'Always Show'
   ]);
 
-  wbRecord(EFSH, 'Effect Shader', [
-    wbEDID,
-    wbString(ICON, 'Fill Texture'),
-    wbString(ICO2, 'Particle Shader Texture'),
-    wbStruct(DATA, '', [
-      wbInteger('Flags', itU8, wbFlags([
-        {0} 'No Membrane Shader',
-        {1} '',
-        {2} '',
-        {3} 'No Particle Shader',
-        {4} 'Edge Effect - Inverse',
-        {5} 'Membrane Shader - Affect Skin Only'
-      ])),
-      wbByteArray('Unused', 3),
-      wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
-      wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
-      wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
-      wbStruct('Fill/Texture Effect - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
-      wbFloat('Fill/Texture Effect - Full Alpha Time'),
-      wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
-      wbFloat('Fill/Texture Effect - Presistent Alpha Ratio'),
-      wbFloat('Fill/Texture Effect - Alpha Pulse Amplitude'),
-      wbFloat('Fill/Texture Effect - Alpha Pulse Frequency'),
-      wbFloat('Fill/Texture Effect - Texture Animation Speed (U)'),
-      wbFloat('Fill/Texture Effect - Texture Animation Speed (V)'),
-      wbFloat('Edge Effect - Fall Off'),
-      wbStruct('Edge Effect - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbFloat('Edge Effect - Alpha Fade In Time'),
-      wbFloat('Edge Effect - Full Alpha Time'),
-      wbFloat('Edge Effect - Alpha Fade Out Time'),
-      wbFloat('Edge Effect - Persistent Alpha Ratio'),
-      wbFloat('Edge Effect - Alpha Pulse Amplitude'),
-      wbFloat('Edge Effect - Alpha Pusle Frequence'),
-      wbFloat('Fill/Texture Effect - Full Alpha Ratio'),
-      wbFloat('Edge Effect - Full Alpha Ratio'),
-      wbInteger('Membrane Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
-      wbInteger('Particle Shader - Source Blend Mode', itU32, wbBlendModeEnum),
-      wbInteger('Particle Shader - Blend Operation', itU32, wbBlendOpEnum),
-      wbInteger('Particle Shader - Z Test Function', itU32, wbZTestFuncEnum),
-      wbInteger('Particle Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
-      wbFloat('Particle Shader - Particle Birth Ramp Up Time'),
-      wbFloat('Particle Shader - Full Particle Birth Time'),
-      wbFloat('Particle Shader - Particle Birth Ramp Down Time'),
-      wbFloat('Particle Shader - Full Particle Birth Ratio'),
-      wbFloat('Particle Shader - Persistant Particle Birth Ratio'),
-      wbFloat('Particle Shader - Particle Lifetime'),
-      wbFloat('Particle Shader - Particle Lifetime +/-'),
-      wbFloat('Particle Shader - Initial Speed Along Normal'),
-      wbFloat('Particle Shader - Acceleration Along Normal'),
-      wbFloat('Particle Shader - Initial Velocity #1'),
-      wbFloat('Particle Shader - Initial Velocity #2'),
-      wbFloat('Particle Shader - Initial Velocity #3'),
-      wbFloat('Particle Shader - Acceleration #1'),
-      wbFloat('Particle Shader - Acceleration #2'),
-      wbFloat('Particle Shader - Acceleration #3'),
-      wbFloat('Particle Shader - Scale Key 1'),
-      wbFloat('Particle Shader - Scale Key 2'),
-      wbFloat('Particle Shader - Scale Key 1 Time'),
-      wbFloat('Particle Shader - Scale Key 2 Time'),
-      wbStruct('Color Key 1 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbStruct('Color Key 2 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbStruct('Color Key 3 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbFloat('Color Key 1 - Color Alpha'),
-      wbFloat('Color Key 2 - Color Alpha'),
-      wbFloat('Color Key 3 - Color Alpha'),
-      wbFloat('Color Key 1 - Color Key Time'),
-      wbFloat('Color Key 2 - Color Key Time'),
-      wbFloat('Color Key 3 - Color Key Time')
-    ], cpNormal, True, nil, 25)
-  ]);
-
   wbRecord(ENCH, 'Enchantment', [
     wbString(NAME, 'NameID'),
     wbStruct(ENDT, 'Enchant Data', [
@@ -3178,13 +2847,6 @@ begin
       wbInteger('MagMin', itU32),
       wbInteger('MagMax', itU32)
     ])
-  ]);
-
-  wbRecord(EYES, 'Eyes', [
-    wbEDID,
-    wbFULL,
-    wbString(ICON, 'Texture', 0, cpNormal, True),
-    wbInteger(DATA, 'Flags', itU8, wbFlags(['Playable']), cpNormal, True)
   ]);
 
   wbXNAM :=
@@ -3267,28 +2929,6 @@ begin
     ], [])
   ]);
 
-  wbRecord(FLOR, 'Flora', [
-    wbEDID,
-    wbFULL,
-    wbMODL,
-    wbSCRI,
-    wbFormIDCk(PFIG, 'Ingredient', [INGR]),
-    wbStruct(PFPC, 'Seasonal ingredient production', [
-      wbInteger('Spring', itU8),
-      wbInteger('Summer ', itU8),
-      wbInteger('Fall', itU8),
-      wbInteger('Winter', itU8)
-    ], cpNormal, True)
-  ]);
-
-  wbRecord(FURN, 'Furniture', [
-    wbEDID,
-    wbFULL,
-    wbMODL,
-    wbSCRI,
-    wbByteArray(MNAM, 'Marker Flags', 0, cpNormal, True)
-  ]);
-
   wbRecord(GLOB, 'Global', [
     wbString(NAME, 'NameID'),
     wbString(FNAM, 'Type', 1),
@@ -3306,52 +2946,6 @@ begin
       wbInteger(INTV, 'Interer Value', its32),
       wbFloat(FLTV, 'Float Value')
     ], [])
-  ]);
-
-  wbRecord(GRAS, 'Grass', [
-    wbEDID,
-    wbMODL,
-    wbStruct(DATA, '', [
-      wbInteger('Density', itU8),
-      wbInteger('Min Slope', itU8),
-      wbInteger('Max Slope', itU8),
-      wbByteArray('Unused', 1),
-      wbInteger('Unit from water amount', itU16),
-      wbByteArray('Unused', 2),
-      wbInteger('Unit from water type', itU32, wbEnum([
-        'Above - At Least',
-        'Above - At Most',
-        'Below - At Least',
-        'Below - At Most',
-        'Either - At Least',
-        'Either - At Most',
-        'Either - At Most Above',
-        'Either - At Most Below'
-      ])),
-      wbFloat('Position Range'),
-      wbFloat('Height Range'),
-      wbFloat('Color Range'),
-      wbFloat('Wave Period'),
-      wbInteger('Flags', itU8, wbFlags([
-        'Vertex Lighting',
-        'Uniform Scaling',
-        'Fit to Slope'
-      ])),
-      wbByteArray('Unused', 3)
-    ], cpNormal, True)
-  ]);
-
-  wbRecord(HAIR, 'Hair', [
-    wbEDID,
-    wbFULL,
-    wbMODL,
-    wbString(ICON, 'Texture', 0, cpNormal, True),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      'Playable',
-      'Not Male',
-      'Not Female',
-      'Fixed'
-    ]), cpNormal, True)
   ]);
 
   wbCrimeTypeEnum :=
@@ -3647,13 +3241,6 @@ begin
     wbSCROs
   ], []);
 }
-  wbRecord(IDLE, 'Idle Animation', [
-    wbEDID,
-    wbMODL,
-    wbCTDAs,
-    wbInteger(ANAM, 'Animation Group Section', itU8, wbIdleAnam, nil, cpNormal, True),
-    wbArray(DATA, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [IDLE, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True)
-  ]);
 
   wbRecord(INGR, 'Ingredient', [
     wbString(NAME, 'NameID'),
@@ -3773,22 +3360,6 @@ begin
     wbString(SNAM, 'Sound name')
   ]);
 
-  wbRecord(LSCR, 'Load Screen', [
-    wbEDID,
-    wbICON,
-    wbDESC,
-    wbRArrayS('Locations', wbStructSK(LNAM, [0, 1], 'Location', [
-      wbFormIDCk('Direct', [CELL, WRLD, NULL]),
-      wbStructSK([0, 1], 'Indirect', [
-        wbFormIDCk('World', [NULL, WRLD]),
-        wbStructSK([0,1], 'Grid', [
-          wbInteger('Y', itS16),
-          wbInteger('X', itS16)
-        ])
-      ])
-    ]))
-  ]);
-
   wbRecord(LTEX, 'Landscape Texture', [
     wbString(NAME, 'NameID'),
     wbInteger(INTV, 'Landscape ID Number', itU32),
@@ -3826,25 +3397,6 @@ begin
       ], [])
     )
   ]);
-
-  wbRecord(LVSP, 'Leveled Spell', [
-    wbEDID,
-    wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
-      {0x01} 'Calculate from all levels <= player''s level',
-      {0x02} 'Calculate for each item in count',
-      {0x04} 'Use all spells'
-    ]), cpNormal, True),
-    wbRArrayS('Leveled List Entries',
-      wbStructExSK(LVLO , [0, 2], [3], 'Leveled List Entry', [
-        wbInteger('Level', itS16),
-        wbByteArray('Unused', 2),
-        wbFormIDCk('Reference', [SPEL, LVSP]),
-        wbInteger('Count', itS16),
-        wbByteArray('Unused', 2)
-      ], cpNormal, False, nil, 3),
-    cpNormal, True)
-  ], False, nil, cpNormal, False, wbLVLAfterLoad);
 
   wbRecord(MGEF, 'Magic Effect', [
     wbInteger(INDX, 'Magic Effect ID', itU32),
@@ -4105,75 +3657,6 @@ begin
           {11} 'Cast magic'
         ]);
 
-  wbRecord(PACK, 'AI Package', [
-    wbEDID,
-    wbUnion(PKDT, 'General', wbPACKPKDTDecider, [
-      wbStruct('General', [
-        wbInteger('Flags', itU16, wbPKDTFlags),
-        wbInteger('Type', itU8, wbPKDTType),
-        wbByteArray('Unused', 1)
-      ]),
-      wbStruct('General', [
-        wbInteger('Flags', itU32, wbPKDTFlags),
-        wbInteger('Type', itU8, wbPKDTType),
-        wbByteArray('Unused', 3)
-      ])
-    ]),
-    wbStruct(PLDT, 'Location', [
-      wbInteger('Type', itS32, wbEnum([
-        {0} 'Near reference',
-        {1} 'In cell',
-        {2} 'Near current location',
-        {3} 'Near editor location',
-        {4} 'Object ID',
-        {5} 'Object type'
-      ])),
-      wbUnion('Location', wbPxDTLocationDecider, [
-        wbFormIDCk('Reference', [REFR, ACHR, ACRE, PLYR], True),
-        wbFormIDCk('Cell', [CELL]),
-        wbFormIDCk('Unused', [NULL]),
-        wbFormIDCk('Unused', [NULL]),
-        wbFormIDCk('Object ID', [ACTI, DOOR, FLOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
-        wbInteger('Object type', itU32)
-      ]),
-      wbInteger('Radius', itS32)
-    ]),
-    wbStruct(PSDT, 'Schedule', [
-      wbInteger('Month', itS8),
-      wbInteger('Day of week', itS8, wbEnum([
-        'Sundas',
-        'Morndas',
-        'Tirdas',
-        'Middas',
-        'Turdas',
-        'Fredas',
-        'Loredas',
-        'Morndas to Fredas',
-        'Loredas, Sundas',
-        'Morndas, Middas, Fredas',
-        'Tirdas, Turdas'
-      ], [
-        -1, 'Any'
-      ])),
-      wbInteger('Date', itU8),
-      wbInteger('Time', itS8),
-      wbInteger('Duration', itS32)
-    ]),
-    wbStruct(PTDT, 'Target', [
-      wbInteger('Type', itS32, wbEnum([
-        {0} 'Specific reference',
-        {1} 'Object ID',
-        {2} 'Object type'
-      ])),
-      wbUnion('Target', wbPxDTLocationDecider, [
-        wbFormIDCk('Reference', [ACHR, ACRE, REFR, PLYR], True),
-        wbFormIDCk('Object ID', [ACTI, DOOR, FLOR, STAT, FURN, CREA, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH]),
-        wbInteger('Object type', itU32)
-      ]),
-      wbInteger('Count', itS32)
-    ]),
-    wbCTDAs
-  ]);
   {16 bytes }
   wbPGRP :=
     wbArray(PGRP, 'Points', wbStruct('Point', [
@@ -4239,44 +3722,6 @@ begin
     )
 }
   ], False, nil, cpNormal, False, wbPGRDAfterLoad);
-
-  wbRecord(QUST, 'Quest', [
-    wbEDID,
-    wbSCRI,
-    wbFULL,
-    wbICON,
-    wbStruct(DATA, 'General', [
-      wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'Start game enabled',
-        {0x02} '',
-        {0x04} 'Allow repeated conversation topics',
-        {0x08} 'Allow repeated stages'
-      ])),
-      wbInteger('Priority', itU8)
-    ], cpNormal, True),
-    wbCTDAs,
-    wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
-      wbInteger(INDX, 'Stage index', itS16),
-      wbRArray('Log Entries', wbRStruct('Log Entry', [
-        wbInteger(QSDT, 'Stage Flags', itU8, wbFlags([
-          {0x01} 'Complete quest'
-        ])),
-        wbCTDAs,
-        wbStringKC(CNAM, 'Log Entry', 0, cpTranslate),
-        wbResultScript
-      ], []))
-    ], [])),
-    wbRArray('Targets', wbRStruct('Target', [
-      wbStruct(QSTA, 'Target', [
-        wbFormIDCk('Target', [REFR, ACRE, ACHR], True),
-        wbInteger('Flags', itU8, wbFlags([
-          {0x01} 'Compass marker ignores locks'
-        ])),
-        wbByteArray('Unused', 3)
-      ]),
-      wbCTDAs
-    ], []))
-  ]);
 
   wbBodyDataIndex :=
     wbInteger(INDX, 'Index', itU32, wbEnum([
@@ -4420,83 +3865,6 @@ begin
     wbByteArray(SNAM, 'Unknown', 2, cpNormal, True)
   ], True);
 
-  wbRecord(REFR, 'Placed Object', [
-    wbEDID,
-    wbFormIDCk(NAME, 'Base', [TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS], False, cpNormal, True),
-    wbStruct(XTEL, 'Teleport Destination', [
-      wbFormIDCk('Door', [REFR], True),
-      wbPosRot
-    ]),
-    wbStruct(XLOC, 'Lock information', [
-      wbInteger('Lock Level', itU8),
-      wbByteArray('Unused', 3),
-      wbFormIDCk('Key', [KEYM, NULL]),
-      wbUnion('Unused', wbXLOCFillerDecider, [
-        wbEmpty('Unused'),
-        wbByteArray('Unused', 4)
-      ]),
-      wbInteger('Flags', itU8, wbFlags(['', '', 'Leveled Lock'])),
-      wbByteArray('Unused', 3)
-    ]),
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32),
-      wbXGLB
-    ], [XLOC]),
-    wbXESP,
-    wbFormIDCk(XTRG, 'Target', [REFR, ACHR, ACRE], True),
-    wbUnion(XSED, '', wbREFRXSEDDecider, [
-      wbInteger('SpeedTree Seed', itU8),
-      wbInteger('SpeedTree Seed (old format)', itU8{itU32 CS just cuts it off...})
-    ]),
-    wbXLOD,
-    wbFloat(XCHG, 'Charge'),
-    wbInteger(XHLT, 'Health', itS32),
-    wbRStruct('Unused', [
-      wbFormIDCk(XPCI, 'Unused', [CELL]),
-      wbString(FULL, 'Unused')
-    ], []),
-    wbInteger(XLCM, 'Level Modifier', itS32),
-    wbFormIDCk(XRTM, 'Unknown', [REFR]),
-    wbInteger(XACT, 'Action Flag', itU32, wbFlags([
-      'Use Default',
-      'Activate',
-      'Open',
-      'Open by Default'
-    ])),
-    wbInteger(XCNT, 'Count', itS32),
-    wbRStruct('Map Marker', [
-      wbEmpty(XMRK, 'Map Marker Start Marker'),
-      wbInteger(FNAM, 'Map Flags', itU8, wbFlags([
-        {0x01} 'Visible',
-        {0x02} 'Can Travel To'
-      ]), cpNormal, True),
-      wbFULLReq,
-      wbStruct(TNAM, '', [
-        wbInteger('Type', itU8, wbEnum([
-          {0x00} 'None?',
-          {0x01} 'Camp',
-          {0x02} 'Cave',
-          {0x03} 'City',
-          {0x04} 'Elven Ruin',
-          {0x05} 'Fort Ruin',
-          {0x06} 'Mine',
-          {0x07} 'Landmark',
-          {0x08} 'Tavern',
-          {0x09} 'Settlement',
-          {0x0A} 'Daedric Shrine',
-          {0x0B} 'Oblivion Gate',
-          {0x0C} 'Unknown? (door icon)'
-        ])),
-        wbByteArray('Unused', 1)
-      ], cpNormal, True)
-    ], []),
-    wbEmpty(ONAM, 'Open by Default'),
-    wbXSCL,
-    wbInteger(XSOL, 'Contained Soul', itU8, wbSoulGemEnum),
-    wbDATAPosRot
-  ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
-
   wbRecord(REGN, 'Region', [
     wbString(NAME, 'NameID'),
     wbString(FNAM, 'Sound Filename'),
@@ -4571,22 +3939,6 @@ begin
     wbString(SCRI, 'ScriptID')
   ]);
 
-  wbRecord(ROAD, 'Road', [
-    wbPGRP,
-    wbArray(PGRR, 'Point-to-Point Connections (complex structure can''t be represented, see source)',
-      {The Connection Count in the PGRP record specifies how many entries in this
-       array belong to each point. If the first 4 points in the PGRP array have
-       Connection Counts 2, 5, 2, 4 then the first 2 entries are the connections
-       of point 0, then next 5 are the connections of point 1, the next 2 of point 2,
-       the next 4 of point 3 and so on..., this can currently not be represented
-       declaratively }
-      wbStruct('Point', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]), 0, nil, nil, cpNormal, True)
-  ]);
-
   wbRecord(LOCK, 'Lockpicking Items', [
     wbString(NAME, 'NameID'),
     wbString(MODL, 'Model Filename'),
@@ -4605,15 +3957,6 @@ begin
     ]),
     wbString(ITEX, 'Book Name'),
     wbString(SCRI, 'ScriptID')
-  ]);
-
-  wbRecord(SBSP, 'Subspace', [
-    wbEDID,
-    wbStruct(DNAM, '', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ], cpNormal, True)
   ]);
 
   wbRecord(PROB, 'Probe Items', [
@@ -4657,29 +4000,6 @@ begin
     wbStringScript(SCTX, 'Script Source', 0, cpNormal, True)
   ]);
 
-  wbRecord(SGST, 'Sigil Stone', [
-    wbEDID,
-    wbStruct(OBME, 'Oblivion Magic Extender', [
-      wbInteger('Record Version', itU8),
-      wbStruct('OBME Version', [
-        wbInteger('Beta', itU8),
-        wbInteger('Minor', itU8),
-        wbInteger('Major', itU8)
-      ]),
-      wbByteArray('Unused', $1C)
-    ], cpNormal, False, wbOBMEDontShow),
-    wbFULL,
-    wbMODL,
-    wbICON,
-    wbSCRI,
-    wbEffects,
-    wbStruct(DATA, '', [
-      wbInteger('Uses ', itU8),
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
-    ], cpNormal, True)
-  ]);
-
   wbAttributeEnum :=
     wbEnum([
       'Strength',
@@ -4708,20 +4028,6 @@ begin
       wbFloat('Action Four')
     ]),
     wbString(DESC, 'Description')
-  ]);
-
-  wbRecord(SLGM, 'Soul Gem', [
-    wbEDID,
-    wbFULL,
-    wbMODL,
-    wbICON,
-    wbSCRI,
-    wbStruct(DATA, '', [
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
-    ], cpNormal, True),
-    wbInteger(SOUL, 'Contained Soul', itU8, wbSoulGemEnum, cpNormal, True),
-    wbInteger(SLCP, 'Maximum Capacity', itU8, wbSoulGemEnum, cpNormal, True)
   ]);
 
   wbRecord(SNDG, 'Sound Generator', [
@@ -4802,88 +4108,6 @@ begin
       ], []))
     ], [])
   ], False, nil, cpNormal, True);
-
-  wbRecord(TREE, 'Tree', [
-    wbEDID,
-    wbMODL,
-    wbICON,
-    wbArrayS(SNAM, 'SpeedTree Seeds', wbInteger('SpeedTree Seed', itU32)),
-    wbStruct(CNAM, 'Tree Data', [
-      wbFloat('Leaf Curvature'),
-      wbFloat('Minimum Leaf Angle'),
-      wbFloat('Maximum Leaf Angle'),
-      wbFloat('Branch Dimming Value'),
-      wbFloat('Leaf Dimming Value'),
-      wbInteger('Shadow Radius', itS32),
-      wbFloat('Rock Speed'),
-      wbFloat('Rustle Speed')
-    ], cpNormal, True),
-    wbStruct(BNAM, 'Billboard Dimensions', [
-      wbFloat('Width'),
-      wbFloat('Height')
-    ], cpNormal, True)
-  ]);
-
-  wbRecord(WATR, 'Water', [
-    wbEDID,
-    wbString(TNAM, 'Texture', 0, cpNormal, True),
-    wbInteger(ANAM, 'Opacity', itU8, nil, cpNormal, True),
-    wbInteger(FNAM, 'Flags', itU8, wbFlags([
-      {0}'Causes Damage',
-      {1}'Reflective'
-    ]), cpNormal, True),
-    wbString(MNAM, 'Material ID'),
-    wbFormIDCk(SNAM, 'Sound', [SOUN]),
-    wbStruct(DATA, '', [
-      wbFloat('Wind Velocity'),
-      wbFloat('Wind Direction'),
-      wbFloat('Wave Amplitude'),
-      wbFloat('Wave Frequency'),
-      wbFloat('Sun Power'),
-      wbFloat('Reflectivity Amount'),
-      wbFloat('Fresnel Amount'),
-      wbFloat('Scroll X Speed'),
-      wbFloat('Scroll Y Speed'),
-      wbFloat('Fog Distance - Near Plane'),
-      wbFloat('Fog Distance - Far Plane'),
-      wbStruct('Shallow Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbStruct('Deep Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbStruct('Reflection Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbInteger('Texture Blend', itU8),
-      wbByteArray('Unused', 3),
-      wbFloat('Rain Simulator - Force'),
-      wbFloat('Rain Simulator - Velocity'),
-      wbFloat('Rain Simulator - Falloff'),
-      wbFloat('Rain Simulator - Dampner'),
-      wbFloat('Rain Simulator - Starting Size'),
-      wbFloat('Displacement Simulator - Force'),
-      wbFloat('Displacement Simulator - Velocity'),
-      wbFloat('Displacement Simulator - Falloff'),
-      wbFloat('Displacement Simulator - Dampner'),
-      wbFloat('Displacement Simulator - Starting Size'),
-      wbInteger('Damage', itU16)
-    ], cpNormal, True, nil, 0),
-    wbStruct(GNAM, 'Related Waters', [
-      wbFormIDCk('Daytime', [WATR, NULL]),
-      wbFormIDCk('Nighttime', [WATR, NULL]),
-      wbFormIDCk('Underwater', [WATR, NULL])
-    ], cpNormal, True)
-  ]);
 
   wbRecord(WEAP, 'Weapon', [
     wbString(NAME, 'NameID'),
