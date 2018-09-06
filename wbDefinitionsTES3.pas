@@ -67,6 +67,7 @@ const
   AIDT : TwbSignature = 'AIDT';
   ALCH : TwbSignature = 'ALCH';
   ALDT : TwbSignature = 'ALDT'; { Morrowind }
+  AMBI : TwbSignature = 'AMBI'; { Morrowind }
   AMMO : TwbSignature = 'AMMO';
   ANAM : TwbSignature = 'ANAM'; { Morrowind }
   ANIO : TwbSignature = 'ANIO';
@@ -133,6 +134,7 @@ const
   FLOR : TwbSignature = 'FLOR';
   FLTV : TwbSignature = 'FLTV'; { Morrowind }
   FNAM : TwbSignature = 'FNAM'; { Morrowind }
+  FRMR : TwbSignature = 'FRMR'; { Morrowind }
   FULL : TwbSignature = 'FULL';
   FURN : TwbSignature = 'FURN';
   GLOB : TwbSignature = 'GLOB'; { Morrowind }
@@ -188,6 +190,7 @@ const
   NAM0 : TwbSignature = 'NAM0';
   NAM1 : TwbSignature = 'NAM1';
   NAM2 : TwbSignature = 'NAM2';
+  NAM5 : TwbSignature = 'NAM5'; { Morrowind }
   NAM9 : TwbSignature = 'NAM9';
   NAME : TwbSignature = 'NAME'; { Morrowind }
   NIFT : TwbSignature = 'NIFT';
@@ -233,6 +236,7 @@ const
   REFR : TwbSignature = 'REFR';
   PLYR : TwbSignature = 'PLYR';
   REGN : TwbSignature = 'REGN';
+  RGNN : TwbSignature = 'RGNN'; { Morrowind }
   RNAM : TwbSignature = 'RNAM'; { Morrowind }
   ROAD : TwbSignature = 'ROAD';
   RPLD : TwbSignature = 'RPLD';
@@ -284,6 +288,7 @@ const
   WATR : TwbSignature = 'WATR';
   WEAP : TwbSignature = 'WEAP';
   WEAT : TwbSignature = 'WEAT'; { Morrowind }
+  WHGT : TwbSignature = 'WHGT'; { Morrowind }
   WLST : TwbSignature = 'WLST';
   WNAM : TwbSignature = 'WNAM';
   WPDT : TwbSignature = 'WPDT'; { Morrowind }
@@ -2443,59 +2448,80 @@ begin
   ]);
 
   wbRecord(CELL, 'Cell', [
-    wbEDID,
-    wbFULL,
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Is Interior Cell',
-      {0x02} 'Has water',
-      {0x04} 'Invert Fast Travel behavior',
-      {0x08} 'Force hide land (exterior cell) / Oblivion interior (interior cell)',
-      {0x10} '',
-      {0x20} 'Public place',
-      {0x40} 'Hand changed',
-      {0x80} 'Behave like exterior'
-    ]), cpNormal, True),
-    wbStruct(XCLC, 'Grid', [
-      wbInteger('X', itS32),
-      wbInteger('Y', itS32)
+    wbString(NAME, 'NameID'),
+    wbStruct(DATA, 'Cell Data', [
+      wbInteger('Flags', itU32, wbFlags([
+        {0x01} 'Is Interior Cell',
+        {0x02} 'Has water',
+        {0x04} 'Illegal to Sleep here',
+        {0x08} 'Unknown4',
+        {0x10} 'Unknown5',
+        {0x20} 'Unknown6',
+        {0x40} 'Unknown7',
+        {0x80} 'Behave like exterior'
+      ])),
+      wbInteger('GridX', itS32),
+      wbInteger('GridY', itS32)
     ]),
-    wbStruct(XCLL, 'Lighting', [
-      wbStruct('Ambient Color', [
+    wbInteger(INTV, 'Number of uses', itU32),
+    wbString(RGNN, 'Activator ID Name'),
+
+    {Exterior Cell Sub-Records}
+    wbStruct(NAM5, 'Map Color', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8),
         wbByteArray('Unused', 1)
-      ]),
-      wbStruct('Directional Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbStruct('Fog Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]),
-      wbFloat('Fog Near'),
-      wbFloat('Fog Far'),
-      wbInteger('Directional Rotation XY', itS32),
-      wbInteger('Directional Rotation Z', itS32),
-      wbFloat('Directional Fade', cpNormal, False, 1, -1, nil, nil, 1.0),
-      wbFloat('Fog Clip Dist')
     ]),
-    wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
-    wbInteger(XCMT, 'Music', itU8, wbMusicEnum),
-    wbFloat(XCLW, 'Water Height', cpBenign),
-    wbFormIDCk(XCCM, 'Climate', [CLMT]),
-    wbFormIDCk(XCWT, 'Water', [WATR]),
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32),
-      wbXGLB
-    ], [XCLW, XCMT])
-  ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
+
+    {Exterior Cell Sub-Records}
+    wbFloat(WHGT, 'Water Height'),
+    wbStruct(AMBI, 'Map Color', [
+        wbInteger('AmbientColor', itU32),
+        wbInteger('SunlightColor', itU32),
+        wbInteger('FogColor', itU32),
+        wbFloat('FogDensity')
+    ]),
+
+    {Referenced Object Data Grouping}
+    wbRarray('Referenced Objects',
+      wbRStruct('Objects', [
+        wbInteger(FRMR, 'Object Index', itS32),
+        wbString(NAME, 'NameID'),
+        wbFloat(XSCL, 'Scale'),
+        wbInteger(DELE, 'Object Index', itS32),
+        wbStruct(DODT, 'Cell Travel Destination', [
+          wbFloat('XPos'),
+          wbFloat('YPos'),
+          wbFloat('ZPos'),
+          wbFloat('XRot'),
+          wbFloat('YRot'),
+          wbFloat('ZRot')
+        ]),
+        wbString(DNAM, 'Door exit name'),
+        wbInteger(FLTV, 'Lock Level', itS32),
+        wbString(KNAM, 'Door key'),
+        wbString(TNAM, 'Trap name'),
+        wbInteger(UNAM, 'Reference Blocked', itU8),
+        wbString(ANAM, 'Owner ID string'),
+        wbString(BNAM, 'Global variable'),
+        wbByteArray(XCHG, 'Unknown'),
+        wbInteger(NAM9, 'Reference Blocked', itU32),
+        wbString(XSOL, 'Soul Extra Data'),
+        wbStruct(DATA, 'Reference Position Data', [
+          wbFloat('XRefPos'),
+          wbFloat('YRefPos'),
+          wbFloat('ZRefPos'),
+          wbFloat('XRefRot'),
+          wbFloat('YRefRot'),
+          wbFloat('ZRefRot')
+        ])
+      ], [])
+    ),
+
+    {Referenced Object Count}
+    wbInteger(NAM0, 'Number of objects in cell for current file', itS32)
+  ], True);
 
   wbServiceFlags :=
     wbFlags([
