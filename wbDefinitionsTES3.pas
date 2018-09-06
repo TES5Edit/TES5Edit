@@ -2199,31 +2199,36 @@ begin
 
   wbSkillEnum :=
     wbEnum([
-      'Armorer',
-      'Athletics',
-      'Blade',
       'Block',
-      'Blunt',
-      'Hand To Hand',
+      'Armorer',
+      'Medium Armor',
       'Heavy Armor',
-      'Alchemy',
-      'Alteration',
-      'Conjuration',
+      'Blunt Weapon',
+      'Long Blade',
+      'Axe',
+      'Spear',
+      'Athletics',
+      'Enchant',
       'Destruction',
+      'Alteration',
       'Illusion',
+      'Conjuration',
       'Mysticism',
       'Restoration',
-      'Acrobatics',
-      'Light Armor',
-      'Marksman',
-      'Mercantile',
+      'Alchemy',
+      'Unarmored',
       'Security',
       'Sneak',
-      'Speechcraft'
+      'Acrobatics',
+      'Light Armor',
+      'Short Blade',
+      'Marksman',
+      'Mercantile',
+      'Speechcraft',
+      'Hand-To-Hand'
     ], [
       -1, 'None'
     ]);
-
 
   wbEFID := wbInteger(EFID, 'Magic effect name', itU32, wbChar4, cpNormal, True);
 
