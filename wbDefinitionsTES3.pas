@@ -161,6 +161,7 @@ const
   KFFZ : TwbSignature = 'KFFZ';
   KNAM : TwbSignature = 'KNAM'; { Morrowind }
   LAND : TwbSignature = 'LAND';
+  LEVC : TwbSignature = 'LEVC'; { Morrowind }
   LHDT : TwbSignature = 'LHDT'; { Morrowind }
   LIGH : TwbSignature = 'LIGH';
   LNAM : TwbSignature = 'LNAM';
@@ -197,6 +198,7 @@ const
   NAME : TwbSignature = 'NAME'; { Morrowind }
   NIFT : TwbSignature = 'NIFT';
   NIFZ : TwbSignature = 'NIFZ';
+  NNAM : TwbSignature = 'NNAM'; { Morrowind }
   NPC_ : TwbSignature = 'NPC_';
   NPCO : TwbSignature = 'NPCO'; { Morrowind }
   NPCS : TwbSignature = 'NPCS'; { Morrowind }
@@ -3806,25 +3808,21 @@ begin
     wbString(DATA, 'FileName')
   ]);
 
-  wbRecord(LVLC, 'Leveled Creature', [
-    wbEDID,
-    wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
+  wbRecord(LEVC, 'Leveled Creature', [
+    wbString(NAME, 'NameID'),
+    wbInteger(DATA, 'Flags', itU32, wbFlags([
       {0x01} 'Calculate from all levels <= player''s level',
       {0x02} 'Calculate for each item in count'
-    ]), cpNormal, True),
-    wbRArrayS('Leveled List Entries',
-      wbStructExSK(LVLO , [0, 2], [3], 'Leveled List Entry', [
-        wbInteger('Level', itS16),
-        wbByteArray('Unused', 2),
-        wbFormIDCk('Reference', [NPC_, CREA, LVLC]),
-        wbInteger('Count', itS16),
-        wbByteArray('Unused', 2)
-      ], cpNormal, False, nil, 3),
-    cpNormal, True),
-    wbSCRI,
-    wbFormIDCk(TNAM, 'Creature template', [NPC_, CREA])
-  ], True, nil, cpNormal, False, wbLVLAfterLoad);
+    ])),
+    wbInteger(NNAM, 'Chance none', itU8),
+    wbInteger(INDX, 'Count', itS32),
+    wbRArray('Leveled Creature Entries',
+      wbRStruct('Leveled Creature', [
+        wbString(CNAM, 'Creature Name'),
+        wbInteger(INTV, 'Creature Level', itS16)
+      ], [])
+    )
+  ]);
 
   wbRecord(LVLI, 'Leveled Item', [
     wbEDID,
