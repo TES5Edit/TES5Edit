@@ -162,6 +162,7 @@ const
   KNAM : TwbSignature = 'KNAM'; { Morrowind }
   LAND : TwbSignature = 'LAND';
   LEVC : TwbSignature = 'LEVC'; { Morrowind }
+  LEVI : TwbSignature = 'LEVI'; { Morrowind }
   LHDT : TwbSignature = 'LHDT'; { Morrowind }
   LIGH : TwbSignature = 'LIGH';
   LNAM : TwbSignature = 'LNAM';
@@ -3824,24 +3825,21 @@ begin
     )
   ]);
 
-  wbRecord(LVLI, 'Leveled Item', [
-    wbEDID,
-    wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
+  wbRecord(LEVI, 'Leveled Item', [
+    wbString(NAME, 'NameID'),
+    wbInteger(DATA, 'Flags', itU32, wbFlags([
       {0x01} 'Calculate from all levels <= player''s level',
       {0x02} 'Calculate for each item in count'
-    ]), cpNormal, True),
-    wbRArrayS('Leveled List Entries',
-      wbStructExSK(LVLO , [0, 2], [3], 'Leveled List Entry', [
-        wbInteger('Level', itS16),
-        wbByteArray('Unused', 2),
-        wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, LVLI, KEYM, CLOT, ALCH, APPA, LIGH]),
-        wbInteger('Count', itS16),
-        wbByteArray('Unused', 2)
-      ], cpNormal, False, nil, 3),
-    cpNormal, True),
-    wbByteArray(DATA, 'Unused', 1)
-  ], False, nil, cpNormal, False, wbLVLAfterLoad);
+    ])),
+    wbInteger(NNAM, 'Chance none', itU8),
+    wbInteger(INDX, 'Count', itS32),
+    wbRArray('Leveled List Entries',
+      wbRStruct('Leveled Item', [
+        wbString(INAM, 'Item Name'),
+        wbInteger(INTV, 'Item Level', itS16)
+      ], [])
+    )
+  ]);
 
   wbRecord(LVSP, 'Leveled Spell', [
     wbEDID,
