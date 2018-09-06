@@ -2327,10 +2327,8 @@ begin
             wbByteArray('Unused', $0A)
           ]),
           wbEFIDOBME,
-          wbEFITOBME,
           wbSCITOBME,
-          wbString(EFII, 'Icon'),
-          wbEFIX
+          wbString(EFII, 'Icon')
         ], []),
         wbEmpty(EFXX, 'Effects End Marker', cpNormal, True),
         wbFULLReq
