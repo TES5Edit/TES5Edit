@@ -74,15 +74,19 @@ const
   AODT : TwbSignature = 'AODT'; { Morrowind }
   APPA : TwbSignature = 'APPA';
   ARMO : TwbSignature = 'ARMO';
+  ASND : TwbSignature = 'ASND'; { Morrowind }
   ATTR : TwbSignature = 'ATTR';
   ATXT : TwbSignature = 'ATXT';
+  AVFX : TwbSignature = 'AVFX'; { Morrowind }
   BKDT : TwbSignature = 'BKDT'; { Morrowind }
   BMDT : TwbSignature = 'BMDT';
   BNAM : TwbSignature = 'BNAM';
   BODY : TwbSignature = 'BODY'; { Morrowind }
   BOOK : TwbSignature = 'BOOK';
   BSGN : TwbSignature = 'BSGN';
+  BSND : TwbSignature = 'BSND'; { Morrowind }
   BTXT : TwbSignature = 'BTXT';
+  BVFX : TwbSignature = 'BVFX'; { Morrowind }
   BYDT : TwbSignature = 'BYDT'; { Morrowind }
   CELL : TwbSignature = 'CELL';
   CLAS : TwbSignature = 'CLAS'; { Morrowind }
@@ -99,10 +103,12 @@ const
   CSDC : TwbSignature = 'CSDC';
   CSDI : TwbSignature = 'CSDI';
   CSDT : TwbSignature = 'CSDT';
+  CSND : TwbSignature = 'CSND'; { Morrowind }
   CSTD : TwbSignature = 'CSTD';
   CSTY : TwbSignature = 'CSTY';
   CTDA : TwbSignature = 'CTDA';
   CTDT : TwbSignature = 'CTDT';
+  CVFX : TwbSignature = 'CVFX'; { Morrowind }
   DATA : TwbSignature = 'DATA';
   DATX : TwbSignature = 'DATX';
   DELE : TwbSignature = 'DELE';
@@ -147,6 +153,8 @@ const
   HCLR : TwbSignature = 'HCLR';
   HEDR : TwbSignature = 'HEDR';
   HNAM : TwbSignature = 'HNAM';
+  HSND : TwbSignature = 'HSND'; { Morrowind }
+  HVFX : TwbSignature = 'HVFX'; { Morrowind }
   ICO2 : TwbSignature = 'ICO2';
   ICON : TwbSignature = 'ICON';
   IDLE : TwbSignature = 'IDLE';
@@ -178,6 +186,7 @@ const
   LVSP : TwbSignature = 'LVSP';
   MAST : TwbSignature = 'MAST';
   MCDT : TwbSignature = 'MCDT'; { Morrowind }
+  MEDT : TwbSignature = 'MEDT'; { Morrowind }
   MGEF : TwbSignature = 'MGEF';
   MISC : TwbSignature = 'MISC';
   MNAM : TwbSignature = 'MNAM';
@@ -225,6 +234,7 @@ const
   PNAM : TwbSignature = 'PNAM';
   PSDT : TwbSignature = 'PSDT';
   PTDT : TwbSignature = 'PTDT';
+  PTEX : TwbSignature = 'PTEX'; { Morrowind }
   QNAM : TwbSignature = 'QNAM';
   QSDT : TwbSignature = 'QSDT';
   QSTA : TwbSignature = 'QSTA';
@@ -3847,115 +3857,48 @@ begin
   ], False, nil, cpNormal, False, wbLVLAfterLoad);
 
   wbRecord(MGEF, 'Magic Effect', [
-    wbStringMgefCode(EDID, 'Magic Effect Code'),
-    wbStruct(OBME, 'Oblivion Magic Extender', [
-      wbInteger('Record Version', itU8),
-      wbStruct('OBME Version', [
-        wbInteger('Beta', itU8),
-        wbInteger('Minor', itU8),
-        wbInteger('Major', itU8)
-      ]),
-      wbInteger('Param A Info', itU8, wbOBMEResolutionInfo),
-      wbInteger('Param B Info', itU8, wbOBMEResolutionInfo),
-      wbByteArray('Unused', 2),
-      wbString('Handler', 4),
-      wbInteger('Flag Overrides', itU32, wbFlags([
-        { 0} '',
-        { 1} '',
-        { 2} 'ParamFlagA',
-        { 3} 'Beneficial',
-        { 4} '',
-        { 5} '',
-        { 6} '',
-        { 7} '',
-        { 8} '',
-        { 9} '',
-        {10} '',
-        {11} '',
-        {12} '',
-        {13} '',
-        {14} '',
-        {15} '',
-        {16} 'ParamFlagB',
-        {17} 'Magnitude Is Range',
-        {18} 'Atomic Resistance',
-        {19} 'ParamFlagC',
-        {20} 'ParamFlagD',
-        {21} '',
-        {22} '',
-        {23} '',
-        {24} '',
-        {25} '',
-        {26} '',
-        {27} '',
-        {28} '',
-        {29} '',
-        {30} 'Hidden'
-      ])),
-      wbByteArray('ParamB', 4),
-      wbByteArray('Unused', $1C)
-    ], cpNormal, False, wbOBMEDontShow),
-    wbString(EDDX, 'EditorID', 0, cpNormal, False, wbEDDXDontShow),
-    wbFULL,
-    wbDESC,
-    wbICON,
-    wbMODL,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'Hostile',
-        {0x00000002} 'Recover',
-        {0x00000004} 'Detrimental',
-        {0x00000008} 'Magnitude %',
-        {0x00000010} 'Self',
-        {0x00000020} 'Touch',
-        {0x00000040} 'Target',
-        {0x00000080} 'No duration',
-        {0x00000100} 'No magnitude',
-        {0x00000200} 'No area',
-        {0x00000400} 'FX persist',
-        {0x00000800} 'Spellmaking',
-        {0x00001000} 'Enchanting',
-        {0x00002000} 'No Ingredient',
-        {0x00004000} '',
-        {0x00008000} '',
-        {0x00010000} 'Use weapon',
-        {0x00020000} 'Use armor',
-        {0x00040000} 'Use creature',
-        {0x00080000} 'Use skill',
-        {0x00100000} 'Use attribute',
-        {0x00200000} '',
-        {0x00400000} '',
-        {0x00800000} '',
-        {0x01000000} 'Use actor value',
-        {0x02000000} 'Spray projectile type (or Fog if Bolt is specified as well)',
-        {0x04000000} 'Bolt projectile type',
-        {0x08000000} 'No hit effect'
-      ])),
+    wbInteger(INDX, 'Magic Effect ID', itU32),
+    wbStruct(MEDT, 'Effect Data', [
+      wbInteger('SpellSchool', itU32, wbMagicSchoolEnum),
       wbFloat('Base cost'),
-      wbUnion('Assoc. Item', wbMGEFFAssocItemDecider, [
-        wbFormIDCk('Unused', [NULL]),
-        wbFormIDCk('Assoc. Weapon', [WEAP]),
-        wbFormIDCk('Assoc. Armor', [ARMO, NULL{?}]),
-        wbFormIDCk('Assoc. Creature', [CREA, LVLC, NPC_]),
-        wbInteger('Assoc. Actor Value', itS32, wbActorValueEnum)
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001} 'Unknown1',
+        {0x00000002} 'Unknown2',
+        {0x00000004} 'Unknown3',
+        {0x00000008} 'Unknown4',
+        {0x00000010} 'Unknown5',
+        {0x00000020} 'Unknown6',
+        {0x00000040} 'Unknown7',
+        {0x00000080} 'Unknown8',
+        {0x00000100} 'Unknown9',
+        {0x00000200} 'Spellmaking',
+        {0x00000400} 'Enchanting',
+        {0x00000800} 'Negative'
+      ])),
+      wbStruct('Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbByteArray('Uknown', 1)
       ]),
-      wbInteger('Magic School', itS32, wbMagicSchoolEnum),
-      wbInteger('Resist value', itS32, wbActorValueEnum),
-      wbInteger('Counter Effect Count', itU16), //!!! must be updated automatically when ESCE length changes!
-      wbByteArray('Unused', 2),
-      wbFormIDCk('Light', [LIGH, NULL]),
-      wbFloat('Projectile speed'),
-      wbFormIDCk('Effect Shader', [EFSH, NULL]),
-      wbFormIDCk('Enchant effect', [EFSH, NULL]),
-      wbFormIDCk('Casting sound', [NULL, SOUN]),
-      wbFormIDCk('Bolt sound', [NULL, SOUN]),
-      wbFormIDCk('Hit sound', [NULL, SOUN]),
-      wbFormIDCk('Area sound', [NULL, SOUN]),
-      wbFloat('Constant Effect enchantment factor'),
-      wbFloat('Constant Effect barter factor')
-    ], cpNormal, True, nil, 10),
-    wbArrayS(ESCE, 'Counter Effects', wbStringMgefCode('Counter Effect Code', 4){wbInteger('Counter Effect', itU32, wbChar4)})
-  ], False, nil, cpNormal, False, wbMGEFAfterLoad);
+      wbFloat('Speed Multiplier'),
+      wbFloat('Size Multiplier'),
+      wbFloat('SizeCap'),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
+    ]),
+    wbString(ITEX, 'Effect Icon string'),
+    wbString(PTEX, 'Particle texture string'),
+    wbString(CVFX, 'Casting visual string'),
+    wbString(BVFX, 'Bolt visual string'),
+    wbString(HVFX, 'Hit visual string'),
+    wbString(AVFX, 'Area visual string'),
+    wbString(BSND, 'Bolt sound'),
+    wbString(CSND, 'Cast sound'),
+    wbString(HSND, 'Hit sound'),
+    wbString(ASND, 'Area sound'),
+    wbString(DESC, 'Description')
+  ]);
 
   wbRecord(MISC, 'Misc. Item', [
     wbString(NAME, 'NameID'),
