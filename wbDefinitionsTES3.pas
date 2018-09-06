@@ -74,6 +74,7 @@ const
   ARMO : TwbSignature = 'ARMO';
   ATTR : TwbSignature = 'ATTR';
   ATXT : TwbSignature = 'ATXT';
+  BKDT : TwbSignature = 'BKDT'; { Morrowind }
   BMDT : TwbSignature = 'BMDT';
   BNAM : TwbSignature = 'BNAM';
   BOOK : TwbSignature = 'BOOK';
@@ -267,6 +268,7 @@ const
   TCLF : TwbSignature = 'TCLF';
   TCLT : TwbSignature = 'TCLT';
   TES3 : TwbSignature = 'TES3';
+  TEXT : TwbSignature = 'TEXT'; { Morrowind }
   TNAM : TwbSignature = 'TNAM';
   TRDT : TwbSignature = 'TRDT';
   TREE : TwbSignature = 'TREE';
@@ -2423,22 +2425,30 @@ begin
     wbString(ENAM, 'EnchantID')
   ]);
 
+  {Done}
   wbRecord(BOOK, 'Book', [
-    wbEDID,
-    wbFULL,
-    wbMODL,
-    wbICON,
-    wbSCRI,
-    wbENAM,
-    wbInteger(ANAM, 'Enchantment Points', itU16),
-    wbDESC,
-    wbStruct(DATA, '', [
-      wbInteger('Flags', itU8, wbFlags(['Scroll', 'Can''t be taken'])),
-      wbInteger('Teaches', itS8, wbSkillEnum),
+    wbString(NAME, 'NameID'),
+    wbString(MODL, 'Model Filename'),
+    wbString(FNAM, 'Book Name'),
+    wbStruct(BKDT, 'Book Data', [
+      wbFloat('Weight'),
       wbInteger('Value', itU32),
-      wbFloat('Weight')
-    ], cpNormal, True)
-  ], True);
+      { Not sure this might be a Flag, it's 0 when it's not a scroll
+      and 01 when it is a scroll }
+      wbInteger('Scroll', itU32, wbEnum([
+        'Not A Scroll',
+        'Scroll'
+      ])),
+      wbInteger('SkillID', itS32, wbSkillEnum),
+      wbInteger('EnchantPts', itU32)
+    ]),
+    wbString(SCRI, 'ScriptID'),
+    wbString(ITEX, 'Icon Filename'),
+    {quotes don't work with wbString in the book text}
+    {x93Such as?x94 asked Bianki, smiling.<BR>}
+    wbString(TEXT, 'Book Text'),
+    wbString(ENAM, 'EnchantID')
+  ]);
 
   wbSPLO := wbFormIDCk(SPLO, 'Spell', [SPEL, LVSP]);
   wbSPLOs := wbRArrayS('Spells', wbSPLO);
