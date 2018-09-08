@@ -7053,7 +7053,7 @@ begin
 
   wbScriptFragmentsQuest := wbStruct('Script Fragments', [
     wbInteger('Unknown', itS8),
-    wbInteger('fragmentCount', itU16),
+    wbInteger('fragmentCount', itU16, nil, cpBenign),
     wbLenString('scriptName', 2),
     // if scriptName = "" then no Flags and Properties
     wbUnion('Script', wbScriptFragmentsEmptyScriptDecider, [
