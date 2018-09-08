@@ -5548,7 +5548,7 @@ begin
 
   wbScriptFragmentsQuest := wbStruct('Script Fragments', [
     wbInteger('Unknown', itS8),
-    wbInteger('fragmentCount', itU16),
+    wbInteger('fragmentCount', itU16, nil, cpBenign),
     wbLenString('fileName', 2),
     wbArrayS('Fragments',
       wbStructSK([0, 2], 'Fragment', [
