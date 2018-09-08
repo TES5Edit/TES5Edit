@@ -68,7 +68,9 @@ threadvar
   wbCurrentAction         : string;
   wbCurrentProgress       : string;
   wbStartTime             : TDateTime;
+  wbLocalStartTime        : TDateTime;
   wbShowStartTime         : Integer;
+  wbShowCaption           : Integer;
   wbHideStartTime         : Integer;
   wbLastMessageAt         : UInt64;
   wbMaxMessageInterval    : UInt64;
