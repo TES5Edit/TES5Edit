@@ -1570,6 +1570,9 @@ type
     procedure AfterLoad(const aElement: IwbElement);
     procedure AfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
+    function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbNamedDef;
+    function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbNamedDef;
+
     function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
     procedure SetTreeHead(aValue: Boolean);     // Make the element a "header record" in the tree navigator;
     function GetTreeBranch: Boolean;            // Is the element included in a "leaf" expected to be displayed in the view pane
@@ -1709,6 +1712,9 @@ type
 
   IwbValueDef = interface(IwbNamedDef)
     ['{BBF684A6-0EE5-4EF6-83DD-D323A0D2919A}']
+    function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbValueDef;
+    function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbValueDef;
+
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
@@ -4443,6 +4449,10 @@ type
     function GetPath: string;
     procedure AfterLoad(const aElement: IwbElement); virtual;
     procedure AfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+    function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbNamedDef;
+    function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbNamedDef;
+
     function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
     procedure SetTreeHead(aValue: Boolean);     // Make the element a "header record" in the tree navigator;
     function GetTreeBranch: Boolean;            // Is the element included in a "leaf" expected to be displayed in the view pane
@@ -4822,6 +4832,9 @@ type
     procedure AfterClone(const aSource: TwbDef); virtual;
 
     {---IwbValueDef---}
+    function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbValueDef;
+    function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbValueDef;
+
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; reintroduce; virtual; abstract;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; virtual;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; virtual;
@@ -8036,6 +8049,18 @@ begin
     IsUnknown := IsUnknown or (Pos('unknown', LowerCase(Parent.Name)) > 0);
     noUnused := noUnused or (Parent.Name = 'Unused');
   end;
+end;
+
+function TwbNamedDef.SetAfterLoad(const aAfterLoad: TwbAfterLoadCallback): IwbNamedDef;
+begin
+  Result := Self;
+  noAfterLoad := aAfterLoad;
+end;
+
+function TwbNamedDef.SetAfterSet(const aAfterSet: TwbAfterSetCallback): IwbNamedDef;
+begin
+  Result := Self;
+  noAfterSet := aAfterSet;
 end;
 
 procedure TwbNamedDef.SetTreeBranch(aValue: Boolean);
@@ -13800,6 +13825,18 @@ end;
 procedure TwbValueDef.MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs);
 begin
   {can be overriden}
+end;
+
+function TwbValueDef.SetAfterLoad(const aAfterLoad: TwbAfterLoadCallback): IwbValueDef;
+begin
+  Result := Self;
+  noAfterLoad := aAfterLoad;
+end;
+
+function TwbValueDef.SetAfterSet(const aAfterSet: TwbAfterSetCallback): IwbValueDef;
+begin
+  Result := Self;
+  noAfterSet := aAfterSet;
 end;
 
 function TwbValueDef.SetDefaultEditValue(const aValue: string): IwbValueDef;
