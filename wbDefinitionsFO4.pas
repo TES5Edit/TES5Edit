@@ -3296,6 +3296,17 @@ begin
       Container.ElementByName['Value'].SetToDefault;
 end;
 
+procedure wbScriptFragmentsQuestScriptNameAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainerElementRef;
+begin
+  if aOldValue <> aNewValue then
+    if (aOldValue = '') <> (aNewValue = '') then
+      if Supports(aElement.Container, IwbContainerElementRef, Container) then
+        Container.ElementByName['Script'].SetToDefault;
+end;
+
+
 {>>> For VMAD <<<}
 function wbScriptFragmentsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -7057,7 +7068,7 @@ begin
   wbScriptFragmentsQuest := wbStruct('Script Fragments', [
     wbInteger('Unknown', itS8),
     wbInteger('fragmentCount', itU16, nil, cpBenign),
-    wbLenString('scriptName', 2),
+    wbLenString('scriptName', 2).SetAfterSet(wbScriptFragmentsQuestScriptNameAfterSet),
     // if scriptName = "" then no Flags and Properties
     wbUnion('Script', wbScriptFragmentsEmptyScriptDecider, [
       wbStruct('Script Data', [
