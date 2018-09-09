@@ -5980,7 +5980,7 @@ begin
 
   if wbSimpleRecords then begin
     wbMaxHeightDataCELL := wbByteArray(MHDT, 'Max Height Data', 0, cpNormal);
-    wbMaxHeightDataWRLD := wbByteArray(MHDT, 'Max Height Data', 0, cpNormal);
+    wbMaxHeightDataWRLD := wbByteArray(MHDT, 'Max Height Data', 0, cpNormalIgnoreEmpty);
   end
   else begin
     wbMaxHeightDataCELL := wbStruct(MHDT, 'Max Height Data', [
