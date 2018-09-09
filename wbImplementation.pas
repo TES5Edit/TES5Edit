@@ -2491,55 +2491,11 @@ begin
           end;
         end;
       end;
-{
-  repeat
-    FoundAny := False;
 
-    Group := GetGroupBySignature('SMEN');
-    if Assigned(Group) then
-      for i := 0 to Pred(Group.ElementCount) do
-        if Supports(Group.Elements[i], IwbMainRecord, Rec) then begin
-          Rec := Rec.WinningOverride;
-          if not Rec.IsReachable then begin
-            if Supports(Rec.ElementLinksTo['PNAM'], IwbMainRecord, Rec2) then
-              if Rec2.IsReachable then begin
-                FoundAny := True;
-                (Rec as IwbElementInternal).Reached;
-              end;
-          end;
-        end;
-
-    Group := GetGroupBySignature('SMQN');
-    if Assigned(Group) then
-      for i := 0 to Pred(Group.ElementCount) do
-        if Supports(Group.Elements[i], IwbMainRecord, Rec) then begin
-          Rec := Rec.WinningOverride;
-          if not Rec.IsReachable then begin
-            if Supports(Rec.ElementLinksTo['PNAM'], IwbMainRecord, Rec2) then
-              if Rec2.IsReachable then begin
-                FoundAny := True;
-                (Rec as IwbElementInternal).Reached;
-              end;
-          end;
-        end;
-
-    Group := GetGroupBySignature('SMBN');
-    if Assigned(Group) then
-      for i := 0 to Pred(Group.ElementCount) do
-        if Supports(Group.Elements[i], IwbMainRecord, Rec) then begin
-          Rec := Rec.WinningOverride;
-          if not Rec.IsReachable then begin
-            if Supports(Rec.ElementLinksTo['PNAM'], IwbMainRecord, Rec2) then
-              if Rec2.IsReachable then begin
-                FoundAny := True;
-                (Rec as IwbElementInternal).Reached;
-              end;
-          end;
-        end;
-
-  until not FoundAny;
-}
-
+  Group := GetGroupBySignature('DOBJ');
+  if Assigned(Group) then
+    for i := 0 to Pred(Group.ElementCount) do
+      (Group.Elements[i] as IwbElementInternal).Reached;
 end;
 
 procedure TwbFile.BuildRef;
@@ -9471,7 +9427,7 @@ begin
     DoInit(False);
 
     Signature := GetSignature;
-    IsComplex := (Signature = 'DIAL') or (Signature = 'WRLD') or (Signature = 'CELL');
+    IsComplex := (Signature = 'DIAL') or (Signature = 'WRLD') or (Signature = 'CELL') or (Signature = 'DOBJ');
     if GetIsWinningOverride or IsComplex then begin
       Result := inherited Reached;
 
@@ -9531,7 +9487,13 @@ begin
                       if RefRecord.ElementNativeValues['DNAM'] > 0 then
                         (RefRecord as IwbElementInternal).Reached;
                     end;
-                end else
+                end else if Signature = 'DIAL' then begin
+                  if Supports(RefRecord.ElementLinksTo['QNAM'], IwbMainRecord, MainRecord) then
+                    if MainRecord.LoadOrderFormID = GetLoadOrderFormID then begin
+                      if Int64(RefRecord.GetElementNativeValue('DATA\Category')) in [3, 4, 5, 7] then
+                        (RefRecord as IwbElementInternal).Reached;
+                    end;
+                end;
               end;
             end;
           end;
