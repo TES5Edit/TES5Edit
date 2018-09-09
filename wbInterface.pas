@@ -1703,8 +1703,10 @@ type
 
   IwbRecordMemberDef = interface(IwbSignatureDef)
     ['{259F3F08-F4ED-439D-8C1A-48137C84E52A}']
-
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
+
+    function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbRecordMemberDef{Self};
+    function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbRecordMemberDef{Self};
   end;
 
   TwbUsedMasters = array[Byte] of Boolean;
@@ -4459,7 +4461,20 @@ type
     procedure SetTreeBranch(aValue: Boolean);   // Make the element included in a "leaf" visible in the tree navigator;
   end;
 
-  TwbSignatureDef = class(TwbNamedDef, IwbSignatureDef)
+  TwbBaseSignatureDef = class(TwbNamedDef, IwbSignatureDef)
+  protected
+    {---IwbSignatureDef---}
+    function GetDefaultSignature: TwbSignature; virtual;
+
+    function GetSignature(const aIndex: Integer): TwbSignature; virtual;
+    function GetSignatureCount: Integer; virtual;
+
+    function CanHandle(aSignature     : TwbSignature;
+                 const aDataContainer : IwbDataContainer)
+                                      : Boolean; virtual;
+  end;
+
+  TwbSignatureDef = class(TwbBaseSignatureDef)
   private
     soSignatures : TwbSignatures;
   protected
@@ -4482,14 +4497,10 @@ type
                        aGetCP      : TwbGetConflictPriority); overload;
 
     {---IwbSignatureDef---}
-    function GetDefaultSignature: TwbSignature;
+    function GetDefaultSignature: TwbSignature; override;
 
-    function GetSignature(const aIndex: Integer): TwbSignature;
-    function GetSignatureCount: Integer;
-
-    function CanHandle(aSignature     : TwbSignature;
-                 const aDataContainer : IwbDataContainer)
-                                      : Boolean; virtual;
+    function GetSignature(const aIndex: Integer): TwbSignature; override;
+    function GetSignatureCount: Integer; override;
   end;
 
   TwbRecordDefFlag = (
@@ -4611,6 +4622,8 @@ type
 
     {---IwbRecordMemberDef---}
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
+    function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbRecordMemberDef;
+    function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbRecordMemberDef;
 
     {---IwbSubRecordDef---}
     function GetValue: IwbValueDef;
@@ -4624,7 +4637,15 @@ type
     function SetDefaultNativeValue(const aValue: Variant): IwbSubRecordDef;
   end;
 
-  TwbSubRecordArrayDef = class(TwbNamedDef, IwbRecordMemberDef, IwbSubRecordArrayDef)
+  TwbRecordMemberDef = class(TwbBaseSignatureDef, IwbRecordMemberDef)
+    {---IwbRecordMemberDef---}
+    function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
+
+    function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbRecordMemberDef{Self};
+    function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbRecordMemberDef{Self};
+  end;
+
+  TwbSubRecordArrayDef = class(TwbRecordMemberDef, IwbSubRecordArrayDef)
   private
     sraElement  : IwbRecordMemberDef;
     sraSorted   : Boolean;
@@ -4652,24 +4673,21 @@ type
     procedure AfterLoad(const aElement: IwbElement); override;
 
     {---IwbSignatureDef---}
-    function GetDefaultSignature: TwbSignature;
+    function GetDefaultSignature: TwbSignature; override;
 
-    function GetSignature(const aIndex: Integer): TwbSignature;
-    function GetSignatureCount: Integer;
+    function GetSignature(const aIndex: Integer): TwbSignature; override;
+    function GetSignatureCount: Integer; override;
 
     function CanHandle(aSignature     : TwbSignature;
                  const aDataContainer : IwbDataContainer)
-                                      : Boolean; virtual;
-
-    {---IwbRecordMemberDef---}
-    function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
+                                      : Boolean; override;
 
     {---IwbSubRecordArrayDef---}
     function GetElement: IwbRecordMemberDef;
     function GetSorted(const aContainer: IwbContainer): Boolean;
   end;
 
-  TwbSubRecordStructDef = class(TwbNamedDef, IwbRecordMemberDef, IwbSubRecordStructDef, IwbRecordDef)
+  TwbSubRecordStructDef = class(TwbRecordMemberDef, IwbSubRecordStructDef, IwbRecordDef)
   private
     srsMembers           : array of IwbRecordMemberDef;
     srsSignatures        : TStringList;
@@ -4701,17 +4719,14 @@ type
     procedure AfterLoad(const aElement: IwbElement); override;
 
     {---IwbSignatureDef---}
-    function GetDefaultSignature: TwbSignature;
+    function GetDefaultSignature: TwbSignature; override;
 
-    function GetSignature(const aIndex: Integer): TwbSignature;
-    function GetSignatureCount: Integer;
+    function GetSignature(const aIndex: Integer): TwbSignature; override;
+    function GetSignatureCount: Integer; override;
 
     function CanHandle(aSignature     : TwbSignature;
                  const aDataContainer : IwbDataContainer)
-                                      : Boolean; virtual;
-
-    {---IwbRecordMemberDef---}
-    function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
+                                      : Boolean; override;
 
     {---IwbRecordDef---}
     function ContainsMemberFor(aSignature     : TwbSignature;
@@ -4732,7 +4747,7 @@ type
     function GetRecordHeaderStruct: IwbStructDef;
   end;
 
-  TwbSubRecordUnionDef = class(TwbNamedDef, IwbRecordMemberDef, IwbSubRecordUnionDef, IwbRecordDef)
+  TwbSubRecordUnionDef = class(TwbRecordMemberDef, IwbSubRecordUnionDef, IwbRecordDef)
   private
     sruMembers           : array of IwbRecordMemberDef;
     sruSignatures        : TStringList;
@@ -4757,17 +4772,14 @@ type
     procedure Report(const aParents: TwbDefPath); override;
 
     {---IwbSignatureDef---}
-    function GetDefaultSignature: TwbSignature;
+    function GetDefaultSignature: TwbSignature; override;
 
-    function GetSignature(const aIndex: Integer): TwbSignature;
-    function GetSignatureCount: Integer;
+    function GetSignature(const aIndex: Integer): TwbSignature; override;
+    function GetSignatureCount: Integer; override;
 
     function CanHandle(aSignature     : TwbSignature;
                  const aDataContainer : IwbDataContainer)
-                                      : Boolean; virtual;
-
-    {---IwbRecordMemberDef---}
-    function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
+                                      : Boolean; override;
 
     {---IwbRecordDef---}
     function ContainsMemberFor(aSignature     : TwbSignature;
@@ -8075,13 +8087,6 @@ end;
 
 { TwbSignatureDef }
 
-function TwbSignatureDef.CanHandle(aSignature     : TwbSignature;
-                             const aDataContainer : IwbDataContainer)
-                                                  : Boolean;
-begin
-  Result := aSignature = GetDefaultSignature;
-end;
-
 constructor TwbSignatureDef.Create(aPriority  : TwbConflictPriority;
                                    aRequired  : Boolean;
                              const aSignature : TwbSignature;
@@ -8560,6 +8565,18 @@ begin
   defReported := True;
 end;
 
+function TwbSubRecordDef.SetAfterLoad(const aAfterLoad: TwbAfterLoadCallback): IwbRecordMemberDef;
+begin
+  Result := Self;
+  noAfterLoad := aAfterLoad;
+end;
+
+function TwbSubRecordDef.SetAfterSet(const aAfterSet: TwbAfterSetCallback): IwbRecordMemberDef;
+begin
+  Result := Self;
+  noAfterSet := aAfterSet;
+end;
+
 function TwbSubRecordDef.SetDefaultEditValue(const aValue: string): IwbSubRecordDef;
 begin
   if Assigned(srValue) then
@@ -8663,12 +8680,6 @@ begin
     Result := sraIsSorted(aContainer)
   else
     Result := sraSorted;
-end;
-
-function TwbSubRecordArrayDef.IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef;
-begin
-  Result := Self;
-  if aOnlyWhenTrue then Include(defFlags, aFlag);
 end;
 
 procedure TwbSubRecordArrayDef.Report(const aParents: TwbDefPath);
@@ -8921,12 +8932,6 @@ begin
   Result := Assigned(srsSkipSignatures) and srsSkipSignatures.Find(aSignature, Dummy);
 end;
 
-function TwbSubRecordStructDef.IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef;
-begin
-  Result := Self;
-  if aOnlyWhenTrue then Include(defFlags, aFlag);
-end;
-
 procedure TwbSubRecordStructDef.Report(const aParents: TwbDefPath);
 var
   Parents : TwbDefPath;
@@ -9157,12 +9162,6 @@ var
   Dummy: Integer;
 begin
   Result := Assigned(sruSkipSignatures) and sruSkipSignatures.Find(aSignature, Dummy);
-end;
-
-function TwbSubRecordUnionDef.IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef;
-begin
-  Result := Self;
-  if aOnlyWhenTrue then Include(defFlags, aFlag);
 end;
 
 procedure TwbSubRecordUnionDef.Report(const aParents: TwbDefPath);
@@ -16650,6 +16649,51 @@ begin
     end else
       if not Supports(Result.Parent, IwbValueDef, Result) then
         Exit(nil);
+end;
+
+{ TwbRecordMemberDef }
+
+function TwbRecordMemberDef.IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue: Boolean): IwbRecordMemberDef;
+begin
+  Result := Self;
+  if aOnlyWhenTrue then Include(defFlags, aFlag);
+end;
+
+function TwbRecordMemberDef.SetAfterLoad(const aAfterLoad: TwbAfterLoadCallback): IwbRecordMemberDef;
+begin
+  Result := Self;
+  noAfterLoad := aAfterLoad;
+end;
+
+function TwbRecordMemberDef.SetAfterSet(const aAfterSet: TwbAfterSetCallback): IwbRecordMemberDef;
+begin
+  Result := Self;
+  noAfterSet := aAfterSet;
+end;
+
+{ TwbBaseSignatureDef }
+
+function TwbBaseSignatureDef.CanHandle(aSignature     : TwbSignature;
+                                 const aDataContainer : IwbDataContainer)
+                                                      : Boolean;
+begin
+  Result := aSignature = GetDefaultSignature;
+end;
+
+function TwbBaseSignatureDef.GetDefaultSignature: TwbSignature;
+begin
+  Result := #0#0#0#0;
+end;
+
+function TwbBaseSignatureDef.GetSignature(const aIndex: Integer): TwbSignature;
+begin
+  Result := GetDefaultSignature;
+end;
+
+function TwbBaseSignatureDef.GetSignatureCount: Integer;
+begin
+  if GetDefaultSignature <> #0#0#0#0 then
+    Result := 1;
 end;
 
 initialization
