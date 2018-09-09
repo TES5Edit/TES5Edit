@@ -3306,6 +3306,17 @@ begin
         Container.ElementByName['Script'].SetToDefault;
 end;
 
+procedure wbAECHTypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container      : IwbContainerElementRef;
+  ValueContainer : IwbContainerElementRef;
+begin
+  if aOldValue <> aNewValue then
+    if Supports(aElement.Container, IwbContainerElementRef, Container) then
+      if Supports(Container.ElementByPath['DNAM\Value'], IwbContainerElementRef, ValueContainer) then
+        ValueContainer.SetToDefault;
+end;
+
 
 {>>> For VMAD <<<}
 function wbScriptFragmentsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -16276,33 +16287,31 @@ begin
           Int64($864804BE), 'BSOverdrive',
           Int64($EF575F7F), 'BSStateVariableFilter',
           Int64($18837B4F), 'BSDelayEffect'
-        ]), cpNormal, False, False, nil, nil, Int64($864804BE)),
+        ]), cpNormal, False, False, nil, nil, Int64($864804BE)).SetAfterSet(wbAECHTypeAfterSet),
         wbStruct(DNAM, 'Data', [
           wbInteger('Enabled', itU32, wbBoolEnum),
-          wbUnion('Value 1', wbAECHDataDecider, [
-            wbFloat('Input Gain'), // exponentially(?) normalized from 0..10 to -80..20
-            wbFloat('Center Freq'),
-            wbFloat('Feedback %')
-          ]),
-          wbUnion('Value 2', wbAECHDataDecider, [
-            wbFloat('Output Gain'), // exponentially(?) normalized from 0..10 to -80..20
-            wbFloat('Q Value'),
-            wbFloat('Wet Mix %')
-          ]),
-          wbUnion('Value 3', wbAECHDataDecider, [
-            wbFloat('Upper Threshold'), // exponentially(?) normalized from 0..1 to -74..0
-            wbInteger('Filter Mode', itU32, wbEnum([
-              'High Pass',
-              'Low Pass',
-              'Band Pass',
-              'Notch'
-            ])),
-            wbInteger('Delay MS', itU32)
-          ]),
-          wbUnion('Value 4', wbAECHDataDecider, [
-            wbFloat('Lower Threshold'), // exponentially(?) normalized from 0..1 to -80..0
-            wbByteArray('Unused', 0),
-            wbByteArray('Unused', 0)
+          wbUnion('Value', wbAECHDataDecider, [
+            wbStruct('Overdrive', [
+              wbFloat('Input Gain'), // exponentially(?) normalized from 0..10 to -80..20
+              wbFloat('Output Gain'), // exponentially(?) normalized from 0..10 to -80..20
+              wbFloat('Upper Threshold'), // exponentially(?) normalized from 0..1 to -74..0
+              wbFloat('Lower Threshold') // exponentially(?) normalized from 0..1 to -80..0
+            ]),
+            wbStruct('State Variable Filter', [
+              wbFloat('Center Freq'),
+              wbFloat('Q Value'),
+              wbInteger('Filter Mode', itU32, wbEnum([
+                'High Pass',
+                'Low Pass',
+                'Band Pass',
+                'Notch'
+              ]))
+            ]),
+            wbStruct('Delay Effect', [
+              wbFloat('Feedback %'),
+              wbFloat('Wet Mix %'),
+              wbInteger('Delay MS', itU32)
+            ])
           ])
         ])
       ], [])
