@@ -715,6 +715,8 @@ var
   wbSPLOs: IwbSubRecordArrayDef;
   wbCNTO: IwbSubRecordStructDef;
   wbCNTOs: IwbSubRecordArrayDef;
+  wbCNTONoReach: IwbSubRecordStructDef;
+  wbCNTOsNoReach: IwbSubRecordArrayDef;
   wbAIDT: IwbSubRecordDef;
   wbCSDT: IwbSubRecordStructDef;
   wbCSDTs: IwbSubRecordArrayDef;
@@ -4921,6 +4923,16 @@ begin
   wbCOCT := wbInteger(COCT, 'Count', itU32, nil, cpBenign);
   wbCNTOs := wbRArrayS('Items', wbCNTO, cpNormal, False, nil, wbCNTOsAfterSet);
 
+  wbCNTONoReach :=
+    wbRStructExSK([0], [1], 'Item', [
+      wbStructExSK(CNTO, [0], [1], 'Item', [
+        wbFormIDCkNoReach('Item', [ARMO, AMMO, APPA, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, INGR, LIGH, SLGM, SCRL]),
+        wbInteger('Count', itS32)
+      ]),
+      wbCOED
+    ], []);
+  wbCNTOsNoReach := wbRArrayS('Items', wbCNTONoReach, cpNormal, False, nil, wbCNTOsAfterSet);
+
   wbArmorTypeEnum := wbEnum([
     'Light Armor',
     'Heavy Armor',
@@ -7646,8 +7658,8 @@ begin
     wbEDID,
     wbFULL,
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
-    wbFormIDCk(BNAM, 'Branch', [DLBR, NULL]),
-    wbFormIDCk(QNAM, 'Quest', [QUST, NULL], False, cpNormal, False),
+    wbFormIDCkNoReach(BNAM, 'Branch', [DLBR, NULL]),
+    wbFormIDCkNoReach(QNAM, 'Quest', [QUST, NULL], False, cpNormal, False),
     wbStruct(DATA, 'Data', [
       // this should not be named Flags since TwbFile.BuildReachable
       // expects Top-Level flag here from FNV
@@ -10045,8 +10057,8 @@ begin
 
   wbRecord(SMBN, 'Story Manager Branch Node', [
     wbEDID,
-    wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
-    wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
+    wbFormIDCkNoReach(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
+    wbFormIDCkNoReach(SNAM, 'Previous Sibling ', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
     wbCITCReq,
     wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
@@ -10055,8 +10067,8 @@ begin
 
   wbRecord(SMQN, 'Story Manager Quest Node', [
     wbEDID,
-    wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
-    wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
+    wbFormIDCkNoReach(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
+    wbFormIDCkNoReach(SNAM, 'Previous Sibling ', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
     wbCITCReq,
     wbCTDAsCount,
     wbStruct(DNAM, 'Flags', [
@@ -10079,8 +10091,8 @@ begin
 
   wbRecord(SMEN, 'Story Manager Event Node', [
     wbEDID,
-    wbFormIDCk(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
-    wbFormIDCk(SNAM, 'Child ', [SMQN, SMBN, SMEN, NULL]),
+    wbFormIDCkNoReach(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
+    wbFormIDCkNoReach(SNAM, 'Previous Sibling ', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
     wbCITCReq,
     wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
@@ -10093,7 +10105,7 @@ procedure DefineTES5j;
 begin
   wbRecord(DLBR, 'Dialog Branch', [
     wbEDID,
-    wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
+    wbFormIDCkNoReach(QNAM, 'Quest', [QUST], False, cpNormal, True),
     wbInteger(TNAM, 'Unknown', itU32),
     wbInteger(DNAM, 'Flags', itU32, wbFlags([
       {0x01} 'Top-Level',
@@ -10172,8 +10184,8 @@ begin
     ])), [
     wbEDID,
     wbStruct(DATA, 'Data', [
-      wbFormIDCk('Parent', [NPC_, NULL]),
-      wbFormIDCk('Child', [NPC_, NULL]),
+      wbFormIDCkNoReach('Parent', [NPC_, NULL]),
+      wbFormIDCkNoReach('Child', [NPC_, NULL]),
       wbInteger('Rank', itU16, wbEnum([
         'Lover',
         'Ally',
@@ -10713,7 +10725,7 @@ begin
     {>>> END leftover from earlier CK versions <<<}
 
     wbLString(RNAM, 'Prompt', 0, cpTranslate),
-    wbFormIDCk(ANAM, 'Speaker', [NPC_]),
+    wbFormIDCkNoReach(ANAM, 'Speaker', [NPC_]),
     wbFormIDCk(TWAT, 'Walk Away Topic', [DIAL]),
     wbFormIDCk(ONAM, 'Audio Output Override', [SOPM])
   ], False, wbINFOAddInfo, cpNormal, False, nil{wbINFOAfterLoad});
@@ -11255,10 +11267,10 @@ begin
   wbRecord(COBJ, 'Constructible Object', [
     wbEDID,
     wbCOCT,
-    wbCNTOs,
+    wbCNTOsNoReach,
     wbCTDAs,
     wbFormID(CNAM, 'Created Object'),
-    wbFormIDCk(BNAM, 'Workbench Keyword', [KYWD]),
+    wbFormIDCkNoReach(BNAM, 'Workbench Keyword', [KYWD]),
     wbInteger(NAM1, 'Created Object Count', itU16)
   ], False, nil, cpNormal, False, nil, wbContainerAfterSet);
 
