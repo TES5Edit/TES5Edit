@@ -404,6 +404,7 @@ type
     dtArray,
     dtStruct,
     dtUnion,
+    dtResolvable,
     dtEmpty,
     dtStructChapter
   );
@@ -535,7 +536,7 @@ type
     esNotReachable,
     esReachable,
     esTagged,
-    esDeciding,
+    esResolving,
     esNotSuitableToAddTo,
     esDummy, {Used in wbScriptAdapter as a default value}
     esConstructionComplete,
@@ -1792,10 +1793,18 @@ type
     ['{BC66ABFF-3108-4C64-B416-674A2A8F297D}']
   end;
 
-  IwbUnionDef = interface(IwbValueDef)
-    ['{04D6B7BA-B457-4E43-9910-592395FEA0D6}']
-    function Decide(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef;
+  IwbResolvableDef = interface(IwbValueDef)
+    ['{2EB12125-5E21-4A55-902F-CC245510AC58}']
+    function NeedsElementToResolve: Boolean;
+    function ResolveDef(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef;
+  end;
 
+  IwbRecursiveDef = interface(IwbResolvableDef)
+    ['{6BE62954-70CC-4833-BA1D-2F38605F06C9}']
+  end;
+
+  IwbUnionDef = interface(IwbResolvableDef)
+    ['{04D6B7BA-B457-4E43-9910-592395FEA0D6}']
     function GetMember(aIndex: Integer): IwbValueDef;
     function GetMemberCount: Integer;
 
@@ -2463,6 +2472,14 @@ function wbUnion(const aName     : string;
                        aGetCP    : TwbGetConflictPriority = nil)
                                  : IwbUnionDef; overload;
 
+function wbRecursive(const aName     : string;
+                           aLevelsUp : Integer;
+                           aPriority : TwbConflictPriority = cpNormal;
+                           aRequired : Boolean = False;
+                           aDontShow : TwbDontShowCallback = nil;
+                           aAfterSet : TwbAfterSetCallback = nil;
+                           aGetCP    : TwbGetConflictPriority = nil)
+                                     : IwbRecursiveDef;
 
 function wbByteArray(const aSignature : TwbSignature;
                      const aName      : string = 'Unknown';
@@ -4837,7 +4854,54 @@ type
     function CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; virtual;
   end;
 
-  TwbUnionDef = class(TwbValueDef, IwbUnionDef)
+  TwbResolvableDef = class(TwbValueDef, IwbResolvableDef)
+    {---IwbDef---}
+    function GetDefType: TwbDefType; override;
+    function GetDefTypeName: string; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function CanContainFormIDs: Boolean; override;
+
+    {---IwbValueDef---}
+    function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
+    function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+    function GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement; override;
+    procedure BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement); override;
+    function ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    procedure FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string); override;
+    function ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant; override;
+    procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
+    function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
+    function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; override;
+    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>; override;
+    function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
+    function GetIsVariableSizeInternal: Boolean; override;
+    function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+
+    {---IwbResolvableDef---}
+    function NeedsElementToResolve: Boolean; virtual;
+    function ResolveDef(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef; virtual; abstract;
+  end;
+
+  TwbRecursiveDef = class(TwbResolvableDef, IwbRecursiveDef)
+  protected {private}
+    rdLevelsUp: Integer;
+  protected
+    constructor Clone(const aSource: TwbDef); override;
+    constructor Create(aPriority : TwbConflictPriority;
+                       aRequired : Boolean;
+                 const aName     : string;
+                       aLevelsUp : Integer;
+                       aDontShow : TwbDontShowCallback;
+                       aAfterSet : TwbAfterSetCallback;
+                       aGetCP    : TwbGetConflictPriority);
+
+    {---IwbResolvableDef---}
+    function ResolveDef(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef; override;
+  end;
+
+  TwbUnionDef = class(TwbResolvableDef, IwbUnionDef)
   protected {private}
     udDecider: TwbUnionDecider;
     udMembers: array of IwbValueDef;
@@ -4861,28 +4925,18 @@ type
     procedure Report(const aParents: TwbDefPath); override;
 
     {---IwbValueDef---}
-    function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
-    function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
-    function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
-    function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
-    function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
-    function GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement; override;
-    procedure BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement); override;
     function GetIsVariableSizeInternal: Boolean; override;
-    function ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
-    procedure FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string); override;
-    function ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant; override;
-    procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
-    function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
-    function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>; override;
-    function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
+    function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+
+    {---IwbResolvableDef---}
+    function NeedsElementToResolve: Boolean; override;
+    function ResolveDef(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef; override;
 
     {---IwbUnionDef---}
-    function Decide(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef;
     function GetMember(aIndex: Integer): IwbValueDef;
     function GetMemberCount: Integer;
   end;
+
 
   TwbStringTransformType = (
     ttToString,
@@ -6244,6 +6298,17 @@ begin
   Result := TwbUnionDef.Create(aPriority, aRequired, aName, aDecider, aMembers, aDontShow, aAfterSet, aGetCP);
 end;
 
+function wbRecursive(const aName     : string;
+                           aLevelsUp : Integer;
+                           aPriority : TwbConflictPriority = cpNormal;
+                           aRequired : Boolean = False;
+                           aDontShow : TwbDontShowCallback = nil;
+                           aAfterSet : TwbAfterSetCallback = nil;
+                           aGetCP    : TwbGetConflictPriority = nil)
+                                     : IwbRecursiveDef;
+begin
+  Result := TwbRecursiveDef.Create(aPriority, aRequired, aName, aLevelsUp, aDontShow, aAfterSet, aGetCP);
+end;
 
 function wbByteArray(const aSignature : TwbSignature;
                      const aName      : string = 'Unknown';
@@ -14194,14 +14259,14 @@ begin
   Result := '';
 end;
 
-{ TwbUnionDef }
+{ TwbResolvableDef }
 
-procedure TwbUnionDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
+procedure TwbResolvableDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
 var
   ValueDef : IwbValueDef;
 begin
   inherited;
-  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  ValueDef := ResolveDef(aBasePtr, aEndPtr, aElement);
   if Assigned(ValueDef) then
     ValueDef.BuildRef(aBasePtr, aEndPtr, aElement);
 end;
@@ -14235,9 +14300,31 @@ begin
   Result := ubCanContainFormIDs;
 end;
 
-function TwbUnionDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbResolvableDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
+var
+  ValueDef: IwbValueDef;
 begin
-  Result := Decide(aBasePtr, aEndPtr, aElement).Check(aBasePtr, aEndPtr, aElement);
+  ValueDef := ResolveDef(nil, nil, aElement);
+  if Assigned(ValueDef) then
+    Result := ValueDef.CanAssign(aElement, aIndex, aDef)
+  else
+    Result := False;
+end;
+
+function TwbResolvableDef.CanContainFormIDs: Boolean;
+var
+  ValueDef: IwbValueDef;
+begin
+  ValueDef := ResolveDef(nil, nil, nil);
+  if Assigned(ValueDef) then
+    Result := ValueDef.CanContainFormIDs
+  else
+    Result := True; {we don't know, better assume yes}
+end;
+
+function TwbResolvableDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+begin
+  Result := ResolveDef(aBasePtr, aEndPtr, aElement).Check(aBasePtr, aEndPtr, aElement);
 end;
 
 constructor TwbUnionDef.Clone(const aSource: TwbDef);
@@ -14266,7 +14353,7 @@ begin
   end;
 end;
 
-function TwbUnionDef.Decide(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef;
+function TwbUnionDef.ResolveDef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef;
 var
   aMemberIndex : Integer;
 begin
@@ -14278,16 +14365,16 @@ begin
   Used(nil, '');
 end;
 
-procedure TwbUnionDef.FromEditValue(aBasePtr, aEndPtr: Pointer;
+procedure TwbResolvableDef.FromEditValue(aBasePtr, aEndPtr: Pointer;
   const aElement: IwbElement; const aValue: string);
 begin
-  Decide(aBasePtr, aEndPtr, aElement).
+  ResolveDef(aBasePtr, aEndPtr, aElement).
     EditValue[aBasePtr, aEndPtr, aElement] := aValue;
 end;
 
-procedure TwbUnionDef.FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant);
+procedure TwbResolvableDef.FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant);
 begin
-  Decide(aBasePtr, aEndPtr, aElement).
+  ResolveDef(aBasePtr, aEndPtr, aElement).
     NativeValue[aBasePtr, aEndPtr, aElement] := aValue;
 end;
 
@@ -14301,36 +14388,46 @@ begin
   Result := 'Union';
 end;
 
-function TwbUnionDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>;
+function TwbResolvableDef.GetDefType: TwbDefType;
+begin
+  Result := dtResolvable;
+end;
+
+function TwbResolvableDef.GetDefTypeName: string;
+begin
+  Result := 'Resolvable';
+end;
+
+function TwbResolvableDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>;
 var
   ValueDef: IwbValueDef;
 begin
-  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  ValueDef := ResolveDef(aBasePtr, aEndPtr, aElement);
   if Assigned(ValueDef) then
     Result := ValueDef.EditInfo[aBasePtr, aEndPtr, aElement]
   else
     Result := nil;
 end;
 
-function TwbUnionDef.GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType;
+function TwbResolvableDef.GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType;
 var
   ValueDef: IwbValueDef;
 begin
-  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  ValueDef := ResolveDef(aBasePtr, aEndPtr, aElement);
   if Assigned(ValueDef) then
     Result := ValueDef.EditType[aBasePtr, aEndPtr, aElement]
   else
     Result := etDefault;
 end;
 
-function TwbUnionDef.GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
+function TwbResolvableDef.GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 var
   ValueDef: IwbValueDef;
 begin
   Result := wbIsInternalEdit;
   if not Result then
   begin
-    ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+    ValueDef := ResolveDef(aBasePtr, aEndPtr, aElement);
     if Assigned(ValueDef) then
       Result := ValueDef.IsEditable[aBasePtr, aEndPtr, aElement]
     else
@@ -14339,6 +14436,17 @@ begin
   if defInternalEditOnly then
     if not wbIsInternalEdit then
       Result := False;
+end;
+
+function TwbResolvableDef.GetIsVariableSizeInternal: Boolean;
+var
+  ValueDef: IwbValueDef;
+begin
+  ValueDef := ResolveDef(nil, nil, nil);
+  if Assigned(ValueDef) then
+    Result := ValueDef.IsVariableSize
+  else
+    Result := True; {we don't know, better assume yes}
 end;
 
 function TwbUnionDef.GetIsVariableSizeInternal: Boolean;
@@ -14363,18 +14471,34 @@ begin
   end;
 end;
 
-function TwbUnionDef.GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement;
+function TwbResolvableDef.GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement;
 var
   ValueDef: IwbValueDef;
 begin
   if Assigned(vdLinksToCallback) then
     Exit(vdLinksToCallback(aElement));
 
-  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  ValueDef := ResolveDef(aBasePtr, aEndPtr, aElement);
   if Assigned(ValueDef) then
     Result := ValueDef.LinksTo[aBasePtr, aEndPtr, aElement]
   else
     Result := nil;
+end;
+
+function TwbResolvableDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  ValueDef: IwbValueDef;
+begin
+  ValueDef := ResolveDef(aBasePtr, aEndPtr, aElement);
+  if Assigned(ValueDef) then
+    Result := ValueDef.GetSize(aBasePtr, aEndPtr, aElement)
+  else
+    Result := 0;
+end;
+
+function TwbResolvableDef.NeedsElementToResolve: Boolean;
+begin
+  Result := False;
 end;
 
 function TwbUnionDef.GetMember(aIndex: Integer): IwbValueDef;
@@ -14400,7 +14524,7 @@ begin
 //      ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
 //  end;
   if GetIsVariableSize then
-    aMember := Decide(aBasePtr, aEndPtr, aElement)
+    aMember := ResolveDef(aBasePtr, aEndPtr, aElement)
   else
     aMember := nil;;
   if not Assigned(aMember) then begin
@@ -14438,11 +14562,16 @@ begin
   end;
 end;
 
-function TwbUnionDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function TwbUnionDef.NeedsElementToResolve: Boolean;
+begin
+  Result := True;
+end;
+
+function TwbResolvableDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   aMember : IwbValueDef;
 begin
-  aMember := Decide(aBasePtr, aEndPtr, aElement);
+  aMember := ResolveDef(aBasePtr, aEndPtr, aElement);
   if Assigned(aMember) then
     Result := aMember.DefaultSize[aBasePtr, aEndPtr, aElement]
   else
@@ -14470,55 +14599,55 @@ begin
   defReported := True;
 end;
 
-function TwbUnionDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
+function TwbResolvableDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 var
   ValueDef: IwbValueDef;
 begin
-  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  ValueDef := ResolveDef(aBasePtr, aEndPtr, aElement);
   if Assigned(ValueDef) then
     Result := ValueDef.SetToDefault(aBasePtr, aEndPtr, aElement)
   else
     Result := False;
 end;
 
-function TwbUnionDef.ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbResolvableDef.ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 var
   ValueDef: IwbValueDef;
 begin
-  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  ValueDef := ResolveDef(aBasePtr, aEndPtr, aElement);
   if Assigned(ValueDef) then
     Result := ValueDef.EditValue[aBasePtr, aEndPtr, aElement]
   else
     Result := '';
 end;
 
-function TwbUnionDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
+function TwbResolvableDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
 var
   ValueDef: IwbValueDef;
 begin
-  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  ValueDef := ResolveDef(aBasePtr, aEndPtr, aElement);
   if Assigned(ValueDef) then
     Result := ValueDef.NativeValue[aBasePtr, aEndPtr, aElement]
   else
     Result := '';
 end;
 
-function TwbUnionDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
+function TwbResolvableDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
 var
   ValueDef: IwbValueDef;
 begin
-  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  ValueDef := ResolveDef(aBasePtr, aEndPtr, aElement);
   if Assigned(ValueDef) then
     Result := ValueDef.ToSortKey(aBasePtr, aEndPtr, aElement, aExtended)
   else
     Result := '';
 end;
 
-function TwbUnionDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbResolvableDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 var
   ValueDef: IwbValueDef;
 begin
-  ValueDef := Decide(aBasePtr, aEndPtr, aElement);
+  ValueDef := ResolveDef(aBasePtr, aEndPtr, aElement);
   if Assigned(ValueDef) then
     Result := ValueDef.ToString(aBasePtr, aEndPtr, aElement)
   else
@@ -16450,6 +16579,40 @@ begin
   Len := Length(Self);
   SetLength(Self, Succ(Len));
   Self[Len] := aMainRecord;
+end;
+
+{ TwbRecursiveDef }
+
+constructor TwbRecursiveDef.Clone(const aSource: TwbDef);
+begin
+  with aSource as TwbRecursiveDef do
+    Self.Create(defPriority, defRequired, noName, rdLevelsUp, noDontShow, noAfterSet, defGetCP).AfterClone(aSource);
+end;
+
+constructor TwbRecursiveDef.Create(aPriority : TwbConflictPriority;
+                                   aRequired : Boolean;
+                             const aName     : string;
+                                   aLevelsUp : Integer;
+                                   aDontShow : TwbDontShowCallback;
+                                   aAfterSet : TwbAfterSetCallback;
+                                   aGetCP    : TwbGetConflictPriority);
+begin
+  inherited Create(aPriority, aRequired, aName, nil, aAfterSet, aDontShow, aGetCP, False);
+  rdLevelsUp := aLevelsUp;
+end;
+
+function TwbRecursiveDef.ResolveDef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef;
+var
+  i : Integer;
+begin
+  Result := nil;
+  for i := 1 to rdLevelsUp do
+    if i = 1 then begin
+      if not Supports(defParent, IwbValueDef, Result) then
+        Exit(nil);
+    end else
+      if not Supports(Result.Parent, IwbValueDef, Result) then
+        Exit(nil);
 end;
 
 initialization

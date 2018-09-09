@@ -235,8 +235,8 @@ type
     function Reached: Boolean;
     procedure TryAssignMembers(const aSource: IwbElement);
 
-    function BeginDecide: Boolean;
-    procedure EndDecide;
+    function BeginResolve: Boolean;
+    procedure EndResolve;
 
     property Modified: Boolean
       read GetModified
@@ -294,8 +294,8 @@ type
     function GetNameSuffix: string; virtual;
     procedure TryAssignMembers(const aSource: IwbElement); virtual;
 
-    function BeginDecide: Boolean;
-    procedure EndDecide;
+    function BeginResolve: Boolean;
+    procedure EndResolve;
 
     procedure NotifyChanged(aContainer: Pointer);
     procedure NotifyChangedInternal(aContainer: Pointer); virtual;
@@ -4527,7 +4527,7 @@ var
   SelfRef    : IwbContainerElementRef;
   Def        : IwbDef;
   ValueDef   : IwbValueDef;
-  UnionDef   : IwbUnionDef;
+  ResolvableDef   : IwbResolvableDef;
   HasMap     : Boolean;
   StructDef  : IwbStructDef;
   OurSize    : Integer;
@@ -4584,13 +4584,13 @@ begin
               sElement := Container.Elements[i];
               if (sElement.ElementType = etUnion) and
                  Supports(cntElements[j], IwbContainerElementRef, uContainer) and
-                 Supports(uContainer.GetValueDef, IwbUnionDef, UnionDef) then begin
+                 Supports(uContainer.GetValueDef, IwbResolvableDef, ResolvableDef) then begin
                 if (uContainer.ElementCount = 1) then begin // At this point it is usually the default choice set by default
                   uContainer.RemoveElement(0);
                 end;
                 if (uContainer.ElementCount = 0) then begin
                   BasePtr := nil;
-                  UnionDoInit(UnionDef, uContainer as IwbContainer, BasePtr, nil);
+                  UnionDoInit(ResolvableDef, uContainer as IwbContainer, BasePtr, nil);
                 end;
               end;
               if (not aOnlySK or GetIsInSK(cntElements[j].SortOrder)) then begin
@@ -10624,6 +10624,31 @@ end;
 
 { TwbSubRecord }
 
+function Resolve(const aValueDef: IwbValueDef; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef;
+var
+  Internal      : IwbElementInternal;
+  ResolvableDef : IwbResolvableDef;
+  CanResolve    : Boolean;
+begin
+  Result := aValueDef;
+
+  Supports(aElement, IwbElementInternal, Internal);
+  CanResolve := False;
+  try
+    while Supports(Result, IwbResolvableDef, ResolvableDef) do begin
+      CanResolve := CanResolve or (Assigned(Internal) and Internal.BeginResolve);
+      if (not ResolvableDef.NeedsElementToResolve) or CanResolve then
+        Result := ResolvableDef.ResolveDef(aBasePtr,aEndPtr, aElement)
+      else
+        break;
+    end;
+  finally
+    if CanResolve then
+      Internal.EndResolve;
+  end;
+end;
+
+
 function TwbSubRecord.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
 var
   SelfRef    : IwbContainerElementRef;
@@ -10633,6 +10658,7 @@ var
   StructDef  : IwbStructDef;
   IntegerDef : IwbIntegerDef;
   FlagsDef   : IwbFlagsDef;
+  ValueDef   : IwbValueDef;
 begin
   if not wbEditAllowed then
     raise Exception.Create(GetName + ' can not be modified.');
@@ -10676,13 +10702,18 @@ begin
               Result := nil;
               raise;
             end;
-          end else case ArrayDef.Element.DefType of
-            dtArray: Result := TwbArray.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
-            dtStruct: Result := TwbStruct.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
-            dtStructChapter: Result := TwbChapter.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
-            dtUnion: Result := TwbUnion.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
-          else
-            Result := TwbValue.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
+          end else begin
+            ValueDef := ArrayDef.Element;
+            if ValueDef.DefType = dtResolvable then
+              ValueDef := Resolve(ValueDef, nil, nil, aElement);
+            case ValueDef.DefType of
+              dtArray: Result := TwbArray.Create(Self, ValueDef, aElement, not aDeepCopy, s);
+              dtStruct: Result := TwbStruct.Create(Self, ValueDef, aElement, not aDeepCopy, s);
+              dtStructChapter: Result := TwbChapter.Create(Self, ValueDef, aElement, not aDeepCopy, s);
+              dtUnion: Result := TwbUnion.Create(Self, ValueDef, aElement, not aDeepCopy, s);
+            else
+              Result := TwbValue.Create(Self, ValueDef, aElement, not aDeepCopy, s);
+            end;
           end;
 
         CheckCount;
@@ -10722,6 +10753,7 @@ function TwbSubRecord.AssignInternal(aIndex: Integer; const aElement: IwbElement
 var
   Element       : IwbElement;
   ArrayDef      : IwbArrayDef;
+  ValueDef      : IwbValueDef;
   Container     : IwbContainer;
   s             : string;
   i             : Integer;
@@ -10798,15 +10830,19 @@ begin
                 end;
               end else begin
                 Element := nil;
-                if not Supports(aElement, IwbStringListTerminator) then
-                  case ArrayDef.Element.DefType of
-                    dtArray: Element := TwbArray.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
-                    dtStruct: Element := TwbStruct.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
-                    dtStructChapter: Element := TwbChapter.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
-                    dtUnion: Element := TwbUnion.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+                if not Supports(aElement, IwbStringListTerminator) then begin
+                  ValueDef := ArrayDef.Element;
+                  if ValueDef.DefType = dtResolvable then
+                    ValueDef := Resolve(ValueDef, nil, nil, aElement);
+                  case ValueDef.DefType of
+                    dtArray: Element := TwbArray.Create(Self, ValueDef, aElement, aOnlySK, s);
+                    dtStruct: Element := TwbStruct.Create(Self, ValueDef, aElement, aOnlySK, s);
+                    dtStructChapter: Element := TwbChapter.Create(Self, ValueDef, aElement, aOnlySK, s);
+                    dtUnion: Element := TwbUnion.Create(Self, ValueDef, aElement, aOnlySK, s);
                   else
-                    Element := TwbValue.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+                    Element := TwbValue.Create(Self, ValueDef, aElement, aOnlySK, s);
                   end;
+                end;
                 Result := Element;
               end;
               if AlignedCreate then begin
@@ -10956,30 +10992,6 @@ begin
   TwbStringListTerminator.Create(Self);
   if srsSorted in srStates then
     Include(srStates, srsSortInvalid);
-end;
-
-function Resolve(const aValueDef: IwbValueDef; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef;
-var
-  Internal  : IwbElementInternal;
-  UnionDef  : IwbUnionDef;
-  CanDecide : Boolean;
-begin
-  Result := aValueDef;
-
-  Supports(aElement, IwbElementInternal, Internal);
-  CanDecide := False;
-  try
-    while Supports(Result, IwbUnionDef, UnionDef) do begin
-      CanDecide := CanDecide or (Assigned(Internal) and Internal.BeginDecide);
-      if CanDecide then
-        Result := UnionDef.Decide(aBasePtr,aEndPtr,aElement)
-      else
-        break;
-    end;
-  finally
-    if CanDecide then
-      Internal.EndDecide;
-  end;
 end;
 
 function TwbSubRecord.CompareExchangeFormID(aOldFormID, aNewFormID: TwbFormID): Boolean;
@@ -13419,11 +13431,11 @@ begin
   {$ENDIF WIN64}
 end;
 
-function TwbElement.BeginDecide: Boolean;
+function TwbElement.BeginResolve: Boolean;
 begin
-  Result := not (esDeciding in eStates);
+  Result := not (esResolving in eStates);
   if Result then
-    Include(eStates, esDeciding);
+    Include(eStates, esResolving);
 end;
 
 function TwbElement.BeginUpdate: Integer;
@@ -13651,9 +13663,9 @@ begin
   {nothing}
 end;
 
-procedure TwbElement.EndDecide;
+procedure TwbElement.EndResolve;
 begin
-  Exclude(eStates, esDeciding);
+  Exclude(eStates, esResolving);
 end;
 
 function TwbElement.EndUpdate: Integer;
@@ -15462,6 +15474,9 @@ begin
   i := 0;
 
   ValueDef := ArrayDef.Element;
+  if ValueDef.DefType = dtResolvable then
+    ValueDef := Resolve(ValueDef, nil, nil, aContainer);
+
   VarSize := ArrayDef.IsVariableSize;
   ArrSize := ArrayDef.ElementCount;
   if ArrSize < 0 then begin
@@ -15544,6 +15559,7 @@ var
   i         : Integer;
   s         : string;
   ArrayDef  : IwbArrayDef;
+  ValueDef  : IwbValueDef;
 begin
   if not wbEditAllowed then
     raise Exception.Create(GetName + ' can not be modified.');
@@ -15570,13 +15586,17 @@ begin
     s := '#' + IntToStr(Length(cntElements));
 
   if not Supports(aElement, IwbStringListTerminator) then
-    case ArrayDef.Element.DefType of
-      dtArray: Result := TwbArray.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
-      dtStruct: Result := TwbStruct.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
-      dtStructChapter: Result := TwbChapter.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
-      dtUnion: Result := TwbUnion.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
+    ValueDef := ArrayDef.Element;
+    if ValueDef.DefType = dtResolvable then
+      ValueDef := Resolve(ValueDef, nil, nil, aElement);
+
+    case ValueDef.DefType of
+      dtArray: Result := TwbArray.Create(Self, ValueDef, aElement, not aDeepCopy, s);
+      dtStruct: Result := TwbStruct.Create(Self, ValueDef, aElement, not aDeepCopy, s);
+      dtStructChapter: Result := TwbChapter.Create(Self, ValueDef, aElement, not aDeepCopy, s);
+      dtUnion: Result := TwbUnion.Create(Self, ValueDef, aElement, not aDeepCopy, s);
     else
-      Result := TwbValue.Create(Self, ArrayDef.Element, aElement, not aDeepCopy, s);
+      Result := TwbValue.Create(Self, ValueDef, aElement, not aDeepCopy, s);
     end;
 
   CheckCount;
@@ -15589,6 +15609,7 @@ var
   sElement      : IwbElement;
   dElement      : IwbElement;
   ArrayDef      : IwbArrayDef;
+  ValueDef      : IwbValueDef;
   Container     : IwbContainer;
   DataContainer : IwbDataContainer;
   s             : string;
@@ -15658,13 +15679,16 @@ begin
       Element := nil;
 
       if not Supports(aElement, IwbStringListTerminator) then
-        case ArrayDef.Element.DefType of
-          dtArray: Element := TwbArray.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
-          dtStruct: Element := TwbStruct.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
-          dtStructChapter: Element := TwbChapter.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
-          dtUnion: Element := TwbUnion.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+        ValueDef := ArrayDef.Element;
+        if ValueDef.DefType = dtResolvable then
+          ValueDef := Resolve(ValueDef, nil, nil, aElement);
+        case ValueDef.DefType of
+          dtArray: Element := TwbArray.Create(Self, ValueDef, aElement, aOnlySK, s);
+          dtStruct: Element := TwbStruct.Create(Self, ValueDef, aElement, aOnlySK, s);
+          dtStructChapter: Element := TwbChapter.Create(Self, ValueDef, aElement, aOnlySK, s);
+          dtUnion: Element := TwbUnion.Create(Self, ValueDef, aElement, aOnlySK, s);
         else
-          Element := TwbValue.Create(Self, ArrayDef.Element, aElement, aOnlySK, s);
+          Element := TwbValue.Create(Self, ValueDef, aElement, aOnlySK, s);
         end;
 
       Result := Element;
@@ -15892,6 +15916,9 @@ begin
 
   for i := 0 to Pred(StructDef.MemberCount) do begin
     ValueDef := StructDef.Members[i];
+    if ValueDef.DefType = dtResolvable then
+      ValueDef := Resolve(ValueDef, nil, nil, aContainer);
+
     if Assigned(aBasePtr) and (i >= OptionalFromElement) then begin
       over := (NativeUInt(aBasePtr) >= NativeUInt(aEndPtr));
       if not over then begin
@@ -16012,16 +16039,19 @@ end;
 
 function UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer): TwbUnionFlags;
 var
-  UnionDef : IwbUnionDef;
+  ResolvableDef : IwbResolvableDef;
   ValueDef : IwbValueDef;
   ArrayDef : IwbArrayDef;
   Element  : IwbElementInternal;
 
 begin
   Result := ufNone;
-  UnionDef := aValueDef as IwbUnionDef;
+  ResolvableDef := aValueDef as IwbResolvableDef;
 
-  ValueDef := UnionDef.Decide(aBasePtr, aEndPtr, aContainer);
+  ValueDef := ResolvableDef.ResolveDef(aBasePtr, aEndPtr, aContainer);
+
+  if Assigned(ValueDef) and (ValueDef.DefType = dtResolvable) then
+    ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
 
   if Assigned(ValueDef) then // I had one case. Most likely due to an error in wbXXXXDefinitions
     case ValueDef.DefType of
@@ -16045,7 +16075,7 @@ begin
     Element.SetMemoryOrder(0);
   end;
 
-  UnionDef.AfterLoad(aContainer);
+  ResolvableDef.AfterLoad(aContainer);
 end;
 
 function TwbUnion.CompareExchangeFormID(aOldFormID, aNewFormID: TwbFormID): Boolean;
@@ -18203,7 +18233,7 @@ var
   fPath       : String;
   modPtr      : Pointer;
   mods        : TwbArray;
-
+  ValueDef    : IwbValueDef;
 begin
   SelfRef := Self as IwbContainerElementRef;
   flProgress('Start processing');
@@ -18255,13 +18285,18 @@ begin
     ExtractInfo := [];
 
   for i := 0 to Pred(wbFileChapters.MemberCount) do begin
-    case wbFileChapters.Members[i].DefType of
-      dtArray: Element := TwbArray.Create(Self, currentPtr, flEndPtr, wbFileChapters.Members[i], '');
-      dtStruct: Element := TwbStruct.Create(Self, currentPtr, flEndPtr, wbFileChapters.Members[i], '');
-      dtStructChapter: Element := TwbChapter.Create(Self, currentPtr, flEndPtr, wbFileChapters.Members[i], '');
-      dtUnion: Element := TwbUnion.Create(Self, currentPtr, flEndPtr, wbFileChapters.Members[i], '');
+
+    ValueDef := wbFileChapters.Members[i];
+    if ValueDef.DefType = dtResolvable then
+      ValueDef := Resolve(ValueDef, currentPtr, flEndPtr, Self);
+
+    case ValueDef.DefType of
+      dtArray: Element := TwbArray.Create(Self, currentPtr, flEndPtr, ValueDef, '');
+      dtStruct: Element := TwbStruct.Create(Self, currentPtr, flEndPtr, ValueDef, '');
+      dtStructChapter: Element := TwbChapter.Create(Self, currentPtr, flEndPtr, ValueDef, '');
+      dtUnion: Element := TwbUnion.Create(Self, currentPtr, flEndPtr, ValueDef, '');
     else
-      Element := TwbValue.Create(Self, currentPtr, flEndPtr, wbFileChapters.Members[i], '');
+      Element := TwbValue.Create(Self, currentPtr, flEndPtr, ValueDef, '');
     end;
     if (i in ExtractInfo) and Supports(Element, IwbContainer, Container) then
       with Element as TwbContainer do DoInit(True);

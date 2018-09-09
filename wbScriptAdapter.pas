@@ -298,7 +298,7 @@ begin
     8: Result := esNotReachable;
     9: Result := esReachable;
     10: Result := esTagged;
-    11: Result := esDeciding;
+    11: Result := esResolving;
     12: Result := esNotSuitableToAddTo;
   else
     Result := esDummy;
@@ -1810,7 +1810,8 @@ begin
     AddConst(cUnit, 'esNotReachable', Ord(esNotReachable));
     AddConst(cUnit, 'esReachable', Ord(esReachable));
     AddConst(cUnit, 'esTagged', Ord(esTagged));
-    AddConst(cUnit, 'esDeciding', Ord(esDeciding));
+    AddConst(cUnit, 'esDeciding', Ord(esResolving));
+    AddConst(cUnit, 'esResolving', Ord(esResolving));
     AddConst(cUnit, 'esNotSuitableToAddTo', Ord(esNotSuitableToAddTo));
 
     { TwbDefType }
