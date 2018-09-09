@@ -42,7 +42,7 @@ https://www.nexusmods.com/newvegas/mods/38413
 
 ## Online Documentation
 
-EpFwip started an HTML conversion of the Fallout 3 Training Manual many years ago. With the help of GhPages and Jekyll I have been able to create online documentation for xEdit. New screen shots of the Fallout 3 examples that Miax and JustinOther presented will be added as time permits. Also the website will continue to evolve over time.
+EpFwip started an HTML conversion of the Fallout 3 Training Manual many years ago. With the help of GhPages and Jekyll online documentation for xEdit is now available. New screen shots of the Fallout 3 examples that Miax and JustinOther presented will be added as time permits. Also the website will continue to evolve over time.
 
 However, for now consider what the Tome of xEdit presents as a current resource for xEdit functionality. The previous PDF file presented step by step illustrations of the built in functions available to xEdit. While the UI itself has had few changes over time the functions work the same and only certain functions are game specific.
 
