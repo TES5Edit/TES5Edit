@@ -13647,13 +13647,16 @@ end;
 
 procedure TwbElement.DoAfterSet(const aOldValue, aNewValue: Variant);
 var
-  NamedDef: IwbNamedDef;
+  NamedDef1: IwbNamedDef;
+  NamedDef2: IwbNamedDef;
 begin
-  NamedDef := GetValueDef;
-  if Assigned(NamedDef) then
-    NamedDef.AfterSet(Self, aOldValue, aNewValue);
-  if Supports(GetDef, IwbNamedDef, NamedDef) then
-    NamedDef.AfterSet(Self, aOldValue, aNewValue);
+  NamedDef1 := GetValueDef;
+  if Assigned(NamedDef1) then
+    NamedDef1.AfterSet(Self, aOldValue, aNewValue);
+
+  if Supports(GetDef, IwbNamedDef, NamedDef2) then
+    if not NamedDef2.Equals(NamedDef1) then
+      NamedDef2.AfterSet(Self, aOldValue, aNewValue);
 
   Exclude(eStates, esReportedErrorReading);
 end;
