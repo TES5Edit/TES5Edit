@@ -164,6 +164,11 @@ function  wbIsAeroEnabled: Boolean;
 
 function wbGetLastWriteTime(const s: string): TDateTime;
 
+type
+  wb<T> = record
+    class function Iff(aCond: Boolean; const aTrue, aFalse: T): T; static;
+  end;
+
 implementation
 
 uses
@@ -1506,6 +1511,13 @@ begin
     Result := TFile.GetLastWriteTime(s);
 end;
 
+class function wb<T>.Iff(aCond: Boolean; const aTrue, aFalse: T): T;
+begin
+  if aCond then
+    Result := aTrue
+  else
+    Result := aFalse;
+end;
 
 initialization
   CRCInit;

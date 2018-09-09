@@ -710,6 +710,7 @@ type
     function GetReferencesInjected: Boolean;
     function GetInjectionSourceFiles: TDynFiles;
     function GetIsNotReachable: Boolean;
+    function GetIsReachable: Boolean;
     function GetDataSize: Integer;
     procedure SetDataSize(aSize: Integer);
     procedure MergeStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
@@ -819,6 +820,8 @@ type
       read GetIsInjected;
     property IsNotReachable: Boolean
       read GetIsNotReachable;
+    property IsReachable: Boolean
+      read GetIsReachable;
     property ReferencesInjected: Boolean
       read GetReferencesInjected;
 

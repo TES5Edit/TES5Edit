@@ -354,6 +354,7 @@ type
     function GetReferencesInjected: Boolean; virtual;
     function GetInjectionSourceFiles: TDynFiles; virtual;
     function GetIsNotReachable: Boolean; virtual;
+    function GetIsReachable: Boolean; virtual;
     procedure SetModified(aValue: Boolean); virtual;
     procedure SetInternalModified(aValue: Boolean); virtual;
     function GetDataSize: Integer; virtual;
@@ -981,6 +982,7 @@ type
     function GetInjectionSourceFiles: TDynFiles; override;
     function RemoveInjected(aCanRemove: Boolean): Boolean; override;
     function GetIsNotReachable: Boolean; override;
+    function GetIsReachable: Boolean; override;
     function GetCountedRecordCount: Cardinal; override;
     procedure InitDataPtr; override;
     procedure DecompressIfNeeded;
@@ -2276,13 +2278,15 @@ end;
 
 procedure TwbFile.BuildReachable;
 var
-  Group : IwbGroupRecord;
-  i     : Integer;
-  Rec   : IwbMainRecord;
-  Cnt   : IwbContainerElementRef;
-  Cnt2  : IwbContainerElementRef;
-  Flg   : IwbElement;
-  s     : string;
+  Group    : IwbGroupRecord;
+  i        : Integer;
+  Rec      : IwbMainRecord;
+  Rec2     : IwbMainRecord;
+  Cnt      : IwbContainerElementRef;
+  Cnt2     : IwbContainerElementRef;
+  Flg      : IwbElement;
+  s        : string;
+  FoundAny : Boolean;
 begin
   if Length(cntElements) < 1 then
     Exit;
@@ -2388,28 +2392,50 @@ begin
           if Rec.IsWinningOverride then begin
             Cnt := Rec as IwbContainerElementRef;
             if Supports(Cnt.RecordBySignature['DATA'], IwbContainerElementRef, Cnt) then begin
-              if (Integer(Cnt.NativeValue) and 1) <> 0 then
+              s := Cnt.SortKey[False];
+              if (Length(s)>0) and (s[1] = '1') then
+                //Playable
                 (Rec as IwbElementInternal).Reached;
             end;
           end;
         end;
 
-    Group := GetGroupBySignature('DIAL');
-    if Assigned(Group) then
-      for i := 0 to Pred(Group.ElementCount) do
-        if Supports(Group.Elements[i], IwbMainRecord, Rec) then begin
-          if Rec.IsWinningOverride then begin
-            Cnt := Rec as IwbContainerElementRef;
-            if Supports(Cnt.RecordBySignature['DATA'], IwbContainerElementRef, Cnt2) then begin
-              Flg := Cnt2.ElementByName['Flags'];
-              if Assigned(Flg) then begin
-                s := Flg.SortKey[False];
-                if (Length(s)>1) and (s[2] = '1') then
+    if wbGameMode >= gmTES5 then begin
+      Group := GetGroupBySignature('EYES');
+      if Assigned(Group) then
+        for i := 0 to Pred(Group.ElementCount) do
+          if Supports(Group.Elements[i], IwbMainRecord, Rec) then begin
+            if Rec.IsWinningOverride then begin
+              Cnt := Rec as IwbContainerElementRef;
+              if Supports(Cnt.RecordBySignature['DATA'], IwbContainerElementRef, Cnt) then begin
+                s := Cnt.SortKey[False];
+                if (Length(s)>0) and (s[1] = '1') then
+                  //Playable
                   (Rec as IwbElementInternal).Reached;
               end;
             end;
           end;
-        end;
+    end;
+
+    if wbGameMode < gmTES5 then begin
+      Group := GetGroupBySignature('DIAL');
+      if Assigned(Group) then
+        for i := 0 to Pred(Group.ElementCount) do
+          if Supports(Group.Elements[i], IwbMainRecord, Rec) then begin
+            if Rec.IsWinningOverride then begin
+              Cnt := Rec as IwbContainerElementRef;
+              if Supports(Cnt.RecordBySignature['DATA'], IwbContainerElementRef, Cnt2) then begin
+                Flg := Cnt2.ElementByName['Flags'];
+                if Assigned(Flg) then begin
+                  s := Flg.SortKey[False];
+                  if (Length(s)>1) and (s[2] = '1') then
+                    //Top-level
+                    (Rec as IwbElementInternal).Reached;
+                end;
+              end;
+            end;
+          end;
+    end;
 
     Group := GetGroupBySignature('NPC_');
     if Assigned(Group) then
@@ -2422,6 +2448,7 @@ begin
               if Assigned(Flg) then begin
                 s := Flg.EditValue;
                 if (Length(s) > 2) and (s[3]='1') then
+                  //Is CharGen Face Preset
                   (Rec as IwbElementInternal).Reached;
               end;
             end;
@@ -2440,6 +2467,7 @@ begin
             if Assigned(Flg) then begin
               s := Flg.EditValue;
               if (Length(s) > 0) and (s[1]='1') then
+                //Playable
                 (Rec as IwbElementInternal).Reached;
             end;
           end;
@@ -2452,16 +2480,66 @@ begin
       if Supports(Group.Elements[i], IwbMainRecord, Rec) then begin
         if Rec.IsWinningOverride then begin
           Cnt := Rec as IwbContainerElementRef;
-          if Supports(Cnt.RecordBySignature['DATA'], IwbContainerElementRef, Cnt) then begin
+          if Supports(Cnt.RecordBySignature[wb<TwbSignature>.Iff(wbGameMode >= gmTES5, 'DNAM', 'DATA')], IwbContainerElementRef, Cnt) then begin
             Flg := Cnt.Elements[0];
             if Assigned(Flg) then begin
               s := Flg.EditValue;
               if (Length(s) > 0) and (s[1]='1') then
+                //Start game enabled
                 (Rec as IwbElementInternal).Reached;
             end;
           end;
         end;
       end;
+{
+  repeat
+    FoundAny := False;
+
+    Group := GetGroupBySignature('SMEN');
+    if Assigned(Group) then
+      for i := 0 to Pred(Group.ElementCount) do
+        if Supports(Group.Elements[i], IwbMainRecord, Rec) then begin
+          Rec := Rec.WinningOverride;
+          if not Rec.IsReachable then begin
+            if Supports(Rec.ElementLinksTo['PNAM'], IwbMainRecord, Rec2) then
+              if Rec2.IsReachable then begin
+                FoundAny := True;
+                (Rec as IwbElementInternal).Reached;
+              end;
+          end;
+        end;
+
+    Group := GetGroupBySignature('SMQN');
+    if Assigned(Group) then
+      for i := 0 to Pred(Group.ElementCount) do
+        if Supports(Group.Elements[i], IwbMainRecord, Rec) then begin
+          Rec := Rec.WinningOverride;
+          if not Rec.IsReachable then begin
+            if Supports(Rec.ElementLinksTo['PNAM'], IwbMainRecord, Rec2) then
+              if Rec2.IsReachable then begin
+                FoundAny := True;
+                (Rec as IwbElementInternal).Reached;
+              end;
+          end;
+        end;
+
+    Group := GetGroupBySignature('SMBN');
+    if Assigned(Group) then
+      for i := 0 to Pred(Group.ElementCount) do
+        if Supports(Group.Elements[i], IwbMainRecord, Rec) then begin
+          Rec := Rec.WinningOverride;
+          if not Rec.IsReachable then begin
+            if Supports(Rec.ElementLinksTo['PNAM'], IwbMainRecord, Rec2) then
+              if Rec2.IsReachable then begin
+                FoundAny := True;
+                (Rec as IwbElementInternal).Reached;
+              end;
+          end;
+        end;
+
+  until not FoundAny;
+}
+
 end;
 
 procedure TwbFile.BuildRef;
@@ -8340,16 +8418,29 @@ begin
     Result := inherited GetIsNotReachable;
     if Result then
       for i := Low(mrOverrides) to High(mrOverrides) do
-        if not (esNotReachable in mrOverrides[i].ElementStates) then begin
-          Result := False;
-          Exit;
-        end;
+        if not (esNotReachable in mrOverrides[i].ElementStates) then
+          Exit(False);
   end;
 end;
 
 function TwbMainRecord.GetIsPersistent: Boolean;
 begin
   Result := GetFlags.IsPersistent;
+end;
+
+function TwbMainRecord.GetIsReachable: Boolean;
+var
+  i: Integer;
+begin
+  if Assigned(mrMaster) then
+    Result := IwbMainRecord(mrMaster).IsReachable
+  else begin
+    Result := inherited GetIsReachable;
+    if not Result then
+      for i := Low(mrOverrides) to High(mrOverrides) do
+        if esReachable in mrOverrides[i].ElementStates then
+          Exit(True);
+  end;
 end;
 
 function TwbMainRecord.GetIsVisibleWhenDistant: Boolean;
@@ -9351,10 +9442,14 @@ var
 function TwbMainRecord.Reached: Boolean;
 var
   Signature : TwbSignature;
-  i         : Integer;
+  i, j      : Integer;
   IsComplex : Boolean;
   SelfRef   : IwbContainerElementRef;
   Collector : TwbMainRecordCollector;
+  RefRecord : IwbMainRecord;
+  MainRecord: IwbMainRecord;
+  Master    : IwbMainRecord;
+  Keywords  : IwbContainerElementRef;
 begin
   wbTick;
 
@@ -9381,21 +9476,79 @@ begin
       Result := inherited Reached;
 
       if Result then begin
-        if not Assigned(eContainer) then
-          Exit;
-        if LinksToParent then
-          Exit;
-        if not IsComplex then
-          Exit;
+        if Assigned(eContainer) then begin
 
-        if Assigned(mrMaster) then
-          (IwbMainRecord(mrMaster) as IwbElementInternal).Reached
-        else
-          for i := 0 to Pred(GetOverrideCount) do
-            (GetOverride(i) as IwbElementInternal).Reached;
+          if (Signature = 'SMBN') or (Signature = 'SMQN') or (Signature = 'SMEN') then begin
+            Master := GetMasterOrSelf;
+            for i := 0 to Pred(Master.ReferencedByCount) do begin
+              RefRecord := Master.ReferencedBy[i];
+              Signature := RefRecord.Signature;
+              if (Signature = 'SMBN') or (Signature = 'SMQN') or (Signature = 'SMEN') then
+                if Supports(RefRecord.ElementLinksTo['PNAM'], IwbMainRecord, MainRecord) then
+                  if MainRecord.LoadOrderFormID = GetLoadOrderFormID then
+                    (RefRecord as IwbElementInternal).Reached;
+            end;
+          end else if Signature = 'FURN' then begin
+            if wbGameMode >= gmTES5 then begin
+              if GetElementNativeValue('WBDT\Bench Type') > 0 then
+                if Supports(GetElementByPath('KWDA - Keywords'), IwbContainerElementRef, Keywords) then
+                  for i := 0 to Pred(Keywords.ElementCount) do
+                    if Supports(Keywords.Elements[i].LinksTo, IwbMainRecord, MainRecord) then begin
+                      Master := MainRecord.MasterOrSelf;
+                      for j := 0 to Pred(Master.ReferencedByCount) do begin
+                        RefRecord := Master.ReferencedBy[j];
+                        Signature := RefRecord.Signature;
+                        if Signature = 'COBJ' then
+                          if Supports(RefRecord.ElementLinksTo['BNAM'], IwbMainRecord, MainRecord) then
+                            if MainRecord.LoadOrderFormID = Master.LoadOrderFormID then
+                             (RefRecord as IwbElementInternal).Reached;
+                      end;
+                    end;
+            end;
+          end else if Signature = 'NPC_' then begin
+            if wbGameMode >= gmTES5 then begin
+              Master := GetMasterOrSelf;
+              for i := 0 to Pred(Master.ReferencedByCount) do begin
+                RefRecord := Master.ReferencedBy[i];
+                Signature := RefRecord.Signature;
+                if Signature = 'RELA' then
+                  (RefRecord as IwbElementInternal).Reached;
+              end;
+            end;
+          end else if Signature = 'QUST' then begin
+            if wbGameMode >= gmTES5 then begin
+              Master := GetMasterOrSelf;
+              for i := 0 to Pred(Master.ReferencedByCount) do begin
+                RefRecord := Master.ReferencedBy[i];
+                Signature := RefRecord.Signature;
+                if Signature = 'SCEN' then begin
+                  if Supports(RefRecord.ElementLinksTo['PNAM'], IwbMainRecord, MainRecord) then
+                    if MainRecord.LoadOrderFormID = GetLoadOrderFormID then
+                      (RefRecord as IwbElementInternal).Reached;
+                end else if Signature = 'DLBR' then begin
+                  if Supports(RefRecord.ElementLinksTo['QNAM'], IwbMainRecord, MainRecord) then
+                    if MainRecord.LoadOrderFormID = GetLoadOrderFormID then begin
+                      if RefRecord.ElementNativeValues['DNAM'] > 0 then
+                        (RefRecord as IwbElementInternal).Reached;
+                    end;
+                end else
+              end;
+            end;
+          end;
 
-        if Assigned(mrGroup) then
-          (mrGroup as IwbElementInternal).Reached;
+          if not LinksToParent then begin
+            if IsComplex then begin
+              if Assigned(mrMaster) then
+                (IwbMainRecord(mrMaster) as IwbElementInternal).Reached
+              else
+                for i := 0 to Pred(GetOverrideCount) do
+                  (GetOverride(i) as IwbElementInternal).Reached;
+
+              if Assigned(mrGroup) then
+                (mrGroup as IwbElementInternal).Reached;
+            end;
+          end;
+        end;
       end;
     end else
       Result := (GetWinningOverride as IwbElementInternal).Reached;
@@ -13900,6 +14053,11 @@ end;
 function TwbElement.GetIsNotReachable: Boolean;
 begin
   Result := esNotReachable in eStates;
+end;
+
+function TwbElement.GetIsReachable: Boolean;
+begin
+  Result := esReachable in eStates;
 end;
 
 function TwbElement.GetIsRemoveable: Boolean;
