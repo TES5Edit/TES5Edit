@@ -5557,7 +5557,7 @@ begin
   inherited;
 
   if esModified in eStates then
-    DoAfterSet(varEmpty, varEmpty);
+    DoAfterSet(Unassigned, Unassigned);
 end;
 
 procedure TwbContainer.PrepareSave;
