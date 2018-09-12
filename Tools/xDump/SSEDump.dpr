@@ -979,23 +979,6 @@ begin
         tsSaves:   DefineTES5Saves;
         tsPlugins: DefineTES5;
       end;
-    end else if isMode('SSE') then begin
-      wbGameMode := gmSSE;
-      wbAppName := 'SSE';
-      wbGameName := 'Skyrim';
-      wbLoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
-      if not (wbToolMode in [tmDump, tmExport]) then begin
-        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
-        Exit;
-      end;
-      if not (wbToolSource in [tsPlugins { Needs better decoding , tsSaves}]) then begin
-        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
-        Exit;
-      end;
-      case wbToolSource of
-        tsSaves:   DefineTES5Saves;
-        tsPlugins: DefineTES5;
-      end;
     end else if isMode('TES5vr') then begin
       wbGameMode := gmTES5VR;
       wbAppName := 'TES5VR';
@@ -1051,6 +1034,23 @@ begin
       case wbToolSource of
         tsSaves:   DefineFO4Saves;
         tsPlugins: DefineFO4;
+      end;
+    end else if isMode('SSE') then begin
+      wbGameMode := gmSSE;
+      wbAppName := 'SSE';
+      wbGameName := 'Skyrim';
+      wbLoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
+      if not (wbToolMode in [tmDump, tmExport]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
+        Exit;
+      end;
+      if not (wbToolSource in [tsPlugins, tsSaves]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
+        Exit;
+      end;
+      case wbToolSource of
+        tsSaves:   DefineTES5Saves;
+        tsPlugins: DefineTES5;
       end;
     end else begin
       WriteLn(ErrOutput, 'Application name must contain FNV, FO3, FO4, FO4vr, SSE, TES4, TES5 or TES5vr to select game.');
