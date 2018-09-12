@@ -470,7 +470,7 @@ var
 begin
   // Detecting game mode
   // check command line params first for mode overrides
-  // they should take precendence over application name detection
+  // they should take precedence over application name detection
   // AppSourceMode := SourceModes[1];
   for s in SourceModes do
     if FindCmdLineSwitch(s) or wbFindCmdLineParam(s, p) or (Pos(s, wbForcedModes) <> 0) then begin
