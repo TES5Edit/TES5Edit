@@ -2229,7 +2229,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..320] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..321] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -2561,7 +2561,8 @@ const
     (Index: 6186; Name: 'IsInCharGen'; ),
     (Index: 6192; Name: 'GetWaterImmersionPerc'; ),
     (Index: 6204; Name: 'IsFleeing'; ),
-    (Index: 6217; Name: 'GetTargetUnreachable'; )
+    (Index: 6217; Name: 'GetTargetUnreachable'; ),
+    (Index: 6268; Name: 'IsInKillCam'; )
 );
 
 var
