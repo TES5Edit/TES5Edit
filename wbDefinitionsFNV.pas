@@ -5883,6 +5883,7 @@ begin
     wbString(ICO2, 'Female icon filename'),
     wbString(MIC2, 'Female mico filename'),
     wbString(BMCT, 'Ragdoll Constraint Template'),
+    wbDEST,
     wbREPL,
     wbBIPL,
     wbETYPReq,
@@ -10550,14 +10551,15 @@ begin
           {0x2000} 'Start at Random Position'
         ])),
         wbInteger('Static attentuation cdB', itS16),
-        wbInteger('Stop time ', itU8),
-        wbInteger('Start time ', itU8),
+        wbInteger('Stop time ', itU8, wbAlocTime),
+        wbInteger('Start time ', itU8, wbAlocTime),
         wbArray('Attenuation Curve', wbInteger('Point', itS16), 5),
         wbInteger('Reverb Attenuation Control', itS16),
         wbInteger('Priority', itS32),
-//        wbByteArray('Unknown', 8)
-        wbInteger('x', itS32),
-        wbInteger('y', itS32)
+        wbStruct('Loop Points', [
+          wbInteger('Begin', itS32),
+          wbInteger('End', itS32)
+        ])
 
       ], cpNormal, True),
       wbStruct(SNDX, 'Sound Data', [
