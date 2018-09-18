@@ -4495,6 +4495,8 @@ begin
   SetDefaultNodeHeight(Trunc(RowHeight * (GetCurrentPPIScreen / PixelsPerInch)));
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
   wbSortGroupRecord := Settings.ReadBool('Options', 'SortGroupRecord', wbSortGroupRecord);
+  wbFocusAddedElement := Settings.ReadBool('Options', 'FocusAddedElement', wbFocusAddedElement);
+  wbRequireCtrlForDblClick := Settings.ReadBool('Options', 'RequireCtrlForDblClick', wbRequireCtrlForDblClick);
   wbRemoveOffsetData := Settings.ReadBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
   wbShowGroupRecordCount := Settings.ReadBool('Options', 'ShowGroupRecordCount', wbShowGroupRecordCount);
   wbShowFileFlags := Settings.ReadBool('Options', 'ShowFileFlags', wbShowFileFlags);
@@ -6336,6 +6338,7 @@ var
   TargetIndex                 : Integer;
   TargetElement               : IwbElement;
   NewElement                  : IwbElement;
+  Control                     : Boolean;
 begin
   if not wbEditAllowed then
     Exit;
@@ -6354,7 +6357,9 @@ begin
 
       ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
       TargetElement := nil;
-      FocusedElement := NewElement;
+      Control := GetKeyState(VK_CONTROL) < 0;
+      if wbFocusAddedElement xor Control then
+        FocusedElement := NewElement;
       PostResetActiveTree;
     finally
       //      vstView.EndUpdate;
@@ -11727,6 +11732,8 @@ begin
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
     cbSortGroupRecord.Checked := wbSortGroupRecord;
+    cbFocusAddedElement.Checked := wbFocusAddedElement;
+    cbRequireCtrlForDblClick.Checked := wbRequireCtrlForDblClick;
     cbRemoveOffsetData.Checked := wbRemoveOffsetData;
     cbShowFlagEnumValue.Checked := wbShowFlagEnumValue;
     cbShowGroupRecordCount.Checked := wbShowGroupRecordCount;
@@ -11768,6 +11775,8 @@ begin
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
     wbSortGroupRecord := cbSortGroupRecord.Checked;
+    wbFocusAddedElement := cbFocusAddedElement.Checked;
+    wbRequireCtrlForDblClick := cbRequireCtrlForDblClick.Checked;
     wbRemoveOffsetData := cbRemoveOffsetData.Checked;
     wbShowFlagEnumValue := cbShowFlagEnumValue.Checked;
     wbShowGroupRecordCount := cbShowGroupRecordCount.Checked;
@@ -11805,6 +11814,8 @@ begin
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
     Settings.WriteBool('Options', 'SortGroupRecord', wbSortGroupRecord);
+    Settings.WriteBool('Options', 'FocusAddedElement', wbFocusAddedElement);
+    Settings.WriteBool('Options', 'RequireCtrlForDblClick', wbRequireCtrlForDblClick);
     Settings.WriteBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
     Settings.WriteBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
     Settings.WriteBool('Options', 'ShowGroupRecordCount', wbShowGroupRecordCount);

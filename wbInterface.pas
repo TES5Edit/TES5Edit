@@ -131,6 +131,8 @@ var
   wbAlwaysSorted           : Boolean  = False;
   wbThemesSupported        : Boolean  = True;
   wbReportModGroups        : Boolean  = False;
+  wbRequireCtrlForDblClick : Boolean  = False;
+  wbFocusAddedElement      : Boolean  = True;
 
   wbPluginsFileName    : String;
   wbModGroupFileName   : string;

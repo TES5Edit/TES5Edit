@@ -74,10 +74,12 @@ end;
 
 procedure TfrmFileSelect.CheckListBox1DblClick(Sender: TObject);
 begin
-  SelectNone1.Click;
-  if (CheckListBox1.ItemIndex >= 0) and (CheckListBox1.ItemIndex < CheckListBox1.Count) then begin
-    CheckListBox1.Checked[CheckListBox1.ItemIndex] := True;
-    btnOK.Click;
+  if not wbRequireCtrlForDblClick or (GetKeyState(VK_CONTROL) < 0) then begin
+    SelectNone1.Click;
+    if (CheckListBox1.ItemIndex >= 0) and (CheckListBox1.ItemIndex < CheckListBox1.Count) then begin
+      CheckListBox1.Checked[CheckListBox1.ItemIndex] := True;
+      btnOK.Click;
+    end;
   end;
 end;
 

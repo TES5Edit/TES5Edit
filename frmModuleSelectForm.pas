@@ -637,7 +637,7 @@ end;
 
 procedure TfrmModuleSelect.vstModulesNodeDblClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
 begin
-  if GetKeyState(VK_CONTROL) < 0 then
+  if not wbRequireCtrlForDblClick or (GetKeyState(VK_CONTROL) < 0) then
     with HitInfo do
       if Assigned(HitNode) then
         DoSingleModuleLoad(HitNode);
