@@ -3,7 +3,7 @@ object frmOptions: TfrmOptions
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Options'
-  ClientHeight = 402
+  ClientHeight = 421
   ClientWidth = 466
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,20 +20,21 @@ object frmOptions: TfrmOptions
   OnKeyDown = FormKeyDown
   DesignSize = (
     466
-    402)
+    421)
   PixelsPerInch = 96
   TextHeight = 13
   object pcOptions: TPageControl
     Left = 0
     Top = 0
     Width = 466
-    Height = 363
+    Height = 382
     ActivePage = tsGeneral
     Align = alTop
     TabOrder = 0
     object tsGeneral: TTabSheet
       Caption = 'General'
       ImageIndex = 1
+      ExplicitHeight = 335
       object cbIKnow: TCheckBox
         Left = 298
         Top = 302
@@ -198,6 +199,7 @@ object frmOptions: TfrmOptions
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'
+      ExplicitHeight = 335
       object Label1: TLabel
         Left = 16
         Top = 9
@@ -265,6 +267,7 @@ object frmOptions: TfrmOptions
     object tsUISettings: TTabSheet
       Caption = 'UI Settings'
       ImageIndex = 2
+      ExplicitHeight = 335
       object Label3: TLabel
         Left = 16
         Top = 16
@@ -447,26 +450,44 @@ object frmOptions: TfrmOptions
         TabOrder = 10
         Value = 0
       end
+      object cbRequireCtrlForDblClick: TCheckBox
+        Left = 16
+        Top = 297
+        Width = 280
+        Height = 17
+        Caption = 'Selection forms require holding CTRL for double click'
+        TabOrder = 11
+      end
+      object cbFocusAddedElement: TCheckBox
+        Left = 16
+        Top = 320
+        Width = 280
+        Height = 17
+        Caption = 'Focus newly added elements in View'
+        TabOrder = 12
+      end
     end
   end
   object btnOK: TButton
     Left = 302
-    Top = 369
+    Top = 388
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 1
+    ExplicitTop = 369
   end
   object btnCancel: TButton
     Left = 383
-    Top = 369
+    Top = 388
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
+    ExplicitTop = 369
   end
 end
