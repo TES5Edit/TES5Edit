@@ -252,7 +252,6 @@ begin
   Settings := frmMain.Settings;
 
   if Assigned(Settings) then begin
-  // skip reading main form position if Shift is pressed
     lLeft := Settings.ReadInteger(Name, 'Left', 0);
     lTop := Settings.ReadInteger(Name, 'Top', 0);
     lWidth := Settings.ReadInteger(Name, 'Width', 0);
