@@ -297,8 +297,9 @@ begin
       if miExtension = meUnknown then
         Continue;
 
-      if miExtension in [meESM, meESL] then
-        Include(miFlags, mfIsESM);
+      if wbGameMode >= gmFO4 then
+        if miExtension in [meESM, meESL] then
+          Include(miFlags, mfIsESM);
 
       miDateTime := wbGetLastWriteTime(wbDataPath + miOriginalName);
 
