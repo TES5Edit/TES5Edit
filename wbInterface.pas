@@ -22,6 +22,7 @@ uses
   Types,
   Classes,
   SysUtils,
+  UITypes,
   Graphics;
 
 const
@@ -305,6 +306,7 @@ type
   TByteSet = set of Byte;
   TConflictAllSet = set of TConflictAll;
   TConflictAllColors = array[TConflictAll] of TColor;
+  TConflictAllNames = array[TConflictAll] of string;
 
   TConflictThis = (
     ctUnknown,
@@ -323,13 +325,14 @@ type
 
   TConflictThisSet = set of TConflictThis;
   TConflictThisColors = array[TConflictThis] of TColor;
+  TConflictThisNames = array[TConflictThis] of string;
 
 var
   wbColorConflictAll: TConflictAllColors = (
     clDefault, // caUnknown
     clDefault, // caOnlyOne
     clLime,    // caNoConflict
-    clYellow,  // caConflictBenign
+    TColors.Greenyellow,  // caConflictBenign
     clYellow,  // caOverride
     clRed,     // caConflict
     clFuchsia  // caConflictCritical
@@ -348,6 +351,31 @@ var
     clOlive,      // ctIdenticalToMasterWinsConflict
     clOrange,     // ctConflictWins
     clRed         // ctConflictLoses
+  );
+
+  wbNameConflictAll: TConflictAllNames = (
+    '',
+    'Single Record',
+    'Multiple but no conflict',
+    'Benign Conflict',
+    'Override without conflict',
+    'Conflict',
+    'Critical Conflict'
+  );
+
+  wbNameConflictThis: TConflictThisNames = (
+    '',
+    'Ignored',
+    'Not Defined',
+    'Identical to Master',
+    'Single Record',
+    'Hidden by Mod Group',
+    'Master',
+    'Benign conflict',
+    'Override without conflict',
+    'Identical to Master but conflict winner',
+    'Conflict winner',
+    'Conflict loser'
   );
 
 type

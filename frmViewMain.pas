@@ -359,6 +359,7 @@ type
     tmrUpdateColumnWidths: TTimer;
     tmrPendingSetActive: TTimer;
     cbNavFilterKeepChildren: TCheckBox;
+    bnLegend: TSpeedButton;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -597,6 +598,7 @@ type
     procedure bnHelpClick(Sender: TObject);
     procedure bnDiscordClick(Sender: TObject);
     procedure tmrPendingSetActiveTimer(Sender: TObject);
+    procedure bnLegendClick(Sender: TObject);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
   protected
@@ -1053,7 +1055,8 @@ uses
   frmTipForm,
   frmModuleSelectForm,
   frmModGroupSelectForm,
-  frmModGroupEditForm;
+  frmModGroupEditForm,
+  frmLegendForm;
 
 var
   LastUpdate               : UInt64;
@@ -6883,6 +6886,16 @@ begin
   if Now - LastHelpClick > 1/24/60/60 then begin
     ShellExecute(Handle, 'open', PChar(wbHelpUrl), '', '', SW_SHOWNORMAL);
     LastHelpClick := Now;
+  end;
+end;
+
+procedure TfrmMain.bnLegendClick(Sender: TObject);
+begin
+  if Assigned(frmLegend) then
+    frmLegend.Visible := bnLegend.Down
+  else if bnLegend.Down then begin
+    Application.CreateForm(TfrmLegend, frmLegend);
+    frmLegend.Show;
   end;
 end;
 
@@ -15039,6 +15052,8 @@ begin
 end;
 
 procedure TfrmMain.vstViewFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
+var
+  NodeDatas                   : PViewNodeDatas;
 begin
   if Column <> LastViewColumn then begin
     if ComparingSiblings then
@@ -15047,6 +15062,26 @@ begin
       vstView.InvalidateColumn(0);
 
     LastViewColumn := Column;
+  end;
+
+  Dec(Column);
+
+  if not Assigned(frmLegend) then
+    Exit;
+  if (Column < Low(ActiveRecords)) or (Column > High(ActiveRecords)) then
+    Exit;
+
+  NodeDatas := Sender.GetNodeData(Node);
+  if not Assigned(NodeDatas) then
+    Exit;
+
+  with NodeDatas[Column] do begin
+    if Ord(ConflictAll) > 0 then
+      frmLegend.dgLegend.Row := Ord(ConflictAll);
+    if Ord(ConflictThis) > 0 then
+      frmLegend.dgLegend.Col := Ord(ConflictThis)
+    else if Column = 0 then
+      frmLegend.dgLegend.Col := Ord(ctMaster);
   end;
 end;
 
