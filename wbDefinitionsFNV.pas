@@ -7936,12 +7936,12 @@ begin
     ], cpNormal, True, nil, 5)
   ]);
 
-  wbTimeInterpolator := wbStruct('Data', [
+  wbTimeInterpolator := wbStructSK([0], 'Data', [
     wbFloat('Time'),
     wbFloat('Value')
   ]);
 
-  wbColorInterpolator := wbStruct('Data', [
+  wbColorInterpolator := wbStructSK([0], 'Data', [
     wbFloat('Time'),
     wbFloat('Red', cpNormal, False, 255, 0),
     wbFloat('Green', cpNormal, False, 255, 0),
