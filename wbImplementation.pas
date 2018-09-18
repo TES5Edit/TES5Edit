@@ -11310,7 +11310,7 @@ begin
   if Assigned(srValueDef) and (dfNotAlignable in srValueDef.DefFlags) then
     Exit(False);
 
-  Result := srsIsArray in srStates;
+  Result := (srsIsArray in srStates) and ((srValueDef as IwbArrayDef).ElementCount <= 0);
 end;
 
 function TwbSubRecord.GetCheck: string;
