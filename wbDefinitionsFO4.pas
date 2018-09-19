@@ -15037,6 +15037,10 @@ begin
       wbFloat('Near Clip'),
       wbFloat('Volumetric Intensity')
     ], cpNormal, False, nil, 4),
+    {--- Lit Water ---}
+    wbRArrayS('Lit Water',
+      wbFormIDCk(XLTW, 'Water', [REFR])
+    ),
 		wbStruct(XALP, 'Alpha', [
       wbInteger('Cutoff', itU8),
       wbInteger('Base', itU8)
