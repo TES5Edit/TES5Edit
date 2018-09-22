@@ -1357,6 +1357,8 @@ begin
         Exit;
       if aInt >= Vertices.ElementCount then
         Exit;
+      if aInt < 0 then
+        Exit;
       Vertex := Vertices.Elements[aInt] as IwbContainerElementRef;
 
       with Vertex do try
@@ -8541,23 +8543,43 @@ begin
             wbInteger('Edge 1-2', itS16, wbEdgeToStr1, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo1),
             wbInteger('Edge 2-0', itS16, wbEdgeToStr2, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo2),
             wbInteger('Flags', itU16, wbFlags([
-              'Edge 0-1 link',
-              'Edge 1-2 link',
-              'Edge 2-0 link',
-              'Unknown 4',
-              'Unknown 5',
-              'Unknown 6',
-              'Preferred',
-              'Unknown 8',
-              'Unknown 9',
-              'Water',
-              'Door',
-              'Found',
-              'Unknown 13',
-              'Unknown 14',
-              'Unknown 15',
-              'Unknown 16'
+              'Edge 0-1 link',      //$0001 1
+              'Edge 1-2 link',      //$0002 2
+              'Edge 2-0 link',      //$0004 4
+              'Deleted',            //$0008 8
+              'Unknown 5',          //$0010 16   used in CK source according to Nukem
+              'Overlapping',        //$0020 32
+              'Preferred',          //$0040 64
+              '',                   //$0080 128
+              'Unknown 9',          //$0100 256  used in CK source according to Nukem
+              'Water',              //$0200 512
+              'Door',               //$0400 1024
+              'Found',              //$0800 2048
+              'Unknown 13',         //$1000 4096 used in CK source according to Nukem
+              '',                   //$2000 \
+              '',                   //$4000  |-- used as 3 bit counter inside CK, probably stripped before save
+              ''                    //$8000 /
             ])),
+{ Flags below are wrong. The first 4 bit are an enum as follows:
+0000 = Open Edge No Cover
+1000 = wall no cover
+0100 = ledge cover
+1100 = UNUSED
+0010 = cover  64
+1010 = cover  80
+0110 = cover  96
+1110 = cover 112
+0001 = cover 128
+1001 = cover 144
+0101 = cover 160
+1101 = cover 176
+0011 = cover 192
+1011 = cover 208
+0111 = cover 224
+1111 = max cover
+then 2 bit flags, then another such enum, and the rest is probably flags.
+Can't properly represent that with current record definition methods.
+}
             wbInteger('Cover Flags', itU16, wbFlags([
               'Edge 0-1 wall',
               'Edge 0-1 ledge cover',
