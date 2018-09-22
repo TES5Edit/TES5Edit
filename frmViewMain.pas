@@ -5924,10 +5924,13 @@ var
   i,j,k          : Integer;
   ConflictAll    : TConflictAll;
   ConflictThis   : TConflictThis;
+  ConflictThisLmt: TConflictThis;
   Element        : IwbElement;
   ElementCount   : Integer;
+  HasElement     : Boolean;
   lDontShow      : Boolean;
 begin
+  HasElement := False;
   lDontShow := False;
   if not Assigned(aNodeDatas) then begin
     aNodeDatas := vstView.GetNodeData(aNode);
@@ -5950,6 +5953,7 @@ begin
   ConflictAll := caUnknown;
   ConflictThis := ctUnknown;
   for i := Low(ActiveRecords) to High(ActiveRecords) do begin
+    HasElement := HasElement or Assigned(aNodeDatas[i].Element);
     if aNodeDatas[i].ConflictAll > ConflictAll then
       ConflictAll := aNodeDatas[i].ConflictAll;
     if aNodeDatas[i].ConflictThis > ConflictThis then
@@ -6040,12 +6044,20 @@ begin
     else
       vstView.IsVisible[aNode] := not lDontShow;
     end;
-    if not ComparingSiblings then begin
+
+    if vstView.IsVisible[aNode] then
       if HideNoConflict then
-        if Length(ActiveRecords) > 1 then
-          if ConflictThis < ctOverride then
+        if Length(ActiveRecords) > 1 then begin
+          if ComparingSiblings then begin
+            if ConflictAll < caConflictBenign then
+              vstView.IsVisible[aNode] := False;
+          end else begin
+            if ConflictThis < ctOverride then
+              vstView.IsVisible[aNode] := False;
+          end;
+        end else
+          if not HasElement then
             vstView.IsVisible[aNode] := False;
-    end;
   end;
 end;
 
@@ -12658,7 +12670,7 @@ var
   TargetElement : IwbElement;
   NodeLabel     : String;
 begin
-  mniViewHideNoConflict.Visible := not ComparingSiblings;
+  mniViewHideNoConflict.Visible := True;
   mniViewStick.Visible := False;
   mniViewEdit.Visible := False;
   mniViewSetToDefault.Visible := False;
