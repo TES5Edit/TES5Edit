@@ -427,6 +427,8 @@ begin
 
       wbPluginsFileName := wbPluginsFileName + wbGameName2 + '\Plugins.txt';
     end;
+  if ExtractFilePath(wbPluginsFileName) = '' then
+    wbPluginsFileName := ExpandFileName(wbPluginsFileName);
 
   // settings in the ini file next to app, or in the same folder with plugins.txt
   wbSettingsFileName := wbProgramPath + wbAppName + wbToolName + '.ini';
