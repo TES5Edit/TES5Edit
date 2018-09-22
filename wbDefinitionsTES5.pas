@@ -380,6 +380,7 @@ const
   LNAM : TwbSignature = 'LNAM';
   LSCR : TwbSignature = 'LSCR';
   LTEX : TwbSignature = 'LTEX';
+  MPCD : TwbSignature = 'MPCD';
   LTMP : TwbSignature = 'LTMP';
   LVLC : TwbSignature = 'LVLC';
   LVLD : TwbSignature = 'LVLD';
@@ -10854,7 +10855,19 @@ begin
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed'
       ]), [18]), [
-      wbByteArray(DATA, 'Unknown'),
+      wbInteger(DATA, 'Flags', itU32, wbFlags([
+        'Vertex Normals / Height Map',
+        'Vertex Colours',
+        'Layers',
+        'Unknown 4',
+        'Unknown 5',
+        '',
+        '',
+        '',
+        '',
+        '',
+        'MPCD'
+      ])),
       wbArray(VNML, 'Vertex Normals', wbStruct('Row', [
         wbArray('Columns', wbStruct('Column', [
           wbInteger('X', itU8),
@@ -10901,7 +10914,8 @@ begin
         ], [])
       ], [])),
 
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL]))
+      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
+      wbRArray('Unknown', wbUnknown(MPCD))
     ]);
 
   end;
