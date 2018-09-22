@@ -15663,6 +15663,8 @@ var
   SelectedNodes               : TNodeArray;
   FirstNode                   : PVirtualNode;
   MainRecords                 : TDynMainRecords;
+  _File                       : IwbFile;
+  MainRecord                  : IwbMainRecord;
   i, j                        : Integer;
   HeaderType                  : TwbElementType;
 begin
@@ -15672,7 +15674,7 @@ begin
     Element := NodeData.Element;
     if Assigned(Element) then begin
       HeaderType := Element.ElementType;
-      if not (Element.ElementType in [etMainRecord, etStructChapter]) and not Element.TreeHead then
+      if not (Element.ElementType in [etFile, etMainRecord, etStructChapter]) and not Element.TreeHead then
         Element := nil;
     end;
 
@@ -15717,8 +15719,11 @@ begin
     j := 0;
     for i := Low(SelectedNodes) to High(SelectedNodes) do begin
       NodeData := vstNav.GetNodeData(SelectedNodes[i]);
-      if Assigned(NodeData.Element) and (NodeData.Element.ElementType = etMainRecord) then begin
-        MainRecords[j] := NodeData.Element as IwbMainRecord;
+      if Assigned(NodeData.Element) and (NodeData.Element.ElementType in [etMainRecord{, etFile}]) then begin
+        {if Supports(NodeData.Element, IwbFile, _File) then
+          MainRecords[j] := _File.Elements[0] as IwbMainRecord
+        else}
+          MainRecords[j] := NodeData.Element as IwbMainRecord;
         if not Assigned(FirstNode) then begin
           FirstNode := SelectedNodes[i];
           Inc(j);
@@ -15731,9 +15736,11 @@ begin
 
   if Length(MainRecords) > 1 then
     SetActiveRecord(MainRecords)
-  else if Supports(Element, IwbMainRecord) then
-    SetActiveRecord(Element as IwbMainRecord)
-  else if Supports(Element, IwbDataContainer) then
+  else if Supports(Element, IwbMainRecord, MainRecord) then
+    SetActiveRecord(MainRecord)
+  else if Supports(Element, IwbFile, _File) and (_File.ElementCount > 0) and Supports(_File.Elements[0], IwbMainRecord, MainRecord) then begin
+    SetActiveRecord(MainRecord)
+  end else if Supports(Element, IwbDataContainer) then
     SetActiveContainer(Element as IwbDataContainer)
   else
     ClearActiveContainer;
