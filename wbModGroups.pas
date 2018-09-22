@@ -126,6 +126,7 @@ type
     procedure mgfLoad;
     procedure mgfCheckValid(aForce: Boolean);
     procedure mgfAddModGroupsTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
+    function mgfAnyModuleHasFile: Boolean;
   public
     mgfFlags     : TwbModGroupFileFlags;
     mgfFileName  : string;
@@ -233,6 +234,11 @@ begin
   end;
   for i := Low(mgfModGroups) to High(mgfModGroups) do
     mgfModGroups[i].mgAddSelfTo(aList, aValidOnly);
+end;
+
+function TwbModGroupsFile.mgfAnyModuleHasFile: Boolean;
+begin
+  Result := Length(mgfModules.FilteredByFlag(mfHasFile)) > 0;
 end;
 
 procedure TwbModGroupsFile.mgfCheckValid(aForce: Boolean);
@@ -872,8 +878,11 @@ begin
     with Self[i]^ do begin
       if IsValid then
         s := 'ModGroup "%s" is valid, but has messages:'
-      else
+      else begin
+        if Assigned(mgModGroupsFile) and not mgModGroupsFile.mgfAnyModuleHasFile then
+          Continue;
         s := 'ModGroup "%s" is invalid:';
+      end;
       Messages := GetValidationMessages;
       if Length(Messages) > 0 then begin
         wbProgress(s, [mgName]);
