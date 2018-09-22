@@ -10867,7 +10867,7 @@ begin
         wbArray('Rows', wbStruct('Row', [
           wbArray('Columns', wbInteger('Column', itU8), 33)
         ]), 33),
-        wbByteArray('Unknown', 3)
+        wbByteArray('Unused', 3)
       ]),
       wbArray(VCLR, 'Vertex Colours', wbStruct('Row', [
         wbArray('Columns', wbStruct('Column', [
@@ -10882,7 +10882,7 @@ begin
           wbStructSK(BTXT, [1, 3], 'Base Layer Header', [
             wbFormIDCk('Texture', [LTEX, NULL]),
             wbInteger('Quadrant', itU8, wbQuadrantEnum),
-            wbByteArray('Unknown', 1),
+            wbByteArray('Unused', 1),
             wbInteger('Layer', itS16)
           ])
         ], []),
@@ -10890,12 +10890,12 @@ begin
           wbStructSK(ATXT, [1, 3], 'Alpha Layer Header', [
             wbFormIDCk('Texture', [LTEX, NULL]),
             wbInteger('Quadrant', itU8, wbQuadrantEnum),
-            wbByteArray('Unknown', 1),
+            wbByteArray('Unused', 1),
             wbInteger('Layer', itS16)
           ]),
           wbArrayS(VTXT, 'Alpha Layer Data', wbStructSK([0], 'Cell', [
             wbInteger('Position', itU16, wbAtxtPosition),
-            wbByteArray('Unknown', 2),
+            wbByteArray('Unused', 2),
             wbFloat('Opacity')
           ]))
         ], [])
