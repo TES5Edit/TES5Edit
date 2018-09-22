@@ -10679,6 +10679,7 @@ begin
     wbOBNDReq,
     wbMODLReq,
     wbICONReq,
+    wbDEST,
     wbArrayS(SNAM, 'SpeedTree Seeds', wbInteger('SpeedTree Seed', itU32), 0, cpNormal, True),
     wbStruct(CNAM, 'Tree Data', [
       wbFloat('Leaf Curvature'),
