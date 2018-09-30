@@ -6008,14 +6008,14 @@ begin
     ]);
     wbMaxHeightDataWRLD := wbStruct(MHDT, 'Max Height Data', [
       wbStruct('Min', [
-        wbInteger('X', itS16),
-        wbInteger('Y', itS16)
+        wbInteger('X', itS16, nil, nil, cpNormalIgnoreEmpty),
+        wbInteger('Y', itS16, nil, nil, cpNormalIgnoreEmpty)
       ]),
       wbStruct('Max', [
-        wbInteger('X', itS16),
-        wbInteger('Y', itS16)
+        wbInteger('X', itS16, nil, nil, cpNormalIgnoreEmpty),
+        wbInteger('Y', itS16, nil, nil, cpNormalIgnoreEmpty)
       ]),
-      wbByteArray('Cell Data', 0)
+      wbByteArray('Cell Data', 0, cpNormalIgnoreEmpty)
       // way too verbose for no practical use
       {wbArray('Cell Data', wbStruct('Quad Height', [
         wbInteger('Bottom Left', itU8),
@@ -6023,7 +6023,7 @@ begin
         wbInteger('Top Left', itU8),
         wbInteger('Top Right', itU8)
       ]))}
-    ]);
+    ], cpNormalIgnoreEmpty);
   end;
 
   if wbSimpleRecords then
