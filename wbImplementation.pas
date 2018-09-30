@@ -2184,6 +2184,7 @@ begin
   end;
 
   SetModified(True);
+  IncGeneration;
 
   if NotAllAdded then
     raise Exception.Create('Only '+IntToStr(GetMasterCount - OldMasterCount)+' of '+IntToStr(aMasters.Count)+' masters could be added. Master list now contains '+IntToStr(GetMasterCount)+' entries and is full.');
@@ -2567,6 +2568,7 @@ begin
         Assert(False);
 
       SetModified(True);
+      IncGeneration;
 
       Assert(Length(flMasters) = MasterFiles.ElementCount);
 
