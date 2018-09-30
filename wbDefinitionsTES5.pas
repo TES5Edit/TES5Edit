@@ -13575,20 +13575,19 @@ begin
     IsSSE(
       wbStruct(CRDT, 'Critical Data', [
         wbInteger('Damage', itU16),
-        wbByteArray('Unknown', 2),
+        wbByteArray('Unused', 2, cpIgnore),
         wbFloat('% Mult'),
         wbInteger('Flags', itU8, wbFlags([
           'On Death'
         ])),
 		// SSE
-        wbByteArray('Unused', 3, cpIgnore),
-        wbByteArray('Unknown', 4),
+        wbByteArray('Unused', 7, cpIgnore),
         wbFormIDCk('Effect', [SPEL, NULL]),
-        wbByteArray('Unknown', 4)
+        wbByteArray('Unused', 4, cpIgnore)
       ]),
       wbStruct(CRDT, 'Critical Data', [
         wbInteger('Damage', itU16),
-        wbByteArray('Unknown', 2),
+        wbByteArray('Unused', 2, cpIgnore),
         wbFloat('% Mult'),
         wbInteger('Flags', itU8, wbFlags([
           'On Death'
