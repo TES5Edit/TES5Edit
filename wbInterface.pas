@@ -471,7 +471,8 @@ type
   TwbDefFlag = (
     dfInternalEditOnly,
     dfZeroSortKey, // not implemented for all Defs!!!
-    dfNotAlignable
+    dfNotAlignable,
+    dfCollapsed
   );
 
   TwbDefFlags = set of TwbDefFlag;
@@ -494,6 +495,8 @@ type
     function GetNoReach: Boolean;
     function GetParent: IwbDef;
     function GetDefFlags: TwbDefFlags;
+    function GetCollapsed: Boolean;
+    procedure SetCollapsed(const aValue: Boolean);
 
     procedure Report(const aParents: TwbDefPath);
     procedure Used(const aElement: IwbElement = nil; const s: string = '');
@@ -511,6 +514,9 @@ type
       read GetDefID;
     property DefFlags: TwbDefFlags
       read GetDefFlags;
+    property Collapsed: Boolean
+      read GetCollapsed
+      write SetCollapsed;
     property ConflictPriority[const aElement: IwbElement]: TwbConflictPriority
       read GetConflictPriority;
     property ConflictPriorityCanChange: Boolean
@@ -922,7 +928,8 @@ type
     csReseting,
     csRefsBuild,
     csAsCreatedEmpty,
-    csSortedBySortOrder
+    csSortedBySortOrder,
+    csCollapsed
   );
 
   TwbContainerStates = set of TwbContainerState;
@@ -942,6 +949,8 @@ type
     function GetElementBySortOrder(aSortOrder: Integer): IwbElement;
     function GetAdditionalElementCount: Integer;
     function GetContainerStates: TwbContainerStates;
+    function GetCollapsed: Boolean;
+    procedure SetCollapsed(const aValue: Boolean);
     function GetElementByPath(const aPath: string): IwbElement;
     function GetElementValue(const aName: string): string;
     function GetElementExists(const aName: string): Boolean;
@@ -1004,6 +1013,9 @@ type
 
     property ContainerStates: TwbContainerStates
       read GetContainerStates;
+    property Collapsed: Boolean
+      read GetCollapsed
+      write SetCollapsed;
 
     property ElementByName[const aName: string]: IwbElement
       read GetElementByName;
@@ -1026,6 +1038,8 @@ type
     ['{4066BCCF-01AA-4638-9C3D-3475CD8D5749}']
     function ReleaseKeepAlive: IwbContainerElementRef;
   end;
+
+  TwbContainerElementRefs = TArray<IwbContainerElementRef>;
 
   IwbKeepAliveRoot = interface(IInterface)
     ['{D1D2C080-CE73-428F-B88F-BF9503CB8619}']
@@ -4435,6 +4449,8 @@ type
     function GetRoot: IwbDef;
     function GetParent: IwbDef;
     function GetDefFlags: TwbDefFlags;
+    function GetCollapsed: Boolean;
+    procedure SetCollapsed(const aValue: Boolean);
 
     procedure Report(const aParents: TwbDefPath); virtual;
     procedure Used(const aElement: IwbElement; const s: string);
@@ -7825,6 +7841,11 @@ begin
   Result := Assigned(aDef) and (aDef.DefID = GetDefID);
 end;
 
+function TwbDef.GetCollapsed: Boolean;
+begin
+  Result := dfCollapsed in defFlags;
+end;
+
 function TwbDef.GetConflictPriority(const aElement: IwbElement): TwbConflictPriority;
 begin
   Result := defPriority;
@@ -7940,6 +7961,14 @@ begin
         WriteLn('Unknown Field: ', wbDefsToPath(aParents), wbDefToName(Self));
 
   defReported := True;
+end;
+
+procedure TwbDef.SetCollapsed(const aValue: Boolean);
+begin
+  if aValue then
+    Include(defFlags, dfCollapsed)
+  else
+    Exclude(defFlags, dfCollapsed);
 end;
 
 function TwbDef.SetParent(const aParent: TwbDef; aForceDuplicate: Boolean): IwbDef;

@@ -103,7 +103,8 @@ type
     vnfIgnore,
     vnfUseSortOrder,
     vnfIsSorted,
-    vnfIsAligned
+    vnfIsAligned,
+    vnfCollapsed
   );
   TViewNodeFlags = set of TViewNodeFlag;
 
@@ -599,6 +600,8 @@ type
     procedure bnDiscordClick(Sender: TObject);
     procedure tmrPendingSetActiveTimer(Sender: TObject);
     procedure bnLegendClick(Sender: TObject);
+    procedure vstViewCollapsed(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure vstViewExpanded(Sender: TBaseVirtualTree; Node: PVirtualNode);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
   protected
@@ -635,10 +638,10 @@ type
 
     function GetUniqueLinksTo(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer): TDynMainRecords;
 
-    procedure InitChilds(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer; var aChildCount: Cardinal);
+    procedure InitChildren(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer; var aChildCount: Cardinal);
     procedure InitNodes(const aNode: PVirtualNode; const aNodeDatas, aParentDatas: PViewNodeDatas; aNodeCount: Integer; aIndex: Cardinal; var aInitialStates: TVirtualNodeInitStates);
     procedure InitConflictStatus(aNode: PVirtualNode; aInjected: Boolean; aNodeDatas: PViewNodeDatas = nil);
-    procedure InheritStateFromChilds(Node: PVirtualNode; NodeData: PNavNodeData);
+    procedure InheritStateFromChildren(Node: PVirtualNode; NodeData: PNavNodeData);
 
     function NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
     function NodeDatasForContainer(const aContainer: IwbDataContainer): TDynViewNodeDatas;
@@ -657,6 +660,8 @@ type
     procedure ResetAllConflict;
     procedure ResetActiveTree;
     procedure PostResetActiveTree;
+    procedure ExpandView;
+    function CollectViewContainers: TwbContainerElementRefs;
 
     function AddRequiredMaster(const aMasterFile: IwbFile; const aTargetFile: IwbFile): Boolean;
     function AddRequiredMasters(const aSourceElement: IwbElement; const aTargetFile: IwbFile; aAsNew: Boolean; aSilent: Boolean = False): Boolean; overload;
@@ -730,6 +735,7 @@ type
     OnlyShowMasterAndLeafs: Boolean;
     AutoSave: Boolean;
     ParentedGroupRecordType: set of Byte;
+    RebuildingViewTree: Boolean;
 
     FilterPreset: Boolean; // new: flag to skip filter window
     FilterScripted: Boolean; // new: flag to use scripted filtering function
@@ -3846,6 +3852,29 @@ begin
   end;
 end;
 
+function TfrmMain.CollectViewContainers: TwbContainerElementRefs;
+var
+  Node      : PVirtualNode;
+  NodeDatas : PViewNodeDatas;
+  i, j      : Integer;
+begin
+  SetLength(Result, vstView.TotalCount * Length(ActiveRecords));
+
+  j := 0;
+  Node := vstView.GetLastChild(nil);
+  while Assigned(Node) do begin
+    NodeDatas := vstView.GetNodeData(Node);
+    if Assigned(NodeDatas) then
+      for i := Low(ActiveRecords) to High(ActiveRecords) do
+        if Assigned(NodeDatas[i].Container) then begin
+          Result[j] := NodeDatas[i].Container;
+          Inc(j);
+        end;
+    Node := vstView.GetPrevious(Node);
+  end;
+  SetLength(Result, j);
+end;
+
 function TfrmMain.ConflictLevelForChildNodeDatas(const aNodeDatas: TDynViewNodeDatas; aSiblingCompare, aInjected: Boolean): TConflictAll;
 var
   ChildCount    : Cardinal;
@@ -3877,7 +3906,7 @@ begin
   end;
 
   ChildCount := 0;
-  InitChilds(@aNodeDatas[0], Length(aNodeDatas), ChildCount);
+  InitChildren(@aNodeDatas[0], Length(aNodeDatas), ChildCount);
   if ChildCount > 0 then
     for i := 0 to Pred(ChildCount) do begin
       NodeDatas := nil;
@@ -4857,6 +4886,31 @@ begin
   end;
 end;
 
+procedure TfrmMain.ExpandView;
+var
+  Node      : PVirtualNode;
+  NodeDatas : PViewNodeDatas;
+  i         : Integer;
+begin
+  RebuildingViewTree := True;
+  try
+    vstView.FullExpand;
+    Node := vstView.GetLastChild(nil);
+    while Assigned(Node) do begin
+      NodeDatas := vstView.GetNodeData(Node);
+      if Assigned(NodeDatas) then
+        for i := Low(ActiveRecords) to High(ActiveRecords) do
+          if vnfCollapsed in NodeDatas[i].ViewNodeFlags then begin
+            vstView.Expanded[Node] := False;
+            Break;
+          end;
+      Node := vstView.GetPrevious(Node);
+    end;
+  finally
+    RebuildingViewTree := False;
+  end;
+end;
+
 function NormalizeRotation(const aRot: TwbVector): TwbVector;
 
   function NormalizeAxis(const aValue: Single): Single;
@@ -5632,7 +5686,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.InheritStateFromChilds(Node: PVirtualNode; NodeData: PNavNodeData);
+procedure TfrmMain.InheritStateFromChildren(Node: PVirtualNode; NodeData: PNavNodeData);
 var
   ChildNode                   : PVirtualNode;
   ChildData                   : PNavNodeData;
@@ -5658,7 +5712,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.InitChilds(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer;
+procedure TfrmMain.InitChildren(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer;
   var aChildCount: Cardinal);
 var
   NodeData                    : PViewNodeData;
@@ -6119,8 +6173,11 @@ begin
         end;
 
       if Assigned(Container) then
-        if Container.ElementCount > 0 then
+        if Container.ElementCount > 0 then begin
           Include(aInitialStates, ivsHasChildren);
+          if Container.Collapsed then
+            Include(NodeData.ViewNodeFlags, vnfCollapsed);
+        end;
     end;
 end;
 
@@ -6157,7 +6214,7 @@ begin
       end;
 
       if InheritConflictByParent and (Node.ChildCount > 0) then
-        InheritStateFromChilds(Node, NodeData);
+        InheritStateFromChildren(Node, NodeData);
 
       vstNav.InvalidateNode(Node);
     end;
@@ -6262,7 +6319,7 @@ begin
         end;
 
         if InheritConflictByParent and (Node.ChildCount > 0) then
-          InheritStateFromChilds(Node, NodeData);
+          InheritStateFromChildren(Node, NodeData);
 
         vstNav.InvalidateNode(Node);
       end;
@@ -11498,7 +11555,7 @@ begin
 
               end else
                 if InheritConflictByParent and (PersCellNode <> Node) then
-                  InheritStateFromChilds(Node, NodeData);
+                  InheritStateFromChildren(Node, NodeData);
             end else if NodeData.Element.Skipped then begin
               vstNav.DeleteNode(Node)
             end else if (FlattenBlocks or FlattenCellChilds) and
@@ -12937,6 +12994,7 @@ var
   ColumnWidths                : array of Integer;
   i                           : Integer;
   sw                          : TStopwatch;
+  Containers                  : TwbContainerElementRefs;
 begin
   sw := TStopwatch.StartNew;
   LockWindowUpdate(vstView.Handle);
@@ -12960,6 +13018,7 @@ begin
     end;
     NodeForFocusedElement := nil;
 
+    Containers := CollectViewContainers;
     if Assigned(ActiveRecord) then begin
       MainRecord := ActiveRecord;
       DoSetActiveRecord(nil);
@@ -12970,8 +13029,10 @@ begin
       vstView.Clear;
       vstView.RootNodeCount := RootNodeCount;
       InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
-      vstView.FullExpand;
+      ExpandView;
     end;
+    Containers := nil;
+
     vstView.UpdateScrollBars(False);
     vstView.OffsetXY := OffsetXY;
     if Assigned(Node) then begin
@@ -13483,7 +13544,7 @@ begin
         else
           vstView.RootNodeCount := 1;
         InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
-        vstView.FullExpand;
+        ExpandView;
         UpdateColumnWidths;
         if pgMain.ActivePage <> tbsReferencedBy then
           pgMain.ActivePage := tbsView;
@@ -13587,7 +13648,7 @@ begin
       vstView.NodeDataSize := SizeOf(TViewNodeData) * Length(ActiveRecords);
       vstView.RootNodeCount := (aMainRecords[0].Def as IwbRecordDef).MemberCount + aMainRecords[0].AdditionalElementCount;
       InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
-      vstView.FullExpand;
+      ExpandView;
       pgMain.ActivePage := tbsView;
     finally
       vstView.EndUpdate;
@@ -13819,7 +13880,7 @@ begin
         vstView.NodeDataSize := SizeOf(TViewNodeData) * Length(ActiveRecords);
         vstView.RootNodeCount := (ActiveMaster.Def as IwbRecordDef).MemberCount + ActiveMaster.AdditionalElementCount;
         InitConflictStatus(vstView.RootNode, ActiveMaster.IsInjected and not (ActiveMaster.Signature = 'GMST'), @ActiveRecords[0]);
-        vstView.FullExpand;
+        ExpandView;
 
         UpdateColumnWidths;
         SetViewNodePositionLabel(ViewLabel);
@@ -14788,10 +14849,32 @@ begin
   end;
 end;
 
+procedure TfrmMain.vstViewCollapsed(Sender: TBaseVirtualTree; Node: PVirtualNode);
+var
+  NodeDatas                   : PViewNodeDatas;
+  i                           : Integer;
+  Shift                       : Boolean;
+begin
+  if RebuildingViewTree then
+    Exit;
+
+  Shift := GetKeyState(VK_SHIFT) < 0;
+
+  NodeDatas := Sender.GetNodeData(Node);
+  if not Assigned(NodeDatas) then
+    Exit;
+  for i := Low(ActiveRecords) to High(ActiveRecords) do
+    if Assigned(NodeDatas[i].Container) then begin
+      NodeDatas[i].Container.Collapsed := True;
+      if Shift and Assigned(NodeDatas[i].Container.Def) then
+        NodeDatas[i].Container.Def.Collapsed := True;
+    end;
+end;
+
 procedure TfrmMain.vstViewCollapsing(Sender: TBaseVirtualTree;
   Node: PVirtualNode; var Allowed: Boolean);
 begin
-  Allowed := False;
+  //Allowed := False;
 end;
 
 Type
@@ -15073,6 +15156,22 @@ begin
     Exit;
 
   Allowed := Element.IsEditable and EditWarn;
+end;
+
+procedure TfrmMain.vstViewExpanded(Sender: TBaseVirtualTree; Node: PVirtualNode);
+var
+  NodeDatas                   : PViewNodeDatas;
+  i                           : Integer;
+begin
+  if RebuildingViewTree then
+    Exit;
+
+  NodeDatas := Sender.GetNodeData(Node);
+  if not Assigned(NodeDatas) then
+    Exit;
+  for i := Low(ActiveRecords) to High(ActiveRecords) do
+    if Assigned(NodeDatas[i].Container) then
+      NodeDatas[i].Container.Collapsed := False;
 end;
 
 procedure TfrmMain.vstViewFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
@@ -15359,7 +15458,7 @@ end;
 
 procedure TfrmMain.vstViewInitChildren(Sender: TBaseVirtualTree; Node: PVirtualNode; var ChildCount: Cardinal);
 begin
-  InitChilds(Sender.GetNodeData(Node), Length(ActiveRecords), ChildCount);
+  InitChildren(Sender.GetNodeData(Node), Length(ActiveRecords), ChildCount);
 end;
 
 procedure TfrmMain.vstViewInitNode(Sender: TBaseVirtualTree; ParentNode,
