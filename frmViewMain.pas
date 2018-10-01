@@ -13139,6 +13139,7 @@ begin
                 s := s + t;
 
               try
+                ForceDirectories(ExtractFilePath(wbDataPath + s));
                 FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024*1024);
                 try
                   PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
