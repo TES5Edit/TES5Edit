@@ -9862,13 +9862,9 @@ begin
 end;
 
 procedure TwbMainRecord.SetContainer(const aContainer: IwbContainer);
-var
-  ContainedIn: IwbContainedIn;
 begin
   inherited;
-  if csInit in cntStates then
-    if Supports(GetElementBySortOrder(-2 + GetAdditionalElementCount), IwbContainedIn, ContainedIn) then
-      ContainedIn.ContainerChanged;
+  ContainerChanged;
 end;
 
 procedure TwbMainRecord.SetEditorID(const aValue: string);
@@ -12851,8 +12847,15 @@ end;
 
 procedure TwbGroupRecord.MasterCountUpdated(aOld, aNew: Byte);
 var
-  FileID: Integer;
+  FileID      : Integer;
+  SelfPtr     : IwbContainerElementRef;
+  ContainedIn : IwbContainedIn;
+  Changed     : Boolean;
+  i           : Integer;
 begin
+  SelfPtr := Self as IwbContainerElementRef;
+
+  Changed := False;
   if grStruct.grsGroupType in [1, 6..10] then begin
     if grStruct.grsLabel <> 0 then begin
       FileID := grStruct.grsLabel shr 24;
@@ -12860,6 +12863,7 @@ begin
         FileID := aNew;
         MakeHeaderWriteable;
         grStruct.grsLabel := (grStruct.grsLabel and $00FFFFFF) or (Cardinal(FileID) shl 24);
+        Changed := True;
       end;
     end;
   end;
@@ -12872,13 +12876,23 @@ begin
     Exclude(grStates, gsSorting);
   end;
 
+  if Changed then
+    for i := 0 to Pred(GetElementCount) do
+      if Supports(GetElement(i), IwbContainedIn, ContainedIn) then
+        ContainedIn.ContainerChanged;
 end;
 
 procedure TwbGroupRecord.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs);
 var
+  SelfPtr     : IwbContainerElementRef;
   OldFormID: TwbFormID;
   NewFormID: TwbFormID;
+  ContainedIn : IwbContainedIn;
+  Changed     : Boolean;
+  i           : Integer;
 begin
+  SelfPtr := Self as IwbContainerElementRef;
+
   // do not sort records while we are updating
   Include(grStates, gsSorting);
   try
@@ -12891,6 +12905,7 @@ begin
   if grStruct.grsGroupType = 7 then
     Sort;
 
+  Changed := False;
   if grStruct.grsGroupType in [1, 6..10] then begin
     OldFormID := TwbFormID.FromCardinal(grStruct.grsLabel);
     if not OldFormID.IsNull then begin
@@ -12898,9 +12913,15 @@ begin
       if OldFormID <> NewFormID then begin
         MakeHeaderWriteable;
         grStruct.grsLabel := NewFormID.ToCardinal;
+        Changed := True;
       end;
     end;
   end;
+
+  if Changed then
+    for i := 0 to Pred(GetElementCount) do
+      if Supports(GetElement(i), IwbContainedIn, ContainedIn) then
+        ContainedIn.ContainerChanged;
 end;
 
 procedure TwbGroupRecord.NotifyChangedInternal(aContainer: Pointer);
@@ -17177,7 +17198,7 @@ end;
 procedure TwbDataContainer.InvalidateStorage;
 begin
   Include(dcFlags, dcfStorageInvalid);
-  inherited;
+  inherited InvalidateStorage;
 end;
 
 function TwbDataContainer.IsFlags: Boolean;
