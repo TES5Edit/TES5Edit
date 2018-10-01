@@ -7831,6 +7831,7 @@ begin
         ])
       )
     ], []),
+    wbEmpty(XATP, 'Activation Point'),
 
     wbEmpty(XLKT, 'Linked Ref Transient'),
     wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
@@ -15321,7 +15322,7 @@ begin
     ], []),
 
     {--- Attach reference ---}
-    wbFormIDCk(XATR, 'Attach Ref', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
+    wbFormIDCk(XATR, 'Attach Ref', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, ACHR]),
 
     wbRArray('Spline Connection', wbStruct(XPLK, 'Link', [
       wbFormIDCk('Ref', [REFR, ACHR]),
