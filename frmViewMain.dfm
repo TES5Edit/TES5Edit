@@ -81,6 +81,10 @@ object frmMain: TfrmMain
       object tbsView: TTabSheet
         Caption = 'View'
         OnShow = tbsViewShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object imgFlattr: TImage
           Left = 312
           Top = 520
@@ -274,13 +278,14 @@ object frmMain: TfrmMain
           TabOrder = 0
           TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScroll, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale]
           TreeOptions.MiscOptions = [toAcceptOLEDrop, toEditable, toGridExtensions, toInitOnSave, toToggleOnDblClick, toWheelPanning, toFullRowDrag, toEditOnClick]
-          TreeOptions.PaintOptions = [toHotTrack, toShowHorzGridLines, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseBlendedSelection]
+          TreeOptions.PaintOptions = [toHotTrack, toShowButtons, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseBlendedSelection]
           TreeOptions.SelectionOptions = [toExtendedFocus, toFullRowSelect, toRightClickSelect, toSimpleDrawSelection]
           TreeOptions.StringOptions = [toAutoAcceptEditChange]
           OnAdvancedHeaderDraw = vstViewAdvancedHeaderDraw
           OnBeforeCellPaint = vstViewBeforeCellPaint
           OnBeforeItemErase = vstViewBeforeItemErase
           OnClick = vstViewClick
+          OnCollapsed = vstViewCollapsed
           OnCollapsing = vstViewCollapsing
           OnCreateEditor = vstViewCreateEditor
           OnDblClick = vstViewDblClick
@@ -288,6 +293,7 @@ object frmMain: TfrmMain
           OnDragOver = vstViewDragOver
           OnDragDrop = vstViewDragDrop
           OnEditing = vstViewEditing
+          OnExpanded = vstViewExpanded
           OnFocusChanged = vstViewFocusChanged
           OnFocusChanging = vstViewFocusChanging
           OnFreeNode = vstViewFreeNode
@@ -1622,7 +1628,7 @@ object frmMain: TfrmMain
       AlignWithMargins = True
       Left = 3
       Top = 28
-      Width = 449
+      Width = 440
       Height = 26
       Margins.Bottom = 9
       Align = alTop
@@ -1632,7 +1638,6 @@ object frmMain: TfrmMain
         'ply the filter if necessary.'
       Visible = False
       WordWrap = True
-      ExplicitWidth = 440
     end
     object vstNav: TVirtualEditTree
       Left = 0
@@ -1687,7 +1692,7 @@ object frmMain: TfrmMain
         end
         item
           Position = 2
-          Width = 125
+          Width = 129
           WideText = 'Name'
         end>
     end

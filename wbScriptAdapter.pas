@@ -896,7 +896,7 @@ var
   Container: IwbContainerElementRef;
 begin
   if Supports(IInterface(Args.Values[0]), IwbContainerElementRef, Container) then
-    Value := Byte(Container.ContainerStates);
+    Value := Word(Container.ContainerStates);
 end;
 
 procedure IwbContainer_IsSorted(var Value: Variant; Args: TJvInterpreterArgs);

@@ -510,6 +510,8 @@ type
     function GetAdditionalElementCount: Integer; virtual;
     procedure ReverseElements;
     function GetContainerStates: TwbContainerStates;
+    function GetCollapsed: Boolean;
+    procedure SetCollapsed(const aValue: Boolean);
     function GetElementByPath(const aPath: string): IwbElement;
     function GetElementValue(const aName: string): string;
     function GetElementExists(const aName: string): Boolean;
@@ -5106,6 +5108,13 @@ begin
     Result := nil;
 end;
 
+function TwbContainer.GetCollapsed: Boolean;
+var
+  Def: IwbDef;
+begin
+  Result := (csCollapsed in cntStates) or (Supports(GetDef, IwbDef, Def) and Def.Collapsed);
+end;
+
 function TwbContainer.GetContainerStates: TwbContainerStates;
 begin
   Result := cntStates;
@@ -5977,6 +5986,20 @@ begin
     Temp[High(cntElements)-i] := cntElements[i];
   cntElements := Temp;
   Exclude(cntStates, csSortedBySortOrder);
+end;
+
+procedure TwbContainer.SetCollapsed(const aValue: Boolean);
+var
+  Def: IwbDef;
+begin
+  if aValue then
+    Include(cntStates, csCollapsed)
+  else begin
+    Exclude(cntStates, csCollapsed);
+    Def := GetDef;
+    if Assigned(Def) then
+      Def.Collapsed := False;
+  end;
 end;
 
 procedure TwbContainer.SetElementEditValue(const aName, aValue: string);
