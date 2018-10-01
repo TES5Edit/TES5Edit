@@ -7570,7 +7570,7 @@ begin
           ])),
           wbStruct('Aggro', [
             wbInteger('Aggro Radius Behavior', itU8, wbEnum(['False', 'True'])),
-            wbInteger('Unknown', itU8),
+            wbInteger('Unused', itU8, nil, nil, cpIgnore),
             wbInteger('Warn', itU32),
             wbInteger('Warn/Attack', itU32),
             wbInteger('Attack', itU32)
