@@ -7744,16 +7744,16 @@ begin
       , -1).IncludeFlag(dfNotAlignable),
       wbArray('Unknown 6',
         wbStruct('Unknown', [
-          wbInteger('Unknown', itU16),
-          wbInteger('Unknown', itU16)
+          wbInteger('Unknown', itU16), //not triangle or vertex
+          wbInteger('Unknown', itU16)  //not triangle or vertex
         ])
       , -1).IncludeFlag(dfNotAlignable),
-      wbArray('Unknown 7',  // if navmesh version gt 11
-        wbStruct('Unknown', [
-          wbFloat('Unknown'),
-          wbFloat('Unknown'),
-          wbFloat('Unknown'),
-          wbInteger('Unknown', itU16),
+      wbArray('Waypoints',  // if navmesh version gt 11
+        wbStruct('Waypoint', [
+          wbFloat('X'),
+          wbFloat('Y'),
+          wbFloat('Z'),
+          wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo),
           wbInteger('Unknown', itU32)
         ])
       , -1).IncludeFlag(dfNotAlignable),
@@ -10920,61 +10920,12 @@ begin
       ]), [18]), [
       wbEDID,
       wbNVNM,
-//      wbStruct(NVNM, 'Geometry', [
-//        wbInteger('Unknown', itU32),
-//        wbByteArray('Unknown', 4),
-//        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-//        wbUnion('Parent', wbNVNMParentDecider, [
-//          wbStruct('Coordinates', [
-//            wbInteger('Grid Y', itS16),
-//            wbInteger('Grid X', itS16)
-//          ]),
-//          wbFormIDCk('Parent Cell', [CELL])
-//        ]),
-//        wbArray('Vertices', wbStruct('Vertex', [
-//          wbFloat('X'),
-//          wbFloat('Y'),
-//          wbFloat('Z')
-//        ]), -1),
-//        wbArray('Triangles',
-//          wbStruct('Triangle', [
-//            wbInteger('Vertex 0', itS16),
-//            wbInteger('Vertex 1', itS16),
-//            wbInteger('Vertex 2', itS16),
-//            wbInteger('Edge 0-1', itS16),
-//            wbInteger('Edge 1-2', itS16),
-//            wbInteger('Edge 2-0', itS16),
-//            wbFloat('Height'),
-//            wbByteArray('Unknown', 5)
-//          ])
-//        , -1),
-//        wbArray('Edge Links',
-//          wbStruct('Edge Link', [
-//            wbByteArray('Unknown', 4),
-//            wbFormIDCk('Mesh', [NAVM]),
-//            wbInteger('Triangle', itS16),
-//            wbInteger('Unknown', itU8)
-//          ])
-//        , -1),
-//        wbArray('Door Triangles',
-//          wbStruct('Door Triangle', [
-//            wbInteger('Triangle before door', itS16),
-//            wbByteArray('Unknown', 4),
-//            wbFormIDCk('Door', [REFR])
-//          ])
-//        , -1),
-//        wbUnknown
-//      ]),
       wbFormID(ONAM),
       wbArray(NNAM, 'Unknown', wbInteger('Unknown', itU16)),
-      wbUnion(MNAM, 'Unknown', wbSubrecordSizeDecider, [wbNull,
-        wbStruct('Unknown', [
-          wbFormID('Unknown'),
-          wbInteger('Unknown', itU16),
-          //wbInteger('Unused', itU16),
-          wbUnknown
-        ])
-      ])
+      wbArray(MNAM, 'PreCut Map Entries', wbStruct('PreCut Map Entry', [
+        wbFormID('Reference'),
+        wbArray('Triangles', wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo), -2)
+      ]))
     ], False, wbNAVMAddInfo);
 
   end;
