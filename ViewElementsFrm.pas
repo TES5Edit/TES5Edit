@@ -40,6 +40,7 @@ type
     btnCancel: TButton;
     dlgCompareTool: TOpenDialog;
     LiteCompareButton: TButton;
+    FindDialog1: TFindDialog;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure btnCompareClick(Sender: TObject);
@@ -47,7 +48,11 @@ type
     procedure btnCancelClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FindDialog1Find(Sender: TObject);
   private
+    FMemo   : TMemo;
+    FSelPos : Integer;
+
     Edits: TwbEdits;
     procedure MemoChange(Sender: TObject);
     procedure MemoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -226,6 +231,55 @@ begin
   end;
 end;
 
+procedure TfrmViewElements.FindDialog1Find(Sender: TObject);
+var
+  S, T : string;
+  startpos : integer;
+begin
+  with TFindDialog(Sender) do begin
+    {If the stored position is 0 this cannot be a find next. }
+    if FSelPos = 0 then
+      Options := Options - [frFindNext];
+
+     { Figure out where to start the search and get the corresponding
+       text from the memo. }
+    if frfindNext in Options then begin
+      { This is a find next, start after the end of the last found word. }
+      StartPos := FSelPos + Length(Findtext);
+      S := Copy(FMemo.Lines.Text, StartPos, MaxInt);
+    end else begin
+      { This is a find first, start at the, well, start. }
+      S := FMemo.Lines.Text;
+      StartPos := 1;
+    end;
+    T := FindText;
+
+    if not (frMatchCase in Options) then begin
+      S := S.ToLower;
+      T := T.ToLower;
+    end;
+
+    { Perform a global search for T in S }
+    FSelPos := Pos(FindText, S);
+    if FSelPos > 0 then begin
+       { Found something, correct position for the location of the start
+         of search. }
+      FSelPos := FSelPos + StartPos - 1;
+      FMemo.SelStart := FSelPos - 1;
+      FMemo.SelLength := Length(FindText);
+      FMemo.SetFocus;
+    end else begin
+      { No joy, show a message. }
+      if frfindNext in Options then
+        S := Concat('There are no further occurences of "', FindText,
+          '".')
+      else
+        S := Concat('Could not find "', FindText, '".');
+      MessageDlg(S, mtError, [mbOK], 0);
+    end;
+  end;
+end;
+
 procedure TfrmViewElements.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action := caFree;
@@ -314,7 +368,12 @@ procedure TfrmViewElements.MemoKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
   if (Key = Ord('A')) and (ssCtrl in Shift) then
-    TMemo(Sender).SelectAll;
+    TMemo(Sender).SelectAll
+  else if (Key = Ord('F')) and (ssCtrl in Shift) then begin
+    FMemo := TMemo(Sender);
+    FSelPos := 0;
+    FindDialog1.Execute;
+  end;
 end;
 
 function TfrmViewElements.ShowModal: Integer;

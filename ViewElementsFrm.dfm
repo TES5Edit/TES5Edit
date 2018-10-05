@@ -118,4 +118,10 @@ object frmViewElements: TfrmViewElements
     Left = 288
     Top = 216
   end
+  object FindDialog1: TFindDialog
+    Options = [frDown, frHideWholeWord, frHideUpDown, frDisableUpDown, frDisableWholeWord]
+    OnFind = FindDialog1Find
+    Left = 392
+    Top = 136
+  end
 end
