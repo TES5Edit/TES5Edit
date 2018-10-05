@@ -807,6 +807,53 @@ begin
   if wbIKnowWhatImDoing and FindCmdLineSwitch('AllowMasterFilesEdit') then
     wbAllowMasterFilesEdit := True;
 
+  if FindCmdLineSwitch('quickshowconflicts') then
+    wbQuickShowConflicts := True;
+
+  if FindCmdLineSwitch('veryquickshowconflicts') then begin
+    wbQuickShowConflicts := True;
+    wbVeryQuickShowConflicts := True;
+  end;
+
+  if FindCmdLineSwitch('quickclean') and (wbToolSource in [tsPlugins]) then
+    wbQuickClean := wbIKnowWhatImDoing;
+
+  if FindCmdLineSwitch('quickautoclean') and (wbToolSource in [tsPlugins]) then begin
+    wbQuickClean := wbIKnowWhatImDoing;
+    wbQuickCleanAutoSave := wbQuickClean;
+  end;
+
+  if wbQuickShowConflicts and wbQuickClean then begin
+    ShowMessage('Can''t activate Quick Clean and Quick Show Conflicts modes at the same time.');
+    Exit(False);
+  end;
+
+  if FindCmdLineSwitch('fixup') then
+    wbAllowInternalEdit := True
+  else if FindCmdLineSwitch('nofixup') then
+    wbAllowInternalEdit := False;
+
+  if FindCmdLineSwitch('skipbsa') then
+    wbLoadBSAs := False
+  else if FindCmdLineSwitch('forcebsa') then
+    wbLoadBSAs := True;
+
+  if FindCmdLineSwitch('skipInternalEditing') then
+    wbAllowInternalEdit := False
+  else if FindCmdLineSwitch('forceInternalEditing') then
+    wbAllowInternalEdit := True;
+
+  if FindCmdLineSwitch('showfixup') then
+    wbShowInternalEdit := True
+  else if FindCmdLineSwitch('hidefixup') then
+    wbShowInternalEdit := False;
+
+  if wbQuickClean then begin
+    wbFixupPGRD := True;
+    wbAllowInternalEdit := True;
+    wbSimpleRecords := False;
+  end;
+
   // definitions
   case wbGameMode of
     gmFNV: case wbToolSource of
@@ -856,45 +903,8 @@ begin
   if FindCmdLineSwitch('MoreInfoForIndex') then
     wbMoreInfoForIndex := true;
 
-  if FindCmdLineSwitch('fixup') then
-    wbAllowInternalEdit := True
-  else if FindCmdLineSwitch('nofixup') then
-    wbAllowInternalEdit := False;
-
-  if FindCmdLineSwitch('skipbsa') then
-    wbLoadBSAs := False
-  else if FindCmdLineSwitch('forcebsa') then
-    wbLoadBSAs := True;
-
-  if FindCmdLineSwitch('skipInternalEditing') then
-    wbAllowInternalEdit := False
-  else if FindCmdLineSwitch('forceInternalEditing') then
-    wbAllowInternalEdit := True;
-
-  if FindCmdLineSwitch('showfixup') then
-    wbShowInternalEdit := True
-  else if FindCmdLineSwitch('hidefixup') then
-    wbShowInternalEdit := False;
-
-  if FindCmdLineSwitch('quickshowconflicts') then
-    wbQuickShowConflicts := True;
-
-  if FindCmdLineSwitch('veryquickshowconflicts') then begin
-    wbQuickShowConflicts := True;
-    wbVeryQuickShowConflicts := True;
-  end;
-
-
   if wbIKnowWhatImDoing and FindCmdLineSwitch('IKnowIllBreakMyGameWithThis') then
     wbAllowEditGameMaster := True;
-
-  if FindCmdLineSwitch('quickclean') and (wbToolSource in [tsPlugins]) then
-    wbQuickClean := wbIKnowWhatImDoing;
-
-  if FindCmdLineSwitch('quickautoclean') and (wbToolSource in [tsPlugins]) then begin
-    wbQuickClean := wbIKnowWhatImDoing;
-    wbQuickCleanAutoSave := wbQuickClean;
-  end;
 
   if FindCmdLineSwitch('TrackAllEditorID') then
     wbTrackAllEditorID := True;
@@ -974,12 +984,6 @@ begin
 
   if FindCmdLineSwitch('fixuppgrd') then
     wbFixupPGRD := True;
-
-  if wbQuickClean then begin
-    wbAllowInternalEdit := True;
-    wbFixupPGRD := True;
-    wbSimpleRecords := False;
-  end;
 
   wbShouldLoadMOHookFile := wbFindCmdLineParam('moprofile', wbMOProfile);
 
