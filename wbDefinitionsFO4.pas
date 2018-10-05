@@ -7683,41 +7683,61 @@ begin
           wbFloat('Height'), // this and next if form ver > 57
           wbInteger('Unknown', itU8), // flags
           wbInteger('Flags', itU16, wbFlags([
-            'Edge 0-1 link',
-            'Edge 1-2 link',
-            'Edge 2-0 link',
-            'Unknown 4',
-            'Unknown 5',
-            'Unknown 6',
-            'Preferred',
-            'Unknown 8',
-            'Unknown 9',
-            'Water',
-            'Door',
-            'Found',
-            'Unknown 13',
-            'Unknown 14',
-            'Unknown 15',
-            'Unknown 16'
+            'Edge 0-1 link',      //$0001 1
+            'Edge 1-2 link',      //$0002 2
+            'Edge 2-0 link',      //$0004 4
+            '',                   //$0008 8
+            'No Large Creatures',          //$0010 16   used in CK source according to Nukem
+            'Overlapping',        //$0020 32
+            'Preferred',          //$0040 64
+            '',                   //$0080 128
+            'Unknown 9',          //$0100 256  used in CK source according to Nukem
+            'Water',              //$0200 512
+            'Door',               //$0400 1024
+            'Found',              //$0800 2048
+            'Unknown 13',         //$1000 4096 used in CK source according to Nukem
+            '',                   //$2000 \
+            '',                   //$4000  |-- used as 3 bit counter inside CK, probably stripped before save
+            ''                    //$8000 /
           ])),
-          wbInteger('Cover Flags', itU16, wbFlags([
-            'Edge 0-1 wall',
-            'Edge 0-1 ledge cover',
-            'Unknown 3',
-            'Unknown 4',
-            'Edge 0-1 left',
-            'Edge 0-1 right',
-            'Edge 1-2 wall',
-            'Edge 1-2 ledge cover',
-            'Unknown 9',
-            'Unknown 10',
-            'Edge 1-2 left',
-            'Edge 1-2 right',
-            'Unknown 13',
-            'Unknown 14',
-            'Unknown 15',
-            'Unknown 16'
-          ]))
+{ Flags below are wrong. The first 4 bit are an enum as follows:
+0000 = Open Edge No Cover
+1000 = wall no cover
+0100 = ledge cover
+1100 = UNUSED
+0010 = cover  64
+1010 = cover  80
+0110 = cover  96
+1110 = cover 112
+0001 = cover 128
+1001 = cover 144
+0101 = cover 160
+1101 = cover 176
+0011 = cover 192
+1011 = cover 208
+0111 = cover 224
+1111 = max cover
+then 2 bit flags, then another such enum, and the rest is probably flags.
+Can't properly represent that with current record definition methods.
+}
+            wbInteger('Cover Flags', itU16, wbFlags([
+              'Edge 0-1 Cover Value 1/4',
+              'Edge 0-1 Cover Value 2/4',
+              'Edge 0-1 Cover Value 3/4',
+              'Edge 0-1 Cover Value 4/4',
+              'Edge 0-1 Left',
+              'Edge 0-1 Right',
+              'Edge 1-2 Cover Value 1/4',
+              'Edge 1-2 Cover Value 2/4',
+              'Edge 1-2 Cover Value 3/4',
+              'Edge 1-2 Cover Value 4/4',
+              'Edge 1-2 Left',
+              'Edge 1-2 Right',
+              'Unknown 13',
+              'Unknown 14',
+              'Unknown 15',
+              'Unknown 16'
+            ]))
         ])
       , -1).IncludeFlag(dfNotAlignable),
       wbArray('Edge Links',
@@ -7731,7 +7751,7 @@ begin
       wbArrayS('Door Triangles',
         wbStructSK([0, 2], 'Door Triangle', [
           wbInteger('Triangle before door', itU16).SetLinksToCallback(wbTriangleLinksTo),
-          wbInteger('DTUnknown', itU32),  // used as a key to lookup in a map of PathingDoor
+          wbByteArray('CRC of "PathingDoor"', 4).SetDefaultEditValue('F3 73 8B E4'),  // used as a key to lookup in a map of PathingDoor
           wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
         ])
       , -1),
@@ -7745,7 +7765,7 @@ begin
       wbArray('Unknown 6',
         wbStruct('Unknown', [
           wbInteger('Unknown', itU16), //not triangle or vertex
-          wbInteger('Unknown', itU16)  //not triangle or vertex
+          wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo)
         ])
       , -1).IncludeFlag(dfNotAlignable),
       wbArray('Waypoints',  // if navmesh version gt 11
@@ -10817,35 +10837,6 @@ begin
       ]), [18]), [
       wbEDID,
       wbNVNM,
-//      wbStruct(NVNM, 'Geometry', [
-//        wbByteArray('Unknown', 8),
-//        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-//        wbUnion('Parent', wbNVNMParentDecider, [
-//          wbStruct('Coordinates', [
-//            wbInteger('Grid Y', itS16),
-//            wbInteger('Grid X', itS16)
-//          ]),
-//          wbFormIDCk('Parent Cell', [CELL])
-//        ]),
-//        wbArray('Vertices', wbByteArray('Vertex', 12), -1),
-//        wbArray('Triangles', wbByteArray('Triangle', 21), -1),
-//        wbArray('Edge Links',
-//          wbStruct('Edge Link', [
-//            wbByteArray('Unknown', 4),
-//            wbFormIDCk('Mesh', [NAVM]),
-//            wbInteger('Triangle', itS16),
-//            wbInteger('Unknown', itU8)
-//          ])
-//        , -1),
-//        wbArray('Door Triangles',
-//          wbStruct('Door Triangle', [
-//            wbInteger('Triangle before door', itS16),
-//            wbByteArray('Unknown', 4),
-//            wbFormIDCk('Door', [REFR])
-//          ])
-//        , -1),
-//        wbUnknown
-//      ]),
       wbUnknown(ONAM),
       wbUnknown(NNAM),
       wbUnknown(MNAM)
