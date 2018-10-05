@@ -1047,6 +1047,7 @@ var
   //wbRaceFRMI: IwbSubrecordArrayDef;
   wbRaceRBPC: IwbSubRecordDef;
   wbNVNM: IwbSubRecordDef;
+  wbMNAMNAVM: IwbSubRecordDef;
   wbMaxHeightDataCELL: IwbSubRecordDef;
   wbMaxHeightDataWRLD: IwbSubRecordDef;
   wbOFST: IwbSubRecordDef;
@@ -7795,6 +7796,10 @@ Can't properly represent that with current record definition methods.
       ])
     ]);
 
+  wbMNAMNAVM := wbArrayS(MNAM, 'PreCut Map Entries', wbStructSK([0], 'PreCut Map Entry', [
+    wbFormID('Reference'),
+    wbArrayS('Triangles', wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo), -2)
+  ]))
 end;
 
 procedure DefineFO4b;
@@ -10837,9 +10842,9 @@ begin
       ]), [18]), [
       wbEDID,
       wbNVNM,
-      wbUnknown(ONAM),
+      wbFormID(ONAM),
       wbUnknown(NNAM),
-      wbUnknown(MNAM)
+      wbMNAMNAVM
     ], False, wbNAVMAddInfo);
 
   end else begin
@@ -10913,10 +10918,7 @@ begin
       wbNVNM,
       wbFormID(ONAM),
       wbArray(NNAM, 'Unknown', wbInteger('Unknown', itU16)),
-      wbArray(MNAM, 'PreCut Map Entries', wbStruct('PreCut Map Entry', [
-        wbFormID('Reference'),
-        wbArray('Triangles', wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo), -2)
-      ]))
+      wbMNAMNAVM
     ], False, wbNAVMAddInfo);
 
   end;
