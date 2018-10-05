@@ -8544,22 +8544,22 @@ begin
             wbInteger('Edge 1-2', itS16, wbEdgeToStr1, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo1),
             wbInteger('Edge 2-0', itS16, wbEdgeToStr2, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo2),
             wbInteger('Flags', itU16, wbFlags([
-              'Edge 0-1 link',      //$0001 1
-              'Edge 1-2 link',      //$0002 2
-              'Edge 2-0 link',      //$0004 4
-              'Deleted',            //$0008 8
-              'Unknown 5',          //$0010 16   used in CK source according to Nukem
-              'Overlapping',        //$0020 32
-              'Preferred',          //$0040 64
-              '',                   //$0080 128
-              'Unknown 9',          //$0100 256  used in CK source according to Nukem
-              'Water',              //$0200 512
-              'Door',               //$0400 1024
-              'Found',              //$0800 2048
-              'Unknown 13',         //$1000 4096 used in CK source according to Nukem
-              '',                   //$2000 \
-              '',                   //$4000  |-- used as 3 bit counter inside CK, probably stripped before save
-              ''                    //$8000 /
+              'Edge 0-1 link',      // 0 $0001 1
+              'Edge 1-2 link',      // 1 $0002 2
+              'Edge 2-0 link',      // 2 $0004 4
+              'Deleted',            // 3 $0008 8    added by CK Fixes to mark pseudo-deleted triangles
+              'No Large Creatures',          // 4 $0010 16   used in CK source according to Nukem
+              'Overlapping',        // 5 $0020 32
+              'Preferred',          // 6 $0040 64
+              '',                   // 7 $0080 128
+              'Unknown 9',          // 8 $0100 256  used in CK source according to Nukem
+              'Water',              // 9 $0200 512
+              'Door',               //10 $0400 1024
+              'Found',              //11 $0800 2048
+              'Unknown 13',         //12 $1000 4096 used in CK source according to Nukem
+              '',                   //13 $2000 \
+              '',                   //14 $4000  |-- used as 3 bit counter inside CK, probably stripped before save
+              ''                    //15 $8000 /
             ])),
 { Flags below are wrong. The first 4 bit are an enum as follows:
 0000 = Open Edge No Cover
@@ -8582,18 +8582,18 @@ then 2 bit flags, then another such enum, and the rest is probably flags.
 Can't properly represent that with current record definition methods.
 }
             wbInteger('Cover Flags', itU16, wbFlags([
-              'Edge 0-1 wall',
-              'Edge 0-1 ledge cover',
-              'Unknown 3',
-              'Unknown 4',
-              'Edge 0-1 left',
-              'Edge 0-1 right',
-              'Edge 1-2 wall',
-              'Edge 1-2 ledge cover',
-              'Unknown 9',
-              'Unknown 10',
-              'Edge 1-2 left',
-              'Edge 1-2 right',
+              'Edge 0-1 Cover Value 1/4',
+              'Edge 0-1 Cover Value 2/4',
+              'Edge 0-1 Cover Value 3/4',
+              'Edge 0-1 Cover Value 4/4',
+              'Edge 0-1 Left',
+              'Edge 0-1 Right',
+              'Edge 1-2 Cover Value 1/4',
+              'Edge 1-2 Cover Value 2/4',
+              'Edge 1-2 Cover Value 3/4',
+              'Edge 1-2 Cover Value 4/4',
+              'Edge 1-2 Left',
+              'Edge 1-2 Right',
               'Unknown 13',
               'Unknown 14',
               'Unknown 15',
