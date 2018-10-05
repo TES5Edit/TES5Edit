@@ -5494,10 +5494,19 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
-  DoInit(False);
-  for i := Low(cntElements) to High(cntElements) do
-    if cntElements[i].CanContainFormIDs then
-      cntElements[i].MasterCountUpdated(aOld, aNew);
+  BeginUpdate;
+  try
+    wbTick;
+
+    DoInit(False);
+    inherited;
+
+    for i := Low(cntElements) to High(cntElements) do
+      if cntElements[i].CanContainFormIDs then
+        cntElements[i].MasterCountUpdated(aOld, aNew);
+  finally
+    EndUpdate;
+  end;
 end;
 
 procedure TwbContainer.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs);
@@ -5505,12 +5514,20 @@ var
   i       : Integer;
   SelfRef : IwbContainerElementRef;
 begin
-  inherited;
   SelfRef := Self as IwbContainerElementRef;
-  DoInit(False);
-  for i := Low(cntElements) to High(cntElements) do
-    if cntElements[i].CanContainFormIDs then
-      cntElements[i].MasterIndicesUpdated(aOld, aNew);
+  BeginUpdate;
+  try
+    wbTick;
+
+    DoInit(False);
+    inherited;
+
+    for i := Low(cntElements) to High(cntElements) do
+      if cntElements[i].CanContainFormIDs then
+        cntElements[i].MasterIndicesUpdated(aOld, aNew);
+  finally
+    EndUpdate;
+  end;
 end;
 
 procedure TwbContainer.MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer);
@@ -7015,7 +7032,9 @@ end;
 function TwbMainRecord.CompareExchangeFormID(aOldFormID, aNewFormID: TwbFormID): Boolean;
 var
   SelfRef : IwbContainerElementRef;
+  KAR: IwbKeepAliveRoot;
 begin
+  KAR := wbCreateKeepAliveRoot;
   SelfRef := Self as IwbContainerElementRef;
 
   mrBaseRecordID := TwbFormID.Null;
@@ -7527,7 +7546,9 @@ var
   i        : Integer;
 
   SelfRef : IwbContainerElementRef;
+  KAR     : IwbKeepAliveRoot;
 begin
+  KAR := wbCreateKeepAliveRoot;
   SelfRef := Self as IwbContainerElementRef;
   DoInit(False);
 
@@ -9157,41 +9178,50 @@ var
 
   SelfRef  : IwbContainerElementRef;
   NewFileID: TwbFileID;
+
+  KAR: IwbKeepAliveRoot;
 begin
-  wbTick;
+  KAR := wbCreateKeepAliveRoot;
 
-  mrBaseRecordID := TwbFormID.Null;
-  Exclude(mrStates, mrsBaseRecordChecked);
+  BeginUpdate;
+  try
+    wbTick;
 
-  SelfRef := Self as IwbContainerElementRef;
-  DoInit(False);
+    mrBaseRecordID := TwbFormID.Null;
+    Exclude(mrStates, mrsBaseRecordChecked);
 
-  NewFileID := TwbFileID.Create(aNew);
+    SelfRef := Self as IwbContainerElementRef;
+    DoInit(False);
 
-  if not mrStruct.mrsFormID.IsNull then
-    if mrStruct.mrsFormID.FileID.FullSlot >= aOld then begin
-      MakeHeaderWriteable;
-      mrStruct.mrsFormID.FileID := NewFileID;
-      mrFixedFormID := TwbFormID.Null;
-      mrLoadOrderFormID := TwbFormID.Null;
-      Exclude(mrStates, mrsIsInjectedChecked);
-    end;
+    NewFileID := TwbFileID.Create(aNew);
 
-  if csRefsBuild in cntStates then begin
+    if not mrStruct.mrsFormID.IsNull then
+      if mrStruct.mrsFormID.FileID.FullSlot >= aOld then begin
+        MakeHeaderWriteable;
+        mrStruct.mrsFormID.FileID := NewFileID;
+        mrFixedFormID := TwbFormID.Null;
+        mrLoadOrderFormID := TwbFormID.Null;
+        Exclude(mrStates, mrsIsInjectedChecked);
+      end;
 
-    FoundOne := False;
-    for i := High(mrReferences) downto Low(mrReferences) do begin
-      if mrReferences[i].FileID.FullSlot < aOld then
-        Break;
-      FoundOne := True;
-      mrReferences[i].FileID := NewFileID;
-    end;
+    if csRefsBuild in cntStates then begin
 
-    if FoundOne then
+      FoundOne := False;
+      for i := High(mrReferences) downto Low(mrReferences) do begin
+        if mrReferences[i].FileID.FullSlot < aOld then
+          Break;
+        FoundOne := True;
+        mrReferences[i].FileID := NewFileID;
+      end;
+
+      if FoundOne then
+        inherited;
+
+    end else
       inherited;
-
-  end else
-    inherited;
+  finally
+    EndUpdate;
+  end;
 end;
 
 procedure TwbMainRecord.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs);
@@ -9202,46 +9232,55 @@ var
   FoundOne : Boolean;
 
   SelfRef : IwbContainerElementRef;
+
+  KAR: IwbKeepAliveRoot;
 begin
-  wbTick;
+  KAR := wbCreateKeepAliveRoot;
 
-  mrBaseRecordID := TwbFormID.Null;
-  Exclude(mrStates, mrsBaseRecordChecked);
+  BeginUpdate;
+  try
+    wbTick;
 
-  SelfRef := Self as IwbContainerElementRef;
-  DoInit(False);
+    mrBaseRecordID := TwbFormID.Null;
+    Exclude(mrStates, mrsBaseRecordChecked);
 
-  OldFormID := GetFormID;
-  if not OldFormID.IsNull then begin
-    NewFormID := FixupFormID(OldFormID, aOld, aNew);
-    if OldFormID <> NewFormID then begin
-      MakeHeaderWriteable;
-      mrStruct.mrsFormID := NewFormID;
-      mrFixedFormID := TwbFormID.Null;
-      mrLoadOrderFormID := TwbFormID.Null;
-      Exclude(mrStates, mrsIsInjectedChecked);
-    end;
-  end;
+    SelfRef := Self as IwbContainerElementRef;
+    DoInit(False);
 
-  if csRefsBuild in cntStates then begin
-
-    FoundOne := False;
-    for i := Low(mrReferences) to High(mrReferences) do begin
-      OldFormID := mrReferences[i];
+    OldFormID := GetFormID;
+    if not OldFormID.IsNull then begin
       NewFormID := FixupFormID(OldFormID, aOld, aNew);
       if OldFormID <> NewFormID then begin
-        FoundOne := True;
-        mrReferences[i] := NewFormID;
+        MakeHeaderWriteable;
+        mrStruct.mrsFormID := NewFormID;
+        mrFixedFormID := TwbFormID.Null;
+        mrLoadOrderFormID := TwbFormID.Null;
+        Exclude(mrStates, mrsIsInjectedChecked);
       end;
     end;
 
-    if FoundOne then begin
-      wbMergeSort32(@mrReferences[0], Length(mrReferences), CompareFormIDs );
-      inherited;
-    end;
+    if csRefsBuild in cntStates then begin
 
-  end else
-    inherited;
+      FoundOne := False;
+      for i := Low(mrReferences) to High(mrReferences) do begin
+        OldFormID := mrReferences[i];
+        NewFormID := FixupFormID(OldFormID, aOld, aNew);
+        if OldFormID <> NewFormID then begin
+          FoundOne := True;
+          mrReferences[i] := NewFormID;
+        end;
+      end;
+
+      if FoundOne then begin
+        wbMergeSort32(@mrReferences[0], Length(mrReferences), CompareFormIDs );
+        inherited;
+      end;
+
+    end else
+      inherited;
+  finally
+    EndUpdate;
+  end;
 end;
 
 function TwbMainRecord.MasterRecordsFromMasterFilesAndSelf: TDynMainRecords;
@@ -9316,7 +9355,10 @@ procedure TwbMainRecord.PrepareSave;
 var
   _File       : IwbFile;
   GroupRecord : IwbGroupRecord;
+  KAR: IwbKeepAliveRoot;
 begin
+  KAR := wbCreateKeepAliveRoot;
+
   if GetSignature = wbHeaderSignature then begin
     if not Supports(GetContainer, IwbFile, _File) then
       raise Exception.Create('File Header record '+GetName+' must be contained directly in the file.');
@@ -10613,9 +10655,12 @@ var
   DataSize          : Cardinal;
   MemoryStream      : TMemoryStream;
   mrs               : TwbMainRecordStruct;
-var
+
   SelfRef : IwbContainerElementRef;
+  KAR: IwbKeepAliveRoot;
 begin
+  KAR := wbCreateKeepAliveRoot;
+
   if (esModified in eStates) or wbTestWrite then begin
     SelfRef := Self as IwbContainerElementRef;
     DoInit(True);
@@ -11665,13 +11710,18 @@ begin
   if not Assigned(srDef) then
     Exit;
 
-  DoInit(False);
+  BeginUpdate;
+  try
+    DoInit(False);
 
-  inherited MasterCountUpdated(aOld, aNew);
+    inherited MasterCountUpdated(aOld, aNew);
 
-  ResolvedDef := Resolve(srValueDef, GetDataBasePtr, dcDataEndPtr, Self);
-  if Assigned(ResolvedDef) then
-    ResolvedDef.MasterCountUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+    ResolvedDef := Resolve(srValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+    if Assigned(ResolvedDef) then
+      ResolvedDef.MasterCountUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+  finally
+    EndUpdate;
+  end;
 end;
 
 procedure TwbSubRecord.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs);
@@ -11684,13 +11734,18 @@ begin
   if not Assigned(srDef) then
     Exit;
 
-  DoInit(False);
+  BeginUpdate;
+  try
+    DoInit(False);
 
-  inherited MasterIndicesUpdated(aOld, aNew);
+    inherited MasterIndicesUpdated(aOld, aNew);
 
-  ResolvedDef := Resolve(srValueDef, GetDataBasePtr, dcDataEndPtr, Self);
-  if Assigned(ResolvedDef) then
-    ResolvedDef.MasterIndicesUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+    ResolvedDef := Resolve(srValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+    if Assigned(ResolvedDef) then
+      ResolvedDef.MasterIndicesUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+  finally
+    EndUpdate;
+  end;
 end;
 
 procedure TwbSubRecord.MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer);
@@ -12878,31 +12933,36 @@ var
 begin
   SelfPtr := Self as IwbContainerElementRef;
 
-  Changed := False;
-  if grStruct.grsGroupType in [1, 6..10] then begin
-    if grStruct.grsLabel <> 0 then begin
-      FileID := grStruct.grsLabel shr 24;
-      if FileID >= aOld then begin
-        FileID := aNew;
-        MakeHeaderWriteable;
-        grStruct.grsLabel := (grStruct.grsLabel and $00FFFFFF) or (Cardinal(FileID) shl 24);
-        Changed := True;
+  BeginUpdate;
+  try
+    Changed := False;
+    if grStruct.grsGroupType in [1, 6..10] then begin
+      if grStruct.grsLabel <> 0 then begin
+        FileID := grStruct.grsLabel shr 24;
+        if FileID >= aOld then begin
+          FileID := aNew;
+          MakeHeaderWriteable;
+          grStruct.grsLabel := (grStruct.grsLabel and $00FFFFFF) or (Cardinal(FileID) shl 24);
+          Changed := True;
+        end;
       end;
     end;
-  end;
 
-  // do not sort records while we are updating
-  Include(grStates, gsSorting);
-  try
-    inherited;
+    // do not sort records while we are updating
+    Include(grStates, gsSorting);
+    try
+      inherited;
+    finally
+      Exclude(grStates, gsSorting);
+    end;
+
+    if Changed then
+      for i := 0 to Pred(GetElementCount) do
+        if Supports(GetElement(i), IwbContainedIn, ContainedIn) then
+          ContainedIn.ContainerChanged;
   finally
-    Exclude(grStates, gsSorting);
+    EndUpdate;
   end;
-
-  if Changed then
-    for i := 0 to Pred(GetElementCount) do
-      if Supports(GetElement(i), IwbContainedIn, ContainedIn) then
-        ContainedIn.ContainerChanged;
 end;
 
 procedure TwbGroupRecord.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs);
@@ -12916,35 +12976,40 @@ var
 begin
   SelfPtr := Self as IwbContainerElementRef;
 
-  // do not sort records while we are updating
-  Include(grStates, gsSorting);
+  BeginUpdate;
   try
-    inherited;
-  finally
-    Exclude(grStates, gsSorting);
-  end;
+    // do not sort records while we are updating
+    Include(grStates, gsSorting);
+    try
+      inherited;
+    finally
+      Exclude(grStates, gsSorting);
+    end;
 
-  // sort INFOs afterwards if group is a DIAL children
-  if grStruct.grsGroupType = 7 then
-    Sort;
+    // sort INFOs afterwards if group is a DIAL children
+    if grStruct.grsGroupType = 7 then
+      Sort;
 
-  Changed := False;
-  if grStruct.grsGroupType in [1, 6..10] then begin
-    OldFormID := TwbFormID.FromCardinal(grStruct.grsLabel);
-    if not OldFormID.IsNull then begin
-      NewFormID := FixupFormID(OldFormID, aOld, aNew);
-      if OldFormID <> NewFormID then begin
-        MakeHeaderWriteable;
-        grStruct.grsLabel := NewFormID.ToCardinal;
-        Changed := True;
+    Changed := False;
+    if grStruct.grsGroupType in [1, 6..10] then begin
+      OldFormID := TwbFormID.FromCardinal(grStruct.grsLabel);
+      if not OldFormID.IsNull then begin
+        NewFormID := FixupFormID(OldFormID, aOld, aNew);
+        if OldFormID <> NewFormID then begin
+          MakeHeaderWriteable;
+          grStruct.grsLabel := NewFormID.ToCardinal;
+          Changed := True;
+        end;
       end;
     end;
-  end;
 
-  if Changed then
-    for i := 0 to Pred(GetElementCount) do
-      if Supports(GetElement(i), IwbContainedIn, ContainedIn) then
-        ContainedIn.ContainerChanged;
+    if Changed then
+      for i := 0 to Pred(GetElementCount) do
+        if Supports(GetElement(i), IwbContainedIn, ContainedIn) then
+          ContainedIn.ContainerChanged;
+  finally
+    EndUpdate;
+  end;
 end;
 
 procedure TwbGroupRecord.NotifyChangedInternal(aContainer: Pointer);
@@ -16288,13 +16353,18 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit(False);
+  BeginUpdate;
+  try
+    DoInit(False);
 
-  inherited MasterCountUpdated(aOld, aNew);
+    inherited MasterCountUpdated(aOld, aNew);
 
-  ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
-  if Assigned(ResolvedDef) then
-    ResolvedDef.MasterCountUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+    ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+    if Assigned(ResolvedDef) then
+      ResolvedDef.MasterCountUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+  finally
+    EndUpdate;
+  end;
 end;
 
 procedure TwbUnion.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs);
@@ -16304,13 +16374,18 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit(False);
+  BeginUpdate;
+  try
+    DoInit(False);
 
-  inherited MasterIndicesUpdated(aOld, aNew);
+    inherited MasterIndicesUpdated(aOld, aNew);
 
-  ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
-  if Assigned(ResolvedDef) then
-    ResolvedDef.MasterIndicesUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+    ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+    if Assigned(ResolvedDef) then
+      ResolvedDef.MasterIndicesUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+  finally
+    EndUpdate;
+  end;
 end;
 
 procedure TwbUnion.FindUsedMasters(aMasters: PwbUsedMasters);
@@ -16500,13 +16575,18 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit(False);
+  BeginUpdate;
+  try
+    DoInit(False);
 
-  inherited MasterCountUpdated(aOld, aNew);
+    inherited MasterCountUpdated(aOld, aNew);
 
-  ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
-  if Assigned(ResolvedDef) then
-    ResolvedDef.MasterCountUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+    ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+    if Assigned(ResolvedDef) then
+      ResolvedDef.MasterCountUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+  finally
+    EndUpdate;
+  end;
 end;
 
 procedure TwbValue.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs);
@@ -16516,13 +16596,18 @@ var
 begin
   SelfRef := Self as IwbContainerElementRef;
 
-  DoInit(False);
+  BeginUpdate;
+  try
+    DoInit(False);
 
-  inherited MasterIndicesUpdated(aOld, aNew);
+    inherited MasterIndicesUpdated(aOld, aNew);
 
-  ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
-  if Assigned(ResolvedDef) then
-    ResolvedDef.MasterIndicesUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+    ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+    if Assigned(ResolvedDef) then
+      ResolvedDef.MasterIndicesUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+  finally
+    EndUpdate;
+  end;
 end;
 
 procedure TwbValue.FindUsedMasters(aMasters: PwbUsedMasters);
