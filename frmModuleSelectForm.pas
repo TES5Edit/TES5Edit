@@ -57,6 +57,10 @@ type
     procedure mniSelectAllClick(Sender: TObject);
     procedure mniSelectNoneClick(Sender: TObject);
     procedure mniInvertSelectionClick(Sender: TObject);
+    procedure edFilterKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure vstModulesKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     ChangingChecked : Integer;
     procedure SimulateLoad;
@@ -211,6 +215,19 @@ begin
       end;
     finally
       EndUpdate;
+    end;
+  end;
+end;
+
+procedure TfrmModuleSelect.edFilterKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if Key = VK_DOWN then begin
+    vstModules.FocusedNode := vstModules.GetFirstVisible;
+    if Assigned(vstModules.FocusedNode) then begin
+      vstModules.ClearSelection;
+      vstModules.Selected[vstModules.FocusedNode] := True;
+      vstModules.SetFocus;
     end;
   end;
 end;
@@ -626,6 +643,18 @@ begin
     end else
       Include(InitialStates, ivsDisabled);
   end;
+end;
+
+procedure TfrmModuleSelect.vstModulesKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+  FirstVisible: PVirtualNode;
+begin
+  if Key = VK_UP then
+    if Shift = [] then begin
+      FirstVisible := vstModules.GetFirstVisible;
+      if not Assigned(FirstVisible) or (vstModules.FocusedNode = FirstVisible) then
+        edFilter.SetFocus;
+    end;
 end;
 
 procedure TfrmModuleSelect.vstModulesKeyPress(Sender: TObject; var Key: Char);
