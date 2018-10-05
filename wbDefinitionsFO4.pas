@@ -11255,8 +11255,7 @@ begin
       wbUnion(DATA, 'Effect Data', wbPerkDATADecider, [
         wbStructSK([0, 1], 'Quest + Stage', [
           wbFormIDCk('Quest', [QUST]),
-          wbInteger('Quest Stage', itU16, wbPerkDATAQuestStageToStr, wbCTDAParam2QuestStageToInt),
-          wbByteArray('Unused', 2)
+          wbInteger('Quest Stage', itU16, wbPerkDATAQuestStageToStr, wbCTDAParam2QuestStageToInt)
         ]),
         wbFormIDCk('Ability', [SPEL]),
         wbStructSK([0, 1], 'Entry Point', [
