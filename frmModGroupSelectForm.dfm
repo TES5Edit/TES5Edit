@@ -53,6 +53,7 @@ object frmModGroupSelect: TfrmModGroupSelect
     OnIncrementalSearch = vstModGroupsIncrementalSearch
     OnInitChildren = vstModGroupsInitChildren
     OnInitNode = vstModGroupsInitNode
+    OnKeyDown = vstModGroupsKeyDown
     OnKeyPress = vstModGroupsKeyPress
     OnNodeDblClick = vstModGroupsNodeDblClick
     OnBeforeGetCheckState = vstModGroupsBeforeGetCheckState
@@ -128,6 +129,7 @@ object frmModGroupSelect: TfrmModGroupSelect
     LabelPosition = lpLeft
     TabOrder = 0
     OnChange = edFilterChange
+    OnKeyDown = edFilterKeyDown
   end
   object btnCancel: TButton
     Left = 700

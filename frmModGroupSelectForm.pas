@@ -57,6 +57,10 @@ type
     procedure mniInvertSelectionClick(Sender: TObject);
     procedure vstModGroupsNodeDblClick(Sender: TBaseVirtualTree;
       const HitInfo: THitInfo);
+    procedure edFilterKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure vstModGroupsKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     ChangingChecked : Integer;
     procedure CollectSelected;
@@ -212,6 +216,17 @@ begin
     finally
       EndUpdate;
     end;
+  end;
+end;
+
+procedure TfrmModGroupSelect.edFilterKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_DOWN then begin
+    vstModGroups.FocusedNode := vstModGroups.GetFirstVisible;
+    if Assigned(vstModGroups.FocusedNode) then
+      vstModGroups.ClearSelection;
+      vstModGroups.Selected[vstModGroups.FocusedNode] := True;
+      vstModGroups.SetFocus;
   end;
 end;
 
@@ -605,6 +620,18 @@ begin
     end else
       Include(InitialStates, ivsDisabled);
   end;
+end;
+
+procedure TfrmModGroupSelect.vstModGroupsKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+  FirstVisible: PVirtualNode;
+begin
+  if Key = VK_UP then
+    if Shift = [] then begin
+      FirstVisible := vstModGroups.GetFirstVisible;
+      if not Assigned(FirstVisible) or (vstModGroups.FocusedNode = FirstVisible) then
+        edFilter.SetFocus;
+    end;
 end;
 
 procedure TfrmModGroupSelect.vstModGroupsKeyPress(Sender: TObject; var Key: Char);
