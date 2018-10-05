@@ -7419,18 +7419,18 @@ begin
         wbInteger('Vertex Count', itU32),
         wbInteger('Triangle Count', itU32),
         wbInteger('External Connections Count', itU32),
-        wbInteger('NVCA Count', itU32),
+        wbInteger('Cover Triangle Count', itU32),
         wbInteger('Doors Count', itU32)
       ]),
       wbByteArray(NVVX, 'Vertices'),
       wbByteArray(NVTR, 'Triangles'),
-      wbByteArray(NVCA, 'Unknown'),
+      wbByteArray(NVCA, 'Cover Triangles'),
       wbArray(NVDP, 'Doors', wbStruct('Door', [
         wbFormIDCk('Reference', [REFR]),
         wbInteger('Triangle', itU16),
         wbByteArray('Unused', 2)
       ])).IncludeFlag(dfNotAlignable),
-      wbByteArray(NVGD, 'Unknown'),
+      wbByteArray(NVGD, 'NavMesh Grid'),
       wbArray(NVEX, 'External Connections', wbStruct('Connection', [
         wbByteArray('Unknown', 4),
         wbFormIDCk('Navigation Mesh', [NAVM], False, cpNormal),
@@ -7448,7 +7448,7 @@ begin
         wbInteger('Vertex Count', itU32),
         wbInteger('Triangle Count', itU32),
         wbInteger('External Connections Count', itU32),
-        wbInteger('NVCA Count', itU32),
+        wbInteger('Cover Triangle Count', itU32),
         wbInteger('Doors Count', itU32) // as of version = 5 (earliest NavMesh version I saw (Fallout3 1.7) is already 11)
       ]),
       wbArray(NVVX, 'Vertices', wbStruct('Vertex', [
@@ -7463,42 +7463,64 @@ begin
           '1 <-> 2',
           '2 <-> 0'
         ]),
-        wbInteger('Flags', itU32, wbFlags([
-          'Triangle #0 Is External',
-          'Triangle #1 Is External',
-          'Triangle #2 Is External',
-          'Unknown 4',
-          'Unknown 5',
-          'Unknown 6',
-          'Preferred pathing',
-          'Unknown 8',
-          'Unknown 9',
-          'Water',
-          'Contains door',
-          'Unknown 12',
-          'Unknown 13', // Cleared on LoadForm
-          'Unknown 14', // Cleared on LoadForm
-          'Unknown 15', // Cleared on LoadForm
-          'Unknown 16',
-          'Unknown 17',
-          'Unknown 18',
-          'Unknown 19',
-          'Unknown 20',
-          'Unknown 21',
-          'Unknown 22',
-          'Unknown 23',
-          'Unknown 24',
-          'Unknown 25',
-          'Unknown 26',
-          'Unknown 27',
-          'Unknown 28',
-          'Unknown 29',
-          'Unknown 30',
-          'Unknown 31',
-          'Unknown 32'
+        wbInteger('Flags', itU16, wbFlags([
+          'Edge 0 <-> 1 external',  // 0 $0001 1
+          'Edge 1 <-> 2 external',  // 1 $0002 2
+          'Edge 2 <-> 0 external',  // 2 $0004 4
+          '',                       // 3 $0008 8
+          'No Large Creatures',     // 4 $0010 16
+          'Overlapping',            // 5 $0020 32
+          'Preferred',              // 6 $0040 64
+          '',                       // 7 $0080 128
+          'Unknown 9',              // 8 $0100 256  used in SSE CK source according to Nukem
+          'Water',                  // 9 $0200 512
+          'Door',                   //10 $0400 1024
+          'Found',                  //11 $0800 2048
+          'Unknown 13',             //12 $1000 4096 used in SSE CK source according to Nukem
+          '',                       //13 $2000 \
+          '',                       //14 $4000  |-- used as 3 bit counter inside CK, probably stripped before save
+          ''                        //15 $8000 /
+        ])),
+        { Flags below are wrong. The first 4 bit are an enum as follows:
+        0000 = Open Edge No Cover
+        1000 = wall no cover
+        0100 = ledge cover
+        1100 = UNUSED
+        0010 = cover  64
+        1010 = cover  80
+        0110 = cover  96
+        1110 = cover 112
+        0001 = cover 128
+        1001 = cover 144
+        0101 = cover 160
+        1101 = cover 176
+        0011 = cover 192
+        1011 = cover 208
+        0111 = cover 224
+        1111 = max cover
+        then 2 bit flags, then another such enum, and the rest is probably flags.
+        Can't properly represent that with current record definition methods.
+        }
+        wbInteger('Cover Flags', itU16, wbFlags([
+          'Edge 0 <-> 1 Cover Value 1/4',
+          'Edge 0 <-> 1 Cover Value 2/4',
+          'Edge 0 <-> 1 Cover Value 3/4',
+          'Edge 0 <-> 1 Cover Value 4/4',
+          'Edge 0 <-> 1 Left',
+          'Edge 0 <-> 1 Right',
+          'Edge 1 <-> 2 Cover Value 1/4',
+          'Edge 1 <-> 2 Cover Value 2/4',
+          'Edge 1 <-> 2 Cover Value 3/4',
+          'Edge 1 <-> 2 Cover Value 4/4',
+          'Edge 1 <-> 2 Left',
+          'Edge 1 <-> 2 Right',
+          'Unknown 13',
+          'Unknown 14',
+          'Unknown 15',
+          'Unknown 16'
         ]))
       ])).IncludeFlag(dfNotAlignable),
-      wbArray(NVCA, 'Unknown', wbInteger('Triangle', itS16)),  // Assumed triangle as the value fits the triangle id's
+      wbArray(NVCA, 'Cover Triangles', wbInteger('Cover Triangle', itS16)),
       wbArray(NVDP, 'Doors', wbStruct('Door', [
         wbFormIDCk('Reference', [REFR]),
         wbInteger('Triangle', itU16),
