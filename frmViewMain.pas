@@ -5054,6 +5054,7 @@ var
   txt      : AnsiString;
   fs       : TBufferedFileStream;
 begin
+  fs := nil;
   try
     try
       if FileExists(s) then begin
