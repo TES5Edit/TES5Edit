@@ -6994,15 +6994,17 @@ end;
 procedure TwbMainRecord.CollapseStorage;
 var
   Stream  : TMemoryStream;
-
+  KAR     : IwbKeepAliveRoot;
 begin
   if (esModified in eStates) then begin
+    KAR := wbCreateKeepAliveRoot;
     PrepareSave;
     Stream := TMemoryStream.Create;
     try
       WriteToStream(Stream, True);
       DoReset(True);
       ReleaseElements;
+      KAR := nil;
 
       if mrsBasePtrAllocated in mrStates then
         FreeMem(dcBasePtr);
@@ -9182,7 +9184,7 @@ var
   KAR: IwbKeepAliveRoot;
 begin
   KAR := wbCreateKeepAliveRoot;
-
+  FoundOne := False;
   BeginUpdate;
   try
     wbTick;
@@ -9206,7 +9208,6 @@ begin
 
     if csRefsBuild in cntStates then begin
 
-      FoundOne := False;
       for i := High(mrReferences) downto Low(mrReferences) do begin
         if mrReferences[i].FileID.FullSlot < aOld then
           Break;
@@ -9214,14 +9215,15 @@ begin
         mrReferences[i].FileID := NewFileID;
       end;
 
-      if FoundOne then
-        inherited;
-
     end else
+      FoundOne := True;
+
+    if FoundOne then
       inherited;
   finally
     EndUpdate;
   end;
+  CollapseStorage;
 end;
 
 procedure TwbMainRecord.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs);
@@ -9281,6 +9283,8 @@ begin
   finally
     EndUpdate;
   end;
+
+  CollapseStorage;
 end;
 
 function TwbMainRecord.MasterRecordsFromMasterFilesAndSelf: TDynMainRecords;
