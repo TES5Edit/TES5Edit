@@ -7752,7 +7752,7 @@ Can't properly represent that with current record definition methods.
       wbArrayS('Door Triangles',
         wbStructSK([0, 2], 'Door Triangle', [
           wbInteger('Triangle before door', itU16).SetLinksToCallback(wbTriangleLinksTo),
-          wbByteArray('CRC of "PathingDoor"', 4).SetDefaultEditValue('F3 73 8B E4'),  // used as a key to lookup in a map of PathingDoor
+          wbInteger('DTUnknown', itU32), //contains 0 or the CRC of "PathingDoor" = F3 73 8B E4
           wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
         ])
       , -1),
