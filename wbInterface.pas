@@ -4141,11 +4141,13 @@ end;
 
 function RadiansNormalize(const aElement: IwbElement; aFloat: Extended): Extended;
 begin
-//  Result := RoundToEx(aFloat, -6);
   Result := aFloat;
 
-  if Abs(Result/TwoPi) > 100.0 then
+  if Abs(Result/TwoPi) > 100.0 then begin
     Result := Result - Sign(Result)*TwoPi*Trunc(Abs(Result/TwoPi) - 100.0);
+    if Abs(Result/TwoPi) > 101.0 then
+      Exit(NaN);
+  end;
 
   while Result < 0.0 do
     Result := Result + TwoPi;
@@ -4155,8 +4157,6 @@ begin
     Result := 0.0;
   if SingleSameValue(Result, TwoPi) or (Result > TwoPi) then
     Result := 0.0;
-
-//  Result := RoundToEx(Result, -6);
 end;
 
 type
@@ -11972,6 +11972,8 @@ begin
             if Value <> 0.0 then
               if SingleSameValue(Value, 0.0) then
                 Value := 0.0;
+            if SetExceptions([]) * DefaultExceptionFlags <> [] then
+              Value := 0.0;
           except
             Value := 0.0;
           end;
