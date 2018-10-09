@@ -7097,6 +7097,7 @@ begin
     AllModGroups := wbModGroupsByName;
     LoadModGroupsSelection(AllModGroups);
     Caption := 'Reloading ModGroups - Which ModGroups do you want to activate?';
+    PresetCategory := 'ActiveModGroups';
     if ShowModal = mrOk then begin
       SaveModGroupsSelection(SelectedModGroups);
       WasModGroupsExist := ModGroupsExist;
@@ -17759,6 +17760,7 @@ begin
           wbModGroupsByName(False).ShowValidationMessages;
           LoadModGroupsSelection(AllModGroups);
           Caption := 'Which ModGroups do you want to activate?';
+          PresetCategory := 'ActiveModGroups';
           if ShowModal = mrOk then begin
             SaveModGroupsSelection(SelectedModGroups);
             ModGroups := SelectedModGroups;

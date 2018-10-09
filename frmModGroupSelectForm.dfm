@@ -20,6 +20,15 @@ object frmModGroupSelect: TfrmModGroupSelect
     615)
   PixelsPerInch = 96
   TextHeight = 13
+  object lblPreset: TLabel
+    Left = 375
+    Top = 11
+    Width = 35
+    Height = 13
+    Anchors = [akTop, akRight]
+    Caption = '&Preset:'
+    FocusControl = cbPreset
+  end
   object btnOK: TButton
     Left = 781
     Top = 582
@@ -28,7 +37,7 @@ object frmModGroupSelect: TfrmModGroupSelect
     Anchors = [akRight, akBottom]
     Caption = 'OK'
     ModalResult = 1
-    TabOrder = 3
+    TabOrder = 7
   end
   object vstModGroups: TVirtualStringTree
     Left = 8
@@ -41,7 +50,7 @@ object frmModGroupSelect: TfrmModGroupSelect
     Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowImages, hoShowSortGlyphs, hoVisible]
     Header.SortColumn = 0
     PopupMenu = pmuModGroups
-    TabOrder = 1
+    TabOrder = 5
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning, toEditOnClick]
     TreeOptions.PaintOptions = [toPopupMode, toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseBlendedSelection]
     TreeOptions.SelectionOptions = [toFullRowSelect, toLevelSelectConstraint, toMultiSelect, toRightClickSelect, toSiblingSelectConstraint, toAlwaysSelectNode]
@@ -115,12 +124,12 @@ object frmModGroupSelect: TfrmModGroupSelect
     Anchors = [akLeft, akTop, akRight]
     BevelOuter = bvLowered
     BorderWidth = 3
-    TabOrder = 2
+    TabOrder = 8
   end
   object edFilter: TLabeledEdit
-    Left = 48
+    Left = 39
     Top = 8
-    Width = 808
+    Width = 330
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     EditLabel.Width = 28
@@ -139,8 +148,46 @@ object frmModGroupSelect: TfrmModGroupSelect
     Anchors = [akRight, akBottom]
     Caption = 'Cancel'
     ModalResult = 2
-    TabOrder = 4
+    TabOrder = 6
     Visible = False
+  end
+  object bnDelete: TButton
+    Left = 781
+    Top = 4
+    Width = 75
+    Height = 25
+    Action = acPresetDelete
+    Anchors = [akTop, akRight]
+    TabOrder = 4
+  end
+  object bnSave: TButton
+    Left = 700
+    Top = 4
+    Width = 75
+    Height = 25
+    Action = acPresetSave
+    Anchors = [akTop, akRight]
+    TabOrder = 3
+  end
+  object bnLoad: TButton
+    Left = 619
+    Top = 4
+    Width = 75
+    Height = 25
+    Action = acPresetLoad
+    Anchors = [akTop, akRight]
+    BiDiMode = bdRightToLeft
+    ParentBiDiMode = False
+    TabOrder = 2
+  end
+  object cbPreset: TComboBox
+    Left = 416
+    Top = 8
+    Width = 197
+    Height = 21
+    Anchors = [akTop, akRight]
+    TabOrder = 1
+    OnKeyPress = cbPresetKeyPress
   end
   object pmuModGroups: TPopupMenu
     OnPopup = pmuModGroupsPopup
@@ -157,6 +204,26 @@ object frmModGroupSelect: TfrmModGroupSelect
     object mniInvertSelection: TMenuItem
       Caption = 'Invert Selection'
       OnClick = mniInvertSelectionClick
+    end
+  end
+  object aclModGroups: TActionList
+    Left = 424
+    Top = 320
+    object acPresetLoad: TAction
+      Caption = '&Load'
+      OnExecute = acPresetLoadExecute
+      OnUpdate = acPresetLoadUpdate
+    end
+    object acPresetSave: TAction
+      AutoCheck = True
+      Caption = '&Save'
+      OnExecute = acPresetSaveExecute
+      OnUpdate = acPresetSaveUpdate
+    end
+    object acPresetDelete: TAction
+      Caption = '&Delete'
+      OnExecute = acPresetDeleteExecute
+      OnUpdate = acPresetDeleteUpdate
     end
   end
 end
