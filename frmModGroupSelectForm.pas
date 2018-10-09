@@ -20,7 +20,10 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, CheckLst, Menus,
   Vcl.Styles.Utils.SystemMenu, VirtualTrees, VirtualEditTree,
-  wbInterface, wbLoadOrder, wbModGroups, Vcl.ExtCtrls;
+  wbInterface, wbLoadOrder, wbModGroups, Vcl.ExtCtrls, System.Actions, Vcl.ActnList;
+
+const
+  csLast = '<Last>';
 
 type
   TfrmModGroupSelect = class(TForm)
@@ -33,6 +36,15 @@ type
     pnlError: TPanel;
     edFilter: TLabeledEdit;
     btnCancel: TButton;
+    bnDelete: TButton;
+    bnSave: TButton;
+    bnLoad: TButton;
+    cbPreset: TComboBox;
+    lblPreset: TLabel;
+    aclModGroups: TActionList;
+    acPresetLoad: TAction;
+    acPresetSave: TAction;
+    acPresetDelete: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -59,15 +71,30 @@ type
       const HitInfo: THitInfo);
     procedure edFilterKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
-    procedure vstModGroupsKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
+    procedure vstModGroupsKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure acPresetLoadUpdate(Sender: TObject);
+    procedure acPresetDeleteExecute(Sender: TObject);
+    procedure acPresetDeleteUpdate(Sender: TObject);
+    procedure acPresetSaveExecute(Sender: TObject);
+    procedure acPresetSaveUpdate(Sender: TObject);
+    procedure acPresetLoadExecute(Sender: TObject);
+    procedure cbPresetKeyPress(Sender: TObject; var Key: Char);
   private
     ChangingChecked : Integer;
     procedure CollectSelected;
     procedure DoSingleModGroupLoad(Node: PVirtualNode = nil);
     function GetSelectedOrAll: TNodeArray;
     function CheckStateForModGroup(aModGroup: PwbModGroup; aIsRootChild: Boolean): TCheckState;
+
+    procedure PresetLoad(const aPreset: string);
+    procedure PresetSave(const aPreset: string; aAfterShowModal: Boolean);
+    procedure PresetDelete(const aPreset: string);
+    function GetPresetsSection: string;
+    procedure PresetsUpdate;
+    function IsPresetDifferent(const aPreset: string): Boolean;
   public
+    PresetCategory  : string;
+    LoadedPreset    : string;
     AllModGroups      : TwbModGroupPtrs;
     SelectedModGroups : TwbModGroupPtrs;
 
@@ -172,6 +199,116 @@ begin
   mniInvertSelection.Enabled := mniSelectAll.Enabled;
 end;
 
+procedure TfrmModGroupSelect.PresetDelete(const aPreset: string);
+begin
+  if PresetCategory = '' then
+    Exit;
+  if aPreset = '' then
+    Exit;
+  if aPreset.StartsWith('<') then
+    Exit;
+  if not Assigned(frmMain.Settings) then
+    Exit;
+  if not frmMain.Settings.ValueExists(GetPresetsSection, aPreset) then
+    Exit;
+  if MessageDlg('Are you sure you want to delete preset "'+aPreset+'"?', mtConfirmation, mbYesNo, 0) <> mrYes then
+    Exit;
+  frmMain.Settings.DeleteKey(GetPresetsSection, aPreset);
+  frmMain.Settings.UpdateFile;
+  PresetsUpdate;
+  if cbPreset.Text = aPreset then
+    cbPreset.Text := '';
+end;
+
+procedure TfrmModGroupSelect.PresetLoad(const aPreset: string);
+var
+  sl   : TStringList;
+  i, j : Integer;
+begin
+  LoadedPreset := '';
+  if PresetCategory = '' then
+    Exit;
+  if aPreset = '' then
+    Exit;
+  if not Assigned(frmMain.Settings) then
+    Exit;
+  AllModGroups.ExcludeAll(SelectFlag);
+  sl := TStringList.Create;
+  try
+    if aPreset.StartsWith('<') then begin
+      if aPreset = csLast then
+        sl.CommaText := frmMain.Settings.ReadString('ModGroups', 'Selection', '')
+      else
+        Exit;
+    end else
+       sl.CommaText := frmMain.Settings.ReadString(GetPresetsSection, aPreset, '');
+    sl.Sorted := True;
+    for i := Low(AllModGroups) to High(AllModGroups) do
+      with AllModGroups[i]^ do
+        if sl.Find(mgName, j) then
+          Include(mgFlags, SelectFlag);
+  finally
+    sl.Free;
+  end;
+  LoadedPreset := aPreset;
+  CollectSelected;
+end;
+
+procedure TfrmModGroupSelect.PresetSave(const aPreset: string; aAfterShowModal: Boolean);
+var
+  sl            : TStringList;
+  i             : Integer;
+  s             : string;
+  DefaultButton : TMsgDlgBtn;
+begin
+  if PresetCategory = '' then
+    Exit;
+  if aPreset = '' then
+    Exit;
+  if aPreset.StartsWith('<') then
+    Exit;
+  if not Assigned(frmMain.Settings) then
+    Exit;
+
+  DefaultButton := mbYes;
+  if aAfterShowModal then begin
+    DefaultButton := mbNo;
+    s := 'You have changed the selection after loading a preset. Do you want to update the preset "'+aPreset+'" with your new selection?';
+  end else
+    s := 'Are you sure you want to overwrite existing preset "'+aPreset+'"?';
+  if frmMain.Settings.ValueExists(GetPresetsSection, aPreset) then
+    if MessageDlg(s, mtConfirmation, mbYesNo, 0, DefaultButton) <> mrYes then
+      Exit;
+
+  sl := TStringList.Create;
+  try
+    for i := Low(SelectedModGroups) to High(SelectedModGroups) do
+      with SelectedModGroups[i]^ do
+        sl.Add(mgName);
+    frmMain.Settings.WriteString(GetPresetsSection, aPreset, sl.CommaText);
+    frmMain.Settings.UpdateFile;
+  finally
+    sl.Free;
+  end;
+  PresetsUpdate;
+end;
+
+procedure TfrmModGroupSelect.PresetsUpdate;
+begin
+  with cbPreset, Items do begin
+    BeginUpdate;
+    try
+      Clear;
+      if Assigned(frmMain.Settings) and (PresetCategory <> '') then
+        frmMain.Settings.ReadSection(GetPresetsSection, Items);
+      if frmMain.Settings.ValueExists('ModGroups', 'Selection') then
+        Insert(0, csLast);
+    finally
+      EndUpdate;
+    end;
+  end;
+end;
+
 procedure TfrmModGroupSelect.DoSingleModGroupLoad(Node: PVirtualNode);
 begin
   AllModGroups.ExcludeAll(SelectFlag);
@@ -269,8 +406,21 @@ begin
           vstModGroups.FocusedNode := Node;
         vstModGroups.Selected[Node] := True;
       end;
-      if ssCtrl in Shift then
+      if Shift = [ssCtrl] then
         DoSingleModGroupLoad;
+      Exit;
+    end else if cbPreset.Focused then begin
+      if acPresetLoad.Execute then begin
+        if Shift = [ssCtrl] then begin
+          CollectSelected;
+          if btnOK.Enabled then
+            btnOK.Click;
+        end else
+          vstModGroups.SetFocus;
+      end else if acPresetSave.Execute then
+        vstModGroups.SetFocus
+      else
+        Beep;
       Exit;
     end;
 
@@ -285,7 +435,16 @@ begin
     if btnCancel.Enabled then
       btnCancel.Click;
   end else if Key = VK_MULTIPLY then
-    mniInvertSelection.Click;
+    mniInvertSelection.Click
+  else if Key = VK_DELETE then
+    if cbPreset.Focused then begin
+      if Shift = [ssShift] then begin
+        Key := 0;
+        if not acPresetDelete.Execute then
+          Beep;
+        Exit;
+      end;
+    end;
 end;
 
 procedure TfrmModGroupSelect.FormShow(Sender: TObject);
@@ -311,6 +470,11 @@ begin
     vstModGroups.FocusedNode := vstModGroups.GetFirstVisible;
     vstModGroups.Selected[vstModGroups.FocusedNode] := True;
   end;
+end;
+
+function TfrmModGroupSelect.GetPresetsSection: string;
+begin
+  Result := Name + '_' + PresetCategory + '_Presets';
 end;
 
 function TfrmModGroupSelect.GetSelectedOrAll: TNodeArray;
@@ -346,6 +510,87 @@ begin
   SetLength(Result, j);
 end;
 
+function TfrmModGroupSelect.IsPresetDifferent(const aPreset: string): Boolean;
+var
+  slCurrent, slPreset : TStringList;
+  i  : Integer;
+begin
+  Result := False;
+
+  if PresetCategory = '' then
+    Exit;
+  if aPreset = '' then
+    Exit;
+  if aPreset.StartsWith('<') then
+    Exit;
+  if not Assigned(frmMain.Settings) then
+    Exit;
+  if not frmMain.Settings.ValueExists(GetPresetsSection, aPreset) then
+    Exit;
+
+  slCurrent := TStringList.Create;
+  slPreset := TStringList.Create;
+  try
+    slCurrent.Sorted := True;
+    slCurrent.Duplicates := dupIgnore;
+    for i := Low(SelectedModGroups) to High(SelectedModGroups) do
+      with SelectedModGroups[i]^ do
+        slCurrent.Add(mgName);
+
+    slPreset.Sorted := True;
+    slPreset.Duplicates := dupIgnore;
+    slPreset.CommaText := frmMain.Settings.ReadString(GetPresetsSection, aPreset, '');
+
+    Result :=
+          (slCurrent.Count <> slPreset.Count) or
+      not SameText(slCurrent.CommaText,slPreset.CommaText);
+  finally
+    slCurrent.Free;
+    slPreset.Free;
+  end;
+end;
+
+procedure TfrmModGroupSelect.acPresetDeleteExecute(Sender: TObject);
+begin
+  PresetDelete(cbPreset.Text);
+end;
+
+procedure TfrmModGroupSelect.acPresetDeleteUpdate(Sender: TObject);
+begin
+  TAction(Sender).Enabled :=
+    Assigned(frmMain.Settings) and
+    frmMain.Settings.ValueExists(GetPresetsSection, cbPreset.Text);
+end;
+
+procedure TfrmModGroupSelect.acPresetLoadExecute(Sender: TObject);
+begin
+  PresetLoad(cbPreset.Text);
+end;
+
+procedure TfrmModGroupSelect.acPresetLoadUpdate(Sender: TObject);
+begin
+  TAction(Sender).Enabled :=
+    (cbPreset.Text = csLast) or
+    (Assigned(frmMain.Settings) and frmMain.Settings.ValueExists(GetPresetsSection, cbPreset.Text));
+end;
+
+procedure TfrmModGroupSelect.acPresetSaveExecute(Sender: TObject);
+begin
+  PresetSave(cbPreset.Text, False);
+end;
+
+procedure TfrmModGroupSelect.acPresetSaveUpdate(Sender: TObject);
+var
+  s: string;
+begin
+  s := string(cbPreset.Text).Replace('=', '', [rfReplaceAll]).Trim;
+  TAction(Sender).Enabled :=
+    (cbPreset.Text = s) and
+    (s <> '') and
+    (s[1] <> '<') and
+    (Length(SelectedModGroups) > 0);
+end;
+
 procedure TfrmModGroupSelect.AllowCancel;
 var
   Left: Integer;
@@ -355,6 +600,12 @@ begin
   Left := btnCancel.Left;
   btnCancel.Left := btnOK.Left;
   btnOK.Left := Left;
+end;
+
+procedure TfrmModGroupSelect.cbPresetKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = #13 then
+    Key := #0;
 end;
 
 function TfrmModGroupSelect.CheckStateForModGroup(aModGroup: PwbModGroup; aIsRootChild: Boolean): TCheckState;
@@ -380,6 +631,18 @@ begin
     AllModGroups := wbModGroupsByName.FilteredByFlag(FilterFlag);
   vstModGroups.ChildCount[nil] := Length(AllModGroups);
   vstModGroups.InitRecursive(nil, 100, False);
+
+  if PresetCategory <> '' then begin
+    PresetsUpdate;
+  end else begin
+    lblPreset.Visible := False;
+    cbPreset.Visible := False;
+    acPresetDelete.Visible := False;
+    acPresetSave.Visible := False;
+    acPresetLoad.Visible := False;
+    edFilter.Width := (vstModGroups.Left + vstModGroups.Width) - edFilter.Left;
+  end;
+
   if Length(AllModGroups) < 1 then
     Result := mrCancel
   else
@@ -392,6 +655,9 @@ begin
 
   if Length(SelectedModGroups) < MinSelect then
     Result := mrCancel;
+
+  if (Result = mrOk) and (LoadedPreset <> '') and IsPresetDifferent(LoadedPreset) then
+    PresetSave(LoadedPreset, True);
 end;
 
 procedure TfrmModGroupSelect.CollectSelected;
@@ -636,9 +902,10 @@ end;
 
 procedure TfrmModGroupSelect.vstModGroupsKeyPress(Sender: TObject; var Key: Char);
 begin
-  if Key = '?' then begin
-    edFilter.SetFocus;
-  end;
+  if Key = '?' then
+    edFilter.SetFocus
+  else if Key = '|' then
+    cbPreset.SetFocus;
 end;
 
 procedure TfrmModGroupSelect.vstModGroupsNodeDblClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
