@@ -816,10 +816,10 @@ begin
   end;
 
   if FindCmdLineSwitch('quickclean') and (wbToolSource in [tsPlugins]) then
-    wbQuickClean := wbIKnowWhatImDoing;
+    wbQuickClean := True;
 
   if FindCmdLineSwitch('quickautoclean') and (wbToolSource in [tsPlugins]) then begin
-    wbQuickClean := wbIKnowWhatImDoing;
+    wbQuickClean := True;
     wbQuickCleanAutoSave := wbQuickClean;
   end;
 
@@ -827,6 +827,9 @@ begin
     ShowMessage('Can''t activate Quick Clean and Quick Show Conflicts modes at the same time.');
     Exit(False);
   end;
+
+  if wbQuickClean then
+    wbIKnowWhatImDoing := True;
 
   if FindCmdLineSwitch('fixup') then
     wbAllowInternalEdit := True
