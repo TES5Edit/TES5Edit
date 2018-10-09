@@ -4363,7 +4363,8 @@ begin
                 MaxSelect := 1;
                 AllModules := wbModulesByLoadOrder(False).FilteredByFlag(mfValid);
                 AllModules.ExcludeAll(mfActive);
-              end;
+              end else
+                PresetCategory := 'ActiveModules';
 
               if ShowModal = mrOk then begin
                 FilteredModules.IncludeAll(mfTaggedForPluginMode);
