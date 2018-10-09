@@ -3812,7 +3812,7 @@ begin
         flRecords[i].ClampFormID(k);
     end;
 
-    if GetIsESL then begin
+    if FileHeader.IsESL then begin
       FileFileID := GetFileFileID;
       for i := High(flRecords) downto Low(flRecords) do begin
         Current := flRecords[i];
