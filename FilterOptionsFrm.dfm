@@ -138,7 +138,7 @@ object frmFilterOptions: TfrmFilterOptions
     end
     object cbConflictThis: TCheckBox
       Left = 12
-      Top = 184
+      Top = 157
       Width = 361
       Height = 17
       Caption = 
@@ -283,26 +283,29 @@ object frmFilterOptions: TfrmFilterOptions
       ItemHeight = 13
       PopupMenu = pmuSelection
       TabOrder = 34
+      OnKeyPress = clbKeyPress
     end
     object clbConflictAll: TCheckListBox
       Left = 34
       Top = 59
       Width = 318
-      Height = 113
+      Height = 92
       Color = clBtnFace
       ItemHeight = 13
       PopupMenu = pmuSelection
       TabOrder = 35
+      OnKeyPress = clbKeyPress
     end
     object clbConflictThis: TCheckListBox
       Left = 34
-      Top = 207
+      Top = 180
       Width = 318
-      Height = 141
+      Height = 163
       Color = clBtnFace
       ItemHeight = 13
       PopupMenu = pmuSelection
       TabOrder = 36
+      OnKeyPress = clbKeyPress
     end
     object clbRecordSignatures: TCheckListBox
       Left = 379
@@ -313,6 +316,7 @@ object frmFilterOptions: TfrmFilterOptions
       ItemHeight = 13
       PopupMenu = pmuSelection
       TabOrder = 37
+      OnKeyPress = clbKeyPress
     end
     object edBaseEditorID: TEdit
       Left = 665

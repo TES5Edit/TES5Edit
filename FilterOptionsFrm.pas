@@ -90,6 +90,7 @@ type
     procedure btnFilterAddClick(Sender: TObject);
     procedure btnFilterDelClick(Sender: TObject);
     procedure btnFilterSaveClick(Sender: TObject);
+    procedure clbKeyPress(Sender: TObject; var Key: Char);
   private
     Settings: TMemIniFile;
     function GetRecordSignatures: string;
@@ -412,6 +413,20 @@ end;
 procedure TfrmFilterOptions.btnFilterSaveClick(Sender: TObject);
 begin
   FilterSavePreset(cmbPreset.Text);
+end;
+
+procedure TfrmFilterOptions.clbKeyPress(Sender: TObject;
+  var Key: Char);
+begin
+  if Key in ['+','-','*'] then begin
+    pmuSelection.PopupComponent := Sender as TComponent;
+    case Key of
+      '+': mniSelectionClick(mniSelectAll);
+      '-': mniSelectionClick(mniSelectNone);
+      '*': mniSelectionClick(mniInvertSelection);
+    end;
+    Key := #0;
+  end;
 end;
 
 procedure TfrmFilterOptions.cmbPresetSelect(Sender: TObject);
