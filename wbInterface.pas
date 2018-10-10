@@ -741,6 +741,7 @@ type
     function GetConflictPriority: TwbConflictPriority;
     function GetConflictPriorityCanChange: Boolean;
     function GetModified: Boolean;
+    function GetElementGeneration: Integer;
     procedure MarkModifiedRecursive;
     function GetIsInjected: Boolean;
     function GetReferencesInjected: Boolean;
@@ -852,6 +853,8 @@ type
 
     property Modified: Boolean
       read GetModified;
+    property ElementGeneration: Integer
+      read GetElementGeneration;
     property IsInjected: Boolean
       read GetIsInjected;
     property IsNotReachable: Boolean
@@ -1292,6 +1295,7 @@ type
 
   TwbGridCell = record
     x, y: Integer;
+    class operator Equal(const a, b: TwbGridCell): Boolean; static;
   end;
 
   TDynMainRecords = TArray<IwbMainRecord>;
@@ -1328,6 +1332,9 @@ type
     function GetWinningOverride: IwbMainRecord;
     function GetHighestOverrideOrSelf(aMaxLoadOrder: Integer): IwbMainRecord;
     function GetHighestOverrideVisibleForFile(const aFile: IwbFile): IwbMainRecord;
+    function GetAllVisibleForFile(const aFile: IwbFile): TDynMainRecords;
+    function GetChildBySignature(const aSignature: TwbSignature): IwbMainRecord;
+    function GetChildByGridCell(const aGridCell: TwbGridCell): IwbMainRecord;
     function GetFlags: TwbMainRecordStructFlags;
     function GetChildGroup: IwbGroupRecord;
     function EnsureChildGroup: IwbGroupRecord;
@@ -1370,6 +1377,7 @@ type
     function GetScale(out aScale: Single): Boolean;
 
     function GetGridCell(out aGridCell: TwbGridCell): Boolean;
+    function SetGridCell(const aGridCell: TwbGridCell): Boolean;
 
     procedure Delete;
     procedure DeleteInto(const aFile: IwbFile);
@@ -1451,6 +1459,12 @@ type
       read GetHighestOverrideOrSelf;
     property HighestOverrideVisibleForFile[const aFile: IwbFile]: IwbMainRecord
       read GetHighestOverrideVisibleForFile;
+    property AllVisibleForFile[const aFile: IwbFile]: TDynMainRecords
+      read GetAllVisibleForFile;
+    property ChildBySignature[const aSignature: TwbSignature]: IwbMainRecord
+      read GetChildBySignature;
+    property ChildByGridCell[const aGridCell: TwbGridCell]: IwbMainRecord
+      read GetChildByGridCell;
     property MasterAndLeafs: TDynMainRecords
       read GetMasterAndLeafs;
 
@@ -1546,7 +1560,8 @@ type
     procedure SetGroupLabel(aLabel: Cardinal);
     function GetChildrenOf: IwbMainRecord;
 
-    function FindChildGroup(aType: Integer; aMainRecord: IwbMainRecord): IwbGroupRecord;
+    function FindChildGroup(aType: Integer; const aMainRecord: IwbMainRecord): IwbGroupRecord; overload;
+    function FindChildGroup(aType: Integer; const aLabel : Cardinal): IwbGroupRecord; overload;
 
     function GetMainRecordByEditorID(const aEditorID: string): IwbMainRecord;
     function GetMainRecordByFormID(const aFormID: TwbFormID): IwbMainRecord;
@@ -3606,14 +3621,18 @@ function ConflictThisToColor(aConflictThis: TConflictThis): TColor;
 
 var
   wbGetFormIDCallback : function(const aElement: IwbElement): TwbFormID;
+  wbGetCellDetailsForWorldspaceCallback : function (aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
 
 function wbFlagsList(aFlags: array of const; aDeleted : Boolean = True; aUnknowns: Boolean = False): TDynStrings;
 function wbGetFormID(const aElement: IwbElement): TwbFormID;
+
+function wbGetCellDetailsForWorldspace(aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
 function wbPositionToGridCell(const aPosition: TwbVector): TwbGridCell;
 function wbSubBlockFromGridCell(const aGridCell: TwbGridCell): TwbGridCell;
 function wbBlockFromSubBlock(const aSubBlock: TwbGridCell): TwbGridCell;
 function wbGridCellToGroupLabel(const aGridCell: TwbGridCell): Cardinal;
 function wbIsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell): Boolean;
+function wbGridCellToCenterPosition(const aGridCell: TwbGridCell): TwbVector;
 
 var
   wbRecordFlags            : IwbIntegerDef;
@@ -4289,6 +4308,19 @@ begin
     Dec(Result.y);
 end;
 
+function wbGridCellToCenterPosition(const aGridCell: TwbGridCell): TwbVector;
+begin
+  Result.z := 0;
+  if aGridCell.x >= 0 then
+    Result.x := (Succ(aGridCell.x) * 4096) - 2048
+  else
+    Result.x := (aGridCell.x * 4096) + 2048;
+  if aGridCell.y >= 0 then
+    Result.y := (Succ(aGridCell.y) * 4096) - 2048
+  else
+    Result.y := (aGridCell.y * 4096) + 2048;
+end;
+
 function wbSubBlockFromGridCell(const aGridCell: TwbGridCell): TwbGridCell;
 begin
   Result.x := aGridCell.x div 8;
@@ -4327,6 +4359,13 @@ begin
     Result := wbGetFormIDCallback(aElement)
   else
     Result := TwbFormID.Null;
+end;
+
+function wbGetCellDetailsForWorldspace(aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
+begin
+  Result :=
+    Assigned(wbGetCellDetailsForWorldspaceCallback) and
+    wbGetCellDetailsForWorldspaceCallback(aWorldspace, aPersistent, aGridCell);
 end;
 
 function ConflictAllToColor(aConflictAll: TConflictAll): TColor;
@@ -16758,6 +16797,15 @@ function TwbBaseSignatureDef.GetSignatureCount: Integer;
 begin
   if GetDefaultSignature <> #0#0#0#0 then
     Result := 1;
+end;
+
+{ TwbGridCell }
+
+class operator TwbGridCell.Equal(const a, b: TwbGridCell): Boolean;
+begin
+  Result :=
+    (a.x = b.x) and
+    (a.y = b.y);
 end;
 
 initialization

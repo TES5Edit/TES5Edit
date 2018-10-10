@@ -678,6 +678,7 @@ type
     function SaveChanged(aSilent: Boolean = False): Boolean;
     procedure JumpTo(aInterface: IInterface; aBackward: Boolean);
     function FindNodeForElement(const aElement: IwbElement): PVirtualNode;
+    function FindNodeForElementIn(aParent: PVirtualNode; const aElement: IwbElement): PVirtualNode;
     function EditWarn: Boolean;
     function RemoveableSelection(ContainsChilds: PBoolean): TNodeArray;
     function EditableSelection(ContainsChilds: PBoolean): TNodeArray;
@@ -5020,9 +5021,8 @@ var
   Node                        : PVirtualNode;
   NodeData                    : PNavNodeData;
 begin
-  Result := nil;
   if not Assigned(aElement) then
-    Exit;
+    Exit(nil);
 
   Container := aElement.Container;
   if Assigned(Container) then
@@ -5030,24 +5030,24 @@ begin
   else
     Result := vstNav.RootNode;
 
-  if not Assigned(Result) then
-    Exit;
+  if Assigned(Result) then
+    Result := FindNodeForElementIn(Result, aElement);
+end;
 
-  Node := vstNav.GetFirstChild(Result);
-  while Assigned(Node) do begin
-    NodeData := vstNav.GetNodeData(Node);
-    if Assigned(NodeData) then begin
-      if aElement.Equals(NodeData.Element) or aElement.Equals(NodeData.Container) then begin
-        Result := Node;
+function TfrmMain.FindNodeForElementIn(aParent: PVirtualNode; const aElement: IwbElement): PVirtualNode;
+var
+  NodeData                    : PNavNodeData;
+begin
+  if not Assigned(aElement) then
+    Exit(nil);
+  Result := vstNav.GetFirstChild(aParent);
+  while Assigned(Result) do begin
+    NodeData := vstNav.GetNodeData(Result);
+    if Assigned(NodeData) then
+      if aElement.Equals(NodeData.Element) or aElement.Equals(NodeData.Container) then
         Exit;
-      end;
-    end;
-
-    Node := vstNav.GetNextSibling(Node);
+    Result := vstNav.GetNextSibling(Result);
   end;
-
-  if Result = vstNav.RootNode then
-    Result := nil;
 end;
 
 procedure TfrmMain.SaveLog(const s: string; aAllowReplace: Boolean);
@@ -7429,29 +7429,34 @@ end;
 
 procedure TfrmMain.mniNavAddClick(Sender: TObject);
 var
+  FocusedNode                 : PVirtualNode;
+  Node                        : PVirtualNode;
   NodeData                    : PNavNodeData;
   Container                   : IwbContainerElementRef;
   Element                     : IwbElement;
   MainRecord                  : IwbMainRecord;
 begin
-  NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
+  FocusedNode := vstNav.FocusedNode;
+  NodeData := vstNav.GetNodeData(FocusedNode);
   if Assigned(NodeData) and Supports(NodeData.Element, IwbContainerElementRef, Container) then begin
-    vstNav.FullyVisible[vstNav.FocusedNode] := True;
-    vstNav.Expanded[vstNav.FocusedNode] := True;
     Element := Container.Add(StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]), False);
     if Assigned(Element) then begin
-      vstNav.AddChild(vstNav.FocusedNode, Pointer(Element));
-      Element._AddRef;
 
+      vstNav.Expanded[FocusedNode] := False;
+      vstNav.Expanded[FocusedNode.Parent] := False;
+      Node := FindNodeForElement(Element);
+      if not Assigned(Node) then
+        Node := FocusedNode;
+
+      vstNav.FullyVisible[Node] := True;
       vstNav.ClearSelection;
-      vstNav.FocusedNode := FindNodeForElement(Element);
+      vstNav.FocusedNode := Node;
       vstNav.Selected[vstNav.FocusedNode] := True;
 
       if Supports(Element, IwbMainRecord, MainRecord) then
         DoSetActiveRecord(MainRecord)
       else
         DoSetActiveRecord(nil);
-
     end;
   end;
 end;

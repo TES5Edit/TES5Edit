@@ -87,7 +87,9 @@ uses
   wbNifMath in 'wbNifMath.pas',
   wbHalfFloat in 'wbHalfFloat.pas',
   wbModGroups in 'wbModGroups.pas',
-  wbBetterStringList in 'wbBetterStringList.pas';
+  wbBetterStringList in 'wbBetterStringList.pas',
+  frmLegendForm in 'frmLegendForm.pas' {frmLegend},
+  frmWorldspaceCellDetailsForm in 'frmWorldspaceCellDetailsForm.pas' {frmWorldspaceCellDetails};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
