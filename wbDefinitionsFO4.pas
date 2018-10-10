@@ -7743,10 +7743,10 @@ Can't properly represent that with current record definition methods.
       , -1).IncludeFlag(dfNotAlignable),
       wbArray('Edge Links',
         wbStruct('Edge Link', [
-          wbInteger('Unknown', itU32),
-          wbFormIDCk('Mesh', [NAVM]), // those last three are a structure
-          wbInteger('Triangle', itS16),
-          wbInteger('Unknown', itU8) // if form ver > 127
+          wbByteArray('Unknown', 4, cpIgnore),
+          wbFormIDCk('Mesh', [NAVM], False, cpIgnore), // those last three are a structure
+          wbInteger('Triangle', itS16, nil, cpIgnore),
+          wbByteArray('Unknown', 1, cpIgnore) // if form ver > 127
         ], cpIgnore)
       , -1, cpIgnore).IncludeFlag(dfNotAlignable),
       wbArrayS('Door Triangles',
