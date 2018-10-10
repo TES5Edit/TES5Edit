@@ -141,6 +141,13 @@
         <DCCReference Include="wbHalfFloat.pas"/>
         <DCCReference Include="wbModGroups.pas"/>
         <DCCReference Include="wbBetterStringList.pas"/>
+        <DCCReference Include="frmLegendForm.pas">
+            <Form>frmLegend</Form>
+        </DCCReference>
+        <DCCReference Include="frmWorldspaceCellDetailsForm.pas">
+            <Form>frmWorldspaceCellDetails</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

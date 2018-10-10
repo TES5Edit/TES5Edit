@@ -349,6 +349,7 @@ type
     function GetConflictPriority: TwbConflictPriority; virtual;
     function GetConflictPriorityCanChange: Boolean; virtual;
     function GetModified: Boolean;
+    function GetElementGeneration: Integer;
     procedure MarkModifiedRecursive; virtual;
     function GetIsInjected: Boolean; virtual;
     function GetReferencesInjected: Boolean; virtual;
@@ -973,6 +974,8 @@ type
     mrShortName         : string;
     mrDisplayName       : string;
 
+    mrPositionGeneration: Integer;
+
     function mrStruct: PwbMainRecordStruct; inline;
 
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
@@ -1005,6 +1008,7 @@ type
     function LinksToParent: Boolean; override;
     function Reached: Boolean; override;
     function GetContainingMainRecord: IwbMainRecord; override;
+    procedure DoAfterSet(const aOldValue, aNewValue: Variant); override;
 
     procedure DoBuildRef(aRemove: Boolean);
     procedure BuildRef; override;
@@ -1077,6 +1081,9 @@ type
     function GetWinningOverride: IwbMainRecord;
     function GetHighestOverrideOrSelf(aMaxLoadOrder: Integer): IwbMainRecord;
     function GetHighestOverrideVisibleForFile(const aFile: IwbFile): IwbMainRecord;
+    function GetAllVisibleForFile(const aFile: IwbFile): TDynMainRecords;
+    function GetChildBySignature(const aSignature: TwbSignature): IwbMainRecord;
+    function GetChildByGridCell(const aGridCell: TwbGridCell): IwbMainRecord;
     function GetFlags: TwbMainRecordStructFlags;
     function GetFlagsPtr: PwbMainRecordStructFlags;
     function GetChildGroup: IwbGroupRecord;
@@ -1121,6 +1128,7 @@ type
     function GetRotation(out aRotation: TwbVector): Boolean;
     function GetScale(out aScale: Single): Boolean;
     function GetGridCell(out aGridCell: TwbGridCell): Boolean;
+    function SetGridCell(const aGridCell: TwbGridCell): Boolean;
     function GetFormVersion: Cardinal; {>>> Form Version access <<<}
     procedure SetFormVersion(aFormVersion: Cardinal); {>>> Form Version access <<<}
     function GetFormVCS1: Cardinal;
@@ -1645,7 +1653,8 @@ type
     function LinksToParent: Boolean; override;
     function Reached: Boolean; override;
 
-    function FindChildGroup(aType: Integer; aMainRecord: IwbMainRecord): IwbGroupRecord;
+    function FindChildGroup(aType: Integer; const aMainRecord: IwbMainRecord): IwbGroupRecord; overload;
+    function FindChildGroup(aType: Integer; const aLabel: Cardinal): IwbGroupRecord; overload;
 
     function GetMainRecordByEditorID(const aEditorID: string): IwbMainRecord;
     function GetMainRecordByFormID(const aFormID: TwbFormID): IwbMainRecord;
@@ -6290,6 +6299,7 @@ var
   SelfRef   : IwbContainerElementRef;
   i         : Integer;
   Group     : IwbGroupRecord;
+  GrpType   : Integer;
 begin
   Result := nil;
 
@@ -6325,20 +6335,7 @@ begin
       Group := TwbGroupRecord.Create(GetContainer, 6, Self);
       mrGroup := Group;
     end;
-
-    SelfRef := Group as IwbContainerElementRef;
-    Group := nil;
-    for i := 0 to Pred(SelfRef.ElementCount) do
-      if Supports(SelfRef.Elements[i], IwbGroupRecord, Group) then
-        if (Group.GroupType = 9) and (Group.GroupLabel = Self.GetFormID.ToCardinal) then
-          Break
-        else
-          Group := nil;
-    if not Assigned(Group) then
-      Group := TwbGroupRecord.Create(SelfRef as IwbContainer, 9, Self);
-
     Result := Group.Add(aName, aSilent);
-
     Exit;
   end else if (GetSignature = 'DIAL') and
      (
@@ -6692,6 +6689,30 @@ begin
 
   if wbHasProgressCallback then
     wbProgressCallback;
+end;
+
+procedure TwbMainRecord.DoAfterSet(const aOldValue, aNewValue: Variant);
+var
+  SelfRef   : IwbContainerElementRef;
+  DataRec   : IwbContainerElementRef;
+  Position  : IwbElement;
+begin
+  SelfRef := Self;
+  DoInit(False);
+  inherited;
+  if mrDef.IsReference and CheckChildOfCell then begin
+    if not Supports(GetRecordBySignature('DATA'), IwbContainerElementRef, DataRec) then
+      Exit;
+    if DataRec.ElementCount <> 2 then
+      Exit;
+    Position := DataRec.Elements[0];
+    if not Position.Modified then
+      Exit;
+    if Position.ElementGeneration = mrPositionGeneration then
+      Exit;
+    UpdateCellChildGroup;
+    mrPositionGeneration := Position.ElementGeneration;
+  end;
 end;
 
 procedure TwbMainRecord.DoBuildRef(aRemove: Boolean);
@@ -7140,20 +7161,28 @@ begin
     end;
 
   Create(lContainer, Pointer(BasePtr), nil, nil);
-  Assert(Assigned(mrDef));
-  SelfRef := Self as IwbContainerElementRef;
-  DoInit(True);
-  SetModified(True);
-  InvalidateStorage;
-  for i := 0 to Pred(mrDef.MemberCount) do
-    if mrDef.Members[i].Required then
-      Assign(i, nil, False);
+  BeginUpdate;
+  try
+    Assert(Assigned(mrDef));
+    SelfRef := Self as IwbContainerElementRef;
+    DoInit(True);
+    SetModified(True);
+    InvalidateStorage;
+    for i := 0 to Pred(mrDef.MemberCount) do
+      if mrDef.Members[i].Required then
+        Assign(i, nil, False);
+
+    if IsInterior then
+      if Supports(GetRecordBySignature('DATA'), IwbContainerElementRef, ContainerRef) then
+        ContainerRef.EditValue := '1';
+
+    CollapseStorage;
+  finally
+    EndUpdate;
+  end;
+
   if Supports(lContainer, IwbGroupRecordInternal, Group) then
     Group.Sort;
-
-  if IsInterior then
-    if Supports(GetRecordBySignature('DATA'), IwbContainerElementRef, ContainerRef) then
-      ContainerRef.EditValue := '1';
 end;
 
 constructor TwbMainRecord.Create(const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aPrevMainRecord : IwbMainRecord);
@@ -7394,21 +7423,7 @@ begin
           mrEditorID := CurrentRec.Value
         else if CurrentRec.Signature = 'FULL' then
           mrFullName := CurrentRec.Value
-        else if (CurrentRec.Signature = 'NAME') and
-                (
-                  (mrDef.DefaultSignature = 'REFR') or
-                  (mrDef.DefaultSignature = 'PGRE') or
-                  (mrDef.DefaultSignature = 'PMIS') or
-                  (mrDef.DefaultSignature = 'ACHR') or
-                  (mrDef.DefaultSignature = 'ACRE') or
-                  (mrDef.DefaultSignature = 'PARW') or {>>> Skyrim <<<}
-                  (mrDef.DefaultSignature = 'PBEA') or {>>> Skyrim <<<}
-                  (mrDef.DefaultSignature = 'PFLA') or {>>> Skyrim <<<}
-                  (mrDef.DefaultSignature = 'PCON') or {>>> Skyrim <<<}
-                  (mrDef.DefaultSignature = 'PBAR') or {>>> Skyrim <<<}
-                  (mrDef.DefaultSignature = 'PHZD')    {>>> Skyrim <<<}
-                ) then begin
-
+        else if (CurrentRec.Signature = 'NAME') and mrDef.IsReference then begin
           mrBaseRecordID := TwbFormID.FromCardinal(CurrentRec.NativeValue);
           Include(mrStates, mrsBaseRecordChecked);
         end;
@@ -7582,8 +7597,9 @@ end;
 
 function TwbMainRecord.GetAddList: TDynStrings;
 var
-  i, j      : Integer;
-  RecordDef : PwbMainRecordDef;
+  i, j        : Integer;
+  RecordDef   : PwbMainRecordDef;
+  GroupRecord : IwbGroupRecord;
 begin
   Result := nil;
 
@@ -7591,22 +7607,28 @@ begin
     Exit;
 
   if GetSignature = 'DIAL' then begin
-    SetLength(Result, 1);
-    Result[0] := 'INFO';
+    Result.Add('INFO');
   end else if GetSignature = 'CELL' then begin
-    SetLength(Result, 11);
-    Result[0] := 'ACHR';
-    Result[1] := 'ACRE';
-    Result[2] := 'REFR';
-    Result[3] := 'PGRE';
-    Result[4] := 'PMIS';
-    Result[5] := 'PARW'; {>>> Skyrim <<<}
-    Result[6] := 'PBEA'; {>>> Skyrim <<<}
-    Result[7] := 'PFLA'; {>>> Skyrim <<<}
-    Result[8] := 'PCON'; {>>> Skyrim <<<}
-    Result[9] := 'PBAR'; {>>> Skyrim <<<}
-    Result[10] := 'PHZD'; {>>> Skyrim <<<}
+    Result.Add('ACHR');
+    Result.Add('ACRE');
+    Result.Add('REFR');
+    Result.Add('PGRE');
+    Result.Add('PMIS');
+    Result.Add('PARW');
+    Result.Add('PBEA');
+    Result.Add('PFLA');
+    Result.Add('PCON');
+    Result.Add('PBAR');
+    Result.Add('PHZD');
+    if not GetIsPersistent then begin
+      if Supports(GetContainer, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType = 5) then
+        Result.Add('LAND');
+      Result.Add('PGRD');
+      Result.Add('NAVM');
+    end;
   end else if GetSignature = 'WRLD' then begin
+    Result.Add('CELL');
+    Result.Add('ROAD');
   end else if wbVWDAsQuestChildren and (GetSignature = 'QUST') then begin
     SetLength(Result, 3);
     Result[0] := 'DIAL';
@@ -7621,6 +7643,28 @@ begin
       Inc(j);
     end;
   SetLength(Result, j);
+end;
+
+function TwbMainRecord.GetAllVisibleForFile(const aFile: IwbFile): TDynMainRecords;
+var
+  MainRecord : IwbMainRecord;
+  i          : Integer;
+  FormID     : TwbFormID;
+  _File      : IwbFile;
+begin
+  FormID := GetLoadOrderFormID;
+  Result := nil;
+
+  MainRecord := aFile.ContainedRecordByLoadOrderFormID[FormID, True];
+  if Assigned(MainRecord) then
+    Result.Add(MainRecord);
+
+  for i := Pred(aFile.MasterCount) downto 0 do begin
+    _File := aFile.Masters[i];
+    MainRecord := _File.ContainedRecordByLoadOrderFormID[FormID, True];
+    if Assigned(MainRecord) then
+      Result.Add(MainRecord);
+  end;
 end;
 
 function TwbMainRecord.GetBaseRecord: IwbMainRecord;
@@ -7767,6 +7811,52 @@ begin
       end;
     SetLength(Result, Length(Result) - 2);
   end;
+end;
+
+function TwbMainRecord.GetChildByGridCell(const aGridCell: TwbGridCell): IwbMainRecord;
+var
+  Group    : IwbGroupRecord;
+  Block    : TwbGridCell;
+  SubBlock : TwbGridCell;
+  i        : Integer;
+  Cell     : IwbMainRecord;
+  GridCell : TwbGridCell;
+begin
+  Group := GetChildGroup;
+  if not Assigned(Group) then
+    Exit(nil);
+  if Group.GroupType <> 1 then
+    Exit(nil);
+  SubBlock := wbSubBlockFromGridCell(aGridCell);
+  Block := wbBlockFromSubBlock(SubBlock);
+  Group := Group.FindChildGroup(4, wbGridCellToGroupLabel(Block));
+  if not Assigned(Group) then
+    Exit(nil);
+  Group := Group.FindChildGroup(5, wbGridCellToGroupLabel(SubBlock));
+  if not Assigned(Group) then
+    Exit(nil);
+  for i := 0 to Pred(Group.ElementCount) do
+    if Supports(Group.Elements[i], IwbMainRecord, Cell) and Cell.GetGridCell(GridCell) then
+      if aGridCell = GridCell then
+        Exit(Cell);
+  Result := nil;
+end;
+
+function TwbMainRecord.GetChildBySignature(const aSignature: TwbSignature): IwbMainRecord;
+var
+  Group: IwbGroupRecord;
+begin
+  Group := GetChildGroup;
+  if not Assigned(Group) then
+    Exit(nil);
+
+  Result := nil;
+  if not Supports(Group.ElementBySignature[aSignature], IwbMainRecord, Result) then
+    if Group.GroupType = 6 then begin
+      Group := Group.FindChildGroup(9, Self);
+      if Assigned(Group) then
+        Supports(Group.ElementBySignature[aSignature], IwbMainRecord, Result);
+    end;
 end;
 
 function TwbMainRecord.GetChildGroup: IwbGroupRecord;
@@ -8019,6 +8109,42 @@ procedure TwbMainRecord.SetFormVersion(aFormVersion: Cardinal);
 begin
   MakeHeaderWriteable;
   mrStruct.mrsVersion := aFormVersion;
+end;
+
+function TwbMainRecord.SetGridCell(const aGridCell: TwbGridCell): Boolean;
+var
+  Signature : TwbSignature;
+  SelfRef   : IwbContainerElementRef;
+  XCLCRec   : IwbContainerElementRef;
+begin
+  Result := False;
+
+  Signature := GetSignature;
+  if (Signature <> 'CELL') then
+    Exit;
+
+  SelfRef := Self;
+  DoInit(False);
+
+  if not Supports(GetRecordBySignature('XCLC'), IwbContainerElementRef, XCLCRec) then begin
+    Add('XCLC', True);
+    if not Supports(GetRecordBySignature('XCLC'), IwbContainerElementRef, XCLCRec) then
+      Exit;
+  end;
+
+  if XCLCRec.ElementCount < 2 then
+    Exit;
+
+  with aGridCell, XCLCRec do begin
+    BeginUpdate;
+    try
+      Elements[0].NativeValue := x;
+      Elements[1].NativeValue := y;
+    finally
+      EndUpdate;
+    end;
+    Result := True;
+  end;
 end;
 
 function TwbMainRecord.GetFormVCS1: Cardinal;
@@ -10248,9 +10374,14 @@ begin
     if ElementCount <> 3 then
       Exit;
 
-    Elements[0].NativeValue := X;
-    Elements[1].NativeValue := Y;
-    Elements[2].NativeValue := Z;
+    BeginUpdate;
+    try
+      Elements[0].NativeValue := X;
+      Elements[1].NativeValue := Y;
+      Elements[2].NativeValue := Z;
+    finally
+      EndUpdate;
+    end;
   end;
   Result := True;
 end;
@@ -10339,7 +10470,7 @@ begin
   else
     CorrectGroupType := 9;
 
-  if OldTypeGroup.GroupType = CorrectGroupType then
+  if (OldTypeGroup.GroupType = CorrectGroupType) and (CorrectGroupType <> 9) then
     Exit;
 
   OldCell := OldChildGroup.ChildrenOf;
@@ -10350,51 +10481,23 @@ begin
 
   i := OldCell.GetElementNativeValue('DATA');
   IsExterior := (i and 1) = 0;
+
+  if (OldTypeGroup.GroupType = CorrectGroupType) and not IsExterior then
+    Exit;
+
+  NewCell := nil;
+
   if IsExterior then begin
     if not Supports(OldCell.Container, IwbGroupRecord, OldCellOwnerGroup) then
       raise Exception.Create(OldCell.GetName + ' is not contained in a group');
     if not (OldCellOwnerGroup.GroupType in [1, 5]) then
       raise Exception.Create(OldCell.GetName + ' is not contained in a group of type "World Childen" or "Exterior Cell Sub-Block"');
-    if (CorrectGroupType = 8) then begin
+    if CorrectGroupType = 8 then begin
       if OldCellOwnerGroup.GroupType <> 1 then begin
-
-        if not Supports(OldCellOwnerGroup.Container, IwbGroupRecord, TempGroup) then
-          raise Exception.Create(OldCellOwnerGroup.GetName + ' is not contained in a group');
-        if not (TempGroup.GroupType in [4]) then
-          raise Exception.Create(OldCellOwnerGroup.GetName + ' is not contained in a group of type "Exterior Cell Block"');
-
-        if not Supports(TempGroup.Container, IwbGroupRecord, NewCellOwnerGroup) then
-          raise Exception.Create(TempGroup.GetName + ' is not contained in a group');
-        if not (NewCellOwnerGroup.GroupType in [1]) then
-          raise Exception.Create(TempGroup.GetName + ' is not contained in a group of type "World Childen"');
-
-        NewCell := nil;
-        for i := 0 to Pred(NewCellOwnerGroup.ElementCount) do
-          if Supports(NewCellOwnerGroup.Elements[i], IwbMainRecord, NewCell) then
-            if NewCell.Signature <> 'CELL' then
-              NewCell := nil
-            else
-              Break;
-
-        if not Assigned(NewCell) then begin
-          Worldspace := NewCellOwnerGroup.ChildrenOf;
-          if not Assigned(Worldspace) then
-            raise Exception.Create(NewCellOwnerGroup.GetName + ' can not find its WRLD record');
-          Worldspace := Worldspace.MasterOrSelf;
-          TempGroup := Worldspace.ChildGroup;
-          if not Assigned(TempGroup) then
-            raise Exception.Create(Worldspace.GetName + ' can not find its child group');
-
-          for i := 0 to Pred(TempGroup.ElementCount) do
-            if Supports(TempGroup.Elements[i], IwbMainRecord, NewCell) then
-              if NewCell.Signature <> 'CELL' then
-                NewCell := nil
-              else
-                Break;
-
-          if Assigned(NewCell) then
-            NewCell := wbCopyElementToFile(NewCell, GetFile, False, True, '', '', '', False) as IwbMainRecord;
-        end;
+        Worldspace := OldCellOwnerGroup.ChildrenOf;
+        if not Assigned(Worldspace) or (Worldspace.Signature <> 'WRLD') then
+          raise Exception.Create(OldCell.GetName + ' can not find its WRLD record');
+        NewCell := WorldSpace.Add('CELL[P]') as IwbMainRecord;
 
         if not Assigned(NewCell) then
           raise Exception.Create('Could not determine CELL for persistent exterior references');
@@ -10403,88 +10506,33 @@ begin
       end else
         NewChildGroup := OldChildGroup;
     end else begin
-      if OldCellOwnerGroup.GroupType <> 5 then begin
+      if not GetPosition(Position) then
+        raise Exception.Create('Could not determine position of ' + GetName);
 
-        if not GetPosition(Position) then
-          raise Exception.Create('Could not determine position of ' + GetName);
+      GridCell := wbPositionToGridCell(Position);
 
-        GridCell := wbPositionToGridCell(Position);
-        SubBlock := wbSubBlockFromGridCell(GridCell);
-        Block := wbBlockFromSubBlock(SubBlock);
-
-        SubBlockLabel := wbGridCellToGroupLabel(SubBlock);
-        BlockLabel := wbGridCellToGroupLabel(Block);
-
-        NewCell := nil;
-        TempGroup := nil;
-        for i := 0 to Pred(OldCellOwnerGroup.ElementCount) do
-          if Supports(OldCellOwnerGroup.Elements[i], IwbGroupRecord, TempGroup) then
-            if (TempGroup.GroupType = 4) and (TempGroup.GroupLabel = BlockLabel) then
-              Break
-            else
-              TempGroup := nil;
-
-        if Assigned(TempGroup) then begin
-          NewCellOwnerGroup := nil;
-          for i := 0 to Pred(TempGroup.ElementCount) do
-            if Supports(TempGroup.Elements[i], IwbGroupRecord, NewCellOwnerGroup) then
-              if (NewCellOwnerGroup.GroupType = 5) and (NewCellOwnerGroup.GroupLabel = SubBlockLabel) then
-                Break
-              else
-                NewCellOwnerGroup := nil;
-          if Assigned(NewCellOwnerGroup) then
-            for i := 0 to Pred(NewCellOwnerGroup.ElementCount) do
-              if Supports(NewCellOwnerGroup.Elements[i], IwbMainRecord, NewCell) then
-                if NewCell.GetGridCell(TempGridCell) and (GridCell.x = TempGridCell.x) and (GridCell.y = TempGridCell.y) then
-                  Break
-                else
-                  NewCell := nil;
+      NewCell := nil;
+      if not OldCell.IsPersistent then begin
+        if not OldCell.GetGridCell(TempGridCell) then
+          raise Exception.Create('Could not determine grid cell of ' + OldCell.GetName);
+        if TempGridCell = GridCell then begin
+          if OldTypeGroup.GroupType = CorrectGroupType then
+            Exit;
+          NewCell := OldCell;
         end;
+      end;
 
-        if not Assigned(NewCell) then begin
-          Worldspace := OldCellOwnerGroup.ChildrenOf;
-          if not Assigned(Worldspace) then
-            raise Exception.Create(OldCellOwnerGroup.GetName + ' can not find its WRLD record');
-          Worldspace := Worldspace.MasterOrSelf;
-          TempGroup2 := Worldspace.ChildGroup;
-          if not Assigned(TempGroup2) then
-            raise Exception.Create(Worldspace.GetName + ' can not find its child group');
+      if not Assigned(NewCell) then begin
+        Worldspace := OldCellOwnerGroup.ChildrenOf;
+        if not Assigned(Worldspace) or (Worldspace.Signature <> 'WRLD') then
+          raise Exception.Create(OldCell.GetName + ' can not find its WRLD record');
+        NewCell := WorldSpace.Add(Format('CELL[%d,%d]', [GridCell.x, GridCell.y])) as IwbMainRecord;
+      end;
 
-          TempGroup := nil;
-          for i := 0 to Pred(TempGroup2.ElementCount) do
-            if Supports(TempGroup2.Elements[i], IwbGroupRecord, TempGroup) then
-              if (TempGroup.GroupType = 4) and (TempGroup.GroupLabel = BlockLabel) then
-                Break
-              else
-                TempGroup := nil;
+      if not Assigned(NewCell) then
+        raise Exception.CreateFmt('Could not determine CELL for temporary exterior references in grid [%d, %d]', [GridCell.x, GridCell.y]);
 
-          if Assigned(TempGroup) then begin
-            NewCellOwnerGroup := nil;
-            for i := 0 to Pred(TempGroup.ElementCount) do
-              if Supports(TempGroup.Elements[i], IwbGroupRecord, NewCellOwnerGroup) then
-                if (NewCellOwnerGroup.GroupType = 5) and (NewCellOwnerGroup.GroupLabel = SubBlockLabel) then
-                  Break
-                else
-                  NewCellOwnerGroup := nil;
-            if Assigned(NewCellOwnerGroup) then
-              for i := 0 to Pred(NewCellOwnerGroup.ElementCount) do
-                if Supports(NewCellOwnerGroup.Elements[i], IwbMainRecord, NewCell) then
-                  if NewCell.GetGridCell(TempGridCell) and (GridCell.x = TempGridCell.x) and (GridCell.y = TempGridCell.y) then
-                    Break
-                  else
-                    NewCell := nil;
-          end;
-
-          if Assigned(NewCell) then
-            NewCell := wbCopyElementToFile(NewCell, GetFile, False, True, '', '', '', False) as IwbMainRecord;
-        end;
-
-        if not Assigned(NewCell) then
-          raise Exception.Create('Could not determine CELL for persistent exterior references');
-
-        NewChildGroup := NewCell.EnsureChildGroup;
-      end else
-        NewChildGroup := OldChildGroup;
+      NewChildGroup := NewCell.EnsureChildGroup;
     end;
   end else
     NewChildGroup := OldChildGroup;
@@ -10492,16 +10540,15 @@ begin
   if not Assigned(NewChildGroup) then
     raise Exception.Create('Could not determine new CELL child group');
 
-  NewTypeGroup := nil;
-  for i := 0 to Pred(NewChildGroup.ElementCount) do
-    if Supports(NewChildGroup.Elements[i], IwbGroupRecord, NewTypeGroup) then
-      if NewTypeGroup.GroupType = CorrectGroupType then
-        Break
-      else
-        NewTypeGroup := nil;
+  if not Assigned(NewCell) then
+    NewCell := NewChildGroup.ChildrenOf;
 
+  NewTypeGroup := NewChildGroup.FindChildGroup(CorrectGroupType, NewCell);
   if not Assigned(NewTypeGroup) then
-    NewTypeGroup := TwbGroupRecord.Create(NewChildGroup, CorrectGroupType, NewChildGroup.ChildrenOf);
+    NewTypeGroup := TwbGroupRecord.Create(NewChildGroup, CorrectGroupType, NewCell);
+
+  if OldTypeGroup.Equals(NewTypeGroup) then
+    Exit;
 
   OldTypeGroup.RemoveElement(SelfRef);
   if OldTypeGroup.ElementCount = 0 then
@@ -12006,9 +12053,21 @@ var
   FormID    : TwbFormID;
   _File     : IwbFile;
   MainRecord: IwbMainRecord;
+  MainRecords : TDynMainRecords;
   IsInjected: Boolean;
   Group     : IwbGroupRecord;
   i         : Integer;
+  IsWorldCell: Boolean;
+  s         : string;
+  Params    : TArray<string>;
+  Persistent: Boolean;
+  GridCell  : TwbGridCell;
+  SubBlock  : TwbGridCell;
+  Block     : TwbGridCell;
+  GrpType   : Integer;
+  GrpLabel  : Cardinal;
+  ChildGroup: IwbGroupRecord;
+  Cell      : IwbMainRecord;
 
   SelfRef   : IwbContainerElementRef;
 begin
@@ -12029,15 +12088,15 @@ begin
          Exit;
     6: begin
       Group := nil;
-      for i := 0 to GetElementCount do
-        if Supports(GetElement(i), IwbGroupRecord, Group) then
-          if (Group.GroupType = 9) and (Group.GroupLabel = GetGroupLabel) then
-            Break
-          else
-            Group := nil;
+      GrpType := 9;
+      MainRecord := GetChildrenOf;
+      if not Assigned(MainRecord) then
+        Exit;
+      if MainRecord.IsPersistent then
+        GrpType := 8;
+      Group := FindChildGroup(GrpType, GetGroupLabel);
       if not Assigned(Group) then
-        Group := TwbGroupRecord.Create(Self, 9, GetGroupLabel);
-
+        Group := TwbGroupRecord.Create(Self, GrpType, MainRecord);
       Result := Group.Add(aName, aSilent);
       Exit;
     end;
@@ -12081,6 +12140,103 @@ begin
   if not Assigned(_File) then
     Exit;
 
+  if Signature = 'ROAD' then begin
+    if grStruct.grsGroupType <> 1 then
+      raise Exception.Create('ROAD can only be added to groups of type 1');
+    MainRecord := GetChildrenOf;
+    if not Assigned(MainRecord) then
+      raise Exception.Create('Can''t find MainRecord for group');
+    if MainRecord.Signature <> 'WRLD' then
+      raise Exception.Create('Expected WRLD record, but found: ' + MainRecord.Signature);
+    MainRecords := MainRecord.AllVisibleForFile[_File];
+    MainRecord := nil;
+    for i := Low(MainRecords) to High(MainRecords) do begin
+      MainRecord := MainRecords[i].ChildBySignature[Signature];
+      if Assigned(MainRecord) then
+        break;
+    end;
+    if Assigned(MainRecord) then begin
+      if MainRecord._File.Equals(_File) then
+        Exit(MainRecord);
+      Result := wbCopyElementToFile(MainRecord, _File, false, true, '', '', '', False);
+      Exit;
+    end;
+  end;
+
+  if (Signature = 'LAND') or (Signature = 'PGRD') then begin
+    if grStruct.grsGroupType <> 9 then
+      raise Exception.Create(Signature + ' can only be added to groups of type 9');
+    MainRecord := GetChildrenOf;
+    if not Assigned(MainRecord) then
+      raise Exception.Create('Can''t find MainRecord for group');
+    if MainRecord.Signature <> 'CELL' then
+      raise Exception.Create('Expected CELL record, but found: ' + MainRecord.Signature);
+    MainRecords := MainRecord.AllVisibleForFile[_File];
+    MainRecord := nil;
+    for i := Low(MainRecords) to High(MainRecords) do begin
+      MainRecord := MainRecords[i].ChildBySignature[Signature];
+      if Assigned(MainRecord) then
+        break;
+    end;
+    if Assigned(MainRecord) then begin
+      if MainRecord._File.Equals(_File) then
+        Exit(MainRecord);
+      Result := wbCopyElementToFile(MainRecord, _File, false, true, '', '', '', False);
+      Exit;
+    end;
+  end;
+
+  IsWorldCell := (Signature = 'CELL') and (grStruct.grsGroupType = 1);
+
+  if IsWorldCell then begin
+    s := Copy(aName, 5);
+    s := s.Trim;
+    if s.StartsWith('[') and s.EndsWith(']') then begin
+      Delete(s, 1, 1);
+      Delete(s, Length(s), 1);
+      Params := s.Split([',']).ForEach(Trim);
+      if (Length(Params) = 1) and SameText(Params[0], 'P') then
+        Persistent := True
+      else if Length(Params) = 2 then begin
+        Persistent := False;
+        GridCell.x := StrToInt(Params[0]);
+        GridCell.y := StrToInt(Params[1]);
+      end else
+        raise Exception.Create('Invalid Parameters: ' + aName);
+    end else begin
+      if aSilent then
+        raise Exception.Create('To add a Worldspace CELL silently, parameters must be specified: CELL[P] for persistent world cell or CELL[x,y] for temporary cell');
+      if not wbGetCellDetailsForWorldspace(GetChildrenOf, Persistent, GridCell) then
+        Exit;
+      if Persistent then begin
+        GridCell.x := 0;
+        GridCell.y := 0;
+      end;
+    end;
+
+    MainRecord := GetChildrenOf;
+    if not Assigned(MainRecord) then
+      raise Exception.Create('Can''t find MainRecord for group');
+    if MainRecord.Signature <> 'WRLD' then
+      raise Exception.Create('Expected WRLD record, but found: ' + MainRecord.Signature);
+    MainRecords := MainRecord.AllVisibleForFile[_File];
+    MainRecord := nil;
+    for i := Low(MainRecords) to High(MainRecords) do begin
+      if Persistent then
+        MainRecord := MainRecords[i].ChildBySignature['CELL']
+      else
+        MainRecord := MainRecords[i].ChildByGridCell[GridCell];
+      if Assigned(MainRecord) then
+        break;
+    end;
+    if Assigned(MainRecord) then begin
+      if MainRecord._File.Equals(_File) then
+        Exit(MainRecord);
+      Result := wbCopyElementToFile(MainRecord, _File, false, true, '', '', '', False);
+      Exit;
+    end;
+  end;
+
   if aSilent then
     if Signature = 'PLYR' then
       FormID := TwbFormID.FromCardinal($00000014)
@@ -12103,9 +12259,47 @@ begin
       raise Exception.Create('Existing record '+MainRecord.Name+' has different signature');
   end;
 
-  Result := TwbMainRecord.Create(Self, Signature, FormID);
+  Group := Self;
+
+  if IsWorldCell and not Persistent then begin
+    SubBlock := wbSubBlockFromGridCell(GridCell);
+    Block := wbBlockFromSubBlock(SubBlock);
+
+    GrpLabel := wbGridCellToGroupLabel(Block);
+    ChildGroup := Group.FindChildGroup(4, GrpLabel);
+    if not Assigned(ChildGroup) then
+      ChildGroup := TwbGroupRecord.Create(Group, 4, GrpLabel);
+    Group := ChildGroup;
+
+    GrpLabel := wbGridCellToGroupLabel(SubBlock);
+    ChildGroup := Group.FindChildGroup(5, GrpLabel);
+    if not Assigned(ChildGroup) then
+      ChildGroup := TwbGroupRecord.Create(Group, 5, GrpLabel);
+    Group := ChildGroup;
+  end;
+
+  Result := TwbMainRecord.Create(Group, Signature, FormID);
   if IsInjected then
     (MainRecord as IwbMainRecordInternal).YouGotAMaster(Result as IwbMainRecord);
+
+  MainRecord := Result as IwbMainRecord;
+  MainRecord.BeginUpdate;
+  try
+    if IsWorldCell then begin
+      MainRecord.SetGridCell(GridCell);
+      if Persistent then
+        MainRecord.IsPersistent := True;
+    end;
+
+    if MainRecord.Def.IsReference then begin
+      Cell := Group.ChildrenOf;
+      if Assigned(Cell) and not Cell.IsPersistent and Cell.GetGridCell(GridCell) then
+        MainRecord.SetPosition(wbGridCellToCenterPosition(GridCell));
+    end;
+  finally
+    MainRecord.EndUpdate;
+  end;
+
   if csRefsBuild in _File.ContainerStates then
     Result.BuildRef;
 end;
@@ -12620,7 +12814,14 @@ begin
   inherited;
 end;
 
-function TwbGroupRecord.FindChildGroup(aType: Integer; aMainRecord: IwbMainRecord): IwbGroupRecord;
+function TwbGroupRecord.FindChildGroup(aType: Integer; const aMainRecord: IwbMainRecord): IwbGroupRecord;
+begin
+  if not Assigned(aMainRecord) then
+    Exit(nil);
+  Result := FindChildGroup(aType, aMainRecord.FormID.ToCardinal);
+end;
+
+function TwbGroupRecord.FindChildGroup(aType: Integer; const aLabel: Cardinal): IwbGroupRecord;
 var
   SelfRef : IwbContainerElementRef;
   i       : Integer;
@@ -12632,7 +12833,7 @@ begin
   for i := Low(cntElements) to High(cntElements) do
     if Supports(cntElements[i], IwbGroupRecord, Result) then
       if Result.GroupType = aType then
-        if Result.GroupLabel = aMainRecord.FormID.ToCardinal then
+        if Result.GroupLabel = aLabel then
           Exit;
   Result := nil;
 end;
@@ -12653,57 +12854,46 @@ end;
 
 function TwbGroupRecord.GetAddList: TDynStrings;
 var
-  i, j      : Integer;
-  RecordDef : PwbMainRecordDef;
+  i, j        : Integer;
+  RecordDef   : PwbMainRecordDef;
+  GroupRecord : IwbGroupRecord;
 begin
   Result := nil;
   case grStruct.grsGroupType of
-    0: begin
-         SetLength(Result, 1);
-         Result[0] := TwbSignature(grStruct.grsLabel);
+    0: Result.Add(TwbSignature(grStruct.grsLabel));
+    1: begin
+         Result.Add('CELL');
+         if wbGameMode = gmTES4 then
+           Result.Add('ROAD');
        end;
-    7: begin
-         SetLength(Result, 1);
-         Result[0] := 'INFO';
-       end;
-    8: begin
-         SetLength(Result, 11);
-         Result[0] := 'ACHR';
-         Result[1] := 'ACRE';
-         Result[2] := 'REFR';
-         Result[3] := 'PGRE';
-         Result[4] := 'PMIS';
-         Result[5] := 'PARW'; {>>> Skyrim <<<}
-         Result[6] := 'PBEA'; {>>> Skyrim <<<}
-         Result[7] := 'PFLA'; {>>> Skyrim <<<}
-         Result[8] := 'PCON'; {>>> Skyrim <<<}
-         Result[9] := 'PBAR'; {>>> Skyrim <<<}
-         Result[10] := 'PHZD'; {>>> Skyrim <<<}
-       end;
-    6, 9: begin
-         SetLength(Result, 11);
-         Result[0] := 'ACHR';
-         Result[1] := 'ACRE';
-         Result[2] := 'REFR';
-         Result[3] := 'PGRE';
-         Result[4] := 'PMIS';
-         Result[5] := 'PARW'; {>>> Skyrim <<<}
-         Result[6] := 'PBEA'; {>>> Skyrim <<<}
-         Result[7] := 'PFLA'; {>>> Skyrim <<<}
-         Result[8] := 'PCON'; {>>> Skyrim <<<}
-         Result[9] := 'PBAR'; {>>> Skyrim <<<}
-         Result[10] := 'PHZD'; {>>> Skyrim <<<}
+    7: Result.Add('INFO');
+    6, 8, 9: begin
+         Result.Add('ACHR');
+         Result.Add('ACRE');
+         Result.Add('REFR');
+         Result.Add('PGRE');
+         Result.Add('PMIS');
+         Result.Add('PARW');
+         Result.Add('PBEA');
+         Result.Add('PFLA');
+         Result.Add('PCON');
+         Result.Add('PBAR');
+         Result.Add('PHZD');
+         if grStruct.grsGroupType = 9 then begin
+           if Supports(GetContainer, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType = 6) and
+              Supports(GroupRecord.Container, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType = 5) then
+             Result.Add('LAND');
+           Result.Add('PGRD');
+           Result.Add('NAVM');
+         end;
        end;
     10: if wbVWDAsQuestChildren then begin
-         SetLength(Result, 3);
-         Result[0] := 'DIAL';
-         Result[1] := 'DLBR';
-         Result[2] := 'SCEN';
-      end
-      else begin
-         SetLength(Result, 1);
-         Result[0] := 'REFR';
-       end;
+          SetLength(Result, 3);
+          Result[0] := 'DIAL';
+          Result[1] := 'DLBR';
+          Result[2] := 'SCEN';
+        end else
+          Result.Add('REFR');
   end;
   j := 0;
   for i := Low(Result) to High(Result) do
@@ -12715,10 +12905,15 @@ begin
 end;
 
 function TwbGroupRecord.GetChildrenOf: IwbMainRecord;
+var
+  Group: IwbGroupRecord;
 begin
   Result := nil;
   if grStruct.grsGroupType in [1, 6..10] then
-    Result := GetFile.RecordByFormID[TwbFormID.FromCardinal(grStruct.grsLabel), True];
+    Result := GetFile.RecordByFormID[TwbFormID.FromCardinal(grStruct.grsLabel), True]
+  else if grStruct.grsGroupType in [4, 5] then
+    if Supports(GetContainer, IwbGroupRecord, Group) then
+      Result := Group.ChildrenOf;
 end;
 
 function TwbGroupRecord.GetElementType: TwbElementType;
@@ -14042,6 +14237,11 @@ end;
 function TwbElement.GetEditValue: string;
 begin
   Result := '';
+end;
+
+function TwbElement.GetElementGeneration: Integer;
+begin
+  Result := eGeneration;
 end;
 
 function TwbElement.GetElementID: Pointer;
