@@ -1,12 +1,12 @@
 [submodule "delphi-detours-library"]
 	path = delphi-detours-library
-	url = https://github.com/eFrysTon/delphi-detours-library.git
+	url = https://github.com/ElminsterAU/delphi-detours-library.git
 	branch = master
 [submodule "vcl-styles-utils"]
 	path = vcl-styles-utils
-	url = https://github.com/eFrysTon/vcl-styles-utils.git
+	url = https://github.com/ElminsterAU/vcl-styles-utils.git
 	branch = master
 [submodule "VirtualTrees"]
 	path = VirtualTrees
-	url = https://github.com/eFrysTon/Virtual-TreeView.git
+	url = https://github.com/ElminsterAU/Virtual-TreeView.git
 	branch = master
