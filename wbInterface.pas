@@ -1543,6 +1543,10 @@ type
   TDynCardinalArray = array of UInt64;
   {$ENDIF WIN32}
 
+  TDynElementsHelper = record helper for TDynElements
+    procedure Add(const aElement: IwbElement);
+  end;
+
   IwbSubRecord = interface(IwbRecord)
     ['{CDE36A3D-64F6-4B8E-980E-FBAB8D9FCAF7}']
     function GetSubRecordHeaderSize: Integer;
@@ -16719,6 +16723,18 @@ begin
   SetLength(Self, Succ(Len));
   Self[Len] := aMainRecord;
 end;
+
+{ TDynElementsHelper }
+
+procedure TDynElementsHelper.Add(const aElement: IwbElement);
+var
+  Len: Integer;
+begin
+  Len := Length(Self);
+  SetLength(Self, Succ(Len));
+  Self[Len] := aElement;
+end;
+
 
 { TwbRecursiveDef }
 
