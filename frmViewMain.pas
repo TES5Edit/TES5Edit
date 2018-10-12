@@ -91,11 +91,14 @@ type
 
   PNavNodeData = ^TNavNodeData;
   TNavNodeData = record
-    Element      : IwbElement;
-    Container    : IwbContainer;
-    ConflictAll  : TConflictAll;
-    ConflictThis : TConflictThis;
-    Flags        : TNavNodeFlags;
+    Element         : IwbElement;
+    Container       : IwbContainer;
+    ConflictAll     : TConflictAll;
+    ConflictThis    : TConflictThis;
+    ElementGen      : Integer;
+    ContainerGen    : Integer;
+    MissingElements : TDynElements;
+    Flags           : TNavNodeFlags;
   end;
 
   TViewNodeFlag = (
@@ -114,6 +117,8 @@ type
     Container: IwbContainerElementRef;
     ConflictAll: TConflictAll;
     ConflictThis: TConflictThis;
+    ElementGen   : Integer;
+    ContainerGen : Integer;
     ViewNodeFlags: TViewNodeFlags;
     procedure UpdateRefs;
   end;
@@ -620,6 +625,13 @@ type
     EditInfoCache: TArray<string>;
     EditInfoCacheID: Pointer;
 
+    vstNavInitChildrenGeneration: UInt64;
+    vstNavLastCollapsedChildrenCleanup: UInt64;
+
+    vstNavLastCheckedForChanges : UInt64;
+    vstNavReInit : Boolean;
+    NavFocusedElement : IwbElement;
+
     function GetRefBySelectionAsMainRecords: TDynMainRecords;
     function GetRefBySelectionAsElements: TDynElements;
 
@@ -662,6 +674,10 @@ type
     procedure PostResetActiveTree;
     procedure ExpandView;
     function CollectViewContainers: TwbContainerElementRefs;
+    procedure NavCleanupCollapsedNodeChildren;
+    procedure NavCheckForChanges;
+
+    procedure NavUpdate(aForce: Boolean);
 
     function AddRequiredMaster(const aMasterFile: IwbFile; const aTargetFile: IwbFile): Boolean;
     function AddRequiredMasters(const aSourceElement: IwbElement; const aTargetFile: IwbFile; aAsNew: Boolean; aSilent: Boolean = False): Boolean; overload;
@@ -726,9 +742,9 @@ type
     ActiveMaster: IwbMainRecord;
     ActiveRecords: TDynViewNodeDatas;
     ActiveContainer: IwbDataContainer;
-    FocusedElement : IwbElement;
-    NodeForFocusedElement: PVirtualNode;
-    ColumnForFocusedElement: Integer;
+    ViewFocusedElement : IwbElement;
+    NodeForViewFocusedElement: PVirtualNode;
+    ColumnForViewFocusedElement: Integer;
     LoaderStarted: Boolean;
     ModGroupsExist : Boolean;
     ModGroupsEnabled : Boolean;
@@ -859,6 +875,8 @@ type
                          const aValidCRCs : TDynCardinalArray;
                            out aFileCRC   : Cardinal)
                                           : Boolean;
+
+    procedure UpdateActions; override;
 
     procedure ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
     procedure vstCreateEditor(const aElement: IwbElement; out EditLink: IVTEditLink);
@@ -3735,6 +3753,135 @@ begin
   vstNav.Invalidate;
 end;
 
+procedure TfrmMain.NavCheckForChanges;
+var
+  Node            : PVirtualNode;
+  NodeData        : PNavNodeData;
+  FocusedElements : TDynElements;
+  i               : Integer;
+begin
+  if not (toAutoFreeOnCollapse in vstNav.TreeOptions.AutoOptions) then
+    Exit;
+  vstNav.BeginUpdate;
+  try
+    FocusedElements := nil;
+    if Assigned(NavFocusedElement) then begin
+      FocusedElements.Add(NavFocusedElement);
+      NavFocusedElement := nil;
+    end;
+    Node := vstNav.FocusedNode;
+    while Assigned(Node) do begin
+      NodeData := vstNav.GetNodeData(Node);
+      if Assigned(NodeData) then
+        if Assigned(NodeData.Element) then
+          FocusedElements.Add(NodeData.Element);
+      Node := Node.NextSibling;
+    end;
+    Node := vstNav.FocusedNode;
+    if Assigned(Node) then
+      Node := Node.PrevSibling;
+    while Assigned(Node) do begin
+      NodeData := vstNav.GetNodeData(Node);
+      if Assigned(NodeData) then
+        if Assigned(NodeData.Element) then
+          FocusedElements.Add(NodeData.Element);
+      Node := Node.PrevSibling;
+    end;
+    Node := vstNav.FocusedNode;
+    if Assigned(Node) then
+      Node := Node.Parent;
+    while Assigned(Node) do begin
+      NodeData := vstNav.GetNodeData(Node);
+      if Assigned(NodeData) then
+        if Assigned(NodeData.Element) then
+          FocusedElements.Add(NodeData.Element);
+      Node := Node.Parent;
+    end;
+
+    Node := vstNav.GetFirstInitialized;
+    while Assigned(Node) do begin
+      vstNavReInit := False;
+      NodeData := vstNav.GetNodeData(Node);
+      with NodeData^ do begin
+        if Assigned(Element) and (Element.ElementGeneration <> ElementGen) or
+           Assigned(Container) and (Container.ElementGeneration <> ContainerGen) then begin
+
+          vstNavReInit := True;
+          vstNav.ReinitNode(Node, True);
+        end;
+      end;
+
+      if vstNavReInit then
+        Node := vstNav.GetNextSiblingNoInit(Node)
+      else
+        Node := vstNav.GetNextInitialized(Node);
+    end;
+
+    NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
+    for i := Low(FocusedElements) to High(FocusedElements) do begin
+      if Assigned(NodeData) then
+        if FocusedElements[i].Equals(NodeData.Element) then
+          Exit;
+      Node := FindNodeForElement(FocusedElements[i]);
+      if Assigned(Node) then begin
+        vstNav.ClearSelection;
+        vstNav.FullyVisible[Node] := True;
+        vstNav.FocusedNode := Node;
+        vstNav.Selected[Node] := True;
+        Exit;
+      end;
+    end;
+
+  finally
+    vstNav.EndUpdate;
+    NavCleanupCollapsedNodeChildren;
+    vstNavLastCollapsedChildrenCleanup := vstNavInitChildrenGeneration;
+  end;
+end;
+
+procedure TfrmMain.NavCleanupCollapsedNodeChildren;
+var
+  Node     : PVirtualNode;
+  NodeData : PNavNodeData;
+begin
+  if not (toAutoFreeOnCollapse in vstNav.TreeOptions.AutoOptions) then
+    Exit;
+  vstNav.BeginUpdate;
+  try
+    Node := vstNav.GetFirstInitialized;
+    while Assigned(Node) do begin
+      if (Node.ChildCount > 0) and not vstNav.Expanded[Node] then begin
+        NodeData := vstNav.GetNodeData(Node);
+        vstNav.DeleteChildren(Node);
+      end;
+      Node := vstNav.GetNextInitialized(Node);
+    end;
+  finally
+    vstNav.EndUpdate;
+  end;
+end;
+
+procedure TfrmMain.NavUpdate(aForce: Boolean);
+begin
+  if Assigned(vstNav) and
+     (toAutoFreeOnCollapse in vstNav.TreeOptions.AutoOptions) then begin
+
+    vstNav.BeginUpdate;
+    try
+      if aForce or (vstNavLastCollapsedChildrenCleanup <> vstNavInitChildrenGeneration) or (vstNavLastCheckedForChanges <> wbGlobalModifedGeneration) then begin
+         NavCleanupCollapsedNodeChildren;
+         vstNavLastCollapsedChildrenCleanup := vstNavInitChildrenGeneration;
+      end;
+      if aForce or (vstNavLastCheckedForChanges <> wbGlobalModifedGeneration) then begin
+        NavCheckForChanges;
+        vstNavLastCheckedForChanges := wbGlobalModifedGeneration;
+      end;
+    finally
+      vstNav.EndUpdate;
+    end;
+  end;
+end;
+
 procedure TfrmMain.CleanupRefCache;
 var
   Files : TStringDynArray
@@ -6147,10 +6294,10 @@ begin
         end;
     end;
     if Assigned(NodeData.Element) then begin
-      if Assigned(aNode) and Assigned(FocusedElement) and not Assigned(NodeForFocusedElement) then
-        if FocusedElement.Equals(NodeData.Element) then begin
-          NodeForFocusedElement := aNode;
-          ColumnForFocusedElement := Succ(i);
+      if Assigned(aNode) and Assigned(ViewFocusedElement) and not Assigned(NodeForViewFocusedElement) then
+        if ViewFocusedElement.Equals(NodeData.Element) then begin
+          NodeForViewFocusedElement := aNode;
+          ColumnForViewFocusedElement := Succ(i);
         end;
       if NodeData.Element.DontShow then begin
         NodeData.Element := nil;
@@ -6430,7 +6577,7 @@ begin
       TargetElement := nil;
       Control := GetKeyState(VK_CONTROL) < 0;
       if wbFocusAddedElement xor Control then
-        FocusedElement := NewElement;
+        ViewFocusedElement := NewElement;
       PostResetActiveTree;
     finally
       //      vstView.EndUpdate;
@@ -6536,7 +6683,7 @@ begin
     PerformDrop(vstView, Node, TargetColumns[i], SourceElement);
 
   InvalidateElementsTreeView(NoNodes);
-  FocusedElement := SourceElement;
+  ViewFocusedElement := SourceElement;
   PostResetActiveTree;
   vstNav.Invalidate;
 end;
@@ -6853,6 +7000,7 @@ begin
         i: Integer;
       begin
         vstNav.BeginUpdate;
+        NavCleanupCollapsedNodeChildren;
         try
           try
             if jvi.FunctionExists('', 'Initialize') then begin
@@ -6936,6 +7084,7 @@ begin
           end;
 
         finally
+          NavCleanupCollapsedNodeChildren;
           vstNav.EndUpdate;
         end;
       end);
@@ -7130,7 +7279,7 @@ begin
         Exit;
 
       Element.MoveDown;
-      FocusedElement := Element;
+      ViewFocusedElement := Element;
       PostResetActiveTree;
     end;
   end;
@@ -7152,7 +7301,7 @@ begin
         Exit;
 
       Element.MoveUp;
-      FocusedElement := Element;
+      ViewFocusedElement := Element;
       PostResetActiveTree;
     end;
   end;
@@ -7256,6 +7405,7 @@ procedure TfrmMain.mniRefByRemoveClick(Sender: TObject);
 var
   MainRecords                 : TDynMainRecords;
   MainRecord                  : IwbMainRecord;
+  GroupRecord                 : IwbGroupRecord;
   i                           : Integer;
   lActiveRecord               : IwbMainRecord;
   Container                   : IwbContainerElementRef;
@@ -7287,39 +7437,46 @@ begin
 
   lActiveRecord := ActiveRecord;
 
-  for i := Low(MainRecords) to High(MainRecords) do begin
-    MainRecord := MainRecords[i];
-    MainRecords[i] := nil;
-    if Assigned(MainRecord) then begin
-      if not Supports(MainRecord.Container, IwbContainerElementRef, Container) then
-        Container := nil;
+  vstNav.BeginUpdate;
+  try
+    for i := Low(MainRecords) to High(MainRecords) do begin
+      MainRecord := MainRecords[i];
+      if Assigned(MainRecord) then begin
+        if not Supports(MainRecord.Container, IwbContainerElementRef, Container) then
+          Container := nil;
 
-      CheckHistoryRemove(BackHistory, MainRecord);
-      CheckHistoryRemove(ForwardHistory, MainRecord);
+        CheckHistoryRemove(BackHistory, MainRecord);
+        CheckHistoryRemove(ForwardHistory, MainRecord);
 
-      if MainRecord.Equals(lActiveRecord) then
-        lActiveRecord := nil;
+        if MainRecord.Equals(lActiveRecord) then
+          lActiveRecord := nil;
 
-      Node := FindNodeForElement(MainRecord);
-      NodeData := vstNav.GetNodeData(Node);
+        GroupRecord := MainRecord.ChildGroup;
 
-      if Assigned(NodeData) then begin
-        if MainRecord.Equals(NodeData.Container) then
-          NodeData.Container := nil;
-        if Assigned(NodeData.Container) then
-          NodeData.Container.Remove;
+        if not (toAutoFreeOnCollapse in vstNav.TreeOptions.AutoOptions) then begin
+          Node := FindNodeForElement(MainRecord);
+          if Assigned(Node) then
+            vstNav.DeleteNode(Node);
+          if Assigned(GroupRecord) then begin
+            Node := FindNodeForElement(GroupRecord);
+            if Assigned(Node) then
+              vstNav.DeleteNode(Node);
+          end;
+        end;
+
+        MainRecord.Remove;
+        if Assigned(GroupRecord) then
+          GroupRecord.Remove;
+        MainRecord := nil;
       end;
-      MainRecord.Remove;
-      if Assigned(NodeData) then begin
-        NodeData.Element := nil;
-        NodeData.Container := nil;
-      end;
-      MainRecord := nil;
-
-      if Assigned(Node) then
-        vstNav.DeleteNode(Node);
     end;
+
+    NavUpdate(True);
+
+  finally
+    vstNav.EndUpdate;
   end;
+
   MainRecords := nil;
 
   ActiveRecord := nil;
@@ -7441,18 +7598,8 @@ begin
   if Assigned(NodeData) and Supports(NodeData.Element, IwbContainerElementRef, Container) then begin
     Element := Container.Add(StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]), False);
     if Assigned(Element) then begin
-
-      vstNav.Expanded[FocusedNode] := False;
-      vstNav.Expanded[FocusedNode.Parent] := False;
-      Node := FindNodeForElement(Element);
-      if not Assigned(Node) then
-        Node := FocusedNode;
-
-      vstNav.FullyVisible[Node] := True;
-      vstNav.ClearSelection;
-      vstNav.FocusedNode := Node;
-      vstNav.Selected[vstNav.FocusedNode] := True;
-
+      NavFocusedElement := Element;
+      NavUpdate(True);
       if Supports(Element, IwbMainRecord, MainRecord) then
         DoSetActiveRecord(MainRecord)
       else
@@ -8181,7 +8328,7 @@ begin
 
       Element.EditValue := EditValue;
       ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
-      FocusedElement := Element;
+      ViewFocusedElement := Element;
       Element := nil;
       PostResetActiveTree;
       InvalidateElementsTreeView(NoNodes);
@@ -8206,7 +8353,7 @@ begin
 
       Element.SetToDefault;
       ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
-      FocusedElement := Element;
+      ViewFocusedElement := Element;
       Element := nil;
       PostResetActiveTree;
       InvalidateElementsTreeView(NoNodes);
@@ -8308,6 +8455,7 @@ var
   Element                     : IwbElement;
   DialogResult                : Integer;
   MainRecord                  : IwbMainRecord;
+  GroupRecord                 : IwbGroupRecord;
 begin
   if not wbEditAllowed then
     Exit;
@@ -8332,22 +8480,31 @@ begin
   if DialogResult <> mrYes then
     Exit;
 
-  CheckHistoryRemove(BackHistory, MainRecord);
-  CheckHistoryRemove(ForwardHistory, MainRecord);
+  vstNav.BeginUpdate;
+  try
+    CheckHistoryRemove(BackHistory, MainRecord);
+    CheckHistoryRemove(ForwardHistory, MainRecord);
 
-  Node := FindNodeForElement(Element);
-  NodeData := vstNav.GetNodeData(Node);
+    GroupRecord := MainRecord.ChildGroup;
 
-  if Assigned(NodeData) then begin
-    if Element.Equals(NodeData.Container) then
-      NodeData.Container := nil;
-    if Assigned(NodeData.Container) then
-      NodeData.Container.Remove;
-  end;
-  Element.Remove;
-  if Assigned(NodeData) then begin
-    NodeData.Element := nil;
-    NodeData.Container := nil;
+    if not (toAutoFreeOnCollapse in vstNav.TreeOptions.AutoOptions) then begin
+      Node := FindNodeForElement(MainRecord);
+      if Assigned(Node) then
+        vstNav.DeleteNode(Node);
+      if Assigned(GroupRecord) then begin
+        Node := FindNodeForElement(GroupRecord);
+        if Assigned(Node) then
+          vstNav.DeleteNode(Node);
+      end;
+    end;
+
+    Element.Remove;
+    if Assigned(GroupRecord) then
+      GroupRecord.Remove;
+
+    NavUpdate(True);
+  finally
+    vstNav.EndUpdate;
   end;
 
   MainRecord := ActiveRecord;
@@ -8356,9 +8513,6 @@ begin
   DoSetActiveRecord(nil);
 
   Element := nil;
-
-  if Assigned(Node) then
-    vstNav.DeleteNode(Node);
 
   DoSetActiveRecord(MainRecord);
   InvalidateElementsTreeView(NoNodes);
@@ -8718,6 +8872,7 @@ var
   Element                     : IwbElement;
   DialogResult                : Integer;
   MainRecord                  : IwbMainRecord;
+  GroupRecord                 : IwbGroupRecord;
   Selection                   : TNodeArray;
   i                           : Integer;
   ContainsChilds              : Boolean;
@@ -8755,26 +8910,31 @@ begin
   if DialogResult <> mrYes then
     Exit;
 
-  for i := Low(Selection) to High(Selection) do begin
-    NodeData := vstNav.GetNodeData(Selection[i]);
-    Element := NodeData.Element;
+  vstNav.BeginUpdate;
+  try
+    for i := Low(Selection) to High(Selection) do begin
+      NodeData := vstNav.GetNodeData(Selection[i]);
+      Element := NodeData.Element;
 
-    if Supports(Element, IwbMainRecord, MainRecord) then begin
-      CheckHistoryRemove(BackHistory, MainRecord);
-      CheckHistoryRemove(ForwardHistory, MainRecord);
+      GroupRecord := nil;
+      if Supports(Element, IwbMainRecord, MainRecord) then begin
+        CheckHistoryRemove(BackHistory, MainRecord);
+        CheckHistoryRemove(ForwardHistory, MainRecord);
+        GroupRecord := MainRecord.ChildGroup;
+      end;
+
+      DoSetActiveRecord(nil);
+      Element.Remove;
+      if Assigned(GroupRecord) then
+        GroupRecord.Remove;
+      if not (toAutoFreeOnCollapse in vstNav.TreeOptions.AutoOptions) then
+        vstNav.DeleteNode(Selection[i]);
     end;
-
-    DoSetActiveRecord(nil);
-    if Element.Equals(NodeData.Container) then
-      NodeData.Container := nil;
-    if Assigned(NodeData.Container) then
-      NodeData.Container.Remove;
-    Element.Remove;
-    NodeData.Element := nil;
-    NodeData.Container := nil;
-    Element := nil;
-    vstNav.DeleteNode(Selection[i]);
+    NavUpdate(True);
+  finally
+    vstNav.EndUpdate;
   end;
+
   InvalidateElementsTreeView(NoNodes);
 end;
 
@@ -11982,7 +12142,7 @@ begin
       if not EditWarn then
         Exit;
 
-      FocusedElement := Element.NextMember;
+      ViewFocusedElement := Element.NextMember;
       PostResetActiveTree;
     end;
   end;
@@ -12260,7 +12420,7 @@ begin
       end;
 
       ActiveRecords[Pred(TargetColumn)].UpdateRefs;
-      FocusedElement := NewElement;
+      ViewFocusedElement := NewElement;
       NewElement := nil;
       TargetElement := nil;
       Result := True;
@@ -12748,8 +12908,8 @@ begin
   mniViewHeaderHidden.Checked := esHidden in MainRecord.ElementStates;
   if not ActiveRecords[Column].Element._File.IsEditable then
     Exit;
-  if DebugHook = 0 then //reserve Delete for debugging until we know why it can go "crazy"
-    Exit;
+//  if DebugHook = 0 then //reserve Delete for debugging until we know why it can go "crazy"
+//    Exit;
   mniViewHeaderRemove.Visible := True;
 end;
 
@@ -12901,7 +13061,7 @@ begin
       if not EditWarn then
         Exit;
 
-      FocusedElement := Element.PreviousMember;
+      ViewFocusedElement := Element.PreviousMember;
       PostResetActiveTree;
     end;
   end;
@@ -13046,13 +13206,13 @@ begin
     Node := vstView.FocusedNode;
     if Assigned(Node) then begin
       r := vstView.GetDisplayRect(Node, Column, False);
-      if not Assigned(FocusedElement) then
+      if not Assigned(ViewFocusedElement) then
         if (Column > 0) and (Pred(Column) <= High(ActiveRecords)) then begin
           NodeDatas := vstView.GetNodeData(Node);
-          FocusedElement := NodeDatas[Pred(Column)].Element;
+          ViewFocusedElement := NodeDatas[Pred(Column)].Element;
         end;
     end;
-    NodeForFocusedElement := nil;
+    NodeForViewFocusedElement := nil;
 
     Containers := CollectViewContainers;
     if Assigned(ActiveRecord) then begin
@@ -13072,9 +13232,9 @@ begin
     vstView.UpdateScrollBars(False);
     vstView.OffsetXY := OffsetXY;
     if Assigned(Node) then begin
-      if Assigned(NodeForFocusedElement) then begin
-        Node := NodeForFocusedElement;
-        Column := ColumnForFocusedElement;
+      if Assigned(NodeForViewFocusedElement) then begin
+        Node := NodeForViewFocusedElement;
+        Column := ColumnForViewFocusedElement;
       end else
         Node := vstView.GetNodeAt(r.Left + 2, r.Top + 2);
       if Assigned(Node) then
@@ -13091,8 +13251,8 @@ begin
             Columns[i].Width := ColumnWidths[i];
       end;
   finally
-    FocusedElement := nil;
-    NodeForFocusedElement := nil;
+    ViewFocusedElement := nil;
+    NodeForViewFocusedElement := nil;
     vstView.EndUpdate;
     LockWindowUpdate(0);
   end;
@@ -13861,8 +14021,8 @@ begin
       ActiveMaster := nil;
       ActiveIndex := NoColumn;
       ActiveRecord := aMainRecord;
-      NodeForFocusedElement := nil;
-      ColumnForFocusedElement := NoColumn;
+      NodeForViewFocusedElement := nil;
+      ColumnForViewFocusedElement := NoColumn;
 
       if Assigned(ActiveRecord) then begin
         ActiveMaster := nil;
@@ -15052,7 +15212,7 @@ var
   NodeDatas                   : PViewNodeDatas;
   i                           : Integer;
   ModalEdit                   : Boolean;
-  FocusedElement              : IwbElement;
+  ViewFocusedElement              : IwbElement;
   Element                     : IwbElement;
   Def                         : IwbNamedDef;
   SubRecordDef                : IwbSubRecordDef;
@@ -15068,10 +15228,10 @@ begin
   if Assigned(NodeDatas) then begin
 
     if vstView.FocusedColumn > 0 then
-      FocusedElement := NodeDatas[Pred(vstView.FocusedColumn)].Element
+      ViewFocusedElement := NodeDatas[Pred(vstView.FocusedColumn)].Element
     else
-      FocusedElement := nil;
-    Element := FocusedElement;
+      ViewFocusedElement := nil;
+    Element := ViewFocusedElement;
     if not Assigned(Element) then
       for i := Low(ActiveRecords) to High(ActiveRecords) do begin
         Element := NodeDatas[i].Element;
@@ -15084,7 +15244,7 @@ begin
       if Supports(Def, IwbSubRecordDef, SubRecordDef) then
         Def := SubRecordDef.Value;
 
-      if Assigned(FocusedElement) and Assigned(Def) and FocusedElement.IsEditable then
+      if Assigned(ViewFocusedElement) and Assigned(Def) and ViewFocusedElement.IsEditable then
         if Def.DefType in [dtInteger, dtFlag, dtFloat] then begin
           vstView.EditNode(vstView.FocusedNode, vstView.FocusedColumn);
           Exit;
@@ -15561,14 +15721,14 @@ begin
           Exit;
         Key := 0;
         Element.MoveUp;
-        FocusedElement := Element;
+        ViewFocusedElement := Element;
       end;
       VK_DOWN: begin
         if not Element.CanMoveDown then
           Exit;
         Key := 0;
         Element.MoveDown;
-        FocusedElement := Element;
+        ViewFocusedElement := Element;
       end;
       Ord('C'): begin
         Clipboard.AsText := Element.EditValue;
@@ -15640,7 +15800,7 @@ begin
       try
         Element.EditValue := NewText;
         ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
-        FocusedElement := Element;
+        ViewFocusedElement := Element;
         Element := nil;
         PostResetActiveTree;
       finally
@@ -16100,8 +16260,13 @@ end;
 procedure TfrmMain.vstNavFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   with PNavNodeData(Sender.GetNodeData(Node))^ do begin
+    MissingElements := nil;
     Element := nil;
     Container := nil;
+    ConflictAll := caUnknown;
+    ConflictThis := ctUnknown;
+    ElementGen := 0;
+    ContainerGen := 0;
   end;
 end;
 
@@ -16273,48 +16438,106 @@ begin
   Result := 0;
 end;
 
-procedure TfrmMain.vstNavInitChildren(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; var ChildCount: Cardinal);
+procedure TfrmMain.vstNavInitChildren(Sender: TBaseVirtualTree; Node: PVirtualNode; var ChildCount: Cardinal);
 var
-  Container                   : IwbContainer;
+  Container                   : IwbContainerElementRef;
+  NodeData                    : PNavNodeData;
+  NodesToRemove               : Integer;
+  ChildNode                   : PVirtualNode;
+  ChildNodeData               : PNavNodeData;
+  i, j                        : Integer;
 begin
-  Container := PNavNodeData(Sender.GetNodeData(Node)).Container;
+  NodeData := Sender.GetNodeData(Node);
 
-  if Assigned(Container) then
-    ChildCount := Container.ElementCount
-  else
+  if Assigned(NodeData) and Supports(NodeData.Container, IwbContainerElementRef, Container) then begin
+    Inc(vstNavInitChildrenGeneration);
+    ChildCount := Container.ElementCount;
+    NodeData.MissingElements := nil;
+
+    NodesToRemove := Node.ChildCount - ChildCount;
+
+    ChildNode := Node.FirstChild;
+    if Assigned(ChildNode) then begin
+      for i := 0 to Pred(ChildCount) do
+        Container.Elements[i].Found := False;
+      while Assigned(ChildNode) do begin
+        ChildNodeData := Sender.GetNodeData(ChildNode);
+        if Assigned(ChildNodeData) then begin
+          if Assigned(ChildNodeData.Element) then begin
+            if not Container.Equals(ChildNodeData.Element.Container) then begin
+              Sender.DeleteChildren(ChildNode);
+              vstNavFreeNode(Sender, ChildNode);
+              ChildNode.States := ChildNode.States - [vsInitialized, vsChecking,
+                vsCutOrCopy, vsDeleting, vsHasChildren, vsExpanded, vsHeightMeasured];
+            end else
+              ChildNodeData.Element.Found := True;
+          end else
+            ChildNode.States := ChildNode.States - [vsInitialized, vsChecking,
+              vsCutOrCopy, vsDeleting, vsHasChildren, vsExpanded, vsHeightMeasured];
+        end;
+        ChildNode := ChildNode.NextSibling;
+      end;
+      SetLength(NodeData.MissingElements, ChildCount);
+      j := 0;
+      for i := 0 to Pred(ChildCount) do
+        if not Container.Elements[i].Found then begin
+          NodeData.MissingElements[j] := Container.Elements[i];
+          Inc(j);
+        end;
+      SetLength(NodeData.MissingElements, j);
+    end;
+  end else
     ChildCount := 0;
 end;
 
 procedure TfrmMain.vstNavInitNode(Sender: TBaseVirtualTree; ParentNode,
   Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
 var
-  NodeData    : PNavNodeData;
-  Element     : IwbElement;
-  Container   : IwbContainerElementRef;
-  Container2  : IwbContainerElementRef;
-  GroupRecord : IwbGroupRecord;
-  i           : Integer;
+  NodeData       : PNavNodeData;
+  ParentNodeData : PNavNodeData;
+  Element        : IwbElement;
+  Container      : IwbContainerElementRef;
+  Container2     : IwbContainerElementRef;
+  GroupRecord    : IwbGroupRecord;
+  MainRecord     : IwbMainRecord;
+  i              : Integer;
+  FoundGroup     : Boolean;
+  SiblingNode    : PVirtualNode;
+  SiblingNodeData: PNavNodeData;
 begin
   GroupRecord := nil;
   NodeData := PNavNodeData(Sender.GetNodeData(Node));
+  with NodeData^ do begin
+    ElementGen := 0;
+    ContainerGen := 0;
+  end;
+
+  GroupRecord := nil;
   Element := NodeData.Element;
-  if Element = nil then begin
-    Container := PNavNodeData(Sender.GetNodeData(Node.Parent)).Container as IwbContainerElementRef;
-    if Assigned(Container) and (Node.Index < Cardinal(Container.ElementCount)) then begin
-      Element := Container.Elements[Node.Index];
-      if Element.ElementType = etMainRecord then
-        if Integer(Succ(Node.Index)) < Container.ElementCount then begin
-          if Supports(Container.Elements[Succ(Node.Index)], IwbGroupRecord, GroupRecord) then begin
-            if (not (GroupRecord.GroupType in ParentedGroupRecordType)) or
-              ((Element as IwbMainRecord).FormID.ToCardinal <> GroupRecord.GroupLabel) then
-              GroupRecord := nil;
-          end;
+  ParentNodeData := Sender.GetNodeData(Node.Parent);
+  if Assigned(ParentNodeData) then
+    Container := ParentNodeData.Container as IwbContainerElementRef;
+  if not Assigned(Element) then begin
+    if Assigned(ParentNodeData) then begin
+      i := Length(ParentNodeData.MissingElements);
+      if i > 0 then begin
+        Dec(i);
+        Element := ParentNodeData.MissingElements[i];
+        SetLength(ParentNodeData.MissingElements, i);
+      end else
+        if Assigned(Container) and (Node.Index < Cardinal(Container.ElementCount)) then begin
+          Element := Container.Elements[Node.Index];
+          if Assigned(Element) and (Element.ElementType = etMainRecord) then
+            if Integer(Succ(Node.Index)) < Container.ElementCount then begin
+              if Supports(Container.Elements[Succ(Node.Index)], IwbGroupRecord, GroupRecord) then begin
+                if (not (GroupRecord.GroupType in ParentedGroupRecordType)) or
+                  ((Element as IwbMainRecord).FormID.ToCardinal <> GroupRecord.GroupLabel) then
+                  GroupRecord := nil;
+              end;
+            end;
         end;
       NodeData.Element := Element;
-    end
-    else
-      Element := nil;
+    end;
   end;
 
   if not Assigned(Element) then begin
@@ -16322,18 +16545,45 @@ begin
     Exit;
   end;
 
+  if not Assigned(GroupRecord) then
+    if Supports(Element, IwbMainRecord, MainRecord) then begin
+      GroupRecord := MainRecord.ChildGroup;
+      if Assigned(GroupRecord) then begin
+        FoundGroup := False;
+        SiblingNode := Node.PrevSibling;
+        while not FoundGroup and Assigned(SiblingNode) do begin
+          SiblingNodeData := Sender.GetNodeData(SiblingNode);
+          if GroupRecord.Equals(SiblingNodeData.Element) then
+            FoundGroup := True;
+          SiblingNode := SiblingNode.PrevSibling;
+        end;
+        if not FoundGroup then begin
+          SiblingNode := Node.NextSibling;
+          while not FoundGroup and Assigned(SiblingNode) do begin
+            SiblingNodeData := Sender.GetNodeData(SiblingNode);
+            if GroupRecord.Equals(SiblingNodeData.Element) then
+              FoundGroup := True;
+            SiblingNode := SiblingNode.NextSibling;
+          end;
+        end;
+        if FoundGroup then begin
+          Sender.IsVisible[SiblingNode] := False;
+          Sender.HasChildren[SiblingNode] := False;
+          vstNavFreeNode(Sender, SiblingNode);
+        end;
+      end;
+    end;
+
   if not (Element.ElementType in [etMainRecord, etStructChapter]) and not Element.TreeHead then begin
     if Supports(Element, IwbContainerElementRef, Container) and (Container.ElementCount > 0) then begin
       Include(InitialStates, ivsHasChildren);
       NodeData.Container := IInterface(Container) as IwbContainer;
     end
-  end
-  else if Assigned(GroupRecord) then begin
+  end else if Assigned(GroupRecord) then begin
     if GroupRecord.ElementCount > 0 then
       Include(InitialStates, ivsHasChildren);
     NodeData.Container := GroupRecord;
-  end
-  else if Element.ElementType = etStructChapter then
+  end else if Element.ElementType = etStructChapter then
     if Supports(Element, IwbContainerElementRef, Container) and (Container.ElementCount > 0) then
       for i := 0 to Pred(Container.ElementCount) do
         if (Container.Elements[i].TreeBranch) and
@@ -16343,21 +16593,61 @@ begin
           Break;
         end;
 
-  if Node.Index > 0 then
-    if Supports(Element, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType in ParentedGroupRecordType) then begin
+  if Supports(Element, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType in ParentedGroupRecordType) then begin
+    FoundGroup := False;
+    if Node.Index > 0 then begin
       Container := PNavNodeData(Sender.GetNodeData(Node.Parent)).Container as IwbContainerElementRef;
       if Assigned(Container) and (Integer(Node.Index) < Container.ElementCount) then begin
         Element := Container.Elements[Pred(Node.Index)];
         if (Element.ElementType = etMainRecord) and
           ((Element as IwbMainRecord).FormID.ToCardinal = GroupRecord.GroupLabel) then begin
-          Include(InitialStates, ivsHidden);
-          Exclude(InitialStates, ivsHasChildren);
-          NodeData.Container := nil;
-          NodeData.Element := nil;
-          Exit;
+          FoundGroup := True;
         end;
       end;
     end;
+    if not FoundGroup then begin
+      MainRecord := GroupRecord.ChildrenOf;
+      if Assigned(MainRecord) then begin
+        SiblingNode := Node.PrevSibling;
+        while not FoundGroup and Assigned(SiblingNode) do begin
+          SiblingNodeData := Sender.GetNodeData(SiblingNode);
+          if MainRecord.Equals(SiblingNodeData.Element) then
+            FoundGroup := True;
+          SiblingNode := SiblingNode.PrevSibling;
+        end;
+        if not FoundGroup then begin
+          SiblingNode := Node.NextSibling;
+          while not FoundGroup and Assigned(SiblingNode) do begin
+            SiblingNodeData := Sender.GetNodeData(SiblingNode);
+            if MainRecord.Equals(SiblingNodeData.Element) then
+              FoundGroup := True;
+            SiblingNode := SiblingNode.NextSibling;
+          end;
+        end;
+      end;
+    end;
+    if not FoundGroup then begin
+      if Assigned(ParentNodeData) then begin
+        for i := High(ParentNodeData.MissingElements) downto Low(ParentNodeData.MissingElements) do
+          if MainRecord.Equals(ParentNodeData.MissingElements[i]) then
+            FoundGroup := True;
+      end;
+    end;
+    if FoundGroup then begin
+      Include(InitialStates, ivsHidden);
+      Exclude(InitialStates, ivsHasChildren);
+      NodeData.Container := nil;
+      NodeData.Element := nil;
+      NodeData.MissingElements := nil;
+    end;
+  end;
+
+  with NodeData^ do begin
+    if Assigned(Element) then
+      ElementGen := Element.ElementGeneration;
+    if Assigned(Container) then
+      ContainerGen := Container.ElementGeneration;
+  end;
 end;
 
 procedure TfrmMain.vstNavKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -17846,6 +18136,13 @@ begin
   UpdateActiveFromPluggyLink;
 end;
 
+procedure TfrmMain.UpdateActions;
+begin
+  if Enabled then
+    NavUpdate(False);
+  inherited;
+end;
+
 procedure TfrmMain.UpdateActiveFromPluggyLink;
 var
   FormID                      : TwbFormID;
@@ -18692,20 +18989,20 @@ end;
 procedure TMainRecordElementHistoryEntry.Show;
 begin
   with frmMain do begin
-    FocusedElement := mreElement;
-    NodeForFocusedElement := nil;
-    ColumnForFocusedElement := NoColumn;
+    ViewFocusedElement := mreElement;
+    NodeForViewFocusedElement := nil;
+    ColumnForViewFocusedElement := NoColumn;
 
     inherited;
 
-    if not Assigned(NodeForFocusedElement) and Assigned(FocusedElement) and FocusedElement.Equals(mreElement) then
+    if not Assigned(NodeForViewFocusedElement) and Assigned(ViewFocusedElement) and ViewFocusedElement.Equals(mreElement) then
       ResetActiveTree;
 
-    FocusedElement := nil;
-    if Assigned(NodeForFocusedElement) then begin
-      vstView.FocusedNode := NodeForFocusedElement;
-      if ColumnForFocusedElement <> NoColumn then
-        vstView.FocusedColumn := ColumnForFocusedElement;
+    ViewFocusedElement := nil;
+    if Assigned(NodeForViewFocusedElement) then begin
+      vstView.FocusedNode := NodeForViewFocusedElement;
+      if ColumnForViewFocusedElement <> NoColumn then
+        vstView.FocusedColumn := ColumnForViewFocusedElement;
       vstView.TopNode := vstView.FocusedNode;
       vstView.ScrollIntoView(vstView.FocusedColumn, True, vstView.FocusedNode);
     end;
