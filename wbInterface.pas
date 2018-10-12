@@ -580,6 +580,7 @@ type
     esChangeNotified,
     esModifiedUpdated,
     esSorting,
+    esFound,
 
     //the following entries must match TwbElementErrorType:
     esReportedErrorReading,
@@ -798,6 +799,13 @@ type
     procedure Tag;
     procedure ResetTags;
     function IsTagged: Boolean;
+
+    function GetFound: Boolean;
+    procedure SetFound(const aValue: Boolean);
+
+    property Found: Boolean
+      read GetFound
+      write SetFound;
 
     property IsHidden: Boolean
       read GetIsHidden;
