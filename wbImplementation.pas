@@ -409,6 +409,9 @@ type
     procedure ResetTags; virtual;
     function IsTagged: Boolean;
 
+    function GetFound: Boolean;
+    procedure SetFound(const aValue: Boolean);
+
     function CopyInto(const aFile: IwbFile; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 
     function BeginUpdate: Integer;
@@ -14268,6 +14271,11 @@ begin
     Result := nil;
 end;
 
+function TwbElement.GetFound: Boolean;
+begin
+  Result := esFound in eStates;
+end;
+
 function TwbElement.GetFullPath: string;
 begin
   if Assigned(eContainer) then
@@ -14831,6 +14839,14 @@ begin
     Exclude(eStates, aState)
   else
     Include(eStates, aState);
+end;
+
+procedure TwbElement.SetFound(const aValue: Boolean);
+begin
+  if aValue then
+    Include(eStates, esFound)
+  else
+    Exclude(eStates, esFound);
 end;
 
 procedure TwbElement.SetInternalModified(aValue: Boolean);
