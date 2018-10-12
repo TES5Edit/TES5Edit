@@ -134,6 +134,8 @@ var
   wbRequireCtrlForDblClick : Boolean  = False;
   wbFocusAddedElement      : Boolean  = True;
 
+  wbGlobalModifedGeneration : UInt64;
+
   wbPluginsFileName    : String;
   wbModGroupFileName   : string;
 

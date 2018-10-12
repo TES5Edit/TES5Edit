@@ -357,6 +357,7 @@ type
     function GetIsNotReachable: Boolean; virtual;
     function GetIsReachable: Boolean; virtual;
     procedure SetModified(aValue: Boolean); virtual;
+    procedure SetParentModified; virtual;
     procedure SetInternalModified(aValue: Boolean); virtual;
     function GetDataSize: Integer; virtual;
     procedure SetDataSize(aSize: Integer); virtual;
@@ -646,6 +647,7 @@ type
     function GetBaseName: string; override;
     procedure PrepareSave; override;
     procedure SetModified(aValue: Boolean); override;
+    procedure SetParentModified; override;
 
     procedure BuildRef; override;
     function BuildOrLoadRef(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
@@ -3358,6 +3360,11 @@ var
 begin
   if (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then
     Header.ElementNativeValues['HEDR\Next Object ID'] := aObjectID;
+end;
+
+procedure TwbFile.SetParentModified;
+begin
+  Inc(wbGlobalModifedGeneration);
 end;
 
 function TwbFile.GetIsNotPlugin: Boolean;
@@ -14890,8 +14897,7 @@ begin
     if eUpdateCount > 0 then
       Include(eStates, esModifiedUpdated)
     else
-      if Assigned(eContainer) then
-        (IwbContainer(eContainer) as IwbElementInternal).Modified := True;
+      SetParentModified;
   end;
 end;
 
@@ -14903,6 +14909,12 @@ end;
 procedure TwbElement.SetNativeValue(const aValue: Variant);
 begin
   raise Exception.Create(GetName + ' can not be edited.');
+end;
+
+procedure TwbElement.SetParentModified;
+begin
+  if Assigned(eContainer) then
+    (IwbContainer(eContainer) as IwbElementInternal).Modified := True;
 end;
 
 procedure TwbElement.SetSortOrder(aIndex: Integer);
@@ -14986,8 +14998,8 @@ begin
   end;
   if esModifiedUpdated in eStates then begin
     Exclude(eStates, esModifiedUpdated);
-    if Assigned(eContainer) and (esModified in eStates) then
-      (IwbContainer(eContainer) as IwbElementInternal).Modified := True;
+    if esModified in eStates then
+      SetParentModified;
   end;
 end;
 
