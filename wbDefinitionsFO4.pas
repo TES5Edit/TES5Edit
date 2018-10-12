@@ -9622,7 +9622,7 @@ begin
       wbInteger('Meshes Count', itU32),
       wbInteger('References Count', itU32),
       wbArrayS('Meshes', wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt), wbCELLCombinedMeshesCounter, cpNormal, False, nil, wbCELLCombinedMeshesAfterSet),
-      wbArrayS('References',  wbStructSK([1, 0], 'Reference', [
+      wbArrayS('References',  wbStructSK([0], 'Reference', [
         wbFormIDCk('Reference', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
         wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt)
       ]), wbCELLCombinedRefsCounter, cpNormal, False, nil, wbCELLCombinedRefsAfterSet)
