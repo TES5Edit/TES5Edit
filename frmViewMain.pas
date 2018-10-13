@@ -16496,7 +16496,7 @@ procedure TfrmMain.vstNavInitChildren(Sender: TBaseVirtualTree; Node: PVirtualNo
 var
   Container                   : IwbContainerElementRef;
   NodeData                    : PNavNodeData;
-  NodesToRemove               : Integer;
+  NodesToRemove               : Int64;
   ChildNode                   : PVirtualNode;
   ChildNodeData               : PNavNodeData;
   i, j                        : Integer;
@@ -16508,7 +16508,7 @@ begin
     ChildCount := Container.ElementCount;
     NodeData.MissingElements := nil;
 
-    NodesToRemove := Node.ChildCount - ChildCount;
+    NodesToRemove := Int64(Node.ChildCount) - Int64(ChildCount);
 
     ChildNode := Node.FirstChild;
     if Assigned(ChildNode) then begin
@@ -16525,9 +16525,11 @@ begin
                 vsCutOrCopy, vsDeleting, vsHasChildren, vsExpanded, vsHeightMeasured];
             end else
               ChildNodeData.Element.Found := True;
-          end else
+          end else begin
+            vstNavFreeNode(Sender, ChildNode);
             ChildNode.States := ChildNode.States - [vsInitialized, vsChecking,
               vsCutOrCopy, vsDeleting, vsHasChildren, vsExpanded, vsHeightMeasured];
+          end;
         end;
         ChildNode := ChildNode.NextSibling;
       end;
