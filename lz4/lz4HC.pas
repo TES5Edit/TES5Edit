@@ -39,6 +39,7 @@
 
 unit lz4HC;
 {$POINTERMATH ON}
+{$Q-} // doesn't work with overflow checking
 
 interface
 
