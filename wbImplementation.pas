@@ -3490,6 +3490,8 @@ begin
   end;
 
   Result := GetMasterRecordByFormID(aFormID, aAllowInjected);
+  if Assigned(Result) then
+    Result := Result.HighestOverrideVisibleForFile[Self];
 end;
 
 function TwbFile.GetRecordCount: Integer;
