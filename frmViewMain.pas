@@ -3789,13 +3789,13 @@ begin
     end;
     Node := vstNav.FocusedNode;
     if Assigned(Node) then
-      Node := Node.Parent;
+      Node := vstNav.NodeParent[Node];
     while Assigned(Node) do begin
       NodeData := vstNav.GetNodeData(Node);
       if Assigned(NodeData) then
         if Assigned(NodeData.Element) then
           FocusedElements.Add(NodeData.Element);
-      Node := Node.Parent;
+      Node := vstNav.NodeParent[Node];
     end;
 
     Node := vstNav.GetFirstInitialized;
@@ -4987,10 +4987,10 @@ begin
           if not Assigned(KeepAllUntil) and cbNavFilterKeepChildren.Checked then
             KeepAllUntil := GetNextNoChild(Node);
 
-          ParentNode := Node.Parent;
+          ParentNode := NodeParent[Node];
           while Assigned(ParentNode) and IsFiltered[ParentNode] do begin
             IsFiltered[ParentNode] := False;
-            ParentNode := ParentNode.Parent;
+            ParentNode := NodeParent[ParentNode];
           end;
         end;
         Node := GetNext(Node);
@@ -5673,7 +5673,7 @@ begin
     TargetIndex := TargetNode.Index;
     if TargetNode = vstView.RootNode then
       Break;
-    TargetNode := TargetNode.Parent;
+    TargetNode := vstView.NodeParent[TargetNode];
   end;
   if not Assigned(TargetElement) then
     Exit;
@@ -5713,7 +5713,7 @@ begin
     TargetIndex := TargetNode.Index;
     if TargetNode = Target.RootNode then
       Break;
-    TargetNode := TargetNode.Parent;
+    TargetNode := Target.NodeParent[TargetNode];
   end;
   if not Assigned(TargetElement) then
     Exit;
