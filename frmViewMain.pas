@@ -694,6 +694,7 @@ type
     function SaveChanged(aSilent: Boolean = False): Boolean;
     procedure JumpTo(aInterface: IInterface; aBackward: Boolean);
     function FindNodeForElement(const aElement: IwbElement): PVirtualNode;
+    function FindNodeOrAncestorForElement(const aElement: IwbElement): PVirtualNode;
     function FindNodeForElementIn(aParent: PVirtualNode; const aElement: IwbElement): PVirtualNode;
     function EditWarn: Boolean;
     function RemoveableSelection(ContainsChilds: PBoolean): TNodeArray;
@@ -5169,18 +5170,46 @@ var
   Container                   : IwbContainer;
   Node                        : PVirtualNode;
   NodeData                    : PNavNodeData;
+
+  REFR                        : IwbMainRecord;
+  Position                    : TwbVector;
+  CellGRUP                    : IwbGroupRecord;
+  CELL                        : IwbMainRecord;
+  WorldGRUP                   : IwbGroupRecord;
+  WRLD                        : IwbMainRecord;
+  GridCell                    : TwbGridCell;
 begin
   if not Assigned(aElement) then
     Exit(nil);
 
-  Container := aElement.Container;
-  if Assigned(Container) then
-    Result := FindNodeForElement(Container)
-  else
-    Result := vstNav.RootNode;
+  Node := FindNodeOrAncestorForElement(aElement);
+  NodeData := vstNav.GetNodeData(Node);
+  if Assigned(NodeData) then
+    if aElement.Equals(NodeData.Element) or aElement.Equals(NodeData.Container) then
+      Exit(Node);
 
-  if Assigned(Result) then
-    Result := FindNodeForElementIn(Result, aElement);
+  if FilterApplied and AssignPersWrldChild then
+    //may be a persistent reference that has been assigned to a
+    //temporary world CELL by the filter
+    if Supports(aElement, IwbMainRecord, REFR) then
+      if REFR.GetPosition(Position) then
+        if Supports(REFR.Container, IwbGroupRecord, CellGRUP) then
+          if Supports(CellGRUP.ChildrenOf, IwbMainRecord, CELL) then
+            if CELL.Signature = 'CELL' then
+              if CELL.IsPersistent then
+                if Supports(CELL.Container, IwbGroupRecord, WorldGRUP) then
+                  if Supports(WorldGRUP.ChildrenOf, IwbMainRecord, WRLD) then
+                    if WRLD.Signature = 'WRLD' then begin
+                      GridCell := wbPositionToGridCell(Position);
+                      CELL := WRLD.ChildByGridCell[GridCell];
+                      if Assigned(CELL) then begin
+                        Node := FindNodeForElement(CELL);
+                        if Assigned(Node) then
+                          Exit(FindNodeForElementIn(Node, aElement));
+                      end;
+                    end;
+
+  Result := nil;
 end;
 
 function TfrmMain.FindNodeForElementIn(aParent: PVirtualNode; const aElement: IwbElement): PVirtualNode;
@@ -5197,6 +5226,29 @@ begin
         Exit;
     Result := vstNav.GetNextSibling(Result);
   end;
+end;
+
+function TfrmMain.FindNodeOrAncestorForElement(const aElement: IwbElement): PVirtualNode;
+var
+  Container                   : IwbContainer;
+  Node                        : PVirtualNode;
+  NodeData                    : PNavNodeData;
+begin
+  if not Assigned(aElement) then
+    Exit(nil);
+
+  Container := aElement.Container;
+  if Assigned(Container) then
+    Node := FindNodeOrAncestorForElement(Container)
+  else
+    Node := vstNav.RootNode;
+
+  if Assigned(Node) then begin
+    Result := FindNodeForElementIn(Node, aElement);
+    if not Assigned(Result) then
+      Result := Node;
+  end else
+    Result := nil;
 end;
 
 procedure TfrmMain.SaveLog(const s: string; aAllowReplace: Boolean);
