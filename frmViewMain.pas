@@ -604,6 +604,7 @@ type
     procedure vstViewScroll(Sender: TBaseVirtualTree; DeltaX, DeltaY: Integer);
     procedure bnHelpClick(Sender: TObject);
     procedure bnDiscordClick(Sender: TObject);
+    procedure bnPatreonClick(Sender: TObject);
     procedure tmrPendingSetActiveTimer(Sender: TObject);
     procedure bnLegendClick(Sender: TObject);
     procedure vstViewCollapsed(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -7189,6 +7190,18 @@ begin
     LastDiscordClick := Now;
   end;
 end;
+
+var
+  LastPatreonClick: TDateTime;
+
+procedure TfrmMain.bnPatreonClick(Sender: TObject);
+begin
+  if Now - LastPatreonClick > 1/24/60/60 then begin
+    ShellExecute(Handle, 'open', PChar(wbPatreonUrl), '', '', SW_SHOWNORMAL);
+    LastPatreonClick := Now;
+  end;
+end;
+
 
 procedure TfrmMain.mniNavApplyScriptClick(Sender: TObject);
 var

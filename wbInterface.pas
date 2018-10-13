@@ -218,6 +218,7 @@ var
   wbNexusModsUrl: string;
   wbHelpUrl: string = 'https://tes5edit.github.io/docs';
   wbDiscordUrl: string = 'https://discord.gg/5t8RnNQ';
+  wbPatreonUrl: string = 'https://www.patreon.com/ElminsterAU';
 
 {$IFDEF USE_CODESITE}
 type
