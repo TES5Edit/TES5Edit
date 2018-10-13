@@ -2843,11 +2843,12 @@ begin
 
   with odModule do begin
     FileName := '';
-    InitialDir := wbDataPath;
+    InitialDir := Settings.ReadString('CompareTo', 'InitialDir', wbDataPath);
     if not Execute then
       Exit;
 
     CompareFile := FileName;
+    Settings.WriteString('CompareTo', 'InitialDir', ExtractFilePath(CompareFile));
     if wbIsPlugin(CompareFile) then
       fPath := wbDataPath
     else
