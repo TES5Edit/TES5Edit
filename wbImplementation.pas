@@ -1076,8 +1076,8 @@ type
     function GetMasterOrSelf: IwbMainRecord;
     function GetOverride(aIndex: Integer): IwbMainRecord;
     function GetOverrideCount: Integer;
-    procedure AddReferencedBy(aMainRecord: IwbMainRecord);
-    procedure RemoveReferencedBy(aMainRecord: IwbMainRecord);
+    procedure AddReferencedBy(const aMainRecord: IwbMainRecord);
+    procedure RemoveReferencedBy(const aMainRecord: IwbMainRecord);
     procedure SortReferencedBy;
     function GetReferencedBy(aIndex: Integer): IwbMainRecord;
     function GetReferencedByCount: Integer;
@@ -6481,10 +6481,14 @@ var
   _ResizeLock: TRTLCriticalSection;
 {$ENDIF}
 
-procedure TwbMainRecord.AddReferencedBy(aMainRecord : IwbMainRecord);
+procedure TwbMainRecord.AddReferencedBy(const aMainRecord : IwbMainRecord);
 var
   i, j: Integer;
 begin
+  if Assigned(mrMaster) then begin
+    IwbMainRecord(mrMasteR).AddReferencedBy(aMainRecord);
+    Exit;
+  end;
 (**)
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   if wbBuildingRefsParallel then
@@ -8850,6 +8854,9 @@ end;
 
 function TwbMainRecord.GetReferencedBy(aIndex: Integer): IwbMainRecord;
 begin
+  if Assigned(mrMaster) then
+    Exit(IwbMainRecord(mrMaster).ReferencedBy[aIndex]);
+
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   Assert(not wbBuildingRefsParallel);
 {$ENDIF}
@@ -8861,6 +8868,9 @@ end;
 
 function TwbMainRecord.GetReferencedByCount: Integer;
 begin
+  if Assigned(mrMaster) then
+    Exit(IwbMainRecord(mrMaster).ReferencedByCount);
+
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   Assert(not wbBuildingRefsParallel);
 {$ENDIF}
@@ -9899,10 +9909,14 @@ begin
   mrMasterAndLeafs := nil;
 end;
 
-procedure TwbMainRecord.RemoveReferencedBy(aMainRecord: IwbMainRecord);
+procedure TwbMainRecord.RemoveReferencedBy(const aMainRecord: IwbMainRecord);
 var
   i: Integer;
 begin
+  if Assigned(mrMaster) then begin
+    IwbMainRecord(mrMasteR).RemoveReferencedBy(aMainRecord);
+    Exit;
+  end;
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   Assert(not wbBuildingRefsParallel);
 {$ENDIF}
@@ -10288,7 +10302,7 @@ begin
     end;
 
   Master := _File.RecordByFormID[aFormID, False];
-  if Assigned(Master) and ((Master._File as IwbFileInternal) = _File) then
+  if Assigned(Master) and ((Master._File as IwbFileInternal).Equals(_File)) then
     raise Exception.Create('FormID ['+aFormID.ToString(True)+'] is already present in file ' + _File.Name);
 
   _File.RemoveMainRecord(Self);

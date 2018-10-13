@@ -1335,8 +1335,8 @@ type
     function GetMasterOrSelf: IwbMainRecord;
     function GetOverride(aIndex: Integer): IwbMainRecord;
     function GetOverrideCount: Integer;
-    procedure AddReferencedBy(aMainRecord: IwbMainRecord);
-    procedure RemoveReferencedBy(aMainRecord: IwbMainRecord);
+    procedure AddReferencedBy(const aMainRecord: IwbMainRecord);
+    procedure RemoveReferencedBy(const aMainRecord: IwbMainRecord);
     function GetReferencedBy(aIndex: Integer): IwbMainRecord;
     function GetReferencedByCount: Integer;
     function GetIsWinningOverride: Boolean;
