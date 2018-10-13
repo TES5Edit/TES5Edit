@@ -4951,6 +4951,8 @@ function TfrmMain.EditWarn: Boolean;
 var
   EditWarnCount: Integer;
 begin
+  if not wbLoaderDone then
+    Exit(False);
   Result := EditWarnOk or (DebugHook <> 0) or wbIKnowWhatImDoing;
   if not Result then
     with TfrmEditWarning.Create(Self) do try
