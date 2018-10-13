@@ -119,6 +119,7 @@ type
     ConflictThis: TConflictThis;
     ElementGen   : Integer;
     ContainerGen : Integer;
+    MissingElements : TDynElements;
     ViewNodeFlags: TViewNodeFlags;
     procedure UpdateRefs;
   end;
