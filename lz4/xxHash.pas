@@ -40,6 +40,7 @@
 
 unit xxHash;
 {$POINTERMATH ON}
+{$Q-} // doesn't work with overflow checking
 
 interface
 
