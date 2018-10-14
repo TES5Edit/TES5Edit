@@ -34,7 +34,6 @@ object frmOptions: TfrmOptions
     object tsGeneral: TTabSheet
       Caption = 'General'
       ImageIndex = 1
-      ExplicitHeight = 335
       object cbIKnow: TCheckBox
         Left = 298
         Top = 302
@@ -199,7 +198,6 @@ object frmOptions: TfrmOptions
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'
-      ExplicitHeight = 335
       object Label1: TLabel
         Left = 16
         Top = 9
@@ -267,7 +265,6 @@ object frmOptions: TfrmOptions
     object tsUISettings: TTabSheet
       Caption = 'UI Settings'
       ImageIndex = 2
-      ExplicitHeight = 335
       object Label3: TLabel
         Left = 16
         Top = 16
@@ -467,6 +464,91 @@ object frmOptions: TfrmOptions
         TabOrder = 12
       end
     end
+    object tbsUITheme: TTabSheet
+      Caption = 'UI Theme'
+      ImageIndex = 3
+      object pnlThemeTop: TPanel
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 452
+        Height = 46
+        Align = alTop
+        BevelOuter = bvNone
+        TabOrder = 0
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 458
+        object rbThemeSystem: TRadioButton
+          Left = 0
+          Top = 1
+          Width = 65
+          Height = 17
+          Caption = '&System'
+          TabOrder = 0
+          OnClick = rbThemeClick
+        end
+        object cbThemeSystem: TComboBox
+          Left = 0
+          Top = 24
+          Width = 145
+          Height = 21
+          Style = csDropDownList
+          TabOrder = 1
+          OnSelect = cbThemeSystemSelect
+        end
+        object rbThemeLight: TRadioButton
+          Left = 151
+          Top = 1
+          Width = 65
+          Height = 17
+          Caption = 'Light'
+          TabOrder = 2
+          OnClick = rbThemeClick
+        end
+        object cbThemeLight: TComboBox
+          Left = 151
+          Top = 24
+          Width = 145
+          Height = 21
+          Style = csDropDownList
+          TabOrder = 3
+          OnSelect = cbThemeSystemSelect
+        end
+        object rbThemeDark: TRadioButton
+          Left = 302
+          Top = 1
+          Width = 65
+          Height = 17
+          Caption = 'Dark'
+          TabOrder = 4
+          OnClick = rbThemeClick
+        end
+        object cbThemeDark: TComboBox
+          Left = 302
+          Top = 24
+          Width = 145
+          Height = 21
+          Style = csDropDownList
+          TabOrder = 5
+          OnSelect = cbThemeSystemSelect
+        end
+      end
+      object pnlThemePreview: TPanel
+        AlignWithMargins = True
+        Left = 3
+        Top = 55
+        Width = 452
+        Height = 296
+        Align = alClient
+        BevelOuter = bvLowered
+        TabOrder = 1
+        ExplicitLeft = 136
+        ExplicitTop = 0
+        ExplicitWidth = 185
+        ExplicitHeight = 41
+      end
+    end
   end
   object btnOK: TButton
     Left = 302
@@ -477,7 +559,6 @@ object frmOptions: TfrmOptions
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 1
-    ExplicitTop = 369
   end
   object btnCancel: TButton
     Left = 383
@@ -488,6 +569,5 @@ object frmOptions: TfrmOptions
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
-    ExplicitTop = 369
   end
 end

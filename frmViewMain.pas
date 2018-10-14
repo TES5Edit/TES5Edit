@@ -12159,6 +12159,9 @@ begin
     if ShowModal <> mrOK then
       Exit;
 
+    if wbThemesSupported then
+      TStyleManager.TrySetStyle(GetSelectedTheme, False);
+
     vstNav.Font := pnlFontRecords.Font;
     vstView.Font := pnlFontRecords.Font;
     lblPath.Font := pnlFontRecords.Font;
