@@ -309,7 +309,6 @@ type
     mniNavRenumberFormIDsFrom: TMenuItem;
     mniNavCompactFormIDs: TMenuItem;
     mniNavRenumberFormIDsInject: TMenuItem;
-    imgFlattr: TImage;
     tmrGenerator: TTimer;
     mniNavLocalizationEditor: TMenuItem;
     mniNavLocalizationSwitch: TMenuItem;
@@ -545,11 +544,6 @@ type
     procedure mniNavTestClick(Sender: TObject);
     procedure mniNavCopyIdleClick(Sender: TObject);
     procedure mniNavRenumberFormIDsFromClick(Sender: TObject);
-    procedure stbMainDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel;
-      const Rect: TRect);
-    procedure stbMainResize(Sender: TObject);
-    procedure stbMainMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure tmrGeneratorTimer(Sender: TObject);
     procedure mmoMessagesDblClick(Sender: TObject);
     procedure mniNavLocalizationEditorClick(Sender: TObject);
@@ -14311,27 +14305,6 @@ procedure TfrmMain.splElementsMouseDown(Sender: TObject; Button: TMouseButton; S
 begin
   if Button = mbRight then
     pnlNav.Visible := not pnlNav.Visible;
-end;
-
-procedure TfrmMain.stbMainDrawPanel(StatusBar: TStatusBar; Panel: TStatusPanel;
-  const Rect: TRect);
-begin
-  StatusBar.Canvas.StretchDraw(Rect, imgFlattr.Picture.Graphic);
-end;
-
-procedure TfrmMain.stbMainMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-begin
-  if (Button = mbLeft) and (X > stbMain.Panels[0].Width) then
-    if wbNexusModsUrl <> '' then begin
-      ShellExecute(Handle, 'open', PChar(wbNexusModsUrl), '', '', SW_SHOWNORMAL);
-      ShowMessage('Please use the NexusMods page for donations. Thank you.');
-    end;
-end;
-
-procedure TfrmMain.stbMainResize(Sender: TObject);
-begin
-  stbMain.Panels[0].Width := stbMain.ClientWidth - stbMain.Panels[1].Width;
 end;
 
 procedure TfrmMain.tbsMessagesShow(Sender: TObject);
