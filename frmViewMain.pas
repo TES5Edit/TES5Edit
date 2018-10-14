@@ -603,6 +603,7 @@ type
     procedure tmrUpdateColumnWidthsTimer(Sender: TObject);
     procedure vstViewScroll(Sender: TBaseVirtualTree; DeltaX, DeltaY: Integer);
     procedure bnHelpClick(Sender: TObject);
+    procedure bnNexusModsClick(Sender: TObject);
     procedure bnDiscordClick(Sender: TObject);
     procedure bnPatreonClick(Sender: TObject);
     procedure tmrPendingSetActiveTimer(Sender: TObject);
@@ -7178,6 +7179,17 @@ begin
   else if bnLegend.Down then begin
     Application.CreateForm(TfrmLegend, frmLegend);
     frmLegend.Show;
+  end;
+end;
+
+var
+  LastNexusModsClick: TDateTime;
+
+procedure TfrmMain.bnNexusModsClick(Sender: TObject);
+begin
+  if Now - LastNexusModsClick > 1/24/60/60 then begin
+    ShellExecute(Handle, 'open', PChar(wbNexusModsUrl), '', '', SW_SHOWNORMAL);
+    LastNexusModsClick := Now;
   end;
 end;
 
