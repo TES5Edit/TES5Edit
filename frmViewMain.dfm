@@ -32,9 +32,6 @@ object frmMain: TfrmMain
     AutoSnap = False
     MinSize = 250
     ResizeStyle = rsUpdate
-    ExplicitLeft = 457
-    ExplicitTop = 32
-    ExplicitHeight = 594
   end
   object stbMain: TStatusBar
     AlignWithMargins = True
@@ -138,6 +135,7 @@ object frmMain: TfrmMain
           OnNewText = vstViewNewText
           OnResize = vstViewResize
           OnScroll = vstViewScroll
+          ExplicitLeft = 136
           Columns = <
             item
               Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coFixed]
@@ -159,78 +157,152 @@ object frmMain: TfrmMain
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 1
-          object bnLegend: TSpeedButton
-            AlignWithMargins = True
-            Left = 831
-            Top = 3
-            Width = 60
-            Height = 19
-            Align = alRight
-            AllowAllUp = True
-            GroupIndex = 1
-            Caption = 'Legend'
-            Flat = True
-            OnClick = bnLegendClick
-            ExplicitLeft = 960
-            ExplicitHeight = 24
-          end
-          object edViewFilterName: TLabeledEdit
-            Left = 90
-            Top = 1
-            Width = 143
-            Height = 21
-            EditLabel.AlignWithMargins = True
-            EditLabel.Width = 76
-            EditLabel.Height = 13
-            EditLabel.Caption = 'Filter by Name: '
-            EditLabel.Layout = tlCenter
-            LabelPosition = lpLeft
+          object fpnlViewFilter: TFlowPanel
+            Left = 0
+            Top = 0
+            Width = 828
+            Height = 25
+            Align = alClient
+            BevelOuter = bvNone
             TabOrder = 0
-            OnChange = edViewFilterChange
-            OnKeyDown = edViewFilterNameKeyDown
-            OnKeyPress = edFilterNoBeepOnEnterKeyPress
+            OnResize = fpnlViewFilterResize
+            ExplicitLeft = -243
+            ExplicitTop = -72
+            ExplicitWidth = 1137
+            ExplicitHeight = 97
+            object lblViewFilterName: TLabel
+              AlignWithMargins = True
+              Left = 3
+              Top = 7
+              Width = 73
+              Height = 13
+              Margins.Top = 7
+              Caption = 'Filter by &Name:'
+              FocusControl = edViewFilterName
+            end
+            object edViewFilterName: TEdit
+              AlignWithMargins = True
+              Left = 82
+              Top = 3
+              Width = 121
+              Height = 21
+              TabOrder = 0
+              OnChange = edViewFilterChange
+              OnKeyDown = edViewFilterNameKeyDown
+              OnKeyPress = edFilterNoBeepOnEnterKeyPress
+            end
+            object cobViewFilter: TComboBox
+              AlignWithMargins = True
+              Left = 209
+              Top = 3
+              Width = 53
+              Height = 21
+              AutoDropDown = True
+              AutoCloseUp = True
+              Style = csDropDownList
+              ItemIndex = 0
+              TabOrder = 1
+              Text = 'and'
+              OnChange = edViewFilterChange
+              OnKeyDown = edViewFilterNameKeyDown
+              Items.Strings = (
+                'and'
+                'or')
+            end
+            object lblViewFilterValue: TLabel
+              AlignWithMargins = True
+              Left = 268
+              Top = 7
+              Width = 45
+              Height = 13
+              Margins.Top = 7
+              Caption = 'by &Value:'
+              FocusControl = edViewFilterValue
+            end
+            object edViewFilterValue: TEdit
+              AlignWithMargins = True
+              Left = 319
+              Top = 3
+              Width = 121
+              Height = 21
+              TabOrder = 2
+              OnChange = edViewFilterChange
+              OnKeyDown = edViewFilterNameKeyDown
+              OnKeyPress = edFilterNoBeepOnEnterKeyPress
+            end
+            object fpnlViewFilterKeep: TFlowPanel
+              AlignWithMargins = True
+              Left = 446
+              Top = 0
+              Width = 259
+              Height = 27
+              Margins.Top = 0
+              Margins.Bottom = 0
+              BevelOuter = bvNone
+              TabOrder = 3
+              object lblViewFilterKeep: TLabel
+                AlignWithMargins = True
+                Left = 3
+                Top = 7
+                Width = 24
+                Height = 13
+                Margins.Top = 7
+                Caption = 'Keep'
+              end
+              object cbViewFilterKeepChildren: TCheckBox
+                AlignWithMargins = True
+                Left = 33
+                Top = 3
+                Width = 54
+                Height = 21
+                Caption = '&children'
+                TabOrder = 0
+                OnClick = edViewFilterChange
+              end
+              object cbViewFilterKeepSiblings: TCheckBox
+                AlignWithMargins = True
+                Left = 93
+                Top = 3
+                Width = 54
+                Height = 21
+                Caption = '&siblings'
+                TabOrder = 1
+                OnClick = edViewFilterChange
+              end
+              object cbViewFilterKeepParentsSiblings: TCheckBox
+                AlignWithMargins = True
+                Left = 153
+                Top = 3
+                Width = 96
+                Height = 21
+                Caption = '&parent'#39's siblings'
+                TabOrder = 2
+                OnClick = edViewFilterChange
+              end
+            end
           end
-          object edViewFilterValue: TLabeledEdit
-            Left = 337
-            Top = 1
-            Width = 143
-            Height = 21
-            EditLabel.AlignWithMargins = True
-            EditLabel.Width = 48
-            EditLabel.Height = 13
-            EditLabel.Caption = 'by Value: '
-            EditLabel.Layout = tlCenter
-            LabelPosition = lpLeft
-            TabOrder = 2
-            OnChange = edViewFilterChange
-            OnKeyDown = edViewFilterNameKeyDown
-            OnKeyPress = edFilterNoBeepOnEnterKeyPress
-          end
-          object cobViewFilter: TComboBox
-            Left = 239
-            Top = 1
-            Width = 41
-            Height = 21
-            AutoDropDown = True
-            AutoCloseUp = True
-            Style = csDropDownList
-            ItemIndex = 0
+          object pnlViewTopLegend: TPanel
+            Left = 828
+            Top = 0
+            Width = 66
+            Height = 25
+            Align = alRight
+            BevelOuter = bvNone
             TabOrder = 1
-            Text = 'and'
-            OnChange = edViewFilterChange
-            OnKeyDown = edViewFilterNameKeyDown
-            Items.Strings = (
-              'and'
-              'or')
-          end
-          object cbNavFilterKeepChildren: TCheckBox
-            Left = 486
-            Top = 3
-            Width = 215
-            Height = 17
-            Caption = 'Keep children of nodes matching filter'
-            TabOrder = 3
-            OnClick = edViewFilterChange
+            ExplicitLeft = 709
+            object bnLegend: TSpeedButton
+              AlignWithMargins = True
+              Left = 3
+              Top = 3
+              Width = 60
+              Height = 21
+              Align = alTop
+              AllowAllUp = True
+              GroupIndex = 1
+              Caption = 'Legend'
+              Flat = True
+              OnClick = bnLegendClick
+            end
           end
         end
       end
@@ -1243,7 +1315,6 @@ object frmMain: TfrmMain
         FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF993F079C420A9E
         460E9D450C9C410984360CFF00FFFF00FFFF00FFFF00FFFF00FF}
       NumGlyphs = 3
-      ExplicitLeft = 886
     end
     object bnForward: TSpeedButton
       AlignWithMargins = True
@@ -1330,7 +1401,6 @@ object frmMain: TfrmMain
         FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF993F079C420A9E
         460E9D450C9C410984360CFF00FFFF00FFFF00FFFF00FFFF00FF}
       NumGlyphs = 3
-      ExplicitLeft = 916
     end
     object bnHelp: TSpeedButton
       AlignWithMargins = True
@@ -1444,7 +1514,6 @@ object frmMain: TfrmMain
         0000000000000000000000000000000000000000000000000000000000000000
         0000000000000000000000000000000000000000000000000000}
       OnClick = bnHelpClick
-      ExplicitLeft = 1159
     end
     object bnNexusMods: TSpeedButton
       AlignWithMargins = True
@@ -1491,7 +1560,6 @@ object frmMain: TfrmMain
         0000000000000000000000000000000000000000000000000000000000000000
         00000B0B0B2C0E0D0F6504040417000000000000000000000000}
       OnClick = bnNexusModsClick
-      ExplicitLeft = 1139
     end
     object bnGitHub: TSpeedButton
       AlignWithMargins = True
@@ -1556,8 +1624,6 @@ object frmMain: TfrmMain
         1D4F19191A410F0F0F2326262681232324E42626267C00000000000000000000
         00000000000000000000}
       OnClick = bnGitHubClick
-      ExplicitLeft = 1125
-      ExplicitTop = 0
     end
     object bnDiscord: TSpeedButton
       AlignWithMargins = True
@@ -1614,7 +1680,6 @@ object frmMain: TfrmMain
         0000000000000000000000000000000000000000000000000000000000000000
         0000000000000000000000000000000000000000000000000000}
       OnClick = bnDiscordClick
-      ExplicitLeft = 1235
     end
     object bnPatreon: TSpeedButton
       AlignWithMargins = True
@@ -1661,7 +1726,6 @@ object frmMain: TfrmMain
         0000000000000000000012161E301B3C7B970C4ECAD80056F8F80056F8F80B4F
         CCD91B3D7C9812171E3100000000000000000000000000000000}
       OnClick = bnPatreonClick
-      ExplicitLeft = 1301
     end
     object lblPath: TEdit
       AlignWithMargins = True
@@ -1686,7 +1750,6 @@ object frmMain: TfrmMain
       TabOrder = 0
       Visible = False
       StyleElements = [seFont, seBorder]
-      ExplicitWidth = 915
     end
   end
   object pnlNav: TPanel
