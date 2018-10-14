@@ -13418,12 +13418,21 @@ begin
           SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 0;
         end;
 
-      for i := 0 to Pred(wbLocalizationHandler.Count) do
-        if wbLocalizationHandler[i].Modified  or wbTestWrite then begin
-          CheckListBox1.AddItem(wbLocalizationHandler[i].Name, Pointer(wbLocalizationHandler[i]));
-          CheckListBox1.Checked[Pred(CheckListBox1.Count)] := wbLocalizationHandler[i].Modified;
-          SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 1;
+      if Assigned(wbLocalizationHandler) then try
+        for i := 0 to Pred(wbLocalizationHandler.Count) do try
+          if wbLocalizationHandler[i].Modified or wbTestWrite then begin
+            CheckListBox1.AddItem(wbLocalizationHandler[i].Name, Pointer(wbLocalizationHandler[i]));
+            CheckListBox1.Checked[Pred(CheckListBox1.Count)] := wbLocalizationHandler[i].Modified;
+            SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 1;
+          end;
+        except
+          on E: Exception do
+            wbProgress('Error while trying to access wbLocalizationHandler[%d]: [%s] %s', [i, E.ClassName, E.Message]);
         end;
+      except
+        on E: Exception do
+          wbProgress('Error while trying to iterate over wbLocalizationHandler: [%s] %s', [E.ClassName, E.Message]);
+      end;
 
       Caption := 'Save changed files:';
       cbBackup.Visible := True;
