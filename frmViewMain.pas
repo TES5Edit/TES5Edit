@@ -5730,7 +5730,7 @@ begin
     TargetIndex := TargetNode.Index;
     if TargetNode = vstView.RootNode then
       Break;
-    TargetNode := vstView.NodeParent[TargetNode];
+    TargetNode := TargetNode.Parent;
   end;
   if not Assigned(TargetElement) then
     Exit;
@@ -5770,7 +5770,7 @@ begin
     TargetIndex := TargetNode.Index;
     if TargetNode = Target.RootNode then
       Break;
-    TargetNode := Target.NodeParent[TargetNode];
+    TargetNode := TargetNode.Parent;
   end;
   if not Assigned(TargetElement) then
     Exit;
