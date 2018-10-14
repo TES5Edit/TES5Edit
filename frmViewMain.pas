@@ -604,6 +604,7 @@ type
     procedure vstViewScroll(Sender: TBaseVirtualTree; DeltaX, DeltaY: Integer);
     procedure bnHelpClick(Sender: TObject);
     procedure bnNexusModsClick(Sender: TObject);
+    procedure bnGitHubClick(Sender: TObject);
     procedure bnDiscordClick(Sender: TObject);
     procedure bnPatreonClick(Sender: TObject);
     procedure tmrPendingSetActiveTimer(Sender: TObject);
@@ -7190,6 +7191,17 @@ begin
   if Now - LastNexusModsClick > 1/24/60/60 then begin
     ShellExecute(Handle, 'open', PChar(wbNexusModsUrl), '', '', SW_SHOWNORMAL);
     LastNexusModsClick := Now;
+  end;
+end;
+
+var
+  LastGitHubClick: TDateTime;
+
+procedure TfrmMain.bnGitHubClick(Sender: TObject);
+begin
+  if Now - LastGitHubClick > 1/24/60/60 then begin
+    ShellExecute(Handle, 'open', PChar(wbGitHubUrl), '', '', SW_SHOWNORMAL);
+    LastGitHubClick := Now;
   end;
 end;
 

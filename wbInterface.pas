@@ -215,8 +215,9 @@ var
 
   wbDarkMode : Boolean = False;
 
-  wbNexusModsUrl: string;
   wbHelpUrl: string = 'https://tes5edit.github.io/docs';
+  wbNexusModsUrl: string;
+  wbGitHubUrl: string = 'https://github.com/TES5Edit/TES5Edit/releases';
   wbDiscordUrl: string = 'https://discord.gg/5t8RnNQ';
   wbPatreonUrl: string = 'https://www.patreon.com/ElminsterAU';
 
