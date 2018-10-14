@@ -349,9 +349,6 @@ type
     pnlNavBottom: TPanel;
     edFileNameFilter: TLabeledEdit;
     pnlViewTop: TPanel;
-    edViewFilterName: TLabeledEdit;
-    edViewFilterValue: TLabeledEdit;
-    cobViewFilter: TComboBox;
     lblFilterHint: TLabel;
     N22: TMenuItem;
     mniViewModGroupsReload: TMenuItem;
@@ -364,7 +361,18 @@ type
     mniNavDeleteModGroups: TMenuItem;
     tmrUpdateColumnWidths: TTimer;
     tmrPendingSetActive: TTimer;
-    cbNavFilterKeepChildren: TCheckBox;
+    fpnlViewFilter: TFlowPanel;
+    lblViewFilterName: TLabel;
+    edViewFilterName: TEdit;
+    cobViewFilter: TComboBox;
+    lblViewFilterValue: TLabel;
+    edViewFilterValue: TEdit;
+    fpnlViewFilterKeep: TFlowPanel;
+    lblViewFilterKeep: TLabel;
+    cbViewFilterKeepChildren: TCheckBox;
+    cbViewFilterKeepSiblings: TCheckBox;
+    cbViewFilterKeepParentsSiblings: TCheckBox;
+    pnlViewTopLegend: TPanel;
     bnLegend: TSpeedButton;
 
     {--- Form ---}
@@ -605,8 +613,10 @@ type
     procedure bnLegendClick(Sender: TObject);
     procedure vstViewCollapsed(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstViewExpanded(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure fpnlViewFilterResize(Sender: TObject);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
+    procedure ApplyViewFilter;
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -4973,32 +4983,11 @@ begin
 end;
 
 procedure TfrmMain.edViewFilterChange(Sender: TObject);
-var
-  Node         : PVirtualNode;
-  ParentNode   : PVirtualNode;
-  KeepAllUntil : PVirtualNode;
 begin
   with vstView do begin
     BeginUpdate;
     try
-      Node := GetFirst;
-      KeepAllUntil := nil;
-      while Assigned(Node) do begin
-        IsFiltered[Node] := not Assigned(KeepAllUntil) and IsViewNodeFiltered(Node);
-        if not IsFiltered[Node] then begin
-          if not Assigned(KeepAllUntil) and cbNavFilterKeepChildren.Checked then
-            KeepAllUntil := GetNextNoChild(Node);
-
-          ParentNode := NodeParent[Node];
-          while Assigned(ParentNode) and IsFiltered[ParentNode] do begin
-            IsFiltered[ParentNode] := False;
-            ParentNode := NodeParent[ParentNode];
-          end;
-        end;
-        Node := GetNext(Node);
-        if KeepAllUntil = Node then
-          KeepAllUntil := nil;
-      end;
+      ApplyViewFilter;
       UpdateColumnWidths;
     finally
       EndUpdate;
@@ -5057,6 +5046,7 @@ begin
           end;
       Node := vstView.GetPrevious(Node);
     end;
+    ApplyViewFilter;
   finally
     RebuildingViewTree := False;
   end;
@@ -5687,14 +5677,12 @@ procedure TfrmMain.FormShow(Sender: TObject);
 var
   i: Integer;
 begin
-  {
-  pnlTop.Height := Abs(lblPath.Font.Height) + Trunc(20 * (GetCurrentPPIScreen/PixelsPerInch));
-  pnlSearch.Height := Abs(edFormIDSearch.Font.Height) + Trunc(16 * (GetCurrentPPIScreen/PixelsPerInch));
-  i := edEditorIDSearch.Left;
-  edEditorIDSearch.Left := Trunc(pnlSearch.Height * 2.5);
-  edEditorIDSearch.Width := edEditorIDSearch.Width - (edEditorIDSearch.Left - i);
-  }
   tmrStartup.Enabled := True;
+end;
+
+procedure TfrmMain.fpnlViewFilterResize(Sender: TObject);
+begin
+  pnlViewTop.Height := fpnlViewFilterKeep.Top + fpnlViewFilterKeep.Height + 8;
 end;
 
 function TfrmMain.GetAddElement(out TargetNode: PVirtualNode; out TargetIndex: Integer;
@@ -7153,6 +7141,64 @@ begin
     ScriptEngine := nil;
     jvi.Free;
     tmrCheckUnsaved.Enabled := bCheckUnsaved;
+  end;
+end;
+
+procedure TfrmMain.ApplyViewFilter;
+var
+  Node         : PVirtualNode;
+  ParentNode   : PVirtualNode;
+  Unfiltered   : array of PVirtualNode;
+  i            : Integer;
+begin
+  with vstView do begin
+    Unfiltered := nil;
+    Node := GetFirst;
+    while Assigned(Node) do begin
+      IsFiltered[Node] := IsViewNodeFiltered(Node);
+      if not IsFiltered[Node] then begin
+        SetLength(Unfiltered, Succ(Length(Unfiltered)));
+        Unfiltered[High(Unfiltered)] := Node;
+      end;
+      Node := GetNext(Node);
+    end;
+    for i := Low(Unfiltered) to High(Unfiltered) do begin
+      Node := NodeParent[Unfiltered[i]];
+      while Assigned(Node) do begin
+        IsFiltered[Node] := False;
+        Node := NodeParent[Node];
+      end;
+
+      if cbViewFilterKeepChildren.Checked then begin
+        Node := GetLast(Unfiltered[i]);
+        while Assigned(Node) and (Node <> Unfiltered[i]) do begin
+          IsFiltered[Node] := False;
+          Node := GetPrevious(Node);
+        end;
+      end;
+
+      if cbViewFilterKeepSiblings.Checked then begin
+        Node := Unfiltered[i];
+        if Assigned(Node.Parent) then begin
+          Node := Node.Parent.FirstChild;
+          while Assigned(Node) do begin
+            IsFiltered[Node] := False;
+            Node := GetNextSibling(Node);
+          end;
+        end;
+      end;
+
+      if cbViewFilterKeepParentsSiblings.Checked then begin
+        Node := NodeParent[Unfiltered[i]];
+        if Assigned(Node) and Assigned(Node.Parent) then begin
+          Node := Node.Parent.FirstChild;
+          while Assigned(Node) do begin
+            IsFiltered[Node] := False;
+            Node := GetNextSibling(Node);
+          end;
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -15744,15 +15790,6 @@ begin
   if not Assigned(ParentDatas) then
     ParentDatas := @ActiveRecords[0];
   InitNodes(Node, NodeDatas, ParentDatas, Length(ActiveRecords), Node.Index, InitialStates);
-  if IsViewNodeFiltered(Node) then
-    Include(InitialStates, ivsFiltered)
-  else begin
-    Parent := Node.Parent;
-    while Assigned(Parent) and (Sender.IsFiltered[Parent]) do begin
-      Sender.IsFiltered[Parent] := False;
-      Parent := Parent.Parent;
-    end;
-  end;
 end;
 
 procedure TfrmMain.vstViewKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
