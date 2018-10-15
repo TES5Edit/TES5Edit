@@ -10,3 +10,11 @@
 	path = VirtualTrees
 	url = https://github.com/ElminsterAU/Virtual-TreeView.git
 	branch = master
+[submodule "GrijjyFoundation"]
+	path = GrijjyFoundation
+	url = https://github.com/ElminsterAU/GrijjyFoundation.git
+	branch = master
+[submodule "DelphiScalableClientSockets"]
+	path = DelphiScalableClientSockets
+	url = https://github.com/ElminsterAU/DelphiScalableClientSockets.git
+	branch = master
