@@ -133,6 +133,9 @@ function ProgramPath:	String;
 /// <summary>Provides the file path to Tes5Edit's 'Edit Scripts' folder as a String.</summary>
 /// <remarks>NOTE If launching TES5Edit via a .tes5pas file, ScriptsPath will change to the directory where the .te5pas file is located. (therefore if your script has any .pas file it is grabbing functions from, they also need to be in the that same directory.)</remarks>
 function ScriptsPath:	String;
+/// <summary>Provides the argument passed to the -scriptargs:"<args>" command line option as a String.</summary>
+/// <remarks>NOTE: If one needs to pass comma separated or other formatted data they should pass it as a single string and then parse the string returned from ScriptArgs in a script's Initialize function.</remarks>
+function ScriptArgs:	String;
 /// <summary>Provides the number of loaded files in your current TES5Edit session</summary>
 /// <remarks>NOTE: "Skyrim.Hardcoded.keep.this..." (aka. Skyrim.exe) is considered a file and is reflected in this variable.</remarks>
 function FileCount:	Integer;
@@ -575,6 +578,11 @@ begin
 end;
 
 function ScriptsPath:	String;
+begin
+  Result := '';
+end;
+
+function ScriptArgs:	String;
 begin
   Result := '';
 end;

@@ -17500,6 +17500,11 @@ begin
     Value := wbScriptsPath;
     Done := True;
   end
+  else if (SameText(Identifier, 'ScriptArgs') and (Args.Count = 0)) or
+     (SameText(Identifier, 'wbScriptArgs') and (Args.Count = 0)) then begin
+    Value := wbScriptArgs;
+    Done := True;
+  end
   else if (SameText(Identifier, 'wbDataPath') and (Args.Count = 0)) or
      (SameText(Identifier, 'DataPath') and (Args.Count = 0)) then begin
     Value := wbDataPath;

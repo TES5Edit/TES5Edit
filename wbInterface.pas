@@ -133,6 +133,7 @@ var
   wbReportModGroups        : Boolean  = False;
   wbRequireCtrlForDblClick : Boolean  = False;
   wbFocusAddedElement      : Boolean  = True;
+  wbScriptArgs             : String;
 
   wbGlobalModifedGeneration : UInt64;
 

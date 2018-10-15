@@ -857,6 +857,13 @@ begin
     wbSimpleRecords := False;
   end;
 
+  // Generic arguments usable by scripts for their own decision logic.
+  // The argument is parsed as a literal string to give scripts the
+  // option of parsing it how they see fit as it may not be a safe
+  // assumption to comma-split it by default.
+  if wbFindCmdLineParam('scriptargs', s) then
+    wbScriptArgs := s;
+
   // definitions
   case wbGameMode of
     gmFNV: case wbToolSource of
