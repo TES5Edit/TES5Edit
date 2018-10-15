@@ -1451,12 +1451,26 @@ begin
     Value := _File.RecordByEditorID[string(Args.Values[1])];
 end;
 
+procedure IwbFile_AddMasters(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    _File.AddMasters(TStrings(V2O(Args.Values[1])));
+end;
+
 procedure IwbFile_AddMasterIfMissing(var Value: Variant; Args: TJvInterpreterArgs);
 var
   _File: IwbFile;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    _File.AddMasterIfMissing(string(Args.Values[1]));
+    case Args.Count of
+    0, 1: JvInterpreterError(ieNotEnoughParams, -1);
+    3: _File.AddMasterIfMissing(string(Args.Values[1]), Boolean(Args.Values[2]));
+    2: _File.AddMasterIfMissing(string(Args.Values[1]));
+    else
+     JvInterpreterError(ieTooManyParams, -1);
+    end;
 end;
 
 procedure IwbFile_HasMaster(var Value: Variant; Args: TJvInterpreterArgs);
@@ -2023,7 +2037,8 @@ begin
     AddFunction(cUnit, 'GroupBySignature', IwbFile_GroupBySignature, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'RecordByFormID', IwbFile_RecordByFormID, 3, [varEmpty, varInteger, varBoolean], varEmpty);
     AddFunction(cUnit, 'RecordByEditorID', IwbFile_RecordByEditorID, 2, [varEmpty, varString], varEmpty);
-    AddFunction(cUnit, 'AddMasterIfMissing', IwbFile_AddMasterIfMissing, 2, [varEmpty, varString], varEmpty);
+    AddFunction(cUnit, 'AddMasters', IwbFile_AddMasters, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'AddMasterIfMissing', IwbFile_AddMasterIfMissing, -1, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'HasMaster', IwbFile_HasMaster, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'HasGroup', IwbFile_HasGroup, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'LoadOrderFormIDtoFileFormID', IwbFile_LoadOrderFormIDtoFileFormID, 2, [varEmpty, varEmpty], varEmpty);

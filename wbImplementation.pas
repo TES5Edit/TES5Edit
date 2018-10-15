@@ -706,7 +706,7 @@ type
     function FileFileIDtoLoadOrderFileID(aFileID: TwbFileID): TwbFileID;
 
     procedure AddMasters(aMasters: TStrings);
-    procedure AddMasterIfMissing(const aMaster: string);
+    procedure AddMasterIfMissing(const aMaster: string; aSortMasters: Boolean = True);
     procedure SortMasters;
     procedure CleanMasters;
 
@@ -2116,7 +2116,7 @@ begin
   UpdateModuleMasters;
 end;
 
-procedure TwbFile.AddMasterIfMissing(const aMaster: string);
+procedure TwbFile.AddMasterIfMissing(const aMaster: string; aSortMasters: Boolean = True);
 var
   i       : Integer;
   Masters : TStringList;
@@ -2128,7 +2128,8 @@ begin
   try
     Masters.Add(aMaster);
     AddMasters(Masters);
-    SortMasters;
+    if aSortMasters then
+      SortMasters;
   finally
     Masters.Free;
   end;
