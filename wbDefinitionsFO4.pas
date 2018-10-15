@@ -5585,7 +5585,7 @@ begin
     2: Result := 1;
     4: Result := 3;
     5: Result := 2;
-    6: Result := 3;
+    6: Result := 0;
   end;
 end;
 
