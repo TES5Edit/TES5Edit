@@ -72,7 +72,8 @@ uses
   Vcl.Themes,
   Vcl.Styles,
   Vcl.Styles.Utils.SystemMenu,
-  Vcl.Styles.Ext;
+  Vcl.Styles.Ext,
+  JvBalloonHint;
 
 const
   DefaultInterval             = 1 / 24 / 6;
@@ -374,6 +375,12 @@ type
     cbViewFilterKeepParentsSiblings: TCheckBox;
     pnlViewTopLegend: TPanel;
     bnLegend: TSpeedButton;
+    bnHelp: TSpeedButton;
+    bnNexusMods: TSpeedButton;
+    bnGitHub: TSpeedButton;
+    bnDiscord: TSpeedButton;
+    bnPatreon: TSpeedButton;
+    jbhPatreon: TJvBalloonHint;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -614,6 +621,7 @@ type
     procedure vstViewCollapsed(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstViewExpanded(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure fpnlViewFilterResize(Sender: TObject);
+    procedure jbhPatreonBalloonClick(Sender: TObject);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
@@ -4658,6 +4666,7 @@ begin
         ShowTip;
 
       wbStartTime := Now;
+      jbhPatreon.ActivateHint(bnPatreon, 'Please consider supporting future xEdit development.', 'Patreon is now live!', 30000);
       TLoaderThread.Create(sl);
     finally
       FreeAndNil(sl);
@@ -6467,6 +6476,12 @@ begin
       Exit(not FoundValue)
     else
       Exit(False);
+end;
+
+procedure TfrmMain.jbhPatreonBalloonClick(Sender: TObject);
+begin
+  bnPatreon.Click;
+  jbhPatreon.CancelHint;
 end;
 
 procedure TfrmMain.InvalidateElementsTreeView(aNodes: TNodeArray);

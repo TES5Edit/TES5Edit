@@ -72,6 +72,10 @@ object frmMain: TfrmMain
       object tbsView: TTabSheet
         Caption = 'View'
         OnShow = tbsViewShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object vstView: TVirtualEditTree
           AlignWithMargins = True
           Left = 0
@@ -135,7 +139,6 @@ object frmMain: TfrmMain
           OnNewText = vstViewNewText
           OnResize = vstViewResize
           OnScroll = vstViewScroll
-          ExplicitLeft = 136
           Columns = <
             item
               Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coFixed]
@@ -166,10 +169,6 @@ object frmMain: TfrmMain
             BevelOuter = bvNone
             TabOrder = 0
             OnResize = fpnlViewFilterResize
-            ExplicitLeft = -243
-            ExplicitTop = -72
-            ExplicitWidth = 1137
-            ExplicitHeight = 97
             object lblViewFilterName: TLabel
               AlignWithMargins = True
               Left = 3
@@ -289,7 +288,6 @@ object frmMain: TfrmMain
             Align = alRight
             BevelOuter = bvNone
             TabOrder = 1
-            ExplicitLeft = 709
             object bnLegend: TSpeedButton
               AlignWithMargins = True
               Left = 3
@@ -311,6 +309,10 @@ object frmMain: TfrmMain
         ImageIndex = 3
         TabVisible = False
         OnShow = tbsViewShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object lvReferencedBy: TListView
           AlignWithMargins = True
           Left = 0
@@ -353,6 +355,10 @@ object frmMain: TfrmMain
         Caption = 'Messages'
         ImageIndex = 1
         OnShow = tbsMessagesShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object mmoMessages: TMemo
           AlignWithMargins = True
           Left = 0
@@ -374,6 +380,10 @@ object frmMain: TfrmMain
       object tbsInfo: TTabSheet
         Caption = 'Information'
         ImageIndex = 2
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object Memo1: TMemo
           AlignWithMargins = True
           Left = 3
@@ -744,6 +754,10 @@ object frmMain: TfrmMain
         Caption = 'Weapon Spreadsheet'
         ImageIndex = 4
         OnShow = tbsSpreadsheetShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object vstSpreadSheetWeapon: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -949,6 +963,10 @@ object frmMain: TfrmMain
         Caption = 'Armor Spreadsheet'
         ImageIndex = 5
         OnShow = tbsSpreadsheetShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object vstSpreadsheetArmor: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -1090,6 +1108,10 @@ object frmMain: TfrmMain
         Caption = 'Ammunition Spreadsheet'
         ImageIndex = 6
         OnShow = tbsSpreadsheetShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object vstSpreadSheetAmmo: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -1210,6 +1232,10 @@ object frmMain: TfrmMain
         Caption = 'TabSheet2'
         ImageIndex = 7
         TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object DisplayPanel: TPanel
           Left = 0
           Top = 0
@@ -1687,6 +1713,9 @@ object frmMain: TfrmMain
       Top = 3
       Width = 70
       Height = 24
+      Hint = 
+        'Patreon is now live! Please support further ongoing xEdit develo' +
+        'pment.'
       Align = alRight
       Caption = 'Patreon'
       Flat = True
@@ -1725,6 +1754,8 @@ object frmMain: TfrmMain
         FFFF0059FFFF0058FDFD1A3D809B040405090000000000000000000000000000
         0000000000000000000012161E301B3C7B970C4ECAD80056F8F80056F8F80B4F
         CCD91B3D7C9812171E3100000000000000000000000000000000}
+      ParentShowHint = False
+      ShowHint = True
       OnClick = bnPatreonClick
     end
     object lblPath: TEdit
@@ -1765,7 +1796,7 @@ object frmMain: TfrmMain
       AlignWithMargins = True
       Left = 3
       Top = 28
-      Width = 449
+      Width = 440
       Height = 26
       Margins.Bottom = 9
       Align = alTop
@@ -1775,7 +1806,6 @@ object frmMain: TfrmMain
         'ply the filter if necessary.'
       Visible = False
       WordWrap = True
-      ExplicitWidth = 440
     end
     object vstNav: TVirtualEditTree
       Left = 0
@@ -1830,7 +1860,7 @@ object frmMain: TfrmMain
         end
         item
           Position = 2
-          Width = 125
+          Width = 129
           WideText = 'Name'
         end>
     end
@@ -2674,5 +2704,12 @@ object frmMain: TfrmMain
     OnTimer = tmrPendingSetActiveTimer
     Left = 192
     Top = 456
+  end
+  object jbhPatreon: TJvBalloonHint
+    DefaultBalloonPosition = bpLeftDown
+    DefaultHeader = 'Patreon'
+    OnBalloonClick = jbhPatreonBalloonClick
+    Left = 1301
+    Top = 105
   end
 end
