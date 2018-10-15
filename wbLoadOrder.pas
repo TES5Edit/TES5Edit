@@ -164,11 +164,15 @@ var
 function wbModuleByName(const aName: string): PwbModuleInfo;
 var
   i: Integer;
+  s: string;
 begin
-  if aName = '' then
+  s := aName;
+  if s.EndsWith(csDotGhost, True) then
+    SetLength(s, Length(s) + Length(csDotGhost));
+  if s = '' then
     Exit(@_InvalidModule);
   wbLoadModules;
-  if _ModulesByName.Find(aName, i) then
+  if _ModulesByName.Find(s, i) then
     Result := Pointer(_ModulesByName.Objects[i])
   else
     Result := @_InvalidModule;
