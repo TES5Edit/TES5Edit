@@ -1098,7 +1098,36 @@ uses
   frmModuleSelectForm,
   frmModGroupSelectForm,
   frmModGroupEditForm,
-  frmLegendForm;
+  frmLegendForm,
+  WinInet;
+
+function GetUrlContent(const Url: string): UTF8String;
+var
+  NetHandle: HINTERNET;
+  UrlHandle: HINTERNET;
+  Buffer: array[0..1023] of byte;
+  BytesRead: dWord;
+  StrBuffer: UTF8String;
+begin
+  Result := '';
+  NetHandle := InternetOpen('xEdit', INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
+  if Assigned(NetHandle) then try
+    UrlHandle := InternetOpenUrl(NetHandle, PChar(Url), nil, 0, INTERNET_FLAG_RELOAD, 0);
+    if Assigned(UrlHandle) then try
+      repeat
+        InternetReadFile(UrlHandle, @Buffer, SizeOf(Buffer), BytesRead);
+        SetString(StrBuffer, PAnsiChar(@Buffer[0]), BytesRead);
+        Result := Result + StrBuffer;
+      until BytesRead = 0;
+    finally
+      InternetCloseHandle(UrlHandle);
+    end else
+      raise Exception.CreateFmt('Cannot open URL %s', [Url]);
+  finally
+    InternetCloseHandle(NetHandle);
+  end else
+    raise Exception.Create('Unable to initialize Wininet');
+end;
 
 var
   LastUpdate               : UInt64;
