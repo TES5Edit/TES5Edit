@@ -7106,6 +7106,8 @@ var
   SubBlock     : Cardinal;
   lContainer   : IwbContainer;
   IsInterior   : Boolean;
+  Cell         : IwbMainRecord;
+  GridCell     : TwbGridCell;
 begin
   IsInterior := False;
   lContainer := aContainer;
@@ -7191,6 +7193,13 @@ begin
     if IsInterior then
       if Supports(GetRecordBySignature('DATA'), IwbContainerElementRef, ContainerRef) then
         ContainerRef.EditValue := '1';
+
+    if mrDef.IsReference then
+      if Supports(lContainer, IwbGroupRecordInternal, Group) then begin
+        Cell := Group.ChildrenOf;
+        if Assigned(Cell) and not Cell.IsPersistent and Cell.GetGridCell(GridCell) then
+          SetPosition(wbGridCellToCenterPosition(GridCell));
+      end;
 
     CollapseStorage;
   finally
@@ -12315,12 +12324,6 @@ begin
       MainRecord.SetGridCell(GridCell);
       if Persistent then
         MainRecord.IsPersistent := True;
-    end;
-
-    if MainRecord.Def.IsReference then begin
-      Cell := Group.ChildrenOf;
-      if Assigned(Cell) and not Cell.IsPersistent and Cell.GetGridCell(GridCell) then
-        MainRecord.SetPosition(wbGridCellToCenterPosition(GridCell));
     end;
   finally
     MainRecord.EndUpdate;
