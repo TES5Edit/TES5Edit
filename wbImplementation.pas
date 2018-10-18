@@ -2219,8 +2219,8 @@ begin
   Result := blrNone;
   if not wbDontCache and (not (fsRefsBuild in flStates)) and ((not (esModified in eStates) or (esInternalModified in eStates))) then begin
     CacheFileName := ExtractFileName(flFileName);
-    if CacheFileName.EndsWith('.ghost', True) then
-      SetLength(CacheFileName, Length(CacheFileName) - Length('.ghost'));
+    if CacheFileName.EndsWith(csDotGhost, True) then
+      SetLength(CacheFileName, Length(CacheFileName) - Length(csDotGhost));
     CacheFileName :=
             wbCachePath +
             IntToHex64(wbCRC32App, 8) +
@@ -2982,7 +2982,7 @@ begin
   flProgress('Loading file');
 
   if not FileExists(flFileName) then begin
-    s := flFileName + '.ghost';
+    s := flFileName + csDotGhost;
     if FileExists(s) then begin
       flProgress('File is .ghost''ed, adjusting file name...');
       flFileNameOnDisk := s;

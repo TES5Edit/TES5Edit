@@ -146,12 +146,12 @@ end;
 
 function wbCheckForValidExtension(aFilePath : string; const anExtension : string): Boolean; overload;
 begin
-  Result := UpperCase(ExtractFileExt(aFilePath)) = UpperCase(anExtension);
+  Result := aFilePath.EndsWith(anExtension, True);
 end;
 
 function wbCheckForPluginExtension(aFilePath : string): Boolean;
 begin
-  Result := wbCheckForValidExtension(aFilePath, '.esp') or wbCheckForValidExtension(aFilePath, '.esm');
+  Result := wbIsPlugin(aFilePath);
 end;
 
 function wbCheckForValidExtension(aFilePath : string): Boolean; overload;
