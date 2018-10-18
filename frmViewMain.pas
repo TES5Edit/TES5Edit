@@ -4761,6 +4761,10 @@ begin
         ShowTip;
 
       wbStartTime := Now;
+
+      wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
+      wbNoGitHubCheck := Settings.ReadBool('Options', 'NoGitHubCheck', wbNoGitHubCheck);
+
       jbhPatreon.ActivateHint(bnPatreon, 'Please consider supporting future xEdit development.', 'Patreon is now live!', 30000);
       TLoaderThread.Create(sl);
     finally
@@ -12257,6 +12261,8 @@ begin
     cbAutoSave.Checked := AutoSave;
     //cbIKnow.Checked := wbIKnowWhatImDoing;
     cbShowTip.Checked := wbShowTip;
+    cbPatron.Checked := wbPatron;
+    cbNoGitHubCheck.Checked := wbNoGitHubCheck;
     cbTrackAllEditorID.Checked := wbTrackAllEditorID;
     cbUDRSetXESP.Checked := wbUDRSetXESP;
     cbUDRSetScale.Checked := wbUDRSetScale;
@@ -12304,6 +12310,8 @@ begin
     AutoSave := cbAutoSave.Checked;
     //wbIKnowWhatImDoing := cbIKnow.Checked;
     wbShowTip := cbShowTip.Checked;
+    wbPatron := cbPatron.Checked;
+    wbNoGitHubCheck := cbNoGitHubCheck.Checked;
     wbTrackAllEditorID := cbTrackAllEditorID.Checked;
     wbUDRSetXESP := cbUDRSetXESP.Checked;
     wbUDRSetScale := cbUDRSetScale.Checked;
@@ -12342,6 +12350,8 @@ begin
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
     Settings.WriteBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
     Settings.WriteBool('Options', 'ShowTip', wbShowTip);
+    Settings.WriteBool('Options', 'Patron', wbPatron);
+    Settings.WriteBool('Options', 'NoGitHubCheck', wbNoGitHubCheck);
     Settings.WriteBool('Options', 'UDRSetXESP', wbUDRSetXESP);
     Settings.WriteBool('Options', 'UDRSetScale', wbUDRSetScale);
     Settings.WriteFloat('Options', 'UDRSetScaleValue', wbUDRSetScaleValue);

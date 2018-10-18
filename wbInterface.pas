@@ -211,6 +211,8 @@ var
   wbMoreInfoForDecider               : Boolean = False;
   wbTrackAllEditorID                 : Boolean = False;
   wbShowTip                          : Boolean = True;
+  wbPatron                           : Boolean = False;
+  wbNoGitHubCheck                    : Boolean = False;
 
   wbCheckExpectedBytes : Boolean = True;
 
