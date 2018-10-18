@@ -16494,7 +16494,7 @@ begin
           -1, 0: CellText := _File.Name;
           1: begin
             s := '';
-            if wbShowFileFlags then begin
+            if wbShowFileFlags and Assigned(_File.Header) then begin
               if _File.Header.IsESM then
                 s := '<ESM>';
               if _File.Header.IsESL then
