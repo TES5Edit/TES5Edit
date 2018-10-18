@@ -155,6 +155,10 @@ type
 
   TwbThread = class(TThread);
 
+  TwbCheckGitHubReleaseThread = class(TwbThread)
+    procedure Execute; override;
+  end;
+
   TLOOTPluginInfo = record
     Plugin: string;
     CRC32: TwbCRC32;
@@ -382,6 +386,7 @@ type
     bnDiscord: TSpeedButton;
     bnPatreon: TSpeedButton;
     jbhPatreon: TJvBalloonHint;
+    jbhGitHub: TJvBalloonHint;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -624,6 +629,7 @@ type
     procedure vstViewExpanded(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure fpnlViewFilterResize(Sender: TObject);
     procedure jbhPatreonBalloonClick(Sender: TObject);
+    procedure jbhGitHubBalloonClick(Sender: TObject);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
@@ -649,7 +655,10 @@ type
     vstNavLastCheckedForChanges : UInt64;
     vstNavReInit : Boolean;
     NavFocusedElement : IwbElement;
+
     HideRemoveMessage : Boolean;
+
+    GitHubVersion : TwbVersion;
 
     function GetRefBySelectionAsMainRecords: TDynMainRecords;
     function GetRefBySelectionAsElements: TDynElements;
@@ -857,6 +866,8 @@ type
     PluggyEnchantmentFormID: TwbFormID;
     PluggySpellFormID: TwbFormID;
     PluggyLinkThread: TwbThread;
+
+    CheckGitHubReleaseThread: TwbCheckGitHubReleaseThread;
 
     FileCRCs: TwbFastStringListIC;
 
@@ -1070,6 +1081,7 @@ implementation
 {$R *.dfm}
 
 uses
+  JsonDataObjects,
   DDetours,
   Mask,
   {$IFNDEF LiteVersion}
@@ -4765,7 +4777,16 @@ begin
       wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
       wbNoGitHubCheck := Settings.ReadBool('Options', 'NoGitHubCheck', wbNoGitHubCheck);
 
-      jbhPatreon.ActivateHint(bnPatreon, 'Please consider supporting future xEdit development.', 'Patreon is now live!', 30000);
+      if wbToolMode in [tmEdit, tmView, tmTranslate] then begin
+        if wbPatron then
+          jbhPatreon.ActivateHint(bnPatreon, 'Thanks!', '', 3000)
+        else
+          jbhPatreon.ActivateHint(bnPatreon, 'Please consider supporting future xEdit development.', 'Patreon is now live!', 15000);
+
+        if not wbNoGitHubCheck then
+          CheckGitHubReleaseThread := TwbCheckGitHubReleaseThread.Create;
+      end;
+
       TLoaderThread.Create(sl);
     finally
       FreeAndNil(sl);
@@ -5422,6 +5443,13 @@ begin
   if Assigned(PluggyLinkThread) then
     PluggyLinkThread.Terminate;
   FreeAndNil(PluggyLinkThread);
+
+  if Assigned(CheckGitHubReleaseThread) then begin
+    if CheckGitHubReleaseThread.Finished then
+      FreeAndNil(CheckGitHubReleaseThread)
+    else
+      TerminateThread(CheckGitHubReleaseThread.Handle, 0);
+  end;
 
   if not SaveChanged then begin
     Action := caNone;
@@ -6575,6 +6603,12 @@ begin
       Exit(not FoundValue)
     else
       Exit(False);
+end;
+
+procedure TfrmMain.jbhGitHubBalloonClick(Sender: TObject);
+begin
+  bnGitHub.Click;
+  jbhGitHub.CancelHint;
 end;
 
 procedure TfrmMain.jbhPatreonBalloonClick(Sender: TObject);
@@ -14957,6 +14991,14 @@ var
   ChangesMade : Boolean;
   i, dummy: Integer;
 begin
+  if GitHubVersion.Major <> 0 then
+    if not jbhPatreon.Active then begin
+      bnGitHub.ShowHint := True;
+      bnGitHub.Hint := 'A newer version is available on GitHub: ' + GitHubVersion;
+      jbhGitHub.ActivateHint(bnGitHub, bnGitHub.Hint, '', 20000);
+      GitHubVersion := '';
+    end;
+
   if Assigned(NewMessages) and (NewMessages.Count > 0) then begin
     mmoMessages.Lines.AddStrings(NewMessages);
     NewMessages.Clear;
@@ -19340,6 +19382,45 @@ begin
       vstView.ScrollIntoView(vstView.FocusedColumn, True, vstView.FocusedNode);
     end;
   end;
+end;
+
+{ TwbCheckGitHubReleaseThread }
+
+procedure TwbCheckGitHubReleaseThread.Execute;
+var
+  J: TJsonBaseObject;
+  A: TJsonArray;
+  i: Integer;
+  s: string;
+
+  v, vmax: TwbVersion;
+begin
+  vmax := '';
+  try
+    J := TJsonBaseObject.ParseUtf8(GetUrlContent('https://api.github.com/repos/TES5Edit/TES5Edit/releases'));
+    try
+      if J is TJsonArray then begin
+        A := J as TJsonArray;
+        for i := 0 to Pred(A.Count) do try
+          s := A.O[i].S['tag_name'];
+          if s.StartsWith('xedit-') then try
+            v := Copy(s, Succ(Length('xedit-')), High(Integer));
+            if v > vmax then
+              vmax := v;
+          except
+          end;
+        except
+        end;
+      end;
+    finally
+      J.Free;
+    end;
+  except end;
+  if vmax > VersionString then
+    Synchronize(procedure begin
+      if Assigned(frmMain) then
+        frmMain.GitHubVersion := vmax;
+    end);
 end;
 
 initialization
