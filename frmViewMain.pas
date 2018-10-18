@@ -16618,7 +16618,7 @@ begin
 
     ChildNode := Node.FirstChild;
     if Assigned(ChildNode) then begin
-      for i := 0 to Pred(ChildCount) do
+      for i := 0 to Pred(Integer(ChildCount)) do
         Container.Elements[i].Found := False;
       while Assigned(ChildNode) do begin
         ChildNodeData := Sender.GetNodeData(ChildNode);
@@ -16641,7 +16641,7 @@ begin
       end;
       SetLength(NodeData.MissingElements, ChildCount);
       j := 0;
-      for i := 0 to Pred(ChildCount) do
+      for i := 0 to Pred(Integer(ChildCount)) do
         if not Container.Elements[i].Found then begin
           NodeData.MissingElements[j] := Container.Elements[i];
           Inc(j);
