@@ -316,8 +316,10 @@ procedure SetElementNativeValues(aeContainer: IwbContainer; asPath: string; avVa
 // IwbFile Functions
 // ********************************************************************
 
-/// <summary>Adds the specified file as a master for aeFile, if it isn't already a master.</summary>
-procedure AddMasterIfMissing(aeFile: IwbFile; asMasterFilename: string);
+/// <summary>Adds the list of masters in aMasters to aeFile. If sorting is desired an explicit call to SortMasters is necessary.</summary>
+procedure AddMasters(aeFile: IwbFile; aMasters: TStrings);
+/// <summary>Adds the specified file as a master for aeFile, if it isn't already a master. If SortMasters is true (the default) all masters will be sorted if any were added.</summary>
+procedure AddMasterIfMissing(aeFile: IwbFile; asMasterFilename: string; aSortMasters: Boolean = True);
 /// <summary>Creates a new, empty plugin in the game's plugin folder (Data) and adds it to the end of the plugins list.</summary>
 /// <param name="asFileName">Name of the plugin.</param>
 /// <returns>The reference to the newly created plugin as a IwbFile</returns>
@@ -968,7 +970,11 @@ end;
 // IwbFile Functions
 // ********************************************************************
 
-procedure AddMasterIfMissing(aeFile: IwbFile; asMasterFilename: string);
+procedure AddMasters(aeFile: IwbFile; aMasters: TStrings);
+begin
+end;
+
+procedure AddMasterIfMissing(aeFile: IwbFile; asMasterFilename: string; aSortMasters: Boolean = True);
 begin
 end;
 

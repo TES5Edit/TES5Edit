@@ -1160,7 +1160,7 @@ type
 
     procedure GetMasters(aMasters: TStrings);
     procedure AddMasters(aMasters: TStrings);
-    procedure AddMasterIfMissing(const aMaster: string);
+    procedure AddMasterIfMissing(const aMaster: string; aSortMasters: Boolean = True);
     procedure SortMasters;
     procedure CleanMasters;
 
