@@ -138,7 +138,7 @@ object frmScript: TfrmScript
   object dlgSave: TSaveDialog
     DefaultExt = 'pas'
     Filter = 'Pascal files (*.pas)|*.pas'
-    Options = [ofOverwritePrompt, ofHideReadOnly, ofNoChangeDir, ofOldStyleDialog, ofEnableSizing]
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
     OptionsEx = [ofExNoPlacesBar]
     Title = 'Save script'
     Left = 600
