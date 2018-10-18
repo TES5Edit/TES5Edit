@@ -3838,6 +3838,9 @@ function wbCanOverwrite(const aTarget, aSource: IwbElement): TwbCanOverwriteActi
 var
   wbVarPointer: TVarType = $7FF;
 
+function wbFormIDErrorCheckLock: Integer;
+function wbFormIDErrorCheckUnlock: Integer;
+
 implementation
 
 uses
@@ -14227,14 +14230,29 @@ begin
   inherited;
 end;
 
+threadvar
+  _FormIDErrorCheckLockCount: Integer;
+
+function wbFormIDErrorCheckLock: Integer;
+begin
+  Inc(_FormIDErrorCheckLockCount);
+end;
+
+function wbFormIDErrorCheckUnlock: Integer;
+begin
+  Dec(_FormIDErrorCheckLockCount);
+end;
+
 function TwbFormIDChecked.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
 var
   Error: string;
 begin
   Result := inherited FromEditValue(aValue, aElement);
-  Error := Check(Result, aElement);
-  if Error <> '' then
-    raise Exception.Create(Error);
+  if _FormIDErrorCheckLockCount < 1 then begin
+    Error := Check(Result, aElement);
+    if Error <> '' then
+      raise Exception.Create(Error);
+  end;
 end;
 
 function TwbFormIDChecked.GetExactIdentString: string;
