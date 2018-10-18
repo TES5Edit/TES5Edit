@@ -14792,7 +14792,7 @@ var
   AvailableWidth : Integer;
   NewWidth       : Integer;
 begin
-  vstView.BeginUpdate;
+  vstView.BeginUpdate(True);
   vstView.Header.Columns.BeginUpdate;
   try
     with vstView.Header, Columns do begin
