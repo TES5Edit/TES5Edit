@@ -25,9 +25,36 @@ uses
   UITypes,
   Graphics;
 
+type
+  TwbVersion = record
+    Major   : Integer;
+    Minor   : Integer;
+    Release : Integer;
+    Build   : string;
+    Title   : string;
+
+    class operator Equal(const A, B: TwbVersion): Boolean; static;
+    class operator NotEqual(const A, B: TwbVersion): Boolean; static;
+    class operator GreaterThan(const A, B: TwbVersion): Boolean; static;
+    class operator GreaterThanOrEqual(const A, B: TwbVersion): Boolean; static;
+    class operator LessThan(const A, B: TwbVersion): Boolean; static;
+    class operator LessThanOrEqual(const A, B: TwbVersion): Boolean; static;
+
+    class operator Implicit(const aVersion: TwbVersion): string; static;
+    class operator Implicit(const s: string): TwbVersion; static;
+
+    function ToString: string;
+  end;
+
 const
-  VersionString            = '3.2.79 EXPERIMENTAL';
-  wbDevCRC32App : Cardinal = $FFFFFFFF;
+  VersionString : TwbVersion = (
+    Major   : 3;
+    Minor   : 2;
+    Release : 79;
+    Build   : 'e';
+    Title   : 'EXPERIMENTAL';
+  );
+  wbDevCRC32App : Cardinal = $FFFFFFEF;
 
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
@@ -16851,6 +16878,117 @@ begin
   Result :=
     (a.x = b.x) and
     (a.y = b.y);
+end;
+
+{ TwbVersion }
+
+class operator TwbVersion.Equal(const A, B: TwbVersion): Boolean;
+begin
+  Result :=
+    (A.Major = B.Major) and
+    (A.Minor = B.Minor) and
+    (A.Release = B.Release) and
+    SameText(A.Build, B.Build);
+end;
+
+class operator TwbVersion.GreaterThan(const A, B: TwbVersion): Boolean;
+begin
+  Result :=
+    (A.Major > B.Major) or
+    (
+      (A.Major = B.Major) and
+      (
+        (A.Minor > B.Minor) or
+        (
+          (A.Minor = B.Minor) and
+          (
+            (A.Release > B.Release) or
+            (
+              (A.Release = B.Release) and
+              (CompareText(A.Build, B.Build) >= 0)
+            )
+          )
+        )
+      )
+    );
+end;
+
+class operator TwbVersion.GreaterThanOrEqual(const A, B: TwbVersion): Boolean;
+begin
+  Result := (A > B) or (A = B);
+end;
+
+class operator TwbVersion.Implicit(const s: string): TwbVersion;
+var
+  t  : string;
+  i  : Integer;
+  sl : TArray<string>;
+begin
+  with Result do begin
+    t := s;
+    i := Pos(' ', t);
+    if i > 0 then begin
+      Title := Copy(t, Succ(i), High(Integer));
+      Delete(t, i, High(Integer));
+    end else
+      Title := '';
+
+    sl := t.Split(['.']);
+
+    Major := 0;
+    Minor := 0;
+    Release := 0;
+    Build := '';
+    if Length(sl) >= 1 then begin
+      Major := StrToInt(sl[0]);
+      if Length(sl) >= 2 then begin
+        Minor := StrToInt(sl[1]);
+        if Length(sl) >= 3 then begin
+          t := sl[2];
+          i := 1;
+          while (i <= Length(t)) and (t[i] in ['0'..'9']) do
+            Inc(i);
+          if i <= Length(t) then begin
+            Build := Copy(t, i, High(Integer));
+            Delete(t, i, High(Integer));
+          end;
+          Release := StrToInt(t);
+        end;
+      end;
+    end;
+  end;
+end;
+
+class operator TwbVersion.LessThan(const A, B: TwbVersion): Boolean;
+begin
+  Result := not (A >= B);
+end;
+
+class operator TwbVersion.LessThanOrEqual(const A, B: TwbVersion): Boolean;
+begin
+  Result := (A < B) or (A = B);
+end;
+
+class operator TwbVersion.NotEqual(const A, B: TwbVersion): Boolean;
+begin
+  Result := not (A = B);
+end;
+
+function TwbVersion.ToString: string;
+begin
+  Result := Self;
+end;
+
+class operator TwbVersion.Implicit(const aVersion: TwbVersion): string;
+begin
+  with aVersion do begin
+    Result := Major.ToString + '.' +
+              Minor.ToString + '.' +
+              Release.ToString +
+              Build;
+    if Title <> '' then
+      Result := Result + ' ' + Title;
+  end;
 end;
 
 initialization
