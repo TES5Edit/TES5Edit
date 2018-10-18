@@ -1089,7 +1089,7 @@ type
     fsMemoryMapped,
     fsScanning,
     fsPseudoESL,
-    fsPseudoESLCompatible,
+    fsESLCompatible,
     fsIsOfficial
   );
 
