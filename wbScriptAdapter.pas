@@ -1760,6 +1760,15 @@ begin
     wbLocalizationHandler.GetStringsFromFile(string(Args.Values[0]), TStrings(V2O(Args.Values[1])));
 end;
 
+procedure Misc_wbFormIDErrorCheckLock(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbFormIDErrorCheckLock;
+end;
+
+procedure Misc_wbFormIDErrorCheckUnlock(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbFormIDErrorCheckUnlock;
+end;
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 begin
@@ -2065,6 +2074,8 @@ begin
     AddFunction(cUnit, 'wbNormalizeResourceName', Misc_wbNormalizeResourceName, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbStringListInString', Misc_wbStringListInString, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'LocalizationGetStringsFromFile', Misc_LocalizationGetStringsFromFile, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbFormIDErrorCheckLock', Misc_wbFormIDErrorCheckLock, 0, [], varEmpty);
+    AddFunction(cUnit, 'wbFormIDErrorCheckUnlock', Misc_wbFormIDErrorCheckUnlock, 0, [], varEmpty);
   end;
 end;
 
