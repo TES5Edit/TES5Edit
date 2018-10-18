@@ -4138,28 +4138,34 @@ var
   Container : IwbDataContainer;
   Element   : IwbElement;
   fResult   : Extended;
+  i         : Int64;
 begin
-  Result := 0;
+  i := 0;
 
   if Supports(aElement.Container, IwbDataContainer, Container) and (Container.Name = 'OFST - Offset Data') and
      Supports(Container.Container, IwbDataContainer, Container) then begin
     Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
     if Assigned(Element) then begin
       fResult :=  Element.NativeValue;
-      if fResult >= MaxInt then
-        Result := 0
+      if (fResult >= High(Integer)) or (fResult < Low(Integer))  then
+        i := 0
       else
-        Result := Trunc(fResult);
+        i := Trunc(fResult);
       Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
       if Assigned(Element) then begin
         fResult :=  Element.NativeValue;
-        if fResult >= MaxInt then
-          Result := 1
+        if (fResult >= High(Integer)) or (fResult < Low(Integer))  then
+          i := 0
         else
-          Result := Trunc(fResult) - Result + 1;
+          i := Trunc(fResult) - Result + 1;
       end;
     end;
   end;
+
+  if (i < 1) or (i > 100000) then
+    i := 1;
+
+  Result := i;
 end;
 
 procedure DefineFO3a;
