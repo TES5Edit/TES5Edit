@@ -51,8 +51,7 @@ var
 function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil): Boolean; overload;
 function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil): Boolean; overload;
 
-function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
-  IsTemporary: Boolean = False; aOnlyHeader: Boolean = False): IwbFile;
+function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsESL: Boolean): IwbFile; overload;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile; overload;
 procedure wbFileForceClosed;
@@ -751,7 +750,7 @@ type
 
     procedure UpdateModuleMasters;
 
-    constructor Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aOnlyHeader: Boolean; IsTemporary: Boolean = False);
+    constructor Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates);
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aIsEsl: Boolean); overload;
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo); overload;
   public
@@ -1933,6 +1932,7 @@ var
   s     : string;
   t     : string;
   i     : Integer;
+  States: TwbFileStates;
 begin
   if not wbRequireLoadorder and IsTemporary then begin
     for i := 0 to Pred(GetMasterCount) do
@@ -1947,8 +1947,13 @@ begin
   if s <> '' then
     s := IncludeTrailingPathDelimiter(s);
 
+  if IsTemporary then
+    States := [fsIsTemporary]
+  else
+    States := [];
+
   flProgress('Adding master "' + t + '"');
-  _File := wbFile(s + t, -1, '', IsTemporary, False);
+  _File := wbFile(s + t, -1, '', States);
   if not (wbToolMode in [tmDump, tmExport]) and (wbRequireLoadOrder and (_File.LoadOrder < 0)) then
     raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.')
   else
@@ -2604,11 +2609,10 @@ begin
   UpdateModuleMasters;
 end;
 
-constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aOnlyHeader: Boolean; IsTemporary: Boolean = False);
+constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates);
 begin
+  flStates := aStates * [fsIsTemporary, fsOnlyHeader];
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
-  if IsTemporary then
-    Include(flStates, fsIsTemporary);
   if aCompareTo <> '' then begin
     Include(flStates, fsIsCompareLoad);
     if SameText(ExtractFileName(aFileName), wbGameName + wbHardcodedDat) then
@@ -2618,8 +2622,6 @@ begin
     Include(flStates, fsIsGameMaster);
     Include(flStates, fsIsOfficial);
   end;
-  if aOnlyHeader then
-    Include(flStates, fsOnlyHeader);
 
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
@@ -16996,8 +16998,7 @@ begin
   _NextLightSlot := 0;
 end;
 
-function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = '';
-  IsTemporary: Boolean = False; aOnlyHeader: Boolean = False): IwbFile;
+function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []): IwbFile;
 var
   FileName: string;
   i: Integer;
@@ -17012,9 +17013,9 @@ begin
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
   else begin
     if not wbIsPlugin(FileName) then
-      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, aOnlyHeader, IsTemporary)
+      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, aStates)
     else
-      Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, aOnlyHeader, IsTemporary);
+      Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, aStates);
     SetLength(Files, Succ(Length(Files)));
     Files[High(Files)] := Result;
     FilesMap.AddObject(FileName, Pointer(Result));
@@ -17041,9 +17042,9 @@ begin
       if FilesMap.Find(FileName, i) then
         _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
       else if not wbIsPlugin(FileName) then
-        _File := TwbFileSource.Create(FileName, -1, '', True)
+        _File := TwbFileSource.Create(FileName, -1, '', [fsOnlyHeader])
       else
-        _File := TwbFile.Create(FileName, -1, '', True);
+        _File := TwbFile.Create(FileName, -1, '', [fsOnlyHeader]);
 
       if Assigned(aMasters) then
         _File.GetMasters(aMasters);

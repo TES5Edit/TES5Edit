@@ -914,7 +914,7 @@ type
 
     procedure PostAddMessage(const s: string);
     procedure SendAddFile(const aFile: IwbFile);
-    procedure SendLoaderDone(const aStartTime: TDateTime);
+    procedure SendLoaderDone(const aStartTime: TDateTime; aLoadOrder: Integer);
 
     procedure PostPluggyChange(aFormID, aBaseFormID, aInventoryFormID, aEnchantmentFormID, aSpellFormID: TwbFormID);
   end;
@@ -926,12 +926,12 @@ type
     ltDataPath: string;
     ltMaster: string;
     ltFiles: array of IwbFile;
-    ltTemporary: Boolean;
+    ltStates: TwbFileStates;
 
     procedure Execute; override;
   public
-    constructor Create(var aList: TStringList; IsTemporary: Boolean = False); overload;
-    constructor Create(aFileName: string; aMaster: string; aLoadOrder: Integer; IsTemporary: Boolean = False); overload;
+    constructor Create(var aList: TStringList; aFileStates: TwbFileStates = []); overload;
+    constructor Create(aFileName: string; aMaster: string; aLoadOrder: Integer; aFileStates: TwbFileStates = []); overload;
     destructor Destroy; override;
   end;
 
@@ -2873,8 +2873,9 @@ var
   fPath        : string;
   s            : String;
   i            : Integer;
-  Temporary    : Boolean;
+  States       : TwbFileStates;
 begin
+  States := [];
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
   if not Assigned(NodeData) then
     Exit;
@@ -2910,9 +2911,8 @@ begin
       CompareFile := s;
       CopyFile(PChar(FileName), PChar(CompareFile), false);
       // We need to propagate a flag to mark the copy temporary, so it can be deleted on close
-      Temporary := True;
-    end else
-      Temporary := False;
+      Include(States, fsIsTemporary);
+    end;
   end;
 
   vstNav.PopupMenu := nil;
@@ -2921,8 +2921,9 @@ begin
   DoSetActiveRecord(nil);
   mniNavFilterRemoveClick(Sender);
   wbStartTime := Now;
-  TLoaderThread.Create(CompareFile, _File.FileName, _File.LoadOrder, Temporary);
+  TLoaderThread.Create(CompareFile, _File.FileName, _File.LoadOrder, States);
 end;
+
 
 procedure TfrmMain.mniNavCopyIdleClick(Sender: TObject);
 var
@@ -13847,9 +13848,9 @@ begin
   SendMessage(Handle, WM_USER + 1, UInt64(Pointer(aFile)), 0);
 end;
 
-procedure TfrmMain.SendLoaderDone(const aStartTime: TDateTime);
+procedure TfrmMain.SendLoaderDone(const aStartTime: TDateTime; aLoadOrder: Integer);
 begin
-  SendMessage(Handle, WM_USER + 2, NativeUInt(@aStartTime), 0);
+  SendMessage(Handle, WM_USER + 2, NativeUInt(@aStartTime), aLoadOrder);
 end;
 
 procedure TfrmMain.DoSetActiveContainer(const aContainer: IwbDataContainer);
@@ -18127,142 +18128,129 @@ procedure TfrmMain.WMUser2(var Message: TMessage);
 var
   i         : Integer;
   ModGroups : TwbModGroupPtrs;
+  LoadOrder : Integer;
+  NewFile   : IwbFile;
 begin
   wbLoaderDone := True;
   wbStartTime := PDateTime(Message.WParam)^;
-  Inc(wbShowStartTime);
-  try
-
-    if wbToolMode in [tmEdit] then begin
-      // unchecked Show Tip checkbox, update setting
-      if Assigned(frmTip) and not wbShowTip then begin
-        Settings.WriteBool('Options', 'ShowTip', wbShowTip);
-        Settings.UpdateFile;
-      end;
-      HideTip;
-    end;
-
-    if wbLoaderError then begin
-      ShowMessage('An error occured while loading modules. Editing is disabled. Check the message log and correct the error.');
-      Exit;
-    end;
-
-    _BlockInternalEdit := False;
-
-    if (wbToolMode in [tmLODgen, tmScript]) then begin
-      if not wbForceTerminate then
-        tmrGenerator.Enabled := True;
-      Exit;
-    end;
-
-    vstNav.PopupMenu := pmuNav;
-
-    if wbIsSkyrim then begin
-      with vstSpreadSheetWeapon.Header.Columns[9] do
-        Options := Options - [coVisible];
-      for i := 12 to 20 do
-        with vstSpreadSheetWeapon.Header.Columns[i] do
-          Options := Options + [coVisible];
-
-      with vstSpreadsheetArmor.Header.Columns[9] do
-        Options := Options - [coVisible];
-      with vstSpreadsheetArmor.Header.Columns[6] do
-        Text := 'Armor Type';
-      for i := 11 to 12 do
-        with vstSpreadsheetArmor.Header.Columns[i] do
-          Options := Options + [coVisible];
-
-      with vstSpreadSheetAmmo.Header.Columns[5] do
-        Options := Options - [coVisible];
-      with vstSpreadSheetAmmo.Header.Columns[7] do
-        Options := Options - [coVisible];
-      with vstSpreadSheetAmmo.Header.Columns[4] do
-        Text := 'Projectile';
-      with vstSpreadSheetAmmo.Header.Columns[9] do
-        Options := Options + [coVisible];
-    end;
-
-    SetupTreeView(vstSpreadSheetWeapon);
-    SetupTreeView(vstSpreadsheetArmor);
-    SetupTreeView(vstSpreadSheetAmmo);
-
-    tbsWEAPSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim;
-    tbsARMOSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim;
-    tbsAMMOSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim;
-
-    tmrCheckUnsaved.Enabled := wbEditAllowed and
-      not (wbToolMode in wbAutoModes) and
-      not wbIKnowWhatImDoing;
-
-    if wbForceTerminate then begin
-      GeneralProgressNoAbortCheck('Loading of modules got terminated early. Editing is disabled.');
-      Exit;
-    end;
-
-    if wbFirstLoadComplete then
-      Exit;
-
-    wbFirstLoadComplete := True;
-
-    ModGroups := nil;
-
-    if wbQuickShowConflicts then begin
-      ModGroups := wbModGroupsByName;
-      wbModGroupsByName(False).ShowValidationMessages;
-    end else if not (wbQuickClean or (wbToolMode in wbAutoModes)) then
-      if wbToolMode in [tmView, tmEdit] then begin
-        with TfrmModGroupSelect.Create(Self) do
-        try
-          AllModGroups := wbModGroupsByName;
-          wbModGroupsByName(False).ShowValidationMessages;
-          LoadModGroupsSelection(AllModGroups);
-          Caption := 'Which ModGroups do you want to activate?';
-          PresetCategory := 'ActiveModGroups';
-          if ShowModal = mrOk then begin
-            SaveModGroupsSelection(SelectedModGroups);
-            ModGroups := SelectedModGroups;
-          end;
-        finally
-          Free;
+  LoadOrder := Message.LParam;
+  if LoadOrder < 0 then begin
+    Inc(wbShowStartTime);
+    try
+      if wbToolMode in [tmEdit] then begin
+        // unchecked Show Tip checkbox, update setting
+        if Assigned(frmTip) and not wbShowTip then begin
+          Settings.WriteBool('Options', 'ShowTip', wbShowTip);
+          Settings.UpdateFile;
         end;
+        HideTip;
       end;
 
-    ModGroupsExist := ModGroups.Activate;
-    ModGroupsEnabled := ModGroupsExist;
-    mniModGroupsEnabled.Checked := ModGroupsEnabled;
-    mniModGroupsDisabled.Checked := not ModGroupsEnabled;
+      if wbLoaderError then begin
+        ShowMessage('An error occured while loading modules. Editing is disabled. Check the message log and correct the error.');
+        Exit;
+      end;
 
-    if wbQuickShowConflicts then
-      mniNavFilterConflicts.Click;
+      _BlockInternalEdit := False;
 
-    if wbQuickClean then begin
-      mniNavFilterForCleaning.Click;
-      JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
-      vstNav.ClearSelection;
-      vstNav.FocusedNode := vstNav.FocusedNode.Parent;
-      vstNav.Selected[vstNav.FocusedNode] := True;
-      DoSetActiveRecord(nil);
-      pgMain.ActivePage := tbsMessages;
-      mniNavUndeleteAndDisableReferences.Click;
-      mniNavRemoveIdenticalToMaster.Click;
+      if (wbToolMode in [tmLODgen, tmScript]) then begin
+        if not wbForceTerminate then
+          tmrGenerator.Enabled := True;
+        Exit;
+      end;
 
-      if wbQuickCleanAutoSave then
-        if not SaveChanged(True) then
-          Exit;
+        if wbIsSkyrim then begin
+        with vstSpreadSheetWeapon.Header.Columns[9] do
+          Options := Options - [coVisible];
+        for i := 12 to 20 do
+          with vstSpreadSheetWeapon.Header.Columns[i] do
+            Options := Options + [coVisible];
 
-      mniNavFilterForCleaning.Click;
-      JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
-      vstNav.ClearSelection;
-      vstNav.FocusedNode := vstNav.FocusedNode.Parent;
-      vstNav.Selected[vstNav.FocusedNode] := True;
-      DoSetActiveRecord(nil);
-      pgMain.ActivePage := tbsMessages;
-      mniNavUndeleteAndDisableReferences.Click;
-      mniNavRemoveIdenticalToMaster.Click;
+        with vstSpreadsheetArmor.Header.Columns[9] do
+          Options := Options - [coVisible];
+        with vstSpreadsheetArmor.Header.Columns[6] do
+          Text := 'Armor Type';
+        for i := 11 to 12 do
+          with vstSpreadsheetArmor.Header.Columns[i] do
+            Options := Options + [coVisible];
 
-      if wbQuickCleanAutoSave then begin
-        if not SaveChanged(True) then
-          Exit;
+        with vstSpreadSheetAmmo.Header.Columns[5] do
+          Options := Options - [coVisible];
+        with vstSpreadSheetAmmo.Header.Columns[7] do
+          Options := Options - [coVisible];
+        with vstSpreadSheetAmmo.Header.Columns[4] do
+          Text := 'Projectile';
+        with vstSpreadSheetAmmo.Header.Columns[9] do
+          Options := Options + [coVisible];
+      end;
+
+      SetupTreeView(vstSpreadSheetWeapon);
+      SetupTreeView(vstSpreadsheetArmor);
+      SetupTreeView(vstSpreadSheetAmmo);
+
+      tbsWEAPSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim;
+      tbsARMOSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim;
+      tbsAMMOSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim;
+
+      tmrCheckUnsaved.Enabled := wbEditAllowed and
+        not (wbToolMode in wbAutoModes) and
+        not wbIKnowWhatImDoing;
+
+      if wbForceTerminate then begin
+        GeneralProgressNoAbortCheck('Loading of modules got terminated early. Editing is disabled.');
+        Exit;
+      end;
+
+      if wbFirstLoadComplete then
+        Exit;
+
+      wbFirstLoadComplete := True;
+
+      ModGroups := nil;
+
+      if wbQuickShowConflicts then begin
+        ModGroups := wbModGroupsByName;
+        wbModGroupsByName(False).ShowValidationMessages;
+      end else if not (wbQuickClean or (wbToolMode in wbAutoModes)) then
+        if wbToolMode in [tmView, tmEdit] then begin
+          with TfrmModGroupSelect.Create(Self) do
+          try
+            AllModGroups := wbModGroupsByName;
+            wbModGroupsByName(False).ShowValidationMessages;
+            LoadModGroupsSelection(AllModGroups);
+            Caption := 'Which ModGroups do you want to activate?';
+            PresetCategory := 'ActiveModGroups';
+            if ShowModal = mrOk then begin
+              SaveModGroupsSelection(SelectedModGroups);
+              ModGroups := SelectedModGroups;
+            end;
+          finally
+            Free;
+          end;
+        end;
+
+      ModGroupsExist := ModGroups.Activate;
+      ModGroupsEnabled := ModGroupsExist;
+      mniModGroupsEnabled.Checked := ModGroupsEnabled;
+      mniModGroupsDisabled.Checked := not ModGroupsEnabled;
+
+      if wbQuickShowConflicts then
+        mniNavFilterConflicts.Click;
+
+      if wbQuickClean then begin
+        mniNavFilterForCleaning.Click;
+        JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
+        vstNav.ClearSelection;
+        vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+        vstNav.Selected[vstNav.FocusedNode] := True;
+        DoSetActiveRecord(nil);
+        pgMain.ActivePage := tbsMessages;
+        mniNavUndeleteAndDisableReferences.Click;
+        mniNavRemoveIdenticalToMaster.Click;
+
+        if wbQuickCleanAutoSave then
+          if not SaveChanged(True) then
+            Exit;
 
         mniNavFilterForCleaning.Click;
         JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
@@ -18274,15 +18262,34 @@ begin
         mniNavUndeleteAndDisableReferences.Click;
         mniNavRemoveIdenticalToMaster.Click;
 
-        mniNavLOManagersDirtyInfoClick(mniNavLOManagersDirtyInfo);
-      end;
+        if wbQuickCleanAutoSave then begin
+          if not SaveChanged(True) then
+            Exit;
 
-      wbQuickClean := False;
-      wbProgress('Quick Clean mode finished.');
+          mniNavFilterForCleaning.Click;
+          JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
+          vstNav.ClearSelection;
+          vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+          vstNav.Selected[vstNav.FocusedNode] := True;
+          DoSetActiveRecord(nil);
+          pgMain.ActivePage := tbsMessages;
+          mniNavUndeleteAndDisableReferences.Click;
+          mniNavRemoveIdenticalToMaster.Click;
+
+          mniNavLOManagersDirtyInfoClick(mniNavLOManagersDirtyInfo);
+        end;
+
+        wbQuickClean := False;
+        wbProgress('Quick Clean mode finished.');
+      end;
+    finally
+      Dec(wbShowStartTime);
     end;
-  finally
-    Dec(wbShowStartTime);
+  end else begin
+    NewFile := nil;
+    //!!!!
   end;
+  vstNav.PopupMenu := pmuNav;
 end;
 
 procedure TfrmMain.WMUser3(var Message: TMessage);
@@ -18397,25 +18404,25 @@ end;
 
 { TLoaderThread }
 
-constructor TLoaderThread.Create(var aList: TStringList; IsTemporary: Boolean = False);
+constructor TLoaderThread.Create(var aList: TStringList; aFileStates: TwbFileStates = []);
 begin
   ltDataPath := wbDataPath;
   ltMaster := '';
   ltLoadList := aList;
   aList := nil;
-  ltTemporary := IsTemporary;
+  ltStates := aFileStates;
   inherited Create(False);
   FreeOnTerminate := True;
 end;
 
-constructor TLoaderThread.Create(aFileName: string; aMaster: string; aLoadOrder: Integer; IsTemporary: Boolean = False);
+constructor TLoaderThread.Create(aFileName: string; aMaster: string; aLoadOrder: Integer; aFileStates: TwbFileStates = []);
 begin
   ltLoadOrderOffset := aLoadOrder;
   ltDataPath := '';
   ltLoadList := TStringList.Create;
   ltLoadList.Add(aFileName);
   ltMaster := aMaster;
-  ltTemporary := IsTemporary;
+  ltStates := aFileStates;
   inherited Create(False);
   FreeOnTerminate := True;
 end;
@@ -18566,7 +18573,7 @@ begin
                 if not FileExists(s) then // Assume its a save in the save path
                   s := wbSavePath + ltLoadList[i];
           end;
-          _File := wbFile(s, i + ltLoadOrderOffset, ltMaster, ltTemporary);
+          _File := wbFile(s, i + ltLoadOrderOffset, ltMaster, ltStates);
           SetLength(ltFiles, Succ(Length(ltFiles)));
           ltFiles[High(ltFiles)] := _File;
           frmMain.SendAddFile(_File);
@@ -18677,7 +18684,9 @@ begin
   finally
     wbCurrentTick := 0;
     _LoaderProgressAction := '';
-    frmMain.SendLoaderDone(wbStartTime);
+    if ltMaster = '' then
+      ltLoadOrderOffset := -1;
+    frmMain.SendLoaderDone(wbStartTime, ltLoadOrderOffset);
     LoaderProgress('finished');
     _wbProgressCallback := nil;
   end;
