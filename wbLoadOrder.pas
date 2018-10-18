@@ -29,7 +29,8 @@ type
     meUnknown,
     meESM,
     meESL,
-    meESP
+    meESP,
+    meESU
   );
 
   TwbModuleExtensionHelper = record helper for TwbModuleExtension
@@ -145,6 +146,7 @@ begin
     meESM: Result := csDotEsm;
     meESL: Result := csDotEsl;
     meESP: Result := csDotEsp;
+    meESU: Result := csDotEsu;
   else
     Result := '';
   end;
@@ -284,7 +286,7 @@ begin
     with _Modules[j] do try
       miFlags := [];
       miOriginalName := ExtractFileName(Files[i]);
-      if miOriginalName.EndsWith('.ghost', True) then begin
+      if miOriginalName.EndsWith(csDotGhost, True) then begin
         miName := Copy(miOriginalName, 1, Length(miOriginalName) - Length(csDotGhost));
         Include(miFlags, mfGhost);
         if (j > 0) and SameText(miName, _Modules[Pred(j)].miName) then
@@ -296,6 +298,8 @@ begin
         miExtension := meESM
       else if miName.EndsWith(csDotEsp, True) then
         miExtension := meESP
+      else if miName.EndsWith(csDotEsu, True) then
+        miExtension := meESU
       else if miName.EndsWith(csDotEsl, True) and wbIsEslSupported then
         miExtension := meESL;
       if miExtension = meUnknown then
@@ -580,6 +584,8 @@ begin
       miExtension := meESM
     else if miName.EndsWith(csDotEsp, True) then
       miExtension := meESP
+    else if miName.EndsWith(csDotEsu, True) then
+      miExtension := meESU
     else if miName.EndsWith(csDotEsl, True) and wbIsEslSupported then
       miExtension := meESL;
 

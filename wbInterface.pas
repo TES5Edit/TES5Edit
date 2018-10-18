@@ -42,6 +42,7 @@ const
   csDotEsm   = '.esm';
   csDotEsl   = '.esl';
   csDotEsp   = '.esp';
+  csDotEsu   = '.esu';
 
 type
   TwbProgressCallback = procedure(const aStatus: string);
@@ -16334,13 +16335,11 @@ function wbIsPlugin(aFileName: string): Boolean;
 var
   i: Integer;
 begin
-  Result := Pos(UpperCase(wbHardcodedDat), UpperCase(aFileName))<>0;
+  Result := aFileName.EndsWith(wbHardcodedDat, True);
   if not Result then
-    for i := 0 to Pred(Length(wbPluginExtensions)) do
-      if Pos(UpperCase(wbPluginExtensions[i]), UpperCase(ExtractFileExt(aFileName)))=1 then begin
-        Result := True;
-        Exit;
-      end;
+    for i := Low(wbPluginExtensions) to High(wbPluginExtensions) do
+      if aFileName.EndsWith(wbPluginExtensions[i], True) or aFileName.EndsWith(wbPluginExtensions[i] + csDotGhost, True) then
+        Exit(True);
 end;
 
 function wbStr4ToString(aInt: Int64): string;
@@ -16867,10 +16866,10 @@ initialization
   wbProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
 
   SetLength(wbPluginExtensions, 4);
-  wbPluginExtensions[0] := '.ESP';
-  wbPluginExtensions[1] := '.ESM';
-  wbPluginExtensions[2] := '.ESL';
-  wbPluginExtensions[3] := '.GHOST';
+  wbPluginExtensions[0] := csDotEsp;
+  wbPluginExtensions[1] := csDotEsm;
+  wbPluginExtensions[2] := csDotEsl;
+  wbPluginExtensions[3] := csDotEsu;
 
 finalization
   FreeAndNil(wbIgnoreRecords);
