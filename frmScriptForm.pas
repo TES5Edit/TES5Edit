@@ -111,12 +111,9 @@ begin
 end;
 
 procedure TfrmScript.UpdateCaretPos;
-var
-  l, c: Word;
 begin
-  l := SendMessage(Editor.Handle, EM_LINEFROMCHAR, -1, 0);
-  c := LoWord(SendMessage(Editor.Handle, EM_GETSEL, 0, 0)) - SendMessage(Editor.Handle, EM_LINEINDEX, -1, 0);
-  lblPosition.Caption := Format('Line:%d Col:%d', [Succ(l), Succ(c)]);
+  with Editor.CaretPos do
+    lblPosition.Caption := Format('Line:%d Col:%d', [Succ(y), Succ(x)]);
 end;
 
 procedure TfrmScript.EditorMouseUp(Sender: TObject; Button: TMouseButton;
