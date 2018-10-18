@@ -72,6 +72,8 @@ type
     rbThemeDark: TRadioButton;
     cbThemeDark: TComboBox;
     pnlThemePreview: TPanel;
+    cbPatron: TCheckBox;
+    cbNoGitHubCheck: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);

@@ -100,7 +100,7 @@ object frmOptions: TfrmOptions
         TabOrder = 7
       end
       object cbAutoSave: TCheckBox
-        Left = 298
+        Left = 266
         Top = 15
         Width = 81
         Height = 17
@@ -108,7 +108,7 @@ object frmOptions: TfrmOptions
         TabOrder = 4
       end
       object cbTrackAllEditorID: TCheckBox
-        Left = 298
+        Left = 266
         Top = 38
         Width = 111
         Height = 17
@@ -171,7 +171,7 @@ object frmOptions: TfrmOptions
         TabOrder = 14
       end
       object cbShowTip: TCheckBox
-        Left = 298
+        Left = 266
         Top = 61
         Width = 111
         Height = 17
@@ -194,6 +194,26 @@ object frmOptions: TfrmOptions
         Height = 17
         Caption = 'Align alignable array elements'
         TabOrder = 17
+      end
+      object cbPatron: TCheckBox
+        Left = 266
+        Top = 84
+        Width = 157
+        Height = 17
+        BiDiMode = bdRightToLeftReadingOnly
+        Caption = 'I am a patron or donor'
+        ParentBiDiMode = False
+        TabOrder = 18
+      end
+      object cbNoGitHubCheck: TCheckBox
+        Left = 266
+        Top = 108
+        Width = 169
+        Height = 17
+        BiDiMode = bdRightToLeftReadingOnly
+        Caption = 'Don'#39't check for GitHub update'
+        ParentBiDiMode = False
+        TabOrder = 19
       end
     end
     object tsCleaning: TTabSheet
@@ -476,9 +496,6 @@ object frmOptions: TfrmOptions
         Align = alTop
         BevelOuter = bvNone
         TabOrder = 0
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 458
         object rbThemeSystem: TRadioButton
           Left = 0
           Top = 1
@@ -543,10 +560,6 @@ object frmOptions: TfrmOptions
         Align = alClient
         BevelOuter = bvLowered
         TabOrder = 1
-        ExplicitLeft = 136
-        ExplicitTop = 0
-        ExplicitWidth = 185
-        ExplicitHeight = 41
       end
     end
   end
