@@ -1986,6 +1986,10 @@ object frmMain: TfrmMain
       Caption = 'Compare to...'
       OnClick = mniNavCompareToClick
     end
+    object mniNavCreateDeltaPatch: TMenuItem
+      Caption = 'Create delta patch using...'
+      OnClick = mniNavCreateDeltaPatchClick
+    end
     object mniNavCompareSelected: TMenuItem
       Caption = 'Compare Selected'
       OnClick = mniNavCompareSelectedClick
