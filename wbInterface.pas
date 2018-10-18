@@ -50,8 +50,8 @@ const
   VersionString : TwbVersion = (
     Major   : 3;
     Minor   : 2;
-    Release : 79;
-    Build   : 'e';
+    Release : 80;
+    Build   : '';
     Title   : 'EXPERIMENTAL';
   );
   wbDevCRC32App : Cardinal = $FFFFFFEF;
