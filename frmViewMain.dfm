@@ -103,7 +103,8 @@ object frmMain: TfrmMain
           NodeDataSize = 8
           ParentShowHint = False
           PopupMenu = pmuView
-          SelectionBlendFactor = 24
+          SelectionBlendFactor = 48
+          SelectionCurveRadius = 3
           ShowHint = True
           TabOrder = 0
           TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScroll, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale]
@@ -1825,7 +1826,7 @@ object frmMain: TfrmMain
       IncrementalSearch = isVisibleOnly
       NodeDataSize = 8
       ParentShowHint = False
-      SelectionBlendFactor = 32
+      SelectionBlendFactor = 80
       SelectionCurveRadius = 3
       ShowHint = True
       TabOrder = 0

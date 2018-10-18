@@ -13214,11 +13214,13 @@ begin
   begin
     vstNav.Colors.TreeLineColor := Darker(clWindowText);
     vstView.Colors.TreeLineColor := Darker(clWindowText);
+    vstNav.SelectionBlendFactor := 80;
   end
   else
   begin
     vstNav.Colors.TreeLineColor := clBtnShadow;
     vstView.Colors.TreeLineColor := clBtnShadow;
+    vstNav.SelectionBlendFactor := 64;
   end;
 end;
 
