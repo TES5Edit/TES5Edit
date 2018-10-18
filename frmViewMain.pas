@@ -4546,9 +4546,8 @@ begin
           end;
         end;
 
+        sl.Clear;
         if wbToolSource in [tsPlugins] then begin
-          sl.Clear;
-
           if (wbToolMode in wbPluginModes) or (wbVeryQuickShowConflicts and (GetAsyncKeyState(VK_CONTROL) >= 0)) then try
             sl.AddStrings(wbModulesByLoadOrder.SimulateLoad.ToStrings(False));
           except end;
@@ -4574,6 +4573,12 @@ begin
             finally
               Free;
             end;
+        end else begin
+          if not (wbToolMode in wbAutoModes) then
+            if ShowModal = mrOk then
+              for i := 0 to Pred(CheckListBox1.Count) do
+                if CheckListBox1.Checked[i] then
+                  sl.Add(CheckListBox1.Items[i]);
         end;
       finally
         Free;
