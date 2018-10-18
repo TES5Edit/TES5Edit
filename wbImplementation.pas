@@ -2070,7 +2070,7 @@ begin
     if (FileID >= Cardinal(GetMasterCount)) and not (fsIsCompareLoad in flStates) then begin
 
       if (FormID.ToCardinal and $00FFF000) <> 0 then begin
-        Exclude(flStates, fsPseudoESLCompatible);
+        Exclude(flStates, fsESLCompatible);
         if wbHasProgressCallback then
           if GetIsESL or flLoadOrderFileID.IsLightSlot then
               wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with ESL flag active.>');
@@ -4013,7 +4013,7 @@ begin
       AddMaster(flCompareTo);
 
     if wbPseudoESL then
-      Include(flStates, fsPseudoESLCompatible);
+      Include(flStates, fsESLCompatible);
 
     if Header.IsESL then begin
       if wbPseudoESL then
@@ -4039,8 +4039,9 @@ begin
     if flRecordsCount < Length(flRecords) then
       SetLength(flRecords, flRecordsCount);
 
-    if fsPseudoESLCompatible in flStates then
-      Include(flStates, fsPseudoESL);
+    if wbPseudoESL then
+      if fsESLCompatible in flStates then
+        Include(flStates, fsPseudoESL);
 
     AssignSlot;
   finally
