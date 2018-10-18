@@ -12935,14 +12935,17 @@ end;
 
 function TwbGroupRecord.GetChildrenOf: IwbMainRecord;
 var
-  Group: IwbGroupRecord;
+  Group : IwbGroupRecord;
+  _File : IwbFile;
 begin
   Result := nil;
-  if grStruct.grsGroupType in [1, 6..10] then
-    Result := GetFile.RecordByFormID[TwbFormID.FromCardinal(grStruct.grsLabel), True]
-  else if grStruct.grsGroupType in [4, 5] then
-    if Supports(GetContainer, IwbGroupRecord, Group) then
-      Result := Group.ChildrenOf;
+  _File := GetFile;
+  if Assigned(_File) then
+    if grStruct.grsGroupType in [1, 6..10] then
+      Result := _File.RecordByFormID[TwbFormID.FromCardinal(grStruct.grsLabel), True]
+    else if grStruct.grsGroupType in [4, 5] then
+      if Supports(GetContainer, IwbGroupRecord, Group) then
+        Result := Group.ChildrenOf;
 end;
 
 function TwbGroupRecord.GetElementType: TwbElementType;
