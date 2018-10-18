@@ -10535,13 +10535,13 @@ begin
   SelfRef := Self as IwbElement;
 
   if not Supports(GetContainer, IwbGroupRecord, OldTypeGroup) then
-    raise Exception.Create(GetName + ' is not contained in a group.');
+    Exit;//raise Exception.Create(GetName + ' is not contained in a group.');
   if not (OldTypeGroup.GroupType in [8, 9, 10]) then
-    raise Exception.Create(GetName + ' is not contained in a group of type "Cell Persistent Childen", "Cell Temporary Children" or "Cell Visible Distant Children"');
+    Exit;//raise Exception.Create(GetName + ' is not contained in a group of type "Cell Persistent Childen", "Cell Temporary Children" or "Cell Visible Distant Children"');
   if not Supports(OldTypeGroup.Container, IwbGroupRecord, OldChildGroup) then
-    raise Exception.Create(OldTypeGroup.GetName + ' is not contained in a group');
+    Exit;//raise Exception.Create(OldTypeGroup.GetName + ' is not contained in a group');
   if not (OldChildGroup.GroupType in [6]) then
-    raise Exception.Create(OldTypeGroup.GetName + ' is not contained in a group of type "Cell Children"');
+    Exit;//raise Exception.Create(OldTypeGroup.GetName + ' is not contained in a group of type "Cell Children"');
 
   if GetIsPersistent then
     CorrectGroupType := 8
@@ -10555,9 +10555,9 @@ begin
 
   OldCell := OldChildGroup.ChildrenOf;
   if not Assigned(OldCell) then
-    raise Exception.Create(OldChildGroup.GetName + ' can not find its CELL record');
+    Exit;//raise Exception.Create(OldChildGroup.GetName + ' can not find its CELL record');
   if not OldCell.ElementExists['DATA'] then
-    raise Exception.Create(OldCell.GetName + ' is missing its DATA subrecord');
+    Exit;//raise Exception.Create(OldCell.GetName + ' is missing its DATA subrecord');
 
   i := OldCell.GetElementNativeValue('DATA');
   IsExterior := (i and 1) = 0;
@@ -10569,25 +10569,25 @@ begin
 
   if IsExterior then begin
     if not Supports(OldCell.Container, IwbGroupRecord, OldCellOwnerGroup) then
-      raise Exception.Create(OldCell.GetName + ' is not contained in a group');
+      Exit;//raise Exception.Create(OldCell.GetName + ' is not contained in a group');
     if not (OldCellOwnerGroup.GroupType in [1, 5]) then
-      raise Exception.Create(OldCell.GetName + ' is not contained in a group of type "World Childen" or "Exterior Cell Sub-Block"');
+      Exit;//raise Exception.Create(OldCell.GetName + ' is not contained in a group of type "World Childen" or "Exterior Cell Sub-Block"');
     if CorrectGroupType = 8 then begin
       if OldCellOwnerGroup.GroupType <> 1 then begin
         Worldspace := OldCellOwnerGroup.ChildrenOf;
         if not Assigned(Worldspace) or (Worldspace.Signature <> 'WRLD') then
-          raise Exception.Create(OldCell.GetName + ' can not find its WRLD record');
+           Exit;//raise Exception.Create(OldCell.GetName + ' can not find its WRLD record');
         NewCell := WorldSpace.Add('CELL[P]') as IwbMainRecord;
 
         if not Assigned(NewCell) then
-          raise Exception.Create('Could not determine CELL for persistent exterior references');
+           Exit;//raise Exception.Create('Could not determine CELL for persistent exterior references');
 
         NewChildGroup := NewCell.EnsureChildGroup;
       end else
         NewChildGroup := OldChildGroup;
     end else begin
       if not GetPosition(Position) then
-        raise Exception.Create('Could not determine position of ' + GetName);
+        Exit;//raise Exception.Create('Could not determine position of ' + GetName);
 
       GridCell := wbPositionToGridCell(Position);
 
@@ -10605,12 +10605,12 @@ begin
       if not Assigned(NewCell) then begin
         Worldspace := OldCellOwnerGroup.ChildrenOf;
         if not Assigned(Worldspace) or (Worldspace.Signature <> 'WRLD') then
-          raise Exception.Create(OldCell.GetName + ' can not find its WRLD record');
+          Exit;//raise Exception.Create(OldCell.GetName + ' can not find its WRLD record');
         NewCell := WorldSpace.Add(Format('CELL[%d,%d]', [GridCell.x, GridCell.y])) as IwbMainRecord;
       end;
 
       if not Assigned(NewCell) then
-        raise Exception.CreateFmt('Could not determine CELL for temporary exterior references in grid [%d, %d]', [GridCell.x, GridCell.y]);
+        Exit;//raise Exception.CreateFmt('Could not determine CELL for temporary exterior references in grid [%d, %d]', [GridCell.x, GridCell.y]);
 
       NewChildGroup := NewCell.EnsureChildGroup;
     end;
@@ -10618,7 +10618,7 @@ begin
     NewChildGroup := OldChildGroup;
 
   if not Assigned(NewChildGroup) then
-    raise Exception.Create('Could not determine new CELL child group');
+    Exit;//raise Exception.Create('Could not determine new CELL child group');
 
   if not Assigned(NewCell) then
     NewCell := NewChildGroup.ChildrenOf;
