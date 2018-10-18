@@ -2522,6 +2522,9 @@ end;
 
 procedure TwbFile.BuildRef;
 begin
+  if fsIsDeltaPatch in flStates then
+    Exit;
+
   if (csRefsBuild in cntStates) and (cntRefsBuildAt >= eGeneration) then
     Exit;
   BuildOrLoadRef(False);
@@ -2611,7 +2614,7 @@ end;
 
 constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates);
 begin
-  flStates := aStates * [fsIsTemporary, fsOnlyHeader];
+  flStates := aStates * [fsIsTemporary, fsOnlyHeader, fsIsDeltaPatch];
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
   if aCompareTo <> '' then begin
     Include(flStates, fsIsCompareLoad);
@@ -2664,7 +2667,17 @@ begin
     Include(flModule.miFlags, mfLoaded);
     Include(flModule.miFlags, mfIsHardcoded);
     Exclude(flModule.miFlags, mfValid);
-  end;
+  end else if not (fsOnlyHeader in flStates) then
+    flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+
+  if not (fsOnlyHeader in flStates) then
+    if Assigned(flModule) and not Assigned(flModule.miFile) then begin
+      flModule.miFile := Self;
+      flModule.miLoadOrder := flLoadOrder;
+      flModule.miFileID := flLoadOrderFileID;
+      Include(flModule.miFlags, mfHasFile);
+      Include(flModule.miFlags, mfLoaded);
+    end;
 end;
 
 var
@@ -3292,7 +3305,7 @@ begin
         wbEditAllowed and
     ((not (fsIsGameMaster in flStates)) or wbAllowEditGameMaster) and
     not (fsIsHardcoded in flStates) and
-    not (fsIsCompareLoad in flStates)
+    ((not (fsIsCompareLoad in flStates)) or (fsIsDeltaPatch in flStates))
   );
 end;
 
@@ -3741,6 +3754,7 @@ begin
       Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
       while FileHeader.RemoveElement('ONAM') <> nil do
         ;
+
       if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
         for i := 0 to Pred(MasterFiles.ElementCount) do begin
           if Supports(MasterFiles.Elements[i], IwbContainerElementRef, MasterFile) then begin
@@ -3822,14 +3836,18 @@ begin
           if j > High(flRecords) then
             Break;
         end;
-      Exclude(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
-      FileHeader.UpdateRefs;
+      if not (fsIsDeltaPatch in flStates) then begin
+        Exclude(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
+        FileHeader.UpdateRefs;
+      end;
     end;
 
-    if wbClampFormID then begin
-      if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
-        k := MasterFiles.ElementCount
-      else
+    if wbClampFormID or (fsIsDeltaPatch in flStates) then begin
+      if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then begin
+        k := MasterFiles.ElementCount;
+        if fsIsDeltaPatch in flStates then
+          Dec(k);
+      end else
         k := 0;
       for i := Low(flRecords) to High(flRecords) do
         flRecords[i].ClampFormID(k);
@@ -4009,8 +4027,26 @@ begin
           AddMaster(Rec.Value);
       end;
 
-    if flCompareTo <> '' then
+    if flCompareTo <> '' then begin
+      if fsIsDeltaPatch in flStates then
+        if Assigned(MasterFiles) then begin
+          if wbBeginInternalEdit(True) then try
+            j := MasterFiles.ElementCount;
+            MasterFiles.Assign(High(Integer), nil, False);
+            Assert(MasterFiles.ElementCount = Succ(j));
+            Rec := (MasterFiles[j] as IwbContainer).RecordBySignature['MAST'];
+
+            Assert(Assigned(Rec));
+            Assert(Rec.EditValue = '');
+
+            Rec.EditValue := flCompareToFile.FileName;
+          finally;
+            wbEndInternalEdit;
+          end;
+        end else
+          raise Exception.Create('Delta patch source file must have at least one existing master');
       AddMaster(flCompareTo);
+    end;
 
     if wbPseudoESL then
       Include(flStates, fsESLCompatible);
@@ -6698,6 +6734,9 @@ procedure TwbMainRecord.BuildRef;
   end;
 
 begin
+  if mrsNoUpdateRefs in mrStates then
+    Exit;
+
   if (csRefsBuild in cntStates) and (cntRefsBuildAt >= eGeneration) then
     Exit;
 
@@ -7220,8 +7259,11 @@ begin
   inherited;
   try
     _File := GetFile as IwbFileInternal;
-    if Assigned(_File) then
+    if Assigned(_File) then begin
       _File.AddMainRecord(Self);
+      if fsIsDeltaPatch in _File.FileStates then
+        Include(mrStates, mrsNoUpdateRefs);
+    end;
   except
     if Assigned(aContainer) then
       aContainer.RemoveElement(Self);
@@ -12437,9 +12479,11 @@ var
         end;
     end;
 
-    if not aAsNew and MainRecord.IsMaster and (Result._File.LoadOrder <= MainRecord._File.LoadOrder) then
-      if Supports(Result, IwbMainRecord, MainRecord2) then
-        (MainRecord as IwbMainRecordInternal).YouGotAMaster(MainRecord2);
+    if not aAsNew and MainRecord.IsMaster then
+      if (Result._File.LoadOrder < MainRecord._File.LoadOrder) or
+        ((Result._File.LoadOrder = MainRecord._File.LoadOrder) and not (fsIsCompareLoad in Result._File.FileStates) ) then
+        if Supports(Result, IwbMainRecord, MainRecord2) then
+          (MainRecord as IwbMainRecordInternal).YouGotAMaster(MainRecord2);
 
     if Assigned(Result) and (csRefsBuild in Result._File.ContainerStates) then
       Result.BuildRef;

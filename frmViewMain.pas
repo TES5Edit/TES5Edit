@@ -201,6 +201,7 @@ type
     acForward: TAction;
     N3: TMenuItem;
     mniNavCompareTo: TMenuItem;
+    mniNavCreateDeltaPatch: TMenuItem;
     odModule: TOpenDialog;
     tbsWEAPSpreadsheet: TTabSheet;
     vstSpreadSheetWeapon: TVirtualEditTree;
@@ -443,6 +444,7 @@ type
     procedure mniNavCellChild(Sender: TObject);
     procedure mniNavCompareSelectedClick(Sender: TObject);
     procedure mniNavCompareToClick(Sender: TObject);
+    procedure mniNavCreateDeltaPatchClick(Sender: TObject);
     procedure mniNavCopyIntoClick(Sender: TObject);
     procedure mniNavFilterApplyClick(Sender: TObject);
     procedure mniNavFilterRemoveClick(Sender: TObject);
@@ -647,6 +649,7 @@ type
     vstNavLastCheckedForChanges : UInt64;
     vstNavReInit : Boolean;
     NavFocusedElement : IwbElement;
+    HideRemoveMessage : Boolean;
 
     function GetRefBySelectionAsMainRecords: TDynMainRecords;
     function GetRefBySelectionAsElements: TDynElements;
@@ -2924,6 +2927,62 @@ begin
   TLoaderThread.Create(CompareFile, _File.FileName, _File.LoadOrder, States);
 end;
 
+procedure TfrmMain.mniNavCreateDeltaPatchClick(Sender: TObject);
+var
+  _File        : IwbFile;
+  NodeData     : PNavNodeData;
+  CompareFile  : string;
+  s            : String;
+  i            : Integer;
+begin
+  NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
+  if not Assigned(NodeData) then
+    Exit;
+  if not Supports(NodeData.Element, IwbFile, _File) then
+    Exit;
+  if _File.IsNotPlugin then begin
+    ShowMessage('Delta patch can only be created for modules');
+    Exit;
+  end;
+
+  with odModule do begin
+    FileName := '';
+    InitialDir := Settings.ReadString('CreateDeltaPatch', 'InitialDir', wbDataPath);
+    if not Execute then
+      Exit;
+
+    CompareFile := FileName;
+    Settings.WriteString('CreateDeltaPatch', 'InitialDir', ExtractFilePath(CompareFile));
+
+    if not wbIsPlugin(CompareFile) then begin
+      ShowMessage('Delta patch can only be created for modules');
+      Exit;
+    end;
+
+    s := ChangeFileExt(_File.FileName, '');
+    i := 0;
+
+    repeat
+      if not InputQuery('Delta Patch Filename', 'Please specify the name of the delta patch (without extension)', s) then
+        Exit;
+      CompareFile := wbDataPath + s + '.esu';
+      if FileExists(CompareFile) then
+        ShowMessage('A module called "' + s + '.esu" already exists.')
+      else
+        Break;
+    until False;
+
+    CopyFile(PChar(FileName), PChar(CompareFile), false);
+  end;
+
+  vstNav.PopupMenu := nil;
+  wbLoaderDone := False;
+  wbLoaderError := False;
+  DoSetActiveRecord(nil);
+  mniNavFilterRemoveClick(Sender);
+  wbStartTime := Now;
+  TLoaderThread.Create(CompareFile, _File.FileName, _File.LoadOrder, [fsIsDeltaPatch]);
+end;
 
 procedure TfrmMain.mniNavCopyIdleClick(Sender: TObject);
 var
@@ -10190,7 +10249,8 @@ begin
             if not NodeData.Element.IsRemoveable then
               PostAddMessage('Can''t remove: ' + NodeData.Element.Name)
             else begin
-              PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
+              if not HideRemoveMessage then
+                PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
               if not AutoModeCheckForITM then begin
                 if Assigned(NodeData.Container) and not NodeData.Container.Equals(NodeData.Element) then
                     NodeData.Container.Remove;
@@ -12812,6 +12872,7 @@ begin
     (Length(EditableSelection(nil)) > 0);
 
   mniNavCompareTo.Visible := Supports(Element, IwbFile);
+  mniNavCreateDeltaPatch.Visible := Supports(Element, IwbFile);
   mniNavAddMasters.Visible := mniNavCheckForErrors.Visible and Supports(Element, IwbFile);
   mniNavSortMasters.Visible := mniNavAddMasters.Visible;
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
@@ -18137,6 +18198,7 @@ var
   ModGroups : TwbModGroupPtrs;
   LoadOrder : Integer;
   NewFile   : IwbFile;
+  MasterFile: IwbFile;
 begin
   wbLoaderDone := True;
   wbStartTime := PDateTime(Message.WParam)^;
@@ -18294,7 +18356,90 @@ begin
     end;
   end else begin
     NewFile := nil;
-    //!!!!
+    MasterFile := nil;
+    for i := High(Files) downto Low(Files) do
+      if Files[i].LoadOrder = LoadOrder then begin
+        NewFile := Files[i];
+        Break;
+      end;
+    for i := Low(Files) to High(Files) do
+      if Files[i].LoadOrder = LoadOrder then begin
+        MasterFile := Files[i];
+        Break;
+      end;
+    if Assigned(NewFile) and Assigned(MasterFile) and not MasterFile.Equals(NewFile) then begin
+      if fsIsDeltaPatch in NewFile.FileStates then try
+
+        PerformLongAction('Creating Delta Patch', '', procedure
+        var
+          i          : Integer;
+          Node       : PVirtualNode;
+          NodeData   : PNavNodeData;
+          MainRecord : IwbMainRecord;
+        begin
+          HideRemoveMessage := True;
+          wbQuickClean := True;
+
+          for i := High(Files) downto Low(Files) do
+            Files[i].Hide;
+
+          MasterFile.Show;
+          NewFile.Show;
+
+          wbModulesByLoadOrder.ExcludeAll(mfTaggedForPluginMode);
+          Include(PwbModuleInfo(MasterFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
+          mniNavFilterForCleaning.Click;
+          JumpTo(MasterFile.Header, False);
+          vstNav.ClearSelection;
+          vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+          vstNav.Selected[vstNav.FocusedNode] := True;
+          DoSetActiveRecord(nil);
+          pgMain.ActivePage := tbsMessages;
+
+          Node := vstNav.GetLast;
+          while Assigned(Node) do begin
+            NodeData := vstNav.GetNodeData(Node);
+            if Assigned(NodeData) then
+              if Supports(NodeData.Element, IwbMainRecord, MainRecord) then
+                if MainRecord.Signature <> 'TES4' then
+                  if not MainRecord.IsDeleted then
+                    if NodeData.ConflictThis = ctOnlyOne then
+                      if Supports(wbCopyElementToFile(NodeData.Element, NewFile, False, False, '', '', '', False), IwbMainRecord, MainRecord) then
+                        MainRecord.IsDeleted := True;
+            Node := vstNav.GetPrevious(Node);
+          end;
+
+          wbModulesByLoadOrder.ExcludeAll(mfTaggedForPluginMode);
+          Include(PwbModuleInfo(NewFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
+          mniNavFilterForCleaning.Click;
+          JumpTo(NewFile.Header, False);
+          vstNav.ClearSelection;
+          vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+          vstNav.Selected[vstNav.FocusedNode] := True;
+          DoSetActiveRecord(nil);
+          pgMain.ActivePage := tbsMessages;
+          mniNavRemoveIdenticalToMaster.Click;
+
+          for i := High(Files) downto Low(Files) do
+            Files[i].Show;
+
+          wbModulesByLoadOrder.ExcludeAll(mfTaggedForPluginMode);
+          Include(PwbModuleInfo(NewFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
+          wbQuickClean := True;
+          mniNavFilterForCleaning.Click;
+          JumpTo(NewFile.Header, False);
+          vstNav.ClearSelection;
+          vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+          vstNav.Selected[vstNav.FocusedNode] := True;
+          DoSetActiveRecord(nil);
+          pgMain.ActivePage := tbsMessages;
+        end);
+
+      finally
+        wbQuickClean := False;
+        HideRemoveMessage := False;
+      end;
+    end;
   end;
   vstNav.PopupMenu := pmuNav;
 end;

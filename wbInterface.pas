@@ -1106,6 +1106,7 @@ type
   TwbFileState = (
     fsIsNew,
     fsIsCompareLoad,
+    fsIsDeltaPatch,
     fsOnlyHeader,
     fsIsHardcoded,
     fsIsGameMaster,
