@@ -3910,21 +3910,25 @@ end;
 
 procedure TfrmMain.NavUpdate(aForce: Boolean);
 begin
-  if Assigned(vstNav) and
-     (toAutoFreeOnCollapse in vstNav.TreeOptions.AutoOptions) then begin
+  if (wbToolMode in [tmEdit, tmTranslate]) or aForce then begin
+    if Assigned(vstNav) and
+       (toAutoFreeOnCollapse in vstNav.TreeOptions.AutoOptions) then begin
 
-    vstNav.BeginUpdate;
-    try
-      if aForce or (vstNavLastCollapsedChildrenCleanup <> vstNavInitChildrenGeneration) or (vstNavLastCheckedForChanges <> wbGlobalModifedGeneration) then begin
-         NavCleanupCollapsedNodeChildren;
-         vstNavLastCollapsedChildrenCleanup := vstNavInitChildrenGeneration;
+      if aForce or (wbLoaderDone and ((vstNavLastCollapsedChildrenCleanup <> vstNavInitChildrenGeneration) or (vstNavLastCheckedForChanges <> wbGlobalModifedGeneration))) then begin
+        vstNav.BeginUpdate;
+        try
+          if aForce or (vstNavLastCollapsedChildrenCleanup <> vstNavInitChildrenGeneration) or (vstNavLastCheckedForChanges <> wbGlobalModifedGeneration) then begin
+            NavCleanupCollapsedNodeChildren;
+            vstNavLastCollapsedChildrenCleanup := vstNavInitChildrenGeneration;
+          end;
+          if aForce or (vstNavLastCheckedForChanges <> wbGlobalModifedGeneration) then begin
+            NavCheckForChanges;
+            vstNavLastCheckedForChanges := wbGlobalModifedGeneration;
+          end;
+        finally
+          vstNav.EndUpdate;
+        end;
       end;
-      if aForce or (vstNavLastCheckedForChanges <> wbGlobalModifedGeneration) then begin
-        NavCheckForChanges;
-        vstNavLastCheckedForChanges := wbGlobalModifedGeneration;
-      end;
-    finally
-      vstNav.EndUpdate;
     end;
   end;
 end;
