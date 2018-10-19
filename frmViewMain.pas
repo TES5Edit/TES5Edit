@@ -630,6 +630,8 @@ type
     procedure fpnlViewFilterResize(Sender: TObject);
     procedure jbhPatreonBalloonClick(Sender: TObject);
     procedure jbhGitHubBalloonClick(Sender: TObject);
+    procedure jbhPatreonCloseBtnClick(Sender: TObject; var CanClose: Boolean);
+    procedure jbhGitHubCloseBtnClick(Sender: TObject; var CanClose: Boolean);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
@@ -658,7 +660,8 @@ type
 
     HideRemoveMessage : Boolean;
 
-    GitHubVersion : TwbVersion;
+    GitHubVersion  : TwbVersion;
+    ShowGitHubHint : Boolean;
 
     function GetRefBySelectionAsMainRecords: TDynMainRecords;
     function GetRefBySelectionAsElements: TDynElements;
@@ -4777,16 +4780,6 @@ begin
       wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
       wbNoGitHubCheck := Settings.ReadBool('Options', 'NoGitHubCheck', wbNoGitHubCheck);
 
-      if wbToolMode in [tmEdit, tmView, tmTranslate] then begin
-        if wbPatron then
-          jbhPatreon.ActivateHint(bnPatreon, 'Thanks!', '', 3000)
-        else
-          jbhPatreon.ActivateHint(bnPatreon, 'Please consider supporting future xEdit development.', 'Patreon is now live!', 15000);
-
-        if not wbNoGitHubCheck then
-          CheckGitHubReleaseThread := TwbCheckGitHubReleaseThread.Create;
-      end;
-
       TLoaderThread.Create(sl);
     finally
       FreeAndNil(sl);
@@ -4856,6 +4849,25 @@ begin
 
   CreateActionsForScripts;
   wbDataFormat.dfResourceGetDataCallback := @dfResourceOpenData;
+
+  if wbToolMode in [tmEdit, tmView, tmTranslate] then begin
+    i := Settings.ReadInteger('Patreon', 'SnoozeCounter', 0);
+    if i > 0 then begin
+      Settings.WriteInteger('Patreon', 'SnoozeCounter', Pred(i));
+      Settings.UpdateFile;
+    end else
+      if Settings.ReadInteger('Patreon', 'SnoozeDate', 0) <> Trunc(Now) then
+        if wbPatron then begin
+          jbhPatreon.ActivateHint(bnPatreon, 'Thanks!', '', 3000);
+          Settings.WriteInteger('Patreon', 'SnoozeCounter', 15);
+          Settings.WriteInteger('Patreon', 'SnoozeDate', Trunc(Now));
+          Settings.UpdateFile;
+        end else
+          jbhPatreon.ActivateHint(bnPatreon, 'Please consider supporting future xEdit development.', 'Patreon is now live!', 15000);
+
+    if not wbNoGitHubCheck then
+      CheckGitHubReleaseThread := TwbCheckGitHubReleaseThread.Create;
+  end;
 end;
 
 procedure TfrmMain.edEditorIDSearchChange(Sender: TObject);
@@ -6611,10 +6623,28 @@ begin
   jbhGitHub.CancelHint;
 end;
 
+procedure TfrmMain.jbhGitHubCloseBtnClick(Sender: TObject; var CanClose: Boolean);
+begin
+  if Assigned(Settings) and (GitHubVersion.Major > 0) then begin
+    Settings.WriteString('GetHub', 'SnoozeVersion', GitHubVersion.ToString);
+    Settings.WriteInteger('GetHub', 'SnoozeDate', Trunc(Now));
+    Settings.UpdateFile;
+  end;
+end;
+
 procedure TfrmMain.jbhPatreonBalloonClick(Sender: TObject);
 begin
   bnPatreon.Click;
   jbhPatreon.CancelHint;
+end;
+
+procedure TfrmMain.jbhPatreonCloseBtnClick(Sender: TObject; var CanClose: Boolean);
+begin
+  if Assigned(Settings) then begin
+    Settings.WriteInteger('Patreon', 'SnoozeCounter', 10);
+    Settings.WriteInteger('Patreon', 'SnoozeDate', Trunc(Now));
+    Settings.UpdateFile;
+  end;
 end;
 
 procedure TfrmMain.InvalidateElementsTreeView(aNodes: TNodeArray);
@@ -7386,11 +7416,14 @@ var
   LastGitHubClick: TDateTime;
 
 procedure TfrmMain.bnGitHubClick(Sender: TObject);
+var
+  Dummy: Boolean;
 begin
   if Now - LastGitHubClick > 1/24/60/60 then begin
     ShellExecute(Handle, 'open', PChar(wbGitHubUrl), '', '', SW_SHOWNORMAL);
     LastGitHubClick := Now;
   end;
+  jbhGitHubCloseBtnClick(Sender, Dummy);
 end;
 
 var
@@ -7412,6 +7445,11 @@ begin
   if Now - LastPatreonClick > 1/24/60/60 then begin
     ShellExecute(Handle, 'open', PChar(wbPatreonUrl), '', '', SW_SHOWNORMAL);
     LastPatreonClick := Now;
+  end;
+  if Assigned(Settings) then begin
+    Settings.WriteInteger('Patreon', 'SnoozeCounter', 30);
+    Settings.WriteInteger('Patreon', 'SnoozeDate', Trunc(Now));
+    Settings.UpdateFile;
   end;
 end;
 
@@ -14933,6 +14971,7 @@ begin
     TotalUsageTime := TotalUsageTime + 1 / 24 / 60 / 2;
     Settings.WriteFloat('Usage', 'TotalTime', TotalUsageTime);
     Settings.UpdateFile;
+    {
     if (RateNoticeGiven < 2) and (TotalUsageTime > 1 / 8) then begin
       RateNoticeGiven := 2;
       Settings.WriteInteger('Usage', 'RateNoticeGiven', RateNoticeGiven);
@@ -14944,7 +14983,7 @@ begin
         'if you have any suggestions how to improve this program please don''t hesitate to let me know about '+
         'them via the release topic on the Bethesda Game Studios Forums.');
     end;
-
+    }
   end;
 
   if not AutoSave then
@@ -14991,13 +15030,15 @@ var
   ChangesMade : Boolean;
   i, dummy: Integer;
 begin
-  if GitHubVersion.Major <> 0 then
-    if not jbhPatreon.Active then begin
-      bnGitHub.ShowHint := True;
-      bnGitHub.Hint := 'A newer version is available on GitHub: ' + GitHubVersion;
-      jbhGitHub.ActivateHint(bnGitHub, bnGitHub.Hint, '', 20000);
-      GitHubVersion := '';
-    end;
+  if ShowGitHubHint then
+    if GitHubVersion > VersionString then
+      if not jbhPatreon.Active then begin
+        bnGitHub.ShowHint := True;
+        bnGitHub.Hint := 'A newer version is available on GitHub: ' + GitHubVersion;
+        if GitHubVersion > TwbVersion(Settings.ReadString('GetHub', 'SnoozeVersion', '')) then
+          jbhGitHub.ActivateHint(bnGitHub, bnGitHub.Hint, '', 20000);
+        ShowGitHubHint := False;
+      end;
 
   if Assigned(NewMessages) and (NewMessages.Count > 0) then begin
     mmoMessages.Lines.AddStrings(NewMessages);
@@ -19416,11 +19457,12 @@ begin
       J.Free;
     end;
   except end;
-  if vmax > VersionString then
-    Synchronize(procedure begin
-      if Assigned(frmMain) then
-        frmMain.GitHubVersion := vmax;
-    end);
+  Synchronize(procedure begin
+    if Assigned(frmMain) then begin
+      frmMain.GitHubVersion := vmax;
+      frmMain.ShowGitHubHint := True;
+    end;
+  end);
 end;
 
 initialization
