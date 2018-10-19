@@ -2683,6 +2683,7 @@ object frmMain: TfrmMain
     DefaultBalloonPosition = bpLeftDown
     DefaultHeader = 'Patreon'
     OnBalloonClick = jbhPatreonBalloonClick
+    OnCloseBtnClick = jbhPatreonCloseBtnClick
     Left = 1301
     Top = 105
   end
@@ -2690,6 +2691,7 @@ object frmMain: TfrmMain
     DefaultBalloonPosition = bpLeftDown
     DefaultHeader = 'GitHub'
     OnBalloonClick = jbhGitHubBalloonClick
+    OnCloseBtnClick = jbhGitHubCloseBtnClick
     Left = 1173
     Top = 105
   end
