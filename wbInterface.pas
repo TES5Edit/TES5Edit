@@ -16908,7 +16908,7 @@ begin
             (A.Release > B.Release) or
             (
               (A.Release = B.Release) and
-              (CompareText(A.Build, B.Build) >= 0)
+              (CompareText(A.Build, B.Build) > 0)
             )
           )
         )
