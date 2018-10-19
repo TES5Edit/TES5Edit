@@ -2915,7 +2915,7 @@ begin
       s := fPath + ExtractFileName(CompareFile);
       if FileExists(s) or (mfHasFile in wbModuleByName(ExtractFileName(s)).miFlags) then // Finds a unique name
         for i := 0 to 255 do begin
-          s := fPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
+          s := fPath + ChangeFileExt(ChangeFileExt(ExtractFileName(CompareFile),'') + IntToHex(i, 3), ExtractFileExt(CompareFile));
           if not (FileExists(s) or (mfHasFile in wbModuleByName(ExtractFileName(s)).miFlags)) then
             break;
         end;
