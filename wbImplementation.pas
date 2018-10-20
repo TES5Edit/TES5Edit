@@ -3673,13 +3673,13 @@ begin
   else
     Mask := $FFFFFF;
 
-  NextObjectID := StrToInt64Def(HEDR.Elements[2].EditValue, $800) and Mask;
+  NextObjectID := GetNextObjectID and Mask;
 
-  if (NextObjectID = 0) or (NextObjectID = Mask) then
-    NextObjectID := StrToInt64Def(HEDR.Elements[1].EditValue, $800) and Mask;
-
-  if NextObjectID < $800 then
-    NextObjectID := $800;
+  if (NextObjectID < $800) or (NextObjectID = Mask) then begin
+    NextObjectID := GetHighObjectID + 1;
+    if NextObjectID > Mask then
+      NextObjectID := $800;
+  end;
 
   Result := TwbFormID.FromCardinal(NextObjectID).ChangeFileID(GetFileFileID);
   First := Result;
@@ -3696,7 +3696,7 @@ begin
   if NextObjectID > Mask then
     NextObjectID := $800;
 
-  HEDR.Elements[2].EditValue := IntToStr(NextObjectID);
+  SetNextObjectID(NextObjectID);
 end;
 
 procedure TwbFile.PrepareSave;

@@ -3875,6 +3875,9 @@ var
 function wbFormIDErrorCheckLock: Integer;
 function wbFormIDErrorCheckUnlock: Integer;
 
+function wbNextObjectIDToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbNextObjectIDToInt(const aString: string; const aElement: IwbElement): Int64;
+
 implementation
 
 uses
@@ -16995,6 +16998,35 @@ begin
     if Title <> '' then
       Result := Result + ' ' + Title;
   end;
+end;
+
+function wbNextObjectIDToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  if aType in [ctToStr, ctToSortKey, ctToEditValue] then begin
+    Result := IntToHex(aInt, 8);
+    if aType = ctToEditValue then
+      Result := '$' + Result;
+  end else
+    Result := '';
+end;
+
+function wbNextObjectIDToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  s     : string;
+  _File : IwbFile;
+begin
+  Result := 2048;
+  s := Trim(aString);
+  if Length(s) > 0 then
+    if s = '?' then begin
+      if not Assigned(aElement) then
+        Exit;
+      _File := aElement._File;
+      if not Assigned(_File) then
+        Exit;
+      Result := _File.HighObjectID + 1;
+    end else
+      Result := StrToInt(s);
 end;
 
 initialization
