@@ -9690,7 +9690,7 @@ begin
           wbByteArray('Unused', 4, cpIgnore)
         ]),
         wbInteger('Radius', itS32)
-      ], cpNormal, True),
+      ], cpNormal{, True}),
       wbStruct(PLD2, 'Location 2', [
         wbInteger('Type', itS32, wbEnum([
           {0} 'Near reference',
