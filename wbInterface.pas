@@ -1166,6 +1166,7 @@ type
 
     function GetRecord(aIndex: Integer): IwbMainRecord;
     function GetRecordCount: Integer;
+    function GetHighObjectID: Cardinal;
     function GetHeader: IwbMainRecord;
 
     function GetCachedEditInfo(aIdent: Integer; var aEditInfo: TArray<string>): Boolean;
@@ -1217,6 +1218,8 @@ type
       read GetRecord;
     property RecordCount: Integer
       read GetRecordCount;
+    property HighObjectID: Cardinal
+      read GetHighObjectID;
 
     property Header: IwbMainRecord
       read GetHeader;
