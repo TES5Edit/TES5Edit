@@ -9142,7 +9142,7 @@ begin
         ]),
         wbInteger('Radius', itS32)
       ])
-    ], []),
+    ], [], cpNormal, False, nil, True),
     wbStruct(PSDT, 'Schedule', [
       wbInteger('Month', itS8),
       wbInteger('Day of week', itS8, wbEnum([
