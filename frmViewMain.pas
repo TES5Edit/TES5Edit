@@ -10918,7 +10918,7 @@ var
   TargetFile    : IwbFile;
   MainRecords   : TDynMainRecords;
   TargetFormIDs : TArray<TwbFormID>;
-  EndFormID     : TwbFormID;
+  HighFormID    : TwbFormID;
 
   function Prepare: Boolean;
   var
@@ -11021,18 +11021,17 @@ var
       repeat
         if s <> '' then
           ShowMessage('"'+s+'" is not a valid start FormID.')
-        else
-          if Supports(TargetFile.Elements[0], IwbMainRecord, MainRecord) and (MainRecord.Signature = 'TES4') then begin
-            c := MainRecord.ElementNativeValues['HEDR\Next Object ID'] and $FFFFFF;
-            if TargetIsESL then
-              c := c and $FFF;
-            if c < $800 then
-              c := $800;
-            if TargetIsESL then
-              s := IntToHex(c, 3)
-            else
-              s := IntToHex(c, 6);
-          end;
+        else begin
+          c := TargetFile.NextObjectID and $FFFFFF;
+          if TargetIsESL then
+            c := c and $FFF;
+          if c < $800 then
+            c := $800;
+          if TargetIsESL then
+            s := IntToHex(c, 3)
+          else
+            s := IntToHex(c, 6);
+        end;
 
         if TargetIsESL then begin
           if not InputQuery('Start from...', 'Please enter the new module specific start FormID in hex. e.g. 800. Specify only the last 3 digits. (Target is ESL)', s) then
@@ -11064,6 +11063,7 @@ var
     SetLength(TakenFormIDs, j);
 
     StartFormID.FileID := TargetFile.LoadOrderFileID;
+    HighFormID := StartFormID;
     if Sender = mniNavCompactFormIDs then
       EndFormID := TwbFormID.FromCardinal($FFF).ChangeFileID(TargetFile.LoadOrderFileID)
     else if not TargetFile.Equals(SourceFile) then begin
@@ -11071,8 +11071,10 @@ var
         EndFormID := TwbFormID.FromCardinal($FFF).ChangeFileID(TargetFile.LoadOrderFileID)
       else
         EndFormID := TwbFormID.FromCardinal($FFFFFF).ChangeFileID(TargetFile.LoadOrderFileID);
-    end else
+    end else begin
       EndFormID := StartFormID + j;
+      HighFormID := EndFormID;
+    end;
 
     if TargetFile.Equals(SourceFile) then
       for i := Low(MainRecords) to High(MainRecords) do begin
@@ -11143,6 +11145,9 @@ var
           Exit;
         end;
 
+        if NewFormID > HighFormID then
+          HighFormID := NewFormID;
+
         if NewFormID = OldFormID then
           Continue;
 
@@ -11175,6 +11180,8 @@ var
             Exit;
           end;
 
+          if NewFormID > HighFormID then
+            HighFormID := NewFormID;
           TargetFormIDs[k] := NewFormID;
         end;
 
@@ -11208,16 +11215,10 @@ var
   end;
 
   procedure UpdateNextObjectID;
-  var
-    MainRecord   : IwbMainRecord;
   begin
-    if TargetFile.IsEditable and Supports(TargetFile.Elements[0], IwbMainRecord, MainRecord) and (MainRecord.Signature = 'TES4') then begin
-      if Sender = mniNavCompactFormIDs then
-        MainRecord.ElementNativeValues['HEDR\Next Object ID'] := $800
-      else begin
-        Inc(EndFormID);
-        MainRecord.ElementNativeValues['HEDR\Next Object ID'] := EndFormID.ObjectID;
-      end;
+    if TargetFile.IsEditable then begin
+      Inc(HighFormID);
+      TargetFile.NextObjectID := HighFormID.ObjectID;
     end;
   end;
 
