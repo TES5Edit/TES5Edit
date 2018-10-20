@@ -9000,9 +9000,10 @@ begin
   end;
 
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
-
+  {
   if srsAllowUnordered and not FoundRequired then
-   raise Exception.Create(GetPath + ' must contain at least one required element');
+    raise Exception.Create(GetPath + ' must contain at least one required element');
+  }
 end;
 
 destructor TwbSubRecordStructDef.Destroy;
