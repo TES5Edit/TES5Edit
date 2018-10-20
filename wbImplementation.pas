@@ -690,6 +690,7 @@ type
     function GetCRC32: TwbCRC32;
     function GetRecord(aIndex: Integer): IwbMainRecord; inline;
     function GetRecordCount: Integer; inline;
+    function GetHighObjectID: Cardinal;
     function GetHeader: IwbMainRecord;
 
     function GetLoadOrder: Integer; inline;
@@ -3298,6 +3299,20 @@ begin
   Result := GetFileGeneration;
   for i := Low(flMasters) to High(flMasters) do
     Result := Max(Result, (flMasters[i] as IwbFileInternal).GetFileGeneration);
+end;
+
+function TwbFile.GetHighObjectID: Cardinal;
+var
+  FormID : TwbFormID;
+begin
+  Result := $800;
+  if not flFormIDsSorted then
+    SortRecords;
+  if Length(flRecords) > 0 then begin
+    FormID := flRecords[High(flRecords)].FixedFormID;
+    if FormID.FileID.FullSlot >= GetMasterCount then
+      Result := FormID.ObjectID;
+  end;
 end;
 
 function TwbFile.GetIsEditable: Boolean;
