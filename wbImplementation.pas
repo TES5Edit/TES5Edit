@@ -5007,8 +5007,6 @@ end;
 procedure TwbContainer.DoReset(aForce: Boolean);
 begin
   if not aForce then begin
-    if Length(cntElements) = 0 then
-      Exit;
     if not (csInit in cntStates) then
       Exit;
     if esModified in eStates then
