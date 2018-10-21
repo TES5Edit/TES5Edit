@@ -306,6 +306,10 @@ object frmMain: TfrmMain
         ImageIndex = 3
         TabVisible = False
         OnShow = tbsViewShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object lvReferencedBy: TListView
           AlignWithMargins = True
           Left = 0
@@ -348,6 +352,10 @@ object frmMain: TfrmMain
         Caption = 'Messages'
         ImageIndex = 1
         OnShow = tbsMessagesShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object mmoMessages: TMemo
           AlignWithMargins = True
           Left = 0
@@ -369,6 +377,10 @@ object frmMain: TfrmMain
       object tbsInfo: TTabSheet
         Caption = 'Information'
         ImageIndex = 2
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object Memo1: TMemo
           AlignWithMargins = True
           Left = 3
@@ -739,6 +751,10 @@ object frmMain: TfrmMain
         Caption = 'Weapon Spreadsheet'
         ImageIndex = 4
         OnShow = tbsSpreadsheetShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object vstSpreadSheetWeapon: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -944,6 +960,10 @@ object frmMain: TfrmMain
         Caption = 'Armor Spreadsheet'
         ImageIndex = 5
         OnShow = tbsSpreadsheetShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object vstSpreadsheetArmor: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -1085,6 +1105,10 @@ object frmMain: TfrmMain
         Caption = 'Ammunition Spreadsheet'
         ImageIndex = 6
         OnShow = tbsSpreadsheetShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object vstSpreadSheetAmmo: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -1205,6 +1229,10 @@ object frmMain: TfrmMain
         Caption = 'TabSheet2'
         ImageIndex = 7
         TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object DisplayPanel: TPanel
           Left = 0
           Top = 0
@@ -2145,8 +2173,18 @@ object frmMain: TfrmMain
       GroupIndex = 4
       OnClick = mniNavCopyIntoClick
     end
+    object mniNavCopyAsOverrideWithOverwrite: TMenuItem
+      Caption = 'Copy as override (with overwriting) into....'
+      GroupIndex = 4
+      OnClick = mniNavCopyIntoClick
+    end
     object mniNavDeepCopyAsOverride: TMenuItem
       Caption = 'Deep copy as override into....'
+      GroupIndex = 4
+      OnClick = mniNavCopyIntoClick
+    end
+    object mniNavDeepCopyAsOverrideWithOverwriting: TMenuItem
+      Caption = 'Deep copy as override (with overwriting) into....'
       GroupIndex = 4
       OnClick = mniNavCopyIntoClick
     end
@@ -2476,6 +2514,18 @@ object frmMain: TfrmMain
       Caption = 'Copy as override into....'
       OnClick = mniViewHeaderCopyIntoClick
     end
+    object mniViewHeaderCopyAsOverrideWithOverwriting: TMenuItem
+      Caption = 'Copy as override (with overwriting) into....'
+      OnClick = mniViewHeaderCopyIntoClick
+    end
+    object mniViewHeaderDeepCopyAsOverride: TMenuItem
+      Caption = 'Deep copy as override into....'
+      OnClick = mniViewHeaderCopyIntoClick
+    end
+    object mniViewHeaderDeepCopyAsOverrideWithOverwriting: TMenuItem
+      Caption = 'Deep copy as override (with overwriting) into....'
+      OnClick = mniViewHeaderCopyIntoClick
+    end
     object mniViewHeaderCopyAsNewRecord: TMenuItem
       Caption = 'Copy as new record into...'
       OnClick = mniViewHeaderCopyIntoClick
@@ -2562,8 +2612,16 @@ object frmMain: TfrmMain
       Caption = 'Copy as override into....'
       OnClick = mniRefByCopyIntoClick
     end
+    object mniRefByCopyOverrideIntoWithOverwriting: TMenuItem
+      Caption = 'Copy as override (with overwriting) into....'
+      OnClick = mniRefByCopyIntoClick
+    end
     object mniRefByDeepCopyOverrideInto: TMenuItem
       Caption = 'Deep copy as override into....'
+      OnClick = mniRefByCopyIntoClick
+    end
+    object mniRefByDeepCopyOverrideIntoWithOverwriting: TMenuItem
+      Caption = 'Deep copy as override (with overwriting) into....'
       OnClick = mniRefByCopyIntoClick
     end
     object mniRefByCopyAsNewInto: TMenuItem
