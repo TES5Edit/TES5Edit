@@ -629,7 +629,11 @@ type
     etCheckComboBox
   );
 
-  TDynFiles = array of IwbFile;
+  TDynFiles = TArray<IwbFile>;
+
+  TDynFilesHelper = record helper for TArray<IwbFile>
+    procedure Add(const aFile: IwbFile);
+  end;
 
   TwbFileID = record
   private
@@ -17030,6 +17034,15 @@ begin
       Result := _File.HighObjectID + 1;
     end else
       Result := StrToInt(s);
+end;
+
+procedure TDynFilesHelper.Add(const aFile: IwbFile);
+var
+  Len: Integer;
+begin
+  Len := Length(Self);
+  SetLength(Self, Succ(Len));
+  Self[Len] := aFile;
 end;
 
 initialization
