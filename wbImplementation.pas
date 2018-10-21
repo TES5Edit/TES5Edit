@@ -15083,8 +15083,17 @@ begin
   end;
   if esModifiedUpdated in eStates then begin
     Exclude(eStates, esModifiedUpdated);
-    if esModified in eStates then
-      SetParentModified;
+    if esModified in eStates then begin
+      if esInternalModified in eStates then begin
+        wbBeginInternalEdit(True);
+        try
+          SetParentModified;
+        finally
+          wbEndInternalEdit;
+        end;
+      end else
+        SetParentModified;
+    end;
   end;
 end;
 
