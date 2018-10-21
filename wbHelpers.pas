@@ -166,6 +166,8 @@ type
     class function Iff(aCond: Boolean; const aTrue, aFalse: T): T; static;
   end;
 
+procedure wbCodeBlock(const aProc: TProc);
+
 implementation
 
 uses
@@ -1490,6 +1492,11 @@ begin
     Result := aTrue
   else
     Result := aFalse;
+end;
+
+procedure wbCodeBlock(const aProc: TProc);
+begin
+  aProc;
 end;
 
 initialization
