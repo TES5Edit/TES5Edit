@@ -801,6 +801,7 @@ type
     function GetDontShow: Boolean;
     procedure SetToDefault;
     procedure SetToDefaultIfAsCreatedEmpty;
+    function ResetLeafFirst: Boolean;
 
     function ShouldReportError(aErrorType: TwbElementErrorType): Boolean;
 
