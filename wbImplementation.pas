@@ -330,6 +330,7 @@ type
     function GetResolvedValueDef: IwbValueDef; virtual;
     function GetElementType: TwbElementType; virtual;
     procedure DoReset(aForce: Boolean); virtual;
+    function ResetLeafFirst: Boolean; virtual;
     function GetContainer: IwbContainer;
     function GetContainingMainRecord: IwbMainRecord; virtual;
     function GetFile: IwbFile; virtual;
@@ -482,6 +483,8 @@ type
     procedure ResetReachable; override;
 
     procedure DoReset(aForce: Boolean); override;
+    function ResetLeafFirst: Boolean; override;
+    function ResetChildrenLeafFirst: Boolean; virtual;
     procedure DoInit(aNeedSorted: Boolean); virtual;
 
     function HasErrors: Boolean; override;
@@ -1285,6 +1288,7 @@ type
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
     procedure PrepareSave; override;
     function RemoveInjected(aCanRemove: Boolean): Boolean; override;
+    function ResetLeafFirst: Boolean; override;
 
     procedure SetToDefaultInternal; override;
 
@@ -5049,6 +5053,12 @@ begin
   end;
 end;
 
+function TwbContainer.ResetLeafFirst: Boolean;
+begin
+  Result := ResetChildrenLeafFirst;
+  Result := inherited ResetLeafFirst and Result;
+end;
+
 {$D-}
 function TwbContainer.ElementAddRef: Integer;
 begin
@@ -6002,6 +6012,18 @@ end;
 procedure TwbContainer.Reset;
 begin
   { can be overriden }
+end;
+
+function TwbContainer.ResetChildrenLeafFirst: Boolean;
+var
+  i       : Integer;
+  SelfRef : IwbContainerElementRef;
+begin
+  Result := True;
+  SelfRef := Self as IwbContainerElementRef;
+  //DoInit; elements that don't exist yet don't have anything to reset...
+  for i := Low(cntElements) to High(cntElements) do
+    Result := cntElements[i].ResetLeafFirst and Result;
 end;
 
 procedure TwbContainer.ResetConflict;
@@ -11976,6 +11998,11 @@ begin
   inherited;
 end;
 
+function TwbSubRecord.ResetLeafFirst: Boolean;
+begin
+  Result := inherited ResetLeafFirst and (eExternalRefs = 0) and (cntElementRefs = 0);
+end;
+
 procedure TwbSubRecord.ResetMemoryOrder;
 var
   SetSuffix : Boolean;
@@ -14184,6 +14211,12 @@ end;
 procedure TwbElement.DoReset(aForce: Boolean);
 begin
   {nothing}
+end;
+
+function TwbElement.ResetLeafFirst: Boolean;
+begin
+  DoReset(False);
+  Result := eExternalRefs < 1;
 end;
 
 procedure TwbElement.EndResolve;
