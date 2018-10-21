@@ -219,8 +219,13 @@ type
     mniNavAddMasters: TMenuItem;
     pmuViewHeader: TPopupMenu;
     mniViewHeaderCopyAsOverride: TMenuItem;
+    mniViewHeaderCopyAsOverrideWithOverwriting: TMenuItem;
+    mniViewHeaderDeepCopyAsOverride: TMenuItem;
+    mniViewHeaderDeepCopyAsOverrideWithOverwriting: TMenuItem;
     mniViewHeaderCopyAsNewRecord: TMenuItem;
     mniNavCopyAsOverride: TMenuItem;
+    mniNavCopyAsOverrideWithOverwrite: TMenuItem;
+    mniNavDeepCopyAsOverrideWithOverwriting: TMenuItem;
     mniNavCopyAsNewRecord: TMenuItem;
     mniViewHeaderRemove: TMenuItem;
     mniViewHeaderCopyAsWrapper: TMenuItem;
@@ -282,7 +287,9 @@ type
     mniNavRemoveIdenticalToMaster: TMenuItem;
     N14: TMenuItem;
     mniRefByCopyOverrideInto: TMenuItem;
+    mniRefByCopyOverrideIntoWithOverwriting: TMenuItem;
     mniRefByDeepCopyOverrideInto: TMenuItem;
+    mniRefByDeepCopyOverrideIntoWithOverwriting: TMenuItem;
     mniRefByCopyAsNewInto: TMenuItem;
     mniNavSetVWDAuto: TMenuItem;
     mniNavSetVWDAutoInto: TMenuItem;
@@ -669,7 +676,7 @@ type
     procedure DoGenerateLOD;
     procedure DoRunScript;
 
-    function CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback = nil): TDynElements;
+    function CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy, AllowOverwrite: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback = nil): TDynElements;
 
     procedure BuildAllRef;
     procedure ResetAllTags;
@@ -2264,7 +2271,7 @@ end;
 var
   _PreviousCopyIntoSelectedModules: TwbModuleInfos;
 
-function TfrmMain.CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback): TDynElements;
+function TfrmMain.CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy, AllowOverwrite: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback): TDynElements;
 var
   Elements             : TDynElements;
   MainRecord           : IwbMainRecord;
@@ -2283,7 +2290,6 @@ var
   CopiedElement        : IwbElement;
   Container            : IwbContainer;
   IsESL                : Boolean;
-  AllowOverwrite       : Boolean;
   PrevOverwriteResult  : TModalResult;
   PrevDeleteResult     : TModalResult;
   lResult              : TDynElements;
@@ -2351,9 +2357,7 @@ begin
         if LoadOrder > j then
           j := LoadOrder;
 
-    AllowOverwrite := not (AsNew or AsWrapper or AsSpawnRate) and
-      (GetKeyState(VK_SHIFT) < 0) and
-      (GetKeyState(VK_CONTROL) < 0);
+    AllowOverwrite := AllowOverwrite and (not (AsNew or AsWrapper or AsSpawnRate));
 
     PrevOverwriteResult := mrNone;
     PrevDeleteResult := mrNone;
@@ -3075,7 +3079,7 @@ begin
                 Exit;
             until not SameText(OldModelPrefix, NewModelPrefix);
 
-            NewElements := CopyInto(True, False, False, True, OldElements);
+            NewElements := CopyInto(True, False, False, True, False, OldElements);
             Assert(Length(NewElements) = Length(OldElements));
 
             SetLength(OldFormIDs, Length(NewElements));
@@ -3150,7 +3154,8 @@ begin
     Sender = mniNavCopyAsNewRecord,
     Sender = mniNavCopyAsWrapper,
     Sender = mniNavCopyAsSpawnRateOverride,
-    Sender = mniNavDeepCopyAsOverride,
+    (Sender = mniNavDeepCopyAsOverride) or (Sender = mniNavDeepCopyAsOverrideWithOverwriting),
+    (Sender = mniNavCopyAsOverrideWithOverwrite) or (Sender = mniNavDeepCopyAsOverrideWithOverwriting),
     Elements);
 
   for i := Low(SelectedNodes) to High(SelectedNodes) do
@@ -7667,6 +7672,7 @@ begin
     False,
     False,
     False,
+    False,
     Elements,
     AfterCopyDisable);
 
@@ -7691,7 +7697,8 @@ begin
     Sender = mniRefByCopyAsNewInto,
     False,
     False,
-    Sender = mniRefByDeepCopyOverrideInto,
+    (Sender = mniRefByDeepCopyOverrideInto) or (Sender = mniRefByDeepCopyOverrideIntoWithOverwriting),
+    (Sender = mniRefByCopyOverrideIntoWithOverwriting) or (Sender = mniRefByDeepCopyOverrideIntoWithOverwriting),
     Elements);
 
   vstNav.Invalidate;
@@ -8719,7 +8726,16 @@ begin
     Exit;
 
   Master := MainRecord.MasterOrSelf;
-  CopyInto(AsNew, AsWrapper, False, True, [MainRecord]);
+
+  CopyInto(
+    AsNew,
+    AsWrapper,
+    False,
+    (Sender = mniViewHeaderDeepCopyAsOverride) or (Sender = mniViewHeaderDeepCopyAsOverrideWithOverwriting),
+    (Sender = mniViewHeaderCopyAsOverrideWithOverwriting) or (Sender = mniViewHeaderDeepCopyAsOverrideWithOverwriting),
+    [MainRecord]
+  );
+
   Master.ResetConflict;
   PostResetActiveTree;
   InvalidateElementsTreeView(NoNodes);
@@ -9491,7 +9507,7 @@ begin
       end;
 
       if Length(Elements) > 0 then
-        CopyInto(False, False, False, False, Elements, SetVWDCallback);
+        CopyInto(False, False, False, False, False, Elements, SetVWDCallback);
     end);
 
     vstNav.Invalidate;
@@ -12985,11 +13001,15 @@ begin
   mniNavAdd.Visible := mniNavAdd.Count > 0;
 
   mniNavCopyAsOverride.Visible := mniNavCheckForErrors.Visible and not mniNavAddMasters.Visible;
+  mniNavCopyAsOverrideWithOverwrite.Visible := mniNavCopyAsOverride.Visible;
   mniNavDeepCopyAsOverride.Visible := mniNavCopyAsOverride.Visible and SelectionIncludesAnyDeepCopyRecords;
+  mniNavDeepCopyAsOverrideWithOverwriting.Visible := mniNavDeepCopyAsOverride.Visible;
   mniNavCopyAsNewRecord.Visible := mniNavCopyAsOverride.Visible and not SelectionIncludesNonCopyNewRecords;
 
-  if mniNavDeepCopyAsOverride.Visible and SelectionIncludesOnlyDeepCopyRecords then
+  if mniNavDeepCopyAsOverride.Visible and SelectionIncludesOnlyDeepCopyRecords then begin
     mniNavCopyAsOverride.Visible := False;
+    mniNavCopyAsOverrideWithOverwrite.Visible := False;
+  end;
 
   mniNavCopyAsWrapper.Visible := False;
   if mniNavCopyAsOverride.Visible and Supports(Element, IwbMainRecord, MainRecord) then
@@ -13137,7 +13157,10 @@ begin
     not wbTranslationMode and
     wbEditAllowed and
     (Length(Selected) > 0);
+  mniRefByCopyOverrideIntoWithOverwriting.Visible := mniRefByCopyOverrideInto.Visible;
   mniRefByDeepCopyOverrideInto.Visible := mniRefByCopyOverrideInto.Visible and ByRefSelectionIncludesAnyDeepCopyRecords(Selected);
+  mniRefByDeepCopyOverrideIntoWithOverwriting.Visible := mniRefByDeepCopyOverrideInto.Visible;
+
   mniRefByCopyAsNewInto.Visible := mniRefByCopyOverrideInto.Visible and not ByRefSelectionIncludesNonCopyNewRecords(Selected);
   mniRefByCopyDisabledOverrideInto.Visible := mniRefByCopyOverrideInto.Visible;
   mniRefByRemove.Visible := mniRefByCopyOverrideInto.Visible;
@@ -13204,6 +13227,9 @@ var
   MainRecord                  : IwbMainRecord;
 begin
   mniViewHeaderCopyAsOverride.Visible := False;
+  mniViewHeaderCopyAsOverrideWithOverwriting.Visible := False;
+  mniViewHeaderDeepCopyAsOverride.Visible := False;
+  mniViewHeaderDeepCopyAsOverrideWithOverwriting.Visible := False;
   mniViewHeaderCopyAsNewRecord.Visible := False;
   mniViewHeaderCopyAsWrapper.Visible := False;
   mniViewHeaderRemove.Visible := False;
@@ -13223,6 +13249,12 @@ begin
     Exit;
 
   mniViewHeaderCopyAsOverride.Visible := True;
+  mniViewHeaderCopyAsOverrideWithOverwriting.Visible := True;
+  if Assigned(MainRecord.ChildGroup) then begin
+    mniViewHeaderDeepCopyAsOverride.Visible := True;
+    mniViewHeaderDeepCopyAsOverrideWithOverwriting.Visible := True;
+  end;
+
   mniViewHeaderCopyAsNewRecord.Visible := not(
     (MainRecord.Signature = 'CELL') or
     (MainRecord.Signature = 'WRLD') or
