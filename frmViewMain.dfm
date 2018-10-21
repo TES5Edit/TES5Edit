@@ -1999,15 +1999,27 @@ object frmMain: TfrmMain
       OnClick = mniNavFilterRemoveClick
     end
     object mniNavFilterApply: TMenuItem
-      Caption = 'Apply Filter'
+      Caption = 'Apply Filter (all)'
+      OnClick = mniNavFilterApplyClick
+    end
+    object mniNavFilterApplySelected: TMenuItem
+      Caption = 'Apply Filter (selected)'
       OnClick = mniNavFilterApplyClick
     end
     object mniNavFilterForCleaning: TMenuItem
-      Caption = 'Apply Filter for Cleaning'
+      Caption = 'Apply Filter for Cleaning (all)'
+      OnClick = mniNavFilterForCleaningClick
+    end
+    object mniNavFilterForCleaningSelected: TMenuItem
+      Caption = 'Apply Filter for Cleaning (selected)'
       OnClick = mniNavFilterForCleaningClick
     end
     object mniNavFilterConflicts: TMenuItem
-      Caption = 'Apply Filter to show Conflicts'
+      Caption = 'Apply Filter to show Conflicts (all)'
+      OnClick = mniNavFilterConflictsClick
+    end
+    object mniNavFilterConflictsSelected: TMenuItem
+      Caption = 'Apply Filter to show Conflicts (selected)'
       OnClick = mniNavFilterConflictsClick
     end
     object N1: TMenuItem

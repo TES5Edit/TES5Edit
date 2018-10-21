@@ -181,6 +181,7 @@ type
     pmuNav: TPopupMenu;
     mniNavFilterRemove: TMenuItem;
     mniNavFilterApply: TMenuItem;
+    mniNavFilterApplySelected: TMenuItem;
     tbsInfo: TTabSheet;
     Memo1: TMemo;
     mniNavCheckForErrors: TMenuItem;
@@ -328,6 +329,7 @@ type
     mniNavLocalization: TMenuItem;
     mniNavLocalizationLanguage: TMenuItem;
     mniNavFilterForCleaning: TMenuItem;
+    mniNavFilterForCleaningSelected: TMenuItem;
     mniNavCreateSEQFile: TMenuItem;
     mniNavApplyScript: TMenuItem;
     mniNavOptions: TMenuItem;
@@ -340,6 +342,7 @@ type
     mniViewHeaderJumpTo: TMenuItem;
     acScript: TAction;
     mniNavFilterConflicts: TMenuItem;
+    mniNavFilterConflictsSelected: TMenuItem;
     mniModGroups: TMenuItem;
     mniModGroupsEnabled: TMenuItem;
     mniModGroupsDisabled: TMenuItem;
@@ -934,7 +937,7 @@ type
     procedure AddFile(const aFile: IwbFile);
     procedure AddFileInternal(const aFile: IwbFile);
 
-    procedure ReInitTree(aNoGameMaster: Boolean = False);
+    procedure ReInitTree(aNoGameMaster: Boolean; aFiles: TDynFiles);
 
     procedure PostAddMessage(const s: string);
     procedure SendAddFile(const aFile: IwbFile);
@@ -10615,7 +10618,7 @@ procedure TfrmMain.mniNavFilterRemoveClick(Sender: TObject);
 begin
   vstNav.BeginUpdate;
   try
-    ReInitTree;
+    ReInitTree(False, nil);
     vstNav.TreeOptions.AutoOptions := vstNav.TreeOptions.AutoOptions + [toAutoFreeOnCollapse];
   finally
     vstNav.EndUpdate;
@@ -11442,10 +11445,13 @@ var
 
   MainRecordDef: PwbMainRecordDef;
   HasACHR, HasACRE, HasREFR: Boolean;
+
+  FilterFiles : TDynFiles;
 begin
   Signatures := nil;
   BaseSignatures := nil;
   TopLevelGroups := nil;
+  FilterFiles := nil;
 
   PersCellNode := nil;
   PersCellChecked := False;
@@ -11822,203 +11828,245 @@ begin
 
   vstNav.Visible:= False;
   try
-    PerformLongAction('Applying Filter', '[Pass 1] Processed Records: 0', procedure
-    var
-      i      : Integer;
-      Count  : Cardinal;
-      Count2 : Cardinal;
-      CountUnfiltered : Cardinal;
-    begin
-      vstNav.BeginUpdate;
-      try
-        if (FilterConflictAll and (FilterConflictAllSet = [])) or
-           (FilterConflictThis and (FilterConflictThisSet = [])) or
-           (FilterRequiresBaseRecord and not PotentiallyUnfilteredRefs) or
-           (Assigned(Signatures) and (Signatures.Count < 1)) or
-           (Assigned(BaseSignatures) and (BaseSignatures.Count < 1)) or
-           (Assigned(TopLevelGroups) and (TopLevelGroups.Count < 1)) then
-          vstNav.Clear
-        else
-          ReInitTree(FilterNoGameMaster);
+    if (FilterConflictAll and (FilterConflictAllSet = [])) or
+       (FilterConflictThis and (FilterConflictThisSet = [])) or
+       (FilterRequiresBaseRecord and not PotentiallyUnfilteredRefs) or
+       (Assigned(Signatures) and (Signatures.Count < 1)) or
+       (Assigned(BaseSignatures) and (BaseSignatures.Count < 1)) or
+       (Assigned(TopLevelGroups) and (TopLevelGroups.Count < 1)) then begin
+      vstNav.Clear
+    end else begin
+      if (Sender = mniNavFilterApplySelected) or
+         (Sender = mniNavFilterForCleaningSelected) or
+         (Sender = mniNavFilterConflictsSelected) then begin
 
-        Count := 0;
-        vstNav.TreeOptions.AutoOptions := vstNav.TreeOptions.AutoOptions - [toAutoFreeOnCollapse];
-
-        if wbTranslationMode then begin
-          Node := vstNav.GetFirst;
-          NodeData := vstNav.GetNodeData(Node);
-          if Assigned(NodeData) and Assigned(NodeData.Element) and (NodeData.Element.ElementType = etFile) then
-            if SameText((NodeData.Element as IwbFile).FileName, wbGameName + '.esm') then
-              vstNav.DeleteNode(Node);
-        end;
-
-        if Assigned(TopLevelGroups) then begin
-          FileNode := vstNav.GetLastChild(nil);
-          while Assigned(FileNode) do begin
-            NextFileNode := vstNav.GetPreviousSibling(FileNode);
-            NodeData := vstNav.GetNodeData(FileNode);
-            if Assigned(NodeData) and Assigned(NodeData.Element) and (NodeData.Element.ElementType = etFile) then begin
-              Node := vstNav.GetLastChild(FileNode);
-              while Assigned(Node) do begin
-                NextNode := vstNav.GetPreviousSibling(Node);
-                NodeData := vstNav.GetNodeData(Node);
-                if Assigned(NodeData) and Assigned(NodeData.Element) and (NodeData.Element.ElementType = etGroupRecord) then begin
-                  GroupRecord := NodeData.Element as IwbGroupRecord;
-                  if GroupRecord.GroupType = 0 then begin
-                    if not TopLevelGroups.Find(GroupRecord.GroupLabelSignature, Dummy) then
-                      vstNav.DeleteNode(Node);
-                  end;
-                end;
-                Node := NextNode;
-              end;
-            end;
-            FileNode := NextFileNode;
+        with TfrmFileSelect.Create(Self) do try
+          for i := Low(Files) to High(Files) do begin
+            _File := Files[i];
+            CheckListBox1.Items.AddObject(_File.Name, Pointer(_File));
+            _File.ResetTags;
           end;
+
+          wbCodeBlock(procedure
+          var
+            SelectedNodes : TNodeArray;
+            NodeData      : PNavNodeData;
+            i             : Integer;
+          begin
+            SelectedNodes := vstNav.GetSortedSelection(True);
+            for i := Low(SelectedNodes) to High(SelectedNodes) do begin
+              NodeData := vstNav.GetNodeData(SelectedNodes[i]);
+              if Assigned(NodeData.Element) then
+                NodeData.Element._File.Tag;
+            end;
+          end);
+
+          for i := 0 to Pred(CheckListBox1.Items.Count) do
+            CheckListBox1.Checked[i] := IwbFile(Pointer(CheckListBox1.Items.Objects[i])).IsTagged;
+
+          Caption := 'What files should be added to the navigation treeview before applying the filter?';
+
+          if ShowModal <> mrOk then
+            Exit;
+
+          for i := 0 to Pred(CheckListBox1.Items.Count) do
+            if CheckListBox1.Checked[i] then
+              FilterFiles.Add(IwbFile(Pointer(CheckListBox1.Items.Objects[i])));
+        finally
+          Free;
         end;
 
-        Node := vstNav.GetLast(nil);
-        while Assigned(Node) do begin
-          wbCurrentProgress := '[Pass 1] Processed Records: ' + Count.ToString;
-          Inc(Count);
-          wbTick;
+      end;
+      PerformLongAction('Applying Filter', '[Pass 1] Processed Records: 0', procedure
+      var
+        i      : Integer;
+        Count  : Cardinal;
+        Count2 : Cardinal;
+        CountUnfiltered : Cardinal;
+      begin
+        vstNav.BeginUpdate;
+        try
+          ReInitTree(FilterNoGameMaster, FilterFiles);
 
-          NextNode := vstNav.GetPrevious(Node);
-          NodeData := vstNav.GetNodeData(Node);
-          FoundAny := False;
+          Count := 0;
+          vstNav.TreeOptions.AutoOptions := vstNav.TreeOptions.AutoOptions - [toAutoFreeOnCollapse];
 
-          if Assigned(NodeData.Element) then begin
+          if wbTranslationMode then begin
+            Node := vstNav.GetFirst;
+            NodeData := vstNav.GetNodeData(Node);
+            if Assigned(NodeData) and Assigned(NodeData.Element) and (NodeData.Element.ElementType = etFile) then
+              if SameText((NodeData.Element as IwbFile).FileName, wbGameName + '.esm') then
+                vstNav.DeleteNode(Node);
+          end;
 
-            if NodeData.Element.ElementType = etMainRecord then begin
-              MainRecord := NodeData.Element as IwbMainRecord;
-
-              if FilterConflictOnly then
-                if MainRecord.MasterOrSelf.OverrideCount < 2 then begin
-                  //filter early, can't possibly have a conflict
-                  vstNav.DeleteNode(Node);
-                  Node := NextNode;
-                  Continue;
-                end;
-
-              if MainRecord.IsInjected then
-                Include(NodeData.Flags, nnfInjected);
-              if MainRecord.IsNotReachable then
-                Include(NodeData.Flags, nnfNotReachable);
-              if MainRecord.ReferencesInjected then
-                Include(NodeData.Flags, nnfReferencesInjected);
-
-              Exclude(NodeData.Flags, nnfFilterChecked);
-
-              if not (FlattenCellChilds and AssignPersWrldChild and (MainRecord.Signature = 'CELL')) then
-                if CheckFilterNode(False) then begin
-                  //filter early
-                  Node := NextNode;
-                  Continue;
-                end;
-
-              if FilterConflictAll or FilterConflictThis or InheritConflictByParent then begin
-                ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
-                if not (FlattenCellChilds and AssignPersWrldChild and (MainRecord.Signature = 'CELL')) then
-                  if Node.ChildCount = 0 then
-                    if (FilterConflictAll and not (NodeData.ConflictAll in FilterConflictAllSet)) or
-                       (FilterConflictThis and not (NodeData.ConflictThis in FilterConflictThisSet)) then begin
-                      //filter early
-                      vstNav.DeleteNode(Node);
-                      Node := NextNode;
-                      Continue;
+          if Assigned(TopLevelGroups) then begin
+            FileNode := vstNav.GetLastChild(nil);
+            while Assigned(FileNode) do begin
+              NextFileNode := vstNav.GetPreviousSibling(FileNode);
+              NodeData := vstNav.GetNodeData(FileNode);
+              if Assigned(NodeData) and Assigned(NodeData.Element) and (NodeData.Element.ElementType = etFile) then begin
+                Node := vstNav.GetLastChild(FileNode);
+                while Assigned(Node) do begin
+                  NextNode := vstNav.GetPreviousSibling(Node);
+                  NodeData := vstNav.GetNodeData(Node);
+                  if Assigned(NodeData) and Assigned(NodeData.Element) and (NodeData.Element.ElementType = etGroupRecord) then begin
+                    GroupRecord := NodeData.Element as IwbGroupRecord;
+                    if GroupRecord.GroupType = 0 then begin
+                      if not TopLevelGroups.Find(GroupRecord.GroupLabelSignature, Dummy) then
+                        vstNav.DeleteNode(Node);
                     end;
+                  end;
+                  Node := NextNode;
+                end;
               end;
+              FileNode := NextFileNode;
+            end;
+          end;
 
-              if FlattenCellChilds and AssignPersWrldChild then
-                if (MainRecord.Signature = 'WRLD') then begin
-                  Cells := nil;
-                  PersCellChecked := False;
-                  PersCellNode := nil;
-                end else if (MainRecord.Signature = 'CELL') and
-                  Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
-                  case GroupRecord.GroupType of
-                    5: begin {exterior cell}
-                      if not PersCellChecked then begin
-                        PersCellChecked := True;
-                        PersCellNode := nil;
-                        Cells := nil;
+          Node := vstNav.GetLast(nil);
+          while Assigned(Node) do begin
+            wbCurrentProgress := '[Pass 1] Processed Records: ' + Count.ToString;
+            Inc(Count);
+            wbTick;
 
-                        Node2 := Node.Parent;
-                        if Assigned(Node2) then begin
-                          NodeData2 := vstNav.GetNodeData(Node2);
-                          if Assigned(NodeData2) and
-                            Supports(NodeData2.Element, IwbGroupRecord, GroupRecord) and
-                            (GroupRecord.GroupType = 5) then begin
+            NextNode := vstNav.GetPrevious(Node);
+            NodeData := vstNav.GetNodeData(Node);
+            FoundAny := False;
 
-                            Node2 := Node2.Parent;
-                            if Assigned(Node2) then begin
-                              NodeData2 := vstNav.GetNodeData(Node2);
-                              if Assigned(NodeData2) and
-                                Supports(NodeData2.Element, IwbGroupRecord, GroupRecord) and
-                                (GroupRecord.GroupType = 4) then begin
+            if Assigned(NodeData.Element) then begin
 
-                                Node2 := Node2.Parent;
-                                if Assigned(Node2) then begin
-                                  NodeData2 := vstNav.GetNodeData(Node2);
-                                  if Assigned(NodeData2) and
-                                    Supports(NodeData2.Element, IwbMainRecord, MainRecord2) and
-                                    (MainRecord2.Signature = 'WRLD') then begin
+              if NodeData.Element.ElementType = etMainRecord then begin
+                MainRecord := NodeData.Element as IwbMainRecord;
 
-                                    Node2 := vstNav.GetFirstChild(Node2);
+                if FilterConflictOnly then
+                  if MainRecord.MasterOrSelf.OverrideCount < 2 then begin
+                    //filter early, can't possibly have a conflict
+                    vstNav.DeleteNode(Node);
+                    Node := NextNode;
+                    Continue;
+                  end;
 
-                                    while Assigned(Node2) and not Assigned(PersCellNode) do begin
-                                      NodeData2 := vstNav.GetNodeData(Node2);
-                                      if Assigned(NodeData2) and
-                                        Supports(NodeData2.Element, IwbMainRecord, MainRecord2) and
-                                        (MainRecord2.Signature = 'CELL') then
-                                        PersCellNode := Node2;
+                if MainRecord.IsInjected then
+                  Include(NodeData.Flags, nnfInjected);
+                if MainRecord.IsNotReachable then
+                  Include(NodeData.Flags, nnfNotReachable);
+                if MainRecord.ReferencesInjected then
+                  Include(NodeData.Flags, nnfReferencesInjected);
 
-                                      Node2 := vstNav.GetNextSibling(Node2);
-                                    end;
+                Exclude(NodeData.Flags, nnfFilterChecked);
 
-                                    if Assigned(PersCellNode) then begin
-                                      Node2 := vstNav.GetFirstChild(PersCellNode);
-                                      PersCellNode := nil;
+                if not (FlattenCellChilds and AssignPersWrldChild and (MainRecord.Signature = 'CELL')) then
+                  if CheckFilterNode(False) then begin
+                    //filter early
+                    Node := NextNode;
+                    Continue;
+                  end;
+
+                if FilterConflictAll or FilterConflictThis or InheritConflictByParent then begin
+                  ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+                  if not (FlattenCellChilds and AssignPersWrldChild and (MainRecord.Signature = 'CELL')) then
+                    if Node.ChildCount = 0 then
+                      if (FilterConflictAll and not (NodeData.ConflictAll in FilterConflictAllSet)) or
+                         (FilterConflictThis and not (NodeData.ConflictThis in FilterConflictThisSet)) then begin
+                        //filter early
+                        vstNav.DeleteNode(Node);
+                        Node := NextNode;
+                        Continue;
+                      end;
+                end;
+
+                if FlattenCellChilds and AssignPersWrldChild then
+                  if (MainRecord.Signature = 'WRLD') then begin
+                    Cells := nil;
+                    PersCellChecked := False;
+                    PersCellNode := nil;
+                  end else if (MainRecord.Signature = 'CELL') and
+                    Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
+                    case GroupRecord.GroupType of
+                      5: begin {exterior cell}
+                        if not PersCellChecked then begin
+                          PersCellChecked := True;
+                          PersCellNode := nil;
+                          Cells := nil;
+
+                          Node2 := Node.Parent;
+                          if Assigned(Node2) then begin
+                            NodeData2 := vstNav.GetNodeData(Node2);
+                            if Assigned(NodeData2) and
+                              Supports(NodeData2.Element, IwbGroupRecord, GroupRecord) and
+                              (GroupRecord.GroupType = 5) then begin
+
+                              Node2 := Node2.Parent;
+                              if Assigned(Node2) then begin
+                                NodeData2 := vstNav.GetNodeData(Node2);
+                                if Assigned(NodeData2) and
+                                  Supports(NodeData2.Element, IwbGroupRecord, GroupRecord) and
+                                  (GroupRecord.GroupType = 4) then begin
+
+                                  Node2 := Node2.Parent;
+                                  if Assigned(Node2) then begin
+                                    NodeData2 := vstNav.GetNodeData(Node2);
+                                    if Assigned(NodeData2) and
+                                      Supports(NodeData2.Element, IwbMainRecord, MainRecord2) and
+                                      (MainRecord2.Signature = 'WRLD') then begin
+
+                                      Node2 := vstNav.GetFirstChild(Node2);
 
                                       while Assigned(Node2) and not Assigned(PersCellNode) do begin
                                         NodeData2 := vstNav.GetNodeData(Node2);
                                         if Assigned(NodeData2) and
-                                          Supports(NodeData2.Element, IwbGroupRecord, GroupRecord) and
-                                          (GroupRecord.GroupType = 8) then begin
+                                          Supports(NodeData2.Element, IwbMainRecord, MainRecord2) and
+                                          (MainRecord2.Signature = 'CELL') then
                                           PersCellNode := Node2;
-                                          end;
 
                                         Node2 := vstNav.GetNextSibling(Node2);
                                       end;
 
-                                      SetLength(Cells, 1000, 1000);
+                                      if Assigned(PersCellNode) then begin
+                                        Node2 := vstNav.GetFirstChild(PersCellNode);
+                                        PersCellNode := nil;
 
-                                      Node2 := vstNav.GetLastChild(PersCellNode);
-                                      while Assigned(Node2) do begin
-                                        NextNode2 := vstNav.GetPreviousSibling(Node2);
+                                        while Assigned(Node2) and not Assigned(PersCellNode) do begin
+                                          NodeData2 := vstNav.GetNodeData(Node2);
+                                          if Assigned(NodeData2) and
+                                            Supports(NodeData2.Element, IwbGroupRecord, GroupRecord) and
+                                            (GroupRecord.GroupType = 8) then begin
+                                            PersCellNode := Node2;
+                                            end;
 
-                                        NodeData2 := vstNav.GetNodeData(Node2);
-                                        if Assigned(NodeData2) and
-                                          Supports(NodeData2.Element, IwbMainRecord, MainRecord2) and
-                                          MainRecord2.GetPosition(Position) then begin
+                                          Node2 := vstNav.GetNextSibling(Node2);
+                                        end;
 
-                                          GridCell := wbPositionToGridCell(Position);
-                                          with GridCell do begin
-                                            Inc(x, 500);
-                                            Inc(y, 500);
+                                        SetLength(Cells, 1000, 1000);
 
-                                            if (x >= Low(Cells)) and (x <= High(Cells)) and
-                                              (y >= Low(Cells[x])) and (y <= High(Cells[x])) then begin
+                                        Node2 := vstNav.GetLastChild(PersCellNode);
+                                        while Assigned(Node2) do begin
+                                          NextNode2 := vstNav.GetPreviousSibling(Node2);
 
-                                              SetLength(Cells[x,y], Succ(Length(Cells[x,y])));
-                                              Cells[x,y, High(Cells[x,y])] := Node2;
+                                          NodeData2 := vstNav.GetNodeData(Node2);
+                                          if Assigned(NodeData2) and
+                                            Supports(NodeData2.Element, IwbMainRecord, MainRecord2) and
+                                            MainRecord2.GetPosition(Position) then begin
+
+                                            GridCell := wbPositionToGridCell(Position);
+                                            with GridCell do begin
+                                              Inc(x, 500);
+                                              Inc(y, 500);
+
+                                              if (x >= Low(Cells)) and (x <= High(Cells)) and
+                                                (y >= Low(Cells[x])) and (y <= High(Cells[x])) then begin
+
+                                                SetLength(Cells[x,y], Succ(Length(Cells[x,y])));
+                                                Cells[x,y, High(Cells[x,y])] := Node2;
+
+                                              end;
 
                                             end;
 
                                           end;
 
+                                          Node2 := NextNode2;
                                         end;
-
-                                        Node2 := NextNode2;
                                       end;
                                     end;
                                   end;
@@ -12027,127 +12075,127 @@ begin
                             end;
                           end;
                         end;
-                      end;
 
-                      if Assigned(PersCellNode) and MainRecord.GetGridCell(GridCell) then begin
+                        if Assigned(PersCellNode) and MainRecord.GetGridCell(GridCell) then begin
 
-                        with GridCell do begin
-                          Inc(x, 500);
-                          Inc(y, 500);
+                          with GridCell do begin
+                            Inc(x, 500);
+                            Inc(y, 500);
 
-                          if (x >= Low(Cells)) and (x <= High(Cells)) and
-                            (y >= Low(Cells[x])) and (y <= High(Cells[x])) then begin
+                            if (x >= Low(Cells)) and (x <= High(Cells)) and
+                              (y >= Low(Cells[x])) and (y <= High(Cells[x])) then begin
 
-                            for i := Low(Cells[x,y]) to High(Cells[x,y]) do begin
+                              for i := Low(Cells[x,y]) to High(Cells[x,y]) do begin
 
-                              Node2 := Cells[x,y,i];
-                              {NodeData2 :=} vstNav.GetNodeData(Node2);
-                              vstNav.MoveTo(Node2, Node, amAddChildFirst, False);
-                              if not FoundAny then begin
-                                FoundAny := True;
-                                NextNode := Node2;
+                                Node2 := Cells[x,y,i];
+                                {NodeData2 :=} vstNav.GetNodeData(Node2);
+                                vstNav.MoveTo(Node2, Node, amAddChildFirst, False);
+                                if not FoundAny then begin
+                                  FoundAny := True;
+                                  NextNode := Node2;
+                                end;
                               end;
+                              Cells[x,y] := nil;
+
                             end;
-                            Cells[x,y] := nil;
 
                           end;
-
                         end;
+
                       end;
-
-                    end;
-                end;
-            end else if NodeData.Element.ElementType = etGroupRecord then
-              if Supports(NodeData.Element, IwbGroupRecord, GroupRecord) then
-                if GroupRecord.GroupType = 1 then begin
-                  if Assigned(PersCellNode) then begin
-                    PersCellChecked := False;
-                    PersCellNode := nil;
-                    Cells := nil;
                   end;
-                end;
+              end else if NodeData.Element.ElementType = etGroupRecord then
+                if Supports(NodeData.Element, IwbGroupRecord, GroupRecord) then
+                  if GroupRecord.GroupType = 1 then begin
+                    if Assigned(PersCellNode) then begin
+                      PersCellChecked := False;
+                      PersCellNode := nil;
+                      Cells := nil;
+                    end;
+                  end;
 
-            if FoundAny then begin
-              Node := NextNode;
-              Continue;
-            end;
+              if FoundAny then begin
+                Node := NextNode;
+                Continue;
+              end;
 
-            if not (vsVisible in Node.States) then begin
-              vstNav.DeleteNode(Node)
-            end else if Node.ChildCount > 0 then begin
-              if
-                (FlattenBlocks or FlattenCellChilds) and
-                Supports(NodeData.Element, IwbGroupRecord, GroupRecord) and
-                (
-                  (FlattenBlocks and (GroupRecord.GroupType in [2..5])) or
-                  (FlattenCellChilds and (GroupRecord.GroupType in [8..10]))
-                ) then begin
+              if not (vsVisible in Node.States) then begin
+                vstNav.DeleteNode(Node)
+              end else if Node.ChildCount > 0 then begin
+                if
+                  (FlattenBlocks or FlattenCellChilds) and
+                  Supports(NodeData.Element, IwbGroupRecord, GroupRecord) and
+                  (
+                    (FlattenBlocks and (GroupRecord.GroupType in [2..5])) or
+                    (FlattenCellChilds and (GroupRecord.GroupType in [8..10]))
+                  ) then begin
 
-                vstNav.MoveTo(Node, Node, amInsertBefore, True);
-                vstNav.DeleteNode(Node);
+                  vstNav.MoveTo(Node, Node, amInsertBefore, True);
+                  vstNav.DeleteNode(Node);
 
-              end else
-                if InheritConflictByParent and (PersCellNode <> Node) then
-                  InheritStateFromChildren(Node, NodeData);
-            end else if NodeData.Element.Skipped then begin
-              vstNav.DeleteNode(Node)
-            end else if (FlattenBlocks or FlattenCellChilds) and
-                    Supports(NodeData.Element, IwbGroupRecord, GroupRecord) and
-                    (
-                      (FlattenBlocks and (GroupRecord.GroupType in [2..5])) or
-                      (FlattenCellChilds and (GroupRecord.GroupType in [8..10]))
-                    ) then
-                      vstNav.DeleteNode(Node);
-          end else
-            vstNav.DeleteNode(Node);
+                end else
+                  if InheritConflictByParent and (PersCellNode <> Node) then
+                    InheritStateFromChildren(Node, NodeData);
+              end else if NodeData.Element.Skipped then begin
+                vstNav.DeleteNode(Node)
+              end else if (FlattenBlocks or FlattenCellChilds) and
+                      Supports(NodeData.Element, IwbGroupRecord, GroupRecord) and
+                      (
+                        (FlattenBlocks and (GroupRecord.GroupType in [2..5])) or
+                        (FlattenCellChilds and (GroupRecord.GroupType in [8..10]))
+                      ) then
+                        vstNav.DeleteNode(Node);
+            end else
+              vstNav.DeleteNode(Node);
 
-          Node := NextNode;
-        end;
-
-
-        Count2 := 0;
-        CountUnfiltered := 0;
-        MainRecordCount := 0;
-
-        vstNav.TreeOptions.AutoOptions := vstNav.TreeOptions.AutoOptions - [toAutoFreeOnCollapse];
-        Node := vstNav.GetLast(nil);
-        while Assigned(Node) do begin
-          NextNode := vstNav.GetPrevious(Node);
-          NodeData := vstNav.GetNodeData(Node);
-          if Assigned(NodeData) and Assigned(NodeData.Element) and (NodeData.Element.ElementType = etFile) then begin
-            if MainRecordCount > 0 then begin
-              _File := NodeData.Element._File;
-              for i := Low(Files) to High(Files) do
-                if Files[i].Equals(_File) then
-                  Break;
-              FileFiltered[i] := _File.RecordCount - MainRecordCount;
-            end;
-            MainRecordCount := 0;
+            Node := NextNode;
           end;
-          if not CheckFilterNode(True) then begin
-            if Assigned(NodeData) and Assigned(NodeData.Element) and (NodeData.Element.ElementType = etMainRecord) then
-              Inc(MainRecordCount);
-            Inc(CountUnfiltered);
+
+
+          Count2 := 0;
+          CountUnfiltered := 0;
+          MainRecordCount := 0;
+
+          vstNav.TreeOptions.AutoOptions := vstNav.TreeOptions.AutoOptions - [toAutoFreeOnCollapse];
+          Node := vstNav.GetLast(nil);
+          while Assigned(Node) do begin
+            NextNode := vstNav.GetPrevious(Node);
+            NodeData := vstNav.GetNodeData(Node);
+            if Assigned(NodeData) and Assigned(NodeData.Element) and (NodeData.Element.ElementType = etFile) then begin
+              if MainRecordCount > 0 then begin
+                _File := NodeData.Element._File;
+                for i := Low(Files) to High(Files) do
+                  if Files[i].Equals(_File) then
+                    Break;
+                FileFiltered[i] := _File.RecordCount - MainRecordCount;
+              end;
+              MainRecordCount := 0;
+            end;
+            if not CheckFilterNode(True) then begin
+              if Assigned(NodeData) and Assigned(NodeData.Element) and (NodeData.Element.ElementType = etMainRecord) then
+                Inc(MainRecordCount);
+              Inc(CountUnfiltered);
+            end;
+            Node := NextNode;
+            Inc(Count2);
+            wbCurrentProgress := '[Pass 2] Processed Records: ' + Count2.ToString;
+            wbTick;
           end;
-          Node := NextNode;
-          Inc(Count2);
-          wbCurrentProgress := '[Pass 2] Processed Records: ' + Count2.ToString;
-          wbTick;
+
+          wbCurrentProgress := '[Pass 1] Processed Records: ' + Count.ToString + ', [Pass 2] Processed Records: ' + Count2.ToString + ', Remaining unfiltered nodes: ' + CountUnfiltered.ToString;
+
+          for i := Low(Files) to High(Files) do
+            if (FileFiltered[i] > 0) and (FileFiltered[i] < Files[i].RecordCount) then
+              wbProgress(Format('[%s] Filtered %.0n of %.0n records',
+                [Files[i].FileName, Min(Files[i].RecordCount, FileFiltered[i]) + 0.0, Files[i].RecordCount + 0.0]));
+
+          FilterApplied := True;
+          lblFilterHint.Visible := True;
+        finally
+          vstNav.EndUpdate;
         end;
-
-        wbCurrentProgress := '[Pass 1] Processed Records: ' + Count.ToString + ', [Pass 2] Processed Records: ' + Count2.ToString + ', Remaining unfiltered nodes: ' + CountUnfiltered.ToString;
-
-        for i := Low(Files) to High(Files) do
-          if (FileFiltered[i] > 0) and (FileFiltered[i] < Files[i].RecordCount) then
-            wbProgress(Format('[%s] Filtered %.0n of %.0n records',
-              [Files[i].FileName, Min(Files[i].RecordCount, FileFiltered[i]) + 0.0, Files[i].RecordCount + 0.0]));
-
-        FilterApplied := True;
-        lblFilterHint.Visible := True;
-      finally
-        vstNav.EndUpdate;
-      end;
-    end);
+      end);
+    end;
   finally
     Signatures.Free;
     BaseSignatures.Free;
@@ -13432,7 +13480,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.ReInitTree(aNoGameMaster: Boolean = False);
+procedure TfrmMain.ReInitTree(aNoGameMaster: Boolean; aFiles: TDynFiles);
 var
   i, j                        : Integer;
   _File                       : IwbFile;
@@ -13440,68 +13488,32 @@ var
   SelectedNodes               : TNodeArray;
   NodeData                    : PNavNodeData;
 begin
-  SelectFrm := nil;
+  if wbQuickClean then begin
+    aFiles := nil;
+    wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode).FilteredBy(function(aModule: PwbModuleInfo): Boolean
+    begin
+      Result := False;
+      if Assigned(aModule.miFile) then
+        aFiles.Add(aModule._File);
+    end);
+  end else
+    if Length(aFiles) < 1 then
+      aFiles := Files;
+
+  FilterApplied := False;
+  lblFilterHint.Visible := False;
+  vstNav.BeginUpdate;
   try
-    if wbQuickClean or ((GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0)) then begin
-      SelectFrm := TfrmFileSelect.Create(Self);
-      with SelectFrm do begin
-        for i := Low(Files) to High(Files) do begin
-          CheckListBox1.Items.Add(Files[i].Name);
-          Files[i].ResetTags;
-        end;
-
-        if wbQuickClean then begin
-
-          wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode).FilteredBy(function(aModule: PwbModuleInfo): Boolean
-          begin
-            Result := False;
-            if Assigned(aModule.miFile) then
-              aModule._File.Tag;
-          end);
-
-        end else begin
-
-          SelectedNodes := vstNav.GetSortedSelection(True);
-          for i := Low(SelectedNodes) to High(SelectedNodes) do begin
-            NodeData := vstNav.GetNodeData(SelectedNodes[i]);
-            if Assigned(NodeData.Element) then
-              NodeData.Element._File.Tag;
-          end;
-
-        end;
-
-        for i := Low(Files) to High(Files) do
-          if Files[i].IsTagged then
-            CheckListBox1.Checked[i] := True;
-
-        Caption := 'What files should be added to the navigation treeview?';
-
-        if not wbQuickClean then
-          if ShowModal <> mrOk then
-            FreeAndNil(SelectFrm);
-      end;
-    end;
-
-    FilterApplied := False;
-    lblFilterHint.Visible := False;
-    vstNav.BeginUpdate;
-    try
-      vstNav.Clear;
-      j := Low(Files);
-      if aNoGameMaster then
-        Inc(j);
-      for i := j to High(Files) do begin
-        _File := Files[i];
-        if not Assigned(SelectFrm) or SelectFrm.CheckListBox1.Checked[i] then begin
-          vstNav.AddChild(nil, Pointer(_File));
-          _File._AddRef;
-        end;
-      end;
-    finally
-      vstNav.EndUpdate;
+    vstNav.Clear;
+    for i := Low(aFiles) to High(aFiles) do begin
+      _File := aFiles[i];
+      if aNoGameMaster and (_File.FileStates * [fsIsGameMaster, fsIsHardcoded] <> []) then
+        Continue;
+      vstNav.AddChild(nil, Pointer(_File));
+      _File._AddRef;
     end;
   finally
-    SelectFrm.Free;
+    vstNav.EndUpdate;
   end;
 end;
 
