@@ -522,10 +522,19 @@ type
     function GetElementByPath(const aPath: string): IwbElement;
     function GetElementValue(const aName: string): string;
     function GetElementExists(const aName: string): Boolean;
+
     function GetElementEditValue(const aName: string): string;
+    function GetMemberEditValue(const aName: string): string;
+
     procedure SetElementEditValue(const aName, aValue: string);
+    procedure SetMemberEditValue(const aName, aValue: string);
+
     function GetElementNativeValue(const aName: string): Variant;
+    function GetMemberNativeValue(const aName: string): Variant;
+
     procedure SetElementNativeValue(const aName: string; const aValue: Variant);
+    procedure SetMemberNativeValue(const aName: string; const aValue: Variant);
+
     function GetElementLinksTo(const aName: string): IwbElement;
     function GetElementSortKey(const aName: string; aExtended: Boolean): string;
 
@@ -5368,8 +5377,11 @@ begin
   DoInit(False);
 
   Element := ResolveElementName(aName, Name);
-  if not Assigned(Element) then
+  if not Assigned(Element) then begin
+    if Name = '' then
+      Result := GetMemberEditValue(aName);
     Exit;
+  end;
 
   if Name = '' then
     Result := Element.EditValue
@@ -5434,8 +5446,11 @@ begin
   DoInit(False);
 
   Element := ResolveElementName(aName, Name);
-  if not Assigned(Element) then
+  if not Assigned(Element) then begin
+    if Name = '' then
+      Result := GetMemberNativeValue(aName);
     Exit;
+  end;
 
   if Name = '' then
     Result := Element.NativeValue
@@ -5491,6 +5506,48 @@ end;
 function TwbContainer.GetIsInSK(aIndex: Integer): Boolean;
 begin
   Result := False;
+end;
+
+function TwbContainer.GetMemberEditValue(const aName: string): string;
+var
+  IntegerDef : IwbIntegerDef;
+  FlagsDef   : IwbFlagsDef;
+  FlagDef    : IwbFlagDef;
+  s          : string;
+  i          : Integer;
+begin
+  Result := '';
+  if Supports(GetValueDef, IwbIntegerDef, IntegerDef) then
+    if Supports(IntegerDef.Formater[Self], IwbFlagsDef, FlagsDef) then
+      if FlagsDef.FindFlag(aName, FlagDef) then begin
+        s := GetEditValue;
+        i := Succ(FlagDef.FlagIndex);
+        if Length(s) >= i then
+          Result := s[i]
+        else
+          Result := '0';
+      end;
+end;
+
+function TwbContainer.GetMemberNativeValue(const aName: string): Variant;
+var
+  IntegerDef : IwbIntegerDef;
+  FlagsDef   : IwbFlagsDef;
+  FlagDef    : IwbFlagDef;
+  s          : string;
+  i          : Integer;
+begin
+  VarClear(Result);
+  if Supports(GetValueDef, IwbIntegerDef, IntegerDef) then
+    if Supports(IntegerDef.Formater[Self], IwbFlagsDef, FlagsDef) then
+      if FlagsDef.FindFlag(aName, FlagDef) then begin
+        s := GetEditValue;
+        i := Succ(FlagDef.FlagIndex);
+        if Length(s) >= i then
+          Result := s[i] = '1'
+        else
+          Result := False;
+      end;
 end;
 
 function TwbContainer.GetRecordBySignature(const aSignature: TwbSignature): IwbRecord;
@@ -6134,8 +6191,11 @@ begin
   DoInit(False);
 
   Element := ResolveElementName(aName, Name, True);
-  if not Assigned(Element) then
+  if not Assigned(Element) then begin
+    if Name = '' then
+      SetMemberEditValue(aName, aValue);
     Exit;
+  end;
 
   if Name = '' then
     Element.EditValue := aValue
@@ -6154,8 +6214,11 @@ begin
   DoInit(False);
 
   Element := ResolveElementName(aName, Name, True);
-  if not Assigned(Element) then
+  if not Assigned(Element) then begin
+    if Name = '' then
+      SetMemberNativeValue(aName, aValue);
     Exit;
+  end;
 
   if Name = '' then
     Element.NativeValue := aValue
@@ -6174,6 +6237,54 @@ begin
         Exit;
       end;
   Include(cntStates, csSortedBySortOrder);
+end;
+
+procedure TwbContainer.SetMemberEditValue(const aName, aValue: string);
+var
+  IntegerDef : IwbIntegerDef;
+  FlagsDef   : IwbFlagsDef;
+  FlagDef    : IwbFlagDef;
+  s          : string;
+  b          : Boolean;
+begin
+  if Supports(GetValueDef, IwbIntegerDef, IntegerDef) then
+    if Supports(IntegerDef.Formater[Self], IwbFlagsDef, FlagsDef) then
+      if FlagsDef.FindFlag(aName, FlagDef) then begin
+        b := aValue = '1';
+        s := GetEditValue;
+        s := s + StringOfChar('0', 64 - Length(s));
+        if (FlagDef.FlagIndex >= 0) and (FlagDef.FlagIndex < Length(s)) then begin
+          if b then
+            s[Succ(FlagDef.FlagIndex)] := '1'
+          else
+            s[Succ(FlagDef.FlagIndex)] := '0';
+          SetEditValue(s);
+        end;
+      end;
+end;
+
+procedure TwbContainer.SetMemberNativeValue(const aName: string; const aValue: Variant);
+var
+  IntegerDef : IwbIntegerDef;
+  FlagsDef   : IwbFlagsDef;
+  FlagDef    : IwbFlagDef;
+  s          : string;
+  b          : Boolean;
+begin
+  if Supports(GetValueDef, IwbIntegerDef, IntegerDef) then
+    if Supports(IntegerDef.Formater[Self], IwbFlagsDef, FlagsDef) then
+      if FlagsDef.FindFlag(aName, FlagDef) then begin
+        b := aValue;
+        s := GetEditValue;
+        s := s + StringOfChar('0', 64 - Length(s));
+        if (FlagDef.FlagIndex >= 0) and (FlagDef.FlagIndex < Length(s)) then begin
+          if b then
+            s[Succ(FlagDef.FlagIndex)] := '1'
+          else
+            s[Succ(FlagDef.FlagIndex)] := '0';
+          SetEditValue(s);
+        end;
+      end;
 end;
 
 procedure TwbContainer.SetToDefaultIfAsCreatedEmpty;
