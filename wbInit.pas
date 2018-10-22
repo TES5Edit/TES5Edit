@@ -190,25 +190,38 @@ end;
 // several ini settings should be read before record definitions
 // they may affect definitions like wbSimpleRecords
 // and should be overridden by command line parameters
-procedure ReadSettings;
+function ReadSettings: Boolean;
 var
   ResetSettings: Boolean;
   Settings: TMemIniFile;
   Shift,Ctrl,Alt: Boolean;
+  s : string;
 begin
-  ResetSettings := FindCmdLineSwitch('resetsettings');
-  if not ResetSettings then begin
-    Shift := GetAsyncKeyState(VK_SHIFT) < 0;
-    Ctrl := GetAsyncKeyState(VK_CONTROL) < 0;
-    Alt := GetAsyncKeyState(VK_MENU) < 0;
-    if Shift and Ctrl and Alt then
-      ResetSettings := MessageDlg('Reset ALL settings?',
-        mtConfirmation, [mbYes, mbNo], 0, mbNo) = mrYes;
+  Result := True;
+
+  if FileExists(wbSettingsFileName) then begin
+    ResetSettings := FindCmdLineSwitch('resetsettings');
+    if not ResetSettings then begin
+      Shift := GetAsyncKeyState(VK_SHIFT) < 0;
+      Ctrl := GetAsyncKeyState(VK_CONTROL) < 0;
+      Alt := GetAsyncKeyState(VK_MENU) < 0;
+      if Shift and Ctrl and Alt then
+        ResetSettings := MessageDlg('Reset ALL settings? (Existing settings file will be backed up.)',
+          mtConfirmation, [mbYes, mbNo], 0, mbNo) = mrYes;
+    end;
+
+    if ResetSettings then begin
+      s := wbSettingsFileName + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+
+      if not RenameFile(PChar(wbSettingsFileName), PChar(s)) then begin
+        ShowMessage(Format('Could not rename existing settings file to "%s".', [s]));
+        Exit(False);
+      end else
+        ShowMessage(Format('ALL settings have been reset. Existing settings file has been renamed to "%s".', [s]));
+    end;
   end;
 
-  if ResetSettings then
-    DeleteFile(PChar(wbSettingsFileName))
-  else try
+  if FileExists(wbSettingsFileName) then try
     Settings := TMemIniFile.Create(wbSettingsFileName);
     try
       wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
@@ -786,7 +799,8 @@ begin
     Exit(False);
   end;
 
-  ReadSettings;
+  if not ReadSettings then
+    Exit(False);
 
   if wbFindCmdLineParam('AllowDirectSaves', s) then begin
     wbAllowDirectSaveFor := TStringList.Create;
