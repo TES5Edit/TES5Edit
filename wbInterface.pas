@@ -631,7 +631,7 @@ type
 
   TDynFiles = TArray<IwbFile>;
 
-  TDynFilesHelper = record helper for TArray<IwbFile>
+  TDynFilesHelper = record helper for TDynFiles
     procedure Add(const aFile: IwbFile);
   end;
 
