@@ -50,7 +50,7 @@ const
   VersionString : TwbVersion = (
     Major   : 3;
     Minor   : 2;
-    Release : 83;
+    Release : 84;
     Build   : '';
     Title   : 'EXPERIMENTAL';
   );
