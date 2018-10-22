@@ -2174,6 +2174,7 @@ type
     procedure FlagGetCP(const aElement: IwbElement; aIndex: Integer; var aCP: TwbConflictPriority);
     function GetFlagHasGetCP(aIndex: Integer): Boolean;
     function GetFlagDef(aIndex : Integer): IwbFlagDef;
+    function FindFlag(aName: string; out aFlagDef: IwbFlagDef): Boolean;
 
     property BaseFlagsDef: IwbFlagsDef
       read GetBaseFlagsDef;
@@ -5879,6 +5880,7 @@ type
     procedure FlagGetCP(const aElement: IwbElement; aIndex: Integer; var aCP: TwbConflictPriority);
     function GetFlagHasGetCP(aIndex: Integer): Boolean;
     function GetFlagDef(aIndex : Integer): IwbFlagDef;
+    function FindFlag(aName: string; out aFlagDef: IwbFlagDef): Boolean;
   end;
 
   TwbFlagDef = class(TwbValueDef, IwbFlagDef)
@@ -10977,6 +10979,47 @@ begin
   Result := False;
   if flgHasDontShows and (aIndex <= High(flgDontShows)) and Assigned(flgDontShows[aIndex]) then
     Result := flgDontShows[aIndex](aElement);
+end;
+
+function TwbFlagsDef.FindFlag(aName: string; out aFlagDef: IwbFlagDef): Boolean;
+var
+  i: Integer;
+  j: Int64;
+begin
+  Result := False;
+  aFlagDef := nil;
+
+  if aName = '' then
+    Exit;
+
+  for i := Low(flgNames) to High(flgNames) do
+    if SameText(aName, flgNames[i]) then begin
+      aFlagDef := GetFlagDef(i);
+      Exit(Assigned(aFlagDef));
+    end;
+
+
+  if aName.StartsWith('0x') then
+    aName := '$' + Copy(aName, 3);
+
+  if aName.StartsWith('$') then begin
+    j := StrToIntDef(aName, 0);
+    i := 0;
+    while (j <> 0) and (i < GetFlagCount) do begin
+      if j = 1 then begin
+        aFlagDef := GetFlagDef(i);
+        Exit(Assigned(aFlagDef));
+      end;
+      Inc(i);
+      j := j shr 1;
+    end;
+  end;
+
+  i := StrToIntDef(aName, -1);
+  if (i >= 0) and (i < GetFlagCount) then begin
+    aFlagDef := GetFlagDef(i);
+    Exit(Assigned(aFlagDef));
+  end;
 end;
 
 procedure TwbFlagsDef.FlagGetCP(const aElement : IwbElement;
