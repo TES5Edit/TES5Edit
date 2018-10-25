@@ -10488,7 +10488,8 @@ begin
     wbSNAMMarkerParams,
     wbNVNM,
     wbAPPR,
-    wbObjectTemplate
+    wbObjectTemplate,
+    wbNVNM
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(GLOB, 'Global',
