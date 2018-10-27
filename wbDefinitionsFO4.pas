@@ -10486,7 +10486,6 @@ begin
     ])),
     wbString(XMRK, 'Marker Model'),
     wbSNAMMarkerParams,
-    wbNVNM,
     wbAPPR,
     wbObjectTemplate,
     wbNVNM
