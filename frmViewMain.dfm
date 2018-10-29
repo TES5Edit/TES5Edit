@@ -377,10 +377,6 @@ object frmMain: TfrmMain
       object tbsInfo: TTabSheet
         Caption = 'Information'
         ImageIndex = 2
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object Memo1: TMemo
           AlignWithMargins = True
           Left = 3
@@ -404,46 +400,38 @@ object frmMain: TfrmMain
             ''
             
               'The navigation treeview on the left side shows all active master' +
-              's and plugins in their correct load order. By navigating that tr' +
-              'eeview you can look at every single record in any of your master' +
-              's or plugins. Once a record has been selected the detailed conte' +
-              'nts of that record is shown on the right side.'
+              's and plugins in their correct load order. By navigating '
+            
+              'that treeview you can look at every single record in any of your' +
+              ' masters or plugins. Once a record has been selected the '
+            'detailed contents of that record is shown on the right side.'
             ''
             
               'The view treeview shows all versions of the selected record from' +
-              ' all plugins which contain it. The left most column is the maste' +
-              'r. The right most column is the plugin that "wins". This is the ' +
-              'version of the record that the game sees.'
+              ' all plugins which contain it. The left most column is the '
+            
+              'master. The right most column is the plugin that "wins". This is' +
+              ' the version of the record that the game sees.'
             ''
             
               'The navigation and view treeview use the same color coding to si' +
-              'gnal the conflict state of individual fields (in the view treevi' +
-              'ew) and the record overall (in the navigation treeview).'
+              'gnal the conflict state of individual fields (in the view '
+            'treeview) and the record overall (in the navigation treeview).'
             ''
-            'Background color:'
-            'White - Single Record'
-            'Green - Multiple but no conflict'
-            'Yellow - Override without conflict'
-            'Red - Conflict'
-            ''
-            'Text color:'
-            'Black - Single Record'
-            'Purple - Master'
-            'Gray - Identical to Master'
-            'Orange - Identical to Master but conflict Winner'
-            'Green - Override without conflict'
-            'Orange - Conflict winner'
-            'Red - Conflict loser'
+            
+              'Previously colors were listed by background and text color. Inst' +
+              'ead, click the Legend button in the upper right corner. The '
+            'Legend window will summarizes the meaning of the colors.'
             ''
             
               'Conflict detection is not simply based on the existence of multi' +
-              'ple records for the same FormID in different plugins but instead' +
-              ' performs a comparison of the parsed subrecord data.'
+              'ple records for the same FormID in different plugins but '
+            'instead performs a comparison of the parsed subrecord data.'
             ''
             
               'The navigation treeview has a context menu where you can activat' +
-              'e filtering. Filtering is based on the same conflict categorizat' +
-              'ion as the background and text color.'
+              'e filtering. Filtering is based on the same conflict '
+            'categorization as the background and text color.'
             ''
             'Command Line Switches:'
             ''
@@ -458,9 +446,10 @@ object frmMain: TfrmMain
               'lagged]'
             
               '-PseudoESL [xEdit will check if the module falls within ESL cons' +
-              'traints (not containing new records with ObjectIDs > $FFF) and l' +
-              'oad the file like an ESL (mapped into the FE xxx namespace) if p' +
-              'ossible]'
+              'traints (not containing new records with ObjectIDs > $FFF) '
+            
+              'and load the file like an ESL (mapped into the FE xxx namespace)' +
+              ' if possible]'
             '-DontCache [Completely disables ref caching]'
             
               '-DontCacheLoad [Don'#39't load cache files if present, but save if p' +
@@ -468,15 +457,18 @@ object frmMain: TfrmMain
             '-DontCacheSave [Don'#39't save cache files after building refs]'
             
               '-AllowDirectSaves:<filename list> [File may be an .esm, .esl, or' +
-              ' .esp. Without a list of files, this will load non-official (off' +
-              'icial = game master, official dlcs, CCs) modules without using m' +
-              'emory mapped files. Optionally you can specify a list of files. ' +
-              'Which will only load the listed modules without using memory map' +
-              'ped files. This optional list may include official modules.]'
+              ' .esp. Without a list of files, this will load non-official '
+            
+              '(official = game master, official dlcs, CCs) modules without usi' +
+              'ng memory mapped files. Optionally you can specify a list of '
+            
+              'files. Which will only load the listed modules without using mem' +
+              'ory mapped files. This optional list may include official '
+            'modules.]'
             
               '-<gamemode> [Specifies which game mode to use. <gamemode> can be' +
-              ' any of the following: '#39'tes5vr'#39', '#39'fo4vr'#39', '#39'tes4'#39', '#39'tes5'#39', '#39'sse'#39',' +
-              ' '#39'fo3'#39', '#39'fnv'#39', '#39'fo4'#39']'
+              ' any of the following: '#39'tes5vr'#39', '#39'fo4vr'#39', '#39'tes4'#39', '#39'tes5'#39', '
+            #39'sse'#39', '#39'fo3'#39', '#39'fnv'#39', '#39'fo4'#39']'
             
               '-moprofile:<profilename> Opens the plugin selection from the MO ' +
               'profile named in the switch.'
@@ -486,8 +478,10 @@ object frmMain: TfrmMain
               ']'
             
               '-VeryQuickShowConflicts [loads all modules according to plugins.' +
-              'txt without showing module selection, except if CTRL is pressed ' +
-              'on start]'
+              'txt without showing module selection, except if CTRL is '
+            'pressed on start]'
+            '-quickclean [cleans 2 times and prompts to save the file]'
+            '-quickautoclean [Cleans 3 times and saves in between each step]'
             '-C:<path> [path to use for cache files]'
             '-S:<path><filename> [Run specified script]'
             '-T:<path> [Temporary Directory]'
@@ -561,6 +555,18 @@ object frmMain: TfrmMain
             ''
             '- CTRL + [Double Click] on FormID to switch focus to that record'
             ''
+            'Modgroup Editor:'
+            ''
+            '- CTRL UP/DOWN - Move entry'
+            
+              '- INSERT - Insert entry (Insert Module or CRC depending on which' +
+              ' is selected)'
+            '- SHIFT + INSERT - Insert crc (when on a module)'
+            '- DELETE - Delete a module or crc'
+            
+              '- SPACE / Mouse Click - toggle flag when a flag is currently foc' +
+              'used'
+            ''
             'Modgroups:'
             ''
             
@@ -569,16 +575,19 @@ object frmMain: TfrmMain
             ''
             
               'If a modgroup is active, what it essentially means is that for e' +
-              'ach record that is contained in more than one mod of the modgrou' +
-              'p, only the last (in load order) is visible. That'#39's it. The invi' +
-              'sible record versions simply don'#39't participate in the normal con' +
-              'flict detection mechanisms at all.'
+              'ach record that is contained in more than one mod of the '
+            
+              'modgroup, only the last (in load order) is visible. That'#39's it. T' +
+              'he invisible record versions simply don'#39't participate in the '
+            'normal conflict detection mechanisms at all.'
             ''
             
               'A modgroup does not perform any merge or make any changes to any' +
-              ' mod. All it does it hide away version of records that you'#39've st' +
-              'ated (by defining the modgroup) that you'#39've already checked them' +
-              ' against each other and the hidden record is simply irrelevant.'
+              ' mod. All it does it hide away version of records that '
+            
+              'you'#39've stated (by defining the modgroup) that you'#39've already che' +
+              'cked them against each other and the hidden record is simply '
+            'irrelevant.'
             ''
             'Modgroups File and Syntax:'
             ''
@@ -609,10 +618,11 @@ object frmMain: TfrmMain
             ''
             
               'If a module is followed by a list of one or more CRC values, the' +
-              ' modgroup is only available if the module has one of the listed ' +
-              'CRCs. Source means that if a record in this mod is found, then i' +
-              't will hide the versions of the same record from all mods listed' +
-              ' above it that are targets.'
+              ' modgroup is only available if the module has one of the '
+            
+              'listed CRCs. Source means that if a record in this mod is found,' +
+              ' then it will hide the versions of the same record from all '
+            'mods listed above it that are targets.'
             ''
             '[Modgroup Name]'
             'MainPlugin.esm'
@@ -651,24 +661,28 @@ object frmMain: TfrmMain
             ''
             
               'Not all mod groups defined in that file will necessarily show up' +
-              ' in the selection list. Mod groups for which less then 2 plugins' +
-              ' are currently active are filtered. If the load order of plugins' +
-              ' doesn'#39't match the order in the mod group it is also filtered.'
+              ' in the selection list. Mod groups for which less then 2 '
+            
+              'plugins are currently active are filtered. If the load order of ' +
+              'plugins doesn'#39't match the order in the mod group it is also '
+            'filtered.'
             ''
             'What'#39's the effect of having a mod group active?'
             ''
             
               'When a record for the view treeview is generated and multiple fi' +
-              'les of the same mod group modify this record, then only the newe' +
-              'st of the files in that modgroup will be shown. So instead of se' +
-              'eing 5 different files with numerous conflicts you are only seei' +
-              'ng the newest file in that mod group. This also affects conflict' +
-              ' classification.'
+              'les of the same mod group modify this record, then only the '
+            
+              'newest of the files in that modgroup will be shown. So instead o' +
+              'f seeing 5 different files with numerous conflicts you are '
+            
+              'only seeing the newest file in that mod group. This also affects' +
+              ' conflict classification.'
             ''
             
               'It'#39's worth pointing out here that if a record is overridden by b' +
-              'oth plugins in a mod group and other plugins that normal conflic' +
-              't detection will still work perfectly.'
+              'oth plugins in a mod group and other plugins that normal '
+            'conflict detection will still work perfectly.'
             ''
             
               'Basically this system can be used to reduce a lot of noise from ' +
@@ -680,9 +694,11 @@ object frmMain: TfrmMain
             ''
             
               'Cache files are based on the CRC of the xEdit EXE, then the plug' +
-              'in filename. For example 3917E178_DLCNukaWorld_esm_43D25C56.refc' +
-              'ache. Once built xEdit will load the cache file rather then buil' +
-              'd the references again. This reduces load time.'
+              'in filename. For example '
+            
+              '3917E178_DLCNukaWorld_esm_43D25C56.refcache. Once built xEdit wi' +
+              'll load the cache file rather then build the references '
+            'again. This reduces load time.'
             ''
             'xEdit Backup Files:'
             ''
@@ -690,15 +706,17 @@ object frmMain: TfrmMain
             ''
             
               'Backups are saved with the file name [PluginName].[esm/esp/els].' +
-              'backup.[Date Stamp} For example PluginName.esp.backup.2018_07_25' +
-              '_20_52_10. These can be renamed and copied to the Data folder.'
+              'backup.[Date Stamp} For example '
+            
+              'PluginName.esp.backup.2018_07_25_20_52_10. These can be renamed ' +
+              'and copied to the Data folder.'
             ''
             'Show Only Master and Leafs:'
             ''
             
               'What this does is, similar to modgroups, reduce which records ar' +
-              'e being show in the view treeview (and are taken into account fo' +
-              'r calculating conflict information).'
+              'e being show in the view treeview (and are taken into '
+            'account for calculating conflict information).'
             ''
             'Suppose you have the following mods:'
             ''
@@ -729,22 +747,23 @@ object frmMain: TfrmMain
             ''
             
               'Then with active "Only Master and Leafs" only Master, D, E, and ' +
-              'C will be shown. The assumption here being that whatever the con' +
-              'tents of A or B, it'#39's already being taken into account by D and/' +
-              'or E.'
+              'C will be shown. The assumption here being that whatever the '
+            
+              'contents of A or B, it'#39's already being taken into account by D a' +
+              'nd/or E.'
             ''
             
               'This assumption is obviously only true if the author of mods D a' +
-              'nd E did their job correctly, so this isn'#39't a good option to hav' +
-              'e always enabled. As long as that assumption holds true, it can ' +
-              'declutter the reported conflicts significantly.'
+              'nd E did their job correctly, so this isn'#39't a good option to '
+            
+              'have always enabled. As long as that assumption holds true, it c' +
+              'an declutter the reported conflicts significantly.'
             '')
           ParentColor = True
           ParentFont = False
           ReadOnly = True
           ScrollBars = ssVertical
           TabOrder = 0
-          WordWrap = False
         end
       end
       object tbsWEAPSpreadsheet: TTabSheet
