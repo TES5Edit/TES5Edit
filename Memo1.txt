@@ -9,20 +9,7 @@ The view treeview shows all versions of the selected record from all plugins whi
 
 The navigation and view treeview use the same color coding to signal the conflict state of individual fields (in the view treeview) and the record overall (in the navigation treeview).
 
-Background color:
-White - Single Record
-Green - Multiple but no conflict
-Yellow - Override without conflict
-Red - Conflict
-
-Text color:
-Black - Single Record
-Purple - Master
-Gray - Identical to Master
-Orange - Identical to Master but conflict Winner
-Green - Override without conflict
-Orange - Conflict winner
-Red - Conflict loser
+Previously colors were listed by background and text color. Instead, click the Legend button in the upper right corner. The Legend window will summarizes the meaning of the colors.
 
 Conflict detection is not simply based on the existence of multiple records for the same FormID in different plugins but instead performs a comparison of the parsed subrecord data.
 
@@ -47,6 +34,8 @@ Command Line Switches:
 -setesm [Set ESM flag. Plugin selection screen will appear.]
 -clearesm [Remove ESM flag. Plugin selection screen will appear.]
 -VeryQuickShowConflicts [loads all modules according to plugins.txt without showing module selection, except if CTRL is pressed on start]
+-quickclean [cleans 2 times and prompts to save the file]
+-quickautoclean [Cleans 3 times and saves in between each step]
 -C:<path> [path to use for cache files]
 -S:<path><filename> [Run specified script]
 -T:<path> [Temporary Directory]
@@ -104,13 +93,21 @@ Messages tab:
 
 - CTRL + [Double Click] on FormID to switch focus to that record
 
+Modgroup Editor:
+
+- CTRL UP/DOWN - Move entry
+- INSERT - Insert entry (Insert Module or CRC depending on which is selected)
+- SHIFT + INSERT - Insert crc (when on a module)
+- DELETE - Delete a module or crc
+- SPACE / Mouse Click - toggle flag when a flag is currently focused
+
 Modgroups:
 
 For a modgroup the be activateable, the order of the mods in the load order and modgroup must match.
 
 If a modgroup is active, what it essentially means is that for each record that is contained in more than one mod of the modgroup, only the last (in load order) is visible. That's it. The invisible record versions simply don't participate in the normal conflict detection mechanisms at all.
 
-A modgroup does not perform any merge or make any changes to any mod. All it does it hide away version of records that you've stated (by defining the modgroup) that you've already checked them against each other and the hidden record is simply irrelevant. 
+A modgroup does not perform any merge or make any changes to any mod. All it does it hide away version of records that you've stated (by defining the modgroup) that you've already checked them against each other and the hidden record is simply irrelevant.
 
 Modgroups File and Syntax:
 
