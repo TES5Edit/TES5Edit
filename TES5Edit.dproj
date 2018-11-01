@@ -126,6 +126,7 @@
         <DCCReference Include="wbDefinitionsFO3Saves.pas"/>
         <DCCReference Include="wbDefinitionsFO4.pas"/>
         <DCCReference Include="wbDefinitionsFO4Saves.pas"/>
+        <DCCReference Include="wbDefinitionsFO76.pas"/>
         <DCCReference Include="wbDefinitionsTES3.pas"/>
         <DCCReference Include="wbDefinitionsTES4.pas"/>
         <DCCReference Include="wbDefinitionsTES4Saves.pas"/>

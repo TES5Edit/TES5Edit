@@ -73,6 +73,7 @@ uses
   wbDefinitionsFO3Saves in 'wbDefinitionsFO3Saves.pas',
   wbDefinitionsFO4 in 'wbDefinitionsFO4.pas',
   wbDefinitionsFO4Saves in 'wbDefinitionsFO4Saves.pas',
+  wbDefinitionsFO76 in 'wbDefinitionsFO76.pas',
   wbDefinitionsTES3 in 'wbDefinitionsTES3.pas',
   wbDefinitionsTES4 in 'wbDefinitionsTES4.pas',
   wbDefinitionsTES4Saves in 'wbDefinitionsTES4Saves.pas',

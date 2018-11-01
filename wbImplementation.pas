@@ -2736,7 +2736,9 @@ begin
   else if wbIsSkyrim then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.7'
   else if wbIsFallout4 then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.95';
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.95'
+  else if wbIsFallout76 then
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '68.0';
   Header.RecordBySignature['HEDR'].Elements[2].EditValue := '$800';
 
   if aIsESL then begin
@@ -2803,7 +2805,9 @@ begin
   else if wbIsSkyrim then
     Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.7'
   else if wbIsFallout4 then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.95';
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.95'
+  else if wbIsFallout76 then
+    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '68.0';
   Header.RecordBySignature['HEDR'].Elements[2].EditValue := '$800';
 
   if mfHasESLFlag in aTemplate.miFlags then begin
@@ -3787,7 +3791,7 @@ begin
 
     j := 0;
     ONAMs := nil;
-    if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 then begin
+    if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 then begin
       Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
       while FileHeader.RemoveElement('ONAM') <> nil do
         ;
@@ -3795,7 +3799,7 @@ begin
       if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
         for i := 0 to Pred(MasterFiles.ElementCount) do begin
           if Supports(MasterFiles.Elements[i], IwbContainerElementRef, MasterFile) then begin
-            // Fallout 4 CK creates ONAMs in ESP too
+            // Fallout 4 CK creates ONAMs in ESP too. Cannot verify for FO76.
             if FileHeader.IsESM or wbIsFallout4 then
               while j <= High(flRecords) do begin
                 Current := flRecords[j];
@@ -4133,7 +4137,7 @@ begin
   SortRecordsByEditorID;
   flProgress('EditorID index built');
 
-  if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 then begin
+  if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 then begin
     IsInternal := not GetIsEditable and wbBeginInternalEdit(True);
     try
       SetLength(Groups, wbGroupOrder.Count);
@@ -6772,7 +6776,7 @@ begin
             with TwbMainRecord(MainRecord.ElementID) do begin
               Self.mrStruct.mrsFlags := mrStruct.mrsFlags;
               Self.mrStruct.mrsVCS1 := DefaultVCS1;
-              if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 then begin
+              if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 then begin
                 Self.mrStruct.mrsVersion := mrStruct.mrsVersion;
                 Self.mrStruct.mrsVCS2 := DefaultVCS2; //mrStruct.mrsVCS2;
               end;
@@ -7332,6 +7336,7 @@ var
     BasePtr.mrsFormID := aFormID;
     BasePtr.mrsVCS1 := DefaultVCS1;
     case wbGameMode of
+      gmFO76           : BasePtr.mrsVersion := 182;
       gmFO4, gmFO4VR   : BasePtr.mrsVersion := 131;
       gmSSE, gmTES5VR  : BasePtr.mrsVersion := 44;
       gmTES5           : BasePtr.mrsVersion := 43;
@@ -8534,7 +8539,7 @@ var
 begin
   Result := '';
 
-  if not wbIsFallout4 then
+  if not wbIsFallout4 and not wbIsFallout76 then
     Exit;
 
   if not (mrsHasPrecombinedMeshChecked in mrStates) then begin
@@ -13869,7 +13874,7 @@ begin
   try
     ChildrenOf := GetChildrenOf;
     // there is no PNAM in Fallout 4, looks like INFOs are no longer linked lists
-    if (not wbIsFallout4) and Assigned(ChildrenOf) and (ChildrenOf.Signature = 'DIAL') then begin
+    if (not wbIsFallout4 and not wbIsFallout76) and Assigned(ChildrenOf) and (ChildrenOf.Signature = 'DIAL') then begin
       {>>> Sorting DIAL group doesn't always work, and Skyrim.esm has a plenty of unsorted DIALs <<<}
       {>>> Also disabled for FNV, https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=59 <<<}
       if not wbSortGroupRecord then
