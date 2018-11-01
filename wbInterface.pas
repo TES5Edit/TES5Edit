@@ -2490,7 +2490,7 @@ function wbStringKC(const aName      : string;
                                      : IwbStringDef; overload;
 
 function wbLString(const aSignature : TwbSignature;
-                   const aName      : string;
+                   const aName      : string = '';
                          aSize      : Integer = 0;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
@@ -6335,7 +6335,7 @@ begin
 end;
 
 function wbLString(const aSignature : TwbSignature;
-                   const aName      : string;
+                   const aName      : string = '';
                          aSize      : Integer = 0;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
