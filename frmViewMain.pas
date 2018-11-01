@@ -397,6 +397,7 @@ type
     bnPatreon: TSpeedButton;
     jbhPatreon: TJvBalloonHint;
     jbhGitHub: TJvBalloonHint;
+    N25: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
