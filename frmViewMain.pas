@@ -17751,6 +17751,10 @@ begin
     Value := wbGameName;
     Done := True;
   end
+  else if SameText(Identifier, 'wbGameMasterEsm') and (Args.Count = 0) then begin
+    Value := wbGameMasterEsm;
+    Done := True;
+  end
   else if SameText(Identifier, 'wbGameName2') and (Args.Count = 0) then begin
     Value := wbGameName2;
     Done := True;
@@ -18901,7 +18905,7 @@ begin
           if wbForceTerminate then
             Exit;
 
-          if (i = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameName + '.esm') then begin
+          if (i = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameMasterEsm) then begin
             t := wbGameName + wbHardcodedDat;
             s := wbProgramPath + t;
             if FileExists(s) then begin

@@ -2644,7 +2644,7 @@ begin
     if SameText(ExtractFileName(aFileName), wbGameName + wbHardcodedDat) then
       Include(flStates, fsIsHardcoded);
     flCompareTo := wbExpandFileName(aCompareTo);
-  end else if SameText(ExtractFileName(aFileName), wbGameName + '.esm') then begin
+  end else if SameText(ExtractFileName(aFileName), wbGameMasterEsm) then begin
     Include(flStates, fsIsGameMaster);
     Include(flStates, fsIsOfficial);
   end;

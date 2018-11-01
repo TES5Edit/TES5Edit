@@ -411,7 +411,7 @@ begin
       if mfMastersMissing in miFlags then
         Exclude(miFlags, mfActive);
 
-  with wbModuleByName(wbGameName + csDotEsm)^ do
+  with wbModuleByName(wbGameMasterEsm)^ do
     if IsValid then begin
       miOfficialIndex := Low(Integer);
       Include(miFlags, mfActive);
