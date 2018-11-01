@@ -2915,6 +2915,7 @@ begin
 
     CompareFile := FileName;
     Settings.WriteString('CompareTo', 'InitialDir', ExtractFilePath(CompareFile));
+    Settings.UpdateFile;
     if wbIsPlugin(CompareFile) then
       fPath := wbDataPath
     else
@@ -2975,6 +2976,7 @@ begin
 
     CompareFile := FileName;
     Settings.WriteString('CreateDeltaPatch', 'InitialDir', ExtractFilePath(CompareFile));
+    Settings.UpdateFile;
 
     if not wbIsPlugin(CompareFile) then begin
       ShowMessage('Delta patch can only be created for modules');
@@ -5125,6 +5127,7 @@ begin
         EditWarnOk := True;
         Inc(EditWarnCount);
         Settings.WriteInteger('Usage', 'EditWarnCount', EditWarnCount);
+        Settings.UpdateFile;
       end;
 
     finally
