@@ -794,6 +794,7 @@ type
     NewModGroupName: string;
     OnlyShowMasterAndLeafs: Boolean;
     AutoSave: Boolean;
+    ScriptRunning: Boolean;
     ParentedGroupRecordType: set of Byte;
     RebuildingViewTree: Boolean;
 
@@ -7202,14 +7203,14 @@ begin
   p := Pos('Mode:', aScript);
   bShowMessages := not ContainsText(Copy(aScript, p, PosEx(#10, aScript, p) - p), 'Silent');
 
-  bCheckUnsaved := tmrCheckUnsaved.Enabled;
-  tmrCheckUnsaved.Enabled := False;
-
   Count := 0;
   ScriptProcessElements := [etMainRecord];
 
   jvi := TJvInterpreterProgram.Create(Self);
   try
+    ScriptRunning := True;
+    UserWasActive := True;
+
     ScriptEngine := jvi;
     jvi.OnGetValue := JvInterpreterProgram1GetValue;
     jvi.OnSetValue := JvInterpreterProgram1SetValue;
@@ -7336,7 +7337,7 @@ begin
   finally
     ScriptEngine := nil;
     jvi.Free;
-    tmrCheckUnsaved.Enabled := bCheckUnsaved;
+    ScriptRunning := False;
   end;
 end;
 
@@ -15031,21 +15032,13 @@ end;
 procedure TfrmMain.tmrCheckUnsavedTimer(Sender: TObject);
 var
   i, j                        : Integer;
-const
-  SiteName : array[TwbGameMode] of string =
-    ('Fallout3', 'Fallout New Vegas', 'Oblivion', 'Oblivion',
-     'Skyrim', 'Skyrim', 'Skyrim Special Edition',
-     'Fallout 4', 'Fallout 4', 'Fallout 76');
 begin
   if not wbLoaderDone then
     Exit;
 
-  // skip if Left mouse button is pressed, could be indication of active drag&drop or other action in progress
-  if GetAsyncKeyState(VK_LBUTTON) and $8000 <> 0 then
-    Exit;
-
   if UserWasActive then begin
-    UserWasActive := False;
+    if not ScriptRunning then //count running script as user activity
+      UserWasActive := False;
     TotalUsageTime := TotalUsageTime + 1 / 24 / 60 / 2;
     Settings.WriteFloat('Usage', 'TotalTime', TotalUsageTime);
     Settings.UpdateFile;
@@ -15064,7 +15057,20 @@ begin
     }
   end;
 
+  if not Enabled then
+    Exit;
+
+  if not wbEditAllowed then
+    Exit;
+
+  if wbToolMode in wbAutoModes then
+    Exit;
+
   if not AutoSave then
+    Exit;
+
+  // skip if Left mouse button is pressed, could be indication of active drag&drop or other action in progress
+  if GetAsyncKeyState(VK_LBUTTON) and $8000 <> 0 then
     Exit;
 
   if vstView.IsEditing then
@@ -18432,14 +18438,12 @@ begin
       tbsARMOSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim;
       tbsAMMOSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim;
 
-      tmrCheckUnsaved.Enabled := wbEditAllowed and
-        not (wbToolMode in wbAutoModes) and
-        not wbIKnowWhatImDoing;
-
       if wbForceTerminate then begin
         GeneralProgressNoAbortCheck('Loading of modules got terminated early. Editing is disabled.');
         Exit;
       end;
+
+      tmrCheckUnsaved.Enabled := True;
 
       if wbFirstLoadComplete then
         Exit;
@@ -18774,8 +18778,7 @@ begin
 
     t := s;
     if (t = '') and (_LoaderProgressAction <> '') and ((lNow - _LoaderProgressLastShown) > 1/24/60/6 {10 seconds} ) then
-      t
-      := 'still ' + _LoaderProgressAction + '...';
+      t := 'still ' + _LoaderProgressAction + '...';
 
     if t <> '' then begin
       frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', lNow - wbStartTime) + '] Background Loader: ' + t);
