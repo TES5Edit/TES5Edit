@@ -4639,7 +4639,7 @@ type
     constructor Create(aPriority  : TwbConflictPriority;
                        aRequired  : Boolean;
                  const aSignature : TwbSignature;
-                 const aName      : string;
+                       aName      : string;
                        aAfterLoad : TwbAfterLoadCallback;
                        aAfterSet  : TwbAfterSetCallback;
                        aDontShow  : TwbDontShowCallback;
@@ -4647,7 +4647,7 @@ type
     constructor Create(aPriority   : TwbConflictPriority;
                        aRequired   : Boolean;
                  const aSignatures : TwbSignatures;
-                 const aName       : string;
+                       aName       : string;
                        aAfterLoad  : TwbAfterLoadCallback;
                        aAfterSet   : TwbAfterSetCallback;
                        aDontShow   : TwbDontShowCallback;
@@ -8261,7 +8261,7 @@ end;
 constructor TwbSignatureDef.Create(aPriority  : TwbConflictPriority;
                                    aRequired  : Boolean;
                              const aSignature : TwbSignature;
-                             const aName      : string;
+                                   aName      : string;
                                    aAfterLoad : TwbAfterLoadCallback;
                                    aAfterSet  : TwbAfterSetCallback;
                                    aDontShow  : TwbDontShowCallback;
@@ -8269,6 +8269,10 @@ constructor TwbSignatureDef.Create(aPriority  : TwbConflictPriority;
 begin
   SetLength(soSignatures, 1);
   soSignatures[0] := aSignature;
+
+  if aName = '' then
+    aName := aSignature;
+
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
 end;
 
@@ -8281,7 +8285,7 @@ end;
 constructor TwbSignatureDef.Create(aPriority   : TwbConflictPriority;
                                    aRequired   : Boolean;
                              const aSignatures : TwbSignatures;
-                             const aName       : string;
+                                   aName       : string;
                                    aAfterLoad  : TwbAfterLoadCallback;
                                    aAfterSet   : TwbAfterSetCallback;
                                    aDontShow   : TwbDontShowCallback;
@@ -8293,6 +8297,11 @@ begin
   SetLength(soSignatures, Length(aSignatures));
   for i := Low(soSignatures) to High(soSignatures) do
     soSignatures[i] := aSignatures[i];
+
+  if aName = '' then
+    if Length(soSignatures) > 0 then
+    aName := soSignatures[0];
+
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
 end;
 
