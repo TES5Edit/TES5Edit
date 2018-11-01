@@ -750,6 +750,9 @@ begin
     wbArchiveExtension := '.ba2';
     ToolModes := wbAlwaysMode + [tmTranslate];
     ToolSources := [tsPlugins];
+
+    //not support for incomplete record definitions
+    wbBuildRefs := False;
   end
   
   else begin
