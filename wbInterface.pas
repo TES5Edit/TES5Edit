@@ -2242,7 +2242,7 @@ type
     function GetName: String;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
-    procedure ResourceList(const aList: TStrings; const aFolder: string = '');
+    procedure ResourceList(const aList: TStrings; aFolder: string = '');
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     property Name: string

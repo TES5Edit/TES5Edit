@@ -103,7 +103,7 @@ type
     function GetName: string;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
-    procedure ResourceList(const aList: TStrings; const aFolder: string = '');
+    procedure ResourceList(const aList: TStrings; aFolder: string = '');
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     {---IwbBSAFile---}
@@ -172,7 +172,7 @@ type
     function GetName: string;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
-    procedure ResourceList(const aList: TStrings; const aFolder: string = '');
+    procedure ResourceList(const aList: TStrings; aFolder: string = '');
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     {---IwbBA2File---}
@@ -209,7 +209,7 @@ type
     function GetName: string;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
-    procedure ResourceList(const aList: TStrings; const aFolder: string = '');
+    procedure ResourceList(const aList: TStrings; aFolder: string = '');
     procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     {---IwbFolder---}
@@ -506,7 +506,7 @@ begin
     Result := bfFolders[Integer(bfFolderMap.Objects[i])].Map.IndexOf(lName) <> -1;
 end;
 
-procedure TwbBSAFile.ResourceList(const aList: TStrings; const aFolder: string = '');
+procedure TwbBSAFile.ResourceList(const aList: TStrings; aFolder: string = '');
 var
   i, j: Integer;
   Folder: string;
@@ -655,9 +655,8 @@ begin
   OldPos := bfStream.Position;
   bfStream.Position := FileTablePosition;
   SetLength(bfFiles, FileCount);
-  for i := Low(bfFiles) to High(bfFiles) do begin
-    bfFiles[i].Name := bfStream.ReadStringLen16;
-  end;
+  for i := Low(bfFiles) to High(bfFiles) do
+    bfFiles[i].Name := bfStream.ReadStringLen16.Replace('/','\');
   bfStream.Position := OldPos;
 
   if bfType = 'GNRL' then begin
@@ -733,12 +732,14 @@ end;
 
 function TwbBA2File.OpenResource(const aFileName: string): IwbResource;
 var
+  lFileName: string;
   lPath, lName: string;
   i, j: Integer;
 begin
-  lPath := LowerCase(ExtractFilePath(aFileName));
+  lFileName := LowerCase(aFileName).Replace('/', '\');
+  lPath := ExtractFilePath(lFileName);
   SetLength(lPath, Pred(Length(lPath)));
-  lName := LowerCase(ExtractFileName(aFileName));
+  lName := ExtractFileName(lFileName);
   if bfFolderMap.Find(lPath, i) then with TStringList(bfFolderMap.Objects[i]) do
     if Find(lName, j) then
       Result := TwbBA2Resource.Create(Self, bfFiles[Integer(Objects[j])]);
@@ -751,25 +752,30 @@ end;
 
 function TwbBA2File.ResourceExists(const aFileName: string): Boolean;
 var
-  lPath, lName: string;
-  i: Integer;
+  lFileName    : string;
+  lPath, lName : string;
+  i            : Integer;
 begin
   Result := False;
-  lPath := LowerCase(ExtractFilePath(aFileName));
+  lFileName := LowerCase(aFileName).Replace('/', '\');
+  lPath := ExtractFilePath(lFileName);
   SetLength(lPath, Pred(Length(lPath)));
-  lName := LowerCase(ExtractFileName(aFileName));
+  lName := ExtractFileName(lFileName);
   if bfFolderMap.Find(lPath, i) then
     Result := TStringList(bfFolderMap.Objects[i]).IndexOf(lName) <> -1;
 end;
 
-procedure TwbBA2File.ResourceList(const aList: TStrings; const aFolder: string = '');
+procedure TwbBA2File.ResourceList(const aList: TStrings; aFolder: string = '');
 var
   i: Integer;
 begin
   if not Assigned(aList) then
     Exit;
+  aFolder := LowerCase(aFolder).Replace('/', '\');
+  if aFolder <> '' then
+    aFolder := IncludeTrailingPathDelimiter(aFolder);
   for i := Low(bfFiles) to High(bfFiles) do
-    if (aFolder = '') or ( SameText(aFolder, Copy(bfFiles[i].Name, 1, Length(aFolder))) ) then
+    if (aFolder = '') or bfFiles[i].Name.StartsWith(aFolder, True) then
       aList.Add(LowerCase(bfFiles[i].Name));
 end;
 
@@ -927,12 +933,13 @@ begin
   Result := FileExists(fPath + aFileName);
 end;
 
-procedure TwbFolder.ResourceList(const aList: TStrings; const aFolder: string = '');
+procedure TwbFolder.ResourceList(const aList: TStrings; aFolder: string = '');
 var
   FileName: string;
 begin
   if not Assigned(aList) then
     Exit;
+  aFolder := aFolder.Replace('/', '\');
   if TDirectory.Exists(fPath + aFolder) then
     for FileName in TDirectory.GetFiles(fPath + aFolder, '*.*', TSearchOption.soAllDirectories) do
       aList.Add(LowerCase(Copy(FileName, Length(fPath) + 1, Length(FileName))));
