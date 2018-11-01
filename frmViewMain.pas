@@ -11898,18 +11898,10 @@ begin
       begin
         vstNav.BeginUpdate;
         try
-          ReInitTree(FilterNoGameMaster, FilterFiles);
+          ReInitTree(FilterNoGameMaster or wbTranslationMode, FilterFiles);
 
           Count := 0;
           vstNav.TreeOptions.AutoOptions := vstNav.TreeOptions.AutoOptions - [toAutoFreeOnCollapse];
-
-          if wbTranslationMode then begin
-            Node := vstNav.GetFirst;
-            NodeData := vstNav.GetNodeData(Node);
-            if Assigned(NodeData) and Assigned(NodeData.Element) and (NodeData.Element.ElementType = etFile) then
-              if SameText((NodeData.Element as IwbFile).FileName, wbGameName + '.esm') then
-                vstNav.DeleteNode(Node);
-          end;
 
           if Assigned(TopLevelGroups) then begin
             FileNode := vstNav.GetLastChild(nil);
