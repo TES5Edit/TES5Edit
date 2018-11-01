@@ -16961,12 +16961,14 @@ begin
           SiblingNode := Node.NextSibling;
           while not FoundGroup and Assigned(SiblingNode) do begin
             SiblingNodeData := Sender.GetNodeData(SiblingNode);
-            if GroupRecord.Equals(SiblingNodeData.Element) then
+            if GroupRecord.Equals(SiblingNodeData.Element) then begin
               FoundGroup := True;
+              Break;
+            end;
             SiblingNode := SiblingNode.NextSibling;
           end;
         end;
-        if FoundGroup then begin
+        if FoundGroup and Assigned(SiblingNode) then begin
           Sender.IsVisible[SiblingNode] := False;
           Sender.HasChildren[SiblingNode] := False;
           vstNavFreeNode(Sender, SiblingNode);
