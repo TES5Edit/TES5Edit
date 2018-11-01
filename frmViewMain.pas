@@ -13280,6 +13280,8 @@ var
   Column                      : TColumnIndex;
   MainRecord                  : IwbMainRecord;
 begin
+  mniViewCreateModGroup.Visible := Length(ActiveRecords) > 2;
+
   mniViewHeaderCopyAsOverride.Visible := False;
   mniViewHeaderCopyAsOverrideWithOverwriting.Visible := False;
   mniViewHeaderDeepCopyAsOverride.Visible := False;
@@ -13353,7 +13355,6 @@ begin
   mniViewCopyToSelectedRecords.Visible := False;
   mniViewCopyMultipleToSelectedRecords.Visible := False;
   mniViewCompareReferencedRow.Visible := False;
-  mniViewCreateModGroup.Visible := False;
 
   if not wbEditAllowed then
     Exit;
@@ -13380,9 +13381,6 @@ begin
     mniViewStickSelected.Visible := NodeLabel <> '';
     mniViewStickSelected.Caption := NodeLabel;
   end;
-
-  if Length(ActiveRecords) > 2 then
-    mniViewCreateModGroup.Visible := True;
 
   if vstView.FocusedColumn > 0 then begin
     NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
@@ -16105,7 +16103,7 @@ begin
   if Shift = [ssCtrl] then begin
     case Key of
       Ord('M'): begin
-        pmuViewPopup(nil);
+        pmuViewHeaderPopup(nil);
         if mniViewCreateModGroup.Visible then
           mniViewCreateModGroup.Click;
         Exit;
