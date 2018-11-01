@@ -2864,6 +2864,7 @@ end;
 
 procedure TfrmMain.mniNavCleanMastersClick(Sender: TObject);
 begin
+  DoSetActiveRecord(nil);
   PerformActionOnSelectedFiles('cleaning masters', procedure(aFile: IwbFile)
   begin
     aFile.CleanMasters;
@@ -7128,6 +7129,8 @@ begin
         if not EditWarn then
           Exit;
 
+        DoSetActiveRecord(nil);
+
         if sl.Count = 1 then
           s := 'Add '+sl[0]+' as new master to ' + _File.Name
         else
@@ -9528,6 +9531,7 @@ end;
 
 procedure TfrmMain.mniNavSortMastersClick(Sender: TObject);
 begin
+  DoSetActiveRecord(nil);
   PerformActionOnSelectedFiles('sorting masters', procedure(aFile: IwbFile)
   begin
     aFile.SortMasters;
