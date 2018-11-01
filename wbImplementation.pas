@@ -7571,6 +7571,8 @@ var
   RequiredRecords      : set of byte;
   PresentRecords       : set of byte;
   i                    : Integer;
+
+  RecordHeaderStruct   : IwbStructDef;
 begin
   RequiredRecords := [];
   PresentRecords := [];
@@ -7595,8 +7597,14 @@ begin
         end;
     GroupRecord := nil;
 
+    RecordHeaderStruct := nil;
+    if Assigned(mrDef) then
+      RecordHeaderStruct := mrDef.RecordHeaderStruct;
+    if not Assigned(RecordHeaderStruct) then
+      RecordHeaderStruct := wbMainRecordHeader;
+
     CurrentPtr := dcBasePtr;
-    with TwbRecordHeaderStruct.Create(Self, CurrentPtr, PByte(CurrentPtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+    with TwbRecordHeaderStruct.Create(Self, CurrentPtr, PByte(CurrentPtr) + wbSizeOfMainRecordStruct, RecordHeaderStruct, '') do begin
       Include(dcFlags, dcfDontSave);
       SetSortOrder(-1);
       SetMemoryOrder(Low(Integer));
