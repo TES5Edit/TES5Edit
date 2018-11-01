@@ -2908,6 +2908,7 @@ begin
     Exit;
 
   with odModule do begin
+    Title := 'Please select the file you want to compare to "'+_File.FileName+'"...';
     FileName := '';
     InitialDir := Settings.ReadString('CompareTo', 'InitialDir', wbDataPath);
     if not Execute then
@@ -2969,6 +2970,7 @@ begin
   end;
 
   with odModule do begin
+    Title := 'Please select a newer verion of "'+_File.FileName+'" to create a delta patch...';
     FileName := '';
     InitialDir := Settings.ReadString('CreateDeltaPatch', 'InitialDir', wbDataPath);
     if not Execute then
