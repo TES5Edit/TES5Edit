@@ -2018,27 +2018,30 @@ object frmMain: TfrmMain
       OnClick = mniNavFilterRemoveClick
     end
     object mniNavFilterApply: TMenuItem
-      Caption = 'Apply Filter (all)'
-      OnClick = mniNavFilterApplyClick
-    end
-    object mniNavFilterApplySelected: TMenuItem
-      Caption = 'Apply Filter (selected)'
+      Caption = 'Apply Filter'
       OnClick = mniNavFilterApplyClick
     end
     object mniNavFilterForCleaning: TMenuItem
-      Caption = 'Apply Filter for Cleaning (all)'
-      OnClick = mniNavFilterForCleaningClick
-    end
-    object mniNavFilterForCleaningSelected: TMenuItem
-      Caption = 'Apply Filter for Cleaning (selected)'
+      Caption = 'Apply Filter for Cleaning'
       OnClick = mniNavFilterForCleaningClick
     end
     object mniNavFilterConflicts: TMenuItem
-      Caption = 'Apply Filter to show Conflicts (all)'
+      Caption = 'Apply Filter to show Conflicts'
       OnClick = mniNavFilterConflictsClick
     end
+    object N25: TMenuItem
+      Caption = '-'
+    end
+    object mniNavFilterApplySelected: TMenuItem
+      Caption = 'Apply Filter (selected files only)'
+      OnClick = mniNavFilterApplyClick
+    end
+    object mniNavFilterForCleaningSelected: TMenuItem
+      Caption = 'Apply Filter for Cleaning (selected files only)'
+      OnClick = mniNavFilterForCleaningClick
+    end
     object mniNavFilterConflictsSelected: TMenuItem
-      Caption = 'Apply Filter to show Conflicts (selected)'
+      Caption = 'Apply Filter to show Conflicts (selected files only)'
       OnClick = mniNavFilterConflictsClick
     end
     object N1: TMenuItem
