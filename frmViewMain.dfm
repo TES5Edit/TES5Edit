@@ -2165,12 +2165,12 @@ object frmMain: TfrmMain
       OnClick = mniNavAddMastersClick
     end
     object mniNavSortMasters: TMenuItem
-      Caption = 'Sort Masters'
+      Caption = 'Sort Masters (to match current load order)'
       GroupIndex = 4
       OnClick = mniNavSortMastersClick
     end
     object mniNavCleanMasters: TMenuItem
-      Caption = 'Clean Masters'
+      Caption = 'Clean Masters (= Remove all unused Masters)'
       GroupIndex = 4
       OnClick = mniNavCleanMastersClick
     end
