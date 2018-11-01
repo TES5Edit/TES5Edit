@@ -4879,7 +4879,7 @@ begin
           Settings.WriteInteger('Patreon', 'SnoozeDate', Trunc(Now));
           Settings.UpdateFile;
         end else
-          jbhPatreon.ActivateHint(bnPatreon, 'Please consider supporting future xEdit development.', 'Patreon is now live!', 15000);
+          jbhPatreon.ActivateHint(bnPatreon, 'Your support is essential to ensure further xEdit development.', 'Patreon', 15000);
 
     if not wbNoGitHubCheck then
       CheckGitHubReleaseThread := TwbCheckGitHubReleaseThread.Create;
