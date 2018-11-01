@@ -213,6 +213,7 @@ const
   AOR2 : TwbSignature = 'AOR2'; { New To Fallout 4 }
   AORU : TwbSignature = 'AORU'; { New To Fallout 4 }
   APPR : TwbSignature = 'APPR'; { New To Fallout 4 }
+  AQIC : TwbSignature = 'AQIC'; { New To Fallout 76 }
   ARMA : TwbSignature = 'ARMA';
   ARMO : TwbSignature = 'ARMO';
   ARTO : TwbSignature = 'ARTO';
@@ -221,12 +222,13 @@ const
   ATKD : TwbSignature = 'ATKD'; { New to Skyrim }
   ATKE : TwbSignature = 'ATKE'; { New to Skyrim }
   ATKR : TwbSignature = 'ATKR'; { New to Skyrim }
-  ATKT : TwbSignature = 'ATKT'; { New To Fallout 4 }
   ATKS : TwbSignature = 'ATKS'; { New To Fallout 4 }
+  ATKT : TwbSignature = 'ATKT'; { New To Fallout 4 }
   ATKW : TwbSignature = 'ATKW'; { New To Fallout 4 }
   ATTN : TwbSignature = 'ATTN'; { New To Fallout 4 }
   ATTX : TwbSignature = 'ATTX'; { New To Fallout 4 }
   ATXT : TwbSignature = 'ATXT';
+  AUUV : TwbSignature = 'AUUV'; { New To Fallout 76 }
   AVFL : TwbSignature = 'AVFL'; { New To Fallout 4 }
   AVIF : TwbSignature = 'AVIF';
   AVSK : TwbSignature = 'AVSK'; { New to Skyrim }
@@ -281,10 +283,10 @@ const
   CRIF : TwbSignature = 'CRIF'; { New to Skyrim }
   CRIS : TwbSignature = 'CRIS'; { New to Fallout 4 }
   CRVA : TwbSignature = 'CRVA'; { New to Skyrim }
-  CS2H : TwbSignature = 'CS2H'; { New To Fallout 4 }
   CS2D : TwbSignature = 'CS2D'; { New To Fallout 4 }
   CS2E : TwbSignature = 'CS2E'; { New To Fallout 4 }
   CS2F : TwbSignature = 'CS2F'; { New To Fallout 4 }
+  CS2H : TwbSignature = 'CS2H'; { New To Fallout 4 }
   CS2K : TwbSignature = 'CS2K'; { New To Fallout 4 }
   CSCR : TwbSignature = 'CSCR';
   CSCV : TwbSignature = 'CSCV'; { New To Fallout 4 }
@@ -300,8 +302,8 @@ const
   CSRA : TwbSignature = 'CSRA'; { New To Fallout 4 }
   CSTY : TwbSignature = 'CSTY';
   CTDA : TwbSignature = 'CTDA';
-  CUSD : TwbSignature = 'CUSD'; { New to Fallout 4 }
   CURV : TwbSignature = 'CURV'; { New To Fallout 76 }
+  CUSD : TwbSignature = 'CUSD'; { New to Fallout 4 }
   CVPA : TwbSignature = 'CVPA'; { New to Fallout 4 }
   DALC : TwbSignature = 'DALC'; { New to Skyrim }
   DAMA : TwbSignature = 'DAMA'; { New to Fallout 4 }
@@ -338,6 +340,7 @@ const
   DTGT : TwbSignature = 'DTGT'; { New To Fallout 4 }
   DTID : TwbSignature = 'DTID'; { New To Fallout 4 }
   DUAL : TwbSignature = 'DUAL';
+  DURL : TwbSignature = 'DURL'; { New To Fallout 76 }
   EAMT : TwbSignature = 'EAMT';
   ECAT : TwbSignature = 'ECAT'; { New To Fallout 76 }
   ECOR : TwbSignature = 'ECOR'; { New to Skyrim }
@@ -351,6 +354,8 @@ const
   ENAM : TwbSignature = 'ENAM';
   ENCH : TwbSignature = 'ENCH';
   ENIT : TwbSignature = 'ENIT';
+  ENLS : TwbSignature = 'ENLS'; { New To Fallout 76 }
+  ENLT : TwbSignature = 'ENLT'; { New To Fallout 76 }
   ENTM : TwbSignature = 'ENTM'; { New To Fallout 76 }
   EPF2 : TwbSignature = 'EPF2';
   EPF3 : TwbSignature = 'EPF3';
@@ -436,6 +441,7 @@ const
   ITMS : TwbSignature = 'ITMS'; { New To Fallout 4 }
   ITXT : TwbSignature = 'ITXT';
   JAIL : TwbSignature = 'JAIL'; { New To Skyrim }
+  JASF : TwbSignature = 'JASF'; { New To Fallout 76 }
   JNAM : TwbSignature = 'JNAM';
   JOUT : TwbSignature = 'JOUT'; { New To Skyrim }
   KEYM : TwbSignature = 'KEYM';
@@ -466,8 +472,8 @@ const
   LSPR : TwbSignature = 'LSPR'; { New to Fallout 4 }
   LTEX : TwbSignature = 'LTEX';
   LTMP : TwbSignature = 'LTMP';
-  LTPT : TwbSignature = 'LTPT'; { New to Fallout 4 }
   LTPC : TwbSignature = 'LTPC'; { New to Fallout 4 }
+  LTPT : TwbSignature = 'LTPT'; { New to Fallout 4 }
   LVLC : TwbSignature = 'LVLC';
   LVLD : TwbSignature = 'LVLD';
   LVLF : TwbSignature = 'LVLF';
@@ -518,9 +524,9 @@ const
   MODC : TwbSignature = 'MODC'; { New to Fallout 4 }
   MODF : TwbSignature = 'MODF'; { New to Fallout 4 }
   MODL : TwbSignature = 'MODL';
+  MODQ : TwbSignature = 'MODQ'; { New to Fallout 4 }
   MODS : TwbSignature = 'MODS';
   MODT : TwbSignature = 'MODT';
-  MODQ : TwbSignature = 'MODQ'; { New to Fallout 4 }
   MOVT : TwbSignature = 'MOVT';
   MPAI : TwbSignature = 'MPAI'; { New To Skyrim }
   MPAV : TwbSignature = 'MPAV'; { New To Skyrim }
@@ -549,6 +555,7 @@ const
   MUSC : TwbSignature = 'MUSC';
   MUST : TwbSignature = 'MUST';
   MWGT : TwbSignature = 'MWGT'; { New to Fallout 4 }
+  MXCT : TwbSignature = 'MXCT'; { New To Fallout 76 }
   NAM0 : TwbSignature = 'NAM0';
   NAM1 : TwbSignature = 'NAM1';
   NAM2 : TwbSignature = 'NAM2';
@@ -566,8 +573,8 @@ const
   NETO : TwbSignature = 'NETO'; { New to Fallout 4 }
   NEXT : TwbSignature = 'NEXT';
   NNAM : TwbSignature = 'NNAM';
-  NNGT : TwbSignature = 'NNGT'; { New to Fallout 4 }
   NNGS : TwbSignature = 'NNGS'; { New to Fallout 4 }
+  NNGT : TwbSignature = 'NNGT'; { New to Fallout 4 }
   NNUS : TwbSignature = 'NNUS'; { New to Fallout 4 }
   NNUT : TwbSignature = 'NNUT'; { New to Fallout 4 }
   NOCM : TwbSignature = 'NOCM'; { New to Fallout 4 }
@@ -672,6 +679,7 @@ const
   REFR : TwbSignature = 'REFR';
   REGN : TwbSignature = 'REGN';
   RELA : TwbSignature = 'RELA';
+  RENT : TwbSignature = 'RENT'; { New To Fallout 76 }
   REPL : TwbSignature = 'REPL';
   REPT : TwbSignature = 'REPT'; { New To Fallout 4 }
   RESO : TwbSignature = 'RESO'; { New To Fallout 76 }
@@ -743,13 +751,14 @@ const
   STOL : TwbSignature = 'STOL'; { New to Skyrim }
   STOP : TwbSignature = 'STOP'; { New to Fallout 4 }
   STSC : TwbSignature = 'STSC'; { New to Fallout 4 }
+  SWFI : TwbSignature = 'SWFI'; { New To Fallout 76 }
   SWMV : TwbSignature = 'SWMV'; { New to Skyrim }
   TACT : TwbSignature = 'TACT';
   TCLT : TwbSignature = 'TCLT';
+  TEND : TwbSignature = 'TEND'; { New to Fallout 4 }
   TERM : TwbSignature = 'TERM'; { New to Fallout 4 }
   TES4 : TwbSignature = 'TES4';
   TETI : TwbSignature = 'TETI'; { New to Fallout 4 }
-  TEND : TwbSignature = 'TEND'; { New to Fallout 4 }
   TIAS : TwbSignature = 'TIAS'; { New to Skyrim }
   TIFC : TwbSignature = 'TIFC'; { New To Skyrim }
   TINC : TwbSignature = 'TINC'; { New to Skyrim }
@@ -924,6 +933,7 @@ const
   YNAM : TwbSignature = 'YNAM';
   ZNAM : TwbSignature = 'ZNAM';
   ZOOM : TwbSignature = 'ZOOM'; { New To Fallout 4 }
+
 
   // signatures of reference records
   sigReferences : TwbSignatures = [
@@ -3525,62 +3535,64 @@ end;
 
 type
   TCTDAFunctionParamType = (
-    { 0} ptString,
-    { 1} ptInteger,
-    { 2} ptFloat,
-    { 3} ptActor,              // ACHR
-    { 4} ptActorBase,          // NPC_
-    { 5} ptActorValue,         // Enum: wbActorValue
-    { 6} ptAdvanceAction,      // ?? Enum
-    { 7} ptAlias,              // index into QUST quest aliases
-    { 8} ptAlignment,          // ?? Enum
-    { 9} ptAssociationType,    // ASTP
-    {10} ptAxis,               // ?? Char
-    {11} ptCastingSource,      // ?? Enum
-    {12} ptCell,               // CELL
-    {13} ptClass,              // CLAS
-    {14} ptCrimeType,          // ?? Enum
-    {15} ptCriticalStage,      // ?? Enum
-    {16} ptEncounterZone,      // ECZN
-    {17} ptEquipType,          // ?? Enum
-    {18} ptEvent,              // Struct
-    {19} ptEventData,          // LCTN, KYWD or FLST
-    {20} ptFaction,            // FACT
-    {21} ptFormList,           // FLST
-    {22} ptFormType,           // ?? Enum
-    {23} ptFurniture,          // FURN
-    {24} ptFurnitureAnim,      // enum
-    {25} ptFurnitureEntry,     // flags
-    {26} ptGlobal,             // GLOB
-    {27} ptIdleForm,           // IDLE
-    {28} ptInventoryObject,    // ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, ARMA, LIGH, LVLI, COBJ
-    {29} ptKeyword,            // KYWD
-    {30} ptLocation,           // LCTN
-    {31} ptMagicEffect,        // MGEF
-    {32} ptMagicItem,          // SPEL
-    {33} ptMiscStat,           // ?? Enum
-    {34} ptObjectReference,    // REFR, ACHR
-    {35} ptOwner,              // FACT, NPC_
-    {36} ptPackage,            // PACK
-    {37} ptPackdata,           // index into PACK package data inputs
-    {38} ptPerk,               // PERK
-    {39} ptQuest,              // QUST
-    {40} ptQuestStage,         // ?? Integer
-    {41} ptRace,               // RACE
-    {42} ptReferencableObject,
-    {43} ptRefType,            // LCRT
-    {44} ptRegion,             // REGN
-    {45} ptScene,              // SCEN
-    {46} ptSex,                // Enum: Male, Female
-    {47} ptShout,              // SHOU
-    {48} ptVariableName,       // Integer
-    {49} ptVATSValueFunction,  //
-    {50} ptVATSValueParam,
-    {51} ptVoiceType,          // VTYP
-    {52} ptWardState,          // enum
-    {53} ptWeather,            // WTHR
-    {54} ptWorldspace,         // WRLD
-    {55} ptDamageType          // DMGT
+    { 0} ptNone,
+    { 1} ptString,
+    { 2} ptInteger,
+    { 3} ptFloat,
+    { 4} ptActor,              // ACHR
+    { 5} ptActorBase,          // NPC_
+    { 6} ptActorValue,         // Enum: wbActorValue
+    { 7} ptAdvanceAction,      // ?? Enum
+    { 8} ptAlias,              // index into QUST quest aliases
+    { 9} ptAlignment,          // ?? Enum
+    {10} ptAssociationType,    // ASTP
+    {11} ptAxis,               // ?? Char
+    {12} ptCastingSource,      // ?? Enum
+    {13} ptCell,               // CELL
+    {14} ptClass,              // CLAS
+    {15} ptCrimeType,          // ?? Enum
+    {16} ptCriticalStage,      // ?? Enum
+    {17} ptEncounterZone,      // ECZN
+    {18} ptEquipType,          // ?? Enum
+    {19} ptEvent,              // Struct
+    {20} ptEventData,          // LCTN, KYWD or FLST
+    {21} ptFaction,            // FACT
+    {22} ptFormList,           // FLST
+    {23} ptFormType,           // ?? Enum
+    {24} ptFurniture,          // FURN
+    {25} ptFurnitureAnim,      // enum
+    {26} ptFurnitureEntry,     // flags
+    {27} ptGlobal,             // GLOB
+    {28} ptIdleForm,           // IDLE
+    {29} ptInventoryObject,    // ARMO, BOOK, MISC, WEAP, AMMO, KEYM, ALCH, ARMA, LIGH, LVLI, COBJ
+    {30} ptKeyword,            // KYWD
+    {31} ptLocation,           // LCTN
+    {32} ptMagicEffect,        // MGEF
+    {33} ptMagicItem,          // SPEL
+    {34} ptMiscStat,           // ?? Enum
+    {35} ptObjectReference,    // REFR, ACHR
+    {36} ptOwner,              // FACT, NPC_
+    {37} ptPackage,            // PACK
+    {38} ptPackdata,           // index into PACK package data inputs
+    {39} ptPerk,               // PERK
+    {40} ptQuest,              // QUST
+    {41} ptQuestStage,         // ?? Integer
+    {42} ptRace,               // RACE
+    {43} ptReferencableObject,
+    {44} ptRefType,            // LCRT
+    {45} ptRegion,             // REGN
+    {46} ptScene,              // SCEN
+    {47} ptSex,                // Enum: Male, Female
+    {48} ptShout,              // SHOU
+    {49} ptVariableName,       // Integer
+    {50} ptVATSValueFunction,  //
+    {51} ptVATSValueParam,
+    {52} ptVoiceType,          // VTYP
+    {53} ptWardState,          // enum
+    {54} ptWeather,            // WTHR
+    {55} ptWorldspace,         // WRLD
+    {56} ptDamageType,         // DMGT
+    {57} ptConditionForm   // CNDF
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -3593,7 +3605,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..478] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..479] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),        //   0
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),        //   2
@@ -4072,7 +4084,8 @@ const
     (Index: 812; Name: 'GetPathingRequestedQuickTurn'),        // 475
     (Index: 813; Name: 'EPIsCalculatingBaseDamage'),        // 476
     (Index: 814; Name: 'GetReanimating'),        // 477
-    (Index: 817; Name: 'IsInRobotWorkbench')        // 478
+    (Index: 817; Name: 'IsInRobotWorkbench'),       // 478
+    (Index: 875; Name: 'IsTrueForConditionForm'; ParamType1: ptConditionForm)      // 479
   );
 
 var
@@ -8482,228 +8495,234 @@ begin
         wbFormIDCk('Comparison Value - Global', [GLOB])
       ]),
    {3}wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
-   {4}wbByteArray('Unused', 2, cpIgnore, False, wbNeverShow),
+   { u4}wbByteArray('Unused', 2, cpIgnore, False, wbNeverShow),
    {5}wbUnion('Parameter #1', wbCTDAParam1Decider, [
         { unknown }
         wbByteArray('Unknown', 4).IncludeFlag(dfZeroSortKey),
-        { 0 ptString}
+        { 0 ptNone}
+        wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+        { 1 ptString}
         wbByteArray('String', 4),
-        { 1 ptInteger}
+        { 2 ptInteger}
         wbInteger('Integer', itS32),
-        { 2 ptFloat}
+        { 3 ptFloat}
         wbFloat('Float'),
-        { 3 ptActor}
+        { 4 ptActor}
         wbFormIDCkNoReach('Actor', [NULL, PLYR, ACHR, REFR]),
-        { 4 ptActorBase}
+        { 5 ptActorBase}
         wbFormIDCkNoReach('Actor Base', [NPC_]),
-        { 5 ptActorValue}
+        { 6 ptActorValue}
         wbActorValue,
-        { 6 ptAdvanceAction}
+        { 7 ptAdvanceAction}
         wbInteger('Player Action', itU32, wbAdvanceActionEnum),
-        { 7 ptAlias}
+        { 8 ptAlias}
         wbInteger('Alias', itS32, wbConditionAliasToStr, wbStrToAlias),
-        { 8 ptAlignment}
+        { 9 ptAlignment}
         wbInteger('Alignment', itU32, wbAlignmentEnum),
-        { 9 ptAssociationType}
+        {10 ptAssociationType}
         wbFormIDCk('Association Type', [ASTP]),
-        {10 ptAxis}
+        {11 ptAxis}
         wbInteger('Axis', itU32, wbAxisEnum),
-        {11 ptCastingSource}
+        {12 ptCastingSource}
         wbInteger('Casting Type', itU32, wbCastingSourceEnum),
-        {12 ptCell}
+        {13 ptCell}
         wbFormIDCkNoReach('Cell', [CELL]),
-        {13 ptClass}
+        {14 ptClass}
         wbFormIDCkNoReach('Class', [CLAS]),
-        {14 ptCrimeType}
+        {15 ptCrimeType}
         wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
-        {15 ptCriticalStage}
+        {16 ptCriticalStage}
         wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
-        {16 ptEncounterZone}
+        {17 ptEncounterZone}
         wbFormIDCkNoReach('Encounter Zone', [ECZN]),
-        {17 ptEquipType}
+        {18 ptEquipType}
         wbFormIDCkNoReach('Equip Type', [EQUP]),
-        {18 ptEvent}
+        {19 ptEvent}
         wbInteger('Event', itU32, wbEventFunctionAndMemberToStr, wbEventFunctionAndMemberToInt),
-        {19 ptEventData}
+        {20 ptEventData}
         wbFormID('Event Data'),
-        {20 ptFaction}
+        {21 ptFaction}
         wbFormIDCkNoReach('Faction', [FACT]),
-        {21 ptFormList}
+        {22 ptFormList}
         wbFormIDCkNoReach('Form List', [FLST]),
-        {22 ptFormType}
+        {23 ptFormType}
         wbInteger('Form Type', itU32, wbFormTypeEnum),
-        {23 ptFurniture}
+        {24 ptFurniture}
         wbFormIDCkNoReach('Furniture', [FURN, FLST]),
-        {24 ptFurnitureAnim}
+        {25 ptFurnitureAnim}
         wbInteger('Furniture Anim', itU32, wbFurnitureAnimTypeEnum),
-        {25 ptFurnitureEntry}
+        {26 ptFurnitureEntry}
         wbInteger('Furniture Entry', itU32, wbEnum([], [$010000, 'Front', $020000, 'Behind', $040000, 'Right', $80000, 'Left', $100000, 'Up'])),
-        {26 ptGlobal}
+        {27 ptGlobal}
         wbFormIDCkNoReach('Global', [GLOB]),
-        {27 ptIdleForm}
+        {28 ptIdleForm}
         wbFormIDCkNoReach('Idle', [IDLE]),
-        {28 ptInventoryObject}
+        {29 ptInventoryObject}
         wbFormIDCkNoReach('Inventory Object', sigBaseObjects),
-        {29 ptKeyword}
+        {30 ptKeyword}
         wbFormIDCkNoReach('Keyword', [KYWD, FLST, NULL]),
-        {30 ptLocation}
+        {31 ptLocation}
         wbFormIDCkNoReach('Location', [LCTN]),
-        {31 ptMagicEffect}
+        {32 ptMagicEffect}
         wbFormIDCkNoReach('Base Effect', [MGEF]),
-        {32 ptMagicItem}
+        {33 ptMagicItem}
         wbFormIDCkNoReach('Effect Item', [SPEL, ENCH, ALCH, INGR, SCRL]),
-        {33 ptMiscStat}
+        {34 ptMiscStat}
         wbInteger('Misc Stat', itU32, wbMiscStatEnum),
-        {34 ptObjectReference}
+        {35 ptObjectReference}
         wbFormIDCkNoReach('Object Reference', sigReferences),
-        {35 ptOwner}
+        {36 ptOwner}
         wbFormIDCkNoReach('Owner', [NULL, FACT, NPC_]),
-        {36 ptPackage}
+        {37 ptPackage}
         wbFormIDCkNoReach('Package', [PACK]),
-        {37 ptPackdata}
+        {38 ptPackdata}
         wbInteger('Packdata ID', itU32),
-        {38 ptPerk}
+        {39 ptPerk}
         wbFormIDCkNoReach('Perk', [PERK]),
-        {39 ptQuest}
+        {40 ptQuest}
         wbFormIDCkNoReach('Quest', [QUST]),
-        {40 ptQuestStage}
+        {41 ptQuestStage}
         wbInteger('Quest Stage', itU32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
-        {41 ptRace}
+        {42 ptRace}
         wbFormIDCkNoReach('Race', [RACE]),
-        {42 ptReferencableObject}
+        {43 ptReferencableObject}
         wbFormIDCkNoReach('Referenceable Object', sigBaseObjects),
-        {43 ptRefType}
+        {44 ptRefType}
         wbFormIDCkNoReach('Location Ref Type', [LCRT]),
-        {44 ptRegion}
+        {45 ptRegion}
         wbFormIDCkNoReach('Region', [REGN]),
-        {45 ptScene}
+        {46 ptScene}
         wbFormIDCk('Scene', [NULL, SCEN]),
-        {46 ptSex}
+        {47 ptSex}
         wbInteger('Sex', itU32, wbSexEnum),
-        {47 ptShout}
+        {48 ptShout}
         wbFormIDCkNoReach('Shout', [SHOU]),
-        {48 ptVariableName}
+        {49 ptVariableName}
         wbByteArray('Variable Name (unused)', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
-        {49 ptVATSValueFunction}
+        {50 ptVATSValueFunction}
         wbInteger('VATS Value Function', itU32, wbVATSValueFunctionEnum),
-        {50 ptVATSValueParam}
+        {51 ptVATSValueParam}
         wbInteger('VATS Value Param (unused)', itU32).IncludeFlag(dfZeroSortKey),
-        {51 ptVoiceType}
+        {52 ptVoiceType}
         wbFormIDCkNoReach('Voice Type', [VTYP, FLST]),
-        {52 ptWardState}
+        {53 ptWardState}
         wbInteger('Ward State', itU32, wbWardStateEnum),
-        {53 ptWeather}
+        {54 ptWeather}
         wbFormIDCkNoReach('Weather', [WTHR]),
-        {54 ptWorldspace}
+        {55 ptWorldspace}
         wbFormIDCkNoReach('Worldspace', [WRLD, FLST]),
-        {55 ptDamageType}
-        wbFormIDCkNoReach('Damage Type', [DMGT, FLST])
+        {56 ptDamageType}
+        wbFormIDCkNoReach('Damage Type', [DMGT, FLST]),
+        { ptConditionForm}
+        wbFormIDCkNoReach('Condition Form', [CNDF])
       ]),
 
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
         { unknown }
         wbByteArray('Unknown', 4).IncludeFlag(dfZeroSortKey),
-        { 0 ptString}
+        { 0 ptNone}
+        wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+        { 1 ptString}
         wbByteArray('String', 4),
-        { 1 ptInteger}
+        { 2 ptInteger}
         wbInteger('Integer', itS32),
-        { 2 ptFloat}
+        { 3 ptFloat}
         wbFloat('Float'),
-        { 3 ptActor}
+        { 4 ptActor}
         wbFormIDCkNoReach('Actor', [NULL, PLYR, ACHR, REFR]),
-        { 4 ptActorBase}
+        { 5 ptActorBase}
         wbFormIDCkNoReach('Actor Base', [NPC_]),
-        { 5 ptActorValue}
+        { 6 ptActorValue}
         wbActorValue,
-        { 6 ptAdvanceAction}
+        { 7 ptAdvanceAction}
         wbInteger('Player Action', itU32, wbAdvanceActionEnum),
-        { 7 ptAlias}
+        { 8 ptAlias}
         wbInteger('Alias', itS32, wbConditionAliasToStr, wbStrToAlias),
-        { 8 ptAlignment}
+        { 9 ptAlignment}
         wbInteger('Alignment', itU32, wbAlignmentEnum),
-        { 9 ptAssociationType}
+        {10 ptAssociationType}
         wbFormIDCk('Association Type', [ASTP]),
-        {10 ptAxis}
+        {11 ptAxis}
         wbInteger('Axis', itU32, wbAxisEnum),
-        {11 ptCastingSource}
+        {12 ptCastingSource}
         wbInteger('Casting Type', itU32, wbCastingSourceEnum),
-        {12 ptCell}
+        {13 ptCell}
         wbFormIDCkNoReach('Cell', [CELL]),
-        {13 ptClass}
+        {14 ptClass}
         wbFormIDCkNoReach('Class', [CLAS]),
-        {14 ptCrimeType}
+        {15 ptCrimeType}
         wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
-        {15 ptCriticalStage}
+        {16 ptCriticalStage}
         wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
-        {16 ptEncounterZone}
+        {17 ptEncounterZone}
         wbFormIDCkNoReach('Encounter Zone', [ECZN]),
-        {17 ptEquipType}
+        {18 ptEquipType}
         wbFormIDCkNoReach('Equip Type', [EQUP]),
-        {18 ptEvent}
+        {19 ptEvent}
         wbInteger('Event', itU32, wbEventFunctionAndMemberToStr, wbEventFunctionAndMemberToInt),
-        {19 ptEventData}
+        {20 ptEventData}
         wbFormID('Event Data'),
-        {20 ptFaction}
+        {21 ptFaction}
         wbFormIDCkNoReach('Faction', [FACT]),
-        {21 ptFormList}
+        {22 ptFormList}
         wbFormIDCkNoReach('Form List', [FLST]),
-        {22 ptFormType}
+        {23 ptFormType}
         wbInteger('Form Type', itU32, wbFormTypeEnum),
-        {23 ptFurniture}
+        {24 ptFurniture}
         wbFormIDCkNoReach('Furniture', [FURN, FLST]),
-        {24 ptFurnitureAnim}
+        {25 ptFurnitureAnim}
         wbInteger('Furniture Anim', itU32, wbFurnitureAnimTypeEnum),
-        {25 ptFurnitureEntry}
+        {26 ptFurnitureEntry}
         wbInteger('Furniture Entry', itU32, wbEnum([], [$010000, 'Front', $020000, 'Behind', $040000, 'Right', $80000, 'Left', $100000, 'Up'])),
-        {26 ptGlobal}
+        {27 ptGlobal}
         wbFormIDCkNoReach('Global', [GLOB]),
-        {27 ptIdleForm}
+        {28 ptIdleForm}
         wbFormIDCkNoReach('Idle', [IDLE]),
-        {28 ptInventoryObject}
+        {29 ptInventoryObject}
         wbFormIDCkNoReach('Inventory Object', sigBaseObjects),
-        {29 ptKeyword}
+        {30 ptKeyword}
         wbFormIDCkNoReach('Keyword', [KYWD, FLST, NULL]),
-        {30 ptLocation}
+        {31 ptLocation}
         wbFormIDCkNoReach('Location', [LCTN]),
-        {31 ptMagicEffect}
+        {32 ptMagicEffect}
         wbFormIDCkNoReach('Base Effect', [MGEF]),
-        {32 ptMagicItem}
+        {33 ptMagicItem}
         wbFormIDCkNoReach('Effect Item', [SPEL, ENCH, ALCH, INGR, SCRL]),
-        {33 ptMiscStat}
+        {34 ptMiscStat}
         wbInteger('Misc Stat', itU32, wbMiscStatEnum),
-        {34 ptObjectReference}
+        {35 ptObjectReference}
         wbFormIDCkNoReach('Object Reference', sigReferences),
-        {35 ptOwner}
+        {36 ptOwner}
         wbFormIDCkNoReach('Owner', [NULL, FACT, NPC_]),
-        {36 ptPackage}
+        {37 ptPackage}
         wbFormIDCkNoReach('Package', [PACK]),
-        {37 ptPackdata}
+        {38 ptPackdata}
         wbInteger('Packdata ID', itU32),
-        {38 ptPerk}
+        {39 ptPerk}
         wbFormIDCkNoReach('Perk', [PERK]),
-        {39 ptQuest}
+        {40 ptQuest}
         wbFormIDCkNoReach('Quest', [QUST]),
-        {40 ptQuestStage}
+        {41 ptQuestStage}
         wbInteger('Quest Stage', itU32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
-        {41 ptRace}
+        {42 ptRace}
         wbFormIDCkNoReach('Race', [RACE]),
-        {42 ptReferencableObject}
+        {43 ptReferencableObject}
         wbFormIDCkNoReach('Referenceable Object', sigBaseObjects),
-        {43 ptRefType}
+        {44 ptRefType}
         wbFormIDCkNoReach('Location Ref Type', [LCRT]),
-        {44 ptRegion}
+        {45 ptRegion}
         wbFormIDCkNoReach('Region', [REGN]),
-        {45 ptScene}
+        {46 ptScene}
         wbFormIDCk('Scene', [NULL, SCEN]),
-        {46 ptSex}
+        {47 ptSex}
         wbInteger('Sex', itU32, wbSexEnum),
-        {47 ptShout}
+        {48 ptShout}
         wbFormIDCkNoReach('Shout', [SHOU]),
-        {48 ptVariableName}
+        {49 ptVariableName}
         wbByteArray('Variable Name (unused)', 4, cpIgnore),
-        {49 ptVATSValueFunction}
+        {50 ptVATSValueFunction}
         wbInteger('VATS Value Function', itU32, wbVATSValueFunctionEnum),
-        {50 ptVATSValueParam}
+        {51 ptVATSValueParam}
         wbUnion('VATS Value Param', wbCTDAParam2VATSValueParamDecider, [
          { 0} wbFormIDCkNoReach('Weapon', [WEAP]),
          { 1} wbFormIDCkNoReach('Weapon List', [FLST], [WEAP]),
@@ -8748,16 +8767,18 @@ begin
          {19} wbInteger('Delivery Type', itU32, wbTargetEnum),
          {20} wbInteger('Casting Type', itU32, wbCastEnum)
         ]),
-        {51 ptVoiceType}
+        {52 ptVoiceType}
         wbFormIDCkNoReach('Voice Type', [VTYP, FLST]),
-        {52 ptWardState}
+        {53 ptWardState}
         wbInteger('Ward State', itU32, wbWardStateEnum),
-        {53 ptWeather}
+        {54 ptWeather}
         wbFormIDCkNoReach('Weather', [WTHR]),
-        {54 ptWorldspace}
+        {55 ptWorldspace}
         wbFormIDCkNoReach('Worldspace', [WRLD, FLST]),
-        {55 ptDamageType}
-        wbFormIDCkNoReach('Damage Type', [DMGT, FLST])
+        {56 ptDamageType}
+        wbFormIDCkNoReach('Damage Type', [DMGT, FLST]),
+        {57 ptConditionForm}
+        wbFormIDCkNoReach('Condition Form', [CNDF])
       ]),
       wbInteger('Run On', itU32, wbEnum([
         { 0} 'Subject',
@@ -16846,173 +16867,12 @@ begin
 
 end;
 
-procedure DefineFO76u;
-begin
-   wbAddGroupOrder(GMST);
-   wbAddGroupOrder(KYWD);
-   wbAddGroupOrder(LCRT);
-   wbAddGroupOrder(AACT);
-   wbAddGroupOrder(TRNS);
-   wbAddGroupOrder(CMPO);
-   wbAddGroupOrder(TXST);
-   //wbAddGroupOrder(MICN);
-   wbAddGroupOrder(GLOB);
-   wbAddGroupOrder(DMGT);
-   wbAddGroupOrder(CLAS);
-   wbAddGroupOrder(FACT);
-   wbAddGroupOrder(HDPT);
-   //wbAddGroupOrder(EYES);
-   wbAddGroupOrder(RACE);
-   wbAddGroupOrder(SOUN);
-   wbAddGroupOrder(ASPC);
-   //wbAddGroupOrder(SKIL);
-   wbAddGroupOrder(MGEF);
-   //wbAddGroupOrder(SCPT);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
-   wbAddGroupOrder(LTEX);
-   wbAddGroupOrder(ENCH);
-   wbAddGroupOrder(SPEL);
-   //wbAddGroupOrder(SCRL);
-   wbAddGroupOrder(ACTI);
-   wbAddGroupOrder(TACT);
-   wbAddGroupOrder(ARMO);
-   wbAddGroupOrder(BOOK);
-   wbAddGroupOrder(CONT);
-   wbAddGroupOrder(DOOR);
-   wbAddGroupOrder(INGR);
-   wbAddGroupOrder(LIGH);
-   wbAddGroupOrder(MISC);
-   wbAddGroupOrder(STAT);
-   wbAddGroupOrder(SCOL);
-   wbAddGroupOrder(MSTT);
-   wbAddGroupOrder(GRAS);
-   wbAddGroupOrder(TREE);
-   wbAddGroupOrder(FLOR);
-   wbAddGroupOrder(FURN);
-   wbAddGroupOrder(WEAP);
-   wbAddGroupOrder(AMMO);
-   wbAddGroupOrder(NPC_);
-   wbAddGroupOrder(PLYR);
-   wbAddGroupOrder(LVLN);
-   wbAddGroupOrder(KEYM);
-   wbAddGroupOrder(ALCH);
-   wbAddGroupOrder(IDLM);
-   wbAddGroupOrder(NOTE);
-   wbAddGroupOrder(PROJ);
-   wbAddGroupOrder(HAZD);
-   wbAddGroupOrder(BNDS);
-   //wbAddGroupOrder(SLGM);
-   wbAddGroupOrder(TERM);
-   wbAddGroupOrder(LVLI);
-   wbAddGroupOrder(WTHR);
-   wbAddGroupOrder(CLMT);
-   wbAddGroupOrder(SPGD);
-   wbAddGroupOrder(RFCT);
-   wbAddGroupOrder(REGN);
-   wbAddGroupOrder(NAVI);
-   wbAddGroupOrder(CELL);
-   //wbAddGroupOrder(REFR);
-   //wbAddGroupOrder(ACHR);
-   //wbAddGroupOrder(PMIS);
-   //wbAddGroupOrder(PARW);
-   //wbAddGroupOrder(PGRE);
-   //wbAddGroupOrder(PBEA);
-   //wbAddGroupOrder(PFLA);
-   //wbAddGroupOrder(PCON);
-   //wbAddGroupOrder(PBAR);
-   //wbAddGroupOrder(PHZD);
-   wbAddGroupOrder(WRLD);
-   //wbAddGroupOrder(LAND);
-   //wbAddGroupOrder(NAVM);
-   //wbAddGroupOrder(TLOD);
-   //wbAddGroupOrder(DIAL);
-   //wbAddGroupOrder(INFO);
-   wbAddGroupOrder(QUST);
-   wbAddGroupOrder(IDLE);
-   wbAddGroupOrder(PACK);
-   wbAddGroupOrder(CSTY);
-   wbAddGroupOrder(LSCR);
-   wbAddGroupOrder(LVSP);
-   wbAddGroupOrder(ANIO);
-   wbAddGroupOrder(WATR);
-   wbAddGroupOrder(EFSH);
-   //wbAddGroupOrder(TOFT);
-   wbAddGroupOrder(EXPL);
-   wbAddGroupOrder(DEBR);
-   wbAddGroupOrder(IMGS);
-   wbAddGroupOrder(IMAD);
-   wbAddGroupOrder(FLST);
-   wbAddGroupOrder(PERK);
-   wbAddGroupOrder(BPTD);
-   wbAddGroupOrder(ADDN);
-   wbAddGroupOrder(AVIF);
-   wbAddGroupOrder(CAMS);
-   wbAddGroupOrder(CPTH);
-   wbAddGroupOrder(VTYP);
-   wbAddGroupOrder(MATT);
-   wbAddGroupOrder(IPCT);
-   wbAddGroupOrder(IPDS);
-   wbAddGroupOrder(ARMA);
-   wbAddGroupOrder(ECZN);
-   wbAddGroupOrder(LCTN);
-   wbAddGroupOrder(MESG);
-   //wbAddGroupOrder(RGDL);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
-   wbAddGroupOrder(DOBJ);
-   wbAddGroupOrder(DFOB);
-   wbAddGroupOrder(LGTM);
-   wbAddGroupOrder(MUSC);
-   wbAddGroupOrder(FSTP);
-   wbAddGroupOrder(FSTS);
-   wbAddGroupOrder(SMBN);
-   wbAddGroupOrder(SMQN);
-   wbAddGroupOrder(SMEN);
-   wbAddGroupOrder(DLBR);
-   wbAddGroupOrder(MUST);
-   wbAddGroupOrder(DLVW);
-   //wbAddGroupOrder(WOOP);
-   //wbAddGroupOrder(SHOU);
-   wbAddGroupOrder(EQUP);
-   wbAddGroupOrder(RELA);
-   wbAddGroupOrder(SCEN);
-   wbAddGroupOrder(ASTP);
-   wbAddGroupOrder(OTFT);
-   wbAddGroupOrder(ARTO);
-   wbAddGroupOrder(MATO);
-   wbAddGroupOrder(MOVT);
-   wbAddGroupOrder(SNDR);
-   wbAddGroupOrder(DUAL); // doesn't exist but can be created in CK
-   wbAddGroupOrder(SNCT);
-   wbAddGroupOrder(SOPM);
-   wbAddGroupOrder(COLL);
-   wbAddGroupOrder(CLFM);
-   wbAddGroupOrder(REVB);
-   wbAddGroupOrder(PKIN);
-   wbAddGroupOrder(RFGP);
-   wbAddGroupOrder(AMDL);
-   wbAddGroupOrder(LAYR);
-   wbAddGroupOrder(COBJ);
-   wbAddGroupOrder(OMOD);
-   wbAddGroupOrder(MSWP);
-   wbAddGroupOrder(ZOOM);
-   wbAddGroupOrder(INNR);
-   wbAddGroupOrder(KSSM);
-   wbAddGroupOrder(AECH);
-   wbAddGroupOrder(SCCO);
-   wbAddGroupOrder(AORU);
-   wbAddGroupOrder(SCSN);
-   wbAddGroupOrder(STAG);
-   wbAddGroupOrder(NOCM);
-   wbAddGroupOrder(LENS);
-   //wbAddGroupOrder(LSPR);
-   wbAddGroupOrder(GDRY);
-   wbAddGroupOrder(OVIS);
-end;
-
 {>>> Start of new Fallout 76 Records <<<}
 
 // AAPD\RADR starts with two 0 bytes, a multiple of 16 (or 0xC8), and then either 0x40 or 0x41.
 // AAPD\WTMX is always either 00 00 00 00 or 00 00 80 3F
 
-procedure DefineFO76v;
+procedure DefineFO76u;
 begin
   wbRecord(AAPD, 'Animation Part Data', [
     wbEDID,
@@ -17031,8 +16891,302 @@ begin
       wbUnknown(WTMX)
     ], [])
   ]);
-  wbAddGroupOrder(AAPD);
+
+  wbRecord(SECH, '', [
+    wbEDID
+  ]);
+
+  wbRecord(RESO, '', [
+    wbEDID
+  ]);
+
+  wbRecord(CURV, '', [
+    wbEDID
+  ]);
+
+  wbRecord(MSCS, '', [
+    wbEDID
+  ]);
+
+  wbRecord(CNCY, 'Currency', [
+    wbEDID,
+    wbString(DURL),
+    wbOBND,
+    wbPTRN,
+    wbFULL,
+    wbMODL,
+    wbUnknown(ENLT),
+    wbUnknown(ENLS),
+    wbUnknown(AUUV),
+    wbYNAM,
+    wbZNAM,
+    wbKeywords,
+    wbUnknown(DATA),
+    wbUnknown(AQIC),
+    wbUnknown(MXCT),
+    wbLString(SNAM)
+  ]);
+
+  wbRecord(LVLP, '', [
+    wbEDID
+  ]);
+
+  wbRecord(PPAK, '', [
+    wbEDID
+  ]);
+
+  wbRecord(PACH, '', [
+    wbEDID
+  ]);
+
+  wbRecord(PCRD, '', [
+    wbEDID
+  ]);
+
+  wbRecord(LVPC, '', [
+    wbEDID
+  ]);
+
+  wbRecord(STND, '', [
+    wbEDID
+  ]);
+
+  wbRecord(STMP, '', [
+    wbEDID
+  ]);
+
+  wbRecord(GCVR, '', [
+    wbEDID
+  ]);
+
+  wbRecord(EMOT, '', [
+    wbEDID
+  ]);
+
+  wbRecord(STHD, '', [
+    wbEDID
+  ]);
+
+  wbRecord(VOLI, '', [
+    wbEDID
+  ]);
+
+  wbRecord(ECAT, '', [
+    wbEDID
+  ]);
+
+  wbRecord(WSPR, '', [
+    wbEDID
+  ]);
+
+  wbRecord(ENTM, '', [
+    wbEDID
+  ]);
+
+  wbRecord(COEN, '', [
+    wbEDID
+  ]);
+
+  wbRecord(CSEN, '', [
+    wbEDID
+  ]);
+
+  wbRecord(WAVE, '', [
+    wbEDID
+  ]);
+
+  wbRecord(PMFT, '', [
+    wbEDID
+  ]);
+
+  wbRecord(CHAL, 'Challenge', [
+    wbEDID,
+    wbFULL,
+    wbString(SNAM),
+    wbUnknown(FNAM),
+    wbFormID(HNAM),
+    wbUnknown(CNAM),
+    wbUnknown(ENAM),
+    wbCTDAs,
+    wbString(JASF)
+  ]);
+
+  wbRecord(AVTR, 'Avatar', [
+    wbEDID,
+    wbFULL,
+    wbString(SWFI),
+    wbFormID(RENT)
+  ]);
+
+  wbRecord(CNDF, 'Condition Form', [
+    wbEDID,
+    wbCTDAs
+  ]);
 end;
+
+procedure DefineFO76Groups;
+begin
+  wbAddGroupOrder(GMST);
+  wbAddGroupOrder(KYWD);
+  wbAddGroupOrder(LCRT);
+  wbAddGroupOrder(AACT);
+  wbAddGroupOrder(TRNS);
+  wbAddGroupOrder(CMPO);
+  wbAddGroupOrder(TXST);
+  wbAddGroupOrder(GLOB);
+  wbAddGroupOrder(DMGT);
+  wbAddGroupOrder(CLAS);
+  wbAddGroupOrder(FACT);
+  wbAddGroupOrder(HDPT);
+  wbAddGroupOrder(RACE);
+  wbAddGroupOrder(SOUN);
+  wbAddGroupOrder(SECH); //new in Fallout 76
+  wbAddGroupOrder(ASPC);
+  wbAddGroupOrder(RESO); //new in Fallout 76
+  wbAddGroupOrder(MGEF);
+  wbAddGroupOrder(LTEX);
+  wbAddGroupOrder(ENCH);
+  wbAddGroupOrder(SPEL);
+  wbAddGroupOrder(ACTI);
+  wbAddGroupOrder(TACT);
+  wbAddGroupOrder(CURV); //new in Fallout 76
+  wbAddGroupOrder(ARMO);
+  wbAddGroupOrder(BOOK);
+  wbAddGroupOrder(CONT);
+  wbAddGroupOrder(DOOR);
+  wbAddGroupOrder(INGR);
+  wbAddGroupOrder(LIGH);
+  wbAddGroupOrder(MISC);
+  wbAddGroupOrder(MSCS); //new in Fallout 76
+  wbAddGroupOrder(CNCY); //new in Fallout 76
+  wbAddGroupOrder(STAT);
+  wbAddGroupOrder(SCOL);
+  wbAddGroupOrder(MSTT);
+  wbAddGroupOrder(GRAS);
+  wbAddGroupOrder(TREE);
+  wbAddGroupOrder(FLOR);
+  wbAddGroupOrder(FURN);
+  wbAddGroupOrder(WEAP);
+  wbAddGroupOrder(AMMO);
+  wbAddGroupOrder(NPC_);
+  wbAddGroupOrder(PLYR);
+  wbAddGroupOrder(LVLN);
+  wbAddGroupOrder(LVLP); //new in Fallout 76
+  wbAddGroupOrder(KEYM);
+  wbAddGroupOrder(ALCH);
+  wbAddGroupOrder(IDLM);
+  wbAddGroupOrder(NOTE);
+  wbAddGroupOrder(PROJ);
+  wbAddGroupOrder(HAZD);
+  wbAddGroupOrder(BNDS);
+  wbAddGroupOrder(TERM);
+  wbAddGroupOrder(PPAK); //new in Fallout 76
+  wbAddGroupOrder(PACH); //new in Fallout 76
+  wbAddGroupOrder(LVLI);
+  wbAddGroupOrder(WTHR);
+  wbAddGroupOrder(CLMT);
+  wbAddGroupOrder(SPGD);
+  wbAddGroupOrder(RFCT);
+  wbAddGroupOrder(REGN);
+  wbAddGroupOrder(NAVI);
+  wbAddGroupOrder(CELL);
+  wbAddGroupOrder(WRLD);
+  wbAddGroupOrder(QUST);
+  wbAddGroupOrder(IDLE);
+  wbAddGroupOrder(PACK);
+  wbAddGroupOrder(CSTY);
+  wbAddGroupOrder(LSCR);
+  //wbAddGroupOrder(LVSP); not contained in SeventySix.esm
+  wbAddGroupOrder(ANIO);
+  wbAddGroupOrder(WATR);
+  wbAddGroupOrder(EFSH);
+  wbAddGroupOrder(EXPL);
+  wbAddGroupOrder(DEBR);
+  wbAddGroupOrder(IMGS);
+  wbAddGroupOrder(IMAD);
+  wbAddGroupOrder(FLST);
+  wbAddGroupOrder(PERK);
+  wbAddGroupOrder(PCRD); //new in Fallout 76
+  wbAddGroupOrder(LVPC); //new in Fallout 76
+  wbAddGroupOrder(BPTD);
+  wbAddGroupOrder(ADDN);
+  wbAddGroupOrder(AVIF);
+  wbAddGroupOrder(CAMS);
+  wbAddGroupOrder(CPTH);
+  wbAddGroupOrder(VTYP);
+  wbAddGroupOrder(MATT);
+  wbAddGroupOrder(IPCT);
+  wbAddGroupOrder(IPDS);
+  wbAddGroupOrder(ARMA);
+  //wbAddGroupOrder(ECZN); not contained in SeventySix.esm
+  wbAddGroupOrder(LCTN);
+  wbAddGroupOrder(MESG);
+  wbAddGroupOrder(DOBJ);
+  wbAddGroupOrder(DFOB);
+  wbAddGroupOrder(LGTM);
+  wbAddGroupOrder(MUSC);
+  wbAddGroupOrder(FSTP);
+  wbAddGroupOrder(FSTS);
+  wbAddGroupOrder(SMBN);
+  wbAddGroupOrder(SMQN);
+  wbAddGroupOrder(SMEN);
+  //wbAddGroupOrder(DLBR); not contained in SeventySix.esm
+  wbAddGroupOrder(MUST);
+  wbAddGroupOrder(DLVW);
+  wbAddGroupOrder(EQUP);
+  wbAddGroupOrder(RELA);
+  //wbAddGroupOrder(SCEN); not contained in SeventySix.esm
+  wbAddGroupOrder(ASTP);
+  wbAddGroupOrder(OTFT);
+  wbAddGroupOrder(ARTO);
+  wbAddGroupOrder(MATO);
+  wbAddGroupOrder(MOVT);
+  wbAddGroupOrder(SNDR);
+  //wbAddGroupOrder(DUAL); not contained in SeventySix.esm
+  wbAddGroupOrder(SNCT);
+  wbAddGroupOrder(SOPM);
+  wbAddGroupOrder(COLL);
+  wbAddGroupOrder(CLFM);
+  wbAddGroupOrder(REVB);
+  wbAddGroupOrder(PKIN);
+  wbAddGroupOrder(RFGP);
+  wbAddGroupOrder(AMDL);
+  wbAddGroupOrder(LAYR);
+  wbAddGroupOrder(COBJ);
+  wbAddGroupOrder(OMOD);
+  wbAddGroupOrder(MSWP);
+  wbAddGroupOrder(ZOOM);
+  wbAddGroupOrder(INNR);
+  wbAddGroupOrder(KSSM);
+  wbAddGroupOrder(AECH);
+  wbAddGroupOrder(SCCO);
+  wbAddGroupOrder(AORU);
+  wbAddGroupOrder(SCSN);
+  wbAddGroupOrder(STAG);
+  wbAddGroupOrder(NOCM);
+  wbAddGroupOrder(LENS);
+  wbAddGroupOrder(GDRY);
+  wbAddGroupOrder(OVIS);
+  wbAddGroupOrder(STND); //new in Fallout 76
+  wbAddGroupOrder(STMP); //new in Fallout 76
+  wbAddGroupOrder(GCVR); //new in Fallout 76
+  wbAddGroupOrder(EMOT); //new in Fallout 76
+  wbAddGroupOrder(STHD); //new in Fallout 76
+  wbAddGroupOrder(VOLI); //new in Fallout 76
+  wbAddGroupOrder(ECAT); //new in Fallout 76
+  wbAddGroupOrder(WSPR); //new in Fallout 76
+  wbAddGroupOrder(ENTM); //new in Fallout 76
+  wbAddGroupOrder(PCEN); //new in Fallout 76
+  wbAddGroupOrder(COEN); //new in Fallout 76
+  wbAddGroupOrder(CSEN); //new in Fallout 76
+  wbAddGroupOrder(WAVE); //new in Fallout 76
+  wbAddGroupOrder(AAPD); //new in Fallout 76
+  wbAddGroupOrder(PMFT); //new in Fallout 76
+  wbAddGroupOrder(CHAL); //new in Fallout 76
+  wbAddGroupOrder(AVTR); //new in Fallout 76
+  wbAddGroupOrder(CNDF); //new in Fallout 76
+end;
+
 
 procedure DefineFO76;
 begin
@@ -17060,7 +17214,8 @@ begin
   DefineFO76s;
   DefineFO76t;
   DefineFO76u;
-  DefineFO76v;
+
+  DefineFO76Groups;
 
   //SetLength(wbOfficialDLC, 7);
   //wbOfficialDLC[0] := 'DLCRobot.esm';
