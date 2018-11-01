@@ -10528,12 +10528,11 @@ begin
     ])), [
     wbEDID,
     wbInteger(FNAM, 'Type', itU8, wbEnum([], [
-             0, 'Unknown 0',
       Ord('s'), 'Short',
       Ord('l'), 'Long',
       Ord('f'), 'Float',
       Ord('b'), 'Boolean'
-    ]), cpNormal, True),
+    ]), cpNormal, True).SetDefaultEditValue('Float'),
     wbFloat(FLTV, 'Value', cpNormal, True)
   ]);
 

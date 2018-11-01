@@ -3187,7 +3187,11 @@ begin
 
   wbRecord(GLOB, 'Global', [
     wbEDID,
-    wbInteger(FNAM, 'Type', itU8, wbGLOBFNAM, nil, cpNormal, True),
+    wbInteger(FNAM, 'Type', itU8, wbEnum([], [
+      Ord('s'), 'Short',
+      Ord('l'), 'Long',
+      Ord('f'), 'Float'
+    ]), cpNormal, True).SetDefaultEditValue('Float'),
     wbFloat(FLTV, 'Value', cpNormal, True)
   ]);
 
