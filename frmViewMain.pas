@@ -5486,9 +5486,11 @@ begin
   end;
 
   if Assigned(Settings) then begin
-    Settings.WriteInteger(Name, 'pnlNavWidth', pnlNav.Width);
-    for i := 0 to Pred(vstNav.Header.Columns.Count) do
-      Settings.WriteInteger(Name, 'vstNavColumnWidth' + IntToStr(i), vstNav.Header.Columns[i].Width);
+    if Assigned(pnlNav) then
+      Settings.WriteInteger(Name, 'pnlNavWidth', pnlNav.Width);
+    if Assigned(vstNav) then
+      for i := 0 to Pred(vstNav.Header.Columns.Count) do
+        Settings.WriteInteger(Name, 'vstNavColumnWidth' + IntToStr(i), vstNav.Header.Columns[i].Width);
 
     if WindowState <> wsMinimized then
       Settings.WriteInteger(Name, 'WindowState', Integer(WindowState));
