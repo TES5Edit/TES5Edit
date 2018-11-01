@@ -3698,7 +3698,7 @@ var
 
 type
   //keep ordered by release date
-  TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR);
+  TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR, gmFO76);
   TwbGameModes  = set of TwbGameMode;
 
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
@@ -3727,13 +3727,14 @@ var
   wbAlwaysMode  : TwbSetOfMode = [ tmView, tmEdit, tmESMify, tmESPify, tmSortAndCleanMasters,
                     tmLODgen, tmScript, tmCheckForITM, tmCheckForDR, tmCheckForErrors ]; // Modes available to all decoded games
   wbSimplePluginsTxt : TwbGameModes = [gmFNV, gmFO3, gmTES3, gmTES4, gmTES5]; //plugins.txt contains only the active plugins
-  wbOrderFromPluginsTxt : TwbGameModes = [gmTES5, gmTES5VR, gmSSE, gmFO4, gmFO4VR]; //load order given by order in plugins.txt
+  wbOrderFromPluginsTxt : TwbGameModes = [gmTES5, gmTES5VR, gmSSE, gmFO4, gmFO4VR, gmFO76]; //load order given by order in plugins.txt
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
 function wbIsSkyrim: Boolean; inline;
 function wbIsFallout3: Boolean; inline;
 function wbIsFallout4: Boolean; inline;
+function wbIsFallout76: Boolean; inline;
 function wbIsEslSupported: Boolean; inline;
 
 procedure ReportDefs;
@@ -4310,9 +4311,14 @@ begin
   Result := wbGameMode in [gmFO4, gmFO4VR];
 end;
 
+function wbIsFallout76: Boolean; inline;
+begin
+  Result := wbGameMode in [gmFO76];
+end;
+
 function wbIsEslSupported: Boolean; inline;
 begin
-  Result := (wbGameMode in [gmSSE, gmTES5VR, gmFO4, gmFO4VR]);
+  Result := (wbGameMode in [gmSSE, gmTES5VR, gmFO4, gmFO4VR, gmFO76]);
 end;
 
 function wbDefToName(const aDef: IwbDef): string;

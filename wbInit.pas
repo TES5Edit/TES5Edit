@@ -70,6 +70,7 @@ uses
   wbDefinitionsFO3Saves,
   wbDefinitionsFO4,
   wbDefinitionsFO4Saves,
+  wbDefinitionsFO76,
   wbDefinitionsTES3,
   wbDefinitionsTES4,
   wbDefinitionsTES4Saves,
@@ -256,7 +257,8 @@ const
     'SkyrimVR.exe',   // gmTES5VR
     'SkyrimSE.exe',   // gmSSE
     'Fallout4.exe',   // gmFO4
-    'Fallout4VR.exe'  // gmFO4VR
+    'Fallout4VR.exe', // gmFO4VR
+    'Fallout76.exe'   // gmFO76
   );
 var
   s: string;
@@ -333,7 +335,9 @@ end;
 procedure DoInitPath(const ParamIndex: Integer);
 const
   sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
-  sBethRegKey64           = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
+  sBethRegKey64           = '\SOFTWARE\WOW6432Node\Bethesda Softworks\';
+  sTempRegKey             = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\';
+  sTempRegKey64           = '\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\';
 var
   s: string;
   IniFile : TIniFile;
@@ -354,21 +358,41 @@ begin
     if wbDataPath = '' then with TRegistry.Create do try
       RootKey := HKEY_LOCAL_MACHINE;
 
-      if not OpenKeyReadOnly(sBethRegKey + wbGameNameReg + '\') then
-        if not OpenKeyReadOnly(sBethRegKey64 + wbGameNameReg + '\') then begin
-          s := 'Fatal: Could not open registry key: ' + sBethRegKey + wbGameNameReg + '\';
-//          if wbGameMode = gmTES5 then // All game exists on steam now
+      if wbGameMode = gmFO76 then begin
+        if not OpenKeyReadOnly(sTempRegKey + wbGameNameReg + '\') then
+          if not OpenKeyReadOnly(sTempRegKey64 + wbGameNameReg + '\') then begin
+            s := 'Fatal: Could not open registry key: ' + sTempRegKey + wbGameNameReg + '\';
+            // this message is probably a lie...
+            ShowMessage(s + #13#10'This can happen after Bethesda Launcher updates, run game''s launcher to restore registry settings');
+            wbDontSave := True;
+            Exit;
+          end;
+
+        wbDataPath := ReadString('Path');
+            wbDataPath := StringReplace(wbDataPath, '"', '', [rfReplaceAll]);
+
+        if wbDataPath = '' then begin
+          s := 'Fatal: Could not determine ' + wbGameName2 + ' installation path, no "Path" registry key';
+          // this message is probably a lie...
+          ShowMessage(s + #13#10'This can happen after Bethesda Launcher updates, run game''s launcher to restore registry settings');
+          wbDontSave := True;
+        end;
+      end else begin
+        if not OpenKeyReadOnly(sBethRegKey + wbGameNameReg + '\') then
+          if not OpenKeyReadOnly(sBethRegKey64 + wbGameNameReg + '\') then begin
+            s := 'Fatal: Could not open registry key: ' + sBethRegKey + wbGameNameReg + '\';
+            ShowMessage(s + #13#10'This can happen after Steam updates, run game''s launcher to restore registry settings');
+              wbDontSave := True;
+              Exit;
+            end;
+
+        wbDataPath := ReadString('Installed Path');
+
+        if wbDataPath = '' then begin
+          s := 'Fatal: Could not determine ' + wbGameName2 + ' installation path, no "Installed Path" registry key';
           ShowMessage(s + #13#10'This can happen after Steam updates, run game''s launcher to restore registry settings');
           wbDontSave := True;
-          Exit;
         end;
-
-      wbDataPath := ReadString('Installed Path');
-
-      if wbDataPath = '' then begin
-        s := 'Fatal: Could not determine ' + wbGameName2 + ' installation path, no "Installed Path" registry key';
-        ShowMessage(s + #13#10'This can happen after Steam updates, run game''s launcher to restore registry settings');
-        wbDontSave := True;
       end;
     finally
       Free;
@@ -399,8 +423,6 @@ begin
 
     if wbGameMode in [gmFO3, gmFNV] then
       wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
-    else if wbGameMode = gmFO4 then
-      wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout4.ini'
     else
       wbTheGameIniFileName := wbMyGamesTheGamePath + wbGameName + '.ini';
 
@@ -475,7 +497,7 @@ var
 procedure DetectAppMode;
 const
   SourceModes : array [1..2] of string = ('plugins', 'saves');
-  GameModes: array [1..8] of string = ('tes5vr', 'fo4vr', 'tes4', 'tes5', 'sse', 'fo3', 'fnv', 'fo4');
+  GameModes: array [1..9] of string = ('tes5vr', 'fo4vr', 'tes4', 'tes5', 'sse', 'fo3', 'fnv', 'fo4', 'fo76');
   ToolModes: array [1..12] of string = (
     'edit', 'view', 'lodgen', 'script', 'translate',
     'setesm', 'clearesm', 'sortandclean', 'sortandcleanmasters',
@@ -723,8 +745,19 @@ begin
     ToolSources := [tsPlugins];
   end
 
+  else if isMode('FO76') then begin
+    wbGameMode := gmFO76;
+    wbAppName := 'FO76';
+    wbGameName := 'Fallout76';
+    wbGameName2 := 'Fallout 76';
+    wbLanguage := 'En';
+    wbArchiveExtension := '.ba2';
+    ToolModes := wbAlwaysMode + [tmTranslate];
+    ToolSources := [tsPlugins];
+  end
+  
   else begin
-    ShowMessage('Application name must contain FNV, FO3, FO4, FO4VR, SSE, TES4, TES5 or TES5VR to select game.');
+    ShowMessage('Application name must contain FNV, FO3, FO4, FO4VR, FO76, SSE, TES4, TES5 or TES5VR to select game.');
     Exit(False);
   end;
 
@@ -789,6 +822,12 @@ begin
       wbHideIgnored := False; // to show Form Version
     end;
     gmFO4, gmFO4VR: begin
+      wbVWDInTemporary := True;
+      wbVWDAsQuestChildren := True;
+      wbLoadBSAs := True; // localization won't work otherwise
+      wbHideIgnored := False; // to show Form Version
+    end;
+    gmFO76: begin
       wbVWDInTemporary := True;
       wbVWDAsQuestChildren := True;
       wbLoadBSAs := True; // localization won't work otherwise
@@ -884,6 +923,9 @@ begin
     gmFO4, gmFO4VR: case wbToolSource of
       tsSaves:   DefineFO4Saves;
       tsPlugins: DefineFO4;
+    end;
+    gmFO76: case wbToolSource of
+      tsPlugins: DefineFO76;
     end;
     gmTES3: case wbToolSource of
       tsPlugins: DefineTES3;

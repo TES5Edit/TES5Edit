@@ -3414,7 +3414,7 @@ var
   i               : Integer;
   EditState       : Boolean;
 begin
-  if wbIsSkyrim or wbIsFallout4 then begin
+  if wbIsSkyrim or wbIsFallout4 or wbIsFallout76 then begin
     if MessageDlg('Merged patch is unsupported for ' + wbGameName2 +
       '. Create it only if you know what you are doing and can troubleshoot possible issues yourself. ' +
       'Do you want to continue?',
@@ -4552,6 +4552,7 @@ begin
             case wbGameMode of
               gmFO3:  begin saveExt := '.fos'; coSaveExt := '.fose'; end;
               gmFO4, gmFO4VR:  begin saveExt := '.fos'; coSaveExt := '';      end;
+              gmFO76:  begin saveExt := '.fos'; coSaveExt := '';      end;
               gmFNV:  begin saveExt := '.fos'; coSaveExt := '.nvse'; end;
               gmTES3: begin saveExt := '.ess'; coSaveExt := '';      end;
               gmTES4: begin saveExt := '.ess'; coSaveExt := '.obse'; end;
@@ -4601,7 +4602,7 @@ begin
           end;
         end;
 
-        if (wbToolMode in wbPluginModes) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFNV, gmTES5, gmTES5VR, gmSSE]) then begin
+        if (wbToolMode in wbPluginModes) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE]) then begin
           Modules.DeactivateAll;
 
           with wbModuleByName(wbPluginToUse)^ do
@@ -10059,7 +10060,7 @@ begin
             if not AutoModeCheckForDR then begin
               IsDeleted := True;
               IsDeleted := False;
-              if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
+              if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
                 IsPersistent := True
               else if wbGameMode = gmTES4 then
                 IsPersistent := False;
@@ -13131,7 +13132,7 @@ begin
      Assigned(Element) and
     (Element.ElementType = etFile);
 
-  mniNavLocalization.Visible := (wbIsSkyrim or wbIsFallout4);
+  mniNavLocalization.Visible := (wbIsSkyrim or wbIsFallout4 or wbIsFallout76);
   mniNavLocalizationSwitch.Visible :=
      Assigned(Element) and
     (Element.ElementType = etFile) and
@@ -13142,7 +13143,7 @@ begin
     else
       mniNavLocalizationSwitch.Caption := 'Localize plugin';
 
-  if wbIsSkyrim or wbIsFallout4 then begin
+  if wbIsSkyrim or wbIsFallout4 or wbIsFallout76 then begin
     mniNavLocalizationLanguage.Clear;
     sl := wbLocalizationHandler.AvailableLanguages;
     for i := 0 to Pred(sl.Count) do begin
@@ -15002,7 +15003,7 @@ const
   SiteName : array[TwbGameMode] of string =
     ('Fallout3', 'Fallout New Vegas', 'Oblivion', 'Oblivion',
      'Skyrim', 'Skyrim', 'Skyrim Special Edition',
-     'Fallout 4', 'Fallout 4');
+     'Fallout 4', 'Fallout 4', 'Fallout 76');
 begin
   if not wbLoaderDone then
     Exit;
