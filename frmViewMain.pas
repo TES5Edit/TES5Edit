@@ -4101,7 +4101,7 @@ begin
             Text := '';
             Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
             Options := Options - [coDraggable, coShowDropMark];
-            Options := Options + [coFixed];
+            Options := Options + [coFixed, coFiller];
           end;
         finally
           EndUpdate;
@@ -14111,8 +14111,8 @@ begin
                 Text := ActiveRecords[i].Element._File.Name;
                 Style := vsOwnerDraw;
                 Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
-                MinWidth := 5;
-                MaxWidth := 3000;
+                MinWidth := Width div 2;
+                MaxWidth := Screen.DesktopWidth;
                 Options := Options - [coAllowclick, coShowDropMark];
                 Options := Options + [coAutoSpring, coDraggable];
                 if ActiveContainer.Equals(ActiveRecords[i].Element) then
@@ -14121,10 +14121,11 @@ begin
             if Length(ActiveRecords) > 1 then
               with Add do begin
                 Text := '';
-                Width := 1;
-                MinWidth := 1;
-                MaxWidth := 3000;
-                Options := Options - [coAllowclick, coDraggable, coShowDropMark];
+                Width := 0;
+                MinWidth := 0;
+                MaxWidth := Screen.DesktopWidth;
+                Options := Options - [coAllowclick, coDraggable, coShowDropMark, coAllowFocus];
+                Options := Options + [coFiller];
               end;
           finally
             EndUpdate;
@@ -14149,6 +14150,7 @@ begin
             with Add do begin
               Text := '';
               Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
+              Options := Options + [coFiller];
             end;
           finally
             EndUpdate;
@@ -14219,18 +14221,19 @@ begin
               Text := (ActiveRecords[i].Element as IwbMainRecord).EditorID;
               Style := vsOwnerDraw;
               Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
-              MinWidth := 5;
-              MaxWidth := 3000;
+              MinWidth := Width div 2;
+              MaxWidth := Screen.DesktopWidth;
               Options := Options - [coAllowclick, coShowDropMark];
               Options := Options + [coAutoSpring, coDraggable];
             end;
           if Length(ActiveRecords) > 1 then
             with Add do begin
               Text := '';
-              Width := 1;
-              MinWidth := 1;
-              MaxWidth := 3000;
+              Width := 0;
+              MinWidth := 0;
+              MaxWidth := Screen.DesktopWidth;
               Options := Options - [coAllowclick, coDraggable, coShowDropMark];
+              Options := Options + [coFiller];
             end;
         finally
           EndUpdate;
@@ -14450,8 +14453,8 @@ begin
                 Text := ActiveRecords[i].Element._File.Name;
                 Style := vsOwnerDraw;
                 Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
-                MinWidth := 5;
-                MaxWidth := 3000;
+                MinWidth := Width div 2;
+                MaxWidth := Screen.DesktopWidth;
                 Options := Options - [coAllowclick, coShowDropMark];
                 Options := Options + [coAutoSpring, coDraggable];
                 if ActiveRecord.Equals(ActiveRecords[i].Element) then
@@ -14460,10 +14463,11 @@ begin
             if Length(ActiveRecords) > 1 then
               with Add do begin
                 Text := '';
-                Width := 1;
-                MinWidth := 1;
-                MaxWidth := 3000;
+                Width := 0;
+                MinWidth := 0;
+                MaxWidth := Screen.DesktopWidth;
                 Options := Options - [coAllowclick, coDraggable, coShowDropMark];
+                Options := Options + [coFiller];
               end;
           finally
             EndUpdate;
@@ -14487,6 +14491,7 @@ begin
             with Add do begin
               Text := '';
               Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
+              Options := Options + [coFiller];
             end;
           finally
             EndUpdate;
@@ -14884,6 +14889,8 @@ var
   ColWidth       : Integer;
   AvailableWidth : Integer;
   NewWidth       : Integer;
+  MinWidth       : Integer;
+  ClientWidth    : Integer;
 begin
   vstView.BeginUpdate(True);
   vstView.Header.Columns.BeginUpdate;
@@ -14900,21 +14907,44 @@ begin
       if Count > 2 then begin
 
         repeat
-          if mniViewColumnWidthFitText.Checked or mniViewColumnWidthFitSmart.Checked then
+          ClientWidth := vstView.ClientWidth;
+
+          if mniViewColumnWidthFitAll.Checked or mniViewColumnWidthFitSmart.Checked then begin
+            MinWidth := 0;
+            for i := 1 to (Count - 2) do
+              Inc(MinWidth, Columns[i].MinWidth);
+            AvailableWidth := ClientWidth - Columns[0].Width;
+            if MinWidth >= AvailableWidth then begin
+              for i := 1 to (Count - 2) do
+                Columns[i].Width := Columns[i].MinWidth;
+              Break;
+            end;
+          end;
+
+          if mniViewColumnWidthFitText.Checked or mniViewColumnWidthFitSmart.Checked then begin
             AutoFitColumns(False, smaAllColumns, 1);
+            if mniViewColumnWidthFitSmart.Checked then
+              for i := 1 to (Count - 2) do
+                Columns[i].Width := Max(Columns[i].MinWidth, Min(Columns[i].Width, ClientWidth));
+          end;
 
           ColWidth := 0;
+          MinWidth := 0;
           if mniViewColumnWidthFitSmart.Checked then begin
-            for i := 0 to (Count - 2) do
+            for i := 0 to (Count - 2) do begin
               Inc(ColWidth, Columns[i].Width);
-            if ColWidth > vstView.ClientWidth then begin
+              Inc(MinWidth, Columns[i].MinWidth);
+            end;
+            if MinWidth  > ClientWidth then
+              ClientWidth := MinWidth;
+            if ColWidth > ClientWidth then begin
               Dec(ColWidth, Columns[0].Width);
-              AvailableWidth := vstView.ClientWidth - Columns[0].Width;
+              AvailableWidth := ClientWidth - Columns[0].Width;
               if AvailableWidth > 0 then begin
                 NewWidth := 0;
                 for i := 1 to (Count - 3) do
                   with Columns[i] do begin
-                    Width := MulDiv(Width, AvailableWidth, ColWidth);
+                    Width := Max(MulDiv(Width, AvailableWidth, ColWidth), MinWidth);
                     Inc(NewWidth, Width);
                   end;
                 Columns[Count-2].Width := Pred(AvailableWidth - NewWidth);
@@ -14938,7 +14968,6 @@ begin
 
       end;
 
-
       if Count = 2 then begin
         if mniViewColumnWidthFitText.Checked or mniViewColumnWidthFitSmart.Checked then begin
           AutoFitColumns(False, smaAllColumns, 1);
@@ -14948,13 +14977,6 @@ begin
         end else
           with Columns[1] do
             Width := Pred(vstView.ClientWidth - Columns[0].Width);
-      end else if Count > 0 then begin
-        ColWidth := 0;
-        for i := 0 to (Count - 2) do
-          Inc(ColWidth, Columns[i].Width);
-        ColWidth := Min(ColWidth, vstView.ClientWidth);
-        with Columns, Items[Pred(Count)] do
-          Width := vstView.ClientWidth - ColWidth;
       end;
     end;
   finally
