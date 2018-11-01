@@ -90,23 +90,19 @@ begin
   aValue := '';
   for i := 1 to ParamCount do begin
     s := ParamStr(i);
-    if (aChars = []) or (s[1] in aChars) then
+    if (aChars = []) or (s[1] in aChars) then begin
+      Delete(s, 1, 1);
+      if s.StartsWith(aSwitch + ':', aIgnoreCase) then begin
+        aValue := Copy(s, Length(aSwitch) + 2, High(Integer));
+        Exit(True);
+      end;
       if aIgnoreCase then begin
-        if AnsiCompareText(Copy(s, 2, Length(aSwitch)), aSwitch) = 0 then begin
-          if (length(s)>(length(aSwitch)+2)) and (s[Length(aSwitch) + 2] = ':') then begin
-            aValue := Copy(s, Length(aSwitch) + 3, MaxInt);
-            Result := True;
-          end;
-          Exit;
-        end;
+        if SameText(s, aSwitch) then
+          Exit(True)
       end else
-        if AnsiCompareStr(Copy(s, 2, Length(aSwitch)), aSwitch) = 0 then begin
-          if s[Length(aSwitch) + 2] = ':' then begin
-            aValue := Copy(s, Length(aSwitch) + 3, MaxInt);
-            Result := True;
-          end;
-          Exit;
-        end;
+        if s = aSwitch then
+          Exit(True);
+    end;
   end;
 end;
 
