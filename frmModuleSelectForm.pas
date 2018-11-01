@@ -235,7 +235,7 @@ begin
       AllModules.ExcludeAll(SelectFlag);
       for i := Low(AllModules) to High(AllModules) do
         with AllModules[i]^ do
-          if mfActiveInPluginsTxt in miFlags then
+          if (mfActiveInPluginsTxt in miFlags) or (miOfficialIndex < High(Integer)) then
             Include(miFlags, SelectFlag);
       SimulateLoad;
     end;
