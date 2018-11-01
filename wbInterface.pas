@@ -3713,7 +3713,8 @@ var
   wbToolMode    : TwbToolMode;
   wbToolSource  : TwbToolSource;
   wbAppName     : string;
-  wbGameName    : string;
+  wbGameName    : string; //name of the exe, usually also name of the game master
+  wbGameMasterEsm : string; // name of the GameMaster.esm, usually wbGameName + csDotEsm, different for Fallout 76
   wbGameName2   : string; // game title name used for AppData and MyGames folders
   wbGameNameReg : string; // registry name
   wbToolName    : string;

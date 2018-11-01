@@ -746,6 +746,7 @@ begin
     wbAppName := 'FO76';
     wbGameName := 'Fallout76';
     wbGameName2 := 'Fallout 76';
+    wbGameMasterEsm := 'SeventySix.esm';
     wbLanguage := 'En';
     wbArchiveExtension := '.ba2';
     ToolModes := wbAlwaysMode + [tmTranslate];
@@ -785,6 +786,9 @@ begin
 
   if wbGameNameReg = '' then
     wbGameNameReg := wbGameName2;
+
+  if wbGameMasterEsm = '' then
+    wbGameMasterEsm := wbGameName + csDotEsm;
 
   if FindCmdLineSwitch('DontCache') then
     wbDontCache := True;
