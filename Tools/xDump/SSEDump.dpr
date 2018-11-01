@@ -752,7 +752,8 @@ const
     'SkyrimVR.exe',   // gmTES5VR
     'SkyrimSE.exe',   // gmSSE
     'Fallout4.exe',   // gmFO4
-    'Fallout4VR.exe'  // gmFO4VR
+    'Fallout4VR.exe', // gmFO4VR
+    'Fallout76.exe'  // gmFO76
   );
 
 var
@@ -1073,7 +1074,7 @@ begin
       wbReportMode := False;
 
     if not FindCmdLineSwitch('q') and not wbReportMode then begin
-      WriteLn(ErrOutput, wbAppName, wbToolName,' ', VersionString);
+      WriteLn(ErrOutput, wbAppName, wbToolName,' ', VersionString.ToString);
       WriteLn(ErrOutput);
 
       WriteLn(ErrOutput, 'This Program is subject to the Mozilla Public License');
