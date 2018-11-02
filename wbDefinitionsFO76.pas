@@ -16897,7 +16897,7 @@ end;
 
 procedure DefineFO76u;
 begin
-  wbRecord(AAPD, '* Animation Part Data', [
+  wbRecord(AAPD, '* Aim Assist Pose Data', [
     wbEDID,
     wbUnknown(AAAP),
     wbRStruct('Unknown', [
@@ -16915,7 +16915,7 @@ begin
     ], [])
   ]);
 
-  wbRecord(SECH, '* Sound Echo', [
+  wbRecord(SECH, '* Sound Echo Marker', [
     wbEDID,
     wbOBND,
     wbString(NNAM, 'Description'),
@@ -16945,17 +16945,17 @@ begin
     wbFormID(NAM4, 'Interval')
   ]);
 
-  wbRecord(CURV, '* CURV', [
+  wbRecord(CURV, '* Curve Table', [
     wbEDID,
     wbString(CRVE),
     wbString(JASF)
   ]);
 
-  wbRecord(MSCS, '* MSCS', [
+  wbRecord(MSCS, '* Misc Item Spawner', [
     wbEDID,
     wbOBND,
     wbUnknown(DATA),
-    wbRArray('Unkown', wbFormID(SPWN))
+    wbRArray('Spawns', wbFormID(SPWN, 'Spawn'))
   ]);
 
   wbRecord(CNCY, '* Currency', [
@@ -16966,7 +16966,7 @@ begin
     wbFULL,
     wbMODL,
     wbUnknown(ENLT),
-    wbUnknown(ENLS),
+    wbFloat(ENLS),
     wbUnknown(AUUV),
     wbYNAM,
     wbZNAM,
@@ -16977,7 +16977,7 @@ begin
     wbLString(SNAM)
   ]);
 
-  wbRecord(LVLP, '* LVLP', [
+  wbRecord(LVLP, '* Leveled Pack In', [
     wbEDID
   ]);
 
@@ -16988,7 +16988,7 @@ begin
     wbUnknown(DATA),
     wbMODL,
     wbUnknown(ENLT),
-    wbUnknown(ENLS),
+    wbFloat(ENLS),
     wbUnknown(AUUV),
     wbDESC,
     wbFormID(PPRL, 'Roll Chances'),
@@ -17009,24 +17009,24 @@ begin
     wbEDID,
     wbDESC,
     wbUnknown(DATA),
-    wbUnknown(PCDV),
-    wbUnknown(SNAM),
-    wbUnknown(MNAM),
-    wbRArray('Unknown',
-      wbRStruct('Unknown', [
-        wbUnknown(PRKE),
-        wbUnknown(DATA),
-        wbUnknown(MNAM),
-        wbUnknown(PRKF)
+    wbFormID(PCDV),
+    wbFormID(SNAM),
+    wbString(MNAM),
+    wbRArray('Perks',
+      wbRStruct('Perk', [
+        wbEmpty(PRKE, 'Start Marker'),
+        wbInteger(DATA, 'Level', itU8),
+        wbFormID(MNAM, Perk),
+        wbEmpty(PRKF, 'End Marker')
       ], [])
     )
   ]);
 
-  wbRecord(LVPC, '* LVPC', [
+  wbRecord(LVPC, '* Leveled Perk Card', [
     wbEDID
   ]);
 
-  wbRecord(STND, '* Snap Node', [
+  wbRecord(STND, '* Snap Template Node', [
     wbEDID,
     wbOBND,
     wbMODL,
@@ -17059,27 +17059,27 @@ begin
 
   wbRecord(GCVR, '* Ground Cover', [
     wbEDID,
-    wbRArray('Unknown', wbRStruct('Unknown', [
+    wbRArray('Grasses', wbRStruct('Grass', [
       wbFormID(GNAM),
       wbUnknown(DNAM)
     ], [])),
-    wbRArray('Unknown', wbFormID(LNAM)),
+    wbRArray('Landscape Textures', wbFormID(LNAM)),
     wbFloat(YNAM),
-    wbUnknown(ZNAM)
+    wbFloat(ZNAM)
   ]);
 
   wbRecord(EMOT, '* Emote', [
     wbEDID,
     wbOBND,
     wbFULL,
-    wbFormID(RENT),
+    wbFormID(RENT, 'Required Entitlement'),
     wbString(SNAM),
     wbUnknown(XFLG),
     wbFormID(CNAM, 'Category'),
     wbFormID(DNAM, 'Animation')
   ]);
 
-  wbRecord(STHD, '* Survival Threshold Data', [
+  wbRecord(STHD, '* Spell Threshold Data', [
     wbEDID,
     wbFormID(SPIT),
     wbFormID(SPLO),
@@ -17092,19 +17092,20 @@ begin
     ]))
   ]);
 
-  wbRecord(VOLI, '* Volumetric Light', [
+  wbRecord(VOLI, 'Volumetric Lighting', [
     wbEDID,
-    wbFloat(CNAM),
-    wbFloat(DNAM),
-    wbFloat(ENAM),
-    wbFloat(FNAM),
-    wbFloat(GNAM),
-    wbFloat(HNAM),
-    wbFloat(INAM),
-    wbFloat(JNAM),
-    wbFloat(KNAM),
-    wbFloat(MNAM),
-    wbFloat(NNAM)
+    wbFloat(CNAM, 'Intensity'),
+    wbFloat(DNAM, 'Custom Color - Contribution'),
+    wbFloat(ENAM, 'Red', cpNormal, False, 255, 0),
+    wbFloat(FNAM, 'Green', cpNormal, False, 255, 0),
+    wbFloat(GNAM, 'Blue', cpNormal, False, 255, 0),
+    wbFloat(HNAM, 'Density - Contribution'),
+    wbFloat(INAM, 'Density - Size'),
+    wbFloat(JNAM, 'Density - Wind Speed'),
+    wbFloat(KNAM, 'Density - Falling Speed'),
+    wbFloat(LNAM, 'Phase Function - Contribution'),
+    wbFloat(MNAM, 'Phase Function - Scattering'),
+    wbFloat(NNAM, 'Sampling Repartition - Range Factor') { max 1.0 }
   ]);
 
   wbRecord(ECAT, '* Emote Category', [
@@ -17114,14 +17115,11 @@ begin
     wbString(SNAM)
   ]);
 
-  wbRecord(WSPR, '* WSPR', [
+  wbRecord(WSPR, '* Workshop Permissions', [
     wbEDID,
     wbFULL,
     wbDESC,
-    wbStruct(DATA, 'Unknown', [
-      wbLString('Unknown'),
-      wbUnknown
-    ])
+    wbUnknown(DATA)
   ]);
 
   wbRecord(ENTM, '* Entitlement', [
@@ -17137,19 +17135,19 @@ begin
     wbRArray('Unknown', wbString(ECIL))
   ]);
 
-  wbRecord(COEN, '* Customer Service Entitlement Operation', [
+  wbRecord(COEN, '* Consumable Entitlement', [
     wbEDID,
     wbDESC
   ]);
 
-  wbRecord(CSEN, '* CSEN', [
+  wbRecord(CSEN, '* Crate Service Entitlement', [
     wbEDID,
     wbFULL,
     wbDESC,
     wbKeywords
   ]);
 
-  wbRecord(WAVE, '* Wave', [
+  wbRecord(WAVE, '* Wave Encounter', [
     wbEDID,
     wbKeywords,
     wbArray(WAVD, 'Unknown', wbStruct('Unknown', [
@@ -17160,7 +17158,7 @@ begin
     wbUnknown(DNAM)
   ]);
 
-  wbRecord(PMFT, '* Photo Mode Frame Type', [
+  wbRecord(PMFT, '* Photo Mode Feature', [
     wbEDID,
     wbUnknown(XALG),
     wbFULL,
@@ -17196,8 +17194,8 @@ begin
   wbRecord(AVTR, '* Avatar', [
     wbEDID,
     wbFULL,
-    wbString(SWFI),
-    wbFormID(RENT)
+    wbString(SWFI, 'Icon'),
+    wbFormID(RENT, 'Required Entitlement')
   ]);
 
   wbRecord(CNDF, '* Condition Form', [
