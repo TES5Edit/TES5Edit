@@ -13617,10 +13617,10 @@ begin
           wbFormIDCk('Ref', [REFR], False, cpIgnore),
           wbInteger('Y', itS16, nil, cpIgnore),
           wbInteger('X', itS16, nil, cpIgnore)
-        ]), -1)
+        ]), -1).IncludeFlag(dfNotAlignable)
       ]),
       cpIgnore, False, nil, nil, wbNeverShow
-    ),
+    ).IncludeFlag(dfNotAlignable),
     wbMaxHeightDataWRLD,
     wbFULL,
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
