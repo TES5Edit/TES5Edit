@@ -34,12 +34,14 @@ uses
   wbImplementation,
   wbLocalization,
   wbHelpers,
+  wbLoadOrder,
   wbDefinitionsFNV,
   wbDefinitionsFNVSaves,
   wbDefinitionsFO3,
   wbDefinitionsFO3Saves,
   wbDefinitionsFO4,
   wbDefinitionsFO4Saves,
+  wbDefinitionsFO76,
   wbDefinitionsTES3,
   wbDefinitionsTES4,
   wbDefinitionsTES4Saves,
@@ -1053,6 +1055,27 @@ begin
         tsSaves:   DefineTES5Saves;
         tsPlugins: DefineTES5;
       end;
+    end else if isMode('FO76') then begin
+      wbGameMode := gmFO76;
+      wbAppName := 'FO76';
+      wbGameName := 'Fallout76';
+      wbGameName2 := 'Fallout 76';
+      wbGameMasterEsm := 'SeventySix.esm';
+      wbLanguage := 'En';
+      wbArchiveExtension := '.ba2';
+      wbLoadBSAs := False;
+      wbCreateContainedIn := False;
+      if not (wbToolMode in [tmDump, tmExport]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbToolName);
+        Exit;
+      end;
+      if not (wbToolSource in [tsPlugins]) then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently supports '+wbSourceName);
+        Exit;
+      end;
+      case wbToolSource of
+        tsPlugins: DefineFO76;
+      end;
     end else begin
       WriteLn(ErrOutput, 'Application name must contain FNV, FO3, FO4, FO4vr, SSE, TES4, TES5 or TES5vr to select game.');
       Exit;
@@ -1063,6 +1086,9 @@ begin
 
     if wbGameNameReg = '' then
       wbGameNameReg := wbGameName2;
+
+    if wbGameMasterEsm = '' then
+      wbGameMasterEsm := wbGameName + csDotEsm;
 
     DoInitPath;
     if (wbToolMode in [tmDump]) and (wbDataPath = '') then // Dump can be run in any directory configuration
@@ -1242,7 +1268,7 @@ begin
       WriteLn(ErrOutput, wbAppName + 'Export -Saves will dump the save file definition in the specified format.');
       WriteLn(ErrOutput);
       WriteLn(ErrOutput, 'You can use the normal redirect mechanism to send the output to a file.');
-      WriteLn(ErrOutput, 'e.g. "'+wbAppName+'Dump '+wbGameName+'.esm > '+wbGameName+'.txt"');
+      WriteLn(ErrOutput, 'e.g. "'+wbAppName+'Dump '+wbGameMasterEsm+' > '+wbGameName+'.txt"');
       WriteLn(ErrOutput);
       WriteLn(ErrOutput, 'Currently supported options:');
       WriteLn(ErrOutput, '-? / -help   ', 'This help screen');
@@ -1301,6 +1327,8 @@ begin
 
     if not Assigned(wbContainerHandler) then
       wbContainerHandler := wbCreateContainerHandler;
+
+    wbLoadModules;
 
     StartTime := Now;
     ReportProgress('['+s+'] Application name : '+wbAppName+' - '+wbGamename+
