@@ -360,6 +360,57 @@ begin
     Result := '';
 end;
 
+function wbLoadImageFromMemory(Data: Pointer; aSize: LongInt; var Image: TImageData): Boolean;
+type
+  TMagic = array [0..3] of AnsiChar;
+  PMagic = ^TMagic;
+const
+  sDDSMagic: TMagic = 'DDS ';
+var
+  s, c: string;
+  b: TBytes;
+  ErrCode: cardinal;
+begin
+  // native function
+  Result := LoadImageFromMemory(Data, aSize, Image);
+
+  // image loaded without problem?
+  if Result then
+    Exit;
+
+  // try to convert unknown format DDS texture to the known one and load again
+  if not ( (aSize > Length(sDDSMagic)) and (PMagic(Data)^ = sDDSMagic) ) then
+    Exit;
+
+  // temp file - better to use TPath.GetGUIDFileName if multithreaded
+  s := wbTempPath + TPath.GetGUIDFileName + '.dds';
+
+  // check temp path
+  if not ForceDirectories(wbTempPath) then
+    Exit;
+
+  // write image to temp file
+  with TFileStream.Create(s, fmCreate) do try
+    WriteBuffer(Data^, aSize);
+  finally
+    Free;
+  end;
+
+  // command line
+  c := '"' + wbScriptsPath + sTexconv + '" -nologo -y -f R32G32B32A32_FLOAT -o "' + ExcludeTrailingPathDelimiter(wbTempPath) + '" "' + s + '"';
+  // execute command
+  ErrCode := ExecuteCaptureConsoleOutput(c);
+
+  // load the converted image from temp file if no error reported
+  if (ErrCode = 0) and FileExists(s) then begin
+    b := TFile.ReadAllBytes(s);
+    Result := wbLoadImageFromMemory(@b[0], Length(b), Image);
+  end;
+
+  // remove temp file
+  if FileExists(s) then
+    DeleteFile(s);
+end;
 
 { TwbLodSettings }
 
@@ -515,7 +566,7 @@ end;
 function TwbLodTES5Tree.LoadFromData(aData: TBytes): Boolean;
 begin
   InitImage(Image);
-  Result := LoadImageFromMemory(@aData[0], Length(aData), Image);
+  Result := wbLoadImageFromMemory(@aData[0], Length(aData), Image);
 end;
 
 
@@ -1181,58 +1232,6 @@ begin
     nif.Free;
     bgsm.Free;
   end;
-end;
-
-function wbLoadImageFromMemory(Data: Pointer; aSize: LongInt; var Image: TImageData): Boolean;
-type
-  TMagic = array [0..3] of AnsiChar;
-  PMagic = ^TMagic;
-const
-  sDDSMagic: TMagic = 'DDS ';
-var
-  s, c: string;
-  b: TBytes;
-  ErrCode: cardinal;
-begin
-  // native function
-  Result := LoadImageFromMemory(Data, aSize, Image);
-
-  // image loaded without problem?
-  if Result then
-    Exit;
-
-  // try to convert unknown format DDS texture to the known one and load again
-  if not ( (aSize > Length(sDDSMagic)) and (PMagic(Data)^ = sDDSMagic) ) then
-    Exit;
-
-  // temp file - better to use TPath.GetGUIDFileName if multithreaded
-  s := wbTempPath + TPath.GetGUIDFileName + '.dds';
-
-  // check temp path
-  if not ForceDirectories(wbTempPath) then
-    Exit;
-
-  // write image to temp file
-  with TFileStream.Create(s, fmCreate) do try
-    WriteBuffer(Data^, aSize);
-  finally
-    Free;
-  end;
-
-  // command line
-  c := '"' + wbScriptsPath + sTexconv + '" -nologo -y -f R32G32B32A32_FLOAT -o "' + ExcludeTrailingPathDelimiter(wbTempPath) + '" "' + s + '"';
-  // execute command
-  ErrCode := ExecuteCaptureConsoleOutput(c);
-
-  // load the converted image from temp file if no error reported
-  if (ErrCode = 0) and FileExists(s) then begin
-    b := TFile.ReadAllBytes(s);
-    Result := wbLoadImageFromMemory(@b[0], Length(b), Image);
-  end;
-
-  // remove temp file
-  if FileExists(s) then
-    DeleteFile(s);
 end;
 
 procedure wbBuildAtlas(
@@ -3586,7 +3585,7 @@ begin
       // creating lod textures atlas part 1 - set file paths to be used in export file
       if bBuildAtlas then begin
         // atlas file name
-        AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds';
+        AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'Objects.dds';
         // atlas map name
         AtlasMapName := wbScriptsPath + 'LODGenAtlasMap.txt';
         // make sure atlas folder exists
