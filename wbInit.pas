@@ -415,7 +415,11 @@ begin
       ShowMessage('Fatal: Could not determine my documents folder');
       Exit;
     end;
-    wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameName2 + '\';
+    
+    if wbGameMode in [gmFO76] then
+      wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameNameReg + '\'
+    else
+      wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameName2 + '\';
 
     if wbGameMode in [gmFO3, gmFNV] then
       wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
