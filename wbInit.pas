@@ -745,7 +745,7 @@ begin
     wbGameMode := gmFO76;
     wbAppName := 'FO76';
     wbGameName := 'Fallout76';
-    wbGameName2 := 'Fallout 76';
+    wbGameNameReg := 'Fallout 76';
     wbGameMasterEsm := 'SeventySix.esm';
     wbLanguage := 'En';
     wbArchiveExtension := '.ba2';
