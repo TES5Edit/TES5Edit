@@ -283,6 +283,7 @@ const
   CRIF : TwbSignature = 'CRIF'; { New to Skyrim }
   CRIS : TwbSignature = 'CRIS'; { New to Fallout 4 }
   CRVA : TwbSignature = 'CRVA'; { New to Skyrim }
+  CRVE : TwbSignature = 'CRVE'; { New To Fallout 76 }
   CS2D : TwbSignature = 'CS2D'; { New To Fallout 4 }
   CS2E : TwbSignature = 'CS2E'; { New To Fallout 4 }
   CS2F : TwbSignature = 'CS2F'; { New To Fallout 4 }
@@ -343,6 +344,10 @@ const
   DURL : TwbSignature = 'DURL'; { New To Fallout 76 }
   EAMT : TwbSignature = 'EAMT';
   ECAT : TwbSignature = 'ECAT'; { New To Fallout 76 }
+  ECHD : TwbSignature = 'ECHD'; { New To Fallout 76 }
+  ECHE : TwbSignature = 'ECHE'; { New To Fallout 76 }
+  ECHO : TwbSignature = 'ECHO'; { New To Fallout 76 }
+  ECIL : TwbSignature = 'ECIL'; { New To Fallout 76 }
   ECOR : TwbSignature = 'ECOR'; { New to Skyrim }
   ECZN : TwbSignature = 'ECZN';
   EDID : TwbSignature = 'EDID';
@@ -354,6 +359,7 @@ const
   ENAM : TwbSignature = 'ENAM';
   ENCH : TwbSignature = 'ENCH';
   ENIT : TwbSignature = 'ENIT';
+  ENLM : TwbSignature = 'ENLM'; { New To Fallout 76 }
   ENLS : TwbSignature = 'ENLS'; { New To Fallout 76 }
   ENLT : TwbSignature = 'ENLT'; { New To Fallout 76 }
   ENTM : TwbSignature = 'ENTM'; { New To Fallout 76 }
@@ -364,6 +370,9 @@ const
   EPFT : TwbSignature = 'EPFT';
   EQUP : TwbSignature = 'EQUP';
   ESCE : TwbSignature = 'ESCE';
+  ETDI : TwbSignature = 'ETDI'; { New To Fallout 76 }
+  ETIP : TwbSignature = 'ETIP'; { New To Fallout 76 }
+  ETRG : TwbSignature = 'ETRG'; { New To Fallout 76 }
   ETYP : TwbSignature = 'ETYP';
   EXPL : TwbSignature = 'EXPL';
   EYES : TwbSignature = 'EYES';
@@ -605,9 +614,11 @@ const
   OVIS : TwbSignature = 'OVIS'; { New to Fallout 4 }
   PACH : TwbSignature = 'PACH'; { New To Fallout 76 }
   PACK : TwbSignature = 'PACK';
+  PAEQ : TwbSignature = 'PAEQ'; { New To Fallout 76 }
   PARW : TwbSignature = 'PARW'; { New to Skyrim }
   PBAR : TwbSignature = 'PBAR'; { New to Skyrim }
   PBEA : TwbSignature = 'PBEA'; { New to Skyrim }
+  PCDV : TwbSignature = 'PCDV'; { New To Fallout 76 }
   PCEN : TwbSignature = 'PCEN'; { New To Fallout 76 }
   PCMB : TwbSignature = 'PCMB'; { New to Fallout 4 }
   PCON : TwbSignature = 'PCON'; { New to Skyrim }
@@ -640,6 +651,10 @@ const
   POCA : TwbSignature = 'POCA';
   POEA : TwbSignature = 'POEA';
   PPAK : TwbSignature = 'PPAK'; { New To Fallout 76 }
+  PPCL : TwbSignature = 'PPCL'; { New To Fallout 76 }
+  PPFC : TwbSignature = 'PPFC'; { New To Fallout 76 }
+  PPLO : TwbSignature = 'PPLO'; { New To Fallout 76 }
+  PPRL : TwbSignature = 'PPRL'; { New To Fallout 76 }
   PRCB : TwbSignature = 'PRCB'; { New to Skyrim }
   PRKC : TwbSignature = 'PRKC';
   PRKE : TwbSignature = 'PRKE';
@@ -726,6 +741,7 @@ const
   SNDD : TwbSignature = 'SNDD';
   SNDR : TwbSignature = 'SNDR';
   SNMV : TwbSignature = 'SNMV'; { New to Skyrim }
+  SNST : TwbSignature = 'SNST'; { New To Fallout 76 }
   SOFT : TwbSignature = 'SOFT'; { New to Skyrim }
   SOPM : TwbSignature = 'SOPM';
   SOUL : TwbSignature = 'SOUL';
@@ -738,6 +754,7 @@ const
   SPLO : TwbSignature = 'SPLO';
   SPMV : TwbSignature = 'SPMV'; { New To Skyrim }
   SPOR : TwbSignature = 'SPOR'; { New to Skyrim }
+  SPWN : TwbSignature = 'SPWN'; { New To Fallout 76 }
   SRAC : TwbSignature = 'SRAC'; { New to Fallout 4 }
   SRAF : TwbSignature = 'SRAF'; { New to Fallout 4 }
   SSPN : TwbSignature = 'SSPN'; { New to Fallout 4 }
@@ -750,6 +767,7 @@ const
   STND : TwbSignature = 'STND'; { New To Fallout 76 }
   STOL : TwbSignature = 'STOL'; { New to Skyrim }
   STOP : TwbSignature = 'STOP'; { New to Fallout 4 }
+  STPT : TwbSignature = 'STPT'; { New To Fallout 76 }
   STSC : TwbSignature = 'STSC'; { New to Fallout 4 }
   SWFI : TwbSignature = 'SWFI'; { New To Fallout 76 }
   SWMV : TwbSignature = 'SWMV'; { New to Skyrim }
@@ -820,6 +838,7 @@ const
   WAIT : TwbSignature = 'WAIT'; { New To Skyrim }
   WAMD : TwbSignature = 'WAMD'; { New To Fallout 4 }
   WATR : TwbSignature = 'WATR';
+  WAVD : TwbSignature = 'WAVD'; { New To Fallout 76 }
   WAVE : TwbSignature = 'WAVE'; { New To Fallout 76 }
   WBDT : TwbSignature = 'WBDT'; { New to Skyrim }
   WCTR : TwbSignature = 'WCTR'; { New To Skyrim }
@@ -837,6 +856,7 @@ const
   WTMX : TwbSignature = 'WTMX'; { New To Fallout 76 }
   WZMD : TwbSignature = 'WZMD'; { New To Fallout 4 }
   XACT : TwbSignature = 'XACT';
+  XALG : TwbSignature = 'XALG'; { New To Fallout 76 }
   XALP : TwbSignature = 'XALP'; { New To Skyrim }
   XAMC : TwbSignature = 'XAMC'; { New To Fallout 4 }
   XAPD : TwbSignature = 'XAPD';
@@ -867,6 +887,7 @@ const
   XEMI : TwbSignature = 'XEMI';
   XESP : TwbSignature = 'XESP';
   XEZN : TwbSignature = 'XEZN';
+  XFLG : TwbSignature = 'XFLG'; { New To Fallout 76 }
   XFVC : TwbSignature = 'XFVC'; { New To Skyrim }
   XGDR : TwbSignature = 'XGDR'; { New To Fallout 4 }
   XGLB : TwbSignature = 'XGLB';
@@ -934,13 +955,15 @@ const
   ZNAM : TwbSignature = 'ZNAM';
   ZOOM : TwbSignature = 'ZOOM'; { New To Fallout 4 }
 
+  QSRD : TwbSignature = 'QSRD'; { New To Fallout 76 }
+  SCFL : TwbSignature = 'SCFL'; { New To Fallout 76 }
+  BEVA : TwbSignature = 'BEVA'; { New To Fallout 76 }
 
   // signatures of reference records
   sigReferences : TwbSignatures = [
     'NULL', 'PLYR', 'ACHR', 'REFR', 'PGRE', 'PHZD',
     'PMIS', 'PARW', 'PBAR', 'PBEA', 'PCON', 'PFLA'
-  ]
-  ;
+  ];
 
   // signatures of referenceable records (placed by references or constructable)
   sigBaseObjects : TwbSignatures = [
@@ -16874,41 +16897,68 @@ end;
 
 procedure DefineFO76u;
 begin
-  wbRecord(AAPD, 'Animation Part Data', [
+  wbRecord(AAPD, '* Animation Part Data', [
     wbEDID,
     wbUnknown(AAAP),
     wbRStruct('Unknown', [
       wbString(ANAM, 'Part'),
       wbString(BNAM, 'Part'),
-      wbUnknown(RADR),
-      wbUnknown(WTMX)
+      wbFloat(RADR),
+      wbFloat(WTMX)
     ], []),
     wbInteger(AAPS, 'Count', itU64),
     wbRStructS('Connections', 'Connection', [
       wbString(ANAM, 'Part'),
       wbString(BNAM, 'Part'),
-      wbUnknown(RADR),
-      wbUnknown(WTMX)
+      wbFloat(RADR),
+      wbFloat(WTMX)
     ], [])
   ]);
 
-  wbRecord(SECH, '', [
-    wbEDID
+  wbRecord(SECH, '* Sound Echo', [
+    wbEDID,
+    wbOBND,
+    wbString(NNAM, 'Description'),
+    wbRArray('Echos',
+      wbRStruct('Echo', [
+        wbRUnion('Echo Marker', [
+          wbEmpty(ECHO, 'Echo Start Marker'),
+          wbEmpty(ECHD, 'Echo Default Start Marker')
+        ], []),
+        wbFormID(ETRG, 'Trigger'),
+        wbFormID(SDSC, 'Sound'),
+        wbUnknown(ANAM),
+        wbUnknown(BNAM),
+        wbUnknown(CNAM),
+        wbUnknown(DNAM),
+        wbUnknown(ENAM),
+        wbString(NNAM, 'Description'),
+        wbEmpty(ECHE, 'Echo End Marker')
+      ], [])
+    )
   ]);
 
-  wbRecord(RESO, '', [
-    wbEDID
+  wbRecord(RESO, '* Resource', [
+    wbEDID,
+    wbFormID(NAM1, 'Actor Value'),
+    wbFormID(NAM2, 'Produce'),
+    wbFormID(NAM4, 'Interval')
   ]);
 
-  wbRecord(CURV, '', [
-    wbEDID
+  wbRecord(CURV, '* CURV', [
+    wbEDID,
+    wbString(CRVE),
+    wbString(JASF)
   ]);
 
-  wbRecord(MSCS, '', [
-    wbEDID
+  wbRecord(MSCS, '* MSCS', [
+    wbEDID,
+    wbOBND,
+    wbUnknown(DATA),
+    wbRArray('Unkown', wbFormID(SPWN))
   ]);
 
-  wbRecord(CNCY, 'Currency', [
+  wbRecord(CNCY, '* Currency', [
     wbEDID,
     wbString(DURL),
     wbOBND,
@@ -16927,98 +16977,230 @@ begin
     wbLString(SNAM)
   ]);
 
-  wbRecord(LVLP, '', [
+  wbRecord(LVLP, '* LVLP', [
     wbEDID
   ]);
 
-  wbRecord(PPAK, '', [
+  wbRecord(PPAK, '* Perk Card Pack', [
+    wbEDID,
+    wbOBND,
+    wbPTRN,
+    wbUnknown(DATA),
+    wbMODL,
+    wbUnknown(ENLT),
+    wbUnknown(ENLS),
+    wbUnknown(AUUV),
+    wbDESC,
+    wbFormID(PPRL, 'Roll Chances'),
+    wbFormID(PPFC, 'Gold Roll Chances'),
+    wbFormID(PPCL, 'Rarity Tables'),
+    wbFormID(PPLO, 'Level Offsets')
+  ]);
+
+  wbRecord(PACH, '* Power Armor Chassis', [
+    wbEDID,
+    wbOBND,
+    wbUnknown(DATA),
+    wbFULL,
+    wbFormID(PAEQ)
+  ]);
+
+  wbRecord(PCRD, 'Perk Card', [
+    wbEDID,
+    wbDESC,
+    wbUnknown(DATA),
+    wbUnknown(PCDV),
+    wbUnknown(SNAM),
+    wbUnknown(MNAM),
+    wbRArray('Unknown',
+      wbRStruct('Unknown', [
+        wbUnknown(PRKE),
+        wbUnknown(DATA),
+        wbUnknown(MNAM),
+        wbUnknown(PRKF)
+      ], [])
+    )
+  ]);
+
+  wbRecord(LVPC, '* LVPC', [
     wbEDID
   ]);
 
-  wbRecord(PACH, '', [
-    wbEDID
+  wbRecord(STND, '* Snap Node', [
+    wbEDID,
+    wbOBND,
+    wbMODL,
+    wbUnknown(ENLM),
+    wbUnknown(ENLT),
+    wbFloat(ENLS),
+    wbUnknown(AUUV),
+    wbUnknown(CNAM),
+    wbUnknown(FNAM),
+    wbUnknown(SNST),
+    wbRArray('Unknown', wbFormID(NNAM)),
+    wbRArray('Unknown', wbFloat(FLTV))
   ]);
 
-  wbRecord(PCRD, '', [
-    wbEDID
+  wbRecord(STMP, '* Snap Template', [
+    wbEDID,
+    wbPTRN,
+    wbFormID(PNAM),
+    wbRArray('Nodes', wbStruct(ENAM, 'Node', [
+      wbByteArray('Unknown', 4), //not FormID, LString, or Float
+      wbFormID('Node'),
+      wbArray('Unknown', wbFloat('Unknown'))
+    ])),
+    wbRArray('Unknown', wbUnknown(ONAM)),
+    wbArray(BNAM, 'Unknown', wbFloat('Unknown'), 6),
+    wbUnknown(GNAM),
+    wbUnknown(INAM),
+    wbUnknown(STPT)
   ]);
 
-  wbRecord(LVPC, '', [
-    wbEDID
+  wbRecord(GCVR, '* Ground Cover', [
+    wbEDID,
+    wbRArray('Unknown', wbRStruct('Unknown', [
+      wbFormID(GNAM),
+      wbUnknown(DNAM)
+    ], [])),
+    wbRArray('Unknown', wbFormID(LNAM)),
+    wbFloat(YNAM),
+    wbUnknown(ZNAM)
   ]);
 
-  wbRecord(STND, '', [
-    wbEDID
+  wbRecord(EMOT, '* Emote', [
+    wbEDID,
+    wbOBND,
+    wbFULL,
+    wbFormID(RENT),
+    wbString(SNAM),
+    wbUnknown(XFLG),
+    wbFormID(CNAM, 'Category'),
+    wbFormID(DNAM, 'Animation')
   ]);
 
-  wbRecord(STMP, '', [
-    wbEDID
+  wbRecord(STHD, '* Survival Threshold Data', [
+    wbEDID,
+    wbFormID(SPIT),
+    wbFormID(SPLO),
+    wbArray(NAM0, 'Stages', wbStruct('Stage', [
+      //wbByteArray('Unknown', 4),
+      wbFloat('Unknown'),
+      wbFormID('Message'),
+      wbByteArray('Unknown', 4),
+      wbFormID('Global')
+    ]))
   ]);
 
-  wbRecord(GCVR, '', [
-    wbEDID
+  wbRecord(VOLI, '* Volumetric Light', [
+    wbEDID,
+    wbFloat(CNAM),
+    wbFloat(DNAM),
+    wbFloat(ENAM),
+    wbFloat(FNAM),
+    wbFloat(GNAM),
+    wbFloat(HNAM),
+    wbFloat(INAM),
+    wbFloat(JNAM),
+    wbFloat(KNAM),
+    wbFloat(MNAM),
+    wbFloat(NNAM)
   ]);
 
-  wbRecord(EMOT, '', [
-    wbEDID
+  wbRecord(ECAT, '* Emote Category', [
+    wbEDID,
+    wbFULL,
+    wbKeywords,
+    wbString(SNAM)
   ]);
 
-  wbRecord(STHD, '', [
-    wbEDID
+  wbRecord(WSPR, '* WSPR', [
+    wbEDID,
+    wbFULL,
+    wbDESC,
+    wbStruct(DATA, 'Unknown', [
+      wbLString('Unknown'),
+      wbUnknown
+    ])
   ]);
 
-  wbRecord(VOLI, '', [
-    wbEDID
+  wbRecord(ENTM, '* Entitlement', [
+    wbEDID,
+    wbFULL,
+    wbDESC,
+    wbKeywords,
+    wbString(SWFI),
+    wbLString(NNAM),
+    wbUnknown(BEVA),
+    wbString(ETIP),
+    wbString(ETDI),
+    wbRArray('Unknown', wbString(ECIL))
   ]);
 
-  wbRecord(ECAT, '', [
-    wbEDID
+  wbRecord(COEN, '* Customer Service Entitlement Operation', [
+    wbEDID,
+    wbDESC
   ]);
 
-  wbRecord(WSPR, '', [
-    wbEDID
+  wbRecord(CSEN, '* CSEN', [
+    wbEDID,
+    wbFULL,
+    wbDESC,
+    wbKeywords
   ]);
 
-  wbRecord(ENTM, '', [
-    wbEDID
+  wbRecord(WAVE, '* Wave', [
+    wbEDID,
+    wbKeywords,
+    wbArray(WAVD, 'Unknown', wbStruct('Unknown', [
+      wbByteArray('Unknown', 4),
+      wbFormID('Unknown'),
+      wbByteArray('Unknown', 4)
+    ])),
+    wbUnknown(DNAM)
   ]);
 
-  wbRecord(COEN, '', [
-    wbEDID
+  wbRecord(PMFT, '* Photo Mode Frame Type', [
+    wbEDID,
+    wbUnknown(XALG),
+    wbFULL,
+    wbICON,
+    wbCTDAs,
+    wbUnknown(FNAM),
+    wbUnknown(INAM),
+    wbFormID(KNAM)
   ]);
 
-  wbRecord(CSEN, '', [
-    wbEDID
-  ]);
-
-  wbRecord(WAVE, '', [
-    wbEDID
-  ]);
-
-  wbRecord(PMFT, '', [
-    wbEDID
-  ]);
-
-  wbRecord(CHAL, 'Challenge', [
+  wbRecord(CHAL, '* Challenge', [
     wbEDID,
     wbFULL,
     wbString(SNAM),
+    wbUnknown(NNAM),
     wbUnknown(FNAM),
     wbFormID(HNAM),
     wbUnknown(CNAM),
     wbUnknown(ENAM),
+    wbRArray('Unknown', wbFormID(ANAM)),
     wbCTDAs,
-    wbString(JASF)
+    wbUnknown(NAM7),
+    wbUnknown(NAM8),
+    wbUnknown(NAM9),
+    wbStruct(QSRD, 'Unknown', [
+      wbFormID('Unknown'),
+      wbUnknown
+    ]),
+    wbString(JASF),
+    wbFormID(SCFL)
   ]);
 
-  wbRecord(AVTR, 'Avatar', [
+  wbRecord(AVTR, '* Avatar', [
     wbEDID,
     wbFULL,
     wbString(SWFI),
     wbFormID(RENT)
   ]);
 
-  wbRecord(CNDF, 'Condition Form', [
+  wbRecord(CNDF, '* Condition Form', [
     wbEDID,
     wbCTDAs
   ]);
