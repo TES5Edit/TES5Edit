@@ -9832,103 +9832,114 @@ end;
 
 procedure TwbMainRecord.PrepareSave;
 var
-  _File       : IwbFile;
-  GroupRecord : IwbGroupRecord;
   KAR: IwbKeepAliveRoot;
-begin
-  KAR := wbCreateKeepAliveRoot;
 
-  if GetSignature = wbHeaderSignature then begin
-    if not Supports(GetContainer, IwbFile, _File) then
-      raise Exception.Create('File Header record '+GetName+' must be contained directly in the file.');
-    if not GetFormID.IsNull then
-      raise Exception.Create('File Header record '+GetName+' can not have a FormID.');
-  end else begin
-    if GetFormID.IsNull then
-      raise Exception.Create('Record '+GetName+' must have a FormID.');
-    if not Supports(GetContainer, IwbGroupRecord, GroupRecord) then
-      raise Exception.Create('Record '+GetName+' is not contained in a group.');
-    case GroupRecord.GroupType of
-      0: begin {top level}
-        if TwbSignature(GroupRecord.GroupLabel) <> GetSignature then
-          raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
-      end;
-      1: begin {World Children}
-        if (GetSignature <> 'CELL') and (GetSignature <> 'ROAD') then
-          raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
-      end;
-      2, 4, 6: begin {interior and exterior block and cell children}
-        raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
-      end;
-      3, 5: begin {interior and exterior sub-block}
-        if (GetSignature <> 'CELL') then
-          raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
-      end;
-      7: begin {topic children}
-        if (GetSignature <> 'INFO') then
-          raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
-      end;
-      8, 10: begin {Persistent and Visible when Distant/Quest Children}
-        if (GetSignature <> 'REFR') and
-           (GetSignature <> 'ACHR') and
-           (GetSignature <> 'ACRE') and
-           (GetSignature <> 'PGRE') and
-           (GetSignature <> 'PMIS') and
-           (GetSignature <> 'PARW') and {>>> Skyrim <<<}
-           (GetSignature <> 'PBEA') and {>>> Skyrim <<<}
-           (GetSignature <> 'PFLA') and {>>> Skyrim <<<}
-           (GetSignature <> 'PCON') and {>>> Skyrim <<<}
-           (GetSignature <> 'PBAR') and {>>> Skyrim <<<}
-           (GetSignature <> 'PHZD')     {>>> Skyrim <<<}
-        then
-          if not (wbVWDAsQuestChildren and ((GetSignature = 'DLBR') or (GetSignature = 'DIAL') or (GetSignature = 'SCEN'))) then
+  procedure Inner;
+  var
+    _File       : IwbFile;
+    GroupRecord : IwbGroupRecord;
+  begin
+    KAR := wbCreateKeepAliveRoot;
+
+    if GetSignature = wbHeaderSignature then begin
+      if not Supports(GetContainer, IwbFile, _File) then
+        raise Exception.Create('File Header record '+GetName+' must be contained directly in the file.');
+      if not GetFormID.IsNull then
+        raise Exception.Create('File Header record '+GetName+' can not have a FormID.');
+    end else begin
+      if GetFormID.IsNull then
+        raise Exception.Create('Record '+GetName+' must have a FormID.');
+      if not Supports(GetContainer, IwbGroupRecord, GroupRecord) then
+        raise Exception.Create('Record '+GetName+' is not contained in a group.');
+      case GroupRecord.GroupType of
+        0: begin {top level}
+          if TwbSignature(GroupRecord.GroupLabel) <> GetSignature then
             raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
+        end;
+        1: begin {World Children}
+          if (GetSignature <> 'CELL') and (GetSignature <> 'ROAD') then
+            raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
+        end;
+        2, 4, 6: begin {interior and exterior block and cell children}
+          raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
+        end;
+        3, 5: begin {interior and exterior sub-block}
+          if (GetSignature <> 'CELL') then
+            raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
+        end;
+        7: begin {topic children}
+          if (GetSignature <> 'INFO') then
+            raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
+        end;
+        8, 10: begin {Persistent and Visible when Distant/Quest Children}
+          if (GetSignature <> 'REFR') and
+             (GetSignature <> 'ACHR') and
+             (GetSignature <> 'ACRE') and
+             (GetSignature <> 'PGRE') and
+             (GetSignature <> 'PMIS') and
+             (GetSignature <> 'PARW') and {>>> Skyrim <<<}
+             (GetSignature <> 'PBEA') and {>>> Skyrim <<<}
+             (GetSignature <> 'PFLA') and {>>> Skyrim <<<}
+             (GetSignature <> 'PCON') and {>>> Skyrim <<<}
+             (GetSignature <> 'PBAR') and {>>> Skyrim <<<}
+             (GetSignature <> 'PHZD')     {>>> Skyrim <<<}
+          then
+            if not (wbVWDAsQuestChildren and ((GetSignature = 'DLBR') or (GetSignature = 'DIAL') or (GetSignature = 'SCEN'))) then
+              raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
 
-        case GroupRecord.GroupType of
-          8:begin
-            if not mrStruct.mrsFlags.IsPersistent then
-              raise Exception.Create('Record ' + GetName + ' needs to have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
-          end;
-          10: if not wbVWDAsQuestChildren then begin
-            if not mrStruct.mrsFlags.IsVisibleWhenDistant then
-              raise Exception.Create('Record ' + GetName + ' needs to have it''s Visible when Distant flag set to be contained in ' + GroupRecord.Name);
-            if mrStruct.mrsFlags.IsPersistent then
-              raise Exception.Create('Record ' + GetName + ' can not have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
+          case GroupRecord.GroupType of
+            8:begin
+              if not mrStruct.mrsFlags.IsPersistent then
+                raise Exception.Create('Record ' + GetName + ' needs to have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
+            end;
+            10: if not wbVWDAsQuestChildren then begin
+              if not mrStruct.mrsFlags.IsVisibleWhenDistant then
+                raise Exception.Create('Record ' + GetName + ' needs to have it''s Visible when Distant flag set to be contained in ' + GroupRecord.Name);
+              if mrStruct.mrsFlags.IsPersistent then
+                raise Exception.Create('Record ' + GetName + ' can not have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
+            end;
           end;
         end;
-      end;
-      9: begin {Temporary}
-        if (GetSignature <> 'REFR') and
-           (GetSignature <> 'ACHR') and
-           (GetSignature <> 'ACRE') and
-           (GetSignature <> 'LAND') and
-           (GetSignature <> 'PGRD') and
-           (GetSignature <> 'NAVM') and
-           (GetSignature <> 'PGRE') and
-           (GetSignature <> 'PMIS') and
-           (GetSignature <> 'PARW') and {>>> Skyrim <<<}
-           (GetSignature <> 'PBEA') and {>>> Skyrim <<<}
-           (GetSignature <> 'PFLA') and {>>> Skyrim <<<}
-           (GetSignature <> 'PCON') and {>>> Skyrim <<<}
-           (GetSignature <> 'PBAR') and {>>> Skyrim <<<}
-           (GetSignature <> 'PHZD')     {>>> Skyrim <<<}
-        then
-          raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
-        if mrStruct.mrsFlags.IsPersistent then
-          raise Exception.Create('Record ' + GetName + ' can not have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
-        if mrStruct.mrsFlags.IsVisibleWhenDistant and not wbVWDInTemporary then
-          raise Exception.Create('Record ' + GetName + ' can not have it''s Visible when Distant flag set to be contained in ' + GroupRecord.Name);
+        9: begin {Temporary}
+          if (GetSignature <> 'REFR') and
+             (GetSignature <> 'ACHR') and
+             (GetSignature <> 'ACRE') and
+             (GetSignature <> 'LAND') and
+             (GetSignature <> 'PGRD') and
+             (GetSignature <> 'NAVM') and
+             (GetSignature <> 'PGRE') and
+             (GetSignature <> 'PMIS') and
+             (GetSignature <> 'PARW') and {>>> Skyrim <<<}
+             (GetSignature <> 'PBEA') and {>>> Skyrim <<<}
+             (GetSignature <> 'PFLA') and {>>> Skyrim <<<}
+             (GetSignature <> 'PCON') and {>>> Skyrim <<<}
+             (GetSignature <> 'PBAR') and {>>> Skyrim <<<}
+             (GetSignature <> 'PHZD')     {>>> Skyrim <<<}
+          then
+            raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
+          if mrStruct.mrsFlags.IsPersistent then
+            raise Exception.Create('Record ' + GetName + ' can not have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
+          if mrStruct.mrsFlags.IsVisibleWhenDistant and not wbVWDInTemporary then
+            raise Exception.Create('Record ' + GetName + ' can not have it''s Visible when Distant flag set to be contained in ' + GroupRecord.Name);
+        end;
       end;
     end;
+
+    if GetIsDeleted and (GetDataSize > 0) then begin
+      GetDataSize;
+      Delete;
+    end;
+
+    //not needed for now
+    inherited;
   end;
 
-  if GetIsDeleted and (GetDataSize > 0) then begin
-    GetDataSize;
-    Delete;
+begin
+  Inner;
+  if Assigned(KAR) and KAR.IsRoot then begin
+    KAR := nil;
+    ResetLeafFirst;
   end;
-
-  //not needed for now
-  inherited;
 end;
 
 type
@@ -11054,61 +11065,128 @@ end;
 
 procedure TwbMainRecord.WriteToStreamInternal(aStream: TStream; aResetModified: Boolean);
 var
-  CurrentPosition   : Int64;
-  NewPosition       : Int64;
-  DataSize          : Cardinal;
-  MemoryStream      : TMemoryStream;
-  mrs               : TwbMainRecordStruct;
+  KAR : IwbKeepAliveRoot;
+  MS  : TMemoryStream;
 
-  SelfRef : IwbContainerElementRef;
-  KAR: IwbKeepAliveRoot;
-begin
-  KAR := wbCreateKeepAliveRoot;
+  procedure Inner;
+  var
+    CurrentPosition   : Int64;
+    DataSize          : Cardinal;
+    Stream            : TStream;
+    MemoryStream      : TMemoryStream;
+    mrs               : TwbMainRecordStruct;
+
+    SelfRef : IwbContainerElementRef;
+  begin
+    KAR := wbCreateKeepAliveRoot;
 
   if (esModified in eStates) or wbTestWrite then begin
-    SelfRef := Self as IwbContainerElementRef;
-    DoInit(True);
+      SelfRef := Self as IwbContainerElementRef;
+      DoInit(True);
 
-    CurrentPosition := aStream.Position;
+      mrs := mrStruct^;
 
-    mrs := mrStruct^;
-//    mrs.mrsFlags2 := 0;
+      CurrentPosition := aStream.Position;
 
-    aStream.WriteBuffer(mrs, wbSizeOfMainRecordStruct );
-
-    if wbForceNewHeader then
-      aStream.WriteBuffer(wbNewHeaderAddon, SizeOf(wbNewHeaderAddon) );
-
-    if mrStruct.mrsFlags.IsCompressed then begin
-
-      MemoryStream := TMemoryStream.Create;
-      try
-        inherited WriteToStreamInternal(MemoryStream, aResetModified);
-        DataSize := MemoryStream.Size;
-        aStream.WriteBuffer(DataSize, SizeOf(DataSize));
-        MemoryStream.Position := 0;
-        ZCompressStream(MemoryStream, aStream);
-      finally
-        FreeAndNil(MemoryStream);
+      if CurrentPosition = 0 then
+        Stream := aStream
+      else begin
+        MS := TMemoryStream.Create;
+        Stream := MS;
       end;
 
-    end else
-      inherited;
+      Stream.WriteBuffer(mrs, wbSizeOfMainRecordStruct );
 
-    NewPosition := aStream.Position;
-    if wbForceNewHeader then
-      DataSize := (NewPosition - CurrentPosition) - wbSizeOfMainRecordStruct - SizeOf(wbNewHeaderAddon)
-    else
-      DataSize := (NewPosition - CurrentPosition) - wbSizeOfMainRecordStruct;
-    aStream.Position := CurrentPosition + 4;
-    aStream.WriteBuffer(DataSize, SizeOf(DataSize));
-    aStream.Position := NewPosition;
+      if wbForceNewHeader then
+        Stream.WriteBuffer(wbNewHeaderAddon, SizeOf(wbNewHeaderAddon) );
 
-  end else begin
-    CurrentPosition := aStream.Position;
-    aStream.WriteBuffer(dcBasePtr^, NativeUInt(dcEndPtr) - NativeUInt(dcBasePtr));
-    if CurrentPosition + wbSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position then
-      Assert(CurrentPosition + wbSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position);
+      if mrStruct.mrsFlags.IsCompressed then begin
+
+        MemoryStream := TMemoryStream.Create;
+        try
+          inherited WriteToStreamInternal(MemoryStream, aResetModified);
+          DataSize := MemoryStream.Size;
+          Stream.WriteBuffer(DataSize, SizeOf(DataSize));
+          MemoryStream.Position := 0;
+          ZCompressStream(MemoryStream, Stream);
+        finally
+          FreeAndNil(MemoryStream);
+        end;
+
+      end else
+        inherited WriteToStreamInternal(Stream, aResetModified);
+
+      if wbForceNewHeader then
+        DataSize := Stream.Size - wbSizeOfMainRecordStruct - SizeOf(wbNewHeaderAddon)
+      else
+        DataSize := Stream.Size - wbSizeOfMainRecordStruct;
+      Stream.Position := 4;
+      Stream.WriteBuffer(DataSize, SizeOf(DataSize));
+
+      if Assigned(MS) then
+        aStream.Write(MS.Memory^, MS.Size)
+      else
+        Stream.Position := Stream.Size;
+
+    end else begin
+
+      if dcfStorageInvalid in dcFlags then
+        Assert(not (dcfStorageInvalid in dcFlags));
+      Assert(Assigned(dcBasePtr));
+      Assert(Assigned(dcEndPtr));
+
+      CurrentPosition := aStream.Position;
+      aStream.WriteBuffer(dcBasePtr^, NativeUInt(dcEndPtr) - NativeUInt(dcBasePtr));
+      if CurrentPosition + wbSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position then
+        Assert(CurrentPosition + wbSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position);
+
+    end;
+  end;
+
+var
+  WasInternal : Boolean;
+begin
+  MS := nil;
+  try
+    WasInternal := (esInternalModified in eStates);
+    Inner;
+    if Assigned(KAR) and KAR.IsRoot then begin
+      KAR := nil;
+      if Assigned(MS) and (Length(cntElements) > 0) then begin
+        if WasInternal then
+          wbBeginInternalEdit(True);
+        try
+          if ResetChildrenLeafFirst then begin
+            DoReset(True);
+            ReleaseElements;
+
+            if mrsBasePtrAllocated in mrStates then
+              FreeMem(dcBasePtr);
+            GetMem(dcBasePtr, MS.Size);
+            Include(mrStates, mrsBasePtrAllocated);
+
+            Move(MS.Memory^, dcBasePtr^, MS.Size);
+
+            dcEndPtr := PByte(dcBasePtr) + MS.Size;
+
+            Exclude(dcFlags, dcfStorageInvalid);
+            mrDataStorage := nil;
+            dcDataStorage := nil;
+            dcDataBasePtr := nil;
+            dcDataEndPtr := nil;
+
+            InitDataPtr;
+          end else
+            asm nop end;
+        finally
+          if WasInternal then
+            wbEndInternalEdit;
+        end;
+      end else
+        ResetLeafFirst;
+    end;
+  finally
+    MS.Free;
   end;
 
   Exclude(eStates, esUnsaved);
