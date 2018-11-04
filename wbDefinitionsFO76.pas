@@ -70,6 +70,7 @@ var
   wbReverbClassEnum: IwbEnumDef;
   wbHitBehaviourEnum: IwbEnumDef;
   wbBoolEnum: IwbEnumDef;
+  wbSpecialTypeEnum: IwbEnumDef;
 
 procedure DefineFO76;
 
@@ -13700,7 +13701,8 @@ begin
     wbArrayS(FVPA, 'Components',
       wbStructSK([0], 'Component', [
         wbFormIDCkNoReach('Component', sigBaseObjects),
-        wbInteger('Count', itU32)
+        wbInteger('Count', itU32),
+        wbFormID('Unknown')
       ])
     ),
     wbDESC,
@@ -17005,10 +17007,25 @@ begin
     wbFormID(PAEQ)
   ]);
 
+  wbSpecialTypeEnum := wbEnum([
+    {0} 'Strength',
+    {1} 'Perception',
+    {2} 'Endurance',
+    {3} 'Charisma',
+    {4} 'Intelligence',
+    {5} 'Agility',
+    {6} 'Luck'
+  ]);
+
   wbRecord(PCRD, 'Perk Card', [
     wbEDID,
     wbDESC,
-    wbUnknown(DATA),
+    wbStruct(DATA, 'Unknown', [
+      wbByteArray('Unknown', 4),
+      wbInteger('Min Level', itU8),
+      wbInteger('Special', itU8, wbSpecialTypeEnum),
+      wbByteArray('Unknown', 2)
+    ]),
     wbFormID(PCDV),
     wbFormID(SNAM),
     wbString(MNAM),
