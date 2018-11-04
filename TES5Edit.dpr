@@ -90,7 +90,9 @@ uses
   wbModGroups in 'wbModGroups.pas',
   wbBetterStringList in 'wbBetterStringList.pas',
   frmLegendForm in 'frmLegendForm.pas' {frmLegend},
-  frmWorldspaceCellDetailsForm in 'frmWorldspaceCellDetailsForm.pas' {frmWorldspaceCellDetails};
+  frmWorldspaceCellDetailsForm in 'frmWorldspaceCellDetailsForm.pas' {frmWorldspaceCellDetails},
+  frmRichEditForm in 'frmRichEditForm.pas' {frmRichEdit},
+  frmDeveloperMessageForm in 'frmDeveloperMessageForm.pas' {frmDeveloperMessage};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

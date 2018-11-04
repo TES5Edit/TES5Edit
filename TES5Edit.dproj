@@ -149,6 +149,14 @@
             <Form>frmWorldspaceCellDetails</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="frmRichEditForm.pas">
+            <Form>frmRichEdit</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="frmDeveloperMessageForm.pas">
+            <Form>frmDeveloperMessage</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
