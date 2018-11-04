@@ -258,8 +258,11 @@ end;
 
 procedure TwbContainerHandler.AddBSA(const aFileName: string);
 begin
-  if not ContainerExists(aFileName) then
-    AddContainer(TwbBSAFile.Create(aFileName));
+  if ExtractFileExt(aFileName) = '.ba2' then
+    AddBA2(aFileName)
+  else
+    if not ContainerExists(aFileName) then
+      AddContainer(TwbBSAFile.Create(aFileName));
 end;
 
 procedure TwbContainerHandler.AddBA2(const aFileName: string);
