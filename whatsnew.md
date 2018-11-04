@@ -12,13 +12,13 @@ Themes require desktop composition to be enabled. The option to select themes is
 
 ## Theme awareness for conflict colour
 
-xEdit is now aware of the current colour scheme (be it the standard windows colours or from an explicitly selected Theme) is Light (darker text on lighter background) and Dark (lighter text on darker background) and will automatically use modified (lighter/darker) text and background colours based on the colours specified in the Options for signaling conflict status.
+xEdit is now aware of the current colour scheme (be it the standard windows colours or from an explicitly selected Theme) is Light (darker text on lighter background) and Dark (lighter text on darker background) and will automatically use modified (lighter/darker) text and background colours based on the colours specified in the Options for signalling conflict status.
 
 ## Legend for conflict colours
 
 At the top right corner of the View tab is now a Legend button which toggles the visibility of a Legend tool window which shows all possible combination of Conflict This (text colour) and Conflict All (background colour).
 
-While the Legend form is open, when changing the focused cell in the View treeview, the matching cell (Conflict This/ConflictAll) in the Legend window is focused.
+While the Legend form is open, when changing the focused cell in the View treeview, the matching cell (Conflict This/Conflict All) in the Legend window is focused.
 
 ## High-DPI aware
 
@@ -28,9 +28,9 @@ xEdit is now flagged as High-DPI aware and the UI should generally scale correct
 
 xEdit now fully supports the ESL flag in the file header (as well as the .esl extension which implicitly always sets the ESL flag).
 
-ESL flagged modules will be loaded into a "light" slot and will have their FormIDs mapped into the FExxx space. Exactly like the game engine. This means it is now possible to have up to 253 "full" modules (00 to FD) and 4096 "light" modules (FE000 ot FEFFF) loaded at the same time.
+ESL flagged modules will be loaded into a "light" slot and will have their FormIDs mapped into the FExxx space. Exactly like the game engine. This means it is now possible to have up to 253 "full" modules (00 to FD) and 4096 "light" modules (FE000 to FEFFF) loaded at the same time.
 
-The ESL flag does not affect load order (light modules can load before full modules, the the first digits of the FormID are NOT a reliable way to determine load order anymore).
+The ESL flag does not affect load order (light modules can load before full modules, the first digits of the FormID are NOT a reliable way to determine load order anymore).
 
 xEdit will prevent files from being saved with set ESL flag if they are not compatible (contain new records with an ObjectID, that's the last digits in the FormID, > $FFF) and will warn on loading wrongly ESL flagged modules.
 
@@ -58,7 +58,7 @@ The cache system can be controlled with these parameters:
 
 ## Multi-threaded building and loading of Referenced By information
 
-The process of building or loading Referenced By information during start is now performed in multiple threads and will scale well with the number of CPU cores available. This can significnatly speed up startup time.
+The process of building or loading Referenced By information during start is now performed in multiple threads and will scale well with the number of CPU cores available. This can significantly speed up startup time.
 
 ## Application and module CRC32 information
 
@@ -104,7 +104,7 @@ You are able to save and load named presets of checked modules.
 
 Double Click or Ctrl+Enter will check only the selected module and automatically close the dialog with OK.
 
-When used for "Copy as ... into", template entries allow to specify the desired extension and inital ESM/ESL flag values for a new file.
+When used for "Copy as ... into", template entries allow to specify the desired extension and initial ESM/ESL flag values for a new file.
 
 When used for "Copy as ... into", the previous selection will be remembered.
 
@@ -132,7 +132,7 @@ A ModGroup is a way to tell xEdit that certain (non-winning) overrides of a reco
 
 A ModGroup can never hide the winning override or the original master record.
 
-A setup where all real conflicts have been resolved by patches and all false positives hidden by ModGroups will show an empty navigation treeview after applying a "Filter to show conflicts". With this as starting point, adding one new mod to an existing setup with 100s of mods will result in only the conflicts caused by the addition of that new mod to show up when running "Filter to show conflicts". Which makes it very easy then to adjust load order, created targeted patches to resolve real conflicts, and finally again create new ModGroups to hide away any false postives.
+A setup where all real conflicts have been resolved by patches and all false positives hidden by ModGroups will show an empty navigation treeview after applying a "Filter to show conflicts". With this as starting point, adding one new mod to an existing setup with 100s of mods will result in only the conflicts caused by the addition of that new mod to show up when running "Filter to show conflicts". Which makes it very easy then to adjust load order, created targeted patches to resolve real conflicts, and finally again create new ModGroups to hide away any false positives.
 
 ### New ModGroup Selection dialog
 
@@ -412,11 +412,11 @@ This is especially useful in cases where for the same original .esp there are tw
 
 Buttons have been added to the top right corner of the main window to open:
 
-Help - Online help for xEdit.
-NexusMods - The NexusMods page for xEdit, adjusted for whatever game mode xEdit is currently running as.
-GitHub - Where you can find the latest development version of xEdit, as well as report issues.
-Discord - The xEdit Discord server. Real-time chat with other xEdit users and developers. Everyone is welcome.
-Patreon - ElminsterAU's Patreon page for xEdit. Your support is absolutely essential to ensure ongoing future development of xEdit.
+* Help - Online help for xEdit.
+* NexusMods - The NexusMods page for xEdit, adjusted for whatever game mode xEdit is currently running as.
+* GitHub - Where you can find the latest development version of xEdit, as well as report issues.
+* Discord - The xEdit Discord server. Real-time chat with other xEdit users and developers. Everyone is welcome.
+* Patreon - ElminsterAU's Patreon page for xEdit. Your support is absolutely essential to ensure ongoing future development of xEdit.
 
 ## Update check on GitHub
 
@@ -510,7 +510,7 @@ To change focus with the keyboard use:
 
 After Move Up/Down (menu) / Ctrl+Cursor Up/Down (keyboard) the focus will correctly stay with the moved element.
 
-After Add (menu) / Insert (keyboard) the focus will be placed on the added element. This can be turned off with the option "Focuse newly added elements in View" (defaults to true).
+After Add (menu) / Insert (keyboard) the focus will be placed on the added element. This can be turned off with the option "Focus newly added elements in View" (defaults to true).
 
 After drop the focus will be placed on the dropped element.
 
@@ -518,7 +518,7 @@ After drop the focus will be placed on the dropped element.
 
 The row labels (the first column) in the View treeview will adjust based on the column which currently has the focus.
 
-This is especially relevant in combindation with alignment and elements which type and name depends on the value of some other element.
+This is especially relevant in combination with alignment and elements which type and name depends on the value of some other element.
 
 ## Change to source for implicitly copied records during "[Deep] Copy as override/new into..."
 
@@ -572,7 +572,7 @@ All 3 functions will show a list of affected record signatures before performing
 
 `-FixPersistence`/`-NoFixPersistence`and `-FilterONAM`/`-NoFilterONAM` parameters are now generally available instead of just in tmMasterUpdate and tmESMify.
 
-## Collapsable Nodes in View tab
+## Collapsible Nodes in View tab
 
 Nodes in the View tab now have a [-] symbol that can be used to collapse them.
 
@@ -616,7 +616,7 @@ In many cases these changes should allow previously unrecognized ITMs to be corr
 
 A generic mechanism has been implemented to allow setting of default values in the record definitions, so that they can be automatically set when an element of that type is added. This is especially important for elements where the default of all bytes set to 0 does not result in a valid value.
 
-A generic mechanism has been added to allow "recursive" record definitions. This now allows VMAD Properties of type "Struct" or "Array of Struct" to contain members that are again of type "Struct" or "Array of Struct", up to arbitrary numbers of nesting leveles deep.
+A generic mechanism has been added to allow "recursive" record definitions. This now allows VMAD Properties of type "Struct" or "Array of Struct" to contain members that are again of type "Struct" or "Array of Struct", up to arbitrary numbers of nesting levels deep.
 
 It is now possible to add (VMAD) Scripts and Properties through the UI (both Adding and drag'n'drop).
 
@@ -644,7 +644,7 @@ It is now also possible to add LAND, PGRD, and NAVM records to CELL through the 
 
 For LAND and PGRD (each of which can only have a single record per CELL), the same search for an existing record and copy as override if necessary is implemented as for CELLs.
 
-When adding a reference (REFR, ACHR, ...) to a temporary exterior CELL, its initial position is set to the center of that CELL.
+When adding a reference (REFR, ACHR, ...) to a temporary exterior CELL, its initial position is set to the centre of that CELL.
 
 This functionality is also available to scripts through the existing `Add()` method.
 
@@ -658,7 +658,7 @@ The navigation treeview will now (if not fossilised) automatically update to ref
 
 If a record is copied (as new or override) into a module for which the Group where the record is placed is currently expanded, it will show up instantly. (Before it was necessary to collapse and expand that group before the record showed up.)
 
-This change is especially noticable together with the automatic updating of the CELL containing a reference that was mentioned above. When the position of a reference is changed in the View tab, the navigation treeview will now instantly show that reference under it's new CELL (while keeping that reference selected in the navigation treeview).
+This change is especially noticeable together with the automatic updating of the CELL containing a reference that was mentioned above. When the position of a reference is changed in the View tab, the navigation treeview will now instantly show that reference under it's new CELL (while keeping that reference selected in the navigation treeview).
 
 ## "Remove" in the header context menu of the View tab
 
