@@ -11176,8 +11176,7 @@ begin
             dcDataEndPtr := nil;
 
             InitDataPtr;
-          end else
-            asm nop end;
+          end;
         finally
           if WasInternal then
             wbEndInternalEdit;
@@ -15090,8 +15089,6 @@ begin
     CodeSite.Send('Self.Name', Self.GetName);
     CodeSite.Send('Self.Path', Self.GetPath);
     CodeSite.Send('Self.Value', Self.GetValue);
-    //if StartsWith(Self.GetValue, '<Error') then
-    //  asm nop end;
     CodeSite.Send('Self.SortOrder', Self.eSortOrder);
     CodeSite.Send('Self.MemoryOrder', Self.eMemoryOrder);
     CodeSite.Send('aBasePtr', NativeUInt(aBasePtr), True);
