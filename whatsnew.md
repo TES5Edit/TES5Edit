@@ -14,6 +14,12 @@ Themes require desktop composition to be enabled. The option to select themes is
 
 xEdit is now aware of the current colour scheme (be it the standard windows colours or from an explicitly selected Theme) is Light (darker text on lighter background) and Dark (lighter text on darker background) and will automatically use modified (lighter/darker) text and background colours based on the colours specified in the Options for signaling conflict status.
 
+## Legend for conflict colours
+
+At the top right corner of the View tab is now a Legend button which toggles the visibility of a Legend tool window which shows all possible combination of Conflict This (text colour) and Conflict All (background colour).
+
+While the Legend form is open, when changing the focused cell in the View treeview, the matching cell (Conflict This/ConflictAll) in the Legend window is focused.
+
 ## High-DPI aware
 
 xEdit is now flagged as High-DPI aware and the UI should generally scale correctly when the scale factor is set to > 100% in the windows settings. A know limitation is that window caption bars and some other elements are not scaling correctly when custom themes are used.
@@ -115,6 +121,104 @@ With this option active, CTRL must be held down for Double Click to be accepted 
 If a normal file and a .ghost file exist, the .ghost file is ignored.
 
 Except in the save dialog, the UI does not show the .ghost extension.
+
+## Completely reworked ModGroups support
+
+ModGroups is a feature that has been in xEdit for a long time, but has gotten very little attention in the past.
+
+This version totally overhauls ModGroups support, adding many new features as well as providing complete UI integration for creating, editing and managing ModGroups.
+
+A ModGroup is a way to tell xEdit that certain (non-winning) overrides of a record can be hidden (because the still visible versions account for all the changes already). By hiding away these versions they no longer participate in conflict detection which can be used to prevent false positives from showing up.
+
+A ModGroup can never hide the winning override or the original master record.
+
+A setup where all real conflicts have been resolved by patches and all false positives hidden by ModGroups will show an empty navigation treeview after applying a "Filter to show conflicts". With this as starting point, adding one new mod to an existing setup with 100s of mods will result in only the conflicts caused by the addition of that new mod to show up when running "Filter to show conflicts". Which makes it very easy then to adjust load order, created targeted patches to resolve real conflicts, and finally again create new ModGroups to hide away any false postives.
+
+### New ModGroup Selection dialog
+
+When the background loader is complete, a new ModGroup Selection dialog is shown. This dialog is very similar to the new Modules Selection dialog and has most of it's features.
+
+The dialog is based on a tree view, so you can directly expand the individual ModGroups to see their contents.
+
+You can filter the tree view to more easily find a specific ModGroup.
+
+A system for saving and loading presets is available.
+
+### Enable/Disable and Reload ModGroups
+
+The context menu on the View treeview has options to disable or enable ModGroups, as well as a function for reloading all ModGroups and show the ModGroup selection dialog again.
+
+### Creating ModGroups
+
+There are two ways to create ModGroups in the UI.
+
+The first is by selecting 2 or more modules in the navigation treeview, and then using the "Create ModGroup..." function in the context menu, or pressing Ctrl+M with the navigation treeview focused. This will create a new ModGroup consisting of the previously selected modules and open it in the ModGroup Editor.
+
+The second is when looking at the View tab with at least 3 records showing (master + 2 overrides). The context menu on the header of the view treeview has a "Create ModGroup..." function, which can also be called by pressing Ctrl+M while the View treeview is focused. This function will then show a Module Selection dialog listing all modules that contribute override records to the current View and where you can check the modules that should be part of this new ModGroup. After confirming the desired modules a new ModGroup will be created and the ModGroup Editor will be opened.
+
+### ModGroup Editor
+
+The ModGroup Editor shows the list of modules that are part of the ModGroup.
+
+New modules can be added by pressing Insert. 
+Modules can be moved up or down by pressing Ctrl + Cursor Up / Cursor Down.
+CRCs can be added to a module by pressing Shift+Insert when that module is selected, or just Insert if one of the existing CRCs if that module is selected.
+A selected module or CRC can be deleted by pressing Delete.
+
+If one or more CRCs has been added to an module, then the CRC of the currently loaded module must match one of these CRCs, otherwise the module is treated as if it wasn't present.
+
+Each module has a number of flags:
+* Optional - All modules NOT flagged as optional must be present for the ModGroup to be valid.
+* Target - Override records in this module can be hidden.
+* Source - A override record in this module will cause the overrides with the same FormID to be hidden from all modules flagged as Target and listed above this Source in this ModGroup.
+* Forbidden - If this module is loaded, the ModGroup is invalid.
+* Ignore LO - If not flagged, then the module must be loaded in the same order as listed in this ModGroup. There are two possible flagged values for this column:
+    * Always - The load order of the module does not matter at all.
+    * in Block - all consecutive modules with this flag form a Block. Any module above the block must be loaded before any module in the block. Any module after the block must be loaded after any module in the block. The modules inside the block can load in any order.
+
+The flags can be toggled by focusing them and pressing space, or by clicking on them with the mouse.
+
+Before a ModGroup can be saved, it must be given a name. There are two functions to make this easier:
+* Pressing Ctrl+N while having a module selected will set the name of the ModGroup to the name of the module (minus extension).
+* Ctrl+C can be used on any listed module to copy it's name to the clipboard which can then be pasted into the Name edit.
+
+After confirming the ModGroup Editor with OK, a Module Selection will be shown with all modules that are part of the ModGroup to select in which .modgroups file this ModGroup should be saved.
+
+After saving a ModGroup the "Reload ModGroups" function will be automatically triggered and the newly added ModGroup has automatically been checked.
+
+### .modgroups files
+
+.modgroups files are files with the same name as a module, but the extension .modgroups. 
+
+These are text files that contain one or more ModGroup entries.
+
+The exact format is described in the online help.
+
+Only .modgroups files that have the same name as a module that is present will be loaded.
+
+ModGroups from .modgroups files that do not belong to a currently loaded module will not show errors if they are invalid.
+
+### Editing ModGroups
+
+As long as at least one ModGroup exists, a "Edit ModGroup..." function is shown in the context menu of the navigation treeview.
+
+It first shows a ModGroup Selection dialog, then loads the selected ModGroup into the same ModGroup Editor as is used for creating new ModGroups.
+
+### Deleting ModGroups
+
+As long as at least one ModGroup exists, a "Delete ModGroups..." function is shown in the context menu of the navigation treeview.
+
+The ModGroup Selection that is then shown allows to select one or more ModGroups for deletion.
+
+### Updating CRCs
+
+As long as at least one ModGroup exists, a "Update CRC in ModGroups..." function is shown in the context menu of the navigation treeview.
+
+This function first shows a Module Selection with all modules that are part of ModGroups with either no CRC or missing the current CRC.
+
+After that a ModGroup Selection is shown with all ModGroups that are missing the current CRC of one or more of the previously selected modules.
+
+After choosing which ModGroups to update, the missing CRCs will be added to all checked ModGroups.
 
 ## Auto "Compare Selected"
 
@@ -560,7 +664,34 @@ This change is especially noticable together with the automatic updating of the 
 
 The "Remove" function in the header context menu of the View tab (which had been removed in the past because it sometimes removed the whole parent group instead of just the desired record) is now fixed and available again.
 
+## LODGen updated
+
+Various updates have been made to LODGen mode. Thanks sheson!
+
+## Show floating point and decompression errors
+
+Messages will now be shown in the log for corrupted floating point values (showed up as NaN in the View and will continue to do so, but the message in the log is new).
+
+Messages will now be shown when an error occurs during decompression of compressed records.
+
+There are known floating point and compression errors in original Bethesda game files. The fact that these errors are shown now instead of silently ignored as before does not mean than anything is more broken then it was. You just know about now.
+
+## Working Next Member / Previous Member for RUnion (e.g. Alias in QUST)
+
+For elements where it is possible for different type of sub records to occur (e.g. ALST = Reference Alias vs. ALCS = Collection Alias vs. ALLS = Location Alias) it is now possible to switch between the different options using the  Next Member and Previous Member options in the context menu of the RUnion element.
+
+## "Apply Script..." dialog improvements
+
+A Filter edit has been added above the script selection combobox. This filter edit will limit entries in the script combobox to ones that contain the filter text anywhere in their name.
+
+When changing the selected script, if the current script has been modified, a confirmation dialog asks if the changes should be saved first. (Silently discarded changes up to now).
+
+When the dialog is closed, if the current script has been modified, a confirmation dialog asks if the changes should be saved. (Silently overwrote the existing script up to now). When closing and not saving, the modified script is still the one that's executed.
+
+When saving a script and the file already exists, a backup copy will be made before overwriting the file.
+
 ## Scripting improvements
+
 
 `procedure AddMasterIfMissing(aeFile: IwbFile; asMasterFilename: string; aSortMasters: Boolean = True);` now takes an optional boolean parameter (defaults to true) to turn off automatic sorting of masters after adding
 `procedure AddMasters(aeFile: IwbFile; aMasters: TStrings);` Adds the list of masters in aMasters to aeFile. If sorting is desired an explicit call to SortMasters is necessary.
@@ -588,3 +719,4 @@ end;
 
 `ElementEditValue` and `ElementNativeValue` now always work for Flags, no matter if the flag is currently set or not.
 
+ 
