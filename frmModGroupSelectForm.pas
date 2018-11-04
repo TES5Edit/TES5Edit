@@ -457,19 +457,14 @@ begin
     vstModGroups.Colors.TreeLineColor := clBtnShadow;
 
   CollectSelected;
+
   vstModGroups.SetFocus;
-  vstModGroups.FocusedNode := nil;
-  vstModGroups.ClearSelection;
-  for Node in vstModGroups.CheckedNodes do begin
-    if not Assigned(vstModGroups.FocusedNode) then
-      vstModGroups.FocusedNode := Node;
-    vstModGroups.Selected[Node] := True;
-    Break;
-  end;
-  if not Assigned(vstModGroups.FocusedNode) then begin
+  vstModGroups.FocusedNode := vstModGroups.GetFirstChecked;
+  if not Assigned(vstModGroups.FocusedNode) then
     vstModGroups.FocusedNode := vstModGroups.GetFirstVisible;
+  vstModGroups.ClearSelection;
+  if Assigned(vstModGroups.FocusedNode) then
     vstModGroups.Selected[vstModGroups.FocusedNode] := True;
-  end;
 end;
 
 function TfrmModGroupSelect.GetPresetsSection: string;

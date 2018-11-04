@@ -471,19 +471,15 @@ begin
     vstModules.Colors.TreeLineColor := clBtnShadow;
 
   SimulateLoad;
+
   vstModules.SetFocus;
-  vstModules.FocusedNode := nil;
-  vstModules.ClearSelection;
-  for Node in vstModules.CheckedNodes do begin
-    if not Assigned(vstModules.FocusedNode) then
-      vstModules.FocusedNode := Node;
-    vstModules.Selected[Node] := True;
-    Break;
-  end;
-  if not Assigned(vstModules.FocusedNode) then begin
+  vstModules.FocusedNode := vstModules.GetFirstChecked;
+  if not Assigned(vstModules.FocusedNode) then
     vstModules.FocusedNode := vstModules.GetFirstVisible;
+  vstModules.ClearSelection;
+  if Assigned(vstModules.FocusedNode) then
     vstModules.Selected[vstModules.FocusedNode] := True;
-  end;
+
   if Length(SelectedModules) = 1 then begin
     vstModules.CheckState[vstModules.FocusedNode] := csUncheckedNormal;
     with PModuleNodeData(vstModules.GetNodeData(vstModules.FocusedNode))^ do
