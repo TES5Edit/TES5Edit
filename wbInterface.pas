@@ -47,12 +47,14 @@ type
   end;
 
 const
+  wbWhatsNewVersion : Integer = 2;
+  wbDeveloperMessageVersion : Integer = 2;
   VersionString : TwbVersion = (
     Major   : 3;
-    Minor   : 2;
-    Release : 84;
+    Minor   : 3;
+    Release : 0;
     Build   : '';
-    Title   : 'EXPERIMENTAL';
+    Title   : 'BETA';
   );
   wbDevCRC32App : Cardinal = $FFFFFFEF;
 
@@ -194,19 +196,19 @@ var
 
   wbReportMode                       : Boolean = False;
   wbReportUnused                     : Boolean = False;
-  wbReportRequired                   : Boolean = True;
-  wbReportUnusedData                 : Boolean = True;
+  wbReportRequired                   : Boolean = False;
+  wbReportUnusedData                 : Boolean = False;
   wbReportUnknownFormIDs             : Boolean = True;
   wbReportUnknownFloats              : Boolean = True;
   wbReportUnknownStrings             : Boolean = True;
   wbReportEmpty                      : Boolean = True;
   wbReportSometimesEmpty             : Boolean = True;
   wbReportFormIDs                    : Boolean = True;
-  wbReportNotFoundButAllowedFormIDs  : Boolean = True;
+  wbReportNotFoundButAllowedFormIDs  : Boolean = False;
   wbReportUnknownFlags               : Boolean = True;
   wbReportUnknownEnums               : Boolean = True;
   wbReportFormIDNotAllowedReferences : Boolean = True;
-  wbReportUnknown                    : Boolean = True;
+  wbReportUnknown                    : Boolean = False;
   wbMoreInfoForRequired              : Boolean = False;
   wbMoreInfoForDecider               : Boolean = False;
   wbTrackAllEditorID                 : Boolean = False;
