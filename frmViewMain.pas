@@ -73,7 +73,7 @@ uses
   Vcl.Styles,
   Vcl.Styles.Utils.SystemMenu,
   Vcl.Styles.Ext,
-  JvBalloonHint;
+  JvBalloonHint, JvExStdCtrls, JvRichEdit;
 
 const
   DefaultInterval             = 1 / 24 / 6;
@@ -402,6 +402,8 @@ type
     N27: TMenuItem;
     N28: TMenuItem;
     N29: TMenuItem;
+    tbsWhatsNew: TTabSheet;
+    reWhatsNew: TJvRichEdit;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -647,6 +649,7 @@ type
     procedure jbhGitHubBalloonClick(Sender: TObject);
     procedure jbhPatreonCloseBtnClick(Sender: TObject; var CanClose: Boolean);
     procedure jbhGitHubCloseBtnClick(Sender: TObject; var CanClose: Boolean);
+    procedure tbsWhatsNewShow(Sender: TObject);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
@@ -1133,6 +1136,8 @@ uses
   frmModGroupSelectForm,
   frmModGroupEditForm,
   frmLegendForm,
+  frmRichEditForm,
+  frmDeveloperMessageForm,
   WinInet;
 
 function GetUrlContent(const Url: string): UTF8String;
@@ -4551,6 +4556,51 @@ begin
   else begin
     AddMessage('Fatal: No source specified');
     Exit;
+  end;
+
+  if wbToolMode in [tmEdit, tmView, tmTranslate] then begin
+
+    s := ExtractFilePath(ParamStr(0)) + 'whatsnew.rtf';
+    if FileExists(s) then begin
+      i := Settings.ReadInteger('WhatsNew', 'Version', 0);
+      with TfrmRichEdit.Create(Self) do try
+        Caption := 'What''s New?';
+        try
+          reMain.Lines.LoadFromFile(s);
+          if i < wbWhatsNewVersion then begin
+            ShowModal;
+            if cbDontShowAgain.Checked then begin
+              Settings.WriteInteger('WhatsNew', 'Version', wbWhatsNewVersion);
+              Settings.UpdateFile;
+            end;
+          end;
+          { doesn't work, no idea why... fix later
+          reWhatsNew.Lines.Assign(reMain.Lines);
+          tbsWhatsNew.TabVisible := True;
+          }
+        except end;
+      finally
+        Free;
+      end;
+    end;
+
+    wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
+    i := Settings.ReadInteger('DeveloperMessage', 'Version', 0);
+    if i < wbDeveloperMessageVersion then begin
+      with TfrmDeveloperMessage.Create(Self) do try
+        if wbPatron then begin
+          btnCancel.Cancel := True;
+          tmrEnableButton.Interval := 1;
+        end;
+        if ShowModal = mrOk then
+          bnPatreon.Click;
+        Settings.WriteInteger('DeveloperMessage', 'Version', wbDeveloperMessageVersion);
+        Settings.UpdateFile;
+      finally
+        Free;
+      end;
+    end;
+
   end;
 
   try
@@ -14866,6 +14916,12 @@ procedure TfrmMain.tbsViewShow(Sender: TObject);
 begin
   pnlNav.Show;
   vstNavChange(vstNav, vstNav.FocusedNode);
+end;
+
+procedure TfrmMain.tbsWhatsNewShow(Sender: TObject);
+begin
+  reWhatsNew.Parent := nil;
+  reWhatsNew.Parent := tbsWhatsNew;
 end;
 
 procedure TfrmMain.tmrStartupTimer(Sender: TObject);
