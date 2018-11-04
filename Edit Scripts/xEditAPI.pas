@@ -140,6 +140,8 @@ function FileCount:	Integer;
 function wbAppName: String;
 /// <summary>xEdit game name</summary>
 function wbGameName: String;
+/// <summary>xEdit game master file name</summary>
+function wbGameMasterEsm: String;
 /// <summary>xEdit version number.</summary>
 function wbVersionNumber:	Integer;
 
@@ -592,6 +594,11 @@ begin
 end;
 
 function wbGameName: String;
+begin
+  Result := '';
+end;
+
+function wbGameMasterEsm: String;
 begin
   Result := '';
 end;
