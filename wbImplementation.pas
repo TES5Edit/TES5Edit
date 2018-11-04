@@ -9584,7 +9584,7 @@ begin
   SetModified(True);
   InvalidateParentStorage;
 
-  if Assigned(dcEndPtr) then begin
+  if not (mrsBasePtrAllocated in mrStates) then begin
     New(p);
     Include(mrStates, mrsBasePtrAllocated);
     p^ := mrStruct^;
