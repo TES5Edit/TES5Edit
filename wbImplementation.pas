@@ -99,6 +99,7 @@ type
 
     {---IwbKeepAliveRoot---}
     procedure Done;
+    function IsRoot: Boolean;
   end;
 
 function wbCreateKeepAliveRoot: IwbKeepAliveRoot;
@@ -19220,6 +19221,11 @@ end;
 procedure TwbKeepAliveRoot.Done;
 begin
   Teardown;
+end;
+
+function TwbKeepAliveRoot.IsRoot: Boolean;
+begin
+  Result := not Assigned(karKAC.kacPrev);
 end;
 
 procedure TwbKeepAliveRoot.Setup;
