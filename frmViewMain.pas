@@ -398,6 +398,10 @@ type
     jbhPatreon: TJvBalloonHint;
     jbhGitHub: TJvBalloonHint;
     N25: TMenuItem;
+    N26: TMenuItem;
+    N27: TMenuItem;
+    N28: TMenuItem;
+    N29: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
