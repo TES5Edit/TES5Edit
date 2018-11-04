@@ -1239,6 +1239,32 @@ object frmMain: TfrmMain
           TabOrder = 0
         end
       end
+      object tbsWhatsNew: TTabSheet
+        Caption = 'What'#39's New'
+        ImageIndex = 8
+        OnShow = tbsWhatsNewShow
+        object reWhatsNew: TJvRichEdit
+          Left = 0
+          Top = 0
+          Width = 894
+          Height = 573
+          Align = alClient
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = []
+          ParentFont = False
+          ReadOnly = True
+          ScrollBars = ssHorizontal
+          SelText = ''
+          StreamFormat = sfRichText
+          TabOrder = 0
+          WantReturns = False
+          ExplicitWidth = 902
+          ExplicitHeight = 599
+        end
+      end
     end
   end
   object pnlTop: TPanel
