@@ -8573,7 +8573,7 @@ var
   Group       : IwbGroupRecord;
   Cell        : IwbMainRecord;
   CombinedRefs, CombinedRef: IwbContainerElementRef;
-  cnt, i      : Cardinal;
+  cnt, i      : Integer;
   CellFormID  : TwbFormID;
   MasterFolder, s: string;
 begin
