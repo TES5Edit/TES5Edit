@@ -733,6 +733,7 @@ type
     procedure SetIsESM(Value: Boolean);
 
     function GetIsESL: Boolean;
+    function GetIsESLDirect: Boolean;
     procedure SetIsESL(Value: Boolean);
 
     function GetIsLocalized: Boolean;
@@ -2701,6 +2702,13 @@ begin
       flModule.miFileID := flLoadOrderFileID;
       Include(flModule.miFlags, mfHasFile);
       Include(flModule.miFlags, mfLoaded);
+
+      if GetIsESM then
+        Include(flModule.miFlags, mfHasESMFlag);
+      if GetIsESLDirect then
+        Include(flModule.miFlags, mfHasESLFlag);
+      if GetIsLocalized then
+        Include(flModule.miFlags, mfHasLocalizedFlag);
     end;
 end;
 
@@ -3358,6 +3366,19 @@ begin
   if wbPseudoESL then
     Exit(fsPseudoESL in flStates);
 
+  if not wbIsEslSupported or GetIsNotPlugin then
+    Exit(False);
+
+  if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
+    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+  Result := Header.IsESL;
+end;
+
+function TwbFile.GetIsESLDirect: Boolean;
+var
+  Header         : IwbMainRecord;
+begin
   if not wbIsEslSupported or GetIsNotPlugin then
     Exit(False);
 
