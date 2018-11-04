@@ -7705,8 +7705,18 @@ begin
 
     if CurrentDefPos > mrDef.QuickInitLimit then begin
       Include(mrStates, mrsQuickInitDone);
-      if mrsQuickInit in mrStates then
+      if mrsQuickInit in mrStates then begin
+
+        if FoundError then
+          if wbHasProgressCallback then begin
+            wbProgressCallback('Errors were found in: ' + GetName);
+            {$IFDEF DBGSUBREC}
+            wbProgressCallback('Contained subrecords: ' + s);
+            {$ENDIF}
+          end;
+
         Exit;
+      end;
     end;
 
     if CurrentDef.DefType = dtSubRecordUnion then begin
