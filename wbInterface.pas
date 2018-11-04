@@ -1661,7 +1661,14 @@ type
     ctCheck,
     ctToEditValue,
     ctEditType,
-    ctEditInfo
+    ctEditInfo,
+    ctLinksTo,
+    ctBuildRef,
+    ctFromEditValue,
+    ctFromInt,
+    ctFromNativeValue,
+    ctToInt,
+    ctToNativeValue
   );
 
   TwbAfterLoadCallback = procedure(const aElement: IwbElement);
@@ -1670,6 +1677,7 @@ type
   TwbFloatNormalizer = function(const aElement: IwbElement; aFloat: Extended): Extended;
   TwbGetConflictPriority = procedure(const aElement: IwbElement; var aConflictPriority: TwbConflictPriority);
   TwbIntToStrCallback = function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+  TwbIntOverlayCallback = function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): Int64;
   TwbStrToIntCallback = function(const aString: string; const aElement: IwbElement): Int64;
   TwbAddInfoCallback = function(const aMainRecord: IwbMainRecord): string;
   TwbUnionDecider = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1974,6 +1982,8 @@ type
     function GetFormaterCanChange: Boolean;
     function GetIntType: TwbIntType;
     function GetExpectedLength(aValue: Int64 = 0): Integer;
+
+    function AddOverlay(const aCallback: TwbIntOverlayCallback): IwbIntegerDef;
 
     property Formater[const aElement: IwbElement]: IwbIntegerDefFormater
       read GetFormater;
@@ -5000,7 +5010,7 @@ type
     vdDefaultEditValue   : string;
     vdDefaultNativeValue : Variant;
     vdLinksToCallback    : TwbLinksToCallback;
-    procedure AfterClone(const aSource: TwbDef); virtual;
+    procedure AfterClone(const aSource: TwbDef); override;
 
     {---IwbValueDef---}
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbValueDef;
@@ -5355,9 +5365,10 @@ type
 
   TwbIntegerDef = class(TwbValueDef, IwbIntegerDef, IwbIntegerDefInternal)
   private
-    inType     : TwbIntType;
-    inFormater : IwbIntegerDefFormater;
-    inDefault  : Int64;
+    inType            : TwbIntType;
+    inFormater        : IwbIntegerDefFormater;
+    inDefault         : Int64;
+    inOverlayCallback : TwbIntOverlayCallback;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority   : TwbConflictPriority;
@@ -5370,6 +5381,7 @@ type
                        aDefault    : Int64;
                        aGetCP      : TwbGetConflictPriority;
                        aTerminator : Boolean);
+    procedure AfterClone(const aSource: TwbDef); override;
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -5411,6 +5423,8 @@ type
     function GetFormaterCanChange: Boolean;
     function GetIntType: TwbIntType;
     function GetExpectedLength(aValue: Int64 = 0): Integer;
+
+    function AddOverlay(const aCallback: TwbIntOverlayCallback): IwbIntegerDef;
 
     {---IwbIntegerDefInternal---}
     procedure ReplaceFormater(const aFormater: IwbIntegerDefFormater);
@@ -9454,6 +9468,18 @@ end;
 
 { TwbIntegerDef }
 
+function TwbIntegerDef.AddOverlay(const aCallback: TwbIntOverlayCallback): IwbIntegerDef;
+begin
+  Result := Self;
+  inOverlayCallback := aCallback;
+end;
+
+procedure TwbIntegerDef.AfterClone(const aSource: TwbDef);
+begin
+  inherited AfterClone(aSource);
+  inOverlayCallback := TwbIntegerDef(aSource).inOverlayCallback;
+end;
+
 function TwbIntegerDef.Assign(const aTarget : IwbElement;
                                     aIndex  : Integer;
                               const aSource : IwbElement;
@@ -9486,6 +9512,10 @@ begin
       else
         {it0:}  Value := 0;
       end;
+
+      if Assigned(inOverlayCallback) then
+        Value := inOverlayCallback(Value, aElement, ctBuildRef);
+
       inFormater.BuildRef(Value, aElement);
     end;
 end;
@@ -9535,6 +9565,10 @@ begin
     else
       {itU0:}  Value := 0;
     end;
+
+    if Assigned(inOverlayCallback) then
+      Value := inOverlayCallback(Value, aElement, ctCheck);
+
     if Assigned(inFormater) then
       Result := inFormater.Check(Value, aElement)
     else
@@ -9597,43 +9631,62 @@ begin
     i := inFormater.FromEditValue(aValue, aElement)
   else
     i := StrToInt64(aValue);
+
+  if Assigned(inOverlayCallback) then
+    i := inOverlayCallback(i, aElement, ctFromEditValue);
+
   FromInt(i, aBasePtr, aEndPtr, aElement);
 end;
 
 procedure TwbIntegerDef.FromInt(aValue: Int64; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement);
+var
+  Value: Int64;
 begin
+  if Assigned(inOverlayCallback) then
+    Value := inOverlayCallback(aValue, aElement, ctFromInt)
+  else
+    Value := aValue;
+
   aElement.RequestStorageChange(aBasePtr, aEndPtr, GetExpectedLength(aValue));
   case inType of
-    itU8:  PByte(aBasePtr)^ := aValue;
-    itS8:  PShortInt(aBasePtr)^ := aValue;
-    itU16: PWord(aBasePtr)^ := aValue;
-    itS16: PSmallInt(aBasePtr)^ := aValue;
-    itU24: WriteInteger24(aBasePtr, aValue);
-    itU32: PCardinal(aBasePtr)^ := aValue;
-    itS32: PLongInt(aBasePtr)^ := aValue;
-    itU64: PUInt64(aBasePtr)^ := aValue;
-    itS64: PInt64(aBasePtr)^ := aValue;
-    itU6to30: WriteIntegerCounter(aBasePtr, aValue);
+    itU8:  PByte(aBasePtr)^ := Value;
+    itS8:  PShortInt(aBasePtr)^ := Value;
+    itU16: PWord(aBasePtr)^ := Value;
+    itS16: PSmallInt(aBasePtr)^ := Value;
+    itU24: WriteInteger24(aBasePtr, Value);
+    itU32: PCardinal(aBasePtr)^ := Value;
+    itS32: PLongInt(aBasePtr)^ := Value;
+    itU64: PUInt64(aBasePtr)^ := Value;
+    itS64: PInt64(aBasePtr)^ := Value;
+    itU6to30: WriteIntegerCounter(aBasePtr, Value);
   else
     {it0: }
   end;
 end;
 
 procedure TwbIntegerDef.FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant);
+var
+  Value: Variant;
 begin
-  aElement.RequestStorageChange(aBasePtr, aEndPtr, GetExpectedLength(aValue));
-  case inType of
-    itS8:  PShortInt(aBasePtr)^ := aValue;
-    itU16: PWord(aBasePtr)^ := aValue;
-    itS16: PSmallInt(aBasePtr)^ := aValue;
-    itU24: WriteInteger24(aBasePtr, aValue);
-    itU32: PCardinal(aBasePtr)^ := aValue;
-    itS32: PLongInt(aBasePtr)^ := aValue;
-    itU64: PUInt64(aBasePtr)^ := aValue;
-    itS64: PInt64(aBasePtr)^ := aValue;
-    itU6to30: WriteIntegerCounter(aBasePtr, aValue);
+  if Assigned(inOverlayCallback) then
+    Value := inOverlayCallback(aValue, aElement, ctFromNativeValue)
   else
-    PByte(aBasePtr)^ := aValue;
+    Value := aValue;
+
+  aElement.RequestStorageChange(aBasePtr, aEndPtr, GetExpectedLength(Value));
+
+  case inType of
+    itS8:  PShortInt(aBasePtr)^ := Value;
+    itU16: PWord(aBasePtr)^ := Value;
+    itS16: PSmallInt(aBasePtr)^ := Value;
+    itU24: WriteInteger24(aBasePtr, Value);
+    itU32: PCardinal(aBasePtr)^ := Value;
+    itS32: PLongInt(aBasePtr)^ := Value;
+    itU64: PUInt64(aBasePtr)^ := Value;
+    itS64: PInt64(aBasePtr)^ := Value;
+    itU6to30: WriteIntegerCounter(aBasePtr, Value);
+  else
+    PByte(aBasePtr)^ := Value;
   end;
 end;
 
@@ -9747,6 +9800,10 @@ begin
       else
         {it0:}  Value := 0;
       end;
+
+      if Assigned(inOverlayCallback) then
+        Value := inOverlayCallback(Value, aElement, ctLinksTo);
+
       Result := inFormater.LinksTo[Value, aElement];
     end;
 end;
@@ -9905,6 +9962,9 @@ begin
       {it0:}  Value := 0;
     end;
 
+    if Assigned(inOverlayCallback) then
+      Value := inOverlayCallback(Value, aElement, ctToEditValue);
+
     Result := '';
     if Assigned(inFormater) then
       Result := inFormater.ToEditValue(Value, aElement);
@@ -9936,27 +9996,67 @@ begin
     else
       {it0:}  Result := 0;
     end;
+
+  if Assigned(inOverlayCallback) then
+    Result := inOverlayCallback(Result, aElement, ctToInt);
 end;
 
 function TwbIntegerDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
+var
+  i: Int64;
 begin
   if (NativeUInt(aEndPtr) - NativeUInt(aBasePtr)) < GetExpectedLength then
     VarClear(Result)
   else
-    case inType of
-      itU8:  Result := PByte(aBasePtr)^;
-      itS8:  Result := PShortInt(aBasePtr)^;
-      itU16: Result := PWord(aBasePtr)^;
-      itS16: Result := PSmallInt(aBasePtr)^;
-      itU24: Result := wbReadInteger24(aBasePtr);
-      itU32: Result := PCardinal(aBasePtr)^;
-      itS32: Result := PLongInt(aBasePtr)^;
-      itU64: Result := PUInt64(aBasePtr)^; //no U64 in delphi...
-      itS64: Result := PInt64(aBasePtr)^;
-      itU6to30: Result := ReadIntegerCounter(aBasePtr);
-    else
-      {it0:}  Result := 0;
-    end;
+    if Assigned(inOverlayCallback) then begin
+
+      case inType of
+        itU8:  i := PByte(aBasePtr)^;
+        itS8:  i := PShortInt(aBasePtr)^;
+        itU16: i := PWord(aBasePtr)^;
+        itS16: i := PSmallInt(aBasePtr)^;
+        itU24: i := wbReadInteger24(aBasePtr);
+        itU32: i := PCardinal(aBasePtr)^;
+        itS32: i := PLongInt(aBasePtr)^;
+        itU64: i := PUInt64(aBasePtr)^; //no U64 in delphi...
+        itS64: i := PInt64(aBasePtr)^;
+        itU6to30: i := ReadIntegerCounter(aBasePtr);
+      else
+        {it0:}  i := 0;
+      end;
+
+      i := inOverlayCallback(i, aElement, ctToNativeValue);
+
+      case inType of
+        itU8:  Result := Byte(i);
+        itS8:  Result := ShortInt(i);
+        itU16: Result := Word(i);
+        itS16: Result := SmallInt(i);
+        itU24: Result := i;
+        itU32: Result := Cardinal(i);
+        itS32: Result := LongInt(i);
+        itU64: Result := UInt64(i); //no U64 in delphi...
+        itS64: Result := Int64(i);
+        itU6to30: Result := i;
+      else
+        {it0:}  Result := 0;
+      end;
+
+    end else
+      case inType of
+        itU8:  Result := PByte(aBasePtr)^;
+        itS8:  Result := PShortInt(aBasePtr)^;
+        itU16: Result := PWord(aBasePtr)^;
+        itS16: Result := PSmallInt(aBasePtr)^;
+        itU24: Result := wbReadInteger24(aBasePtr);
+        itU32: Result := PCardinal(aBasePtr)^;
+        itS32: Result := PLongInt(aBasePtr)^;
+        itU64: Result := PUInt64(aBasePtr)^; //no U64 in delphi...
+        itS64: Result := PInt64(aBasePtr)^;
+        itU6to30: Result := ReadIntegerCounter(aBasePtr);
+      else
+        {it0:}  Result := 0;
+      end;
 end;
 
 function TwbIntegerDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
@@ -9987,6 +10087,9 @@ begin
     else
       {it0:}  Value := 0;
     end;
+
+    if Assigned(inOverlayCallback) then
+      Value := inOverlayCallback(Value, aElement, ctToSortKey);
 
     Result := '';
     if Assigned(inFormater) then
@@ -10033,10 +10136,15 @@ begin
     else
       {it0:}  Value := 0;
     end;
+
+    if Assigned(inOverlayCallback) then
+      Value := inOverlayCallback(Value, aElement, ctToStr);
+
     if Assigned(inFormater) then
       Result := inFormater.ToString(Value, aElement)
     else
       Result := IntToStr(Value);
+
     if (Len > GetExpectedLength) and not (inType in [itU6to30]) then begin
       if wbCheckExpectedBytes then
         Result := Result + Format(' <Warning: Expected %d bytes of data, found %d>', [GetExpectedLength , Len])
