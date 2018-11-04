@@ -3401,7 +3401,7 @@ function wbStructS(const aName        : string;
                          aGetCP       : TwbGetConflictPriority = nil)
                                       : IwbArrayDef; overload;
 
-function wbRStructS(const aName        : string;
+function wbRStructs(const aName        : string;
                     const aElementName : string;
                     const aMembers     : array of IwbRecordMemberDef;
                     const aSkipSigs    : TwbSignatures;
@@ -7518,7 +7518,7 @@ begin
   Result := wbArray(aName, wbStruct(aElementName, aMembers, aPriority), 0, aPriority, aRequired, aDontShow, aGetCP);
 end;
 
-function wbRStructS(const aName        : string;
+function wbRStructs(const aName        : string;
                     const aElementName : string;
                     const aMembers     : array of IwbRecordMemberDef;
                     const aSkipSigs    : TwbSignatures;
