@@ -5807,7 +5807,7 @@ begin
       Exit;
 
   SelfRef := Self as IwbContainerElementRef;
-  DoInit(True);
+  //DoInit(True);
   for i := High(cntElements) downto Low(cntElements) do
     cntElements[i].PrepareSave;
 end;
