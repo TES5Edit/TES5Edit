@@ -306,10 +306,6 @@ object frmMain: TfrmMain
         ImageIndex = 3
         TabVisible = False
         OnShow = tbsViewShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object lvReferencedBy: TListView
           AlignWithMargins = True
           Left = 0
@@ -352,10 +348,6 @@ object frmMain: TfrmMain
         Caption = 'Messages'
         ImageIndex = 1
         OnShow = tbsMessagesShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object mmoMessages: TMemo
           AlignWithMargins = True
           Left = 0
@@ -771,10 +763,6 @@ object frmMain: TfrmMain
         Caption = 'Weapon Spreadsheet'
         ImageIndex = 4
         OnShow = tbsSpreadsheetShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object vstSpreadSheetWeapon: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -980,10 +968,6 @@ object frmMain: TfrmMain
         Caption = 'Armor Spreadsheet'
         ImageIndex = 5
         OnShow = tbsSpreadsheetShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object vstSpreadsheetArmor: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -1125,10 +1109,6 @@ object frmMain: TfrmMain
         Caption = 'Ammunition Spreadsheet'
         ImageIndex = 6
         OnShow = tbsSpreadsheetShow
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object vstSpreadSheetAmmo: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -1249,10 +1229,6 @@ object frmMain: TfrmMain
         Caption = 'TabSheet2'
         ImageIndex = 7
         TabVisible = False
-        ExplicitLeft = 0
-        ExplicitTop = 0
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object DisplayPanel: TPanel
           Left = 0
           Top = 0
@@ -2362,6 +2338,9 @@ object frmMain: TfrmMain
       Caption = 'Add'
       OnClick = mniViewAddClick
     end
+    object N26: TMenuItem
+      Caption = '-'
+    end
     object mniViewRemove: TMenuItem
       Caption = 'Remove'
       OnClick = mniViewRemoveClick
@@ -2369,6 +2348,9 @@ object frmMain: TfrmMain
     object mniViewRemoveFromSelected: TMenuItem
       Caption = 'Remove from selected records'
       OnClick = mniViewRemoveFromSelectedClick
+    end
+    object N27: TMenuItem
+      Caption = '-'
     end
     object mniViewNextMember: TMenuItem
       Caption = 'Next Member'
@@ -2378,9 +2360,15 @@ object frmMain: TfrmMain
       Caption = 'Previous Member'
       OnClick = mniViewPreviousMemberClick
     end
+    object N28: TMenuItem
+      Caption = '-'
+    end
     object mniViewSetToDefault: TMenuItem
       Caption = 'Reset structure'
       OnClick = mniViewSetToDefaultClick
+    end
+    object N29: TMenuItem
+      Caption = '-'
     end
     object mniViewCopyToSelectedRecords: TMenuItem
       Caption = 'Copy to selected records'
