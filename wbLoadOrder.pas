@@ -44,6 +44,7 @@ type
     mfMastersMissing,
     mfHasESMFlag,
     mfHasESLFlag,
+    mfHasLocalizedFlag,
     mfIsESM,
     mfActiveInPluginsTxt,
     mfActive,
@@ -253,7 +254,8 @@ var
   i, j, k    : Integer;
   s          : string;
   IsESM      ,
-  IsESL      : Boolean;
+  IsESL      ,
+  IsLocalized: Boolean;
   lIsActive  : Boolean;
   sl         : TStringList;
   ThisModule ,
@@ -262,77 +264,79 @@ var
 begin
   if Assigned(_ModulesByName) then {already loaded}
     Exit;
-  if wbDataPath = '' then
-    Exit;
+  if wbDataPath <> '' then begin
+    Files := TDirectory.GetFiles(wbDataPath);
+    i := Length(Files);
+    if i > 1 then
+      wbMergeSortPtr(@Files[0], i, TListSortCompare(@CompareText));
 
-  Files := TDirectory.GetFiles(wbDataPath);
-  i := Length(Files);
-  if i > 1 then
-    wbMergeSortPtr(@Files[0], i, TListSortCompare(@CompareText));
-
-  SetLength(_Modules, Succ(Length(Files)));
-  with _Modules[0] do begin
-    miFlags := [];
-    miOriginalName := wbGameName + wbHardcodedDat;
-    miName := miOriginalName;
-    miExtension := meESM;
-
-    Include(miFlags, mfHasESMFlag);
-    Include(miFlags, mfIsESM);
-    Include(miFlags, mfIsHardcoded);
-  end;
-  j := 1;
-  for i := Low(Files) to High(Files) do
-    with _Modules[j] do try
+    SetLength(_Modules, Succ(Length(Files)));
+    with _Modules[0] do begin
       miFlags := [];
-      miOriginalName := ExtractFileName(Files[i]);
-      if miOriginalName.EndsWith(csDotGhost, True) then begin
-        miName := Copy(miOriginalName, 1, Length(miOriginalName) - Length(csDotGhost));
-        Include(miFlags, mfGhost);
-        if (j > 0) and SameText(miName, _Modules[Pred(j)].miName) then
-          Continue; {ignore ghost if original exists}
-      end else
-        miName := miOriginalName;
-      miExtension := meUnknown;
-      if miName.EndsWith(csDotEsm, True) then
-        miExtension := meESM
-      else if miName.EndsWith(csDotEsp, True) then
-        miExtension := meESP
-      else if miName.EndsWith(csDotEsu, True) then
-        miExtension := meESU
-      else if miName.EndsWith(csDotEsl, True) and wbIsEslSupported then
-        miExtension := meESL;
-      if miExtension = meUnknown then
-        Continue;
+      miOriginalName := wbGameName + wbHardcodedDat;
+      miName := miOriginalName;
+      miExtension := meESM;
 
-      if wbGameMode >= gmFO4 then
-        if miExtension in [meESM, meESL] then
-          Include(miFlags, mfIsESM);
-
-      miDateTime := wbGetLastWriteTime(wbDataPath + miOriginalName);
-
-      if not wbMastersForFile(wbDataPath+miOriginalName, miMasterNames, @IsESM, @IsESL) then
-        Continue;
-
-      if IsESM then begin
-        Include(miFlags, mfHasESMFlag);
-        if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and wbIsFallout3 then
-          {ignore header flag for load order, only extension counts}
-        else
-          Include(miFlags, mfIsESM);
-       end;
-
-      if IsESL then
-        Include(miFlags, mfHasESLFlag);
-
-      Include(miFlags, mfValid);
-
-      Inc(j);
-    except
-      on E: Exception do
-      wbProgress('Error loading module information for "%s": [%s] %s', [Files[i], E.ClassName, E.Message]);
+      Include(miFlags, mfHasESMFlag);
+      Include(miFlags, mfIsESM);
+      Include(miFlags, mfIsHardcoded);
     end;
-  SetLength(_Modules, j);
+    j := 1;
+    for i := Low(Files) to High(Files) do
+      with _Modules[j] do try
+        miFlags := [];
+        miOriginalName := ExtractFileName(Files[i]);
+        if miOriginalName.EndsWith(csDotGhost, True) then begin
+          miName := Copy(miOriginalName, 1, Length(miOriginalName) - Length(csDotGhost));
+          Include(miFlags, mfGhost);
+          if (j > 0) and SameText(miName, _Modules[Pred(j)].miName) then
+            Continue; {ignore ghost if original exists}
+        end else
+          miName := miOriginalName;
+        miExtension := meUnknown;
+        if miName.EndsWith(csDotEsm, True) then
+          miExtension := meESM
+        else if miName.EndsWith(csDotEsp, True) then
+          miExtension := meESP
+        else if miName.EndsWith(csDotEsu, True) then
+          miExtension := meESU
+        else if miName.EndsWith(csDotEsl, True) and wbIsEslSupported then
+          miExtension := meESL;
+        if miExtension = meUnknown then
+          Continue;
+
+        if wbGameMode >= gmFO4 then
+          if miExtension in [meESM, meESL] then
+            Include(miFlags, mfIsESM);
+
+        miDateTime := wbGetLastWriteTime(wbDataPath + miOriginalName);
+
+        if not wbMastersForFile(wbDataPath+miOriginalName, miMasterNames, @IsESM, @IsESL, @IsLocalized) then
+          Continue;
+
+        if IsESM then begin
+          Include(miFlags, mfHasESMFlag);
+          if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and wbIsFallout3 then
+            {ignore header flag for load order, only extension counts}
+          else
+            Include(miFlags, mfIsESM);
+         end;
+
+        if IsESL then
+          Include(miFlags, mfHasESLFlag);
+
+        if IsLocalized then
+          Include(miFlags, mfHasLocalizedFlag);
+
+        Include(miFlags, mfValid);
+
+        Inc(j);
+      except
+        on E: Exception do
+        wbProgress('Error loading module information for "%s": [%s] %s', [Files[i], E.ClassName, E.Message]);
+      end;
+    SetLength(_Modules, j);
+  end;
   {do NOT perform SetLength on _Modules after this, it could invalidate pointer into the array}
   _ModulesByName := TStringList.Create;
   for i := Low(_Modules) to High(_Modules) do
@@ -633,6 +637,8 @@ begin
     Result := Result + '<ESM>';
   if mfHasESLFlag in miFlags then
     Result := Result + '<ESL>';
+  if mfHasLocalizedFlag in miFlags then
+    Result := Result + '<Localized>';
   if mfMastersMissing in miFlags then
     Result := Result + '<MissingMasters>';
 end;
