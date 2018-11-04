@@ -1030,7 +1030,7 @@ begin
       if Assigned(Element) and (SameText(Element.Name, aCounterName)) then try
         if Element.GetNativeValue <> SelfAsContainer.GetElementCount then
           // if count = 0 and counter element is not required, then just remove it
-          if (SelfAsContainer.GetElementCount = 0) and not Element.Def.Required then
+          if (SelfAsContainer.GetElementCount = 0) and Element.IsRemoveable then
             Element.Remove
           else
             Element.SetNativeValue(SelfAsContainer.GetElementCount);
