@@ -1095,6 +1095,7 @@ type
   IwbKeepAliveRoot = interface(IInterface)
     ['{D1D2C080-CE73-428F-B88F-BF9503CB8619}']
     procedure Done;
+    function IsRoot: Boolean;
   end;
 
   IwbSortableContainer = interface(IwbContainer)
