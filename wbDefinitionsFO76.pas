@@ -966,6 +966,13 @@ const
   DEFL : TwbSignature = 'DEFL'; { New To Fallout 76 }
   OPDS : TwbSignature = 'OPDS'; { New To Fallout 76 }
   DOFA : TwbSignature = 'DOFA'; { New To Fallout 76 }
+  NTWK : TwbSignature = 'NTWK'; { New To Fallout 76 }
+  ILAC : TwbSignature = 'ILAC'; { New To Fallout 76 }
+
+  ESCR : TwbSignature = 'ESCR'; { New To Fallout 76 }
+  REPR : TwbSignature = 'REPR'; { New To Fallout 76 }
+  AVMG : TwbSignature = 'AVMG'; { New To Fallout 76 }
+  DAMS : TwbSignature = 'DAMS'; { New To Fallout 76 }
 
   // signatures of reference records
   sigReferences : TwbSignatures = [
@@ -1105,6 +1112,11 @@ var
   wbSTCP: IwbSubRecordDef;
   wbNTRM: IwbSubRecordDef;
   wbPRPS: IwbSubRecordDef;
+  wbCVPA: IwbSubRecordDef;
+  wbESCR: IwbSubRecordDef;
+  wbREPR: IwbSubRecordDef;
+  wbAVMG: IwbSubRecordDef;
+  wbDAMS: IwbSubRecordDef;
   wbFLTR: IwbSubRecordDef;
   wbAPPR: IwbSubRecordDef;
   wbObjectTemplate: IwbSubRecordStructDef;
@@ -3663,7 +3675,10 @@ type
     {56} ptDamageType,         // DMGT
     {57} ptConditionForm,      // CNDF
     {58} ptEntitlement,        // ENTM
-    {59} ptPerkCard            // PCRD
+    {59} ptPerkCard,           // PCRD
+    {60} ptAcousticSpace,      // ASPC
+    {61} ptCurrency,           // CNCY
+    {62} ptConstructibleObject // COBJ
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -3767,7 +3782,7 @@ const
     (Index: 146; Name: 'IsInMyOwnedCell'),        //  86
     (Index: 147; Name: 'GetWindSpeed'),        //  87
     (Index: 148; Name: 'GetCurrentWeatherPercent'; ParamType1: ptRegion),        //  88
-    (Index: 149; Name: 'GetIsCurrentWeather'; ParamType1: ptWeather),
+    (Index: 149; Name: 'GetIsCurrentWeather'; ParamType1: ptWeather; ParamType2: ptRegion),
     (Index: 150; Name: 'IsContinuingPackagePCNear'),        //  90
     (Index: 152; Name: 'GetIsCrimeFaction'; ParamType1: ptFaction),        //  91
     (Index: 153; Name: 'CanHaveFlames'),        //  92
@@ -4159,25 +4174,25 @@ const
     {478} (Index: 817; Name: 'IsInRobotWorkbench'),
     {479} (Index: 818; Name: 'IsActorsTurfActive'; Desc: 'True if this actor''s EMS turf is active'),
     {480} (Index: 828; Name: 'GetIsPlayer'),
-    {481} (Index: 832; Name: 'GetStageUniqueQuest'; Desc: 'Get the stage of the a unique quest instance'), //off_1443EB300
-    {482} (Index: 833; Name: 'GetStageDoneUniqueQuest'; Desc: 'Get the stage done of a unique quest instance'), //off_1443EB300
+    {481} (Index: 832; Name: 'GetStageUniqueQuest'; Desc: 'Get the stage of the a unique quest instance'; ParamType1: ptQuest),
+    {482} (Index: 833; Name: 'GetStageDoneUniqueQuest'; Desc: 'Get the stage done of a unique quest instance'; ParamType1: ptQuest; ParamType2: ptQuestStage),
     {483} (Index: 834; Name: 'GetVMQuestVariableUnique'; ParamType1: ptQuest; ParamType2: ptString),
     {484} (Index: 835; Name: 'IsWorkshopOwner'; ParamType1: ptObjectReference),
     {485} (Index: 836; Name: 'IsWorkshopClaimant'; ParamType1: ptObjectReference),
     {486} (Index: 837; Name: 'IsActivePlayer'; Desc: 'Test if player is in current quest instance''s active array'),
     {487} (Index: 839; Name: 'IsMemberOfAPlayerTeam'; Desc: 'Test if player is in a player team'),
-    {488} (Index: 840; Name: 'IsWaterConsumeSpell'; Desc: 'Test if a spell is the consume spell for a water object'), //off_1443EAFC0
+    {488} (Index: 840; Name: 'IsWaterConsumeSpell'; Desc: 'Test if a spell is the consume spell for a water object'; ParamType1: ptMagicItem), //off_1443EAFC0
     {489} (Index: 841; Name: 'IsWaterContactSpell'; Desc: 'Test if a spell is the contact spell for a water object'; ParamType1: ptMagicItem),
     {490} (Index: 842; Name: 'IsPlayerInFriendlyWorkshop'; Desc: 'Test if a player is inside a friendly workshop or camp'),
     {491} (Index: 843; Name: 'GetJunkItemCount'; Desc: 'Get the number of junk items in the refrs inventory'),
     {492} (Index: 844; Name: 'GetIsCurrentLocationExact'; ParamType1: ptLocation),
     {493} (Index: 845; Name: 'GetIsEditorLocationExact'; ParamType1: ptLocation),
-    {494} (Index: 846; Name: 'GetActorValueForCurrentLocation'), //off_1443ECE00
+    {494} (Index: 846; Name: 'GetActorValueForCurrentLocation'; ParamType1: ptActorValue; ParamType2: ptKeyword),
     {495} (Index: 849; Name: 'GetIsInRegion'; ParamType1: ptRegion),
-    {496} (Index: 850; Name: 'GetInAcousticSpace'), //off_1443ECE20
+    {496} (Index: 850; Name: 'GetInAcousticSpace'; ParamType1: ptAcousticSpace),
     {497} (Index: 851; Name: 'IsPowerArmorOwner'; Desc: 'Check if a Power Armor furniture reference is owned by player'),
-    {498} (Index: 852; Name: 'GetCurrency'), //off_1443ECCD0
-    {499} (Index: 853; Name: 'HasLearnedRecipe'; Desc: 'Check if the player has learned the given recipe'), //off_1443ECE30
+    {498} (Index: 852; Name: 'GetCurrency'; ParamType1: ptCurrency),
+    {499} (Index: 853; Name: 'HasLearnedRecipe'; Desc: 'Check if the player has learned the given recipe'; ParamType1: ptConstructibleObject),
     {500} (Index: 854; Name: 'HasActiveMagicEffect'; ParamType1: ptMagicEffect),
     {501} (Index: 855; Name: 'HasBeenSearched'; Desc: 'Check if the refrs container has been searched'),
     {502} (Index: 856; Name: 'GetQuestRunningUnique'; ParamType1: ptQuest),
@@ -4189,7 +4204,7 @@ const
     {508} (Index: 862; Name: 'IsInWorkshop'; Desc: 'Test if a ref is inside the closest workshop boundaries'),
     {509} (Index: 863; Name: 'IsInWorkshopOwned'; Desc: 'Test if a ref is inside the closest workshop boundaries owned by passed player or teammate'; ParamType1: ptObjectReference),
     {510} (Index: 864; Name: 'IsJunkItem'; Desc: 'Test if an item is considered junk'),
-    {511} (Index: 865; Name: 'IsInWeather'; Desc: 'Test if a ref is in a given weather'; ParamType1: ptWeather), //off_1443EB940
+    {511} (Index: 865; Name: 'IsInWeather'; Desc: 'Test if a ref is in a given weather'; ParamType1: ptWeather),
     {512} (Index: 867; Name: 'GetQuickplayModeLoadingInto'; Desc: 'Gets the quickplay mode on the client the player is loading into'),
     {513} (Index: 868; Name: 'IsInitiatingFastTravel'),
     {514} (Index: 869; Name: 'GetQuickplayKeywordLoadingInto'; Desc: 'Gets the quickplay keyword on the client the player is loading into'; ParamType1: ptKeyword),
@@ -4204,7 +4219,7 @@ const
     {523} (Index: 878; Name: 'CHAL_IsTargetWeaponMelee'),
     {524} (Index: 879; Name: 'CHAL_IsTargetWeaponRanged'),
     {525} (Index: 880; Name: 'CHAL_IsTargetWeaponThrown'),
-    {526} (Index: 881; Name: 'CHAL_GetTargetWeaponDamageType'),
+    {526} (Index: 881; Name: 'CHAL_GetTargetWeaponDamageType'; ParamType1: ptDamageType),
     {527} (Index: 882; Name: 'CHAL_DoesTargetWeaponHaveKeyword'; ParamType1: ptKeyword),
     {528} (Index: 884; Name: 'CHAL_IsTargetWorkshopRecipeInCategory'; ParamType1: ptKeyword),
     {529} (Index: 885; Name: 'GetLastFallDamage'),
@@ -4212,7 +4227,7 @@ const
     {531} (Index: 887; Name: 'GetLastHitLethal'),
     {532} (Index: 888; Name: 'IsPlayerTeammate'),
     {533} (Index: 889; Name: 'IsPlayerCombatOpponent'),
-    {534} (Index: 890; Name: 'HasPerkCardEquipped'; ParamType1: ptPerkCard) //off_1443EC190
+    {534} (Index: 890; Name: 'HasPerkCardEquipped'; ParamType1: ptPerkCard; ParamType2: ptInteger) //off_1443EC190
   );
 
 var
@@ -7117,8 +7132,16 @@ begin
   wbENLM := wbUnknown(ENLM);
   wbENLT := wbUnknown(ENLT);
   wbENLS := wbFloat(ENLS);
-  wbAUUV := wbUnknown(AUUV);
-  wbSNTP := wbFormID(SNTP, 'Snap Template');
+  wbAUUV := wbStruct(AUUV, 'Unknown', [
+    { 0} wbByteArray('Unknown', 4),
+    { 4} wbFloat('Unknown'),
+    { 8} wbFloat('Unknown'),
+    {12} wbFloat('Unknown'),
+    {16} wbFloat('Unknown'),
+    {20} wbFloat('Unknown'),
+    {24} wbUnknown
+  ]);
+  wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
   wbXALG := wbUnknown(XALG);
 
   wbPropTypeEnum := wbEnum([
@@ -7664,7 +7687,7 @@ begin
       ])),
       wbUnknown
     ]),
-    wbFormID(HGLB),
+    wbFormIDCk(HGLB, 'Health Global', [GLOB]),
     wbArrayS(DAMC, 'Resistances', wbStructSK([0], 'Resistance', [
       wbFormIDCk('Damage Type', [DMGT]),
       wbInteger('Value', itU32),
@@ -7693,8 +7716,8 @@ begin
           wbFormIDCk('Explosion', [EXPL, NULL]),
           wbFormIDCk('Debris', [DEBR, NULL]),
           wbInteger('Debris Count', itS32),
-          wbFormID('Material Swap'),
-          wbUnknown
+          wbFormIDCk('Material Swap', [MSWP, NULL]),
+          wbFloat
         ], cpNormal, True),
         wbString(DSTA, 'Sequence Name'),
         wbRStructSK([0], 'Model', [
@@ -8382,7 +8405,17 @@ begin
       {15} 'Anim Face',
       {16} 'Quest Group',
       {17} 'Anim Injured',
-      {18} 'Dispel Effect'
+      {18} 'Dispel Effect',
+      {19} 'Unknown 19',
+      {20} 'Unknown 20',
+      {21} 'Unknown 21',
+      {22} 'Unknown 22',
+      {23} 'Unknown 23',
+      {24} 'Unknown 24',
+      {25} 'Unknown 25',
+      {26} 'Unknown 26',
+      {27} 'Unknown 27',
+      {28} 'Unknown 28'
     ]);
 
   wbETYP := wbFormIDCk(ETYP, 'Equipment Type', [EQUP, NULL]);
@@ -8774,12 +8807,18 @@ begin
         wbFormIDCkNoReach('Worldspace', [WRLD, FLST]),
         {56 ptDamageType}
         wbFormIDCkNoReach('Damage Type', [DMGT, FLST]),
-        { ptConditionForm}
+        {57 ptConditionForm}
         wbFormIDCkNoReach('Condition Form', [CNDF]),
-        { ptEntitlement}
+        {58 ptEntitlement}
         wbFormIDCkNoReach('Entitlement', [ENTM]),
-        { ptPerkCard}
-        wbFormIDCkNoReach('Perk Card', [PCRD])
+        {59 ptPerkCard}
+        wbFormIDCkNoReach('Perk Card', [PCRD]),
+        {60 ptAcousticSpace }
+        wbFormIDCkNoReach('Acoustic Space', [ASPC]),
+        {61 ptCurrency }
+        wbFormIDCkNoReach('Currency', [CNCY]),
+        {62 ptConstructibleObject }
+        wbFormIDCkNoReach('Constructible Object', [COBJ])
       ]),
 
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
@@ -8947,7 +8986,13 @@ begin
         {58 ptEntitlement}
         wbFormIDCkNoReach('Entitlement', [ENTM]),
         {59 ptPerkCard}
-        wbFormIDCkNoReach('Perk Card', [PCRD])
+        wbFormIDCkNoReach('Perk Card', [PCRD]),
+        {60 ptAcousticSpace }
+        wbFormIDCkNoReach('Acoustic Space', [ASPC]),
+        {61 ptCurrency }
+        wbFormIDCkNoReach('Currency', [CNCY]),
+        {62 ptConstructibleObject }
+        wbFormIDCkNoReach('Constructible Object', [COBJ])
       ]),
       wbInteger('Run On', itU32, wbEnum([
         { 0} 'Subject',
@@ -8988,6 +9033,46 @@ begin
   wbPRPS := wbArrayS(PRPS, 'Properties', wbStructSK([0], 'Property', [
     wbActorValue,
     wbFloat('Value'),
+    wbUnion('Unknown', wbDeciderFormVersion152, [
+      wbEmpty('Unknown'),
+      wbByteArray('Unknown', 4)
+    ])
+  ]));
+  wbCVPA := wbArrayS(CVPA, 'Unknown', wbStructSK([0], 'Unknown', [
+    wbFormIDCk('Keyword', [KYWD]),
+    wbByteArray('Unknown', 4),
+    wbUnion('Unknown', wbDeciderFormVersion152, [
+      wbEmpty('Unknown'),
+      wbByteArray('Unknown', 4)
+    ])
+  ]));
+  wbESCR := wbArrayS(ESCR, 'Unknown', wbStructSK([0], 'Unknown', [
+    wbFormID('Unknown'),
+    wbByteArray('Unknown', 4),
+    wbUnion('Unknown', wbDeciderFormVersion152, [
+      wbEmpty('Unknown'),
+      wbByteArray('Unknown', 4)
+    ])
+  ]));
+  wbREPR := wbArrayS(REPR, 'Unknown', wbStructSK([0], 'Unknown', [
+    wbFormID('Unknown'),
+    wbByteArray('Unknown', 4),
+    wbUnion('Unknown', wbDeciderFormVersion152, [
+      wbEmpty('Unknown'),
+      wbByteArray('Unknown', 4)
+    ])
+  ]));
+  wbAVMG := wbArrayS(AVMG, 'Unknown', wbStructSK([0], 'Unknown', [
+    wbFormID('Unknown'),
+    wbByteArray('Unknown', 4),
+    wbUnion('Unknown', wbDeciderFormVersion152, [
+      wbEmpty('Unknown'),
+      wbByteArray('Unknown', 4)
+    ])
+  ]));
+  wbDAMS := wbArrayS(DAMS, 'Unknown', wbStructSK([0], 'Unknown', [
+    wbFormID('Unknown'),
+    wbByteArray('Unknown', 4),
     wbUnion('Unknown', wbDeciderFormVersion152, [
       wbEmpty('Unknown'),
       wbByteArray('Unknown', 4)
@@ -9296,18 +9381,25 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
-    wbRArray('Unknown', wbUnknown(OPDS)),
+    wbRArray('Unknown', wbStruct(OPDS, 'Unknown', [
+      wbByteArray('Unknown', 8),
+      wbFloat('Unknown'),
+      wbUnknown
+    ])),
     wbPTRN,
     wbSTCP,
     wbRArray('Unknown', wbUnknown(OPDS)),
-    wbFormID(DEFL),
+    wbFormIDCk(DEFL, 'Deflection Layer', [LAYR]),
     wbSNTP,
     wbUnknown(XALG),
     wbXALG,
     wbFULL,
     wbMODL,
     wbDEST,
-    wbUnknown(DOFA),
+    wbStruct(DOFA, 'Unknown', [
+      wbFormIDCk('Faction', [FACT]),
+      wbUnknown
+    ]),
     wbKSIZ,
     wbKWDAs,
     wbPRPS,
@@ -10772,6 +10864,8 @@ begin
 
   wbRecord(KYWD, 'Keyword',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000010} { 4}  4, 'Unknown 4',
+      {0x00000800} {11} 11, 'Unknown 11', //AnimFaceArchetype*
       {0x00080000} {15} 15, 'Restricted'
     ])), [
     wbEDID,
@@ -10779,6 +10873,7 @@ begin
     wbString(DNAM, 'Notes'),
     wbInteger(TNAM, 'Type', itU32, wbKeywordTypeEnum),
     wbFormIDCk(DATA, 'Attraction Rule', [AORU]),
+    wbEmpty(NTWK, 'Unknown'),
     wbFULL,
     wbString(NNAM, 'Display Name') {Legacy record replaced with FULL}
   ]);
@@ -10786,10 +10881,15 @@ end;
 
 procedure DefineFO76e;
 begin
-  wbRecord(LCRT, 'Location Reference Type', [
+  wbRecord(LCRT, 'Location Reference Type',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000010} { 4}  4, 'Unknown 4'
+    ])), [
     wbEDID,
     wbCNAM,
-    wbUnknown(TNAM)
+    wbUnknown(TNAM),
+    wbMODL,
+    wbUnknown(FNAM)
   ]);
 
   wbRecord(AACT, 'Action',
@@ -15862,7 +15962,7 @@ begin
     wbByteArray(SCRN, 'Screenshot'),                      // If possible then ignored by the runtime. Neither from the CK
     wbRArray('Transient Types (CK only)', wbStruct(TNAM, 'Transient Type', [
       wbInteger('FormType', itU32), // seen TESTopic 78 (array of DIAL) and BGSScene 126 (array of SCEN)
-      wbArray('Unknown', wbFormID('Unknown'))
+      wbArray('Unknown', wbFormIDCk('Unknown', [DIAL, SCEN]))
     ])),          // Ignored by the runtime
     wbInteger(INTV, 'Unknown', itU32),                    // Ignored by the runtime, 4 bytes loaded in CK
     wbInteger(INCC, 'Unknown', itU32)                     // Size of some array of 12 bytes elements
@@ -16591,7 +16691,13 @@ begin
     wbCUSD,
     wbInteger(DATA, 'Auto Calc Value', itU32),
     wbFormIDCk(MNAM, 'Scrap Item', [MISC]),
-    wbFormIDCk(GNAM, 'Mod Scrap Scalar', [GLOB])
+    wbFormIDCk(GNAM, 'Mod Scrap Scalar', [GLOB]),
+    wbCVPA,
+    wbArray(ILAC, 'Unknown', wbStruct('Unknown', [
+      //wbByteArray('Unknown', 4),
+      wbFloat('Unknown'),
+      wbFormIDCk('Curve Table', [CURV])
+    ]))
   ]);
 
   wbRecord(DFOB, 'Default Object', [
