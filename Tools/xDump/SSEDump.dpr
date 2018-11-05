@@ -684,15 +684,33 @@ var
   Error                       : string;
   Container                   : IwbContainerElementRef;
   i                           : Integer;
+  GroupRecord  : IwbGroupRecord;
+  ContainerRef : IwbContainerElementRef;
+  Chapter      : IwbChapter;
 begin
   Error := aElement.Check;
   Result := Error <> '';
   if Result then
     WriteLn(StringOfChar(' ', aIndent * 2) + aElement.Name, ' -> ', Error);
 
-  if Supports(aElement, IwbContainerElementRef, Container) then
+  if Supports(aElement, IwbContainerElementRef, Container) then begin
+
+    if (wbToolSource in [tsPlugins]) then if (Container.ElementType = etGroupRecord) then
+      if Supports(Container, IwbGroupRecord, GroupRecord) then
+        if GroupRecord.GroupType = 0 then begin
+          if Assigned(DumpGroups) and not DumpGroups.Find(String(TwbSignature(GroupRecord.GroupLabel)), i) then
+            Exit;
+          ReportProgress('Checking: ' + GroupRecord.Name);
+        end
+        else
+          if Assigned(SkipChildGroups) and Assigned(GroupRecord.ChildrenOf) and
+             SkipChildGroups.Find(String(TwbSignature(GroupRecord.ChildrenOf.Signature)), i)
+          then
+            Exit;
+
     for i := Pred(Container.ElementCount) downto 0 do
       Result := CheckForErrors(aIndent + 1, Container.Elements[i]) or Result;
+  end;
 
   if Result and (Error = '') then
     WriteLn(StringOfChar(' ', aIndent * 2), 'Above errors were found in: ', aElement.Name);
@@ -1515,8 +1533,8 @@ begin
         ReportProgress('Unexpected Error: <'+e.ClassName+': '+e.Message+'>');
     end;
   finally
-    if wbReportMode or (DebugHook <> 0) then begin
-      WriteLn('Press enter to continue...');
+    if DebugHook <> 0 then begin
+      ReportProgress('Press enter to continue...');
       ReadLn;
     end;
   end;
