@@ -209,6 +209,9 @@ var
   wbReportUnknownEnums               : Boolean = True;
   wbReportFormIDNotAllowedReferences : Boolean = True;
   wbReportUnknown                    : Boolean = False;
+
+  wbReportUnknownStep                : Integer = 1;
+
   wbMoreInfoForRequired              : Boolean = False;
   wbMoreInfoForDecider               : Boolean = False;
   wbTrackAllEditorID                 : Boolean = False;
@@ -13755,8 +13758,8 @@ begin
             end else
               Inc(NotFoundFormIDAtOffSet[Offset]);
           end;
-          Inc(p,4);
-          Inc(OffSet,4);
+          Inc(p,wbReportUnknownStep);
+          Inc(OffSet,wbReportUnknownStep);
         end;
       end;
 
@@ -13799,6 +13802,10 @@ begin
             end;
 
           end;
+          Inc(p,wbReportUnknownStep);
+          Inc(OffSet,wbReportUnknownStep);
+        end;
+      end;
           Inc(p,4);
           Inc(OffSet,4);
         end;
