@@ -260,6 +260,7 @@ const
   CDIX : TwbSignature = 'CDIX'; { New to Fallout 4 }
   CELL : TwbSignature = 'CELL';
   CHAL : TwbSignature = 'CHAL'; { New To Fallout 76 }
+  CIFK : TwbSignature = 'CIFK'; { New to Fallout 76 }
   CIS1 : TwbSignature = 'CIS1'; { New to Skyrim }
   CIS2 : TwbSignature = 'CIS2'; { New to Skyrim }
   CITC : TwbSignature = 'CITC'; { New to Skyrim }
@@ -307,6 +308,7 @@ const
   CURV : TwbSignature = 'CURV'; { New To Fallout 76 }
   CUSD : TwbSignature = 'CUSD'; { New to Fallout 4 }
   CVPA : TwbSignature = 'CVPA'; { New to Fallout 4 }
+  CVT0 : TwbSignature = 'CVT0'; { New to Fallout 76 }
   DALC : TwbSignature = 'DALC'; { New to Skyrim }
   DAMA : TwbSignature = 'DAMA'; { New to Fallout 4 }
   DAMC : TwbSignature = 'DAMC'; { New to Fallout 4 }
@@ -478,6 +480,8 @@ const
   LLCT : TwbSignature = 'LLCT'; {New to Skyrim, part of LVLI 'Count'}
   LLKC : TwbSignature = 'LLKC'; { New to Fallout 4 }
   LNAM : TwbSignature = 'LNAM';
+  LRNC : TwbSignature = 'LRNC'; {New to Fallout 76 }
+  LRNM : TwbSignature = 'LRNM'; {New to Fallout 76 }
   LSCR : TwbSignature = 'LSCR';
   LSPR : TwbSignature = 'LSPR'; { New to Fallout 4 }
   LTEX : TwbSignature = 'LTEX';
@@ -626,6 +630,7 @@ const
   PCRD : TwbSignature = 'PCRD'; { New To Fallout 76 }
   PDTO : TwbSignature = 'PDTO'; { New to Skyrim }
   PERK : TwbSignature = 'PERK';
+  PFAC : TwbSignature = 'PFAC'; { New To Fallout 76 }
   PFIG : TwbSignature = 'PFIG';
   PFLA : TwbSignature = 'PFLA'; { New to Skyrim }
   PFO2 : TwbSignature = 'PFO2'; { New to Skyrim }
@@ -657,6 +662,8 @@ const
   PPLO : TwbSignature = 'PPLO'; { New To Fallout 76 }
   PPRL : TwbSignature = 'PPRL'; { New To Fallout 76 }
   PRCB : TwbSignature = 'PRCB'; { New to Skyrim }
+  PRFI : TwbSignature = 'PRFI'; { New To Fallout 76 }
+  PRFS : TwbSignature = 'PRFS'; { New To Fallout 76 }
   PRKC : TwbSignature = 'PRKC';
   PRKE : TwbSignature = 'PRKE';
   PRKF : TwbSignature = 'PRKF';
@@ -692,6 +699,7 @@ const
   RDOT : TwbSignature = 'RDOT';
   RDSA : TwbSignature = 'RDSA'; { New to Skyrim }
   RDWT : TwbSignature = 'RDWT';
+  RECF : TwbSignature = 'RECF'; {New to Fallout 76 }
   REFR : TwbSignature = 'REFR';
   REGN : TwbSignature = 'REGN';
   RELA : TwbSignature = 'RELA';
@@ -700,6 +708,7 @@ const
   REPT : TwbSignature = 'REPT'; { New To Fallout 4 }
   RESO : TwbSignature = 'RESO'; { New To Fallout 76 }
   REVB : TwbSignature = 'REVB';
+  REPM : TwbSignature = 'REPM'; {New to Fallout 76 }
   RFCT : TwbSignature = 'RFCT';
   RFGP : TwbSignature = 'RFGP'; { New to Fallout 4 }
   RGDL : TwbSignature = 'RGDL'; { Unused in Skyrim, but contained in Skyrim.esm }
@@ -995,9 +1004,9 @@ const
     'CONT', 'DEBR', 'DOOR', 'EXPL', 'FLST', 'FLOR',
     'FURN', 'HAZD', 'IDLM', 'INGR', 'KEYM', 'LIGH',
     'LVLI', 'LVLN', 'LVSP', 'MISC', 'MSTT', 'NOTE',
-    'NPC_', 'OMOD', 'PROJ', 'SCOL', 'SCRL', 'SECH',
-    'SOUN', 'SPEL', 'STAT', 'TACT', 'TERM', 'TREE',
-    'TXST', 'WATR', 'WEAP'
+    'NPC_', 'OMOD', 'PKIN', 'PROJ', 'SCOL', 'SCRL',
+    'SECH', 'SOUN', 'SPEL', 'STAT', 'TACT', 'TERM',
+    'TREE', 'TXST', 'WATR', 'WEAP'
   ];
 
 var
@@ -11636,6 +11645,7 @@ begin
       {0x00000004}  2, 'Non-Playable'
     ])), [
     wbEDID,
+    wbUnknown(DURL),
     wbVMADFragmentedPERK,
     wbFULL,
     wbDESCReq,
@@ -11649,9 +11659,11 @@ begin
       wbInteger('Hidden', itU8, wbBoolEnum)
     ], cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SNDR]),
+    wbFormID(PRFS, 'Perk Activation Sound'),
     wbFormIDCK(NNAM, 'Next Perk', [PERK, NULL]),
     wbString(FNAM, 'SWF'),
-
+    wbString(PRFI),
+    wbFormIDCk(PFAC, 'Perk Added Faction', [FACT]),
     wbRStructsSK('Effects', 'Effect', [0, 1], [
       wbStructSK(PRKE, [1, 2, 0], 'Header', [
         wbInteger('Type', itU8, wbEnum([
@@ -14047,18 +14059,25 @@ begin
 
   wbRecord(COBJ, 'Constructible Object', [
     wbEDID,
+    wbUnknown(XALG),
     wbYNAM,
     wbZNAM,
     wbArrayS(FVPA, 'Components',
       wbStructSK([0], 'Component', [
         wbFormIDCkNoReach('Component', sigBaseObjects),
         wbInteger('Count', itU32),
-        wbUnion('Unknown', wbDeciderFormVersion152, [
-          wbEmpty('Unknown'),
-          wbByteArray('Unknown', 4)
-        ])
+        wbFormID('Curve Table')
       ])
     ),
+    wbArrayS(REPR, 'Repair',
+      wbStructSK([0], 'Component', [
+        wbFormIDCkNoReach('Component', sigBaseObjects),
+        wbInteger('Count', itU32),
+        wbFormID('Curve Table')
+      ])
+    ),
+    wbUnknown(REPM),
+    wbUnknown(LRNM),
     wbDESC,
     wbCTDAs,
     wbFormIDCk(CNAM, 'Created Object', sigBaseObjects),
@@ -14067,7 +14086,14 @@ begin
     wbByteArray(NAM2, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
     wbByteArray(NAM3, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
     wbFormIDCk(ANAM, 'Menu Art Object', [ARTO]),
+    wbFormID(GNAM),
+    wbFormID(CVT0,'Curve Table'),
+    wbFormID(LRNC, 'Learn Chance'),
     wbArrayS(FNAM, 'Category', wbFormIDCk('Keyword', [KYWD])),
+    wbUnknown(HNAM),
+    wbUnknown(DNAM),
+    wbFormID(CIFK),
+    wbUnknown(RECF),
     wbStruct(INTV, 'Data', [
       wbInteger('Created Object Count', itU16),
       wbInteger('Priority', itU16)
@@ -17393,7 +17419,8 @@ begin
     {3} 'Charisma',
     {4} 'Intelligence',
     {5} 'Agility',
-    {6} 'Luck'
+    {6} 'Luck',
+    {7} 'Unknown'
   ]);
 
   wbRecord(PCRD, 'Perk Card', [
@@ -17407,12 +17434,14 @@ begin
     ]),
     wbFormID(PCDV),
     wbFormID(SNAM),
-    wbString(MNAM),
+    wbString(MNAM, 'Male Name'),
+    wbString(FNAM, 'Female Name'),
     wbRArray('Perks',
       wbRStruct('Perk', [
         wbEmpty(PRKE, 'Start Marker'),
-        wbInteger(DATA, 'Level', itU8),
-        wbFormID(MNAM, Perk),
+        wbInteger(DATA, 'Card Rank Cost', itU8),
+        wbFormID(MNAM, 'Male Perk'),
+        wbFormID(FNAM, 'Female Perk'),
         wbEmpty(PRKF, 'End Marker')
       ], [])
     )
