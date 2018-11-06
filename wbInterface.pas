@@ -201,6 +201,7 @@ var
   wbReportUnknownFormIDs             : Boolean = True;
   wbReportUnknownFloats              : Boolean = True;
   wbReportUnknownStrings             : Boolean = True;
+  wbReportUnknownLStrings            : Boolean = True;
   wbReportEmpty                      : Boolean = True;
   wbReportSometimesEmpty             : Boolean = True;
   wbReportFormIDs                    : Boolean = True;
@@ -5296,11 +5297,9 @@ type
     NotFoundString         : Integer;
     Strings                : TStringList;
 
-//------------------------------------------------------------------------------
-// Added LString Routine
-//------------------------------------------------------------------------------
-    FoundLString            : Integer;
-    NotFoundLString         : Integer;
+    FoundLStringAtOffSet     : array of Integer;
+    NotFoundLStringAtOffSet  : array of Integer;
+    LStringsAtOffSet         : array of TStringList;
 
     IsEmpty                 : Integer;
     IsNotEmpty              : Integer;
@@ -13603,6 +13602,24 @@ begin
       end;
     end;
 
+    if wbReportUnknownLStrings then begin
+      FoundOne := False;
+      with BA do begin
+        for j := Low(FoundLStringAtOffSet) to High(FoundLStringAtOffSet) do
+          if (FoundLStringAtOffSet[j] > 2) and (NotFoundLStringAtOffSet[j] = 0) then begin
+            if not FoundOne then begin
+              FoundOne := True;
+              WriteLn('Found LStrings: ', s);
+            end;
+            with LStringsAtOffSet[j] do begin
+              WriteLn('  Offset ', j, ': ', Count, ' (', FoundLStringAtOffSet[j],')');
+              for k := 0 to Pred(Count) do
+                WriteLn('    ', Strings[k], ' (', Integer(Objects[k]),')');
+            end;
+          end;
+      end;
+    end;
+
   end;
 
   if wbReportUnknownStrings then
@@ -13806,10 +13823,46 @@ begin
           Inc(OffSet,wbReportUnknownStep);
         end;
       end;
-          Inc(p,4);
-          Inc(OffSet,4);
+
+      if wbReportUnknownLStrings then
+        if Assigned(aElement) and Assigned(aElement._File) and aElement._File.IsLocalized then begin
+          p := aBasePtr;
+          OffSet := 0;
+          while (NativeUInt(p)+3) < NativeUInt(aEndPtr) do begin
+            aInt := PCardinal(p)^;
+            if (aInt <> $0) and ((Length(NotFoundLStringAtOffSet) < Succ(OffSet)) or (NotFoundLStringAtOffSet[Offset] < 1)) then begin
+
+              if Length(FoundLStringAtOffSet) < Succ(Offset) then
+                SetLength(FoundLStringAtOffSet, Succ(Offset));
+              if Length(NotFoundLStringAtOffSet) < Succ(Offset) then
+                SetLength(NotFoundLStringAtOffSet, Succ(Offset));
+              if Length(LStringsAtOffSet) < Succ(Offset) then
+                SetLength(LStringsAtOffSet, Succ(Offset));
+
+              try
+                s := wbStringToAnsi(wbLocalizationHandler.GetValue(PCardinal(aBasePtr)^, aElement), aElement);
+                if (s <> '') and not S.StartsWith('<Error:', True) then begin
+                  Inc(FoundLStringAtOffSet[Offset]);
+
+                  if not Assigned(LStringsAtOffSet[Offset]) then
+                    LStringsAtOffSet[Offset] := TwbFastStringListCS.CreateSorted;
+
+                  with LStringsAtOffSet[Offset] do if Count < 15 then begin
+                    if not Find(s, i) then
+                      i := AddObject(s, TObject(0));
+                    Objects[i] := TObject(Succ(Integer(Objects[i])));
+                  end;
+                end else
+                  Inc(NotFoundLStringAtOffSet[Offset]);
+              except
+                Inc(NotFoundLStringAtOffSet[Offset]);
+              end;
+
+            end;
+            Inc(p,wbReportUnknownStep);
+            Inc(OffSet,wbReportUnknownStep);
+          end;
         end;
-      end;
 
       if wbReportUnknownStrings then begin
         if (badSize < 1) and (NotFoundString < 1) then begin
