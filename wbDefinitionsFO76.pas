@@ -13587,6 +13587,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbPTRN,
+    wbUnknown(XALG),
     wbFULLReq,
     wbMODL,
     wbICON,
@@ -13599,7 +13600,9 @@ begin
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
-    ], cpNormal, True)
+    ], cpNormal, True),
+    wbUnknown(AQIC),
+    wbDIQO
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbQuadrantEnum := wbEnum([
