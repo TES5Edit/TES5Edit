@@ -903,6 +903,7 @@ type
 
     LOOTPluginInfos: array of TLOOTPluginInfo;
     StickViewNodeLabel: string;
+    FoundViewLabelNode: PVirtualNode;
 
     PendingContainer: IwbDataContainer;
     PendingMainRecords: TDynMainRecords;
@@ -5802,6 +5803,7 @@ begin
 
     vstView.BeginUpdate;
     try
+      FoundViewLabelNode := nil;
       OffsetXY := vstView.OffsetXY;
       Column := vstView.FocusedColumn;
       ViewNode := vstView.FocusedNode;
@@ -5858,19 +5860,25 @@ begin
       else
         Exit;
       end;
-      if Assigned(NavNode) then begin
-        if tmrPendingSetActive.Enabled then
-          tmrPendingSetActiveTimer(tmrPendingSetActive);
-        vstView.UpdateScrollBars(False);
-        vstView.OffsetXY := OffsetXY;
-        if Assigned(ViewNode) then begin
-          ViewNode := vstView.GetNodeAt(r.Left + 2, r.Top + 2);
-          if Assigned(ViewNode) then
-            vstView.FocusedNode := ViewNode;
+      if StickViewNodeLabel <> '' then begin
+        if Assigned(NavNode) then begin
+          if tmrPendingSetActive.Enabled then
+            tmrPendingSetActiveTimer(tmrPendingSetActive);
+          vstView.UpdateScrollBars(False);
+          if not Assigned(FoundViewLabelNode) then begin
+            vstView.OffsetXY := OffsetXY;
+            if Assigned(ViewNode) then begin
+              ViewNode := vstView.GetNodeAt(r.Left + 2, r.Top + 2);
+              if Assigned(ViewNode) then
+                vstView.FocusedNode := ViewNode;
+            end;
+          end else
+            vstView.FocusedNode := FoundViewLabelNode;
+          Column := Min(Max(1, Column), Pred(vstView.Header.Columns.Count));
+          vstView.FocusedColumn := Column;
+          if not Assigned(FoundViewLabelNode) then
+            vstView.OffsetXY := OffsetXY;
         end;
-        Column := Min(Max(1, Column), Pred(vstView.Header.Columns.Count));
-        vstView.FocusedColumn := Column;
-        vstView.OffsetXY := OffsetXY;
       end;
     finally
       vstView.EndUpdate;
@@ -14431,8 +14439,11 @@ begin
     Free;
   end;
 
-  if Assigned(LabelNode) then
+  if Assigned(LabelNode) then begin
     vstView.TopNode := LabelNode;
+    vstView.FocusedNode := LabelNode;
+    FoundViewLabelNode := LabelNode;
+  end;
 end;
 
 procedure TfrmMain.DoSetActiveRecord(const aMainRecord: IwbMainRecord);
@@ -14530,8 +14541,8 @@ begin
         InitConflictStatus(vstView.RootNode, ActiveMaster.IsInjected and not (ActiveMaster.Signature = 'GMST'), @ActiveRecords[0]);
         ExpandView;
 
-        UpdateColumnWidths;
         SetViewNodePositionLabel(ViewLabel);
+        UpdateColumnWidths;
         if pgMain.ActivePage <> tbsReferencedBy then
           pgMain.ActivePage := tbsView;
       end
@@ -15735,8 +15746,9 @@ begin
           ModalEdit and Assigned(NodeDatas[i].Element) and NodeDatas[i].Element.IsEditable);
       if not ModalEdit then
         Show
-      else
+      else begin
         ShowModal;
+      end;
     end;
   end;
 end;
