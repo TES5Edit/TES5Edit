@@ -14273,11 +14273,23 @@ begin
 end;
 
 function TwbElement.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
+var
+  TargetValueDef: IwbValueDef;
+  SourceValueDef: IwbValueDef;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then
+    if (not wbEditAllowed) {or (not GetIsEditable)} then
+      raise Exception.Create(GetName + ' can not be assigned');
 
-  Result := GetDef.Assign(Self, aIndex, aElement, aOnlySK);
+  TargetValueDef := GetValueDef;
+  if TargetValueDef = nil then
+    raise Exception.Create(GetName + ' can not be assigned');
+
+  if not wbIsInternalEdit then
+    if dfInternalEditOnly in TargetValueDef.DefFlags then
+      raise Exception.Create(GetName + ' can not be assigned');
+
+  Result := TargetValueDef.Assign(Self, aIndex, aElement, aOnlySK);;
 end;
 
 procedure TwbElement.BeforeDestruction;
