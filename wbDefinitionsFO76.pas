@@ -17393,7 +17393,8 @@ begin
     {3} 'Charisma',
     {4} 'Intelligence',
     {5} 'Agility',
-    {6} 'Luck'
+    {6} 'Luck',
+    {7} 'Unknown'
   ]);
 
   wbRecord(PCRD, 'Perk Card', [
@@ -17407,12 +17408,14 @@ begin
     ]),
     wbFormID(PCDV),
     wbFormID(SNAM),
-    wbString(MNAM),
+    wbString(MNAM, 'Male Name'),
+    wbString(FNAM, 'Female Name'),
     wbRArray('Perks',
       wbRStruct('Perk', [
         wbEmpty(PRKE, 'Start Marker'),
-        wbInteger(DATA, 'Level', itU8),
-        wbFormID(MNAM, Perk),
+        wbInteger(DATA, 'Card Rank Cost', itU8),
+        wbFormID(MNAM, 'Male Perk'),
+        wbFormID(FNAM, 'Female Perk'),
         wbEmpty(PRKF, 'End Marker')
       ], [])
     )
