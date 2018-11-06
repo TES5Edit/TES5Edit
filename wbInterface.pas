@@ -197,7 +197,7 @@ var
   wbReportMode                       : Boolean = False;
   wbReportUnused                     : Boolean = False;
   wbReportRequired                   : Boolean = False;
-  wbReportUnusedData                 : Boolean = False;
+  wbReportUnusedData                 : Boolean = True;
   wbReportUnknownFormIDs             : Boolean = True;
   wbReportUnknownFloats              : Boolean = True;
   wbReportUnknownStrings             : Boolean = True;
@@ -13850,7 +13850,7 @@ begin
 
                   with LStringsAtOffSet[Offset] do if Count < 15 then begin
                     if not Find(s, i) then
-                      i := AddObject(s, TObject(0));
+                      i := AddObject('[' + IntToHex(i, 8) + '] ' + s, TObject(0));
                     Objects[i] := TObject(Succ(Integer(Objects[i])));
                   end;
                 end else
@@ -14511,11 +14511,13 @@ threadvar
 function wbFormIDErrorCheckLock: Integer;
 begin
   Inc(_FormIDErrorCheckLockCount);
+  Result := _FormIDErrorCheckLockCount;
 end;
 
 function wbFormIDErrorCheckUnlock: Integer;
 begin
   Dec(_FormIDErrorCheckLockCount);
+  Result := _FormIDErrorCheckLockCount;
 end;
 
 function TwbFormIDChecked.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -17126,7 +17128,9 @@ end;
 function TwbBaseSignatureDef.GetSignatureCount: Integer;
 begin
   if GetDefaultSignature <> #0#0#0#0 then
-    Result := 1;
+    Result := 1
+  else
+    Result := 0;
 end;
 
 { TwbGridCell }
