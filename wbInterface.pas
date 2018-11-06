@@ -5702,6 +5702,7 @@ type
     function GetLinksTo(aInt: Int64; const aElement: IwbElement): IwbElement; override;
 
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement; override;
 
     function MasterCountUpdated(aInt: Int64; aOld, aNew: Byte; const aElement: IwbElement): Int64; override;
     function MasterIndicesUpdated(aInt: Int64; const aOld, aNew: TwbFileIDs; const aElement: IwbElement): Int64; override;
@@ -16164,6 +16165,17 @@ begin
 end;
 
 { TwbIntegerDefFormaterUnion }
+
+function TwbIntegerDefFormaterUnion.Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement;
+var
+  IntegerDef: IwbIntegerDefFormater;
+begin
+  IntegerDef := Decide(aTarget);
+  if Assigned(IntegerDef) then
+    Result := IntegerDef.Assign(aTarget, aIndex, aSource, aOnlySK)
+  else
+    Result := nil;
+end;
 
 procedure TwbIntegerDefFormaterUnion.BuildRef(aInt     : Int64;
                                         const aElement : IwbElement);
