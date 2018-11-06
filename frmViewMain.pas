@@ -720,7 +720,6 @@ type
     procedure InvalidateElementsTreeView; overload;
     procedure ResetAllConflict;
     procedure ResetActiveTree;
-    procedure PostResetActiveTree;
     procedure ExpandView;
     function CollectViewContainers: TwbContainerElementRefs;
     procedure NavCleanupCollapsedNodeChildren;
@@ -940,6 +939,8 @@ type
   public
     Settings: TMemIniFile;
     destructor Destroy; override;
+
+    procedure PostResetActiveTree;
 
     procedure AddMessage(const s: string);
     procedure ScrollToTheLastMessage;
