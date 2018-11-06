@@ -1029,6 +1029,7 @@ var
   wbOPDS: IwbSubRecordDef;
   wbOPDSs: IwbSubRecordArrayDef;
   wbDEFL: IwbSubRecordDef;
+  wbDIQO: IwbSubRecordDef;
   wbBEVA: IwbSubRecordDef;
   wbFEVA: IwbSubRecordDef;
   wbNTWK: IwbSubRecordDef;
@@ -6595,6 +6596,7 @@ begin
   wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
   wbCITC := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign);
   wbCITCReq := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign, True);
+  wbDIQO := wbFormIDCk(DIQO, 'Quest', [QUST]);
   wbLVLD := wbInteger(LVLD, 'Chance None', itU8, nil, cpNormal, True);
 
   wbSPCT := wbInteger(SPCT, 'Count', itU32, nil, cpBenign);
@@ -9820,7 +9822,7 @@ begin
     ], cpNormal, True),
     wbLStringKC(CNAM, 'Description', 0, cpTranslate),
     wbFormIDCk(INAM, 'Inventory Art', [STAT]),
-    wbFormIDCk(DIQO, 'Quest', [QUST]),
+    wbDIQO,
     wbUnknown(BTOF)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 end;
@@ -17043,11 +17045,14 @@ begin
     wbVMAD,
     wbOBND,
     wbPTRN,
+    wbXALG,
     wbFULL,
     wbMODL,
     wbICON,
     wbYNAM,
     wbZNAM,
+    wbKSIZ,
+    wbKWDAs,
     wbInteger(DNAM, 'Type', itU8, wbEnum([
       'Sound',
       'Voice',
@@ -17064,6 +17069,7 @@ begin
       wbFormIDCk('Scene', [SCEN]),
       wbFormIDCk('Terminal', [TERM])
     ]),
+    wbDIQO,
     wbString(PNAM, 'Program File')
   ]);
 
