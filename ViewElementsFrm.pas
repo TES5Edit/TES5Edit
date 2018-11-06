@@ -394,6 +394,7 @@ begin
           LockProcessMessages;
           try
             eElement.EditValue := eMemo.Text;
+            frmMain.PostResetActiveTree;
           finally
             UnLockProcessMessages;
           end;
