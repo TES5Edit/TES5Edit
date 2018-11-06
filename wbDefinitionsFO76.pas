@@ -996,6 +996,13 @@ const
   QSDD : TwbSignature = 'QSDD'; { New To Fallout 76 }
   QETE : TwbSignature = 'QETE'; { New To Fallout 76 }
   XCMD : TwbSignature = 'XCMD'; { New To Fallout 76 }
+  XCRP : TwbSignature = 'XCRP'; { New To Fallout 76 }
+  XILS : TwbSignature = 'XILS'; { New To Fallout 76 }
+  RDES : TwbSignature = 'RDES'; { New To Fallout 76 }
+  SRGN : TwbSignature = 'SRGN'; { New To Fallout 76 }
+  XWPK : TwbSignature = 'XWPK'; { New To Fallout 76 }
+  XPPS : TwbSignature = 'XPPS'; { New To Fallout 76 }
+  XWRC : TwbSignature = 'XWRC'; { New To Fallout 76 }
 
   // signatures of reference records
   sigReferences : TwbSignatures = [
@@ -4028,7 +4035,7 @@ const
     (Index: 592; Name: 'GetRefTypeAliveCount'; ParamType1: ptLocation; Paramtype2: ptRefType),        // 300
     (Index: 594; Name: 'GetIsFlying'),        // 301
     (Index: 595; Name: 'IsCurrentSpell'; ParamType1: ptMagicItem; ParamType2: ptCastingSource),
-    (Index: 596; Name: 'SpellHasKeyword'; ParamType1: ptCastingSource; ParamType2: ptKeyword),
+    (Index: 596; Name: 'SpellHasKeyword'; ParamType1: ptKeyword),
     (Index: 597; Name: 'GetEquippedItemType'; ParamType1: ptCastingSource),
     (Index: 598; Name: 'GetLocationAliasCleared'; ParamType1: ptAlias),
     (Index: 600; Name: 'GetLocationAliasRefTypeDeadCount'; ParamType1: ptAlias; ParamType2: ptRefType),
@@ -7040,7 +7047,38 @@ begin
    {153} 'Mod VATS Blitz Dmg Bonus Dist',
    {154} 'Mod Bash Critical Chance',
    {155} 'VATS Apply Paralyzing Palm Spell',
-   {156} 'Null Function'
+   {156} 'Null Function',
+   {157} 'Unknown 157',
+   {158} 'Unknown 158',
+   {159} 'Unknown 159',
+   {160} 'Unknown 160',
+   {161} 'Unknown 161',
+   {162} 'Unknown 162',
+   {163} 'Unknown 163',
+   {164} 'Unknown 164',
+   {165} 'Unknown 165',
+   {166} 'Unknown 166',
+   {167} 'Unknown 167',
+   {168} 'Unknown 168',
+   {169} 'Unknown 169',
+   {170} 'Unknown 170',
+   {171} 'Unknown 171',
+   {172} 'Unknown 172',
+   {173} 'Unknown 173',
+   {174} 'Unknown 174',
+   {175} 'Unknown 175',
+   {176} 'Unknown 176',
+   {177} 'Unknown 177',
+   {178} 'Unknown 178',
+   {179} 'Unknown 179',
+   {180} 'Unknown 180',
+   {181} 'Unknown 181',
+   {182} 'Unknown 182',
+   {183} 'Unknown 183',
+   {184} 'Unknown 184',
+   {185} 'Unknown 185',
+   {186} 'Unknown 186',
+   {187} 'Unknown 187'
   ]);
 
   wbEquipType := wbFlags([
@@ -7431,7 +7469,8 @@ begin
     wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(6),
     wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2),
     wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, wbCanAddScripts),
-    wbScriptFragments
+    wbScriptFragments,
+    wbUnknown
   ], cpNormal, False, nil, 3);
 
   wbVMADFragmentedPACK := wbStruct(VMAD, 'Virtual Machine Adapter', [
@@ -8060,6 +8099,7 @@ begin
     ], True, True)), [
     wbEDID,
     wbVMAD,
+    wbXALG,
     wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
 
@@ -9022,7 +9062,10 @@ begin
         { 7} 'Event Data',
         { 9} 'Command Target',
         {10} 'Event Camera Ref',
-        {11} 'My Killer'
+        {11} 'My Killer',
+        {12} 'Unknown 12',
+        {13} 'Unknown 13',
+        {14} 'Unknown 14'
       ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
       wbUnion('Reference', wbCTDAReferenceDecider, [
         wbInteger('Unused', itU32, nil, cpIgnore),
@@ -9532,6 +9575,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbOPDSs,
     wbFULL,
     wbMODL,
     wbDEST,
@@ -9549,6 +9593,7 @@ begin
     ])), [
     wbEDID,
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
     wbXALG,
     wbFULL,
@@ -9600,6 +9645,7 @@ begin
     ])), [
     wbEDID,
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
     wbPHST,
     wbFULL,
@@ -9649,6 +9695,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
     wbXALG,
     wbFULL,
@@ -9779,6 +9826,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
     wbXALG,
     wbFULL,
@@ -9917,6 +9965,7 @@ begin
       {0x00080000} 19, 'Can''t Wait'
     ]), [18]), [
     wbEDID,
+    wbDURL,
     wbFULL,
     wbInteger(DATA, 'Flags', itU16, wbFlags([
       {0x0001} 'Is Interior Cell',
@@ -9947,7 +9996,7 @@ begin
       ], True))
     ], cpNormal, False, nil, 2),
 
-    wbByteArray(VISI, 'PreVis Files Timestamp', 2),
+    wbByteArray(VISI, 'PreVis Files Timestamp'{, 2}),
     wbFormIDCk(RVIS, 'In PreVis File Of', [CELL]),
     wbByteArray(PCMB, 'PreCombined Files Timestamp', 2),
 
@@ -9990,7 +10039,8 @@ begin
       wbFloat('Fog High Near Scale'),
       wbFloat('Fog High Far Scale'),
       wbFloat('Far Height Mid'),
-      wbFloat('Far Height Range')
+      wbFloat('Far Height Range'),
+      wbUnknown
     ], cpNormal, False, nil, 11),
 
     wbInteger(CNAM, 'Precombined Object Level XY', itU8),
@@ -10001,6 +10051,9 @@ begin
 
     {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
     wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
+    wbUnknown(XILS),
+    wbUnknown(RDES),
+    wbFormIDCk(XCWT, 'Water', [WATR]),
     wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
     wbFormIDCk(XLCN, 'Location', [LCTN]),
     wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
@@ -10014,7 +10067,6 @@ begin
       wbFloat('Z Angle'),
       wbByteArray('Unknown', 0)
     ]),
-    wbFormIDCk(XCWT, 'Water', [WATR]),
 
     {--- Ownership ---}
     wbXOWN,
@@ -10047,7 +10099,8 @@ begin
         wbFormIDCk('Reference', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
         wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt)
       ]), wbCELLCombinedRefsCounter, cpNormal, False, nil, wbCELLCombinedRefsAfterSet)
-    ])
+    ]),
+    wbUnknown(XCRP)
   ], True, wbCellAddInfo, cpNormal, False{, wbCELLAfterLoad});
 
   wbRecord(CLAS, 'Class', [
@@ -10145,6 +10198,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
     wbSNTP,
     wbFULL,
@@ -10460,9 +10514,14 @@ begin
       {0x00800000} 23, 'Is Marker'
     ])), [
     wbEDID,
+    wbDURL,
     wbVMAD,
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
+    wbDEFL,
+    wbSNTP,
+    wbXALG,
     wbFULL,
     wbMODL,
     wbDEST,
@@ -10739,6 +10798,7 @@ begin
   wbRecord(ENCH, 'Object Effect', [
     wbEDID,
     wbOBNDReq,
+    wbOPDSs,
     wbFULL,
     wbStruct(ENIT, 'Effect Data', [
       wbInteger('Enchantment Cost', itS32),
@@ -10861,7 +10921,9 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
+    wbDEFL,
     wbSNTP,
     wbXALG,
     wbFULL,
@@ -11062,6 +11124,7 @@ begin
   wbRecord(ASPC, 'Acoustic Space', [
     wbEDID,
     wbOBNDReq,
+    wbOPDSs,
     wbDEFL,
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
     wbFormIDCk(RDAT, 'Use Sound from Region (Interiors Only)', [REGN]),
@@ -11090,7 +11153,11 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
+    wbDEFL,
+    wbSNTP,
+    wbXALG,
     wbFULL,
     wbMODL,
     wbDEST,
@@ -11110,6 +11177,7 @@ begin
     ])), [
     wbEDID,
     wbOBNDReq,
+    wbOPDSs,
     wbKSIZ,
     wbKWDAs,
     wbInteger(IDLF, 'Flags', itU8, wbFlags([
@@ -11129,6 +11197,7 @@ begin
   wbRecord(PROJ, 'Projectile', [
     wbEDID,
     wbOBNDReq,
+    wbOPDSs,
     wbFULL,
     wbMODL,
     wbDEST,
@@ -11193,6 +11262,7 @@ begin
   wbRecord(HAZD, 'Hazard', [
     wbEDID,
     wbOBNDReq,
+    wbOPDSs,
     wbFULL,
     wbMODL,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD, NULL]),
@@ -11378,6 +11448,7 @@ begin
    wbRecord(EXPL, 'Explosion', [
     wbEDID,
     wbOBNDReq,
+    wbOPDSs,
     wbFULL,
     wbMODL,
     wbEITM,
@@ -11687,23 +11758,20 @@ begin
       wbInteger('Hidden', itU8, wbBoolEnum)
     ], cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SNDR]),
-    wbFormID(PRFS, 'Perk Activation Sound'),
+    wbFormIDCk(PRFS, 'Perk Activation Sound', [SNDR]),
     wbFormIDCK(NNAM, 'Next Perk', [PERK, NULL]),
     wbString(FNAM, 'SWF'),
     wbString(PRFI),
     wbFormIDCk(PFAC, 'Perk Added Faction', [FACT]),
     wbRStructsSK('Effects', 'Effect', [0, 1], [
-      wbStructSK(PRKE, [1, 2, 0], 'Header', [
+      wbStructSK(PRKE, [1, {2,} 0], 'Header', [
         wbInteger('Type', itU8, wbEnum([
           'Quest + Stage',
           'Ability',
           'Entry Point'
         ]), cpNormal, False, nil, wbPERKPRKETypeAfterSet),
-        wbInteger('Rank', itU8),
-        wbInteger('Priority', itU8)
+        wbInteger('Rank', itU8)
       ]),
-      wbUnknown(DATA),
-      (** )
       wbUnion(DATA, 'Effect Data', wbPerkDATADecider, [
         wbStructSK([0, 1], 'Quest + Stage', [
           wbFormIDCk('Quest', [QUST]),
@@ -11728,9 +11796,12 @@ begin
            {12} 'Set to Actor Value Mult', // EPFT=2
            {13} 'Multiply Actor Value Mult', // EPFT=2
            {14} 'Multiply 1 + Actor Value Mult', // EPFT=2
-           {15} 'Set Text' // EPFT=7
+           {15} 'Set Text', // EPFT=7
+           {16} 'Unknown 16', // EPFT=?
+           {17} 'Unknown 17' // EPFT=?
           ])),
-          wbInteger('Perk Condition Tab Count', itU8, nil, cpIgnore)
+          wbInteger('Perk Condition Tab Count', itU8, nil, cpIgnore),
+          wbUnknown
         ])
       ], cpNormal, True),
       (**)
@@ -11746,11 +11817,12 @@ begin
           {1} 'Float',
           {2} 'Float/AV,Float',
           {3} 'LVLI',
-          {4} 'SPEL,lstring,flags',
+          {4} 'SPEL,LString,Flags',
           {5} 'SPEL',
-          {6} 'string',
-          {7} 'lstring',
-          {8} 'AVIF'
+          {6} 'String',
+          {7} 'LString',
+          {8} 'AVIF, Float',
+          {9} 'Ingestible'
         ])),
         // case(EPFT) of
         // 1: EPFD=float
@@ -11760,6 +11832,8 @@ begin
         // 5: EPFD=SPEL
         // 6: EPFD=string
         // 7: EPFD=lstring
+
+        // 9: EPFD=ALCH
 
         wbInteger(EPFB, 'Perk Entry ID (unique)', itU16),
         wbLString(EPF2, 'Button Label', 0, cpTranslate),
@@ -11785,7 +11859,8 @@ begin
           {8} wbStruct('Actor Value, Float', [
                 wbActorValue, // wbInteger('Actor Value', itU32, wbEPFDActorValueToStr, wbEPFDActorValueToInt),
                 wbFloat('Float')
-              ])
+              ]),
+          {9} wbFormIDCk('Ingestible', [ALCH])
         ], cpNormal, False{, wbEPFDDontShow})
       ], [], cpNormal, False{, wbPERKPRKCDontShow}),
       wbEmpty(PRKF, 'End Marker', cpIgnore, True)
@@ -11891,6 +11966,7 @@ begin
   wbRecord(ADDN, 'Addon Node', [
     wbEDID,
     wbOBNDReq,
+    wbOPDSs,
     wbMODL,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SNDR]),
@@ -12036,6 +12112,7 @@ begin
 
   wbRecord(VTYP, 'Voice Type', [
     wbEDID,
+    wbFULL,
     wbInteger(DNAM, 'Flags', itU8, wbFlags([
       'Allow Default Dialog',
       'Female'
@@ -13147,6 +13224,7 @@ begin
   wbRecord(ARTO, 'Art Object', [
     wbEDID,
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
     wbKSIZ,
     wbKWDAs,
@@ -13392,6 +13470,7 @@ begin
   wbRecord(GRAS, 'Grass', [
     wbEDID,
     wbOBNDReq,
+    wbOPDSs,
     wbMODL,
     wbStruct(DATA, '', [
       wbInteger('Density', itU8),
@@ -13540,6 +13619,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbOPDSs,
     wbFULL,
     wbKSIZ,
     wbKWDAs,
@@ -13579,6 +13659,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
     wbFULLReq,
     wbMODL,
@@ -13704,6 +13785,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
     wbMODL,
     wbKSIZ,
@@ -13804,6 +13886,7 @@ begin
   wbRecord(LVLN, 'Leveled NPC', [
     wbEDID,
     wbOBNDReq,
+    wbOPDSs,
     wbLVLD,
     wbInteger(LVLM, 'Max Count', itU8), { Always 00 } {Unavailable}
     wbInteger(LVLF, 'Flags', itU8, wbFlags([
@@ -13841,6 +13924,7 @@ begin
   wbRecord(LVLI, 'Leveled Item', [
     wbEDID,
     wbOBNDReq,
+    wbOPDSs,
     wbLVLD,
     wbInteger(LVLM, 'Max Count', itU8), { Always 00 }
     wbInteger(LVLF, 'Flags', itU8, wbFlags([
@@ -14063,6 +14147,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbOPDSs,
+    wbOPDSs,
     wbPTRN,
     wbOPDSs,
     wbXALG,
@@ -14146,6 +14231,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
     wbSTCP,
     wbSNTP,
@@ -15564,7 +15650,8 @@ begin
     ], cpNormal, False, nil, 5),
     wbStruct(XPDD, 'Projected Decal', [
       wbFloat('Width Scale'),
-      wbFloat('Height Scale')
+      wbFloat('Height Scale'),
+      wbUnknown
       // "Uses Box Primitive" checkbox does the following:
       // 1. "Rounds" above floats (probably due to floating point precision)  [DIRTY EDITS?]
       // 2. "Rounds" DATA\Position floats (probably due to floating point precision)  [DIRTY EDITS?]
@@ -15811,8 +15898,18 @@ begin
     wbXLOD, // not seen in FO4 vanilla files
 
     wbUnknown(XCMD),
+    wbRStruct('Unknown', [
+      wbUnknown(XWPK),
+      wbUnknown(GNAM),
+      wbUnknown(HNAM),
+      wbUnknown(INAM),
+      wbUnknown(XWPK)
+    ], []),
+    wbUnknown(XPPS),
+    wbRArray('Unknown', wbUnknown(XWRC)),
 
     wbDataPosRot,
+    wbUnknown(SRGN),
     wbString(MNAM, 'Comments')
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
@@ -15942,6 +16039,7 @@ begin
   wbRecord(SOUN, 'Sound Marker', [
     wbEDID,
     wbOBNDReq,
+    wbOPDSs,
     wbFormIDCk(SDSC, 'Sound Descriptor', [SNDR, NULL]),
     wbStruct(REPT, 'Repeat', [
       wbFloat('Min Time'),
@@ -16013,6 +16111,7 @@ begin
   wbRecord(SPEL, 'Spell', [
     wbEDID,
     wbOBNDReq,
+    wbOPDSs,
     wbFULL,
     wbKSIZ,
     wbKWDAs,
@@ -16145,6 +16244,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbOPDSs,
     wbMODL,
     wbFormIDCK(PFIG, 'Ingredient', sigBaseObjects),
     wbFormIDCK(SNAM, 'Harvest Sound', [SNDR, NULL]),
@@ -16176,7 +16276,11 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
+    wbSNTP,
+    wbOPDSs,
+    wbDEFL,
     wbFULLReq,
     wbMODL,
     wbDEST,
@@ -16965,7 +17069,8 @@ begin
 
   wbRecord(LAYR, 'Layer', [
     wbEDID,
-    wbFormIDCk(PNAM, 'Parent', [LAYR])
+    wbFormIDCk(PNAM, 'Parent', [LAYR]),
+    wbUnknown(XCLP)
   ]);
 
   wbRecord(LENS, 'Lens Flare', [
@@ -17182,9 +17287,11 @@ begin
     wbOBNDReq,
     wbOPDSs,
     wbPTRN,
+    wbDEFL,
     wbXALG,
     wbMODL,
     wbFULL,
+    wbUnknown(MNAM),
     wbNAM1LODP,
     wbFLTR,
     wbRStructs('Parts', 'Part', [
@@ -17240,6 +17347,7 @@ begin
     wbEDID,
     wbVMADFragmentedPERK, // same fragments format as in PERK
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
     wbSNTP,
     wbLStringKC(NAM0, 'Header Text'),
