@@ -260,6 +260,7 @@ const
   CDIX : TwbSignature = 'CDIX'; { New to Fallout 4 }
   CELL : TwbSignature = 'CELL';
   CHAL : TwbSignature = 'CHAL'; { New To Fallout 76 }
+  CIFK : TwbSignature = 'CIFK'; { New to Fallout 76 }
   CIS1 : TwbSignature = 'CIS1'; { New to Skyrim }
   CIS2 : TwbSignature = 'CIS2'; { New to Skyrim }
   CITC : TwbSignature = 'CITC'; { New to Skyrim }
@@ -307,6 +308,7 @@ const
   CURV : TwbSignature = 'CURV'; { New To Fallout 76 }
   CUSD : TwbSignature = 'CUSD'; { New to Fallout 4 }
   CVPA : TwbSignature = 'CVPA'; { New to Fallout 4 }
+  CVT0 : TwbSignature = 'CVT0'; { New to Fallout 76 }
   DALC : TwbSignature = 'DALC'; { New to Skyrim }
   DAMA : TwbSignature = 'DAMA'; { New to Fallout 4 }
   DAMC : TwbSignature = 'DAMC'; { New to Fallout 4 }
@@ -478,6 +480,8 @@ const
   LLCT : TwbSignature = 'LLCT'; {New to Skyrim, part of LVLI 'Count'}
   LLKC : TwbSignature = 'LLKC'; { New to Fallout 4 }
   LNAM : TwbSignature = 'LNAM';
+  LRNC : TwbSignature = 'LRNC'; {New to Fallout 76 }
+  LRNM : TwbSignature = 'LRNM'; {New to Fallout 76 }
   LSCR : TwbSignature = 'LSCR';
   LSPR : TwbSignature = 'LSPR'; { New to Fallout 4 }
   LTEX : TwbSignature = 'LTEX';
@@ -692,6 +696,7 @@ const
   RDOT : TwbSignature = 'RDOT';
   RDSA : TwbSignature = 'RDSA'; { New to Skyrim }
   RDWT : TwbSignature = 'RDWT';
+  RECF : TwbSignature = 'RECF'; {New to Fallout 76 }
   REFR : TwbSignature = 'REFR';
   REGN : TwbSignature = 'REGN';
   RELA : TwbSignature = 'RELA';
@@ -700,6 +705,7 @@ const
   REPT : TwbSignature = 'REPT'; { New To Fallout 4 }
   RESO : TwbSignature = 'RESO'; { New To Fallout 76 }
   REVB : TwbSignature = 'REVB';
+  REPM : TwbSignature = 'REPM'; {New to Fallout 76 }
   RFCT : TwbSignature = 'RFCT';
   RFGP : TwbSignature = 'RFGP'; { New to Fallout 4 }
   RGDL : TwbSignature = 'RGDL'; { Unused in Skyrim, but contained in Skyrim.esm }
@@ -995,9 +1001,9 @@ const
     'CONT', 'DEBR', 'DOOR', 'EXPL', 'FLST', 'FLOR',
     'FURN', 'HAZD', 'IDLM', 'INGR', 'KEYM', 'LIGH',
     'LVLI', 'LVLN', 'LVSP', 'MISC', 'MSTT', 'NOTE',
-    'NPC_', 'OMOD', 'PROJ', 'SCOL', 'SCRL', 'SECH',
-    'SOUN', 'SPEL', 'STAT', 'TACT', 'TERM', 'TREE',
-    'TXST', 'WATR', 'WEAP'
+    'NPC_', 'OMOD', 'PKIN', 'PROJ', 'SCOL', 'SCRL',
+    'SECH', 'SOUN', 'SPEL', 'STAT', 'TACT', 'TERM',
+    'TREE', 'TXST', 'WATR', 'WEAP'
   ];
 
 var
@@ -14047,18 +14053,25 @@ begin
 
   wbRecord(COBJ, 'Constructible Object', [
     wbEDID,
+    wbUnknown(XALG),
     wbYNAM,
     wbZNAM,
     wbArrayS(FVPA, 'Components',
       wbStructSK([0], 'Component', [
         wbFormIDCkNoReach('Component', sigBaseObjects),
         wbInteger('Count', itU32),
-        wbUnion('Unknown', wbDeciderFormVersion152, [
-          wbEmpty('Unknown'),
-          wbByteArray('Unknown', 4)
-        ])
+        wbFormID('Curve Table')
       ])
     ),
+    wbArrayS(REPR, 'Repair',
+      wbStructSK([0], 'Component', [
+        wbFormIDCkNoReach('Component', sigBaseObjects),
+        wbInteger('Count', itU32),
+        wbFormID('Curve Table')
+      ])
+    ),
+    wbUnknown(REPM),
+    wbUnknown(LRNM),
     wbDESC,
     wbCTDAs,
     wbFormIDCk(CNAM, 'Created Object', sigBaseObjects),
@@ -14067,7 +14080,14 @@ begin
     wbByteArray(NAM2, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
     wbByteArray(NAM3, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
     wbFormIDCk(ANAM, 'Menu Art Object', [ARTO]),
+    wbFormID(GNAM),
+    wbFormID(CVT0,'Curve Table'),
+    wbFormID(LRNC, 'Learn Chance'),
     wbArrayS(FNAM, 'Category', wbFormIDCk('Keyword', [KYWD])),
+    wbUnknown(HNAM),
+    wbUnknown(DNAM),
+    wbFormID(CIFK),
+    wbUnknown(RECF),
     wbStruct(INTV, 'Data', [
       wbInteger('Created Object Count', itU16),
       wbInteger('Priority', itU16)
