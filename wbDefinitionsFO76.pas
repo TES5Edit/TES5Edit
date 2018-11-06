@@ -255,6 +255,7 @@ const
   BSMB : TwbSignature = 'BSMB'; { New to Fallout 4 }
   BSMP : TwbSignature = 'BSMP'; { New to Fallout 4 }
   BSMS : TwbSignature = 'BSMS'; { New to Fallout 4 }
+  BTOF : TwbSignature = 'BTOF'; { New to Fallout 76 }
   BTXT : TwbSignature = 'BTXT';
   CAMS : TwbSignature = 'CAMS';
   CDIX : TwbSignature = 'CDIX'; { New to Fallout 4 }
@@ -323,6 +324,7 @@ const
   DFTF : TwbSignature = 'DFTF'; { New To Skyrim }
   DFTM : TwbSignature = 'DFTM'; { New To Skyrim }
   DIAL : TwbSignature = 'DIAL';
+  DIQO : TwbSignature = 'DIQO'; { New To Fallout 76 }
   DLBR : TwbSignature = 'DLBR';
   DLVW : TwbSignature = 'DLVW';
   DMAX : TwbSignature = 'DMAX'; { New to Skyrim }
@@ -9828,6 +9830,7 @@ begin
     wbOBNDReq,
     wbOPDSs,
     wbPTRN,
+    wbDEFL,
     wbXALG,
     wbFULL,
     wbMODL,
@@ -9864,7 +9867,9 @@ begin
       ])
     ], cpNormal, True),
     wbLStringKC(CNAM, 'Description', 0, cpTranslate),
-    wbFormIDCk(INAM, 'Inventory Art', [STAT])
+    wbFormIDCk(INAM, 'Inventory Art', [STAT]),
+    wbFormIDCk(DIQO, 'Quest', [QUST]),
+    wbUnknown(BTOF)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 end;
 
