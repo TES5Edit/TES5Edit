@@ -255,6 +255,7 @@ const
   BSMB : TwbSignature = 'BSMB'; { New to Fallout 4 }
   BSMP : TwbSignature = 'BSMP'; { New to Fallout 4 }
   BSMS : TwbSignature = 'BSMS'; { New to Fallout 4 }
+  BTOF : TwbSignature = 'BTOF'; { New to Fallout 76 }
   BTXT : TwbSignature = 'BTXT';
   CAMS : TwbSignature = 'CAMS';
   CDIX : TwbSignature = 'CDIX'; { New to Fallout 4 }
@@ -323,6 +324,7 @@ const
   DFTF : TwbSignature = 'DFTF'; { New To Skyrim }
   DFTM : TwbSignature = 'DFTM'; { New To Skyrim }
   DIAL : TwbSignature = 'DIAL';
+  DIQO : TwbSignature = 'DIQO'; { New To Fallout 76 }
   DLBR : TwbSignature = 'DLBR';
   DLVW : TwbSignature = 'DLVW';
   DMAX : TwbSignature = 'DMAX'; { New to Skyrim }
@@ -1034,6 +1036,7 @@ var
   wbOPDS: IwbSubRecordDef;
   wbOPDSs: IwbSubRecordArrayDef;
   wbDEFL: IwbSubRecordDef;
+  wbDIQO: IwbSubRecordDef;
   wbBEVA: IwbSubRecordDef;
   wbFEVA: IwbSubRecordDef;
   wbNTWK: IwbSubRecordDef;
@@ -6600,6 +6603,7 @@ begin
   wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
   wbCITC := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign);
   wbCITCReq := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign, True);
+  wbDIQO := wbFormIDCk(DIQO, 'Quest', [QUST]);
   wbLVLD := wbInteger(LVLD, 'Chance None', itU8, nil, cpNormal, True);
 
   wbSPCT := wbInteger(SPCT, 'Count', itU32, nil, cpBenign);
@@ -9828,6 +9832,7 @@ begin
     wbOBNDReq,
     wbOPDSs,
     wbPTRN,
+    wbDEFL,
     wbXALG,
     wbFULL,
     wbMODL,
@@ -9864,7 +9869,9 @@ begin
       ])
     ], cpNormal, True),
     wbLStringKC(CNAM, 'Description', 0, cpTranslate),
-    wbFormIDCk(INAM, 'Inventory Art', [STAT])
+    wbFormIDCk(INAM, 'Inventory Art', [STAT]),
+    wbDIQO,
+    wbUnknown(BTOF)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 end;
 
@@ -13661,6 +13668,7 @@ begin
     wbOBNDReq,
     wbOPDSs,
     wbPTRN,
+    wbUnknown(XALG),
     wbFULLReq,
     wbMODL,
     wbICON,
@@ -13673,7 +13681,9 @@ begin
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
-    ], cpNormal, True)
+    ], cpNormal, True),
+    wbUnknown(AQIC),
+    wbDIQO
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbQuadrantEnum := wbEnum([
@@ -17143,11 +17153,14 @@ begin
     wbVMAD,
     wbOBND,
     wbPTRN,
+    wbXALG,
     wbFULL,
     wbMODL,
     wbICON,
     wbYNAM,
     wbZNAM,
+    wbKSIZ,
+    wbKWDAs,
     wbInteger(DNAM, 'Type', itU8, wbEnum([
       'Sound',
       'Voice',
@@ -17164,6 +17177,7 @@ begin
       wbFormIDCk('Scene', [SCEN]),
       wbFormIDCk('Terminal', [TERM])
     ]),
+    wbDIQO,
     wbString(PNAM, 'Program File')
   ]);
 
