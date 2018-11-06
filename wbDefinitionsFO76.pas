@@ -990,6 +990,12 @@ const
   RLBC : TwbSignature = 'RLBC'; { New To Fallout 76 }
   CVT1 : TwbSignature = 'CVT1'; { New To Fallout 76 }
   FEVA : TwbSignature = 'FEVA'; { New To Fallout 76 }
+  PHST : TwbSignature = 'PHST'; { New To Fallout 76 }
+
+  QETL : TwbSignature = 'QETL'; { New To Fallout 76 }
+  QSDD : TwbSignature = 'QSDD'; { New To Fallout 76 }
+  QETE : TwbSignature = 'QETE'; { New To Fallout 76 }
+  XCMD : TwbSignature = 'XCMD'; { New To Fallout 76 }
 
   // signatures of reference records
   sigReferences : TwbSignatures = [
@@ -1165,6 +1171,10 @@ var
   wbAUUV: IwbSubRecordDef;
   wbSNTP: IwbSubRecordDef;
   wbXALG: IwbSubRecordDef;
+  wbNAM1: IwbSubRecordDef;
+  wbLODP: IwbSubRecordDef;
+  wbNAM1LODP: IwbSubRecordStructDef;
+  wbPHST: IwbSubRecordDef;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -1667,11 +1677,9 @@ end;
 function wbVertexToStr(aVertex: Integer; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Triangle   : IwbContainerElementRef;
-  Flags      : Int64;
   MainRecord : IwbMainRecord;
   Vertices  : IwbContainerElementRef;
   Vertex   : IwbContainerElementRef;
-  FormID     : TwbFormID;
 begin
   case aType of
     ctToStr: begin
@@ -7196,6 +7204,16 @@ begin
   wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
   wbXALG := wbUnknown(XALG);
 
+  wbNAM1 := wbUnknown(NAM1);
+  wbLODP := wbUnknown(LODP);
+
+  wbNAM1LODP := wbRStruct('Unknown', [
+    wbNAM1,
+    wbLODP
+  ], []);
+
+  wbPHST := wbUnknown(PHST);
+
   wbPropTypeEnum := wbEnum([
     {00} 'None',
     {01} 'Object',
@@ -7690,9 +7708,9 @@ begin
     wbArrayS(DAMC, 'Resistances', wbStructSK([0], 'Resistance', [
       wbFormIDCk('Damage Type', [DMGT]),
       wbInteger('Value', itU32),
-      wbUnion('Unknown', wbDeciderFormVersion152, [
-        wbEmpty('Unknown'),
-        wbByteArray('Unknown', 4)
+      wbUnion('Curve Table', wbDeciderFormVersion152, [
+        wbEmpty('Unused'),
+        wbFormIDCk('Curve Table', [CURV, NULL])
       ])
     ])),
     wbRArray('Stages',
@@ -9083,52 +9101,58 @@ begin
   wbZNAM := wbFormIDCk(ZNAM, 'Sound - Put Down', [SNDR]);
   wbCUSD := wbFormIDCk(CUSD, 'Sound - Crafting', [SNDR]);
   wbINRD := wbFormIDCk(INRD, 'Instance Naming', [INNR]);
+
   wbPRPS := wbArrayS(PRPS, 'Properties', wbStructSK([0], 'Property', [
     wbActorValue,
     wbFloat('Value'),
-    wbUnion('Unknown', wbDeciderFormVersion152, [
-      wbEmpty('Unknown'),
+    wbUnion('Curve Table', wbDeciderFormVersion152, [
+      wbEmpty('Unused'),
       wbFormIDCk('Curve Table', [CURV, NULL])
     ])
   ]));
+
   wbCVPA := wbArrayS(CVPA, 'Unknown', wbStructSK([0], 'Unknown', [
     wbFormIDCk('Keyword', [KYWD]),
     wbByteArray('Unknown', 4),
-    wbUnion('Unknown', wbDeciderFormVersion152, [
-      wbEmpty('Unknown'),
-      wbByteArray('Unknown', 4)
+    wbUnion('Curve Table', wbDeciderFormVersion152, [
+      wbEmpty('Unused'),
+      wbFormIDCk('Curve Table', [CURV, NULL])
     ])
   ]));
+
   wbESCR := wbArrayS(ESCR, 'Unknown', wbStructSK([0], 'Unknown', [
     wbFormID('Unknown'),
     wbByteArray('Unknown', 4),
-    wbUnion('Unknown', wbDeciderFormVersion152, [
-      wbEmpty('Unknown'),
-      wbByteArray('Unknown', 4)
+    wbUnion('Curve Table', wbDeciderFormVersion152, [
+      wbEmpty('Unused'),
+      wbFormIDCk('Curve Table', [CURV, NULL])
     ])
   ]));
-  wbREPR := wbArrayS(REPR, 'Unknown', wbStructSK([0], 'Unknown', [
-    wbFormID('Unknown'),
-    wbByteArray('Unknown', 4),
-    wbUnion('Unknown', wbDeciderFormVersion152, [
-      wbEmpty('Unknown'),
-      wbByteArray('Unknown', 4)
+
+  wbREPR := wbArrayS(REPR, 'Repair', wbStructSK([0], 'Component', [
+    wbFormIDCkNoReach('Component', sigBaseObjects),
+    wbInteger('Count', itU32),
+    wbUnion('Curve Table', wbDeciderFormVersion152, [
+      wbEmpty('Unused'),
+      wbFormIDCk('Curve Table', [CURV, NULL])
     ])
   ]));
+
   wbAVMG := wbArrayS(AVMG, 'Unknown', wbStructSK([0], 'Unknown', [
     wbFormID('Unknown'),
     wbByteArray('Unknown', 4),
-    wbUnion('Unknown', wbDeciderFormVersion152, [
-      wbEmpty('Unknown'),
-      wbByteArray('Unknown', 4)
+    wbUnion('Curve Table', wbDeciderFormVersion152, [
+      wbEmpty('Unused'),
+      wbFormIDCk('Curve Table', [CURV, NULL])
     ])
   ]));
+
   wbDAMS := wbArrayS(DAMS, 'Unknown', wbStructSK([0], 'Unknown', [
     wbFormID('Unknown'),
     wbByteArray('Unknown', 4),
-    wbUnion('Unknown', wbDeciderFormVersion152, [
-      wbEmpty('Unknown'),
-      wbByteArray('Unknown', 4)
+    wbUnion('Curve Table', wbDeciderFormVersion152, [
+      wbEmpty('Unused'),
+      wbFormIDCk('Curve Table', [CURV, NULL])
     ])
   ]));
   wbFLTR := wbString(FLTR, 'Filter');
@@ -9440,7 +9464,6 @@ begin
     wbOPDSs,
     wbDEFL,
     wbSNTP,
-    wbUnknown(XALG),
     wbXALG,
     wbFULL,
     wbMODL,
@@ -9455,8 +9478,7 @@ begin
     wbNTRM,
     wbFTYP,
     wbUnknown(MNAM),
-    wbUnknown(NAM1),
-    wbUnknown(LODP),
+    wbNAM1LODP,
     wbStruct(PNAM, 'Marker Color', [
       wbInteger('Red', itU8),
       wbInteger('Green', itU8),
@@ -9498,8 +9520,7 @@ begin
     ),
     wbUnknown(MNAM),
     wbNVNM,
-    wbUnknown(NAM1),
-    wbUnknown(LODP)
+    wbNAM1LODP
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(TACT, 'Talking Activator',
@@ -9529,6 +9550,7 @@ begin
     wbEDID,
     wbOBNDReq,
     wbPTRN,
+    wbXALG,
     wbFULL,
     wbKSIZ,
     wbKWDAs,
@@ -9579,6 +9601,7 @@ begin
     wbEDID,
     wbOBNDReq,
     wbPTRN,
+    wbPHST,
     wbFULL,
     wbMODL,
     wbDEST,
@@ -9627,6 +9650,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbPTRN,
+    wbXALG,
     wbFULL,
     wbEITM,
     wbRStruct('Male world model', [
@@ -9677,9 +9701,9 @@ begin
     wbArrayS(DAMA, 'Resistances', wbStructSK([0], 'Resistance', [
       wbFormIDCk('Damage Type', [DMGT]),
       wbInteger('Value', itU32),
-      wbUnion('Unknown', wbDeciderFormVersion152, [
-        wbEmpty('Unknown'),
-        wbByteArray('Unknown', 4)
+      wbUnion('Curve Table', wbDeciderFormVersion152, [
+        wbEmpty('Unused'),
+        wbFormIDCk('Curve Table', [CURV, NULL])
       ])
     ])),
     wbFormIDCk(TNAM, 'Template Armor', [ARMO]),
@@ -9756,6 +9780,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbPTRN,
+    wbXALG,
     wbFULL,
     wbMODL,
     wbICON,
@@ -10121,6 +10146,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbPTRN,
+    wbSNTP,
     wbFULL,
     wbMODL,
     wbCOCT,
@@ -10836,6 +10862,8 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbPTRN,
+    wbSNTP,
+    wbXALG,
     wbFULL,
     wbMODL,
     wbDEST,
@@ -11645,7 +11673,7 @@ begin
       {0x00000004}  2, 'Non-Playable'
     ])), [
     wbEDID,
-    wbUnknown(DURL),
+    wbDURL,
     wbVMADFragmentedPERK,
     wbFULL,
     wbDESCReq,
@@ -11674,6 +11702,8 @@ begin
         wbInteger('Rank', itU8),
         wbInteger('Priority', itU8)
       ]),
+      wbUnknown(DATA),
+      (** )
       wbUnion(DATA, 'Effect Data', wbPerkDATADecider, [
         wbStructSK([0, 1], 'Quest + Stage', [
           wbFormIDCk('Quest', [QUST]),
@@ -11703,6 +11733,7 @@ begin
           wbInteger('Perk Condition Tab Count', itU8, nil, cpIgnore)
         ])
       ], cpNormal, True),
+      (**)
 
       wbRStructsSK('Perk Conditions', 'Perk Condition', [0], [
         wbInteger(PRKC, 'Run On (Tab Index)', itS8{, wbPRKCToStr, wbPRKCToInt}),
@@ -12097,6 +12128,7 @@ begin
       {0x00004000} 14, 'Partial Form'
     ])), [
     wbEDID,
+    wbDURL,
 
     wbArray(ACPR, 'Actor Cell Persistent Reference', wbStruct('', [
       wbFormIDCk('Actor', sigReferences, False, cpBenign),
@@ -13797,9 +13829,9 @@ begin
       wbStructSK([0], 'Filter', [
         wbFormIDCk('Keyword', [KYWD]),
         wbInteger('Chance', itU32),
-        wbUnion('Unknown', wbDeciderFormVersion152, [
-          wbEmpty('Unknown'),
-          wbByteArray('Unknown', 4)
+        wbUnion('Curve Table', wbDeciderFormVersion152, [
+          wbEmpty('Unused'),
+          wbFormIDCk('Curve Table', [CURV, NULL])
         ])
       ])
     ),
@@ -13835,9 +13867,9 @@ begin
       wbStructSK([0], 'Filter', [
         wbFormIDCk('Keyword', [KYWD]),
         wbInteger('Chance', itU32),
-        wbUnion('Unknown', wbDeciderFormVersion152, [
-          wbEmpty('Unknown'),
-          wbByteArray('Unknown', 4)
+        wbUnion('Curve Table', wbDeciderFormVersion152, [
+          wbEmpty('Unused'),
+          wbFormIDCk('Curve Table', [CURV, NULL])
         ])
       ])
     ),
@@ -14030,7 +14062,10 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
+    wbOPDSs,
+    wbXALG,
     wbFULL,
     wbMODL,
     wbICON,
@@ -14049,33 +14084,34 @@ begin
     wbStructs(CVPA, 'Components', 'Component', [
       wbFormIDCk('Component', sigBaseObjects), // CK allows only CMPO
       wbInteger('Count', itU32),
-      wbUnion('Unknown', wbDeciderFormVersion152, [
-        wbEmpty('Unknown'),
-        wbByteArray('Unknown', 4)
+      wbUnion('Curve Table', wbDeciderFormVersion152, [
+        wbEmpty('Unused'),
+        wbFormIDCk('Curve Table', [CURV, NULL])
       ])
     ]),
     wbArray(CDIX, 'Component Display Indices', wbInteger('Display Index', itU8))
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
-  wbRecord(COBJ, 'Constructible Object', [
+  wbRecord(COBJ, 'Constructible Object',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      11, 'Unknown 11',
+      26, 'Unknown 26'
+    ])), [
     wbEDID,
-    wbUnknown(XALG),
+    wbXALG,
     wbYNAM,
     wbZNAM,
     wbArrayS(FVPA, 'Components',
       wbStructSK([0], 'Component', [
         wbFormIDCkNoReach('Component', sigBaseObjects),
         wbInteger('Count', itU32),
-        wbFormID('Curve Table')
+        wbUnion('Curve Table', wbDeciderFormVersion152, [
+          wbEmpty('Unused'),
+          wbFormIDCk('Curve Table', [CURV, NULL])
+        ])
       ])
     ),
-    wbArrayS(REPR, 'Repair',
-      wbStructSK([0], 'Component', [
-        wbFormIDCkNoReach('Component', sigBaseObjects),
-        wbInteger('Count', itU32),
-        wbFormID('Curve Table')
-      ])
-    ),
+    wbREPR,
     wbUnknown(REPM),
     wbUnknown(LRNM),
     wbDESC,
@@ -14086,13 +14122,13 @@ begin
     wbByteArray(NAM2, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
     wbByteArray(NAM3, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
     wbFormIDCk(ANAM, 'Menu Art Object', [ARTO]),
-    wbFormID(GNAM),
-    wbFormID(CVT0,'Curve Table'),
-    wbFormID(LRNC, 'Learn Chance'),
+    wbFormIDCk(GNAM, 'Learn Recipe from', [ALCH,AMMO,ARMO,BOOK,MISC,WEAP]), //inventory objects?
+    wbFormIDCk(CVT0,'Curve Table', [CURV]),
+    wbFormIDCk(LRNC,'Learn Chance', [GLOB]),
     wbArrayS(FNAM, 'Category', wbFormIDCk('Keyword', [KYWD])),
-    wbUnknown(HNAM),
+    wbLString(HNAM),
     wbUnknown(DNAM),
-    wbFormID(CIFK),
+    wbFormIDCk(CIFK, 'Unknown', [KYWD]),
     wbUnknown(RECF),
     wbStruct(INTV, 'Data', [
       wbInteger('Created Object Count', itU16),
@@ -14112,6 +14148,9 @@ begin
     wbOBNDReq,
     wbPTRN,
     wbSTCP,
+    wbSNTP,
+    wbDEFL,
+    wbPHST,
     wbStruct(ACBS, 'Configuration', [
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Female',
@@ -14641,6 +14680,11 @@ begin
     wbEDID,
     wbVMADFragmentedQUST,
     wbFULL,
+    wbDESC,
+    wbUnknown(DATA),
+    wbUnknown(QETL),
+    wbUnknown(QSDD),
+    wbUnknown(QETE),
     wbStruct(DNAM, 'General', [
       wbInteger('Flags', itU16, wbFlags([
         {0x0001} 'Start Game Enabled',
@@ -15344,6 +15388,7 @@ begin
   ]), [
     wbEDID,
     wbVMAD,
+    wbXALG,
     wbFormIDCk(NAME, 'Base', sigBaseObjects, False, cpNormal, True),
 
     {--- Bound Contents ---}
@@ -15765,6 +15810,8 @@ begin
 
     wbXLOD, // not seen in FO4 vanilla files
 
+    wbUnknown(XCMD),
+
     wbDataPosRot,
     wbString(MNAM, 'Comments')
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
@@ -16017,11 +16064,17 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
+    wbDEFL,
+    wbSNTP,
+    wbXALG,
     wbFTYP,
     wbMODL,
     wbPRPS,
     wbFULL,
+    wbDEST,
+    wbNAM1LODP,
     wbStruct(DNAM, 'Direction Material', [
       wbFloat('Max Angle (30-120)'),
       wbFormIDCk('Material', [MATO, NULL]),
@@ -16248,7 +16301,9 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
+    wbOPDSs,
     wbSTCP,
     wbFULL,
     wbMODL,
@@ -17013,6 +17068,8 @@ begin
       {0x00000040} 7, 'Mod Collection'
     ])), [
     wbEDID,
+    wbDURL,
+    wbXALG,
     wbFULL,
     wbDESC,
     wbMODL,
@@ -17072,6 +17129,7 @@ begin
     ])), [
     wbEDID,
     wbOBND,
+    wbPTRN,
     wbFLTR,
     wbFormIDCk(CNAM, 'Cell', [CELL]),
     wbInteger(VNAM, 'Version', itU32)
@@ -17122,9 +17180,12 @@ begin
     ])), [
     wbEDID,
     wbOBNDReq,
+    wbOPDSs,
     wbPTRN,
+    wbXALG,
     wbMODL,
     wbFULL,
+    wbNAM1LODP,
     wbFLTR,
     wbRStructs('Parts', 'Part', [
       wbFormIDCk(ONAM, 'Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP]),
@@ -17180,6 +17241,7 @@ begin
     wbVMADFragmentedPERK, // same fragments format as in PERK
     wbOBNDReq,
     wbPTRN,
+    wbSNTP,
     wbLStringKC(NAM0, 'Header Text'),
     wbLStringKC(WNAM, 'Welcome Text'),
     wbFULL,
@@ -17432,16 +17494,16 @@ begin
       wbInteger('Special', itU8, wbSpecialTypeEnum),
       wbByteArray('Unknown', 2)
     ]),
-    wbFormID(PCDV),
-    wbFormID(SNAM),
+    wbFormIDCk(PCDV, 'Perk Card Value', [GLOB]),
+    wbFormIDCk(SNAM, 'Sound', [SNDR]),
     wbString(MNAM, 'Male Name'),
     wbString(FNAM, 'Female Name'),
     wbRArray('Perks',
       wbRStruct('Perk', [
         wbEmpty(PRKE, 'Start Marker'),
         wbInteger(DATA, 'Card Rank Cost', itU8),
-        wbFormID(MNAM, 'Male Perk'),
-        wbFormID(FNAM, 'Female Perk'),
+        wbFormIDCk(MNAM, 'Male Perk', [PERK]),
+        wbFormIDCk(FNAM, 'Female Perk', [PERK]),
         wbEmpty(PRKF, 'End Marker')
       ], [])
     )
@@ -17581,7 +17643,7 @@ begin
 
   wbRecord(PMFT, '* Photo Mode Feature', [
     wbEDID,
-    wbUnknown(XALG),
+    wbXALG,
     wbFULL,
     wbICON,
     wbCTDAs,
