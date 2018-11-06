@@ -630,6 +630,7 @@ const
   PCRD : TwbSignature = 'PCRD'; { New To Fallout 76 }
   PDTO : TwbSignature = 'PDTO'; { New to Skyrim }
   PERK : TwbSignature = 'PERK';
+  PFAC : TwbSignature = 'PFAC'; { New To Fallout 76 }
   PFIG : TwbSignature = 'PFIG';
   PFLA : TwbSignature = 'PFLA'; { New to Skyrim }
   PFO2 : TwbSignature = 'PFO2'; { New to Skyrim }
@@ -661,6 +662,8 @@ const
   PPLO : TwbSignature = 'PPLO'; { New To Fallout 76 }
   PPRL : TwbSignature = 'PPRL'; { New To Fallout 76 }
   PRCB : TwbSignature = 'PRCB'; { New to Skyrim }
+  PRFI : TwbSignature = 'PRFI'; { New To Fallout 76 }
+  PRFS : TwbSignature = 'PRFS'; { New To Fallout 76 }
   PRKC : TwbSignature = 'PRKC';
   PRKE : TwbSignature = 'PRKE';
   PRKF : TwbSignature = 'PRKF';
@@ -11642,6 +11645,7 @@ begin
       {0x00000004}  2, 'Non-Playable'
     ])), [
     wbEDID,
+    wbUnknown(DURL),
     wbVMADFragmentedPERK,
     wbFULL,
     wbDESCReq,
@@ -11655,9 +11659,11 @@ begin
       wbInteger('Hidden', itU8, wbBoolEnum)
     ], cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SNDR]),
+    wbFormID(PRFS, 'Perk Activation Sound'),
     wbFormIDCK(NNAM, 'Next Perk', [PERK, NULL]),
     wbString(FNAM, 'SWF'),
-
+    wbString(PRFI),
+    wbFormIDCk(PFAC, 'Perk Added Faction', [FACT]),
     wbRStructsSK('Effects', 'Effect', [0, 1], [
       wbStructSK(PRKE, [1, 2, 0], 'Header', [
         wbInteger('Type', itU8, wbEnum([
