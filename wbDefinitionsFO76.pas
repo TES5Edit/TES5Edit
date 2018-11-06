@@ -2893,8 +2893,6 @@ begin
       39: Result := 7; // Enhance Weapon
       40: Result := 4; // Spawn Hazard
       46: Result := 6; // Vampire Lord
-    else
-      asm nop end;
     end;
 end;
 
