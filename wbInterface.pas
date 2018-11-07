@@ -512,7 +512,8 @@ type
     dfInternalEditOnly,
     dfZeroSortKey, // not implemented for all Defs!!!
     dfNotAlignable,
-    dfCollapsed
+    dfCollapsed,
+    dfNoReport
   );
 
   TwbDefFlags = set of TwbDefFlag;
@@ -8063,7 +8064,7 @@ var
   i, j : Integer;
   sl   : TStringList;
 begin
-  if defReported then
+  if defReported or (dfNoReport in defFlags) then
     Exit;
 
   if wbReportUnused then
@@ -8583,7 +8584,7 @@ var
   Parents : TwbDefPath;
   i       : Integer;
 begin
-  if defReported then
+  if defReported or (dfNoReport in defFlags) then
     Exit;
 
   inherited;
@@ -8748,7 +8749,7 @@ procedure TwbSubRecordDef.Report(const aParents: TwbDefPath);
 var
   Parents : TwbDefPath;
 begin
-  if defReported then
+  if defReported or (dfNoReport in defFlags) then
     Exit;
 
   inherited;
@@ -8887,7 +8888,7 @@ procedure TwbSubRecordArrayDef.Report(const aParents: TwbDefPath);
 var
   Parents : TwbDefPath;
 begin
-  if defReported then
+  if defReported or (dfNoReport in defFlags) then
     Exit;
 
   inherited;
@@ -9139,7 +9140,7 @@ var
   Parents : TwbDefPath;
   i       : Integer;
 begin
-  if defReported then
+  if defReported or (dfNoReport in defFlags) then
     Exit;
 
   inherited;
@@ -9371,7 +9372,7 @@ var
   Parents : TwbDefPath;
   i       : Integer;
 begin
-  if defReported then
+  if defReported or (dfNoReport in defFlags) then
     Exit;
 
   inherited;
@@ -9900,7 +9901,7 @@ procedure TwbIntegerDef.Report(const aParents: TwbDefPath);
 var
   Parents : TwbDefPath;
 begin
-  if defReported then
+  if defReported or (dfNoReport in defFlags) then
     Exit;
 
   inherited;
@@ -10529,7 +10530,7 @@ procedure TwbArrayDef.Report(const aParents: TwbDefPath);
 var
   Parents : TwbDefPath;
 begin
-  if defReported then
+  if defReported or (dfNoReport in defFlags) then
     Exit;
 
   inherited;
@@ -10776,7 +10777,7 @@ var
   Parents : TwbDefPath;
   i       : Integer;
 begin
-  if defReported then
+  if defReported or (dfNoReport in defFlags) then
     Exit;
 
   inherited;
@@ -11187,7 +11188,7 @@ procedure TwbFlagsDef.Report(const aParents: TwbDefPath);
 var
   i: Integer;
 begin
-  if defReported then
+  if defReported or (dfNoReport in defFlags) then
     Exit;
 
   inherited;
@@ -11699,7 +11700,7 @@ var
   i, j: Integer;
   sl: TStringList;
 begin
-  if defReported then
+  if defReported or (dfNoReport in defFlags) then
     Exit;
 
   inherited;
@@ -13129,7 +13130,7 @@ procedure TwbFormIDDefFormater.Report(const aParents: TwbDefPath);
 var
   i: Integer;
 begin
-  if defReported then
+  if defReported or (dfNoReport in defFlags) then
     Exit;
 
   inherited;
@@ -13537,7 +13538,7 @@ var
   sl: TStringList;
   BA: TwbByteArrayDef;
 begin
-  if defReported then
+  if defReported or (dfNoReport in defFlags) then
     Exit;
 
   inherited;
@@ -14573,7 +14574,7 @@ var
   s    : string;
   Sigs : TStringList;
 begin
-  if defReported then
+  if defReported or (dfNoReport in defFlags) then
     Exit;
 
   inherited;
@@ -15033,7 +15034,7 @@ var
   Parents : TwbDefPath;
   i       : Integer;
 begin
-  if defReported then
+  if defReported or (dfNoReport in defFlags) then
     Exit;
 
   inherited;
