@@ -11999,6 +11999,8 @@ begin
     wbDESCReq,
     wbLString(ANAM, 'Abbreviation', 0, cpTranslate),
     wbFloat(NAM0, 'Default Value'), // Prior to form version 81, it was either 0.0, 1.0 or 100.0, so scale or multiplier ?
+    wbUnknown(NAM5),
+    wbUnknown(NAM6),
     wbInteger(AVFL, 'Flags', itU32, wbFlags([ // 32 bits Flags, it used to impact NAM0 loading (bits 10, 11, 12) (even though it loads later :) )
       'Unknown 1',
       'Unknown 2',
@@ -12043,8 +12045,12 @@ begin
       'Charge',
       'Int Value',
       'Variable',
-      'Resource'
-    ]))
+      'Resource',
+      {10} 'Unknown'
+    ])),
+    wbFormID(NAM2),
+    wbFormID(NAM3), // always a KYWD
+    wbFormID(NAM4)  // always a FLST
   ]); // S.P.E.C.I.A.L start at index 5, so FormID 0x2bc+5 to 0x2bc+11, RadResistIngestion at index 0x29
 
   wbRecord(CAMS, 'Camera Shot', [
