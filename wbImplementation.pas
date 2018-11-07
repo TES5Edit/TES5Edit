@@ -2715,6 +2715,7 @@ end;
 var
   _NextFullSlot: Integer;
   _NextLightSlot: Integer;
+  _NextLoadOrder: Integer;
   Files : array of IwbFile;
   FilesMap: TStringList;
 
@@ -4006,7 +4007,11 @@ var
     if flLoadOrderFileID.FullSlot >= 0 then
       Exit;
 
+    if flLoadOrder = High(Integer) then
+      flLoadOrder := _NextLoadOrder;
+
     if flLoadOrder >= 0 then begin
+      _NextLoadOrder := Max(_NextLoadOrder, Succ(flLoadOrder));
       if wbIsEslSupported or wbPseudoESL then begin
         if (fsPseudoESL in flStates) or (Header.IsESL and not wbIgnoreESL) then begin
           if _NextLightSlot > $FFF then

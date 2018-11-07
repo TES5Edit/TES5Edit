@@ -1518,7 +1518,14 @@ begin
       wbContainerHandler.AddFolder(wbDataPath);
 
       if wbToolMode in [tmDump] then
-        _File := wbFile(s);
+        _File := wbFile(s, High(Integer));
+
+      with wbModuleByName(wbGameMasterEsm)^ do
+        if mfHasFile in miFlags then begin
+          s := wbProgramPath + wbGameName + wbHardcodedDat;
+          if FileExists(s) then
+            wbFile(s, 0, wbGameMasterEsm);
+        end;
 
       ReportProgress('Finished loading record. Starting Dump.');
 
