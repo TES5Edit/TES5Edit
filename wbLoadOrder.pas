@@ -54,6 +54,7 @@ type
     mfTagged,
     mfHasFile,
     mfIsHardcoded,
+    mfIsGameMaster,
     mfNew,
     mfTemplate,
     mfIsModGroupTarget,
@@ -420,6 +421,7 @@ begin
       miOfficialIndex := Low(Integer);
       Include(miFlags, mfActive);
       Include(miFlags, mfHasIndex);
+      Include(miFlags, mfIsGameMaster);
     end;
   with wbModuleByName(wbGameName + wbHardcodedDat)^ do begin
     miOfficialIndex := Succ(Low(Integer));
