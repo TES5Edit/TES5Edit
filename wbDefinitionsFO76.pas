@@ -11222,6 +11222,9 @@ begin
   wbRecord(PROJ, 'Projectile', [
     wbEDID,
     wbOBNDReq,
+    wbUnknown(PHST),
+    wbKSIZ,
+    wbKWDAs,
     wbOPDSs,
     wbFULL,
     wbMODL,
@@ -11242,7 +11245,8 @@ begin
         {0x00400} 'Disable Combat Aim Correction',
         {0x00800} 'Penetrates Geometry',
         {0x01000} 'Continuous Update',
-        {0x02000} 'Seeks Target'
+        {0x02000} 'Seeks Target',
+        {0x04000} 'Unknown 14'
       ])),
       wbInteger('Type', itU16, wbEnum([], [
         $01, 'Missile',
