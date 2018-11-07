@@ -13849,9 +13849,11 @@ begin
                   if not Assigned(LStringsAtOffSet[Offset]) then
                     LStringsAtOffSet[Offset] := TwbFastStringListCS.CreateSorted;
 
+                  s := '[' + IntToHex(i, 8) + '] ' + s;
+
                   with LStringsAtOffSet[Offset] do if Count < 15 then begin
                     if not Find(s, i) then
-                      i := AddObject('[' + IntToHex(i, 8) + '] ' + s, TObject(0));
+                      i := AddObject(s, TObject(0));
                     Objects[i] := TObject(Succ(Integer(Objects[i])));
                   end;
                 end else
