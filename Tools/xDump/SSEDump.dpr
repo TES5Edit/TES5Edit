@@ -68,6 +68,7 @@ var
   DumpForms    : TStringList;
   DumpCount       : Integer;
   DumpMax         : Integer;
+  DumpCheckReport : Boolean = False;
 
 procedure ReportProgress(const aStatus: string);
 begin
@@ -623,7 +624,7 @@ begin
     end;
 
   if aContainer.Skipped then begin
-    if not wbReportMode then WriteLn(aIndent, '<contents skipped>');
+    if ((not wbReportMode) or DumpCheckReport) then WriteLn(aIndent, '<contents skipped>');
   end else begin
     Supports(aContainer, IwbContainerElementRef, ContainerRef);
     for i := 0 to Pred(aContainer.ElementCount) do
@@ -636,6 +637,7 @@ var
   Container   : IwbContainer;
   Name        : string;
   Value       : string;
+  Error       : string;
 
   i            : Integer;
   GroupRecord  : IwbGroupRecord;
@@ -659,20 +661,25 @@ begin
 
   Name := aElement.Name;
   Value := aElement.Value;
+  if DumpCheckReport then
+    Error := aElement.Check;
 
   if (aElement.Name <> 'Unused') and (Name <> 'Unused') then begin
-    if (Name <> '') and not wbReportMode then
+    if (Name <> '') and ((not wbReportMode) or DumpCheckReport) then
       Write(aIndent, Name);
     if (Name <> '') or (Value <> '') then
       aIndent := aIndent + '  ';
     if (Value <> '') and (Pos('Hidden: ', Name)<>1) then begin
-      if not wbReportMode then
+      if ((not wbReportMode) or DumpCheckReport) then
         WriteLn(': ', Value);
     end else begin
-      if (Name <> '') and not wbReportMode then
+      if (Name <> '') and ((not wbReportMode) or DumpCheckReport) then
         WriteLn;
     end;
   end;
+
+  if DumpCheckReport and (Error <> '') then
+    WriteLn(aIndent, '[ERROR: ', Error ,']');
 
   if Supports(aElement, IwbContainer, Container) and (Pos('Hidden: ', Name)<>1) then
     WriteContainer(Container, aIndent);
@@ -1131,6 +1138,11 @@ begin
       else
         wbReportMode := False;
 
+      if FindCmdLineSwitch('dcr') then begin
+        wbReportMode := True;
+        DumpCheckReport := True;
+      end;
+
       if not FindCmdLineSwitch('q') and not wbReportMode then begin
         WriteLn(ErrOutput, wbAppName, wbToolName,' ', VersionString.ToString);
         WriteLn(ErrOutput);
@@ -1331,6 +1343,7 @@ begin
         WriteLn(ErrOutput, '-dg:list     ', 'If specified, only dump the listed top level groups');
         WriteLn(ErrOutput, '-top:N       ', 'If specified, only dump the first N records');
         WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
+        WriteLn(ErrOutput, '-dcr         ', 'Dumps record content while performing "Check for Errors" on each element and generates a report');
         WriteLn(ErrOutput, '             ', '');
         WriteLn(ErrOutput, 'Saves mode ONLY');
         WriteLn(ErrOutput, '-df:list     ', 'If specified, only dump the listed ChangedForm type');
@@ -1515,8 +1528,15 @@ begin
         else
           WriteContainer(_File);
 
-        if wbReportMode then
+        if wbReportMode then begin
+          if DumpCheckReport then begin
+            WriteLn;
+            WriteLn('==================================== REPORT ====================================');
+            WriteLn;
+          end;
+
           ReportDefs;
+        end;
       end else if wbToolMode in [tmExport] then begin
         for Pass := epRead to epRemaining do begin
           ProfileHeader(StrToTExportFormat(s), Pass);
