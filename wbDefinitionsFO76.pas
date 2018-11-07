@@ -360,6 +360,7 @@ const
   EFIT : TwbSignature = 'EFIT';
   EFSH : TwbSignature = 'EFSH';
   EITM : TwbSignature = 'EITM';
+  EILV : TwbSignature = 'EILV'; { New To Fallout 76 }
   EMOT : TwbSignature = 'EMOT'; { New To Fallout 76 }
   ENAM : TwbSignature = 'ENAM';
   ENCH : TwbSignature = 'ENCH';
@@ -982,6 +983,7 @@ const
   DOFA : TwbSignature = 'DOFA'; { New To Fallout 76 }
   NTWK : TwbSignature = 'NTWK'; { New To Fallout 76 }
   ILAC : TwbSignature = 'ILAC'; { New To Fallout 76 }
+  IBSD : TwbSignature = 'IBSD'; { New To Fallout 76 }
 
   ESCR : TwbSignature = 'ESCR'; { New To Fallout 76 }
   REPR : TwbSignature = 'REPR'; { New To Fallout 76 }
@@ -991,6 +993,8 @@ const
   VENG : TwbSignature = 'VENG'; { New To Fallout 76 }
   RLBC : TwbSignature = 'RLBC'; { New To Fallout 76 }
   CVT1 : TwbSignature = 'CVT1'; { New To Fallout 76 }
+  CVT2 : TwbSignature = 'CVT2'; { New To Fallout 76 }
+  CVT3 : TwbSignature = 'CVT3'; { New To Fallout 76 }
   FEVA : TwbSignature = 'FEVA'; { New To Fallout 76 }
   PHST : TwbSignature = 'PHST'; { New To Fallout 76 }
 
@@ -1175,6 +1179,7 @@ var
   wbMaxHeightDataCELL: IwbSubRecordDef;
   wbMaxHeightDataWRLD: IwbSubRecordDef;
   wbOFST: IwbSubRecordDef;
+  wbEILV: IwbSubRecordDef;
   wbENLM: IwbSubRecordDef;
   wbENLT: IwbSubRecordDef;
   wbENLS: IwbSubRecordDef;
@@ -7231,6 +7236,7 @@ begin
 
   wbNTWK := wbEmpty(NTWK, 'Network? Marker');
 
+  wbEILV := wbUnknown(EILV);
   wbENLM := wbUnknown(ENLM);
   wbENLT := wbUnknown(ENLT);
   wbENLS := wbFloat(ENLS);
@@ -9708,7 +9714,10 @@ begin
       wbString(MOD2, 'Model Filename'),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMODC,
-      wbMO2S
+      wbMO2S,
+      wbENLT,
+      wbENLS,
+      wbAUUV
     ], []),
     wbString(ICON, 'Male Inventory Image'),
     wbString(MICO, 'Male Message Icon'),
@@ -9716,7 +9725,10 @@ begin
       wbString(MOD4, 'Model Filename'),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMODC,
-      wbMO4S
+      wbMO4S,
+      wbENLT,
+      wbENLS,
+      wbAUUV
     ], []),
     wbString(ICO2, 'Female Inventory Image'),
     wbString(MIC2, 'Female Message Icon'),
@@ -9732,6 +9744,8 @@ begin
     wbKWDAs,
     wbDESC,
     wbINRD,
+    wbEILV,
+    wbFormIDCk(IBSD, 'Item Break Sound', [SNDR]),
     wbRArray('Models',
       wbRStruct('Model', [
         wbInteger(INDX, 'Addon Index', itU16),
@@ -9759,7 +9773,11 @@ begin
     ])),
     wbFormIDCk(TNAM, 'Template Armor', [ARMO]),
     wbAPPR,
-    wbObjectTemplate
+    wbObjectTemplate,
+    wbFormID(CVT0),
+    wbFormID(CVT1),
+    wbFormID(CVT2),
+    wbFormID(CVT3)
   ], False, nil, cpNormal, False, wbARMOAfterLoad, wbKeywordsAfterSet);
 
   wbRecord(ARMA, 'Armor Addon',
