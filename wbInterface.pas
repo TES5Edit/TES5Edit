@@ -46,16 +46,18 @@ type
     function ToString: string;
   end;
 
-const
-  wbWhatsNewVersion : Integer = 2;
-  wbDeveloperMessageVersion : Integer = 2;
+var
   VersionString : TwbVersion = (
     Major   : 3;
     Minor   : 3;
-    Release : 0;
+    Release : 1;
     Build   : '';
     Title   : 'BETA';
   );
+
+const
+  wbWhatsNewVersion : Integer = 3;
+  wbDeveloperMessageVersion : Integer = 2;
   wbDevCRC32App : Cardinal = $FFFFFFEF;
 
   clOrange       = $004080FF;
