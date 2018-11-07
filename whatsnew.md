@@ -1,3 +1,26 @@
+# What's new in xEdit 3.3.1 BETA?
+
+## Bugfixes
+
+The following reported issues have been fixed:
+
+* #574 - stick to row doesn't work with alt+navigation 
+* #576 - Record flags aren't copied correctly when dragged and dropped 
+* #577 - Data flags aren't copied when dragged and dropped 
+* #579 - xEdit doesn't interpret string encoding in VMAD properties as UTF-8 even -cp:utf-8 is added
+
+## Fallout 76 support
+
+Significant progress has been made on updating record definitions for Fallout 76, but much more work remains to be done.
+
+Fallout 76 mode can be enabled by renaming the exe to `FO76Edit.exe` or starting it with `-fo76` as parameter.
+
+At the current stage of development, please expect lots of error messages and possibly crashes from incomplete record defitions.
+
+## What's New tab
+
+This "What's New" document is now also shown in the "What's New" tab.
+
 # What's new in xEdit 3.3.0 BETA?
 
 ## UI Themes
