@@ -10000,7 +10000,7 @@ begin
     wbKeywords,
     wbDESC,
     wbINRD,
-    wbArray(EILV, 'Unknown', wbByteArray('Unknown', 4)), //same count as models
+    wbArray(EILV, 'Unknown', wbByteArray('Unknown', 4)),
     wbFormIDCk(IBSD, 'Break Sound', [SNDR]),
     wbRArray('Models',
       wbRStruct('Model', [
@@ -10484,16 +10484,19 @@ begin
     wbPTRN,
     wbPHST,
     wbSNTP,
+    wbXALG,
     wbFULL,
     wbMODL,
     wbCOCT,
     wbCNTOs,
     wbDEST,
+    wbDOFA,
     wbStruct(DATA, '', [
       wbInteger('Flags', itU8, wbFlags([
         {0x01} 'Allow Sounds When Animation',
         {0x02} 'Respawns',
-        {0x04} 'Show Owner'
+        {0x04} 'Show Owner',
+        {0x08} 'Unknown 4'
       ])),
       wbFloat('Weight')
     ], cpNormal, True),
