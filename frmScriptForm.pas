@@ -102,6 +102,7 @@ begin
     SaveToFile(s);
     lblPosition.Caption := Format('Saved: %s', [ExtractFileName(s)]);
     ScriptSelectionChanged := False;
+    Editor.Modified := False;
   finally
     Free;
   end;
@@ -170,7 +171,7 @@ begin
   s := cmbScripts.Items[cmbScripts.ItemIndex];
 
   if Editor.Modified and (string(Editor.Text).Trim <> '') then
-    if MessageDlg('The previous script has been modified. Do you want to save it before loading the new script?', mtConfirmation,mbYesNo, 0) = mrYes then
+    if MessageDlg('The previous script ("' + SaveOverride + '") has been modified. Do you want to save it before loading the new script?', mtConfirmation,mbYesNo, 0) = mrYes then
       btnSaveClick(Self);
 
   SaveOverride := s;
