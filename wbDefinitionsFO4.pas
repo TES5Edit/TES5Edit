@@ -4740,6 +4740,17 @@ begin
     Result := False;
 end;
 
+function wbActorTemplatesUseTemplateAny(const aElement: IwbElement): Boolean;
+var
+  MainRecord : IwbMainRecord;
+begin
+  MainRecord := aElement.ContainingMainRecord;
+  if Assigned(MainRecord) then
+    Result := Cardinal(MainRecord.ElementNativeValues['ACBS\Use Template Actors']) = 0
+  else
+    Result := False;
+end;
+
 procedure wbRemoveEmptyKWDA(const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
@@ -13741,7 +13752,7 @@ begin
       wbFormIDCk('Def Pack List', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate10),
       wbFormIDCk('Attack Data', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate11),
       wbFormIDCk('Keywords', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate12)
-    ]),
+    ], cpNormal, False, wbActorTemplatesUseTemplateAny),
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, nil{wbActorTemplateUseTraits}),
     wbSPCT,
     wbSPLOs,
