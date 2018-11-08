@@ -403,7 +403,6 @@ type
     N28: TMenuItem;
     N29: TMenuItem;
     tbsWhatsNew: TTabSheet;
-    reWhatsNew: TJvRichEdit;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -649,7 +648,6 @@ type
     procedure jbhGitHubBalloonClick(Sender: TObject);
     procedure jbhPatreonCloseBtnClick(Sender: TObject; var CanClose: Boolean);
     procedure jbhGitHubCloseBtnClick(Sender: TObject; var CanClose: Boolean);
-    procedure tbsWhatsNewShow(Sender: TObject);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
@@ -4565,7 +4563,7 @@ begin
     s := ExtractFilePath(ParamStr(0)) + 'whatsnew.rtf';
     if FileExists(s) then begin
       i := Settings.ReadInteger('WhatsNew', 'Version', 0);
-      with TfrmRichEdit.Create(Self) do try
+      with TfrmRichEdit.Create(Self) do begin
         Caption := 'What''s New?';
         try
           reMain.Lines.LoadFromFile(s);
@@ -4576,13 +4574,15 @@ begin
               Settings.UpdateFile;
             end;
           end;
-          { doesn't work, no idea why... fix later
-          reWhatsNew.Lines.Assign(reMain.Lines);
+          Parent := tbsWhatsNew;
+          Align := alClient;
+          Visible := True;
+          BorderStyle := bsNone;
+          btnOk.Visible := False;
+          cbDontShowAgain.Visible := False;
+          reMain.Align := alClient;
           tbsWhatsNew.TabVisible := True;
-          }
         except end;
-      finally
-        Free;
       end;
     end;
 
@@ -14928,12 +14928,6 @@ procedure TfrmMain.tbsViewShow(Sender: TObject);
 begin
   pnlNav.Show;
   vstNavChange(vstNav, vstNav.FocusedNode);
-end;
-
-procedure TfrmMain.tbsWhatsNewShow(Sender: TObject);
-begin
-  reWhatsNew.Parent := nil;
-  reWhatsNew.Parent := tbsWhatsNew;
 end;
 
 procedure TfrmMain.tmrStartupTimer(Sender: TObject);
