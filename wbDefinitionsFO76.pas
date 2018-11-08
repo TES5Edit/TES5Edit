@@ -11785,10 +11785,10 @@ begin
         {0x0000002000000000} 'Unknown 38',
         {0x0000004000000000} 'Unknown 39',
         {0x0000008000000000} 'Unknown 40',
-        {0x0000010000000000} 'Unknown 40',
-        {0x0000020000000000} 'Unknown 40',
-        {0x0000040000000000} 'Unknown 40',
-        {0x0000080000000000} 'Unknown 40',
+        {0x0000010000000000} 'Unknown 41',
+        {0x0000020000000000} 'Unknown 42',
+        {0x0000040000000000} 'Unknown 43',
+        {0x0000080000000000} 'Unknown 44',
         {0x0000100000000000} 'Unknown 45'
       ])),
       wbInteger('Sound Level', itU32, wbSoundLevelEnum),
@@ -11800,6 +11800,10 @@ begin
         'Large',
         'Extra Large'
       ])),
+      wbByteArray('Unknown', 4),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
       wbUnknown
 //      wbStruct('Spawn', [
 //        wbFloat('X'),
@@ -14162,9 +14166,9 @@ begin
       wbFloat('Exponent'),
       wbFloat('God Rays - Near Clip'),
       wbInteger('Value', itU32),
-      wbFloat('Weight')
+      wbFloat('Weight'),
+      wbUnknown
     ], cpNormal, True, nil, 10),
-    wbFloat(FNAM, 'Fade value', cpNormal, True),
     wbFloat(LILS),  // float suggested by xDump - all current 76 records are 0.0f or 1.0f
     wbString(NAM0, 'Gobo'),
     wbFormIDCk(LNAM, 'Lens', [LENS]),
@@ -14469,8 +14473,9 @@ begin
 
   wbRecord(MISC, 'Misc. Item',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  11, 'Calc From Components',
-      {0x00000004}  13, 'Pack-In Use Only'
+      {0x00000800}  11, 'Calc From Components',
+      {0x00002000}  13, 'Pack-In Use Only',
+      {0x00008000}  15, 'Unknown 15'
     ])), [
     wbEDID,
     wbVMAD,
