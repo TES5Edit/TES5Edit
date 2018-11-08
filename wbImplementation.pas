@@ -4217,10 +4217,16 @@ begin
   end;
 
   if fsIsHardcoded in flStates then begin
-    if wbBeginInternalEdit(True) then try
-      ((Add('PLYR', True) as IwbGroupRecord).Add('PLYR', True) as IwbMainRecord).EditorID := 'PlayerRef';
+    IsInternal := wbEditAllowed;
+    wbEditAllowed := True;
+    try
+      if wbBeginInternalEdit(True) then try
+        ((Add('PLYR', True) as IwbGroupRecord).Add('PLYR', True) as IwbMainRecord).EditorID := 'PlayerRef';
+      finally
+        wbEndInternalEdit;
+      end;
     finally
-      wbEndInternalEdit;
+      wbEditAllowed := IsInternal;
     end;
   end;
 
