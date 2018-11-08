@@ -498,6 +498,7 @@ const
   LFSP : TwbSignature = 'LFSP'; { New to Fallout 4 }
   LGTM : TwbSignature = 'LGTM';
   LIGH : TwbSignature = 'LIGH';
+  LILS : TwbSignature = 'LILS'; { New To Fallout 76 }
   LLCT : TwbSignature = 'LLCT'; {New to Skyrim, part of LVLI 'Count'}
   LLKC : TwbSignature = 'LLKC'; { New to Fallout 4 }
   LNAM : TwbSignature = 'LNAM';
@@ -527,6 +528,7 @@ const
   MATO : TwbSignature = 'MATO';
   MATT : TwbSignature = 'MATT';
   MCHT : TwbSignature = 'MCHT'; { New to Skyrim }
+  MCQP : TwbSignature = 'MCQP'; { New To Fallout 76 }
   MDOB : TwbSignature = 'MDOB';
   MESG : TwbSignature = 'MESG';
   MGEF : TwbSignature = 'MGEF';
@@ -1203,6 +1205,7 @@ var
   wbLODP: IwbSubRecordDef;
   wbNAM1LODP: IwbSubRecordStructDef;
   wbPHST: IwbSubRecordDef;
+  wbDOFA: IwbSubRecordDef;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -7487,6 +7490,12 @@ begin
   ], []);
 
   wbPHST := wbUnknown(PHST);
+  
+  wbDOFA := wbStruct(DOFA, 'Unknown', [
+    wbFormIDCk('Faction', [FACT]),
+    wbUnknown
+  ]);
+
 
   wbPropTypeEnum := wbEnum([
     {00} 'None',
@@ -9767,10 +9776,7 @@ begin
     wbFULL,
     wbMODL,
     wbDEST,
-    wbStruct(DOFA, 'Unknown', [
-      wbFormIDCk('Faction', [FACT]),
-      wbUnknown
-    ]),
+    wbDOFA,
     wbKeywords,
     wbPRPS,
     wbNTRM,
@@ -11715,6 +11721,7 @@ begin
    wbRecord(EXPL, 'Explosion', [
     wbEDID,
     wbOBNDReq,
+    wbPHST,
     wbOPDSs,
     wbFULL,
     wbMODL,
@@ -11736,18 +11743,53 @@ begin
         wbByteArray('Unknown', 4),
         wbFloat('Vertical Offset Mult')
       ]),
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'Unknown 0',
-        {0x00000002} 'Always Uses World Orientation',
-        {0x00000004} 'Knock Down - Always',
-        {0x00000008} 'Knock Down - By Formula',
-        {0x00000010} 'Ignore LOS Check',
-        {0x00000020} 'Push Explosion Source Ref Only',
-        {0x00000040} 'Ignore Image Space Swap',
-        {0x00000080} 'Chain',
-        {0x00000100} 'No Controller Vibration',
-        {0x00000200} 'Placed Object Persists',
-        {0x00000400} 'Skip Underwater Tests'
+      wbInteger('Flags', itU64, wbFlags([
+        {0x0000000000000001} 'Unknown 0',
+        {0x0000000000000002} 'Always Uses World Orientation',
+        {0x0000000000000004} 'Knock Down - Always',
+        {0x0000000000000008} 'Knock Down - By Formula',
+        {0x0000000000000010} 'Ignore LOS Check',
+        {0x0000000000000020} 'Push Explosion Source Ref Only',
+        {0x0000000000000040} 'Ignore Image Space Swap',
+        {0x0000000000000080} 'Chain',
+        {0x0000000000000100} 'No Controller Vibration',
+        {0x0000000000000200} 'Placed Object Persists',
+        {0x0000000000000400} 'Skip Underwater Tests',
+        {0x0000000000000400} 'Unknown 11',
+        {0x0000000000000800} 'Unknown 12',
+        {0x0000000000001000} 'Unknown 13',
+        {0x0000000000002000} 'Unknown 14',
+        {0x0000000000004000} 'Unknown 15',
+        {0x0000000000008000} 'Unknown 16',
+        {0x0000000000010000} 'Unknown 17',
+        {0x0000000000020000} 'Unknown 18',
+        {0x0000000000040000} 'Unknown 19',
+        {0x0000000000080000} 'Unknown 20',
+        {0x0000000000100000} 'Unknown 21',
+        {0x0000000000200000} 'Unknown 22',
+        {0x0000000000400000} 'Unknown 23',
+        {0x0000000000800000} 'Unknown 24',
+        {0x0000000001000000} 'Unknown 25',
+        {0x0000000002000000} 'Unknown 26',
+        {0x0000000004000000} 'Unknown 27',
+        {0x0000000008000000} 'Unknown 28',
+        {0x0000000010000000} 'Unknown 29',
+        {0x0000000020000000} 'Unknown 30',
+        {0x0000000040000000} 'Unknown 31',
+        {0x0000000080000000} 'Unknown 32',
+        {0x0000000100000000} 'Unknown 33',
+        {0x0000000200000000} 'Unknown 34',
+        {0x0000000400000000} 'Unknown 35',
+        {0x0000000800000000} 'Unknown 36',
+        {0x0000001000000000} 'Unknown 37',
+        {0x0000002000000000} 'Unknown 38',
+        {0x0000004000000000} 'Unknown 39',
+        {0x0000008000000000} 'Unknown 40',
+        {0x0000010000000000} 'Unknown 40',
+        {0x0000020000000000} 'Unknown 40',
+        {0x0000040000000000} 'Unknown 40',
+        {0x0000080000000000} 'Unknown 40',
+        {0x0000100000000000} 'Unknown 45'
       ])),
       wbInteger('Sound Level', itU32, wbSoundLevelEnum),
       wbFloat('Placed Object AutoFade Delay'),
@@ -11758,13 +11800,14 @@ begin
         'Large',
         'Extra Large'
       ])),
-      wbStruct('Spawn', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z'),
-        wbFloat('Spread Degrees'),
-        wbInteger('Count', itU32)
-      ])
+      wbUnknown
+//      wbStruct('Spawn', [
+//        wbFloat('X'),
+//        wbFloat('Y'),
+//        wbFloat('Z'),
+//        wbFloat('Spread Degrees'),
+//        wbInteger('Count', itU32)
+//      ])
     ], cpNormal, True, nil, 13)
   ]);
 
@@ -14065,6 +14108,7 @@ begin
     wbOBNDReq,
     wbOPDSs,
     wbPTRN,
+    wbSNTP,
     wbMODL,
     wbKeywords,
     wbDEST,
@@ -14099,7 +14143,11 @@ begin
         {0x00040000} 'Ignore Roughness',
         {0x00080000} 'No Rim Lighting',
         {0x00100000} 'Ambient Only',
-        {0x00200000} 'Unknown 21' // only in [001C7F0C] <RandomSpot01GR>
+        {0x00200000} 'Unknown 21', // only in [001C7F0C] <RandomSpot01GR>
+        {0x00400000} 'Unknown 22',
+        {0x00800000} 'Unknown 23',
+        {0x01000000} 'Unknown 24',
+        {0x02000000} 'Unknown 25'
       ])),
       wbFloat('Falloff Exponent'),
       wbFloat('FOV'),
@@ -14117,6 +14165,7 @@ begin
       wbFloat('Weight')
     ], cpNormal, True, nil, 10),
     wbFloat(FNAM, 'Fade value', cpNormal, True),
+    wbFloat(LILS),  // float suggested by xDump - all current 76 records are 0.0f or 1.0f
     wbString(NAM0, 'Gobo'),
     wbFormIDCk(LNAM, 'Lens', [LENS]),
     wbFormIDCk(WGDR, 'God Rays', [GDRY]),
@@ -14439,11 +14488,17 @@ begin
     wbYNAM,
     wbZNAM,
     wbKeywords,
-    wbFormID(FIMD, 'Featured Item Message'),
+    wbFormIDCk(FIMD, 'Featured Item Message', [MESG]),
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
     ], cpNormal, True),
+    wbStructs(MCQP, 'Components', 'Component', [  // MCQP probably replaced CVPA
+      wbFormIDCk('Component', sigBaseObjects),
+      wbFormIDCk('Keyword', [KYWD])
+    ]),
+    wbUnknown(AQIC),
+    wbFormIDCk(DIQO, 'Quest', [QUST]),
     // the amount of components is the same as size of CDIX, so should not be sorted probably
     wbStructs(CVPA, 'Components', 'Component', [
       wbFormIDCk('Component', sigBaseObjects), // CK allows only CMPO
@@ -16496,6 +16551,7 @@ begin
     wbPRPS,
     wbFULL,
     wbDEST,
+    wbDOFA,
     wbNAM1LODP,
     wbStruct(DNAM, 'Direction Material', [
       wbFloat('Max Angle (30-120)'),
