@@ -1146,6 +1146,7 @@ var
   wbMGEFType: IwbIntegerDef;
   wbMDOB: IwbSubRecordDef;
   wbSPIT: IwbSubRecordDef;
+  wbMIID: IwbSubRecordDef;
   wbDMDC: IwbSubRecordDef;
   wbDMDS: IwbSubRecordDef;
   wbMO5S: IwbSubRecordDef;
@@ -11079,6 +11080,8 @@ begin
     wbMODL
   ]);
 
+  wbMIID := wbUnknown(MIID);
+
   wbRecord(ENCH, 'Object Effect', [
     wbEDID,
     wbOBNDReq,
@@ -11103,7 +11106,7 @@ begin
       wbFormIDCk('Worn Restrictions', [FLST, NULL])
     ], cpNormal, True, nil, 8),
     wbEffectsReq,
-    wbUnknown(MIID)
+    wbMIID
   ]);
 
   {wbRecord(EYES, 'Eyes', [
@@ -13983,7 +13986,8 @@ begin
         {0x00000100} 'References Persist'
       ]))
     ], cpNormal, True),
-    wbEffectsReq
+    wbEffectsReq,
+    wbMIID
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(KEYM, 'Key',
@@ -16513,7 +16517,7 @@ begin
     wbDESCReq,
     wbSPIT,
     wbEffectsReq,
-    wbUnknown(MIID)
+    wbMIID
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   {wbRecord(SCRL, 'Scroll', [
