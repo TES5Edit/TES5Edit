@@ -1,3 +1,18 @@
+# What's new in xEdit 3.3.2 BETA?
+
+## Bugfixes
+
+The following reported issues have been fixed:
+
+* #583 - Edited scripts not marked as not modified when manually saved
+* #584 - deleting things from use template actors (sorted) sometimes moves two entries down instead of 1
+* #585 - xEdit doesn't remember which monitor it was last placed on in certain situations
+* #586 - keyboard selection in dropdown lists doesn't work 
+* #587 - modified bold font doesn't fully get removed
+* #588 - dropdown in a specific part of omod's properties doesn't work
+* #589 - dropdown list's horizontal scrollbar covers up the bottommost entry 
+* #590 - alt+cursor movement defaults to descriptions column if out of bound
+
 # What's new in xEdit 3.3.1 BETA?
 
 ## Bugfixes
