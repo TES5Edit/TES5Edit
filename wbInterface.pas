@@ -13850,14 +13850,14 @@ begin
                 SetLength(LStringsAtOffSet, Succ(Offset));
 
               try
-                s := wbStringToAnsi(wbLocalizationHandler.GetValue(PCardinal(aBasePtr)^, aElement), aElement);
+                s := wbStringToAnsi(wbLocalizationHandler.GetValue(aInt, aElement), aElement);
                 if (s <> '') and not S.StartsWith('<Error:', True) then begin
                   Inc(FoundLStringAtOffSet[Offset]);
 
                   if not Assigned(LStringsAtOffSet[Offset]) then
                     LStringsAtOffSet[Offset] := TwbFastStringListCS.CreateSorted;
 
-                  s := '[' + IntToHex(i, 8) + '] ' + s;
+                  s := '[' + IntToHex(aInt, 8) + '] ' + s;
 
                   with LStringsAtOffSet[Offset] do if Count < 15 then begin
                     if not Find(s, i) then
