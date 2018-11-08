@@ -5766,9 +5766,12 @@ procedure TfrmMain.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftStat
 var
   OffsetXY                    : TPoint;
   Column                      : TColumnIndex;
+  FocusFile                   : IwbFile;
+  _File                       : IwbFile;
   NavNode                     : PVirtualNode;
   ViewNode                    : PVirtualNode;
   r                           : TRect;
+  i                           : Integer;
 begin
   if (Key = Ord('S')) and (Shift = [ssCtrl]) then
     SaveChanged;
@@ -5803,6 +5806,12 @@ begin
       FoundViewLabelNode := nil;
       OffsetXY := vstView.OffsetXY;
       Column := vstView.FocusedColumn;
+      FocusFile := nil;
+      if (Pred(Column) >= Low(ActiveRecords)) and (Pred(Column) <= High(ActiveRecords)) then
+        with ActiveRecords[Pred(Column)] do
+          if Assigned(Element) then
+            FocusFile := Element._File;
+
       ViewNode := vstView.FocusedNode;
       if Assigned(ViewNode) then
         r := vstView.GetDisplayRect(ViewNode, Column, False);
@@ -5857,25 +5866,62 @@ begin
       else
         Exit;
       end;
-      if StickViewNodeLabel <> '' then begin
-        if Assigned(NavNode) then begin
-          if tmrPendingSetActive.Enabled then
-            tmrPendingSetActiveTimer(tmrPendingSetActive);
-          vstView.UpdateScrollBars(False);
-          if not Assigned(FoundViewLabelNode) then begin
+      if Assigned(NavNode) then begin
+        if tmrPendingSetActive.Enabled then
+          tmrPendingSetActiveTimer(tmrPendingSetActive);
+        vstView.UpdateScrollBars(False);
+        if (StickViewNodeLabel = '*') or not Assigned(FoundViewLabelNode) then begin
+          if StickViewNodeLabel = '' then
             vstView.OffsetXY := OffsetXY;
-            if Assigned(ViewNode) then begin
-              ViewNode := vstView.GetNodeAt(r.Left + 2, r.Top + 2);
-              if Assigned(ViewNode) then
-                vstView.FocusedNode := ViewNode;
-            end;
-          end else
-            vstView.FocusedNode := FoundViewLabelNode;
-          Column := Min(Max(1, Column), Pred(vstView.Header.Columns.Count));
-          vstView.FocusedColumn := Column;
+          if Assigned(ViewNode) then begin
+            ViewNode := vstView.GetNodeAt(r.Left + 2, r.Top + 2);
+            if Assigned(ViewNode) then
+              vstView.FocusedNode := ViewNode;
+          end;
+        end else
+          vstView.FocusedNode := FoundViewLabelNode;
+
+        Column := Min(Max(1, Column), Pred(vstView.Header.Columns.Count));
+
+        { Try to find exact file }
+        if Assigned(FocusFile) then
+          for i := Low(ActiveRecords) to High(ActiveRecords) do
+            with ActiveRecords[i] do
+              if Assigned(Element) and FocusFile.Equals(Element._File) then begin
+                Column := Succ(i);
+                FocusFile := nil;
+                Break;
+              end;
+
+        { Try to find the lowest one with same or higher load order }
+        if Assigned(FocusFile) then
+          if FocusFile.LoadOrder >= 0 then
+            for i := Low(ActiveRecords) to High(ActiveRecords) do
+              with ActiveRecords[i] do
+                if Assigned(Element) then begin
+                  _File := Element._File;
+                  if Assigned(_File) and (_File.LoadOrder >= FocusFile.LoadOrder) then begin
+                    Column := Succ(i);
+                    FocusFile := nil;
+                    Break;
+                  end;
+                end;
+
+        { Go to the right most column }
+        if Assigned(FocusFile) then
+          for i := High(ActiveRecords) downto Low(ActiveRecords) do
+            with ActiveRecords[i] do
+              if Assigned(Element) then begin
+                Column := Succ(i);
+                FocusFile := nil;
+                Break;
+              end;
+
+        vstView.FocusedColumn := Column;
+
+        if StickViewNodeLabel = '' then
           if not Assigned(FoundViewLabelNode) then
             vstView.OffsetXY := OffsetXY;
-        end;
       end;
     finally
       vstView.EndUpdate;
@@ -14434,7 +14480,8 @@ begin
 
   if Assigned(LabelNode) then begin
     vstView.TopNode := LabelNode;
-    vstView.FocusedNode := LabelNode;
+    if StickViewNodeLabel <> '*' then
+      vstView.FocusedNode := LabelNode;
     FoundViewLabelNode := LabelNode;
   end;
 end;
