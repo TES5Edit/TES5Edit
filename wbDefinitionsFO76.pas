@@ -1097,6 +1097,7 @@ var
   wbMODLReq: IwbSubRecordStructDef;
   wbCTDA: IwbSubRecordStructDef;
   wbCTDAs: IwbSubRecordArrayDef;
+  wbCNDCs: IwbSubRecordArrayDef;
   wbCTDAsReq: IwbSubRecordArrayDef;
   wbCTDAsCount: IwbSubRecordArrayDef;
   wbXLOD: IwbSubRecordDef;
@@ -1206,6 +1207,7 @@ var
   wbNAM1LODP: IwbSubRecordStructDef;
   wbPHST: IwbSubRecordDef;
   wbDOFA: IwbSubRecordDef;
+  wbQSTI: IwbSubRecordDef;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -1367,18 +1369,18 @@ begin
     Exit;
 
   Element := nil;
-  if MainRecord.Signature = ACTI then
-    Element := MainRecord.ElementBySignature['QSTI']
+  if (MainRecord.Signature = ACTI) or (MainRecord.Signature = TACT) then
+    Element := MainRecord.ElementBySignature[QSTI]
   else if MainRecord.Signature = SCEN then
-    Element := MainRecord.ElementBySignature['PNAM']
+    Element := MainRecord.ElementBySignature[PNAM]
   else if MainRecord.Signature = PACK then
-    Element := MainRecord.ElementBySignature['QNAM']
+    Element := MainRecord.ElementBySignature[QNAM]
   else if (MainRecord.Signature = INFO) then begin
     // get DIAL for INFO
     if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
       if Supports(GroupRecord.ChildrenOf, IwbMainRecord, MainRecord) then
         if MainRecord.Signature = DIAL then
-          Element := MainRecord.ElementBySignature['QNAM'];
+          Element := MainRecord.ElementBySignature[QNAM];
   end;
 
   if Assigned(Element) then
@@ -1561,7 +1563,7 @@ function wbCTDAParamQuestOverlay(aInt: Int64; const aElement: IwbElement; aType:
 
     if MainRecord.Signature = QUST then
       Result := MainRecord.FixedFormID.ToCardinal
-    else if MainRecord.Signature = ACTI then begin
+    else if (MainRecord.Signature = ACTI) or (MainRecord.Signature = TACT) then begin
       Element := MainRecord.ElementBySignature[QSTI];
       if Assigned(Element) then
         Result := Element.NativeValue;
@@ -4506,18 +4508,18 @@ begin
       if Assigned(MainRecord) then begin
 
         Element := nil;
-        if MainRecord.Signature = ACTI then
-          Element := MainRecord.ElementBySignature['QSTI']
+        if (MainRecord.Signature = ACTI) or (MainRecord.Signature = TACT) then
+          Element := MainRecord.ElementBySignature[QSTI]
         else if MainRecord.Signature = SCEN then
-          Element := MainRecord.ElementBySignature['PNAM']
+          Element := MainRecord.ElementBySignature[PNAM]
         else if MainRecord.Signature = PACK then
-          Element := MainRecord.ElementBySignature['QNAM']
+          Element := MainRecord.ElementBySignature[QNAM]
         else if (MainRecord.Signature = INFO) then begin
           // get DIAL for INFO
           if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
             if Supports(GroupRecord.ChildrenOf, IwbMainRecord, MainRecord) then
               if MainRecord.Signature = DIAL then
-                Element := MainRecord.ElementBySignature['QNAM'];
+                Element := MainRecord.ElementBySignature[QNAM];
         end;
 
         if Assigned(Element) then
@@ -4569,18 +4571,18 @@ begin
       if Assigned(MainRecord) then begin
 
         Element := nil;
-        if MainRecord.Signature = ACTI then
-          Element := MainRecord.ElementBySignature['QSTI']
+        if (MainRecord.Signature = ACTI) or (MainRecord.Signature = TACT) then
+          Element := MainRecord.ElementBySignature[QSTI]
         else if MainRecord.Signature = SCEN then
-          Element := MainRecord.ElementBySignature['PNAM']
+          Element := MainRecord.ElementBySignature[PNAM]
         else if MainRecord.Signature = PACK then
-          Element := MainRecord.ElementBySignature['QNAM']
+          Element := MainRecord.ElementBySignature[QNAM]
         else if (MainRecord.Signature = INFO) then begin
           // get DIAL for INFO
           if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
             if Supports(GroupRecord.ChildrenOf, IwbMainRecord, MainRecord) then
               if MainRecord.Signature = DIAL then
-                Element := MainRecord.ElementBySignature['QNAM'];
+                Element := MainRecord.ElementBySignature[QNAM];
         end;
 
         if Assigned(Element) then
@@ -7496,6 +7498,7 @@ begin
     wbUnknown
   ]);
 
+  wbQSTI := wbFormIDCk(QSTI, 'Quest', [QUST]);
 
   wbPropTypeEnum := wbEnum([
     {00} 'None',
@@ -9343,6 +9346,21 @@ begin
   wbCTDAsCount := wbRArray('Conditions', wbCTDA, cpNormal, False, nil, wbCTDAsAfterSet);
   wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
 
+  wbCNDCs :=
+    wbRArray('Unknown',
+      wbRUnion('Unknown', [
+        wbRStruct('Unknown', [
+          wbUnknown(CNDC),
+          wbCITC,
+          wbCTDAs
+        ], []),
+        wbRStruct('Unknown', [
+          wbCITC,
+          wbCTDAs
+        ], [])
+      ], [])
+    );
+
   wbAttackData := wbRStructSK([1], 'Attack', [
     wbStruct(ATKD, 'Attack Data', [
       wbFloat('Damage Mult'),
@@ -9792,7 +9810,7 @@ begin
     wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
     wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
-    wbFormIDCk(QSTI, 'Quest', [QUST]),
+    wbQSTI,
     wbATTX,
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       'No Displacement',
@@ -9809,19 +9827,7 @@ begin
       wbInteger('Starts Active', itU8, wbBoolEnum),
       wbInteger('No Signal Static', itU8, wbBoolEnum)
     ], cpNormal, False, nil, 4),
-    wbRArray('Unknown',
-      wbRUnion('Unknown', [
-        wbRStruct('Unknown', [
-          wbUnknown(CNDC),
-          wbCITC,
-          wbCTDAs
-        ], []),
-        wbRStruct('Unknown', [
-          wbCITC,
-          wbCTDAs
-        ], [])
-      ], [])
-    ),
+    wbCNDCs,
     wbUnknown(MNAM),
     wbNVNM,
     wbNAM1LODP
@@ -9841,10 +9847,13 @@ begin
     wbMODL,
     wbDEST,
     wbKeywords,
-    wbUnknown(PNAM, cpIgnore, True),
+    wbUnknown(PNAM),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
-    wbUnknown(FNAM, cpIgnore, True),
-    wbFormIDCk(VNAM, 'Voice Type', [VTYP])
+    wbQSTI,
+    wbUnknown(FNAM),
+    wbCNDCs,
+    wbFormIDCk(VNAM, 'Voice Type', [VTYP]),
+    wbFormIDCk(FNAM, 'Faction', [FACT])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(ALCH, 'Ingestible',
