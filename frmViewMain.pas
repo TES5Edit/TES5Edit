@@ -13939,6 +13939,7 @@ begin
       Exit(False);
   finally
     Free;
+    InvalidateElementsTreeView(NoNodes);
   end;
 end;
 
