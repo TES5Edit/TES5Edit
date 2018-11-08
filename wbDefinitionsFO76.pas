@@ -10000,7 +10000,7 @@ begin
     wbKeywords,
     wbDESC,
     wbINRD,
-    wbUnknown(EILV),
+    wbArray(EILV, 'Unknown', wbByteArray('Unknown', 4)), //same count as models
     wbFormIDCk(IBSD, 'Break Sound', [SNDR]),
     wbRArray('Models',
       wbRStruct('Model', [
