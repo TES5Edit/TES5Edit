@@ -5548,14 +5548,11 @@ begin
       for i := 0 to Pred(vstNav.Header.Columns.Count) do
         Settings.WriteInteger(Name, 'vstNavColumnWidth' + IntToStr(i), vstNav.Header.Columns[i].Width);
 
-    if WindowState <> wsMinimized then
       Settings.WriteInteger(Name, 'WindowState', Integer(WindowState));
-    if WindowState = wsNormal then begin
       Settings.WriteInteger(Name, 'Left', Left);
       Settings.WriteInteger(Name, 'Top', Top);
       Settings.WriteInteger(Name, 'Width', Width);
       Settings.WriteInteger(Name, 'Height', Height);
-    end;
     Settings.UpdateFile;
   end;
 
