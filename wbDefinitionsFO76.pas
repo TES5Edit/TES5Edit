@@ -1020,6 +1020,10 @@ const
   ZNAM : TwbSignature = 'ZNAM';
   ZOOM : TwbSignature = 'ZOOM'; { New To Fallout 4 }
 
+  MIID : TwbSignature = 'MIID'; { New To Fallout 76 }
+  DURG : TwbSignature = 'DURG'; { New To Fallout 76 }
+  MAGG : TwbSignature = 'MAGG'; { New To Fallout 76 }
+
     // signatures of reference records
   sigReferences : TwbSignatures = [
     'NULL', 'PLYR', 'ACHR', 'REFR', 'PGRE', 'PHZD',
@@ -1339,6 +1343,7 @@ var
   i, j       : Integer;
   s, t       : string;
   GroupRecord: IwbGroupRecord;
+  Element    : IwbElement;
 begin
   case aType of
     ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Quest>';
@@ -1358,17 +1363,23 @@ begin
   if not Assigned(MainRecord) then
     Exit;
 
-  if MainRecord.Signature = SCEN then
-    Supports(MainRecord.ElementBySignature['PNAM'].LinksTo, IwbMainRecord, MainRecord)
+  Element := nil;
+  if MainRecord.Signature = ACTI then
+    Element := MainRecord.ElementBySignature['QSTI']
+  else if MainRecord.Signature = SCEN then
+    Element := MainRecord.ElementBySignature['PNAM']
   else if MainRecord.Signature = PACK then
-    Supports(MainRecord.ElementBySignature['QNAM'].LinksTo, IwbMainRecord, MainRecord)
-  else if MainRecord.Signature = INFO then begin
+    Element := MainRecord.ElementBySignature['QNAM']
+  else if (MainRecord.Signature = INFO) then begin
     // get DIAL for INFO
     if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
       if Supports(GroupRecord.ChildrenOf, IwbMainRecord, MainRecord) then
         if MainRecord.Signature = DIAL then
-          Supports(MainRecord.ElementBySignature['QNAM'].LinksTo, IwbMainRecord, MainRecord);
+          Element := MainRecord.ElementBySignature['QNAM'];
   end;
+
+  if Assigned(Element) then
+    Supports(Element.LinksTo, IwbMainRecord, MainRecord);
 
   if not Assigned(MainRecord) then
     Exit;
@@ -1537,7 +1548,7 @@ function wbCTDAParamQuestOverlay(aInt: Int64; const aElement: IwbElement; aType:
   var
     MainRecord : IwbMainRecord;
     GroupRecord: IwbGroupRecord;
-    QuestLink  : IwbElement;
+    Element    : IwbElement;
   begin
     if not Assigned(aElement) then
       Exit;
@@ -1547,18 +1558,27 @@ function wbCTDAParamQuestOverlay(aInt: Int64; const aElement: IwbElement; aType:
 
     if MainRecord.Signature = QUST then
       Result := MainRecord.FixedFormID.ToCardinal
-    else if MainRecord.Signature = ACTI then
-      Result := MainRecord.ElementBySignature[QSTI].NativeValue
-    else if MainRecord.Signature = SCEN then
-      Result := MainRecord.ElementBySignature[PNAM].NativeValue
-    else if MainRecord.Signature = PACK then
-      Result := MainRecord.ElementBySignature[QNAM].NativeValue
-    else if MainRecord.Signature = INFO then begin
+    else if MainRecord.Signature = ACTI then begin
+      Element := MainRecord.ElementBySignature[QSTI];
+      if Assigned(Element) then
+        Result := Element.NativeValue;
+    end else if MainRecord.Signature = SCEN then begin
+      Element := MainRecord.ElementBySignature[PNAM];
+      if Assigned(Element) then
+        Result := Element.NativeValue;
+    end else if MainRecord.Signature = PACK then begin
+      Element := MainRecord.ElementBySignature[QNAM];
+      if Assigned(Element) then
+        Result := Element.NativeValue;
+    end else if MainRecord.Signature = INFO then begin
       // get DIAL for INFO
       if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
         if Supports(GroupRecord.ChildrenOf, IwbMainRecord, MainRecord) then
-          if MainRecord.Signature = DIAL then
-            Result := MainRecord.ElementBySignature[QNAM].NativeValue;
+          if MainRecord.Signature = DIAL then begin
+            Element := MainRecord.ElementBySignature[QNAM];
+            if Assigned(Element) then
+              Result := Element.NativeValue;
+          end;
     end;
   end;
 
@@ -3029,16 +3049,37 @@ begin
 
   if not VarIsEmpty(ArchType) then
     case Integer(ArchType) of
-      12: Result := 1; // Light
-      17: Result := 2; // Bound Item
-      18: Result := 3; // Summon Creature
-      25: Result := 4; // Guide
-      34: Result := 8; // Peak Mod
-      35: Result := 5; // Cloak
-      36: Result := 6; // Werewolf
-      39: Result := 7; // Enhance Weapon
-      40: Result := 4; // Spawn Hazard
-      46: Result := 6; // Vampire Lord
+       0: Result := 9;  //Value Modifier
+       1: Result := 0;
+       4: Result := 0;
+       5: Result := 0;
+       6: Result := 0;
+       7: Result := 0;
+       8: Result := 0;
+       9: Result := 0;
+      11: Result := 0;
+      12: Result := 1;  // Light
+      17: Result := 2;  // Bound Item
+      18: Result := 3;  // Summon Creature
+      21: Result := 0;
+      25: Result := 4;  // Guide
+      28: Result := 0;
+      31: Result := 0;
+      33: Result := 0;
+      34: Result := 8;  // Peak Mod
+      35: Result := 5;  // Cloak
+      36: Result := 6;  // Werewolf
+      37: Result := 0;
+      39: Result := 7;  // Enhance Weapon
+      40: Result := 4;  // Spawn Hazard
+      45: Result := 10; // Damage
+      46: Result := 6;  // Vampire Lord
+      47: Result := 0;
+      48: Result := 0;
+      49: Result := 0;
+    else
+      if wbReportMode then
+        wbProgress('Unknown ArchType: ' + Integer(ArchType).ToString);
     end;
 end;
 
@@ -3337,6 +3378,12 @@ function wbDeciderFormVersion152(aBasePtr: Pointer; aEndPtr: Pointer; const aEle
 begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 152);
 end;
+
+function wbDeciderFormVersion154(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 154);
+end;
+
 
 
 function wbAECHDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -4441,6 +4488,7 @@ var
   ParamType: TCTDAFunctionParamType;
   MainRecord: IwbMainRecord;
   GroupRecord: IwbGroupRecord;
+  Element    : IwbElement;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
@@ -4454,17 +4502,23 @@ begin
       MainRecord := aElement.ContainingMainRecord;
       if Assigned(MainRecord) then begin
 
-        if MainRecord.Signature = SCEN then
-          Supports(MainRecord.ElementBySignature['PNAM'].LinksTo, IwbMainRecord, MainRecord)
+        Element := nil;
+        if MainRecord.Signature = ACTI then
+          Element := MainRecord.ElementBySignature['QSTI']
+        else if MainRecord.Signature = SCEN then
+          Element := MainRecord.ElementBySignature['PNAM']
         else if MainRecord.Signature = PACK then
-          Supports(MainRecord.ElementBySignature['QNAM'].LinksTo, IwbMainRecord, MainRecord)
+          Element := MainRecord.ElementBySignature['QNAM']
         else if (MainRecord.Signature = INFO) then begin
           // get DIAL for INFO
           if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
             if Supports(GroupRecord.ChildrenOf, IwbMainRecord, MainRecord) then
               if MainRecord.Signature = DIAL then
-                Supports(MainRecord.ElementBySignature['QNAM'].LinksTo, IwbMainRecord, MainRecord);
+                Element := MainRecord.ElementBySignature['QNAM'];
         end;
+
+        if Assigned(Element) then
+          Supports(Element.LinksTo, IwbMainRecord, MainRecord);
 
         if Assigned(MainRecord) and (MainRecord.Signature = QUST) then begin
           ParamType := ptQuestStage;
@@ -4497,6 +4551,7 @@ var
   ParamType: TCTDAFunctionParamType;
   MainRecord: IwbMainRecord;
   GroupRecord: IwbGroupRecord;
+  Element    : IwbElement;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
@@ -4510,17 +4565,23 @@ begin
       MainRecord := aElement.ContainingMainRecord;
       if Assigned(MainRecord) then begin
 
-        if MainRecord.Signature = SCEN then
-          Supports(MainRecord.ElementBySignature['PNAM'].LinksTo, IwbMainRecord, MainRecord)
+        Element := nil;
+        if MainRecord.Signature = ACTI then
+          Element := MainRecord.ElementBySignature['QSTI']
+        else if MainRecord.Signature = SCEN then
+          Element := MainRecord.ElementBySignature['PNAM']
         else if MainRecord.Signature = PACK then
-          Supports(MainRecord.ElementBySignature['QNAM'].LinksTo, IwbMainRecord, MainRecord)
+          Element := MainRecord.ElementBySignature['QNAM']
         else if (MainRecord.Signature = INFO) then begin
           // get DIAL for INFO
           if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
             if Supports(GroupRecord.ChildrenOf, IwbMainRecord, MainRecord) then
               if MainRecord.Signature = DIAL then
-                Supports(MainRecord.ElementBySignature['QNAM'].LinksTo, IwbMainRecord, MainRecord);
+                Element := MainRecord.ElementBySignature['QNAM'];
         end;
+
+        if Assigned(Element) then
+          Supports(Element.LinksTo, IwbMainRecord, MainRecord);
 
         if Assigned(MainRecord) and (MainRecord.Signature = QUST) then begin
           ParamType := ptNone;
@@ -6908,7 +6969,7 @@ begin
     wbFloat('Unknown'),
     wbFloat('Unknown'),
     wbFloat('Unknown'),
-    wbUnknown
+    wbUnknown.IncludeFlag(dfNoReport)
    (*
     wbFloat('Min Width'),
     wbFloat('Max Width'),
@@ -7386,11 +7447,11 @@ begin
   ], cpNormal, True);
 
   wbOPDS := wbStruct(OPDS, 'Unknown', [
-    wbByteArray('Unknown', 4),
+    wbByteArray('Unknown', 4).IncludeFlag(dfNoReport),
     wbFloat('Unknown'),
     wbFloat('Unknown'),
     wbFloat('Unknown'),
-    wbUnknown
+    wbUnknown.IncludeFlag(dfNoReport)
   ]);
 
   wbDEFL := wbFormIDCk(DEFL, 'Deflection Layer', [LAYR]);
@@ -7916,7 +7977,9 @@ begin
         'VATS Targetable',
         'Large Actor Destroys'
       ])),
-      wbUnknown
+      wbByteArray('Unknown', 2),
+      wbByteArray('Unknown', 4),
+      wbFloat('Unknown')
     ]),
     wbFormIDCk(HGLB, 'Health Global', [GLOB]),
     wbArrayS(DAMC, 'Resistances', wbStructSK([0], 'Resistance', [
@@ -8906,11 +8969,22 @@ begin
   wbEFID := wbFormIDCk(EFID, 'Base Effect', [MGEF]);
 
   wbEFIT :=
-    wbStructSK(EFIT, [3, 4], '', [
-      wbFloat('Magnitude', cpNormal, True),
-      wbInteger('Area', itU32),
-      wbInteger('Duration', itU32)
-    ], cpNormal, True, nil, -1, wbEFITAfterLoad);
+    wbUnion(EFIT, '', wbDeciderFormVersion154, [
+      wbStruct('', [
+        wbEmpty('Unused'),
+        wbFloat('Magnitude'),
+        wbInteger('Area', itU32),
+        wbInteger('Duration', itU32),
+        wbEmpty('Unused')
+      ], cpNormal, True, nil, -1, wbEFITAfterLoad),
+      wbStruct('', [
+        wbByteArray('Unknown', 4),
+        wbFloat('Magnitude'),
+        wbInteger('Area', itU32),
+        wbInteger('Duration', itU32),
+        wbByteArray('Unknown', 8)
+      ], cpNormal, True)
+    ], cpNormal, True);
 
   wbCTDA := wbRStructSK([0], 'Condition', [
     wbStructSK(CTDA, [3, 5], '', [
@@ -9651,7 +9725,10 @@ begin
     wbRStructs('Effects', 'Effect', [
       wbEFID,
       wbEFIT,
-      wbCTDAs
+      wbFormIDCk(CVT0, 'Curve Table', [CURV]),
+      wbCTDAs,
+      wbFormIDCk(DURG, 'Duration', [GLOB]),
+      wbFormIDCk(MAGG, 'Magnitude', [GLOB])
     ], [], cpNormal, True);
 
   wbRecord(ACTI, 'Activator',
@@ -11007,7 +11084,8 @@ begin
       wbFormIDCk('Base Enchantment', [ENCH, NULL]),
       wbFormIDCk('Worn Restrictions', [FLST, NULL])
     ], cpNormal, True, nil, 8),
-    wbEffectsReq
+    wbEffectsReq,
+    wbUnknown(MIID)
   ]);
 
   {wbRecord(EYES, 'Eyes', [
@@ -14072,14 +14150,16 @@ begin
 
   wbRecord(LTEX, 'Landscape Texture', [
     wbEDID,
-    wbFormIDCk(TNAM, 'Texture Set', [TXST], False, cpNormal, False),
+    wbString(BNAM, 'Texture'),
+    wbFormIDCk(TNAM, 'Unused', [TXST], False, cpIgnore, False),
     wbFormIDCk(MNAM, 'Material Type', [MATT, NULL], False, cpNormal, True),
+    wbFormIDCk(ONAM, 'Ground Cover', [GCVR], False, cpNormal, False),
     wbStruct(HNAM, 'Havok Data', [
       wbInteger('Friction', itU8),
       wbInteger('Restitution', itU8)
     ], cpNormal, True),
-    wbInteger(SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True),
-    wbRArray('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
+    wbInteger(SNAM, 'Unused', itU8, nil, cpIgnore, False),
+    wbRArray('Unused', wbFormIDCk(GNAM, 'Unused', [GRAS], False, cpIgnore).IncludeFlag(dfNoReport), cpIgnore)
   ]);
 
   wbRecord(LVLN, 'Leveled NPC', [
@@ -14253,11 +14333,11 @@ begin
                 {0x40000000}  'Unknown 31',
                 {0x80000000}  'Unknown 32'
             ])),
-      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4).IncludeFlag(dfNoReport),
 
       wbFloat('Base Cost'),
       wbUnion('Assoc. Item', wbMGEFAssocItemDecider, [
-        wbFormID('Unused', cpIgnore),
+        wbFormIDCk('Unused', [NULL], False, cpIgnore),
         wbFormIDCk('Assoc. Item', [LIGH, NULL]),
         wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]),
         wbFormIDCk('Assoc. Item', [NPC_, NULL]),
@@ -14265,7 +14345,9 @@ begin
         wbFormIDCk('Assoc. Item', [SPEL, NULL]),
         wbFormIDCk('Assoc. Item', [RACE, NULL]),
         wbFormIDCk('Assoc. Item', [ENCH, NULL]),
-        wbFormIDCk('Assoc. Item', [KYWD, NULL])
+        wbFormIDCk('Assoc. Item', [KYWD, NULL]),
+        wbFormIDCk('Assoc. Item', [STHD, NULL]),
+        wbFormIDCk('Assoc. Item', [DMGT, NULL])
       ], cpNormal, False, nil, wbMGEFAssocItemAfterSet),
       wbByteArray('Magic Skill (unused)', 4),
       wbFormIDCk('Resist Value', [AVIF, NULL]),
@@ -15605,7 +15687,7 @@ begin
     wbString(HLTX, 'Hair Color Extended Lookup Texture'),
     wbFormIDCk(QSTI, 'Dialogue Quest', [QUST]),
     wbBSMPSequence,
-    wbUnknown(SNAM)
+    wbLString(SNAM)
   ], False, nil, cpNormal, False, nil, wbRACEAfterSet);
 
 
@@ -16351,12 +16433,15 @@ begin
     wbEDID,
     wbOBNDReq,
     wbOPDSs,
+    wbDEFL,
     wbFULL,
     wbKeywords,
+    wbMDOB,
     wbETYP,
     wbDESCReq,
     wbSPIT,
-    wbEffectsReq
+    wbEffectsReq,
+    wbUnknown(MIID)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   {wbRecord(SCRL, 'Scroll', [
