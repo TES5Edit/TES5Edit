@@ -11671,7 +11671,7 @@ end;
 
 function TwbEnumDef.GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>;
 begin
-  Result := enEditInfo;
+  Result := Copy(enEditInfo);
 end;
 
 function TwbEnumDef.GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType;
