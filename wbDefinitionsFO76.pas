@@ -17695,9 +17695,14 @@ begin
     wbFULL,
     wbUnknown(MNAM),
     wbNAM1LODP,
+    wbPRPS,
     wbFLTR,
     wbRStructs('Parts', 'Part', [
-      wbFormIDCk(ONAM, 'Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP]),
+      wbStruct(ONAM, 'Static', [
+        wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, CNCY, SCOL]),
+        wbUnknown
+      ]),
+      wbUnknown(ONAM),
       wbArrayS(DATA, 'Placements', wbStruct('Placement', [
         wbStruct('Position', [
           wbFloat('X'),
