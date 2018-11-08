@@ -745,6 +745,12 @@ type
     eeUnusedData
   );
 
+  TwbResetModified = (
+    rmNo,
+    rmYes,
+    rmSetInternal
+  );
+
   IwbElement = interface
     ['{F4B4637D-C794-415F-B5C7-587EAA4095B3}']
 
@@ -858,7 +864,7 @@ type
     property IsHidden: Boolean
       read GetIsHidden;
 
-    procedure WriteToStream(aStream: TStream; aResetModified: Boolean);
+    procedure WriteToStream(aStream: TStream; aResetModified: TwbResetModified);
 
     function CopyInto(const aFile: IwbFile; AsNew, DeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 
