@@ -234,6 +234,7 @@ type
     procedure InvalidateStorage;
     function Reached: Boolean;
     procedure TryAssignMembers(const aSource: IwbElement);
+    procedure ResetModified(aResetModified: TwbResetModified);
 
     function BeginResolve: Boolean;
     procedure EndResolve;
@@ -386,8 +387,9 @@ type
     function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; virtual;
 
-    procedure WriteToStream(aStream: TStream; aResetModified: Boolean); virtual;
-    procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); virtual;
+    procedure WriteToStream(aStream: TStream; aResetModified: TwbResetModified); virtual;
+    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); virtual;
+    procedure ResetModified(aResetModified: TwbResetModified); virtual;
     function GetLinksTo: IwbElement; virtual;
     function GetNoReach: Boolean;
 
@@ -505,7 +507,8 @@ type
     procedure SetToDefaultInternal; override;
     procedure SetToDefaultIfAsCreatedEmpty; override;
 
-    procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); override;
+    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override;
+    procedure ResetModified(aResetModified: TwbResetModified); override;
 
     function GetElement(aIndex: Integer): IwbElement;
     function GetAnyElement: IwbElement;
@@ -677,8 +680,8 @@ type
     function GetIsEditable: Boolean; override;
     function GetIsRemoveable: Boolean; override;
 
-    procedure WriteToStream(aStream: TStream; aResetModified: Boolean); override;
-    procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); override;
+    procedure WriteToStream(aStream: TStream; aResetModified: TwbResetModified); override;
+    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override;
 
     function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
 
@@ -817,7 +820,7 @@ type
     procedure SetModified(aValue: Boolean); override;
     procedure RequestStorageChange(var aBasePtr, aEndPtr: Pointer; aNewSize: Cardinal); override;
 
-    procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); override;
+    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override;
     procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     function DoCheckSizeAfterWrite: Boolean; virtual;
@@ -1011,7 +1014,7 @@ type
     procedure InitDataPtr; override;
     procedure DecompressIfNeeded;
     procedure ScanData; override;
-    procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); override;
+    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override;
     procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     function CanContainFormIDs: Boolean; override;
@@ -1303,7 +1306,7 @@ type
 
     procedure SetToDefaultInternal; override;
 
-    procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); override;
+    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override;
 
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
@@ -1531,7 +1534,7 @@ type
     procedure SetEditValue(const aValue: string); override;
     procedure SetNativeValue(const aValue: Variant); override;
     function GetDataSize: Integer; override;
-    procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); override;
+    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override;
     procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
@@ -1660,7 +1663,7 @@ type
     procedure SetModified(aValue: Boolean); override;
 
     procedure PrepareSave; override;
-    procedure WriteToStreamInternal(aStream: TStream; aResetModified: Boolean); override;
+    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override;
     procedure MasterCountUpdated(aOld, aNew: Byte); override;
     procedure MasterIndicesUpdated(const aOld, aNew: TwbFileIDs); override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
@@ -4492,7 +4495,7 @@ begin
     end;
 end;
 
-procedure TwbFile.WriteToStream(aStream: TStream; aResetModified: Boolean);
+procedure TwbFile.WriteToStream(aStream: TStream; aResetModified: TwbResetModified);
 var
   MemoryStream: TMemoryStream;
 begin
@@ -4507,7 +4510,7 @@ begin
   end;
 end;
 
-procedure TwbFile.WriteToStreamInternal(aStream: TStream; aResetModified: Boolean);
+procedure TwbFile.WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified);
 var
   SelfRef : IwbContainerElementRef;
 begin
@@ -4516,9 +4519,14 @@ begin
   inherited WriteToStreamInternal(aStream, aResetModified);
 
   Exclude(eStates, esUnsaved);
-  if aResetModified then begin
-    Exclude(eStates, esModified);
-    Exclude(eStates, esInternalModified);
+  case aResetModified of
+    rmYes: begin
+      Exclude(eStates, esModified);
+      Exclude(eStates, esInternalModified);
+    end;
+    rmSetInternal:
+      if esModified in eStates then
+        Include(eStates, esInternalModified);
   end;
 end;
 
@@ -4533,7 +4541,7 @@ type
 function ArrayDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; out SizePrefix: Integer): Boolean; forward;
 procedure StructDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer); forward;
 function UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer): TwbUnionFlags; forward;
-function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Boolean; forward;
+function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; const aPrevFlags: TDynElementInternals): Boolean; forward;
 
 { TwbContainer }
 
@@ -6146,6 +6154,32 @@ begin
     cntElements[i].MemoryOrder := i;
 end;
 
+procedure TwbContainer.ResetModified(aResetModified: TwbResetModified);
+var
+  i: Integer;
+  SelfRef : IwbContainerElementRef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+  // NOT Init... we only need to reset elements that already exist
+
+  inherited;
+
+  for i := Low(cntElements) to High(cntElements) do
+    cntElements[i].ResetModified(aResetModified);
+
+  Exclude(eStates, esUnsaved);
+  case aResetModified of
+    rmYes: begin
+      Exclude(eStates, esModified);
+      Exclude(eStates, esInternalModified);
+    end;
+    rmSetInternal:
+      if esModified in eStates then
+        Include(eStates, esInternalModified);
+  end;
+end;
+
 procedure TwbContainer.ResetReachable;
 var
   i       : Integer;
@@ -6431,7 +6465,7 @@ begin
   end;
 end;
 
-procedure TwbContainer.WriteToStreamInternal(aStream: TStream; aResetModified: Boolean);
+procedure TwbContainer.WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified);
 var
   i: Integer;
   SelfRef : IwbContainerElementRef;
@@ -6444,9 +6478,14 @@ begin
     cntElements[i].WriteToStream(aStream, aResetModified);
 
   Exclude(eStates, esUnsaved);
-  if aResetModified then begin
-    Exclude(eStates, esModified);
-    Exclude(eStates, esInternalModified);
+  case aResetModified of
+    rmYes: begin
+      Exclude(eStates, esModified);
+      Exclude(eStates, esInternalModified);
+    end;
+    rmSetInternal:
+      if esModified in eStates then
+        Include(eStates, esInternalModified);
   end;
 end;
 
@@ -7276,7 +7315,7 @@ begin
     PrepareSave;
     Stream := TMemoryStream.Create;
     try
-      WriteToStream(Stream, True);
+      WriteToStream(Stream, rmYes);
       KAR := nil;
       if Assigned(aKAR) then
         aKAR^ := nil;
@@ -11074,10 +11113,11 @@ begin
     BuildRef;
 end;
 
-procedure TwbMainRecord.WriteToStreamInternal(aStream: TStream; aResetModified: Boolean);
+procedure TwbMainRecord.WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified);
 var
-  KAR : IwbKeepAliveRoot;
-  MS  : TMemoryStream;
+  KAR       : IwbKeepAliveRoot;
+  MS        : TMemoryStream;
+  NeedReset : Boolean;
 
   procedure Inner;
   var
@@ -11116,6 +11156,7 @@ var
         MemoryStream := TMemoryStream.Create;
         try
           inherited WriteToStreamInternal(MemoryStream, aResetModified);
+          NeedReset := False;
           DataSize := MemoryStream.Size;
           Stream.WriteBuffer(DataSize, SizeOf(DataSize));
           MemoryStream.Position := 0;
@@ -11124,8 +11165,10 @@ var
           FreeAndNil(MemoryStream);
         end;
 
-      end else
+      end else begin
         inherited WriteToStreamInternal(Stream, aResetModified);
+        NeedReset := False;
+      end;
 
       if wbForceNewHeader then
         DataSize := Stream.Size - wbSizeOfMainRecordStruct - SizeOf(wbNewHeaderAddon)
@@ -11157,6 +11200,7 @@ var
 var
   WasInternal : Boolean;
 begin
+  NeedReset := True;
   MS := nil;
   try
     WasInternal := (esInternalModified in eStates);
@@ -11199,10 +11243,19 @@ begin
     MS.Free;
   end;
 
-  Exclude(eStates, esUnsaved);
-  if aResetModified then begin
-    Exclude(eStates, esModified);
-    Exclude(eStates, esInternalModified);
+  if NeedReset then
+    ResetModified(aResetModified)
+  else begin
+    Exclude(eStates, esUnsaved);
+    case aResetModified of
+      rmYes: begin
+        Exclude(eStates, esModified);
+        Exclude(eStates, esInternalModified);
+      end;
+      rmSetInternal:
+        if esModified in eStates then
+          Include(eStates, esInternalModified);
+    end;
   end;
 end;
 
@@ -11806,7 +11859,7 @@ begin
           end;
         end;
       else
-        if ValueDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, Self) then begin
+        if ValueDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, Self, nil) then begin
           Include(srStates, srsIsFlags);
           Include(srStates, srsSorted);
         end;
@@ -12444,7 +12497,7 @@ begin
   Result := PwbSubRecordHeaderStruct(dcBasePtr);
 end;
 
-procedure TwbSubRecord.WriteToStreamInternal(aStream: TStream; aResetModified: Boolean);
+procedure TwbSubRecord.WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified);
 var
   CurrentPosition   : Int64;
   NewPosition       : Int64;
@@ -12485,9 +12538,14 @@ begin
   end;
 
   Exclude(eStates, esUnsaved);
-  if aResetModified then begin
-    Exclude(eStates, esModified);
-    Exclude(eStates, esInternalModified);
+  case aResetModified of
+    rmYes: begin
+      Exclude(eStates, esModified);
+      Exclude(eStates, esInternalModified);
+    end;
+    rmSetInternal:
+      if esModified in eStates then
+        Include(eStates, esInternalModified);
   end;
 end;
 
@@ -14119,7 +14177,7 @@ begin
   inherited;
 end;
 
-procedure TwbGroupRecord.WriteToStreamInternal(aStream: TStream; aResetModified: Boolean);
+procedure TwbGroupRecord.WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified);
 var
   CurrentPosition   : Int64;
   NewPosition       : Int64;
@@ -14147,9 +14205,14 @@ begin
       Assert(CurrentPosition + grStruct.grsGroupSize = aStream.Position);
 
   Exclude(eStates, esUnsaved);
-  if aResetModified then begin
-    Exclude(eStates, esModified);
-    Exclude(eStates, esInternalModified);
+  case aResetModified of
+    rmYes: begin
+      Exclude(eStates, esModified);
+      Exclude(eStates, esInternalModified);
+    end;
+    rmSetInternal:
+      if esModified in eStates then
+        Include(eStates, esInternalModified);
   end;
 end;
 
@@ -14562,6 +14625,20 @@ function TwbElement.ResetLeafFirst: Boolean;
 begin
   DoReset(False);
   Result := eExternalRefs < 1;
+end;
+
+procedure TwbElement.ResetModified(aResetModified: TwbResetModified);
+begin
+  Exclude(eStates, esUnsaved);
+  case aResetModified of
+    rmYes: begin
+      Exclude(eStates, esModified);
+      Exclude(eStates, esInternalModified);
+    end;
+    rmSetInternal:
+      if esModified in eStates then
+        Include(eStates, esInternalModified);
+  end;
 end;
 
 procedure TwbElement.EndResolve;
@@ -15473,7 +15550,7 @@ begin
   end;
 end;
 
-procedure TwbElement.WriteToStream(aStream: TStream; aResetModified: Boolean);
+procedure TwbElement.WriteToStream(aStream: TStream; aResetModified: TwbResetModified);
 {$IFDEF USE_CODESITE}
 var
   Log: Boolean;
@@ -15503,12 +15580,17 @@ begin
   {$ENDIF}
 end;
 
-procedure TwbElement.WriteToStreamInternal(aStream: TStream; aResetModified: Boolean);
+procedure TwbElement.WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified);
 begin
   Exclude(eStates, esUnsaved);
-  if aResetModified then begin
-    Exclude(eStates, esModified);
-    Exclude(eStates, esInternalModified);
+  case aResetModified of
+    rmYes: begin
+      Exclude(eStates, esModified);
+      Exclude(eStates, esInternalModified);
+    end;
+    rmSetInternal:
+      if esModified in eStates then
+        Include(eStates, esInternalModified);
   end;
 end;
 
@@ -18242,17 +18324,19 @@ begin
   Exclude(dcFlags, dcfStorageInvalid);
 end;
 
-procedure TwbDataContainer.WriteToStreamInternal(aStream: TStream; aResetModified: Boolean);
+procedure TwbDataContainer.WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified);
 var
   OldPosition  : Int64;
   Size         : NativeUInt;
   ExpectedSize : NativeUInt;
+  NeedReset    : Boolean;
 begin
   if [dcfDontSave, dcfDontCompare] * dcFlags <> [] then
     Exit;
 
   OldPosition := aStream.Position;
   ExpectedSize := GetDataSize;
+  NeedReset := True;
 
   if (esModified in eStates) or wbTestWrite then begin
     if not (dcfStorageInvalid in dcFlags) and Assigned(dcDataEndPtr) and Assigned(dcDataBasePtr) then
@@ -18265,6 +18349,7 @@ begin
       aStream.WriteBuffer(dcDataBasePtr^, Size);
     end else begin
       inherited WriteToStreamInternal(aStream, aResetModified);
+      NeedReset := False;
       if aStream.Position = OldPosition then begin
         Size := GetDataSize;
         if Size > 0 then
@@ -18281,10 +18366,21 @@ begin
     if DoCheckSizeAfterWrite then
       Assert(not DoCheckSizeAfterWrite);
 
-  Exclude(eStates, esUnsaved);
-  if aResetModified then begin
-    Exclude(eStates, esModified);
-    Exclude(eStates, esInternalModified);
+  if NeedReset then
+    // didn't call inherited WriteToStreamInternal, need to reset all elements
+    ResetModified(aResetModified)
+  else begin
+    // elements already reset by call to inherited WriteToStreamInternal
+    Exclude(eStates, esUnsaved);
+    case aResetModified of
+      rmYes: begin
+        Exclude(eStates, esModified);
+        Exclude(eStates, esInternalModified);
+      end;
+      rmSetInternal:
+        if esModified in eStates then
+          Include(eStates, esInternalModified);
+    end;
   end;
 end;
 
@@ -18793,15 +18889,20 @@ procedure TwbStringListTerminator.SetNativeValue(const aValue: Variant);
 begin
 end;
 
-procedure TwbStringListTerminator.WriteToStreamInternal(aStream: TStream; aResetModified: Boolean);
+procedure TwbStringListTerminator.WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified);
 const
   NullChar : AnsiChar = #0;
 begin
   aStream.Write(NullChar, 1);
   Exclude(eStates, esUnsaved);
-  if aResetModified then begin
-    Exclude(eStates, esModified);
-    Exclude(eStates, esInternalModified);
+  case aResetModified of
+    rmYes: begin
+      Exclude(eStates, esModified);
+      Exclude(eStates, esInternalModified);
+    end;
+    rmSetInternal:
+      if esModified in eStates then
+        Include(eStates, esInternalModified);
   end;
 end;
 

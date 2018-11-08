@@ -13880,7 +13880,7 @@ begin
               try
                 try
                   PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
-                  _File.WriteToStream(FileStream, False);
+                  _File.WriteToStream(FileStream, rmSetInternal);
                   SavedAny := True;
                   if not (fsMemoryMapped in _File.FileStates) then
                     TryDirectRename := True;

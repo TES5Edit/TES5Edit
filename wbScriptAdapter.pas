@@ -1507,13 +1507,23 @@ end;
 
 procedure IwbFile_WriteToStream(var Value: Variant; Args: TJvInterpreterArgs);
 var
-  _File : IwbFile;
-  Stream: TStream;
+  _File  : IwbFile;
+  Stream : TStream;
+  i      : Integer;
+  rm     : TwbResetModified;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then begin
     Stream := TStream(V2O(Args.Values[1]));
-    if Assigned(Stream) then
-      _File.WriteToStream(Stream, Boolean(Args.Values[2]));
+    if Assigned(Stream) then begin
+      i := Args.Values[2];
+      case i of
+        0: rm := rmNo;
+        2: rm := rmSetInternal;
+      else
+        rm := rmYes;
+      end;
+      _File.WriteToStream(Stream, rm);
+    end;
   end;
 end;
 
