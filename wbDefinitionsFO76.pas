@@ -17877,7 +17877,7 @@ end;
 
 procedure DefineFO76u;
 begin
-  wbRecord(AAPD, '* Aim Assist Pose Data', [
+  wbRecord(AAPD, 'Aim Assist Pose Data', [
     wbEDID,
     wbUnknown(AAAP),
     wbRStruct('Unknown', [
@@ -17928,20 +17928,20 @@ begin
     wbFormIDCK(NAM4, 'Interval', [GLOB])
   ]);
 
-  wbRecord(CURV, '* Curve Table', [
+  wbRecord(CURV, 'Curve Table', [
     wbEDID,
     wbString(CRVE),
     wbString(JASF)
   ]);
 
-  wbRecord(MSCS, '* Misc Item Spawner', [
+  wbRecord(MSCS, 'Misc Item Spawner', [
     wbEDID,
     wbOBND,
     wbUnknown(DATA),
-    wbRArray('Spawns', wbFormID(SPWN, 'Spawn'))
+    wbRArray('Spawns', wbFormIDCk(SPWN, 'Spawn', [MISC]))
   ]);
 
-  wbRecord(CNCY, '* Currency', [
+  wbRecord(CNCY, 'Currency', [
     wbEDID,
     wbDURL,
     wbOBND,
@@ -17957,11 +17957,11 @@ begin
     wbLString(SNAM)
   ]);
 
-  wbRecord(LVLP, '* Leveled Pack In', [
+  wbRecord(LVLP, 'Leveled Pack In', [
     wbEDID
   ]);
 
-  wbRecord(PPAK, '* Perk Card Pack', [
+  wbRecord(PPAK, 'Perk Card Pack', [
     wbEDID,
     wbOBND,
     wbPTRN,
@@ -17975,7 +17975,7 @@ begin
     wbFormID(PPLO, 'Level Offsets')
   ]);
 
-  wbRecord(PACH, '* Power Armor Chassis', [
+  wbRecord(PACH, 'Power Armor Chassis', [
     wbEDID,
     wbOBND,
     wbUnknown(DATA),
@@ -18018,11 +18018,11 @@ begin
     )
   ]);
 
-  wbRecord(LVPC, '* Leveled Perk Card', [
+  wbRecord(LVPC, 'Leveled Perk Card', [
     wbEDID
   ]);
 
-  wbRecord(STND, '* Snap Template Node', [
+  wbRecord(STND, 'Snap Template Node', [
     wbEDID,
     wbOBND,
     wbMODL,
@@ -18033,7 +18033,7 @@ begin
     wbRArray('Unknown', wbFloat(FLTV))
   ]);
 
-  wbRecord(STMP, '* Snap Template', [
+  wbRecord(STMP, 'Snap Template', [
     wbEDID,
     wbPTRN,
     wbFormID(PNAM),
@@ -18049,7 +18049,7 @@ begin
     wbUnknown(STPT)
   ]);
 
-  wbRecord(GCVR, '* Ground Cover', [
+  wbRecord(GCVR, 'Ground Cover', [
     wbEDID,
     wbRArray('Grasses', wbRStruct('Grass', [
       wbFormID(GNAM),
@@ -18060,7 +18060,7 @@ begin
     wbFloat(ZNAM)
   ]);
 
-  wbRecord(EMOT, '* Emote', [
+  wbRecord(EMOT, 'Emote', [
     wbEDID,
     wbOBND,
     wbFULL,
@@ -18071,7 +18071,7 @@ begin
     wbFormID(DNAM, 'Animation')
   ]);
 
-  wbRecord(STHD, '* Spell Threshold Data', [
+  wbRecord(STHD, 'Spell Threshold Data', [
     wbEDID,
     wbFormID(SPIT),
     wbFormID(SPLO),
@@ -18100,21 +18100,21 @@ begin
     wbFloat(NNAM, 'Sampling Repartition - Range Factor') { max 1.0 }
   ]);
 
-  wbRecord(ECAT, '* Emote Category', [
+  wbRecord(ECAT, 'Emote Category', [
     wbEDID,
     wbFULL,
     wbKeywords,
     wbString(SNAM)
   ]);
 
-  wbRecord(WSPR, '* Workshop Permissions', [
+  wbRecord(WSPR, 'Workshop Permissions', [
     wbEDID,
     wbFULL,
     wbDESC,
     wbUnknown(DATA)
   ]);
 
-  wbRecord(ENTM, '* Entitlement', [
+  wbRecord(ENTM, 'Entitlement', [
     wbEDID,
     wbFULL,
     wbDESC,
@@ -18127,19 +18127,19 @@ begin
     wbRArray('Unknown', wbString(ECIL))
   ]);
 
-  wbRecord(COEN, '* Consumable Entitlement', [
+  wbRecord(COEN, 'Consumable Entitlement', [
     wbEDID,
     wbDESC
   ]);
 
-  wbRecord(CSEN, '* Crate Service Entitlement', [
+  wbRecord(CSEN, 'Crate Service Entitlement', [
     wbEDID,
     wbFULL,
     wbDESC,
     wbKeywords
   ]);
 
-  wbRecord(WAVE, '* Wave Encounter', [
+  wbRecord(WAVE, 'Wave Encounter', [
     wbEDID,
     wbKeywords,
     wbArray(WAVD, 'Unknown', wbStruct('Unknown', [
@@ -18150,7 +18150,7 @@ begin
     wbUnknown(DNAM)
   ]);
 
-  wbRecord(PMFT, '* Photo Mode Feature', [
+  wbRecord(PMFT, 'Photo Mode Feature', [
     wbEDID,
     wbXALG,
     wbFULL,
@@ -18161,7 +18161,7 @@ begin
     wbFormID(KNAM)
   ]);
 
-  wbRecord(CHAL, '* Challenge', [
+  wbRecord(CHAL, 'Challenge', [
     wbEDID,
     wbFULL,
     wbString(SNAM),
@@ -18183,14 +18183,14 @@ begin
     wbFormID(SCFL)
   ]);
 
-  wbRecord(AVTR, '* Avatar', [
+  wbRecord(AVTR, 'Avatar', [
     wbEDID,
     wbFULL,
     wbString(SWFI, 'Icon'),
     wbFormID(RENT, 'Required Entitlement')
   ]);
 
-  wbRecord(CNDF, '* Condition Form', [
+  wbRecord(CNDF, 'Condition Form', [
     wbEDID,
     wbCTDAs
   ]);
