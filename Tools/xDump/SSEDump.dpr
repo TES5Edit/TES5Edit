@@ -1143,6 +1143,9 @@ begin
         DumpCheckReport := True;
       end;
 
+      if wbReportMode then
+        wbShowFlagEnumValue := True;
+
       if not FindCmdLineSwitch('q') and not wbReportMode then begin
         WriteLn(ErrOutput, wbAppName, wbToolName,' ', VersionString.ToString);
         WriteLn(ErrOutput);
