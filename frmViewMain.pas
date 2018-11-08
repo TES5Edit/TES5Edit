@@ -10570,20 +10570,15 @@ begin
       if not EditWarn then
         Exit;
 
-      //      vstView.BeginUpdate;
-      try
-
-        Element.Remove;
-        ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
-        Element := nil;
-        PostResetActiveTree;
-
-      finally
-        //        vstView.EndUpdate;
+      if Assigned(NextNode) then begin
+        NodeDatas := vstView.GetNodeData(NextNode);
+        ViewFocusedElement := NodeDatas[Pred(vstView.FocusedColumn)].Element;
       end;
 
-      if Assigned(NextNode) then
-        vstView.FocusedNode := NextNode;
+      Element.Remove;
+      ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
+      Element := nil;
+      PostResetActiveTree;
       InvalidateElementsTreeView(NoNodes);
     end;
   end;

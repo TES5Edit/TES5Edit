@@ -17003,7 +17003,7 @@ begin
       dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     else
       Element := nil; // >>> so that simple union behave as they did <<< TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-      if ValueDoInit(aValueDef, aContainer, aBasePtr, aEndPtr, aContainer) then Result := ufFlags;
+      if ValueDoInit(aValueDef, aContainer, aBasePtr, aEndPtr, aContainer, nil) then Result := ufFlags;
     end;
 
   if Assigned(Element) then begin
@@ -17160,16 +17160,16 @@ begin
     Result := ResolvedDef.CompareExchangeFormID(GetDataBasePtr, dcDataEndPtr, Self, aOldFormID, aNewFormID) or Result;
 end;
 
-function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Boolean;
+function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; const aPrevFlags: TDynElementInternals): Boolean;
 var
   IntegerDef : IwbIntegerDef;
   FlagsDef   : IwbFlagsDef;
-  i          : Cardinal;
-  j          : Cardinal;
+  i, j, k, l : Int64;
   t          : string;
   BasePtr    : Pointer;
   Element    : IwbElement;
   ValueDef   : IwbValueDef;
+  Flag       : IwbFlag;
 begin
   Result := False;
 
@@ -17181,14 +17181,32 @@ begin
       if Supports(ValueDef, IwbIntegerDef, IntegerDef) then
         if Supports(IntegerDef.Formater[aElement], IwbFlagsDef, FlagsDef) then begin
           if Assigned(aBasePtr) and (FlagsDef.FlagCount > 0) then begin
+            l := Low(aPrevFlags);
             j := IntegerDef.ToInt(aBasePtr, aEndPtr, aContainer);
             if j <> 0 then
               for i := 0 to Pred(FlagsDef.FlagCount) do
-                if (j and (Cardinal(1) shl i)) <> 0 then begin
+                if (j and (Int64(1) shl i)) <> 0 then begin
                   t := FlagsDef.Flags[i];
-                  if (t <> '') and (not wbHideUnused or not SameText(t,'Unused')) then
-                    Element := TwbFlag.Create(aContainer, aBasePtr, aEndPtr, IntegerDef, FlagsDef, i);
-                  j := j and not (Cardinal(1) shl i);
+                  if (t <> '') and (not wbHideUnused or not SameText(t,'Unused')) then begin
+                    Element := nil;
+                    for k := l to High(aPrevFlags) do
+                      if Supports(aPrevFlags[k], IwbFlag, Flag) then
+                        if Flag.FlagsDef.Equals(FlagsDef) then begin
+                          if Flag.FlagIndex = i then begin
+                            l := Succ(k);
+                            Element := Flag;
+                            aPrevFlags[k] := nil;
+                            aContainer.AddElement(Element);
+                            Break;
+                          end else if Flag.FlagIndex < i then
+                            l := k
+                          else
+                            Break;
+                        end;
+                    if not Assigned(Element) then
+                      Element := TwbFlag.Create(aContainer, aBasePtr, aEndPtr, IntegerDef, FlagsDef, i);
+                  end;
+                  j := j and not (Int64(1) shl i);
                   if j = 0 then
                     Break;
                 end;
@@ -17251,6 +17269,8 @@ begin
     Inc(PByte(aBasePtr), i);
 end;
 
+threadvar
+  _PrevFlags : TDynElementInternals;
 
 procedure TwbValue.Init;
 var
@@ -17258,11 +17278,8 @@ var
 begin
   inherited;
   BasePtr := GetDataBasePtr;
-  vIsFlags := ValueDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr, Self);
-// flags should already have been created in the right order, no need to sort them
-//  if vIsFlags then
-//    if Length(cntElements) > 1 then
-//      wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSortKeys);
+  vIsFlags := ValueDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr, Self, _PrevFlags);
+  _PrevFlags := nil;
 end;
 
 function TwbValue.IsFlags: Boolean;
@@ -17383,27 +17400,39 @@ begin
 end;
 
 procedure TwbValue.SetEditValue(const aValue: string);
+
+  procedure RecreateFlags;
+  begin
+    _PrevFlags := ReleaseElements;
+    try
+      Reset;
+      Init;
+    finally
+      _PrevFlags := nil;
+    end;
+  end;
+
 var
   OldValue, NewValue: Variant;
+  lValue: string;
 begin
   if not wbEditAllowed then
     raise Exception.Create(GetName + ' can not be edited.');
 
+  lValue := '';
   if (not Assigned(dcDataBasePtr) or not Assigned(dcDataEndPtr)) or (aValue <> GetEditValue) then begin
     OldValue := GetNativeValue;
     vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
     if vIsFlags and (csInit in cntStates) then begin
-      Reset;
-      Init;
+      lValue := vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self];
+      RecreateFlags;
     end;
     NewValue := GetNativeValue;
     DoAfterSet(OldValue, NewValue);
     NotifyChanged(eContainer);
     if vIsFlags and (csInit in cntStates) then begin
-      if vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] <> aValue then begin
-        Reset;
-        Init;
-      end;
+      if vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] <> lValue then
+        RecreateFlags;
     end;
   end;
 end;
