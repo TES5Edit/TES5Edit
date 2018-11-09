@@ -1,7 +1,6 @@
 object frmMain: TfrmMain
   Left = 0
   Top = 0
-  ActiveControl = vstView
   Caption = 'TES5View'
   ClientHeight = 663
   ClientWidth = 1370
@@ -72,6 +71,10 @@ object frmMain: TfrmMain
       object tbsView: TTabSheet
         Caption = 'View'
         OnShow = tbsViewShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object vstView: TVirtualEditTree
           AlignWithMargins = True
           Left = 0
@@ -306,6 +309,10 @@ object frmMain: TfrmMain
         ImageIndex = 3
         TabVisible = False
         OnShow = tbsViewShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object lvReferencedBy: TListView
           AlignWithMargins = True
           Left = 0
@@ -348,6 +355,10 @@ object frmMain: TfrmMain
         Caption = 'Messages'
         ImageIndex = 1
         OnShow = tbsMessagesShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object mmoMessages: TMemo
           AlignWithMargins = True
           Left = 0
@@ -369,6 +380,10 @@ object frmMain: TfrmMain
       object tbsInfo: TTabSheet
         Caption = 'Information'
         ImageIndex = 2
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object Memo1: TMemo
           AlignWithMargins = True
           Left = 3
@@ -763,6 +778,10 @@ object frmMain: TfrmMain
         Caption = 'Weapon Spreadsheet'
         ImageIndex = 4
         OnShow = tbsSpreadsheetShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object vstSpreadSheetWeapon: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -968,6 +987,10 @@ object frmMain: TfrmMain
         Caption = 'Armor Spreadsheet'
         ImageIndex = 5
         OnShow = tbsSpreadsheetShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object vstSpreadsheetArmor: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -1109,6 +1132,10 @@ object frmMain: TfrmMain
         Caption = 'Ammunition Spreadsheet'
         ImageIndex = 6
         OnShow = tbsSpreadsheetShow
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object vstSpreadSheetAmmo: TVirtualEditTree
           Tag = 3
           Left = 0
@@ -1229,6 +1256,10 @@ object frmMain: TfrmMain
         Caption = 'TabSheet2'
         ImageIndex = 7
         TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object DisplayPanel: TPanel
           Left = 0
           Top = 0
@@ -1242,28 +1273,11 @@ object frmMain: TfrmMain
       object tbsWhatsNew: TTabSheet
         Caption = 'What'#39's New'
         ImageIndex = 8
-        OnShow = tbsWhatsNewShow
-        object reWhatsNew: TJvRichEdit
-          Left = 0
-          Top = 0
-          Width = 894
-          Height = 573
-          Align = alClient
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -11
-          Font.Name = 'Tahoma'
-          Font.Style = []
-          ParentFont = False
-          ReadOnly = True
-          ScrollBars = ssHorizontal
-          SelText = ''
-          StreamFormat = sfRichText
-          TabOrder = 0
-          WantReturns = False
-          ExplicitWidth = 902
-          ExplicitHeight = 599
-        end
+        TabVisible = False
+        ExplicitLeft = 0
+        ExplicitTop = 0
+        ExplicitWidth = 0
+        ExplicitHeight = 0
       end
     end
   end
@@ -1815,7 +1829,7 @@ object frmMain: TfrmMain
       AlignWithMargins = True
       Left = 3
       Top = 28
-      Width = 449
+      Width = 440
       Height = 26
       Margins.Bottom = 9
       Align = alTop
@@ -1825,7 +1839,6 @@ object frmMain: TfrmMain
         'ply the filter if necessary.'
       Visible = False
       WordWrap = True
-      ExplicitWidth = 440
     end
     object vstNav: TVirtualEditTree
       Left = 0
@@ -1880,7 +1893,7 @@ object frmMain: TfrmMain
         end
         item
           Position = 2
-          Width = 125
+          Width = 129
           WideText = 'Name'
         end>
     end
