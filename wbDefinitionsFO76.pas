@@ -8027,16 +8027,18 @@ begin
           wbFloat
         ], cpNormal, True),
         wbString(DSTA, 'Sequence Name'),
-        wbRStructSK([0], 'Model', [
-          wbString(DMDL, 'Model Filename', 0, cpNormal, True),
-          wbDMDT,
-          wbDMDC,
-          wbDMDS,
-          wbENLM,
-          wbENLT,
-          wbENLS,
-          wbAUUV
-        ], [], cpNormal, False, nil, True),
+        wbRArray('Models',
+          wbRStructSK([0], 'Model', [
+            wbString(DMDL, 'Model Filename', 0, cpNormal, True),
+            wbDMDT,
+            wbDMDC,
+            wbDMDS,
+            wbENLM,
+            wbENLT,
+            wbENLS,
+            wbAUUV
+          ], [], cpNormal, False)
+        ),
         wbEmpty(DSTF, 'End Marker', cpNormal, True)
       ], [], cpNormal, False, nil)
     )
@@ -11442,12 +11444,15 @@ begin
     wbOBNDReq,
     wbOPDSs,
     wbPTRN,
+    wbPHST,
+    wbSTCP,
     wbDEFL,
     wbSNTP,
     wbXALG,
     wbFULL,
     wbMODL,
     wbDEST,
+    wbDOFA,
     wbKeywords,
     wbPRPS,
     wbInteger(DATA, 'On Local Map', itU8, wbBoolEnum, cpNormal, True),
