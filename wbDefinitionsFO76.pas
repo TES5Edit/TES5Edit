@@ -13812,7 +13812,9 @@ begin
     wbEDID,
     wbOBNDReq,
     wbOPDSs,
+    wbPHST,
     wbMODL,
+    {
     wbStruct(DATA, '', [
       wbInteger('Density', itU8),
       wbInteger('Min Slope', itU8),
@@ -13840,7 +13842,17 @@ begin
         'Fit to Slope'
       ])),
       wbByteArray('Unknown', 3)
-    ], cpNormal, True)
+    ], cpNormal, True),            }
+    wbStruct(DNAM, '', [
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbByteArray('Unknown', 8),
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
+    ], cpNormal, True, nil, 7)
   ]);
 
   wbRecord(IDLE, 'Idle Animation', [
