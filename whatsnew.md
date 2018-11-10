@@ -81,7 +81,7 @@ When a `.cpoverride` is in effect, it's specifically noted:
 [Dragonborn_English.STRINGS] Using encoding (from override): 65001 (UTF-8)
 ```
 
-When a module as a `.cpoverride` applied to it, it is also recorded in the log:
+When a module has a `.cpoverride` applied to it, it is also recorded in the log:
 ```
 [00:04] Background Loader: [Dragonborn.esm] File loaded (CRC32:A9F83BFF)
 [00:04] Background Loader: [Dragonborn.esm] Using encoding (from override): 65001 (UTF-8)
