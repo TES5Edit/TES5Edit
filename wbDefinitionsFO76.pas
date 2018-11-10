@@ -1025,6 +1025,11 @@ const
   MIID : TwbSignature = 'MIID'; { New To Fallout 76 }
   DURG : TwbSignature = 'DURG'; { New To Fallout 76 }
   MAGG : TwbSignature = 'MAGG'; { New To Fallout 76 }
+  FLFG : TwbSignature = 'FLFG'; { New To Fallout 76 }
+  FMAH : TwbSignature = 'FMAH'; { New To Fallout 76 }
+  FMIH : TwbSignature = 'FMIH'; { New To Fallout 76 }
+  FMAG : TwbSignature = 'FMAG'; { New To Fallout 76 }
+  FMIG : TwbSignature = 'FMIG'; { New To Fallout 76 }
 
     // signatures of reference records
   sigReferences : TwbSignatures = [
@@ -16696,11 +16701,12 @@ begin
     wbSNTP,
     wbOPDSs,
     wbDEFL,
-    wbFULLReq,
+    wbFULL,
     wbMODL,
     wbDEST,
     wbKeywords,
     wbPRPS,
+    wbNAM1LODP,
     wbUnknown(PNAM),
     wbATTX,
     wbLStringKC(RNAM, 'Activate Text Override', 0, cpTranslate),
@@ -16712,7 +16718,15 @@ begin
       wbInteger('Summer ', itU8),
       wbInteger('Fall', itU8),
       wbInteger('Winter', itU8)
-    ], cpNormal, True)
+    ], cpNormal),
+    wbUnknown(CITC),
+    wbInteger(FLFG, 'Flags', itU32, wbFlags([
+      {0x00000001} 'Unknown 0'
+    ]), cpNormal),
+    wbFloat(FMAH, 'Max Harvest'),
+    wbFloat(FMIH, 'Min Harvest'),
+    wbFormIDCk(FMAG, 'Max Harvest Global', [GLOB]),
+    wbFormIDCk(FMIG, 'Max Harvest Global', [GLOB])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(WATR, 'Water', [
