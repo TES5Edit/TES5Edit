@@ -11354,9 +11354,9 @@ begin
       wbString(TX02, 'Wrinkles'), {TX05 TX02 TX06 Yes this has to go here}
       wbString(TX06, 'Multilayer'),
       wbString(TX07, 'Smooth Spec'),
-      wbString(TX08, 'Unknown'),
-      wbString(TX09, 'Unknown'),
-      wbString(TX10, 'Unknown')
+      wbString(TX08, 'Specular'),
+      wbString(TX09, 'Lighting'),
+      wbString(TX10, 'Flow')
     ], []),
     wbDODT,
     wbInteger(DNAM, 'Flags', itU16, wbFlags([
