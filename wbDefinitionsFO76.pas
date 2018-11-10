@@ -1030,6 +1030,7 @@ const
   FMIH : TwbSignature = 'FMIH'; { New To Fallout 76 }
   FMAG : TwbSignature = 'FMAG'; { New To Fallout 76 }
   FMIG : TwbSignature = 'FMIG'; { New To Fallout 76 }
+  FNMU : TwbSignature = 'FNMU'; { New To Fallout 76 }
 
     // signatures of reference records
   sigReferences : TwbSignatures = [
@@ -7367,7 +7368,7 @@ begin
   ]);
 
   wbFurnitureAnimTypeEnum := wbEnum([
-    {0} '',
+    {0} 'Unknown 0',
     {1} 'Sit',
     {2} 'Lay',
     {3} '',
@@ -9369,11 +9370,11 @@ begin
         wbRStruct('Unknown', [
           wbUnknown(CNDC),
           wbCITC,
-          wbCTDAs
+          wbCTDAsCount
         ], []),
         wbRStruct('Unknown', [
           wbCITC,
-          wbCTDAs
+          wbCTDAsCount
         ], [])
       ], [])
     );
@@ -11233,8 +11234,10 @@ begin
     wbFULL,
     wbMODL,
     wbDEST,
+    wbDOFA,
     wbKeywords,
     wbPRPS,
+    wbNAM1LODP,
     wbNTRM,
     wbFTYP,
     wbUnknown(PNAM),
@@ -11242,12 +11245,19 @@ begin
     wbATTX,
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       {0x0001} 'Unknown 0',
-      {0x0002} 'Ignored By Sandbox'
+      {0x0002} 'Ignored By Sandbox',
+      {0x0004} '',
+      {0x0008} '',
+      {0x0010} 'Unknown 4'
     ])),
-    wbCITC,
-    wbCTDAsCount,
+    wbCNDCs,
     wbCOCT,
     wbCNTOs,
+    wbStruct(RADR, 'Unknown', [
+      wbByteArray('Unknown', 8),
+      wbFloat('Unknown'),
+      wbUnknown
+    ]),
     wbMNAMFurnitureMarker,
     wbStruct(WBDT, 'Workbench Data', [
       wbInteger('Bench Type', itU8, wbEnum([
@@ -11277,8 +11287,16 @@ begin
       wbInteger('Type', itU16, wbFurnitureAnimTypeEnum),
       wbInteger('Entry Points', itU16, wbFurnitureEntryTypeFlags)
     ])),
+    wbStruct(FNMU, 'Music Instrument', [
+      wbFormIDCk('Intro', [SNDR]),
+      wbFormIDCk('Rhythm', [SNDR]),
+      wbFormIDCk('Lead', [SNDR]),
+      wbFormIDCk('Outro', [SNDR])
+    ]),
     wbString(XMRK, 'Marker Model'),
     wbSNAMMarkerParams,
+    wbUnknown(CNAM),
+    wbUnknown(LNAM),
     wbAPPR,
     wbObjectTemplate,
     wbNVNM
