@@ -142,17 +142,17 @@ Themes require desktop composition to be enabled. The option to select themes is
 
 ## Theme awareness for conflict colour
 
-xEdit is now aware of the current colour scheme (be it the standard windows colours or from an explicitly selected Theme) is Light (darker text on lighter background) and Dark (lighter text on darker background) and will automatically use modified (lighter/darker) text and background colours based on the colours specified in the Options for signalling conflict status.
+xEdit is now aware of the current colour scheme (be it the standard windows colours or from an explicitly selected Theme) as Light (darker text on lighter background) and Dark (lighter text on darker background) and will automatically use modified (lighter/darker) text and background colours based on the colours specified in the Options for signalling conflict status.
 
 ## Legend for conflict colours
 
-At the top right corner of the View tab is now a Legend button which toggles the visibility of a Legend tool window which shows all possible combination of Conflict This (text colour) and Conflict All (background colour).
+At the top right corner of the View tab is now a Legend button which toggles the visibility of a Legend tool window which shows all possible combinations of Conflict This (text colour) and Conflict All (background colour).
 
 While the Legend form is open, when changing the focused cell in the View treeview, the matching cell (Conflict This/Conflict All) in the Legend window is focused.
 
 ## High-DPI aware
 
-xEdit is now flagged as High-DPI aware and the UI should generally scale correctly when the scale factor is set to > 100% in the windows settings. A know limitation is that window caption bars and some other elements are not scaling correctly when custom themes are used.
+xEdit is now flagged as High-DPI aware and the UI should generally scale correctly when the scale factor is set to > 100% in the windows settings. A known limitation is that window caption bars and some other elements are not scaling correctly when custom themes are used.
 
 ## ESL support
 
@@ -162,17 +162,17 @@ ESL flagged modules will be loaded into a "light" slot and will have their FormI
 
 The ESL flag does not affect load order (light modules can load before full modules, the first digits of the FormID are NOT a reliable way to determine load order anymore).
 
-xEdit will prevent files from being saved with set ESL flag if they are not compatible (contain new records with an ObjectID, that's the last digits in the FormID, > $FFF) and will warn on loading wrongly ESL flagged modules.
+xEdit will prevent files from being saved with set ESL flag if they are not compatible (contain new records with an ObjectID, that's the last digits in the FormID, > $FFF) and will warn on loading incorrectly ESL flagged modules.
 
 ESL support can be controlled with two parameters:
-`-IgnoreESL` will load all modules into full slots, ignoring the ESL flag and .esl extension
-`-PseudoESL` will load all ESL compatible modules into light slots, even without ESL flag and .esl extension. This works even for games that do not have ESL support in the game engine.
+`-IgnoreESL` will load all modules into full slots, ignoring the ESL flag and the .esl extension
+`-PseudoESL` will load all ESL compatible modules into light slots, even without the ESL flag and the .esl extension. This works even for games that do not have ESL support in the game engine.
 
 ## Referenced By Caching
 
 Referenced By information is now being cached after being build. The cache files only need to be rebuild if the CRC of the module or application changes. 
 
-Refs are only saved to cache if reaching a threshold of more than 500 records in the file or ref building taking more than 2 seconds.
+Refs are only saved to cache if reaching a threshold of more than 500 records in the file or ref building is taking more than 2 seconds.
 
 The message log shows if referenced information is build or loaded, and if build, if it has been saved.
 
@@ -193,7 +193,7 @@ The process of building or loading Referenced By information during start is now
 ## Application and module CRC32 information
 
 The CRC32 of the application file is shown at the top of the messages log
-The CRC32 of loaded modules is shown during the loading and in the navigation tree view.
+The CRC32 of loaded modules is shown during the loading and in the navigation treeview.
 
 ## Load order handling
 
@@ -203,7 +203,7 @@ Specifically, for TES4, FO3, and FNV load order is derived from file modify time
 For TES5/SSE and FO4 from the order in `plugins.txt`.
 For TES5 (which does not contain inactive modules in it's plugins.txt) the load order for inactive modules is supplemented from `loadorder.txt`.
 
-For SSE and FO4, files with the `.esm` and `.esl` extensions always are treated as having the ESM flag set, even if it is missing in the file.
+For SSE and FO4, files with the `.esm` and `.esl` extensions are always treated as having the ESM flag set, even if it is missing in the file.
 
 The load order is:
 1. `{game}.esm`
@@ -220,11 +220,11 @@ If during loading of modules in this order a module is being loaded for which on
 
 The selection dialogs for modules (used for selecting active modules at start and target modules during adding masters, "copy as ... into" and similar operations) has been completely rewritten.
 
-It is now using a treeview which allows to see the required masters. 
+It is now using a treeview which allows you to see the required masters. 
 
 There are columns for File Order (giving the exact reason for the position in the order), ESM flag, ESL flag (for SSE and FO4), Load Order (for active modules) and FormID Prefix.
 
-The visible modules can be filtered using an edit above the tree view.
+The visible modules can be filtered using an edit above the treeview.
 
 Modules with missing masters are shown with ~~strike-through~~ and can't be checked.
 
@@ -234,9 +234,9 @@ You are able to save and load named presets of checked modules.
 
 Double Click or Ctrl+Enter will check only the selected module and automatically close the dialog with OK.
 
-When used for "Copy as ... into", template entries allow to specify the desired extension and initial ESM/ESL flag values for a new file.
+When used for "Copy as ... into", template entries allow you to specify the desired extension and initial ESM/ESL flag values for a new file.
 
-When used for "Copy as ... into", the previous selection will be remembered.
+When used for "Copy as ... into", the previous selection is remembered.
 
 ## Optional 'Selection Forms require holding CTRL for double click'
 
@@ -256,21 +256,21 @@ Except in the save dialog, the UI does not show the .ghost extension.
 
 ModGroups is a feature that has been in xEdit for a long time, but has gotten very little attention in the past.
 
-This version totally overhauls ModGroups support, adding many new features as well as providing complete UI integration for creating, editing and managing ModGroups.
+This version totally overhauls the ModGroups support, adding many new features as well as providing complete UI integration for creating, editing and managing ModGroups.
 
 A ModGroup is a way to tell xEdit that certain (non-winning) overrides of a record can be hidden (because the still visible versions account for all the changes already). By hiding away these versions they no longer participate in conflict detection which can be used to prevent false positives from showing up.
 
 A ModGroup can never hide the winning override or the original master record.
 
-A setup where all real conflicts have been resolved by patches and all false positives hidden by ModGroups will show an empty navigation treeview after applying a "Filter to show conflicts". With this as starting point, adding one new mod to an existing setup with 100s of mods will result in only the conflicts caused by the addition of that new mod to show up when running "Filter to show conflicts". Which makes it very easy then to adjust load order, created targeted patches to resolve real conflicts, and finally again create new ModGroups to hide away any false positives.
+A setup where all real conflicts have been resolved by patches and all false positives hidden by ModGroups will show an empty navigation treeview after applying a "Filter to show conflicts". With this as the starting point, adding one new mod to an existing setup with 100's of mods will result in only the conflicts caused by the addition of that new mod to show up when running "Filter to show conflicts". This makes it very easy then to adjust the load order, created targeted patches to resolve real conflicts, and finally again create new ModGroups to hide away any false positives.
 
 ### New ModGroup Selection dialog
 
 When the background loader is complete, a new ModGroup Selection dialog is shown. This dialog is very similar to the new Modules Selection dialog and has most of it's features.
 
-The dialog is based on a tree view, so you can directly expand the individual ModGroups to see their contents.
+The dialog is based on a treeview, so you can directly expand the individual ModGroups to see their contents.
 
-You can filter the tree view to more easily find a specific ModGroup.
+You can filter the treeview to more easily find a specific ModGroup.
 
 A system for saving and loading presets is available.
 
@@ -284,7 +284,7 @@ There are two ways to create ModGroups in the UI.
 
 The first is by selecting 2 or more modules in the navigation treeview, and then using the "Create ModGroup..." function in the context menu, or pressing Ctrl+M with the navigation treeview focused. This will create a new ModGroup consisting of the previously selected modules and open it in the ModGroup Editor.
 
-The second is when looking at the View tab with at least 3 records showing (master + 2 overrides). The context menu on the header of the view treeview has a "Create ModGroup..." function, which can also be called by pressing Ctrl+M while the View treeview is focused. This function will then show a Module Selection dialog listing all modules that contribute override records to the current View and where you can check the modules that should be part of this new ModGroup. After confirming the desired modules a new ModGroup will be created and the ModGroup Editor will be opened.
+The second is when looking at the View tab with at least 3 records visible (master + 2 overrides). The context menu on the header of the view treeview has a "Create ModGroup..." function, which can also be called by pressing Ctrl+M while the View treeview is focused. This function will then show a Module Selection dialog listing all modules that contribute override records to the current View and where you can check the modules that should be part of this new ModGroup. After confirming the desired modules a new ModGroup will be created and the ModGroup Editor will be opened.
 
 ### ModGroup Editor
 
@@ -354,15 +354,15 @@ After choosing which ModGroups to update, the missing CRCs will be added to all 
 
 A new option 'Auto "Compare Selected" when multi-selecting less than [x] records' has been added. Defaults to 5. Can be disabled by setting to a value smaller than 2.
 
-When multi-selecting less than the specified number of records in the navigation tree view, the "Compare Selected" function is automatically triggered, showing the selected records side by side in the view tab.
+When multi-selecting less than the specified number of records in the navigation treeview, the "Compare Selected" function is automatically triggered, showing the selected records side by side in the view tab.
 
-When more records than the specified limit are selected, "Compare Selected" can still be triggered via the context menu on the navigation tree view, like before.
+When more records than the specified limit are selected, "Compare Selected" can still be triggered via the context menu on the navigation treeview, like before.
 
 ## Rewritten "copy [multiple] to selected records"
 
-The "Copy to selected records" function (available in the context menu of the view tree view) has been rewritten. 
+The "Copy to selected records" function (available in the context menu of the view treeview) has been rewritten. 
 
-It can now only be used when in "Compare Selected" mode. In return, it now behaves exactly the same as dragging the value from the focused cell to the other cells in the same row in the view tree view. This solves all previous problems with the function.
+It can now only be used when in "Compare Selected" mode. In return, it now behaves exactly the same as dragging the value from the focused cell to the other cells in the same row in the view treeview. This solves all previous problems with the function.
 
 A new "Copy multiple to selected records" functions has been added, it allows performing "Copy to selected records" for a selection from all top level entries in the current view to be performed in one operation.
 
@@ -378,28 +378,28 @@ In either case, the existing settings file is being backed up and all settings a
 
 New command line parameters have been added that allow directly saving over an existing file (instead of saving in a temporary file and waiting until xEdit is closed to rename the file) by preventing the use of memory mapped files.
 
-`-AllowDirectSaves` will load all non-official (official = game master, official dlcs, CCs) modules without using memory mapped files  
-`-AllowDirectSaves:a.esm,b.esl,c.esp` will load only the listed modules without using memory mapped files. The list may include official modules.
+`-AllowDirectSave` will load all non-official (official = game master, official dlcs, CCs) modules without using memory mapped files  
+`-AllowDirectSave:a.esm,b.esl,c.esp` will load only the listed modules without using memory mapped files. The list may include official modules.
 
-## Editing in view tree view
+## Editing in view treeview
 
-Double Click in the view tree view now activates the in-place editor for Integer (includes FormID), Float, and Flag fields, and opens the editor form for everything else.
+Double Click in the view treeview now activates the in-place editor for Integer (includes FormID), Float, and Flag fields, and opens the editor form for everything else.
 
 Showing the in-place editor for fields with large drop down lists of potential values (especially FormIDs) has been hugely (multiple orders of magnitude) sped up.
 
 ## Element Editor Form
 
-The Element Editor Form (opened by Double Click in the View tree view on string fields) now accepts Enter to insert line breaks and supports Ctrl+F to search in the text.
+The Element Editor Form (opened by Double Click in the View treeview on string fields) now accepts Enter to insert line breaks and supports Ctrl+F to search in the text.
 
 ## Apply filter
 
-A large speed up in applying certain filters has been achieved.
+A huge speed up in applying certain filters has been achieved.
 
 "Apply Filter to show Conflict Losers" has been renamed to "Apply Filter to show Conflicts" and changed from showing [ctConflictLoses] to showing [ctIdenticalToMasterWinsConflict, ctConflictWins, ctConflictLoses].
 
-The 3 "Apply Filter..." menu items functions have been extended with 3 "Apply Filter... (selected files only)" functions. These behave the same as the original functions, except that only selected files are added to the treeview before the filter is being applied. This will not change the filter outcome for the nodes that have been added to the tree view, and will simply prevent nodes from files that weren't included in the selection from showing up in the result. This can hugely speed up the filter process. e.g. when applying a filter for cleaning, it's not necessary to apply that filter to any file except the one that should be cleaned.
+The 3 "Apply Filter..." menu items functions have been extended with 3 "Apply Filter... (selected files only)" functions. These behave the same as the original functions, except that only selected files are added to the treeview before the filter is being applied. This will not change the filter outcome for the nodes that have been added to the treeview, and will simply prevent nodes from files that weren't included in the selection from showing up in the result. This can dramatically speed up the filter process. e.g. when applying a filter for cleaning, it's not necessary to apply that filter to any file except the one that should be cleaned.
 
-When a filter is applied, the navigation tree view is "fossilized" (always has been that way). This means that all nodes in the tree view, visible or not, have been created at the time the filter was applied, and the tree view will not react to structural changes (like adding new records to a file) while the filter remains applied. This was not well understood by most users before. To prevent confusion, a hint is now shown above the navigation treeview explaining this while a filter is active.
+When a filter is applied, the navigation treeview is "fossilized" (always has been that way). This means that all nodes in the treeview, visible or not, have been created at the time the filter was applied, and the treeview will not react to structural changes (like adding new records to a file) while the filter remains applied. This was not well understood by most users before. To prevent confusion, a hint is now shown above the navigation treeview explaining this while a filter is active.
 
 When "Apply filter for Cleaning" is executed, ModGroups, "Show Master and Leafs", and "Quick Show Conflict" mode are automatically disabled.
 
@@ -411,11 +411,11 @@ If a preset has been selected in the Filter Options dialog, and the options have
 
 ## Reachable information
 
-This function has been present in xEdit for a long time, but seemed to have become non-functional. 
+This function has been present in xEdit for a long time, but seems to have become non-functional. 
 
 It is now possible to build reachable information for all games supported by xEdit.
 
-A record is considered "reachable" if a normal player, starting a fresh game with the current load order, and without using the console or other tricks is able potentially to somehow interact with that record.
+A record is considered "reachable" if a normal player, starting a fresh game with the current load order, and without using the console or other tricks, is able potentially to somehow interact with that record.
 
 Once reachable information has been build, it is possible to filter for reachable/unreachable records using the usual "Apply Filter..." function.
 
@@ -423,11 +423,11 @@ Correct generation of reachable information requires a lot of fine tuning of the
 
 ## Editing "Master Files" in "File Header"
 
-Previous versions allowed to freely edit Master Files in the File Header. Because adding or removing MAST sub records directly will not renumber the FormIDs stored inside the file, this would lead to behaviour that is unexpected, and usually destructive in nature, for people that don't have deep understanding of the internal workings for module files.
+Previous versions allowed to freely edit Master Files in the File Header. Because adding or removing MAST sub records directly will not renumber the FormID's stored inside the file, this would lead to behaviour that is unexpected (and usually destructive in nature) for people that don't have a deep understanding of the internal workings for module files.
 
-xEdit will now by default prevent any direct changes to Master Files. The correct way to add a master is to use the "Add Masters" function in the context menu of the navigation tree view. The correct way to remove a master is to make sure the file no longer contains any references to the master in question and use the "Clean Masters" function in the context menu.
+xEdit will now by default prevent any direct changes to Master Files. The correct way to add a master is to use the "Add Masters" function in the context menu of the navigation treeview. The correct way to remove a master is to make sure the file no longer contains any references to the master in question and use the "Clean Masters" function in the context menu.
 
-To allow direct editing of the Master Files again, xEdit must now be started with `-AllowMasterFilesEdit` in addition to `-IKnowWhatImDoing`. Please only use that parameter when really required and that you actually do know what you are doing.
+To allow direct editing of the Master Files again, xEdit must now be started with `-AllowMasterFilesEdit` in addition to `-IKnowWhatImDoing`. Please only use that parameter when really required and when you actually do know what you are doing.
 
 ## Improvements to adding, sorting, and cleaning masters
 
@@ -443,7 +443,7 @@ All 3 functions should perform much faster and use much less memory. They will a
 
 A new "Show File Header Flags" option has been added. 
 
-When this is active, the ESM, ESL, and Localized flags are shown for file nodes in the navigation tree view.
+When this is active, the ESM, ESL, and Localized flags are shown for file nodes in the navigation treeview.
 
 ## PlayerRef [PLYR:00000014] as visible record in {game}.exe
 	
@@ -455,7 +455,7 @@ This makes it possible to track the Referenced By information for this record.
 
 The {game}.Hardcoded.dat files have been updated to include more records and their filenames have been simplified.
 
-## Copy to Clipboard on navigation tree view
+## Copy to Clipboard on navigation treeview
 
 Ctrl+C on the navigation treeview will copy the contents of the first column of the selected nodes to the clipboard.
 Ctrl+Alt+C will copy the following value of the 3rd column.
@@ -476,9 +476,9 @@ xEdit can be started with the following parameters:
 
 Quick Clean mode automatically turns off "Simple Records" (to ensure the largest number of possible ITMs are recognized) and sets "I Know What I'm Doing" mode (to prevent the edit warning).
 
-## Drag'n'Drop of whole record in view tree view
+## Drag'n'Drop of whole record in view treeview
 
-In the view tree view, it is now possible to copy the contents of the whole record by dragging the header (showing the file name) of one column onto another.
+In the view treeview, it is now possible to copy the contents of the whole record by dragging the header (showing the file name) of one column onto another.
 
 ## Nav mesh improvements
 
@@ -518,7 +518,7 @@ This leaves the delta patch with only the records that have changed between the 
 
 It is recommended that the delta patch is saved and xEdit closed after creating it.
 
-Like for "Compare to..." last folder will be remembered (even across session).
+Like with "Compare to..." last folder will be remembered (even across session).
 
 One of the most important uses of a delta patch is when a module that another module uses as master has been updated.
 
@@ -550,7 +550,7 @@ Buttons have been added to the top right corner of the main window to open:
 
 ## Update check on GitHub
 
-xEdit will automatically perform a check for newer version on GitHub
+xEdit will automatically perform a check for a newer version on GitHub
 
 This can be turned of with the "Don't check for GitHub update" function.
 
@@ -558,7 +558,7 @@ If an update is available, a balloon hint will be shown under the GitHub button 
 
 ## Patreon reminder balloon hint
 
-A balloon hint is shown to point out the Patreon button.
+A balloon hint is shown to highlight the Patreon button.
 
 If the button is clicked or the hint closed with the [x] then it will not be shown again for a while.
 
@@ -568,7 +568,7 @@ Please consider supporting xEdit development. Future updates as extensive as thi
 
 ## Column width modes
 
-The Column width modes (changeable via context menu on the view tree view) have been overhauled.
+The Column width modes (changeable via context menu on the view treeview) have been overhauled.
 
 All Columns have a minimum width of half the standard width specified in Options.
 
@@ -576,7 +576,7 @@ Available options are now:
 * Standard - All columns use the intial standard width specified in Options. Column width can be adjusted and will only reset when moving to a different record
 * Fit All - The title column (first column) uses the standard width, the remaining space is equally distributed among all columns. The column size is automatically adjusted if the window is resized
 * Fit Text - The width of the columns is automatically adjusted to fit all text currently visible on screen. The column widths are updated automatically when scrolling.
-* Fit Smart - Combination of Fit Text and Fit All. The width of the columns is automatically adjusted to fit all text currently visible on screen. If the total width of all columns exceeds the client width of the tree view, then all columns except the title column (first column) are proportionally shrunk so that all columns fit inside the client width of the treeview. The column widths are updated automatically when scrolling.
+* Fit Smart - Combination of Fit Text and Fit All. The width of the columns is automatically adjusted to fit all text currently visible on screen. If the total width of all columns exceeds the client width of the treeview, then all columns except the title column (first column) are proportionally shrunk so that all columns fit inside the client width of the treeview. The column widths are updated automatically when scrolling.
 
 ## Hide no conflict and empty rows
 
@@ -678,11 +678,11 @@ Warning: The function will NOT rename any external files that might contain the 
 
 Normally, that function will not overwrite an existing record with the same FormID in the target.
 
-If the "(with overwriting)" variant is used, then an existing record in the target will trigger a confirmation dialog to decide if the record should be overwritten. The dialog also give the choice of "Yes for all" and "No for all".
+If the "(with overwriting)" variant is used, then an existing record in the target will trigger a confirmation dialog to decide if the record should be overwritten. The dialog also gives the choice of "Yes for all" and "No for all".
 
 If the source record is flagged as deleted, then a confirmation dialog is shown to decide if the record should be copied (overwriting the target with a record flagged as deleted) or the existing record in the target should be removed.
 
-After injecting forms into master, by performing a "Deep copy as override (with overwriting) into..." from all top level groups of a module, and selecting one of its masters as target, then selecting to overwrite all existing records and having the targets of all records flagged as deleted removed, the Version Control based functionality of CK to merge a plugin into master can be emulated.
+After injecting forms into master, by performing a "Deep copy as override (with overwriting) into..." from all top level groups of a module, and selecting one of its masters as the target, then selecting to overwrite all existing records and having the targets of all records flagged as deleted removed, the Version Control based functionality of CK to merge a plugin into master can be emulated.
 
 ## "Compact FormIDs for ESL"
 
@@ -736,7 +736,7 @@ If that plugin is loaded into FO4, and FO4Edit is started as the same time as th
 
 Once activated, if a reference is selected in the console in game, xEdit will automatically change the View tab to showing that record.
 
-This function is currently only available for FO4, but might be added for other games in the future.
+This function is currently only available for FO4, but might be added to other games in the future.
 
 ## General record definition improvements and fixes
 
@@ -782,7 +782,7 @@ This functionality is also available to scripts through the existing `Add()` met
 
 When a reference (REFR, ACHR, ...) needs to update it's containing group (position changed, persistent flag changed, ...) it will now internally use the functions above to find or create the right CELL. This also fixes an existing bug where changing the position of a temporary reference did not move the reference to the correct temporary CELL (only when the record was changed to persistent and back was the cell updated, and then only if the right cell already existed, new cells were not created when necessary).
 
-## Automatic updating of navigation tree view in reaction to structural changes
+## Automatic updating of navigation treeview in reaction to structural changes
 
 The navigation treeview will now (if not fossilised) automatically update to reflect any structural changes to a module without the need to manually collapsing and expanding the parent node.
 
@@ -804,19 +804,19 @@ Messages will now be shown in the log for corrupted floating point values (showe
 
 Messages will now be shown when an error occurs during decompression of compressed records.
 
-There are known floating point and compression errors in original Bethesda game files. The fact that these errors are shown now instead of silently ignored as before does not mean than anything is more broken then it was. You just know about now.
+There are known floating point and compression errors in the original Bethesda game files. The fact that these errors are shown now instead of silently ignored as before does not mean than anything is more broken then it was. You just know about it now.
 
 ## Working Next Member / Previous Member for RUnion (e.g. Alias in QUST)
 
-For elements where it is possible for different type of sub records to occur (e.g. ALST = Reference Alias vs. ALCS = Collection Alias vs. ALLS = Location Alias) it is now possible to switch between the different options using the  Next Member and Previous Member options in the context menu of the RUnion element.
+For elements where it is possible for different type of sub records to occur (e.g. ALST = Reference Alias vs. ALCS = Collection Alias vs. ALLS = Location Alias) it is now possible to switch between the different options using the Next Member and Previous Member options in the context menu of the RUnion element.
 
 ## "Apply Script..." dialog improvements
 
 A Filter edit has been added above the script selection combobox. This filter edit will limit entries in the script combobox to ones that contain the filter text anywhere in their name.
 
-When changing the selected script, if the current script has been modified, a confirmation dialog asks if the changes should be saved first. (Silently discarded changes up to now).
+When changing the selected script, if the current script has been modified, a confirmation dialog asks if the changes should be saved first. (Silently discarded changes previously).
 
-When the dialog is closed, if the current script has been modified, a confirmation dialog asks if the changes should be saved. (Silently overwrote the existing script up to now). When closing and not saving, the modified script is still the one that's executed.
+When the dialog is closed, if the current script has been modified, a confirmation dialog asks if the changes should be saved. (Silently overwrote the existing script previously). When closing and not saving, the modified script is still the one that's executed.
 
 When saving a script and the file already exists, a backup copy will be made before overwriting the file.
 
