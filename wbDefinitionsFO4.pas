@@ -1275,7 +1275,7 @@ begin
   end;
 end;
 
-function wbCTDAParam2QuestStageToInt(const aString: string; const aElement: IwbElement): Int64;
+function wbQuestStageToInt(const aString: string; const aElement: IwbElement): Int64;
 var
   i    : Integer;
   s    : string;
@@ -1287,6 +1287,48 @@ begin
   s := Copy(s, 1, Pred(i));
 
   Result := StrToInt(s);
+end;
+
+function wbCTDAParamQuestOverlay(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): Int64;
+
+  procedure ResolveOverlay;
+  var
+    MainRecord : IwbMainRecord;
+    GroupRecord: IwbGroupRecord;
+    Element    : IwbElement;
+  begin
+    if not Assigned(aElement) then
+      Exit;
+    MainRecord := aElement.ContainingMainRecord;
+    if not Assigned(MainRecord) then
+      Exit;
+
+    if MainRecord.Signature = QUST then
+      Result := MainRecord.FixedFormID.ToCardinal
+    else if MainRecord.Signature = SCEN then begin
+      Element := MainRecord.ElementBySignature[PNAM];
+      if Assigned(Element) then
+        Result := Element.NativeValue;
+    end else if MainRecord.Signature = PACK then begin
+      Element := MainRecord.ElementBySignature[QNAM];
+      if Assigned(Element) then
+        Result := Element.NativeValue;
+    end else if MainRecord.Signature = INFO then begin
+      // get DIAL for INFO
+      if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
+        if Supports(GroupRecord.ChildrenOf, IwbMainRecord, MainRecord) then
+          if MainRecord.Signature = DIAL then begin
+            Element := MainRecord.ElementBySignature[QNAM];
+            if Assigned(Element) then
+              Result := Element.NativeValue;
+          end;
+    end;
+  end;
+
+begin
+  Result := aInt;
+  if (aInt = 0) and (aType in [ctCheck, ctToStr, ctToSortKey, ctLinksTo]) then
+    ResolveOverlay;
 end;
 
 function wbREFRNavmeshTriangleToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -1527,11 +1569,9 @@ end;
 function wbVertexToStr(aVertex: Integer; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Triangle   : IwbContainerElementRef;
-  Flags      : Int64;
   MainRecord : IwbMainRecord;
   Vertices  : IwbContainerElementRef;
   Vertex   : IwbContainerElementRef;
-  FormID     : TwbFormID;
 begin
   case aType of
     ctToStr: begin
@@ -3556,6 +3596,7 @@ type
   TCTDAFunction = record
     Index: Integer;
     Name: string;
+    Desc: string;
     ParamType1: TCTDAFunctionParamType;
     ParamType2: TCTDAFunctionParamType;
     ParamType3: TCTDAFunctionParamType;
@@ -6986,7 +7027,7 @@ begin
     wbStructSK([1], 'Object v2', [
       wbInteger('Unused', itU16, nil, cpIgnore, False, wbNeverShow),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias).SetDefaultEditValue('None'),
-      wbFormID('FormID')
+      wbFormID('FormID').IncludeFlag(dfNoReport)
     ], [2, 1, 0]),
     wbStructSK([1], 'Object v1', [
       wbFormID('FormID'),
@@ -7008,14 +7049,14 @@ begin
       wbUnion('Value', wbScriptPropertyDecider, [
         {00} wbNull,
         {01} wbScriptPropertyObject,
-        {02} wbLenString('String', 2, cpTranslate),
+        {02} wbLenString('String', 2).OverrideEncoding(wbEncodingVMAD),
         {03} wbInteger('Int32', itS32),
         {04} wbFloat('Float'),
         {05} wbInteger('Bool', itU8, wbBoolEnum),
         {06} wbRecursive('Struct', 3), // Variable. No idea if possible or how to decode, leaving like that for the moment
         {07} wbRecursive('Struct', 3),
         {11} wbArray('Array of Object', wbScriptPropertyObject, -1),
-        {12} wbArray('Array of String', wbLenString('Element', 2, cpTranslate), -1),
+        {12} wbArray('Array of String', wbLenString('Element', 2).OverrideEncoding(wbEncodingVMAD), -1),
         {13} wbArray('Array of Int32', wbInteger('Element', itS32), -1),
         {14} wbArray('Array of Float', wbFloat('Element'), -1),
         {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbBoolEnum), -1),
@@ -7036,14 +7077,14 @@ begin
       wbUnion('Value', wbScriptPropertyDecider, [
        {00} wbNull,
        {01} wbScriptPropertyObject,
-       {02} wbLenString('String', 2, cpTranslate),
+       {02} wbLenString('String', 2).OverrideEncoding(wbEncodingVMAD),
        {03} wbInteger('Int32', itS32),
        {04} wbFloat('Float'),
        {05} wbInteger('Bool', itU8, wbBoolEnum),
        {06} wbScriptPropertyStruct, // Variable. No idea if possible or how to decode, leaving like that for the moment
        {07} wbScriptPropertyStruct,
        {11} wbArray('Array of Object', wbScriptPropertyObject, -1),
-       {12} wbArray('Array of String', wbLenString('Element', 2, cpTranslate), -1),
+       {12} wbArray('Array of String', wbLenString('Element', 2).OverrideEncoding(wbEncodingVMAD), -1),
        {13} wbArray('Array of Int32', wbInteger('Element', itS32), -1),
        {14} wbArray('Array of Float', wbFloat('Element'), -1),
        {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbBoolEnum), -1),
@@ -8545,9 +8586,9 @@ begin
         {38 ptPerk}
         wbFormIDCkNoReach('Perk', [PERK]),
         {39 ptQuest}
-        wbFormIDCkNoReach('Quest', [QUST]),
+        wbFormIDCkNoReach('Quest', [QUST]).AddOverlay(wbCTDAParamQuestOverlay),
         {40 ptQuestStage}
-        wbInteger('Quest Stage', itU32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
+        wbInteger('Quest Stage', itU32, wbCTDAParam2QuestStageToStr, wbQuestStageToInt),
         {41 ptRace}
         wbFormIDCkNoReach('Race', [RACE]),
         {42 ptReferencableObject}
@@ -8664,7 +8705,7 @@ begin
         {39 ptQuest}
         wbFormIDCkNoReach('Quest', [QUST]),
         {40 ptQuestStage}
-        wbInteger('Quest Stage', itU32, wbCTDAParam2QuestStageToStr, wbCTDAParam2QuestStageToInt),
+        wbInteger('Quest Stage', itU32, wbCTDAParam2QuestStageToStr, wbQuestStageToInt),
         {41 ptRace}
         wbFormIDCkNoReach('Race', [RACE]),
         {42 ptReferencableObject}
@@ -11265,7 +11306,7 @@ begin
       wbUnion(DATA, 'Effect Data', wbPerkDATADecider, [
         wbStructSK([0, 1], 'Quest + Stage', [
           wbFormIDCk('Quest', [QUST]),
-          wbInteger('Quest Stage', itU16, wbPerkDATAQuestStageToStr, wbCTDAParam2QuestStageToInt)
+          wbInteger('Quest Stage', itU16, wbPerkDATAQuestStageToStr, wbQuestStageToInt)
         ]),
         wbFormIDCk('Ability', [SPEL]),
         wbStructSK([0, 1], 'Entry Point', [

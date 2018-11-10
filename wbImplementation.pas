@@ -73,6 +73,7 @@ implementation
 
 uses
   lz4io,
+  wbLocalization,
   wbHelpers,
   wbSort;
 
@@ -606,8 +607,9 @@ type
   end;
 
   TwbCachedEditInfo = record
-    ceiEditInfo   : TArray<string>;
-    ceiGeneration : Integer;
+    ceiEditInfo    : TArray<string>;
+    ceiGeneration  : Integer;
+    ceiLGeneration : Integer;
   end;
 
   TwbCachedEditInfos = TArray<TwbCachedEditInfo>;
@@ -648,6 +650,9 @@ type
 
     flCachedEditInfos        : TwbCachedEditInfos;
     flGeneration             : Integer;
+
+    flEncoding               : TEncoding;
+    flEncodingTrans          : TEncoding;
 
     procedure flOpenFile; virtual;
     procedure flCloseFile; virtual;
@@ -748,6 +753,8 @@ type
     function GetIsNotPlugin: Boolean;
     function GetHasNoFormID: Boolean;
     procedure SetHasNoFormID(Value: Boolean);
+
+    function GetEncoding(aTranslatable: Boolean): TEncoding;
 
     {---IwbFileInternal---}
     procedure AddMainRecord(const aRecord: IwbMainRecord);
@@ -996,9 +1003,13 @@ type
     mrShortName         : string;
     mrDisplayName       : string;
 
+    mrLGeneration       : Integer;
+
     mrPositionGeneration: Integer;
 
     function mrStruct: PwbMainRecordStruct; inline;
+
+    procedure mrInvalidateNameCache;
 
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
     function RemoveElement(aPos: Integer; aMarkModified: Boolean = False): IwbElement; overload; override;
@@ -2641,6 +2652,8 @@ begin
 end;
 
 constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates);
+var
+  s: string;
 begin
   flStates := aStates * [fsIsTemporary, fsOnlyHeader, fsIsDeltaPatch];
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
@@ -2679,6 +2692,23 @@ begin
   end;
 
   flOpenFile;
+
+  s := ChangeFileExt(flFileName, '.cpoverride');
+  if FileExists(s) then try
+    with TStringList.Create do try
+      LoadFromFile(s);
+      if Count > 0 then begin
+        s := Strings[0].Trim;
+        if s <> '' then begin
+          flEncodingTrans := wbMBCSEncoding(s);
+          flProgress(Format('Using encoding (from override): %s', [flEncodingTrans.EncodingName]));
+         end;
+      end;
+    finally
+      Free;
+    end;
+  except end;
+
   Scan;
 
   if Assigned(flModule) then begin
@@ -3196,12 +3226,15 @@ begin
   if aIdent > High(flCachedEditInfos) then
     Exit(False);
   with flCachedEditInfos[aIdent] do begin
-    Result := ceiGeneration >= GetHighestGenerationSelfAndMasters;
+    Result :=
+      (ceiGeneration >= GetHighestGenerationSelfAndMasters) and
+      (ceiLGeneration >= wbLocalizationHandler.Generation);
     if Result then
       aEditInfo := ceiEditInfo
     else begin
       ceiEditInfo := nil;
       ceiGeneration := 0;
+      ceiLGeneration := 0;
     end;
   end;
 end;
@@ -3254,6 +3287,19 @@ end;
 function TwbFile.GetElementType: TwbElementType;
 begin
   Result := etFile;
+end;
+
+function TwbFile.GetEncoding(aTranslatable: Boolean): TEncoding;
+begin
+  if aTranslatable then begin
+    Result :=flEncodingTrans;
+    if not Assigned(Result) then
+      Result := wbEncodingTrans
+  end else begin
+    Result := flEncoding;
+    if not Assigned(Result) then
+      Result := wbEncoding;
+  end;
 end;
 
 function TwbFile.GetFile: IwbFile;
@@ -4244,6 +4290,7 @@ begin
   with flCachedEditInfos[aIdent] do begin
     ceiEditInfo := aEditInfo;
     ceiGeneration := _FileGeneration;
+    ceiLGeneration := wbLocalizationHandler.Generation;
   end;
 end;
 
@@ -8280,6 +8327,9 @@ var
   MapMarker   : IwbContainerElementRef;
   _File       : IwbFile;
 begin
+  if mrLGeneration <> wbLocalizationHandler.Generation then
+    mrInvalidateNameCache;
+
   if mrDisplayName <> '' then
     Exit(mrDisplayName);
 
@@ -8430,6 +8480,9 @@ function TwbMainRecord.GetFullName: string;
 var
   SelfRef: IwbContainerElementRef;
 begin
+  if mrLGeneration <> wbLocalizationHandler.Generation then
+    mrInvalidateNameCache;
+
   if mrsFullNameFromCache in mrStates then
     Exit(mrFullName);
 
@@ -9022,6 +9075,9 @@ function TwbMainRecord.GetShortName: string;
 var
   s : string;
 begin
+  if mrLGeneration <> wbLocalizationHandler.Generation then
+    mrInvalidateNameCache;
+
   if wbDisplayShorterNames then begin
     if mrShortName <> '' then
       Exit(mrShortName);
@@ -9078,6 +9134,9 @@ function TwbMainRecord.GetName: string;
 var
   s : string;
 begin
+  if mrLGeneration <> wbLocalizationHandler.Generation then
+    mrInvalidateNameCache;
+
   if mrName <> '' then
     Exit(mrName);
 
@@ -9873,6 +9932,27 @@ end;
 procedure TwbMainRecord.MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer);
 begin
   Assert(False);
+end;
+
+procedure TwbMainRecord.mrInvalidateNameCache;
+var
+  _File   : IwbFile;
+  FULLRec : IwbElement;
+begin
+  _File := GetFile;
+  if Assigned(_File) and _File.IsLocalized then begin
+    Exclude(mrStates, mrsFullNameFromCache);
+    mrFullName := '';
+    mrName := '';
+    mrShortName := '';
+    mrDisplayName := '';
+    if (mrsQuickInitDone in mrStates) or (csInitOnce in cntStates) then begin
+      FULLRec := GetRecordBySignature('FULL');
+      if Assigned(FULLRec) then
+        mrFullName := FULLRec.Value;
+    end;
+  end;
+  mrLGeneration := wbLocalizationHandler.Generation
 end;
 
 function TwbMainRecord.mrStruct: PwbMainRecordStruct;
@@ -14698,15 +14778,9 @@ begin
   if Assigned(Def) then
     Result := Def.ConflictPriority[Self];
 
-  if wbTranslationMode then begin
-    if Result <> cpTranslate then
-      Result := cpIgnore
-    else
-      Result := cpNormal;
-  end else begin
-    if Result = cpTranslate then
-      Result := cpNormal;
-  end;
+  if wbTranslationMode then
+    if not (dfTranslatable in Def.DefFlags) then
+      Result := cpIgnore;
 
   if Result = cpFormID then begin
     Result := cpCritical;
@@ -18004,15 +18078,9 @@ begin
   if Assigned(Def) then
     Result := Def.ConflictPriority[Self];
 
-  if wbTranslationMode then begin
-    if Result <> cpTranslate then
-      Result := cpIgnore
-    else
-      Result := cpNormal;
-  end else begin
-    if Result = cpTranslate then
-      Result := cpNormal;
-  end;
+  if wbTranslationMode then
+    if not (dfTranslatable in Def.DefFlags) then
+      Result := cpIgnore;
 
   if Result = cpFormID then begin
     Result := cpCritical;

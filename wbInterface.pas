@@ -165,6 +165,7 @@ var
   wbReportModGroups        : Boolean  = False;
   wbRequireCtrlForDblClick : Boolean  = False;
   wbFocusAddedElement      : Boolean  = True;
+  wbCheckNonCPNChars       : Boolean  = True;
 
   wbGlobalModifedGeneration : UInt64;
 
@@ -482,7 +483,6 @@ type
   );
 
   TwbGroupTypes = set of Byte;
-  TwbStringEncoding = (seCP1252, seUTF8);
 
 var
   dtNonValues : set of TwbDefType = [
@@ -496,8 +496,6 @@ var
     dtUnion,
     dtStructChapter
   ];
-
-  wbStringEncoding: TwbStringEncoding = seCP1252;
 
 type
   IwbDef = interface;
@@ -515,7 +513,8 @@ type
     dfZeroSortKey, // not implemented for all Defs!!!
     dfNotAlignable,
     dfCollapsed,
-    dfNoReport
+    dfNoReport,
+    dfTranslatable
   );
 
   TwbDefFlags = set of TwbDefFlag;
@@ -756,7 +755,7 @@ type
 
     function GetElementID: Pointer;
     function GetElementStates: TwbElementStates;
-    procedure SetElementState(aState: TwbElementState; Clear: Boolean = false);
+    procedure SetElementState(aState: TwbElementState; Clear: Boolean = False);
     function Equals(const aElement: IwbElement): Boolean;
 
     function GetValue: string;
@@ -810,7 +809,7 @@ type
     function CanContainFormIDs: Boolean;
     function GetLinksTo: IwbElement;
     function GetNoReach: Boolean;
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; recursive: Boolean = True; initial: Boolean = false);
+    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; recursive: Boolean = True; initial: Boolean = False);
     function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
     procedure ResetConflict;
     procedure ResetReachable;
@@ -1210,6 +1209,8 @@ type
     function GetHasNoFormID: Boolean;
     procedure SetHasNoFormID(Value: Boolean);
 
+    function GetEncoding(aTranslatable: Boolean): TEncoding;
+
     property FileName: string
       read GetFileName;
     property FileNameOnDisk: string
@@ -1280,6 +1281,9 @@ type
     property HasNoFormID: Boolean   // Like Morrowind for example. Also true for save/coSave.
       read GetHasNoFormID
       write SetHasNoFormID;
+
+    property Encoding[aTranslatable: Boolean]: TEncoding
+      read GetEncoding;
   end;
 
   IwbDataContainer = interface(IwbContainer)
@@ -1962,7 +1966,12 @@ type
     property MemberCount: Integer read GetMemberCount;
   end;
 
-  IwbStringDef = interface(IwbValueDef)
+  IwbBaseStringDef = interface(IwbValueDef)
+    ['{06632243-538C-48EC-9074-7BB72142CAB8}']
+    function OverrideEncoding(aEncoding: TEncoding): IwbBaseStringDef;
+  end;
+
+  IwbStringDef = interface(IwbBaseStringDef)
     ['{37B02D28-EDB4-41C6-B933-9F56C013A88A}']
     function GetStringSize: Integer;
 
@@ -1970,7 +1979,7 @@ type
       read GetStringSize;
   end;
 
-  IwbLenStringDef = interface(IwbValueDef)
+  IwbLenStringDef = interface(IwbBaseStringDef)
     ['{1AD7FAE2-DAA7-4651-B78D-10E138EDF48B}']
   end;
 
@@ -3828,8 +3837,6 @@ function wbIsInternalEdit: Boolean;
 
 function StrToSignature(const s: string): TwbSignature;
 function IntToSignature(aInt: Cardinal): TwbSignature; inline;
-function wbStringToAnsi(const aString: string; const aElement: IwbElement): AnsiString;
-function wbAnsiToString(const aString: AnsiString; const aElement: IwbElement): string;
 
 function FixupFormID(aFormID: TwbFormID; const aOld, aNew: TwbFileIDs): TwbFormID;
 
@@ -3913,13 +3920,25 @@ function wbFormIDErrorCheckUnlock: Integer;
 function wbNextObjectIDToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 function wbNextObjectIDToInt(const aString: string; const aElement: IwbElement): Int64;
 
+var
+  wbEncoding         : TEncoding;
+  wbEncodingTrans    : TEncoding;
+  wbEncodingVMAD     : TEncoding;
+
+  wbLEncodingDefault : TEncoding;
+  wbLEncoding        : TStringList;
+
+procedure wbAddDistinctLEncodings;
+function wbEncodingForLanguage(const aLanguage: string): TEncoding;
+function wbMBCSEncoding(aCP: Cardinal): TEncoding; overload;
+function wbMBCSEncoding(const s: string): TEncoding; overload;
+
 implementation
 
 uses
   Windows,
   Variants,
   Math,
-  AnsiStrings,
   TypInfo,
   wbSort,
   wbLocalization;
@@ -4156,52 +4175,6 @@ end;
 function IntToSignature(aInt: Cardinal): TwbSignature; inline;
 begin
   Result := PwbSignature(@aInt)^;
-end;
-
-function IsTranslatable(const aElement: IwbElement): Boolean;
-var
-  Def: IwbDef;
-begin
-  Result := False;
-
-  if Assigned(aElement) then begin
-    Def := aElement.ValueDef;
-    if not Assigned(Def) then
-      Def := aElement.Def;
-
-    if Assigned(Def) then
-       Result := Def.ConflictPriority[aElement] = cpTranslate;
-  end;
-end;
-
-function wbStringToAnsi(const aString: String; const aElement: IwbElement): AnsiString;
-var
-  Translatable: Boolean;
-begin
-  if Assigned(aElement) then
-    Translatable := IsTranslatable(aElement)
-  else
-    Translatable := True;
-
-  if Translatable and (wbStringEncoding = seUTF8) then
-    Result := UTF8Encode(aString)
-  else
-    Result := AnsiString(aString);
-end;
-
-function wbAnsiToString(const aString: AnsiString; const aElement: IwbElement): string;
-var
-  Translatable: Boolean;
-begin
-  if Assigned(aElement) then
-    Translatable := IsTranslatable(aElement)
-  else
-    Translatable := True;
-
-  if Translatable and (wbStringEncoding = seUTF8) then
-    Result := UTF8Decode(aString)
-  else
-    Result := string(aString);
 end;
 
 function wbBeginInternalEdit(aForce: Boolean): Boolean;
@@ -4622,7 +4595,7 @@ type
                        aAfterSet   : TwbAfterSetCallback;
                        aDontShow   : TwbDontShowCallback;
                        aGetCP      : TwbGetConflictPriority;
-                       aTerminator : Boolean);
+                       aTerminator : Boolean); virtual;
     {--- IwbDef ---}
     function GetDontShow(const aElement: IwbElement): Boolean; override;
     function GetHasDontShow: Boolean; override;
@@ -5150,16 +5123,33 @@ type
   TwbStringTransformType = (
     ttToString,
     ttToSortKey,
+    ttCheck,
     ttToEditValue,
     ttFromEditValue,
     ttToNativeValue,
     ttFromNativeValue
   );
 
-  TwbStringDef = class(TwbValueDef, IwbStringDef)
+  TwbBaseStringDef = class(TwbValueDef, IwbBaseStringDef)
   protected
-    sdSize: Integer;
-    sdForward: boolean;
+    bsdEncodingOverride : TEncoding;
+    function bsdGetEncoding(const aElement: IwbElement): TEncoding;
+  protected
+    procedure AfterClone(const aSource: TwbDef); override;
+
+    {---IwbBaseStringDef---}
+    function OverrideEncoding(aEncoding: TEncoding): IwbBaseStringDef;
+  public
+    constructor Create(aPriority: TwbConflictPriority; aRequired: Boolean;
+      const aName: string; aAfterLoad: TwbAfterLoadCallback;
+      aAfterSet: TwbAfterSetCallback; aDontShow: TwbDontShowCallback;
+      aGetCP: TwbGetConflictPriority; aTerminator: Boolean);
+  end;
+
+  TwbStringDef = class(TwbBaseStringDef, IwbStringDef)
+  protected
+    sdSize     : Integer;
+    sdForward  : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority   : TwbConflictPriority;
@@ -5171,14 +5161,15 @@ type
                        aDontShow   : TwbDontShowCallback;
                        aGetCP      : TwbGetConflictPriority;
                        aTerminator : Boolean;
-                       aForward    : boolean = false); virtual;
-    function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString; virtual;
+                       aForward    : Boolean = False); virtual;
+
+    function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string; virtual;
     function ToStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
 
-    procedure FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString); virtual;
+    procedure FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType); virtual;
     procedure FromStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType);
 
-    function TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString; virtual;
+    function TransformString(const s: string; aTransformType: TwbStringTransformType; const aElement: IwbElement): string; virtual;
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -5189,6 +5180,7 @@ type
     {---IwbValueDef---}
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
+    function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetIsVariableSizeInternal: Boolean; override;
@@ -5205,12 +5197,12 @@ type
 
   TwbStringScriptDef = class(TwbStringDef)
   protected
-    function TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString; override;
+    function TransformString(const s: string; aTransformType: TwbStringTransformType; const aElement: IwbElement): string; override;
   end;
 
   TwbStringLCDef = class(TwbStringDef)
   protected
-    function TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString; override;
+    function TransformString(const s: string; aTransformType: TwbStringTransformType; const aElement: IwbElement): string; override;
   end;
 
   TwbStringKCDef = class(TwbStringDef)  // Keep Case
@@ -5220,7 +5212,8 @@ type
 
   TwbStringMgefCodeDef = class(TwbStringDef)
   protected
-    function TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString; override;
+    function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string; override;
+    procedure FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType); override;
 
     {---IwbDef---}
     function CanContainFormIDs: Boolean; override;
@@ -5237,10 +5230,20 @@ type
 
   TwbLStringDef = class(TwbStringDef)
   protected
+    constructor Create(aPriority   : TwbConflictPriority;
+                       aRequired   : Boolean;
+                 const aName       : string;
+                       aSize       : Integer;
+                       aAfterLoad  : TwbAfterLoadCallback;
+                       aAfterSet   : TwbAfterSetCallback;
+                       aDontShow   : TwbDontShowCallback;
+                       aGetCP      : TwbGetConflictPriority;
+                       aTerminator : Boolean;
+                       aForward    : Boolean = False); override;
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
-    function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString; override;
-    procedure FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString); override;
+    function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string; override;
+    procedure FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType); override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
   end;
@@ -5250,7 +5253,7 @@ type
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
   end;
 
-  TwbLenStringDef = class(TwbValueDef, IwbLenStringDef)
+  TwbLenStringDef = class(TwbBaseStringDef, IwbLenStringDef)
   protected
     Prefix: Integer;
     constructor Clone(const aSource: TwbDef); override;
@@ -7959,6 +7962,10 @@ end;
 
 constructor TwbDef.Create(aPriority: TwbConflictPriority; aRequired: Boolean; aGetCP: TwbGetConflictPriority);
 begin
+  if aPriority = cpTranslate then begin
+    Include(defFlags, dfTranslatable);
+    aPriority := cpNormal;
+  end;
   defPriority := aPriority;
   defRequired := aRequired;
   defGetCP := aGetCP;
@@ -10929,7 +10936,7 @@ begin
       Result := SameStr(FlagsDef.Flags[i], GetFlag(i));
     end;
   end else
-    Result := false;
+    Result := False;
 end;
 
 function TwbFlagsDef.CanContainFormIDs: Boolean;
@@ -11811,6 +11818,11 @@ begin
   Result := False;
 end;
 
+function TwbStringDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+begin
+  Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttCheck);
+end;
+
 constructor TwbStringDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbStringDef do
@@ -11826,7 +11838,7 @@ constructor TwbStringDef.Create(aPriority   : TwbConflictPriority;
                                 aDontShow   : TwbDontShowCallback;
                                 aGetCP      : TwbGetConflictPriority;
                                 aTerminator : Boolean;
-                                aForward    : boolean);
+                                aForward    : Boolean);
 begin
   sdSize := aSize;
   sdForward := aForward;
@@ -11843,27 +11855,32 @@ begin
   FromStringTransform(aBasePtr, aEndPtr, aElement, aValue, ttFromNativeValue);
 end;
 
-procedure TwbStringDef.FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString);
+procedure TwbStringDef.FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType);
 var
   NewSize : Integer;
+  b       : TBytes;
 begin
+  b := bsdGetEncoding(aElement).GetBytes(aValue);
+
   if sdSize > 0 then
     NewSize := sdSize
   else
-    NewSize := Succ(Length(aValue));
+    NewSize := Succ(Length(b));
 
   aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize + Ord(noTerminator));
 
   if sdSize > 0 then begin
     FillChar(aBasePtr^, sdSize, 0);
-    NewSize := Length(aValue);
+    NewSize := Length(b);
+    if NewSize > sdSize then
+      NewSize := sdSize;
     if NewSize > 0 then
-      Move(aValue[1], aBasePtr^, NewSize);
+      Move(b[0], aBasePtr^, NewSize);
   end else begin
     if NewSize > 1 then
-      Move(aValue[1], aBasePtr^, Length(aValue));
+      Move(b[0], aBasePtr^, Length(b));
 
-    PAnsiChar(aBasePtr)[Pred(NewSize)] := #0;
+    PByte(aBasePtr)[Pred(NewSize)] := 0;
   end;
   if noTerminator then
     PAnsiChar(aBasePtr)[NewSize] := AnsiChar(wbTerminator);
@@ -11871,7 +11888,7 @@ end;
 
 procedure TwbStringDef.FromStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType);
 begin
-  FromStringNative(aBasePtr, aEndPtr, aElement, TransformString(wbStringToAnsi(aValue, aElement), aTransformType, aElement));
+  FromStringNative(aBasePtr, aEndPtr, aElement, TransformString(aValue, aTransformType, aElement), aTransformType);
 end;
 
 function TwbStringDef.GetDefType: TwbDefType;
@@ -11964,42 +11981,64 @@ begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToString);
 end;
 
-function TwbStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString;
+function TwbStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
 var
-  aLen, Len : Cardinal;
+  lLen, Len : NativeUInt;
+  b         : TBytes;
+  i         : Integer;
 begin
+  Result := '';
   Len := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
+  if (Len > 0) and noTerminator then
+    if PByte(aBasePtr)[Pred(Len)] = wbTerminator then
+      Dec(Len);
+
   if sdSize > 0 then begin
     if Len > Cardinal(sdSize) then
       Len := sdSize;
   end;
 
   if sdForward then begin
-    aLen := 0;
-    while aLen < Len do begin
-      if PAnsiChar(aBasePtr)[aLen] = #0 then
+    lLen := 0;
+    while lLen < Len do begin
+      if PByte(aBasePtr)[lLen] = 0 then
         Break;
-      Inc(aLen);
+      Inc(lLen);
     end;
-    Len := aLen;
-    //if aLen < Len then
-    //  Len := Succ(aLen);
+    Len := lLen;
   end else
-    while (Len > 0) and (PAnsiChar(aBasePtr)[Pred(Len)] = #0) do
+    while (Len > 0) and (PByte(aBasePtr)[Pred(Len)] = 0) do
       Dec(Len);
 
-  SetLength(Result, Len);
-  if Len > 0 then
-    Move(aBasePtr^, Result[1], Len);
+  if Len > 0 then begin
+    b := BytesOf(aBasePtr, Len);
+    if aTransformType <> ttCheck then
+      Result := bsdGetEncoding(aElement).GetString(b);
+    if wbCheckNonCPNChars then
+      if aTransformType in [ttToString, ttCheck] then
+        if not (dfTranslatable in defFlags) then
+          for i := Low(b) to High(b) do
+            if not (b[i] in [10, 13, 32..126]) then begin
+              if aTransformType = ttToString then
+                Result := Result + ' <Warning: ';
+
+              Result := Result + 'non-code page neutral character in non-translatable string';
+
+              if aTransformType = ttToString then
+                Result := Result + '>';
+              Break;
+            end;
+  end;
+
   Used(aElement, Result);
 end;
 
 function TwbStringDef.ToStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
 begin
-  Result := wbAnsiToString(TransformString(ToStringNative(aBasePtr, aEndPtr, aElement), aTransformType, aElement), aElement);
+  Result := TransformString(ToStringNative(aBasePtr, aEndPtr, aElement, aTransformType), aTransformType, aElement);
 end;
 
-function TwbStringDef.TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString;
+function TwbStringDef.TransformString(const s: string; aTransformType: TwbStringTransformType; const aElement: IwbElement): string;
 begin
   Result := s;
 end;
@@ -13850,8 +13889,7 @@ begin
                 SetLength(LStringsAtOffSet, Succ(Offset));
 
               try
-                s := wbStringToAnsi(wbLocalizationHandler.GetValue(aInt, aElement), aElement);
-                if (s <> '') and not S.StartsWith('<Error:', True) then begin
+                if wbLocalizationHandler.GetValue(aInt, aElement, s) then begin
                   Inc(FoundLStringAtOffSet[Offset]);
 
                   if not Assigned(LStringsAtOffSet[Offset]) then
@@ -15399,16 +15437,16 @@ var
   Len     : Cardinal;
   NewSize : Cardinal;
   p       : Pointer;
-  s       : AnsiString;
+  b       : TBytes;
 begin
-  s := AnsiString(aValue);
-  Len := Length(s);
+  b := bsdGetEncoding(aElement).GetBytes(aValue);
+  Len := Length(b);
   NewSize := Len + GetPrefixOffset;
   aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize + Ord(noTerminator));
   SetPrefixValue(aBasePtr, aEndPtr, aElement, Len);
   p := PByte(aBasePtr) + GetPrefixOffset;
   if Len > 0 then
-    Move(s[1], p^, Len);
+    Move(b[0], p^, Len);
   if noTerminator then begin
     Inc(PByte(p), Len+1);
     PByte(p)^ := wbTerminator;
@@ -15532,9 +15570,8 @@ function TwbLenStringDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: Iw
 var
   Size : Cardinal;
   Len  : Cardinal;
-  s    : AnsiString;
+  b    : TBytes;
 begin
-  s := '';
   Len := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
   if Len<GetPrefixOffset+Ord(noTerminator) then
     Exit;
@@ -15545,10 +15582,12 @@ begin
   if Len > Size then
     Len := Size;
 
-  SetLength(s, Len);
-  if Len > 0 then
-    Move(aBasePtr^, s[1], Len);
-  Result := wbAnsiToString(s, aElement);
+  if Len > 0 then begin
+    b := BytesOf(aBasePtr, Len);
+    Result := bsdGetEncoding(aElement).GetString(b);
+  end else
+    Result := '';
+
   Used(aElement, Result);
 end;
 
@@ -15596,9 +15635,12 @@ end;
 
 { TwbStringLCDef }
 
-function TwbStringLCDef.TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString;
+function TwbStringLCDef.TransformString(const s: string; aTransformType: TwbStringTransformType; const aElement: IwbElement): string;
 begin
-  Result := LowerCase(s);
+  if aTransformType = ttCheck then
+    Result := s
+  else
+    Result := LowerCase(s);
 end;
 
 { TwbLString }
@@ -15613,11 +15655,26 @@ begin
   Result := 'Localized String';
 end;
 
-procedure TwbLStringDef.FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: AnsiString);
+constructor TwbLStringDef.Create(aPriority   : TwbConflictPriority;
+                                 aRequired   : Boolean;
+                           const aName       : string;
+                                 aSize       : Integer;
+                                 aAfterLoad  : TwbAfterLoadCallback;
+                                 aAfterSet   : TwbAfterSetCallback;
+                                 aDontShow   : TwbDontShowCallback;
+                                 aGetCP      : TwbGetConflictPriority;
+                                 aTerminator : Boolean;
+                                 aForward    : Boolean = False);
+begin
+  Include(defFlags, dfTranslatable);
+  inherited;
+end;
+
+procedure TwbLStringDef.FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType);
 var
   ID: Cardinal;
 begin
-  if Copy(aValue, 1, Length(sStringID)) = sStringID then begin
+  if aValue.StartsWith(sStringID) then begin
     aElement.RequestStorageChange(aBasePtr, aEndPtr, SizeOf(Cardinal));
     PCardinal(aBasePtr)^ := StrToInt64Def('$' + Copy(aValue, Succ(Length(sStringID)), Length(aValue)), 0);
     Exit;
@@ -15626,7 +15683,7 @@ begin
   if aElement._File.IsLocalized then
     if wbLocalizationHandler.NoTranslate then
       // assign a string when delocalizing and NoTranslate is true
-      inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue)
+      inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue, aTransformType)
     else begin
       // set localized string's value
       ID := wbLocalizationHandler.SetValue(PCardinal(aBasePtr)^, aElement, aValue);
@@ -15635,7 +15692,7 @@ begin
       //raise Exception.Create('Can not assign to a localized string')
     end
   else
-    inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue);
+    inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue, aTransformType);
 end;
 
 function TwbLStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -15656,20 +15713,32 @@ begin
     Result := inherited GetDefaultSize(aBasePtr, aEndPtr, aElement);
 end;
 
-function TwbLStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): AnsiString;
+function TwbLStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
+var
+  _File : IwbFile;
+  Found : Boolean;
 begin
-  if Assigned(aElement._File) and aElement._File.IsLocalized then begin
-    if (NativeUInt(aEndPtr) - NativeUInt(aBasePtr)) <> 4 then
-      Result := '< Error: lstring ID should be Int32 value >'
-    else
-      Result := wbStringToAnsi(wbLocalizationHandler.GetValue(PCardinal(aBasePtr)^, aElement), aElement)
+  _File := aElement._File;
+  if Assigned(_File) and _File.IsLocalized then begin
+    if (NativeUInt(aEndPtr) - NativeUInt(aBasePtr)) <> 4 then begin
+      if aTransformType = ttCheck then
+        Result := 'lstring ID is not Int32'
+      else
+        Result := '<Error: lstring ID is not Int32>'
+    end else
+      Found := wbLocalizationHandler.GetValue(PCardinal(aBasePtr)^, aElement, Result);
+      if aTransformType = ttCheck then
+        if Found then
+          Result := ''
+        else
+          Result := 'lstring ID [' + IntToHex(PCardinal(aBasePtr)^, 8) + '] could not be resolved';
   end else
-    Result := inherited ToStringNative(aBasePtr, aEndPtr, aElement);
+    Result := inherited ToStringNative(aBasePtr, aEndPtr, aElement, aTransformType);
 end;
 
 { TwbStringScriptDef }
 
-function TwbStringScriptDef.TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString;
+function TwbStringScriptDef.TransformString(const s: string; aTransformType: TwbStringTransformType; const aElement: IwbElement): string;
 var
   i: Integer;
 begin
@@ -15681,7 +15750,7 @@ begin
         if Strings[i] = '' then
           Delete(i);
       end;
-      Result := AnsiString(Text);
+      Result := Text;
     finally
       Free;
     end;
@@ -15711,19 +15780,153 @@ end;
 
 procedure TwbStringMgefCodeDef.FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters);
 var
-  s        : AnsiString;
+  lLen, Len      : NativeUInt;
   MgefCode : PCardinal;
 begin
-  s := ToStringNative(aBasePtr, aEndPtr, aElement);
+  Len := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
+  if sdSize > 0 then begin
+    if Len > Cardinal(sdSize) then
+      Len := sdSize;
+  end;
 
-  if Length(s) <> 4 then
+  if sdForward then begin
+    lLen := 0;
+    while lLen < Len do begin
+      if PByte(aBasePtr)[lLen] = 0 then
+        Break;
+      Inc(lLen);
+    end;
+    Len := lLen;
+  end else
+    while (Len > 0) and (PByte(aBasePtr)[Pred(Len)] = 0) do
+      Dec(Len);
+
+  if Len <> 4 then
     Exit;
 
-  MgefCode := PCardinal(@s[1]);
+  MgefCode := PCardinal(aBasePtr);
 
   if (MgefCode^ and $80000000) <> 0 then
     { yes, it's a dynamic code }
     aMasters[(MgefCode^ and $000000FF)] := True;
+end;
+
+procedure TwbStringMgefCodeDef.FromStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string; aTransformType: TwbStringTransformType);
+var
+  Value    : string;
+  s        : string;
+  t        : AnsiString;
+  MgefCode : Cardinal;
+  IsAlpha  : Boolean;
+  i, j     : Integer;
+  _File    : IwbFile;
+  FileID   : Cardinal;
+  NewSize  : Integer;
+  b        : TBytes;
+begin
+  b := nil;
+  SetLength(b, 4);
+
+  Value := aValue.Trim;
+
+  i := Pos(':', Value);
+  if i > 0 then begin
+    s := Copy(Value, 1, Pred(i));
+
+    FileID := $FF;
+
+    if Assigned(aElement) then begin
+      _File := aElement._File;
+      if Assigned(_File) then begin
+        if SameText(s, _File.FileName) then
+          FileID := _File.MasterCount
+        else if SameText(s, _File.Name) then
+          FileID := _File.MasterCount
+        else begin
+          for j := 0 to Pred(_File.MasterCount) do
+            if SameText(t, _File.Masters[j].Name) then begin
+              FileID := j;
+              break;
+            end;
+          if FileID = $FF then
+            for j := 0 to Pred(_File.MasterCount) do
+              if SameText(s, _File.Masters[j].FileName) then begin
+                FileID := j;
+                break;
+              end;
+        end;
+      end;
+    end;
+
+    if FileID = $FF then begin
+      if i > 1 then
+        FileID := StrToInt('$' + s);
+
+      if Assigned(aElement) then begin
+        _File := aElement._File;
+        if Assigned(_File) then
+          if FileID = $FF then
+            FileID := _File.MasterCount
+          else
+            FileID := _File.LoadOrderFileIDtoFileFileID(TwbFileID.Create(FileID)).FullSlot;
+      end;
+    end;
+
+    s := Copy(Value, Succ(i), High(Integer));
+    MgefCode := StrToInt(s);
+    if MgefCode > $7FFFFF then
+      raise Exception.Create('"'+s+'" exceeds the maximum value for a dynamic magic effect code');
+    MgefCode := (MgefCode shl 8) or $80000000;
+
+    MgefCode := MgefCode or FileID;
+
+  end else if Length(Value) = 8 then begin
+
+    MgefCode := StrToInt('$' + Value);
+    if (MgefCode and $80000000) <> 0 then
+      raise Exception.Create('"'+Value+'" is not a valid magic effect code');
+
+  end else if Length(Value) = 4 then begin
+
+    IsAlpha := True;
+    for i := 1 to 4 do
+      if not(s[i] in ['a'..'z', 'A'..'Z', '0'..'9', '_']) then begin
+        IsAlpha := False;
+        break;
+      end;
+    if not IsAlpha then
+      raise Exception.Create('"'+Value+'" is not a valid magic effect code');
+
+    t := AnsiString(Value);
+    MgefCode := PCardinal(@t[1])^;
+
+  end else
+    raise Exception.Create('"'+Value+'" is not a valid magic effect code');
+
+  PCardinal(@b[0])^ := MgefCode;
+
+  if sdSize > 0 then
+    NewSize := sdSize
+  else
+    NewSize := Succ(Length(b));
+
+  aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize + Ord(noTerminator));
+
+  if sdSize > 0 then begin
+    FillChar(aBasePtr^, sdSize, 0);
+    NewSize := Length(b);
+    if NewSize > sdSize then
+      NewSize := sdSize;
+    if NewSize > 0 then
+      Move(b[0], aBasePtr^, NewSize);
+  end else begin
+    if NewSize > 1 then
+      Move(b[0], aBasePtr^, Length(b));
+
+    PByte(aBasePtr)[Pred(NewSize)] := 0;
+  end;
+  if noTerminator then
+    PAnsiChar(aBasePtr)[NewSize] := AnsiChar(wbTerminator);
 end;
 
 function TwbStringMgefCodeDef.GetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbElement;
@@ -15741,38 +15944,69 @@ end;
 
 procedure TwbStringMgefCodeDef.MasterCountUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOld, aNew: Byte);
 var
-  s        : AnsiString;
-  MgefCode : PCardinal;
+  lLen, Len : NativeUInt;
+  MgefCode  : PCardinal;
 begin
-  s := ToStringNative(aBasePtr, aEndPtr, aElement);
+  Len := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
+  if sdSize > 0 then begin
+    if Len > Cardinal(sdSize) then
+      Len := sdSize;
+  end;
 
-  if Length(s) <> 4 then
+  if sdForward then begin
+    lLen := 0;
+    while lLen < Len do begin
+      if PByte(aBasePtr)[lLen] = 0 then
+        Break;
+      Inc(lLen);
+    end;
+    Len := lLen;
+  end else
+    while (Len > 0) and (PByte(aBasePtr)[Pred(Len)] = 0) do
+      Dec(Len);
+
+  if Len <> 4 then
     Exit;
 
-  MgefCode := PCardinal(@s[1]);
+  MgefCode := PCardinal(aBasePtr);
 
   if (MgefCode^ and $80000000) <> 0 then
     { yes, it's a dynamic code }
     if (MgefCode^ and $000000FF) >= aOld then begin
       { yes, it refers to this file }
       MgefCode^ := (MgefCode^ and $FFFFFF00) or aNew;
-      FromStringNative(aBasePtr, aEndPtr, aElement, s);
       aElement.NotifyChanged(Pointer(aElement.Container));
     end;
 end;
 
 procedure TwbStringMgefCodeDef.MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs);
 var
-  s        : AnsiString;
-  MgefCode : PCardinal;
-  i        : Integer;
+  lLen, Len : NativeUInt;
+  MgefCode  : PCardinal;
+  i         : Integer;
 begin
-  s := ToStringNative(aBasePtr, aEndPtr, aElement);
+  Len := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
+  if sdSize > 0 then begin
+    if Len > Cardinal(sdSize) then
+      Len := sdSize;
+  end;
 
-  if Length(s) <> 4 then
+  if sdForward then begin
+    lLen := 0;
+    while lLen < Len do begin
+      if PByte(aBasePtr)[lLen] = 0 then
+        Break;
+      Inc(lLen);
+    end;
+    Len := lLen;
+  end else
+    while (Len > 0) and (PByte(aBasePtr)[Pred(Len)] = 0) do
+      Dec(Len);
+
+  if Len <> 4 then
     Exit;
 
-  MgefCode := PCardinal(@s[1]);
+  MgefCode := PCardinal(aBasePtr);
 
   //aOld and aNew are file specific, so we only need to look at FullSlot part.
 
@@ -15783,7 +16017,6 @@ begin
       if (MgefCode^ and $000000FF) = aOld[i].FullSlot then begin
         { yes, it refers to this file }
         MgefCode^ := (MgefCode^ and $FFFFFF00) or aNew[i].FullSlot;
-        FromStringNative(aBasePtr, aEndPtr, aElement, s);
         aElement.NotifyChanged(Pointer(aElement.Container));
         Exit;
       end;
@@ -15808,133 +16041,86 @@ begin
   end;
 end;
 
-function TwbStringMgefCodeDef.TransformString(const s: AnsiString; aTransformType: TwbStringTransformType; const aElement: IwbElement): AnsiString;
+function TwbStringMgefCodeDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
 var
-  IsAlpha  : Boolean;
-  i, j     : Integer;
-  MgefCode : Cardinal;
-  _File    : IwbFile;
-  FileID   : Cardinal;
-  t        : AnsiString;
+  lLen, Len : NativeUInt;
+  IsAlpha   : Boolean;
+  i         : Integer;
+  MgefCode  : Cardinal;
+  _File     : IwbFile;
+  FileID    : Cardinal;
 begin
-  case aTransformType of
-    ttToString, ttToSortKey, ttToEditValue, ttToNativeValue: begin
-      Result := s;
-      if Length(s) = 4 then begin
-        IsAlpha := True;
-        for i := 1 to 4 do
-          if not(s[i] in ['a'..'z', 'A'..'Z', '0'..'9', '_']) then begin
-            IsAlpha := False;
-            break;
-          end;
-        if not IsAlpha then begin
-          MgefCode := PCardinal(@s[1])^;
-          if (MgefCode and $80000000) <> 0 then begin
-            if Assigned(aElement) then begin
-              _File := aElement._File;
-              if Assigned(_File) then begin
-                FileID := MgefCode and $000000FF;
+  Result := '';
+  Len := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
+  if sdSize > 0 then begin
+    if Len > Cardinal(sdSize) then
+      Len := sdSize;
+  end;
 
-                if FileID >= _File.MasterCount then
-                  Result := AnsiString(_File.Name)
-                else
-                  Result := AnsiString(_File.Masters[FileID].Name);
-
-                //TODO: should that be IntToHex instead?
-                Result := Result + ':' + AnsiString(IntToStr((MgefCode and not $800000FF) shr 8));
-
-                Exit;
-              end;
-            end;
-          end;
-          Result := AnsiString(IntToHex64(MgefCode, 8));
-          if aTransformType = ttToString then
-            Result := Result + ' <Warning: Effect Code is neither alphanumeric nor dynamic>';
-        end;
-      end else if aTransformType = ttToString then
-        Result := Result + AnsiString(' <Warning: Expected 4 bytes but found ' + IntToStr(Length(s)) + '>');
+  if sdForward then begin
+    lLen := 0;
+    while lLen < Len do begin
+      if PByte(aBasePtr)[lLen] = 0 then
+        Break;
+      Inc(lLen);
     end;
-    ttFromEditValue, ttFromNativeValue: begin
-      Result := Trim(s);
-      if S = '' then
-        Exit;
-      i := Pos(':', Result);
-      if i > 0 then begin
+    Len := lLen;
+  end else
+    while (Len > 0) and (PByte(aBasePtr)[Pred(Len)] = 0) do
+      Dec(Len);
 
-        t := Copy(Result, 1, Pred(i));
-
-        FileID := $FF;
-
+  if Len = 4 then begin
+    IsAlpha := True;
+    for i := 0 to 3 do
+      if not(PAnsiChar(aBasePtr)^ in ['a'..'z', 'A'..'Z', '0'..'9', '_']) then begin
+        IsAlpha := False;
+        break;
+      end;
+    if not IsAlpha then begin
+      MgefCode := PCardinal(aBasePtr)^;
+      if (MgefCode and $80000000) <> 0 then begin
         if Assigned(aElement) then begin
           _File := aElement._File;
           if Assigned(_File) then begin
-            if SameText(t, _File.FileName) then
-              FileID := _File.MasterCount
-            else if SameText(t, _File.Name) then
-              FileID := _File.MasterCount
-            else begin
-              for j := 0 to Pred(_File.MasterCount) do
-                if SameText(t, _File.Masters[j].Name) then begin
-                  FileID := j;
-                  break;
-                end;
-              if FileID = $FF then
-                for j := 0 to Pred(_File.MasterCount) do
-                  if SameText(t, _File.Masters[j].FileName) then begin
-                    FileID := j;
-                    break;
-                  end;
-            end;
-          end;
-        end;
+            FileID := MgefCode and $000000FF;
 
-        if FileID = $FF then begin
-          if i > 1 then
-            FileID := StrToInt('$' + t);
-
-          if Assigned(aElement) then begin
-            _File := aElement._File;
-            if Assigned(_File) then
-              if FileID = $FF then
-                FileID := _File.MasterCount
+            if aTransformType <> ttCheck then begin
+              if FileID >= _File.MasterCount then
+                Result := _File.FileName
               else
-                FileID := _File.LoadOrderFileIDtoFileFileID(TwbFileID.Create(FileID)).FullSlot;
+                Result := _File.Masters[FileID].FileName;
+
+              Result := Result + ':' + IntToStr((MgefCode and not $800000FF) shr 8);
+            end;
+            Exit;
           end;
         end;
+      end;
 
-        t := Copy(Result, Succ(i), High(Integer));
-        MgefCode := StrToInt(t);
-        if MgefCode > $7FFFFF then
-          raise Exception.Create('"'+t+'" exceeds the maximum value for a dynamic magic effect code');
-        MgefCode := (MgefCode shl 8) or $80000000;
+      if aTransformType = ttCheck then
+        Exit('Effect Code is neither alphanumeric nor dynamic');
 
-        MgefCode := MgefCode or FileID;
+      Result := IntToHex(MgefCode, 8);
+      if aTransformType =  ttToString then
+        Result := Result + ' <Warning: Effect Code is neither alphanumeric nor dynamic>';
 
-      end else if Length(Result) = 8 then begin
-
-        MgefCode := StrToInt('$' + Result);
-        if (MgefCode and $80000000) <> 0 then
-          raise Exception.Create('"'+Result+'" is not a valid magic effect code');
-
-      end else if Length(s) = 4 then begin
-
-        IsAlpha := True;
-        for i := 1 to 4 do
-          if not(s[i] in ['a'..'z', 'A'..'Z', '0'..'9', '_']) then begin
-            IsAlpha := False;
-            break;
-          end;
-        if not IsAlpha then
-          raise Exception.Create('"'+Result+'" is not a valid magic effect code');
-        MgefCode := PCardinal(@Result[1])^;
-
-      end else
-        raise Exception.Create('"'+Result+'" is not a valid magic effect code');
-
-      SetLength(Result, 4);
-      PCardinal(@Result[1])^ := MgefCode;
+      Exit;
     end;
   end;
+
+  Result := inherited ToStringNative(aBasePtr, aEndPtr, aElement, aTransformType);
+
+  i := Length(Result);
+  if (i <> 4) then
+    case aTransformType of
+      ttToString:
+        Result := Result + ' <Warning: Expected 4 bytes but found ' + i.ToString + '>';
+      ttCheck:
+        Exit('Expected 4 bytes but found ' + i.ToString);
+    end;
+
+  if aTransformType = ttCheck then
+    Result := '';
 end;
 
 function GetContainerFromUnion(const aElement: IwbElement): IwbContainer;
@@ -17302,7 +17488,134 @@ begin
   Self[Len] := aFile;
 end;
 
+{ TwbBaseStringDef }
+
+procedure TwbBaseStringDef.AfterClone(const aSource: TwbDef);
+begin
+  inherited;
+  with aSource as TwbBaseStringDef do
+    Self.bsdEncodingOverride := bsdEncodingOverride;
+end;
+
+function TwbBaseStringDef.bsdGetEncoding(const aElement: IwbElement): TEncoding;
+var
+  _File: IwbFile;
+begin
+  Result := bsdEncodingOverride;
+  if not Assigned(Result) then begin
+    if Assigned(aElement) then begin
+      _File := aElement._File;
+      if Assigned(_File) then
+        Exit(_File.Encoding[dfTranslatable in defFlags]);
+    end;
+    if dfTranslatable in defFlags then
+      Result := wbEncodingTrans
+    else
+      Result := wbEncoding;
+  end;
+end;
+
+constructor TwbBaseStringDef.Create(aPriority   : TwbConflictPriority;
+                                    aRequired   : Boolean;
+                              const aName       : string;
+                                    aAfterLoad  : TwbAfterLoadCallback;
+                                    aAfterSet   : TwbAfterSetCallback;
+                                    aDontShow   : TwbDontShowCallback;
+                                    aGetCP      : TwbGetConflictPriority;
+                                    aTerminator : Boolean);
+begin
+  inherited;
+end;
+
+function TwbBaseStringDef.OverrideEncoding(aEncoding: TEncoding): IwbBaseStringDef;
+begin
+  Result := Self;
+  bsdEncodingOverride := aEncoding;
+end;
+
+procedure wbAddDistinctLEncodings;
+begin
+  wbLEncoding.AddObject('english', wbMBCSEncoding(1252));
+  wbLEncoding.AddObject('french', wbMBCSEncoding(1252));
+  wbLEncoding.AddObject('polish', wbMBCSEncoding(1250));
+  wbLEncoding.AddObject('czech', wbMBCSEncoding(1250));
+  wbLEncoding.AddObject('danish', wbMBCSEncoding(1252));
+  wbLEncoding.AddObject('finnish', wbMBCSEncoding(1252));
+  wbLEncoding.AddObject('german', wbMBCSEncoding(1252));
+  wbLEncoding.AddObject('greek', wbMBCSEncoding(1253));
+  wbLEncoding.AddObject('italian', wbMBCSEncoding(1252));
+  wbLEncoding.AddObject('japanese', TEncoding.UTF8);
+  wbLEncoding.AddObject('norwegian', wbMBCSEncoding(1252));
+  wbLEncoding.AddObject('portuguese', wbMBCSEncoding(1252));
+  wbLEncoding.AddObject('spanish', wbMBCSEncoding(1252));
+  wbLEncoding.AddObject('swedish', wbMBCSEncoding(1252));
+  wbLEncoding.AddObject('turkish', wbMBCSEncoding(1254));
+  wbLEncoding.AddObject('russian', wbMBCSEncoding(1251));
+  wbLEncoding.AddObject('chinese', TEncoding.UTF8);
+  wbLEncoding.AddObject('hungarian', wbMBCSEncoding(1250));
+  wbLEncoding.AddObject('arabic', wbMBCSEncoding(1256));
+end;
+
+function wbEncodingForLanguage(const aLanguage: string): TEncoding;
+var
+  i: Integer;
+begin
+  Result := wbLEncodingDefault;
+  if wbLEncoding.Find(aLanguage, i) then
+    Result := wbLEncoding.Objects[i] as TEncoding;
+end;
+
+var
+  _MBCSEncodings: TStringList;
+
+function wbMBCSEncoding(aCP: Cardinal): TEncoding;
+var
+  s: string;
+  i: Integer;
+begin
+  s := aCP.ToString;
+  if _MBCSEncodings.Find(s, i) then
+    Result := _MBCSEncodings.Objects[i] as TEncoding
+  else begin
+    Result := TMBCSEncoding.Create(aCP);
+    _MBCSEncodings.AddObject(s, Result);
+  end;
+end;
+
+function wbMBCSEncoding(const s: string): TEncoding; overload;
+var
+  CP: Cardinal;
+begin
+  if SameText(s, 'utf-8') or SameText(s, 'utf8') then
+    Result := TEncoding.UTF8
+  else begin
+    CP := StrToInt(s);
+    if CP = 65001 then
+      Result := TEncoding.UTF8
+    else
+      Result := wbMBCSEncoding(CP);
+  end;
+end;
+
+
 initialization
+  _MBCSEncodings := TStringList.Create;
+  _MBCSEncodings.CaseSensitive := False;
+  _MBCSEncodings.Sorted := True;
+  _MBCSEncodings.Duplicates := dupError;
+  _MBCSEncodings.OwnsObjects := True;
+
+  wbEncoding := wbMBCSEncoding(1252);
+  wbEncodingTrans := wbEncoding;
+  wbEncodingVMAD := TEncoding.UTF8;
+
+  wbLEncodingDefault := TEncoding.UTF8;
+
+  wbLEncoding := TStringList.Create;
+  wbLEncoding.CaseSensitive := False;
+  wbLEncoding.Sorted := True;
+  wbLEncoding.Duplicates := dupError;
+
   TwoPi := 2 * OnePi;
 
   if (DebugHook = 0) then
@@ -17326,5 +17639,7 @@ finalization
   FreeAndNil(wbRecordDefMap);
   wbRecordDefs := nil;
   wbContainerHandler := nil;
+  FreeAndNil(wbLEncoding);
+  FreeAndNil(_MBCSEncodings);
 end.
 
