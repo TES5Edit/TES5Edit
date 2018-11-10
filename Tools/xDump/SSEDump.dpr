@@ -26,6 +26,7 @@ uses
   SysUtils,
   Windows,
   Registry,
+  IniFiles,
   Zlibex,
   lz4,
   wbBSA,
@@ -691,9 +692,7 @@ var
   Error                       : string;
   Container                   : IwbContainerElementRef;
   i                           : Integer;
-  GroupRecord  : IwbGroupRecord;
-  ContainerRef : IwbContainerElementRef;
-  Chapter      : IwbChapter;
+  GroupRecord                 : IwbGroupRecord;
 begin
   Error := aElement.Check;
   Result := Error <> '';
@@ -1017,6 +1016,8 @@ begin
       tss := [tsPlugins, tsSaves];
       tms := [tmDump, tmExport];
 
+      wbLanguage := 'English';
+
       case wbGameMode of
         gmFNV: begin
           wbGameName := 'FalloutNV';
@@ -1048,7 +1049,6 @@ begin
         end;
         gmTES5: begin
           wbGameName := 'Skyrim';
-          wbLanguage := 'English';
           case wbToolSource of
             tsSaves:   DefineTES5Saves;
             tsPlugins: DefineTES5;
@@ -1057,7 +1057,6 @@ begin
         gmTES5VR: begin
           wbGameName := 'Skyrim';
           wbGameName2 := 'Skyrim VR';
-          wbLanguage := 'English';
           tss := [tsPlugins];
           case wbToolSource of
             //tsSaves:   DefineTES5Saves;
@@ -1247,15 +1246,60 @@ begin
         DumpForms.Free;
       end;
 
-      if wbFindCmdLineParam('l', s) and (wbGameMode in [gmTES5, gmTES5vr, gmSSE, gmFO4, gmFO4vr, gmFO76]) then
-        wbLanguage := s
-      else
+      if wbGameMode in [gmFO4, gmFO4vr, gmFO76] then
+        wbLanguage := 'En';
+
+      if wbGameMode <= gmTES5 then
+        wbAddDistinctLEncodings
+      else begin
+        wbLEncodingDefault := TEncoding.UTF8;
         case wbGameMode of
-          gmTES5, gmTES5vr, gmSSE:
-            wbLanguage := 'English';
-          gmFO4, gmFO4vr, gmFO76:
-            wbLanguage := 'En';
+        gmSSE, gmTES5VR:
+          wbLEncoding.AddObject('english', wbMBCSEncoding(1252))
+        else {FO4, FO76}
+          wbLEncoding.AddObject('en', wbMBCSEncoding(1252))
         end;
+      end;
+
+      if wbFindCmdLineParam('l', s) then begin
+        wbLanguage := s;
+        wbEncodingTrans := wbEncodingForLanguage(wbLanguage);
+        wbLocalizationHandler.Clear;
+      end else
+        if FileExists(wbTheGameIniFileName) then begin
+          with TMemIniFile.Create(wbTheGameIniFileName) do try
+            case wbGameMode of
+              gmTES4: case ReadInteger('Controls', 'iLanguage', 0) of
+                1: s := 'German';
+                2: s := 'French';
+                3: s := 'Spanish';
+                4: s := 'Italian';
+              else
+                s := 'English';
+              end;
+            else
+              s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
+            end;
+            if (s <> '') and not SameText(s, wbLanguage) then begin
+              wbLanguage := s;
+              wbEncodingTrans := wbEncodingForLanguage(wbLanguage);
+              wbLocalizationHandler.Clear;
+            end;
+          finally
+            Free;
+          end;
+        end;
+
+      if wbFindCmdLineParam('cp-general', s) then begin
+        wbEncoding :=  wbMBCSEncoding(s);
+        wbLocalizationHandler.Clear;
+      end;
+
+      if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then begin
+        wbEncodingTrans :=  wbMBCSEncoding(s);
+        wbLocalizationHandler.Clear;
+      end;
+
       if wbFindCmdLineParam('bts', s) then
         wbBytesToSkip := StrToInt64Def(s, wbBytesToSkip);
       if wbFindCmdLineParam('btd', s) then
