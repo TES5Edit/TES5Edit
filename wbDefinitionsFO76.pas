@@ -13811,7 +13811,10 @@ begin
     wbInteger(ANAM, 'Reverb Class', itU32, wbReverbClassEnum, cpNormal, True)
   ]);
 
-  wbRecord(GRAS, 'Grass', [
+  wbRecord(GRAS, 'Grass',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00008000}  15, 'Unknown 15'
+    ])), [
     wbEDID,
     wbOBNDReq,
     wbOPDSs,
