@@ -2265,7 +2265,8 @@ begin
         wbFormID('Param #2 - FormID'),
         wbStringMgefCode('Param #2 - Magic Effect Code', 4),
         wbFormIDCk('Param #2 - Actor Value', [ACVA])
-      ])
+      ]),
+      wbUnknown
     ], cpNormal, True, nil, -1, wbEFITAfterLoad);
 
   wbMagicSchoolEnum :=
