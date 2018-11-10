@@ -1,6 +1,6 @@
 # What's new in xEdit 3.3.3 BETA?
 
-## Improved languange support
+## Improved language support
 
 Module files for the supported games store their strings generally ANSI (one byte per character) strings. This requires that the correct codepage (mapping between characters and their byte values) is used. Previous versions of xEdit had very limited support for accessing module files that didn't use the same ANSI codepage as the system ANSI codepage of the local system.
 
@@ -8,8 +8,8 @@ xEdit no longer simply uses the the system ANSI codepage, but instead uses speci
 
 * General strings - These are values like file names, developer comments, internal names that are never visible to the player.
 * VMAD properties of type string or array of string - These only exist in Skyrim and later. They are strings stored in the module file, but in a distinctly different way then other strings.
-* Localized strings - These are are strings stored in external `.[i|d]strings` files when a module is localized.
-* Translatable strings - These are strings stored in the module file that a player of the game might get to see. For Oblivion, Fallout 3, and Fallout New Vegas, these are string fields explicitly marked as such in the xEdit record definitions. For Skyrim and newer, this also includes any localizable string (strings that will be stored in the external `.[i|d]strings` files when a module is localized) if the module is not actually localized.
+* Localized strings - These are are strings stored in external `.strings` files when a module is localized.
+* Translatable strings - These are strings stored in the module file that a player of the game might get to see. For Oblivion, Fallout 3, and Fallout New Vegas, these are string fields explicitly marked as such in the xEdit record definitions. For Skyrim and newer, this also includes any localizable string (strings that will be stored in the external `.strings` files when a module is localized) if the module is not actually localized.
 
 General strings now always explicitly use codepage 1252 (ANSI - Latin I). This can be overridden using `-cp-general:<codepage>` where `<codepage>` is either `utf8` or a codepage number. It should normally never be necessary to override this.
 
@@ -17,7 +17,7 @@ VMAD properties are always explicitly stored as UTF8. There is no way to overrid
 
 Localized strings are accessed based on the language name that's part of the filename of the `.strings` files.
 
-For Skyrim (not SE), the following languange names are recognized:
+For Skyrim (not SE), the following language names are recognized:
 
 * english - 1252
 * french - 1252
@@ -39,27 +39,27 @@ For Skyrim (not SE), the following languange names are recognized:
 * hungarian - 1250
 * arabic - 1256
 
-For SSE, the following languange names are recognized:
+For SSE, the following language names are recognized:
 
 * english - 1252
 
-For Fallout 4 and Fallout 76, the following languange names are recognized:
+For Fallout 4 and Fallout 76, the following language names are recognized:
 
 * en - 1252
 
-The fallback for unknown languanges is always UTF8. (SSE, FO4, and FO76 always use UTF8 for anything except english.)
+The fallback for unknown languages is always UTF8. (SSE, FO4, and FO76 always use UTF8 for anything except english.)
 
-xEdit will automatically use the correct codepage for localized strings, even when the languange is switched at runtime using the localization context menu.
+xEdit will automatically use the correct codepage for localized strings, even when the language is switched at runtime using the localization context menu.
 
 The codepage for these files can be overridden byte creating a text file with the same name as the `.strings` file, but the extension `.cpoverride` instead. e.g. `Skyrim_English.cpoverride`. The file should contain a single line with the desired codepage. 
 
-xEdit used to always default to "English" ("En" for Fallout 4) as language if not explicitly specified on the command line using `-l:<language>`. While it is still possible to use that switch to override the languange selection, xEdit will now attempt to get the correct languange from the `<game>.ini` file, from the iLanguage key for Oblivion, and the sLanguage key for any later games.
+xEdit used to always default to "English" ("En" for Fallout 4) as language if not explicitly specified on the command line using `-l:<language>`. While it is still possible to use that switch to override the language selection, xEdit will now attempt to get the correct language from the `<game>.ini` file, from the iLanguage key for Oblivion, and the sLanguage key for any later games.
 
 For localized strings, while this language setting affects the inital choice of which `.strings` files are being used for localized modules, this can be changed at runtime using the localization context menu.
 
-Translatable string use the same codepage as localized strings, but based on the language defined at program start (either from the `<game>.ini` or explicitly using `-l:<language>`) For games before Skyrim, the same list of languange names and codepages as listed above applies. Changing the language through the localization context menu after xEdit has started will *not* change the codepage being used for translatable (but not localized) strings.
+Translatable string use the same codepage as localized strings, but based on the language defined at program start (either from the `<game>.ini` or explicitly using `-l:<language>`) For games before Skyrim, the same list of language names and codepages as listed above applies. Changing the language through the localization context menu after xEdit has started will *not* change the codepage being used for translatable (but not localized) strings.
 
-The codepage used for translatable strings can be globally overridden (has priority over the languange selection) using the `-cp:<codepage>` or `-cp-trans:<codepage>` command line parameter where `<codepage>` is either `utf8` or a codepage number. `-cp` is supported for backward compatibility, `-cp-trans` is preferred.
+The codepage used for translatable strings can be globally overridden (has priority over the language selection) using the `-cp:<codepage>` or `-cp-trans:<codepage>` command line parameter where `<codepage>` is either `utf8` or a codepage number. `-cp` is supported for backward compatibility, `-cp-trans` is preferred.
 
 The codepage can further be overridden on a per module basis by creating a `.cpoverride` file with the same name as the module, like described above for `.strings` files. e.g. `Dragonborn.cpoverride`.
 
