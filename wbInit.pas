@@ -64,6 +64,7 @@ uses
   wbHelpers,
   wbInterface,
   wbImplementation,
+  wbLocalization,
   wbDefinitionsFNV,
   wbDefinitionsFNVSaves,
   wbDefinitionsFO3,
@@ -336,7 +337,7 @@ const
   sTempRegKey64           = '\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\';
 var
   s: string;
-  IniFile : TIniFile;
+  IniFile : TMemIniFile;
 begin
   wbModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
 
@@ -437,7 +438,7 @@ begin
 
     s := 'Saves\';
     if FileExists(wbTheGameIniFileName) then begin
-      IniFile := TIniFile.Create(wbTheGameIniFileName);
+      IniFile := TMemIniFile.Create(wbTheGameIniFileName);
       try
         s := IniFile.ReadString('General', 'SLocalSavePath', s);
       finally
@@ -662,6 +663,8 @@ begin
   if not (wbToolMode in [tmView, tmEdit]) then
     wbPrettyFormID := False;
 
+  wbLanguage := 'English';
+
   if isMode('FNV') then begin
     wbGameMode := gmFNV;
     wbAppName := 'FNV';
@@ -698,7 +701,6 @@ begin
     wbGameMode := gmTES5;
     wbAppName := 'TES5';
     wbGameName := 'Skyrim';
-    wbLanguage := 'English';
     ToolModes := wbAlwaysMode + [tmTranslate];
     ToolSources := [tsPlugins, tsSaves];
   end
@@ -708,7 +710,6 @@ begin
     wbAppName := 'TES5VR';
     wbGameName := 'Skyrim';
     wbGameName2 := 'Skyrim VR';
-    wbLanguage := 'English';
     ToolModes := wbAlwaysMode + [tmTranslate];
     ToolSources := [tsPlugins];
   end
@@ -718,7 +719,6 @@ begin
     wbAppName := 'SSE';
     wbGameName := 'Skyrim';
     wbGameName2 := 'Skyrim Special Edition';
-    wbLanguage := 'English';
     ToolModes := wbAlwaysMode + [tmTranslate];
     ToolSources := [tsPlugins, tsSaves];
   end
@@ -846,6 +846,18 @@ begin
     Exit(False);
   end;
 
+  if wbGameMode <= gmTES5 then
+    wbAddDistinctLEncodings
+  else begin
+    wbLEncodingDefault := TEncoding.UTF8;
+    case wbGameMode of
+    gmSSE, gmTES5VR:
+      wbLEncoding.AddObject('english', wbMBCSEncoding(1252))
+    else {FO4, FO76}
+      wbLEncoding.AddObject('en', wbMBCSEncoding(1252))
+    end;
+  end;
+
   if not ReadSettings then
     Exit(False);
 
@@ -918,6 +930,45 @@ begin
     wbSimpleRecords := False;
   end;
 
+  if wbFindCmdLineParam('l', s) then begin
+    wbLanguage := s;
+    wbEncodingTrans := wbEncodingForLanguage(wbLanguage);
+    wbLocalizationHandler.Clear;
+  end else
+    if FileExists(wbTheGameIniFileName) then begin
+      with TMemIniFile.Create(wbTheGameIniFileName) do try
+        case wbGameMode of
+          gmTES4: case ReadInteger('Controls', 'iLanguage', 0) of
+            1: s := 'German';
+            2: s := 'French';
+            3: s := 'Spanish';
+            4: s := 'Italian';
+          else
+            s := 'English';
+          end;
+        else
+          s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
+        end;
+        if (s <> '') and not SameText(s, wbLanguage) then begin
+          wbLanguage := s;
+          wbEncodingTrans := wbEncodingForLanguage(wbLanguage);
+          wbLocalizationHandler.Clear;
+        end;
+      finally
+        Free;
+      end;
+    end;
+
+  if wbFindCmdLineParam('cp-general', s) then begin
+    wbEncoding :=  wbMBCSEncoding(s);
+    wbLocalizationHandler.Clear;
+  end;
+
+  if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then begin
+    wbEncodingTrans :=  wbMBCSEncoding(s);
+    wbLocalizationHandler.Clear;
+  end;
+
   // definitions
   case wbGameMode of
     gmFNV: case wbToolSource of
@@ -950,14 +1001,6 @@ begin
       tsSaves:   DefineTES5Saves;
       tsPlugins: DefineTES5;
     end
-  end;
-
-  if wbFindCmdLineParam('l', s) then
-    wbLanguage := s;
-
-  if wbFindCmdLineParam('cp', s) then begin
-    if SameText(s, 'utf-8') then
-      wbStringEncoding := seUTF8;
   end;
 
   if FindCmdLineSwitch('speed') then
@@ -1021,6 +1064,8 @@ begin
       wbBuildRefs := False;
     end;
     tmTranslate: begin
+      if wbGameMode >= gmTES5 then
+        wbLoadBSAs := True; //needed for localization
       wbTranslationMode := True;
       wbHideUnused := True;
       wbHideIgnored := True;

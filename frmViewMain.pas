@@ -664,6 +664,7 @@ type
     ReachableBuild: Boolean;
     ReferencedBySortColumn: TListColumn;
 
+    EditInfoCacheLGeneration: Integer;
     EditInfoCache: TArray<string>;
     EditInfoCacheID: Pointer;
 
@@ -1952,7 +1953,7 @@ begin
     aMainRecord.ConflictThis := aConflictThis;
   end else begin
     NodeDatas := NodeDatasForMainRecord(aMainRecord);
-    if Length(NodeDatas) = 1 then begin
+    if (Length(NodeDatas) = 1) and not wbTranslationMode then begin
       aConflictAll := caOnlyOne;
       NodeDatas[0].ConflictAll := caOnlyOne;
       NodeDatas[0].ConflictThis := ctOnlyOne;
@@ -4185,7 +4186,8 @@ begin
     0: Result := caUnknown;
     1: begin
       Result := caOnlyOne;
-      aNodeDatas[0].ConflictThis := ctOnlyOne;
+      if not wbTranslationMode then
+        aNodeDatas[0].ConflictThis := ctOnlyOne;
     end;
   else
     Result := caNoConflict;
@@ -4238,10 +4240,14 @@ begin
           j := (Element as IwbContainer).AdditionalElementCount;
           if (i >= j) and (i-j < ElementCount) then
             with (Element.Def as IwbRecordDef).Members[i - j] do
-              if (wbTranslationMode and (ConflictPriority[nil] <> cpTranslate)) or
+              if (wbTranslationMode and (not (dfTranslatable in DefFlags))) or
                 (wbTranslationMode and (ConflictPriority[nil] = cpIgnore)) then
                 ConflictThis := ctIgnored;
         end;
+
+        if not Assigned(Element) then
+          if wbTranslationMode then
+            ConflictThis := ctIgnored;
 
         for j := Low(aNodeDatas) to High(aNodeDatas) do
           if ConflictThis > aNodeDatas[j].ConflictThis then
@@ -4541,6 +4547,12 @@ begin
     Exit;
   end;
 
+  AddMessage('Using language: ' + wbLanguage);
+  AddMessage('Using general string encoding: ' + wbEncoding.EncodingName);
+  AddMessage('Using translatable string encoding: ' + wbEncodingTrans.EncodingName);
+  if wbGameMode >= gmTES5 then
+    AddMessage('Using VMAD string encoding: ' + wbEncodingVMAD.EncodingName);
+
   i := Settings.ReadInteger(Name, 'pnlNavWidth', pnlNav.Width);
   if i < 50 then i := 50;
   if i >= ClientWidth then i := ClientWidth - 50;
@@ -4791,7 +4803,7 @@ begin
       case wbToolSource of
         tsSaves: { to be done };
         tsPlugins: with TfrmFileSelect.Create(nil) do try
-
+          {
           if (not wbEditAllowed) or wbTranslationMode then begin
             Caption := 'Skip these records:';
 
@@ -4823,6 +4835,7 @@ begin
               FreeAndNil(sl2);
             end;
           end;
+          }
         finally
           Free;
         end;
@@ -6477,6 +6490,10 @@ begin
       ConflictThis := aNodeDatas[i].ConflictThis;
   end;
 
+  if not HasElement then
+    if wbTranslationMode then
+      ConflictThis := ctIgnored;
+
   for i := Low(ActiveRecords) to High(ActiveRecords) do
     aNodeDatas[i].ConflictAll := ConflictAll;
 
@@ -6503,6 +6520,7 @@ begin
           else
             ChildNodeDatas := vstView.GetNodeData(aNode.Parent);
 
+          Element := nil;
           for i := Low(ActiveRecords) to High(ActiveRecords) do begin
             Element := ChildNodeDatas[i].Container;
             if Assigned(Element) then
@@ -6515,7 +6533,7 @@ begin
             j := Integer(aNode.Index);
             if (j >= i) and ((j-i) < ElementCount) then
               with (Element.Def as IwbRecordDef).Members[j - i] do begin
-                if (wbTranslationMode and (ConflictPriority[nil] <> cpTranslate)) or
+                if (wbTranslationMode and (not (dfTranslatable in DefFlags))) or
                   (wbTranslationMode and (ConflictPriority[nil] = cpIgnore)) then begin
                   ConflictThis := ctIgnored;
                   for k := Low(ActiveRecords) to High(ActiveRecords) do
@@ -6535,6 +6553,10 @@ begin
                 end;
               end;
           end;
+
+          if not Assigned(Element) then
+            if wbTranslationMode then
+              ConflictThis := ctIgnored;
 
           if ConflictThis = ctNotDefined then begin
             NodeDatas := vstView.GetNodeData(aNode.Parent);
@@ -13114,9 +13136,15 @@ begin
     wbEditAllowed and
     Assigned(Element);
 
+  mniNavCheckForCircularLeveledLists.Visible :=
+    mniNavCheckForErrors.Visible;
+
+
+
   mniNavSetVWDAuto.Visible := mniNavCheckForErrors.Visible and (wbGameMode = gmTES4);
   mniNavSetVWDAutoInto.Visible := mniNavCheckForErrors.Visible and (wbGameMode = gmTES4);
   mniNavRemoveIdenticalToMaster.Visible := mniNavCheckForErrors.Visible;
+  mniNavUndeleteAndDisableReferences.Visible := mniNavCheckForErrors.Visible;
   mniNavLOManagersDirtyInfo.Visible := mniNavCheckForErrors.Visible and (Length(LOOTPluginInfos) <> 0);
 
   mniNavRemove.Visible :=
@@ -13129,7 +13157,7 @@ begin
     (Length(EditableSelection(nil)) > 0);
 
   mniNavCompareTo.Visible := Supports(Element, IwbFile);
-  mniNavCreateDeltaPatch.Visible := Supports(Element, IwbFile);
+  mniNavCreateDeltaPatch.Visible := not wbTranslationMode and Supports(Element, IwbFile);
   mniNavAddMasters.Visible := mniNavCheckForErrors.Visible and Supports(Element, IwbFile);
   mniNavSortMasters.Visible := mniNavAddMasters.Visible;
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
@@ -13140,21 +13168,22 @@ begin
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;
 
-  if Supports(Element, IwbContainerElementRef, Container) then
-    if Container.IsElementEditable(nil) then begin
-      AddList := Container.GetAddList;
-      for i := Low(AddList) to High(AddList) do begin
-        MenuItem := TMenuItem.Create(mniNavAdd);
-        MenuItem.Caption := AddList[i];
-        MenuItem.OnClick := mniNavAddClick;
-        mniNavAdd.Add(MenuItem);
+  if not wbTranslationMode and wbEditAllowed then
+    if Supports(Element, IwbContainerElementRef, Container) then
+      if Container.IsElementEditable(nil) then begin
+        AddList := Container.GetAddList;
+        for i := Low(AddList) to High(AddList) do begin
+          MenuItem := TMenuItem.Create(mniNavAdd);
+          MenuItem.Caption := AddList[i];
+          MenuItem.OnClick := mniNavAddClick;
+          mniNavAdd.Add(MenuItem);
 
-        MenuItem := TMenuItem.Create(mniNavAdd);
-        MenuItem.Caption := AddList[i];
-        MenuItem.OnClick := mniNavAddClick;
-        pmuNavAdd.Items.Add(MenuItem);
+          MenuItem := TMenuItem.Create(mniNavAdd);
+          MenuItem.Caption := AddList[i];
+          MenuItem.OnClick := mniNavAddClick;
+          pmuNavAdd.Items.Add(MenuItem);
+        end;
       end;
-    end;
 
   mniNavAdd.Visible := mniNavAdd.Count > 0;
 
@@ -13178,6 +13207,8 @@ begin
       (MainRecord.Signature = 'LVSP');
   mniNavCopyAsSpawnRateOverride.Visible :=
     mniNavCopyAsWrapper.Visible;
+
+  mniNavCopyIdle.Visible := mniNavCheckForErrors.Visible and not mniNavAddMasters.Visible;
 
   mniNavCleanupInjected.Visible :=
     mniNavCopyAsOverride.Visible and
@@ -13284,6 +13315,7 @@ begin
     mniNavLogAnalyzer.Add(MenuItem);
   end;
 
+  mniNavCreateMergedPatch.Visible := not wbTranslationMode and wbEditAllowed;
 end;
 
 procedure TfrmMain.pmuPathPopup(Sender: TObject);
@@ -15646,6 +15678,12 @@ var
   CheckComboLink              : TwbCheckComboEditLink;
   {$ENDIF}
 begin
+  if EditInfoCacheLGeneration <> wbLocalizationHandler.Generation then begin
+    EditInfoCacheID := 0;
+    EditInfoCache := nil;
+    EditInfoCacheLGeneration := wbLocalizationHandler.Generation;
+  end;
+
   case aElement.EditType of
   {$IFNDEF LiteVersion}
     etDefault: begin
@@ -17159,6 +17197,33 @@ begin
       ElementGen := Element.ElementGeneration;
     if Assigned(Container) then
       ContainerGen := Container.ElementGeneration;
+
+    if wbLoaderDone and
+      wbTranslationMode and
+      Assigned(Element) and
+      (InitialStates * [ivsHidden, ivsHasChildren] = []) and
+      (Element.ElementType = etMainRecord) then begin
+
+      if ConflictThis = ctUnknown then begin
+        MainRecord := Element as IwbMainRecord;
+        ConflictLevelForMainRecord(MainRecord, ConflictAll, ConflictThis);
+        if MainRecord.IsInjected then
+          Include(NodeData.Flags, nnfInjected)
+        else
+          Exclude(NodeData.Flags, nnfInjected);
+        if MainRecord.IsNotReachable then
+          Include(NodeData.Flags, nnfNotReachable)
+        else
+          Exclude(NodeData.Flags, nnfNotReachable);
+        if MainRecord.ReferencesInjected then
+          Include(NodeData.Flags, nnfReferencesInjected)
+        else
+          Exclude(NodeData.Flags, nnfReferencesInjected);
+      end;
+
+      if ConflictThis < ctIdenticalToMaster then
+        Include(InitialStates, ivsHidden);
+    end;
   end;
 end;
 
