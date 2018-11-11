@@ -7549,7 +7549,7 @@ begin
     wbUnknown.IncludeFlag(dfNoReport)
   ]);
 
-  wbDEFL := wbFormIDCk(DEFL, 'Deflection Layer', [LAYR]);
+  wbDEFL := wbFormIDCk(DEFL, 'Default Layer', [LAYR]);
 
   wbBEVA := wbUnknown(BEVA);
   wbFEVA := wbFloat(FEVA);
@@ -11585,13 +11585,15 @@ begin
     wbEDID,
     wbOBNDReq,
     wbOPDSs,
+    wbDEFL,
     wbKeywords,
     wbInteger(IDLF, 'Flags', itU8, wbFlags([
       'Run in Sequence',
       'Unknown 1',
       'Do Once',
       'Unknown 3',
-      'Ignored by Sandbox'
+      'Ignored by Sandbox',
+      'Unknown 5'
     ]), cpNormal, False),
     wbInteger(IDLC, 'Animation Count', itU8, nil, cpBenign),
     wbFloat(IDLT, 'Idle Timer Setting', cpNormal, False),
