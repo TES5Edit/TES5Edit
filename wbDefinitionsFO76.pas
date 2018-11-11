@@ -6932,13 +6932,10 @@ begin
            wbInteger('Required Rank', itS32)
          ]),
     {08} wbFloat('Item Condition'),
-         wbUnion('Curve Table', wbDeciderFormVersion174, [
-           wbEmpty('Unused'),
-           wbStruct('Tables', [
-             wbFormIDCk('Min', [CURV]),
-             wbFormIDCk('Max', [CURV])
-           ])
-    ])
+         wbStruct('Curve Tables', [
+           wbFormIDCk('Min', [CURV]),
+           wbFormIDCk('Max', [CURV])
+         ])
   ]);
 
   wbCNTO :=
