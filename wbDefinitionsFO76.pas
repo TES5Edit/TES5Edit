@@ -9953,8 +9953,11 @@ begin
     wbFormIDCk(FNAM, 'Faction', [FACT])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
+  wbMIID := wbUnknown(MIID);
+
   wbRecord(ALCH, 'Ingestible',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00040000} 18, 'Unknown 18',
       {0x20000000} 29, 'Medicine'
     ])), [
     wbEDID,
@@ -9994,14 +9997,18 @@ begin
                 {0x00004000} 'Unknown 15',
                 {0x00008000} 'Unknown 16',
                 {0x00010000} 'Medicine',
-                {0x00020000} 'Poison'
+                {0x00020000} 'Poison',
+                {0x00040000} 'Unknown 19'
       ])),
-      wbFormID('Addiction'),
+      wbFormIDCk('Addiction', [SPEL, NULL]),
       wbFloat('Addiction Chance'),
-      wbFormIDCk('Sound - Consume', [SNDR, NULL])
+      wbFormIDCk('Sound - Consume', [SNDR, NULL]),
+      wbFormIDCk('Health', [CURV, NULL]),
+      wbFormIDCk('Spoiled', [ALCH, NULL])
     ], cpNormal, True),
     wbLStringKC(DNAM, 'Addiction Name', 0, cpTranslate),
-    wbEffectsReq
+    wbEffectsReq,
+    wbMIID
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   wbRecord(AMMO, 'Ammunition',
@@ -11175,8 +11182,6 @@ begin
     ], cpNormal, True),
     wbMODL
   ]);
-
-  wbMIID := wbUnknown(MIID);
 
   wbRecord(ENCH, 'Object Effect', [
     wbEDID,
