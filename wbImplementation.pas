@@ -417,6 +417,9 @@ type
     function GetFound: Boolean;
     procedure SetFound(const aValue: Boolean);
 
+    function GetLocalized: TwbTriBool;
+    procedure SetLocalized(const aValue: TwbTriBool);
+
     function CopyInto(const aFile: IwbFile; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string): IwbElement;
 
     function BeginUpdate: Integer;
@@ -1865,8 +1868,8 @@ begin
   Result := CompareStr(SortKey1, SortKey2);
 
   if Result = 0 then begin
-    SortKey1 := IwbElement(Item1).Value;
-    SortKey2 := IwbElement(Item1).Value;
+    SortKey1 := IwbElement(Item1).EditValue;
+    SortKey2 := IwbElement(Item1).EditValue;
 
     Result := CompareStr(SortKey1, SortKey2);
 
@@ -2591,7 +2594,7 @@ begin
     for i := Low(flMasters) to High(flMasters) do begin
       Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
       Assert(Assigned(Rec));
-      Assert(SameText(Rec.Value, flMasters[i].FileName));
+      Assert(SameText(Rec.EditValue, flMasters[i].FileName));
       MasterFiles[i].SortOrder := i;
     end;
 
@@ -2638,7 +2641,7 @@ begin
       for i := Low(flMasters) to High(flMasters) do begin
         Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
         Assert(Assigned(Rec));
-        Assert(SameText(Rec.Value, flMasters[i].FileName));
+        Assert(SameText(Rec.EditValue, flMasters[i].FileName));
       end;
 
       if Length(Old) > 0 then
@@ -3561,8 +3564,8 @@ begin
         Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
         if not Assigned(Rec) then
           raise Exception.CreateFmt('Unexpected error reading master list for file "%s"', [flFileName]);
-        if not wbStripEmptyMasters or (Trim(Rec.Value) <> '') then
-          aMasters.Add(Rec.Value);
+        if not wbStripEmptyMasters or (Trim(Rec.EditValue) <> '') then
+          aMasters.Add(Rec.EditValue);
       end;
   end else
     for i := Low(flMasters) to High(flMasters) do
@@ -4140,8 +4143,8 @@ begin
         Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
         if not Assigned(Rec) then
           raise Exception.CreateFmt('Unexpected error reading master list for file "%s"', [flFileName]);
-        if not wbStripEmptyMasters or (Trim(Rec.Value) <> '') then
-          AddMaster(Rec.Value);
+        if not wbStripEmptyMasters or (Trim(Rec.EditValue) <> '') then
+          AddMaster(Rec.EditValue);
       end;
 
     if flCompareTo <> '' then begin
@@ -4179,7 +4182,7 @@ begin
     flRecordsCount := 0;
     HEDR := Header.RecordBySignature['HEDR'];
     if Assigned(HEDR) then begin
-      SetLength(flRecords, StrToInt(HEDR.Elements[1].Value));
+      SetLength(flRecords, Int64(HEDR.Elements[1].NativeValue));
     end;
 
     flProgress('Header processed. Expecting ' + IntToStr(Length(flRecords)) + ' records');
@@ -4430,7 +4433,7 @@ begin
       for i := Low(flMasters) to High(flMasters) do begin
         Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
         Assert(Assigned(Rec));
-        Assert(SameText(Rec.Value, flMasters[i].FileName));
+        Assert(SameText(Rec.EditValue, flMasters[i].FileName));
         OldList.AddObject(flMasters[i].FileName, Pointer(i));
         MasterFiles[i].SortOrder := i;
       end;
@@ -7200,8 +7203,8 @@ begin
   if Supports(aElement, IwbSubRecord, SubRecord) then begin
     NotRelevant := False;
     case Cardinal(SubRecord.Signature) of
-      EDID: mrEditorID := SubRecord.Value;
-      FULL: mrFullName := SubRecord.Value;
+      EDID: mrEditorID := SubRecord.EditValue;
+      FULL: mrFullName := SubRecord.EditValue;
       NAME: Exclude(mrStates, mrsBaseRecordChecked);
     else
       NotRelevant := True;
@@ -7825,9 +7828,9 @@ begin
       dtSubRecord       : begin
         (CurrentRec as IwbSubRecordInternal).SetDef(CurrentDef as IwbSubRecordDef);
         if CurrentRec.Signature = 'EDID' then
-          mrEditorID := CurrentRec.Value
+          mrEditorID := CurrentRec.EditValue
         else if CurrentRec.Signature = 'FULL' then
-          mrFullName := CurrentRec.Value
+          mrFullName := CurrentRec.EditValue
         else if (CurrentRec.Signature = 'NAME') and mrDef.IsReference then begin
           mrBaseRecordID := TwbFormID.FromCardinal(CurrentRec.NativeValue);
           Include(mrStates, mrsBaseRecordChecked);
@@ -8639,7 +8642,7 @@ begin
       SelfRef := Self as IwbContainerElementRef;
       if Supports(GetElementByName('Model'), IwbContainerElementRef, ModelCnt) then
         if Supports(ModelCnt.RecordBySignature['MODL'], IwbContainerElementRef, MODL) then begin
-          s := Trim(StringReplace(MODL.Value, '/', '\', [rfReplaceAll]));
+          s := Trim(StringReplace(MODL.EditValue, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
             s := 'meshes\'+ s;//
             if Length(wbContainerHandler.OpenResource(s)) > 0 then
@@ -8780,7 +8783,7 @@ begin
       SelfRef := Self as IwbContainerElementRef;
       if Supports(GetElementByName('Model'), IwbContainerElementRef, ModelCnt) then
         if Supports(ModelCnt.RecordBySignature['MODL'], IwbContainerElementRef, MODL) then begin
-          s := Trim(StringReplace(MODL.Value, '/', '\', [rfReplaceAll]));
+          s := Trim(StringReplace(MODL.EditValue, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
             s := 'textures\trees\billboards'+ChangeFileExt(s, '.dds');
             if Length(wbContainerHandler.OpenResource(s)) > 0 then
@@ -8791,7 +8794,7 @@ begin
       SelfRef := Self as IwbContainerElementRef;
       if Supports(GetElementByName('Model'), IwbContainerElementRef, ModelCnt) then
         if Supports(ModelCnt.RecordBySignature['MODL'], IwbContainerElementRef, MODL) then begin
-          s := Trim(StringReplace(MODL.Value, '/', '\', [rfReplaceAll]));
+          s := Trim(StringReplace(MODL.EditValue, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
             s := 'meshes\'+ChangeFileExt(s, '_far.nif');
             if Length(wbContainerHandler.OpenResource(s)) > 0 then
@@ -9949,7 +9952,7 @@ begin
     if (mrsQuickInitDone in mrStates) or (csInitOnce in cntStates) then begin
       FULLRec := GetRecordBySignature('FULL');
       if Assigned(FULLRec) then
-        mrFullName := FULLRec.Value;
+        mrFullName := FULLRec.EditValue;
     end;
   end;
   mrLGeneration := wbLocalizationHandler.Generation
@@ -14976,6 +14979,16 @@ begin
   Result := nil;
 end;
 
+function TwbElement.GetLocalized: TwbTriBool;
+begin
+  if esLocalized in eStates then
+    Result := tbTrue
+  else if esNotLocalized in eStates then
+    Result := tbFalse
+  else
+    Result := tbUnknown;
+end;
+
 function TwbElement.GetMemoryOrder: Integer;
 begin
   Result := eMemoryOrder;
@@ -15475,6 +15488,24 @@ begin
     SetModified(aValue);
   finally
     wbEndInternalEdit;
+  end;
+end;
+
+procedure TwbElement.SetLocalized(const aValue: TwbTriBool);
+begin
+  case aValue of
+    tbUnknown: begin
+      Exclude(eStates, esLocalized);
+      Exclude(eStates, esNotLocalized);
+    end;
+    tbFalse: begin
+      Exclude(eStates, esLocalized);
+      Include(eStates, esNotLocalized);
+    end;
+    tbTrue: begin
+      Include(eStates, esLocalized);
+      Exclude(eStates, esNotLocalized);
+    end;
   end;
 end;
 
@@ -19325,9 +19356,9 @@ begin
 
   if Assigned(MasterFiles) then
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
-      fPath := wbDataPath + MasterFiles[i].Value;
+      fPath := wbDataPath + MasterFiles[i].EditValue;
       if FileExists(fPath) then
-        aMasters.Add(MasterFiles[i].Value)
+        aMasters.Add(MasterFiles[i].EditValue)
     end;
 
 end;
@@ -19419,7 +19450,7 @@ begin
 
   if Assigned(MasterFiles) then
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
-      fPath := wbDataPath + MasterFiles[i].Value;
+      fPath := wbDataPath + MasterFiles[i].EditValue;
       if FileExists(fPath) then
         AddMaster(fPath)
       else if wbUseFalsePlugins then begin
@@ -19427,7 +19458,7 @@ begin
         if not FileExists(fPath) then
           fPath := ExtractFilePath(wbProgramPath) + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
         if FileExists(fPath) then
-          AddMaster(SelectTemporaryCopy(fPath, MasterFiles[i].Value), True);
+          AddMaster(SelectTemporaryCopy(fPath, MasterFiles[i].EditValue), True);
       end;
     end;
 
