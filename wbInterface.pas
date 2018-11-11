@@ -166,6 +166,7 @@ var
   wbRequireCtrlForDblClick : Boolean  = False;
   wbFocusAddedElement      : Boolean  = True;
   wbCheckNonCPNChars       : Boolean  = True;
+  wbShowStringBytes        : Boolean  = False;
 
   wbGlobalModifedGeneration : UInt64;
 
@@ -623,6 +624,8 @@ type
     esModifiedUpdated,
     esSorting,
     esFound,
+    esLocalized,
+    esNotLocalized,
 
     //the following entries must match TwbElementErrorType:
     esReportedErrorReading,
@@ -750,6 +753,12 @@ type
     rmSetInternal
   );
 
+  TwbTriBool = (
+    tbUnknown,
+    tbFalse,
+    tbTrue
+  );
+
   IwbElement = interface
     ['{F4B4637D-C794-415F-B5C7-587EAA4095B3}']
 
@@ -855,6 +864,9 @@ type
 
     function GetFound: Boolean;
     procedure SetFound(const aValue: Boolean);
+
+    function GetLocalized: TwbTriBool;
+    procedure SetLocalized(const aValue: TwbTriBool);
 
     property Found: Boolean
       read GetFound
@@ -980,6 +992,10 @@ type
 
     property TreeBranch: Boolean
       read GetTreeBranch;
+
+    property Localized: TwbTriBool
+      read GetLocalized
+      write SetLocalized;
   end;
 
   IwbRecord = interface;
@@ -11985,7 +12001,8 @@ function TwbStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement:
 var
   lLen, Len : NativeUInt;
   b         : TBytes;
-  i         : Integer;
+  i, j      : Integer;
+  s         : string;
 begin
   Result := '';
   Len := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
@@ -12012,8 +12029,41 @@ begin
 
   if Len > 0 then begin
     b := BytesOf(aBasePtr, Len);
-    if aTransformType <> ttCheck then
+    try
       Result := bsdGetEncoding(aElement).GetString(b);
+      if aTransformType = ttCheck then
+        Result := '';
+      {
+      i := Length(Result);
+      j := i;
+      while (i > 0) and (Result[i] = #0) do
+        Dec(i);
+      if i <> j then
+        SetLength(Result, i);
+      }
+    except
+      on E: Exception do begin
+        Result := '';
+        if aTransformType <> ttCheck then
+          for i := Low(b) to High(b) do begin
+            Result := Result + IntToHex64(b[i], 2);
+            if i < High(b) then
+              Result := Result + ' ';
+          end;
+
+        if aTransformType = ttToString then
+          Result := Result + ' <Error: ';
+
+        if aTransformType in [ttToString, ttCheck] then
+          Result := Result + Format('Can''t read string: [%s] %s', [E.ClassName, E.Message]);
+
+        if aTransformType = ttToString then
+          Result := Result + '>';
+
+        if aTransformType <> ttCheck then
+          wbProgress('[%s] <Error reading string: [%s] %s>', [aElement.FullPath, E.ClassName, E.Message]);
+      end;
+    end;
     if wbCheckNonCPNChars then
       if aTransformType in [ttToString, ttCheck] then
         if not (dfTranslatable in defFlags) then
@@ -12039,8 +12089,21 @@ begin
 end;
 
 function TwbStringDef.TransformString(const s: string; aTransformType: TwbStringTransformType; const aElement: IwbElement): string;
+var
+  i: Integer;
 begin
   Result := s;
+  if wbShowStringBytes then begin
+    if aTransformType = ttToString then begin
+      Result := Result + ' [';
+      for i := 1 to Length(s) do begin
+        Result := Result + IntToHex(Ord(s[i]), 4);
+        if i < Length(s) then
+          Result := Result + ' ';
+      end;
+      Result := Result + ']';
+    end;
+  end;
 end;
 
 { TwbFloatDef }
@@ -15677,37 +15740,64 @@ begin
   if aValue.StartsWith(sStringID) then begin
     aElement.RequestStorageChange(aBasePtr, aEndPtr, SizeOf(Cardinal));
     PCardinal(aBasePtr)^ := StrToInt64Def('$' + Copy(aValue, Succ(Length(sStringID)), Length(aValue)), 0);
+    aElement.Localized := tbTrue;
     Exit;
   end;
 
   if aElement._File.IsLocalized then
-    if wbLocalizationHandler.NoTranslate then
+    if wbLocalizationHandler.NoTranslate then begin
       // assign a string when delocalizing and NoTranslate is true
-      inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue, aTransformType)
-    else begin
+      inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue, aTransformType);
+      aElement.Localized := tbFalse;
+    end else begin
       // set localized string's value
       ID := wbLocalizationHandler.SetValue(PCardinal(aBasePtr)^, aElement, aValue);
       aElement.RequestStorageChange(aBasePtr, aEndPtr, SizeOf(Cardinal));
       PCardinal(aBasePtr)^ := ID;
+      aElement.Localized := tbTrue;
       //raise Exception.Create('Can not assign to a localized string')
     end
-  else
+  else begin
     inherited FromStringNative(aBasePtr, aEndPtr, aElement, aValue, aTransformType);
+    aElement.Localized := tbFalse;
+  end;
 end;
 
 function TwbLStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Localized : Boolean;
+  _File     : IwbFile;
 begin
+  case aElement.Localized of
+    tbFalse: Localized := False;
+    tbTrue: Localized := True;
+  else
+    _File := aElement._File;
+    Localized := Assigned(_File) and _File.IsLocalized;
+  end;
+
   if Assigned(aBasePtr) and Assigned(aEndPtr) and (NativeUInt(aBasePtr) >= NativeUInt(aEndPtr)) then
     Result := 0
-  else if Assigned(aBasePtr) and Assigned(aEndPtr) and Assigned(aElement._File) and aElement._File.IsLocalized then
+  else if Assigned(aBasePtr) and Assigned(aEndPtr) and Localized then
     Result := Min(4, NativeUInt(aEndPtr) - NativeUInt(aBasePtr))
   else
     Result := inherited GetSize(aBasePtr, aEndPtr, aElement);
 end;
 
 function TwbLStringDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Localized : Boolean;
+  _File     : IwbFile;
 begin
-  if Assigned(aElement._File) and aElement._File.IsLocalized then
+  case aElement.Localized of
+    tbFalse: Localized := False;
+    tbTrue: Localized := True;
+  else
+    _File := aElement._File;
+    Localized := Assigned(_File) and _File.IsLocalized;
+  end;
+
+  if Localized then
     Result := 4
   else
     Result := inherited GetDefaultSize(aBasePtr, aEndPtr, aElement);
@@ -15715,11 +15805,19 @@ end;
 
 function TwbLStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
 var
-  _File : IwbFile;
-  Found : Boolean;
+  Localized : Boolean;
+  _File     : IwbFile;
+  Found     : Boolean;
 begin
-  _File := aElement._File;
-  if Assigned(_File) and _File.IsLocalized then begin
+  case aElement.Localized of
+    tbFalse: Localized := False;
+    tbTrue: Localized := True;
+  else
+    _File := aElement._File;
+    Localized := Assigned(_File) and _File.IsLocalized;
+  end;
+
+  if Localized then begin
     if (NativeUInt(aEndPtr) - NativeUInt(aBasePtr)) <> 4 then begin
       if aTransformType = ttCheck then
         Result := 'lstring ID is not Int32'

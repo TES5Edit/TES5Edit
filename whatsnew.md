@@ -1,3 +1,11 @@
+# What's new in xEdit 3.3.4 BETA?
+
+## Bugfixes
+
+The following reported issues have been fixed:
+
+* #594 - "Localize plugin" function is broken
+
 # What's new in xEdit 3.3.3 BETA?
 
 ## Improved language support
