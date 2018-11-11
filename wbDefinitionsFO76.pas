@@ -18251,14 +18251,17 @@ begin
     wbEDID,
     wbOBND,
     wbPTRN,
-    wbUnknown(DATA),
+    wbStruct(DATA, 'Data', [
+      wbByteArray('Unknown', 4),
+      wbFloat('Unknown')
+    ]),
     wbFULL,
     wbMODL,
     wbDESC,
-    wbFormID(PPRL, 'Roll Chances'),
-    wbFormID(PPFC, 'Gold Roll Chances'),
-    wbFormID(PPCL, 'Rarity Tables'),
-    wbFormID(PPLO, 'Level Offsets')
+    wbFormIDCk(PPRL, 'Roll Chances', [FLST]),
+    wbFormIDCk(PPFC, 'Gold Roll Chances', [FLST]),
+    wbFormIDCk(PPCL, 'Rarity Tables', [FLST]),
+    wbFormIDCk(PPLO, 'Level Offsets', [FLST])
   ]);
 
   wbRecord(PACH, 'Power Armor Chassis', [
