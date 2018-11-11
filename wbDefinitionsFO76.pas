@@ -6376,7 +6376,8 @@ begin
       wbByteColors('Z-')
     ]),
     wbByteColors('Specular'),
-    wbFloat('Scale')
+    wbUnknown
+    //wbFloat('Scale')
   ])
 end;
 
@@ -17513,6 +17514,16 @@ begin
       wbFormIDCK('EarlySunset', [GDRY, NULL]),
       wbFormIDCK('LateSunset', [GDRY, NULL])
     ]),
+    wbStruct(HNAM, 'Unknown', [
+      wbFormIDCK('Sunrise', [VOLI, NULL]),
+      wbFormIDCK('Day', [VOLI, NULL]),
+      wbFormIDCK('Sunset', [VOLI, NULL]),
+      wbFormIDCK('Night', [VOLI, NULL]),
+      wbFormIDCK('EarlySunrise', [VOLI, NULL]),
+      wbFormIDCK('LateSunrise', [VOLI, NULL]),
+      wbFormIDCK('EarlySunset', [VOLI, NULL]),
+      wbFormIDCK('LateSunset', [VOLI, NULL])
+    ]),
     wbRStruct('Directional Ambient Lighting Colors', [
       wbAmbientColors(DALC, 'Sunrise'),
       wbAmbientColors(DALC, 'Day'),
@@ -17534,7 +17545,8 @@ begin
       wbFloat('Unknown')
     ], cpNormal, False, nil, 3),
     wbFloat(VNAM, 'Volatility Mult'),
-    wbFloat(WNAM, 'Visibility Mult')
+    wbFloat(WNAM, 'Visibility Mult'),
+    wbFloat(XNAM)
   ]);
 end;
 
