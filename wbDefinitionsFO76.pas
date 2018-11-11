@@ -1412,7 +1412,7 @@ begin
     Element := MainRecord.ElementBySignature[QSTI]
   else if MainRecord.Signature = SCEN then
     Element := MainRecord.ElementBySignature[PNAM]
-  else if MainRecord.Signature = PACK then
+  else if (MainRecord.Signature = PACK) or (MainRecord.Signature = TERM) then
     Element := MainRecord.ElementBySignature[QNAM]
   else if (MainRecord.Signature = INFO) then begin
     // get DIAL for INFO
@@ -1610,7 +1610,7 @@ function wbCTDAParamQuestOverlay(aInt: Int64; const aElement: IwbElement; aType:
       Element := MainRecord.ElementBySignature[PNAM];
       if Assigned(Element) then
         Result := Element.NativeValue;
-    end else if MainRecord.Signature = PACK then begin
+    end else if (MainRecord.Signature = PACK) or (MainRecord.Signature = TERM) then begin
       Element := MainRecord.ElementBySignature[QNAM];
       if Assigned(Element) then
         Result := Element.NativeValue;
@@ -2309,7 +2309,7 @@ begin
     Result := wbAliasToStr(aInt, Container, aType)
   else if MainRecord.Signature = SCEN then
     Result := wbAliasToStr(aInt, Container.ElementBySignature['PNAM'], aType)
-  else if MainRecord.Signature = PACK then
+  else if (MainRecord.Signature = PACK) or (MainRecord.Signature = TERM) then
     Result := wbAliasToStr(aInt, Container.ElementBySignature['QNAM'], aType)
   else if MainRecord.Signature = INFO then begin
     // get DIAL for INFO
@@ -4561,7 +4561,7 @@ begin
           Element := MainRecord.ElementBySignature[QSTI]
         else if MainRecord.Signature = SCEN then
           Element := MainRecord.ElementBySignature[PNAM]
-        else if MainRecord.Signature = PACK then
+        else if (MainRecord.Signature = PACK) or (MainRecord.Signature = TERM) then
           Element := MainRecord.ElementBySignature[QNAM]
         else if (MainRecord.Signature = INFO) then begin
           // get DIAL for INFO
@@ -4624,7 +4624,7 @@ begin
           Element := MainRecord.ElementBySignature[QSTI]
         else if MainRecord.Signature = SCEN then
           Element := MainRecord.ElementBySignature[PNAM]
-        else if MainRecord.Signature = PACK then
+        else if (MainRecord.Signature = PACK) or (MainRecord.Signature = TERM) then
           Element := MainRecord.ElementBySignature[QNAM]
         else if (MainRecord.Signature = INFO) then begin
           // get DIAL for INFO
@@ -18073,7 +18073,7 @@ begin
       ], []),
       cpNormal, False, nil, wbTERMDisplayItemsAfterSet
     ),
-    wbFormIDCk(QNAM, 'Unknown', [QUST]),
+    wbFormIDCk(QNAM, 'Quest', [QUST]),
     wbUnknown(TDAT),
     wbInteger(ISIZ, 'Count', itU32, nil, cpBenign),
     wbRArray('Menu Items',
@@ -18312,9 +18312,9 @@ begin
     wbOBND,
     wbPTRN,
     wbStruct(DATA, 'Data', [
-      wbByteArray('Unknown', 4),
-      wbFloat('Unknown')
-    ]),
+      wbInteger('Value', itU32),
+      wbFloat('Weight')
+    ], cpNormal, True, nil, 1),
     wbFULL,
     wbMODL,
     wbDESC,
@@ -18327,9 +18327,12 @@ begin
   wbRecord(PACH, 'Power Armor Chassis', [
     wbEDID,
     wbOBND,
-    wbUnknown(DATA),
+    wbStruct(DATA, 'Data', [
+      wbInteger('Value', itU32),
+      wbFloat('Weight')
+    ], cpNormal, True, nil, 1),
     wbFULL,
-    wbFormID(PAEQ)
+    wbFormIDCk(PAEQ, 'Unknown', [LVLI])
   ]);
 
   wbSpecialTypeEnum := wbEnum([
