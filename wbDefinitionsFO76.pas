@@ -3432,6 +3432,11 @@ begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 174);
 end;
 
+function wbDeciderFormVersion181(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 181);
+end;
+
 
 function wbAECHDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -5244,6 +5249,17 @@ begin
   MainRecord := aElement.ContainingMainRecord;
   if Assigned(MainRecord) then
     Result := (Cardinal(MainRecord.ElementNativeValues['ACBS\Use Template Actors']) shr 12 and 1) = 0
+  else
+    Result := False;
+end;
+
+function wbActorTemplatesUseTemplate13(const aElement: IwbElement): Boolean;
+var
+  MainRecord : IwbMainRecord;
+begin
+  MainRecord := aElement.ContainingMainRecord;
+  if Assigned(MainRecord) then
+    Result := (Cardinal(MainRecord.ElementNativeValues['ACBS\Use Template Actors']) shr 13 and 1) = 0
   else
     Result := False;
 end;
@@ -14869,7 +14885,8 @@ begin
         {0x0200} 'Script',
         {0x0400} 'Def Pack List',
         {0x0800} 'Attack Data',
-        {0x1000} 'Keywords'
+        {0x1000} 'Keywords',
+        {0x2000} 'Unknown 13'
       ])),
       wbInteger('Bleedout Override', itU16),
       wbByteArray('Unknown', 2)
@@ -14898,8 +14915,9 @@ begin
       wbFormIDCk('Script', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate9),
       wbFormIDCk('Def Pack List', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate10),
       wbFormIDCk('Attack Data', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate11),
-      wbFormIDCk('Keywords', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate12)
-    ], cpNormal, True, wbActorTemplatesUseTemplateAny),
+      wbFormIDCk('Keywords', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate12),
+      wbFormIDCk('Unknown', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate13)
+    ], cpNormal, False, wbActorTemplatesUseTemplateAny, 13),
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, nil{wbActorTemplateUseTraits}),
     wbSPCT,
     wbSPLOs,
@@ -14918,8 +14936,11 @@ begin
     wbRArrayS('Perks',
       wbStructSK(PRKR, [0], 'Perk', [
         wbFormIDCk('Perk', [PERK]),
-        wbInteger('Rank', itU8)
-      ]), cpNormal, False, nil, wbPRKRsAfterSet
+        wbUnion('', wbDeciderFormVersion181, [
+          wbInteger('Rank', itU8),
+          wbEmpty('Unused')
+        ])
+      ]) ,cpNormal, False, nil, wbPRKRsAfterSet
     ),
     wbPRPS,
     wbFTYP,
@@ -14934,23 +14955,20 @@ begin
     wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
     wbFULL,
     wbLStringKC(SHRT, 'Short Name', 0, cpTranslate),
-    wbByteArray(DATA, 'Marker'),
+    wbEmpty(DATA, 'Marker'),
     wbStruct(DNAM, '', [
       wbInteger('Unknown', itU16),
       wbInteger('Unknown', itU16),
       wbInteger('Far Away Model Distance', itU16),
       wbInteger('Geared Up Weapons', itU16)
     ]),
-    wbRArrayS('Head Parts', wbFormIDCk(PNAM, 'Head Part', [HDPT]), cpNormal, False, nil, nil, nil{wbActorTemplateUseModelAnimation}),
-    wbFormIDCk(HCLF, 'Hair Color', [CLFM], False, cpNormal, False),
-    wbFormIDCk(BCLF, 'Facial Hair Color', [CLFM], False, cpNormal, False),
     wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False),
     wbFormIDCk(GNAM, 'Gift Filter', [FLST], False, cpNormal, False),
+    wbFormIDCk(HCLF, 'Hair Color (old FormVersion only)', [CLFM], False, cpNormal, False), // in a few records, it's still up here
     wbUnknown(NAM5, cpNormal, True),
     wbFloat(NAM6, 'Height Min', cpNormal, True),
-    wbFloat(NAM7, 'Unused', cpNormal, True),
     wbFloat(NAM4, 'Height Max'),
-    wbStruct(MWGT, 'Weight', [
+    wbStruct(MWGT, 'Weight (old FormVersion only)', [
        wbFloat('Thin'),
        wbFloat('Muscular'),
        wbFloat('Fat')
@@ -14974,6 +14992,14 @@ begin
     wbFormIDCk(SOFT, 'Sleeping Outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(DPLT, 'Default Package List', [FLST], False, cpNormal, False),
     wbFormIDCk(CRIF, 'Crime Faction', [FACT], False, cpNormal, False),
+    wbRArrayS('Head Parts', wbFormIDCk(PNAM, 'Head Part', [HDPT]), cpNormal, False, nil, nil, nil{wbActorTemplateUseModelAnimation}),
+    wbFormIDCk(HCLF, 'Hair Color', [CLFM], False, cpNormal, False),
+    wbFormIDCk(BCLF, 'Facial Hair Color', [CLFM], False, cpNormal, False),
+    wbStruct(MWGT, 'Weight', [
+       wbFloat('Thin'),
+       wbFloat('Muscular'),
+       wbFloat('Fat')
+    ]),
     wbFormIDCk(FTST, 'Head Texture', [TXST], False, cpNormal, False),
     wbStruct(QNAM, 'Texture lighting', [
       wbFloat('Red', cpNormal, True, 255, 0),
@@ -15022,7 +15048,10 @@ begin
       ], [])
     ),
     wbFloat(FMIN, 'Facial Morph Intensity'),
-    wbATTX
+    wbATTX,
+    wbFormIDCk(CVT0, 'Curve Table', [CURV]),
+    wbFormIDCk(CVT2, 'Curve Table', [CURV]),
+    wbFormIDCk(CVT3, 'Curve Table', [CURV])
   ], False, nil, cpNormal, False, wbNPCAfterLoad, wbNPCAfterSet);
 
   wbPKDTSpecificFlagsUnused := False;
@@ -18611,7 +18640,7 @@ end;
 
 procedure DefineFO76;
 begin
-  wbNexusModsUrl := '';
+  wbNexusModsUrl := 'https://www.nexusmods.com/fallout76/mods/30';
   {if wbToolMode = tmLODgen then
     wbNexusModsUrl := '';}
   DefineFO76a;
