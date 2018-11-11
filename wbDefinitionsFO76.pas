@@ -11674,6 +11674,7 @@ begin
     wbEDID,
     wbOBNDReq,
     wbOPDSs,
+    wbDEFL,
     wbFULL,
     wbMODL,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD, NULL]),
