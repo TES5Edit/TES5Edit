@@ -319,6 +319,7 @@ const
   CVT1 : TwbSignature = 'CVT1'; { New To Fallout 76 }
   CVT2 : TwbSignature = 'CVT2'; { New To Fallout 76 }
   CVT3 : TwbSignature = 'CVT3'; { New To Fallout 76 }
+  CVT4 : TwbSignature = 'CVT4'; { New To Fallout 76 }
   DALC : TwbSignature = 'DALC'; { New to Skyrim }
   DAMA : TwbSignature = 'DAMA'; { New to Fallout 4 }
   DAMC : TwbSignature = 'DAMC'; { New to Fallout 4 }
@@ -574,6 +575,7 @@ const
   MOD4 : TwbSignature = 'MOD4';
   MOD5 : TwbSignature = 'MOD5'; { New to Skyrim }
   MODC : TwbSignature = 'MODC'; { New to Fallout 4 }
+  MODD : TwbSignature = 'MODD'; { New to Fallout 76 }
   MODF : TwbSignature = 'MODF'; { New to Fallout 4 }
   MODL : TwbSignature = 'MODL';
   MODQ : TwbSignature = 'MODQ'; { New to Fallout 4 }
@@ -1100,6 +1102,7 @@ var
   wbDATAPosRot: IwbSubRecordDef;
   wbPosRot: IwbStructDef;
   wbMODC: IwbSubRecordDef;
+  wbMODD: IwbSubRecordDef;
   wbMODF: IwbSubRecordDef;
   wbMODL: IwbSubRecordStructDef;
   wbMODS: IwbSubRecordDef;
@@ -1191,6 +1194,8 @@ var
   wbSPED: IwbSubRecordDef;
   wbCUSD: IwbSubRecordDef;
   wbINRD: IwbSubRecordDef;
+  wbEILV: IwbSubRecordDef;
+  wbIBSD: IwbSubRecordDef;
   wbPTRN: IwbSubRecordDef;
   wbSTCP: IwbSubRecordDef;
   wbNTRM: IwbSubRecordDef;
@@ -7995,7 +8000,9 @@ begin
   wbMO4C := wbFloat(MO4C, 'Color Remapping Index');
   wbMO5C := wbFloat(MO5C, 'Color Remapping Index');
 
-    wbDMDT := wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
+  wbMODD := wbUnknown(MODD);
+
+  wbDMDT := wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
 
   if wbDecodeTextureHashes then
     wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
@@ -8024,7 +8031,8 @@ begin
       wbUnknown(XFLG),
       wbENLT,
       wbENLS,
-      wbAUUV
+      wbAUUV,
+      wbMODD
     ], [], cpNormal, False, nil, True);
 
   wbMODLActor :=
@@ -9495,6 +9503,8 @@ begin
   wbZNAM := wbFormIDCk(ZNAM, 'Sound - Put Down', [SNDR]);
   wbCUSD := wbFormIDCk(CUSD, 'Sound - Crafting', [SNDR]);
   wbINRD := wbFormIDCk(INRD, 'Instance Naming', [INNR]);
+  wbEILV := wbArray(EILV, 'Levels', wbInteger('Level', itU32));
+  wbIBSD := wbFormIDCk(IBSD, 'Break Sound', [SNDR]);
 
   wbPRPS := wbArrayS(PRPS, 'Properties', wbStructSK([0], 'Property', [
     wbActorValue,
@@ -9542,8 +9552,8 @@ begin
   ]));
 
   wbDAMS := wbArrayS(DAMS, 'Unknown', wbStructSK([0], 'Unknown', [
-    wbFormID('Unknown'),
-    wbByteArray('Unknown', 4),
+    wbFormIDCk('Type', [DMGT]),
+    wbInteger('Amount', itU32),
     wbUnion('Curve Table', wbDeciderFormVersion152, [
       wbEmpty('Unused'),
       wbFormIDCk('Curve Table', [CURV, NULL])
@@ -10071,8 +10081,8 @@ begin
     wbKeywords,
     wbDESC,
     wbINRD,
-    wbArray(EILV, 'Unknown', wbByteArray('Unknown', 4)),
-    wbFormIDCk(IBSD, 'Break Sound', [SNDR]),
+    wbEILV,
+    wbIBSD,
     wbRArray('Models',
       wbRStruct('Model', [
         wbInteger(INDX, 'Addon Index', itU16),
@@ -17043,6 +17053,8 @@ begin
     wbKeywords,
     wbDESC,
     wbFormIDCk(INRD, 'Instance Naming', [INNR]),
+    wbEILV,
+    wbIBSD,
     wbAPPR,
     wbObjectTemplate,
     wbFormIDCk(NNAM, 'Embedded Weapon Mod', [OMOD]),
@@ -17053,89 +17065,95 @@ begin
       wbMO4C,
       wbMO4F
     ], []),
+    wbENLT,
+    wbENLS,
+    wbAUUV,
     wbStruct(DNAM, 'Data', [
-      wbFormIDCk('Ammo', [AMMO, NULL]),
-      wbFloat('Speed'),
-      wbFloat('Reload Speed'),
-      wbFloat('Reach'),
-      wbFloat('Min Range'),
-      wbFloat('Max Range'),
-      wbFloat('Attack Delay'),
-      wbByteArray('Unknown', 4),
-      wbFloat('Damage - OutOfRange Mult'),
-      wbInteger('On Hit', itU32, wbHitBehaviourEnum),
-      wbFormIDCk('Skill', [AVIF, NULL]),
-      wbFormIDCk('Resist', [AVIF, NULL]),
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'Player Only',
-        {0x00000002} 'NPCs Use Ammo',
-        {0x00000004} 'No Jam After Reload',
-        {0x00000008} 'Charging Reload',
-        {0x00000010} 'Minor Crime',
-        {0x00000020} 'Fixed Range',
-        {0x00000040} 'Not Used In Normal Combat',
-        {0x00000080} 'Unknown 8',
-        {0x00000100} 'Crit Effect - on Death',
-        {0x00000200} 'Charging Attack',
-        {0x00000400} 'Unknown 11',
-        {0x00000800} 'Hold Input To Power',
-        {0x00001000} 'Non Hostile',
-        {0x00002000} 'Bound Weapon',
-        {0x00004000} 'Ignores Normal Weapon Resistance',
-        {0x00008000} 'Automatic',
-        {0x00010000} 'Repeatable Single Fire',
-        {0x00020000} 'Can''t Drop',
-        {0x00040000} 'Hide Backpack',
-        {0x00080000} 'Embedded Weapon',
-        {0x00100000} 'Not Playable',
-        {0x00200000} 'Has Scope',
-        {0x00400000} 'Bolt Action',
-        {0x00800000} 'Secondary Weapon',
-        {0x01000000} 'Disable Shells',
-        {0x02000000} 'Unknown 26',
-        {0x04000000} 'Unknown 27',
-        {0x08000000} 'Unknown 28',
-        {0x10000000} 'Unknown 29',
-        {0x20000000} 'Unknown 30',
-        {0x40000000} 'Unknown 31',
-        {0x80000000} 'Unknown 32'
-      ])),
-      wbInteger('Capacity', itU16),
-      wbInteger('Animation Type', itU8, wbEnum([
-        'HandToHandMelee',
-        'OneHandSword',
-        'OneHandDagger',
-        'OneHandAxe',
-        'OneHandMace',
-        'TwoHandSword',
-        'TwoHandAxe',
-        'Bow',
-        'Staff',
-        'Gun',
-        'Grenade',
-        'Mine'
-      ])),
-      wbFloat('Damage - Secondary'),
-      wbFloat('Weight'),
-      wbInteger('Value', itU32),
-      wbInteger('Damage - Base', itU16),
-      wbInteger('Sound Level', itU32, wbSoundLevelEnum),
-      wbFormIDCk('Sound - Attack', [SNDR, NULL]),
-      wbFormIDCk('Sound - Attack 2D', [SNDR, NULL]),
-      wbFormIDCk('Sound - Attack Loop', [SNDR, NULL]),
-      wbFormIDCk('Sound - Attack Fail', [SNDR, NULL]),
-      wbFormIDCk('Sound - Idle', [SNDR, NULL]),
-      wbFormIDCk('Sound - Equip Sound', [SNDR, NULL]),
-      wbFormIDCk('Sound - UnEquip Sound', [SNDR, NULL]),
-      wbFormIDCk('Sound - Fast Equip Sound', [SNDR, NULL]),
-      wbInteger('Accuracy Bonus', itU8),
-      wbFloat('Animation Attack Seconds'),
-      wbByteArray('Unknown', 2),
-      wbFloat('Action Point Cost'),
-      wbFloat('Full Power Seconds'),
-      wbFloat('Min Power Per Shot'),
+      {  0} wbFormIDCk('Ammo', [AMMO, NULL]),
+      {  4} wbFloat('Speed'),
+      {  8} wbFloat('Reload Speed'),
+      { 12} wbFloat('Reach'),
+      { 16} wbFloat('Min Range'),
+      { 20} wbFloat('Max Range'),
+      { 24} wbFloat('Attack Delay'),
+      { 28} wbFloat('Unknown'),
+      { 32} wbFloat('Unknown'),
+      { 36} wbByteArray('Unknown', 4),
+      { 40} wbFloat('Damage - OutOfRange Mult'),
+      { 44} wbFloat('Unknown'),
+      { 48} wbInteger('On Hit', itU32, wbHitBehaviourEnum),
+      { 52} wbFormIDCk('Skill', [AVIF, NULL]),
+      { 56} wbFormIDCk('Resist', [AVIF, NULL]),
+      { 60} wbInteger('Flags', itU32, wbFlags([
+              {0x00000001} 'Player Only',
+              {0x00000002} 'NPCs Use Ammo',
+              {0x00000004} 'No Jam After Reload',
+              {0x00000008} 'Charging Reload',
+              {0x00000010} 'Minor Crime',
+              {0x00000020} 'Fixed Range',
+              {0x00000040} 'Not Used In Normal Combat',
+              {0x00000080} 'Unknown 8',
+              {0x00000100} 'Crit Effect - on Death',
+              {0x00000200} 'Charging Attack',
+              {0x00000400} 'Unknown 11',
+              {0x00000800} 'Hold Input To Power',
+              {0x00001000} 'Non Hostile',
+              {0x00002000} 'Bound Weapon',
+              {0x00004000} 'Ignores Normal Weapon Resistance',
+              {0x00008000} 'Automatic',
+              {0x00010000} 'Repeatable Single Fire',
+              {0x00020000} 'Can''t Drop',
+              {0x00040000} 'Hide Backpack',
+              {0x00080000} 'Embedded Weapon',
+              {0x00100000} 'Not Playable',
+              {0x00200000} 'Has Scope',
+              {0x00400000} 'Bolt Action',
+              {0x00800000} 'Secondary Weapon',
+              {0x01000000} 'Disable Shells',
+              {0x02000000} 'Unknown 26',
+              {0x04000000} 'Unknown 27',
+              {0x08000000} 'Unknown 28',
+              {0x10000000} 'Unknown 29',
+              {0x20000000} 'Unknown 30',
+              {0x40000000} 'Unknown 31',
+              {0x80000000} 'Unknown 32'
+            ])),
+      { 64} wbInteger('Capacity', itU16),
+      { 66} wbInteger('Animation Type', itU8, wbEnum([
+              'HandToHandMelee',
+              'OneHandSword',
+              'OneHandDagger',
+              'OneHandAxe',
+              'OneHandMace',
+              'TwoHandSword',
+              'TwoHandAxe',
+              'Bow',
+              'Staff',
+              'Gun',
+              'Grenade',
+              'Mine'
+            ])),
+      { 67} wbFloat('Damage - Secondary'),
+      { 71} wbFloat('Weight'),
+      { 75} wbInteger('Value', itU32),
+      { 79} wbInteger('Damage - Base', itU16),
+      { 81} wbInteger('Sound Level', itU32, wbSoundLevelEnum),
+      { 85} wbFormIDCk('Sound - Attack', [SNDR, NULL]),
+      { 89} wbFormIDCk('Sound - Attack 2D', [SNDR, NULL]),
+      { 93} wbFormIDCk('Sound - Attack Loop', [SNDR, NULL]),
+      { 97} wbFormIDCk('Sound - Attack Fail', [SNDR, NULL]),
+      {101} wbFormIDCk('Sound - Idle', [SNDR, NULL]),
+      {105} wbFormIDCk('Sound - Equip Sound', [SNDR, NULL]),
+      {109} wbFormIDCk('Sound - UnEquip Sound', [SNDR, NULL]),
+      {113} wbFormIDCk('Sound - Fast Equip Sound', [SNDR, NULL]),
+      {117} wbInteger('Accuracy Bonus', itU8),
+      {118} wbFloat('Animation Attack Seconds'),
+      {122} wbByteArray('Unknown', 2),
+      {124} wbFloat('Action Point Cost'),
+      {128} wbFloat('Full Power Seconds'),
+      {132} wbFloat('Min Power Per Shot'),
       wbInteger('Stagger', itU32, wbStaggerEnum),
-      wbByteArray('Unknown', 4)
+      wbUnknown
     ]),
     wbStruct(FNAM, '', [
       wbFloat('Animation Fire Seconds'),
@@ -17165,18 +17183,28 @@ begin
     wbFormIDCk(WAMD, 'Aim Model', [AMDL]),
     wbFormIDCk(WZMD, 'Zoom', [ZOOM]),
     wbFormIDCk(CNAM, 'Template', [WEAP]),
-    wbStructs(DAMA, 'Damage Types', 'Damage Type', [
+    wbArrayS(DAMA, 'Damage Types', wbStructSK([0], 'Damage Type', [
       wbFormIDCk('Type', [DMGT]),
-      wbInteger('Amount', itU32)
-    ]),
+      wbInteger('Amount', itU32),
+      wbUnion('Curve Table', wbDeciderFormVersion152, [
+        wbEmpty('Unused'),
+        wbFormIDCk('Curve Table', [CURV, NULL])
+      ])
+    ])),
     wbFLTR,
+    wbFormIDCk(CVT0, '', [CURV]),
+    wbFormIDCk(CVT1, '', [CURV]),
+    wbFormIDCk(CVT2, '', [CURV]),
+    wbFormIDCk(CVT3, '', [CURV]),
+    wbFormIDCk(CVT4, '', [CURV]),
     wbInteger(MASE, 'Melee Speed', itU32, wbEnum([
       'Very Slow',
       'Slow',
       'Medium',
       'Fast',
       'Very Fast'
-    ]))
+    ])),
+    wbDAMS
   ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad}, wbKeywordsAfterSet);
 
   wbRecord(WRLD, 'Worldspace',
