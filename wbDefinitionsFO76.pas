@@ -511,6 +511,8 @@ const
   LTMP : TwbSignature = 'LTMP';
   LTPC : TwbSignature = 'LTPC'; { New to Fallout 4 }
   LTPT : TwbSignature = 'LTPT'; { New to Fallout 4 }
+  LVCV : TwbSignature = 'LVCV'; { New To Fallout 76 }
+  LVIV : TwbSignature = 'LVIV'; { New To Fallout 76 }
   LVLC : TwbSignature = 'LVLC';
   LVLD : TwbSignature = 'LVLD';
   LVLF : TwbSignature = 'LVLF';
@@ -520,6 +522,11 @@ const
   LVLN : TwbSignature = 'LVLN';
   LVLO : TwbSignature = 'LVLO';
   LVLP : TwbSignature = 'LVLP'; { New To Fallout 76 }
+  LVLT : TwbSignature = 'LVLT'; { New To Fallout 76 }
+  LVLV : TwbSignature = 'LVLV'; { New To Fallout 76 }
+  LVMV : TwbSignature = 'LVMV'; { New To Fallout 76 }
+  LVOG : TwbSignature = 'LVOG'; { New To Fallout 76 }
+  LVOV : TwbSignature = 'LVOV'; { New To Fallout 76 }
   LVPC : TwbSignature = 'LVPC'; { New To Fallout 76 }
   LVSG : TwbSignature = 'LVSG'; { New to Fallout 4 }
   LVSP : TwbSignature = 'LVSP';
@@ -3394,6 +3401,10 @@ begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 154);
 end;
 
+function wbDeciderFormVersion173(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 173);
+end;
 
 
 function wbAECHDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -14288,27 +14299,48 @@ begin
     wbEDID,
     wbOBNDReq,
     wbOPDSs,
-    wbLVLD,
+    wbUnion(LVLD, 'Chance None', wbDeciderFormVersion173, [
+      wbInteger('Value', itU8, nil, cpNormal, True),
+      wbEmpty('Value')
+    ]),
+    wbFloat(LVMV),
+    wbFloat(LVCV),
     wbInteger(LVLM, 'Max Count', itU8), { Always 00 } {Unavailable}
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
-      {0x01} 'Calculate from all levels <= player''s level',
-      {0x02} 'Calculate for each item in count',
-      {0x04} 'Calculate All' {Still picks just one}
-    ]), cpNormal, True),
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
+    wbInteger(LVLF, 'Flags', itU8, wbFlags([
+      {0x00000001} 'Calculate from all levels <= player''s level',
+      {0x00000002} 'Calculate for each item in count',
+      {0x00000004} 'Calculate All', {Still picks just one}
+      {0x00000008} 'Unknown 3',
+      {0x00000010} 'Unknown 4',
+      {0x00000020} 'Unknown 5',
+      {0x00000040} 'Unknown 6',
+      {0x00000080} 'Unknown 7'
+    ]), cpNormal, True),
+    wbCTDAs,
     wbLLCT,
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itU16),
-          wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
-          wbFormIDCk('Reference', [NPC_, LVLN]),
-          wbInteger('Count', itS16),
-          wbInteger('Chance None', itU8),
-          wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
+        wbUnion(LVLO, 'Leveled Entry', wbDeciderFormVersion173, [
+          wbStructExSK([0, 2], [3], 'Base Data', [
+            wbInteger('Level', itU16),
+            wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
+            wbFormIDCk('Reference', [NPC_, LVLN]),
+            wbInteger('Count', itS16),
+            wbInteger('Chance None', itU8),
+            wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
+          ]),
+          wbFormIDCk('Reference', [NPC_, LVLN])
         ]),
-                wbCOED
-      ], []), cpNormal, False, nil, wbLVLOsAfterSet),
+        wbCTDAs,
+        wbFloat(LVOV),
+        wbFloat(LVIV),
+        wbFloat(LVLV),
+        wbFormIDCk(LVOG, 'Unknown', [GLOB]),
+        wbFormIDCk(LVLT, 'Curve Table', [CURV]),
+        wbCOED
+    ], []), cpNormal, False, nil, wbLVLOsAfterSet),
+
     wbArrayS(LLKC, 'Filter Keyword Chances',
       wbStructSK([0], 'Filter', [
         wbFormIDCk('Keyword', [KYWD]),
@@ -14319,7 +14351,10 @@ begin
         ])
       ])
     ),
-    wbMODL
+    wbMODL,
+    wbENLT,
+    wbENLS,
+    wbAUUV
   ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
   wbRecord(LVLI, 'Leveled Item', [
