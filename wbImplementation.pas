@@ -2704,7 +2704,7 @@ begin
         s := Strings[0].Trim;
         if s <> '' then begin
           flEncodingTrans := wbMBCSEncoding(s);
-          flProgress(Format('Using encoding (from override): %s', [flEncodingTrans.EncodingName]));
+          flProgress(Format('Using encoding (from .cpoverride): %s', [flEncodingTrans.EncodingName]));
          end;
       end;
     finally
@@ -4099,6 +4099,7 @@ var
   CurrentPtr  : Pointer;
   HEDR        : IwbRecord;
   MasterFiles : IwbContainerElementRef;
+  s           : string;
   Rec         : IwbRecord;
   i, j        : Integer;
   SelfRef     : IwbContainerElementRef;
@@ -4146,6 +4147,22 @@ begin
         if not wbStripEmptyMasters or (Trim(Rec.EditValue) <> '') then
           AddMaster(Rec.EditValue);
       end;
+
+    s := Header.ElementEditValues['SNAM'].ToLower;
+    i := Pos('<cp:', s);
+    if i > 0 then begin
+      s := Copy(s, i, 9);
+      if (Length(s) = 9) and (s[9] = '>') then begin
+        s := Copy(s, 5, 4);
+        try
+          flEncodingTrans := wbMBCSEncoding(s);
+          flProgress(Format('Using encoding (from File Header Description): %s', [flEncodingTrans.EncodingName]));
+        except
+          on E: Exception do
+            wbProgress('Couldn''t use encoding override "%s": [%s] %s', [s, E.ClassName, E.Message]);
+        end;
+      end;
+    end;
 
     if flCompareTo <> '' then begin
       if fsIsDeltaPatch in flStates then
