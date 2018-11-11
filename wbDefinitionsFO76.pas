@@ -1059,9 +1059,10 @@ const
     'COBJ', 'CONT', 'DEBR', 'DOOR', 'EXPL', 'FLST',
     'FLOR', 'FURN', 'HAZD', 'IDLM', 'INGR', 'KEYM',
     'LIGH', 'LVLI', 'LVLN', 'LVSP', 'MISC', 'MSTT',
-    'NOTE', 'NPC_', 'OMOD', 'PACH', 'PKIN', 'PROJ',
-    'SCOL', 'SCRL', 'SECH', 'SOUN', 'SPEL', 'STAT',
-    'TACT', 'TERM', 'TREE', 'TXST', 'WATR', 'WEAP'
+    'NOTE', 'NPC_', 'OMOD', 'PACH', 'PKIN', 'PPAK',
+    'PROJ', 'SCOL', 'SCRL', 'SECH', 'SOUN', 'SPEL',
+    'STAT', 'TACT', 'TERM', 'TREE', 'TXST', 'WATR',
+    'WEAP'
   ];
 
 var
@@ -5747,7 +5748,6 @@ begin
     if not Supports(MainRecord.ElementByName['Leveled List Entries'], IwbContainerElementRef, Entries) then
       Exit;
 
-
     for i := 0 to Pred(Entries.ElementCount) do begin
       if not Supports(Entries.Elements[i], IwbContainerElementRef, Container) then
         Exit;
@@ -6926,7 +6926,7 @@ begin
 
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
     {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
-    {04} wbUnion('Global Variable / Required Rank', wbCOEDOwnerDecider, [
+    {04} wbUnion('', wbCOEDOwnerDecider, [
            wbByteArray('Unused', 4, cpIgnore),
            wbFormIDCk('Global Variable', [GLOB, NULL]),
            wbInteger('Required Rank', itS32)
@@ -14359,7 +14359,7 @@ begin
     wbLLCT,
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbUnion(LVLO, 'Leveled Entry', wbDeciderFormVersion174, [
+        wbUnion(LVLO, '', wbDeciderFormVersion174, [
           wbStructExSK([0, 2], [3], 'Base Data', [
             wbInteger('Level', itU16),
             wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
@@ -14389,10 +14389,7 @@ begin
         ])
       ])
     ),
-    wbMODL,
-    wbENLT,
-    wbENLS,
-    wbAUUV
+    wbMODL
   ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
   wbRecord(LVLI, 'Leveled Item', [
@@ -14424,7 +14421,7 @@ begin
     wbLLCT,
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbUnion(LVLO, 'Leveled Entry', wbDeciderFormVersion174, [
+        wbUnion(LVLO, '', wbDeciderFormVersion174, [
           wbStructExSK([0, 2], [3], 'Base Data', [
             wbInteger('Level', itU16),
             wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
@@ -14459,8 +14456,68 @@ begin
     wbFormIDCk(LVSG, 'Epic Loot Chance', [GLOB]),
     wbDIQO,
     wbUnknown(LIMC),
-    wbMODLReq,
+    wbMODL,
     wbLStringKC(ONAM, 'Override Name', 0, cpTranslate)
+  ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
+
+  wbRecord(LVLP, 'Leveled Pack In', [
+    wbEDID,
+    wbOBNDReq,
+    //wbOPDSs,
+    //wbDEFL,
+    //wbXALG,
+    wbLVLD,
+    wbLVMV,
+    //wbLVMG,
+    //wbLVMT,
+    wbLVCV,
+    //wbInteger(LVLM, 'Max Count', itU8), { Always 00 }
+    //wbFormIDCk(LVLG, 'Use Global', [GLOB]),
+    //wbLVCT,
+    wbInteger(LVLF, 'Flags', itU8, wbFlags([
+      {0x00000001} 'Calculate from all levels <= player''s level',
+      {0x00000002} 'Calculate for each item in count',
+      {0x00000004} 'Calculate All', {Still picks just one}
+      {0x00000008} 'Unknown 3',
+      {0x00000010} 'Unknown 4',
+      {0x00000020} 'Unknown 5',
+      {0x00000040} 'Unknown 6',
+      {0x00000080} 'Unknown 7'
+    ]), cpNormal, True),
+    //wbCTDAs,
+    //wbFormIDCk(LVLG, 'Use Global', [GLOB]),
+    wbLLCT,
+    wbRArrayS('Leveled List Entries',
+      wbRStructExSK([0], [1], 'Leveled List Entry', [
+        wbFormIDCk(LVLO, 'Reference', sigBaseObjects),
+        //wbCOED,
+        //wbCTDAs,
+        wbLVOV,
+        //wbLVOC,
+        //wbLVOT,
+        wbLVIV,
+        //wbLVIG,
+        wbLVLV
+        //wbLVOG,
+        //wbLVLT
+    ], []), cpNormal, False, nil, wbLVLOsAfterSet),
+    {
+    wbArrayS(LLKC, 'Filter Keyword Chances',
+      wbStructSK([0], 'Filter', [
+        wbFormIDCk('Keyword', [KYWD]),
+        wbInteger('Chance', itU32),
+        wbUnion('Curve Table', wbDeciderFormVersion152, [
+          wbEmpty('Unused'),
+          wbFormIDCk('Curve Table', [CURV, NULL])
+        ])
+      ])
+    ),
+    }
+    //wbFormIDCk(LVSG, 'Epic Loot Chance', [GLOB]),
+    //wbDIQO,
+    //wbUnknown(LIMC),
+    wbMODL
+    //wbLStringKC(ONAM, 'Override Name', 0, cpTranslate)
   ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
   wbRecord(LVSP, 'Leveled Spell', [
@@ -18123,10 +18180,6 @@ begin
     wbUnknown(AQIC),
     wbUnknown(MXCT),
     wbLString(SNAM)
-  ]);
-
-  wbRecord(LVLP, 'Leveled Pack In', [
-    wbEDID
   ]);
 
   wbRecord(PPAK, 'Perk Card Pack', [
