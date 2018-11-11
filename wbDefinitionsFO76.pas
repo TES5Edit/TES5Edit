@@ -3418,6 +3418,11 @@ begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 99);
 end;
 
+function wbDeciderFormVersion134(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 134);
+end;
+
 function wbDeciderFormVersion152(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 152);
@@ -10565,7 +10570,10 @@ begin
     wbEDID,
     wbStruct(DATA, 'Effect Data', [
             wbFormIDCK('Effect Art', [ARTO, NULL]),
-      wbFormIDCK('Shader', [EFSH, NULL]),
+      wbUnion('Unused', wbDeciderFormVersion134, [
+        wbFormIDCK('Unused', [EFSH, NULL]),
+        wbEmpty('Unused')
+      ]),
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Rotate to Face Target',
         {0x00000002} 'Attach to Camera',
