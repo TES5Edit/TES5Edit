@@ -881,7 +881,7 @@ object frmEditWarning: TfrmEditWarning
           Font.Name = 'Tahoma'
           Font.Style = []
           Lines.Strings = (
-            'You are about edit a module file.'
+            'You are about to edit a module file.'
             ''
             'If you have the slightest doubt about '
             'what the implications of your change '
@@ -893,8 +893,6 @@ object frmEditWarning: TfrmEditWarning
           ParentFont = False
           ReadOnly = True
           TabOrder = 0
-          ExplicitLeft = -6
-          ExplicitTop = 70
         end
       end
       object Panel4: TPanel
@@ -915,8 +913,6 @@ object frmEditWarning: TfrmEditWarning
           Height = 36
           Caption = '&Yes I'#39'm absolutely sure'
           Enabled = False
-          ModalResult = 1
-          TabOrder = 0
           Glyph.Data = {
             76140000424D7614000000000000360000002800000048000000180000000100
             18000000000040140000130B0000130B00000000000000000000FF00FFFF00FF
@@ -1082,7 +1078,9 @@ object frmEditWarning: TfrmEditWarning
             FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
             FFFF00FFFF00FFFF00FF039E0C039E0C039E0C039E0C039E0C039E0C039E0C03
             9E0CFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF}
+          ModalResult = 1
           NumGlyphs = 3
+          TabOrder = 0
         end
         object BitBtn1: TBitBtn
           AlignWithMargins = True
@@ -1093,8 +1091,6 @@ object frmEditWarning: TfrmEditWarning
           Margins.Bottom = 0
           Caption = 'Hmm.. let me thi&nk about it some more'
           Default = True
-          ModalResult = 3
-          TabOrder = 1
           Glyph.Data = {
             F6060000424DF606000000000000360000002800000018000000180000000100
             180000000000C0060000120B0000120B00000000000000000000FF00FFFF00FF
@@ -1152,6 +1148,8 @@ object frmEditWarning: TfrmEditWarning
             FF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00
             FFFF00FFFF00FFFF00FF00009A00009A0105A0020EB1010DB00003A000009A00
             009AFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF}
+          ModalResult = 3
+          TabOrder = 1
         end
       end
     end
