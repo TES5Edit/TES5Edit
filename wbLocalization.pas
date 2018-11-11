@@ -258,9 +258,6 @@ begin
   aStream.Position := Position + Succ(i);
 end;
 
-var
-  x: Integer;
-
 function TwbLocalizationFile.ReadLenZString(aStream: TMemoryStream): string;
 var
   Position : Integer;
@@ -272,8 +269,8 @@ begin
   p := @PByte(aStream.Memory)[Position];
   i := PInteger(p)^;
   Inc(PInteger(p), 1);
+  Dec(i);
   if i > 0 then begin
-    Inc(x);
     b := BytesOf(p, i);
     Result := GetEncoding.GetString(b);
   end else
