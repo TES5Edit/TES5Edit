@@ -3978,7 +3978,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..536] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..537] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
@@ -4165,6 +4165,7 @@ const
     (Index: 367; Name: 'GetLastPlayerAction'),
     (Index: 368; Name: 'IsPlayerActionActive'; ParamType1: ptInteger),
     (Index: 370; Name: 'IsTalkingActivatorActor'; ParamType1: ptActor),
+    (Index: 371; Name: 'IsOnChems'),
     (Index: 372; Name: 'IsInList'; ParamType1: ptFormList),
     (Index: 373; Name: 'GetStolenItemValue'; ParamType1: ptFaction),
     (Index: 375; Name: 'GetCrimeGoldViolent'; ParamType1: ptFaction),
@@ -10504,12 +10505,17 @@ begin
     // DLC01Lair01 "The Mechanist's Lair" [CELL:010008A3]
     wbArrayS(XPRI, 'Physics References', wbFormIDCk('Reference', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA])),
     wbStruct(XCRI, 'Combined References', [
-      wbInteger('Meshes Count', itU32),
-      wbInteger('References Count', itU32),
-      wbArrayS('Meshes', wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt), wbCELLCombinedMeshesCounter, cpNormal, False, nil, wbCELLCombinedMeshesAfterSet),
+      wbInteger('Meshes Count', itU64),
+      wbInteger('References Count', itU64),
+      wbArrayS('Meshes', wbStruct('Unknown', [
+        wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt),
+        wbByteArray('Unknown', 4)
+      ]), wbCELLCombinedMeshesCounter, cpNormal, False, nil, wbCELLCombinedMeshesAfterSet),
       wbArrayS('References',  wbStructSK([0], 'Reference', [
         wbFormIDCk('Reference', [REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA]),
-        wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt)
+        wbByteArray('Unknown', 4),
+        wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt),
+        wbByteArray('Unknown', 4)
       ]), wbCELLCombinedRefsCounter, cpNormal, False, nil, wbCELLCombinedRefsAfterSet)
     ]),
     wbUnknown(XCRP)
@@ -11999,7 +12005,7 @@ begin
 
   wbRecord(IMGS, 'Image Space', [
     wbEDID,
-    wbByteArray(ENAM, 'Unused', 0, cpIgnore),
+    wbArray(ENAM, 'Unknown', wbFloat('Unknown')),
     wbStruct(HNAM, 'HDR', [
       wbFloat('Eye Adapt Speed'),
       wbFloat('Tonemap E'),
@@ -12011,8 +12017,8 @@ begin
       wbFloat('Sky Scale'),
       wbFloat('Middle Gray')
     ], cpNormal, True),
-    wbUnknown(FNAM), {TODO}
-    wbUnknown(GNAM), {TODO}
+    wbArray(FNAM, 'Unknown', wbFloat('Unknown')),
+    wbArray(GNAM, 'Unknown', wbFloat('Unknown')),
     wbStruct(CNAM, 'Cinematic', [
       wbFloat('Saturation'),
       wbFloat('Brightness'),
@@ -12049,18 +12055,7 @@ begin
       wbFloat('Vignette Radius'),
       wbFloat('Vignette Strength')
     ], cpNormal, True, nil, 5),
-    wbUnknown(XNAM), {TODO}
-//    wbStruct(XNAM, 'Unknown', [
-//      wbStruct('Unknown', [
-//        wbFloat('Unknown 2'),
-//        wbByteArray('Unknown 3', 4)
-//      ]),
-//      wbStruct('Unknown', [
-//        wbFloat('Unknown 2'),
-//        wbFloat('Unknown 2')
-//      ]),
-//      wbFloat('Unknown 2')
-//    ]),
+    wbArray(XNAM, 'Unknown', wbFloat('Unknown')),
     wbFloat(INAM),
     wbUnknown(YNAM), {TODO}
     wbUnknown(ZNAM), {TODO}
