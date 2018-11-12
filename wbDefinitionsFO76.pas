@@ -3444,6 +3444,11 @@ begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 154);
 end;
 
+function wbDeciderFormVersion155(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 155);
+end;
+
 function wbDeciderFormVersion174(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 174);
@@ -10776,8 +10781,11 @@ begin
       wbFloat('Ground Attack Time'),
       wbFloat('Perch Attack Chance'),
       wbFloat('Perch Attack Time'),
-      wbFloat('Flying Attack Chance')
-    ], cpNormal, True),
+      wbFloat('Flying Attack Chance'),
+      wbFloat('Unknown 1'),
+      wbFloat('Unknown 2'),
+      wbFloat('Unknown 3')
+    ], cpNormal, True, nil, 7),
     wbInteger(DATA, 'Flags', itU32, wbFlags([
       {0x01} 'Dueling',
       {0x02} 'Flanking',
