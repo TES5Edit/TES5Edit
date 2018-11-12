@@ -18055,17 +18055,26 @@ begin
     ])), [
     wbEDID,
     wbOBND,
+    wbOPDSs,
+    wbVMAD,
     wbPTRN,
     wbFLTR,
+    wbOPDSs,
     wbFormIDCk(CNAM, 'Cell', [CELL]),
-    wbInteger(VNAM, 'Version', itU32)
+    wbInteger(VNAM, 'Version', itU32),
+    wbUnknown(FNAM),
+    wbUnknown(GNAM),
+    wbFormID(HNAM),
+    wbArray(INAM, 'References', wbFormID('Reference')),
+    wbLString(FULL)
   ]);
 
   wbRecord(RFGP, 'Reference Group', [
     wbEDID,
     wbString(NNAM, 'Name'),
     wbFormIDCk(RNAM, 'Reference', sigReferences),
-    wbUnknown(PNAM)
+    wbFormID(PNAM),
+    wbFormID(LNAM)
   ]);
 
   {wbRecord(RGDL, 'RGDL', [
