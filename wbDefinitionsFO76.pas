@@ -18486,22 +18486,26 @@ begin
     wbEDID,
     wbFULL,
     wbString(SNAM),
-    wbUnknown(NNAM),
+    wbString(NNAM),
     wbUnknown(FNAM),
-    wbFormID(HNAM),
-    wbUnknown(CNAM),
+    wbFormIDCk(HNAM, 'Required Count', [GLOB]),
+    wbInteger(CNAM, 'Challenge Frequency', itU32, wbEnum([
+      'Daily',
+      'Weekly',
+      'Lifetime'
+    ])),
     wbUnknown(ENAM),
-    wbRArray('Unknown', wbFormID(ANAM)),
+    wbRArray('Pre-Requisites', wbFormIDCk(ANAM, 'Challenge', [CHAL])),
     wbCTDAs,
     wbUnknown(NAM7),
     wbUnknown(NAM8),
     wbUnknown(NAM9),
-    wbStruct(QSRD, 'Unknown', [
-      wbFormID('Unknown'),
-      wbUnknown
+    wbStruct(QSRD, 'Completion Reward', [
+      wbFormID('Item'),
+      wbInteger('Count', itU32)
     ]),
     wbString(JASF),
-    wbFormID(SCFL)
+    wbFormIDCk(SCFL, 'SubChallenge Completion List', [FLST])
   ]);
 
   wbRecord(AVTR, 'Avatar', [
