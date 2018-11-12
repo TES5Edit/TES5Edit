@@ -12848,9 +12848,9 @@ begin
     ])),
 
     wbFULL,
+    wbKeywords,
     wbPRPS,
     wbUnknown(DATA),
-    wbKeywords,
     wbFormIDCk(PNAM, 'Parent Location', [LCTN, NULL]),
     wbFormIDCk(NAM1, 'Music', [MUSC, NULL]),
     wbFormIDCk(FNAM, 'Unreported Crime Faction', [FACT]),
