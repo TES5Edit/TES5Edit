@@ -13384,6 +13384,8 @@ begin
       wbInteger('Ducking (dB)', itU16, wbDiv(100))
     ]),
     wbFloat(WNAM, 'Fade Duration'),
+    wbUnknown(VNAM),
+    wbUnknown(UNAM),
     wbArray(TNAM, 'Music Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ]);
 
