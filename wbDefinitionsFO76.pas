@@ -12033,7 +12033,7 @@ begin
       wbFloat('Sunlight Scale'),
       wbFloat('Sky Scale'),
       wbFloat('Middle Gray')
-    ], cpNormal, True),
+    ], cpNormal),
     wbArray(FNAM, 'Unknown', wbFloat('Unknown')),
     wbArray(GNAM, 'Unknown', wbFloat('Unknown')),
     wbStruct(CNAM, 'Cinematic', [
