@@ -194,6 +194,8 @@ var
   Settings: TMemIniFile;
   Shift,Ctrl,Alt: Boolean;
   s : string;
+  sl: TStringList;
+  i: Integer;
 begin
   Result := True;
 
@@ -227,11 +229,23 @@ begin
       wbShowFlagEnumValue := Settings.ReadBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
       wbTrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
       wbAllowDirectSave := Settings.ReadBool('Options', 'AllowDirectSave', wbAllowDirectSave);
+      sl := TStringList.Create;
+      try
+        Settings.ReadSection('cpoverride', sl);
+        for i := 0 to Pred(sl.Count) do try
+          s := sl[i];
+          wbAddLEncodingIfMissing(s, Settings.ReadString('cpoverride', s, ''));
+        except
+          on E:Exception do
+            ShowMessage('Could not add code page override "'+sl[i]+'" from wbSettingsFileName: ['+E.ClassName+'] ' + E.Message);
+        end;
+      finally
+        sl.Free;
+      end;
     finally
       Settings.Free;
     end;
-  finally
-  end;
+  except end;
 end;
 
 function GetCSIDLShellFolder(CSIDLFolder: integer): string;
@@ -846,20 +860,20 @@ begin
     Exit(False);
   end;
 
+  if not ReadSettings then
+    Exit(False);
+
   if wbGameMode <= gmTES5 then
-    wbAddDistinctLEncodings
+    wbAddDefaultLEncodingsIfMissing
   else begin
     wbLEncodingDefault := TEncoding.UTF8;
     case wbGameMode of
     gmSSE, gmTES5VR:
-      wbLEncoding.AddObject('english', wbMBCSEncoding(1252))
+      wbAddLEncodingIfMissing('english', '1252');
     else {FO4, FO76}
-      wbLEncoding.AddObject('en', wbMBCSEncoding(1252))
+      wbAddLEncodingIfMissing('en', '1252');
     end;
   end;
-
-  if not ReadSettings then
-    Exit(False);
 
   if wbFindCmdLineParam('AllowDirectSaves', s) then begin
     wbAllowDirectSaveFor := TStringList.Create;
@@ -932,8 +946,6 @@ begin
 
   if wbFindCmdLineParam('l', s) then begin
     wbLanguage := s;
-    wbEncodingTrans := wbEncodingForLanguage(wbLanguage);
-    wbLocalizationHandler.Clear;
   end else
     if FileExists(wbTheGameIniFileName) then begin
       with TMemIniFile.Create(wbTheGameIniFileName) do try
@@ -949,25 +961,20 @@ begin
         else
           s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
         end;
-        if (s <> '') and not SameText(s, wbLanguage) then begin
+        if (s <> '') and not SameText(s, wbLanguage) then
           wbLanguage := s;
-          wbEncodingTrans := wbEncodingForLanguage(wbLanguage);
-          wbLocalizationHandler.Clear;
-        end;
       finally
         Free;
       end;
     end;
 
-  if wbFindCmdLineParam('cp-general', s) then begin
-    wbEncoding :=  wbMBCSEncoding(s);
-    wbLocalizationHandler.Clear;
-  end;
+  wbEncodingTrans := wbEncodingForLanguage(wbLanguage);
 
-  if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then begin
+  if wbFindCmdLineParam('cp-general', s) then
+    wbEncoding :=  wbMBCSEncoding(s);
+
+  if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
     wbEncodingTrans :=  wbMBCSEncoding(s);
-    wbLocalizationHandler.Clear;
-  end;
 
   // definitions
   case wbGameMode of

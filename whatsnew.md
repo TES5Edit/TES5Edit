@@ -6,9 +6,25 @@ The following reported issues have been fixed:
 
 * #594 - "Localize plugin" function is broken
 
-## Code Page override using Description in File Header
+## Codepage override using Description in File Header
 
-The code page for translatable strings (see below for definition) can now be overridden by placing the text `<cp:xxxx>` somewhere in the description of the module. `xxxx` can be `utf8` or any valid code page number, e.g. `1252`. Code pages with less than 4 digits must use leading 0s, e.g. `<cp:0930>`.
+The codepage for translatable strings (see below for definition) can now be overridden by placing the text `<cp:xxxx>` somewhere in the description of the module. `xxxx` can be `utf8` or any valid codepage number, e.g. `1252`. codepages with less than 4 digits must use leading 0s, e.g. `<cp:0930>`.
+
+## Setting codepage for language in settings file
+
+It is possible to set the codepage used for a language (new or overridding a default from the list below) by modifying the settings file (shown as "Using settings file:" in the messages log on start).
+
+There is currently no UI support for this, but the settings file can be opened in a text editor and a `[cpoverride]` section can be added or modified like this:
+
+```
+[cpoverride]
+english=utf8
+klingon=6666
+```
+
+The specified value must be `utf8` or a valid codepage (which `6666` isn't, that was just an example).
+
+The specified codepage will affect any place where a codepage is derived from language.
 
 ## Compare Selected
 
@@ -104,7 +120,7 @@ When a module has a `.cpoverride` applied to it, it is also recorded in the log:
 [00:04] Background Loader: [Dragonborn.esm] Start processing
 ```
 
-These changes allow explicit control of all used code pages, and make xEdit's behaviour independent from the ANSI system codepage of the local OS.
+These changes allow explicit control of all used codepages, and make xEdit's behaviour independent from the ANSI system codepage of the local OS.
 
 ## updated Skyrim.Hardcoded.dat
 
