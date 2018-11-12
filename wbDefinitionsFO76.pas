@@ -505,8 +505,8 @@ const
   LLKC : TwbSignature = 'LLKC'; { New to Fallout 4 }
   LNAM : TwbSignature = 'LNAM';
   LODP : TwbSignature = 'LODP'; { New To Fallout 76 }
-  LRNC : TwbSignature = 'LRNC'; {New to Fallout 76 }
-  LRNM : TwbSignature = 'LRNM'; {New to Fallout 76 }
+  LRNC : TwbSignature = 'LRNC'; { New to Fallout 76 }
+  LRNM : TwbSignature = 'LRNM'; { New to Fallout 76 }
   LSCR : TwbSignature = 'LSCR';
   LSPR : TwbSignature = 'LSPR'; { New to Fallout 4 }
   LTEX : TwbSignature = 'LTEX';
@@ -740,6 +740,7 @@ const
   RACE : TwbSignature = 'RACE';
   RADR : TwbSignature = 'RADR'; { New To Fallout 4 }
   RBPC : TwbSignature = 'RBPC'; { New To Fallout 4 }
+  RCBN : TwbSignature = 'RCBN'; { New To Fallout 76 }
   RCEC : TwbSignature = 'RCEC'; { New To Skyrim }
   RCLR : TwbSignature = 'RCLR';
   RCPR : TwbSignature = 'RCPR'; { New to Dawnguard }
@@ -752,14 +753,16 @@ const
   RDMP : TwbSignature = 'RDMP';
   RDOT : TwbSignature = 'RDOT';
   RDSA : TwbSignature = 'RDSA'; { New to Skyrim }
+  RDSN : TwbSignature = 'RDSN'; { New to Fallout 76 }
+  RDWK : TwbSignature = 'RDWK'; { New to Fallout 76 }
   RDWT : TwbSignature = 'RDWT';
-  RECF : TwbSignature = 'RECF'; {New to Fallout 76 }
+  RECF : TwbSignature = 'RECF'; { New to Fallout 76 }
   REFR : TwbSignature = 'REFR';
   REGN : TwbSignature = 'REGN';
   RELA : TwbSignature = 'RELA';
   RENT : TwbSignature = 'RENT'; { New To Fallout 76 }
   REPL : TwbSignature = 'REPL';
-  REPM : TwbSignature = 'REPM'; {New to Fallout 76 }
+  REPM : TwbSignature = 'REPM'; { New to Fallout 76 }
   REPR : TwbSignature = 'REPR'; { New To Fallout 76 }
   REPT : TwbSignature = 'REPT'; { New To Fallout 4 }
   RESO : TwbSignature = 'RESO'; { New To Fallout 76 }
@@ -3605,6 +3608,22 @@ begin
     Result := 1;
 end;
 
+function wbRDOTCountCallback(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+var
+  Container  : IwbContainer;
+begin
+  if not Assigned(aElement) then
+    Exit;
+
+  Container := GetContainerFromUnion(aElement);
+  if not Assigned(Container) then
+    Exit;
+  Container := Container.Container;
+  if not Assigned(Container) then
+    Exit;
+
+  Result := Container.DataSize div 76;
+end;
 
 {>>> For VMAD <<<}
 function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -10569,7 +10588,7 @@ begin
   wbRecord(RFCT, 'Visual Effect', [
     wbEDID,
     wbStruct(DATA, 'Effect Data', [
-            wbFormIDCK('Effect Art', [ARTO, NULL]),
+      wbFormIDCK('Effect Art', [ARTO, NULL]),
       wbUnion('Unused', wbDeciderFormVersion134, [
         wbFormIDCK('Unused', [EFSH, NULL]),
         wbEmpty('Unused')
@@ -16613,6 +16632,8 @@ begin
       wbByteArray('Unknown', 1)
     ], cpNormal, True),
     wbFormIDCkNoReach(WNAM, 'Worldspace', [WRLD]),
+    wbFormIDCkNoReach(LNAM, 'Location', [LCTN]),
+    wbUnknown(LCPR),
     wbRArray('Region Areas', wbRStruct('Region Area', [
       wbInteger(RPLI, 'Edge Fall-off', itU32),
       wbArray(RPLD, 'Region Point List Data', wbStruct('Point', [
@@ -16664,6 +16685,11 @@ begin
         ])),
         wbFloat('Chance')
       ]), 0, cpNormal, False, nil, nil, wbREGNSoundDontShow),
+      wbRArray('Unknown', wbStruct(RDSN, 'Unknown', [
+        wbFormIDCk('Sound', [SNDR, NULL]),
+        wbArray('Keywords', wbFormIDCk('Keyword', [KYWD]), -1),
+        wbFloat('Unknown')
+      ])),
 
             {--- Map ---}
       wbLString(RDMP, 'Map Name', 0, cpTranslate, False, wbREGNMapDontShow),
@@ -16671,7 +16697,55 @@ begin
       {followed by one of these: }
 
       {--- Objects ---}
-      wbArray(RDOT, 'Objects', wbStruct('Object', [
+      wbStruct(RDOT, 'Unknown', [
+        wbArray('Unknown', wbStruct('Unknown', [
+          {00} wbByteArray('Unknown', 4),
+          {04} wbFloat('Unknown'),
+          {08} wbFloat('Unknown'),
+          {12} wbFloat('Unknown'),
+          {16} wbFloat('Unknown'),
+          {20} wbByteArray('Unknown', 24),
+          {44} wbFloat('Unknown'),
+          {48} wbFloat('Unknown'),
+          {52} wbFloat('Unknown'),
+          {56} wbByteArray('Unknown', 8),
+          {64} wbInteger('Clustering', itU8),
+          {65} wbInteger('Min Slope', itU8),
+          {66} wbInteger('Max Slope', itU8),
+          {67} wbInteger('Flags', itU8, wbFlags([
+                 {0}'Conform to slope',
+                 {1}'Paint Vertices',
+                 {2}'Size Variance +/-',
+                 {3}'X +/-',
+                 {4}'Y +/-',
+                 {5}'Z +/-',
+                 {6}'Tree',
+                 {7}'Huge Rock'
+               ])),
+          {68} wbFormIDCk('Object', [TREE, FLOR, STAT, LTEX, MSTT, PKIN, SCOL]),
+          {72} wbByteArray('Unknown', 2)
+        ]), wbRDOTCountCallback),
+        wbArray('Unknown', wbByteArray('Unknown', 2), wbRDOTCountCallback)
+      ]),
+
+       (** )
+      wbStruct(RDOT, 'Unknown', [
+        wbByteArray('Unknown', 68),
+        wbArray('Unknown', wbStruct('Unknown', [
+          {00} wbFormIDCk('Pack-In', [PKIN]),
+          {04} wbInteger('Parent Index', itU16, wbHideFFFF),
+          {06} wbByteArray('Unknown', 40),
+          {46} wbFloat('Unknown'),
+          {50} wbFloat('Unknown'),
+          {54} wbFloat('Unknown'),
+          {58} wbByteArray('Unknown', 16)
+        ]))
+      ]),
+       (** )
+       (** )
+      wbStruct('Object', [
+        wbUnknown
+        (** )
         wbFormIDCk('Object', [TREE, FLOR, STAT, LTEX, MSTT]),
         wbInteger('Parent Index', itU16, wbHideFFFF),
         wbByteArray('Unknown', 2),
@@ -16704,6 +16778,8 @@ begin
         wbByteArray('Unknown', 2),
         wbByteArray('Unknown', 4)
       ]), 0, nil, nil, cpNormal, False, wbREGNObjectsDontShow),
+        (**)
+
 
       {--- Grass ---}
       wbArrayS(RDGS, 'Grasses', wbStructSK([0], 'Grass', [
@@ -16719,9 +16795,15 @@ begin
       ]), 0, cpNormal, False, nil, nil, wbREGNWeatherDontShow),
 
       wbFloat(RLDM, 'LOD Display Distance Multiplier'),
-      wbFloat(ANAM, 'Occlusion Accuracy Dist')
+      wbFloat(ANAM, 'Occlusion Accuracy Dist'),
 
-    ], []))
+      {--- Unknown ---}
+      wbStruct(RDWK, 'Unknown', [
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ])
+    ], [])),
+    wbUnknown(RCBN)
   ], True);
 
   wbRecord(SOUN, 'Sound Marker', [
