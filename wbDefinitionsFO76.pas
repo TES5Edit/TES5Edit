@@ -3619,7 +3619,7 @@ begin
   rCNAM := Container.ElementBySignature['CNAM'];
   if not Assigned(rCNAM) then Exit;
 
-  if rCNAM.EditValue = 'AutoWeapon' then
+  if rCNAM.NativeValue = Int64($ED157AE3) then  // 'AutoWeapon'
     Result := 1;
 end;
 
@@ -13950,6 +13950,9 @@ begin
         'Channel 2? (unused)'
       ])
     ]),
+    wbFloat(WNAM),
+    wbUnknown(ONAM),
+    wbFormIDCk(ENAM, 'Effect', [AECH]),
     wbStruct(ATTN, 'Attenuation Values', [
       wbFloat('Fade In Distance - Start'),
       wbFloat('Fade In Distance - End'),
