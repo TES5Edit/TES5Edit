@@ -12710,6 +12710,7 @@ begin
     wbFormIDCk(NAM1, 'Sound 2', [SNDR]),
     wbFormIDCk(NAM3, 'Footstep Explosion', [EXPL]),
     wbFormIDCk(NAM2, 'Hazard', [HAZD]),
+    wbFormIDCk(NAM4, 'Sound 3', [SNDR]),
     wbFloat(FNAM, 'Footstep Particle Max Dist')
   ]);
 
