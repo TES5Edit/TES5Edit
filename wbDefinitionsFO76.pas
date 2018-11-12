@@ -1132,7 +1132,7 @@ var
   wbXESP: IwbSubRecordDef;
   wbICON: IwbSubRecordDef;
   wbMICO: IwbSubRecordDef;
-  wbActorValue: IwbIntegerDef;
+  wbActorValue: IwbUnionDef;
   wbETYP: IwbSubRecordDef;
   wbETYPReq: IwbSubRecordDef;
   wbEFID: IwbSubRecordDef;
@@ -3416,6 +3416,11 @@ begin
     Result := 1;
 end;
 
+function wbDeciderFormVersion77(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 77);
+end;
+
 function wbDeciderFormVersion99(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 99);
@@ -3612,6 +3617,8 @@ function wbRDOTCountCallback(aBasePtr: Pointer; aEndPtr: Pointer; const aElement
 var
   Container  : IwbContainer;
 begin
+  Result := 0;
+
   if not Assigned(aElement) then
     Exit;
 
@@ -3907,7 +3914,7 @@ type
     { 3} ptFloat,
     { 4} ptActor,              // ACHR
     { 5} ptActorBase,          // NPC_
-    { 6} ptActorValue,         // Enum: wbActorValue
+    { 6} ptActorValue,         // AVIF?
     { 7} ptAdvanceAction,      // ?? Enum
     { 8} ptAlias,              // index into QUST quest aliases
     { 9} ptAlignment,          // ?? Enum
@@ -3964,7 +3971,8 @@ type
     {60} ptAcousticSpace,      // ASPC
     {61} ptCurrency,           // CNCY
     {62} ptConstructibleObject,// COBJ
-    {63} ptRegionOpt           // REGN optional
+    {63} ptRegionOpt,          // REGN optional
+    {64} ptActorValueEnum      // Enum: wbActorValue
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -3987,7 +3995,7 @@ const
     (Index:  10; Name: 'GetStartingPos'; ParamType1: ptAxis),
     (Index:  11; Name: 'GetStartingAngle'; ParamType1: ptAxis),
     (Index:  12; Name: 'GetSecondsPassed'),
-    (Index:  14; Name: 'GetValue'; ParamType1: ptActorValue),
+    (Index:  14; Name: 'GetValue'; ParamType1: ptActorValue{Enum}),
     (Index:  18; Name: 'GetCurrentTime'),
     (Index:  24; Name: 'GetScale'),
     (Index:  25; Name: 'IsMoving'),
@@ -4196,7 +4204,7 @@ const
     (Index: 435; Name: 'PlayerAudioDetection'),
     (Index: 437; Name: 'GetIsCreatureType'; ParamType1: ptInteger),
     (Index: 438; Name: 'HasKey'; ParamType1: ptObjectReference),
-    (Index: 439; Name: 'IsFurnitureEntryType'; ParamType1: ptReferencableObject),
+    (Index: 439; Name: 'IsFurnitureEntryType'; ParamType1: ptFurnitureEntry),
     (Index: 444; Name: 'GetInCurrentLocationFormList'; ParamType1: ptFormList),
     (Index: 445; Name: 'GetInZone'; ParamType1: ptEncounterZone),
     (Index: 446; Name: 'GetVelocity'; ParamType1: ptAxis),
@@ -4284,7 +4292,7 @@ const
     (Index: 592; Name: 'GetRefTypeAliveCount'; ParamType1: ptLocation; Paramtype2: ptRefType),
     (Index: 594; Name: 'GetIsFlying'),
     (Index: 595; Name: 'IsCurrentSpell'; ParamType1: ptMagicItem; ParamType2: ptCastingSource),
-    (Index: 596; Name: 'SpellHasKeyword'; ParamType1: ptKeyword),
+    (Index: 596; Name: 'SpellHasKeyword'; ParamType1: ptInteger; ParamType2: ptKeyword),
     (Index: 597; Name: 'GetEquippedItemType'; ParamType1: ptCastingSource),
     (Index: 598; Name: 'GetLocationAliasCleared'; ParamType1: ptAlias),
     (Index: 600; Name: 'GetLocationAliasRefTypeDeadCount'; ParamType1: ptAlias; ParamType2: ptRefType),
@@ -4320,7 +4328,7 @@ const
     (Index: 633; Name: 'GetFlyingState'),
     (Index: 635; Name: 'IsInFavorState'),
     (Index: 636; Name: 'HasTwoHandedWeaponEquipped'),
-    (Index: 637; Name: 'IsFurnitureExitType'; ParamType1: ptReferencableObject),
+    (Index: 637; Name: 'IsFurnitureExitType'; ParamType1: ptFurnitureEntry),
     (Index: 638; Name: 'IsInFriendStatewithPlayer'),
     (Index: 639; Name: 'GetWithinDistance'; ParamType1: ptObjectReference; ParamType2: ptFloat),
     (Index: 640; Name: 'GetValuePercent'; ParamType1: ptActorValue),
@@ -6970,7 +6978,10 @@ begin
   ], []);
 
   //wbActorValue := wbInteger('Actor Value', itS32, wbActorValueEnum);
-  wbActorValue := wbFormIDCkNoReach('Actor Value', [AVIF, NULL]);
+  wbActorValue := wbUnion('Actor Value', wbDeciderFormVersion77, [
+    wbInteger('Actor Value', itU32, wbActorValueEnum),
+    wbFormIDCkNoReach('Actor Value', [AVIF, NULL])
+  ]);
 
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
     {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -9186,7 +9197,7 @@ begin
         {25 ptFurnitureAnim}
         wbInteger('Furniture Anim', itU32, wbFurnitureAnimTypeEnum),
         {26 ptFurnitureEntry}
-        wbInteger('Furniture Entry', itU32, wbEnum([], [$010000, 'Front', $020000, 'Behind', $040000, 'Right', $80000, 'Left', $100000, 'Up'])),
+        wbInteger('Furniture Entry', itU32, wbFurnitureEntryTypeFlags),
         {27 ptGlobal}
         wbFormIDCkNoReach('Global', [GLOB]),
         {28 ptIdleForm}
@@ -9260,7 +9271,9 @@ begin
         {62 ptConstructibleObject }
         wbFormIDCkNoReach('Constructible Object', [COBJ]),
         {63 ptRegionOpt}
-        wbFormIDCkNoReach('Region', [REGN, NULL])
+        wbFormIDCkNoReach('Region', [REGN, NULL]),
+        {64 ptActorValueEnum}
+        wbInteger('Actor Value', itS32, wbActorValueEnum)
       ]),
 
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
@@ -9319,7 +9332,7 @@ begin
         {25 ptFurnitureAnim}
         wbInteger('Furniture Anim', itU32, wbFurnitureAnimTypeEnum),
         {26 ptFurnitureEntry}
-        wbInteger('Furniture Entry', itU32, wbEnum([], [$010000, 'Front', $020000, 'Behind', $040000, 'Right', $80000, 'Left', $100000, 'Up'])),
+        wbInteger('Furniture Entry', itU32, wbFurnitureEntryTypeFlags),
         {27 ptGlobal}
         wbFormIDCkNoReach('Global', [GLOB]),
         {28 ptIdleForm}
@@ -9436,7 +9449,9 @@ begin
         {62 ptConstructibleObject }
         wbFormIDCkNoReach('Constructible Object', [COBJ]),
         {63 ptRegionOpt}
-        wbFormIDCkNoReach('Region', [REGN, NULL])
+        wbFormIDCkNoReach('Region', [REGN, NULL]),
+        {64 ptActorValueEnum}
+        wbInteger('Actor Value', itS32, wbActorValueEnum)
       ]),
       wbInteger('Run On', itU32, wbEnum([
         { 0} 'Subject',
