@@ -3944,7 +3944,9 @@ var
   wbLEncodingDefault : TEncoding;
   wbLEncoding        : TStringList;
 
-procedure wbAddDistinctLEncodings;
+procedure wbAddDefaultLEncodingsIfMissing;
+procedure wbAddLEncodingIfMissing(const aLanguage: string; aEncoding: TEncoding); overload;
+procedure wbAddLEncodingIfMissing(const aLanguage: string; const aEncoding: string); overload;
 function wbEncodingForLanguage(const aLanguage: string): TEncoding;
 function wbMBCSEncoding(aCP: Cardinal): TEncoding; overload;
 function wbMBCSEncoding(const s: string): TEncoding; overload;
@@ -17631,27 +17633,51 @@ begin
   bsdEncodingOverride := aEncoding;
 end;
 
-procedure wbAddDistinctLEncodings;
+procedure wbAddLEncodingIfMissing(const aLanguage: string; aEncoding: TEncoding); overload;
+var
+  i: Integer;
 begin
-  wbLEncoding.AddObject('english', wbMBCSEncoding(1252));
-  wbLEncoding.AddObject('french', wbMBCSEncoding(1252));
-  wbLEncoding.AddObject('polish', wbMBCSEncoding(1250));
-  wbLEncoding.AddObject('czech', wbMBCSEncoding(1250));
-  wbLEncoding.AddObject('danish', wbMBCSEncoding(1252));
-  wbLEncoding.AddObject('finnish', wbMBCSEncoding(1252));
-  wbLEncoding.AddObject('german', wbMBCSEncoding(1252));
-  wbLEncoding.AddObject('greek', wbMBCSEncoding(1253));
-  wbLEncoding.AddObject('italian', wbMBCSEncoding(1252));
-  wbLEncoding.AddObject('japanese', TEncoding.UTF8);
-  wbLEncoding.AddObject('norwegian', wbMBCSEncoding(1252));
-  wbLEncoding.AddObject('portuguese', wbMBCSEncoding(1252));
-  wbLEncoding.AddObject('spanish', wbMBCSEncoding(1252));
-  wbLEncoding.AddObject('swedish', wbMBCSEncoding(1252));
-  wbLEncoding.AddObject('turkish', wbMBCSEncoding(1254));
-  wbLEncoding.AddObject('russian', wbMBCSEncoding(1251));
-  wbLEncoding.AddObject('chinese', TEncoding.UTF8);
-  wbLEncoding.AddObject('hungarian', wbMBCSEncoding(1250));
-  wbLEncoding.AddObject('arabic', wbMBCSEncoding(1256));
+  if aLanguage = '' then
+    Exit;
+  if not Assigned(aEncoding) then
+    Exit;
+  if not wbLEncoding.Find(aLanguage, i) then
+    wbLEncoding.AddObject(aLanguage, aEncoding);
+end;
+
+procedure wbAddLEncodingIfMissing(const aLanguage: string; const aEncoding: string); overload;
+var
+  i: Integer;
+begin
+  if aLanguage = '' then
+    Exit;
+  if aEncoding = '' then
+    Exit;
+  if not wbLEncoding.Find(aLanguage, i) then
+    wbLEncoding.AddObject(aLanguage, wbMBCSEncoding(aEncoding));
+end;
+
+procedure wbAddDefaultLEncodingsIfMissing;
+begin
+  wbAddLEncodingIfMissing('english', '1252');
+  wbAddLEncodingIfMissing('french', '1252');
+  wbAddLEncodingIfMissing('polish', '1250');
+  wbAddLEncodingIfMissing('czech', '1250');
+  wbAddLEncodingIfMissing('danish', '1252');
+  wbAddLEncodingIfMissing('finnish', '1252');
+  wbAddLEncodingIfMissing('german', '1252');
+  wbAddLEncodingIfMissing('greek', '1253');
+  wbAddLEncodingIfMissing('italian', '1252');
+  wbAddLEncodingIfMissing('japanese', TEncoding.UTF8);
+  wbAddLEncodingIfMissing('norwegian', '1252');
+  wbAddLEncodingIfMissing('portuguese', '1252');
+  wbAddLEncodingIfMissing('spanish', '1252');
+  wbAddLEncodingIfMissing('swedish', '1252');
+  wbAddLEncodingIfMissing('turkish', '1254');
+  wbAddLEncodingIfMissing('russian', '1251');
+  wbAddLEncodingIfMissing('chinese', TEncoding.UTF8);
+  wbAddLEncodingIfMissing('hungarian', '1250');
+  wbAddLEncodingIfMissing('arabic', '1256');
 end;
 
 function wbEncodingForLanguage(const aLanguage: string): TEncoding;
