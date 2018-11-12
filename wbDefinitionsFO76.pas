@@ -13855,7 +13855,9 @@ begin
         $00, 'None',
         $08, 'Loop',
         $10, 'Envelope Fast',
-        $20, 'Envelope Slow'
+        $20, 'Envelope Slow',
+        $80, 'Unknown 128',
+        $88, 'Unknown 136'
       ])),
       wbInteger('Sidechain', itU8),
       wbInteger('Rumble Send Value = (Small / 7) + ((Big / 7) * 16)', itU8)
@@ -13870,17 +13872,21 @@ begin
       ]),
       wbFormIDCk('Base Descriptor', [SNDR])
     ]),
+    wbUnknown(HNAM),
+    wbUnknown(INAM),
     wbRArray('Descriptors', wbFormIDCk(DNAM, 'Descriptor', [SNDR])),
     wbInteger(ITMC, 'Count', itU32, nil, cpBenign),
     wbRArrayS('Rates of Fire',
       wbRStructSK([1], 'Sound', [
         wbEmpty(ITMS, 'Marker Start'),
         wbInteger(INTV, 'RoF (RPM)', itU32),
-        wbString(FNAM, 'File'),
+        wbRArray('Files', wbString(FNAM, 'File')),
         wbEmpty(ITME, 'Marker End')
       ], []),
       cpNormal, False, nil, wbSNDRRatesOfFireAfterSet
-    )
+    ),
+    wbUnknown(PNAM),
+    wbUnknown(QNAM)
   ]);
 
   wbRecord(DUAL, 'Dual Cast Data', [
