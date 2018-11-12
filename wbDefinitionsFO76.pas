@@ -4369,6 +4369,7 @@ const
     (Index: 683; Name: 'GetPathingCurrentSpeed'),
     (Index: 684; Name: 'GetPathingCurrentSpeedAngle'; ParamType1: ptAxis),
     (Index: 691; Name: 'GetWorkshopObjectCount'; ParamType1: ptReferencableObject),
+//    (Index: 692; Name: '??? HasKeyword'; ParamType1: ptKeyword),
     (Index: 693; Name: 'EPMagic_SpellHasKeyword'; ParamType1: ptKeyword),
     (Index: 694; Name: 'GetNoBleedoutRecovery'),
     (Index: 696; Name: 'EPMagic_SpellHasSkill'; ParamType1: ptActorValue),
