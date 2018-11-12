@@ -13987,7 +13987,10 @@ begin
     ], cpNormal, True, nil, 7)
   ]);
 
-  wbRecord(IDLE, 'Idle Animation', [
+  wbRecord(IDLE, 'Idle Animation',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      11, 'Photomode'
+    ], True, True)), [
     wbEDID,
     wbCTDAs,
     wbString(DNAM, 'Behavior Graph'),
@@ -14008,7 +14011,9 @@ begin
       wbInteger('Animation Group Section', itU8{, wbIdleAnam}),
       wbInteger('Replay Delay', itU16)
     ], cpNormal, True),
-    wbString(GNAM, 'Animation File')
+    wbString(GNAM, 'Animation File'),
+    wbFormIDCk(PNAM, 'Photomode Category Keyword', [KYWD]),
+    wbFULL
   ]);
 
   wbRecord(INFO, 'Dialog response',
