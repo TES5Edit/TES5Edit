@@ -10223,6 +10223,10 @@ begin
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO2C,
       wbMO2S,
+      wbUnknown(XFLG),
+      wbENLT,
+      wbENLS,
+      wbAUUV,
       wbMO2F
     ], [], cpNormal, False),
     wbRStruct('Female world model', [
@@ -10230,6 +10234,10 @@ begin
       wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO3C,
       wbMO3S,
+      wbUnknown(XFLG),
+      wbENLT,
+      wbENLS,
+      wbAUUV,
       wbMO3F
     ], []),
     wbRStruct('Male 1st Person', [
@@ -10237,6 +10245,9 @@ begin
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO4C,
       wbMO4S,
+      wbENLT,
+      wbENLS,
+      wbAUUV,
       wbMO4F
     ], []),
     wbRStruct('Female 1st Person', [
@@ -10244,6 +10255,9 @@ begin
       wbByteArray(MO5T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO5C,
       wbMO5S,
+      wbENLT,
+      wbENLS,
+      wbAUUV,
       wbMO5F
     ], []),
     wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),
