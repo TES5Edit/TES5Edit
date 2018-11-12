@@ -256,6 +256,7 @@ const
   BPNT : TwbSignature = 'BPNT';
   BPTD : TwbSignature = 'BPTD';
   BPTN : TwbSignature = 'BPTN';
+  BPVB : TwbSignature = 'BPVB'; { New to Fallout 76 }
   BSIZ : TwbSignature = 'BSIZ'; { New to Fallout 4 }
   BSMB : TwbSignature = 'BSMB'; { New to Fallout 4 }
   BSMP : TwbSignature = 'BSMP'; { New to Fallout 4 }
@@ -12402,6 +12403,7 @@ begin
     wbMODL,
     wbRArrayS('Body Parts',
       wbRStructSK([1], 'Body Part', [
+        wbString(BPVB, 'Bone Name', 0, cpNormal, True),
         wbLString(BPTN, 'Part Name', 0, cpTranslate), // optional
         wbString(BPNN, 'Part Node', 0, cpNormal, True),
         wbString(BPNT, 'VATS Target', 0, cpNormal, True),
@@ -12476,7 +12478,8 @@ begin
           wbFormIDCk('On Cripple - Impact DataSet', [IPDS, NULL]),
           wbFloat('On Cripple - Debris Scale'),
           wbInteger('On Cripple - Debris Count', itU8),
-          wbInteger('On Cripple - Decal Count', itU8)
+          wbInteger('On Cripple - Decal Count', itU8),
+          wbFloat('Unknown')
         ], cpNormal, True),
         wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
         wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
