@@ -515,6 +515,7 @@ const
   LTPT : TwbSignature = 'LTPT'; { New to Fallout 4 }
   LVCV : TwbSignature = 'LVCV'; { New To Fallout 76 }
   LVCT : TwbSignature = 'LVCT'; { New To Fallout 76 }
+  LVCL : TwbSignature = 'LVCL'; { New To Fallout 76 }
   LVIG : TwbSignature = 'LVIG'; { New To Fallout 76 }
   LVIV : TwbSignature = 'LVIV'; { New To Fallout 76 }
   LVLC : TwbSignature = 'LVLC';
@@ -538,6 +539,7 @@ const
   LVPC : TwbSignature = 'LVPC'; { New To Fallout 76 }
   LVSG : TwbSignature = 'LVSG'; { New to Fallout 4 }
   LVSP : TwbSignature = 'LVSP';
+  LVUO : TwbSignature = 'LVUO'; { New To Fallout 76 }
   MASE : TwbSignature = 'MASE'; { New To Fallout 4 }
   MAST : TwbSignature = 'MAST';
   MATO : TwbSignature = 'MATO';
@@ -12175,6 +12177,7 @@ begin
       wbInteger('Motion Blur Strength', itU32),
       wbUnknown
     ]),
+    wbString(LNAM),
     wbArray(BNAM, 'Blur Radius', wbTimeInterpolator),
     wbArray(VNAM, 'Double Vision Strength', wbTimeInterpolator),
     wbArray(TNAM, 'Tint Color', wbColorInterpolator),
@@ -12239,7 +12242,8 @@ begin
       wbArray(_53_IAD, 'Contrast Add', wbTimeInterpolator)
     ], []),
     wbUnknown(_14_IAD),
-    wbUnknown(_54_IAD)
+    wbUnknown(_54_IAD),
+    wbString(FULL)
   ]);
 
   wbRecord(FLST, 'FormID List', [
@@ -18464,7 +18468,44 @@ begin
   ]);
 
   wbRecord(LVPC, 'Leveled Perk Card', [
-    wbEDID
+    wbEDID,
+    wbLVLD,
+    wbLVMV,
+    wbLVCV,
+    wbInteger(LVLF, 'Flags', itU8, wbFlags([
+      {0x00000001} 'Calculate from all levels <= player''s level',
+      {0x00000002} 'Calculate for each item in count',
+      {0x00000004} 'Calculate All', {Still picks just one}
+      {0x00000008} 'Unknown 3',
+      {0x00000010} 'Unknown 4',
+      {0x00000020} 'Unknown 5',
+      {0x00000040} 'Unknown 6',
+      {0x00000080} 'Unknown 7'
+    ]), cpNormal, True),
+    wbLLCT,
+    wbRArrayS('Leveled List Entries',
+      wbRStructExSK([0], [1], 'Leveled List Entry', [
+        wbUnion(LVLO, '', wbDeciderFormVersion174, [
+          wbStructExSK([0, 2], [3], 'Base Data', [
+            wbInteger('Level', itU16),
+            wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
+            wbFormIDCk('Reference', [PCRD]),
+            wbInteger('Count', itS16),
+            wbInteger('Chance None', itU8),
+            wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
+          ]),
+          wbFormIDCk('Reference', [PCRD])
+        ]),
+        wbCOED,
+        wbCTDAs,
+        wbLVOV,
+        wbLVIV,
+        wbLVLV,
+        wbLVOG,
+        wbLVLT
+    ], []), cpNormal, False, nil, wbLVLOsAfterSet),
+    wbUnknown(LVCL),
+    wbUnknown(LVUO)
   ]);
 
   wbRecord(STND, 'Snap Template Node', [
