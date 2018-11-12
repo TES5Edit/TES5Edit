@@ -1195,6 +1195,7 @@ var
   wbNull: IwbValueDef;
   wbTimeInterpolator: IwbStructDef;
   wbColorInterpolator: IwbStructDef;
+  wbIMADUnknown1: IwbStructDef;
   wbYNAM: IwbSubRecordDef;
   wbZNAM: IwbSubRecordDef;
   wbSPED: IwbSubRecordDef;
@@ -12092,6 +12093,14 @@ begin
     wbFloat('Alpha', cpNormal, False, 255, 0)
   ]);
 
+  wbIMADUnknown1 := wbStruct('Unknown', [
+    wbByteArray('Unknown', 4), //may be a float too, can't confirm
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown')
+  ]);
+
+
   wbRecord(IMAD, 'Image Space Adapter', [
     wbEDID,
     wbStruct(DNAM, 'Data Count', [
@@ -12215,24 +12224,24 @@ begin
       wbArray(_07_IAD, 'Sky Scale Mult', wbTimeInterpolator),
       wbArray(_47_IAD, 'Sky Scale Add', wbTimeInterpolator)
     ], []),
-    wbUnknown(_08_IAD),
-    wbUnknown(_48_IAD),
-    wbUnknown(_09_IAD),
-    wbUnknown(_49_IAD),
-    wbUnknown(_0A_IAD),
-    wbUnknown(_4A_IAD),
-    wbUnknown(_0B_IAD),
-    wbUnknown(_4B_IAD),
-    wbUnknown(_0C_IAD),
-    wbUnknown(_4C_IAD),
-    wbUnknown(_0D_IAD),
-    wbUnknown(_4D_IAD),
-    wbUnknown(_0E_IAD),
-    wbUnknown(_4E_IAD),
-    wbUnknown(_0F_IAD),
-    wbUnknown(_4F_IAD),
-    wbUnknown(_10_IAD),
-    wbUnknown(_50_IAD),
+    wbSubRecord(_08_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_48_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_09_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_49_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_0A_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_4A_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_0B_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_4B_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_0C_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_4C_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_0D_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_4D_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_0E_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_4E_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_0F_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_4F_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_10_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_50_IAD, 'Unknown', wbIMADUnknown1),
     wbRStruct('Cinematic', [
       wbArray(_11_IAD, 'Saturation Mult', wbTimeInterpolator),
       wbArray(_51_IAD, 'Saturation Add', wbTimeInterpolator),
@@ -12241,8 +12250,8 @@ begin
       wbArray(_13_IAD, 'Contrast Mult', wbTimeInterpolator),
       wbArray(_53_IAD, 'Contrast Add', wbTimeInterpolator)
     ], []),
-    wbUnknown(_14_IAD),
-    wbUnknown(_54_IAD),
+    wbSubRecord(_14_IAD, 'Unknown', wbIMADUnknown1),
+    wbSubRecord(_54_IAD, 'Unknown', wbIMADUnknown1),
     wbString(FULL)
   ]);
 
