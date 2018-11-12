@@ -13235,6 +13235,7 @@ begin
       end;
     end;
     mniNavCompareSelected.Visible := Length(Nodes) > 1;
+    mniNavCompareSelected.Caption := 'Compare Selected ('+Length(Nodes).ToString+')';
   end;
 
   mniNavCreateModGroup.Visible := False;

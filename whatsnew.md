@@ -10,6 +10,10 @@ The following reported issues have been fixed:
 
 The code page for translatable strings (see below for definition) can now be overridden by placing the text `<cp:xxxx>` somewhere in the description of the module. `xxxx` can be `utf8` or any valid code page number, e.g. `1252`. Code pages with less than 4 digits must use leading 0s, e.g. `<cp:0930>`.
 
+## Compare Selected
+
+The Compare Selected context menu entry now shows the number of currently selected records as `Compare Selected (x)`.
+
 # What's new in xEdit 3.3.3 BETA?
 
 ## Improved language support
