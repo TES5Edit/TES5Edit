@@ -545,6 +545,7 @@ const
   MAST : TwbSignature = 'MAST';
   MATO : TwbSignature = 'MATO';
   MATT : TwbSignature = 'MATT';
+  MBNR : TwbSignature = 'MBNR'; { New To Fallout 76 }
   MCHT : TwbSignature = 'MCHT'; { New to Skyrim }
   MCQP : TwbSignature = 'MCQP'; { New To Fallout 76 }
   MDOB : TwbSignature = 'MDOB';
@@ -12906,7 +12907,8 @@ begin
     wbRStructs('Menu Buttons', 'Menu Button', [
       wbLStringKC(ITXT, 'Button Text', 0, cpTranslate),
       wbCTDAs
-    ], [])
+    ], []),
+    wbUnknown(MBNR)
   ], False, nil, cpNormal, False, wbMESGAfterLoad);
 
   a := MakeVarRecs([
