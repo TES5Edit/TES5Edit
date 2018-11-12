@@ -11992,6 +11992,8 @@ begin
       wbFloat('Sky Scale'),
       wbFloat('Middle Gray')
     ], cpNormal, True),
+    wbUnknown(FNAM), {TODO}
+    wbUnknown(GNAM), {TODO}
     wbStruct(CNAM, 'Cinematic', [
       wbFloat('Saturation'),
       wbFloat('Brightness'),
@@ -12028,6 +12030,21 @@ begin
       wbFloat('Vignette Radius'),
       wbFloat('Vignette Strength')
     ], cpNormal, True, nil, 5),
+    wbUnknown(XNAM), {TODO}
+//    wbStruct(XNAM, 'Unknown', [
+//      wbStruct('Unknown', [
+//        wbFloat('Unknown 2'),
+//        wbByteArray('Unknown 3', 4)
+//      ]),
+//      wbStruct('Unknown', [
+//        wbFloat('Unknown 2'),
+//        wbFloat('Unknown 2')
+//      ]),
+//      wbFloat('Unknown 2')
+//    ]),
+    wbFloat(INAM),
+    wbUnknown(YNAM), {TODO}
+    wbUnknown(ZNAM), {TODO}
     wbString(TX00, 'LUT')
   ]);
 
