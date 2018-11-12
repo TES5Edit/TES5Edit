@@ -18072,6 +18072,8 @@ begin
     wbArray(FNAM, 'Filter Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbFormIDCk(LNAM, 'Loose Mod', sigBaseObjects),
     wbInteger(NAM1, 'Priority', itU8),
+    wbByteArray(NAM2, 'Unused', 0),
+    wbArray(NAM3, 'Unknown Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbFLTR
   ]);
 
