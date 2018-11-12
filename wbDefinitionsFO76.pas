@@ -14358,6 +14358,7 @@ begin
     wbEDID,
     wbDESCReq,
     wbCTDAs,
+    wbString(BNAM, 'Background Image'),
     wbFormIDCk(NNAM, 'Loading Screen NIF', [STAT, SCOL, NULL], False, cpNormal, True),
     wbFormIDCk(TNAM, 'Transform', [TRNS]),
     wbStruct(ONAM, 'Rotation', [
