@@ -11992,6 +11992,8 @@ begin
       wbFloat('Sky Scale'),
       wbFloat('Middle Gray')
     ], cpNormal, True),
+    wbUnknown(FNAM), {TODO}
+    wbUnknown(GNAM), {TODO}
     wbStruct(CNAM, 'Cinematic', [
       wbFloat('Saturation'),
       wbFloat('Brightness'),
@@ -12028,6 +12030,21 @@ begin
       wbFloat('Vignette Radius'),
       wbFloat('Vignette Strength')
     ], cpNormal, True, nil, 5),
+    wbUnknown(XNAM), {TODO}
+//    wbStruct(XNAM, 'Unknown', [
+//      wbStruct('Unknown', [
+//        wbFloat('Unknown 2'),
+//        wbByteArray('Unknown 3', 4)
+//      ]),
+//      wbStruct('Unknown', [
+//        wbFloat('Unknown 2'),
+//        wbFloat('Unknown 2')
+//      ]),
+//      wbFloat('Unknown 2')
+//    ]),
+    wbFloat(INAM),
+    wbUnknown(YNAM), {TODO}
+    wbUnknown(ZNAM), {TODO}
     wbString(TX00, 'LUT')
   ]);
 
@@ -13987,7 +14004,10 @@ begin
     ], cpNormal, True, nil, 7)
   ]);
 
-  wbRecord(IDLE, 'Idle Animation', [
+  wbRecord(IDLE, 'Idle Animation',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      11, 'Photomode'
+    ], True, True)), [
     wbEDID,
     wbCTDAs,
     wbString(DNAM, 'Behavior Graph'),
@@ -14008,7 +14028,9 @@ begin
       wbInteger('Animation Group Section', itU8{, wbIdleAnam}),
       wbInteger('Replay Delay', itU16)
     ], cpNormal, True),
-    wbString(GNAM, 'Animation File')
+    wbString(GNAM, 'Animation File'),
+    wbFormIDCk(PNAM, 'Photomode Category Keyword', [KYWD]),
+    wbFULL
   ]);
 
   wbRecord(INFO, 'Dialog response',
@@ -14353,6 +14375,7 @@ begin
     wbEDID,
     wbDESCReq,
     wbCTDAs,
+    wbString(BNAM, 'Background Image'),
     wbFormIDCk(NNAM, 'Loading Screen NIF', [STAT, SCOL, NULL], False, cpNormal, True),
     wbFormIDCk(TNAM, 'Transform', [TRNS]),
     wbStruct(ONAM, 'Rotation', [
@@ -16984,11 +17007,13 @@ begin
     wbInteger(FNAM, 'Flags', itU8, wbFlags([
       {0x01} 'Dangerous',
       {0x02} 'Unknown 1',
-      {0x04} 'Directional Sound'
+      {0x04} 'Directional Sound',
+      {0x08} 'Unknown 3',
+      {0x10} 'Unknown 4'
     ]), cpNormal, True),
     wbFormIDCk(TNAM, 'Material (unused)', [MATT]),
     wbFormIDCk(SNAM, 'Open Sound', [SNDR, NULL]),
-    wbFormIDCk(XNAM, 'Consume Spell', [SPEL]),
+    wbFormIDCk(XNAM, 'Consume Spell', [SPEL, ALCH]),
     wbFormIDCk(YNAM, 'Contact Spell', [SPEL]),
     wbFormIDCk(INAM, 'Image Space', [IMGS]),
     wbByteArray(DATA, 'Unused', 0),
@@ -17033,29 +17058,34 @@ begin
         wbFloat('Interior Specular Brightness'),
         wbFloat('Interior Specular Power')
       ]),
-      wbStruct('Noise Properties', [
-        wbFloat('Layer 1 - Wind Direction'),
-        wbFloat('Layer 2 - Wind Direction'),
-        wbFloat('Layer 3 - Wind Direction'),
-        wbFloat('Layer 1 - Wind Speed'),
-        wbFloat('Layer 2 - Wind Speed'),
-        wbFloat('Layer 3 - Wind Speed'),
-        wbFloat('Layer 1 - Amplitude Scale'),
-        wbFloat('Layer 2 - Amplitude Scale'),
-        wbFloat('Layer 3 - Amplitude Scale'),
-        wbFloat('Layer 1 - UV Scale'),
-        wbFloat('Layer 2 - UV Scale'),
-        wbFloat('Layer 3 - UV Scale'),
-        wbFloat('Layer 1 - Noise Falloff'),
-        wbFloat('Layer 2 - Noise Falloff'),
-        wbFloat('Layer 3 - Noise Falloff')
-      ]),
-      wbStruct('Silt Properties', [
-        wbFloat('Silt Amount'),
-        wbByteColors('Light Color'),
-        wbByteColors('Dark Color')
-      ]),
-      wbInteger('Screen Space Reflections', itU8, wbBoolEnum)
+//      wbStruct('Noise Properties', [
+//        wbFloat('Layer 1 - Wind Direction'),
+//        wbFloat('Layer 2 - Wind Direction'),
+//        wbFloat('Layer 3 - Wind Direction'),
+//        wbFloat('Layer 1 - Wind Speed'),
+//        wbFloat('Layer 2 - Wind Speed'),
+//        wbFloat('Layer 3 - Wind Speed'),
+//        wbFloat('Layer 1 - Amplitude Scale'),
+//        wbFloat('Layer 2 - Amplitude Scale'),
+//        wbFloat('Layer 3 - Amplitude Scale'),
+//        wbFloat('Layer 1 - UV Scale'),
+//        wbFloat('Layer 2 - UV Scale'),
+//        wbFloat('Layer 3 - UV Scale'),
+//        wbFloat('Layer 1 - Noise Falloff'),
+//        wbFloat('Layer 2 - Noise Falloff'),
+//        wbFloat('Layer 3 - Noise Falloff')
+//      ]),
+//      wbStruct('Silt Properties', [
+//        wbFloat('Silt Amount'),
+//        wbByteColors('Light Color'),
+//        wbByteColors('Dark Color')
+//      ]),
+//      wbInteger('Screen Space Reflections', itU8, wbBoolEnum)
+      wbFloat('Unknown 1'),
+      wbByteArray('Unknown 2', 4),
+      wbByteArray('Unknown 3', 4),
+      wbByteArray('Unknown 4', 4),
+      wbByteArray('Unknown 5', 4)
     ], cpNormal, True, nil, 4),
     wbByteArray(GNAM, 'Unused', 0),
     wbStruct(NAM0, 'Linear Velocity', [
@@ -17070,7 +17100,9 @@ begin
     ], cpNormal, False),
     wbString(NAM2, 'Layer 1 Noise Texture'),
     wbString(NAM3, 'Layer 2 Noise Texture'),
-    wbString(NAM4, 'Layer 3 Noise Texture')
+    wbString(NAM4, 'Layer 3 Noise Texture'),
+    wbString(NAM5, 'Flow Normals Noise Texture'),
+    wbUnknown(NAM6)
   ]);
 
   wbRecord(WEAP, 'Weapon',
@@ -18478,30 +18510,44 @@ begin
     wbICON,
     wbCTDAs,
     wbUnknown(FNAM),
-    wbUnknown(INAM),
-    wbFormID(KNAM)
+//    wbStruct(FNAM, 'Unknown', [
+//      wbInteger('Unknown 1', itU32),
+//      wbFloat('Unknown 2'),
+//      wbFloat('Unknown 3'),
+//      wbByteArray('Unknown 4', 4),
+//      wbByteArray('Unknown 5', 4),
+//      wbByteArray('Unknown 6', 4),
+//      wbByteArray('Unknown 7', 4),
+//      wbByteArray('Unknown 8', 4)
+//   ]),
+    wbFormIDCk(INAM, 'Image Space', [IMAD]),
+    wbFormIDCk(KNAM, 'Keyword', [KYWD])
   ]);
 
   wbRecord(CHAL, 'Challenge', [
     wbEDID,
     wbFULL,
     wbString(SNAM),
-    wbUnknown(NNAM),
+    wbString(NNAM),
     wbUnknown(FNAM),
-    wbFormID(HNAM),
-    wbUnknown(CNAM),
+    wbFormIDCk(HNAM, 'Required Count', [GLOB]),
+    wbInteger(CNAM, 'Challenge Frequency', itU32, wbEnum([
+      'Daily',
+      'Weekly',
+      'Lifetime'
+    ])),
     wbUnknown(ENAM),
-    wbRArray('Unknown', wbFormID(ANAM)),
+    wbRArray('Pre-Requisites', wbFormIDCk(ANAM, 'Challenge', [CHAL])),
     wbCTDAs,
     wbUnknown(NAM7),
     wbUnknown(NAM8),
     wbUnknown(NAM9),
-    wbStruct(QSRD, 'Unknown', [
-      wbFormID('Unknown'),
-      wbUnknown
+    wbStruct(QSRD, 'Completion Reward', [
+      wbFormID('Item'),
+      wbInteger('Count', itU32)
     ]),
     wbString(JASF),
-    wbFormID(SCFL)
+    wbFormIDCk(SCFL, 'SubChallenge Completion List', [FLST])
   ]);
 
   wbRecord(AVTR, 'Avatar', [
