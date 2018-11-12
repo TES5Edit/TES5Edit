@@ -18478,8 +18478,18 @@ begin
     wbICON,
     wbCTDAs,
     wbUnknown(FNAM),
-    wbUnknown(INAM),
-    wbFormID(KNAM)
+//    wbStruct(FNAM, 'Unknown', [
+//      wbInteger('Unknown 1', itU32),
+//      wbFloat('Unknown 2'),
+//      wbFloat('Unknown 3'),
+//      wbByteArray('Unknown 4', 4),
+//      wbByteArray('Unknown 5', 4),
+//      wbByteArray('Unknown 6', 4),
+//      wbByteArray('Unknown 7', 4),
+//      wbByteArray('Unknown 8', 4)
+//   ]),
+    wbFormIDCk(INAM, 'Image Space', [IMAD]),
+    wbFormIDCk(KNAM, 'Keyword', [KYWD])
   ]);
 
   wbRecord(CHAL, 'Challenge', [
