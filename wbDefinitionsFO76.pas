@@ -18569,7 +18569,10 @@ begin
       wbFormID('Node'),
       wbArray('Unknown', wbFloat('Unknown'))
     ])),
-    wbRArray('Unknown', wbUnknown(ONAM)),
+    wbRArray('Unknown', wbRStruct('Unknown', [
+      wbUnknown(ONAM),
+      wbUnknown(TNAM)
+    ], [])),
     wbArray(BNAM, 'Unknown', wbFloat('Unknown'), 6),
     wbUnknown(GNAM),
     wbUnknown(INAM),
