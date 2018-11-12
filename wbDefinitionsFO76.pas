@@ -16990,11 +16990,13 @@ begin
     wbInteger(FNAM, 'Flags', itU8, wbFlags([
       {0x01} 'Dangerous',
       {0x02} 'Unknown 1',
-      {0x04} 'Directional Sound'
+      {0x04} 'Directional Sound',
+      {0x08} 'Unknown 3',
+      {0x10} 'Unknown 4'
     ]), cpNormal, True),
     wbFormIDCk(TNAM, 'Material (unused)', [MATT]),
     wbFormIDCk(SNAM, 'Open Sound', [SNDR, NULL]),
-    wbFormIDCk(XNAM, 'Consume Spell', [SPEL]),
+    wbFormIDCk(XNAM, 'Consume Spell', [SPEL, ALCH]),
     wbFormIDCk(YNAM, 'Contact Spell', [SPEL]),
     wbFormIDCk(INAM, 'Image Space', [IMGS]),
     wbByteArray(DATA, 'Unused', 0),
@@ -17039,29 +17041,34 @@ begin
         wbFloat('Interior Specular Brightness'),
         wbFloat('Interior Specular Power')
       ]),
-      wbStruct('Noise Properties', [
-        wbFloat('Layer 1 - Wind Direction'),
-        wbFloat('Layer 2 - Wind Direction'),
-        wbFloat('Layer 3 - Wind Direction'),
-        wbFloat('Layer 1 - Wind Speed'),
-        wbFloat('Layer 2 - Wind Speed'),
-        wbFloat('Layer 3 - Wind Speed'),
-        wbFloat('Layer 1 - Amplitude Scale'),
-        wbFloat('Layer 2 - Amplitude Scale'),
-        wbFloat('Layer 3 - Amplitude Scale'),
-        wbFloat('Layer 1 - UV Scale'),
-        wbFloat('Layer 2 - UV Scale'),
-        wbFloat('Layer 3 - UV Scale'),
-        wbFloat('Layer 1 - Noise Falloff'),
-        wbFloat('Layer 2 - Noise Falloff'),
-        wbFloat('Layer 3 - Noise Falloff')
-      ]),
-      wbStruct('Silt Properties', [
-        wbFloat('Silt Amount'),
-        wbByteColors('Light Color'),
-        wbByteColors('Dark Color')
-      ]),
-      wbInteger('Screen Space Reflections', itU8, wbBoolEnum)
+//      wbStruct('Noise Properties', [
+//        wbFloat('Layer 1 - Wind Direction'),
+//        wbFloat('Layer 2 - Wind Direction'),
+//        wbFloat('Layer 3 - Wind Direction'),
+//        wbFloat('Layer 1 - Wind Speed'),
+//        wbFloat('Layer 2 - Wind Speed'),
+//        wbFloat('Layer 3 - Wind Speed'),
+//        wbFloat('Layer 1 - Amplitude Scale'),
+//        wbFloat('Layer 2 - Amplitude Scale'),
+//        wbFloat('Layer 3 - Amplitude Scale'),
+//        wbFloat('Layer 1 - UV Scale'),
+//        wbFloat('Layer 2 - UV Scale'),
+//        wbFloat('Layer 3 - UV Scale'),
+//        wbFloat('Layer 1 - Noise Falloff'),
+//        wbFloat('Layer 2 - Noise Falloff'),
+//        wbFloat('Layer 3 - Noise Falloff')
+//      ]),
+//      wbStruct('Silt Properties', [
+//        wbFloat('Silt Amount'),
+//        wbByteColors('Light Color'),
+//        wbByteColors('Dark Color')
+//      ]),
+//      wbInteger('Screen Space Reflections', itU8, wbBoolEnum)
+      wbFloat('Unknown 1'),
+      wbByteArray('Unknown 2', 4),
+      wbByteArray('Unknown 3', 4),
+      wbByteArray('Unknown 4', 4),
+      wbByteArray('Unknown 5', 4)
     ], cpNormal, True, nil, 4),
     wbByteArray(GNAM, 'Unused', 0),
     wbStruct(NAM0, 'Linear Velocity', [
@@ -17076,7 +17083,9 @@ begin
     ], cpNormal, False),
     wbString(NAM2, 'Layer 1 Noise Texture'),
     wbString(NAM3, 'Layer 2 Noise Texture'),
-    wbString(NAM4, 'Layer 3 Noise Texture')
+    wbString(NAM4, 'Layer 3 Noise Texture'),
+    wbString(NAM5, 'Flow Normals Noise Texture'),
+    wbUnknown(NAM6)
   ]);
 
   wbRecord(WEAP, 'Weapon',
