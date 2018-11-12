@@ -18052,7 +18052,8 @@ begin
 
   wbRecord(PKIN, 'Pack-In',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000200}  9, 'Prefab'
+      {0x00000200}  9, 'Prefab',
+      {0x00000400}  10, 'Unknown 10'
     ])), [
     wbEDID,
     wbOBND,
@@ -18064,9 +18065,9 @@ begin
     wbFormIDCk(CNAM, 'Cell', [CELL]),
     wbInteger(VNAM, 'Version', itU32),
     wbUnknown(FNAM),
-    wbUnknown(GNAM),
-    wbFormID(HNAM),
-    wbArray(INAM, 'References', wbFormID('Reference')),
+    wbUnknown(GNAM).IncludeFlag(dfNoReport),
+    wbFormIDCk(HNAM, 'Unknown', [PKIN]),
+    wbArray(INAM, 'References', wbFormIDCk('Reference', [REFR])),
     wbLString(FULL)
   ]);
 
