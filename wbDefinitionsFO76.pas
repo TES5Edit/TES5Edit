@@ -10495,7 +10495,27 @@ begin
         {0x00000080} 'Clip Distance',
         {0x00000100} 'Fog Power',
         {0x00000200} 'Fog Max',
-        {0x00000400} 'Light Fade Distances'
+        {0x00000400} 'Light Fade Distances',
+        {0x00000800} 'Unknown 11',
+        {0x00001000} 'Unknown 12',
+        {0x00002000} 'Unknown 13',
+        {0x00004000} 'Unknown 14',
+        {0x00008000} 'Unknown 15',
+        {0x00010000} 'Unknown 16',
+        {0x00020000} 'Unknown 17',
+        {0x00040000} 'Unknown 18',
+        {0x00080000} 'Unknown 19',
+        {0x00100000} 'Unknown 20',
+        {0x00200000} 'Unknown 21',
+        {0x00400000} 'Unknown 22',
+        {0x00800000} 'Unknown 23',
+        {0x01000000} 'Unknown 24',
+        {0x02000000} 'Unknown 25',
+        {0x04000000} 'Unknown 26',
+        {0x08000000} 'Unknown 27',
+        {0x10000000} 'Unknown 28',
+        {0x20000000} 'Unknown 29',
+        {0x40000000} 'Unknown 30'
       ])),
       wbFloat('Near Height Mid'),
       wbFloat('Near Height Range'),
@@ -10519,7 +10539,7 @@ begin
 
     {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
     wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
-    wbUnknown(XILS),
+    wbFloat(XILS),
     wbUnknown(RDES),
     wbFormIDCk(XCWT, 'Water', [WATR]),
     wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
@@ -10573,7 +10593,11 @@ begin
         wbByteArray('Unknown', 4)
       ]), wbCELLCombinedRefsCounter, cpNormal, False, nil, wbCELLCombinedRefsAfterSet)
     ]),
-    wbUnknown(XCRP)
+//    wbUnknown(XCRP)
+    wbStruct(XCRP, 'Unknown', [
+      wbByteArray('Unknown', 4),
+      wbArray('References', wbFormID('Reference'))
+    ])
   ], True, wbCellAddInfo, cpNormal, False{, wbCELLAfterLoad});
 
   wbRecord(CLAS, 'Class', [
@@ -16688,12 +16712,17 @@ begin
     wbRStruct('Unknown', [
       wbUnknown(XWPK),
       wbUnknown(GNAM),
-      wbUnknown(HNAM),
+      wbFormID(HNAM),
       wbUnknown(INAM),
       wbUnknown(XWPK)
     ], []),
     wbUnknown(XPPS),
-    wbRArray('Unknown', wbUnknown(XWRC)),
+    wbRArray('Resources',
+      wbStruct(XWRC, '', [
+        wbFormIDCk('Resource', [RESO]),
+        wbFloat('Count')
+      ])
+    ),
     wbXPCK,
     wbUnknown(XLLV),
     wbDataPosRot,
