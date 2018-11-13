@@ -928,6 +928,7 @@ const
   WCTR : TwbSignature = 'WCTR'; { New To Skyrim }
   WEAP : TwbSignature = 'WEAP';
   WGDR : TwbSignature = 'WGDR'; { New To Fallout 4 }
+  WHGT : TwbSignature = 'WHGT'; { New To Fallout 76 }
   WKMV : TwbSignature = 'WKMV'; { New to Skyrim }
   WLEV : TwbSignature = 'WLEV'; { New To Fallout 4 }
   WLST : TwbSignature = 'WLST';
@@ -986,12 +987,14 @@ const
   XILS : TwbSignature = 'XILS'; { New To Fallout 76 }
   XILW : TwbSignature = 'XILW'; { New To Fallout 4 }
   XIS2 : TwbSignature = 'XIS2'; { New To Skyrim }
+  XKPD : TwbSignature = 'XKPD'; { New To Fallout 76 }
   XLCM : TwbSignature = 'XLCM';
   XLCN : TwbSignature = 'XLCN'; { New To Skyrim }
   XLIB : TwbSignature = 'XLIB'; { New To Skyrim }
   XLIG : TwbSignature = 'XLIG'; { New To Skyrim }
   XLKR : TwbSignature = 'XLKR';
   XLKT : TwbSignature = 'XLKT'; { New To Fallout 4 }
+  XLLV : TwbSignature = 'XLLV'; { New To Fallout 76 }
   XLOC : TwbSignature = 'XLOC';
   XLOD : TwbSignature = 'XLOD';
   XLRL : TwbSignature = 'XLRL'; { New To Skyrim }
@@ -10369,6 +10372,7 @@ procedure DefineFO76c;
       wbUnknown(XATP),
       wbInteger(XAMC, 'Ammo Count', itU32),
       wbEmpty(XLKT, 'Linked Ref Transient'),
+      wbXRGD,
       wbFormIDCk(XLYR, 'Layer', [LAYR]),
       wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
       wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
@@ -10381,6 +10385,7 @@ procedure DefineFO76c;
       wbEmpty(XIS2, 'Ignored by Sandbox'),
       wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
       wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
+      wbFormIDCk(XPCK, 'Unknown', [RFGP]),
       wbXSCL,
       wbXLOD,
       wbDataPosRot,
@@ -16409,6 +16414,8 @@ begin
       wbFloat('Max Weak Distance'),
       wbInteger('Flags', itU32, wbFlags(['Ignores Distance Checks']))
     ]),
+    wbUnknown(XFLG),
+    wbUnknown(XKPD),
     wbStruct(XBSD, 'Spline', [
       wbFloat('Slack'),
       wbFloat('Thickness'),
@@ -16678,7 +16685,7 @@ begin
     wbUnknown(XPPS),
     wbRArray('Unknown', wbUnknown(XWRC)),
     wbUnknown(XPCK),
-
+    wbUnknown(XLLV),
     wbDataPosRot,
     wbUnknown(SRGN),
     wbString(MNAM, 'Comments')
@@ -17493,11 +17500,16 @@ begin
         wbFloat('Y', cpNormal, False, 1/4096)
       ], cpIgnore, True)
     ], []),
+    wbRArray('Unknown', wbFormIDCk(LNAM, 'Landscape Texture', [LTEX])),
+    wbUnknown(NAM5),
+    wbUnknown(NAM6),
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
     wbString(XWEM, 'Water Environment Map'),
     wbString(TNAM, 'HD LOD Diffuse Texture'),
     wbString(UNAM, 'HD LOD Normal Texture'),
+    wbUnknown(XCLW),
+    wbUnknown(WHGT),
     wbRStruct('World Default Level Data', [
       wbStruct(WLEV, 'Dimension', [
         wbStruct('NW Cell', [
@@ -17512,7 +17524,8 @@ begin
       wbByteArray(WLEV, 'Data')
     ], []),
     wbOFST,
-    wbUnknown(CLSZ)
+    wbUnknown(CLSZ),
+    wbUnknown(VISI)
   ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
 
