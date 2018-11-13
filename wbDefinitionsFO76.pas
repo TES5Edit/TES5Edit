@@ -1260,6 +1260,7 @@ var
   wbLVCT: IwbSubRecordDef;
   wbLVOC: IwbSubRecordDef;
   wbLVIG: IwbSubRecordDef;
+  wbXPCK: IwbSubRecordDef;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -6986,6 +6987,8 @@ begin
   wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal, False, nil, wbKWDAsAfterSet);
   wbReqKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal, True, nil, wbKWDAsAfterSet);
 
+  wbXPCK := wbFormIDCk(XPCK, 'Unknown', [RFGP]);
+
   wbKeywords := wbRStruct('Keywords', [
     wbKSIZ,
     wbReqKWDAs
@@ -10339,6 +10342,7 @@ procedure DefineFO76c;
       ], True, True)), [
       wbEDID,
       wbVMAD,
+      wbXALG,
       wbFormIDCk(NAME, 'Projectile', [PROJ, HAZD]),
       wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
       wbFloat(XHTW, 'Head-Tracking Weight'),
@@ -10385,7 +10389,12 @@ procedure DefineFO76c;
       wbEmpty(XIS2, 'Ignored by Sandbox'),
       wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
       wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
-      wbFormIDCk(XPCK, 'Unknown', [RFGP]),
+      wbRArray('Unknown', wbRStruct('Unknown', [
+        wbUnknown(XWPK),
+        wbUnknown(GNAM),
+        wbUnknown(INAM)
+      ], [])),
+      wbXPCK,
       wbXSCL,
       wbXLOD,
       wbDataPosRot,
@@ -16684,7 +16693,7 @@ begin
     ], []),
     wbUnknown(XPPS),
     wbRArray('Unknown', wbUnknown(XWRC)),
-    wbUnknown(XPCK),
+    wbXPCK,
     wbUnknown(XLLV),
     wbDataPosRot,
     wbUnknown(SRGN),
