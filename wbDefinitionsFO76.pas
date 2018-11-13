@@ -10392,6 +10392,7 @@ procedure DefineFO76c;
       wbRArray('Unknown', wbRStruct('Unknown', [
         wbUnknown(XWPK),
         wbUnknown(GNAM),
+        wbFormID(HNAM, 'Reference'),
         wbUnknown(INAM)
       ], [])),
       wbXPCK,
