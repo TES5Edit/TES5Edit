@@ -1900,7 +1900,7 @@ type
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbValueDef{Self};
 
     procedure MasterCountUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOld, aNew: Byte);
-    procedure MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs);
+    function MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs): Boolean;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters);
     function CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean;
 
@@ -5049,7 +5049,7 @@ type
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbValueDef{Self};
 
     procedure MasterCountUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOld, aNew: Byte); virtual;
-    procedure MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs); virtual;
+    function MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs): Boolean; virtual;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); virtual;
     function CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; virtual;
   end;
@@ -5241,7 +5241,7 @@ type
     procedure BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement); override;
 
     procedure MasterCountUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOld, aNew: Byte); override;
-    procedure MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs); override;
+    function MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs): Boolean; override;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); override;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
   end;
@@ -5446,7 +5446,7 @@ type
     function SetDefaultNativeValue(const aValue: Variant): IwbValueDef; override;
 
     procedure MasterCountUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOld, aNew: Byte); override;
-    procedure MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs); override;
+    function MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs): Boolean; override;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); override;
     function CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override;
 
@@ -9907,18 +9907,20 @@ begin
     inherited MasterCountUpdated(aBasePtr, aEndPtr, aElement, aOld, aNew);
 end;
 
-procedure TwbIntegerDef.MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs);
+function TwbIntegerDef.MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs): Boolean;
 var
   OldValue : Int64;
   NewValue : Int64;
 begin
+  Result := False;
   if Assigned(inFormater) then begin
     OldValue := ToInt(aBasePtr, aEndPtr, aElement);
     NewValue := inFormater.MasterIndicesUpdated(OldValue, aOld, aNew, aElement);
-    if OldValue <> NewValue then
+    Result := OldValue <> NewValue;
+    if Result then
       FromInt(NewValue, aBasePtr, aEndPtr, aElement)
   end else
-    inherited MasterIndicesUpdated(aBasePtr, aEndPtr, aElement, aOld, aNew);
+    Result := inherited MasterIndicesUpdated(aBasePtr, aEndPtr, aElement, aOld, aNew);
 end;
 
 procedure TwbIntegerDef.ReplaceFormater(const aFormater: IwbIntegerDefFormater);
@@ -14332,8 +14334,9 @@ begin
   {can be overriden}
 end;
 
-procedure TwbValueDef.MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs);
+function TwbValueDef.MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs): Boolean;
 begin
+  Result := False;
   {can be overriden}
 end;
 
@@ -16079,12 +16082,14 @@ begin
     end;
 end;
 
-procedure TwbStringMgefCodeDef.MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs);
+function TwbStringMgefCodeDef.MasterIndicesUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs): Boolean;
 var
   lLen, Len : NativeUInt;
   MgefCode  : PCardinal;
   i         : Integer;
 begin
+  Result := False;
+
   Len := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
   if sdSize > 0 then begin
     if Len > Cardinal(sdSize) then
@@ -16117,7 +16122,7 @@ begin
       if (MgefCode^ and $000000FF) = aOld[i].FullSlot then begin
         { yes, it refers to this file }
         MgefCode^ := (MgefCode^ and $FFFFFF00) or aNew[i].FullSlot;
-        aElement.NotifyChanged(Pointer(aElement.Container));
+        Result := True;
         Exit;
       end;
 end;
