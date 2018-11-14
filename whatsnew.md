@@ -7,11 +7,11 @@ The following reported issues have been fixed:
 * #594 - "Localize plugin" function is broken
 * (reported on discord) - sorting masters can under certain circumstances result in corruption of FormIDs
 * (reported on discord) - adding/removing/sorting masters can leave the virtual "Worldspace" elements invalid (does not corrupt actual data)
-* (found by devloper) - Language selection is not aware of .strings files in .bsa/.ba2 archives
-* (found by devloper) - UTF8 encoding for localized strings needs a fallback mechanism if strings are not valid UTF8
-* (found by devloper) - ref building uses more memory than necessary
-* (found by devloper) - if the module selection form on opening has exactly one entry and it is checked, it shows up as unchecked
-* (found by devloper) - inconsistencies in whe collapsing/expanding types and elements in the view tab (implementation and description below updated)
+* (found by developer) - Language selection is not aware of .strings files in .bsa/.ba2 archives
+* (found by developer) - UTF8 encoding for localized strings needs a fallback mechanism if strings are not valid UTF8
+* (found by developer) - ref building uses more memory than necessary
+* (found by developer) - if the module selection form on opening has exactly one entry and it is checked, it shows up as unchecked
+* (found by developer) - inconsistencies in the collapsing/expanding types and elements in the view tab (implementation and description below updated)
 * #600 - Reporting a null xEdit app version number
 
 ## Fallout 76 support
