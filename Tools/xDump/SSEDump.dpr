@@ -1250,21 +1250,21 @@ begin
         wbLanguage := 'En';
 
       if wbGameMode <= gmTES5 then
-        wbAddDistinctLEncodings
+        wbAddDefaultLEncodingsIfMissing(False)
       else begin
-        wbLEncodingDefault := TEncoding.UTF8;
+        wbLEncodingDefault[False] := TEncoding.UTF8;
         case wbGameMode of
         gmSSE, gmTES5VR:
-          wbLEncoding.AddObject('english', wbMBCSEncoding(1252))
+          wbAddLEncodingIfMissing('english', '1252', False);
         else {FO4, FO76}
-          wbLEncoding.AddObject('en', wbMBCSEncoding(1252))
+          wbAddLEncodingIfMissing('en', '1252', False);
         end;
       end;
 
+      wbAddDefaultLEncodingsIfMissing(True);
+
       if wbFindCmdLineParam('l', s) then begin
         wbLanguage := s;
-        wbEncodingTrans := wbEncodingForLanguage(wbLanguage);
-        wbLocalizationHandler.Clear;
       end else
         if FileExists(wbTheGameIniFileName) then begin
           with TMemIniFile.Create(wbTheGameIniFileName) do try
@@ -1280,25 +1280,20 @@ begin
             else
               s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
             end;
-            if (s <> '') and not SameText(s, wbLanguage) then begin
+            if (s <> '') and not SameText(s, wbLanguage) then
               wbLanguage := s;
-              wbEncodingTrans := wbEncodingForLanguage(wbLanguage);
-              wbLocalizationHandler.Clear;
-            end;
           finally
             Free;
           end;
         end;
 
-      if wbFindCmdLineParam('cp-general', s) then begin
-        wbEncoding :=  wbMBCSEncoding(s);
-        wbLocalizationHandler.Clear;
-      end;
+      wbEncodingTrans := wbEncodingForLanguage(wbLanguage, False);
 
-      if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then begin
+      if wbFindCmdLineParam('cp-general', s) then
+        wbEncoding :=  wbMBCSEncoding(s);
+
+      if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
         wbEncodingTrans :=  wbMBCSEncoding(s);
-        wbLocalizationHandler.Clear;
-      end;
 
       if wbFindCmdLineParam('bts', s) then
         wbBytesToSkip := StrToInt64Def(s, wbBytesToSkip);
