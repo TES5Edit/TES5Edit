@@ -12,6 +12,7 @@ The following reported issues have been fixed:
 * (found by devloper) - ref building uses more memory than necessary
 * (found by devloper) - if the module selection form on opening has exactly one entry and it is checked, it shows up as unchecked
 * (found by devloper) - inconsistencies in whe collapsing/expanding types and elements in the view tab (implementation and description below updated)
+* #600 - Reporting a null xEdit app version number
 
 ## New command line parameters
 

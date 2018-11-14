@@ -44,6 +44,7 @@ type
     class operator Implicit(const s: string): TwbVersion; static;
 
     function ToString: string;
+    function ToCardinal: Cardinal;
   end;
 
 var
@@ -17555,6 +17556,16 @@ end;
 class operator TwbVersion.NotEqual(const A, B: TwbVersion): Boolean;
 begin
   Result := not (A = B);
+end;
+
+function TwbVersion.ToCardinal: Cardinal;
+begin
+  Result :=
+    (Cardinal(VersionString.Major   and $000000FF) shl 24) or
+    (Cardinal(VersionString.Minor   and $000000FF) shl 16) or
+    (Cardinal(VersionString.Release and $000000FF) shl  8);
+  if (Length(Build) = 1) and (Build[1] in ['a'..'z']) then
+    Result := Result + Succ(Ord(Build[1]) -  Ord('a'));
 end;
 
 function TwbVersion.ToString: string;

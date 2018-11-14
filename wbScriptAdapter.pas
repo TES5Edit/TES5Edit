@@ -165,33 +165,9 @@ begin
 end;
 
 procedure wbGetVersionNumber(var Value: Variant; Args: TJvInterpreterArgs);
-var
-  fileInfo   : PVSFIXEDFILEINFO;
-  verlen     : Cardinal;
-  rs         : TResourceStream;
-  m          : TMemoryStream;
-  resource   : HRSRC;
 begin
-  Value := 0;
-  resource := FindResource(HInstance, PWideChar(1), RT_VERSION);
-  if resource = 0 then
-    Exit;
-  m := TMemoryStream.Create;
-  try
-    rs := TResourceStream.CreateFromID(HInstance, 1, RT_VERSION);
-    try m.CopyFrom(rs, rs.Size); finally rs.Free; end;
-    m.Position := 0;
-    if not VerQueryValue(m.Memory, '\', Pointer(fileInfo), verlen) then
-      Exit;
-    Value := fileInfo.dwFileVersionMS shl  8 and $FF000000 +
-             fileInfo.dwFileVersionMS shl 16 and $00FF0000 +
-             fileInfo.dwFileVersionLS shr  8 and $0000FF00 +
-             fileInfo.dwFileVersionLS        and $000000FF;
-  finally
-    m.Free;
-  end;
+  Value := VersionString.ToCardinal;
 end;
-
 
 { TwbVector }
 
