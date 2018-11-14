@@ -39,6 +39,8 @@
 
 unit lz4frame_static;
 {$POINTERMATH ON}
+{$Q-}
+{$R-}
 
 interface
 

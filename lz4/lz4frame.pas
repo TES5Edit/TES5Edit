@@ -38,6 +38,8 @@
 *)
 unit lz4frame;
 {$POINTERMATH ON}
+{$Q-}
+{$R-}
 
 interface
 

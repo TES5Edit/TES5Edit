@@ -39,6 +39,9 @@
 
 unit lz4common;
 {$POINTERMATH ON}
+{$Q-}
+{$R-}
+
 
 interface
 
