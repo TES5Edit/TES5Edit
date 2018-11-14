@@ -541,6 +541,7 @@ type
     function GetDefFlags: TwbDefFlags;
     function GetCollapsed: Boolean;
     procedure SetCollapsed(const aValue: Boolean);
+    function GetCollapsedGen: Integer;
 
     procedure Report(const aParents: TwbDefPath);
     procedure Used(const aElement: IwbElement = nil; const s: string = '');
@@ -561,6 +562,8 @@ type
     property Collapsed: Boolean
       read GetCollapsed
       write SetCollapsed;
+    property CollapsedGen: Integer
+      read GetCollapsedGen;
     property ConflictPriority[const aElement: IwbElement]: TwbConflictPriority
       read GetConflictPriority;
     property ConflictPriorityCanChange: Boolean
@@ -1010,7 +1013,8 @@ type
     csRefsBuild,
     csAsCreatedEmpty,
     csSortedBySortOrder,
-    csCollapsed
+    csCollapsed,
+    csExpanded
   );
 
   TwbContainerStates = set of TwbContainerState;
@@ -1030,8 +1034,8 @@ type
     function GetElementBySortOrder(aSortOrder: Integer): IwbElement;
     function GetAdditionalElementCount: Integer;
     function GetContainerStates: TwbContainerStates;
-    function GetCollapsed: Boolean;
-    procedure SetCollapsed(const aValue: Boolean);
+    function GetCollapsed: TwbTriBool;
+    procedure SetCollapsed(const aValue: TwbTriBool);
     function GetElementByPath(const aPath: string): IwbElement;
     function GetElementValue(const aName: string): string;
     function GetElementExists(const aName: string): Boolean;
@@ -1094,7 +1098,7 @@ type
 
     property ContainerStates: TwbContainerStates
       read GetContainerStates;
-    property Collapsed: Boolean
+    property Collapsed: TwbTriBool
       read GetCollapsed
       write SetCollapsed;
 
@@ -4542,19 +4546,22 @@ type
     defSource   : IwbDef;
     defParent   : TwbDef;
 
-    defPriority : TwbConflictPriority;
-    defGetCP    : TwbGetConflictPriority;
-    defFlags    : TwbDefFlags;
+    defPriority     : TwbConflictPriority;
+    defGetCP        : TwbGetConflictPriority;
+    defFlags        : TwbDefFlags;
+    defCollapsedGen : Integer;
+
     defRequired : Boolean;
 
-    defUsed     : Boolean;
-    defReported : Boolean;
+    defUsed             : Boolean;
+    defReported         : Boolean;
     defPossiblyRequired : Boolean;
-    defNotRequired : Boolean;
+    defNotRequired      : Boolean;
 
-    IsUnknown        : Boolean;
-    IsUnknownChecked : Boolean;
-    UnknownValues    : TStringList;
+    IsUnknown           : Boolean;
+    IsUnknownChecked    : Boolean;
+    UnknownValues       : TStringList;
+
 
     function defInternalEditOnly: Boolean;
   protected
@@ -4580,6 +4587,7 @@ type
     function GetDefFlags: TwbDefFlags;
     function GetCollapsed: Boolean;
     procedure SetCollapsed(const aValue: Boolean);
+    function GetCollapsedGen: Integer;
 
     procedure Report(const aParents: TwbDefPath); virtual;
     procedure Used(const aElement: IwbElement; const s: string);
@@ -8013,6 +8021,11 @@ begin
   Result := dfCollapsed in defFlags;
 end;
 
+function TwbDef.GetCollapsedGen: Integer;
+begin
+  Result := defCollapsedGen;
+end;
+
 function TwbDef.GetConflictPriority(const aElement: IwbElement): TwbConflictPriority;
 begin
   Result := defPriority;
@@ -8132,6 +8145,9 @@ end;
 
 procedure TwbDef.SetCollapsed(const aValue: Boolean);
 begin
+  if aValue <> GetCollapsed then
+    Inc(defCollapsedGen);
+
   if aValue then
     Include(defFlags, dfCollapsed)
   else

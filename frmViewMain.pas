@@ -107,8 +107,7 @@ type
     vnfIgnore,
     vnfUseSortOrder,
     vnfIsSorted,
-    vnfIsAligned,
-    vnfCollapsed
+    vnfIsAligned
   );
   TViewNodeFlags = set of TViewNodeFlag;
 
@@ -785,6 +784,7 @@ type
     procedure WMUser2(var Message: TMessage); message WM_USER + 2;
     procedure WMUser3(var Message: TMessage); message WM_USER + 3;
     procedure WMUser4(var Message: TMessage); message WM_USER + 4;
+    procedure WMUser5(var Message: TMessage); message WM_USER + 5;
     procedure WndProc(var Message: TMessage); override;
     procedure UpdateTreeLineColor;
   private
@@ -807,6 +807,7 @@ type
     ScriptRunning: Boolean;
     ParentedGroupRecordType: set of Byte;
     RebuildingViewTree: Boolean;
+    DelayedExpandView: Boolean;
 
     FilterPreset: Boolean; // new: flag to skip filter window
     FilterScripted: Boolean; // new: flag to use scripted filtering function
@@ -5267,6 +5268,7 @@ var
   i         : Integer;
 begin
   RebuildingViewTree := True;
+  vstView.BeginUpdate;
   try
     vstView.FullExpand;
     Node := vstView.GetLastChild(nil);
@@ -5274,14 +5276,16 @@ begin
       NodeDatas := vstView.GetNodeData(Node);
       if Assigned(NodeDatas) then
         for i := Low(ActiveRecords) to High(ActiveRecords) do
-          if vnfCollapsed in NodeDatas[i].ViewNodeFlags then begin
-            vstView.Expanded[Node] := False;
-            Break;
-          end;
+          with NodeDatas[i] do
+            if Assigned(Container) and (Container.Collapsed = tbTrue) then begin
+              vstView.Expanded[Node] := False;
+              Break;
+            end;
       Node := vstView.GetPrevious(Node);
     end;
     ApplyViewFilter;
   finally
+    vstView.EndUpdate;
     RebuildingViewTree := False;
   end;
 end;
@@ -6686,11 +6690,8 @@ begin
         end;
 
       if Assigned(Container) then
-        if Container.ElementCount > 0 then begin
+        if Container.ElementCount > 0 then
           Include(aInitialStates, ivsHasChildren);
-          if Container.Collapsed then
-            Include(NodeData.ViewNodeFlags, vnfCollapsed);
-        end;
     end;
 end;
 
@@ -15658,16 +15659,20 @@ begin
   if RebuildingViewTree then
     Exit;
 
-  Shift := GetKeyState(VK_SHIFT) < 0;
+  Shift := GetKeyState(VK_CONTROL) < 0;
 
   NodeDatas := Sender.GetNodeData(Node);
   if not Assigned(NodeDatas) then
     Exit;
   for i := Low(ActiveRecords) to High(ActiveRecords) do
     if Assigned(NodeDatas[i].Container) then begin
-      NodeDatas[i].Container.Collapsed := True;
-      if Shift and Assigned(NodeDatas[i].Container.Def) then
+      if Shift and Assigned(NodeDatas[i].Container.Def) then begin
         NodeDatas[i].Container.Def.Collapsed := True;
+        NodeDatas[i].Container.Collapsed := tbUnknown;
+        DelayedExpandView := True;
+        PostMessage(Handle, WM_USER + 5, 0, 0);
+      end else
+        NodeDatas[i].Container.Collapsed := tbTrue;
     end;
 end;
 
@@ -15829,8 +15834,16 @@ var
 begin
   UserWasActive := True;
 
-  if (vstView.FocusedColumn = 0) and ComparingSiblings then begin
-    mniViewSort.Click;
+  if (vstView.FocusedColumn = 0) then begin
+    if ComparingSiblings then
+      mniViewSort.Click
+    else begin
+      vstView.ToggleNode(vstView.FocusedNode);
+      if DelayedExpandView then begin
+        DelayedExpandView := False;
+        ExpandView;
+      end;
+    end;
     Exit;
   end;
 
@@ -15969,16 +15982,26 @@ procedure TfrmMain.vstViewExpanded(Sender: TBaseVirtualTree; Node: PVirtualNode)
 var
   NodeDatas                   : PViewNodeDatas;
   i                           : Integer;
+  Shift                       : Boolean;
 begin
   if RebuildingViewTree then
     Exit;
+
+  Shift := GetKeyState(VK_CONTROL) < 0;
 
   NodeDatas := Sender.GetNodeData(Node);
   if not Assigned(NodeDatas) then
     Exit;
   for i := Low(ActiveRecords) to High(ActiveRecords) do
-    if Assigned(NodeDatas[i].Container) then
-      NodeDatas[i].Container.Collapsed := False;
+    if Assigned(NodeDatas[i].Container) then begin
+      if Shift and Assigned(NodeDatas[i].Container.Def) then begin
+        NodeDatas[i].Container.Def.Collapsed := False;
+        NodeDatas[i].Container.Collapsed := tbUnknown;
+        DelayedExpandView := True;
+        PostMessage(Handle, WM_USER + 5, 0, 0);
+      end else
+        NodeDatas[i].Container.Collapsed := tbFalse;
+    end;
 end;
 
 procedure TfrmMain.vstViewFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
@@ -18867,8 +18890,20 @@ begin
   UpdateActiveFromPluggyLink;
 end;
 
+procedure TfrmMain.WMUser5(var Message: TMessage);
+begin
+  if DelayedExpandView then begin
+    DelayedExpandView := False;
+    ExpandView;
+  end;
+end;
+
 procedure TfrmMain.UpdateActions;
 begin
+  if DelayedExpandView then begin
+    DelayedExpandView := False;
+    ExpandView;
+  end;
   if Enabled then
     NavUpdate(False);
   inherited;
