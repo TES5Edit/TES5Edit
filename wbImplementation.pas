@@ -2284,7 +2284,7 @@ begin
       CacheFileName := CacheFileName +
         '_g' + GetEncoding(False).CodePage.ToString +
         '_t' + GetEncoding(True).CodePage.ToString +
-        '_l' + wbEncodingForLanguage(wbLanguage).CodePage.ToString +
+        '_l' + wbEncodingForLanguage(wbLanguage, False).CodePage.ToString +
         '_' + wbLanguage;
     end;
 

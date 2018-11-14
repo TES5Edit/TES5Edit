@@ -234,7 +234,7 @@ begin
         Settings.ReadSection('cpoverride', sl);
         for i := 0 to Pred(sl.Count) do try
           s := sl[i];
-          wbAddLEncodingIfMissing(s, Settings.ReadString('cpoverride', s, ''));
+          wbAddLEncodingIfMissing(s, Settings.ReadString('cpoverride', s, ''), False);
         except
           on E:Exception do
             ShowMessage('Could not add code page override "'+sl[i]+'" from wbSettingsFileName: ['+E.ClassName+'] ' + E.Message);
@@ -864,16 +864,18 @@ begin
     Exit(False);
 
   if wbGameMode <= gmTES5 then
-    wbAddDefaultLEncodingsIfMissing
+    wbAddDefaultLEncodingsIfMissing(False)
   else begin
-    wbLEncodingDefault := TEncoding.UTF8;
+    wbLEncodingDefault[False] := TEncoding.UTF8;
     case wbGameMode of
     gmSSE, gmTES5VR:
-      wbAddLEncodingIfMissing('english', '1252');
+      wbAddLEncodingIfMissing('english', '1252', False);
     else {FO4, FO76}
-      wbAddLEncodingIfMissing('en', '1252');
+      wbAddLEncodingIfMissing('en', '1252', False);
     end;
   end;
+
+  wbAddDefaultLEncodingsIfMissing(True);
 
   if wbFindCmdLineParam('AllowDirectSaves', s) then begin
     wbAllowDirectSaveFor := TStringList.Create;
@@ -968,7 +970,7 @@ begin
       end;
     end;
 
-  wbEncodingTrans := wbEncodingForLanguage(wbLanguage);
+  wbEncodingTrans := wbEncodingForLanguage(wbLanguage, False);
 
   if wbFindCmdLineParam('cp-general', s) then
     wbEncoding :=  wbMBCSEncoding(s);
