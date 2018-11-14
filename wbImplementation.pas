@@ -2258,6 +2258,9 @@ begin;
     raise Exception.Create('Only '+IntToStr(GetMasterCount - OldMasterCount)+' of '+IntToStr(aMasters.Count)+' masters could be added. Master list now contains '+IntToStr(GetMasterCount)+' entries and is full.');
 end;
 
+threadvar
+  _FileRefsBuilding: Boolean;
+
 function TwbFile.BuildOrLoadRef(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
 var
   CachePath     : string;
@@ -2315,7 +2318,14 @@ begin
       if not aOnlyLoad then begin
         Include(flStates, fsRefsBuild);
         StartTime := Now;
-        inherited BuildRef;
+        try
+          Include(flStates, fsRefsBuilding);
+          _FileRefsBuilding := True;
+          inherited BuildRef;
+        finally
+          _FileRefsBuilding := False;
+          Exclude(flStates, fsRefsBuilding);
+        end;
         EndTime := Now;
         Result := blrBuilt;
         if not wbDontCacheSave then begin
@@ -7044,6 +7054,7 @@ procedure TwbMainRecord.BuildRef;
   begin
     KAR := wbCreateKeepAliveRoot;
     DoBuildRef(False);
+    KAR := nil;
   end;
 
 begin
@@ -7055,8 +7066,12 @@ begin
 
   if wbSpeedOverMemory then
     DoBuildRef(False)
-  else
+  else begin
     UseKAC;
+    if _FileRefsBuilding and not (esModified in eStates) then
+      if ResetChildrenLeafFirst then
+        Reset;
+  end;
 
   if wbHasProgressCallback then
     wbProgressCallback;
@@ -10490,7 +10505,7 @@ begin
   ReleaseElements;
   mrDataStorage := nil;
   InitDataPtr;
-  inherited;
+  inherited Reset;
 end;
 
 procedure TwbMainRecord.ResetConflict;

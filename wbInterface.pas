@@ -1153,6 +1153,7 @@ type
     fsIsTemporary,
     fsHasNoFormID,
     fsRefsBuild,
+    fsRefsBuilding,
     fsIsGhost,
     fsMemoryMapped,
     fsScanning,
