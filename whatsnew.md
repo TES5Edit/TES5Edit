@@ -14,6 +14,14 @@ The following reported issues have been fixed:
 * (found by devloper) - inconsistencies in whe collapsing/expanding types and elements in the view tab (implementation and description below updated)
 * #600 - Reporting a null xEdit app version number
 
+## Fallout 76 support
+
+Great progress has been made. All records have working definitions now. Reference building has been enabled and it is now possible to fully load SeventySix.esm with fully build reference building without errors.
+
+Fallout 76 support is generally ready to the point that anyone should be able to use it to look at SeventySix.esm without much of a chance for error messages or crashes.
+
+But significant amount of work remains to further refine the record definitions and identify the many new "Unknown" values that have been added.
+
 ## New command line parameters
 
 Two new command line parameters have been added:
