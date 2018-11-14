@@ -256,6 +256,7 @@ const
   BPNT : TwbSignature = 'BPNT';
   BPTD : TwbSignature = 'BPTD';
   BPTN : TwbSignature = 'BPTN';
+  BPVB : TwbSignature = 'BPVB'; { New to Fallout 76 }
   BSIZ : TwbSignature = 'BSIZ'; { New to Fallout 4 }
   BSMB : TwbSignature = 'BSMB'; { New to Fallout 4 }
   BSMP : TwbSignature = 'BSMP'; { New to Fallout 4 }
@@ -544,6 +545,7 @@ const
   MAST : TwbSignature = 'MAST';
   MATO : TwbSignature = 'MATO';
   MATT : TwbSignature = 'MATT';
+  MBNR : TwbSignature = 'MBNR'; { New To Fallout 76 }
   MCHT : TwbSignature = 'MCHT'; { New to Skyrim }
   MCQP : TwbSignature = 'MCQP'; { New To Fallout 76 }
   MDOB : TwbSignature = 'MDOB';
@@ -926,6 +928,7 @@ const
   WCTR : TwbSignature = 'WCTR'; { New To Skyrim }
   WEAP : TwbSignature = 'WEAP';
   WGDR : TwbSignature = 'WGDR'; { New To Fallout 4 }
+  WHGT : TwbSignature = 'WHGT'; { New To Fallout 76 }
   WKMV : TwbSignature = 'WKMV'; { New to Skyrim }
   WLEV : TwbSignature = 'WLEV'; { New To Fallout 4 }
   WLST : TwbSignature = 'WLST';
@@ -984,12 +987,14 @@ const
   XILS : TwbSignature = 'XILS'; { New To Fallout 76 }
   XILW : TwbSignature = 'XILW'; { New To Fallout 4 }
   XIS2 : TwbSignature = 'XIS2'; { New To Skyrim }
+  XKPD : TwbSignature = 'XKPD'; { New To Fallout 76 }
   XLCM : TwbSignature = 'XLCM';
   XLCN : TwbSignature = 'XLCN'; { New To Skyrim }
   XLIB : TwbSignature = 'XLIB'; { New To Skyrim }
   XLIG : TwbSignature = 'XLIG'; { New To Skyrim }
   XLKR : TwbSignature = 'XLKR';
   XLKT : TwbSignature = 'XLKT'; { New To Fallout 4 }
+  XLLV : TwbSignature = 'XLLV'; { New To Fallout 76 }
   XLOC : TwbSignature = 'XLOC';
   XLOD : TwbSignature = 'XLOD';
   XLRL : TwbSignature = 'XLRL'; { New To Skyrim }
@@ -1255,6 +1260,7 @@ var
   wbLVCT: IwbSubRecordDef;
   wbLVOC: IwbSubRecordDef;
   wbLVIG: IwbSubRecordDef;
+  wbXPCK: IwbSubRecordDef;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -3444,6 +3450,11 @@ begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 154);
 end;
 
+function wbDeciderFormVersion155(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 155);
+end;
+
 function wbDeciderFormVersion174(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 174);
@@ -3612,7 +3623,7 @@ begin
   rCNAM := Container.ElementBySignature['CNAM'];
   if not Assigned(rCNAM) then Exit;
 
-  if rCNAM.EditValue = 'AutoWeapon' then
+  if rCNAM.NativeValue = Int64($ED157AE3) then  // 'AutoWeapon'
     Result := 1;
 end;
 
@@ -4362,6 +4373,7 @@ const
     (Index: 683; Name: 'GetPathingCurrentSpeed'),
     (Index: 684; Name: 'GetPathingCurrentSpeedAngle'; ParamType1: ptAxis),
     (Index: 691; Name: 'GetWorkshopObjectCount'; ParamType1: ptReferencableObject),
+//    (Index: 692; Name: '??? HasKeyword'; ParamType1: ptKeyword),
     (Index: 693; Name: 'EPMagic_SpellHasKeyword'; ParamType1: ptKeyword),
     (Index: 694; Name: 'GetNoBleedoutRecovery'),
     (Index: 696; Name: 'EPMagic_SpellHasSkill'; ParamType1: ptActorValue),
@@ -6974,6 +6986,8 @@ begin
   wbKSIZ := wbInteger(KSIZ, 'Keyword Count', itU32, nil, cpBenign);
   wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal, False, nil, wbKWDAsAfterSet);
   wbReqKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal, True, nil, wbKWDAsAfterSet);
+
+  wbXPCK := wbFormIDCk(XPCK, 'Unknown', [RFGP]);
 
   wbKeywords := wbRStruct('Keywords', [
     wbKSIZ,
@@ -10217,6 +10231,10 @@ begin
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO2C,
       wbMO2S,
+      wbUnknown(XFLG),
+      wbENLT,
+      wbENLS,
+      wbAUUV,
       wbMO2F
     ], [], cpNormal, False),
     wbRStruct('Female world model', [
@@ -10224,6 +10242,10 @@ begin
       wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO3C,
       wbMO3S,
+      wbUnknown(XFLG),
+      wbENLT,
+      wbENLS,
+      wbAUUV,
       wbMO3F
     ], []),
     wbRStruct('Male 1st Person', [
@@ -10231,6 +10253,9 @@ begin
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO4C,
       wbMO4S,
+      wbENLT,
+      wbENLS,
+      wbAUUV,
       wbMO4F
     ], []),
     wbRStruct('Female 1st Person', [
@@ -10238,6 +10263,9 @@ begin
       wbByteArray(MO5T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO5C,
       wbMO5S,
+      wbENLT,
+      wbENLS,
+      wbAUUV,
       wbMO5F
     ], []),
     wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),
@@ -10314,6 +10342,7 @@ procedure DefineFO76c;
       ], True, True)), [
       wbEDID,
       wbVMAD,
+      wbXALG,
       wbFormIDCk(NAME, 'Projectile', [PROJ, HAZD]),
       wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
       wbFloat(XHTW, 'Head-Tracking Weight'),
@@ -10347,6 +10376,7 @@ procedure DefineFO76c;
       wbUnknown(XATP),
       wbInteger(XAMC, 'Ammo Count', itU32),
       wbEmpty(XLKT, 'Linked Ref Transient'),
+      wbXRGD,
       wbFormIDCk(XLYR, 'Layer', [LAYR]),
       wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
       wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
@@ -10359,6 +10389,13 @@ procedure DefineFO76c;
       wbEmpty(XIS2, 'Ignored by Sandbox'),
       wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
       wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
+      wbRArray('Unknown', wbRStruct('Unknown', [
+        wbUnknown(XWPK),
+        wbUnknown(GNAM),
+        wbFormID(HNAM, 'Reference'),
+        wbUnknown(INAM)
+      ], [])),
+      wbXPCK,
       wbXSCL,
       wbXLOD,
       wbDataPosRot,
@@ -10458,7 +10495,27 @@ begin
         {0x00000080} 'Clip Distance',
         {0x00000100} 'Fog Power',
         {0x00000200} 'Fog Max',
-        {0x00000400} 'Light Fade Distances'
+        {0x00000400} 'Light Fade Distances',
+        {0x00000800} 'Unknown 11',
+        {0x00001000} 'Unknown 12',
+        {0x00002000} 'Unknown 13',
+        {0x00004000} 'Unknown 14',
+        {0x00008000} 'Unknown 15',
+        {0x00010000} 'Unknown 16',
+        {0x00020000} 'Unknown 17',
+        {0x00040000} 'Unknown 18',
+        {0x00080000} 'Unknown 19',
+        {0x00100000} 'Unknown 20',
+        {0x00200000} 'Unknown 21',
+        {0x00400000} 'Unknown 22',
+        {0x00800000} 'Unknown 23',
+        {0x01000000} 'Unknown 24',
+        {0x02000000} 'Unknown 25',
+        {0x04000000} 'Unknown 26',
+        {0x08000000} 'Unknown 27',
+        {0x10000000} 'Unknown 28',
+        {0x20000000} 'Unknown 29',
+        {0x40000000} 'Unknown 30'
       ])),
       wbFloat('Near Height Mid'),
       wbFloat('Near Height Range'),
@@ -10482,7 +10539,7 @@ begin
 
     {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
     wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
-    wbUnknown(XILS),
+    wbFloat(XILS),
     wbUnknown(RDES),
     wbFormIDCk(XCWT, 'Water', [WATR]),
     wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
@@ -10536,7 +10593,11 @@ begin
         wbByteArray('Unknown', 4)
       ]), wbCELLCombinedRefsCounter, cpNormal, False, nil, wbCELLCombinedRefsAfterSet)
     ]),
-    wbUnknown(XCRP)
+//    wbUnknown(XCRP)
+    wbStruct(XCRP, 'Unknown', [
+      wbByteArray('Unknown', 4),
+      wbArray('References', wbFormID('Reference'))
+    ])
   ], True, wbCellAddInfo, cpNormal, False{, wbCELLAfterLoad});
 
   wbRecord(CLAS, 'Class', [
@@ -10776,8 +10837,11 @@ begin
       wbFloat('Ground Attack Time'),
       wbFloat('Perch Attack Chance'),
       wbFloat('Perch Attack Time'),
-      wbFloat('Flying Attack Chance')
-    ], cpNormal, True),
+      wbFloat('Flying Attack Chance'),
+      wbFloat('Unknown 1'),
+      wbFloat('Unknown 2'),
+      wbFloat('Unknown 3')
+    ], cpNormal, True, nil, 7),
     wbInteger(DATA, 'Flags', itU32, wbFlags([
       {0x01} 'Dueling',
       {0x02} 'Flanking',
@@ -12394,6 +12458,7 @@ begin
     wbMODL,
     wbRArrayS('Body Parts',
       wbRStructSK([1], 'Body Part', [
+        wbString(BPVB, 'Bone Name', 0, cpNormal, True),
         wbLString(BPTN, 'Part Name', 0, cpTranslate), // optional
         wbString(BPNN, 'Part Node', 0, cpNormal, True),
         wbString(BPNT, 'VATS Target', 0, cpNormal, True),
@@ -12468,7 +12533,8 @@ begin
           wbFormIDCk('On Cripple - Impact DataSet', [IPDS, NULL]),
           wbFloat('On Cripple - Debris Scale'),
           wbInteger('On Cripple - Debris Count', itU8),
-          wbInteger('On Cripple - Decal Count', itU8)
+          wbInteger('On Cripple - Decal Count', itU8),
+          wbFloat('Unknown')
         ], cpNormal, True),
         wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
         wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
@@ -12699,6 +12765,7 @@ begin
     wbFormIDCk(NAM1, 'Sound 2', [SNDR]),
     wbFormIDCk(NAM3, 'Footstep Explosion', [EXPL]),
     wbFormIDCk(NAM2, 'Hazard', [HAZD]),
+    wbFormIDCk(NAM4, 'Sound 3', [SNDR]),
     wbFloat(FNAM, 'Footstep Particle Max Dist')
   ]);
 
@@ -12822,9 +12889,9 @@ begin
     ])),
 
     wbFULL,
+    wbKeywords,
     wbPRPS,
     wbUnknown(DATA),
-    wbKeywords,
     wbFormIDCk(PNAM, 'Parent Location', [LCTN, NULL]),
     wbFormIDCk(NAM1, 'Music', [MUSC, NULL]),
     wbFormIDCk(FNAM, 'Unreported Crime Faction', [FACT]),
@@ -12880,7 +12947,8 @@ begin
     wbRStructs('Menu Buttons', 'Menu Button', [
       wbLStringKC(ITXT, 'Button Text', 0, cpTranslate),
       wbCTDAs
-    ], [])
+    ], []),
+    wbUnknown(MBNR)
   ], False, nil, cpNormal, False, wbMESGAfterLoad);
 
   a := MakeVarRecs([
@@ -13356,6 +13424,8 @@ begin
       wbInteger('Ducking (dB)', itU16, wbDiv(100))
     ]),
     wbFloat(WNAM, 'Fade Duration'),
+    wbUnknown(VNAM),
+    wbUnknown(UNAM),
     wbArray(TNAM, 'Music Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ]);
 
@@ -13414,7 +13484,8 @@ begin
       wbFormIDCk(NNAM, 'Quest', [QUST]),
       wbUnknown(FNAM),
       wbFloat(RNAM, 'Hours until reset', cpNormal, False, 1/24)
-    ], []), cpNormal, False, nil, wbSMQNQuestsAfterSet)
+    ], []), cpNormal, False, nil, wbSMQNQuestsAfterSet),
+    wbUnknown(UNAM)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
   wbRecord(SMEN, 'Story Manager Event Node', [
@@ -13823,7 +13894,9 @@ begin
         $00, 'None',
         $08, 'Loop',
         $10, 'Envelope Fast',
-        $20, 'Envelope Slow'
+        $20, 'Envelope Slow',
+        $80, 'Unknown 128',
+        $88, 'Unknown 136'
       ])),
       wbInteger('Sidechain', itU8),
       wbInteger('Rumble Send Value = (Small / 7) + ((Big / 7) * 16)', itU8)
@@ -13838,17 +13911,21 @@ begin
       ]),
       wbFormIDCk('Base Descriptor', [SNDR])
     ]),
+    wbUnknown(HNAM),
+    wbUnknown(INAM),
     wbRArray('Descriptors', wbFormIDCk(DNAM, 'Descriptor', [SNDR])),
     wbInteger(ITMC, 'Count', itU32, nil, cpBenign),
     wbRArrayS('Rates of Fire',
       wbRStructSK([1], 'Sound', [
         wbEmpty(ITMS, 'Marker Start'),
         wbInteger(INTV, 'RoF (RPM)', itU32),
-        wbString(FNAM, 'File'),
+        wbRArray('Files', wbString(FNAM, 'File')),
         wbEmpty(ITME, 'Marker End')
       ], []),
       cpNormal, False, nil, wbSNDRRatesOfFireAfterSet
-    )
+    ),
+    wbUnknown(PNAM),
+    wbUnknown(QNAM)
   ]);
 
   wbRecord(DUAL, 'Dual Cast Data', [
@@ -13912,6 +13989,9 @@ begin
         'Channel 2? (unused)'
       ])
     ]),
+    wbFloat(WNAM),
+    wbUnknown(ONAM),
+    wbFormIDCk(ENAM, 'Effect', [AECH]),
     wbStruct(ATTN, 'Attenuation Values', [
       wbFloat('Fade In Distance - Start'),
       wbFloat('Fade In Distance - End'),
@@ -16368,6 +16448,8 @@ begin
       wbFloat('Max Weak Distance'),
       wbInteger('Flags', itU32, wbFlags(['Ignores Distance Checks']))
     ]),
+    wbUnknown(XFLG),
+    wbUnknown(XKPD),
     wbStruct(XBSD, 'Spline', [
       wbFloat('Slack'),
       wbFloat('Thickness'),
@@ -16630,14 +16712,19 @@ begin
     wbRStruct('Unknown', [
       wbUnknown(XWPK),
       wbUnknown(GNAM),
-      wbUnknown(HNAM),
+      wbFormID(HNAM),
       wbUnknown(INAM),
       wbUnknown(XWPK)
     ], []),
     wbUnknown(XPPS),
-    wbRArray('Unknown', wbUnknown(XWRC)),
-    wbUnknown(XPCK),
-
+    wbRArray('Resources',
+      wbStruct(XWRC, '', [
+        wbFormIDCk('Resource', [RESO]),
+        wbFloat('Count')
+      ])
+    ),
+    wbXPCK,
+    wbUnknown(XLLV),
     wbDataPosRot,
     wbUnknown(SRGN),
     wbString(MNAM, 'Comments')
@@ -17452,11 +17539,16 @@ begin
         wbFloat('Y', cpNormal, False, 1/4096)
       ], cpIgnore, True)
     ], []),
+    wbRArray('Unknown', wbFormIDCk(LNAM, 'Landscape Texture', [LTEX])),
+    wbUnknown(NAM5),
+    wbUnknown(NAM6),
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
     wbString(XWEM, 'Water Environment Map'),
     wbString(TNAM, 'HD LOD Diffuse Texture'),
     wbString(UNAM, 'HD LOD Normal Texture'),
+    wbUnknown(XCLW),
+    wbUnknown(WHGT),
     wbRStruct('World Default Level Data', [
       wbStruct(WLEV, 'Dimension', [
         wbStruct('NW Cell', [
@@ -17471,7 +17563,8 @@ begin
       wbByteArray(WLEV, 'Data')
     ], []),
     wbOFST,
-    wbUnknown(CLSZ)
+    wbUnknown(CLSZ),
+    wbUnknown(VISI)
   ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
 
@@ -17876,6 +17969,7 @@ begin
   wbRecord(KSSM, 'Sound Keyword Mapping', [
     wbEDID,
     wbFormIDCk(DNAM, 'Primary Descriptor', [SNDR]),
+    wbFormIDCk(FNAM, 'Trigger Sound', [SNDR]),
     wbFormIDCk(ENAM, 'Exterior Tail', [SNDR]),
     wbFormIDCk(VNAM, 'VATS Descriptor', [SNDR]),
     wbFloat(TNAM, 'VATS Threshold'),
@@ -17928,7 +18022,8 @@ begin
 
   wbRecord(MSWP, 'Material Swap',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00010000} 16, 'Custom Swap'
+      {0x00010000} 16, 'Custom Swap',
+      {0x00020000} 17, 'Unknown'
     ])), [
     wbEDID,
     wbString(FNAM, 'Tree Folder'), {First FNAM}
@@ -18031,6 +18126,8 @@ begin
     wbArray(FNAM, 'Filter Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbFormIDCk(LNAM, 'Loose Mod', sigBaseObjects),
     wbInteger(NAM1, 'Priority', itU8),
+    wbByteArray(NAM2, 'Unused', 0),
+    wbArray(NAM3, 'Unknown Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbFLTR
   ]);
 
@@ -18524,7 +18621,10 @@ begin
       wbFormID('Node'),
       wbArray('Unknown', wbFloat('Unknown'))
     ])),
-    wbRArray('Unknown', wbUnknown(ONAM)),
+    wbRArray('Unknown', wbRStruct('Unknown', [
+      wbUnknown(ONAM),
+      wbUnknown(TNAM)
+    ], [])),
     wbArray(BNAM, 'Unknown', wbFloat('Unknown'), 6),
     wbUnknown(GNAM),
     wbUnknown(INAM),
