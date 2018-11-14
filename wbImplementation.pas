@@ -8831,14 +8831,25 @@ begin
       PrecombinedCacheFileName := s;
       SetLength(PrecombinedCache, 0);
 
-      if Supports(Cell.ElementByPath['XCRI\References'], IwbContainerElementRef, CombinedRefs) then begin
-        cnt := CombinedRefs.ElementCount;
-        SetLength(PrecombinedCache, cnt);
-        for i := 0 to Pred(cnt) do
-          if Supports(CombinedRefs[i], IwbContainerElementRef, CombinedRef) and (CombinedRef.ElementCount = 2) then begin
-            PrecombinedCache[i].Ref := CombinedRef.Elements[0].NativeValue;
-            PrecombinedCache[i].ID := CombinedRef.Elements[1].NativeValue;
+      if wbGameMode = gmFO76 then begin
+        if Supports(Cell.ElementByPath['XCRP\References'], IwbContainerElementRef, CombinedRefs) then begin
+          cnt := CombinedRefs.ElementCount;
+          SetLength(PrecombinedCache, cnt);
+          for i := 0 to Pred(cnt) do begin
+            PrecombinedCache[i].Ref := CombinedRefs[i].NativeValue;
+            PrecombinedCache[i].ID := 0;
           end;
+        end;
+      end else begin
+        if Supports(Cell.ElementByPath['XCRI\References'], IwbContainerElementRef, CombinedRefs) then begin
+          cnt := CombinedRefs.ElementCount;
+          SetLength(PrecombinedCache, cnt);
+          for i := 0 to Pred(cnt) do
+            if Supports(CombinedRefs[i], IwbContainerElementRef, CombinedRef) and (CombinedRef.ElementCount = 2) then begin
+              PrecombinedCache[i].Ref := CombinedRef.Elements[0].NativeValue;
+              PrecombinedCache[i].ID := CombinedRef.Elements[1].NativeValue;
+            end;
+        end;
       end;
     end;
 
@@ -8855,16 +8866,20 @@ begin
 
   if mrsHasPrecombinedMesh in mrStates then begin
 
-    MasterFolder := '';
-    SelfRef := Self as IwbContainerElementRef;
-    if Supports(SelfRef.Container, IwbGroupRecord, Group) then
-      if Supports(Group.ChildrenOf, IwbMainRecord, Cell) then begin
-        Cell := Cell.MasterOrSelf;
-        if Assigned(Cell) and Assigned(Cell._File) and (Cell._File.LoadOrder > 0) then
-          MasterFolder := Cell._File.FileName + '\';
-      end;
+    if wbGameMode = gmFO76 then begin
+      Result := 'Precombined\' + IntToHex(Self.mrPrecombinedCellID, 8) + '\' + IntToHex(Self.mrPrecombinedCellID, 8) + 'nif';
+    end else begin
+      MasterFolder := '';
+      SelfRef := Self as IwbContainerElementRef;
+      if Supports(SelfRef.Container, IwbGroupRecord, Group) then
+        if Supports(Group.ChildrenOf, IwbMainRecord, Cell) then begin
+          Cell := Cell.MasterOrSelf;
+          if Assigned(Cell) and Assigned(Cell._File) and (Cell._File.LoadOrder > 0) then
+            MasterFolder := Cell._File.FileName + '\';
+        end;
 
-    Result := 'Precombined\' + MasterFolder + IntToHex(Self.mrPrecombinedCellID, 8) + '_' + IntToHex(Self.mrPrecombinedID, 8) + '_OC.nif';
+      Result := 'Precombined\' + MasterFolder + IntToHex(Self.mrPrecombinedCellID, 8) + '_' + IntToHex(Self.mrPrecombinedID, 8) + '_OC.nif';
+    end;
   end;
 end;
 
