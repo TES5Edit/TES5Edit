@@ -515,7 +515,8 @@ type
     dfNotAlignable,
     dfCollapsed,
     dfNoReport,
-    dfTranslatable
+    dfTranslatable,
+    dfAllowAnyMember
   );
 
   TwbDefFlags = set of TwbDefFlag;
@@ -9015,7 +9016,7 @@ function TwbSubRecordStructDef.CanHandle(aSignature     : TwbSignature;
                                    const aDataContainer : IwbDataContainer)
                                                         : Boolean;
 begin
-  if srsAllowUnordered then
+  if srsAllowUnordered or (dfAllowAnyMember in defFlags) then
     Result := ContainsMemberFor(aSignature, aDataContainer)
   else
     Result := srsMembers[0].CanHandle(aSignature, aDataContainer);
@@ -9148,7 +9149,7 @@ end;
 
 function TwbSubRecordStructDef.GetSignatureCount: Integer;
 begin
-  if srsAllowUnordered then
+  if srsAllowUnordered or (dfAllowAnyMember in defFlags) then
     Result := srsSignatures.Count
   else
     Result := srsMembers[0].GetSignatureCount;
@@ -9156,7 +9157,7 @@ end;
 
 function TwbSubRecordStructDef.GetSignature(const aIndex: Integer): TwbSignature;
 begin
-  if srsAllowUnordered then
+  if srsAllowUnordered or (dfAllowAnyMember in defFlags) then
     Result := StrToSignature(srsSignatures[aIndex])
   else
     Result := srsMembers[0].GetSignature(aIndex);
