@@ -39,6 +39,9 @@
 *)
 unit lz4;
 {$POINTERMATH ON}
+{$Q-}
+{$R-}
+
 
 interface
 

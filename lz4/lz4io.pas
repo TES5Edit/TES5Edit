@@ -40,6 +40,9 @@
 
 unit lz4io;
 {$POINTERMATH ON}
+{$Q-}
+{$R-}
+
 
 interface
 
