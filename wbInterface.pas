@@ -51,13 +51,13 @@ var
   VersionString : TwbVersion = (
     Major   : 3;
     Minor   : 3;
-    Release : 3;
+    Release : 4;
     Build   : '';
     Title   : 'BETA';
   );
 
 const
-  wbWhatsNewVersion : Integer = 5;
+  wbWhatsNewVersion : Integer = 6;
   wbDeveloperMessageVersion : Integer = 2;
   wbDevCRC32App : Cardinal = $FFFFFFEE;
 
