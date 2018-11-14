@@ -462,6 +462,7 @@ type
     cntStates        : TwbContainerStates;
     cntKeepAliveNext : IwbContainerElementRef;
     cntRefsBuildAt   : Integer;
+    cntCollapesGen   : Integer;
 
     function _AddRef: Integer; override; stdcall;
     function _Release: Integer; override; stdcall;
@@ -525,8 +526,8 @@ type
     function GetAdditionalElementCount: Integer; virtual;
     procedure ReverseElements;
     function GetContainerStates: TwbContainerStates;
-    function GetCollapsed: Boolean;
-    procedure SetCollapsed(const aValue: Boolean);
+    function GetCollapsed: TwbTriBool;
+    procedure SetCollapsed(const aValue: TwbTriBool);
     function GetElementByPath(const aPath: string): IwbElement;
     function GetElementValue(const aName: string): string;
     function GetElementExists(const aName: string): Boolean;
@@ -5158,6 +5159,18 @@ begin
 end;
 
 procedure TwbContainer.DoReset(aForce: Boolean);
+
+  procedure CheckCollapsedGen;
+  var
+    Def: IwbDef;
+  begin
+    if Supports(GetDef, IwbDef, Def) then
+      if Def.CollapsedGen > cntCollapesGen then begin
+        Exclude(cntStates, csCollapsed);
+        Exclude(cntStates, csExpanded);
+      end;
+  end;
+
 begin
   if not aForce then begin
     if not (csInit in cntStates) then
@@ -5168,6 +5181,11 @@ begin
       Exit;
     if not CanElementReset then
       Exit;
+    if [csCollapsed, csExpanded] * cntStates <> [] then begin
+      CheckCollapsedGen;
+      if [csCollapsed, csExpanded] * cntStates <> [] then
+        Exit;
+    end;
   end;
 
   if [csInitializing, csReseting] * cntStates <> [] then
@@ -5345,11 +5363,30 @@ begin
     Result := nil;
 end;
 
-function TwbContainer.GetCollapsed: Boolean;
+function TwbContainer.GetCollapsed: TwbTriBool;
 var
   Def: IwbDef;
 begin
-  Result := (csCollapsed in cntStates) or (Supports(GetDef, IwbDef, Def) and Def.Collapsed);
+  Def := nil;
+  if Supports(GetDef, IwbDef, Def) then
+    if Def.CollapsedGen > cntCollapesGen then begin
+      Exclude(cntStates, csCollapsed);
+      Exclude(cntStates, csExpanded);
+      cntCollapesGen := Def.CollapsedGen;
+    end;
+
+  if csCollapsed in cntStates then
+    Result := tbTrue
+  else if csExpanded in cntStates then
+    Result := tbFalse
+  else begin
+    Result := tbUnknown;
+    if Assigned(Def) then
+      if Def.Collapsed then
+        Result := tbTrue
+      else
+        Result := tbFalse;
+   end;
 end;
 
 function TwbContainer.GetContainerStates: TwbContainerStates;
@@ -6329,17 +6366,25 @@ begin
   Exclude(cntStates, csSortedBySortOrder);
 end;
 
-procedure TwbContainer.SetCollapsed(const aValue: Boolean);
+procedure TwbContainer.SetCollapsed(const aValue: TwbTriBool);
 var
   Def: IwbDef;
 begin
-  if aValue then
-    Include(cntStates, csCollapsed)
-  else begin
+  Def := GetDef;
+  if Assigned(Def) then
+    cntCollapesGen := Def.CollapsedGen;
+  case aValue of
+    tbTrue: begin
+      Include(cntStates, csCollapsed);
+      Exclude(cntStates, csExpanded);
+    end;
+    tbFalse: begin
+      Exclude(cntStates, csCollapsed);
+      Include(cntStates, csExpanded);
+    end;
+  else
     Exclude(cntStates, csCollapsed);
-    Def := GetDef;
-    if Assigned(Def) then
-      Def.Collapsed := False;
+    Exclude(cntStates, csExpanded);
   end;
 end;
 

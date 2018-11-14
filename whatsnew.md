@@ -10,6 +10,8 @@ The following reported issues have been fixed:
 * (found by devloper) - Language selection is not aware of .strings files in .bsa/.ba2 archives
 * (found by devloper) - UTF8 encoding for localized strings needs a fallback mechanism if strings are not valid UTF8
 * (found by devloper) - ref building uses more memory than necessary
+* (found by devloper) - if the module selection form on opening has exactly one entry and it is checked, it shows up as unchecked
+* (found by devloper) - inconsistencies in whe collapsing/expanding types and elements in the view tab (implementation and description below updated)
 
 ## "Hamburger" Menu
 
@@ -755,11 +757,13 @@ All 3 functions will show a list of affected record signatures before performing
 
 Nodes in the View tab now have a [-] symbol that can be used to collapse them.
 
-Collapsing a single node is stored in the elements and applies only for that one record. It may also get forgotten when navigating away from the record and coming back later. (This depends if the element gets freed or not, which depends on exactly which element it is and if it has been modified or not.)
+Collapsing or expanding a single node is stored in the elements and applies only for that one record. It may also get forgotten when navigating away from the record and coming back later. (This depends if the element gets freed or not, which depends on exactly which element it is and if it has been modified or not.)
         
-When holding shift while clicking the [-] in front of the node, the collapse is stored in the type definition instead of the Element and applies to all Elements of that definition. That means it will be preserved when navigating between different records.
+When holding control while clicking the [-] in front of the node, the collapse or expansion is stored in the type definition instead of the Element and applies to all Elements of that definition. That means it will be preserved when navigating between different records.
 
-When expanding a node that was globally collapsed (by holding shift), it will be globally expanded.
+It is possible to have the type collapsed and then expand individual elements, or have the type expanded and then collapse individual elements. When expanding or collapsing a type (by holding control) then the state of all individual elements of that type is reset to match the state of the type.
+
+In addition to clicking on the [-], nodes can also be collapsed or expanded by double clicking on the desired row in column 0 (the title column) as long as Compare Selected is not active (which already uses double click in the title column to trigger sorting by the values in that row).
 
 ## Next Object ID in File Header
 
