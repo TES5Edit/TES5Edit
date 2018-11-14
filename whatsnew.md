@@ -9,6 +9,7 @@ The following reported issues have been fixed:
 * (reported on discord) - adding/removing/sorting masters can leave the virtual "Worldspace" elements invalid (does not corrupt actual data)
 * (found by devloper) - Language selection is not aware of .strings files in .bsa/.ba2 archives
 * (found by devloper) - UTF8 encoding for localized strings needs a fallback mechanism if strings are not valid UTF8
+* (found by devloper) - ref building uses more memory than necessary
 
 ## "Hamburger" Menu
 
