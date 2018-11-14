@@ -1253,6 +1253,19 @@ object frmMain: TfrmMain
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 2
+    object bnMainMenu: TSpeedButton
+      AlignWithMargins = True
+      Left = 3
+      Top = 3
+      Width = 24
+      Height = 24
+      Align = alLeft
+      Caption = #926
+      Enabled = False
+      Flat = True
+      PopupMenu = pmuMain
+      OnMouseDown = bnMainMenuMouseDown
+    end
     object bnBack: TSpeedButton
       AlignWithMargins = True
       Left = 931
@@ -1757,9 +1770,9 @@ object frmMain: TfrmMain
     end
     object lblPath: TEdit
       AlignWithMargins = True
-      Left = 0
+      Left = 30
       Top = 5
-      Width = 925
+      Width = 895
       Height = 20
       Margins.Left = 0
       Margins.Top = 5
@@ -1773,7 +1786,6 @@ object frmMain: TfrmMain
       Ctl3D = True
       ParentColor = True
       ParentCtl3D = False
-      PopupMenu = pmuPath
       ReadOnly = True
       TabOrder = 0
       Visible = False
@@ -2295,19 +2307,10 @@ object frmMain: TfrmMain
       object mniNavLocalization: TMenuItem
         Caption = 'Localization'
         GroupIndex = 4
-        object mniNavLocalizationEditor: TMenuItem
-          Caption = 'Editor'
-          GroupIndex = 4
-          OnClick = mniNavLocalizationEditorClick
-        end
         object mniNavLocalizationSwitch: TMenuItem
           Caption = 'Localize'
           GroupIndex = 4
           OnClick = mniNavLocalizationSwitchClick
-        end
-        object mniNavLocalizationLanguage: TMenuItem
-          Caption = 'Language'
-          GroupIndex = 4
         end
       end
       object mniNavLogAnalyzer: TMenuItem
@@ -2679,47 +2682,6 @@ object frmMain: TfrmMain
       OnClick = mniRefByVWDClick
     end
   end
-  object pmuPath: TPopupMenu
-    OnPopup = pmuPathPopup
-    Left = 416
-    Top = 8
-    object mniPathPluggyLink: TMenuItem
-      Caption = 'Pluggy Link'
-      object mniPathPluggyLinkDisabled: TMenuItem
-        Caption = 'Disabled'
-        Checked = True
-        RadioItem = True
-        OnClick = mniPathPluggyLinkClick
-      end
-      object mniPathPluggyLinkReference: TMenuItem
-        Tag = 1
-        Caption = 'Reference'
-        RadioItem = True
-        OnClick = mniPathPluggyLinkClick
-      end
-      object mniPathPluggyLinkBaseObject: TMenuItem
-        Tag = 2
-        Caption = 'Base Object'
-        RadioItem = True
-        OnClick = mniPathPluggyLinkClick
-      end
-      object mniPathPluggyLinkInventory: TMenuItem
-        Caption = 'Inventory'
-        RadioItem = True
-        OnClick = mniPathPluggyLinkClick
-      end
-      object mniPathPluggyLinkEnchantment: TMenuItem
-        Caption = 'Enchantment'
-        RadioItem = True
-        OnClick = mniPathPluggyLinkClick
-      end
-      object mniPathPluggyLinkSpell: TMenuItem
-        Caption = 'Spell'
-        RadioItem = True
-        OnClick = mniPathPluggyLinkClick
-      end
-    end
-  end
   object pmuNavAdd: TPopupMenu
     Left = 152
     Top = 184
@@ -2779,5 +2741,69 @@ object frmMain: TfrmMain
     OnCloseBtnClick = jbhGitHubCloseBtnClick
     Left = 1173
     Top = 105
+  end
+  object pmuMain: TPopupMenu
+    OnPopup = pmuMainPopup
+    Left = 208
+    Top = 280
+    object mniMainLocalization: TMenuItem
+      Caption = 'Localization'
+      GroupIndex = 4
+      object mniMainLocalizationLanguage: TMenuItem
+        Caption = 'Language'
+        GroupIndex = 4
+      end
+      object mniMainLocalizationEditor: TMenuItem
+        Caption = 'Editor'
+        GroupIndex = 4
+        OnClick = mniMainLocalizationEditorClick
+      end
+    end
+    object mniMainPluggyLink: TMenuItem
+      Caption = 'Pluggy Link'
+      GroupIndex = 4
+      object mniMainPluggyLinkDisabled: TMenuItem
+        Caption = 'Disabled'
+        Checked = True
+        RadioItem = True
+        OnClick = mniMainPluggyLinkClick
+      end
+      object mniMainPluggyLinkReference: TMenuItem
+        Tag = 1
+        Caption = 'Reference'
+        RadioItem = True
+        OnClick = mniMainPluggyLinkClick
+      end
+      object mniMainPluggyLinkBaseObject: TMenuItem
+        Tag = 2
+        Caption = 'Base Object'
+        RadioItem = True
+        OnClick = mniMainPluggyLinkClick
+      end
+      object mniMainPluggyLinkInventory: TMenuItem
+        Caption = 'Inventory'
+        RadioItem = True
+        OnClick = mniMainPluggyLinkClick
+      end
+      object mniMainPluggyLinkEnchantment: TMenuItem
+        Caption = 'Enchantment'
+        RadioItem = True
+        OnClick = mniMainPluggyLinkClick
+      end
+      object mniMainPluggyLinkSpell: TMenuItem
+        Caption = 'Spell'
+        RadioItem = True
+        OnClick = mniMainPluggyLinkClick
+      end
+    end
+    object N30: TMenuItem
+      Caption = '-'
+      GroupIndex = 4
+    end
+    object mniMainOptions: TMenuItem
+      Caption = 'Options'
+      GroupIndex = 4
+      OnClick = mniNavOptionsClick
+    end
   end
 end

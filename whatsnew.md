@@ -10,6 +10,16 @@ The following reported issues have been fixed:
 * (found by devloper) - Language selection is not aware of .strings files in .bsa/.ba2 archives
 * (found by devloper) - UTF8 encoding for localized strings needs a fallback mechanism if strings are not valid UTF8
 
+## "Hamburger" Menu
+
+A "Hamburger Menu" button has been added to the top left corner of the main window. This button opens a menu with (currently) the following entries:
+
+* Localization
+* GameLink (if present)
+* Options
+
+More menu items that are unnecessarily (= not depending on context) in different context menus may get moved to this menu in the future.
+
 ## Codepage override using Description in File Header
 
 The codepage for translatable strings (see below for definition) can now be overridden by placing the text `<cp:xxxx>` somewhere in the description of the module. `xxxx` can be `utf8` or any valid codepage number, e.g. `1252`. codepages with less than 4 digits must use leading 0s, e.g. `<cp:0930>`.

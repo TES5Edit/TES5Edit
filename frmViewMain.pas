@@ -301,14 +301,13 @@ type
     N17: TMenuItem;
     N18: TMenuItem;
     mniNavCheckForCircularLeveledLists: TMenuItem;
-    pmuPath: TPopupMenu;
-    mniPathPluggyLink: TMenuItem;
-    mniPathPluggyLinkDisabled: TMenuItem;
-    mniPathPluggyLinkReference: TMenuItem;
-    mniPathPluggyLinkBaseObject: TMenuItem;
-    mniPathPluggyLinkInventory: TMenuItem;
-    mniPathPluggyLinkSpell: TMenuItem;
-    mniPathPluggyLinkEnchantment: TMenuItem;
+    mniMainPluggyLink: TMenuItem;
+    mniMainPluggyLinkDisabled: TMenuItem;
+    mniMainPluggyLinkReference: TMenuItem;
+    mniMainPluggyLinkBaseObject: TMenuItem;
+    mniMainPluggyLinkInventory: TMenuItem;
+    mniMainPluggyLinkSpell: TMenuItem;
+    mniMainPluggyLinkEnchantment: TMenuItem;
     mniNavBanditFix: TMenuItem;
     N20: TMenuItem;
     mniRefByRemove: TMenuItem;
@@ -324,10 +323,11 @@ type
     mniNavCompactFormIDs: TMenuItem;
     mniNavRenumberFormIDsInject: TMenuItem;
     tmrGenerator: TTimer;
-    mniNavLocalizationEditor: TMenuItem;
     mniNavLocalizationSwitch: TMenuItem;
     mniNavLocalization: TMenuItem;
-    mniNavLocalizationLanguage: TMenuItem;
+    mniMainLocalizationEditor: TMenuItem;
+    mniMainLocalization: TMenuItem;
+    mniMainLocalizationLanguage: TMenuItem;
     mniNavFilterForCleaning: TMenuItem;
     mniNavFilterForCleaningSelected: TMenuItem;
     mniNavCreateSEQFile: TMenuItem;
@@ -390,6 +390,7 @@ type
     cbViewFilterKeepParentsSiblings: TCheckBox;
     pnlViewTopLegend: TPanel;
     bnLegend: TSpeedButton;
+    bnMainMenu: TSpeedButton;
     bnHelp: TSpeedButton;
     bnNexusMods: TSpeedButton;
     bnGitHub: TSpeedButton;
@@ -403,6 +404,9 @@ type
     N28: TMenuItem;
     N29: TMenuItem;
     tbsWhatsNew: TTabSheet;
+    pmuMain: TPopupMenu;
+    mniMainOptions: TMenuItem;
+    N30: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -568,14 +572,13 @@ type
     procedure acForwardUpdate(Sender: TObject);
     procedure acForwardExecute(Sender: TObject);
     procedure mniNavCheckForCircularLeveledListsClick(Sender: TObject);
-    procedure mniPathPluggyLinkClick(Sender: TObject);
+    procedure mniMainPluggyLinkClick(Sender: TObject);
     procedure mniNavBanditFixClick(Sender: TObject);
     procedure mniNavRaceLVLIsClick(Sender: TObject);
     procedure mniRefByCopyDisabledOverrideIntoClick(Sender: TObject);
     procedure lvReferencedByColumnClick(Sender: TObject; Column: TListColumn);
     procedure lvReferencedByCompare(Sender: TObject; Item1, Item2: TListItem;
       Data: Integer; var Compare: Integer);
-    procedure pmuPathPopup(Sender: TObject);
     procedure mniNavUndeleteAndDisableReferencesClick(Sender: TObject);
     procedure mniNavMarkModifiedClick(Sender: TObject);
     procedure mniNavCreateMergedPatchClick(Sender: TObject);
@@ -584,9 +587,9 @@ type
     procedure mniNavRenumberFormIDsFromClick(Sender: TObject);
     procedure tmrGeneratorTimer(Sender: TObject);
     procedure mmoMessagesDblClick(Sender: TObject);
-    procedure mniNavLocalizationEditorClick(Sender: TObject);
+    procedure mniMainLocalizationEditorClick(Sender: TObject);
     procedure mniNavLocalizationSwitchClick(Sender: TObject);
-    procedure mniNavLocalizationLanguageClick(Sender: TObject);
+    procedure mniMainLocalizationLanguageClick(Sender: TObject);
     procedure mniNavFilterForCleaningClick(Sender: TObject);
     procedure mniNavCreateSEQFileClick(Sender: TObject);
     procedure vstNavExpanding(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -648,6 +651,8 @@ type
     procedure jbhGitHubBalloonClick(Sender: TObject);
     procedure jbhPatreonCloseBtnClick(Sender: TObject; var CanClose: Boolean);
     procedure jbhGitHubCloseBtnClick(Sender: TObject; var CanClose: Boolean);
+    procedure pmuMainPopup(Sender: TObject);
+    procedure bnMainMenuMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
@@ -1818,19 +1823,19 @@ begin
     end;
 end;
 
-procedure TfrmMain.mniPathPluggyLinkClick(Sender: TObject);
+procedure TfrmMain.mniMainPluggyLinkClick(Sender: TObject);
 begin
   (Sender as TMenuItem).Checked := True;
 
-  if mniPathPluggyLinkReference.Checked then
+  if mniMainPluggyLinkReference.Checked then
     PluggyLinkState := plsReference
-  else if mniPathPluggyLinkBaseObject.Checked then
+  else if mniMainPluggyLinkBaseObject.Checked then
     PluggyLinkState := plsBase
-  else if mniPathPluggyLinkInventory.Checked then
+  else if mniMainPluggyLinkInventory.Checked then
     PluggyLinkState := plsInventory
-  else if mniPathPluggyLinkEnchantment.Checked then
+  else if mniMainPluggyLinkEnchantment.Checked then
     PluggyLinkState := plsEnchantment
-  else if mniPathPluggyLinkSpell.Checked then
+  else if mniMainPluggyLinkSpell.Checked then
     PluggyLinkState := plsSpell
   else
     PluggyLinkState := plsNone;
@@ -2956,6 +2961,7 @@ begin
   end;
 
   vstNav.PopupMenu := nil;
+  bnMainMenu.Enabled := False;
   wbLoaderDone := False;
   wbLoaderError := False;
   DoSetActiveRecord(nil);
@@ -3015,6 +3021,7 @@ begin
   end;
 
   vstNav.PopupMenu := nil;
+  bnMainMenu.Enabled := False;
   wbLoaderDone := False;
   wbLoaderError := False;
   DoSetActiveRecord(nil);
@@ -5683,6 +5690,27 @@ begin
   except end;
 
   wbApplyFontAndScale(Self);
+  bnMainMenu.StyleElements := bnMainMenu.StyleElements - [seFont];
+  bnMainMenu.Font.Style := bnMainMenu.Font.Style + [fsBold];
+  bnMainMenu.Font.Size := Trunc(bnMainMenu.Font.Size * 1.5);
+  if Screen.Fonts.IndexOf('Segoe MDL2 Assets') >= 0 then begin
+    bnMainMenu.Font.Name := 'Segoe MDL2 Assets';
+    bnMainMenu.Caption := Chr($E700);
+
+    bnBack.StyleElements := bnBack.StyleElements - [seFont];
+    bnBack.Glyph := nil;
+    bnBack.Font.Style := bnBack.Font.Style + [fsBold];
+    //bnBack.Font.Size := Trunc(bnBack.Font.Size * 1.5);
+    bnBack.Font.Name := 'Segoe MDL2 Assets';
+    bnBack.Caption := Chr($E00E);
+
+    bnForward.StyleElements := bnForward.StyleElements - [seFont];
+    bnForward.Glyph := nil;
+    bnForward.Font.Style := bnForward.Font.Style + [fsBold];
+//    bnForward.Font.Size := Trunc(bnForward.Font.Size * 1.5);
+    bnForward.Font.Name := 'Segoe MDL2 Assets';
+    bnForward.Caption := Chr($E00F);
+  end;
 
   wbSetDoubleBuffered(Self);
 
@@ -7548,6 +7576,21 @@ begin
     Application.CreateForm(TfrmLegend, frmLegend);
     frmLegend.Show;
   end;
+end;
+
+procedure TfrmMain.bnMainMenuMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  p: TPoint;
+begin
+  if Button = mbLeft then
+    with Sender as TSpeedButton do begin
+      p.X := 0;
+      p.Y := Height;
+      p := ClientToScreen(p);
+      Down := True;
+      pmuMain.Popup(p.X, p.Y);
+      Abort;
+    end;
 end;
 
 var
@@ -10808,7 +10851,7 @@ begin
   InvalidateElementsTreeView(NoNodes);
 end;
 
-procedure TfrmMain.mniNavLocalizationEditorClick(Sender: TObject);
+procedure TfrmMain.mniMainLocalizationEditorClick(Sender: TObject);
 begin
   if not Assigned(wbLocalizationHandler) then
     Exit;
@@ -10820,7 +10863,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.mniNavLocalizationLanguageClick(Sender: TObject);
+procedure TfrmMain.mniMainLocalizationLanguageClick(Sender: TObject);
 var
   i: integer;
   s: string;
@@ -10887,141 +10930,142 @@ begin
   if not Supports(NodeData.Element, IwbFile, _File) then
     Exit;
 
-  fLocalize := not _File.IsLocalized;
-  fTranslate := false;
-  Translated := 0;
+  lFiles := TStringList.Create;
+  try
+    fLocalize := not _File.IsLocalized;
+    fTranslate := false;
+    Translated := 0;
 
-  if fLocalize then begin
+    if fLocalize then begin
 
-    with TfrmLocalizePlugin.Create(Self) do try
+      with TfrmLocalizePlugin.Create(Self) do try
 
-      lFiles := wbLocalizationHandler.AvailableLocalizationFiles;
-      clbFrom.Items.AddStrings(lFiles);
-      clbTo.Items.AddStrings(lFiles);
+        wbLocalizationHandler.AvailableLocalizationFiles(lFiles);
+        clbFrom.Items.AddStrings(lFiles);
+        clbTo.Items.AddStrings(lFiles);
 
-      if ShowModal <> mrOk then begin
-        FreeAndNil(lFiles);
-        Exit;
+        if ShowModal <> mrOk then
+          Exit;
+
+        fTranslate := cbTranslation.Checked;
+
+        if fTranslate then
+          for i := 0 to Pred(lFiles.Count) do begin
+            j := 0;
+            if clbFrom.Checked[i] then j := j or 1;
+            if clbTo.Checked[i] then j := j or 2;
+            lFiles.Objects[i] := Pointer(j);
+          end;
+
+      finally
+        Free;
       end;
 
-      fTranslate := cbTranslation.Checked;
+    end;
 
-      if fTranslate then
+    if not EditWarn then
+      Exit;
+
+    ok := false;
+
+    try
+      if fLocalize then
+        Caption := 'Localizing Records. Please wait...'
+      else
+        Caption := 'Delocalizing Records. Please wait...';
+      pgMain.ActivePage := tbsMessages;
+
+      StartTick := GetTickCount64;
+      wbStartTime := Now;
+      Enabled := false;
+
+      if fTranslate then begin
+        PostAddMessage('[Processing] Building translation index...');
+
+        lFrom := TwbFastStringList.Create;
+        lTo := TwbFastStringList.Create;
+
         for i := 0 to Pred(lFiles.Count) do begin
-          j := 0;
-          if clbFrom.Checked[i] then j := j or 1;
-          if clbTo.Checked[i] then j := j or 2;
-          lFiles.Objects[i] := Pointer(j);
+          if Integer(lFiles.Objects[i]) and 1 > 0 then begin
+            wblf := TwbLocalizationFile.Create(wbLocalizationHandler.StringsPath + lFiles[i]);
+            for j := 0 to Pred(wblf.Count) do
+              lFrom.Add(AnsiLowerCase(wblf.Items[j]));
+            wblf.Destroy;
+          end;
+
+          if Integer(lFiles.Objects[i]) and 2 > 0 then begin
+            wblf := TwbLocalizationFile.Create(wbLocalizationHandler.StringsPath + lFiles[i]);
+            lTo.AddStrings(wblf.Items);
+            wblf.Destroy;
+          end;
         end;
+
+        if lFrom.Count <> lTo.Count then begin
+          PostAddMessage('[Error] Number of strings in vocabulary does not match. Check parameters and run again.');
+          Exit;
+        end;
+      end;
+
+      PostAddMessage('[Processing] Collecting localizable values...');
+      GatherLStrings(_File, lstrings);
+
+      PostAddMessage('[Processing] Performing operation...');
+      for i := Low(lstrings) to High(lstrings) do begin
+
+        Element := lstrings[i];
+        if fLocalize then begin
+          s := Element.EditValue;
+          if fTranslate then begin
+            j := lFrom.IndexOf(AnsiLowerCase(s));
+            if j <> -1 then begin
+              s := lTo[j];
+              Inc(Translated);
+            end else
+              // count empty strings as translated too
+              if s = '' then Inc(Translated);
+          end;
+          ID := wbLocalizationHandler.AddValue(s, Element);
+          Element.EditValue := sStringID + IntToHex(ID, 8);
+        end else begin
+          s := Element.EditValue;
+          wbLocalizationHandler.NoTranslate := true;
+          Element.EditValue := s;
+          wbLocalizationHandler.NoTranslate := false;
+        end;
+
+        if StartTick + 500 < GetTickCount64 then begin
+          DoProcessMessages;
+          StartTick := GetTickCount64;
+        end;
+
+      end;
+
+      _File.IsLocalized := not _File.IsLocalized;
+
+      vstNav.Invalidate;
+      ok := true;
 
     finally
-      Free;
+      if fLocalize and fTranslate then begin
+        FreeAndNil(lFrom);
+        FreeAndNil(lTo);
+      end;
+
+      wbLocalizationHandler.NoTranslate := false;
+      Enabled := true;
+      PostAddMessage('[Processing done] ' +
+        ' Localizable Strings: ' + IntToStr(Length(lstrings)) +
+        ' Translated: ' + IntToStr(Translated) +
+        ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
+      Caption := Application.Title;
+
+      // that "(de)localization" is a very dirty hack which can probably lead
+      // to problems if user continues to work with a plugin, so
+      // immediately force a "save changes" window and quit.
+      if ok then Close;
     end;
-
-  end;
-
-  if not EditWarn then
-    Exit;
-
-  ok := false;
-
-  try
-    if fLocalize then
-      Caption := 'Localizing Records. Please wait...'
-    else
-      Caption := 'Delocalizing Records. Please wait...';
-    pgMain.ActivePage := tbsMessages;
-
-    StartTick := GetTickCount64;
-    wbStartTime := Now;
-    Enabled := false;
-
-    if fTranslate then begin
-      PostAddMessage('[Processing] Building translation index...');
-
-      lFrom := TwbFastStringList.Create;
-      lTo := TwbFastStringList.Create;
-
-      for i := 0 to Pred(lFiles.Count) do begin
-        if Integer(lFiles.Objects[i]) and 1 > 0 then begin
-          wblf := TwbLocalizationFile.Create(wbLocalizationHandler.StringsPath + lFiles[i]);
-          for j := 0 to Pred(wblf.Count) do
-            lFrom.Add(AnsiLowerCase(wblf.Items[j]));
-          wblf.Destroy;
-        end;
-
-        if Integer(lFiles.Objects[i]) and 2 > 0 then begin
-          wblf := TwbLocalizationFile.Create(wbLocalizationHandler.StringsPath + lFiles[i]);
-          lTo.AddStrings(wblf.Items);
-          wblf.Destroy;
-        end;
-      end;
-
-      if lFrom.Count <> lTo.Count then begin
-        PostAddMessage('[Error] Number of strings in vocabulary does not match. Check parameters and run again.');
-        Exit;
-      end;
-    end;
-
-
-    PostAddMessage('[Processing] Collecting localizable values...');
-    GatherLStrings(_File, lstrings);
-
-    PostAddMessage('[Processing] Performing operation...');
-    for i := Low(lstrings) to High(lstrings) do begin
-
-      Element := lstrings[i];
-      if fLocalize then begin
-        s := Element.EditValue;
-        if fTranslate then begin
-          j := lFrom.IndexOf(AnsiLowerCase(s));
-          if j <> -1 then begin
-            s := lTo[j];
-            Inc(Translated);
-          end else
-            // count empty strings as translated too
-            if s = '' then Inc(Translated);
-        end;
-        ID := wbLocalizationHandler.AddValue(s, Element);
-        Element.EditValue := sStringID + IntToHex(ID, 8);
-      end else begin
-        s := Element.EditValue;
-        wbLocalizationHandler.NoTranslate := true;
-        Element.EditValue := s;
-        wbLocalizationHandler.NoTranslate := false;
-      end;
-
-      if StartTick + 500 < GetTickCount64 then begin
-        DoProcessMessages;
-        StartTick := GetTickCount64;
-      end;
-
-    end;
-
-    _File.IsLocalized := not _File.IsLocalized;
-
-    vstNav.Invalidate;
-    ok := true;
-
   finally
-    if fLocalize and fTranslate then begin
-      FreeAndNil(lFiles);
-      FreeAndNil(lFrom);
-      FreeAndNil(lTo);
-    end;
-
-    wbLocalizationHandler.NoTranslate := false;
-    Enabled := true;
-    PostAddMessage('[Processing done] ' +
-      ' Localizable Strings: ' + IntToStr(Length(lstrings)) +
-      ' Translated: ' + IntToStr(Translated) +
-      ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
-    Caption := Application.Title;
-
-    // that "(de)localization" is a very dirty hack which can probably lead
-    // to problems if user continues to work with a plugin, so
-    // immediately force a "save changes" window and quit.
-    if ok then Close;
+    lFiles.Free;
   end;
 end;
 
@@ -13068,6 +13112,46 @@ begin
   end;
 end;
 
+procedure TfrmMain.pmuMainPopup(Sender: TObject);
+var
+  sl       : TStringList;
+  i        : Integer;
+  MenuItem : TMenuItem;
+begin
+  mniMainLocalization.Visible := (wbIsSkyrim or wbIsFallout4 or wbIsFallout76);
+
+  if wbIsSkyrim or wbIsFallout4 or wbIsFallout76 then begin
+    mniMainLocalizationLanguage.Clear;
+    sl := TStringList.Create;
+    try
+      wbLocalizationHandler.AvailableLanguages(sl);
+      for i := 0 to Pred(sl.Count) do begin
+        MenuItem := TMenuItem.Create(mniMainLocalizationLanguage);
+        MenuItem.Caption := sl[i];
+        MenuItem.RadioItem := true;
+        if SameText(sl[i], wbLanguage) then
+          MenuItem.Checked := true;
+        MenuItem.OnClick := mniMainLocalizationLanguageClick;
+        mniMainLocalizationLanguage.Add(MenuItem);
+      end;
+    finally
+      sl.Free;
+    end;
+  end;
+
+  mniMainPluggyLink.Visible := (wbGameMode = gmTES4) or FileExists(wbDataPath + 'xEdit\xEditLink.ini');
+  if wbGameMode <> gmTES4 then
+    mniMainPluggyLink.Caption := 'GameLink';
+  mniMainPluggyLink.Checked := PluggyLinkState <> plsNone;
+
+  mniMainPluggyLinkDisabled.Visible := mniMainPluggyLink.Visible;
+  mniMainPluggyLinkReference.Visible := mniMainPluggyLink.Visible;
+  mniMainPluggyLinkBaseObject.Visible := mniMainPluggyLink.Visible;
+  mniMainPluggyLinkInventory.Visible := mniMainPluggyLink.Visible and (wbGameMode = gmTES4);
+  mniMainPluggyLinkSpell.Visible := mniMainPluggyLink.Visible and (wbGameMode = gmTES4);
+  mniMainPluggyLinkEnchantment.Visible := mniMainPluggyLink.Visible and (wbGameMode = gmTES4);
+end;
+
 procedure TfrmMain.pmuNavPopup(Sender: TObject);
 var
   NodeData                    : PNavNodeData;
@@ -13284,21 +13368,6 @@ begin
     else
       mniNavLocalizationSwitch.Caption := 'Localize plugin';
 
-  if wbIsSkyrim or wbIsFallout4 or wbIsFallout76 then begin
-    mniNavLocalizationLanguage.Clear;
-    sl := wbLocalizationHandler.AvailableLanguages;
-    for i := 0 to Pred(sl.Count) do begin
-      MenuItem := TMenuItem.Create(mniNavLocalizationLanguage);
-      MenuItem.Caption := sl[i];
-      MenuItem.RadioItem := true;
-      if SameText(sl[i], wbLanguage) then
-        MenuItem.Checked := true;
-      MenuItem.OnClick := mniNavLocalizationLanguageClick;
-      mniNavLocalizationLanguage.Add(MenuItem);
-    end;
-    sl.Free;
-  end;
-
   mniNavLogAnalyzer.Visible := (wbGameMode = gmTES4) or wbIsSkyrim;
   mniNavLogAnalyzer.Clear;
   if wbIsSkyrim then begin
@@ -13317,20 +13386,6 @@ begin
   end;
 
   mniNavCreateMergedPatch.Visible := not wbTranslationMode and wbEditAllowed;
-end;
-
-procedure TfrmMain.pmuPathPopup(Sender: TObject);
-begin
-  mniPathPluggyLink.Visible := (wbGameMode = gmTES4) or FileExists(wbDataPath + 'xEdit\xEditLink.ini');
-  if wbGameMode <> gmTES4 then
-    mniPathPluggyLink.Caption := 'GameLink';
-
-  mniPathPluggyLinkDisabled.Visible := mniPathPluggyLink.Visible;
-  mniPathPluggyLinkReference.Visible := mniPathPluggyLink.Visible;
-  mniPathPluggyLinkBaseObject.Visible := mniPathPluggyLink.Visible;
-  mniPathPluggyLinkInventory.Visible := mniPathPluggyLink.Visible and (wbGameMode = gmTES4);
-  mniPathPluggyLinkSpell.Visible := mniPathPluggyLink.Visible and (wbGameMode = gmTES4);
-  mniPathPluggyLinkEnchantment.Visible := mniPathPluggyLink.Visible and (wbGameMode = gmTES4);
 end;
 
 procedure TfrmMain.pmuRefByPopup(Sender: TObject);
@@ -18551,138 +18606,125 @@ var
   NewFile   : IwbFile;
   MasterFile: IwbFile;
 begin
-  wbLoaderDone := True;
-  wbStartTime := PDateTime(Message.WParam)^;
-  LoadOrder := Message.LParam;
-  if LoadOrder < 0 then begin
-    Inc(wbShowStartTime);
-    try
-      if wbToolMode in [tmEdit] then begin
-        // unchecked Show Tip checkbox, update setting
-        if Assigned(frmTip) and not wbShowTip then begin
-          Settings.WriteBool('Options', 'ShowTip', wbShowTip);
-          Settings.UpdateFile;
-        end;
-        HideTip;
-      end;
-
-      if wbLoaderError then begin
-        ShowMessage('An error occured while loading modules. Editing is disabled. Check the message log and correct the error.');
-        Exit;
-      end;
-
-      _BlockInternalEdit := False;
-
-      if (wbToolMode in [tmLODgen, tmScript]) then begin
-        if not wbForceTerminate then
-          tmrGenerator.Enabled := True;
-        Exit;
-      end;
-
-        if wbIsSkyrim then begin
-        with vstSpreadSheetWeapon.Header.Columns[9] do
-          Options := Options - [coVisible];
-        for i := 12 to 20 do
-          with vstSpreadSheetWeapon.Header.Columns[i] do
-            Options := Options + [coVisible];
-
-        with vstSpreadsheetArmor.Header.Columns[9] do
-          Options := Options - [coVisible];
-        with vstSpreadsheetArmor.Header.Columns[6] do
-          Text := 'Armor Type';
-        for i := 11 to 12 do
-          with vstSpreadsheetArmor.Header.Columns[i] do
-            Options := Options + [coVisible];
-
-        with vstSpreadSheetAmmo.Header.Columns[5] do
-          Options := Options - [coVisible];
-        with vstSpreadSheetAmmo.Header.Columns[7] do
-          Options := Options - [coVisible];
-        with vstSpreadSheetAmmo.Header.Columns[4] do
-          Text := 'Projectile';
-        with vstSpreadSheetAmmo.Header.Columns[9] do
-          Options := Options + [coVisible];
-      end;
-
-      SetupTreeView(vstSpreadSheetWeapon);
-      SetupTreeView(vstSpreadsheetArmor);
-      SetupTreeView(vstSpreadSheetAmmo);
-
-      tbsWEAPSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim;
-      tbsARMOSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim;
-      tbsAMMOSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim;
-
-      if wbForceTerminate then begin
-        GeneralProgressNoAbortCheck('Loading of modules got terminated early. Editing is disabled.');
-        Exit;
-      end;
-
-      tmrCheckUnsaved.Enabled := True;
-
-      if wbFirstLoadComplete then
-        Exit;
-
-      wbFirstLoadComplete := True;
-
-      ModGroups := nil;
-
-      if wbQuickShowConflicts then begin
-        ModGroups := wbModGroupsByName;
-        wbModGroupsByName(False).ShowValidationMessages;
-      end else if not (wbQuickClean or (wbToolMode in wbAutoModes)) then
-        if wbToolMode in [tmView, tmEdit] then begin
-          with TfrmModGroupSelect.Create(Self) do
-          try
-            AllModGroups := wbModGroupsByName;
-            wbModGroupsByName(False).ShowValidationMessages;
-            LoadModGroupsSelection(AllModGroups);
-            Caption := 'Which ModGroups do you want to activate?';
-            PresetCategory := 'ActiveModGroups';
-            if ShowModal = mrOk then begin
-              SaveModGroupsSelection(SelectedModGroups);
-              ModGroups := SelectedModGroups;
-            end;
-          finally
-            Free;
+  try
+    wbLoaderDone := True;
+    wbStartTime := PDateTime(Message.WParam)^;
+    LoadOrder := Message.LParam;
+    if LoadOrder < 0 then begin
+      Inc(wbShowStartTime);
+      try
+        if wbToolMode in [tmEdit] then begin
+          // unchecked Show Tip checkbox, update setting
+          if Assigned(frmTip) and not wbShowTip then begin
+            Settings.WriteBool('Options', 'ShowTip', wbShowTip);
+            Settings.UpdateFile;
           end;
+          HideTip;
         end;
 
-      ModGroupsExist := ModGroups.Activate;
-      ModGroupsEnabled := ModGroupsExist;
-      mniModGroupsEnabled.Checked := ModGroupsEnabled;
-      mniModGroupsDisabled.Checked := not ModGroupsEnabled;
+        if wbLoaderError then begin
+          ShowMessage('An error occured while loading modules. Editing is disabled. Check the message log and correct the error.');
+          Exit;
+        end;
 
-      if wbQuickShowConflicts then
-        mniNavFilterConflicts.Click;
+        _BlockInternalEdit := False;
 
-      if wbQuickClean then begin
-        mniNavFilterForCleaning.Click;
-        JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
-        vstNav.ClearSelection;
-        vstNav.FocusedNode := vstNav.FocusedNode.Parent;
-        vstNav.Selected[vstNav.FocusedNode] := True;
-        DoSetActiveRecord(nil);
-        pgMain.ActivePage := tbsMessages;
-        mniNavUndeleteAndDisableReferences.Click;
-        mniNavRemoveIdenticalToMaster.Click;
+        if (wbToolMode in [tmLODgen, tmScript]) then begin
+          if not wbForceTerminate then
+            tmrGenerator.Enabled := True;
+          Exit;
+        end;
 
-        if wbQuickCleanAutoSave then
-          if not SaveChanged(True) then
-            Exit;
+          if wbIsSkyrim then begin
+          with vstSpreadSheetWeapon.Header.Columns[9] do
+            Options := Options - [coVisible];
+          for i := 12 to 20 do
+            with vstSpreadSheetWeapon.Header.Columns[i] do
+              Options := Options + [coVisible];
 
-        mniNavFilterForCleaning.Click;
-        JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
-        vstNav.ClearSelection;
-        vstNav.FocusedNode := vstNav.FocusedNode.Parent;
-        vstNav.Selected[vstNav.FocusedNode] := True;
-        DoSetActiveRecord(nil);
-        pgMain.ActivePage := tbsMessages;
-        mniNavUndeleteAndDisableReferences.Click;
-        mniNavRemoveIdenticalToMaster.Click;
+          with vstSpreadsheetArmor.Header.Columns[9] do
+            Options := Options - [coVisible];
+          with vstSpreadsheetArmor.Header.Columns[6] do
+            Text := 'Armor Type';
+          for i := 11 to 12 do
+            with vstSpreadsheetArmor.Header.Columns[i] do
+              Options := Options + [coVisible];
 
-        if wbQuickCleanAutoSave then begin
-          if not SaveChanged(True) then
-            Exit;
+          with vstSpreadSheetAmmo.Header.Columns[5] do
+            Options := Options - [coVisible];
+          with vstSpreadSheetAmmo.Header.Columns[7] do
+            Options := Options - [coVisible];
+          with vstSpreadSheetAmmo.Header.Columns[4] do
+            Text := 'Projectile';
+          with vstSpreadSheetAmmo.Header.Columns[9] do
+            Options := Options + [coVisible];
+        end;
+
+        SetupTreeView(vstSpreadSheetWeapon);
+        SetupTreeView(vstSpreadsheetArmor);
+        SetupTreeView(vstSpreadSheetAmmo);
+
+        tbsWEAPSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim;
+        tbsARMOSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim;
+        tbsAMMOSpreadsheet.TabVisible := (wbGameMode = gmTES4) or wbIsSkyrim;
+
+        if wbForceTerminate then begin
+          GeneralProgressNoAbortCheck('Loading of modules got terminated early. Editing is disabled.');
+          Exit;
+        end;
+
+        tmrCheckUnsaved.Enabled := True;
+
+        if wbFirstLoadComplete then
+          Exit;
+
+        wbFirstLoadComplete := True;
+
+        ModGroups := nil;
+
+        if wbQuickShowConflicts then begin
+          ModGroups := wbModGroupsByName;
+          wbModGroupsByName(False).ShowValidationMessages;
+        end else if not (wbQuickClean or (wbToolMode in wbAutoModes)) then
+          if wbToolMode in [tmView, tmEdit] then begin
+            with TfrmModGroupSelect.Create(Self) do
+            try
+              AllModGroups := wbModGroupsByName;
+              wbModGroupsByName(False).ShowValidationMessages;
+              LoadModGroupsSelection(AllModGroups);
+              Caption := 'Which ModGroups do you want to activate?';
+              PresetCategory := 'ActiveModGroups';
+              if ShowModal = mrOk then begin
+                SaveModGroupsSelection(SelectedModGroups);
+                ModGroups := SelectedModGroups;
+              end;
+            finally
+              Free;
+            end;
+          end;
+
+        ModGroupsExist := ModGroups.Activate;
+        ModGroupsEnabled := ModGroupsExist;
+        mniModGroupsEnabled.Checked := ModGroupsEnabled;
+        mniModGroupsDisabled.Checked := not ModGroupsEnabled;
+
+        if wbQuickShowConflicts then
+          mniNavFilterConflicts.Click;
+
+        if wbQuickClean then begin
+          mniNavFilterForCleaning.Click;
+          JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
+          vstNav.ClearSelection;
+          vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+          vstNav.Selected[vstNav.FocusedNode] := True;
+          DoSetActiveRecord(nil);
+          pgMain.ActivePage := tbsMessages;
+          mniNavUndeleteAndDisableReferences.Click;
+          mniNavRemoveIdenticalToMaster.Click;
+
+          if wbQuickCleanAutoSave then
+            if not SaveChanged(True) then
+              Exit;
 
           mniNavFilterForCleaning.Click;
           JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
@@ -18694,103 +18736,122 @@ begin
           mniNavUndeleteAndDisableReferences.Click;
           mniNavRemoveIdenticalToMaster.Click;
 
-          mniNavLOManagersDirtyInfoClick(mniNavLOManagersDirtyInfo);
-        end;
+          if wbQuickCleanAutoSave then begin
+            if not SaveChanged(True) then
+              Exit;
 
-        wbQuickClean := False;
-        wbProgress('Quick Clean mode finished.');
-      end;
-    finally
-      Dec(wbShowStartTime);
-    end;
-  end else begin
-    NewFile := nil;
-    MasterFile := nil;
-    for i := High(Files) downto Low(Files) do
-      if Files[i].LoadOrder = LoadOrder then begin
-        NewFile := Files[i];
-        Break;
-      end;
-    for i := Low(Files) to High(Files) do
-      if Files[i].LoadOrder = LoadOrder then begin
-        MasterFile := Files[i];
-        Break;
-      end;
-    if Assigned(NewFile) and Assigned(MasterFile) and not MasterFile.Equals(NewFile) then begin
-      if fsIsDeltaPatch in NewFile.FileStates then try
+            mniNavFilterForCleaning.Click;
+            JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
+            vstNav.ClearSelection;
+            vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+            vstNav.Selected[vstNav.FocusedNode] := True;
+            DoSetActiveRecord(nil);
+            pgMain.ActivePage := tbsMessages;
+            mniNavUndeleteAndDisableReferences.Click;
+            mniNavRemoveIdenticalToMaster.Click;
 
-        PerformLongAction('Creating Delta Patch', '', procedure
-        var
-          i          : Integer;
-          Node       : PVirtualNode;
-          NodeData   : PNavNodeData;
-          MainRecord : IwbMainRecord;
-        begin
-          HideRemoveMessage := True;
-          wbQuickClean := True;
-
-          for i := High(Files) downto Low(Files) do
-            Files[i].Hide;
-
-          MasterFile.Show;
-          NewFile.Show;
-
-          wbModulesByLoadOrder.ExcludeAll(mfTaggedForPluginMode);
-          Include(PwbModuleInfo(MasterFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
-          mniNavFilterForCleaning.Click;
-          JumpTo(MasterFile.Header, False);
-          vstNav.ClearSelection;
-          vstNav.FocusedNode := vstNav.FocusedNode.Parent;
-          vstNav.Selected[vstNav.FocusedNode] := True;
-          DoSetActiveRecord(nil);
-          pgMain.ActivePage := tbsMessages;
-
-          Node := vstNav.GetLast;
-          while Assigned(Node) do begin
-            NodeData := vstNav.GetNodeData(Node);
-            if Assigned(NodeData) then
-              if Supports(NodeData.Element, IwbMainRecord, MainRecord) then
-                if MainRecord.Signature <> 'TES4' then
-                  if not MainRecord.IsDeleted then
-                    if NodeData.ConflictThis = ctOnlyOne then
-                      if Supports(wbCopyElementToFile(NodeData.Element, NewFile, False, False, '', '', '', False), IwbMainRecord, MainRecord) then
-                        MainRecord.IsDeleted := True;
-            Node := vstNav.GetPrevious(Node);
+            mniNavLOManagersDirtyInfoClick(mniNavLOManagersDirtyInfo);
           end;
 
-          wbModulesByLoadOrder.ExcludeAll(mfTaggedForPluginMode);
-          Include(PwbModuleInfo(NewFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
-          mniNavFilterForCleaning.Click;
-          JumpTo(NewFile.Header, False);
-          vstNav.ClearSelection;
-          vstNav.FocusedNode := vstNav.FocusedNode.Parent;
-          vstNav.Selected[vstNav.FocusedNode] := True;
-          DoSetActiveRecord(nil);
-          pgMain.ActivePage := tbsMessages;
-          mniNavRemoveIdenticalToMaster.Click;
-
-          for i := High(Files) downto Low(Files) do
-            Files[i].Show;
-
-          wbModulesByLoadOrder.ExcludeAll(mfTaggedForPluginMode);
-          Include(PwbModuleInfo(NewFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
-          wbQuickClean := True;
-          mniNavFilterForCleaning.Click;
-          JumpTo(NewFile.Header, False);
-          vstNav.ClearSelection;
-          vstNav.FocusedNode := vstNav.FocusedNode.Parent;
-          vstNav.Selected[vstNav.FocusedNode] := True;
-          DoSetActiveRecord(nil);
-          pgMain.ActivePage := tbsMessages;
-        end);
-
+          wbQuickClean := False;
+          wbProgress('Quick Clean mode finished.');
+        end;
       finally
-        wbQuickClean := False;
-        HideRemoveMessage := False;
+        Dec(wbShowStartTime);
+      end;
+    end else begin
+      NewFile := nil;
+      MasterFile := nil;
+      for i := High(Files) downto Low(Files) do
+        if Files[i].LoadOrder = LoadOrder then begin
+          NewFile := Files[i];
+          Break;
+        end;
+      for i := Low(Files) to High(Files) do
+        if Files[i].LoadOrder = LoadOrder then begin
+          MasterFile := Files[i];
+          Break;
+        end;
+      if Assigned(NewFile) and Assigned(MasterFile) and not MasterFile.Equals(NewFile) then begin
+        if fsIsDeltaPatch in NewFile.FileStates then try
+
+          PerformLongAction('Creating Delta Patch', '', procedure
+          var
+            i          : Integer;
+            Node       : PVirtualNode;
+            NodeData   : PNavNodeData;
+            MainRecord : IwbMainRecord;
+          begin
+            HideRemoveMessage := True;
+            wbQuickClean := True;
+
+            for i := High(Files) downto Low(Files) do
+              Files[i].Hide;
+
+            MasterFile.Show;
+            NewFile.Show;
+
+            wbModulesByLoadOrder.ExcludeAll(mfTaggedForPluginMode);
+            Include(PwbModuleInfo(MasterFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
+            mniNavFilterForCleaning.Click;
+            JumpTo(MasterFile.Header, False);
+            vstNav.ClearSelection;
+            vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+            vstNav.Selected[vstNav.FocusedNode] := True;
+            DoSetActiveRecord(nil);
+            pgMain.ActivePage := tbsMessages;
+
+            Node := vstNav.GetLast;
+            while Assigned(Node) do begin
+              NodeData := vstNav.GetNodeData(Node);
+              if Assigned(NodeData) then
+                if Supports(NodeData.Element, IwbMainRecord, MainRecord) then
+                  if MainRecord.Signature <> 'TES4' then
+                    if not MainRecord.IsDeleted then
+                      if NodeData.ConflictThis = ctOnlyOne then
+                        if Supports(wbCopyElementToFile(NodeData.Element, NewFile, False, False, '', '', '', False), IwbMainRecord, MainRecord) then
+                          MainRecord.IsDeleted := True;
+              Node := vstNav.GetPrevious(Node);
+            end;
+
+            wbModulesByLoadOrder.ExcludeAll(mfTaggedForPluginMode);
+            Include(PwbModuleInfo(NewFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
+            mniNavFilterForCleaning.Click;
+            JumpTo(NewFile.Header, False);
+            vstNav.ClearSelection;
+            vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+            vstNav.Selected[vstNav.FocusedNode] := True;
+            DoSetActiveRecord(nil);
+            pgMain.ActivePage := tbsMessages;
+            mniNavRemoveIdenticalToMaster.Click;
+
+            for i := High(Files) downto Low(Files) do
+              Files[i].Show;
+
+            wbModulesByLoadOrder.ExcludeAll(mfTaggedForPluginMode);
+            Include(PwbModuleInfo(NewFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
+            wbQuickClean := True;
+            mniNavFilterForCleaning.Click;
+            JumpTo(NewFile.Header, False);
+            vstNav.ClearSelection;
+            vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+            vstNav.Selected[vstNav.FocusedNode] := True;
+            DoSetActiveRecord(nil);
+            pgMain.ActivePage := tbsMessages;
+          end);
+
+        finally
+          wbQuickClean := False;
+          HideRemoveMessage := False;
+        end;
       end;
     end;
+  finally
+    if wbFirstLoadComplete then begin
+      vstNav.PopupMenu := pmuNav;
+      bnMainMenu.Enabled := True;
+    end;
   end;
-  vstNav.PopupMenu := pmuNav;
 end;
 
 procedure TfrmMain.WMUser3(var Message: TMessage);
