@@ -1115,7 +1115,7 @@ var
   wbMODC: IwbSubRecordDef;
   wbMODD: IwbSubRecordDef;
   wbMODF: IwbSubRecordDef;
-  wbMODL: IwbSubRecordStructDef;
+  wbMODL: IwbRecordMemberDef;
   wbMODS: IwbSubRecordDef;
   wbMO2S: IwbSubRecordDef;
   wbMO3S: IwbSubRecordDef;
@@ -1128,8 +1128,8 @@ var
   wbMO3C: IwbSubRecordDef;
   wbMO4C: IwbSubRecordDef;
   wbMO5C: IwbSubRecordDef;
-  wbMODLActor: IwbSubRecordStructDef;
-  wbMODLReq: IwbSubRecordStructDef;
+  wbMODLActor: IwbRecordMemberDef;
+  wbMODLReq: IwbRecordMemberDef;
   wbCTDA: IwbSubRecordStructDef;
   wbCTDAs: IwbSubRecordArrayDef;
   wbCNDCs: IwbSubRecordArrayDef;
@@ -1240,11 +1240,11 @@ var
   wbENLS: IwbSubRecordDef;
   wbAUUV: IwbSubRecordDef;
   wbSNTP: IwbSubRecordDef;
-  wbXALG: IwbSubRecordDef;
+  wbXALG: IwbRecordMemberDef;
   wbNAM1: IwbSubRecordDef;
   wbLODP: IwbSubRecordDef;
   wbNAM1LODP: IwbSubRecordStructDef;
-  wbPHST: IwbSubRecordDef;
+  wbPHST: IwbRecordMemberDef;
   wbDOFA: IwbSubRecordDef;
   wbQSTI: IwbSubRecordDef;
   wbLVIV: IwbSubRecordDef;
@@ -7617,7 +7617,7 @@ begin
   wbENLT := wbUnknown(ENLT);
   wbENLS := wbFloat(ENLS);
   wbAUUV := wbStruct(AUUV, 'Unknown', [
-    { 0} wbByteArray('Unknown', 4),
+    { 0} wbByteArray('Unknown', 4).IncludeFlag(dfNoReport),
     { 4} wbFloat('Unknown'),
     { 8} wbFloat('Unknown'),
     {12} wbFloat('Unknown'),
@@ -7626,7 +7626,7 @@ begin
     {24} wbUnknown
   ]);
   wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
-  wbXALG := wbUnknown(XALG);
+  wbXALG := wbUnknown(XALG).IncludeFlag(dfNoReport);
 
   wbNAM1 := wbUnknown(NAM1);
   wbLODP := wbUnknown(LODP);
@@ -7636,7 +7636,7 @@ begin
     wbLODP
   ], []);
 
-  wbPHST := wbUnknown(PHST);
+  wbPHST := wbUnknown(PHST).IncludeFlag(dfNoReport);
   
   wbDOFA := wbStruct(DOFA, 'Unknown', [
     wbFormIDCk('Faction', [FACT]),
@@ -8104,14 +8104,14 @@ begin
       wbENLS,
       wbAUUV,
       wbMODD
-    ], [], cpNormal, False, nil, True);
+    ], []).IncludeFlag(dfAllowAnyMember);
 
   wbMODLActor :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model Filename', 0, cpNormal, True),
       wbMODT,
       wbMODS
-    ], [], cpNormal, False, nil{wbActorTemplateUseModelAnimation}, True);
+    ], []).IncludeFlag(dfAllowAnyMember);
 
   wbMODLReq :=
     wbRStructSK([0], 'Model', [
@@ -8124,7 +8124,7 @@ begin
       wbENLT,
       wbENLS,
       wbAUUV
-    ], [], cpNormal, True, nil, True);
+    ], [], cpNormal, True).IncludeFlag(dfAllowAnyMember);
 
   wbDMDS := wbFormIDCk(DMDS, 'Material Swap', [MSWP]);
   wbDMDC := wbFloat(DMDC, 'Color Remapping Index');
@@ -8184,7 +8184,7 @@ begin
             wbENLT,
             wbENLS,
             wbAUUV
-          ], [], cpNormal, False)
+          ], []).IncludeFlag(dfAllowAnyMember)
         ),
         wbEmpty(DSTF, 'End Marker', cpNormal, True)
       ], [], cpNormal, False, nil)
@@ -9504,7 +9504,7 @@ begin
     wbRArray('Unknown',
       wbRUnion('Unknown', [
         wbRStruct('Unknown', [
-          wbUnknown(CNDC),
+          wbUnknown(CNDC).IncludeFlag(dfNoReport),
           wbCITC,
           wbCTDAsCount
         ], []),
@@ -10134,22 +10134,22 @@ begin
       wbString(MOD2, 'Model Filename'),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMODC,
-      wbMO2S
-    ], []),
-    wbENLT,
-    wbENLS,
-    wbAUUV,
+      wbMO2S,
+      wbENLT,
+      wbENLS,
+      wbAUUV
+    ], []).IncludeFlag(dfAllowAnyMember),
     wbString(ICON, 'Male Inventory Image'),
     wbString(MICO, 'Male Message Icon'),
     wbRStruct('Female world model', [
       wbString(MOD4, 'Model Filename'),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMODC,
-      wbMO4S
-    ], []),
-    wbENLT,
-    wbENLS,
-    wbAUUV,
+      wbMO4S,
+      wbENLT,
+      wbENLS,
+      wbAUUV
+    ], []).IncludeFlag(dfAllowAnyMember),
     wbString(ICO2, 'Female Inventory Image'),
     wbString(MIC2, 'Female Message Icon'),
     wbBOD2,
@@ -10236,7 +10236,7 @@ begin
       wbENLS,
       wbAUUV,
       wbMO2F
-    ], [], cpNormal, False),
+    ], []).IncludeFlag(dfAllowAnyMember),
     wbRStruct('Female world model', [
       wbString(MOD3, 'Model Filename'),
       wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
@@ -10247,7 +10247,7 @@ begin
       wbENLS,
       wbAUUV,
       wbMO3F
-    ], []),
+    ], []).IncludeFlag(dfAllowAnyMember),
     wbRStruct('Male 1st Person', [
       wbString(MOD4, 'Model Filename'),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
@@ -10257,7 +10257,7 @@ begin
       wbENLS,
       wbAUUV,
       wbMO4F
-    ], []),
+    ], []).IncludeFlag(dfAllowAnyMember),
     wbRStruct('Female 1st Person', [
       wbString(MOD5, 'Model Filename'),
       wbByteArray(MO5T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
@@ -10267,7 +10267,7 @@ begin
       wbENLS,
       wbAUUV,
       wbMO5F
-    ], []),
+    ], []).IncludeFlag(dfAllowAnyMember),
     wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),
     wbFormIDCK(NAM1, 'Female Skin Texture', [TXST, NULL]),
     wbFormIDCK(NAM2, 'Male Skin Texture Swap List', [FLST, NULL]),
@@ -12322,7 +12322,7 @@ begin
   wbRecord(FLST, 'FormID List', [
     wbString(EDID, 'Editor ID', 0, cpBenign, True, nil, wbFLSTEDIDAfterSet),
     wbFULL,
-    wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
+    wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID').IncludeFlag(dfNoReport), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
   ]);
 
   wbRecord(PERK, 'Perk',
@@ -13368,7 +13368,7 @@ begin
     wbArrayS(DNAM, 'Objects',
       wbStructSK([0], 'Object', [
         wbInteger('Use', itU32, wbEnum([], c), cpNormalIgnoreEmpty),
-        wbFormID('Object ID', cpNormalIgnoreEmpty)
+        wbFormID('Object ID', cpNormalIgnoreEmpty).IncludeFlag(dfNoReport)
       ]), 0, cpNormalIgnoreEmpty, True, wbDOBJObjectsAfterLoad
     )
   ]);
@@ -13402,7 +13402,8 @@ begin
       wbFloat('Fog High Near Scale'),
       wbFloat('Fog High Far Scale'),
       wbFloat('Far Height Mid'),
-      wbFloat('Far Height Range')
+      wbFloat('Far Height Range'),
+      wbUnknown
     ], cpNormal, True, nil, 15),
     wbAmbientColors(DALC),
     wbFormIDCk(WGDR, 'God Rays', [GDRY])
@@ -17311,11 +17312,11 @@ begin
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO4S,
       wbMO4C,
-      wbMO4F
-    ], []),
-    wbENLT,
-    wbENLS,
-    wbAUUV,
+      wbMO4F,
+      wbENLT,
+      wbENLS,
+      wbAUUV
+    ], []).IncludeFlag(dfAllowAnyMember),
     wbStruct(DNAM, 'Data', [
       {  0} wbFormIDCk('Ammo', [AMMO, NULL]),
       {  4} wbFloat('Speed'),
@@ -18227,7 +18228,7 @@ begin
     wbRStructs('Parts', 'Part', [
       wbStruct(ONAM, 'Static', [
         wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, CNCY, SCOL]),
-        wbUnknown
+        wbFormIDCk('Material Swap', [MSWP])
       ]),
       wbUnknown(ONAM),
       wbArrayS(DATA, 'Placements', wbStruct('Placement', [
@@ -18615,18 +18616,18 @@ begin
   wbRecord(STMP, 'Snap Template', [
     wbEDID,
     wbPTRN,
-    wbFormID(PNAM),
+    wbFormIDCk(PNAM, 'Parent', [STMP]),
     wbRArray('Nodes', wbStruct(ENAM, 'Node', [
-      wbByteArray('Unknown', 4), //not FormID, LString, or Float
-      wbFormID('Node'),
-      wbArray('Unknown', wbFloat('Unknown'))
+      wbInteger('Node ID', itU32),
+      wbFormIDCk('Node', [STND]),
+      wbArray('Unknown', wbFloat('Unknown'), 4)
     ])),
     wbRArray('Unknown', wbRStruct('Unknown', [
-      wbUnknown(ONAM),
-      wbUnknown(TNAM)
+      wbInteger(ONAM, 'Node ID', itU32),
+      wbArray(TNAM, 'Unknown', wbFloat('Unknown'), 4)
     ], [])),
     wbArray(BNAM, 'Unknown', wbFloat('Unknown'), 6),
-    wbUnknown(GNAM),
+    wbArray(GNAM, 'Unknown', wbFloat('Unknown'), 3),
     wbUnknown(INAM),
     wbUnknown(STPT)
   ]);

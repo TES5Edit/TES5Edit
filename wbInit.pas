@@ -769,10 +769,7 @@ begin
     wbArchiveExtension := '.ba2';
     ToolModes := wbAlwaysMode + [tmTranslate];
     ToolSources := [tsPlugins];
-    VersionString.Title := 'EXTRA EXPERIMENTAL';
-
-    //not support for incomplete record definitions
-    wbBuildRefs := False;
+    VersionString.Title := 'EXPERIMENTAL';
   end
   
   else begin
