@@ -480,7 +480,7 @@ begin
   if Assigned(vstModules.FocusedNode) then
     vstModules.Selected[vstModules.FocusedNode] := True;
 
-  if Length(SelectedModules) = 1 then begin
+  if (Length(AllModules) > 1) and  (Length(SelectedModules) = 1) then begin
     vstModules.CheckState[vstModules.FocusedNode] := csUncheckedNormal;
     with PModuleNodeData(vstModules.GetNodeData(vstModules.FocusedNode))^ do
       if Assigned(mndModule) then
