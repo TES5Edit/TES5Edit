@@ -3941,15 +3941,16 @@ var
   wbEncodingTrans    : TEncoding;
   wbEncodingVMAD     : TEncoding;
 
-  wbLEncodingDefault : TEncoding;
-  wbLEncoding        : TStringList;
+  wbLEncodingDefault : array[Boolean] of TEncoding;
+  wbLEncoding        : array[Boolean] of TStringList;
 
-procedure wbAddDefaultLEncodingsIfMissing;
-procedure wbAddLEncodingIfMissing(const aLanguage: string; aEncoding: TEncoding); overload;
-procedure wbAddLEncodingIfMissing(const aLanguage: string; const aEncoding: string); overload;
-function wbEncodingForLanguage(const aLanguage: string): TEncoding;
+procedure wbAddDefaultLEncodingsIfMissing(aFallback: Boolean);
+procedure wbAddLEncodingIfMissing(const aLanguage: string; aEncoding: TEncoding; aFallback: Boolean); overload;
+procedure wbAddLEncodingIfMissing(const aLanguage: string; const aEncoding: string; aFallback: Boolean); overload;
+function wbEncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
+
 function wbMBCSEncoding(aCP: Cardinal): TEncoding; overload;
-function wbMBCSEncoding(const s: string): TEncoding; overload;
+function wbMBCSEncoding(s: string): TEncoding; overload;
 
 implementation
 
@@ -17638,7 +17639,7 @@ begin
   bsdEncodingOverride := aEncoding;
 end;
 
-procedure wbAddLEncodingIfMissing(const aLanguage: string; aEncoding: TEncoding); overload;
+procedure wbAddLEncodingIfMissing(const aLanguage: string; aEncoding: TEncoding; aFallback: Boolean); overload;
 var
   i: Integer;
 begin
@@ -17646,11 +17647,11 @@ begin
     Exit;
   if not Assigned(aEncoding) then
     Exit;
-  if not wbLEncoding.Find(aLanguage, i) then
-    wbLEncoding.AddObject(aLanguage, aEncoding);
+  if not wbLEncoding[aFallback].Find(aLanguage, i) then
+    wbLEncoding[aFallback].AddObject(aLanguage, aEncoding);
 end;
 
-procedure wbAddLEncodingIfMissing(const aLanguage: string; const aEncoding: string); overload;
+procedure wbAddLEncodingIfMissing(const aLanguage: string; const aEncoding: string; aFallback: Boolean); overload;
 var
   i: Integer;
 begin
@@ -17658,40 +17659,40 @@ begin
     Exit;
   if aEncoding = '' then
     Exit;
-  if not wbLEncoding.Find(aLanguage, i) then
-    wbLEncoding.AddObject(aLanguage, wbMBCSEncoding(aEncoding));
+  if not wbLEncoding[aFallback].Find(aLanguage, i) then
+    wbLEncoding[aFallback].AddObject(aLanguage, wbMBCSEncoding(aEncoding));
 end;
 
-procedure wbAddDefaultLEncodingsIfMissing;
+procedure wbAddDefaultLEncodingsIfMissing(aFallback: Boolean);
 begin
-  wbAddLEncodingIfMissing('english', '1252');
-  wbAddLEncodingIfMissing('french', '1252');
-  wbAddLEncodingIfMissing('polish', '1250');
-  wbAddLEncodingIfMissing('czech', '1250');
-  wbAddLEncodingIfMissing('danish', '1252');
-  wbAddLEncodingIfMissing('finnish', '1252');
-  wbAddLEncodingIfMissing('german', '1252');
-  wbAddLEncodingIfMissing('greek', '1253');
-  wbAddLEncodingIfMissing('italian', '1252');
-  wbAddLEncodingIfMissing('japanese', TEncoding.UTF8);
-  wbAddLEncodingIfMissing('norwegian', '1252');
-  wbAddLEncodingIfMissing('portuguese', '1252');
-  wbAddLEncodingIfMissing('spanish', '1252');
-  wbAddLEncodingIfMissing('swedish', '1252');
-  wbAddLEncodingIfMissing('turkish', '1254');
-  wbAddLEncodingIfMissing('russian', '1251');
-  wbAddLEncodingIfMissing('chinese', TEncoding.UTF8);
-  wbAddLEncodingIfMissing('hungarian', '1250');
-  wbAddLEncodingIfMissing('arabic', '1256');
+  wbAddLEncodingIfMissing('english', '1252', aFallback);
+  wbAddLEncodingIfMissing('french', '1252', aFallback);
+  wbAddLEncodingIfMissing('polish', '1250', aFallback);
+  wbAddLEncodingIfMissing('czech', '1250', aFallback);
+  wbAddLEncodingIfMissing('danish', '1252', aFallback);
+  wbAddLEncodingIfMissing('finnish', '1252', aFallback);
+  wbAddLEncodingIfMissing('german', '1252', aFallback);
+  wbAddLEncodingIfMissing('greek', '1253', aFallback);
+  wbAddLEncodingIfMissing('italian', '1252', aFallback);
+  wbAddLEncodingIfMissing('japanese', TEncoding.UTF8, aFallback);
+  wbAddLEncodingIfMissing('norwegian', '1252', aFallback);
+  wbAddLEncodingIfMissing('portuguese', '1252', aFallback);
+  wbAddLEncodingIfMissing('spanish', '1252', aFallback);
+  wbAddLEncodingIfMissing('swedish', '1252', aFallback);
+  wbAddLEncodingIfMissing('turkish', '1254', aFallback);
+  wbAddLEncodingIfMissing('russian', '1251', aFallback);
+  wbAddLEncodingIfMissing('chinese', TEncoding.UTF8, aFallback);
+  wbAddLEncodingIfMissing('hungarian', '1250', aFallback);
+  wbAddLEncodingIfMissing('arabic', '1256', aFallback);
 end;
 
-function wbEncodingForLanguage(const aLanguage: string): TEncoding;
+function wbEncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
 var
   i: Integer;
 begin
-  Result := wbLEncodingDefault;
-  if wbLEncoding.Find(aLanguage, i) then
-    Result := wbLEncoding.Objects[i] as TEncoding;
+  Result := wbLEncodingDefault[aFallback];
+  if wbLEncoding[aFallback].Find(aLanguage, i) then
+    Result := wbLEncoding[aFallback].Objects[i] as TEncoding;
 end;
 
 var
@@ -17711,13 +17712,15 @@ begin
   end;
 end;
 
-function wbMBCSEncoding(const s: string): TEncoding; overload;
+function wbMBCSEncoding(s: string): TEncoding; overload;
 var
   CP: Cardinal;
 begin
   if SameText(s, 'utf-8') or SameText(s, 'utf8') then
     Result := TEncoding.UTF8
   else begin
+    if s.StartsWith('windows-') then
+      Delete(s, 1, Length('windows-'));
     CP := StrToInt(s);
     if CP = 65001 then
       Result := TEncoding.UTF8
@@ -17725,7 +17728,6 @@ begin
       Result := wbMBCSEncoding(CP);
   end;
 end;
-
 
 initialization
   _MBCSEncodings := TStringList.Create;
@@ -17738,12 +17740,18 @@ initialization
   wbEncodingTrans := wbEncoding;
   wbEncodingVMAD := TEncoding.UTF8;
 
-  wbLEncodingDefault := TEncoding.UTF8;
+  wbLEncodingDefault[False] := TEncoding.UTF8;
+  wbLEncodingDefault[True] := wbMBCSEncoding(1252);
 
-  wbLEncoding := TStringList.Create;
-  wbLEncoding.CaseSensitive := False;
-  wbLEncoding.Sorted := True;
-  wbLEncoding.Duplicates := dupError;
+  wbLEncoding[False] := TStringList.Create;
+  wbLEncoding[False].CaseSensitive := False;
+  wbLEncoding[False].Sorted := True;
+  wbLEncoding[False].Duplicates := dupError;
+
+  wbLEncoding[True] := TStringList.Create;
+  wbLEncoding[True].CaseSensitive := False;
+  wbLEncoding[True].Sorted := True;
+  wbLEncoding[True].Duplicates := dupError;
 
   TwoPi := 2 * OnePi;
 
