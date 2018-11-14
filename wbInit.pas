@@ -36,6 +36,8 @@ var
   wbVeryQuickShowConflicts : Boolean;
   wbQuickClean         : Boolean;
   wbQuickCleanAutoSave : Boolean;
+  wbAutoLoad           : Boolean;
+  wbAutoGameLink       : Boolean;
 
   wbParamIndex         : integer = 1;     // First unused parameter
   wbPluginsToUse       : TStringList;
@@ -604,6 +606,7 @@ var
   s: string;
   ToolModes: TwbSetOfMode;
   ToolSources: TwbSetOfSource;
+  i: Integer;
 begin
   if not wbIsAeroEnabled then
     wbThemesSupported := False;
@@ -899,7 +902,20 @@ begin
   if FindCmdLineSwitch('veryquickshowconflicts') then begin
     wbQuickShowConflicts := True;
     wbVeryQuickShowConflicts := True;
+    wbAutoLoad := True;
   end;
+
+  if FindCmdLineSwitch('autoload') then
+    wbAutoLoad := True;
+
+  if FindCmdLineSwitch('autogamelink') then begin
+    wbAutoLoad := True;
+    wbAutoGameLink := True;
+  end;
+
+  if wbAutoLoad then
+    if wbQuickShowConflicts then
+      wbVeryQuickShowConflicts := True;
 
   if FindCmdLineSwitch('quickclean') and (wbToolSource in [tsPlugins]) then
     wbQuickClean := True;
@@ -909,13 +925,23 @@ begin
     wbQuickCleanAutoSave := wbQuickClean;
   end;
 
-  if wbQuickShowConflicts and wbQuickClean then begin
-    ShowMessage('Can''t activate Quick Clean and Quick Show Conflicts modes at the same time.');
+  i := 0;
+  if wbQuickShowConflicts then
+    Inc(i);
+  if wbQuickClean then
+    Inc(i);
+  if wbAutoGameLink then
+    Inc(i);
+
+  if i > 1 then begin
+    ShowMessage('Can''t activate more than one out of Quick Clean, Quick Show Conflicts, or Auto GameLink modes same time.');
     Exit(False);
   end;
 
-  if wbQuickClean then
+  if wbQuickClean then begin
     wbIKnowWhatImDoing := True;
+    wbAutoLoad := False;
+  end;
 
   if FindCmdLineSwitch('fixup') then
     wbAllowInternalEdit := True

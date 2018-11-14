@@ -13,6 +13,13 @@ The following reported issues have been fixed:
 * (found by devloper) - if the module selection form on opening has exactly one entry and it is checked, it shows up as unchecked
 * (found by devloper) - inconsistencies in whe collapsing/expanding types and elements in the view tab (implementation and description below updated)
 
+## New command line parameters
+
+Two new command line parameters have been added:
+
+* `-autoload` - Will not show the Module Selection dialog and just load all modules that are active according to plugins.txt. It also skips the ModGroup Selection and automatically loads all valid ModGroups
+* `-autogamelink` - Implies `-autoload`. Will automatically activate GameLink in Reference mode at the end of the Background Loader.
+
 ## "Hamburger" Menu
 
 A "Hamburger Menu" button has been added to the top left corner of the main window. This button opens a menu with (currently) the following entries:
