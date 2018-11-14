@@ -5,6 +5,7 @@
 The following reported issues have been fixed:
 
 * #594 - "Localize plugin" function is broken
+* (on discord) - sorting masters can under certain circumstances result in corruption of FormIDs
 
 ## Codepage override using Description in File Header
 

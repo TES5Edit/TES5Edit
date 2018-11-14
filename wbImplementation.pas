@@ -230,7 +230,7 @@ type
     function GetCountedRecordCount: Cardinal;
     procedure PrepareSave;
     procedure MasterCountUpdated(aOld, aNew: Byte);
-    procedure MasterIndicesUpdated(const aOld, aNew: TwbFileIDs);
+    function MasterIndicesUpdated(const aOld, aNew: TwbFileIDs): Boolean;
     procedure FindUsedMasters(aMasters: PwbUsedMasters);
     procedure InvalidateStorage;
     function Reached: Boolean;
@@ -284,7 +284,7 @@ type
     function GetCountedRecordCount: Cardinal; virtual;
     procedure PrepareSave; virtual;
     procedure MasterCountUpdated(aOld, aNew: Byte); virtual;
-    procedure MasterIndicesUpdated(const aOld, aNew: TwbFileIDs); virtual;
+    function MasterIndicesUpdated(const aOld, aNew: TwbFileIDs): Boolean; virtual;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); virtual;
     procedure InvalidateStorage; virtual;
     procedure InvalidateParentStorage; virtual;
@@ -474,7 +474,7 @@ type
     function GetCountedRecordCount: Cardinal; override;
     procedure PrepareSave; override;
     procedure MasterCountUpdated(aOld, aNew: Byte); override;
-    procedure MasterIndicesUpdated(const aOld, aNew: TwbFileIDs); override;
+    function MasterIndicesUpdated(const aOld, aNew: TwbFileIDs): Boolean; override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
 
     procedure ResetMemoryOrder; virtual;
@@ -903,6 +903,7 @@ type
     procedure RemoveChildGroup(const aGroup: IwbGroupRecord);
     procedure SetReferencesInjected(aValue: Boolean);
     procedure ClearForRelease;
+    function DoBuildRef(aRemove: Boolean): Boolean;
 
     procedure SaveRefsToStream(aStream: TStream; aSaveNames: Boolean);
     procedure LoadRefsFromStream(aStream: TStream; aLoadNames: Boolean);
@@ -1037,7 +1038,7 @@ type
     procedure Remove; override;
     procedure PrepareSave; override;
     procedure MasterCountUpdated(aOld, aNew: Byte); override;
-    procedure MasterIndicesUpdated(const aOld, aNew: TwbFileIDs); override;
+    function MasterIndicesUpdated(const aOld, aNew: TwbFileIDs): Boolean; override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
     function GetReferenceFile: IwbFile; override;
     procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True; Initial: Boolean = false); override;
@@ -1045,8 +1046,10 @@ type
     function Reached: Boolean; override;
     function GetContainingMainRecord: IwbMainRecord; override;
     procedure DoAfterSet(const aOldValue, aNewValue: Variant); override;
+    procedure SetParentModified; override;
 
-    procedure DoBuildRef(aRemove: Boolean);
+
+    function DoBuildRef(aRemove: Boolean): Boolean;
     procedure BuildRef; override;
     procedure AddReferencedFromID(aFormID: TwbFormID); override;
     procedure ResetConflict; override;
@@ -1304,7 +1307,7 @@ type
     procedure BuildRef; override;
     function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override;
     procedure MasterCountUpdated(aOld, aNew: Byte); override;
-    procedure MasterIndicesUpdated(const aOld, aNew: TwbFileIDs); override;
+    function MasterIndicesUpdated(const aOld, aNew: TwbFileIDs): Boolean; override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
     procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
@@ -1477,7 +1480,7 @@ type
 
     function GetElementType: TwbElementType; override;
     procedure MasterCountUpdated(aOld, aNew: Byte); override;
-    procedure MasterIndicesUpdated(const aOld, aNew: TwbFileIDs); override;
+    function MasterIndicesUpdated(const aOld, aNew: TwbFileIDs): Boolean; override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
   end;
 
@@ -1499,7 +1502,7 @@ type
     function GetValue: string; override;
     function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override;
     procedure MasterCountUpdated(aOld, aNew: Byte); override;
-    procedure MasterIndicesUpdated(const aOld, aNew: TwbFileIDs); override;
+    function MasterIndicesUpdated(const aOld, aNew: TwbFileIDs): Boolean; override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
     function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
 
@@ -1637,7 +1640,7 @@ type
 
   TwbGroupStates = set of TwbGroupState;
 
-  TwbGroupRecord = class(TwbRecord, IwbGroupRecord, IwbGroupRecordInternal)
+  TwbGroupRecord = class(TwbRecord, IwbGroupRecord, IwbGroupRecordInternal, IwbContainedIn)
   protected {private}
     grStates: TwbGroupStates;
   protected
@@ -1679,7 +1682,7 @@ type
     procedure PrepareSave; override;
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override;
     procedure MasterCountUpdated(aOld, aNew: Byte); override;
-    procedure MasterIndicesUpdated(const aOld, aNew: TwbFileIDs); override;
+    function MasterIndicesUpdated(const aOld, aNew: TwbFileIDs): Boolean; override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
 
     function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
@@ -1703,6 +1706,8 @@ type
     function GetChildrenOf: IwbMainRecord;
 
     procedure AddElement(const aElement: IwbElement); override;
+
+    procedure ContainerChanged;
   end;
 
   IwbSubRecordArrayInternal = interface(IwbSubRecordArray)
@@ -5779,22 +5784,23 @@ begin
   end;
 end;
 
-procedure TwbContainer.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs);
+function TwbContainer.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs): Boolean;
 var
   i       : Integer;
   SelfRef : IwbContainerElementRef;
 begin
+  Result := False;
   SelfRef := Self as IwbContainerElementRef;
   BeginUpdate;
   try
     wbTick;
 
     DoInit(False);
-    inherited;
+    Result := inherited MasterIndicesUpdated(aOld, aNew);
 
     for i := Low(cntElements) to High(cntElements) do
       if cntElements[i].CanContainFormIDs then
-        cntElements[i].MasterIndicesUpdated(aOld, aNew);
+        Result := cntElements[i].MasterIndicesUpdated(aOld, aNew) or Result;
   finally
     EndUpdate;
   end;
@@ -7080,7 +7086,7 @@ begin
   end;
 end;
 
-procedure TwbMainRecord.DoBuildRef(aRemove: Boolean);
+function TwbMainRecord.DoBuildRef(aRemove: Boolean): Boolean;
 var
   _File         : IwbFile;
   Files         : array of IwbFile;
@@ -7092,6 +7098,8 @@ var
     FileID     : Integer;
     MainRecord : IwbMainRecord;
   begin
+    Result := True;
+
     if not Assigned(_File) then begin
       _File := GetFile;
       FilesCount := _File.MasterCount;
@@ -7123,6 +7131,8 @@ var
   Cmp           : Integer;
   SelfRef : IwbContainerElementRef;
 begin
+  Result := False;
+
   if mrsBuildingRef in mrStates then
     Exit;
 
@@ -7388,7 +7398,9 @@ begin
   if (esModified in eStates) then begin
     WasInternal := (esInternalModified in eStates);
     KAR := wbCreateKeepAliveRoot;
+    UpdateRefs;
     PrepareSave;
+    UpdateRefs;
     Stream := TMemoryStream.Create;
     try
       WriteToStream(Stream, rmYes);
@@ -8008,7 +8020,7 @@ begin
     aMasters[FileID] := True;
   end;
 
-  if csRefsBuild in cntStates then begin
+  if (csRefsBuild in cntStates) and (cntRefsBuildAt >= eGeneration) then begin
 
     for i := High(mrReferences) downto Low(mrReferences) do begin
       FileID := mrReferences[i].FileID.FullSlot;
@@ -9327,6 +9339,9 @@ var
   Found   : Boolean;
 begin
   if not (mrsReferencesInjectedChecked in mrStates) and (csRefsBuild in cntStates) then try
+    if cntRefsBuildAt < eGeneration then
+      BuildRef;
+
     Include(mrStates, mrsReferencesInjectedChecked);
     Exclude(mrStates, mrsReferencesInjected);
     if Length(mrReferences) > 0 then begin
@@ -9757,11 +9772,13 @@ var
 
   procedure Inner;
   var
-    i        : Integer;
-    FoundOne : Boolean;
+    i             : Integer;
+    FoundOne      : Boolean;
+    RefsOutOfDate : Boolean;
+    HeaderUpdated : Boolean;
 
-    SelfRef  : IwbContainerElementRef;
-    NewFileID: TwbFileID;
+    SelfRef       : IwbContainerElementRef;
+    NewFileID     : TwbFileID;
   begin
     wbBeginInternalEdit(True);
     try
@@ -9779,6 +9796,9 @@ var
 
         NewFileID := TwbFileID.Create(aNew);
 
+        RefsOutOfDate := cntRefsBuildAt < eGeneration;
+
+        HeaderUpdated := False;
         if not mrStruct.mrsFormID.IsNull then
           if mrStruct.mrsFormID.FileID.FullSlot >= aOld then begin
             MakeHeaderWriteable;
@@ -9786,6 +9806,7 @@ var
             mrFixedFormID := TwbFormID.Null;
             mrLoadOrderFormID := TwbFormID.Null;
             Exclude(mrStates, mrsIsInjectedChecked);
+            HeaderUpdated := True;
           end;
 
         if csRefsBuild in cntStates then begin
@@ -9797,11 +9818,14 @@ var
             mrReferences[i].FileID := NewFileID;
           end;
 
+          if RefsOutOfDate then
+            FoundOne := True;
+
         end else
           FoundOne := True;
 
         if FoundOne then
-          inherited;
+          inherited MasterCountUpdated(aOld, aNew);
       finally
         EndUpdate;
       end;
@@ -9822,16 +9846,18 @@ begin
   end;
 end;
 
-procedure TwbMainRecord.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs);
+function TwbMainRecord.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs): Boolean;
 var
   KAR: IwbKeepAliveRoot;
 
   procedure Inner;
   var
-    OldFormID: TwbFormID;
-    NewFormID: TwbFormID;
-    i        : Integer;
-    FoundOne : Boolean;
+    OldFormID     : TwbFormID;
+    NewFormID     : TwbFormID;
+    i             : Integer;
+    RefsOutOfDate : Boolean;
+    FoundOne      : Boolean;
+    HeaderUpdated : Boolean;
 
     SelfRef : IwbContainerElementRef;
   begin
@@ -9849,6 +9875,9 @@ var
         SelfRef := Self as IwbContainerElementRef;
         DoInit(False);
 
+        RefsOutOfDate := cntRefsBuildAt < eGeneration;
+
+        HeaderUpdated := False;
         OldFormID := GetFormID;
         if not OldFormID.IsNull then begin
           NewFormID := FixupFormID(OldFormID, aOld, aNew);
@@ -9858,9 +9887,11 @@ var
             mrFixedFormID := TwbFormID.Null;
             mrLoadOrderFormID := TwbFormID.Null;
             Exclude(mrStates, mrsIsInjectedChecked);
+            HeaderUpdated := True;
           end;
         end;
 
+        FoundOne := False;
         if csRefsBuild in cntStates then begin
 
           FoundOne := False;
@@ -9873,13 +9904,19 @@ var
             end;
           end;
 
-          if FoundOne then begin
+          if FoundOne then
             wbMergeSort32(@mrReferences[0], Length(mrReferences), CompareFormIDs );
-            inherited;
-          end;
+
+          if RefsOutOfDate then
+            FoundOne := True;
 
         end else
-          inherited;
+          FoundOne := True;
+
+        if FoundOne then
+          Result := inherited MasterIndicesUpdated(aOld, aNew);
+
+        Result := Result or HeaderUpdated;
       finally
         EndUpdate;
       end;
@@ -9892,6 +9929,8 @@ var
   WasModifed: Boolean;
 
 begin
+  Result := False;
+
   WasModifed := [esModified, esInternalModified] * eStates = [esModified];
   Inner;
   if not WasModifed and (esModified in eStates) then begin
@@ -10859,6 +10898,12 @@ begin
   Assert(mreHeader.mrehInUse);
   Assert(mreGeneration = mreHeader.mrehGeneration);
   mreNext := Pointer(aEntry);
+end;
+
+procedure TwbMainRecord.SetParentModified;
+begin
+  inherited;
+  UpdateRefs;
 end;
 
 function TwbMainRecord.SetPosition(const aPosition: TwbVector): Boolean;
@@ -12378,11 +12423,13 @@ begin
   end;
 end;
 
-procedure TwbSubRecord.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs);
+function TwbSubRecord.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs): Boolean;
 var
   SelfRef     : IwbContainerElementRef;
   ResolvedDef : IwbValueDef;
 begin
+  Result := False;
+
   SelfRef := Self as IwbContainerElementRef;
 
   if not Assigned(srDef) then
@@ -12392,11 +12439,11 @@ begin
   try
     DoInit(False);
 
-    inherited MasterIndicesUpdated(aOld, aNew);
+    Result := inherited MasterIndicesUpdated(aOld, aNew);
 
     ResolvedDef := Resolve(srValueDef, GetDataBasePtr, dcDataEndPtr, Self);
     if Assigned(ResolvedDef) then
-      ResolvedDef.MasterIndicesUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+      Result := ResolvedDef.MasterIndicesUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew) or Result;
   finally
     EndUpdate;
   end;
@@ -13377,6 +13424,16 @@ begin
         Exit(False);
 end;
 
+procedure TwbGroupRecord.ContainerChanged;
+var
+  i           : Integer;
+  ContainedIn : IwbContainedIn;
+begin
+  for i := 0 to Pred(GetElementCount) do
+    if Supports(GetElement(i), IwbContainedIn, ContainedIn) then
+      ContainedIn.ContainerChanged;
+end;
+
 constructor TwbGroupRecord.Create(const aContainer: IwbContainer; aType: Integer; aLabel: Cardinal);
 var
   BasePtr : PwbGroupRecordStruct;
@@ -13773,15 +13830,13 @@ begin
     end;
 
     if Changed then
-      for i := 0 to Pred(GetElementCount) do
-        if Supports(GetElement(i), IwbContainedIn, ContainedIn) then
-          ContainedIn.ContainerChanged;
+      ContainerChanged;
   finally
     EndUpdate;
   end;
 end;
 
-procedure TwbGroupRecord.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs);
+function TwbGroupRecord.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs): Boolean;
 var
   SelfPtr     : IwbContainerElementRef;
   OldFormID: TwbFormID;
@@ -13790,6 +13845,8 @@ var
   Changed     : Boolean;
   i           : Integer;
 begin
+  Result := False;
+
   SelfPtr := Self as IwbContainerElementRef;
 
   BeginUpdate;
@@ -13797,7 +13854,7 @@ begin
     // do not sort records while we are updating
     Include(grStates, gsSorting);
     try
-      inherited;
+      Result := inherited MasterIndicesUpdated(aOld, aNew);
     finally
       Exclude(grStates, gsSorting);
     end;
@@ -13806,9 +13863,10 @@ begin
     if grStruct.grsGroupType = 7 then
       Sort;
 
+    Changed := False;
+
     wbBeginInternalEdit(True);
     try
-      Changed := False;
       if grStruct.grsGroupType in [1, 6..10] then begin
         OldFormID := TwbFormID.FromCardinal(grStruct.grsLabel);
         if not OldFormID.IsNull then begin
@@ -13817,6 +13875,7 @@ begin
             MakeHeaderWriteable;
             grStruct.grsLabel := NewFormID.ToCardinal;
             Changed := True;
+            Result := True;
           end;
         end;
       end;
@@ -13825,9 +13884,7 @@ begin
     end;
 
     if Changed then
-      for i := 0 to Pred(GetElementCount) do
-        if Supports(GetElement(i), IwbContainedIn, ContainedIn) then
-          ContainedIn.ContainerChanged;
+      ContainerChanged;
   finally
     EndUpdate;
   end;
@@ -15284,8 +15341,9 @@ begin
   {can be overriden}
 end;
 
-procedure TwbElement.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs);
+function TwbElement.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs): Boolean;
 begin
+  Result := False;
   Assert( Length(aOld) = Length(aNew) );
 end;
 
@@ -15557,9 +15615,6 @@ begin
     Exclude(eStates, esExtendedSortKeyValid);
     eSortKey := '';
     eExtendedSortKey := '';
-
-//    if wbIsInternalEdit and (Self is TwbMainRecord) then
-//      Exit;
 
     Inc(eGeneration);
 
@@ -17282,22 +17337,24 @@ begin
   end;
 end;
 
-procedure TwbUnion.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs);
+function TwbUnion.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs): Boolean;
 var
   SelfRef    : IwbContainerElementRef;
   ResolvedDef : IwbValueDef;
 begin
+  Result := False;
+
   SelfRef := Self as IwbContainerElementRef;
 
   BeginUpdate;
   try
     DoInit(False);
 
-    inherited MasterIndicesUpdated(aOld, aNew);
+    Result := inherited MasterIndicesUpdated(aOld, aNew);
 
     ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
     if Assigned(ResolvedDef) then
-      ResolvedDef.MasterIndicesUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+      Result := ResolvedDef.MasterIndicesUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew) or Result;
   finally
     EndUpdate;
   end;
@@ -17521,22 +17578,24 @@ begin
   end;
 end;
 
-procedure TwbValue.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs);
+function TwbValue.MasterIndicesUpdated(const aOld, aNew: TwbFileIDs): Boolean;
 var
   SelfRef    : IwbContainerElementRef;
   ResolvedDef : IwbValueDef;
 begin
+  Result := False;
+
   SelfRef := Self as IwbContainerElementRef;
 
   BeginUpdate;
   try
     DoInit(False);
 
-    inherited MasterIndicesUpdated(aOld, aNew);
+    Result := inherited MasterIndicesUpdated(aOld, aNew);
 
     ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
     if Assigned(ResolvedDef) then
-      ResolvedDef.MasterIndicesUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew);
+      Result := ResolvedDef.MasterIndicesUpdated(GetDataBasePtr, dcDataEndPtr, Self, aOld, aNew) or Result;
   finally
     EndUpdate;
   end;
