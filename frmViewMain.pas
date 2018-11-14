@@ -4714,7 +4714,7 @@ begin
 
         sl.Clear;
         if wbToolSource in [tsPlugins] then begin
-          if (wbToolMode in wbPluginModes) or (wbVeryQuickShowConflicts and (GetAsyncKeyState(VK_CONTROL) >= 0)) then try
+          if (wbToolMode in wbPluginModes) or (wbAutoLoad and (GetAsyncKeyState(VK_CONTROL) >= 0)) then try
             sl.AddStrings(wbModulesByLoadOrder.SimulateLoad.ToStrings(False));
           except end;
 
@@ -18705,7 +18705,7 @@ begin
 
         ModGroups := nil;
 
-        if wbQuickShowConflicts then begin
+        if wbQuickShowConflicts or wbAutoLoad then begin
           ModGroups := wbModGroupsByName;
           wbModGroupsByName(False).ShowValidationMessages;
         end else if not (wbQuickClean or (wbToolMode in wbAutoModes)) then
@@ -18778,6 +18778,16 @@ begin
 
           wbQuickClean := False;
           wbProgress('Quick Clean mode finished.');
+        end;
+
+        if wbAutoGameLink then begin
+          pmuMainPopup(Self);
+          if mniMainPluggyLinkReference.Visible then begin
+            mniMainPluggyLinkReference.Checked := True;
+            mniMainPluggyLinkReference.Click;
+            wbProgress('Auto GameLink mode activated.');
+          end else
+            wbProgress('Auto GameLink mode could not be activated.');
         end;
       finally
         Dec(wbShowStartTime);
