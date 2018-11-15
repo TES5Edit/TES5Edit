@@ -16577,108 +16577,120 @@ begin
       wbFULLReq,
       wbStruct(TNAM, '', [
         wbInteger('Type', itU8, wbEnum([], [
-          {Vv = Verified Vanilla}
-          {No new map markers for Automatron or Workshop}
-          0, 'Cave', {Vv}
-          1, 'City', {Vv}
-          2, 'Diamond City', {Vv}
-          3, 'Encampment', {Vv}
-          4, 'Factory / Industrial Site', {Vv}
-          5, 'Gov''t Building / Monument', {Vv}
-          6, 'Metro Station', {Vv}
-          7, 'Military Base', {Vv}
-          8, 'Natural Landmark', {Vv}
-          9, 'Office / Civic Building', {Vv}
-          10, 'Ruins - Town', {Vv}
-          11, 'Ruins - Urban', {Vv}
-          12, 'Sanctuary', {Vv}
-          13, 'Settlement', {Vv}
-          14, 'Sewer / Utility Tunnels', {Vv}
-          15, 'Vault', {Vv}
-          16, 'Airfield', {Vv}
-          17, 'Bunker Hill', {Vv}
-          18, 'Camper', {Vv}
-          19, 'Car', {Vv}
-          20, 'Church', {Vv}
-          21, 'Country Club', {Vv}
-          22, 'Custom House', {Vv}
-          23, 'Drive-In', {Vv}
-          24, 'Elevated Highway', {Vv}
-          25, 'Faneuil Hall', {Vv}
-          26, 'Farm', {Vv}
-          27, 'Filling Station', {Vv}
-          28, 'Forested', {Vv}
-          29, 'Goodneighbor', {Vv}
-          30, 'Graveyard', {Vv}
-          31, 'Hospital', {Vv}
-          32, 'Industrial Dome', {Vv}
-          33, 'Industrial Stacks', {Vv}
-          34, 'Institute', {Vv}
-          35, 'Irish Pride', {Vv}
-          36, 'Junkyard', {Vv}
-          37, 'Observatory', {Vv}
-          38, 'Pier', {Vv}
-          39, 'Pond / Lake', {Vv}
-          40, 'Quarry', {Vv}
-          41, 'Radioactive Area', {Vv}
-          42, 'Radio Tower', {Vv}
-          43, 'Salem', {Vv}
-          44, 'School', {Vv}
-          45, 'Shipwreck', {Vv}
-          46, 'Submarine', {Vv}
-          47, 'Swan Pond', {Vv}
-          48, 'Synth Head', {Vv}
-          49, 'Town', {Vv}
-          50, 'Brotherhood of Steel', {Vv}
-          51, 'Brownstone Townhouse', {Vv}
-          52, 'Bunker', {Vv}
-          53, 'Castle', {Vv}
-          54, 'Skyscraper', {Vv}
-          55, 'Libertalia', {Vv}
-          56, 'Low-Rise Building', {Vv}
-          57, 'Minutemen', {Vv}
-          58, 'Police Station', {Vv}
-          59, 'Prydwen', {Vv}
-          60, 'Railroad - Faction', {Vv}
-          61, 'Railroad', {Vv}
-          62, 'Satellite', {Vv}
-          63, 'Sentinel', {Vv}
-          64, 'USS Constitution', {Vv}
-          65, 'Mechanist LairRaider settlementVassal settlementPotential Vassal settlement', {Vv}
-          66, 'Custom 66',
-          67, 'Custom 67',
-          68, 'Custom 68',
-          69, 'Custom 69',
-          70, 'Custom 70',
-          71, 'Custom 71',
-          72, 'Custom 72',
-          73, 'Custom 73',
-          74, 'Custom 74',
-          75, 'Custom 75',
-          76, 'Custom 76',
-          77, 'Custom 77',
-          78, 'Custom 78',
-          79, 'Custom 79',
-          80, 'Custom 80',
-          81, 'Custom 81',
-          82, 'Custom 82',
-          83, 'Custom 83',
-          84, 'Custom 84',
-          85, 'Custom 85',
-          86, 'Custom 86',
-          87, 'Custom 87',
-          88, 'Custom 88',
-          89, 'Custom 89',
-          90, 'Custom 90',
-          91, 'Custom 91',
-          92, 'Custom 92',
-          93, 'Custom 93',
-          94, 'Custom 94',
-          95, 'Custom 95',
-          96, 'Custom 96',
-          97, 'Custom 97',
-          98, 'Custom 98',
-          99, 'Custom 99'
+          0, 'CaveMarker',
+          1, 'CityMarker',
+          2, 'EncampmentMarker',
+          3, 'FactoryMarker',
+          4, 'MonumentMarker',
+          5, 'MetroMarker',
+          6, 'MilitaryBaseMarker',
+          7, 'LandmarkMarker',
+          8, 'OfficeMarker',
+          9, 'TownRuinsMarker',
+          10, 'UrbanRuinsMarker',
+          11, 'SancHillsMarker',
+          12, 'SettlementMarker',
+          13, 'SewerMarker',
+          14, 'VaultMarker',
+          15, 'AirfieldMarker',
+          16, 'CamperMarker',
+          17, 'CarMarker',
+          18, 'ChurchMarker',
+          19, 'CountryClubMarker',
+          20, 'CustomHouseMarker',
+          21, 'DriveInMarker',
+          22, 'ElevatedHighwayMarker',
+          23, 'FarmMarker',
+          24, 'FillingStationMarker',
+          25, 'ForestedMarker',
+          26, 'GoodneighborMarker',
+          27, 'GraveyardMarker',
+          28, 'HospitalMarker',
+          29, 'IndustrialDomeMarker',
+          30, 'IndustrialStacksMarker',
+          31, 'InstituteMarker',
+          32, 'IrishPrideMarker',
+          33, 'JunkyardMarker',
+          34, 'ObservatoryMarker',
+          35, 'PierMarker',
+          36, 'PondLakeMarker',
+          37, 'QuarryMarker',
+          38, 'RadioactiveAreaMarker',
+          39, 'RadioTowerMarker',
+          40, 'SalemMarker',
+          41, 'SchoolMarker',
+          42, 'ShipwreckMarker',
+          43, 'SubmarineMarker',
+          44, 'SwanPondMarker',
+          45, 'TownMarker',
+          46, 'BoSMarker',
+          47, 'BrownstoneMarker',
+          48, 'BunkerMarker',
+          49, 'CastleMarker',
+          50, 'SkyscraperMarker',
+          51, 'LibertaliaMarker',
+          52, 'LowRiseMarker',
+          53, 'MinutemenMarker',
+          54, 'PoliceStationMarker',
+          55, 'RailroadFactionMarker',
+          56, 'RailroadMarker',
+          57, 'SatelliteMarker',
+          58, 'SentinelMarker',
+          59, 'USSConstitutionMarker',
+          60, 'MechanistMarker',
+          61, 'RaiderSettlementMarker',
+          62, 'VassalSettlementMarker',
+          63, 'PotentialVassalSettlementMarker',
+          64, 'TrainStationMarker',
+          65, 'ElectricalSubstationMarker',
+          66, 'FissureMarker',
+          67, 'Vault63Marker',
+          68, 'Vault76Marker',
+          69, 'Vault94Marker',
+          70, 'Vault96Marker',
+          71, 'AmusementParkMarker',
+          72, 'MansionMarker',
+          73, 'ArktosPharmaMarker',
+          74, 'PowerPlantMarker',
+          75, 'SkiResortMarker',
+          76, 'AppalachianAntiquesMarker',
+          77, 'TeapotMarker',
+          78, 'AgriculturalCenterMarker',
+          79, 'WoodShackMarker',
+          80, 'HouseTrailerMarker',
+          81, 'LookoutTowerMarker',
+          82, 'OverlookMarker',
+          83, 'PumpkinMarker',
+          84, 'CowSpotsCreameryMarker',
+          85, 'CabinMarker',
+          86, 'TrainTrackMark',
+          87, 'CapitalBuildingMarker',
+          88, 'HighTechBuildingMarker',
+          89, 'LighthouseMarker',
+          90, 'ExcavatorMarker',
+          91, 'SpaceStationMarker',
+          92, 'PalaceWindingPathMarker',
+          93, 'TopOfTheWorldMarker',
+          94, 'DamMarker',
+          95, 'MonorailMarker',
+          96, 'WhitespringResort',
+          97, 'NukaColaQuantumPlant',
+          98, 'MysteriousGuidestoneMarker',
+          99, 'PublicWorkshopMarker',
+          100, 'DoorMarker',
+          101, 'QuestMarker',
+          102, 'DoorMarker',
+          103, 'QuestMarker',
+          104, 'PlayerSetMarker',
+          105, 'PlayerLocMarker',
+          106, 'PowerArmorLocMarker',
+          107, 'TeammateMarker',
+          108, 'LastCorpseMarker',
+          109, 'YourCampMarker',
+          110, 'InWorldEventMarker',
+          111, 'MasterFissureMarker',
+          112, 'NukedZoneMarker',
+          113, 'WaypointMarker'
         ])),
         wbByteArray('Unused', 1)
       ], cpNormal, True)
