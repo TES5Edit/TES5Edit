@@ -39,10 +39,11 @@ object frmRichEdit: TfrmRichEdit
     TabOrder = 3
   end
   object reMain: TJvRichEdit
+    AlignWithMargins = True
     Left = 8
     Top = 35
-    Width = 848
-    Height = 541
+    Width = 842
+    Height = 535
     Anchors = [akLeft, akTop, akRight, akBottom]
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
@@ -57,6 +58,8 @@ object frmRichEdit: TfrmRichEdit
     StreamFormat = sfRichText
     TabOrder = 1
     WantReturns = False
+    ExplicitWidth = 848
+    ExplicitHeight = 541
   end
   object cbDontShowAgain: TCheckBox
     Left = 664
