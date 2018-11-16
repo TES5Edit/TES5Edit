@@ -166,7 +166,7 @@ var
   wbReportModGroups        : Boolean  = False;
   wbRequireCtrlForDblClick : Boolean  = False;
   wbFocusAddedElement      : Boolean  = True;
-  wbCheckNonCPNChars       : Boolean  = True;
+  wbCheckNonCPNChars       : Boolean  = False;
   wbShowStringBytes        : Boolean  = False;
 
   wbGlobalModifedGeneration : UInt64;
