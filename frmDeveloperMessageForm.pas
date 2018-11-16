@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
-  JvExStdCtrls, JvRichEdit;
+  JvExStdCtrls, JvRichEdit, FileContainer;
 
 type
   TfrmDeveloperMessage = class(TForm)
@@ -13,6 +13,7 @@ type
     btnOk: TButton;
     reMain: TJvRichEdit;
     tmrEnableButton: TTimer;
+    fcMessage: TFileContainer;
     procedure FormCreate(Sender: TObject);
     procedure tmrEnableButtonTimer(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -39,9 +40,22 @@ begin
 end;
 
 procedure TfrmDeveloperMessage.FormCreate(Sender: TObject);
+var
+  Stream: TStream;
+  OldSize: Integer;
 begin
+  OldSize := Font.Size;
+
   wbApplyFontAndScale(Self);
-  reMain.Font := Font;
+
+  Stream := fcMessage.CreateReadStream;
+  try
+    reMain.Lines.LoadFromStream(Stream);
+  finally
+    Stream.Free;
+  end;
+
+  reMain.Zoom := MulDiv(MulDiv(reMain.Zoom, Abs(Font.Size), Abs(OldSize)), 90, 100);
 
   if wbThemesSupported then
     with TVclStylesSystemMenu.Create(Self) do begin
