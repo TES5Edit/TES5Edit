@@ -8,6 +8,12 @@ To invite feedback about it for this BETA, it will be shown again even if it was
 
 For *this BETA release only* you will be asked afterwards if it should be shown again next time and you are going to be asked to provide any constructive feedback you might have about it's contents or presentation on the xEdit Discord.
 
+## Bugfixes
+
+The following reported issues have been fixed:
+
+* (reported on discord) - changing FormID of a record does not show new FormID until after saving and restarting
+* (reported on discord) - [FO4] FNAM in GLOB is wrong
 
 ## Search and Zoom in What's New
 

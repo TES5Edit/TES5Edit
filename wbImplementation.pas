@@ -10918,6 +10918,8 @@ begin
         Assert(mrGroup.GroupLabel = mrStruct.mrsFormID.ToCardinal);
       MakeHeaderWriteable;
       mrStruct.mrsFormID := aFormID;
+      mrFixedFormID := TwbFormID.Null;
+      mrLoadOrderFormID := TwbFormID.Null;
       if Assigned(mrGroup) then
         mrGroup.GroupLabel := aFormID.ToCardinal;
       UpdateInteriorCellGroup;
@@ -10941,8 +10943,6 @@ begin
   mrReferencedBy := nil;
   mrReferencedByCount := 0;
   mrReferencedBySize := 0;
-  mrFixedFormID := TwbFormID.Null;
-  mrLoadOrderFormID := TwbFormID.Null;
   Exclude(mrStates, mrsIsInjectedChecked);
   mrConflictAll := caUnknown;
   mrConflictThis := ctUnknown;
@@ -10951,6 +10951,9 @@ begin
     Assert(mrGroup.GroupLabel = mrStruct.mrsFormID.ToCardinal);
   MakeHeaderWriteable;
   mrStruct.mrsFormID := aFormID;
+  mrFixedFormID := TwbFormID.Null;
+  mrLoadOrderFormID := TwbFormID.Null;
+  Exclude(mrStates, mrsIsInjectedChecked);
   if Assigned(mrGroup) then
     mrGroup.GroupLabel := aFormID.ToCardinal;
   UpdateInteriorCellGroup;
