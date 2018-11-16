@@ -10549,6 +10549,7 @@ begin
     ])), [
     wbEDID,
     wbInteger(FNAM, 'Type', itU8, wbEnum([], [
+             0, 'Unknown',
       Ord('s'), 'Short',
       Ord('l'), 'Long',
       Ord('f'), 'Float',
