@@ -69,6 +69,7 @@ uses
   wbLocalization,
   wbDataFormat,
   wbModGroups,
+  wbHardcoded,
   Vcl.Themes,
   Vcl.Styles,
   Vcl.Styles.Utils.SystemMenu,
@@ -19082,6 +19083,7 @@ var
   dummy                       : Integer;
   _File                       : IwbFile;
   s,t                         : string;
+  b                           : TBytes;
 //  F                           : TSearchRec;
   n,m                         : TStringList;
   StartTime                   : TDateTime;
@@ -19188,11 +19190,11 @@ begin
             Exit;
 
           if (i = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameMasterEsm) then begin
-            t := wbGameName + wbHardcodedDat;
-            s := wbProgramPath + t;
-            if FileExists(s) then begin
+            b := TwbHardcodedContainer.GetHardCodedDat;
+            if Length(b) > 0 then begin
+              t := wbGameName + csDotExe;
               LoaderProgress('loading "' + t + '"...');
-              _File := wbFile(s, 0, ltDataPath + ltLoadList[i]);
+              _File := wbFile(t, 0, ltDataPath + ltLoadList[i], [fsIsHardcoded], b);
               SetLength(ltFiles, Succ(Length(ltFiles)));
               ltFiles[High(ltFiles)] := _File;
               frmMain.SendAddFile(_File);

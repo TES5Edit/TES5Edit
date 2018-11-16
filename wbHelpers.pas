@@ -642,7 +642,7 @@ end;
 
 function wbExpandFileName(const aFileName: string): string;
 begin
-  if ExtractFilePath(aFileName) = '' then
+  if (ExtractFilePath(aFileName) = '') and not SameText(aFileName, wbGameName + csDotExe) then
     Result := wbDataPath + ExtractFileName(aFileName)
   else
     Result := aFileName;

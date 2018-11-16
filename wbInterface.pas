@@ -63,13 +63,14 @@ const
 
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
-  wbHardcodedDat = '.Hardcoded.dat';
   wbRefCacheExt  = '.refcache';
 
 const
   CRLF = #13#10;
 
-  const
+const
+  csDotExe   = '.exe';
+
   csDotGhost = '.ghost';
   csDotEsm   = '.esm';
   csDotEsl   = '.esl';
@@ -16944,7 +16945,7 @@ function wbIsPlugin(aFileName: string): Boolean;
 var
   i: Integer;
 begin
-  Result := aFileName.EndsWith(wbHardcodedDat, True);
+  Result := SameText(aFileName, wbGameName + '.exe');
   if not Result then
     for i := Low(wbPluginExtensions) to High(wbPluginExtensions) do
       if aFileName.EndsWith(wbPluginExtensions[i], True) or aFileName.EndsWith(wbPluginExtensions[i] + csDotGhost, True) then
