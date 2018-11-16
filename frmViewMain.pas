@@ -661,6 +661,8 @@ type
     procedure mniMainSaveClick(Sender: TObject);
     procedure jbhSaveBalloonClick(Sender: TObject);
     procedure jbhSaveCloseBtnClick(Sender: TObject; var CanClose: Boolean);
+    procedure vstViewHeaderMouseDown(Sender: TVTHeader; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
@@ -16343,6 +16345,24 @@ begin
       vstView.EndUpdate;
     end;
     InvalidateElementsTreeView(NoNodes);
+  end;
+end;
+
+procedure TfrmMain.vstViewHeaderMouseDown(Sender: TVTHeader; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Column     : Integer;
+  Element    : IwbElement;
+  MainRecord : IwbMainRecord;
+begin
+  if (Shift = [ssCtrl]) and (Button = mbLeft) then begin
+    Column := vstView.Header.Columns.ColumnFromPosition(Point(X, Y));
+    Dec(Column);
+    if (Column >= Low(ActiveRecords)) and (Column <= High(ActiveRecords)) then begin
+      Element := ActiveRecords[Column].Element;
+      if not Supports(Element, IwbMainRecord, MainRecord) then
+        Exit;
+      JumpTo(MainRecord, True);
+    end;
   end;
 end;
 
