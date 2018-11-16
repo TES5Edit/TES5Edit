@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
-  JvExStdCtrls, JvRichEdit, FileContainer;
+  JvExStdCtrls, JvRichEdit, FileContainer, dxGDIPlusClasses;
 
 type
   TfrmDeveloperMessage = class(TForm)
@@ -14,6 +14,8 @@ type
     reMain: TJvRichEdit;
     tmrEnableButton: TTimer;
     fcMessage: TFileContainer;
+    pnlElminster: TPanel;
+    imgElminster: TImage;
     procedure FormCreate(Sender: TObject);
     procedure tmrEnableButtonTimer(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -55,8 +57,6 @@ begin
     Stream.Free;
   end;
 
-  reMain.Zoom := MulDiv(MulDiv(reMain.Zoom, Abs(Font.Size), Abs(OldSize)), 90, 100);
-
   if wbThemesSupported then
     with TVclStylesSystemMenu.Create(Self) do begin
       ShowNativeStyle := True;
@@ -65,8 +65,39 @@ begin
 end;
 
 procedure TfrmDeveloperMessage.FormShow(Sender: TObject);
+var
+  CharCount : Integer;
+  pt        : TPoint;
 begin
   tmrEnableButton.Enabled := True;
+
+  if RichEditVersion >= 3 then begin
+    reMain.Zoom := reMain.Zoom - 1;
+    CharCount := Length(reMain.Text);
+    pt := reMain.GetCharPos(CharCount);
+    while pt.Y < reMain.Height do begin
+      reMain.Zoom := reMain.Zoom + 1;
+      pt := reMain.GetCharPos(CharCount);
+    end;
+    while pt.Y > reMain.Height do begin
+      reMain.Zoom := reMain.Zoom - 1;
+      pt := reMain.GetCharPos(CharCount);
+    end;
+    while pt.Y < reMain.Height do begin
+      reMain.Zoom := reMain.Zoom + 1;
+      pt := reMain.GetCharPos(CharCount);
+    end;
+    while pt.Y > reMain.Height do begin
+      reMain.Zoom := reMain.Zoom - 1;
+      pt := reMain.GetCharPos(CharCount);
+    end;
+    pt := reMain.GetCharPos(80);
+    pnlElminster.Top := reMain.Top + 10;
+    pnlElminster.Height := pt.y - 20;
+    pnlElminster.Width := pnlElminster.Height;
+    pnlElminster.Left := (reMain.Left + reMain.Width) - (pnlElminster.Width + 10);
+  end else
+    pnlElminster.Visible := False;
 end;
 
 procedure TfrmDeveloperMessage.tmrEnableButtonTimer(Sender: TObject);
