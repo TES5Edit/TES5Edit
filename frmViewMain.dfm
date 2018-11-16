@@ -87,6 +87,7 @@ object frmMain: TfrmMain
           ClipboardFormats.Strings = (
             'Plain text'
             'Virtual Tree Data')
+          DefaultText = 'Node'
           DragOperations = [doCopy]
           Header.AutoSizeIndex = 1
           Header.Height = 21
@@ -139,13 +140,13 @@ object frmMain: TfrmMain
             item
               Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coFixed]
               Position = 0
+              Text = 'Labels'
               Width = 250
-              WideText = 'Labels'
             end
             item
               Position = 1
+              Text = 'Values'
               Width = 233
-              WideText = 'Values'
             end>
         end
         object pnlViewTop: TPanel
@@ -770,6 +771,7 @@ object frmMain: TfrmMain
           Height = 573
           Align = alClient
           Color = clInfoBk
+          DefaultText = 'Node'
           DragOperations = [doCopy]
           Header.AutoSizeIndex = 0
           Header.Options = [hoColumnResize, hoDblClickResize, hoRestrictDrag, hoShowSortGlyphs, hoVisible]
@@ -806,160 +808,160 @@ object frmMain: TfrmMain
               MinWidth = 150
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 0
+              Text = 'File Name'
               Width = 150
-              WideText = 'File Name'
             end
             item
               MinWidth = 75
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 1
+              Text = 'FormID'
               Width = 75
-              WideText = 'FormID'
             end
             item
               MinWidth = 150
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 2
+              Text = 'EditorID'
               Width = 150
-              WideText = 'EditorID'
             end
             item
               MinWidth = 150
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 3
+              Text = 'Weapon Name'
               Width = 150
-              WideText = 'Weapon Name'
             end
             item
               MinWidth = 150
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 4
+              Text = 'Enchantment'
               Width = 150
-              WideText = 'Enchantment'
             end
             item
               MinWidth = 120
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 6
+              Text = 'Type'
               Width = 120
-              WideText = 'Type'
             end
             item
               Alignment = taRightJustify
               MinWidth = 85
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 8
+              Text = 'Speed'
               Width = 85
-              WideText = 'Speed'
             end
             item
               Alignment = taRightJustify
               MinWidth = 85
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 9
+              Text = 'Reach'
               Width = 85
-              WideText = 'Reach'
             end
             item
               Alignment = taRightJustify
               MinWidth = 65
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 10
+              Text = 'Value'
               Width = 65
-              WideText = 'Value'
             end
             item
               Alignment = taRightJustify
               MinWidth = 65
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 11
+              Text = 'Health'
               Width = 65
-              WideText = 'Health'
             end
             item
               Alignment = taRightJustify
               MinWidth = 85
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 12
+              Text = 'Weight'
               Width = 85
-              WideText = 'Weight'
             end
             item
               Alignment = taRightJustify
               MinWidth = 65
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 13
+              Text = 'Damage'
               Width = 65
-              WideText = 'Damage'
             end
             item
               Alignment = taRightJustify
               MinWidth = 70
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark]
               Position = 5
+              Text = 'Amount'
               Width = 70
-              WideText = 'Amount'
             end
             item
               MinWidth = 65
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark]
               Position = 7
+              Text = 'Skill'
               Width = 65
-              WideText = 'Skill'
             end
             item
               Alignment = taRightJustify
               MinWidth = 65
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark]
               Position = 14
+              Text = 'Stagger'
               Width = 65
-              WideText = 'Stagger'
             end
             item
               Alignment = taRightJustify
               MinWidth = 65
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark]
               Position = 15
+              Text = 'Crit. Damage'
               Width = 65
-              WideText = 'Crit. Damage'
             end
             item
               Alignment = taRightJustify
               MinWidth = 65
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark]
               Position = 16
+              Text = 'Crit. % Mult.'
               Width = 65
-              WideText = 'Crit. % Mult.'
             end
             item
               Alignment = taRightJustify
               MinWidth = 65
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark]
               Position = 17
+              Text = 'Range Min'
               Width = 65
-              WideText = 'Range Min'
             end
             item
               Alignment = taRightJustify
               MinWidth = 65
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark]
               Position = 18
+              Text = 'Range Max'
               Width = 65
-              WideText = 'Range Max'
             end
             item
               MinWidth = 65
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark]
               Position = 19
+              Text = 'Sound'
               Width = 65
-              WideText = 'Sound'
             end
             item
               MinWidth = 120
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark]
               Position = 20
+              Text = 'Template'
               Width = 120
-              WideText = 'Template'
             end>
         end
       end
@@ -975,6 +977,7 @@ object frmMain: TfrmMain
           Height = 573
           Align = alClient
           Color = clInfoBk
+          DefaultText = 'Node'
           DragOperations = [doCopy]
           Header.AutoSizeIndex = 0
           Header.Options = [hoColumnResize, hoDblClickResize, hoRestrictDrag, hoShowSortGlyphs, hoVisible]
@@ -1011,96 +1014,96 @@ object frmMain: TfrmMain
               MinWidth = 150
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 0
+              Text = 'File Name'
               Width = 150
-              WideText = 'File Name'
             end
             item
               MinWidth = 75
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 1
+              Text = 'FormID'
               Width = 75
-              WideText = 'FormID'
             end
             item
               MinWidth = 150
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 2
+              Text = 'EditorID'
               Width = 150
-              WideText = 'EditorID'
             end
             item
               MinWidth = 150
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 3
+              Text = 'Armor Name'
               Width = 150
-              WideText = 'Armor Name'
             end
             item
               MinWidth = 150
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 4
+              Text = 'Enchantment'
               Width = 150
-              WideText = 'Enchantment'
             end
             item
               MinWidth = 120
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 5
+              Text = 'Slots'
               Width = 120
-              WideText = 'Slots'
             end
             item
               MinWidth = 110
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 6
+              Text = 'Type'
               Width = 110
-              WideText = 'Type'
             end
             item
               Alignment = taRightJustify
               MinWidth = 85
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 8
+              Text = 'Armor'
               Width = 85
-              WideText = 'Armor'
             end
             item
               Alignment = taRightJustify
               MinWidth = 65
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 9
+              Text = 'Value'
               Width = 65
-              WideText = 'Value'
             end
             item
               Alignment = taRightJustify
               MinWidth = 65
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 10
+              Text = 'Health'
               Width = 65
-              WideText = 'Health'
             end
             item
               Alignment = taRightJustify
               MinWidth = 85
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 11
+              Text = 'Weight'
               Width = 85
-              WideText = 'Weight'
             end
             item
               MinWidth = 115
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark]
               Position = 7
+              Text = 'Equip. Type'
               Width = 115
-              WideText = 'Equip. Type'
             end
             item
               MinWidth = 110
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark]
               Position = 12
+              Text = 'Template'
               Width = 110
-              WideText = 'Template'
             end>
         end
       end
@@ -1116,6 +1119,7 @@ object frmMain: TfrmMain
           Height = 573
           Align = alClient
           Color = clInfoBk
+          DefaultText = 'Node'
           DragOperations = [doCopy]
           Header.AutoSizeIndex = 0
           Header.Options = [hoColumnResize, hoDblClickResize, hoRestrictDrag, hoShowSortGlyphs, hoVisible]
@@ -1152,75 +1156,75 @@ object frmMain: TfrmMain
               MinWidth = 150
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 0
+              Text = 'File Name'
               Width = 150
-              WideText = 'File Name'
             end
             item
               MinWidth = 75
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 1
+              Text = 'FormID'
               Width = 75
-              WideText = 'FormID'
             end
             item
               MinWidth = 150
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 2
+              Text = 'EditorID'
               Width = 150
-              WideText = 'EditorID'
             end
             item
               MinWidth = 150
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 3
+              Text = 'Ammunition Name'
               Width = 150
-              WideText = 'Ammunition Name'
             end
             item
               MinWidth = 150
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 4
+              Text = 'Enchantment'
               Width = 150
-              WideText = 'Enchantment'
             end
             item
               Alignment = taRightJustify
               MinWidth = 85
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 5
+              Text = 'Speed'
               Width = 85
-              WideText = 'Speed'
             end
             item
               Alignment = taRightJustify
               MinWidth = 65
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 6
+              Text = 'Value'
               Width = 65
-              WideText = 'Value'
             end
             item
               Alignment = taRightJustify
               MinWidth = 85
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 7
+              Text = 'Weight'
               Width = 85
-              WideText = 'Weight'
             end
             item
               Alignment = taRightJustify
               MinWidth = 65
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]
               Position = 8
+              Text = 'Damage'
               Width = 65
-              WideText = 'Damage'
             end
             item
               MinWidth = 80
               Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark]
               Position = 9
+              Text = 'Flags'
               Width = 80
-              WideText = 'Flags'
             end>
         end
       end
@@ -1826,6 +1830,7 @@ object frmMain: TfrmMain
       BevelInner = bvNone
       Colors.SelectionRectangleBlendColor = clGray
       Colors.SelectionRectangleBorderColor = clBlack
+      DefaultText = 'Node'
       Header.AutoSizeIndex = 2
       Header.Height = 21
       Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
@@ -1860,18 +1865,18 @@ object frmMain: TfrmMain
       Columns = <
         item
           Position = 0
+          Text = 'FormID'
           Width = 201
-          WideText = 'FormID'
         end
         item
           Position = 1
+          Text = 'EditorID'
           Width = 125
-          WideText = 'EditorID'
         end
         item
           Position = 2
+          Text = 'Name'
           Width = 125
-          WideText = 'Name'
         end>
     end
     object pnlSearch: TPanel
