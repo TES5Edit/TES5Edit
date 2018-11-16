@@ -1,10 +1,22 @@
 # What's new in xEdit 3.3.5 BETA?
 
+## Developer message update
+
+The developer message has been updated. 
+
+To invite feedback about it for this BETA, it will be shown again even if it was previously shown to you.
+
+For *this BETA release only* you will be asked afterwards if it should be shown again next time and you are going to be asked to provide any constructive feedback you might have about it's contents or presentation on the xEdit Discord.
+
 ## removed Hardcoded.dat
 
 External Hardcoded.dat files are no longer required. The data is now compiled into the exe.
 
 It is possible to override the data contained in the exe by placing a {GameName}.Hardcoded.Override.dat beside the exe.
+
+## What's New compiled into exe
+
+This What's New document is now compiled into the exe and no longer loaded from the external whatsnew.rtf
 
 # What's new in xEdit 3.3.4 BETA?
 

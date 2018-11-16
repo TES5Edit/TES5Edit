@@ -149,12 +149,13 @@ object frmDeveloperMessage: TfrmDeveloperMessage
     Enabled = False
     Interval = 5000
     OnTimer = tmrEnableButtonTimer
-    Left = 424
-    Top = 320
+    Left = 440
+    Top = 464
   end
   object fcMessage: TFileContainer
-    Left = 256
-    Top = 432
+    Compressed = True
+    Left = 264
+    Top = 464
     CompressedData = {
       789CD4BD4D971DB9729E3BE75AFC0FBC33DB03299189CC445E4D2CE9DA96EF92
       75CF922579C2091240364B2A16A9AAEAEED33EABFFFB7D1EECFA24592C7637D9

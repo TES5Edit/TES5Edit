@@ -19,7 +19,7 @@ type
   protected {private}
     procedure DefineProperties(Filer: TFiler); override;
   public
-    constructor Create(aOwner: TComponent); virtual;
+    constructor Create(aOwner: TComponent); override;
 
     procedure LoadFromFile(const aFileName: string);
     procedure LoadFromStream(aStream: TStream);
@@ -34,8 +34,7 @@ type
   published
     property Compressed: Boolean
       read fCompressed
-      write fCompressed
-      default True;
+      write fCompressed;
   end;
 
 function SameBytes(const a,b: TBytes): Boolean;
