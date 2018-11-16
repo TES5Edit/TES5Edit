@@ -14040,7 +14040,7 @@ procedure DefineFO4n;
           ])),
           wbFloat(TTED, 'Default')
         ], []),
-        wbByteArray(TTGE, 'Group End', 4)
+        wbInteger(TTGE, 'Category Index', itU32)
       ], []);
   end;
 
