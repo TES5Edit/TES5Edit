@@ -77,7 +77,8 @@ uses
   JvBalloonHint, JvExStdCtrls, JvRichEdit, FileContainer;
 
 const
-  DefaultInterval             = 1 / 24 / 6;
+  DefaultInterval             = 1 / 24 / 6; // 10 minutes
+  MaxSaveListCount            = 5;
 
 type
   TDynBooleans = array of Boolean;
@@ -408,6 +409,9 @@ type
     mniMainOptions: TMenuItem;
     N30: TMenuItem;
     fcWhatsNew: TFileContainer;
+    N31: TMenuItem;
+    mniMainSave: TMenuItem;
+    jbhSave: TJvBalloonHint;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -654,9 +658,13 @@ type
     procedure jbhGitHubCloseBtnClick(Sender: TObject; var CanClose: Boolean);
     procedure pmuMainPopup(Sender: TObject);
     procedure bnMainMenuMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure mniMainSaveClick(Sender: TObject);
+    procedure jbhSaveBalloonClick(Sender: TObject);
+    procedure jbhSaveCloseBtnClick(Sender: TObject; var CanClose: Boolean);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
+    procedure SetSaveInterval;
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -744,7 +752,7 @@ type
     function AddNewFile(out aFile: IwbFile; aIsESL: Boolean): Boolean; overload;
     function AddNewFile(out aFile: IwbFile; aTemplate: PwbModuleInfo): Boolean; overload;
 
-    function SaveChanged(aSilent: Boolean = False): Boolean;
+    function SaveChanged(aSilent: Boolean = False; aShowMessageIfNothing: Boolean = False): Boolean;
     procedure JumpTo(aInterface: IInterface; aBackward: Boolean);
     function FindNodeForElement(const aElement: IwbElement): PVirtualNode;
     function FindNodeOrAncestorForElement(const aElement: IwbElement): PVirtualNode;
@@ -805,7 +813,7 @@ type
     ModGroupsEnabled : Boolean;
     NewModGroupName: string;
     OnlyShowMasterAndLeafs: Boolean;
-    AutoSave: Boolean;
+    ShowUnsavedHint: Boolean;
     ScriptRunning: Boolean;
     ParentedGroupRecordType: set of Byte;
     RebuildingViewTree: Boolean;
@@ -4458,7 +4466,7 @@ begin
   wbHideUnused := True;
   wbFlagsAsArray := True;
   wbRequireLoadOrder := not wbUseFalsePlugins;
-  AutoSave := False;
+  ShowUnsavedHint := True;
   ParentedGroupRecordType := [1, 6, 7];
   if wbVWDAsQuestChildren then
     Include(ParentedGroupRecordType, 10);
@@ -4897,7 +4905,7 @@ begin
 
   TotalUsageTime := Settings.ReadFloat('Usage', 'TotalTime', 0);
   RateNoticeGiven := Settings.ReadInteger('Usage', 'RateNoticeGiven', 0);
-  AutoSave := Settings.ReadBool('Options', 'AutoSave', AutoSave);
+  ShowUnsavedHint := Settings.ReadBool('Options', 'ShowUnsavedHint', ShowUnsavedHint);
   if not wbTranslationMode then begin
     wbHideUnused := Settings.ReadBool('Options', 'HideUnused', wbHideUnused);
     wbHideIgnored := Settings.ReadBool('Options', 'HideIgnored', wbHideIgnored);
@@ -5208,7 +5216,12 @@ var
 begin
   if not wbLoaderDone then
     Exit(False);
-  Result := EditWarnOk or (DebugHook <> 0) or wbIKnowWhatImDoing;
+
+  Result :=
+    EditWarnOk or
+    (DebugHook <> 0) or
+    wbIKnowWhatImDoing;
+
   if not Result then
     with TfrmEditWarning.Create(Self) do try
       EditWarnCount := Settings.ReadInteger('Usage', 'EditWarnCount', 0);
@@ -5217,7 +5230,6 @@ begin
 
       Result := ShowModal = mrOk;
       if Result then begin
-        EditWarnOk := True;
         Inc(EditWarnCount);
         Settings.WriteInteger('Usage', 'EditWarnCount', EditWarnCount);
         Settings.UpdateFile;
@@ -5226,6 +5238,9 @@ begin
     finally
       Free;
     end;
+
+  if Result then
+    EditWarnOk := True;
 end;
 
 procedure TfrmMain.edViewFilterChange(Sender: TObject);
@@ -5829,8 +5844,14 @@ var
   r                           : TRect;
   i                           : Integer;
 begin
-  if (Key = Ord('S')) and (Shift = [ssCtrl]) then
-    SaveChanged;
+  if wbLoaderDone then begin
+    if (Key = Ord('S')) and (Shift = [ssCtrl]) then begin
+      jbhSave.CancelHint;
+      SaveChanged(False, True);
+    end;
+    if (Key = Ord('O')) and (Shift = [ssCtrl]) then
+      mniMainOptions.Click;
+  end;
   if Assigned(vstSpreadSheetWeapon) then vstSpreadSheetWeapon.UpdateHotTrack;
   if Assigned(vstSpreadsheetArmor) then vstSpreadsheetArmor.UpdateHotTrack;
   if Assigned(vstSpreadSheetAmmo) then vstSpreadSheetAmmo.UpdateHotTrack;
@@ -6834,6 +6855,16 @@ begin
   end;
 end;
 
+procedure TfrmMain.jbhSaveBalloonClick(Sender: TObject);
+begin
+  SaveChanged(False, True);
+end;
+
+procedure TfrmMain.jbhSaveCloseBtnClick(Sender: TObject; var CanClose: Boolean);
+begin
+  SetSaveInterval;
+end;
+
 procedure TfrmMain.InvalidateElementsTreeView(aNodes: TNodeArray);
 var
   Node                        : PVirtualNode;
@@ -6841,6 +6872,9 @@ var
   MainRecord                  : IwbMainRecord;
   i                           : Integer;
 begin
+  if not Assigned(vstNav) then
+    Exit;
+
   if Length(aNodes) = 0 then
     aNodes := vstNav.GetSortedSelection(True);
   for i := -1 to High(aNodes) do begin
@@ -12583,7 +12617,7 @@ begin
     cbAlignArrayElements.Checked := wbAlignArrayElements;
     edColumnWidth.Text := IntToStr(ColumnWidth);
     edRowHeight.Text := IntToStr(RowHeight);
-    cbAutoSave.Checked := AutoSave;
+    cbShowUnsavedHint.Checked := ShowUnsavedHint;
     //cbIKnow.Checked := wbIKnowWhatImDoing;
     cbShowTip.Checked := wbShowTip;
     cbPatron.Checked := wbPatron;
@@ -12632,7 +12666,7 @@ begin
     ColumnWidth := StrToIntDef(edColumnWidth.Text, ColumnWidth);
     RowHeight := StrToIntDef(edRowHeight.Text, RowHeight);
     SetDefaultNodeHeight(Trunc(RowHeight * (GetCurrentPPIScreen / PixelsPerInch)));
-    AutoSave := cbAutoSave.Checked;
+    ShowUnsavedHint := cbShowUnsavedHint.Checked;
     //wbIKnowWhatImDoing := cbIKnow.Checked;
     wbShowTip := cbShowTip.Checked;
     wbPatron := cbPatron.Checked;
@@ -12649,7 +12683,7 @@ begin
     SaveFont(Settings, 'UI', 'FontRecords', vstNav.Font);
     SaveFont(Settings, 'UI', 'FontMessages', mmoMessages.Font);
     SaveFont(Settings, 'UI', 'FontViewer', pnlFontViewer.Font);
-    Settings.WriteBool('Options', 'AutoSave', AutoSave);
+    Settings.WriteBool('Options', 'ShowUnsavedHint', ShowUnsavedHint);
     if not wbTranslationMode then begin
       Settings.WriteBool('Options', 'HideUnused', wbHideUnused);
       Settings.WriteBool('Options', 'HideIgnored', wbHideIgnored);
@@ -13130,6 +13164,8 @@ var
   i        : Integer;
   MenuItem : TMenuItem;
 begin
+  jbhSave.CancelHint;
+
   mniMainLocalization.Visible := (wbIsSkyrim or wbIsFallout4 or wbIsFallout76);
 
   if wbIsSkyrim or wbIsFallout4 or wbIsFallout76 then begin
@@ -13162,6 +13198,8 @@ begin
   mniMainPluggyLinkInventory.Visible := mniMainPluggyLink.Visible and (wbGameMode = gmTES4);
   mniMainPluggyLinkSpell.Visible := mniMainPluggyLink.Visible and (wbGameMode = gmTES4);
   mniMainPluggyLinkEnchantment.Visible := mniMainPluggyLink.Visible and (wbGameMode = gmTES4);
+
+  mniMainSave.Visible := wbEditAllowed and not wbDontSave;
 end;
 
 procedure TfrmMain.pmuNavPopup(Sender: TObject);
@@ -13903,7 +13941,13 @@ begin
     end;
 end;
 
-function TfrmMain.SaveChanged(aSilent: Boolean = False): Boolean;
+procedure TfrmMain.mniMainSaveClick(Sender: TObject);
+begin
+  jbhSave.CancelHint;
+  SaveChanged(False, True);
+end;
+
+function TfrmMain.SaveChanged(aSilent: Boolean = False; aShowMessageIfNothing: Boolean = False): Boolean;
 var
   i                           : Integer;
   FileStream                  : TBufferedFileStream;
@@ -13917,8 +13961,10 @@ var
   SavedAny                    : Boolean;
   AnyErrors                   : Boolean;
   TryDirectRename             : Boolean;
+  FoundSomething              : Boolean;
 begin
   Result := True;
+  FoundSomething := False;
 
   if wbDontSave then
     Exit;
@@ -13955,17 +14001,19 @@ begin
       if Assigned(Settings) then
         cbBackup.Checked := not Settings.ReadBool(frmMain.Name, 'DontBackup', not cbBackup.Checked);
 
-      if (CheckListBox1.Count > 0) and (not (wbToolMode in wbAutoModes)) then begin
-        NoEscape := True;
-        if not aSilent then
-          if ShowModal <> mrOk then
-            Exit(False);
-        wbDontBackup := not cbBackup.Checked;
-        if Assigned(Settings) then begin
-          Settings.WriteBool(frmMain.Name, 'DontBackup', wbDontBackup);
-          Settings.UpdateFile;
+      if (CheckListBox1.Count > 0) then begin
+        FoundSomething := True;
+        if (not (wbToolMode in wbAutoModes)) then begin
+          if not aSilent then
+            if ShowModal <> mrOk then
+              Exit(False);
+          wbDontBackup := not cbBackup.Checked;
+          if Assigned(Settings) then begin
+            Settings.WriteBool(frmMain.Name, 'DontBackup', wbDontBackup);
+            Settings.UpdateFile;
+          end;
+          wbStartTime := Now;
         end;
-        wbStartTime := Now;
       end;
 
       Inc(wbShowStartTime);
@@ -13976,6 +14024,7 @@ begin
 
         for i := 0 to Pred(CheckListBox1.Items.Count) do
           if CheckListBox1.Checked[i] then begin
+            FoundSomething := True;
             TryDirectRename := False;
             NeedsRename := False;
 
@@ -14087,6 +14136,12 @@ begin
     Free;
     InvalidateElementsTreeView(NoNodes);
   end;
+
+  if aShowMessageIfNothing and not FoundSomething then
+    ShowMessage('No unsaved changes.');
+
+  if SavedAny then
+    SetSaveInterval;
 end;
 
 function TfrmMain.SelectionIncludesAnyDeepCopyRecords: Boolean;
@@ -14515,6 +14570,24 @@ begin
       SetDoubleBuffered(TWinControl(aWinControl.Controls[i]))
     else
       Exit;
+end;
+
+procedure TfrmMain.SetSaveInterval;
+var
+  MinUnsavedSince : TDateTime;
+  j               : Integer;
+begin
+  MinUnsavedSince := MaxDouble;
+
+  for j := Low(Files) to High(Files) do
+    if esUnsaved in Files[j].ElementStates then
+      if Files[j].UnsavedSince < MinUnsavedSince then
+        MinUnsavedSince := Files[j].UnsavedSince;
+
+  if MinUnsavedSince < Now then
+    SaveInterval := (Now - MinUnsavedSince) + DefaultInterval
+  else
+    SaveInterval := DefaultInterval;
 end;
 
 function TfrmMain.GetViewNodePositionLabel(aNode: PVirtualNode = nil): string;
@@ -15233,6 +15306,8 @@ end;
 procedure TfrmMain.tmrCheckUnsavedTimer(Sender: TObject);
 var
   i, j                        : Integer;
+  sl                          : TStringList;
+  FoundExpired                : Boolean;
 begin
   if not wbLoaderDone then
     Exit;
@@ -15267,7 +15342,7 @@ begin
   if wbToolMode in wbAutoModes then
     Exit;
 
-  if not AutoSave then
+  if not ShowUnsavedHint then
     Exit;
 
   // skip if Left mouse button is pressed, could be indication of active drag&drop or other action in progress
@@ -15277,24 +15352,38 @@ begin
   if vstView.IsEditing then
     Exit;
 
-  tmrCheckUnsaved.Enabled := False;
-  try
-      for i := Low(Files) to High(Files) do
-        if esUnsaved in Files[i].ElementStates then
-          if Files[i].UnsavedSince < Now - SaveInterval then begin
-            if MessageDlg('You have changes which are unsaved for a while already. Do you want to save now?', mtConfirmation, [mbYes, mbNo], 0, mbYes) = mrYes then begin
-              SaveChanged;
-              SaveInterval := DefaultInterval;
-            end;
-            Exit;
-          end;
-  finally
-    for j := Low(Files) to High(Files) do
-      if esUnsaved in Files[j].ElementStates then
-        if Files[j].UnsavedSince < Now - SaveInterval then
-          SaveInterval := (Now - Files[j].UnsavedSince) + DefaultInterval;
+  if jbhSave.Active then
+    Exit;
 
-    tmrCheckUnsaved.Enabled := True;
+  if not Assigned(bnMainMenu) then
+    Exit;
+
+  FoundExpired := False;
+  sl := TStringList.Create;
+  try
+    sl.TrailingLineBreak := False;
+    j := 0;
+    for i := Low(Files) to High(Files) do
+      if esUnsaved in Files[i].ElementStates then begin
+        if Files[i].UnsavedSince < Now - SaveInterval then
+          FoundExpired := True;
+
+        if Files[i].UnsavedSince < Now then begin
+          if sl.Count >= MaxSaveListCount then
+            Inc(j)
+          else
+            sl.Add(Files[i].Name + ' ('+TimeToStr(Now - Files[i].UnsavedSince)+')');
+        end;
+      end;
+    if j > 0 then
+      sl.Add('(+'+j.ToString+' more)');
+
+    if FoundExpired then begin
+      jbhSave.ActivateHint(bnMainMenu, sl.Text, 'You have unsaved changes. Do you want to save now?', 30000);
+      SetSaveInterval;
+    end;
+  finally
+    sl.Free;
   end;
 end;
 
