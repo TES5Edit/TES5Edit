@@ -92,7 +92,8 @@ uses
   frmLegendForm in 'frmLegendForm.pas' {frmLegend},
   frmWorldspaceCellDetailsForm in 'frmWorldspaceCellDetailsForm.pas' {frmWorldspaceCellDetails},
   frmRichEditForm in 'frmRichEditForm.pas' {frmRichEdit},
-  frmDeveloperMessageForm in 'frmDeveloperMessageForm.pas' {frmDeveloperMessage};
+  frmDeveloperMessageForm in 'frmDeveloperMessageForm.pas' {frmDeveloperMessage},
+  wbHardcoded in 'wbHardcoded.pas' {wbHardcodedContainer: TDataModule};
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

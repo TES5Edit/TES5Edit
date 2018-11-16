@@ -274,7 +274,7 @@ begin
     SetLength(_Modules, Succ(Length(Files)));
     with _Modules[0] do begin
       miFlags := [];
-      miOriginalName := wbGameName + wbHardcodedDat;
+      miOriginalName := wbGameName + csDotExe;
       miName := miOriginalName;
       miExtension := meESM;
 
@@ -423,7 +423,7 @@ begin
       Include(miFlags, mfHasIndex);
       Include(miFlags, mfIsGameMaster);
     end;
-  with wbModuleByName(wbGameName + wbHardcodedDat)^ do begin
+  with wbModuleByName(wbGameName + csDotExe)^ do begin
     miOfficialIndex := Succ(Low(Integer));
     Include(miFlags, mfHasIndex);
   end;

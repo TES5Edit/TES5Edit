@@ -12,9 +12,9 @@
 
 *******************************************************************************}
 
-// JCL_DEBUG_EXPERT_INSERTJDBG ON
-// JCL_DEBUG_EXPERT_GENERATEJDBG ON
-// JCL_DEBUG_EXPERT_DELETEMAPFILE ON
+// JCL_DEBUG_EXPERT_INSERTJDBG OFF
+// JCL_DEBUG_EXPERT_GENERATEJDBG OFF
+// JCL_DEBUG_EXPERT_DELETEMAPFILE OFF
 
 program SSEDump;
 
@@ -37,6 +37,7 @@ uses
   wbLocalization,
   wbHelpers,
   wbLoadOrder,
+  wbHardcoded,
   wbDefinitionsFNV,
   wbDefinitionsFNVSaves,
   wbDefinitionsFO3,
@@ -914,6 +915,7 @@ var
   tss             : TwbSetOfSource;
   tms             : TwbSetOfMode;
   Found           : Boolean;
+  b               : TBytes;
 begin
   {$IF CompilerVersion >= 24}
   FormatSettings.DecimalSeparator := '.';
@@ -1564,9 +1566,9 @@ begin
 
       with wbModuleByName(wbGameMasterEsm)^ do
         if mfHasFile in miFlags then begin
-          s := wbProgramPath + wbGameName + wbHardcodedDat;
-          if FileExists(s) then
-            wbFile(s, 0, wbGameMasterEsm);
+          b := TwbHardcodedContainer.GetHardCodedDat;
+          if Length(b) > 0 then
+            wbFile(wbGameName + csDotExe, 0, wbGameMasterEsm, [fsIsHardcoded], b);
         end;
 
       ReportProgress('Finished loading record. Starting Dump.');

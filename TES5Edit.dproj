@@ -147,15 +147,17 @@
         </DCCReference>
         <DCCReference Include="frmWorldspaceCellDetailsForm.pas">
             <Form>frmWorldspaceCellDetails</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="frmRichEditForm.pas">
             <Form>frmRichEdit</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="frmDeveloperMessageForm.pas">
             <Form>frmDeveloperMessage</Form>
+        </DCCReference>
+        <DCCReference Include="wbHardcoded.pas">
+            <Form>wbHardcodedContainer</Form>
             <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

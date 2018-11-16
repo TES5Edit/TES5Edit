@@ -1,3 +1,11 @@
+# What's new in xEdit 3.3.5 BETA?
+
+## removed Hardcoded.dat
+
+External Hardcoded.dat files are no longer required. The data is now compiled into the exe.
+
+It is possible to override the data contained in the exe by placing a {GameName}.Hardcoded.Override.dat beside the exe.
+
 # What's new in xEdit 3.3.4 BETA?
 
 ## Bugfixes

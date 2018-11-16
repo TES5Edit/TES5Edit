@@ -51,7 +51,7 @@ var
 function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil): Boolean; overload;
 function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil): Boolean; overload;
 
-function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []): IwbFile;
+function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsESL: Boolean): IwbFile; overload;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile; overload;
 procedure wbFileForceClosed;
@@ -620,6 +620,7 @@ type
 
   TwbFile = class(TwbContainer, IwbFile, IwbFileInternal)
   protected
+    flData                   : TBytes;
     flFileName               : string;
     flFileNameOnDisk         : string;
     flLoadOrder              : Integer;
@@ -779,7 +780,7 @@ type
 
     procedure UpdateModuleMasters;
 
-    constructor Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates);
+    constructor Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates; aData: TBytes);
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aIsEsl: Boolean); overload;
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo); overload;
   public
@@ -2679,15 +2680,16 @@ begin
   UpdateModuleMasters;
 end;
 
-constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates);
+constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates; aData: TBytes);
 var
   s: string;
 begin
+  flData := aData;
   flStates := aStates * [fsIsTemporary, fsOnlyHeader, fsIsDeltaPatch];
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
   if aCompareTo <> '' then begin
     Include(flStates, fsIsCompareLoad);
-    if SameText(ExtractFileName(aFileName), wbGameName + wbHardcodedDat) then
+    if SameText(ExtractFileName(aFileName), wbGameName + csDotExe) then
       Include(flStates, fsIsHardcoded);
     flCompareTo := wbExpandFileName(aCompareTo);
   end else if SameText(ExtractFileName(aFileName), wbGameMasterEsm) then begin
@@ -2718,6 +2720,9 @@ begin
        (wbAllowDirectSaveFor.IndexOf(GetFileName) >= 0) then
       Exclude(flStates, fsMemoryMapped);
   end;
+
+  if Length(flData) > 0 then
+    Exclude(flStates, fsMemoryMapped);
 
   flOpenFile;
 
@@ -3054,7 +3059,9 @@ end;
 
 procedure TwbFile.flCloseFile;
 begin
-  if fsMemoryMapped in flStates then begin
+  if Length(flData) > 0 then begin
+    flView := nil;
+  end else if fsMemoryMapped in flStates then begin
     if Assigned(flView) then begin
       UnmapViewOfFile(flView);
       flView := nil;
@@ -3094,73 +3101,78 @@ var
 begin
   flProgress('Loading file');
 
-  if not FileExists(flFileName) then begin
-    s := flFileName + csDotGhost;
-    if FileExists(s) then begin
-      flProgress('File is .ghost''ed, adjusting file name...');
-      flFileNameOnDisk := s;
-      Include(flStates, fsIsGhost);
-    end;
-  end;
-
-  if fsMemoryMapped in flStates then begin
-    flFileHandle := CreateFile(
-      PChar(flFileNameOnDisk),
-      FileAccessMode[False],
-      FileShareMode[False],
-      nil,
-      OPEN_EXISTING,
-      FILE_FLAG_RANDOM_ACCESS,
-      0
-    );
-    if (flFileHandle = INVALID_HANDLE_VALUE) or (flFileHandle = 0) then
-      RaiseLastOSError;
-
-    flSize := 0;
-    if not GetFileSizeEx(flFileHandle, flSize) then
-      RaiseLastOSError;
-
-    if flSize < 1 then
-      raise Exception.CreateFmt('"%s" is 0 bytes in size', [flFileName]);
-
-    flMapHandle := CreateFileMapping(
-      flFileHandle,
-      nil,
-      PageProtection[False],
-      0,
-      0,
-      nil
-    );
-    if (flMapHandle = INVALID_HANDLE_VALUE) or (flMapHandle = 0) then
-      RaiseLastOSError;
-
-    flView := MapViewOfFileEx(
-      flMapHandle,
-      ViewAccessMode[False],
-      0,
-      0,
-      0,
-      nil
-    );
-     if not Assigned(flView) then
-      RaiseLastOSError;
+  flSize := Length(flData);
+  if flSize > 0 then begin
+    flView := @flData[0];
   end else begin
-    with TFileStream.Create(flFileNameOnDisk, fmOpenRead or fmShareDenyWrite) do try
-      flSize := Size;
-      flView := VirtualAlloc(0, flSize, MEM_COMMIT, PAGE_READWRITE);
-      if not Assigned(flView) then
-        RaiseLastOSError;
-      Read(flView^, flSize);
-      if not VirtualProtect(flView, flSize, PAGE_READONLY, OldProtect) then
-        RaiseLastOSError;
-    finally
-      Free;
+    if not FileExists(flFileName) then begin
+      s := flFileName + csDotGhost;
+      if FileExists(s) then begin
+        flProgress('File is .ghost''ed, adjusting file name...');
+        flFileNameOnDisk := s;
+        Include(flStates, fsIsGhost);
+      end;
     end;
 
-    if fsIsTemporary in flStates then try
-      DeleteFile(flFileNameOnDisk);
-    except
-      flProgress('Could not delete temporary file ' + flFileNameOnDisk);
+    if fsMemoryMapped in flStates then begin
+      flFileHandle := CreateFile(
+        PChar(flFileNameOnDisk),
+        FileAccessMode[False],
+        FileShareMode[False],
+        nil,
+        OPEN_EXISTING,
+        FILE_FLAG_RANDOM_ACCESS,
+        0
+      );
+      if (flFileHandle = INVALID_HANDLE_VALUE) or (flFileHandle = 0) then
+        RaiseLastOSError;
+
+      flSize := 0;
+      if not GetFileSizeEx(flFileHandle, flSize) then
+        RaiseLastOSError;
+
+      if flSize < 1 then
+        raise Exception.CreateFmt('"%s" is 0 bytes in size', [flFileName]);
+
+      flMapHandle := CreateFileMapping(
+        flFileHandle,
+        nil,
+        PageProtection[False],
+        0,
+        0,
+        nil
+      );
+      if (flMapHandle = INVALID_HANDLE_VALUE) or (flMapHandle = 0) then
+        RaiseLastOSError;
+
+      flView := MapViewOfFileEx(
+        flMapHandle,
+        ViewAccessMode[False],
+        0,
+        0,
+        0,
+        nil
+      );
+       if not Assigned(flView) then
+        RaiseLastOSError;
+    end else begin
+      with TFileStream.Create(flFileNameOnDisk, fmOpenRead or fmShareDenyWrite) do try
+        flSize := Size;
+        flView := VirtualAlloc(0, flSize, MEM_COMMIT, PAGE_READWRITE);
+        if not Assigned(flView) then
+          RaiseLastOSError;
+        Read(flView^, flSize);
+        if not VirtualProtect(flView, flSize, PAGE_READONLY, OldProtect) then
+          RaiseLastOSError;
+      finally
+        Free;
+      end;
+
+      if fsIsTemporary in flStates then try
+        DeleteFile(flFileNameOnDisk);
+      except
+        flProgress('Could not delete temporary file ' + flFileNameOnDisk);
+      end;
     end;
   end;
 
@@ -17820,7 +17832,7 @@ begin
   _NextLightSlot := 0;
 end;
 
-function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []): IwbFile;
+function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
 var
   FileName: string;
   i: Integer;
@@ -17835,9 +17847,9 @@ begin
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
   else begin
     if not wbIsPlugin(FileName) then
-      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, aStates)
+      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, aStates, aData)
     else
-      Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, aStates);
+      Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, aStates, aData);
     SetLength(Files, Succ(Length(Files)));
     Files[High(Files)] := Result;
     FilesMap.AddObject(FileName, Pointer(Result));
@@ -17864,9 +17876,9 @@ begin
       if FilesMap.Find(FileName, i) then
         _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
       else if not wbIsPlugin(FileName) then
-        _File := TwbFileSource.Create(FileName, -1, '', [fsOnlyHeader])
+        _File := TwbFileSource.Create(FileName, -1, '', [fsOnlyHeader], nil)
       else
-        _File := TwbFile.Create(FileName, -1, '', [fsOnlyHeader]);
+        _File := TwbFile.Create(FileName, -1, '', [fsOnlyHeader], nil);
 
       if Assigned(aMasters) then
         _File.GetMasters(aMasters);
