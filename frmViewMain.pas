@@ -17418,35 +17418,36 @@ var
   Chapter    : IwbChapter;
   _File      : IwbFile;
 begin
-  case Key of
-    VK_DELETE: begin
-      pmuNavPopup(nil);
-      if mniNavRemove.Enabled and mniNavRemove.Visible then
-        mniNavRemove.Click;
-    end;
-    VK_INSERT: begin
-      pmuNavPopup(nil);
-      if mniNavAdd.Enabled and mniNavAdd.Visible then begin
-        if mniNavAdd.Count = 1 then
-          mniNavAdd.Items[0].Click
-        else begin
-          r := vstNav.GetDisplayRect(vstNav.FocusedNode, 0, True);
-          p := vstNav.ClientToScreen(Point(r.Left, r.Bottom));
-          pmuNavAdd.Popup(p.X, p.Y);
+  if wbLoaderDone then
+    case Key of
+      VK_DELETE: begin
+        pmuNavPopup(nil);
+        if mniNavRemove.Enabled and mniNavRemove.Visible then
+          mniNavRemove.Click;
+      end;
+      VK_INSERT: begin
+        pmuNavPopup(nil);
+        if mniNavAdd.Enabled and mniNavAdd.Visible then begin
+          if mniNavAdd.Count = 1 then
+            mniNavAdd.Items[0].Click
+          else begin
+            r := vstNav.GetDisplayRect(vstNav.FocusedNode, 0, True);
+            p := vstNav.ClientToScreen(Point(r.Left, r.Bottom));
+            pmuNavAdd.Popup(p.X, p.Y);
+          end;
         end;
       end;
+      VK_F2: begin
+        pmuNavPopup(nil);
+        if mniNavChangeFormID.Enabled and mniNavChangeFormID.Visible then
+          mniNavChangeFormID.Click;
+      end;
+      Ord('M'): if Shift = [ssCtrl] then begin
+        pmuNavPopup(nil);
+        if mniNavCreateModGroup.Visible then
+          mniNavCreateModGroupClick(nil);
+      end;
     end;
-    VK_F2: begin
-      pmuNavPopup(nil);
-      if mniNavChangeFormID.Enabled and mniNavChangeFormID.Visible then
-        mniNavChangeFormID.Click;
-    end;
-    Ord('M'): if Shift = [ssCtrl] then begin
-      pmuNavPopup(nil);
-      if mniNavCreateModGroup.Visible then
-        mniNavCreateModGroupClick(nil);
-    end;
-  end;
 
   if ssCtrl in Shift then begin
     case Key of
