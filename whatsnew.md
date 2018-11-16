@@ -40,6 +40,10 @@ Clicking the hint will show the usual save selection dialog.
 
 Clicking the [X] in the hint or ignoring it for 15 seconds until it disappears on it's own will snooze it for 10 minutes.
 
+## Ctrl + Click on View Header as Jump To
+
+`Ctrl + Click` on the View tab Header performs now Jump To on that record.
+
 ## removed Hardcoded.dat
 
 External Hardcoded.dat files are no longer required. The data is now compiled into the exe.

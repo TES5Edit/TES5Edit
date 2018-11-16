@@ -129,6 +129,7 @@ object frmMain: TfrmMain
           OnGetHint = vstViewGetHint
           OnHeaderClick = vstViewHeaderClick
           OnHeaderDrawQueryElements = vstViewHeaderDrawQueryElements
+          OnHeaderMouseDown = vstViewHeaderMouseDown
           OnInitChildren = vstViewInitChildren
           OnInitNode = vstViewInitNode
           OnKeyDown = vstViewKeyDown
