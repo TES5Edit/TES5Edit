@@ -58,7 +58,7 @@ var
 
 const
   wbWhatsNewVersion : Integer = 6;
-  wbDeveloperMessageVersion : Integer = 2;
+  wbDeveloperMessageVersion : Integer = 3;
   wbDevCRC32App : Cardinal = $FFFFFFEE;
 
   clOrange       = $004080FF;

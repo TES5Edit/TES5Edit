@@ -74,7 +74,7 @@ uses
   Vcl.Styles,
   Vcl.Styles.Utils.SystemMenu,
   Vcl.Styles.Ext,
-  JvBalloonHint, JvExStdCtrls, JvRichEdit;
+  JvBalloonHint, JvExStdCtrls, JvRichEdit, FileContainer;
 
 const
   DefaultInterval             = 1 / 24 / 6;
@@ -407,6 +407,7 @@ type
     pmuMain: TPopupMenu;
     mniMainOptions: TMenuItem;
     N30: TMenuItem;
+    fcWhatsNew: TFileContainer;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -4429,6 +4430,8 @@ var
   Modules       : TwbModuleInfos;
   Module        : PwbModuleInfo;
   AgeDateTime   : TDateTime;
+
+  Stream        : TStream;
 begin
   AutoDone := False;
   ErrorsCount := 0;
@@ -4581,35 +4584,37 @@ begin
 
   if wbToolMode in [tmEdit, tmView, tmTranslate] then begin
 
-    s := ExtractFilePath(ParamStr(0)) + 'whatsnew.rtf';
-    if FileExists(s) then begin
-      i := Settings.ReadInteger('WhatsNew', 'Version', 0);
-      with TfrmRichEdit.Create(Self) do begin
-        Caption := 'What''s New?';
+    i := Settings.ReadInteger('WhatsNew', 'Version', 0);
+    with TfrmRichEdit.Create(Self) do begin
+      Caption := 'What''s New?';
+      try
+        Stream := fcWhatsNew.CreateReadStream;
         try
-          reMain.Lines.LoadFromFile(s);
-          if i < wbWhatsNewVersion then begin
-            ShowModal;
-            if cbDontShowAgain.Checked then begin
-              Settings.WriteInteger('WhatsNew', 'Version', wbWhatsNewVersion);
-              Settings.UpdateFile;
-            end;
+          reMain.Lines.LoadFromStream(Stream);
+        finally
+          Stream.Free;
+        end;
+        if i < wbWhatsNewVersion then begin
+          ShowModal;
+          if cbDontShowAgain.Checked then begin
+            Settings.WriteInteger('WhatsNew', 'Version', wbWhatsNewVersion);
+            Settings.UpdateFile;
           end;
-          Parent := tbsWhatsNew;
-          Align := alClient;
-          Visible := True;
-          BorderStyle := bsNone;
-          btnOk.Visible := False;
-          cbDontShowAgain.Visible := False;
-          reMain.Align := alClient;
-          tbsWhatsNew.TabVisible := True;
-        except end;
-      end;
+        end;
+        Parent := tbsWhatsNew;
+        Align := alClient;
+        Visible := True;
+        BorderStyle := bsNone;
+        btnOk.Visible := False;
+        cbDontShowAgain.Visible := False;
+        reMain.Align := alClient;
+        tbsWhatsNew.TabVisible := True;
+      except end;
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
     i := Settings.ReadInteger('DeveloperMessage', 'Version', 0);
-    if i < wbDeveloperMessageVersion then begin
+    if (i < wbDeveloperMessageVersion) then begin
       with TfrmDeveloperMessage.Create(Self) do try
         if wbPatron then begin
           btnCancel.Cancel := True;
@@ -4617,8 +4622,13 @@ begin
         end;
         if ShowModal = mrOk then
           bnPatreon.Click;
+        if MessageDlg('This dialog will only be shown for this current BETA release.' + CRLF + CRLF +
+          'If you have any constructive feedback about the contents and presentation of the previously shown Developer message, please leave it in the #feedback channel on the xEdit Discord (button in the top right corner).' + CRLF + CRLF +
+          'Do you want the developer message to show again on the next start? (So if you forgot to read it, you can restart xEdit to see it again...)',
+          mtConfirmation, mbYesNo, 0) <> mrYes then begin
         Settings.WriteInteger('DeveloperMessage', 'Version', wbDeveloperMessageVersion);
         Settings.UpdateFile;
+        end;
       finally
         Free;
       end;
@@ -12824,11 +12834,11 @@ begin
     j := 0;
     for i := Low(Files) to High(Files) do
       if Files[i].LoadOrder = LoadOrder then begin
-        // header of .dat file, show only itself
-        if SameText(ExtractFileExt(aMainRecord.GetFile.FileName), '.dat') and not SameText(ExtractFileExt(Files[i].FileName), '.dat') then
+        // header of .exe file, show only itself
+        if SameText(ExtractFileExt(aMainRecord.GetFile.FileName), '.exe') and not SameText(ExtractFileExt(Files[i].FileName), '.exe') then
           Continue;
-        // skip .dat file header by default
-        if not SameText(ExtractFileExt(aMainRecord.GetFile.FileName), '.dat') and SameText(ExtractFileExt(Files[i].FileName), '.dat') then
+        // skip .exe file header by default
+        if not SameText(ExtractFileExt(aMainRecord.GetFile.FileName), '.exe') and SameText(ExtractFileExt(Files[i].FileName), '.exe') then
           Continue;
         Rec := Files[i].Elements[0] as IwbMainRecord;
         if Assigned(Rec) then begin
