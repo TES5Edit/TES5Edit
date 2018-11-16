@@ -8,6 +8,19 @@ To invite feedback about it for this BETA, it will be shown again even if it was
 
 For *this BETA release only* you will be asked afterwards if it should be shown again next time and you are going to be asked to provide any constructive feedback you might have about it's contents or presentation on the xEdit Discord.
 
+
+## Search and Zoom in What's New
+
+A search edit and zoom trackbar have been added to the What's New Viewer.
+
+`ALT + S` or `CTRL + F` focus the search edit.
+
+Zoom can be controlled with `CTRL + 0, +, or -`.
+
+`F3` when the main text is focused keeps searching from the current cursor position.
+
+`Enter` when the search edit is focused keeps searching from the current position if the search text has remained unchanged, or starts for the start if the search text has changed.
+
 ## Save in Hamburger Menu
 
 "Save" is now available in the Hamburger Menu.
