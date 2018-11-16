@@ -2805,13 +2805,25 @@ object frmMain: TfrmMain
       Caption = '-'
       GroupIndex = 4
     end
+    object mniMainSave: TMenuItem
+      Caption = 'Save'
+      GroupIndex = 4
+      ShortCut = 16467
+      OnClick = mniMainSaveClick
+    end
+    object N31: TMenuItem
+      Caption = '-'
+      GroupIndex = 4
+    end
     object mniMainOptions: TMenuItem
       Caption = 'Options'
       GroupIndex = 4
+      ShortCut = 16463
       OnClick = mniNavOptionsClick
     end
   end
   object fcWhatsNew: TFileContainer
+    Compressed = True
     Left = 552
     Top = 432
     CompressedData = {
@@ -3871,5 +3883,15 @@ object frmMain: TfrmMain
       2A72BB918935AC540FC12A69443173F386A1DD99D1BBB1C876A3153D8839C5F1
       7FE531EB818D8F972F3EE7EAFE168FCFE981FF7FBB6F8FCFE5810DBB7FEC3DF6
       8F5F7EF96FBC72BE36}
+  end
+  object jbhSave: TJvBalloonHint
+    DefaultBalloonPosition = bpRightDown
+    DefaultHeader = 'Unsaved Changes'
+    DefaultIcon = ikQuestion
+    Options = [boUseDefaultIcon, boShowCloseBtn]
+    OnBalloonClick = jbhSaveBalloonClick
+    OnCloseBtnClick = jbhSaveCloseBtnClick
+    Left = 53
+    Top = 145
   end
 end

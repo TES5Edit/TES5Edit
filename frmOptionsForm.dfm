@@ -99,12 +99,12 @@ object frmOptions: TfrmOptions
         Caption = 'Simple records LAND, NAVI, NAVM, CELL, WRLD (requires restart)'
         TabOrder = 7
       end
-      object cbAutoSave: TCheckBox
+      object cbShowUnsavedHint: TCheckBox
         Left = 266
         Top = 15
-        Width = 81
+        Width = 127
         Height = 17
-        Caption = 'Auto save'
+        Caption = 'Show Unsaved Hint'
         TabOrder = 4
       end
       object cbTrackAllEditorID: TCheckBox

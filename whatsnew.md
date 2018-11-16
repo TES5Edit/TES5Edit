@@ -8,6 +8,18 @@ To invite feedback about it for this BETA, it will be shown again even if it was
 
 For *this BETA release only* you will be asked afterwards if it should be shown again next time and you are going to be asked to provide any constructive feedback you might have about it's contents or presentation on the xEdit Discord.
 
+## Save in Hamburger Menu
+
+"Save" is now available in the Hamburger Menu.
+
+## "Show Unsaved Hint" replaces previous "Auto Save" option
+
+When "Show Unsaved Hint" is checked in the Options (on by default) then if there are any unsaved changes older than 10 minutes a balloon hint is being shown under the Hamburger Menu, listing the unsaved files and how long they have been unsaved.
+
+Clicking the hint will show the usual save selection dialog.
+
+Clicking the [X] in the hint or ignoring it for 15 seconds until it disappears on it's own will snooze it for 10 minutes.
+
 ## removed Hardcoded.dat
 
 External Hardcoded.dat files are no longer required. The data is now compiled into the exe.

@@ -37,7 +37,7 @@ type
     cbConflictAll: TComboBox;
     clbConflictAll: TColorBox;
     cbSimpleRecords: TCheckBox;
-    cbAutoSave: TCheckBox;
+    cbShowUnsavedHint: TCheckBox;
     cbTrackAllEditorID: TCheckBox;
     cbSortGroupRecord: TCheckBox;
     cbShowFlagEnumValue: TCheckBox;
