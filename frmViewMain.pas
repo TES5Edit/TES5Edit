@@ -4617,6 +4617,7 @@ begin
         BorderStyle := bsNone;
         btnOk.Visible := False;
         cbDontShowAgain.Visible := False;
+        reMain.Margins.Top := edSearch.Top + edSearch.Height + reMain.Margins.Left;
         reMain.Align := alClient;
         tbsWhatsNew.TabVisible := True;
       except end;
