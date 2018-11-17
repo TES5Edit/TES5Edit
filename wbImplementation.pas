@@ -14092,6 +14092,7 @@ var
 
   SelfPtr     : IwbContainerElementRef;
   ContainedIn : IwbContainedIn;
+  Element     : IwbElement;
 begin
   SelfPtr := Self as IwbContainerElementRef;
 
@@ -14113,16 +14114,21 @@ begin
   MakeHeaderWriteable;
   grStruct.grsLabel := aLabel;
 
-//  if grStruct.grsGroupType <> 6 then
-//    Exit;
+  for i := 0 to Pred(GetElementCount) do begin
 
-  for i := 0 to Pred(GetElementCount) do
-    if Supports(GetElement(i), IwbGroupRecord, GroupRecord) then begin
-      if GroupRecord.GroupType in [8..10] then
+    Element := GetElement(i);
+
+    if Supports(Element, IwbGroupRecord, GroupRecord) then
+      if GroupRecord.GroupType in [8..10] then begin
         if GroupRecord.GroupLabel = OldLabel then
           GroupRecord.GroupLabel := aLabel;
-    end else if Supports(GetElement(i), IwbContainedIn, ContainedIn) then
+        Continue;
+      end;
+
+    if Supports(Element, IwbContainedIn, ContainedIn) then
       ContainedIn.ContainerChanged;
+
+  end;
 end;
 
 procedure TwbGroupRecord.SetModified(aValue: Boolean);
@@ -19270,12 +19276,20 @@ begin
     if not Supports(GroupRecord.Container, IwbGroupRecord, GroupRecord) then
       Exit;
 
-  if wbVWDAsQuestChildren then Grp := [8..9] else Grp := [8..10];
+  if wbVWDAsQuestChildren then
+    Grp := [8..9]
+  else
+    Grp := [8..10];
+
   if GroupRecord.GroupType in Grp then
     if not Supports(GroupRecord.Container, IwbGroupRecord, GroupRecord) then
       Exit;
 
-  if wbVWDAsQuestChildren then Grp := [1, 6, 7, 10] else Grp := [1, 6, 7];
+  if wbVWDAsQuestChildren then
+    Grp := [1, 6, 7, 10]
+  else
+    Grp := [1, 6, 7];
+
   if not (GroupRecord.GroupType in Grp) then
     Exit;
 
