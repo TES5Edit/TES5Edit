@@ -5614,6 +5614,8 @@ begin
   if DirectoryExists(wbTempPath) and wbRemoveTempPath then
     DeleteDirectory(wbTempPath); // remove temp folder unless it existed
 
+  tmrCheckUnsaved.Enabled := False;
+
   LockWindowUpdate(Handle);
   try
     BackHistory := nil;
@@ -15350,6 +15352,11 @@ begin
 
   // skip if Left mouse button is pressed, could be indication of active drag&drop or other action in progress
   if GetAsyncKeyState(VK_LBUTTON) and $8000 <> 0 then
+    Exit;
+
+  if not Assigned(vstView) then
+    Exit;
+  if not Assigned(vstNav) then
     Exit;
 
   if vstView.IsEditing then

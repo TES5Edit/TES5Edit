@@ -15,6 +15,7 @@ The following reported issues have been fixed:
 * (reported on discord) - changing FormID of a record does not show new FormID until after saving and restarting
 * (reported on discord) - [FO4] FNAM in GLOB is wrong
 * (found by developer) - Certain shortcuts work while the loader is still active when they shouldn't
+* (found by developer) - Random AV after saving when closing
 
 ## Search and Zoom in What's New
 
