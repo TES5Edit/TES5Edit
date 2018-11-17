@@ -15,6 +15,7 @@ The following reported issues have been fixed:
 * (reported on discord) - changing FormID of a record does not show new FormID until after saving and restarting
 * (reported on discord) - [FO4] FNAM in GLOB is wrong
 * (reported on discord) - virtual "Worldspace" element on temporary exterior cells can show invalid value after changing FormID of WRLD record
+* (reported on discord) - When using Copy as override (with overwriting), "No to All" does not work for records flagged as deleted
 * (found by developer) - Certain shortcuts work while the loader is still active when they shouldn't
 * (found by developer) - Random AV after saving when closing
 
