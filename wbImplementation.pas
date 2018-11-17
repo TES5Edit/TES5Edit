@@ -12667,19 +12667,25 @@ begin
 
   DoInit(False);
 
-  if GetEditValue <> aValue then begin
-    if Assigned(srValueDef) then begin
-      OldValue := GetNativeValue;
-      srValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
-      NewValue := GetNativeValue;
-      DoAfterSet(OldValue, NewValue);
-    end else
-      raise Exception.Create(GetName + ' can not be edited');
-    if (srsIsFlags in srStates) and (csInit in cntStates) then begin
-      Reset;
-      Init;
+  BeginUpdate;
+  try
+    if GetEditValue <> aValue then begin
+      if Assigned(srValueDef) then begin
+        OldValue := GetNativeValue;
+        srValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
+        SetModified(True);
+        NewValue := GetNativeValue;
+        DoAfterSet(OldValue, NewValue);
+      end else
+        raise Exception.Create(GetName + ' can not be edited');
+      if (srsIsFlags in srStates) and (csInit in cntStates) then begin
+        Reset;
+        Init;
+      end;
+      NotifyChanged(eContainer);
     end;
-    NotifyChanged(eContainer);
+  finally
+    EndUpdate;
   end;
 end;
 
@@ -12704,18 +12710,24 @@ begin
 
   DoInit(False);
 
-  if Assigned(srValueDef) then begin
-    OldValue := GetNativeValue;
-    srValueDef.NativeValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
-    NewValue := GetNativeValue;
-    DoAfterSet(OldValue, NewValue);
-  end else
-    raise Exception.Create(GetName + ' can not be edited');
-  if (srsIsFlags in srStates) and (csInit in cntStates) then begin
-    Reset;
-    Init;
+  BeginUpdate;
+  try
+    if Assigned(srValueDef) then begin
+      OldValue := GetNativeValue;
+      srValueDef.NativeValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
+      SetModified(True);
+      NewValue := GetNativeValue;
+      DoAfterSet(OldValue, NewValue);
+    end else
+      raise Exception.Create(GetName + ' can not be edited');
+    if (srsIsFlags in srStates) and (csInit in cntStates) then begin
+      Reset;
+      Init;
+    end;
+    NotifyChanged(eContainer);
+  finally
+    EndUpdate;
   end;
-  NotifyChanged(eContainer);
 end;
 
 procedure TwbSubRecord.SetToDefaultInternal;
@@ -17781,21 +17793,27 @@ begin
   if not wbEditAllowed then
     raise Exception.Create(GetName + ' can not be edited.');
 
-  lValue := '';
-  if (not Assigned(dcDataBasePtr) or not Assigned(dcDataEndPtr)) or (aValue <> GetEditValue) then begin
-    OldValue := GetNativeValue;
-    vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
-    if vIsFlags and (csInit in cntStates) then begin
-      lValue := vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self];
-      RecreateFlags;
-    end;
-    NewValue := GetNativeValue;
-    DoAfterSet(OldValue, NewValue);
-    NotifyChanged(eContainer);
-    if vIsFlags and (csInit in cntStates) then begin
-      if vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] <> lValue then
+  BeginUpdate;
+  try
+    lValue := '';
+    if (not Assigned(dcDataBasePtr) or not Assigned(dcDataEndPtr)) or (aValue <> GetEditValue) then begin
+      OldValue := GetNativeValue;
+      vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
+      SetModified(True);
+      if vIsFlags and (csInit in cntStates) then begin
+        lValue := vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self];
         RecreateFlags;
+      end;
+      NewValue := GetNativeValue;
+      DoAfterSet(OldValue, NewValue);
+      NotifyChanged(eContainer);
+      if vIsFlags and (csInit in cntStates) then begin
+        if vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] <> lValue then
+          RecreateFlags;
+      end;
     end;
+  finally
+    EndUpdate;
   end;
 end;
 
@@ -17806,18 +17824,24 @@ begin
   if not wbEditAllowed then
     raise Exception.Create(GetName + ' can not be edited.');
 
-  OldValue := GetNativeValue;
-  vbValueDef.NativeValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
-  if vIsFlags and (csInit in cntStates) then begin
-    Reset;
-    Init;
-  end;
-  NewValue := GetNativeValue;
-  DoAfterSet(OldValue, NewValue);
-  NotifyChanged(eContainer);
-  if vIsFlags and (csInit in cntStates) then begin
-    Reset;
-    Init;
+  BeginUpdate;
+  try
+    OldValue := GetNativeValue;
+    vbValueDef.NativeValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
+    SetModified(True);
+    if vIsFlags and (csInit in cntStates) then begin
+      Reset;
+      Init;
+    end;
+    NewValue := GetNativeValue;
+    DoAfterSet(OldValue, NewValue);
+    NotifyChanged(eContainer);
+    if vIsFlags and (csInit in cntStates) then begin
+      Reset;
+      Init;
+    end;
+  finally
+    EndUpdate;
   end;
 end;
 
@@ -18924,12 +18948,18 @@ begin
   if not wbEditAllowed then
     raise Exception.Create(GetName + ' can not be edited.');
 
-  if aValue <> GetEditValue then begin
-    OldValue := GetNativeValue;
-    vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
-    NewValue := GetNativeValue;
-    DoAfterSet(OldValue, NewValue);
-    NotifyChanged(eContainer);
+  BeginUpdate;
+  try
+    if aValue <> GetEditValue then begin
+      OldValue := GetNativeValue;
+      vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
+      SetModified(True);
+      NewValue := GetNativeValue;
+      DoAfterSet(OldValue, NewValue);
+      NotifyChanged(eContainer);
+    end;
+  finally
+    EndUpdate;
   end;
 end;
 
@@ -18946,11 +18976,17 @@ begin
   if not wbEditAllowed then
     raise Exception.Create(GetName + ' can not be edited.');
 
-  OldValue := GetNativeValue;
-  vbValueDef.NativeValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
-  NewValue := GetNativeValue;
-  DoAfterSet(OldValue, NewValue);
-  NotifyChanged(eContainer);
+  BeginUpdate;
+  try
+    OldValue := GetNativeValue;
+    vbValueDef.NativeValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
+    SetModified(True);
+    NewValue := GetNativeValue;
+    DoAfterSet(OldValue, NewValue);
+    NotifyChanged(eContainer);
+  finally
+    EndUpdate;
+  end;
 end;
 
 procedure TwbValueBase.SetToDefaultInternal;
