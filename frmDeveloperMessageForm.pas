@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
-  JvExStdCtrls, JvRichEdit, FileContainer, dxGDIPlusClasses;
+  JvExStdCtrls, JvRichEdit, FileContainer, dxGDIPlusClasses, JvHtControls;
 
 type
   TfrmDeveloperMessage = class(TForm)
@@ -16,12 +16,15 @@ type
     fcMessage: TFileContainer;
     pnlElminster: TPanel;
     imgElminster: TImage;
+    fcMessageThanks: TFileContainer;
+    lblOops: TJvHTLabel;
     procedure FormCreate(Sender: TObject);
     procedure tmrEnableButtonTimer(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure lblOopsClick(Sender: TObject);
   private
-    { Private declarations }
+    procedure FixZoom;
   public
     { Public declarations }
   end;
@@ -35,45 +38,17 @@ uses
   frmViewMain,
   Vcl.Styles.Utils.SystemMenu;
 
-procedure TfrmDeveloperMessage.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  if not (btnCancel.Enabled or (ModalResult = mrOk)) then
-    Action := caNone;
-end;
-
-procedure TfrmDeveloperMessage.FormCreate(Sender: TObject);
-var
-  Stream: TStream;
-  OldSize: Integer;
-begin
-  OldSize := Font.Size;
-
-  wbApplyFontAndScale(Self);
-
-  Stream := fcMessage.CreateReadStream;
-  try
-    reMain.Lines.LoadFromStream(Stream);
-  finally
-    Stream.Free;
-  end;
-
-  if wbThemesSupported then
-    with TVclStylesSystemMenu.Create(Self) do begin
-      ShowNativeStyle := True;
-      MenuCaption := 'Theme';
-    end;
-end;
-
-procedure TfrmDeveloperMessage.FormShow(Sender: TObject);
+procedure TfrmDeveloperMessage.FixZoom;
 var
   CharCount : Integer;
   pt        : TPoint;
 begin
-  tmrEnableButton.Enabled := True;
-
   if RichEditVersion >= 3 then begin
     reMain.Zoom := reMain.Zoom - 1;
-    CharCount := Length(reMain.Text);
+    reMain.ClearSelection;
+    reMain.SelStart := 100000;
+    CharCount := reMain.SelStart + 1;
+    reMain.SelStart := 0;
     pt := reMain.GetCharPos(CharCount);
     while pt.Y < reMain.Height do begin
       reMain.Zoom := reMain.Zoom + 1;
@@ -91,6 +66,7 @@ begin
       reMain.Zoom := reMain.Zoom - 1;
       pt := reMain.GetCharPos(CharCount);
     end;
+    reMain.Zoom := reMain.Zoom - 2;
     pt := reMain.GetCharPos(80);
     pnlElminster.Top := reMain.Top + 10;
     pnlElminster.Height := pt.y - 20;
@@ -98,6 +74,61 @@ begin
     pnlElminster.Left := (reMain.Left + reMain.Width) - (pnlElminster.Width + 10);
   end else
     pnlElminster.Visible := False;
+end;
+
+procedure TfrmDeveloperMessage.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  if not (btnCancel.Enabled or (ModalResult = mrOk)) then
+    Action := caNone;
+end;
+
+procedure TfrmDeveloperMessage.FormCreate(Sender: TObject);
+var
+  Stream: TStream;
+begin
+  wbApplyFontAndScale(Self);
+
+  if wbPatron then begin
+    lblOops.Visible := True;
+    Stream := fcMessageThanks.CreateReadStream
+  end else
+    Stream := fcMessage.CreateReadStream;
+  try
+    reMain.Lines.LoadFromStream(Stream);
+  finally
+    Stream.Free;
+  end;
+
+  if wbThemesSupported then
+    with TVclStylesSystemMenu.Create(Self) do begin
+      ShowNativeStyle := True;
+      MenuCaption := 'Theme';
+    end;
+end;
+
+procedure TfrmDeveloperMessage.FormShow(Sender: TObject);
+begin
+  tmrEnableButton.Enabled := True;
+  FixZoom;
+end;
+
+procedure TfrmDeveloperMessage.lblOopsClick(Sender: TObject);
+var
+  Stream: TStream;
+begin
+  LockWindowUpdate(Handle);
+  try
+    lblOops.Visible := False;
+    Stream := fcMessage.CreateReadStream;
+    try
+      reMain.Lines.LoadFromStream(Stream);
+    finally
+      Stream.Free;
+    end;
+    FixZoom;
+  finally
+    LockWindowUpdate(0);
+  end;
 end;
 
 procedure TfrmDeveloperMessage.tmrEnableButtonTimer(Sender: TObject);
