@@ -2428,6 +2428,7 @@ begin
             if MainRecord.IsDeleted then begin
               case PrevDeleteResult of
                 mrYesToAll: Result := coDelete;
+                mrNoToAll: Result := coCopy;
               else
                 if Assigned(aTarget) then
                   s := 'The source' + CRLF + CRLF +
