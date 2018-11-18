@@ -1050,7 +1050,6 @@ type
     procedure DoAfterSet(const aOldValue, aNewValue: Variant); override;
     procedure SetParentModified; override;
 
-
     function DoBuildRef(aRemove: Boolean): Boolean;
     procedure BuildRef; override;
     procedure AddReferencedFromID(aFormID: TwbFormID); override;
@@ -7537,6 +7536,7 @@ procedure TwbMainRecord.ContainerChanged;
 var
   ContainedIn: IwbContainedIn;
 begin
+  mrInvalidateNameCache;
   if csInit in cntStates then
     if Supports(GetElementBySortOrder(-2 + GetAdditionalElementCount), IwbContainedIn, ContainedIn) then
       ContainedIn.ContainerChanged;
@@ -10992,6 +10992,7 @@ end;
 
 procedure TwbMainRecord.SetParentModified;
 begin
+  mrInvalidateNameCache;
   inherited;
   UpdateRefs;
 end;
