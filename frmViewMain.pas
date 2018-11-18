@@ -14804,6 +14804,9 @@ begin
   finally
     lvReferencedBy.Items.EndUpdate;
   end;
+
+  if Assigned(pgMain.ActivePage) then
+    pgMain.ActivePage.Visible := True;
 end;
 
 procedure TfrmMain.ShowChangeReferencedBy(OldFormID, NewFormID: TwbFormID; const ReferencedBy: TDynMainRecords; aSilent: Boolean);
