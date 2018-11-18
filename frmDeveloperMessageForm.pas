@@ -40,15 +40,18 @@ uses
 
 procedure TfrmDeveloperMessage.FixZoom;
 var
-  CharCount : Integer;
+  i, CharCount : Integer;
   pt        : TPoint;
 begin
   if RichEditVersion >= 3 then begin
+
     reMain.Zoom := reMain.Zoom - 1;
     reMain.ClearSelection;
     reMain.SelStart := 100000;
-    CharCount := reMain.SelStart + 1;
-    reMain.SelStart := 0;
+    i := reMain.SelStart;
+    reMain.SelText := #13#13;
+    reMain.SelStart := 100000;
+    CharCount := reMain.SelStart;
     pt := reMain.GetCharPos(CharCount);
     while pt.Y < reMain.Height do begin
       reMain.Zoom := reMain.Zoom + 1;
@@ -66,12 +69,16 @@ begin
       reMain.Zoom := reMain.Zoom - 1;
       pt := reMain.GetCharPos(CharCount);
     end;
-    reMain.Zoom := reMain.Zoom - 2;
     pt := reMain.GetCharPos(80);
     pnlElminster.Top := reMain.Top + 10;
     pnlElminster.Height := pt.y - 20;
     pnlElminster.Width := pnlElminster.Height;
     pnlElminster.Left := (reMain.Left + reMain.Width) - (pnlElminster.Width + 10);
+
+    reMain.SelStart := i;
+    reMain.SelLength := 1000;
+    reMain.SelText := '';
+    reMain.SelStart := 0;
   end else
     pnlElminster.Visible := False;
 end;
