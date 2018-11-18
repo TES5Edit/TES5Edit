@@ -11959,6 +11959,7 @@ begin
 
   if Count <> Length(cntElements) then begin
     UpdateCount := eUpdateCount;
+    SetModified(True);
     for i := 1 to UpdateCount do EndUpdate;
     case srArraySizePrefix of
       1: PByte(GetDataBasePtr)^ := Length(cntElements);
@@ -12011,7 +12012,10 @@ begin
 
   ResolvedDef := Resolve(srValueDef, GetDataBasePtr, dcDataEndPtr, Self);
   if Assigned(ResolvedDef) then
-    Result := ResolvedDef.CompareExchangeFormID(GetDataBasePtr, dcDataEndPtr, Self, aOldFormID, aNewFormID) or Result;
+    if ResolvedDef.CompareExchangeFormID(GetDataBasePtr, dcDataEndPtr, Self, aOldFormID, aNewFormID) then begin
+      SetModified(True);
+      Result := True;
+    end;
 end;
 
 constructor TwbSubRecord.Create(const aContainer: IwbContainer; const aSubRecordDef: IwbSubRecordDef);
@@ -17434,7 +17438,10 @@ begin
 
   ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
   if Assigned(ResolvedDef) then
-    Result := ResolvedDef.CompareExchangeFormID(GetDataBasePtr, dcDataEndPtr, Self, aOldFormID, aNewFormID) or Result;
+    if ResolvedDef.CompareExchangeFormID(GetDataBasePtr, dcDataEndPtr, Self, aOldFormID, aNewFormID) then begin
+      SetModified(True);
+      Result := True;
+    end;
 end;
 
 function TwbUnion.GetElementType: TwbElementType;
@@ -17566,7 +17573,10 @@ begin
 
   ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
   if Assigned(ResolvedDef) then
-    Result := ResolvedDef.CompareExchangeFormID(GetDataBasePtr, dcDataEndPtr, Self, aOldFormID, aNewFormID) or Result;
+    if ResolvedDef.CompareExchangeFormID(GetDataBasePtr, dcDataEndPtr, Self, aOldFormID, aNewFormID) then begin
+      SetModified(True);
+      Result := True;
+    end;
 end;
 
 function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; const aPrevFlags: TDynElementInternals): Boolean;
@@ -18603,6 +18613,7 @@ begin
   if Assigned(ValueDef) then begin
     OldValue := GetNativeValue;
     if ValueDef.SetToDefault(GetDataBasePtr, GetDataEndPtr, Self) then begin
+      SetModified(True);
       NewValue := GetNativeValue;
       DoAfterSet(OldValue, NewValue);
       NotifyChanged(eContainer);
