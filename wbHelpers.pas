@@ -143,7 +143,9 @@ function wbStripDotGhost(const aFileName: string): string;
 type
   TPassThroughFunc<T> = reference to function (const a: T): T;
 
-  TStringArrayHelper = record helper for TArray<string>
+  TDynStringArray = TArray<string>;
+
+  TStringArrayHelper = record helper for TDynStringArray
     function ForEach(const aFunc: TPassThroughFunc<string>): TArray<string>;
     function AddPrefix(const aPrefix: string): TArray<string>;
     function RemoveEmpty: TArray<string>;
@@ -153,7 +155,9 @@ type
     procedure Add(const s: string);
   end;
 
-  TPointerArrayHelper = record helper for TArray<Pointer>
+  TDynPointerArray = TArray<Pointer>;
+
+  TPointerArrayHelper = record helper for TDynPointerArray
     procedure Add(p: Pointer);
   end;
 
