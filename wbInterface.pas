@@ -485,6 +485,8 @@ type
     dtStructChapter
   );
 
+  TwbDefTypes = set of TwbDefType;
+
   TwbGroupTypes = set of Byte;
 
 var
@@ -1985,9 +1987,12 @@ type
     ['{04D6B7BA-B457-4E43-9910-592395FEA0D6}']
     function GetMember(aIndex: Integer): IwbValueDef;
     function GetMemberCount: Integer;
+    function GetMemberTypes:TwbDefTypes;
 
     property Members[aIndex: Integer]: IwbValueDef read GetMember;
     property MemberCount: Integer read GetMemberCount;
+    property MemberTypes: TwbDefTypes
+      read GetMemberTypes;
   end;
 
   IwbBaseStringDef = interface(IwbValueDef)
@@ -5118,6 +5123,7 @@ type
   protected {private}
     udDecider: TwbUnionDecider;
     udMembers: array of IwbValueDef;
+    udMemberTypes: TwbDefTypes;
     ubCanContainFormIDs: Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
@@ -5148,6 +5154,7 @@ type
     {---IwbUnionDef---}
     function GetMember(aIndex: Integer): IwbValueDef;
     function GetMemberCount: Integer;
+    function GetMemberTypes: TwbDefTypes;
   end;
 
 
@@ -15097,6 +15104,17 @@ end;
 function TwbUnionDef.GetMemberCount: Integer;
 begin
   Result := Length(udMembers);
+end;
+
+function TwbUnionDef.GetMemberTypes: TwbDefTypes;
+var
+  i        : Integer;
+begin
+  if udMemberTypes = [] then begin
+    for i := Low(udMembers) to High(udMembers) do
+      Include(udMemberTypes, udMembers[i].DefType);
+  end;
+  Result := udMemberTypes;
 end;
 
 function TwbUnionDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;

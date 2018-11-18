@@ -11618,6 +11618,36 @@ begin
   end;
 end;
 
+function wbUnionCreate(const aContainer  : IwbContainer;
+                         var aBasePtr    : Pointer;
+                             aEndPtr     : Pointer;
+                       const aValueDef   : IwbValueDef;
+                       const aNameSuffix : string;
+                             aDontCompare: Boolean = False): TwbValueBase; overload;
+var
+  UnionDef: IwbUnionDef;
+begin
+  if Supports(aValueDef, IwbUnionDef, UnionDef) and
+    (UnionDef.MemberTypes * [dtArray, dtStruct, dtStructChapter, dtUnion] <> []) then
+      Exit(TwbUnion.Create(aContainer, aBasePtr, aEndPtr, aValueDef, aNameSuffix, aDontCompare));
+
+  Result := TwbValue.Create(aContainer, aBasePtr, aEndPtr, aValueDef, aNameSuffix, aDontCompare);
+end;
+
+function wbUnionCreate(const aContainer  : IwbContainer;
+                       const aValueDef   : IwbValueDef;
+                       const aSource     : IwbElement;
+                       const aOnlySK     : Boolean;
+                       const aNameSuffix : string): TwbValueBase; overload;
+var
+  UnionDef: IwbUnionDef;
+begin
+  if Supports(aValueDef, IwbUnionDef, UnionDef) and
+    (UnionDef.MemberTypes * [dtArray, dtStruct, dtStructChapter, dtUnion] <> []) then
+      Exit(TwbUnion.Create(aContainer, aValueDef, aSource, aOnlySK, aNameSuffix));
+
+  Result := TwbValue.Create(aContainer, aValueDef, aSource, aOnlySK, aNameSuffix);
+end;
 
 function TwbSubRecord.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
 var
@@ -11680,7 +11710,7 @@ begin
               dtArray: Result := TwbArray.Create(Self, ValueDef, aElement, not aDeepCopy, s);
               dtStruct: Result := TwbStruct.Create(Self, ValueDef, aElement, not aDeepCopy, s);
               dtStructChapter: Result := TwbChapter.Create(Self, ValueDef, aElement, not aDeepCopy, s);
-              dtUnion: Result := TwbUnion.Create(Self, ValueDef, aElement, not aDeepCopy, s);
+              dtUnion: Result := wbUnionCreate(Self, ValueDef, aElement, not aDeepCopy, s);
             else
               Result := TwbValue.Create(Self, ValueDef, aElement, not aDeepCopy, s);
             end;
@@ -11808,7 +11838,7 @@ begin
                     dtArray: Element := TwbArray.Create(Self, ValueDef, aElement, aOnlySK, s);
                     dtStruct: Element := TwbStruct.Create(Self, ValueDef, aElement, aOnlySK, s);
                     dtStructChapter: Element := TwbChapter.Create(Self, ValueDef, aElement, aOnlySK, s);
-                    dtUnion: Element := TwbUnion.Create(Self, ValueDef, aElement, aOnlySK, s);
+                    dtUnion: Element := wbUnionCreate(Self, ValueDef, aElement, aOnlySK, s);
                   else
                     Element := TwbValue.Create(Self, ValueDef, aElement, aOnlySK, s);
                   end;
@@ -12116,7 +12146,7 @@ begin
         dtArray: Element := TwbArray.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
         dtStruct: Element := TwbStruct.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
         dtStructChapter: Element := TwbChapter.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
-        dtUnion: Element := TwbUnion.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
+        dtUnion: Element := wbUnionCreate(Self, BasePtr, dcDataEndPtr, ValueDef, '');
       else
         Element := TwbValue.Create(Self, BasePtr, dcDataEndPtr, ValueDef, '');
       end;
@@ -16817,7 +16847,7 @@ begin
         dtArray: Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
         dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
         dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
-        dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
+        dtUnion: Element := wbUnionCreate(aContainer, aBasePtr, aEndPtr, ValueDef, t);
         dtString: begin
           if Assigned(aBasePtr) and (PAnsiChar(aBasePtr)^ = #0) and (ValueDef.IsVariableSize) then begin
             Inc(PByte(aBasePtr));
@@ -16906,7 +16936,7 @@ begin
       dtArray: Result := TwbArray.Create(Self, ValueDef, aElement, not aDeepCopy, s);
       dtStruct: Result := TwbStruct.Create(Self, ValueDef, aElement, not aDeepCopy, s);
       dtStructChapter: Result := TwbChapter.Create(Self, ValueDef, aElement, not aDeepCopy, s);
-      dtUnion: Result := TwbUnion.Create(Self, ValueDef, aElement, not aDeepCopy, s);
+      dtUnion: Result := wbUnionCreate(Self, ValueDef, aElement, not aDeepCopy, s);
     else
       Result := TwbValue.Create(Self, ValueDef, aElement, not aDeepCopy, s);
     end;
@@ -16998,7 +17028,7 @@ begin
           dtArray: Element := TwbArray.Create(Self, ValueDef, aElement, aOnlySK, s);
           dtStruct: Element := TwbStruct.Create(Self, ValueDef, aElement, aOnlySK, s);
           dtStructChapter: Element := TwbChapter.Create(Self, ValueDef, aElement, aOnlySK, s);
-          dtUnion: Element := TwbUnion.Create(Self, ValueDef, aElement, aOnlySK, s);
+          dtUnion: Element := wbUnionCreate(Self, ValueDef, aElement, aOnlySK, s);
         else
           Element := TwbValue.Create(Self, ValueDef, aElement, aOnlySK, s);
         end;
@@ -17252,7 +17282,7 @@ begin
       dtArray: Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
       dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
       dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-      dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtUnion: Element := wbUnionCreate(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     else
       Element := TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     end;
@@ -17376,7 +17406,7 @@ begin
       end;
       dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
       dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-      dtUnion: Element := TwbUnion.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtUnion: Element := wbUnionCreate(aContainer, aBasePtr, aEndPtr, ValueDef, '');
     else
       Element := nil; // >>> so that simple union behave as they did <<< TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
       if ValueDoInit(aValueDef, aContainer, aBasePtr, aEndPtr, aContainer, nil) then Result := ufFlags;
@@ -19705,7 +19735,7 @@ begin
       dtArray: Element := TwbArray.Create(Self, currentPtr, flEndPtr, ValueDef, '');
       dtStruct: Element := TwbStruct.Create(Self, currentPtr, flEndPtr, ValueDef, '');
       dtStructChapter: Element := TwbChapter.Create(Self, currentPtr, flEndPtr, ValueDef, '');
-      dtUnion: Element := TwbUnion.Create(Self, currentPtr, flEndPtr, ValueDef, '');
+      dtUnion: Element := wbUnionCreate(Self, currentPtr, flEndPtr, ValueDef, '');
     else
       Element := TwbValue.Create(Self, currentPtr, flEndPtr, ValueDef, '');
     end;
