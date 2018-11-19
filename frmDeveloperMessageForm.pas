@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
-  JvExStdCtrls, JvRichEdit, FileContainer, dxGDIPlusClasses, JvHtControls;
+  JvExStdCtrls, JvRichEdit, FileContainer, JvHtControls;
 
 type
   TfrmDeveloperMessage = class(TForm)
@@ -18,6 +18,7 @@ type
     imgElminster: TImage;
     fcMessageThanks: TFileContainer;
     lblOops: TJvHTLabel;
+    fcImage: TFileContainer;
     procedure FormCreate(Sender: TObject);
     procedure tmrEnableButtonTimer(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -94,6 +95,13 @@ var
   Stream: TStream;
 begin
   wbApplyFontAndScale(Self);
+
+  Stream := fcImage.CreateReadStream;
+  try
+    imgElminster.Picture.LoadFromStream(Stream);
+  finally
+    Stream.Free;
+  end;
 
   if wbPatron then begin
     lblOops.Visible := True;
