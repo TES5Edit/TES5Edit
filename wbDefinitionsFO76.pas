@@ -9591,8 +9591,8 @@ begin
   ]));
 
   wbCVPA := wbArrayS(CVPA, 'Unknown', wbStructSK([0], 'Unknown', [
-    wbFormIDCk('Keyword', [KYWD]),
-    wbByteArray('Unknown', 4),
+    wbFormIDCk('Scrap Count Keyword', [KYWD]),
+    wbInteger('Scrap Component Count', itU32),
     wbUnion('Curve Table', wbDeciderFormVersion152, [
       wbEmpty('Unused'),
       wbFormIDCk('Curve Table', [CURV, NULL])
