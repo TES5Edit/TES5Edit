@@ -14917,7 +14917,7 @@ begin
     ], cpNormal, True),
     wbStructs(MCQP, 'Components', 'Component', [  // MCQP probably replaced CVPA
       wbFormIDCk('Component', sigBaseObjects),
-      wbFormIDCk('Keyword', [KYWD])
+      wbFormIDCk('Component Count Keyword', [KYWD])
     ]),
     wbUnknown(AQIC),
     wbFormIDCk(DIQO, 'Quest', [QUST]),
