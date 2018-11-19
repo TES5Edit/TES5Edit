@@ -14756,9 +14756,11 @@ begin
           end;
         end;
         vstView.NodeDataSize := SizeOf(TViewNodeData) * Length(ActiveRecords);
-        vstView.RootNodeCount := (ActiveMaster.Def as IwbRecordDef).MemberCount + ActiveMaster.AdditionalElementCount;
-        InitConflictStatus(vstView.RootNode, ActiveMaster.IsInjected and not (ActiveMaster.Signature = 'GMST'), @ActiveRecords[0]);
-        ExpandView;
+        if Assigned(ActiveMaster) and Assigned(ActiveMaster.Def) then begin
+          vstView.RootNodeCount := (ActiveMaster.Def as IwbRecordDef).MemberCount + ActiveMaster.AdditionalElementCount;
+          InitConflictStatus(vstView.RootNode, ActiveMaster.IsInjected and not (ActiveMaster.Signature = 'GMST'), @ActiveRecords[0]);
+          ExpandView;
+        end;
 
         SetViewNodePositionLabel(ViewLabel);
         UpdateColumnWidths;
@@ -16406,9 +16408,6 @@ begin
       else
         Style := Style - [fsUnderline];
     end;
-
-    if ActiveRecords[0].ConflictAll = caUnknown then
-      Assert(False);
 
     if ActiveRecords[0].ConflictAll >= caNoConflict then
       Sender.Background := wbLighter(ConflictAllToColor(ActiveRecords[0].ConflictAll), 0.85);
