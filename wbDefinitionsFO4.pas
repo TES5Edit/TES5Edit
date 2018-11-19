@@ -10391,9 +10391,24 @@ begin
     wbEffectsReq
   ]);
 
-  {wbRecord(EYES, 'Eyes', [
-    wbEDID
-  ]);}
+  wbRecord(EYES, 'Eyes',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Non-Playable'
+    ])), [
+    wbEDID,
+    wbFULLReq,
+    wbString(ICON, 'Texture', 0, cpNormal, True),
+    wbInteger(DATA, 'Flags', itU8, wbFlags([
+      {0x01}'Playable',
+      {0x02}'Not Male',
+      {0x04}'Not Female',
+      {0x08}'Unknown 4',
+      {0x10}'Unknown 5',
+      {0x20}'Unknown 6',
+      {0x40}'Unknown 7',
+      {0x80}'Unknown 8'
+    ]), cpNormal, True)
+  ]);
 
   wbRecord(FACT, 'Faction', [
     wbEDID,
@@ -16570,6 +16585,7 @@ begin
   ]);
 
   wbRecord(NOCM, 'Navigation Mesh Obstacle Manager', [
+    wbEDID,
     wbRArray('Unknown',
       wbRStruct('Unknown', [
         wbInteger(INDX, 'Index', itU32),
@@ -16657,6 +16673,7 @@ begin
   ]);
 
   wbRecord(OVIS, 'Object Visibility Manager', [
+    wbEDID,
     wbRArray('Unknown',
       wbRStruct('Unknown', [
         wbFormIDCk(INDX, 'Object', [STAT]),
@@ -16920,7 +16937,7 @@ begin
    wbAddGroupOrder(CLAS);
    wbAddGroupOrder(FACT);
    wbAddGroupOrder(HDPT);
-   //wbAddGroupOrder(EYES);
+   wbAddGroupOrder(EYES);
    wbAddGroupOrder(RACE);
    wbAddGroupOrder(SOUN);
    wbAddGroupOrder(ASPC);
