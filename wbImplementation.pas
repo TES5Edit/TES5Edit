@@ -4135,6 +4135,7 @@ var
   CurrentPtr  : Pointer;
   HEDR        : IwbRecord;
   MasterFiles : IwbContainerElementRef;
+  MasterFilesAdded : Boolean;
   s           : string;
   Rec         : IwbRecord;
   i, j        : Integer;
@@ -4201,11 +4202,21 @@ begin
     end;
 
     if flCompareTo <> '' then begin
-      if fsIsDeltaPatch in flStates then
+      if fsIsDeltaPatch in flStates then begin
+        MasterFilesAdded := False;
+        if not Assigned(MasterFiles) then begin
+          MasterFiles := Header.Add('Master Files', True) as IwbContainerElementRef;
+          MasterFilesAdded := True;
+        end;
         if Assigned(MasterFiles) then begin
           if wbBeginInternalEdit(True) then try
             j := MasterFiles.ElementCount;
-            MasterFiles.Assign(High(Integer), nil, False);
+            if MasterFilesAdded then
+              MasterFiles.Assign(High(Integer), nil, False)
+            else begin
+              Assert(j=1);
+              Dec(j);
+            end;
             Assert(MasterFiles.ElementCount = Succ(j));
             Rec := (MasterFiles[j] as IwbContainer).RecordBySignature['MAST'];
 
@@ -4218,6 +4229,7 @@ begin
           end;
         end else
           raise Exception.Create('Delta patch source file must have at least one existing master');
+      end;
       AddMaster(flCompareTo);
     end;
 
