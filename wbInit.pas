@@ -244,6 +244,15 @@ begin
       finally
         sl.Free;
       end;
+
+      if not Settings.ReadBool('Init', 'FirstStart', False) then try
+        Settings.WriteBool('Init', 'FirstStart', True);
+        if VersionString.Minor mod 2 = 0 then begin
+          wbNoGitHubCheck := True;
+          Settings.WriteBool('Options', 'NoGitHubCheck', wbNoGitHubCheck);
+        end;
+        Settings.UpdateFile;
+      except end;
     finally
       Settings.Free;
     end;

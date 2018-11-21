@@ -14645,10 +14645,11 @@ begin
       vstView.RootNodeCount := (aMainRecords[0].Def as IwbRecordDef).MemberCount + aMainRecords[0].AdditionalElementCount;
       InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
       ExpandView;
-      pgMain.ActivePage := tbsView;
+      UpdateColumnWidths;
     finally
       vstView.EndUpdate;
     end;
+    pgMain.ActivePage := tbsView;
     tbsReferencedBy.TabVisible := False;
   finally
     lvReferencedBy.Items.EndUpdate;
