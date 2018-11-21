@@ -160,6 +160,10 @@ type
     procedure Execute; override;
   end;
 
+  TwbCheckNexusModsReleaseThread = class(TwbThread)
+    procedure Execute; override;
+  end;
+
   TLOOTPluginInfo = record
     Plugin: string;
     CRC32: TwbCRC32;
@@ -399,6 +403,7 @@ type
     bnPatreon: TSpeedButton;
     jbhPatreon: TJvBalloonHint;
     jbhGitHub: TJvBalloonHint;
+    jbhNexusMods: TJvBalloonHint;
     N25: TMenuItem;
     N26: TMenuItem;
     N27: TMenuItem;
@@ -655,8 +660,10 @@ type
     procedure fpnlViewFilterResize(Sender: TObject);
     procedure jbhPatreonBalloonClick(Sender: TObject);
     procedure jbhGitHubBalloonClick(Sender: TObject);
+    procedure jbhNexusModsBalloonClick(Sender: TObject);
     procedure jbhPatreonCloseBtnClick(Sender: TObject; var CanClose: Boolean);
     procedure jbhGitHubCloseBtnClick(Sender: TObject; var CanClose: Boolean);
+    procedure jbhNexusModsCloseBtnClick(Sender: TObject; var CanClose: Boolean);
     procedure pmuMainPopup(Sender: TObject);
     procedure bnMainMenuMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure mniMainSaveClick(Sender: TObject);
@@ -695,7 +702,10 @@ type
     HideRemoveMessage : Boolean;
 
     GitHubVersion  : TwbVersion;
-    ShowGitHubHint : Boolean;
+    ShowGitHubHint : TDateTime;
+
+    NexusModsVersion  : TwbVersion;
+    ShowNexusModsHint : TDateTime;
 
     function GetRefBySelectionAsMainRecords: TDynMainRecords;
     function GetRefBySelectionAsElements: TDynElements;
@@ -908,6 +918,7 @@ type
     PluggyLinkThread: TwbThread;
 
     CheckGitHubReleaseThread: TwbCheckGitHubReleaseThread;
+    CheckNexusModsReleaseThread: TwbCheckNexusModsReleaseThread;
 
     FileCRCs: TwbFastStringListIC;
 
@@ -4945,6 +4956,7 @@ begin
 
       wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
       wbNoGitHubCheck := Settings.ReadBool('Options', 'NoGitHubCheck', wbNoGitHubCheck);
+      wbNoNexusModsCheck := Settings.ReadBool('Options', 'NoNexusModsCheck', wbNoNexusModsCheck);
 
       TLoaderThread.Create(sl);
     finally
@@ -5031,6 +5043,8 @@ begin
         end else
           jbhPatreon.ActivateHint(bnPatreon, 'Your support is essential to ensure further xEdit development.', 'Patreon', 15000);
 
+    if not wbNoNexusModsCheck then
+      CheckNexusModsReleaseThread := TwbCheckNexusModsReleaseThread.Create;
     if not wbNoGitHubCheck then
       CheckGitHubReleaseThread := TwbCheckGitHubReleaseThread.Create;
   end;
@@ -5638,6 +5652,13 @@ begin
       FreeAndNil(CheckGitHubReleaseThread)
     else
       TerminateThread(CheckGitHubReleaseThread.Handle, 0);
+  end;
+
+  if Assigned(CheckNexusModsReleaseThread) then begin
+    if CheckNexusModsReleaseThread.Finished then
+      FreeAndNil(CheckNexusModsReleaseThread)
+    else
+      TerminateThread(CheckNexusModsReleaseThread.Handle, 0);
   end;
 
   if not SaveChanged then begin
@@ -6887,11 +6908,26 @@ begin
   jbhGitHub.CancelHint;
 end;
 
+procedure TfrmMain.jbhNexusModsBalloonClick(Sender: TObject);
+begin
+  bnNexusMods.Click;
+  jbhNexusMods.CancelHint;
+end;
+
 procedure TfrmMain.jbhGitHubCloseBtnClick(Sender: TObject; var CanClose: Boolean);
 begin
   if Assigned(Settings) and (GitHubVersion.Major > 0) then begin
-    Settings.WriteString('GetHub', 'SnoozeVersion', GitHubVersion.ToString);
-    Settings.WriteInteger('GetHub', 'SnoozeDate', Trunc(Now));
+    Settings.WriteString('GitHub', 'SnoozeVersion', GitHubVersion.ToString);
+    Settings.WriteInteger('GitHub', 'SnoozeDate', Trunc(Now));
+    Settings.UpdateFile;
+  end;
+end;
+
+procedure TfrmMain.jbhNexusModsCloseBtnClick(Sender: TObject; var CanClose: Boolean);
+begin
+  if Assigned(Settings) and (NexusModsVersion.Major > 0) then begin
+    Settings.WriteString('NexusMods', 'SnoozeVersion', NexusModsVersion.ToString);
+    Settings.WriteInteger('NexusMods', 'SnoozeDate', Trunc(Now));
     Settings.UpdateFile;
   end;
 end;
@@ -7699,11 +7735,14 @@ var
   LastNexusModsClick: TDateTime;
 
 procedure TfrmMain.bnNexusModsClick(Sender: TObject);
+var
+  Dummy: Boolean;
 begin
   if Now - LastNexusModsClick > 1/24/60/60 then begin
     ShellExecute(Handle, 'open', PChar(wbNexusModsUrl), '', '', SW_SHOWNORMAL);
     LastNexusModsClick := Now;
   end;
+  jbhNexusModsCloseBtnClick(Sender, Dummy);
 end;
 
 var
@@ -12769,6 +12808,7 @@ begin
     cbShowTip.Checked := wbShowTip;
     cbPatron.Checked := wbPatron;
     cbNoGitHubCheck.Checked := wbNoGitHubCheck;
+    cbNoNexusModsCheck.Checked := wbNoNexusModsCheck;
     cbTrackAllEditorID.Checked := wbTrackAllEditorID;
     cbUDRSetXESP.Checked := wbUDRSetXESP;
     cbUDRSetScale.Checked := wbUDRSetScale;
@@ -12818,6 +12858,7 @@ begin
     wbShowTip := cbShowTip.Checked;
     wbPatron := cbPatron.Checked;
     wbNoGitHubCheck := cbNoGitHubCheck.Checked;
+    wbNoNexusModsCheck := cbNoNexusModsCheck.Checked;
     wbTrackAllEditorID := cbTrackAllEditorID.Checked;
     wbUDRSetXESP := cbUDRSetXESP.Checked;
     wbUDRSetScale := cbUDRSetScale.Checked;
@@ -12858,6 +12899,7 @@ begin
     Settings.WriteBool('Options', 'ShowTip', wbShowTip);
     Settings.WriteBool('Options', 'Patron', wbPatron);
     Settings.WriteBool('Options', 'NoGitHubCheck', wbNoGitHubCheck);
+    Settings.WriteBool('Options', 'NoNexusModsCheck', wbNoNexusModsCheck);
     Settings.WriteBool('Options', 'UDRSetXESP', wbUDRSetXESP);
     Settings.WriteBool('Options', 'UDRSetScale', wbUDRSetScale);
     Settings.WriteFloat('Options', 'UDRSetScaleValue', wbUDRSetScaleValue);
@@ -15572,15 +15614,35 @@ var
   ChangesMade : Boolean;
   i, dummy: Integer;
 begin
-  if ShowGitHubHint then
-    if GitHubVersion > VersionString then
-      if not jbhPatreon.Active then begin
+  if (ShowNexusModsHint <> 0) and (ShowNexusModsHint < Now) then
+    if NexusModsVersion > VersionString then begin
+      if not (jbhPatreon.Active or jbhGitHub.Active) then begin
+        bnNexusMods.ShowHint := True;
+        bnNexusMods.Hint := 'A newer version is available on NexusMods: ' + NexusModsVersion;
+        if NexusModsVersion > TwbVersion(Settings.ReadString('NexusMods', 'SnoozeVersion', '')) then
+          jbhNexusMods.ActivateHint(bnNexusMods, bnNexusMods.Hint, '', 20000);
+        ShowNexusModsHint := 0;
+      end;
+    end else begin
+      bnNexusMods.ShowHint := True;
+      bnNexusMods.Hint := 'Current version on NexusMods: ' + NexusModsVersion;
+      ShowNexusModsHint := 0;
+    end;
+
+  if (ShowGitHubHint <> 0) and (ShowGitHubHint < Now) then
+    if GitHubVersion > VersionString then begin
+      if not (jbhPatreon.Active or jbhNexusMods.Active) then begin
         bnGitHub.ShowHint := True;
         bnGitHub.Hint := 'A newer version is available on GitHub: ' + GitHubVersion;
-        if GitHubVersion > TwbVersion(Settings.ReadString('GetHub', 'SnoozeVersion', '')) then
+        if GitHubVersion > TwbVersion(Settings.ReadString('GitHub', 'SnoozeVersion', '')) then
           jbhGitHub.ActivateHint(bnGitHub, bnGitHub.Hint, '', 20000);
-        ShowGitHubHint := False;
+        ShowGitHubHint := 0;
       end;
+    end else begin
+      bnGitHub.ShowHint := True;
+      bnGitHub.Hint := 'Current version on GitHub: ' + GitHubVersion;
+      ShowGitHubHint := 0;
+    end;
 
   if Assigned(NewMessages) and (NewMessages.Count > 0) then begin
     mmoMessages.Lines.AddStrings(NewMessages);
@@ -20105,7 +20167,45 @@ begin
   Synchronize(procedure begin
     if Assigned(frmMain) then begin
       frmMain.GitHubVersion := vmax;
-      frmMain.ShowGitHubHint := True;
+      frmMain.ShowGitHubHint := Now + (1/24/60/6); // 10 seconds
+    end;
+  end);
+end;
+
+{ TwbCheckNexusModsReleaseThread }
+
+procedure TwbCheckNexusModsReleaseThread.Execute;
+var
+  i: Integer;
+  s: string;
+  vmax: TwbVersion;
+const
+  csCheckFor = 'property="twitter:label1" content="version"';
+  csExtractAfter = 'property="twitter:data1" content="';
+begin
+  if wbNexusModsUrl = '' then
+    Exit;
+
+  vmax := '';
+  try
+    s := GetUrlContent(wbNexusModsUrl);
+    s := s.ToLowerInvariant;
+    if s.Contains(csCheckFor) then begin
+      i := Pos(csExtractAfter, s);
+      if i > 0 then begin
+        Delete(s, 1, i + Pred(Length(csExtractAfter)));
+        i := Pos('"', s);
+        if i > 0 then begin
+          Delete(s, i, High(Integer));
+          vmax := s;
+        end;
+      end;
+    end;
+  except end;
+  Synchronize(procedure begin
+    if Assigned(frmMain) then begin
+      frmMain.NexusModsVersion := vmax;
+      frmMain.ShowNexusModsHint := Now + (1/24/60/6); // 10 seconds
     end;
   end);
 end;

@@ -24,6 +24,16 @@ The following reported issues have been fixed:
 * (reported on discord) - Compare Selected does not initially use the correct Column Width mode
 * (found by developer) - Clicking the OK button in the Module Selection Form does not always behave the same as pressing `Enter`
 
+## Update check on NexusMods
+
+xEdit will automatically perform a check for a newer version on NexusMods
+
+This can be turned of with the "Don't check for NexusMods update" option.
+
+If an update is available, a balloon hint will be shown under the NexusMods button on start.
+
+If xEdit is an even minor version (e.g. 4.0.x, 4.2.x, ...) when it is started for the first time (after this change) then update checking on GitHub is initially disabled (but can be turned on in the Options).
+
 # What's new in xEdit 3.3.5 BETA?
 
 ## Developer message update
@@ -706,7 +716,7 @@ Buttons have been added to the top right corner of the main window to open:
 
 xEdit will automatically perform a check for a newer version on GitHub
 
-This can be turned of with the "Don't check for GitHub update" function.
+This can be turned of with the "Don't check for GitHub update" option.
 
 If an update is available, a balloon hint will be shown under the GitHub button on start.
 
