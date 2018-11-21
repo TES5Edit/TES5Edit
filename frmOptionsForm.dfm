@@ -207,13 +207,23 @@ object frmOptions: TfrmOptions
       end
       object cbNoGitHubCheck: TCheckBox
         Left = 266
-        Top = 108
+        Top = 131
         Width = 169
         Height = 17
         BiDiMode = bdRightToLeftReadingOnly
         Caption = 'Don'#39't check for GitHub update'
         ParentBiDiMode = False
         TabOrder = 19
+      end
+      object cbNoNexusModsCheck: TCheckBox
+        Left = 266
+        Top = 108
+        Width = 169
+        Height = 17
+        BiDiMode = bdRightToLeftReadingOnly
+        Caption = 'Don'#39't check for NexusMods update'
+        ParentBiDiMode = False
+        TabOrder = 20
       end
     end
     object tsCleaning: TTabSheet
