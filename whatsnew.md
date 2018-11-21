@@ -21,6 +21,7 @@ The following reported issues have been fixed:
 
 * (reported on discord) - TOC building does not work on Win7
 * (reported on discord) - while in "Fit All" column width mode, it is not possible to manually increase the width of columns
+* (found by developer) - Clicking the OK button in the Module Selection Form does not always behave the same as pressing `Enter`
 
 # What's new in xEdit 3.3.5 BETA?
 

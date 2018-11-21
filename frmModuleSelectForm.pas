@@ -78,6 +78,7 @@ type
     procedure acPresetSaveUpdate(Sender: TObject);
     procedure acPresetLoadExecute(Sender: TObject);
     procedure cbPresetKeyPress(Sender: TObject; var Key: Char);
+    procedure btnOKClick(Sender: TObject);
   private
     ChangingChecked : Integer;
     procedure SimulateLoad;
@@ -616,6 +617,14 @@ begin
   Left := btnCancel.Left;
   btnCancel.Left := btnOK.Left;
   btnOK.Left := Left;
+end;
+
+procedure TfrmModuleSelect.btnOKClick(Sender: TObject);
+begin
+  if Length(SelectedModules)=0 then
+    DoSingleModuleLoad;
+  if not btnOK.Enabled then
+    ModalResult := mrNone;
 end;
 
 procedure TfrmModuleSelect.cbPresetKeyPress(Sender: TObject; var Key: Char);
