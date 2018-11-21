@@ -2287,6 +2287,92 @@ begin
   Result := wbAliasToStr(aInt, Container.ElementBySignature['ALEQ'] , aType);
 end;
 
+function wbCTDAParam1StringToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  Container  : IwbContainerElementRef;
+begin
+  Result := 0;
+
+  if not Assigned(aElement) then
+    Exit;
+
+  Container := GetContainerFromUnion(aElement) as IwbContainerElementRef;
+  if not Assigned(Container) then
+    Exit;
+
+  Container.ElementEditValues['..\CIS1'] := aString
+end;
+
+function wbCTDAParam1StringToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Container  : IwbContainerElementRef;
+begin
+  case aType of
+    ctToStr, ctToSortKey, ctToEditValue, ctToNativeValue: begin
+      Result := '';
+
+      if not Assigned(aElement) then
+        Exit;
+
+      Container := GetContainerFromUnion(aElement) as IwbContainerElementRef;
+      if not Assigned(Container) then
+        Exit;
+
+      if aType in [ctToEditValue, ctToNativeValue] then
+        Result := Container.ElementEditValues['..\CIS1']
+      else
+        Result := Container.ElementValues['..\CIS1'];
+    end;
+    ctCheck, ctEditType, ctEditInfo, ctLinksTo:
+      Result := '';
+  else
+    Result := IntToStr(aInt);
+  end;
+end;
+
+function wbCTDAParam2StringToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  Container  : IwbContainerElementRef;
+begin
+  Result := 0;
+
+  if not Assigned(aElement) then
+    Exit;
+
+  Container := GetContainerFromUnion(aElement) as IwbContainerElementRef;
+  if not Assigned(Container) then
+    Exit;
+
+  Container.ElementEditValues['..\CIS2'] := aString
+end;
+
+function wbCTDAParam2StringToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Container  : IwbContainerElementRef;
+begin
+  case aType of
+    ctToStr, ctToSortKey, ctToEditValue, ctToNativeValue: begin
+      Result := '';
+
+      if not Assigned(aElement) then
+        Exit;
+
+      Container := GetContainerFromUnion(aElement) as IwbContainerElementRef;
+      if not Assigned(Container) then
+        Exit;
+
+      if aType in [ctToEditValue, ctToNativeValue] then
+        Result := Container.ElementEditValues['..\CIS2']
+      else
+        Result := Container.ElementValues['..\CIS2'];
+    end;
+    ctCheck, ctEditType, ctEditInfo, ctLinksTo:
+      Result := '';
+  else
+    Result := IntToStr(aInt);
+  end;
+end;
+
 function wbConditionAliasToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Container  : IwbContainer;
@@ -7617,13 +7703,15 @@ begin
   wbENLT := wbUnknown(ENLT);
   wbENLS := wbFloat(ENLS);
   wbAUUV := wbStruct(AUUV, 'Unknown', [
-    { 0} wbByteArray('Unknown', 4).IncludeFlag(dfNoReport),
+    { 0} wbByteArray('Unknown', 1).IncludeFlag(dfNoReport),
+    { 1} wbByteArray('Padding?', 3, cpIgnore).IncludeFlag(dfNoReport),
     { 4} wbFloat('Unknown'),
     { 8} wbFloat('Unknown'),
     {12} wbFloat('Unknown'),
     {16} wbFloat('Unknown'),
     {20} wbFloat('Unknown'),
-    {24} wbUnknown
+    {24} wbByteArray('Unknown', 1).IncludeFlag(dfNoReport),
+    {25} wbByteArray('Padding?', 3, cpIgnore).IncludeFlag(dfNoReport)
   ]);
   wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
   wbXALG := wbUnknown(XALG).IncludeFlag(dfNoReport);
@@ -9164,7 +9252,7 @@ begin
         { 0 ptNone}
         wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
         { 1 ptString}
-        wbByteArray('String', 4),
+        wbInteger('String', itU32, wbCTDAParam1StringToString, wbCTDAParam1StringToInt),
         { 2 ptInteger}
         wbInteger('Integer', itS32),
         { 3 ptFloat}
@@ -9299,7 +9387,7 @@ begin
         { 0 ptNone}
         wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
         { 1 ptString}
-        wbByteArray('String', 4),
+        wbInteger('String', itU32, wbCTDAParam2StringToString, wbCTDAParam2StringToInt),
         { 2 ptInteger}
         wbInteger('Integer', itS32),
         { 3 ptFloat}
@@ -17955,9 +18043,9 @@ begin
     wbRArray('Naming Rules',
       wbRStruct('Ruleset', [
         wbInteger(VNAM, 'Count', itU32),
-        // should not be sorted
+        // should not be sorted, but can be aligned
         wbRArray('Names',
-          wbRStruct('Name', [
+          wbRStructSK([3, 0], 'Name', [
             wbLStringKC(WNAM, 'Text', 0, cpTranslate),
             wbKeywords,
             wbStruct(XNAM, 'Property', [
