@@ -596,6 +596,7 @@ type
     procedure mniNavLocalizationSwitchClick(Sender: TObject);
     procedure mniMainLocalizationLanguageClick(Sender: TObject);
     procedure mniNavFilterForCleaningClick(Sender: TObject);
+    procedure mniNavFilterForOnlyOneClick(Sender: TObject);
     procedure mniNavCreateSEQFileClick(Sender: TObject);
     procedure vstNavExpanding(Sender: TBaseVirtualTree; Node: PVirtualNode;
       var Allowed: Boolean);
@@ -826,6 +827,7 @@ type
     FilterApplied: Boolean;
     FilterNoGameMaster: Boolean;
     FilterConflictOnly: Boolean;
+    FilterOnlyOne: Boolean;
 
     FilterConflictAll: Boolean;
     FilterConflictAllSet: TConflictAllSet;
@@ -1951,6 +1953,45 @@ procedure TfrmMain.ConflictLevelForMainRecord(const aMainRecord: IwbMainRecord; 
 
 var
   NodeDatas                   : TDynViewNodeDatas;
+
+  function IsCompareToSame: Boolean;
+  var
+    MainRecordMaster, MainRecordOverride: IwbMainRecord;
+    FileMaster, FileOverride: IwbFile;
+  begin
+    Result := False;
+
+    if Length(NodeDatas) <> 2 then
+      Exit;
+
+    if not Supports(NodeDatas[0].Element, IwbMainRecord, MainRecordMaster) then
+      Exit;
+    if MainRecordMaster.Modified then
+      Exit;
+
+    if not Supports(NodeDatas[1].Element, IwbMainRecord, MainRecordOverride) then
+      Exit;
+    if MainRecordOverride.Modified then
+      Exit;
+
+    FileOverride := MainRecordOverride._File;
+    if not Assigned(FileOverride) then
+      Exit;
+
+    if not (fsCompareToHasSameMasters in FileOverride.FileStates) then
+      Exit;
+
+    FileMaster := MainRecordMaster._File;
+    if not Assigned(FileMaster) then
+      Exit;
+
+    if not FileMaster.Equals(FileOverride.CompareToFile) then
+      Exit;
+
+    Result := MainRecordMaster.ContentEquals(MainRecordOverride);
+  end;
+
+var
   i                           : Integer;
   Master                      : IwbMainRecord;
   KeepAliveRoot               : IwbKeepAliveRoot;
@@ -1975,12 +2016,24 @@ begin
       aConflictAll := caOnlyOne;
       NodeDatas[0].ConflictAll := caOnlyOne;
       NodeDatas[0].ConflictThis := ctOnlyOne;
-    end else if wbQuickShowConflicts and (Length(NodeDatas) = 2) then begin
-      aConflictAll := caOverride;
-      NodeDatas[0].ConflictAll := caOverride;
-      NodeDatas[1].ConflictAll := caOverride;
-      NodeDatas[0].ConflictThis := ctMaster;
-      NodeDatas[1].ConflictThis := ctOverride;
+    end else if Length(NodeDatas) = 2 then begin
+      if wbQuickShowConflicts then begin
+        aConflictAll := caOverride;
+        NodeDatas[0].ConflictAll := caOverride;
+        NodeDatas[1].ConflictAll := caOverride;
+        NodeDatas[0].ConflictThis := ctMaster;
+        NodeDatas[1].ConflictThis := ctOverride;
+      end else if IsCompareToSame then begin
+        aConflictAll := caNoConflict;
+        NodeDatas[0].ConflictAll := caNoConflict;
+        NodeDatas[1].ConflictAll := caNoConflict;
+        NodeDatas[0].ConflictThis := ctMaster;
+        NodeDatas[1].ConflictThis := ctIdenticalToMaster;
+      end else begin
+        aConflictAll := ConflictLevelForChildNodeDatas(NodeDatas, False, (aMainRecord.MasterOrSelf.IsInjected and not (aMainRecord.Signature = 'GMST')) );
+        if aConflictAll = caNoConflict then
+          IsCompareToSame;
+      end
     end else
       aConflictAll := ConflictLevelForChildNodeDatas(NodeDatas, False, (aMainRecord.MasterOrSelf.IsInjected and not (aMainRecord.Signature = 'GMST')) );
 
@@ -3041,6 +3094,8 @@ begin
   DoSetActiveRecord(nil);
   mniNavFilterRemoveClick(Sender);
   wbStartTime := Now;
+  DoSetActiveRecord(nil);
+  pgMain.ActivePage := tbsMessages;
   TLoaderThread.Create(CompareFile, _File.FileName, _File.LoadOrder, [fsIsDeltaPatch]);
 end;
 
@@ -12174,6 +12229,14 @@ begin
                     Continue;
                   end;
 
+                if FilterOnlyOne then
+                  if (Node.ChildCount = 0) and (MainRecord.MasterOrSelf.OverrideCount > 0) then begin
+                    //filter early, can't possibly have a conflict
+                    vstNav.DeleteNode(Node);
+                    Node := NextNode;
+                    Continue;
+                  end;
+
                 if MainRecord.IsInjected then
                   Include(NodeData.Flags, nnfInjected);
                 if MainRecord.IsNotReachable then
@@ -12582,6 +12645,89 @@ begin
   try
     mniNavFilterApplyClick(Sender);
   finally
+    FilterPreset := False;
+  end;
+end;
+
+procedure TfrmMain.mniNavFilterForOnlyOneClick(Sender: TObject);
+begin
+  FilterConflictAll := False;
+  FilterConflictThis := True;
+
+  FilterByInjectStatus := False;
+  FilterInjectStatus := False;
+
+  FilterByNotReachableStatus := False;
+  FilterNotReachableStatus := False;
+
+  FilterByReferencesInjectedStatus := False;
+  FilterReferencesInjectedStatus := False;
+
+  FilterByEditorID := False;
+  FilterEditorID := '';
+
+  FilterByName := False;
+  FilterName := '';
+
+  FilterByBaseEditorID := False;
+  FilterBaseEditorID := '';
+
+  FilterByBaseName := False;
+  FilterBaseName := '';
+
+  FilterScaledActors := False;
+
+  FilterByPersistent := False;
+  FilterPersistent := False;
+  FilterUnnecessaryPersistent := False;
+  FilterMasterIsTemporary := False;
+  FilterIsMaster := False;
+  FilterPersistentPosChanged := False;
+
+  FilterDeleted := False;
+
+  FilterByVWD := False;
+  FilterVWD := False;
+
+  FilterByHasVWDMesh := False;
+  FilterHasVWDMesh := False;
+
+  FilterByHasPrecombinedMesh := False;
+  FilterHasPrecombinedMesh := False;
+
+  FilterBySignature := False;
+  FilterSignatures := '';
+
+  FilterByBaseSignature := False;
+  FilterBaseSignatures := '';
+
+  FilterConflictAllSet := [];
+  FilterConflictThisSet := [ctOnlyOne];
+
+  FlattenBlocks := False;
+  FlattenCellChilds := False;
+  AssignPersWrldChild := False;
+  InheritConflictByParent := True;
+
+  if ModGroupsEnabled or OnlyShowMasterAndLeafs or wbQuickShowConflicts then begin
+    if ModGroupsEnabled then
+      wbProgress('Disabling ModGroups');
+    if OnlyShowMasterAndLeafs then
+      wbProgress('Disabling "Only Show Master and Leafs"');
+    if wbQuickShowConflicts then
+      wbProgress('Disabling "Quick Show Conflict" mode');
+    ModGroupsEnabled := False;
+    OnlyShowMasterAndLeafs := False;
+    wbQuickShowConflicts := False;
+    ResetAllConflict;
+  end;
+
+  FilterPreset := True;
+  FilterOnlyOne := True;
+  try
+    mniNavFilterApplyClick(Sender);
+  finally
+    FilterOnlyOne := False;
     FilterPreset := False;
   end;
 end;
@@ -18956,15 +19102,12 @@ begin
             MasterFile.Show;
             NewFile.Show;
 
-            wbModulesByLoadOrder.ExcludeAll(mfTaggedForPluginMode);
-            Include(PwbModuleInfo(MasterFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
-            mniNavFilterForCleaning.Click;
-            JumpTo(MasterFile.Header, False);
-            vstNav.ClearSelection;
-            vstNav.FocusedNode := vstNav.FocusedNode.Parent;
-            vstNav.Selected[vstNav.FocusedNode] := True;
             DoSetActiveRecord(nil);
             pgMain.ActivePage := tbsMessages;
+
+            wbModulesByLoadOrder.ExcludeAll(mfTaggedForPluginMode);
+            Include(PwbModuleInfo(MasterFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
+            mniNavFilterForOnlyOneClick(Self);
 
             Node := vstNav.GetLast;
             while Assigned(Node) do begin
@@ -18978,6 +19121,8 @@ begin
                           MainRecord.IsDeleted := True;
               Node := vstNav.GetPrevious(Node);
             end;
+
+            NewFile.RemoveIdenticalDeltaFast;
 
             wbModulesByLoadOrder.ExcludeAll(mfTaggedForPluginMode);
             Include(PwbModuleInfo(NewFile.ModuleInfo).miFlags, mfTaggedForPluginMode);

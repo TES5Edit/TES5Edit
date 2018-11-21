@@ -10,6 +10,10 @@ Width of the TOC is adjustable with a splitter.
 
 State (visible or not) and width of the TOC is saved and restored when the Form shows again.
 
+## Hugely improved performance for "Create Delta Patch"
+
+Time needed for creating a delta patch for the 650MB SeventySix.esm has been reduced from over 600 minutes (10 hours) to about 5 minutes.
+
 # What's new in xEdit 3.3.5 BETA?
 
 ## Developer message update
