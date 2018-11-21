@@ -826,6 +826,10 @@ type
     property PageRect: TRect read FPageRect write FPageRect;
     property Paragraph: TJvParaAttributes read FParagraph;
     property SelectionType: TRichSelectionType read GetSelectionType;
+    {>>>}
+    property RichEditOle: IUnknown
+      read FRichEditOle;
+    {<<<}
   end;
 
   {$IFDEF RTL230_UP}
@@ -1338,6 +1342,9 @@ const
 
   RichEdit10ModuleName = 'RICHED32.DLL';
   RichEdit20ModuleName = 'RICHED20.DLL';
+  {>>>}
+  RichEditNewModuleName = 'MSFTEDIT.DLL';
+  {<<<}
 
   FT_DOWN = 1;
 
@@ -2813,6 +2820,9 @@ end;
 
 procedure TJvCustomRichEdit.CreateParams(var Params: TCreateParams);
 const
+{>>>}
+  MSFTEDIT_CLASS = 'RichEdit50W';
+{<<<}
   HideScrollBars: array[Boolean] of DWORD = (ES_DISABLENOSCROLL, 0);
   HideSelections: array[Boolean] of DWORD = (ES_NOHIDESEL, 0);
   WordWraps: array[Boolean] of DWORD = (0, ES_AUTOHSCROLL);
@@ -2823,6 +2833,10 @@ begin
   case RichEditVersion of
     1:
       CreateSubClass(Params, RICHEDIT_CLASS10A);
+{>>>}
+    4:
+      CreateSubClass(Params, MSFTEDIT_CLASS);
+{<<<}
   else
     CreateSubClass(Params, RICHEDIT_CLASS);
   end;
@@ -7716,6 +7730,15 @@ var
   VerSize: DWORD;
 begin
   RichEditVersion := 1;
+  {>>>}
+  GLibHandle := SafeLoadLibrary(RichEditNewModuleName);
+  if (GLibHandle > 0) and (GLibHandle < HINSTANCE_ERROR) then
+    GLibHandle := 0;
+  if GLibHandle <> 0 then begin
+    RichEditVersion := 4;
+    Exit;
+  end;
+  {<<<}
   GLibHandle := SafeLoadLibrary(RichEdit20ModuleName);
   if (GLibHandle > 0) and (GLibHandle < HINSTANCE_ERROR) then
     GLibHandle := 0;
@@ -7742,7 +7765,7 @@ begin
               RichEditVersion := (FI.dwFileVersionMS and $FFFF) div 10
             else
             if FI.dwFileVersionMS and $FFFF0000 = $000C0000 then
-              RichEditVersion := 6;
+              RichEditVersion := 3;
             if RichEditVersion = 0 then
               RichEditVersion := 2;
           end;

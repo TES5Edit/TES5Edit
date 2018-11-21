@@ -5,17 +5,22 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, JvExStdCtrls, JvRichEdit,
-  Vcl.ExtCtrls, Vcl.ComCtrls;
+  Vcl.ExtCtrls, Vcl.ComCtrls, VirtualTrees, JvExExtCtrls, JvSplitter, wbPushLikeButton;
 
 type
   TfrmRichEdit = class(TForm)
     btnOk: TButton;
-    reMain: TJvRichEdit;
     tmrEnableButton: TTimer;
     cbDontShowAgain: TCheckBox;
     edSearch: TLabeledEdit;
     tbrZoom: TTrackBar;
     Label1: TLabel;
+    pnlMain: TPanel;
+    reMain: TJvRichEdit;
+    splTOC: TJvSplitter;
+    btnTOC: TButton;
+    pnlTOC: TPanel;
+    vstTOC: TVirtualStringTree;
     procedure FormCreate(Sender: TObject);
     procedure tmrEnableButtonTimer(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -23,8 +28,21 @@ type
     procedure edSearchKeyPress(Sender: TObject; var Key: Char);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure tbrZoomChange(Sender: TObject);
+    procedure vstTOCGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
+    procedure vstTOCNodeDblClick(Sender: TBaseVirtualTree;
+      const HitInfo: THitInfo);
+    procedure btnTOCClick(Sender: TObject);
+    procedure vstTOCCollapsing(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      var Allowed: Boolean);
+    procedure splTOCMoved(Sender: TObject);
+  protected
+    procedure UpdateActions; override;
   private
+    NeedRebuildTOC : Boolean;
     InRedirectKey: Integer;
+    procedure BuildTOC;
+    procedure TOCSelected(aNode: PVirtualNode);
   public
     { Public declarations }
   end;
@@ -35,8 +53,81 @@ implementation
 
 uses
   wbInterface,
+  TOM2,
   frmViewMain,
   Vcl.Styles.Utils.SystemMenu;
+
+procedure TfrmRichEdit.btnTOCClick(Sender: TObject);
+begin
+  pnlTOC.Visible := btnTOC.Checked;
+  splTOC.Visible := pnlTOC.Visible;
+  if pnlTOC.Visible then
+    if splTOC.Left <= pnlTOC.Width then
+      splTOC.Left := pnlTOC.Width + 1;
+  if Assigned(frmMain) and Assigned(frmMain.Settings) then begin
+    frmMain.Settings.WriteBool(Name, 'TOC', pnlTOC.Visible);
+    frmMain.Settings.UpdateFile;
+  end;
+end;
+
+procedure TfrmRichEdit.BuildTOC;
+var
+  TD       : ITextDocument2;
+  TR       : ITextRange2;
+  i        : Integer;
+  s        : string;
+  Size     : Single;
+  LastEnd  : Integer;
+  Style    : Integer;
+  LastNode : PVirtualNode;
+  LastTR   : ITextRange2;
+  NewNode : PVirtualNode;
+  NewTR   : ITextRange2;
+begin
+  //vstTOC.BeginUpdate;
+  try
+    vstTOC.Clear;
+    vstTOC.NodeDataSize := SizeOf(Pointer);
+    NeedRebuildTOC := False;
+
+    if not Supports(reMain.RichEditOle, ITextDocument2, TD) then
+      Exit;
+
+    TR := TD.Range2(0,0);
+
+    LastNode := nil;
+    LastTR := nil;
+
+    LastEnd := 0;
+    i := TR.MoveEnd(tomCharFormat, 1);
+    while TR.End_ > LastEnd do begin
+      LastEnd := TR.End_;
+      if TR.Font2.Bold = tomTRUE then begin
+        NewTR := TR.Duplicate2;
+        while Assigned(LastNode) do begin
+          if NewTR.Font2.Size < LastTR.Font2.Size then
+            Break;
+          LastNode := LastNode.Parent;
+          if LastNode = vstTOC.RootNode then
+            LastNode := nil;
+          if Assigned(LastNode) then
+            LastTR := ITextRange2(PPointer(LastNode.GetData)^);
+        end;
+
+        NewNode := vstTOC.AddChild(LastNode, NewTR);
+
+        LastNode := NewNode;
+        LastTR := NewTR;
+      end;
+      TR.Start := TR.End_;
+      i := TR.MoveEnd(tomCharFormat, 1);
+    end;
+
+    vstTOC.FullExpand;
+  finally
+    //vstTOC.EndUpdate;
+  end;
+end;
 
 procedure TfrmRichEdit.edSearchKeyPress(Sender: TObject; var Key: Char);
 begin
@@ -52,6 +143,8 @@ end;
 
 procedure TfrmRichEdit.FormCreate(Sender: TObject);
 begin
+  btnTOC.PushLike := True;
+
   wbApplyFontAndScale(Self);
 
   if wbThemesSupported then
@@ -70,19 +163,34 @@ begin
   if InRedirectKey > 0 then
     Exit;
 
-  case Key of
-    VK_UP, VK_DOWN, VK_NEXT, VK_PRIOR: begin
-      if not reMain.Focused then begin
-        Inc(InRedirectKey);
-        try
-          reMain.Perform(WM_KEYDOWN, Key, 0);
-        finally
-          Dec(InRedirectKey);
-        end;
-        Key := 0;
-      end;
+  if vstTOC.Focused then begin
+    if Key = VK_RETURN then begin
+      Key := 0;
+      TOCSelected(vstTOC.FocusedNode);
       Exit;
     end;
+  end else
+    case Key of
+      VK_UP, VK_DOWN, VK_NEXT, VK_PRIOR: begin
+        if not reMain.Focused then begin
+          Inc(InRedirectKey);
+          try
+            reMain.Perform(WM_KEYDOWN, Key, 0);
+          finally
+            Dec(InRedirectKey);
+          end;
+          Key := 0;
+        end;
+        Exit;
+      end;
+    end;
+
+  if (Shift = [ssAlt]) and (Key = Ord('T')) then begin
+    btnTOC.Checked := not btnTOC.Checked;
+    if btnTOC.Checked then
+      vstTOC.SetFocus;
+    Key := 0;
+    Exit;
   end;
 
   if Shift = [ssCtrl] then
@@ -145,11 +253,37 @@ end;
 
 procedure TfrmRichEdit.FormShow(Sender: TObject);
 begin
+  if Assigned(frmMain) and Assigned(frmMain.Settings) then begin
+    pnlTOC.Width := frmMain.Settings.ReadInteger(Name, 'TOCWidth', pnlTOC.Width);
+    splTOC.Left := pnlTOC.Width + 1;
+    btnTOC.Checked := frmMain.Settings.ReadBool(Name, 'TOC', pnlTOC.Visible);
+  end;
+
+  pnlMain.Margins.Top := edSearch.BoundsRect.Bottom + pnlMain.Margins.Left;
+  if btnOk.Visible then
+    pnlMain.Margins.Bottom := (ClientHeight - btnOk.Top) + pnlMain.Margins.Left
+  else
+    pnlMain.Margins.Bottom := pnlMain.Margins.Left;
+
+  btnTOC.Left := pnlMain.Margins.Left;
+  btnTOC.Top := edSearch.Top;
+  btnTOC.Height := edSearch.Height;
+
   tmrEnableButton.Enabled := True;
   if Assigned(frmMain) and Assigned(frmMain.Settings) then begin
     tbrZoom.Position := frmMain.Settings.ReadInteger(Name, 'Zoom', tbrZoom.Position);
     reMain.Zoom := tbrZoom.Position;
   end;
+  BuildTOC;
+end;
+
+procedure TfrmRichEdit.splTOCMoved(Sender: TObject);
+begin
+  if pnlTOC.Visible then
+    if Assigned(frmMain) and Assigned(frmMain.Settings) then begin
+      frmMain.Settings.WriteInteger(Name, 'TOCWidth', pnlTOC.Width);
+      frmMain.Settings.UpdateFile;
+    end;
 end;
 
 procedure TfrmRichEdit.tbrZoomChange(Sender: TObject);
@@ -165,6 +299,54 @@ procedure TfrmRichEdit.tmrEnableButtonTimer(Sender: TObject);
 begin
   tmrEnableButton.Enabled := False;
   btnOk.Enabled := True;
+end;
+
+procedure TfrmRichEdit.TOCSelected(aNode: PVirtualNode);
+var
+  p : PPointer;
+begin
+  p := vstTOC.GetNodeData(aNode);
+  if Assigned(p) then begin
+    ITextRange2(p^).ScrollIntoView(tomStart);
+    ITextRange2(p^).Select;
+  end;
+end;
+
+procedure TfrmRichEdit.UpdateActions;
+begin
+  if NeedRebuildTOC then
+    BuildTOC;
+  inherited;
+end;
+
+procedure TfrmRichEdit.vstTOCCollapsing(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; var Allowed: Boolean);
+begin
+  Allowed := False;
+end;
+
+procedure TfrmRichEdit.vstTOCGetText(Sender   : TBaseVirtualTree;
+                                     Node     : PVirtualNode;
+                                     Column   : TColumnIndex;
+                                     TextType : TVSTTextType;
+                                 var CellText : string);
+var
+  p : PPointer;
+begin
+  if not NeedRebuildTOC then begin
+    p := vstTOC.GetNodeData(Node);
+    if Assigned(p) then try
+      CellText := ITextRange2(p^).Text;
+      CellText := CellText.Trim;
+    except
+      NeedRebuildTOC := True;
+    end;
+  end;
+end;
+
+procedure TfrmRichEdit.vstTOCNodeDblClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
+begin
+  TOCSelected(HitInfo.HitNode);
 end;
 
 end.

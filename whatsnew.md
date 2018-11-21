@@ -1,3 +1,15 @@
+# What's new in xEdit 3.3.6 BETA?
+
+## Table of Contents for What's New
+
+The TOC button in the top left corner of the What's New Form (also when docked in the What's New Tab) can be used to show or hide a Table of Contents.
+
+`Double Click` or `Enter` in the TOC will scroll the selected header into view.
+
+Width of the TOC is adjustable with a splitter.
+
+State (visible or not) and width of the TOC is saved and restored when the Form shows again.
+
 # What's new in xEdit 3.3.5 BETA?
 
 ## Developer message update
