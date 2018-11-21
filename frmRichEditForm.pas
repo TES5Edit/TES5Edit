@@ -72,28 +72,28 @@ end;
 
 procedure TfrmRichEdit.BuildTOC;
 var
-  TD       : ITextDocument2;
-  TR       : ITextRange2;
+  TD       : ITextDocument;
+  TR       : ITextRange;
   i        : Integer;
   s        : string;
   Size     : Single;
   LastEnd  : Integer;
   Style    : Integer;
   LastNode : PVirtualNode;
-  LastTR   : ITextRange2;
+  LastTR   : ITextRange;
   NewNode : PVirtualNode;
-  NewTR   : ITextRange2;
+  NewTR   : ITextRange;
 begin
-  //vstTOC.BeginUpdate;
+  vstTOC.BeginUpdate;
   try
     vstTOC.Clear;
     vstTOC.NodeDataSize := SizeOf(Pointer);
     NeedRebuildTOC := False;
 
-    if not Supports(reMain.RichEditOle, ITextDocument2, TD) then
+    if not Supports(reMain.RichEditOle, ITextDocument, TD) then
       Exit;
 
-    TR := TD.Range2(0,0);
+    TR := TD.Range(0,0);
 
     LastNode := nil;
     LastTR := nil;
@@ -102,16 +102,16 @@ begin
     i := TR.MoveEnd(tomCharFormat, 1);
     while TR.End_ > LastEnd do begin
       LastEnd := TR.End_;
-      if TR.Font2.Bold = tomTRUE then begin
-        NewTR := TR.Duplicate2;
+      if TR.Font.Bold = tomTRUE then begin
+        NewTR := TR.Duplicate;
         while Assigned(LastNode) do begin
-          if NewTR.Font2.Size < LastTR.Font2.Size then
+          if NewTR.Font.Size < LastTR.Font.Size then
             Break;
           LastNode := LastNode.Parent;
           if LastNode = vstTOC.RootNode then
             LastNode := nil;
           if Assigned(LastNode) then
-            LastTR := ITextRange2(PPointer(LastNode.GetData)^);
+            LastTR := ITextRange(PPointer(LastNode.GetData)^);
         end;
 
         NewNode := vstTOC.AddChild(LastNode, NewTR);
@@ -125,7 +125,7 @@ begin
 
     vstTOC.FullExpand;
   finally
-    //vstTOC.EndUpdate;
+    vstTOC.EndUpdate;
   end;
 end;
 
@@ -307,8 +307,8 @@ var
 begin
   p := vstTOC.GetNodeData(aNode);
   if Assigned(p) then begin
-    ITextRange2(p^).ScrollIntoView(tomStart);
-    ITextRange2(p^).Select;
+    ITextRange(p^).ScrollIntoView(tomStart);
+    ITextRange(p^).Select;
   end;
 end;
 
@@ -336,7 +336,7 @@ begin
   if not NeedRebuildTOC then begin
     p := vstTOC.GetNodeData(Node);
     if Assigned(p) then try
-      CellText := ITextRange2(p^).Text;
+      CellText := ITextRange(p^).Text;
       CellText := CellText.Trim;
     except
       NeedRebuildTOC := True;
