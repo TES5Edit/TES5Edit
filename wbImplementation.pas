@@ -642,6 +642,8 @@ type
 
     flRecords                : array of IwbMainRecord;
     flRecordsCount           : Integer; {only used during loading}
+    flRecordProcessing       : IwbMainRecord;
+    flRecordNeedCompactFrom  : Integer;
 
     flRecordsByEditorID      : array of IwbMainRecord;
     flRecordsByEditorIDCount : Integer; {only used during loading}
@@ -760,6 +762,9 @@ type
     procedure SetHasNoFormID(Value: Boolean);
 
     function GetEncoding(aTranslatable: Boolean): TEncoding;
+
+    function GetCompareToFile: IwbFile;
+    procedure RemoveIdenticalDeltaFast;
 
     {---IwbFileInternal---}
     procedure AddMainRecord(const aRecord: IwbMainRecord);
@@ -912,6 +917,8 @@ type
 
     procedure MakeHeaderWriteable;
     function mrStruct: PwbMainRecordStruct;
+
+    function IsSameData(aBase, aEnd: Pointer): Boolean;
   end;
 
   IwbMainRecordEntry = interface(IwbMainRecordInternal)
@@ -1178,6 +1185,9 @@ type
     procedure ChangeFormSignature(aSignature: TwbSignature);
     procedure ClampFormID(aIndex: Cardinal);
 
+    function ContentEquals(const aMainRecord: IwbMainRecord): Boolean;
+
+
     procedure Delete;
     procedure DeleteInto(const aFile: IwbFile);
 
@@ -1196,6 +1206,7 @@ type
     procedure ClearForRelease;
     procedure SaveRefsToStream(aStream: TStream; aSaveNames: Boolean);
     procedure LoadRefsFromStream(aStream: TStream; aLoadNames: Boolean);
+    function IsSameData(aBase, aEnd: Pointer): Boolean;
 
     {---IwbMainRecordEntry---}
     procedure RemoveEntry;
@@ -2077,6 +2088,9 @@ var
 begin
   if not Assigned(aRecord) then
     Exit;
+
+  Assert(not Assigned(flRecordProcessing));
+
   FormID := aRecord.FormID;
   if not FormID.IsNull then begin
 
@@ -3009,6 +3023,22 @@ begin
     Exit;
   end;
 
+  if flRecordNeedCompactFrom <= High(flRecords) then begin
+    c := flRecordNeedCompactFrom;
+    for i := flRecordNeedCompactFrom to High(flRecords) do begin
+      if Assigned(flRecords[i]) then begin
+        if i <> c then begin
+          Assert(not Assigned(flRecords[c]));
+          Pointer(flRecords[c]) := Pointer(flRecords[i]);
+          Pointer(flRecords[i]) := nil;
+        end;
+        Inc(c);
+      end;
+    end;
+    SetLength(flRecords, c);
+    flRecordNeedCompactFrom := High(Integer);
+  end;
+
   i := GetMasterCount;
   if aFormID.FileID.FullSlot > i then
     aFormID.FileID := TwbFileID.Create(i);
@@ -3276,6 +3306,11 @@ begin
       ceiLGeneration := 0;
     end;
   end;
+end;
+
+function TwbFile.GetCompareToFile: IwbFile;
+begin
+  Result := flCompareToFile;
 end;
 
 function TwbFile.GetContainedRecordByLoadOrderFormID(aFormID: TwbFormID; aAllowInjected: Boolean): IwbMainRecord;
@@ -4027,6 +4062,101 @@ begin
   Result := False;
 end;
 
+procedure TwbFile.RemoveIdenticalDeltaFast;
+var
+  i, j                : Integer;
+  MasterMainRecord    : IwbMainRecord;
+  CompareToMainRecord : IwbMainRecord;
+  ChildGroup          : IwbGroupRecord;
+  Container           : IwbContainerElementRef;
+  ParentContainer     : IwbContainerElementRef;
+  RemovedAny          : Boolean;
+  SkippedForChildren  : Boolean;
+begin
+  if not (fsCompareToHasSameMasters in flStates) then
+    Exit;
+
+  repeat
+
+    RemovedAny := False;
+    SkippedForChildren := False;
+
+    for i := High(flRecords) downto Low(flRecords) do begin
+      wbTick;
+      flRecordProcessing := flRecords[i];
+      try
+        MasterMainRecord := flRecordProcessing.Master;
+        if not Assigned(MasterMainRecord) then
+          Continue;
+
+        if esModified in flRecordProcessing.ElementStates then
+          Continue;
+
+        ChildGroup := flRecordProcessing.ChildGroup;
+        if Assigned(ChildGroup) and (ChildGroup.ElementCount < 1) then begin
+          ChildGroup.Remove;
+          ChildGroup := nil;
+        end;
+        if Assigned(ChildGroup) then begin
+          SkippedForChildren := True;
+          Continue;
+        end;
+
+        CompareToMainRecord := nil;
+        if flCompareToFile.Equals(MasterMainRecord._File) then
+          CompareToMainRecord := MasterMainRecord
+        else
+          for j := 0 to Pred(MasterMainRecord.OverrideCount) do
+            if flCompareToFile.Equals(MasterMainRecord.Overrides[j]._File) then begin
+              CompareToMainRecord := MasterMainRecord.Overrides[j];
+              Break;
+            end;
+        if not Assigned(CompareToMainRecord) then
+          Continue;
+
+        if esModified in CompareToMainRecord.ElementStates then
+          Continue;
+
+        if not CompareToMainRecord.ContentEquals(flRecordProcessing) then
+          Continue;
+
+        Container := flRecordProcessing.Container as IwbContainerElementRef;
+        flRecordProcessing.Remove;
+        flRecords[i] := nil;
+        flRecordNeedCompactFrom := i;
+        RemovedAny := True;
+        while Assigned(Container) and (Container.ElementCount = 0) do begin
+          ParentContainer := Container.Container as IwbContainerElementRef;
+          Container.Remove;
+          Container := ParentContainer;
+        end;
+      finally
+        flRecordProcessing := nil;
+      end;
+    end;
+
+    if flRecordNeedCompactFrom <= High(flRecords) then begin
+      j := flRecordNeedCompactFrom;
+      for i := flRecordNeedCompactFrom to High(flRecords) do begin
+        if Assigned(flRecords[i]) then begin
+          if i <> j then begin
+            Assert(not Assigned(flRecords[j]));
+            Pointer(flRecords[j]) := Pointer(flRecords[i]);
+            Pointer(flRecords[i]) := nil;
+          end;
+          Inc(j);
+        end;
+      end;
+      SetLength(flRecords, j);
+      flRecordNeedCompactFrom := High(Integer);
+    end;
+
+    if not SkippedForChildren then
+      RemovedAny := False;
+
+  until not RemovedAny;
+end;
+
 procedure TwbFile.RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
 var
   i: Integer;
@@ -4057,15 +4187,19 @@ begin
   if not aRecord.FormID.IsNull then begin
     Assert(flLoadFinished);
 
-    if (Length(flRecords) < 1) or not FindFormID(aRecord.FormID, i) then
-      raise Exception.Create('Can''t remove FormID ['+aRecord.FormID.ToString(True)+'] from file '+GetName+': FormID not registered');
+    if not aRecord.Equals(flRecordProcessing) then begin
+      Assert(not Assigned(flRecordProcessing));
 
-    flRecords[i] := nil;
-    if i < High(flRecords) then begin
-      Move(flRecords[Succ(i)], flRecords[i], SizeOf(Pointer) * (High(flRecords) - i));
-      Pointer(flRecords[High(flRecords)]) := nil;
+      if (Length(flRecords) < 1) or not FindFormID(aRecord.FormID, i) then
+        raise Exception.Create('Can''t remove FormID ['+aRecord.FormID.ToString(True)+'] from file '+GetName+': FormID not registered');
+
+      flRecords[i] := nil;
+      if i < High(flRecords) then begin
+        Move(flRecords[Succ(i)], flRecords[i], SizeOf(Pointer) * (High(flRecords) - i));
+        Pointer(flRecords[High(flRecords)]) := nil;
+      end;
+      SetLength(flRecords, Pred(Length(flRecords)));
     end;
-    SetLength(flRecords, Pred(Length(flRecords)));
 
     FileID := aRecord.FormID.FileID.FullSlot;
     if FileID >= Cardinal(GetMasterCount) then begin
@@ -4202,6 +4336,17 @@ begin
     end;
 
     if flCompareTo <> '' then begin
+
+      if Assigned(flCompareToFile) then
+        if flCompareToFile.MasterCount = GetMasterCount then begin
+          Include(flStates, fsCompareToHasSameMasters);
+          for i := 0 to Pred(GetMasterCount) do
+            if not flCompareToFile.Masters[i].Equals(GetMaster(i)) then begin
+              Exclude(flStates, fsCompareToHasSameMasters);
+              Break;
+            end;
+        end;
+
       if fsIsDeltaPatch in flStates then begin
         MasterFilesAdded := False;
         if not Assigned(MasterFiles) then begin
@@ -4211,7 +4356,7 @@ begin
         if Assigned(MasterFiles) then begin
           if wbBeginInternalEdit(True) then try
             j := MasterFiles.ElementCount;
-            if MasterFilesAdded then
+            if not MasterFilesAdded then
               MasterFiles.Assign(High(Integer), nil, False)
             else begin
               Assert(j=1);
@@ -4227,9 +4372,11 @@ begin
           finally;
             wbEndInternalEdit;
           end;
+          (MasterFiles as IwbElementInternal).SetModified(True);
         end else
           raise Exception.Create('Delta patch source file must have at least one existing master');
       end;
+
       AddMaster(flCompareTo);
     end;
 
@@ -4587,6 +4734,7 @@ begin
       Pointer(flRecords[i]) := SortEntryPtrs[i].rseMainRecord;
   end;
   flFormIDsSorted := True;
+  flRecordNeedCompactFrom := High(Integer);
 end;
 
 procedure TwbFile.SortRecordsByEditorID;
@@ -6477,6 +6625,7 @@ var
   FlagDef    : IwbFlagDef;
   s          : string;
   b          : Boolean;
+  Element    : IwbElement;
 begin
   if Supports(GetValueDef, IwbIntegerDef, IntegerDef) then
     if Supports(IntegerDef.Formater[Self], IwbFlagsDef, FlagsDef) then
@@ -6491,7 +6640,11 @@ begin
             s[Succ(FlagDef.FlagIndex)] := '0';
           SetEditValue(s);
         end;
+        Exit;
       end;
+  Element := Add(aName, True);
+  if Assigned(Element) then
+    Element.EditValue := aValue;
 end;
 
 procedure TwbContainer.SetMemberNativeValue(const aName: string; const aValue: Variant);
@@ -6501,6 +6654,7 @@ var
   FlagDef    : IwbFlagDef;
   s          : string;
   b          : Boolean;
+  Element    : IwbElement;
 begin
   if Supports(GetValueDef, IwbIntegerDef, IntegerDef) then
     if Supports(IntegerDef.Formater[Self], IwbFlagsDef, FlagsDef) then
@@ -6515,7 +6669,11 @@ begin
             s[Succ(FlagDef.FlagIndex)] := '0';
           SetEditValue(s);
         end;
+        Exit;
       end;
+  Element := Add(aName, True);
+  if Assigned(Element) then
+    Element.EditValue := aValue;
 end;
 
 procedure TwbContainer.SetToDefaultIfAsCreatedEmpty;
@@ -7552,6 +7710,17 @@ begin
   if csInit in cntStates then
     if Supports(GetElementBySortOrder(-2 + GetAdditionalElementCount), IwbContainedIn, ContainedIn) then
       ContainedIn.ContainerChanged;
+end;
+
+function TwbMainRecord.ContentEquals(const aMainRecord: IwbMainRecord): Boolean;
+var
+  MRI : IwbMainRecordInternal;
+begin
+  Result := False;
+  if esModified in eStates then
+    Exit;
+  if Supports(aMainRecord, IwbMainRecordInternal, MRI) then
+    Result := MRI.IsSameData(dcBasePtr, dcEndPtr);
 end;
 
 constructor TwbMainRecord.Create(const aContainer: IwbContainer; const aSignature: TwbSignature; aFormID: TwbFormID);
@@ -9695,6 +9864,50 @@ end;
 function TwbMainRecord.IsElementRemoveable(const aElement: IwbElement): Boolean;
 begin
   Result := IsElementEditable(aElement) and not aElement.Def.Required;
+end;
+
+function TwbMainRecord.IsSameData(aBase, aEnd: Pointer): Boolean;
+var
+  MySize: Int64;
+  OtherSize: Int64;
+  MyBase: PwbMainRecordStruct;
+  OtherBase: PwbMainRecordStruct;
+begin
+  Result := False;
+  if esModified in eStates then
+    Exit;
+  if not Assigned(aBase) then
+    Exit;
+  if not Assigned(aEnd) then
+    Exit;
+  if not Assigned(dcBasePtr) then
+    Exit;
+  if not Assigned(dcEndPtr) then
+    Exit;
+
+  MySize := NativeUInt(dcEndPtr) - NativeUInt(dcBasePtr);
+  OtherSize := NativeUInt(aEnd) - NativeUInt(aBase);
+
+  if MySize <> OtherSize then
+    Exit;
+
+  MyBase := dcBasePtr;
+  OtherBase := aBase;
+
+  if MyBase^.mrsSignature <> OtherBase^.mrsSignature then
+    Exit;
+  if MyBase^.mrsDataSize <> OtherBase^.mrsDataSize then
+    Exit;
+  if MyBase^.mrsFlags._Flags <> OtherBase^.mrsFlags._Flags then
+    Exit;
+  if MyBase^.mrsFormID <> OtherBase^.mrsFormID then
+    Exit;
+
+  Inc(MyBase);
+  Inc(OtherBase);
+  Dec(MySize, SizeOf(TwbMainRecordStruct));
+
+  Result := CompareMem(MyBase, OtherBase, MySize);
 end;
 
 function TwbMainRecord.LinksToParent: Boolean;

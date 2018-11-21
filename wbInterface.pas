@@ -1167,7 +1167,8 @@ type
     fsScanning,
     fsPseudoESL,
     fsESLCompatible,
-    fsIsOfficial
+    fsIsOfficial,
+    fsCompareToHasSameMasters
   );
 
   TwbFileStates = set of TwbFileState;
@@ -1236,6 +1237,10 @@ type
     procedure SetHasNoFormID(Value: Boolean);
 
     function GetEncoding(aTranslatable: Boolean): TEncoding;
+
+    function GetCompareToFile: IwbFile;
+
+    procedure RemoveIdenticalDeltaFast;
 
     property FileName: string
       read GetFileName;
@@ -1310,6 +1315,9 @@ type
 
     property Encoding[aTranslatable: Boolean]: TEncoding
       read GetEncoding;
+
+    property CompareToFile: IwbFile
+      read GetCompareToFile;
   end;
 
   IwbDataContainer = interface(IwbContainer)
@@ -1491,6 +1499,8 @@ type
 
     procedure ChangeFormSignature(aSignature: TwbSignature);
     procedure ClampFormID(aIndex: Cardinal);
+
+    function ContentEquals(const aMainRecord: IwbMainRecord): Boolean;
 
     property Def: IwbMainRecordDef
       read GetMainRecordDef;
