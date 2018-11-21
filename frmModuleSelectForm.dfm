@@ -37,6 +37,7 @@ object frmModuleSelect: TfrmModuleSelect
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 8
+    OnClick = btnOKClick
   end
   object vstModules: TVirtualStringTree
     Left = 8
@@ -44,6 +45,7 @@ object frmModuleSelect: TfrmModuleSelect
     Width = 848
     Height = 541
     Anchors = [akLeft, akTop, akRight, akBottom]
+    DefaultText = 'Node'
     Header.AutoSizeIndex = 0
     Header.Height = 16
     Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
@@ -69,47 +71,47 @@ object frmModuleSelect: TfrmModuleSelect
     Columns = <
       item
         Position = 0
+        Text = 'Filename'
         Width = 409
-        WideText = 'Filename'
       end
       item
         Alignment = taRightJustify
         CaptionAlignment = taCenter
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coEditable, coStyleColor]
         Position = 1
+        Text = 'File Order'
         Width = 200
-        WideText = 'File Order'
       end
       item
         Alignment = taCenter
         CaptionAlignment = taCenter
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coEditable, coStyleColor]
         Position = 2
+        Text = 'ESM'
         Width = 40
-        WideText = 'ESM'
       end
       item
         Alignment = taCenter
         CaptionAlignment = taCenter
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coEditable, coStyleColor]
         Position = 3
+        Text = 'ESL'
         Width = 40
-        WideText = 'ESL'
       end
       item
         Alignment = taRightJustify
         CaptionAlignment = taCenter
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coEditable, coStyleColor]
         Position = 4
+        Text = 'Load Order'
         Width = 75
-        WideText = 'Load Order'
       end
       item
         CaptionAlignment = taCenter
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coEditable, coStyleColor]
         Position = 5
+        Text = 'FormID Prefix'
         Width = 80
-        WideText = 'FormID Prefix'
       end>
   end
   object pnlError: TPanel
