@@ -225,6 +225,7 @@ var
   wbShowTip                          : Boolean = True;
   wbPatron                           : Boolean = False;
   wbNoGitHubCheck                    : Boolean = False;
+  wbNoNexusModsCheck                 : Boolean = False;
 
   wbCheckExpectedBytes : Boolean = True;
 
