@@ -4689,13 +4689,8 @@ begin
         end;
         if ShowModal = mrOk then
           bnPatreon.Click;
-        if MessageDlg('This dialog will only be shown for this current BETA release.' + CRLF + CRLF +
-          'If you have any constructive feedback about the contents and presentation of the previously shown Developer message, please leave it in the #feedback channel on the xEdit Discord (button in the top right corner).' + CRLF + CRLF +
-          'Do you want the developer message to show again on the next start? (So if you forgot to read it, you can restart xEdit to see it again...)',
-          mtConfirmation, mbYesNo, 0) <> mrYes then begin
         Settings.WriteInteger('DeveloperMessage', 'Version', wbDeveloperMessageVersion);
         Settings.UpdateFile;
-        end;
       finally
         Free;
       end;
