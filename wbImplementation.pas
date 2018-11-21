@@ -8887,7 +8887,10 @@ begin
     mrStruct.mrsFormID.FileID := TwbFileID.Create(aIndex);
     if Assigned(mrGroup) then
       mrGroup.GroupLabel := mrStruct.mrsFormID.ToCardinal;
-  end;
+  end else
+    if mrStruct.mrsFormID.FileID.FullSlot = aIndex then
+      if Assigned(mrGroup) then
+        mrGroup.GroupLabel := mrStruct.mrsFormID.ToCardinal;
 end;
 
 function TwbMainRecord.GetGridCell(out aGridCell: TwbGridCell): Boolean;
@@ -13868,13 +13871,15 @@ end;
 
 procedure TwbGroupRecord.FindUsedMasters(aMasters: PwbUsedMasters);
 var
+  FormID: TwbFormID;
   FileID: Integer;
 begin
   inherited;
 
   if grStruct.grsGroupType in [1, 6..10] then begin
     if grStruct.grsLabel <> 0 then begin
-      FileID := grStruct.grsLabel shr 24;
+      FormID := TwbFormID.FromCardinal(GetGroupLabel);
+      FileID := FormID.FileID.FullSlot;
       aMasters[FileID] := True;
     end;
   end;
@@ -13941,7 +13946,7 @@ begin
   _File := GetFile;
   if Assigned(_File) then
     if grStruct.grsGroupType in [1, 6..10] then
-      Result := _File.RecordByFormID[TwbFormID.FromCardinal(grStruct.grsLabel), True]
+      Result := _File.RecordByFormID[TwbFormID.FromCardinal(GetGroupLabel), True]
     else if grStruct.grsGroupType in [4, 5] then
       if Supports(GetContainer, IwbGroupRecord, Group) then
         Result := Group.ChildrenOf;
@@ -13953,8 +13958,23 @@ begin
 end;
 
 function TwbGroupRecord.GetGroupLabel: Cardinal;
+var
+  _File      : IwbFile;
+  FileFileID : TwbFileID;
+  FormID     : TwbFormID;
 begin
   Result := grStruct.grsLabel;
+  if grStruct.grsGroupType in [1, 6..10] then begin
+    _File := GetFile;
+    if Assigned(_File) then begin
+      FileFileID := _File.FileFileID;
+      FormID := TwbFormID.FromCardinal(Result);
+      if FormID.FileID.FullSlot > FileFileID.FullSlot then begin
+        FormID.FileID := FileFileID;
+        Result := FormID.ToCardinal;
+      end;
+    end;
+  end;
 end;
 
 function TwbGroupRecord.GetGroupLabelSignature: string;
@@ -14041,10 +14061,7 @@ begin
     Exit;
   end;
 
-//  if wbDisplayLoadOrderFormID then
-//    Result := Result + wbFormID.ToString(GetChildrenOf.FixedFormID, Self)
-//  else
-    Result := Result + wbFormID.ToString(grStruct.grsLabel, Self);
+  Result := Result + wbFormID.ToString(GetGroupLabel, Self);
 end;
 
 function TwbGroupRecord.GetCountedRecordCount: Cardinal;
@@ -14062,17 +14079,17 @@ begin
       if wbFindRecordDef(AnsiString(Result), RecordDef) then
         Result := RecordDef.GetName;
     end;
-    1: Result := 'World Children';
+    1: Result := 'World Children of ' + IntToHex(GetGroupLabel, 8);
     2: Result := 'Block ' + IntToStr(grStruct.grsLabel);
     3: Result := 'Sub-Block ' + IntToStr(grStruct.grsLabel);
     4: Result := 'Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo);
     5: Result := 'Sub-Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo);
-    6: Result := 'Children of ' + IntToHex(grStruct.grsLabel, 8);
-    7: Result := 'Children of ' + IntToHex(grStruct.grsLabel, 8);
+    6: Result := 'Children of ' + IntToHex(GetGroupLabel, 8);
+    7: Result := 'Children of ' + IntToHex(GetGroupLabel, 8);
     8: Result := 'Persistent';
     9: Result := 'Temporary';
     10: if wbVWDAsQuestChildren then
-      Result := 'Children of ' + IntToHex(grStruct.grsLabel, 8)
+      Result := 'Children of ' + IntToHex(GetGroupLabel, 8)
     else
       Result := 'Visible when Distant';
   else
@@ -14093,7 +14110,7 @@ begin
       IntToHex64(LongRecSmall(grStruct.grsLabel).Hi + Low(SmallInt), 5) +
       IntToHex64(LongRecSmall(grStruct.grsLabel).Lo + Low(SmallInt), 5);
   else
-    Result := Result + IntToHex64(grStruct.grsLabel, 8);
+    Result := Result + IntToHex64(GetGroupLabel, 8);
   end;
 end;
 
@@ -14105,7 +14122,7 @@ end;
 procedure TwbGroupRecord.InformPrevMainRecord(const aPrevMainRecord: IwbMainRecord);
 begin
   inherited;
-  if (grStruct.grsGroupType in [1, 6, 7]) and Assigned(aPrevMainRecord) and (aPrevMainRecord.FormID.ToCardinal = grStruct.grsLabel) then
+  if (grStruct.grsGroupType in [1, 6, 7]) and Assigned(aPrevMainRecord) and (aPrevMainRecord.FixedFormID.ToCardinal = GetGroupLabel) then
     (aPrevMainRecord as IwbMainRecordInternal).SetChildGroup(Self);
 end;
 
@@ -14230,10 +14247,10 @@ begin
     wbBeginInternalEdit(True);
     try
       if grStruct.grsGroupType in [1, 6..10] then begin
-        OldFormID := TwbFormID.FromCardinal(grStruct.grsLabel);
+        OldFormID := TwbFormID.FromCardinal(GetGroupLabel);
         if not OldFormID.IsNull then begin
           NewFormID := FixupFormID(OldFormID, aOld, aNew);
-          if OldFormID <> NewFormID then begin
+          if grStruct.grsLabel <> NewFormID.ToCardinal then begin
             MakeHeaderWriteable;
             grStruct.grsLabel := NewFormID.ToCardinal;
             Changed := True;
@@ -14346,19 +14363,18 @@ end;
 
 procedure TwbGroupRecord.SetGroupLabel(aLabel: Cardinal);
 var
-  OldLabel    : Cardinal;
+  _File       : IwbFile;
+  FileFileID  : TwbFileID;
+  FormID      : TwbFormID;
   i           : Integer;
   GroupRecord : IwbGroupRecord;
 
   SelfPtr     : IwbContainerElementRef;
   ContainedIn : IwbContainedIn;
   Element     : IwbElement;
+  Changed     : Boolean;
 begin
   SelfPtr := Self as IwbContainerElementRef;
-
-  OldLabel := grStruct.grsLabel;
-  if aLabel = OldLabel then
-    Exit;
 
   case grStruct.grsGroupType of
     1: ;//Result := Result + ' World Children of ';
@@ -14371,8 +14387,22 @@ begin
     raise Exception.Create('Can not set Label of ' + GetName);
   end;
 
-  MakeHeaderWriteable;
-  grStruct.grsLabel := aLabel;
+  _File := GetFile;
+  if Assigned(_File) then begin
+    FileFileID := _File.FileFileID;
+    FormID := TwbFormID.FromCardinal(aLabel);
+    if FormID.FileID.FullSlot > FileFileID.FullSlot then begin
+      FormID.FileID := FileFileID;
+      aLabel := FormID.ToCardinal;
+    end;
+  end;
+
+  Changed := False;
+  if aLabel <> grStruct.grsLabel then begin
+    MakeHeaderWriteable;
+    grStruct.grsLabel := aLabel;
+    Changed := True;
+  end;
 
   for i := 0 to Pred(GetElementCount) do begin
 
@@ -14380,13 +14410,13 @@ begin
 
     if Supports(Element, IwbGroupRecord, GroupRecord) then
       if GroupRecord.GroupType in [8..10] then begin
-        if GroupRecord.GroupLabel = OldLabel then
-          GroupRecord.GroupLabel := aLabel;
+        GroupRecord.GroupLabel := aLabel;
         Continue;
       end;
 
-    if Supports(Element, IwbContainedIn, ContainedIn) then
-      ContainedIn.ContainerChanged;
+    if Changed then
+      if Supports(Element, IwbContainedIn, ContainedIn) then
+        ContainedIn.ContainerChanged;
 
   end;
 end;
