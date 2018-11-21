@@ -14,6 +14,12 @@ State (visible or not) and width of the TOC is saved and restored when the Form 
 
 Time needed for creating a delta patch for the 650MB SeventySix.esm has been reduced from over 600 minutes (10 hours) to about 5 minutes.
 
+## Bugfixes
+
+The following reported issues have been fixed:
+
+* (reported on discord) - while in "Fit All" column width mode, it is not possible to manually increase the width of columns
+
 # What's new in xEdit 3.3.5 BETA?
 
 ## Developer message update
