@@ -15325,6 +15325,16 @@ var
   MinWidth       : Integer;
   ClientWidth    : Integer;
 begin
+  if vstView.Header.Columns.Header.States * [
+    hsAutoSizing,              // auto size chain is in progess, do not trigger again on WM_SIZE
+    hsDragging,                // header dragging is in progress (only if enabled)
+    hsDragPending,             // left button is down, user might want to start dragging a column
+    hsColumnWidthTracking,     // column resizing is in progress
+    hsColumnWidthTrackPending, // left button is down, user might want to start resize a column
+    hsResizing                 // multi column resizing in progress
+  ] <> [] then
+    Exit;
+
   vstView.BeginUpdate(True);
   vstView.Header.Columns.BeginUpdate;
   try
