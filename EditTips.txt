@@ -1,29 +1,27 @@
 All xEdit versions for different games (TES5Edit, FO4Edit, FNVEdit, etc.) are the same executable, you can rename to run in a different game mode
 You can run in several game modes from the same xEdit executable by creating different shortcuts with command line parameters like -fo4 -edit
 xLODGen LOD generator tools are the same executables as xEdit, you can generate LOD for a worldspace by right clicking on a plugin with world -> Other -> Generate LOD
-You can switch between different language strings files in right click -> Other -> Localization -> Language menu (Skyrim and later games)
+You can switch between different language strings files in [Hamburger Menu] -> Localization -> Language menu (Skyrim and later games)
 Add -l:fr command line parameter to use strings files for the specified language by default, where "fr" is the language ID of strings files (Skyrim and later games)
 Adding -cp:utf-8 command line parameters adds support for the game languages that use UTF-8 encoding (Skyrim and later games)
 A lot of right click menu options don't work while background loader is still running
 If xEdit doesn't start saying that ini or Data folder not found, run the game launcher to restore registry settings
 If xEdit doesn't ask to save plugin(s) upon exit, it means there were no changes made. Modified record and plugins are highlighted with bold font
 Pressing Ctrl+S saves the current plugin to a temp file which will replace the original one when closing xEdit
-When xEdit asks you save plugin(s), pressing OK or closing window with X has the same behaviour! You need to actually uncheck plugins you don't want to save
+When xEdit asks you save plugin(s), closing window with X aborts the save/exit. You need to actually uncheck plugins you don't want to save and click Ok to continue.
 To edit a plugin and test in game without restarting xEdit, create a copy, load it in xEdit and press F5 to save over the original after making changes
 xEdit creates backups of modified plugins in "Data\TES5Edit Backups" folder (TES5 is for Skyrim)
 Never change master files in TES4 plugin header manually, that will break plugin in majority of cases because internal FormID numbers are tied to this list. Use right click menu options "Add Masters", "Sort Masters" and "Clean Masters" instead
 Pressing F2 in the right pane activates inplace editor
 Pressing F2 in the left pane allows to change FormID of a record
-Filter is always applied to all plugins, so it doesn't matter where you right click
 Hold Ctrl or Shift while clicking in the left pane to select several records/plugins at once
 You can compare several records of the same type or drag&drop values by selecting them and right click -> Compare selected
 You can compare several versions of the same plugin by loading only one of them, right click on it -> Compare to, select the other one
-You can copy data from a record to several others by selecting them in the left pane, make sure that the source record to copy from is the last you selected so it is visible in the right pane, then right click on a data node you want to copy in the right pane -> Copy to selected
+You can copy data from a record to several others by selecting them in the left pane, activating Compare select, then right click on a data node you want to copy in the right pane -> Copy to selected
 You can bookmark up to 5 records with Ctrl+1..5 keys and go back with Alt+1..5 keys. Bookmarks are preserved between different xEdit sessions
 Holding Ctrl while clicking on FormIDs in the right pane focuses on them
 Hold Ctrl and double click on FormID numbers in the messages tab to focus on those records
-Hold Shift and double click on text fields in the right pane to open multiline editor
-Double click on text fields in the right pane to open multiline viewer
+Double click on text fields in the right pane to open multiline editor
 You can drag&drop values in the right pane between different plugins which allows you to copy even whole structures and lists if you drag by the header
 To add a new entry to a list in the right pane, right click on list's header top row and select "Add" or press Insert
 To make a copy of entry in a list in the right pane, drop&drop it over the list's header
@@ -34,18 +32,19 @@ To create a new record right click on a group in the left pane and select "Add".
 Press Del in the left pane to delete a record or a group of records. You can select several at once for deletion
 Some lists are sorted by xEdit internally and you can't change the order of entries in them, for example leveled lists
 Holding Alt while expanding a tree in the left pane does full expand. This can take a lot of time when expanding large trees
-Press Ctrl+C to copy to clipboard the text of the selected data node in the rigt pane, handy for copying and editing FormIDs
+Press Ctrl+C to copy to clipboard the text of the selected data node in the right or left pane, handy for copying and editing FormIDs
 Pressing Ctrl+F3 brings up Assets Browser which allows to quickly find files inside BSA/BA2 archives and Data folder, unpack them or preview in associated application
 Pressing Alt+F3 brings up Worldspace Browser which allows to overlay different information over the worldspace LOD map and quickly navigate between exterior cells using right click
 Pressing Ctrl+W when a weather record is selected brings up visual weather editor
 Holding Shift while clicking OK in plugins selection window disables building of references for all plugins, this speeds up loading but several functions won't work properly like changing FormIDs for example. Cleaning plugins will work though
-xEdit has Options window accessible with right click -> Other -> Options menu, where you can change colors, fonts and other settings
+xEdit has Options window accessible with [Hamburger Menu] -> Options menu, where you can change colors, fonts and other settings
 xEdit stores all of it's settings in Plugins.XXXviewsettings file located in the same folder as plugins.txt, but if you create ini file with the same name as executable in the same folder (FO4Edit.ini for example), xEdit will use it instead
+You can reset ALL settings by holding Ctrl + Shift + Alt while starting
 If you don't see xEdit window after launching, hold Shift next time to reset window position
 Italic font in the left pane means that those records or other record(s) deeper in the tree are injected. They have FormID load order index of a master file but don't override any records from it
 Underlined font in the left pane means that the reference(s) of those records are injected
 Red background color in the records tree doesn't mean something bad, it is just an indication that record(s) are overridden by later loaded plugins having different data
-xEdit can't load more than 256 plugins at once due to FormID numbers limitation
+xEdit can't load more than 256 modules (games without ESL support) or 253 full modules and 4096 light modules (SSE, FO4) at once due to FormID numbers limitation
 You can't reorder plugins in xEdit. Games prior to Skyrim (TES4, FO3, FNV) use plugin files dates for ordering, Skyrim and later games use order defined in the plugins.txt file
 You can't edit the game master file loaded at index 00. Use "Copy as override" right click menu to create a plugin and make your changes there
 "Copy as new" will still add masters to destination plugin if record references anything else from master file(s) or original plugin
@@ -54,10 +53,10 @@ Right click in the plugins selection window to clear selection, invert it or sel
 If you don't see anything when browsing records, you forgot to disable "Hide no conflicts rows" right click menu in the right pane
 "Stick to" right click menu in the right pane allows to focus on specified data node by default when browsing records instead of the top Record Header
 There are left and right arrow buttons in the right upper corner for your browsing history
-"Referenced by" tab shows records that link to the selected one. By default references information is not built for the game master and newly created plugins. You can manually build it using right click -> Other -> Build Reference Info menu
+"Referenced by" tab shows records that link to the selected one
 [Placed Object] in square brackets in the left pane means that this object is a part of precombined meshes of it's cell
 All exterior persistent references are located in a single persistent cell of a worldspace, however if you double click on FormID field of a reference in the right pane, the real world grid (X,Y) coordinates are shown at the end of description
 Records override each other using "Rule of one", which means the winning record from the last loaded plugin fully discards all data from the previous ones (except for a few rare occasions)
 Modgroups feature allows to hide conflicts in selected plugins combinations for easier conflicts resolution. Google "reddit tes5dit modgroups" for more information and examples
 xEdit supports scripting using Pascal language with right click -> Apply Script menu. Dozens of useful scripts are already provided for modding and learning
-Please always try the latest xEdit version from Nexus before reporting any issues
+Please always try the latest xEdit version from NexusMods or GitHub before reporting any issues
