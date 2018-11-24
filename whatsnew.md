@@ -37,6 +37,7 @@ The following reported issues have been fixed:
 * (reported on discord) - HITMEs (FormID Prefix HIgher Than Master Entries) in GRUP labels can lead to problems
 * (reported on discord) - Compare Selected does not initially use the correct Column Width mode
 * (found by developer) - Clicking the OK button in the Module Selection Form does not always behave the same as pressing `Enter`
+* (found by developer) - wbOffsetDataColsCounter can cause range check for modules with faulty data
 
 ## Update check on NexusMods
 
