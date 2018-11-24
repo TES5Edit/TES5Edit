@@ -15618,7 +15618,7 @@ begin
           if sl.Count >= MaxSaveListCount then
             Inc(j)
           else
-            sl.Add(Files[i].Name + ' ('+TimeToStr(Now - Files[i].UnsavedSince)+')');
+            sl.Add(Files[i].Name + ' ('+FormatDateTime('hh:nn', Now - Files[i].UnsavedSince)+')');
         end;
       end;
     if j > 0 then
