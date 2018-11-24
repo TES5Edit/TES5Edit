@@ -271,17 +271,18 @@ end;
 function CheckAppPath: string;
 const
   ExeName : array[TwbGameMode] of string = (
-    'FalloutNV.exe',  // gmFNV
-    'Fallout3.exe',   // gmFO3
     'Morrowind.exe',  // gmTES3
     'Oblivion.exe',   // gmTES4
+    'Fallout3.exe',   // gmFO3
+    'FalloutNV.exe',  // gmFNV
     'TESV.exe',       // gmTES5
-    'SkyrimVR.exe',   // gmTES5VR
-    'SkyrimSE.exe',   // gmSSE
     'Fallout4.exe',   // gmFO4
+    'SkyrimSE.exe',   // gmSSE
+    'SkyrimVR.exe',   // gmTES5VR
     'Fallout4VR.exe', // gmFO4VR
     'Fallout76.exe'   // gmFO76
   );
+
 var
   s: string;
 begin

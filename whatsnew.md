@@ -39,6 +39,7 @@ The following reported issues have been fixed:
 * (reported on discord) - Balloon Hint displays Caption in wrong font/colour when using custom themes
 * (reported on discord) - Various issue with xDump when running on a file that is not the game master
 * (reported on discord) - some texts are cut off in Options Form when a very wide system font is set
+* (reported on discord) - xEdit doesn't always find data path correctly if installed in the game folder
 * (found by developer) - Clicking the OK button in the Module Selection Form does not always behave the same as pressing `Enter`
 * (found by developer) - wbOffsetDataColsCounter can cause range check for modules with faulty data
 * (found by developer) - unsaved time interval is shown wrong in unsaved hint on systems configured for 12h time display
