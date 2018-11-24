@@ -45,6 +45,7 @@ object frmModGroupSelect: TfrmModGroupSelect
     Width = 848
     Height = 541
     Anchors = [akLeft, akTop, akRight, akBottom]
+    DefaultText = 'Node'
     Header.AutoSizeIndex = 0
     Header.Height = 16
     Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowImages, hoShowSortGlyphs, hoVisible]
@@ -70,40 +71,40 @@ object frmModGroupSelect: TfrmModGroupSelect
       item
         Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
         Position = 0
+        Text = 'Name'
         Width = 494
-        WideText = 'Name'
       end
       item
         Alignment = taCenter
         CaptionAlignment = taCenter
         Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
         Position = 1
+        Text = 'Optional'
         Width = 70
-        WideText = 'Optional'
       end
       item
         Alignment = taCenter
         CaptionAlignment = taCenter
         Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
         Position = 2
+        Text = 'Target'
         Width = 70
-        WideText = 'Target'
       end
       item
         Alignment = taCenter
         CaptionAlignment = taCenter
         Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
         Position = 3
+        Text = 'Source'
         Width = 70
-        WideText = 'Source'
       end
       item
         Alignment = taCenter
         CaptionAlignment = taCenter
         Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
         Position = 4
+        Text = 'Forbidden'
         Width = 70
-        WideText = 'Forbidden'
       end
       item
         Alignment = taCenter
@@ -111,8 +112,8 @@ object frmModGroupSelect: TfrmModGroupSelect
         Options = [coAllowClick, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coStyleColor]
         Position = 5
         Style = vsOwnerDraw
+        Text = 'Ignore LO'
         Width = 70
-        WideText = 'Ignore LO'
       end>
   end
   object pnlError: TPanel
