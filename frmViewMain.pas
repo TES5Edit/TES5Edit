@@ -12190,10 +12190,11 @@ begin
       end;
       PerformLongAction('Applying Filter', '[Pass 1] Processed Records: 0', procedure
       var
-        i      : Integer;
+        i, j   : Integer;
         Count  : Cardinal;
         Count2 : Cardinal;
         CountUnfiltered : Cardinal;
+        Master : IwbMainRecord;
       begin
         vstNav.BeginUpdate;
         try
@@ -12249,13 +12250,26 @@ begin
                     Continue;
                   end;
 
-                if FilterOnlyOne then
-                  if (Node.ChildCount = 0) and (MainRecord.MasterOrSelf.OverrideCount > 0) then begin
-                    //filter early, can't possibly have a conflict
-                    vstNav.DeleteNode(Node);
-                    Node := NextNode;
-                    Continue;
+                if FilterOnlyOne and (Node.ChildCount = 0) then begin
+                  Master := MainRecord.MasterOrSelf;
+                  if Master.OverrideCount > 0 then begin
+                    j := 0;
+                    if not Master.IsHidden then
+                      Inc(j);
+                    for i := 0 to Pred(Master.OverrideCount) do
+                      if not Master.Overrides[i].IsHidden then begin
+                        Inc(j);
+                        if j > 1 then
+                          Break;
+                      end;
+                    if j > 1 then begin
+                      //filter early, can't possibly have a conflict
+                      vstNav.DeleteNode(Node);
+                      Node := NextNode;
+                      Continue;
+                    end;
                   end;
+                end;
 
                 if MainRecord.IsInjected then
                   Include(NodeData.Flags, nnfInjected);
@@ -12672,7 +12686,7 @@ end;
 procedure TfrmMain.mniNavFilterForOnlyOneClick(Sender: TObject);
 begin
   FilterConflictAll := False;
-  FilterConflictThis := True;
+  FilterConflictThis := False;
 
   FilterByInjectStatus := False;
   FilterInjectStatus := False;
@@ -12722,7 +12736,7 @@ begin
   FilterBaseSignatures := '';
 
   FilterConflictAllSet := [];
-  FilterConflictThisSet := [ctOnlyOne];
+  FilterConflictThisSet := [];
 
   FlattenBlocks := False;
   FlattenCellChilds := False;
@@ -19213,7 +19227,7 @@ begin
             Include(PwbModuleInfo(MasterFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
             mniNavFilterForOnlyOneClick(Self);
 
-            Node := vstNav.GetLast;
+            Node := vstNav.GetFirst;
             while Assigned(Node) do begin
               NodeData := vstNav.GetNodeData(Node);
               if Assigned(NodeData) then
@@ -19223,7 +19237,7 @@ begin
                       if NodeData.ConflictThis = ctOnlyOne then
                         if Supports(wbCopyElementToFile(NodeData.Element, NewFile, False, False, '', '', '', False), IwbMainRecord, MainRecord) then
                           MainRecord.IsDeleted := True;
-              Node := vstNav.GetPrevious(Node);
+              Node := vstNav.GetNext(Node);
             end;
 
             NewFile.RemoveIdenticalDeltaFast;
