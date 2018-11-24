@@ -7885,7 +7885,7 @@ begin
     LoadModGroupsSelection(AllModGroups);
     Caption := 'Reloading ModGroups - Which ModGroups do you want to activate?';
     PresetCategory := 'ActiveModGroups';
-    if ShowModal = mrOk then begin
+    if (Length(AllModGroups) < 1) or (ShowModal = mrOk) then begin
       SaveModGroupsSelection(SelectedModGroups);
       WasModGroupsExist := ModGroupsExist;
       ModGroupsExist := SelectedModGroups.Activate;

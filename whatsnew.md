@@ -42,6 +42,8 @@ The following reported issues have been fixed:
 * (found by developer) - Clicking the OK button in the Module Selection Form does not always behave the same as pressing `Enter`
 * (found by developer) - wbOffsetDataColsCounter can cause range check for modules with faulty data
 * (found by developer) - unsaved time interval is shown wrong in unsaved hint on systems configured for 12h time display
+* (found by developer) - deleting the last (= there are no others) modgroup will not deactivate mod groups
+
 
 ## Update check on NexusMods
 
