@@ -34,19 +34,12 @@ object frmOptions: TfrmOptions
     object tsGeneral: TTabSheet
       Caption = 'General'
       ImageIndex = 1
-      object cbIKnow: TCheckBox
-        Left = 298
-        Top = 302
-        Width = 137
-        Height = 17
-        Caption = 'I know what I am doing'
-        TabOrder = 8
-        Visible = False
-      end
+      ExplicitLeft = 36
+      ExplicitTop = 28
       object cbHideUnused: TCheckBox
         Left = 16
         Top = 15
-        Width = 81
+        Width = 233
         Height = 17
         Caption = 'Hide unused'
         TabOrder = 0
@@ -54,7 +47,7 @@ object frmOptions: TfrmOptions
       object cbHideIgnored: TCheckBox
         Left = 16
         Top = 38
-        Width = 81
+        Width = 233
         Height = 17
         Caption = 'Hide ignored'
         TabOrder = 1
@@ -62,7 +55,7 @@ object frmOptions: TfrmOptions
       object cbHideNeverShow: TCheckBox
         Left = 16
         Top = 61
-        Width = 121
+        Width = 233
         Height = 17
         Caption = 'Hide "never shown"'
         TabOrder = 2
@@ -70,7 +63,7 @@ object frmOptions: TfrmOptions
       object cbLoadBSAs: TCheckBox
         Left = 16
         Top = 108
-        Width = 81
+        Width = 233
         Height = 17
         Hint = 
           'Skip loading BSA and BA2 archives. Some functions like LOD gener' +
@@ -81,7 +74,7 @@ object frmOptions: TfrmOptions
       object cbSortFLST: TCheckBox
         Left = 16
         Top = 131
-        Width = 121
+        Width = 233
         Height = 17
         Hint = 
           'Sorting FLST can cause issues for mods relying on the order of f' +
@@ -93,7 +86,7 @@ object frmOptions: TfrmOptions
       object cbSimpleRecords: TCheckBox
         Left = 16
         Top = 201
-        Width = 357
+        Width = 439
         Height = 17
         Hint = 'Display binary data as hex arrays'
         Caption = 'Simple records LAND, NAVI, NAVM, CELL, WRLD (requires restart)'
@@ -102,7 +95,7 @@ object frmOptions: TfrmOptions
       object cbShowUnsavedHint: TCheckBox
         Left = 266
         Top = 15
-        Width = 127
+        Width = 189
         Height = 17
         Caption = 'Show Unsaved Hint'
         TabOrder = 4
@@ -110,7 +103,7 @@ object frmOptions: TfrmOptions
       object cbTrackAllEditorID: TCheckBox
         Left = 266
         Top = 38
-        Width = 111
+        Width = 189
         Height = 17
         Hint = 'Default only track MGEF and game settings'
         Caption = 'Track all EditorID'
@@ -119,111 +112,111 @@ object frmOptions: TfrmOptions
       object cbSortGroupRecord: TCheckBox
         Left = 16
         Top = 154
-        Width = 81
+        Width = 439
         Height = 17
         Hint = 'Sort INFOs in DIAL by previous INFO'
         Caption = 'Sort INFOs'
-        TabOrder = 9
+        TabOrder = 8
       end
       object cbShowFlagEnumValue: TCheckBox
         Left = 16
         Top = 224
-        Width = 297
+        Width = 439
         Height = 17
         Hint = 
           'Add integer values of flags and enumerations in () brackets at t' +
           'he end'
         Caption = 'Show values of flags and enumerations (requires restart)'
-        TabOrder = 10
+        TabOrder = 9
       end
       object cbRemoveOffsetData: TCheckBox
         Left = 16
         Top = 177
-        Width = 169
+        Width = 439
         Height = 17
         Hint = 'Remove OFST subrecords from worldspaces'
         Caption = 'Remove OFST offset data'
-        TabOrder = 11
+        TabOrder = 10
       end
       object cbActorTemplateHide: TCheckBox
         Left = 16
         Top = 84
-        Width = 169
+        Width = 233
         Height = 17
         Caption = 'Hide templated fields on actors'
-        TabOrder = 12
+        TabOrder = 11
       end
       object cbClampFormID: TCheckBox
         Left = 16
         Top = 293
-        Width = 105
+        Width = 439
         Height = 17
         Hint = 'Set FormID index to the number of masters if greater'
         Caption = 'Clamp FormIDs'
-        TabOrder = 13
+        TabOrder = 12
       end
       object cbShowGroupRecordCount: TCheckBox
         Left = 16
         Top = 247
-        Width = 233
+        Width = 439
         Height = 17
         Caption = 'Show elements count for group records'
-        TabOrder = 14
+        TabOrder = 13
       end
       object cbShowTip: TCheckBox
         Left = 266
         Top = 61
-        Width = 111
+        Width = 189
         Height = 17
         Hint = 'Default only track MGEF and game settings'
         Caption = 'Show tip on start'
-        TabOrder = 15
+        TabOrder = 14
       end
       object cbShowFileFlags: TCheckBox
         Left = 16
         Top = 270
-        Width = 233
+        Width = 439
         Height = 17
         Caption = 'Show file header flags'
-        TabOrder = 16
+        TabOrder = 15
       end
       object cbAlignArrayElements: TCheckBox
         Left = 16
         Top = 315
-        Width = 185
+        Width = 439
         Height = 17
         Caption = 'Align alignable array elements'
-        TabOrder = 17
+        TabOrder = 16
       end
       object cbPatron: TCheckBox
         Left = 266
         Top = 84
-        Width = 157
+        Width = 189
         Height = 17
         BiDiMode = bdRightToLeftReadingOnly
         Caption = 'I am a patron or donor'
         ParentBiDiMode = False
-        TabOrder = 18
+        TabOrder = 17
       end
       object cbNoGitHubCheck: TCheckBox
         Left = 266
         Top = 131
-        Width = 169
+        Width = 189
         Height = 17
         BiDiMode = bdRightToLeftReadingOnly
         Caption = 'Don'#39't check for GitHub update'
         ParentBiDiMode = False
-        TabOrder = 19
+        TabOrder = 18
       end
       object cbNoNexusModsCheck: TCheckBox
         Left = 266
         Top = 108
-        Width = 169
+        Width = 189
         Height = 17
         BiDiMode = bdRightToLeftReadingOnly
         Caption = 'Don'#39't check for NexusMods update'
         ParentBiDiMode = False
-        TabOrder = 20
+        TabOrder = 19
       end
     end
     object tsCleaning: TTabSheet
@@ -249,7 +242,7 @@ object frmOptions: TfrmOptions
       object cbUDRSetScale: TCheckBox
         Left = 32
         Top = 71
-        Width = 97
+        Width = 112
         Height = 17
         Caption = 'Set scale to'
         TabOrder = 1
@@ -257,20 +250,20 @@ object frmOptions: TfrmOptions
       object cbUDRSetZ: TCheckBox
         Left = 32
         Top = 94
-        Width = 97
+        Width = 112
         Height = 17
         Caption = 'Set Z position to'
         TabOrder = 2
       end
       object edUDRSetScaleValue: TEdit
-        Left = 133
+        Left = 149
         Top = 69
         Width = 84
         Height = 21
         TabOrder = 3
       end
       object edUDRSetZValue: TEdit
-        Left = 133
+        Left = 149
         Top = 92
         Width = 84
         Height = 21
@@ -279,13 +272,13 @@ object frmOptions: TfrmOptions
       object cbUDRSetMSTT: TCheckBox
         Left = 32
         Top = 117
-        Width = 201
+        Width = 213
         Height = 17
         Caption = '[FO3/FNV] Replace MSTT FormID with'
         TabOrder = 5
       end
       object edUDRSetMSTTValue: TEdit
-        Left = 239
+        Left = 247
         Top = 115
         Width = 82
         Height = 21
@@ -326,28 +319,28 @@ object frmOptions: TfrmOptions
       object Label7: TLabel
         Left = 16
         Top = 235
-        Width = 267
+        Width = 275
         Height = 13
         Caption = 'Auto "Compare Selected" when multi-selecting less than'
       end
       object Label8: TLabel
-        Left = 359
+        Left = 375
         Top = 235
-        Width = 36
+        Width = 64
         Height = 13
         Caption = 'records'
       end
       object Label9: TLabel
         Left = 16
         Top = 267
-        Width = 330
+        Width = 338
         Height = 13
         Caption = 
           'Delay updating View when navigation treeview selection changes b' +
           'y '
       end
       object Label10: TLabel
-        Left = 415
+        Left = 431
         Top = 267
         Width = 24
         Height = 13
@@ -458,8 +451,8 @@ object frmOptions: TfrmOptions
         TabOrder = 8
       end
       object sedAutoCompareSelectedLimit: TSpinEdit
-        Left = 289
-        Top = 236
+        Left = 297
+        Top = 231
         Width = 64
         Height = 22
         MaxValue = 999999
@@ -468,9 +461,9 @@ object frmOptions: TfrmOptions
         Value = 0
       end
       object sedNavChangeDelay: TSpinEdit
-        Left = 345
+        Left = 360
         Top = 264
-        Width = 64
+        Width = 59
         Height = 22
         MaxValue = 999999
         MinValue = 0
