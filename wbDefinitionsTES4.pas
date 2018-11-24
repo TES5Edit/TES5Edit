@@ -2010,7 +2010,7 @@ begin
     wbInteger('Data Size', itU32, nil, cpIgnore),
     wbRecordFlags,
     wbFormID('FormID', cpFormID),
-    wbByteArray('Unknown', 4, cpIgnore)
+    wbByteArray('Version Control Info', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4)
   ]);
 
   wbSizeOfMainRecordStruct := 20;

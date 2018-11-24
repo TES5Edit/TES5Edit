@@ -1733,6 +1733,7 @@ type
   TwbFloatNormalizer = function(const aElement: IwbElement; aFloat: Extended): Extended;
   TwbGetConflictPriority = procedure(const aElement: IwbElement; var aConflictPriority: TwbConflictPriority);
   TwbIntToStrCallback = function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+  TwbByteArrayToStrCallback = procedure(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
   TwbIntOverlayCallback = function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): Int64;
   TwbStrToIntCallback = function(const aString: string; const aElement: IwbElement): Int64;
   TwbAddInfoCallback = function(const aMainRecord: IwbMainRecord): string;
@@ -2025,6 +2026,7 @@ type
 
   IwbByteArrayDef = interface(IwbValueDef)
     ['{3069E1AC-4307-421B-93E4-797E18075EF9}']
+    function SetToStr(const aToStrCallback : TwbByteArrayToStrCallback): IwbByteArrayDef;
   end;
 
   IwbEmptyDef = interface(IwbValueDef)
@@ -3976,6 +3978,9 @@ function wbEncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEn
 function wbMBCSEncoding(aCP: Cardinal): TEncoding; overload;
 function wbMBCSEncoding(s: string): TEncoding; overload;
 
+procedure wbVCI1ToStrBeforeFO4(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbVCI1ToStrAfterFO4(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+
 implementation
 
 uses
@@ -5366,6 +5371,7 @@ type
     IsNotEmpty              : Integer;
 
     badCountCallback        : TwbCountCallBack;
+    badToStrCallback        : TwbByteArrayToStrCallback;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority      : TwbConflictPriority;
@@ -5376,6 +5382,10 @@ type
                        aCountCallback : TwbCountCallback;
                        aGetCP         : TwbGetConflictPriority;
                        aTerminator    : Boolean);
+    procedure AfterClone(const aSource: TwbDef); override;
+
+    function ToStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
@@ -5386,6 +5396,8 @@ type
 
     {---IwbValueDef---}
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
+    function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetIsVariableSizeInternal: Boolean; override;
@@ -5394,7 +5406,12 @@ type
     function ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant; override;
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
+    function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; override;
+    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>; override;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
+
+    {--- IwbByteArrayDef ---}
+    function SetToStr(const aToStrCallback : TwbByteArrayToStrCallback): IwbByteArrayDef;
   end;
 
   TwbEmptyDef = class(TwbValueDef, IwbEmptyDef)
@@ -13508,6 +13525,14 @@ end;
 
 { TwbByteArrayDef }
 
+procedure TwbByteArrayDef.AfterClone(const aSource: TwbDef);
+begin
+  inherited AfterClone(aSource);
+  with aSource as TwbByteArrayDef do begin
+    Self.badToStrCallback := badToStrCallback;
+  end;
+end;
+
 function TwbByteArrayDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   ByteArrayDef: IwbByteArrayDef;
@@ -13521,6 +13546,13 @@ end;
 function TwbByteArrayDef.CanContainFormIDs: Boolean;
 begin
   Result := False;
+end;
+
+function TwbByteArrayDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+begin
+  Result := '';
+  if Assigned(badToStrCallback) then
+    badToStrCallback(Result, aBasePtr, aEndPtr, aElement, ctCheck);
 end;
 
 constructor TwbByteArrayDef.Clone(const aSource: TwbDef);
@@ -13631,6 +13663,37 @@ begin
       -255 : Result := 'Null';
          0 : Result := 'Filler for remaining data';
       end
+end;
+
+function TwbByteArrayDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>;
+var
+  s: string;
+begin
+  Result := nil;
+  if Assigned(badToStrCallback) then
+    with TStringList.Create do try
+      s := '';
+      badToStrCallback(s, aBasePtr, aEndPtr, aElement, ctEditInfo);
+      CommaText := s;
+      Result := ToStringArray;
+    finally
+      Free;
+    end;
+end;
+
+function TwbByteArrayDef.GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType;
+var
+  s: string;
+begin
+  Result := etDefault;
+  if Assigned(badToStrCallback) then begin
+    s := '';
+    badToStrCallback(s, aBasePtr, aEndPtr, aElement, ctEditType);
+    if SameText(s, 'ComboBox') then
+      Result := etComboBox
+    else if SameText(s, 'CheckComboBox') then
+      Result := etCheckComboBox;
+  end;
 end;
 
 function TwbByteArrayDef.GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
@@ -13824,10 +13887,17 @@ begin
   end;
 end;
 
-function TwbByteArrayDef.ToEditValue(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement): string;
+function TwbByteArrayDef.SetToStr(const aToStrCallback: TwbByteArrayToStrCallback): IwbByteArrayDef;
 begin
-  Result := ToString(aBasePtr, aEndPtr, aElement);
+  Result := Self;
+  badToStrCallback := aToStrCallback;
+end;
+
+function TwbByteArrayDef.ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+begin
+  Result := ToStringInternal(aBasePtr, aEndPtr, aElement);
+  if Assigned(badToStrCallback) then
+    badToStrCallback(Result, aBasePtr, aEndPtr, aElement, ctToEditValue);
 end;
 
 function TwbByteArrayDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
@@ -13855,7 +13925,25 @@ begin
       Inc(Result);
 end;
 
+function TwbByteArrayDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
+begin
+  Result := ToStringInternal(aBasePtr, aEndPtr, aElement);
+  if dfZeroSortKey in defFlags then begin
+    if Length(Result) > 0 then
+      Result := StringOfChar('0', Length(Result));
+  end else
+    if Assigned(badToStrCallback) then
+      badToStrCallback(Result, aBasePtr, aEndPtr, aElement, ctToSortKey);
+end;
+
 function TwbByteArrayDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+begin
+  Result := ToStringInternal(aBasePtr, aEndPtr, aElement);
+  if Assigned(badToStrCallback) then
+    badToStrCallback(Result, aBasePtr, aEndPtr, aElement, ctToStr);
+end;
+
+function TwbByteArrayDef.ToStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 var
   p: PByte;
 {}  _File: IwbFile;
@@ -17785,6 +17873,72 @@ begin
       Result := TEncoding.UTF8
     else
       Result := wbMBCSEncoding(CP);
+  end;
+end;
+
+procedure wbVCI1ToStrBeforeFO4(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  c       : Cardinal;
+  Day,
+  Month,
+  Year,
+  User,
+  Index   : Integer;
+begin
+  if aType = ctToStr then begin
+    c := PCardinal(aBasePtr)^;
+
+    if c <> 0 then begin
+      Day := c and $FF;
+      c := c shr 8;
+
+      Year := c and $FF;
+      c := c shr 8;
+      Dec(Year);
+      Month := Succ(Year mod 12);
+      Year := Year div 12;
+      Inc(Year, 2003);
+
+      User := c and $FF;
+      c := c shr 8;
+
+      Index := c and $FF;
+
+      aValue := Format('%.4d-%.2d-%.2d User: %d Index: %d', [Year, Month, Day, User, Index]);
+    end;
+  end;
+end;
+
+procedure wbVCI1ToStrAfterFO4(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  c       : Cardinal;
+  Day,
+  Month,
+  Year,
+  User,
+  Index   : Integer;
+begin
+  if aType = ctToStr then begin
+    c := PCardinal(aBasePtr)^;
+
+    if c <> 0 then begin
+      Day := c and $1F;
+      c := c shr 5;
+
+      Month := c and $0F;
+      c := c shr 4;
+
+      Year := c and $7F;
+      Inc(Year, 2000);
+      c := c shr 7;
+
+      User := c and $FF;
+      c := c shr 8;
+
+      Index := c and $FF;
+
+      aValue := Format('%.4d-%.2d-%.2d User: %d Index: %d', [Year, Month, Day, User, Index]);
+    end;
   end;
 end;
 
