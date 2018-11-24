@@ -4495,9 +4495,9 @@ begin
     wbInteger('Data Size', itU32, nil, cpIgnore),
     wbRecordFlags,
     wbFormID('FormID', cpFormID),
-    wbInteger('Version Control Master FormID', itU32, nil, cpIgnore),
+    wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4),
     wbInteger('Form Version', itU16, nil, cpIgnore),
-    wbInteger('Version Control Info 2', itU16, nil, cpIgnore)  // limited to values from 0 to 0xF
+    wbByteArray('Version Control Info 2', 2, cpIgnore)
   ]);
 
   wbSizeOfMainRecordStruct := 24;

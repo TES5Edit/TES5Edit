@@ -54,6 +54,10 @@ The Tips shown at program start have been updated to take into account changes m
 
 The Tips no longer require the external file EditTips.txt and are now baked into the exe.
 
+## Record definitions
+
+* Version Control Info is now decoded for all games and shows as `yyyy-mm-dd User: x Index: y` if not 0.
+
 # What's new in xEdit 3.3.5 BETA?
 
 ## Developer message updated

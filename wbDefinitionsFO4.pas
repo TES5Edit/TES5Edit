@@ -6415,7 +6415,6 @@ begin
   end;
 end;
 
-
 var
   wbRecordFlagsFlags : IwbFlagsDef;
 
@@ -6683,13 +6682,13 @@ begin
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbRecordFlagsFlags, wbFlagsList([])));
 
   wbMainRecordHeader := wbStruct('Record Header', [
-    wbString('Signature', 4, cpCritical),
-    wbInteger('Data Size', itU32, nil, cpIgnore),
-    wbRecordFlags,
-    wbFormID('FormID', cpFormID),
-    wbByteArray('Version Control Info 1', 4, cpIgnore),
-    wbInteger('Form Version', itU16, nil, cpIgnore),
-    wbByteArray('Version Control Info 2', 2, cpIgnore)
+    {00} wbString('Signature', 4, cpCritical),
+    {04} wbInteger('Data Size', itU32, nil, cpIgnore),
+    {08} wbRecordFlags,
+    {12} wbFormID('FormID', cpFormID),
+    {16} wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrAfterFO4),
+    {20} wbInteger('Form Version', itU16, nil, cpIgnore),
+    {22} wbByteArray('Version Control Info 2', 2, cpIgnore)
   ]);
 
   wbSizeOfMainRecordStruct := 24;
