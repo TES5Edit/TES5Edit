@@ -23,7 +23,6 @@ type
     edUDRSetMSTTValue: TEdit;
     Label1: TLabel;
     tsGeneral: TTabSheet;
-    cbIKnow: TCheckBox;
     cbHideUnused: TCheckBox;
     cbHideIgnored: TCheckBox;
     cbHideNeverShow: TCheckBox;
