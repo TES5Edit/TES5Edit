@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls;
+  Dialogs, StdCtrls, ExtCtrls, FileContainer;
 
 type
   TfrmTip = class(TForm)
@@ -13,6 +13,7 @@ type
     StaticText1: TStaticText;
     cbShowTip: TCheckBox;
     lblNextTip: TLabel;
+    fcEditTips: TFileContainer;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure lblNextTipClick(Sender: TObject);
@@ -73,24 +74,42 @@ end;
 
 procedure TfrmTip.FormCreate(Sender: TObject);
 var
+  FileContainer : TFileContainer;
+  Stream        : TStream;
+
   TipsFile: string;
   i: integer;
 begin
-  TipsFile := ExtractFilePath(Application.ExeName) + wbToolName + 'Tips.txt';
-
+  slTips := TStringList.Create;
   try
-    if not FileExists(TipsFile) then
-      Exit;
+    FileContainer := FindComponent('fc'+wbToolName+'Tips') as TFileContainer;
 
-    slTips := TStringList.Create;
-    slTips.LoadFromFile(TipsFile, TEncoding.UTF8);
+    TipsFile := ExtractFilePath(Application.ExeName) + wbToolName + 'Tips.Override.txt';
+    if FileExists(TipsFile) then try
+      slTips.LoadFromFile(TipsFile, TEncoding.UTF8);
+    except end;
 
-    if slTips.Count = 0 then
-        Exit;
+    if (slTips.Count < 1) and Assigned(FileContainer) then try
+      Stream := FileContainer.CreateReadStream;
+      try
+        slTips.LoadFromStream(Stream, TEncoding.UTF8);
+      finally
+        Stream.Free
+      end;
+    except end;
+
+    if slTips.Count < 1 then try
+      TipsFile := ExtractFilePath(Application.ExeName) + wbToolName + 'Tips.txt';
+      if FileExists(TipsFile) then
+        slTips.LoadFromFile(TipsFile, TEncoding.UTF8);
+    except end;
 
     for i := Pred(slTips.Count) downto 0 do
       if Trim(slTips[i]) = '' then
         slTips.Delete(i);
+
+    if slTips.Count = 0 then
+        Exit;
 
     NextTip;
 
@@ -99,8 +118,7 @@ end;
 
 procedure TfrmTip.FormDestroy(Sender: TObject);
 begin
-  if Assigned(slTips) then
-    slTips.Free;
+  FreeAndNil(slTips);
 end;
 
 initialization
