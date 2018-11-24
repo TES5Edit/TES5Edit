@@ -1169,7 +1169,8 @@ type
     fsPseudoESL,
     fsESLCompatible,
     fsIsOfficial,
-    fsCompareToHasSameMasters
+    fsCompareToHasSameMasters,
+    fsAddToMap
   );
 
   TwbFileStates = set of TwbFileState;
