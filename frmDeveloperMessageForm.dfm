@@ -1,6 +1,7 @@
 object frmDeveloperMessage: TfrmDeveloperMessage
   Left = 0
   Top = 0
+  ActiveControl = btnOK
   BorderIcons = [biSystemMenu, biMaximize]
   BorderStyle = bsDialog
   Caption = 'A message from the developer'
@@ -19,18 +20,17 @@ object frmDeveloperMessage: TfrmDeveloperMessage
     625)
   PixelsPerInch = 96
   TextHeight = 13
-  object lblOops: TJvHTLabel
-    Left = 11
-    Top = 600
-    Width = 320
-    Height = 14
+  object btnOops: TButton
+    Left = 8
+    Top = 592
+    Width = 361
+    Height = 25
     Caption = 
-      '<a name="oops">Oops, I checked that option by mistake, show me t' +
-      'he other text...</a>'
-    SuperSubScriptRatio = 0.666666666666666600
+      'Oops, I checked that option by mistake, show me the other messag' +
+      'e...'
+    TabOrder = 0
     Visible = False
-    OnClick = lblOopsClick
-    Layout = tlCenter
+    OnClick = btnOopsClick
   end
   object btnOK: TButton
     Left = 770
@@ -41,7 +41,7 @@ object frmDeveloperMessage: TfrmDeveloperMessage
     Caption = 'Open Patreon'
     Default = True
     ModalResult = 1
-    TabOrder = 0
+    TabOrder = 3
   end
   object reMain: TJvRichEdit
     Left = 8
@@ -60,7 +60,7 @@ object frmDeveloperMessage: TfrmDeveloperMessage
     SelectionBar = False
     SelText = ''
     StreamFormat = sfRichText
-    TabOrder = 1
+    TabOrder = 4
     WantReturns = False
   end
   object btnCancel: TButton
@@ -69,7 +69,7 @@ object frmDeveloperMessage: TfrmDeveloperMessage
     Width = 96
     Height = 25
     Anchors = [akRight, akBottom]
-    Caption = 'Cancel'
+    Caption = 'Close'
     Enabled = False
     ModalResult = 2
     TabOrder = 2
@@ -80,7 +80,7 @@ object frmDeveloperMessage: TfrmDeveloperMessage
     Width = 154
     Height = 159
     Caption = 'pnlElminster'
-    TabOrder = 3
+    TabOrder = 5
     object imgElminster: TImage
       Left = 1
       Top = 1
@@ -93,6 +93,15 @@ object frmDeveloperMessage: TfrmDeveloperMessage
       ExplicitWidth = 105
       ExplicitHeight = 105
     end
+  end
+  object cbDontShowAgain: TCheckBox
+    Left = 476
+    Top = 596
+    Width = 175
+    Height = 17
+    Anchors = [akRight, akBottom]
+    Caption = '&Don'#39't show again until changed'
+    TabOrder = 1
   end
   object tmrEnableButton: TTimer
     Enabled = False

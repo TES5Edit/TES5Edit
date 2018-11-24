@@ -10,6 +10,20 @@ Width of the TOC is adjustable with a splitter.
 
 State (visible or not) and width of the TOC is saved and restored when the Form shows again.
 
+## Developer message updated
+
+The special dialog after the message that was exclusive to the last BETA has been removed.
+
+The dialog now has a "Don't show again for a while" checkbox. When checked, the dialog will not be shown again until a newer version of xEdit with a changed message has been installed, or 14 days have expire.
+
+For Patrons, the checkbox is "Don't show again until changed" and it will only show again when the message has changed.
+
+The message will be shown directly when the Option Form is closed and the "I'm a Patron or Donor" checkbox has been changed form unchecked to checked.
+
+The text has remained unchanged from the last BETA release.
+
+Please provide feedback on the xEdit Discord in the #feedback channel if you think any of this should be changed before the release on NexusMods.
+
 ## Hugely improved performance for "Create Delta Patch"
 
 Time needed for creating a delta patch for the 650MB SeventySix.esm has been reduced from over 600 minutes (10 hours) to about 5 minutes.
@@ -36,7 +50,7 @@ If xEdit is an even minor version (e.g. 4.0.x, 4.2.x, ...) when it is started fo
 
 # What's new in xEdit 3.3.5 BETA?
 
-## Developer message update
+## Developer message updated
 
 The developer message has been updated. 
 
