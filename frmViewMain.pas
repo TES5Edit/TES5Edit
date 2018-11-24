@@ -941,6 +941,7 @@ type
     procedure DoInit;
     procedure SetDoubleBuffered(aWinControl: TWinControl);
     procedure CleanupRefCache;
+    procedure ShowDeveloperMessage(aForce: Boolean = False);
 
     procedure SetActiveRecord(const aMainRecord: IwbMainRecord); overload;
     procedure SetActiveRecord(const aMainRecords: TDynMainRecords); overload;
@@ -4691,22 +4692,7 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    i := Settings.ReadInteger('DeveloperMessage', 'Version', 0);
-    if (i < wbDeveloperMessageVersion) then begin
-      with TfrmDeveloperMessage.Create(Self) do try
-        if wbPatron then begin
-          btnCancel.Cancel := True;
-          tmrEnableButton.Interval := 1;
-        end;
-        if ShowModal = mrOk then
-          bnPatreon.Click;
-        Settings.WriteInteger('DeveloperMessage', 'Version', wbDeveloperMessageVersion);
-        Settings.UpdateFile;
-      finally
-        Free;
-      end;
-    end;
-
+    ShowDeveloperMessage;
   end;
 
   try
@@ -12771,8 +12757,10 @@ var
   ct: TConflictThis;
   ca: TConflictAll;
   i: integer;
+  PatronSet: Boolean;
 begin
   with TfrmOptions.Create(Self) do try
+    PatronSet := False;
 
     pnlFontRecords.Font := vstNav.Font;
     pnlFontMessages.Font := mmoMessages.Font;
@@ -12856,6 +12844,7 @@ begin
     ShowUnsavedHint := cbShowUnsavedHint.Checked;
     //wbIKnowWhatImDoing := cbIKnow.Checked;
     wbShowTip := cbShowTip.Checked;
+    PatronSet := cbPatron.Checked and not wbPatron;
     wbPatron := cbPatron.Checked;
     wbNoGitHubCheck := cbNoGitHubCheck.Checked;
     wbNoNexusModsCheck := cbNoNexusModsCheck.Checked;
@@ -12867,6 +12856,9 @@ begin
     wbUDRSetZValue := StrToFloatDef(edUDRSetZValue.Text, wbUDRSetZValue);
     wbUDRSetMSTT := cbUDRSetMSTT.Checked;
     wbUDRSetMSTTValue := StrToInt64Def('$' + edUDRSetMSTTValue.Text, wbUDRSetMSTTValue);
+
+    if PatronSet then
+      ShowDeveloperMessage(True);
 
     SaveFont(Settings, 'UI', 'FontRecords', vstNav.Font);
     SaveFont(Settings, 'UI', 'FontMessages', mmoMessages.Font);
@@ -15075,6 +15067,50 @@ begin
   finally
     Free;
   end;
+end;
+
+procedure TfrmMain.ShowDeveloperMessage(aForce: Boolean);
+var
+  i           : Integer;
+  LastShownOn : Int64;
+begin
+  i := Settings.ReadInteger('DeveloperMessage', 'Version', 0);
+
+  if not aForce then
+    if not wbPatron then begin
+      LastShownOn := Settings.ReadInteger('DeveloperMessage', 'LastShownOn', 0);
+      if LastShownOn + 14 <= Trunc(Date) then
+        aForce := True;
+    end;
+
+  if aForce or (i < wbDeveloperMessageVersion) then
+    with TfrmDeveloperMessage.Create(Self) do try
+
+      if wbPatron then begin
+        btnCancel.Cancel := True;
+        btnCancel.Enabled := True;
+        ActiveControl := btnCancel;
+        tmrEnableButton.Interval := 1;
+      end;
+
+      if i > 0 then
+        cbDontShowAgain.Checked := True;
+
+      if ShowModal = mrOk then
+        bnPatreon.Click;
+
+      Settings.WriteInteger('DeveloperMessage', 'LastShownOn', Trunc(Date));
+
+      if cbDontShowAgain.Checked then
+        Settings.WriteInteger('DeveloperMessage', 'Version', wbDeveloperMessageVersion)
+      else
+        Settings.WriteInteger('DeveloperMessage', 'Version', 0);
+
+      Settings.UpdateFile;
+    finally
+      Free;
+    end;
+
 end;
 
 procedure TfrmMain.splElementsMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);

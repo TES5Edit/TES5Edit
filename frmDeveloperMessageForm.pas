@@ -9,21 +9,28 @@ uses
 
 type
   TfrmDeveloperMessage = class(TForm)
+    btnOops: TButton;
     btnCancel: TButton;
+    cbDontShowAgain: TCheckBox;
     btnOk: TButton;
+
     reMain: TJvRichEdit;
-    tmrEnableButton: TTimer;
     fcMessage: TFileContainer;
+    fcMessageThanks: TFileContainer;
+
     pnlElminster: TPanel;
     imgElminster: TImage;
-    fcMessageThanks: TFileContainer;
-    lblOops: TJvHTLabel;
     fcImage: TFileContainer;
+
+    tmrEnableButton: TTimer;
+
     procedure FormCreate(Sender: TObject);
-    procedure tmrEnableButtonTimer(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure lblOopsClick(Sender: TObject);
+
+    procedure btnOopsClick(Sender: TObject);
+
+    procedure tmrEnableButtonTimer(Sender: TObject);
   private
     procedure FixZoom;
   public
@@ -45,9 +52,8 @@ var
   pt        : TPoint;
 begin
   if RichEditVersion >= 3 then begin
-
     reMain.Zoom := reMain.Zoom - 1;
-    reMain.ClearSelection;
+    reMain.SelLength := 0;
     reMain.SelStart := 100000;
     i := reMain.SelStart;
     reMain.SelText := #13#13;
@@ -104,10 +110,14 @@ begin
   end;
 
   if wbPatron then begin
-    lblOops.Visible := True;
+    btnOops.Visible := True;
+    cbDontShowAgain.Caption := '&Don''t show again until changed';
     Stream := fcMessageThanks.CreateReadStream
-  end else
+  end else begin
+    btnOops.Visible := False;
+    cbDontShowAgain.Caption := '&Don''t show again for a while';
     Stream := fcMessage.CreateReadStream;
+  end;
   try
     reMain.Lines.LoadFromStream(Stream);
   finally
@@ -127,13 +137,15 @@ begin
   FixZoom;
 end;
 
-procedure TfrmDeveloperMessage.lblOopsClick(Sender: TObject);
+procedure TfrmDeveloperMessage.btnOopsClick(Sender: TObject);
 var
   Stream: TStream;
 begin
+  wbPatron := False;
   LockWindowUpdate(Handle);
   try
-    lblOops.Visible := False;
+    btnOops.Visible := False;
+    cbDontShowAgain.Caption := '&Don''t show again for a while';
     Stream := fcMessage.CreateReadStream;
     try
       reMain.Lines.LoadFromStream(Stream);
