@@ -48,6 +48,12 @@ If an update is available, a balloon hint will be shown under the NexusMods butt
 
 If xEdit is an even minor version (e.g. 4.0.x, 4.2.x, ...) when it is started for the first time (after this change) then update checking on GitHub is initially disabled (but can be turned on in the Options).
 
+## Tips updated
+
+The Tips shown at program start have been updated to take into account changes made to xEdit.
+
+The Tips no longer require the external file EditTips.txt and are now baked into the exe.
+
 # What's new in xEdit 3.3.5 BETA?
 
 ## Developer message updated
