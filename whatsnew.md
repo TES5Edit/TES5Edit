@@ -36,6 +36,7 @@ The following reported issues have been fixed:
 * (reported on discord) - while in "Fit All" column width mode, it is not possible to manually increase the width of columns
 * (reported on discord) - HITMEs (FormID Prefix HIgher Than Master Entries) in GRUP labels can lead to problems
 * (reported on discord) - Compare Selected does not initially use the correct Column Width mode
+* (reported on discord) - Balloon Hint displays Caption in wrong font/colour when using custom themes
 * (found by developer) - Clicking the OK button in the Module Selection Form does not always behave the same as pressing `Enter`
 * (found by developer) - wbOffsetDataColsCounter can cause range check for modules with faulty data
 

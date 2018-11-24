@@ -464,13 +464,16 @@ begin
 end;
 
 procedure GetHintTitleFont(AFont: TFont);
+(** )
 {$IFDEF JVCLThemesEnabled}
 var
   AThemedTextColor: Integer;
   Result: Boolean;
   LogFontW: TLogFontW;
 {$ENDIF JVCLThemesEnabled}
+(**)
 begin
+  (** )
   {$IFDEF JVCLThemesEnabled}
   if IsWinVista_UP and StyleServices.Enabled then
   begin
@@ -490,6 +493,7 @@ begin
     end;
   end;
   {$ENDIF JVCLThemesEnabled}
+  (**)
   AFont.Assign(Screen.HintFont);
   AFont.Style := AFont.Style + [fsBold];
 end;
