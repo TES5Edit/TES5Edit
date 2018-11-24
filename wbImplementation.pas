@@ -780,7 +780,7 @@ type
     procedure SortRecords;
     procedure SortRecordsByEditorID;
 
-    procedure AddMaster(const aFileName: string; isTemporary: Boolean = False); overload;
+    procedure AddMaster(const aFileName: string; isTemporary: Boolean = False; aAutoLoadOrder: Boolean = False); overload;
     procedure AddMaster(const aFile: IwbFile); overload;
 
     procedure UpdateModuleMasters;
@@ -1976,7 +1976,7 @@ end;
 var
   _FileGeneration: Integer;
 
-procedure TwbFile.AddMaster(const aFileName: string; IsTemporary: Boolean);
+procedure TwbFile.AddMaster(const aFileName: string; IsTemporary: Boolean; aAutoLoadOrder: Boolean);
 var
   _File : IwbFile;
   s     : string;
@@ -2003,7 +2003,10 @@ begin
     States := [];
 
   flProgress('Adding master "' + t + '"');
-  _File := wbFile(s + t, -1, '', States);
+  i := -1;
+  if aAutoLoadOrder then
+    i := High(Integer);
+  _File := wbFile(s + t, i, '', States);
   if not (wbToolMode in [tmDump, tmExport]) and (wbRequireLoadOrder and (_File.LoadOrder < 0)) then
     raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.')
   else
@@ -2693,6 +2696,13 @@ begin
   UpdateModuleMasters;
 end;
 
+var
+  _NextFullSlot: Integer;
+  _NextLightSlot: Integer;
+  _NextLoadOrder: Integer;
+  Files : array of IwbFile;
+  FilesMap: TStringList;
+
 constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates; aData: TBytes);
 var
   s: string;
@@ -2774,7 +2784,7 @@ begin
   end else if not (fsOnlyHeader in flStates) then
     flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
 
-  if not (fsOnlyHeader in flStates) then
+  if not (fsOnlyHeader in flStates) then begin
     if Assigned(flModule) and not Assigned(flModule.miFile) then begin
       flModule.miFile := Self;
       flModule.miLoadOrder := flLoadOrder;
@@ -2789,14 +2799,14 @@ begin
       if GetIsLocalized then
         Include(flModule.miFlags, mfHasLocalizedFlag);
     end;
-end;
 
-var
-  _NextFullSlot: Integer;
-  _NextLightSlot: Integer;
-  _NextLoadOrder: Integer;
-  Files : array of IwbFile;
-  FilesMap: TStringList;
+    if fsAddToMap in aStates then begin
+      SetLength(Files, Succ(Length(Files)));
+      Files[High(Files)] := Self;
+      FilesMap.AddObject(flFileName, Pointer(Files[High(Files)]));
+    end;
+  end;
+end;
 
 constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aIsESl: Boolean);
 var
@@ -2946,6 +2956,7 @@ begin
         with miMasters[i]^ do
           if Assigned(miFile) then
             AddMaster(_File);
+
   BuildOrLoadRef(False);
 end;
 
@@ -4316,7 +4327,7 @@ begin
         if not Assigned(Rec) then
           raise Exception.CreateFmt('Unexpected error reading master list for file "%s"', [flFileName]);
         if not wbStripEmptyMasters or (Trim(Rec.EditValue) <> '') then
-          AddMaster(Rec.EditValue);
+          AddMaster(Rec.EditValue, False, flLoadOrder = High(Integer));
       end;
 
     s := Header.ElementEditValues['SNAM'].ToLower;
@@ -18176,12 +18187,9 @@ begin
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
   else begin
     if not wbIsPlugin(FileName) then
-      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, aStates, aData)
+      Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData)
     else
-      Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, aStates, aData);
-    SetLength(Files, Succ(Length(Files)));
-    Files[High(Files)] := Result;
-    FilesMap.AddObject(FileName, Pointer(Result));
+      Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData);
   end;
 end;
 

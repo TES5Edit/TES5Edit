@@ -838,10 +838,10 @@ begin
             Exit;
           end;
 
-        wbDataPath := ReadString('Path');
-            wbDataPath := StringReplace(wbDataPath, '"', '', [rfReplaceAll]);
+        DataPath := ReadString('Path');
+            DataPath := StringReplace(DataPath, '"', '', [rfReplaceAll]);
 
-        if wbDataPath = '' then begin
+        if DataPath = '' then begin
           ReportProgress('Warning: Could not determine ' + wbGameName2 + ' installation path, no "Path" registry key');
         end;
       end else begin
@@ -1442,13 +1442,23 @@ begin
       try
         IsLocalized := False;
         wbMastersForFile(s, Masters, nil, nil, @IsLocalized);
+        if not IsLocalized then
+          for i := 0 to Pred(Masters.Count) do begin
+            wbMastersForFile(Masters[i], nil, nil, nil, @IsLocalized);
+            if IsLocalized then
+              Break;
+          end;
+        Masters.Add(ExtractFileName(s));
         if IsLocalized and not wbLoadBSAs and not FindCmdLineSwitch('nobsa') then begin
-          t := ExtractFilePath(s) + 'Strings\' + ChangeFileExt(ExtractFileName(s), '') + '_' + wbLanguage + '.STRINGS';
-          if not FileExists(t) then
-            wbLoadBSAs := True;
+          for i := 0 to Pred(Masters.Count) do begin
+            t := ExtractFilePath(s) + 'Strings\' + ChangeFileExt(Masters[i], '') + '_' + wbLanguage + '.STRINGS';
+            if not FileExists(t) then begin
+              wbLoadBSAs := True;
+              Break;
+            end;
+          end;
         end;
         if wbLoadBSAs then begin
-          Masters.Add(ExtractFileName(s));
 
           if wbLoadAllBSAs then begin
             n := TStringList.Create;
