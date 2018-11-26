@@ -73,7 +73,6 @@ object frmRichEdit: TfrmRichEdit
     Margins.Bottom = 35
     Align = alClient
     BevelOuter = bvNone
-    Caption = 'pnlMain'
     TabOrder = 3
     object splTOC: TJvSplitter
       Left = 185

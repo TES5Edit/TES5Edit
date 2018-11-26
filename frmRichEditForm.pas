@@ -40,6 +40,7 @@ type
     procedure UpdateActions; override;
   private
     NeedRebuildTOC : Boolean;
+    NeedToggleTOC : Boolean;
     InRedirectKey: Integer;
     procedure BuildTOC;
     procedure TOCSelected(aNode: PVirtualNode);
@@ -275,6 +276,7 @@ begin
     reMain.Zoom := tbrZoom.Position;
   end;
   BuildTOC;
+  NeedToggleTOC := True;
 end;
 
 procedure TfrmRichEdit.splTOCMoved(Sender: TObject);
@@ -316,6 +318,18 @@ procedure TfrmRichEdit.UpdateActions;
 begin
   if NeedRebuildTOC then
     BuildTOC;
+  if NeedToggleTOC then begin
+    NeedToggleTOC := False;
+    if btnTOC.Checked then begin
+      LockWindowUpdate(Handle);
+      try
+        btnTOC.Checked := not btnTOC.Checked;
+        btnTOC.Checked := not btnTOC.Checked;
+      finally
+        LockWindowUpdate(0);
+      end;
+    end;
+  end;
   inherited;
 end;
 
