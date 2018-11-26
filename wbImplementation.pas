@@ -14211,9 +14211,7 @@ begin
 
     Changed := False;
 
-    if GetMastersUpdated then begin
-      asm nop end;
-    end else begin
+    if not GetMastersUpdated then begin
       IsInternal := wbBeginInternalEdit(True);
       try
         if grStruct.grsGroupType in [1, 6..10] then begin
