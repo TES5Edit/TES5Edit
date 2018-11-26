@@ -1,3 +1,11 @@
+# What's new in xEdit 3.3.7 BETA?
+
+## Bugfixes
+
+The following reported issues have been fixed:
+
+* (reported on discord) - Adding, Sorting, and Cleaning Masters can lead to data corruption (Please check all modules where you made changes to masters with 3.3.6!!!)
+
 # What's new in xEdit 3.3.6 BETA?
 
 ## Table of Contents for What's New

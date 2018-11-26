@@ -205,7 +205,7 @@ begin
     Inc(j);
   end;
   while Assigned(_File) do begin
-    Result := _File.RecordByFormID[FormID.ChangeFileID(_File.FileFileID), True];
+    Result := _File.RecordByFormID[FormID.ChangeFileID(_File.FileFileID[True]), True, True];
     if Assigned(Result) then
       Exit;
 

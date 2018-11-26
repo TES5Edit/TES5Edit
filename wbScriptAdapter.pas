@@ -1373,7 +1373,7 @@ var
 begin
   Value := 0;
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    Value := _File.MasterCount;
+    Value := _File.MasterCount[True];
 end;
 
 procedure IwbFile_MasterByIndex(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1381,8 +1381,8 @@ var
   _File: IwbFile;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    if Args.Values[1] < _File.MasterCount then
-      Value := _File.Masters[Args.Values[1]];
+    if Args.Values[1] < _File.MasterCount[True] then
+      Value := _File.Masters[Args.Values[1], True];
 end;
 
 procedure IwbFile_RecordCount(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1416,7 +1416,7 @@ var
   _File: IwbFile;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    Value := _File.RecordByFormID[TwbFormID.FromVar(Args.Values[1]), Args.Values[2]];
+    Value := _File.RecordByFormID[TwbFormID.FromVar(Args.Values[1]), Args.Values[2], True];
 end;
 
 procedure IwbFile_RecordByEditorID(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1470,7 +1470,7 @@ var
   _File: IwbFile;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    Value := _File.LoadOrderFormIDtoFileFormID(TwbFormID.FromVar(Args.Values[1])).ToCardinal;
+    Value := _File.LoadOrderFormIDtoFileFormID(TwbFormID.FromVar(Args.Values[1]), True).ToCardinal;
 end;
 
 procedure IwbFile_FileFormIDtoLoadOrderFormID(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1478,7 +1478,7 @@ var
   _File: IwbFile;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    Value := _File.FileFormIDtoLoadOrderFormID(TwbFormID.FromVar(Args.Values[1])).ToCardinal;
+    Value := _File.FileFormIDtoLoadOrderFormID(TwbFormID.FromVar(Args.Values[1]), True).ToCardinal;
 end;
 
 procedure IwbFile_WriteToStream(var Value: Variant; Args: TJvInterpreterArgs);
