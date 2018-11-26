@@ -131,6 +131,7 @@ function wbCounterContainerAfterSet(aCounterName: String; anArrayName: String; c
 function wbCounterContainerByPathAfterSet(aCounterName: String; anArrayName: String; const aElement: IwbElement): Boolean;
 function wbFormVerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aMinimum: Integer): Integer;
 function wbFormVer78Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbFormVer44Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 
 // BSA helper
 
@@ -1364,6 +1365,11 @@ end;
 function wbFormVer78Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 78);
+end;
+
+function wbFormVer44Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 44);
 end;
 
 function ExecuteCaptureConsoleOutput(const aCommandLine: string): Cardinal;
