@@ -922,6 +922,7 @@ type
 
     FileCRCs: TwbFastStringListIC;
 
+    CheckedCount: Cardinal;
     ErrorsCount : Cardinal;
     ITMcount    : Cardinal;
     DRcount     : Cardinal;
@@ -2832,18 +2833,25 @@ begin
     Result := aElement.ContainingMainRecord;
     // first error in this record - show record's name
     if Assigned(Result) and (Result <> LastRecord) then begin
-      wbProgress(Result.Name);
       Inc(ErrorsCount);
+      wbCurrentProgress := Format('Processed Records: %d Errors found: %d', [CheckedCount, ErrorsCount]);
+      wbProgress(Result.Name);
     end;
     wbProgress('    ' + aElement.Path + ' -> ' + Error);
   end else begin
     // passing through last record with error
     Result := LastRecord;
-    wbProgress('');
+    wbTick;
   end;
+
   if Supports(aElement, IwbContainerElementRef, Container) then
     for i := 0 to Pred(Container.ElementCount) do
       Result := CheckForErrorsLinear(Container.Elements[i], Result);
+
+  if aElement.ElementType = etMainRecord then begin
+    Inc(CheckedCount);
+    wbCurrentProgress := Format('Processed Records: %d Errors found: %d', [CheckedCount, ErrorsCount]);
+  end;
 end;
 
 function TfrmMain.CheckForErrors(const aIndent: Integer; const aElement: IwbElement): Boolean;
@@ -2920,19 +2928,18 @@ begin
 end;
 
 procedure TfrmMain.mniNavCheckForErrorsClick(Sender: TObject);
-var
-  Nodes                       : TNodeArray;
-  NodeData                    : PNavNodeData;
-  i                           : Integer;
 begin
   UserWasActive := True;
 
-  Inc(wbShowStartTime);
-  wbStartTime := Now;
-  Enabled := False;
-  pgMain.ActivePage := tbsMessages;
-  ErrorsCount := 0;
-  try
+  PerformLongAction('Checking for Errors', '', procedure
+  var
+    Nodes                       : TNodeArray;
+    NodeData                    : PNavNodeData;
+    i                           : Integer;
+  begin
+    ErrorsCount := 0;
+    CheckedCount := 0;
+
     Nodes := vstNav.GetSortedSelection(True);
     for i := Low(Nodes) to High(Nodes) do begin
       NodeData := vstNav.GetNodeData(Nodes[i]);
@@ -2941,21 +2948,13 @@ begin
           wbCurrentAction := 'Checking for Errors in ' + NodeData.Container.Name;
           wbProgress(wbCurrentAction);
           CheckForErrorsLinear(NodeData.Container, nil)
-          //CheckForErrors(0, NodeData.Container)
         end else if Assigned(NodeData.Element) then begin
           wbCurrentAction := 'Checking for Errors in ' + NodeData.Element.Name;
           wbProgress(wbCurrentAction);
           CheckForErrorsLinear(NodeData.Element, nil)
-          //CheckForErrors(0, NodeData.Element);
         end;
     end;
-    wbProgress('All Done!');
-  finally
-    wbCurrentAction := '';
-    Caption := Application.Title;
-    Enabled := True;
-    Dec(wbShowStartTime);
-  end;
+  end);
 end;
 
 procedure TfrmMain.mniNavCleanMastersClick(Sender: TObject);

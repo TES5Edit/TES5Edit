@@ -7,6 +7,10 @@ The following reported issues have been fixed:
 * (reported on discord) - Adding, Sorting, and Cleaning Masters can lead to data corruption (Please check all modules where you made changes to masters with 3.3.6!!!)
 * (reported on discord) - What's New TOC does not intially show correctly in the What's New tab if the TOC was left open previously and the "Don't show again until changed" checkbox is checked in the What's New Form at program start
 
+## Features
+
+* "Check for Errors" now provides better progress information.
+
 # What's new in xEdit 3.3.6 BETA?
 
 ## Table of Contents for What's New
