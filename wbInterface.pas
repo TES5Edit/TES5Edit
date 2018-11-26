@@ -17838,7 +17838,8 @@ begin
       Index := c and $FF;
 
       aValue := Format('%.4d-%.2d-%.2d User: %d Index: %d', [Year, Month, Day, User, Index]);
-    end;
+    end else
+      aValue := 'None';
   end;
 end;
 
@@ -17871,7 +17872,8 @@ begin
       Index := c and $FF;
 
       aValue := Format('%.4d-%.2d-%.2d User: %d Index: %d', [Year, Month, Day, User, Index]);
-    end;
+    end else
+      aValue := 'None';
   end;
 end;
 

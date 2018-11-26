@@ -5220,7 +5220,10 @@ begin
     wbInteger('Data Size', itU32, nil, cpIgnore),
     wbRecordFlags,
     wbFormID('FormID', cpFormID),
-    wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4),
+    wbUnion('Version Control Info 1', wbFormVer44Decider, [
+      wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4),
+      wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrAfterFO4)
+    ]),
     wbInteger('Form Version', itU16, nil, cpIgnore),
     wbByteArray('Version Control Info 2', 2, cpIgnore)
   ]);
