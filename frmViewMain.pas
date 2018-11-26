@@ -1337,7 +1337,7 @@ begin
 
   if Assigned(aElement) then begin
     ObjectID := aElement._File.NextObjectID; // remember ID
-    s := aElement._File.FileFormIDtoLoadOrderFormID(aElement._File.NewFormID).ToString(False);
+    s := aElement._File.FileFormIDtoLoadOrderFormID(aElement._File.NewFormID, True).ToString(False);
   end;
 
   try
@@ -1560,21 +1560,21 @@ begin
   if not wbrequireLoadorder then begin
     k := aFile.LoadOrder;
     if k >= 0 then
-      for i := 0 to Pred(aFile.MasterCount) do begin
+      for i := 0 to Pred(aFile.MasterCount[True]) do begin
         Present := False;
         for j := Low(Files) to high(Files) do
-          if sameText(Files[j].FileName, aFile.Masters[i].FileName) then begin
+          if sameText(Files[j].FileName, aFile.Masters[i, True].FileName) then begin
             Present := True;
             Break;
           end;
         if not Present then
           begin
-            if aFile.Masters[i].LoadOrder = -1 then begin
-              aFile.Masters[i].ForceLoadOrder(k);
+            if aFile.Masters[i, True].LoadOrder = -1 then begin
+              aFile.Masters[i, True].ForceLoadOrder(k);
               Inc(k);
             end;
 
-            AddFileInternal(aFile.Masters[i]);
+            AddFileInternal(aFile.Masters[i, True]);
           end;
       end;
     if k <> aFile.LoadOrder then
@@ -1742,8 +1742,8 @@ begin
   try
     sl.AddStrings(aMasters);
 
-    for i := 0 to Pred(aTargetFile.MasterCount) do
-      if sl.Find(aTargetFile.Masters[i].FileName, j) then
+    for i := 0 to Pred(aTargetFile.MasterCount[True]) do
+      if sl.Find(aTargetFile.Masters[i, True].FileName, j) then
         sl.Delete(j);
     if sl.Find(aTargetFile.FileName, j) then
       sl.Delete(j);
@@ -1808,8 +1808,8 @@ begin
   try
     aSourceElement.ReportRequiredMasters(sl, aAsNew);
 
-    for i := 0 to Pred(aTargetFile.MasterCount) do
-      if sl.Find(aTargetFile.Masters[i].FileName, j) then
+    for i := 0 to Pred(aTargetFile.MasterCount[True]) do
+      if sl.Find(aTargetFile.Masters[i, True].FileName, j) then
         sl.Delete(j);
     if sl.Find(aTargetFile.FileName, j) then
       sl.Delete(j);
@@ -5184,8 +5184,8 @@ begin
         Inc(j);
       end;
       while Assigned(_File) do begin
-        FormID.FileID := TwbFileID.Create(_File.MasterCount);
-        MainRecord := _File.RecordByFormID[FormID, True];
+        FormID.FileID := TwbFileID.Create(_File.MasterCount[True]);
+        MainRecord := _File.RecordByFormID[FormID, True, True];
         if Assigned(MainRecord) then begin
           Node := FindNodeForElement(MainRecord);
           if not Assigned(Node) then
@@ -8433,7 +8433,7 @@ begin
             AddMessage('Skipping line '+IntToStr(i+1)+': Old FormID "'+s+'" is not in the valid range.');
             Continue;
           end;
-          OldRecord := OldMaster.RecordByFormID[TwbFormID.FromCardinal(j).ChangeFileID(OldMaster.FileFileID), True];
+          OldRecord := OldMaster.RecordByFormID[TwbFormID.FromCardinal(j).ChangeFileID(OldMaster.FileFileID[True]), True, True];
           if not Assigned(OldRecord) then begin
             AddMessage('Skipping line '+IntToStr(i+1)+': Old Record with FormID "'+s+'" was not found in old Master "'+OldMaster.FileName+'".');
             Continue;
@@ -8445,7 +8445,7 @@ begin
             AddMessage('Skipping line '+IntToStr(i+1)+': New FormID "'+s+'" is not in the valid range.');
             Continue;
           end;
-          NewRecord := NewMaster.RecordByFormID[TwbFormID.FromCardinal(j).ChangeFileID(NewMaster.FileFileID), True];
+          NewRecord := NewMaster.RecordByFormID[TwbFormID.FromCardinal(j).ChangeFileID(NewMaster.FileFileID[True]), True, True];
           if not Assigned(NewRecord) then begin
             AddMessage('Skipping line '+IntToStr(i+1)+': New Record with FormID "'+s+'" was not found in new Master "'+NewMaster.FileName+'".');
             Continue;
@@ -8519,7 +8519,7 @@ begin
     if AddRequiredMasters(NewMasters, _File) then
       for i := 0 to Pred(l) do with ReplaceList[i] do begin
         ShowChangeReferencedBy(rlOldRecord.LoadOrderFormID, rlNewRecord.LoadOrderFormID, rlReferencedBy, True);
-        RefRecord := _File.RecordByFormID[rlOldRecord.LoadOrderFormID, False];
+        RefRecord := _File.RecordByFormID[rlOldRecord.LoadOrderFormID, False, True];
         if Assigned(RefRecord) and _File.Equals(RefRecord._File) then begin
           AddMessage('Changing FormID ['+RefRecord.LoadOrderFormID.ToString(True)+'] to ['+rlNewRecord.LoadOrderFormID.ToString(True)+']');
           RefRecord.LoadOrderFormID := rlNewRecord.LoadOrderFormID;
@@ -8794,7 +8794,7 @@ begin
       if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then begin
 
         if s = '' then begin
-          s := MainRecord._File.FileFormIDtoLoadOrderFormID(MainRecord._File.NewFormID).ToString(False);
+          s := MainRecord._File.FileFormIDtoLoadOrderFormID(MainRecord._File.NewFormID, True).ToString(False);
           if not InputQuery('New FormID generated', 'Please verify the newly generated FormID. The FormID needs to be a load order corrected form ID.', s) then
             Exit;
         end;
@@ -8811,7 +8811,7 @@ begin
       OldFileID := OldFormID.FileID;
       if OldFileID = _File.LoadOrderFileID then
         Continue;
-      NewFormID := _File.FileFormIDtoLoadOrderFormID(_File.NewFormID);
+      NewFormID := _File.FileFormIDtoLoadOrderFormID(_File.NewFormID, True);
 
     end;
 
@@ -8823,7 +8823,7 @@ begin
     AddMessage('Changing FormID ['+OldFormID.ToString(True)+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToString(True)+']');
 
     try
-      MainRecord._File.LoadOrderFormIDtoFileFormID(NewFormID);
+      MainRecord._File.LoadOrderFormIDtoFileFormID(NewFormID, True);
     except
       NewFileID := NewFormID.FileID;
       _OldFile := MainRecord._File;
@@ -11315,8 +11315,8 @@ var
       with TfrmModuleSelect.Create(Self) do try
         AllModules := wbModulesByLoadOrder.FilteredByFlag(mfValid);
         AllModules.ExcludeAll(mfTagged);
-        for i := 0 to Pred(SourceFile.MasterCount) do
-          with SourceFile.Masters[i] do
+        for i := 0 to Pred(SourceFile.MasterCount[True]) do
+          with SourceFile.Masters[i, True] do
             include(PwbModuleInfo(ModuleInfo).miFlags, mfTagged);
         AllModules := AllModules.FilteredByFlag(mfTagged);
         AllModules.ExcludeAll(mfTagged);
@@ -13451,7 +13451,7 @@ begin
   mniNavRenumberFormIDsInject.Visible :=
     mniNavRenumberFormIDsFrom.Visible and
     Supports(Element, IwbFile, _File) and
-    (_File.MasterCount > 0);
+    (_File.MasterCount[True] > 0);
 
   mniNavChangeReferencingRecords.Visible :=
     not wbTranslationMode and
@@ -14751,7 +14751,7 @@ begin
       IsESM := True;
       Result := True;
     end else begin
-      if wbMasterUpdateFilterONAM and (MasterCount > 0) then
+      if wbMasterUpdateFilterONAM and (MasterCount[True] > 0) then
         Elements[0].MarkModifiedRecursive;
     end;
 end;
@@ -19360,8 +19360,8 @@ begin
     _File := Files[FileID.FullSlot];
   end;
 
-  FormID.FileID := _File.FileFileID;
-  MainRecord := _File.RecordByFormID[FormID, True];
+  FormID.FileID := _File.FileFileID[True];
+  MainRecord := _File.RecordByFormID[FormID, True, True];
   if Assigned(MainRecord) then begin
     MainRecord := MainRecord.WinningOverride;
 

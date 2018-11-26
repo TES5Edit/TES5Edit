@@ -1833,7 +1833,7 @@ begin
             k := BTT.Refs[j][r].RefFormID.FileID.FullSlot;
             if not Assigned(loFiles[k]) then
               Continue;
-            Ref := loFiles[k].RecordByFormID[loFiles[k].LoadOrderFormIDtoFileFormID(BTT.Refs[j][r].RefFormID), False];
+            Ref := loFiles[k].RecordByFormID[loFiles[k].LoadOrderFormIDtoFileFormID(BTT.Refs[j][r].RefFormID, True), False, True];
             // found a matching reference of TREE
             if Assigned(Ref) and Assigned(Ref.BaseRecord) and ((Ref.BaseRecord.Signature = 'TREE') or (Ref.BaseRecord.Signature = 'STAT')) then begin
               LstIndex := BTT.Types[j].Index;

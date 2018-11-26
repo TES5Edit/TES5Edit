@@ -111,6 +111,7 @@ object frmLogAnalyzer: TfrmLogAnalyzer
       Colors.SelectionRectangleBlendColor = clGray
       Colors.SelectionRectangleBorderColor = clBlack
       Colors.SelectionTextColor = clBlack
+      DefaultText = 'Node'
       Header.AutoSizeIndex = 1
       Header.Height = 21
       Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
@@ -135,25 +136,25 @@ object frmLogAnalyzer: TfrmLogAnalyzer
       Columns = <
         item
           Position = 0
+          Text = 'FormID'
           Width = 100
-          WideText = 'FormID'
         end
         item
           Position = 1
+          Text = 'Name'
           Width = 469
-          WideText = 'Name'
         end
         item
           Alignment = taRightJustify
           Position = 2
+          Text = 'Value1'
           Width = 100
-          WideText = 'Value1'
         end
         item
           Alignment = taRightJustify
           Position = 3
+          Text = 'Value2'
           Width = 100
-          WideText = 'Value2'
         end>
     end
     object memoText: TMemo
