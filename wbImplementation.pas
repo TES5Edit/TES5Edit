@@ -8509,17 +8509,22 @@ end;
 
 function TwbMainRecord.GetBaseRecordID: TwbFormID;
 var
-  _File: IwbFile;
+  _File      : IwbFile;
+  BaseRecord : IwbMainRecord;
 begin
   _File := GetFile;
   if (mrsBaseRecordChecked in mrStates) and Assigned(_File) then
     if fsMastersUpdating in _File.FileStates then
       Exclude(mrStates, mrsBaseRecordChecked);
 
-  if not (mrsBaseRecordChecked in mrStates) then
-    Exit(GetBaseRecord.FixedFormID);
-
-  Result := GetFile.FileFormIDtoLoadOrderFormID(mrBaseRecordID, True);
+  if not (mrsBaseRecordChecked in mrStates) then begin
+    BaseRecord := GetBaseRecord;
+    if Assigned(BaseRecord) then
+      Result := BaseRecord.LoadOrderFormID
+    else
+      Result := TwbFormID.Null;
+  end else
+    Result := GetFile.FileFormIDtoLoadOrderFormID(mrBaseRecordID, True);
 end;
 
 function TwbMainRecord.GetBaseRecordSignature: TwbSignature;
@@ -10257,8 +10262,11 @@ var
 
         SetMastersUpdated(True);
 
-        if FoundOne then
+        if FoundOne then begin
           Result := inherited MastersUpdated(aOld, aNew, aOldCount, aNewCount);
+          Exclude(mrStates, mrsBaseRecordChecked);
+          mrBaseRecordID := TwbFormID.Null;
+        end;
 
         Result := Result or HeaderUpdated;
       finally
@@ -10897,7 +10905,7 @@ begin
   if i>0 then
     aStream.Write(mrFullName[1], SizeOf(Char) * i);
 
-  GetBaseRecordID;
+  GetBaseRecord;
   aStream.Write(mrBaseRecordID, SizeOf(mrBaseRecordID));
 
   if aSaveNames then begin

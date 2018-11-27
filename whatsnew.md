@@ -1,3 +1,11 @@
+# What's new in xEdit 3.3.7a BETA?
+
+## Bugfixes
+
+The following reported issues have been fixed:
+
+* (reported on discord) - AV during reference building
+
 # What's new in xEdit 3.3.7 BETA?
 
 ## Bugfixes
