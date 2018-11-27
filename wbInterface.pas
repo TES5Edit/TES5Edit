@@ -52,14 +52,14 @@ var
     Major   : 3;
     Minor   : 3;
     Release : 7;
-    Build   : '';
+    Build   : 'a';
     Title   : 'BETA';
   );
 
 const
-  wbWhatsNewVersion : Integer = 03030700;
+  wbWhatsNewVersion : Integer = 03030701;
   wbDeveloperMessageVersion : Integer = 03030600;
-  wbDevCRC32App : Cardinal = $FFFFFFED;
+  wbDevCRC32App : Cardinal = $FFFFFFEB;
 
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
