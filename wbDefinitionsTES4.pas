@@ -1745,7 +1745,7 @@ begin
         if Connection.Elements[j].NativeValue = 65535 then begin
           if not FirstRemoved then begin
             FirstRemoved := True;
-            Connections.MarkModifiedRecursive;
+            Connections.MarkModifiedRecursive(AllElementTypes);
           end;
           Connection.Elements[j].Remove;
           Removed := True;

@@ -245,6 +245,7 @@ type
     tmrCheckUnsaved: TTimer;
     mniViewRemoveFromSelected: TMenuItem;
     pnlNav: TPanel;
+    pnlNavContent: TPanel;
     pnlSearch: TPanel;
     pnlNavTopFormID: TPanel;
     edFormIDSearch: TLabeledEdit;
@@ -8018,9 +8019,6 @@ begin
 end;
 
 procedure TfrmMain.mniRefByMarkModifiedClick(Sender: TObject);
-var
-  MainRecords                 : TDynMainRecords;
-  i                           : Integer;
 begin
   if not wbEditAllowed then
     Exit;
@@ -8031,12 +8029,17 @@ begin
 
   UserWasActive := True;
 
-  MainRecords := GetRefBySelectionAsMainRecords;
+  PerformLongAction('Mark Modified', '', procedure
+  var
+    MainRecords                 : TDynMainRecords;
+    i                           : Integer;
+  begin
+    MainRecords := GetRefBySelectionAsMainRecords;
+    for i := Low(MainRecords) to High(MainRecords) do
+      MainRecords[i].MarkModifiedRecursive(AllElementTypes);
+    MainRecords := nil;
+  end);
 
-  for i := Low(MainRecords) to High(MainRecords) do
-    MainRecords[i].MarkModifiedRecursive;
-
-  MainRecords := nil;
   vstNav.Invalidate;
 end;
 
@@ -10207,7 +10210,7 @@ begin
       Result := CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin]) + CRLF;
     Result := Result + StringOfChar(' ', 4) + 'clean:';
     Result := Result + CRLF + Format(StringOfChar(' ', 6) + '- crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
-    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''[%sEdit v%s](%s)''', [wbAppName, VersionString.ToString, wbNexusModsUrl]);
+    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''%sEdit v%s''', [wbAppName, VersionString.ToString]);
   end;
 end;
 
@@ -11213,7 +11216,6 @@ var
   NodeData                    : PNavNodeData;
   Element                     : IwbElement;
   Selection                   : TNodeArray;
-  i                           : Integer;
   ContainsChilds              : Boolean;
 begin
   if not wbEditAllowed then
@@ -11231,12 +11233,17 @@ begin
   if not EditWarn then
     Exit;
 
-  for i := Low(Selection) to High(Selection) do begin
-    NodeData := vstNav.GetNodeData(Selection[i]);
-    Element := NodeData.Element;
-    if Assigned(Element) then
-      Element.MarkModifiedRecursive;
-  end;
+  PerformLongAction('Mark Modified', '', procedure
+  var
+    i                           : Integer;
+  begin
+    for i := Low(Selection) to High(Selection) do begin
+      NodeData := vstNav.GetNodeData(Selection[i]);
+      Element := NodeData.Element;
+      if Assigned(Element) then
+        Element.MarkModifiedRecursive(AllElementTypes);
+    end;
+  end);
   InvalidateElementsTreeView(NoNodes);
 end;
 
@@ -14751,7 +14758,7 @@ begin
       Result := True;
     end else begin
       if wbMasterUpdateFilterONAM and (MasterCount[True] > 0) then
-        Elements[0].MarkModifiedRecursive;
+        Elements[0].MarkModifiedRecursive(AllElementTypes);
     end;
 end;
 
@@ -19130,33 +19137,24 @@ begin
           mniNavFilterConflicts.Click;
 
         if wbQuickClean then begin
-          mniNavFilterForCleaning.Click;
-          JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
-          vstNav.ClearSelection;
-          vstNav.FocusedNode := vstNav.FocusedNode.Parent;
-          vstNav.Selected[vstNav.FocusedNode] := True;
-          DoSetActiveRecord(nil);
-          pgMain.ActivePage := tbsMessages;
-          mniNavUndeleteAndDisableReferences.Click;
-          mniNavRemoveIdenticalToMaster.Click;
+          pnlNavContent.Visible := False;
+          try
+            mniNavFilterForCleaning.Click;
+            with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do begin
+              JumpTo(Header, False);
+              MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
+            end;
+            vstNav.ClearSelection;
+            vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+            vstNav.Selected[vstNav.FocusedNode] := True;
+            DoSetActiveRecord(nil);
+            pgMain.ActivePage := tbsMessages;
+            mniNavUndeleteAndDisableReferences.Click;
+            mniNavRemoveIdenticalToMaster.Click;
 
-          if wbQuickCleanAutoSave then
-            if not SaveChanged(True) then
-              Exit;
-
-          mniNavFilterForCleaning.Click;
-          JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
-          vstNav.ClearSelection;
-          vstNav.FocusedNode := vstNav.FocusedNode.Parent;
-          vstNav.Selected[vstNav.FocusedNode] := True;
-          DoSetActiveRecord(nil);
-          pgMain.ActivePage := tbsMessages;
-          mniNavUndeleteAndDisableReferences.Click;
-          mniNavRemoveIdenticalToMaster.Click;
-
-          if wbQuickCleanAutoSave then begin
-            if not SaveChanged(True) then
-              Exit;
+            if wbQuickCleanAutoSave then
+              if not SaveChanged(True) then
+                Exit;
 
             mniNavFilterForCleaning.Click;
             JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
@@ -19168,11 +19166,28 @@ begin
             mniNavUndeleteAndDisableReferences.Click;
             mniNavRemoveIdenticalToMaster.Click;
 
-            mniNavLOManagersDirtyInfoClick(mniNavLOManagersDirtyInfo);
-          end;
+            if wbQuickCleanAutoSave then begin
+              if not SaveChanged(True) then
+                Exit;
 
-          wbQuickClean := False;
-          wbProgress('Quick Clean mode finished.');
+              mniNavFilterForCleaning.Click;
+              JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
+              vstNav.ClearSelection;
+              vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+              vstNav.Selected[vstNav.FocusedNode] := True;
+              DoSetActiveRecord(nil);
+              pgMain.ActivePage := tbsMessages;
+              mniNavUndeleteAndDisableReferences.Click;
+              mniNavRemoveIdenticalToMaster.Click;
+
+              mniNavLOManagersDirtyInfoClick(mniNavLOManagersDirtyInfo);
+            end;
+          finally
+            pnlNavContent.Visible := True;
+            vstNav.Invalidate;
+            wbQuickClean := False;
+            wbProgress('Quick Clean mode finished.');
+          end;
         end;
 
         if wbAutoGameLink then begin

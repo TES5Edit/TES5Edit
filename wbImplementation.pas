@@ -352,7 +352,7 @@ type
     function GetConflictPriorityCanChange: Boolean; virtual;
     function GetModified: Boolean;
     function GetElementGeneration: Integer;
-    procedure MarkModifiedRecursive; virtual;
+    procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); virtual;
     function GetIsInjected: Boolean; virtual;
     function GetReferencesInjected: Boolean; virtual;
     function GetInjectionSourceFiles: TDynFiles; virtual;
@@ -504,7 +504,7 @@ type
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     function UpdateMemoryOrder(out aMemoryOrderElements: TArray<Pointer>): Boolean;
     procedure BuildRef; override;
-    procedure MarkModifiedRecursive; override;
+    procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); override;
 
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
@@ -1099,7 +1099,7 @@ type
     procedure UpdateCellChildGroup;
     procedure UpdateInteriorCellGroup;
 
-    procedure MarkModifiedRecursive; override;
+    procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); override;
 
     {---IwbMainRecord---}
     function GetDef: IwbNamedDef; override;
@@ -6072,16 +6072,26 @@ begin
     Result := nil;
 end;
 
-procedure TwbContainer.MarkModifiedRecursive;
+procedure TwbContainer.MarkModifiedRecursive(const aElementTypes: TwbElementTypes);
 var
   i: Integer;
   SelfRef : IwbContainerElementRef;
 begin
+  if not (GetElementType in aElementTypes) then
+    Exit;
+
+  wbTick;
+
   SelfRef := Self as IwbContainerElementRef;
   DoInit(False);
-  for i := Low(cntElements) to High(cntElements) do
-    cntElements[i].MarkModifiedRecursive;
-  inherited;
+  BeginUpdate;
+  try
+    for i := Low(cntElements) to High(cntElements) do
+      cntElements[i].MarkModifiedRecursive(aElementTypes);
+    inherited;
+  finally
+    EndUpdate;
+  end;
 end;
 
 function TwbContainer.MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean;
@@ -10178,17 +10188,20 @@ begin
 
 end;
 
-procedure TwbMainRecord.MarkModifiedRecursive;
+procedure TwbMainRecord.MarkModifiedRecursive(const aElementTypes: TwbElementTypes);
 var
   SelfRef : IwbContainerElementRef;
   Group   : IwbGroupRecord;
 begin
+  if not (GetElementType in aElementTypes) then
+    Exit;
+
   SelfRef := Self as IwbContainerElementRef;
   DoInit(False);
   inherited;
   Group := GetChildGroup;
   if Assigned(Group) then
-    Group.MarkModifiedRecursive;
+    Group.MarkModifiedRecursive(aElementTypes);
 end;
 
 
@@ -15711,8 +15724,11 @@ begin
   Result := False;
 end;
 
-procedure TwbElement.MarkModifiedRecursive;
+procedure TwbElement.MarkModifiedRecursive(const aElementTypes: TwbElementTypes);
 begin
+  if not (GetElementType in aElementTypes) then
+    Exit;
+
   if not Assigned(eContainer) or IwbContainer(eContainer).IsElementEditable(Self) then begin
     SetModified(True);
     InvalidateParentStorage;
