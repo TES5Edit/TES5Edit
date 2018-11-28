@@ -629,7 +629,7 @@ var
   Element: IwbElement;
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    Element.MarkModifiedRecursive;
+    Element.MarkModifiedRecursive(AllElementTypes);
 end;
 
 procedure IwbElement_SetToDefault(var Value: Variant; Args: TJvInterpreterArgs);

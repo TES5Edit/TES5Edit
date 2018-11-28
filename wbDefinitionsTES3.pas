@@ -1462,7 +1462,7 @@ begin
         if not Supports(Container2.Elements[i].LinksTo, IwbMainRecord, MainRecord) or (MainRecord.Signature <> 'REGN') then begin
           if not Removed then begin
             Removed := True;
-            Container2.MarkModifiedRecursive;
+            Container2.MarkModifiedRecursive(AllElementTypes);
           end;
           Container2.RemoveElement(i);
         end;
@@ -1716,7 +1716,7 @@ begin
         if Connection.Elements[j].NativeValue = 65535 then begin
           if not FirstRemoved then begin
             FirstRemoved := True;
-            Connections.MarkModifiedRecursive;
+            Connections.MarkModifiedRecursive(AllElementTypes);
           end;
           Connection.Elements[j].Remove;
           Removed := True;

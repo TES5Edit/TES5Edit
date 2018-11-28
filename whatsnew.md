@@ -1,3 +1,13 @@
+# What's new in xEdit 3.3.8 BETA?
+
+## Change to Quick [Auto] Clean
+
+A user reported that after cleaning Dawnguard.esm, parts of the soul cairn worldspace do no longer load in the game. This is an old issue that's already present in 3.2.1 and probably before.
+
+To fix this issue, xEdit is now marking all groups and main records as modified before saving when using Quick [Auto] Clean. This forces these elements to be individually saved, instead of simply writing out the bytes from the original file.
+
+This means that using Quick Clean will now produce a different CRC than using the old manual method (explicitly applying filter and explicitly performing UDR and remove ITM).
+
 # What's new in xEdit 3.3.7a BETA?
 
 ## Bugfixes

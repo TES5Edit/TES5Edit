@@ -51,13 +51,13 @@ var
   VersionString : TwbVersion = (
     Major   : 3;
     Minor   : 3;
-    Release : 7;
-    Build   : 'a';
+    Release : 8;
+    Build   : '';
     Title   : 'BETA';
   );
 
 const
-  wbWhatsNewVersion : Integer = 03030701;
+  wbWhatsNewVersion : Integer = 03030800;
   wbDeveloperMessageVersion : Integer = 03030600;
   wbDevCRC32App : Cardinal = $FFFFFFEB;
 
@@ -606,6 +606,7 @@ type
 
   TwbElementTypes = set of TwbElementType;
 
+
   IwbContainer = interface;
   IwbFile = interface;
   IwbNamedDef = interface;
@@ -813,7 +814,7 @@ type
     function GetConflictPriorityCanChange: Boolean;
     function GetModified: Boolean;
     function GetElementGeneration: Integer;
-    procedure MarkModifiedRecursive;
+    procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes);
     function GetIsInjected: Boolean;
     function GetReferencesInjected: Boolean;
     function GetInjectionSourceFiles: TDynFiles;
@@ -2385,6 +2386,9 @@ var
     etArray
   ];
   wbPluginExtensions : TwbPluginExtensions;
+
+const
+  AllElementTypes = [Low(TwbElementType)..High(TwbElementType)];
 
 function wbRecord(const aSignature      : TwbSignature;
                   const aName           : string;
