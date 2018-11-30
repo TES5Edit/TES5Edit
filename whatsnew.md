@@ -1,3 +1,11 @@
+# What's new in xEdit 3.3.9 BETA?
+
+## Bugfixes
+
+The following reported issues have been fixed:
+
+* (reported on discord) - manual cleaning of Dawnguard.esm removes 4 more records than using quick clean
+
 # What's new in xEdit 3.3.8 BETA?
 
 ## Change to Quick [Auto] Clean

@@ -19030,6 +19030,7 @@ var
   LoadOrder : Integer;
   NewFile   : IwbFile;
   MasterFile: IwbFile;
+  WasUnsaved: Boolean;
 begin
   try
     wbLoaderDone := True;
@@ -19139,22 +19140,8 @@ begin
         if wbQuickClean then begin
           pnlNavContent.Visible := False;
           try
-            mniNavFilterForCleaning.Click;
-            with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do begin
-              JumpTo(Header, False);
-              MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
-            end;
-            vstNav.ClearSelection;
-            vstNav.FocusedNode := vstNav.FocusedNode.Parent;
-            vstNav.Selected[vstNav.FocusedNode] := True;
-            DoSetActiveRecord(nil);
-            pgMain.ActivePage := tbsMessages;
-            mniNavUndeleteAndDisableReferences.Click;
-            mniNavRemoveIdenticalToMaster.Click;
-
-            if wbQuickCleanAutoSave then
-              if not SaveChanged(True) then
-                Exit;
+            with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
+              BuildOrLoadRef(False);
 
             mniNavFilterForCleaning.Click;
             JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
@@ -19166,20 +19153,57 @@ begin
             mniNavUndeleteAndDisableReferences.Click;
             mniNavRemoveIdenticalToMaster.Click;
 
+            WasUnsaved := False;
+            with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
+              if esUnsaved in ElementStates then begin
+                MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
+                WasUnsaved := True;
+              end;
+
             if wbQuickCleanAutoSave then begin
               if not SaveChanged(True) then
                 Exit;
 
-              mniNavFilterForCleaning.Click;
-              JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
-              vstNav.ClearSelection;
-              vstNav.FocusedNode := vstNav.FocusedNode.Parent;
-              vstNav.Selected[vstNav.FocusedNode] := True;
-              DoSetActiveRecord(nil);
-              pgMain.ActivePage := tbsMessages;
-              mniNavUndeleteAndDisableReferences.Click;
-              mniNavRemoveIdenticalToMaster.Click;
+              if WasUnsaved then begin
+                ResetAllConflict;
 
+                with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
+                  BuildOrLoadRef(False);
+
+                mniNavFilterForCleaning.Click;
+                JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
+                vstNav.ClearSelection;
+                vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+                vstNav.Selected[vstNav.FocusedNode] := True;
+                DoSetActiveRecord(nil);
+                pgMain.ActivePage := tbsMessages;
+                mniNavUndeleteAndDisableReferences.Click;
+                mniNavRemoveIdenticalToMaster.Click;
+
+                WasUnsaved := False;
+                with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
+                  if esUnsaved in ElementStates then begin
+                    MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
+                    WasUnsaved := True;
+                  end;
+
+                if wbQuickCleanAutoSave then begin
+                  if not SaveChanged(True) then
+                    Exit;
+
+                  if WasUnsaved then begin
+                    mniNavFilterForCleaning.Click;
+                    JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
+                    vstNav.ClearSelection;
+                    vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+                    vstNav.Selected[vstNav.FocusedNode] := True;
+                    DoSetActiveRecord(nil);
+                    pgMain.ActivePage := tbsMessages;
+                    mniNavUndeleteAndDisableReferences.Click;
+                    mniNavRemoveIdenticalToMaster.Click;
+                  end;
+                end;
+              end;
               mniNavLOManagersDirtyInfoClick(mniNavLOManagersDirtyInfo);
             end;
           finally
