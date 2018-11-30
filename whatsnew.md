@@ -10,6 +10,10 @@ The following reported issues have been fixed:
 * (reported on discord) - the right most column in the view tab is not always resizable
 * (found by developer) - Ctrl + Click on View Header does not correctly resize the columns of the View after switching to the clicked on record
 
+## Developer message updated
+
+The developer message has been slightly streamlined and it's flow improved. (Thanks GamerPoet!)
+
 # What's new in xEdit 3.3.8 BETA?
 
 ## Change to Quick [Auto] Clean
