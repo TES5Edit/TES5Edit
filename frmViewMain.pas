@@ -1363,6 +1363,7 @@ var
   lBackup     : string;
   s           : string;
   OldDateTime : TDateTime;
+  i           : Integer;
 begin
   Result := False;
 
@@ -1395,6 +1396,12 @@ begin
         MessageBox(0, PChar(s), 'Error', 0);
     end;
     lBackup := wbBackupPath + ExtractFileName(aTo) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+    s := lBackup;
+    i := 1;
+    while FileExists(lBackup) and (i < 1000) do begin
+      lBackup := s + '_' + i.ToString;
+      Inc(i);
+    end;
     if not wbDontBackup then begin
       // backup original file
       wbProgress('Renaming "' + lTo + '" to "' + lBackup + '".');
@@ -14317,7 +14324,7 @@ begin
                 FilesToRename := TStringList.Create;
               // s - rename from, relative to DataPath
               // u - rename to, relative to DataPath
-              FilesToRename.Values[u] := s;
+              FilesToRename.AddPair(u, s);
             end;
 
             DoProcessMessages;
