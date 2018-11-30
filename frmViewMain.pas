@@ -7916,9 +7916,14 @@ begin
       if not EditWarn then
         Exit;
 
-      Element.MoveDown;
-      ViewFocusedElement := Element;
-      PostResetActiveTree;
+      LockProcessMessages;
+      try
+        Element.MoveDown;
+        ViewFocusedElement := Element;
+        ResetActiveTree;
+      finally
+        UnLockProcessMessages;
+      end;
     end;
   end;
 end;
@@ -7938,9 +7943,14 @@ begin
       if not EditWarn then
         Exit;
 
-      Element.MoveUp;
-      ViewFocusedElement := Element;
-      PostResetActiveTree;
+      LockProcessMessages;
+      try
+        Element.MoveUp;
+        ViewFocusedElement := Element;
+        ResetActiveTree;
+      finally
+        UnlockProcessMessages;
+      end;
     end;
   end;
 end;
@@ -16743,18 +16753,32 @@ begin
 
     case Key of
       VK_UP: begin
-        if not Element.CanMoveUp then
+        LockProcessMessages;
+        try
+          if not Element.CanMoveUp then
+            Exit;
+          Key := 0;
+          Element.MoveUp;
+          ViewFocusedElement := Element;
+          ResetActiveTree;
           Exit;
-        Key := 0;
-        Element.MoveUp;
-        ViewFocusedElement := Element;
+        finally
+          UnLockProcessMessages;
+        end;
       end;
       VK_DOWN: begin
-        if not Element.CanMoveDown then
+        LockProcessMessages;
+        try
+          if not Element.CanMoveDown then
+            Exit;
+          Key := 0;
+          Element.MoveDown;
+          ViewFocusedElement := Element;
+          ResetActiveTree;
           Exit;
-        Key := 0;
-        Element.MoveDown;
-        ViewFocusedElement := Element;
+        finally
+          UnLockProcessMessages;
+        end;
       end;
       Ord('C'): begin
         Clipboard.AsText := Element.EditValue;
@@ -16763,8 +16787,6 @@ begin
     else
       Exit;
     end;
-
-    PostResetActiveTree;
 
   end else if Shift = [] then begin
 
