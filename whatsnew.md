@@ -8,6 +8,7 @@ The following reported issues have been fixed:
 * (reported on discord) - holding the cursor down key when moving elements with ctrl+cursor in the view tab can result in errors
 * (reported on discord) - saving a file multiple times before closing xEdit leaves `file.save.datetime` files behind in the data folder
 * (reported on discord) - the right most column in the view tab is not always resizable
+* (found by developer) - Ctrl + Click on View Header does not correctly resize the columns of the View after switching to the clicked on record
 
 # What's new in xEdit 3.3.8 BETA?
 
