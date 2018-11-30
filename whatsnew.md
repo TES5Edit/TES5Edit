@@ -7,7 +7,7 @@ The following reported issues have been fixed:
 * (reported on discord) - manual cleaning of Dawnguard.esm removes 4 more records than using quick clean
 * (reported on discord) - holding the cursor down key when moving elements with ctrl+cursor in the view tab can result in errors
 * (reported on discord) - saving a file multiple times before closing xEdit leaves `file.save.datetime` files behind in the data folder
-
+* (reported on discord) - the right most column in the view tab is not always resizable
 
 # What's new in xEdit 3.3.8 BETA?
 
