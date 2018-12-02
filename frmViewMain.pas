@@ -942,6 +942,8 @@ type
     PendingContainer: IwbDataContainer;
     PendingMainRecords: TDynMainRecords;
 
+    PendingResetActiveTree: Boolean;
+
     procedure DoInit;
     procedure SetDoubleBuffered(aWinControl: TWinControl);
     procedure CleanupRefCache;
@@ -977,6 +979,7 @@ type
     destructor Destroy; override;
 
     procedure PostResetActiveTree;
+    procedure CheckViewForChange;
 
     procedure AddMessage(const s: string);
     procedure ScrollToTheLastMessage;
@@ -2903,6 +2906,29 @@ begin
       if HistoryEntry.Remove(aMainRecord) then
         aList.Remove(Intf);
   end;
+end;
+
+procedure TfrmMain.CheckViewForChange;
+
+  function Changed: Boolean;
+  var
+    i       : Integer;
+  begin
+    Result := False;
+    for i := Low(ActiveRecords) to High(ActiveRecords) do
+      with ActiveRecords[i] do begin
+        if Assigned(Element) then
+          if ElementGen <> Element.ElementGeneration then
+            Exit(True);
+        if Assigned(Container) then
+          if ContainerGen <> Container.ElementGeneration then
+            Exit(True);
+      end;
+  end;
+
+begin
+  if Changed then
+    PostResetActiveTree;
 end;
 
 procedure TfrmMain.mniNavCheckForCircularLeveledListsClick(Sender: TObject);
@@ -6734,6 +6760,18 @@ begin
           if not HasElement then
             vstView.IsVisible[aNode] := False;
   end;
+
+  for i := Low(ActiveRecords) to High(ActiveRecords) do
+    with aNodeDatas[i] do begin
+      if Assigned(Element) then
+        ElementGen := Element.ElementGeneration
+      else
+        ElementGen := 0;
+      if Assigned(Container) then
+        ContainerGen := Container.ElementGeneration
+      else
+        ContainerGen := 0;
+    end;
 end;
 
 procedure TfrmMain.InitNodes(const aNode: PVirtualNode; const aNodeDatas: PViewNodeDatas;
@@ -7625,6 +7663,8 @@ begin
 
     InvalidateElementsTreeView(NoNodes);
     vstNav.Invalidate;
+    if pgMain.ActivePage = tbsView then
+      CheckViewForChange;
   finally
     ScriptEngine := nil;
     jvi.Free;
@@ -13375,7 +13415,8 @@ begin
         lvReferencedBy.Items.EndUpdate;
       end;
     end;
-  end;
+  end else if pgMain.ActivePage = tbsView then
+    CheckViewForChange;
 end;
 
 procedure TfrmMain.pmuMainPopup(Sender: TObject);
@@ -13921,8 +13962,10 @@ end;
 
 procedure TfrmMain.PostResetActiveTree;
 begin
-  if Length(PendingMainRecords) < 1 then
+  if Length(PendingMainRecords) < 1 then begin
+    PendingResetActiveTree := True;
     PostMessage(Handle, WM_USER + 3, 0, 0);
+  end;
 end;
 
 procedure TfrmMain.mniViewPreviousMemberClick(Sender: TObject);
@@ -14538,6 +14581,7 @@ var
 begin
   PendingContainer := nil;
   PendingMainRecords := nil;
+  PendingResetActiveTree := False;
 
   UserWasActive := True;
 
@@ -14648,6 +14692,7 @@ var
 begin
   PendingContainer := nil;
   PendingMainRecords := nil;
+  PendingResetActiveTree := False;
 
   UserWasActive := True;
 
@@ -14887,6 +14932,7 @@ var
 begin
   PendingContainer := nil;
   PendingMainRecords := nil;
+  PendingResetActiveTree := False;
 
   UserWasActive := True;
 
@@ -19360,7 +19406,8 @@ begin
   if tmrPendingSetActive.Enabled then
     tmrPendingSetActiveTimer(tmrPendingSetActive)
   else
-    ResetActiveTree;
+    if PendingResetActiveTree then
+      ResetActiveTree;
 end;
 
 procedure TfrmMain.WMUser4(var Message: TMessage);
