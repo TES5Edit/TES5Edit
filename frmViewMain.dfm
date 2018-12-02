@@ -1862,6 +1862,7 @@ object frmMain: TfrmMain
         OnChange = vstNavChange
         OnCompareNodes = vstNavCompareNodes
         OnExpanding = vstNavExpanding
+        OnFocusChanged = vstNavFocusChanged
         OnFreeNode = vstNavFreeNode
         OnGetText = vstNavGetText
         OnPaintText = vstNavPaintText
