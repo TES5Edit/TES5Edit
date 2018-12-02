@@ -7,7 +7,7 @@ The following reported issues have been fixed:
 * (reported on discord) - Using the mouse wheel to change the script combobox in the Apply Script Form does not load the newly selected script
 * (reported on discord) - multi-selecting records in the navigation treeview, and then selecting just one of the previousl selected records does not update the view tab
 * (reported on discord) - after applying a script, the view tab is not updated without selecting a different record first
-
+* (reported on discord) - saving a .strings file does not remove the modified flag for it
 
 # What's new in xEdit 3.3.9 BETA?
 

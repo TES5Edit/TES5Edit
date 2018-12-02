@@ -14309,6 +14309,7 @@ begin
                   _LFile.WriteToStream(FileStream);
                   SavedAny := True;
                   TryDirectRename := True; //TODO: make sure this is ok?
+                  _LFile.Modified := False;
                 finally
                   FileStream.Free;
                 end;
