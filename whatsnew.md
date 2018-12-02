@@ -8,6 +8,7 @@ The following reported issues have been fixed:
 * (reported on discord) - multi-selecting records in the navigation treeview, and then selecting just one of the previousl selected records does not update the view tab
 * (reported on discord) - after applying a script, the view tab is not updated without selecting a different record first
 * (reported on discord) - saving a .strings file does not remove the modified flag for it
+* (reported on discord) - after saving, previous changes to record header flags can still show as modified
 
 # What's new in xEdit 3.3.9 BETA?
 
