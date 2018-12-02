@@ -1,3 +1,11 @@
+# What's new in xEdit 3.3.10 BETA?
+
+## Bugfixes
+
+The following reported issues have been fixed:
+
+* (reported on discord) - Using the mouse wheel to change the script combobox in the Apply Script Form does not load the newly selected script
+
 # What's new in xEdit 3.3.9 BETA?
 
 ## Bugfixes
