@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, IOUtils;
+  Dialogs, StdCtrls, ExtCtrls, IOUtils, Vcl.ComCtrls;
 
 const
   sNewScript = '<new script>';
@@ -12,6 +12,17 @@ const
   sScriptExt = '.pas';
 
 type
+  TComboBox = class(StdCtrls.TComboBox)
+  protected {private}
+    FOnBeforeWheel: TNotifyEvent;
+    FOnAfterWheel: TNotifyEvent;
+  protected
+    procedure WMMouseWheel(var Message: TWMMouseWheel); message WM_MOUSEWHEEL;
+
+    property OnBeforeWheel: TNotifyEvent read FOnBeforeWheel write FOnBeforeWheel;
+    property OnAfterWheel: TNotifyEvent read FOnAfterWheel write FOnAfterWheel;
+  end;
+
   TfrmScript = class(TForm)
     pnlTop: TPanel;
     cmbScripts: TComboBox;
@@ -43,6 +54,9 @@ type
     procedure cmbScriptsKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure edFilterKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure cmbScriptsDropDown(Sender: TObject);
+    procedure cmbScriptsBeforeWheel(Sender: TObject);
+    procedure cmbScriptsAfterWheel(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     ScriptSelectionChanged : Boolean;
     LastCloseUp : Int64;
@@ -105,6 +119,24 @@ begin
     Editor.Modified := False;
   finally
     Free;
+  end;
+end;
+
+procedure TfrmScript.cmbScriptsAfterWheel(Sender: TObject);
+begin
+  if not (cmbScripts.Focused or cmbScripts.DroppedDown) then begin
+    if SelectionOnEnter <> cmbScripts.Text then
+      ScriptSelectionChanged := True;
+    if ScriptSelectionChanged then
+      DoScriptSelectionChange;
+  end;
+end;
+
+procedure TfrmScript.cmbScriptsBeforeWheel(Sender: TObject);
+begin
+  if not (cmbScripts.Focused or cmbScripts.DroppedDown) then begin
+    ScriptSelectionChanged := False;
+    SelectionOnEnter := cmbScripts.Text;
   end;
 end;
 
@@ -308,6 +340,12 @@ begin
   end;
 end;
 
+procedure TfrmScript.FormCreate(Sender: TObject);
+begin
+  cmbScripts.OnBeforeWheel := cmbScriptsBeforeWheel;
+  cmbScripts.OnAfterWheel := cmbScriptsAfterWheel;
+end;
+
 procedure TfrmScript.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 var
   i: Integer;
@@ -341,6 +379,17 @@ procedure TfrmScript.FormShow(Sender: TObject);
 begin
   ScriptSelectionChanged := True;
   ReadScriptsList;
+end;
+
+{ TComboBox }
+
+procedure TComboBox.WMMouseWheel(var Message: TWMMouseWheel);
+begin
+  if Assigned(FOnBeforeWheel) then
+    FOnBeforeWheel(Self);
+  inherited;
+  if Assigned(FOnAfterWheel) then
+    FOnAfterWheel(Self);
 end;
 
 end.
