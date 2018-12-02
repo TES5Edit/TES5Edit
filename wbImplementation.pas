@@ -18906,8 +18906,10 @@ var
   ExpectedSize : NativeUInt;
   NeedReset    : Boolean;
 begin
-  if [dcfDontSave, dcfDontCompare] * dcFlags <> [] then
+  if [dcfDontSave, dcfDontCompare] * dcFlags <> [] then begin
+    ResetModified(aResetModified);
     Exit;
+  end;
 
   OldPosition := aStream.Position;
   ExpectedSize := GetDataSize;
