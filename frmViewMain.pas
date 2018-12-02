@@ -672,6 +672,8 @@ type
     procedure jbhSaveCloseBtnClick(Sender: TObject; var CanClose: Boolean);
     procedure vstViewHeaderMouseDown(Sender: TVTHeader; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure vstNavFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
@@ -17309,6 +17311,11 @@ begin
   // and use JumpTo() command which expands the navigation tree
   if (GetKeyState(VK_MENU) < 0) and not Assigned(ScriptEngine) then
     Sender.FullExpand(Node);
+end;
+
+procedure TfrmMain.vstNavFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
+begin
+  vstNavChange(Sender, Node);
 end;
 
 procedure TfrmMain.vstNavFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
