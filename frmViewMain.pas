@@ -2389,7 +2389,7 @@ var
   MainRecord           : IwbMainRecord;
   MainRecord2          : IwbMainRecord;
   Master               : IwbMainRecord;
-  ReferenceFile        : IwbFile;
+  TargetFile        : IwbFile;
   sl                   : TStringList;
   i, j                 : Integer;
   EditorID             : string;
@@ -2445,7 +2445,7 @@ begin
             with Container as IwbGroupRecord do begin
               MainRecord := ChildrenOf;
               if Assigned(MainRecord) then
-                MainRecord.ReportRequiredMasters(sl, AsNew, False, True);
+                MainRecord.ReportRequiredMasters(sl, AsNew);
             end;
 
           Container := Container.Container;
@@ -2677,26 +2677,47 @@ begin
           for i := Low(SelectedModules) to High(SelectedModules) do
             begin
               if mfTemplate in SelectedModules[i].miFlags then begin
-                ReferenceFile := nil;
-                while not Assigned(ReferenceFile) do
-                  if not AddNewFile(ReferenceFile, SelectedModules[i]) then
+                TargetFile := nil;
+                while not Assigned(TargetFile) do
+                  if not AddNewFile(TargetFile, SelectedModules[i]) then
                     Break;
-                if Assigned(ReferenceFile) then
-                  _PreviousCopyIntoSelectedModules[i] := ReferenceFile.ModuleInfo;
+                if Assigned(TargetFile) then
+                  _PreviousCopyIntoSelectedModules[i] := TargetFile.ModuleInfo;
               end else
-                ReferenceFile := SelectedModules[i]._File;
+                TargetFile := SelectedModules[i]._File;
 
-              if Assigned(ReferenceFile) and AddRequiredMasters(sl, ReferenceFile,
+              if Assigned(TargetFile) then begin
+                sl.Clear;
+                for j := Low(Elements) to High(Elements) do begin
+                  Elements[j].ReportRequiredMasters(sl, AsNew);
+                  Container := Elements[j].Container;
+                  while Assigned(Container) do begin
+                    Container.ReportRequiredMasters(sl, AsNew, False, True);
+                    if Container.ElementType = etGroupRecord then
+                      with Container as IwbGroupRecord do begin
+                        MainRecord := ChildrenOf;
+                        if Assigned(MainRecord) then begin
+                          MainRecord := MainRecord.HighestOverrideVisibleForFile[TargetFile];
+                          MainRecord.ReportRequiredMasters(sl, AsNew);
+                        end;
+                      end;
+
+                    Container := Container.Container;
+                  end;
+                end;
+              end;
+
+              if Assigned(TargetFile) and AddRequiredMasters(sl, TargetFile,
                 mfTemplate in SelectedModules[i].miFlags) then begin
 
                 if AsWrapper then begin
 
                   for j := Low(Elements) to High(Elements) do begin
                     MainRecord := Elements[j] as IwbMainRecord;
-                    wbCurrentProgress := Format('[%s] into [%s]', [MainRecord.FullPath, ReferenceFile.FullPath]);
+                    wbCurrentProgress := Format('[%s] into [%s]', [MainRecord.FullPath, TargetFile.FullPath]);
                     wbProgress(Operation + ' ' + wbCurrentProgress);
 
-                    MainRecord2 := wbCopyElementToFile(MainRecord, ReferenceFile, True, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix, False) as IwbMainRecord;
+                    MainRecord2 := wbCopyElementToFile(MainRecord, TargetFile, True, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix, False) as IwbMainRecord;
                     wbProgress('');
 
                     Assert(Assigned(MainRecord2));
@@ -2704,7 +2725,7 @@ begin
                       MainRecord2.EditorID := EditorID;
 
                     EditorID := MainRecord.EditorID;
-                    MainRecord := wbCopyElementToFile(MainRecord, ReferenceFile, False, False, '', '', '', AllowOverwrite) as IwbMainRecord;
+                    MainRecord := wbCopyElementToFile(MainRecord, TargetFile, False, False, '', '', '', AllowOverwrite) as IwbMainRecord;
                     wbProgress('');
                     Assert(Assigned(MainRecord));
                     MainRecord.Assign(Low(Integer), nil, False);
@@ -2727,12 +2748,12 @@ begin
                     try
                       if DeepCopy and Supports(Elements[j], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
                         wbProgress(Operation + ' ' + wbCurrentProgress);
-                        lResult[j] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix, AllowOverwrite);
+                        lResult[j] := wbCopyElementToFile(MainRecord.ChildGroup, TargetFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix, AllowOverwrite);
                         wbProgress('');
                       end else begin
-                        wbCurrentProgress := Format('[%s] into [%s]', [Elements[j].FullPath, ReferenceFile.FullPath]);
+                        wbCurrentProgress := Format('[%s] into [%s]', [Elements[j].FullPath, TargetFile.FullPath]);
                         wbProgress(Operation + ' ' + wbCurrentProgress);
-                        CopiedElement := wbCopyElementToFile(Elements[j], ReferenceFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix, AllowOverwrite);
+                        CopiedElement := wbCopyElementToFile(Elements[j], TargetFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix, AllowOverwrite);
                         wbProgress('');
                         if Assigned(CopiedElement) then begin
                           if Assigned(aAfterCopyCallback) then
@@ -2750,14 +2771,14 @@ begin
                 end else begin
                   MainRecord := nil;
                   if DeepCopy and Supports(Elements[0], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
-                    wbCurrentProgress := Format('[%s] into [%s]', [MainRecord.ChildGroup.FullPath, ReferenceFile.FullPath]);
+                    wbCurrentProgress := Format('[%s] into [%s]', [MainRecord.ChildGroup.FullPath, TargetFile.FullPath]);
                     wbProgress(Operation + ' ' + wbCurrentProgress);
-                    lResult[0] := wbCopyElementToFile(MainRecord.ChildGroup, ReferenceFile, AsNew, True, '', '', '', AllowOverwrite);
+                    lResult[0] := wbCopyElementToFile(MainRecord.ChildGroup, TargetFile, AsNew, True, '', '', '', AllowOverwrite);
                     wbProgress('');
                   end else begin
-                    wbCurrentProgress := Format('[%s] into [%s]', [Elements[0].FullPath, ReferenceFile.FullPath]);
+                    wbCurrentProgress := Format('[%s] into [%s]', [Elements[0].FullPath, TargetFile.FullPath]);
                     wbProgress(Operation + ' ' + wbCurrentProgress);
-                    CopiedElement := wbCopyElementToFile(Elements[0], ReferenceFile, AsNew, True, '', '', '', AllowOverwrite);
+                    CopiedElement := wbCopyElementToFile(Elements[0], TargetFile, AsNew, True, '', '', '', AllowOverwrite);
                     wbProgress('');
                     if Assigned(CopiedElement) then begin
                       if Assigned(aAfterCopyCallback) then
