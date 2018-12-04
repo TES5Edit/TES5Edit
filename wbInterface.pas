@@ -51,13 +51,13 @@ var
   VersionString : TwbVersion = (
     Major   : 3;
     Minor   : 3;
-    Release : 10;
+    Release : 11;
     Build   : '';
     Title   : 'BETA';
   );
 
 const
-  wbWhatsNewVersion : Integer = 03031000;
+  wbWhatsNewVersion : Integer = 03031100;
   wbDeveloperMessageVersion : Integer = 03030900;
   wbDevCRC32App : Cardinal = $FFFFFFEB;
 
@@ -169,6 +169,7 @@ var
   wbFocusAddedElement      : Boolean  = True;
   wbCheckNonCPNChars       : Boolean  = False;
   wbShowStringBytes        : Boolean  = False;
+  wbResetModifiedOnSave    : Boolean  = True;
 
   wbGlobalModifedGeneration : UInt64;
 
