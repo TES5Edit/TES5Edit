@@ -5407,6 +5407,7 @@ begin
     Exit;
   Exclude(cntStates, csSortedBySortOrder);
   Include(cntStates, csInitializing);
+  wbLockProcessMessages;
   try
     cntElementsMap := nil;
     Include(cntStates, csInit);
@@ -5428,6 +5429,7 @@ begin
           end;
         end;
   finally
+    wbUnLockProcessMessages;
     Exclude(cntStates, csInitializing);
   end;
 end;
