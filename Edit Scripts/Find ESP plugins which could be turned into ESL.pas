@@ -5,7 +5,7 @@ unit FindESPtoESL;
 
 const
   iESLMaxRecords = $800; // max possible new records in ESL
-  iESLMaxFormID = $3ff; // max allowed FormID number in ESL
+  iESLMaxFormID = $fff; // max allowed FormID number in ESL
 
 
 procedure CheckForESL(f: IInterface);
