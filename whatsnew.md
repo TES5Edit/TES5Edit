@@ -1,3 +1,11 @@
+# What's new in xEdit 3.3.11 BETA?
+
+## Bugfixes
+
+The following reported issues have been fixed:
+
+* #611 - Filter bugs out when .esps are already expanded
+
 # What's new in xEdit 3.3.10 BETA?
 
 ## Bugfixes
