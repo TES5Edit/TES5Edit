@@ -2868,7 +2868,7 @@ begin
     // first error in this record - show record's name
     if Assigned(Result) and (Result <> LastRecord) then begin
       Inc(ErrorsCount);
-      wbCurrentProgress := Format('Processed Records: %d Errors found: %d', [CheckedCount, ErrorsCount]);
+      wbCurrentProgress := Format('Processed Records: %d, Errors found: %d', [CheckedCount, ErrorsCount]);
       wbProgress(Result.Name);
     end;
     wbProgress('    ' + aElement.Path + ' -> ' + Error);
@@ -2884,7 +2884,7 @@ begin
 
   if aElement.ElementType = etMainRecord then begin
     Inc(CheckedCount);
-    wbCurrentProgress := Format('Processed Records: %d Errors found: %d', [CheckedCount, ErrorsCount]);
+    wbCurrentProgress := Format('Processed Records: %d, Errors found: %d', [CheckedCount, ErrorsCount]);
   end;
 end;
 
