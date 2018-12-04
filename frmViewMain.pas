@@ -5148,8 +5148,8 @@ begin
     try
       Node := GetFirst;
       while Assigned(Node) do begin
-        IsFiltered[Node] := (SearchText <> '') and
-          not Text[Node, 0, False].ToLowerInvariant.Contains(SearchText);
+        IsVisible[Node] := not ((SearchText <> '') and
+          not Text[Node, 0, False].ToLowerInvariant.Contains(SearchText));
         Node := GetNextSibling(Node);
       end;
     finally
