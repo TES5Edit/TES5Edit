@@ -8,6 +8,10 @@ The following reported issues have been fixed:
 * (reported on discord) - crash from accessing a partially initialized record, caused by a pending paint event being executed if a log message is added during the initialization of the recordting in a crash
 * (reported on discord) - "[Deep] Copy as (Override|New Record)" can under certain circumstances overlook some masters that need to be added to the target file before the copy operation
 
+## Feature
+
+* "Reset Modified (Bold) on Save" Option has been added.
+
 # What's new in xEdit 3.3.10 BETA?
 
 ## Bugfixes

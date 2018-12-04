@@ -34,8 +34,6 @@ object frmOptions: TfrmOptions
     object tsGeneral: TTabSheet
       Caption = 'General'
       ImageIndex = 1
-      ExplicitLeft = 36
-      ExplicitTop = 28
       object cbHideUnused: TCheckBox
         Left = 16
         Top = 15
@@ -112,7 +110,7 @@ object frmOptions: TfrmOptions
       object cbSortGroupRecord: TCheckBox
         Left = 16
         Top = 154
-        Width = 439
+        Width = 243
         Height = 17
         Hint = 'Sort INFOs in DIAL by previous INFO'
         Caption = 'Sort INFOs'
@@ -218,6 +216,16 @@ object frmOptions: TfrmOptions
         ParentBiDiMode = False
         TabOrder = 19
       end
+      object cbResetModifiedOnSave: TCheckBox
+        Left = 265
+        Top = 154
+        Width = 189
+        Height = 17
+        BiDiMode = bdRightToLeftReadingOnly
+        Caption = 'Reset Modified (Bold) on Save'
+        ParentBiDiMode = False
+        TabOrder = 20
+      end
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'
@@ -319,21 +327,21 @@ object frmOptions: TfrmOptions
       object Label7: TLabel
         Left = 16
         Top = 235
-        Width = 275
+        Width = 267
         Height = 13
         Caption = 'Auto "Compare Selected" when multi-selecting less than'
       end
       object Label8: TLabel
         Left = 375
         Top = 235
-        Width = 64
+        Width = 36
         Height = 13
         Caption = 'records'
       end
       object Label9: TLabel
         Left = 16
         Top = 267
-        Width = 338
+        Width = 330
         Height = 13
         Caption = 
           'Delay updating View when navigation treeview selection changes b' +
