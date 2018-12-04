@@ -5033,6 +5033,7 @@ begin
   wbAutoCompareSelectedLimit := Settings.ReadInteger('Options', 'AutoCompareSelectedLimit', wbAutoCompareSelectedLimit);
   tmrPendingSetActive.Interval := Settings.ReadInteger('Options', 'NavChangeDelay', tmrPendingSetActive.Interval);
   wbClampFormID := Settings.ReadBool('Options', 'ClampFormID', wbClampFormID);
+  wbResetModifiedOnSave := Settings.ReadBool('Options', 'ResetModifiedOnSave', wbResetModifiedOnSave);
   wbAlignArrayElements := Settings.ReadBool('Options', 'AlignArrayElements', wbAlignArrayElements);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
@@ -12888,6 +12889,7 @@ begin
     sedNavChangeDelay.Value := tmrPendingSetActive.Interval;
     cbSimpleRecords.Checked := wbSimpleRecords;
     cbClampFormID.Checked := wbClampFormID;
+    cbResetModifiedOnSave.Checked := wbResetModifiedOnSave;
     cbAlignArrayElements.Checked := wbAlignArrayElements;
     edColumnWidth.Text := IntToStr(ColumnWidth);
     edRowHeight.Text := IntToStr(RowHeight);
@@ -12937,6 +12939,7 @@ begin
     tmrPendingSetActive.Interval := sedNavChangeDelay.Value;
     wbSimpleRecords := cbSimpleRecords.Checked;
     wbClampFormID := cbClampFormID.Checked;
+    wbResetModifiedOnSave := cbResetModifiedOnSave.Checked;
     wbAlignArrayElements := cbAlignArrayElements.Checked;
     ColumnWidth := StrToIntDef(edColumnWidth.Text, ColumnWidth);
     RowHeight := StrToIntDef(edRowHeight.Text, RowHeight);
@@ -12983,6 +12986,7 @@ begin
     Settings.WriteInteger('Options', 'NavChangeDelay', tmrPendingSetActive.Interval);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
     Settings.WriteBool('Options', 'ClampFormID', wbClampFormID);
+    Settings.WriteBool('Options', 'ResetModifiedOnSave', wbResetModifiedOnSave);
     Settings.WriteBool('Options', 'AlignArrayElements', wbAlignArrayElements);
     Settings.WriteInteger('Options', 'ColumnWidth', ColumnWidth);
     Settings.WriteInteger('Options', 'RowHeight', RowHeight);
@@ -14246,6 +14250,10 @@ var
   AnyErrors                   : Boolean;
   TryDirectRename             : Boolean;
   FoundSomething              : Boolean;
+
+const
+  ResetModifiedFromBool : array[Boolean] of TwbResetModified =
+    (rmNo, rmSetInternal);
 begin
   Result := True;
   FoundSomething := False;
@@ -14360,7 +14368,7 @@ begin
               try
                 try
                   PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
-                  _File.WriteToStream(FileStream, rmSetInternal);
+                  _File.WriteToStream(FileStream, ResetModifiedFromBool[wbResetModifiedOnSave]);
                   SavedAny := True;
                   if not (fsMemoryMapped in _File.FileStates) then
                     TryDirectRename := True;
