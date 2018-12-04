@@ -20382,6 +20382,9 @@ begin
 end;
 
 initialization
+  wbLockProcessMessages := LockProcessMessages;
+  wbUnLockProcessMessages := UnLockProcessMessages;
+
   _LoaderProgressLock.Initialize;
 
   with TWinControlProtectedHacker(TWinControl.Create(nil)) do try

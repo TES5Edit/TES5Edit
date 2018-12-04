@@ -3947,6 +3947,15 @@ procedure wbProgress(const aStatus: string = ''; aForce: Boolean = False); overl
 procedure wbProgress(const aStatus: string; const aArgs: array of const; aForce: Boolean = False); overload;
 procedure wbTick;
 
+type
+  TIntegerFunction = function: Integer;
+
+function DummyIntegerFunction: Integer;
+
+var
+  wbLockProcessMessages: TIntegerFunction = DummyIntegerFunction;
+  wbUnLockProcessMessages: TIntegerFunction = DummyIntegerFunction;
+
 function Lighter(Color: TColor; Amount: Double = 0.5): TColor;
 function Darker(Color: TColor; Amount: Double = 0.5): TColor;
 function wbLighter(Color: TColor; Amount: Double = 0.5): TColor;
@@ -17879,6 +17888,11 @@ begin
     end else
       aValue := 'None';
   end;
+end;
+
+function DummyIntegerFunction: Integer;
+begin
+  Result := 0;
 end;
 
 initialization
