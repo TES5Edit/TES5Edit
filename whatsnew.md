@@ -1,3 +1,11 @@
+# What's new in xEdit 4.0.0?
+
+## Bugfixes
+
+The following reported issues have been fixed:
+
+* #614 - Problems with codepage tranlation
+
 # What's new in xEdit 3.3.11 BETA?
 
 ## Bugfixes
