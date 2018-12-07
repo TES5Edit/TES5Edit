@@ -1,89 +1,12 @@
 # What's new in xEdit 4.0.0?
 
-## Bugfixes
+## What's New
 
-The following reported issues have been fixed:
+A "What's New" document has been created and is embedded inside the exe file.
 
-* #614 - Problems with codepage tranlation
+It is automatically shown on program start. By checking the "Don't show until changed" checkbox, it is no longer shown on future starts until the What's New document has changed (because xEdit was updated).
 
-# What's new in xEdit 3.3.11 BETA?
-
-## Bugfixes
-
-The following reported issues have been fixed:
-
-* #611 - Filter bugs out when .esps are already expanded
-* #612 - Edit Script to detect ESL capable plugins too restrictive
-* (reported on discord) - crash from accessing a partially initialized record, caused by a pending paint event being executed if a log message is added during the initialization of the recordting in a crash
-* (reported on discord) - "[Deep] Copy as (Override|New Record)" can under certain circumstances overlook some masters that need to be added to the target file before the copy operation
-
-## Features
-
-* "Reset Modified (Bold) on Save" Option has been added
-
-# What's new in xEdit 3.3.10 BETA?
-
-## Bugfixes
-
-The following reported issues have been fixed:
-
-* (reported on discord) - Using the mouse wheel to change the script combobox in the Apply Script Form does not load the newly selected script
-* (reported on discord) - multi-selecting records in the navigation treeview, and then selecting just one of the previousl selected records does not update the view tab
-* (reported on discord) - after applying a script, the view tab is not updated without selecting a different record first
-* (reported on discord) - saving a .strings file does not remove the modified flag for it
-* (reported on discord) - after saving, previous changes to record header flags can still show as modified
-
-# What's new in xEdit 3.3.9 BETA?
-
-## Bugfixes
-
-The following reported issues have been fixed:
-
-* (reported on discord) - manual cleaning of Dawnguard.esm removes 4 more records than using quick clean
-* (reported on discord) - holding the cursor down key when moving elements with ctrl+cursor in the view tab can result in errors
-* (reported on discord) - saving a file multiple times before closing xEdit leaves `file.save.datetime` files behind in the data folder
-* (reported on discord) - the right most column in the view tab is not always resizable
-* (found by developer) - Ctrl + Click on View Header does not correctly resize the columns of the View after switching to the clicked on record
-
-## Developer message updated
-
-The developer message has been slightly streamlined and it's flow improved. (Thanks GamerPoet!)
-
-# What's new in xEdit 3.3.8 BETA?
-
-## Change to Quick [Auto] Clean
-
-A user reported that after cleaning Dawnguard.esm, parts of the soul cairn worldspace do no longer load in the game. This is an old issue that's already present in 3.2.1 and probably before.
-
-To fix this issue, xEdit is now marking all groups and main records as modified before saving when using Quick [Auto] Clean. This forces these elements to be individually saved, instead of simply writing out the bytes from the original file.
-
-This means that using Quick Clean will now produce a different CRC than using the old manual method (explicitly applying filter and explicitly performing UDR and remove ITM).
-
-# What's new in xEdit 3.3.7a BETA?
-
-## Bugfixes
-
-The following reported issues have been fixed:
-
-* (reported on discord) - AV during reference building
-
-# What's new in xEdit 3.3.7 BETA?
-
-## Bugfixes
-
-The following reported issues have been fixed:
-
-* (reported on discord) - Adding, Sorting, and Cleaning Masters can lead to data corruption (Please check all modules where you made changes to masters with 3.3.6!!!)
-* (reported on discord) - What's New TOC does not initially show correctly in the What's New tab if the TOC was left open previously and the "Don't show again until changed" checkbox is checked in the What's New Form at program start
-* (reported on discord) - SSEEdit does not correctly display Version Control Info 1 for records with FormVersion 44
-
-## Features
-
-* "Check for Errors" now provides better progress information.
-
-# What's new in xEdit 3.3.6 BETA?
-
-## Table of Contents for What's New
+### Table of Contents 
 
 The TOC button in the top left corner of the What's New Form (also when docked in the What's New Tab) can be used to show or hide a Table of Contents.
 
@@ -93,321 +16,21 @@ Width of the TOC is adjustable with a splitter.
 
 State (visible or not) and width of the TOC is saved and restored when the Form shows again.
 
-## Developer message updated
+### Search 
 
-The special dialog after the message that was exclusive to the last BETA has been removed.
-
-The dialog now has a "Don't show again for a while" checkbox. When checked, the dialog will not be shown again until a newer version of xEdit with a changed message has been installed, or 14 days have expire.
-
-For Patrons, the checkbox is "Don't show again until changed" and it will only show again when the message has changed.
-
-The message will be shown directly when the Option Form is closed and the "I'm a Patron or Donor" checkbox has been changed form unchecked to checked.
-
-The text has remained unchanged from the last BETA release.
-
-Please provide feedback on the xEdit Discord in the #feedback channel if you think any of this should be changed before the release on NexusMods.
-
-## Hugely improved performance for "Create Delta Patch"
-
-Time needed for creating a delta patch for the 650MB SeventySix.esm has been reduced from over 600 minutes (10 hours) to about 5 minutes.
-
-## Bugfixes
-
-The following reported issues have been fixed:
-
-* (reported on discord) - TOC building does not work on Win7
-* (reported on discord) - while in "Fit All" column width mode, it is not possible to manually increase the width of columns
-* (reported on discord) - HITMEs (FormID Prefix HIgher Than Master Entries) in GRUP labels can lead to problems
-* (reported on discord) - Compare Selected does not initially use the correct Column Width mode
-* (reported on discord) - Balloon Hint displays Caption in wrong font/colour when using custom themes
-* (reported on discord) - Various issue with xDump when running on a file that is not the game master
-* (reported on discord) - some texts are cut off in Options Form when a very wide system font is set
-* (reported on discord) - xEdit doesn't always find data path correctly if installed in the game folder
-* (found by developer) - Clicking the OK button in the Module Selection Form does not always behave the same as pressing `Enter`
-* (found by developer) - wbOffsetDataColsCounter can cause range check for modules with faulty data
-* (found by developer) - unsaved time interval is shown wrong in unsaved hint on systems configured for 12h time display
-* (found by developer) - deleting the last (= there are no others) modgroup will not deactivate mod groups
-
-
-## Update check on NexusMods
-
-xEdit will automatically perform a check for a newer version on NexusMods
-
-This can be turned of with the "Don't check for NexusMods update" option.
-
-If an update is available, a balloon hint will be shown under the NexusMods button on start.
-
-If xEdit is an even minor version (e.g. 4.0.x, 4.2.x, ...) when it is started for the first time (after this change) then update checking on GitHub is initially disabled (but can be turned on in the Options).
-
-## Tips updated
-
-The Tips shown at program start have been updated to take into account changes made to xEdit.
-
-The Tips no longer require the external file EditTips.txt and are now baked into the exe.
-
-## Record definitions
-
-* Version Control Info is now decoded for all games and shows as `yyyy-mm-dd User: x Index: y` if not 0.
-
-# What's new in xEdit 3.3.5 BETA?
-
-## Developer message updated
-
-The developer message has been updated. 
-
-To invite feedback about it for this BETA, it will be shown again even if it was previously shown to you.
-
-For *this BETA release only* you will be asked afterwards if it should be shown again next time and you are going to be asked to provide any constructive feedback you might have about it's contents or presentation on the xEdit Discord.
-
-## Bugfixes
-
-The following reported issues have been fixed:
-
-* (reported on discord) - changing FormID of a record does not show new FormID until after saving and restarting
-* (reported on discord) - [FO4] FNAM in GLOB is wrong
-* (reported on discord) - virtual "Worldspace" element on temporary exterior cells can show invalid value after changing FormID of WRLD record
-* (reported on discord) - When using Copy as override (with overwriting), "No to All" does not work for records flagged as deleted
-* (reported on discord) - After using Copy into (and possible other situations) the View tab may (in rare cases) be blank
-* (reported on discord) - Flags do not work in Unions
-* (found by developer) - Certain shortcuts work while the loader is still active when they shouldn't
-* (found by developer) - Random AV after saving when closing
-
-## Search and Zoom in What's New
-
-A search edit and zoom trackbar have been added to the What's New Viewer.
+A search edit has been added to the What's New Viewer.
 
 `ALT + S` or `CTRL + F` focus the search edit.
-
-Zoom can be controlled with `CTRL + 0, +, or -`.
 
 `F3` when the main text is focused keeps searching from the current cursor position.
 
 `Enter` when the search edit is focused keeps searching from the current position if the search text has remained unchanged, or starts for the start if the search text has changed.
 
-## Save in Hamburger Menu
+### Zoom
 
-"Save" is now available in the Hamburger Menu.
+A zoom trackbar has been added to the What's New Viewer.
 
-## "Show Unsaved Hint" replaces previous "Auto Save" option
-
-When "Show Unsaved Hint" is checked in the Options (on by default) then if there are any unsaved changes older than 10 minutes a balloon hint is being shown under the Hamburger Menu, listing the unsaved files and how long they have been unsaved.
-
-Clicking the hint will show the usual save selection dialog.
-
-Clicking the [X] in the hint or ignoring it for 15 seconds until it disappears on it's own will snooze it for 10 minutes.
-
-## Ctrl + Click on View Header as Jump To
-
-`Ctrl + Click` on the View tab Header performs now Jump To on that record.
-
-## removed Hardcoded.dat
-
-External Hardcoded.dat files are no longer required. The data is now compiled into the exe.
-
-It is possible to override the data contained in the exe by placing a {GameName}.Hardcoded.Override.dat beside the exe.
-
-## What's New compiled into exe
-
-This What's New document is now compiled into the exe and no longer loaded from the external whatsnew.rtf
-
-# What's new in xEdit 3.3.4 BETA?
-
-## Bugfixes
-
-The following reported issues have been fixed:
-
-* #594 - "Localize plugin" function is broken
-* (reported on discord) - sorting masters can under certain circumstances result in corruption of FormIDs
-* (reported on discord) - adding/removing/sorting masters can leave the virtual "Worldspace" elements invalid (does not corrupt actual data)
-* (found by developer) - Language selection is not aware of .strings files in .bsa/.ba2 archives
-* (found by developer) - UTF8 encoding for localized strings needs a fallback mechanism if strings are not valid UTF8
-* (found by developer) - ref building uses more memory than necessary
-* (found by developer) - if the module selection form on opening has exactly one entry and it is checked, it shows up as unchecked
-* (found by developer) - inconsistencies in the collapsing/expanding types and elements in the view tab (implementation and description below updated)
-* #600 - Reporting a null xEdit app version number
-
-## Fallout 76 support
-
-Great progress has been made. All records have working definitions now. Reference building has been enabled and it is now possible to fully load SeventySix.esm with fully build reference building without errors.
-
-Fallout 76 support is generally ready to the point that anyone should be able to use it to look at SeventySix.esm without much of a chance for error messages or crashes.
-
-But significant amount of work remains to further refine the record definitions and identify the many new "Unknown" values that have been added.
-
-## New command line parameters
-
-Two new command line parameters have been added:
-
-* `-autoload` - Will not show the Module Selection dialog and just load all modules that are active according to plugins.txt. It also skips the ModGroup Selection and automatically loads all valid ModGroups
-* `-autogamelink` - Implies `-autoload`. Will automatically activate GameLink in Reference mode at the end of the Background Loader.
-
-## "Hamburger" Menu
-
-A "Hamburger Menu" button has been added to the top left corner of the main window. This button opens a menu with (currently) the following entries:
-
-* Localization
-* GameLink (if present)
-* Options
-
-More menu items that are unnecessarily (= not depending on context) in different context menus may get moved to this menu in the future.
-
-## Codepage override using Description in File Header
-
-The codepage for translatable strings (see below for definition) can now be overridden by placing the text `<cp:xxxx>` somewhere in the description of the module. `xxxx` can be `utf8` or any valid codepage number, e.g. `1252`. codepages with less than 4 digits must use leading 0s, e.g. `<cp:0930>`.
-
-## Setting codepage for language in settings file
-
-It is possible to set the codepage used for a language (new or overridding a default from the list below) by modifying the settings file (shown as "Using settings file:" in the messages log on start).
-
-There is currently no UI support for this, but the settings file can be opened in a text editor and a `[cpoverride]` section can be added or modified like this:
-
-```
-[cpoverride]
-english=utf8
-klingon=6666
-```
-
-The specified value must be `utf8` or a valid codepage (which `6666` isn't, that was just an example).
-
-The specified codepage will affect any place where a codepage is derived from language.
-
-## Compare Selected
-
-The Compare Selected context menu entry now shows the number of currently selected records as `Compare Selected (x)`.
-
-# What's new in xEdit 3.3.3 BETA?
-
-## Improved language support
-
-Module files for the supported games store their strings generally ANSI (one byte per character) strings. This requires that the correct codepage (mapping between characters and their byte values) is used. Previous versions of xEdit had very limited support for accessing module files that didn't use the same ANSI codepage as the system ANSI codepage of the local system.
-
-xEdit no longer simply uses the system ANSI codepage, but instead uses specific encodings for certain classes of strings.
-
-* General strings - These are values like file names, developer comments, internal names that are never visible to the player.
-* VMAD properties of type string or array of string - These only exist in Skyrim and later. They are strings stored in the module file, but in a distinctly different way then other strings.
-* Localized strings - These are strings stored in external `.strings` files when a module is localized.
-* Translatable strings - These are strings stored in the module file that a player of the game might get to see. For Oblivion, Fallout 3, and Fallout New Vegas, these are string fields explicitly marked as such in the xEdit record definitions. For Skyrim and newer, this also includes any localizable string (strings that will be stored in the external `.strings` files when a module is localized) if the module is not actually localized.
-
-General strings now always explicitly use codepage 1252 (ANSI - Latin I). This can be overridden using `-cp-general:<codepage>` where `<codepage>` is either `utf8` or a codepage number. It should normally never be necessary to override this.
-
-VMAD properties are always explicitly stored as UTF8. There is no way to override this. All supported games always expect these strings to be UTF8 and any other codepage would result in errors.
-
-Localized strings are accessed based on the language name that's part of the filename of the `.strings` files.
-
-For Skyrim (not SE), the following language names are recognized:
-
-* english - 1252
-* french - 1252
-* polish - 1250
-* czech - 1250
-* danish - 1252
-* finnish - 1252
-* german - 1252
-* greek - 1253
-* italian - 1252
-* japanese - UTF8
-* norwegian - 1252
-* portuguese - 1252
-* spanish - 1252
-* swedish - 1252
-* turkish - 1254
-* russian - 1251
-* chinese - UTF8;
-* hungarian - 1250
-* arabic - 1256
-
-For SSE, the following language names are recognized:
-
-* english - 1252
-
-For Fallout 4 and Fallout 76, the following language names are recognized:
-
-* en - 1252
-
-The fallback for unknown languages is always UTF8. (SSE, FO4, and FO76 always use UTF8 for anything except english.)
-
-xEdit will automatically use the correct codepage for localized strings, even when the language is switched at runtime using the localization context menu.
-
-The codepage for these files can be overridden byte creating a text file with the same name as the `.strings` file, but the extension `.cpoverride` instead. e.g. `Skyrim_English.cpoverride`. The file should contain a single line with the desired codepage. 
-
-xEdit used to always default to "English" ("En" for Fallout 4) as language if not explicitly specified on the command line using `-l:<language>`. While it is still possible to use that switch to override the language selection, xEdit will now attempt to get the correct language from the `<game>.ini` file, from the iLanguage key for Oblivion, and the sLanguage key for any later games.
-
-For localized strings, while this language setting affects the inital choice of which `.strings` files are being used for localized modules, this can be changed at runtime using the localization context menu.
-
-Translatable string use the same codepage as localized strings, but based on the language defined at program start (either from the `<game>.ini` or explicitly using `-l:<language>`) For games before Skyrim, the same list of language names and codepages as listed above applies. Changing the language through the localization context menu after xEdit has started will *not* change the codepage being used for translatable (but not localized) strings.
-
-The codepage used for translatable strings can be globally overridden (has priority over the language selection) using the `-cp:<codepage>` or `-cp-trans:<codepage>` command line parameter where `<codepage>` is either `utf8` or a codepage number. `-cp` is supported for backward compatibility, `-cp-trans` is preferred.
-
-The codepage can further be overridden on a per module basis by creating a `.cpoverride` file with the same name as the module, like described above for `.strings` files. e.g. `Dragonborn.cpoverride`.
-
-The following entries near the top of the message log provide information about the used codepages:
-```
-Using language: russian
-Using general string encoding: 1252  (ANSI - Latin I)
-Using translatable string encoding: 1251  (ANSI - Cyrillic)
-Using VMAD string encoding: 65001 (UTF-8)
-```
-
-When `.strings` files are loaded, the used encoding is shown in the log:
-```
-[00:00] Background Loader: [Skyrim_russian.STRINGS] Using encoding: 1251  (ANSI - Cyrillic)
-```
-
-When a `.cpoverride` is in effect, it's specifically noted:
-```
-[Dragonborn_English.STRINGS] Using encoding (from override): 65001 (UTF-8)
-```
-
-When a module has a `.cpoverride` applied to it, it is also recorded in the log:
-```
-[00:04] Background Loader: [Dragonborn.esm] File loaded (CRC32:A9F83BFF)
-[00:04] Background Loader: [Dragonborn.esm] Using encoding (from override): 65001 (UTF-8)
-[00:04] Background Loader: [Dragonborn.esm] Start processing
-```
-
-These changes allow explicit control of all used codepages, and make xEdit's behaviour independent from the ANSI system codepage of the local OS.
-
-## updated Skyrim.Hardcoded.dat
-
-# What's new in xEdit 3.3.2 BETA?
-
-## Bugfixes
-
-The following reported issues have been fixed:
-
-* #583 - Edited scripts not marked as not modified when manually saved
-* #584 - deleting things from use template actors (sorted) sometimes moves two entries down instead of 1
-* #585 - xEdit doesn't remember which monitor it was last placed on in certain situations
-* #586 - keyboard selection in dropdown lists doesn't work 
-* #587 - modified bold font doesn't fully get removed
-* #588 - dropdown in a specific part of omod's properties doesn't work
-* #589 - dropdown list's horizontal scrollbar covers up the bottommost entry 
-* #590 - alt+cursor movement defaults to descriptions column if out of bound
-
-# What's new in xEdit 3.3.1 BETA?
-
-## Bugfixes
-
-The following reported issues have been fixed:
-
-* #574 - stick to row doesn't work with alt+navigation 
-* #576 - Record flags aren't copied correctly when dragged and dropped 
-* #577 - Data flags aren't copied when dragged and dropped 
-* #579 - xEdit doesn't interpret string encoding in VMAD properties as UTF-8 even -cp:utf-8 is added
-
-## Fallout 76 support
-
-Significant progress has been made on updating record definitions for Fallout 76, but much more work remains to be done.
-
-Fallout 76 mode can be enabled by renaming the exe to `FO76Edit.exe` or starting it with `-fo76` as parameter.
-
-At the current stage of development, please expect lots of error messages and possibly crashes from incomplete record definitions.
-
-## What's New tab
-
-This "What's New" document is now also shown in the "What's New" tab.
-
-# What's new in xEdit 3.3.0 BETA?
+Zoom can be controlled with `CTRL + 0, +, or -`.
 
 ## UI Themes
 
@@ -433,6 +56,17 @@ While the Legend form is open, when changing the focused cell in the View treevi
 
 xEdit is now flagged as High-DPI aware and the UI should generally scale correctly when the scale factor is set to > 100% in the windows settings. A known limitation is that window caption bars and some other elements are not scaling correctly when custom themes are used.
 
+## "Hamburger" Menu
+
+A "Hamburger Menu" button has been added to the top left corner of the main window. This button opens a menu with (currently) the following entries:
+
+* Localization
+* GameLink (if present)
+* Save
+* Options
+
+More menu items that are unnecessarily (= not depending on context) in different context menus may get moved to this menu in the future.
+
 ## ESL support
 
 xEdit now fully supports the ESL flag in the file header (as well as the .esl extension which implicitly always sets the ESL flag).
@@ -446,6 +80,16 @@ xEdit will prevent files from being saved with set ESL flag if they are not comp
 ESL support can be controlled with two parameters:
 `-IgnoreESL` will load all modules into full slots, ignoring the ESL flag and the .esl extension
 `-PseudoESL` will load all ESL compatible modules into light slots, even without the ESL flag and the .esl extension. This works even for games that do not have ESL support in the game engine.
+
+## Fallout 76 support
+
+Fallout 76 mode can be enabled by renaming the exe to `FO76Edit.exe` or starting it with `-fo76` as parameter.
+
+All records have working definitions. Reference building is supported and it is possible to fully load SeventySix.esm with fully build references without errors.
+
+Fallout 76 support is generally ready to the point that anyone should be able to use it to look at SeventySix.esm without much of a chance for error messages or crashes.
+
+But significant amount of work remains to further refine the record definitions and identify the many new "Unknown" values that have been added.
 
 ## Referenced By Caching
 
@@ -473,6 +117,133 @@ The process of building or loading Referenced By information during start is now
 
 The CRC32 of the application file is shown at the top of the messages log
 The CRC32 of loaded modules is shown during the loading and in the navigation treeview.
+
+## Improved language and codepage support
+ 
+Module files for the supported games store their strings generally ANSI (one byte per character) strings. This requires that the correct codepage (mapping between characters and their byte values) is used. Previous versions of xEdit had very limited support for accessing module files that didn't use the same ANSI codepage as the system ANSI codepage of the local system.
+
+xEdit no longer simply uses the system ANSI codepage, but instead uses specific encodings for certain classes of strings.
+
+These changes allow explicit control of all used codepages, and make xEdit's behaviour independent from the ANSI system codepage of the local OS.
+
+### String classes
+
+There are different classes of strings in regards to codepage:
+
+* General strings - These are values like file names, developer comments, internal names that are never visible to the player.
+* VMAD properties of type string or array of string - These only exist in Skyrim and later. They are strings stored in the module file, but in a distinctly different way then other strings.
+* Localized strings - These are strings stored in external `.strings` files when a module is localized.
+* Translatable strings - These are strings stored in the module file that a player of the game might get to see. For Oblivion, Fallout 3, and Fallout New Vegas, these are string fields explicitly marked as such in the xEdit record definitions. For Skyrim and newer, this also includes any localizable string (strings that will be stored in the external `.strings` files when a module is localized) if the module is not actually localized.
+
+General strings now always explicitly use codepage 1252 (ANSI - Latin I). This can be overridden using `-cp-general:<codepage>` where `<codepage>` is either `utf8` or a codepage number. It should normally never be necessary to override this.
+
+VMAD properties are always explicitly stored as UTF8. There is no way to override this. All supported games always expect these strings to be UTF8 and any other codepage would result in errors.
+
+Localized strings are accessed based on the language name that's part of the filename of the `.strings` files.
+
+### Languages
+
+For Skyrim (not SE) and older, the following language names are recognized:
+
+* arabic - 1256
+* chinese - UTF8
+* czech - 1250
+* danish - 1252
+* english - 1252
+* finnish - 1252
+* french - 1252
+* german - 1252
+* greek - 1253
+* hungarian - 1250
+* italian - 1252
+* japanese - UTF8
+* norwegian - 1252
+* polish - 1250
+* portuguese - 1252
+* russian - 1251
+* spanish - 1252
+* swedish - 1252
+* turkish - 1254
+
+For SSE, the following language names are recognized:
+
+* english - 1252
+
+For Fallout 4 and Fallout 76, the following language names are recognized:
+
+* en - 1252
+
+### Defining codepage for language in settings file
+
+It is possible to set the codepage used for a language (new or overridding a default from the list above) by modifying the settings file (shown as "Using settings file:" in the messages log on start).
+
+There is currently no UI support for this, but the settings file can be opened in a text editor and a `[cpoverride]` section can be added or modified like this:
+
+```
+[cpoverride]
+english=utf8
+klingon=6666
+```
+
+The specified value must be `utf8` or a valid codepage (which `6666` isn't, that was just an example).
+
+The specified codepage will affect any place where a codepage is derived from language.
+
+### Default language
+
+xEdit used to always default to "English" ("En" for Fallout 4) as language if not explicitly specified on the command line using `-l:<language>`. While it is still possible to use that switch to override the language selection, xEdit will now attempt to get the correct language from the `<game>.ini` file, from the iLanguage key for Oblivion, and the sLanguage key for any later games.
+
+### Localized strings
+
+xEdit will automatically use the correct codepage for localized strings, even when the language is switched at runtime using the localization context menu.
+
+The fallback for localized strings in unknown languages is always UTF8. (SSE, FO4, and FO76 always use UTF8 for anything except english.)
+
+The codepage for these files can be overridden byte creating a text file with the same name as the `.strings` file, but the extension `.cpoverride` instead. e.g. `Skyrim_English.cpoverride`. The file should contain a single line with the desired codepage. 
+
+For localized strings, while this language setting affects the inital choice of which `.strings` files are being used for localized modules, this can be changed at runtime using the localization context menu.
+
+### Translatable strings
+
+Translatable string use the same codepage as localized strings, but based on the language defined at program start (either from the `<game>.ini` or explicitly using `-l:<language>`) For games before Skyrim, the same list of language names and codepages as listed above applies. Changing the language through the localization context menu after xEdit has started will *not* change the codepage being used for translatable (but not localized) strings.
+
+The codepage used for translatable strings can be globally overridden (has priority over the language selection) using the `-cp:<codepage>` or `-cp-trans:<codepage>` command line parameter where `<codepage>` is either `utf8` or a codepage number. `-cp` is supported for backward compatibility, `-cp-trans` is preferred.
+
+The codepage can further be overridden on a per module basis by creating a `.cpoverride` file with the same name as the module, like described above for `.strings` files. e.g. `Dragonborn.cpoverride`.
+
+Alternatively, the codepage for translatable strings can now be overridden by placing the text `<cp:xxxx>` somewhere in the description (in the file header) of the module. `xxxx` can be `utf8` or any valid codepage number, e.g. `1252`. codepages with less than 4 digits must use leading 0s, e.g. `<cp:0930>`.
+
+### Log entries
+
+The following entries near the top of the message log provide information about the used language and codepages:
+```
+Using language: russian
+Using general string encoding: 1252  (ANSI - Latin I)
+Using translatable string encoding: 1251  (ANSI - Cyrillic)
+Using VMAD string encoding: 65001 (UTF-8)
+```
+
+When `.strings` files are loaded, the used encoding is shown in the log:
+```
+[00:00] Background Loader: [Skyrim_russian.STRINGS] Using encoding: 1251  (ANSI - Cyrillic)
+```
+
+When a `.cpoverride` is in effect, it's specifically noted:
+```
+[Dragonborn_English.STRINGS] Using encoding (from override): 65001 (UTF-8)
+```
+
+When a module has a `.cpoverride` applied to it, it is also recorded in the log:
+```
+[00:04] Background Loader: [Dragonborn.esm] File loaded (CRC32:A9F83BFF)
+[00:04] Background Loader: [Dragonborn.esm] Using encoding (from override): 65001 (UTF-8)
+[00:04] Background Loader: [Dragonborn.esm] Start processing
+```
+
+When a module has `<cp:XXXX>`specified in it's description, it is also recorded in the log:
+```
+[00:12] Background Loader: [CpOverrideTest.esp] Using encoding (from File Header Description): 65001 (UTF-8)
+```
 
 ## Load order handling
 
@@ -629,6 +400,10 @@ After that a ModGroup Selection is shown with all ModGroups that are missing the
 
 After choosing which ModGroups to update, the missing CRCs will be added to all checked ModGroups.
 
+## Compare Selected
+
+The Compare Selected context menu entry now shows the number of currently selected records as `Compare Selected (x)`.
+
 ## Auto "Compare Selected"
 
 A new option 'Auto "Compare Selected" when multi-selecting less than [x] records' has been added. Defaults to 5. Can be disabled by setting to a value smaller than 2.
@@ -659,6 +434,20 @@ New command line parameters have been added that allow directly saving over an e
 
 `-AllowDirectSave` will load all non-official (official = game master, official dlcs, CCs) modules without using memory mapped files  
 `-AllowDirectSave:a.esm,b.esl,c.esp` will load only the listed modules without using memory mapped files. The list may include official modules.
+
+## "Show Unsaved Hint" replaces previous "Auto Save" option
+
+When "Show Unsaved Hint" is checked in the Options (on by default) then if there are any unsaved changes older than 10 minutes a balloon hint is being shown under the Hamburger Menu, listing the unsaved files and how long they have been unsaved.
+
+Clicking the hint will show the usual save selection dialog.
+
+Clicking the [X] in the hint or ignoring it for 15 seconds until it disappears on it's own will snooze it for 10 minutes.
+
+## Reset Modified flag for elements on Save
+
+A "Reset Modified (Bold) on Save" Option has been added (defaults to true). 
+
+With this option active, saving will reset the modified flag for elements (which caused them to show in Bold).
 
 ## Editing in view treeview
 
@@ -732,7 +521,15 @@ This makes it possible to track the Referenced By information for this record.
 
 ## Hardcoded.dat files updated
 
-The {game}.Hardcoded.dat files have been updated to include more records and their filenames have been simplified.
+The `Hardcoded.dat` files have been updated to include more records and they are now embedded inside the exe.
+
+It is possible to override the data contained in the exe by placing a `{GameName}.Hardcoded.Override.dat` beside the exe.
+	
+## Tips updated
+
+The Tips shown at program start have been updated to take into account changes made to xEdit.
+
+The Tips no longer require the external file EditTips.txt and are now embedded in the exe.
 
 ## Copy to Clipboard on navigation treeview
 
@@ -755,9 +552,19 @@ xEdit can be started with the following parameters:
 
 Quick Clean mode automatically turns off "Simple Records" (to ensure the largest number of possible ITMs are recognized) and sets "I Know What I'm Doing" mode (to prevent the edit warning).
 
+A user reported that after cleaning Dawnguard.esm, parts of the soul cairn worldspace do no longer load in the game. This is an old issue that's already present in 3.2.1 and probably before.
+
+To fix this issue, xEdit is now marking all groups and main records as modified before saving when using Quick [Auto] Clean. This forces these elements to be individually saved, instead of simply writing out the bytes from the original file.
+
+This means that using Quick Clean will now produce a different CRC than using the old manual method (explicitly applying filter and explicitly performing UDR and remove ITM).
+
 ## Drag'n'Drop of whole record in view treeview
 
 In the view treeview, it is now possible to copy the contents of the whole record by dragging the header (showing the file name) of one column onto another.
+
+## Mouse shortcut for "Jump To" in the view treeview
+
+`Ctrl + Click` on the view treeview header performs a "Jump To" on that record.
 
 ## Nav mesh improvements
 
@@ -827,13 +634,25 @@ Buttons have been added to the top right corner of the main window to open:
 * Discord - The xEdit Discord server. Real-time chat with other xEdit users and developers. Everyone is welcome.
 * Patreon - ElminsterAU's Patreon page for xEdit. Your support is absolutely essential to ensure ongoing future development of xEdit.
 
-## Update check on GitHub
+## Update check
+
+### GitHub
 
 xEdit will automatically perform a check for a newer version on GitHub
 
 This can be turned of with the "Don't check for GitHub update" option.
 
 If an update is available, a balloon hint will be shown under the GitHub button on start.
+
+### NexusMods
+
+xEdit will automatically perform a check for a newer version on NexusMods
+
+This can be turned of with the "Don't check for NexusMods update" option.
+
+If an update is available, a balloon hint will be shown under the NexusMods button on start.
+
+If xEdit is an even minor version (e.g. 4.0.x, 4.2.x, ...) when it is started for the first time (after this change) then update checking on GitHub is initially disabled (but can be turned on in the Options).
 
 ## Patreon reminder balloon hint
 
@@ -1009,6 +828,10 @@ During long operations (building reference or reachable information, filtering, 
 
 This is an ongoing change and not all long operations may have been converted to the new system yet.
 
+## `-autoload` command line parameter
+
+The `-autoload` parameter will not show the Module Selection dialog and just load all modules that are active according to plugins.txt. It also skips the ModGroup Selection and automatically loads all valid ModGroups.
+
 ## GameLink / FO4EditLink
 
 A FO4EditLink plugin for F4SE is now included.
@@ -1018,6 +841,8 @@ If that plugin is loaded into FO4, and FO4Edit is started as the same time as th
 Once activated, if a reference is selected in the console in game, xEdit will automatically change the View tab to showing that record.
 
 This function is currently only available for FO4, but might be added to other games in the future.
+
+A `-autogamelink` parameter has been added. It implies `-autoload` and will automatically activate GameLink in Reference mode at the end of the Background Loader.
 
 ## General record definition improvements and fixes
 
@@ -1030,6 +855,8 @@ A generic mechanism has been implemented to allow setting of default values in t
 A generic mechanism has been added to allow "recursive" record definitions. This now allows VMAD Properties of type "Struct" or "Array of Struct" to contain members that are again of type "Struct" or "Array of Struct", up to arbitrary numbers of nesting levels deep.
 
 It is now possible to add (VMAD) Scripts and Properties through the UI (both Adding and drag'n'drop).
+
+Version Control Info is now decoded for all games and shows as `yyyy-mm-dd User: x Index: y` or `None` (if all 0).
 
 ## Using EditorID to flag ITMs as intentional
 
@@ -1129,6 +956,71 @@ end;
 `Add(WorldSpace, 'CELL[P]', True)` or `Add(WorldSpace, 'CELL[1,5]', True)` can be used to add a (or return an existing) persistent or temporary worldspace CELL to a Worldspace.
 
 `ElementEditValue` and `ElementNativeValue` now always work for Flags, no matter if the flag is currently set or not.
+
+## Bugfixes
+
+A large number of reported bugs have been fixed. (This is list incomplete as many bugs have been fixed before keeping of this list was started.)
+
+* #574 - stick to row doesn't work with alt+navigation 
+* #576 - Record flags aren't copied correctly when dragged and dropped 
+* #577 - Data flags aren't copied when dragged and dropped 
+* #579 - xEdit doesn't interpret string encoding in VMAD properties as UTF-8 even -cp:utf-8 is added
+* #583 - Edited scripts not marked as not modified when manually saved
+* #584 - deleting things from use template actors (sorted) sometimes moves two entries down instead of 1
+* #585 - xEdit doesn't remember which monitor it was last placed on in certain situations
+* #586 - keyboard selection in dropdown lists doesn't work 
+* #587 - modified bold font doesn't fully get removed
+* #588 - dropdown in a specific part of omod's properties doesn't work
+* #589 - dropdown list's horizontal scrollbar covers up the bottommost entry 
+* #590 - alt+cursor movement defaults to descriptions column if out of bound
+* #594 - "Localize plugin" function is broken
+* (reported on discord) - sorting masters can under certain circumstances result in corruption of FormIDs
+* (reported on discord) - adding/removing/sorting masters can leave the virtual "Worldspace" elements invalid (does not corrupt actual data)
+* (found by developer) - Language selection is not aware of .strings files in .bsa/.ba2 archives
+* (found by developer) - UTF8 encoding for localized strings needs a fallback mechanism if strings are not valid UTF8
+* (found by developer) - ref building uses more memory than necessary
+* (found by developer) - if the module selection form on opening has exactly one entry and it is checked, it shows up as unchecked
+* (found by developer) - inconsistencies in the collapsing/expanding types and elements in the view tab (implementation and description below updated)
+* #600 - Reporting a null xEdit app version number
+* (reported on discord) - changing FormID of a record does not show new FormID until after saving and restarting
+* (reported on discord) - [FO4] FNAM in GLOB is wrong
+* (reported on discord) - virtual "Worldspace" element on temporary exterior cells can show invalid value after changing FormID of WRLD record
+* (reported on discord) - When using Copy as override (with overwriting), "No to All" does not work for records flagged as deleted
+* (reported on discord) - After using Copy into (and possible other situations) the View tab may (in rare cases) be blank
+* (reported on discord) - Flags do not work in Unions
+* (found by developer) - Certain shortcuts work while the loader is still active when they shouldn't
+* (found by developer) - Random AV after saving when closing
+* (reported on discord) - TOC building does not work on Win7
+* (reported on discord) - while in "Fit All" column width mode, it is not possible to manually increase the width of columns
+* (reported on discord) - HITMEs (FormID Prefix HIgher Than Master Entries) in GRUP labels can lead to problems
+* (reported on discord) - Compare Selected does not initially use the correct Column Width mode
+* (reported on discord) - Balloon Hint displays Caption in wrong font/colour when using custom themes
+* (reported on discord) - Various issue with xDump when running on a file that is not the game master
+* (reported on discord) - some texts are cut off in Options Form when a very wide system font is set
+* (reported on discord) - xEdit doesn't always find data path correctly if installed in the game folder
+* (found by developer) - Clicking the OK button in the Module Selection Form does not always behave the same as pressing `Enter`
+* (found by developer) - wbOffsetDataColsCounter can cause range check for modules with faulty data
+* (found by developer) - unsaved time interval is shown wrong in unsaved hint on systems configured for 12h time display
+* (found by developer) - deleting the last (= there are no others) modgroup will not deactivate mod groups
+* (reported on discord) - Adding, Sorting, and Cleaning Masters can lead to data corruption (Please check all modules where you made changes to masters with 3.3.6!!!)
+* (reported on discord) - What's New TOC does not initially show correctly in the What's New tab if the TOC was left open previously and the "Don't show again until changed" checkbox is checked in the What's New Form at program start
+* (reported on discord) - SSEEdit does not correctly display Version Control Info 1 for records with FormVersion 44
+* (reported on discord) - AV during reference building
+* (reported on discord) - manual cleaning of Dawnguard.esm removes 4 more records than using quick clean
+* (reported on discord) - holding the cursor down key when moving elements with ctrl+cursor in the view tab can result in errors
+* (reported on discord) - saving a file multiple times before closing xEdit leaves `file.save.datetime` files behind in the data folder
+* (reported on discord) - the right most column in the view tab is not always resizable
+* (found by developer) - Ctrl + Click on View Header does not correctly resize the columns of the View after switching to the clicked on record
+* (reported on discord) - Using the mouse wheel to change the script combobox in the Apply Script Form does not load the newly selected script
+* (reported on discord) - multi-selecting records in the navigation treeview, and then selecting just one of the previousl selected records does not update the view tab
+* (reported on discord) - after applying a script, the view tab is not updated without selecting a different record first
+* (reported on discord) - saving a .strings file does not remove the modified flag for it
+* (reported on discord) - after saving, previous changes to record header flags can still show as modified
+* #611 - Filter bugs out when .esps are already expanded
+* #612 - Edit Script to detect ESL capable plugins too restrictive
+* (reported on discord) - crash from accessing a partially initialized record, caused by a pending paint event being executed if a log message is added during the initialization of the recordting in a crash
+* (reported on discord) - "[Deep] Copy as (Override|New Record)" can under certain circumstances overlook some masters that need to be added to the target file before the copy operation
+* #614 - Problems with codepage tranlation
 
 # What's new in xEdit 3.2.2? 
 
