@@ -49,16 +49,16 @@ type
 
 var
   VersionString : TwbVersion = (
-    Major   : 3;
-    Minor   : 3;
-    Release : 11;
+    Major   : 4;
+    Minor   : 0;
+    Release : 0;
     Build   : '';
-    Title   : 'BETA';
+    Title   : '';
   );
 
 const
-  wbWhatsNewVersion : Integer = 03031100;
-  wbDeveloperMessageVersion : Integer = 03030900;
+  wbWhatsNewVersion : Integer = 04000000;
+  wbDeveloperMessageVersion : Integer = 04000000;
   wbDevCRC32App : Cardinal = $FFFFFFEB;
 
   clOrange       = $004080FF;
