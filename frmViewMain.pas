@@ -3139,7 +3139,7 @@ begin
       Exit;
     end;
 
-    s := ChangeFileExt(_File.FileName, '');
+    s := ChangeFileExt(ExtractFileName(CompareFile), '');
     i := 0;
 
     repeat
@@ -4632,6 +4632,8 @@ begin
   if not (wbDontSave or wbDontBackup) then
     AddMessage('Using Backup Path: ' + wbBackupPath);
 
+  AddMessage('Using Scripts Path: ' + wbScriptsPath);
+
   if not wbDontCache then
     AddMessage('Using Cache Path: ' + wbCachePath);
 
@@ -5408,7 +5410,7 @@ begin
   vstView.BeginUpdate;
   try
     vstView.FullExpand;
-    Node := vstView.GetLastChild(nil);
+    Node := vstView.GetLast(nil);
     while Assigned(Node) do begin
       NodeDatas := vstView.GetNodeData(Node);
       if Assigned(NodeDatas) then

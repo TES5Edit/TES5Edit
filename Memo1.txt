@@ -17,9 +17,8 @@ The navigation treeview has a context menu where you can activate filtering. Fil
 
 Command Line Switches:
 
--cp:<encoding> [utf-8 for UTF-8]
--l:sp For Fallout 4 [Set Language]
--l:spanish For Skyrim/SSE [Set Language]
+-cp:<codepage> or -cp-trans:<codepage> [sets codepage for translatable strings to codepage number or utf8]
+-l:<language> [Sets language, affects used codepage and .strings files]
 -edit [Enable Edit Mode]
 -view [Enable View Mode]
 -saves [Enable Saves Mode / View Mode Only]
@@ -29,15 +28,15 @@ Command Line Switches:
 -DontCacheLoad [Don't load cache files if present, but save if possible]
 -DontCacheSave [Don't save cache files after building refs]
 -AllowDirectSaves:<filename list> [File may be an .esm, .esl, or .esp. Without a list of files, this will load non-official (official = game master, official dlcs, CCs) modules without using memory mapped files. Optionally you can specify a list of files. Which will only load the listed modules without using memory mapped files. This optional list may include official modules.]
--<gamemode> [Specifies which game mode to use. <gamemode> can be any of the following: 'tes5vr', 'fo4vr', 'tes4', 'tes5', 'sse', 'fo3', 'fnv', 'fo4']
+-<gamemode> [Specifies which game mode to use. <gamemode> can be any of the following: 'tes5vr', 'fo4vr', 'tes4', 'tes5', 'sse', 'fo3', 'fnv', 'fo4', 'fo76']
 -moprofile:<profilename> Opens the plugin selection from the MO profile named in the switch.
 -setesm [Set ESM flag. Plugin selection screen will appear.]
 -clearesm [Remove ESM flag. Plugin selection screen will appear.]
 -VeryQuickShowConflicts [loads all modules according to plugins.txt without showing module selection, except if CTRL is pressed on start]
--quickclean [cleans 2 times and prompts to save the file]
+-quickclean [cleans and prompts to save the file]
 -quickautoclean [Cleans 3 times and saves in between each step]
 -C:<path> [path to use for cache files]
--S:<path><filename> [Run specified script]
+-S:<path> [Path to look for scripts]
 -T:<path> [Temporary Directory]
 -D:<path> [Specify a Data Directory]
 -O:<path> [Specify path for generated LOD files]
@@ -46,6 +45,7 @@ Command Line Switches:
 -P:<path><filename> [Custom Plugins.txt file]
 -B:<path> [Backups path i.e. Edit Backups\]
 -R:<path><filename> [Custom xEdit Log Filename]
+All path parameters must be specified with trailing backslash.
 
 Keyboard Shortcuts:
 
