@@ -13757,16 +13757,16 @@ begin
     wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
     wbByteArray(ONAM, 'Unused', 0, cpIgnore),
     wbRStruct('Cloud Speed', [
-      wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)),
-      wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt))
+      wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable),
+      wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable)
     ], []),
-    wbArray(PNAM, 'Cloud Colors', wbWeatherColors('Layer')),
+    wbArray(PNAM, 'Cloud Colors', wbWeatherColors('Layer')).IncludeFlag(dfNotAlignable),
     wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
       wbFloat('Sunrise'),
       wbFloat('Day'),
       wbFloat('Sunset'),
       wbFloat('Night')
-    ])),
+    ])).IncludeFlag(dfNotAlignable),
     {>>> not as an array since last entries are omitted in skyrim.esm <<<}
     wbStruct(NAM0, 'Weather Colors', [
       wbWeatherColors('Sky-Upper'),

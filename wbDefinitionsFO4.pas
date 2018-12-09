@@ -16173,10 +16173,10 @@ begin
     wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
     wbByteArray(ONAM, 'Unused', 0, cpIgnore),
     wbRStruct('Cloud Speed', [
-      wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)),
-      wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt))
+      wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable),
+      wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable)
     ], []),
-    wbArray(PNAM, 'Cloud Colors', wbWeatherColors('Layer')),
+    wbArray(PNAM, 'Cloud Colors', wbWeatherColors('Layer')).IncludeFlag(dfNotAlignable),
     wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
       wbFloat('Sunrise'),
       wbFloat('Day'),
@@ -16186,7 +16186,7 @@ begin
       wbFloat('LateSunrise'),
       wbFloat('EarlySunset'),
       wbFloat('LateSunset')
-    ])),
+    ])).IncludeFlag(dfNotAlignable),
     wbStruct(NAM0, 'Weather Colors', [
       wbWeatherColors('Sky-Upper'),
       wbWeatherColors('Fog Near'),
@@ -16208,7 +16208,7 @@ begin
       wbWeatherColors('Fog Near High'),
       wbWeatherColors('Fog Far High')
     ], cpNormal, True, nil, 8),
-    wbArray(NAM4, 'Unknown', wbFloat('Unknown')),
+    wbArray(NAM4, 'Unknown', wbFloat('Unknown')).IncludeFlag(dfNotAlignable),
     wbStruct(FNAM, 'Fog Distance', [
       wbFloat('Day - Near'),
       wbFloat('Day - Far'),
