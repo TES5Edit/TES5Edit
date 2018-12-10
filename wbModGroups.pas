@@ -193,7 +193,7 @@ begin
               mgfLoad;
               Inc(j);
             end;
-
+            ModGroupFilesByName.AddObject(ModGroupFileName, Pointer(ModGroupFile));
           end;
         if Assigned(ModGroupFile) and (i <= High(Modules)) then
           with ModGroupFile^ do begin
