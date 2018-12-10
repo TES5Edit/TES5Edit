@@ -2305,15 +2305,11 @@ begin
             IntToHex64(wbCRC32App, 8) +
       '_' + ChangeFileExt(CacheFileName, '') +
       '_' + Copy(ExtractFileExt(CacheFileName), 2) +
-      '_' + GetCRC32.ToString;
-
-    if fsIsGameMaster in flStates then begin
-      CacheFileName := CacheFileName +
-        '_g' + GetEncoding(False).CodePage.ToString +
-        '_t' + GetEncoding(True).CodePage.ToString +
-        '_l' + wbEncodingForLanguage(wbLanguage, False).CodePage.ToString +
-        '_' + wbLanguage;
-    end;
+      '_' + GetCRC32.ToString +
+      '_g' + GetEncoding(False).CodePage.ToString +
+      '_t' + GetEncoding(True).CodePage.ToString +
+      '_l' + wbEncodingForLanguage(wbLanguage, False).CodePage.ToString +
+      '_' + wbLanguage;
 
     CacheFileName := CacheFileName + wbRefCacheExt;
     if not wbDontCacheLoad and FileExists(CacheFileName) then begin
