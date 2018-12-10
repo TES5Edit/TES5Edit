@@ -11116,12 +11116,12 @@ begin
     wbString(TX00, 'LUT')
   ]);
 
-  wbTimeInterpolator := wbStruct('Data', [
+  wbTimeInterpolator := wbStructSK([0], 'Data', [
     wbFloat('Time'),
     wbFloat('Value')
   ]);
 
-  wbColorInterpolator := wbStruct('Data', [
+  wbColorInterpolator := wbStructSK([0], 'Data', [
     wbFloat('Time'),
     wbFloat('Red', cpNormal, False, 255, 0),
     wbFloat('Green', cpNormal, False, 255, 0),
@@ -12464,7 +12464,7 @@ begin
       wbFloat('Loop Ends'),
       wbInteger('Loop Count', itU32)
     ]),
-    wbArray(FNAM, 'Cue Points', wbFloat('Point')),
+    wbArray(FNAM, 'Cue Points', wbFloat('Point')).IncludeFlag(dfNotAlignable),
     wbCITC,
     wbCTDAsCount,
     wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
