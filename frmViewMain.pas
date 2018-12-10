@@ -1208,7 +1208,7 @@ begin
     raise Exception.Create('Unable to initialize Wininet');
 end;
 
-var
+threadvar
   LastUpdate               : UInt64;
   ProcessMessagesLockCount : Integer;
 
