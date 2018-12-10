@@ -15758,6 +15758,7 @@ var
   Size : Cardinal;
   Len  : Cardinal;
   b    : TBytes;
+  i    : Integer;
 begin
   Len := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
   if Len<GetPrefixOffset+Ord(noTerminator) then
@@ -15771,7 +15772,22 @@ begin
 
   if Len > 0 then begin
     b := BytesOf(aBasePtr, Len);
-    Result := bsdGetEncoding(aElement).GetString(b);
+    try
+      Result := bsdGetEncoding(aElement).GetString(b);
+    except
+      on E: Exception do begin
+        Result := '';
+        for i := Low(b) to High(b) do begin
+          Result := Result + IntToHex64(b[i], 2);
+          if i < High(b) then
+            Result := Result + ' ';
+        end;
+        Result := Result + ' <Error: ';
+        Result := Result + Format('Can''t read string: [%s] %s', [E.ClassName, E.Message]);
+        Result := Result + '>';
+        wbProgress('[%s] <Error reading string: [%s] %s>', [aElement.FullPath, E.ClassName, E.Message]);
+      end;
+    end;
   end else
     Result := '';
 
