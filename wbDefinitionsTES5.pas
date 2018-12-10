@@ -8829,12 +8829,12 @@ begin
     ], cpNormal, False, nil, 3)
   ]);
 
-  wbTimeInterpolator := wbStruct('Data', [
+  wbTimeInterpolator := wbStructSK([0], 'Data', [
     wbFloat('Time'),
     wbFloat('Value')
   ]);
 
-  wbColorInterpolator := wbStruct('Data', [
+  wbColorInterpolator := wbStructSK([0], 'Data', [
     wbFloat('Time'),
     wbFloat('Red', cpNormal, False, 255, 0),
     wbFloat('Green', cpNormal, False, 255, 0),
@@ -10156,7 +10156,7 @@ begin
     wbFloat(DNAM, 'Fade-Out'),
     wbString(ANAM, 'Track Filename'),
     wbString(BNAM, 'Finale Filename'),
-    wbArray(FNAM, 'Cue Points', wbFloat('Point')),
+    wbArray(FNAM, 'Cue Points', wbFloat('Point')).IncludeFlag(dfNotAlignable),
     wbStruct(LNAM, 'Loop Data', [
       wbFloat('Loop Begins'),
       wbFloat('Loop Ends'),
