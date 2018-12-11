@@ -55,6 +55,7 @@ Check for new versions here
 - [TES5Edit](http://www.nexusmods.com/skyrim/mods/25859)
 - [TES5VREdit](http://www.nexusmods.com/skyrim/mods/25859)
 - [SSEEdit](http://www.nexusmods.com/skyrimspecialedition/mods/164)
+- [FO76Edit](https://www.nexusmods.com/fallout76/mods/30)
 - [Mirror](https://github.com/TES5Edit/TES5Edit/releases)
 
 ## xLODGen Versions
