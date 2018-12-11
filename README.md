@@ -8,8 +8,6 @@ Please do not use the tracker for general help and support on how to use xEdit.
 
 xEdit 4.0.0 by ElminsterAU. Updates since 2012 include TES5Edit/SSEEdit/FO4Edit by Hlp, Zilav and Sharlikran. LOD management by Sheson.
 
-Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used xEdit, Wiki Pages and basic videos are available.  Starting from 3.1.0 we need to remind you that we only support version 1.9.0.32 of Skyrim. Update xEdit and Skyrim before you post in the forum.  If you see any references to xEdit that is a short way of saying all versions of the program which would cover FO3Edit, FNVEdit, TES4Edit and TES5Edit.
-
 ## xEdit Cleaning Guide
 
 With the 4.0 update all previous guides are obsolete. Refer to the [xEdit Quick Auto Clean](https://tes5edit.github.io/docs/5-mod-cleaning-and-error-checking.html#quickautoclean)
