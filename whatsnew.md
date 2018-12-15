@@ -6,6 +6,10 @@
 * #619 - Assertion failure when running REPLACE MODEL FILE NAME script
 * (reported on Discord) - attempted reporting of encoding error might result in endless loop and crash
 
+## PayPal Button
+
+By popular demand, a PayPal button has been added for people that prefer to make a one-off donation instead of pledging on Patreon.
+
 # What's new in xEdit 4.0.0?
 
 ## What's New

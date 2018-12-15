@@ -137,7 +137,6 @@ object frmMain: TfrmMain
           OnNewText = vstViewNewText
           OnResize = vstViewResize
           OnScroll = vstViewScroll
-          ExplicitTop = 28
           Columns = <
             item
               Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coFixed]
@@ -1258,7 +1257,7 @@ object frmMain: TfrmMain
     end
     object bnBack: TSpeedButton
       AlignWithMargins = True
-      Left = 931
+      Left = 881
       Top = 3
       Width = 24
       Height = 24
@@ -1341,10 +1340,11 @@ object frmMain: TfrmMain
         FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF993F079C420A9E
         460E9D450C9C410984360CFF00FFFF00FFFF00FFFF00FFFF00FF}
       NumGlyphs = 3
+      ExplicitLeft = 931
     end
     object bnForward: TSpeedButton
       AlignWithMargins = True
-      Left = 961
+      Left = 911
       Top = 3
       Width = 25
       Height = 24
@@ -1427,10 +1427,11 @@ object frmMain: TfrmMain
         FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF993F079C420A9E
         460E9D450C9C410984360CFF00FFFF00FFFF00FFFF00FFFF00FF}
       NumGlyphs = 3
+      ExplicitLeft = 961
     end
     object bnHelp: TSpeedButton
       AlignWithMargins = True
-      Left = 992
+      Left = 942
       Top = 3
       Width = 70
       Height = 24
@@ -1540,10 +1541,11 @@ object frmMain: TfrmMain
         0000000000000000000000000000000000000000000000000000000000000000
         0000000000000000000000000000000000000000000000000000}
       OnClick = bnHelpClick
+      ExplicitLeft = 992
     end
     object bnNexusMods: TSpeedButton
       AlignWithMargins = True
-      Left = 1068
+      Left = 1018
       Top = 3
       Width = 75
       Height = 24
@@ -1586,10 +1588,12 @@ object frmMain: TfrmMain
         0000000000000000000000000000000000000000000000000000000000000000
         00000B0B0B2C0E0D0F6504040417000000000000000000000000}
       OnClick = bnNexusModsClick
+      ExplicitLeft = 1012
+      ExplicitTop = 2
     end
     object bnGitHub: TSpeedButton
       AlignWithMargins = True
-      Left = 1149
+      Left = 1099
       Top = 3
       Width = 60
       Height = 24
@@ -1650,12 +1654,13 @@ object frmMain: TfrmMain
         1D4F19191A410F0F0F2326262681232324E42626267C00000000000000000000
         00000000000000000000}
       OnClick = bnGitHubClick
+      ExplicitLeft = 1149
     end
     object bnDiscord: TSpeedButton
       AlignWithMargins = True
-      Left = 1215
+      Left = 1165
       Top = 3
-      Width = 70
+      Width = 66
       Height = 24
       Align = alRight
       Caption = 'Discord'
@@ -1706,12 +1711,13 @@ object frmMain: TfrmMain
         0000000000000000000000000000000000000000000000000000000000000000
         0000000000000000000000000000000000000000000000000000}
       OnClick = bnDiscordClick
+      ExplicitLeft = 1155
     end
     object bnPatreon: TSpeedButton
       AlignWithMargins = True
-      Left = 1291
+      Left = 1237
       Top = 3
-      Width = 70
+      Width = 64
       Height = 24
       Hint = 
         'Patreon is now live! Please support further ongoing xEdit develo' +
@@ -1757,12 +1763,56 @@ object frmMain: TfrmMain
       ParentShowHint = False
       ShowHint = True
       OnClick = bnPatreonClick
+      ExplicitLeft = 1235
+    end
+    object bnPayPal: TSpeedButton
+      AlignWithMargins = True
+      Left = 1307
+      Top = 3
+      Width = 54
+      Height = 24
+      Align = alRight
+      Caption = 'PayPal'
+      Flat = True
+      Glyph.Data = {
+        76030000424D760300000000000036000000280000000D000000100000000100
+        2000000000004003000000000000000000000000000000000000000000000000
+        0000000000003E3829446C5C38766959357425231E2700000000000000000000
+        0000000000000000000000000000000000000101010102020202856A2E93DC9B
+        01FDDC9B01FD6C592E7800000000000000000000000000000000000000000000
+        00004F392D715D3723945E392595A26915D8DD9B01FEDE9C01FF90712AA00101
+        01010000000000000000000000000000000000000000764A33B8843000FE8430
+        00FEA55801FEDD9C00FFDE9C01FFAB7D13C30606060600000000000000000000
+        00000000000000000000543E3276843000FE853000FF984800FFDD9C01FFDE9C
+        01FFC88D04E6443E2D4A2B27202E1E1D1A1F0404040400000000000000003F33
+        2E51822F00FB853000FF8D3900FFDC9A01FFDE9C01FFDD9B01FED59600F6D293
+        00F2C78B02E5846726951A1A181C000000002723212F7E2D00F3853000FF842F
+        00FFD69401FFDE9C01FFDE9C01FFDE9C01FFDE9C01FFDE9C01FFDB9B00FD9E76
+        1AB40A0A0A0B17161519762A00E4853000FF842F00FF863C02FF924C02FF944D
+        02FFA05A02FFBF7B02FFDC9A00FFDE9C01FFD79701F7473F2D4D0A09090A6F2E
+        0ECB853000FF853000FF722501FF692002FF692002FF692002FF681F02FF8840
+        02FFD69401FFDD9B01FE8E73359D03030303693820B0843000FE853000FF7727
+        01FF692002FF692002FF692002FF692002FF681F02FF904902FFDD9B01FFBD93
+        35D4000000005C3D2E8B843000FE853000FF7A2900FF692002FF692002FF6920
+        02FF692002FF692002FF681F02FFC58301FB705E347C000000004B393166832F
+        00FD853000FF7F2C00FF681F02FF692002FF692002FF692002FF692002FF681F
+        02FE7E5222BC1313121400000000352D2944812E00FA853000FF842F00FF7D2B
+        00FF7D2B00FF7D2B00FF7D2B00FF7D2B00FF7F2D00FE60443789000000000000
+        00002522212A7D2D00F2853000FF853000FF853000FF853000FF853000FF8530
+        00FF853000FF822E00FC45352D5F000000000000000011101012732903DC8530
+        00FF853000FF853000FF853000FF853000FF843000FE812E00F9683015B81313
+        1215000000000000000003030303593C2E84744228BB734127BD734127BB7342
+        27BC754429C0704834AB43342E5A0F0E0E100000000000000000}
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = bnPayPalClick
+      ExplicitLeft = 1301
     end
     object lblPath: TEdit
       AlignWithMargins = True
       Left = 30
       Top = 5
-      Width = 895
+      Width = 845
       Height = 20
       Margins.Left = 0
       Margins.Top = 5
@@ -1780,6 +1830,7 @@ object frmMain: TfrmMain
       TabOrder = 0
       Visible = False
       StyleElements = [seFont, seBorder]
+      ExplicitWidth = 819
     end
   end
   object pnlNav: TPanel

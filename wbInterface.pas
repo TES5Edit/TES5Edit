@@ -264,6 +264,7 @@ var
   wbGitHubUrl: string = 'https://github.com/TES5Edit/TES5Edit/releases';
   wbDiscordUrl: string = 'https://discord.gg/5t8RnNQ';
   wbPatreonUrl: string = 'https://www.patreon.com/ElminsterAU';
+  wbPayPalUrl: string = 'https://paypal.me/ElminsterAU';
 
 {$IFDEF USE_CODESITE}
 type
