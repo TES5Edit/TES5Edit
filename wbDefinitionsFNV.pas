@@ -8785,7 +8785,7 @@ begin
     wbCTDAs,
     wbRArray('Choices', wbFormIDCk(TCLT, 'Choice', [DIAL])),
     wbRArray('Link From', wbFormIDCk(TCLF, 'Topic', [DIAL])),
-    wbRArray('Unknown', wbFormIDCk(TCFU, 'Info', [INFO] )),
+    wbRArray('Follow Up', wbFormIDCk(TCFU, 'Info', [INFO] )),
     wbRStruct('Script (Begin)', [
       wbEmbeddedScriptReq
     ], [], cpNormal, True),
