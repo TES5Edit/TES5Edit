@@ -7849,6 +7849,7 @@ end;
 
 var
   LastPayPalClick: TDateTime;
+
 procedure TfrmMain.bnPayPalClick(Sender: TObject);
 begin
   if Now - LastPayPalClick > 1/24/60/60 then begin
@@ -19237,8 +19238,7 @@ begin
           wbModGroupsByName(False).ShowValidationMessages;
         end else if not (wbQuickClean or (wbToolMode in wbAutoModes)) then
           if wbToolMode in [tmView, tmEdit] then begin
-            with TfrmModGroupSelect.Create(Self) do
-            try
+            with TfrmModGroupSelect.Create(Self) do try
               AllModGroups := wbModGroupsByName;
               wbModGroupsByName(False).ShowValidationMessages;
               LoadModGroupsSelection(AllModGroups);

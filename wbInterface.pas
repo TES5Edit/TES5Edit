@@ -12059,10 +12059,10 @@ end;
 
 function TwbStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
 var
-  lLen, Len : NativeUInt;
-  b         : TBytes;
-  i, j      : Integer;
-  s         : string;
+  lLen, Len  : NativeUInt;
+  b          : TBytes;
+  i, j       : Integer;
+  s          : string;
   MainRecord : IwbMainRecord;
 begin
   Result := '';
