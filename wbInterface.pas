@@ -12062,6 +12062,7 @@ var
   b         : TBytes;
   i, j      : Integer;
   s         : string;
+  MainRecord : IwbMainRecord;
 begin
   Result := '';
   Len := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
@@ -12119,8 +12120,13 @@ begin
         if aTransformType = ttToString then
           Result := Result + '>';
 
-        if aTransformType <> ttCheck then
-          wbProgress('[%s] <Error reading string: [%s] %s>', [aElement.FullPath, E.ClassName, E.Message]);
+        if aTransformType <> ttCheck then begin
+          s := '';
+          MainRecord := aElement.ContainingMainRecord;
+          if Assigned(MainRecord) then
+            s := MainRecord.LoadOrderFormID.ToString;
+          wbProgress('[%s] [%s] <Error reading string: [%s] %s>', [s, aElement.Path, E.ClassName, E.Message]);
+        end
       end;
     end;
     if wbCheckNonCPNChars then
