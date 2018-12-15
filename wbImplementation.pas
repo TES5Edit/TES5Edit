@@ -963,7 +963,7 @@ type
     mrsIsInjectedChecked,
     mrsReferencesInjected,
     mrsReferencesInjectedChecked,
-    mrsSearchedChildGroup,
+    mrsSearchingChildGroup,
     mrsHasVWDMeshChecked,
     mrsHasVWDMesh,
     mrsHasPrecombinedMeshChecked,
@@ -1005,6 +1005,7 @@ type
     mrConflictThis      : TConflictThis;
     mrDataStorage       : TBytes;
     mrGroup             : IwbGroupRecord;
+    mrGroupSearchGen    : Integer;
 
     mrReferencedBy      : TDynMainRecords;
     mrReferencedByCount : Integer;
@@ -1649,7 +1650,8 @@ type
   TwbGroupState = (
     gsSorted,
     gsSorting,
-    gsSortPostponed
+    gsSortPostponed,
+    gsInformedMainRecord
   );
 
   TwbGroupStates = set of TwbGroupState;
@@ -8689,9 +8691,12 @@ var
   ContainingGroup: IwbGroupRecord;
 begin
   Result := mrGroup;
-  if not Assigned(Result) and not (mrsSearchedChildGroup in mrStates) then begin
-    try
-      Include(mrStates, mrsSearchedChildGroup);
+  if not Assigned(Result) and not (mrsSearchingChildGroup in mrStates) then begin
+    if Supports(GetContainer, IwbGroupRecord, ContainingGroup) then try
+      if mrGroupSearchGen = ContainingGroup.ElementGeneration then
+        Exit;
+
+      Include(mrStates, mrsSearchingChildGroup);
       SearchForGroup := 0;
       if GetSignature = 'WRLD' then
         SearchForGroup := 1
@@ -8702,11 +8707,12 @@ begin
       else if wbVWDAsQuestChildren and (GetSignature = 'QUST') then
         SearchForGroup := 10;
 
-      if (SearchForGroup > 0) and Supports(GetContainer, IwbGroupRecord, ContainingGroup) then
+      if SearchForGroup > 0 then
         mrGroup := ContainingGroup.FindChildGroup(SearchForGroup, Self);
       Result := mrGroup;
+      mrGroupSearchGen := ContainingGroup.ElementGeneration;
     finally
-      Exclude(mrStates, mrsSearchedChildGroup);
+      Exclude(mrStates, mrsSearchingChildGroup);
     end;
   end;
 end;
@@ -10687,7 +10693,7 @@ procedure TwbMainRecord.RemoveChildGroup(const aGroup: IwbGroupRecord);
 begin
   if Assigned(mrGroup) and mrGroup.Equals(aGroup) then begin
     mrGroup := nil;
-    Exclude(mrStates, mrsSearchedChildGroup);
+    mrGroupSearchGen := -1;
   end;
 end;
 
@@ -14164,8 +14170,10 @@ end;
 procedure TwbGroupRecord.InformPrevMainRecord(const aPrevMainRecord: IwbMainRecord);
 begin
   inherited;
-  if (grStruct.grsGroupType in [1, 6, 7]) and Assigned(aPrevMainRecord) and (aPrevMainRecord.FixedFormID.ToCardinal = GetGroupLabel) then
+  if (grStruct.grsGroupType in [1, 6, 7]) and Assigned(aPrevMainRecord) and (aPrevMainRecord.FixedFormID.ToCardinal = GetGroupLabel) then begin
     (aPrevMainRecord as IwbMainRecordInternal).SetChildGroup(Self);
+    Include(grStates, gsInformedMainRecord);
+  end;
 end;
 
 procedure TwbGroupRecord.InitDataPtr;
