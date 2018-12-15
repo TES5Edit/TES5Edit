@@ -402,6 +402,7 @@ type
     bnGitHub: TSpeedButton;
     bnDiscord: TSpeedButton;
     bnPatreon: TSpeedButton;
+    bnPayPal: TSpeedButton;
     jbhPatreon: TJvBalloonHint;
     jbhGitHub: TJvBalloonHint;
     jbhNexusMods: TJvBalloonHint;
@@ -654,6 +655,7 @@ type
     procedure bnGitHubClick(Sender: TObject);
     procedure bnDiscordClick(Sender: TObject);
     procedure bnPatreonClick(Sender: TObject);
+    procedure bnPayPalClick(Sender: TObject);
     procedure tmrPendingSetActiveTimer(Sender: TObject);
     procedure bnLegendClick(Sender: TObject);
     procedure vstViewCollapsed(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -7845,6 +7847,15 @@ begin
   end;
 end;
 
+var
+  LastPayPalClick: TDateTime;
+procedure TfrmMain.bnPayPalClick(Sender: TObject);
+begin
+  if Now - LastPayPalClick > 1/24/60/60 then begin
+    ShellExecute(Handle, 'open', PChar(wbPayPalUrl), '', '', SW_SHOWNORMAL);
+    LastPayPalClick := Now;
+  end;
+end;
 
 procedure TfrmMain.mniNavApplyScriptClick(Sender: TObject);
 var
