@@ -5364,13 +5364,20 @@ function TwbContainer.CompareExchangeFormID(aOldFormID, aNewFormID: TwbFormID): 
 var
   i: Integer;
   SelfRef : IwbContainerElementRef;
+  Elements : TDynElementInternals;
 begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit(False);
   Result := False;
-  for i := Low(cntElements) to High(cntElements) do
-    if cntElements[i].CanContainFormIDs then
-      Result := cntElements[i].CompareExchangeFormID(aOldFormID, aNewFormID) or Result;
+  BeginUpdate;
+  try
+    Elements := Copy(cntElements);
+    for i := Low(Elements) to High(Elements) do
+      if Elements[i].CanContainFormIDs then
+        Result := Elements[i].CompareExchangeFormID(aOldFormID, aNewFormID) or Result;
+  finally
+    EndUpdate;
+  end;
 end;
 
 procedure TwbContainer.CreatedEmpty;
@@ -12286,6 +12293,8 @@ begin
 
   DoInit(False);
 
+  BeginUpdate;
+  try
   Result := inherited CompareExchangeFormID(aOldFormID, aNewFormID);
 
   ResolvedDef := Resolve(srValueDef, GetDataBasePtr, dcDataEndPtr, Self);
@@ -12293,6 +12302,9 @@ begin
     if ResolvedDef.CompareExchangeFormID(GetDataBasePtr, dcDataEndPtr, Self, aOldFormID, aNewFormID) then begin
       SetModified(True);
       Result := True;
+      end;
+  finally
+    EndUpdate;
     end;
 end;
 
@@ -17697,6 +17709,8 @@ begin
 
   DoInit(False);
 
+  BeginUpdate;
+  try
   Result := inherited CompareExchangeFormID(aOldFormID, aNewFormID);
 
   ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
@@ -17704,6 +17718,9 @@ begin
     if ResolvedDef.CompareExchangeFormID(GetDataBasePtr, dcDataEndPtr, Self, aOldFormID, aNewFormID) then begin
       SetModified(True);
       Result := True;
+      end;
+  finally
+    EndUpdate;
     end;
 end;
 
@@ -17815,6 +17832,8 @@ begin
 
   DoInit(False);
 
+  BeginUpdate;
+  try
   Result := inherited CompareExchangeFormID(aOldFormID, aNewFormID);
 
   ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
@@ -17822,6 +17841,9 @@ begin
     if ResolvedDef.CompareExchangeFormID(GetDataBasePtr, dcDataEndPtr, Self, aOldFormID, aNewFormID) then begin
       SetModified(True);
       Result := True;
+      end;
+  finally
+    EndUpdate;
     end;
 end;
 
