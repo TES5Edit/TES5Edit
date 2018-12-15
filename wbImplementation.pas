@@ -5364,8 +5364,8 @@ end;
 
 function TwbContainer.CompareExchangeFormID(aOldFormID, aNewFormID: TwbFormID): Boolean;
 var
-  i: Integer;
-  SelfRef : IwbContainerElementRef;
+  i        : Integer;
+  SelfRef  : IwbContainerElementRef;
   Elements : TDynElementInternals;
 begin
   SelfRef := Self as IwbContainerElementRef;
@@ -12301,17 +12301,18 @@ begin
 
   BeginUpdate;
   try
-  Result := inherited CompareExchangeFormID(aOldFormID, aNewFormID);
+    Result := inherited CompareExchangeFormID(aOldFormID, aNewFormID);
 
-  ResolvedDef := Resolve(srValueDef, GetDataBasePtr, dcDataEndPtr, Self);
-  if Assigned(ResolvedDef) then
-    if ResolvedDef.CompareExchangeFormID(GetDataBasePtr, dcDataEndPtr, Self, aOldFormID, aNewFormID) then begin
-      SetModified(True);
-      Result := True;
+    ResolvedDef := Resolve(srValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+    if Assigned(ResolvedDef) then
+      if ResolvedDef.CompareExchangeFormID(GetDataBasePtr, dcDataEndPtr, Self, aOldFormID, aNewFormID) then begin
+        SetModified(True);
+        Result := True;
+        //wbProgress('Replaced FormID [%s] with [%s] in "%s". New Value: %s', [aOldFormID.ToString, aNewFormID.ToString, GetPath, GetValue]);
       end;
   finally
     EndUpdate;
-    end;
+  end;
 end;
 
 constructor TwbSubRecord.Create(const aContainer: IwbContainer; const aSubRecordDef: IwbSubRecordDef);
@@ -17720,17 +17721,18 @@ begin
 
   BeginUpdate;
   try
-  Result := inherited CompareExchangeFormID(aOldFormID, aNewFormID);
+    Result := inherited CompareExchangeFormID(aOldFormID, aNewFormID);
 
-  ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
-  if Assigned(ResolvedDef) then
-    if ResolvedDef.CompareExchangeFormID(GetDataBasePtr, dcDataEndPtr, Self, aOldFormID, aNewFormID) then begin
-      SetModified(True);
-      Result := True;
+    ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+    if Assigned(ResolvedDef) then
+      if ResolvedDef.CompareExchangeFormID(GetDataBasePtr, dcDataEndPtr, Self, aOldFormID, aNewFormID) then begin
+        SetModified(True);
+        Result := True;
+        //wbProgress('Replaced FormID [%s] with [%s] in "%s". New Value: %s', [aOldFormID.ToString, aNewFormID.ToString, GetPath, GetValue]);
       end;
   finally
     EndUpdate;
-    end;
+  end;
 end;
 
 function TwbUnion.GetElementType: TwbElementType;
@@ -17843,17 +17845,18 @@ begin
 
   BeginUpdate;
   try
-  Result := inherited CompareExchangeFormID(aOldFormID, aNewFormID);
+    Result := inherited CompareExchangeFormID(aOldFormID, aNewFormID);
 
-  ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
-  if Assigned(ResolvedDef) then
-    if ResolvedDef.CompareExchangeFormID(GetDataBasePtr, dcDataEndPtr, Self, aOldFormID, aNewFormID) then begin
-      SetModified(True);
-      Result := True;
+    ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+    if Assigned(ResolvedDef) then
+      if ResolvedDef.CompareExchangeFormID(GetDataBasePtr, dcDataEndPtr, Self, aOldFormID, aNewFormID) then begin
+        SetModified(True);
+        Result := True;
+        //wbProgress('Replaced FormID [%s] with [%s] in "%s". New Value: %s', [aOldFormID.ToString, aNewFormID.ToString, GetFullPath, GetValue]);
       end;
   finally
     EndUpdate;
-    end;
+  end;
 end;
 
 function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; const aPrevFlags: TDynElementInternals): Boolean;
