@@ -6,6 +6,8 @@ object frmLegend: TfrmLegend
   ClientHeight = 636
   ClientWidth = 1296
   Color = clBtnFace
+  Constraints.MinHeight = 100
+  Constraints.MinWidth = 300
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
