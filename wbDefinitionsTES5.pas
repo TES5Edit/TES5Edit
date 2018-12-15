@@ -3012,7 +3012,8 @@ type
     ptScene,              // SCEN
     ptWardState,          // enum
     ptEvent,              // Struct
-    ptEventData           // LCTN, KYWD or FLST
+    ptEventData,          // LCTN, KYWD or FLST
+    ptKnowable            // MGEF, WOOP
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -3263,7 +3264,7 @@ const
 {N} (Index: 487; Name: 'IsCarryable'),
 {V} (Index: 488; Name: 'GetConcussed'),
 {V} (Index: 491; Name: 'GetMapMarkerVisible'),
-{N} (Index: 493; Name: 'PlayerKnows'; ParamType1: ptMagicEffect),
+{N} (Index: 493; Name: 'PlayerKnows'; ParamType1: ptKnowable),
 {V} (Index: 494; Name: 'GetPermanentActorValue'; ParamType1: ptActorValue),
 {V} (Index: 495; Name: 'GetKillingBlowLimb'),
 {N} (Index: 497; Name: 'CanPayCrimeGold'),
@@ -6807,7 +6808,8 @@ begin
         wbFormIDCk('Scene', [NULL, SCEN]),
         wbInteger('Ward State', itU32, wbWardStateEnum),
         wbInteger('Event', itU32, wbEventFunctionAndMemberToStr, wbEventFunctionAndMemberToInt),
-        wbFormID('Event Data')
+        wbFormID('Event Data'),
+        wbFormIDCk('Knowable', [MGEF, WOOP])
       ]),
    {6}wbUnion('Parameter #2', wbCTDAParam2Decider, [
         wbByteArray('Unknown', 4),
@@ -6908,7 +6910,8 @@ begin
         wbFormIDCk('Scene', [NULL, SCEN]),
         wbInteger('Ward State', itU32, wbWardStateEnum),
         wbInteger('Event', itU32, wbEventFunctionAndMemberToStr, wbEventFunctionAndMemberToInt),
-        wbFormID('Event Data')
+        wbFormID('Event Data'),
+        wbFormIDCk('Knowable', [MGEF, WOOP])
       ]),
    {7}wbInteger('Run On', itU32, wbEnum([
         {0} 'Subject',
