@@ -7,6 +7,7 @@
 * (reported on Discord) - attempted reporting of encoding error might result in endless loop and crash
 * (reported on Discord) - back/forward mouse buttons do not work in 64bit
 * (reported on Discord) - Legend Form can show up with 0 size under some conditions
+* (reported on Discord) - [FNV] TCFU in INFO should be called "Follow Up"
 * (found by developer) - main records do not correctly cache that they have already searched for a child group
 
 ## PayPal Button
