@@ -1859,7 +1859,7 @@ begin
     case LongRec(Msg.wParam).Hi of
     {$ENDIF WIN32}
     {$IFDEF WIN64}
-    case Int64Rec(Msg.wParam).Hi of
+    case LongRec(Int64Rec(Msg.wParam).Lo).Hi of
     {$ENDIF WIN64}
       1: Handled := acBack.Execute;
       2: Handled := acForward.Execute;
