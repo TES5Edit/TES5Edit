@@ -16603,9 +16603,10 @@ begin
     Exit;
 
   Index := srcDef.GetMemberIndexFor(Signature, nil);
-  if Index >= 0 then
-    Assign(Index, nil, False);
+  if Index < 0 then
+    Exit;
 
+  Assign(Index, nil, False);
   Result := GetElementBySignature(Signature);
   Assert(Assigned(Result));
 end;
