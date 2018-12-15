@@ -3,6 +3,7 @@
 ## Bugfixes
 
 * #618 - 3.3 and 4.0.0 fail to update records when changing form IDs (breaks auto-renumbering, merging)
+* #619 - Assertion failure when running REPLACE MODEL FILE NAME script
 
 # What's new in xEdit 4.0.0?
 
