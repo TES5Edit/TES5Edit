@@ -5,6 +5,7 @@
 * #618 - 3.3 and 4.0.0 fail to update records when changing form IDs (breaks auto-renumbering, merging)
 * #619 - Assertion failure when running REPLACE MODEL FILE NAME script
 * (reported on Discord) - attempted reporting of encoding error might result in endless loop and crash
+* (found by developer) - main records do not correctly cache that they have already searched for a child group
 
 ## PayPal Button
 
