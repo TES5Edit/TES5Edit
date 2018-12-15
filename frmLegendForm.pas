@@ -46,20 +46,20 @@ begin
       j := 0;
       with dgLegend.Canvas do
         for i := 1 to Pred(dgLegend.RowCount) do
-          j := Max(j, TextWidth(wbNameConflictAll[TConflictAll(i)]+'WW'));
+          j := Max(j, TextWidth(wbNameConflictAll[TConflictAll(i)]+'oo'));
       dgLegend.ColWidths[0] := j;
 
       with dgLegend.Canvas do
         for i := 1 to Pred(dgLegend.ColCount) do
-          dgLegend.ColWidths[i] := TextWidth(wbNameConflictThis[TConflictThis(i)]+'WW');
+          dgLegend.ColWidths[i] := TextWidth(wbNameConflictThis[TConflictThis(i)]+'oo');
       CellSizeCalc := 2;
-      with dgLegend, CellRect(Pred(ColCount), Pred(RowCount)) do begin
-        Self.ClientWidth := Right+6;
-        Self.ClientHeight := Bottom+6;
+       with dgLegend, CellRect(Pred(ColCount), Pred(RowCount)) do begin
+        Self.ClientWidth := Right+2;
+        Self.ClientHeight := Bottom+2;
       end;
       dgLegend.Invalidate;
     end;
-    1: ;
+    1: dgLegend.Canvas.FillRect(Rect);
     2: begin
       with dgLegend.Canvas do begin
         if aCol = 0 then begin
@@ -71,7 +71,9 @@ begin
             ConflictAll := TConflictAll(aRow);
             ConflictThis := TConflictThis(aCol);
             if ConflictAll >= caNoConflict then
-              Brush.Color := wbLighter(ConflictAllToColor(ConflictAll), 0.85);
+              Brush.Color := wbLighter(ConflictAllToColor(ConflictAll), 0.85)
+            else
+              Brush.Color := clWindow;
             Font.Color := wbDarker(ConflictThisToColor(ConflictThis));
             FillRect(Rect);
           end;
@@ -125,6 +127,8 @@ begin
       Position := poDesigned;
   end;
 
+  dgLegend.Align := alNone;
+  dgLegend.BoundsRect := Rect(0, 0, 6000, 3000);
   dgLegend.ColCount := Succ(Ord(High(TConflictThis)));
   dgLegend.RowCount := Succ(Ord(High(TConflictAll)));
 end;
