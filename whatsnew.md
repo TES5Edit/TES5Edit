@@ -1,3 +1,9 @@
+# What's new in xEdit 4.0.1?
+
+## Bugfixes
+
+* #618 - 3.3 and 4.0.0 fail to update records when changing form IDs (breaks auto-renumbering, merging)
+
 # What's new in xEdit 4.0.0?
 
 ## What's New
