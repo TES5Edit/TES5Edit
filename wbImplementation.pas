@@ -9367,12 +9367,16 @@ begin
 end;
 
 function TwbMainRecord.GetIsInjected: Boolean;
+var
+  _File: IwbFile;
 begin
   if not (mrsIsInjectedChecked in mrStates) then begin
-    if not Assigned(mrMaster) and
+    _File := GetFile;
+    if Assigned(_File) and
+       not Assigned(mrMaster) and
        not mrStruct.mrsFormID.IsNull and
-           (mrStruct.mrsFormID.FileID.FullSlot < GetFile.MasterCount[GetMastersUpdated]) and
-       not (fsIsHardcoded in GetFile.FileStates) then
+           (mrStruct.mrsFormID.FileID.FullSlot < _File.MasterCount[GetMastersUpdated]) and
+       not (fsIsHardcoded in _File.FileStates) then
       Include(mrStates, mrsIsInjected)
     else
       Exclude(mrStates, mrsIsInjected);
