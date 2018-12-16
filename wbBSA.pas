@@ -630,8 +630,9 @@ var
   i: integer;
 begin
   FreeAndNil(bfStream);
-  for i := 0 to Pred(bfFolderMap.Count) do
-    TStringList(bfFolderMap.Objects[i]).Free;
+  if Assigned(bfFolderMap) then
+    for i := 0 to Pred(bfFolderMap.Count) do
+      TStringList(bfFolderMap.Objects[i]).Free;
   FreeAndNil(bfFolderMap);
   inherited;
 end;

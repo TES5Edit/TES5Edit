@@ -19704,10 +19704,15 @@ begin
                       for j := 0 to Pred(n.Count) do
                         if wbLoadBSAs then begin
                           LoaderProgress('[' + n[j] + '] Loading Resources.');
-                          if wbArchiveExtension = '.bsa' then
-                            wbContainerHandler.AddBSA(MakeDataFileName(n[j], ltDataPath))
-                          else if wbArchiveExtension = '.ba2' then
-                            wbContainerHandler.AddBA2(MakeDataFileName(n[j], ltDataPath))
+                          try
+                            if wbArchiveExtension = '.bsa' then
+                              wbContainerHandler.AddBSA(MakeDataFileName(n[j], ltDataPath))
+                            else if wbArchiveExtension = '.ba2' then
+                              wbContainerHandler.AddBA2(MakeDataFileName(n[j], ltDataPath))
+                          except
+                            on E: Exception do
+                              LoaderProgress(Format('[%s] Could not be loaded. <Error: [%s] %s>', [n[j], E.ClassName, E.Message]));
+                          end;
                         end else
                           LoaderProgress('[' + n[j] + '] Skipped.');
                       for j := 0 to Pred(m.Count) do
