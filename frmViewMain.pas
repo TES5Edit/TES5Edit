@@ -10752,31 +10752,33 @@ begin
               (
                 Supports(NodeData.Element, IwbGroupRecord, GroupRecord)
               )
-            ) then begin
-            MainRecord := nil;
+            ) and
+              not (Supports(NodeData.Element, IwbMainRecord, MainRecord) and MainRecord.MasterOrSelf.IsInjected)
+            then begin
+              MainRecord := nil;
 
-            if Assigned(NodeData.Element._File) then
-              with NodeData.Element._File do begin
-              Plugin := FileName;
-              PluginCRC32 := CRC32;
-            end;
+              if Assigned(NodeData.Element._File) then
+                with NodeData.Element._File do begin
+                  Plugin := FileName;
+                  PluginCRC32 := CRC32;
+                end;
 
-            if not NodeData.Element.IsRemoveable then
-              PostAddMessage('Can''t remove: ' + NodeData.Element.Name)
-            else begin
-              if not HideRemoveMessage then
-                PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
-              if not AutoModeCheckForITM then begin
-                if Assigned(NodeData.Container) and not NodeData.Container.Equals(NodeData.Element) then
-                    NodeData.Container.Remove;
-                NodeData.Element.Remove;
-                NodeData.Container := nil;
-                NodeData.Element := nil;
-                vstNav.DeleteNode(Node);
+              if not NodeData.Element.IsRemoveable then
+                PostAddMessage('Can''t remove: ' + NodeData.Element.Name)
+              else begin
+                if not HideRemoveMessage then
+                  PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
+                if not AutoModeCheckForITM then begin
+                  if Assigned(NodeData.Container) and not NodeData.Container.Equals(NodeData.Element) then
+                      NodeData.Container.Remove;
+                  NodeData.Element.Remove;
+                  NodeData.Container := nil;
+                  NodeData.Element := nil;
+                  vstNav.DeleteNode(Node);
+                end;
+                Inc(RemovedCount);
               end;
-              Inc(RemovedCount);
             end;
-          end;
         end;
 
         Node := NextNode;
