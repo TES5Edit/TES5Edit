@@ -17669,7 +17669,10 @@ var
   FoundGroup     : Boolean;
   SiblingNode    : PVirtualNode;
   SiblingNodeData: PNavNodeData;
+  AdditionalWorkReq : Boolean;
 begin
+  AdditionalWorkReq := ivsReInit in InitialStates;
+
   GroupRecord := nil;
   NodeData := PNavNodeData(Sender.GetNodeData(Node));
   with NodeData^ do begin
@@ -17689,6 +17692,7 @@ begin
         Dec(i);
         Element := ParentNodeData.MissingElements[i];
         SetLength(ParentNodeData.MissingElements, i);
+        AdditionalWorkReq := True;
       end else
         if Assigned(Container) and (Node.Index < Cardinal(Container.ElementCount)) then begin
           Element := Container.Elements[Node.Index];
@@ -17710,36 +17714,37 @@ begin
     Exit;
   end;
 
-  if not Assigned(GroupRecord) then
-    if Supports(Element, IwbMainRecord, MainRecord) then begin
-      GroupRecord := MainRecord.ChildGroup;
-      if Assigned(GroupRecord) then begin
-        FoundGroup := False;
-        SiblingNode := Node.PrevSibling;
-        while not FoundGroup and Assigned(SiblingNode) do begin
-          SiblingNodeData := Sender.GetNodeData(SiblingNode);
-          if GroupRecord.Equals(SiblingNodeData.Element) then
-            FoundGroup := True;
-          SiblingNode := SiblingNode.PrevSibling;
-        end;
-        if not FoundGroup then begin
-          SiblingNode := Node.NextSibling;
+  if AdditionalWorkReq then
+    if not Assigned(GroupRecord) then
+      if Supports(Element, IwbMainRecord, MainRecord) then begin
+        GroupRecord := MainRecord.ChildGroup;
+        if Assigned(GroupRecord) then begin
+          FoundGroup := False;
+          SiblingNode := Node.PrevSibling;
           while not FoundGroup and Assigned(SiblingNode) do begin
             SiblingNodeData := Sender.GetNodeData(SiblingNode);
-            if GroupRecord.Equals(SiblingNodeData.Element) then begin
+            if GroupRecord.Equals(SiblingNodeData.Element) then
               FoundGroup := True;
-              Break;
+            SiblingNode := SiblingNode.PrevSibling;
+          end;
+          if not FoundGroup then begin
+            SiblingNode := Node.NextSibling;
+            while not FoundGroup and Assigned(SiblingNode) do begin
+              SiblingNodeData := Sender.GetNodeData(SiblingNode);
+              if GroupRecord.Equals(SiblingNodeData.Element) then begin
+                FoundGroup := True;
+                Break;
+              end;
+              SiblingNode := SiblingNode.NextSibling;
             end;
-            SiblingNode := SiblingNode.NextSibling;
+          end;
+          if FoundGroup and Assigned(SiblingNode) then begin
+            Sender.IsVisible[SiblingNode] := False;
+            Sender.HasChildren[SiblingNode] := False;
+            vstNavFreeNode(Sender, SiblingNode);
           end;
         end;
-        if FoundGroup and Assigned(SiblingNode) then begin
-          Sender.IsVisible[SiblingNode] := False;
-          Sender.HasChildren[SiblingNode] := False;
-          vstNavFreeNode(Sender, SiblingNode);
-        end;
       end;
-    end;
 
   if not (Element.ElementType in [etMainRecord, etStructChapter]) and not Element.TreeHead then begin
     if Supports(Element, IwbContainerElementRef, Container) and (Container.ElementCount > 0) then begin
@@ -17772,32 +17777,34 @@ begin
         end;
       end;
     end;
-    if not FoundGroup then begin
-      MainRecord := GroupRecord.ChildrenOf;
-      if Assigned(MainRecord) then begin
-        SiblingNode := Node.PrevSibling;
-        while not FoundGroup and Assigned(SiblingNode) do begin
-          SiblingNodeData := Sender.GetNodeData(SiblingNode);
-          if MainRecord.Equals(SiblingNodeData.Element) then
-            FoundGroup := True;
-          SiblingNode := SiblingNode.PrevSibling;
-        end;
-        if not FoundGroup then begin
-          SiblingNode := Node.NextSibling;
+    if AdditionalWorkReq then begin
+      if not FoundGroup then begin
+        MainRecord := GroupRecord.ChildrenOf;
+        if Assigned(MainRecord) then begin
+          SiblingNode := Node.PrevSibling;
           while not FoundGroup and Assigned(SiblingNode) do begin
             SiblingNodeData := Sender.GetNodeData(SiblingNode);
             if MainRecord.Equals(SiblingNodeData.Element) then
               FoundGroup := True;
-            SiblingNode := SiblingNode.NextSibling;
+            SiblingNode := SiblingNode.PrevSibling;
+          end;
+          if not FoundGroup then begin
+            SiblingNode := Node.NextSibling;
+            while not FoundGroup and Assigned(SiblingNode) do begin
+              SiblingNodeData := Sender.GetNodeData(SiblingNode);
+              if MainRecord.Equals(SiblingNodeData.Element) then
+                FoundGroup := True;
+              SiblingNode := SiblingNode.NextSibling;
+            end;
           end;
         end;
       end;
-    end;
-    if not FoundGroup then begin
-      if Assigned(ParentNodeData) then begin
-        for i := High(ParentNodeData.MissingElements) downto Low(ParentNodeData.MissingElements) do
-          if MainRecord.Equals(ParentNodeData.MissingElements[i]) then
-            FoundGroup := True;
+      if not FoundGroup then begin
+        if Assigned(ParentNodeData) then begin
+          for i := High(ParentNodeData.MissingElements) downto Low(ParentNodeData.MissingElements) do
+            if MainRecord.Equals(ParentNodeData.MissingElements[i]) then
+              FoundGroup := True;
+        end;
       end;
     end;
     if FoundGroup then begin
