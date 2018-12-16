@@ -754,7 +754,7 @@ type
     procedure ExpandView;
     function CollectViewContainers: TwbContainerElementRefs;
     procedure NavCleanupCollapsedNodeChildren;
-    procedure NavCheckForChanges;
+    function NavCheckForChanges: Boolean;
 
     procedure NavUpdate(aForce: Boolean);
 
@@ -4043,13 +4043,14 @@ begin
   vstNav.Invalidate;
 end;
 
-procedure TfrmMain.NavCheckForChanges;
+function TfrmMain.NavCheckForChanges: Boolean;
 var
   Node            : PVirtualNode;
   NodeData        : PNavNodeData;
   FocusedElements : TDynElements;
   i               : Integer;
 begin
+  Result := False;
   if not (toAutoFreeOnCollapse in vstNav.TreeOptions.AutoOptions) then
     Exit;
   vstNav.BeginUpdate;
@@ -4118,6 +4119,7 @@ begin
         vstNav.FullyVisible[Node] := True;
         vstNav.FocusedNode := Node;
         vstNav.Selected[Node] := True;
+        Result := True;
         Exit;
       end;
     end;
@@ -4152,7 +4154,10 @@ begin
 end;
 
 procedure TfrmMain.NavUpdate(aForce: Boolean);
+var
+  CheckFocusedNode: Boolean;
 begin
+  CheckFocusedNode := False;
   if (wbToolMode in [tmEdit, tmTranslate]) or aForce then begin
     if Assigned(vstNav) and
        (toAutoFreeOnCollapse in vstNav.TreeOptions.AutoOptions) then begin
@@ -4165,13 +4170,16 @@ begin
             vstNavLastCollapsedChildrenCleanup := vstNavInitChildrenGeneration;
           end;
           if aForce or (vstNavLastCheckedForChanges <> wbGlobalModifedGeneration) then begin
-            NavCheckForChanges;
+            CheckFocusedNode := NavCheckForChanges;
             vstNavLastCheckedForChanges := wbGlobalModifedGeneration;
           end;
         finally
           vstNav.EndUpdate;
         end;
       end;
+      if CheckFocusedNode then
+        if Assigned(vstNav.FocusedNode) then
+          vstNav.ScrollIntoView(vstNav.FocusedNode, False);
     end;
   end;
 end;
