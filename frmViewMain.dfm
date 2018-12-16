@@ -4516,4 +4516,11 @@ object frmMain: TfrmMain
     Left = 53
     Top = 145
   end
+  object tmrShutdown: TTimer
+    Enabled = False
+    Interval = 100
+    OnTimer = tmrShutdownTimer
+    Left = 184
+    Top = 520
+  end
 end
