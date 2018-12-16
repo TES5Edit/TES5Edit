@@ -15,6 +15,7 @@
 * (found by developer) - the View tab is initially visible without a record having been selected in the navigation treeview
 * (found by developer) - main records do not correctly cache that they have already searched for a child group
 * (found by developer) - if the focused navigation treeview node is moved outside the current visible nodes, it is not scrolled into view automatically
+* (found by developer) - certain scripts with `for` loops or `case` statements might fail with `Integer required` error in 64 bit
 
 ## PayPal Button
 
