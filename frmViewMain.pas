@@ -809,7 +809,7 @@ type
   private
     procedure WMUser(var Message: TMessage); message WM_USER;
     procedure WMUser1(var Message: TMessage); message WM_USER + 1;
-    procedure WMUser2(var Message: TMessage); message WM_USER + 2;
+    procedure WMUserLoaderDone(var Message: TMessage); message WM_USER + 2;
     procedure WMUser3(var Message: TMessage); message WM_USER + 3;
     procedure WMUser4(var Message: TMessage); message WM_USER + 4;
     procedure WMUser5(var Message: TMessage); message WM_USER + 5;
@@ -4588,6 +4588,7 @@ begin
 
   wbGetFormIDCallback := GetFormIDCallback;
 
+  tbsView.TabVisible := False;
   tbsWEAPSpreadsheet.TabVisible := False;
   tbsARMOSpreadsheet.TabVisible := False;
   tbsAMMOSpreadsheet.TabVisible := False;
@@ -15509,6 +15510,7 @@ end;
 
 procedure TfrmMain.tbsViewShow(Sender: TObject);
 begin
+  tbsView.TabVisible := True;
   pnlNav.Show;
   vstNavChange(vstNav, vstNav.FocusedNode);
 end;
@@ -19141,7 +19143,7 @@ begin
   AddFile(IwbFile(Pointer(Message.WParam)));
 end;
 
-procedure TfrmMain.WMUser2(var Message: TMessage);
+procedure TfrmMain.WMUserLoaderDone(var Message: TMessage);
 
   procedure SetupTreeView(aTreeView: TVirtualEditTree);
   var
