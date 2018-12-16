@@ -419,6 +419,7 @@ type
     N31: TMenuItem;
     mniMainSave: TMenuItem;
     jbhSave: TJvBalloonHint;
+    tmrShutdown: TTimer;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -676,6 +677,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure vstNavFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex);
+    procedure tmrShutdownTimer(Sender: TObject);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
@@ -4727,9 +4729,25 @@ begin
   else begin
     AddMessage('Fatal: No source specified');
     Exit;
+
   end;
 
   if wbToolMode in [tmEdit, tmView, tmTranslate] then begin
+
+    {$IFDEF WIN64}
+    if True or Settings.ReadBool('Init', 'First64Start', True) then begin
+      if MessageDlg('You have started the 64bit version.' + CRLF + CRLF +
+        'The only reason to use the 64bit version is if you are getting an out of memory ' +
+        'error while using the 32bit version.' + CRLF + CRLF +
+        'The 32bit version is generally faster and uses less memory than the 64bit version.' + CRLF + CRLF +
+        'Are you sure you want to continue?', mtConfirmation, mbYesNo, 0, mbNo) <> mrYes then begin
+        tmrShutdown.Enabled := True;
+        Exit;
+        end;
+      Settings.WriteBool('Init', 'First64Start', False);
+      Settings.UpdateFile;
+    end;
+    {$ENDIF WIN64}
 
     i := Settings.ReadInteger('WhatsNew', 'Version', 0);
     with TfrmRichEdit.Create(Self) do begin
@@ -15513,6 +15531,11 @@ begin
   tbsView.TabVisible := True;
   pnlNav.Show;
   vstNavChange(vstNav, vstNav.FocusedNode);
+end;
+
+procedure TfrmMain.tmrShutdownTimer(Sender: TObject);
+begin
+  Close;
 end;
 
 procedure TfrmMain.tmrStartupTimer(Sender: TObject);
