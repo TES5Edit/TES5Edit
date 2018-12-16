@@ -11,6 +11,7 @@
 * (reported on Discord) - [TES5/SSE] "PlayerKnows" condition does not accept WOOP parameters
 * (reported on Discord) - broken `.bsa`/`.ba2` crashes the loading instead of just giving an error message
 * (found by developer) - main records do not correctly cache that they have already searched for a child group
+* (found by developer) - if the focused navigation tree view node is moved outside the current visible nodes, it is not scrolled into view automatically
 
 ## PayPal Button
 
