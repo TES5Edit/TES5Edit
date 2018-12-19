@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{1CF0403A-AFA2-4C4F-9031-459BB8418946}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="FileContainerR26.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="FileContainerD26.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="FileContainerR26">
+        <MSBuild Projects="FileContainerR26.dproj"/>
+    </Target>
+    <Target Name="FileContainerR26:Clean">
+        <MSBuild Projects="FileContainerR26.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FileContainerR26:Make">
+        <MSBuild Projects="FileContainerR26.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="FileContainerD26">
+        <MSBuild Projects="FileContainerD26.dproj"/>
+    </Target>
+    <Target Name="FileContainerD26:Clean">
+        <MSBuild Projects="FileContainerD26.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FileContainerD26:Make">
+        <MSBuild Projects="FileContainerD26.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="FileContainerR26;FileContainerD26"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="FileContainerR26:Clean;FileContainerD26:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="FileContainerR26:Make;FileContainerD26:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
