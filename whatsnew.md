@@ -12,6 +12,7 @@
 * (reported on Discord) - broken `.bsa`/`.ba2` crashes the loading instead of just giving an error message
 * (reported on Discord) - Remove ITM should not apply to injected records
 * (reported on Discord) - "Dialog Topic" and "Worldspace" Groups can be very slow to expand
+* (reported on Discord) - Script access to TSearchRec is broken in 64bit
 * (found by developer) - the View tab is initially visible without a record having been selected in the navigation treeview
 * (found by developer) - main records do not correctly cache that they have already searched for a child group
 * (found by developer) - if the focused navigation treeview node is moved outside the current visible nodes, it is not scrolled into view automatically
