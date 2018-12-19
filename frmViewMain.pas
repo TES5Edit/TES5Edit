@@ -4735,7 +4735,7 @@ begin
   if wbToolMode in [tmEdit, tmView, tmTranslate] then begin
 
     {$IFDEF WIN64}
-    if True or Settings.ReadBool('Init', 'First64Start', True) then begin
+    if Settings.ReadBool('Init', 'First64Start', True) then begin
       if MessageDlg('You have started the 64bit version.' + CRLF + CRLF +
         'The only reason to use the 64bit version is if you are getting an out of memory ' +
         'error while using the 32bit version.' + CRLF + CRLF +
@@ -15818,10 +15818,12 @@ begin
       if not (jbhPatreon.Active or jbhGitHub.Active) then begin
         bnNexusMods.ShowHint := True;
         bnNexusMods.Hint := 'A newer version is available on NexusMods: ' + NexusModsVersion;
-        if NexusModsVersion > TwbVersion(Settings.ReadString('NexusMods', 'SnoozeVersion', '')) then
+        if Settings.ReadInteger('NexusMods', 'SnoozeDate', 0) <> Trunc(Now) then
+        //if NexusModsVersion > TwbVersion(Settings.ReadString('NexusMods', 'SnoozeVersion', '')) then
           jbhNexusMods.ActivateHint(bnNexusMods, bnNexusMods.Hint, '', 20000);
         ShowNexusModsHint := 0;
       end;
+      bnNexusMods.Font.Style := bnNexusMods.Font.Style + [fsBold, fsUnderline];
     end else begin
       bnNexusMods.ShowHint := True;
       bnNexusMods.Hint := 'Current version on NexusMods: ' + NexusModsVersion;
@@ -15833,10 +15835,12 @@ begin
       if not (jbhPatreon.Active or jbhNexusMods.Active) then begin
         bnGitHub.ShowHint := True;
         bnGitHub.Hint := 'A newer version is available on GitHub: ' + GitHubVersion;
-        if GitHubVersion > TwbVersion(Settings.ReadString('GitHub', 'SnoozeVersion', '')) then
+        if Settings.ReadInteger('GitHub', 'SnoozeDate', 0) <> Trunc(Now) then
+        //if GitHubVersion > TwbVersion(Settings.ReadString('GitHub', 'SnoozeVersion', '')) then
           jbhGitHub.ActivateHint(bnGitHub, bnGitHub.Hint, '', 20000);
         ShowGitHubHint := 0;
       end;
+      bnGitHub.Font.Style := bnNexusMods.Font.Style + [fsBold, fsUnderline];
     end else begin
       bnGitHub.ShowHint := True;
       bnGitHub.Hint := 'Current version on GitHub: ' + GitHubVersion;

@@ -21,6 +21,10 @@
 
 By popular demand, a PayPal button has been added for people that prefer to make a one-off donation instead of pledging on Patreon.
 
+## NexusMods and GitHub buttons
+
+When a new update is available, the caption of the NexusMods and GitHub buttons will now be bold and underlined.
+
 # What's new in xEdit 4.0.0?
 
 ## What's New
