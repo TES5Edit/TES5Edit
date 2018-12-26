@@ -15071,7 +15071,11 @@ begin
     wbFormIDCk(LRNC,'Learn Chance', [GLOB]),
     wbArrayS(FNAM, 'Category', wbFormIDCk('Keyword', [KYWD])),
     wbLString(HNAM),
-    wbUnknown(DNAM),
+    wbStruct(DNAM, 'Data', [
+      wbByteArray('Unknown', 4),
+      wbInteger('Created Object Count', itU16),
+      wbByteArray('Unknown', 2) // looks like 16-bit flags
+    ], cpNormal, False, nil, 1),
     wbFormIDCk(CIFK, 'Unknown', [KYWD]),
     wbUnknown(RECF),
     wbStruct(INTV, 'Data', [
