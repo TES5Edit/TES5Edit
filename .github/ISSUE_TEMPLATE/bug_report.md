@@ -5,12 +5,12 @@ about: Create a report to help us improve
 ---
 
 **What is the version of xEdit you are using?**
-Copy the first line from you xEdit messages window.
+Copy the first line from your xEdit messages window.
 
 **Describe the bug**
 A clear and concise description of what the bug is.
 
-**To Reproduce**
+**To reproduce**
 Steps to reproduce the behavior:
 1. Go to '...'
 2. Click on '....'
