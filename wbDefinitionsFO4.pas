@@ -6864,7 +6864,8 @@ begin
    {153} 'Mod VATS Blitz Dmg Bonus Dist',
    {154} 'Mod Bash Critical Chance',
    {155} 'VATS Apply Paralyzing Palm Spell',
-   {156} 'Null Function'
+   {156} 'Mod Fatigue for Fatigue AP Max',
+   {157} 'Set Fatigue to AP Mult'
   ]);
 
   wbEquipType := wbFlags([
