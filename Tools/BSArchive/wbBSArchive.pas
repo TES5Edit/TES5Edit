@@ -396,8 +396,12 @@ const
   MAGIC_DXT1: TMagic4 = 'DXT1';
   MAGIC_DXT3: TMagic4 = 'DXT3';
   MAGIC_DXT5: TMagic4 = 'DXT5';
+  MAGIC_ATI1: TMagic4 = 'ATI1';
   MAGIC_ATI2: TMagic4 = 'ATI2';
-  MAGIC_BC7: TMagic4 = 'BC7';
+  MAGIC_BC4S: TMagic4 = 'BC4S';
+  MAGIC_BC4U: TMagic4 = 'BC4U';
+  MAGIC_BC5S: TMagic4 = 'BC5S';
+  MAGIC_BC5U: TMagic4 = 'BC5U';
 
   iFileFO4Unknown = $00100100;
   iFileFO4Tail = $BAADF00D;
@@ -444,6 +448,7 @@ const
   DDSD_MIPMAPCOUNT     = $00020000;
   DDSD_LINEARSIZE      = $00080000;
   DDSD_DEPTH           = $00800000;
+  DDSCAPS_COMPLEX      = $00000008;
   DDSCAPS_TEXTURE      = $00001000;
   DDSCAPS_MIPMAP       = $00400000;
   DDSCAPS2_CUBEMAP     = $00000200;
@@ -455,8 +460,15 @@ const
   DDSCAPS2_NEGATIVEZ   = $00008000;
   DDSCAPS2_VOLUME      = $00200000;
   DDPF_ALPHAPIXELS     = $00000001;
+  DDPF_ALPHA           = $00000002;
   DDPF_FOURCC          = $00000004;
   DDPF_RGB             = $00000040;
+  DDPF_YUV             = $00000200;
+  DDPF_LUMINANCE       = $00020000;
+
+  // DX10
+  DDS_DIMENSION_TEXTURE2D       = $00000003;
+  DDS_RESOURCE_MISC_TEXTURECUBE = $00000004;
 
   crc32table : array [0..255] of Cardinal = (
     $00000000, $77073096, $ee0e612c, $990951ba, $076dc419, $706af48f,
@@ -1652,7 +1664,8 @@ begin
 
         i := fHeaderFO4.FileCount;
         Inc(fHeaderFO4.FileCount);
-        fFilesFO4[i].Name := aFileName;
+        // archive2.exe uses /
+        fFilesFO4[i].Name := StringReplace(aFileName, '\', '/', [rfReplaceAll]);
         fFilesFO4[i].DirHash := CreateHashFO4(fdir);
         fFilesFO4[i].NameHash := CreateHashFO4(name);
         fFilesFO4[i].Ext := Int2Magic(Str2MagicInt(ext));
@@ -1694,7 +1707,8 @@ begin
         // filling common part
         i := fHeaderFO4.FileCount;
         Inc(fHeaderFO4.FileCount);
-        fFilesFO4[i].Name := aFileName;
+        // archive2.exe uses /
+        fFilesFO4[i].Name := StringReplace(aFileName, '\', '/', [rfReplaceAll]);
         fFilesFO4[i].DirHash := CreateHashFO4(fdir);
         fFilesFO4[i].NameHash := CreateHashFO4(name);
         fFilesFO4[i].Ext := Int2Magic(Str2MagicInt(ext));
@@ -1717,41 +1731,71 @@ begin
           fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_BC2_UNORM)
         else if DDSHeader.ddspf.dwFourCC = MAGIC_DXT5 then
           fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_BC3_UNORM)
+        else if DDSHeader.ddspf.dwFourCC = MAGIC_ATI1 then
+          fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_BC4_UNORM)
+        else if DDSHeader.ddspf.dwFourCC = MAGIC_BC4U then
+          fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_BC4_UNORM)
+        else if DDSHeader.ddspf.dwFourCC = MAGIC_BC4S then
+          fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_BC4_SNORM)
         else if DDSHeader.ddspf.dwFourCC = MAGIC_ATI2 then
           fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_BC5_UNORM)
-        else if DDSHeader.ddspf.dwFourCC = MAGIC_BC7 then
-          fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_BC7_UNORM)
+        else if DDSHeader.ddspf.dwFourCC = MAGIC_BC5U then
+          fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_BC5_UNORM)
+        else if DDSHeader.ddspf.dwFourCC = MAGIC_BC5S then
+          fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_BC5_SNORM)
         else if DDSHeader.ddspf.dwFourCC = MAGIC_DX10 then begin
           DDSHeaderDX10 := @aData[Off];
           Off := Off + SizeOf(DDSHeaderDX10^);
           fFilesFO4[i].DXGIFormat := Byte(DDSHeaderDX10.dxgiFormat);
         end
-        else if DDSHeader.ddspf.dwFlags and DDPF_RGB <> 0 then begin
+        else begin
           if DDSHeader.ddspf.dwRGBBitCount = 32 then
-            if DDSHeader.ddspf.dwFlags and DDPF_ALPHAPIXELS <> 0 then
-              fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_B8G8R8A8_UNORM)
-            else
+            if DDSHeader.ddspf.dwFlags and DDPF_ALPHAPIXELS = 0 then
               fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_B8G8R8X8_UNORM)
+            else if DDSHeader.ddspf.dwRBitMask = $000000FF then
+              fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_R8G8B8A8_UNORM)
+            else
+              fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_B8G8R8A8_UNORM)
+          else if DDSHeader.ddspf.dwRGBBitCount = 16 then
+            if (DDSHeader.ddspf.dwRBitMask = $F800) and (DDSHeader.ddspf.dwGBitMask = $07E0) and
+               (DDSHeader.ddspf.dwBBitMask = $001F) and (DDSHeader.ddspf.dwABitMask = $0000) then
+              fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_B5G6R5_UNORM)
+            else if (DDSHeader.ddspf.dwRBitMask = $7C00) and (DDSHeader.ddspf.dwGBitMask = $03E0) and
+                    (DDSHeader.ddspf.dwBBitMask = $001F) and (DDSHeader.ddspf.dwABitMask = $8000) then
+              fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_B5G5R5A1_UNORM)
+            else
+              fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_R8G8_UNORM)
           else if DDSHeader.ddspf.dwRGBBitCount = 8 then
-            fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_R8_UNORM)
+            if DDSHeader.ddspf.dwFlags and DDPF_ALPHA <> 0 then
+              fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_A8_UNORM)
+            else
+              fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_R8_UNORM)
           else
             raise Exception.Create('Unsupported uncompressed DDS format');
         end;
 
         // MipMap size detection
         case TDXGI(fFilesFO4[i].DXGIFormat) of
-          DXGI_FORMAT_BC1_UNORM, DXGI_FORMAT_BC1_UNORM_SRGB:
+          DXGI_FORMAT_BC1_UNORM, DXGI_FORMAT_BC1_UNORM_SRGB,
+          DXGI_FORMAT_BC4_UNORM, DXGI_FORMAT_BC4_SNORM:
             BitsPerPixel := 4;
           DXGI_FORMAT_BC2_UNORM, DXGI_FORMAT_BC2_UNORM_SRGB,
           DXGI_FORMAT_BC3_UNORM, DXGI_FORMAT_BC3_UNORM_SRGB,
-          DXGI_FORMAT_BC5_UNORM,
-          DXGI_FORMAT_BC7_UNORM, DXGI_FORMAT_BC7_UNORM_SRGB:
+          DXGI_FORMAT_BC5_UNORM, DXGI_FORMAT_BC5_SNORM,
+          DXGI_FORMAT_BC6H_SF16, DXGI_FORMAT_BC6H_UF16,
+          DXGI_FORMAT_BC7_UNORM, DXGI_FORMAT_BC7_UNORM_SRGB,
+          DXGI_FORMAT_A8_UNORM,
+          DXGI_FORMAT_R8_SINT, DXGI_FORMAT_R8_SNORM,
+          DXGI_FORMAT_R8_UINT, DXGI_FORMAT_R8_UNORM:
             BitsPerPixel := 8;
+          DXGI_FORMAT_B5G6R5_UNORM, DXGI_FORMAT_B5G5R5A1_UNORM,
+          DXGI_FORMAT_R8G8_SINT, DXGI_FORMAT_R8G8_UINT, DXGI_FORMAT_R8G8_UNORM:
+            BitsPerPixel := 16;
           DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM_SRGB,
-          DXGI_FORMAT_B8G8R8X8_UNORM, DXGI_FORMAT_B8G8R8X8_UNORM_SRGB:
+          DXGI_FORMAT_B8G8R8X8_UNORM, DXGI_FORMAT_B8G8R8X8_UNORM_SRGB,
+          DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_SINT,
+          DXGI_FORMAT_R8G8B8A8_UINT, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
             BitsPerPixel := 32;
-          DXGI_FORMAT_R8_UNORM:
-            BitsPerPixel := 8;
           else
             raise Exception.Create('Unsupported DDS format');
         end;
@@ -1816,6 +1860,7 @@ var
   FileTES4: PwbBSFileTES4;
   FileFO4: PwbBSFileFO4;
   DDSHeader: PDDSHeader;
+  DDSHeaderDX10: PDDSHeaderDX10;
   i, size, TexSize: integer;
   bCompressed: Boolean;
   Buffer: TBytes;
@@ -1919,59 +1964,183 @@ begin
         DDSHeader.dwWidth := FileFO4.Width;
         DDSHeader.dwHeight := FileFO4.Height;
         DDSHeader.dwFlags := DDSD_CAPS or DDSD_PIXELFORMAT or
-                             DDSD_WIDTH or DDSD_HEIGHT or
-                             DDSD_LINEARSIZE or DDSD_MIPMAPCOUNT;
-        DDSHeader.dwCaps := DDSCAPS_TEXTURE or DDSCAPS_MIPMAP;
+                             DDSD_WIDTH or DDSD_HEIGHT or DDSD_MIPMAPCOUNT;
+        DDSHeader.dwCaps := DDSCAPS_TEXTURE;
         DDSHeader.dwMipMapCount := FileFO4.NumMips;
-        if FileFO4.CubeMaps = 2049 then
-          DDSHeader.dwCaps2 := DDSCAPS2_POSITIVEX or DDSCAPS2_NEGATIVEX
-                            or DDSCAPS2_POSITIVEY or DDSCAPS2_NEGATIVEY
-                            or DDSCAPS2_POSITIVEZ or DDSCAPS2_NEGATIVEZ
-                            or DDSCAPS2_CUBEMAP;
+        if DDSHeader.dwMipMapCount > 1 then
+         DDSHeader.dwCaps := DDSHeader.dwCaps or DDSCAPS_MIPMAP or DDSCAPS_COMPLEX;
+        DDSHeader.dwDepth := 1;
+
+        DDSHeaderDX10 := @Result[SizeOf(TDDSHeader)];
+        DDSHeaderDX10.resourceDimension := DDS_DIMENSION_TEXTURE2D;
+        DDSHeaderDX10.arraySize := 1;
+
+        if FileFO4.CubeMaps = 2049 then begin
+          DDSHeader.dwCaps := DDSHeader.dwCaps or DDSCAPS2_CUBEMAP or DDSCAPS_COMPLEX
+                           or DDSCAPS2_POSITIVEX or DDSCAPS2_NEGATIVEX
+                           or DDSCAPS2_POSITIVEY or DDSCAPS2_NEGATIVEY
+                           or DDSCAPS2_POSITIVEZ or DDSCAPS2_NEGATIVEZ;
+          DDSHeaderDX10.miscFlags := DDS_RESOURCE_MISC_TEXTURECUBE;
+        end;
         DDSHeader.ddspf.dwSize := SizeOf(DDSHeader.ddspf);
         case TDXGI(FileFO4.DXGIFormat) of
-          DXGI_FORMAT_BC1_UNORM, DXGI_FORMAT_BC1_UNORM_SRGB: begin
+          DXGI_FORMAT_BC1_UNORM: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_LINEARSIZE;
             DDSHeader.ddspf.dwFlags := DDPF_FOURCC;
             DDSHeader.ddspf.dwFourCC := MAGIC_DXT1;
-            DDSHeader.dwPitchOrLinearSize := FileFO4.Width * FileFO4.Height div 4;
+            DDSHeader.dwPitchOrLinearSize := FileFO4.Width * FileFO4.Height div 2;
           end;
-          DXGI_FORMAT_BC2_UNORM, DXGI_FORMAT_BC2_UNORM_SRGB: begin
+          DXGI_FORMAT_BC2_UNORM: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_LINEARSIZE;
             DDSHeader.ddspf.dwFlags := DDPF_FOURCC;
             DDSHeader.ddspf.dwFourCC := MAGIC_DXT3;
             DDSHeader.dwPitchOrLinearSize := FileFO4.Width * FileFO4.Height;
           end;
-          DXGI_FORMAT_BC3_UNORM, DXGI_FORMAT_BC3_UNORM_SRGB: begin
+          DXGI_FORMAT_BC3_UNORM: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_LINEARSIZE;
             DDSHeader.ddspf.dwFlags := DDPF_FOURCC;
             DDSHeader.ddspf.dwFourCC := MAGIC_DXT5;
             DDSHeader.dwPitchOrLinearSize := FileFO4.Width * FileFO4.Height;
           end;
+          DXGI_FORMAT_BC4_SNORM: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_LINEARSIZE;
+            DDSHeader.ddspf.dwFlags := DDPF_FOURCC;
+            DDSHeader.ddspf.dwFourCC := MAGIC_BC4S;
+            DDSHeader.dwPitchOrLinearSize := FileFO4.Width * FileFO4.Height div 2;
+          end;
+          DXGI_FORMAT_BC4_UNORM: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_LINEARSIZE;
+            DDSHeader.ddspf.dwFlags := DDPF_FOURCC;
+            DDSHeader.ddspf.dwFourCC := MAGIC_BC4U;
+            DDSHeader.dwPitchOrLinearSize := FileFO4.Width * FileFO4.Height div 2;
+          end;
+          DXGI_FORMAT_BC5_SNORM: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_LINEARSIZE;
+            DDSHeader.ddspf.dwFlags := DDPF_FOURCC;
+            DDSHeader.ddspf.dwFourCC := MAGIC_BC5S;
+            DDSHeader.dwPitchOrLinearSize := FileFO4.Width * FileFO4.Height;
+          end;
           DXGI_FORMAT_BC5_UNORM: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_LINEARSIZE;
             DDSHeader.ddspf.dwFlags := DDPF_FOURCC;
-            DDSHeader.ddspf.dwFourCC := MAGIC_ATI2;
+            DDSHeader.ddspf.dwFourCC := MAGIC_BC5U;
             DDSHeader.dwPitchOrLinearSize := FileFO4.Width * FileFO4.Height;
           end;
+          DXGI_FORMAT_BC1_UNORM_SRGB: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_LINEARSIZE;
+            DDSHeader.ddspf.dwFlags := DDPF_FOURCC;
+            DDSHeader.ddspf.dwFourCC := MAGIC_DX10;
+            DDSHeaderDX10.dxgiFormat := Integer(FileFO4.DXGIFormat);
+            DDSHeader.dwPitchOrLinearSize := FileFO4.Width * FileFO4.Height div 2;
+          end;
+          DXGI_FORMAT_BC2_UNORM_SRGB, DXGI_FORMAT_BC3_UNORM_SRGB,
+          DXGI_FORMAT_BC6H_UF16, DXGI_FORMAT_BC6H_SF16,
           DXGI_FORMAT_BC7_UNORM, DXGI_FORMAT_BC7_UNORM_SRGB: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_LINEARSIZE;
             DDSHeader.ddspf.dwFlags := DDPF_FOURCC;
-            DDSHeader.ddspf.dwFourCC := MAGIC_BC7;
+            DDSHeader.ddspf.dwFourCC := MAGIC_DX10;
+            DDSHeaderDX10.dxgiFormat := Integer(FileFO4.DXGIFormat);
             DDSHeader.dwPitchOrLinearSize := FileFO4.Width * FileFO4.Height;
           end;
-          DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM_SRGB: begin
+          DXGI_FORMAT_B8G8R8A8_UNORM_SRGB, DXGI_FORMAT_B8G8R8X8_UNORM_SRGB,
+          DXGI_FORMAT_R8G8B8A8_SINT, DXGI_FORMAT_R8G8B8A8_UINT, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_PITCH;
+            DDSHeader.ddspf.dwFlags := DDPF_FOURCC;
+            DDSHeader.ddspf.dwFourCC := MAGIC_DX10;
+            DDSHeaderDX10.dxgiFormat := Integer(FileFO4.DXGIFormat);
+            DDSHeader.dwPitchOrLinearSize := FileFO4.Width * 4;
+          end;
+          DXGI_FORMAT_R8G8_SINT, DXGI_FORMAT_R8G8_UINT: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_PITCH;
+            DDSHeader.ddspf.dwFlags := DDPF_FOURCC;
+            DDSHeader.ddspf.dwFourCC := MAGIC_DX10;
+            DDSHeaderDX10.dxgiFormat := Integer(FileFO4.DXGIFormat);
+            DDSHeader.dwPitchOrLinearSize := FileFO4.Width * 2;
+          end;
+          DXGI_FORMAT_R8_SINT, DXGI_FORMAT_R8_SNORM, DXGI_FORMAT_R8_UINT: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_PITCH;
+            DDSHeader.ddspf.dwFlags := DDPF_FOURCC;
+            DDSHeader.ddspf.dwFourCC := MAGIC_DX10;
+            DDSHeaderDX10.dxgiFormat := Integer(FileFO4.DXGIFormat);
+            DDSHeader.dwPitchOrLinearSize := FileFO4.Width;
+          end;
+            DXGI_FORMAT_R8G8B8A8_UNORM: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_PITCH;
+            DDSHeader.ddspf.dwFlags := DDPF_RGB or DDPF_ALPHAPIXELS;
+            DDSHeader.ddspf.dwRGBBitCount := 32;
+            DDSHeader.ddspf.dwRBitMask := $000000FF;
+            DDSHeader.ddspf.dwGBitMask := $0000FF00;
+            DDSHeader.ddspf.dwBBitMask := $00FF0000;
+            DDSHeader.ddspf.dwABitMask := $FF000000;
+            DDSHeader.dwPitchOrLinearSize := FileFO4.Width * 4;
+          end;
+            DXGI_FORMAT_B8G8R8A8_UNORM: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_PITCH;
+            DDSHeader.ddspf.dwFlags := DDPF_RGB or DDPF_ALPHAPIXELS;
+            DDSHeader.ddspf.dwRGBBitCount := 32;
+            DDSHeader.ddspf.dwRBitMask := $00FF0000;
+            DDSHeader.ddspf.dwGBitMask := $0000FF00;
+            DDSHeader.ddspf.dwBBitMask := $000000FF;
+            DDSHeader.ddspf.dwABitMask := $FF000000;
+            DDSHeader.dwPitchOrLinearSize := FileFO4.Width * 4;
+          end;
+          DXGI_FORMAT_B8G8R8X8_UNORM: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_PITCH;
             DDSHeader.ddspf.dwFlags := DDPF_RGB;
             DDSHeader.ddspf.dwRGBBitCount := 32;
             DDSHeader.ddspf.dwRBitMask := $00FF0000;
             DDSHeader.ddspf.dwGBitMask := $0000FF00;
             DDSHeader.ddspf.dwBBitMask := $000000FF;
-            DDSHeader.dwPitchOrLinearSize := FileFO4.Width * FileFO4.Height * 4;
+            DDSHeader.dwPitchOrLinearSize := FileFO4.Width * 4;
+          end;
+          DXGI_FORMAT_B5G6R5_UNORM: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_PITCH;
+            DDSHeader.ddspf.dwFlags := DDPF_RGB;
+            DDSHeader.ddspf.dwRGBBitCount := 16;
+            DDSHeader.ddspf.dwRBitMask := $0000F800;
+            DDSHeader.ddspf.dwGBitMask := $000007E0;
+            DDSHeader.ddspf.dwBBitMask := $0000001F;
+            DDSHeader.dwPitchOrLinearSize := FileFO4.Width * 2;
+          end;
+          DXGI_FORMAT_B5G5R5A1_UNORM: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_PITCH;
+            DDSHeader.ddspf.dwFlags := DDPF_RGB or DDPF_ALPHAPIXELS;
+            DDSHeader.ddspf.dwRGBBitCount := 16;
+            DDSHeader.ddspf.dwRBitMask := $00007C00;
+            DDSHeader.ddspf.dwGBitMask := $000003E0;
+            DDSHeader.ddspf.dwBBitMask := $0000001F;
+            DDSHeader.ddspf.dwABitMask := $00008000;
+            DDSHeader.dwPitchOrLinearSize := FileFO4.Width * 2;
+          end;
+          DXGI_FORMAT_R8G8_UNORM: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_PITCH;
+            DDSHeader.ddspf.dwFlags := DDPF_LUMINANCE OR DDPF_ALPHAPIXELS;
+            DDSHeader.ddspf.dwRGBBitCount := 16;
+            DDSHeader.ddspf.dwRBitMask := $000000FF;
+            DDSHeader.ddspf.dwABitMask := $0000FF00;
+            DDSHeader.dwPitchOrLinearSize := FileFO4.Width * 2;
+          end;
+          DXGI_FORMAT_A8_UNORM: begin
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_PITCH;
+            DDSHeader.ddspf.dwFlags := DDPF_ALPHA;
+            DDSHeader.ddspf.dwRGBBitCount := 8;
+            DDSHeader.ddspf.dwABitMask := $000000FF;
+            DDSHeader.dwPitchOrLinearSize := FileFO4.Width;
           end;
           DXGI_FORMAT_R8_UNORM: begin
-            DDSHeader.ddspf.dwFlags := DDPF_RGB;
+            DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_PITCH;
+            DDSHeader.ddspf.dwFlags := DDPF_LUMINANCE;
             DDSHeader.ddspf.dwRGBBitCount := 8;
             DDSHeader.ddspf.dwRBitMask := $000000FF;
-            DDSHeader.dwPitchOrLinearSize := FileFO4.Width * FileFO4.Height * 4;
+            DDSHeader.dwPitchOrLinearSize := FileFO4.Width;
           end;
         end;
-        // append chunks
         TexSize := SizeOf(TDDSHeader);
+        if DDSHeader.ddspf.dwFourCC = MAGIC_DX10 then begin
+          SetLength(Result, Length(Result) + SizeOf(TDDSHeaderDX10));
+          Inc(TexSize, SizeOf(TDDSHeaderDX10));
+        end;
+        // append chunks
         for i := Low(FileFO4.TexChunks) to High(FileFO4.TexChunks) do with FileFO4.TexChunks[i] do begin
           fStream.Position := Offset;
           // compressed chunk
