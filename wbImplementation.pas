@@ -2203,6 +2203,7 @@ end;
 procedure TwbFile.AddMasters(aMasters: TStrings);
 var
   NotAllAdded    : Boolean;
+  lMasters       : TStringList;
 
   procedure Inner;
   var
@@ -2237,7 +2238,7 @@ var
       MaxMasterCount := $FF;
 
     if wbBeginInternalEdit(True) then try
-      for i := 0 to Pred(aMasters.Count) do begin
+      for i := 0 to Pred(lMasters.Count) do begin
         if GetMasterCount(True) >= MaxMasterCount then begin
           NotAllAdded := True;
           Break;
@@ -2256,8 +2257,8 @@ var
         Assert(Assigned(Rec), '[AddMasters] not Assigned(Rec)');
         Assert(Rec.EditValue = '', '[AddMasters] Rec.EditValue <> ''''');
 
-        Rec.EditValue := aMasters[i];
-        AddMaster(aMasters[i]);
+        Rec.EditValue := lMasters[i];
+        AddMaster(lMasters[i]);
         Rec := nil;
       end;
     finally
@@ -2266,11 +2267,26 @@ var
       Assert(False, '[AddMasters] not wbBeginInternalEdit');
   end;
 
+var
+  i    : Integer;
+  s, t : string;
 begin;
   NotAllAdded := False;
 
+  lMasters := TStringList.Create;
   flOldMasters := Copy(flMasters);
   try
+    if Assigned(aMasters) then
+      for i := 0 to Pred(aMasters.Count) do begin
+        s := Trim(aMasters[i]);
+        t := ExtractFileExt(s);
+        if SameText(t, '.esm') or SameText(t, '.esp') or (wbIsEslSupported and SameText(t, '.esl')) then
+          lMasters.Add(s);
+      end;
+
+    if lMasters.Count < 1 then
+      Exit;
+
     Inner;
 
     if Length(flOldMasters) <> Length(flMasters) then begin
@@ -2282,8 +2298,9 @@ begin;
     IncGeneration;
 
     if NotAllAdded then
-      raise Exception.Create('Only '+ (Length(flMasters) - Length(flOldMasters)).ToString + ' of ' + aMasters.Count.ToString +' masters could be added. Master list now contains '+ Length(flMasters).ToString +' entries and is full.');
+      raise Exception.Create('Only '+ (Length(flMasters) - Length(flOldMasters)).ToString + ' of ' + lMasters.Count.ToString +' masters could be added. Master list now contains '+ Length(flMasters).ToString +' entries and is full.');
   finally
+    lMasters.Free;
     flOldMasters := nil;
   end;
 end;
