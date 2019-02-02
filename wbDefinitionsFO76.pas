@@ -3880,7 +3880,7 @@ begin
     Container := Container.Container;
   if not Assigned(Container) then Exit;
 
-  Result := Cardinal(Container.ElementNativeValues['fragmentCount']);
+  Result := Cardinal(Container.ElementNativeValues['FragmentCount']);
 end;
 
 {>>> For VMAD <<<}
@@ -3984,7 +3984,7 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  if Container.ElementEditValues['scriptName'] = '' then
+  if Container.ElementEditValues['ScriptName'] = '' then
     Result := 1;
 end;
 
@@ -7834,7 +7834,7 @@ begin
     ]), -2, cpNormal, False, nil, nil, nil, wbCanAddScriptProperties);
 
   wbScriptEntry := wbStructSK([0], 'Script', [
-    wbLenString('scriptName', 2),
+    wbLenString('ScriptName', 2),
     wbScriptFlags,
     wbScriptProperties
   ]);
@@ -7849,8 +7849,8 @@ begin
     wbArray('Fragments',  // Do NOT sort, ordered OnBegin, OnEnd
       wbStruct('Fragment', [
         wbInteger('Unknown', itS8),
-        wbLenString('scriptName', 2),
-        wbLenString('fragmentName', 2)
+        wbLenString('ScriptName', 2),
+        wbLenString('FragmentName', 2)
       ]), [], wbScriptFragmentsInfoCounter)
   ]);
 
@@ -7865,16 +7865,16 @@ begin
     wbArray('Fragments',  // Do NOT sort, ordered OnBegin, OnEnd, OnChange
       wbStruct('Fragment', [
         wbInteger('Unknown', itS8),
-        wbLenString('scriptName', 2),
-        wbLenString('fragmentName', 2)
+        wbLenString('ScriptName', 2),
+        wbLenString('FragmentName', 2)
       ]), [], wbScriptFragmentsPackCounter)
   ]);
 
   wbScriptFragmentsQuest := wbStruct('Script Fragments', [
     wbInteger('Unknown', itS8),
-    wbInteger('fragmentCount', itU16, nil, cpBenign),
-    wbLenString('scriptName', 2).SetAfterSet(wbScriptFragmentsQuestScriptNameAfterSet),
-    // if scriptName = "" then no Flags and Properties
+    wbInteger('FragmentCount', itU16, nil, cpBenign),
+    wbLenString('ScriptName', 2).SetAfterSet(wbScriptFragmentsQuestScriptNameAfterSet),
+    // if ScriptName = "" then no Flags and Properties
     wbUnion('Script', wbScriptFragmentsEmptyScriptDecider, [
       wbStruct('Script Data', [
         wbScriptFlags,
@@ -7894,8 +7894,8 @@ begin
         wbInteger('Unknown', itS16),
         wbInteger('Quest Stage Index', itS32),
         wbInteger('Unknown', itS8),
-        wbLenString('scriptName', 2),
-        wbLenString('fragmentName', 2)
+        wbLenString('ScriptName', 2),
+        wbLenString('FragmentName', 2)
       ]),
       wbScriptFragmentsQuestCounter)
   ]);
@@ -7910,8 +7910,8 @@ begin
     wbArray('Fragments',  // Do NOT sort, ordered OnBegin, OnEnd
       wbStruct('Fragment', [
         wbInteger('Unknown', itS8),
-        wbLenString('scriptName', 2),
-        wbLenString('fragmentName', 2)
+        wbLenString('ScriptName', 2),
+        wbLenString('FragmentName', 2)
       ]), [], wbScriptFragmentsSceneCounter),
     wbArray('Phase Fragments',
       wbStructSK([0, 1], 'Phase Fragment', [
@@ -7923,8 +7923,8 @@ begin
         wbInteger('Unknown', itS16),
         wbInteger('Unknown', itS8),
         wbInteger('Unknown', itS8),
-        wbLenString('scriptName', 2),
-        wbLenString('fragmentName', 2)
+        wbLenString('ScriptName', 2),
+        wbLenString('FragmentName', 2)
       ]), -2)
   ]);
 
@@ -7936,8 +7936,8 @@ begin
         wbInteger('Fragment Index', itU16),
         wbInteger('Unused', itS16, nil, cpIgnore, False, wbNeverShow),
         wbInteger('Unknown', itS8),
-        wbLenString('scriptName', 2),
-        wbLenString('fragmentName', 2)
+        wbLenString('ScriptName', 2),
+        wbLenString('FragmentName', 2)
       ]), -2)
   ]);
 
@@ -8184,7 +8184,7 @@ begin
 
   wbMODL :=
     wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename', 0, cpNormal, True),
+      wbString(MODL, 'Model FileName', 0, cpNormal, True),
       wbMODT,
       wbMODC,
       wbMODS,
@@ -8199,14 +8199,14 @@ begin
 
   wbMODLActor :=
     wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename', 0, cpNormal, True),
+      wbString(MODL, 'Model FileName', 0, cpNormal, True),
       wbMODT,
       wbMODS
     ], []).IncludeFlag(dfAllowAnyMember);
 
   wbMODLReq :=
     wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename', 0, cpNormal, True),
+      wbString(MODL, 'Model FileName', 0, cpNormal, True),
       wbMODT,
       wbMODC,
       wbMODS,
@@ -8267,7 +8267,7 @@ begin
         wbString(DSTA, 'Sequence Name'),
         wbRArray('Models',
           wbRStructSK([0], 'Model', [
-            wbString(DMDL, 'Model Filename', 0, cpNormal, True),
+            wbString(DMDL, 'Model FileName', 0, cpNormal, True),
             wbDMDT,
             wbDMDC,
             wbDMDS,
@@ -8306,7 +8306,7 @@ begin
           wbInteger('Debris Count', itS32)
         ], cpNormal, True), // End DSTD
         wbRStructSK([0], 'Model', [ // Begin DMDL
-          wbString(DMDL, 'Model Filename')
+          wbString(DMDL, 'Model FileName')
         ], []), // End DMDL
         wbDMDT,
         wbDMDC,
@@ -10224,7 +10224,7 @@ begin
     wbFULL,
     wbEITM,
     wbRStruct('Male world model', [
-      wbString(MOD2, 'Model Filename'),
+      wbString(MOD2, 'Model FileName'),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMODC,
       wbMO2S,
@@ -10235,7 +10235,7 @@ begin
     wbString(ICON, 'Male Inventory Image'),
     wbString(MICO, 'Male Message Icon'),
     wbRStruct('Female world model', [
-      wbString(MOD4, 'Model Filename'),
+      wbString(MOD4, 'Model FileName'),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMODC,
       wbMO4S,
@@ -10320,7 +10320,7 @@ begin
       wbFloat('Weapon Adjust')
     ], cpNormal, True),
     wbRStruct('Male world model', [
-      wbString(MOD2, 'Model Filename'),
+      wbString(MOD2, 'Model FileName'),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO2C,
       wbMO2S,
@@ -10331,7 +10331,7 @@ begin
       wbMO2F
     ], []).IncludeFlag(dfAllowAnyMember),
     wbRStruct('Female world model', [
-      wbString(MOD3, 'Model Filename'),
+      wbString(MOD3, 'Model FileName'),
       wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO3C,
       wbMO3S,
@@ -10342,7 +10342,7 @@ begin
       wbMO3F
     ], []).IncludeFlag(dfAllowAnyMember),
     wbRStruct('Male 1st Person', [
-      wbString(MOD4, 'Model Filename'),
+      wbString(MOD4, 'Model FileName'),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO4C,
       wbMO4S,
@@ -10352,7 +10352,7 @@ begin
       wbMO4F
     ], []).IncludeFlag(dfAllowAnyMember),
     wbRStruct('Female 1st Person', [
-      wbString(MOD5, 'Model Filename'),
+      wbString(MOD5, 'Model FileName'),
       wbByteArray(MO5T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO5C,
       wbMO5S,
@@ -11743,7 +11743,7 @@ begin
         'Tri',
         'Chargen Morph'
       ])),
-      wbString(NAM1, 'Filename', 0, cpTranslate, True)
+      wbString(NAM1, 'FileName', 0, cpTranslate, True)
     ], []),
     wbFormIDCk(TNAM, 'Texture Set', [TXST]),
     wbFormIDCk(CNAM, 'Color', [CLFM]),
@@ -11889,7 +11889,7 @@ begin
       wbFormIDCk('VATS Projectile', [PROJ, NULL])
     ]),
     wbRStructSK([0], 'Muzzle Flash Model', [
-      wbString(NAM1, 'Model Filename'),
+      wbString(NAM1, 'Model FileName'),
       wbByteArray(NAM2, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow)
     ], [], cpNormal, True),
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
@@ -12184,7 +12184,7 @@ begin
     wbRStructs('Models', 'Model', [
       wbStruct(DATA, 'Data', [
         wbInteger('Percentage', itU8),
-        wbString('Model Filename'),
+        wbString('Model FileName'),
         wbInteger('Flags', itU8, wbFlags([
           'Has Collision Data'
         ]))
@@ -13632,8 +13632,8 @@ begin
     ]), cpNormal, True),
     wbFloat(FLTV, 'Duration'),
     wbFloat(DNAM, 'Fade-Out'),
-    wbString(ANAM, 'Track Filename'),
-    wbString(BNAM, 'Finale Filename'),
+    wbString(ANAM, 'Track FileName'),
+    wbString(BNAM, 'Finale FileName'),
     wbStruct(LNAM, 'Loop Data', [
       wbFloat('Loop Begins'),
       wbFloat('Loop Ends'),
@@ -14299,7 +14299,7 @@ begin
     wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL], False, cpBenign),
     wbFormIDCk(DNAM, 'Shared INFO', [INFO]),
     wbFormIDCk(GNAM, 'INFO group', [INFO]),
-    wbString(IOVR, 'Override Filename'),
+    wbString(IOVR, 'Override FileName'),
 
     wbRArray('Responses', wbRStruct('Response', [
       wbStruct(TRDA, 'Response Data', [
@@ -17188,7 +17188,7 @@ begin
     wbNVNM,
     wbArray(MNAM, 'Distant LOD',
       wbStruct('LOD', [
-        {>>> Contains null-terminated mesh filename followed by random data up to 260 bytes <<<}
+        {>>> Contains null-terminated mesh FileName followed by random data up to 260 bytes <<<}
         wbString(True, 'Mesh', 260)
         //wbByteArray('Mesh', 260, cpIgnore)
       ]), [
@@ -17217,7 +17217,7 @@ begin
     wbString(CNAM, 'Author', 0, cpTranslate, True),
     wbString(SNAM, 'Description', 0, cpTranslate),
     wbRArray('Master Files', wbRStruct('Master File', [
-      wbStringForward(MAST, 'Filename', 0, cpNormal, True),
+      wbStringForward(MAST, 'FileName', 0, cpNormal, True),
       // wbInteger(DATA, 'Filesize', itU64, nil, nil, cpIgnore, True)  // Should be set by CK but usually null
       wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
     ], [ONAM])).IncludeFlag(dfInternalEditOnly, not wbAllowMasterFilesEdit),
@@ -17429,7 +17429,7 @@ begin
     wbObjectTemplate,
     wbFormIDCk(NNAM, 'Embedded Weapon Mod', [OMOD]),
     wbRStruct('1st Person Model', [
-      wbString(MOD4, 'Model Filename'),
+      wbString(MOD4, 'Model FileName'),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
       wbMO4S,
       wbMO4C,

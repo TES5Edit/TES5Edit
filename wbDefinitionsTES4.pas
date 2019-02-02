@@ -2057,7 +2057,7 @@ begin
 
   wbMODL :=
     wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename'),
+      wbString(MODL, 'Model FileName'),
       wbFloat(MODB, 'Bound Radius', cpBenign),
       wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
 //      wbArray(MODT, 'Unknown',
@@ -2118,7 +2118,7 @@ begin
     wbFormIDCk(SNAM, 'Sound', [SOUN])
   ]);
 
-  wbICON := wbString(ICON, 'Icon filename');
+  wbICON := wbString(ICON, 'Icon FileName');
 
   wbActorValueEnum :=
     wbEnum([
@@ -2470,27 +2470,27 @@ begin
       wbByteArray('Unused', 1)
     ], cpNormal, True),
     wbRStruct('Male biped model', [
-      wbString(MODL, 'Model Filename'),
+      wbString(MODL, 'Model FileName'),
       wbFloat(MODB, 'Bound Radius', cpBenign),
       wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
     ], []),
     wbRStruct('Male world model', [
-      wbString(MOD2, 'Model Filename'),
+      wbString(MOD2, 'Model FileName'),
       wbFloat(MO2B, 'Bound Radius', cpBenign),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore)
     ], []),
-    wbString(ICON, 'Male icon filename'),
+    wbString(ICON, 'Male icon FileName'),
     wbRStruct('Female biped model', [
-      wbString(MOD3, 'Model Filename'),
+      wbString(MOD3, 'Model FileName'),
       wbFloat(MO3B, 'Bound Radius', cpBenign),
       wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore)
     ], []),
     wbRStruct('Female world model', [
-      wbString(MOD4, 'Model Filename'),
+      wbString(MOD4, 'Model FileName'),
       wbFloat(MO4B, 'Bound Radius', cpBenign),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore)
     ], []),
-    wbString(ICO2, 'Female icon filename'),
+    wbString(ICO2, 'Female icon FileName'),
     wbStruct(DATA, '', [
       wbInteger('Armor', itU16, wbDiv(100)),
       wbInteger('Value', itU32),
@@ -2684,27 +2684,27 @@ begin
       wbByteArray('Unused', 1)
     ], cpNormal, True),
     wbRStruct('Male biped model', [
-      wbString(MODL, 'Model Filename'),
+      wbString(MODL, 'Model FileName'),
       wbFloat(MODB, 'Bound Radius', cpBenign),
       wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
     ], []),
     wbRStruct('Male world model', [
-      wbString(MOD2, 'Model Filename'),
+      wbString(MOD2, 'Model FileName'),
       wbFloat(MO2B, 'Bound Radius', cpBenign),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore)
     ], []),
-    wbString(ICON, 'Male icon filename'),
+    wbString(ICON, 'Male icon FileName'),
     wbRStruct('Female biped model', [
-      wbString(MOD3, 'Model Filename'),
+      wbString(MOD3, 'Model FileName'),
       wbFloat(MO3B, 'Bound Radius', cpBenign),
       wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore)
     ], []),
     wbRStruct('Female world model', [
-      wbString(MOD4, 'Model Filename'),
+      wbString(MOD4, 'Model FileName'),
       wbFloat(MO4B, 'Bound Radius', cpBenign),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore)
     ], []),
-    wbString(ICO2, 'Female icon filename'),
+    wbString(ICO2, 'Female icon FileName'),
     wbStruct(DATA, '', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
@@ -4732,7 +4732,7 @@ begin
 
   wbRecord(SOUN, 'Sound', [
     wbEDID,
-    wbString(FNAM, 'Sound Filename'),
+    wbString(FNAM, 'Sound FileName'),
     wbRUnion('Sound Data', [
       wbStruct(SNDX, 'Sound Data', [
         wbInteger('Minimum attenuation distance', itU8, wbMul(5)),
@@ -4837,7 +4837,7 @@ begin
     wbString(CNAM, 'Author', 0, cpTranslate, True),
     wbString(SNAM, 'Description', 0, cpTranslate),
     wbRArray('Master Files', wbRStruct('Master File', [
-      wbStringForward(MAST, 'Filename', 0, cpNormal, True),
+      wbStringForward(MAST, 'FileName', 0, cpNormal, True),
       wbByteArray(DATA, 'Unused', 8, cpIgnore, True)
     ], [])).IncludeFlag(dfInternalEditOnly, not wbAllowMasterFilesEdit)
   ], False, nil, cpNormal, True, wbRemoveOFST);

@@ -3403,7 +3403,7 @@ begin
     Container := Container.Container;
   if not Assigned(Container) then Exit;
 
-  Result := Cardinal(Container.ElementNativeValues['fragmentCount']);
+  Result := Cardinal(Container.ElementNativeValues['FragmentCount']);
 end;
 
 {>>> For VMAD <<<}
@@ -7130,7 +7130,7 @@ begin
 
   wbScriptFragmentsQuest := wbStruct('Script Fragments', [
     wbInteger('Unknown', itS8),
-    wbInteger('fragmentCount', itU16, nil, cpBenign),
+    wbInteger('FragmentCount', itU16, nil, cpBenign),
     wbLenString('ScriptName', 2).SetAfterSet(wbScriptFragmentsQuestScriptNameAfterSet),
     // if ScriptName = "" then no Flags and Properties
     wbUnion('Script', wbScriptFragmentsEmptyScriptDecider, [
