@@ -846,6 +846,7 @@ const
   STOL : TwbSignature = 'STOL'; { New to Skyrim }
   STOP : TwbSignature = 'STOP'; { New to Fallout 4 }
   STPT : TwbSignature = 'STPT'; { New To Fallout 76 }
+  SNFG : TwbSignature = 'SNFG'; { New To Fallout 76 }
   STSC : TwbSignature = 'STSC'; { New to Fallout 4 }
   SWFI : TwbSignature = 'SWFI'; { New To Fallout 76 }
   SWMV : TwbSignature = 'SWMV'; { New to Skyrim }
@@ -1050,6 +1051,8 @@ const
   ZOOM : TwbSignature = 'ZOOM'; { New To Fallout 4 }
 
   MIID : TwbSignature = 'MIID'; { New To Fallout 76 }
+  MAGF : TwbSignature = 'MAGF'; { New To Fallout 76 }
+  MAGA : TwbSignature = 'MAGA'; { New To Fallout 76 }
   DURG : TwbSignature = 'DURG'; { New To Fallout 76 }
   MAGG : TwbSignature = 'MAGG'; { New To Fallout 76 }
   FLFG : TwbSignature = 'FLFG'; { New To Fallout 76 }
@@ -9997,6 +10000,8 @@ begin
       wbEFID,
       wbEFIT,
       wbFormIDCk(CVT0, 'Curve Table', [CURV]),
+      wbFormIDCk(MAGA, 'Actor Value', [AVIF]),
+      wbByteArray(MAGF, 'Unknown'),
       wbCTDAs,
       wbFormIDCk(DURG, 'Duration', [GLOB]),
       wbFormIDCk(MAGG, 'Magnitude', [GLOB])
@@ -14235,6 +14240,7 @@ begin
       11, 'Photomode'
     ], True, True)), [
     wbEDID,
+    wbXALG,
     wbCTDAs,
     wbString(DNAM, 'Behavior Graph'),
     wbString(ENAM, 'Animation Event'),
@@ -18744,7 +18750,8 @@ begin
     wbArray(BNAM, 'Unknown', wbFloat('Unknown'), 6),
     wbArray(GNAM, 'Unknown', wbFloat('Unknown'), 3),
     wbUnknown(INAM),
-    wbUnknown(STPT)
+    wbUnknown(STPT),
+    wbUnknown(SNFG)
   ]);
 
   wbRecord(GCVR, 'Ground Cover', [
