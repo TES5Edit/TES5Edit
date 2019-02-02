@@ -145,8 +145,10 @@ type
     procedure EndUse;
   end;
 
-var
+threadvar
   mreHeader: TwbMainRecordEntryHeader;
+var
+  mreNextGen: Integer;
 
 function wbCopyElementToFile(const aSource: IwbElement; aFile: IwbFile; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
 var
@@ -1643,7 +1645,6 @@ type
 
   IwbGroupRecordInternal = interface(IwbGroupRecord)
     ['{0BDDCF46-DFF6-4771-8FBB-0BC78828999B}']
-    procedure Sort;
     procedure SetModified(aValue: Boolean);
   end;
 
@@ -14290,7 +14291,7 @@ begin
     Exit;
   inherited;
   // Let's try to sort only when the group membership change and not when one of its member change.
-  if Assigned(aContainer) and (IwbContainerInternal(aContainer).ElementID = GetElementID) then
+  if ((grStruct.grsGroupType = 7) and wbSortINFO) or (Assigned(aContainer) and (IwbContainerInternal(aContainer).ElementID = GetElementID)) then
     Exclude(grStates, gsSorted);
 end;
 
@@ -14581,15 +14582,41 @@ begin
     end;
 end;
 
-var
+threadvar
   ElementRefs      : array of IwbContainerElementRef;
   ElementRefsCount : Integer;
 
-procedure TwbGroupRecord.Sort;
 
-  procedure DoInserRecord(const InsertRecord: IwbMainRecordEntry);
+
+procedure TwbGroupRecord.Sort;
+type
+  PInsertStackEntry = ^TInsertStackEntry;
+  TInsertStackEntry = record
+    isePrev   : PInsertStackEntry;
+    iseRecord : IwbMainRecordEntry;
+  end;
+
+  procedure DoInsertRecord(const InsertRecord: IwbMainRecordEntry; aPrevInsertStackEntry: PInsertStackEntry);
   var
-    TargetRecord: IwbMainRecordEntry;
+    TargetRecord     : IwbMainRecordEntry;
+
+    procedure ReportCycle;
+    var
+      Current: PInsertStackEntry;
+    begin
+      wbProgress('Cyclic PNAM references found for %s %s: ', [InsertRecord._File.Name, InsertRecord.Name]);
+      Current := aPrevInsertStackEntry;
+      while Assigned(Current) do begin
+        wbProgress('referenced by %s %s: ', [Current.iseRecord._File.Name, Current.iseRecord.Name]);
+        if TargetRecord.Equals(Current.iseRecord) then
+          Exit;
+        Current := Current.isePrev;
+      end;
+    end;
+
+  var
+    InsertStackEntry : TInsertStackEntry;
+    Run              : PInsertStackEntry;
   begin
     SetLength(ElementRefs, Succ(Length(ElementRefs)));
     if not Supports(InsertRecord, IwbContainerElementRef, ElementRefs[High(ElementRefs)]) then
@@ -14601,8 +14628,21 @@ procedure TwbGroupRecord.Sort;
       if not Supports(TargetRecord, IwbContainerElementRef, ElementRefs[High(ElementRefs)]) then
         Assert(False);
 
-      if not TargetRecord.IsInList then
-        DoInserRecord(TargetRecord);
+      if not TargetRecord.IsInList then with InsertStackEntry do begin
+        isePrev := aPrevInsertStackEntry;
+        iseRecord := InsertRecord;
+
+        Run := aPrevInsertStackEntry;
+        while Assigned(Run) do begin
+          if TargetRecord.Equals(Run.iseRecord) then begin
+            ReportCycle;
+            Abort;
+          end;
+          Run := Run.isePrev;
+        end;
+
+        DoInsertRecord(TargetRecord, @InsertStackEntry);
+      end;
 
       InsertRecord.InsertEntryAfter(TargetRecord);
 
@@ -14628,6 +14668,12 @@ var
   NewElements : TDynElementInternals;
 
 begin
+{$IFDEF USE_PARALLEL_BUILD_REFS}
+  if wbBuildingRefsParallel then
+    _ResizeLock.Enter;
+  try
+{$ENDIF}
+
   if grStates * [gsSorted, gsSorting] <> [] then
     Exit;
 
@@ -14640,103 +14686,124 @@ begin
   try
     ChildrenOf := GetChildrenOf;
     // there is no PNAM in Fallout 4, looks like INFOs are no longer linked lists
-    if (not wbIsFallout4 and not wbIsFallout76) and Assigned(ChildrenOf) and (ChildrenOf.Signature = 'DIAL') then begin
+
+    if wbCanSortINFO and (grStruct.grsGroupType = 7) then begin
       {>>> Sorting DIAL group doesn't always work, and Skyrim.esm has a plenty of unsorted DIALs <<<}
       {>>> Also disabled for FNV, https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=59 <<<}
-      if not wbSortGroupRecord then
+
+      if not wbSortINFO then
         Exit;
 
       if not wbDisplayLoadOrderFormID then
         Exit;
 
-      Inc(ElementRefsCount);
       try
-        MainRecords := ChildrenOf.MasterRecordsFromMasterFilesAndSelf;
-        SetLength(Groups, Length(MainRecords));
-        i := 0;
-        for j := Low(MainRecords) to High(MainRecords) do begin
-          Groups[i] := MainRecords[j].ChildGroup;
-          if Assigned(Groups[i]) and (Groups[i].ElementCount > 0) then
-            Inc(i);
-        end;
-        SetLength(Groups, i);
-
-        for i := Low(Groups) to High(Groups) do
-          if not Equals(Groups[i]) then
-            (Groups[i] as IwbGroupRecordInternal).Sort;
-
-        mreHeader.BeginUse;
+        Inc(ElementRefsCount);
         try
+          MainRecords := ChildrenOf.MasterRecordsFromMasterFilesAndSelf;
+          SetLength(Groups, Length(MainRecords));
+          i := 0;
+          for j := Low(MainRecords) to High(MainRecords) do begin
+            Groups[i] := MainRecords[j].ChildGroup;
+            if Assigned(Groups[i]) and (Groups[i].ElementCount > 0) then
+              Inc(i);
+          end;
+          SetLength(Groups, i);
+
           for i := Low(Groups) to High(Groups) do
-            if Supports(Groups[i], IwbContainerElementRef, Group) then
-              for j := 0 to Pred(Group.ElementCount) do
-                if Supports(Group.Elements[j], IwbMainRecordEntry, InsertRecord) then
-                   DoInserRecord(InsertRecord);
-          TargetRecord := IwbMainRecordEntry(mreHeader.mrehTail);
-          while Assigned(TargetRecord) do begin
-            PrevRecord := TargetRecord.PrevEntry;
-            if not Equals(TargetRecord.Container) then
-              TargetRecord.RemoveEntry
-            else if not TargetRecord.IsDeleted then if wbBeginInternalEdit then try
-              if not TargetRecord.ElementExists['PNAM'] then begin
-                {>>> No QSTI in Skyrim, using DIAL\QNAM <<<}
-                if wbIsSkyrim then begin
-                  Supports(TargetRecord.Container, IwbGroupRecord, g);
-                  InfoQuest := g.ChildrenOf.ElementNativeValues['QNAM'];
-                end else
-                  InfoQuest := TargetRecord.ElementNativeValues['QSTI'];
-                InsertRecord := PrevRecord;
-                Inserted := False;
-                while Assigned(InsertRecord) do begin
-                  if wbIsSkyrim then begin
-                    Supports(InsertRecord.Container, IwbGroupRecord, g);
-                    InfoQuest2 := g.ChildrenOf.ElementNativeValues['QNAM'];
-                  end else
-                    InfoQuest2 := InsertRecord.ElementNativeValues['QSTI'];
-                  if (not InsertRecord.IsDeleted) and (InfoQuest = InfoQuest2) then begin
-                    try
-                      Inserted := True;
-                      TargetRecord.Add('PNAM').NativeValue := InsertRecord.LoadOrderFormID.ToCardinal;
-                    except
-                      TargetRecord.RemoveElement('PNAM');
+            if not Equals(Groups[i]) then
+              (Groups[i] as IwbGroupRecordInternal).Sort;
+
+          try
+            mreHeader.BeginUse;
+            try
+              for i := Low(Groups) to High(Groups) do
+                if Supports(Groups[i], IwbContainerElementRef, Group) then
+                  for j := 0 to Pred(Group.ElementCount) do
+                    if Supports(Group.Elements[j], IwbMainRecordEntry, InsertRecord) then
+                       DoInsertRecord(InsertRecord, nil);
+              TargetRecord := IwbMainRecordEntry(mreHeader.mrehTail);
+              while Assigned(TargetRecord) do begin
+                PrevRecord := TargetRecord.PrevEntry;
+                if not Equals(TargetRecord.Container) then
+                  TargetRecord.RemoveEntry
+                else
+                  if wbFillPNAM and (not TargetRecord.IsDeleted) then
+                    if wbBeginInternalEdit then try
+                      if not TargetRecord.ElementExists['PNAM'] then begin
+                        {>>> No QSTI in Skyrim, using DIAL\QNAM <<<}
+                        if wbIsSkyrim then begin
+                          Supports(TargetRecord.Container, IwbGroupRecord, g);
+                          InfoQuest := g.ChildrenOf.ElementNativeValues['QNAM'];
+                        end else
+                          InfoQuest := TargetRecord.ElementNativeValues['QSTI'];
+                        InsertRecord := PrevRecord;
+                        Inserted := False;
+                        while Assigned(InsertRecord) do begin
+                          if wbIsSkyrim then begin
+                            Supports(InsertRecord.Container, IwbGroupRecord, g);
+                            InfoQuest2 := g.ChildrenOf.ElementNativeValues['QNAM'];
+                          end else
+                            InfoQuest2 := InsertRecord.ElementNativeValues['QSTI'];
+                          if (not InsertRecord.IsDeleted) and (InfoQuest = InfoQuest2) then begin
+                            try
+                              Inserted := True;
+                              TargetRecord.Add('PNAM').NativeValue := InsertRecord.LoadOrderFormID.ToCardinal;
+                            except
+                              TargetRecord.RemoveElement('PNAM');
+                            end;
+                            Break;
+                          end;
+                          InsertRecord := InsertRecord.PrevEntry;
+                        end;
+                        if not Inserted then
+                          TargetRecord.Add('PNAM');
+                      end;
+                    finally
+                      wbEndInternalEdit;
                     end;
-                    Break;
-                  end;
-                  InsertRecord := InsertRecord.PrevEntry;
-                end;
-                if not Inserted then
-                  TargetRecord.Add('PNAM');
+
+                TargetRecord := PrevRecord;
               end;
+
+              Assert(mreHeader.mrehCount = Length(cntElements), '[TwbGroupRecord.Sort] mreHeader.mrehCount <> Length(cntElements)');
+
+              SetLength(NewElements, Length(cntElements));
+              k := High(NewElements);
+              TargetRecord := IwbMainRecordEntry(mreHeader.mrehTail);
+              while Assigned(TargetRecord) do begin
+                Assert(k >= Low(NewElements), '[TwbGroupRecord.Sort] k < Low(NewElements)');
+                if not Supports(TargetRecord, IwbElementInternal, NewElements[k]) then
+                  Assert(False, '[TwbGroupRecord.Sort] not Supports(IwbElementInternal)');
+                TargetRecord.SortOrder := k;
+                TargetRecord := TargetRecord.PrevEntry;
+                Dec(k);
+              end;
+              Assert(k = -1, '[TwbGroupRecord.Sort] k <> -1');
+
+              cntElements := NewElements;
+              Include(grStates, gsSorted);
             finally
-              wbEndInternalEdit;
+              mreHeader.EndUse;
             end;
-            TargetRecord := PrevRecord;
+          except
+            on E: Exception do begin
+              wbProgress('<Error sorting INFO for ["%s" in "%s"]: [%s] %s>', [GetName, GetFile.Name, E.ClassName, E.Message]);
+              raise;
+            end;
           end;
-
-          Assert(mreHeader.mrehCount = Length(cntElements));
-
-          SetLength(NewElements, Length(cntElements));
-          k := High(NewElements);
-          TargetRecord := IwbMainRecordEntry(mreHeader.mrehTail);
-          while Assigned(TargetRecord) do begin
-            Assert(k >= Low(NewElements));
-            if not Supports(TargetRecord, IwbElementInternal, NewElements[k]) then
-              Assert(False);
-            TargetRecord := TargetRecord.PrevEntry;
-            Dec(k);
-          end;
-          Assert(k = -1);
-
-          cntElements := NewElements;
-          Include(grStates, gsSorted);
         finally
-          mreHeader.EndUse;
+          Dec(ElementRefsCount);
+          if ElementRefsCount = 0 then
+            ElementRefs := nil;
         end;
-      finally
-        Dec(ElementRefsCount);
-        if ElementRefsCount = 0 then
-          ElementRefs := nil;
+      except
+        wbProgress('<Warning: could not sorting INFO for ["%s" in "%s"] because of previous error>', [GetName, GetFile.Name]);
+        if ElementRefsCount > 0 then
+          raise;
       end;
+
+      Include(grStates, gsSorted);
       Exit;
     end;
 
@@ -14746,6 +14813,13 @@ begin
   finally
     Exclude(grStates, gsSorting);
   end;
+
+{$IFDEF USE_PARALLEL_BUILD_REFS}
+  finally
+    if wbBuildingRefsParallel then
+      _ResizeLock.Leave;
+  end;
+{$ENDIF}
 end;
 
 procedure TwbGroupRecord.UpdatedEnded;
@@ -19832,7 +19906,7 @@ begin
   Assert(not mrehInUse);
   mrehInUse := True;
 
-  Inc(mrehGeneration);
+  mrehGeneration := LockedInc(mreNextGen);
   mrehHead := nil;
   mrehTail := nil;
   mrehCount := 0;
@@ -19843,7 +19917,7 @@ begin
   Assert(mrehInUse);
   mrehInUse := False;
 
-  Inc(mrehGeneration);
+  mrehGeneration := LockedInc(mreNextGen);
   mrehHead := nil;
   mrehTail := nil;
   mrehCount := 0;

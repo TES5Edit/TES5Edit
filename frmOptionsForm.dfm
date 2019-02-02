@@ -3,7 +3,7 @@ object frmOptions: TfrmOptions
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Options'
-  ClientHeight = 421
+  ClientHeight = 436
   ClientWidth = 466
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,14 +20,14 @@ object frmOptions: TfrmOptions
   OnKeyDown = FormKeyDown
   DesignSize = (
     466
-    421)
+    436)
   PixelsPerInch = 96
   TextHeight = 13
   object pcOptions: TPageControl
     Left = 0
     Top = 0
     Width = 466
-    Height = 382
+    Height = 397
     ActivePage = tsGeneral
     Align = alTop
     TabOrder = 0
@@ -83,7 +83,7 @@ object frmOptions: TfrmOptions
       end
       object cbSimpleRecords: TCheckBox
         Left = 16
-        Top = 201
+        Top = 225
         Width = 439
         Height = 17
         Hint = 'Display binary data as hex arrays'
@@ -107,18 +107,18 @@ object frmOptions: TfrmOptions
         Caption = 'Track all EditorID'
         TabOrder = 5
       end
-      object cbSortGroupRecord: TCheckBox
+      object cbSortINFO: TCheckBox
         Left = 16
         Top = 154
         Width = 243
         Height = 17
         Hint = 'Sort INFOs in DIAL by previous INFO'
-        Caption = 'Sort INFOs'
+        Caption = 'Sort INFOs (requires restart)'
         TabOrder = 8
       end
       object cbShowFlagEnumValue: TCheckBox
         Left = 16
-        Top = 224
+        Top = 248
         Width = 439
         Height = 17
         Hint = 
@@ -129,8 +129,8 @@ object frmOptions: TfrmOptions
       end
       object cbRemoveOffsetData: TCheckBox
         Left = 16
-        Top = 177
-        Width = 439
+        Top = 201
+        Width = 243
         Height = 17
         Hint = 'Remove OFST subrecords from worldspaces'
         Caption = 'Remove OFST offset data'
@@ -146,7 +146,7 @@ object frmOptions: TfrmOptions
       end
       object cbClampFormID: TCheckBox
         Left = 16
-        Top = 293
+        Top = 317
         Width = 439
         Height = 17
         Hint = 'Set FormID index to the number of masters if greater'
@@ -155,7 +155,7 @@ object frmOptions: TfrmOptions
       end
       object cbShowGroupRecordCount: TCheckBox
         Left = 16
-        Top = 247
+        Top = 271
         Width = 439
         Height = 17
         Caption = 'Show elements count for group records'
@@ -172,7 +172,7 @@ object frmOptions: TfrmOptions
       end
       object cbShowFileFlags: TCheckBox
         Left = 16
-        Top = 270
+        Top = 294
         Width = 439
         Height = 17
         Caption = 'Show file header flags'
@@ -180,7 +180,7 @@ object frmOptions: TfrmOptions
       end
       object cbAlignArrayElements: TCheckBox
         Left = 16
-        Top = 315
+        Top = 339
         Width = 439
         Height = 17
         Caption = 'Align alignable array elements'
@@ -225,6 +225,15 @@ object frmOptions: TfrmOptions
         Caption = 'Reset Modified (Bold) on Save'
         ParentBiDiMode = False
         TabOrder = 20
+      end
+      object cbFillPNAM: TCheckBox
+        Left = 32
+        Top = 177
+        Width = 227
+        Height = 17
+        Hint = 'Fill missing PNAM in INFO records'
+        Caption = 'Fill missing PNAM (requires restart)'
+        TabOrder = 22
       end
     end
     object tsCleaning: TTabSheet
@@ -567,7 +576,7 @@ object frmOptions: TfrmOptions
         Left = 3
         Top = 55
         Width = 452
-        Height = 296
+        Height = 311
         Align = alClient
         BevelOuter = bvLowered
         TabOrder = 1
@@ -576,7 +585,7 @@ object frmOptions: TfrmOptions
   end
   object btnOK: TButton
     Left = 302
-    Top = 388
+    Top = 403
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -586,7 +595,7 @@ object frmOptions: TfrmOptions
   end
   object btnCancel: TButton
     Left = 383
-    Top = 388
+    Top = 403
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
