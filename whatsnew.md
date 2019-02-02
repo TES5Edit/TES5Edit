@@ -4,6 +4,18 @@
 
 Definitions have been updated to account for increased form version in 1.0.4 and 1.0.5 patches.
 
+## Sorting of INFO records
+
+Problems with INFO sorting have been fixed and INFO sorting is automatically enabled by default for all games where it applies. (There should normally never be a need to turn it off, and turning it off can result in files being written that will not result in the correct INFO order when read by the game engine or CK.)
+
+Background Info: INFO records resolve their PNAM (previous INFO) reference at the moment they are loaded, for this to work correctly the referenced INFO record must have been loaded before. To achieve this, INFO records need to be sorted according to their PNAM before being written to file.
+
+The Sort INFO option has been split into "Sort INFO" (default to True) and "Fill missing PNAM" (default to False, to preserve the previous behaviour were Sort INFO was turned off by default).
+
+The navigation treeview now by default shows the INFO children of DIAL records in the order derived from their PNAM values (the same order that they are also displayed in CK and the order in which they are processed by the game) instead of sorted by FormID. This can be changed using the context menu on the FormID column header of the navigations treeview.
+
+New parameters have been added to control these two options (overridding whatever has been set in the options when used): `-SortINFO`, `-NoSortINFO`, `-FillPNAM`, and `-NoFillPNAM`.
+
 # What's new in xEdit 4.0.1?
 
 ## Bugfixes

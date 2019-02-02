@@ -2637,9 +2637,10 @@ object frmMain: TfrmMain
     Top = 400
   end
   object pmuNavHeaderPopup: TPopupMenu
+    OnPopup = pmuNavHeaderPopupPopup
     Left = 152
     Top = 88
-    object Files1: TMenuItem
+    object mniNavHeaderFiles: TMenuItem
       Caption = 'Files'
       object mniNavHeaderFilesDefault: TMenuItem
         AutoCheck = True
@@ -2659,6 +2660,22 @@ object frmMain: TfrmMain
         Caption = 'always by file name'
         RadioItem = True
         OnClick = mniNavHeaderFilesClick
+      end
+    end
+    object mniNavHeaderINFO: TMenuItem
+      Caption = 'Dialog Topics'
+      object mniNavHeaderINFObyPreviousINFO: TMenuItem
+        AutoCheck = True
+        Caption = 'by Previous INFO'
+        Checked = True
+        RadioItem = True
+        OnClick = mniNavHeaderINFOClick
+      end
+      object mniNavHeaderINFObyFormID: TMenuItem
+        AutoCheck = True
+        Caption = 'by FormID'
+        RadioItem = True
+        OnClick = mniNavHeaderINFOClick
       end
     end
   end

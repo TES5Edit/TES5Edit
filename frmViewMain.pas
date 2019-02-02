@@ -271,7 +271,7 @@ type
     mniNavBuildReachable: TMenuItem;
     mniNavCleanupInjected: TMenuItem;
     pmuNavHeaderPopup: TPopupMenu;
-    Files1: TMenuItem;
+    mniNavHeaderFiles: TMenuItem;
     mniNavHeaderFilesDefault: TMenuItem;
     mniNavHeaderFilesLoadOrder: TMenuItem;
     mniNavHeaderFilesFileName: TMenuItem;
@@ -420,6 +420,9 @@ type
     mniMainSave: TMenuItem;
     jbhSave: TJvBalloonHint;
     tmrShutdown: TTimer;
+    mniNavHeaderINFO: TMenuItem;
+    mniNavHeaderINFObyFormID: TMenuItem;
+    mniNavHeaderINFObyPreviousINFO: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -678,6 +681,8 @@ type
     procedure vstNavFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex);
     procedure tmrShutdownTimer(Sender: TObject);
+    procedure mniNavHeaderINFOClick(Sender: TObject);
+    procedure pmuNavHeaderPopupPopup(Sender: TObject);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
@@ -1924,6 +1929,22 @@ begin
     Caption := Application.Title;
     Enabled := True;
   end;
+end;
+
+procedure TfrmMain.mniNavHeaderINFOClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  UserWasActive := True;
+
+  if mniNavHeaderINFObyFormID.Checked then
+    i := 1
+  else
+    i := 0;
+  Settings.WriteInteger('Nav','INFOSort', i);
+  Settings.UpdateFile;
+  vstNav.Header.SortTree;
+  vstNav.ScrollIntoView(vstNav.FocusedNode, True);
 end;
 
 function TfrmMain.ByRefSelectionIncludesAnyDeepCopyRecords(aSelection: TDynMainRecords): Boolean;
@@ -4729,7 +4750,6 @@ begin
   else begin
     AddMessage('Fatal: No source specified');
     Exit;
-
   end;
 
   if wbToolMode in [tmEdit, tmView, tmTranslate] then begin
@@ -5055,7 +5075,8 @@ begin
   RowHeight := Settings.ReadInteger('Options', 'RowHeight', RowHeight);
   SetDefaultNodeHeight(Trunc(RowHeight * (GetCurrentPPIScreen / PixelsPerInch)));
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
-  wbSortGroupRecord := Settings.ReadBool('Options', 'SortGroupRecord', wbSortGroupRecord);
+  //wbSortINFO := Settings.ReadBool('Options', 'SortINFO', wbSortINFO); read in wbInit
+  //wbFillPNAM := Settings.ReadBool('Options', 'FillPNAM', wbFillPNAM); read in wbInit
   wbFocusAddedElement := Settings.ReadBool('Options', 'FocusAddedElement', wbFocusAddedElement);
   wbRequireCtrlForDblClick := Settings.ReadBool('Options', 'RequireCtrlForDblClick', wbRequireCtrlForDblClick);
   wbRemoveOffsetData := Settings.ReadBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
@@ -5097,6 +5118,12 @@ begin
     2: mniNavHeaderFilesFileName.Checked := True;
   else
     mniNavHeaderFilesDefault.Checked := True;
+  end;
+
+  case Settings.ReadInteger('Nav', 'INFOSort', 0) of
+    1: mniNavHeaderINFObyFormID.Checked := True;
+  else
+    mniNavHeaderINFObyPreviousINFO.Checked := True;
   end;
 
   CreateActionsForScripts;
@@ -5940,7 +5967,7 @@ begin
     end;
 
   wbDarkMode := wbIsDarkMode;
-  _BlockInternalEdit := True;
+  //_BlockInternalEdit := True;
   _wbProgressCallback := GeneralProgress;
   LastUpdate := GetTickCount64;
   UpdateTreeLineColor;
@@ -11073,7 +11100,7 @@ begin
     i := 2
   else
     i := 0;
-  Settings.WriteInteger('Nav','FilesSort',i);
+  Settings.WriteInteger('Nav','FilesSort', i);
   Settings.UpdateFile;
   vstNav.Header.SortTree;
   vstNav.ScrollIntoView(vstNav.FocusedNode, True);
@@ -12921,7 +12948,8 @@ begin
     cbActorTemplateHide.Checked := wbActorTemplateHide;
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
-    cbSortGroupRecord.Checked := wbSortGroupRecord;
+    cbSortINFO.Checked := wbSortINFO;
+    cbFillPNAM.Checked := wbFillPNAM;
     cbFocusAddedElement.Checked := wbFocusAddedElement;
     cbRequireCtrlForDblClick.Checked := wbRequireCtrlForDblClick;
     cbRemoveOffsetData.Checked := wbRemoveOffsetData;
@@ -12971,7 +12999,8 @@ begin
     wbActorTemplateHide := cbActorTemplateHide.Checked;
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
-    wbSortGroupRecord := cbSortGroupRecord.Checked;
+    wbSortINFO := cbSortINFO.Checked;
+    wbFillPNAM := cbFillPNAM.Checked;
     wbFocusAddedElement := cbFocusAddedElement.Checked;
     wbRequireCtrlForDblClick := cbRequireCtrlForDblClick.Checked;
     wbRemoveOffsetData := cbRemoveOffsetData.Checked;
@@ -13018,7 +13047,8 @@ begin
     Settings.WriteBool('Options', 'ActorTemplateHide', wbActorTemplateHide);
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
-    Settings.WriteBool('Options', 'SortGroupRecord', wbSortGroupRecord);
+    Settings.WriteBool('Options', 'SortINFO', wbSortINFO);
+    Settings.WriteBool('Options', 'FillPNAM', wbFillPNAM);
     Settings.WriteBool('Options', 'FocusAddedElement', wbFocusAddedElement);
     Settings.WriteBool('Options', 'RequireCtrlForDblClick', wbRequireCtrlForDblClick);
     Settings.WriteBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
@@ -13529,6 +13559,11 @@ begin
   mniMainPluggyLinkEnchantment.Visible := mniMainPluggyLink.Visible and (wbGameMode = gmTES4);
 
   mniMainSave.Visible := wbEditAllowed and not wbDontSave;
+end;
+
+procedure TfrmMain.pmuNavHeaderPopupPopup(Sender: TObject);
+begin
+  mniNavHeaderINFO.Visible := wbSortINFO;
 end;
 
 procedure TfrmMain.pmuNavPopup(Sender: TObject);
@@ -17383,6 +17418,11 @@ begin
           end;
           if Result = 0 then begin
             Result := CmpI32(MainRecord1.SortPriority, MainRecord2.SortPriority);
+            if wbSortINFO and mniNavHeaderINFObyPreviousINFO.Checked and (MainRecord1.Signature = 'INFO') and (MainRecord2.Signature = 'INFO') then begin
+              if Supports(MainRecord1.Container, IwbGroupRecord, GroupRecord1) then
+                GroupRecord1.Sort;
+              Result := CmpW32(MainRecord1.SortOrder, MainRecord2.SortOrder);
+            end;
             if Result = 0 then begin
               Result := TwbFormID.Compare(MainRecord1.LoadOrderFormID, MainRecord2.LoadOrderFormID);
               if Result = 0 then
