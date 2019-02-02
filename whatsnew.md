@@ -4,6 +4,20 @@
 
 * (found by developer) - saving `.esm` or `.esl` files without ESM flag for SSE stripped ONAM instead of writing it as required (the game treats files with these extension always as having ESM)
 
+## [Very] Quick Show Conflicts, Quick [Auto] Clean, and Auto Game Link Sub Modes
+
+These sub modes of Edit mode can now be accessed using the name of the exe in addition to use of parameters.
+
+To use these modes, you can rename the as e.g.:
+
+* Very Quick Show Conflicts: `FO3EditVeryQuickShowConflicts.exe` or `TES4EditVQSC.exe`
+* Quick Show Conflicts: `SSEEditQuickShowConflicts.exe` or `TES5EditQSC.exe`
+* Quick Auto Clean: `FNVEditQuickAutoClean.exe` or `FO4EditQAC.exe`
+* Quick Clean: `TES4EditQuickClean.exe` or `SSEEditQC.exe`
+* Auto Game Link: `FO4EditAutoGameLink.exe` or `FO4EditAGL.exe`
+
+These sub modes will now show in the Window Caption of the Main Window, to make it easy to see that xEdit has been started in one of these modes.
+
 ## Fallout 76
 
 Definitions have been updated to account for increased form version in 1.0.4 and 1.0.5 patches.

@@ -4907,6 +4907,7 @@ begin
                 MaxSelect := 1;
                 AllModules := wbModulesByLoadOrder(False).FilteredByFlag(mfValid);
                 AllModules.ExcludeAll(mfActive);
+                Caption := 'Please check or double click the module that you want to ' + wbSubMode;
               end else
                 PresetCategory := 'ActiveModules';
 
