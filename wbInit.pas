@@ -231,6 +231,8 @@ begin
       wbShowFlagEnumValue := Settings.ReadBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
       wbTrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
       wbAllowDirectSave := Settings.ReadBool('Options', 'AllowDirectSave', wbAllowDirectSave);
+      wbSortINFO := Settings.ReadBool('Options', 'SortINFO', wbSortINFO);
+      wbFillPNAM := Settings.ReadBool('Options', 'FillPNAM', wbFillPNAM);
       sl := TStringList.Create;
       try
         Settings.ReadSection('cpoverride', sl);
@@ -835,10 +837,12 @@ begin
     gmFNV: begin
       wbVWDInTemporary := True;
       wbLoadBSAs := False;
+      wbCanSortINFO := True;
     end;
     gmFO3: begin
       wbVWDInTemporary := True;
       wbLoadBSAs := False;
+      wbCanSortINFO := True;
     end;
     gmTES3: begin
       wbLoadBSAs := False;
@@ -847,11 +851,13 @@ begin
     gmTES4: begin
       wbLoadBSAs := True;
       wbAllowInternalEdit := false;
+      wbCanSortINFO := True;
     end;
     gmTES5, gmTES5VR, gmSSE: begin
       wbVWDInTemporary := True;
       wbLoadBSAs := True; // localization won't work otherwise
       wbHideIgnored := False; // to show Form Version
+      wbCanSortINFO := True;
     end;
     gmFO4, gmFO4VR: begin
       wbVWDInTemporary := True;
@@ -870,8 +876,24 @@ begin
     Exit(False);
   end;
 
+  wbSortINFO := wbCanSortINFO;
+
   if not ReadSettings then
     Exit(False);
+
+  if wbCanSortINFO then begin
+    if FindCmdLineSwitch('sortinfo') then
+      wbSortINFO := True;
+
+    if FindCmdLineSwitch('nosortinfo') then
+      wbSortINFO := False;
+
+    if FindCmdLineSwitch('FillPNAM') then
+      wbFillPNAM := True;
+
+    if FindCmdLineSwitch('NoFillPNAM') then
+      wbFillPNAM := False;
+  end;
 
   if wbGameMode <= gmTES5 then
     wbAddDefaultLEncodingsIfMissing(False)

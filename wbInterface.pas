@@ -130,7 +130,9 @@ var
   wbDisplayShorterNames    : Boolean  = False;
   wbSortSubRecords         : Boolean  = False;
   wbSortFLST               : Boolean  = True;
-  wbSortGroupRecord        : Boolean  = False;
+  wbCanSortINFO            : Boolean  = False;
+  wbSortINFO               : Boolean  = False;
+  wbFillPNAM               : Boolean  = False;
   wbRemoveOffsetData       : Boolean  = True;
   wbEditAllowed            : Boolean  = False;
   wbFlagsAsArray           : Boolean  = False;
@@ -1691,6 +1693,8 @@ type
 
     procedure AddElement(const aElement: IwbElement);
 
+    procedure Sort;
+
     property GroupType: Integer
       read GetGroupType;
     property GroupLabel: Cardinal
@@ -1698,7 +1702,6 @@ type
       write SetGroupLabel;
     property GroupLabelSignature: string
       read GetGroupLabelSignature;
-
 
     property ChildrenOf: IwbMainRecord
       read GetChildrenOf;
