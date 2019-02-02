@@ -2,6 +2,7 @@
 
 ## Bugfixes
 
+* #636 - Adding a script fragment to a Quest's VMAD record doesn't update the fragmentCount field
 * (found by developer) - saving `.esm` or `.esl` files without ESM flag for SSE stripped ONAM instead of writing it as required (the game treats files with these extension always as having ESM)
 
 ## [Very] Quick Show Conflicts, Quick [Auto] Clean, and Auto Game Link Sub Modes
