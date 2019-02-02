@@ -4689,7 +4689,7 @@ begin
 
   wbMODL :=
     wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename', 0, cpNormal, True),
+      wbString(MODL, 'Model FileName', 0, cpNormal, True),
       wbByteArray(MODB, 'Unknown', 4, cpIgnore),
       wbMODT,
       wbMODS,
@@ -4698,7 +4698,7 @@ begin
 
   wbMODLActor :=
     wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename', 0, cpNormal, True),
+      wbString(MODL, 'Model FileName', 0, cpNormal, True),
       wbByteArray(MODB, 'Unknown', 4, cpIgnore),
       wbMODT,
       wbMODS,
@@ -4707,7 +4707,7 @@ begin
 
   wbMODLReq :=
     wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model Filename', 0, cpNormal, True),
+      wbString(MODL, 'Model FileName', 0, cpNormal, True),
       wbByteArray(MODB, 'Unknown', 4, cpIgnore),
       wbMODT,
       wbMODS,
@@ -4741,7 +4741,7 @@ begin
           wbInteger('Debris Count', itS32)
         ], cpNormal, True),
         wbRStructSK([0], 'Model', [
-          wbString(DMDL, 'Model Filename'),
+          wbString(DMDL, 'Model FileName'),
           wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore)
 //          wbArray(DMDT, 'Unknown',
 //            wbByteArray('Unknown', 24, cpBenign),
@@ -4778,7 +4778,7 @@ begin
           wbInteger('Debris Count', itS32)
         ], cpNormal, True),
         wbRStructSK([0], 'Model', [
-          wbString(DMDL, 'Model Filename'),
+          wbString(DMDL, 'Model FileName'),
           wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore)
 //          wbArray(DMDT, 'Unknown',
 //            wbByteArray('Unknown', 24, cpBenign),
@@ -5074,13 +5074,13 @@ begin
   ]);
 
   wbICON := wbRStruct('Icon', [
-    wbString(ICON, 'Large Icon filename', 0, cpNormal, True),
-    wbString(MICO, 'Small Icon filename')
+    wbString(ICON, 'Large Icon FileName', 0, cpNormal, True),
+    wbString(MICO, 'Small Icon FileName')
   ], [], cpNormal, False, nil, True);
 
   wbICONReq := wbRStruct('Icon', [
-    wbString(ICON, 'Large Icon filename', 0, cpNormal, True),
-    wbString(MICO, 'Small Icon filename')
+    wbString(ICON, 'Large Icon FileName', 0, cpNormal, True),
+    wbString(MICO, 'Small Icon FileName')
   ], [], cpNormal, True, nil, True);
 
   wbVatsValueFunctionEnum :=
@@ -5862,31 +5862,31 @@ begin
     wbEITM,
     wbBMDT,
     wbRStruct('Male biped model', [
-      wbString(MODL, 'Model Filename', 0, cpNormal, True),
+      wbString(MODL, 'Model FileName', 0, cpNormal, True),
       wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
       wbMODS,
       wbMODD
     ], [], cpNormal, False, nil, True),
     wbRStruct('Male world model', [
-      wbString(MOD2, 'Model Filename'),
+      wbString(MOD2, 'Model FileName'),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO2S
     ], []),
-    wbString(ICON, 'Male icon filename'),
-    wbString(MICO, 'Male mico filename'),
+    wbString(ICON, 'Male icon FileName'),
+    wbString(MICO, 'Male mico FileName'),
     wbRStruct('Female biped model', [
-      wbString(MOD3, 'Model Filename', 0, cpNormal, True),
+      wbString(MOD3, 'Model FileName', 0, cpNormal, True),
       wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO3S,
       wbMOSD
     ], [], cpNormal, False, nil, True),
     wbRStruct('Female world model', [
-      wbString(MOD4, 'Model Filename'),
+      wbString(MOD4, 'Model FileName'),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO4S
     ], []),
-    wbString(ICO2, 'Female icon filename'),
-    wbString(MIC2, 'Female mico filename'),
+    wbString(ICO2, 'Female icon FileName'),
+    wbString(MIC2, 'Female mico FileName'),
     wbString(BMCT, 'Ragdoll Constraint Template'),
     wbDEST,
     wbREPL,
@@ -5933,31 +5933,31 @@ begin
     wbFULL,
     wbBMDT,
     wbRStruct('Male biped model', [
-      wbString(MODL, 'Model Filename', 0, cpNormal, True),
+      wbString(MODL, 'Model FileName', 0, cpNormal, True),
       wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
       wbMODS,
       wbMODD
     ], [], cpNormal, False, nil, True),
     wbRStruct('Male world model', [
-      wbString(MOD2, 'Model Filename'),
+      wbString(MOD2, 'Model FileName'),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO2S
     ], []),
-    wbString(ICON, 'Male icon filename'),
-    wbString(MICO, 'Male mico filename'),
+    wbString(ICON, 'Male icon FileName'),
+    wbString(MICO, 'Male mico FileName'),
     wbRStruct('Female biped model', [
-      wbString(MOD3, 'Model Filename', 0, cpNormal, True),
+      wbString(MOD3, 'Model FileName', 0, cpNormal, True),
       wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO3S,
       wbMOSD
     ], [], cpNormal, False, nil, True),
     wbRStruct('Female world model', [
-      wbString(MOD4, 'Model Filename'),
+      wbString(MOD4, 'Model FileName'),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO4S
     ], []),
-    wbString(ICO2, 'Female icon filename'),
-    wbString(MIC2, 'Female mico filename'),
+    wbString(ICO2, 'Female icon FileName'),
+    wbString(MIC2, 'Female mico FileName'),
     wbETYPReq,
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
@@ -7366,7 +7366,7 @@ begin
       {80} wbFloat('Bouncy Mult')
     ], cpNormal, True, nil, 18),
     wbRStructSK([0], 'Muzzle Flash Model', [
-      wbString(NAM1, 'Model Filename'),
+      wbString(NAM1, 'Model FileName'),
       wbByteArray(NAM2, 'Texture Files Hashes', 0, cpIgnore)
     ], [], cpNormal, True),
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
@@ -7885,7 +7885,7 @@ begin
     wbRStructs('Models', 'Model', [
       wbStruct(DATA, 'Data', [
         wbInteger('Percentage', itU8),
-        wbString('Model Filename'),
+        wbString('Model FileName'),
         wbInteger('Flags', itU8, wbFlags([
           'Has Collission Data'
         ]))
@@ -8641,7 +8641,7 @@ begin
 
   wbRecord(MUSC, 'Music Type', [
     wbEDIDReq,
-    wbString(FNAM, 'Filename'),
+    wbString(FNAM, 'FileName'),
     wbFloat(ANAM, 'dB (positive = Loop)')
   ]);
 
@@ -10557,7 +10557,7 @@ begin
   wbRecord(SOUN, 'Sound', [
     wbEDIDReq,
     wbOBNDReq,
-    wbString(FNAM, 'Sound Filename'),
+    wbString(FNAM, 'Sound FileName'),
     wbInteger(RNAM, 'Random Chance %', itU8),
     wbRUnion('Sound Data', [
       wbStruct(SNDD, 'Sound Data', [
@@ -10691,7 +10691,7 @@ begin
     wbString(CNAM, 'Author', 0, cpTranslate, True),
     wbString(SNAM, 'Description', 0, cpTranslate),
     wbRArray('Master Files', wbRStruct('Master File', [
-      wbStringForward(MAST, 'Filename', 0, cpNormal, True),
+      wbStringForward(MAST, 'FileName', 0, cpNormal, True),
       wbByteArray(DATA, 'Unused', 8, cpIgnore, True)
     ], [ONAM])).IncludeFlag(dfInternalEditOnly, not wbAllowMasterFilesEdit),
     wbArray(ONAM, 'Overriden Forms', wbFormIDCk('Form', [REFR, ACHR, ACRE, PMIS, PBEA, PGRE, LAND, NAVM]), 0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
@@ -10901,18 +10901,18 @@ begin
     wbYNAM,
     wbZNAM,
     wbRStruct('Shell Casing Model', [
-      wbString(MOD2, 'Model Filename'),
+      wbString(MOD2, 'Model FileName'),
       wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO2S
     ], []),
     wbRStruct('Scope Model', [
-      wbString(MOD3, 'Model Filename'),
+      wbString(MOD3, 'Model FileName'),
       wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO3S
     ], []),
     wbFormIDCK(EFSD, 'Scope Effect', [EFSH]),
     wbRStruct('World Model', [
-      wbString(MOD4, 'Model Filename'),
+      wbString(MOD4, 'Model FileName'),
       wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
       wbMO4S
     ], []),
