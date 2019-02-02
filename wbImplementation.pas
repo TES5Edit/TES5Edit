@@ -765,6 +765,9 @@ type
     function GetNextObjectID: Cardinal;
     procedure SetNextObjectID(aObjectID: Cardinal);
 
+    function HasONAM: Boolean;
+    procedure MarkHeaderModified;
+
     function GetIsNotPlugin: Boolean;
     function GetHasNoFormID: Boolean;
     procedure SetHasNoFormID(Value: Boolean);
@@ -3797,6 +3800,21 @@ begin
   end;
 end;
 
+function TwbFile.HasONAM: Boolean;
+var
+  Header         : IwbMainRecord;
+begin
+  if GetIsNotPlugin then begin
+    Result := False;
+    Exit;
+  end;
+
+  if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
+    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+  Result := Assigned(Header.ElementByPath['ONAM']);
+end;
+
 procedure TwbFile.IncGeneration;
 begin
   Inc(_FileGeneration);
@@ -3882,6 +3900,19 @@ end;
 
 var
   _MastersGeneration: Integer;
+
+procedure TwbFile.MarkHeaderModified;
+var
+  Header         : IwbMainRecord;
+begin
+  if GetIsNotPlugin then
+    Exit;
+
+  if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
+    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+  (Header as IwbElementInternal).SetModified(True);
+end;
 
 function TwbFile.MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean;
 var
@@ -4043,7 +4074,7 @@ begin
         for i := 0 to Pred(MasterFiles.ElementCount) do begin
           if Supports(MasterFiles.Elements[i], IwbContainerElementRef, MasterFile) then begin
             // Fallout 4 CK creates ONAMs in ESP too. Cannot verify for FO76.
-            if FileHeader.IsESM or wbIsFallout4 then
+            if wbAlwaysSaveOnam or wbAlwaysSaveOnamForce or FileHeader.IsESM or (Assigned(flModule) and (mfHasESMExtension in flModule.miFlags)) then
               while j <= High(flRecords) do begin
                 Current := flRecords[j];
                 FormID := Current.FixedFormID;

@@ -75,6 +75,7 @@ type
     cbNoGitHubCheck: TCheckBox;
     cbNoNexusModsCheck: TCheckBox;
     cbResetModifiedOnSave: TCheckBox;
+    cbAlwaysSaveOnam: TCheckBox;
     cbFillPNAM: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);

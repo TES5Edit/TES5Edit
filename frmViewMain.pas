@@ -171,6 +171,8 @@ type
   end;
   PLOOTPluginInfo = ^TLOOTPluginInfo;
 
+  TwbSaveResult = (srAllDone, srNothingToDo, srAbort, srError);
+
   TfrmMain = class(TForm)
     vstNav: TVirtualEditTree;
     splElements: TSplitter;
@@ -420,6 +422,7 @@ type
     mniMainSave: TMenuItem;
     jbhSave: TJvBalloonHint;
     tmrShutdown: TTimer;
+    mniMarkallfileswithoutONAMasmodified: TMenuItem;
     mniNavHeaderINFO: TMenuItem;
     mniNavHeaderINFObyFormID: TMenuItem;
     mniNavHeaderINFObyPreviousINFO: TMenuItem;
@@ -681,6 +684,7 @@ type
     procedure vstNavFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex);
     procedure tmrShutdownTimer(Sender: TObject);
+    procedure mniMarkallfileswithoutONAMasmodifiedClick(Sender: TObject);
     procedure mniNavHeaderINFOClick(Sender: TObject);
     procedure pmuNavHeaderPopupPopup(Sender: TObject);
   protected
@@ -777,7 +781,7 @@ type
     function AddNewFile(out aFile: IwbFile; aIsESL: Boolean): Boolean; overload;
     function AddNewFile(out aFile: IwbFile; aTemplate: PwbModuleInfo): Boolean; overload;
 
-    function SaveChanged(aSilent: Boolean = False; aShowMessageIfNothing: Boolean = False): Boolean;
+    function SaveChanged(aSilent: Boolean = False; aShowMessageIfNothing: Boolean = False): TwbSaveResult;
     procedure JumpTo(aInterface: IInterface; aBackward: Boolean);
     function FindNodeForElement(const aElement: IwbElement): PVirtualNode;
     function FindNodeOrAncestorForElement(const aElement: IwbElement): PVirtualNode;
@@ -802,6 +806,7 @@ type
     procedure SetDefaultNodeHeight(aHeight: Integer);
 
     function SetAllToMaster: Boolean;
+    function UpdateAllOnam: Boolean;
     function RestorePluginsFromMaster: Boolean;
     procedure ApplyScript(const aScriptName: string; aScript: string);
     procedure CreateActionsForScripts;
@@ -5086,6 +5091,7 @@ begin
   tmrPendingSetActive.Interval := Settings.ReadInteger('Options', 'NavChangeDelay', tmrPendingSetActive.Interval);
   wbClampFormID := Settings.ReadBool('Options', 'ClampFormID', wbClampFormID);
   wbResetModifiedOnSave := Settings.ReadBool('Options', 'ResetModifiedOnSave', wbResetModifiedOnSave);
+  wbAlwaysSaveOnam := Settings.ReadBool('Options', 'AlwaysSaveOnam', wbAlwaysSaveOnam) or wbAlwaysSaveOnamForce;
   wbAlignArrayElements := Settings.ReadBool('Options', 'AlignArrayElements', wbAlignArrayElements);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
@@ -5762,7 +5768,7 @@ begin
       TerminateThread(CheckNexusModsReleaseThread.Handle, 0);
   end;
 
-  if not SaveChanged then begin
+  if SaveChanged >= srAbort then begin
     Action := caNone;
     Exit;
   end;
@@ -12961,6 +12967,9 @@ begin
     cbSimpleRecords.Checked := wbSimpleRecords;
     cbClampFormID.Checked := wbClampFormID;
     cbResetModifiedOnSave.Checked := wbResetModifiedOnSave;
+    cbAlwaysSaveOnam.Checked := wbAlwaysSaveOnam or wbAlwaysSaveOnamForce;
+    if wbAlwaysSaveOnamForce then
+      cbAlwaysSaveOnam.Enabled := False;
     cbAlignArrayElements.Checked := wbAlignArrayElements;
     edColumnWidth.Text := IntToStr(ColumnWidth);
     edRowHeight.Text := IntToStr(RowHeight);
@@ -13012,6 +13021,7 @@ begin
     wbSimpleRecords := cbSimpleRecords.Checked;
     wbClampFormID := cbClampFormID.Checked;
     wbResetModifiedOnSave := cbResetModifiedOnSave.Checked;
+    wbAlwaysSaveOnam := cbAlwaysSaveOnam.Checked or wbAlwaysSaveOnamForce;
     wbAlignArrayElements := cbAlignArrayElements.Checked;
     ColumnWidth := StrToIntDef(edColumnWidth.Text, ColumnWidth);
     RowHeight := StrToIntDef(edRowHeight.Text, RowHeight);
@@ -13060,6 +13070,7 @@ begin
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
     Settings.WriteBool('Options', 'ClampFormID', wbClampFormID);
     Settings.WriteBool('Options', 'ResetModifiedOnSave', wbResetModifiedOnSave);
+    Settings.WriteBool('Options', 'AlwaysSaveOnam', wbAlwaysSaveOnam or wbAlwaysSaveOnamForce);
     Settings.WriteBool('Options', 'AlignArrayElements', wbAlignArrayElements);
     Settings.WriteInteger('Options', 'ColumnWidth', ColumnWidth);
     Settings.WriteInteger('Options', 'RowHeight', RowHeight);
@@ -14313,9 +14324,23 @@ begin
   SaveChanged(False, True);
 end;
 
-function TfrmMain.SaveChanged(aSilent: Boolean = False; aShowMessageIfNothing: Boolean = False): Boolean;
+procedure TfrmMain.mniMarkallfileswithoutONAMasmodifiedClick(Sender: TObject);
 var
-  i                           : Integer;
+  i: Integer;
+begin
+  if not EditWarn then
+    Exit;
+  for i := Low(Files) to High(Files) do
+    with Files[i] do
+      if IsEditable then
+        if not HasONAM then
+          MarkHeaderModified;
+  vstNav.Invalidate;
+end;
+
+function TfrmMain.SaveChanged(aSilent: Boolean = False; aShowMessageIfNothing: Boolean = False): TwbSaveResult;
+var
+  i, j                        : Integer;
   FileStream                  : TBufferedFileStream;
   FileType                    : array of Byte;
   _File                       : IwbFile;
@@ -14325,15 +14350,17 @@ var
   s                           : string;
   t                           : string;
   SavedAny                    : Boolean;
+  SavedThisOne                : Boolean;
   AnyErrors                   : Boolean;
   TryDirectRename             : Boolean;
   FoundSomething              : Boolean;
+  CRC                         : TwbCRC32;
 
 const
   ResetModifiedFromBool : array[Boolean] of TwbResetModified =
     (rmNo, rmSetInternal);
 begin
-  Result := True;
+  Result := srNothingToDo;
   FoundSomething := False;
 
   if wbDontSave then
@@ -14376,7 +14403,7 @@ begin
         if (not (wbToolMode in wbAutoModes)) then begin
           if not aSilent then
             if ShowModal <> mrOk then
-              Exit(False);
+              Exit(srAbort);
           wbDontBackup := not cbBackup.Checked;
           if Assigned(Settings) then begin
             Settings.WriteBool(frmMain.Name, 'DontBackup', wbDontBackup);
@@ -14442,18 +14469,30 @@ begin
               if NeedsRename then
                 s := s + t;
 
+              CRC := _File.CRC32;
               FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024 * 1024);
               try
                 try
                   PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
                   _File.WriteToStream(FileStream, ResetModifiedFromBool[wbResetModifiedOnSave]);
-                  SavedAny := True;
+                  SavedThisOne := True;
                   if not (fsMemoryMapped in _File.FileStates) then
                     TryDirectRename := True;
                 finally
                   FileStream.Free;
                 end;
 
+                if NeedsRename then
+                  if CRC = _File.CRC32 then begin
+                    DeleteFile(wbDataPath + s);
+                    NeedsRename := False;
+                    TryDirectRename := False;
+                    SavedThisOne := False;
+                    PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] File has not changed, removing: ' + s);
+                  end;
+
+                if SavedThisOne then
+                  SavedAny := True;
               except
                 on E: Exception do begin
                   DeleteFile(wbDataPath + s);
@@ -14499,10 +14538,12 @@ begin
 
     if AnyErrors then
       AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Errors have occured. At least one file was not saved.');
-    if SavedAny then
+    if SavedAny then begin
       AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Done saving.');
+      Result := srAllDone;
+    end;
     if AnyErrors then
-      Exit(False);
+      Exit(srError);
   finally
     Free;
     InvalidateElementsTreeView(NoNodes);
@@ -14931,6 +14972,21 @@ begin
     end else begin
       if wbMasterUpdateFilterONAM and (MasterCount[True] > 0) then
         Elements[0].MarkModifiedRecursive(AllElementTypes);
+    end;
+end;
+
+function TfrmMain.UpdateAllOnam: Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  for i := Low(Files) to High(Files) do with Files[i] do
+    if IsEditable and (FileStates * [fsIsGameMaster, fsIsHardcoded, fsIsOfficial] = []) then begin
+      if MasterCount[True] > 0 then begin
+        Elements[0].MarkModifiedRecursive(AllElementTypes);
+        AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Updating ONAM in: ' + FileName);
+        Result := True;
+      end;
     end;
 end;
 
@@ -15896,7 +15952,7 @@ begin
     frmMain.Close;   // Wait until NewMessages are processed.
   end;
 
-  if (wbToolMode in [tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmCheckForITM,
+  if (wbToolMode in [tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmCheckForITM,
         tmCheckForDR, tmCheckForErrors]) and wbLoaderDone and not wbMasterUpdateDone then begin
     wbMasterUpdateDone := True;
     ChangesMade := False;
@@ -15910,7 +15966,7 @@ begin
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! No changes have been made to any of your active modules.');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! You have to resolve the problem and run this program again.');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Loading and saving the problematic module in GECK can sometimes produce');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Loading and saving the problematic module in CS/GECK/CK can sometimes produce');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] to get the original fixed.');
     end else try
@@ -15956,9 +16012,19 @@ begin
         finally
           wbDontSave := True;
         end;
-      end else
-        ChangesMade := SetAllToMaster;
-      SaveChanged;
+      end else if wbToolMode = tmMasterUpdate then
+        ChangesMade := SetAllToMaster
+      else if wbToolMode = tmOnamUpdate then begin
+        ChangesMade := UpdateAllOnam;
+        if ChangesMade then begin
+          Settings.WriteBool('Options', 'AlwaysSaveOnam', True);
+          Settings.UpdateFile;
+        end;
+      end;
+
+      if SaveChanged = srNothingToDo then
+        ChangesMade := False;
+
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= All Done =--');
       if ChangesMade then begin
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] You have to close this program to finalize renaming of the .save files.');
@@ -15966,7 +16032,7 @@ begin
       end else begin
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] None of your active modules required changes.');
       end;
-      if (wbToolMode in [tmMasterUpdate]) then begin
+      if (wbToolMode in [tmOnamUpdate, tmMasterUpdate]) then begin
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
         PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! Remember to run this program again any time you make changes to your active mods. !!!.');
       end else
@@ -15976,14 +16042,14 @@ begin
     except
       wbDontSave := True;
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= Error =--');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] An error occured while trying to change the ESM flag or saving the modified files.');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] An error occured while trying to modify the file or saving the modified files.');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Please look at the log above to determine which of your modules caused that problem.');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] The most likely reason for this is a module file that contains structural errors.');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! No changes have been made to any of your active modules.');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! You have to resolve the problem and run this program again.');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Loading and saving the problematic module in GECK can sometimes produce');
+      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Loading and saving the problematic module in CS/GECK/CK can sometimes produce');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
       PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] to get the original fixed.');
     end;
@@ -19371,7 +19437,7 @@ begin
               end;
 
             if wbQuickCleanAutoSave then begin
-              if not SaveChanged(True) then
+              if SaveChanged(True) >= srAbort then
                 Exit;
 
               if WasUnsaved then begin
@@ -19398,7 +19464,7 @@ begin
                   end;
 
                 if wbQuickCleanAutoSave then begin
-                  if not SaveChanged(True) then
+                  if SaveChanged(True) >= srAbort then
                     Exit;
 
                   if WasUnsaved then begin

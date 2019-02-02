@@ -226,6 +226,16 @@ object frmOptions: TfrmOptions
         ParentBiDiMode = False
         TabOrder = 20
       end
+      object cbAlwaysSaveOnam: TCheckBox
+        Left = 265
+        Top = 177
+        Width = 189
+        Height = 17
+        BiDiMode = bdRightToLeftReadingOnly
+        Caption = 'Always save ONAM'
+        ParentBiDiMode = False
+        TabOrder = 21
+      end
       object cbFillPNAM: TCheckBox
         Left = 32
         Top = 177
