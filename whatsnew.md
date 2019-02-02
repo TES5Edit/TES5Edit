@@ -1,5 +1,9 @@
 # What's new in xEdit 4.0.2?
 
+## Bugfixes
+
+* (found by developer) - saving `.esm` or `.esl` files without ESM flag for SSE stripped ONAM instead of writing it as required (the game treats files with these extension always as having ESM)
+
 ## Fallout 76
 
 Definitions have been updated to account for increased form version in 1.0.4 and 1.0.5 patches.
@@ -15,6 +19,22 @@ The Sort INFO option has been split into "Sort INFO" (default to True) and "Fill
 The navigation treeview now by default shows the INFO children of DIAL records in the order derived from their PNAM values (the same order that they are also displayed in CK and the order in which they are processed by the game) instead of sorted by FormID. This can be changed using the context menu on the FormID column header of the navigations treeview.
 
 New parameters have been added to control these two options (overridding whatever has been set in the options when used): `-SortINFO`, `-NoSortINFO`, `-FillPNAM`, and `-NoFillPNAM`.
+
+# ONAMUpdate Mode
+
+ONAM is the signature of a subrecord in the file header that's used to list all overridden records in temporary CELL children groups in the file. It is required for ESM flagged files to allow support for loading temporary records on-demand by the game engine. xEdit already automatically correctly writes ONAM for ESM flagged files.
+
+ONAMUpdate mode can be used to have xEdit fully automatically create ONAM subrecords also for all non ESM flagged files. The purpose is to support a new option in SSE Engine Fixes to make the game load all files as if they were masters. Further information about this can be found in SSE Engine Fixes.
+
+There is no reason to use ONAMUpdate mode if you aren't going to use that function in SSE Engine Fixes.
+
+To run xEdit in ONAMUpdate mode, you can either rename it to `SSEONAMUpdate.exe` or start it with the `-ONAMUpdate` parameter.
+
+A new Option "Always save ONAM" has been added (defaults to true). When this Option is active, xEdit will write ONAM when saving not ESM flagged files. (Without the Option, saving a non-ESM flagged file will strip out ONAM.)
+
+When running ONAMUpdate mode, this option will be turned on and is saved in the settings file.
+
+The option can be forced on using the `-AlwaysSaveONAM` parameter.
 
 # What's new in xEdit 4.0.1?
 

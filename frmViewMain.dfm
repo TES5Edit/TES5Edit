@@ -2358,6 +2358,11 @@ object frmMain: TfrmMain
         Caption = 'Log Analyzer'
         GroupIndex = 4
       end
+      object mniMarkallfileswithoutONAMasmodified: TMenuItem
+        Caption = 'Mark all files without ONAM as modified'
+        GroupIndex = 4
+        OnClick = mniMarkallfileswithoutONAMasmodifiedClick
+      end
       object N13: TMenuItem
         Caption = '-'
         GroupIndex = 4
