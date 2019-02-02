@@ -45,6 +45,7 @@ type
     mfHasESMFlag,
     mfHasESLFlag,
     mfHasLocalizedFlag,
+    mfHasESMExtension,
     mfIsESM,
     mfActiveInPluginsTxt,
     mfActive,
@@ -307,8 +308,10 @@ begin
           Continue;
 
         if wbGameMode >= gmFO4 then
-          if miExtension in [meESM, meESL] then
+          if miExtension in [meESM, meESL] then begin
+            Include(miFlags, mfHasESMExtension);
             Include(miFlags, mfIsESM);
+          end;
 
         miDateTime := wbGetLastWriteTime(wbDataPath + miOriginalName);
 
@@ -321,9 +324,11 @@ begin
             {ignore header flag for load order, only extension counts}
           else
             Include(miFlags, mfIsESM);
-         end;
+        end;
 
         if IsESL then
+          Include(miFlags, mfHasESLFlag);
+        if miExtension in [meESL] then
           Include(miFlags, mfHasESLFlag);
 
         if IsLocalized then

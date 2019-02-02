@@ -527,8 +527,8 @@ procedure DetectAppMode;
 const
   SourceModes : array [1..2] of string = ('plugins', 'saves');
   GameModes: array [1..9] of string = ('tes5vr', 'fo4vr', 'tes4', 'tes5', 'sse', 'fo3', 'fnv', 'fo4', 'fo76');
-  ToolModes: array [1..12] of string = (
-    'edit', 'view', 'lodgen', 'script', 'translate',
+  ToolModes: array [1..15] of string = (
+    'edit', 'view', 'lodgen', 'script', 'translate', 'onamupdate', 'masterupdate', 'masterrestore',
     'setesm', 'clearesm', 'sortandclean', 'sortandcleanmasters',
     'checkforerrors', 'checkforitm', 'checkfordr');
 var
@@ -649,6 +649,9 @@ begin
   end else if isMode('MasterUpdate') then begin
     wbToolMode    := tmMasterUpdate;
     wbToolName    := 'MasterUpdate';
+  end else if isMode('OnamUpdate') then begin
+    wbToolMode    := tmOnamUpdate;
+    wbToolName    := 'OnamUpdate';
   end else if isMode('MasterRestore') then begin
     wbToolMode    := tmMasterRestore;
     wbToolName    := 'MasterRestore';
@@ -685,7 +688,7 @@ begin
     wbToolMode    := tmEdit;
     wbToolName    := 'Edit';
   end else begin
-    ShowMessage('Application name must contain Edit, View, LODGen, MasterUpdate, MasterRestore, setESM, clearESM, sortAndCleanMasters, CheckForITM, CheckForDR or CheckForErrors to select mode.');
+    ShowMessage('Application name must contain Edit, View, LODGen, OnamUpdate, MasterUpdate, MasterRestore, setESM, clearESM, sortAndCleanMasters, CheckForITM, CheckForDR or CheckForErrors to select mode.');
     Exit(False);
   end;
 
@@ -730,7 +733,7 @@ begin
     wbGameMode := gmTES5;
     wbAppName := 'TES5';
     wbGameName := 'Skyrim';
-    ToolModes := wbAlwaysMode + [tmTranslate];
+    ToolModes := wbAlwaysMode + [tmOnamUpdate];
     ToolSources := [tsPlugins, tsSaves];
   end
 
@@ -739,7 +742,7 @@ begin
     wbAppName := 'TES5VR';
     wbGameName := 'Skyrim';
     wbGameName2 := 'Skyrim VR';
-    ToolModes := wbAlwaysMode + [tmTranslate];
+    ToolModes := wbAlwaysMode + [tmOnamUpdate];
     ToolSources := [tsPlugins];
   end
 
@@ -748,7 +751,7 @@ begin
     wbAppName := 'SSE';
     wbGameName := 'Skyrim';
     wbGameName2 := 'Skyrim Special Edition';
-    ToolModes := wbAlwaysMode + [tmTranslate];
+    ToolModes := wbAlwaysMode + [tmOnamUpdate];
     ToolSources := [tsPlugins, tsSaves];
   end
 
@@ -758,7 +761,7 @@ begin
     wbGameName := 'Fallout4';
     wbArchiveExtension := '.ba2';
     wbLanguage := 'En';
-    ToolModes := wbAlwaysMode + [tmTranslate];
+    ToolModes := wbAlwaysMode;
     ToolSources := [tsPlugins, tsSaves];
   end
 
@@ -770,7 +773,7 @@ begin
     wbGameNameReg := 'Fallout 4 VR';
     wbLanguage := 'En';
     wbArchiveExtension := '.ba2';
-    ToolModes := wbAlwaysMode + [tmTranslate];
+    ToolModes := wbAlwaysMode;
     ToolSources := [tsPlugins];
   end
 
@@ -782,11 +785,11 @@ begin
     wbGameMasterEsm := 'SeventySix.esm';
     wbLanguage := 'En';
     wbArchiveExtension := '.ba2';
-    ToolModes := wbAlwaysMode + [tmTranslate];
+    ToolModes := wbAlwaysMode;
     ToolSources := [tsPlugins];
     VersionString.Title := 'EXPERIMENTAL';
   end
-  
+
   else begin
     ShowMessage('Application name must contain FNV, FO3, FO4, FO4VR, FO76, SSE, TES4, TES5 or TES5VR to select game.');
     Exit(False);
@@ -864,12 +867,16 @@ begin
       wbVWDAsQuestChildren := True;
       wbLoadBSAs := True; // localization won't work otherwise
       wbHideIgnored := False; // to show Form Version
+      wbAlwaysSaveOnam := True;
+      wbAlwaysSaveOnamForce := True;
     end;
     gmFO76: begin
       wbVWDInTemporary := True;
       wbVWDAsQuestChildren := True;
       wbLoadBSAs := True; // localization won't work otherwise
       wbHideIgnored := False; // to show Form Version
+      wbAlwaysSaveOnam := True;
+      wbAlwaysSaveOnamForce := True;
     end;
   else
     ShowMessage('Unknown GameMode');
@@ -1112,13 +1119,17 @@ begin
       wbLoadBSAs := True;
       wbBuildRefs := True;
     end;
-    tmMasterUpdate, tmESMify: begin
+    tmOnamUpdate, tmMasterUpdate, tmESMify: begin
       wbIKnowWhatImDoing := True;
       wbAllowInternalEdit := False;
       wbShowInternalEdit := False;
       wbLoadBSAs := False;
       wbBuildRefs := False;
       wbMasterUpdateFilterONAM := wbToolMode in [tmESMify];
+      if wbToolMode = tmOnamUpdate then begin
+        wbAlwaysSaveOnam := True;
+        wbAlwaysSaveOnamForce := True;
+      end;
     end;
     tmMasterRestore, tmESPify, tmCheckForDR, tmCheckForITM, tmCheckForErrors: begin
       wbIKnowWhatImDoing := True;
@@ -1136,6 +1147,9 @@ begin
       wbHideNeverShow := True;
     end;
   end;
+
+  if FindCmdLineSwitch('alwayssaveonam') then
+    wbAlwaysSaveOnam := True;
 
   if FindCmdLineSwitch('filteronam') then
     wbMasterUpdateFilterONAM := True

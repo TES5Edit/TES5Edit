@@ -172,6 +172,8 @@ var
   wbCheckNonCPNChars       : Boolean  = False;
   wbShowStringBytes        : Boolean  = False;
   wbResetModifiedOnSave    : Boolean  = True;
+  wbAlwaysSaveOnam         : Boolean  = False;
+  wbAlwaysSaveOnamForce    : Boolean  = False;
 
   wbGlobalModifedGeneration : UInt64;
 
@@ -1244,6 +1246,9 @@ type
 
     function GetNextObjectID: Cardinal;
     procedure SetNextObjectID(aObjectID: Cardinal);
+
+    function HasONAM: Boolean;
+    procedure MarkHeaderModified;
 
     function GetIsNotPlugin: Boolean;
     function GetHasNoFormID: Boolean;
@@ -3792,7 +3797,7 @@ type
   TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR, gmFO76);
   TwbGameModes  = set of TwbGameMode;
 
-  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
+  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
                     tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
                     tmCheckForErrors, tmCheckForITM, tmCheckForDR);
   TwbToolSource = (tsPlugins, tsSaves);
@@ -3811,12 +3816,12 @@ var
   wbToolName    : string;
   wbSourceName  : String;
   wbLanguage    : string;
-  wbAutoModes   : TwbSetOfMode = [ tmMasterUpdate, tmMasterRestore, tmLODgen, // Tool modes that run without user interaction until final status
+  wbAutoModes   : TwbSetOfMode = [ tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, // Tool modes that run without user interaction until final status
                     tmESMify, tmESPify, tmSortAndCleanMasters, tmScript,
                     tmCheckForErrors, tmCheckForITM, tmCheckForDR ];
   wbPluginModes : TwbSetOfMode = [ tmESMify, tmESPify, tmSortAndCleanMasters,
                                    tmCheckForErrors, tmCheckForITM, tmCheckForDR ];  // Auto modes that require a specific plugin to be provided.
-  wbAlwaysMode  : TwbSetOfMode = [ tmView, tmEdit, tmESMify, tmESPify, tmSortAndCleanMasters,
+  wbAlwaysMode  : TwbSetOfMode = [ tmView, tmEdit, tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
                     tmLODgen, tmScript, tmCheckForITM, tmCheckForDR, tmCheckForErrors ]; // Modes available to all decoded games
   wbSimplePluginsTxt : TwbGameModes = [gmFNV, gmFO3, gmTES3, gmTES4, gmTES5]; //plugins.txt contains only the active plugins
   wbOrderFromPluginsTxt : TwbGameModes = [gmTES5, gmTES5VR, gmSSE, gmFO4, gmFO4VR, gmFO76]; //load order given by order in plugins.txt
