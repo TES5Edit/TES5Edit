@@ -5,6 +5,7 @@
 * #634 - [FO4] Unknown Perk Entrypoint 157
 * #636 - Adding a script fragment to a Quest's VMAD record doesn't update the fragmentCount field
 * (found by developer) - saving `.esm` or `.esl` files without ESM flag for SSE stripped ONAM instead of writing it as required (the game treats files with these extension always as having ESM)
+* (found by developer) - `AddMasters()` can be called with names that are not valid module files
 
 ## [Very] Quick Show Conflicts, Quick [Auto] Clean, and Auto Game Link Sub Modes
 
