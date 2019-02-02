@@ -619,7 +619,10 @@ var
   ToolModes: TwbSetOfMode;
   ToolSources: TwbSetOfSource;
   i: Integer;
+  ExeName: string;
 begin
+  ExeName := ChangeFileExt(ExtractFileName(ParamStr(0)), '').ToLowerInvariant;
+
   if not wbIsAeroEnabled then
     wbThemesSupported := False;
 
@@ -935,33 +938,35 @@ begin
   if wbIKnowWhatImDoing and FindCmdLineSwitch('AllowMasterFilesEdit') then
     wbAllowMasterFilesEdit := True;
 
-  if FindCmdLineSwitch('quickshowconflicts') then
-    wbQuickShowConflicts := True;
+  if wbToolMode = tmEdit then begin
+    if FindCmdLineSwitch('quickshowconflicts') or ExeName.Contains('quickshowconflicts') or ExeName.Contains('qsc') then
+      wbQuickShowConflicts := True;
 
-  if FindCmdLineSwitch('veryquickshowconflicts') then begin
-    wbQuickShowConflicts := True;
-    wbVeryQuickShowConflicts := True;
-    wbAutoLoad := True;
-  end;
-
-  if FindCmdLineSwitch('autoload') then
-    wbAutoLoad := True;
-
-  if FindCmdLineSwitch('autogamelink') then begin
-    wbAutoLoad := True;
-    wbAutoGameLink := True;
-  end;
-
-  if wbAutoLoad then
-    if wbQuickShowConflicts then
+    if FindCmdLineSwitch('veryquickshowconflicts') or ExeName.Contains('veryquickshowconflicts') or ExeName.Contains('vqsc') then begin
+      wbQuickShowConflicts := True;
       wbVeryQuickShowConflicts := True;
+      wbAutoLoad := True;
+    end;
 
-  if FindCmdLineSwitch('quickclean') and (wbToolSource in [tsPlugins]) then
-    wbQuickClean := True;
+    if FindCmdLineSwitch('autoload') then
+      wbAutoLoad := True;
 
-  if FindCmdLineSwitch('quickautoclean') and (wbToolSource in [tsPlugins]) then begin
-    wbQuickClean := True;
-    wbQuickCleanAutoSave := wbQuickClean;
+    if FindCmdLineSwitch('autogamelink') or ExeName.Contains('autogamelink') or ExeName.Contains('agl') then begin
+      wbAutoLoad := True;
+      wbAutoGameLink := True;
+    end;
+
+    if wbAutoLoad then
+      if wbQuickShowConflicts then
+        wbVeryQuickShowConflicts := True;
+
+    if (FindCmdLineSwitch('quickclean') or ExeName.Contains('quickclean') or ExeName.Contains('qc')) and (wbToolSource in [tsPlugins]) then
+      wbQuickClean := True;
+
+    if (FindCmdLineSwitch('quickautoclean') or ExeName.Contains('quickautoclean') or ExeName.Contains('qac')) and (wbToolSource in [tsPlugins]) then begin
+      wbQuickClean := True;
+      wbQuickCleanAutoSave := wbQuickClean;
+    end;
   end;
 
   i := 0;
@@ -1161,6 +1166,17 @@ begin
   else if FindCmdLineSwitch('NoFixPersistence') then
     wbMasterUpdateFixPersistence := False;
 
+  if wbVeryQuickShowConflicts then
+    wbSubMode := 'Very Quick Show Conflicts'
+  else if wbQuickShowConflicts then
+    wbSubMode := 'Quick Show Conflicts'
+  else if wbQuickCleanAutoSave then
+    wbSubMode := 'Quick Auto Clean'
+  else if wbQuickClean then
+    wbSubMode := 'Quick Clean'
+  else if wbAutoGameLink then
+    wbSubMode := 'Auto Game Link';
+
   wbApplicationTitle := wbAppName + wbToolName + ' ' + VersionString;
   {$IFDEF LiteVersion}
   wbApplicationTitle := wbApplicationTitle + ' Lite';
@@ -1168,6 +1184,8 @@ begin
   {$IFDEF WIN64}
   wbApplicationTitle := wbApplicationTitle + ' x64';
   {$ENDIF WIN64}
+  if wbSubMode <> '' then
+    wbApplicationTitle := wbApplicationTitle + ' (' + wbSubMode + ')';
 
   if FindCmdLineSwitch('nobuildrefs') then
     wbBuildRefs := False;

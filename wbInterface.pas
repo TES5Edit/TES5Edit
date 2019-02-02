@@ -3808,6 +3808,7 @@ var
   wbGameMode    : TwbGameMode;
   wbToolMode    : TwbToolMode;
   wbToolSource  : TwbToolSource;
+  wbSubMode     : string;
   wbAppName     : string;
   wbGameName    : string; //name of the exe, usually also name of the game master
   wbGameMasterEsm : string; // name of the GameMaster.esm, usually wbGameName + csDotEsm, different for Fallout 76
