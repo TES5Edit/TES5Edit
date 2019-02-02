@@ -195,7 +195,7 @@ begin
   end;
 
   Container := aSource.Container;
-  Assert(Assigned(Container));
+  Assert(Assigned(Container), '[wbCopyElementToRecord] not Assigned(Container)');
   Target := wbCopyElementToRecord(Container, aMainRecord, False, False);
 
   if Assigned(Target) then
@@ -2099,8 +2099,8 @@ begin
   if not Assigned(aRecord) then
     Exit;
 
-  Assert(not Assigned(flRecordProcessing));
-  Assert(Length(flRecordFormIDs) < 1);
+  Assert(not Assigned(flRecordProcessing), '[AddMainRecord] Assigned(flRecordProcessing)');
+  Assert(Length(flRecordFormIDs) < 1, '[AddMainRecord] Length(flRecordFormIDs) >= 1');
 
   FormID := aRecord.FixedFormID;
 
@@ -2227,7 +2227,7 @@ var
     if not Assigned(MasterFiles) then begin
       Header.Assign(5, nil, False);
       MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
-      Assert(Assigned(MasterFiles));
+      Assert(Assigned(MasterFiles), '[AddMasters] not Assigned(MasterFiles)');
       IsNew := True;
     end;
 
@@ -2243,18 +2243,18 @@ var
           Break;
         end;
         if IsNew then begin
-          Assert(MasterFiles.ElementCount = 1);
+          Assert(MasterFiles.ElementCount = 1, '[AddMasters] MasterFiles.ElementCount <> 1');
           Rec := (MasterFiles[0] as IwbContainer).RecordBySignature['MAST'];
           IsNew := False;
         end else begin
           j := MasterFiles.ElementCount;
           MasterFiles.Assign(High(Integer), nil, False);
-          Assert(MasterFiles.ElementCount = Succ(j));
+          Assert(MasterFiles.ElementCount = Succ(j), '[AddMasters]');
           Rec := (MasterFiles[j] as IwbContainer).RecordBySignature['MAST'];
         end;
 
-        Assert(Assigned(Rec));
-        Assert(Rec.EditValue = '');
+        Assert(Assigned(Rec), '[AddMasters] not Assigned(Rec)');
+        Assert(Rec.EditValue = '', '[AddMasters] Rec.EditValue <> ''''');
 
         Rec.EditValue := aMasters[i];
         AddMaster(aMasters[i]);
@@ -2263,7 +2263,7 @@ var
     finally
       wbEndInternalEdit;
     end else
-      Assert(False);
+      Assert(False, '[AddMasters] not wbBeginInternalEdit');
   end;
 
 begin;
@@ -2330,7 +2330,7 @@ begin
       end;
         MemoryStream.Position := 0;
         MemoryStream.Read(flRecordsCount, SizeOf(flRecordsCount));
-        Assert(flRecordsCount=Length(flRecords));
+        Assert(flRecordsCount = Length(flRecords), '[TwbFile.BuildOrLoadRef] flRecordsCount <> Length(flRecords)');
         for i := 0 to Pred(flRecordsCount) do begin
           (flRecords[i] as IwbMainRecordInternal).LoadRefsFromStream(MemoryStream, fsIsGameMaster in flStates);
           wbTick;
@@ -2640,13 +2640,13 @@ begin
     flOldMasters := Copy(flMasters);
     try
       MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
-      Assert(Assigned(MasterFiles));
-      Assert(MasterFiles.ElementCount = Length(flMasters));
+      Assert(Assigned(MasterFiles), '[TwbFile.CleanMasters] not Assigned(MasterFiles)');
+      Assert(MasterFiles.ElementCount = Length(flMasters), '[TwbFile.CleanMasters] MasterFiles.ElementCount <> Length(flMasters)');
 
       for i := Low(flMasters) to High(flMasters) do begin
         Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
-        Assert(Assigned(Rec));
-        Assert(SameText(Rec.EditValue, flMasters[i].FileName));
+        Assert(Assigned(Rec), '[TwbFile.CleanMasters] not Assigned(Rec)');
+        Assert(SameText(Rec.EditValue, flMasters[i].FileName), '[TwbFile.CleanMasters] not SameText(Rec.EditValue, flMasters[i].FileName)');
         MasterFiles[i].SortOrder := i;
       end;
 
@@ -2683,17 +2683,17 @@ begin
         finally
           wbEndInternalEdit;
         end else
-          Assert(False);
+          Assert(False, '[TwbFile.CleanMasters] not wbBeginInternalEdit');
 
         SetModified(True);
         IncGeneration;
 
-        Assert(Length(flMasters) = MasterFiles.ElementCount);
+        Assert(Length(flMasters) = MasterFiles.ElementCount, '[TwbFile.CleanMasters] Length(flMasters) <> MasterFiles.ElementCount');
 
         for i := Low(flMasters) to High(flMasters) do begin
           Rec := (MasterFiles[i] as IwbContainer).RecordBySignature['MAST'];
-          Assert(Assigned(Rec));
-          Assert(SameText(Rec.EditValue, flMasters[i].FileName));
+          Assert(Assigned(Rec), '[TwbFile.CleanMasters] not Assigned(Rec)');
+          Assert(SameText(Rec.EditValue, flMasters[i].FileName), '[TwbFile.CleanMasters] not SameText(Rec.EditValue, flMasters[i].FileName)');
         end;
 
         MastersUpdated(Old, New, k, j);
@@ -13140,7 +13140,7 @@ begin
     CurrentPosition := aStream.Position;
     inherited;
     if CurrentPosition + srStruct.srsDataSize <> aStream.Position then
-      Assert(CurrentPosition + srStruct.srsDataSize = aStream.Position);
+      Assert(CurrentPosition + srStruct.srsDataSize = aStream.Position, 'CurrentPosition + srStruct.srsDataSize <> aStream.Position');
   end;
 
   Exclude(eStates, esUnsaved);
@@ -19082,7 +19082,7 @@ begin
 
   if (aStream.Position - OldPosition) <> ExpectedSize then
     if DoCheckSizeAfterWrite then
-      Assert(not DoCheckSizeAfterWrite);
+      Assert(False, '[TwbDataContainer.WriteToStreamInternal] (aStream.Position - OldPosition) <> ExpectedSize');
 
   if NeedReset then
     // didn't call inherited WriteToStreamInternal, need to reset all elements
