@@ -1,3 +1,9 @@
+# What's new in xEdit 4.0.2?
+
+## Fallout 76
+
+Definitions have been updated to account for increased form version in 1.0.4 and 1.0.5 patches.
+
 # What's new in xEdit 4.0.1?
 
 ## Bugfixes
