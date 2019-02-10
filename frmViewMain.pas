@@ -5961,6 +5961,8 @@ begin
           end;
         end;
         WindowState := TWindowState(Settings.ReadInteger(Name, 'WindowState', Integer(WindowState)));
+        if WindowState = wsMinimized then
+          WindowState := wsNormal;
         if WindowState = wsMaximized then
           Position := poDesigned;
       end;
