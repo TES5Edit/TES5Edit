@@ -1,5 +1,11 @@
 # What's new in xEdit 4.0.2?
 
+## Ko-Fi
+
+A number of users asked for a way to support xEdit development without using Patreon and/or PayPal.
+
+It is now possible to support xEdit development with both one time and monthly donations via Ko-Fi, charged directly to a credit card using stripe.com (or via PayPal) in AU$.
+
 ## Bugfixes
 
 * #634 - [FO4] Unknown Perk Entrypoint 157
@@ -76,6 +82,12 @@ It also fixes some issues where certain `.bsa` files (e.g. extra voices when lan
 ## Expert Options
 
 Some Options have been moved to a new Experts tab which is only visible if you Know What You Are Doing.
+
+## Shrinking SpeedButtons
+
+On the "UI Settings" tab, a new "Shrink SpeedButtons in the top right corner of the main form (requires restart)" Option has been added.
+
+Selecting this option will remove the captions from the Help / NexusMods / GitHub / Discord / Patreon / Ko-Fi / PayPal buttons.
 
 # What's new in xEdit 4.0.1?
 

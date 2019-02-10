@@ -408,6 +408,7 @@ type
     bnGitHub: TSpeedButton;
     bnDiscord: TSpeedButton;
     bnPatreon: TSpeedButton;
+    bnKoFi: TSpeedButton;
     bnPayPal: TSpeedButton;
     jbhPatreon: TJvBalloonHint;
     jbhGitHub: TJvBalloonHint;
@@ -667,6 +668,7 @@ type
     procedure bnGitHubClick(Sender: TObject);
     procedure bnDiscordClick(Sender: TObject);
     procedure bnPatreonClick(Sender: TObject);
+    procedure bnKoFiClick(Sender: TObject);
     procedure bnPayPalClick(Sender: TObject);
     procedure tmrPendingSetActiveTimer(Sender: TObject);
     procedure bnLegendClick(Sender: TObject);
@@ -696,6 +698,8 @@ type
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
     procedure SetSaveInterval;
+
+    procedure ShrinkButtons;
   protected
     BackHistory: IInterfaceList;
     ForwardHistory: IInterfaceList;
@@ -5116,6 +5120,7 @@ begin
   wbAlignArrayElements := Settings.ReadBool('Options', 'AlignArrayElements', wbAlignArrayElements);
   wbManualCleaningHide := Settings.ReadBool('Options', 'ManualCleaningHide', wbManualCleaningHide);
   wbManualCleaningAllow := Settings.ReadBool('Options', 'ManualCleaningAllow', wbManualCleaningAllow);
+  wbShrinkButtons := Settings.ReadBool('Options', 'ShrinkButtons', wbShrinkButtons);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
   wbUDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
@@ -6026,8 +6031,12 @@ begin
       ColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', ColumnWidth);
       RowHeight := Settings.ReadInteger('Options', 'RowHeight', RowHeight);
       SetDefaultNodeHeight(Trunc(RowHeight * (GetCurrentPPIScreen / PixelsPerInch)));
+      wbShrinkButtons := Settings.ReadBool('Options', 'ShrinkButtons', wbShrinkButtons);
     end;
   except end;
+
+  if wbShrinkButtons then
+    ShrinkButtons;
 
   if wbToolMode in wbAutoModes then begin
     mmoMessages.Parent := Self;
@@ -7928,6 +7937,22 @@ begin
   if Assigned(Settings) then begin
     Settings.WriteInteger('Patreon', 'SnoozeCounter', 30);
     Settings.WriteInteger('Patreon', 'SnoozeDate', Trunc(Now));
+    Settings.UpdateFile;
+  end;
+end;
+
+var
+  LastKoFiClick: TDateTime;
+
+procedure TfrmMain.bnKoFiClick(Sender: TObject);
+begin
+  if Now - LastKoFiClick > 1/24/60/60 then begin
+    ShellExecute(Handle, 'open', PChar(wbKoFiUrl), '', '', SW_SHOWNORMAL);
+    LastKoFiClick := Now;
+  end;
+  if Assigned(Settings) then begin
+    Settings.WriteInteger('KoFi', 'SnoozeCounter', 30);
+    Settings.WriteInteger('KoFi', 'SnoozeDate', Trunc(Now));
     Settings.UpdateFile;
   end;
 end;
@@ -12998,6 +13023,7 @@ begin
     cbAlignArrayElements.Checked := wbAlignArrayElements;
     cbManualCleaningHide.Checked := wbManualCleaningHide;
     cbManualCleaningAllow.Checked := wbManualCleaningAllow;
+    cbShrinkButtons.Checked := wbShrinkButtons;
     edColumnWidth.Text := IntToStr(ColumnWidth);
     edRowHeight.Text := IntToStr(RowHeight);
     cbShowUnsavedHint.Checked := ShowUnsavedHint;
@@ -13052,6 +13078,7 @@ begin
     wbAlignArrayElements := cbAlignArrayElements.Checked;
     wbManualCleaningHide := cbManualCleaningHide.Checked;
     wbManualCleaningAllow := cbManualCleaningAllow.Checked;
+    wbShrinkButtons := cbShrinkButtons.Checked;
     ColumnWidth := StrToIntDef(edColumnWidth.Text, ColumnWidth);
     RowHeight := StrToIntDef(edRowHeight.Text, RowHeight);
     SetDefaultNodeHeight(Trunc(RowHeight * (GetCurrentPPIScreen / PixelsPerInch)));
@@ -13103,6 +13130,7 @@ begin
     Settings.WriteBool('Options', 'AlignArrayElements', wbAlignArrayElements);
     Settings.WriteBool('Options', 'ManualCleaningHide', wbManualCleaningHide);
     Settings.WriteBool('Options', 'ManualCleaningAllow', wbManualCleaningAllow);
+    Settings.WriteBool('Options', 'ShrinkButtons', wbShrinkButtons);
     Settings.WriteInteger('Options', 'ColumnWidth', ColumnWidth);
     Settings.WriteInteger('Options', 'RowHeight', RowHeight);
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
@@ -15422,6 +15450,21 @@ begin
       Free;
     end;
 
+end;
+
+procedure TfrmMain.ShrinkButtons;
+var
+  i: Integer;
+begin
+  with pnlTop do
+    for i := Pred(ControlCount) downto 0 do
+      if Controls[i] is TSpeedButton then
+        with TSpeedButton(Controls[i]) do
+          if Tag = 0 then begin
+            Hint := Caption;
+            Caption := '';
+            Width := (Height - Glyph.Height) + Glyph.Width;
+          end;
 end;
 
 procedure TfrmMain.splElementsMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
