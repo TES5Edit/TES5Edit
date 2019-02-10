@@ -4077,6 +4077,7 @@ var
   NodeData        : PNavNodeData;
   FocusedElements : TDynElements;
   i               : Integer;
+  _File           : IwbFile;
 begin
   Result := False;
   if not (toAutoFreeOnCollapse in vstNav.TreeOptions.AutoOptions) then
@@ -4126,7 +4127,13 @@ begin
            Assigned(Container) and (Container.ElementGeneration <> ContainerGen) then begin
 
           vstNavReInit := True;
-          vstNav.ReinitNode(Node, True);
+          _File := nil;
+          if Assigned(Element) then
+            _File := Element._File
+          else
+            _File := Container._File;
+          if _File.FileStates * [fsIsGameMaster, fsIsHardcoded] = [] then
+            vstNav.ReinitNode(Node, True);
         end;
       end;
 
