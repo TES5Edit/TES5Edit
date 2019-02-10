@@ -5851,7 +5851,7 @@ begin
         {0x0040} 'Non-Playable',
         {0x0080} 'Heavy'
       ], True)),
-      wbByteArray('Unused')
+      wbByteArray('Unused', 3)
     ], cpNormal, True);
 
   wbRecord(ARMO, 'Armor', [
