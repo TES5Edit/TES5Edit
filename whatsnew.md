@@ -13,6 +13,12 @@
 * (found by developer) - The navigation treeview unnecessarily checks nodes of them main game masters for changes
 * (found by developer) - [TES5/SSE] Words of Power in SHOU should not be alignable
 
+## Manual Cleaning functions are deprecated
+
+Manual Cleaning functions ('Apply Filter for Cleaning', 'Undelete and Disable References', and 'Remove "Identical to Master" records' are considered obsolete with the introduction of 'Quick Auto Clean' mode and will now only show a message explaining this.
+
+More information about Quick Auto Clean can be found in this What's New document (in multiple places below, use the search function).
+
 ## [Very] Quick Show Conflicts, Quick [Auto] Clean, and Auto Game Link Sub Modes
 
 These sub modes of Edit mode can now be accessed using the name of the exe in addition to use of parameters.
@@ -66,6 +72,10 @@ xEdit specific code for `.bsa`/`.ba2` has been completely replaced with the code
 This change adds support for TES3 `.bsa` archives as well as support for for additional texture formats for FO4 and FO76 texture `.ba2` archives.
 
 It also fixes some issues where certain `.bsa` files (e.g. extra voices when language in Steam has been set to Polish for TES5) could result in an endless loop while starting xEdit.
+
+## Expert Options
+
+Some Options have been moved to a new Experts tab which is only visible if you Know What You Are Doing.
 
 # What's new in xEdit 4.0.1?
 
@@ -1521,3 +1531,9 @@ This version contains no major new functionality, but a number of bugfixes. Upda
 - Mod Groups (more about that later)
 - Settings (records to skip, mod groups, filter) are loaded/saved into a .tes4viewsettings file with the same path and name as the plugins.txt (or the plugin list passed on the command line)
 - Possible range check error when loading a file with errors should be gone
+
+# You Know What You Are Doing
+
+You've read the whole What's New Document. Great! Hopefully this means that you know what you are doing now.
+
+If you start xEdit with a `-IKnowWhatImDoing` parameter, it will now longer show the "Edit Warning" dialog and unhide a few hidden Options and Functions.
