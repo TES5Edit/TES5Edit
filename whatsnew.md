@@ -7,6 +7,7 @@
 * (reported on Discord) - xEdit remembers (unwantedly) if the main form was minimized when it was last closes and restores that state
 * (reported on Discord) - When the same file is saved twice within the same second, it results in an error while renaming .save files on shutdown
 * (reported on Discord) - [FNV] Unused at the end of BMDT is wrongly defined as variable size (should always be 3 bytes)
+* (reported on Discord) - Collapsing of record storage (used when adding/removing/sorting masters) can under certain circumstances result in an assert while trying to save the file later
 * (found by developer) - Saving `.esm` or `.esl` files without ESM flag for SSE stripped ONAM instead of writing it as required (the game treats files with these extension always as having ESM)
 * (found by developer) - `AddMasters()` can be called with names that are not valid module files
 * (found by developer) - The navigation treeview unnecessarily checks nodes of them main game masters for changes

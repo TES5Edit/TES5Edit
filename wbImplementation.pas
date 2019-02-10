@@ -814,7 +814,8 @@ type
     dcfDontCompare,
     dcfDontMerge,
     dcfDontSave,
-    dcfStorageInvalid
+    dcfStorageInvalid,
+    dcfBasePtrInvalid
   );
 
   TwbDataContainerFlags = set of TwbDataContainerFlag;
@@ -12823,6 +12824,8 @@ begin
   Assert(srStruct.srsDataSize = NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr));
 
   dcBasePtr := BasePtr;
+  if dcfBasePtrInvalid in dcFlags then
+    Exclude(dcFlags, dcfBasePtrInvalid);
   dcEndPtr := dcDataEndPtr;
 end;
 
@@ -12925,6 +12928,8 @@ begin
     FreeMem(dcBasePtr, SizeNeeded);
 
   dcBasePtr := BasePtr;
+  if dcfBasePtrInvalid in dcFlags then
+    Exclude(dcFlags, dcfBasePtrInvalid);
   dcEndPtr := dcDataEndPtr;
   lDataSize := NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr);
   if (lDataSize <= High(Word)) or (wbGameMode = gmTES3) then
@@ -13128,9 +13133,12 @@ var
   SubHeader         : TwbSubRecordHeaderStruct;
   SelfRef           : IwbContainerElementRef;
 begin
-  if (esModified in eStates) or wbTestWrite or (srStruct.srsDataSize = 0) then begin
+  if (esModified in eStates) or (dcfBasePtrInvalid in dcFlags) or wbTestWrite or (srStruct.srsDataSize = 0) then begin
     SelfRef := Self as IwbContainerElementRef;
     DoInit(True);
+
+    if (aResetModified = rmYes) and (dcfStorageInvalid in dcFlags) then
+      UpdateStorageFromElements;
 
     BigDataSize := GetDataSize;
     if (BigDataSize > High(Word)) and (wbGameMode <> gmTES3) then begin
@@ -13152,6 +13160,10 @@ begin
     if BigDataSize <> NewPosition - CurrentPosition then
       Assert(BigDataSize = NewPosition - CurrentPosition );
 
+    if aResetModified = rmYes then begin
+      Assert(not (dcfStorageInvalid in dcFlags), '[TwbSubRecord.WriteToStreamInternal] dcfStorageInvalid in dcFlags');
+      Include(dcFlags, dcfBasePtrInvalid);
+    end;
   end else begin
     aStream.WriteBuffer(dcBasePtr^, TwbSubRecordHeaderStruct.SizeOf );
     CurrentPosition := aStream.Position;
