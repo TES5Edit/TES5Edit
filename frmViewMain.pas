@@ -3056,7 +3056,7 @@ end;
 procedure TfrmMain.mniNavCleaningObsoleteClick(Sender: TObject);
 begin
   ShowMessage('This function has been made obsolete by the introduction of Quick Auto Clean mode.' + CRLF + CRLF +
-    'If you have used this function because you were following a guide, please be aware that the guide is outdated and does no longer apply.' + CRLF + CRLF +
+    'If you have used this function because you were following a guide, please be aware that the guide is outdated and no longer applies.' + CRLF + CRLF +
     'For more information about Quick Auto Clean mode, please check the What''s New document or the online help (press the help button in the top right corner of the main form).' + CRLF + CRLF +
     'You can hide this function by checking the "Hide Manual Cleaning functions" Option.');
 end;
