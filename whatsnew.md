@@ -10,6 +10,7 @@
 * (found by developer) - Saving `.esm` or `.esl` files without ESM flag for SSE stripped ONAM instead of writing it as required (the game treats files with these extension always as having ESM)
 * (found by developer) - `AddMasters()` can be called with names that are not valid module files
 * (found by developer) - The navigation treeview unnecessarily checks nodes of them main game masters for changes
+* (found by developer) - [TES5/SSE] Words of Power in SHOU should not be alignable
 
 ## [Very] Quick Show Conflicts, Quick [Auto] Clean, and Auto Game Link Sub Modes
 
