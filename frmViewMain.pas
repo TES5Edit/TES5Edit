@@ -14440,6 +14440,13 @@ begin
 
               try
                 ForceDirectories(ExtractFilePath(wbDataPath + s));
+                if NeedsRename then begin
+                  j := 0;
+                  while FileExists(wbDataPath + s) do begin
+                    Inc(j);
+                    s := u + t + '_' + j.ToString;
+                  end;
+                end;
                 FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024*1024);
                 try
                   PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
@@ -14469,8 +14476,14 @@ begin
               s := CheckListBox1.Items[i];
               u := s;
               NeedsRename := FileExists(wbDataPath + CheckListBox1.Items[i]);
-              if NeedsRename then
+              if NeedsRename then begin
                 s := s + t;
+                j := 0;
+                while FileExists(wbDataPath + s) do begin
+                  Inc(j);
+                  s := u + t + '_' + j.ToString;
+                end;
+              end;
 
               CRC := _File.CRC32;
               FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024 * 1024);
