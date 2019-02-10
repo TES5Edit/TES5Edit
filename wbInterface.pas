@@ -174,6 +174,8 @@ var
   wbResetModifiedOnSave    : Boolean  = True;
   wbAlwaysSaveOnam         : Boolean  = False;
   wbAlwaysSaveOnamForce    : Boolean  = False;
+  wbManualCleaningAllow    : Boolean  = False;
+  wbManualCleaningHide     : Boolean  = False;
 
   wbGlobalModifedGeneration : UInt64;
 

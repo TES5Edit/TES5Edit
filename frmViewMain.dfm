@@ -2059,6 +2059,10 @@ object frmMain: TfrmMain
       Caption = 'Apply Filter for Cleaning'
       OnClick = mniNavFilterForCleaningClick
     end
+    object mniNavFilterForCleaningObsolete: TMenuItem
+      Caption = 'Apply Filter for Cleaning'
+      OnClick = mniNavCleaningObsoleteClick
+    end
     object mniNavFilterConflicts: TMenuItem
       Caption = 'Apply Filter to show Conflicts'
       OnClick = mniNavFilterConflictsClick
@@ -2073,6 +2077,10 @@ object frmMain: TfrmMain
     object mniNavFilterForCleaningSelected: TMenuItem
       Caption = 'Apply Filter for Cleaning (selected files only)'
       OnClick = mniNavFilterForCleaningClick
+    end
+    object mniNavFilterForCleaningSelectedObsolete: TMenuItem
+      Caption = 'Apply Filter for Cleaning (selected files only)'
+      OnClick = mniNavCleaningObsoleteClick
     end
     object mniNavFilterConflictsSelected: TMenuItem
       Caption = 'Apply Filter to show Conflicts (selected files only)'
@@ -2126,9 +2134,17 @@ object frmMain: TfrmMain
       Caption = 'Undelete and Disable References'
       OnClick = mniNavUndeleteAndDisableReferencesClick
     end
+    object mniNavUndeleteAndDisableReferencesObsolete: TMenuItem
+      Caption = 'Undelete and Disable References'
+      OnClick = mniNavCleaningObsoleteClick
+    end
     object mniNavRemoveIdenticalToMaster: TMenuItem
       Caption = 'Remove "Identical to Master" records'
       OnClick = mniNavRemoveIdenticalToMasterClick
+    end
+    object mniNavRemoveIdenticalToMasterObsolete: TMenuItem
+      Caption = 'Remove "Identical to Master" records'
+      OnClick = mniNavCleaningObsoleteClick
     end
     object mniNavLOManagersDirtyInfo: TMenuItem
       Caption = 'BOSS/LOOT Cleaning Report'

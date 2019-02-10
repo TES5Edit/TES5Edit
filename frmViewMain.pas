@@ -294,6 +294,7 @@ type
     mniRefByNotVWD: TMenuItem;
     mniRefByVWD: TMenuItem;
     mniNavRemoveIdenticalToMaster: TMenuItem;
+    mniNavRemoveIdenticalToMasterObsolete: TMenuItem;
     N14: TMenuItem;
     mniRefByCopyOverrideInto: TMenuItem;
     mniRefByCopyOverrideIntoWithOverwriting: TMenuItem;
@@ -324,6 +325,7 @@ type
     mniNavCopyAsSpawnRateOverride: TMenuItem;
     pmuNavAdd: TPopupMenu;
     mniNavUndeleteAndDisableReferences: TMenuItem;
+    mniNavUndeleteAndDisableReferencesObsolete: TMenuItem;
     mniNavMarkModified: TMenuItem;
     mniNavCreateMergedPatch: TMenuItem;
     mniNavCopyIdle: TMenuItem;
@@ -338,6 +340,8 @@ type
     mniMainLocalizationLanguage: TMenuItem;
     mniNavFilterForCleaning: TMenuItem;
     mniNavFilterForCleaningSelected: TMenuItem;
+    mniNavFilterForCleaningObsolete: TMenuItem;
+    mniNavFilterForCleaningSelectedObsolete: TMenuItem;
     mniNavCreateSEQFile: TMenuItem;
     mniNavApplyScript: TMenuItem;
     mniNavOptions: TMenuItem;
@@ -610,6 +614,7 @@ type
     procedure mniNavLocalizationSwitchClick(Sender: TObject);
     procedure mniMainLocalizationLanguageClick(Sender: TObject);
     procedure mniNavFilterForCleaningClick(Sender: TObject);
+    procedure mniNavCleaningObsoleteClick(Sender: TObject);
     procedure mniNavFilterForOnlyOneClick(Sender: TObject);
     procedure mniNavCreateSEQFileClick(Sender: TObject);
     procedure vstNavExpanding(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -3044,6 +3049,14 @@ begin
   end);
 end;
 
+procedure TfrmMain.mniNavCleaningObsoleteClick(Sender: TObject);
+begin
+  ShowMessage('This function has been made obsolete by the introduction of Quick Auto Clean mode.' + CRLF + CRLF +
+    'If you have used this function because you were following a guide, please be aware that the guide is outdated and does no longer apply.' + CRLF + CRLF +
+    'For more information about Quick Auto Clean mode, please check the What''s New document or the online help (press the help button in the top right corner of the main form).' + CRLF + CRLF +
+    'You can hide this function by checking the "Hide Manual Cleaning functions" Option.');
+end;
+
 procedure TfrmMain.mniNavCleanMastersClick(Sender: TObject);
 begin
   DoSetActiveRecord(nil);
@@ -5101,6 +5114,8 @@ begin
   wbResetModifiedOnSave := Settings.ReadBool('Options', 'ResetModifiedOnSave', wbResetModifiedOnSave);
   wbAlwaysSaveOnam := Settings.ReadBool('Options', 'AlwaysSaveOnam', wbAlwaysSaveOnam) or wbAlwaysSaveOnamForce;
   wbAlignArrayElements := Settings.ReadBool('Options', 'AlignArrayElements', wbAlignArrayElements);
+  wbManualCleaningHide := Settings.ReadBool('Options', 'ManualCleaningHide', wbManualCleaningHide);
+  wbManualCleaningAllow := Settings.ReadBool('Options', 'ManualCleaningAllow', wbManualCleaningAllow);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
   wbUDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
@@ -12981,6 +12996,8 @@ begin
     if wbAlwaysSaveOnamForce then
       cbAlwaysSaveOnam.Enabled := False;
     cbAlignArrayElements.Checked := wbAlignArrayElements;
+    cbManualCleaningHide.Checked := wbManualCleaningHide;
+    cbManualCleaningAllow.Checked := wbManualCleaningAllow;
     edColumnWidth.Text := IntToStr(ColumnWidth);
     edRowHeight.Text := IntToStr(RowHeight);
     cbShowUnsavedHint.Checked := ShowUnsavedHint;
@@ -13033,6 +13050,8 @@ begin
     wbResetModifiedOnSave := cbResetModifiedOnSave.Checked;
     wbAlwaysSaveOnam := cbAlwaysSaveOnam.Checked or wbAlwaysSaveOnamForce;
     wbAlignArrayElements := cbAlignArrayElements.Checked;
+    wbManualCleaningHide := cbManualCleaningHide.Checked;
+    wbManualCleaningAllow := cbManualCleaningAllow.Checked;
     ColumnWidth := StrToIntDef(edColumnWidth.Text, ColumnWidth);
     RowHeight := StrToIntDef(edRowHeight.Text, RowHeight);
     SetDefaultNodeHeight(Trunc(RowHeight * (GetCurrentPPIScreen / PixelsPerInch)));
@@ -13082,6 +13101,8 @@ begin
     Settings.WriteBool('Options', 'ResetModifiedOnSave', wbResetModifiedOnSave);
     Settings.WriteBool('Options', 'AlwaysSaveOnam', wbAlwaysSaveOnam or wbAlwaysSaveOnamForce);
     Settings.WriteBool('Options', 'AlignArrayElements', wbAlignArrayElements);
+    Settings.WriteBool('Options', 'ManualCleaningHide', wbManualCleaningHide);
+    Settings.WriteBool('Options', 'ManualCleaningAllow', wbManualCleaningAllow);
     Settings.WriteInteger('Options', 'ColumnWidth', ColumnWidth);
     Settings.WriteInteger('Options', 'RowHeight', RowHeight);
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
@@ -13658,13 +13679,31 @@ begin
   mniNavCheckForCircularLeveledLists.Visible :=
     mniNavCheckForErrors.Visible;
 
-
-
   mniNavSetVWDAuto.Visible := mniNavCheckForErrors.Visible and (wbGameMode = gmTES4);
   mniNavSetVWDAutoInto.Visible := mniNavCheckForErrors.Visible and (wbGameMode = gmTES4);
-  mniNavRemoveIdenticalToMaster.Visible := mniNavCheckForErrors.Visible;
-  mniNavUndeleteAndDisableReferences.Visible := mniNavCheckForErrors.Visible;
   mniNavLOManagersDirtyInfo.Visible := mniNavCheckForErrors.Visible and (Length(LOOTPluginInfos) <> 0);
+
+  if wbManualCleaningAllow then begin
+    mniNavFilterForCleaning.Visible := True;
+    mniNavFilterForCleaningSelected.Visible := True;
+    mniNavRemoveIdenticalToMaster.Visible := mniNavCheckForErrors.Visible;
+    mniNavUndeleteAndDisableReferences.Visible := mniNavCheckForErrors.Visible;
+
+    mniNavFilterForCleaningObsolete.Visible := False;
+    mniNavFilterForCleaningSelectedObsolete.Visible := False;
+    mniNavRemoveIdenticalToMasterObsolete.Visible := False;
+    mniNavUndeleteAndDisableReferencesObsolete.Visible := False;
+  end else begin
+    mniNavFilterForCleaning.Visible := False;
+    mniNavFilterForCleaningSelected.Visible := False;
+    mniNavRemoveIdenticalToMaster.Visible := False;
+    mniNavUndeleteAndDisableReferences.Visible := False;
+
+    mniNavFilterForCleaningObsolete.Visible := not wbManualCleaningHide;
+    mniNavFilterForCleaningSelectedObsolete.Visible := not wbManualCleaningHide;
+    mniNavRemoveIdenticalToMasterObsolete.Visible := (not wbManualCleaningHide) and mniNavCheckForErrors.Visible;
+    mniNavUndeleteAndDisableReferencesObsolete.Visible := (not wbManualCleaningHide) and mniNavCheckForErrors.Visible;
+  end;
 
   mniNavRemove.Visible :=
     not wbTranslationMode and
