@@ -10211,7 +10211,7 @@ begin
         wbFormIDCk('Spell', [SPEL, NULL]),
         wbFloat('Recovery Time')
       ])
-    )
+    ).IncludeFlag(dfNotAlignable)
   ]);
 
   wbRecord(EQUP, 'Equip Type', [
