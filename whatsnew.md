@@ -6,6 +6,8 @@ A number of users asked for a way to support xEdit development without using Pat
 
 It is now possible to support xEdit development with both one time and monthly donations via Ko-Fi, charged directly to a credit card using stripe.com (or via PayPal) in AU$.
 
+The Ko-Fi Page is linked via the Ko-Fi button in the top right corner of the main form.
+
 ## Bugfixes
 
 * #634 - [FO4] Unknown Perk Entrypoint 157
@@ -53,7 +55,7 @@ The Sort INFO option has been split into "Sort INFO" (default to True) and "Fill
 
 The navigation treeview now by default shows the INFO children of DIAL records in the order derived from their PNAM values (the same order that they are also displayed in CK and the order in which they are processed by the game) instead of sorted by FormID. This can be changed using the context menu on the FormID column header of the navigations treeview.
 
-New parameters have been added to control these two options (overridding whatever has been set in the options when used): `-SortINFO`, `-NoSortINFO`, `-FillPNAM`, and `-NoFillPNAM`.
+New parameters have been added to control these two options (overriding whatever has been set in the options when used): `-SortINFO`, `-NoSortINFO`, `-FillPNAM`, and `-NoFillPNAM`.
 
 ## ONAMUpdate Mode
 
@@ -71,7 +73,7 @@ When running ONAMUpdate mode, this option will be turned on and is saved in the 
 
 The option can be forced on using the `-AlwaysSaveONAM` parameter.
 
-## `.bsa`/`.ba2` Handling
+## .bsa/.ba2 Handling
 
 xEdit specific code for `.bsa`/`.ba2` has been completely replaced with the code from `BSArch`.
 
