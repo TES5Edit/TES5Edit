@@ -37,7 +37,7 @@ The navigation treeview now by default shows the INFO children of DIAL records i
 
 New parameters have been added to control these two options (overridding whatever has been set in the options when used): `-SortINFO`, `-NoSortINFO`, `-FillPNAM`, and `-NoFillPNAM`.
 
-# ONAMUpdate Mode
+## ONAMUpdate Mode
 
 ONAM is the signature of a subrecord in the file header that's used to list all overridden records in temporary CELL children groups in the file. It is required for ESM flagged files to allow support for loading temporary records on-demand by the game engine. xEdit already automatically correctly writes ONAM for ESM flagged files.
 
@@ -52,6 +52,14 @@ A new Option "Always save ONAM" has been added (defaults to true). When this Opt
 When running ONAMUpdate mode, this option will be turned on and is saved in the settings file.
 
 The option can be forced on using the `-AlwaysSaveONAM` parameter.
+
+## `.bsa`/`.ba2` Handling
+
+xEdit specific code for `.bsa`/`.ba2` has been completely replaced with the code from `BSArch`.
+
+This change adds support for TES3 `.bsa` archives as well as support for for additional texture formats for FO4 and FO76 texture `.ba2` archives.
+
+It also fixes some issues where certain `.bsa` files (e.g. extra voices when language in Steam has been set to Polish for TES5) could result in an endless loop while starting xEdit.
 
 # What's new in xEdit 4.0.1?
 
