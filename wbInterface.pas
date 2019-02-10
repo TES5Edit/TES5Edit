@@ -176,6 +176,7 @@ var
   wbAlwaysSaveOnamForce    : Boolean  = False;
   wbManualCleaningAllow    : Boolean  = False;
   wbManualCleaningHide     : Boolean  = False;
+  wbShrinkButtons          : Boolean  = False;
 
   wbGlobalModifedGeneration : UInt64;
 
@@ -270,6 +271,7 @@ var
   wbGitHubUrl: string = 'https://github.com/TES5Edit/TES5Edit/releases';
   wbDiscordUrl: string = 'https://discord.gg/5t8RnNQ';
   wbPatreonUrl: string = 'https://www.patreon.com/ElminsterAU';
+  wbKoFiUrl: string = 'https://www.ko-fi.com/ElminsterAU';
   wbPayPalUrl: string = 'https://paypal.me/ElminsterAU';
 
 {$IFDEF USE_CODESITE}
