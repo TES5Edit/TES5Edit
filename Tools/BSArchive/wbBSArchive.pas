@@ -189,6 +189,7 @@ type
   PDDSHeaderDX10 = ^TDDSHeaderDX10;
 
   TwbBSArchive = class;
+
   TBSArchiveType = (baNone, baTES3, baTES4, baFO3, baSSE, baFO4, baFO4dds);
   TBSArchiveState = (stReading, stWriting);
   TBSArchiveStates = set of TBSArchiveState;
@@ -325,7 +326,6 @@ type
     function FindFileRecordTES3(const aFileName: string; var aFileIdx: Integer): Boolean;
     function FindFileRecordTES4(const aFileName: string; var aFolderIdx, aFileIdx: Integer): Boolean;
     function FindFileRecordFO4(const aFileName: string; var aFileIdx: Integer): Boolean;
-    function FindFileRecord(const aFileName: string): Pointer;
     function GetDDSMipChunkNum(var aDDSInfo: TDDSInfo): Integer;
     function CalcDataHash(aData: Pointer; aLen: Cardinal): TPackedDataHash;
     function FindPackedData(aSize: Cardinal; aHash: TPackedDataHash; aFileRecord: Pointer): Boolean;
@@ -341,12 +341,15 @@ type
     procedure Save;
     procedure AddFile(const aRootDir, aFileName: string); overload;
     procedure AddFile(const aFileName: string; const aData: TBytes); overload;
+    function FindFileRecord(const aFileName: string): Pointer;
     function ExtractFileData(aFileRecord: Pointer): TBytes; overload;
     function ExtractFileData(const aFileName: string): TBytes; overload;
     procedure ExtractFileToStream(const aFileName: string; aStream: TStream);
     procedure ExtractFile(const aFileName, aSaveAs: string);
     procedure IterateFiles(aProc: TBSFileIterationProc);
     function FileExists(const aFileName: string): Boolean;
+    procedure ResourceList(const aList: TStrings; aFolder: string = '');
+    procedure ResolveHash(const aHash: UInt64; var Results: TArray<string>);
     //procedure IterateFolders(aProc: TBSFileIterationProc);
     procedure Close;
 
@@ -367,7 +370,6 @@ function SplitNameExt(const aFileName: string; var Name, Ext: string): Integer;
 function CreateHashTES3(const aFileName: string): UInt64;
 function CreateHashTES4(const aFileName: string): UInt64; overload;
 function CreateHashFO4(const aFileName: string): Cardinal;
-
 
 implementation
 
@@ -516,14 +518,12 @@ const
     $b40bbe37, $c30c8ea1, $5a05df1b, $2d02ef8d
   );
 
-
 type
   TPreallocatedMemoryStream = class(TCustomMemoryStream)
   public
     constructor Create(Ptr: Pointer; Size: Int64);
     function Write(const Buffer; Count: Longint): Longint; override;
   end;
-
 
 constructor TPreallocatedMemoryStream.Create(Ptr: Pointer; Size: Int64);
 begin
@@ -794,7 +794,7 @@ var
   i, j: integer;
 begin
   if SplitDirName(aFileName, fdir, fname) = 0 then
-    raise Exception.Create('File is missing the folder part: ' + aFileName);
+    Exit(False);
 
   Result := False;
   h := CreateHashTES4(fdir, '');
@@ -831,7 +831,7 @@ var
   i: integer;
 begin
   if SplitDirName(aFileName, fdir, fname) = 0 then
-    raise Exception.Create('File is missing the folder part: ' + aFileName);
+    Exit(False);
 
   SplitNameExt(fname, name, ext);
   hdir := CreateHashFO4(fdir);
@@ -2298,6 +2298,82 @@ begin
     fPackedDataCount := 0;
   end;
 end;
+
+procedure TwbBSArchive.ResourceList(const aList: TStrings; aFolder: string = '');
+var
+  Folder : string;
+  i, j   : Integer;
+begin
+  if not Assigned(aList) then
+    Exit;
+
+  Folder := ExcludeTrailingPathDelimiter(aFolder);
+  case fType of
+    baTES3:
+      for i := Low(fFilesTES3) to High(fFilesTES3) do
+        with fFilesTES3[i] do
+          if (Folder = '') or Name.StartsWith(Folder, True) then
+            aList.Add(Name);
+    baTES4, baFO3, baSSE:
+      for i := Low(fFoldersTES4) to High(fFoldersTES4) do
+        with fFoldersTES4[i] do begin
+          if (Folder = '') or Name.StartsWith(Folder, True) then
+            for j := Low(Files) to High(Files) do
+              aList.Add(Name + '\' + Files[j].Name);
+        end;
+    baFO4, baFO4dds:
+      for i := Low(fFilesFO4) to High(fFilesFO4) do
+        with fFilesFO4[i] do
+          if (Folder = '') or Name.StartsWith(Folder, True) then
+            aList.Add(Name);
+  end;
+
+end;
+
+procedure TwbBSArchive.ResolveHash(const aHash: UInt64; var Results: TArray<string>);
+var
+  Len  : Integer;
+  i, j : Integer;
+begin
+  case fType of
+    baTES3:
+      for i := Low(fFilesTES3) to High(fFilesTES3) do
+        with fFilesTES3[i] do
+          if aHash = Hash then begin
+            SetLength(Results, Succ(Len));
+            Results[Len] := Name;
+            Inc(Len);
+          end;
+    baTES4, baFO3, baSSE:
+      for i := Low(fFoldersTES4) to High(fFoldersTES4) do
+        with fFoldersTES4[i] do begin
+          if aHash = Hash then begin
+            SetLength(Results, Succ(Len));
+            Results[Len] := Name;
+            Inc(Len);
+          end;
+          for j := Low(Files) to High(Files) do
+            with Files[j] do
+              if aHash = Hash then begin
+                SetLength(Results, Succ(Len));
+                Results[Len] := Name;
+                Inc(Len);
+              end;
+        end;
+    {
+    baFO4, baFO4dds:
+      for i := Low(fFilesFO4) to High(fFilesFO4) do
+        with fFilesFO4[i] do begin
+          if aHash = NameHash then begin
+            SetLength(Results, Succ(Len));
+            Results[Len] := Name;
+            Inc(Len);
+          end;
+        end;
+    }
+  end;
+end;
+
 
 
 end.
