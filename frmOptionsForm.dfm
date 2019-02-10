@@ -275,49 +275,49 @@ object frmOptions: TfrmOptions
       ImageIndex = 2
       object Label3: TLabel
         Left = 16
-        Top = 16
+        Top = 40
         Width = 89
         Height = 13
         Caption = 'Conflict Color Font'
       end
       object Label4: TLabel
         Left = 16
-        Top = 72
+        Top = 96
         Width = 123
         Height = 13
         Caption = 'Conflict Color Background'
       end
       object Label5: TLabel
         Left = 18
-        Top = 192
+        Top = 216
         Width = 66
         Height = 13
         Caption = 'Column Width'
       end
       object Label6: TLabel
         Left = 159
-        Top = 191
+        Top = 215
         Width = 55
         Height = 13
         Caption = 'Row Height'
       end
       object Label7: TLabel
         Left = 16
-        Top = 235
+        Top = 259
         Width = 267
         Height = 13
         Caption = 'Auto "Compare Selected" when multi-selecting less than'
       end
       object Label8: TLabel
         Left = 375
-        Top = 235
+        Top = 259
         Width = 36
         Height = 13
         Caption = 'records'
       end
       object Label9: TLabel
         Left = 16
-        Top = 267
+        Top = 291
         Width = 330
         Height = 13
         Caption = 
@@ -326,14 +326,14 @@ object frmOptions: TfrmOptions
       end
       object Label10: TLabel
         Left = 431
-        Top = 267
+        Top = 291
         Width = 24
         Height = 13
         Caption = 'msec'
       end
       object clbConflictThis: TColorBox
         Left = 223
-        Top = 35
+        Top = 59
         Width = 114
         Height = 22
         Style = [cbStandardColors, cbExtendedColors, cbIncludeDefault, cbCustomColor, cbPrettyNames, cbCustomColors]
@@ -342,7 +342,7 @@ object frmOptions: TfrmOptions
       end
       object cbConflictThis: TComboBox
         Left = 16
-        Top = 35
+        Top = 59
         Width = 201
         Height = 21
         Style = csDropDownList
@@ -351,7 +351,7 @@ object frmOptions: TfrmOptions
       end
       object cbConflictAll: TComboBox
         Left = 16
-        Top = 91
+        Top = 115
         Width = 201
         Height = 21
         Style = csDropDownList
@@ -360,7 +360,7 @@ object frmOptions: TfrmOptions
       end
       object clbConflictAll: TColorBox
         Left = 223
-        Top = 91
+        Top = 115
         Width = 114
         Height = 22
         Style = [cbStandardColors, cbExtendedColors, cbIncludeDefault, cbCustomColor, cbPrettyNames, cbCustomColors]
@@ -369,7 +369,7 @@ object frmOptions: TfrmOptions
       end
       object pnlFontRecords: TPanel
         Left = 16
-        Top = 136
+        Top = 160
         Width = 137
         Height = 33
         Cursor = crHandPoint
@@ -387,7 +387,7 @@ object frmOptions: TfrmOptions
       end
       object pnlFontMessages: TPanel
         Left = 159
-        Top = 136
+        Top = 160
         Width = 137
         Height = 33
         Cursor = crHandPoint
@@ -405,7 +405,7 @@ object frmOptions: TfrmOptions
       end
       object pnlFontViewer: TPanel
         Left = 302
-        Top = 136
+        Top = 160
         Width = 137
         Height = 33
         Cursor = crHandPoint
@@ -423,21 +423,21 @@ object frmOptions: TfrmOptions
       end
       object edColumnWidth: TEdit
         Left = 92
-        Top = 188
+        Top = 212
         Width = 51
         Height = 21
         TabOrder = 7
       end
       object edRowHeight: TEdit
         Left = 223
-        Top = 188
+        Top = 212
         Width = 51
         Height = 21
         TabOrder = 8
       end
       object sedAutoCompareSelectedLimit: TSpinEdit
         Left = 297
-        Top = 231
+        Top = 255
         Width = 64
         Height = 22
         MaxValue = 999999
@@ -447,7 +447,7 @@ object frmOptions: TfrmOptions
       end
       object sedNavChangeDelay: TSpinEdit
         Left = 360
-        Top = 264
+        Top = 288
         Width = 59
         Height = 22
         MaxValue = 999999
@@ -457,7 +457,7 @@ object frmOptions: TfrmOptions
       end
       object cbRequireCtrlForDblClick: TCheckBox
         Left = 16
-        Top = 297
+        Top = 321
         Width = 280
         Height = 17
         Caption = 'Selection forms require holding CTRL for double click'
@@ -465,11 +465,21 @@ object frmOptions: TfrmOptions
       end
       object cbFocusAddedElement: TCheckBox
         Left = 16
-        Top = 320
+        Top = 344
         Width = 280
         Height = 17
         Caption = 'Focus newly added elements in View'
         TabOrder = 12
+      end
+      object cbShrinkButtons: TCheckBox
+        Left = 16
+        Top = 12
+        Width = 439
+        Height = 17
+        Caption = 
+          'Shrink SpeedButtons in the top right corner of the main form (re' +
+          'quires restart)'
+        TabOrder = 13
       end
     end
     object tbsUITheme: TTabSheet
