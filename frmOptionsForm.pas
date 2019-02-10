@@ -76,7 +76,10 @@ type
     cbNoNexusModsCheck: TCheckBox;
     cbResetModifiedOnSave: TCheckBox;
     cbAlwaysSaveOnam: TCheckBox;
+    tsExperts: TTabSheet;
     cbFillPNAM: TCheckBox;
+    cbManualCleaningHide: TCheckBox;
+    cbManualCleaningAllow: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);
@@ -229,6 +232,8 @@ begin
   wbColorConflictThisDefault := wbColorConflictThis;
 
   pcOptions.ActivePageIndex := 0;
+
+  tsExperts.TabVisible := wbIKnowWhatImDoing;
 end;
 
 procedure TfrmOptions.FormKeyDown(Sender: TObject; var Key: Word;
