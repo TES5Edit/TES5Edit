@@ -466,9 +466,11 @@ object frmOptions: TfrmOptions
       object cbFocusAddedElement: TCheckBox
         Left = 16
         Top = 344
-        Width = 280
+        Width = 423
         Height = 17
-        Caption = 'Focus newly added elements in View'
+        Caption = 
+          'Focus newly added elements in View (can be inverted by holding C' +
+          'TRL)'
         TabOrder = 12
       end
       object cbShrinkButtons: TCheckBox
