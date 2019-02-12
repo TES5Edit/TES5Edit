@@ -2428,6 +2428,7 @@ var
   MainRecord           : IwbMainRecord;
   MainRecord2          : IwbMainRecord;
   Master               : IwbMainRecord;
+  GroupRecord          : IwbGroupRecord;
   TargetFile        : IwbFile;
   sl                   : TStringList;
   i, j                 : Integer;
@@ -2477,6 +2478,9 @@ begin
         end;
       end else begin
         Elements[i].ReportRequiredMasters(sl, AsNew);
+        if DeepCopy then
+          if Supports(Elements[i], IwbMainRecord, MainRecord) and Supports(MainRecord.ChildGroup, IwbGroupRecord, GroupRecord) then
+            GroupRecord.ReportRequiredMasters(sl, AsNew);
         Container := Elements[i].Container;
         while Assigned(Container) do begin
           Container.ReportRequiredMasters(sl, AsNew, False, True);
@@ -2729,6 +2733,9 @@ begin
                 sl.Clear;
                 for j := Low(Elements) to High(Elements) do begin
                   Elements[j].ReportRequiredMasters(sl, AsNew);
+                  if DeepCopy then
+                    if Supports(Elements[j], IwbMainRecord, MainRecord) and Supports(MainRecord.ChildGroup, IwbGroupRecord, GroupRecord) then
+                      GroupRecord.ReportRequiredMasters(sl, AsNew);
                   Container := Elements[j].Container;
                   while Assigned(Container) do begin
                     Container.ReportRequiredMasters(sl, AsNew, False, True);
