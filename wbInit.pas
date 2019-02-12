@@ -938,6 +938,9 @@ begin
   if wbIKnowWhatImDoing and FindCmdLineSwitch('AllowMasterFilesEdit') then
     wbAllowMasterFilesEdit := True;
 
+  if wbIKnowWhatImDoing and FindCmdLineSwitch('StripEmptyMasters') then
+    wbStripEmptyMasters := True;
+
   if wbToolMode = tmEdit then begin
     if FindCmdLineSwitch('quickshowconflicts') or ExeName.Contains('quickshowconflicts') or ExeName.Contains('qsc') then
       wbQuickShowConflicts := True;
