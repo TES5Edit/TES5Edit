@@ -17102,6 +17102,14 @@ begin
       Exit;
 
     case Key of
+      VK_INSERT: begin
+        pmuViewPopup(nil);
+        Key := 0;
+        if mniViewAdd.Visible and mniViewAdd.Enabled then begin
+          mniViewAdd.Click;
+          PostResetActiveTree;
+        end;
+      end;
       VK_UP: begin
         LockProcessMessages;
         try
