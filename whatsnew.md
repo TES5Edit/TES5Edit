@@ -16,6 +16,7 @@ The Ko-Fi Page is linked via the Ko-Fi button in the top right corner of the mai
 * (reported on Discord) - When the same file is saved twice within the same second, it results in an error while renaming .save files on shutdown
 * (reported on Discord) - [FNV] Unused at the end of BMDT is wrongly defined as variable size (should always be 3 bytes)
 * (reported on Discord) - Collapsing of record storage (used when adding/removing/sorting masters) can under certain circumstances result in an assert while trying to save the file later
+* (reported on Discord) - "Deep Copy as Override" does not check records in child groups when looking for masters that need to be added to the target
 * (found by developer) - Saving `.esm` or `.esl` files without ESM flag for SSE stripped ONAM instead of writing it as required (the game treats files with these extension always as having ESM)
 * (found by developer) - `AddMasters()` can be called with names that are not valid module files
 * (found by developer) - The navigation treeview unnecessarily checks nodes of them main game masters for changes
@@ -859,7 +860,7 @@ To change focus with the keyboard use:
 
 After Move Up/Down (menu) / Ctrl+Cursor Up/Down (keyboard) the focus will correctly stay with the moved element.
 
-After Add (menu) / Insert (keyboard) the focus will be placed on the added element. This can be turned off with the option "Focus newly added elements in View" (defaults to true).
+After Add (menu) / `Insert` (keyboard) the focus will be placed on the added element. This can be turned off with the option "Focus newly added elements in View" (defaults to true). The meaning of the Option can be inverted by holding `CTRL` while using Add / `Insert`.
 
 After drop the focus will be placed on the dropped element.
 
