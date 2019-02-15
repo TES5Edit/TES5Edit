@@ -769,21 +769,6 @@ end;
 {==============================================================================}
 
 function CheckAppPath: string;
-const
-  //gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmFO4
-  ExeName : array[TwbGameMode] of string =(
-    'FalloutNV.exe',  // gmFNV
-    'Fallout3.exe',   // gmFO3
-    'Morrowind.exe',  // gmTES3
-    'Oblivion.exe',   // gmTES4
-    'TESV.exe',       // gmTES5
-    'SkyrimVR.exe',   // gmTES5VR
-    'SkyrimSE.exe',   // gmSSE
-    'Fallout4.exe',   // gmFO4
-    'Fallout4VR.exe', // gmFO4VR
-    'Fallout76.exe'  // gmFO76
-  );
-
 var
   s: string;
 begin
@@ -791,7 +776,7 @@ begin
   s := ParamStr(0);
   s := ExtractFilePath(s);
   while Length(s) > 3 do begin
-    if FileExists(s + ExeName[wbGameMode]) and DirectoryExists(s + 'Data') then begin
+    if FileExists(s + wbGameExeName) and DirectoryExists(s + 'Data') then begin
       Result := s;
       Exit;
     end;
@@ -815,11 +800,11 @@ end;
 
 procedure DoInitPath;
 const
-  sBethRegKey   = '\SOFTWARE\Bethesda Softworks\';
-  sBethRegKey64 = '\SOFTWARE\Wow6432Node\Bethesda Softworks\';
-  sTempRegKey   = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\';
-  sTempRegKey64 = '\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\';
+  sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
+  sTempRegKey             = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\';
+
 var
+  s, regPath, regKey, client: string;
   ProgramPath : String;
   DataPath    : String;
 begin
@@ -829,35 +814,43 @@ begin
     DataPath := CheckAppPath;
 
     if DataPath = '' then with TRegistry.Create do try
+      Access  := KEY_READ or KEY_WOW64_32KEY;
       RootKey := HKEY_LOCAL_MACHINE;
 
-      if wbGameMode = gmFO76 then begin
-        if not OpenKeyReadOnly(sTempRegKey + wbGameNameReg + '\') then
-          if not OpenKeyReadOnly(sTempRegKey64 + wbGameNameReg + '\') then begin
-            ReportProgress('Warning: Could not open registry key: ' + sTempRegKey + wbGameNameReg + '\');
-            Exit;
-          end;
+      case wbGameMode of
+        gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR: begin
+          regPath := sBethRegKey + wbGameNameReg + '\';
+          client  := 'Steam';
+        end;
+        gmEnderal: begin
+          regPath := sTempRegKey + wbGameNameReg + '\';
+          client  := 'Steam';
+        end;
+        gmFO76: begin
+          regPath := sTempRegKey + wbGameNameReg + '\';
+          client  := 'Bethesda.net Launcher';
+        end;
+      end;
 
-        DataPath := ReadString('Path');
+      if not OpenKey(regPath, False) then begin
+        Access := KEY_READ or KEY_WOW64_64KEY;
+        if not OpenKey(regPath, False) then begin
+          ReportProgress('Warning: Could not open registry key: ' + regPath);
+          Exit;
+        end;
+      end;
+
+      case wbGameMode of
+      gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR:
+              regKey := 'Installed Path';
+      gmEnderal:  regKey := 'InstallLocation';
+      gmFO76: regKey := 'Path';
+      end;
+        DataPath := ReadString(regKey);
             DataPath := StringReplace(DataPath, '"', '', [rfReplaceAll]);
 
         if DataPath = '' then begin
-          ReportProgress('Warning: Could not determine ' + wbGameName2 + ' installation path, no "Path" registry key');
-        end;
-      end else begin
-        if not OpenKeyReadOnly(sBethRegKey + wbGameNameReg + '\') then
-          if not OpenKeyReadOnly(sBethRegKey64 + wbGameNameReg + '\') then begin
-            ReportProgress('Warning: Could not open registry key: ' + sBethRegKey + wbGameName + '\');
-            ReportProgress('This can happen after Steam updates, run game''s launcher to restore registry settings');
-            Exit;
-          end;
-
-        DataPath := ReadString('Installed Path');
-
-        if DataPath = '' then begin
-          ReportProgress('Warning: Could not determine '+wbGameName+' installation path, no "Installed Path" registry key');
-          ReportProgress('This can happen after Steam updates, run game''s launcher to restore registry settings');
-        end;
+          ReportProgress(Format('Warning: Could not determine %s installation path, no "%s" registry key', [wbGameName2, regKey]));
       end;
     finally
       Free;
@@ -893,7 +886,7 @@ begin
     gmFO3:            SwitchToFO3CoSave;
     gmFO4, gmFO4vr:   SwitchToFO4CoSave;
     gmTES4:           SwitchToTES4CoSave;
-    gmTES5, gmTES5vr: SwitchToTES5CoSave;
+    gmTES5, gmTES5vr, gmEnderal: SwitchToTES5CoSave;
     gmSSE:            SwitchToTES5CoSave;
   end;
 end;
@@ -1020,6 +1013,7 @@ begin
 
       wbLanguage := 'English';
 
+      wbGameExeName := '';
       case wbGameMode of
         gmFNV: begin
           wbGameName := 'FalloutNV';
@@ -1051,6 +1045,17 @@ begin
         end;
         gmTES5: begin
           wbGameName := 'Skyrim';
+          wbGameExeName := 'TESV';
+          case wbToolSource of
+            tsSaves:   DefineTES5Saves;
+            tsPlugins: DefineTES5;
+          end;
+        end;
+        gmEnderal: begin
+          wbGameName := 'Enderal';
+          wbGameExeName := 'TESV';
+          wbGameNameReg := 'Steam App 933480';
+          wbGameMasterEsm := 'Skyrim.esm';
           case wbToolSource of
             tsSaves:   DefineTES5Saves;
             tsPlugins: DefineTES5;
@@ -1059,6 +1064,7 @@ begin
         gmTES5VR: begin
           wbGameName := 'Skyrim';
           wbGameName2 := 'Skyrim VR';
+          wbGameExeName := 'SkyrimVR';
           tss := [tsPlugins];
           case wbToolSource of
             //tsSaves:   DefineTES5Saves;
@@ -1075,6 +1081,7 @@ begin
         end;
         gmFO4VR: begin
           wbGameName := 'Fallout4';
+          wbGameExeName := 'Fallout4VR';
           wbGameName2 := 'Fallout4VR';
           wbGameNameReg := 'Fallout 4 VR';
           wbCreateContainedIn := False;
@@ -1086,6 +1093,7 @@ begin
         end;
         gmSSE: begin
           wbGameName := 'Skyrim';
+          wbGameExeName := 'SkyrimSE';
           wbGameName2 := 'Skyrim Special Edition';
           case wbToolSource of
             tsSaves:   DefineTES5Saves;
@@ -1115,6 +1123,10 @@ begin
 
       if wbGameMasterEsm = '' then
         wbGameMasterEsm := wbGameName + csDotEsm;
+
+      if wbGameExeName = '' then
+        wbGameExeName := wbGameName;
+      wbGameExeName := wbGameExeName + csDotExe;
 
       if not (wbToolMode in tms) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently support ToolMode: '+wbToolName);
@@ -1251,7 +1263,7 @@ begin
       if wbGameMode in [gmFO4, gmFO4vr, gmFO76] then
         wbLanguage := 'En';
 
-      if wbGameMode <= gmTES5 then
+      if wbGameMode <= gmEnderal then
         wbAddDefaultLEncodingsIfMissing(False)
       else begin
         wbLEncodingDefault[False] := TEncoding.UTF8;
@@ -1311,6 +1323,11 @@ begin
       s := ParamStr(ParamCount);
 
       NeedsSyntaxInfo := False;
+
+      if not FileExists(s) then
+        if FileExists(wbDataPath + s) then
+          s := wbDataPath + s;
+
       if (wbToolMode in [tmDump]) and (ParamCount >= 1) and not FileExists(s) then begin
         if s[1] in SwitchChars then
           WriteLn(ErrOutput, 'No inputfile was specified. Please check the command line parameters.')
@@ -1338,7 +1355,8 @@ begin
             else
               WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
           gmTES5,
-          gmTES5vr: if SameText(ExtractFileExt(s), '.skse') then SwitchToCoSave;
+          gmTES5vr,
+          gmEnderal: if SameText(ExtractFileExt(s), '.skse') then SwitchToCoSave;
           gmSSE:    if SameText(ExtractFileExt(s), '.skse') then SwitchToCoSave;
         else
             WriteLn(ErrOutput, 'CoSave are not supported yet "',s,'". Please check the command line parameters.');
@@ -1497,7 +1515,7 @@ begin
                 m := TStringList.Create;
                 try
                   if HasBSAs(ChangeFileExt(Masters[i], ''), wbDataPath,
-                      wbGameMode in [gmTES5, gmTES5vr, gmSSE], wbGameMode in [gmTES5, gmTES5vr, gmSSE], n, m)>0 then begin
+                      wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], n, m)>0 then begin
                     for j := 0 to Pred(n.Count) do begin
                       ReportProgress('[' + n[j] + '] Loading Resources.');
                       wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
@@ -1578,7 +1596,7 @@ begin
         if mfHasFile in miFlags then begin
           b := TwbHardcodedContainer.GetHardCodedDat;
           if Length(b) > 0 then
-            wbFile(wbGameName + csDotExe, 0, wbGameMasterEsm, [fsIsHardcoded], b);
+            wbFile(wbGameExeName, 0, wbGameMasterEsm, [fsIsHardcoded], b);
         end;
 
       ReportProgress('Finished loading record. Starting Dump.');
