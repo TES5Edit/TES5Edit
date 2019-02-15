@@ -7909,6 +7909,7 @@ var
       gmFO4, gmFO4VR   : BasePtr.mrsVersion := 131;
       gmSSE, gmTES5VR  : BasePtr.mrsVersion := 44;
       gmTES5           : BasePtr.mrsVersion := 43;
+      gmEND            : BasePtr.mrsVersion := 43;
       gmFNV            : BasePtr.mrsVersion := 15;
       gmFO3            : BasePtr.mrsVersion := 15;
       else               BasePtr.mrsVersion := 15;
