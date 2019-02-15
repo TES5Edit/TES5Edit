@@ -4821,7 +4821,7 @@ begin
               gmFNV:  begin saveExt := '.fos'; coSaveExt := '.nvse'; end;
               gmTES3: begin saveExt := '.ess'; coSaveExt := '';      end;
               gmTES4: begin saveExt := '.ess'; coSaveExt := '.obse'; end;
-              gmTES5, gmTES5VR, gmSSE: begin saveExt := '.ess'; coSaveExt := '.skse'; end;
+              gmTES5, gmEND, gmTES5VR, gmSSE: begin saveExt := '.ess'; coSaveExt := '.skse'; end;
             end;
 
             if FindFirst(ExpandFileName(wbSavePath+'\*'+saveExt), faAnyfile, R)=0 then try
@@ -4867,7 +4867,7 @@ begin
           end;
         end;
 
-        if (wbToolMode in wbPluginModes) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE]) then begin
+        if (wbToolMode in wbPluginModes) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEND]) then begin
           Modules.DeactivateAll;
 
           with wbModuleByName(wbPluginToUse)^ do
@@ -4969,6 +4969,7 @@ begin
               Exit;
             end;
           gmTES5: if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
+          gmEND:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
           gmSSE:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
         else
           MessageDlg('CoSave are not supported yet "'+s+'". Please check the the selection.', mtError, [mbAbort], 0);
@@ -13673,7 +13674,7 @@ begin
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
   mniNavApplyScript.Visible := mniNavCheckForErrors.Visible;
-  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmTES5VR, gmSSE, gmFO4, gmFO4VR]);
+  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmEND, gmTES5VR, gmSSE, gmFO4, gmFO4VR]);
 
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;
@@ -19853,7 +19854,7 @@ begin
                 // all games except old Skyrim load BSA files with partial matching, Skyrim requires exact names match
                 // and can use a private ini to specify the bsa to use.
                 if HasBSAs(ChangeFileExt(ltLoadList[i], ''), ltDataPath,
-                    wbGameMode in [gmTES5], wbIsSkyrim, n, m)>0 then begin
+                    wbGameMode in [gmTES5, gmEND], wbIsSkyrim, n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do
                         if wbLoadBSAs then begin
                           LoaderProgress('[' + n[j] + '] Loading Resources.');
