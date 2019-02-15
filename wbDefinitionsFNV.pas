@@ -5805,8 +5805,8 @@ begin
       wbFormIDCk('Consumed Ammo', [AMMO, MISC, NULL]),
       wbFloat('Consumed Percentage')
     ], cpNormal, False, nil, 3),
-    wbStringKC(ONAM, 'Short Name'),
-    wbStringKC(QNAM, 'Abbrev.'),
+    wbStringKC(ONAM, 'Short Name', 0, cpTranslate),
+    wbStringKC(QNAM, 'Abbrev.', 0, cpTranslate),
     wbRArray('Ammo Effects',
       wbFormIDCk(RCIL, 'Effect', [AMEF])
     )
@@ -8361,7 +8361,7 @@ begin
     wbFULL,
     wbDESCReq,
     wbICON,
-    wbStringKC(ANAM, 'Short Name')
+    wbStringKC(ANAM, 'Short Name', 0, cpTranslate)
   ]);
 
   wbRecord(RADS, 'Radiation Stage', [

@@ -22,6 +22,7 @@ The Ko-Fi Page is linked via the Ko-Fi button in the top right corner of the mai
 * (found by developer) - `AddMasters()` can be called with names that are not valid module files
 * (found by developer) - The navigation treeview unnecessarily checks nodes of them main game masters for changes
 * (found by developer) - [TES5/SSE] Words of Power in SHOU should not be alignable
+* (found by developer) - [FO3/FNV] Some strings that are translatable are not flagged as such
 
 ## Manual Cleaning functions are deprecated
 
