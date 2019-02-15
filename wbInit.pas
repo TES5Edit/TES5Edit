@@ -278,6 +278,7 @@ const
     'Fallout3.exe',   // gmFO3
     'FalloutNV.exe',  // gmFNV
     'TESV.exe',       // gmTES5
+    'TESV.exe',       // gmEND
     'Fallout4.exe',   // gmFO4
     'SkyrimSE.exe',   // gmSSE
     'SkyrimVR.exe',   // gmTES5VR
@@ -297,6 +298,18 @@ begin
     end;
     s := ExtractFilePath(ExcludeTrailingPathDelimiter(s));
   end;
+end;
+
+function PathRelativeToFull(const BasePath: string; const AddPath: string) : string;
+var CDir : string;
+begin
+  CDir := GetCurrentDir;
+  try
+    SetCurrentDir(BasePath);
+    Result := ExpandFileName(AddPath);
+  finally
+    SetCurrentDir(CDir);
+  end
 end;
 
 {===SafeLoadLibrary============================================================}
@@ -360,11 +373,10 @@ end;
 procedure DoInitPath(const ParamIndex: Integer);
 const
   sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
-  sBethRegKey64           = '\SOFTWARE\WOW6432Node\Bethesda Softworks\';
   sTempRegKey             = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\';
-  sTempRegKey64           = '\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\';
+
 var
-  s: string;
+  s, regPath, regKey, client: string;
   IniFile : TMemIniFile;
 begin
   wbModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
@@ -380,50 +392,57 @@ begin
   if not wbFindCmdLineParam('D', wbDataPath) then begin
     wbDataPath := CheckAppPath;
 
-    if wbDataPath = '' then with TRegistry.Create do try
+    if (wbDataPath = '') then with TRegistry.Create do try
+      Access  := KEY_READ or KEY_WOW64_32KEY;
       RootKey := HKEY_LOCAL_MACHINE;
 
-      if wbGameMode = gmFO76 then begin
-        if not OpenKeyReadOnly(sTempRegKey + wbGameNameReg + '\') then
-          if not OpenKeyReadOnly(sTempRegKey64 + wbGameNameReg + '\') then begin
-            s := 'Fatal: Could not open registry key: ' + sTempRegKey + wbGameNameReg + '\';
-            // this message is probably a lie...
-            ShowMessage(s + #13#10'This can happen after Bethesda Launcher updates, run game''s launcher to restore registry settings');
-            wbDontSave := True;
-            Exit;
-          end;
+      case wbGameMode of
+      gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR: begin
+        regPath := sBethRegKey + wbGameNameReg + '\';
+        client  := 'Steam';
+      end;
+      gmEND: begin
+        regPath := sTempRegKey + wbGameNameReg + '\';
+        client  := 'Steam';
+      end;
+      gmFO76: begin
+        regPath := sTempRegKey + wbGameNameReg + '\';
+        client  := 'Bethesda.net Launcher';
+      end;
+      end;
 
-        wbDataPath := ReadString('Path');
-            wbDataPath := StringReplace(wbDataPath, '"', '', [rfReplaceAll]);
-
-        if wbDataPath = '' then begin
-          s := 'Fatal: Could not determine ' + wbGameName2 + ' installation path, no "Path" registry key';
-          // this message is probably a lie...
-          ShowMessage(s + #13#10'This can happen after Bethesda Launcher updates, run game''s launcher to restore registry settings');
+      if not OpenKey(regPath, False) then begin
+        Access := KEY_READ or KEY_WOW64_64KEY;
+        if not OpenKey(regPath, False) then begin
+          s := 'Fatal: Could not open registry key: ' + regPath;
+          ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, client]));
           wbDontSave := True;
+          Exit;
         end;
-      end else begin
-        if not OpenKeyReadOnly(sBethRegKey + wbGameNameReg + '\') then
-          if not OpenKeyReadOnly(sBethRegKey64 + wbGameNameReg + '\') then begin
-            s := 'Fatal: Could not open registry key: ' + sBethRegKey + wbGameNameReg + '\';
-            ShowMessage(s + #13#10'This can happen after Steam updates, run game''s launcher to restore registry settings');
-              wbDontSave := True;
-              Exit;
-            end;
+      end;
 
-        wbDataPath := ReadString('Installed Path');
+      case wbGameMode of
+      gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR:
+              regKey := 'Installed Path';
+      gmEND:  regKey := 'InstallLocation';
+      gmFO76: regKey := 'Path';
+      end;
 
-        if wbDataPath = '' then begin
-          s := 'Fatal: Could not determine ' + wbGameName2 + ' installation path, no "Installed Path" registry key';
-          ShowMessage(s + #13#10'This can happen after Steam updates, run game''s launcher to restore registry settings');
-          wbDontSave := True;
-        end;
+      wbDataPath := ReadString(regKey);
+      wbDataPath := StringReplace(wbDataPath, '"', '', [rfReplaceAll]);
+
+      if (wbDataPath = '') then begin
+        s := Format('Fatal: Could not determine %s installation path, no "%s" registry key', [wbGameName2, regKey]);
+        ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, client]));
+        wbDontSave := True;
       end;
     finally
       Free;
     end;
-    if wbDataPath <>'' then
+
+    if (wbDataPath <> '') then
       wbDataPath := IncludeTrailingPathDelimiter(wbDataPath) + 'Data\';
+
   end else
     wbDataPath := IncludeTrailingPathDelimiter(wbDataPath);
 
@@ -444,7 +463,7 @@ begin
       ShowMessage('Fatal: Could not determine my documents folder');
       Exit;
     end;
-    
+
     if wbGameMode in [gmFO76] then
       wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameNameReg + '\'
     else
@@ -473,7 +492,7 @@ begin
         FreeAndNil(IniFile);
       end;
     end;
-    wbSavePath := wbMyGamesTheGamePath + s;
+    wbSavePath := PathRelativeToFull(wbMyGamesTheGamePath, s);
   end;
   wbSavePath := IncludeTrailingPathDelimiter(wbSavePath);
 
@@ -526,7 +545,7 @@ var
 procedure DetectAppMode;
 const
   SourceModes : array [1..2] of string = ('plugins', 'saves');
-  GameModes: array [1..9] of string = ('tes5vr', 'fo4vr', 'tes4', 'tes5', 'sse', 'fo3', 'fnv', 'fo4', 'fo76');
+  GameModes: array [1..10] of string = ('tes5vr', 'fo4vr', 'tes4', 'tes5', 'enderal', 'sse', 'fo3', 'fnv', 'fo4', 'fo76');
   ToolModes: array [1..15] of string = (
     'edit', 'view', 'lodgen', 'script', 'translate', 'onamupdate', 'masterupdate', 'masterrestore',
     'setesm', 'clearesm', 'sortandclean', 'sortandcleanmasters',
@@ -740,6 +759,16 @@ begin
     ToolSources := [tsPlugins, tsSaves];
   end
 
+  else if isMode('Enderal') then begin
+    wbGameMode := gmEND;
+    wbAppName := 'Enderal';
+    wbGameName := 'Enderal';
+    wbGameNameReg := 'Steam App 933480';
+    wbGameMasterEsm := 'Skyrim.esm';
+    ToolModes := wbAlwaysMode + [tmOnamUpdate];
+    ToolSources := [tsPlugins, tsSaves];
+  end
+
   else if isMode('TES5VR') then begin
     wbGameMode := gmTES5VR;
     wbAppName := 'TES5VR';
@@ -794,7 +823,7 @@ begin
   end
 
   else begin
-    ShowMessage('Application name must contain FNV, FO3, FO4, FO4VR, FO76, SSE, TES4, TES5 or TES5VR to select game.');
+    ShowMessage('Application name must contain FNV, FO3, FO4, FO4VR, FO76, SSE, TES4, TES5, TES5VR, or Enderal to select game.');
     Exit(False);
   end;
 
@@ -859,7 +888,7 @@ begin
       wbAllowInternalEdit := false;
       wbCanSortINFO := True;
     end;
-    gmTES5, gmTES5VR, gmSSE: begin
+    gmTES5, gmEND, gmTES5VR, gmSSE: begin
       wbVWDInTemporary := True;
       wbLoadBSAs := True; // localization won't work otherwise
       wbHideIgnored := False; // to show Form Version
@@ -905,7 +934,8 @@ begin
       wbFillPNAM := False;
   end;
 
-  if wbGameMode <= gmTES5 then
+  // Was gmTES5, but is now gmEND
+  if wbGameMode <= gmEND then
     wbAddDefaultLEncodingsIfMissing(False)
   else begin
     wbLEncodingDefault[False] := TEncoding.UTF8;
@@ -1076,6 +1106,10 @@ begin
       tsSaves:   DefineTES5Saves;
       tsPlugins: DefineTES5;
     end;
+    gmEND: case wbToolSource of
+      tsSaves:   DefineTES5Saves;
+      tsPlugins: DefineTES5;
+    end;
     gmSSE: case wbToolSource of
       tsSaves:   DefineTES5Saves;
       tsPlugins: DefineTES5;
@@ -1212,6 +1246,7 @@ begin
     gmFO3:  SwitchToFO3CoSave;
     gmTES4: SwitchToTES4CoSave;
     gmTES5: SwitchToTES5CoSave;
+    gmEND:  SwitchToTES5CoSave;
     gmSSE:  SwitchToTES5CoSave;
   end;
 end;
