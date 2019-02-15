@@ -13,6 +13,7 @@ type
     fcFallout76: TFileContainer;
     fcFallout3: TFileContainer;
     fcFalloutNV: TFileContainer;
+    fcEnderal: TFileContainer; // This is the same as Skyrim
   public
     class function GetHardCodedDat: TBytes;
   end;
