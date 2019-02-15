@@ -3798,7 +3798,7 @@ var
 
 type
   //keep ordered by release date
-  TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmEND, gmFO4, gmSSE, gmTES5VR, gmFO4VR, gmFO76);
+  TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmFO4VR, gmFO76);
   TwbGameModes  = set of TwbGameMode;
 
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
@@ -3815,6 +3815,7 @@ var
   wbSubMode     : string;
   wbAppName     : string;
   wbGameName    : string; //name of the exe, usually also name of the game master
+  wbGameExeName : string;
   wbGameMasterEsm : string; // name of the GameMaster.esm, usually wbGameName + csDotEsm, different for Fallout 76
   wbGameName2   : string; // game title name used for AppData and MyGames folders
   wbGameNameReg : string; // registry name
@@ -3828,8 +3829,8 @@ var
                                    tmCheckForErrors, tmCheckForITM, tmCheckForDR ];  // Auto modes that require a specific plugin to be provided.
   wbAlwaysMode  : TwbSetOfMode = [ tmView, tmEdit, tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
                     tmLODgen, tmScript, tmCheckForITM, tmCheckForDR, tmCheckForErrors ]; // Modes available to all decoded games
-  wbSimplePluginsTxt : TwbGameModes = [gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmEND]; //plugins.txt contains only the active plugins
-  wbOrderFromPluginsTxt : TwbGameModes = [gmTES5, gmTES5VR, gmSSE, gmEND, gmFO4, gmFO4VR, gmFO76]; //load order given by order in plugins.txt
+  wbSimplePluginsTxt : TwbGameModes = [gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmEnderal]; //plugins.txt contains only the active plugins
+  wbOrderFromPluginsTxt : TwbGameModes = [gmTES5, gmTES5VR, gmSSE, gmEnderal, gmFO4, gmFO4VR, gmFO76]; //load order given by order in plugins.txt
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
@@ -4379,7 +4380,7 @@ end;
 
 function wbIsSkyrim: Boolean; inline;
 begin
-  Result := wbGameMode in [gmTES5, gmEND, gmTES5VR, gmSSE];
+  Result := wbGameMode in [gmTES5, gmEnderal, gmTES5VR, gmSSE];
 end;
 
 function wbIsFallout3: Boolean; inline;
@@ -17045,7 +17046,7 @@ function wbIsPlugin(aFileName: string): Boolean;
 var
   i: Integer;
 begin
-  Result := SameText(aFileName, wbGameName + '.exe');
+  Result := SameText(aFileName, wbGameExeName);
   if not Result then
     for i := Low(wbPluginExtensions) to High(wbPluginExtensions) do
       if aFileName.EndsWith(wbPluginExtensions[i], True) or aFileName.EndsWith(wbPluginExtensions[i] + csDotGhost, True) then

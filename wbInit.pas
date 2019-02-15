@@ -271,28 +271,13 @@ begin
 end;
 
 function CheckAppPath: string;
-const
-  ExeName : array[TwbGameMode] of string = (
-    'Morrowind.exe',  // gmTES3
-    'Oblivion.exe',   // gmTES4
-    'Fallout3.exe',   // gmFO3
-    'FalloutNV.exe',  // gmFNV
-    'TESV.exe',       // gmTES5
-    'TESV.exe',       // gmEND
-    'Fallout4.exe',   // gmFO4
-    'SkyrimSE.exe',   // gmSSE
-    'SkyrimVR.exe',   // gmTES5VR
-    'Fallout4VR.exe', // gmFO4VR
-    'Fallout76.exe'   // gmFO76
-  );
-
 var
   s: string;
 begin
   Result := '';
   s := ExtractFilePath(ParamStr(0));
   while Length(s) > 3 do begin
-    if FileExists(s + ExeName[wbGameMode]) and DirectoryExists(s + 'Data') then begin
+    if FileExists(s + wbGameExeName) and DirectoryExists(s + 'Data') then begin
       Result := s;
       Exit;
     end;
@@ -401,7 +386,7 @@ begin
         regPath := sBethRegKey + wbGameNameReg + '\';
         client  := 'Steam';
       end;
-      gmEND: begin
+      gmEnderal: begin
         regPath := sTempRegKey + wbGameNameReg + '\';
         client  := 'Steam';
       end;
@@ -424,7 +409,7 @@ begin
       case wbGameMode of
       gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR:
               regKey := 'Installed Path';
-      gmEND:  regKey := 'InstallLocation';
+      gmEnderal:  regKey := 'InstallLocation';
       gmFO76: regKey := 'Path';
       end;
 
@@ -719,6 +704,7 @@ begin
 
   wbLanguage := 'English';
 
+  wbGameExeName := '';
   if isMode('FNV') then begin
     wbGameMode := gmFNV;
     wbAppName := 'FNV';
@@ -755,14 +741,16 @@ begin
     wbGameMode := gmTES5;
     wbAppName := 'TES5';
     wbGameName := 'Skyrim';
+    wbGameExeName := 'TESV';
     ToolModes := wbAlwaysMode + [tmOnamUpdate];
     ToolSources := [tsPlugins, tsSaves];
   end
 
   else if isMode('Enderal') then begin
-    wbGameMode := gmEND;
+    wbGameMode := gmEnderal;
     wbAppName := 'Enderal';
     wbGameName := 'Enderal';
+    wbGameExeName := 'TESV';
     wbGameNameReg := 'Steam App 933480';
     wbGameMasterEsm := 'Skyrim.esm';
     ToolModes := wbAlwaysMode + [tmOnamUpdate];
@@ -774,6 +762,8 @@ begin
     wbAppName := 'TES5VR';
     wbGameName := 'Skyrim';
     wbGameName2 := 'Skyrim VR';
+    wbGameExeName := 'SkyrimVR';
+
     ToolModes := wbAlwaysMode + [tmOnamUpdate];
     ToolSources := [tsPlugins];
   end
@@ -782,6 +772,7 @@ begin
     wbGameMode := gmSSE;
     wbAppName := 'SSE';
     wbGameName := 'Skyrim';
+    wbGameExeName := 'SkyrimSE';
     wbGameName2 := 'Skyrim Special Edition';
     ToolModes := wbAlwaysMode + [tmOnamUpdate];
     ToolSources := [tsPlugins, tsSaves];
@@ -801,6 +792,7 @@ begin
     wbGameMode := gmFO4VR;
     wbAppName := 'FO4VR';
     wbGameName := 'Fallout4';
+    wbGameExeName := 'Fallout4VR';
     wbGameName2 := 'Fallout4VR';
     wbGameNameReg := 'Fallout 4 VR';
     wbLanguage := 'En';
@@ -826,6 +818,11 @@ begin
     ShowMessage('Application name must contain FNV, FO3, FO4, FO4VR, FO76, SSE, TES4, TES5, TES5VR, or Enderal to select game.');
     Exit(False);
   end;
+
+  if wbGameExeName = '' then
+    wbGameExeName := wbGameName;
+
+  wbGameExeName := wbGameExeName + csDotExe;
 
   if wbGameMode in [gmFO3, gmFNV] then begin
     wbUDRSetZ := False;
@@ -888,7 +885,7 @@ begin
       wbAllowInternalEdit := false;
       wbCanSortINFO := True;
     end;
-    gmTES5, gmEND, gmTES5VR, gmSSE: begin
+    gmTES5, gmEnderal, gmTES5VR, gmSSE: begin
       wbVWDInTemporary := True;
       wbLoadBSAs := True; // localization won't work otherwise
       wbHideIgnored := False; // to show Form Version
@@ -934,8 +931,8 @@ begin
       wbFillPNAM := False;
   end;
 
-  // Was gmTES5, but is now gmEND
-  if wbGameMode <= gmEND then
+  // Was gmTES5, but is now gmEnderal
+  if wbGameMode <= gmEnderal then
     wbAddDefaultLEncodingsIfMissing(False)
   else begin
     wbLEncodingDefault[False] := TEncoding.UTF8;
@@ -1106,7 +1103,7 @@ begin
       tsSaves:   DefineTES5Saves;
       tsPlugins: DefineTES5;
     end;
-    gmEND: case wbToolSource of
+    gmEnderal: case wbToolSource of
       tsSaves:   DefineTES5Saves;
       tsPlugins: DefineTES5;
     end;
@@ -1246,7 +1243,7 @@ begin
     gmFO3:  SwitchToFO3CoSave;
     gmTES4: SwitchToTES4CoSave;
     gmTES5: SwitchToTES5CoSave;
-    gmEND:  SwitchToTES5CoSave;
+    gmEnderal:  SwitchToTES5CoSave;
     gmSSE:  SwitchToTES5CoSave;
   end;
 end;
