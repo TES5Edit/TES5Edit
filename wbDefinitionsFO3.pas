@@ -5435,7 +5435,7 @@ begin
       wbInteger('Value', itS32),
       wbInteger('Clip Rounds', itU8)
     ], cpNormal, True),
-    wbStringKC(ONAM, 'Short Name')
+    wbStringKC(ONAM, 'Short Name', 0, cpTranslate)
   ]);
 
   wbRecord(ANIO, 'Animated Object', [
@@ -7854,7 +7854,7 @@ begin
     wbFULL,
     wbDESCReq,
     wbICON,
-    wbStringKC(ANAM, 'Short Name')
+    wbStringKC(ANAM, 'Short Name', 0, cpTranslate)
   ]);
 
   wbRecord(RADS, 'Radiation Stage', [
