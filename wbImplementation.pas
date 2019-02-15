@@ -2741,7 +2741,7 @@ begin
   flLoadOrderFileID := TwbFileID.Create(-1, -1);
   if aCompareTo <> '' then begin
     Include(flStates, fsIsCompareLoad);
-    if SameText(ExtractFileName(aFileName), wbGameName + csDotExe) then
+    if SameText(ExtractFileName(aFileName), wbGameExeName) then
       Include(flStates, fsIsHardcoded);
     flCompareTo := wbExpandFileName(aCompareTo);
   end else if SameText(ExtractFileName(aFileName), wbGameMasterEsm) then begin
@@ -3365,7 +3365,7 @@ function TwbFile.GetBaseName: string;
 begin
   Result := GetFileName;
   if fsIsHardcoded in flStates then
-    Result := wbGameName + '.exe';
+    Result := wbGameExeName;
 end;
 
 function TwbFile.GetCachedEditInfo(aIdent: Integer; var aEditInfo: TArray<string>): Boolean;
@@ -3742,7 +3742,7 @@ var
 begin
   Result := GetFileName;
   if fsIsHardcoded in flStates then
-    Result := wbGameName + '.exe';
+    Result := wbGameExeName;
   if flLoadOrderFileID.FullSlot >= 0 then
     Result := '['+flLoadOrderFileID.ToString+'] ' + Result;
 end;
@@ -7905,11 +7905,11 @@ var
     BasePtr.mrsFormID := aFormID;
     BasePtr.mrsVCS1 := DefaultVCS1;
     case wbGameMode of
-      gmFO76           : BasePtr.mrsVersion := 182;
+      gmFO76           : BasePtr.mrsVersion := 183;
       gmFO4, gmFO4VR   : BasePtr.mrsVersion := 131;
       gmSSE, gmTES5VR  : BasePtr.mrsVersion := 44;
       gmTES5           : BasePtr.mrsVersion := 43;
-      gmEND            : BasePtr.mrsVersion := 43;
+      gmEnderal        : BasePtr.mrsVersion := 43;
       gmFNV            : BasePtr.mrsVersion := 15;
       gmFO3            : BasePtr.mrsVersion := 15;
       else               BasePtr.mrsVersion := 15;

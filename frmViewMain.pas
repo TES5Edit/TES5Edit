@@ -4852,7 +4852,7 @@ begin
               gmFNV:  begin saveExt := '.fos'; coSaveExt := '.nvse'; end;
               gmTES3: begin saveExt := '.ess'; coSaveExt := '';      end;
               gmTES4: begin saveExt := '.ess'; coSaveExt := '.obse'; end;
-              gmTES5, gmEND, gmTES5VR, gmSSE: begin saveExt := '.ess'; coSaveExt := '.skse'; end;
+              gmTES5, gmEnderal, gmTES5VR, gmSSE: begin saveExt := '.ess'; coSaveExt := '.skse'; end;
             end;
 
             if FindFirst(ExpandFileName(wbSavePath+'\*'+saveExt), faAnyfile, R)=0 then try
@@ -4898,7 +4898,7 @@ begin
           end;
         end;
 
-        if (wbToolMode in wbPluginModes) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEND]) then begin
+        if (wbToolMode in wbPluginModes) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEnderal]) then begin
           Modules.DeactivateAll;
 
           with wbModuleByName(wbPluginToUse)^ do
@@ -4947,6 +4947,8 @@ begin
                 sl.AddStrings(SelectedModules.ToStrings(False));
               end;
               if sl.Count < 1 then begin
+                if Length(AllModules) < 1 then
+                  ShowMessage('There are no modules in the data folder.');
                 frmMain.Close;
                 Exit;
               end;
@@ -5000,7 +5002,7 @@ begin
               Exit;
             end;
           gmTES5: if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
-          gmEND:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
+          gmEnderal:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
           gmSSE:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
         else
           MessageDlg('CoSave are not supported yet "'+s+'". Please check the the selection.', mtError, [mbAbort], 0);
@@ -13305,10 +13307,10 @@ begin
     for i := Low(Files) to High(Files) do
       if Files[i].LoadOrder = LoadOrder then begin
         // header of .exe file, show only itself
-        if SameText(ExtractFileExt(aMainRecord.GetFile.FileName), '.exe') and not SameText(ExtractFileExt(Files[i].FileName), '.exe') then
+        if SameText(ExtractFileExt(aMainRecord.GetFile.FileName), csDotExe) and not SameText(ExtractFileExt(Files[i].FileName), csDotExe) then
           Continue;
         // skip .exe file header by default
-        if not SameText(ExtractFileExt(aMainRecord.GetFile.FileName), '.exe') and SameText(ExtractFileExt(Files[i].FileName), '.exe') then
+        if not SameText(ExtractFileExt(aMainRecord.GetFile.FileName), csDotExe) and SameText(ExtractFileExt(Files[i].FileName), csDotExe) then
           Continue;
         Rec := Files[i].Elements[0] as IwbMainRecord;
         if Assigned(Rec) then begin
@@ -13757,7 +13759,7 @@ begin
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
   mniNavApplyScript.Visible := mniNavCheckForErrors.Visible;
-  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmEND, gmTES5VR, gmSSE, gmFO4, gmFO4VR]);
+  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmFO4, gmFO4VR]);
 
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;
@@ -19973,7 +19975,7 @@ begin
                 // all games except old Skyrim load BSA files with partial matching, Skyrim requires exact names match
                 // and can use a private ini to specify the bsa to use.
                 if HasBSAs(ChangeFileExt(ltLoadList[i], ''), ltDataPath,
-                    wbGameMode in [gmTES5, gmEND], wbIsSkyrim, n, m)>0 then begin
+                    wbGameMode in [gmTES5, gmEnderal], wbIsSkyrim, n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do
                         if wbLoadBSAs then begin
                           LoaderProgress('[' + n[j] + '] Loading Resources.');
@@ -20027,7 +20029,7 @@ begin
           if (i = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameMasterEsm) then begin
             b := TwbHardcodedContainer.GetHardCodedDat;
             if Length(b) > 0 then begin
-              t := wbGameName + csDotExe;
+              t := wbGameExeName;
               LoaderProgress('loading "' + t + '"...');
               _File := wbFile(t, 0, ltDataPath + ltLoadList[i], [fsIsHardcoded], b);
               SetLength(ltFiles, Succ(Length(ltFiles)));

@@ -43,6 +43,14 @@ To use these modes, you can rename the as e.g.:
 
 These sub modes will now show in the Window Caption of the Main Window, to make it easy to see that xEdit has been started in one of these modes.
 
+## Enderal
+
+Initial support for Enderal has been added.
+
+xEdit can be renamed to `EnderalEdit.exe` or started with `-enderal` as parameter.
+
+A known problem currently is that if Enderal was installed in one location and then later moved to a different location with Steam, Steam does not update the registry with the new installation path and xEdit will be unable to find Enderal's Data path.
+
 ## Fallout 76
 
 Definitions have been updated to account for increased form version in 1.0.4 and 1.0.5 patches.
