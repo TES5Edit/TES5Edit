@@ -552,7 +552,7 @@ end;
 
 function String2Magic(const aStr: string): TMagic4;
 begin
-  Result := '    ';
+  Result := #0#0#0#0;
   if Length(aStr) > 0 then Result[0] := AnsiChar(aStr[1]);
   if Length(aStr) > 1 then Result[1] := AnsiChar(aStr[2]);
   if Length(aStr) > 2 then Result[2] := AnsiChar(aStr[3]);
