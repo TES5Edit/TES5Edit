@@ -145,9 +145,9 @@ begin
   slOut := TStrings(V2O(Args.Values[1]));
   if not Assigned(slIn) or not Assigned(slOut) then
     Exit;
-  Filter := string(Args.Values[2]);
+  Filter := Lowercase(string(Args.Values[2]));
   for i := 0 to Pred(slIn.Count) do
-    if Pos(Filter, slIn[i]) > 0 then
+    if Pos(Filter, Lowercase(slIn[i])) > 0 then
       slOut.Add(slIn[i]);
 end;
 
