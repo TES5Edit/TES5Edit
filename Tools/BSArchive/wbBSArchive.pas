@@ -1051,7 +1051,7 @@ begin
       // read file names
       fStream.Position := fHeaderFO4.FileTableOffset;
       for i := Low(fFilesFO4) to High(fFilesFO4) do
-        fFilesFO4[i].Name := fStream.ReadStringLen16;
+        fFilesFO4[i].Name := StringReplace(fStream.ReadStringLen16, '/', '\', [rfReplaceAll]);
     end;
 
     //--------------------------------------------------
