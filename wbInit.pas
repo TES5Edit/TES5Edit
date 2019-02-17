@@ -358,7 +358,8 @@ end;
 procedure DoInitPath(const ParamIndex: Integer);
 const
   sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
-  sTempRegKey             = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\';
+  sUninstallRegKey        = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\';
+  sSureAIRegKey           = '\Software\SureAI\';
 
 var
   s, regPath, regKey, client: string;
@@ -380,18 +381,18 @@ begin
     if (wbDataPath = '') then with TRegistry.Create do try
       Access  := KEY_READ or KEY_WOW64_32KEY;
       RootKey := HKEY_LOCAL_MACHINE;
+      client  := 'Steam';
 
       case wbGameMode of
       gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR: begin
         regPath := sBethRegKey + wbGameNameReg + '\';
-        client  := 'Steam';
       end;
       gmEnderal: begin
-        regPath := sTempRegKey + wbGameNameReg + '\';
-        client  := 'Steam';
+        RootKey := HKEY_CURRENT_USER;
+        regPath := sSureAIRegKey + wbGameNameReg + '\';
       end;
       gmFO76: begin
-        regPath := sTempRegKey + wbGameNameReg + '\';
+        regPath := sUninstallRegKey + wbGameNameReg + '\';
         client  := 'Bethesda.net Launcher';
       end;
       end;
@@ -408,9 +409,9 @@ begin
 
       case wbGameMode of
       gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR:
-              regKey := 'Installed Path';
-      gmEnderal:  regKey := 'InstallLocation';
-      gmFO76: regKey := 'Path';
+                  regKey := 'Installed Path';
+      gmEnderal:  regKey := 'Install_Path';
+      gmFO76:     regKey := 'Path';
       end;
 
       wbDataPath := ReadString(regKey);
@@ -751,7 +752,6 @@ begin
     wbAppName := 'Enderal';
     wbGameName := 'Enderal';
     wbGameExeName := 'TESV';
-    wbGameNameReg := 'Steam App 933480';
     wbGameMasterEsm := 'Skyrim.esm';
     ToolModes := wbAlwaysMode + [tmOnamUpdate];
     ToolSources := [tsPlugins, tsSaves];
