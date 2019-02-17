@@ -10933,7 +10933,7 @@ begin
       wbString(MWD7, 'Mod 1, 2 and 3')
     ], [], cpNormal, False, nil, True),}
 
-    wbString(VANM, 'VATS Attack Name'),
+    wbString(VANM, 'VATS Attack Name', 0, cpTranslate),
     wbString(NNAM, 'Embedded Weapon Node'),
 
     wbFormIDCk(INAM, 'Impact DataSet', [IPDS]),
