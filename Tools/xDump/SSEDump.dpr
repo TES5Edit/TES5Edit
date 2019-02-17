@@ -801,7 +801,8 @@ end;
 procedure DoInitPath;
 const
   sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
-  sTempRegKey             = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\';
+  sUninstallRegKey        = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\';
+  sSureAIRegKey           = '\Software\SureAI\';
 
 var
   s, regPath, regKey, client: string;
@@ -813,23 +814,23 @@ begin
   if not wbFindCmdLineParam('D', DataPath) then begin
     DataPath := CheckAppPath;
 
-    if DataPath = '' then with TRegistry.Create do try
+    if (DataPath = '') then with TRegistry.Create do try
       Access  := KEY_READ or KEY_WOW64_32KEY;
       RootKey := HKEY_LOCAL_MACHINE;
+      client  := 'Steam';
 
       case wbGameMode of
-        gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR: begin
-          regPath := sBethRegKey + wbGameNameReg + '\';
-          client  := 'Steam';
-        end;
-        gmEnderal: begin
-          regPath := sTempRegKey + wbGameNameReg + '\';
-          client  := 'Steam';
-        end;
-        gmFO76: begin
-          regPath := sTempRegKey + wbGameNameReg + '\';
-          client  := 'Bethesda.net Launcher';
-        end;
+      gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR: begin
+        regPath := sBethRegKey + wbGameNameReg + '\';
+      end;
+      gmEnderal: begin
+        RootKey := HKEY_CURRENT_USER;
+        regPath := sSureAIRegKey + wbGameNameReg + '\';
+      end;
+      gmFO76: begin
+        regPath := sUninstallRegKey + wbGameNameReg + '\';
+        client  := 'Bethesda.net Launcher';
+      end;
       end;
 
       if not OpenKey(regPath, False) then begin
@@ -842,22 +843,24 @@ begin
 
       case wbGameMode of
       gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR:
-              regKey := 'Installed Path';
-      gmEnderal:  regKey := 'InstallLocation';
-      gmFO76: regKey := 'Path';
+                  regKey := 'Installed Path';
+      gmEnderal:  regKey := 'Install_Path';
+      gmFO76:     regKey := 'Path';
       end;
-        DataPath := ReadString(regKey);
-            DataPath := StringReplace(DataPath, '"', '', [rfReplaceAll]);
 
-        if DataPath = '' then begin
-          ReportProgress(Format('Warning: Could not determine %s installation path, no "%s" registry key', [wbGameName2, regKey]));
+      DataPath := ReadString(regKey);
+      DataPath := StringReplace(DataPath, '"', '', [rfReplaceAll]);
+
+      if DataPath = '' then begin
+        ReportProgress(Format('Warning: Could not determine %s installation path, no "%s" registry key', [wbGameName2, regKey]));
       end;
     finally
       Free;
     end;
 
-    if DataPath <>'' then
+    if (DataPath <> '') then
       DataPath := IncludeTrailingPathDelimiter(DataPath) + 'Data\';
+
   end else
     DataPath := IncludeTrailingPathDelimiter(DataPath);
 
@@ -1054,7 +1057,6 @@ begin
         gmEnderal: begin
           wbGameName := 'Enderal';
           wbGameExeName := 'TESV';
-          wbGameNameReg := 'Steam App 933480';
           wbGameMasterEsm := 'Skyrim.esm';
           case wbToolSource of
             tsSaves:   DefineTES5Saves;
