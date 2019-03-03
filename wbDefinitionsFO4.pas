@@ -16058,7 +16058,7 @@ begin
         wbInteger('Flags', itU8, wbFlags([
           {0x0001} 'Use Land Data',
           {0x0002} 'Use LOD Data',
-          {0x0004} 'Don''t Use Map Data',
+          {0x0004} 'Use Map Data',
           {0x0008} 'Use Water Data',
           {0x0010} 'Use Climate Data',
           {0x0020} 'Use Image Space Data (unused)',
