@@ -129,7 +129,7 @@ var
   wbShowFileFlags          : Boolean  = False;
   wbDisplayShorterNames    : Boolean  = False;
   wbSortSubRecords         : Boolean  = False;
-  wbSortFLST               : Boolean  = True;
+  wbSortFLST               : Boolean  = False;
   wbCanSortINFO            : Boolean  = False;
   wbSortINFO               : Boolean  = False;
   wbFillPNAM               : Boolean  = False;

@@ -5116,7 +5116,7 @@ begin
   ColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', ColumnWidth);
   RowHeight := Settings.ReadInteger('Options', 'RowHeight', RowHeight);
   SetDefaultNodeHeight(Trunc(RowHeight * (GetCurrentPPIScreen / PixelsPerInch)));
-  wbSortFLST := Settings.ReadBool('Options', 'SortFLST', wbSortFLST);
+  wbSortFLST := Settings.ReadBool('Options', 'SortFLST2', wbSortFLST);
   //wbSortINFO := Settings.ReadBool('Options', 'SortINFO', wbSortINFO); read in wbInit
   //wbFillPNAM := Settings.ReadBool('Options', 'FillPNAM', wbFillPNAM); read in wbInit
   wbFocusAddedElement := Settings.ReadBool('Options', 'FocusAddedElement', wbFocusAddedElement);
@@ -13135,7 +13135,7 @@ begin
     end;
     Settings.WriteBool('Options', 'ActorTemplateHide', wbActorTemplateHide);
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
-    Settings.WriteBool('Options', 'SortFLST', wbSortFLST);
+    Settings.WriteBool('Options', 'SortFLST2', wbSortFLST);
     Settings.WriteBool('Options', 'SortINFO', wbSortINFO);
     Settings.WriteBool('Options', 'FillPNAM', wbFillPNAM);
     Settings.WriteBool('Options', 'FocusAddedElement', wbFocusAddedElement);

@@ -29,6 +29,7 @@ This will open a YouTube playlist with xEdit specific videos by GamerPoets.
 * (found by developer) - The navigation treeview unnecessarily checks nodes of them main game masters for changes
 * (found by developer) - [TES5/SSE] Words of Power in SHOU should not be alignable
 * (found by developer) - [FO3/FNV] Some strings that are translatable are not flagged as such
+* (found by developer) - [FO3/FNV] Sort FLST should be disabled by default
 
 ## Manual Cleaning functions are deprecated
 
