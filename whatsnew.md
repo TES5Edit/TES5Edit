@@ -25,6 +25,7 @@ This will open a YouTube playlist with xEdit specific videos by GamerPoets.
 * (reported on Discord) - "Deep Copy as Override" does not check records in child groups when looking for masters that need to be added to the target
 * (reported on Discord) - When using `Insert` key in the View, it is not possible to use Ctrl to flip the "Focus newly added elements in View" option
 * (reported on Discord) - [SSE] DATA in WATR is Unused
+* (reported on Discord) - Without theme, the icons in the top right corner have a black background (thanks shad0wshayd3 for the fix)
 * (found by developer) - Saving `.esm` or `.esl` files without ESM flag for SSE stripped ONAM instead of writing it as required (the game treats files with these extension always as having ESM)
 * (found by developer) - `AddMasters()` can be called with names that are not valid module files
 * (found by developer) - The navigation treeview unnecessarily checks nodes of them main game masters for changes
@@ -107,9 +108,9 @@ Some Options have been moved to a new Experts tab which is only visible if you K
 
 ## Shrinking SpeedButtons
 
-On the "UI Settings" tab, a new "Shrink SpeedButtons in the top right corner of the main form (requires restart)" Option has been added.
+On the "UI Settings" tab, a new "Shrink SpeedButtons in the top right corner of the main form" Option has been added. The option is also available in the context menu of the buttons. (Thanks to shad0wshayd3 for improving the implementation.)
 
-Selecting this option will remove the captions from the Help / NexusMods / GitHub / Discord / Patreon / Ko-Fi / PayPal buttons.
+Selecting this option will remove the captions from the Help / Videos / NexusMods / GitHub / Discord / Patreon / Ko-Fi / PayPal buttons.
 
 # What's new in xEdit 4.0.1?
 
