@@ -24,6 +24,7 @@ This will open a YouTube playlist with xEdit specific videos by GamerPoets.
 * (reported on Discord) - Collapsing of record storage (used when adding/removing/sorting masters) can under certain circumstances result in an assert while trying to save the file later
 * (reported on Discord) - "Deep Copy as Override" does not check records in child groups when looking for masters that need to be added to the target
 * (reported on Discord) - When using `Insert` key in the View, it is not possible to use Ctrl to flip the "Focus newly added elements in View" option
+* (reported on Discord) - [SSE] DATA in WATR is Unused
 * (found by developer) - Saving `.esm` or `.esl` files without ESM flag for SSE stripped ONAM instead of writing it as required (the game treats files with these extension always as having ESM)
 * (found by developer) - `AddMasters()` can be called with names that are not valid module files
 * (found by developer) - The navigation treeview unnecessarily checks nodes of them main game masters for changes
