@@ -1199,7 +1199,6 @@ type
 
     function ContentEquals(const aMainRecord: IwbMainRecord): Boolean;
 
-
     procedure Delete;
     procedure DeleteInto(const aFile: IwbFile);
 
