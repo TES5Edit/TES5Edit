@@ -37,6 +37,7 @@ var
   wbQuickClean         : Boolean;
   wbQuickCleanAutoSave : Boolean;
   wbAutoLoad           : Boolean;
+  wbAutoExit           : Boolean;
   wbAutoGameLink       : Boolean;
 
   wbParamIndex         : integer = 1;     // First unused parameter
@@ -981,6 +982,9 @@ begin
     if FindCmdLineSwitch('autoload') then
       wbAutoLoad := True;
 
+    if FindCmdLineSwitch('autoexit') then
+      wbAutoExit := True;
+
     if FindCmdLineSwitch('autogamelink') or ExeName.Contains('autogamelink') or ExeName.Contains('agl') then begin
       wbAutoLoad := True;
       wbAutoGameLink := True;
@@ -1014,7 +1018,6 @@ begin
 
   if wbQuickClean then begin
     wbIKnowWhatImDoing := True;
-    wbAutoLoad := False;
   end;
 
   if FindCmdLineSwitch('fixup') then
@@ -1220,6 +1223,12 @@ begin
   {$ENDIF WIN64}
   if wbSubMode <> '' then
     wbApplicationTitle := wbApplicationTitle + ' (' + wbSubMode + ')';
+
+  if wbAutoLoad then
+    wbApplicationTitle := wbApplicationTitle + ' [Auto Load]';
+
+  if wbAutoExit then
+    wbApplicationTitle := wbApplicationTitle + ' [Auto Exit]';
 
   if FindCmdLineSwitch('nobuildrefs') then
     wbBuildRefs := False;
