@@ -28,6 +28,7 @@ uses
   Controls,
   Forms,
   Dialogs,
+  CommCtrl,
   ExtCtrls,
   ComCtrls,
   StdCtrls,
@@ -404,14 +405,14 @@ type
     pnlViewTopLegend: TPanel;
     bnLegend: TSpeedButton;
     bnMainMenu: TSpeedButton;
-    bnHelp: TJvTransparentButton;
-    bnVideos: TJvTransparentButton;
-    bnNexusMods: TJvTransparentButton;
-    bnGitHub: TJvTransparentButton;
-    bnDiscord: TJvTransparentButton;
-    bnPatreon: TJvTransparentButton;
-    bnKoFi: TJvTransparentButton;
-    bnPayPal: TJvTransparentButton;
+    bnHelp: TSpeedButton;
+    bnVideos: TSpeedButton;
+    bnNexusMods: TSpeedButton;
+    bnGitHub: TSpeedButton;
+    bnDiscord: TSpeedButton;
+    bnPatreon: TSpeedButton;
+    bnKoFi: TSpeedButton;
+    bnPayPal: TSpeedButton;
     jbhPatreon: TJvBalloonHint;
     jbhGitHub: TJvBalloonHint;
     jbhNexusMods: TJvBalloonHint;
@@ -5518,15 +5519,14 @@ var
 begin
   with pnlBtn do
     for i := Pred(ControlCount) downto 0 do
-      if Controls[i] is TJvTransparentButton then
-        with TJvTransparentButton(Controls[i]) do
+      if Controls[i] is TSpeedButton then
+        with TSpeedButton(Controls[i]) do
           if Tag = 0 then begin
             Caption := Hint;
-            TextAlign := ttaRight;
             Hint := HelpKeyword;
             Width := Constraints.MaxWidth;
             ShowHint := not Hint.IsEmpty;
-            FrameStyle := fsLight;
+            Flat := True;
           end;
 end;
 
@@ -5561,7 +5561,7 @@ end;
 
 function NormalizeRotation(const aRot: TwbVector): TwbVector;
 
-function NormalizeAxis(const aValue: Single): Single;
+  function NormalizeAxis(const aValue: Single): Single;
   begin
     Result := aValue;
     while Result < (-Pi) do
@@ -15528,20 +15528,19 @@ var
 begin
   with pnlBtn do
     for i := Pred(ControlCount) downto 0 do
-      if Controls[i] is TJvTransparentButton then
-        with TJvTransparentButton(Controls[i]) do
+      if Controls[i] is TSpeedButton then
+        with TSpeedButton(Controls[i]) do
           if Tag = 0 then begin
             HelpKeyword := Hint;
             Hint := Caption;
             Caption := '';
-            TextAlign := ttaCenter;
             Constraints.MaxWidth := Width;
             Width := (Height - Glyph.Height) + Glyph.Width;
             ShowHint := not Hint.IsEmpty;
           end;
 
-  if btnNexusModsNewVersion then bnNexusMods.FrameStyle := fsIndent;
-  if btnGithubNewVersion then bnGithub.FrameStyle := fsIndent;
+  bnNexusMods.Flat := not btnNexusModsNewVersion;
+  bnGithub.Flat := not btnGithubNewVersion;
 end;
 
 procedure TfrmMain.splElementsMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -16093,7 +16092,7 @@ begin
 
         if wbShrinkButtons then begin
           bnNexusMods.HelpKeyword := 'A newer version is available on NexusMods: ' + NexusModsVersion;
-          bnNexusMods.FrameStyle := fsIndent;
+          bnNexusMods.Flat := False;
         end else bnNexusMods.Hint := 'A newer version is available on NexusMods: ' + NexusModsVersion;
 
         if Settings.ReadInteger('NexusMods', 'SnoozeDate', 0) <> Trunc(Now) then
@@ -16122,7 +16121,7 @@ begin
 
         if wbShrinkButtons then begin
           bnGitHub.HelpKeyword := 'A newer version is available on GitHub: ' + GitHubVersion;
-          bnGitHub.FrameStyle := fsIndent;
+          bnGitHub.Flat := False;
         end else bnGitHub.Hint := 'A newer version is available on GitHub: ' + GitHubVersion;
 
         if Settings.ReadInteger('GitHub', 'SnoozeDate', 0) <> Trunc(Now) then
@@ -20794,6 +20793,32 @@ begin
   end);
 end;
 
+type
+  TDoDrawIcon = function (DC: HDC; Details: TThemedElementDetails; const R: TRect; himl: HIMAGELIST; Index: Integer): Boolean of object;
+  TUxThemeStyleHack = class(TUxThemeStyle);
+  TCustomStyleHack = class(TCustomStyle);
+
+var
+  Trampoline_TUxThemeStyle_DoDrawIcon : function(Self: TUxThemeStyleHack; DC: HDC; Details: TThemedElementDetails; const R: TRect; himl: HIMAGELIST; Index: Integer): Boolean;
+  CodePointer_TUxThemeStyle_DoDrawIcon : TDoDrawIcon;
+
+function Detour_TUxThemeStyle_DoDrawIcon(Self: TUxThemeStyleHack; DC: HDC;
+  Details: TThemedElementDetails; const R: TRect; himl: HIMAGELIST;
+  Index: Integer): Boolean;
+var
+  Icon: HICON;
+  IW, IH: Integer;
+begin
+  if Details.Element = teButton then begin
+    if not ImageList_GetIconSize(himl, IW, IH) then
+      Exit(False);
+    Icon := ImageList_GetIcon(himl, Index, LR_DEFAULTCOLOR);
+    Result := DrawIconEx(DC, R.Left, R.Top, Icon, IW, IH, 0, 0, DI_NORMAL);
+    DestroyIcon(Icon);
+  end else
+    Result := Trampoline_TUxThemeStyle_DoDrawIcon(Self, DC, Details, R, himl, Index)
+end;
+
 initialization
   wbLockProcessMessages := LockProcessMessages;
   wbUnLockProcessMessages := UnLockProcessMessages;
@@ -20806,10 +20831,17 @@ initialization
     Free;
   end;
 
+  with TUxThemeStyleHack(TUxThemeStyle.Create) do try
+    CodePointer_TUxThemeStyle_DoDrawIcon := DoDrawIcon;
+  finally
+    Free;
+  end;
+
   BeginHooks;
   try
 
     @Trampoline_TWinControl_MainWndProc := InterceptCreate(@CodePointer_TWinControl_MainWndProc, @Detour_TWinControl_MainWndProc);
+    @Trampoline_TUxThemeStyle_DoDrawIcon := InterceptCreate(@CodePointer_TUxThemeStyle_DoDrawIcon, @Detour_TUxThemeStyle_DoDrawIcon);
 
   finally
     EndHooks;
@@ -20823,6 +20855,7 @@ finalization
   try
 
     InterceptRemove(@Trampoline_TWinControl_MainWndProc);
+    InterceptRemove(@Trampoline_TUxThemeStyle_DoDrawIcon);
 
   finally
     EndUnHooks;

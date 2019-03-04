@@ -387,86 +387,86 @@ object frmMain: TfrmMain
             'xEdit is an advanced graphical esp editor and conflict detector.'
             ''
             'Discord: https://discord.gg/5t8RnNQ'
-
+            
               'Forum: https://afkmods.iguanadons.net/index.php?/topic/3750-wipz' +
               '-tes5edit/'
             ''
-
+            
               'The navigation treeview on the left side shows all active master' +
               's and plugins in their correct load order. By navigating that tr' +
               'eeview you can look at every single record in any of your master' +
               's or plugins. Once a record has been selected the detailed conte' +
               'nts of that record is shown on the right side.'
             ''
-
+            
               'The view treeview shows all versions of the selected record from' +
               ' all plugins which contain it. The left most column is the maste' +
               'r. The right most column is the plugin that "wins". This is the ' +
               'version of the record that the game sees.'
             ''
-
+            
               'The navigation and view treeview use the same color coding to si' +
               'gnal the conflict state of individual fields (in the view treevi' +
               'ew) and the record overall (in the navigation treeview).'
             ''
-
+            
               'Previously colors were listed by background and text color. Inst' +
               'ead, click the Legend button in the upper right corner. The Lege' +
               'nd window will summarizes the meaning of the colors.'
             ''
-
+            
               'Conflict detection is not simply based on the existence of multi' +
               'ple records for the same FormID in different plugins but instead' +
               ' performs a comparison of the parsed subrecord data.'
             ''
-
+            
               'The navigation treeview has a context menu where you can activat' +
               'e filtering. Filtering is based on the same conflict categorizat' +
               'ion as the background and text color.'
             ''
             'Command Line Switches:'
             ''
-
+            
               '-cp:<codepage> or -cp-trans:<codepage> [sets codepage for transl' +
               'atable strings to codepage number or utf8]'
-
+            
               '-l:<language> [Sets language, affects used codepage and .strings' +
               ' files]'
             '-edit [Enable Edit Mode]'
             '-view [Enable View Mode]'
             '-saves [Enable Saves Mode / View Mode Only]'
-
+            
               '-IgnoreESL [Will load all modules as full modules, even if ESL f' +
               'lagged]'
-
+            
               '-PseudoESL [xEdit will check if the module falls within ESL cons' +
               'traints (not containing new records with ObjectIDs > $FFF) and l' +
               'oad the file like an ESL (mapped into the FE xxx namespace) if p' +
               'ossible]'
             '-DontCache [Completely disables ref caching]'
-
+            
               '-DontCacheLoad [Don'#39't load cache files if present, but save if p' +
               'ossible]'
             '-DontCacheSave [Don'#39't save cache files after building refs]'
-
+            
               '-AllowDirectSaves:<filename list> [File may be an .esm, .esl, or' +
               ' .esp. Without a list of files, this will load non-official (off' +
               'icial = game master, official dlcs, CCs) modules without using m' +
               'emory mapped files. Optionally you can specify a list of files. ' +
               'Which will only load the listed modules without using memory map' +
               'ped files. This optional list may include official modules.]'
-
+            
               '-<gamemode> [Specifies which game mode to use. <gamemode> can be' +
               ' any of the following: '#39'tes5vr'#39', '#39'fo4vr'#39', '#39'tes4'#39', '#39'tes5'#39', '#39'sse'#39',' +
               ' '#39'fo3'#39', '#39'fnv'#39', '#39'fo4'#39', '#39'fo76'#39']'
-
+            
               '-moprofile:<profilename> Opens the plugin selection from the MO ' +
               'profile named in the switch.'
             '-setesm [Set ESM flag. Plugin selection screen will appear.]'
-
+            
               '-clearesm [Remove ESM flag. Plugin selection screen will appear.' +
               ']'
-
+            
               '-VeryQuickShowConflicts [loads all modules according to plugins.' +
               'txt without showing module selection, except if CTRL is pressed ' +
               'on start]'
@@ -486,17 +486,17 @@ object frmMain: TfrmMain
             ''
             'Keyboard Shortcuts:'
             ''
-
+            
               '- Holding Shift+Ctrl+Alt while starting shows a dialog asking if' +
               ' the setting file should be deleted.'
             '- Holding Shift while starting to reset window position'
             ''
             'Module Selection Treeview:'
             ''
-
+            
               '- Hold SHIFT to skip building/loading references for all plugins' +
               '.'
-
+            
               '- [UP/DOWN] arrow to navigate plugin list. If multiple plugins a' +
               're selected, this will deselect them.'
             '- [Space] to check or uncheck selected plugins.'
@@ -512,11 +512,11 @@ object frmMain: TfrmMain
             '- Ctrl + 1 through 5 to set a Bookmark.'
             '- ALT + 1 through 5 to jump to a Bookmark.'
             '- F2 to change FormID of a record'
-
+            
               '- Ctrl or Shift while clicking to select several records/plugins' +
               ' at once'
             '- Del To delete a record or a group of records'
-
+            
               '- Alt + Click to fully expand a tree. This can take a lot of tim' +
               'e when expanding large trees.'
             '- [Right Arrow] or + to expand current node'
@@ -530,15 +530,15 @@ object frmMain: TfrmMain
             '- F2 to activate inplace editor'
             '- CTRL + Click on FormID to switch focus to that record'
             '- [Double Click] on text field to open multiline viewer'
-
+            
               '- [Double Click] on [Integer, Float, or FormID] to open In-Place' +
               ' Editor'
             '- Shift + [Double Click] on text field to open multiline editor'
             '- Ctrl + C to copy to clipboard'
-
+            
               '- Ctrl + W from a weather record to open the visual weather edit' +
               'or'
-
+            
               '- Alt + CRSR while in view treeview to navigate within the Navag' +
               'ation treeview'
             ''
@@ -549,29 +549,29 @@ object frmMain: TfrmMain
             'Modgroup Editor:'
             ''
             '- CTRL UP/DOWN - Move entry'
-
+            
               '- INSERT - Insert entry (Insert Module or CRC depending on which' +
               ' is selected)'
             '- SHIFT + INSERT - Insert crc (when on a module)'
             '- DELETE - Delete a module or crc'
-
+            
               '- SPACE / Mouse Click - toggle flag when a flag is currently foc' +
               'used'
             ''
             'Modgroups:'
             ''
-
+            
               'For a modgroup the be activateable, the order of the mods in the' +
               ' load order and modgroup must match.'
             ''
-
+            
               'If a modgroup is active, what it essentially means is that for e' +
               'ach record that is contained in more than one mod of the modgrou' +
               'p, only the last (in load order) is visible. That'#39's it. The invi' +
               'sible record versions simply don'#39't participate in the normal con' +
               'flict detection mechanisms at all.'
             ''
-
+            
               'A modgroup does not perform any merge or make any changes to any' +
               ' mod. All it does it hide away version of records that you'#39've st' +
               'ated (by defining the modgroup) that you'#39've already checked them' +
@@ -579,14 +579,14 @@ object frmMain: TfrmMain
             ''
             'Modgroups File and Syntax:'
             ''
-
+            
               '[xEdit EXE Name].modgroups i.e. SSEEdit.modgroups for SSEEdit. S' +
               'ave in the same folder as the EXE.'
-
+            
               '[Plugin Name].modgroups i.e. for Someplugin.esp, Someplugin.modg' +
               'roups. Save the file in your Data folder instead.'
             ''
-
+            
               'Prefixes are processed from left to right. #@Plugin.esp is the s' +
               'ame -Plugin.esp. They combine "negatively" not positively.'
             ''
@@ -594,17 +594,17 @@ object frmMain: TfrmMain
             '+ The file is optional'
             '- The file is neither a target nor a source.'
             '} Ignore load order completely'
-
+            
               '{ Ignore load order among a consecutive block of mods marked wit' +
               'h this.'
             '@ File is not a source'
             '# File is not a target'
-
+            
               '! File is forbidden. If the listed module is active, the modgrou' +
               'p is invalid.'
             '<filename>:CRC32'
             ''
-
+            
               'If a module is followed by a list of one or more CRC values, the' +
               ' modgroup is only available if the module has one of the listed ' +
               'CRCs. Source means that if a record in this mod is found, then i' +
@@ -619,7 +619,7 @@ object frmMain: TfrmMain
             'MainPlugin - D.esp'
             'MainPlugin - E.esp'
             ''
-
+            
               'The above example means that all in that particular order for th' +
               'e modgroup to be activateable.'
             ''
@@ -633,10 +633,10 @@ object frmMain: TfrmMain
             '-MainPlugin - D.esp'
             'MainPlugin - E.esp'
             ''
-
+            
               'Group A) If a record is present in E and D, the records from plu' +
               'gin D will be hidden.'
-
+            
               'Group B) If a record is present in E and C, the records from plu' +
               'gin C will be hidden.'
             ''
@@ -646,7 +646,7 @@ object frmMain: TfrmMain
             'MainPlugin - E.esp'
             ''
             ''
-
+            
               'Not all mod groups defined in that file will necessarily show up' +
               ' in the selection list. Mod groups for which less then 2 plugins' +
               ' are currently active are filtered. If the load order of plugins' +
@@ -654,7 +654,7 @@ object frmMain: TfrmMain
             ''
             'What'#39's the effect of having a mod group active?'
             ''
-
+            
               'When a record for the view treeview is generated and multiple fi' +
               'les of the same mod group modify this record, then only the newe' +
               'st of the files in that modgroup will be shown. So instead of se' +
@@ -662,12 +662,12 @@ object frmMain: TfrmMain
               'ng the newest file in that mod group. This also affects conflict' +
               ' classification.'
             ''
-
+            
               'It'#39's worth pointing out here that if a record is overridden by b' +
               'oth plugins in a mod group and other plugins that normal conflic' +
               't detection will still work perfectly.'
             ''
-
+            
               'Basically this system can be used to reduce a lot of noise from ' +
               'the conflict reports.'
             ''
@@ -675,7 +675,7 @@ object frmMain: TfrmMain
             ''
             '[GameMode]\Data\FO4Edit Cache'
             ''
-
+            
               'Cache files are based on the CRC of the xEdit EXE, then the plug' +
               'in filename. For example 3917E178_DLCNukaWorld_esm_43D25C56.refc' +
               'ache. Once built xEdit will load the cache file rather then buil' +
@@ -685,14 +685,14 @@ object frmMain: TfrmMain
             ''
             '[GameMode]\Data\FO4Edit Backups'
             ''
-
+            
               'Backups are saved with the file name [PluginName].[esm/esp/els].' +
               'backup.[Date Stamp} For example PluginName.esp.backup.2018_07_25' +
               '_20_52_10. These can be renamed and copied to the Data folder.'
             ''
             'Show Only Master and Leafs:'
             ''
-
+            
               'What this does is, similar to modgroups, reduce which records ar' +
               'e being show in the view treeview (and are taken into account fo' +
               'r calculating conflict information).'
@@ -724,13 +724,13 @@ object frmMain: TfrmMain
             '               |              |'
             '               +--------------+'
             ''
-
+            
               'Then with active "Only Master and Leafs" only Master, D, E, and ' +
               'C will be shown. The assumption here being that whatever the con' +
               'tents of A or B, it'#39's already being taken into account by D and/' +
               'or E.'
             ''
-
+            
               'This assumption is obviously only true if the author of mods D a' +
               'nd E did their job correctly, so this isn'#39't a good option to hav' +
               'e always enabled. As long as that assumption holds true, it can ' +
@@ -1258,7 +1258,7 @@ object frmMain: TfrmMain
     end
     object bnBack: TSpeedButton
       AlignWithMargins = True
-      Left = 770
+      Left = 805
       Top = 3
       Width = 24
       Height = 24
@@ -1344,7 +1344,7 @@ object frmMain: TfrmMain
     end
     object bnForward: TSpeedButton
       AlignWithMargins = True
-      Left = 800
+      Left = 835
       Top = 3
       Width = 25
       Height = 24
@@ -1453,9 +1453,9 @@ object frmMain: TfrmMain
     end
     object pnlBtn: TPanel
       AlignWithMargins = True
-      Left = 831
+      Left = 866
       Top = 3
-      Width = 530
+      Width = 495
       Height = 24
       Align = alRight
       AutoSize = True
@@ -1463,20 +1463,19 @@ object frmMain: TfrmMain
       BevelOuter = bvNone
       PopupMenu = pmuBtnMenu
       TabOrder = 1
-      object bnPayPal: TJvTransparentButton
+      object bnPayPal: TSpeedButton
         AlignWithMargins = True
-        Left = 475
+        Left = 442
         Top = 0
         Width = 52
         Height = 24
+        Margins.Left = 1
         Margins.Top = 0
+        Margins.Right = 1
         Margins.Bottom = 0
         Align = alLeft
-        AutoGray = False
         Caption = 'PayPal'
-        FrameStyle = fsLight
-        TextAlign = ttaRight
-        OnClick = bnPayPalClick
+        Flat = True
         Glyph.Data = {
           76030000424D760300000000000036000000280000000D000000100000000100
           2000000000004003000000000000000000000000000000000000000000000000
@@ -1506,27 +1505,25 @@ object frmMain: TfrmMain
           00FF853000FF853000FF853000FF853000FF843000FE812E00F9683015B81313
           1215000000000000000003030303593C2E84744228BB734127BD734127BB7342
           27BC754429C0704834AB43342E5A0F0E0E100000000000000000}
+        OnClick = bnPayPalClick
       end
-      object bnPatreon: TJvTransparentButton
+      object bnPatreon: TSpeedButton
         AlignWithMargins = True
-        Left = 411
+        Left = 332
         Top = 0
         Width = 58
         Height = 24
-        Hint =
+        Hint = 
           'Patreon is now live! Please support further ongoing xEdit develo' +
           'pment.'
+        Margins.Left = 1
         Margins.Top = 0
+        Margins.Right = 1
         Margins.Bottom = 0
         Align = alLeft
         Constraints.MaxWidth = 58
-        AutoGray = False
         Caption = 'Patreon'
-        FrameStyle = fsLight
-        ParentShowHint = False
-        ShowHint = True
-        TextAlign = ttaRight
-        OnClick = bnPatreonClick
+        Flat = True
         Glyph.Data = {
           36040000424D3604000000000000360000002800000010000000100000000100
           20000000000000040000000000000000000000000000000000000059FFFF2470
@@ -1562,22 +1559,24 @@ object frmMain: TfrmMain
           FFFF0059FFFF0058FDFD1A3D809B040405090000000000000000000000000000
           0000000000000000000012161E301B3C7B970C4ECAD80056F8F80056F8F80B4F
           CCD91B3D7C9812171E3100000000000000000000000000000000}
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = bnPatreonClick
       end
-      object bnNexusMods: TJvTransparentButton
+      object bnNexusMods: TSpeedButton
         AlignWithMargins = True
-        Left = 141
+        Left = 128
         Top = 0
         Width = 76
         Height = 24
+        Margins.Left = 1
         Margins.Top = 0
+        Margins.Right = 1
         Margins.Bottom = 0
         Align = alLeft
         Constraints.MaxWidth = 76
-        AutoGray = False
         Caption = 'NexusMods'
-        FrameStyle = fsLight
-        TextAlign = ttaRight
-        OnClick = bnNexusModsClick
+        Flat = True
         Glyph.Data = {
           36040000424D3604000000000000360000002800000010000000100000000100
           2000000000000004000000000000000000000000000000000000000000000000
@@ -1613,22 +1612,22 @@ object frmMain: TfrmMain
           25BF201F23FF28272AFF1F1E22F5171718690000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000
           00000B0B0B2C0E0D0F6504040417000000000000000000000000}
+        OnClick = bnNexusModsClick
       end
-      object bnKoFi: TJvTransparentButton
+      object bnKoFi: TSpeedButton
         AlignWithMargins = True
-        Left = 357
+        Left = 392
         Top = 0
         Width = 48
         Height = 24
+        Margins.Left = 1
         Margins.Top = 0
+        Margins.Right = 1
         Margins.Bottom = 0
         Align = alLeft
         Constraints.MaxWidth = 48
-        AutoGray = False
         Caption = 'Ko-Fi'
-        FrameStyle = fsLight
-        TextAlign = ttaRight
-        OnClick = bnKoFiClick
+        Flat = True
         Glyph.Data = {
           36040000424D3604000000000000360000002800000010000000100000000100
           2000000000000004000000000000000000000000000000000000000000000000
@@ -1664,22 +1663,22 @@ object frmMain: TfrmMain
           57FFBF9F57FFAF9250EF31281670000000020000000000000000000000000000
           00000000000000000000030201172E2715716A5830B49C8247D39C8247D36A58
           30B42B2413710303011800000000000000000000000000000000}
+        OnClick = bnKoFiClick
       end
-      object bnHelp: TJvTransparentButton
+      object bnHelp: TSpeedButton
         AlignWithMargins = True
-        Left = 3
+        Left = 1
         Top = 0
-        Width = 72
+        Width = 69
         Height = 24
+        Margins.Left = 1
         Margins.Top = 0
+        Margins.Right = 1
         Margins.Bottom = 0
         Align = alLeft
         Constraints.MaxWidth = 72
-        AutoGray = False
         Caption = 'Help'
-        FrameStyle = fsLight
-        TextAlign = ttaRight
-        OnClick = bnHelpClick
+        Flat = True
         Glyph.Data = {
           960C0000424D960C00000000000036000000280000002C000000120000000100
           200000000000600C000000000000000000000000000000000000000000001F1F
@@ -1782,21 +1781,21 @@ object frmMain: TfrmMain
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000}
+        OnClick = bnHelpClick
       end
-      object bnVideos: TJvTransparentButton
+      object bnVideos: TSpeedButton
         AlignWithMargins = True
-        Left = 81
+        Left = 72
         Top = 0
         Width = 54
         Height = 24
+        Margins.Left = 1
         Margins.Top = 0
+        Margins.Right = 1
         Margins.Bottom = 0
         Align = alLeft
-        AutoGray = False
         Caption = 'Videos'
-        FrameStyle = fsLight
-        TextAlign = ttaRight
-        OnClick = bnVideosClick
+        Flat = True
         Glyph.Data = {
           36040000424D3604000000000000360000002800000010000000100000000100
           2000000000000004000000000000000000000000000000000000000000000000
@@ -1832,21 +1831,21 @@ object frmMain: TfrmMain
           5BFF3D6068FF33555FFA22394687000000000000000000000000000000000000
           0000000000000000000007070832292930903E3C45CE5D5D6AE9545868EA3446
           50CF183B32860916122000000000000000000000000000000000}
+        OnClick = bnVideosClick
       end
-      object bnGitHub: TJvTransparentButton
+      object bnGitHub: TSpeedButton
         AlignWithMargins = True
-        Left = 223
+        Left = 206
         Top = 0
         Width = 60
         Height = 24
+        Margins.Left = 1
         Margins.Top = 0
+        Margins.Right = 1
         Margins.Bottom = 0
         Align = alLeft
-        AutoGray = False
         Caption = 'GitHub'
-        FrameStyle = fsLight
-        TextAlign = ttaRight
-        OnClick = bnGitHubClick
+        Flat = True
         Glyph.Data = {
           66060000424D6606000000000000360000002800000016000000120000000100
           2000000000003006000000000000000000000000000000000000000000000000
@@ -1900,22 +1899,22 @@ object frmMain: TfrmMain
           00000000000000000000242424DD262627C41D1D1D4C0D0D0D1E1A1A1A431D1D
           1D4F19191A410F0F0F2326262681232324E42626267C00000000000000000000
           00000000000000000000}
+        OnClick = bnGitHubClick
       end
-      object bnDiscord: TJvTransparentButton
+      object bnDiscord: TSpeedButton
         AlignWithMargins = True
-        Left = 289
+        Left = 268
         Top = 0
         Width = 62
         Height = 24
+        Margins.Left = 1
         Margins.Top = 0
+        Margins.Right = 1
         Margins.Bottom = 0
         Align = alLeft
         Constraints.MaxWidth = 62
-        AutoGray = False
         Caption = 'Discord'
-        FrameStyle = fsLight
-        TextAlign = ttaRight
-        OnClick = bnDiscordClick
+        Flat = True
         Glyph.Data = {
           76050000424D7605000000000000360000002800000015000000100000000100
           2000000000004005000000000000000000000000000000000000000000000201
@@ -1961,6 +1960,7 @@ object frmMain: TfrmMain
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000000000000000
           0000000000000000000000000000000000000000000000000000}
+        OnClick = bnDiscordClick
       end
     end
   end
@@ -1989,7 +1989,7 @@ object frmMain: TfrmMain
         Height = 26
         Margins.Bottom = 9
         Align = alTop
-        Caption =
+        Caption = 
           'A filter has been applied. The treeview contents is fossilized a' +
           'nd will not adjust structure to changes.  Please remove or re-ap' +
           'ply the filter if necessary.'
@@ -2715,7 +2715,7 @@ object frmMain: TfrmMain
     end
   end
   object odModule: TOpenDialog
-    Filter =
+    Filter = 
       'Plugin Files (*.esm;*.esl;*.esp;*.esu)|*.esm;*.esl;*.esp;*.esu|S' +
       'ave Files (*.ess;*.fos)|*.ess;*.fos|CoSave Files (*.obse;*.fose;' +
       '*.nvse;*.skse)|*.obse;*.fose;*.nvse;*.skse|All Files (*.*)|*.*'
@@ -4817,11 +4817,10 @@ object frmMain: TfrmMain
   end
   object pmuBtnMenu: TPopupMenu
     OnPopup = pmuBtnMenuPopup
-    Left = 968
+    Left = 976
     Top = 104
     object mniBtnShrinkButtons: TMenuItem
       Caption = 'Shrink Buttons'
-      RadioItem = True
       OnClick = mniBtnShrinkButtonsClick
     end
   end
