@@ -11029,8 +11029,8 @@ begin
 
   if Assigned(aGroup) then begin
     if not (not Assigned(mrGroup) or (mrGroup.Equals(aGroup))) then begin
-      if not (not Assigned(mrGroup) or (mrGroup.Equals(aGroup))) then
-        Assert(not Assigned(mrGroup) or (mrGroup.Equals(aGroup)), 'Found additional ' + mrGroup.Name + ' for ' + Self.GetName);
+      wbProgress('<Error: Found additional ' + mrGroup.Name + ' for ' + Self.GetName +'>');
+      Exit;
     end;
     if Assigned(eContainer) then
       IwbContainer(eContainer).Equals(aGroup.Container);
