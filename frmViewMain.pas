@@ -11241,8 +11241,11 @@ end;
 procedure TfrmMain.mniBtnShrinkButtonsClick(Sender: TObject);
 begin
   wbShrinkButtons := not wbShrinkButtons;
-  Settings.WriteBool('Options', 'ShrinkButtons', wbShrinkButtons);
-  Settings.UpdateFile;
+  
+  if (Settings <> nil) then begin
+    Settings.WriteBool('Options', 'ShrinkButtons', wbShrinkButtons);
+    Settings.UpdateFile;
+  end;
 
   if wbShrinkButtons then ShrinkButtons else ExpandButtons;
 end;
