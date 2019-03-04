@@ -14108,6 +14108,9 @@ begin
       wbNexusModsUrl := 'https://www.nexusmods.com/skyrim/mods/62698';
   end;
 
+  if wbGameMode = gmEnderal then
+    wbNexusModsUrl := 'https://www.nexusmods.com/enderal/mods/23';
+
   DefineTES5a;
   DefineTES5b;
   DefineTES5c;
