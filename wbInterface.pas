@@ -267,6 +267,7 @@ var
   wbDarkMode : Boolean = False;
 
   wbHelpUrl: string = 'https://tes5edit.github.io/docs';
+  wbVideosUrl: string = 'https://www.youtube.com/playlist?list=PLlN8weLk86XiGXJI4DaRa1QIq1zhDpD8V';
   wbNexusModsUrl: string;
   wbGitHubUrl: string = 'https://github.com/TES5Edit/TES5Edit/releases';
   wbDiscordUrl: string = 'https://discord.gg/5t8RnNQ';
@@ -350,7 +351,6 @@ type
     procedure AddMessages(const aMessages: TwbMessages); overload;
     function ToStrings: TArray<string>;
   end;
-
 
   TConflictAll = (
     caUnknown,

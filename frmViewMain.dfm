@@ -1257,8 +1257,9 @@ object frmMain: TfrmMain
       OnMouseDown = bnMainMenuMouseDown
     end
     object bnBack: TSpeedButton
+      Tag = 1
       AlignWithMargins = True
-      Left = 811
+      Left = 818
       Top = 3
       Width = 24
       Height = 24
@@ -1343,8 +1344,9 @@ object frmMain: TfrmMain
       NumGlyphs = 3
     end
     object bnForward: TSpeedButton
+      Tag = 1
       AlignWithMargins = True
-      Left = 841
+      Left = 848
       Top = 3
       Width = 25
       Height = 24
@@ -1430,10 +1432,12 @@ object frmMain: TfrmMain
     end
     object bnHelp: TSpeedButton
       AlignWithMargins = True
-      Left = 872
+      Left = 877
       Top = 3
-      Width = 70
+      Width = 71
       Height = 24
+      Margins.Left = 1
+      Margins.Right = 1
       Align = alRight
       Caption = 'Help'
       Flat = True
@@ -1541,12 +1545,62 @@ object frmMain: TfrmMain
         0000000000000000000000000000000000000000000000000000}
       OnClick = bnHelpClick
     end
+    object bnVideos: TSpeedButton
+      AlignWithMargins = True
+      Left = 950
+      Top = 3
+      Width = 52
+      Height = 24
+      Margins.Left = 1
+      Margins.Right = 1
+      Align = alRight
+      Caption = 'Videos'
+      Flat = True
+      Glyph.Data = {
+        36040000424D3604000000000000360000002800000010000000100000000100
+        2000000000000004000000000000000000000000000000000000000000000000
+        000000000000000000000101022C080C16870F1526C3161C2CE3192236E71821
+        33D00D1118940202043800000000000000000000000000000000000000000000
+        0000000000000B0E188E202741FF2A2A37FF272B3BFF171E32FF1D263BFF252E
+        43FF293348FF293043FF11141B9B000000000000000000000000000000000000
+        000011131EB4222D4FFF1C2235FF211405FF2B292AFF28344DFF282E3EFF292E
+        3AFF2C323EFF2D333FFF353A47FF1F2127C10000000000000000000000000A0A
+        0F8B2A304AFF202238FF212234FF20202BFF2C2A37FF3B3B49FF2E343BFF2824
+        2BFF3E3540FF383B41FF2C2D32FF44454FFF1C1D229900000000010101222527
+        38FF190E1DFF303C4BFF588395FF628699FF5E7C8FFF444C56FF484850FF5669
+        75FF5C7E8FFF48555CFF383338FF3A3639FF585A65FF090A0B2B0F0F148F3129
+        39FF3E4F5DFF68ABBEFF516D78FF4D4C51FF6B8997FF6CA8BAFF4D4950FF7895
+        A1FF70BBCCFF393B3DFF453C3DFF353136FF423F47FF2B2C309A272429D34745
+        53FF79C3D9FF56808DFF22090DFF261619FF58616EFF7CBFD3FF3B3A41FF687D
+        8BFF5E98A6FF373232FF493636FF261A1EFF322E32FF38383EDA3E353CF46B7B
+        8AFF94E1F6FF3F474FFF281C21FF271E24FF6D8693FFA0E6F5FF404852FF606E
+        7AFF7EBCCBFF536D75FF69858DFF303037FF241415FF3C3A42F4453B44F4606C
+        7CFF99E5FAFF3E4A50FF31262AFF444349FF4C5C69FF4E6067FF404046FF6B7B
+        87FF7EBBCDFF464C59FF77919EFF83C2D2FF272930FF3E353BF73C3840D3574E
+        5BFF86C6DCFF517F8AFF260F12FF4B414BFF352B35FF2A3940FF3A2E30FF6675
+        7EFF70ADBFFF2C1B22FF38252BFF89DCF0FF52707CFF3C2D35DE27282C92746C
+        79FF626871FF87BFD1FF566F79FF555154FF6C8C9BFF73ADC0FF4C4248FF6E89
+        94FF7EC5D7FF54626CFF638B99FF6EA6B9FF4C4951FF2C272C9B040405267475
+        83FF473C44FF655E64FF688B9EFF5390BDFF7091A9FF666E7DFF555664FF7687
+        97FF7B8F9FFF6A7F88FF657A86FF423A44FF3C3441FF0E0E1129000000002122
+        27917C7F93FF4F4242FF212739FF053A7EFF4A546FFF6A5C64FF454A58FF3E3B
+        47FF564D5CFF565365FF38333FFF292732FF2C2F3D9300000000000000000000
+        0000444650B98C8DA1FF454552FF2C2C37FF4E4953FF5A5967FF5A5D6AFF4A47
+        53FF4A4259FF3F3B5AFF262741FF2F374AB80000000000000000000000000000
+        0000000000002D2F3892777588FF786F79FF49434DFF3D3A48FF534959FF4B4A
+        5BFF3D6068FF33555FFA22394687000000000000000000000000000000000000
+        0000000000000000000007070832292930903E3C45CE5D5D6AE9545868EA3446
+        50CF183B32860916122000000000000000000000000000000000}
+      OnClick = bnVideosClick
+    end
     object bnNexusMods: TSpeedButton
       AlignWithMargins = True
-      Left = 948
+      Left = 1004
       Top = 3
-      Width = 75
+      Width = 76
       Height = 24
+      Margins.Left = 1
+      Margins.Right = 1
       Align = alRight
       Caption = 'NexusMods'
       Flat = True
@@ -1589,10 +1643,12 @@ object frmMain: TfrmMain
     end
     object bnGitHub: TSpeedButton
       AlignWithMargins = True
-      Left = 1029
+      Left = 1082
       Top = 3
-      Width = 60
+      Width = 58
       Height = 24
+      Margins.Left = 1
+      Margins.Right = 1
       Align = alRight
       Caption = 'GitHub'
       Flat = True
@@ -1653,10 +1709,12 @@ object frmMain: TfrmMain
     end
     object bnDiscord: TSpeedButton
       AlignWithMargins = True
-      Left = 1095
+      Left = 1142
       Top = 3
-      Width = 66
+      Width = 60
       Height = 24
+      Margins.Left = 1
+      Margins.Right = 1
       Align = alRight
       Caption = 'Discord'
       Flat = True
@@ -1709,13 +1767,15 @@ object frmMain: TfrmMain
     end
     object bnPatreon: TSpeedButton
       AlignWithMargins = True
-      Left = 1167
+      Left = 1204
       Top = 3
-      Width = 64
+      Width = 59
       Height = 24
       Hint = 
         'Patreon is now live! Please support further ongoing xEdit develo' +
         'pment.'
+      Margins.Left = 1
+      Margins.Right = 1
       Align = alRight
       Caption = 'Patreon'
       Flat = True
@@ -1760,10 +1820,12 @@ object frmMain: TfrmMain
     end
     object bnKoFi: TSpeedButton
       AlignWithMargins = True
-      Left = 1237
+      Left = 1265
       Top = 3
-      Width = 64
+      Width = 45
       Height = 24
+      Margins.Left = 1
+      Margins.Right = 1
       Align = alRight
       Caption = 'Ko-Fi'
       Flat = True
@@ -1806,10 +1868,12 @@ object frmMain: TfrmMain
     end
     object bnPayPal: TSpeedButton
       AlignWithMargins = True
-      Left = 1307
+      Left = 1312
       Top = 3
-      Width = 54
+      Width = 51
       Height = 24
+      Margins.Left = 1
+      Margins.Right = 1
       Align = alRight
       Caption = 'PayPal'
       Flat = True
@@ -1850,7 +1914,7 @@ object frmMain: TfrmMain
       AlignWithMargins = True
       Left = 30
       Top = 5
-      Width = 775
+      Width = 782
       Height = 20
       Margins.Left = 0
       Margins.Top = 5

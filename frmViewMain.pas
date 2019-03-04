@@ -404,6 +404,7 @@ type
     bnLegend: TSpeedButton;
     bnMainMenu: TSpeedButton;
     bnHelp: TSpeedButton;
+    bnVideos: TSpeedButton;
     bnNexusMods: TSpeedButton;
     bnGitHub: TSpeedButton;
     bnDiscord: TSpeedButton;
@@ -664,6 +665,7 @@ type
     procedure tmrUpdateColumnWidthsTimer(Sender: TObject);
     procedure vstViewScroll(Sender: TBaseVirtualTree; DeltaX, DeltaY: Integer);
     procedure bnHelpClick(Sender: TObject);
+    procedure bnVideosClick(Sender: TObject);
     procedure bnNexusModsClick(Sender: TObject);
     procedure bnGitHubClick(Sender: TObject);
     procedure bnDiscordClick(Sender: TObject);
@@ -7868,6 +7870,17 @@ begin
   if Now - LastHelpClick > 1/24/60/60 then begin
     ShellExecute(Handle, 'open', PChar(wbHelpUrl), '', '', SW_SHOWNORMAL);
     LastHelpClick := Now;
+  end;
+end;
+
+var
+  LastVideosClick: TDateTime;
+
+procedure TfrmMain.bnVideosClick(Sender: TObject);
+begin
+  if Now - LastVideosClick > 1/24/60/60 then begin
+    ShellExecute(Handle, 'open', PChar(wbVideosUrl), '', '', SW_SHOWNORMAL);
+    LastVideosClick := Now;
   end;
 end;
 
