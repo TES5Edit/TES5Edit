@@ -2108,13 +2108,15 @@ const
   OrderedList = 'OrderedList';
 begin
   Result := wbSortFLST; {>>> Should not be sorted according to Arthmoor and JustinOther, left as sorted for compatibility <<<}
-  rEDID := aContainer.RecordBySignature[EDID];
-  if Assigned(rEDID) then begin
-    s := rEDID.Value;
-    if Length(s) > Length(OrderedList) then
-      Delete(s, 1, Length(s)-Length(OrderedList));
-    if SameText(s, OrderedList) then
-      Result := False;
+  if Result then begin
+    rEDID := aContainer.RecordBySignature[EDID];
+    if Assigned(rEDID) then begin
+      s := rEDID.Value;
+      if Length(s) > Length(OrderedList) then
+        Delete(s, 1, Length(s)-Length(OrderedList));
+      if SameText(s, OrderedList) then
+        Result := False;
+    end;
   end;
   if Result then begin
     MainRecord := aContainer.ContainingMainRecord;
