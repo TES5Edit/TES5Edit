@@ -74,7 +74,8 @@ uses
   Vcl.Styles,
   Vcl.Styles.Utils.SystemMenu,
   Vcl.Styles.Ext,
-  JvBalloonHint, JvExStdCtrls, JvRichEdit, FileContainer;
+  JvBalloonHint, JvExStdCtrls, JvRichEdit, FileContainer, JvExControls,
+  JvButton, JvTransparentButton;
 
 const
   DefaultInterval             = 1 / 24 / 6; // 10 minutes
@@ -403,13 +404,14 @@ type
     pnlViewTopLegend: TPanel;
     bnLegend: TSpeedButton;
     bnMainMenu: TSpeedButton;
-    bnHelp: TSpeedButton;
-    bnNexusMods: TSpeedButton;
-    bnGitHub: TSpeedButton;
-    bnDiscord: TSpeedButton;
-    bnPatreon: TSpeedButton;
-    bnKoFi: TSpeedButton;
-    bnPayPal: TSpeedButton;
+    bnHelp: TJvTransparentButton;
+    bnVideos: TJvTransparentButton;
+    bnNexusMods: TJvTransparentButton;
+    bnGitHub: TJvTransparentButton;
+    bnDiscord: TJvTransparentButton;
+    bnPatreon: TJvTransparentButton;
+    bnKoFi: TJvTransparentButton;
+    bnPayPal: TJvTransparentButton;
     jbhPatreon: TJvBalloonHint;
     jbhGitHub: TJvBalloonHint;
     jbhNexusMods: TJvBalloonHint;
@@ -431,6 +433,9 @@ type
     mniNavHeaderINFO: TMenuItem;
     mniNavHeaderINFObyFormID: TMenuItem;
     mniNavHeaderINFObyPreviousINFO: TMenuItem;
+    pnlBtn: TPanel;
+    pmuBtnMenu: TPopupMenu;
+    mniBtnShrinkButtons: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -664,6 +669,7 @@ type
     procedure tmrUpdateColumnWidthsTimer(Sender: TObject);
     procedure vstViewScroll(Sender: TBaseVirtualTree; DeltaX, DeltaY: Integer);
     procedure bnHelpClick(Sender: TObject);
+    procedure bnVideosClick(Sender: TObject);
     procedure bnNexusModsClick(Sender: TObject);
     procedure bnGitHubClick(Sender: TObject);
     procedure bnDiscordClick(Sender: TObject);
@@ -694,11 +700,14 @@ type
     procedure mniMarkallfileswithoutONAMasmodifiedClick(Sender: TObject);
     procedure mniNavHeaderINFOClick(Sender: TObject);
     procedure pmuNavHeaderPopupPopup(Sender: TObject);
+    procedure pmuBtnMenuPopup(Sender: TObject);
+    procedure mniBtnShrinkButtonsClick(Sender: TObject);
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
     procedure SetSaveInterval;
 
+    procedure ExpandButtons;
     procedure ShrinkButtons;
   protected
     BackHistory: IInterfaceList;
@@ -966,6 +975,9 @@ type
     PendingMainRecords: TDynMainRecords;
 
     PendingResetActiveTree: Boolean;
+
+    btnNexusModsNewVersion: boolean;
+    btnGithubNewVersion: boolean;
 
     procedure DoInit;
     procedure SetDoubleBuffered(aWinControl: TWinControl);
@@ -5500,6 +5512,24 @@ begin
   end;
 end;
 
+procedure TfrmMain.ExpandButtons;
+var
+  i: Integer;
+begin
+  with pnlBtn do
+    for i := Pred(ControlCount) downto 0 do
+      if Controls[i] is TJvTransparentButton then
+        with TJvTransparentButton(Controls[i]) do
+          if Tag = 0 then begin
+            Caption := Hint;
+            TextAlign := ttaRight;
+            Hint := HelpKeyword;
+            Width := Constraints.MaxWidth;
+            ShowHint := not Hint.IsEmpty;
+            FrameStyle := fsLight;
+          end;
+end;
+
 procedure TfrmMain.ExpandView;
 var
   Node      : PVirtualNode;
@@ -5531,7 +5561,7 @@ end;
 
 function NormalizeRotation(const aRot: TwbVector): TwbVector;
 
-  function NormalizeAxis(const aValue: Single): Single;
+function NormalizeAxis(const aValue: Single): Single;
   begin
     Result := aValue;
     while Result < (-Pi) do
@@ -7868,6 +7898,17 @@ begin
   if Now - LastHelpClick > 1/24/60/60 then begin
     ShellExecute(Handle, 'open', PChar(wbHelpUrl), '', '', SW_SHOWNORMAL);
     LastHelpClick := Now;
+  end;
+end;
+
+var
+  LastVideosClick: TDateTime;
+
+procedure TfrmMain.bnVideosClick(Sender: TObject);
+begin
+  if Now - LastVideosClick > 1/24/60/60 then begin
+    ShellExecute(Handle, 'open', PChar(wbVideosUrl), '', '', SW_SHOWNORMAL);
+    LastVideosClick := Now;
   end;
 end;
 
@@ -11197,6 +11238,15 @@ begin
   InvalidateElementsTreeView(NoNodes);
 end;
 
+procedure TfrmMain.mniBtnShrinkButtonsClick(Sender: TObject);
+begin
+  wbShrinkButtons := not wbShrinkButtons;
+  Settings.WriteBool('Options', 'ShrinkButtons', wbShrinkButtons);
+  Settings.UpdateFile;
+
+  if wbShrinkButtons then ShrinkButtons else ExpandButtons;
+end;
+
 procedure TfrmMain.mniMainLocalizationEditorClick(Sender: TObject);
 begin
   if not Assigned(wbLocalizationHandler) then
@@ -13088,6 +13138,8 @@ begin
     wbAlignArrayElements := cbAlignArrayElements.Checked;
     wbManualCleaningHide := cbManualCleaningHide.Checked;
     wbManualCleaningAllow := cbManualCleaningAllow.Checked;
+    if (wbShrinkButtons <> cbShrinkButtons.Checked) then
+      if cbShrinkButtons.Checked then ShrinkButtons else ExpandButtons;
     wbShrinkButtons := cbShrinkButtons.Checked;
     ColumnWidth := StrToIntDef(edColumnWidth.Text, ColumnWidth);
     RowHeight := StrToIntDef(edRowHeight.Text, RowHeight);
@@ -13595,6 +13647,11 @@ begin
     end;
   end else if pgMain.ActivePage = tbsView then
     CheckViewForChange;
+end;
+
+procedure TfrmMain.pmuBtnMenuPopup(Sender: TObject);
+begin
+  mniBtnShrinkButtons.Checked := wbShrinkButtons;
 end;
 
 procedure TfrmMain.pmuMainPopup(Sender: TObject);
@@ -15466,15 +15523,22 @@ procedure TfrmMain.ShrinkButtons;
 var
   i: Integer;
 begin
-  with pnlTop do
+  with pnlBtn do
     for i := Pred(ControlCount) downto 0 do
-      if Controls[i] is TSpeedButton then
-        with TSpeedButton(Controls[i]) do
+      if Controls[i] is TJvTransparentButton then
+        with TJvTransparentButton(Controls[i]) do
           if Tag = 0 then begin
+            HelpKeyword := Hint;
             Hint := Caption;
             Caption := '';
+            TextAlign := ttaCenter;
+            Constraints.MaxWidth := Width;
             Width := (Height - Glyph.Height) + Glyph.Width;
+            ShowHint := not Hint.IsEmpty;
           end;
+
+  if btnNexusModsNewVersion then bnNexusMods.FrameStyle := fsIndent;
+  if btnGithubNewVersion then bnGithub.FrameStyle := fsIndent;
 end;
 
 procedure TfrmMain.splElementsMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -16023,16 +16087,28 @@ begin
     if NexusModsVersion > VersionString then begin
       if not (jbhPatreon.Active or jbhGitHub.Active) then begin
         bnNexusMods.ShowHint := True;
-        bnNexusMods.Hint := 'A newer version is available on NexusMods: ' + NexusModsVersion;
+
+        if wbShrinkButtons then begin
+          bnNexusMods.HelpKeyword := 'A newer version is available on NexusMods: ' + NexusModsVersion;
+          bnNexusMods.FrameStyle := fsIndent;
+        end else bnNexusMods.Hint := 'A newer version is available on NexusMods: ' + NexusModsVersion;
+
         if Settings.ReadInteger('NexusMods', 'SnoozeDate', 0) <> Trunc(Now) then
         //if NexusModsVersion > TwbVersion(Settings.ReadString('NexusMods', 'SnoozeVersion', '')) then
-          jbhNexusMods.ActivateHint(bnNexusMods, bnNexusMods.Hint, '', 20000);
+          if wbShrinkButtons then
+            jbhNexusMods.ActivateHint(bnNexusMods, bnNexusMods.HelpKeyword, '', 20000)
+          else jbhNexusMods.ActivateHint(bnNexusMods, bnNexusMods.Hint, '', 20000);
         ShowNexusModsHint := 0;
       end;
+
       bnNexusMods.Font.Style := bnNexusMods.Font.Style + [fsBold, fsUnderline];
+      btnNexusModsNewVersion := true;
+
     end else begin
       bnNexusMods.ShowHint := True;
-      bnNexusMods.Hint := 'Current version on NexusMods: ' + NexusModsVersion;
+      if wbShrinkButtons then
+        bnNexusMods.HelpKeyword := 'Current version on NexusMods: ' + NexusModsVersion
+      else bnNexusMods.Hint := 'Current version on NexusMods: ' + NexusModsVersion;
       ShowNexusModsHint := 0;
     end;
 
@@ -16040,16 +16116,28 @@ begin
     if GitHubVersion > VersionString then begin
       if not (jbhPatreon.Active or jbhNexusMods.Active) then begin
         bnGitHub.ShowHint := True;
-        bnGitHub.Hint := 'A newer version is available on GitHub: ' + GitHubVersion;
+
+        if wbShrinkButtons then begin
+          bnGitHub.HelpKeyword := 'A newer version is available on GitHub: ' + GitHubVersion;
+          bnGitHub.FrameStyle := fsIndent;
+        end else bnGitHub.Hint := 'A newer version is available on GitHub: ' + GitHubVersion;
+
         if Settings.ReadInteger('GitHub', 'SnoozeDate', 0) <> Trunc(Now) then
         //if GitHubVersion > TwbVersion(Settings.ReadString('GitHub', 'SnoozeVersion', '')) then
-          jbhGitHub.ActivateHint(bnGitHub, bnGitHub.Hint, '', 20000);
+          if wbShrinkButtons then
+            jbhGitHub.ActivateHint(bnGitHub, bnGitHub.HelpKeyword, '', 20000)
+          else jbhGitHub.ActivateHint(bnGitHub, bnGitHub.Hint, '', 20000);
         ShowGitHubHint := 0;
       end;
-      bnGitHub.Font.Style := bnNexusMods.Font.Style + [fsBold, fsUnderline];
+
+      bnGitHub.Font.Style := bnGitHub.Font.Style + [fsBold, fsUnderline];
+      btnGithubNewVersion := true;
+
     end else begin
       bnGitHub.ShowHint := True;
-      bnGitHub.Hint := 'Current version on GitHub: ' + GitHubVersion;
+      if wbShrinkButtons then
+        bnGitHub.HelpKeyword := 'Current version on GitHub: ' + GitHubVersion
+      else bnGitHub.Hint := 'Current version on GitHub: ' + GitHubVersion;
       ShowGitHubHint := 0;
     end;
 

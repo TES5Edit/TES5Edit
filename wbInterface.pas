@@ -267,6 +267,7 @@ var
   wbDarkMode : Boolean = False;
 
   wbHelpUrl: string = 'https://tes5edit.github.io/docs';
+  wbVideosUrl: string = 'https://www.youtube.com/playlist?list=PLlN8weLk86XiGXJI4DaRa1QIq1zhDpD8V';
   wbNexusModsUrl: string;
   wbGitHubUrl: string = 'https://github.com/TES5Edit/TES5Edit/releases';
   wbDiscordUrl: string = 'https://discord.gg/5t8RnNQ';
@@ -2243,7 +2244,7 @@ type
     ['{CF657B3A-E7A6-48FE-AC68-8DF15962A531}']
   end;
 
-  IwbStr4 = interface(IwbIntegerDefFormater)	// 4 bytes strings stored as itU32 
+  IwbStr4 = interface(IwbIntegerDefFormater)	// 4 bytes strings stored as itU32
     ['{2DC5200E-C1F1-47e7-A927-3D110D59F55A}']
   end;  // The interface handles swaping the character in readable order
 
