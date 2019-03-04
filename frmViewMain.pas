@@ -18176,7 +18176,7 @@ begin
         end;
       end;
       if not FoundGroup then begin
-        if Assigned(ParentNodeData) then begin
+        if Assigned(MainRecord) and Assigned(ParentNodeData) then begin
           for i := High(ParentNodeData.MissingElements) downto Low(ParentNodeData.MissingElements) do
             if MainRecord.Equals(ParentNodeData.MissingElements[i]) then
               FoundGroup := True;
