@@ -129,7 +129,7 @@ var
   wbShowFileFlags          : Boolean  = False;
   wbDisplayShorterNames    : Boolean  = False;
   wbSortSubRecords         : Boolean  = False;
-  wbSortFLST               : Boolean  = True;
+  wbSortFLST               : Boolean  = False;
   wbCanSortINFO            : Boolean  = False;
   wbSortINFO               : Boolean  = False;
   wbFillPNAM               : Boolean  = False;
@@ -351,7 +351,6 @@ type
     procedure AddMessages(const aMessages: TwbMessages); overload;
     function ToStrings: TArray<string>;
   end;
-
 
   TConflictAll = (
     caUnknown,

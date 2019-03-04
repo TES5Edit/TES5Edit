@@ -13351,7 +13351,10 @@ begin
     wbFormIDCk(SNAM, 'Open Sound', [SNDR, NULL]),
     wbFormIDCk(XNAM, 'Spell', [SPEL]),
     wbFormIDCk(INAM, 'Image Space', [IMGS]),
-    wbInteger(DATA, 'Damage Per Second', itU16, nil, cpNormal, True, True),
+    IsSSE(
+      wbInteger(DATA, 'Unused', itU16, nil, cpIgnore, True, True),
+      wbInteger(DATA, 'Damage Per Second', itU16, nil, cpNormal, True, True)
+    ),
     IsSSE(
       wbStruct(DNAM, 'Visual Data', [
         wbFloat('Unknown'),

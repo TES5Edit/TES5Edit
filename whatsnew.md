@@ -8,6 +8,12 @@ It is now possible to support xEdit development with both one time and monthly d
 
 The Ko-Fi Page is linked via the Ko-Fi button in the top right corner of the main form.
 
+## GamerPoets Videos
+
+A new "Videos" button has been added in the top right corner of the main form.
+
+This will open a YouTube playlist with xEdit specific videos by GamerPoets.
+
 ## Bugfixes
 
 * #634 - [FO4] Unknown Perk Entrypoint 157
@@ -18,11 +24,14 @@ The Ko-Fi Page is linked via the Ko-Fi button in the top right corner of the mai
 * (reported on Discord) - Collapsing of record storage (used when adding/removing/sorting masters) can under certain circumstances result in an assert while trying to save the file later
 * (reported on Discord) - "Deep Copy as Override" does not check records in child groups when looking for masters that need to be added to the target
 * (reported on Discord) - When using `Insert` key in the View, it is not possible to use Ctrl to flip the "Focus newly added elements in View" option
+* (reported on Discord) - [SSE] DATA in WATR is Unused
 * (found by developer) - Saving `.esm` or `.esl` files without ESM flag for SSE stripped ONAM instead of writing it as required (the game treats files with these extension always as having ESM)
 * (found by developer) - `AddMasters()` can be called with names that are not valid module files
 * (found by developer) - The navigation treeview unnecessarily checks nodes of them main game masters for changes
 * (found by developer) - [TES5/SSE] Words of Power in SHOU should not be alignable
 * (found by developer) - [FO3/FNV] Some strings that are translatable are not flagged as such
+* (found by developer) - [FO3/FNV] Sort FLST should be disabled by default
+* (found by developer) - Duplicate "Children of" GRUPs should report a non-fatal error instead of asserting
 
 ## Manual Cleaning functions are deprecated
 
