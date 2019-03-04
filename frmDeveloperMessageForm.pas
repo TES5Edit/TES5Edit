@@ -8,11 +8,9 @@ uses
   JvExStdCtrls, JvRichEdit, FileContainer, JvHtControls;
 
 type
+  TdmChoice = (dmcPatreon, dmcKoFi, dmcPayPal);
+
   TfrmDeveloperMessage = class(TForm)
-    btnOops: TButton;
-    btnCancel: TButton;
-    cbDontShowAgain: TCheckBox;
-    btnOk: TButton;
 
     reMain: TJvRichEdit;
     fcMessage: TFileContainer;
@@ -23,6 +21,13 @@ type
     fcImage: TFileContainer;
 
     tmrEnableButton: TTimer;
+    pnlBottom: TPanel;
+    btnOops: TButton;
+    cbDontShowAgain: TCheckBox;
+    btnCancel: TButton;
+    btnOK: TButton;
+    btnKoFi: TButton;
+    btnPayPal: TButton;
 
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -31,10 +36,13 @@ type
     procedure btnOopsClick(Sender: TObject);
 
     procedure tmrEnableButtonTimer(Sender: TObject);
+    procedure btnOKClick(Sender: TObject);
+    procedure btnKoFiClick(Sender: TObject);
+    procedure btnPayPalClick(Sender: TObject);
   private
     procedure FixZoom;
   public
-    { Public declarations }
+    Choice : TdmChoice;
   end;
 
 implementation
@@ -137,6 +145,11 @@ begin
   FixZoom;
 end;
 
+procedure TfrmDeveloperMessage.btnOKClick(Sender: TObject);
+begin
+  Choice := dmcPatreon;
+end;
+
 procedure TfrmDeveloperMessage.btnOopsClick(Sender: TObject);
 var
   Stream: TStream;
@@ -145,7 +158,22 @@ begin
   LockWindowUpdate(Handle);
   try
     btnOops.Visible := False;
+    btnOK.Visible := True;
+    btnKoFi.Visible := True;
+    btnPayPal.Visible := True;
+    btnOK.Enabled := True;
+    btnKoFi.Enabled := True;
+    btnPayPal.Enabled := True;
+    btnOK.Default := True;
+    btnCancel.Default := False;
     cbDontShowAgain.Caption := '&Don''t show again for a while';
+
+    cbDontShowAgain.Left := 0;
+    btnCancel.Left := cbDontShowAgain.Left + cbDontShowAgain.Width + 5;
+    btnOK.Left := btnCancel.Left + btnCancel.Width + 5;
+    btnKoFi.Left := btnOK.Left + btnOK.Width + 5;
+    btnPayPal.Left := btnKoFi.Left + btnKoFi.Width + 5;
+
     Stream := fcMessage.CreateReadStream;
     try
       reMain.Lines.LoadFromStream(Stream);
@@ -156,6 +184,16 @@ begin
   finally
     LockWindowUpdate(0);
   end;
+end;
+
+procedure TfrmDeveloperMessage.btnKoFiClick(Sender: TObject);
+begin
+  Choice := dmcKoFi;
+end;
+
+procedure TfrmDeveloperMessage.btnPayPalClick(Sender: TObject);
+begin
+  Choice := dmcPayPal;
 end;
 
 procedure TfrmDeveloperMessage.tmrEnableButtonTimer(Sender: TObject);
