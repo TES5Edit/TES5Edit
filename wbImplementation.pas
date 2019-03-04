@@ -7904,7 +7904,7 @@ var
     BasePtr.mrsFormID := aFormID;
     BasePtr.mrsVCS1 := DefaultVCS1;
     case wbGameMode of
-      gmFO76           : BasePtr.mrsVersion := 183;
+      gmFO76           : BasePtr.mrsVersion := 184;
       gmFO4, gmFO4VR   : BasePtr.mrsVersion := 131;
       gmSSE, gmTES5VR  : BasePtr.mrsVersion := 44;
       gmTES5           : BasePtr.mrsVersion := 43;
