@@ -2243,7 +2243,7 @@ type
     ['{CF657B3A-E7A6-48FE-AC68-8DF15962A531}']
   end;
 
-  IwbStr4 = interface(IwbIntegerDefFormater)	// 4 bytes strings stored as itU32 
+  IwbStr4 = interface(IwbIntegerDefFormater)	// 4 bytes strings stored as itU32
     ['{2DC5200E-C1F1-47e7-A927-3D110D59F55A}']
   end;  // The interface handles swaping the character in readable order
 
