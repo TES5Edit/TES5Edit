@@ -63,7 +63,7 @@ object frmOptions: TfrmOptions
         Top = 108
         Width = 233
         Height = 17
-        Hint =
+        Hint = 
           'Skip loading BSA and BA2 archives. Some functions like LOD gener' +
           'ation and localization may not work properly if disabled.'
         Caption = 'Load BSAs'
@@ -218,7 +218,7 @@ object frmOptions: TfrmOptions
         Top = 32
         Width = 385
         Height = 33
-        Caption =
+        Caption = 
           'Set enabled state opposite of player (deactivate at your own ris' +
           'k, this is a critical setting)'
         TabOrder = 0
@@ -320,7 +320,7 @@ object frmOptions: TfrmOptions
         Top = 291
         Width = 330
         Height = 13
-        Caption =
+        Caption = 
           'Delay updating View when navigation treeview selection changes b' +
           'y '
       end
@@ -468,7 +468,7 @@ object frmOptions: TfrmOptions
         Top = 344
         Width = 423
         Height = 17
-        Caption =
+        Caption = 
           'Focus newly added elements in View (can be inverted by holding C' +
           'TRL)'
         TabOrder = 12
@@ -577,10 +577,10 @@ object frmOptions: TfrmOptions
         Top = 80
         Width = 439
         Height = 17
-        Hint =
+        Hint = 
           'Add integer values of flags and enumerations in () brackets at t' +
           'he end'
-        Caption =
+        Caption = 
           'Show values of flags and enumerations (requires restart, interfe' +
           'rs with scripts)'
         TabOrder = 1
@@ -608,7 +608,7 @@ object frmOptions: TfrmOptions
         Top = 11
         Width = 233
         Height = 17
-        Hint =
+        Hint = 
           'Sorting FLST can cause issues for mods relying on the order of f' +
           'orms, unsorted FLST prevents them from being merged in merged pa' +
           'tch.'
