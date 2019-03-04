@@ -6733,8 +6733,8 @@ begin
     ], cpNormal, True),
     wbRArray('Menu Items',
       wbRStruct('Menu Item', [
-        wbStringKC(ITXT, 'Item Text'),
-        wbStringKC(RNAM, 'Result Text', 0, cpNormal, True),
+        wbStringKC(ITXT, 'Item Text', 0, cpTranslate),
+        wbStringKC(RNAM, 'Result Text', 0, cpTranslate, True),
         wbInteger(ANAM, 'Flags', itU8, wbFlags([
           'Add Note',
           'Force Redraw'
@@ -8003,7 +8003,7 @@ begin
     ]), cpNormal, True, False, nil, wbMESGDNAMAfterSet),
     wbInteger(TNAM, 'Display Time', itU32, nil, cpNormal, False, False, wbMESGTNAMDontShow),
     wbRStructs('Menu Buttons', 'Menu Button', [
-      wbStringKC(ITXT, 'Button Text'),
+      wbStringKC(ITXT, 'Button Text', 0, cpTranslate),
       wbCTDAs
     ], [])
   ], False, nil, cpNormal, False, wbMESGAfterLoad);
