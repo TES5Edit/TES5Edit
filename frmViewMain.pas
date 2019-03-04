@@ -4828,7 +4828,7 @@ begin
         finally
           Stream.Free;
         end;
-        if i < wbWhatsNewVersion then begin
+        if (i < wbWhatsNewVersion) and not wbAutoLoad then begin
           ShowModal;
           if cbDontShowAgain.Checked then begin
             Settings.WriteInteger('WhatsNew', 'Version', wbWhatsNewVersion);
@@ -4848,7 +4848,8 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    ShowDeveloperMessage;
+    if not wbPatron or not wbAutoLoad then
+      ShowDeveloperMessage;
   end;
 
   try
@@ -4911,18 +4912,19 @@ begin
           end;
         end;
 
-        if (wbToolMode in wbPluginModes) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEnderal]) then begin
+        if ((wbToolMode in wbPluginModes) or wbQuickClean) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEnderal]) then begin
           Modules.DeactivateAll;
 
-          with wbModuleByName(wbPluginToUse)^ do
-            if IsValid then begin
-              Activate;
-              Include(miFlags, mfTaggedForPluginMode);
-            end else begin
-              ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
-              frmMain.Close;
-              Exit;
-            end;
+          if (wbPluginToUse <> '') or not wbQuickClean then
+            with wbModuleByName(wbPluginToUse)^ do
+              if IsValid then begin
+                Activate;
+                Include(miFlags, mfTaggedForPluginMode);
+              end else begin
+                ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
+                frmMain.Close;
+                Exit;
+              end;
 
           // More plugins requested ?
           while wbFindNextValidCmdLinePlugin(wbParamIndex, s, wbDataPath) do begin
@@ -4941,6 +4943,13 @@ begin
         sl.Clear;
         if wbToolSource in [tsPlugins] then begin
           if (wbToolMode in wbPluginModes) or (wbAutoLoad and (GetAsyncKeyState(VK_CONTROL) >= 0)) then try
+            if wbQuickClean then
+              if Length(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
+                ShowMessage('Exactly one module must be selected for Quick Clean mode.');
+                frmMain.Close;
+                Exit;
+              end;
+
             sl.AddStrings(wbModulesByLoadOrder.SimulateLoad.ToStrings(False));
           except end;
 
@@ -4950,7 +4959,6 @@ begin
                 MinSelect := 1;
                 MaxSelect := 1;
                 AllModules := wbModulesByLoadOrder(False).FilteredByFlag(mfValid);
-                AllModules.ExcludeAll(mfActive);
                 Caption := 'Please check or double click the module that you want to ' + wbSubMode;
               end else
                 PresetCategory := 'ActiveModules';
@@ -16097,6 +16105,9 @@ begin
     DoGenerateLOD
   else if wbToolMode = tmScript then
     DoRunScript;
+
+  if wbAutoExit then
+    tmrShutdown.Enabled := True;
 end;
 
 procedure TfrmMain.tmrMessagesTimer(Sender: TObject);
@@ -19617,25 +19628,26 @@ begin
 
         ModGroups := nil;
 
-        if wbQuickShowConflicts or wbAutoLoad then begin
-          ModGroups := wbModGroupsByName;
-          wbModGroupsByName(False).ShowValidationMessages;
-        end else if not (wbQuickClean or (wbToolMode in wbAutoModes)) then
-          if wbToolMode in [tmView, tmEdit] then begin
-            with TfrmModGroupSelect.Create(Self) do try
-              AllModGroups := wbModGroupsByName;
-              wbModGroupsByName(False).ShowValidationMessages;
-              LoadModGroupsSelection(AllModGroups);
-              Caption := 'Which ModGroups do you want to activate?';
-              PresetCategory := 'ActiveModGroups';
-              if ShowModal = mrOk then begin
-                SaveModGroupsSelection(SelectedModGroups);
-                ModGroups := SelectedModGroups;
+        if not (wbQuickClean or (wbToolMode in wbAutoModes)) then
+          if wbQuickShowConflicts or wbAutoLoad then begin
+            ModGroups := wbModGroupsByName;
+            wbModGroupsByName(False).ShowValidationMessages;
+          end else
+            if wbToolMode in [tmView, tmEdit] then begin
+              with TfrmModGroupSelect.Create(Self) do try
+                AllModGroups := wbModGroupsByName;
+                wbModGroupsByName(False).ShowValidationMessages;
+                LoadModGroupsSelection(AllModGroups);
+                Caption := 'Which ModGroups do you want to activate?';
+                PresetCategory := 'ActiveModGroups';
+                if ShowModal = mrOk then begin
+                  SaveModGroupsSelection(SelectedModGroups);
+                  ModGroups := SelectedModGroups;
+                end;
+              finally
+                Free;
               end;
-            finally
-              Free;
             end;
-          end;
 
         ModGroupsExist := ModGroups.Activate;
         ModGroupsEnabled := ModGroupsExist;
@@ -19720,6 +19732,8 @@ begin
             wbQuickClean := False;
             wbProgress('Quick Clean mode finished.');
           end;
+          if wbAutoExit then
+            tmrShutdown.Enabled := True;
         end;
 
         if wbAutoGameLink then begin

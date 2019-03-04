@@ -54,6 +54,18 @@ To use these modes, you can rename the as e.g.:
 
 These sub modes will now show in the Window Caption of the Main Window, to make it easy to see that xEdit has been started in one of these modes.
 
+## Auto Load for Quick [Auto] Clean
+
+The `-autoload` parameter can be used together with `-quickautoclean` or `-quickclean` parameters.
+
+It is then necessary to specify the module that should be cleaned on the command line.
+
+e.g.: `SSEEdit.exe -quickautoclean -autoload update.esm`
+
+## Auto Exit
+
+The new `-autoexit` parameter can be used together with a number of different modes (e.g. Quick [Auto] Clean, LODGen, Script) to have xEdit automatically close after the operation is finished.
+
 ## Enderal
 
 Initial support for Enderal has been added.
