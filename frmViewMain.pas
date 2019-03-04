@@ -15497,7 +15497,18 @@ begin
 
       if wbPatron then begin
         btnCancel.Cancel := True;
+        btnCancel.Default := True;
         btnCancel.Enabled := True;
+        btnCancel.Caption := 'Close';
+        btnOK.Visible := False;
+        btnOK.Default := False;
+        btnOK.Enabled := False;
+        btnKoFi.Visible := False;
+        btnKoFi.Default := False;
+        btnKoFi.Enabled := False;
+        btnPayPal.Visible := False;
+        btnKoFi.Default := False;
+        btnKoFi.Enabled := False;
         ActiveControl := btnCancel;
         tmrEnableButton.Interval := 1;
       end;
@@ -15506,7 +15517,15 @@ begin
         cbDontShowAgain.Checked := True;
 
       if ShowModal = mrOk then
-        bnPatreon.Click;
+        if not wbPatron then
+          case Choice of
+            dmcKoFi:
+              bnKoFi.Click;
+            dmcPayPal:
+              bnPayPal.Click;
+          else
+            bnPatreon.Click;
+          end;
 
       Settings.WriteInteger('DeveloperMessage', 'LastShownOn', Trunc(Date));
 
