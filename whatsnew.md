@@ -8,6 +8,12 @@ It is now possible to support xEdit development with both one time and monthly d
 
 The Ko-Fi Page is linked via the Ko-Fi button in the top right corner of the main form.
 
+## GamerPoets Videos
+
+A new "Videos" button has been added in the top right corner of the main form.
+
+This will open a YouTube playlist with xEdit specific videos by GamerPoets.
+
 ## Bugfixes
 
 * #634 - [FO4] Unknown Perk Entrypoint 157
