@@ -234,6 +234,7 @@ begin
       wbAllowDirectSave := Settings.ReadBool('Options', 'AllowDirectSave', wbAllowDirectSave);
       wbSortINFO := Settings.ReadBool('Options', 'SortINFO', wbSortINFO);
       wbFillPNAM := Settings.ReadBool('Options', 'FillPNAM', wbFillPNAM);
+      wbCollapseConditions := Settings.ReadBool('Options', 'CollapseConditions', wbCollapseConditions);
       sl := TStringList.Create;
       try
         Settings.ReadSection('cpoverride', sl);

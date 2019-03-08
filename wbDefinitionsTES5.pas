@@ -3651,6 +3651,92 @@ begin
   Result := StrToInt64(aString);
 end;
 
+function wbCTDAParam1StringToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  Container  : IwbContainerElementRef;
+begin
+  Result := 0;
+
+  if not Assigned(aElement) then
+    Exit;
+
+  Container := GetContainerFromUnion(aElement) as IwbContainerElementRef;
+  if not Assigned(Container) then
+    Exit;
+
+  Container.ElementEditValues['..\CIS1'] := aString
+end;
+
+function wbCTDAParam1StringToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Container  : IwbContainerElementRef;
+begin
+  case aType of
+    ctToStr, ctToSortKey, ctToEditValue, ctToNativeValue: begin
+      Result := '';
+
+      if not Assigned(aElement) then
+        Exit;
+
+      Container := GetContainerFromUnion(aElement) as IwbContainerElementRef;
+      if not Assigned(Container) then
+        Exit;
+
+      if aType in [ctToEditValue, ctToNativeValue] then
+        Result := Container.ElementEditValues['..\CIS1']
+      else
+        Result := Container.ElementValues['..\CIS1'];
+    end;
+    ctCheck, ctEditType, ctEditInfo, ctLinksTo:
+      Result := '';
+  else
+    Result := IntToStr(aInt);
+  end;
+end;
+
+function wbCTDAParam2StringToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  Container  : IwbContainerElementRef;
+begin
+  Result := 0;
+
+  if not Assigned(aElement) then
+    Exit;
+
+  Container := GetContainerFromUnion(aElement) as IwbContainerElementRef;
+  if not Assigned(Container) then
+    Exit;
+
+  Container.ElementEditValues['..\CIS2'] := aString
+end;
+
+function wbCTDAParam2StringToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Container  : IwbContainerElementRef;
+begin
+  case aType of
+    ctToStr, ctToSortKey, ctToEditValue, ctToNativeValue: begin
+      Result := '';
+
+      if not Assigned(aElement) then
+        Exit;
+
+      Container := GetContainerFromUnion(aElement) as IwbContainerElementRef;
+      if not Assigned(Container) then
+        Exit;
+
+      if aType in [ctToEditValue, ctToNativeValue] then
+        Result := Container.ElementEditValues['..\CIS2']
+      else
+        Result := Container.ElementValues['..\CIS2'];
+    end;
+    ctCheck, ctEditType, ctEditInfo, ctLinksTo:
+      Result := '';
+  else
+    Result := IntToStr(aInt);
+  end;
+end;
+
 function wbNeverShow(const aElement: IwbElement): Boolean;
 begin
   Result := wbHideNeverShow;
@@ -6815,7 +6901,7 @@ begin
         wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
         wbInteger('Integer', itS32),
         wbFloat('Float'),
-        wbByteArray('Variable Name (unused)', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+        wbInteger('Variable Name', itU32, wbCTDAParam1StringToString, wbCTDAParam1StringToInt),
         wbInteger('Sex', itU32, wbSexEnum),
         wbInteger('Actor Value', itS32, wbActorValueEnum),
         wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
@@ -6875,7 +6961,7 @@ begin
         wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
         wbInteger('Integer', itS32),
         wbFloat('Float'),
-        wbByteArray('Variable Name (unused)', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+        wbInteger('Variable Name', itU32, wbCTDAParam2StringToString, wbCTDAParam2StringToInt),
         wbInteger('Sex', itU32, wbSexEnum),
         wbInteger('Actor Value', itS32, wbActorValueEnum),
         wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
@@ -6990,7 +7076,7 @@ begin
     ], cpNormal, False{, nil, 0, wbCTDAAfterLoad}),
     wbString(CIS1, 'Parameter #1'),
     wbString(CIS2, 'Parameter #2')
-  ], [], cpNormal).SetToStr(wbConditionToStr);
+  ], [], cpNormal).SetToStr(wbConditionToStr).IncludeFlag(dfCollapsed, wbCollapseConditions);
 
   wbCTDAs := wbRArray('Conditions', wbCTDA, cpNormal, False);
   wbCTDAsCount := wbRArray('Conditions', wbCTDA, cpNormal, False, nil, wbCTDAsAfterSet);

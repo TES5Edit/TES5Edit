@@ -203,6 +203,14 @@ object frmOptions: TfrmOptions
         Caption = 'Hide Manual Cleaning functions'
         TabOrder = 18
       end
+      object cbCollapseConditions: TCheckBox
+        Left = 16
+        Top = 273
+        Width = 439
+        Height = 17
+        Caption = 'Collapse Conditions by Default (requires restart)'
+        TabOrder = 19
+      end
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'

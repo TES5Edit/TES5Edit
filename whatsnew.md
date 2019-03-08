@@ -34,6 +34,12 @@ This will open a YouTube playlist with xEdit specific videos by GamerPoets.
 * (found by developer) - [FO3/FNV] Sort FLST should be disabled by default
 * (found by developer) - Duplicate "Children of" GRUPs should report a non-fatal error instead of asserting
 
+## Collapsed Conditions
+
+Collapsed Conditions now display the condition in a easily readable compact 1 line format.
+
+Conditions are now collapsed by default. An option has been added to control this.
+
 ## Manual Cleaning functions are deprecated
 
 Manual Cleaning functions ('Apply Filter for Cleaning', 'Undelete and Disable References', and 'Remove "Identical to Master" records' are considered obsolete with the introduction of 'Quick Auto Clean' mode and will now only show a message explaining this.
