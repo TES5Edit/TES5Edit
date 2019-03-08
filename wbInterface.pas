@@ -11010,6 +11010,8 @@ end;
 function TwbStructDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
   Result := '';
+  if Assigned(ndToStr) then
+    ndToStr(Result, nil, nil, aElement, ctToStr);
   Used(aElement, Result);
 end;
 
