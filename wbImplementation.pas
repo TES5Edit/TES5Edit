@@ -1752,6 +1752,7 @@ type
 
     procedure DoInit(aNeedSorted: Boolean); override;
 
+    function GetValue: string; override;
     function GetName: string; override;
     function GetDef: IwbNamedDef; override;
     function GetElementType: TwbElementType; override;
@@ -1789,6 +1790,7 @@ type
     procedure AddRequiredElements;
     function Add(const aName: string; aSilent: Boolean): IwbElement; override;
 
+    function GetValue: string; override;
     function GetSortKeyInternal(aExtended: Boolean): string; override;
     function GetName: string; override;
     function GetDef: IwbNamedDef; override;
@@ -16714,6 +16716,30 @@ begin
   Result := arcSorted;
 end;
 
+function TwbSubRecordArray.GetValue: string;
+var
+  SelfRef : IwbContainerElementRef;
+var
+  Def: IwbDef;
+begin
+  if wbReportMode then begin
+    Def := GetValueDef;
+    if Assigned(Def) then
+      Def.Used;
+    Def := GetDef;
+    if Assigned(Def) then
+      Def.Used;
+  end;
+
+  SelfRef := Self as IwbContainerElementRef;
+  Result := '';
+
+  if not Assigned(arcDef) then
+    Exit;
+  DoInit(True);
+  Result := arcDef.ToString(Self);
+end;
+
 function TwbSubRecordArray.IsElementRemoveable(const aElement: IwbElement): Boolean;
 begin
   Result := IsElementEditable(aElement) and (Length(cntElements) > 1);
@@ -17095,6 +17121,30 @@ begin
           Result := Result + '|';
       end;
   end;
+end;
+
+function TwbSubRecordStruct.GetValue: string;
+var
+  SelfRef : IwbContainerElementRef;
+  Def: IwbDef;
+  RMD: IwbRecordMemberDef;
+begin
+  if wbReportMode then begin
+    Def := GetValueDef;
+    if Assigned(Def) then
+      Def.Used;
+    Def := GetDef;
+    if Assigned(Def) then
+      Def.Used;
+  end;
+
+  SelfRef := Self as IwbContainerElementRef;
+  Result := '';
+
+  if not Supports(srcDef, IwbRecordMemberDef, RMD) then
+    Exit;
+  DoInit(True);
+  Result := RMD.ToString(Self);
 end;
 
 function TwbSubRecordStruct.IsElementRemoveable(const aElement: IwbElement): Boolean;
