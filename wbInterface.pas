@@ -1755,7 +1755,7 @@ type
   TwbFloatNormalizer = function(const aElement: IwbElement; aFloat: Extended): Extended;
   TwbGetConflictPriority = procedure(const aElement: IwbElement; var aConflictPriority: TwbConflictPriority);
   TwbIntToStrCallback = function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-  TwbByteArrayToStrCallback = procedure(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+  TwbToStrCallback = procedure(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
   TwbIntOverlayCallback = function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): Int64;
   TwbStrToIntCallback = function(const aString: string; const aElement: IwbElement): Int64;
   TwbAddInfoCallback = function(const aMainRecord: IwbMainRecord): string;
@@ -1909,10 +1909,13 @@ type
 
   IwbRecordMemberDef = interface(IwbSignatureDef)
     ['{259F3F08-F4ED-439D-8C1A-48137C84E52A}']
+    function ToString(const aElement: IwbElement): string;
+
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
 
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbRecordMemberDef{Self};
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbRecordMemberDef{Self};
+    function SetToStr(const aToStr : TwbToStrCallback): IwbRecordMemberDef{Self};
   end;
 
   TwbUsedMasters = array[Byte] of Boolean;
@@ -1952,6 +1955,7 @@ type
     function SetDefaultEditValue(const aValue: string): IwbValueDef;
     function SetDefaultNativeValue(const aValue: Variant): IwbValueDef;
     function SetLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef;
+    function SetToStr(const aToStr : TwbToStrCallback): IwbValueDef;
 
     property Size[aBasePtr, aEndPtr: Pointer; const aElement: IwbElement]: Integer
       read GetSize;
@@ -2047,7 +2051,6 @@ type
 
   IwbByteArrayDef = interface(IwbValueDef)
     ['{3069E1AC-4307-421B-93E4-797E18075EF9}']
-    function SetToStr(const aToStrCallback : TwbByteArrayToStrCallback): IwbByteArrayDef;
   end;
 
   IwbEmptyDef = interface(IwbValueDef)
@@ -4664,14 +4667,15 @@ type
 
   TwbNamedDef = class(TwbDef, IwbNamedDef)
   private
-    noName       : string;
-    noAfterLoad  : TwbAfterLoadCallback;
-    noAfterSet   : TwbAfterSetCallback;
-    noDontShow   : TwbDontShowCallback;
-    noTerminator : Boolean;
-    noUnused     : Boolean;
-    noTreeHead   : Boolean;
-    noTreeBranch : Boolean;
+    ndName       : string;
+    ndAfterLoad  : TwbAfterLoadCallback;
+    ndAfterSet   : TwbAfterSetCallback;
+    ndToStr      : TwbToStrCallback;
+    ndDontShow   : TwbDontShowCallback;
+    ndTerminator : Boolean;
+    ndUnused     : Boolean;
+    ndTreeHead   : Boolean;
+    ndTreeBranch : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority   : TwbConflictPriority;
@@ -4682,6 +4686,7 @@ type
                        aDontShow   : TwbDontShowCallback;
                        aGetCP      : TwbGetConflictPriority;
                        aTerminator : Boolean); virtual;
+    procedure AfterClone(const aSource: TwbDef); override;
     {--- IwbDef ---}
     function GetDontShow(const aElement: IwbElement): Boolean; override;
     function GetHasDontShow: Boolean; override;
@@ -4864,9 +4869,12 @@ type
     procedure Report(const aParents: TwbDefPath); override;
 
     {---IwbRecordMemberDef---}
+    function ToString(const aElement: IwbElement): string;
+
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbRecordMemberDef;
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbRecordMemberDef;
+    function SetToStr(const aToStr : TwbToStrCallback): IwbRecordMemberDef{Self};
 
     {---IwbSubRecordDef---}
     function GetValue: IwbValueDef;
@@ -4882,10 +4890,13 @@ type
 
   TwbRecordMemberDef = class(TwbBaseSignatureDef, IwbRecordMemberDef)
     {---IwbRecordMemberDef---}
+    function ToString(const aElement: IwbElement): string;
+
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
 
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbRecordMemberDef{Self};
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbRecordMemberDef{Self};
+    function SetToStr(const aToStr : TwbToStrCallback): IwbRecordMemberDef{Self};
   end;
 
   TwbSubRecordArrayDef = class(TwbRecordMemberDef, IwbSubRecordArrayDef)
@@ -5113,6 +5124,7 @@ type
     function SetDefaultEditValue(const aValue: string): IwbValueDef; virtual;
     function SetDefaultNativeValue(const aValue: Variant): IwbValueDef; virtual;
     function SetLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef; virtual;
+    function SetToStr(const aToStr : TwbToStrCallback): IwbValueDef; virtual;
 
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbValueDef{Self};
 
@@ -5403,7 +5415,6 @@ type
     IsNotEmpty              : Integer;
 
     badCountCallback        : TwbCountCallBack;
-    badToStrCallback        : TwbByteArrayToStrCallback;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority      : TwbConflictPriority;
@@ -5441,9 +5452,6 @@ type
     function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; override;
     function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>; override;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
-
-    {--- IwbByteArrayDef ---}
-    function SetToStr(const aToStrCallback : TwbByteArrayToStrCallback): IwbByteArrayDef;
   end;
 
   TwbEmptyDef = class(TwbValueDef, IwbEmptyDef)
@@ -8268,26 +8276,34 @@ end;
 
 { TwbNamedDef }
 
+procedure TwbNamedDef.AfterClone(const aSource: TwbDef);
+begin
+  inherited AfterClone(aSource);
+  with aSource as TwbNamedDef do begin
+    Self.ndToStr := ndToStr;
+  end;
+end;
+
 procedure TwbNamedDef.AfterLoad(const aElement: IwbElement);
 begin
   Used(nil, '');
-  if Assigned(noAfterLoad) then
-    noAfterLoad(aElement);
+  if Assigned(ndAfterLoad) then
+    ndAfterLoad(aElement);
 end;
 
 
 procedure TwbNamedDef.AfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
-  if Assigned(noAfterSet) then
-    noAfterSet(aElement, aOldValue, aNewValue);
+  if Assigned(ndAfterSet) then
+    ndAfterSet(aElement, aOldValue, aNewValue);
 end;
 
 constructor TwbNamedDef.Clone(const aSource: TwbDef);
 begin
   with (aSource as TwbNamedDef) do begin
-    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, noDontShow, defGetCP, noTerminator).AfterClone(aSource);
-    Self.noTreeHead := GetTreeHead;
-    Self.notreeBranch := GetTreeBranch;
+    Self.Create(defPriority, defRequired, ndName, ndAfterLoad, ndAfterSet, ndDontShow, defGetCP, ndTerminator).AfterClone(aSource);
+    Self.ndTreeHead := GetTreeHead;
+    Self.ndTreeBranch := GetTreeBranch;
   end
 end;
 
@@ -8300,15 +8316,15 @@ constructor TwbNamedDef.Create(aPriority   : TwbConflictPriority;
                                aGetCP      : TwbGetConflictPriority;
                                aTerminator : Boolean);
 begin
-  noName := aName;
-  noDontShow := aDontShow;
-  noAfterLoad := aAfterLoad;
-  noAfterSet := aAfterSet;
-  noTerminator := aTerminator;
-  noTreeHead := False;
-  noTreeBranch := False;
+  ndName := aName;
+  ndDontShow := aDontShow;
+  ndAfterLoad := aAfterLoad;
+  ndAfterSet := aAfterSet;
+  ndTerminator := aTerminator;
+  ndTreeHead := False;
+  ndTreeBranch := False;
   if aName = 'Unused' then begin
-    noUnused := True;
+    ndUnused := True;
     if aPriority = cpNormal then
         aPriority := cpIgnore;
   end;
@@ -8320,20 +8336,20 @@ end;
 
 function TwbNamedDef.GetDontShow(const aElement: IwbElement): Boolean;
 begin
-  if Assigned(noDontShow) then
-    Result := noDontShow(aElement)
+  if Assigned(ndDontShow) then
+    Result := ndDontShow(aElement)
   else
-    Result := wbHideUnused and noUnused;
+    Result := wbHideUnused and ndUnused;
 end;
 
 function TwbNamedDef.GetHasDontShow: Boolean;
 begin
-  Result := Assigned(noDontShow) or (wbHideUnused and noUnused);
+  Result := Assigned(ndDontShow) or (wbHideUnused and ndUnused);
 end;
 
 function TwbNamedDef.GetName: string;
 begin
-  Result := noName;
+  Result := ndName;
 end;
 
 function TwbNamedDef.GetPath: string;
@@ -8354,12 +8370,12 @@ end;
 
 function TwbNamedDef.GetTreeBranch: Boolean;
 begin
-  Result := noTreeBranch;
+  Result := ndTreeBranch;
 end;
 
 function TwbNamedDef.GetTreeHead: Boolean;
 begin
-  Result := noTreeHead;
+  Result := ndTreeHead;
 end;
 
 procedure TwbNamedDef.ParentSet;
@@ -8367,32 +8383,32 @@ var
   Parent: IwbNamedDef;
 begin
   inherited;
-  if not (IsUnknown or noUnused) and (noName = '') and Supports(defParent, IwbNamedDef, Parent) then begin
+  if not (IsUnknown or ndUnused) and (ndName = '') and Supports(defParent, IwbNamedDef, Parent) then begin
     IsUnknown := IsUnknown or (Pos('unknown', LowerCase(Parent.Name)) > 0);
-    noUnused := noUnused or (Parent.Name = 'Unused');
+    ndUnused := ndUnused or (Parent.Name = 'Unused');
   end;
 end;
 
 function TwbNamedDef.SetAfterLoad(const aAfterLoad: TwbAfterLoadCallback): IwbNamedDef;
 begin
   Result := Self;
-  noAfterLoad := aAfterLoad;
+  ndAfterLoad := aAfterLoad;
 end;
 
 function TwbNamedDef.SetAfterSet(const aAfterSet: TwbAfterSetCallback): IwbNamedDef;
 begin
   Result := Self;
-  noAfterSet := aAfterSet;
+  ndAfterSet := aAfterSet;
 end;
 
 procedure TwbNamedDef.SetTreeBranch(aValue: Boolean);
 begin
-  noTreeBranch := avalue;
+  ndTreeBranch := avalue;
 end;
 
 procedure TwbNamedDef.SetTreeHead(aValue: Boolean);
 begin
-  noTreeHead := aValue;
+  ndTreeHead := aValue;
 end;
 
 { TwbSignatureDef }
@@ -8418,7 +8434,7 @@ end;
 constructor TwbSignatureDef.Clone(const aSource: TwbDef);
 begin
   with (aSource as TwbSignatureDef) do
-    Self.Create(defPriority, defRequired, soSignatures, noName, noAfterLoad, noAfterSet, noDontShow, defGetCP).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, soSignatures, ndName, ndAfterLoad, ndAfterSet, ndDontShow, defGetCP).AfterClone(aSource);
 end;
 
 constructor TwbSignatureDef.Create(aPriority   : TwbConflictPriority;
@@ -8508,8 +8524,8 @@ end;
 constructor TwbMainRecordDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbMainRecordDef do
-    Self.Create(defPriority, defRequired, GetDefaultSignature, noName, recRecordFlags, recMembers,
-      AllowUnordered, recAddInfoCallback, noAfterLoad, noAfterSet, rdfIsReference in recDefFlags).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, GetDefaultSignature, ndName, recRecordFlags, recMembers,
+      AllowUnordered, recAddInfoCallback, ndAfterLoad, ndAfterSet, rdfIsReference in recDefFlags).AfterClone(aSource);
 end;
 
 function TwbMainRecordDef.ContainsMemberFor(aSignature     : TwbSignature;
@@ -8799,7 +8815,7 @@ end;
 constructor TwbSubRecordDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbSubRecordDef do
-    Self.Create(defPriority, defRequired, soSignatures, noName, srValue, noAfterLoad, noAfterSet, srSizeMatch, noDontShow, defGetCP).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, soSignatures, ndName, srValue, ndAfterLoad, ndAfterSet, srSizeMatch, ndDontShow, defGetCP).AfterClone(aSource);
 end;
 
 constructor TwbSubRecordDef.Create(aPriority  : TwbConflictPriority;
@@ -8887,13 +8903,13 @@ end;
 function TwbSubRecordDef.SetAfterLoad(const aAfterLoad: TwbAfterLoadCallback): IwbRecordMemberDef;
 begin
   Result := Self;
-  noAfterLoad := aAfterLoad;
+  ndAfterLoad := aAfterLoad;
 end;
 
 function TwbSubRecordDef.SetAfterSet(const aAfterSet: TwbAfterSetCallback): IwbRecordMemberDef;
 begin
   Result := Self;
-  noAfterSet := aAfterSet;
+  ndAfterSet := aAfterSet;
 end;
 
 function TwbSubRecordDef.SetDefaultEditValue(const aValue: string): IwbSubRecordDef;
@@ -8908,6 +8924,19 @@ begin
   if Assigned(srValue) then
     srValue := srValue.SetDefaultNativeValue(aValue);
   Result := Self;
+end;
+
+function TwbSubRecordDef.SetToStr(const aToStr: TwbToStrCallback): IwbRecordMemberDef;
+begin
+  Result := Self;
+  ndToStr := aToStr;
+end;
+
+function TwbSubRecordDef.ToString(const aElement: IwbElement): string;
+begin
+  Result := '';
+  if Assigned(ndToStr) then
+    ndToStr(Result, nil, nil, aElement, ctToStr);
 end;
 
 { TwbSubRecordArrayDef }
@@ -8952,8 +8981,8 @@ end;
 constructor TwbSubRecordArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbSubRecordArrayDef do
-    Self.Create(defPriority, defRequired, noName, sraElement, sraSorted,
-      noAfterLoad, noAfterSet, noDontShow, sraIsSorted, defGetCP).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, ndName, sraElement, sraSorted,
+      ndAfterLoad, ndAfterSet, ndDontShow, sraIsSorted, defGetCP).AfterClone(aSource);
 end;
 
 constructor TwbSubRecordArrayDef.Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
@@ -9115,7 +9144,7 @@ begin
       for i := 0 to Pred(srsSkipSignatures.Count) do
         SkipSigs[i] := StrToSignature(srsSkipSignatures[i]);
     end;
-    Self.Create(defPriority, defRequired, noName, srsMembers, SkipSigs, noDontShow, srsAllowUnordered, noAfterLoad, noAfterSet, defGetCP).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, ndName, srsMembers, SkipSigs, ndDontShow, srsAllowUnordered, ndAfterLoad, ndAfterSet, defGetCP).AfterClone(aSource);
   end;
 end;
 
@@ -9343,7 +9372,7 @@ begin
       for i := 0 to Pred(sruSkipSignatures.Count) do
         SkipSigs[i] := StrToSignature(sruSkipSignatures[i]);
     end;
-    Self.Create(defPriority, defRequired, noName, sruMembers, SkipSigs, noDontShow, defGetCP).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, ndName, sruMembers, SkipSigs, ndDontShow, defGetCP).AfterClone(aSource);
   end;
 end;
 
@@ -9702,7 +9731,7 @@ end;
 constructor TwbIntegerDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbIntegerDef do
-    Self.Create(defPriority, defRequired, noName, inType, inFormater, noDontShow, noAfterSet, inDefault, defGetCP, noTerminator).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, ndName, inType, inFormater, ndDontShow, ndAfterSet, inDefault, defGetCP, ndTerminator).AfterClone(aSource);
 end;
 
 function TwbIntegerDef.CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID, aNewFormID: TwbFormID): Boolean;
@@ -9862,12 +9891,12 @@ begin
   if inType = it0  then
     Result := 0
   else begin
-    Result := ExpectedLen[inType]+Ord(noTerminator);
+    Result := ExpectedLen[inType]+Ord(ndTerminator);
     if (inType=itU6to30) and (aValue<>0) then
       case (aValue and 3) of
-        0 : Result := 1 + Ord(noTerminator);
-        1 : Result := 2 + Ord(noTerminator);
-        2 : Result := 4 + Ord(noTerminator);
+        0 : Result := 1 + Ord(ndTerminator);
+        1 : Result := 2 + Ord(ndTerminator);
+        2 : Result := 4 + Ord(ndTerminator);
       end;
   end;
 end;
@@ -9942,16 +9971,16 @@ begin
     Result := 0
   else if Assigned(aBasePtr) and Assigned(aEndPtr) and (NativeUInt(aBasePtr) < NativeUInt(aEndPtr)) then
     case inType of
-      itU8:  Result := SizeOf(Byte)+Ord(noTerminator);
-      itS8:  Result := SizeOf(ShortInt)+Ord(noTerminator);
-      itU16: Result := SizeOf(Word)+Ord(noTerminator);
-      itS16: Result := SizeOf(SmallInt)+Ord(noTerminator);
-      itU24: Result := 3*SizeOf(Byte)+Ord(noTerminator);
-      itU32: Result := SizeOf(Cardinal)+Ord(noTerminator);
-      itS32: Result := SizeOf(LongInt)+Ord(noTerminator);
-      itU64: Result := SizeOf(UInt64)+Ord(noTerminator);
-      itS64: Result := SizeOf(Int64)+Ord(noTerminator);
-      itU6to30: Result := ReadIntegerCounterSize(aBasePtr)+Ord(noTerminator);
+      itU8:  Result := SizeOf(Byte)+Ord(ndTerminator);
+      itS8:  Result := SizeOf(ShortInt)+Ord(ndTerminator);
+      itU16: Result := SizeOf(Word)+Ord(ndTerminator);
+      itS16: Result := SizeOf(SmallInt)+Ord(ndTerminator);
+      itU24: Result := 3*SizeOf(Byte)+Ord(ndTerminator);
+      itU32: Result := SizeOf(Cardinal)+Ord(ndTerminator);
+      itS32: Result := SizeOf(LongInt)+Ord(ndTerminator);
+      itU64: Result := SizeOf(UInt64)+Ord(ndTerminator);
+      itS64: Result := SizeOf(Int64)+Ord(ndTerminator);
+      itU6to30: Result := ReadIntegerCounterSize(aBasePtr)+Ord(ndTerminator);
     else
       Result := 0;
     end
@@ -9962,16 +9991,16 @@ end;
 function TwbIntegerDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   case inType of
-    itU8:  Result := SizeOf(Byte)+Ord(noTerminator);
-    itS8:  Result := SizeOf(ShortInt)+Ord(noTerminator);
-    itU16: Result := SizeOf(Word)+Ord(noTerminator);
-    itS16: Result := SizeOf(SmallInt)+Ord(noTerminator);
-    itU24: Result := 3*SizeOf(Byte)+Ord(noTerminator);
-    itU32: Result := SizeOf(Cardinal)+Ord(noTerminator);
-    itS32: Result := SizeOf(LongInt)+Ord(noTerminator);
-    itU64: Result := SizeOf(UInt64)+Ord(noTerminator);
-    itS64: Result := SizeOf(Int64)+Ord(noTerminator);
-    itU6to30: Result := 1+Ord(noTerminator);
+    itU8:  Result := SizeOf(Byte)+Ord(ndTerminator);
+    itS8:  Result := SizeOf(ShortInt)+Ord(ndTerminator);
+    itU16: Result := SizeOf(Word)+Ord(ndTerminator);
+    itS16: Result := SizeOf(SmallInt)+Ord(ndTerminator);
+    itU24: Result := 3*SizeOf(Byte)+Ord(ndTerminator);
+    itU32: Result := SizeOf(Cardinal)+Ord(ndTerminator);
+    itS32: Result := SizeOf(LongInt)+Ord(ndTerminator);
+    itU64: Result := SizeOf(UInt64)+Ord(ndTerminator);
+    itS64: Result := SizeOf(Int64)+Ord(ndTerminator);
+    itU6to30: Result := 1+Ord(ndTerminator);
   else
     {it0:} Result := 0;
   end;
@@ -10317,11 +10346,11 @@ constructor TwbArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbArrayDef do
     if Assigned(arCountCallback) then
-      Self.Create(defPriority, defRequired, noName, arElement, arCountCallback,
-        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, defGetCP, arCanAddTo, noTerminator, arTerminated).AfterClone(aSource)
+      Self.Create(defPriority, defRequired, ndName, arElement, arCountCallback,
+        arLabels, arSorted, ndAfterLoad, ndAfterSet, ndDontShow, defGetCP, arCanAddTo, ndTerminator, arTerminated).AfterClone(aSource)
     else
-      Self.Create(defPriority, defRequired, noName, arElement, arCount,
-        arLabels, arSorted, noAfterLoad, noAfterSet, noDontShow, defGetCP, arCanAddTo, noTerminator, arTerminated).AfterClone(aSource);
+      Self.Create(defPriority, defRequired, ndName, arElement, arCount,
+        arLabels, arSorted, ndAfterLoad, ndAfterSet, ndDontShow, defGetCP, arCanAddTo, ndTerminator, arTerminated).AfterClone(aSource);
 end;
 
 constructor TwbArrayDef.Create(aPriority      : TwbConflictPriority;
@@ -10380,23 +10409,23 @@ begin
         Prefix := 2
     else
       Prefix := 4;
-    if noTerminator then
+    if ndTerminator then
       Result := 'Separated Array with '+IntToStr(Prefix)+' Bytes Counter of '
     else
       Result := 'Array with '+IntToStr(Prefix)+' Bytes Counter of ';
   end else begin
     if (arCount < 1) and Assigned(arCountCallback) then
-      if noTerminator then
+      if ndTerminator then
         Result := 'Separated Variable Count Array'
       else
         Result := 'Variable Count Array'
     else if arCount > 0 then
-      if noTerminator then
+      if ndTerminator then
         Result := 'Separated Array of '+IntToStr(arCount)+' '
       else
         Result := 'Array of '+IntToStr(arCount)+' '
     else
-      if noTerminator then
+      if ndTerminator then
           Result := 'Separated Array of '
       else
         Result := 'Array of ';
@@ -10468,7 +10497,7 @@ end;
 function TwbArrayDef.GetPrefixSize(aBasePtr: Pointer): Integer;
 begin
   Result := GetPrefixLength(aBasePtr);
-  if (Result>0) and noTerminator then
+  if (Result>0) and ndTerminator then
     Inc(Result);
 end;
 
@@ -10509,7 +10538,7 @@ begin
 
   if Assigned(aBasePtr) and Assigned(aEndPtr) and (NativeUInt(aEndPtr) < NativeUInt(aBasePtr)) then begin
 //    wbProgressCallback('Found an array with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
-//      ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+//      ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+ndName);
     Exit;
   end;
 
@@ -10579,7 +10608,7 @@ begin
           if Assigned(aBasePtr) and Assigned(aEndPtr) and (NativeUInt(aEndPtr) < NativeUInt(aBasePtr)+Result) then begin
 //            if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
 //              wbProgressCallback('Found an array with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
-//                ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+//                ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+ndName);
             Result := NativeUInt(aEndPtr) - NativeUInt(aBasePtr) + Result;
             Exit;
           end;
@@ -10607,7 +10636,7 @@ begin
       if Assigned(aBasePtr) and Assigned(aEndPtr) and (NativeUInt(aEndPtr) < NativeUInt(aBasePtr) + Result) then begin
 //        if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
 //          wbProgressCallback('Found a static array with a negative size! (3) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
-//            ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+//            ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+ndName);
         Result := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
         Exit;
       end;
@@ -10695,8 +10724,8 @@ end;
 constructor TwbStructDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbStructDef do
-    Self.Create(defPriority, defRequired, noName, stMembers, stSortKey,
-      stExSortKey, stElementMap, stOptionalFromElement, noDontShow, noAfterLoad, noAfterSet, defGetCP).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, ndName, stMembers, stSortKey,
+      stExSortKey, stElementMap, stOptionalFromElement, ndDontShow, ndAfterLoad, ndAfterSet, defGetCP).AfterClone(aSource);
 end;
 
 constructor TwbStructDef.Create(aPriority            : TwbConflictPriority;
@@ -10801,7 +10830,7 @@ begin
   end;
   if (NativeUInt(aBasePtr) > NativeUInt(aEndPtr)) then begin // if aBasePtr >= aEndPtr then no allocation (or error)
 //    wbProgressCallback('Found a struct with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
-//      ' > '+IntToHex64(Cardinal(aEndPtr), 8)+' for '+ noName);
+//      ' > '+IntToHex64(Cardinal(aEndPtr), 8)+' for '+ ndName);
   end else if (not Assigned(aBasePtr) or (NativeUInt(aBasePtr) = NativeUInt(aEndPtr))) and (GetIsVariableSizeInternal) then begin
     Result := 0; // assuming we would have called GetDefaultSize otherwise... GetDefaultSize(aBasePtr, aEndPtr, aElement);
   end else begin
@@ -10819,7 +10848,7 @@ begin
         if Assigned(aBasePtr) and Assigned(aEndPtr) and (NativeUInt(aEndPtr) < NativeUInt(aBasePtr)+Result) then begin
 //          if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
 //          wbProgressCallback('Found a struct with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Size, 8)+
-//            ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+//            ' < '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+ndName);
           Result := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
           Break;
         end;
@@ -10837,7 +10866,7 @@ begin
         if Assigned(aBasePtr) and Assigned(aEndPtr) and (NativeUInt(aEndPtr) < NativeUInt(aBasePtr)+Result) then begin
 //          if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
 //            wbProgressCallback('Found a struct with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
-//              ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+//              ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+ndName);
           Result := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
           Break;
         end;
@@ -11916,7 +11945,7 @@ end;
 constructor TwbStringDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbStringDef do
-    Self.Create(defPriority, defRequired, noName, sdSize, noAfterLoad, noAfterSet, noDontShow, defGetCP, noTerminator).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, ndName, sdSize, ndAfterLoad, ndAfterSet, ndDontShow, defGetCP, ndTerminator).AfterClone(aSource);
 end;
 
 constructor TwbStringDef.Create(aPriority   : TwbConflictPriority;
@@ -11957,7 +11986,7 @@ begin
   else
     NewSize := Succ(Length(b));
 
-  aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize + Ord(noTerminator));
+  aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize + Ord(ndTerminator));
 
   if sdSize > 0 then begin
     FillChar(aBasePtr^, sdSize, 0);
@@ -11972,7 +12001,7 @@ begin
 
     PByte(aBasePtr)[Pred(NewSize)] := 0;
   end;
-  if noTerminator then
+  if ndTerminator then
     PAnsiChar(aBasePtr)[NewSize] := AnsiChar(wbTerminator);
 end;
 
@@ -12025,12 +12054,12 @@ end;
 function TwbStringDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   if sdSize > 0 then
-    Result := sdSize + Ord(noTerminator)
+    Result := sdSize + Ord(ndTerminator)
   else begin
     if aBasePtr = nil then
-      Result := 1 + Ord(noTerminator)
+      Result := 1 + Ord(ndTerminator)
     else begin
-      Result := Ord(noTerminator);
+      Result := Ord(ndTerminator);
       while NativeUInt(aBasePtr) < NativeUInt(aEndPtr) do begin
         Inc(Result);
         if PAnsiChar(aBasePtr)^ = #0 then
@@ -12045,9 +12074,9 @@ end;
 function TwbStringDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   if sdSize > 0 then
-    Result := sdSize + Ord(noTerminator)
+    Result := sdSize + Ord(ndTerminator)
   else
-    Result := 1 + Ord(noTerminator);
+    Result := 1 + Ord(ndTerminator);
 end;
 
 function TwbStringDef.ToEditValue(aBasePtr, aEndPtr: Pointer;
@@ -12081,7 +12110,7 @@ var
 begin
   Result := '';
   Len := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
-  if (Len > 0) and noTerminator then
+  if (Len > 0) and ndTerminator then
     if PByte(aBasePtr)[Pred(Len)] = wbTerminator then
       Dec(Len);
 
@@ -12209,8 +12238,8 @@ end;
 constructor TwbFloatDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbFloatDef do
-    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, fdScale, fdDigits, noDontShow,
-      fdNormalizer, fdDefault, defGetCP, fdDouble, noTerminator).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, ndName, ndAfterLoad, ndAfterSet, fdScale, fdDigits, ndDontShow,
+      fdNormalizer, fdDefault, defGetCP, fdDouble, ndTerminator).AfterClone(aSource);
 end;
 
 constructor TwbFloatDef.Create(aPriority   : TwbConflictPriority;
@@ -12292,9 +12321,9 @@ begin
     Value := 0;
 
   if fdDouble then
-    Size := SizeOf(Double)+Ord(noTerminator)
+    Size := SizeOf(Double)+Ord(ndTerminator)
   else
-    Size := SizeOf(Single)+Ord(noTerminator);
+    Size := SizeOf(Single)+Ord(ndTerminator);
   aElement.RequestStorageChange(aBasePtr, aEndPtr, Size);
   if Assigned(aBasePtr) then begin
     if Clear then begin
@@ -12320,7 +12349,7 @@ begin
       else
         PSingle(aBasePtr)^ := Value;
     end;
-    if noTerminator then
+    if ndTerminator then
       PByte(aBasePtr)[SizeOf(Single)] := wbTerminator;
   end;
 end;
@@ -12346,7 +12375,7 @@ end;
 function TwbFloatDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   if Assigned(aBasePtr) and Assigned(aEndPtr) and (NativeUInt(aBasePtr) >= NativeUInt(aEndPtr)) then
-    Result := Ord(noTerminator)
+    Result := Ord(ndTerminator)
   else
     Result := GetDefaultSize(aBasePtr, aEndPtr, aElement)
 end;
@@ -12354,9 +12383,9 @@ end;
 function TwbFloatDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   if fdDouble then
-    Result := SizeOf(Double) + Ord(noTerminator)
+    Result := SizeOf(Double) + Ord(ndTerminator)
   else
-    Result := SizeOf(Single) + Ord(noTerminator);
+    Result := SizeOf(Single) + Ord(ndTerminator);
 end;
 
 function TwbFloatDef.SetDefaultNativeValue(const aValue: Variant): IwbValueDef;
@@ -13540,9 +13569,6 @@ end;
 procedure TwbByteArrayDef.AfterClone(const aSource: TwbDef);
 begin
   inherited AfterClone(aSource);
-  with aSource as TwbByteArrayDef do begin
-    Self.badToStrCallback := badToStrCallback;
-  end;
 end;
 
 function TwbByteArrayDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
@@ -13563,15 +13589,15 @@ end;
 function TwbByteArrayDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
   Result := '';
-  if Assigned(badToStrCallback) then
-    badToStrCallback(Result, aBasePtr, aEndPtr, aElement, ctCheck);
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctCheck);
 end;
 
 constructor TwbByteArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbByteArrayDef do
-    Self.Create(defPriority, defRequired, noName, badSize, noDontShow,
-      badCountCallBack, defGetCP, noTerminator).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, ndName, badSize, ndDontShow,
+      badCountCallBack, defGetCP, ndTerminator).AfterClone(aSource);
 end;
 
 constructor TwbByteArrayDef.Create(aPriority      : TwbConflictPriority;
@@ -13682,10 +13708,10 @@ var
   s: string;
 begin
   Result := nil;
-  if Assigned(badToStrCallback) then
+  if Assigned(ndToStr) then
     with TStringList.Create do try
       s := '';
-      badToStrCallback(s, aBasePtr, aEndPtr, aElement, ctEditInfo);
+      ndToStr(s, aBasePtr, aEndPtr, aElement, ctEditInfo);
       CommaText := s;
       Result := ToStringArray;
     finally
@@ -13698,9 +13724,9 @@ var
   s: string;
 begin
   Result := etDefault;
-  if Assigned(badToStrCallback) then begin
+  if Assigned(ndToStr) then begin
     s := '';
-    badToStrCallback(s, aBasePtr, aEndPtr, aElement, ctEditType);
+    ndToStr(s, aBasePtr, aEndPtr, aElement, ctEditType);
     if SameText(s, 'ComboBox') then
       Result := etComboBox
     else if SameText(s, 'CheckComboBox') then
@@ -13739,7 +13765,7 @@ begin
       end
     else if Result < 0 then Result := 0;
   end;
-  if Result>0 then Inc(Result, Ord(noTerminator));
+  if Result>0 then Inc(Result, Ord(ndTerminator));
 end;
 
 function TwbByteArrayDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -13755,7 +13781,7 @@ begin
     else
       Result := 0;
     end;
-  if Result>0 then Inc(Result, Ord(noTerminator));
+  if Result>0 then Inc(Result, Ord(ndTerminator));
 end;
 
 procedure TwbByteArrayDef.Report(const aParents: TwbDefPath);
@@ -13899,17 +13925,11 @@ begin
   end;
 end;
 
-function TwbByteArrayDef.SetToStr(const aToStrCallback: TwbByteArrayToStrCallback): IwbByteArrayDef;
-begin
-  Result := Self;
-  badToStrCallback := aToStrCallback;
-end;
-
 function TwbByteArrayDef.ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
   Result := ToStringInternal(aBasePtr, aEndPtr, aElement);
-  if Assigned(badToStrCallback) then
-    badToStrCallback(Result, aBasePtr, aEndPtr, aElement, ctToEditValue);
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToEditValue);
 end;
 
 function TwbByteArrayDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
@@ -13944,15 +13964,15 @@ begin
     if Length(Result) > 0 then
       Result := StringOfChar('0', Length(Result));
   end else
-    if Assigned(badToStrCallback) then
-      badToStrCallback(Result, aBasePtr, aEndPtr, aElement, ctToSortKey);
+    if Assigned(ndToStr) then
+      ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToSortKey);
 end;
 
 function TwbByteArrayDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
   Result := ToStringInternal(aBasePtr, aEndPtr, aElement);
-  if Assigned(badToStrCallback) then
-    badToStrCallback(Result, aBasePtr, aEndPtr, aElement, ctToStr);
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
 end;
 
 function TwbByteArrayDef.ToStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
@@ -13981,7 +14001,7 @@ begin
   SetLength(Result, Length(Result) - 1);
 
   if wbReportMode then begin
-    if Assigned(aElement) and (Self.noName <> 'Unused') then begin
+    if Assigned(aElement) and (Self.ndName <> 'Unused') then begin
       _File := aElement._File;
 
       if wbReportUnknownFormIDs then begin
@@ -14374,6 +14394,7 @@ begin
     Self.vdDefaultEditValue := vdDefaultEditValue;
     Self.vdDefaultNativeValue := vdDefaultNativeValue;
     Self.vdLinksToCallback := vdLinksToCallback;
+    Self.ndToStr := ndToStr;
   end;
 end;
 
@@ -14477,13 +14498,13 @@ end;
 function TwbValueDef.SetAfterLoad(const aAfterLoad: TwbAfterLoadCallback): IwbValueDef;
 begin
   Result := Self;
-  noAfterLoad := aAfterLoad;
+  ndAfterLoad := aAfterLoad;
 end;
 
 function TwbValueDef.SetAfterSet(const aAfterSet: TwbAfterSetCallback): IwbValueDef;
 begin
   Result := Self;
-  noAfterSet := aAfterSet;
+  ndAfterSet := aAfterSet;
 end;
 
 function TwbValueDef.SetDefaultEditValue(const aValue: string): IwbValueDef;
@@ -14510,6 +14531,12 @@ function TwbValueDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: Iw
 begin
   Result := False;
   {can be overriden}
+end;
+
+function TwbValueDef.SetToStr(const aToStr: TwbToStrCallback): IwbValueDef;
+begin
+  Result := Self;
+  ndToStr := aToStr;
 end;
 
 function TwbValueDef.ToEditValue(aBasePtr, aEndPtr: Pointer;
@@ -14544,7 +14571,7 @@ begin
       for i := 0 to Pred(srsSkipSignatures.Count) do
         SkipSigs[i] := StrToSignature(srsSkipSignatures[i]);
     end;
-    Self.Create(defPriority, defRequired, noName, srsMembers, SkipSigs, srsSortKey, srsExSortKey, noDontShow, srsAllowUnordered, noAfterLoad, noAfterSet, defGetCP).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, ndName, srsMembers, SkipSigs, srsSortKey, srsExSortKey, ndDontShow, srsAllowUnordered, ndAfterLoad, ndAfterSet, defGetCP).AfterClone(aSource);
   end;
 end;
 
@@ -15026,7 +15053,7 @@ end;
 constructor TwbUnionDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbUnionDef do
-    Self.Create(defPriority, defRequired, noName, udDecider, udMembers, noDontShow, noAfterSet, defGetCP).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, ndName, udDecider, udMembers, ndDontShow, ndAfterSet, defGetCP).AfterClone(aSource);
 end;
 
 constructor TwbUnionDef.Create(aPriority : TwbConflictPriority;
@@ -15228,7 +15255,7 @@ var
 begin
 //  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
 //    wbProgressCallback('Found a union with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
-//      ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+//      ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+ndName);
 //  end;
   if GetIsVariableSize then
     aMember := ResolveDef(aBasePtr, aEndPtr, aElement)
@@ -15263,7 +15290,7 @@ begin
     if Assigned(aBasePtr) and Assigned(aEndPtr) and (NativeUInt(aEndPtr) < NativeUInt(aBasePtr)+Result) then begin
 //      if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
 //        wbProgressCallback('Found a union with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
-//          ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+noName);
+//          ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+ndName);
       Result := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
     end;
   end;
@@ -15372,7 +15399,7 @@ end;
 constructor TwbEmptyDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbEmptyDef do
-    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet, noDontShow, edSorted, defGetCP).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, ndName, ndAfterLoad, ndAfterSet, ndDontShow, edSorted, defGetCP).AfterClone(aSource);
 end;
 
 constructor TwbEmptyDef.Create(aPriority  : TwbConflictPriority;
@@ -15620,7 +15647,7 @@ end;
 constructor TwbLenStringDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbLenStringDef do
-    Self.Create(defPriority, defRequired, noName, Prefix, noAfterLoad, noAfterSet, noDontShow, defGetCP, noTerminator).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, ndName, Prefix, ndAfterLoad, ndAfterSet, ndDontShow, defGetCP, ndTerminator).AfterClone(aSource);
 end;
 
 constructor TwbLenStringDef.Create(aPriority    : TwbConflictPriority;
@@ -15650,12 +15677,12 @@ begin
   b := bsdGetEncoding(aElement).GetBytes(aValue);
   Len := Length(b);
   NewSize := Len + GetPrefixOffset;
-  aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize + Ord(noTerminator));
+  aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize + Ord(ndTerminator));
   SetPrefixValue(aBasePtr, aEndPtr, aElement, Len);
   p := PByte(aBasePtr) + GetPrefixOffset;
   if Len > 0 then
     Move(b[0], p^, Len);
-  if noTerminator then begin
+  if ndTerminator then begin
     Inc(PByte(p), Len+1);
     PByte(p)^ := wbTerminator;
   end;
@@ -15730,7 +15757,7 @@ begin
       Result := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
       Len := GetPrefixValue(aBasePtr, aEndPtr, aElement);
       if Len>0 then
-        Len := Len+GetPrefixOffset+Ord(noTerminator)
+        Len := Len+GetPrefixOffset+Ord(ndTerminator)
       else
         Len := GetPrefixOffset;
       if Len>Result then
@@ -15744,7 +15771,7 @@ end;
 
 function TwbLenStringDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  Result := GetPrefixOffset+Ord(noTerminator);
+  Result := GetPrefixOffset+Ord(ndTerminator);
 end;
 
 procedure TwbLenStringDef.SetPrefixValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aValue: Cardinal);
@@ -15782,7 +15809,7 @@ var
   i    : Integer;
 begin
   Len := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
-  if Len<GetPrefixOffset+Ord(noTerminator) then
+  if Len<GetPrefixOffset+Ord(ndTerminator) then
     Exit;
 
   Size := GetPrefixValue(aBasePtr, aEndPtr, aElement);
@@ -16169,7 +16196,7 @@ begin
   else
     NewSize := Succ(Length(b));
 
-  aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize + Ord(noTerminator));
+  aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize + Ord(ndTerminator));
 
   if sdSize > 0 then begin
     FillChar(aBasePtr^, sdSize, 0);
@@ -16184,7 +16211,7 @@ begin
 
     PByte(aBasePtr)[Pred(NewSize)] := 0;
   end;
-  if noTerminator then
+  if ndTerminator then
     PAnsiChar(aBasePtr)[NewSize] := AnsiChar(wbTerminator);
 end;
 
@@ -16475,8 +16502,8 @@ end;
 constructor TwbStructCDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbStructCDef do
-    Self.Create(defPriority, defRequired, noName, stMembers, stSortKey,
-      stExSortKey, stOptionalFromElement, noDontShow, noAfterLoad, noAfterSet,
+    Self.Create(defPriority, defRequired, ndName, stMembers, stSortKey,
+      stExSortKey, stOptionalFromElement, ndDontShow, ndAfterLoad, ndAfterSet,
       scSizeCallback, scGetChapterType, scGetChapterTypeName, scGetChapterName, defGetCP).AfterClone(aSource);
 end;
 
@@ -16500,7 +16527,7 @@ begin
   scGetChapterTypeName := aGetChapterTypeName;
   scGetChapterName := aGetChapterName;
   inherited Create(aPriority, aRequired, aName, aMembers, aSortKey, aExSortKey, [], aOptionalFromElement, aDontShow, aAfterLoad, aAfterSet, aGetCP);
-  noTreeBranch := False;
+  ndTreeBranch := False;
 end;
 
 function TwbStructCDef.GetDefType: TwbDefType;
@@ -16957,8 +16984,8 @@ end;
 constructor TwbFlagDef.Clone(const aSource: TwbDef);
 begin
   with (aSource as TwbFlagDef) do
-    Self.Create(defPriority, defRequired, noName, noAfterLoad, noAfterSet,
-      noDontShow, defGetCP, noTerminator, fdFlagIndex).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, ndName, ndAfterLoad, ndAfterSet,
+      ndDontShow, defGetCP, ndTerminator, fdFlagIndex).AfterClone(aSource);
 end;
 
 constructor TwbFlagDef.Create(aPriority   : TwbConflictPriority;
@@ -17481,7 +17508,7 @@ end;
 constructor TwbRecursiveDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbRecursiveDef do
-    Self.Create(defPriority, defRequired, noName, rdLevelsUp, noDontShow, noAfterSet, defGetCP).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, ndName, rdLevelsUp, ndDontShow, ndAfterSet, defGetCP).AfterClone(aSource);
 end;
 
 constructor TwbRecursiveDef.Create(aPriority : TwbConflictPriority;
@@ -17521,13 +17548,26 @@ end;
 function TwbRecordMemberDef.SetAfterLoad(const aAfterLoad: TwbAfterLoadCallback): IwbRecordMemberDef;
 begin
   Result := Self;
-  noAfterLoad := aAfterLoad;
+  ndAfterLoad := aAfterLoad;
 end;
 
 function TwbRecordMemberDef.SetAfterSet(const aAfterSet: TwbAfterSetCallback): IwbRecordMemberDef;
 begin
   Result := Self;
-  noAfterSet := aAfterSet;
+  ndAfterSet := aAfterSet;
+end;
+
+function TwbRecordMemberDef.SetToStr(const aToStr: TwbToStrCallback): IwbRecordMemberDef;
+begin
+  Result := Self;
+  ndToStr := aToStr;
+end;
+
+function TwbRecordMemberDef.ToString(const aElement: IwbElement): string;
+begin
+  Result := '';
+  if Assigned(ndToStr) then
+    ndToStr(Result, nil, nil, aElement, ctToStr);
 end;
 
 { TwbBaseSignatureDef }
