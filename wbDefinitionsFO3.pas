@@ -560,7 +560,7 @@ var
   wbMO4S: IwbSubRecordDef;
   wbMODLActor: IwbSubRecordStructDef;
   wbMODLReq: IwbSubRecordStructDef;
-  wbCTDA: IwbSubRecordDef;
+  wbCTDA: IwbRecordMemberDef;
   wbSCHRReq: IwbSubRecordDef;
   wbCTDAs: IwbSubRecordArrayDef;
   wbCTDAsReq: IwbSubRecordArrayDef;
@@ -1926,6 +1926,60 @@ begin
 
   if Integer(Container.ElementNativeValues['Run On']) = 2 then
     Result := 1;
+end;
+
+procedure wbConditionToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Condition: IwbContainerElementRef;
+  RunOn, Param1, Param2: IwbElement;
+  Typ: Byte;
+begin
+  if not Supports(aElement, IwbContainerElementRef, Condition) then
+    Exit;
+  if Condition.Collapsed <> tbTrue then
+    Exit;
+
+  Typ := Condition.Elements[0].NativeValue;
+
+  if (Condition.ElementCount >= 9) and (Condition.Elements[7].Def.DefType <> dtEmpty) and (Condition.Elements[8].Def.DefType <> dtEmpty) then begin
+    RunOn := Condition.Elements[7];
+    if RunOn.NativeValue = 2 then
+      aValue := Condition.Elements[8].Value
+    else
+      aValue := RunOn.Value;
+  end else
+    if (Typ and $02) = 0 then
+      aValue := 'Subject'
+    else
+      aValue := 'Target';
+
+  aValue := aValue + '.' + Condition.Elements[3].Value;
+
+  Param1 := Condition.Elements[5];
+  if Param1.ConflictPriority <> cpIgnore then begin
+    aValue := aValue + '(' {+ Param1.Name + ': '} + Param1.Value;
+    Param2 := Condition.Elements[6];
+    if Param2.ConflictPriority <> cpIgnore then begin
+      aValue := aValue + ', ' {+ Param2.Name + ': '} + Param2.Value;
+    end;
+    aValue := aValue + ')';
+  end;
+
+  case Typ and $E0 of
+    $00 : aValue := aValue + ' = ';
+    $20 : aValue := aValue + ' <> ';
+    $40 : aValue := aValue + ' > ';
+    $60 : aValue := aValue + ' >= ';
+    $80 : aValue := aValue + ' < ';
+    $A0 : aValue := aValue + ' <= ';
+  end;
+
+  aValue := aValue + Condition.Elements[2].Value;
+
+  if (Typ and $01) = 0 then
+    aValue := aValue + ' AND'
+  else
+    aValue := aValue + ' OR';
 end;
 
 function wbNAVINVMIDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -5228,8 +5282,9 @@ begin
         wbFloat('Comparison Value - Float'),
         wbFormIDCk('Comparison Value - Global', [GLOB])
       ]),
-   {3}wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),   // Limited to itu16
-   {4}wbUnion('Parameter #1', wbCTDAParam1Decider, [
+   {3}wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),   // Limited to itu16
+   {4}wbByteArray('Unused', 2, cpIgnore, False, wbNeverShow),
+   {5}wbUnion('Parameter #1', wbCTDAParam1Decider, [
         {00} wbByteArray('Unknown', 4),
         {01} wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
         {02} wbInteger('Integer', itS32),
@@ -5277,7 +5332,7 @@ begin
         {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, LVLC, LVLN],
                                                 [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, LVLC, LVLN])
       ]),
-      wbUnion('Parameter #2', wbCTDAParam2Decider, [
+   {6}wbUnion('Parameter #2', wbCTDAParam2Decider, [
         {00} wbByteArray('Unknown', 4),
         {01} wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
         {02} wbInteger('Integer', itS32),
@@ -5361,18 +5416,18 @@ begin
         {45} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, FLST, LVLC, LVLN],
                                                 [CREA, NPC_, PROJ, TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, LVLC, LVLN])
       ]),
-      wbInteger('Run On', itU32, wbEnum([
+   {7}wbInteger('Run On', itU32, wbEnum([
         'Subject',
         'Target',
         'Reference',
         'Combat Target',
         'Linked Reference'
       ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
-      wbUnion('Reference', wbCTDAReferenceDecider, [
+   {8}wbUnion('Reference', wbCTDAReferenceDecider, [
         wbInteger('Unused', itU32, nil, cpIgnore),
         wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PBEA, PGRE], True)
       ])
-    ], cpNormal, False, nil, 6, wbCTDAAfterLoad);
+    ], cpNormal, False, nil, 7, wbCTDAAfterLoad).SetToStr(wbConditionToStr).IncludeFlag(dfCollapsed, wbCollapseConditions);
   wbCTDAs := wbRArray('Conditions', wbCTDA);
   wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
 

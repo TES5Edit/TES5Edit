@@ -52,12 +52,12 @@ var
     Major   : 4;
     Minor   : 0;
     Release : 1;
-    Build   : 'o';
-    Title   : 'RC5 for 4.0.2';
+    Build   : 'p';
+    Title   : 'RC6 for 4.0.2';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04000104;
+  wbWhatsNewVersion : Integer = 04000105;
   wbDeveloperMessageVersion : Integer = 04000101;
   wbDevCRC32App : Cardinal = $FFFFFFEB;
 
@@ -177,6 +177,7 @@ var
   wbManualCleaningAllow    : Boolean  = False;
   wbManualCleaningHide     : Boolean  = False;
   wbShrinkButtons          : Boolean  = False;
+  wbCollapseConditions     : Boolean  = True;
 
   wbGlobalModifedGeneration : UInt64;
 

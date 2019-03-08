@@ -435,6 +435,52 @@ begin
   end;
 end;
 
+procedure wbConditionToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Condition: IwbContainerElementRef;
+  RunOn, Param1, Param2: IwbElement;
+  Typ: Byte;
+begin
+  if not Supports(aElement, IwbContainerElementRef, Condition) then
+    Exit;
+  if Condition.Collapsed <> tbTrue then
+    Exit;
+
+  Typ := Condition.Elements[0].NativeValue;
+  if (Typ and $02) = 0 then
+    aValue := 'Subject'
+  else
+    aValue := 'Target';
+
+  aValue := aValue + '.' + Condition.Elements[3].Value;
+
+  Param1 := Condition.Elements[5];
+  if Param1.ConflictPriority <> cpIgnore then begin
+    aValue := aValue + '(' {+ Param1.Name + ': '} + Param1.Value;
+    Param2 := Condition.Elements[6];
+    if Param2.ConflictPriority <> cpIgnore then begin
+      aValue := aValue + ', ' {+ Param2.Name + ': '} + Param2.Value;
+    end;
+    aValue := aValue + ')';
+  end;
+
+  case Typ and $E0 of
+    $00 : aValue := aValue + ' = ';
+    $20 : aValue := aValue + ' <> ';
+    $40 : aValue := aValue + ' > ';
+    $60 : aValue := aValue + ' >= ';
+    $80 : aValue := aValue + ' < ';
+    $A0 : aValue := aValue + ' <= ';
+  end;
+
+  aValue := aValue + Condition.Elements[2].Value;
+
+  if (Typ and $01) = 0 then
+    aValue := aValue + ' AND'
+  else
+    aValue := aValue + ' OR';
+end;
+
 function wbIdleAnam(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
@@ -1141,6 +1187,11 @@ begin
         Exit;
       end;
   Result := StrToInt64(aString);
+end;
+
+function wbNeverShow(const aElement: IwbElement): Boolean;
+begin
+  Result := wbHideNeverShow;
 end;
 
 function wbCTDAParam2VariableNameToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -3349,8 +3400,9 @@ begin
           wbFloat('Comparison Value - Float'),
           wbFormIDCk('Comparison Value - Global', [GLOB])
         ]),
-     {3}wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
-     {4}wbUnion('Parameter #1', wbCTDAParam1Decider, [
+     {3}wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),   // Limited to itu16
+     {4}wbByteArray('Unused', 2, cpIgnore, False, wbNeverShow),
+     {5}wbUnion('Parameter #1', wbCTDAParam1Decider, [
           {00} wbByteArray('Unknown', 4),
           {01} wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
           {02} wbInteger('Integer', itS32),
@@ -3382,7 +3434,7 @@ begin
           {28} wbFormIDCkNoReach('Worldspace', [WRLD]),
           {29} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS])
         ]),
-        wbUnion('Parameter #2', wbCTDAParam2Decider, [
+     {6}wbUnion('Parameter #2', wbCTDAParam2Decider, [
           {00} wbByteArray('Unknown', 4),
           {01} wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
           {02} wbInteger('Integer', itS32),
@@ -3414,8 +3466,9 @@ begin
           {28} wbFormIDCkNoReach('Worldspace', [WRLD]),
           {29} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS])
         ]),
-        wbInteger('Unused', itU32, nil, cpIgnore)
-      ], cpNormal, False, nil, 6),
+     {7}wbInteger('Unused', itU32, nil, cpIgnore)
+      ], cpNormal, False, nil, 7).SetToStr(wbConditionToStr).IncludeFlag(dfCollapsed, wbCollapseConditions),
+
       wbStructSK(CTDT, [3, 4], 'Condition (old format)', [
      {0}wbInteger('Type', itU8, wbCtdaType),
      {1}wbByteArray('Unused', 3),
@@ -3423,8 +3476,9 @@ begin
           wbFloat('Comparison Value - Float'),
           wbFormIDCk('Comparison Value - Global', [GLOB])
         ]),
-     {3}wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),
-     {4}wbUnion('Parameter #1', wbCTDAParam1Decider, [
+     {3}wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),   // Limited to itu16
+     {4}wbByteArray('Unused', 2, cpIgnore, False, wbNeverShow),
+     {5}wbUnion('Parameter #1', wbCTDAParam1Decider, [
           {00} wbByteArray('Unknown', 4),
           {01} wbByteArray('None', 4, cpIgnore),
           {02} wbInteger('Integer', itS32),
@@ -3456,7 +3510,7 @@ begin
           {28} wbFormIDCkNoReach('Worldspace', [WRLD]),
           {29} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS])
         ]),
-        wbUnion('Parameter #2', wbCTDAParam2Decider, [
+     {6}wbUnion('Parameter #2', wbCTDAParam2Decider, [
           {00} wbByteArray('Unknown', 4),
           {01} wbByteArray('None', 4, cpIgnore),
           {02} wbInteger('Integer', itS32),
@@ -3488,7 +3542,7 @@ begin
           {28} wbFormIDCkNoReach('Worldspace', [WRLD]),
           {29} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS])
         ]),
-        wbEmpty('Unused', cpIgnore)
+     {7}wbEmpty('Unused', cpIgnore)
       ])
     ], []);
 
