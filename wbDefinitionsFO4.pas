@@ -2876,6 +2876,56 @@ begin
     Result := 1;
 end;
 
+procedure wbConditionToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Condition: IwbContainerElementRef;
+  lCTDA: IwbContainerElementRef;
+  RunOn, Param1, Param2: IwbElement;
+  Typ: Byte;
+begin
+  if not Supports(aElement, IwbContainerElementRef, Condition) then
+    Exit;
+  if Condition.Collapsed <> tbTrue then
+    Exit;
+  if not Supports(Condition.RecordBySignature[CTDA], IwbContainerElementRef, lCTDA) then
+    Exit;
+  RunOn := lCTDA.Elements[7];
+  if RunOn.NativeValue = 2 then
+    aValue := lCTDA.Elements[8].Value
+  else
+    aValue := RunOn.Value;
+
+  aValue := aValue + '.' + lCTDA.Elements[3].Value;
+
+  Param1 := lCTDA.Elements[5];
+  if Param1.ConflictPriority <> cpIgnore then begin
+    aValue := aValue + '(' {+ Param1.Name + ': '} + Param1.Value;
+    Param2 := lCTDA.Elements[6];
+    if Param2.ConflictPriority <> cpIgnore then begin
+      aValue := aValue + ', ' {+ Param2.Name + ': '} + Param2.Value;
+    end;
+    aValue := aValue + ')';
+  end;
+
+  Typ := lCTDA.Elements[0].NativeValue;
+
+  case Typ and $E0 of
+    $00 : aValue := aValue + ' = ';
+    $20 : aValue := aValue + ' <> ';
+    $40 : aValue := aValue + ' > ';
+    $60 : aValue := aValue + ' >= ';
+    $80 : aValue := aValue + ' < ';
+    $A0 : aValue := aValue + ' <= ';
+  end;
+
+  aValue := aValue + lCTDA.Elements[2].Value;
+
+  if (Typ and $01) = 0 then
+    aValue := aValue + ' AND'
+  else
+    aValue := aValue + ' OR';
+end;
+
 function wbNAVIIslandDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container   : IwbContainer;
@@ -8810,7 +8860,7 @@ begin
     ], cpNormal, False{, nil, 0, wbCTDAAfterLoad}),
     wbString(CIS1, 'Parameter #1'),
     wbString(CIS2, 'Parameter #2')
-  ], [], cpNormal);
+  ], [], cpNormal).SetToStr(wbConditionToStr);
 
   wbCTDAs := wbRArray('Conditions', wbCTDA, cpNormal, False);
   wbCTDAsCount := wbRArray('Conditions', wbCTDA, cpNormal, False, nil, wbCTDAsAfterSet);

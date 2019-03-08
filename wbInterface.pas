@@ -2004,6 +2004,8 @@ type
 
   IwbSubRecordStructDef = interface(IwbRecordMemberDef)
     ['{B5441812-5229-488B-AEA6-C182CEBED441}']
+    function ToString(const aElement: IwbElement): string;
+    function SetToStr(const aToStr : TwbToStrCallback): IwbSubRecordStructDef{Self};
   end;
 
   IwbSubRecordUnionDef = interface(IwbRecordMemberDef)
@@ -4961,6 +4963,9 @@ type
                        aAfterSet       : TwbAfterSetCallback;
                        aGetCP          : TwbGetConflictPriority);
     destructor Destroy; override;
+
+    function ToString(const aElement: IwbElement): string;
+    function SetToStr(const aToStr : TwbToStrCallback): IwbSubRecordStructDef{Self};
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -9300,6 +9305,19 @@ begin
     end;
 
   defReported := True;
+end;
+
+function TwbSubRecordStructDef.SetToStr(const aToStr: TwbToStrCallback): IwbSubRecordStructDef;
+begin
+  Result := Self;
+  ndToStr := aToStr;
+end;
+
+function TwbSubRecordStructDef.ToString(const aElement: IwbElement): string;
+begin
+  Result := '';
+  if Assigned(ndToStr) then
+    ndToStr(Result, nil, nil, aElement, ctToStr);
 end;
 
 { TwbSubRecordUnionDef }
