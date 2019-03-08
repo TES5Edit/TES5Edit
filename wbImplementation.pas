@@ -12793,6 +12793,8 @@ begin
 
   if Assigned(srValueDef) then
     Result := srValueDef.ToString(GetDataBasePtr, dcDataEndPtr, Self);
+  if Result = '' then
+    Result := srDef.ToString(Self);
 end;
 
 function TwbSubRecord.GetValueDef: IwbValueDef;
@@ -17125,9 +17127,14 @@ end;
 
 function TwbSubRecordStruct.GetValue: string;
 var
-  SelfRef : IwbContainerElementRef;
-  Def: IwbDef;
-  RMD: IwbRecordMemberDef;
+  SelfRef    : IwbContainerElementRef;
+  Def        : IwbDef;
+  RMD        : IwbRecordMemberDef;
+
+  HasSortKey : IwbHasSortKeyDef;
+  SortMember : Integer;
+  Element    : IwbElement;
+  i          : Integer;
 begin
   if wbReportMode then begin
     Def := GetValueDef;
@@ -17145,6 +17152,22 @@ begin
     Exit;
   DoInit(True);
   Result := RMD.ToString(Self);
+  { this needs more thought
+  if Result = '' then
+    if Supports(srcDef, IwbHasSortKeyDef, HasSortKey) then
+      if HasSortKey.SortKeyCount[True] > 0 then begin
+        Result := '(';
+        for i := 0 to Pred(HasSortKey.SortKeyCount[True]) do begin
+          if i > 0 then
+            Result := Result + '; ';
+          SortMember := HasSortKey.SortKeys[i, True];
+          Element := GetElementBySortOrder(SortMember + GetAdditionalElementCount);
+          if Assigned(Element) then
+            Result := Result + Element.Name + ': ' + Element.Value;
+        end;
+        Result := Result + ')';
+      end;
+  }
 end;
 
 function TwbSubRecordStruct.IsElementRemoveable(const aElement: IwbElement): Boolean;

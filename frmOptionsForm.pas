@@ -81,6 +81,7 @@ type
     cbManualCleaningHide: TCheckBox;
     cbManualCleaningAllow: TCheckBox;
     cbShrinkButtons: TCheckBox;
+    cbCollapseConditions: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);

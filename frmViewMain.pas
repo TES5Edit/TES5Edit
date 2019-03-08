@@ -5151,6 +5151,7 @@ begin
   wbAlignArrayElements := Settings.ReadBool('Options', 'AlignArrayElements', wbAlignArrayElements);
   wbManualCleaningHide := Settings.ReadBool('Options', 'ManualCleaningHide', wbManualCleaningHide);
   wbManualCleaningAllow := Settings.ReadBool('Options', 'ManualCleaningAllow', wbManualCleaningAllow);
+  wbCollapseConditions := Settings.ReadBool('Options', 'CollapseConditions', wbCollapseConditions);
   wbShrinkButtons := Settings.ReadBool('Options', 'ShrinkButtons', wbShrinkButtons);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
@@ -5561,6 +5562,7 @@ begin
       Node := vstView.GetPrevious(Node);
     end;
     ApplyViewFilter;
+    UpdateColumnWidths;
   finally
     vstView.EndUpdate;
     RebuildingViewTree := False;
@@ -13094,6 +13096,7 @@ begin
     cbAlignArrayElements.Checked := wbAlignArrayElements;
     cbManualCleaningHide.Checked := wbManualCleaningHide;
     cbManualCleaningAllow.Checked := wbManualCleaningAllow;
+    cbCollapseConditions.Checked := wbCollapseConditions;
     cbShrinkButtons.Checked := wbShrinkButtons;
     edColumnWidth.Text := IntToStr(ColumnWidth);
     edRowHeight.Text := IntToStr(RowHeight);
@@ -13122,7 +13125,7 @@ begin
     vstNav.Font := pnlFontRecords.Font;
     vstView.Font := pnlFontRecords.Font;
     lblPath.Font := pnlFontRecords.Font;
-    pnlTop.Height := Abs(lblPath.Font.Height) + Trunc(20 * (GetCurrentPPIScreen/PixelsPerInch));
+    //pnlTop.Height := Abs(lblPath.Font.Height) + Trunc(20 * (GetCurrentPPIScreen/PixelsPerInch));
     mmoMessages.Font := pnlFontMessages.Font;
     if not wbTranslationMode then begin
       wbHideUnused := cbHideUnused.Checked;
@@ -13149,6 +13152,7 @@ begin
     wbAlignArrayElements := cbAlignArrayElements.Checked;
     wbManualCleaningHide := cbManualCleaningHide.Checked;
     wbManualCleaningAllow := cbManualCleaningAllow.Checked;
+    wbCollapseConditions := cbCollapseConditions.Checked;
     if (wbShrinkButtons <> cbShrinkButtons.Checked) then
       if cbShrinkButtons.Checked then ShrinkButtons else ExpandButtons;
     wbShrinkButtons := cbShrinkButtons.Checked;
@@ -13203,6 +13207,7 @@ begin
     Settings.WriteBool('Options', 'AlignArrayElements', wbAlignArrayElements);
     Settings.WriteBool('Options', 'ManualCleaningHide', wbManualCleaningHide);
     Settings.WriteBool('Options', 'ManualCleaningAllow', wbManualCleaningAllow);
+    Settings.WriteBool('Options', 'CollapseConditions', wbCollapseConditions);
     Settings.WriteBool('Options', 'ShrinkButtons', wbShrinkButtons);
     Settings.WriteInteger('Options', 'ColumnWidth', ColumnWidth);
     Settings.WriteInteger('Options', 'RowHeight', RowHeight);

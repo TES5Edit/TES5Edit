@@ -619,7 +619,7 @@ var
   wbMO4S: IwbSubRecordDef;
   wbMODLActor: IwbSubRecordStructDef;
   wbMODLReq: IwbSubRecordStructDef;
-  wbCTDA: IwbSubRecordDef;
+  wbCTDA: IwbRecordMemberDef;
   wbSCHRReq: IwbSubRecordDef;
   wbCTDAs: IwbSubRecordArrayDef;
   wbCTDAsReq: IwbSubRecordArrayDef;
@@ -2006,14 +2006,74 @@ end;
 function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
+  i             : Integer;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  if Integer(Container.ElementNativeValues['Run On']) = 2 then
-    Result := 1;
+  i := Container.ElementNativeValues['Function'];
+  // IsFacingUp, IsLeftUp
+  if (i <> 106) and (i <> 285) then
+    if Integer(Container.ElementNativeValues['Run On']) = 2 then
+      Result := 1;
+end;
+
+procedure wbConditionToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Condition: IwbContainerElementRef;
+  RunOn, Param1, Param2: IwbElement;
+  Typ: Byte;
+  i: Integer;
+begin
+  if not Supports(aElement, IwbContainerElementRef, Condition) then
+    Exit;
+  if Condition.Collapsed <> tbTrue then
+    Exit;
+
+  Typ := Condition.Elements[0].NativeValue;
+
+  if (Condition.ElementCount >= 9) and (Condition.Elements[7].Def.DefType <> dtEmpty) and (Condition.Elements[8].Def.DefType <> dtEmpty) then begin
+    i := Condition.Elements[3].NativeValue;
+    RunOn := Condition.Elements[7];
+    if (i <> 106) and (i <> 285) and (RunOn.NativeValue = 2) then
+      aValue := Condition.Elements[8].Value
+    else
+      aValue := RunOn.Value;
+  end else
+    if (Typ and $02) = 0 then
+      aValue := 'Subject'
+    else
+      aValue := 'Target';
+
+  aValue := aValue + '.' + Condition.Elements[3].Value;
+
+  Param1 := Condition.Elements[5];
+  if Param1.ConflictPriority <> cpIgnore then begin
+    aValue := aValue + '(' {+ Param1.Name + ': '} + Param1.Value;
+    Param2 := Condition.Elements[6];
+    if Param2.ConflictPriority <> cpIgnore then begin
+      aValue := aValue + ', ' {+ Param2.Name + ': '} + Param2.Value;
+    end;
+    aValue := aValue + ')';
+  end;
+
+  case Typ and $E0 of
+    $00 : aValue := aValue + ' = ';
+    $20 : aValue := aValue + ' <> ';
+    $40 : aValue := aValue + ' > ';
+    $60 : aValue := aValue + ' >= ';
+    $80 : aValue := aValue + ' < ';
+    $A0 : aValue := aValue + ' <= ';
+  end;
+
+  aValue := aValue + Condition.Elements[2].Value;
+
+  if (Typ and $01) = 0 then
+    aValue := aValue + ' AND'
+  else
+    aValue := aValue + ' OR';
 end;
 
 function wbNAVINVMIDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -5559,8 +5619,9 @@ begin
         wbFloat('Comparison Value - Float'),
         wbFormIDCk('Comparison Value - Global', [GLOB])
       ]),
-   {3}wbInteger('Function', itU32, wbCTDAFunctionToStr, wbCTDAFunctionToInt),   // Limited to itu16
-   {4}wbUnion('Parameter #1', wbCTDAParam1Decider, [
+   {3}wbInteger('Function', itU16, wbCTDAFunctionToStr, wbCTDAFunctionToInt),   // Limited to itu16
+   {4}wbByteArray('Unused', 2, cpIgnore, False, wbNeverShow),
+   {5}wbUnion('Parameter #1', wbCTDAParam1Decider, [
         {00} wbByteArray('Unknown', 4),
         {01} wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
         {02} wbInteger('Integer', itS32),
@@ -5614,7 +5675,7 @@ begin
         {50} wbFormIDCkNoReach('Casino', [CSNO]),
         {51} wbFormID('Form')
       ]),
-      wbUnion('Parameter #2', wbCTDAParam2Decider, [
+   {6}wbUnion('Parameter #2', wbCTDAParam2Decider, [
         {00} wbByteArray('Unknown', 4),
         {01} wbByteArray('None', 4, cpIgnore),
         {02} wbInteger('Integer', itS32),
@@ -5708,7 +5769,7 @@ begin
         {50} wbFormIDCkNoReach('Casino', [CSNO]),
         {51} wbFormID('Form')
       ]),
-      wbUnion('Run On', wbCTDARunOnDecider, [
+   {7}wbUnion('Run On', wbCTDARunOnDecider, [
         wbInteger('Run On', itU32, wbEnum([
           {0} 'Subject',
           {1} 'Target',
@@ -5730,11 +5791,11 @@ begin
           21, 'Upper Body'
         ]))
       ]),
-      wbUnion('Reference', wbCTDAReferenceDecider, [
+   {8}wbUnion('Reference', wbCTDAReferenceDecider, [
         wbInteger('Unused', itU32, nil, cpIgnore),
         wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PBEA, PGRE, NULL], True)    // Can end up NULL if the original function requiring a reference is replaced by another who has no Run on prerequisite
       ])
-    ], cpNormal, False, nil, 6, wbCTDAAfterLoad);
+    ], cpNormal, False, nil, 7, wbCTDAAfterLoad).SetToStr(wbConditionToStr).IncludeFlag(dfCollapsed, wbCollapseConditions);
   wbCTDAs := wbRArray('Conditions', wbCTDA);
   wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
 
