@@ -40,6 +40,12 @@ Collapsed Conditions now display the condition in a easily readable compact 1 li
 
 Conditions are now collapsed by default. An option has been added to control this.
 
+## Collapse Arrays with Benign Conflict Priority by Default
+
+A new Option "Collapse Arrays with Benign Conflict Priority by Default" has been added (defaults to true).
+
+When this option is active, Arrays with a Conflict Priority of Benign will be initially collapsed.
+
 ## Manual Cleaning functions are deprecated
 
 Manual Cleaning functions ('Apply Filter for Cleaning', 'Undelete and Disable References', and 'Remove "Identical to Master" records' are considered obsolete with the introduction of 'Quick Auto Clean' mode and will now only show a message explaining this.

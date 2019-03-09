@@ -6,7 +6,7 @@ Please do not use the tracker for general help and support on how to use xEdit.
 
 #summary TES5Edit Readme
 
-xEdit 3.2.2 by ElminsterAU
+xEdit 4.0.2 by ElminsterAU
 Updated by Hlp, Zilav, Sharlikran, Sheson
 
 Make backups of your plugins and report any issues in the official Bethesda thread. If you have never used TES5Edit, Wiki Pages and basic videos are available.  Starting from 3.1.0 we need to remind you that we only support version 1.9.0.32 of Skyrim. Update TES5Edit and Skyrim before you post in the forum.  If you see any references to xEdit that is a short way of saying all versions of the program which would cover FO3Edit, FNVEdit, TES4Edit and TES5Edit.
@@ -22,6 +22,7 @@ AFK Mods: https://afkmods.iguanadons.net/index.php?/topic/3750-wipz-tes5edit/
 
 Rename to TES4Edit.exe to work with Oblivion.
 Rename to TES5Edit.exe to work with Skyrim.
+Rename to EnderalEdit.exe to work with Enderal.
 Rename to TES5VREdit.exe to work with Skyrim VR.
 Rename to SSEEdit to work with Skyrim SE.
 Rename to FO3Edit.exe to work with Fallout3.
@@ -41,6 +42,7 @@ FO4Edit: http://www.nexusmods.com/fallout4/mods/2737
 FO4VREdit: http://www.nexusmods.com/fallout4/mods/2737
 TES4Edit: http://www.nexusmods.com/oblivion/mods/11536
 TES5Edit: http://www.nexusmods.com/skyrim/mods/25859
+EnderalEdit: http://www.nexusmods.com/enderal/mods/23
 TES5VREdit: http://www.nexusmods.com/skyrim/mods/25859
 SSEEdit: http://www.nexusmods.com/skyrimspecialedition/mods/164
 Mirror: https://github.com/TES5Edit/TES5Edit/releases
