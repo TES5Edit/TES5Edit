@@ -5152,6 +5152,7 @@ begin
   wbManualCleaningHide := Settings.ReadBool('Options', 'ManualCleaningHide', wbManualCleaningHide);
   wbManualCleaningAllow := Settings.ReadBool('Options', 'ManualCleaningAllow', wbManualCleaningAllow);
   wbCollapseConditions := Settings.ReadBool('Options', 'CollapseConditions', wbCollapseConditions);
+  wbCollapseBenignArray := Settings.ReadBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
   wbShrinkButtons := Settings.ReadBool('Options', 'ShrinkButtons', wbShrinkButtons);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
@@ -13097,6 +13098,7 @@ begin
     cbManualCleaningHide.Checked := wbManualCleaningHide;
     cbManualCleaningAllow.Checked := wbManualCleaningAllow;
     cbCollapseConditions.Checked := wbCollapseConditions;
+    cbCollapseBenignArray.Checked := wbCollapseBenignArray;
     cbShrinkButtons.Checked := wbShrinkButtons;
     edColumnWidth.Text := IntToStr(ColumnWidth);
     edRowHeight.Text := IntToStr(RowHeight);
@@ -13153,6 +13155,7 @@ begin
     wbManualCleaningHide := cbManualCleaningHide.Checked;
     wbManualCleaningAllow := cbManualCleaningAllow.Checked;
     wbCollapseConditions := cbCollapseConditions.Checked;
+    wbCollapseBenignArray := cbCollapseBenignArray.Checked;
     if (wbShrinkButtons <> cbShrinkButtons.Checked) then
       if cbShrinkButtons.Checked then ShrinkButtons else ExpandButtons;
     wbShrinkButtons := cbShrinkButtons.Checked;
@@ -13208,6 +13211,7 @@ begin
     Settings.WriteBool('Options', 'ManualCleaningHide', wbManualCleaningHide);
     Settings.WriteBool('Options', 'ManualCleaningAllow', wbManualCleaningAllow);
     Settings.WriteBool('Options', 'CollapseConditions', wbCollapseConditions);
+    Settings.WriteBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
     Settings.WriteBool('Options', 'ShrinkButtons', wbShrinkButtons);
     Settings.WriteInteger('Options', 'ColumnWidth', ColumnWidth);
     Settings.WriteInteger('Options', 'RowHeight', RowHeight);
@@ -15361,6 +15365,8 @@ begin
         end;
 
         SetViewNodePositionLabel(ViewLabel);
+        if (vstView.FocusedColumn < 1) and (ColumnForViewFocusedElement < 1) and (ActiveIndex > NoColumn) then
+          vstView.FocusedColumn := ActiveIndex + 1;
         UpdateColumnWidths;
         if pgMain.ActivePage <> tbsReferencedBy then
           pgMain.ActivePage := tbsView;
