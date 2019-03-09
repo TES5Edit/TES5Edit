@@ -28,7 +28,7 @@ Command Line Switches:
 -DontCacheLoad [Don't load cache files if present, but save if possible]
 -DontCacheSave [Don't save cache files after building refs]
 -AllowDirectSaves:<filename list> [File may be an .esm, .esl, or .esp. Without a list of files, this will load non-official (official = game master, official dlcs, CCs) modules without using memory mapped files. Optionally you can specify a list of files. Which will only load the listed modules without using memory mapped files. This optional list may include official modules.]
--<gamemode> [Specifies which game mode to use. <gamemode> can be any of the following: 'tes5vr', 'fo4vr', 'tes4', 'tes5', 'sse', 'fo3', 'fnv', 'fo4', 'fo76']
+-<gamemode> [Specifies which game mode to use. <gamemode> can be any of the following: 'tes5vr', 'fo4vr', 'tes4', 'tes5', 'enderal', 'sse', 'fo3', 'fnv', 'fo4', 'fo76']
 -moprofile:<profilename> Opens the plugin selection from the MO profile named in the switch.
 -setesm [Set ESM flag. Plugin selection screen will appear.]
 -clearesm [Remove ESM flag. Plugin selection screen will appear.]

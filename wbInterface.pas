@@ -51,14 +51,14 @@ var
   VersionString : TwbVersion = (
     Major   : 4;
     Minor   : 0;
-    Release : 1;
-    Build   : 'p';
-    Title   : 'RC6 for 4.0.2';
+    Release : 2;
+    Build   : '';
+    Title   : '';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04000105;
-  wbDeveloperMessageVersion : Integer = 04000101;
+  wbWhatsNewVersion : Integer = 04000200;
+  wbDeveloperMessageVersion : Integer = 04000200;
   wbDevCRC32App : Cardinal = $FFFFFFEB;
 
   clOrange       = $004080FF;
@@ -178,6 +178,7 @@ var
   wbManualCleaningHide     : Boolean  = False;
   wbShrinkButtons          : Boolean  = False;
   wbCollapseConditions     : Boolean  = True;
+  wbCollapseBenignArray    : Boolean  = True;
 
   wbGlobalModifedGeneration : UInt64;
 
@@ -4629,6 +4630,7 @@ type
     constructor Clone(const aSource: TwbDef); virtual;
     constructor Create(aPriority: TwbConflictPriority; aRequired: Boolean; aGetCP: TwbGetConflictPriority);
     procedure AfterClone(const aSource: TwbDef); virtual;
+    procedure AfterConstruction; override;
 
     {---IwbDef---}
     function GetDefType: TwbDefType; virtual; abstract;
@@ -8035,6 +8037,14 @@ procedure TwbDef.AfterClone(const aSource: TwbDef);
 begin
   defSource := aSource;
   defFlags := aSource.defFlags;
+end;
+
+procedure TwbDef.AfterConstruction;
+begin
+  inherited;
+  if wbCollapseBenignArray and (GetDefType in [dtSubRecord, dtSubRecordArray, dtArray]) then
+    if (defPriority = cpBenign) and not Assigned(defGetCP) then
+      Include(defFlags, dfCollapsed);
 end;
 
 function TwbDef.Assign(const aTarget : IwbElement;
@@ -17833,8 +17843,9 @@ begin
     Exit;
   if aEncoding = '' then
     Exit;
-  if not wbLEncoding[aFallback].Find(aLanguage, i) then
+  if not wbLEncoding[aFallback].Find(aLanguage, i) then try
     wbLEncoding[aFallback].AddObject(aLanguage, wbMBCSEncoding(aEncoding));
+  except end;
 end;
 
 procedure wbAddDefaultLEncodingsIfMissing(aFallback: Boolean);

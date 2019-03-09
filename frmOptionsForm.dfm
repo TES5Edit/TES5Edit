@@ -211,6 +211,18 @@ object frmOptions: TfrmOptions
         Caption = 'Collapse Conditions by Default (requires restart)'
         TabOrder = 19
       end
+      object cbCollapseBenignArray: TCheckBox
+        Left = 16
+        Top = 296
+        Width = 439
+        Height = 17
+        Caption = 
+          'Collapse Arrays with Benign Conflict Priority by Default (requir' +
+          'es restart)'
+        Ctl3D = True
+        ParentCtl3D = False
+        TabOrder = 20
+      end
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'
