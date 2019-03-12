@@ -20838,17 +20838,17 @@ begin
 end;
 
 type
-  TDoDrawIcon = function (DC: HDC; Details: TThemedElementDetails; const R: TRect; himl: HIMAGELIST; Index: Integer): Boolean of object;
+  TDoDrawIcon = function (DC: HDC; Details: TThemedElementDetails; const R: TRect; himl: HIMAGELIST; Index: Integer; DPI: Integer = 0): Boolean of object;
   TUxThemeStyleHack = class(TUxThemeStyle);
   TCustomStyleHack = class(TCustomStyle);
 
 var
-  Trampoline_TUxThemeStyle_DoDrawIcon : function(Self: TUxThemeStyleHack; DC: HDC; Details: TThemedElementDetails; const R: TRect; himl: HIMAGELIST; Index: Integer): Boolean;
+  Trampoline_TUxThemeStyle_DoDrawIcon : function(Self: TUxThemeStyleHack; DC: HDC; Details: TThemedElementDetails; const R: TRect; himl: HIMAGELIST; Index: Integer; DPI: Integer = 0): Boolean;
   CodePointer_TUxThemeStyle_DoDrawIcon : TDoDrawIcon;
 
 function Detour_TUxThemeStyle_DoDrawIcon(Self: TUxThemeStyleHack; DC: HDC;
   Details: TThemedElementDetails; const R: TRect; himl: HIMAGELIST;
-  Index: Integer): Boolean;
+  Index: Integer; DPI: Integer = 0): Boolean;
 var
   Icon: HICON;
   IW, IH: Integer;
@@ -20860,7 +20860,7 @@ begin
     Result := DrawIconEx(DC, R.Left, R.Top, Icon, IW, IH, 0, 0, DI_NORMAL);
     DestroyIcon(Icon);
   end else
-    Result := Trampoline_TUxThemeStyle_DoDrawIcon(Self, DC, Details, R, himl, Index)
+    Result := Trampoline_TUxThemeStyle_DoDrawIcon(Self, DC, Details, R, himl, Index, DPI)
 end;
 
 initialization
