@@ -661,6 +661,7 @@ const
   OMOD : TwbSignature = 'OMOD'; { New to Fallout 4 }
   ONAM : TwbSignature = 'ONAM';
   OPDS : TwbSignature = 'OPDS'; { New To Fallout 76 }
+  CMIC : TwbSignature = 'CMIC'; { New To Fallout 76 }
   OTFT : TwbSignature = 'OTFT';
   OVIS : TwbSignature = 'OVIS'; { New to Fallout 4 }
   PACH : TwbSignature = 'PACH'; { New To Fallout 76 }
@@ -745,6 +746,9 @@ const
   RADR : TwbSignature = 'RADR'; { New To Fallout 4 }
   RBPC : TwbSignature = 'RBPC'; { New To Fallout 4 }
   RCBN : TwbSignature = 'RCBN'; { New To Fallout 76 }
+  LAVT : TwbSignature = 'LAVT'; { New To Fallout 76 }
+  LAMN : TwbSignature = 'LAMN'; { New To Fallout 76 }
+  LAMX : TwbSignature = 'LAMX'; { New To Fallout 76 }
   RCEC : TwbSignature = 'RCEC'; { New To Skyrim }
   RCLR : TwbSignature = 'RCLR';
   RCPR : TwbSignature = 'RCPR'; { New to Dawnguard }
@@ -965,6 +969,7 @@ const
   XCNT : TwbSignature = 'XCNT';
   XCRI : TwbSignature = 'XCRI'; { New To Fallout 4 }
   XCRP : TwbSignature = 'XCRP'; { New To Fallout 76 }
+  XCPF : TwbSignature = 'XCPF'; { New To Fallout 76 }
   XCVL : TwbSignature = 'XCVL'; { New To Skyrim }
   XCVR : TwbSignature = 'XCVR'; { New To Fallout 4 }
   XCWT : TwbSignature = 'XCWT';
@@ -3604,6 +3609,40 @@ begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 181);
 end;
 
+function wbDeciderFormVersion188(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 188);
+end;
+
+function wbDeciderFormVersion187(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 187);
+end;
+
+function wbDeciderFormVersion186(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 186);
+end;
+
+function wbDeciderFormVersion185(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 185);
+end;
+
+function wbDeciderFormVersion184(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 184);
+end;
+
+function wbDeciderFormVersion183(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 183);
+end;
+
+function wbDeciderFormVersion182(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 182);
+end;
 
 function wbAECHDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -9710,7 +9749,11 @@ begin
       wbFloat('Knockdown'),
       wbFloat('Recovery Time'),
       wbFloat('Action Points Mult'),
-      wbInteger('Stagger Offset', itS32)
+      wbInteger('Stagger Offset', itS32),
+      wbUnion('Unknown', wbDeciderFormVersion188, [
+        wbEmpty('Unused'),
+        wbFloat('Unknown')
+      ])
     ]),
     wbString(ATKE, 'Attack Event'),
     wbFormIDCk(ATKW, 'Weapon Slot', [EQUP]),
@@ -10127,6 +10170,9 @@ begin
       'Unknown 3',
       'Is a Radio'
     ])),
+    wbUnknown(LAVT),
+    wbUnknown(LAMN),
+    wbUnknown(LAMX),
     wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
     wbStruct(RADR, 'Radio Receiver', [
       wbFormIDCk('Sound Model', [SOPM, NULL]),
@@ -10138,6 +10184,11 @@ begin
     wbCNDCs,
     wbUnknown(MNAM),
     wbNVNM,
+    wbArray(VEND, 'Unknown', wbStruct('Unknown', [
+      wbFormID('Unknown'),
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4)
+    ])),
     wbNAM1LODP
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
@@ -10749,7 +10800,9 @@ begin
     wbStruct(XCRP, 'Unknown', [
       wbByteArray('Unknown', 4),
       wbArray('References', wbFormID('Reference'))
-    ])
+    ]),
+
+    wbUnknown(XCPF)
   ], True, wbCellAddInfo, cpNormal, False{, wbCELLAfterLoad});
 
   wbRecord(CLAS, 'Class', [
@@ -10853,6 +10906,7 @@ begin
     wbOPDSs,
     wbPTRN,
     wbPHST,
+    wbSTCP,
     wbSNTP,
     wbXALG,
     wbFULL,
@@ -10877,7 +10931,8 @@ begin
     wbFormIDCk(SNAM, 'Sound - Open', [SNDR]),
     wbFormIDCk(QNAM, 'Sound - Close', [SNDR]),
     wbFormIDCk(TNAM, 'Sound - Take All', [SNDR]),
-    wbFormIDCk(ONAM, 'Filter List', [FLST])
+    wbFormIDCk(ONAM, 'Filter List', [FLST]),
+    wbUnknown(CMIC)
   ], True, nil, cpNormal, False, nil, wbContainerAfterSet);
 
   wbAIDT :=
@@ -11626,6 +11681,9 @@ begin
       wbFloat('Unknown'),
       wbUnknown
     ]),
+    wbUnknown(LAVT),
+    wbUnknown(LAMN),
+    wbUnknown(LAMX),
     wbMNAMFurnitureMarker,
     wbStruct(WBDT, 'Workbench Data', [
       wbInteger('Bench Type', itU8, wbEnum([
@@ -11702,6 +11760,7 @@ begin
       {0x00080000} {15} 15, 'Restricted'
     ])), [
     wbEDID,
+    wbXALG,
     wbCNAM,
     wbString(DNAM, 'Notes'),
     wbInteger(TNAM, 'Type', itU32, wbKeywordTypeEnum),
@@ -12508,7 +12567,11 @@ begin
       wbInteger('Level', itU8),
       wbInteger('Num Ranks', itU8),
       wbInteger('Playable', itU8, wbBoolEnum),
-      wbInteger('Hidden', itU8, wbBoolEnum)
+      wbInteger('Hidden', itU8, wbBoolEnum),
+      wbUnion('Unknown', wbDeciderFormVersion188, [
+        wbEmpty('Unused'),
+        wbByteArray('Unknown', 1)
+      ])
     ], cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SNDR]),
     wbFormIDCk(PRFS, 'Perk Activation Sound', [SNDR]),
@@ -13108,6 +13171,7 @@ begin
       'Message Box',
       'Delay Initial Display'
     ]), cpNormal, True, False, nil, wbMESGDNAMAfterSet),
+    wbUnknown(XFLG),
     wbInteger(TNAM, 'Display Time', itU32, nil, cpNormal, False, False, wbMESGTNAMDontShow),
     wbString(SNAM, 'SWF'),
     wbLStringKC(NNAM, 'Short Title', 0, cpTranslate),
@@ -14041,6 +14105,7 @@ begin
 
   wbRecord(SNDR, 'Sound Descriptor', [
     wbEDID,
+    wbXALG,
     wbString(NNAM, 'Notes'),
     wbInteger(CNAM, 'Descriptor Type', itU32, wbEnum([], [
       Int64($1EEF540A), 'Standard',
@@ -14677,7 +14742,8 @@ begin
       wbFloat('Min'),
       wbFloat('Max')
     ]),
-    wbString(MOD2, 'Camera Path', 0, cpNormal, False)
+    wbString(MOD2, 'Camera Path', 0, cpNormal, False),
+    wbUnknown(PNAM)
   ]);
 
   wbRecord(LTEX, 'Landscape Texture', [
@@ -14757,6 +14823,7 @@ begin
     wbDEFL,
     wbXALG,
     wbLVLD,
+    wbLStringKC(ONAM, 'Override Name', 0, cpTranslate),
     wbLVMV,
     wbLVMG,
     wbLVMT,
@@ -14764,18 +14831,33 @@ begin
     wbInteger(LVLM, 'Max Count', itU8), { Always 00 }
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbLVCT,
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
-      {0x00000001} 'Calculate from all levels <= player''s level',
-      {0x00000002} 'Calculate for each item in count',
-      {0x00000004} 'Calculate All', {Still picks just one}
-      {0x00000008} 'Unknown 3',
-      {0x00000010} 'Unknown 4',
-      {0x00000020} 'Unknown 5',
-      {0x00000040} 'Unknown 6',
-      {0x00000080} 'Unknown 7'
-    ]), cpNormal, True),
+    wbStruct(LVLF, 'Flags', [
+      wbInteger('Flags', itU8, wbFlags([
+        {0x00000001} 'Calculate from all levels <= player''s level',
+        {0x00000002} 'Calculate for each item in count',
+        {0x00000004} 'Calculate All', {Still picks just one}
+        {0x00000008} 'Unknown 3',
+        {0x00000010} 'Unknown 4',
+        {0x00000020} 'Unknown 5',
+        {0x00000040} 'Unknown 6',
+        {0x00000080} 'Unknown 7'
+      ]), cpNormal, True),
+      wbUnion('Flags2', wbDeciderFormVersion185, [
+        wbEmpty('Unused'),
+        wbInteger('Flags2', itU8, wbFlags([
+          {0x00000001} 'Unknown 0',
+          {0x00000002} 'Unknown 1',
+          {0x00000004} 'Unknown 2',
+          {0x00000008} 'Unknown 3',
+          {0x00000010} 'Unknown 4',
+          {0x00000020} 'Unknown 5',
+          {0x00000040} 'Unknown 6',
+          {0x00000080} 'Unknown 7'
+        ]), cpNormal, True)
+      ])
+    ], cpNormal, True),
     wbCTDAs,
-    wbFormIDCk(LVLG, 'Use Global', [GLOB]),
+    //wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbLLCT,
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
@@ -14814,9 +14896,8 @@ begin
     wbFormIDCk(LVSG, 'Epic Loot Chance', [GLOB]),
     wbDIQO,
     wbUnknown(LIMC),
-    wbMODL,
-    wbLStringKC(ONAM, 'Override Name', 0, cpTranslate)
-  ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
+    wbMODL
+  ], True, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
   wbRecord(LVLP, 'Leveled Pack In', [
     wbEDID,
@@ -15132,8 +15213,10 @@ begin
     wbByteArray(NAM3, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
     wbFormIDCk(ANAM, 'Menu Art Object', [ARTO]),
     wbFormIDCk(GNAM, 'Learn Recipe from', [ALCH,AMMO,ARMO,BOOK,MISC,WEAP]), //inventory objects?
-    wbFormIDCk(CVT0,'Curve Table', [CURV]),
-    wbFormIDCk(LRNC,'Learn Chance', [GLOB]),
+    wbFormIDCk(INAM, 'Unknown', [GLOB]),
+    wbFormIDCk(JNAM, 'Unknown', [GLOB]),
+    wbFormIDCk(CVT0, 'Curve Table', [CURV]),
+    wbFormIDCk(LRNC, 'Learn Chance', [GLOB]),
     wbArrayS(FNAM, 'Category', wbFormIDCk('Keyword', [KYWD])),
     wbLString(HNAM),
     wbStruct(DNAM, 'Data', [
@@ -15772,9 +15855,11 @@ begin
     wbFLTR,
     wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, False),
     wbEmpty(NEXT, 'Marker'),
-    wbCTDAs, {>>> Unknown, doesn't show up in CK <<<}
+    wbCTDAs,
     wbEmpty(NEXT, 'Marker'),
-    wbCTDAs, {>>> Unknown, doesn't show up in CK <<<}
+    wbCTDAs,
+    wbEmpty(NEXT, 'Marker'),
+    wbCTDAs,
     wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
       wbStructSK(INDX, [0], 'Stage Index', [
         wbInteger('Stage Index', itU16),
@@ -16189,7 +16274,11 @@ begin
       wbFormIDCk('OnCripple - Impact DataSet', [IPDS, NULL]),
       wbFormIDCk('Explodable - Subsegment Explosion', [EXPL, NULL]),
       wbFloat('Orientation Limits - Pitch'),
-      wbFloat('Orientation Limits - Roll')
+      wbFloat('Orientation Limits - Roll'),
+      wbUnion('Unknown', wbDeciderFormVersion188, [
+        wbEmpty('Unused'),
+        wbByteArray('Unknown', 4)
+      ])
     ], cpNormal, True),
 
     wbEmpty(MNAM, 'Male Marker'),
@@ -18211,6 +18300,7 @@ begin
       {0x00020000} 17, 'Unknown'
     ])), [
     wbEDID,
+    wbXALG,
     wbString(FNAM, 'Tree Folder'), {First FNAM}
     wbRArrayS('Material Substitutions',
       wbRStructSK([0], 'Substitution', [
@@ -18450,6 +18540,7 @@ begin
 
   wbRecord(STAG, 'Animation Sound Tag Set', [
     wbEDID,
+    wbXALG,
     wbRArray('Sounds', wbStruct(TNAM, 'Sound', [
       wbFormIDCk('Sound', [SNDR, NULL]),
       wbString('Action')
@@ -18553,6 +18644,7 @@ begin
       {0x00008000} 16, 'Around Origin'
     ])), [
     wbEDID,
+    wbXALG,
     wbStruct(DATA, 'Data', [
       wbPosRot,
       wbFloat('Scale'),
@@ -18589,6 +18681,14 @@ begin
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
+      ]),
+      wbUnion('Unknown', wbDeciderFormVersion187, [
+        wbEmpty('Unused'),
+        wbFloat('Unknown')
+      ]),
+      wbUnion('Unknown', wbDeciderFormVersion187, [
+        wbEmpty('Unused'),
+        wbFloat('Unknown')
       ])
     ])
   ]);
@@ -18790,6 +18890,7 @@ begin
     wbEDID,
     wbOBND,
     wbMODL,
+    wbKeywords,
     wbUnknown(CNAM),
     wbUnknown(FNAM),
     wbUnknown(SNST),
@@ -18804,8 +18905,20 @@ begin
     wbRArray('Nodes', wbStruct(ENAM, 'Node', [
       wbInteger('Node ID', itU32),
       wbFormIDCk('Node', [STND]),
-      wbArray('Unknown', wbFloat('Unknown'), 4)
-    ])),
+      wbArray('Unknown', wbFloat('Unknown'), 4),
+      wbUnion('Unknown', wbDeciderFormVersion187, [
+        wbEmpty('Unused'),
+        wbFloat('Unknown')
+      ]),
+      wbUnion('Unknown', wbDeciderFormVersion187, [
+        wbEmpty('Unused'),
+        wbFloat('Unknown')
+      ]),
+      wbUnion('Unknown', wbDeciderFormVersion187, [
+        wbEmpty('Unused'),
+        wbInteger('Unknown', itU32)
+      ])
+   ])),
     wbRArray('Unknown', wbRStruct('Unknown', [
       wbInteger(ONAM, 'Node ID', itU32),
       wbArray(TNAM, 'Unknown', wbFloat('Unknown'), 4)
@@ -18884,6 +18997,7 @@ begin
 
   wbRecord(ENTM, 'Entitlement', [
     wbEDID,
+    wbXALG,
     wbFULL,
     wbDESC,
     wbKeywords,
@@ -18945,6 +19059,7 @@ begin
     wbString(SNAM),
     wbString(NNAM),
     wbUnknown(FNAM),
+    wbUnknown(XFLG),
     wbFormIDCk(HNAM, 'Required Count', [GLOB]),
     wbInteger(CNAM, 'Challenge Frequency', itU32, wbEnum([
       'Daily',
