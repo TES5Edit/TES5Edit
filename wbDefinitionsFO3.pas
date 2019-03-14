@@ -524,8 +524,8 @@ var
   wbEITM: IwbSubRecordDef;
   wbREPL: IwbSubRecordDef;
   wbBIPL: IwbSubRecordDef;
-  wbOBND: IwbSubRecordDef;
-  wbOBNDReq: IwbSubRecordDef;
+  wbOBND: IwbRecordMemberDef;
+  wbOBNDReq: IwbRecordMemberDef;
   wbDEST: IwbSubRecordStructDef;
   wbDESTActor: IwbSubRecordStructDef;
   wbDODT: IwbSubRecordDef;
@@ -1938,6 +1938,31 @@ begin
     Exit;
 
   aValue := RecordHeader.Elements[3].Value;
+end;
+
+procedure wbOBNDToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  OBND: IwbContainerElementRef;
+  FacetPointA, FacetPointB: String;
+  X1, X2, Y1, Y2, Z1, Z2: IwbElement;
+begin
+  if not Supports(aElement, IwbContainerElementRef, OBND) then
+    Exit;
+  if OBND.Collapsed <> tbTrue then
+    Exit;
+
+  X1 := OBND.Elements[0];
+  Y1 := OBND.Elements[1];
+  Z1 := OBND.Elements[2];
+
+  X2 := OBND.Elements[3];
+  Y2 := OBND.Elements[4];
+  Z2 := OBND.Elements[5];
+
+  FacetPointA := X1.Value + ', ' + Y1.Value + ', ' + Z1.Value;
+  FacetPointB := X2.Value + ', ' + Y2.Value + ', ' + Z2.Value;
+
+  aValue := '(' + FacetPointA + '), (' + FacetPointB + ')';
 end;
 
 procedure wbConditionToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -4378,7 +4403,7 @@ begin
     wbInteger('X2', itS16),
     wbInteger('Y2', itS16),
     wbInteger('Z2', itS16)
-  ]);
+  ]).SetToStr(wbOBNDToStr).IncludeFlag(dfCollapsed, wbCollapseOBND);
   wbOBNDReq := wbStruct(OBND, 'Object Bounds', [
     wbInteger('X1', itS16),
     wbInteger('Y1', itS16),
@@ -4386,7 +4411,7 @@ begin
     wbInteger('X2', itS16),
     wbInteger('Y2', itS16),
     wbInteger('Z2', itS16)
-  ], cpNormal, True);
+  ], cpNormal, True).SetToStr(wbOBNDToStr).IncludeFlag(dfCollapsed, wbCollapseOBND);
   wbREPL := wbFormIDCkNoReach(REPL, 'Repair List', [FLST]);
   wbEITM := wbFormIDCk(EITM, 'Object Effect', [ENCH, SPEL]);
   wbBIPL := wbFormIDCk(BIPL, 'Biped Model List', [FLST]);
