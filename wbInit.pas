@@ -235,6 +235,7 @@ begin
       wbSortINFO := Settings.ReadBool('Options', 'SortINFO', wbSortINFO);
       wbFillPNAM := Settings.ReadBool('Options', 'FillPNAM', wbFillPNAM);
       wbCollapseRecordHeader := Settings.ReadBool('Options', 'CollapseRecordHeader', wbCollapseRecordHeader);
+      wbCollapseOBND := Settings.ReadBool('Options', 'CollapseObjectBounds', wbCollapseOBND);
       wbCollapseConditions := Settings.ReadBool('Options', 'CollapseConditions', wbCollapseConditions);
       wbCollapseBenignArray := Settings.ReadBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
       sl := TStringList.Create;

@@ -178,6 +178,7 @@ var
   wbManualCleaningHide     : Boolean  = False;
   wbShrinkButtons          : Boolean  = False;
   wbCollapseRecordHeader   : Boolean  = True;
+  wbCollapseOBND           : Boolean  = True;
   wbCollapseConditions     : Boolean  = True;
   wbCollapseBenignArray    : Boolean  = True;
 
