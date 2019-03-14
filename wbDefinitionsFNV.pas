@@ -77,7 +77,8 @@ uses
   SysUtils,
   Math,
   Variants,
-  wbHelpers;
+  wbHelpers,
+  wbDefinitionsCommon;
 
 const
   _00_IAD: TwbSignature = #$00'IAD';
@@ -2022,123 +2023,6 @@ begin
   if (i <> 106) and (i <> 285) then
     if Integer(Container.ElementNativeValues['Run On']) = 2 then
       Result := 1;
-end;
-
-procedure wbMainRecordHeaderToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  RecordHeader: IwbContainerElementRef;
-begin
-  if not Supports(aElement, IwbContainerElementRef, RecordHeader) then
-    Exit;
-  if RecordHeader.Collapsed <> tbTrue then
-    Exit;
-
-  aValue := RecordHeader.Elements[3].Value;
-end;
-
-procedure wbOBNDToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  OBND: IwbContainerElementRef;
-  FacetPointA, FacetPointB: String;
-  X1, X2, Y1, Y2, Z1, Z2: IwbElement;
-begin
-  if not Supports(aElement, IwbContainerElementRef, OBND) then
-    Exit;
-  if OBND.Collapsed <> tbTrue then
-    Exit;
-
-  X1 := OBND.Elements[0];
-  Y1 := OBND.Elements[1];
-  Z1 := OBND.Elements[2];
-
-  X2 := OBND.Elements[3];
-  Y2 := OBND.Elements[4];
-  Z2 := OBND.Elements[5];
-
-  FacetPointA := X1.Value + ', ' + Y1.Value + ', ' + Z1.Value;
-  FacetPointB := X2.Value + ', ' + Y2.Value + ', ' + Z2.Value;
-
-  aValue := '(' + FacetPointA + '), (' + FacetPointB + ')';
-end;
-
-procedure wbModelToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  Model: IwbContainerElementRef;
-begin
-  if not Supports(aElement, IwbContainerElementRef, Model) then
-    Exit;
-  if Model.Collapsed <> tbTrue then
-    Exit;
-
-  aValue := Model.Elements[0].Value;
-end;
-
-procedure wbFactionXNAMToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  Relation: IwbContainerElementRef;
-begin
-  if not Supports(aElement, IwbContainerElementRef, Relation) then
-    Exit;
-  if Relation.Collapsed <> tbTrue then
-    Exit;
-
-  aValue := Relation.Elements[2].Value + ' ' + Relation.Elements[0].Value;
-end;
-
-procedure wbConditionToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  Condition: IwbContainerElementRef;
-  RunOn, Param1, Param2: IwbElement;
-  Typ: Byte;
-  i: Integer;
-begin
-  if not Supports(aElement, IwbContainerElementRef, Condition) then
-    Exit;
-  if Condition.Collapsed <> tbTrue then
-    Exit;
-
-  Typ := Condition.Elements[0].NativeValue;
-
-  if (Condition.ElementCount >= 9) and (Condition.Elements[7].Def.DefType <> dtEmpty) and (Condition.Elements[8].Def.DefType <> dtEmpty) then begin
-    i := Condition.Elements[3].NativeValue;
-    RunOn := Condition.Elements[7];
-    if (i <> 106) and (i <> 285) and (RunOn.NativeValue = 2) then
-      aValue := Condition.Elements[8].Value
-    else
-      aValue := RunOn.Value;
-  end else
-    if (Typ and $02) = 0 then
-      aValue := 'Subject'
-    else
-      aValue := 'Target';
-
-  aValue := aValue + '.' + Condition.Elements[3].Value;
-
-  Param1 := Condition.Elements[5];
-  if Param1.ConflictPriority <> cpIgnore then begin
-    aValue := aValue + '(' {+ Param1.Name + ': '} + Param1.Value;
-    Param2 := Condition.Elements[6];
-    if Param2.ConflictPriority <> cpIgnore then begin
-      aValue := aValue + ', ' {+ Param2.Name + ': '} + Param2.Value;
-    end;
-    aValue := aValue + ')';
-  end;
-
-  case Typ and $E0 of
-    $00 : aValue := aValue + ' = ';
-    $20 : aValue := aValue + ' <> ';
-    $40 : aValue := aValue + ' > ';
-    $60 : aValue := aValue + ' >= ';
-    $80 : aValue := aValue + ' < ';
-    $A0 : aValue := aValue + ' <= ';
-  end;
-
-  aValue := aValue + Condition.Elements[2].Value;
-
-  if (Typ and $01) = 0 then
-    aValue := aValue + ' AND'
-  else
-    aValue := aValue + ' OR';
 end;
 
 function wbNAVINVMIDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -4625,7 +4509,7 @@ begin
     wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4),
     wbInteger('Form Version', itU16, nil, cpIgnore),
     wbByteArray('Version Control Info 2', 2, cpIgnore)
-  ]).SetToStr(wbMainRecordHeaderToStr).IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
+  ]).SetToStr(wbRecordHeaderToStr).IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
 
   wbSizeOfMainRecordStruct := 24;
 
@@ -4703,7 +4587,7 @@ begin
     wbInteger('X2', itS16),
     wbInteger('Y2', itS16),
     wbInteger('Z2', itS16)
-  ]).SetToStr(wbOBNDToStr).IncludeFlag(dfCollapsed, wbCollapseOBND);
+  ]).SetToStr(wbObjectBoundsToStr).IncludeFlag(dfCollapsed, wbCollapseOBND);
   wbOBNDReq := wbStruct(OBND, 'Object Bounds', [
     wbInteger('X1', itS16),
     wbInteger('Y1', itS16),
@@ -4711,7 +4595,7 @@ begin
     wbInteger('X2', itS16),
     wbInteger('Y2', itS16),
     wbInteger('Z2', itS16)
-  ], cpNormal, True).SetToStr(wbOBNDToStr).IncludeFlag(dfCollapsed, wbCollapseOBND);
+  ], cpNormal, True).SetToStr(wbObjectBoundsToStr).IncludeFlag(dfCollapsed, wbCollapseOBND);
   wbREPL := wbFormIDCkNoReach(REPL, 'Repair List', [FLST]);
   wbEITM := wbFormIDCk(EITM, 'Object Effect', [ENCH, SPEL]);
   wbBIPL := wbFormIDCk(BIPL, 'Biped Model List', [FLST]);
@@ -5889,7 +5773,7 @@ begin
         wbInteger('Unused', itU32, nil, cpIgnore),
         wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PBEA, PGRE, NULL], True)    // Can end up NULL if the original function requiring a reference is replaced by another who has no Run on prerequisite
       ])
-    ], cpNormal, False, nil, 7, wbCTDAAfterLoad).SetToStr(wbConditionToStr).IncludeFlag(dfCollapsed, wbCollapseConditions);
+    ], cpNormal, False, nil, 7, wbCTDAAfterLoad).SetToStr(wbConditionToStrFNV).IncludeFlag(dfCollapsed, wbCollapseConditions);
   wbCTDAs := wbRArray('Conditions', wbCTDA);
   wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
 
@@ -7054,7 +6938,7 @@ begin
         'Ally',
         'Friend'
       ]))
-    ]).SetToStr(wbFactionXNAMToStr).IncludeFlag(dfCollapsed, wbCollapseFactionXNAMs);
+    ]).SetToStr(wbFactionRelationToStr).IncludeFlag(dfCollapsed, wbCollapseFactionRelations);
 
   wbXNAMs := wbRArrayS('Relations', wbXNAM);
 
