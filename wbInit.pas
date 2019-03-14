@@ -237,6 +237,7 @@ begin
       wbCollapseRecordHeader := Settings.ReadBool('Options', 'CollapseRecordHeader', wbCollapseRecordHeader);
       wbCollapseOBND := Settings.ReadBool('Options', 'CollapseObjectBounds', wbCollapseOBND);
       wbCollapseModels := Settings.ReadBool('Options', 'CollapseModels', wbCollapseModels);
+      wbCollapseFactionXNAMs := Settings.ReadBool('Options', 'CollapseFactionRelations', wbCollapseFactionXNAMs);
       wbCollapseConditions := Settings.ReadBool('Options', 'CollapseConditions', wbCollapseConditions);
       wbCollapseBenignArray := Settings.ReadBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
       sl := TStringList.Create;

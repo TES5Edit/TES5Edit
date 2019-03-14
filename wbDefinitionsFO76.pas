@@ -1115,6 +1115,8 @@ var
   wbFULL: IwbSubRecordDef;
   wbFULLActor: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
+  wbXNAM: IwbRecordMemberDef;
+  wbXNAMs: IwbSubRecordArrayDef;
   wbDESC: IwbSubRecordDef;
   wbDESCReq: IwbSubRecordDef;
   wbXSCL: IwbSubRecordDef;
@@ -3357,6 +3359,18 @@ begin
     Exit;
 
   aValue := Model.Elements[0].Value;
+end;
+
+procedure wbFactionXNAMToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Relation: IwbContainerElementRef;
+begin
+  if not Supports(aElement, IwbContainerElementRef, Relation) then
+    Exit;
+  if Relation.Collapsed <> tbTrue then
+    Exit;
+
+  aValue := Relation.Elements[2].Value + ' ' + Relation.Elements[0].Value;
 end;
 
 procedure wbConditionToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -11626,21 +11640,24 @@ begin
     ]), cpNormal, True)
   ]);
 
+  wbXNAM :=
+    wbStructSK(XNAM, [0], 'Relation', [
+      wbFormIDCkNoReach('Faction', [FACT, RACE]),
+      wbInteger('Modifier', itS32),
+      wbInteger('Group Combat Reaction', itU32, wbEnum([
+        {0x00000001} 'Neutral',
+        {0x00000002} 'Enemy',
+        {0x00000004} 'Ally',
+        {0x00000008} 'Friend'
+      ]))
+    ]).SetToStr(wbFactionXNAMToStr).IncludeFlag(dfCollapsed, wbCollapseFactionXNAMs);
+
+  wbXNAMs := wbRArrayS('Relations', wbXNAM);
+
   wbRecord(FACT, 'Faction', [
     wbEDID,
     wbFULL,
-    wbRArrayS('Relations',
-      wbStructSK(XNAM, [0], 'Relation', [
-        wbFormIDCkNoReach('Faction', [FACT, RACE]),
-        wbInteger('Modifier', itS32),
-        wbInteger('Group Combat Reaction', itU32, wbEnum([
-          {0x00000001} 'Neutral',
-          {0x00000002} 'Enemy',
-          {0x00000004} 'Ally',
-          {0x00000008} 'Friend'
-        ]))
-      ])
-    ),
+    wbXNAMs,
     wbStruct(DATA, 'Flags', [
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Hidden From NPC',

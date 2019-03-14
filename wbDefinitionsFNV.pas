@@ -602,7 +602,7 @@ var
   wbFULL: IwbSubRecordDef;
   wbFULLActor: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
-  wbXNAM: IwbSubRecordDef;
+  wbXNAM: IwbRecordMemberDef;
   wbXNAMs: IwbSubRecordArrayDef;
   wbDESC: IwbSubRecordDef;
   wbDESCReq: IwbSubRecordDef;
@@ -2071,6 +2071,18 @@ begin
     Exit;
 
   aValue := Model.Elements[0].Value;
+end;
+
+procedure wbFactionXNAMToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Relation: IwbContainerElementRef;
+begin
+  if not Supports(aElement, IwbContainerElementRef, Relation) then
+    Exit;
+  if Relation.Collapsed <> tbTrue then
+    Exit;
+
+  aValue := Relation.Elements[2].Value + ' ' + Relation.Elements[0].Value;
 end;
 
 procedure wbConditionToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -7042,7 +7054,7 @@ begin
         'Ally',
         'Friend'
       ]))
-    ]);
+    ]).SetToStr(wbFactionXNAMToStr).IncludeFlag(dfCollapsed, wbCollapseFactionXNAMs);
 
   wbXNAMs := wbRArrayS('Relations', wbXNAM);
 
