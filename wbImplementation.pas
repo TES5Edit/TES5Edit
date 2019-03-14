@@ -8192,9 +8192,9 @@ begin
 
     RecordHeaderStruct := nil;
     if Assigned(mrDef) then
-      RecordHeaderStruct := mrDef.RecordHeaderStruct;
+      RecordHeaderStruct := mrDef.RecordHeaderStruct as IwbStructDef;
     if not Assigned(RecordHeaderStruct) then
-      RecordHeaderStruct := wbMainRecordHeader;
+      RecordHeaderStruct := wbMainRecordHeader as IwbStructDef;
 
     CurrentPtr := dcBasePtr;
     with TwbRecordHeaderStruct.Create(Self, CurrentPtr, PByte(CurrentPtr) + wbSizeOfMainRecordStruct, RecordHeaderStruct, '') do begin

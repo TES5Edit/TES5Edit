@@ -2556,6 +2556,18 @@ begin
     Result := 1;
 end;
 
+procedure wbMainRecordHeaderToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  RecordHeader: IwbContainerElementRef;
+begin
+  if not Supports(aElement, IwbContainerElementRef, RecordHeader) then
+    Exit;
+  if RecordHeader.Collapsed <> tbTrue then
+    Exit;
+
+  aValue := RecordHeader.Elements[3].Value;
+end;
+
 procedure wbConditionToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Condition: IwbContainerElementRef;
@@ -5372,7 +5384,7 @@ begin
     ]),
     wbInteger('Form Version', itU16, nil, cpIgnore),
     wbByteArray('Version Control Info 2', 2, cpIgnore)
-  ]);
+  ]).SetToStr(wbMainRecordHeaderToStr).IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
 
   wbSizeOfMainRecordStruct := 24;
 
