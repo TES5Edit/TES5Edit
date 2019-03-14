@@ -177,6 +177,7 @@ var
   wbManualCleaningAllow    : Boolean  = False;
   wbManualCleaningHide     : Boolean  = False;
   wbShrinkButtons          : Boolean  = False;
+  wbCollapseRecordHeader   : Boolean  = True;
   wbCollapseConditions     : Boolean  = True;
   wbCollapseBenignArray    : Boolean  = True;
 
@@ -3798,7 +3799,7 @@ function wbGridCellToCenterPosition(const aGridCell: TwbGridCell): TwbVector;
 
 var
   wbRecordFlags            : IwbIntegerDef;
-  wbMainRecordHeader       : IwbStructDef;
+  wbMainRecordHeader       : IwbValueDef;
   wbSizeOfMainRecordStruct : Integer;
 
 type
@@ -8672,9 +8673,9 @@ end;
 function TwbMainRecordDef.GetRecordHeaderStruct: IwbStructDef;
 begin
   if Assigned(recRecordHeaderStruct) then
-    Result := recRecordHeaderStruct
+    Result := recRecordHeaderStruct as IwbStructDef
   else
-    Result := wbMainRecordHeader;
+    Result := wbMainRecordHeader as IwbStructDef;
 end;
 
 function TwbMainRecordDef.GetReferenceSignature(const aIndex: Integer): TwbSignature;
@@ -9261,7 +9262,7 @@ end;
 
 function TwbSubRecordStructDef.GetRecordHeaderStruct: IwbStructDef;
 begin
-  Result := wbMainRecordHeader;
+  Result := wbMainRecordHeader as IwbStructDef;
 end;
 
 function TwbSubRecordStructDef.GetDefaultSignature: TwbSignature;
@@ -9486,7 +9487,7 @@ end;
 
 function TwbSubRecordUnionDef.GetRecordHeaderStruct: IwbStructDef;
 begin
-  Result := wbMainRecordHeader;
+  Result := wbMainRecordHeader as IwbStructDef;
 end;
 
 function TwbSubRecordUnionDef.GetSignatureCount: Integer;

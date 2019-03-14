@@ -2020,6 +2020,18 @@ begin
       Result := 1;
 end;
 
+procedure wbMainRecordHeaderToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  RecordHeader: IwbContainerElementRef;
+begin
+  if not Supports(aElement, IwbContainerElementRef, RecordHeader) then
+    Exit;
+  if RecordHeader.Collapsed <> tbTrue then
+    Exit;
+
+  aValue := RecordHeader.Elements[3].Value;
+end;
+
 procedure wbConditionToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Condition: IwbContainerElementRef;
@@ -4560,7 +4572,7 @@ begin
     wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4),
     wbInteger('Form Version', itU16, nil, cpIgnore),
     wbByteArray('Version Control Info 2', 2, cpIgnore)
-  ]);
+  ]).SetToStr(wbMainRecordHeaderToStr).IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
 
   wbSizeOfMainRecordStruct := 24;
 
@@ -7606,7 +7618,7 @@ begin
         wbFloat('Max X'),
         wbFloat('Max Y'),
         wbFloat('Max Z'),
-        wbArray('Cells', wbArray('Cell', wbInteger('Triangle', itS16).IncludeFlag(dfNotAlignable), -2)).IncludeFlag(dfNotAlignable) // Divisor is row count² , assumed triangle as the values fit the triangle id's
+        wbArray('Cells', wbArray('Cell', wbInteger('Triangle', itS16).IncludeFlag(dfNotAlignable), -2)).IncludeFlag(dfNotAlignable) // Divisor is row countï¿½ , assumed triangle as the values fit the triangle id's
       ]),
       wbArray(NVEX, 'External Connections', wbStruct('Connection', [
         wbByteArray('Unknown', 4),  // absent in ver<9, not endian swap in ver>=9, so char or byte array
