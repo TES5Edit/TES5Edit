@@ -181,6 +181,7 @@ var
   wbCollapseOBND           : Boolean  = True;
   wbCollapseModels         : Boolean  = True;
   wbCollapseFactionXNAMs   : Boolean  = True;
+  wbCollapseRecipeItems    : Boolean  = True;
   wbCollapseConditions     : Boolean  = True;
   wbCollapseBenignArray    : Boolean  = True;
 
