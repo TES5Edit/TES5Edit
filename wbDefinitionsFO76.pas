@@ -1148,6 +1148,8 @@ var
   wbARMAFemaleWorldModel: IwbRecordMemberDef;
   wbARMAMale1stPersonModel: IwbRecordMemberDef;
   wbARMAFemale1stPersonModel: IwbRecordMemberDef;
+  wbComponent: IwbValueDef;
+  wbComponents: IwbSubRecordDef;
   wbCTDA: IwbRecordMemberDef;
   wbCTDAs: IwbSubRecordArrayDef;
   wbCNDCs: IwbSubRecordArrayDef;
@@ -3373,6 +3375,18 @@ begin
     Exit;
 
   aValue := Relation.Elements[2].Value + ' ' + Relation.Elements[0].Value;
+end;
+
+procedure wbRecipeComponentToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Component: IwbContainerElementRef;
+begin
+  if not Supports(aElement, IwbContainerElementRef, Component) then
+    Exit;
+  if Component.Collapsed <> tbTrue then
+    Exit;
+
+  aValue := Component.Elements[1].Value + 'x ' + Component.Elements[0].Value;
 end;
 
 procedure wbConditionToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -15265,6 +15279,18 @@ begin
     wbArray(CDIX, 'Component Display Indices', wbInteger('Display Index', itU8))
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
+  wbComponent :=
+    wbStructSK([0], 'Component', [
+      wbFormIDCkNoReach('Component', sigBaseObjects),
+      wbInteger('Count', itU32),
+      wbUnion('Curve Table', wbDeciderFormVersion152, [
+        wbEmpty('Unused'),
+        wbFormIDCk('Curve Table', [CURV, NULL])
+      ])
+    ]).SetToStr(wbRecipeComponentToStr).IncludeFlag(dfCollapsed, wbCollapseRecipeItems);
+
+  wbComponents := wbArrayS(FVPA, 'Components', wbComponent);
+
   wbRecord(COBJ, 'Constructible Object',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       11, 'Unknown 11',
@@ -15274,16 +15300,7 @@ begin
     wbXALG,
     wbYNAM,
     wbZNAM,
-    wbArrayS(FVPA, 'Components',
-      wbStructSK([0], 'Component', [
-        wbFormIDCkNoReach('Component', sigBaseObjects),
-        wbInteger('Count', itU32),
-        wbUnion('Curve Table', wbDeciderFormVersion152, [
-          wbEmpty('Unused'),
-          wbFormIDCk('Curve Table', [CURV, NULL])
-        ])
-      ])
-    ),
+    wbComponents,
     wbREPR,
     wbUnknown(REPM),
     wbUnknown(LRNM),

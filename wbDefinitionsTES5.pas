@@ -716,7 +716,7 @@ var
   wbSPLOs: IwbSubRecordArrayDef;
   wbCNTO: IwbSubRecordStructDef;
   wbCNTOs: IwbSubRecordArrayDef;
-  wbCNTONoReach: IwbSubRecordStructDef;
+  wbCNTONoReach: IwbRecordMemberDef;
   wbCNTOsNoReach: IwbSubRecordArrayDef;
   wbAIDT: IwbSubRecordDef;
   wbCSDT: IwbSubRecordStructDef;
@@ -2622,6 +2622,20 @@ begin
     Exit;
 
   aValue := Relation.Elements[2].Value + ' ' + Relation.Elements[0].Value;
+end;
+
+procedure wbRecipeItemToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Item, CNTO: IwbContainerElementRef;
+begin
+  if not Supports(aElement, IwbContainerElementRef, Item) then
+    Exit;
+  if Item.Collapsed <> tbTrue then
+    Exit;
+
+  CNTO := Item.Elements[0] as IwbContainerElementRef;
+
+  aValue := CNTO.Elements[1].Value + 'x ' + CNTO.Elements[0].Value;
 end;
 
 procedure wbConditionToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -5147,7 +5161,7 @@ begin
         wbInteger('Count', itS32)
       ]),
       wbCOED
-    ], []);
+    ], []).SetToStr(wbRecipeItemToStr).IncludeFlag(dfCollapsed, wbCollapseRecipeItems);
   wbCNTOsNoReach := wbRArrayS('Items', wbCNTONoReach, cpNormal, False, nil, wbCNTOsAfterSet);
 
   wbArmorTypeEnum := wbEnum([
