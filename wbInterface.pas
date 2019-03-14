@@ -180,6 +180,7 @@ var
   wbCollapseRecordHeader   : Boolean  = True;
   wbCollapseOBND           : Boolean  = True;
   wbCollapseModels         : Boolean  = True;
+  wbCollapseFactionXNAMs   : Boolean  = True;
   wbCollapseConditions     : Boolean  = True;
   wbCollapseBenignArray    : Boolean  = True;
 
