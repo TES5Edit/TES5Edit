@@ -315,7 +315,7 @@ var
   wbXSCL: IwbSubRecordDef;
   wbDATAPosRot : IwbSubRecordDef;
   wbPosRot : IwbStructDef;
-  wbMODL: IwbSubRecordStructDef;
+  wbMODL: IwbRecordMemberDef;
   wbCTDA: IwbSubRecordUnionDef;
   wbSCHR: IwbSubRecordUnionDef;
   wbCTDAs: IwbSubRecordArrayDef;
@@ -445,6 +445,18 @@ begin
     Exit;
 
   aValue := RecordHeader.Elements[3].Value;
+end;
+
+procedure wbModelToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Model: IwbContainerElementRef;
+begin
+  if not Supports(aElement, IwbContainerElementRef, Model) then
+    Exit;
+  if Model.Collapsed <> tbTrue then
+    Exit;
+
+  aValue := Model.Elements[0].Value;
 end;
 
 procedure wbConditionToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -2126,7 +2138,7 @@ begin
 //      wbArray(MODT, 'Unknown',
 //        wbByteArray('Unknown', 24, cpBenign),
 //      0, nil, cpBenign)
-    ], []);
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
 
   wbSCRI := wbFormIDCk(SCRI, 'Script', [SCPT]);
   wbENAM := wbFormIDCk(ENAM, 'Enchantment', [ENCH]);

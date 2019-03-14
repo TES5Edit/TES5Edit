@@ -611,14 +611,18 @@ var
   wbPosRot : IwbStructDef;
   wbMODD: IwbSubRecordDef;
   wbMOSD: IwbSubRecordDef;
-  wbMODL: IwbSubRecordStructDef;
+  wbMODL: IwbRecordMemberDef;
   wbMODT: IwbSubRecordDef;
   wbMODS: IwbSubRecordDef;
   wbMO2S: IwbSubRecordDef;
   wbMO3S: IwbSubRecordDef;
   wbMO4S: IwbSubRecordDef;
-  wbMODLActor: IwbSubRecordStructDef;
-  wbMODLReq: IwbSubRecordStructDef;
+  wbMODLActor: IwbRecordMemberDef;
+  wbMODLReq: IwbRecordMemberDef;
+  wbMaleBipedModel: IwbRecordMemberDef;
+  wbMaleWorldModel: IwbRecordMemberDef;
+  wbFemaleBipedModel: IwbRecordMemberDef;
+  wbFemaleWorldModel: IwbRecordMemberDef;
   wbCTDA: IwbRecordMemberDef;
   wbSCHRReq: IwbSubRecordDef;
   wbCTDAs: IwbSubRecordArrayDef;
@@ -2055,6 +2059,18 @@ begin
   FacetPointB := X2.Value + ', ' + Y2.Value + ', ' + Z2.Value;
 
   aValue := '(' + FacetPointA + '), (' + FacetPointB + ')';
+end;
+
+procedure wbModelToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Model: IwbContainerElementRef;
+begin
+  if not Supports(aElement, IwbContainerElementRef, Model) then
+    Exit;
+  if Model.Collapsed <> tbTrue then
+    Exit;
+
+  aValue := Model.Elements[0].Value;
 end;
 
 procedure wbConditionToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -4793,7 +4809,7 @@ begin
       wbMODT,
       wbMODS,
       wbMODD
-    ], [], cpNormal, False, nil, True);
+    ], [], cpNormal, False, nil, True).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
 
   wbMODLActor :=
     wbRStructSK([0], 'Model', [
@@ -4802,7 +4818,7 @@ begin
       wbMODT,
       wbMODS,
       wbMODD
-    ], [], cpNormal, False, wbActorTemplateUseModelAnimation, True);
+    ], [], cpNormal, False, wbActorTemplateUseModelAnimation, True).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
 
   wbMODLReq :=
     wbRStructSK([0], 'Model', [
@@ -4811,8 +4827,37 @@ begin
       wbMODT,
       wbMODS,
       wbMODD
-    ], [], cpNormal, True, nil, True);
+    ], [], cpNormal, True, nil, True).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
 
+  wbMaleBipedModel :=
+    wbRStruct('Male biped model', [
+      wbString(MODL, 'Model FileName', 0, cpNormal, True),
+      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
+      wbMODS,
+      wbMODD
+    ], [], cpNormal, False, nil, True).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
+
+  wbMaleWorldModel :=
+    wbRStruct('Male world model', [
+      wbString(MOD2, 'Model FileName'),
+      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
+      wbMO2S
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
+
+  wbFemaleBipedModel :=
+    wbRStruct('Female biped model', [
+      wbString(MOD3, 'Model FileName', 0, cpNormal, True),
+      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
+      wbMO3S,
+      wbMOSD
+    ], [], cpNormal, False, nil, True).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
+
+  wbFemaleWorldModel :=
+    wbRStruct('Female world model', [
+      wbString(MOD4, 'Model FileName'),
+      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
+      wbMO4S
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
 
   wbDEST := wbRStruct('Destructible', [
     wbStruct(DEST, 'Header', [
@@ -5961,30 +6006,12 @@ begin
     wbSCRI,
     wbEITM,
     wbBMDT,
-    wbRStruct('Male biped model', [
-      wbString(MODL, 'Model FileName', 0, cpNormal, True),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
-      wbMODS,
-      wbMODD
-    ], [], cpNormal, False, nil, True),
-    wbRStruct('Male world model', [
-      wbString(MOD2, 'Model FileName'),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
-      wbMO2S
-    ], []),
+    wbMaleBipedModel,
+    wbMaleWorldModel,
     wbString(ICON, 'Male icon FileName'),
     wbString(MICO, 'Male mico FileName'),
-    wbRStruct('Female biped model', [
-      wbString(MOD3, 'Model FileName', 0, cpNormal, True),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
-      wbMO3S,
-      wbMOSD
-    ], [], cpNormal, False, nil, True),
-    wbRStruct('Female world model', [
-      wbString(MOD4, 'Model FileName'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
-      wbMO4S
-    ], []),
+    wbFemaleBipedModel,
+    wbFemaleWorldModel,
     wbString(ICO2, 'Female icon FileName'),
     wbString(MIC2, 'Female mico FileName'),
     wbString(BMCT, 'Ragdoll Constraint Template'),
@@ -6032,30 +6059,12 @@ begin
     wbOBNDReq,
     wbFULL,
     wbBMDT,
-    wbRStruct('Male biped model', [
-      wbString(MODL, 'Model FileName', 0, cpNormal, True),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
-      wbMODS,
-      wbMODD
-    ], [], cpNormal, False, nil, True),
-    wbRStruct('Male world model', [
-      wbString(MOD2, 'Model FileName'),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
-      wbMO2S
-    ], []),
+    wbMaleBipedModel,
+    wbMaleWorldModel,
     wbString(ICON, 'Male icon FileName'),
     wbString(MICO, 'Male mico FileName'),
-    wbRStruct('Female biped model', [
-      wbString(MOD3, 'Model FileName', 0, cpNormal, True),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
-      wbMO3S,
-      wbMOSD
-    ], [], cpNormal, False, nil, True),
-    wbRStruct('Female world model', [
-      wbString(MOD4, 'Model FileName'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
-      wbMO4S
-    ], []),
+    wbFemaleBipedModel,
+    wbFemaleWorldModel,
     wbString(ICO2, 'Female icon FileName'),
     wbString(MIC2, 'Female mico FileName'),
     wbETYPReq,
@@ -7643,7 +7652,7 @@ begin
         wbFloat('Max X'),
         wbFloat('Max Y'),
         wbFloat('Max Z'),
-        wbArray('Cells', wbArray('Cell', wbInteger('Triangle', itS16).IncludeFlag(dfNotAlignable), -2)).IncludeFlag(dfNotAlignable) // Divisor is row countï¿½ , assumed triangle as the values fit the triangle id's
+        wbArray('Cells', wbArray('Cell', wbInteger('Triangle', itS16).IncludeFlag(dfNotAlignable), -2)).IncludeFlag(dfNotAlignable) // Divisor is row count² , assumed triangle as the values fit the triangle id's
       ]),
       wbArray(NVEX, 'External Connections', wbStruct('Connection', [
         wbByteArray('Unknown', 4),  // absent in ver<9, not endian swap in ver>=9, so char or byte array

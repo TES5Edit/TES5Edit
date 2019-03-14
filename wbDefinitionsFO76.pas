@@ -1140,6 +1140,12 @@ var
   wbMO5C: IwbSubRecordDef;
   wbMODLActor: IwbRecordMemberDef;
   wbMODLReq: IwbRecordMemberDef;
+  wbARMOMaleWorldModel: IwbRecordMemberDef;
+  wbARMOFemaleWorldModel: IwbRecordMemberDef;
+  wbARMAMaleWorldModel: IwbRecordMemberDef;
+  wbARMAFemaleWorldModel: IwbRecordMemberDef;
+  wbARMAMale1stPersonModel: IwbRecordMemberDef;
+  wbARMAFemale1stPersonModel: IwbRecordMemberDef;
   wbCTDA: IwbRecordMemberDef;
   wbCTDAs: IwbSubRecordArrayDef;
   wbCNDCs: IwbSubRecordArrayDef;
@@ -3341,6 +3347,18 @@ begin
   FacetPointB := X2.Value + ', ' + Y2.Value + ', ' + Z2.Value;
 
   aValue := '(' + FacetPointA + '), (' + FacetPointB + ')';
+end;
+
+procedure wbModelToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Model: IwbContainerElementRef;
+begin
+  if not Supports(aElement, IwbContainerElementRef, Model) then
+    Exit;
+  if Model.Collapsed <> tbTrue then
+    Exit;
+
+  aValue := Model.Elements[0].Value;
 end;
 
 procedure wbConditionToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -8340,14 +8358,14 @@ begin
       wbENLS,
       wbAUUV,
       wbMODD
-    ], []).IncludeFlag(dfAllowAnyMember);
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
 
   wbMODLActor :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model FileName', 0, cpNormal, True),
       wbMODT,
       wbMODS
-    ], []).IncludeFlag(dfAllowAnyMember);
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
 
   wbMODLReq :=
     wbRStructSK([0], 'Model', [
@@ -8360,7 +8378,79 @@ begin
       wbENLT,
       wbENLS,
       wbAUUV
-    ], [], cpNormal, True).IncludeFlag(dfAllowAnyMember);
+    ], [], cpNormal, True).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
+
+  wbARMOMaleWorldModel :=
+    wbRStruct('Male world model', [
+      wbString(MOD2, 'Model FileName'),
+      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbMODC,
+      wbMO2S,
+      wbENLT,
+      wbENLS,
+      wbAUUV
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
+
+  wbARMOFemaleWorldModel :=
+    wbRStruct('Female world model', [
+      wbString(MOD4, 'Model FileName'),
+      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbMODC,
+      wbMO4S,
+      wbENLT,
+      wbENLS,
+      wbAUUV
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
+
+  wbARMAMaleWorldModel :=
+    wbRStruct('Male world model', [
+      wbString(MOD2, 'Model FileName'),
+      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbMO2C,
+      wbMO2S,
+      wbUnknown(XFLG),
+      wbENLT,
+      wbENLS,
+      wbAUUV,
+      wbMO2F
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
+
+  wbARMAFemaleWorldModel :=
+    wbRStruct('Female world model', [
+      wbString(MOD3, 'Model FileName'),
+      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbMO3C,
+      wbMO3S,
+      wbUnknown(XFLG),
+      wbENLT,
+      wbENLS,
+      wbAUUV,
+      wbMO3F
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
+
+  wbARMAMale1stPersonModel :=
+	  wbRStruct('Male 1st Person', [
+      wbString(MOD4, 'Model FileName'),
+      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbMO4C,
+      wbMO4S,
+      wbENLT,
+      wbENLS,
+      wbAUUV,
+      wbMO4F
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
+
+  wbARMAFemale1stPersonModel :=
+	  wbRStruct('Female 1st Person', [
+      wbString(MOD5, 'Model FileName'),
+      wbByteArray(MO5T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbMO5C,
+      wbMO5S,
+      wbENLT,
+      wbENLS,
+      wbAUUV,
+      wbMO5F
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
 
   wbDMDS := wbFormIDCk(DMDS, 'Material Swap', [MSWP]);
   wbDMDC := wbFloat(DMDC, 'Color Remapping Index');
@@ -10380,26 +10470,10 @@ begin
     wbXALG,
     wbFULL,
     wbEITM,
-    wbRStruct('Male world model', [
-      wbString(MOD2, 'Model FileName'),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMODC,
-      wbMO2S,
-      wbENLT,
-      wbENLS,
-      wbAUUV
-    ], []).IncludeFlag(dfAllowAnyMember),
+    wbARMOMaleWorldModel,
     wbString(ICON, 'Male Inventory Image'),
     wbString(MICO, 'Male Message Icon'),
-    wbRStruct('Female world model', [
-      wbString(MOD4, 'Model FileName'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMODC,
-      wbMO4S,
-      wbENLT,
-      wbENLS,
-      wbAUUV
-    ], []).IncludeFlag(dfAllowAnyMember),
+    wbARMOFemaleWorldModel,
     wbString(ICO2, 'Female Inventory Image'),
     wbString(MIC2, 'Female Message Icon'),
     wbBOD2,
@@ -10476,48 +10550,10 @@ begin
       wbByteArray('Unknown', 1),
       wbFloat('Weapon Adjust')
     ], cpNormal, True),
-    wbRStruct('Male world model', [
-      wbString(MOD2, 'Model FileName'),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO2C,
-      wbMO2S,
-      wbUnknown(XFLG),
-      wbENLT,
-      wbENLS,
-      wbAUUV,
-      wbMO2F
-    ], []).IncludeFlag(dfAllowAnyMember),
-    wbRStruct('Female world model', [
-      wbString(MOD3, 'Model FileName'),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO3C,
-      wbMO3S,
-      wbUnknown(XFLG),
-      wbENLT,
-      wbENLS,
-      wbAUUV,
-      wbMO3F
-    ], []).IncludeFlag(dfAllowAnyMember),
-    wbRStruct('Male 1st Person', [
-      wbString(MOD4, 'Model FileName'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO4C,
-      wbMO4S,
-      wbENLT,
-      wbENLS,
-      wbAUUV,
-      wbMO4F
-    ], []).IncludeFlag(dfAllowAnyMember),
-    wbRStruct('Female 1st Person', [
-      wbString(MOD5, 'Model FileName'),
-      wbByteArray(MO5T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO5C,
-      wbMO5S,
-      wbENLT,
-      wbENLS,
-      wbAUUV,
-      wbMO5F
-    ], []).IncludeFlag(dfAllowAnyMember),
+    wbARMAMaleWorldModel,
+    wbARMAFemaleWorldModel,
+    wbARMAMale1stPersonModel,
+    wbARMAFemale1stPersonModel,
     wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),
     wbFormIDCK(NAM1, 'Female Skin Texture', [TXST, NULL]),
     wbFormIDCK(NAM2, 'Male Skin Texture Swap List', [FLST, NULL]),
