@@ -81,8 +81,16 @@ type
     cbManualCleaningHide: TCheckBox;
     cbManualCleaningAllow: TCheckBox;
     cbShrinkButtons: TCheckBox;
+    cbCollapseRecordHeader: TCheckBox;
+    cbCollapseObjectBounds: TCheckBox;
+    cbCollapseModels: TCheckBox;
+    cbCollapseFactionRelations: TCheckBox;
+    cbCollapseRecipeItems: TCheckBox;
+    cbCollapseScriptProperties: TCheckBox;
     cbCollapseConditions: TCheckBox;
     cbCollapseBenignArray: TCheckBox;
+    tsViewSettings: TTabSheet;
+    lblFieldsToCollapse: TLabel;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);

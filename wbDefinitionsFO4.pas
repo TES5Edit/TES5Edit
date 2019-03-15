@@ -987,6 +987,7 @@ var
   wbScriptFlags: IwbIntegerDef;
   wbScriptPropertyObject: IwbUnionDef;
   wbScriptPropertyStruct: IwbArrayDef;
+  wbScriptProperty: IwbValueDef;
   wbScriptProperties: IwbArrayDef;
   wbScriptFragments: IwbStructDef;
   wbScriptFragmentsQuest: IwbValueDef;
@@ -3355,25 +3356,7 @@ begin
 end;
 
 
-{>>> For VMAD <<<}
-function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  ObjFormat: Integer;
-  Container: IwbContainer;
-begin
-  Result := 0;
 
-  Container := aElement.Container;
-  while Assigned(Container) and (Container.ElementType <> etSubRecord) do
-    Container := Container.Container;
-
-  if not Assigned(Container) then Exit;
-
-  ObjFormat := Container.ElementNativeValues['Object Format'];
-
-  if ObjFormat = 1 then
-    Result := 1;
-end;
 
 {>>> For VMAD <<<}
 function wbScriptPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -7092,7 +7075,7 @@ begin
     wbInteger('X2', itS16),
     wbInteger('Y2', itS16),
     wbInteger('Z2', itS16)
-  ]).SetToStr(wbObjectBoundsToStr).IncludeFlag(dfCollapsed, wbCollapseOBND);
+  ]).SetToStr(wbObjectBoundsToStr).IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
 
   wbOBNDReq := wbStruct(OBND, 'Object Bounds', [
     wbInteger('X1', itS16),
@@ -7101,7 +7084,7 @@ begin
     wbInteger('X2', itS16),
     wbInteger('Y2', itS16),
     wbInteger('Z2', itS16)
-  ], cpNormal, True).SetToStr(wbObjectBoundsToStr).IncludeFlag(dfCollapsed, wbCollapseOBND);
+  ], cpNormal, True).SetToStr(wbObjectBoundsToStr).IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
 
   wbPropTypeEnum := wbEnum([
     {00} 'None',
@@ -7172,8 +7155,8 @@ begin
       ])
     ]), -1, cpNormal, False);
 
-  wbScriptProperties :=
-    wbArrayS('Properties', wbStructSK([0], 'Property', [
+  wbScriptProperty :=
+    wbStructSK([0], 'Property', [
       wbLenString('propertyName', 2),
       wbInteger('Type', itU8, wbPropTypeEnum, cpNormal, False, nil, wbScriptPropertyTypeAfterSet),
       wbInteger('Flags', itU8, wbEnum([
@@ -7198,7 +7181,10 @@ begin
        {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbBoolEnum), -1),
        {17} wbArray('Array of Struct', wbScriptPropertyStruct, -1)
       ])
-    ]), -2, cpNormal, False, nil, nil, nil, wbCanAddScriptProperties);
+    ]).SetToStr(wbScriptPropertyToStr).IncludeFlag(dfCollapsed, wbCollapseScriptProperties);
+
+  wbScriptProperties :=
+    wbArrayS('Properties', wbScriptProperty, -2, cpNormal, False, nil, nil, nil, wbCanAddScriptProperties);
 
   wbScriptEntry := wbStructSK([0], 'Script', [
     wbLenString('ScriptName', 2),

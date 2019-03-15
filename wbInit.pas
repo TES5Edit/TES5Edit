@@ -235,10 +235,11 @@ begin
       wbSortINFO := Settings.ReadBool('Options', 'SortINFO', wbSortINFO);
       wbFillPNAM := Settings.ReadBool('Options', 'FillPNAM', wbFillPNAM);
       wbCollapseRecordHeader := Settings.ReadBool('Options', 'CollapseRecordHeader', wbCollapseRecordHeader);
-      wbCollapseOBND := Settings.ReadBool('Options', 'CollapseObjectBounds', wbCollapseOBND);
+      wbCollapseObjectBounds := Settings.ReadBool('Options', 'CollapseObjectBounds', wbCollapseObjectBounds);
       wbCollapseModels := Settings.ReadBool('Options', 'CollapseModels', wbCollapseModels);
       wbCollapseFactionRelations := Settings.ReadBool('Options', 'CollapseFactionRelations', wbCollapseFactionRelations);
       wbCollapseRecipeItems := Settings.ReadBool('Options', 'CollapseRecipeItems', wbCollapseRecipeItems);
+      wbCollapseScriptProperties := Settings.ReadBool('Options', 'CollapseScriptProperties', wbCollapseScriptProperties);
       wbCollapseConditions := Settings.ReadBool('Options', 'CollapseConditions', wbCollapseConditions);
       wbCollapseBenignArray := Settings.ReadBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
       sl := TStringList.Create;
