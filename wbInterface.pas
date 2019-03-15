@@ -178,10 +178,11 @@ var
   wbManualCleaningHide     : Boolean  = False;
   wbShrinkButtons          : Boolean  = False;
   wbCollapseRecordHeader   : Boolean  = True;
-  wbCollapseOBND           : Boolean  = True;
+  wbCollapseObjectBounds   : Boolean  = True;
   wbCollapseModels         : Boolean  = True;
   wbCollapseFactionRelations : Boolean  = True;
   wbCollapseRecipeItems    : Boolean  = True;
+  wbCollapseScriptProperties : Boolean  = True;
   wbCollapseConditions     : Boolean  = True;
   wbCollapseBenignArray    : Boolean  = True;
 

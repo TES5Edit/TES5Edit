@@ -18,15 +18,24 @@ procedure wbObjectBoundsToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Poi
 procedure wbRecipeComponentToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbRecipeItemToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbRecordHeaderToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbScriptPropertyToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+
+function wbGetPropertyValueArrayItems(const aContainer: IwbContainerElementRef): string;
+function wbGetScriptObjFormat(const aElement: IwbElement): Integer;
+
+function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 
 implementation
 
 uses
+  Classes,
+  StrUtils,
   SysUtils;
 
 const
   CTDA : TwbSignature = 'CTDA';
 
+{>>> For Collapsible Fields <<<}
 procedure wbConditionToStrFNV(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Condition: IwbContainerElementRef;
@@ -375,6 +384,139 @@ begin
   aValue := '[' + MainRecord.Signature + ':' + MainRecord.LoadOrderFormID.ToString(True) + ']';
   if Length(RecordFlags.Value) > 0 then
     aValue := aValue + ' {' + RecordFlags.Value + '}';
+end;
+
+procedure wbScriptPropertyToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  ObjectVersion, PropertyName, PropertyType, PropertyValue: string;
+  ArrayContainer, ObjectUnion, ScriptProperty: IwbContainerElementRef;
+  ObjectFormID, ObjectAlias: IwbElement;
+  MainRecord: IwbMainRecord;
+begin
+  if not Supports(aElement, IwbContainerElementRef, ScriptProperty) then
+    Exit;
+  if ScriptProperty.Collapsed <> tbTrue then
+    Exit;
+
+  PropertyType := ScriptProperty.ElementByName['Type'].Value;
+  if CompareStr(PropertyType, 'None') = 0 then
+    Exit;
+
+  PropertyName := ScriptProperty.ElementByName['propertyName'].Value;
+  if Length(PropertyName) = 0 then
+    Exit;
+
+  if ContainsStr(PropertyType, 'Struct') then begin
+    // TODO: add support for Array of Struct (FO4, FO76)
+    PropertyValue := '';
+
+    // replace array type names with shorter, sweeter versions
+    PropertyType := PropertyType.Substring(9) + '[]';
+  end
+
+  else if ContainsStr(PropertyType, 'Array') then begin
+    ArrayContainer := ScriptProperty.ElementByPath['Value\' + PropertyType] as IwbContainerElementRef;
+    if not (ArrayContainer.ElementCount > 0) then
+      Exit;
+
+    PropertyValue := wbGetPropertyValueArrayItems(ArrayContainer);
+
+    // replace array type names with shorter, sweeter versions
+    PropertyType := PropertyType.Substring(9) + '[]';
+  end
+
+  else if ContainsStr('String Int32 Float Bool', PropertyType) then
+    PropertyValue := ScriptProperty.ElementByName[PropertyType].Value
+
+  else if CompareStr(PropertyType, 'Object') = 0 then begin
+    ObjectUnion := ScriptProperty.ElementByPath['Value\Object Union'] as IwbContainerElementRef;
+    ObjectVersion := IfThen(wbGetScriptObjFormat(ObjectUnion) = 0, 'v2', 'v1');
+
+    ObjectFormID := ObjectUnion.ElementByPath['Object ' + ObjectVersion + '\FormID'];
+    ObjectAlias := ObjectUnion.ElementByPath['Object ' + ObjectVersion + '\Alias'];
+
+    if not (CompareStr(ObjectAlias.Value, 'None') = 0) and not (Length(ObjectAlias.Value) = 0) then begin
+      PropertyType := 'Alias';
+      PropertyName := ObjectAlias.EditValue;
+    end;
+
+    if Supports(ObjectFormID.LinksTo, IwbMainRecord, MainRecord) then
+      if MainRecord <> nil then
+        PropertyValue := MainRecord.ShortName
+      else
+        PropertyValue := 'NULL';
+  end;
+
+  if Length(PropertyValue) > 0 then
+    aValue := PropertyType + ' ' + PropertyName + ' = ' + PropertyValue
+  else
+    aValue := PropertyType + ' ' + PropertyName;
+end;
+
+function wbGetPropertyValueArrayItems(const aContainer: IwbContainerElementRef): String;
+var
+  i: Integer;
+  ObjectVersion, ItemName: string;
+  ObjectUnion: IwbContainerElementRef;
+  FormID, Alias: IwbElement;
+  MainRecord: IwbMainRecord;
+  Items: TStringList;
+begin
+  Items := TStringList.Create;
+
+  if CompareStr(aContainer.Name, 'Array of Object') = 0 then
+    for i := 0 to Pred(aContainer.ElementCount) do begin
+      ObjectUnion := aContainer.Elements[i] as IwbContainerElementRef;
+      ObjectVersion := IfThen(wbGetScriptObjFormat(ObjectUnion) = 0, 'v2', 'v1');
+
+      FormID := ObjectUnion.ElementByPath['Object ' + ObjectVersion + '\FormID'];
+      Alias := ObjectUnion.ElementByPath['Object ' + ObjectVersion + '\Alias'];
+
+      if Supports(FormID.LinksTo, IwbMainRecord, MainRecord) then
+        if MainRecord <> nil then
+          ItemName := MainRecord.ShortName
+        else
+          ItemName := 'NULL';
+
+      if not (CompareStr(Alias.Value, 'None') = 0) and not (Length(Alias.Value) = 0) then
+        Items.Add(Alias.EditValue + IfThen(Length(ItemName) > 0, ' = ' + ItemName, ''))
+      else
+        if MainRecord <> nil then
+          Items.Add(MainRecord.ShortName)
+        else
+          Items.Add('NULL');
+    end
+  else
+    for i := 0 to Pred(aContainer.ElementCount) do
+      Items.Add(aContainer.Elements[i].Value);
+
+  Result := Items.CommaText;
+  Items.Free;
+end;
+
+function wbGetScriptObjFormat(const aElement: IwbElement): Integer;
+var
+  ObjFormat: Integer;
+  Container: IwbContainer;
+begin
+  Result := 0;
+
+  Container := aElement.Container;
+  while Assigned(Container) and (Container.ElementType <> etSubRecord) do
+    Container := Container.Container;
+
+  if not Assigned(Container) then Exit;
+
+  ObjFormat := Container.ElementNativeValues['Object Format'];
+
+  if ObjFormat = 1 then
+    Result := 1;
+end;
+
+{>>> For VMAD <<<}
+function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbGetScriptObjFormat(aElement);
 end;
 
 end.
