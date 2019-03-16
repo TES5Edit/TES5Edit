@@ -199,7 +199,7 @@ end;
 procedure wbConditionToStrTES4(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Condition: IwbContainerElementRef;
-  RunOn, Param1, Param2: IwbElement;
+  Param1, Param2: IwbElement;
   Typ: Byte;
 begin
   if not Supports(aElement, IwbContainerElementRef, Condition) then
