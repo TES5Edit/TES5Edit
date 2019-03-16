@@ -27,7 +27,7 @@ uses
   VirtualEditTree,
   {$IFNDEF LiteVersion}
   cxVTEditors,
-  {$ENDIF}
+  {$ENDIF }
   Vcl.Themes,
   Vcl.Styles,
   Vcl.Styles.Hooks,
@@ -67,6 +67,7 @@ uses
   frmModuleSelectForm in 'frmModuleSelectForm.pas',
   frmModGroupSelectForm in 'frmModGroupSelectForm.pas',
   frmModGroupEditForm in 'frmModGroupEditForm.pas',
+  wbDefinitionsCommon in 'wbDefinitionsCommon.pas',
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
   wbDefinitionsFNVSaves in 'wbDefinitionsFNVSaves.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',
@@ -118,7 +119,7 @@ begin
   Application.Title := wbApplicationTitle;
   try
     Application.CreateForm(TfrmMain, frmMain);
-    Application.Run;
+	Application.Run;
   finally
     DoRename;
   end;
