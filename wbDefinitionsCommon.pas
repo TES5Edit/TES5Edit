@@ -9,9 +9,8 @@ uses
 
 procedure wbConditionToStrFNV(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbConditionToStrFO3(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-procedure wbConditionToStrFO76(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbConditionToStrTES4(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-procedure wbConditionToStrTES5(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType); {also used for FO4}
+procedure wbConditionToStrTES5(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType); {also used for FO4 and FO76}
 procedure wbFactionRelationToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbModelToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbObjectBoundsToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -139,56 +138,6 @@ begin
   end;
 
   aValue := aValue + Condition.Elements[2].Value;
-
-  if (Typ and $01) = 0 then
-    aValue := aValue + ' AND'
-  else
-    aValue := aValue + ' OR';
-end;
-
-procedure wbConditionToStrFO76(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  Condition: IwbContainerElementRef;
-  lCTDA: IwbContainerElementRef;
-  RunOn, Param1, Param2: IwbElement;
-  Typ: Byte;
-begin
-  if not Supports(aElement, IwbContainerElementRef, Condition) then
-    Exit;
-  if Condition.Collapsed <> tbTrue then
-    Exit;
-  if not Supports(Condition.RecordBySignature[CTDA], IwbContainerElementRef, lCTDA) then
-    Exit;
-  RunOn := lCTDA.Elements[7];
-  if RunOn.NativeValue = 2 then
-    aValue := lCTDA.Elements[8].Value
-  else
-    aValue := RunOn.Value;
-
-  aValue := aValue + '.' + lCTDA.Elements[3].Value;
-
-  Param1 := lCTDA.Elements[5];
-  if Param1.ConflictPriority <> cpIgnore then begin
-    aValue := aValue + '(' {+ Param1.Name + ': '} + Param1.Value;
-    Param2 := lCTDA.Elements[6];
-    if Param2.ConflictPriority <> cpIgnore then begin
-      aValue := aValue + ', ' {+ Param2.Name + ': '} + Param2.Value;
-    end;
-    aValue := aValue + ')';
-  end;
-
-  Typ := lCTDA.Elements[0].NativeValue;
-
-  case Typ and $E0 of
-    $00 : aValue := aValue + ' = ';
-    $20 : aValue := aValue + ' <> ';
-    $40 : aValue := aValue + ' > ';
-    $60 : aValue := aValue + ' >= ';
-    $80 : aValue := aValue + ' < ';
-    $A0 : aValue := aValue + ' <= ';
-  end;
-
-  aValue := aValue + lCTDA.Elements[2].Value;
 
   if (Typ and $01) = 0 then
     aValue := aValue + ' AND'
