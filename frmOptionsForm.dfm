@@ -269,7 +269,7 @@ object frmOptions: TfrmOptions
       end
       object cbCollapseScriptProperties: TCheckBox
         Left = 16
-        Top = 131
+        Top = 154
         Width = 439
         Height = 17
         Caption = 'Script Properties (only TES5, FO4, and FO76)'
@@ -277,7 +277,7 @@ object frmOptions: TfrmOptions
       end
       object cbCollapseBenignArray: TCheckBox
         Left = 16
-        Top = 154
+        Top = 177
         Width = 220
         Height = 17
         Caption = 'Arrays with Benign Conflict Priority'
@@ -290,6 +290,14 @@ object frmOptions: TfrmOptions
         Height = 17
         Caption = 'Leveled List Entries (except FO76)'
         TabOrder = 8
+      end
+      object cbCollapseObjectProperties: TCheckBox
+        Left = 16
+        Top = 131
+        Width = 439
+        Height = 17
+        Caption = 'Actor Value Properties (only FO4 and FO76)'
+        TabOrder = 9
       end
     end
     object tsCleaning: TTabSheet

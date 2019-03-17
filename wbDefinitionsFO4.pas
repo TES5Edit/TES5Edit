@@ -1045,6 +1045,7 @@ var
   wbSTCP: IwbSubRecordDef;
   wbNTRM: IwbSubRecordDef;
   wbPRPS: IwbSubRecordDef;
+  wbObjectProperty: IwbValueDef;
   wbFLTR: IwbSubRecordDef;
   wbAPPR: IwbSubRecordDef;
   wbObjectTemplate: IwbSubRecordStructDef;
@@ -8968,10 +8969,15 @@ begin
   wbZNAM := wbFormIDCk(ZNAM, 'Sound - Put Down', [SNDR]);
   wbCUSD := wbFormIDCk(CUSD, 'Sound - Crafting', [SNDR]);
   wbINRD := wbFormIDCk(INRD, 'Instance Naming', [INNR]);
-  wbPRPS := wbArrayS(PRPS, 'Properties', wbStructSK([0], 'Property', [
-    wbActorValue,
-    wbFloat('Value')
-  ]));
+
+  wbObjectProperty :=
+    wbStructSK([0], 'Property', [
+      wbActorValue,
+      wbFloat('Value')
+    ]).SetToStr(wbObjectPropertyToStr).IncludeFlag(dfCollapsed, wbCollapseObjectProperties);
+
+  wbPRPS := wbArrayS(PRPS, 'Properties', wbObjectProperty);
+
   wbFLTR := wbString(FLTR, 'Filter');
   wbAPPR := wbArray(APPR, 'Attach Parent Slots', wbFormIDCk('Keyword', [KYWD]));
   wbFTYP := wbFormIDCk(FTYP, 'Forced Loc Ref Type', [LCRT]);
