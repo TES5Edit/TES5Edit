@@ -180,8 +180,10 @@ var
   wbCollapseRecordHeader   : Boolean  = True;
   wbCollapseObjectBounds   : Boolean  = True;
   wbCollapseModels         : Boolean  = True;
+  wbCollapseFactions       : Boolean  = True;
   wbCollapseFactionRelations : Boolean  = True;
-  wbCollapseRecipeItems    : Boolean  = True;
+  wbCollapseItems          : Boolean  = True;
+  wbCollapseLeveledItems   : Boolean  = True;
   wbCollapseScriptProperties : Boolean  = True;
   wbCollapseConditions     : Boolean  = True;
   wbCollapseBenignArray    : Boolean  = True;

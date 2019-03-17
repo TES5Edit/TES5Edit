@@ -237,8 +237,10 @@ begin
       wbCollapseRecordHeader := Settings.ReadBool('Options', 'CollapseRecordHeader', wbCollapseRecordHeader);
       wbCollapseObjectBounds := Settings.ReadBool('Options', 'CollapseObjectBounds', wbCollapseObjectBounds);
       wbCollapseModels := Settings.ReadBool('Options', 'CollapseModels', wbCollapseModels);
+      wbCollapseFactions := Settings.ReadBool('Options', 'CollapseFactions', wbCollapseFactions);
       wbCollapseFactionRelations := Settings.ReadBool('Options', 'CollapseFactionRelations', wbCollapseFactionRelations);
-      wbCollapseRecipeItems := Settings.ReadBool('Options', 'CollapseRecipeItems', wbCollapseRecipeItems);
+      wbCollapseItems := Settings.ReadBool('Options', 'CollapseItems', wbCollapseItems);
+      wbCollapseLeveledItems := Settings.ReadBool('Options', 'CollapseLeveledItems', wbCollapseLeveledItems);
       wbCollapseScriptProperties := Settings.ReadBool('Options', 'CollapseScriptProperties', wbCollapseScriptProperties);
       wbCollapseConditions := Settings.ReadBool('Options', 'CollapseConditions', wbCollapseConditions);
       wbCollapseBenignArray := Settings.ReadBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);

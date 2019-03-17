@@ -5155,7 +5155,8 @@ begin
   wbCollapseObjectBounds := Settings.ReadBool('Options', 'CollapseObjectBounds', wbCollapseObjectBounds);
   wbCollapseModels := Settings.ReadBool('Options', 'CollapseModels', wbCollapseModels);
   wbCollapseFactionRelations := Settings.ReadBool('Options', 'CollapseFactionRelations', wbCollapseFactionRelations);
-  wbCollapseRecipeItems := Settings.ReadBool('Options', 'CollapseRecipeItems', wbCollapseRecipeItems);
+  wbCollapseItems := Settings.ReadBool('Options', 'CollapseItems', wbCollapseItems);
+  wbCollapseLeveledItems := Settings.ReadBool('Options', 'CollapseLeveledItems', wbCollapseLeveledItems);
   wbCollapseScriptProperties := Settings.ReadBool('Options', 'CollapseScriptProperties', wbCollapseScriptProperties);
   wbCollapseConditions := Settings.ReadBool('Options', 'CollapseConditions', wbCollapseConditions);
   wbCollapseBenignArray := Settings.ReadBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
@@ -13107,7 +13108,8 @@ begin
     cbCollapseObjectBounds.Checked := wbCollapseObjectBounds;
     cbCollapseModels.Checked := wbCollapseModels;
     cbCollapseFactionRelations.Checked := wbCollapseFactionRelations;
-    cbCollapseRecipeItems.Checked := wbCollapseRecipeItems;
+    cbCollapseItems.Checked := wbCollapseItems;
+    cbCollapseLeveledItems.Checked := wbCollapseLeveledItems;
     cbCollapseScriptProperties.Checked := wbCollapseScriptProperties;
     cbCollapseConditions.Checked := wbCollapseConditions;
     cbCollapseBenignArray.Checked := wbCollapseBenignArray;
@@ -13170,7 +13172,8 @@ begin
     wbCollapseObjectBounds := cbCollapseObjectBounds.Checked;
     wbCollapseModels := cbCollapseModels.Checked;
     wbCollapseFactionRelations := cbCollapseFactionRelations.Checked;
-    wbCollapseRecipeItems := cbCollapseRecipeItems.Checked;
+    wbCollapseItems := cbCollapseItems.Checked;
+    wbCollapseLeveledItems := cbCollapseLeveledItems.Checked;
     wbCollapseScriptProperties := cbCollapseScriptProperties.Checked;
     wbCollapseConditions := cbCollapseConditions.Checked;
     wbCollapseBenignArray := cbCollapseBenignArray.Checked;
@@ -13232,7 +13235,8 @@ begin
     Settings.WriteBool('Options', 'CollapseObjectBounds', wbCollapseObjectBounds);
     Settings.WriteBool('Options', 'CollapseModels', wbCollapseModels);
     Settings.WriteBool('Options', 'CollapseFactionRelations', wbCollapseFactionRelations);
-    Settings.WriteBool('Options', 'CollapseRecipeItems', wbCollapseRecipeItems);
+    Settings.WriteBool('Options', 'CollapseItems', wbCollapseItems);
+    Settings.WriteBool('Options', 'CollapseLeveledItems', wbCollapseLeveledItems);
     Settings.WriteBool('Options', 'CollapseScriptProperties', wbCollapseScriptProperties);
     Settings.WriteBool('Options', 'CollapseConditions', wbCollapseConditions);
     Settings.WriteBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);

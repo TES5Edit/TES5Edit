@@ -304,7 +304,7 @@ var
   wbBodyDataIndex: IwbSubRecordDef;
   wbSPLO: IwbSubRecordDef;
   wbSPLOs: IwbSubRecordArrayDef;
-  wbCNTO: IwbSubRecordDef;
+  wbCNTO: IwbRecordMemberDef;
   wbCNTOs: IwbSubRecordArrayDef;
   wbCSDT: IwbSubRecordStructDef;
   wbCSDTs: IwbSubRecordArrayDef;
@@ -340,6 +340,10 @@ var
   wbSCITOBME: IwbSubRecordStructDef;
 //  wbEffects: IwbSubRecordUnionDef;
   wbEffects: IwbSubRecordArrayDef;
+  wbFaction: IwbRecordMemberDef;
+  wbLeveledListEntryCreature: IwbRecordMemberDef;
+  wbLeveledListEntryItem: IwbRecordMemberDef;
+  wbLeveledListEntrySpell: IwbRecordMemberDef;
 
 function wbClmtMoonsPhaseLength(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -2721,7 +2725,7 @@ begin
     wbStructSK(CNTO, [0], 'Item', [
       wbFormIDCk('Item', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, LVLI, KEYM, CLOT, ALCH, APPA, LIGH]),
       wbInteger('Count', itS32)
-    ]);
+    ]).SetToStr(wbItemToStr).IncludeFlag(dfCollapsed, wbCollapseItems);
 
   wbCNTOs := wbRArrayS('Items', wbCNTO);
 
@@ -3838,6 +3842,33 @@ begin
     wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
   ]);
 
+  wbLeveledListEntryCreature :=
+    wbStructExSK(LVLO, [0, 2], [3], 'Leveled List Entry', [
+      wbInteger('Level', itS16),
+      wbByteArray('Unused', 2),
+      wbFormIDCk('Reference', [NPC_, CREA, LVLC]),
+      wbInteger('Count', itS16),
+      wbByteArray('Unused', 2)
+    ], cpNormal, False, nil, 3).SetToStr(wbLeveledListEntryToStr).IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
+
+  wbLeveledListEntryItem :=
+    wbStructExSK(LVLO, [0, 2], [3], 'Leveled List Entry', [
+      wbInteger('Level', itS16),
+      wbByteArray('Unused', 2),
+      wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, LVLI, KEYM, CLOT, ALCH, APPA, LIGH]),
+      wbInteger('Count', itS16),
+      wbByteArray('Unused', 2)
+    ], cpNormal, False, nil, 3).SetToStr(wbLeveledListEntryToStr).IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
+
+  wbLeveledListEntrySpell :=
+    wbStructExSK(LVLO, [0, 2], [3], 'Leveled List Entry', [
+      wbInteger('Level', itS16),
+      wbByteArray('Unused', 2),
+      wbFormIDCk('Reference', [SPEL, LVSP]),
+      wbInteger('Count', itS16),
+      wbByteArray('Unused', 2)
+    ], cpNormal, False, nil, 3).SetToStr(wbLeveledListEntryToStr).IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
+
   wbRecord(LVLC, 'Leveled Creature', [
     wbEDID,
     wbInteger(LVLD, 'Chance none', itU8, nil, cpNormal, True),
@@ -3845,15 +3876,7 @@ begin
       {0x01} 'Calculate from all levels <= player''s level',
       {0x02} 'Calculate for each item in count'
     ]), cpNormal, True),
-    wbRArrayS('Leveled List Entries',
-      wbStructExSK(LVLO , [0, 2], [3], 'Leveled List Entry', [
-        wbInteger('Level', itS16),
-        wbByteArray('Unused', 2),
-        wbFormIDCk('Reference', [NPC_, CREA, LVLC]),
-        wbInteger('Count', itS16),
-        wbByteArray('Unused', 2)
-      ], cpNormal, False, nil, 3),
-    cpNormal, True),
+    wbRArrayS('Leveled List Entries', wbLeveledListEntryCreature, cpNormal, True),
     wbSCRI,
     wbFormIDCk(TNAM, 'Creature template', [NPC_, CREA])
   ], True, nil, cpNormal, False, wbLVLAfterLoad);
@@ -3865,15 +3888,7 @@ begin
       {0x01} 'Calculate from all levels <= player''s level',
       {0x02} 'Calculate for each item in count'
     ]), cpNormal, True),
-    wbRArrayS('Leveled List Entries',
-      wbStructExSK(LVLO , [0, 2], [3], 'Leveled List Entry', [
-        wbInteger('Level', itS16),
-        wbByteArray('Unused', 2),
-        wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, LVLI, KEYM, CLOT, ALCH, APPA, LIGH]),
-        wbInteger('Count', itS16),
-        wbByteArray('Unused', 2)
-      ], cpNormal, False, nil, 3),
-    cpNormal, True),
+    wbRArrayS('Leveled List Entries', wbLeveledListEntryItem, cpNormal, True),
     wbByteArray(DATA, 'Unused', 1)
   ], False, nil, cpNormal, False, wbLVLAfterLoad);
 
@@ -3885,15 +3900,7 @@ begin
       {0x02} 'Calculate for each item in count',
       {0x04} 'Use all spells'
     ]), cpNormal, True),
-    wbRArrayS('Leveled List Entries',
-      wbStructExSK(LVLO , [0, 2], [3], 'Leveled List Entry', [
-        wbInteger('Level', itS16),
-        wbByteArray('Unused', 2),
-        wbFormIDCk('Reference', [SPEL, LVSP]),
-        wbInteger('Count', itS16),
-        wbByteArray('Unused', 2)
-      ], cpNormal, False, nil, 3),
-    cpNormal, True)
+    wbRArrayS('Leveled List Entries', wbLeveledListEntrySpell, cpNormal, True)
   ], False, nil, cpNormal, False, wbLVLAfterLoad);
 
   wbRecord(MGEF, 'Magic Effect', [
@@ -4045,6 +4052,13 @@ begin
     wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
   ], [], cpNormal, True);
 
+  wbFaction :=
+    wbStructSK(SNAM, [0], 'Faction', [
+      wbFormIDCk('Faction', [FACT]),
+      wbInteger('Rank', itU8),
+      wbByteArray('Unused', 3)
+    ]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions);
+
   wbRecord(NPC_, 'Non-Player Character', [
     wbEDID,
     wbFULL,
@@ -4080,13 +4094,7 @@ begin
       wbInteger('Calc min', itU16),
       wbInteger('Calc max', itU16)
     ], cpNormal, True),
-    wbRArrayS('Factions',
-      wbStructSK(SNAM, [0], 'Faction', [
-        wbFormIDCk('Faction', [FACT]),
-        wbInteger('Rank', itU8),
-        wbByteArray('Unused', 3)
-      ])
-    ),
+    wbRArrayS('Factions', wbFaction),
     wbFormIDCk(INAM, 'Death item', [LVLI]),
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True),
     wbCNTOs,

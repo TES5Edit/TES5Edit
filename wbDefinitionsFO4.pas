@@ -929,7 +929,7 @@ var
   wbXRGB: IwbSubRecordDef;
   wbSPLO: IwbSubRecordDef;
   wbSPLOs: IwbSubRecordArrayDef;
-  wbCNTO: IwbSubRecordStructDef;
+  wbCNTO: IwbRecordMemberDef;
   wbCNTOs: IwbSubRecordArrayDef;
   wbAIDT: IwbSubRecordDef;
   wbFULL: IwbSubRecordDef;
@@ -1063,6 +1063,9 @@ var
   wbMaxHeightDataCELL: IwbSubRecordDef;
   wbMaxHeightDataWRLD: IwbSubRecordDef;
   wbOFST: IwbSubRecordDef;
+  wbFaction: IwbRecordMemberDef;
+  wbLeveledListEntryItem: IwbRecordMemberDef;
+  wbLeveledListEntryNPC: IwbRecordMemberDef;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -6552,7 +6555,7 @@ begin
         wbInteger('Count', itS32)
       ]),
       wbCOED
-    ], []);
+    ], []).SetToStr(wbItemToStr).IncludeFlag(dfCollapsed, wbCollapseItems);
   wbCOCT := wbInteger(COCT, 'Count', itU32, nil, cpBenign);
   wbCNTOs := wbRArrayS('Items', wbCNTO, cpNormal, False, nil, wbCNTOsAfterSet);
 
@@ -13532,6 +13535,32 @@ begin
     wbRArray('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
   ]);
 
+  wbLeveledListEntryItem :=
+    wbRStructExSK([0], [1], 'Leveled List Entry', [
+      wbStructExSK(LVLO, [0, 2], [3], 'Base Data', [
+        wbInteger('Level', itU16),
+        wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
+        wbFormIDCk('Reference', sigBaseObjects),
+        wbInteger('Count', itU16),
+        wbInteger('Chance None', itU8),
+        wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
+      ]),
+      wbCOED
+    ], []).SetToStr(wbLeveledListEntryToStr).IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
+
+  wbLeveledListEntryNPC :=
+    wbRStructExSK([0], [1], 'Leveled List Entry', [
+      wbStructExSK(LVLO, [0, 2], [3], 'Base Data', [
+        wbInteger('Level', itU16),
+        wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
+        wbFormIDCk('Reference', [NPC_, LVLN]),
+        wbInteger('Count', itS16),
+        wbInteger('Chance None', itU8),
+        wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
+      ]),
+      wbCOED
+    ], []).SetToStr(wbLeveledListEntryToStr).IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
+
   wbRecord(LVLN, 'Leveled NPC', [
     wbEDID,
     wbOBNDReq,
@@ -13544,18 +13573,7 @@ begin
     ]), cpNormal, True),
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbLLCT,
-    wbRArrayS('Leveled List Entries',
-      wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itU16),
-          wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
-          wbFormIDCk('Reference', [NPC_, LVLN]),
-          wbInteger('Count', itS16),
-          wbInteger('Chance None', itU8),
-          wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
-        ]),
-				wbCOED
-      ], []), cpNormal, False, nil, wbLVLOsAfterSet),
+    wbRArrayS('Leveled List Entries', wbLeveledListEntryNPC, cpNormal, False, nil, wbLVLOsAfterSet),
     wbArrayS(LLKC, 'Filter Keyword Chances',
       wbStructSK([0], 'Filter', [
         wbFormIDCk('Keyword', [KYWD]),
@@ -13577,19 +13595,7 @@ begin
     ]), cpNormal, True),
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbLLCT,
-    wbRArrayS('Leveled List Entries',
-      wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbStructExSK(LVLO , [0, 2], [3], 'Base Data', [
-          wbInteger('Level', itU16),
-          wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
-          wbFormIDCk('Reference', sigBaseObjects),
-          wbInteger('Count', itU16),
-          wbInteger('Chance None', itU8),
-          wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
-        ]),
-        wbCOED
-      ], []), cpNormal, False, nil, wbLVLOsAfterSet
-    ),
+    wbRArrayS('Leveled List Entries', wbLeveledListEntryItem, cpNormal, False, nil, wbLVLOsAfterSet),
     wbArrayS(LLKC, 'Filter Keyword Chances',
       wbStructSK([0], 'Filter', [
         wbFormIDCk('Keyword', [KYWD]),
@@ -13809,7 +13815,7 @@ begin
     wbStructSK([0], 'Component', [
       wbFormIDCkNoReach('Component', sigBaseObjects),
       wbInteger('Count', itU32)
-    ]).SetToStr(wbRecipeComponentToStr).IncludeFlag(dfCollapsed, wbCollapseRecipeItems);
+    ]).SetToStr(wbItemToStr).IncludeFlag(dfCollapsed, wbCollapseItems);
 
   wbComponents := wbArrayS(FVPA, 'Components', wbComponent);
 
@@ -13832,6 +13838,12 @@ begin
       wbInteger('Priority', itU16)
     ], cpNormal, False, nil, 1)
   ]);
+
+  wbFaction :=
+    wbStructSK(SNAM, [0], 'Faction', [
+      wbFormIDCk('Faction', [FACT]),
+      wbInteger('Rank', itS8)
+    ]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions);
 
   wbRecord(NPC_, 'Non-Player Character (Actor)',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -13906,12 +13918,7 @@ begin
       wbInteger('Bleedout Override', itU16),
       wbByteArray('Unknown', 2)
     ], cpNormal, True),
-    wbRArrayS('Factions',
-      wbStructSK(SNAM, [0], 'Faction', [
-        wbFormIDCk('Faction', [FACT]),
-        wbInteger('Rank', itS8)
-      ]), cpNormal, False, nil, nil, nil{wbActorTemplateUseFactions}
-    ),
+    wbRArrayS('Factions', wbFaction, cpNormal, False, nil, nil, nil{wbActorTemplateUseFactions}),
     wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(TPLT, 'Default Template', [LVLN, NPC_]),

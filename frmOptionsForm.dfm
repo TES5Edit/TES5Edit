@@ -259,14 +259,12 @@ object frmOptions: TfrmOptions
         Caption = 'Models / 1st Person Models / Biped Models / World Models'
         TabOrder = 4
       end
-      object cbCollapseRecipeItems: TCheckBox
+      object cbCollapseItems: TCheckBox
         Left = 16
         Top = 108
         Width = 439
         Height = 17
-        Caption = 
-          'Constructible Object Items and Components (only TES5, FO4, and F' +
-          'O76)'
+        Caption = 'Items / Components'
         TabOrder = 5
       end
       object cbCollapseScriptProperties: TCheckBox
@@ -284,6 +282,14 @@ object frmOptions: TfrmOptions
         Height = 17
         Caption = 'Arrays with Benign Conflict Priority'
         TabOrder = 7
+      end
+      object cbCollapseLeveledItems: TCheckBox
+        Left = 235
+        Top = 108
+        Width = 220
+        Height = 17
+        Caption = 'Leveled List Entries (except FO76)'
+        TabOrder = 8
       end
     end
     object tsCleaning: TTabSheet
