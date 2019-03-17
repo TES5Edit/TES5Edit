@@ -203,25 +203,109 @@ object frmOptions: TfrmOptions
         Caption = 'Hide Manual Cleaning functions'
         TabOrder = 18
       end
+    end
+    object tsViewSettings: TTabSheet
+      Caption = 'View'
+      object lblFieldsToCollapse: TLabel
+        Left = 16
+        Top = 15
+        Width = 261
+        Height = 13
+        Caption = 'Fields to Collapse by Default (requires restart)'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+      object cbCollapseRecordHeader: TCheckBox
+        Left = 16
+        Top = 39
+        Width = 220
+        Height = 17
+        Caption = 'Record Header'
+        TabOrder = 0
+      end
+      object cbCollapseObjectBounds: TCheckBox
+        Left = 235
+        Top = 39
+        Width = 220
+        Height = 17
+        Caption = 'Object Bounds (except TES4)'
+        TabOrder = 1
+      end
       object cbCollapseConditions: TCheckBox
         Left = 16
-        Top = 273
+        Top = 62
+        Width = 220
+        Height = 17
+        Caption = 'Conditions'
+        TabOrder = 2
+      end
+      object cbCollapseFactionRelations: TCheckBox
+        Left = 235
+        Top = 62
+        Width = 220
+        Height = 17
+        Caption = 'Faction Relations (except TES4)'
+        TabOrder = 3
+      end
+      object cbCollapseModels: TCheckBox
+        Left = 16
+        Top = 85
         Width = 439
         Height = 17
-        Caption = 'Collapse Conditions by Default (requires restart)'
-        TabOrder = 19
+        Caption = 'Models / 1st Person Models / Biped Models / World Models'
+        TabOrder = 4
+      end
+      object cbCollapseItems: TCheckBox
+        Left = 16
+        Top = 108
+        Width = 220
+        Height = 17
+        Caption = 'Items / Components'
+        TabOrder = 5
+      end
+      object cbCollapseScriptProperties: TCheckBox
+        Left = 16
+        Top = 177
+        Width = 439
+        Height = 17
+        Caption = 'Script Properties (only TES5, FO4, and FO76)'
+        TabOrder = 6
       end
       object cbCollapseBenignArray: TCheckBox
         Left = 16
-        Top = 296
+        Top = 200
+        Width = 220
+        Height = 17
+        Caption = 'Arrays with Benign Conflict Priority'
+        TabOrder = 7
+      end
+      object cbCollapseLeveledItems: TCheckBox
+        Left = 235
+        Top = 108
+        Width = 220
+        Height = 17
+        Caption = 'Leveled List Entries (except FO76)'
+        TabOrder = 8
+      end
+      object cbCollapseObjectProperties: TCheckBox
+        Left = 16
+        Top = 154
         Width = 439
         Height = 17
-        Caption = 
-          'Collapse Arrays with Benign Conflict Priority by Default (requir' +
-          'es restart)'
-        Ctl3D = True
-        ParentCtl3D = False
-        TabOrder = 20
+        Caption = 'Actor Value Properties (only FO4 and FO76)'
+        TabOrder = 9
+      end
+      object cbCollapseEquipSlots: TCheckBox
+        Left = 16
+        Top = 131
+        Width = 220
+        Height = 17
+        Caption = 'Race Equip Slots (only FO4 and FO76)'
+        TabOrder = 10
       end
     end
     object tsCleaning: TTabSheet

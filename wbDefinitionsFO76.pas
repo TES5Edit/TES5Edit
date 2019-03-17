@@ -84,7 +84,8 @@ uses
   SysUtils,
   Math,
   Variants,
-  wbHelpers;
+  wbHelpers,
+  wbDefinitionsCommon;
 
 const
   _00_IAD: TwbSignature = #$00'IAD';
@@ -1095,8 +1096,8 @@ var
   wbCOED: IwbSubRecordDef;
   wbXLCM: IwbSubRecordDef;
   wbEITM: IwbSubRecordDef;
-  wbOBND: IwbSubRecordDef;
-  wbOBNDReq: IwbSubRecordDef;
+  wbOBND: IwbRecordMemberDef;
+  wbOBNDReq: IwbRecordMemberDef;
   wbOPDS: IwbSubRecordDef;
   wbOPDSs: IwbSubRecordArrayDef;
   wbDEFL: IwbSubRecordDef;
@@ -1111,12 +1112,14 @@ var
   wbXRGB: IwbSubRecordDef;
   wbSPLO: IwbSubRecordDef;
   wbSPLOs: IwbSubRecordArrayDef;
-  wbCNTO: IwbSubRecordStructDef;
+  wbCNTO: IwbRecordMemberDef;
   wbCNTOs: IwbSubRecordArrayDef;
   wbAIDT: IwbSubRecordDef;
   wbFULL: IwbSubRecordDef;
   wbFULLActor: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
+  wbXNAM: IwbRecordMemberDef;
+  wbXNAMs: IwbSubRecordArrayDef;
   wbDESC: IwbSubRecordDef;
   wbDESCReq: IwbSubRecordDef;
   wbXSCL: IwbSubRecordDef;
@@ -1140,6 +1143,14 @@ var
   wbMO5C: IwbSubRecordDef;
   wbMODLActor: IwbRecordMemberDef;
   wbMODLReq: IwbRecordMemberDef;
+  wbARMOMaleWorldModel: IwbRecordMemberDef;
+  wbARMOFemaleWorldModel: IwbRecordMemberDef;
+  wbARMAMaleWorldModel: IwbRecordMemberDef;
+  wbARMAFemaleWorldModel: IwbRecordMemberDef;
+  wbARMAMale1stPersonModel: IwbRecordMemberDef;
+  wbARMAFemale1stPersonModel: IwbRecordMemberDef;
+  wbComponent: IwbValueDef;
+  wbComponents: IwbSubRecordDef;
   wbCTDA: IwbRecordMemberDef;
   wbCTDAs: IwbSubRecordArrayDef;
   wbCNDCs: IwbSubRecordArrayDef;
@@ -1161,6 +1172,7 @@ var
   wbScriptFlags: IwbIntegerDef;
   wbScriptPropertyObject: IwbUnionDef;
   wbScriptPropertyStruct: IwbArrayDef;
+  wbScriptProperty: IwbValueDef;
   wbScriptProperties: IwbArrayDef;
   wbScriptFragments: IwbStructDef;
   wbScriptFragmentsQuest: IwbValueDef;
@@ -1222,6 +1234,7 @@ var
   wbSTCP: IwbSubRecordDef;
   wbNTRM: IwbSubRecordDef;
   wbPRPS: IwbSubRecordDef;
+  wbObjectProperty: IwbValueDef;
   wbCVPA: IwbSubRecordDef;
   wbESCR: IwbSubRecordDef;
   wbREPR: IwbSubRecordDef;
@@ -1271,6 +1284,11 @@ var
   wbLVOC: IwbSubRecordDef;
   wbLVIG: IwbSubRecordDef;
   wbXPCK: IwbSubRecordDef;
+  wbFaction: IwbRecordMemberDef;
+  wbLeveledListEntryItem: IwbRecordMemberDef;
+  wbLeveledListEntryNPC: IwbRecordMemberDef;
+  wbLeveledListEntryPackIn: IwbRecordMemberDef;
+  wbLeveledListEntryPerkCard: IwbRecordMemberDef;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -3306,56 +3324,6 @@ begin
     Result := 1;
 end;
 
-procedure wbConditionToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  Condition: IwbContainerElementRef;
-  lCTDA: IwbContainerElementRef;
-  RunOn, Param1, Param2: IwbElement;
-  Typ: Byte;
-begin
-  if not Supports(aElement, IwbContainerElementRef, Condition) then
-    Exit;
-  if Condition.Collapsed <> tbTrue then
-    Exit;
-  if not Supports(Condition.RecordBySignature[CTDA], IwbContainerElementRef, lCTDA) then
-    Exit;
-  RunOn := lCTDA.Elements[7];
-  if RunOn.NativeValue = 2 then
-    aValue := lCTDA.Elements[8].Value
-  else
-    aValue := RunOn.Value;
-
-  aValue := aValue + '.' + lCTDA.Elements[3].Value;
-
-  Param1 := lCTDA.Elements[5];
-  if Param1.ConflictPriority <> cpIgnore then begin
-    aValue := aValue + '(' {+ Param1.Name + ': '} + Param1.Value;
-    Param2 := lCTDA.Elements[6];
-    if Param2.ConflictPriority <> cpIgnore then begin
-      aValue := aValue + ', ' {+ Param2.Name + ': '} + Param2.Value;
-    end;
-    aValue := aValue + ')';
-  end;
-
-  Typ := lCTDA.Elements[0].NativeValue;
-
-  case Typ and $E0 of
-    $00 : aValue := aValue + ' = ';
-    $20 : aValue := aValue + ' <> ';
-    $40 : aValue := aValue + ' > ';
-    $60 : aValue := aValue + ' >= ';
-    $80 : aValue := aValue + ' < ';
-    $A0 : aValue := aValue + ' <= ';
-  end;
-
-  aValue := aValue + lCTDA.Elements[2].Value;
-
-  if (Typ and $01) = 0 then
-    aValue := aValue + ' AND'
-  else
-    aValue := aValue + ' OR';
-end;
-
 function wbNAVIIslandDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container   : IwbContainer;
@@ -3832,26 +3800,6 @@ begin
     Exit;
 
   Result := Container.DataSize div 76;
-end;
-
-{>>> For VMAD <<<}
-function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  ObjFormat: Integer;
-  Container: IwbContainer;
-begin
-  Result := 0;
-
-  Container := aElement.Container;
-  while Assigned(Container) and (Container.ElementType <> etSubRecord) do
-    Container := Container.Container;
-
-  if not Assigned(Container) then Exit;
-
-  ObjFormat := Container.ElementNativeValues['Object Format'];
-
-  if ObjFormat = 1 then
-    Result := 1;
 end;
 
 {>>> For VMAD <<<}
@@ -7219,7 +7167,7 @@ begin
         wbInteger('Count', itS32)
       ]),
       wbCOED
-    ], []);
+    ], []).SetToStr(wbItemToStr).IncludeFlag(dfCollapsed, wbCollapseItems);
   wbCOCT := wbInteger(COCT, 'Count', itU32, nil, cpBenign);
   wbCNTOs := wbRArrayS('Items', wbCNTO, cpNormal, False, nil, wbCNTOsAfterSet);
 
@@ -7456,7 +7404,7 @@ begin
     wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrAfterFO4),
     wbInteger('Form Version', itU16, nil, cpIgnore),
     wbByteArray('Version Control Info 2', 2, cpIgnore)
-  ]);
+  ]).SetToStr(wbRecordHeaderToStr).IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
 
   wbSizeOfMainRecordStruct := 24;
 
@@ -7783,7 +7731,7 @@ begin
     wbInteger('X2', itS16),
     wbInteger('Y2', itS16),
     wbInteger('Z2', itS16)
-  ]);
+  ]).SetToStr(wbObjectBoundsToStr).IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
 
   wbOBNDReq := wbStruct(OBND, 'Object Bounds', [
     wbInteger('X1', itS16),
@@ -7792,7 +7740,7 @@ begin
     wbInteger('X2', itS16),
     wbInteger('Y2', itS16),
     wbInteger('Z2', itS16)
-  ], cpNormal, True);
+  ], cpNormal, True).SetToStr(wbObjectBoundsToStr).IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
 
   wbOPDS := wbStruct(OPDS, 'Unknown', [
     wbByteArray('Unknown', 4).IncludeFlag(dfNoReport),
@@ -7914,8 +7862,8 @@ begin
       ])
     ]), -1, cpNormal, False);
 
-  wbScriptProperties :=
-    wbArrayS('Properties', wbStructSK([0], 'Property', [
+  wbScriptProperty :=
+    wbStructSK([0], 'Property', [
       wbLenString('propertyName', 2),
       wbInteger('Type', itU8, wbPropTypeEnum, cpNormal, False, nil, wbScriptPropertyTypeAfterSet),
       wbInteger('Flags', itU8, wbEnum([
@@ -7940,7 +7888,10 @@ begin
        {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbBoolEnum), -1),
        {17} wbArray('Array of Struct', wbScriptPropertyStruct, -1)
       ])
-    ]), -2, cpNormal, False, nil, nil, nil, wbCanAddScriptProperties);
+    ]).SetToStr(wbScriptPropertyToStr).IncludeFlag(dfCollapsed, wbCollapseScriptProperties);
+
+  wbScriptProperties :=
+    wbArrayS('Properties', wbScriptProperty, -2, cpNormal, False, nil, nil, nil, wbCanAddScriptProperties);
 
   wbScriptEntry := wbStructSK([0], 'Script', [
     wbLenString('ScriptName', 2),
@@ -8303,14 +8254,14 @@ begin
       wbENLS,
       wbAUUV,
       wbMODD
-    ], []).IncludeFlag(dfAllowAnyMember);
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
 
   wbMODLActor :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model FileName', 0, cpNormal, True),
       wbMODT,
       wbMODS
-    ], []).IncludeFlag(dfAllowAnyMember);
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
 
   wbMODLReq :=
     wbRStructSK([0], 'Model', [
@@ -8323,7 +8274,79 @@ begin
       wbENLT,
       wbENLS,
       wbAUUV
-    ], [], cpNormal, True).IncludeFlag(dfAllowAnyMember);
+    ], [], cpNormal, True).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
+
+  wbARMOMaleWorldModel :=
+    wbRStruct('Male world model', [
+      wbString(MOD2, 'Model FileName'),
+      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbMODC,
+      wbMO2S,
+      wbENLT,
+      wbENLS,
+      wbAUUV
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
+
+  wbARMOFemaleWorldModel :=
+    wbRStruct('Female world model', [
+      wbString(MOD4, 'Model FileName'),
+      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbMODC,
+      wbMO4S,
+      wbENLT,
+      wbENLS,
+      wbAUUV
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
+
+  wbARMAMaleWorldModel :=
+    wbRStruct('Male world model', [
+      wbString(MOD2, 'Model FileName'),
+      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbMO2C,
+      wbMO2S,
+      wbUnknown(XFLG),
+      wbENLT,
+      wbENLS,
+      wbAUUV,
+      wbMO2F
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
+
+  wbARMAFemaleWorldModel :=
+    wbRStruct('Female world model', [
+      wbString(MOD3, 'Model FileName'),
+      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbMO3C,
+      wbMO3S,
+      wbUnknown(XFLG),
+      wbENLT,
+      wbENLS,
+      wbAUUV,
+      wbMO3F
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
+
+  wbARMAMale1stPersonModel :=
+	  wbRStruct('Male 1st Person', [
+      wbString(MOD4, 'Model FileName'),
+      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbMO4C,
+      wbMO4S,
+      wbENLT,
+      wbENLS,
+      wbAUUV,
+      wbMO4F
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
+
+  wbARMAFemale1stPersonModel :=
+	  wbRStruct('Female 1st Person', [
+      wbString(MOD5, 'Model FileName'),
+      wbByteArray(MO5T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbMO5C,
+      wbMO5S,
+      wbENLT,
+      wbENLS,
+      wbAUUV,
+      wbMO5F
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels).IncludeFlag(dfAllowAnyMember);
 
   wbDMDS := wbFormIDCk(DMDS, 'Material Swap', [MSWP]);
   wbDMDC := wbFloat(DMDC, 'Color Remapping Index');
@@ -9693,7 +9716,7 @@ begin
     ], cpNormal, False{, nil, 0, wbCTDAAfterLoad}),
     wbString(CIS1, 'Parameter #1'),
     wbString(CIS2, 'Parameter #2')
-  ], [], cpNormal).SetToStr(wbConditionToStr).IncludeFlag(dfCollapsed, wbCollapseConditions);
+  ], [], cpNormal).SetToStr(wbConditionToStrTES5).IncludeFlag(dfCollapsed, wbCollapseConditions);
 
   wbCTDAs := wbRArray('Conditions', wbCTDA, cpNormal, False);
   wbCTDAsCount := wbRArray('Conditions', wbCTDA, cpNormal, False, nil, wbCTDAsAfterSet);
@@ -9784,14 +9807,17 @@ begin
   wbEILV := wbArray(EILV, 'Levels', wbInteger('Level', itU32));
   wbIBSD := wbFormIDCk(IBSD, 'Break Sound', [SNDR]);
 
-  wbPRPS := wbArrayS(PRPS, 'Properties', wbStructSK([0], 'Property', [
-    wbActorValue,
-    wbFloat('Value'),
-    wbUnion('Curve Table', wbDeciderFormVersion152, [
-      wbEmpty('Unused'),
-      wbFormIDCk('Curve Table', [CURV, NULL])
-    ])
-  ]));
+  wbObjectProperty :=
+    wbStructSK([0], 'Property', [
+      wbActorValue,
+      wbFloat('Value'),
+      wbUnion('Curve Table', wbDeciderFormVersion152, [
+        wbEmpty('Unused'),
+        wbFormIDCk('Curve Table', [CURV, NULL])
+      ])
+    ]).SetToStr(wbObjectPropertyToStr).IncludeFlag(dfCollapsed, wbCollapseObjectProperties);
+
+  wbPRPS := wbArrayS(PRPS, 'Properties', wbObjectProperty);
 
   wbCVPA := wbArrayS(CVPA, 'Unknown', wbStructSK([0], 'Unknown', [
     wbFormIDCk('Scrap Count Keyword', [KYWD]),
@@ -10343,26 +10369,10 @@ begin
     wbXALG,
     wbFULL,
     wbEITM,
-    wbRStruct('Male world model', [
-      wbString(MOD2, 'Model FileName'),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMODC,
-      wbMO2S,
-      wbENLT,
-      wbENLS,
-      wbAUUV
-    ], []).IncludeFlag(dfAllowAnyMember),
+    wbARMOMaleWorldModel,
     wbString(ICON, 'Male Inventory Image'),
     wbString(MICO, 'Male Message Icon'),
-    wbRStruct('Female world model', [
-      wbString(MOD4, 'Model FileName'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMODC,
-      wbMO4S,
-      wbENLT,
-      wbENLS,
-      wbAUUV
-    ], []).IncludeFlag(dfAllowAnyMember),
+    wbARMOFemaleWorldModel,
     wbString(ICO2, 'Female Inventory Image'),
     wbString(MIC2, 'Female Message Icon'),
     wbBOD2,
@@ -10439,48 +10449,10 @@ begin
       wbByteArray('Unknown', 1),
       wbFloat('Weapon Adjust')
     ], cpNormal, True),
-    wbRStruct('Male world model', [
-      wbString(MOD2, 'Model FileName'),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO2C,
-      wbMO2S,
-      wbUnknown(XFLG),
-      wbENLT,
-      wbENLS,
-      wbAUUV,
-      wbMO2F
-    ], []).IncludeFlag(dfAllowAnyMember),
-    wbRStruct('Female world model', [
-      wbString(MOD3, 'Model FileName'),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO3C,
-      wbMO3S,
-      wbUnknown(XFLG),
-      wbENLT,
-      wbENLS,
-      wbAUUV,
-      wbMO3F
-    ], []).IncludeFlag(dfAllowAnyMember),
-    wbRStruct('Male 1st Person', [
-      wbString(MOD4, 'Model FileName'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO4C,
-      wbMO4S,
-      wbENLT,
-      wbENLS,
-      wbAUUV,
-      wbMO4F
-    ], []).IncludeFlag(dfAllowAnyMember),
-    wbRStruct('Female 1st Person', [
-      wbString(MOD5, 'Model FileName'),
-      wbByteArray(MO5T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO5C,
-      wbMO5S,
-      wbENLT,
-      wbENLS,
-      wbAUUV,
-      wbMO5F
-    ], []).IncludeFlag(dfAllowAnyMember),
+    wbARMAMaleWorldModel,
+    wbARMAFemaleWorldModel,
+    wbARMAMale1stPersonModel,
+    wbARMAFemale1stPersonModel,
     wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),
     wbFormIDCK(NAM1, 'Female Skin Texture', [TXST, NULL]),
     wbFormIDCK(NAM2, 'Male Skin Texture Swap List', [FLST, NULL]),
@@ -11568,21 +11540,24 @@ begin
     ]), cpNormal, True)
   ]);
 
+  wbXNAM :=
+    wbStructSK(XNAM, [0], 'Relation', [
+      wbFormIDCkNoReach('Faction', [FACT, RACE]),
+      wbInteger('Modifier', itS32),
+      wbInteger('Group Combat Reaction', itU32, wbEnum([
+        {0x00000001} 'Neutral',
+        {0x00000002} 'Enemy',
+        {0x00000004} 'Ally',
+        {0x00000008} 'Friend'
+      ]))
+    ]).SetToStr(wbFactionRelationToStr).IncludeFlag(dfCollapsed, wbCollapseFactionRelations);
+
+  wbXNAMs := wbRArrayS('Relations', wbXNAM);
+
   wbRecord(FACT, 'Faction', [
     wbEDID,
     wbFULL,
-    wbRArrayS('Relations',
-      wbStructSK(XNAM, [0], 'Relation', [
-        wbFormIDCkNoReach('Faction', [FACT, RACE]),
-        wbInteger('Modifier', itS32),
-        wbInteger('Group Combat Reaction', itU32, wbEnum([
-          {0x00000001} 'Neutral',
-          {0x00000002} 'Enemy',
-          {0x00000004} 'Ally',
-          {0x00000008} 'Friend'
-        ]))
-      ])
-    ),
+    wbXNAMs,
     wbStruct(DATA, 'Flags', [
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Hidden From NPC',
@@ -14775,6 +14750,68 @@ begin
     wbRArray('Unused', wbFormIDCk(GNAM, 'Unused', [GRAS], False, cpIgnore).IncludeFlag(dfNoReport), cpIgnore)
   ]);
 
+  wbLeveledListEntryItem :=
+    wbRStructExSK([0], [1], 'Leveled List Entry', [
+      wbUnion(LVLO, '', wbDeciderFormVersion174, [
+        wbStructExSK([0, 2], [3], 'Base Data', [
+          wbInteger('Level', itU16),
+          wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
+          wbFormIDCk('Reference', sigBaseObjects),
+          wbInteger('Count', itS16),
+          wbInteger('Chance None', itU8),
+          wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
+        ]),
+        wbFormIDCk('Reference', sigBaseObjects)
+      ]),
+      wbCOED,
+      wbCTDAs,
+      wbLVOV,
+      wbLVOC,
+      wbLVOT,
+      wbLVIV,
+      wbLVIG,
+      wbLVLV,
+      wbLVOG,
+      wbLVLT
+    ], []){.SetToStr(wbLeveledListEntryToStr).IncludeFlag(dfCollapsed, wbCollapseLeveledItems)};
+
+  wbLeveledListEntryNPC :=
+    wbRStructExSK([0], [1], 'Leveled List Entry', [
+      wbUnion(LVLO, '', wbDeciderFormVersion174, [
+        wbStructExSK([0, 2], [3], 'Base Data', [
+          wbInteger('Level', itU16),
+          wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
+          wbFormIDCk('Reference', [NPC_, LVLN]),
+          wbInteger('Count', itS16),
+          wbInteger('Chance None', itU8),
+          wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
+        ]),
+        wbFormIDCk('Reference', [NPC_, LVLN])
+      ]),
+      wbCOED,
+      wbCTDAs,
+      wbLVOV,
+      wbLVIV,
+      wbLVLV,
+      wbLVOG,
+      wbLVLT
+    ], []){.SetToStr(wbLeveledListEntryToStr).IncludeFlag(dfCollapsed, wbCollapseLeveledItems)};
+
+  wbLeveledListEntryPackIn :=
+    wbRStructExSK([0], [1], 'Leveled List Entry', [
+      wbFormIDCk(LVLO, 'Reference', sigBaseObjects),
+      //wbCOED,
+      //wbCTDAs,
+      wbLVOV,
+      //wbLVOC,
+      //wbLVOT,
+      wbLVIV,
+      //wbLVIG,
+      wbLVLV
+      //wbLVOG,
+      //wbLVLT
+    ], []);
+
   wbLVLFFlags := wbFlags([
       {0x00000001} 'Calculate from all levels <= player''s level',
       {0x00000002} 'Calculate for each item in count',
@@ -14801,28 +14838,7 @@ begin
     ], cpNormal, True),
     wbCTDAs,
     wbLLCT,
-    wbRArrayS('Leveled List Entries',
-      wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbUnion(LVLO, '', wbDeciderFormVersion174, [
-          wbStructExSK([0, 2], [3], 'Base Data', [
-            wbInteger('Level', itU16),
-            wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
-            wbFormIDCk('Reference', [NPC_, LVLN]),
-            wbInteger('Count', itS16),
-            wbInteger('Chance None', itU8),
-            wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
-          ]),
-          wbFormIDCk('Reference', [NPC_, LVLN])
-        ]),
-        wbCOED,
-        wbCTDAs,
-        wbLVOV,
-        wbLVIV,
-        wbLVLV,
-        wbLVOG,
-        wbLVLT
-    ], []), cpNormal, False, nil, wbLVLOsAfterSet),
-
+    wbRArrayS('Leveled List Entries', wbLeveledListEntryNPC, cpNormal, False, nil, wbLVLOsAfterSet),
     wbArrayS(LLKC, 'Filter Keyword Chances',
       wbStructSK([0], 'Filter', [
         wbFormIDCk('Keyword', [KYWD]),
@@ -14858,30 +14874,7 @@ begin
     wbCTDAs,
     //wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbLLCT,
-    wbRArrayS('Leveled List Entries',
-      wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbUnion(LVLO, '', wbDeciderFormVersion174, [
-          wbStructExSK([0, 2], [3], 'Base Data', [
-            wbInteger('Level', itU16),
-            wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
-            wbFormIDCk('Reference', sigBaseObjects),
-            wbInteger('Count', itS16),
-            wbInteger('Chance None', itU8),
-            wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
-          ]),
-          wbFormIDCk('Reference', sigBaseObjects)
-        ]),
-        wbCOED,
-        wbCTDAs,
-        wbLVOV,
-        wbLVOC,
-        wbLVOT,
-        wbLVIV,
-        wbLVIG,
-        wbLVLV,
-        wbLVOG,
-        wbLVLT
-    ], []), cpNormal, False, nil, wbLVLOsAfterSet),
+    wbRArrayS('Leveled List Entries', wbLeveledListEntryItem, cpNormal, False, nil, wbLVLOsAfterSet),
     wbArrayS(LLKC, 'Filter Keyword Chances',
       wbStructSK([0], 'Filter', [
         wbFormIDCk('Keyword', [KYWD]),
@@ -14919,20 +14912,7 @@ begin
     //wbCTDAs,
     //wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbLLCT,
-    wbRArrayS('Leveled List Entries',
-      wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbFormIDCk(LVLO, 'Reference', sigBaseObjects),
-        //wbCOED,
-        //wbCTDAs,
-        wbLVOV,
-        //wbLVOC,
-        //wbLVOT,
-        wbLVIV,
-        //wbLVIG,
-        wbLVLV
-        //wbLVOG,
-        //wbLVLT
-    ], []), cpNormal, False, nil, wbLVLOsAfterSet),
+    wbRArrayS('Leveled List Entries', wbLeveledListEntryPackIn, cpNormal, False, nil, wbLVLOsAfterSet),
     {
     wbArrayS(LLKC, 'Filter Keyword Chances',
       wbStructSK([0], 'Filter', [
@@ -15175,6 +15155,18 @@ begin
     wbArray(CDIX, 'Component Display Indices', wbInteger('Display Index', itU8))
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
+  wbComponent :=
+    wbStructSK([0], 'Component', [
+      wbFormIDCkNoReach('Component', sigBaseObjects),
+      wbInteger('Count', itU32),
+      wbUnion('Curve Table', wbDeciderFormVersion152, [
+        wbEmpty('Unused'),
+        wbFormIDCk('Curve Table', [CURV, NULL])
+      ])
+    ]).SetToStr(wbItemToStr).IncludeFlag(dfCollapsed, wbCollapseItems);
+
+  wbComponents := wbArrayS(FVPA, 'Components', wbComponent);
+
   wbRecord(COBJ, 'Constructible Object',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       11, 'Unknown 11',
@@ -15184,16 +15176,7 @@ begin
     wbXALG,
     wbYNAM,
     wbZNAM,
-    wbArrayS(FVPA, 'Components',
-      wbStructSK([0], 'Component', [
-        wbFormIDCkNoReach('Component', sigBaseObjects),
-        wbInteger('Count', itU32),
-        wbUnion('Curve Table', wbDeciderFormVersion152, [
-          wbEmpty('Unused'),
-          wbFormIDCk('Curve Table', [CURV, NULL])
-        ])
-      ])
-    ),
+    wbComponents,
     wbREPR,
     wbUnknown(REPM),
     wbUnknown(LRNM),
@@ -15224,6 +15207,12 @@ begin
       wbInteger('Priority', itU16)
     ], cpNormal, False, nil, 1)
   ]);
+
+  wbFaction :=
+    wbStructSK(SNAM, [0], 'Faction', [
+      wbFormIDCk('Faction', [FACT]),
+      wbInteger('Rank', itS8)
+    ]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions);
 
   wbRecord(NPC_, 'Non-Player Character (Actor)',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -15303,12 +15292,7 @@ begin
       wbInteger('Bleedout Override', itU16),
       wbByteArray('Unknown', 2)
     ], cpNormal, True),
-    wbRArrayS('Factions',
-      wbStructSK(SNAM, [0], 'Faction', [
-        wbFormIDCk('Faction', [FACT]),
-        wbInteger('Rank', itS8)
-      ]), cpNormal, False, nil, nil, nil{wbActorTemplateUseFactions}
-    ),
+    wbRArrayS('Factions', wbFaction, cpNormal, False, nil, nil, nil{wbActorTemplateUseFactions}),
     wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(TPLT, 'Default Template', [LVLN, NPC_]),
@@ -16341,7 +16325,7 @@ begin
       wbRStruct('Equip Slot', [
         wbFormIDCk(QNAM, 'Equip Slot', [EQUP]),
         wbString(ZNAM, 'Node')
-      ], [])
+      ], []).SetToStr(wbEquipSlotToStr).IncludeFlag(dfCollapsed, wbCollapseEquipSlots)
     ),
     wbFormIDCk(UNWP, 'Unarmed Weapon', [WEAP]),
     wbFormIDCk(RLBC, '? Loot Bag', [CONT]),
@@ -18838,18 +18822,8 @@ begin
     )
   ]);
 
-  wbRecord(LVPC, 'Leveled Perk Card', [
-    wbEDID,
-    wbLVLD,
-    wbLVMV,
-    wbLVCV,
-    wbUnion(LVLF, 'Flags', wbDeciderFormVersion185, [
-      wbInteger('', itU8, wbLVLFFlags),
-      wbInteger('', itU16, wbLVLFFlags)
-    ], cpNormal, True),
-    wbLLCT,
-    wbRArrayS('Leveled List Entries',
-      wbRStructExSK([0], [1], 'Leveled List Entry', [
+  wbLeveledListEntryPerkCard :=
+    wbRStructExSK([0], [1], 'Leveled List Entry', [
         wbUnion(LVLO, '', wbDeciderFormVersion174, [
           wbStructExSK([0, 2], [3], 'Base Data', [
             wbInteger('Level', itU16),
@@ -18868,7 +18842,19 @@ begin
         wbLVLV,
         wbLVOG,
         wbLVLT
-    ], []), cpNormal, False, nil, wbLVLOsAfterSet),
+    ], []){.SetToStr(wbLeveledListEntryToStr).IncludeFlag(dfCollapsed, wbCollapseLeveledItems)};
+
+  wbRecord(LVPC, 'Leveled Perk Card', [
+    wbEDID,
+    wbLVLD,
+    wbLVMV,
+    wbLVCV,
+    wbUnion(LVLF, 'Flags', wbDeciderFormVersion185, [
+      wbInteger('', itU8, wbLVLFFlags),
+      wbInteger('', itU16, wbLVLFFlags)
+    ], cpNormal, True),
+    wbLLCT,
+    wbRArrayS('Leveled List Entries', wbLeveledListEntryPerkCard, cpNormal, False, nil, wbLVLOsAfterSet),
     wbUnknown(LVCL),
     wbUnknown(LVUO)
   ]);
