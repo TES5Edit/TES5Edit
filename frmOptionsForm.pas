@@ -85,12 +85,13 @@ type
     cbCollapseObjectBounds: TCheckBox;
     cbCollapseModels: TCheckBox;
     cbCollapseFactionRelations: TCheckBox;
-    cbCollapseRecipeItems: TCheckBox;
+    cbCollapseItems: TCheckBox;
     cbCollapseScriptProperties: TCheckBox;
     cbCollapseConditions: TCheckBox;
     cbCollapseBenignArray: TCheckBox;
     tsViewSettings: TTabSheet;
     lblFieldsToCollapse: TLabel;
+    cbCollapseLeveledItems: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);
