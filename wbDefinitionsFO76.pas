@@ -16332,7 +16332,7 @@ begin
       wbRStruct('Equip Slot', [
         wbFormIDCk(QNAM, 'Equip Slot', [EQUP]),
         wbString(ZNAM, 'Node')
-      ], [])
+      ], []).SetToStr(wbEquipSlotToStr).IncludeFlag(dfCollapsed, wbCollapseEquipSlots)
     ),
     wbFormIDCk(UNWP, 'Unarmed Weapon', [WEAP]),
     wbFormIDCk(RLBC, '? Loot Bag', [CONT]),

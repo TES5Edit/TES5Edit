@@ -262,14 +262,14 @@ object frmOptions: TfrmOptions
       object cbCollapseItems: TCheckBox
         Left = 16
         Top = 108
-        Width = 439
+        Width = 220
         Height = 17
         Caption = 'Items / Components'
         TabOrder = 5
       end
       object cbCollapseScriptProperties: TCheckBox
         Left = 16
-        Top = 154
+        Top = 177
         Width = 439
         Height = 17
         Caption = 'Script Properties (only TES5, FO4, and FO76)'
@@ -277,7 +277,7 @@ object frmOptions: TfrmOptions
       end
       object cbCollapseBenignArray: TCheckBox
         Left = 16
-        Top = 177
+        Top = 200
         Width = 220
         Height = 17
         Caption = 'Arrays with Benign Conflict Priority'
@@ -293,11 +293,19 @@ object frmOptions: TfrmOptions
       end
       object cbCollapseObjectProperties: TCheckBox
         Left = 16
-        Top = 131
+        Top = 154
         Width = 439
         Height = 17
         Caption = 'Actor Value Properties (only FO4 and FO76)'
         TabOrder = 9
+      end
+      object cbCollapseEquipSlots: TCheckBox
+        Left = 16
+        Top = 131
+        Width = 220
+        Height = 17
+        Caption = 'Race Equip Slots (only FO4 and FO76)'
+        TabOrder = 10
       end
     end
     object tsCleaning: TTabSheet
