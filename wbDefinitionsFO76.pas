@@ -72,6 +72,8 @@ var
   wbBoolEnum: IwbEnumDef;
   wbSpecialTypeEnum: IwbEnumDef;
 
+  wbLVLFFlags : IwbFlagsDef;
+
 procedure DefineFO76;
 
 implementation
@@ -3585,6 +3587,14 @@ end;
 function wbDeciderFormVersion187(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 187);
+end;
+
+function wbDeciderCELLFlags(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  if (NativeUInt(aEndPtr) - NativeUInt(aBasePtr)) = 2 then
+    Result := 0
+  else
+    Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 187);
 end;
 
 function wbDeciderFormVersion186(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -10599,18 +10609,7 @@ begin
   ReferenceRecord(PHZD, 'Placed Hazard');
   ReferenceRecord(PMIS, 'Placed Missile');
 
-  wbRecord(CELL, 'Cell',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000400}  7, 'No Pre Vis',
-      {0x00000400} 10, 'Persistent',
-      {0x00020000} 17, 'Off Limits',
-      {0x00040000} 18, 'Compressed',
-      {0x00080000} 19, 'Can''t Wait'
-    ]), [18]), [
-    wbEDID,
-    wbDURL,
-    wbFULL,
-    wbInteger(DATA, 'Flags', itU16, wbFlags([
+  var wbCellFlags := wbFlags([
       {0x0001} 'Is Interior Cell',
       {0x0002} 'Has Water',
       {0x0004} 'Can''t Travel From Here',
@@ -10627,7 +10626,23 @@ begin
       {0x2000} 'Player Followers Can''t Travel Here',
       {0x4000} 'Unknown 15',
       {0x8000} 'Unknown 16'
-    ]), cpNormal, True, False, nil, wbCELLDATAAfterSet),
+    ]);
+
+  wbRecord(CELL, 'Cell',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000400}  7, 'No Pre Vis',
+      {0x00000400} 10, 'Persistent',
+      {0x00020000} 17, 'Off Limits',
+      {0x00040000} 18, 'Compressed',
+      {0x00080000} 19, 'Can''t Wait'
+    ]), [18]), [
+    wbEDID,
+    wbDURL,
+    wbFULL,
+    wbUnion(DATA, 'Flags', wbDeciderCELLFlags, [
+      wbInteger('', itU16, wbCELLFlags),
+      wbInteger('', itU32, wbCELLFlags)
+    ], cpNormal, True).SetAfterSet(wbCELLDATAAfterSet),
     wbStruct(XCLC, 'Grid', [
       wbInteger('X', itS32),
       wbInteger('Y', itS32),
@@ -14797,6 +14812,17 @@ begin
       //wbLVLT
     ], []);
 
+  wbLVLFFlags := wbFlags([
+      {0x00000001} 'Calculate from all levels <= player''s level',
+      {0x00000002} 'Calculate for each item in count',
+      {0x00000004} 'Calculate All', {Still picks just one}
+      {0x00000008} 'Unknown 3',
+      {0x00000010} 'Unknown 4',
+      {0x00000020} 'Unknown 5',
+      {0x00000040} 'Unknown 6',
+      {0x00000080} 'Unknown 7'
+    ]);
+
   wbRecord(LVLN, 'Leveled NPC', [
     wbEDID,
     wbOBNDReq,
@@ -14806,16 +14832,10 @@ begin
     wbLVCV,
     wbInteger(LVLM, 'Max Count', itU8), { Always 00 } {Unavailable}
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
-      {0x00000001} 'Calculate from all levels <= player''s level',
-      {0x00000002} 'Calculate for each item in count',
-      {0x00000004} 'Calculate All', {Still picks just one}
-      {0x00000008} 'Unknown 3',
-      {0x00000010} 'Unknown 4',
-      {0x00000020} 'Unknown 5',
-      {0x00000040} 'Unknown 6',
-      {0x00000080} 'Unknown 7'
-    ]), cpNormal, True),
+    wbUnion(LVLF, 'Flags', wbDeciderFormVersion185, [
+      wbInteger('', itU8, wbLVLFFlags),
+      wbInteger('', itU16, wbLVLFFlags)
+    ], cpNormal, True),
     wbCTDAs,
     wbLLCT,
     wbRArrayS('Leveled List Entries', wbLeveledListEntryNPC, cpNormal, False, nil, wbLVLOsAfterSet),
@@ -14847,30 +14867,9 @@ begin
     wbInteger(LVLM, 'Max Count', itU8), { Always 00 }
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbLVCT,
-    wbStruct(LVLF, 'Flags', [
-      wbInteger('Flags', itU8, wbFlags([
-        {0x00000001} 'Calculate from all levels <= player''s level',
-        {0x00000002} 'Calculate for each item in count',
-        {0x00000004} 'Calculate All', {Still picks just one}
-        {0x00000008} 'Unknown 3',
-        {0x00000010} 'Unknown 4',
-        {0x00000020} 'Unknown 5',
-        {0x00000040} 'Unknown 6',
-        {0x00000080} 'Unknown 7'
-      ]), cpNormal, True),
-      wbUnion('Flags2', wbDeciderFormVersion185, [
-        wbEmpty('Unused'),
-        wbInteger('Flags2', itU8, wbFlags([
-          {0x00000001} 'Unknown 0',
-          {0x00000002} 'Unknown 1',
-          {0x00000004} 'Unknown 2',
-          {0x00000008} 'Unknown 3',
-          {0x00000010} 'Unknown 4',
-          {0x00000020} 'Unknown 5',
-          {0x00000040} 'Unknown 6',
-          {0x00000080} 'Unknown 7'
-        ]), cpNormal, True)
-      ])
+    wbUnion(LVLF, 'Flags', wbDeciderFormVersion185, [
+      wbInteger('', itU8, wbLVLFFlags),
+      wbInteger('', itU16, wbLVLFFlags)
     ], cpNormal, True),
     wbCTDAs,
     //wbFormIDCk(LVLG, 'Use Global', [GLOB]),
@@ -14906,16 +14905,10 @@ begin
     //wbInteger(LVLM, 'Max Count', itU8), { Always 00 }
     //wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     //wbLVCT,
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
-      {0x00000001} 'Calculate from all levels <= player''s level',
-      {0x00000002} 'Calculate for each item in count',
-      {0x00000004} 'Calculate All', {Still picks just one}
-      {0x00000008} 'Unknown 3',
-      {0x00000010} 'Unknown 4',
-      {0x00000020} 'Unknown 5',
-      {0x00000040} 'Unknown 6',
-      {0x00000080} 'Unknown 7'
-    ]), cpNormal, True),
+    wbUnion(LVLF, 'Flags', wbDeciderFormVersion185, [
+      wbInteger('', itU8, wbLVLFFlags),
+      wbInteger('', itU16, wbLVLFFlags)
+    ], cpNormal, True),
     //wbCTDAs,
     //wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbLLCT,
@@ -18856,16 +18849,10 @@ begin
     wbLVLD,
     wbLVMV,
     wbLVCV,
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
-      {0x00000001} 'Calculate from all levels <= player''s level',
-      {0x00000002} 'Calculate for each item in count',
-      {0x00000004} 'Calculate All', {Still picks just one}
-      {0x00000008} 'Unknown 3',
-      {0x00000010} 'Unknown 4',
-      {0x00000020} 'Unknown 5',
-      {0x00000040} 'Unknown 6',
-      {0x00000080} 'Unknown 7'
-    ]), cpNormal, True),
+    wbUnion(LVLF, 'Flags', wbDeciderFormVersion185, [
+      wbInteger('', itU8, wbLVLFFlags),
+      wbInteger('', itU16, wbLVLFFlags)
+    ], cpNormal, True),
     wbLLCT,
     wbRArrayS('Leveled List Entries', wbLeveledListEntryPerkCard, cpNormal, False, nil, wbLVLOsAfterSet),
     wbUnknown(LVCL),
