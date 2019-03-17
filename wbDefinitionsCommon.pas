@@ -527,7 +527,7 @@ end;
 procedure wbRecordHeaderToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   RecordHeader: IwbContainerElementRef;
-  RecordFlags: IwbElement;
+  RecordFlags, FormVersion: IwbElement;
   MainRecord: IwbMainRecord;
 begin
   if aType <> ctToStr then
@@ -540,9 +540,10 @@ begin
     Exit;
 
   MainRecord := RecordHeader.ContainingMainRecord;
-  RecordFlags := RecordHeader.Elements[2];
+  RecordFlags := RecordHeader.ElementByName['Record Flags'];
+  FormVersion := RecordHeader.ElementByName['Form Version'];
 
-  aValue := '[' + MainRecord.Signature + ':' + MainRecord.LoadOrderFormID.ToString(True) + ']';
+  aValue := '[v' + FormVersion.Value + '] [' + MainRecord.Signature + ':' + MainRecord.LoadOrderFormID.ToString(True) + ']';
   if Length(RecordFlags.Value) > 0 then
     aValue := aValue + ' {' + RecordFlags.Value + '}';
 end;
