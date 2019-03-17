@@ -344,6 +344,10 @@ var
   wbLeveledListEntryCreature: IwbRecordMemberDef;
   wbLeveledListEntryItem: IwbRecordMemberDef;
   wbLeveledListEntrySpell: IwbRecordMemberDef;
+  wbMaleBipedModel: IwbRecordMemberDef;
+  wbMaleWorldModel: IwbRecordMemberDef;
+  wbFemaleBipedModel: IwbRecordMemberDef;
+  wbFemaleWorldModel: IwbRecordMemberDef;
 
 function wbClmtMoonsPhaseLength(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -2011,7 +2015,7 @@ begin
     {0x00008000}'Visible when distant',
     {0x00010000}'',
     {0x00020000}'Dangerous / Off limits (Interior cell)',
-    {0x00040000}'Compressed ',
+    {0x00040000}'Compressed',
     {0x00080000}'Can''t wait'
   ]));
 
@@ -2442,6 +2446,34 @@ begin
     ], cpNormal, True)
   ]);
 
+  wbMaleBipedModel :=
+    wbRStruct('Male biped model', [
+      wbString(MODL, 'Model FileName'),
+      wbFloat(MODB, 'Bound Radius', cpBenign),
+      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
+
+  wbMaleWorldModel :=
+    wbRStruct('Male world model', [
+      wbString(MOD2, 'Model FileName'),
+      wbFloat(MO2B, 'Bound Radius', cpBenign),
+      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore)
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
+
+  wbFemaleBipedModel :=
+    wbRStruct('Female biped model', [
+      wbString(MOD3, 'Model FileName'),
+      wbFloat(MO3B, 'Bound Radius', cpBenign),
+      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore)
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
+
+  wbFemaleWorldModel :=
+    wbRStruct('Female world model', [
+      wbString(MOD4, 'Model FileName'),
+      wbFloat(MO4B, 'Bound Radius', cpBenign),
+      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore)
+    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
+
   wbRecord(ARMO, 'Armor', [
     wbEDID,
     wbFULL,
@@ -2479,27 +2511,11 @@ begin
       ])),
       wbByteArray('Unused', 1)
     ], cpNormal, True),
-    wbRStruct('Male biped model', [
-      wbString(MODL, 'Model FileName'),
-      wbFloat(MODB, 'Bound Radius', cpBenign),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
-    ], []),
-    wbRStruct('Male world model', [
-      wbString(MOD2, 'Model FileName'),
-      wbFloat(MO2B, 'Bound Radius', cpBenign),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore)
-    ], []),
+    wbMaleBipedModel,
+    wbMaleWorldModel,
     wbString(ICON, 'Male icon FileName'),
-    wbRStruct('Female biped model', [
-      wbString(MOD3, 'Model FileName'),
-      wbFloat(MO3B, 'Bound Radius', cpBenign),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore)
-    ], []),
-    wbRStruct('Female world model', [
-      wbString(MOD4, 'Model FileName'),
-      wbFloat(MO4B, 'Bound Radius', cpBenign),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore)
-    ], []),
+    wbFemaleBipedModel,
+    wbFemaleWorldModel,
     wbString(ICO2, 'Female icon FileName'),
     wbStruct(DATA, '', [
       wbInteger('Armor', itU16, wbDiv(100)),
@@ -2693,27 +2709,11 @@ begin
       ])),
       wbByteArray('Unused', 1)
     ], cpNormal, True),
-    wbRStruct('Male biped model', [
-      wbString(MODL, 'Model FileName'),
-      wbFloat(MODB, 'Bound Radius', cpBenign),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
-    ], []),
-    wbRStruct('Male world model', [
-      wbString(MOD2, 'Model FileName'),
-      wbFloat(MO2B, 'Bound Radius', cpBenign),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore)
-    ], []),
+    wbMaleBipedModel,
+    wbMaleWorldModel,
     wbString(ICON, 'Male icon FileName'),
-    wbRStruct('Female biped model', [
-      wbString(MOD3, 'Model FileName'),
-      wbFloat(MO3B, 'Bound Radius', cpBenign),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore)
-    ], []),
-    wbRStruct('Female world model', [
-      wbString(MOD4, 'Model FileName'),
-      wbFloat(MO4B, 'Bound Radius', cpBenign),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore)
-    ], []),
+    wbFemaleBipedModel,
+    wbFemaleWorldModel,
     wbString(ICO2, 'Female icon FileName'),
     wbStruct(DATA, '', [
       wbInteger('Value', itU32),
