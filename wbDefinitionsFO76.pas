@@ -1234,6 +1234,7 @@ var
   wbSTCP: IwbSubRecordDef;
   wbNTRM: IwbSubRecordDef;
   wbPRPS: IwbSubRecordDef;
+  wbObjectProperty: IwbValueDef;
   wbCVPA: IwbSubRecordDef;
   wbESCR: IwbSubRecordDef;
   wbREPR: IwbSubRecordDef;
@@ -9806,14 +9807,17 @@ begin
   wbEILV := wbArray(EILV, 'Levels', wbInteger('Level', itU32));
   wbIBSD := wbFormIDCk(IBSD, 'Break Sound', [SNDR]);
 
-  wbPRPS := wbArrayS(PRPS, 'Properties', wbStructSK([0], 'Property', [
-    wbActorValue,
-    wbFloat('Value'),
-    wbUnion('Curve Table', wbDeciderFormVersion152, [
-      wbEmpty('Unused'),
-      wbFormIDCk('Curve Table', [CURV, NULL])
-    ])
-  ]));
+  wbObjectProperty :=
+    wbStructSK([0], 'Property', [
+      wbActorValue,
+      wbFloat('Value'),
+      wbUnion('Curve Table', wbDeciderFormVersion152, [
+        wbEmpty('Unused'),
+        wbFormIDCk('Curve Table', [CURV, NULL])
+      ])
+    ]).SetToStr(wbObjectPropertyToStr).IncludeFlag(dfCollapsed, wbCollapseObjectProperties);
+
+  wbPRPS := wbArrayS(PRPS, 'Properties', wbObjectProperty);
 
   wbCVPA := wbArrayS(CVPA, 'Unknown', wbStructSK([0], 'Unknown', [
     wbFormIDCk('Scrap Count Keyword', [KYWD]),

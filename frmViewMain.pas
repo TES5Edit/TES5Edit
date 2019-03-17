@@ -5196,6 +5196,7 @@ begin
   wbCollapseFactionRelations := Settings.ReadBool('Options', 'CollapseFactionRelations', wbCollapseFactionRelations);
   wbCollapseItems := Settings.ReadBool('Options', 'CollapseItems', wbCollapseItems);
   wbCollapseLeveledItems := Settings.ReadBool('Options', 'CollapseLeveledItems', wbCollapseLeveledItems);
+  wbCollapseObjectProperties := Settings.ReadBool('Options', 'CollapseObjectProperties', wbCollapseObjectProperties);
   wbCollapseScriptProperties := Settings.ReadBool('Options', 'CollapseScriptProperties', wbCollapseScriptProperties);
   wbCollapseConditions := Settings.ReadBool('Options', 'CollapseConditions', wbCollapseConditions);
   wbCollapseBenignArray := Settings.ReadBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
@@ -13149,6 +13150,7 @@ begin
     cbCollapseFactionRelations.Checked := wbCollapseFactionRelations;
     cbCollapseItems.Checked := wbCollapseItems;
     cbCollapseLeveledItems.Checked := wbCollapseLeveledItems;
+    cbCollapseObjectProperties.Checked := wbCollapseObjectProperties;
     cbCollapseScriptProperties.Checked := wbCollapseScriptProperties;
     cbCollapseConditions.Checked := wbCollapseConditions;
     cbCollapseBenignArray.Checked := wbCollapseBenignArray;
@@ -13213,6 +13215,7 @@ begin
     wbCollapseFactionRelations := cbCollapseFactionRelations.Checked;
     wbCollapseItems := cbCollapseItems.Checked;
     wbCollapseLeveledItems := cbCollapseLeveledItems.Checked;
+    wbCollapseObjectProperties := cbCollapseObjectProperties.Checked;
     wbCollapseScriptProperties := cbCollapseScriptProperties.Checked;
     wbCollapseConditions := cbCollapseConditions.Checked;
     wbCollapseBenignArray := cbCollapseBenignArray.Checked;
@@ -13276,6 +13279,7 @@ begin
     Settings.WriteBool('Options', 'CollapseFactionRelations', wbCollapseFactionRelations);
     Settings.WriteBool('Options', 'CollapseItems', wbCollapseItems);
     Settings.WriteBool('Options', 'CollapseLeveledItems', wbCollapseLeveledItems);
+    Settings.WriteBool('Options', 'CollapseObjectProperties', wbCollapseObjectProperties);
     Settings.WriteBool('Options', 'CollapseScriptProperties', wbCollapseScriptProperties);
     Settings.WriteBool('Options', 'CollapseConditions', wbCollapseConditions);
     Settings.WriteBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);

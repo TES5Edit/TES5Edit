@@ -184,6 +184,7 @@ var
   wbCollapseFactionRelations : Boolean  = True;
   wbCollapseItems          : Boolean  = True;
   wbCollapseLeveledItems   : Boolean  = True;
+  wbCollapseObjectProperties : Boolean  = True;
   wbCollapseScriptProperties : Boolean  = True;
   wbCollapseConditions     : Boolean  = True;
   wbCollapseBenignArray    : Boolean  = True;

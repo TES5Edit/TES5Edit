@@ -29,6 +29,8 @@ uses
 
   procedure wbRecordHeaderToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
+  procedure wbObjectPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+
   procedure wbScriptPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
   /// <summary>Calls and returns wbGetScriptObjFormat. Used for VMAD parsing.</summary>
@@ -395,7 +397,7 @@ begin
 
   Rank := Faction.Elements[1];
 
-  aValue := '{' + Rank.Value + '} ' + MainRecord.ShortName;
+  aValue := MainRecord.ShortName + ' {Rank: ' + Rank.Value + '}';
 end;
 
 procedure wbFactionRelationToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -457,6 +459,42 @@ begin
   FacetPointB := X2.Value + ', ' + Y2.Value + ', ' + Z2.Value;
 
   aValue := '(' + FacetPointA + '), (' + FacetPointB + ')';
+end;
+
+procedure wbObjectPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Container, CurveTable: IwbContainerElementRef;
+  ActorValueForm, ActorValueData, CurveTableForm: IwbElement;
+  MainRecord: IwbMainRecord;
+begin
+  if aType <> ctToStr then
+    Exit;
+
+  if not Supports(aElement, IwbContainerElementRef, Container) then
+    Exit;
+
+  if Container.Collapsed <> tbTrue then
+    Exit;
+
+  ActorValueForm := Container.ElementByName['Actor Value'];
+
+  if not Supports(ActorValueForm.LinksTo, IwbMainRecord, MainRecord) then
+    Exit;
+
+  ActorValueData := Container.ElementByName['Value'];
+
+  aValue := MainRecord.EditorID + ' = ' + Format('%.*g', [5, StrToFloat(ActorValueData.Value)]);
+
+  if wbGameMode <> gmFO76 then
+    Exit;
+
+  CurveTable := Container.ElementByName['Curve Table'] as IwbContainerElementRef;
+  CurveTableForm := CurveTable.ElementByName['Curve Table'];
+
+  if not Supports(CurveTableForm, IwbMainRecord, MainRecord) then
+    Exit;
+
+  aValue := aValue + ' {Curve Table: ' + MainRecord.ShortName + '}';
 end;
 
 procedure wbItemToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
