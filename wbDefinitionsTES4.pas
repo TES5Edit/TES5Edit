@@ -310,7 +310,7 @@ var
   wbCSDTs: IwbSubRecordArrayDef;
   wbFULL: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
-  wbXNAM: IwbSubRecordDef;
+  wbXNAM: IwbRecordMemberDef;
   wbXNAMs: IwbSubRecordArrayDef;
   wbDESC: IwbSubRecordDef;
   wbXSCL: IwbSubRecordDef;
@@ -3156,7 +3156,7 @@ begin
     wbStructSK(XNAM, [0], 'Relation', [
       wbFormIDCkNoReach('Faction', [FACT, RACE]),
       wbInteger('Modifier', itS32)
-    ]);
+    ]).SetToStr(wbFactionRelationToStr).IncludeFlag(dfCollapsed, wbCollapseFactionRelations);
 
   wbXNAMs := wbRArrayS('Relations', wbXNAM);
 
