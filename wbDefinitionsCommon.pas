@@ -15,6 +15,8 @@ uses
 
   procedure wbConditionToStrTES5(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType); {also used for FO4 and FO76}
 
+  procedure wbEquipSlotToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+
   procedure wbFactionRelationToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
   procedure wbFactionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -373,6 +375,29 @@ begin
     aValue := aValue + ' OR';
 end;
 
+procedure wbEquipSlotToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Container: IwbContainerElementRef;
+  EquipSlot, EquipNode: IwbElement;
+begin
+  if aType <> ctToStr then
+    Exit;
+
+  if not Supports(aElement, IwbContainerElementRef, Container) then
+    Exit;
+
+  if Container.Collapsed <> tbTrue then
+    Exit;
+
+  EquipSlot := Container.ElementBySignature['QNAM'];
+  EquipNode := Container.ElementBySignature['ZNAM'];
+
+  if not Assigned(EquipNode) then
+    aValue := EquipSlot.Value
+  else
+    aValue := EquipNode.Value + ' = ' + EquipSlot.Value;
+end;
+
 procedure wbFactionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Faction: IwbContainerElementRef;
@@ -477,6 +502,8 @@ begin
     Exit;
 
   ActorValueForm := Container.ElementByName['Actor Value'];
+  if not Assigned(ActorValueForm) then
+    Exit;
 
   if not Supports(ActorValueForm.LinksTo, IwbMainRecord, MainRecord) then
     Exit;
@@ -489,7 +516,12 @@ begin
     Exit;
 
   CurveTable := Container.ElementByName['Curve Table'] as IwbContainerElementRef;
+  if not Assigned(CurveTable) then
+    Exit;
+
   CurveTableForm := CurveTable.ElementByName['Curve Table'];
+  if not Assigned(CurveTableForm) then
+    Exit;
 
   if not Supports(CurveTableForm, IwbMainRecord, MainRecord) then
     Exit;

@@ -5196,6 +5196,7 @@ begin
   wbCollapseFactionRelations := Settings.ReadBool('Options', 'CollapseFactionRelations', wbCollapseFactionRelations);
   wbCollapseItems := Settings.ReadBool('Options', 'CollapseItems', wbCollapseItems);
   wbCollapseLeveledItems := Settings.ReadBool('Options', 'CollapseLeveledItems', wbCollapseLeveledItems);
+  wbCollapseEquipSlots := Settings.ReadBool('Options', 'CollapseEquipSlots', wbCollapseEquipSlots);
   wbCollapseObjectProperties := Settings.ReadBool('Options', 'CollapseObjectProperties', wbCollapseObjectProperties);
   wbCollapseScriptProperties := Settings.ReadBool('Options', 'CollapseScriptProperties', wbCollapseScriptProperties);
   wbCollapseConditions := Settings.ReadBool('Options', 'CollapseConditions', wbCollapseConditions);
@@ -13150,6 +13151,7 @@ begin
     cbCollapseFactionRelations.Checked := wbCollapseFactionRelations;
     cbCollapseItems.Checked := wbCollapseItems;
     cbCollapseLeveledItems.Checked := wbCollapseLeveledItems;
+    cbCollapseEquipSlots.Checked := wbCollapseEquipSlots;
     cbCollapseObjectProperties.Checked := wbCollapseObjectProperties;
     cbCollapseScriptProperties.Checked := wbCollapseScriptProperties;
     cbCollapseConditions.Checked := wbCollapseConditions;
@@ -13215,6 +13217,7 @@ begin
     wbCollapseFactionRelations := cbCollapseFactionRelations.Checked;
     wbCollapseItems := cbCollapseItems.Checked;
     wbCollapseLeveledItems := cbCollapseLeveledItems.Checked;
+    wbCollapseEquipSlots := cbCollapseEquipSlots.Checked;
     wbCollapseObjectProperties := cbCollapseObjectProperties.Checked;
     wbCollapseScriptProperties := cbCollapseScriptProperties.Checked;
     wbCollapseConditions := cbCollapseConditions.Checked;
@@ -13279,6 +13282,7 @@ begin
     Settings.WriteBool('Options', 'CollapseFactionRelations', wbCollapseFactionRelations);
     Settings.WriteBool('Options', 'CollapseItems', wbCollapseItems);
     Settings.WriteBool('Options', 'CollapseLeveledItems', wbCollapseLeveledItems);
+    Settings.WriteBool('Options', 'CollapseEquipSlots', wbCollapseEquipSlots);
     Settings.WriteBool('Options', 'CollapseObjectProperties', wbCollapseObjectProperties);
     Settings.WriteBool('Options', 'CollapseScriptProperties', wbCollapseScriptProperties);
     Settings.WriteBool('Options', 'CollapseConditions', wbCollapseConditions);
