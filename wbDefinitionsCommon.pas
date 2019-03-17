@@ -400,45 +400,68 @@ end;
 
 procedure wbFactionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
-  Faction: IwbContainerElementRef;
+  Container: IwbContainerElementRef;
   FormID, Rank: IwbElement;
   MainRecord: IwbMainRecord;
+  NativeRank: integer;
 begin
   if aType <> ctToStr then
     Exit;
 
-  if not Supports(aElement, IwbContainerElementRef, Faction) then
+  if not Supports(aElement, IwbContainerElementRef, Container) then
     Exit;
 
-  if Faction.Collapsed <> tbTrue then
+  if Container.Collapsed <> tbTrue then
     Exit;
 
-  FormID := Faction.Elements[0];
+  FormID := Container.Elements[0];
   if not Assigned(FormID) then
     Exit;
 
   if not Supports(FormID.LinksTo, IwbMainRecord, MainRecord) then
     Exit;
 
-  Rank := Faction.Elements[1];
+  Rank := Container.Elements[1];
+  NativeRank := Rank.NativeValue;
 
-  aValue := MainRecord.ShortName + ' {Rank: ' + Rank.Value + '}';
+  aValue := MainRecord.ShortName + ' {Rank: ' + IntToStr(NativeRank) + '}';
 end;
 
 procedure wbFactionRelationToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
-  Relation: IwbContainerElementRef;
+  Container: IwbContainerElementRef;
+  FormID, Rank, CombatReaction: IwbElement;
+  MainRecord: IwbMainRecord;
+  RankMod: string;
+  NativeRank: integer;
 begin
   if aType <> ctToStr then
     Exit;
 
-  if not Supports(aElement, IwbContainerElementRef, Relation) then
+  if not Supports(aElement, IwbContainerElementRef, Container) then
     Exit;
 
-  if Relation.Collapsed <> tbTrue then
+  if Container.Collapsed <> tbTrue then
     Exit;
 
-  aValue := Relation.Elements[2].Value + ' ' + Relation.Elements[0].Value;
+  FormID := Container.Elements[0];
+  if not Assigned(FormID) then
+    Exit;
+
+  if not Supports(FormID.LinksTo, IwbMainRecord, MainRecord) then
+    Exit;
+
+  Rank := Container.Elements[1];
+  NativeRank := Rank.NativeValue;
+
+  if wbGameMode = gmTES4 then begin
+    if NativeRank > 0 then RankMod := '+' else RankMod := '-';
+    aValue := RankMod + IntToStr(NativeRank) + ' ' + MainRecord.ShortName;
+    Exit;
+  end;
+
+  CombatReaction := Container.Elements[2];
+  aValue := CombatReaction.Value + ' ' + MainRecord.ShortName;
 end;
 
 procedure wbModelToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
