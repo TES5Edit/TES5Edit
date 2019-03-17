@@ -455,8 +455,10 @@ begin
   NativeRank := Rank.NativeValue;
 
   if wbGameMode = gmTES4 then begin
-    if NativeRank > 0 then RankMod := '+' else RankMod := '-';
-    aValue := RankMod + IntToStr(NativeRank) + ' ' + MainRecord.ShortName;
+    if NativeRank >= 0 then
+      aValue := '+' + IntToStr(NativeRank) + ' ' + MainRecord.ShortName
+    else
+      aValue := IntToStr(NativeRank) + ' ' + MainRecord.ShortName;
     Exit;
   end;
 
