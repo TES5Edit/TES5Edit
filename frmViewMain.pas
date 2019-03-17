@@ -5193,6 +5193,7 @@ begin
   wbCollapseRecordHeader := Settings.ReadBool('Options', 'CollapseRecordHeader', wbCollapseRecordHeader);
   wbCollapseObjectBounds := Settings.ReadBool('Options', 'CollapseObjectBounds', wbCollapseObjectBounds);
   wbCollapseModels := Settings.ReadBool('Options', 'CollapseModels', wbCollapseModels);
+  wbCollapseFactions := Settings.ReadBool('Options', 'CollapseFactions', wbCollapseFactions);
   wbCollapseFactionRelations := Settings.ReadBool('Options', 'CollapseFactionRelations', wbCollapseFactionRelations);
   wbCollapseItems := Settings.ReadBool('Options', 'CollapseItems', wbCollapseItems);
   wbCollapseLeveledItems := Settings.ReadBool('Options', 'CollapseLeveledItems', wbCollapseLeveledItems);
@@ -13148,6 +13149,7 @@ begin
     cbCollapseRecordHeader.Checked := wbCollapseRecordHeader;
     cbCollapseObjectBounds.Checked := wbCollapseObjectBounds;
     cbCollapseModels.Checked := wbCollapseModels;
+    cbCollapseFactions.Checked := wbCollapseFactions;
     cbCollapseFactionRelations.Checked := wbCollapseFactionRelations;
     cbCollapseItems.Checked := wbCollapseItems;
     cbCollapseLeveledItems.Checked := wbCollapseLeveledItems;
@@ -13214,6 +13216,7 @@ begin
     wbCollapseRecordHeader := cbCollapseRecordHeader.Checked;
     wbCollapseObjectBounds := cbCollapseObjectBounds.Checked;
     wbCollapseModels := cbCollapseModels.Checked;
+    wbCollapseFactions := cbCollapseFactions.Checked;
     wbCollapseFactionRelations := cbCollapseFactionRelations.Checked;
     wbCollapseItems := cbCollapseItems.Checked;
     wbCollapseLeveledItems := cbCollapseLeveledItems.Checked;
@@ -13279,6 +13282,7 @@ begin
     Settings.WriteBool('Options', 'CollapseRecordHeader', wbCollapseRecordHeader);
     Settings.WriteBool('Options', 'CollapseObjectBounds', wbCollapseObjectBounds);
     Settings.WriteBool('Options', 'CollapseModels', wbCollapseModels);
+    Settings.WriteBool('Options', 'CollapseFactions', wbCollapseFactions);
     Settings.WriteBool('Options', 'CollapseFactionRelations', wbCollapseFactionRelations);
     Settings.WriteBool('Options', 'CollapseItems', wbCollapseItems);
     Settings.WriteBool('Options', 'CollapseLeveledItems', wbCollapseLeveledItems);

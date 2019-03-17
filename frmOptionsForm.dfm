@@ -238,7 +238,7 @@ object frmOptions: TfrmOptions
       object cbCollapseConditions: TCheckBox
         Left = 16
         Top = 62
-        Width = 220
+        Width = 89
         Height = 17
         Caption = 'Conditions'
         TabOrder = 2
@@ -248,7 +248,7 @@ object frmOptions: TfrmOptions
         Top = 62
         Width = 220
         Height = 17
-        Caption = 'Faction Relations (except TES4)'
+        Caption = 'Faction Relations'
         TabOrder = 3
       end
       object cbCollapseModels: TCheckBox
@@ -306,6 +306,14 @@ object frmOptions: TfrmOptions
         Height = 17
         Caption = 'Race Equip Slots (only FO4 and FO76)'
         TabOrder = 10
+      end
+      object cbCollapseFactions: TCheckBox
+        Left = 138
+        Top = 62
+        Width = 91
+        Height = 17
+        Caption = 'Factions'
+        TabOrder = 11
       end
     end
     object tsCleaning: TTabSheet
