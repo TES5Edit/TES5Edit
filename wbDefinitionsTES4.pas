@@ -413,7 +413,7 @@ begin
           {0x04} 'Use global'
         ]);
 
-      s := wbCtdaTypeFlags.ToString(aInt and $0F, aElement);
+      s := wbCtdaTypeFlags.ToString(aInt and $0F, aElement, aType = ctToSummary);
 
       if s <> '' then
         Result := Result + ' / ' + s;
@@ -644,7 +644,7 @@ begin
     Container := Container.Container;
 
   if Assigned(Container) then begin
-    s := wbFormID.ToString(GroupRecord.GroupLabel, aMainRecord);
+    s := wbFormID.ToString(GroupRecord.GroupLabel, aMainRecord, False);
     if s <> '' then begin
       if Result <> '' then
         s := s + ' ';
