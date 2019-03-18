@@ -1565,10 +1565,6 @@ type
     constructor Create(const aMainRecord: IwbMainRecord);
   end;
 
-  IwbStringListTerminator = interface
-    ['{0D8ED4AA-1AFE-4283-87D7-2B66C5496227}']
-  end;
-
   TwbStringListTerminator = class(TwbElement, IwbStringListTerminator)
     function GetName: string; override;
     function GetElementType: TwbElementType; override;
@@ -1582,6 +1578,7 @@ type
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
+    function GetDontShow: Boolean; override;
   end;
 
   IwbFlag = interface(IwbElement)
@@ -1782,7 +1779,7 @@ type
     function GetSignature: TwbSignature;
   end;
 
-  TwbSubRecordStruct = class(TwbContainer, IwbHasSignature)
+  TwbSubRecordStruct = class(TwbContainer, IwbSubRecordStruct, IwbHasSignature)
   protected {private}
     srcDef: IwbRecordDef;
   protected
@@ -12796,11 +12793,8 @@ end;
 
 function TwbSubRecord.GetValue: string;
 var
-//  i : Integer;
-//  j : Int64;
   SelfRef : IwbContainerElementRef;
-var
-  Def: IwbDef;
+  Def     : IwbDef;
 begin
   if wbReportMode then begin
     Def := GetValueDef;
@@ -12820,8 +12814,8 @@ begin
 
   if Assigned(srValueDef) then
     Result := srValueDef.ToString(GetDataBasePtr, dcDataEndPtr, Self);
-  if Result = '' then
-    Result := srDef.ToString(Self);
+  if Assigned(srDef) then
+    srDef.ToString(Result, Self, ctToStr);
 end;
 
 function TwbSubRecord.GetValueDef: IwbValueDef;
@@ -16776,7 +16770,8 @@ begin
   if not Assigned(arcDef) then
     Exit;
   DoInit(True);
-  Result := arcDef.ToString(Self);
+
+  arcDef.ToString(Result, Self, ctToStr);
 end;
 
 function TwbSubRecordArray.IsElementRemoveable(const aElement: IwbElement): Boolean;
@@ -17188,23 +17183,8 @@ begin
   if not Supports(srcDef, IwbRecordMemberDef, RMD) then
     Exit;
   DoInit(True);
-  Result := RMD.ToString(Self);
-  { this needs more thought
-  if Result = '' then
-    if Supports(srcDef, IwbHasSortKeyDef, HasSortKey) then
-      if HasSortKey.SortKeyCount[True] > 0 then begin
-        Result := '(';
-        for i := 0 to Pred(HasSortKey.SortKeyCount[True]) do begin
-          if i > 0 then
-            Result := Result + '; ';
-          SortMember := HasSortKey.SortKeys[i, True];
-          Element := GetElementBySortOrder(SortMember + GetAdditionalElementCount);
-          if Assigned(Element) then
-            Result := Result + Element.Name + ': ' + Element.Value;
-        end;
-        Result := Result + ')';
-      end;
-  }
+
+  RMD.ToString(Result, Self, ctToStr);
 end;
 
 function TwbSubRecordStruct.IsElementRemoveable(const aElement: IwbElement): Boolean;
@@ -19741,6 +19721,11 @@ end;
 function TwbStringListTerminator.GetDataSize: Integer;
 begin
   Result := 1;
+end;
+
+function TwbStringListTerminator.GetDontShow: Boolean;
+begin
+  Result := wbHideNeverShow;
 end;
 
 function TwbStringListTerminator.GetElementType: TwbElementType;

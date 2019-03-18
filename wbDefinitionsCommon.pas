@@ -635,12 +635,21 @@ begin
     Exit;
 
   MainRecord := RecordHeader.ContainingMainRecord;
-  RecordFlags := RecordHeader.ElementByName['Record Flags'];
-  FormVersion := RecordHeader.ElementByName['Form Version'];
 
-  aValue := '[v' + FormVersion.Value + '] [' + MainRecord.Signature + ':' + MainRecord.LoadOrderFormID.ToString(True) + ']';
-  if Length(RecordFlags.Value) > 0 then
-    aValue := aValue + ' {' + RecordFlags.Value + '}';
+  FormVersion := RecordHeader.ElementByName['Form Version'];
+  if Assigned(FormVersion) then
+    aValue := '[v' + FormVersion.Value + '] '
+  else
+    aValue := '';
+
+  aValue := aValue + '[' + MainRecord.Signature + ':' + MainRecord.LoadOrderFormID.ToString(True) + ']';
+
+  RecordFlags := RecordHeader.ElementByName['Record Flags'];
+  if Assigned(RecordFlags) then begin
+    var RecordFlagsValue: string := RecordFlags.Value;
+    if Length(RecordFlagsValue) > 0 then
+      aValue := aValue + ' {' + RecordFlagsValue + '}';
+  end;
 end;
 
 /// <summary>Fills PropertyType and PropertyValue from array assigned to property</summary>
