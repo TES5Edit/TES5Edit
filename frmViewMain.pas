@@ -16591,8 +16591,10 @@ begin
         NodeDatas[i].Container.Collapsed := tbUnknown;
         DelayedExpandView := True;
         PostMessage(Handle, WM_USER + 5, 0, 0);
-      end else
+      end else begin
         NodeDatas[i].Container.Collapsed := tbTrue;
+        UpdateColumnWidths;
+      end;
     end;
 end;
 
@@ -16919,8 +16921,10 @@ begin
         NodeDatas[i].Container.Collapsed := tbUnknown;
         DelayedExpandView := True;
         PostMessage(Handle, WM_USER + 5, 0, 0);
-      end else
+      end else begin
         NodeDatas[i].Container.Collapsed := tbFalse;
+        UpdateColumnWidths;
+      end;
     end;
 end;
 
@@ -17058,8 +17062,11 @@ begin
         else if vnfIsAligned in NodeDatas[0].ViewNodeFlags then
           CellText := CellText + ' (aligned)';
       end else begin
-        if (Element.ConflictPriority <> cpIgnore) or not wbHideIgnored then
+        if (Element.ConflictPriority <> cpIgnore) or not wbHideIgnored then begin
           CellText := Element.Value;
+          if (CellText = '') and (Element.Collapsed = tbTrue) then
+            CellText := Element.Summary;
+        end;
       end;
     end
   end else if TextType = ttNormal then

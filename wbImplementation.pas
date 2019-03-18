@@ -317,6 +317,7 @@ type
     function HasErrors: Boolean; virtual;
 
     function GetValue: string; virtual;
+    function GetSummary: string; virtual;
     function GetCheck: string; virtual;
     function GetSortKey(aExtended: Boolean): string; virtual;
     function GetSortKeyInternal(aExtended: Boolean): string; virtual;
@@ -352,6 +353,7 @@ type
     procedure RequestStorageChange(var aBasePtr, aEndPtr: Pointer; aNewSize: Cardinal); virtual;
     function GetConflictPriority: TwbConflictPriority; virtual;
     function GetConflictPriorityCanChange: Boolean; virtual;
+    function GetCollapsed: TwbTriBool; virtual;
     function GetModified: Boolean;
     function GetElementGeneration: Integer;
     procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); virtual;
@@ -529,7 +531,7 @@ type
     function GetAdditionalElementCount: Integer; virtual;
     procedure ReverseElements;
     function GetContainerStates: TwbContainerStates;
-    function GetCollapsed: TwbTriBool;
+    function GetCollapsed: TwbTriBool; override;
     procedure SetCollapsed(const aValue: TwbTriBool);
     function GetElementByPath(const aPath: string): IwbElement;
     function GetElementValue(const aName: string): string;
@@ -1080,6 +1082,7 @@ type
 
     function GetPath: string; override;
     function GetValue: string; override;
+    function GetSummary: string; override;
     function GetSortKeyInternal(aExtended: Boolean): string; override;
     function GetSortPriority: Integer; override;
     function GetAdditionalElementCount: Integer; override;
@@ -1319,6 +1322,7 @@ type
     function IsFlags: Boolean; override;
 
     function GetValue: string; override;
+    function GetSummary: string; override;
     function GetCheck: string; override;
     function GetSortKeyInternal(aExtended: Boolean): string; override;
     function GetIsEditable: Boolean; override;
@@ -1389,6 +1393,7 @@ type
 
     function GetCheck: string; override;
     function GetValue: string; override;
+    function GetSummary: string; override;
     function GetSortKeyInternal(aExtended: Boolean): string; override;
 
     function GetIsEditable: Boolean; override;
@@ -1750,6 +1755,7 @@ type
     procedure DoInit(aNeedSorted: Boolean); override;
 
     function GetValue: string; override;
+    function GetSummary: string; override;
     function GetName: string; override;
     function GetDef: IwbNamedDef; override;
     function GetElementType: TwbElementType; override;
@@ -1788,6 +1794,7 @@ type
     function Add(const aName: string; aSilent: Boolean): IwbElement; override;
 
     function GetValue: string; override;
+    function GetSummary: string; override;
     function GetSortKeyInternal(aExtended: Boolean): string; override;
     function GetName: string; override;
     function GetDef: IwbNamedDef; override;
@@ -9924,6 +9931,21 @@ begin
     Result := 0;
 end;
 
+function TwbMainRecord.GetSummary: string;
+var
+  Def: IwbDef;
+begin
+  if wbReportMode then begin
+    Def := GetValueDef;
+    if Assigned(Def) then
+      Def.Used;
+    Def := GetDef;
+    if Assigned(Def) then
+      Def.Used;
+  end;
+  Result := '';
+end;
+
 function TwbMainRecord.GetValue: string;
 var
   Def: IwbDef;
@@ -12764,6 +12786,31 @@ begin
     Result := 0;
 end;
 
+function TwbSubRecord.GetSummary: string;
+var
+  SelfRef : IwbContainerElementRef;
+  Def     : IwbDef;
+begin
+  if wbReportMode then begin
+    Def := GetValueDef;
+    if Assigned(Def) then
+      Def.Used;
+    Def := GetDef;
+    if Assigned(Def) then
+      Def.Used;
+  end;
+
+  SelfRef := Self as IwbContainerElementRef;
+  Result := '';
+
+  if not Assigned(srDef) then
+    Exit;
+  DoInit(True);
+
+  if Assigned(srDef) then
+    Result := srDef.ToSummary(Self);
+end;
+
 function TwbSubRecord.GetValue: string;
 var
   SelfRef : IwbContainerElementRef;
@@ -15395,6 +15442,11 @@ begin
   Result := '';
 end;
 
+function TwbElement.GetCollapsed: TwbTriBool;
+begin
+  Result := tbFalse;
+end;
+
 function TwbElement.GetConflictPriority: TwbConflictPriority;
 var
   Def        : IwbDef;
@@ -15786,6 +15838,11 @@ end;
 function TwbElement.GetSortPriority: Integer;
 begin
   Result := 0;
+end;
+
+function TwbElement.GetSummary: string;
+begin
+  Result := '';
 end;
 
 function TwbElement.GetTreeBranch: Boolean;
@@ -16712,6 +16769,31 @@ begin
   Result := arcSorted;
 end;
 
+function TwbSubRecordArray.GetSummary: string;
+var
+  SelfRef : IwbContainerElementRef;
+var
+  Def: IwbDef;
+begin
+  if wbReportMode then begin
+    Def := GetValueDef;
+    if Assigned(Def) then
+      Def.Used;
+    Def := GetDef;
+    if Assigned(Def) then
+      Def.Used;
+  end;
+
+  SelfRef := Self as IwbContainerElementRef;
+  Result := '';
+
+  if not Assigned(arcDef) then
+    Exit;
+  DoInit(True);
+
+  Result := arcDef.ToSummary(Self);
+end;
+
 function TwbSubRecordArray.GetValue: string;
 var
   SelfRef : IwbContainerElementRef;
@@ -17118,6 +17200,31 @@ begin
           Result := Result + '|';
       end;
   end;
+end;
+
+function TwbSubRecordStruct.GetSummary: string;
+var
+  SelfRef    : IwbContainerElementRef;
+  Def        : IwbDef;
+  RMD        : IwbRecordMemberDef;
+begin
+  if wbReportMode then begin
+    Def := GetValueDef;
+    if Assigned(Def) then
+      Def.Used;
+    Def := GetDef;
+    if Assigned(Def) then
+      Def.Used;
+  end;
+
+  SelfRef := Self as IwbContainerElementRef;
+
+  Result := '';
+  if not Supports(srcDef, IwbRecordMemberDef, RMD) then
+    Exit;
+  DoInit(True);
+
+  Result := RMD.ToSummary(Self);
 end;
 
 function TwbSubRecordStruct.GetValue: string;
@@ -19395,6 +19502,26 @@ begin
     DoInit(True);
     Result := vbValueDef.ToSortKey(GetDataBasePtr, dcDataEndPtr, Self, aExtended);
   end;
+end;
+
+function TwbValueBase.GetSummary: string;
+var
+  SelfRef : IwbContainerElementRef;
+var
+  Def: IwbDef;
+begin
+  if wbReportMode then begin
+    Def := GetValueDef;
+    if Assigned(Def) then
+      Def.Used;
+    Def := GetDef;
+    if Assigned(Def) then
+      Def.Used;
+  end;
+
+  SelfRef := Self as IwbContainerElementRef;
+  DoInit(True);
+  Result := vbValueDef.ToSummary(GetDataBasePtr, dcDataEndPtr, Self);
 end;
 
 function TwbValueBase.GetValue: string;

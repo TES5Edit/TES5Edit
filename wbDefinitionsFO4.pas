@@ -1082,7 +1082,7 @@ begin
   AsFloat := PSingle(@AsCardinal)^;
   aInt := Round(AsFloat);
   case aType of
-    ctToStr: Result := wbActorValueEnum.ToString(aInt, aElement);
+    ctToStr: Result := wbActorValueEnum.ToString(aInt, aElement, aType = ctToSummary);
     ctToSortKey: Result := wbActorValueEnum.ToSortKey(aInt, aElement);
     ctCheck: Result := wbActorValueEnum.Check(aInt, aElement);
     ctToEditValue: Result := wbActorValueEnum.ToEditValue(aInt, aElement);
@@ -1343,7 +1343,7 @@ function wbCTDAParamQuestOverlay(aInt: Int64; const aElement: IwbElement; aType:
 
 begin
   Result := aInt;
-  if (aInt = 0) and (aType in [ctCheck, ctToStr, ctToSortKey, ctLinksTo]) then
+  if (aInt = 0) and (aType in [ctCheck, ctToStr, ctToSummary, ctToSortKey, ctLinksTo]) then
     ResolveOverlay;
 end;
 
@@ -2242,7 +2242,7 @@ begin
       else
         Result := '<Unknown Compare operator>'
       end;
-      s := wbCtdaTypeFlags.ToString(aInt and $1F, aElement);
+      s := wbCtdaTypeFlags.ToString(aInt and $1F, aElement, aType = ctToSummary);
       if s <> '' then
         Result := Result + ' / ' + s;
     end;
@@ -2815,7 +2815,7 @@ begin
     Container := Container.Container;
 
   if Assigned(Container) then begin
-    s := wbFormID.ToString(GroupRecord.GroupLabel, aMainRecord);
+    s := wbFormID.ToString(GroupRecord.GroupLabel, aMainRecord, False);
     if s <> '' then begin
       if Result <> '' then
         s := s + ' ';
@@ -5693,7 +5693,7 @@ begin
     end
   else
     case aType of
-      ctToStr: Result := PropEnum.ToString(aInt, aElement);
+      ctToStr: Result := PropEnum.ToString(aInt, aElement, aType = ctToSummary);
       ctToSortKey: Result := PropEnum.ToSortKey(aInt, aElement);
       ctCheck: Result := PropEnum.Check(aInt, aElement);
       ctToEditValue: Result := PropEnum.ToEditValue(aInt, aElement);

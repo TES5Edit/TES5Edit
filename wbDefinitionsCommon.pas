@@ -586,13 +586,10 @@ var
   Level, Ref, Count, ChanceNone: IwbElement;
   MainRecord: IwbMainRecord;
 begin
-  if aType <> ctToStr then
+  if aType <> ctToSummary then
     Exit;
 
   if not Supports(aElement, IwbContainerElementRef, Container) then
-    Exit;
-
-  if Container.Collapsed <> tbTrue then
     Exit;
 
   LeveledObject := Container.ElementBySignature['LVLO'] as IwbContainerElementRef;

@@ -659,7 +659,7 @@ begin
   AsFloat := PSingle(@AsCardinal)^;
   aInt := Round(AsFloat);
   case aType of
-    ctToStr: Result := wbActorValueEnum.ToString(aInt, aElement);
+    ctToStr: Result := wbActorValueEnum.ToString(aInt, aElement, aType = ctToSummary);
     ctToSortKey: Result := wbActorValueEnum.ToSortKey(aInt, aElement);
     ctCheck: Result := wbActorValueEnum.Check(aInt, aElement);
     ctToEditValue: Result := wbActorValueEnum.ToEditValue(aInt, aElement);
@@ -1306,7 +1306,7 @@ begin
           {0x04} 'Use global'
         ]);
 
-      s := wbCtdaTypeFlags.ToString(aInt and $0F, aElement);
+      s := wbCtdaTypeFlags.ToString(aInt and $0F, aElement, aType = ctToSummary);
 
       if s <> '' then
         Result := Result + ' / ' + s;
@@ -1719,7 +1719,7 @@ begin
     Container := Container.Container;
 
   if Assigned(Container) then begin
-    s := wbFormID.ToString(GroupRecord.GroupLabel, aMainRecord);
+    s := wbFormID.ToString(GroupRecord.GroupLabel, aMainRecord, False);
     if s <> '' then begin
       if Result <> '' then
         s := s + ' ';
