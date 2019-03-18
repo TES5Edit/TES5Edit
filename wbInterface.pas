@@ -1035,6 +1035,10 @@ type
       read GetMastersUpdated;
   end;
 
+  IwbStringListTerminator = interface
+    ['{0D8ED4AA-1AFE-4283-87D7-2B66C5496227}']
+  end;
+
   IwbRecord = interface;
 
   TwbContainerState = (
@@ -1733,15 +1737,15 @@ type
       read GetMainRecordByFormID;
   end;
 
-  IwbSubRecordArray = interface
+  IwbSubRecordArray = interface(IwbContainer)
     ['{26937F7A-5F31-4D65-932F-038BD0FA9FEF}']
   end;
 
-  IwbSubRecordStruct = interface
+  IwbSubRecordStruct = interface(IwbContainer)
     ['{E8C496D3-D396-4685-87EC-82E1FD2588B8}']
   end;
 
-  IwbSubRecordUnion = interface
+  IwbSubRecordUnion = interface(IwbContainer)
     ['{11959F58-B396-4449-9D9D-5DF1251C3E76}']
   end;
 
@@ -1784,6 +1788,7 @@ type
   IwbNamedDef = interface(IwbDef)
     ['{F8FEDE89-C089-42C5-B587-49A7D87055F0}']
     function GetName: string;
+    function GetSingularName: string;
     function GetPath: string;
     procedure AfterLoad(const aElement: IwbElement);
     procedure AfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -1921,7 +1926,8 @@ type
 
   IwbRecordMemberDef = interface(IwbSignatureDef)
     ['{259F3F08-F4ED-439D-8C1A-48137C84E52A}']
-    function ToString(const aElement: IwbElement): string;
+    procedure ToString(var Result : string; const aElement: IwbElement; aType: TwbCallbackType);
+    function ToSummary(const aElement: IwbElement; aExtended: Boolean): string;
 
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
 
@@ -1939,6 +1945,7 @@ type
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbValueDef;
 
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+    function ToSummary(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -2016,6 +2023,7 @@ type
 
   IwbSubRecordStructDef = interface(IwbRecordMemberDef)
     ['{B5441812-5229-488B-AEA6-C182CEBED441}']
+    function SetSummaryKey(const aSummaryKey: array of Integer): {Self}IwbSubRecordStructDef;
   end;
 
   IwbSubRecordUnionDef = interface(IwbRecordMemberDef)
@@ -4038,7 +4046,8 @@ uses
   Math,
   TypInfo,
   wbSort,
-  wbLocalization;
+  wbLocalization,
+  wbImplementation;
 
 type
   IwbIntegerDefInternal = interface(IwbIntegerDef)
@@ -4681,6 +4690,7 @@ type
   TwbNamedDef = class(TwbDef, IwbNamedDef)
   private
     ndName       : string;
+    ndSingularName: string;
     ndAfterLoad  : TwbAfterLoadCallback;
     ndAfterSet   : TwbAfterSetCallback;
     ndToStr      : TwbToStrCallback;
@@ -4709,6 +4719,7 @@ type
 
     {---IwbNamedDef---}
     function GetName: string;
+    function GetSingularName: string;
     function GetPath: string;
     procedure AfterLoad(const aElement: IwbElement); virtual;
     procedure AfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -4882,7 +4893,8 @@ type
     procedure Report(const aParents: TwbDefPath); override;
 
     {---IwbRecordMemberDef---}
-    function ToString(const aElement: IwbElement): string;
+    procedure ToString(var Result : string; const aElement: IwbElement; aType: TwbCallbackType); virtual;
+    function ToSummary(const aElement: IwbElement; aExtended: Boolean): string; virtual;
 
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbRecordMemberDef;
@@ -4903,7 +4915,8 @@ type
 
   TwbRecordMemberDef = class(TwbBaseSignatureDef, IwbRecordMemberDef)
     {---IwbRecordMemberDef---}
-    function ToString(const aElement: IwbElement): string;
+    procedure ToString(var Result : string; const aElement: IwbElement; aType: TwbCallbackType); virtual;
+    function ToSummary(const aElement: IwbElement; aExtended: Boolean): string; virtual;
 
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
 
@@ -4949,6 +4962,10 @@ type
                  const aDataContainer : IwbDataContainer)
                                       : Boolean; override;
 
+    {---IwbRecordMemberDef---}
+    procedure ToString(var Result : string; const aElement: IwbElement; aType: TwbCallbackType); override;
+    function ToSummary(const aElement: IwbElement; aExtended: Boolean): string; override;
+
     {---IwbSubRecordArrayDef---}
     function GetElement: IwbRecordMemberDef;
     function GetSorted(const aContainer: IwbContainer): Boolean;
@@ -4961,6 +4978,7 @@ type
     srsSkipSignatures    : TStringList;
     srsCanContainFormIDs : Boolean;
     srsAllowUnordered    : Boolean;
+    srsSummaryKey        : array of Integer;
   public
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority       : TwbConflictPriority;
@@ -4973,6 +4991,7 @@ type
                        aAfterLoad      : TwbAfterLoadCallback;
                        aAfterSet       : TwbAfterSetCallback;
                        aGetCP          : TwbGetConflictPriority);
+    procedure AfterClone(const aSource: TwbDef);
     destructor Destroy; override;
 
     {---IwbDef---}
@@ -5012,6 +5031,13 @@ type
     function GetMemberCount: Integer;
     function GetSkipSignature(const aSignature: TwbSignature): Boolean; virtual;
     function GetRecordHeaderStruct: IwbStructDef;
+
+    {---IwbRecordMemberDef---}
+    procedure ToString(var Result : string; const aElement: IwbElement; aType: TwbCallbackType); override;
+    function ToSummary(const aElement: IwbElement; aExtended: Boolean): string; override;
+
+    {---IwbSubRecordStructDef---}
+    function SetSummaryKey(const aSummaryKey: array of Integer): {Self}IwbSubRecordStructDef;
   end;
 
   TwbSubRecordUnionDef = class(TwbRecordMemberDef, IwbSubRecordUnionDef, IwbRecordDef)
@@ -5092,6 +5118,9 @@ type
     function GetSortKey(aIndex: Integer; aExtended: Boolean): Integer;
     function GetSortKeyCount(aExtended: Boolean): Integer;
     function IsInSK(aIndex: Integer): Boolean;
+
+    {---IwbRecordMemberDef---}
+    function ToSummary(const aElement: IwbElement; aExtended: Boolean): string; override;
   end;
 
   TwbValueDefState = (
@@ -5115,6 +5144,7 @@ type
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbValueDef;
 
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; reintroduce; virtual; abstract;
+    function ToSummary(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; virtual;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; virtual;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; virtual;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; virtual; abstract;
@@ -5383,6 +5413,9 @@ type
     function GetDefTypeName: string; override;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function CanContainFormIDs: Boolean; override;
+
+    {---TwbLenStringDef---}
+    function ToStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; virtual;
 
     {---IwbValueDef---}
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
@@ -5717,6 +5750,7 @@ type
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    function ToSummary(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
     function GetIsVariableSizeInternal: Boolean; override;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
@@ -8389,6 +8423,19 @@ begin
   end;
 end;
 
+function TwbNamedDef.GetSingularName: string;
+begin
+  if ndSingularName = '' then begin
+    ndSingularName := ndName;
+    if ndSingularName.EndsWith('ies') then begin
+      SetLength(ndSingularName, Length(ndSingularName) - 3);
+      ndSingularName := ndSingularName + 'y';
+    end else if ndSingularName.EndsWith('s') then
+      SetLength(ndSingularName, Length(ndSingularName) - 1);
+  end;
+  Result := ndSingularName;
+end;
+
 function TwbNamedDef.GetTreeBranch: Boolean;
 begin
   Result := ndTreeBranch;
@@ -8953,11 +9000,20 @@ begin
   ndToStr := aToStr;
 end;
 
-function TwbSubRecordDef.ToString(const aElement: IwbElement): string;
+procedure TwbSubRecordDef.ToString(var Result : string; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  if Assigned(ndToStr) then
+    ndToStr(Result, nil, nil, aElement, aType);
+end;
+
+function TwbSubRecordDef.ToSummary(const aElement: IwbElement; aExtended: Boolean): string;
 begin
   Result := '';
-  if Assigned(ndToStr) then
-    ndToStr(Result, nil, nil, aElement, ctToStr);
+  if Assigned(aElement) and Assigned(srValue) then begin
+    var DataContainer: IwbDataContainer;
+    if Supports(aElement, IwbDataContainer, DataContainer) then
+      Result := srValue.ToSummary(DataContainer.DataBasePtr, DataContainer.DataEndPtr, aElement, aExtended);
+  end;
 end;
 
 { TwbSubRecordArrayDef }
@@ -9070,6 +9126,52 @@ begin
   defReported := True;
 end;
 
+procedure TwbSubRecordArrayDef.ToString(var Result: string; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  inherited;
+  if (Result = '') and (aType = ctToStr) then begin
+    var CER: IwbContainerElementRef;
+    if Supports(aElement, IwbContainerElementRef, CER) and (CER.Collapsed = tbTrue) then begin
+      var l := CER.ElementCount;
+      if l > 0 then begin
+        var s: string;
+        if l = 1 then
+          s := GetSingularName
+        else
+          s := GetName;
+        Result := '('+ l.ToString + ' ' + s.ToLower + ')';
+      end;
+    end;
+  end;
+end;
+
+function TwbSubRecordArrayDef.ToSummary(const aElement: IwbElement; aExtended: Boolean): string;
+begin
+  Result := '';
+  var CER: IwbContainerElementRef;
+  if Supports(aElement, IwbContainerElementRef, CER) then begin
+    var l := CER.ElementCount;
+    if l > 0 then begin
+      { needs more thought...
+      if l = 1 then begin
+        var Element := CER.Elements[0];
+        var RMD: IwbRecordMemberDef;
+        if Supports(Element.Def, IwbRecordMemberDef, RMD) then
+          Result := RMD.ToSummary(Element, aExtended).Trim;
+        if Result <> '' then
+          Exit(Result);
+      end;
+      }
+      var s: string;
+      if l = 1 then
+        s := GetSingularName
+      else
+        s := GetName;
+      Result := l.ToString + ' ' + s.ToLower;
+    end;
+  end;
+end;
+
 function TwbSubRecordArrayDef.GetDefType: TwbDefType;
 begin
   Result := dtSubRecordArray;
@@ -9085,6 +9187,14 @@ end;
 function TwbSubRecordStructDef.AdditionalInfoFor(const aMainRecord: IwbMainRecord): string;
 begin
   Result := '';
+end;
+
+procedure TwbSubRecordStructDef.AfterClone(const aSource: TwbDef);
+begin
+  inherited AfterClone(aSource);
+  with aSource as TwbSubRecordStructDef do begin
+    Self.srsSummaryKey := srsSummaryKey;
+  end;
 end;
 
 procedure TwbSubRecordStructDef.AfterLoad(const aElement: IwbElement);
@@ -9321,6 +9431,53 @@ begin
     end;
 
   defReported := True;
+end;
+
+function TwbSubRecordStructDef.SetSummaryKey(const aSummaryKey: array of Integer): IwbSubRecordStructDef;
+begin
+  Result := Self;
+  srsSummaryKey := nil;
+  SetLength(srsSummaryKey, Length(aSummaryKey));
+  for var i := Low(srsSummaryKey) to High(srsSummaryKey) do
+    srsSummaryKey[i] := aSummaryKey[i];
+end;
+
+procedure TwbSubRecordStructDef.ToString(var Result: string; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  inherited;
+  if (aType = ctToStr) and (Result = '') then begin
+    var CER: IwbContainerElementRef;
+    if Supports(aElement, IwbContainerElementRef, CER) and (CER.Collapsed = tbTrue) then
+      Result := ToSummary(aElement, True);
+  end;
+end;
+
+function TwbSubRecordStructDef.ToSummary(const aElement: IwbElement; aExtended: Boolean): string;
+var
+  CER: IwbContainerElementRef;
+  SRS: IwbSubRecordStruct;
+begin
+  Result := '';
+  var l := Length(srsSummaryKey);
+  if l < 1 then
+    Exit;
+  if not Supports(aElement, IwbContainerElementRef, CER) then
+    Exit;
+  if not Supports(aElement, IwbSubRecordStruct, SRS) then
+    Exit;
+  for var i := 0 to Pred(l) do begin
+    var SortOrder := srsSummaryKey[i];
+    var Member := CER.ElementBySortOrder[SortOrder + CER.AdditionalElementCount];
+    var RMD: IwbRecordMemberDef;
+    if Assigned(Member) and Supports(Member.Def, IwbRecordMemberDef, RMD) then begin
+      var s := RMD.ToSummary(Member, aExtended).Trim;
+      if s <> '' then begin
+        if Result <> '' then
+          Result := Result + ' ';
+        Result := Result + RMD.Name + ':(' + s + ')';
+      end;
+    end;
+  end;
 end;
 
 { TwbSubRecordUnionDef }
@@ -9747,6 +9904,9 @@ begin
     else
       Result := '';
   end;
+
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctCheck);
 end;
 
 constructor TwbIntegerDef.Clone(const aSource: TwbDef);
@@ -10133,6 +10293,9 @@ begin
     if Result = '' then
       Result := IntToStr(Value);
   end;
+
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToEditValue);
 end;
 
 function TwbIntegerDef.ToInt(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Int64;
@@ -10266,6 +10429,9 @@ begin
       Result := Result + IntToHex64(Value, Succ(GetExpectedLength(Value) * 2));
     end;
   end;
+
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToSortKey);
 end;
 
 function TwbIntegerDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
@@ -10311,6 +10477,10 @@ begin
         Result := Result + Format(' <Warning: Expected %d bytes of data, found %d>', [GetExpectedLength , Len])
     end;
   end;
+
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
+
   Used(aElement, Result);
 end;
 
@@ -10716,6 +10886,33 @@ end;
 function TwbArrayDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
   Result := '';
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
+
+  if Result = '' then begin
+    var CER: IwbContainerElementRef;
+    if Supports(aElement, IwbContainerElementRef, CER) and (CER.Collapsed = tbTrue) then begin
+      var l := CER.ElementCount;
+      if l > 0 then begin
+        if Supports(CER.Elements[Pred(l)], IwbStringListTerminator) then
+          Dec(l);
+        if l > 0 then begin
+          var s: string;
+          if l = 1 then
+            s := GetSingularName
+          else
+            s := GetName;
+          if s = '' then
+            if l = 1 then
+              s := aElement.Def.GetSingularName
+            else
+              s := aElement.Def.GetName;
+          Result := '('+ l.ToString + ' ' + s.ToLower + ')';
+        end;
+      end;
+    end;
+  end;
+
   Used(aElement, Result);
 end;
 
@@ -11026,14 +11223,106 @@ begin
         Result := Result + '|';
     end;
   end;
+
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToSortKey);
 end;
 
 function TwbStructDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
   Result := '';
   if Assigned(ndToStr) then
-    ndToStr(Result, nil, nil, aElement, ctToStr);
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
+  if Result = '' then begin
+    var CER: IwbContainerElementRef;
+    if Supports(aElement, IwbContainerElementRef, CER) and (CER.Collapsed = tbTrue) then
+      Result := ToSummary(aBasePtr, aEndPtr, aElement, True);
+  end;
   Used(aElement, Result);
+end;
+
+function TwbStructDef.ToSummary(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
+var
+  i, j        : Integer;
+  SortMember  : Integer;
+  BasePtr     : Pointer;
+  EndPtr      : Pointer;
+begin
+  Result := '';
+  if (Length(stSortKey) > 0) or (aExtended and (Length(stExSortKey) > 0)) then begin
+    for i := Low(stSortKey) to High(stSortKey) do begin
+      SortMember := stSortKey[i];
+      if SortMember <= High(stMembers) then begin
+        BasePtr := aBasePtr;
+        for j := Low(stMembers) to Pred(SortMember) do begin
+          Inc(PByte(BasePtr), stMembers[j].Size[BasePtr, aEndPtr, aElement]);
+          if NativeUInt(BasePtr) > NativeUInt(aEndPtr) then
+            BasePtr := aEndPtr;
+        end;
+
+        EndPtr := PByte(BasePtr) + stMembers[SortMember].Size[BasePtr, aEndPtr, aElement];
+
+        if NativeUInt(BasePtr) > NativeUInt(aEndPtr) then
+          BasePtr := aEndPtr;
+        if NativeUInt(EndPtr) > NativeUInt(aEndPtr) then
+          EndPtr := aEndPtr;
+
+        var s:= stMembers[SortMember].ToSummary(BasePtr, EndPtr, aElement, aExtended).Trim;
+        if s <> '' then begin
+          if Result <> '' then
+            Result := Result + ' ';
+          Result := Result + stMembers[SortMember].Name + ':(' + s + ')';
+        end;
+      end;
+    end;
+    if aExtended then begin
+      for i := Low(stExSortKey) to High(stExSortKey) do begin
+        SortMember := stExSortKey[i];
+        if SortMember <= High(stMembers) then begin
+          BasePtr := aBasePtr;
+          for j := Low(stMembers) to Pred(SortMember) do begin
+            Inc(PByte(BasePtr), stMembers[j].Size[BasePtr, aEndPtr, aElement]);
+            if NativeUInt(BasePtr) > NativeUInt(aEndPtr) then
+              BasePtr := aEndPtr;
+          end;
+
+          EndPtr := PByte(BasePtr) + stMembers[SortMember].Size[BasePtr, aEndPtr, aElement];
+
+          if NativeUInt(BasePtr) > NativeUInt(aEndPtr) then
+            BasePtr := aEndPtr;
+          if NativeUInt(EndPtr) > NativeUInt(aEndPtr) then
+            EndPtr := aEndPtr;
+
+          var s:= stMembers[SortMember].ToSummary(BasePtr, EndPtr, aElement, aExtended).Trim;
+          if s <> '' then begin
+            if Result <> '' then
+              Result := Result + ' ';
+            Result := Result + stMembers[SortMember].Name + ':(' + s + ')';
+          end;
+        end;
+      end;
+    end;
+  end{ else begin
+    BasePtr := aBasePtr;
+    for j := Low(stMembers) to High(stMembers) do begin
+      EndPtr := PByte(BasePtr) + stMembers[j].Size[BasePtr, aEndPtr, aElement];
+
+      if NativeUInt(BasePtr) > NativeUInt(aEndPtr) then
+        BasePtr := aEndPtr;
+      if NativeUInt(EndPtr) > NativeUInt(aEndPtr) then
+        EndPtr := aEndPtr;
+
+      if (stMembers[j].ConflictPriority[aElement] > cpIgnore) and (stMembers[j].GetDontShow(aElement)
+      var s:= stMembers[j].ToSummary(BasePtr, EndPtr, aElement, aExtended).Trim;
+      if s <> '' then begin
+        if Result <> '' then
+          Result := Result + ' ';
+        Result := Result + stMembers[j].Name + ':(' + s + ')';
+      end;
+
+      BasePtr := EndPtr;
+    end;
+  end};
 end;
 
 { TwbFlagsDef }
@@ -11963,6 +12252,8 @@ end;
 function TwbStringDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttCheck);
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctCheck);
 end;
 
 constructor TwbStringDef.Clone(const aSource: TwbDef);
@@ -12102,25 +12393,35 @@ begin
     Result := 1 + Ord(ndTerminator);
 end;
 
-function TwbStringDef.ToEditValue(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement): string;
+function TwbStringDef.ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToEditValue);
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToEditValue);
 end;
 
 function TwbStringDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
 begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToNativeValue);
+  if Assigned(ndToStr) then begin
+    var s: string := Result;
+    ndToStr(s, aBasePtr, aEndPtr, aElement, ctToNativeValue);
+    Result := s;
+  end;
 end;
 
 function TwbStringDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
 begin
   Result := UpperCase(ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey));
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToSortKey);
 end;
 
 function TwbStringDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToString);
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
 end;
 
 function TwbStringDef.ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
@@ -12535,6 +12836,9 @@ begin
     Result := 'Min'
   else
     Result := FloatToStrF(Value, ffFixed, 99, fdDigits);
+
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToEditValue);
 end;
 
 function TwbFloatDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
@@ -12572,6 +12876,9 @@ begin
       Result := StringOfChar('0', 22 - Length(Result)) + Result;
     Result := PlusMinus[(Value < 0) and not IsZero(Value, 0.0000009999999999)] + Result;
   end;
+
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToSortKey);
 end;
 
 function TwbFloatDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
@@ -12601,6 +12908,9 @@ begin
         Result := Format(' <Warning: Expected %d bytes of data, found %d>', [GetDefaultSize(aBasePtr, aEndPtr, aElement), Len]);
   end;
   Used(aElement, Result);
+
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
 end;
 
 { TwbChar4 }
@@ -14426,8 +14736,7 @@ begin
   {nothing}
 end;
 
-function TwbValueDef.Check(aBasePtr, aEndPtr: Pointer;
-  const aElement: IwbElement): string;
+function TwbValueDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
   Result := '';
 end;
@@ -14581,6 +14890,11 @@ begin
       Result := StringOfChar('0', Length(Result));
 end;
 
+function TwbValueDef.ToSummary(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
+begin
+  Result := ToString(aBasePtr, aEndPtr, aElement);
+end;
+
 { TwbSubRecordStructSKDef }
 
 constructor TwbSubRecordStructSKDef.Clone(const aSource: TwbDef);
@@ -14648,6 +14962,41 @@ end;
 function TwbSubRecordStructSKDef.IsInSK(aIndex: Integer): Boolean;
 begin
   Result := (aIndex >= Low(srsMemberInSK)) and (aIndex <= High(srsMemberInSK)) and srsMemberInSK[aIndex];
+end;
+
+function TwbSubRecordStructSKDef.ToSummary(const aElement: IwbElement; aExtended: Boolean): string;
+var
+  CER: IwbContainerElementRef;
+  SRS: IwbSubRecordStruct;
+begin
+  Result := '';
+  var l := GetSortKeyCount(aExtended);
+  if l < 1 then
+    Exit;
+  if not Supports(aElement, IwbContainerElementRef, CER) then
+    Exit;
+  if not Supports(aElement, IwbSubRecordStruct, SRS) then
+    Exit;
+  for var i := 0 to Pred(l) do begin
+    var SortOrder := GetSortKey(i, aExtended);
+    var Member := CER.ElementBySortOrder[SortOrder + CER.AdditionalElementCount];
+    var RMD: IwbRecordMemberDef;
+    if Assigned(Member) and Supports(Member.Def, IwbRecordMemberDef, RMD) then begin
+      var s := RMD.ToSummary(Member, aExtended).Trim;
+      if s <> '' then begin
+        if Result <> '' then
+          Result := Result + ' ';
+        Result := Result + RMD.Name + ':(' + s + ')';
+      end;
+    end;
+  end;
+
+  var s := inherited ToSummary(aElement, aExtended);
+  if s <> '' then begin
+    if Result <> '' then
+      Result := Result + ' ';
+    Result := Result + s;
+  end;
 end;
 
 { TwbFormIDChecked }
@@ -15071,6 +15420,8 @@ end;
 function TwbResolvableDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
   Result := ResolveDef(aBasePtr, aEndPtr, aElement).Check(aBasePtr, aEndPtr, aElement);
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctCheck);
 end;
 
 constructor TwbUnionDef.Clone(const aSource: TwbDef);
@@ -15376,6 +15727,8 @@ begin
     Result := ValueDef.EditValue[aBasePtr, aEndPtr, aElement]
   else
     Result := '';
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToEditValue);
 end;
 
 function TwbResolvableDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
@@ -15398,6 +15751,8 @@ begin
     Result := ValueDef.ToSortKey(aBasePtr, aEndPtr, aElement, aExtended)
   else
     Result := '';
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToSortKey);
 end;
 
 function TwbResolvableDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
@@ -15409,6 +15764,8 @@ begin
     Result := ValueDef.ToString(aBasePtr, aEndPtr, aElement)
   else
     Result := '';
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
   Used(aElement, Result);
 end;
 
@@ -15480,26 +15837,17 @@ begin
 end;
 
 function TwbEmptyDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
-//var
-//  NamedDef: IwbNamedDef;
 begin
-//  Result := GetName;
-//  if (Result = '') and Supports(defParent, IwbNamedDef, NamedDef) then
-//    Result := NamedDef.Name;
-//  if Result = '' then
-    Result := '<Empty>';
-//  Result := '';
+  Result := '<Empty>';
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToSortKey);
 end;
 
 function TwbEmptyDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
-//var
-//  NamedDef: IwbNamedDef;
 begin
-//  Result := GetName;
-//  if (Result = '') and Supports(defParent, IwbNamedDef, NamedDef) then
-//    Result := NamedDef.Name;
   Result := '';
-
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
   Used(aElement, Result);
 end;
 
@@ -15654,6 +16002,7 @@ var
   Len  : Cardinal;
 begin
   Result := '';
+
   Len := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
   if Len < GetPrefixOffset then begin
     if wbCheckExpectedBytes then
@@ -15665,6 +16014,9 @@ begin
     if wbCheckExpectedBytes then
       Result := Format('Expected %d bytes of data, found %d', [Size , Len]);
   end;
+
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctCheck);
 end;
 
 constructor TwbLenStringDef.Clone(const aSource: TwbDef);
@@ -15816,15 +16168,27 @@ end;
 
 function TwbLenStringDef.ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
-  Result := ToString(aBasePtr, aEndPtr, aElement);
+  Result := ToStringInternal(aBasePtr, aEndPtr, aElement);
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToEditValue);
 end;
 
 function TwbLenStringDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
 begin
-  Result := ToString(aBasePtr, aEndPtr, aElement);
+  var s := ToStringInternal(aBasePtr, aEndPtr, aElement);
+  if Assigned(ndToStr) then
+    ndToStr(s, aBasePtr, aEndPtr, aElement, ctToNativeValue);
+  Result := s;
 end;
 
 function TwbLenStringDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+begin
+  Result := ToStringInternal(aBasePtr, aEndPtr, aElement);
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
+end;
+
+function TwbLenStringDef.ToStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 var
   Size : Cardinal;
   Len  : Cardinal;
@@ -16448,6 +16812,8 @@ end;
 function TwbStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
 begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey);
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToSortKey);
 end;
 
 { TwbLStringKCDef }
@@ -16455,6 +16821,8 @@ end;
 function TwbLStringKCDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
 begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey);
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToSortKey);
 end;
 
 { TwbRefID }
@@ -17090,6 +17458,8 @@ function TwbFlagDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElem
 begin
   Assert(False);
   Result := '';
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
 end;
 
 function wbIsPlugin(aFileName: string): Boolean;
@@ -17586,11 +17956,15 @@ begin
   ndToStr := aToStr;
 end;
 
-function TwbRecordMemberDef.ToString(const aElement: IwbElement): string;
+procedure TwbRecordMemberDef.ToString(var Result : string; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  if Assigned(ndToStr) then
+    ndToStr(Result, nil, nil, aElement, aType);
+end;
+
+function TwbRecordMemberDef.ToSummary(const aElement: IwbElement; aExtended: Boolean): string;
 begin
   Result := '';
-  if Assigned(ndToStr) then
-    ndToStr(Result, nil, nil, aElement, ctToStr);
 end;
 
 { TwbBaseSignatureDef }

@@ -2322,7 +2322,7 @@ begin
 
   wbEffects := wbRArray('Effects',
     wbRUnion('Effects', [
-      wbRStruct('Effect', [
+      wbRStructSK([0, 1], 'Effect', [
         wbEFID,
         wbEFIT,
         wbSCIT
@@ -4342,10 +4342,10 @@ begin
         wbCTDAs,
         wbStringKC(CNAM, 'Log Entry', 0, cpTranslate),
         wbResultScript
-      ], []))
-    ], [])),
+      ], []).SetSummaryKey([2, 1]))
+    ], []).SetSummaryKey([1])),
     wbRArray('Targets', wbRStruct('Target', [
-      wbStruct(QSTA, 'Target', [
+      wbStructSK(QSTA, [0], 'Target', [
         wbFormIDCkNoReach('Target', [REFR, ACRE, ACHR], True),
         wbInteger('Flags', itU8, wbFlags([
           {0x01} 'Compass marker ignores locks'
@@ -4353,7 +4353,7 @@ begin
         wbByteArray('Unused', 3)
       ]),
       wbCTDAs
-    ], []))
+    ], []).SetSummaryKey([0, 1]))
   ]);
 
   wbBodyDataIndex :=
