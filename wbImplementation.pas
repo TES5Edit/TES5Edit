@@ -14220,7 +14220,7 @@ begin
     Exit;
   end;
 
-  Result := Result + wbFormID.ToString(GetGroupLabel, Self);
+  Result := Result + wbFormID.ToString(GetGroupLabel, Self, False);
 end;
 
 function TwbGroupRecord.GetCountedRecordCount: Cardinal;
