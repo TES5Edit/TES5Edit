@@ -805,7 +805,7 @@ var
   wbTints: IwbSubRecordArrayDef;
   wbMODT: IwbSubRecordDef;
   wbDMDT: IwbSubRecordDef;
-  wbOwnership: IwbSubRecordStructDef;
+  wbOwnership: IwbRecordMemberDef;
   wbRACE_DATAFlags01: IwbIntegerDef;
   wbPhonemeTargets: IwbSubRecordDef;
   wbNoseMorphFlags: IwbIntegerDef;
@@ -6164,7 +6164,7 @@ begin
   wbOwnership := wbRStruct('Ownership', [
     wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]),
     wbInteger(XRNK, 'Faction rank', itS32)
-  ], [XRGD]);
+  ], [XRGD]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions);
 
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 end;

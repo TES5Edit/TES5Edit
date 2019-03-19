@@ -5035,7 +5035,7 @@ begin
     wbRStruct('Ownership', [
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32)
-    ], [XCMT, XCMO]),
+    ], [XCMT, XCMO]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
 
     {--- Merchant Container ----}
     wbFormIDCk(XMRC, 'Merchant Container', [REFR], True),
@@ -6095,7 +6095,7 @@ begin
     wbRStruct('Ownership', [
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32)
-    ], [XCMT, XCMO]),
+    ], [XCMT, XCMO]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
     wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
     wbByteArray(XCMT, 'Unused', 1, cpIgnore),
     wbFormIDCk(XCMO, 'Music Type', [MUSC])
@@ -7585,7 +7585,7 @@ begin
     wbRStruct('Ownership', [
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32)
-    ], [XCMT, XCMO]),
+    ], [XCMT, XCMO]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
 
     {--- Extra ---}
     wbInteger(XCNT, 'Count', itS32),
@@ -7681,7 +7681,7 @@ begin
     wbRStruct('Ownership', [
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32)
-    ], [XCMT, XCMO]),
+    ], [XCMT, XCMO]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
 
     {--- Extra ---}
     wbInteger(XCNT, 'Count', itS32),
@@ -7777,7 +7777,7 @@ begin
     wbRStruct('Ownership', [
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32)
-    ], [XCMT, XCMO]),
+    ], [XCMT, XCMO]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
 
     {--- Extra ---}
     wbInteger(XCNT, 'Count', itS32),
@@ -10284,7 +10284,7 @@ begin
     wbRStruct('Ownership', [
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32)
-    ], [XCMT, XCMO]),
+    ], [XCMT, XCMO]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
 
     {--- Lock ---}
     wbStruct(XLOC, 'Lock Data', [

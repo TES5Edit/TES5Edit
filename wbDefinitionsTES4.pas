@@ -2117,7 +2117,7 @@ begin
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32),
       wbXGLB
-    ], []),
+    ], []).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
     wbXESP,
     wbXRGD,
     wbXSCL,
@@ -2605,7 +2605,7 @@ begin
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32),
       wbXGLB
-    ], [XCLW, XCMT, XCCM])
+    ], [XCLW, XCMT, XCCM]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions)
   ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
 
   wbServiceFlags :=
@@ -4481,7 +4481,7 @@ begin
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32),
       wbXGLB
-    ], [XLOC]),
+    ], [XLOC]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
     wbXESP,
     wbFormIDCk(XTRG, 'Target', [REFR, ACHR, ACRE], True),
     wbStruct(XSED, 'SpeedTree', [
