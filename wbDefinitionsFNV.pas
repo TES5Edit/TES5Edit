@@ -1,4 +1,4 @@
-{*******************************************************************************
+ï»¿{*******************************************************************************
 
      The contents of this file are subject to the Mozilla Public License
      Version 1.1 (the "License"); you may not use this file except in
@@ -653,10 +653,6 @@ var
   wbBPNDStruct: IwbSubRecordDef;
   wbTimeInterpolator: IwbStructDef;
   wbColorInterpolator: IwbStructDef;
-  wbFaction: IwbRecordMemberDef;
-  wbLeveledListEntryCreature: IwbRecordMemberDef;
-  wbLeveledListEntryNPC: IwbRecordMemberDef;
-  wbLeveledListEntryItem: IwbRecordMemberDef;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -5458,6 +5454,8 @@ begin
 end;
 
 procedure DefineFNVb;
+var
+  wbEffect: IwbRecordMemberDef;
 begin
   wbMiscStatEnum :=
     wbEnum([
@@ -5781,20 +5779,18 @@ begin
   wbCTDAs := wbRArray('Conditions', wbCTDA);
   wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
 
-  wbEffects :=
-    wbRStructs('Effects','Effect', [
+  wbEffect :=
+    wbRStruct('Effect', [
       wbEFID,
       wbEFIT,
       wbCTDAs
     ], []);
 
-  wbEffectsReq :=
-    wbRStructs('Effects','Effect', [
-      wbEFID,
-      wbEFIT,
-      wbCTDAs
-    ], [], cpNormal, True);
+  wbEffects :=
+    wbRArray('Effects', wbEffect);
 
+  wbEffectsReq :=
+    wbRArray('Effects', wbEffect, cpNormal, True);
 
   wbRecord(ALCH, 'Ingestible', [
     wbEDIDReq,
@@ -6151,6 +6147,8 @@ begin
 end;
 
 procedure DefineFNVc;
+var
+  wbFaction: IwbRecordMemberDef;
 begin
   wbRecord(CLMT, 'Climate', [
     wbEDIDReq,
@@ -6585,6 +6583,8 @@ begin
 end;
 
 procedure DefineFNVd;
+var
+  wbStaticPart: IwbRecordMemberDef;
 begin
   wbRecord(CSTY, 'Combat Style', [
     wbEDIDReq,
@@ -7189,11 +7189,8 @@ begin
     )
   ]);
 
-  wbRecord(SCOL, 'Static Collection', [
-    wbEDIDReq,
-    wbOBNDReq,
-    wbMODLReq,
-    wbRStructs('Parts', 'Part', [
+  wbStaticPart :=
+    wbRStruct('Part', [
       wbFormIDCk(ONAM, 'Static', [STAT]),
       wbArrayS(DATA, 'Placements', wbStruct('Placement', [
         wbStruct('Position', [
@@ -7208,7 +7205,13 @@ begin
         ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
         wbFloat('Scale')
       ]), 0, cpNormal, True)
-    ], [], cpNormal, True)
+    ], [], cpNormal, True);
+
+  wbRecord(SCOL, 'Static Collection', [
+    wbEDIDReq,
+    wbOBNDReq,
+    wbMODLReq,
+    wbRArray('Parts', wbStaticPart)
   ]);
 
   wbRecord(MSTT, 'Moveable Static', [
@@ -7311,6 +7314,12 @@ begin
 end;
 
 procedure DefineFNVe;
+var
+  wbDebrisModel: IwbRecordMemberDef;
+  wbMenuButton: IwbRecordMemberDef;
+  wbLeveledListEntryCreature: IwbRecordMemberDef;
+  wbLeveledListEntryItem: IwbRecordMemberDef;
+  wbLeveledListEntryNPC: IwbRecordMemberDef;
 begin
   wbRecord(PROJ, 'Projectile', [
     wbEDIDReq,
@@ -7553,7 +7562,7 @@ begin
         wbFloat('Max X'),
         wbFloat('Max Y'),
         wbFloat('Max Z'),
-        wbArray('Cells', wbArray('Cell', wbInteger('Triangle', itS16).IncludeFlag(dfNotAlignable), -2)).IncludeFlag(dfNotAlignable) // Divisor is row count² , assumed triangle as the values fit the triangle id's
+        wbArray('Cells', wbArray('Cell', wbInteger('Triangle', itS16).IncludeFlag(dfNotAlignable), -2)).IncludeFlag(dfNotAlignable) // Divisor is row countï¿½ , assumed triangle as the values fit the triangle id's
       ]),
       wbArray(NVEX, 'External Connections', wbStruct('Connection', [
         wbByteArray('Unknown', 4),  // absent in ver<9, not endian swap in ver>=9, so char or byte array
@@ -7890,9 +7899,8 @@ begin
           CCRD, IMOD])
   ]);
 
-  wbRecord(DEBR, 'Debris', [
-    wbEDIDReq,
-    wbRStructs('Models', 'Model', [
+  wbDebrisModel :=
+    wbRStruct('Model', [
       wbStruct(DATA, 'Data', [
         wbInteger('Percentage', itU8),
         wbString('Model FileName'),
@@ -7901,7 +7909,11 @@ begin
         ]))
       ], cpNormal, True),
       wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
-    ], [], cpNormal, True)
+    ], [], cpNormal, True);
+
+  wbRecord(DEBR, 'Debris', [
+    wbEDIDReq,
+    wbRArray('Models', wbDebrisModel, cpNormal, True)
   ]);
 
   wbRecord(IMGS, 'Image Space', [
@@ -8497,6 +8509,12 @@ begin
     ], cpNormal, True)
   ]);
 
+  wbMenuButton :=
+    wbRStruct('Menu Button', [
+      wbStringKC(ITXT, 'Button Text', 0, cpTranslate),
+      wbCTDAs
+    ], []);
+
   wbRecord(MESG, 'Message', [
     wbEDIDReq,
     wbDESCReq,
@@ -8517,10 +8535,7 @@ begin
       'Auto Display'
     ]), cpNormal, True, False, nil, wbMESGDNAMAfterSet),
     wbInteger(TNAM, 'Display Time', itU32, nil, cpNormal, False, False, wbMESGTNAMDontShow),
-    wbRStructs('Menu Buttons', 'Menu Button', [
-      wbStringKC(ITXT, 'Button Text', 0, cpTranslate),
-      wbCTDAs
-    ], [])
+    wbRArray('Menu Buttons', wbMenuButton)
   ], False, nil, cpNormal, False, wbMESGAfterLoad);
 
   wbRecord(RGDL, 'Ragdoll', [
@@ -10741,6 +10756,9 @@ begin
 end;
 
 procedure DefineFNVf;
+var
+  wbIngredient: IwbRecordMemberDef;
+  wbOutput: IwbRecordMemberDef;
 begin
   wbRecord(WATR, 'Water', [
     wbEDIDReq,
@@ -11813,6 +11831,18 @@ begin
     ]))
   ]);
 
+  wbIngredient :=
+    wbRStruct('Ingredient', [
+      wbFormIDCk(RCIL, 'Item', [ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP, LIGH], False, cpNormal, True),
+      wbInteger(RCQY, 'Quantity', itU32, nil, cpNormal, True)
+    ], []);
+
+  wbOutput :=
+    wbRStruct('Output', [
+      wbFormIDCk(RCOD, 'Item', [ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP, LIGH], False, cpNormal, True),
+      wbInteger(RCQY, 'Quantity', itU32, nil, cpNormal, True)
+    ], []);
+
   wbRecord(RCPE, 'Recipe', [
     wbEDIDReq,
     wbFULL,
@@ -11823,14 +11853,8 @@ begin
       wbFormIDCk('Category', [RCCT, NULL]),   // Some of DeadMoney are NULL
       wbFormIDCk('Sub-Category', [RCCT])
     ]),
-    wbRStructs('Ingredients', 'Ingredient', [
-      wbFormIDCk(RCIL, 'Item', [ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP, LIGH], False, cpNormal, True),
-      wbInteger(RCQY, 'Quantity', itU32, nil, cpNormal, True)
-    ], []),
-    wbRStructs('Outputs', 'Output', [
-      wbFormIDCk(RCOD, 'Item', [ARMO, AMMO, MISC, WEAP, BOOK, KEYM, ALCH, NOTE, IMOD, CMNY, CCRD, CHIP, LIGH], False, cpNormal, True),
-      wbInteger(RCQY, 'Quantity', itU32, nil, cpNormal, True)
-    ], [])
+    wbRArray('Ingredients', wbIngredient),
+    wbRArray('Outputs', wbOutput)
   ]);
 
   wbRecord(REPU, 'Reputation', [

@@ -831,10 +831,6 @@ var
   wbOFST: IwbSubRecordDef;
   wbNVNM: IwbSubRecordDef;
   wbNAVIslandData: IwbStructDef;
-  wbFaction: IwbRecordMemberDef;
-  wbLeveledListEntryNPC: IwbRecordMemberDef;
-  wbLeveledListEntryItem: IwbRecordMemberDef;
-  wbLeveledListEntrySpell: IwbRecordMemberDef;
 
 
 function IsSSE: Boolean; inline; overload;
@@ -6170,6 +6166,8 @@ begin
 end;
 
 procedure DefineTES5b;
+var
+  wbEffect: IwbRecordMemberDef;
 begin
 
   wbRefRecord(ACHR, 'Placed NPC',
@@ -7065,12 +7063,15 @@ begin
   wbYNAM := wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]);
   wbZNAM := wbFormIDCk(ZNAM, 'Sound - Put Down', [SNDR]);
 
-  wbEffectsReq :=
-    wbRStructs('Effects', 'Effect', [
+  wbEffect :=
+    wbRStruct('Effect', [
       wbEFID,
       wbEFIT,
       wbCTDAs
     ], [], cpNormal, True);
+
+  wbEffectsReq :=
+    wbRArray('Effects', wbEffect, cpNormal, True);
 
   wbRecord(ALCH, 'Ingestible',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -8357,6 +8358,8 @@ begin
 end;
 
 procedure DefineTES5e;
+var
+  wbHeadPartPart: IwbRecordMemberDef;
 begin
   wbRecord(LCRT, 'Location Reference Type', [
     wbEDID,
@@ -8389,6 +8392,16 @@ begin
     ]), cpNormal, False)
   ]);
 
+  wbHeadPartPart :=
+    wbRStruct('Part', [
+      wbInteger(NAM0, 'Part Type', itU32, wbEnum([
+        'Race Morph',
+        'Tri',
+        'Chargen Morph'
+      ])),
+      wbString(NAM1, 'FileName', 0, cpTranslate, True)
+    ], []);
+
   wbRecord(HDPT, 'Head Part',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
@@ -8415,14 +8428,7 @@ begin
     wbRArrayS('Extra Parts',
       wbFormIDCk(HNAM, 'Part', [HDPT])
     ),
-    wbRStructs('Parts', 'Part', [
-      wbInteger(NAM0, 'Part Type', itU32, wbEnum([
-        'Race Morph',
-        'Tri',
-        'Chargen Morph'
-      ])),
-      wbString(NAM1, 'FileName', 0, cpTranslate, True)
-    ], []),
+    wbRArray('Parts', wbHeadPartPart),
     wbFormIDCk(TNAM, 'Texture Set', [TXST, NULL]),
     wbFormIDCk(CNAM, 'Color', [CLFM, NULL]),
     wbFormIDCk(RNAM, 'Valid Races', [FLST, NULL])
@@ -8838,6 +8844,8 @@ Can't properly represent that with current record definition methods.
 end;
 
 procedure DefineTES5g;
+var
+  wbDebrisModel: IwbRecordMemberDef;
 begin
 
    wbRecord(EXPL, 'Explosion', [
@@ -8875,9 +8883,8 @@ begin
     ], cpNormal, True, nil, 10)
   ]);
 
-  wbRecord(DEBR, 'Debris', [
-    wbEDID,
-    wbRStructs('Models', 'Model', [
+  wbDebrisModel :=
+    wbRStruct('Model', [
       wbStruct(DATA, 'Data', [
         wbInteger('Percentage', itU8),
         wbString('Model FileName'),
@@ -8886,7 +8893,11 @@ begin
         ]))
       ], cpNormal, True),
       wbMODT
-    ], [], cpNormal, True)
+    ], [], cpNormal, True);
+
+  wbRecord(DEBR, 'Debris', [
+    wbEDID,
+    wbRArray('Models', wbDebrisModel, cpNormal, True)
   ]);
 
   wbRecord(IMGS, 'Image Space', [
@@ -9601,6 +9612,7 @@ procedure DefineTES5i;
 var
   a, b, c : TVarRecs;
   s: string;
+  wbMenuButton: IwbRecordMemberDef;
 begin
   // load map markes list from external file if present
   s := ExtractFilePath(ParamStr(0)) + wbAppName + 'MapMarkers.txt';
@@ -9693,6 +9705,12 @@ begin
      {11} 'DLC02 - Dragonborn'
     ]);
 
+  wbMenuButton :=
+    wbRStruct('Menu Button', [
+      wbLString(ITXT, 'Button Text', 0, cpTranslate),
+      wbCTDAs
+    ], []);
+
   wbRecord(MESG, 'Message', [
     wbEDID,
     wbDESCReq,
@@ -9704,10 +9722,7 @@ begin
       'Auto Display'
     ]), cpNormal, True, False, nil, wbMESGDNAMAfterSet),
     wbInteger(TNAM, 'Display Time', itU32, nil, cpNormal, False, False, wbMESGTNAMDontShow),
-    wbRStructs('Menu Buttons', 'Menu Button', [
-      wbLString(ITXT, 'Button Text', 0, cpTranslate),
-      wbCTDAs
-    ], [])
+    wbRArray('Menu Buttons', wbMenuButton)
   ], False, nil, cpNormal, False, wbMESGAfterLoad);
 
   a := MakeVarRecs([
@@ -11086,6 +11101,11 @@ begin
 end;
 
 procedure DefineTES5m;
+var
+  wbLeveledListEntryItem: IwbRecordMemberDef;
+  wbLeveledListEntryNPC: IwbRecordMemberDef;
+  wbLeveledListEntrySpell: IwbRecordMemberDef;
+  wbFaction: IwbRecordMemberDef;
 begin
 
   wbRecord(LSCR, 'Load Screen',
@@ -14028,6 +14048,8 @@ end;
 
 {>>> Unused records, they have empty GRUP in skyrim.esm <<<}
 procedure DefineTES5p;
+var
+  wbStaticPart: IwbRecordMemberDef;
 begin
   wbRecord(CLDC, 'CLDC', [
     wbEDID
@@ -14051,22 +14073,7 @@ begin
     wbEDID,
     wbOBNDReq,
     wbMODLReq,
-    wbRStructs('Parts', 'Part', [
-      wbFormIDCk(ONAM, 'Static', [STAT]),
-      wbArrayS(DATA, 'Placements', wbStruct('Placement', [
-        wbStruct('Position', [
-          wbFloat('X'),
-          wbFloat('Y'),
-          wbFloat('Z')
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-        wbStruct('Rotation', [
-          wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-          wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-          wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-        wbFloat('Scale')
-      ]), 0, cpNormal, True)
-    ], [], cpNormal, True)
+    wbRArray('Parts', wbStaticPart, cpNormal, True)
   ]);
 
   wbRecord(SCPT, 'SCPT', [
