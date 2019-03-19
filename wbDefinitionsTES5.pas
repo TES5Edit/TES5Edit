@@ -3096,7 +3096,7 @@ const
 {V} (Index: 110; Name: 'GetCurrentAIPackage'),
 {V} (Index: 111; Name: 'IsWaiting'),
 {V} (Index: 112; Name: 'IsIdlePlaying'),
-{N} (Index: 116; Name: 'IsIntimidatebyPlayer'),
+{N} (Index: 116; Name: 'IsIntimidatedbyPlayer'),
 {N} (Index: 117; Name: 'IsPlayerInRegion'; ParamType1: ptRegion),
 {V} (Index: 118; Name: 'GetActorAggroRadiusViolated'),
 {V} (Index: 122; Name: 'GetCrime'; ParamType1: ptActor; ParamType2: ptCrimeType),
@@ -6373,7 +6373,7 @@ begin
 
   wbActorValueEnum :=
     wbEnum([
-    {00} 'Aggresion',
+    {00} 'Aggression',
     {01} 'Confidence',
     {02} 'Energy',
     {03} 'Morality',
@@ -8372,7 +8372,7 @@ begin
     wbEDID,
     wbOBNDReq,
     wbRStruct('Textures (RGB/A)', [
-      wbString(TX00,'Difuse'),
+      wbString(TX00,'Diffuse'),
       wbString(TX01,'Normal/Gloss'),
       wbString(TX02,'Environment Mask/Subsurface Tint'),
       wbString(TX03,'Glow/Detail Map'),
@@ -9976,7 +9976,7 @@ begin
     Sig2Int('HBLM'), 'Help - Low Magicka',
     Sig2Int('HBLS'), 'Help - Low Stamina',
     Sig2Int('HBHJ'), 'Help - Jail',
-    Sig2Int('HBFT'), 'Help - Teamate Favor',
+    Sig2Int('HBFT'), 'Help - Teammate Favor',
     Sig2Int('HBWC'), 'Help - Weapon Charge',
     Sig2Int('HBFS'), 'Help - Favorites',
     Sig2Int('KHFL'), 'Kinect Help FormList',
@@ -10939,7 +10939,7 @@ begin
       ]), [18]), [
       wbByteArray(DATA, 'Unknown'),
       wbByteArray(VNML, 'Vertex Normals'),
-      wbByteArray(VHGT, 'Vertext Height Map'),
+      wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
 
       wbRArrayS('Layers', wbRUnion('Layer', [
@@ -10991,7 +10991,7 @@ begin
           wbInteger('Z', itU8)
         ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), 33)
       ]), 33),
-      wbStruct(VHGT, 'Vertext Height Map', [
+      wbStruct(VHGT, 'Vertex Height Map', [
         wbFloat('Offset'),
         wbArray('Rows', wbStruct('Row', [
           wbArray('Columns', wbInteger('Column', itU8), 33)

@@ -4876,7 +4876,7 @@ begin
 
   wbActorValueEnum :=
     wbEnum([
-        {00} 'Aggresion',
+        {00} 'Aggression',
         {01} 'Confidence',
         {02} 'Energy',
         {03} 'Responsibility',
@@ -4999,7 +4999,7 @@ begin
         {08} 'Head Wear',
         {09} 'Hand Wear',
         {10} 'Chems',
-        {11} 'Stimpack',
+        {11} 'Stimpak',
         {12} 'Food',
         {13} 'Alcohol'
       ], [
@@ -5709,7 +5709,7 @@ begin
       {0x00000008} 'Books',
       {0x00000010} 'Food',
       {0x00000020} 'Chems',
-      {0x00000040} 'Stimpacks',
+      {0x00000040} 'Stimpaks',
       {0x00000080} 'Lights?',
       {0x00000100} '',
       {0x00000200} '',
@@ -7436,7 +7436,7 @@ begin
         wbInteger('Percentage', itU8),
         wbString('Model FileName'),
         wbInteger('Flags', itU8, wbFlags([
-          'Has Collission Data'
+          'Has Collision Data'
         ]))
       ], cpNormal, True),
       wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
@@ -8070,8 +8070,8 @@ begin
   wbRecord(DOBJ, 'Default Object Manager', [
     wbEDIDReq,
     wbArray(DATA, 'Default Objects', wbFormID('Default Object'), [
-      'Stimpack',
-      'SuperStimpack',
+      'Stimpak',
+      'SuperStimpak',
       'RadX',
       'RadAway',
       'Morphine',
@@ -8332,7 +8332,7 @@ begin
     wbRecord(LAND, 'Landscape', [
       wbByteArray(DATA, 'Unknown'),
       wbByteArray(VNML, 'Vertex Normals'),
-      wbByteArray(VHGT, 'Vertext Height Map'),
+      wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
 
       wbRArrayS('Layers', wbRUnion('Layer', [
@@ -8369,7 +8369,7 @@ begin
           wbInteger('Z', itU8)
         ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), 33)
       ]), 33),
-      wbStruct(VHGT, 'Vertext Height Map', [
+      wbStruct(VHGT, 'Vertex Height Map', [
         wbFloat('Offset'),
         wbArray('Rows', wbStruct('Row', [
           wbArray('Columns', wbInteger('Column', itU8), 33)
@@ -9580,7 +9580,7 @@ begin
       'Portal',
       'Debris Small',
       'Debris Large',
-      'Acustic Space',
+      'Acoustic Space',
       'Actor Zone',
       'Projectile Zone',
       'Gas Trap',
@@ -9976,8 +9976,8 @@ begin
     wbString(FNAM, 'Sound FileName'),
     wbRUnion('Sound Data', [
       wbStruct(SNDD, 'Sound Data', [
-        wbInteger('Minimum Attentuation Distance', itU8, wbMul(5)),
-        wbInteger('Maximum Attentuation Distance', itU8, wbMul(100)),
+        wbInteger('Minimum Attenuation Distance', itU8, wbMul(5)),
+        wbInteger('Maximum Attenuation Distance', itU8, wbMul(100)),
         wbInteger('Frequency Adjustment %', itS8),
         wbByteArray('Unused', 1),
         wbInteger('Flags', itU32, wbFlags([
@@ -9995,7 +9995,7 @@ begin
           {0x0800} '2D Radius',
           {0x1000} 'Mute When Submerged'
         ])),
-        wbInteger('Static attentuation cdB', itS16),
+        wbInteger('Static attenuation cdB', itS16),
         wbInteger('Stop time ', itU8),
         wbInteger('Start time ', itU8),
         wbArray('Attenuation Curve', wbInteger('Point', itS16), 5),
@@ -10004,8 +10004,8 @@ begin
         wbByteArray('Unknown', 8)
       ], cpNormal, True),
       wbStruct(SNDX, 'Sound Data', [
-        wbInteger('Minimum attentuation distance', itU8, wbMul(5)),
-        wbInteger('Maximum attentuation distance', itU8, wbMul(100)),
+        wbInteger('Minimum attenuation distance', itU8, wbMul(5)),
+        wbInteger('Maximum attenuation distance', itU8, wbMul(100)),
         wbInteger('Frequency adjustment %', itS8),
         wbByteArray('Unused', 1),
         wbInteger('Flags', itU32, wbFlags([
@@ -10023,7 +10023,7 @@ begin
           {0x0800} '2D Radius',
           {0x1000} 'Mute When Submerged'
         ])),
-        wbInteger('Static attentuation cdB', itS16),
+        wbInteger('Static attenuation cdB', itS16),
         wbInteger('Stop time ', itU8),
         wbInteger('Start time ', itU8)
       ], cpNormal, True)
@@ -10089,7 +10089,7 @@ begin
       wbStringForward(MAST, 'FileName', 0, cpNormal, True),
       wbByteArray(DATA, 'Unused', 8, cpIgnore, True)
     ], [ONAM])).IncludeFlag(dfInternalEditOnly, not wbAllowMasterFilesEdit),
-    wbArray(ONAM, 'Overriden Forms', wbFormIDCk('Form', [REFR, ACHR, ACRE, PMIS, PBEA, PGRE, LAND, NAVM]), 0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
+    wbArray(ONAM, 'Overridden Forms', wbFormIDCk('Form', [REFR, ACHR, ACRE, PMIS, PBEA, PGRE, LAND, NAVM]), 0, nil, nil, cpNormal, False, wbTES4ONAMDontShow),
     wbByteArray(SCRN, 'Screenshot')
   ], True, nil, cpNormal, True, wbRemoveOFST);
 
@@ -10387,7 +10387,7 @@ begin
         {02} 'Left Attack',
         {03} 'Right Attack',
         {04} 'Left Mobility',
-        {05} 'Right Mobilty',
+        {05} 'Right Mobility',
         {06} 'Brain'
       ])),
       {44} wbFloat('Min Range'),

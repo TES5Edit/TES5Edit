@@ -108,7 +108,7 @@ begin
   dfLODTreeBTT :=
     dfArray('Trees', dfStruct('Tree', [
       dfInteger('Type', dtU32),
-      dfArray('References', dfStruct('Refefence', [
+      dfArray('References', dfStruct('Reference', [
         dfFloat('X'),
         dfFloat('Y'),
         dfFloat('Z'),

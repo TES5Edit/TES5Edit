@@ -1328,7 +1328,7 @@ begin
 
         wbPrepareImageAlpha(atlas, fmtDiffuse, alphaThreshold);
         if not ConvertImage(atlas, fmtDiffuse) then
-          raise Exception.Create('Image convertion error');
+          raise Exception.Create('Image conversion error');
 
         try
           GenerateMipMaps(atlas, 0, mipmap);
@@ -1367,7 +1367,7 @@ begin
 
         wbPrepareImageAlpha(atlas, fmtNormal);
         if not ConvertImage(atlas, fmtNormal) then
-          raise Exception.Create('Image convertion error');
+          raise Exception.Create('Image conversion error');
 
         try
           GenerateMipMaps(atlas, 0, mipmap);
@@ -1407,7 +1407,7 @@ begin
 
           wbPrepareImageAlpha(atlas, fmtSpecular);
           if not ConvertImage(atlas, fmtSpecular) then
-            raise Exception.Create('Image convertion error');
+            raise Exception.Create('Image conversion error');
 
           try
             GenerateMipMaps(atlas, 0, mipmap);
@@ -1708,7 +1708,7 @@ begin
 
       wbPrepareImageAlpha(Atlases[i], fmtDiffuse);
       if not ConvertImage(Atlases[i], fmtDiffuse) then
-        raise Exception.Create('Image convertion error');
+        raise Exception.Create('Image conversion error');
 
       fname := slAtlas[i];
       if SameText(Copy(fname, 1, 9), 'textures\') then
@@ -1727,7 +1727,7 @@ begin
 
       wbPrepareImageAlpha(Atlases_n[i], fmtNormal);
       if not ConvertImage(Atlases_n[i], fmtNormal) then
-        raise Exception.Create('Image convertion error');
+        raise Exception.Create('Image conversion error');
 
       try
         GenerateMipMaps(Atlases_n[i], 0, mipmap);
