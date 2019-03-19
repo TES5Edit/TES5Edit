@@ -5202,6 +5202,8 @@ begin
   wbCollapseScriptProperties := Settings.ReadBool('Options', 'CollapseScriptProperties', wbCollapseScriptProperties);
   wbCollapseConditions := Settings.ReadBool('Options', 'CollapseConditions', wbCollapseConditions);
   wbCollapseBenignArray := Settings.ReadBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
+  wbCollapseRGBA := Settings.ReadBool('Options', 'CollapseRGBA', wbCollapseRGBA);
+  wbCollapseVec3 := Settings.ReadBool('Options', 'CollapseVec3', wbCollapseVec3);
   wbShrinkButtons := Settings.ReadBool('Options', 'ShrinkButtons', wbShrinkButtons);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
@@ -13158,6 +13160,8 @@ begin
     cbCollapseScriptProperties.Checked := wbCollapseScriptProperties;
     cbCollapseConditions.Checked := wbCollapseConditions;
     cbCollapseBenignArray.Checked := wbCollapseBenignArray;
+    cbCollapseRGBA.Checked := wbCollapseRGBA;
+    cbCollapseVec3.Checked := wbCollapseVec3;
     cbShrinkButtons.Checked := wbShrinkButtons;
     edColumnWidth.Text := IntToStr(ColumnWidth);
     edRowHeight.Text := IntToStr(RowHeight);
@@ -13225,6 +13229,8 @@ begin
     wbCollapseScriptProperties := cbCollapseScriptProperties.Checked;
     wbCollapseConditions := cbCollapseConditions.Checked;
     wbCollapseBenignArray := cbCollapseBenignArray.Checked;
+    wbCollapseRGBA := cbCollapseRGBA.Checked;
+    wbCollapseVec3 := cbCollapseVec3.Checked;
     if (wbShrinkButtons <> cbShrinkButtons.Checked) then
       if cbShrinkButtons.Checked then ShrinkButtons else ExpandButtons;
     wbShrinkButtons := cbShrinkButtons.Checked;
@@ -13291,6 +13297,8 @@ begin
     Settings.WriteBool('Options', 'CollapseScriptProperties', wbCollapseScriptProperties);
     Settings.WriteBool('Options', 'CollapseConditions', wbCollapseConditions);
     Settings.WriteBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
+    Settings.WriteBool('Options', 'CollapseRGBA', wbCollapseRGBA);
+    Settings.WriteBool('Options', 'CollapseVec3', wbCollapseVec3);
     Settings.WriteBool('Options', 'ShrinkButtons', wbShrinkButtons);
     Settings.WriteInteger('Options', 'ColumnWidth', ColumnWidth);
     Settings.WriteInteger('Options', 'RowHeight', RowHeight);

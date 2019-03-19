@@ -95,6 +95,9 @@ type
     cbCollapseObjectProperties: TCheckBox;
     cbCollapseEquipSlots: TCheckBox;
     cbCollapseFactions: TCheckBox;
+    lblTypesToCollapse: TLabel;
+    cbCollapseRGBA: TCheckBox;
+    cbCollapseVec3: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);
