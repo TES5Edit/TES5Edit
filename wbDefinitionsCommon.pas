@@ -7,6 +7,10 @@ interface
 uses
   wbInterface;
 
+const
+  SCDA : TwbSignature = 'SCDA';
+  SCTX : TwbSignature = 'SCTX';
+
   procedure wbConditionToStrFNV(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
   procedure wbConditionToStrFO3(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -41,6 +45,8 @@ uses
 
   /// <summary>Calls and returns wbGetScriptObjFormat. Used for VMAD parsing.</summary>
   function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+
+  procedure wbScriptToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 implementation
 
@@ -296,6 +302,15 @@ begin
       aValue := aValue + ', ' {+ Param2.Name + ': '} + Param2.Value;
     aValue := aValue + ')';
   end;
+
+{
+  var CER: IwbContainerElementRef;
+  if Supports(Condition.Container, IwbContainerElementRef, CER) then begin
+    var l := CER.ElementCount;
+    if (l < 2) or Condition.Equals(CER.Elements[Pred(l)]) then
+      Exit;
+  end;
+}
 
   wbBuildConditionStrWithOperators(Container, Typ, aValue);
 end;
@@ -710,9 +725,9 @@ begin
   if Container = nil then
     Exit;
 
-  X := Container.Elements[0].Value;
-  Y := Container.Elements[1].Value;
-  Z := Container.Elements[2].Value;
+  X := Container.Elements[0].Summary;
+  Y := Container.Elements[1].Summary;
+  Z := Container.Elements[2].Summary;
 
   aValue := 'Vec3(' + X + ', ' + Y + ', ' + Z + ')';
 end;
@@ -723,6 +738,52 @@ function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aEl
 begin
   Result := wbGetScriptObjFormat(aElement);
 end;
+
+procedure wbScriptToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  CER: IwbContainerElementRef;
+begin
+  if aType <> ctToSummary then
+    Exit;
+
+  if not Supports(aElement, IwbContainerElementRef, CER) then
+    Exit;
+
+  var eSCDA := CER.ElementBySignature[SCDA];
+  var eSCTX := CER.ElementBySignature[SCTX];
+
+  if Assigned(eSCDA) then begin
+    if Assigned(eSCTX) then begin
+      with TStringList.Create do try
+        Text := eSCTX.Value;
+        for var i := Pred(Count) downto 0 do begin
+          var s := Strings[i].Trim;
+          if s.StartsWith(';') then
+            s := '';
+          if s = '' then
+            Delete(i);
+        end;
+        if Count = 0 then
+          aValue := '<Source missing>'
+        else if Count = 1 then
+          aValue := Strings[0].Trim
+        else
+          aValue := '<'+Count.ToString+' lines>';
+      finally
+        Free;
+      end;
+    end else begin
+      aValue := '<Source missing>';
+    end;
+  end else begin
+    if Assigned(eSCTX) then begin
+      aValue := '<Source not compiled>';
+    end else begin
+      aValue := '<Empty>';
+    end;
+  end;
+end;
+
 
 end.
 

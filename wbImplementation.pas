@@ -539,6 +539,7 @@ type
     procedure SetCollapsed(const aValue: TwbTriBool);
     function GetElementByPath(const aPath: string): IwbElement;
     function GetElementValue(const aName: string): string;
+    function GetElementSummary(const aName: string): string;
     function GetElementExists(const aName: string): Boolean;
 
     function GetElementEditValue(const aName: string): string;
@@ -1761,6 +1762,7 @@ type
     procedure DoInit(aNeedSorted: Boolean); override;
 
     function GetValue: string; override;
+    function GetCheck: string; override;
     function GetSummary: string; override;
     function GetName: string; override;
     function GetDef: IwbNamedDef; override;
@@ -1802,6 +1804,7 @@ type
     function GetValue: string; override;
     function GetSummary: string; override;
     function GetSortKeyInternal(aExtended: Boolean): string; override;
+    function GetCheck: string; override;
     function GetName: string; override;
     function GetDef: IwbNamedDef; override;
     function GetElementType: TwbElementType; override;
@@ -6012,6 +6015,28 @@ begin
     Result := Container.ElementSortKeys[Name, aExtended];
 end;
 
+function TwbContainer.GetElementSummary(const aName: string): string;
+var
+  SelfRef   : IwbContainerElementRef;
+  Element   : IwbElement;
+  Name      : string;
+  Container : IwbContainerElementRef;
+begin
+  Result := '';
+
+  SelfRef := Self as IwbContainerElementRef;
+  DoInit(False);
+
+  Element := ResolveElementName(aName, Name);
+  if not Assigned(Element) then
+    Exit;
+
+  if Name = '' then
+    Result := Element.Summary
+  else if Supports(Element, IwbContainerElementRef, Container) then
+    Result := Container.ElementSummaries[Name];
+end;
+
 function TwbContainer.GetElementValue(const aName: string): string;
 var
   SelfRef   : IwbContainerElementRef;
@@ -8715,6 +8740,8 @@ begin
       end;
     SetLength(Result, Length(Result) - 2);
   end;
+
+  mrDef.ToString(Result, Self, ctCheck);
 end;
 
 function TwbMainRecord.GetChildByGridCell(const aGridCell: TwbGridCell): IwbMainRecord;
@@ -8868,6 +8895,9 @@ begin
         Result := GetElementValue('Responses\Response\NAM1');
     end;
 
+  if Result = '' then
+    Result := GetSummary;
+
   _File := GetFile;
   if Assigned(_File) and (fsIsOfficial in _File.FileStates) then
     mrDisplayName := Result;
@@ -8910,6 +8940,9 @@ begin
             (GridCoords.ElementCount >= 2) then
               Result := GridCoords.Elements[0].SortKey[True] + '|' + GridCoords.Elements[1].SortKey[True];
     end;
+
+  if Result = '' then
+    Result := GetDisplayName(True);
 end;
 
 function TwbMainRecord.GetEditorID: string;
@@ -9966,6 +9999,8 @@ begin
       Def.Used;
   end;
   Result := '';
+  if Assigned(mrDef) then
+    Result := mrDef.ToSummary(Self);
 end;
 
 function TwbMainRecord.GetValue: string;
@@ -12616,6 +12651,7 @@ begin
 
   if Assigned(srValueDef) then
     Result := srValueDef.Check(GetDataBasePtr, dcDataEndPtr, Self);
+  srDef.ToString(Result, Self, ctCheck);
 end;
 
 function TwbSubRecord.GetDataPrefixSize: Integer;
@@ -16765,6 +16801,21 @@ begin
   Result := True;
 end;
 
+function TwbSubRecordArray.GetCheck: string;
+var
+  SelfRef : IwbContainerElementRef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+  Result := '';
+
+  if not Assigned(arcDef) then
+    Exit;
+  DoInit(False);
+
+  arcDef.ToString(Result, Self, ctCheck);
+end;
+
 function TwbSubRecordArray.GetDef: IwbNamedDef;
 begin
   Result := arcDef;
@@ -17164,6 +17215,21 @@ begin
     SetModified(True);
     InvalidateStorage;
   end;
+end;
+
+function TwbSubRecordStruct.GetCheck: string;
+var
+  SelfRef : IwbContainerElementRef;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+  Result := '';
+
+  if not Assigned(srcDef) then
+    Exit;
+  DoInit(False);
+
+  srcDef.ToString(Result, Self, ctCheck);
 end;
 
 function TwbSubRecordStruct.GetDef: IwbNamedDef;
