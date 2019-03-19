@@ -1,4 +1,4 @@
-{*******************************************************************************
+ï»¿{*******************************************************************************
 
      The contents of this file are subject to the Mozilla Public License
      Version 1.1 (the "License"); you may not use this file except in
@@ -5140,6 +5140,8 @@ begin
 end;
 
 procedure DefineFO3b;
+var
+  wbEffect: IwbRecordMemberDef;
 begin
   wbMiscStatEnum :=
     wbEnum([
@@ -5415,20 +5417,18 @@ begin
   wbCTDAs := wbRArray('Conditions', wbCTDA);
   wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
 
-  wbEffects :=
-    wbRStructs('Effects','Effect', [
+  wbEffect :=
+    wbRStruct('Effect', [
       wbEFID,
       wbEFIT,
       wbCTDAs
     ], []);
 
-  wbEffectsReq :=
-    wbRStructs('Effects','Effect', [
-      wbEFID,
-      wbEFIT,
-      wbCTDAs
-    ], [], cpNormal, True);
+  wbEffects :=
+    wbRArray('Effects', wbEffect);
 
+  wbEffectsReq :=
+    wbRArray('Effects', wbEffect, cpNormal, True);
 
   wbRecord(ALCH, 'Ingestible', [
     wbEDIDReq,
@@ -6173,6 +6173,9 @@ begin
 end;
 
 procedure DefineFO3d;
+var
+  wbFactionRank: IwbRecordMemberDef;
+  wbStaticPart: IwbRecordMemberDef;
 begin
   wbRecord(CSTY, 'Combat Style', [
     wbEDIDReq,
@@ -6519,6 +6522,14 @@ begin
 
   wbXNAMs := wbRArrayS('Relations', wbXNAM);
 
+  wbFactionRank :=
+    wbRStructSK([0], 'Rank', [
+      wbInteger(RNAM, 'Rank#', itS32),
+      wbString(MNAM, 'Male', 0, cpTranslate),
+      wbString(FNAM, 'Female', 0, cpTranslate),
+      wbString(INAM, 'Insignia (Unused)')
+    ], []);
+
   wbRecord(FACT, 'Faction', [
     wbEDIDReq,
     wbFULL,
@@ -6536,12 +6547,7 @@ begin
       wbByteArray('Unused', 2)
     ], cpNormal, True, nil, 1),
     wbFloat(CNAM, 'Unused'),
-    wbRStructsSK('Ranks', 'Rank', [0], [
-      wbInteger(RNAM, 'Rank#', itS32),
-      wbString(MNAM, 'Male', 0, cpTranslate),
-      wbString(FNAM, 'Female', 0, cpTranslate),
-      wbString(INAM, 'Insignia (Unused)')
-    ], [])
+    wbRArrayS('Ranks', wbFactionRank)
   ], False, nil, cpNormal, False, wbFACTAfterLoad);
 
   wbRecord(FURN, 'Furniture', [
@@ -6751,11 +6757,8 @@ begin
     )
   ]);
 
-  wbRecord(SCOL, 'Static Collection', [
-    wbEDIDReq,
-    wbOBNDReq,
-    wbMODLReq,
-    wbRStructs('Parts', 'Part', [
+  wbStaticPart :=
+    wbRStruct('Part', [
       wbFormIDCk(ONAM, 'Static', [STAT]),
       wbArrayS(DATA, 'Placements', wbStruct('Placement', [
         wbStruct('Position', [
@@ -6770,7 +6773,13 @@ begin
         ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
         wbFloat('Scale')
       ]), 0, cpNormal, True)
-    ], [], cpNormal, True)
+    ], [], cpNormal, True);
+
+  wbRecord(SCOL, 'Static Collection', [
+    wbEDIDReq,
+    wbOBNDReq,
+    wbMODLReq,
+    wbRArray('Parts', wbStaticPart, cpNormal, True)
   ]);
 
   wbRecord(MSTT, 'Moveable Static', [
@@ -6873,6 +6882,10 @@ begin
 end;
 
 procedure DefineFO3e;
+var
+  wbDebrisModel: IwbRecordMemberDef;
+  wbPerkEffect: IwbRecordMemberDef;
+  wbMenuButton: IwbRecordMemberDef;
 begin
   wbRecord(PROJ, 'Projectile', [
     wbEDIDReq,
@@ -7099,7 +7112,7 @@ begin
         wbFloat('Max X'),
         wbFloat('Max Y'),
         wbFloat('Max Z'),
-        wbArray('Cells', wbArray('Cell', wbInteger('Triangle', itS16).IncludeFlag(dfNotAlignable), -2)).IncludeFlag(dfNotAlignable) // Divisor is row count² , assumed triangle as the values fit the triangle id's
+        wbArray('Cells', wbArray('Cell', wbInteger('Triangle', itS16).IncludeFlag(dfNotAlignable), -2)).IncludeFlag(dfNotAlignable) // Divisor is row countï¿½ , assumed triangle as the values fit the triangle id's
       ]),
       wbArray(NVEX, 'External Connections', wbStruct('Connection', [
         wbByteArray('Unknown', 4),
@@ -7429,9 +7442,8 @@ begin
           ASPC, IDLM, ARMA, MSTT, NOTE, PWAT, SCOL, TACT, TERM, TXST])
   ]);
 
-  wbRecord(DEBR, 'Debris', [
-    wbEDIDReq,
-    wbRStructs('Models', 'Model', [
+  wbDebrisModel :=
+    wbRStruct('Model', [
       wbStruct(DATA, 'Data', [
         wbInteger('Percentage', itU8),
         wbString('Model FileName'),
@@ -7440,7 +7452,11 @@ begin
         ]))
       ], cpNormal, True),
       wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
-    ], [], cpNormal, True)
+    ], [], cpNormal, True);
+
+  wbRecord(DEBR, 'Debris', [
+    wbEDIDReq,
+    wbRArray('Models', wbDebrisModel, cpNormal, True)
   ]);
 
   wbRecord(IMGS, 'Image Space', [
@@ -7662,20 +7678,8 @@ begin
     wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
   ]);
 
-  wbRecord(PERK, 'Perk', [
-    wbEDIDReq,
-    wbFULL,
-    wbDESCReq,
-    wbICON,
-    wbCTDAs,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Trait', itU8, wbEnum(['No', 'Yes'])),
-      wbInteger('Min Level', itU8),
-      wbInteger('Ranks', itU8),
-      wbInteger('Playable', itU8, wbEnum(['No', 'Yes'])),
-      wbInteger('Hidden', itU8, wbEnum(['No', 'Yes']))
-    ], cpNormal, True, nil, 4),
-    wbRStructsSK('Effects', 'Effect', [0, 1], [
+  wbPerkEffect :=
+    wbRStructSK([0, 1], 'Effect', [
       wbStructSK(PRKE, [1, 2, 0], 'Header', [
         wbInteger('Type', itU8, wbEnum([
           'Quest + Stage',
@@ -7763,7 +7767,22 @@ begin
         wbEmbeddedScriptPerk
       ], [], cpNormal, False, wbPERKPRKCDontShow),
       wbEmpty(PRKF, 'End Marker', cpIgnore, True)
-    ], [])
+    ], []);
+
+  wbRecord(PERK, 'Perk', [
+    wbEDIDReq,
+    wbFULL,
+    wbDESCReq,
+    wbICON,
+    wbCTDAs,
+    wbStruct(DATA, 'Data', [
+      wbInteger('Trait', itU8, wbEnum(['No', 'Yes'])),
+      wbInteger('Min Level', itU8),
+      wbInteger('Ranks', itU8),
+      wbInteger('Playable', itU8, wbEnum(['No', 'Yes'])),
+      wbInteger('Hidden', itU8, wbEnum(['No', 'Yes']))
+    ], cpNormal, True, nil, 4),
+    wbRArrayS('Effects', wbPerkEffect)
   ]);
 
   wbBPNDStruct := wbStruct(BPND, '', [
@@ -7986,6 +8005,12 @@ begin
     ], cpNormal, True)
   ]);
 
+  wbMenuButton :=
+    wbRStruct('Menu Button', [
+      wbStringKC(ITXT, 'Button Text', 0, cpTranslate),
+      wbCTDAs
+    ], []);
+
   wbRecord(MESG, 'Message', [
     wbEDIDReq,
     wbDESCReq,
@@ -8006,10 +8031,7 @@ begin
       'Auto Display'
     ]), cpNormal, True, False, nil, wbMESGDNAMAfterSet),
     wbInteger(TNAM, 'Display Time', itU32, nil, cpNormal, False, False, wbMESGTNAMDontShow),
-    wbRStructs('Menu Buttons', 'Menu Button', [
-      wbStringKC(ITXT, 'Button Text', 0, cpTranslate),
-      wbCTDAs
-    ], [])
+    wbRArray('Menu Buttons', wbMenuButton)
   ], False, nil, cpNormal, False, wbMESGAfterLoad);
 
   wbRecord(RGDL, 'Ragdoll', [

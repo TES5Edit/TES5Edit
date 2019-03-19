@@ -338,12 +338,6 @@ var
   wbEFIX: IwbSubRecordDef;
   wbSCIT: IwbSubRecordStructDef;
   wbSCITOBME: IwbSubRecordStructDef;
-//  wbEffects: IwbSubRecordUnionDef;
-  wbEffects: IwbSubRecordArrayDef;
-  wbFaction: IwbRecordMemberDef;
-  wbLeveledListEntryCreature: IwbRecordMemberDef;
-  wbLeveledListEntryItem: IwbRecordMemberDef;
-  wbLeveledListEntrySpell: IwbRecordMemberDef;
   wbMaleBipedModel: IwbRecordMemberDef;
   wbMaleWorldModel: IwbRecordMemberDef;
   wbFemaleBipedModel: IwbRecordMemberDef;
@@ -1995,6 +1989,14 @@ begin
 end;
 
 procedure DefineTES4;
+var
+  wbEffect: IwbRecordMemberDef;
+  wbFactionRank: IwbRecordMemberDef;
+  wbEffects: IwbRecordMemberDef;
+  wbFaction: IwbRecordMemberDef;
+  wbLeveledListEntryCreature: IwbRecordMemberDef;
+  wbLeveledListEntryItem: IwbRecordMemberDef;
+  wbLeveledListEntrySpell: IwbRecordMemberDef;
 begin
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {0x00000001}'ESM',
@@ -2320,6 +2322,26 @@ begin
 
   wbOBMEResolutionInfo := wbEnum(['None', 'FormID', 'Magic Effect Code', 'Actor Value']);
 
+  wbEffect :=
+    wbRStruct('Effect', [
+      wbStruct(EFME, 'Oblivion Magic Extender', [
+        wbInteger('Record Version', itU8),
+        wbStruct('OBME Version', [
+          wbInteger('Beta', itU8),
+          wbInteger('Minor', itU8),
+          wbInteger('Major', itU8)
+        ]),
+        wbInteger('EFIT Param Info', itU8, wbOBMEResolutionInfo),
+        wbInteger('EFIX Param Info', itU8, wbOBMEResolutionInfo),
+        wbByteArray('Unused', $0A)
+      ]),
+      wbEFIDOBME,
+      wbEFITOBME,
+      wbSCITOBME,
+      wbString(EFII, 'Icon'),
+      wbEFIX
+    ], []);
+
   wbEffects := wbRArray('Effects',
     wbRUnion('Effects', [
       wbRStructSK([0, 1], 'Effect', [
@@ -2328,24 +2350,7 @@ begin
         wbSCIT
       ], []),
       wbRStruct('Effects', [
-        wbRStructs('Effects','Effect', [
-          wbStruct(EFME, 'Oblivion Magic Extender', [
-            wbInteger('Record Version', itU8),
-            wbStruct('OBME Version', [
-              wbInteger('Beta', itU8),
-              wbInteger('Minor', itU8),
-              wbInteger('Major', itU8)
-            ]),
-            wbInteger('EFIT Param Info', itU8, wbOBMEResolutionInfo),
-            wbInteger('EFIX Param Info', itU8, wbOBMEResolutionInfo),
-            wbByteArray('Unused', $0A)
-          ]),
-          wbEFIDOBME,
-          wbEFITOBME,
-          wbSCITOBME,
-          wbString(EFII, 'Icon'),
-          wbEFIX
-        ], []),
+        wbRArray('Effects', wbEffect),
         wbEmpty(EFXX, 'Effects End Marker', cpNormal, True),
         wbFULLReq
       ], [])
@@ -2773,6 +2778,13 @@ begin
     {5} 'Grand'
   ]);
 
+  wbFaction :=
+    wbStructSK(SNAM, [0], 'Faction', [
+      wbFormIDCk('Faction', [FACT]),
+      wbInteger('Rank', itU8),
+      wbByteArray('Unused', 3)
+    ]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions);
+
   wbRecord(CREA, 'Creature', [
     wbEDID,
     wbFULL,
@@ -2812,13 +2824,7 @@ begin
       wbInteger('Calc min', itU16),
       wbInteger('Calc max', itU16)
     ], cpNormal, True),
-    wbRArrayS('Factions',
-      wbStructSK(SNAM, [0], 'Faction', [
-        wbFormIDCk('Faction', [FACT]),
-        wbInteger('Rank', itU8),
-        wbByteArray('Unused', 3)
-      ])
-    ),
+    wbRArrayS('Factions', wbFaction),
     wbFormIDCk(INAM, 'Death item', [LVLI]),
     wbSCRI,
     wbStruct(AIDT, 'AI Data', [
@@ -3160,18 +3166,21 @@ begin
 
   wbXNAMs := wbRArrayS('Relations', wbXNAM);
 
+  wbFactionRank :=
+    wbRStructSK([0], 'Rank', [
+      wbInteger(RNAM, 'Rank#', itS32),
+      wbString(MNAM, 'Male', 0, cpTranslate),
+      wbString(FNAM, 'Female', 0, cpTranslate),
+      wbString(INAM, 'Insignia')
+    ], []);
+
   wbRecord(FACT, 'Faction', [
     wbEDID,
     wbFULL,
     wbXNAMs,
     wbInteger(DATA, 'Flags', itU8, wbFlags(['Hidden from Player', 'Evil', 'Special Combat']), cpNormal, True),
     wbFloat(CNAM, 'Crime Gold Multiplier', cpNormal, True, 1, -1, nil, nil, 1.0),
-    wbRStructsSK('Ranks', 'Rank', [0], [
-      wbInteger(RNAM, 'Rank#', itS32),
-      wbString(MNAM, 'Male', 0, cpTranslate),
-      wbString(FNAM, 'Female', 0, cpTranslate),
-      wbString(INAM, 'Insignia')
-    ], [])
+    wbRArrayS('Ranks', wbFactionRank)
   ]);
 
   wbRecord(FLOR, 'Flora', [
@@ -4051,13 +4060,6 @@ begin
     wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
     wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
   ], [], cpNormal, True);
-
-  wbFaction :=
-    wbStructSK(SNAM, [0], 'Faction', [
-      wbFormIDCk('Faction', [FACT]),
-      wbInteger('Rank', itU8),
-      wbByteArray('Unused', 3)
-    ]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions);
 
   wbRecord(NPC_, 'Non-Player Character', [
     wbEDID,
