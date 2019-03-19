@@ -9267,7 +9267,7 @@ begin
     Int64($0F3315AC), 'Money Shots',
     Int64($5E457DAC), 'Most Caps Carried',
     Int64($D37C6909), 'Murders',
-    Int64($B91253A4), 'Mysterious Strabger Visits',
+    Int64($B91253A4), 'Mysterious Stranger Visits',
     Int64($1DEEA18A), 'Nuka Cola Flavors Created',
     Int64($9CE72536), 'Nuka World Creatures Killed',
     Int64($EB0D60AC), 'Objects Built',
@@ -9292,7 +9292,7 @@ begin
     Int64($ACE470D7), 'Skill Books Read',
     Int64($B556CC52), 'Sneak Attacks',
     Int64($32D1B38F), 'Speach Successes',
-    Int64($5D6B18F1), 'Stimpacks Taken',
+    Int64($5D6B18F1), 'Stimpaks Taken',
     Int64($C5321BC5), 'Supply Lines Created',
     Int64($3869002E), 'Survival Denied',
     Int64($F9DEC209), 'Survival Level-Ups',
@@ -11188,7 +11188,7 @@ begin
        {110} 'OutofBreath',
        {111} 'CombatGrunt',
        {112} 'LeaveWaterBreath',
-       {113} 'ImpatientPostitive',
+       {113} 'ImpatientPositive',
        {114} 'ImpatientNegative',
        {115} 'ImpatientNeutral',
        {116} 'ImpatientQuestion',
@@ -11792,7 +11792,7 @@ begin
     wbOPDSs,
     wbFLTR,
     wbRStruct('Textures (RGB/A)', [
-      wbString(TX00, 'Difuse'),
+      wbString(TX00, 'Diffuse'),
       wbString(TX01, 'Normal/Gloss'),
       wbString(TX03, 'Glow'),
       wbString(TX04, 'Height'),
@@ -13409,7 +13409,7 @@ begin
     Sig2Int('HBEC'), 'Help Basic Enchanting',
     Sig2Int('HBFG'), 'Help Basic Forging',
     Sig2Int('HBFS'), 'Help Favorites',
-    Sig2Int('HBFT'), 'Help Teamate Favor',
+    Sig2Int('HBFT'), 'Help Teammate Favor',
     Sig2Int('HBHJ'), 'Help Jail',
     Sig2Int('HBJL'), 'Help Journal',
     Sig2Int('HBLH'), 'Help Low Health',
@@ -14549,7 +14549,7 @@ begin
       ]), [18]), [
       wbByteArray(DATA, 'Unknown'),
       wbByteArray(VNML, 'Vertex Normals'),
-      wbByteArray(VHGT, 'Vertext Height Map'),
+      wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
 
       wbRArrayS('Layers', wbRUnion('Layer', [
@@ -14589,7 +14589,7 @@ begin
           wbInteger('Z', itU8)
         ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), 33)
       ]), 33),
-      wbStruct(VHGT, 'Vertext Height Map', [
+      wbStruct(VHGT, 'Vertex Height Map', [
         wbFloat('Offset'),
         wbArray('Rows', wbStruct('Row', [
           wbArray('Columns', wbInteger('Column', itU8), 33)
@@ -14968,7 +14968,7 @@ begin
     {28} 'Cure Addiction',
     {29} 'Cure Poison',
     {30} 'Concussion',
-    {31} 'Stimpack',
+    {31} 'Stimpak',
     {32} 'Accumulate Magnitude',
     {33} 'Stagger',
     {34} 'Peak Value Modifier',

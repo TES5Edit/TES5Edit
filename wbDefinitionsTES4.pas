@@ -3676,7 +3676,7 @@ begin
     wbRecord(LAND, 'Landscape', [
       wbByteArray(DATA, 'Unknown'),
       wbByteArray(VNML, 'Vertex Normals'),
-      wbByteArray(VHGT, 'Vertext Height Map'),
+      wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
 
       wbRArrayS('Layers', wbRUnion('Layer', [
@@ -3717,7 +3717,7 @@ begin
           wbInteger('Z', itU8)
         ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), 33)
       ]), 33),
-      wbStruct(VHGT, 'Vertext Height Map', [
+      wbStruct(VHGT, 'Vertex Height Map', [
         wbFloat('Offset'),
         wbArray('Rows', wbStruct('Row', [
           wbArray('Columns', wbInteger('Column', itU8), 33)

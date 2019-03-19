@@ -723,7 +723,7 @@ object frmOptions: TfrmOptions
           'he end'
         Caption = 
           'Show values of flags and enumerations (requires restart, interfe' +
-          'rs with scripts)'
+          'res with scripts)'
         TabOrder = 1
       end
       object cbSortINFO: TCheckBox
