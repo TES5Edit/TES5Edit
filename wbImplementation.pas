@@ -29,6 +29,7 @@ uses
   Math,
   wbInterface,
   wbLoadOrder,
+  System.Generics.Collections,
   {$IFDEF USE_CODESITE}
   CodeSiteLogging,
   {$ENDIF}
@@ -69,9 +70,14 @@ function wbCreateKeepAliveRoot: IwbKeepAliveRoot;
 function wbBeginKeepAlive: Integer;
 function wbEndKeepAlive: Integer;
 
+function wbFormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
+
+function wbRecordByLoadOrderFormID(const aFormID: TwbFormID): IwbMainRecord;
+
 implementation
 
 uses
+  TypInfo,
   lz4io,
   wbLocalization,
   wbHelpers,
@@ -395,6 +401,7 @@ type
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); virtual;
     procedure ResetModified(aResetModified: TwbResetModified); virtual;
     function GetLinksTo: IwbElement; virtual;
+    procedure SetLinksTo(const aElement: IwbElement); virtual;
     function GetNoReach: Boolean;
 
     procedure SetContainer(const aContainer: IwbContainer); virtual;
@@ -1343,10 +1350,12 @@ type
     function CanContainFormIDs: Boolean; override;
     function CanElementReset: Boolean; override;
     function GetLinksTo: IwbElement; override;
+    procedure SetLinksTo(const aValue: IwbElement); override;
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
     procedure PrepareSave; override;
     function RemoveInjected(aCanRemove: Boolean): Boolean; override;
     function ResetLeafFirst: Boolean; override;
+    function Add(const aName: string; aSilent: Boolean): IwbElement; override;
 
     procedure SetToDefaultInternal; override;
 
@@ -1409,6 +1418,7 @@ type
     procedure BuildRef; override;
     function CanContainFormIDs: Boolean; override;
     function GetLinksTo: IwbElement; override;
+    procedure SetLinksTo(const aValue: IwbElement); override;
     function GetDataSize: Integer; override;
     function DoCheckSizeAfterWrite: Boolean; override;
 
@@ -12051,6 +12061,14 @@ begin
   Result := TwbValue.Create(aContainer, aValueDef, aSource, aOnlySK, aNameSuffix);
 end;
 
+function TwbSubRecord.Add(const aName: string; aSilent: Boolean): IwbElement;
+begin
+  if srsIsArray in srStates then
+    Result := Assign(High(Integer), nil, False)
+  else
+    Result := inherited Add(aName, aSilent);
+end;
+
 function TwbSubRecord.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
 var
   SelfRef    : IwbContainerElementRef;
@@ -13124,6 +13142,47 @@ begin
       if Assigned(srValueDef) then begin
         OldValue := GetNativeValue;
         srValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
+        SetModified(True);
+        NewValue := GetNativeValue;
+        DoAfterSet(OldValue, NewValue);
+      end else
+        raise Exception.Create(GetName + ' can not be edited');
+      if (srsIsFlags in srStates) and (csInit in cntStates) then begin
+        Reset;
+        Init;
+      end;
+      NotifyChanged(eContainer);
+    end;
+  finally
+    EndUpdate;
+  end;
+end;
+
+procedure TwbSubRecord.SetLinksTo(const aValue: IwbElement);
+var
+  SelfRef : IwbContainerElementRef;
+  OldValue, NewValue: Variant;
+  OldLinksTo: IwbElement;
+begin
+  if not wbEditAllowed then
+    raise Exception.Create(GetName + ' can not be edited.');
+
+  SelfRef := Self as IwbContainerElementRef;
+  if not Assigned(srDef) then
+    if Assigned(aValue) then
+      raise Exception.Create(GetName + ' can not be edited')
+    else
+      Exit;
+
+  DoInit(False);
+
+  BeginUpdate;
+  try
+    OldLinksTo := srValueDef.LinksTo[dcDataBasePtr, dcDataEndPtr, Self];
+    if (OldLinksTo <> aValue) and (not Assigned(OldLinksTo) or not OldLinksTo.Equals(aValue)) then begin
+      if Assigned(srValueDef) then begin
+        OldValue := GetNativeValue;
+        srValueDef.LinksTo[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
         SetModified(True);
         NewValue := GetNativeValue;
         DoAfterSet(OldValue, NewValue);
@@ -16218,6 +16277,11 @@ begin
     if IsInternal then
       wbEndInternalEdit;
   end;
+end;
+
+procedure TwbElement.SetLinksTo(const aElement: IwbElement);
+begin
+  raise Exception.CreateFmt('%s.SetLinksTo is not implemented', [ClassName]);
 end;
 
 procedure TwbElement.SetLocalized(const aValue: TwbTriBool);
@@ -19659,6 +19723,33 @@ begin
 end;
 
 
+procedure TwbValueBase.SetLinksTo(const aValue: IwbElement);
+var
+  OldValue, NewValue: Variant;
+  OldLinksTo: IwbElement;
+begin
+  if not wbEditAllowed then
+    raise Exception.Create(GetName + ' can not be edited.');
+
+  BeginUpdate;
+  try
+    OldLinksTo := vbValueDef.LinksTo[dcDataBasePtr, dcDataEndPtr, Self];
+    if (OldLinksTo <> aValue) and (not Assigned(OldLinksTo) or not OldLinksTo.Equals(aValue)) then begin
+      if Assigned(vbValueDef) then begin
+        OldValue := GetNativeValue;
+        vbValueDef.LinksTo[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
+        SetModified(True);
+        NewValue := GetNativeValue;
+        DoAfterSet(OldValue, NewValue);
+      end else
+        raise Exception.Create(GetName + ' can not be edited');
+      NotifyChanged(eContainer);
+    end;
+  finally
+    EndUpdate;
+  end;
+end;
+
 procedure TwbValueBase.SetNameSuffix(const aSuffix: string);
 begin
   vbNameSuffix := aSuffix;
@@ -20569,6 +20660,44 @@ begin
     _DataSizeWord := Value;
 end;
 
+
+var
+  _Identitys  : array[Byte] of TDictionary<string, Cardinal>;
+  _NextIDs    : array[Byte] of Cardinal;
+
+function wbFormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
+var
+  i: Cardinal;
+  s: string;
+begin
+  Assert(wbGameMode = gmTES3);
+  aIdentity := aIdentity.ToLowerInvariant;
+
+  if not Assigned(_Identitys[aFormIDNameBase]) then
+    _Identitys[aFormIDNameBase] := TDictionary<string, Cardinal>.Create;
+
+  if not _Identitys[aFormIDNameBase].TryGetValue(aIdentity, i) then begin
+    i := _NextIDs[aFormIDNameBase];
+    Inc(_NextIDs[aFormIDNameBase]);
+    _Identitys[aFormIDNameBase].Add(aIdentity, i);
+  end;
+
+  Result := TwbFormID.FromCardinal( (Cardinal(aFormIDBase) shl 16) + i );
+end;
+
+function wbRecordByLoadOrderFormID(const aFormID: TwbFormID): IwbMainRecord;
+var
+  FileID: TwbFileID;
+begin
+  Result := nil;
+  FileID := aFormID.FileID;
+  for var i:= Low(Files) to High(Files) do
+    if Files[i].LoadOrderFileID = FileID then begin
+      Result := Files[i].RecordByFormID[aFormID, True, False];
+      Exit;
+    end;
+end;
+
 initialization
   _MastersGeneration := 1;
 {$IFDEF USE_PARALLEL_BUILD_REFS}
@@ -20610,6 +20739,8 @@ finalization
   wbContainedInDef[6] := nil;
   wbContainedInDef[7] := nil;
   wbContainedInDef[10] := nil;
+  for var i := Low(_Identitys) to High(_Identitys) do
+    FreeAndNil(_Identitys[i]);
 
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   _ResizeLock.Destroy;
