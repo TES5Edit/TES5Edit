@@ -370,6 +370,8 @@ begin
   if not Assigned(Faction.LinksTo) then
     Exit;
 
+  Rank := Container.Elements[1];
+
   aValue := Faction.Value;
 
   if Assigned(Rank) then
