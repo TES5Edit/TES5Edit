@@ -3437,7 +3437,7 @@ begin
           {29} wbFormIDCkNoReach('Referenceable Object', [CREA, NPC_, TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS])
         ]),
      {7}wbInteger('Unused', itU32, nil, cpIgnore)
-      ], cpNormal, False, nil, 7).SetToStr(wbConditionToStrTES4).IncludeFlag(dfCollapsed, wbCollapseConditions),
+      ], cpNormal, False, nil, 7).SetToStr(wbConditionToStr).IncludeFlag(dfCollapsed, wbCollapseConditions),
 
       wbStructSK(CTDT, [3, 4], 'Condition (old format)', [
      {0}wbInteger('Type', itU8, wbCtdaType),

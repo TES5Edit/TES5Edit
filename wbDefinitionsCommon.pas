@@ -11,42 +11,36 @@ const
   SCDA : TwbSignature = 'SCDA';
   SCTX : TwbSignature = 'SCTX';
 
-  procedure wbConditionToStrFNV(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbConditionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-  procedure wbConditionToStrFO3(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbEquipSlotToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-  procedure wbConditionToStrTES4(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbFactionRelationToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-  procedure wbConditionToStrTES5(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType); {also used for FO4 and FO76}
+procedure wbFactionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-  procedure wbEquipSlotToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbItemToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-  procedure wbFactionRelationToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbLeveledListEntryToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-  procedure wbFactionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbModelToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-  procedure wbItemToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbObjectBoundsToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-  procedure wbLeveledListEntryToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbRecordHeaderToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-  procedure wbModelToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbRGBAToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-  procedure wbObjectBoundsToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbObjectPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-  procedure wbRecordHeaderToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbScriptPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-  procedure wbRGBAToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-  procedure wbObjectPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+/// <summary>Calls and returns wbGetScriptObjFormat. Used for VMAD parsing.</summary>
+function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 
-  procedure wbScriptPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-
-  procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-
-  /// <summary>Calls and returns wbGetScriptObjFormat. Used for VMAD parsing.</summary>
-  function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-
-  procedure wbScriptToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbScriptToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 implementation
 
@@ -61,19 +55,9 @@ const
 
 {>>> For Collapsible Fields <<<}
 
-procedure wbTrySetContainer(const aElement: IwbElement; aType: TwbCallbackType; var aContainer: IwbContainerElementRef);
-var
-  Container: IwbContainerElementRef;
+function wbTrySetContainer(const aElement: IwbElement; aType: TwbCallbackType; out aContainer: IwbContainerElementRef): Boolean;
 begin
-  aContainer := nil;
-
-  if aType <> ctToSummary then
-    Exit;
-
-  if not Supports(aElement, IwbContainerElementRef, Container) then
-    Exit;
-
-  aContainer := Container;
+  Result := (aType = ctToSummary) and Supports(aElement, IwbContainerElementRef, aContainer);
 end;
 
 /// <summary>Generates "{Count}x {FormID}" string for item. Supports single and double structs.</summary>
@@ -171,8 +155,52 @@ begin
   Items.Free;
 end;
 
-procedure wbBuildConditionStrWithOperators(const Container: IwbContainerElementRef; Typ: Byte; var aValue: string);
+procedure wbConditionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Container: IwbContainerElementRef;
+  cerCTDA: IwbContainerElementRef;
 begin
+  if not wbTrySetContainer(aElement, aType, Container) then
+    Exit;
+
+  if wbGameMode > gmFNV then begin
+    if not Supports(Container.RecordBySignature[CTDA], IwbContainerElementRef, cerCTDA) then
+      Exit;
+  end else
+    cerCTDA := Container;
+
+  var Typ : Byte := cerCTDA.Elements[0].NativeValue;
+  var Func := cerCTDA.Elements[3];
+
+  if (cerCTDA.ElementCount >= 9) and (cerCTDA.Elements[7].Def.DefType <> dtEmpty) and (cerCTDA.Elements[8].Def.DefType <> dtEmpty) then begin
+    var RunOn := cerCTDA.Elements[7];
+    var RunOnInt: Integer := RunOn.NativeValue;
+    if wbGameMode = gmFNV then begin
+      var FuncInt: Integer := Func.NativeValue;
+      if (FuncInt = 106) or (FuncInt = 285) then
+        RunOnInt := 0;
+    end;
+    if RunOnInt = 2 then
+      aValue := '(' + cerCTDA.Elements[8].Summary + ')'
+    else
+      aValue := RunOn.Summary.Replace(' ', '', [rfReplaceAll]);
+  end else
+    if (Typ and $02) = 0 then
+      aValue := 'Subject'
+    else
+      aValue := 'Target';
+
+  aValue := aValue + '.' + Func.Summary;
+
+  var Param1 := cerCTDA.Elements[5];
+  if Param1.ConflictPriority <> cpIgnore then begin
+    aValue := aValue + '(' {+ Param1.Name + ': '} + Param1.Summary;
+    var Param2 := cerCTDA.Elements[6];
+    if Param2.ConflictPriority <> cpIgnore then
+      aValue := aValue + ', ' {+ Param2.Name + ': '} + Param2.Summary;
+    aValue := aValue + ')';
+  end;
+
   case Typ and $E0 of
     $00: aValue := aValue + ' = ';
     $20: aValue := aValue + ' <> ';
@@ -182,174 +210,19 @@ begin
     $A0: aValue := aValue + ' <= ';
   end;
 
-  aValue := aValue + Container.Elements[2].Value;
+  aValue := aValue + cerCTDA.Elements[2].Summary;
+
+  var Conditions: IwbContainerElementRef;
+  if Supports(Container.Container, IwbContainerElementRef, Conditions) then begin
+    var l := Conditions.ElementCount;
+    if (l < 2) or Container.Equals(Conditions.Elements[Pred(l)]) then
+      Exit;
+  end;
 
   if (Typ and $01) = 0 then
     aValue := aValue + ' AND'
   else
     aValue := aValue + ' OR';
-end;
-
-// TODO: merge wbConditionToStr* procedures
-procedure wbConditionToStrFNV(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  Container: IwbContainerElementRef;
-  RunOn, Param1, Param2: IwbElement;
-  Typ: Byte;
-  i: Integer;
-begin
-  wbTrySetContainer(aElement, aType, Container);
-  if Container = nil then
-    Exit;
-
-  Typ := Container.Elements[0].NativeValue;
-
-  if (Container.ElementCount >= 9) and (Container.Elements[7].Def.DefType <> dtEmpty) and (Container.Elements[8].Def.DefType <> dtEmpty) then
-  begin
-    i := Container.Elements[3].NativeValue;
-    RunOn := Container.Elements[7];
-    if (i <> 106) and (i <> 285) and (RunOn.NativeValue = 2) then
-      aValue := Container.Elements[8].Value
-    else
-      aValue := RunOn.Value;
-  end
-  else
-    if (Typ and $02) = 0 then
-      aValue := 'Subject'
-    else
-      aValue := 'Target';
-
-  aValue := aValue + '.' + Container.Elements[3].Value;
-
-  Param1 := Container.Elements[5];
-  if Param1.ConflictPriority <> cpIgnore then
-  begin
-    aValue := aValue + '(' {+ Param1.Name + ': '} + Param1.Value;
-    Param2 := Container.Elements[6];
-    if Param2.ConflictPriority <> cpIgnore then
-      aValue := aValue + ', ' {+ Param2.Name + ': '} + Param2.Value;
-    aValue := aValue + ')';
-  end;
-
-  wbBuildConditionStrWithOperators(Container, Typ, aValue);
-end;
-
-procedure wbConditionToStrFO3(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  Container: IwbContainerElementRef;
-  RunOn, Param1, Param2: IwbElement;
-  Typ: Byte;
-begin
-  wbTrySetContainer(aElement, aType, Container);
-  if Container = nil then
-    Exit;
-
-  Typ := Container.Elements[0].NativeValue;
-
-  if (Container.ElementCount >= 9) and (Container.Elements[7].Def.DefType <> dtEmpty) and (Container.Elements[8].Def.DefType <> dtEmpty) then
-  begin
-    RunOn := Container.Elements[7];
-    if RunOn.NativeValue = 2 then
-      aValue := Container.Elements[8].Value
-    else
-      aValue := RunOn.Value;
-  end
-  else
-    if (Typ and $02) = 0 then
-      aValue := 'Subject'
-    else
-      aValue := 'Target';
-
-  aValue := aValue + '.' + Container.Elements[3].Value;
-
-  Param1 := Container.Elements[5];
-  if Param1.ConflictPriority <> cpIgnore then
-  begin
-    aValue := aValue + '(' {+ Param1.Name + ': '} + Param1.Value;
-    Param2 := Container.Elements[6];
-    if Param2.ConflictPriority <> cpIgnore then
-      aValue := aValue + ', ' {+ Param2.Name + ': '} + Param2.Value;
-    aValue := aValue + ')';
-  end;
-
-  wbBuildConditionStrWithOperators(Container, Typ, aValue);
-end;
-
-procedure wbConditionToStrTES4(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  Container: IwbContainerElementRef;
-  Param1, Param2: IwbElement;
-  Typ: Byte;
-begin
-  wbTrySetContainer(aElement, aType, Container);
-  if Container = nil then
-    Exit;
-
-  Typ := Container.Elements[0].NativeValue;
-  if (Typ and $02) = 0 then
-    aValue := 'Subject'
-  else
-    aValue := 'Target';
-
-  aValue := aValue + '.' + Container.Elements[3].Value;
-
-  Param1 := Container.Elements[5];
-  if Param1.ConflictPriority <> cpIgnore then
-  begin
-    aValue := aValue + '(' {+ Param1.Name + ': '} + Param1.Value;
-    Param2 := Container.Elements[6];
-    if Param2.ConflictPriority <> cpIgnore then
-      aValue := aValue + ', ' {+ Param2.Name + ': '} + Param2.Value;
-    aValue := aValue + ')';
-  end;
-
-{
-  var CER: IwbContainerElementRef;
-  if Supports(Condition.Container, IwbContainerElementRef, CER) then begin
-    var l := CER.ElementCount;
-    if (l < 2) or Condition.Equals(CER.Elements[Pred(l)]) then
-      Exit;
-  end;
-}
-
-  wbBuildConditionStrWithOperators(Container, Typ, aValue);
-end;
-
-procedure wbConditionToStrTES5(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  Container: IwbContainerElementRef;
-  lCTDA: IwbContainerElementRef;
-  RunOn, Param1, Param2: IwbElement;
-  Typ: Byte;
-begin
-  wbTrySetContainer(aElement, aType, Container);
-  if Container = nil then
-    Exit;
-
-  if not Supports(Container.RecordBySignature[CTDA], IwbContainerElementRef, lCTDA) then
-    Exit;
-
-  RunOn := lCTDA.Elements[7];
-  if RunOn.NativeValue = 2 then
-    aValue := lCTDA.Elements[8].Value
-  else
-    aValue := RunOn.Value;
-
-  aValue := aValue + '.' + lCTDA.Elements[3].Value;
-
-  Param1 := lCTDA.Elements[5];
-  if Param1.ConflictPriority <> cpIgnore then
-  begin
-    aValue := aValue + '(' {+ Param1.Name + ': '} + Param1.Value;
-    Param2 := lCTDA.Elements[6];
-    if Param2.ConflictPriority <> cpIgnore then
-      aValue := aValue + ', ' {+ Param2.Name + ': '} + Param2.Value;
-    aValue := aValue + ')';
-  end;
-
-  Typ := lCTDA.Elements[0].NativeValue;
-
-  wbBuildConditionStrWithOperators(lCTDA, Typ, aValue);
 end;
 
 procedure wbEquipSlotToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -689,31 +562,29 @@ var
   R, G, B, RGB: string;
   AlphaDefType: TwbDefType;
 begin
-  wbTrySetContainer(aElement, aType, Container);
-  if Container = nil then
+  if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
-  R := Container.Elements[0].Value;
-  G := Container.Elements[1].Value;
-  B := Container.Elements[2].Value;
-  A := Container.Elements[3];
-
-  RGB := 'RGB(' + R + ', ' + G + ', ' + B + ')';
-
-  // handle RGB only
-  if not Assigned(A) then
-  begin
-    aValue := RGB;
+  if Container.ElementCount >= 3 then begin
+    R := Container.Elements[0].Summary;
+    G := Container.Elements[1].Summary;
+    B := Container.Elements[2].Summary;
+  end else
     Exit;
-  end;
 
-  // handle RGBA
-  AlphaDefType := A.Def.DefType;
-
-  if not (AlphaDefType = dtByteArray) then
-    aValue := 'RGBA(' + R + ', ' + G + ', ' + B + ', ' + A.Value + ')'
+  if Container.ElementCount >= 4 then
+    A := Container.Elements[3]
   else
-    aValue := RGB;
+    A := nil;
+
+  if Assigned(A) then
+    if (A.ConflictPriority <= cpIgnore) or (A.Def.DefType = dtByteArray) then
+      A := nil;
+
+  if Assigned(A) then
+    aValue := 'RGBA(' + R + ', ' + G + ', ' + B + ', ' + A.Summary + ')'
+  else
+    aValue := 'RGB(' + R + ', ' + G + ', ' + B + ')';
 end;
 
 procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);

@@ -7055,7 +7055,7 @@ begin
     ], cpNormal, False{, nil, 0, wbCTDAAfterLoad}),
     wbString(CIS1, 'Parameter #1'),
     wbString(CIS2, 'Parameter #2')
-  ], [], cpNormal).SetToStr(wbConditionToStrTES5).IncludeFlag(dfCollapsed, wbCollapseConditions);
+  ], [], cpNormal).SetToStr(wbConditionToStr).IncludeFlag(dfCollapsed, wbCollapseConditions);
 
   wbCTDAs := wbRArray('Conditions', wbCTDA, cpNormal, False);
   wbCTDAsCount := wbRArray('Conditions', wbCTDA, cpNormal, False, nil, wbCTDAsAfterSet);
@@ -7167,7 +7167,7 @@ begin
     wbEDID,
     wbMODL,
     wbString(BNAM, 'Unload Event')
-  ]);
+  ]).SetSummaryKey([1]);
 
   wbRecord(ARMO, 'Armor',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -7239,7 +7239,7 @@ begin
     wbRArrayS('Additional Races', wbFormIDCK(MODL, 'Race', [RACE, NULL])),
     wbFormIDCk(SNDD, 'Footstep Sound', [FSTS, NULL]),
     wbFormIDCk(ONAM, 'Art Object', [ARTO])
-  ], False, nil, cpNormal, False, wbARMAAfterLoad);
+  ], False, nil, cpNormal, False, wbARMAAfterLoad).SetSummaryKey([4]);
 
   wbRecord(BOOK, 'Book', [
     wbEDID,
@@ -9290,7 +9290,7 @@ begin
       wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
       wbByteArray(NAM5, 'Texture Files Hashes', 0, cpNormal)
     ], [], cpNormal, True)
-  ]);
+  ]).SetSummaryKey([1, 2]).IncludeFlag(dfSummaryNoName);
 
   wbRecord(ADDN, 'Addon Node', [
     wbEDID,
@@ -9306,7 +9306,7 @@ begin
         3, 'Always Loaded' // {0x0002}'Always Loaded' : The Check-Box is Unchecked in the CK
       ]))
     ], cpNormal, True)
-  ]);
+  ]).SetSummaryKey([2]);
 end;
 
 procedure DefineTES5h;
@@ -9377,9 +9377,9 @@ begin
       {32} wbFloat('Min Time'),
       {36} wbFloat('Target % Between Actors'),
       {40} wbFloat('Near Target Distance')
-    ], cpNormal, True, nil, 8),
+    ], cpNormal, True, nil, 8).SetSummaryKeyOnValue([0, 1, 2]).IncludeFlagOnValue(dfSummaryNoName),
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
-  ]);
+  ]).SetSummaryKey([1, 2]).IncludeFlag(dfSummaryNoName);
 
   wbRecord(CPTH, 'Camera Path', [
     wbEDID,
@@ -9394,7 +9394,7 @@ begin
       130, 'Shot List'
     ]), cpNormal, True),
     wbRArray('Camera Shots', wbFormIDCk(SNAM, 'Camera Shot', [CAMS]))
-  ]);
+  ]).SetSummaryKey([1, 4]).IncludeFlag(dfSummaryNoName);
 
   wbRecord(VTYP, 'Voice Type', [
     wbEDID,
@@ -10526,7 +10526,7 @@ begin
       'Magic Hit Effect',
       'Enchantment Effect'
     ]))
-  ]);
+  ]).SetSummaryKey([2]);
 
   wbRecord(MATO, 'Material Object', [
     wbEDID,
@@ -11448,7 +11448,13 @@ begin
     wbFormID(CNAM, 'Created Object'),
     wbFormIDCkNoReach(BNAM, 'Workbench Keyword', [KYWD]),
     wbInteger(NAM1, 'Created Object Count', itU16)
-  ], False, nil, cpNormal, False, nil, wbContainerAfterSet);
+  ], False, nil, cpNormal, False, nil, wbContainerAfterSet)
+    .SetSummaryKey([6, 4, 2, 3, 5])
+    .SetSummaryPrefixSuffix(6, '(', 'x')
+    .SetSummaryPrefixSuffix(4, '', ')')
+    .SetSummaryPrefixSuffix(2, 'from (', ')')
+    .SetSummaryPrefixSuffix(3, 'when (', ')')
+    .SetSummaryPrefixSuffix(5, 'at (', ')');
 
   wbFaction :=
     wbStructSK(SNAM, [0], 'Faction', [

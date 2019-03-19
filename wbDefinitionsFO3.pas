@@ -5411,7 +5411,7 @@ begin
         wbInteger('Unused', itU32, nil, cpIgnore),
         wbFormIDCkNoReach('Reference', [PLYR, ACHR, ACRE, REFR, PMIS, PBEA, PGRE], True)
       ])
-    ], cpNormal, False, nil, 7, wbCTDAAfterLoad).SetToStr(wbConditionToStrFO3).IncludeFlag(dfCollapsed, wbCollapseConditions);
+    ], cpNormal, False, nil, 7, wbCTDAAfterLoad).SetToStr(wbConditionToStr).IncludeFlag(dfCollapsed, wbCollapseConditions);
   wbCTDAs := wbRArray('Conditions', wbCTDA);
   wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
 
