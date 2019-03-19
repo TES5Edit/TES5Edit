@@ -15912,12 +15912,6 @@ begin
   defReported := True;
 end;
 
-procedure TwbResolvableDef.SetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement, aValue: IwbElement);
-begin
-  ResolveDef(aBasePtr, aEndPtr, aElement).
-    LinksTo[aBasePtr, aEndPtr, aElement] := aValue;
-end;
-
 function TwbResolvableDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 var
   ValueDef: IwbValueDef;
