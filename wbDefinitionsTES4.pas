@@ -338,12 +338,6 @@ var
   wbEFIX: IwbSubRecordDef;
   wbSCIT: IwbSubRecordStructDef;
   wbSCITOBME: IwbSubRecordStructDef;
-//  wbEffects: IwbSubRecordUnionDef;
-  wbEffects: IwbSubRecordArrayDef;
-  wbFaction: IwbRecordMemberDef;
-  wbLeveledListEntryCreature: IwbRecordMemberDef;
-  wbLeveledListEntryItem: IwbRecordMemberDef;
-  wbLeveledListEntrySpell: IwbRecordMemberDef;
   wbMaleBipedModel: IwbRecordMemberDef;
   wbMaleWorldModel: IwbRecordMemberDef;
   wbFemaleBipedModel: IwbRecordMemberDef;
@@ -1995,6 +1989,14 @@ begin
 end;
 
 procedure DefineTES4;
+var
+  wbEffect: IwbRecordMemberDef;
+  wbFactionRank: IwbRecordMemberDef;
+  wbEffects: IwbRecordMemberDef;
+  wbFaction: IwbRecordMemberDef;
+  wbLeveledListEntryCreature: IwbRecordMemberDef;
+  wbLeveledListEntryItem: IwbRecordMemberDef;
+  wbLeveledListEntrySpell: IwbRecordMemberDef;
 begin
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {0x00000001}'ESM',
@@ -2047,12 +2049,12 @@ begin
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
-      ]),
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
       wbStruct('Rotation', [
         wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-      ])
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
     ]);
 
   wbDATAPosRot :=
@@ -2061,12 +2063,12 @@ begin
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
-      ]),
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
       wbStruct('Rotation', [
         wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-      ])
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
     ], cpNormal, True);
 
   wbMODL :=
@@ -2117,7 +2119,7 @@ begin
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32),
       wbXGLB
-    ], []),
+    ], []).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
     wbXESP,
     wbXRGD,
     wbXSCL,
@@ -2320,6 +2322,26 @@ begin
 
   wbOBMEResolutionInfo := wbEnum(['None', 'FormID', 'Magic Effect Code', 'Actor Value']);
 
+  wbEffect :=
+    wbRStruct('Effect', [
+      wbStruct(EFME, 'Oblivion Magic Extender', [
+        wbInteger('Record Version', itU8),
+        wbStruct('OBME Version', [
+          wbInteger('Beta', itU8),
+          wbInteger('Minor', itU8),
+          wbInteger('Major', itU8)
+        ]),
+        wbInteger('EFIT Param Info', itU8, wbOBMEResolutionInfo),
+        wbInteger('EFIX Param Info', itU8, wbOBMEResolutionInfo),
+        wbByteArray('Unused', $0A)
+      ]),
+      wbEFIDOBME,
+      wbEFITOBME,
+      wbSCITOBME,
+      wbString(EFII, 'Icon'),
+      wbEFIX
+    ], []);
+
   wbEffects := wbRArray('Effects',
     wbRUnion('Effects', [
       wbRStructSK([0, 1], 'Effect', [
@@ -2328,24 +2350,7 @@ begin
         wbSCIT
       ], []),
       wbRStruct('Effects', [
-        wbRStructs('Effects','Effect', [
-          wbStruct(EFME, 'Oblivion Magic Extender', [
-            wbInteger('Record Version', itU8),
-            wbStruct('OBME Version', [
-              wbInteger('Beta', itU8),
-              wbInteger('Minor', itU8),
-              wbInteger('Major', itU8)
-            ]),
-            wbInteger('EFIT Param Info', itU8, wbOBMEResolutionInfo),
-            wbInteger('EFIX Param Info', itU8, wbOBMEResolutionInfo),
-            wbByteArray('Unused', $0A)
-          ]),
-          wbEFIDOBME,
-          wbEFITOBME,
-          wbSCITOBME,
-          wbString(EFII, 'Icon'),
-          wbEFIX
-        ], []),
+        wbRArray('Effects', wbEffect),
         wbEmpty(EFXX, 'Effects End Marker', cpNormal, True),
         wbFULLReq
       ], [])
@@ -2576,19 +2581,19 @@ begin
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8),
         wbByteArray('Unused', 1)
-      ]),
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
       wbStruct('Directional Color', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8),
         wbByteArray('Unused', 1)
-      ]),
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
       wbStruct('Fog Color', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8),
         wbByteArray('Unused', 1)
-      ]),
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
       wbFloat('Fog Near'),
       wbFloat('Fog Far'),
       wbInteger('Directional Rotation XY', itS32),
@@ -2605,7 +2610,7 @@ begin
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32),
       wbXGLB
-    ], [XCLW, XCMT, XCCM])
+    ], [XCLW, XCMT, XCCM]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions)
   ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
 
   wbServiceFlags :=
@@ -2773,6 +2778,13 @@ begin
     {5} 'Grand'
   ]);
 
+  wbFaction :=
+    wbStructSK(SNAM, [0], 'Faction', [
+      wbFormIDCk('Faction', [FACT]),
+      wbInteger('Rank', itU8),
+      wbByteArray('Unused', 3)
+    ]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions);
+
   wbRecord(CREA, 'Creature', [
     wbEDID,
     wbFULL,
@@ -2812,13 +2824,7 @@ begin
       wbInteger('Calc min', itU16),
       wbInteger('Calc max', itU16)
     ], cpNormal, True),
-    wbRArrayS('Factions',
-      wbStructSK(SNAM, [0], 'Faction', [
-        wbFormIDCk('Faction', [FACT]),
-        wbInteger('Rank', itU8),
-        wbByteArray('Unused', 3)
-      ])
-    ),
+    wbRArrayS('Factions', wbFaction),
     wbFormIDCk(INAM, 'Death item', [LVLI]),
     wbSCRI,
     wbStruct(AIDT, 'AI Data', [
@@ -3043,7 +3049,7 @@ begin
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8),
         wbByteArray('Unused', 1)
-      ]),
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
       wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
       wbFloat('Fill/Texture Effect - Full Alpha Time'),
       wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
@@ -3058,7 +3064,7 @@ begin
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8),
         wbByteArray('Unused', 1)
-      ]),
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
       wbFloat('Edge Effect - Alpha Fade In Time'),
       wbFloat('Edge Effect - Full Alpha Time'),
       wbFloat('Edge Effect - Alpha Fade Out Time'),
@@ -3096,19 +3102,19 @@ begin
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8),
         wbByteArray('Unused', 1)
-      ]),
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
       wbStruct('Color Key 2 - Color', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8),
         wbByteArray('Unused', 1)
-      ]),
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
       wbStruct('Color Key 3 - Color', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8),
         wbByteArray('Unused', 1)
-      ]),
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
       wbFloat('Color Key 1 - Color Alpha'),
       wbFloat('Color Key 2 - Color Alpha'),
       wbFloat('Color Key 3 - Color Alpha'),
@@ -3160,18 +3166,21 @@ begin
 
   wbXNAMs := wbRArrayS('Relations', wbXNAM);
 
+  wbFactionRank :=
+    wbRStructSK([0], 'Rank', [
+      wbInteger(RNAM, 'Rank#', itS32),
+      wbString(MNAM, 'Male', 0, cpTranslate),
+      wbString(FNAM, 'Female', 0, cpTranslate),
+      wbString(INAM, 'Insignia')
+    ], []);
+
   wbRecord(FACT, 'Faction', [
     wbEDID,
     wbFULL,
     wbXNAMs,
     wbInteger(DATA, 'Flags', itU8, wbFlags(['Hidden from Player', 'Evil', 'Special Combat']), cpNormal, True),
     wbFloat(CNAM, 'Crime Gold Multiplier', cpNormal, True, 1, -1, nil, nil, 1.0),
-    wbRStructsSK('Ranks', 'Rank', [0], [
-      wbInteger(RNAM, 'Rank#', itS32),
-      wbString(MNAM, 'Male', 0, cpTranslate),
-      wbString(FNAM, 'Female', 0, cpTranslate),
-      wbString(INAM, 'Insignia')
-    ], [])
+    wbRArrayS('Ranks', wbFactionRank)
   ]);
 
   wbRecord(FLOR, 'Flora', [
@@ -3676,7 +3685,7 @@ begin
     wbRecord(LAND, 'Landscape', [
       wbByteArray(DATA, 'Unknown'),
       wbByteArray(VNML, 'Vertex Normals'),
-      wbByteArray(VHGT, 'Vertext Height Map'),
+      wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
 
       wbRArrayS('Layers', wbRUnion('Layer', [
@@ -3715,9 +3724,9 @@ begin
           wbInteger('X', itU8),
           wbInteger('Y', itU8),
           wbInteger('Z', itU8)
-        ]), 33)
+        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), 33)
       ]), 33),
-      wbStruct(VHGT, 'Vertext Height Map', [
+      wbStruct(VHGT, 'Vertex Height Map', [
         wbFloat('Offset'),
         wbArray('Rows', wbStruct('Row', [
           wbArray('Columns', wbInteger('Column', itU8), 33)
@@ -3729,7 +3738,7 @@ begin
           wbInteger('X', itU8),
           wbInteger('Y', itU8),
           wbInteger('Z', itU8)
-        ]), 33)
+        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), 33)
       ]), 33),
 
       wbRArrayS('Layers', wbRUnion('Layer', [
@@ -3775,7 +3784,7 @@ begin
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8),
         wbInteger('Unused', itU8)
-      ]),
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Dynamic',
         {0x00000002} 'Can be Carried',
@@ -4052,13 +4061,6 @@ begin
     wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
   ], [], cpNormal, True);
 
-  wbFaction :=
-    wbStructSK(SNAM, [0], 'Faction', [
-      wbFormIDCk('Faction', [FACT]),
-      wbInteger('Rank', itU8),
-      wbByteArray('Unused', 3)
-    ]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions);
-
   wbRecord(NPC_, 'Non-Player Character', [
     wbEDID,
     wbFULL,
@@ -4154,7 +4156,7 @@ begin
       wbInteger('Green', itU8),
       wbInteger('Blue', itU8),
       wbByteArray('Unused', 1)
-    ], cpNormal, True),
+    ], cpNormal, True).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
     wbFormIDCk(ZNAM, 'Combat Style', [CSTY]),
     wbFaceGen,
     wbByteArray(FNAM, 'Unknown', 0, cpBenign)
@@ -4481,7 +4483,7 @@ begin
       wbXOWN,
       wbInteger(XRNK, 'Faction rank', itS32),
       wbXGLB
-    ], [XLOC]),
+    ], [XLOC]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
     wbXESP,
     wbFormIDCk(XTRG, 'Target', [REFR, ACHR, ACRE], True),
     wbStruct(XSED, 'SpeedTree', [
@@ -4548,7 +4550,7 @@ begin
       wbInteger('Green', itU8),
       wbInteger('Blue', itU8),
       wbByteArray('Unused', 1)
-    ], cpNormal, True),
+    ], cpNormal, True).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
     wbFormIDCkNoReach(WNAM, 'Worldspace', [WRLD]),
 
     wbRArray('Region Areas', wbRStruct('Region Area', [
@@ -4613,7 +4615,7 @@ begin
           wbInteger('X', itU16),
           wbInteger('Y', itU16),
           wbInteger('Z', itU16)
-        ]),
+        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
         wbByteArray('Unused', 2),
         wbByteArray('Unknown', 4)
       ])),
@@ -4661,7 +4663,7 @@ begin
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
-      ]), 0, nil, nil, cpNormal, True)
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), 0, nil, nil, cpNormal, True)
   ]);
 
   wbRecord(SBSP, 'Subspace', [
@@ -4670,7 +4672,7 @@ begin
       wbFloat('X'),
       wbFloat('Y'),
       wbFloat('Z')
-    ], cpNormal, True)
+    ], cpNormal, True).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
   ]);
 
   wbSLSD := wbStructSK(SLSD, [0], 'Local Variable Data', [
@@ -4912,19 +4914,19 @@ begin
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8),
         wbByteArray('Unused', 1)
-      ]),
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
       wbStruct('Deep Color', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8),
         wbByteArray('Unused', 1)
-      ]),
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
       wbStruct('Reflection Color', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8),
         wbByteArray('Unused', 1)
-      ]),
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
       wbInteger('Texture Blend', itU8),
       wbByteArray('Unused', 3),
       wbFloat('Rain Simulator - Force'),
@@ -5082,7 +5084,7 @@ begin
           wbInteger('Green', itU8),
           wbInteger('Blue', itU8),
           wbByteArray('Unused', 1)
-        ]),
+        ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
         ['Sunrise', 'Day', 'Sunset', 'Night']
       ),
       ['Sky-Upper','Fog','Clouds-Lower','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Clouds-Upper']
@@ -5126,7 +5128,7 @@ begin
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8)
-      ])
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
     ], cpNormal, True),
     wbRArray('Sounds', wbStruct(SNAM, 'Sound', [
       wbFormIDCk('Sound', [SOUN]),

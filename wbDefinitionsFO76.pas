@@ -1196,7 +1196,7 @@ var
   wbKWDAs: IwbSubRecordDef;
   wbReqKWDAs: IwbSubRecordDef;
   wbKeywords: IwbSubRecordStructDef;
-  wbCNAM: IwbSubRecordDef;
+  wbCNAM: IwbRecordMemberDef;
   wbCITC: IwbSubRecordDef;
   wbCITCReq: IwbSubRecordDef;
   wbMGEFData: IwbSubRecordStructDef;
@@ -1284,11 +1284,6 @@ var
   wbLVOC: IwbSubRecordDef;
   wbLVIG: IwbSubRecordDef;
   wbXPCK: IwbSubRecordDef;
-  wbFaction: IwbRecordMemberDef;
-  wbLeveledListEntryItem: IwbRecordMemberDef;
-  wbLeveledListEntryNPC: IwbRecordMemberDef;
-  wbLeveledListEntryPackIn: IwbRecordMemberDef;
-  wbLeveledListEntryPerkCard: IwbRecordMemberDef;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -6525,23 +6520,23 @@ begin
     Result := 7;
 end;
 
-function wbByteColors(const aName: string = 'Color'): IwbStructDef;
+function wbByteColors(const aName: string = 'Color'): IwbValueDef;
 begin
   Result := wbStruct(aName, [
     wbInteger('Red', itU8),
     wbInteger('Green', itU8),
     wbInteger('Blue', itU8),
     wbByteArray('Unused', 1)
-  ]);
+  ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
 end;
 
-function wbFloatColors(const aName: string = 'Color'): IwbStructDef;
+function wbFloatColors(const aName: string = 'Color'): IwbValueDef;
 begin
   Result := wbStruct(aName, [
     wbFloat('Red', cpNormal, True, 255, 0),
     wbFloat('Green', cpNormal, True, 255, 0),
     wbFloat('Blue', cpNormal, True, 255, 0)
-  ]);
+  ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
 end;
 
 function wbWeatherColors(const aName: string): IwbStructDef;
@@ -7256,7 +7251,7 @@ begin
     wbInteger('Green', itU8),
     wbInteger('Blue', itU8),
     wbByteArray('Unknown', 1)
-  ]);
+  ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
 
   wbDODT := wbStruct(DODT, 'Decal Data', [
     wbFloat('Unknown'),
@@ -8181,12 +8176,12 @@ begin
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
-      ]),
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
       wbStruct('Rotation', [
         wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-      ])
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
     ]);
 
   wbDATAPosRot :=
@@ -8195,12 +8190,12 @@ begin
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
-      ]),
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
       wbStruct('Rotation', [
         wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-      ])
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
     ], cpNormal, True);
 
   wbMODS := wbFormIDCk(MODS, 'Material Swap', [MSWP]);
@@ -8578,7 +8573,7 @@ begin
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
-      ]), -1).IncludeFlag(dfNotAlignable),
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), -1).IncludeFlag(dfNotAlignable),
       wbArray('Triangles',
         wbStruct('Triangle', [
           wbInteger('Vertex 0', itS16, wbVertexToStr0, wbVertexToInt0).SetLinksToCallback(wbVertexLinksTo),
@@ -8709,6 +8704,9 @@ Can't properly represent that with current record definition methods.
 end;
 
 procedure DefineFO76b;
+var
+  wbBoneDataItem: IwbRecordMemberDef;
+  wbEffect: IwbRecordMemberDef;
 begin
   wbRefRecord(ACHR, 'Placed NPC',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -9267,7 +9265,7 @@ begin
     Int64($0F3315AC), 'Money Shots',
     Int64($5E457DAC), 'Most Caps Carried',
     Int64($D37C6909), 'Murders',
-    Int64($B91253A4), 'Mysterious Strabger Visits',
+    Int64($B91253A4), 'Mysterious Stranger Visits',
     Int64($1DEEA18A), 'Nuka Cola Flavors Created',
     Int64($9CE72536), 'Nuka World Creatures Killed',
     Int64($EB0D60AC), 'Objects Built',
@@ -9292,7 +9290,7 @@ begin
     Int64($ACE470D7), 'Skill Books Read',
     Int64($B556CC52), 'Sneak Attacks',
     Int64($32D1B38F), 'Speach Successes',
-    Int64($5D6B18F1), 'Stimpacks Taken',
+    Int64($5D6B18F1), 'Stimpaks Taken',
     Int64($C5321BC5), 'Supply Lines Created',
     Int64($3869002E), 'Survival Denied',
     Int64($F9DEC209), 'Survival Level-Ups',
@@ -10121,20 +10119,23 @@ begin
     wbEmpty(STOP, 'Marker', cpNormal, True)
   ], []);
 
-  wbBSMPSequence := wbRStructs('Bone Data', 'Data', [
-    wbInteger(BSMP, 'Gender', itU32, wbEnum(['Male', 'Female'])),
-    // should not be sorted!!!
-    wbRArray('Bones',
-      wbRStructSK([0], 'Bone', [
-        wbString(BSMB, 'Name'),
-        wbArray(BSMS, 'Values', wbFloat('Value')).IncludeFlag(dfNotAlignable),
-        wbUnknown(BMMP)
-      ], [])
-    )
-  ], []);
+  wbBoneDataItem :=
+    wbRStruct('Data', [
+      wbInteger(BSMP, 'Gender', itU32, wbEnum(['Male', 'Female'])),
+      // should not be sorted!!!
+      wbRArray('Bones',
+        wbRStructSK([0], 'Bone', [
+          wbString(BSMB, 'Name'),
+          wbArray(BSMS, 'Values', wbFloat('Value')).IncludeFlag(dfNotAlignable),
+          wbUnknown(BMMP)
+        ], [])
+      )
+    ], []);
 
-  wbEffectsReq :=
-    wbRStructs('Effects', 'Effect', [
+  wbBSMPSequence := wbRArray('Bone Data', wbBoneDataItem);
+
+  wbEffect :=
+    wbRStruct('Effect', [
       wbEFID,
       wbEFIT,
       wbFormIDCk(CVT0, 'Curve Table', [CURV]),
@@ -10144,6 +10145,9 @@ begin
       wbFormIDCk(DURG, 'Duration', [GLOB]),
       wbFormIDCk(MAGG, 'Magnitude', [GLOB])
     ], [], cpNormal, True);
+
+  wbEffectsReq :=
+    wbRArray('Effects', wbEffect, cpNormal, True);
 
   wbRecord(ACTI, 'Activator',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -10193,7 +10197,7 @@ begin
       wbInteger('Green', itU8),
       wbInteger('Blue', itU8),
       wbInteger('Unused', itU8)
-    ]),
+    ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
     wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
     wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
@@ -10587,6 +10591,8 @@ procedure DefineFO76c;
       wbString(MNAM, 'Comments')
     ], True, wbPlacedAddInfo);
   end;
+var
+  wbCellFlags: IwbFlagsDef;
 
 begin
 {>>>
@@ -10609,7 +10615,7 @@ begin
   ReferenceRecord(PHZD, 'Placed Hazard');
   ReferenceRecord(PMIS, 'Placed Missile');
 
-  var wbCellFlags := wbFlags([
+  wbCellFlags := wbFlags([
       {0x0001} 'Is Interior Cell',
       {0x0002} 'Has Water',
       {0x0004} 'Can''t Travel From Here',
@@ -11188,7 +11194,7 @@ begin
        {110} 'OutofBreath',
        {111} 'CombatGrunt',
        {112} 'LeaveWaterBreath',
-       {113} 'ImpatientPostitive',
+       {113} 'ImpatientPositive',
        {114} 'ImpatientNegative',
        {115} 'ImpatientNeutral',
        {116} 'ImpatientQuestion',
@@ -11762,6 +11768,8 @@ begin
 end;
 
 procedure DefineFO76e;
+var
+  wbHeadPartPart: IwbRecordMemberDef;
 begin
   wbRecord(LCRT, 'Location Reference Type',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -11792,7 +11800,7 @@ begin
     wbOPDSs,
     wbFLTR,
     wbRStruct('Textures (RGB/A)', [
-      wbString(TX00, 'Difuse'),
+      wbString(TX00, 'Diffuse'),
       wbString(TX01, 'Normal/Gloss'),
       wbString(TX03, 'Glow'),
       wbString(TX04, 'Height'),
@@ -11813,6 +11821,16 @@ begin
     ]), cpNormal, True),
     wbString(MNAM, 'Material')
   ]);
+
+  wbHeadPartPart :=
+    wbRStruct('Part', [
+      wbInteger(NAM0, 'Part Type', itU32, wbEnum([
+        'Race Morph',
+        'Tri',
+        'Chargen Morph'
+      ])),
+      wbString(NAM1, 'FileName', 0, cpTranslate, True)
+    ], []);
 
   wbRecord(HDPT, 'Head Part',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -11845,14 +11863,7 @@ begin
     wbRArrayS('Extra Parts',
       wbFormIDCk(HNAM, 'Part', [HDPT])
     ),
-    wbRStructs('Parts', 'Part', [
-      wbInteger(NAM0, 'Part Type', itU32, wbEnum([
-        'Race Morph',
-        'Tri',
-        'Chargen Morph'
-      ])),
-      wbString(NAM1, 'FileName', 0, cpTranslate, True)
-    ], []),
+    wbRArray('Parts', wbHeadPartPart),
     wbFormIDCk(TNAM, 'Texture Set', [TXST]),
     wbFormIDCk(CNAM, 'Color', [CLFM]),
     wbFormIDCk(RNAM, 'Valid Races', [FLST]),
@@ -12147,7 +12158,7 @@ begin
                 wbFloat('X'),
                 wbFloat('Y'),
                 wbFloat('Z')
-              ]), -1)
+              ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), -1)
             ])
           ]),
           wbByteArray('Unknown', 4),
@@ -12188,6 +12199,8 @@ begin
 end;
 
 procedure DefineFO76g;
+var
+  wbDebrisModel: IwbRecordMemberDef;
 begin
 
    wbRecord(EXPL, 'Explosion', [
@@ -12287,9 +12300,8 @@ begin
     ], cpNormal, True, nil, 13)
   ]);
 
-  wbRecord(DEBR, 'Debris', [
-    wbEDID,
-    wbRStructs('Models', 'Model', [
+  wbDebrisModel :=
+    wbRStruct('Model', [
       wbStruct(DATA, 'Data', [
         wbInteger('Percentage', itU8),
         wbString('Model FileName'),
@@ -12298,7 +12310,11 @@ begin
         ]))
       ], cpNormal, True),
       wbMODT
-    ], [], cpNormal, True)
+    ], [], cpNormal, True);
+
+  wbRecord(DEBR, 'Debris', [
+    wbEDID,
+    wbRArray('Models', wbDebrisModel)
   ]);
 
   wbRecord(IMGS, 'Image Space', [
@@ -12902,7 +12918,7 @@ begin
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
-      ])
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
     ], cpNormal, True, nil, 9),
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
   ]);
@@ -12941,7 +12957,7 @@ begin
       wbFloat('Red', cpNormal, True, 255, 0),
       wbFloat('Green', cpNormal, True, 255, 0),
       wbFloat('Blue', cpNormal, True, 255, 0)
-    ]),
+    ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
     wbFloat(BNAM, 'Buoyancy'),
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
       'Stair Material',
@@ -13150,7 +13166,14 @@ end;
 procedure DefineFO76i;
 var
   a, b, c : TVarRecs;
+  wbMenuButton: IwbRecordMemberDef;
 begin
+  wbMenuButton :=
+    wbRStruct('Menu Button', [
+      wbLStringKC(ITXT, 'Button Text', 0, cpTranslate),
+      wbCTDAs
+    ], []);
+
   wbRecord(MESG, 'Message', [
     wbEDID,
     wbDESCReq,
@@ -13165,10 +13188,7 @@ begin
     wbInteger(TNAM, 'Display Time', itU32, nil, cpNormal, False, False, wbMESGTNAMDontShow),
     wbString(SNAM, 'SWF'),
     wbLStringKC(NNAM, 'Short Title', 0, cpTranslate),
-    wbRStructs('Menu Buttons', 'Menu Button', [
-      wbLStringKC(ITXT, 'Button Text', 0, cpTranslate),
-      wbCTDAs
-    ], []),
+    wbRArray('Menu Buttons', wbMenuButton),
     wbUnknown(MBNR)
   ], False, nil, cpNormal, False, wbMESGAfterLoad);
 
@@ -13409,7 +13429,7 @@ begin
     Sig2Int('HBEC'), 'Help Basic Enchanting',
     Sig2Int('HBFG'), 'Help Basic Forging',
     Sig2Int('HBFS'), 'Help Favorites',
-    Sig2Int('HBFT'), 'Help Teamate Favor',
+    Sig2Int('HBFT'), 'Help Teammate Favor',
     Sig2Int('HBHJ'), 'Help Jail',
     Sig2Int('HBJL'), 'Help Journal',
     Sig2Int('HBLH'), 'Help Low Health',
@@ -13723,6 +13743,8 @@ begin
 end;
 
 procedure DefineFO76j;
+var
+  wbStartScene: IwbRecordMemberDef;
 begin
   wbRecord(DLBR, 'Dialog Branch', [
     wbEDID,
@@ -13818,6 +13840,15 @@ begin
       wbFormIDCk('Association Type', [ASTP, NULL])
     ])
   ]);
+
+  wbStartScene :=
+    wbRStruct('Start Scene', [
+      wbFormIDCk(LCEP, 'Scene', [SCEN]),
+      wbInteger(INTT, 'Phase Index', itU16),
+      wbString(SSPN, 'Start Phase for Scene'),
+      wbCITC,
+      wbCTDAs
+    ], []);
 
   wbRecord(SCEN, 'Scene', [
     wbEDID,
@@ -13930,13 +13961,7 @@ begin
       wbInteger(SCQS, 'Set Parent Quest Stage', itS16),
       wbFloat(TNAM, 'Timer - Min Seconds'),
       wbUnknown(STSC),
-      wbRStructs('Start Scenes', 'Start Scene', [
-        wbFormIDCk(LCEP, 'Scene', [SCEN]),
-        wbInteger(INTT, 'Phase Index', itU16),
-        wbString(SSPN, 'Start Phase for Scene'),
-        wbCITC,
-        wbCTDAs
-      ], []),
+      wbRArray('Start Scenes', wbStartScene),
       wbFormIDCk(PTOP, 'Player Positive Response', [DIAL]),
       wbFormIDCk(NTOP, 'Player Negative Response', [DIAL]),
       wbFormIDCk(NETO, 'Player Neutral Response', [DIAL]),
@@ -14073,7 +14098,7 @@ begin
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
-      ]),
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
       wbFloat('Normal Dampener'),
       wbFloatColors('Single Pass Color'),
       wbInteger('Flags', itU32, wbFlags(['Single Pass']))
@@ -14245,7 +14270,7 @@ begin
       wbInteger('Green', itU8),
       wbInteger('Blue', itU8),
       wbInteger('Unused', itU8)
-    ], cpNormal, True),
+    ], cpNormal, True).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
     wbInteger(GNAM, 'Flags', itU32, wbFlags([
       {0x00000001} 'Trigger Volume',
       {0x00000002} 'Sensor',
@@ -14549,7 +14574,7 @@ begin
       ]), [18]), [
       wbByteArray(DATA, 'Unknown'),
       wbByteArray(VNML, 'Vertex Normals'),
-      wbByteArray(VHGT, 'Vertext Height Map'),
+      wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
 
       wbRArrayS('Layers', wbRUnion('Layer', [
@@ -14587,9 +14612,9 @@ begin
           wbInteger('X', itU8),
           wbInteger('Y', itU8),
           wbInteger('Z', itU8)
-        ]), 33)
+        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), 33)
       ]), 33),
-      wbStruct(VHGT, 'Vertext Height Map', [
+      wbStruct(VHGT, 'Vertex Height Map', [
         wbFloat('Offset'),
         wbArray('Rows', wbStruct('Row', [
           wbArray('Columns', wbInteger('Column', itU8), 33)
@@ -14601,7 +14626,7 @@ begin
           wbInteger('X', itU8),
           wbInteger('Y', itU8),
           wbInteger('Z', itU8)
-        ]), 33)
+        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), 33)
       ]), 33),
 
       wbRArrayS('Layers', wbRUnion('Layer', [
@@ -14711,6 +14736,11 @@ begin
 end;
 
 procedure DefineFO76m;
+var
+  wbLeveledListEntryItem: IwbRecordMemberDef;
+  wbLeveledListEntryNPC: IwbRecordMemberDef;
+  wbLeveledListEntryPackIn: IwbRecordMemberDef;
+  wbFaction: IwbRecordMemberDef;
 begin
 
   wbRecord(LSCR, 'Load Screen',
@@ -14968,7 +14998,7 @@ begin
     {28} 'Cure Addiction',
     {29} 'Cure Poison',
     {30} 'Concussion',
-    {31} 'Stimpack',
+    {31} 'Stimpak',
     {32} 'Accumulate Magnitude',
     {33} 'Stagger',
     {34} 'Peak Value Modifier',
@@ -15402,7 +15432,7 @@ begin
       wbFloat('Green', cpNormal, True, 255, 0),
       wbFloat('Blue', cpNormal, True, 255, 0),
       wbFloat('Alpha')
-    ]),
+    ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
     wbArray(MSDK, 'Morph Keys', wbInteger('Key', itU32, wbMorphValueToStr, wbHexStrToInt)),
     wbArray(MSDV, 'Morph Values', wbFloat('Value')),
     wbRArrayS('Face Tinting Layers',
@@ -15511,30 +15541,38 @@ end;
 procedure DefineFO76n;
 
   function wbTintTemplateGroups(const aName: string): IwbSubRecordArrayDef;
+  var
+    wbTintTemplateGroup: IwbSubRecordStructDef;
+    wbTintTemplateOption: IwbSubRecordStructDef;
   begin
-    Result :=
-      wbRStructs(aName, 'Group', [
+    wbTintTemplateOption :=
+      wbRStruct('Option', [
+        wbStruct(TETI, 'Index', [
+          wbByteArray('Unknown', 2),
+          wbInteger('Index', itU16)
+        ]),
+        wbLString(TTGP, 'Name', 0, cpTranslate),
+        wbUnknown(TTEF),
+        wbCTDAs,
+        wbRArray('Textures', wbString(TTET, 'Texture')),
+        wbUnknown(TTEB),
+        wbArray(TTEC, 'Template Colors', wbStruct('Template Color', [
+          wbFormIDCk('Color', [CLFM]),
+          wbFloat('Alpha'),
+          wbInteger('Template Index', itU16),
+          wbByteArray('Unknown', 4)
+        ])),
+        wbFloat(TTED, 'Unknown')
+      ], []);
+
+    wbTintTemplateGroup :=
+      wbRStruct('Group', [
         wbLString(TTGP, 'Group Name', 0, cpTranslate),
-        wbRStructs('Options', 'Option', [
-          wbStruct(TETI, 'Index', [
-            wbByteArray('Unknown', 2),
-            wbInteger('Index', itU16)
-          ]),
-          wbLString(TTGP, 'Name', 0, cpTranslate),
-          wbUnknown(TTEF),
-          wbCTDAs,
-          wbRArray('Textures', wbString(TTET, 'Texture')),
-          wbUnknown(TTEB),
-          wbArray(TTEC, 'Template Colors', wbStruct('Template Color', [
-            wbFormIDCk('Color', [CLFM]),
-            wbFloat('Alpha'),
-            wbInteger('Template Index', itU16),
-            wbByteArray('Unknown', 4)
-          ])),
-          wbFloat(TTED, 'Unknown')
-        ], []),
+        wbRArray('Options', wbTintTemplateOption),
         wbByteArray(TTGE, 'Group End', 4)
       ], []);
+
+    Result := wbRArray(aName, wbTintTemplateGroup);
   end;
 
   function wbMorphGroups(const aName: string): IwbSubRecordArrayDef;
@@ -16531,7 +16569,7 @@ begin
       wbFloat('X'),
       wbFloat('Y'),
       wbFloat('Z')
-    ]),
+    ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
 
     {--- Primitive ---}
     wbStruct(XPRM, 'Primitive', [
@@ -16539,7 +16577,7 @@ begin
         wbFloat('X', cpNormal, True, 2, 4),
         wbFloat('Y', cpNormal, True, 2, 4),
         wbFloat('Z', cpNormal, True, 2, 4)
-      ]),
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
       wbFloatColors('Color'),
       wbFloat('Unknown'),
       wbInteger('Type', itU32, wbEnum([
@@ -16567,7 +16605,7 @@ begin
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
-      ]),
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
       wbStruct('Rotation (Quaternion?)', [
         wbFloat('q1'),
         wbFloat('q2'),
@@ -16587,7 +16625,7 @@ begin
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
-      ]),
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
       wbStruct('Rotation (Quaternion?)', [
         wbFloat('q1'),
         wbFloat('q2'),
@@ -16991,7 +17029,7 @@ begin
       wbInteger('Green', itU8),
       wbInteger('Blue', itU8),
       wbByteArray('Unknown', 1)
-    ], cpNormal, True),
+    ], cpNormal, True).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
     wbFormIDCkNoReach(WNAM, 'Worldspace', [WRLD]),
     wbFormIDCkNoReach(LNAM, 'Location', [LCTN]),
     wbUnknown(LCPR),
@@ -17512,12 +17550,12 @@ begin
       wbFloat('X'),
       wbFloat('Y'),
       wbFloat('Z')
-    ], cpNormal, False),
+    ], cpNormal, False).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
     wbStruct(NAM1, 'Angular Velocity', [
       wbFloat('X'),
       wbFloat('Y'),
       wbFloat('Z')
-    ], cpNormal, False),
+    ], cpNormal, False).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
     wbString(NAM2, 'Layer 1 Noise Texture'),
     wbString(NAM3, 'Layer 2 Noise Texture'),
     wbString(NAM4, 'Layer 3 Noise Texture'),
@@ -17940,7 +17978,7 @@ begin
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8)
-      ]),
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
       wbInteger('Visual Effect - Begin', itU8), // scaled 0..1
       wbInteger('Visual Effect - End', itU8), // scaled 0..1
       wbInteger('Wind Direction', itU8), // scaled 0..360
@@ -18303,6 +18341,8 @@ begin
 end;
 
 procedure DefineFO76s;
+var
+  wbStaticPart: IwbRecordMemberDef;
 begin
   wbRecord(NOTE, 'Note', [
     wbEDID,
@@ -18452,6 +18492,28 @@ begin
     wbUnknown(VNAM, cpNormal, True)
   ]);
 
+  wbStaticPart :=
+    wbRStruct('Part', [
+      wbStruct(ONAM, 'Static', [
+        wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, CNCY, SCOL]),
+        wbFormIDCk('Material Swap', [MSWP])
+      ]),
+      wbUnknown(ONAM),
+      wbArrayS(DATA, 'Placements', wbStruct('Placement', [
+        wbStruct('Position', [
+          wbFloat('X'),
+          wbFloat('Y'),
+          wbFloat('Z')
+        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+        wbStruct('Rotation', [
+          wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+          wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+          wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+        wbFloat('Scale')
+      ]), 0, cpNormal, True)
+    ], [], cpNormal, True);
+
   wbRecord(SCOL, 'Static Collection',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  4, 'Non Occluder',
@@ -18476,26 +18538,7 @@ begin
     wbNAM1LODP,
     wbPRPS,
     wbFLTR,
-    wbRStructs('Parts', 'Part', [
-      wbStruct(ONAM, 'Static', [
-        wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, CNCY, SCOL]),
-        wbFormIDCk('Material Swap', [MSWP])
-      ]),
-      wbUnknown(ONAM),
-      wbArrayS(DATA, 'Placements', wbStruct('Placement', [
-        wbStruct('Position', [
-          wbFloat('X'),
-          wbFloat('Y'),
-          wbFloat('Z')
-        ]),
-        wbStruct('Rotation', [
-          wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-          wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-          wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-        ]),
-        wbFloat('Scale')
-      ]), 0, cpNormal, True)
-    ], [], cpNormal, True)
+    wbRArray('Parts', wbStaticPart, cpNormal, True)
   ]);
 
   wbRecord(SCSN, 'Audio Category Snapshot', [
@@ -18658,7 +18701,7 @@ begin
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z')
-      ]),
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
       wbUnion('Unknown', wbDeciderFormVersion187, [
         wbEmpty('Unused'),
         wbFloat('Unknown')
@@ -18678,6 +18721,8 @@ end;
 // AAPD\WTMX is always either 00 00 00 00 or 00 00 80 3F
 
 procedure DefineFO76u;
+var
+  wbLeveledListEntryPerkCard: IwbRecordMemberDef;
 begin
   wbRecord(AAPD, 'Aim Assist Pose Data', [
     wbEDID,

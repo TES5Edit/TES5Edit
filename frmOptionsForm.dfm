@@ -219,6 +219,19 @@ object frmOptions: TfrmOptions
         Font.Style = [fsBold]
         ParentFont = False
       end
+      object lblTypesToCollapse: TLabel
+        Left = 16
+        Top = 231
+        Width = 263
+        Height = 13
+        Caption = 'Types to Collapse by Default (requires restart)'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
       object cbCollapseRecordHeader: TCheckBox
         Left = 16
         Top = 39
@@ -314,6 +327,22 @@ object frmOptions: TfrmOptions
         Height = 17
         Caption = 'Factions'
         TabOrder = 11
+      end
+      object cbCollapseRGBA: TCheckBox
+        Left = 16
+        Top = 255
+        Width = 213
+        Height = 17
+        Caption = 'Colors (RGB/A)'
+        TabOrder = 12
+      end
+      object cbCollapseVec3: TCheckBox
+        Left = 235
+        Top = 255
+        Width = 213
+        Height = 17
+        Caption = 'Vector3 (XYZ)'
+        TabOrder = 13
       end
     end
     object tsCleaning: TTabSheet
@@ -694,7 +723,7 @@ object frmOptions: TfrmOptions
           'he end'
         Caption = 
           'Show values of flags and enumerations (requires restart, interfe' +
-          'rs with scripts)'
+          'res with scripts)'
         TabOrder = 1
       end
       object cbSortINFO: TCheckBox
