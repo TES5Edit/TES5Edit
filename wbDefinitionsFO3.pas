@@ -1,4 +1,4 @@
-﻿{*******************************************************************************
+{*******************************************************************************
 
      The contents of this file are subject to the Mozilla Public License
      Version 1.1 (the "License"); you may not use this file except in
@@ -392,7 +392,6 @@ const
   RNAM : TwbSignature = 'RNAM';
   RPLD : TwbSignature = 'RPLD';
   RPLI : TwbSignature = 'RPLI';
-  SCDA : TwbSignature = 'SCDA';
   SCHR : TwbSignature = 'SCHR';
   SCOL : TwbSignature = 'SCOL';
   SCPT : TwbSignature = 'SCPT';
@@ -400,7 +399,6 @@ const
   SCRN : TwbSignature = 'SCRN';
   SCRO : TwbSignature = 'SCRO';
   SCRV : TwbSignature = 'SCRV';
-  SCTX : TwbSignature = 'SCTX';
   SCVR : TwbSignature = 'SCVR';
   SLCP : TwbSignature = 'SLCP';
   SLSD : TwbSignature = 'SLSD';
@@ -571,9 +569,9 @@ var
   wbCTDAsReq: IwbSubRecordArrayDef;
   wbSCROs: IwbRecordMemberDef;
 //  wbPGRP: IwbSubRecordDef;
-  wbEmbeddedScript: IwbSubRecordStructDef;
-  wbEmbeddedScriptPerk: IwbSubRecordStructDef;
-  wbEmbeddedScriptReq: IwbSubRecordStructDef;
+  wbEmbeddedScript: IwbRecordMemberDef;
+  wbEmbeddedScriptPerk: IwbRecordMemberDef;
+  wbEmbeddedScriptReq: IwbRecordMemberDef;
   wbSCRI: IwbSubRecordDef;
   wbSCRIActor: IwbSubRecordDef;
   wbFaceGen: IwbSubRecordStructDef;
@@ -4626,7 +4624,7 @@ begin
       wbString(SCVR, 'Name', 0, cpCritical, True)
     ], [])),
     wbSCROs
-  ], [], cpNormal, False, nil, False, wbEmbeddedScriptAfterLoad);
+  ], [], cpNormal, False, nil, False, wbEmbeddedScriptAfterLoad).SetToStr(wbScriptToStr);
 
   wbEmbeddedScriptPerk := wbRStruct('Embedded Script', [
     wbSCHRReq,
@@ -4637,7 +4635,7 @@ begin
       wbString(SCVR, 'Name', 0, cpCritical, True)
     ], [])),
     wbSCROs
-  ], [], cpNormal, False, wbEPF2DontShow, False, wbEmbeddedScriptAfterLoad);
+  ], [], cpNormal, False, wbEPF2DontShow, False, wbEmbeddedScriptAfterLoad).SetToStr(wbScriptToStr);
 
   wbEmbeddedScriptReq := wbRStruct('Embedded Script', [
     wbSCHRReq,
@@ -4648,7 +4646,7 @@ begin
       wbString(SCVR, 'Name', 0, cpCritical, True)
     ], [])),
     wbSCROs
-  ], [], cpNormal, True, nil, False, wbEmbeddedScriptAfterLoad);
+  ], [], cpNormal, True, nil, False, wbEmbeddedScriptAfterLoad).SetToStr(wbScriptToStr);
 
 
   wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32);
@@ -6700,7 +6698,7 @@ begin
       wbString(SCVR, 'Name', 0, cpCritical, True)
     ], [])),
     wbSCROs
-  ]);
+  ]).SetToStr(wbScriptToStr);
 
   wbRecord(TERM, 'Terminal', [
     wbEDIDReq,
@@ -7112,7 +7110,7 @@ begin
         wbFloat('Max X'),
         wbFloat('Max Y'),
         wbFloat('Max Z'),
-        wbArray('Cells', wbArray('Cell', wbInteger('Triangle', itS16).IncludeFlag(dfNotAlignable), -2)).IncludeFlag(dfNotAlignable) // Divisor is row count� , assumed triangle as the values fit the triangle id's
+        wbArray('Cells', wbArray('Cell', wbInteger('Triangle', itS16).IncludeFlag(dfNotAlignable), -2)).IncludeFlag(dfNotAlignable) // Divisor is row count? , assumed triangle as the values fit the triangle id's
       ]),
       wbArray(NVEX, 'External Connections', wbStruct('Connection', [
         wbByteArray('Unknown', 4),

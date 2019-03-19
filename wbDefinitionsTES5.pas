@@ -14048,8 +14048,6 @@ end;
 
 {>>> Unused records, they have empty GRUP in skyrim.esm <<<}
 procedure DefineTES5p;
-var
-  wbStaticPart: IwbRecordMemberDef;
 begin
   wbRecord(CLDC, 'CLDC', [
     wbEDID
@@ -14073,7 +14071,22 @@ begin
     wbEDID,
     wbOBNDReq,
     wbMODLReq,
-    wbRArray('Parts', wbStaticPart, cpNormal, True)
+    wbRStructs('Parts', 'Part', [
+      wbFormIDCk(ONAM, 'Static', [STAT]),
+      wbArrayS(DATA, 'Placements', wbStruct('Placement', [
+        wbStruct('Position', [
+          wbFloat('X'),
+          wbFloat('Y'),
+          wbFloat('Z')
+        ]),
+        wbStruct('Rotation', [
+          wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+          wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+          wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+        ]),
+        wbFloat('Scale')
+      ]), 0, cpNormal, True)
+    ], [], cpNormal, True)
   ]);
 
   wbRecord(SCPT, 'SCPT', [

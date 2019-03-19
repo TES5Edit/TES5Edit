@@ -219,7 +219,6 @@ const
   RPLD : TwbSignature = 'RPLD';
   RPLI : TwbSignature = 'RPLI';
   SBSP : TwbSignature = 'SBSP';
-  SCDA : TwbSignature = 'SCDA';
   SCHD : TwbSignature = 'SCHD';
   SCHR : TwbSignature = 'SCHR';
   SCIT : TwbSignature = 'SCIT';
@@ -227,7 +226,6 @@ const
   SCRI : TwbSignature = 'SCRI';
   SCRO : TwbSignature = 'SCRO';
   SCRV : TwbSignature = 'SCRV';
-  SCTX : TwbSignature = 'SCTX';
   SCVR : TwbSignature = 'SCVR';
   SGST : TwbSignature = 'SGST';
   SKIL : TwbSignature = 'SKIL';
@@ -300,7 +298,7 @@ var
   wbXOWN: IwbSubRecordDef;
   wbXGLB: IwbSubRecordDef;
   wbXRGD: IwbSubRecordDef;
-  wbSLSD: IwbSubRecordDef;
+  wbSLSD: IwbRecordMemberDef;
   wbBodyDataIndex: IwbSubRecordDef;
   wbSPLO: IwbSubRecordDef;
   wbSPLOs: IwbSubRecordArrayDef;
@@ -322,7 +320,7 @@ var
   wbCTDAs: IwbSubRecordArrayDef;
   wbSCROs: IwbRecordMemberDef;
   wbPGRP: IwbSubRecordDef;
-  wbResultScript: IwbSubRecordStructDef;
+  wbResultScript: IwbRecordMemberDef;
 //  wbResultScriptOld: IwbSubRecordStructDef;
   wbSCRI: IwbSubRecordDef;
   wbFaceGen: IwbSubRecordStructDef;
@@ -1337,7 +1335,7 @@ var
   s, t       : string;
 begin
   case aType of
-    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Parameter 1>';
+    ctToStr, ctToSummary: Result := IntToStr(aInt) + ' <Warning: Could not resolve Parameter 1>';
     ctToEditValue: Result := IntToStr(aInt);
     ctToSortKey: begin
       Result := IntToHex64(aInt, 8);
@@ -1364,7 +1362,7 @@ begin
 
   if MainRecord.Signature <> QUST then begin
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+      ctToStr, ctToSummary: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
       ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
     end;
     Exit;
@@ -1385,7 +1383,11 @@ begin
       for i := 0 to Pred(Stages.ElementCount) do
         if Supports(Stages.Elements[i], IwbContainerElementRef, Stage) then begin
           j := Stage.ElementNativeValues['INDX'];
-          s := Trim(Stage.ElementValues['Log Entries\Log Entry\CNAM']);
+          if aType = ctToSummary then
+            s := Stage.ElementSummaries['Log Entries\Log Entry\CNAM']
+          else
+            s := Stage.ElementValues['Log Entries\Log Entry\CNAM'];
+          s := s.Trim;
           t := IntToStr(j);
           while Length(t) < 3 do
             t := '0' + t;
@@ -1395,7 +1397,7 @@ begin
             EditInfos.AddObject(t, TObject(j))
           else if j = aInt then begin
             case aType of
-              ctToStr, ctToEditValue: Result := t;
+              ctToStr, ctToSummary, ctToEditValue: Result := t;
               ctCheck: Result := '';
             end;
             Exit;
@@ -1404,7 +1406,7 @@ begin
     end;
 
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+      ctToStr, ctToSummary: Result := IntToStr(aInt) + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
       ctCheck: Result := '<Warning: Quest Stage not found in "' + MainRecord.Name + '">';
       ctEditInfo: begin
         EditInfos.Sort;
@@ -2435,7 +2437,7 @@ begin
     wbEDID,
     wbMODL,
     wbFormIDCk(DATA, 'IDLE animation', [IDLE], False, cpNormal, True)
-  ]);
+  ]).SetSummaryKey([1, 2]).IncludeFlag(dfSummaryNoName);
 
   wbRecord(APPA, 'Alchemical Apparatus', [
     wbEDID,
@@ -3213,7 +3215,7 @@ begin
       Ord('f'), 'Float'
     ]), cpNormal, True).SetDefaultEditValue('Float'),
     wbFloat(FLTV, 'Value', cpNormal, True)
-  ]);
+  ]).SetSummaryKey([2]);
 
   wbRecord(GMST, 'Game Setting', [
     wbEDID,
@@ -3222,7 +3224,7 @@ begin
       wbInteger('', itS32),
       wbFloat('')
     ], cpNormal, True)
-  ]);
+  ]).SetSummaryKey([1]);
 
   wbRecord(GRAS, 'Grass', [
     wbEDID,
@@ -3255,7 +3257,7 @@ begin
       ])),
       wbByteArray('Unused', 3)
     ], cpNormal, True)
-  ]);
+  ]).SetSummaryKey([1]);
 
   wbRecord(HAIR, 'Hair', [
     wbEDID,
@@ -3563,22 +3565,15 @@ begin
     wbByteArray(SCDA, 'Compiled result script'),
     wbStringScript(SCTX, 'Result script source'),
     wbSCROs
-  ], []);
-{
-  wbResultScriptOld := wbRStruct('Result Script (Old Format?)', [
-    wbByteArray(SCHD, 'Unknown (Script Header?)'),
-    wbByteArray(SCDA, 'Compiled result script'),
-    wbStringScript(SCTX, 'Result script source'),
-    wbSCROs
-  ], []);
-}
+  ], []).SetToStr(wbScriptToStr);
+
   wbRecord(IDLE, 'Idle Animation', [
     wbEDID,
     wbMODL,
     wbCTDAs,
     wbInteger(ANAM, 'Animation Group Section', itU8, wbIdleAnam, nil, cpNormal, True),
     wbArray(DATA, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [IDLE, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True)
-  ]);
+  ]).SetSummaryKey([1]);
 
   wbRecord(INFO, 'Dialog response', [
     wbStruct(DATA, '', [
@@ -3821,7 +3816,7 @@ begin
         ])
       ])
     ]))
-  ]);
+  ]).SetSummaryKey([2]);
 
   wbRecord(LTEX, 'Landscape Texture', [
     wbEDID,
@@ -3849,7 +3844,7 @@ begin
     ], cpNormal, True),
     wbInteger(SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True, False, nil, nil, 30),
     wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
-  ]);
+  ]).SetSummaryKey([1]);
 
   wbLeveledListEntryCreature :=
     wbStructExSK(LVLO, [0, 2], [3], 'Leveled List Entry', [
@@ -3888,7 +3883,7 @@ begin
     wbRArrayS('Leveled List Entries', wbLeveledListEntryCreature, cpNormal, True),
     wbSCRI,
     wbFormIDCk(TNAM, 'Creature template', [NPC_, CREA])
-  ], True, nil, cpNormal, False, wbLVLAfterLoad);
+  ], True, nil, cpNormal, False, wbLVLAfterLoad).SetSummaryKey([3]);
 
   wbRecord(LVLI, 'Leveled Item', [
     wbEDID,
@@ -3899,7 +3894,7 @@ begin
     ]), cpNormal, True),
     wbRArrayS('Leveled List Entries', wbLeveledListEntryItem, cpNormal, True),
     wbByteArray(DATA, 'Unused', 1)
-  ], False, nil, cpNormal, False, wbLVLAfterLoad);
+  ], False, nil, cpNormal, False, wbLVLAfterLoad).SetSummaryKey([3]);
 
   wbRecord(LVSP, 'Leveled Spell', [
     wbEDID,
@@ -3910,7 +3905,7 @@ begin
       {0x04} 'Use all spells'
     ]), cpNormal, True),
     wbRArrayS('Leveled List Entries', wbLeveledListEntrySpell, cpNormal, True)
-  ], False, nil, cpNormal, False, wbLVLAfterLoad);
+  ], False, nil, cpNormal, False, wbLVLAfterLoad).SetSummaryKey([3]);
 
   wbRecord(MGEF, 'Magic Effect', [
     wbStringMgefCode(EDID, 'Magic Effect Code'),
@@ -4197,43 +4192,43 @@ begin
           {0x80000000} ''
         ]);
 
-  wbPKDTType := wbEnum([
-           {0} 'Find',
-           {1} 'Follow',
-           {2} 'Escort',
-           {3} 'Eat',
-           {4} 'Sleep',
-           {5} 'Wander',
-           {6} 'Travel',
-           {7} 'Accompany',
-           {8} 'Use item at',
-           {9} 'Ambush',
-          {10} 'Flee not combat',
-          {11} 'Cast magic'
+  wbPKDTType := wbEnumSummary([
+           {0} 'Find', '',
+           {1} 'Follow', '',
+           {2} 'Escort', '',
+           {3} 'Eat', '',
+           {4} 'Sleep', '',
+           {5} 'Wander', '',
+           {6} 'Travel', '',
+           {7} 'Accompany', '',
+           {8} 'Use item at', 'Use',
+           {9} 'Ambush', '',
+          {10} 'Flee not combat', 'Flee',
+          {11} 'Cast magic', 'Cast'
         ]);
 
   wbRecord(PACK, 'AI Package', [
     wbEDID,
     wbUnion(PKDT, 'General', wbPACKPKDTDecider, [
-      wbStruct('General', [
+      wbStruct('', [
         wbInteger('Flags', itU16, wbPKDTFlags),
         wbInteger('Type', itU8, wbPKDTType),
         wbByteArray('Unused', 1)
-      ]),
-      wbStruct('General', [
+      ]).SetSummaryKey([1]).IncludeFlag(dfSummaryNoName),
+      wbStruct('', [
         wbInteger('Flags', itU32, wbPKDTFlags),
         wbInteger('Type', itU8, wbPKDTType),
         wbByteArray('Unused', 3)
-      ])
-    ]),
+      ]).SetSummaryKey([1]).IncludeFlag(dfSummaryNoName)
+    ]).IncludeFlag(dfSummaryNoName),
     wbStruct(PLDT, 'Location', [
-      wbInteger('Type', itS32, wbEnum([
-        {0} 'Near reference',
-        {1} 'In cell',
-        {2} 'Near current location',
-        {3} 'Near editor location',
-        {4} 'Object ID',
-        {5} 'Object type'
+      wbInteger('Type', itS32, wbEnumSummary([
+        {0} 'Near reference', 'near',
+        {1} 'In cell', 'in',
+        {2} 'Near current location', 'near current location',
+        {3} 'Near editor location', 'near editor location',
+        {4} 'Object ID', 'at any',
+        {5} 'Object type', 'at any object type'
       ])),
       wbUnion('Location', wbPxDTLocationDecider, [
         wbFormIDCkNoReach('Reference', [REFR, ACHR, ACRE, PLYR], True),
@@ -4244,7 +4239,7 @@ begin
         wbInteger('Object type', itU32)
       ]),
       wbInteger('Radius', itS32)
-    ]),
+    ]).ForValue(procedure (const v: IwbValueDef) begin (v as IwbStructDef).SetSummaryKey([0, 1]).IncludeFlag(dfSummaryNoName) end).IncludeFlag(dfSummaryNoName),
     wbStruct(PSDT, 'Schedule', [
       wbInteger('Month', itS8),
       wbInteger('Day of week', itS8, wbEnum([
@@ -4267,10 +4262,10 @@ begin
       wbInteger('Duration', itS32)
     ]),
     wbStruct(PTDT, 'Target', [
-      wbInteger('Type', itS32, wbEnum([
-        {0} 'Specific reference',
-        {1} 'Object ID',
-        {2} 'Object type'
+      wbInteger('Type', itS32, wbEnumSummary([
+        {0} 'Specific reference', 'only',
+        {1} 'Object ID', 'any',
+        {2} 'Object type', 'any object type'
       ])),
       wbUnion('Target', wbPxDTLocationDecider, [
         wbFormIDCkNoReach('Reference', [ACHR, ACRE, REFR, PLYR], True),
@@ -4278,9 +4273,9 @@ begin
         wbInteger('Object type', itU32)
       ]),
       wbInteger('Count', itS32)
-    ]),
+    ]).ForValue(procedure (const v: IwbValueDef) begin (v as IwbStructDef).SetSummaryKey([0, 1]).IncludeFlag(dfSummaryNoName) end).IncludeFlag(dfSummaryNoName),
     wbCTDAs
-  ]);
+  ]).SetSummaryKey([1, 2, 4, 5]).IncludeFlag(dfSummaryNoName);
 
   wbPGRP :=
     wbArray(PGRP, 'Points', wbStruct('Point', [
@@ -4555,11 +4550,11 @@ begin
 
     wbRArray('Region Areas', wbRStruct('Region Area', [
       wbInteger(RPLI, 'Edge Fall-off', itU32),
-      wbArray(RPLD, 'Region Point List Data', wbStruct('Point', [
+      wbArray(RPLD, 'Points', wbStruct('Point', [
         wbFloat('X'),
         wbFloat('Y')
       ]), 0, wbRPLDAfterLoad)
-    ], []), cpNormal, True),
+    ], []).SetSummaryKey([1]).IncludeFlag(dfSummaryNoName), cpNormal, True),
 
     wbRArrayS('Region Data Entries', wbRStructSK([0], 'Region Data Entry', [
       {always starts with an RDAT}
@@ -4648,7 +4643,7 @@ begin
         wbInteger('Chance', itU32)
       ]))
     ], []))
-  ], True);
+  ], True).SetSummaryKey([3, 4]).IncludeFlag(dfSummaryNoName);
 
   wbRecord(ROAD, 'Road', [
     wbPGRP,
@@ -4673,14 +4668,14 @@ begin
       wbFloat('Y'),
       wbFloat('Z')
     ], cpNormal, True).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
-  ]);
+  ]).SetSummaryKey([1]);
 
   wbSLSD := wbStructSK(SLSD, [0], 'Local Variable Data', [
     wbInteger('Index', itU32),
     wbByteArray('Unused', 12),
     wbInteger('Flags', itU8, wbFlags(['IsLongOrShort']), cpCritical),
     wbByteArray('Unused')
-  ]);
+  ]).IncludeFlag(dfSummaryNoName);
 
   wbRecord(SCPT, 'Script', [
     wbEDID,
@@ -4691,9 +4686,9 @@ begin
     wbRArrayS('Local Variables', wbRStructSK([0], 'Local Variable', [
       wbSLSD,
       wbString(SCVR, 'Name', 0, cpCritical)
-    ], [])),
+    ], []).SetSummaryKey([1]).IncludeFlag(dfSummaryNoName)),
     wbSCROs
-  ]);
+  ]).SetToStr(wbScriptToStr);
 
   wbRecord(SGST, 'Sigil Stone', [
     wbEDID,
@@ -4733,7 +4728,7 @@ begin
     wbString(JNAM, 'Journeyman Text', 0, cpTranslate, True),
     wbString(ENAM, 'Expert Text', 0, cpTranslate, True),
     wbString(MNAM, 'Master Text', 0, cpTranslate, True)
-  ]);
+  ]).SetSummaryKey([2]);
 
   wbRecord(SLGM, 'Soul Gem', [
     wbEDID,
@@ -4794,7 +4789,7 @@ begin
         wbEmpty('Unused')
       ], cpNormal, True)
     ], [], cpNormal, True)
-  ]);
+  ]).SetSummaryKey([1]);
 
   wbRecord(SPEL, 'Spell', [
     wbEDID,
@@ -4843,7 +4838,7 @@ begin
   wbRecord(STAT, 'Static', [
     wbEDID,
     wbMODL
-  ]);
+  ]).SetSummaryKey([1]);
 
   wbRecord(TES4, 'Main File Header', [
     wbStruct(HEDR, 'Header', [
@@ -4885,7 +4880,7 @@ begin
       wbFloat('Width'),
       wbFloat('Height')
     ], cpNormal, True)
-  ]);
+  ]).SetSummaryKey([1]);
 
   wbRecord(WATR, 'Water', [
     wbEDID,
@@ -4946,7 +4941,7 @@ begin
       wbFormIDCk('Nighttime', [WATR, NULL]),
       wbFormIDCk('Underwater', [WATR, NULL])
     ], cpNormal{>>>, True<<<})
-  ]);
+  ]).SetSummaryKey([1]);
 
   wbRecord(WEAP, 'Weapon', [
     wbEDID,
@@ -5139,7 +5134,7 @@ begin
        {3}'Thunder'
       ]))
     ]))
-  ]);
+  ]).SetSummaryKey([1,2,3]);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(GLOB);
