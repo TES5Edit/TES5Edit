@@ -11,8 +11,6 @@ const
   SCDA : TwbSignature = 'SCDA';
   SCTX : TwbSignature = 'SCTX';
 
-procedure wbScriptDataToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-
 procedure wbConditionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 procedure wbEquipSlotToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -145,21 +143,6 @@ begin
 
   Result := Items.CommaText;
   Items.Free;
-end;
-
-procedure wbScriptDataToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  Container: IwbContainerElementRef;
-begin
-  if not wbTrySetContainer(aElement, aType, Container) then
-    Exit;
-
-  var RefCount := 'RefCount = ' + Container.Elements[1].Value;
-  var CompiledSize := 'CompiledSize = ' + Container.Elements[2].Value;
-  var VariableCount := 'VariableCount = ' + Container.Elements[3].Value;
-  var ScriptType := Container.Elements[4].Value;
-
-  aValue := ScriptType + ' {' + CompiledSize + ', ' + RefCount + ', ' + VariableCount + '}';
 end;
 
 procedure wbConditionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);

@@ -3559,7 +3559,14 @@ begin
         ], [
           $100, 'Magic Effect'
         ]))
-      ]).SetToStr(wbScriptDataToStr).IncludeFlag(dfCollapsed, wbCollapseScriptData),
+      ])
+      .SetSummaryKeyOnValue([4, 2, 1, 3])
+      .SetSummaryPrefixSuffixOnValue(4, '', '')
+      .SetSummaryPrefixSuffixOnValue(2, '{CompiledSize = ', ',')
+      .SetSummaryPrefixSuffixOnValue(1, 'RefCount = ', ',')
+      .SetSummaryPrefixSuffixOnValue(3, 'VariableCount = ', '}')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseScriptData),
       wbStruct(SCHD, 'Basic Script Data', [
         wbByteArray('Unused', 4),
         wbInteger('RefCount', itU32),
@@ -3572,7 +3579,14 @@ begin
           $100, 'Magic Effect'
         ])),
         wbByteArray('Unknown')
-      ]).SetToStr(wbScriptDataToStr).IncludeFlag(dfCollapsed, wbCollapseScriptData)
+      ])
+      .SetSummaryKeyOnValue([4, 2, 1, 3])
+      .SetSummaryPrefixSuffixOnValue(4, '', '')
+      .SetSummaryPrefixSuffixOnValue(2, '{CompiledSize = ', ',')
+      .SetSummaryPrefixSuffixOnValue(1, 'RefCount = ', ',')
+      .SetSummaryPrefixSuffixOnValue(3, 'VariableCount = ', '}')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseScriptData)
     ], []);
 
   wbSCROs :=
