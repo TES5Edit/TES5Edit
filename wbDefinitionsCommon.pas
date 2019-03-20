@@ -68,19 +68,15 @@ var
   FormID, Count: IwbElement;
   MainRecord: IwbMainRecord;
 begin
+  Result := '';
+
   FormID := aContainer.Elements[0];
 
   if not Assigned(FormID) then
-  begin
-    Result := '';
     Exit;
-  end;
 
   if not Supports(FormID.LinksTo, IwbMainRecord, MainRecord) then
-  begin
-    Result := '';
     Exit;
-  end;
 
   Count := aContainer.Elements[1];
 
