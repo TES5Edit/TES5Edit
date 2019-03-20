@@ -578,7 +578,8 @@ type
     dfDontSave,
     dfUseLoadOrder,
     dfSummaryMembersNoName,
-    dfSummaryNoName
+    dfSummaryNoName,
+    dfSummaryNoSortKey
   );
 
   TwbDefFlags = set of TwbDefFlag;
@@ -2115,6 +2116,7 @@ type
     ['{CE0BDAB8-F4FB-42B8-8013-AE7176C0FCD1}']
     function SetSummaryKeyOnValue(const aSummaryKey: array of Integer): {Self}IwbSubRecordWithStructDef;
     function SetSummaryPrefixSuffixOnValue(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbSubRecordWithStructDef;
+    function SetSummaryDelimiterOnValue(const aDelimiter: string): {Self}IwbSubRecordWithStructDef;
   end;
 
   IwbSubRecordArrayDef = interface(IwbRecordMemberDef)
@@ -5106,6 +5108,7 @@ type
     {---IwbSubRecordWithStructDef---}
     function SetSummaryKeyOnValue(const aSummaryKey: array of Integer): {Self}IwbSubRecordWithStructDef;
     function SetSummaryPrefixSuffixOnValue(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbSubRecordWithStructDef;
+    function SetSummaryDelimiterOnValue(const aDelimiter: string): {Self}IwbSubRecordWithStructDef;
   end;
 
   TwbRecordMemberDef = class(TwbBaseSignatureDef, IwbRecordMemberDef)
@@ -9538,6 +9541,12 @@ begin
   Result := Self;
 end;
 
+function TwbSubRecordDef.SetSummaryDelimiterOnValue(const aDelimiter: string): IwbSubRecordWithStructDef;
+begin
+  Result := Self;
+  (srValue as IwbStructDef).SetSummaryDelimiter(aDelimiter);
+end;
+
 function TwbSubRecordDef.SetSummaryKeyOnValue(const aSummaryKey: array of Integer): IwbSubRecordWithStructDef;
 begin
   Result := Self;
@@ -11946,8 +11955,10 @@ begin
     MemberUsed := nil;
     DelayedName := '';
     MembersNoName := dfSummaryMembersNoName in defFlags;
-    Process(stSortKey);
-    Process(stExSortKey);
+    if not (dfSummaryNoSortKey in defFlags) then begin
+      Process(stSortKey);
+      Process(stExSortKey);
+    end;
     Process(stSummaryKey);
   end;
 end;
@@ -15750,8 +15761,10 @@ end;
 function TwbSubRecordStructSKDef.ToSummaryInternal(const aElement: IwbElement): string;
 begin
   Result := '';
-  StructKeysToSummary(Result, aElement, srsMembers, srsSortKey, srsSummaryPrefix, srsSummarySuffix, srsSummaryDelimiter);
-  StructKeysToSummary(Result, aElement, srsMembers, srsExSortKey, srsSummaryPrefix, srsSummarySuffix, srsSummaryDelimiter);
+  if not (dfSummaryNoSortKey in defFlags) then begin
+    StructKeysToSummary(Result, aElement, srsMembers, srsSortKey, srsSummaryPrefix, srsSummarySuffix, srsSummaryDelimiter);
+    StructKeysToSummary(Result, aElement, srsMembers, srsExSortKey, srsSummaryPrefix, srsSummarySuffix, srsSummaryDelimiter);
+  end;
   var s := inherited ToSummaryInternal(aElement);
   if s <> '' then begin
     if Result <> '' then
