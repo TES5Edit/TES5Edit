@@ -8846,13 +8846,7 @@ begin
       {20} wbInteger('Disposition Base', itS16, nil, cpNormal, False, wbActorTemplateUseTraits),
       {22} wbInteger('Template Flags', itU16, wbTemplateFlags)
     ], cpNormal, True),
-    wbRArrayS('Factions',
-      wbStructSK(SNAM, [0], 'Faction', [
-        wbFormIDCk('Faction', [FACT]),
-        wbInteger('Rank', itU8),
-        wbByteArray('Unused', 3)
-      ]),
-    cpNormal, False, nil, nil, wbActorTemplateUseFactions),
+    wbRArrayS('Factions', wbFaction, cpNormal, False, nil, nil, wbActorTemplateUseFactions),
     wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, wbActorTemplateUseTraits),
     wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, True, wbActorTemplateUseTraits),
     wbFormIDCk(TPLT, 'Template', [LVLN, NPC_]),
