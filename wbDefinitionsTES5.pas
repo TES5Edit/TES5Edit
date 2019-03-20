@@ -7765,6 +7765,8 @@ begin
 end;
 
 procedure DefineTES5d;
+var
+  wbFactionRank: IwbRecordMemberDef;
 begin
   wbRecord(DIAL, 'Dialog Topic', [
     wbEDID,
@@ -8158,6 +8160,14 @@ begin
 
   wbXNAMs := wbRArrayS('Relations', wbXNAM);
 
+  wbFactionRank :=
+    wbRStructSK([0], 'Rank', [
+      wbInteger(RNAM, 'Rank#', itU32),
+      wbLString(MNAM, 'Male Title', 0, cpTranslate),
+      wbLString(FNAM, 'Female Title', 0, cpTranslate),
+      wbString(INAM, 'Insignia Unused')
+    ], []);
+
   wbRecord(FACT, 'Faction', [
     wbEDID,
     wbFULL,
@@ -8216,12 +8226,7 @@ begin
       {02} wbInteger('Escape', itU16),
       {02} wbInteger('Werewolf', itU16)
       ], cpNormal, False, nil, 7),
-    wbRStructsSK('Ranks', 'Rank', [0], [
-      wbInteger(RNAM, 'Rank#', itU32),
-      wbLString(MNAM, 'Male Title', 0, cpTranslate),
-      wbLString(FNAM, 'Female Title', 0, cpTranslate),
-      wbString(INAM, 'Insignia Unused')
-    ], []),
+    wbRArrayS('Ranks', wbFactionRank),
     wbFormIDCk(VEND, 'Vendor Buy/Sell List', [FLST]),
     wbFormIDCk(VENC, 'Merchant Container', [REFR]),
     wbStruct(VENV, 'Vendor Values', [
@@ -8846,6 +8851,9 @@ end;
 procedure DefineTES5g;
 var
   wbDebrisModel: IwbRecordMemberDef;
+  wbBodyPartPart: IwbRecordMemberDef;
+  wbPerkEffect: IwbRecordMemberDef;
+  wbPerkConditions: IwbRecordMemberDef;
 begin
 
    wbRecord(EXPL, 'Explosion', [
@@ -9112,26 +9120,14 @@ begin
     wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
   ]);
 
-  wbRecord(PERK, 'Perk',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Non-Playable'
-    ])), [
-    wbEDID,
-    wbVMADFragmentedPERK,
-    wbFULL,
-    wbDESCReq,
-    wbICON,
-    wbCTDAs,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Trait', itU8, wbEnum(['False', 'True'])),
-      wbInteger('Level', itU8),
-      wbInteger('Num Ranks', itU8),
-      wbInteger('Playable', itU8, wbEnum(['False', 'True'])),
-      wbInteger('Hidden', itU8, wbEnum(['False', 'True']))
-    ], cpNormal, True),
-    wbFormIDCK(NNAM, 'Next Perk', [PERK, NULL]),
+  wbPerkConditions :=
+    wbRStructSK([0], 'Perk Condition', [
+      wbInteger(PRKC, 'Run On (Tab Index)', itS8{, wbPRKCToStr, wbPRKCToInt}),
+      wbCTDAsReq
+    ], [], cpNormal, False{, nil, nil, wbPERKPRKCDontShow});
 
-    wbRStructsSK('Effects', 'Effect', [0, 1], [
+  wbPerkEffect :=
+    wbRStructSK([0, 1], 'Effect', [
       wbStructSK(PRKE, [1, 2, 0], 'Header', [
         wbInteger('Type', itU8, wbEnum([
           'Quest + Stage',
@@ -9172,10 +9168,7 @@ begin
         ])
       ], cpNormal, True),
 
-      wbRStructsSK('Perk Conditions', 'Perk Condition', [0], [
-        wbInteger(PRKC, 'Run On (Tab Index)', itS8{, wbPRKCToStr, wbPRKCToInt}),
-        wbCTDAsReq
-      ], [], cpNormal, False{, nil, nil, wbPERKPRKCDontShow}),
+      wbRArrayS('Perk Conditions', wbPerkConditions),
 
       wbRStruct('Function Parameters', [
         wbInteger(EPFT, 'Type', itU8, wbEnum([
@@ -9223,13 +9216,31 @@ begin
         ], cpNormal, False{, wbEPFDDontShow})
       ], [], cpNormal, False{, wbPERKPRKCDontShow}),
       wbEmpty(PRKF, 'End Marker', cpIgnore, True)
-    ], [])
+    ], []);
+
+  wbRecord(PERK, 'Perk',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Non-Playable'
+    ])), [
+    wbEDID,
+    wbVMADFragmentedPERK,
+    wbFULL,
+    wbDESCReq,
+    wbICON,
+    wbCTDAs,
+    wbStruct(DATA, 'Data', [
+      wbInteger('Trait', itU8, wbEnum(['False', 'True'])),
+      wbInteger('Level', itU8),
+      wbInteger('Num Ranks', itU8),
+      wbInteger('Playable', itU8, wbEnum(['False', 'True'])),
+      wbInteger('Hidden', itU8, wbEnum(['False', 'True']))
+    ], cpNormal, True),
+    wbFormIDCK(NNAM, 'Next Perk', [PERK, NULL]),
+    wbRArrayS('Effects', wbPerkEffect)
   ]);
 
-  wbRecord(BPTD, 'Body Part Data', [
-    wbEDID,
-    wbMODL,
-    wbRStructsSK('Body Parts', 'Body Part', [2], [
+  wbBodyPartPart :=
+    wbRStructSK([2], 'Body Part', [
       wbLString(BPTN, 'Part Name', 0, cpTranslate, True),
       wbString(PNAM, 'Pose Matching', 0, cpNormal, False),
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
@@ -9289,7 +9300,12 @@ begin
       wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
       wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
       wbByteArray(NAM5, 'Texture Files Hashes', 0, cpNormal)
-    ], [], cpNormal, True)
+    ], [], cpNormal, True);
+
+  wbRecord(BPTD, 'Body Part Data', [
+    wbEDID,
+    wbMODL,
+    wbRArrayS('Body Parts', wbBodyPartPart)
   ]).SetSummaryKey([1, 2]).IncludeFlag(dfSummaryNoName);
 
   wbRecord(ADDN, 'Addon Node', [
@@ -14054,6 +14070,8 @@ end;
 
 {>>> Unused records, they have empty GRUP in skyrim.esm <<<}
 procedure DefineTES5p;
+var
+  wbStaticPart: IwbRecordMemberDef;
 begin
   wbRecord(CLDC, 'CLDC', [
     wbEDID
@@ -14073,11 +14091,8 @@ begin
   ]);
   }
 
-  wbRecord(SCOL, 'Static Collection', [
-    wbEDID,
-    wbOBNDReq,
-    wbMODLReq,
-    wbRStructs('Parts', 'Part', [
+  wbStaticPart :=
+    wbRStruct('Part', [
       wbFormIDCk(ONAM, 'Static', [STAT]),
       wbArrayS(DATA, 'Placements', wbStruct('Placement', [
         wbStruct('Position', [
@@ -14092,7 +14107,13 @@ begin
         ]),
         wbFloat('Scale')
       ]), 0, cpNormal, True)
-    ], [], cpNormal, True)
+    ], [], cpNormal, True);
+
+  wbRecord(SCOL, 'Static Collection', [
+    wbEDID,
+    wbOBNDReq,
+    wbMODLReq,
+    wbRArray('Parts', wbStaticPart)
   ]);
 
   wbRecord(SCPT, 'SCPT', [
