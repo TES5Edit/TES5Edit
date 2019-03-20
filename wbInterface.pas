@@ -191,6 +191,7 @@ var
   wbCollapseBenignArray    : Boolean  = True;
   wbCollapseRGBA           : Boolean  = True;
   wbCollapseVec3           : Boolean  = True;
+  wbCollapseScriptData     : Boolean  = True;
   wbReportInjected         : Boolean  = True;
 
   wbGlobalModifedGeneration : UInt64;
