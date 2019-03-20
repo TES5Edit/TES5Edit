@@ -65,12 +65,11 @@ end;
 /// <returns>string</return>
 function wbGetItemStr(const aContainer: IwbContainerElementRef): string;
 var
-  FormID, Count: IwbElement;
   MainRecord: IwbMainRecord;
 begin
   Result := '';
 
-  FormID := aContainer.Elements[0];
+  var FormID := aContainer.Elements[0];
 
   if not Assigned(FormID) then
     Exit;
@@ -78,7 +77,7 @@ begin
   if not Supports(FormID.LinksTo, IwbMainRecord, MainRecord) then
     Exit;
 
-  Count := aContainer.Elements[1];
+  var Count := aContainer.Elements[1];
 
   Result := Count.Value + 'x ' + MainRecord.ShortName;
 end;
@@ -88,7 +87,6 @@ end;
 /// <returns>0 = Object v2, 1 = Object v1</returns>
 function wbGetScriptObjFormat(const aElement: IwbElement): Integer;
 var
-  ObjFormat: Integer;
   Container: IwbContainer;
 begin
   Result := 0;
@@ -100,7 +98,7 @@ begin
   if Container = nil then
     Exit;
 
-  ObjFormat := Container.ElementNativeValues['Object Format'];
+  var ObjFormat := Container.ElementNativeValues['Object Format'];
 
   if ObjFormat = 1 then
     Result := 1;
@@ -111,23 +109,19 @@ end;
 /// <returns>string from TStringList.CommaText</returns>
 function wbGetPropertyValueArrayItems(const aContainer: IwbContainerElementRef): string;
 var
-  ObjectUnion: IwbContainerElementRef;
-  FormID, Alias: IwbElement;
   MainRecord: IwbMainRecord;
-  Items: TStringList;
-  ObjectVersion, ItemName: string;
-  i: Integer;
+  ItemName: string;
 begin
-  Items := TStringList.Create;
+  var Items := TStringList.Create;
 
   if CompareStr(aContainer.Name, 'Array of Object') = 0 then
-    for i := 0 to Pred(aContainer.ElementCount) do
+    for var i := 0 to Pred(aContainer.ElementCount) do
     begin
-      ObjectUnion := aContainer.Elements[i] as IwbContainerElementRef;
-      ObjectVersion := IfThen(wbGetScriptObjFormat(ObjectUnion) = 0, 'v2', 'v1');
+      var ObjectUnion := aContainer.Elements[i] as IwbContainerElementRef;
+      var ObjectVersion := IfThen(wbGetScriptObjFormat(ObjectUnion) = 0, 'v2', 'v1');
 
-      FormID := ObjectUnion.ElementByPath['Object ' + ObjectVersion + '\FormID'];
-      Alias := ObjectUnion.ElementByPath['Object ' + ObjectVersion + '\Alias'];
+      var FormID := ObjectUnion.ElementByPath['Object ' + ObjectVersion + '\FormID'];
+      var Alias := ObjectUnion.ElementByPath['Object ' + ObjectVersion + '\Alias'];
 
       if Supports(FormID.LinksTo, IwbMainRecord, MainRecord) then
         if MainRecord <> nil then
@@ -144,7 +138,7 @@ begin
           Items.Add('NULL');
     end
   else
-    for i := 0 to Pred(aContainer.ElementCount) do
+    for var i := 0 to Pred(aContainer.ElementCount) do
       Items.Add(aContainer.Elements[i].Value);
 
   Result := Items.CommaText;
@@ -159,19 +153,23 @@ begin
   if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
-  if wbGameMode > gmFNV then begin
+  if wbGameMode > gmFNV then
+  begin
     if not Supports(Container.RecordBySignature[CTDA], IwbContainerElementRef, cerCTDA) then
       Exit;
-  end else
+  end
+  else
     cerCTDA := Container;
 
   var Typ : Byte := cerCTDA.Elements[0].NativeValue;
   var Func := cerCTDA.Elements[3];
 
-  if (cerCTDA.ElementCount >= 9) and (cerCTDA.Elements[7].Def.DefType <> dtEmpty) and (cerCTDA.Elements[8].Def.DefType <> dtEmpty) then begin
+  if (cerCTDA.ElementCount >= 9) and (cerCTDA.Elements[7].Def.DefType <> dtEmpty) and (cerCTDA.Elements[8].Def.DefType <> dtEmpty) then
+  begin
     var RunOn := cerCTDA.Elements[7];
     var RunOnInt: Integer := RunOn.NativeValue;
-    if wbGameMode = gmFNV then begin
+    if wbGameMode = gmFNV then
+    begin
       var FuncInt: Integer := Func.NativeValue;
       if (FuncInt = 106) or (FuncInt = 285) then
         RunOnInt := 0;
@@ -180,7 +178,8 @@ begin
       aValue := '(' + cerCTDA.Elements[8].Summary + ')'
     else
       aValue := RunOn.Summary.Replace(' ', '', [rfReplaceAll]);
-  end else
+  end
+  else
     if (Typ and $02) = 0 then
       aValue := 'Subject'
     else
@@ -189,7 +188,8 @@ begin
   aValue := aValue + '.' + Func.Summary;
 
   var Param1 := cerCTDA.Elements[5];
-  if Param1.ConflictPriority <> cpIgnore then begin
+  if Param1.ConflictPriority <> cpIgnore then
+  begin
     aValue := aValue + '(' {+ Param1.Name + ': '} + Param1.Summary;
     var Param2 := cerCTDA.Elements[6];
     if Param2.ConflictPriority <> cpIgnore then
@@ -209,7 +209,8 @@ begin
   aValue := aValue + cerCTDA.Elements[2].Summary;
 
   var Conditions: IwbContainerElementRef;
-  if Supports(Container.Container, IwbContainerElementRef, Conditions) then begin
+  if Supports(Container.Container, IwbContainerElementRef, Conditions) then
+  begin
     var l := Conditions.ElementCount;
     if (l < 2) or Container.Equals(Conditions.Elements[Pred(l)]) then
       Exit;
@@ -224,73 +225,63 @@ end;
 procedure wbEquipSlotToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Container: IwbContainerElementRef;
-  EquipSlot, EquipNode: IwbElement;
 begin
-  wbTrySetContainer(aElement, aType, Container);
-  if Container = nil then
+  if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
-  EquipSlot := Container.ElementBySignature['QNAM'];
-  EquipNode := Container.ElementBySignature['ZNAM'];
+  var EquipSlot := Container.ElementBySignature['QNAM'].Value;
+  var EquipNode := Container.ElementBySignature['ZNAM'];
 
-  if not Assigned(EquipNode) then
-    aValue := EquipSlot.Value
-  else
-    aValue := EquipNode.Value + ' = ' + EquipSlot.Value;
+  aValue := EquipSlot;
+  if Assigned(EquipNode) then
+    aValue := EquipNode.Value + ' = ' + aValue;
 end;
 
 procedure wbFactionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Container: IwbContainerElementRef;
-  Faction, Rank: IwbElement;
   MainRecord: IwbMainRecord;
-  NativeRank: integer;
 begin
-  wbTrySetContainer(aElement, aType, Container);
-  if Container = nil then
+  if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
-  Faction := Container.Elements[0];
+  var Faction := Container.Elements[0];
   if not Assigned(Faction.LinksTo) then
     Exit;
 
-  Rank := Container.Elements[1];
+  var Rank := Container.Elements[1];
 
   aValue := Faction.Value;
 
   if Assigned(Rank) then
-  begin
-    NativeRank := Rank.NativeValue;
-    aValue := aValue + ' {Rank: ' + IntToStr(NativeRank) + '}';
-  end;
+    aValue := aValue + ' {Rank: ' + IntToStr(Rank.NativeValue) + '}';
 end;
 
 procedure wbFactionRelationToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Container: IwbContainerElementRef;
-  Faction, Rank: IwbElement;
   MainRecord: IwbMainRecord;
-  NativeRank: integer;
 begin
-  wbTrySetContainer(aElement, aType, Container);
-  if Container = nil then
+  if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
-  Faction := Container.Elements[0];
+  var Faction := Container.Elements[0];
   if not Assigned(Faction.LinksTo) then
     Exit;
 
-  Rank := Container.Elements[1];
+  var Rank := Container.Elements[1];
 
   aValue := Faction.Value;
 
   if wbGameMode = gmTES4 then
   begin
-    NativeRank := Rank.NativeValue;
+    var NativeRank := Rank.NativeValue;
+
+    aValue := IntToStr(NativeRank) + ' ' + aValue;
+
     if NativeRank >= 0 then
-      aValue := '+' + IntToStr(NativeRank) + ' ' + aValue
-    else
-      aValue := IntToStr(NativeRank) + ' ' + aValue;
+      aValue := '+' + aValue;
+
     Exit;
   end;
 
@@ -301,8 +292,7 @@ procedure wbModelToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; 
 var
   Container: IwbContainerElementRef;
 begin
-  wbTrySetContainer(aElement, aType, Container);
-  if Container = nil then
+  if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
   aValue := Container.Elements[0].Value;
@@ -311,60 +301,58 @@ end;
 procedure wbObjectBoundsToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Container: IwbContainerElementRef;
-  FacetPointA, FacetPointB: string;
-  X1, X2, Y1, Y2, Z1, Z2: IwbElement;
 begin
-  wbTrySetContainer(aElement, aType, Container);
-  if Container = nil then
+  if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
-  X1 := Container.Elements[0];
-  Y1 := Container.Elements[1];
-  Z1 := Container.Elements[2];
+  var X1 := Container.Elements[0];
+  var Y1 := Container.Elements[1];
+  var Z1 := Container.Elements[2];
 
-  X2 := Container.Elements[3];
-  Y2 := Container.Elements[4];
-  Z2 := Container.Elements[5];
+  var X2 := Container.Elements[3];
+  var Y2 := Container.Elements[4];
+  var Z2 := Container.Elements[5];
 
-  FacetPointA := X1.Value + ', ' + Y1.Value + ', ' + Z1.Value;
-  FacetPointB := X2.Value + ', ' + Y2.Value + ', ' + Z2.Value;
+  var FacetPointA := X1.Value + ', ' + Y1.Value + ', ' + Z1.Value;
+  var FacetPointB := X2.Value + ', ' + Y2.Value + ', ' + Z2.Value;
 
   aValue := '(' + FacetPointA + '), (' + FacetPointB + ')';
 end;
 
 procedure wbObjectPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
-  Container, CurveTable: IwbContainerElementRef;
-  ActorValueForm, ActorValueData, CurveTableForm: IwbElement;
+  Container: IwbContainerElementRef;
   MainRecord: IwbMainRecord;
 begin
-  wbTrySetContainer(aElement, aType, Container);
-  if Container = nil then
+  if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
-  ActorValueForm := Container.ElementByName['Actor Value'];
+  var ActorValueForm := Container.ElementByName['Actor Value'];
+
   if not Assigned(ActorValueForm) then
     Exit;
 
   if not Supports(ActorValueForm.LinksTo, IwbMainRecord, MainRecord) then
     Exit;
 
-  ActorValueData := Container.ElementByName['Value'];
+  var ActorValueData := Container.ElementByName['Value'];
 
   aValue := MainRecord.EditorID + ' = ' + Format('%.*g', [5, StrToFloat(ActorValueData.Value)]);
 
   if wbGameMode <> gmFO76 then
     Exit;
 
-  CurveTable := Container.ElementByName['Curve Table'] as IwbContainerElementRef;
+  var CurveTable := Container.ElementByName['Curve Table'] as IwbContainerElementRef;
+
   if not Assigned(CurveTable) then
     Exit;
 
-  CurveTableForm := CurveTable.ElementByName['Curve Table'];
+  var CurveTableForm := CurveTable.ElementByName['Curve Table'];
+
   if not Assigned(CurveTableForm) then
     Exit;
 
-  if not Supports(CurveTableForm, IwbMainRecord, MainRecord) then
+  if not Supports(CurveTableForm.LinksTo, IwbMainRecord, MainRecord) then
     Exit;
 
   aValue := aValue + ' {Curve Table: ' + MainRecord.ShortName + '}';
@@ -375,8 +363,7 @@ var
   Container: IwbContainerElementRef;
   ItemString: string;
 begin
-  wbTrySetContainer(aElement, aType, Container);
-  if Container = nil then
+  if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
   // check for second struct
@@ -397,8 +384,7 @@ var
   Level, Ref, Count, ChanceNone: IwbElement;
   MainRecord: IwbMainRecord;
 begin
-  wbTrySetContainer(aElement, aType, Container);
-  if Container = nil then
+  if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
   LeveledObject := Container.ElementBySignature['LVLO'] as IwbContainerElementRef;
@@ -432,8 +418,7 @@ var
   MainRecord: IwbMainRecord;
   RecordFlagsValue, DisplayValue: string;
 begin
-  wbTrySetContainer(aElement, aType, Container);
-  if Container = nil then
+  if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
   MainRecord := Container.ContainingMainRecord;
@@ -444,10 +429,10 @@ begin
 
   DisplayValue := '[' + MainRecord.Signature + ':' + MainRecord.LoadOrderFormID.ToString(True) + ']';
 
-  if wbGameMode = gmTES4 then
-    aValue := DisplayValue
-  else
-    aValue := '[v' + FormVersion.Value + '] ' + DisplayValue;
+  aValue := DisplayValue;
+
+  if wbGameMode <> gmTES4 then
+    aValue := '[v' + FormVersion.Value + '] ' + aValue;
 
   if Length(RecordFlagsValue) > 0 then
     aValue := aValue + ' {' + RecordFlagsValue + '}';
@@ -455,10 +440,8 @@ end;
 
 /// <summary>Fills PropertyType and PropertyValue from array assigned to property</summary>
 procedure wbScriptPropertyArrayToStr(const aContainer: IwbContainerElementRef; var PropertyType: string; var PropertyValue: string);
-var
-  ArrayContainer: IwbContainerElementRef;
 begin
-  ArrayContainer := aContainer.ElementByPath['Value\' + PropertyType] as IwbContainerElementRef;
+  var ArrayContainer := aContainer.ElementByPath['Value\' + PropertyType] as IwbContainerElementRef;
 
   if not (ArrayContainer.ElementCount > 0) then
     Exit;
@@ -470,19 +453,16 @@ end;
 /// <summary>Fills PropertyName, PropertyType, and PropertyName from object assigned to property</summary>
 procedure wbScriptPropertyObjectToStr(const aContainer: IwbContainerElementRef; var PropertyName: string; var PropertyType: string; var PropertyValue: string);
 var
-  ObjectUnion: IwbContainerElementRef;
-  FormID, Alias: IwbElement;
   MainRecord: IwbMainRecord;
-  AliasValue, Version: string;
 begin
-  ObjectUnion := aContainer.ElementByPath['Value\Object Union'] as IwbContainerElementRef;
+  var ObjectUnion := aContainer.ElementByPath['Value\Object Union'] as IwbContainerElementRef;
 
-  Version := IfThen(wbGetScriptObjFormat(ObjectUnion) = 0, 'v2', 'v1');
+  var Version := IfThen(wbGetScriptObjFormat(ObjectUnion) = 0, 'v2', 'v1');
 
-  FormID := ObjectUnion.ElementByPath['Object ' + Version + '\FormID'];
-  Alias := ObjectUnion.ElementByPath['Object ' + Version + '\Alias'];
+  var FormID := ObjectUnion.ElementByPath['Object ' + Version + '\FormID'];
+  var Alias := ObjectUnion.ElementByPath['Object ' + Version + '\Alias'];
 
-  AliasValue := Alias.Value;
+  var AliasValue := Alias.Value;
 
   // compare length, too, because v1 doesn't default to 'None'
   if not (CompareStr(AliasValue, 'None') = 0) and not (Length(AliasValue) = 0) then
@@ -501,25 +481,23 @@ end;
 procedure wbScriptPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Container: IwbContainerElementRef;
-  PropertyTypeElement: IwbElement;
-  PropertyName, PropertyType, PropertyValue: string;
+  PropertyValue: string;
 begin
-  wbTrySetContainer(aElement, aType, Container);
-  if Container = nil then
+  if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
-  PropertyTypeElement := Container.ElementByName['Type'];
+  var PropertyTypeElement := Container.ElementByName['Type'];
 
   // 0 = None
   if PropertyTypeElement.NativeValue = 0 then
     Exit;
 
-  PropertyName := Container.ElementByName['propertyName'].Value;
+  var PropertyName := Container.ElementByName['propertyName'].Value;
 
   if Length(PropertyName) = 0 then
     Exit;
 
-  PropertyType := PropertyTypeElement.Value;
+  var PropertyType := PropertyTypeElement.Value;
 
   // 1 = Object
   if PropertyTypeElement.NativeValue = 1 then
@@ -545,23 +523,23 @@ begin
   end;
 
   // set display string
+  aValue := PropertyType + ' ' + PropertyName;
+
   if Length(PropertyValue) > 0 then
-    aValue := PropertyType + ' ' + PropertyName + ' = ' + PropertyValue
-  else
-    aValue := PropertyType + ' ' + PropertyName;
+    aValue := aValue + ' = ' + PropertyValue;
 end;
 
 procedure wbRGBAToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Container: IwbContainerElementRef;
   A: IwbElement;
-  R, G, B, RGB: string;
-  AlphaDefType: TwbDefType;
+  R, G, B: string;
 begin
   if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
-  if Container.ElementCount >= 3 then begin
+  if Container.ElementCount >= 3 then
+  begin
     R := Container.Elements[0].Summary;
     G := Container.Elements[1].Summary;
     B := Container.Elements[2].Summary;
@@ -586,15 +564,13 @@ end;
 procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Container: IwbContainerElementRef;
-  X, Y, Z: string;
 begin
-  wbTrySetContainer(aElement, aType, Container);
-  if Container = nil then
+  if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
-  X := Container.Elements[0].Summary;
-  Y := Container.Elements[1].Summary;
-  Z := Container.Elements[2].Summary;
+  var X := Container.Elements[0].Summary;
+  var Y := Container.Elements[1].Summary;
+  var Z := Container.Elements[2].Summary;
 
   aValue := 'Vec3(' + X + ', ' + Y + ', ' + Z + ')';
 end;
@@ -610,44 +586,48 @@ procedure wbScriptToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer;
 var
   CER: IwbContainerElementRef;
 begin
-  if aType <> ctToSummary then
-    Exit;
-
-  if not Supports(aElement, IwbContainerElementRef, CER) then
+  if not wbTrySetContainer(aElement, aType, CER) then
     Exit;
 
   var eSCDA := CER.ElementBySignature[SCDA];
   var eSCTX := CER.ElementBySignature[SCTX];
 
-  if Assigned(eSCDA) then begin
-    if Assigned(eSCTX) then begin
-      with TStringList.Create do try
-        Text := eSCTX.Value;
-        for var i := Pred(Count) downto 0 do begin
-          var s := Strings[i].Trim;
-          if s.StartsWith(';') then
-            s := '';
-          if s = '' then
-            Delete(i);
-        end;
-        if Count = 0 then
-          aValue := '<Source missing>'
-        else if Count = 1 then
-          aValue := Strings[0].Trim
-        else
-          aValue := '<'+Count.ToString+' lines>';
-      finally
-        Free;
-      end;
-    end else begin
-      aValue := '<Source missing>';
+  if not Assigned(eSCDA) then
+  begin
+    aValue := IfThen(Assigned(eSCTX), '<Source not compiled>', '<Empty>');
+    Exit;
+  end;
+
+  if not Assigned(eSCTX) then
+  begin
+    aValue := '<Source missing>';
+    Exit;
+  end;
+
+  with TStringList.Create do
+  try
+    Text := eSCTX.Value;
+
+    for var i := Pred(Count) downto 0 do
+    begin
+      var s := Strings[i].Trim;
+
+      if s.StartsWith(';') then
+        s := '';
+
+      if s = '' then
+        Delete(i);
     end;
-  end else begin
-    if Assigned(eSCTX) then begin
-      aValue := '<Source not compiled>';
-    end else begin
-      aValue := '<Empty>';
-    end;
+
+    if Count = 0 then
+      aValue := '<Source missing>'
+    else
+      if Count = 1 then
+        aValue := Strings[0].Trim
+      else
+        aValue := '<'+Count.ToString+' lines>';
+  finally
+    Free;
   end;
 end;
 
