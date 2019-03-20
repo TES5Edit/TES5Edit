@@ -7,13 +7,14 @@ uses
 
 type
   TwbHardcodedContainer = class(TDataModule)
+    fcMorrowind: TFileContainer;
     fcOblivion: TFileContainer;
     fcSkyrim: TFileContainer;
-    fcFallout4: TFileContainer;
-    fcFallout76: TFileContainer;
+    fcEnderal: TFileContainer; // This is the same as Skyrim
     fcFallout3: TFileContainer;
     fcFalloutNV: TFileContainer;
-    fcEnderal: TFileContainer; // This is the same as Skyrim
+    fcFallout4: TFileContainer;
+    fcFallout76: TFileContainer;
   public
     class function GetHardCodedDat: TBytes;
   end;

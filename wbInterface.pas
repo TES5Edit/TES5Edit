@@ -1,4 +1,4 @@
-{******************************************************************************
+{*****************************************************************************
 
      The contents of this file are subject to the Mozilla Public License
      Version 1.1 (the "License"); you may not use this file except in
@@ -50,16 +50,16 @@ type
 var
   VersionString : TwbVersion = (
     Major   : 4;
-    Minor   : 0;
+    Minor   : 1;
     Release : 2;
-    Build   : '';
-    Title   : '';
+    Build   : 'b';
+    Title   : 'EXTREMELY EXPERIMENTAL';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04000200;
-  wbDeveloperMessageVersion : Integer = 04000200;
-  wbDevCRC32App : Cardinal = $FFFFFFEB;
+  wbWhatsNewVersion : Integer = 04010200;
+  wbDeveloperMessageVersion : Integer = 04000001;
+  wbDevCRC32App : Cardinal = $FFFFFFE9;
 
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
@@ -133,6 +133,8 @@ var
   wbCanSortINFO            : Boolean  = False;
   wbSortINFO               : Boolean  = False;
   wbFillPNAM               : Boolean  = False;
+  wbFillINOM               : Boolean  = True;
+  wbFillINOA               : Boolean  = True;
   wbRemoveOffsetData       : Boolean  = True;
   wbEditAllowed            : Boolean  = False;
   wbFlagsAsArray           : Boolean  = False;
@@ -299,6 +301,7 @@ type
     laElementSetToDefault,
     laElementWriteToStream,
     laElementMergeStorage,
+    laSortInfo,
 
     laDummy
   );
@@ -307,12 +310,13 @@ type
 var
   wbLoggingAreas : TwbLoggingAreas = [
 
-    laAddIfMissing,
-    laElementAssign,
-    laElementCanAssign,
-    laElementSetToDefault,
+    //laAddIfMissing,
+    //laElementAssign,
+    //laElementCanAssign,
+    //laElementSetToDefault,
     //laElementWriteToStream,
     //laElementMergeStorage,
+    laSortInfo,
 
     laDummy
   ];
@@ -472,6 +476,26 @@ type
   PwbSignature = ^TwbSignature;
   TwbSignature = array[0..3] of AnsiChar;
   TwbSignatures = array of TwbSignature;
+
+  TwbKnownSubRecordSignature = (
+    ksrsEditorID,
+    ksrsFullName,
+    ksrsBaseRecord,
+    ksrsGridCell
+  );
+
+  PwbKnownSubRecordSignatures = ^TwbKnownSubRecordSignatures;
+  TwbKnownSubRecordSignatures = array[TwbKnownSubRecordSignature] of TwbSignature;
+
+var
+  wbKnownSubRecordSignatures: TwbKnownSubRecordSignatures = (
+    'EDID',
+    'FULL',
+    'NAME',
+    'XCLC'
+  );
+
+type
   TwbFileMagic = string;
 
   TwbIntType = (
@@ -553,6 +577,7 @@ type
     dfAllowAnyMember,
     dfDontSave,
     dfUseLoadOrder,
+    dfSummaryMembersNoName,
     dfSummaryNoName
   );
 
@@ -1467,6 +1492,7 @@ type
   TwbGridCell = record
     x, y: Integer;
     class operator Equal(const a, b: TwbGridCell): Boolean; static;
+    function SortKey: string;
   end;
 
   TDynMainRecords = TArray<IwbMainRecord>;
@@ -1745,7 +1771,7 @@ type
 
     procedure AddElement(const aElement: IwbElement);
 
-    procedure Sort;
+    procedure Sort(aForce: Boolean = False);
 
     property GroupType: Integer
       read GetGroupType;
@@ -1899,6 +1925,12 @@ type
       read GetRecordHeaderStruct;
   end;
 
+  TwbMainRecordGetFormIDCallback = reference to function(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean;
+  TwbMainRecordIdentityCallback = reference to function(const aMainRecord: IwbMainRecord): string;
+  TwbMainRecordGetEditorIDCallback = reference to function(const aSubRecord: IwbSubRecord): string;
+  TwbMainRecordSetEditorIDCallback = reference to procedure(const aSubRecord: IwbSubRecord; const aEditorID: string);
+  TwbMainRecordGetGridCellCallback = reference to function(const aSubRecord: IwbSubRecord; out aGridCell: TwbGridCell): Boolean;
+
   PwbMainRecordDef = ^IwbMainRecordDef;
   IwbMainRecordDef = interface(IwbRecordDef)
     ['{B9559BE2-705B-43BF-A1B2-5B7829F65B53}']
@@ -1909,6 +1941,7 @@ type
     function GetContainsEditorID: Boolean;
     function GetContainsFullName: Boolean;
     function GetContainsBaseRecord: Boolean;
+    function GetContainsGridCell: Boolean;
 
     function GetBaseSignature(const aIndex: Integer): TwbSignature;
     function GetBaseSignatureCount: Integer;
@@ -1918,10 +1951,31 @@ type
     function GetReferenceSignatureCount: Integer;
     function IsValidReferenceSignature(const aSignature: TwbSignature): Boolean;
 
+    function GetFormIDBase: Byte;
+    function SetFormIDBase(aBase: Byte): IwbMainRecordDef;
+
+    function GetFormIDNameBase: Byte;
+    function SetFormIDNameBase(aBase: Byte): IwbMainRecordDef;
+
+    function GetFormID(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean;
+    function SetGetFormIDCallback(const aCallback: TwbMainRecordGetFormIDCallback): IwbMainRecordDef;
+
+    function KnownSubRecordSignatures: PwbKnownSubRecordSignatures;
+    function GetIdentity(const aMainRecord: IwbMainRecord): string;
+    function SetIdentityCallback(const aCallback: TwbMainRecordIdentityCallback): IwbMainRecordDef;
+
+    function GetEditorID(const aSubRecord: IwbSubRecord): string;
+    procedure SetEditorID(const aSubRecord: IwbSubRecord; const aEditorID: string);
+    function SetGetEditorIDCallback(const aCallback: TwbMainRecordGetEditorIDCallback): IwbMainRecordDef;
+    function SetSetEditorIDCallback(const aCallback: TwbMainRecordSetEditorIDCallback): IwbMainRecordDef;
+
+    function GetGridCell(const aSubRecord: IwbSubRecord; out aGridCell: TwbGridCell): Boolean;
+    function SetGetGridCellCallback(const aCallback: TwbMainRecordGetGridCellCallback): IwbMainRecordDef;
 
     function SetToStr(const aToStr : TwbToStrCallback): IwbMainRecordDef{Self};
     function SetSummaryKey(const aSummaryKey: array of Integer): {Self}IwbMainRecordDef;
-    function SetSummaryPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbMainRecordDef;
+    function SetSummaryDelimiter(const aDelimiter: string): {Self}IwbMainRecordDef;
+    function SetSummaryMemberPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbMainRecordDef;
     function ToSummary(const aMainRecord: IwbMainRecord): string;
 
     property IsReference: Boolean
@@ -1936,6 +1990,8 @@ type
       read GetContainsFullName;
     property ContainsBaseRecord: Boolean
       read GetContainsBaseRecord;
+    property ContainsGridCell: Boolean
+      read GetContainsGridCell;
 
     property BaseSignatures[const aIndex: Integer]: TwbSignature
       read GetBaseSignature;
@@ -2058,6 +2114,7 @@ type
   IwbSubRecordWithStructDef = interface(IwbSubRecordDef)
     ['{CE0BDAB8-F4FB-42B8-8013-AE7176C0FCD1}']
     function SetSummaryKeyOnValue(const aSummaryKey: array of Integer): {Self}IwbSubRecordWithStructDef;
+    function SetSummaryPrefixSuffixOnValue(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbSubRecordWithStructDef;
   end;
 
   IwbSubRecordArrayDef = interface(IwbRecordMemberDef)
@@ -2072,7 +2129,8 @@ type
   IwbSubRecordStructDef = interface(IwbRecordMemberDef)
     ['{B5441812-5229-488B-AEA6-C182CEBED441}']
     function SetSummaryKey(const aSummaryKey: array of Integer): {Self}IwbSubRecordStructDef;
-    function SetSummaryPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbSubRecordStructDef;
+    function SetSummaryDelimiter(const aDelimiter: string): {Self}IwbSubRecordStructDef;
+    function SetSummaryMemberPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbSubRecordStructDef;
   end;
 
   IwbSubRecordUnionDef = interface(IwbRecordMemberDef)
@@ -2083,6 +2141,7 @@ type
     ['{2EB12125-5E21-4A55-902F-CC245510AC58}']
     function NeedsElementToResolve: Boolean;
     function ResolveDef(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef;
+    function ResolveDefAndElement(aBasePtr: Pointer; aEndPtr: Pointer; var aElement: IwbElement): IwbValueDef;
   end;
 
   IwbRecursiveDef = interface(IwbResolvableDef)
@@ -2211,6 +2270,8 @@ type
     property OptionalFromElement: Integer read GetOptionalFromElement;
 
     function SetSummaryKey(const aSummaryKey: array of Integer): {Self}IwbStructDef;
+    function SetSummaryDelimiter(const aDelimiter: string): {Self}IwbStructDef;
+    function SetSummaryMemberPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbStructDef;
   end;
 
   IwbStructCDef = interface(IwbStructDef)
@@ -2492,6 +2553,31 @@ function wbRecord(const aSignature      : TwbSignature;
 
 function wbRecord(const aSignature      : TwbSignature;
                   const aName           : string;
+                  const aRecordFlags    : IwbIntegerDefFormater;
+                  const aMembers        : array of IwbRecordMemberDef;
+                        aAllowUnordered : Boolean = False;
+                        aAddInfoCallback: TwbAddInfoCallback = nil;
+                        aPriority       : TwbConflictPriority = cpNormal;
+                        aRequired       : Boolean = False;
+                        aAfterLoad      : TwbAfterLoadCallback = nil;
+                        aAfterSet       : TwbAfterSetCallback = nil)
+                                        : IwbMainRecordDef; overload;
+
+function wbRecord(const aSignature      : TwbSignature;
+                  const aName           : string;
+                  const aKnownSRs       : PwbKnownSubRecordSignatures;
+                  const aMembers        : array of IwbRecordMemberDef;
+                        aAllowUnordered : Boolean = False;
+                        aAddInfoCallback: TwbAddInfoCallback = nil;
+                        aPriority       : TwbConflictPriority = cpNormal;
+                        aRequired       : Boolean = False;
+                        aAfterLoad      : TwbAfterLoadCallback = nil;
+                        aAfterSet       : TwbAfterSetCallback = nil)
+                                        : IwbMainRecordDef; overload;
+
+function wbRecord(const aSignature      : TwbSignature;
+                  const aName           : string;
+                  const aKnownSRs       : PwbKnownSubRecordSignatures;
                   const aRecordFlags    : IwbIntegerDefFormater;
                   const aMembers        : array of IwbRecordMemberDef;
                         aAllowUnordered : Boolean = False;
@@ -4840,6 +4926,7 @@ type
     rdfContainsEditorID,
     rdfContainsFullName,
     rdfContainsBaseRecord,
+    rdfContainsGridCell,
     rdfIsReference
   );
   TwbRecordDefFlags = set of TwbRecordDefFlag;
@@ -4855,9 +4942,18 @@ type
     recDefFlags           : TwbRecordDefFlags;
     recBaseRecordFormID   : IwbFormIDChecked;
     recReferences         : TStringList;
+    recKnownSRs           : PwbKnownSubRecordSignatures;
+    recGetFormIDCallback  : TwbMainRecordGetFormIDCallback;
+    recIdentityCallback   : TwbMainRecordIdentityCallback;
+    recGetEditorIDCallback: TwbMainRecordGetEditorIDCallback;
+    recSetEditorIDCallback: TwbMainRecordSetEditorIDCallback;
+    recGetGridCellCallback: TwbMainRecordGetGridCellCallback;
+    recFormIDBase         : Byte;
+    recFormIDNameBase     : Byte;
     recSummaryKey         : array of Integer;
     recSummaryPrefix      : TArray<string>;
     recSummarySuffix      : TArray<string>;
+    recSummaryDelimiter   : string;
 
     procedure recBuildReferences;
   protected
@@ -4866,6 +4962,7 @@ type
                        aRequired        : Boolean;
                  const aSignature       : TwbSignature;
                  const aName            : string;
+                 const aKnownSRs        : PwbKnownSubRecordSignatures;
                  const aRecordFlags     : IwbIntegerDefFormater;
                  const aMembers         : array of IwbRecordMemberDef;
                        aAllowUnordered  : Boolean;
@@ -4909,6 +5006,7 @@ type
     function GetContainsEditorID: Boolean;
     function GetContainsFullName: Boolean;
     function GetContainsBaseRecord: Boolean;
+    function GetContainsGridCell: Boolean;
 
     function GetBaseSignature(const aIndex: Integer): TwbSignature;
     function GetBaseSignatureCount: Integer;
@@ -4918,9 +5016,30 @@ type
     function GetReferenceSignatureCount: Integer;
     function IsValidReferenceSignature(const aSignature: TwbSignature): Boolean;
 
+    function GetFormIDBase: Byte;
+    function SetFormIDBase(aBase: Byte): IwbMainRecordDef;
+    function GetFormIDNameBase: Byte;
+    function SetFormIDNameBase(aBase: Byte): IwbMainRecordDef;
+
+    function GetFormID(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean;
+    function SetGetFormIDCallback(const aCallback: TwbMainRecordGetFormIDCallback): IwbMainRecordDef;
+
+    function KnownSubRecordSignatures: PwbKnownSubRecordSignatures;
+    function GetIdentity(const aMainRecord: IwbMainRecord): string;
+    function SetIdentityCallback(const aCallback: TwbMainRecordIdentityCallback): IwbMainRecordDef;
+
+    function GetEditorID(const aSubRecord: IwbSubRecord): string;
+    procedure SetEditorID(const aSubRecord: IwbSubRecord; const aEditorID: string);
+    function SetGetEditorIDCallback(const aCallback: TwbMainRecordGetEditorIDCallback): IwbMainRecordDef;
+    function SetSetEditorIDCallback(const aCallback: TwbMainRecordSetEditorIDCallback): IwbMainRecordDef;
+
+    function GetGridCell(const aSubRecord: IwbSubRecord; out aGridCell: TwbGridCell): Boolean;
+    function SetGetGridCellCallback(const aCallback: TwbMainRecordGetGridCellCallback): IwbMainRecordDef;
+
     function SetToStr(const aToStr : TwbToStrCallback): IwbMainRecordDef{Self};
     function SetSummaryKey(const aSummaryKey: array of Integer): {Self}IwbMainRecordDef;
-    function SetSummaryPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbMainRecordDef;
+    function SetSummaryDelimiter(const aDelimiter: string): {Self}IwbMainRecordDef;
+    function SetSummaryMemberPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbMainRecordDef;
 
     function ToSummary(const aMainRecord: IwbMainRecord): string;
     {--- IwbMainRecordDefInternal ---}
@@ -4986,6 +5105,7 @@ type
 
     {---IwbSubRecordWithStructDef---}
     function SetSummaryKeyOnValue(const aSummaryKey: array of Integer): {Self}IwbSubRecordWithStructDef;
+    function SetSummaryPrefixSuffixOnValue(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbSubRecordWithStructDef;
   end;
 
   TwbRecordMemberDef = class(TwbBaseSignatureDef, IwbRecordMemberDef)
@@ -5055,6 +5175,7 @@ type
     srsSummaryKey        : array of Integer;
     srsSummaryPrefix     : TArray<string>;
     srsSummarySuffix     : TArray<string>;
+    srsSummaryDelimiter  : string;
   public
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority       : TwbConflictPriority;
@@ -5110,10 +5231,11 @@ type
 
     {---IwbRecordMemberDef---}
     function ToSummaryInternal(const aElement: IwbElement): string; override;
-    function SetSummaryPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbSubRecordStructDef;
+    function SetSummaryMemberPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbSubRecordStructDef;
 
     {---IwbSubRecordStructDef---}
     function SetSummaryKey(const aSummaryKey: array of Integer): {Self}IwbSubRecordStructDef;
+    function SetSummaryDelimiter(const aDelimiter: string): {Self}IwbSubRecordStructDef;
   end;
 
   TwbSubRecordUnionDef = class(TwbRecordMemberDef, IwbSubRecordUnionDef, IwbRecordDef)
@@ -5283,6 +5405,7 @@ type
     {---IwbResolvableDef---}
     function NeedsElementToResolve: Boolean; virtual;
     function ResolveDef(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef; virtual; abstract;
+    function ResolveDefAndElement(aBasePtr: Pointer; aEndPtr: Pointer; var aElement: IwbElement): IwbValueDef; virtual;
   end;
 
   TwbRecursiveDef = class(TwbResolvableDef, IwbRecursiveDef)
@@ -5333,6 +5456,7 @@ type
     {---IwbResolvableDef---}
     function NeedsElementToResolve: Boolean; override;
     function ResolveDef(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef; override;
+    function ResolveDefAndElement(aBasePtr: Pointer; aEndPtr: Pointer; var aElement: IwbElement): IwbValueDef; override;
 
     {---IwbUnionDef---}
     function GetMember(aIndex: Integer): IwbValueDef;
@@ -5805,6 +5929,9 @@ type
     stElementMap          : TDynCardinalArray;
     stCanContainFormIDs   : Boolean;
     stOptionalFromElement : Integer;
+    stSummaryPrefix       : TArray<string>;
+    stSummarySuffix       : TArray<string>;
+    stSummaryDelimiter    : string;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority            : TwbConflictPriority;
@@ -5847,7 +5974,10 @@ type
     function GetMember(aIndex: Integer): IwbValueDef;
     function GetMemberByName(const aName: string): IwbValueDef;
     function GetOptionalFromElement: Integer;
+
     function SetSummaryKey(const aSummaryKey: array of Integer): {Self}IwbStructDef;
+    function SetSummaryDelimiter(const aDelimiter: string): {Self}IwbStructDef;
+    function SetSummaryMemberPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbStructDef;
   end;
 
   TwbStructCDef = class(TwbStructDef, IwbStructCDef)
@@ -6325,6 +6455,20 @@ type
     function GetCallback: TwbIntToStrCallback;
   end;
 
+function wbRecord(const aSignature       : TwbSignature;
+                  const aName            : string;
+                  const aKnownSRs        : PwbKnownSubRecordSignatures;
+                  const aMembers         : array of IwbRecordMemberDef;
+                        aAllowUnordered  : Boolean = False;
+                        aAddInfoCallback : TwbAddInfoCallback = nil;
+                        aPriority        : TwbConflictPriority = cpNormal;
+                        aRequired        : Boolean = False;
+                        aAfterLoad       : TwbAfterLoadCallback = nil;
+                        aAfterSet        : TwbAfterSetCallback = nil)
+                                         : IwbMainRecordDef;
+begin
+  Result := wbRecord(aSignature, aName, aKnownSRs, nil, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet);
+end;
 
 function wbRecord(const aSignature       : TwbSignature;
                   const aName            : string;
@@ -6337,11 +6481,12 @@ function wbRecord(const aSignature       : TwbSignature;
                         aAfterSet        : TwbAfterSetCallback = nil)
                                          : IwbMainRecordDef;
 begin
-  Result := wbRecord(aSignature, aName, nil, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet);
+  Result := wbRecord(aSignature, aName, nil, nil, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet);
 end;
 
 function wbRecord(const aSignature       : TwbSignature;
                   const aName            : string;
+                  const aKnownSRs        : PwbKnownSubRecordSignatures;
                   const aRecordFlags     : IwbIntegerDefFormater;
                   const aMembers         : array of IwbRecordMemberDef;
                         aAllowUnordered  : Boolean;
@@ -6372,7 +6517,7 @@ begin
     end;
   end;
 
-  Result := TwbMainRecordDef.Create(aPriority, aRequired, aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aAfterLoad, aAfterSet, aIsReference);
+  Result := TwbMainRecordDef.Create(aPriority, aRequired, aSignature, aName, aKnownSRs, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aAfterLoad, aAfterSet, aIsReference);
   NewIndex := Length(wbRecordDefs);
   SetLength(wbRecordDefs, Succ(NewIndex));
   with wbRecordDefs[NewIndex] do begin
@@ -6396,7 +6541,23 @@ function wbRecord(const aSignature       : TwbSignature;
                         aAfterSet        : TwbAfterSetCallback = nil)
                                          : IwbMainRecordDef;
 begin
-  Result := wbRecord(aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet, False);
+  Result := wbRecord(aSignature, aName, nil, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet, False);
+end;
+
+function wbRecord(const aSignature       : TwbSignature;
+                  const aName            : string;
+                  const aKnownSRs        : PwbKnownSubRecordSignatures;
+                  const aRecordFlags     : IwbIntegerDefFormater;
+                  const aMembers         : array of IwbRecordMemberDef;
+                        aAllowUnordered  : Boolean = False;
+                        aAddInfoCallback : TwbAddInfoCallback = nil;
+                        aPriority        : TwbConflictPriority = cpNormal;
+                        aRequired        : Boolean = False;
+                        aAfterLoad       : TwbAfterLoadCallback = nil;
+                        aAfterSet        : TwbAfterSetCallback = nil)
+                                         : IwbMainRecordDef;
+begin
+  Result := wbRecord(aSignature, aName, aKnownSRs, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet, False);
 end;
 
 function wbRefRecord(const aSignature       : TwbSignature;
@@ -6425,7 +6586,7 @@ function wbRefRecord(const aSignature       : TwbSignature;
                            aAfterSet        : TwbAfterSetCallback = nil)
                                             : IwbMainRecordDef;
 begin
-  Result := wbRecord(aSignature, aName, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet, True);
+  Result := wbRecord(aSignature, aName, nil, aRecordFlags, aMembers, aAllowUnordered, aAddInfoCallback, aPriority, aRequired, aAfterLoad, aAfterSet, True);
   wbRefRecordDefs.Add(Result);
 end;
 
@@ -8669,9 +8830,17 @@ end;
 procedure TwbMainRecordDef.AfterClone(const aSource: TwbDef);
 begin
   inherited;
-  recSummaryKey := (aSource as TwbMainRecordDef).recSummaryKey;
-  recSummaryPrefix := (aSource as TwbMainRecordDef).recSummaryPrefix;
-  recSummarySuffix := (aSource as TwbMainRecordDef).recSummarySuffix;
+  recGetFormIDCallback := (aSource as TwbMainRecordDef).recGetFormIDCallback;
+  recIdentityCallback := (aSource as TwbMainRecordDef).recIdentityCallback;
+  recGetEditorIDCallback := (aSource as TwbMainRecordDef).recGetEditorIDCallback;
+  recSetEditorIDCallback := (aSource as TwbMainRecordDef).recSetEditorIDCallback;
+  recGetGridCellCallback := (aSource as TwbMainRecordDef).recGetGridCellCallback;
+  recFormIDBase := (aSource as TwbMainRecordDef).recFormIDBase;
+  recFormIDNameBase := (aSource as TwbMainRecordDef).recFormIDNameBase;
+  recSummaryKey := Copy((aSource as TwbMainRecordDef).recSummaryKey);
+  recSummaryPrefix := Copy((aSource as TwbMainRecordDef).recSummaryPrefix);
+  recSummarySuffix := Copy((aSource as TwbMainRecordDef).recSummarySuffix);
+  recSummaryDelimiter := (aSource as TwbMainRecordDef).recSummaryDelimiter;
 end;
 
 procedure TwbMainRecordDef.AfterLoad(const aElement: IwbElement);
@@ -8712,7 +8881,7 @@ end;
 constructor TwbMainRecordDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbMainRecordDef do
-    Self.Create(defPriority, defRequired, GetDefaultSignature, ndName, recRecordFlags, recMembers,
+    Self.Create(defPriority, defRequired, GetDefaultSignature, ndName, recKnownSRs, recRecordFlags, recMembers,
       AllowUnordered, recAddInfoCallback, ndAfterLoad, ndAfterSet, rdfIsReference in recDefFlags).AfterClone(aSource);
 end;
 
@@ -8729,6 +8898,7 @@ constructor TwbMainRecordDef.Create(aPriority        : TwbConflictPriority;
                                     aRequired        : Boolean;
                               const aSignature       : TwbSignature;
                               const aName            : string;
+                              const aKnownSRs        : PwbKnownSubRecordSignatures;
                               const aRecordFlags     : IwbIntegerDefFormater;
                               const aMembers         : array of IwbRecordMemberDef;
                                     aAllowUnordered  : Boolean;
@@ -8742,6 +8912,13 @@ var
   sRec : IwbSubRecordDef;
   iDef : IwbIntegerDef;
 begin
+  recSummaryDelimiter := ' ';
+
+  if Assigned(aKnownSRs) then
+    recKnownSRs := aKnownSRs
+  else
+    recKnownSRs := @wbKnownSubRecordSignatures;
+
   if aIsReference then
     Include(recDefFlags, rdfIsReference);
 
@@ -8768,19 +8945,20 @@ begin
       Include(recDefFlags, rdfCanContainFormIDs);
     for j := 0 to Pred(aMembers[i].SignatureCount) do begin
       Sig := aMembers[i].Signatures[j];
-      if (Sig = 'EDID') or
-         (Sig = 'FULL') or
+      if (Sig = recKnownSRs[ksrsEditorID]) or
+         (Sig = recKnownSRs[ksrsFullName]) or
+         (Sig = recKnownSRs[ksrsGridCell]) or
          (
-           (Sig = 'NAME') and
+           (Sig = recKnownSRs[ksrsBaseRecord]) and
            (rdfIsReference in recDefFlags)
          ) then begin
 
         recQuickInitLimit := i;
-        if Sig = 'EDID' then
+        if Sig = recKnownSRs[ksrsEditorID] then
           Include(recDefFlags, rdfContainsEditorID);
-        if Sig = 'FULL' then
+        if Sig = recKnownSRs[ksrsFullName] then
           Include(recDefFlags, rdfContainsFullName);
-        if Sig = 'NAME' then begin
+        if Sig = recKnownSRs[ksrsBaseRecord] then begin
           Include(recDefFlags, rdfContainsBaseRecord);
           if not Supports(aMembers[i], IwbSubRecordDef, sRec) then
             Assert(False);
@@ -8791,6 +8969,8 @@ begin
           if not Supports(iDef.Formater[nil], IwbFormIDChecked, recBaseRecordFormID) then
             Assert(False);
         end;
+        if Sig = recKnownSRs[ksrsGridCell] then
+          Include(recDefFlags, rdfContainsGridCell);
       end;
       try
         recSignatures.AddObject(Sig, Pointer(i) );
@@ -8884,6 +9064,11 @@ begin
   Result := recReferences.Find(aSignature, Dummy);
 end;
 
+function TwbMainRecordDef.KnownSubRecordSignatures: PwbKnownSubRecordSignatures;
+begin
+  Result := recKnownSRs;
+end;
+
 procedure TwbMainRecordDef.recBuildReferences;
 var
   i: Integer;
@@ -8921,6 +9106,63 @@ begin
   defReported := True;
 end;
 
+procedure TwbMainRecordDef.SetEditorID(const aSubRecord: IwbSubRecord; const aEditorID: string);
+begin
+  if Assigned(recSetEditorIDCallback) then
+    recSetEditorIDCallback(aSubRecord, aEditorID)
+  else if aEditorID = '' then
+    aSubRecord.Remove
+  else
+    aSubRecord.EditValue := aEditorID;
+end;
+
+function TwbMainRecordDef.SetFormIDBase(aBase: Byte): IwbMainRecordDef;
+begin
+  Result := Self;
+  recFormIDBase := aBase;
+end;
+
+function TwbMainRecordDef.SetFormIDNameBase(aBase: Byte): IwbMainRecordDef;
+begin
+  Result := Self;
+  recFormIDNameBase := aBase;
+end;
+
+function TwbMainRecordDef.SetGetEditorIDCallback(const aCallback: TwbMainRecordGetEditorIDCallback): IwbMainRecordDef;
+begin
+  recGetEditorIDCallback := aCallback;
+  Result := Self;
+end;
+
+function TwbMainRecordDef.SetGetFormIDCallback(const aCallback: TwbMainRecordGetFormIDCallback): IwbMainRecordDef;
+begin
+  recGetFormIDCallback := aCallback;
+  Result := Self;
+end;
+
+function TwbMainRecordDef.SetGetGridCellCallback(const aCallback: TwbMainRecordGetGridCellCallback): IwbMainRecordDef;
+begin
+  recGetGridCellCallback := aCallback;
+  Result := Self;
+end;
+
+function TwbMainRecordDef.SetIdentityCallback(const aCallback: TwbMainRecordIdentityCallback): IwbMainRecordDef;
+begin
+  recIdentityCallback := aCallback;
+  Result := Self;
+end;
+
+function TwbMainRecordDef.SetSetEditorIDCallback(const aCallback: TwbMainRecordSetEditorIDCallback): IwbMainRecordDef;
+begin
+  recSetEditorIDCallback := aCallback;
+  Result := Self;
+end;
+
+function TwbMainRecordDef.SetSummaryDelimiter(const aDelimiter: string): IwbMainRecordDef;
+begin
+  Result := Self;
+  recSummaryDelimiter := aDelimiter;
+end;
 
 function TwbMainRecordDef.SetSummaryKey(const aSummaryKey: array of Integer): IwbMainRecordDef;
 begin
@@ -8947,10 +9189,10 @@ begin
   SetArrayEntry(aSuffix, arrSuffix);
 end;
 
-function TwbMainRecordDef.SetSummaryPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): IwbMainRecordDef;
+function TwbMainRecordDef.SetSummaryMemberPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): IwbMainRecordDef;
 begin
   Result := Self;
-  Assert(InRange(aIndex, Low(recMembers), High(recMembers)), '[TwbMainRecordDef.SetSummaryPrefixSuffix] not InRange(aIndex, Low(recMembers), High(recMembers))');
+  Assert(InRange(aIndex, Low(recMembers), High(recMembers)), '[TwbMainRecordDef.SetSummaryMemberPrefixSuffix] not InRange(aIndex, Low(recMembers), High(recMembers))');
   wbSetPrefixSuffix(aIndex, aPrefix, aSuffix, recSummaryPrefix, recSummarySuffix);
 end;
 
@@ -8960,7 +9202,7 @@ begin
   ndToStr := aToStr;
 end;
 
-procedure StructKeysToSummary(var Result: string; const aElement: IwbElement; const aMembers: array of IwbRecordMemberDef; const aKeys: array of integer; const aPrefix, aSuffix: array of string);
+procedure StructKeysToSummary(var Result: string; const aElement: IwbElement; const aMembers: array of IwbRecordMemberDef; const aKeys: array of integer; const aPrefix, aSuffix: array of string; const aDelimiter: string);
 
   function GetFromArray(const aArray: array of string; aIndex: Integer): string;
   begin
@@ -8976,7 +9218,7 @@ begin
     var DelayedName := '';
     var CER: IwbContainerElementRef;
     if Supports(aElement, IwbContainerElementRef, CER) then begin
-      var NoName := (dfSummaryNoName in CER.Def.DefFlags);
+      var MembersNoName := (dfSummaryMembersNoName in CER.Def.DefFlags);
       for var i := 0 to Pred(l) do begin
         var SortOrder := aKeys[i];
         if (SortOrder >= Low(aMembers)) and (SortOrder <= High(aMembers)) then begin
@@ -8991,13 +9233,14 @@ begin
               var Prefix := GetFromArray(aPrefix, SortOrder);
               var Suffix := GetFromArray(aSuffix, SortOrder);
               var HasFix := (Prefix <> '') or (Suffix <> '');
+              var NoName := MembersNoName or (dfSummaryNoName in RMD.DefFlags);
 
               if Result <> '' then begin
                 if DelayedName <> '' then begin
                   Result := DelayedName + ':(' + Result + ')';
                   DelayedName := '';
                 end;
-                Result := Result + ' ';
+                Result := Result + aDelimiter;
               end;
 
               var t := RMD.Name;
@@ -9011,7 +9254,7 @@ begin
                   DelayedName := t;
                   Result := s;
                 end else
-                Result := Result + t + ':(' + s + ')';
+                  Result := Result + t + ':(' + s + ')';
               end;
             end;
           end;
@@ -9028,7 +9271,7 @@ begin
     ndToStr(Result, aMainRecord.DataBasePtr, aMainRecord.DataEndPtr, aMainRecord, ctToSummary);
 
   if Result = '' then
-    StructKeysToSummary(Result, aMainRecord, recMembers, recSummaryKey, recSummaryPrefix, recSummarySuffix);
+    StructKeysToSummary(Result, aMainRecord, recMembers, recSummaryKey, recSummaryPrefix, recSummarySuffix, recSummaryDelimiter);
 end;
 
 destructor TwbMainRecordDef.Destroy;
@@ -9069,6 +9312,11 @@ begin
   Result := rdfContainsFullName in recDefFlags;
 end;
 
+function TwbMainRecordDef.GetContainsGridCell: Boolean;
+begin
+  Result := rdfContainsGridCell in recDefFlags;
+end;
+
 function TwbMainRecordDef.GetDefType: TwbDefType;
 begin
   Result := dtRecord;
@@ -9077,6 +9325,60 @@ end;
 function TwbMainRecordDef.GetDefTypeName: string;
 begin
   Result := 'Record';
+end;
+
+function TwbMainRecordDef.GetEditorID(const aSubRecord: IwbSubRecord): string;
+begin
+  if Assigned(recGetEditorIDCallback) then
+    Result := recGetEditorIDCallback(aSubRecord)
+  else
+    Result := aSubRecord.EditValue;
+end;
+
+function TwbMainRecordDef.GetFormID(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean;
+begin
+  Result := Assigned(recGetFormIDCallback) and recGetFormIDCallback(aMainRecord, aFormID);
+end;
+
+function TwbMainRecordDef.GetFormIDBase: Byte;
+
+  procedure RaiseAssert;
+  begin
+    Assert(False, GetName + ' has no FormID Base');
+  end;
+
+begin
+  Result := recFormIDBase;
+  if Result < 1 then
+    RaiseAssert;
+end;
+
+function TwbMainRecordDef.GetFormIDNameBase: Byte;
+begin
+  Result := recFormIDNameBase;
+  if Result < 1 then
+    Result := GetFormIDBase;
+end;
+
+function TwbMainRecordDef.GetGridCell(const aSubRecord: IwbSubRecord; out aGridCell: TwbGridCell): Boolean;
+begin
+  if Assigned(recGetGridCellCallback) then
+    Result := recGetGridCellCallback(aSubRecord, aGridCell)
+  else begin
+    Result := True;
+    with aGridCell, aSubRecord do begin
+      X := ElementNativeValues['X'];
+      Y := ElementNativeValues['Y'];
+    end;
+  end;
+end;
+
+function TwbMainRecordDef.GetIdentity(const aMainRecord: IwbMainRecord): string;
+begin
+  if Assigned(recIdentityCallback) then
+    Result := recIdentityCallback(aMainRecord)
+  else
+    Result := aMainRecord.EditorID;
 end;
 
 function TwbMainRecordDef.GetIsReference: Boolean;
@@ -9240,6 +9542,12 @@ function TwbSubRecordDef.SetSummaryKeyOnValue(const aSummaryKey: array of Intege
 begin
   Result := Self;
   (srValue as IwbStructDef).SetSummaryKey(aSummaryKey);
+end;
+
+function TwbSubRecordDef.SetSummaryPrefixSuffixOnValue(aIndex: Integer; const aPrefix, aSuffix: string): IwbSubRecordWithStructDef;
+begin
+  Result := Self;
+  (srValue as IwbStructDef).SetSummaryMemberPrefixSuffix(aIndex, aPrefix, aSuffix);
 end;
 
 function TwbSubRecordDef.SetToStr(const aToStr: TwbToStrCallback): IwbRecordMemberDef;
@@ -9416,9 +9724,10 @@ procedure TwbSubRecordStructDef.AfterClone(const aSource: TwbDef);
 begin
   inherited AfterClone(aSource);
   with aSource as TwbSubRecordStructDef do begin
-    Self.srsSummaryKey := srsSummaryKey;
-    Self.srsSummaryPrefix := srsSummaryPrefix;
-    Self.srsSummarySuffix := srsSummarySuffix;
+    Self.srsSummaryKey := Copy(srsSummaryKey);
+    Self.srsSummaryPrefix := Copy(srsSummaryPrefix);
+    Self.srsSummarySuffix := Copy(srsSummarySuffix);
+    Self.srsSummaryDelimiter := srsSummaryDelimiter;
   end;
 end;
 
@@ -9527,6 +9836,7 @@ var
   i,j: Integer;
   FoundRequired : Boolean;
 begin
+  srsSummaryDelimiter := ' ';
   srsAllowUnordered := aAllowUnordered;
   srsSignatures := TwbFastStringListCS.CreateSorted(dupIgnore);
 
@@ -9658,6 +9968,12 @@ begin
   defReported := True;
 end;
 
+function TwbSubRecordStructDef.SetSummaryDelimiter(const aDelimiter: string): IwbSubRecordStructDef;
+begin
+  Result := Self;
+  srsSummaryDelimiter := aDelimiter;
+end;
+
 function TwbSubRecordStructDef.SetSummaryKey(const aSummaryKey: array of Integer): IwbSubRecordStructDef;
 begin
   Result := Self;
@@ -9667,10 +9983,10 @@ begin
     srsSummaryKey[i] := aSummaryKey[i];
 end;
 
-function TwbSubRecordStructDef.SetSummaryPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): IwbSubRecordStructDef;
+function TwbSubRecordStructDef.SetSummaryMemberPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): IwbSubRecordStructDef;
 begin
   Result := Self;
-  Assert(InRange(aIndex, Low(srsMembers), High(srsMembers)), '[TwbSubRecordStructDef.SetSummaryPrefixSuffix] not InRange(aIndex, Low(srsMembers), High(srsMembers))');
+  Assert(InRange(aIndex, Low(srsMembers), High(srsMembers)), '[TwbSubRecordStructDef.SetSummaryMemberPrefixSuffix] not InRange(aIndex, Low(srsMembers), High(srsMembers))');
   wbSetPrefixSuffix(aIndex, aPrefix, aSuffix, srsSummaryPrefix, srsSummarySuffix);
 end;
 
@@ -9681,7 +9997,7 @@ var
   SRS: IwbSubRecordStruct;
 begin
   Result := '';
-  StructKeysToSummary(Result, aElement, srsMembers, srsSummaryKey, srsSummaryPrefix, srsSummarySuffix);
+  StructKeysToSummary(Result, aElement, srsMembers, srsSummaryKey, srsSummaryPrefix, srsSummarySuffix, srsSummaryDelimiter);
 end;
 
 { TwbSubRecordUnionDef }
@@ -11207,7 +11523,10 @@ procedure TwbStructDef.AfterClone(const aSource: TwbDef);
 begin
   inherited AfterClone(aSource);
   with aSource as TwbStructDef do begin
-    Self.stSummaryKey := stSummaryKey;
+    Self.stSummaryKey := Copy(stSummaryKey);
+    Self.stSummaryPrefix := Copy(stSummaryPrefix);
+    Self.stSummarySuffix := Copy(stSummarySuffix);
+    Self.stSummaryDelimiter := stSummaryDelimiter;
   end;
 end;
 
@@ -11259,6 +11578,7 @@ constructor TwbStructDef.Create(aPriority            : TwbConflictPriority;
 var
   i: Integer;
 begin
+  stSummaryDelimiter := ' ';
   stOptionalFromElement := aOptionalFromElement;
   SetLength(stMembers, Length(aMembers));
   for i := Low(stMembers) to High(stMembers) do begin
@@ -11438,6 +11758,12 @@ begin
   defReported := True;
 end;
 
+function TwbStructDef.SetSummaryDelimiter(const aDelimiter: string): IwbStructDef;
+begin
+  Result := Self;
+  stSummaryDelimiter := aDelimiter;
+end;
+
 function TwbStructDef.SetSummaryKey(const aSummaryKey: array of Integer): IwbStructDef;
 begin
   Result := Self;
@@ -11445,6 +11771,13 @@ begin
   SetLength(stSummaryKey, Length(aSummaryKey));
   for var i := Low(stSummaryKey) to High(stSummaryKey) do
     stSummaryKey[i] := aSummaryKey[i];
+end;
+
+function TwbStructDef.SetSummaryMemberPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): IwbStructDef;
+begin
+  Result := Self;
+  Assert(InRange(aIndex, Low(stMembers), High(stMembers)), '[TwbStructDef.SetSummaryMemberPrefixSuffix] not InRange(aIndex, Low(stMembers), High(stMembers))');
+  wbSetPrefixSuffix(aIndex, aPrefix, aSuffix, stSummaryPrefix, stSummarySuffix);
 end;
 
 function TwbStructDef.ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
@@ -11543,9 +11876,18 @@ var
   CER         : IwbContainerElementRef;
   MemberUsed  : array of Boolean;
   DelayedName : string;
-  NoName      : Boolean;
+  MembersNoName      : Boolean;
 
   procedure Process(const Keys: array of integer);
+
+    function GetFromArray(const aArray: array of string; aIndex: Integer): string;
+    begin
+      if InRange(aIndex, Low(aArray), High(aArray)) then
+        Result := aArray[aIndex]
+      else
+        Result := '';
+    end;
+
   begin
     for var i := Low(Keys) to High(Keys) do begin
       var SortMember := Keys[i];
@@ -11559,31 +11901,35 @@ var
         var Element := CER.ElementBySortOrder[SortMember + CER.AdditionalElementCount];
         var DC: IwbDataContainer;
         var MemberCER: IwbContainerElementRef;
-        if (Element.ConflictPriority > cpIgnore) and Supports(Element, IwbContainerElementRef, MemberCER) and Supports(Element, IwbDataContainer, DC) then begin
+        if Supports(Element, IwbContainerElementRef, MemberCER) and Supports(Element, IwbDataContainer, DC) and (Element.ConflictPriority > cpIgnore) then begin
           var MemberDef := stMembers[SortMember];
           Assert(MemberDef.Equals(DC.Def));
           var s:= MemberDef.ToSummary(DC.DataBasePtr, DC.DataEndPtr, DC).Trim;
           if s <> '' then begin
+            var Prefix := GetFromArray(stSummaryPrefix, SortMember);
+            var Suffix := GetFromArray(stSummarySuffix, SortMember);
+            var HasFix := (Prefix <> '') or (Suffix <> '');
+
             if Result <> '' then begin
               if DelayedName <> '' then begin
                 Result := DelayedName + ':(' + Result + ')';
                 DelayedName := '';
               end;
-              Result := Result + ' ';
+              Result := Result + stSummaryDelimiter;
             end;
 
             var t := MemberDef.Name;
             if (MemberCER.ElementType = etArray) and (MemberCER.ElementCount = 1) then
               t := MemberDef.GetSingularName;
 
-            if NoName or s.StartsWith(t + ':(', True) then
-              Result := Result + s
+            if MembersNoName or HasFix or s.StartsWith(t + ':(', True) then
+              Result := Result + Prefix + s + Suffix
             else begin
               if Result = '' then begin
                 DelayedName := t;
                 Result := s;
               end else
-              Result := Result + t + ':(' + s + ')';
+                Result := Result + t + ':(' + s + ')';
             end;
 
           end;
@@ -11599,7 +11945,7 @@ begin
   if (Result = '') and Supports(aElement, IwbContainerElementRef, CER) then begin
     MemberUsed := nil;
     DelayedName := '';
-    NoName := dfSummaryNoName in defFlags;
+    MembersNoName := dfSummaryMembersNoName in defFlags;
     Process(stSortKey);
     Process(stExSortKey);
     Process(stSummaryKey);
@@ -12088,7 +12434,7 @@ begin
     for i := Low(enNames) to High(enNames) do begin
       var lName := aNames[i*StepSize];
       enNames[i] := lName;
-      if aNames[i] <> '' then
+      if lName <> '' then
         if wbShowFlagEnumValue then
           EditInfo.Add(lName + ' (' + IntToStr(i) + ')')
         else
@@ -14174,7 +14520,10 @@ begin
 
   if aInt = 0 then begin
     if IsValid('TRGT') and not IsValid('NULL') then begin
-      Result := 'TARGET - Target Reference ['+FormID.ToString(False)+']';
+      if aForSummary then
+        Result := 'TARGET'
+      else
+        Result := 'TARGET - Target Reference ['+FormID.ToString(False)+']';
       if wbReportMode then
         if wbReportFormIDs then begin
           if not Assigned(FoundSignatures) then
@@ -14184,7 +14533,10 @@ begin
           FoundSignatures.Objects[i] := TObject(Succ(Integer(FoundSignatures.Objects[i])));
         end;
     end else begin
-      Result := 'NULL - Null Reference ['+FormID.ToString(False)+']';
+      if aForSummary then
+        Result := 'NULL'
+      else
+        Result := 'NULL - Null Reference ['+FormID.ToString(False)+']';
       if wbReportMode then
         if wbReportFormIDs then begin
           if not Assigned(FoundSignatures) then
@@ -14197,7 +14549,10 @@ begin
     Used(aElement, Result);
     Exit;
   end else if FormID.IsNone then begin
-    Result := 'FFFF - None Reference ['+FormID.ToString(False)+']';
+      if aForSummary then
+        Result := 'FFFF'
+      else
+        Result := 'FFFF - None Reference ['+FormID.ToString(False)+']';
     if wbReportMode then
       if wbReportFormIDs then begin
         if not Assigned(FoundSignatures) then
@@ -14224,9 +14579,12 @@ begin
           MainRecord := _File.RecordByFormID[TwbFormID.FromCardinal(aInt), True, aElement.MastersUpdated];
         end;
         if Assigned(MainRecord) then begin
-          if aForSummary then
-            Result := MainRecord.ShortName
-          else
+          if aForSummary then begin
+            if Assigned(aElement) and MainRecord.Equals(aElement.ContainingMainRecord) then
+              Result := 'Self'
+            else
+              Result := MainRecord.ShortName;
+          end else
             Result := MainRecord.Name;
           if wbReportMode then
             if wbReportFormIDs then begin
@@ -15119,10 +15477,9 @@ end;
 
 function TwbCallbackDef.ToString(aInt: Int64; const aElement: IwbElement; aForSummary: Boolean): string;
 begin
-  Result := '';
   if aForSummary then
-    Result := cdToStr(aInt, aElement, ctToSummary);
-  if Result = '' then
+    Result := cdToStr(aInt, aElement, ctToSummary)
+  else
     Result := cdToStr(aInt, aElement, ctToStr);
   Used(aElement, Result);
 end;
@@ -15393,8 +15750,8 @@ end;
 function TwbSubRecordStructSKDef.ToSummaryInternal(const aElement: IwbElement): string;
 begin
   Result := '';
-  StructKeysToSummary(Result, aElement, srsMembers, srsSortKey, srsSummaryPrefix, srsSummarySuffix);
-  StructKeysToSummary(Result, aElement, srsMembers, srsExSortKey, srsSummaryPrefix, srsSummarySuffix);
+  StructKeysToSummary(Result, aElement, srsMembers, srsSortKey, srsSummaryPrefix, srsSummarySuffix, srsSummaryDelimiter);
+  StructKeysToSummary(Result, aElement, srsMembers, srsExSortKey, srsSummaryPrefix, srsSummarySuffix, srsSummaryDelimiter);
   var s := inherited ToSummaryInternal(aElement);
   if s <> '' then begin
     if Result <> '' then
@@ -15874,6 +16231,21 @@ begin
   Used(nil, '');
 end;
 
+function TwbUnionDef.ResolveDefAndElement(aBasePtr, aEndPtr: Pointer; var aElement: IwbElement): IwbValueDef;
+begin
+  Result := inherited ResolveDefAndElement(aBasePtr, aEndPtr, aElement);
+  if Assigned(Result) then
+    if aElement.ElementType = etUnion then begin
+      var CER: IwbContainerElementRef;
+      if Supports(aElement, IwbContainerElementRef, CER) then
+        if CER.ElementCount = 1 then begin
+          var Element := CER.Elements[0];
+          if Result.Equals(Element.ValueDef) then
+            aElement := Element;
+        end;
+    end;
+end;
+
 procedure TwbResolvableDef.FromEditValue(aBasePtr, aEndPtr: Pointer;
   const aElement: IwbElement; const aValue: string);
 begin
@@ -16008,6 +16380,11 @@ end;
 function TwbResolvableDef.NeedsElementToResolve: Boolean;
 begin
   Result := False;
+end;
+
+function TwbResolvableDef.ResolveDefAndElement(aBasePtr, aEndPtr: Pointer; var aElement: IwbElement): IwbValueDef;
+begin
+  Result := ResolveDef(aBasePtr, aEndPtr, aElement);
 end;
 
 function TwbUnionDef.GetMember(aIndex: Integer): IwbValueDef;
@@ -16189,16 +16566,16 @@ end;
 
 function TwbResolvableDef.ToSummary(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 var
-  ValueDef: IwbValueDef;
+  ValueDef : IwbValueDef;
 begin
   Result := '';
   if Assigned(ndToStr) then
     ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToSummary);
 
   if Result = '' then begin
-    ValueDef := ResolveDef(aBasePtr, aEndPtr, aElement);
-    if Assigned(ValueDef) then
-      Result := ValueDef.ToSummary(aBasePtr, aEndPtr, aElement);
+    var Element := aElement;
+    ValueDef := ResolveDefAndElement(aBasePtr, aEndPtr, Element);
+    Result := ValueDef.ToSummary(aBasePtr, aEndPtr, Element);
   end;
 
   Used(aElement, Result);
@@ -18462,6 +18839,11 @@ begin
   Result :=
     (a.x = b.x) and
     (a.y = b.y);
+end;
+
+function TwbGridCell.SortKey: string;
+begin
+  Result := IntToHex(Int64(x) + Abs(Low(Integer)), 8) + '|' + IntToHex(Int64(y) + Abs(Low(Integer)), 8);
 end;
 
 { TwbVersion }

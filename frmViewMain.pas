@@ -20236,6 +20236,24 @@ begin
         _LoaderProgressAction := 'loading modules';
 
         for i := 0 to Pred(ltLoadList.Count) do begin
+
+          if wbGameMode = gmTES3 then
+            if (i = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameMasterEsm) then begin
+              b := TwbHardcodedContainer.GetHardCodedDat;
+              if Length(b) > 0 then begin
+                t := wbGameExeName;
+                LoaderProgress('loading "' + t + '"...');
+                _File := wbFile(t, 0, '', [fsIsHardcoded], b);
+                SetLength(ltFiles, Succ(Length(ltFiles)));
+                ltFiles[High(ltFiles)] := _File;
+                frmMain.SendAddFile(_File);
+                if wbForceTerminate then
+                  Exit;
+                Inc(ltLoadOrderOffset);
+              end else
+                Assert(False, 'Can''t find Hardcoded module.')
+            end;
+
           LoaderProgress('loading "' + ltLoadList[i] + '"...');
           if FileExists(ltLoadList[i]) then
             s := ltLoadList[i]

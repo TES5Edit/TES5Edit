@@ -699,6 +699,9 @@ const
   YNAM : TwbSignature = 'YNAM';
   ZNAM : TwbSignature = 'ZNAM';
 
+  INOM : TwbSignature = 'INOM'; { xEdit internal use only }
+  INOA : TwbSignature = 'INOA'; { xEdit internal use only }
+
 var
   wbPKDTSpecificFlagsUnused : Boolean;
   wbEDID: IwbSubRecordDef;
@@ -869,7 +872,7 @@ begin
   AsFloat := PSingle(@AsCardinal)^;
   aInt := Round(AsFloat);
   case aType of
-    ctToStr: Result := wbActorValueEnum.ToString(aInt, aElement, aType = ctToSummary);
+    ctToStr, ctToSummary: Result := wbActorValueEnum.ToString(aInt, aElement, aType = ctToSummary);
     ctToSortKey: Result := wbActorValueEnum.ToSortKey(aInt, aElement);
     ctCheck: Result := wbActorValueEnum.Check(aInt, aElement);
     ctToEditValue: Result := wbActorValueEnum.ToEditValue(aInt, aElement);
@@ -900,8 +903,12 @@ var
   s, t       : string;
 begin
   case aType of
-    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Parameter 1>';
-    ctToEditValue: Result := IntToStr(aInt);
+    ctToStr, ctToSummary: begin
+      Result := aInt.ToString;
+      if aType = ctToStr then
+        Result := Result + ' <Warning: Could not resolve Parameter 1>';
+    end;
+    ctToEditValue: Result := aInt.ToString;
     ctToSortKey: begin
       Result := IntToHex64(aInt, 8);
       Exit;
@@ -927,7 +934,11 @@ begin
 
   if MainRecord.Signature <> QUST then begin
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+      end;
       ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
     end;
     Exit;
@@ -958,7 +969,7 @@ begin
             EditInfos.AddObject(t, TObject(j))
           else if j = aInt then begin
             case aType of
-              ctToStr, ctToEditValue: Result := t;
+              ctToStr, ctToSummary, ctToEditValue: Result := t;
               ctCheck: Result := '';
             end;
             Exit;
@@ -967,7 +978,11 @@ begin
     end;
 
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+      end;
       ctCheck: Result := '<Warning: Quest Stage not found in "' + MainRecord.Name + '">';
       ctEditInfo: begin
         EditInfos.Sort;
@@ -991,8 +1006,12 @@ var
   s, t       : string;
 begin
   case aType of
-    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Quest>';
-    ctToEditValue: Result := IntToStr(aInt);
+    ctToStr, ctToSummary: begin
+      Result := aInt.ToString;
+      if aType = ctToStr then
+        Result := Result + ' <Warning: Could not resolve Quest>';
+    end;
+    ctToEditValue: Result := aInt.ToString;
     ctToSortKey: begin
       Result := IntToHex64(aInt, 8);
       Exit;
@@ -1018,7 +1037,11 @@ begin
 
   if MainRecord.Signature <> QUST then begin
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+      end;
       ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
     end;
     Exit;
@@ -1049,7 +1072,7 @@ begin
             EditInfos.AddObject(t, TObject(j))
           else if j = aInt then begin
             case aType of
-              ctToStr, ctToEditValue: Result := t;
+              ctToStr, ctToSummary, ctToEditValue: Result := t;
               ctCheck: Result := '';
             end;
             Exit;
@@ -1058,7 +1081,11 @@ begin
     end;
 
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+      end;
       ctCheck: Result := '<Warning: Quest Stage not found in "' + MainRecord.Name + '">';
       ctEditInfo: begin
         EditInfos.Sort;
@@ -1092,8 +1119,8 @@ var
   Triangles  : IwbContainerElementRef;
 begin
   case aType of
-    ctToStr: Result := IntToStr(aInt);
-    ctToEditValue: Result := IntToStr(aInt);
+    ctToStr, ctToSummary: Result := aInt.ToString;
+    ctToEditValue: Result := aInt.ToString;
     ctToSortKey: begin
       Result := IntToHex64(aInt, 8);
       Exit;
@@ -1119,7 +1146,11 @@ begin
 
   if MainRecord.Signature <> NAVM then begin
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Navmesh record>';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: "'+MainRecord.ShortName+'" is not a Navmesh record>';
+      end;
       ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Navmesh record>';
     end;
     Exit;
@@ -1145,7 +1176,7 @@ var
   FormID     : TwbFormID;
 begin
   case aType of
-    ctToStr: begin
+    ctToStr, ctToSummary: begin
       if aInt < 0 then
         Exit('None');
       Result := aInt.ToString;
@@ -1327,7 +1358,7 @@ var
   Vertex     : IwbContainerElementRef;
 begin
   case aType of
-    ctToStr: begin
+    ctToStr, ctToSummary: begin
       Result := aInt.ToString;
       if not Assigned(aElement) then
         Exit;
@@ -1505,10 +1536,19 @@ var
   s, t       : string;
 begin
   case aType of
-    ctToStr: if aInt = -1 then Result := 'None' else
-      Result := IntToStr(aInt) + ' <Warning: Could not resolve alias>';
+    ctToStr, ctToSummary:
+      if aInt = -1 then begin
+        if aType = ctToStr then
+          Result := 'None'
+        else
+          Result := '';
+      end else begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: Could not resolve alias>';
+      end;
     ctToEditValue: if aInt = -1 then Result := 'None' else
-      Result := IntToStr(aInt);
+      Result := aInt.ToString;
     ctToSortKey: begin
       Result := IntToHex64(aInt, 8);
       Exit;
@@ -1534,7 +1574,11 @@ begin
 
   if MainRecord.Signature <> QUST then begin
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: "' + MainRecord.ShortName + '" is not a Quest record>';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: "' + MainRecord.ShortName + '" is not a Quest record>';
+      end;
       ctCheck: Result := '<Warning: "' + MainRecord.ShortName + '" is not a Quest record>';
     end;
     Exit;
@@ -1566,7 +1610,7 @@ begin
             EditInfos.Add(t)
           else if j = aInt then begin
             case aType of
-              ctToStr, ctToEditValue: Result := t;
+              ctToStr, ctToSummary, ctToEditValue: Result := t;
               ctCheck: Result := '';
             end;
             Exit;
@@ -1575,7 +1619,11 @@ begin
     end;
 
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: Quest Alias not found in "' + MainRecord.Name + '">';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: Quest Alias not found in "' + MainRecord.Name + '">';
+      end;
       ctCheck: Result := '<Warning: Quest Alias not found in "' + MainRecord.Name + '">';
       ctEditInfo: begin
         EditInfos.Add('None');
@@ -1613,7 +1661,7 @@ var
 begin
   if not wbResolveAlias then begin
     case aType of
-      ctToStr, ctToEditValue: Result := IntToStr(aInt);
+      ctToStr, ctToSummary, ctToEditValue: Result := aInt.ToString;
       ctToSortKey: Result := IntToHex64(aInt, 8);
     else
       Result := '';
@@ -1638,7 +1686,7 @@ var
 begin
   if not wbResolveAlias then begin
     case aType of
-      ctToStr, ctToEditValue: Result := IntToStr(aInt);
+      ctToStr, ctToSummary, ctToEditValue: Result := aInt.ToString;
       ctToSortKey: Result := IntToHex64(aInt, 8);
     else
       Result := '';
@@ -1666,7 +1714,7 @@ var
 begin
   if not wbResolveAlias then begin
     case aType of
-      ctToStr, ctToEditValue: Result := IntToStr(aInt);
+      ctToStr, ctToSummary, ctToEditValue: Result := aInt.ToString;
       ctToSortKey: Result := IntToHex64(aInt, 8);
     else
       Result := '';
@@ -1694,7 +1742,7 @@ var
 begin
   if not wbResolveAlias then begin
     case aType of
-      ctToStr, ctToEditValue: Result := IntToStr(aInt);
+      ctToStr, ctToSummary, ctToEditValue: Result := aInt.ToString;
       ctToSortKey: Result := IntToHex64(aInt, 8);
     else
       Result := '';
@@ -1721,7 +1769,7 @@ var
 begin
   if not wbResolveAlias then begin
     case aType of
-      ctToStr, ctToEditValue: Result := IntToStr(aInt);
+      ctToStr, ctToSummary, ctToEditValue: Result := aInt.ToString;
       ctToSortKey: Result := IntToHex64(aInt, 8);
     else
       Result := '';
@@ -1758,7 +1806,7 @@ begin
   // this should never be called since aliases in conditions can be in the forms above only
   // but just in case
   case aType of
-    ctToStr, ctToEditValue: Result := IntToStr(aInt);
+    ctToStr, ctToSummary, ctToEditValue: Result := aInt.ToString;
     ctToSortKey: Result := IntToHex64(aInt, 8);
   else
     Result := '';
@@ -1774,7 +1822,7 @@ begin
   Result := '';
   if aType = ctToSortKey then begin
     Result := IntToHex64(aInt, 2);
-  end else if aType = ctToStr then begin
+  end else if aType in [ctToStr, ctToSummary] then begin
     PhaseLength := aInt mod 64;
     Masser := (aInt and 64) <> 0;
     Secunda := (aInt and 128) <> 0;
@@ -1796,11 +1844,11 @@ function wbClmtTime(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackT
 begin
   if aType = ctToSortKey then
     Result := IntToHex64(aInt, 4)
-  else if aType = ctToStr then
+  else if aType in [ctToStr, ctToSummary] then
     try
       Result := TimeToStr( EncodeTime(aInt div 6, (aInt mod 6) * 10, 0, 0) )
     except
-      Result := IntToStr(aInt)
+      Result := aInt.ToString
     end
   else
     Result := '';
@@ -1872,7 +1920,7 @@ begin
       if (aInt and $10) <> 0 then // Swap Subject and Target
         Result[8] := '1';
     end;
-    ctToStr: begin
+    ctToStr, ctToSummary: begin
       case aInt and $E0 of
         $00 : Result := 'Equal to';
         $20 : Result := 'Not equal to';
@@ -1969,7 +2017,7 @@ begin
   EventFunction := aInt and $FFFF;
   EventMember := aInt shr 16;
   case aType of
-    ctToStr, ctToEditValue: begin
+    ctToStr, ctToSummary, ctToEditValue: begin
       Result := wbEventFunctionEnum.ToEditValue(EventFunction, nil);
       Result := Result + ':' + wbEventMemberEnum.ToEditValue(EventMember, nil);
     end;
@@ -2022,6 +2070,31 @@ begin
     EventMember := 0;
   end;
   Result := EventMember shl 16 + EventFunction;
+end;
+
+procedure wbINFOPNAMAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainer;
+  Group     : IwbGroupRecord;
+begin
+  if not wbSortINFO then
+    Exit;
+
+  if VarSameValue(aOldValue, aNewValue) then
+    Exit;
+
+  if not Assigned(aElement) then
+    Exit;
+
+  Container := aElement.Container;
+  while Assigned(Container) do begin
+    if Supports(Container, IwbGroupRecord, Group) then begin
+      Group.Sort(True);
+      Exit;
+    end;
+    Container := Container.Container;
+  end;
+
 end;
 
 procedure wbMESGDNAMAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -2122,7 +2195,7 @@ var
   i: Integer;
 begin
   Result := '';
-  if wbLoaderDone and (aType in [ctToStr, ctToSortKey] ) then begin
+  if wbLoaderDone and (aType in [ctToStr, ctToSummary, ctToSortKey] ) then begin
     Strings := wbContainerHandler.ResolveHash(aInt);
     for i := Low(Strings) to High(Strings) do
       Result := Result + Strings[i] + ', ';
@@ -2135,7 +2208,7 @@ end;
 //begin
 //  Result := '';
 //  case aType of
-//    ctToStr: begin
+//    ctToStr, ctToSummary: begin
 //      case aInt and not $C0 of
 //        0: Result := 'Idle';
 //        1: Result := 'Movement';
@@ -2175,7 +2248,7 @@ const
 begin
   Result := '';
   case aType of
-    ctToStr, ctToEditValue: Result := FloatToStrF(aInt / 10000, ffFixed, 99, 4);
+    ctToStr, ctToSummary, ctToEditValue: Result := FloatToStrF(aInt / 10000, ffFixed, 99, 4);
     ctToSortKey: begin
       Result := FloatToStrF(aInt / 10000, ffFixed, 99, 4);
       if Length(Result) < 22 then
@@ -2199,7 +2272,7 @@ function wbCloudSpeedToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCa
 begin
   Result := '';
   case aType of
-    ctToStr, ctToEditValue: Result := FloatToStrF((aInt - 127)/127/10, ffFixed, 99, 4);
+    ctToStr, ctToSummary, ctToEditValue: Result := FloatToStrF((aInt - 127)/127/10, ffFixed, 99, 4);
     ctCheck: Result := '';
   end;
 end;
@@ -2221,7 +2294,7 @@ begin
   x := aInt shr 16 and $FFFF;
   Result := '';
   case aType of
-    ctToStr, ctToEditValue: Result := Format('%d, %d', [x, y]);
+    ctToStr, ctToSummary, ctToEditValue: Result := Format('%d, %d', [x, y]);
     ctCheck: Result := '';
   end;
 end;
@@ -2243,11 +2316,11 @@ begin
   Result := '';
   if aType = ctToSortKey then
     Result := IntToHex64(aInt, 4)
-  else if aType = ctToStr then
+  else if aType in [ctToStr, ctToSummary] then
     if aInt = $FFFF then
       Result := 'None'
     else
-      Result := IntToStr(aInt);
+      Result := aInt.ToString;
 end;
 
 function wbAtxtPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -2257,25 +2330,25 @@ begin
     Result := IntToHex64(aInt div 17, 2) + IntToHex64(aInt mod 17, 2)
   else if aType = ctCheck then begin
     if (aInt < 0) or (aInt > 288) then
-      Result := '<Out of range: '+IntToStr(aInt)+'>'
+      Result := '<Out of range: '+aInt.ToString+'>'
     else
       Result := '';
-  end else if aType = ctToStr then
-    Result := IntToStr(aInt) + ' -> ' + IntToStr(aInt div 17) + ':' + IntToStr(aInt mod 17);
+  end else if aType in [ctToStr, ctToSummary] then
+    Result := aInt.ToString + ' -> ' + IntToStr(aInt div 17) + ':' + IntToStr(aInt mod 17);
 end;
 
 function wbGLOBFNAM(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
   case aType of
-    ctToStr: begin
+    ctToStr, ctToSummary: begin
       case aInt of
         Ord('s'): Result := 'Short';
         Ord('l'): Result := 'Long';
         Ord('f'): Result := 'Float';
         Ord('b'): Result := 'Boolean';
       else
-        Result := '<Unknown: '+IntToStr(aInt)+'>';
+        Result := '<Unknown: '+aInt.ToString+'>';
       end;
     end;
     ctToSortKey: Result := Chr(aInt);
@@ -2283,7 +2356,7 @@ begin
       case aInt of
         Ord('s'), Ord('l'), Ord('f'), Ord('b'): Result := '';
       else
-        Result := '<Unknown: '+IntToStr(aInt)+'>';
+        Result := '<Unknown: '+aInt.ToString+'>';
       end;
     end;
   end;
@@ -2334,10 +2407,23 @@ function wbINFOAddInfo(const aMainRecord: IwbMainRecord): string;
 var
   Container: IwbContainer;
   s: string;
+  i: Integer;
 begin
   Result := Trim(aMainRecord.ElementValues['Responses\Response\NAM1']);
   if Result <> '' then
     Result := '''' + Result + '''';
+
+  s := '';
+  i := aMainRecord.ElementNativeValues['ENAM\Flags'];
+  if (i and $0001) <> 0 then
+    s := s + '[G]';
+  if (i and $0002) <> 0 then
+    s := s + '[R]';
+  if (i and $0020) <> 0 then
+    s := s + '[RE]';
+  if (i and $0004) <> 0 then
+    s := s + '[SO]';
+  Result := s + Result;
 
   Container := aMainRecord.Container;
   while Assigned(Container) and (Container.ElementType <> etGroupRecord) do
@@ -3541,14 +3627,14 @@ var
 begin
   Result := '';
   case aType of
-    ctToStr, ctToEditValue: begin
+    ctToStr, ctToSummary, ctToEditValue: begin
       Desc := wbCTDAParamDescFromIndex(aInt);
       if Assigned(Desc) then
         Result := Desc.Name
-      else if aType = ctToEditValue then
-        Result := IntToStr(aInt)
+      else if aType in [ctToSummary, ctToEditValue] then
+        Result := aInt.ToString
       else
-        Result := '<Unknown: '+IntToStr(aInt)+'>';
+        Result := '<Unknown: '+aInt.ToString+'>';
     end;
     ctToSortKey: Result := IntToHex(aInt, 8);
     ctCheck: begin
@@ -3556,7 +3642,7 @@ begin
       if Assigned(Desc) then
         Result := ''
       else
-        Result := '<Unknown: '+IntToStr(aInt)+'>';
+        Result := '<Unknown: '+aInt.ToString+'>';
     end;
     ctEditType:
       Result := 'ComboBox';
@@ -3611,7 +3697,7 @@ var
   Container  : IwbContainerElementRef;
 begin
   case aType of
-    ctToStr, ctToSortKey, ctToEditValue, ctToNativeValue: begin
+    ctToStr, ctToSummary, ctToSortKey, ctToEditValue, ctToNativeValue: begin
       Result := '';
 
       if not Assigned(aElement) then
@@ -3621,15 +3707,19 @@ begin
       if not Assigned(Container) then
         Exit;
 
-      if aType in [ctToEditValue, ctToNativeValue] then
-        Result := Container.ElementEditValues['..\CIS1']
+      case aType of
+        ctToSummary:
+          Result := Container.ElementSummaries['..\CIS1'];
+        ctToEditValue, ctToNativeValue:
+          Result := Container.ElementEditValues['..\CIS1'];
       else
         Result := Container.ElementValues['..\CIS1'];
+      end;
     end;
     ctCheck, ctEditType, ctEditInfo, ctLinksTo:
       Result := '';
   else
-    Result := IntToStr(aInt);
+    Result := aInt.ToString;
   end;
 end;
 
@@ -3654,7 +3744,7 @@ var
   Container  : IwbContainerElementRef;
 begin
   case aType of
-    ctToStr, ctToSortKey, ctToEditValue, ctToNativeValue: begin
+    ctToStr, ctToSummary, ctToSortKey, ctToEditValue, ctToNativeValue: begin
       Result := '';
 
       if not Assigned(aElement) then
@@ -3664,15 +3754,19 @@ begin
       if not Assigned(Container) then
         Exit;
 
-      if aType in [ctToEditValue, ctToNativeValue] then
-        Result := Container.ElementEditValues['..\CIS2']
+      case aType of
+        ctToSummary:
+          Result := Container.ElementSummaries['..\CIS2'];
+        ctToEditValue, ctToNativeValue:
+          Result := Container.ElementEditValues['..\CIS2'];
       else
         Result := Container.ElementValues['..\CIS2'];
+      end;
     end;
     ctCheck, ctEditType, ctEditInfo, ctLinksTo:
       Result := '';
   else
-    Result := IntToStr(aInt);
+    Result := aInt.ToString;
   end;
 end;
 
@@ -4861,12 +4955,12 @@ var
 begin
   // defaults
   case aType of
-    ctToStr, ctToEditValue: Result := IntToStr(aInt);
+    ctToStr, ctToSummary, ctToEditValue: Result := aInt.ToString;
     ctToSortKey: begin
       Result := IntToHex64(aInt, 8);
       Exit;
     end;
-    ctCheck: Result := '<Warning: Could not resolve tint layer index ' + IntToStr(aInt) + '>';
+    ctCheck: Result := '<Warning: Could not resolve tint layer index ' + aInt.ToString + '>';
     ctEditType: Result := '';
     ctEditInfo: Result := '';
   end;
@@ -4940,15 +5034,18 @@ begin
       end;
 
   case aType of
-    ctToStr: begin
+    ctToStr, ctToSummary: begin
       if EntryName <> '' then
-        Result := IntToStr(aInt) + ' ' + EntryName
-      else
-        Result := IntToStr(aInt) + ' <Tint layer index not found in ' + Race.Name + '>';
+        Result := aInt.ToString + ' ' + EntryName
+      else begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Tint layer index not found in ' + Race.Name + '>';
+      end;
     end;
     ctCheck: begin
       if EntryName = '' then
-        Result := '<Tint layer index ' + IntToStr(aInt) + ' not found in ' + Race.Name + '>'
+        Result := '<Tint layer index ' + aInt.ToString + ' not found in ' + Race.Name + '>'
       else
         Result := '';
     end;
@@ -5548,23 +5645,23 @@ begin
     wbInteger('Z2', itS16)
   ], cpNormal, True).SetToStr(wbObjectBoundsToStr).IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
 
-  wbPropTypeEnum := wbEnum([
-    {00} 'None',
-    {01} 'Object',
-    {02} 'String',
-    {03} 'Int32',
-    {04} 'Float',
-    {05} 'Bool',
-    {06} '',
-    {07} '',
-    {08} '',
-    {09} '',
-    {10} '',
-    {11} 'Array of Object',
-    {12} 'Array of String',
-    {13} 'Array of Int32',
-    {14} 'Array of Float',
-    {15} 'Array of Bool'
+  wbPropTypeEnum := wbEnumSummary([
+    {00} 'None', '',
+    {01} 'Object', '',
+    {02} 'String', '',
+    {03} 'Int32', '',
+    {04} 'Float', '',
+    {05} 'Bool', '',
+    {06} '', '',
+    {07} '', '',
+    {08} '', '',
+    {09} '', '',
+    {10} '', '',
+    {11} 'Array of Object', 'Object[]',
+    {12} 'Array of String', 'String[]',
+    {13} 'Array of Int32', 'Int32[]',
+    {14} 'Array of Float', 'Float[]',
+    {15} 'Array of Bool', 'Bool[]'
   ]);
 
   wbScriptFlags := wbInteger('Flags', itU8, wbEnum([
@@ -5575,12 +5672,16 @@ begin
   ]));
 
   wbScriptPropertyObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
-    wbStructSK([1], 'Object v2', [
+    wbStructSK([2], 'Object v2', [
       wbInteger('Unused', itU16, nil, cpIgnore),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias).SetDefaultEditValue('None'),
       wbFormID('FormID')
-    ], [2, 1, 0]),
-    wbStructSK([1], 'Object v1', [
+    ], [2, 1, 0])
+      .SetSummaryKey([1])
+      .SetSummaryMemberPrefixSuffix(1, '.Alias[', ']')
+      .SetSummaryDelimiter('')
+      .IncludeFlag(dfSummaryMembersNoName),
+    wbStructSK([0], 'Object v1', [
       wbFormID('FormID'),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
       wbInteger('Unused', itU16, nil, cpIgnore)
@@ -5610,7 +5711,13 @@ begin
        {14} wbArray('Array of Float', wbFloat('Element'), -1),
        {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1)
       ])
-    ]).SetToStr(wbScriptPropertyToStr).IncludeFlag(dfCollapsed, wbCollapseScriptProperties);
+    ])
+    //.SetToStr(wbScriptPropertyToStr)
+    .SetSummaryKey([1, 3])
+    .SetSummaryMemberPrefixSuffix(0, '', ':')
+    .SetSummaryMemberPrefixSuffix(3, ':= ', '')
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfCollapsed, wbCollapseScriptProperties);
 
   wbScriptProperties :=
     wbArrayS('Properties', wbScriptProperty, -2, cpNormal, False, nil, nil, nil, wbCanAddScriptProperties);
@@ -7895,7 +8002,9 @@ begin
       ]))
     ]),
     wbString(SNAM, 'Subtype Name', 4),
-    wbInteger(TIFC, 'Info Count', itU32, nil, cpBenign)
+    wbInteger(TIFC, 'Info Count', itU32, nil, cpBenign),
+    wbArray(INOM, 'INFO Order (Masters only)', wbFormIDCk('INFO', [INFO], False, cpBenign).IncludeFlag(dfUseLoadOrder), 0, nil, nil, cpBenign).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave),
+    wbArray(INOA, 'INFO Order (All previous modules)', wbFormIDCk('INFO', [INFO], False, cpBenign).IncludeFlag(dfUseLoadOrder), 0, nil, nil, cpBenign).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave)
   ]);
 
   wbRecord(DOOR, 'Door',
@@ -8891,9 +9000,12 @@ begin
         wbInteger('Flags', itU8, wbFlags([
           'Has Collision Data'
         ]))
-      ], cpNormal, True),
+      ], cpNormal, True)
+        .SetSummaryKeyOnValue([0, 1])
+        .SetSummaryPrefixSuffixOnValue(0, '[', '%]')
+        .IncludeFlagOnValue(dfSummaryMembersNoName),
       wbMODT
-    ], [], cpNormal, True);
+    ], [], cpNormal, True).SetSummaryKey([0]);
 
   wbRecord(DEBR, 'Debris', [
     wbEDID,
@@ -9290,7 +9402,7 @@ begin
       wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
       wbByteArray(NAM5, 'Texture Files Hashes', 0, cpNormal)
     ], [], cpNormal, True)
-  ]).SetSummaryKey([1, 2]).IncludeFlag(dfSummaryNoName);
+  ]).SetSummaryKey([1, 2]).IncludeFlag(dfSummaryMembersNoName);
 
   wbRecord(ADDN, 'Addon Node', [
     wbEDID,
@@ -9377,9 +9489,16 @@ begin
       {32} wbFloat('Min Time'),
       {36} wbFloat('Target % Between Actors'),
       {40} wbFloat('Near Target Distance')
-    ], cpNormal, True, nil, 8).SetSummaryKeyOnValue([0, 1, 2]).IncludeFlagOnValue(dfSummaryNoName),
+    ], cpNormal, True, nil, 8)
+      .SetSummaryKeyOnValue([0, 1, 2])
+      .SetSummaryPrefixSuffixOnValue(0, '', ',')
+      .SetSummaryPrefixSuffixOnValue(1, '', ' ->')
+      .IncludeFlagOnValue(dfSummaryMembersNoName),
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
-  ]).SetSummaryKey([1, 2]).IncludeFlag(dfSummaryNoName);
+  ])
+  .SetSummaryKey([1, 2])
+  .SetSummaryMemberPrefixSuffix(2, '[', ']')
+  .IncludeFlag(dfSummaryMembersNoName);
 
   wbRecord(CPTH, 'Camera Path', [
     wbEDID,
@@ -9394,7 +9513,7 @@ begin
       130, 'Shot List'
     ]), cpNormal, True),
     wbRArray('Camera Shots', wbFormIDCk(SNAM, 'Camera Shot', [CAMS]))
-  ]).SetSummaryKey([1, 4]).IncludeFlag(dfSummaryNoName);
+  ]).SetSummaryKey([1, 4]).IncludeFlag(dfSummaryMembersNoName);
 
   wbRecord(VTYP, 'Voice Type', [
     wbEDID,
@@ -10835,7 +10954,7 @@ begin
       wbInteger('Reset Hours', itU16, wbDiv(2730))
     ]),
     wbFormIDCk(TPIC, 'Topic', [DIAL]),
-    wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL], False, cpBenign),
+    wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL], False, cpBenign).SetAfterSet(wbINFOPNAMAfterSet),
     wbInteger(CNAM, 'Favor Level', itU8, wbEnum([
       'None',
       'Small',
@@ -11450,11 +11569,11 @@ begin
     wbInteger(NAM1, 'Created Object Count', itU16)
   ], False, nil, cpNormal, False, nil, wbContainerAfterSet)
     .SetSummaryKey([6, 4, 2, 3, 5])
-    .SetSummaryPrefixSuffix(6, '(', 'x')
-    .SetSummaryPrefixSuffix(4, '', ')')
-    .SetSummaryPrefixSuffix(2, 'from (', ')')
-    .SetSummaryPrefixSuffix(3, 'when (', ')')
-    .SetSummaryPrefixSuffix(5, 'at (', ')');
+    .SetSummaryMemberPrefixSuffix(6, '(', 'x')
+    .SetSummaryMemberPrefixSuffix(4, '', ')')
+    .SetSummaryMemberPrefixSuffix(2, 'from (', ')')
+    .SetSummaryMemberPrefixSuffix(3, 'when (', ')')
+    .SetSummaryMemberPrefixSuffix(5, 'at (', ')');
 
   wbFaction :=
     wbStructSK(SNAM, [0], 'Faction', [

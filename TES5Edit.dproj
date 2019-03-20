@@ -7,7 +7,7 @@
         <MainSource>TES5Edit.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{BB5B51E2-CC9A-4404-A582-958449C5049E}</ProjectGuid>
-        <ProjectVersion>18.4</ProjectVersion>
+        <ProjectVersion>18.6</ProjectVersion>
         <TargetedPlatforms>3</TargetedPlatforms>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -46,10 +46,13 @@
         <DCC_UnitSearchPath>.\Imaging;.\Imaging\zlib;.\zlib;.\lz4;.\VirtualTrees\Source;.\delphi-detours-library\Source;.\vcl-styles-utils\Common;.\FileContainer;.\Tools\BSArchive;.\Tools\BSArchive\TForge;.\Tools\BSArchive;.\Tools\BSArchive\TForge;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>FileVersion=4.0.2.0;ProductVersion=4.0.2.0</VerInfo_Keys>
+        <VerInfo_Keys>FileVersion=4.1.2.0;ProductVersion=4.1.2.0</VerInfo_Keys>
         <VerInfo_Locale>3081</VerInfo_Locale>
         <VerInfo_MajorVer>4</VerInfo_MajorVer>
+        <VerInfo_MinorVer>1</VerInfo_MinorVer>
+        <VerInfo_PreRelease>true</VerInfo_PreRelease>
         <VerInfo_Release>2</VerInfo_Release>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
@@ -190,11 +193,11 @@
                     <VersionInfo Name="IncludeVerInfo">True</VersionInfo>
                     <VersionInfo Name="AutoIncBuild">False</VersionInfo>
                     <VersionInfo Name="MajorVer">4</VersionInfo>
-                    <VersionInfo Name="MinorVer">0</VersionInfo>
+                    <VersionInfo Name="MinorVer">1</VersionInfo>
                     <VersionInfo Name="Release">2</VersionInfo>
                     <VersionInfo Name="Build">0</VersionInfo>
                     <VersionInfo Name="Debug">False</VersionInfo>
-                    <VersionInfo Name="PreRelease">False</VersionInfo>
+                    <VersionInfo Name="PreRelease">True</VersionInfo>
                     <VersionInfo Name="Special">False</VersionInfo>
                     <VersionInfo Name="Private">False</VersionInfo>
                     <VersionInfo Name="DLL">False</VersionInfo>
@@ -204,13 +207,13 @@
                 <VersionInfoKeys>
                     <VersionInfoKeys Name="CompanyName"/>
                     <VersionInfoKeys Name="FileDescription"/>
-                    <VersionInfoKeys Name="FileVersion">4.0.2.0</VersionInfoKeys>
+                    <VersionInfoKeys Name="FileVersion">4.1.2.0</VersionInfoKeys>
                     <VersionInfoKeys Name="InternalName"/>
                     <VersionInfoKeys Name="LegalCopyright"/>
                     <VersionInfoKeys Name="LegalTrademarks"/>
                     <VersionInfoKeys Name="OriginalFilename"/>
                     <VersionInfoKeys Name="ProductName">xEdit by ElminsterAU</VersionInfoKeys>
-                    <VersionInfoKeys Name="ProductVersion">4.0.2.0</VersionInfoKeys>
+                    <VersionInfoKeys Name="ProductVersion">4.1.2.0</VersionInfoKeys>
                     <VersionInfoKeys Name="Comments"/>
                 </VersionInfoKeys>
             </Delphi.Personality>

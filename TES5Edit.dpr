@@ -27,7 +27,7 @@ uses
   VirtualEditTree,
   {$IFNDEF LiteVersion}
   cxVTEditors,
-  {$ENDIF }
+  {$ENDIF}
   Vcl.Themes,
   Vcl.Styles,
   Vcl.Styles.Hooks,
@@ -119,7 +119,7 @@ begin
   Application.Title := wbApplicationTitle;
   try
     Application.CreateForm(TfrmMain, frmMain);
-	Application.Run;
+    Application.Run;
   finally
     DoRename;
   end;

@@ -616,29 +616,30 @@ begin
 
   if IsExternal then begin
     case aType of
-      ctToStr: begin
-        Result := IntToStr(aInt);
-        if Container.ElementExists['..\..\..\..\NVEX\Connection #' + IntToStr(aInt)] then
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if Container.ElementExists['..\..\..\..\NVEX\Connection #' + aInt.ToString] then
           Result := Result + ' (Triangle #' +
-            Container.ElementValues['..\..\..\..\NVEX\Connection #' + IntToStr(aInt) + '\Triangle'] + ' in ' +
-            Container.ElementValues['..\..\..\..\NVEX\Connection #' + IntToStr(aInt) + '\Navigation Mesh'] + ')'
+            Container.ElementValues['..\..\..\..\NVEX\Connection #' + aInt.ToString + '\Triangle'] + ' in ' +
+            Container.ElementValues['..\..\..\..\NVEX\Connection #' + aInt.ToString + '\Navigation Mesh'] + ')'
         else
-          Result := Result + ' <Error: NVEX\Connection #' + IntToStr(aInt) + ' is missing>';
+          if aType = ctToStr then
+            Result := Result + ' <Error: NVEX\Connection #' + aInt.ToString + ' is missing>';
       end;
       ctToSortKey:
-        if Container.ElementExists['..\..\..\..\NVEX\Connection #' + IntToStr(aInt)] then
+        if Container.ElementExists['..\..\..\..\NVEX\Connection #' + aInt.ToString] then
           Result :=
-            Container.ElementSortKeys['..\..\..\..\NVEX\Connection #' + IntToStr(aInt) + '\Navigation Mesh', True] + '|' +
-            Container.ElementSortKeys['..\..\..\..\NVEX\Connection #' + IntToStr(aInt) + '\Triangle', True];
+            Container.ElementSortKeys['..\..\..\..\NVEX\Connection #' + aInt.ToString + '\Navigation Mesh', True] + '|' +
+            Container.ElementSortKeys['..\..\..\..\NVEX\Connection #' + aInt.ToString + '\Triangle', True];
       ctCheck:
-        if Container.ElementExists['..\..\..\..\NVEX\Connection #' + IntToStr(aInt)] then
+        if Container.ElementExists['..\..\..\..\NVEX\Connection #' + aInt.ToString] then
           Result := ''
         else
-          Result := 'NVEX\Connection #' + IntToStr(aInt) + ' is missing';
+          Result := 'NVEX\Connection #' + aInt.ToString + ' is missing';
     end
   end else
     case aType of
-      ctToStr: Result := IntToStr(aInt);
+      ctToStr, ctToSummary: Result := aInt.ToString;
     end;
 end;
 
@@ -657,7 +658,7 @@ begin
   AsFloat := PSingle(@AsCardinal)^;
   aInt := Round(AsFloat);
   case aType of
-    ctToStr: Result := wbActorValueEnum.ToString(aInt, aElement, aType = ctToSummary);
+    ctToStr, ctToSummary: Result := wbActorValueEnum.ToString(aInt, aElement, aType = ctToSummary);
     ctToSortKey: Result := wbActorValueEnum.ToSortKey(aInt, aElement);
     ctCheck: Result := wbActorValueEnum.Check(aInt, aElement);
     ctToEditValue: Result := wbActorValueEnum.ToEditValue(aInt, aElement);
@@ -692,8 +693,12 @@ var
   s          : string;
 begin
   case aType of
-    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Parameter 1>';
-    ctToEditValue: Result := IntToStr(aInt);
+    ctToStr, ctToSummary: begin
+      Result := aInt.ToString;
+      if aType = ctToStr then
+        Result := Result + ' <Warning: Could not resolve Parameter 1>';
+    end;
+    ctToEditValue: Result := aInt.ToString;
     ctToSortKey: begin
       Result := IntToHex64(aInt, 8);
       Exit;
@@ -738,7 +743,11 @@ begin
 
   if not Assigned(ScriptRef) then begin
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" does not contain a SCRI subrecord>';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: "'+MainRecord.ShortName+'" does not contain a SCRI subrecord>';
+      end;
       ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" does not contain a SCRI subrecord>';
     end;
     Exit;
@@ -746,7 +755,11 @@ begin
 
   if not Supports(ScriptRef.LinksTo, IwbMainRecord, Script) then begin
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" does not have a valid script>';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: "'+MainRecord.ShortName+'" does not have a valid script>';
+      end;
       ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" does not have a valid script>';
     end;
     Exit;
@@ -774,7 +787,7 @@ begin
             Variables.AddObject(s, TObject(j))
           else if j = aInt then begin
             case aType of
-              ctToStr, ctToEditValue: Result := s;
+              ctToStr, ctToSummary, ctToEditValue: Result := s;
               ctCheck: Result := '';
             end;
             Exit;
@@ -783,7 +796,11 @@ begin
     end;
 
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: Variable Index not found in "' + Script.Name + '">';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: Variable Index not found in "' + Script.Name + '">';
+      end;
       ctCheck: Result := '<Warning: Variable Index not found in "' + Script.Name + '">';
       ctEditInfo: begin
         Variables.Sort;
@@ -871,8 +888,12 @@ var
   s, t       : string;
 begin
   case aType of
-    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Parameter 1>';
-    ctToEditValue: Result := IntToStr(aInt);
+    ctToStr, ctToSummary: begin
+      Result := aInt.ToString;
+      if aType = ctToStr then
+        Result := Result + ' <Warning: Could not resolve Parameter 1>';
+    end;
+    ctToEditValue: Result := aInt.ToString;
     ctToSortKey: begin
       Result := IntToHex64(aInt, 8);
       Exit;
@@ -898,7 +919,11 @@ begin
 
   if MainRecord.Signature <> QUST then begin
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+      end;
       ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
     end;
     Exit;
@@ -929,7 +954,7 @@ begin
             EditInfos.AddObject(t, TObject(j))
           else if j = aInt then begin
             case aType of
-              ctToStr, ctToEditValue: Result := t;
+              ctToStr, ctToSummary, ctToEditValue: Result := t;
               ctCheck: Result := '';
             end;
             Exit;
@@ -938,7 +963,11 @@ begin
     end;
 
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+      end;
       ctCheck: Result := '<Warning: Quest Stage not found in "' + MainRecord.Name + '">';
       ctEditInfo: begin
         EditInfos.Sort;
@@ -962,8 +991,12 @@ var
   s, t       : string;
 begin
   case aType of
-    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Quest>';
-    ctToEditValue: Result := IntToStr(aInt);
+    ctToStr, ctToSummary: begin
+      Result := aInt.ToString;
+      if aType = ctToStr then
+        Result := Result + ' <Warning: Could not resolve Quest>';
+    end;
+    ctToEditValue: Result := aInt.ToString;
     ctToSortKey: begin
       Result := IntToHex64(aInt, 8);
       Exit;
@@ -989,7 +1022,11 @@ begin
 
   if MainRecord.Signature <> QUST then begin
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+      end;
       ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
     end;
     Exit;
@@ -1020,7 +1057,7 @@ begin
             EditInfos.AddObject(t, TObject(j))
           else if j = aInt then begin
             case aType of
-              ctToStr, ctToEditValue: Result := t;
+              ctToStr, ctToSummary, ctToEditValue: Result := t;
               ctCheck: Result := '';
             end;
             Exit;
@@ -1029,7 +1066,11 @@ begin
     end;
 
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+      end;
       ctCheck: Result := '<Warning: Quest Stage not found in "' + MainRecord.Name + '">';
       ctEditInfo: begin
         EditInfos.Sort;
@@ -1053,8 +1094,12 @@ var
   s, t       : string;
 begin
   case aType of
-    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Parameter 1>';
-    ctToEditValue: Result := IntToStr(aInt);
+    ctToStr, ctToSummary: begin
+      Result := aInt.ToString;
+      if aType = ctToStr then
+        Result := Result + ' <Warning: Could not resolve Parameter 1>';
+    end;
+    ctToEditValue: Result := aInt.ToString;
     ctToSortKey: begin
       Result := IntToHex64(aInt, 8);
       Exit;
@@ -1080,7 +1125,11 @@ begin
 
   if MainRecord.Signature <> QUST then begin
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+      end;
       ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
     end;
     Exit;
@@ -1111,7 +1160,7 @@ begin
             EditInfos.AddObject(t, TObject(j))
           else if j = aInt then begin
             case aType of
-              ctToStr, ctToEditValue: Result := t;
+              ctToStr, ctToSummary, ctToEditValue: Result := t;
               ctCheck: Result := '';
             end;
             Exit;
@@ -1120,7 +1169,11 @@ begin
     end;
 
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: Quest Objective not found in "' + MainRecord.Name + '">';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: Quest Objective not found in "' + MainRecord.Name + '">';
+      end;
       ctCheck: Result := '<Warning: Quest Objective not found in "' + MainRecord.Name + '">';
       ctEditInfo: begin
         EditInfos.Sort;
@@ -1170,7 +1223,7 @@ begin
   Result := '';
   if aType = ctToSortKey then begin
     Result := IntToHex64(aInt, 2);
-  end else if aType = ctToStr then begin
+  end else if aType in [ctToStr, ctToSummary] then begin
     PhaseLength := aInt mod 64;
     Masser := (aInt and 64) <> 0;
     Secunda := (aInt and 128) <> 0;
@@ -1192,7 +1245,7 @@ function wbClmtTime(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackT
 begin
   if aType = ctToSortKey then
     Result := IntToHex64(aInt, 4)
-  else if aType = ctToStr then
+  else if aType in [ctToStr, ctToSummary] then
     Result := TimeToStr( EncodeTime(aInt div 6, (aInt mod 6) * 10, 0, 0) )
   else
     Result := '';
@@ -1206,8 +1259,8 @@ var
   Triangles  : IwbContainerElementRef;
 begin
   case aType of
-    ctToStr: Result := IntToStr(aInt);
-    ctToEditValue: Result := IntToStr(aInt);
+    ctToStr, ctToSummary: Result := aInt.ToString;
+    ctToEditValue: Result := aInt.ToString;
     ctToSortKey: begin
       Result := IntToHex64(aInt, 8);
       Exit;
@@ -1233,7 +1286,11 @@ begin
 
   if MainRecord.Signature <> NAVM then begin
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: "'+MainRecord.ShortName+'" is not a Navmesh record>';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: "'+MainRecord.ShortName+'" is not a Navmesh record>';
+      end;
       ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Navmesh record>';
     end;
     Exit;
@@ -1285,7 +1342,7 @@ begin
       if (aInt and $04) <> 0 then
         Result[5] := '1';
     end;
-    ctToStr: begin
+    ctToStr, ctToSummary: begin
       case aInt and $F0 of
         $00 : Result := 'Equal to';
         $20 : Result := 'Not equal to';
@@ -1482,7 +1539,7 @@ var
   i: Integer;
 begin
   Result := '';
-  if wbLoaderDone and (aType in [ctToStr, ctToSortKey] ) then begin
+  if wbLoaderDone and (aType in [ctToStr, ctToSummary, ctToSortKey] ) then begin
     Strings := wbContainerHandler.ResolveHash(aInt);
     for i := Low(Strings) to High(Strings) do
       Result := Result + Strings[i] + ', ';
@@ -1495,7 +1552,7 @@ function wbIdleAnam(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackT
 begin
   Result := '';
   case aType of
-    ctToStr: begin
+    ctToStr, ctToSummary: begin
       case aInt and not $C0 of
         0: Result := 'Idle';
         1: Result := 'Movement';
@@ -1535,7 +1592,7 @@ const
 begin
   Result := '';
   case aType of
-    ctToStr, ctToEditValue: Result := FloatToStrF(aInt / 10000, ffFixed, 99, 4);
+    ctToStr, ctToSummary, ctToEditValue: Result := FloatToStrF(aInt / 10000, ffFixed, 99, 4);
     ctToSortKey: begin
       Result := FloatToStrF(aInt / 10000, ffFixed, 99, 4);
       if Length(Result) < 22 then
@@ -1560,11 +1617,11 @@ begin
   Result := '';
   if aType = ctToSortKey then
     Result := IntToHex64(aInt, 4)
-  else if aType = ctToStr then
+  else if aType in [ctToStr, ctToSummary] then
     if aInt = $FFFF then
       Result := 'None'
     else
-      Result := IntToStr(aInt);
+      Result := aInt.ToString;
 end;
 
 function wbAtxtPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -1574,24 +1631,24 @@ begin
     Result := IntToHex64(aInt div 17, 2) + IntToHex64(aInt mod 17, 2)
   else if aType = ctCheck then begin
     if (aInt < 0) or (aInt > 288) then
-      Result := '<Out of range: '+IntToStr(aInt)+'>'
+      Result := '<Out of range: '+aInt.ToString+'>'
     else
       Result := '';
-  end else if aType = ctToStr then
-    Result := IntToStr(aInt) + ' -> ' + IntToStr(aInt div 17) + ':' + IntToStr(aInt mod 17);
+  end else if aType in [ctToStr, ctToSummary] then
+    Result := aInt.ToString + ' -> ' + IntToStr(aInt div 17) + ':' + IntToStr(aInt mod 17);
 end;
 
 function wbGLOBFNAM(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
   case aType of
-    ctToStr: begin
+    ctToStr, ctToSummary: begin
       case aInt of
         Ord('s'): Result := 'Short';
         Ord('l'): Result := 'Long';
         Ord('f'): Result := 'Float';
       else
-        Result := '<Unknown: '+IntToStr(aInt)+'>';
+        Result := '<Unknown: '+aInt.ToString+'>';
       end;
     end;
     ctToSortKey: Result := Chr(aInt);
@@ -1599,7 +1656,7 @@ begin
       case aInt of
         Ord('s'), Ord('l'), Ord('f'): Result := '';
       else
-        Result := '<Unknown: '+IntToStr(aInt)+'>';
+        Result := '<Unknown: '+aInt.ToString+'>';
       end;
     end;
   end;
@@ -1730,7 +1787,7 @@ function wbWthrDataClassification(aInt: Int64; const aElement: IwbElement; aType
 begin
   Result := '';
   case aType of
-    ctToStr: begin
+    ctToStr, ctToSummary: begin
       case aInt and not 192 of
         0: Result := 'None';
         1: Result := 'Pleasant';
@@ -2483,14 +2540,14 @@ var
 begin
   Result := '';
   case aType of
-    ctToStr, ctToEditValue: begin
+    ctToStr, ctToSummary, ctToEditValue: begin
       Desc := wbCTDAParamDescFromIndex(aInt);
       if Assigned(Desc) then
         Result := Desc.Name
-      else if aType = ctToEditValue then
-        Result := IntToStr(aInt)
+      else if aType in [ctToSummary, ctToEditValue] then
+        Result := aInt.ToString
       else
-        Result := '<Unknown: '+IntToStr(aInt)+'>';
+        Result := '<Unknown: '+aInt.ToString+'>';
     end;
     ctToSortKey: Result := IntToHex(aInt, 8);
     ctCheck: begin
@@ -2498,7 +2555,7 @@ begin
       if Assigned(Desc) then
         Result := ''
       else
-        Result := '<Unknown: '+IntToStr(aInt)+'>';
+        Result := '<Unknown: '+aInt.ToString+'>';
     end;
     ctEditType:
       Result := 'ComboBox';
@@ -2720,8 +2777,12 @@ var
   EntryPoint    : Integer;
 begin
   case aType of
-    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Entry Point>';
-    ctToEditValue: Result := IntToStr(aInt);
+    ctToStr, ctToSummary: begin
+      Result := aInt.ToString;
+      if aType = ctToStr then
+        Result := Result + ' <Warning: Could not resolve Entry Point>';
+    end;
+    ctToEditValue: Result := aInt.ToString;
     ctToSortKey: begin
       Result := IntToHex64(aInt, 2);
       Exit;
@@ -2739,7 +2800,11 @@ begin
   EntryPoint := EntryPointVar;
   if (EntryPoint < Low(wbPERKEntryPoints)) or (EntryPoint > High(wbPERKEntryPoints)) then begin
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
+      end;
       ctCheck: Result := '<Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
     end;
     Exit;
@@ -2764,12 +2829,16 @@ begin
       else
         if (aInt < 0) or (aInt >= Count) then
           case aType of
-            ctToStr: Result := IntToStr(aInt) + ' <Warning: Value out of Bounds for this Entry Point>';
+            ctToStr, ctToSummary: begin
+              Result := aInt.ToString;
+              if aType = ctToStr then
+                Result := Result + ' <Warning: Value out of Bounds for this Entry Point>';
+            end;
             ctCheck: Result := '<Warning: Value out of Bounds for this Entry Point>';
           end
         else
           case aType of
-            ctToStr, ctToEditValue: case Integer(aInt) of
+            ctToStr, ctToSummary, ctToEditValue: case Integer(aInt) of
               0: Result := Caption1;
               1: Result := Caption2;
               2: Result := Caption3;
@@ -2948,8 +3017,12 @@ var
   i             : Integer;
 begin
   case aType of
-    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Entry Point>';
-    ctToEditValue: Result := IntToStr(aInt);
+    ctToStr, ctToSummary: begin
+      Result := aInt.ToString;
+      if aType = ctToStr then
+        Result := Result + ' <Warning: Could not resolve Entry Point>';
+    end;
+    ctToEditValue: Result := aInt.ToString;
     ctToSortKey: begin
       Result := IntToHex64(aInt, 2);
       Exit;
@@ -2967,7 +3040,11 @@ begin
   EntryPoint := EntryPointVar;
   if (EntryPoint < Low(wbPERKEntryPoints)) or (EntryPoint > High(wbPERKEntryPoints)) then begin
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
+      end;
       ctCheck: Result := '<Warning: Unknown Entry Point #'+IntToStr(EntryPoint)+'>';
     end;
     Exit;
@@ -2989,12 +3066,16 @@ begin
     else
       if (aInt < Low(wbPERKFunctions)) or (aInt > High(wbPERKFunctions)) then
         case aType of
-          ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Function>';
+          ctToStr, ctToSummary: begin
+            Result := aInt.ToString;
+            if aType = ctToStr then
+              Result := Result + ' <Warning: Unknown Function>';
+          end;
           ctCheck: Result := '<Warning: Unknown Function>';
         end
       else
         case aType of
-          ctToStr, ctToEditValue: begin
+          ctToStr, ctToSummary, ctToEditValue: begin
             Result := wbPERKFunctions[Integer(aInt)].Name;
             if (aType = ctToStr) and (wbPERKFunctions[Integer(aInt)].FunctionType <> FunctionType) then
               Result := Result + ' <Warning: Value out of Bounds for this Entry Point>';
@@ -3073,8 +3154,12 @@ var
 //  i               : Integer;
 begin
   case aType of
-    ctToStr: Result := IntToStr(aInt) + ' <Warning: Could not resolve Function>';
-    ctToEditValue: Result := IntToStr(aInt);
+    ctToStr, ctToSummary: begin
+      Result := aInt.ToString;
+      if aType = ctToStr then
+        Result := Result + ' <Warning: Could not resolve Function>';
+    end;
+    ctToEditValue: Result := aInt.ToString;
     ctToSortKey: begin
       Result := IntToHex64(aInt, 2);
       Exit;
@@ -3092,7 +3177,11 @@ begin
   FunctionType := FunctionTypeVar;
   if (FunctionType < Low(wbPERKFunctions)) or (FunctionType > High(wbPERKFunctions)) then begin
     case aType of
-      ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Function #'+IntToStr(FunctionType)+'>';
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: Unknown Function #'+IntToStr(FunctionType)+'>';
+      end;
       ctCheck: Result := '<Warning: Unknown Function #'+IntToStr(FunctionType)+'>';
     end;
     Exit;
@@ -3105,12 +3194,16 @@ begin
     else
       if (aInt < Ord(Low(wbPERKFunctionParams))) or (aInt > Ord(High(wbPERKFunctionParams))) then
         case aType of
-          ctToStr: Result := IntToStr(aInt) + ' <Warning: Unknown Function Param Type>';
+          ctToStr, ctToSummary: begin
+            Result := aInt.ToString;
+            if aType = ctToStr then
+              Result := Result + ' <Warning: Unknown Function Param Type>';
+          end;
           ctCheck: Result := '<Warning: Unknown Function Param Type>';
         end
       else
         case aType of
-          ctToStr, ctToEditValue: begin
+          ctToStr, ctToSummary, ctToEditValue: begin
             Result := wbPERKFunctionParams[TPERKEntryPointFunctionParamType(aInt)];
             if (aType = ctToStr) and (TPERKEntryPointFunctionParamType(aInt) <> ParamType) then
               Result := Result + ' <Warning: Value out of Bounds for this Function>';

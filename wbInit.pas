@@ -285,18 +285,38 @@ begin
     Result := IncludeTrailingBackslash(Result);
 end;
 
+const
+  DataName : array[Boolean] of string = (
+    'Data',
+    'Data Files'   // gmTES3
+  );
+
 function CheckAppPath: string;
-var
-  s: string;
-begin
-  Result := '';
-  s := ExtractFilePath(ParamStr(0));
-  while Length(s) > 3 do begin
-    if FileExists(s + wbGameExeName) and DirectoryExists(s + 'Data') then begin
-      Result := s;
-      Exit;
+
+  function CheckPath(const aStartFrom: string): string;
+  var
+    s: string;
+  begin
+    Result := '';
+    s := aStartFrom;
+    while Length(s) > 3 do begin
+      if FileExists(s + wbGameExeName) and DirectoryExists(s + DataName[wbGameMode = gmTES3]) then begin
+        Result := s;
+        Exit;
+      end;
+      s := ExtractFilePath(ExcludeTrailingPathDelimiter(s));
     end;
-    s := ExtractFilePath(ExcludeTrailingPathDelimiter(s));
+  end;
+
+var
+  CurrentDir, ExeDir: string;
+begin
+  CurrentDir := IncludeTrailingPathDelimiter(GetCurrentDir);
+  Result := CheckPath(CurrentDir);
+  if (Result = '') then begin
+    ExeDir := ExtractFilePath(ParamStr(0));
+    if not SameText(CurrentDir, ExeDir) then
+      Result := CheckPath(ExeDir);
   end;
 end;
 
@@ -440,10 +460,8 @@ begin
     finally
       Free;
     end;
-
-    if (wbDataPath <> '') then
-      wbDataPath := IncludeTrailingPathDelimiter(wbDataPath) + 'Data\';
-
+    if wbDataPath <> '' then
+      wbDataPath := IncludeTrailingPathDelimiter(wbDataPath) + DataName[wbGameMode = gmTES3] + '\';
   end else
     wbDataPath := IncludeTrailingPathDelimiter(wbDataPath);
 
@@ -465,10 +483,14 @@ begin
       Exit;
     end;
 
-    if wbGameMode in [gmFO76] then
-      wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameNameReg + '\'
+    case wbGameMode of
+      gmTES3:
+        wbMyGamesTheGamePath := IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)));
+      gmFO76:
+        wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameNameReg + '\';
     else
       wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameName2 + '\';
+    end;
 
     if wbGameMode in [gmFO3, gmFNV] then
       wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
@@ -545,12 +567,12 @@ var
 
 procedure DetectAppMode;
 const
-  SourceModes : array [1..2] of string = ('plugins', 'saves');
-  GameModes: array [1..10] of string = ('tes5vr', 'fo4vr', 'tes4', 'tes5', 'enderal', 'sse', 'fo3', 'fnv', 'fo4', 'fo76');
-  ToolModes: array [1..15] of string = (
+  SourceModes : array of string = ['plugins', 'saves'];
+  GameModes: array of string = ['tes5vr', 'fo4vr', 'tes3', 'tes4', 'tes5', 'enderal', 'sse', 'fo3', 'fnv', 'fo4', 'fo76'];
+  ToolModes: array of string = [
     'edit', 'view', 'lodgen', 'script', 'translate', 'onamupdate', 'masterupdate', 'masterrestore',
     'setesm', 'clearesm', 'sortandclean', 'sortandcleanmasters',
-    'checkforerrors', 'checkforitm', 'checkfordr');
+    'checkforerrors', 'checkforitm', 'checkfordr'];
 var
   s, p: string;
 begin
@@ -741,8 +763,10 @@ begin
     wbGameMode := gmTES3;
     wbAppName := 'TES3';
     wbGameName := 'Morrowind';
-    ToolModes := [];
-    ToolSources := [];
+    (**)
+    ToolModes := (**)[tmView];(** )wbAlwaysMode - [tmLODgen];(**)
+    ToolSources := [tsPlugins];
+    (**)
   end
 
   else if isMode('TES4') then begin
@@ -870,9 +894,9 @@ begin
 
   if FindCmdLineSwitch('DontCache') then
     wbDontCache := True;
-  if FindCmdLineSwitch('DontCacheLoad') then
+  if wbDontCache or FindCmdLineSwitch('DontCacheLoad') then
     wbDontCacheLoad := True;
-  if FindCmdLineSwitch('DontCacheSave') then
+  if wbDontCache or FindCmdLineSwitch('DontCacheSave') then
     wbDontCacheSave := True;
   if wbDontCacheLoad and wbDontCacheSave then
     wbDontCache := True;
@@ -894,6 +918,12 @@ begin
     gmTES3: begin
       wbLoadBSAs := False;
       wbAllowInternalEdit := false;
+      wbDontCache := True;
+      wbDontCacheLoad := True;
+      wbDontCacheSave := True;
+      wbBuildRefs := False;
+      wbVWDInTemporary := True;
+      wbCreateContainedIn := False;
     end;
     gmTES4: begin
       wbLoadBSAs := True;
@@ -1129,6 +1159,11 @@ begin
       tsPlugins: DefineTES5;
     end
   end;
+
+  if FindCmdLineSwitch('reportinjected') then
+    wbReportInjected := True;
+  if FindCmdLineSwitch('noreportinjected') then
+    wbReportInjected := False;
 
   if FindCmdLineSwitch('speed') then
     wbSpeedOverMemory := True;
