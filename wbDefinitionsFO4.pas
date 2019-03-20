@@ -11196,6 +11196,7 @@ procedure DefineFO4g;
 var
   wbDebrisModel: IwbRecordMemberDef;
   wbPerkEffect: IwbRecordMemberDef;
+  wbPerkConditions: IwbRecordMemberDef;
 begin
 
    wbRecord(EXPL, 'Explosion', [
@@ -11494,6 +11495,12 @@ begin
     wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
   ]);
 
+  wbPerkConditions :=
+    wbRStructSK([0], 'Perk Condition', [
+      wbInteger(PRKC, 'Run On (Tab Index)', itS8{, wbPRKCToStr, wbPRKCToInt}),
+      wbCTDAsReq
+    ], [], cpNormal, False{, nil, nil, wbPERKPRKCDontShow});
+
   wbPerkEffect :=
     wbRStructSK([0, 1], 'Effect', [
     wbStructSK(PRKE, [1, 2, 0], 'Header', [
@@ -11535,10 +11542,7 @@ begin
       ])
     ], cpNormal, True),
 
-    wbRStructsSK('Perk Conditions', 'Perk Condition', [0], [
-      wbInteger(PRKC, 'Run On (Tab Index)', itS8{, wbPRKCToStr, wbPRKCToInt}),
-      wbCTDAsReq
-    ], [], cpNormal, False{, nil, nil, wbPERKPRKCDontShow}),
+    wbRArrayS('Perk Conditions', wbPerkConditions),
 
     wbRStruct('Function Parameters', [
       wbInteger(EPFT, 'Type', itU8, wbEnum([

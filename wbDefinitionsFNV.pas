@@ -6676,6 +6676,7 @@ end;
 procedure DefineFNVd;
 var
   wbStaticPart: IwbRecordMemberDef;
+  wbFactionRank: IwbRecordMemberDef;
 begin
   wbRecord(CSTY, 'Combat Style', [
     wbEDIDReq,
@@ -7038,6 +7039,14 @@ begin
 
   wbXNAMs := wbRArrayS('Relations', wbXNAM);
 
+  wbFactionRank :=
+    wbRStructSK([0], 'Rank', [
+      wbInteger(RNAM, 'Rank#', itS32),
+      wbString(MNAM, 'Male', 0, cpTranslate),
+      wbString(FNAM, 'Female', 0, cpTranslate),
+      wbString(INAM, 'Insignia (Unused)')
+    ], []);
+
   wbRecord(FACT, 'Faction', [
     wbEDIDReq,
     wbFULL,
@@ -7055,12 +7064,7 @@ begin
       wbByteArray('Unused', 2)
     ], cpNormal, True, nil, 1),
     wbFloat(CNAM, 'Unused'),
-    wbRStructsSK('Ranks', 'Rank', [0], [
-      wbInteger(RNAM, 'Rank#', itS32),
-      wbString(MNAM, 'Male', 0, cpTranslate),
-      wbString(FNAM, 'Female', 0, cpTranslate),
-      wbString(INAM, 'Insignia (Unused)')
-    ], []),
+    wbRArrayS('Ranks', wbFactionRank),
     wbFormIDCk(WMI1, 'Reputation', [REPU])
   ], False, nil, cpNormal, False, wbFACTAfterLoad);
 
@@ -7411,6 +7415,8 @@ var
   wbLeveledListEntryCreature: IwbRecordMemberDef;
   wbLeveledListEntryItem: IwbRecordMemberDef;
   wbLeveledListEntryNPC: IwbRecordMemberDef;
+  wbPerkEffect: IwbRecordMemberDef;
+  wbPerkConditions: IwbRecordMemberDef;
 begin
   wbRecord(PROJ, 'Projectile', [
     wbEDIDReq,
@@ -8230,20 +8236,14 @@ begin
     wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
   ]);
 
-  wbRecord(PERK, 'Perk', [
-    wbEDIDReq,
-    wbFULL,
-    wbDESCReq,
-    wbICON,
-    wbCTDAs,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Trait', itU8, wbEnum(['No', 'Yes'])),
-      wbInteger('Min Level', itU8),
-      wbInteger('Ranks', itU8),
-      wbInteger('Playable', itU8, wbEnum(['No', 'Yes'])),
-      wbInteger('Hidden', itU8, wbEnum(['No', 'Yes']))
-    ], cpNormal, True, nil, 4),
-    wbRStructsSK('Effects', 'Effect', [0, 1], [
+  wbPerkConditions :=
+    wbRStructSK([0], 'Perk Condition', [
+        wbInteger(PRKC, 'Run On', itS8, wbPRKCToStr, wbPRKCToInt),
+        wbCTDAsReq
+      ], [], cpNormal, False, wbPERKPRKCDontShow, False, nil, nil);
+
+  wbPerkEffect :=
+    wbRStructSK([0, 1], 'Effect', [
       wbStructSK(PRKE, [1, 2, 0], 'Header', [
         wbInteger('Type', itU8, wbEnum([
           'Quest + Stage',
@@ -8341,10 +8341,7 @@ begin
           wbInteger('Perk Condition Tab Count', itU8, nil, cpIgnore)
         ])
       ], cpNormal, True),
-      wbRStructsSK('Perk Conditions', 'Perk Condition', [0], [
-        wbInteger(PRKC, 'Run On', itS8, wbPRKCToStr, wbPRKCToInt),
-        wbCTDAsReq
-      ], [], cpNormal, False, nil, nil, wbPERKPRKCDontShow),
+      wbRArrayS('Perk Conditions', wbPerkConditions),
       wbRStruct('Entry Point Function Parameters', [
         wbInteger(EPFT, 'Type', itU8, wbPerkEPFTToStr, wbPerkEPFTToInt, cpIgnore, False, nil, wbPerkEPFTAfterSet),
         wbUnion(EPFD, 'Data', wbEPFDDecider, [
@@ -8368,7 +8365,22 @@ begin
         wbEmbeddedScriptPerk
       ], [], cpNormal, False, wbPERKPRKCDontShow),
       wbEmpty(PRKF, 'End Marker', cpIgnore, True)
-    ], [])
+    ], []);
+
+  wbRecord(PERK, 'Perk', [
+    wbEDIDReq,
+    wbFULL,
+    wbDESCReq,
+    wbICON,
+    wbCTDAs,
+    wbStruct(DATA, 'Data', [
+      wbInteger('Trait', itU8, wbEnum(['No', 'Yes'])),
+      wbInteger('Min Level', itU8),
+      wbInteger('Ranks', itU8),
+      wbInteger('Playable', itU8, wbEnum(['No', 'Yes'])),
+      wbInteger('Hidden', itU8, wbEnum(['No', 'Yes']))
+    ], cpNormal, True, nil, 4),
+    wbRArrayS('Effects', wbPerkEffect)
   ]);
 
   wbBPNDStruct := wbStruct(BPND, '', [

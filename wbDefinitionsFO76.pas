@@ -11118,6 +11118,8 @@ begin
 end;
 
 procedure DefineFO76d;
+var
+  wbFactionRank: IwbRecordMemberDef;
 begin
   wbRecord(DIAL, 'Dialog Topic', [
     wbEDID,
@@ -11624,6 +11626,14 @@ begin
 
   wbXNAMs := wbRArrayS('Relations', wbXNAM);
 
+  wbFactionRank :=
+    wbRStructSK([0], 'Rank', [
+      wbInteger(RNAM, 'Rank#', itU32),
+      wbLString(MNAM, 'Male Title', 0, cpTranslate),
+      wbLString(FNAM, 'Female Title', 0, cpTranslate),
+      wbString(INAM, 'Insignia (unused)')
+    ], []);
+
   wbRecord(FACT, 'Faction', [
     wbEDID,
     wbFULL,
@@ -11668,12 +11678,7 @@ begin
       wbInteger('Escape', itU16),
       wbInteger('Werewolf (unused)', itU16)
     ], cpNormal, False, nil, 7),
-    wbRStructsSK('Ranks', 'Rank', [0], [
-      wbInteger(RNAM, 'Rank#', itU32),
-      wbLString(MNAM, 'Male Title', 0, cpTranslate),
-      wbLString(FNAM, 'Female Title', 0, cpTranslate),
-      wbString(INAM, 'Insignia (unused)')
-    ], []),
+    wbRArrayS('Ranks', wbFactionRank),
     wbFormIDCk(VEND, 'Vendor Buy/Sell List', [FLST]),
     wbFormIDCk(VENC, 'Merchant Container', [REFR]),
     wbFormIDCk(VENR, 'Vendor Reset', [GLOB]),
@@ -12265,6 +12270,8 @@ end;
 procedure DefineFO76g;
 var
   wbDebrisModel: IwbRecordMemberDef;
+  wbPerkEffect: IwbRecordMemberDef;
+  wbPerkConditions: IwbRecordMemberDef;
 begin
 
    wbRecord(EXPL, 'Explosion', [
@@ -12621,35 +12628,14 @@ begin
     wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID').IncludeFlag(dfNoReport), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
   ]);
 
-  wbRecord(PERK, 'Perk',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Non-Playable'
-    ])), [
-    wbEDID,
-    wbDURL,
-    wbVMADFragmentedPERK,
-    wbFULL,
-    wbDESCReq,
-    wbString(ICON, 'Image'),
-    wbCTDAs,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Trait', itU8, wbBoolEnum),
-      wbInteger('Level', itU8),
-      wbInteger('Num Ranks', itU8),
-      wbInteger('Playable', itU8, wbBoolEnum),
-      wbInteger('Hidden', itU8, wbBoolEnum),
-      wbUnion('Unknown', wbDeciderFormVersion188, [
-        wbEmpty('Unused'),
-        wbByteArray('Unknown', 1)
-      ])
-    ], cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SNDR]),
-    wbFormIDCk(PRFS, 'Perk Activation Sound', [SNDR]),
-    wbFormIDCK(NNAM, 'Next Perk', [PERK, NULL]),
-    wbString(FNAM, 'SWF'),
-    wbString(PRFI),
-    wbFormIDCk(PFAC, 'Perk Added Faction', [FACT]),
-    wbRStructsSK('Effects', 'Effect', [0, 1], [
+  wbPerkConditions :=
+    wbRStructSK([0], 'Perk Condition', [
+      wbInteger(PRKC, 'Run On (Tab Index)', itS8{, wbPRKCToStr, wbPRKCToInt}),
+      wbCTDAsReq
+    ], [], cpNormal, False{, nil, nil, wbPERKPRKCDontShow});
+
+  wbPerkEffect :=
+    wbRStructSK([0, 1], 'Effect', [
       wbStructSK(PRKE, [1, {2,} 0], 'Header', [
         wbInteger('Type', itU8, wbEnum([
           'Quest + Stage',
@@ -12692,10 +12678,7 @@ begin
       ], cpNormal, True),
       (**)
 
-      wbRStructsSK('Perk Conditions', 'Perk Condition', [0], [
-        wbInteger(PRKC, 'Run On (Tab Index)', itS8{, wbPRKCToStr, wbPRKCToInt}),
-        wbCTDAsReq
-      ], [], cpNormal, False{, nil, nil, wbPERKPRKCDontShow}),
+      wbRArrayS('Perk Conditions', wbPerkConditions),
 
       wbRStruct('Function Parameters', [
         wbInteger(EPFT, 'Type', itU8, wbEnum([
@@ -12750,7 +12733,37 @@ begin
         ], cpNormal, False{, wbEPFDDontShow})
       ], [], cpNormal, False{, wbPERKPRKCDontShow}),
       wbEmpty(PRKF, 'End Marker', cpIgnore, True)
-    ], [])
+    ], []);
+
+  wbRecord(PERK, 'Perk',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Non-Playable'
+    ])), [
+    wbEDID,
+    wbDURL,
+    wbVMADFragmentedPERK,
+    wbFULL,
+    wbDESCReq,
+    wbString(ICON, 'Image'),
+    wbCTDAs,
+    wbStruct(DATA, 'Data', [
+      wbInteger('Trait', itU8, wbBoolEnum),
+      wbInteger('Level', itU8),
+      wbInteger('Num Ranks', itU8),
+      wbInteger('Playable', itU8, wbBoolEnum),
+      wbInteger('Hidden', itU8, wbBoolEnum),
+      wbUnion('Unknown', wbDeciderFormVersion188, [
+        wbEmpty('Unused'),
+        wbByteArray('Unknown', 1)
+      ])
+    ], cpNormal, True),
+    wbFormIDCk(SNAM, 'Sound', [SNDR]),
+    wbFormIDCk(PRFS, 'Perk Activation Sound', [SNDR]),
+    wbFormIDCK(NNAM, 'Next Perk', [PERK, NULL]),
+    wbString(FNAM, 'SWF'),
+    wbString(PRFI),
+    wbFormIDCk(PFAC, 'Perk Added Faction', [FACT]),
+    wbRArrayS('Effects', wbPerkEffect)
   ]);
 
   wbRecord(BPTD, 'Body Part Data', [

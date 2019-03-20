@@ -6977,6 +6977,7 @@ var
   wbDebrisModel: IwbRecordMemberDef;
   wbPerkEffect: IwbRecordMemberDef;
   wbMenuButton: IwbRecordMemberDef;
+  wbPerkConditions: IwbRecordMemberDef;
 begin
   wbRecord(PROJ, 'Projectile', [
     wbEDIDReq,
@@ -7769,6 +7770,12 @@ begin
     wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
   ]);
 
+  wbPerkConditions :=
+    wbRStructSK([0], 'Perk Condition', [
+      wbInteger(PRKC, 'Run On', itS8, wbPRKCToStr, wbPRKCToInt),
+      wbCTDAsReq
+    ], [], cpNormal, False, wbPERKPRKCDontShow, False, nil, nil);
+
   wbPerkEffect :=
     wbRStructSK([0, 1], 'Effect', [
       wbStructSK(PRKE, [1, 2, 0], 'Header', [
@@ -7831,10 +7838,7 @@ begin
           wbInteger('Perk Condition Tab Count', itU8, nil, cpIgnore)
         ])
       ], cpNormal, True),
-      wbRStructsSK('Perk Conditions', 'Perk Condition', [0], [
-        wbInteger(PRKC, 'Run On', itS8, wbPRKCToStr, wbPRKCToInt),
-        wbCTDAsReq
-      ], [], cpNormal, False, nil, nil, wbPERKPRKCDontShow),
+      wbRArrayS('Perk Conditions', wbPerkConditions),
       wbRStruct('Entry Point Function Parameters', [
         wbInteger(EPFT, 'Type', itU8, wbPerkEPFTToStr, wbPerkEPFTToInt, cpIgnore, False, nil, wbPerkEPFTAfterSet),
         wbUnion(EPFD, 'Data', wbEPFDDecider, [
