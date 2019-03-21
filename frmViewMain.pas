@@ -59,6 +59,7 @@ uses
   ImagingFormats,
   ImagingCanvases,
   Imaging,
+  wbDataFormat,
   wbInterface,
   wbImplementation,
   wbLoadOrder,
@@ -68,7 +69,6 @@ uses
   wbHelpers,
   wbInit,
   wbLocalization,
-  wbDataFormat,
   wbModGroups,
   wbHardcoded,
   Vcl.Themes,
@@ -2194,6 +2194,10 @@ var
   Priority               : TwbConflictPriority;
   ThisPriority           : TwbConflictPriority;
   FoundAny               : Boolean;
+
+  ElementTypes           : TwbElementTypes;
+  DefTypes               : TwbDefTypes;
+  OptionalAndMissing     : Boolean;
 begin
 //  if aSiblingCompare then
 //    Priority := cpBenign
@@ -2264,13 +2268,26 @@ begin
       else
         FirstElementNotIgnored := FirstElement;
 
+      ElementTypes := [];
+      DefTypes := [];
+      OptionalAndMissing := False;
+
       for i := 0 to Pred(aNodeCount) do begin
         Element := aNodeDatas[i].Element;
         if Assigned(Element) then begin
+
+          Include(ElementTypes, Element.ElementType);
+          if Assigned(Element.ValueDef) then
+            Include(DefTypes, Element.ValueDef.DefType)
+          else
+            Include(DefTypes, dtEmpty);
+          OptionalAndMissing := OptionalAndMissing or (esOptionalAndMissing in Element.ElementStates);
+
           ThisPriority := Element.ConflictPriority;
           if ThisPriority <> cpIgnore then
             UniqueValues.Add(Element.SortKey[True]);
         end else begin
+          Include(DefTypes, dtEmpty);
           ThisPriority := Priority;
           if not (vnfIgnore in aNodeDatas[i].ViewNodeFlags) then
             if Priority <> cpNormalIgnoreEmpty then
@@ -2395,6 +2412,28 @@ begin
             Result := caConflict;
             Break;
           end;
+
+      if    (Result > caNoConflict)
+        and OptionalAndMissing
+        and (ElementTypes <= [etArray, etStruct, etValue])
+        and (dtEmpty in DefTypes)
+        and ((DefTypes - [dtEmpty]).Count = 1)
+        and ((DefTypes - [dtEmpty, dtString..dtInteger, dtFloat, dtArray, dtStruct]).Count = 0) then begin
+
+        for i := 0 to Pred(aNodeCount) do
+          if not aNodeDatas[i].Element.ContentIsAllZero then
+            Exit;
+
+        Result := caNoConflict;
+
+        for i := 0 to Pred(aNodeCount) do begin
+          if aNodeDatas[i].ConflictThis > ctIdenticalToMaster then
+            aNodeDatas[i].ConflictThis := ctIdenticalToMaster;
+          if aNodeDatas[i].ConflictAll > caNoConflict then
+            aNodeDatas[i].ConflictAll := caNoConflict;
+        end;
+
+      end;
 
     finally
       FreeAndNil(UniqueValues);

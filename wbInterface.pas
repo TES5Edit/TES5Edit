@@ -500,6 +500,10 @@ type
 
   TwbDefTypes = set of TwbDefType;
 
+  TwbDefTypesHelper = record helper for TwbDefTypes
+    function Count: Integer;
+  end;
+
   TwbGroupTypes = set of Byte;
 
 var
@@ -618,6 +622,9 @@ type
 
   TwbElementTypes = set of TwbElementType;
 
+  TwbElementTypesHelper = record helper for TwbElementTypes
+    function Count: Integer;
+  end;
 
   IwbContainer = interface;
   IwbFile = interface;
@@ -648,6 +655,7 @@ type
     esFound,
     esLocalized,
     esNotLocalized,
+    esOptionalAndMissing,
 
     //the following entries must match TwbElementErrorType:
     esReportedErrorReading,
@@ -851,6 +859,7 @@ type
     procedure SetToDefault;
     procedure SetToDefaultIfAsCreatedEmpty;
     function ResetLeafFirst: Boolean;
+    function ContentIsAllZero: Boolean;
 
     function ShouldReportError(aErrorType: TwbElementErrorType): Boolean;
 
@@ -17985,6 +17994,30 @@ end;
 function DummyIntegerFunction: Integer;
 begin
   Result := 0;
+end;
+
+{ TwbDefTypesHelper }
+
+function TwbDefTypesHelper.Count: Integer;
+var
+  i: TwbDefType;
+begin
+  Result := 0;
+  for i := Low(TwbDefType) to High(TwbDefType) do
+    if i in Self then
+      Inc(Result);
+end;
+
+{ TwbElementTypesHelper }
+
+function TwbElementTypesHelper.Count: Integer;
+var
+  i: TwbElementType;
+begin
+  Result := 0;
+  for i := Low(TwbElementType) to High(TwbElementType) do
+    if i in Self then
+      Inc(Result);
 end;
 
 initialization
