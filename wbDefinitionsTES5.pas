@@ -1601,11 +1601,14 @@ begin
         if Supports(Aliases.Elements[i], IwbContainerElementRef, Alias) then begin
           j := Alias.Elements[0].NativeValue;
           s := Alias.ElementEditValues['ALID'];
-          t := IntToStr(j);
-          while Length(t) < 3 do
-            t := '0' + t;
-          if s <> '' then
-            t := t + ' ' + s;
+          if (aType <> ctToSummary) or not wbNoIndexInAliasSummary then begin
+            t := IntToStr(j);
+            while Length(t) < 3 do
+              t := '0' + t;
+            if s <> '' then
+              t := t + ' ' + s;
+          end else
+            t := s;
           if Assigned(EditInfos) then
             EditInfos.Add(t)
           else if j = aInt then begin
@@ -9003,6 +9006,7 @@ begin
       ], cpNormal, True)
         .SetSummaryKeyOnValue([0, 1])
         .SetSummaryPrefixSuffixOnValue(0, '[', '%]')
+        .SetSummaryMemberMaxDepthOnValue(0, 1)
         .IncludeFlagOnValue(dfSummaryMembersNoName),
       wbMODT
     ], [], cpNormal, True).SetSummaryKey([0]);

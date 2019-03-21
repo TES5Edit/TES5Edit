@@ -1282,6 +1282,7 @@ type
     destructor Destroy; override;
 
     function GetName: string; override;
+    function GetShortNameInternal(aForName: Boolean): string; virtual;
     function GetShortName: string; override;
     function GetDisplayName(aUseSuffix: Boolean): string; override;
   end;
@@ -9860,14 +9861,22 @@ begin
 end;
 
 function TwbMainRecord.GetShortName: string;
-var
-  s : string;
 begin
+  Result := GetShortNameInternal(False);
+end;
+
+function TwbMainRecord.GetShortNameInternal(aForName: Boolean): string;
+var
+  s        : string;
+  CanCache : Boolean;
+begin
+  CanCache := (not aForName) or not wbNoFullInShortName;
+
   if mrLGeneration <> wbLocalizationHandler.Generation then
     mrInvalidateNameCache;
 
   if wbDisplayShorterNames then begin
-    if mrShortName <> '' then
+    if CanCache and (mrShortName <> '') then
       Exit(mrShortName);
 
     Result := '';
@@ -9876,12 +9885,14 @@ begin
     if s <> '' then
       Result := Result + {'<' +} s {+'>'};
 
-    s := GetFullName;
-    if s <> '' then begin
-      s := s.Replace('"', '""',[ rfReplaceAll]);
-      if Result <> '' then
-        Result := Result + ' ';
-      Result := Result + '"' + s +'"';
+    if not wbNoFullInShortName or aForName then begin
+      s := GetFullName;
+      if s <> '' then begin
+        s := s.Replace('"', '""',[ rfReplaceAll]);
+        if Result <> '' then
+          Result := Result + ' ';
+        Result := Result + '"' + s +'"';
+      end;
     end;
 
     if Result <> '' then
@@ -9892,7 +9903,7 @@ begin
     else
       Result := Result + '[' + GetSignature + ':' + GetFormID.ToString(True) + ']';
 
-    if fsIsOfficial in GetFile.FileStates then
+    if CanCache and (fsIsOfficial in GetFile.FileStates) then
       mrShortName := Result;
   end else begin
     Result := inherited GetName;
@@ -9928,7 +9939,7 @@ begin
   if mrName <> '' then
     Exit(mrName);
 
-  Result := GetShortName;
+  Result := GetShortNameInternal(True);
   if Assigned(mrDef) then begin
     s := Trim(mrDef.AdditionalInfoFor(Self));
     if s <> '' then
@@ -10230,7 +10241,7 @@ begin
   end;
   Result := '';
   if Assigned(mrDef) then
-    Result := mrDef.ToSummary(Self);
+    Result := mrDef.ToSummary(0, Self);
 end;
 
 function TwbMainRecord.GetValue: string;
@@ -13155,7 +13166,7 @@ begin
   DoInit(True);
 
   if Assigned(srDef) then
-    Result := srDef.ToSummary(Self);
+    Result := srDef.ToSummary(0, Self);
 end;
 
 function TwbSubRecord.GetValue: string;
@@ -17339,7 +17350,7 @@ begin
     Exit;
   DoInit(True);
 
-  Result := arcDef.ToSummary(Self);
+  Result := arcDef.ToSummary(0, Self);
 end;
 
 function TwbSubRecordArray.GetValue: string;
@@ -17787,7 +17798,7 @@ begin
     Exit;
   DoInit(True);
 
-  Result := RMD.ToSummary(Self);
+  Result := RMD.ToSummary(0, Self);
 end;
 
 function TwbSubRecordStruct.GetValue: string;
@@ -20123,7 +20134,7 @@ begin
 
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
-  Result := vbValueDef.ToSummary(GetDataBasePtr, dcDataEndPtr, Self);
+  Result := vbValueDef.ToSummary(0, GetDataBasePtr, dcDataEndPtr, Self);
 end;
 
 function TwbValueBase.GetValue: string;
