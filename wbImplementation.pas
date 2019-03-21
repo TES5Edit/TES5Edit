@@ -1647,6 +1647,7 @@ type
     function GetValueDef: IwbValueDef; override;
 
     function GetValue: string; override;
+    function GetSummary: string; override;
     function GetSortKey(aExtended: Boolean): string; override;
     function GetSortKeyInternal(aExtended: Boolean): string; override;
     function GetConflictPriority: TwbConflictPriority; override;
@@ -18761,7 +18762,7 @@ begin
             if j <> 0 then
               for i := 0 to Pred(FlagsDef.FlagCount) do
                 if (j and (Int64(1) shl i)) <> 0 then begin
-                  t := FlagsDef.Flags[i];
+                  t := FlagsDef.Flags[i, False];
                   if (t <> '') and (not wbHideUnused or not SameText(t,'Unused')) then begin
                     Element := nil;
                     for k := l to High(aPrevFlags) do
@@ -19305,7 +19306,7 @@ end;
 
 function TwbFlag.GetName: string;
 begin
-  Result := GetFlagsDef.Flags[fIndex];
+  Result := GetFlagsDef.Flags[fIndex, False];
 end;
 
 function TwbFlag.GetNativeValue: Variant;
@@ -19350,16 +19351,14 @@ begin
   s := IntToHex64(BaseFlagsDef.DefID, 8);
   Result := s + IntToHex64(fIndex, 2);
   if not FlagsDef.Equals(BaseFlagsDef) then begin
-    s := FlagsDef.Flags[fIndex];
-    if not SameText(s, BaseFlagsDef.Flags[fIndex]) then
+    s := FlagsDef.Flags[fIndex, False];
+    if not SameText(s, BaseFlagsDef.Flags[fIndex, False]) then
       Result := Result + s;
   end;
   fLastDefID := FlagsDef.DefID;
 end;
 
-function TwbFlag.GetValue: string;
-//var
-//  i: Int64;
+function TwbFlag.GetSummary: string;
 var
   Def: IwbDef;
 begin
@@ -19371,14 +19370,22 @@ begin
     if Assigned(Def) then
       Def.Used;
   end;
-  Result := GetFlagsDef.Flags[fIndex];
-{
-  i := fIntegerDef.ToInt(fBasePtr, fEndPtr, Self);
-  if (i and (Int64(1) shl fIndex)) <> 0 then
-    Result := GetName
-  else
-    Result := '';
-}
+  Result := GetFlagsDef.Flags[fIndex, True];
+end;
+
+function TwbFlag.GetValue: string;
+var
+  Def: IwbDef;
+begin
+  if wbReportMode then begin
+    Def := GetValueDef;
+    if Assigned(Def) then
+      Def.Used;
+    Def := GetDef;
+    if Assigned(Def) then
+      Def.Used;
+  end;
+  Result := GetFlagsDef.Flags[fIndex, False];
 end;
 
 function TwbFlag.GetValueDef: IwbValueDef;

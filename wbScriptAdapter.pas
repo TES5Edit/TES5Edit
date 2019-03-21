@@ -427,7 +427,7 @@ begin
 
       for i := 0 to Pred(Flags.FlagCount) do begin
         if i > 0 then s := s + #13#10;
-        s := s + Flags.Flags[i];
+        s := s + Flags.Flags[i, False];
       end;
 
       Value := s;

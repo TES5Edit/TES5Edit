@@ -9249,7 +9249,7 @@ begin
           Caption := 'Edit Value';
 
           for i := 0 to Pred(Flags.FlagCount) do begin
-            CheckListBox1.AddItem(Flags.Flags[i], nil);
+            CheckListBox1.AddItem(Flags.Flags[i, False], nil);
             CheckListBox1.Checked[i] := (i < Length(EditValue)) and (EditValue[i+1] = '1');
           end;
 

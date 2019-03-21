@@ -9000,12 +9000,13 @@ begin
       wbStruct(DATA, 'Data', [
         wbInteger('Percentage', itU8),
         wbString('Model FileName'),
-        wbInteger('Flags', itU8, wbFlags([
-          'Has Collision Data'
+        wbInteger('Flags', itU8, wbFlagsSummary([
+          'Has Collision Data', 'Collision'
         ]))
       ], cpNormal, True)
-        .SetSummaryKeyOnValue([0, 1])
+        .SetSummaryKeyOnValue([0, 1, 2])
         .SetSummaryPrefixSuffixOnValue(0, '[', '%]')
+        .SetSummaryPrefixSuffixOnValue(2, '{', '}')
         .SetSummaryMemberMaxDepthOnValue(0, 1)
         .IncludeFlagOnValue(dfSummaryMembersNoName),
       wbMODT

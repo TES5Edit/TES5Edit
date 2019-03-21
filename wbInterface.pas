@@ -2409,7 +2409,7 @@ type
   IwbFlagsDef = interface(IwbIntegerDefFormater)
     ['{EF564466-A671-453A-88CF-42A0AA32D849}']
     function GetBaseFlagsDef: IwbFlagsDef;
-    function GetFlag(aIndex: Integer): string;
+    function GetFlag(aIndex: Integer; aForSummary: Boolean): string;
     function GetFlagCount: Integer;
     function GetFlagIgnoreConflict(aIndex: Integer): Boolean;
     function GetFlagDontShow(const aElement: IwbElement; aIndex: Integer): Boolean;
@@ -2422,7 +2422,7 @@ type
     property BaseFlagsDef: IwbFlagsDef
       read GetBaseFlagsDef;
 
-    property Flags[aIndex: Integer] : string
+    property Flags[aIndex: Integer; aForSummary: Boolean] : string
       read GetFlag;
     property FlagCount: Integer
       read GetFlagCount;
@@ -3866,6 +3866,32 @@ function wbFlags(const aBaseFlagsDef    : IwbFlagsDef;
                  const aDontShows       : array of TwbDontShowCallback;
                        aUnknownIsUnused : Boolean = False)
                                         : IwbFlagsDef; overload;
+
+function wbFlagsSummary(const aNames           : array of string;
+                              aUnknownIsUnused : Boolean = False)
+                                        : IwbFlagsDef; overload;
+function wbFlagsSummary(const aNames           : array of string;
+                        const aFlagsToIgnore   : array of integer)
+                                               : IwbFlagsDef; overload;
+function wbFlagsSummary(const aNames           : array of string;
+                        const aDontShows       : array of TwbDontShowCallback;
+                              aUnknownIsUnused : Boolean = False)
+                                               : IwbFlagsDef; overload;
+
+function wbFlagsSummary(const aBaseFlagsDef    : IwbFlagsDef;
+                        const aNames           : array of string;
+                              aUnknownIsUnused : Boolean = False)
+                                               : IwbFlagsDef; overload;
+function wbFlagsSummary(const aBaseFlagsDef    : IwbFlagsDef;
+                        const aNames           : array of string;
+                        const aFlagsToIgnore   : array of integer)
+                                               : IwbFlagsDef; overload;
+function wbFlagsSummary(const aBaseFlagsDef    : IwbFlagsDef;
+                        const aNames           : array of string;
+                        const aDontShows       : array of TwbDontShowCallback;
+                              aUnknownIsUnused : Boolean = False)
+                                               : IwbFlagsDef; overload;
+
 
 function wbEnum(const aNames : array of string)
                              : IwbEnumDef; overload;
@@ -6255,26 +6281,29 @@ type
   TwbFlagsDef = class(TwbIntegerDefFormater, IwbFlagsDef)
   private
     flgBaseFlagsDef    : IwbFlagsDef;
-    flgNames           : array of string;
-    flgDontShows       : array of TwbDontShowCallback;
+    flgNames           : TArray<string>;
+    flgSummaries       : TArray<string>;
+    flgDontShows       : TArray<TwbDontShowCallback>;
     flgHasDontShows    : Boolean;
     flgUnusedMask      : Int64;
     flgIgnoreMask      : Int64;
     flgUnknownIsUnused : Boolean;
-    flgGetCPs          : array of TwbGetConflictPriority;
+    flgGetCPs          : TArray<TwbGetConflictPriority>;
     flgHasGetCPs       : Boolean;
-    flgFlagDefs        : array of IwbFlagDef;
+    flgFlagDefs        : TArray<IwbFlagDef>;
 
     UnknownFlags       : array[0..63] of Integer;
     HasUnknownFlags    : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(const aBaseFlagsDef    : IwbFlagsDef;
-                       const aNames           : array of string;
-                       const aDontShows       : array of TwbDontShowCallback;
-                             aUnknownIsUnused : Boolean;
-                             aIgnoreMask      : Int64;
-                       const aGetCPs          : array of TwbGetConflictPriority);
+    constructor Create(aHasSummary      : Boolean;
+                 const aBaseFlagsDef    : IwbFlagsDef;
+                 const aNames           : array of string;
+                 const aDontShows       : array of TwbDontShowCallback;
+                       aUnknownIsUnused : Boolean;
+                       aIgnoreMask      : Int64;
+                 const aGetCPs          : array of TwbGetConflictPriority);
+    procedure AfterClone(const aSource: TwbDef); override;
 
     {---IwbDef---}
     procedure Report(const aParents: TwbDefPath); override;
@@ -6299,7 +6328,7 @@ type
 
     {---IwbFlagsDef---}
     function GetBaseFlagsDef: IwbFlagsDef;
-    function GetFlag(aIndex: Integer): string;
+    function GetFlag(aIndex: Integer; aForSummary: Boolean): string;
     function GetFlagCount: Integer;
     function GetFlagIgnoreConflict(aIndex: Integer): Boolean;
     function GetFlagDontShow(const aElement: IwbElement; aIndex: Integer): Boolean;
@@ -8277,7 +8306,7 @@ function wbFlags(const aBaseFlagsDef    : IwbFlagsDef;
                        aUnknownIsUnused : Boolean = False)
                                         : IwbFlagsDef;
 begin
-  Result := TwbFlagsDef.Create(aBaseFlagsDef, aNames, [], aUnknownIsUnused, 0, []);
+  Result := TwbFlagsDef.Create(False, aBaseFlagsDef, aNames, [], aUnknownIsUnused, 0, []);
 end;
 
 function wbFlags(const aBaseFlagsDef    : IwbFlagsDef;
@@ -8295,7 +8324,7 @@ begin
     if (Index >= 0) and (Index <= High(aNames)) then
       IgnoreMask := IgnoreMask or (1 shl Index);
   end;
-  Result := TwbFlagsDef.Create(aBaseFlagsDef, aNames, [], False, IgnoreMask, []);
+  Result := TwbFlagsDef.Create(False, aBaseFlagsDef, aNames, [], False, IgnoreMask, []);
 end;
 
 
@@ -8305,8 +8334,68 @@ function wbFlags(const aBaseFlagsDef    : IwbFlagsDef;
                        aUnknownIsUnused : Boolean = False)
                                         : IwbFlagsDef; overload;
 begin
-  Result := TwbFlagsDef.Create(aBaseFlagsDef, aNames, aDontShows, aUnknownIsUnused, 0, []);
+  Result := TwbFlagsDef.Create(False, aBaseFlagsDef, aNames, aDontShows, aUnknownIsUnused, 0, []);
 end;
+
+function wbFlagsSummary(const aNames           : array of string;
+                              aUnknownIsUnused : Boolean = False)
+                                               : IwbFlagsDef;
+begin
+  Result := wbFlagsSummary(nil, aNames, aUnknownIsUnused);
+end;
+
+function wbFlagsSummary(const aNames           : array of string;
+                        const aFlagsToIgnore   : array of integer)
+                                               : IwbFlagsDef; overload;
+begin
+  Result := wbFlagsSummary(nil, aNames, aFlagsToIgnore);
+end;
+
+
+function wbFlagsSummary(const aNames           : array of string;
+                        const aDontShows       : array of TwbDontShowCallback;
+                              aUnknownIsUnused : Boolean = False)
+                                               : IwbFlagsDef; overload;
+begin
+  Result := wbFlagsSummary(nil, aNames, aDontShows, aUnknownIsUnused);
+end;
+
+function wbFlagsSummary(const aBaseFlagsDef    : IwbFlagsDef;
+                        const aNames           : array of string;
+                              aUnknownIsUnused : Boolean = False)
+                                               : IwbFlagsDef;
+begin
+  Result := TwbFlagsDef.Create(True, aBaseFlagsDef, aNames, [], aUnknownIsUnused, 0, []);
+end;
+
+function wbFlagsSummary(const aBaseFlagsDef    : IwbFlagsDef;
+                        const aNames           : array of string;
+                        const aFlagsToIgnore   : array of integer)
+                                               : IwbFlagsDef; overload;
+var
+  IgnoreMask : Int64;
+  i          : Integer;
+  Index      : Int64;
+begin
+  IgnoreMask := 0;
+  for i := Low(aFlagsToIgnore) to High(aFlagsToIgnore) do begin
+    Index := aFlagsToIgnore[i];
+    if (Index >= 0) and (Index <= High(aNames)) then
+      IgnoreMask := IgnoreMask or (1 shl Index);
+  end;
+  Result := TwbFlagsDef.Create(True, aBaseFlagsDef, aNames, [], False, IgnoreMask, []);
+end;
+
+
+function wbFlagsSummary(const aBaseFlagsDef    : IwbFlagsDef;
+                 const aNames           : array of string;
+                 const aDontShows       : array of TwbDontShowCallback;
+                       aUnknownIsUnused : Boolean = False)
+                                        : IwbFlagsDef; overload;
+begin
+  Result := TwbFlagsDef.Create(True, aBaseFlagsDef, aNames, aDontShows, aUnknownIsUnused, 0, []);
+end;
+
 
 function wbEnum(const aNames : array of string)
                               : IwbEnumDef;
@@ -12038,6 +12127,12 @@ end;
 
 { TwbFlagsDef }
 
+procedure TwbFlagsDef.AfterClone(const aSource: TwbDef);
+begin
+  inherited;
+  flgSummaries := Copy((aSource as TwbFlagsDef).flgSummaries);
+end;
+
 function TwbFlagsDef.Assign(const aTarget : IwbElement;
                                   aIndex  : Integer;
                             const aSource : IwbElement;
@@ -12066,7 +12161,7 @@ begin
     Result := FlagsDef.FlagCount = GetFlagCount;
     if Result and not GetRoot.Equals(FlagsDef.Root) then
       for i := 0 to Pred(GetFlagCount) do
-        if not SameStr(FlagsDef.Flags[i], GetFlag(i)) then begin
+        if not SameStr(FlagsDef.Flags[i, False], GetFlag(i, False)) then begin
           Result := False;
           Exit;
         end;
@@ -12075,7 +12170,7 @@ begin
     Result := GetBaseFlagsDef.Equals(FlagsDef.BaseFlagsDef);
     if Result then begin
       i := FlagDef.FlagIndex;
-      Result := SameStr(FlagsDef.Flags[i], GetFlag(i));
+      Result := SameStr(FlagsDef.Flags[i, False], GetFlag(i, False));
     end;
   end else
     Result := False;
@@ -12110,18 +12205,29 @@ end;
 constructor TwbFlagsDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbFlagsDef do
-    Self.Create(flgBaseFlagsDef, flgNames, flgDontShows, flgUnknownIsUnused, flgIgnoreMask, flgGetCPs).AfterClone(aSource);
+    Self.Create(False,
+    flgBaseFlagsDef, flgNames, flgDontShows, flgUnknownIsUnused, flgIgnoreMask, flgGetCPs).AfterClone(aSource);
 end;
 
-constructor TwbFlagsDef.Create(const aBaseFlagsDef    : IwbFlagsDef;
-                               const aNames           : array of string;
-                               const aDontShows       : array of TwbDontShowCallback;
-                                     aUnknownIsUnused : Boolean;
-                                     aIgnoreMask      : Int64;
-                               const aGetCPs          : array of TwbGetConflictPriority);
+constructor TwbFlagsDef.Create(aHasSummary      : Boolean;
+                         const aBaseFlagsDef    : IwbFlagsDef;
+                         const aNames           : array of string;
+                         const aDontShows       : array of TwbDontShowCallback;
+                               aUnknownIsUnused : Boolean;
+                               aIgnoreMask      : Int64;
+                         const aGetCPs          : array of TwbGetConflictPriority);
 var
   i: Integer;
 begin
+  var StepSize := 1;
+  var l := Length(aNames);
+
+  if aHasSummary then begin
+    StepSize := 2;
+    Assert(l mod StepSize = 0);
+    l := l div StepSize;
+  end;
+
   if Assigned(aBaseFlagsDef) then
     flgBaseFlagsDef := aBaseFlagsDef.Root as IwbFlagsDef;
   flgIgnoreMask := aIgnoreMask;
@@ -12129,13 +12235,19 @@ begin
   flgUnusedMask := 0;
   if flgUnknownIsUnused then
     flgUnusedMask := not flgUnusedMask;
-  SetLength(flgNames, Length(aNames));
+  SetLength(flgNames, l);
+  SetLength(flgSummaries, l);
   for i := Low(flgNames) to High(flgNames) do begin
-    flgNames[i] := aNames[i];
+    flgNames[i] := aNames[i * StepSize];
     if SameText(flgNames[i], 'Unused') then
       flgUnusedMask := flgUnusedMask or (Int64(1) shl i)
     else if flgUnknownIsUnused and (flgNames[i] <> '') then
       flgUnusedMask := flgUnusedMask and not (Int64(1) shl i);
+
+    if aHasSummary then
+      flgSummaries[i] := aNames[Succ(i * StepSize)];
+    if flgSummaries[i] = '' then
+      flgSummaries[i] := flgNames[i];
   end;
   SetLength(flgFlagDefs, Length(flgNames));
 
@@ -12234,8 +12346,11 @@ begin
   Result := etCheckComboBox;
 end;
 
-function TwbFlagsDef.GetFlag(aIndex: Integer): string;
+function TwbFlagsDef.GetFlag(aIndex: Integer; aForSummary: Boolean): string;
 begin
+  if aForSummary then
+    Exit(flgSummaries[aIndex]);
+
   Result := flgNames[aIndex];
   if wbShowFlagEnumValue then
     Result := Result + ' (0x' + IntToHex(Int64(1) shl aIndex, 8) + ')';
@@ -12404,15 +12519,21 @@ begin
     if (aInt and (Int64(1) shl i)) <> 0 then begin
       s := '';
       if i <= High(flgNames) then
-        s := flgNames[i];
+        if aForSummary then
+          s := flgSummaries[i]
+        else
+          s := flgNames[i];
       if s = '' then begin
-        s := '<Unknown: '+IntToStr(i)+'>';
+        if aForSummary then
+          s := '<'+IntToStr(i)+'>'
+        else
+          s := '<Unknown: '+IntToStr(i)+'>';
         if wbReportMode and wbReportUnknownFlags then begin
           Inc(UnknownFlags[i]);
           HasUnknownFlags := True;
         end;
       end;
-      if wbShowFlagEnumValue then
+      if not aForSummary and wbShowFlagEnumValue then
         s := s + ' (0x' + IntToHex(Int64(1) shl i, 8) + ')';
       if not GetFlagDontShow(aElement, i) then
         Result := Result + s + ', ';
