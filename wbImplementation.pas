@@ -11150,37 +11150,42 @@ begin
         _AddRef; _Release;
       end;
 
-      for i := 0 to Pred(mrDef.MemberCount) do
-        if mrDef.Members[i].Required then
-          Assign(i, nil, False);
+      BeginUpdate;
+      try
+        for i := 0 to Pred(mrDef.MemberCount) do
+          if mrDef.Members[i].Required then
+            Assign(i, nil, False);
 
-      Master := GetMaster;
+        Master := GetMaster;
 
-      if not Assigned(Master) then
-        Exit;
+        if not Assigned(Master) then
+          Exit;
 
-      _File := GetFile;
+        _File := GetFile;
 
-      SelfIndex := -1;
-      for i := 0 to Pred(Master.OverrideCount) do
-        if Equals(Master.Overrides[i]) then begin
-          SelfIndex := i;
-          Break;
+        SelfIndex := -1;
+        for i := 0 to Pred(Master.OverrideCount) do
+          if Equals(Master.Overrides[i]) then begin
+            SelfIndex := i;
+            Break;
+          end;
+
+        for i := Pred(SelfIndex) downto 0 do begin
+          MainRecord := Master.Overrides[i];
+          if not MainRecord.IsDeleted then begin
+            for j := Pred(_File.MasterCount[True]) downto 0 do
+              if MainRecord._File.Equals(_File.Masters[j, True]) then begin
+                Self.Assign(Low(Integer), MainRecord, False);
+                Exit;
+              end;
+          end;
         end;
 
-      for i := Pred(SelfIndex) downto 0 do begin
-        MainRecord := Master.Overrides[i];
-        if not MainRecord.IsDeleted then begin
-          for j := Pred(_File.MasterCount[True]) downto 0 do
-            if MainRecord._File.Equals(_File.Masters[j, True]) then begin
-              Self.Assign(Low(Integer), MainRecord, False);
-              Exit;
-            end;
-        end;
+        if not Master.IsDeleted then
+          Self.Assign(Low(Integer), Master, False);
+      finally
+        EndUpdate;
       end;
-
-      if not Master.IsDeleted then
-        Self.Assign(Low(Integer), Master, False);
 
     end;
   end;
