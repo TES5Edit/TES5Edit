@@ -9995,7 +9995,6 @@ constructor TwbSubRecordStructDef.Create(aPriority       : TwbConflictPriority;
                                          aAfterSet       : TwbAfterSetCallback;
                                          aGetCP          : TwbGetConflictPriority);
 var
-  i,j: Integer;
   FoundRequired : Boolean;
 begin
   srsSummaryDelimiter := ' ';
@@ -10004,25 +10003,25 @@ begin
 
   FoundRequired := False;
   SetLength(srsMembers, Length(aMembers));
-  for i := Low(srsMembers) to High(srsMembers) do begin
-    srsMembers[i] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
-    srsCanContainFormIDs := srsCanContainFormIDs or aMembers[i].CanContainFormIDs;
-    FoundRequired := FoundRequired or srsMembers[i].Required;
-    for j := 0 to Pred(aMembers[i].SignatureCount) do
-      srsSignatures.AddObject(aMembers[i].Signatures[j], Pointer(i) );
-  end;
+  var NewLength := 0;
+  for var i := Low(aMembers) to High(aMembers) do
+    if Assigned(aMembers[i]) then begin
+      srsMembers[NewLength] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
+      srsCanContainFormIDs := srsCanContainFormIDs or aMembers[i].CanContainFormIDs;
+      FoundRequired := FoundRequired or srsMembers[i].Required;
+      for var j := 0 to Pred(aMembers[i].SignatureCount) do
+        srsSignatures.AddObject(aMembers[i].Signatures[j], Pointer(NewLength) );
+      Inc(NewLength);
+    end;
+  SetLength(srsMembers, NewLength);
 
   if Length(aSkipSigs) > 0 then begin
     srsSkipSignatures := TwbFastStringListCS.CreateSorted(dupIgnore);
-    for i := Low(aSkipSigs) to High(aSkipSigs) do
+    for var i := Low(aSkipSigs) to High(aSkipSigs) do
       srsSkipSignatures.Add(aSkipSigs[i]);
   end;
 
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
-  {
-  if srsAllowUnordered and not FoundRequired then
-    raise Exception.Create(GetPath + ' must contain at least one required element');
-  }
 end;
 
 destructor TwbSubRecordStructDef.Destroy;
