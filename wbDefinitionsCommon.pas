@@ -13,8 +13,6 @@ const
 
 procedure wbConditionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-procedure wbEquipSlotToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-
 procedure wbFactionRelationToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 procedure wbFactionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -22,8 +20,6 @@ procedure wbFactionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer
 procedure wbItemToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 procedure wbLeveledListEntryToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-
-procedure wbModelToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 procedure wbObjectBoundsToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
@@ -37,8 +33,26 @@ procedure wbScriptPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: 
 
 procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
+{>>> Common Definitions <<<}
+
+function wbActionFlag: IwbSubRecordDef;
+
+function wbAlternateTexture: IwbStructDef;
+
+function wbAxisEnum: IwbEnumDef;
+
+function wbDebrisModel(aTextureFileHashes: IwbRecordMemberDef): IwbRecordMemberDef;
+
+{>>> Common Functions <<<}
+
+function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
+
+function wbNeverShow(const aElement: IwbElement): Boolean;
+
 /// <summary>Calls and returns wbGetScriptObjFormat. Used for VMAD parsing.</summary>
 function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+
+function wbTryGetContainerFromUnion(const aElement: IwbElement; out aContainer: IwbContainer): Boolean;
 
 procedure wbScriptToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
@@ -52,12 +66,99 @@ uses
 
 const
   CTDA: TwbSignature = 'CTDA';
+  DATA: TwbSignature = 'DATA';
+  MODT: TwbSignature = 'MODT';
+  TXST: TwbSignature = 'TXST';
+  XACT: TwbSignature = 'XACT';
+
+
+function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
+begin
+  Result := PCardinal(@aSignature)^;
+end;
+
+function wbNeverShow(const aElement: IwbElement): Boolean;
+begin
+  Result := wbHideNeverShow;
+end;
+
+{>>> Common Definitions <<<}
+function wbActionFlag: IwbSubRecordDef;
+begin
+  Result :=
+    wbInteger(XACT, 'Action Flag', itU32, wbFlags([
+      'Use Default',
+      'Activate',
+      'Open',
+      'Open by Default'
+    ]));
+end;
+
+function wbAlternateTexture: IwbStructDef;
+begin
+  Result :=
+    wbStructSK([0, 2], 'Alternate Texture', [
+      wbLenString('3D Name'),
+      wbFormIDCk('New Texture', [TXST]),
+      wbInteger('3D Index', itS32)
+    ]);
+end;
+
+function wbAxisEnum: IwbEnumDef;
+begin
+  Result :=
+    wbEnum([], [
+      88, 'X',
+      89, 'Y',
+      90, 'Z'
+    ]);
+end;
+
+function wbDebrisModel(aTextureFileHashes: IwbRecordMemberDef): IwbRecordMemberDef;
+begin
+  Result := wbRStruct('Model', [
+    wbStruct(DATA, 'Data', [
+      wbInteger('Percentage', itU8),
+      wbString('Model FileName'),
+      wbInteger('Flags', itU8, wbFlagsSummary([
+        'Has Collision Data', 'Collision'
+      ]))
+    ], cpNormal, True)
+    .SetSummaryKeyOnValue([0, 1, 2])
+    .SetSummaryPrefixSuffixOnValue(0, '[', '%]')
+    .SetSummaryPrefixSuffixOnValue(2, '{', '}')
+    .SetSummaryMemberMaxDepthOnValue(0, 1)
+    .IncludeFlagOnValue(dfSummaryMembersNoName),
+    aTextureFileHashes
+  ], [], cpNormal, True)
+  .SetSummaryKey([0])
+  .IncludeFlag(dfCollapsed, wbCollapseModels);
+end;
 
 {>>> For Collapsible Fields <<<}
 
 function wbTrySetContainer(const aElement: IwbElement; aType: TwbCallbackType; out aContainer: IwbContainerElementRef): Boolean;
 begin
   Result := (aType = ctToSummary) and Supports(aElement, IwbContainerElementRef, aContainer);
+end;
+
+function wbTryGetContainerFromUnion(const aElement: IwbElement; out aContainer: IwbContainer): Boolean;
+begin
+  if not Assigned(aElement) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  aContainer := GetContainerFromUnion(aElement);
+
+  if not Assigned(aContainer) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  Result := True;
 end;
 
 /// <summary>Generates "{Count}x {FormID}" string for item. Supports single and double structs.</summary>
@@ -222,21 +323,6 @@ begin
     aValue := aValue + ' OR';
 end;
 
-procedure wbEquipSlotToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  Container: IwbContainerElementRef;
-begin
-  if not wbTrySetContainer(aElement, aType, Container) then
-    Exit;
-
-  var EquipSlot := Container.ElementBySignature['QNAM'].Value;
-  var EquipNode := Container.ElementBySignature['ZNAM'];
-
-  aValue := EquipSlot;
-  if Assigned(EquipNode) then
-    aValue := EquipNode.Value + ' = ' + aValue;
-end;
-
 procedure wbFactionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Container: IwbContainerElementRef;
@@ -286,16 +372,6 @@ begin
   end;
 
   aValue := Container.Elements[2].Value + ' ' + aValue;
-end;
-
-procedure wbModelToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  Container: IwbContainerElementRef;
-begin
-  if not wbTrySetContainer(aElement, aType, Container) then
-    Exit;
-
-  aValue := Container.Elements[0].Value;
 end;
 
 procedure wbObjectBoundsToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -630,7 +706,6 @@ begin
     Free;
   end;
 end;
-
 
 end.
 

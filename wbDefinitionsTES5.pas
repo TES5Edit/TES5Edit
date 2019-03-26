@@ -33,7 +33,6 @@ var
 	wbAlignmentEnum: IwbEnumDef;
 	wbArmorTypeEnum: IwbEnumDef;
 	wbAttackAnimationEnum: IwbEnumDef;
-	wbAxisEnum: IwbEnumDef;
 	wbBipedObjectEnum: IwbEnumDef;
 	wbBlendModeEnum: IwbEnumDef;
 	wbBlendOpEnum: IwbEnumDef;
@@ -736,13 +735,10 @@ var
   wbDATAPosRot: IwbSubRecordDef;
   wbPosRot: IwbStructDef;
   wbMODD: IwbSubRecordDef;
-  wbMODL: IwbRecordMemberDef;
   wbMODS: IwbSubRecordDef;
   wbMO2S: IwbSubRecordDef;
   wbMO3S: IwbSubRecordDef;
   wbMO4S: IwbSubRecordDef;
-  wbMODLActor: IwbRecordMemberDef;
-  wbMODLReq: IwbRecordMemberDef;
   wbMaleWorldModel: IwbRecordMemberDef;
   wbARMOFemaleWorldModel: IwbRecordMemberDef;
   wbARMAFemaleWorldModel: IwbRecordMemberDef;
@@ -835,6 +831,29 @@ var
   wbNVNM: IwbSubRecordDef;
   wbNAVIslandData: IwbStructDef;
 
+function wbGenericModel(aRequired: Boolean = False; aDontShow: TwbDontShowCallback = nil): IwbRecordMemberDef;
+begin
+  Result :=
+    wbRStructSK([0], 'Model', [
+      wbString(MODL, 'Model FileName', 0, cpNormal, True),
+      wbMODT,
+      wbMODS
+    ], [], cpNormal, aRequired, aDontShow, True)
+    .SetSummaryKey([0])
+    .IncludeFlag(dfCollapsed, wbCollapseModels);
+end;
+
+function wbTexturedModel(aSubRecordName: string; aSignatures: TwbSignatures; aTextureSubRecord: IwbSubRecordDef): IwbRecordMemberDef;
+begin
+  Result :=
+    wbRStruct(aSubRecordName, [
+      wbString(aSignatures[0], 'Model FileName'),
+      wbByteArray(aSignatures[1], 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      aTextureSubRecord
+    ], [])
+    .SetSummaryKey([0])
+    .IncludeFlag(dfCollapsed, wbCollapseModels);
+end;
 
 function IsSSE: Boolean; inline; overload;
 begin
@@ -855,12 +874,6 @@ begin
     Result := aDef1
   else
     Result := aDef2;
-end;
-
-
-function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
-begin
-  Result := PCardinal(@aSignature)^;
 end;
 
 function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -891,16 +904,122 @@ begin
   Result := AsCardinal;
 end;
 
+function wbGetQuestStageAsStr(aInt: Int64; aParam1: IwbElement; aType: TwbCallbackType; out aResult: string): Boolean;
+var
+  MainRecord: IwbMainRecord;
+  EditInfos: TStringList;
+  Stage, Stages: IwbContainerElementRef;
+begin
+  if not Assigned(aParam1) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  if not Supports(aParam1.LinksTo, IwbMainRecord, MainRecord) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  MainRecord := MainRecord.WinningOverride;
+
+  if MainRecord.Signature <> QUST then
+  begin
+    case aType of
+      ctToStr, ctToSummary:
+      begin
+        aResult := aInt.ToString;
+        if aType = ctToStr then
+          aResult := aResult + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+      end;
+      ctCheck:
+        aResult := '<Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+    end;
+    Exit;
+  end;
+
+  case aType of
+    ctEditType:
+    begin
+      aResult := 'ComboBox';
+      Result := True;
+      Exit;
+    end;
+
+    ctEditInfo:
+      EditInfos := TStringList.Create;
+  else
+    EditInfos := nil;
+  end;
+
+  try
+    if Supports(MainRecord.ElementByName['Stages'], IwbContainerElementRef, Stages) then
+    begin
+      for var i := 0 to Pred(Stages.ElementCount) do
+      begin
+        if not Supports(Stages.Elements[i], IwbContainerElementRef, Stage) then
+          Continue;
+
+        var j: Integer := Stage.ElementNativeValues['INDX\Stage Index'];
+        var s: string := Trim(Stage.ElementValues['Log Entries\Log Entry\CNAM']);
+
+        var t: string := IntToStr(j);
+        while Length(t) < 3 do
+          t := '0' + t;
+
+        if s <> '' then
+          t := t + ' ' + s;
+
+        if Assigned(EditInfos) then
+        begin
+          EditInfos.AddObject(t, TObject(j));
+          Continue;
+        end;
+
+        if j = aInt then
+        begin
+          case aType of
+            ctToStr, ctToSummary, ctToEditValue:
+              aResult := t;
+            ctCheck:
+              aResult := '';
+          end;
+
+          Result := True;
+          Exit;
+        end;
+      end;
+    end;
+
+    case aType of
+      ctToStr, ctToSummary:
+      begin
+        aResult := aInt.ToString;
+        if aType = ctToStr then
+          aResult := aResult + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+      end;
+
+      ctCheck:
+        aResult := '<Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+
+      ctEditInfo:
+      begin
+        EditInfos.Sort;
+        aResult := EditInfos.CommaText;
+      end;
+    end;
+  finally
+    FreeAndNil(EditInfos);
+  end;
+
+  Result := True;
+end;
+
 function wbCTDAParam2QuestStageToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Container  : IwbContainerElementRef;
   Param1     : IwbElement;
-  MainRecord : IwbMainRecord;
-  EditInfos  : TStringList;
-  Stages     : IwbContainerElementRef;
-  Stage      : IwbContainerElementRef;
-  i, j       : Integer;
-  s, t       : string;
 begin
   case aType of
     ctToStr, ctToSummary: begin
@@ -908,102 +1027,36 @@ begin
       if aType = ctToStr then
         Result := Result + ' <Warning: Could not resolve Parameter 1>';
     end;
+
     ctToEditValue: Result := aInt.ToString;
+
     ctToSortKey: begin
       Result := IntToHex64(aInt, 8);
       Exit;
     end;
+
     ctCheck: Result := '<Warning: Could not resolve Parameter 1>';
     ctEditType: Result := '';
     ctEditInfo: Result := '';
   end;
 
-  if not Assigned(aElement) then Exit;
+  if not Assigned(aElement) then
+    Exit;
+
   Container := GetContainerRefFromUnionOrValue(aElement);
-  if not Assigned(Container) then Exit;
+  if not Assigned(Container) then
+    Exit;
 
   Param1 := Container.ElementByName['Parameter #1'];
 
-  if not Assigned(Param1) then
+  if not wbGetQuestStageAsStr(aInt, Param1, aType, Result) then
     Exit;
-
-  if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
-    Exit;
-
-  MainRecord := MainRecord.WinningOverride;
-
-  if MainRecord.Signature <> QUST then begin
-    case aType of
-      ctToStr, ctToSummary: begin
-        Result := aInt.ToString;
-        if aType = ctToStr then
-          Result := Result + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
-      end;
-      ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
-    end;
-    Exit;
-  end;
-
-  case aType of
-    ctEditType: begin
-      Result := 'ComboBox';
-      Exit;
-    end;
-    ctEditInfo:
-      EditInfos := TStringList.Create;
-  else
-    EditInfos := nil;
-  end;
-  try
-    if Supports(MainRecord.ElementByName['Stages'], IwbContainerElementRef, Stages) then begin
-      for i := 0 to Pred(Stages.ElementCount) do
-        if Supports(Stages.Elements[i], IwbContainerElementRef, Stage) then begin
-          j := Stage.ElementNativeValues['INDX\Stage Index'];
-          s := Trim(Stage.ElementValues['Log Entries\Log Entry\CNAM']);
-          t := IntToStr(j);
-          while Length(t) < 3 do
-            t := '0' + t;
-          if s <> '' then
-            t := t + ' ' + s;
-          if Assigned(EditInfos) then
-            EditInfos.AddObject(t, TObject(j))
-          else if j = aInt then begin
-            case aType of
-              ctToStr, ctToSummary, ctToEditValue: Result := t;
-              ctCheck: Result := '';
-            end;
-            Exit;
-          end;
-        end;
-    end;
-
-    case aType of
-      ctToStr, ctToSummary: begin
-        Result := aInt.ToString;
-        if aType = ctToStr then
-          Result := Result + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
-      end;
-      ctCheck: Result := '<Warning: Quest Stage not found in "' + MainRecord.Name + '">';
-      ctEditInfo: begin
-        EditInfos.Sort;
-        Result := EditInfos.CommaText;
-      end;
-    end;
-  finally
-    FreeAndNil(EditInfos);
-  end;
 end;
 
 function wbPerkDATAQuestStageToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Container  : IwbContainerElementRef;
   Param1     : IwbElement;
-  MainRecord : IwbMainRecord;
-  EditInfos  : TStringList;
-  Stages     : IwbContainerElementRef;
-  Stage      : IwbContainerElementRef;
-  i, j       : Integer;
-  s, t       : string;
 begin
   case aType of
     ctToStr, ctToSummary: begin
@@ -1011,90 +1064,30 @@ begin
       if aType = ctToStr then
         Result := Result + ' <Warning: Could not resolve Quest>';
     end;
+
     ctToEditValue: Result := aInt.ToString;
+
     ctToSortKey: begin
       Result := IntToHex64(aInt, 8);
       Exit;
     end;
+
     ctCheck: Result := '<Warning: Could not resolve Quest>';
     ctEditType: Result := '';
     ctEditInfo: Result := '';
   end;
 
-  if not Assigned(aElement) then Exit;
+  if not Assigned(aElement) then
+    Exit;
+
   Container := GetContainerRefFromUnionOrValue(aElement);
-  if not Assigned(Container) then Exit;
+  if not Assigned(Container) then
+    Exit;
 
   Param1 := Container.ElementByName['Quest'];
 
-  if not Assigned(Param1) then
+  if not wbGetQuestStageAsStr(aInt, Param1, aType, Result) then
     Exit;
-
-  if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
-    Exit;
-
-  MainRecord := MainRecord.WinningOverride;
-
-  if MainRecord.Signature <> QUST then begin
-    case aType of
-      ctToStr, ctToSummary: begin
-        Result := aInt.ToString;
-        if aType = ctToStr then
-          Result := Result + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
-      end;
-      ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
-    end;
-    Exit;
-  end;
-
-  case aType of
-    ctEditType: begin
-      Result := 'ComboBox';
-      Exit;
-    end;
-    ctEditInfo:
-      EditInfos := TStringList.Create;
-  else
-    EditInfos := nil;
-  end;
-  try
-    if Supports(MainRecord.ElementByName['Stages'], IwbContainerElementRef, Stages) then begin
-      for i := 0 to Pred(Stages.ElementCount) do
-        if Supports(Stages.Elements[i], IwbContainerElementRef, Stage) then begin
-          j := Stage.ElementNativeValues['INDX\Stage Index'];
-          s := Trim(Stage.ElementValues['Log Entries\Log Entry\CNAM']);
-          t := IntToStr(j);
-          while Length(t) < 3 do
-            t := '0' + t;
-          if s <> '' then
-            t := t + ' ' + s;
-          if Assigned(EditInfos) then
-            EditInfos.AddObject(t, TObject(j))
-          else if j = aInt then begin
-            case aType of
-              ctToStr, ctToSummary, ctToEditValue: Result := t;
-              ctCheck: Result := '';
-            end;
-            Exit;
-          end;
-        end;
-    end;
-
-    case aType of
-      ctToStr, ctToSummary: begin
-        Result := aInt.ToString;
-        if aType = ctToStr then
-          Result := Result + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
-      end;
-      ctCheck: Result := '<Warning: Quest Stage not found in "' + MainRecord.Name + '">';
-      ctEditInfo: begin
-        EditInfos.Sort;
-        Result := EditInfos.CommaText;
-      end;
-    end;
-  finally
-    FreeAndNil(EditInfos);
-  end;
 end;
 
 function wbCTDAParam2QuestStageToInt(const aString: string; const aElement: IwbElement): Int64;
@@ -1130,9 +1123,12 @@ begin
     ctEditInfo: Result := '';
   end;
 
-  if not Assigned(aElement) then Exit;
+  if not Assigned(aElement) then
+    Exit;
+
   Container := GetContainerRefFromUnionOrValue(aElement);
-  if not Assigned(Container) then Exit;
+  if not Assigned(Container) then
+    Exit;
 
   Navmesh := Container.Elements[0];
 
@@ -1179,13 +1175,16 @@ begin
     ctToStr, ctToSummary: begin
       if aInt < 0 then
         Exit('None');
+
       Result := aInt.ToString;
+
       if not Assigned(aElement) then
         Exit;
 
       Triangle := aElement.Container as IwbContainerElementRef;
       if not Assigned(Triangle) then
         Exit;
+
       MainRecord := aElement.ContainingMainRecord;
       if not Assigned(MainRecord) then
         Exit;
@@ -1194,15 +1193,19 @@ begin
       if Flags and (1 shl aEdge) <> 0 then begin
         if not Supports(MainRecord.ElementByPath['NVNM\Edge Links'], IwbContainerElementRef, EdgeLinks) then
           Exit;
+
         if aInt >= EdgeLinks.ElementCount then
           Exit;
+
         if aInt < 0 then
           Exit;
+
         EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
 
         MainRecord := nil;
         if not Supports(EdgeLink.ElementByPath['Mesh'].LinksTo, IwbMainRecord, MainRecord) then
           Exit;
+
         aInt := EdgeLink.ElementNativeValues['Triangle'];
 
         Result := Result + ' (#' + aInt.ToString + ' in ' + MainRecord.Name + ')';
@@ -1216,6 +1219,7 @@ begin
       Triangle := aElement.Container as IwbContainerElementRef;
       if not Assigned(Triangle) then
         Exit;
+
       MainRecord := aElement.ContainingMainRecord;
       if not Assigned(MainRecord) then
         Exit;
@@ -1226,17 +1230,21 @@ begin
       if Flags and (1 shl aEdge) <> 0 then begin
         if not Supports(MainRecord.ElementByPath['NVNM\Edge Links'], IwbContainerElementRef, EdgeLinks) then
           Exit;
+
         if aInt >= EdgeLinks.ElementCount then
           Exit;
+
         EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
 
         MainRecord := nil;
         if not Supports(EdgeLink.ElementByPath['Mesh'].LinksTo, IwbMainRecord, MainRecord) then
           Exit;
+
         if Assigned(MainRecord) then
           FormID := MainRecord.LoadOrderFormID
         else
           FormID := TwbFormID.Null;
+
         aInt := EdgeLink.ElementNativeValues['Triangle'];
       end;
 
@@ -1269,6 +1277,7 @@ begin
   Triangle := aElement.Container as IwbContainerElementRef;
   if not Assigned(Triangle) then
     Exit;
+
   MainRecord := aElement.ContainingMainRecord;
   if not Assigned(MainRecord) then
     Exit;
@@ -1279,15 +1288,19 @@ begin
   if Flags and (1 shl aEdge) <> 0 then begin
     if not Supports(MainRecord.ElementByPath['NVNM\Edge Links'], IwbContainerElementRef, EdgeLinks) then
       Exit;
+
     if aInt >= EdgeLinks.ElementCount then
       Exit;
+
     if aInt < 0 then
       Exit;
+
     EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
 
     MainRecord := nil;
     if not Supports(EdgeLink.ElementByPath['Mesh'].LinksTo, IwbMainRecord, MainRecord) then
       Exit;
+
     aInt := EdgeLink.ElementNativeValues['Triangle'];
   end;
 
@@ -1296,8 +1309,10 @@ begin
 
   if aInt >= Triangles.ElementCount then
     Exit;
+
   if aInt < 0 then
     Exit;
+
   Triangle := Triangles.Elements[aInt] as IwbContainerElementRef;
 
   Result := Triangle;
@@ -1332,6 +1347,7 @@ begin
   Triangle := aElement.Container as IwbContainerElementRef;
   if not Assigned(Triangle) then
     Exit;
+
   MainRecord := aElement.ContainingMainRecord;
   if not Assigned(MainRecord) then
     Exit;
@@ -1343,8 +1359,10 @@ begin
 
   if aInt >= Triangles.ElementCount then
     Exit;
+
   if aInt < 0 then
     Exit;
+
   Triangle := Triangles.Elements[aInt] as IwbContainerElementRef;
 
   Result := Triangle;
@@ -1366,21 +1384,27 @@ begin
       Triangle := aElement.Container as IwbContainerElementRef;
       if not Assigned(Triangle) then
         Exit;
+
       MainRecord := aElement.ContainingMainRecord;
       if not Assigned(MainRecord) then
         Exit;
 
       if not Supports(MainRecord.ElementByPath['NVNM\Vertices'], IwbContainerElementRef, Vertices) then
         Exit;
+
       if aInt >= Vertices.ElementCount then
         Exit;
+
       if aInt < 0 then
         Exit;
+
       Vertex := Vertices.Elements[aInt] as IwbContainerElementRef;
 
       with Vertex do try
         Result := Result + Format(' (%s, %s, %s)', [ElementEditValues['X'], ElementEditValues['Y'], ElementEditValues['Z']]);
-      except end;
+      except
+	  	// TODO: yikes, suppressing exceptions?
+      end;
     end;
     ctToSortKey: begin
       Result := IntToHex(aInt, 4);
@@ -1390,21 +1414,27 @@ begin
       Triangle := aElement.Container as IwbContainerElementRef;
       if not Assigned(Triangle) then
         Exit;
+
       MainRecord := aElement.ContainingMainRecord;
       if not Assigned(MainRecord) then
         Exit;
 
       if not Supports(MainRecord.ElementByPath['NVNM\Vertices'], IwbContainerElementRef, Vertices) then
         Exit;
+
       if aInt >= Vertices.ElementCount then
         Exit;
+
       if aInt < 0 then
         Exit;
+
       Vertex := Vertices.Elements[aInt] as IwbContainerElementRef;
 
       with Vertex do try
         Result := SortKey[False];
-      except end;
+      except
+	  	// TODO: yikes, suppressing exceptions?
+      end;
     end;
     ctCheck: Result := '';
     ctToEditValue: Result := aInt.ToString;
@@ -1676,7 +1706,6 @@ begin
     Exit;
 
   Container := GetContainerRefFromUnionOrValue(aElement);
-
   if not Assigned(Container) then
     Exit;
 
@@ -1697,11 +1726,9 @@ begin
     Exit;
   end;
 
-  if not Assigned(aElement) then
+  if not wbTryGetContainerFromUnion(aElement, Container) then
     Exit;
 
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
   while Assigned(Container) and (Container.ElementType <> etMainRecord) do
     Container := Container.Container;
 
@@ -1725,11 +1752,9 @@ begin
     Exit;
   end;
 
-  if not Assigned(aElement) then
+  if not wbTryGetContainerFromUnion(aElement, Container) then
     Exit;
 
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
   while Assigned(Container) and (Container.ElementType <> etMainRecord) do
     Container := Container.Container;
 
@@ -1757,7 +1782,6 @@ begin
     Exit;
 
   Container := aElement.Container;
-
   if not Assigned(Container) then
     Exit;
 
@@ -1780,11 +1804,9 @@ begin
     Exit;
   end;
 
-  if not Assigned(aElement) then
+  if not wbTryGetContainerFromUnion(aElement, Container) then
     Exit;
 
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
   while Assigned(Container) and (Container.ElementType <> etMainRecord) do
     Container := Container.Container;
 
@@ -1825,7 +1847,10 @@ begin
   Result := '';
   if aType = ctToSortKey then begin
     Result := IntToHex64(aInt, 2);
-  end else if aType in [ctToStr, ctToSummary] then begin
+    Exit;
+  end;
+
+  if aType in [ctToStr, ctToSummary] then begin
     PhaseLength := aInt mod 64;
     Masser := (aInt and 64) <> 0;
     Secunda := (aInt and 128) <> 0;
@@ -2107,16 +2132,20 @@ var
 begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
-  if Supports(aElement.Container, IwbContainerElementRef, Container) then begin
-    OldValue := Integer(aOldValue) and 1;
-    NewValue := Integer(aNewValue) and 1;
-    if NewValue = OldValue then
-      Exit;
-    if NewValue = 1 then
-      Container.RemoveElement('TNAM')
-    else
-      Container.Add('TNAM', True);
-  end;
+
+  if not Supports(aElement.Container, IwbContainerElementRef, Container) then
+    Exit;
+
+  OldValue := Integer(aOldValue) and 1;
+  NewValue := Integer(aNewValue) and 1;
+
+  if NewValue = OldValue then
+    Exit;
+
+  if NewValue = 1 then
+    Container.RemoveElement('TNAM')
+  else
+    Container.Add('TNAM', True);
 end;
 
 procedure wbGMSTEDIDAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -2126,13 +2155,16 @@ var
 begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
-  if Supports(aElement.Container, IwbContainerElementRef, Container) then begin
-    OldValue := aOldValue;
-    NewValue := aNewValue;
-    if (Length(OldValue) < 1) or (Length(OldValue) < 1) or (OldValue[1] <> NewValue[1]) then begin
-      Container.RemoveElement('DATA');
-      Container.Add('DATA', True);
-    end;
+
+  if not Supports(aElement.Container, IwbContainerElementRef, Container) then
+    Exit;
+
+  OldValue := aOldValue;
+  NewValue := aNewValue;
+
+  if (Length(OldValue) < 1) or (Length(OldValue) < 1) or (OldValue[1] <> NewValue[1]) then begin
+    Container.RemoveElement('DATA');
+    Container.Add('DATA', True);
   end;
 end;
 
@@ -2146,21 +2178,24 @@ const
 begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
-  if Supports(aElement.Container, IwbContainerElementRef, Container) then begin
-    OldValue := aOldValue;
-    NewValue := aNewValue;
 
-    if Length(OldValue) > Length(OrderedList) then
-      Delete(OldValue, 1, Length(OldValue)-Length(OrderedList));
-    if Length(NewValue) > Length(OrderedList) then
-      Delete(NewValue, 1, Length(NewValue)-Length(OrderedList));
+  if not Supports(aElement.Container, IwbContainerElementRef, Container) then
+    Exit;
 
-    OldOrdered := SameText(OldValue, OrderedList);
-    NewOrdered := SameText(NewValue, OrderedList);
+  OldValue := aOldValue;
+  NewValue := aNewValue;
 
-    if OldOrdered <> NewOrdered then
-      Container.RemoveElement('FormIDs');
-  end;
+  if Length(OldValue) > Length(OrderedList) then
+    Delete(OldValue, 1, Length(OldValue)-Length(OrderedList));
+
+  if Length(NewValue) > Length(OrderedList) then
+    Delete(NewValue, 1, Length(NewValue)-Length(OrderedList));
+
+  OldOrdered := SameText(OldValue, OrderedList);
+  NewOrdered := SameText(NewValue, OrderedList);
+
+  if OldOrdered <> NewOrdered then
+    Container.RemoveElement('FormIDs');
 end;
 
 procedure wbCtdaTypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -2170,6 +2205,7 @@ var
 begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
+
   if not Supports(aElement, IwbContainerElementRef, Container) then
     Exit;
 
@@ -2387,22 +2423,24 @@ begin
   while Assigned(Container) and (Container.ElementType <> etGroupRecord) do
     Container := Container.Container;
 
-  if Assigned(Container) then begin
-    s := Trim(Container.Name);
-    if s <> '' then begin
-      if Result <> '' then
-        Result := Result + ' ';
-      Result := Result + 'in ' + s;
+  if not Assigned(Container) then
+    Exit;
 
-      // grid position of persistent reference in exterior persistent cell (interior cells are not persistent)
-      if Supports(aMainRecord.Container, IwbGroupRecord, Container) then
-        Cell := IwbGroupRecord(Container).ChildrenOf;
-      if Assigned(Cell) and Cell.IsPersistent and (Cell.Signature = 'CELL') then
-        if aMainRecord.GetPosition(Position) then begin
-          Grid := wbPositionToGridCell(Position);
-          Result := Result + ' at ' + IntToStr(Grid.x) + ',' + IntToStr(Grid.y);
-        end;
-    end;
+  s := Trim(Container.Name);
+    if s <> '' then begin
+    if Result <> '' then
+      Result := Result + ' ';
+    Result := Result + 'in ' + s;
+
+    // grid position of persistent reference in exterior persistent cell (interior cells are not persistent)
+    if Supports(aMainRecord.Container, IwbGroupRecord, Container) then
+      Cell := IwbGroupRecord(Container).ChildrenOf;
+
+    if Assigned(Cell) and Cell.IsPersistent and (Cell.Signature = 'CELL') then
+	  if aMainRecord.GetPosition(Position) then begin
+        Grid := wbPositionToGridCell(Position);
+        Result := Result + ' at ' + IntToStr(Grid.x) + ',' + IntToStr(Grid.y);
+      end;
   end;
 end;
 
@@ -2426,6 +2464,7 @@ begin
     s := s + '[RE]';
   if (i and $0004) <> 0 then
     s := s + '[SO]';
+
   Result := s + Result;
 
   Container := aMainRecord.Container;
@@ -2460,13 +2499,14 @@ begin
   while Assigned(Container) and (Container.ElementType <> etGroupRecord) do
     Container := Container.Container;
 
-  if Assigned(Container) then begin
-    s := Trim(Container.Name);
-    if s <> '' then begin
-      if Result <> '' then
-        Result := Result + ' ';
-      Result := Result + 'in ' + s;
-    end;
+  if not Assigned(Container) then
+    Exit;
+
+  s := Trim(Container.Name);
+  if s <> '' then begin
+    if Result <> '' then
+      Result := Result + ' ';
+    Result := Result + 'in ' + s;
   end;
 end;
 
@@ -2487,16 +2527,17 @@ begin
 
   Container := aMainRecord.Container;
   while Assigned(Container) and not
-    (Supports(Container, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType = 1))  do
+    (Supports(Container, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType = 1)) do
     Container := Container.Container;
 
-  if Assigned(Container) then begin
-    s := wbFormID.ToString(GroupRecord.GroupLabel, aMainRecord, False);
-    if s <> '' then begin
-      if Result <> '' then
-        s := s + ' ';
-      Result := 'in ' + s + Result;
-    end;
+  if not Assigned(Container) then
+    Exit;
+
+  s := wbFormID.ToString(GroupRecord.GroupLabel, aMainRecord, False);
+  if s <> '' then begin
+    if Result <> '' then
+      s := s + ' ';
+    Result := 'in ' + s + Result;
   end;
 end;
 
@@ -2534,9 +2575,8 @@ var
   i: Int64;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   i := Container.ElementByName['Flags'].NativeValue;
   if i and $00000080 <> 0 then
@@ -2554,12 +2594,12 @@ const
 
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   VarClear(ArchType);
   Element := Container.ElementByName['Archtype'];
+
   if Assigned(Element) then
     ArchType := Element.NativeValue
   else if Supports(Container, IwbDataContainer, DataContainer) and
@@ -2568,19 +2608,21 @@ begin
       ArchType := PCardinal(aBasePtr)^;
     end;
 
-  if not VarIsEmpty(ArchType) then
-    case Integer(ArchType) of
-      12: Result := 1; // Light
-      17: Result := 2; // Bound Item
-      18: Result := 3; // Summon Creature
-      25: Result := 4; // Guide
-      34: Result := 8; // Peak Mod
-      35: Result := 5; // Cloak
-      36: Result := 6; // Werewolf
-      39: Result := 7; // Enhance Weapon
-      40: Result := 4; // Spawn Hazard
-      46: Result := 6; // Vampire Lord
-    end;
+  if VarIsEmpty(ArchType) then
+    Exit;
+
+  case Integer(ArchType) of
+    12: Result := 1; // Light
+    17: Result := 2; // Bound Item
+    18: Result := 3; // Summon Creature
+    25: Result := 4; // Guide
+    34: Result := 8; // Peak Mod
+    35: Result := 5; // Cloak
+    36: Result := 6; // Werewolf
+    39: Result := 7; // Enhance Weapon
+    40: Result := 4; // Spawn Hazard
+    46: Result := 6; // Vampire Lord
+  end;
 end;
 
 procedure wbMGEFAssocItemAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -2588,15 +2630,16 @@ var
   Container : IwbContainer;
   Element   : IwbElement;
 begin
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
-  if (aNewValue <> 0) then begin
-    Element := Container.ElementByName['Archtype'];
-    if Assigned(Element) and (Element.NativeValue = 0) then
-        Element.NativeValue := $FF; // Signals ArchType that it should not mess with us on the next change!
-          // I assume this will alo protect Second AV Weight (The two actor values are after ArchType)
-  end;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
+
+  if not (aNewValue <> 0) then
+    Exit;
+
+  Element := Container.ElementByName['Archtype'];
+  if Assigned(Element) and (Element.NativeValue = 0) then
+      Element.NativeValue := $FF; // Signals ArchType that it should not mess with us on the next change!
+        // I assume this will alo protect Second AV Weight (The two actor values are after ArchType)
 end;
 
 procedure wbMGEFAV2WeightAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -2604,14 +2647,15 @@ var
   Container : IwbContainer;
   Element   : IwbElement;
 begin
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
-  if (aNewValue <> 0.0) then begin
-    Element := Container.ElementByName['Archtype'];
-    if Assigned(Element) and (Element.NativeValue = 0) then
-        Element.NativeValue := $FF; // Signals ArchType that it should not mess with us on the next change!
-  end;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
+
+  if not (aNewValue <> 0.0) then
+    Exit;
+
+  Element := Container.ElementByName['Archtype'];
+  if Assigned(Element) and (Element.NativeValue = 0) then
+      Element.NativeValue := $FF; // Signals ArchType that it should not mess with us on the next change!
 end;
 
 procedure wbMGEFArchtypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -2620,8 +2664,10 @@ var
 begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
+
   if not Supports(aElement, IwbContainerElementRef, Container) then
     Exit;
+
   if (aNewValue < $FF) and (aOldValue < $FF) then begin
     Container.ElementNativeValues['..\Assoc. Item'] := 0;
     case Integer(aNewValue) of
@@ -2646,9 +2692,8 @@ var
   Container     : IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   if Integer(Container.ElementNativeValues['Run On']) = 2 then
     Result := 1;
@@ -2737,6 +2782,7 @@ begin
       Exit;
     end;
   end;
+
   if (MainRecord.Signature<>CELL) then begin
     wbProgressCallback('Parent of a NVNM is not identified as a CELL');
     Assert(MainRecord.Signature=CELL); // Better an exception than to destroy the plugin.
@@ -2762,9 +2808,8 @@ var
   MainRecord : IwbMainRecord;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   LinksTo := Container.ElementByName['Owner'].LinksTo;
 
@@ -2782,16 +2827,17 @@ var
 begin
   Result := 1;
   rEDID := aElement.Container.RecordBySignature[EDID];
-  if Assigned(rEDID) then begin
-    s := rEDID.Value;
-    if Length(s) > 0 then
-      case s[1] of
-        's': Result := 0; {String} {>>> Localization Strings <<<}
-        'i': Result := 1; {intS32}
-        'f': Result := 2; {Float}
-        'b': Result := 3; {Boolean}
-      end;
-  end;
+  if not Assigned(rEDID) then
+    Exit;
+
+  s := rEDID.Value;
+  if Length(s) > 0 then
+    case s[1] of
+      's': Result := 0; {String} {>>> Localization Strings <<<}
+      'i': Result := 1; {intS32}
+      'f': Result := 2; {Float}
+      'b': Result := 3; {Boolean}
+    end;
 end;
 
 function wbFLSTLNAMIsSorted(const aContainer: IwbContainer): Boolean;
@@ -2803,13 +2849,14 @@ const
 begin
   Result := False; {>>> Should not be sorted according to Arthmoor and JustinOther <<<}
   rEDID := aContainer.RecordBySignature[EDID];
-  if Assigned(rEDID) then begin
-    s := rEDID.Value;
-    if Length(s) > Length(OrderedList) then
-      Delete(s, 1, Length(s)-Length(OrderedList));
-    if SameText(s, OrderedList) then
-      Result := False;
-  end;
+  if not Assigned(rEDID) then
+    Exit;
+
+  s := rEDID.Value;
+  if Length(s) > Length(OrderedList) then
+    Delete(s, 1, Length(s)-Length(OrderedList));
+  if SameText(s, OrderedList) then
+    Result := False;
 end;
 
 function wbPerkDATADecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -2819,12 +2866,14 @@ var
 begin
   Result := 0;
   rPRKE := aElement.Container.RecordBySignature[PRKE];
-  if Assigned(rPRKE) then begin
-    eType := rPRKE.ElementByName['Type'];
-    if Assigned(eType) then begin
-      Result := eType.NativeValue;
-    end;
-  end;
+  if not Assigned(rPRKE) then
+    Exit;
+
+  eType := rPRKE.ElementByName['Type'];
+  if not Assigned(eType) then
+    Exit;
+
+  Result := eType.NativeValue;
 end;
 
 function wbEPFDDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -2834,8 +2883,10 @@ begin
   Result := 0;
   if not Assigned(aElement) then
     Exit;
+
   if not Supports(aElement.Container, IwbContainerElementRef, Container) then
     Exit;
+
   Result := Container.ElementNativeValues['EPFT'];
   if Result = 2 then
     case Integer(Container.ElementNativeValues['..\DATA\Entry Point\Function']) of
@@ -2850,9 +2901,8 @@ var
   Container     : IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   case Integer(Container.ElementNativeValues['Type']) of
      1: Result := 1;
@@ -2884,14 +2934,17 @@ var
   MainRecord : IwbMainRecord;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
+
   while Assigned(Container) and (Container.ElementType <> etMainRecord) do
     Container := Container.Container;
+
   if not Assigned(Container) then Exit;
 
+  // TODO: should this assume there's a MainRecord?
   Supports(Container, IwbMainRecord, MainRecord);
+
   if MainRecord.Signature = INFO then
     Result := 1
   else if MainRecord.Signature = PACK then
@@ -3029,9 +3082,8 @@ var
   i: Int64;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   i := Container.ElementByName['Flags'].NativeValue;
   if i and $00000004 <> 0 then Result := 1;
@@ -3552,9 +3604,8 @@ var
   Container: IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   // "use global" flag
   if Integer(Container.ElementByName['Type'].NativeValue) and $04 <> 0 then
@@ -3569,9 +3620,8 @@ var
   ParamType: TCTDAFunctionParamType;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   Desc := wbCTDAParamDescFromIndex(Container.ElementByName['Function'].NativeValue);
 
@@ -3594,9 +3644,8 @@ var
   ParamType: TCTDAFunctionParamType;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   Desc := wbCTDAParamDescFromIndex(Container.ElementByName['Function'].NativeValue);
 
@@ -3616,9 +3665,8 @@ var
   Container : IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   Result := Container.ElementByName['Parameter #1'].NativeValue;
 end;
@@ -3771,11 +3819,6 @@ begin
   else
     Result := aInt.ToString;
   end;
-end;
-
-function wbNeverShow(const aElement: IwbElement): Boolean;
-begin
-  Result := wbHideNeverShow;
 end;
 
 function GetREGNType(aElement: IwbElement): Integer;
@@ -6010,47 +6053,11 @@ begin
       ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
     ], cpNormal, True);
 
-  wbMO2S :=
-    wbArrayS(MO2S, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
-      ]),
-    -1);
-  wbMO3S :=
-    wbArrayS(MO3S, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
-      ]),
-    -1);
-  wbMO4S :=
-    wbArrayS(MO4S, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
-      ]),
-    -1);
-  wbMO5S :=
-    wbArrayS(MO5S, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
-      ]),
-    -1);
-
-  wbMODS :=
-    wbArrayS(MODS, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
-      ]),
-    -1);
+  wbMO2S := wbArrayS(MO2S, 'Alternate Textures', wbAlternateTexture, -1);
+  wbMO3S := wbArrayS(MO3S, 'Alternate Textures', wbAlternateTexture, -1);
+  wbMO4S := wbArrayS(MO4S, 'Alternate Textures', wbAlternateTexture, -1);
+  wbMO5S := wbArrayS(MO5S, 'Alternate Textures', wbAlternateTexture, -1);
+  wbMODS := wbArrayS(MODS, 'Alternate Textures', wbAlternateTexture, -1);
 
   wbMODD :=
     wbInteger(MODD, 'FaceGen Model Flags', itU8, wbFlags([
@@ -6063,69 +6070,7 @@ begin
 	wbMODT := wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
 	wbDMDT := wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
 
-  wbMODL :=
-    wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model FileName', 0, cpNormal, True),
-      wbMODT,
-      wbMODS
-    ], [], cpNormal, False, nil, True).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
-  wbMODLActor :=
-    wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model FileName', 0, cpNormal, True),
-      wbMODT,
-      wbMODS
-    ], [], cpNormal, False, nil{wbActorTemplateUseModelAnimation}, True).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
-  wbMODLReq :=
-    wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model FileName', 0, cpNormal, True),
-      wbMODT,
-      wbMODS
-    ], [], cpNormal, True, nil, True).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
-  wbMaleWorldModel :=
-    wbRStruct('Male world model', [
-      wbString(MOD2, 'Model FileName'),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO2S
-    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
-  wbARMOFemaleWorldModel :=
-    wbRStruct('Female world model', [
-      wbString(MOD4, 'Model FileName'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO4S
-    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
-  wbARMAFemaleWorldModel :=
-    wbRStruct('Female world model', [
-      wbString(MOD3, 'Model FileName'),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO3S
-    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
-  wbARMAMale1stPersonModel :=
-    wbRStruct('Male 1st Person', [
-      wbString(MOD4, 'Model FileName'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO4S
-    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
-  wbARMAFemale1stPersonModel :=
-    wbRStruct('Female 1st Person', [
-      wbString(MOD5, 'Model FileName'),
-      wbByteArray(MO5T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO5S
-    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
-  wbDMDSs := wbArrayS(DMDS, 'Alternate Textures',
-    wbStructSK([0, 2], 'Alternate Texture', [
-      wbLenString('3D Name'),
-      wbFormIDCk('New Texture', [TXST]),
-      wbInteger('3D Index', itS32)
-    ]),
-  -1);
+  wbDMDSs := wbArrayS(DMDS, 'Alternate Textures', wbAlternateTexture, -1);
 
   wbDEST := wbRStruct('Destructible', [
     wbStruct(DEST, 'Header', [
@@ -6398,7 +6343,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbDEST,
     wbKSIZ,
     wbKWDAs,
@@ -6429,7 +6374,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbDEST,
     wbKSIZ,
     wbKWDAs,
@@ -6948,13 +6893,6 @@ begin
       'Very Evil'
     ]);
 
-  wbAxisEnum :=
-    wbEnum([], [
-      88, 'X',
-      89, 'Y',
-      90, 'Z'
-    ]);
-
   wbCriticalStageEnum :=
     wbEnum([
       'None',
@@ -7193,7 +7131,7 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbDESC,
-    wbMODL,
+    wbGenericModel,
     wbDEST,
     wbICON,
     wbYNAM,
@@ -7236,7 +7174,7 @@ begin
     wbEDID,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbDEST,
     wbYNAM,
@@ -7275,7 +7213,7 @@ begin
       {0x00000200}  9, 'Unknown 9' // always present in updated records, not in Skyrim.esm
     ]), [9]), [
     wbEDID,
-    wbMODL,
+    wbGenericModel,
     wbString(BNAM, 'Unload Event')
   ]).SetSummaryKey([1]);
 
@@ -7292,9 +7230,9 @@ begin
     wbFULL,
     wbEITM,
     wbInteger(EAMT, 'Enchantment Amount', itU16),
-    wbMaleWorldModel,
+    wbTexturedModel('Male world model', [MOD2, MO2T], wbMO2S),
     wbICON,
-    wbARMOFemaleWorldModel,
+    wbTexturedModel('Female world model', [MOD4, MO4T], wbMO4S),
     wbICO2,
     wbBODTBOD2,
     wbDEST,
@@ -7338,10 +7276,10 @@ begin
       wbByteArray('Unknown', 1),
       wbFloat('Weapon Adjust')
     ], cpNormal, True),
-    wbMaleWorldModel,
-    wbARMAFemaleWorldModel,
-    wbARMAMale1stPersonModel,
-    wbARMAFemale1stPersonModel,
+    wbTexturedModel('Male world model', [MOD2, MO2T], wbMO2S),
+    wbTexturedModel('Female world model', [MOD3, MO3T], wbMO3S),
+    wbTexturedModel('Male 1st Person', [MOD4, MO4T], wbMO4S),
+    wbTexturedModel('Female 1st Person', [MOD5, MO5T], wbMO5S),
     wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),
     wbFormIDCK(NAM1, 'Female Skin texture', [TXST, NULL]),
     wbFormIDCK(NAM2, 'Male Skin Texture Swap List', [FLST, NULL]),
@@ -7356,7 +7294,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbLStringKC(DESC, 'Book Text', 0, cpTranslate, True),
     wbDEST,
@@ -7637,7 +7575,7 @@ begin
     ])),
     wbString(FNAM, 'Sun Texture'),
     wbString(GNAM, 'Sun Glare Texture'),
-    wbMODL,
+    wbGenericModel,
     wbStruct(TNAM, 'Timing', [
       wbStruct('Sunrise', [
         wbInteger('Begin', itU8, wbClmtTime),
@@ -7700,7 +7638,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbCOCT,
     wbCNTOs,
     wbDEST,
@@ -8022,7 +7960,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbDEST,
     wbFormIDCk(SNAM, 'Sound - Open', [SNDR]),
     wbFormIDCk(ANAM, 'Sound - Close', [SNDR]),
@@ -8368,7 +8306,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbDEST,
     wbKSIZ,
     wbKWDAs,
@@ -8525,7 +8463,7 @@ begin
     ])), [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       {0x01} 'Playable',
       {0x02} 'Male',
@@ -8574,7 +8512,7 @@ begin
     wbEDID,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbDEST,
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       'On Local Map',
@@ -8603,14 +8541,14 @@ begin
     wbInteger(IDLC, 'Animation Count', itU8, nil, cpBenign),
     wbFloat(IDLT, 'Idle Timer Setting', cpNormal, False),
     wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, False),
-    wbMODL
+    wbGenericModel
   ], False, nil, cpNormal, False, nil, wbAnimationsAfterSet);
 
   wbRecord(PROJ, 'Projectile', [
     wbEDID,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbDEST,
     wbStruct(DATA, 'Data', [
       {00} wbInteger('Flags', itU16, wbFlags([
@@ -8670,7 +8608,7 @@ begin
     wbEDID,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD, NULL]),
     wbStruct(DATA, 'Data', [
       wbInteger('Limit', itU32),
@@ -8708,7 +8646,7 @@ begin
     wbEDID,
     wbOBND,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbDEST,
     wbYNAM,
@@ -8961,19 +8899,13 @@ Can't properly represent that with current record definition methods.
 end;
 
 procedure DefineTES5g;
-var
-  wbDebrisModel: IwbRecordMemberDef;
-  wbBodyPartPart: IwbRecordMemberDef;
-  wbPerkEffect: IwbRecordMemberDef;
-  wbPerkConditions: IwbRecordMemberDef;
 begin
-
    wbRecord(EXPL, 'Explosion', [
     wbEDID,
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbEITM,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
     wbStruct(DATA, 'Data', [  // Contradicted by FireStormExplosion02 [EXPL:000877F9]
@@ -9003,26 +8935,9 @@ begin
     ], cpNormal, True, nil, 10)
   ]);
 
-  wbDebrisModel :=
-    wbRStruct('Model', [
-      wbStruct(DATA, 'Data', [
-        wbInteger('Percentage', itU8),
-        wbString('Model FileName'),
-        wbInteger('Flags', itU8, wbFlagsSummary([
-          'Has Collision Data', 'Collision'
-        ]))
-      ], cpNormal, True)
-        .SetSummaryKeyOnValue([0, 1, 2])
-        .SetSummaryPrefixSuffixOnValue(0, '[', '%]')
-        .SetSummaryPrefixSuffixOnValue(2, '{', '}')
-        .SetSummaryMemberMaxDepthOnValue(0, 1)
-        .IncludeFlagOnValue(dfSummaryMembersNoName),
-      wbMODT
-    ], [], cpNormal, True).SetSummaryKey([0]);
-
   wbRecord(DEBR, 'Debris', [
     wbEDID,
-    wbRArray('Models', wbDebrisModel, cpNormal, True)
+    wbRArray('Models', wbDebrisModel(wbMODT), cpNormal, True)
   ]);
 
   wbRecord(IMGS, 'Image Space', [
@@ -9237,13 +9152,13 @@ begin
     wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
   ]);
 
-  wbPerkConditions :=
+  var wbPerkConditions :=
     wbRStructSK([0], 'Perk Condition', [
       wbInteger(PRKC, 'Run On (Tab Index)', itS8{, wbPRKCToStr, wbPRKCToInt}),
       wbCTDAsReq
     ], [], cpNormal, False{, nil, nil, wbPERKPRKCDontShow});
 
-  wbPerkEffect :=
+  var wbPerkEffect :=
     wbRStructSK([0, 1], 'Effect', [
       wbStructSK(PRKE, [1, 2, 0], 'Header', [
         wbInteger('Type', itU8, wbEnum([
@@ -9356,7 +9271,7 @@ begin
     wbRArrayS('Effects', wbPerkEffect)
   ]);
 
-  wbBodyPartPart :=
+  var wbBodyPartPart :=
     wbRStructSK([2], 'Body Part', [
       wbLString(BPTN, 'Part Name', 0, cpTranslate, True),
       wbString(PNAM, 'Pose Matching', 0, cpNormal, False),
@@ -9422,14 +9337,14 @@ begin
 
   wbRecord(BPTD, 'Body Part Data', [
     wbEDID,
-    wbMODL,
+    wbGenericModel,
     wbRArrayS('Body Parts', wbBodyPartPart)
   ]).SetSummaryKey([1, 2]).IncludeFlag(dfSummaryNoName);
 
   wbRecord(ADDN, 'Addon Node', [
     wbEDID,
     wbOBNDReq,
-    wbMODL,
+    wbGenericModel,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SNDR, NULL]),
     wbStruct(DNAM, 'Data', [
@@ -9474,7 +9389,7 @@ begin
 
   wbRecord(CAMS, 'Camera Shot', [
     wbEDID,
-    wbMODL,
+    wbGenericModel,
     wbStruct(DATA, 'Data', [
       {00} wbInteger('Action', itU32, wbEnum([
         'Shoot',
@@ -9564,7 +9479,7 @@ begin
 
   wbRecord(IPCT, 'Impact', [
     wbEDID,
-    wbMODL,
+    wbGenericModel,
     wbStruct(DATA, '', [
       wbFloat('Effect - Duration'),
       wbInteger('Effect - Orientation', itU32, wbEnum([
@@ -10661,7 +10576,7 @@ begin
   wbRecord(ARTO, 'Art Object', [
     wbEDID,
     wbOBNDReq,
-    wbMODL,
+    wbGenericModel,
     wbInteger(DNAM, 'Art Type', itU32, wbEnum([
       'Magic Casting',
       'Magic Hit Effect',
@@ -10671,7 +10586,7 @@ begin
 
   wbRecord(MATO, 'Material Object', [
     wbEDID,
-    wbMODL,
+    wbGenericModel,
     wbRArray('Property Data',
       wbByteArray(DNAM, 'Data', 0, cpIgnore, False, False, wbNeverShow)
     ),
@@ -10893,7 +10808,7 @@ begin
   wbRecord(GRAS, 'Grass', [
     wbEDID,
     wbOBNDReq,
-    wbMODL,
+    wbGenericModel,
     wbStruct(DATA, '', [
       wbInteger('Density', itU8),
       wbInteger('Min Slope', itU8),
@@ -11032,7 +10947,7 @@ begin
     wbFULL,
     wbKSIZ,
     wbKWDAs,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbDEST,
     wbETYP,
@@ -11067,7 +10982,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULLReq,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbDEST,
     wbYNAM,
@@ -11086,6 +11001,15 @@ begin
     {2} 'Top Left',
     {3} 'Top Right'
   ]);
+
+  var wbRow :=
+    wbStruct('Row', [
+      wbArray('Columns', wbStruct('Column', [
+        wbInteger('X', itU8),
+        wbInteger('Y', itU8),
+        wbInteger('Z', itU8)
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), 33)
+    ]);
 
   if wbSimpleRecords then begin
 
@@ -11140,13 +11064,7 @@ begin
         '',
         'MPCD'
       ])),
-      wbArray(VNML, 'Vertex Normals', wbStruct('Row', [
-        wbArray('Columns', wbStruct('Column', [
-          wbInteger('X', itU8),
-          wbInteger('Y', itU8),
-          wbInteger('Z', itU8)
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), 33)
-      ]), 33),
+      wbArray(VNML, 'Vertex Normals', wbRow, 33),
       wbStruct(VHGT, 'Vertex Height Map', [
         wbFloat('Offset'),
         wbArray('Rows', wbStruct('Row', [
@@ -11154,13 +11072,7 @@ begin
         ]), 33),
         wbByteArray('Unused', 3)
       ]),
-      wbArray(VCLR, 'Vertex Colours', wbStruct('Row', [
-        wbArray('Columns', wbStruct('Column', [
-          wbInteger('X', itU8),
-          wbInteger('Y', itU8),
-          wbInteger('Z', itU8)
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), 33)
-      ]), 33),
+      wbArray(VCLR, 'Vertex Colours', wbRow, 33),
 
       wbRArrayS('Layers', wbRUnion('Layer', [
         wbRStructSK([0],'Base Layer', [
@@ -11201,7 +11113,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
-    wbMODL,
+    wbGenericModel,
     wbDEST,
     wbFULL,
     wbICON,
@@ -11338,7 +11250,7 @@ begin
     wbFormIDCk(LVLG, 'Global', [GLOB]),
     wbLLCT,
     wbRArrayS('Leveled List Entries', wbLeveledListEntryNPC, cpNormal, False, nil, wbLVLOsAfterSet),
-    wbMODL
+    wbGenericModel
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
   wbRecord(LVLI, 'Leveled Item', [
@@ -11544,7 +11456,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbDEST,
     wbYNAM,
@@ -11562,7 +11474,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbDEST,
     wbYNAM,
@@ -12757,14 +12669,14 @@ begin
         wbEmpty(MNAM, 'Male Data Marker'),
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
-          wbMODL
+          wbGenericModel
         ], []), cpNormal, True)
       ], [], cpNormal, True),
       wbRStruct('Female Body Data', [
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
-          wbMODL
+          wbGenericModel
         ], []), cpNormal, True)
       ], [], cpNormal, True)
     ], [], cpNormal, True),
@@ -12775,11 +12687,11 @@ begin
 	  wbEmpty(NAM3, 'Marker NAM3 #3', cpNormal, True),
     wbRStruct('Male Behavior Graph', [
       wbEmpty(MNAM, 'Male Data Marker'),
-      wbMODL
+      wbGenericModel
     ], [], cpNormal, True),
     wbRStruct('Female Behavior Graph', [
       wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
-      wbMODL
+      wbGenericModel
     ], [], cpNormal, True),
     wbFormIDCk(NAM4, 'Material Type', [MATT, NULL]),
     wbFormIDCk(NAM5, 'Impact Data Set', [IPDS, NULL]),
@@ -12827,7 +12739,7 @@ begin
           wbRArrayS('Face Details Texture Set List Male', wbFormIDCk(FTSM, 'Texture Set', [TXST, NULL])),
           wbFormIDCk(DFTM, 'Default Face Texture Male', [TXST, NULL]),
           wbTints,
-          wbMODL
+          wbGenericModel
       ], [], cpNormal, True),
       wbRStruct('Female Head Data', [
         wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
@@ -12839,13 +12751,33 @@ begin
           wbRArrayS('Face Details Texture Set List Female', wbFormIDCk(FTSF, 'Texture Set', [TXST, NULL])),
           wbFormIDCk(DFTF, 'Default Face Texture Female', [TXST, NULL]),
           wbTints,
-          wbMODL
+          wbGenericModel
       ], [], cpNormal, True)
     ], [], cpNormal, False),
     // End Head Data
     wbFormIDCk(NAM8, 'Morph race', [RACE, NULL]),
     wbFormIDCk(RNAM, 'Armor race', [RACE, NULL])
   ], False, nil, cpNormal, False, wbRACEAfterLoad, wbRACEAfterSet);
+
+
+  var wbSizePosRot :=
+    [
+      wbStruct('Size', [
+        wbFloat('Width', cpNormal, False, 2),
+        wbFloat('Height', cpNormal, False, 2)
+      ]),
+      wbStruct('Position', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+      wbStruct('Rotation (Quaternion?)', [
+        wbFloat('q1'),
+        wbFloat('q2'),
+        wbFloat('q3'),
+        wbFloat('q4')
+      ])
+    ];
 
 
   wbRefRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
@@ -12981,45 +12913,13 @@ begin
       ]))
     ]),
     wbUnknown(XORD),
-    wbStruct(XOCP, 'Occlusion Plane Data', [
-      wbStruct('Size', [
-        wbFloat('Width', cpNormal, False, 2),
-        wbFloat('Height', cpNormal, False, 2)
-      ]),
-      wbStruct('Position', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-      wbStruct('Rotation (Quaternion?)', [
-        wbFloat('q1'),
-        wbFloat('q2'),
-        wbFloat('q3'),
-        wbFloat('q4')
-      ])
-    ]),
+    wbStruct(XOCP, 'Occlusion Plane Data', wbSizePosRot),
 
     wbArray(XPOD, 'Portal Data', wbStruct('References', [
       wbFormIDCk('Origin', [REFR, NULL]),
       wbFormIDCk('Destination', [REFR, NULL])
     ])),
-    wbStruct(XPTL, 'Room Portal (unused)', [
-      wbStruct('Size', [
-        wbFloat('Width', cpNormal, False, 2),
-        wbFloat('Height', cpNormal, False, 2)
-      ]),
-      wbStruct('Position', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-      wbStruct('Rotation (Quaternion?)', [
-        wbFloat('q1'),
-        wbFloat('q2'),
-        wbFloat('q3'),
-        wbFloat('q4')
-      ])
-    ], cpIgnore), // removed by CK
+    wbStruct(XPTL, 'Room Portal (unused)', wbSizePosRot, cpIgnore), // removed by CK
 
     wbRStruct('Bound Data', [
       wbStruct(XRMR, 'Header', [
@@ -13188,12 +13088,7 @@ begin
     ], [])),
 
     {--- Flags ---}
-    wbInteger(XACT, 'Action Flag', itU32, wbFlags([
-      'Use Default',
-      'Activate',
-      'Open',
-      'Open by Default'
-    ])),
+    wbActionFlag,
 
     wbFloat(XHTW, 'Head-Tracking Weight'),
     wbFloat(XFVC, 'Favor Cost'),
@@ -13428,7 +13323,7 @@ begin
     wbMDOB,
     wbETYP,
     wbDESC,
-    wbMODL,
+    wbGenericModel,
     wbDEST,
     wbYNAM,
     wbZNAM,
@@ -13477,7 +13372,7 @@ begin
     ], [11, 16]), [
     wbEDID,
     wbOBNDReq,
-    wbMODL,
+    wbGenericModel,
     IsSSE(
       wbStruct(DNAM, 'Direction Material', [
         wbFloat('Max Angle (30-120)'),
@@ -13551,7 +13446,7 @@ begin
     wbEDID,
     wbVMAD,
     wbOBNDReq,
-    wbMODL,
+    wbGenericModel,
     wbFormIDCK(PFIG, 'Ingredient', [INGR, ALCH, MISC, LVLI, NULL]),
     wbFormIDCK(SNAM, 'Harvest Sound', [SNDR, NULL]),
     wbStruct(PFPC, 'Ingredient Production', [
@@ -13583,7 +13478,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULLReq,
-    wbMODL,
+    wbGenericModel,
     wbDEST,
     wbKSIZ,
     wbKWDAs,
@@ -13772,7 +13667,7 @@ begin
     wbVMAD,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbEITM,
     wbInteger(EAMT, 'Enchantment Amount', itU16),
@@ -13785,11 +13680,7 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbDESC,
-    wbRStruct('Has Scope', [
-      wbString(MOD3, 'Model FileName'),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
-      wbMO3S
-    ], []),
+    wbTexturedModel('Has Scope', [MOD3, MO3T], wbMO3S),
     wbByteArray(NNAM, 'Unused', 0, cpIgnore, False), // leftover
     wbFormIDCk(INAM, 'Impact Data Set', [IPDS, NULL]),
     wbFormIDCk(WNAM, '1st Person Model Object', [STAT, NULL]),
@@ -13940,7 +13831,7 @@ begin
       wbFloat('Default Water Height')
     ]),
     wbString(ICON, 'Map Image'),
-    wbRStruct('Cloud Model', [wbMODL], []),
+    wbRStruct('Cloud Model', [wbGenericModel], []),
     wbStruct(MNAM, 'Map Data', [
       wbStruct('Usable Dimensions', [
         wbInteger('X', itS32),
@@ -14143,7 +14034,7 @@ begin
     ], [], cpNormal, True),
     wbByteArray(NAM2, 'Unused', 0, cpIgnore),
     wbByteArray(NAM3, 'Unused', 0, cpIgnore),
-    wbRStruct('Aurora', [wbMODL], []),
+    wbRStruct('Aurora', [wbGenericModel], []),
     wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS])
   ]);
 
@@ -14237,7 +14128,7 @@ begin
   wbRecord(SCOL, 'Static Collection', [
     wbEDID,
     wbOBNDReq,
-    wbMODLReq,
+    wbGenericModel(True),
     wbRArray('Parts', wbStaticPart)
   ]);
 

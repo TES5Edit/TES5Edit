@@ -25,7 +25,6 @@ var
 	wbPKDTFlags: IwbFlagsDef;
 	wbServiceFlags: IwbFlagsDef;
 
-	wbAxisEnum: IwbEnumDef;
 	wbBlendModeEnum: IwbEnumDef;
 	wbBlendOpEnum: IwbEnumDef;
 	wbCrimeTypeEnum: IwbEnumDef;
@@ -314,7 +313,6 @@ var
   wbXSCL: IwbSubRecordDef;
   wbDATAPosRot : IwbSubRecordDef;
   wbPosRot : IwbStructDef;
-  wbMODL: IwbRecordMemberDef;
   wbCTDA: IwbSubRecordUnionDef;
   wbSCHR: IwbSubRecordUnionDef;
   wbCTDAs: IwbSubRecordArrayDef;
@@ -336,10 +334,18 @@ var
   wbEFIX: IwbSubRecordDef;
   wbSCIT: IwbSubRecordStructDef;
   wbSCITOBME: IwbSubRecordStructDef;
-  wbMaleBipedModel: IwbRecordMemberDef;
-  wbMaleWorldModel: IwbRecordMemberDef;
-  wbFemaleBipedModel: IwbRecordMemberDef;
-  wbFemaleWorldModel: IwbRecordMemberDef;
+
+function wbTexturedModel(aSubRecordName: string; aSignatures: TwbSignatures): IwbRecordMemberDef;
+begin
+  Result :=
+    wbRStruct(aSubRecordName, [
+      wbString(aSignatures[0], 'Model FileName', 0, cpNormal, True),
+      wbFloat(aSignatures[1], 'Bound Radius', cpBenign),
+      wbByteArray(aSignatures[2], 'Texture Files Hashes', 0, cpIgnore)
+    ], [], cpNormal, False, nil, True)
+    .SetSummaryKey([0])
+    .IncludeFlag(dfCollapsed, wbCollapseModels);
+end;
 
 function wbClmtMoonsPhaseLength(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -685,9 +691,8 @@ var
   SubRecord : IwbSubRecord;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   if Supports(Container, IwbSubRecord, SubRecord) then
     if SubRecord.SubRecordHeaderSize = 16 then
@@ -700,9 +705,9 @@ var
   SubRecord : IwbSubRecord;
 begin
   Result := 1;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
+
   if Supports(Container, IwbSubRecord, SubRecord) then
     if SubRecord.SubRecordHeaderSize = 4 then
       Result := 0;
@@ -714,9 +719,8 @@ var
   SubRecord : IwbSubRecord;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   if Supports(Container, IwbSubRecord, SubRecord) then
     if SubRecord.SubRecordHeaderSize = 4 then
@@ -994,9 +998,8 @@ var
   Container: IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   if Integer(Container.ElementByName['Type'].NativeValue) and $04 <> 0 then
     Result := 1;
@@ -1008,9 +1011,8 @@ var
   Container: IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   ParamInfo := Container.ElementNativeValues['..\EFME\EFIT Param Info'];
   if VarIsNull(ParamInfo) or VarIsEmpty(ParamInfo) then
@@ -1024,9 +1026,8 @@ var
   Container: IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   ParamInfo := Container.ElementNativeValues['..\EFME\EFIX Param Info'];
   if VarIsNull(ParamInfo) or VarIsEmpty(ParamInfo) then
@@ -1040,9 +1041,8 @@ var
   Container: IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   Desc := wbCTDAParamDescFromIndex(Container.ElementByName['Function'].NativeValue);
   if Assigned(Desc) then
@@ -1055,9 +1055,8 @@ var
   Container: IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   Desc := wbCTDAParamDescFromIndex(Container.ElementByName['Function'].NativeValue);
   if Assigned(Desc) then
@@ -1911,9 +1910,8 @@ var
   Container: IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   Result := Container.ElementByName['Type'].NativeValue;
 end;
@@ -1948,9 +1946,8 @@ var
   Container: IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   s := Container.ElementByName['Flags'].SortKey[False];
   if s[17] = '1' then
@@ -2101,16 +2098,6 @@ begin
       ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
     ], cpNormal, True);
 
-  wbMODL :=
-    wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model FileName'),
-      wbFloat(MODB, 'Bound Radius', cpBenign),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
-//      wbArray(MODT, 'Unknown',
-//        wbByteArray('Unknown', 24, cpBenign),
-//      0, nil, cpBenign)
-    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
   wbSCRI := wbFormIDCk(SCRI, 'Script', [SCPT]);
   wbENAM := wbFormIDCk(ENAM, 'Enchantment', [ENCH]);
 
@@ -2159,7 +2146,7 @@ begin
   wbRecord(ACTI, 'Activator', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbSCRI,
     wbFormIDCk(SNAM, 'Sound', [SOUN])
   ]);
@@ -2432,7 +2419,7 @@ begin
       wbByteArray('Unused', $1C)
     ], cpNormal, False, wbOBMEDontShow),
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbICON,
     wbSCRI,
     wbFloat(DATA, 'Weight', cpNormal, True),
@@ -2447,7 +2434,7 @@ begin
   wbRecord(AMMO, 'Ammunition', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbICON,
     wbFormIDCk(ENAM, 'Enchantment', [ENCH]),
     wbInteger(ANAM, 'Enchantment Points', itU16),
@@ -2463,14 +2450,14 @@ begin
 
   wbRecord(ANIO, 'Animated Object', [
     wbEDID,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbFormIDCk(DATA, 'IDLE animation', [IDLE], False, cpNormal, True)
   ]).SetSummaryKey([1, 2]).IncludeFlag(dfSummaryMembersNoName);
 
   wbRecord(APPA, 'Alchemical Apparatus', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbICON,
     wbSCRI,
     wbStruct(DATA, '', [
@@ -2480,34 +2467,6 @@ begin
       wbFloat('Quality')
     ], cpNormal, True)
   ]);
-
-  wbMaleBipedModel :=
-    wbRStruct('Male biped model', [
-      wbString(MODL, 'Model FileName'),
-      wbFloat(MODB, 'Bound Radius', cpBenign),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
-    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
-  wbMaleWorldModel :=
-    wbRStruct('Male world model', [
-      wbString(MOD2, 'Model FileName'),
-      wbFloat(MO2B, 'Bound Radius', cpBenign),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore)
-    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
-  wbFemaleBipedModel :=
-    wbRStruct('Female biped model', [
-      wbString(MOD3, 'Model FileName'),
-      wbFloat(MO3B, 'Bound Radius', cpBenign),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore)
-    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
-  wbFemaleWorldModel :=
-    wbRStruct('Female world model', [
-      wbString(MOD4, 'Model FileName'),
-      wbFloat(MO4B, 'Bound Radius', cpBenign),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore)
-    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
 
   wbRecord(ARMO, 'Armor', [
     wbEDID,
@@ -2546,11 +2505,11 @@ begin
       ])),
       wbByteArray('Unused', 1)
     ], cpNormal, True),
-    wbMaleBipedModel,
-    wbMaleWorldModel,
+    wbTexturedModel('Male biped model', [MODL, MODB, MODT]),
+    wbTexturedModel('Male world model', [MOD2, MO2B, MO2T]),
     wbString(ICON, 'Male icon FileName'),
-    wbFemaleBipedModel,
-    wbFemaleWorldModel,
+    wbTexturedModel('Female biped model', [MOD3, MO3B, MO3T]),
+    wbTexturedModel('Female world model', [MOD4, MO4B, MO4T]),
     wbString(ICO2, 'Female icon FileName'),
     wbStruct(DATA, '', [
       wbInteger('Armor', itU16, wbDiv(100)),
@@ -2563,7 +2522,7 @@ begin
   wbRecord(BOOK, 'Book', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbICON,
     wbSCRI,
     wbENAM,
@@ -2692,7 +2651,7 @@ begin
     ])),
     wbString(FNAM, 'Sun Texture'),
     wbString(GNAM, 'Sun Glare Texture'),
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbStruct(TNAM, 'Timing', [
       wbStruct('Sunrise', [
         wbInteger('Begin', itU8, wbClmtTime),
@@ -2744,11 +2703,11 @@ begin
       ])),
       wbByteArray('Unused', 1)
     ], cpNormal, True),
-    wbMaleBipedModel,
-    wbMaleWorldModel,
+    wbTexturedModel('Male biped model', [MODL, MODB, MODT]),
+    wbTexturedModel('Male world model', [MOD2, MO2B, MO2T]),
     wbString(ICON, 'Male icon FileName'),
-    wbFemaleBipedModel,
-    wbFemaleWorldModel,
+    wbTexturedModel('Female biped model', [MOD3, MO3B, MO3T]),
+    wbTexturedModel('Female world model', [MOD4, MO4B, MO4T]),
     wbString(ICO2, 'Female icon FileName'),
     wbStruct(DATA, '', [
       wbInteger('Value', itU32),
@@ -2767,7 +2726,7 @@ begin
   wbRecord(CONT, 'Container', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbSCRI,
     wbCNTOs,
     wbStruct(DATA, '', [
@@ -2818,7 +2777,7 @@ begin
   wbRecord(CREA, 'Creature', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbCNTOs,
     wbSPLOs,
     wbArrayS(NIFZ, 'Models', wbStringLC('Model')),
@@ -3008,7 +2967,7 @@ begin
   wbRecord(DOOR, 'Door', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbSCRI,
     wbFormIDCk(SNAM, 'Open sound', [SOUN]),
     wbFormIDCk(ANAM, 'Close sound', [SOUN]),
@@ -3216,7 +3175,7 @@ begin
   wbRecord(FLOR, 'Flora', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbSCRI,
     wbFormIDCk(PFIG, 'Ingredient', [INGR]),
     wbStruct(PFPC, 'Seasonal ingredient production', [
@@ -3230,7 +3189,7 @@ begin
   wbRecord(FURN, 'Furniture', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbSCRI,
     wbByteArray(MNAM, 'Marker Flags', 0, cpNormal, True)
   ]);
@@ -3256,7 +3215,7 @@ begin
 
   wbRecord(GRAS, 'Grass', [
     wbEDID,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbStruct(DATA, '', [
       wbInteger('Density', itU8),
       wbInteger('Min Slope', itU8),
@@ -3290,7 +3249,7 @@ begin
   wbRecord(HAIR, 'Hair', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbString(ICON, 'Texture', 0, cpNormal, True),
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       'Playable',
@@ -3381,13 +3340,6 @@ begin
 
   wbSexEnum :=
     wbEnum(['Male','Female']);
-
-  wbAxisEnum :=
-    wbEnum([], [
-      88, 'X',
-      89, 'Y',
-      90, 'Z'
-    ]);
 
   wbCTDA :=
     wbRUnion('Condition', [
@@ -3582,8 +3534,8 @@ begin
       ])
       .SetSummaryKeyOnValue([4, 2, 1, 3])
       .SetSummaryPrefixSuffixOnValue(4, '', '')
-      .SetSummaryPrefixSuffixOnValue(2, '{CompiledSize = ', ',')
-      .SetSummaryPrefixSuffixOnValue(1, 'RefCount = ', ',')
+      .SetSummaryPrefixSuffixOnValue(2, '{CompiledSize = ', ', ')
+      .SetSummaryPrefixSuffixOnValue(1, 'RefCount = ', ', ')
       .SetSummaryPrefixSuffixOnValue(3, 'VariableCount = ', '}')
       .IncludeFlagOnValue(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed, wbCollapseScriptData)
@@ -3611,7 +3563,7 @@ begin
 
   wbRecord(IDLE, 'Idle Animation', [
     wbEDID,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbCTDAs,
     wbInteger(ANAM, 'Animation Group Section', itU8, wbIdleAnam, nil, cpNormal, True),
     wbArray(DATA, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [IDLE, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True)
@@ -3686,7 +3638,7 @@ begin
       wbByteArray('Unused', $1C)
     ], cpNormal, False, wbOBMEDontShow),
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbICON,
     wbSCRI,
     wbFloat(DATA, 'Weight', cpNormal, True),
@@ -3701,7 +3653,7 @@ begin
   wbRecord(KEYM, 'Key', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbICON,
     wbSCRI,
     wbStruct(DATA, '', [
@@ -3809,7 +3761,7 @@ begin
 
   wbRecord(LIGH, 'Light', [
     wbEDID,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbSCRI,
     wbFULL,
     wbICON,
@@ -4002,7 +3954,7 @@ begin
     wbFULL,
     wbDESC,
     wbICON,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbStruct(DATA, 'Data', [
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Hostile',
@@ -4068,7 +4020,7 @@ begin
   wbRecord(MISC, 'Misc. Item', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbICON,
     wbSCRI,
     wbStruct(DATA, '', [
@@ -4101,7 +4053,7 @@ begin
   wbRecord(NPC_, 'Non-Player Character', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbStruct(ACBS, 'Configuration', [
       wbInteger('Flags', itU32, wbFlags([
         {0x000001} 'Female',
@@ -4471,14 +4423,14 @@ begin
           'Eye (Left)',
           'Eye (Right)'
         ])),
-        wbMODL,
+        wbTexturedModel('Model', [MODL, MODB, MODT]),
         wbICON
       ], []))
     ], [], cpNormal, True),
     wbEmpty(NAM1, 'Body Data Marker', cpNormal, True),
     wbRStruct('Male Body Data', [
       wbEmpty(MNAM, 'Male Body Data Marker'),
-      wbMODL,
+      wbTexturedModel('Model', [MODL, MODB, MODT]),
       wbRArrayS('Parts', wbRStructSK([0], 'Part', [
         wbBodyDataIndex,
         wbICON
@@ -4486,7 +4438,7 @@ begin
     ], [], cpNormal, True),
     wbRStruct('Female Body Data', [
       wbEmpty(FNAM, 'Female Body Data Marker'),
-      wbMODL,
+      wbTexturedModel('Model', [MODL, MODB, MODT]),
       wbRArrayS('Parts', wbRStructSK([0], 'Part', [
         wbBodyDataIndex,
         wbICON
@@ -4539,12 +4491,7 @@ begin
     ], []),
     wbInteger(XLCM, 'Level Modifier', itS32),
     wbFormIDCk(XRTM, 'Unknown', [REFR]),
-    wbInteger(XACT, 'Action Flag', itU32, wbFlags([
-      'Use Default',
-      'Activate',
-      'Open',
-      'Open by Default'
-    ])),
+    wbActionFlag,
     wbInteger(XCNT, 'Count', itS32),
     wbRStruct('Map Marker', [
       wbEmpty(XMRK, 'Map Marker Data'),
@@ -4744,7 +4691,7 @@ begin
       wbByteArray('Unused', $1C)
     ], cpNormal, False, wbOBMEDontShow),
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbICON,
     wbSCRI,
     wbEffects,
@@ -4775,7 +4722,7 @@ begin
   wbRecord(SLGM, 'Soul Gem', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbICON,
     wbSCRI,
     wbStruct(DATA, '', [
@@ -4879,7 +4826,7 @@ begin
 
   wbRecord(STAT, 'Static', [
     wbEDID,
-    wbMODL
+    wbTexturedModel('Model', [MODL, MODB, MODT])
   ]).SetSummaryKey([1]);
 
   wbRecord(TES4, 'Main File Header', [
@@ -4905,7 +4852,7 @@ begin
 
   wbRecord(TREE, 'Tree', [
     wbEDID,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbICON,
     wbArrayS(SNAM, 'SpeedTree Seeds', wbInteger('SpeedTree Seed', itU32)),
     wbStruct(CNAM, 'Tree Data', [
@@ -4988,7 +4935,7 @@ begin
   wbRecord(WEAP, 'Weapon', [
     wbEDID,
     wbFULL,
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbICON,
     wbSCRI,
     wbENAM,
@@ -5113,7 +5060,7 @@ begin
     wbEDID,
     wbString(CNAM, 'Texture Lower Layer'),
     wbString(DNAM, 'Texture Upper Layer'),
-    wbMODL,
+    wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbArray(NAM0, 'Colors by Types/Times',
       wbArray('Type',
         wbStruct('Time', [

@@ -33,7 +33,6 @@ var
 	wbArchtypeEnum: IwbEnumDef;
 	wbAssistanceEnum: IwbEnumDef;
 	wbAttackAnimationEnum: IwbEnumDef;
-	wbAxisEnum: IwbEnumDef;
 	wbBlendModeEnum: IwbEnumDef;
 	wbBlendOpEnum: IwbEnumDef;
 	wbBodyLocationEnum: IwbEnumDef;
@@ -610,18 +609,11 @@ var
   wbPosRot : IwbStructDef;
   wbMODD: IwbSubRecordDef;
   wbMOSD: IwbSubRecordDef;
-  wbMODL: IwbRecordMemberDef;
   wbMODT: IwbSubRecordDef;
   wbMODS: IwbSubRecordDef;
   wbMO2S: IwbSubRecordDef;
   wbMO3S: IwbSubRecordDef;
   wbMO4S: IwbSubRecordDef;
-  wbMODLActor: IwbRecordMemberDef;
-  wbMODLReq: IwbRecordMemberDef;
-  wbMaleBipedModel: IwbRecordMemberDef;
-  wbMaleWorldModel: IwbRecordMemberDef;
-  wbFemaleBipedModel: IwbRecordMemberDef;
-  wbFemaleWorldModel: IwbRecordMemberDef;
   wbCTDA: IwbRecordMemberDef;
   wbSCHRReq: IwbSubRecordDef;
   wbCTDAs: IwbSubRecordArrayDef;
@@ -652,6 +644,44 @@ var
   wbTimeInterpolator: IwbStructDef;
   wbColorInterpolator: IwbStructDef;
   wbFaction: IwbRecordMemberDef;
+  wbEffect: IwbRecordMemberDef;
+  wbMenuButton: IwbRecordMemberDef;
+  wbLeveledListEntryCreature: IwbRecordMemberDef;
+  wbLeveledListEntryItem: IwbRecordMemberDef;
+  wbLeveledListEntryNPC: IwbRecordMemberDef;
+  wbPerkEffect: IwbRecordMemberDef;
+  wbPerkConditions: IwbRecordMemberDef;
+  wbIngredient: IwbRecordMemberDef;
+  wbOutput: IwbRecordMemberDef;
+  wbFactionRank: IwbRecordMemberDef;
+  wbStaticPart: IwbRecordMemberDef;
+
+function wbGenericModel(aRequired: Boolean = False; aDontShow: TwbDontShowCallback = nil): IwbRecordMemberDef;
+begin
+  Result :=
+    wbRStructSK([0], 'Model', [
+      wbString(MODL, 'Model FileName', 0, cpNormal, True),
+      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
+      wbMODT,
+      wbMODS,
+      wbMODD
+    ], [], cpNormal, aRequired, aDontShow, True)
+    .SetSummaryKey([0])
+    .IncludeFlag(dfCollapsed, wbCollapseModels);
+end;
+
+function wbTexturedModel(aSubRecordName: string; aSignatures: TwbSignatures; aTextureSubRecords: array of IwbSubRecordDef): IwbRecordMemberDef;
+begin
+  Result :=
+    wbRStruct(aSubRecordName, [
+      wbString(aSignatures[0], 'Model FileName', 0, cpNormal, True),
+      wbByteArray(aSignatures[1], 'Texture Files Hashes', 0, cpIgnore),
+      aTextureSubRecords[0],
+      aTextureSubRecords[1]
+    ], [], cpNormal, False, nil, True)
+    .SetSummaryKey([0])
+    .IncludeFlag(dfCollapsed, wbCollapseModels);
+end;
 
 function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -1279,7 +1309,10 @@ begin
   Result := '';
   if aType = ctToSortKey then begin
     Result := IntToHex64(aInt, 2);
-  end else if aType in [ctToStr, ctToSummary] then begin
+    Exit;
+  end;
+
+  if aType in [ctToStr, ctToSummary] then begin
     PhaseLength := aInt mod 64;
     Masser := (aInt and 64) <> 0;
     Secunda := (aInt and 128) <> 0;
@@ -1521,16 +1554,17 @@ var
 begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
-  if Supports(aElement.Container, IwbContainerElementRef, Container) then begin
-    OldValue := Integer(aOldValue) and 1;
-    NewValue := Integer(aNewValue) and 1;
-    if NewValue = OldValue then
-      Exit;
-    if NewValue = 1 then
-      Container.RemoveElement('TNAM')
-    else
-      Container.Add('TNAM', True);
-  end;
+  if not Supports(aElement.Container, IwbContainerElementRef, Container) then
+    Exit;
+
+  OldValue := Integer(aOldValue) and 1;
+  NewValue := Integer(aNewValue) and 1;
+  if NewValue = OldValue then
+    Exit;
+  if NewValue = 1 then
+    Container.RemoveElement('TNAM')
+  else
+    Container.Add('TNAM', True);
 end;
 
 procedure wbGMSTEDIDAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -1560,21 +1594,22 @@ const
 begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
-  if Supports(aElement.Container, IwbContainerElementRef, Container) then begin
-    OldValue := aOldValue;
-    NewValue := aNewValue;
+  if not Supports(aElement.Container, IwbContainerElementRef, Container) then
+    Exit;
 
-    if Length(OldValue) > Length(OrderedList) then
-      Delete(OldValue, 1, Length(OldValue)-Length(OrderedList));
-    if Length(NewValue) > Length(OrderedList) then
-      Delete(NewValue, 1, Length(NewValue)-Length(OrderedList));
+  OldValue := aOldValue;
+  NewValue := aNewValue;
 
-    OldOrdered := SameText(OldValue, OrderedList);
-    NewOrdered := SameText(NewValue, OrderedList);
+  if Length(OldValue) > Length(OrderedList) then
+    Delete(OldValue, 1, Length(OldValue)-Length(OrderedList));
+  if Length(NewValue) > Length(OrderedList) then
+    Delete(NewValue, 1, Length(NewValue)-Length(OrderedList));
 
-    if OldOrdered <> NewOrdered then
-      Container.RemoveElement('FormIDs');
-  end;
+  OldOrdered := SameText(OldValue, OrderedList);
+  NewOrdered := SameText(NewValue, OrderedList);
+
+  if OldOrdered <> NewOrdered then
+    Container.RemoveElement('FormIDs');
 end;
 
 procedure wbCtdaTypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -1810,15 +1845,16 @@ begin
   Result := '';
 
   Rec := aMainRecord.RecordBySignature['DATA'];
-  if Assigned(Rec) then begin
-    Element := Rec.ElementByName['Cell'];
-    if Assigned(Element) then
-      Element := Element.LinksTo;
-    if Assigned(Element) then
-      s := Trim(Element.Name);
-    if s <> '' then
-      Result := 'for ' + s;
-  end;
+  if not Assigned(Rec) then
+    Exit;
+
+  Element := Rec.ElementByName['Cell'];
+  if Assigned(Element) then
+    Element := Element.LinksTo;
+  if Assigned(Element) then
+    s := Trim(Element.Name);
+  if s <> '' then
+    Result := 'for ' + s;
 end;
 
 function wbCellAddInfo(const aMainRecord: IwbMainRecord): string;
@@ -1838,7 +1874,7 @@ begin
 
   Container := aMainRecord.Container;
   while Assigned(Container) and not
-    (Supports(Container, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType = 1))  do
+    (Supports(Container, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType = 1)) do
     Container := Container.Container;
 
   if Assigned(Container) then begin
@@ -1914,14 +1950,14 @@ var
   DataContainer : IwbDataContainer;
 begin
   Result := 0;
+  if not Supports(aElement, IwbDataContainer, DataContainer) then
+    Exit;
 
-  if Supports(aElement, IwbDataContainer, DataContainer) then begin
-    if DataContainer.ElementType = etArray then
-      if not Supports(DataContainer.Container, IwbDataContainer, DataContainer) then
-        Exit;
-    Assert(DataContainer.Name = 'Data');
-    Result := PWord(NativeUInt(DataContainer.DataBasePtr) + 3*3*4)^;
-  end;
+  if DataContainer.ElementType = etArray then
+    if not Supports(DataContainer.Container, IwbDataContainer, DataContainer) then
+      Exit;
+  Assert(DataContainer.Name = 'Data');
+  Result := PWord(NativeUInt(DataContainer.DataBasePtr) + 3*3*4)^;
 end;
 
 function wbNAVINAVMGetCount2(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1929,14 +1965,14 @@ var
   DataContainer : IwbDataContainer;
 begin
   Result := 0;
+  if not Supports(aElement, IwbDataContainer, DataContainer) then
+    Exit;
 
-  if Supports(aElement, IwbDataContainer, DataContainer) then begin
-    if DataContainer.ElementType = etArray then
-      if not Supports(DataContainer.Container, IwbDataContainer, DataContainer) then
-        Exit;
-    Assert(DataContainer.Name = 'Data');
-    Result := PWord(NativeUInt(DataContainer.DataBasePtr) + 3*3*4 + 2)^;
-  end;
+  if DataContainer.ElementType = etArray then
+    if not Supports(DataContainer.Container, IwbDataContainer, DataContainer) then
+      Exit;
+  Assert(DataContainer.Name = 'Data');
+  Result := PWord(NativeUInt(DataContainer.DataBasePtr) + 3*3*4 + 2)^;
 end;
 
 function wbCTDARunOnDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1945,9 +1981,8 @@ var
   i             : Integer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   i := Container.ElementNativeValues['Function'];
   // IsFacingUp, IsLeftUp
@@ -1965,21 +2000,26 @@ end;
 procedure wbPERKPRKETypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   Container : IwbContainerElementRef;
-//  rDATA     : IwbRecord;
 begin
-  if aOldValue <> aNewValue then
-    if Supports(aElement.Container, IwbContainerElementRef, Container) then begin
-      if Supports(Container.Container, IwbContainerElementRef, Container) then begin
-        Container.RemoveElement('DATA');
-        Container.Add('DATA', True);
-        Container.RemoveElement('Perk Conditions');
-        Container.RemoveElement('Entry Point Function Parameters');
-        if aNewValue = 2 then begin
-          Container.Add('EPFT', True);
-          Container.ElementNativeValues['DATA\Entry Point\Function'] := 2;
-        end;
-      end;
-    end;
+  if not (aOldValue <> aNewValue) then
+    Exit;
+
+  if not Supports(aElement.Container, IwbContainerElementRef, Container) then
+    Exit;
+
+  if not Supports(Container.Container, IwbContainerElementRef, Container) then
+    Exit;
+
+  Container.RemoveElement('DATA');
+  Container.Add('DATA', True);
+  Container.RemoveElement('Perk Conditions');
+  Container.RemoveElement('Entry Point Function Parameters');
+
+  if not (aNewValue = 2) then
+    Exit;
+
+  Container.Add('EPFT', True);
+  Container.ElementNativeValues['DATA\Entry Point\Function'] := 2;
 end;
 
 function wbMGEFFAssocItemDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1993,9 +2033,8 @@ const
 
 begin
   Result := 1;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   VarClear(ArchType);
   Element := Container.ElementByName['Archtype'];
@@ -2008,14 +2047,16 @@ begin
       ArchType := PCardinal(aBasePtr)^;
     end;
 
-  if not VarIsEmpty(ArchType) then
-    case Integer(ArchType) of
-      01: Result := 2;//Script
-      18: Result := 3;//Bound Item
-      19: Result := 4;//Summon Creature
-    else
-      Result := 0;
-    end;
+  if VarIsEmpty(ArchType) then
+    Exit;
+
+  case Integer(ArchType) of
+    01: Result := 2;//Script
+    18: Result := 3;//Bound Item
+    19: Result := 4;//Summon Creature
+  else
+    Result := 0;
+  end;
 end;
 
 procedure wbMGEFFAssocItemAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -2023,14 +2064,15 @@ var
   Container : IwbContainer;
   Element   : IwbElement;
 begin
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
-  if (aNewValue <> 0) then begin
-    Element := Container.ElementByName['Archtype'];
-    if Assigned(Element) and Element.NativeValue = 0 then
-        Element.NativeValue := $FF; // Signals ArchType that it should not mess with us on the next change!
-  end;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
+
+  if not (aNewValue <> 0) then
+    Exit;
+
+  Element := Container.ElementByName['Archtype'];
+  if Assigned(Element) and Element.NativeValue = 0 then
+      Element.NativeValue := $FF; // Signals ArchType that it should not mess with us on the next change!
 end;
 
 procedure wbMGEFArchtypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -2070,9 +2112,8 @@ var
   i             : Integer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   i := Container.ElementNativeValues['Function'];
   // IsFacingUp, IsLeftUp
@@ -2086,9 +2127,8 @@ var
   Container     : IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   case Integer(Container.ElementNativeValues['Type']) of
     $00: Result :=1;
@@ -2103,9 +2143,9 @@ var
   SubRecord : IwbSubRecord;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
+
   if Supports(Container, IwbSubRecord, SubRecord) then
     if SubRecord.SubRecordHeaderSize in [132, 148] then
       Result := 1;
@@ -2118,17 +2158,17 @@ var
   MainRecord : IwbMainRecord;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
 
   LinksTo := Container.ElementByName['Owner'].LinksTo;
+  if not Supports(LinksTo, IwbMainRecord, MainRecord) then
+    Exit;
 
-  if Supports(LinksTo, IwbMainRecord, MainRecord) then
-    if MainRecord.Signature = 'NPC_' then
-      Result := 1
-    else if MainRecord.Signature = 'FACT' then
-      Result := 2;
+  if MainRecord.Signature = 'NPC_' then
+    Result := 1
+  else if MainRecord.Signature = 'FACT' then
+    Result := 2;
 end;
 
 function wbCreaLevelDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -2137,9 +2177,9 @@ var
   i: Int64;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
+
   i := Container.ElementByName['Flags'].NativeValue;
   if i and $00000080 <> 0 then
     Result := 1;
@@ -2153,14 +2193,15 @@ var
 begin
   Result := 1;
   rEDID := aElement.Container.RecordBySignature[EDID];
-  if Assigned(rEDID) then begin
-    s := rEDID.Value;
-    if Length(s) > 0 then
-      case s[1] of
-        's': Result := 0;
-        'f': Result := 2;
-      end;
-  end;
+  if not Assigned(rEDID) then
+    Exit;
+
+  s := rEDID.Value;
+  if Length(s) > 0 then
+    case s[1] of
+      's': Result := 0;
+      'f': Result := 2;
+    end;
 end;
 
 function wbFLSTLNAMIsSorted(const aContainer: IwbContainer): Boolean;
@@ -2209,12 +2250,14 @@ var
 begin
   Result := 0;
   rPRKE := aElement.Container.RecordBySignature[PRKE];
-  if Assigned(rPRKE) then begin
-    eType := rPRKE.ElementByName['Type'];
-    if Assigned(eType) then begin
-      Result := eType.NativeValue;
-    end;
-  end;
+  if not Assigned(rPRKE) then
+    Exit;
+
+  eType := rPRKE.ElementByName['Type'];
+  if not Assigned(eType) then
+    Exit;
+
+  Result := eType.NativeValue;
 end;
 
 function wbEPFDDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -2668,9 +2711,8 @@ var
   Container: IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
   if Integer(Container.ElementByName['Type'].NativeValue) and $04 <> 0 then
     Result := 1;
 end;
@@ -2681,9 +2723,8 @@ var
   Container: IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
   Desc := wbCTDAParamDescFromIndex(Container.ElementByName['Function'].NativeValue);
   if Assigned(Desc) then
     Result := Succ(Integer(Desc.ParamType1));
@@ -2694,9 +2735,8 @@ var
   Container : IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
   Result := Container.ElementByName['Parameter #1'].NativeValue;
 end;
 
@@ -2706,9 +2746,8 @@ var
   Container: IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
   Desc := wbCTDAParamDescFromIndex(Container.ElementByName['Function'].NativeValue);
   if Assigned(Desc) then
     Result := Succ(Integer(Desc.ParamType2));
@@ -3137,11 +3176,6 @@ begin
         Result := 2
       else
         raise Exception.Create('"'+s+'" is not valid for this Entry Point');
-end;
-
-function wbNeverShow(const aElement: IwbElement): Boolean;
-begin
-  Result := wbHideNeverShow;
 end;
 
 function GetREGNType(aElement: IwbElement): Integer;
@@ -4418,9 +4452,9 @@ var
   Container: IwbContainer;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
+
   Result := Container.ElementByName['Type'].NativeValue;
 end;
 
@@ -4430,9 +4464,9 @@ var
   SubRecord : IwbSubRecord;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
+
   if Supports(Container, IwbSubRecord, SubRecord) then
     if SubRecord.SubRecordHeaderSize = 8 then
       Result := 1;
@@ -4444,9 +4478,9 @@ var
   SubRecord : IwbSubRecord;
 begin
   Result := 0;
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerFromUnion(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
+
   if Supports(Container, IwbSubRecord, SubRecord) then
     if SubRecord.SubRecordHeaderSize = 8 then
       Exit;
@@ -4520,6 +4554,7 @@ begin
     end;
   end;
 end;
+
 
 procedure DefineFNVa;
 begin
@@ -4732,38 +4767,10 @@ begin
       ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
     ], cpNormal, True);
 
-  wbMODS :=
-    wbArrayS(MODS, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
-      ]),
-    -1);
-  wbMO2S :=
-    wbArrayS(MO2S, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
-      ]),
-    -1);
-  wbMO3S :=
-    wbArrayS(MO3S, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
-      ]),
-    -1);
-  wbMO4S :=
-    wbArrayS(MO4S, 'Alternate Textures',
-      wbStructSK([0, 2], 'Alternate Texture', [
-        wbLenString('3D Name'),
-        wbFormIDCk('New Texture', [TXST]),
-        wbInteger('3D Index', itS32)
-      ]),
-    -1);
+  wbMODS := wbArrayS(MODS, 'Alternate Textures', wbAlternateTexture, -1);
+  wbMO2S := wbArrayS(MO2S, 'Alternate Textures', wbAlternateTexture, -1);
+  wbMO3S := wbArrayS(MO3S, 'Alternate Textures', wbAlternateTexture, -1);
+  wbMO4S := wbArrayS(MO4S, 'Alternate Textures', wbAlternateTexture, -1);
 
   wbMODD :=
     wbInteger(MODD, 'FaceGen Model Flags', itU8, wbFlags([
@@ -4789,63 +4796,6 @@ begin
       wbInteger('Folder', itU64, wbMODTCallback)
     ]))]
   );}
-
-  wbMODL :=
-    wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model FileName', 0, cpNormal, True),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
-      wbMODT,
-      wbMODS,
-      wbMODD
-    ], [], cpNormal, False, nil, True).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
-  wbMODLActor :=
-    wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model FileName', 0, cpNormal, True),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
-      wbMODT,
-      wbMODS,
-      wbMODD
-    ], [], cpNormal, False, wbActorTemplateUseModelAnimation, True).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
-  wbMODLReq :=
-    wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model FileName', 0, cpNormal, True),
-      wbByteArray(MODB, 'Unknown', 4, cpIgnore),
-      wbMODT,
-      wbMODS,
-      wbMODD
-    ], [], cpNormal, True, nil, True).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
-  wbMaleBipedModel :=
-    wbRStruct('Male biped model', [
-      wbString(MODL, 'Model FileName', 0, cpNormal, True),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
-      wbMODS,
-      wbMODD
-    ], [], cpNormal, False, nil, True).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
-  wbMaleWorldModel :=
-    wbRStruct('Male world model', [
-      wbString(MOD2, 'Model FileName'),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
-      wbMO2S
-    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
-  wbFemaleBipedModel :=
-    wbRStruct('Female biped model', [
-      wbString(MOD3, 'Model FileName', 0, cpNormal, True),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
-      wbMO3S,
-      wbMOSD
-    ], [], cpNormal, False, nil, True).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
-
-  wbFemaleWorldModel :=
-    wbRStruct('Female world model', [
-      wbString(MOD4, 'Model FileName'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
-      wbMO4S
-    ], []).SetToStr(wbModelToStr).IncludeFlag(dfCollapsed, wbCollapseModels);
 
   wbDEST := wbRStruct('Destructible', [
     wbStruct(DEST, 'Header', [
@@ -4878,7 +4828,9 @@ begin
 //          wbArray(DMDT, 'Unknown',
 //            wbByteArray('Unknown', 24, cpBenign),
 //          0, nil, nil, cpBenign)
-        ], []),
+        ], [])
+        .SetSummaryKey([0])
+        .IncludeFlag(dfCollapsed, wbCollapseModels),
         wbEmpty(DSTF, 'End Marker', cpNormal, True)
       ], [])
     )
@@ -4915,7 +4867,9 @@ begin
 //          wbArray(DMDT, 'Unknown',
 //            wbByteArray('Unknown', 24, cpBenign),
 //          0, nil, nil, cpBenign)
-        ], []),
+        ], [])
+        .SetSummaryKey([0])
+        .IncludeFlag(dfCollapsed, wbCollapseModels),
         wbEmpty(DSTF, 'End Marker', cpNormal, True)
       ], [])
     )
@@ -5194,7 +5148,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbSCRI,
     wbDEST,
     wbFormIDCk(SNAM, 'Sound - Looping', [SOUN]),
@@ -5546,8 +5500,6 @@ begin
 end;
 
 procedure DefineFNVb;
-var
-  wbEffect: IwbRecordMemberDef;
 begin
   wbMiscStatEnum :=
     wbEnum([
@@ -5603,13 +5555,6 @@ begin
       'Evil',
       'Very Good',
       'Very Evil'
-    ]);
-
-  wbAxisEnum :=
-    wbEnum([], [
-      88, 'X',
-      89, 'Y',
-      90, 'Z'
     ]);
 
   wbCriticalStageEnum :=
@@ -5888,7 +5833,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULLReq,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbSCRI,
     wbDEST,
@@ -5915,7 +5860,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULLReq,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbSCRI,
     wbDEST,
@@ -5947,7 +5892,7 @@ begin
 
   wbRecord(ANIO, 'Animated Object', [
     wbEDIDReq,
-    wbMODLReq,
+    wbGenericModel(True),
     wbFormIDCk(DATA, 'Animation', [IDLE], False, cpNormal, True)
   ]);
 
@@ -5994,12 +5939,12 @@ begin
     wbSCRI,
     wbEITM,
     wbBMDT,
-    wbMaleBipedModel,
-    wbMaleWorldModel,
+    wbTexturedModel('Male biped model', [MODL, MODT], [wbMODS, wbMODD]),
+    wbTexturedModel('Male world model', [MOD2, MO2T], [wbMO2S, nil]),
     wbString(ICON, 'Male icon FileName'),
     wbString(MICO, 'Male mico FileName'),
-    wbFemaleBipedModel,
-    wbFemaleWorldModel,
+    wbTexturedModel('Female biped model', [MOD3, MO3T], [wbMO3S, wbMOSD]),
+    wbTexturedModel('Female world model', [MOD4, MO4T], [wbMO4S, nil]),
     wbString(ICO2, 'Female icon FileName'),
     wbString(MIC2, 'Female mico FileName'),
     wbString(BMCT, 'Ragdoll Constraint Template'),
@@ -6047,12 +5992,12 @@ begin
     wbOBNDReq,
     wbFULL,
     wbBMDT,
-    wbMaleBipedModel,
-    wbMaleWorldModel,
+    wbTexturedModel('Male biped model', [MODL, MODT], [wbMODS, wbMODD]),
+    wbTexturedModel('Male world model', [MOD2, MO2T], [wbMO2S, nil]),
     wbString(ICON, 'Male icon FileName'),
     wbString(MICO, 'Male mico FileName'),
-    wbFemaleBipedModel,
-    wbFemaleWorldModel,
+    wbTexturedModel('Female biped model', [MOD3, MO3T], [wbMO3S, wbMOSD]),
+    wbTexturedModel('Female world model', [MOD4, MO4T], [wbMO4S, nil]),
     wbString(ICO2, 'Female icon FileName'),
     wbString(MIC2, 'Female mico FileName'),
     wbETYPReq,
@@ -6075,7 +6020,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbSCRI,
     wbDESCReq,
@@ -6249,7 +6194,7 @@ begin
     ])),
     wbString(FNAM, 'Sun Texture'),
     wbString(GNAM, 'Sun Glare Texture'),
-    wbMODL,
+    wbGenericModel,
     wbStruct(TNAM, 'Timing', [
       wbStruct('Sunrise', [
         wbInteger('Begin', itU8, wbClmtTime),
@@ -6279,7 +6224,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbSCRI,
     wbCNTOs,
     wbDEST,
@@ -6541,7 +6486,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULLActor,
-    wbMODLActor,
+    wbGenericModel(False, wbActorTemplateUseModelAnimation),
     wbSPLOs,
     wbFormIDCk(EITM, 'Unarmed Attack Effect', [ENCH, SPEL], False, cpNormal, False, wbActorTemplateUseActorEffectList),
     wbInteger(EAMT, 'Unarmed Attack Animation', itU16, wbAttackAnimationEnum, cpNormal, True, False, wbActorTemplateUseActorEffectList),
@@ -6673,9 +6618,6 @@ begin
 end;
 
 procedure DefineFNVd;
-var
-  wbStaticPart: IwbRecordMemberDef;
-  wbFactionRank: IwbRecordMemberDef;
 begin
   wbRecord(CSTY, 'Combat Style', [
     wbEDIDReq,
@@ -6817,7 +6759,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODLReq,
+    wbGenericModel(True),
     wbSCRI,
     wbDEST,
     wbFormIDCk(SNAM, 'Sound - Open', [SOUN]),
@@ -7071,7 +7013,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODLReq,
+    wbGenericModel(True),
     wbSCRI,
     wbDEST,
     wbByteArray(MNAM, 'Marker Flags', 0, cpNormal, True)
@@ -7147,7 +7089,7 @@ begin
   wbRecord(HDPT, 'Head Part', [
     wbEDIDReq,
     wbFULLReq,
-    wbMODL,
+    wbGenericModel,
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       'Playable'
     ]), cpNormal, True),
@@ -7208,7 +7150,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODLReq,
+    wbGenericModel(True),
     wbSCRI,
     wbDEST,
     wbFormIDCk(SNAM, 'Looping Sound', [SOUN]),
@@ -7232,7 +7174,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbSCRI,
     wbDEST,
     wbDESCReq,
@@ -7304,7 +7246,7 @@ begin
   wbRecord(SCOL, 'Static Collection', [
     wbEDIDReq,
     wbOBNDReq,
-    wbMODLReq,
+    wbGenericModel(True),
     wbRArray('Parts', wbStaticPart)
   ]);
 
@@ -7312,7 +7254,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODLReq,
+    wbGenericModel(True),
     wbDEST,
     wbByteArray(DATA, 'Unknown', 1, cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SOUN])
@@ -7321,7 +7263,7 @@ begin
   wbRecord(PWAT, 'Placeable Water', [
     wbEDIDReq,
     wbOBNDReq,
-    wbMODLReq,
+    wbGenericModel(True),
     wbStruct(DNAM, '', [
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001}'Reflects',
@@ -7381,7 +7323,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbYNAM,
     wbZNAM,
@@ -7408,20 +7350,12 @@ begin
 end;
 
 procedure DefineFNVe;
-var
-  wbDebrisModel: IwbRecordMemberDef;
-  wbMenuButton: IwbRecordMemberDef;
-  wbLeveledListEntryCreature: IwbRecordMemberDef;
-  wbLeveledListEntryItem: IwbRecordMemberDef;
-  wbLeveledListEntryNPC: IwbRecordMemberDef;
-  wbPerkEffect: IwbRecordMemberDef;
-  wbPerkConditions: IwbRecordMemberDef;
 begin
   wbRecord(PROJ, 'Projectile', [
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODLReq,
+    wbGenericModel(True),
     wbDEST,
     wbStruct(DATA, 'Data', [
       {00} wbInteger('Flags', itU16, wbFlags([
@@ -7483,7 +7417,9 @@ begin
     wbRStructSK([0], 'Muzzle Flash Model', [
       wbString(NAM1, 'Model FileName'),
       wbByteArray(NAM2, 'Texture Files Hashes', 0, cpIgnore)
-    ], [], cpNormal, True),
+    ], [], cpNormal, True)
+    .SetSummaryKey([0])
+    .IncludeFlag(dfCollapsed, wbCollapseModels),
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
   ]);
 
@@ -7961,7 +7897,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbEITM,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
     wbStruct(DATA, 'Data', [
@@ -7995,21 +7931,9 @@ begin
           CCRD, IMOD])
   ]);
 
-  wbDebrisModel :=
-    wbRStruct('Model', [
-      wbStruct(DATA, 'Data', [
-        wbInteger('Percentage', itU8),
-        wbString('Model FileName'),
-        wbInteger('Flags', itU8, wbFlags([
-          'Has Collision Data'
-        ]))
-      ], cpNormal, True),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)
-    ], [], cpNormal, True);
-
   wbRecord(DEBR, 'Debris', [
     wbEDIDReq,
-    wbRArray('Models', wbDebrisModel, cpNormal, True)
+    wbRArray('Models', wbDebrisModel(wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)), cpNormal, True)
   ]);
 
   wbRecord(IMGS, 'Image Space', [
@@ -8445,7 +8369,7 @@ begin
 
   wbRecord(BPTD, 'Body Part Data', [
     wbEDIDReq,
-    wbMODLReq,
+    wbGenericModel(True),
     wbRStructS('Body Parts', 'Body Part', [ // When the Part Name is provided
       wbString(BPTN, 'Part Name', 0, cpNormal, True),
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
@@ -8471,7 +8395,7 @@ begin
   wbRecord(ADDN, 'Addon Node', [
     wbEDIDReq,
     wbOBNDReq,
-    wbMODLReq,
+    wbGenericModel(True),
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SOUN]),
     wbStruct(DNAM, 'Data', [
@@ -8498,7 +8422,7 @@ begin
 
   wbRecord(CAMS, 'Camera Shot', [
     wbEDIDReq,
-    wbMODL,
+    wbGenericModel,
     wbStruct(DATA, 'Data', [
       {00} wbInteger('Action', itU32, wbEnum([
         'Shoot',
@@ -8558,7 +8482,7 @@ begin
 
   wbRecord(IPCT, 'Impact', [
     wbEDIDReq,
-    wbMODL,
+    wbGenericModel,
     wbStruct(DATA, '', [
       wbFloat('Effect - Duration'),
       wbInteger('Effect - Orientation', itU32, wbEnum([
@@ -8775,7 +8699,7 @@ begin
   wbRecord(GRAS, 'Grass', [
     wbEDIDReq,
     wbOBNDReq,
-    wbMODLReq,
+    wbGenericModel(True),
     wbStruct(DATA, '', [
       wbInteger('Density', itU8),
       wbInteger('Min Slope', itU8),
@@ -8809,7 +8733,7 @@ begin
   wbRecord(HAIR, 'Hair', [
     wbEDIDReq,
     wbFULLReq,
-    wbMODLReq,
+    wbGenericModel(True),
     wbString(ICON, 'Texture', 0, cpNormal, True),
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       'Playable',
@@ -8821,7 +8745,7 @@ begin
 
   wbRecord(IDLE, 'Idle Animation', [
     wbEDID,
-    wbMODLReq,
+    wbGenericModel(True),
     wbCTDAs,
     wbArray(ANAM, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [IDLE, NULL]), ['Parent', 'Previous Sibling'], cpNormal, True),
     wbStruct(DATA, '', [
@@ -8938,7 +8862,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbSCRI,
     wbETYPReq,
@@ -8955,7 +8879,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULLReq,
-    wbMODL,
+    wbGenericModel,
     wbICONReq,
     wbSCRI,
     wbDEST,
@@ -9064,7 +8988,7 @@ begin
   wbRecord(LIGH, 'Light', [
     wbEDIDReq,
     wbOBNDReq,
-    wbMODL,
+    wbGenericModel,
     wbSCRI,
     wbDEST,
     wbFULL,
@@ -9211,7 +9135,7 @@ begin
       {0x02} 'Calculate for each item in count'
     ]), cpNormal, True),
     wbRArrayS('Leveled List Entries', wbLeveledListEntryCreature, cpNormal, True),
-    wbMODL
+    wbGenericModel
   ]);
 
   wbRecord(LVLN, 'Leveled NPC', [
@@ -9223,7 +9147,7 @@ begin
       {0x02} 'Calculate for each item in count'
     ]), cpNormal, True),
     wbRArrayS('Leveled List Entries', wbLeveledListEntryNPC, cpNormal, True),
-    wbMODL
+    wbGenericModel
   ]);
 
    wbRecord(LVLI, 'Leveled Item', [
@@ -9284,7 +9208,7 @@ begin
     wbFULL,
     wbDESCReq,
     wbICON,
-    wbMODL,
+    wbGenericModel,
     wbStruct(DATA, 'Data', [
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Hostile',
@@ -9353,7 +9277,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbSCRI,
     wbDEST,
@@ -9370,7 +9294,7 @@ begin
     wbEDID,
     wbOBND,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbSCRI,
     wbYNAM,
@@ -9412,7 +9336,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULLActor,
-    wbMODLActor,
+    wbGenericModel(False, wbActorTemplateUseModelAnimation),
     wbStruct(ACBS, 'Configuration', [
       {00} wbInteger('Flags', itU32, wbFlags([
              {0x000001} 'Female',
@@ -10153,7 +10077,7 @@ begin
         wbEmpty(MNAM, 'Male Data Marker', cpNormal, True),
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
-          wbMODLReq,
+          wbGenericModel(True),
           wbICON
         ], [], cpNormal, False, nil, False, nil, wbHeadPartsAfterSet), cpNormal, True)
       ], [], cpNormal, True),
@@ -10161,7 +10085,7 @@ begin
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
-          wbMODLReq,
+          wbGenericModel(True),
           wbICON
         ], [], cpNormal, False, nil, False, nil, wbHeadPartsAfterSet), cpNormal, True)
       ], [], cpNormal, True)
@@ -10173,7 +10097,7 @@ begin
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
           wbICON,
-          wbMODLReq
+          wbGenericModel(True)
         ], []), cpNormal, True)
       ], [], cpNormal, True),
       wbRStruct('Female Body Data', [
@@ -10181,7 +10105,7 @@ begin
         wbRArrayS('Parts', wbRStructSK([0], 'Part', [
           wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
           wbICON,
-          wbMODLReq
+          wbGenericModel(True)
         ], []), cpNormal, True)
       ], [], cpNormal, True)
     ], [], cpNormal, True),
@@ -10484,12 +10408,7 @@ begin
     wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
 
     {--- Flags ---}
-    wbInteger(XACT, 'Action Flag', itU32, wbFlags([
-      'Use Default',
-      'Activate',
-      'Open',
-      'Open by Default'
-    ])),
+    wbActionFlag,
     wbEmpty(ONAM, 'Open by Default'),
     wbEmpty(XIBS, 'Ignored By Sandbox'),
 
@@ -10786,7 +10705,7 @@ begin
   wbRecord(STAT, 'Static', [
     wbEDIDReq,
     wbOBNDReq,
-    wbMODL,
+    wbGenericModel,
     wbInteger(BRUS, 'Passthrough Sound', itS8, wbEnum([
       'BushA',
       'BushB',
@@ -10830,7 +10749,7 @@ begin
   wbRecord(TREE, 'Tree', [
     wbEDIDReq,
     wbOBNDReq,
-    wbMODLReq,
+    wbGenericModel(True),
     wbICONReq,
     wbDEST,
     wbArrayS(SNAM, 'SpeedTree Seeds', wbInteger('SpeedTree Seed', itU32), 0, cpNormal, True),
@@ -10852,9 +10771,6 @@ begin
 end;
 
 procedure DefineFNVf;
-var
-  wbIngredient: IwbRecordMemberDef;
-  wbOutput: IwbRecordMemberDef;
 begin
   wbRecord(WATR, 'Water', [
     wbEDIDReq,
@@ -11015,7 +10931,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbSCRI,
     wbEITM,
@@ -11027,22 +10943,10 @@ begin
     wbBIPL,
     wbYNAM,
     wbZNAM,
-    wbRStruct('Shell Casing Model', [
-      wbString(MOD2, 'Model FileName'),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
-      wbMO2S
-    ], []),
-    wbRStruct('Scope Model', [
-      wbString(MOD3, 'Model FileName'),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
-      wbMO3S
-    ], []),
+    wbTexturedModel('Shell Casing Model', [MOD2, MO2T], [wbMO2S, nil]),
+    wbTexturedModel('Scope Model', [MOD3, MO3T], [wbMO3S, nil]),
     wbFormIDCK(EFSD, 'Scope Effect', [EFSH]),
-    wbRStruct('World Model', [
-      wbString(MOD4, 'Model FileName'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
-      wbMO4S
-    ], []),
+    wbTexturedModel('World Model', [MOD4, MO4T], [wbMO4S, nil]),
     wbString(MWD1, 'Model - Mod 1'),
     wbString(MWD2, 'Model - Mod 2'),
     wbString(MWD3, 'Model - Mod 1 and 2'),
@@ -11477,7 +11381,7 @@ begin
     wbString(CNAM, 'Cloud Textures - Layer 1', 0, cpNormal, True),
     wbString(ANAM, 'Cloud Textures - Layer 2', 0, cpNormal, True),
     wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
-    wbMODL,
+    wbGenericModel,
     wbByteArray(LNAM, 'Unknown', 4, cpNormal, True),
     wbArray(ONAM, 'Cloud Speed', wbInteger('Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
     wbArray(PNAM, 'Cloud Layer Colors',
@@ -11546,7 +11450,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbSCRI,
     wbDESC,
@@ -11662,7 +11566,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbSCRI,
     wbYNAM,
@@ -11753,7 +11657,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbDEST,
     wbYNAM,
@@ -11764,7 +11668,7 @@ begin
     wbEDIDReq,
     wbOBNDReq,
     wbFULL,
-    wbMODL,
+    wbGenericModel,
     wbICON,
     wbYNAM,
     wbZNAM,
