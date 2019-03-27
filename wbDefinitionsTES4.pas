@@ -311,8 +311,6 @@ var
   wbXNAMs: IwbSubRecordArrayDef;
   wbDESC: IwbSubRecordDef;
   wbXSCL: IwbSubRecordDef;
-  wbDATAPosRot : IwbSubRecordDef;
-  wbPosRot : IwbStructDef;
   wbCTDA: IwbSubRecordUnionDef;
   wbSCHR: IwbSubRecordUnionDef;
   wbCTDAs: IwbSubRecordArrayDef;
@@ -511,20 +509,6 @@ begin
       Result := 'None'
     else
       Result := aInt.ToString;
-end;
-
-function wbAtxtPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  Result := '';
-  if aType = ctToSortKey then
-    Result := IntToHex64(aInt div 17, 2) + IntToHex64(aInt mod 17, 2)
-  else if aType = ctCheck then begin
-    if (aInt < 0) or (aInt > 288) then
-      Result := '<Out of range: '+aInt.ToString+'>'
-    else
-      Result := '';
-  end else if aType in [ctToStr, ctToSummary] then
-    Result := aInt.ToString + ' -> ' + IntToStr(aInt div 17) + ':' + IntToStr(aInt mod 17);
 end;
 
 function wbWthrDataClassification(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -1365,9 +1349,12 @@ begin
     ctEditInfo: Result := '';
   end;
 
-  if not Assigned(aElement) then Exit;
+  if not Assigned(aElement) then
+    Exit;
+
   Container := GetContainerRefFromUnionOrValue(aElement);
-  if not Assigned(Container) then Exit;
+  if not Assigned(Container) then
+    Exit;
 
   Param1 := Container.ElementByName['Parameter #1'];
 
@@ -1600,15 +1587,12 @@ begin
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
       Exit;
+
     if Container.ElementCount < 1 then
       Exit;
 
     Element := Container.ElementByName['Magic effect name'];
-    if not Assigned(Element) then
-      Exit;
-    if not Supports(Element.LinksTo, IwbMainRecord, MainRecord) then
-      Exit;
-    if MainRecord.Signature <> 'MGEF' then
+    if not wbTryGetMainRecord(Element, MainRecord, 'MGEF') then
       Exit;
 
     if (MainRecord.ElementNativeValues['DATA - Data\Flags'] and $01000000) = 0 then
@@ -1617,6 +1601,7 @@ begin
     ActorValue := MainRecord.ElementNativeValues['DATA - Data\Assoc. Item'];
     if VarIsNull(ActorValue) or VarIsClear(ActorValue) then
       Exit;
+
     if VarCompareValue(ActorValue, Container.ElementNativeValues['Actor Value']) <> vrEqual then
       Container.ElementNativeValues['Actor Value'] := ActorValue;
   finally
@@ -1994,25 +1979,34 @@ var
 begin
   Result := 0;
 
-  if Supports(aElement.Container, IwbDataContainer, Container) and (Container.Name = 'OFST - Offset Data') and
-     Supports(Container.Container, IwbDataContainer, Container) then begin
-    Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
-    if Assigned(Element) then begin
-      fResult :=  Element.NativeValue;
-      if fResult >= MaxInt then
-        Result := 0
-      else
-        Result := Trunc(fResult);
-      Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
-      if Assigned(Element) then begin
-        fResult :=  Element.NativeValue;
-        if fResult >= MaxInt then
-          Result := 1
-        else
-          Result := Trunc(fResult) - Result + 1;
-      end;
-    end;
-  end;
+  if not Supports(aElement.Container, IwbDataContainer, Container) then
+    Exit;
+
+  if not (Container.Name = 'OFST - Offset Data') then
+    Exit;
+
+  if not Supports(Container.Container, IwbDataContainer, Container) then
+    Exit;
+
+  Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
+  if not Assigned(Element) then
+    Exit;
+
+  fResult :=  Element.NativeValue;
+  if fResult >= MaxInt then
+    Result := 0
+  else
+    Result := Trunc(fResult);
+
+  Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
+  if not Assigned(Element) then
+    Exit;
+
+  fResult :=  Element.NativeValue;
+  if fResult >= MaxInt then
+    Result := 1
+  else
+    Result := Trunc(fResult) - Result + 1;
 end;
 
 procedure DefineTES4;
@@ -2069,34 +2063,6 @@ begin
   wbFULLReq := wbStringKC(FULL, 'Name', 0, cpTranslate, True);
   wbDESC := wbStringKC(DESC, 'Description', 0, cpTranslate);
   wbXSCL := wbFloat(XSCL, 'Scale');
-
-  wbPosRot :=
-    wbStruct('Position/Rotation', [
-      wbStruct('Position', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-      wbStruct('Rotation', [
-        wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
-    ]);
-
-  wbDATAPosRot :=
-    wbStruct(DATA, 'Position/Rotation', [
-      wbStruct('Position', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-      wbStruct('Rotation', [
-        wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
-    ], cpNormal, True);
 
   wbSCRI := wbFormIDCk(SCRI, 'Script', [SCPT]);
   wbENAM := wbFormIDCk(ENAM, 'Enchantment', [ENCH]);
@@ -2339,15 +2305,18 @@ begin
 
   wbOBMEResolutionInfo := wbEnum(['None', 'FormID', 'Magic Effect Code', 'Actor Value']);
 
+  var wbOBMEVersion :=
+    wbStruct('OBME Version', [
+      wbInteger('Beta', itU8),
+      wbInteger('Minor', itU8),
+      wbInteger('Major', itU8)
+    ]);
+
   wbEffect :=
     wbRStruct('Effect', [
       wbStruct(EFME, 'Oblivion Magic Extender', [
         wbInteger('Record Version', itU8),
-        wbStruct('OBME Version', [
-          wbInteger('Beta', itU8),
-          wbInteger('Minor', itU8),
-          wbInteger('Major', itU8)
-        ]),
+        wbOBMEVersion,
         wbInteger('EFIT Param Info', itU8, wbOBMEResolutionInfo),
         wbInteger('EFIX Param Info', itU8, wbOBMEResolutionInfo),
         wbByteArray('Unused', $0A)
@@ -2387,11 +2356,7 @@ begin
 //        wbRStructs('Effects','Effect', [
 //          wbStruct(EFME, 'Oblivion Magic Extender', [
 //            wbInteger('Record Version', itU8),
-//            wbStruct('OBME Version', [
-//              wbInteger('Beta', itU8),
-//              wbInteger('Minor', itU8),
-//              wbInteger('Major', itU8)
-//            ]),
+//            wbOBMEVersion,
 //            wbInteger('EFIT Param Info', itU8, wbOBMEResolutionInfo),
 //            wbInteger('EFIX Param Info', itU8, wbOBMEResolutionInfo),
 //            wbByteArray('Unused', $0A)
@@ -2411,11 +2376,7 @@ begin
     wbEDID,
     wbStruct(OBME, 'Oblivion Magic Extender', [
       wbInteger('Record Version', itU8),
-      wbStruct('OBME Version', [
-        wbInteger('Beta', itU8),
-        wbInteger('Minor', itU8),
-        wbInteger('Major', itU8)
-      ]),
+      wbOBMEVersion,
       wbByteArray('Unused', $1C)
     ], cpNormal, False, wbOBMEDontShow),
     wbFULL,
@@ -2652,18 +2613,7 @@ begin
     wbString(FNAM, 'Sun Texture'),
     wbString(GNAM, 'Sun Glare Texture'),
     wbTexturedModel('Model', [MODL, MODB, MODT]),
-    wbStruct(TNAM, 'Timing', [
-      wbStruct('Sunrise', [
-        wbInteger('Begin', itU8, wbClmtTime),
-        wbInteger('End', itU8, wbClmtTime)
-      ]),
-      wbStruct('Sunset', [
-        wbInteger('Begin', itU8, wbClmtTime),
-        wbInteger('End', itU8, wbClmtTime)
-      ]),
-      wbInteger('Volatility', itU8),
-      wbInteger('Moons / Phase Length', itU8, wbClmtMoonsPhaseLength)
-    ], cpNormal, True)
+    wbClimateTiming(wbClmtTime, wbClmtMoonsPhaseLength)
   ]);
 
   wbRecord(CLOT, 'Clothing', [
@@ -3117,11 +3067,7 @@ begin
     wbEDID,
     wbStruct(OBME, 'Oblivion Magic Extender', [
       wbInteger('Record Version', itU8),
-      wbStruct('OBME Version', [
-        wbInteger('Beta', itU8),
-        wbInteger('Minor', itU8),
-        wbInteger('Major', itU8)
-      ]),
+      wbOBMEVersion,
       wbByteArray('Unused', $1C)
     ], cpNormal, False, wbOBMEDontShow),
     wbFULL,
@@ -3178,12 +3124,7 @@ begin
     wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbSCRI,
     wbFormIDCk(PFIG, 'Ingredient', [INGR]),
-    wbStruct(PFPC, 'Seasonal ingredient production', [
-      wbInteger('Spring', itU8),
-      wbInteger('Summer ', itU8),
-      wbInteger('Fall', itU8),
-      wbInteger('Winter', itU8)
-    ], cpNormal, True)
+    wbSeasons
   ]);
 
   wbRecord(FURN, 'Furniture', [
@@ -3580,11 +3521,7 @@ begin
         5, 'Service',
         6, 'Miscellaneous'
       ])),
-      wbInteger('Next Speaker', itU8, wbEnum([
-        {0} 'Target',
-        {1} 'Self',
-        {2} 'Either'
-      ])),
+      wbNextSpeaker,
       wbInteger('Flags', itU8, wbFlags([
         {0x0001} 'Goodbye',
         {0x0002} 'Random',
@@ -3630,11 +3567,7 @@ begin
     wbEDID,
     wbStruct(OBME, 'Oblivion Magic Extender', [
       wbInteger('Record Version', itU8),
-      wbStruct('OBME Version', [
-        wbInteger('Beta', itU8),
-        wbInteger('Minor', itU8),
-        wbInteger('Major', itU8)
-      ]),
+      wbOBMEVersion,
       wbByteArray('Unused', $1C)
     ], cpNormal, False, wbOBMEDontShow),
     wbFULL,
@@ -3662,13 +3595,6 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbQuadrantEnum := wbEnum([
-    {0} 'Bottom Left',
-    {1} 'Bottom Right',
-    {2} 'Top Left',
-    {3} 'Top Right'
-  ]);
-
   if wbSimpleRecords then begin
 
     wbRecord(LAND, 'Landscape', [
@@ -3676,27 +3602,7 @@ begin
       wbByteArray(VNML, 'Vertex Normals'),
       wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
-
-      wbRArrayS('Layers', wbRUnion('Layer', [
-        wbRStructSK([0],'Base Layer', [
-          wbStructSK(BTXT, [1, 3], 'Base Layer Header', [
-            wbFormIDCk('Texture', [LTEX, NULL]),
-            wbInteger('Quadrant', itU8, wbQuadrantEnum),
-            wbByteArray('Unused', 1),
-            wbInteger('Layer', itS16)
-          ])
-        ], []),
-        wbRStructSK([0],'Alpha Layer', [
-          wbStructSK(ATXT, [1, 3], 'Alpha Layer Header', [
-            wbFormIDCk('Texture', [LTEX, NULL]),
-            wbInteger('Quadrant', itU8, wbQuadrantEnum),
-            wbByteArray('Unused', 1),
-            wbInteger('Layer', itS16)
-          ]),
-          wbByteArray(VTXT, 'Alpha Layer Data')
-        ], [])
-      ], [])),
-
+      wbLandscapeLayers(wbSimpleRecords),
       wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL]))
     ]);
 
@@ -3708,52 +3614,10 @@ begin
 //        wbInteger('Flags', itU8, wbFlags([])),
 //        wbByteArray('Unknown')
 //      ]),
-      wbArray(VNML, 'Vertex Normals', wbStruct('Row', [
-        wbArray('Columns', wbStruct('Column', [
-          wbInteger('X', itU8),
-          wbInteger('Y', itU8),
-          wbInteger('Z', itU8)
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), 33)
-      ]), 33),
-      wbStruct(VHGT, 'Vertex Height Map', [
-        wbFloat('Offset'),
-        wbArray('Rows', wbStruct('Row', [
-          wbArray('Columns', wbInteger('Column', itU8), 33)
-        ]), 33),
-        wbByteArray('Unused', 3)
-      ]),
-      wbArray(VCLR, 'Vertex Colours', wbStruct('Row', [
-        wbArray('Columns', wbStruct('Column', [
-          wbInteger('X', itU8),
-          wbInteger('Y', itU8),
-          wbInteger('Z', itU8)
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), 33)
-      ]), 33),
-
-      wbRArrayS('Layers', wbRUnion('Layer', [
-        wbRStructSK([0],'Base Layer', [
-          wbStructSK(BTXT, [1, 3], 'Base Layer Header', [
-            wbFormIDCk('Texture', [LTEX, NULL]),
-            wbInteger('Quadrant', itU8, wbQuadrantEnum),
-            wbByteArray('Unused', 1),
-            wbInteger('Layer', itS16)
-          ])
-        ], []),
-        wbRStructSK([0],'Alpha Layer', [
-          wbStructSK(ATXT, [1, 3], 'Alpha Layer Header', [
-            wbFormIDCk('Texture', [LTEX, NULL]),
-            wbInteger('Quadrant', itU8, wbQuadrantEnum),
-            wbByteArray('Unused', 1),
-            wbInteger('Layer', itS16)
-          ]),
-          wbArrayS(VTXT, 'Alpha Layer Data', wbStructSK([0], 'Cell', [
-            wbInteger('Position', itU16, wbAtxtPosition),
-            wbByteArray('Unused', 2),
-            wbFloat('Opacity')
-          ]))
-        ], [])
-      ], [])),
-
+      wbVertexColumns(VNML, 'Vertex Normals'),
+      wbVertexHeightMap,
+      wbVertexColumns(VCLR, 'Vertex Colours'),
+      wbLandscapeLayers(wbSimpleRecords),
       wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL]))
     ]);
 
@@ -3905,11 +3769,7 @@ begin
     wbStringMgefCode(EDID, 'Magic Effect Code'),
     wbStruct(OBME, 'Oblivion Magic Extender', [
       wbInteger('Record Version', itU8),
-      wbStruct('OBME Version', [
-        wbInteger('Beta', itU8),
-        wbInteger('Minor', itU8),
-        wbInteger('Major', itU8)
-      ]),
+      wbOBMEVersion,
       wbInteger('Param A Info', itU8, wbOBMEResolutionInfo),
       wbInteger('Param B Info', itU8, wbOBMEResolutionInfo),
       wbByteArray('Unused', 2),
@@ -4366,7 +4226,13 @@ begin
       wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
         wbInteger('Skill', itS8, wbActorValueEnum),
         wbInteger('Boost', itS8)
-      ]), 7),
+      ])
+      .SetSummaryKey([1, 0])
+      .SetSummaryMemberPrefixSuffix(1, '+', '')
+      .SetSummaryMemberPrefixSuffix(0, '', '')
+      .SetSummaryDelimiter(' ')
+      .IncludeFlag(dfSummaryNoSortKey)
+      .IncludeFlag(dfSummaryMembersNoName).IncludeFlag(dfCollapsed), 7),
       wbByteArray('Unused', 2),
       wbFloat('Male Height'),
       wbFloat('Female Height'),
@@ -4683,11 +4549,7 @@ begin
     wbEDID,
     wbStruct(OBME, 'Oblivion Magic Extender', [
       wbInteger('Record Version', itU8),
-      wbStruct('OBME Version', [
-        wbInteger('Beta', itU8),
-        wbInteger('Minor', itU8),
-        wbInteger('Major', itU8)
-      ]),
+      wbOBMEVersion,
       wbByteArray('Unused', $1C)
     ], cpNormal, False, wbOBMEDontShow),
     wbFULL,
@@ -4784,11 +4646,7 @@ begin
     wbEDID,
     wbStruct(OBME, 'Oblivion Magic Extender', [
       wbInteger('Record Version', itU8),
-      wbStruct('OBME Version', [
-        wbInteger('Beta', itU8),
-        wbInteger('Minor', itU8),
-        wbInteger('Major', itU8)
-      ]),
+      wbOBMEVersion,
       wbByteArray('Unused', $1C)
     ], cpNormal, False, wbOBMEDontShow),
     wbFULL,
@@ -4994,16 +4852,7 @@ begin
       ]), cpNormal, True),
       //wbArray(NAM0, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
       //wbArray(NAM9, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-      wbRStruct('Object Bounds', [
-        wbStruct(NAM0, 'Min', [
-          wbFloat('X', cpNormal, False, 1/4096),
-          wbFloat('Y', cpNormal, False, 1/4096)
-        ], cpIgnore, True),
-        wbStruct(NAM9, 'Max', [
-          wbFloat('X', cpNormal, False, 1/4096),
-          wbFloat('Y', cpNormal, False, 1/4096)
-        ], cpIgnore, True)
-      ], []),
+      wbWorldspaceOBND,
       wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
       wbByteArray(OFST, 'Offset Data')
     ], False, nil, cpNormal, False, wbRemoveOFST)
@@ -5042,16 +4891,7 @@ begin
       ]), cpNormal, True),
       //wbArray(NAM0, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
       //wbArray(NAM9, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-      wbRStruct('Object Bounds', [
-        wbStruct(NAM0, 'Min', [
-          wbFloat('X', cpNormal, False, 1/4096),
-          wbFloat('Y', cpNormal, False, 1/4096)
-        ], cpIgnore, True),
-        wbStruct(NAM9, 'Max', [
-          wbFloat('X', cpNormal, False, 1/4096),
-          wbFloat('Y', cpNormal, False, 1/4096)
-        ], cpIgnore, True)
-      ], []),
+      wbWorldspaceOBND,
       wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
       wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0)
     ], False, nil, cpNormal, False, wbRemoveOFST);

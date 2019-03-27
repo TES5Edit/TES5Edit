@@ -11,6 +11,8 @@ const
   SCDA : TwbSignature = 'SCDA';
   SCTX : TwbSignature = 'SCTX';
 
+{>>> Common Summary Callbacks <<<}
+
 procedure wbConditionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 procedure wbFactionRelationToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -21,8 +23,6 @@ procedure wbItemToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; c
 
 procedure wbLeveledListEntryToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-procedure wbObjectBoundsToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-
 procedure wbRecordHeaderToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 procedure wbRGBAToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -31,7 +31,17 @@ procedure wbObjectPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: 
 
 procedure wbScriptPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
+procedure wbScriptToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+
 procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+
+{>>> Common Callbacks <<<}
+
+function wbAtxtPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+
+function wbNeverShow(const aElement: IwbElement): Boolean;
+
+function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 
 {>>> Common Definitions <<<}
 
@@ -41,20 +51,43 @@ function wbAlternateTexture: IwbStructDef;
 
 function wbAxisEnum: IwbEnumDef;
 
+function wbCellGrid: IwbRecordMemberDef;
+
+function wbClimateTiming(aTimeCallback: TwbIntToStrCallback; aPhaseCallback: TwbIntToStrCallback): IwbRecordMemberDef;
+
 function wbDebrisModel(aTextureFileHashes: IwbRecordMemberDef): IwbRecordMemberDef;
+
+function wbLandscapeLayers(aSimpleRecords: Boolean = True): IwbRecordMemberDef;
+
+function wbNextSpeaker: IwbIntegerDef;
+
+function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
+
+function wbWorldspaceOBND: IwbRecordMemberDef;
+
+function wbPerkEffectType(aAfterSetCallback: TwbAfterSetCallback): IwbIntegerDef;
+
+function wbPosRot: IwbStructDef;
+
+function wbDATAPosRot: IwbSubRecordDef;
+
+function wbSizePosRot(aSignature: TwbSignature; aName: string; aPriority: TwbConflictPriority = cpNormal): IwbSubRecordDef;
+
+function wbQuadrantEnum: IwbEnumDef;
+
+function wbSeasons: IwbRecordMemberDef;
+
+function wbVertexColumns(aSignature: TwbSignature; aName: string): IwbRecordMemberDef;
+
+function wbVertexHeightMap: IwbRecordMemberDef;
 
 {>>> Common Functions <<<}
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 
-function wbNeverShow(const aElement: IwbElement): Boolean;
-
-/// <summary>Calls and returns wbGetScriptObjFormat. Used for VMAD parsing.</summary>
-function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-
 function wbTryGetContainerFromUnion(const aElement: IwbElement; out aContainer: IwbContainer): Boolean;
 
-procedure wbScriptToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+function wbTryGetMainRecord(const aElement: IwbElement; out aMainRecord: IwbMainRecord; aSignature: string = ''): Boolean;
 
 implementation
 
@@ -65,11 +98,25 @@ uses
   SysUtils;
 
 const
+  NULL: TwbSignature = 'NULL';
+  ATXT: TwbSignature = 'ATXT';
+  BTXT: TwbSignature = 'BTXT';
   CTDA: TwbSignature = 'CTDA';
   DATA: TwbSignature = 'DATA';
+  LTEX: TwbSignature = 'LTEX';
   MODT: TwbSignature = 'MODT';
+  NAM0: TwbSignature = 'NAM0';
+  NAM9: TwbSignature = 'NAM9';
+  OBND: TwbSignature = 'OBND';
+  PFPC: TwbSignature = 'PFPC';
+  TNAM: TwbSignature = 'TNAM';
   TXST: TwbSignature = 'TXST';
+  VCLR: TwbSignature = 'VCLR';
+  VHGT: TwbSignature = 'VHGT';
+  VNML: TwbSignature = 'VNML';
+  VTXT: TwbSignature = 'VTXT';
   XACT: TwbSignature = 'XACT';
+  XCLC: TwbSignature = 'XCLC';
 
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
@@ -82,7 +129,30 @@ begin
   Result := wbHideNeverShow;
 end;
 
+{>>> Common Callbacks <<<}
+
+function wbAtxtPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := '';
+
+  if aType = ctToSortKey then begin
+    Result := IntToHex64(aInt div 17, 2) + IntToHex64(aInt mod 17, 2);
+    Exit;
+  end;
+
+  if aType = ctCheck then begin
+    if (aInt < 0) or (aInt > 288) then
+      Result := '<Out of range: '+aInt.ToString+'>'
+    else
+      Exit;
+  end;
+
+  if aType in [ctToStr, ctToSummary] then
+    Result := aInt.ToString + ' -> ' + IntToStr(aInt div 17) + ':' + IntToStr(aInt mod 17);
+end;
+
 {>>> Common Definitions <<<}
+
 function wbActionFlag: IwbSubRecordDef;
 begin
   Result :=
@@ -114,6 +184,43 @@ begin
     ]);
 end;
 
+function wbCellGrid: IwbRecordMemberDef;
+begin
+  Result := wbStruct(XCLC, 'Grid', [
+    wbInteger('X', itS32),
+    wbInteger('Y', itS32),
+    wbInteger('Force Hide Land', itU32, wbFlags([
+      'Quad 1',
+      'Quad 2',
+      'Quad 3',
+      'Quad 4'
+    ], True))
+  ], cpNormal, False, nil, 2)
+  .SetSummaryKeyOnValue([0, 1, 2])
+  .SetSummaryPrefixSuffixOnValue(0, '(', '')
+  .SetSummaryPrefixSuffixOnValue(1, '', ')')
+  .SetSummaryPrefixSuffixOnValue(2, ' {Force Hide Land: ', '}')
+  .IncludeFlagOnValue(dfSummaryMembersNoName)
+  .IncludeFlag(dfCollapsed);
+end;
+
+function wbClimateTiming(aTimeCallback: TwbIntToStrCallback; aPhaseCallback: TwbIntToStrCallback): IwbRecordMemberDef;
+begin
+  Result :=
+    wbStruct(TNAM, 'Timing', [
+      wbStruct('Sunrise', [
+        wbInteger('Begin', itU8, aTimeCallback),
+        wbInteger('End', itU8, aTimeCallback)
+      ]),
+      wbStruct('Sunset', [
+        wbInteger('Begin', itU8, aTimeCallback),
+        wbInteger('End', itU8, aTimeCallback)
+      ]),
+      wbInteger('Volatility', itU8),
+      wbInteger('Moons / Phase Length', itU8, aPhaseCallback)
+    ], cpNormal, True);
+end;
+
 function wbDebrisModel(aTextureFileHashes: IwbRecordMemberDef): IwbRecordMemberDef;
 begin
   Result := wbRStruct('Model', [
@@ -135,6 +242,265 @@ begin
   .IncludeFlag(dfCollapsed, wbCollapseModels);
 end;
 
+function wbQuadrantEnum: IwbEnumDef;
+begin
+  Result := wbEnum([
+    {0} 'Bottom Left',
+    {1} 'Bottom Right',
+    {2} 'Top Left',
+    {3} 'Top Right'
+  ]);
+end;
+
+function wbLandscapeLayers(aSimpleRecords: Boolean = True): IwbRecordMemberDef;
+var
+  AlphaLayerData: IwbRecordMemberDef;
+begin
+  if aSimpleRecords then
+    AlphaLayerData := wbByteArray(VTXT, 'Alpha Layer Data')
+  else
+    AlphaLayerData :=
+      wbArrayS(VTXT, 'Alpha Layer Data', wbStructSK([0], 'Cell', [
+        wbInteger('Position', itU16, wbAtxtPosition),
+        wbByteArray('Unused', 2),
+        wbFloat('Opacity')
+      ]));
+
+  Result :=
+    wbRArrayS('Layers', wbRUnion('Layer', [
+      wbRStructSK([0],'Base Layer', [
+        wbStructSK(BTXT, [1, 3], 'Base Layer Header', [
+          wbFormIDCk('Texture', [LTEX, NULL]),
+          wbInteger('Quadrant', itU8, wbQuadrantEnum),
+          wbByteArray('Unused', 1),
+          wbInteger('Layer', itS16)
+        ])
+      ], []),
+      wbRStructSK([0],'Alpha Layer', [
+        wbStructSK(ATXT, [1, 3], 'Alpha Layer Header', [
+          wbFormIDCk('Texture', [LTEX, NULL]),
+          wbInteger('Quadrant', itU8, wbQuadrantEnum),
+          wbByteArray('Unused', 1),
+          wbInteger('Layer', itS16)
+        ]),
+        AlphaLayerData
+      ], [])
+    ], []));
+end;
+
+function wbNextSpeaker: IwbIntegerDef;
+begin
+  Result :=
+    wbInteger('Next Speaker', itU8, wbEnum([
+      {0} 'Target',
+      {1} 'Self',
+      {2} 'Either'
+    ]));
+end;
+
+function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
+begin
+  Result :=
+    wbStruct(OBND, 'Object Bounds', [
+      wbInteger('X1', itS16),
+      wbInteger('Y1', itS16),
+      wbInteger('Z1', itS16),
+      wbInteger('X2', itS16),
+      wbInteger('Y2', itS16),
+      wbInteger('Z2', itS16)
+    ], cpNormal, aRequired)
+    .SetSummaryKeyOnValue([0, 1, 2, 3, 4, 5])
+    .SetSummaryPrefixSuffixOnValue(0, '(', '')
+    .SetSummaryPrefixSuffixOnValue(2, '', ')')
+    .SetSummaryPrefixSuffixOnValue(3, '(', '')
+    .SetSummaryPrefixSuffixOnValue(5, '', ')')
+    .SetSummaryDelimiterOnValue(', ')
+    .IncludeFlagOnValue(dfSummaryMembersNoName)
+    .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
+end;
+
+function wbWorldspaceOBND: IwbRecordMemberDef;
+begin
+  Result :=
+    wbRStruct('Object Bounds', [
+      wbStruct(NAM0, 'Min', [
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True)
+      .SetSummaryKeyOnValue([0, 1])
+      .SetSummaryPrefixSuffixOnValue(0, 'Min(', '')
+      .SetSummaryPrefixSuffixOnValue(1, '', ')')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseObjectBounds),
+      wbStruct(NAM9, 'Max', [
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True)
+      .SetSummaryKeyOnValue([0, 1])
+      .SetSummaryPrefixSuffixOnValue(0, 'Max(', '')
+      .SetSummaryPrefixSuffixOnValue(1, '', ')')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseObjectBounds)
+    ], [])
+    .SetSummaryKey([0, 1])
+    .SetSummaryMemberPrefixSuffix(0, '[', '')
+    .SetSummaryMemberPrefixSuffix(1, '', ']')
+    .SetSummaryDelimiter(', ')
+    .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
+end;
+
+function wbPerkEffectType(aAfterSetCallback: TwbAfterSetCallback): IwbIntegerDef;
+begin
+  Result :=
+    wbInteger('Type', itU8, wbEnum([
+      'Quest + Stage',
+      'Ability',
+      'Entry Point'
+    ]), cpNormal, False, nil, aAfterSetCallback);
+end;
+
+function wbPosRot: IwbStructDef;
+begin
+  Result :=
+    wbStruct('Position/Rotation', [
+      wbStruct('Position', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ])
+      .SetSummaryKey([0, 1, 2])
+      .SetSummaryMemberPrefixSuffix(0, 'Vec3(', '')
+      .SetSummaryMemberPrefixSuffix(2, '', ')')
+      .SetSummaryDelimiter(', ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseVec3),
+
+      wbStruct('Rotation', [
+        wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+      ])
+      .SetSummaryKey([0, 1, 2])
+      .SetSummaryMemberPrefixSuffix(0, 'Vec3(', '')
+      .SetSummaryMemberPrefixSuffix(2, '', ')')
+      .SetSummaryDelimiter(', ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseVec3)
+    ]);
+end;
+
+function wbDATAPosRot: IwbSubRecordDef;
+begin
+  Result :=
+    wbStruct(DATA, 'Position/Rotation', [
+      wbStruct('Position', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ])
+      .SetSummaryKey([0, 1, 2])
+      .SetSummaryMemberPrefixSuffix(0, 'Vec3(', '')
+      .SetSummaryMemberPrefixSuffix(2, '', ')')
+      .SetSummaryDelimiter(', ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseVec3),
+
+      wbStruct('Rotation', [
+        wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+      ])
+      .SetSummaryKey([0, 1, 2])
+      .SetSummaryMemberPrefixSuffix(0, 'Vec3(', '')
+      .SetSummaryMemberPrefixSuffix(2, '', ')')
+      .SetSummaryDelimiter(', ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseVec3)
+    ], cpNormal, True);
+end;
+
+function wbSizePosRot(aSignature: TwbSignature; aName: string; aPriority: TwbConflictPriority = cpNormal): IwbSubRecordDef;
+begin
+  Result :=
+    wbStruct(aSignature, aName, [
+      wbStruct('Size', [
+        wbFloat('Width', cpNormal, False, 2),
+        wbFloat('Height', cpNormal, False, 2)
+      ])
+      .SetSummaryKey([0, 1])
+      .SetSummaryMemberPrefixSuffix(0, 'Size(', '')
+      .SetSummaryMemberPrefixSuffix(1, '', ')')
+      .SetSummaryDelimiter(', ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed),
+
+      wbStruct('Position', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ])
+      .SetSummaryKey([0, 1, 2])
+      .SetSummaryMemberPrefixSuffix(0, 'Vec3(', '')
+      .SetSummaryMemberPrefixSuffix(2, '', ')')
+      .SetSummaryDelimiter(', ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseVec3),
+
+      wbStruct('Rotation (Quaternion?)', [
+        wbFloat('q1'),
+        wbFloat('q2'),
+        wbFloat('q3'),
+        wbFloat('q4')
+      ])
+      .SetSummaryKey([0, 1, 2, 3])
+      .SetSummaryMemberPrefixSuffix(0, 'Quat(', '')
+      .SetSummaryMemberPrefixSuffix(3, '', ')')
+      .SetSummaryDelimiter(', ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed)
+    ], aPriority);
+end;
+
+function wbSeasons: IwbRecordMemberDef;
+begin
+  Result :=
+    wbStruct(PFPC, 'Seasonal ingredient production', [
+      wbInteger('Spring', itU8),
+      wbInteger('Summer ', itU8),
+      wbInteger('Fall', itU8),
+      wbInteger('Winter', itU8)
+    ], cpNormal, True);
+end;
+
+function wbVertexColumns(aSignature: TwbSignature; aName: string): IwbRecordMemberDef;
+begin
+  Result :=
+    wbArray(aSignature, aName, wbStruct('Row', [
+      wbArray('Columns', wbStruct('Column', [
+        wbInteger('X', itU8),
+        wbInteger('Y', itU8),
+        wbInteger('Z', itU8)
+      ])
+      .SetSummaryKey([0, 1, 2])
+      .SetSummaryMemberPrefixSuffix(0, 'Vec3(', '')
+      .SetSummaryMemberPrefixSuffix(2, '', ')')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseVec3), 33)
+    ]), 33);
+end;
+
+function wbVertexHeightMap: IwbRecordMemberDef;
+begin
+  Result :=
+    wbStruct(VHGT, 'Vertex Height Map', [
+      wbFloat('Offset'),
+      wbArray('Rows', wbStruct('Row', [
+        wbArray('Columns', wbInteger('Column', itU8), 33)
+      ]), 33),
+      wbByteArray('Unused', 3)
+    ]);
+end;
+
 {>>> For Collapsible Fields <<<}
 
 function wbTrySetContainer(const aElement: IwbElement; aType: TwbCallbackType; out aContainer: IwbContainerElementRef): Boolean;
@@ -142,24 +508,43 @@ begin
   Result := (aType = ctToSummary) and Supports(aElement, IwbContainerElementRef, aContainer);
 end;
 
+{>>> Common Functions <<<}
+
 function wbTryGetContainerFromUnion(const aElement: IwbElement; out aContainer: IwbContainer): Boolean;
 begin
+  Result := False;
+
   if not Assigned(aElement) then
-  begin
-    Result := False;
     Exit;
-  end;
 
   aContainer := GetContainerFromUnion(aElement);
-
   if not Assigned(aContainer) then
-  begin
-    Result := False;
     Exit;
-  end;
 
   Result := True;
 end;
+
+function wbTryGetMainRecord(const aElement: IwbElement; out aMainRecord: IwbMainRecord; aSignature: string = ''): Boolean;
+var
+  MainRecord: IwbMainRecord;
+begin
+  Result := False;
+
+  if not Assigned(aElement) then
+    Exit;
+
+  if not Supports(aElement.LinksTo, IwbMainRecord, MainRecord) then
+    Exit;
+
+  if not SameText(aSignature, '') then
+    if MainRecord.Signature <> aSignature then
+      Exit;
+
+  aMainRecord := MainRecord;
+  Result := True;
+end;
+
+{>>> Common Callbacks <<<}
 
 /// <summary>Generates "{Count}x {FormID}" string for item. Supports single and double structs.</summary>
 /// <param name="aContainer">The Item element</param>
@@ -172,10 +557,7 @@ begin
 
   var FormID := aContainer.Elements[0];
 
-  if not Assigned(FormID) then
-    Exit;
-
-  if not Supports(FormID.LinksTo, IwbMainRecord, MainRecord) then
+  if not wbTryGetMainRecord(FormID, MainRecord) then
     Exit;
 
   var Count := aContainer.Elements[1];
@@ -326,7 +708,6 @@ end;
 procedure wbFactionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Container: IwbContainerElementRef;
-  MainRecord: IwbMainRecord;
 begin
   if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
@@ -346,7 +727,6 @@ end;
 procedure wbFactionRelationToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Container: IwbContainerElementRef;
-  MainRecord: IwbMainRecord;
 begin
   if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
@@ -374,27 +754,6 @@ begin
   aValue := Container.Elements[2].Value + ' ' + aValue;
 end;
 
-procedure wbObjectBoundsToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  Container: IwbContainerElementRef;
-begin
-  if not wbTrySetContainer(aElement, aType, Container) then
-    Exit;
-
-  var X1 := Container.Elements[0];
-  var Y1 := Container.Elements[1];
-  var Z1 := Container.Elements[2];
-
-  var X2 := Container.Elements[3];
-  var Y2 := Container.Elements[4];
-  var Z2 := Container.Elements[5];
-
-  var FacetPointA := X1.Value + ', ' + Y1.Value + ', ' + Z1.Value;
-  var FacetPointB := X2.Value + ', ' + Y2.Value + ', ' + Z2.Value;
-
-  aValue := '(' + FacetPointA + '), (' + FacetPointB + ')';
-end;
-
 procedure wbObjectPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Container: IwbContainerElementRef;
@@ -405,10 +764,7 @@ begin
 
   var ActorValueForm := Container.ElementByName['Actor Value'];
 
-  if not Assigned(ActorValueForm) then
-    Exit;
-
-  if not Supports(ActorValueForm.LinksTo, IwbMainRecord, MainRecord) then
+  if not wbTryGetMainRecord(ActorValueForm, MainRecord) then
     Exit;
 
   var ActorValueData := Container.ElementByName['Value'];
@@ -419,16 +775,11 @@ begin
     Exit;
 
   var CurveTable := Container.ElementByName['Curve Table'] as IwbContainerElementRef;
-
   if not Assigned(CurveTable) then
     Exit;
 
   var CurveTableForm := CurveTable.ElementByName['Curve Table'];
-
-  if not Assigned(CurveTableForm) then
-    Exit;
-
-  if not Supports(CurveTableForm.LinksTo, IwbMainRecord, MainRecord) then
+  if not wbTryGetMainRecord(CurveTableForm, MainRecord) then
     Exit;
 
   aValue := aValue + ' {Curve Table: ' + MainRecord.ShortName + '}';
@@ -605,6 +956,7 @@ begin
     aValue := aValue + ' = ' + PropertyValue;
 end;
 
+// TODO: used in too many places to replace with summary callbacks
 procedure wbRGBAToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Container: IwbContainerElementRef;
@@ -637,6 +989,7 @@ begin
     aValue := 'RGB(' + R + ', ' + G + ', ' + B + ')';
 end;
 
+// TODO: used in too many places to replace with summary callbacks
 procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Container: IwbContainerElementRef;
