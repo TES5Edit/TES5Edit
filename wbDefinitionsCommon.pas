@@ -61,6 +61,10 @@ procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; c
 
 function wbAtxtPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 
+function wbCTDAParam2QuestObjectiveToInt(const aString: string; const aElement: IwbElement): Int64;
+
+function wbCTDAParam2QuestStageToInt(const aString: string; const aElement: IwbElement): Int64;
+
 function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 
 function wbNeverShow(const aElement: IwbElement): Boolean;
@@ -352,6 +356,34 @@ begin
     Result := 1;
 end;
 
+function wbCTDAParam2QuestObjectiveToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  i    : Integer;
+  s    : string;
+begin
+  i := 1;
+  s := Trim(aString);
+  while (i <= Length(s)) and (s[i] in ['0'..'9']) do
+    Inc(i);
+  s := Copy(s, 1, Pred(i));
+
+  Result := StrToInt(s);
+end;
+
+function wbCTDAParam2QuestStageToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  i    : Integer;
+  s    : string;
+begin
+  i := 1;
+  s := Trim(aString);
+  while (i <= Length(s)) and (s[i] in ['0'..'9']) do
+    Inc(i);
+  s := Copy(s, 1, Pred(i));
+
+  Result := StrToInt(s);
+end;
+
 procedure wbCTDARunOnAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   if aOldValue <> aNewValue then
@@ -406,9 +438,9 @@ begin
 end;
 
 function wbLandscapeLayers(aSimpleRecords: Boolean = True): IwbRecordMemberDef;
+var
+  alphaLayerData: IwbSubRecordDef;
 begin
-  var alphaLayerData = nil;
-
   if aSimpleRecords then
     alphaLayerData := wbByteArray(VTXT, 'Alpha Layer Data')
   else
