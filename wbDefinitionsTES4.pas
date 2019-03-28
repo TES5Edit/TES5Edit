@@ -1162,18 +1162,13 @@ begin
     ctEditInfo: Result := '';
   end;
 
-  if not Assigned(aElement) then Exit;
-  Container := GetContainerRefFromUnionOrValue(aElement);
-  if not Assigned(Container) then Exit;
+  if not wbTryGetContainerRefFromUnionOrValue(aElement, Container) then
+    Exit;
 
   Param1 := Container.ElementByName['Parameter #1'];
-
-  if not Assigned(Param1) then
+  if not wbTryGetMainRecord(Param1, MainRecord) then
     Exit;
 
-  MainRecord := nil;
-  if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
-    Exit;
 {    if Param1.NativeValue = 0 then
       if Supports(Container.Container, IwbContainerElementRef, Container) then
         for i := 0 to Pred(Container.ElementCount) do
@@ -1183,9 +1178,6 @@ begin
               if Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
                 Break;
             end;}
-
-  if not Assigned(MainRecord) then
-    Exit;
 
   BaseRecord := MainRecord.BaseRecord;
   if Assigned(BaseRecord) then
@@ -1349,19 +1341,11 @@ begin
     ctEditInfo: Result := '';
   end;
 
-  if not Assigned(aElement) then
-    Exit;
-
-  Container := GetContainerRefFromUnionOrValue(aElement);
-  if not Assigned(Container) then
+  if not wbTryGetContainerRefFromUnionOrValue(aElement, Container) then
     Exit;
 
   Param1 := Container.ElementByName['Parameter #1'];
-
-  if not Assigned(Param1) then
-    Exit;
-
-  if not Supports(Param1.LinksTo, IwbMainRecord, MainRecord) then
+  if not wbTryGetMainRecord(Param1, MainRecord) then
     Exit;
 
   MainRecord := MainRecord.WinningOverride;

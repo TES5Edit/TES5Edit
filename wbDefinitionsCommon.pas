@@ -87,6 +87,8 @@ function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 
 function wbTryGetContainerFromUnion(const aElement: IwbElement; out aContainer: IwbContainer): Boolean;
 
+function wbTryGetContainerRefFromUnionOrValue(const aElement: IwbElement; out aContainer: IwbContainerElementRef): Boolean;
+
 function wbTryGetMainRecord(const aElement: IwbElement; out aMainRecord: IwbMainRecord; aSignature: string = ''): Boolean;
 
 implementation
@@ -124,11 +126,6 @@ begin
   Result := PCardinal(@aSignature)^;
 end;
 
-function wbNeverShow(const aElement: IwbElement): Boolean;
-begin
-  Result := wbHideNeverShow;
-end;
-
 {>>> Common Callbacks <<<}
 
 function wbAtxtPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -149,6 +146,11 @@ begin
 
   if aType in [ctToStr, ctToSummary] then
     Result := aInt.ToString + ' -> ' + IntToStr(aInt div 17) + ':' + IntToStr(aInt mod 17);
+end;
+
+function wbNeverShow(const aElement: IwbElement): Boolean;
+begin
+  Result := wbHideNeverShow;
 end;
 
 {>>> Common Definitions <<<}
@@ -295,8 +297,7 @@ begin
       {0} 'Target',
       {1} 'Self',
       {2} 'Either'
-    ]));
-end;
+    ]));end;
 
 function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
 begin
@@ -524,6 +525,20 @@ begin
   Result := True;
 end;
 
+function wbTryGetContainerRefFromUnionOrValue(const aElement: IwbElement; out aContainer: IwbContainerElementRef): Boolean;
+begin
+  Result := False;
+
+  if not Assigned(aElement) then
+    Exit;
+
+  aContainer := GetContainerRefFromUnionOrValue(aElement);
+  if not Assigned(aContainer) then
+    Exit;
+
+  Result := True;
+end;
+
 function wbTryGetMainRecord(const aElement: IwbElement; out aMainRecord: IwbMainRecord; aSignature: string = ''): Boolean;
 var
   MainRecord: IwbMainRecord;
@@ -556,7 +571,6 @@ begin
   Result := '';
 
   var FormID := aContainer.Elements[0];
-
   if not wbTryGetMainRecord(FormID, MainRecord) then
     Exit;
 
@@ -598,13 +612,13 @@ begin
   var Items := TStringList.Create;
 
   if CompareStr(aContainer.Name, 'Array of Object') = 0 then
-    for var i := 0 to Pred(aContainer.ElementCount) do
-    begin
+    for var i := 0 to Pred(aContainer.ElementCount) do begin
       var ObjectUnion := aContainer.Elements[i] as IwbContainerElementRef;
       var ObjectVersion := IfThen(wbGetScriptObjFormat(ObjectUnion) = 0, 'v2', 'v1');
 
       var FormID := ObjectUnion.ElementByPath['Object ' + ObjectVersion + '\FormID'];
       var Alias := ObjectUnion.ElementByPath['Object ' + ObjectVersion + '\Alias'];
+      var AliasValue := Alias.Value;
 
       if Supports(FormID.LinksTo, IwbMainRecord, MainRecord) then
         if MainRecord <> nil then
@@ -612,7 +626,7 @@ begin
         else
           ItemName := 'NULL';
 
-      if not (CompareStr(Alias.Value, 'None') = 0) and not (Length(Alias.Value) = 0) then
+      if not (CompareStr(AliasValue, 'None') = 0) and not (Length(AliasValue) = 0) then
         Items.Add(Alias.EditValue + IfThen(Length(ItemName) > 0, ' = ' + ItemName, ''))
       else
         if MainRecord <> nil then
@@ -636,27 +650,28 @@ begin
   if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
-  if wbGameMode > gmFNV then
-  begin
+  if wbGameMode > gmFNV then begin
     if not Supports(Container.RecordBySignature[CTDA], IwbContainerElementRef, cerCTDA) then
       Exit;
-  end
-  else
+  end else
     cerCTDA := Container;
 
   var Typ : Byte := cerCTDA.Elements[0].NativeValue;
   var Func := cerCTDA.Elements[3];
 
-  if (cerCTDA.ElementCount >= 9) and (cerCTDA.Elements[7].Def.DefType <> dtEmpty) and (cerCTDA.Elements[8].Def.DefType <> dtEmpty) then
-  begin
+  if (cerCTDA.ElementCount >= 9)
+  and (cerCTDA.Elements[7].Def.DefType <> dtEmpty)
+  and (cerCTDA.Elements[8].Def.DefType <> dtEmpty) then begin
     var RunOn := cerCTDA.Elements[7];
+
     var RunOnInt: Integer := RunOn.NativeValue;
-    if wbGameMode = gmFNV then
-    begin
+
+    if wbGameMode = gmFNV then begin
       var FuncInt: Integer := Func.NativeValue;
       if (FuncInt = 106) or (FuncInt = 285) then
         RunOnInt := 0;
     end;
+
     if RunOnInt = 2 then
       aValue := '(' + cerCTDA.Elements[8].Summary + ')'
     else
@@ -671,12 +686,13 @@ begin
   aValue := aValue + '.' + Func.Summary;
 
   var Param1 := cerCTDA.Elements[5];
-  if Param1.ConflictPriority <> cpIgnore then
-  begin
+  if Param1.ConflictPriority <> cpIgnore then begin
     aValue := aValue + '(' {+ Param1.Name + ': '} + Param1.Summary;
+
     var Param2 := cerCTDA.Elements[6];
     if Param2.ConflictPriority <> cpIgnore then
       aValue := aValue + ', ' {+ Param2.Name + ': '} + Param2.Summary;
+
     aValue := aValue + ')';
   end;
 
@@ -739,8 +755,7 @@ begin
 
   aValue := Faction.Value;
 
-  if wbGameMode = gmTES4 then
-  begin
+  if wbGameMode = gmTES4 then begin
     var NativeRank := Rank.NativeValue;
 
     aValue := IntToStr(NativeRank) + ' ' + aValue;
@@ -763,7 +778,6 @@ begin
     Exit;
 
   var ActorValueForm := Container.ElementByName['Actor Value'];
-
   if not wbTryGetMainRecord(ActorValueForm, MainRecord) then
     Exit;
 
@@ -819,11 +833,7 @@ begin
     Container := LeveledObject;
 
   Ref := Container.ElementByName['Reference'];
-
-  if not Assigned(Ref) then
-    Exit;
-
-  if not Supports(Ref.LinksTo, IwbMainRecord, MainRecord) then
+  if not wbTryGetMainRecord(Ref, MainRecord) then
     Exit;
 
   Level := Container.ElementByName['Level'];
@@ -882,6 +892,8 @@ procedure wbScriptPropertyObjectToStr(const aContainer: IwbContainerElementRef; 
 var
   MainRecord: IwbMainRecord;
 begin
+  PropertyValue := 'NULL';
+
   var ObjectUnion := aContainer.ElementByPath['Value\Object Union'] as IwbContainerElementRef;
 
   var Version := IfThen(wbGetScriptObjFormat(ObjectUnion) = 0, 'v2', 'v1');
@@ -892,17 +904,15 @@ begin
   var AliasValue := Alias.Value;
 
   // compare length, too, because v1 doesn't default to 'None'
-  if not (CompareStr(AliasValue, 'None') = 0) and not (Length(AliasValue) = 0) then
-  begin
+  if not (CompareStr(AliasValue, 'None') = 0) and not (Length(AliasValue) = 0) then begin
     PropertyType := 'Alias';
     PropertyName := Alias.EditValue;
   end;
 
-  if Supports(FormID.LinksTo, IwbMainRecord, MainRecord) then
-    if MainRecord <> nil then
-      PropertyValue := MainRecord.ShortName
-    else
-      PropertyValue := 'NULL';
+  if not wbTryGetMainRecord(FormID, MainRecord) then
+    Exit;
+
+  PropertyValue := MainRecord.ShortName
 end;
 
 procedure wbScriptPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -943,8 +953,7 @@ begin
     Exit;
 
   // 17 = Array of Struct
-  if PropertyTypeElement.NativeValue = 17 then
-  begin
+  if PropertyTypeElement.NativeValue = 17 then begin
     PropertyValue := '';
     PropertyType := PropertyType.Substring(9) + '[]';
   end;
@@ -966,8 +975,7 @@ begin
   if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
-  if Container.ElementCount >= 3 then
-  begin
+  if Container.ElementCount >= 3 then begin
     R := Container.Elements[0].Summary;
     G := Container.Elements[1].Summary;
     B := Container.Elements[2].Summary;
@@ -1021,14 +1029,12 @@ begin
   var eSCDA := CER.ElementBySignature[SCDA];
   var eSCTX := CER.ElementBySignature[SCTX];
 
-  if not Assigned(eSCDA) then
-  begin
+  if not Assigned(eSCDA) then begin
     aValue := IfThen(Assigned(eSCTX), '<Source not compiled>', '<Empty>');
     Exit;
   end;
 
-  if not Assigned(eSCTX) then
-  begin
+  if not Assigned(eSCTX) then begin
     aValue := '<Source missing>';
     Exit;
   end;
@@ -1037,8 +1043,7 @@ begin
   try
     Text := eSCTX.Value;
 
-    for var i := Pred(Count) downto 0 do
-    begin
+    for var i := Pred(Count) downto 0 do begin
       var s := Strings[i].Trim;
 
       if s.StartsWith(';') then
