@@ -43,6 +43,8 @@ procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; c
 
 function wbAtxtPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 
+function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+
 function wbNeverShow(const aElement: IwbElement): Boolean;
 
 function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -150,6 +152,25 @@ begin
 
   if aType in [ctToStr, ctToSummary] then
     Result := aInt.ToString + ' -> ' + IntToStr(aInt div 17) + ':' + IntToStr(aInt mod 17);
+end;
+
+function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbContainer;
+begin
+  Result := 0;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
+
+  if wbGameMode = gmFNV then begin
+    // IsFacingUp, IsLeftUp
+    var i := Container.ElementNativeValues['Function'];
+    if (i = 106) or (i = 285) then
+      Exit;
+  end;
+
+  if Integer(Container.ElementNativeValues['Run On']) = 2 then
+    Result := 1;
 end;
 
 procedure wbCTDARunOnAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
