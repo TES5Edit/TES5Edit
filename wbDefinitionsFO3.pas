@@ -1508,21 +1508,6 @@ begin
   end;
 end;
 
-function wbMODTCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-var
-  Strings: TDynStrings;
-  i: Integer;
-begin
-  Result := '';
-  if wbLoaderDone and (aType in [ctToStr, ctToSummary, ctToSortKey] ) then begin
-    Strings := wbContainerHandler.ResolveHash(aInt);
-    for i := Low(Strings) to High(Strings) do
-      Result := Result + Strings[i] + ', ';
-    SetLength(Result, Length(Result) -2 );
-  end;
-end;
-
-
 function wbIdleAnam(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';

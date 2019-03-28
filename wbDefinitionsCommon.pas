@@ -67,6 +67,8 @@ function wbCTDAParam2QuestStageToInt(const aString: string; const aElement: IwbE
 
 function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 
+function wbMODTCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+
 function wbNeverShow(const aElement: IwbElement): Boolean;
 
 function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -389,6 +391,22 @@ begin
   if aOldValue <> aNewValue then
     if aNewValue <> 2 then
       aElement.Container.ElementNativeValues['Reference'] := 0;
+end;
+
+function wbMODTCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Strings: TDynStrings;
+  i: Integer;
+begin
+  Result := '';
+  if wbLoaderDone and (aType in [ctToStr, ctToSummary, ctToSortKey] ) then begin
+    Strings := wbContainerHandler.ResolveHash(aInt);
+    for i := Low(Strings) to High(Strings) do
+      Result := Result + Strings[i] + ', ';
+    SetLength(Result, Length(Result) -2 );
+  end;
+  if Result = '' then
+    Result := 'Unresolved: ' + IntToHex64(aInt, 16);
 end;
 
 function wbNeverShow(const aElement: IwbElement): Boolean;
