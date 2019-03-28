@@ -1205,8 +1205,6 @@ var
   wbPDTOs: IwbSubRecordArrayDef;
   wbUNAMs: IwbSubRecordArrayDef;
   wbNull: IwbValueDef;
-  wbTimeInterpolator: IwbStructDef;
-  wbColorInterpolator: IwbStructDef;
   wbIMADUnknown1: IwbStructDef;
   wbYNAM: IwbSubRecordDef;
   wbZNAM: IwbSubRecordDef;
@@ -12370,19 +12368,6 @@ begin
     wbString(TX00, 'LUT')
   ]);
 
-  wbTimeInterpolator := wbStructSK([0], 'Data', [
-    wbFloat('Time'),
-    wbFloat('Value')
-  ]);
-
-  wbColorInterpolator := wbStructSK([0], 'Data', [
-    wbFloat('Time'),
-    wbFloat('Red', cpNormal, False, 255, 0),
-    wbFloat('Green', cpNormal, False, 255, 0),
-    wbFloat('Blue', cpNormal, False, 255, 0),
-    wbFloat('Alpha', cpNormal, False, 255, 0)
-  ]);
-
   wbIMADUnknown1 := wbStruct('Unknown', [
     wbByteArray('Unknown', 4), //may be a float too, can't confirm
     wbFloat('Unknown'),
@@ -12532,14 +12517,7 @@ begin
     wbSubRecord(_4F_IAD, 'Unknown', wbIMADUnknown1),
     wbSubRecord(_10_IAD, 'Unknown', wbIMADUnknown1),
     wbSubRecord(_50_IAD, 'Unknown', wbIMADUnknown1),
-    wbRStruct('Cinematic', [
-      wbArray(_11_IAD, 'Saturation Mult', wbTimeInterpolator),
-      wbArray(_51_IAD, 'Saturation Add', wbTimeInterpolator),
-      wbArray(_12_IAD, 'Brightness Mult', wbTimeInterpolator),
-      wbArray(_52_IAD, 'Brightness Add', wbTimeInterpolator),
-      wbArray(_13_IAD, 'Contrast Mult', wbTimeInterpolator),
-      wbArray(_53_IAD, 'Contrast Add', wbTimeInterpolator)
-    ], []),
+    wbCinematicIMAD,
     wbSubRecord(_14_IAD, 'Unknown', wbIMADUnknown1),
     wbSubRecord(_54_IAD, 'Unknown', wbIMADUnknown1),
     wbString(FULL)

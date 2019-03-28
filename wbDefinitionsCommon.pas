@@ -11,6 +11,24 @@ const
   SCDA : TwbSignature = 'SCDA';
   SCTX : TwbSignature = 'SCTX';
 
+var
+  wbActionFlag: IwbSubRecordDef;
+  wbAlternateTexture: IwbStructDef;
+  wbAxisEnum: IwbEnumDef;
+  wbCellGrid: IwbRecordMemberDef;
+  wbCinematicIMAD: IwbSubRecordStructDef;
+  wbColorInterpolator: IwbStructDef;
+  wbDATAPosRot: IwbSubRecordDef;
+  wbNextSpeaker: IwbIntegerDef;
+  wbPosRot: IwbStructDef;
+  wbQuadrantEnum: IwbEnumDef;
+  wbSeasons: IwbRecordMemberDef;
+  wbTimeInterpolator: IwbStructDef;
+  wbVertexHeightMap: IwbRecordMemberDef;
+  wbWorldspaceOBND: IwbRecordMemberDef;
+
+procedure DefineCommonDefinitions;
+
 {>>> Common Procedure Callbacks <<<}
 
 procedure wbCTDARunOnAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -51,41 +69,19 @@ function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aEl
 
 {>>> Common Definitions <<<}
 
-function wbActionFlag: IwbSubRecordDef;
-
-function wbAlternateTexture: IwbStructDef;
-
-function wbAxisEnum: IwbEnumDef;
-
-function wbCellGrid: IwbRecordMemberDef;
-
 function wbClimateTiming(aTimeCallback: TwbIntToStrCallback; aPhaseCallback: TwbIntToStrCallback): IwbRecordMemberDef;
 
 function wbDebrisModel(aTextureFileHashes: IwbRecordMemberDef): IwbRecordMemberDef;
 
 function wbLandscapeLayers(aSimpleRecords: Boolean = True): IwbRecordMemberDef;
 
-function wbNextSpeaker: IwbIntegerDef;
-
 function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
-
-function wbWorldspaceOBND: IwbRecordMemberDef;
 
 function wbPerkEffectType(aAfterSetCallback: TwbAfterSetCallback): IwbIntegerDef;
 
-function wbPosRot: IwbStructDef;
-
-function wbDATAPosRot: IwbSubRecordDef;
-
 function wbSizePosRot(aSignature: TwbSignature; aName: string; aPriority: TwbConflictPriority = cpNormal): IwbSubRecordDef;
 
-function wbQuadrantEnum: IwbEnumDef;
-
-function wbSeasons: IwbRecordMemberDef;
-
 function wbVertexColumns(aSignature: TwbSignature; aName: string): IwbRecordMemberDef;
-
-function wbVertexHeightMap: IwbRecordMemberDef;
 
 {>>> Common Functions <<<}
 
@@ -106,6 +102,12 @@ uses
   SysUtils;
 
 const
+  _11_IAD: TwbSignature = #$11'IAD';
+  _51_IAD: TwbSignature = #$51'IAD';
+  _12_IAD: TwbSignature = #$12'IAD';
+  _52_IAD: TwbSignature = #$52'IAD';
+  _13_IAD: TwbSignature = #$13'IAD';
+  _53_IAD: TwbSignature = #$53'IAD';
   NULL: TwbSignature = 'NULL';
   ATXT: TwbSignature = 'ATXT';
   BTXT: TwbSignature = 'BTXT';
@@ -126,6 +128,183 @@ const
   XACT: TwbSignature = 'XACT';
   XCLC: TwbSignature = 'XCLC';
 
+procedure DefineCommonDefinitions;
+begin
+  wbActionFlag :=
+    wbInteger(XACT, 'Action Flag', itU32, wbFlags([
+      'Use Default',
+      'Activate',
+      'Open',
+      'Open by Default'
+    ]));
+
+  wbAlternateTexture :=
+    wbStructSK([0, 2], 'Alternate Texture', [
+      wbLenString('3D Name'),
+      wbFormIDCk('New Texture', [TXST]),
+      wbInteger('3D Index', itS32)
+    ]);
+
+  wbAxisEnum :=
+    wbEnum([], [
+      88, 'X',
+      89, 'Y',
+      90, 'Z'
+    ]);
+
+  wbCellGrid :=
+    wbStruct(XCLC, 'Grid', [
+      wbInteger('X', itS32),
+      wbInteger('Y', itS32),
+      wbInteger('Force Hide Land', itU32, wbFlags([
+        'Quad 1',
+        'Quad 2',
+        'Quad 3',
+        'Quad 4'
+      ], True))
+    ], cpNormal, False, nil, 2)
+    .SetSummaryKeyOnValue([0, 1, 2])
+    .SetSummaryPrefixSuffixOnValue(0, '(', '')
+    .SetSummaryPrefixSuffixOnValue(1, '', ')')
+    .SetSummaryPrefixSuffixOnValue(2, ' {Force Hide Land: ', '}')
+    .IncludeFlagOnValue(dfSummaryMembersNoName)
+    .IncludeFlag(dfCollapsed);
+
+  wbCinematicIMAD :=
+    wbRStruct('Cinematic', [
+      wbArray(_11_IAD, 'Saturation Mult', wbTimeInterpolator),
+      wbArray(_51_IAD, 'Saturation Add', wbTimeInterpolator),
+      wbArray(_12_IAD, 'Brightness Mult', wbTimeInterpolator),
+      wbArray(_52_IAD, 'Brightness Add', wbTimeInterpolator),
+      wbArray(_13_IAD, 'Contrast Mult', wbTimeInterpolator),
+      wbArray(_53_IAD, 'Contrast Add', wbTimeInterpolator)
+    ], []);
+
+  wbColorInterpolator :=
+    wbStructSK([0], 'Data', [
+      wbFloat('Time'),
+      wbFloat('Red', cpNormal, False, 255, 0),
+      wbFloat('Green', cpNormal, False, 255, 0),
+      wbFloat('Blue', cpNormal, False, 255, 0),
+      wbFloat('Alpha', cpNormal, False, 255, 0)
+    ]);
+
+  wbDATAPosRot :=
+    wbStruct(DATA, 'Position/Rotation', [
+      wbStruct('Position', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ])
+      .SetSummaryKey([0, 1, 2])
+      .SetSummaryMemberPrefixSuffix(0, 'Vec3(', '')
+      .SetSummaryMemberPrefixSuffix(2, '', ')')
+      .SetSummaryDelimiter(', ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseVec3),
+
+      wbStruct('Rotation', [
+        wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+      ])
+      .SetSummaryKey([0, 1, 2])
+      .SetSummaryMemberPrefixSuffix(0, 'Vec3(', '')
+      .SetSummaryMemberPrefixSuffix(2, '', ')')
+      .SetSummaryDelimiter(', ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseVec3)
+    ], cpNormal, True);
+
+  wbNextSpeaker :=
+    wbInteger('Next Speaker', itU8, wbEnum([
+      {0} 'Target',
+      {1} 'Self',
+      {2} 'Either'
+    ]));  wbPosRot :=    wbStruct('Position/Rotation', [
+      wbStruct('Position', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ])
+      .SetSummaryKey([0, 1, 2])
+      .SetSummaryMemberPrefixSuffix(0, 'Vec3(', '')
+      .SetSummaryMemberPrefixSuffix(2, '', ')')
+      .SetSummaryDelimiter(', ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseVec3),
+
+      wbStruct('Rotation', [
+        wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+      ])
+      .SetSummaryKey([0, 1, 2])
+      .SetSummaryMemberPrefixSuffix(0, 'Vec3(', '')
+      .SetSummaryMemberPrefixSuffix(2, '', ')')
+      .SetSummaryDelimiter(', ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseVec3)
+    ]);
+
+  wbQuadrantEnum :=
+    wbEnum([
+      {0} 'Bottom Left',
+      {1} 'Bottom Right',
+      {2} 'Top Left',
+      {3} 'Top Right'
+    ]);
+
+  wbSeasons :=
+    wbStruct(PFPC, 'Seasonal ingredient production', [
+      wbInteger('Spring', itU8),
+      wbInteger('Summer ', itU8),
+      wbInteger('Fall', itU8),
+      wbInteger('Winter', itU8)
+    ], cpNormal, True);
+
+  wbTimeInterpolator :=
+    wbStructSK([0], 'Data', [
+      wbFloat('Time'),
+      wbFloat('Value')
+    ]);
+
+  wbVertexHeightMap :=
+    wbStruct(VHGT, 'Vertex Height Map', [
+      wbFloat('Offset'),
+      wbArray('Rows', wbStruct('Row', [
+        wbArray('Columns', wbInteger('Column', itU8), 33)
+      ]), 33),
+      wbByteArray('Unused', 3)
+    ]);
+
+  wbWorldspaceOBND :=
+    wbRStruct('Object Bounds', [
+      wbStruct(NAM0, 'Min', [
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True)
+      .SetSummaryKeyOnValue([0, 1])
+      .SetSummaryPrefixSuffixOnValue(0, 'Min(', '')
+      .SetSummaryPrefixSuffixOnValue(1, '', ')')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseObjectBounds),
+      wbStruct(NAM9, 'Max', [
+        wbFloat('X', cpNormal, False, 1/4096),
+        wbFloat('Y', cpNormal, False, 1/4096)
+      ], cpIgnore, True)
+      .SetSummaryKeyOnValue([0, 1])
+      .SetSummaryPrefixSuffixOnValue(0, 'Max(', '')
+      .SetSummaryPrefixSuffixOnValue(1, '', ')')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseObjectBounds)
+    ], [])
+    .SetSummaryKey([0, 1])
+    .SetSummaryMemberPrefixSuffix(0, '[', '')
+    .SetSummaryMemberPrefixSuffix(1, '', ']')
+    .SetSummaryDelimiter(', ')
+    .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
+end;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -187,57 +366,6 @@ end;
 
 {>>> Common Definitions <<<}
 
-function wbActionFlag: IwbSubRecordDef;
-begin
-  Result :=
-    wbInteger(XACT, 'Action Flag', itU32, wbFlags([
-      'Use Default',
-      'Activate',
-      'Open',
-      'Open by Default'
-    ]));
-end;
-
-function wbAlternateTexture: IwbStructDef;
-begin
-  Result :=
-    wbStructSK([0, 2], 'Alternate Texture', [
-      wbLenString('3D Name'),
-      wbFormIDCk('New Texture', [TXST]),
-      wbInteger('3D Index', itS32)
-    ]);
-end;
-
-function wbAxisEnum: IwbEnumDef;
-begin
-  Result :=
-    wbEnum([], [
-      88, 'X',
-      89, 'Y',
-      90, 'Z'
-    ]);
-end;
-
-function wbCellGrid: IwbRecordMemberDef;
-begin
-  Result := wbStruct(XCLC, 'Grid', [
-    wbInteger('X', itS32),
-    wbInteger('Y', itS32),
-    wbInteger('Force Hide Land', itU32, wbFlags([
-      'Quad 1',
-      'Quad 2',
-      'Quad 3',
-      'Quad 4'
-    ], True))
-  ], cpNormal, False, nil, 2)
-  .SetSummaryKeyOnValue([0, 1, 2])
-  .SetSummaryPrefixSuffixOnValue(0, '(', '')
-  .SetSummaryPrefixSuffixOnValue(1, '', ')')
-  .SetSummaryPrefixSuffixOnValue(2, ' {Force Hide Land: ', '}')
-  .IncludeFlagOnValue(dfSummaryMembersNoName)
-  .IncludeFlag(dfCollapsed);
-end;
-
 function wbClimateTiming(aTimeCallback: TwbIntToStrCallback; aPhaseCallback: TwbIntToStrCallback): IwbRecordMemberDef;
 begin
   Result :=
@@ -257,43 +385,34 @@ end;
 
 function wbDebrisModel(aTextureFileHashes: IwbRecordMemberDef): IwbRecordMemberDef;
 begin
-  Result := wbRStruct('Model', [
-    wbStruct(DATA, 'Data', [
-      wbInteger('Percentage', itU8),
-      wbString('Model FileName'),
-      wbInteger('Flags', itU8, wbFlagsSummary([
-        'Has Collision Data', 'Collision'
-      ]))
-    ], cpNormal, True)
-    .SetSummaryKeyOnValue([0, 1, 2])
-    .SetSummaryPrefixSuffixOnValue(0, '[', '%]')
-    .SetSummaryPrefixSuffixOnValue(2, '{', '}')
-    .SetSummaryMemberMaxDepthOnValue(0, 1)
-    .IncludeFlagOnValue(dfSummaryMembersNoName),
-    aTextureFileHashes
-  ], [], cpNormal, True)
-  .SetSummaryKey([0])
-  .IncludeFlag(dfCollapsed, wbCollapseModels);
-end;
-
-function wbQuadrantEnum: IwbEnumDef;
-begin
-  Result := wbEnum([
-    {0} 'Bottom Left',
-    {1} 'Bottom Right',
-    {2} 'Top Left',
-    {3} 'Top Right'
-  ]);
+  Result :=
+    wbRStruct('Model', [
+      wbStruct(DATA, 'Data', [
+        wbInteger('Percentage', itU8),
+        wbString('Model FileName'),
+        wbInteger('Flags', itU8, wbFlagsSummary([
+          'Has Collision Data', 'Collision'
+        ]))
+      ], cpNormal, True)
+      .SetSummaryKeyOnValue([0, 1, 2])
+      .SetSummaryPrefixSuffixOnValue(0, '[', '%]')
+      .SetSummaryPrefixSuffixOnValue(2, '{', '}')
+      .SetSummaryMemberMaxDepthOnValue(0, 1)
+      .IncludeFlagOnValue(dfSummaryMembersNoName),
+      aTextureFileHashes
+    ], [], cpNormal, True)
+    .SetSummaryKey([0])
+    .IncludeFlag(dfCollapsed, wbCollapseModels);
 end;
 
 function wbLandscapeLayers(aSimpleRecords: Boolean = True): IwbRecordMemberDef;
-var
-  AlphaLayerData: IwbRecordMemberDef;
 begin
+  var alphaLayerData = nil;
+
   if aSimpleRecords then
-    AlphaLayerData := wbByteArray(VTXT, 'Alpha Layer Data')
+    alphaLayerData := wbByteArray(VTXT, 'Alpha Layer Data')
   else
-    AlphaLayerData :=
+    alphaLayerData :=
       wbArrayS(VTXT, 'Alpha Layer Data', wbStructSK([0], 'Cell', [
         wbInteger('Position', itU16, wbAtxtPosition),
         wbByteArray('Unused', 2),
@@ -317,19 +436,10 @@ begin
           wbByteArray('Unused', 1),
           wbInteger('Layer', itS16)
         ]),
-        AlphaLayerData
+        alphaLayerData
       ], [])
     ], []));
 end;
-
-function wbNextSpeaker: IwbIntegerDef;
-begin
-  Result :=
-    wbInteger('Next Speaker', itU8, wbEnum([
-      {0} 'Target',
-      {1} 'Self',
-      {2} 'Either'
-    ]));end;
 
 function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
 begin
@@ -352,36 +462,6 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
 end;
 
-function wbWorldspaceOBND: IwbRecordMemberDef;
-begin
-  Result :=
-    wbRStruct('Object Bounds', [
-      wbStruct(NAM0, 'Min', [
-        wbFloat('X', cpNormal, False, 1/4096),
-        wbFloat('Y', cpNormal, False, 1/4096)
-      ], cpIgnore, True)
-      .SetSummaryKeyOnValue([0, 1])
-      .SetSummaryPrefixSuffixOnValue(0, 'Min(', '')
-      .SetSummaryPrefixSuffixOnValue(1, '', ')')
-      .IncludeFlagOnValue(dfSummaryMembersNoName)
-      .IncludeFlag(dfCollapsed, wbCollapseObjectBounds),
-      wbStruct(NAM9, 'Max', [
-        wbFloat('X', cpNormal, False, 1/4096),
-        wbFloat('Y', cpNormal, False, 1/4096)
-      ], cpIgnore, True)
-      .SetSummaryKeyOnValue([0, 1])
-      .SetSummaryPrefixSuffixOnValue(0, 'Max(', '')
-      .SetSummaryPrefixSuffixOnValue(1, '', ')')
-      .IncludeFlagOnValue(dfSummaryMembersNoName)
-      .IncludeFlag(dfCollapsed, wbCollapseObjectBounds)
-    ], [])
-    .SetSummaryKey([0, 1])
-    .SetSummaryMemberPrefixSuffix(0, '[', '')
-    .SetSummaryMemberPrefixSuffix(1, '', ']')
-    .SetSummaryDelimiter(', ')
-    .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
-end;
-
 function wbPerkEffectType(aAfterSetCallback: TwbAfterSetCallback): IwbIntegerDef;
 begin
   Result :=
@@ -390,66 +470,6 @@ begin
       'Ability',
       'Entry Point'
     ]), cpNormal, False, nil, aAfterSetCallback);
-end;
-
-function wbPosRot: IwbStructDef;
-begin
-  Result :=
-    wbStruct('Position/Rotation', [
-      wbStruct('Position', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ])
-      .SetSummaryKey([0, 1, 2])
-      .SetSummaryMemberPrefixSuffix(0, 'Vec3(', '')
-      .SetSummaryMemberPrefixSuffix(2, '', ')')
-      .SetSummaryDelimiter(', ')
-      .IncludeFlag(dfSummaryMembersNoName)
-      .IncludeFlag(dfCollapsed, wbCollapseVec3),
-
-      wbStruct('Rotation', [
-        wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-      ])
-      .SetSummaryKey([0, 1, 2])
-      .SetSummaryMemberPrefixSuffix(0, 'Vec3(', '')
-      .SetSummaryMemberPrefixSuffix(2, '', ')')
-      .SetSummaryDelimiter(', ')
-      .IncludeFlag(dfSummaryMembersNoName)
-      .IncludeFlag(dfCollapsed, wbCollapseVec3)
-    ]);
-end;
-
-function wbDATAPosRot: IwbSubRecordDef;
-begin
-  Result :=
-    wbStruct(DATA, 'Position/Rotation', [
-      wbStruct('Position', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ])
-      .SetSummaryKey([0, 1, 2])
-      .SetSummaryMemberPrefixSuffix(0, 'Vec3(', '')
-      .SetSummaryMemberPrefixSuffix(2, '', ')')
-      .SetSummaryDelimiter(', ')
-      .IncludeFlag(dfSummaryMembersNoName)
-      .IncludeFlag(dfCollapsed, wbCollapseVec3),
-
-      wbStruct('Rotation', [
-        wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-      ])
-      .SetSummaryKey([0, 1, 2])
-      .SetSummaryMemberPrefixSuffix(0, 'Vec3(', '')
-      .SetSummaryMemberPrefixSuffix(2, '', ')')
-      .SetSummaryDelimiter(', ')
-      .IncludeFlag(dfSummaryMembersNoName)
-      .IncludeFlag(dfCollapsed, wbCollapseVec3)
-    ], cpNormal, True);
 end;
 
 function wbSizePosRot(aSignature: TwbSignature; aName: string; aPriority: TwbConflictPriority = cpNormal): IwbSubRecordDef;
@@ -494,17 +514,6 @@ begin
     ], aPriority);
 end;
 
-function wbSeasons: IwbRecordMemberDef;
-begin
-  Result :=
-    wbStruct(PFPC, 'Seasonal ingredient production', [
-      wbInteger('Spring', itU8),
-      wbInteger('Summer ', itU8),
-      wbInteger('Fall', itU8),
-      wbInteger('Winter', itU8)
-    ], cpNormal, True);
-end;
-
 function wbVertexColumns(aSignature: TwbSignature; aName: string): IwbRecordMemberDef;
 begin
   Result :=
@@ -520,18 +529,6 @@ begin
       .IncludeFlag(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed, wbCollapseVec3), 33)
     ]), 33);
-end;
-
-function wbVertexHeightMap: IwbRecordMemberDef;
-begin
-  Result :=
-    wbStruct(VHGT, 'Vertex Height Map', [
-      wbFloat('Offset'),
-      wbArray('Rows', wbStruct('Row', [
-        wbArray('Columns', wbInteger('Column', itU8), 33)
-      ]), 33),
-      wbByteArray('Unused', 3)
-    ]);
 end;
 
 {>>> For Collapsible Fields <<<}

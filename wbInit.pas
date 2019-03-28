@@ -68,6 +68,7 @@ uses
   wbInterface,
   wbImplementation,
   wbLocalization,
+  wbDefinitionsCommon,
   wbDefinitionsFNV,
   wbDefinitionsFNVSaves,
   wbDefinitionsFO3,
@@ -1121,6 +1122,8 @@ begin
 
   if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
     wbEncodingTrans :=  wbMBCSEncoding(s);
+
+  DefineCommonDefinitions;
 
   // definitions
   case wbGameMode of

@@ -637,8 +637,6 @@ var
   wbEffects: IwbSubRecordArrayDef;
   wbEffectsReq: IwbSubRecordArrayDef;
   wbBPNDStruct: IwbSubRecordDef;
-  wbTimeInterpolator: IwbStructDef;
-  wbColorInterpolator: IwbStructDef;
   wbFaction: IwbRecordMemberDef;
   wbEffect: IwbRecordMemberDef;
   wbMenuButton: IwbRecordMemberDef;
@@ -7920,19 +7918,6 @@ begin
       ], True)),
       wbByteArray('Unused', 3)
     ], cpNormal, True, nil, 5)
-  ]);
-
-  wbTimeInterpolator := wbStructSK([0], 'Data', [
-    wbFloat('Time'),
-    wbFloat('Value')
-  ]);
-
-  wbColorInterpolator := wbStructSK([0], 'Data', [
-    wbFloat('Time'),
-    wbFloat('Red', cpNormal, False, 255, 0),
-    wbFloat('Green', cpNormal, False, 255, 0),
-    wbFloat('Blue', cpNormal, False, 255, 0),
-    wbFloat('Alpha', cpNormal, False, 255, 0)
   ]);
 
   wbRecord(IMAD, 'Image Space Adapter', [
