@@ -57,7 +57,6 @@ var
   wbQuadrantEnum: IwbEnumDef;
   wbSexEnum: IwbEnumDef;
   wbSkillEnum: IwbEnumDef;
-  wbSoulGemEnum: IwbEnumDef;
   wbSoundLevelEnum: IwbEnumDef;
   wbTargetEnum: IwbEnumDef;
   wbVatsValueFunctionEnum: IwbEnumDef;
@@ -12089,19 +12088,6 @@ begin
       ])
     ])
   ]);
-
-  wbSoulGemEnum := wbEnum([
-    {0} 'None',
-    {1} 'Petty',
-    {2} 'Lesser',
-    {3} 'Common',
-    {4} 'Greater',
-    {5} 'Grand'
-  ]);
-
-  {wbRecord(SLGM, 'Soul Gem', [
-    wbEDID
-  ]);}
 
   if wbSimpleRecords then begin
 
