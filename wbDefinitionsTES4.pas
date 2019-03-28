@@ -34,7 +34,6 @@ var
 	wbMusicEnum: IwbEnumDef;
 	wbOBMEResolutionInfo: IwbEnumDef;
 	wbPKDTType: IwbEnumDef;
-	wbQuadrantEnum: IwbEnumDef;
 	wbSexEnum: IwbEnumDef;
 	wbSkillEnum: IwbEnumDef;
 	wbSoulGemEnum: IwbEnumDef;

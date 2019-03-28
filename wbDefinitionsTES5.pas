@@ -54,7 +54,6 @@ var
 	wbMusicEnum: IwbEnumDef;
 	wbObjectTypeEnum: IwbEnumDef;
 	wbPropTypeEnum: IwbEnumDef;
-	wbQuadrantEnum: IwbEnumDef;
 	wbQuestTypeEnum: IwbEnumDef;
 	wbSexEnum: IwbEnumDef;
 	wbSkillEnum: IwbEnumDef;

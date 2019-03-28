@@ -54,7 +54,6 @@ var
 	wbObjectTypeEnum: IwbEnumDef;
 	wbPKDTType: IwbEnumDef;
 	wbPlayerActionEnum: IwbEnumDef;
-	wbQuadrantEnum: IwbEnumDef;
 	wbReloadAnimEnum: IwbEnumDef;
 	wbSexEnum: IwbEnumDef;
 	wbSkillEnum: IwbEnumDef;

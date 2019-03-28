@@ -27,7 +27,7 @@ var
   wbVertexHeightMap: IwbRecordMemberDef;
   wbWorldspaceOBND: IwbRecordMemberDef;
 
-procedure DefineCommonDefinitions;
+procedure DefineCommon;
 
 {>>> Common Procedure Callbacks <<<}
 
@@ -134,8 +134,23 @@ const
   XACT: TwbSignature = 'XACT';
   XCLC: TwbSignature = 'XCLC';
 
-procedure DefineCommonDefinitions;
+procedure DefineCommon;
 begin
+  wbColorInterpolator :=
+    wbStructSK([0], 'Data', [
+      wbFloat('Time'),
+      wbFloat('Red', cpNormal, False, 255, 0),
+      wbFloat('Green', cpNormal, False, 255, 0),
+      wbFloat('Blue', cpNormal, False, 255, 0),
+      wbFloat('Alpha', cpNormal, False, 255, 0)
+    ]);
+
+  wbTimeInterpolator :=
+    wbStructSK([0], 'Data', [
+      wbFloat('Time'),
+      wbFloat('Value')
+    ]);
+
   wbActionFlag :=
     wbInteger(XACT, 'Action Flag', itU32, wbFlags([
       'Use Default',
@@ -185,15 +200,6 @@ begin
       wbArray(_13_IAD, 'Contrast Mult', wbTimeInterpolator),
       wbArray(_53_IAD, 'Contrast Add', wbTimeInterpolator)
     ], []);
-
-  wbColorInterpolator :=
-    wbStructSK([0], 'Data', [
-      wbFloat('Time'),
-      wbFloat('Red', cpNormal, False, 255, 0),
-      wbFloat('Green', cpNormal, False, 255, 0),
-      wbFloat('Blue', cpNormal, False, 255, 0),
-      wbFloat('Alpha', cpNormal, False, 255, 0)
-    ]);
 
   wbDATAPosRot :=
     wbStruct(DATA, 'Position/Rotation', [
@@ -268,12 +274,6 @@ begin
       wbInteger('Fall', itU8),
       wbInteger('Winter', itU8)
     ], cpNormal, True);
-
-  wbTimeInterpolator :=
-    wbStructSK([0], 'Data', [
-      wbFloat('Time'),
-      wbFloat('Value')
-    ]);
 
   wbVertexHeightMap :=
     wbStruct(VHGT, 'Vertex Height Map', [

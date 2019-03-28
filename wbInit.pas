@@ -1123,7 +1123,7 @@ begin
   if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
     wbEncodingTrans :=  wbMBCSEncoding(s);
 
-  DefineCommonDefinitions;
+  DefineCommon;
 
   // definitions
   case wbGameMode of
