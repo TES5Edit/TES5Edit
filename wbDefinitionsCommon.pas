@@ -11,6 +11,10 @@ const
   SCDA : TwbSignature = 'SCDA';
   SCTX : TwbSignature = 'SCTX';
 
+{>>> Common Procedure Callbacks <<<}
+
+procedure wbCTDARunOnAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
 {>>> Common Summary Callbacks <<<}
 
 procedure wbConditionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -35,7 +39,7 @@ procedure wbScriptToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer;
 
 procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-{>>> Common Callbacks <<<}
+{>>> Common Function Callbacks <<<}
 
 function wbAtxtPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 
@@ -146,6 +150,13 @@ begin
 
   if aType in [ctToStr, ctToSummary] then
     Result := aInt.ToString + ' -> ' + IntToStr(aInt div 17) + ':' + IntToStr(aInt mod 17);
+end;
+
+procedure wbCTDARunOnAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  if aOldValue <> aNewValue then
+    if aNewValue <> 2 then
+      aElement.Container.ElementNativeValues['Reference'] := 0;
 end;
 
 function wbNeverShow(const aElement: IwbElement): Boolean;

@@ -1868,13 +1868,6 @@ begin
   end;
 end;
 
-procedure wbCTDARunOnAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  if aOldValue <> aNewValue then
-    if aNewValue <> 2 then
-      aElement.Container.ElementNativeValues['Reference'] := 0;
-end;
-
 procedure wbPERKPRKETypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   Container : IwbContainerElementRef;
