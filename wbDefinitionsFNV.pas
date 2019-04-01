@@ -55,7 +55,6 @@ var
 	wbPKDTType: IwbEnumDef;
 	wbPlayerActionEnum: IwbEnumDef;
 	wbReloadAnimEnum: IwbEnumDef;
-	wbSexEnum: IwbEnumDef;
 	wbSkillEnum: IwbEnumDef;
 	wbSoundLevelEnum: IwbEnumDef;
 	wbSpecializationEnum: IwbEnumDef;
@@ -624,7 +623,6 @@ var
   wbFaceGenNPC: IwbSubRecordStructDef;
   wbENAM: IwbSubRecordDef;
 //  wbFGGS: IwbSubRecordDef;
-  wbXLOD: IwbSubRecordDef;
   wbXESP: IwbSubRecordDef;
   wbICON: IwbSubRecordStructDef;
   wbICONReq: IwbSubRecordStructDef;
@@ -636,7 +634,6 @@ var
   wbEffects: IwbSubRecordArrayDef;
   wbEffectsReq: IwbSubRecordArrayDef;
   wbBPNDStruct: IwbSubRecordDef;
-  wbFaction: IwbRecordMemberDef;
   wbEffect: IwbRecordMemberDef;
   wbMenuButton: IwbRecordMemberDef;
   wbLeveledListEntryCreature: IwbRecordMemberDef;
@@ -672,7 +669,11 @@ begin
       aTextureSubRecords[0],
       aTextureSubRecords[1]
     ], [], cpNormal, False, nil, True)
-    .SetSummaryKey([0])
+    .SetSummaryKey([0, 2])
+    .SetSummaryMemberPrefixSuffix(2, '', '')
+    .SetSummaryDelimiter(' ')
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfSummaryNoSortKey)
     .IncludeFlag(dfCollapsed, wbCollapseModels);
 end;
 
@@ -3107,13 +3108,16 @@ begin
   Result := -1;
   if not Assigned(aElement) then
     Exit;
+
   while aElement.Name <> 'Region Data Entry' do begin
     aElement := aElement.Container;
     if not Assigned(aElement) then
       Exit;
   end;
+
   if not Supports(aElement, IwbContainerElementRef, Container) then
     Exit;
+
   Result := Container.ElementNativeValues['RDAT\Type'];
 end;
 
@@ -4765,8 +4769,6 @@ begin
   wbSCRIActor := wbFormIDCk(SCRI, 'Script', [SCPT], False, cpNormal, False, wbActorTemplateUseScript);
   wbENAM := wbFormIDCk(ENAM, 'Object Effect', [ENCH]);
 
-  wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
-
   wbXESP := wbStruct(XESP, 'Enable Parent', [
     wbFormIDCk('Reference', [PLYR, REFR, ACRE, ACHR, PGRE, PMIS, PBEA]),
     wbInteger('Flags', itU8, wbFlags([
@@ -5451,9 +5453,6 @@ begin
       'Disintegrate Start',
       'Disintegrate End'
     ]);
-
-  wbSexEnum :=
-    wbEnum(['Male','Female']);
 
   wbCreatureTypeEnum :=
     wbEnum([
@@ -6340,13 +6339,6 @@ begin
     'Use Inventory',
     'Use Script'
   ]);
-
-  wbFaction :=
-    wbStructSK(SNAM, [0], 'Faction', [
-      wbFormIDCk('Faction', [FACT]),
-      wbInteger('Rank', itU8),
-      wbByteArray('Unused', 3)
-    ]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions);
 
   wbRecord(CREA, 'Creature', [
     wbEDIDReq,
@@ -10474,11 +10466,7 @@ begin
   ]);
 
   wbRecord(TES4, 'Main File Header', [
-    wbStruct(HEDR, 'Header', [
-      wbFloat('Version'),
-      wbInteger('Number of Records', itU32),
-      wbInteger('Next Object ID', itU32, wbNextObjectIDToString, wbNextObjectIDToInt)
-    ], cpNormal, True),
+    wbHEDR,
     wbByteArray(OFST, 'Unknown', 0, cpIgnore),
     wbByteArray(DELE, 'Unknown', 0, cpIgnore),
     wbString(CNAM, 'Author', 0, cpTranslate, True),

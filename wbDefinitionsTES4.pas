@@ -34,7 +34,6 @@ var
 	wbMusicEnum: IwbEnumDef;
 	wbOBMEResolutionInfo: IwbEnumDef;
 	wbPKDTType: IwbEnumDef;
-	wbSexEnum: IwbEnumDef;
 	wbSkillEnum: IwbEnumDef;
 	wbSoulGemEnum: IwbEnumDef;
 	wbSpecializationEnum: IwbEnumDef;
@@ -321,7 +320,6 @@ var
   wbFaceGen: IwbSubRecordStructDef;
   wbENAM: IwbSubRecordDef;
 //  wbFGGS: IwbSubRecordDef;
-  wbXLOD: IwbSubRecordDef;
   wbXESP: IwbSubRecordDef;
   wbICON: IwbSubRecordDef;
   wbEFID: IwbSubRecordDef;
@@ -1983,7 +1981,6 @@ var
   wbEffect: IwbRecordMemberDef;
   wbFactionRank: IwbRecordMemberDef;
   wbEffects: IwbRecordMemberDef;
-  wbFaction: IwbRecordMemberDef;
   wbLeveledListEntryCreature: IwbRecordMemberDef;
   wbLeveledListEntryItem: IwbRecordMemberDef;
   wbLeveledListEntrySpell: IwbRecordMemberDef;
@@ -2036,7 +2033,6 @@ begin
   wbSCRI := wbFormIDCk(SCRI, 'Script', [SCPT]);
   wbENAM := wbFormIDCk(ENAM, 'Enchantment', [ENCH]);
 
-  wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
   wbXESP := wbStruct(XESP, 'Enable Parent', [
     wbFormIDCk('Reference', [PLYR, REFR, ACRE, ACHR]),
     wbInteger('Flags', itU8, wbFlags([
@@ -2686,13 +2682,6 @@ begin
     {5} 'Grand'
   ]);
 
-  wbFaction :=
-    wbStructSK(SNAM, [0], 'Faction', [
-      wbFormIDCk('Faction', [FACT]),
-      wbInteger('Rank', itU8),
-      wbByteArray('Unused', 3)
-    ]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions);
-
   wbRecord(CREA, 'Creature', [
     wbEDID,
     wbFULL,
@@ -3247,9 +3236,6 @@ begin
       $42, 'Water',
       $43, 'Effect Shader'
   ]);
-
-  wbSexEnum :=
-    wbEnum(['Male','Female']);
 
   wbCTDA :=
     wbRUnion('Condition', [
@@ -4657,11 +4643,7 @@ begin
   ]).SetSummaryKey([1]);
 
   wbRecord(TES4, 'Main File Header', [
-    wbStruct(HEDR, 'Header', [
-      wbFloat('Version'),
-      wbInteger('Number of Records', itU32),
-      wbInteger('Next Object ID', itU32, wbNextObjectIDToString, wbNextObjectIDToInt)
-    ], cpNormal, True),
+    wbHEDR,
     wbByteArray(OFST, 'Unknown', 0, cpIgnore),
     wbByteArray(DELE, 'Unknown', 0, cpIgnore),
     wbString(CNAM, 'Author', 0, cpTranslate, True),

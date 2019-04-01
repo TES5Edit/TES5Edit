@@ -13,19 +13,24 @@ const
 
 var
   wbActionFlag: IwbSubRecordDef;
-  wbAlternateTexture: IwbStructDef;
+  wbAlternateTexture: IwbValueDef;
   wbAxisEnum: IwbEnumDef;
   wbCellGrid: IwbRecordMemberDef;
   wbCinematicIMAD: IwbSubRecordStructDef;
   wbColorInterpolator: IwbStructDef;
   wbDATAPosRot: IwbSubRecordDef;
+  wbFaction: IwbRecordMemberDef;
+  wbHEDR: IwbSubRecordDef;
+  wbMDOB: IwbSubRecordDef;
   wbNextSpeaker: IwbIntegerDef;
   wbPosRot: IwbStructDef;
   wbQuadrantEnum: IwbEnumDef;
   wbSeasons: IwbRecordMemberDef;
+  wbSexEnum: IwbEnumDef;
   wbTimeInterpolator: IwbStructDef;
   wbVertexHeightMap: IwbRecordMemberDef;
   wbWorldspaceOBND: IwbRecordMemberDef;
+  wbXLOD: IwbSubRecordDef;
 
 procedure DefineCommon;
 
@@ -77,11 +82,15 @@ function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aEl
 
 function wbClimateTiming(aTimeCallback: TwbIntToStrCallback; aPhaseCallback: TwbIntToStrCallback): IwbRecordMemberDef;
 
+function wbCNAM(aRequired: Boolean = False): IwbRecordMemberDef;
+
 function wbDebrisModel(aTextureFileHashes: IwbRecordMemberDef): IwbRecordMemberDef;
 
 function wbLandscapeLayers(aSimpleRecords: Boolean = True): IwbRecordMemberDef;
 
 function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
+
+//function wbOwnership(aSignatures: TwbSignatures; aOwner: IwbSubRecordDef; aGlobal: IwbSubRecordDef = nil): IwbRecordMemberDef;
 
 function wbPerkEffectType(aAfterSetCallback: TwbAfterSetCallback): IwbIntegerDef;
 
@@ -117,14 +126,19 @@ const
   NULL: TwbSignature = 'NULL';
   ATXT: TwbSignature = 'ATXT';
   BTXT: TwbSignature = 'BTXT';
+  CNAM: TwbSignature = 'CNAM';
   CTDA: TwbSignature = 'CTDA';
   DATA: TwbSignature = 'DATA';
+  FACT: TwbSignature = 'FACT';
+  HEDR: TwbSignature = 'HEDR';
   LTEX: TwbSignature = 'LTEX';
+  MDOB: TwbSignature = 'MDOB';
   MODT: TwbSignature = 'MODT';
   NAM0: TwbSignature = 'NAM0';
   NAM9: TwbSignature = 'NAM9';
   OBND: TwbSignature = 'OBND';
   PFPC: TwbSignature = 'PFPC';
+  SNAM: TwbSignature = 'SNAM';
   TNAM: TwbSignature = 'TNAM';
   TXST: TwbSignature = 'TXST';
   VCLR: TwbSignature = 'VCLR';
@@ -133,9 +147,32 @@ const
   VTXT: TwbSignature = 'VTXT';
   XACT: TwbSignature = 'XACT';
   XCLC: TwbSignature = 'XCLC';
+  XLOD: TwbSignature = 'XLOD';
+  XRNK: TwbSignature = 'XRNK';
+
+function IfThen(aBoolean: Boolean; const aTrue: IwbRecordMemberDef; const aFalse: IwbRecordMemberDef): IwbRecordMemberDef; overload;
+begin
+  Result := aFalse;
+  if aBoolean then
+    Result := aTrue;
+end;
+
+function IfThen(aBoolean: Boolean; const aTrue: IwbValueDef; const aFalse: IwbValueDef): IwbValueDef; overload;
+begin
+  Result := aFalse;
+  if aBoolean then
+    Result := aTrue;
+end;
 
 procedure DefineCommon;
 begin
+  wbHEDR :=
+    wbStruct(HEDR, 'Header', [
+      wbFloat('Version'),
+      wbInteger('Number of Records', itU32),
+      wbInteger('Next Object ID', itU32, wbNextObjectIDToString, wbNextObjectIDToInt)
+    ], cpNormal, True);
+
   wbColorInterpolator :=
     wbStructSK([0], 'Data', [
       wbFloat('Time'),
@@ -164,7 +201,14 @@ begin
       wbLenString('3D Name'),
       wbFormIDCk('New Texture', [TXST]),
       wbInteger('3D Index', itS32)
-    ]);
+    ])
+    .SetSummaryKey([2, 0, 1])
+    .SetSummaryMemberPrefixSuffix(2, '[', ']')
+    .SetSummaryMemberPrefixSuffix(0, '', ' =')
+    .SetSummaryDelimiter(' ')
+    .IncludeFlag(dfSummaryNoSortKey)
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfCollapsed);
 
   wbAxisEnum :=
     wbEnum([], [
@@ -228,6 +272,19 @@ begin
       .IncludeFlag(dfCollapsed, wbCollapseVec3)
     ], cpNormal, True);
 
+  wbFaction :=
+    wbStructSK(SNAM, [0], 'Faction', [
+      wbFormIDCk('Faction', [FACT]),
+      wbInteger('Rank', itU8),
+      IfThen(wbGameMode in [gmFO4, gmFO76], nil, wbByteArray('Unused', 3))
+    ])
+    .SetSummaryKeyOnValue([0, 1])
+    .SetSummaryPrefixSuffixOnValue(1, '{Rank: ', '}')
+    .IncludeFlagOnValue(dfSummaryMembersNoName)
+    .IncludeFlag(dfCollapsed, wbCollapseFactions);
+
+  wbMDOB := wbFormID(MDOB, 'Menu Display Object', cpNormal, False);
+
   wbNextSpeaker :=
     wbInteger('Next Speaker', itU8, wbEnum([
       {0} 'Target',
@@ -275,6 +332,9 @@ begin
       wbInteger('Winter', itU8)
     ], cpNormal, True);
 
+  wbSexEnum :=
+    wbEnum(['Male','Female']);
+
   wbVertexHeightMap :=
     wbStruct(VHGT, 'Vertex Height Map', [
       wbFloat('Offset'),
@@ -310,6 +370,8 @@ begin
     .SetSummaryMemberPrefixSuffix(1, '', ']')
     .SetSummaryDelimiter(', ')
     .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
+
+  wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
 end;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
@@ -433,6 +495,19 @@ begin
     ], cpNormal, True);
 end;
 
+function wbCNAM(aRequired: Boolean = False): IwbRecordMemberDef;
+begin
+  Result :=
+    wbStruct(CNAM, 'Color', [
+      wbInteger('Red', itU8),
+      wbInteger('Green', itU8),
+      wbInteger('Blue', itU8),
+      wbByteArray('Unknown', 1)
+    ], cpNormal, aRequired)
+    .SetToStr(wbRGBAToStr)
+    .IncludeFlag(dfCollapsed, wbCollapseRGBA);
+end;
+
 function wbDebrisModel(aTextureFileHashes: IwbRecordMemberDef): IwbRecordMemberDef;
 begin
   Result :=
@@ -511,6 +586,21 @@ begin
     .IncludeFlagOnValue(dfSummaryMembersNoName)
     .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
 end;
+
+//function wbOwnership(aSignatures: TwbSignatures; aOwner: IwbSubRecordDef; aGlobal: IwbSubRecordDef = nil): IwbRecordMemberDef;
+//begin
+//  Result :=
+//    wbRStruct('Ownership', [
+//      aOwner,
+//      wbInteger(XRNK, 'Faction rank', itS32),
+//      IfThen(wbGameMode = gmTES4, aGlobal, nil)
+//    ], aSignatures)
+//    .SetSummaryKey([0, 1])
+//    .SetSummaryMemberPrefixSuffix(1, '{Rank: ', '}')
+//    .SetSummaryDelimiter(' ')
+//    .IncludeFlag(dfSummaryMembersNoName)
+//    .IncludeFlag(dfCollapsed, wbCollapseFactions)
+//end;
 
 function wbPerkEffectType(aAfterSetCallback: TwbAfterSetCallback): IwbIntegerDef;
 begin
