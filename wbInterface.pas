@@ -11744,24 +11744,26 @@ constructor TwbStructDef.Create(aPriority            : TwbConflictPriority;
                                 aAfterLoad           : TwbAfterLoadCallback;
                                 aAfterSet            : TwbAfterSetCallback;
                                 aGetCP               : TwbGetConflictPriority);
-var
-  i: Integer;
 begin
   stSummaryDelimiter := ' ';
   stOptionalFromElement := aOptionalFromElement;
   SetLength(stMembers, Length(aMembers));
-  for i := Low(stMembers) to High(stMembers) do begin
-    stMembers[i] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbValueDef;
-    stCanContainFormIDs := stCanContainFormIDs or aMembers[i].CanContainFormIDs;
-  end;
+  var NewLength := 0;
+  for var i := Low(aMembers) to High(aMembers) do
+    if Assigned(aMembers[i]) then begin
+      stMembers[NewLength] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbValueDef;
+      stCanContainFormIDs := stCanContainFormIDs or aMembers[i].CanContainFormIDs;
+      Inc(NewLength);
+    end;
+  SetLength(stMembers, NewLength);
   SetLength(stSortKey, Length(aSortKey));
-  for i := Low(stSortKey) to High(stSortKey) do
+  for var i := Low(stSortKey) to High(stSortKey) do
     stSortKey[i] := aSortKey[i];
   SetLength(stExSortKey, Length(aExSortKey));
-  for i := Low(stExSortKey) to High(stExSortKey) do
+  for var i := Low(stExSortKey) to High(stExSortKey) do
     stExSortKey[i] := aExSortKey[i];
   SetLength(stElementMap, Length(aElementMap));
-  for i := Low(stElementMap) to High(stElementMap) do
+  for var i := Low(stElementMap) to High(stElementMap) do
     stElementMap[i] := aElementMap[i];
   if Length(stElementMap) > 0 then begin
     Assert(Length(stElementMap) = Length(stMembers));
