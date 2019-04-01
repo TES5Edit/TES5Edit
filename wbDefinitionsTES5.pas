@@ -708,7 +708,6 @@ var
   wbDEST: IwbSubRecordStructDef;
   wbDESTActor: IwbSubRecordStructDef;
   wbDODT: IwbSubRecordDef;
-  wbXGLB: IwbSubRecordDef;
   wbXRGD: IwbSubRecordDef;
   wbXRGB: IwbSubRecordDef;
   wbSPLO: IwbSubRecordDef;
@@ -794,7 +793,6 @@ var
   wbTints: IwbSubRecordArrayDef;
   wbMODT: IwbSubRecordDef;
   wbDMDT: IwbSubRecordDef;
-  wbOwnership: IwbRecordMemberDef;
   wbRACE_DATAFlags01: IwbIntegerDef;
   wbPhonemeTargets: IwbSubRecordDef;
   wbNoseMorphFlags: IwbIntegerDef;
@@ -6148,12 +6146,8 @@ begin
     wbOFST := wbByteArray(OFST, 'Offset Data')
   else
     wbOFST := wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0);
-  wbOwnership := wbRStruct('Ownership', [
-    wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]),
-    wbInteger(XRNK, 'Faction rank', itS32)
-  ], [XRGD]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions);
 
-  wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
+  wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]);
 end;
 
 procedure DefineTES5b;
@@ -6240,7 +6234,7 @@ begin
     wbXESP,
 
     {--- Ownership ---}
-    wbOwnership,
+    wbOwnership(wbXOWN, [XRGD]),
 
     {--- Emittance ---}
     wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
@@ -7278,7 +7272,7 @@ procedure DefineTES5c;
       wbVMAD,
       wbFormIDCk(NAME, 'Projectile', [PROJ, HAZD]),
       wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-      wbOwnership,
+      wbOwnership(wbXOWN, [XRGD]),
       wbFloat(XHTW, 'Head-Tracking Weight'),
       wbFloat(XFVC, 'Favor Cost'),
       wbRArrayS('Reflected/Refracted By',
@@ -7419,7 +7413,7 @@ begin
       wbByteArray('Unknown', 0)
     ]),
     wbFormIDCk(XCWT, 'Water', [WATR]),
-    wbOwnership,
+    wbOwnership(wbXOWN, [XRGD]),
     wbFormIDCk(XILL, 'Lock List', [FLST, NPC_]),
     wbString(XWEM, 'Water Environment Map'),
     wbFormIDCk(XCCM, 'Sky/Weather from Region', [REGN]),
@@ -12864,7 +12858,7 @@ begin
     wbEmpty(XIS2, 'Ignored by Sandbox'),
 
     {--- Ownership ---}
-    wbOwnership,
+    wbOwnership(wbXOWN, [XRGD]),
 
     wbInteger(XCNT, 'Item Count', itS32),
     wbFloat(XCHG, 'Charge'),

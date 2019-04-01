@@ -90,7 +90,7 @@ function wbLandscapeLayers(aSimpleRecords: Boolean = True): IwbRecordMemberDef;
 
 function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
 
-//function wbOwnership(aSignatures: TwbSignatures; aOwner: IwbSubRecordDef; aGlobal: IwbSubRecordDef = nil): IwbRecordMemberDef;
+function wbOwnership(aOwner: IwbSubRecordDef; aSkipSigs: TwbSignatures; aGlobal: IwbSubRecordDef = nil): IwbRecordMemberDef;
 
 function wbPerkEffectType(aAfterSetCallback: TwbAfterSetCallback): IwbIntegerDef;
 
@@ -130,6 +130,7 @@ const
   CTDA: TwbSignature = 'CTDA';
   DATA: TwbSignature = 'DATA';
   FACT: TwbSignature = 'FACT';
+  GLOB: TwbSignature = 'GLOB';
   HEDR: TwbSignature = 'HEDR';
   LTEX: TwbSignature = 'LTEX';
   MDOB: TwbSignature = 'MDOB';
@@ -147,6 +148,7 @@ const
   VTXT: TwbSignature = 'VTXT';
   XACT: TwbSignature = 'XACT';
   XCLC: TwbSignature = 'XCLC';
+  XGLB: TwbSignature = 'XGLB';
   XLOD: TwbSignature = 'XLOD';
   XRNK: TwbSignature = 'XRNK';
 
@@ -587,20 +589,21 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
 end;
 
-//function wbOwnership(aSignatures: TwbSignatures; aOwner: IwbSubRecordDef; aGlobal: IwbSubRecordDef = nil): IwbRecordMemberDef;
-//begin
-//  Result :=
-//    wbRStruct('Ownership', [
-//      aOwner,
-//      wbInteger(XRNK, 'Faction rank', itS32),
-//      IfThen(wbGameMode = gmTES4, aGlobal, nil)
-//    ], aSignatures)
-//    .SetSummaryKey([0, 1])
-//    .SetSummaryMemberPrefixSuffix(1, '{Rank: ', '}')
-//    .SetSummaryDelimiter(' ')
-//    .IncludeFlag(dfSummaryMembersNoName)
-//    .IncludeFlag(dfCollapsed, wbCollapseFactions)
-//end;
+function wbOwnership(aOwner: IwbSubRecordDef; aSkipSigs: TwbSignatures; aGlobal: IwbSubRecordDef = nil): IwbRecordMemberDef;
+begin
+  Result :=
+    wbRStruct('Ownership', [
+      aOwner,
+      wbInteger(XRNK, 'Faction rank', itS32),
+      IfThen(wbGameMode = gmTES4, aGlobal, nil)
+    ], aSkipSigs)
+    .SetSummaryKey([0, 1])
+    .SetSummaryMemberPrefixSuffix(1, '{Rank: ', '}')
+    .SetSummaryDelimiter(' ')
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfSummaryNoSortKey)
+    .IncludeFlag(dfCollapsed, wbCollapseFactions);
+end;
 
 function wbPerkEffectType(aAfterSetCallback: TwbAfterSetCallback): IwbIntegerDef;
 begin

@@ -524,7 +524,6 @@ var
   wbDESTActor: IwbSubRecordStructDef;
   wbDODT: IwbSubRecordDef;
   wbXOWN: IwbSubRecordDef;
-  wbXGLB: IwbSubRecordDef;
   wbXRGD: IwbSubRecordDef;
   wbXRGB: IwbSubRecordDef;
   wbSLSD: IwbSubRecordDef;
@@ -4689,7 +4688,6 @@ begin
   ], True, wbPlacedAddInfo);
 
   wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, CREA, NPC_]); // Ghouls can own too aparently !
-  wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 
   wbRefRecord(ACRE, 'Placed Creature', [
     wbEDID,
@@ -4712,10 +4710,7 @@ begin
     wbXLCM,
 
     {--- Ownership ---}
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32)
-    ], [XCMT, XCMO]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
+    wbOwnership(wbXOWN, [XCMT, XCMO]),
 
     {--- Merchant Container ----}
     wbFormIDCk(XMRC, 'Merchant Container', [REFR], True),
@@ -5622,10 +5617,7 @@ begin
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
     wbFormIDCk(XCCM, 'Climate', [CLMT]),
     wbFormIDCk(XCWT, 'Water', [WATR]),
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32)
-    ], [XCMT, XCMO]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
+    wbOwnership(wbXOWN, [XCMT, XCMO]),
     wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
     wbByteArray(XCMT, 'Unused', 1, cpIgnore),
     wbFormIDCk(XCMO, 'Music Type', [MUSC])
@@ -7048,10 +7040,7 @@ begin
     ], []),
 
     {--- Ownership ---}
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32)
-    ], [XCMT, XCMO]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
+    wbOwnership(wbXOWN, [XCMT, XCMO]),
 
     {--- Extra ---}
     wbInteger(XCNT, 'Count', itS32),
@@ -7142,10 +7131,7 @@ begin
     ], []),
 
     {--- Ownership ---}
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32)
-    ], [XCMT, XCMO]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
+    wbOwnership(wbXOWN, [XCMT, XCMO]),
 
     {--- Extra ---}
     wbInteger(XCNT, 'Count', itS32),
@@ -7236,10 +7222,7 @@ begin
     ], []),
 
     {--- Ownership ---}
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32)
-    ], [XCMT, XCMO]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
+    wbOwnership(wbXOWN, [XCMT, XCMO]),
 
     {--- Extra ---}
     wbInteger(XCNT, 'Count', itS32),
@@ -9514,10 +9497,7 @@ begin
     ]),
 
     {--- Ownership ---}
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32)
-    ], [XCMT, XCMO]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
+    wbOwnership(wbXOWN, [XCMT, XCMO]),
 
     {--- Lock ---}
     wbStruct(XLOC, 'Lock Data', [

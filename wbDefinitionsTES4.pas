@@ -2058,16 +2058,14 @@ begin
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
   wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, NPC_]);
+
+  // TES4 only
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 
   wbRefRecord(ACRE, 'Placed Creature', [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [CREA], False, cpNormal, True),
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32),
-      wbXGLB
-    ], []).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
+    wbOwnership(wbXOWN, [], wbXGLB),
     wbXESP,
     wbXRGD,
     wbXSCL,
@@ -2521,11 +2519,7 @@ begin
     wbFloat(XCLW, 'Water Height', cpBenign),
     wbFormIDCk(XCCM, 'Climate', [CLMT]),
     wbFormIDCk(XCWT, 'Water', [WATR]),
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32),
-      wbXGLB
-    ], [XCLW, XCMT, XCCM]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions)
+    wbOwnership(wbXOWN, [XCLW, XCMT, XCCM], wbXGLB)
   ], True, wbCellAddInfo, cpNormal, False, wbCELLAfterLoad);
 
   wbServiceFlags :=
@@ -4289,11 +4283,7 @@ begin
       wbInteger('Flags', itU8, wbFlags(['', '', 'Leveled Lock'])),
       wbByteArray('Unused', 3)
     ]),
-    wbRStruct('Ownership', [
-      wbXOWN,
-      wbInteger(XRNK, 'Faction rank', itS32),
-      wbXGLB
-    ], [XLOC]).SetToStr(wbFactionToStr).IncludeFlag(dfCollapsed, wbCollapseFactions),
+    wbOwnership(wbXOWN, [XLOC], wbXGLB),
     wbXESP,
     wbFormIDCk(XTRG, 'Target', [REFR, ACHR, ACRE], True),
     wbStruct(XSED, 'SpeedTree', [
