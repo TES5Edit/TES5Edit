@@ -10008,7 +10008,7 @@ begin
     if Assigned(aMembers[i]) then begin
       srsMembers[NewLength] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
       srsCanContainFormIDs := srsCanContainFormIDs or aMembers[i].CanContainFormIDs;
-      FoundRequired := FoundRequired or srsMembers[i].Required;
+      FoundRequired := FoundRequired or (Assigned(srsMembers[i]) and srsMembers[i].Required);
       for var j := 0 to Pred(aMembers[i].SignatureCount) do
         srsSignatures.AddObject(aMembers[i].Signatures[j], Pointer(NewLength) );
       Inc(NewLength);
