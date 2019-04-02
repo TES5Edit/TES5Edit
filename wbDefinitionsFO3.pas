@@ -587,6 +587,8 @@ begin
       wbMODD
     ], [], cpNormal, aRequired, aDontShow, True)
     .SetSummaryKey([0])
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfSummaryNoSortKey)
     .IncludeFlag(dfCollapsed, wbCollapseModels);
 end;
 
@@ -9194,6 +9196,24 @@ begin
     'Upper Body Texture'
   ]);
 
+  var wbHeadParts :=
+    wbRArrayS('Parts', wbHeadPart(wbHeadPartIndexEnum, wbGenericModel(True), wbHeadPartsAfterSet), cpNormal, True);
+
+  var wbBodyParts :=
+    wbRArrayS('Parts',
+      wbRStructSK([0], 'Part', [
+        wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
+        wbICON,
+        wbGenericModel(True)
+      ], [])
+      .SetSummaryKey([0, 2])
+      .SetSummaryMemberPrefixSuffix(0, '[', ']')
+      .SetSummaryDelimiter(' ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfSummaryNoSortKey)
+      .IncludeFlag(dfCollapsed, wbCollapseBodyParts)
+    , cpNormal, True);
+
   wbRecord(RACE, 'Race', [
     wbEDIDReq,
     wbFULLReq,
@@ -9251,38 +9271,22 @@ begin
       wbEmpty(NAM0, 'Head Data Marker', cpNormal, True),
       wbRStruct('Male Head Data', [
         wbEmpty(MNAM, 'Male Data Marker', cpNormal, True),
-        wbRArrayS('Parts', wbRStructSK([0], 'Part', [
-          wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
-          wbGenericModel(True),
-          wbICON
-        ], [], cpNormal, False, nil, False, nil, wbHeadPartsAfterSet), cpNormal, True)
+        wbHeadParts
       ], [], cpNormal, True),
       wbRStruct('Female Head Data', [
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
-        wbRArrayS('Parts', wbRStructSK([0], 'Part', [
-          wbInteger(INDX, 'Index', itU32, wbHeadPartIndexEnum),
-          wbGenericModel(True),
-          wbICON
-        ], [], cpNormal, False, nil, False, nil, wbHeadPartsAfterSet), cpNormal, True)
+        wbHeadParts
       ], [], cpNormal, True)
     ], [], cpNormal, True),
     wbRStruct('Body Data', [
       wbEmpty(NAM1, 'Body Data Marker', cpNormal, True),
       wbRStruct('Male Body Data', [
         wbEmpty(MNAM, 'Male Data Marker'),
-        wbRArrayS('Parts', wbRStructSK([0], 'Part', [
-          wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
-          wbICON,
-          wbGenericModel(True)
-        ], []), cpNormal, True)
+        wbBodyParts
       ], [], cpNormal, True),
       wbRStruct('Female Body Data', [
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
-        wbRArrayS('Parts', wbRStructSK([0], 'Part', [
-          wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
-          wbICON,
-          wbGenericModel(True)
-        ], []), cpNormal, True)
+        wbBodyParts
       ], [], cpNormal, True)
     ], [], cpNormal, True),
     wbArrayS(HNAM, 'Hairs', wbFormIDCk('Hair', [HAIR]), 0, cpNormal, True),

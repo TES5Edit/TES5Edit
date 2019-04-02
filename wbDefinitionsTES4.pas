@@ -296,7 +296,6 @@ var
   wbXGLB: IwbSubRecordDef;
   wbXRGD: IwbSubRecordDef;
   wbSLSD: IwbRecordMemberDef;
-  wbBodyDataIndex: IwbSubRecordDef;
   wbSPLO: IwbSubRecordDef;
   wbSPLOs: IwbSubRecordArrayDef;
   wbCNTO: IwbRecordMemberDef;
@@ -337,6 +336,8 @@ begin
       wbByteArray(aSignatures[2], 'Texture Files Hashes', 0, cpIgnore)
     ], [], cpNormal, False, nil, True)
     .SetSummaryKey([0])
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfSummaryNoSortKey)
     .IncludeFlag(dfCollapsed, wbCollapseModels);
 end;
 
@@ -4146,14 +4147,42 @@ begin
     ], []).SetSummaryKey([0, 1]))
   ]);
 
-  wbBodyDataIndex :=
-    wbInteger(INDX, 'Index', itU32, wbEnum([
+  var wbHeadPartIndexEnum :=
+    wbEnum([
+      'Head',
+      'Ear (Male)',
+      'Ear (Female)',
+      'Mouth',
+      'Teeth (Lower)',
+      'Teeth (Upper)',
+      'Tongue',
+      'Eye (Left)',
+      'Eye (Right)'
+    ]);
+
+  var wbBodyDataIndexEnum :=
+    wbEnum([
       'Upper Body',
       'Lower Body',
       'Hand',
       'Foot',
       'Tail'
-    ]));
+    ]);
+
+  var wbBodyParts :=
+    wbRArrayS('Parts',
+      wbRStructSK([0], 'Part', [
+        wbInteger(INDX, 'Index', itU32, wbBodyDataIndexEnum),
+        wbICON
+      ], [])
+      .SetSummaryKey([0, 1])
+      .SetSummaryMemberPrefixSuffix(0, '[', ']')
+      .SetSummaryMemberPrefixSuffix(1, 'ICON: ', '')
+      .SetSummaryDelimiter(' ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfSummaryNoSortKey)
+      .IncludeFlag(dfCollapsed, wbCollapseBodyParts)
+    );
 
   wbRecord(RACE, 'Race', [
     wbEDID,
@@ -4216,38 +4245,18 @@ begin
     ]),
     wbRStruct('Face Data', [
       wbEmpty(NAM0, 'Face Data Marker'),
-      wbRArrayS('Parts', wbRStructSK([0], 'Part', [
-        wbInteger(INDX, 'Index', itU32, wbEnum([
-          'Head',
-          'Ear (Male)',
-          'Ear (Female)',
-          'Mouth',
-          'Teeth (Lower)',
-          'Teeth (Upper)',
-          'Tongue',
-          'Eye (Left)',
-          'Eye (Right)'
-        ])),
-        wbTexturedModel('Model', [MODL, MODB, MODT]),
-        wbICON
-      ], []))
+      wbRArrayS('Parts', wbHeadPart(wbHeadPartIndexEnum, wbTexturedModel('Model', [MODL, MODB, MODT]), nil))
     ], [], cpNormal, True),
     wbEmpty(NAM1, 'Body Data Marker', cpNormal, True),
     wbRStruct('Male Body Data', [
       wbEmpty(MNAM, 'Male Body Data Marker'),
       wbTexturedModel('Model', [MODL, MODB, MODT]),
-      wbRArrayS('Parts', wbRStructSK([0], 'Part', [
-        wbBodyDataIndex,
-        wbICON
-      ], []))
+      wbBodyParts
     ], [], cpNormal, True),
     wbRStruct('Female Body Data', [
       wbEmpty(FNAM, 'Female Body Data Marker'),
       wbTexturedModel('Model', [MODL, MODB, MODT]),
-      wbRArrayS('Parts', wbRStructSK([0], 'Part', [
-        wbBodyDataIndex,
-        wbICON
-      ], []))
+      wbBodyParts
     ], [], cpNormal, True),
     wbArrayS(HNAM, 'Hairs', wbFormIDCk('Hair', [HAIR]), 0, cpNormal, True),
     wbArrayS(ENAM, 'Eyes', wbFormIDCk('Eye', [EYES]),  0,  cpNormal, True),

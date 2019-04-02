@@ -85,6 +85,8 @@ function wbCNAM(aRequired: Boolean = False): IwbRecordMemberDef;
 
 function wbDebrisModel(aTextureFileHashes: IwbRecordMemberDef): IwbRecordMemberDef;
 
+function wbHeadPart(aHeadPartIndexEnum: IwbEnumDef = nil; aModel: IwbRecordMemberDef = nil; aHeadPartsAfterSet: TwbAfterSetCallback = nil): IwbRecordMemberDef;
+
 function wbLandscapeLayers(aSimpleRecords: Boolean = True): IwbRecordMemberDef;
 
 function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
@@ -130,9 +132,15 @@ const
   DATA: TwbSignature = 'DATA';
   FACT: TwbSignature = 'FACT';
   GLOB: TwbSignature = 'GLOB';
+  HDPT: TwbSignature = 'HDPT';
+  HEAD: TwbSignature = 'HEAD';
   HEDR: TwbSignature = 'HEDR';
+  ICON: TwbSignature = 'ICON';
+  INDX: TwbSignature = 'INDX';
   LTEX: TwbSignature = 'LTEX';
   MDOB: TwbSignature = 'MDOB';
+  MICO: TwbSignature = 'MICO';
+  MODL: TwbSignature = 'MODL';
   MODT: TwbSignature = 'MODT';
   NAM0: TwbSignature = 'NAM0';
   NAM9: TwbSignature = 'NAM9';
@@ -548,6 +556,38 @@ begin
     ], [], cpNormal, True)
     .SetSummaryKey([0])
     .IncludeFlag(dfCollapsed, wbCollapseModels);
+end;
+
+function wbHeadPart(aHeadPartIndexEnum: IwbEnumDef = nil; aModel: IwbRecordMemberDef = nil; aHeadPartsAfterSet: TwbAfterSetCallback = nil): IwbRecordMemberDef;
+begin
+  var wbICON: IwbRecordMemberDef := nil;
+
+  if wbGameMode = gmTES4 then
+    wbICON := wbString(ICON, 'Icon FileName')
+  else if wbGameMode = gmFNV then
+    wbICON := wbRStruct('Icon', [
+      wbString(ICON, 'Large Icon FileName', 0, cpNormal, True),
+      wbString(MICO, 'Small Icon FileName')
+    ], [], cpNormal, False, nil, True)
+  else if wbGameMode = gmFO3 then
+    wbICON := wbRStruct('Icon', [
+      wbString(ICON, 'Large Icon FileName'),
+      wbString(MICO, 'Small Icon FileName')
+    ], []);
+
+  Result :=
+    wbRStructSK([0], IfThen(wbGameMode in [gmTES4, gmFO3, gmFNV], 'Part', 'Head Part'), [
+      wbInteger(INDX, IfThen(wbGameMode in [gmTES4, gmFO3, gmFNV], 'Index', 'Head Part Number'), itU32, aHeadPartIndexEnum),
+      IfThen(wbGameMode in [gmTES4, gmFO3, gmFNV], aModel, nil),
+      IfThen(wbGameMode in [gmTES4, gmFO3, gmFNV], nil, wbFormIDCk(HEAD, 'Head', [HDPT, NULL])),
+      IfThen(wbGameMode in [gmTES4, gmFO3, gmFNV], wbICON, nil)
+    ], [], cpNormal, False, nil, False, nil, aHeadPartsAfterSet)
+    .SetSummaryKey([0, 1])
+    .SetSummaryMemberPrefixSuffix(0, '[', ']')
+    .SetSummaryDelimiter(' ')
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfSummaryNoSortKey)
+    .IncludeFlag(dfCollapsed, wbCollapseHeadParts);
 end;
 
 function wbLandscapeLayers(aSimpleRecords: Boolean = True): IwbRecordMemberDef;

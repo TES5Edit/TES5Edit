@@ -37,7 +37,6 @@ var
 	wbBipedObjectEnum: IwbEnumDef;
 	wbBlendModeEnum: IwbEnumDef;
 	wbBlendOpEnum: IwbEnumDef;
-	wbBodyPartIndexEnum: IwbEnumDef;
 	wbCastEnum: IwbEnumDef;
 	wbCastingSourceEnum: IwbEnumDef;
 	wbCrimeTypeEnum: IwbEnumDef;
@@ -1006,7 +1005,6 @@ var
   wbXRNK: IwbSubRecordDef;
   wbPhonemeTargets: IwbSubRecordDef;
   wbPHWT: IwbSubRecordStructDef;
-  wbHeadPart: IwbSubRecordStructDef;
   wbQUSTAliasFlags: IwbSubRecordDef;
   wbPDTO: IwbSubRecordDef;
   wbPDTOs: IwbSubRecordArrayDef;
@@ -1052,6 +1050,8 @@ begin
       wbMODF
     ], [], cpNormal, aRequired, aDontShow, True)
     .SetSummaryKey([0])
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfSummaryNoSortKey)
     .IncludeFlag(dfCollapsed, wbCollapseModels);
 end;
 
@@ -1066,6 +1066,8 @@ begin
       aTextureSubRecords[2]
     ], [])
     .SetSummaryKey([0])
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfSummaryNoSortKey)
     .IncludeFlag(dfCollapsed, wbCollapseModels);
 end;
 
@@ -10775,16 +10777,6 @@ begin
     wbString(MNAM, 'Material')
   ]);
 
-  var wbHeadPartPart :=
-    wbRStruct('Part', [
-      wbInteger(NAM0, 'Part Type', itU32, wbEnum([
-        'Race Morph',
-        'Tri',
-        'Chargen Morph'
-      ])),
-      wbString(NAM1, 'FileName', 0, cpTranslate, True)
-    ], []);
-
   wbRecord(HDPT, 'Head Part',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
@@ -10815,7 +10807,14 @@ begin
     wbRArrayS('Extra Parts',
       wbFormIDCk(HNAM, 'Part', [HDPT])
     ),
-    wbRArray('Parts', wbHeadPartPart),
+    wbRArray('Parts', wbRStruct('Part', [
+      wbInteger(NAM0, 'Part Type', itU32, wbEnum([
+        'Race Morph',
+        'Tri',
+        'Chargen Morph'
+      ])),
+      wbString(NAM1, 'FileName', 0, cpTranslate, True)
+    ], [])),
     wbFormIDCk(TNAM, 'Texture Set', [TXST]),
     wbFormIDCk(CNAM, 'Color', [CLFM]),
     wbFormIDCk(RNAM, 'Valid Races', [FLST]),
@@ -14529,10 +14528,6 @@ begin
     wbString(SNAM, 'SWF File')
   ]);
 
-  wbBodyPartIndexEnum := wbEnum([
-    'Body Texture'
-  ]);
-
   wbPhonemeTargets := wbStruct(PHWT, 'Phoneme Target Weight', [
     wbFloat('Aah / LipBigAah'),
     wbFloat('BigAah / LipDST'),
@@ -14599,11 +14594,6 @@ begin
     wbRStruct('FLAP', [wbPhonemeTargets], [])
   ], []);
 
-  wbHeadPart := wbRStructSK([0], 'Head Part', [
-    wbInteger(INDX, 'Head Part Number', itU32),
-    wbFormIDCk(HEAD, 'Head', [HDPT, NULL])
-  ], []);
-
   wbRaceRBPC :=
     wbArray(RBPC, 'Biped Object Conditions',
       wbUnion('Slot 30+', wbFormVer78Decider, [
@@ -14629,6 +14619,24 @@ begin
     .SetSummaryDelimiter(' = ')
     .IncludeFlag(dfSummaryMembersNoName)
     .IncludeFlag(dfCollapsed, wbCollapseEquipSlots);
+
+  var wbBodyPartIndexEnum := wbEnum([
+    'Body Texture'
+  ]);
+
+  var wbBodyParts :=
+    wbRArrayS('Parts',
+      wbRStructSK([0], 'Part', [
+        wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
+        wbGenericModel
+      ], [])
+      .SetSummaryKey([0, 1])
+      .SetSummaryMemberPrefixSuffix(0, '[', ']')
+      .SetSummaryDelimiter(' ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfSummaryNoSortKey)
+      .IncludeFlag(dfCollapsed, wbCollapseBodyParts)
+    , cpNormal, True);
 
   wbRecord(RACE, 'Race',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -14783,17 +14791,11 @@ begin
       wbEmpty(NAM1, 'Body Data Marker', cpNormal, True),
       wbRStruct('Male Body Data', [
         wbEmpty(MNAM, 'Male Data Marker'),
-        wbRArrayS('Parts', wbRStructSK([0], 'Part', [
-          wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
-          wbGenericModel
-        ], []), cpNormal, True)
+        wbBodyParts
       ], [], cpNormal, True),
       wbRStruct('Female Body Data', [
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
-        wbRArrayS('Parts', wbRStructSK([0], 'Part', [
-          wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
-          wbGenericModel
-        ], []), cpNormal, True)
+        wbBodyParts
       ], [], cpNormal, True)
     ], [], cpNormal, True),
     wbFormIDCk(GNAM, 'Body Part Data', [BPTD]),
@@ -14803,11 +14805,15 @@ begin
     wbRStruct('Male Behavior Graph', [
       wbEmpty(MNAM, 'Male Data Marker'),
       wbGenericModel
-    ], [], cpNormal, True),
+    ], [], cpNormal, True)
+    .SetSummaryKey([1])
+    .IncludeFlag(dfCollapsed, wbCollapseModels),
     wbRStruct('Female Behavior Graph', [
       wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
       wbGenericModel
-    ], [], cpNormal, True),
+    ], [], cpNormal, True)
+    .SetSummaryKey([1])
+    .IncludeFlag(dfCollapsed, wbCollapseModels),
 
     wbFormIDCk(NAM4, 'Impact Material Type', [MATT]),
     wbFormIDCk(NAM5, 'Impact Data Set', [IPDS]),

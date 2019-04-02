@@ -194,6 +194,8 @@ var
   wbCollapseRGBA           : Boolean  = True;
   wbCollapseVec3           : Boolean  = True;
   wbCollapseScriptData     : Boolean  = True;
+  wbCollapseHeadParts      : Boolean  = True;
+  wbCollapseBodyParts      : Boolean  = True;
   wbReportInjected         : Boolean  = True;
   wbNoFullInShortName      : Boolean  = True;
   wbNoIndexInAliasSummary  : Boolean  = True;
