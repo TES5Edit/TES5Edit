@@ -305,8 +305,6 @@ var
   wbCSDTs: IwbSubRecordArrayDef;
   wbFULL: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
-  wbXNAM: IwbRecordMemberDef;
-  wbXNAMs: IwbSubRecordArrayDef;
   wbDESC: IwbSubRecordDef;
   wbXSCL: IwbSubRecordDef;
   wbCTDA: IwbSubRecordUnionDef;
@@ -3045,14 +3043,6 @@ begin
     wbInteger(DATA, 'Flags', itU8, wbFlags(['Playable']), cpNormal, True)
   ]);
 
-  wbXNAM :=
-    wbStructSK(XNAM, [0], 'Relation', [
-      wbFormIDCkNoReach('Faction', [FACT, RACE]),
-      wbInteger('Modifier', itS32)
-    ]).SetToStr(wbFactionRelationToStr).IncludeFlag(dfCollapsed, wbCollapseFactionRelations);
-
-  wbXNAMs := wbRArrayS('Relations', wbXNAM);
-
   wbFactionRank :=
     wbRStructSK([0], 'Rank', [
       wbInteger(RNAM, 'Rank#', itS32),
@@ -3064,7 +3054,7 @@ begin
   wbRecord(FACT, 'Faction', [
     wbEDID,
     wbFULL,
-    wbXNAMs,
+    wbFactionRelations,
     wbInteger(DATA, 'Flags', itU8, wbFlags(['Hidden from Player', 'Evil', 'Special Combat']), cpNormal, True),
     wbFloat(CNAM, 'Crime Gold Multiplier', cpNormal, True, 1, -1, nil, nil, 1.0),
     wbRArrayS('Ranks', wbFactionRank)
@@ -4170,7 +4160,7 @@ begin
     wbFULL,
     wbDESC,
     wbSPLOs,
-    wbXNAMs,
+    wbFactionRelations,
     wbStruct(DATA, '', [
       wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
         wbInteger('Skill', itS8, wbActorValueEnum),

@@ -20,6 +20,7 @@ var
   wbColorInterpolator: IwbStructDef;
   wbDATAPosRot: IwbSubRecordDef;
   wbFaction: IwbRecordMemberDef;
+  wbFactionRelations: IwbRecordMemberDef;
   wbHEDR: IwbSubRecordDef;
   wbMDOB: IwbSubRecordDef;
   wbNextSpeaker: IwbIntegerDef;
@@ -43,8 +44,6 @@ procedure wbCTDARunOnAfterSet(const aElement: IwbElement; const aOldValue, aNewV
 procedure wbConditionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 procedure wbFactionRelationToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-
-procedure wbFactionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 procedure wbItemToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
@@ -139,6 +138,7 @@ const
   NAM9: TwbSignature = 'NAM9';
   OBND: TwbSignature = 'OBND';
   PFPC: TwbSignature = 'PFPC';
+  RACE: TwbSignature = 'RACE';
   SNAM: TwbSignature = 'SNAM';
   TNAM: TwbSignature = 'TNAM';
   TXST: TwbSignature = 'TXST';
@@ -150,6 +150,7 @@ const
   XCLC: TwbSignature = 'XCLC';
   XGLB: TwbSignature = 'XGLB';
   XLOD: TwbSignature = 'XLOD';
+  XNAM: TwbSignature = 'XNAM';
   XRNK: TwbSignature = 'XRNK';
 
 function IfThen(aBoolean: Boolean; const aTrue: IwbRecordMemberDef; const aFalse: IwbRecordMemberDef): IwbRecordMemberDef; overload;
@@ -284,6 +285,23 @@ begin
     .SetSummaryPrefixSuffixOnValue(1, '{Rank: ', '}')
     .IncludeFlagOnValue(dfSummaryMembersNoName)
     .IncludeFlag(dfCollapsed, wbCollapseFactions);
+
+  wbFactionRelations :=
+    wbRArrayS('Relations',
+      wbStructSK(XNAM, [0], 'Relation', [
+        wbFormIDCkNoReach('Faction', [FACT, RACE]),
+        wbInteger('Modifier', itS32),
+        IfThen(wbGameMode = gmTES4,
+          nil,
+          wbInteger('Group Combat Reaction', itU32, wbEnum([
+            {0x00000001} 'Neutral',
+            {0x00000002} 'Enemy',
+            {0x00000004} 'Ally',
+            {0x00000008} 'Friend'
+          ])))
+      ])
+      .SetToStr(wbFactionRelationToStr)
+      .IncludeFlag(dfCollapsed, wbCollapseFactionRelations));
 
   wbMDOB := wbFormID(MDOB, 'Menu Display Object', cpNormal, False);
 
@@ -891,25 +909,6 @@ begin
     aValue := aValue + ' AND'
   else
     aValue := aValue + ' OR';
-end;
-
-procedure wbFactionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  Container: IwbContainerElementRef;
-begin
-  if not wbTrySetContainer(aElement, aType, Container) then
-    Exit;
-
-  var Faction := Container.Elements[0];
-  if not Assigned(Faction.LinksTo) then
-    Exit;
-
-  var Rank := Container.Elements[1];
-
-  aValue := Faction.Value;
-
-  if Assigned(Rank) then
-    aValue := aValue + ' {Rank: ' + IntToStr(Rank.NativeValue) + '}';
 end;
 
 procedure wbFactionRelationToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);

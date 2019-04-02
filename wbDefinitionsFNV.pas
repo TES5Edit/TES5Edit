@@ -595,8 +595,6 @@ var
   wbFULL: IwbSubRecordDef;
   wbFULLActor: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
-  wbXNAM: IwbRecordMemberDef;
-  wbXNAMs: IwbSubRecordArrayDef;
   wbDESC: IwbSubRecordDef;
   wbDESCReq: IwbSubRecordDef;
   wbXSCL: IwbSubRecordDef;
@@ -6816,20 +6814,6 @@ begin
     ]), cpNormal, True)
   ]);
 
-  wbXNAM :=
-    wbStructSK(XNAM, [0], 'Relation', [
-      wbFormIDCkNoReach('Faction', [FACT, RACE]),
-      wbInteger('Modifier', itS32),
-      wbInteger('Group Combat Reaction', itU32, wbEnum([
-        'Neutral',
-        'Enemy',
-        'Ally',
-        'Friend'
-      ]))
-    ]).SetToStr(wbFactionRelationToStr).IncludeFlag(dfCollapsed, wbCollapseFactionRelations);
-
-  wbXNAMs := wbRArrayS('Relations', wbXNAM);
-
   wbFactionRank :=
     wbRStructSK([0], 'Rank', [
       wbInteger(RNAM, 'Rank#', itS32),
@@ -6841,7 +6825,7 @@ begin
   wbRecord(FACT, 'Faction', [
     wbEDIDReq,
     wbFULL,
-    wbXNAMs,
+    wbFactionRelations,
     wbStruct(DATA, '', [
       wbInteger('Flags 1', itU8, wbFlags([
         'Hidden from PC',
@@ -9779,7 +9763,7 @@ begin
     wbEDIDReq,
     wbFULLReq,
     wbDESCReq,
-    wbXNAMs,
+    wbFactionRelations,
     wbStruct(DATA, '', [
       wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
         wbInteger('Skill', itS8, wbActorValueEnum),
