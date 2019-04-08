@@ -1545,44 +1545,6 @@ begin
   end;
 end;
 
-function wbScaledInt4ToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-const
-  PlusMinus : array[Boolean] of string = ('+', '-');
-begin
-  Result := '';
-  case aType of
-    ctToStr, ctToSummary, ctToEditValue: Result := FloatToStrF(aInt / 10000, ffFixed, 99, 4);
-    ctToSortKey: begin
-      Result := FloatToStrF(aInt / 10000, ffFixed, 99, 4);
-      if Length(Result) < 22 then
-        Result := StringOfChar('0', 22 - Length(Result)) + Result;
-      Result := PlusMinus[aInt < 0] + Result;
-    end;
-    ctCheck: Result := '';
-  end;
-end;
-
-function wbScaledInt4ToInt(const aString: string; const aElement: IwbElement): Int64;
-var
-  f: Extended;
-begin
-  f := StrToFloat(aString);
-  f := f * 10000;
-  Result := Round(f);
-end;
-
-function wbHideFFFF(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  Result := '';
-  if aType = ctToSortKey then
-    Result := IntToHex64(aInt, 4)
-  else if aType in [ctToStr, ctToSummary] then
-    if aInt = $FFFF then
-      Result := 'None'
-    else
-      Result := aInt.ToString;
-end;
-
 function wbGLOBFNAM(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
@@ -1702,37 +1664,6 @@ begin
     Result := 'for ' + s;
 end;
 
-function wbCellAddInfo(const aMainRecord: IwbMainRecord): string;
-var
-  Rec: IwbRecord;
-  Container: IwbContainer;
-  GroupRecord : IwbGroupRecord;
-  s: string;
-begin
-  Result := '';
-
-  if not aMainRecord.IsPersistent then begin
-    Rec := aMainRecord.RecordBySignature['XCLC'];
-    if Assigned(Rec) then
-      Result := 'at ' + Rec.Elements[0].Value + ',' + Rec.Elements[1].Value;
-  end;
-
-  Container := aMainRecord.Container;
-  while Assigned(Container) and not
-    (Supports(Container, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType = 1)) do
-    Container := Container.Container;
-
-  if not Assigned(Container) then
-    Exit;
-
-  s := wbFormID.ToString(GroupRecord.GroupLabel, aMainRecord, False);
-    if s <> '' then begin
-    if Result <> '' then
-      s := s + ' ';
-    Result := 'in ' + s + Result;
-  end;
-end;
-
 function wbWthrDataClassification(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
@@ -1819,26 +1750,6 @@ begin
     Assert(DataContainer.Name = 'Data');
     Result := PWord(NativeUInt(DataContainer.DataBasePtr) + 3*3*4 + 2)^;
   end;
-end;
-
-procedure wbPERKPRKETypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-var
-  Container : IwbContainerElementRef;
-//  rDATA     : IwbRecord;
-begin
-  if aOldValue <> aNewValue then
-    if Supports(aElement.Container, IwbContainerElementRef, Container) then begin
-      if Supports(Container.Container, IwbContainerElementRef, Container) then begin
-        Container.RemoveElement('DATA');
-        Container.Add('DATA', True);
-        Container.RemoveElement('Perk Conditions');
-        Container.RemoveElement('Entry Point Function Parameters');
-        if aNewValue = 2 then begin
-          Container.Add('EPFT', True);
-          Container.ElementNativeValues['DATA\Entry Point\Function'] := 2;
-        end;
-      end;
-    end;
 end;
 
 function wbMGEFFAssocItemDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -2835,56 +2746,6 @@ begin
         raise Exception.Create('"'+s+'" is not valid for this Entry Point');
 end;
 
-function GetREGNType(aElement: IwbElement): Integer;
-var
-  Container: IwbContainerElementRef;
-begin
-  Result := -1;
-  if not Assigned(aElement) then
-    Exit;
-
-  while aElement.Name <> 'Region Data Entry' do begin
-    aElement := aElement.Container;
-    if not Assigned(aElement) then
-      Exit;
-  end;
-
-  if not Supports(aElement, IwbContainerElementRef, Container) then
-    Exit;
-
-  Result := Container.ElementNativeValues['RDAT\Type'];
-end;
-
-function wbREGNObjectsDontShow(const aElement: IwbElement): Boolean;
-begin
-  Result := GetREGNType(aElement) <> 2;
-end;
-
-function wbREGNWeatherDontShow(const aElement: IwbElement): Boolean;
-begin
-  Result := GetREGNType(aElement) <> 3;
-end;
-
-function wbREGNMapDontShow(const aElement: IwbElement): Boolean;
-begin
-  Result := GetREGNType(aElement) <> 4;
-end;
-
-function wbREGNLandDontShow(const aElement: IwbElement): Boolean;
-begin
-  Result := GetREGNType(aElement) <> 5;
-end;
-
-function wbREGNGrassDontShow(const aElement: IwbElement): Boolean;
-begin
-  Result := GetREGNType(aElement) <> 6;
-end;
-
-function wbREGNSoundDontShow(const aElement: IwbElement): Boolean;
-begin
-  Result := GetREGNType(aElement) <> 7;
-end;
-
 function wbMESGTNAMDontShow(const aElement: IwbElement): Boolean;
 var
   Container  : IwbContainerElementRef;
@@ -3549,16 +3410,7 @@ var
   NewActorValue : Integer;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     OldActorValue := Container.ElementNativeValues['DATA - Data\Actor Value'];
@@ -3598,16 +3450,7 @@ var
   NewContainer  : IwbContainerElementRef;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     case Integer(Container.ElementNativeValues['PKDT - General\Type']) of
@@ -3668,16 +3511,7 @@ var
 //  BaseRecord : IwbMainRecord;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     if Container.ElementNativeValues['NAM5'] > 255 then
@@ -3694,16 +3528,7 @@ var
   BaseRecord : IwbMainRecord;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     Container.RemoveElement('RCLR');
@@ -3724,16 +3549,7 @@ var
   MainRecord : IwbMainRecord;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     if (Integer(Container.ElementNativeValues['DATA\Flags 1']) and $80) = 0 then
@@ -3756,16 +3572,7 @@ var
 //  i            : Integer;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     if (not Container.ElementExists['XCLW']) and ((Integer(Container.ElementNativeValues['DATA']) and $02) <> 0) then begin
@@ -3817,16 +3624,7 @@ var
   i: Integer;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     if Container.ElementExists['SNDD'] then
@@ -3888,16 +3686,7 @@ var
   i: Integer;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     if Container.ElementExists['DNAM'] then
@@ -3928,16 +3717,7 @@ var
   MainRecord   : IwbMainRecord;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     if not Container.ElementExists['DNAM'] then
@@ -3960,16 +3740,7 @@ var
   HasTimeDelay : Boolean;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     IsMessageBox := (Integer(Container.ElementNativeValues['DNAM']) and 1) = 1;
@@ -3997,16 +3768,7 @@ var
   PersistantParticleBirthRatio : Extended;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     if not Container.ElementExists['DATA'] then
@@ -4063,16 +3825,7 @@ var
   MainRecord   : IwbMainRecord;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     if not Container.ElementExists['FNAM'] then begin
@@ -4152,17 +3905,6 @@ begin
   finally
     wbEndInternalEdit;
   end;
-end;
-
-function wbPxDTLocationDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container: IwbContainer;
-begin
-  Result := 0;
-  if not wbTryGetContainerFromUnion(aElement, Container) then
-    Exit;
-
-  Result := Container.ElementByName['Type'].NativeValue;
 end;
 
 function wbPKDTFalloutBehaviorFlagsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -5729,10 +5471,7 @@ begin
       {0x0A} 'Movement',
       {0x0B} 'Conscious'
     ])),
-    wbRArrayS('Sounds', wbRStructSK([0], 'Sound', [
-      wbFormIDCk(CSDI, 'Sound', [SOUN], False, cpNormal, True),
-      wbInteger(CSDC, 'Sound Chance', itU8, nil, cpNormal, True)
-    ], []), cpNormal, True)
+    wbSoundTypeSounds
   ], []);
 
   wbCSDTs := wbRArrayS('Sound Types', wbCSDT, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation);
@@ -9704,16 +9443,7 @@ begin
       {--- Sound ---}
       wbInteger(RDMD, 'Music Type', itU32, wbMusicEnum, cpIgnore, False, False, wbNeverShow),
       wbFormIDCk(RDMO, 'Music', [MUSC], False, cpNormal, False, wbREGNSoundDontShow),
-      wbArrayS(RDSD, 'Sounds', wbStructSK([0], 'Sound', [
-        wbFormIDCk('Sound', [SOUN]),
-        wbInteger('Flags', itU32, wbFlags([
-          'Pleasant',
-          'Cloudy',
-          'Rainy',
-          'Snowy'
-        ])),
-        wbInteger('Chance', itU32, wbScaledInt4ToStr, wbScaledInt4ToInt)
-      ]), 0, cpNormal, False, nil, nil, wbREGNSoundDontShow),
+      wbRegionSounds,
 
       {--- Weather ---}
       wbArrayS(RDWT, 'Weather Types', wbStructSK([0], 'Weather Type', [
@@ -10442,15 +10172,7 @@ begin
         wbInteger('Blue', itU8)
       ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
     ], cpNormal, True),
-    wbRArray('Sounds', wbStruct(SNAM, 'Sound', [
-      wbFormIDCk('Sound', [SOUN]),
-      wbInteger('Type', itU32, wbEnum([
-       {0}'Default',
-       {1}'Precip',
-       {2}'Wind',
-       {3}'Thunder'
-      ]))
-    ]))
+    wbWeatherSounds
   ]);
 
   wbAddGroupOrder(GMST);

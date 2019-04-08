@@ -2980,32 +2980,6 @@ end;
 //  end;
 //end;
 
-function wbScaledInt4ToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-const
-  PlusMinus : array[Boolean] of string = ('+', '-');
-begin
-  Result := '';
-  case aType of
-    ctToStr, ctToSummary, ctToEditValue: Result := FloatToStrF(aInt / 10000, ffFixed, 99, 4);
-    ctToSortKey: begin
-      Result := FloatToStrF(aInt / 10000, ffFixed, 99, 4);
-      if Length(Result) < 22 then
-        Result := StringOfChar('0', 22 - Length(Result)) + Result;
-      Result := PlusMinus[aInt < 0] + Result;
-    end;
-    ctCheck: Result := '';
-  end;
-end;
-
-function wbScaledInt4ToInt(const aString: string; const aElement: IwbElement): Int64;
-var
-  f: Extended;
-begin
-  f := StrToFloat(aString);
-  f := f * 10000;
-  Result := Round(f);
-end;
-
 function wbCloudSpeedToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
@@ -3047,18 +3021,6 @@ begin
   PWord(@Value)^ := x;
   PWord(Cardinal(@Value) + SizeOf(SmallInt))^ := y;
   Result := Value;
-end;
-
-function wbHideFFFF(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  Result := '';
-  if aType = ctToSortKey then
-    Result := IntToHex64(aInt, 4)
-  else if aType in [ctToStr, ctToSummary] then
-    if aInt = $FFFF then
-      Result := 'None'
-    else
-      Result := aInt.ToString;
 end;
 
 function wbPlacedAddInfo(const aMainRecord: IwbMainRecord): string;
@@ -3180,63 +3142,6 @@ end;
 //      Result := 'for ' + s;
 //  end;
 //end;
-
-function wbCellAddInfo(const aMainRecord: IwbMainRecord): string;
-var
-  Rec: IwbRecord;
-  Container: IwbContainer;
-  GroupRecord : IwbGroupRecord;
-  s: string;
-begin
-  Result := '';
-
-  if not aMainRecord.IsPersistent then begin
-    Rec := aMainRecord.RecordBySignature['XCLC'];
-    if Assigned(Rec) then
-      Result := 'at ' + Rec.Elements[0].Value + ',' + Rec.Elements[1].Value;
-  end;
-
-  Container := aMainRecord.Container;
-  while Assigned(Container) and not
-    (Supports(Container, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType = 1)) do
-    Container := Container.Container;
-
-  if not Assigned(Container) then
-    Exit;
-
-  s := wbFormID.ToString(GroupRecord.GroupLabel, aMainRecord, False);
-  if s <> '' then begin
-    if Result <> '' then
-      s := s + ' ';
-    Result := 'in ' + s + Result;
-  end;
-end;
-
-{>>> Needs revision for Skyrim <<<}
-procedure wbPERKPRKETypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-var
-  Container : IwbContainerElementRef;
-begin
-  if not (aOldValue <> aNewValue) then
-    Exit;
-
-  if not Supports(aElement.Container, IwbContainerElementRef, Container) then
-    Exit;
-
-  if not Supports(Container.Container, IwbContainerElementRef, Container) then
-    Exit;
-
-  Container.RemoveElement('DATA');
-  Container.Add('DATA', True);
-  Container.RemoveElement('Perk Conditions');
-  Container.RemoveElement('Entry Point Function Parameters');
-
-  if not (aNewValue = 2) then
-    Exit;
-
-  Container.Add('EPFT', True);
-  Container.ElementNativeValues['DATA\Entry Point\Function'] := 2;
-end;
 
 function wbNPCLevelDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -5000,61 +4905,6 @@ begin
   Result := StrToInt64(aString);
 end;
 
-function GetREGNType(aElement: IwbElement): Integer;
-var
-  Container: IwbContainerElementRef;
-begin
-  Result := -1;
-  if not Assigned(aElement) then
-    Exit;
-
-  while aElement.Name <> 'Region Data Entry' do begin
-    aElement := aElement.Container;
-    if not Assigned(aElement) then
-      Exit;
-  end;
-
-  if not Supports(aElement, IwbContainerElementRef, Container) then
-    Exit;
-
-  Result := Container.ElementNativeValues['RDAT\Type'];
-end;
-
-function wbREGNObjectsDontShow(const aElement: IwbElement): Boolean;
-begin
-  Result := GetREGNType(aElement) <> 2;
-end;
-
-function wbREGNWeatherDontShow(const aElement: IwbElement): Boolean;
-begin
-  Result := GetREGNType(aElement) <> 3;
-end;
-
-function wbREGNMapDontShow(const aElement: IwbElement): Boolean;
-begin
-  Result := GetREGNType(aElement) <> 4;
-end;
-
-function wbREGNLandDontShow(const aElement: IwbElement): Boolean;
-begin
-  Result := GetREGNType(aElement) <> 5;
-end;
-
-function wbREGNGrassDontShow(const aElement: IwbElement): Boolean;
-begin
-  Result := GetREGNType(aElement) <> 6;
-end;
-
-function wbREGNSoundDontShow(const aElement: IwbElement): Boolean;
-begin
-  Result := GetREGNType(aElement) <> 7;
-end;
-
-function wbREGNImposterDontShow(const aElement: IwbElement): Boolean;
-begin
-  Result := GetREGNType(aElement) <> 8;
-end;
-
 function wbMESGTNAMDontShow(const aElement: IwbElement): Boolean;
 var
   Container  : IwbContainerElementRef;
@@ -5613,16 +5463,7 @@ var
   MainRecord : IwbMainRecord;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     if Assigned(Container.ElementBySignature['KSIZ']) then
@@ -5697,16 +5538,7 @@ var
   NeedsSort  : Boolean;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     Master := MainRecord.Master;
@@ -5780,16 +5612,7 @@ var
   MainRecord : IwbMainRecord;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     if not Container.ElementExists['XLOC'] then
@@ -5898,16 +5721,7 @@ var
   Flags        : Byte;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     if Supports(Container.ElementBySignature['DATA'] , IwbSubRecord, DataSubRec) then begin
@@ -5948,16 +5762,7 @@ var
   HasTimeDelay : Boolean;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     IsMessageBox := (Integer(Container.ElementNativeValues['DNAM']) and 1) = 1;
@@ -5984,16 +5789,7 @@ var
   MainRecord   : IwbMainRecord;
 begin
   if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
     if not Container.ElementExists['FNAM'] then begin
@@ -6152,124 +5948,6 @@ begin
     Result := Element.NativeValue
   else if wbMoreInfoForDecider then
     wbProgressCallback('"'+Container.Name+'" does not contain an element named Type');
-end;
-
-procedure wbCNTOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('COCT - Count', aElement);
-end;
-
-procedure wbTERMCNTOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('COCT - Holds Holotape (Count)', aElement);
-end;
-
-procedure wbContainerAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterContainerAfterSet('COCT - Count', 'Items', aElement);
-  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
-end;
-
-procedure wbSPLOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('SPCT - Count', aElement);
-end;
-
-procedure wbKWDAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('KSIZ - Keyword Count', aElement);
-end;
-
-procedure wbNPCAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterContainerAfterSet('COCT - Count', 'Items', aElement);
-  wbCounterContainerAfterSet('SPCT - Count', 'Actor Effects', aElement);
-  wbCounterContainerAfterSet('LLCT - Count', 'Leveled List Entries', aElement);
-  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
-  wbCounterContainerAfterSet('PRKZ - Perk Count', 'Perks', aElement);
-end;
-
-procedure wbRaceAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterContainerAfterSet('SPCT - Count', 'Actor Effects', aElement);
-  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
-end;
-
-procedure wbKeywordsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
-end;
-
-procedure wbLVLOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('LLCT - Count', aElement);
-end;
-
-procedure wbLLEAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterContainerAfterSet('LLCT - Count', 'Leveled List Entries', aElement);
-end;
-
-procedure wbPRKRsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('PRKZ - Perk Count', aElement);
-end;
-
-procedure wbSMQNQuestsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('QNAM - Quest Count', aElement);
-end;
-
-procedure wbCTDAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('CITC - Condition Count', aElement);
-end;
-
-procedure wbConditionsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterContainerAfterSet('CITC - Condition Count', 'Conditions', aElement);
-end;
-
-procedure wbCounterEffectsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  // if it is really possible to have both counter effects and multiple data, this is going to be tricky.
-  wbCounterByPathAfterSet('Magic Effect Data\DATA - Data\Counter effect count', aElement);
-end;
-
-procedure wbMGEFAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbKeywordsAfterSet(aElement, aOldValue, aNewValue);
-  wbCounterContainerByPathAfterSet('Magic Effect Data\DATA - Data\Counter effect count', 'Counter Effects', aElement);
-end;
-
-procedure wbTERMDisplayItemsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('BSIZ - Count', aElement);
-end;
-
-procedure wbTERMMenuItemsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('ISIZ - Count', aElement);
-end;
-
-procedure wbSNDRRatesOfFireAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('ITMC - Count', aElement);
-end;
-
-procedure wbNPCActorSoundsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('CS2H - Count', aElement);
-end;
-
-procedure wbMorphPresetsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('MPPC - Count', aElement);
-end;
-
-procedure wbLENSAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('LFSP - Count', aElement);
 end;
 
 procedure wbIDLAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -6647,19 +6325,11 @@ var
 begin
   Result := 0;
 
-  if not Assigned(aElement) then
-    Exit;
-
-  MainRecord := aElement.ContainingMainRecord;
-
-  if not Assigned(MainRecord) then
+  if not wbTryGetContainingMainRecord(aElement, MainRecord) then
     Exit;
 
   NameRec := MainRecord.ElementBySignature[NAME];
-  if not Assigned(NameRec) then
-    Exit;
-
-  if not Supports(NameRec.LinksTo, IwbMainRecord, MainRecord) then
+  if not wbTryGetMainRecord(NameRec, MainRecord) then
     Exit;
 
   if (MainRecord.Signature = ACTI) or
@@ -6768,28 +6438,6 @@ begin
     ctToStr, ctToSummary, ctToSortKey, ctToEditValue: Result := IntToHex(aInt, 8);
   else
     Result := '';
-  end;
-end;
-
-function wbStrToInt(const aString: string; const aElement: IwbElement): Int64;
-var
-  s: string;
-  i: integer;
-begin
-  // ignore anything after space or :
-  i := Pos(' ', aString);
-  if i = 0 then
-    i := Pos(':', aString);
-
-  if i <> 0 then
-    s := Copy(aString, 1, i - 1)
-  else
-    s := aString;
-
-  try
-    Result := StrToInt64(s)
-  except
-    Result := 0;
   end;
 end;
 
@@ -14054,11 +13702,7 @@ begin
     ])),
     wbFormIDCk(GNAM, 'Category', [SNCT]),
     wbFormIDCk(SNAM, 'Alternate Sound For', [SNDR]),
-    wbRArray('Sounds',
-      wbRStruct('Sound Files', [
-        wbString(ANAM, 'File Name')
-      ], [])
-    ),
+    wbSoundDescriptorSounds,
     wbFormIDCk(ONAM, 'Output Model', [SOPM]),
     wbCTDAs,
     wbStruct(LNAM, 'Values', [
@@ -14999,17 +14643,7 @@ begin
     wbKeywords,
     wbMGEFData,
     wbRArrayS('Counter Effects', wbFormIDCk(ESCE, 'Effect', [MGEF]), cpNormal, False, nil, wbCounterEffectsAfterSet),
-    wbArray(SNDD, 'Sounds', wbStruct('', [
-      wbInteger('Type', itU32, wbEnum([
-        'Sheathe/Draw',
-        'Charge',
-        'Ready',
-        'Release',
-        'Concentration Cast Loop',
-        'On Hit'
-      ])),
-      wbFormIDCk('Sound', [SNDR])
-    ])),
+    wbMagicEffectSounds,
     wbLStringKC(DNAM, 'Magic Item Description', 0, cpTranslate),
     wbCTDAs
   ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad}, wbMGEFAfterSet);
@@ -15270,13 +14904,7 @@ begin
     wbInteger(NAM8, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),
     wbRStruct('Actor Sounds', [
       wbInteger(CS2H, 'Count', itU32, nil, cpBenign, True),
-      wbRArrayS('Sounds',
-        wbRStructSK([0], 'Sound', [
-          wbFormIDCk(CS2K, 'Keyword', [KYWD]),
-          wbFormIDCk(CS2D, 'Sound', [SNDR], False, cpNormal, True)
-        ], [], cpNormal, False, nil, True),
-        cpNormal, False, nil, wbNPCActorSoundsAfterSet
-      ),
+      wbActorSounds,
       wbEmpty(CS2E, 'End Marker', cpNormal, True),
       wbByteArray(CS2F, 'Finalize', 1, cpNormal, True)
     ], []),
@@ -16917,16 +16545,7 @@ begin
 
       {--- Sound ---}
       wbFormIDCk(RDMO, 'Music', [MUSC], False, cpNormal, False, wbREGNSoundDontShow),
-      wbArrayS(RDSA, 'Sounds', wbStructSK([0], 'Sound', [
-        wbFormIDCk('Sound', [SNDR, NULL]),
-        wbInteger('Flags', itU32, wbFlags([
-          {0x00000001} 'Pleasant',
-          {0x00000002} 'Cloudy',
-          {0x00000004} 'Rainy',
-          {0x00000008} 'Snowy'
-        ])),
-        wbFloat('Chance')
-      ]), 0, cpNormal, False, nil, nil, wbREGNSoundDontShow),
+      wbRegionSounds,
       wbRArray('Unknown', wbStruct(RDSN, 'Unknown', [
         wbFormIDCk('Sound', [SNDR, NULL]),
         wbArray('Keywords', wbFormIDCk('Keyword', [KYWD]), -1),
@@ -17816,17 +17435,7 @@ begin
       wbInteger('Unknown', itU8)
     ], cpNormal, True, nil, 16),
     wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
-    wbRArray('Sounds',
-      wbStruct(SNAM, 'Sound', [
-        wbFormIDCK('Sound', [SNDR, NULL]),
-        wbInteger('Type', itU32, wbEnum([
-          {0x01} 'Default',
-          {0x02} 'Precipitation',
-          {0x04} 'Wind',
-          {0x08} 'Thunder'
-        ]))
-      ])
-    ),
+    wbWeatherSounds,
     wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
     wbStruct(IMSP, 'Image Spaces', [
       wbFormIDCK('Sunrise', [IMGS, NULL]),

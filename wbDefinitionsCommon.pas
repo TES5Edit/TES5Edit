@@ -28,6 +28,12 @@ var
   wbQuadrantEnum: IwbEnumDef;
   wbSeasons: IwbRecordMemberDef;
   wbSexEnum: IwbEnumDef;
+  wbActorSounds: IwbRecordMemberDef;
+  wbMagicEffectSounds: IwbRecordMemberDef;
+  wbRegionSounds: IwbRecordMemberDef;
+  wbSoundDescriptorSounds: IwbRecordMemberDef;
+  wbSoundTypeSounds: IwbRecordMemberDef;
+  wbWeatherSounds: IwbRecordMemberDef;
   wbTimeInterpolator: IwbStructDef;
   wbVertexHeightMap: IwbRecordMemberDef;
   wbWorldspaceOBND: IwbRecordMemberDef;
@@ -38,6 +44,52 @@ procedure DefineCommon;
 {>>> Common Procedure Callbacks <<<}
 
 procedure wbCTDARunOnAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbPERKPRKETypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbCNTOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbTERMCNTOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbContainerAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbSPLOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbKWDAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbNPCAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbRaceAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbKeywordsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbLVLOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbLLEAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbPRKRsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbSMQNQuestsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbCTDAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbConditionsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbCounterEffectsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbMGEFAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbTERMDisplayItemsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbTERMMenuItemsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbSNDRRatesOfFireAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbNPCActorSoundsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbMorphPresetsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
+procedure wbLENSAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
 {>>> Common Summary Callbacks <<<}
 
@@ -71,9 +123,35 @@ function wbCTDAParam2QuestStageToInt(const aString: string; const aElement: IwbE
 
 function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 
+function wbPxDTLocationDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+
+function wbHideFFFF(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+
 function wbMODTCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 
 function wbNeverShow(const aElement: IwbElement): Boolean;
+
+function GetREGNType(aElement: IwbElement): Integer;
+
+function wbREGNObjectsDontShow(const aElement: IwbElement): Boolean;
+
+function wbREGNWeatherDontShow(const aElement: IwbElement): Boolean;
+
+function wbREGNMapDontShow(const aElement: IwbElement): Boolean;
+
+function wbREGNLandDontShow(const aElement: IwbElement): Boolean;
+
+function wbREGNGrassDontShow(const aElement: IwbElement): Boolean;
+
+function wbREGNSoundDontShow(const aElement: IwbElement): Boolean;
+
+function wbREGNImposterDontShow(const aElement: IwbElement): Boolean;
+
+function wbScaledInt4ToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+
+function wbScaledInt4ToInt(const aString: string; const aElement: IwbElement): Int64;
+
+function wbStrToInt(const aString: string; const aElement: IwbElement): Int64;
 
 function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 
@@ -103,9 +181,15 @@ function wbVertexColumns(aSignature: TwbSignature; aName: string): IwbRecordMemb
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 
+function wbCellAddInfo(const aMainRecord: IwbMainRecord): string;
+
+function wbTryGetContainerWithValidMainRecord(const aElement: IwbElement; out aContainer: IwbContainerElementRef; out aMainRecord: IwbMainRecord): Boolean;
+
 function wbTryGetContainerFromUnion(const aElement: IwbElement; out aContainer: IwbContainer): Boolean;
 
 function wbTryGetContainerRefFromUnionOrValue(const aElement: IwbElement; out aContainer: IwbContainerElementRef): Boolean;
+
+function wbTryGetContainingMainRecord(const aElement: IwbElement; out aMainRecord: IwbMainRecord): Boolean;
 
 function wbTryGetMainRecord(const aElement: IwbElement; out aMainRecord: IwbMainRecord; aSignature: string = ''): Boolean;
 
@@ -115,7 +199,8 @@ uses
   Classes,
   Math,
   StrUtils,
-  SysUtils;
+  SysUtils,
+  wbHelpers;
 
 const
   _11_IAD: TwbSignature = #$11'IAD';
@@ -125,9 +210,14 @@ const
   _13_IAD: TwbSignature = #$13'IAD';
   _53_IAD: TwbSignature = #$53'IAD';
   NULL: TwbSignature = 'NULL';
+  ANAM: TwbSignature = 'ANAM';
   ATXT: TwbSignature = 'ATXT';
   BTXT: TwbSignature = 'BTXT';
   CNAM: TwbSignature = 'CNAM';
+  CS2D: TwbSignature = 'CS2D';
+  CS2K: TwbSignature = 'CS2K';
+  CSDC: TwbSignature = 'CSDC';
+  CSDI: TwbSignature = 'CSDI';
   CTDA: TwbSignature = 'CTDA';
   DATA: TwbSignature = 'DATA';
   FACT: TwbSignature = 'FACT';
@@ -137,6 +227,7 @@ const
   HEDR: TwbSignature = 'HEDR';
   ICON: TwbSignature = 'ICON';
   INDX: TwbSignature = 'INDX';
+  KYWD: TwbSignature = 'KYWD';
   LTEX: TwbSignature = 'LTEX';
   MDOB: TwbSignature = 'MDOB';
   MICO: TwbSignature = 'MICO';
@@ -147,7 +238,12 @@ const
   OBND: TwbSignature = 'OBND';
   PFPC: TwbSignature = 'PFPC';
   RACE: TwbSignature = 'RACE';
+  RDSA: TwbSignature = 'RDSA';
+  RDSD: TwbSignature = 'RDSD';
   SNAM: TwbSignature = 'SNAM';
+  SNDD: TwbSignature = 'SNDD';
+  SNDR: TwbSignature = 'SNDR';
+  SOUN: TwbSignature = 'SOUN';
   TNAM: TwbSignature = 'TNAM';
   TXST: TwbSignature = 'TXST';
   VCLR: TwbSignature = 'VCLR';
@@ -160,6 +256,13 @@ const
   XLOD: TwbSignature = 'XLOD';
   XNAM: TwbSignature = 'XNAM';
   XRNK: TwbSignature = 'XRNK';
+
+function IfThen(aBoolean: Boolean; const aTrue: TwbSignature; const aFalse: TwbSignature): TwbSignature; overload;
+begin
+  Result := aFalse;
+  if aBoolean then
+    Result := aTrue;
+end;
 
 function IfThen(aBoolean: Boolean; const aTrue: IwbRecordMemberDef; const aFalse: IwbRecordMemberDef): IwbRecordMemberDef; overload;
 begin
@@ -363,6 +466,92 @@ begin
   wbSexEnum :=
     wbEnum(['Male','Female']);
 
+  wbActorSounds :=
+    wbRArrayS('Sounds',
+      wbRStructSK([0], 'Sound', [
+        wbFormIDCk(CS2K, 'Keyword', [KYWD]),
+        wbFormIDCk(CS2D, 'Sound', [SNDR], False, cpNormal, True)
+      ], [], cpNormal, False, nil, True)
+      .SetSummaryKey([1, 0])
+      .SetSummaryMemberPrefixSuffix(0, '{', '}')
+      .SetSummaryDelimiter(' ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfSummaryNoSortKey)
+      .IncludeFlag(dfCollapsed),
+      cpNormal, False, nil, wbNPCActorSoundsAfterSet);
+
+  wbMagicEffectSounds :=
+    wbArray(SNDD, 'Sounds',
+      wbStruct('', [
+        wbInteger('Type', itU32, wbEnum([
+          'Sheathe/Draw',
+          'Charge',
+          'Ready',
+          'Release',
+          'Concentration Cast Loop',
+          'On Hit'
+        ])),
+        wbFormIDCk('Sound', [SNDR])
+      ])
+      .SetSummaryKey([0, 1])
+      .SetSummaryMemberPrefixSuffix(0, '[', ']')
+      .SetSummaryDelimiter(' ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed)
+    );
+
+  wbRegionSounds :=
+    wbArrayS(IfThen(wbGameMode in [gmTES4, gmFO3, gmFNV], RDSD, RDSA), 'Sounds', wbStructSK([0], 'Sound', [
+        wbFormIDCk('Sound', [SNDR, SOUN, NULL]),
+        wbInteger('Flags', itU32, wbFlags([
+          'Pleasant',
+          'Cloudy',
+          'Rainy',
+          'Snowy'
+        ])),
+        IfThen(wbGameMode in [gmTES4, gmFO3, gmFNV], wbInteger('Chance', itU32, wbScaledInt4ToStr, wbScaledInt4ToInt), wbFloat('Chance'))
+      ]), 0, cpNormal, False, nil, nil, wbREGNSoundDontShow);
+
+  wbSoundDescriptorSounds :=
+    wbRArray('Sounds',
+      wbRStruct('Sound Files', [
+        wbString(ANAM, 'File Name')
+      ], [])
+      .SetSummaryKey([0])
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed)
+    );
+
+  wbSoundTypeSounds :=
+    wbRArrayS('Sounds',
+      wbRStructSK([0], 'Sound', [
+        wbFormIDCk(CSDI, 'Sound', [SNDR, NULL], False, cpNormal, True),
+        wbInteger(CSDC, 'Sound Chance', itU8, nil, cpNormal, True)
+      ], [])
+      .SetSummaryKey([0, 1])
+      .SetSummaryMemberPrefixSuffix(1, '{Chance: ', '}')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfSummaryNoSortKey)
+      .IncludeFlag(dfCollapsed)
+    , cpNormal, True);
+
+  wbWeatherSounds :=
+    wbRArray('Sounds',
+      wbStruct(SNAM, 'Sound', [
+        wbFormIDCK('Sound', [SNDR, SOUN, NULL]),
+        wbInteger('Type', itU32, wbEnum([
+          {0x01} 'Default',
+          {0x02} 'Precipitation',
+          {0x04} 'Wind',
+          {0x08} 'Thunder'
+        ]))
+      ]).SetSummaryKeyOnValue([1, 0])
+      .SetSummaryPrefixSuffixOnValue(1, '[', ']')
+      .SetSummaryDelimiterOnValue(' ')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed)
+    );
+
   wbVertexHeightMap :=
     wbStruct(VHGT, 'Vertex Height Map', [
       wbFloat('Offset'),
@@ -448,6 +637,17 @@ begin
     Result := 1;
 end;
 
+function wbPxDTLocationDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container: IwbContainer;
+begin
+  Result := 0;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
+
+  Result := Container.ElementByName['Type'].NativeValue;
+end;
+
 function wbCTDAParam2QuestObjectiveToInt(const aString: string; const aElement: IwbElement): Int64;
 var
   i    : Integer;
@@ -483,6 +683,161 @@ begin
       aElement.Container.ElementNativeValues['Reference'] := 0;
 end;
 
+procedure wbPERKPRKETypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainerElementRef;
+begin
+  if not (aOldValue <> aNewValue) then
+    Exit;
+
+  if not Supports(aElement.Container, IwbContainerElementRef, Container) then
+    Exit;
+
+  if not Supports(Container.Container, IwbContainerElementRef, Container) then
+    Exit;
+
+  Container.RemoveElement('DATA');
+  Container.Add('DATA', True);
+  Container.RemoveElement('Perk Conditions');
+  Container.RemoveElement('Entry Point Function Parameters');
+
+  if not (aNewValue = 2) then
+    Exit;
+
+  Container.Add('EPFT', True);
+  Container.ElementNativeValues['DATA\Entry Point\Function'] := 2;
+end;
+
+procedure wbCNTOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('COCT - Count', aElement);
+end;
+
+procedure wbTERMCNTOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('COCT - Holds Holotape (Count)', aElement);
+end;
+
+procedure wbContainerAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerAfterSet('COCT - Count', 'Items', aElement);
+  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
+end;
+
+procedure wbSPLOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('SPCT - Count', aElement);
+end;
+
+procedure wbKWDAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('KSIZ - Keyword Count', aElement);
+end;
+
+procedure wbNPCAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerAfterSet('COCT - Count', 'Items', aElement);
+  wbCounterContainerAfterSet('SPCT - Count', 'Actor Effects', aElement);
+  wbCounterContainerAfterSet('LLCT - Count', 'Leveled List Entries', aElement);
+  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
+  wbCounterContainerAfterSet('PRKZ - Perk Count', 'Perks', aElement);
+end;
+
+procedure wbRaceAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerAfterSet('SPCT - Count', 'Actor Effects', aElement);
+  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
+end;
+
+procedure wbKeywordsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
+end;
+
+procedure wbLVLOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('LLCT - Count', aElement);
+end;
+
+procedure wbLLEAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerAfterSet('LLCT - Count', 'Leveled List Entries', aElement);
+end;
+
+procedure wbPRKRsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('PRKZ - Perk Count', aElement);
+end;
+
+procedure wbSMQNQuestsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('QNAM - Quest Count', aElement);
+end;
+
+procedure wbCTDAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('CITC - Condition Count', aElement);
+end;
+
+procedure wbConditionsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterContainerAfterSet('CITC - Condition Count', 'Conditions', aElement);
+end;
+
+procedure wbCounterEffectsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  // if it is really possible to have both counter effects and multiple data, this is going to be tricky.
+  wbCounterByPathAfterSet('Magic Effect Data\DATA - Data\Counter effect count', aElement);
+end;
+
+procedure wbMGEFAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbKeywordsAfterSet(aElement, aOldValue, aNewValue);
+  wbCounterContainerByPathAfterSet('Magic Effect Data\DATA - Data\Counter effect count', 'Counter Effects', aElement);
+end;
+
+procedure wbTERMDisplayItemsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('BSIZ - Count', aElement);
+end;
+
+procedure wbTERMMenuItemsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('ISIZ - Count', aElement);
+end;
+
+procedure wbSNDRRatesOfFireAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('ITMC - Count', aElement);
+end;
+
+procedure wbNPCActorSoundsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('CS2H - Count', aElement);
+end;
+
+procedure wbMorphPresetsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('MPPC - Count', aElement);
+end;
+
+procedure wbLENSAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('LFSP - Count', aElement);
+end;
+
+function wbHideFFFF(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := '';
+  if aType = ctToSortKey then
+    Result := IntToHex64(aInt, 4)
+  else if aType in [ctToStr, ctToSummary] then
+    if aInt = $FFFF then
+      Result := 'None'
+    else
+      Result := aInt.ToString;
+end;
+
 function wbMODTCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Strings: TDynStrings;
@@ -502,6 +857,109 @@ end;
 function wbNeverShow(const aElement: IwbElement): Boolean;
 begin
   Result := wbHideNeverShow;
+end;
+
+function GetREGNType(aElement: IwbElement): Integer;
+var
+  Container: IwbContainerElementRef;
+begin
+  Result := -1;
+  if not Assigned(aElement) then
+    Exit;
+
+  while aElement.Name <> 'Region Data Entry' do begin
+    aElement := aElement.Container;
+    if not Assigned(aElement) then
+      Exit;
+  end;
+
+  if not Supports(aElement, IwbContainerElementRef, Container) then
+    Exit;
+
+  Result := Container.ElementNativeValues['RDAT\Type'];
+end;
+
+function wbREGNObjectsDontShow(const aElement: IwbElement): Boolean;
+begin
+  Result := GetREGNType(aElement) <> 2;
+end;
+
+function wbREGNWeatherDontShow(const aElement: IwbElement): Boolean;
+begin
+  Result := GetREGNType(aElement) <> 3;
+end;
+
+function wbREGNMapDontShow(const aElement: IwbElement): Boolean;
+begin
+  Result := GetREGNType(aElement) <> 4;
+end;
+
+function wbREGNLandDontShow(const aElement: IwbElement): Boolean;
+begin
+  Result := GetREGNType(aElement) <> 5;
+end;
+
+function wbREGNGrassDontShow(const aElement: IwbElement): Boolean;
+begin
+  Result := GetREGNType(aElement) <> 6;
+end;
+
+function wbREGNSoundDontShow(const aElement: IwbElement): Boolean;
+begin
+  Result := GetREGNType(aElement) <> 7;
+end;
+
+function wbREGNImposterDontShow(const aElement: IwbElement): Boolean;
+begin
+  Result := GetREGNType(aElement) <> 8;
+end;
+
+function wbScaledInt4ToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+const
+  PlusMinus : array[Boolean] of string = ('+', '-');
+begin
+  Result := '';
+  case aType of
+    ctToStr, ctToSummary, ctToEditValue: Result := FloatToStrF(aInt / 10000, ffFixed, 99, 4);
+    ctToSortKey: begin
+      Result := FloatToStrF(aInt / 10000, ffFixed, 99, 4);
+      if Length(Result) < 22 then
+        Result := StringOfChar('0', 22 - Length(Result)) + Result;
+      Result := PlusMinus[aInt < 0] + Result;
+    end;
+    ctCheck: Result := '';
+  end;
+end;
+
+function wbScaledInt4ToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  f: Extended;
+begin
+  f := StrToFloat(aString);
+  f := f * 10000;
+  Result := Round(f);
+end;
+
+function wbStrToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  s: string;
+  i: integer;
+begin
+  // ignore anything after space or :
+  i := Pos(' ', aString);
+  if i = 0 then
+    i := Pos(':', aString);
+
+  if i <> 0 then
+    s := Copy(aString, 1, i - 1)
+  else
+    s := aString;
+
+  try
+    Result := StrToInt64(s)
+  except
+    Result := 0;
+  end;
 end;
 
 {>>> Common Definitions <<<}
@@ -741,6 +1199,52 @@ end;
 
 {>>> Common Functions <<<}
 
+function wbCellAddInfo(const aMainRecord: IwbMainRecord): string;
+var
+  Rec: IwbRecord;
+  Container: IwbContainer;
+  GroupRecord : IwbGroupRecord;
+  s: string;
+begin
+  Result := '';
+
+  if not aMainRecord.IsPersistent then begin
+    Rec := aMainRecord.RecordBySignature['XCLC'];
+    if Assigned(Rec) then
+      Result := 'at ' + Rec.Elements[0].Value + ',' + Rec.Elements[1].Value;
+  end;
+
+  Container := aMainRecord.Container;
+  while Assigned(Container) and not
+    (Supports(Container, IwbGroupRecord, GroupRecord) and (GroupRecord.GroupType = 1)) do
+    Container := Container.Container;
+
+  if not Assigned(Container) then
+    Exit;
+
+  s := wbFormID.ToString(GroupRecord.GroupLabel, aMainRecord, False);
+  if not (s <> '') then
+    Exit;
+
+  if Result <> '' then
+    s := s + ' ';
+
+  Result := 'in ' + s + Result;
+end;
+
+function wbTryGetContainerWithValidMainRecord(const aElement: IwbElement; out aContainer: IwbContainerElementRef; out aMainRecord: IwbMainRecord): Boolean;
+begin
+  Result := False;
+
+  if not Supports(aElement, IwbContainerElementRef, aContainer) then
+    Exit;
+  if aContainer.ElementCount < 1 then    Exit;
+  if not Supports(aElement, IwbMainRecord, aMainRecord) then    Exit;
+  if aMainRecord.IsDeleted then    Exit;
+
+  Result := True;
+end;
+
 function wbTryGetContainerFromUnion(const aElement: IwbElement; out aContainer: IwbContainer): Boolean;
 begin
   Result := False;
@@ -769,23 +1273,35 @@ begin
   Result := True;
 end;
 
-function wbTryGetMainRecord(const aElement: IwbElement; out aMainRecord: IwbMainRecord; aSignature: string = ''): Boolean;
-var
-  MainRecord: IwbMainRecord;
+function wbTryGetContainingMainRecord(const aElement: IwbElement; out aMainRecord: IwbMainRecord): Boolean;
 begin
   Result := False;
 
   if not Assigned(aElement) then
     Exit;
 
-  if not Supports(aElement.LinksTo, IwbMainRecord, MainRecord) then
+  aMainRecord := aElement.ContainingMainRecord;
+
+  if not Assigned(aMainRecord) then
+    Exit;
+
+  Result := True;
+end;
+
+function wbTryGetMainRecord(const aElement: IwbElement; out aMainRecord: IwbMainRecord; aSignature: string = ''): Boolean;
+begin
+  Result := False;
+
+  if not Assigned(aElement) then
+    Exit;
+
+  if not Supports(aElement.LinksTo, IwbMainRecord, aMainRecord) then
     Exit;
 
   if not SameText(aSignature, '') then
-    if MainRecord.Signature <> aSignature then
+    if aMainRecord.Signature <> aSignature then
       Exit;
 
-  aMainRecord := MainRecord;
   Result := True;
 end;
 
