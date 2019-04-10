@@ -1078,6 +1078,7 @@ const
   UIFL : TwbSignature = 'UIFL'; { New To Fallout 76 }
   UIUS : TwbSignature = 'UIUS'; { New To Fallout 76 }
   CENT : TwbSignature = 'CENT'; { New To Fallout 76 }
+  WTFG : TwbSignature = 'WTFG'; { New To Fallout 76 }
 
     // signatures of reference records
   sigReferences : TwbSignatures = [
@@ -1234,6 +1235,7 @@ var
   wbIMADUnknown1: IwbStructDef;
   wbYNAM: IwbSubRecordDef;
   wbZNAM: IwbSubRecordDef;
+  wbZNAMArray: IwbSubRecordDef;
   wbSPED: IwbSubRecordDef;
   wbCUSD: IwbSubRecordDef;
   wbINRD: IwbSubRecordDef;
@@ -9878,6 +9880,15 @@ begin
   wbEILV := wbArray(EILV, 'Levels', wbInteger('Level', itU32));
   wbIBSD := wbFormIDCk(IBSD, 'Break Sound', [SNDR]);
 
+  wbZNAMArray := wbArray(ZNAM, 'Unknown', wbStruct('Unknown', [
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFormIDCk('Keyword', [KYWD,NULL]),
+    wbByteArray('Unknown', 4)
+  ]));
+
   wbObjectProperty :=
     wbStructSK([0], 'Property', [
       wbActorValue,
@@ -11793,14 +11804,7 @@ begin
     ]),
     wbString(XMRK, 'Marker Model'),
     wbSNAMMarkerParams,
-    wbArray(ZNAM, 'Unknown', wbStruct('Unknown', [
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFormIDCk('Keyword', [KYWD,NULL]),
-      wbByteArray('Unknown', 4)
-    ])),
+    wbZNAMArray,
     wbUnknown(CNAM),
     wbUnknown(LNAM),
     wbAPPR,
@@ -18732,6 +18736,7 @@ begin
     wbByteArray(WBDT, 'Workbench Data (unused)', 0),
     wbString(XMRK, 'Marker Model'),
     wbSNAMMarkerParams,
+    wbZNAMArray,
     wbInteger(BSIZ, 'Count', itU32, nil, cpBenign),
     wbRArray('Body Text',
       wbRStruct('Item', [
@@ -19209,6 +19214,7 @@ begin
 
   wbRecord(CHAL, 'Challenge', [
     wbEDID,
+    wbUnknown(WTFG),
     wbFULL,
     wbString(SNAM),
     wbString(NNAM),
