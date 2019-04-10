@@ -502,6 +502,7 @@ const
   LFSD : TwbSignature = 'LFSD'; { New to Fallout 4 }
   LFSP : TwbSignature = 'LFSP'; { New to Fallout 4 }
   LGTM : TwbSignature = 'LGTM';
+  LGDI : TwbSignature = 'LGDI'; { New To Fallout 76 }
   LIGH : TwbSignature = 'LIGH';
   LILS : TwbSignature = 'LILS'; { New To Fallout 76 }
   LIMC : TwbSignature = 'LIMC'; { New To Fallout 76 }
@@ -910,6 +911,7 @@ const
   UNAM : TwbSignature = 'UNAM';
   UNES : TwbSignature = 'UNES'; { New To Skyrim }
   UNWP : TwbSignature = 'UNWP'; { New To Fallout 4 }
+  UTIL : TwbSignature = 'UTIL'; { New To Fallout 76 }
   VATS : TwbSignature = 'VATS';
   VCLR : TwbSignature = 'VCLR';
   VENC : TwbSignature = 'VENC'; { New To Skyrim }
@@ -1070,6 +1072,12 @@ const
   FMIG : TwbSignature = 'FMIG'; { New To Fallout 76 }
   FNMU : TwbSignature = 'FNMU'; { New To Fallout 76 }
 
+  UITE : TwbSignature = 'UITE'; { New To Fallout 76 }
+  UITO : TwbSignature = 'UITO'; { New To Fallout 76 }
+  UITV : TwbSignature = 'UITV'; { New To Fallout 76 }
+  UIFL : TwbSignature = 'UIFL'; { New To Fallout 76 }
+  UIUS : TwbSignature = 'UIUS'; { New To Fallout 76 }
+
     // signatures of reference records
   sigReferences : TwbSignatures = [
     'NULL', 'PLYR', 'ACHR', 'REFR', 'PGRE', 'PHZD',
@@ -1082,11 +1090,11 @@ const
     'ARTO', 'ASPC', 'BNDS', 'BOOK', 'CMPO', 'CNCY',
     'COBJ', 'CONT', 'DEBR', 'DOOR', 'EXPL', 'FLST',
     'FLOR', 'FURN', 'HAZD', 'IDLM', 'INGR', 'KEYM',
-    'LIGH', 'LVLI', 'LVLN', 'LVSP', 'MISC', 'MSTT',
-    'NOTE', 'NPC_', 'OMOD', 'PACH', 'PKIN', 'PPAK',
-    'PROJ', 'SCOL', 'SCRL', 'SECH', 'SOUN', 'SPEL',
-    'STAT', 'TACT', 'TERM', 'TREE', 'TXST', 'WATR',
-    'WEAP'
+    'LGDI', 'LIGH', 'LVLI', 'LVLN', 'LVSP', 'MISC',
+    'MSTT', 'NOTE', 'NPC_', 'OMOD', 'PACH', 'PKIN',
+    'PPAK', 'PROJ', 'SCOL', 'SCRL', 'SECH', 'SOUN',
+    'SPEL', 'STAT', 'TACT', 'TERM', 'TREE', 'TXST',
+    'UTIL', 'WATR', 'WEAP'
   ];
 
 var
@@ -18402,6 +18410,50 @@ begin
     )
   ]);
 
+  wbRecord(UTIL, 'Utility', [
+    wbEDID,
+    wbOBND,
+    wbPTRN,
+    wbXALG,
+    wbFULL,
+    wbMODL,
+    wbKeywords,
+    wbStruct(DATA, '', [
+      wbInteger('Value', itS32),
+      wbFloat('Weight')
+    ], cpNormal, True),
+    wbUnknown(AQIC),
+    wbUnknown(UITE),
+    wbUnknown(UITO),
+    wbUnknown(UITV),
+    wbUnknown(UIFL),
+    wbUnknown(UIUS)
+
+  ]);
+
+  wbRecord(LGDI, 'LGDI', [
+    wbEDID,
+    wbFULL,
+    wbFormID(ANAM),
+
+    wbArray(BNAM, 'Unknown', wbStruct('Unknown', [
+      wbByteArray('Unknown', 4), // could be integer/flag.
+      wbFormID('Unknown')
+    ])),
+
+    wbArray(CNAM, 'Unknown', wbStruct('Unknown', [
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbFormIDCk('Keyword', [KYWD])
+    ])),
+
+    wbArray(DNAM, 'Unknown', wbStruct('Unknown', [
+      wbByteArray('Unknown', 4),
+      wbByteArray('Unknown', 4),
+      wbFormIDCk('Keyword', [KYWD])
+    ]))
+  ]);
+
 end;
 
 procedure DefineFO76s;
@@ -19226,6 +19278,7 @@ begin
   wbAddGroupOrder(LVLP); //new in Fallout 76
   wbAddGroupOrder(KEYM);
   wbAddGroupOrder(ALCH);
+  wbAddGroupOrder(UTIL); //new in Fallout 76
   wbAddGroupOrder(IDLM);
   wbAddGroupOrder(NOTE);
   wbAddGroupOrder(PROJ);
@@ -19337,6 +19390,7 @@ begin
   wbAddGroupOrder(CHAL); //new in Fallout 76
   wbAddGroupOrder(AVTR); //new in Fallout 76
   wbAddGroupOrder(CNDF); //new in Fallout 76
+  wbAddGroupOrder(LGDI); //new in Fallout 76
 end;
 
 
