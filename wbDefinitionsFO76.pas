@@ -1077,6 +1077,7 @@ const
   UITV : TwbSignature = 'UITV'; { New To Fallout 76 }
   UIFL : TwbSignature = 'UIFL'; { New To Fallout 76 }
   UIUS : TwbSignature = 'UIUS'; { New To Fallout 76 }
+  CENT : TwbSignature = 'CENT'; { New To Fallout 76 }
 
     // signatures of reference records
   sigReferences : TwbSignatures = [
@@ -11711,6 +11712,7 @@ begin
       {0x00010000} 16, 'Random Anim Start',
       {0x00800000} 23, 'Is Marker',
       {0x02000000} 25, 'Power Armor',
+      {0x08000000} 27, 'Unknown 27',
       {0x10000000} 28, 'Must Exit To Talk',
       {0x20000000} 29, 'Child Can Use'
     ])), [
@@ -11737,9 +11739,11 @@ begin
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       {0x0001} 'Unknown 0',
       {0x0002} 'Ignored By Sandbox',
-      {0x0004} '',
-      {0x0008} '',
-      {0x0010} 'Unknown 4'
+      {0x0004} 'Unknown 2',
+      {0x0008} 'Unknown 3',
+      {0x0010} 'Unknown 4',
+      {0x0020} 'Unknown 5',
+      {0x0040} 'Unknown 6'
     ])),
     wbCNDCs,
     wbCOCT,
@@ -11789,6 +11793,7 @@ begin
     ]),
     wbString(XMRK, 'Marker Model'),
     wbSNAMMarkerParams,
+    wbUnknown(ZNAM),
     wbUnknown(CNAM),
     wbUnknown(LNAM),
     wbAPPR,
@@ -15224,6 +15229,7 @@ begin
     wbOPDSs,
     wbOPDSs,
     wbPTRN,
+    wbPHST,
     wbOPDSs,
     wbXALG,
     wbFULL,
@@ -18436,7 +18442,7 @@ begin
     wbFULL,
     wbFormID(ANAM),
 
-    wbArray(BNAM, 'Unknown', wbStruct('Unknown', [
+    wbArray(BNAM, 'OMODs', wbStruct('Unknown', [
       wbByteArray('Unknown', 4), // could be integer/flag.
       wbFormID('Unknown')
     ])),
@@ -19145,7 +19151,13 @@ begin
 
   wbRecord(COEN, 'Consumable Entitlement', [
     wbEDID,
-    wbDESC
+    wbFULL,
+    wbDESC,
+    wbKeywords,
+    wbFormID(CENT),
+    wbLStringKC(NNAM, 'Name', 0, cpTranslate),
+    wbString(ETIP, 'Texture Path'),
+    wbString(ETDI, 'Texture File')
   ]);
 
   wbRecord(CSEN, 'Crate Service Entitlement', [
