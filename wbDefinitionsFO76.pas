@@ -18551,6 +18551,7 @@ begin
     wbArray(MNAM, 'Target OMOD Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbArray(FNAM, 'Filter Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbFormIDCk(LNAM, 'Loose Mod', sigBaseObjects),
+    wbFormIDCk(DNAM, 'Unknown', [OMOD,NULL]),
     wbInteger(NAM1, 'Priority', itU8),
     wbByteArray(NAM2, 'Unused', 0),
     wbArray(NAM3, 'Unknown Keywords', wbFormIDCk('Keyword', [KYWD])),
