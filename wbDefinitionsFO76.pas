@@ -1079,6 +1079,7 @@ const
   UIUS : TwbSignature = 'UIUS'; { New To Fallout 76 }
   CENT : TwbSignature = 'CENT'; { New To Fallout 76 }
   WTFG : TwbSignature = 'WTFG'; { New To Fallout 76 }
+  NAVH : TwbSignature = 'NAVH'; { New To Fallout 76 }
 
     // signatures of reference records
   sigReferences : TwbSignatures = [
@@ -10700,31 +10701,32 @@ begin
   ReferenceRecord(PMIS, 'Placed Missile');
 
   wbCellFlags := wbFlags([
-      {0x0001} 'Is Interior Cell',
-      {0x0002} 'Has Water',
-      {0x0004} 'Can''t Travel From Here',
-      {0x0008} 'No LOD Water',
-      {0x0010} 'Unknown 5',
-      {0x0020} 'Public Area',
-      {0x0040} 'Hand Changed',
-      {0x0080} 'Show Sky',
-      {0x0100} 'Use Sky Lighting',
-      {0x0200} 'Unknown 10',
-      {0x0400} 'Unknown 11',
-      {0x0800} 'Sunlight Shadows',
-      {0x1000} 'Distant LOD only',
-      {0x2000} 'Player Followers Can''t Travel Here',
-      {0x4000} 'Unknown 15',
-      {0x8000} 'Unknown 16'
+      {0x00001} 'Is Interior Cell',
+      {0x00002} 'Has Water',
+      {0x00004} 'Can''t Travel From Here',
+      {0x00008} 'No LOD Water',
+      {0x00010} 'Unknown 5',
+      {0x00020} 'Public Area',
+      {0x00040} 'Hand Changed',
+      {0x00080} 'Show Sky',
+      {0x00100} 'Use Sky Lighting',
+      {0x00200} 'Unknown 10',
+      {0x00400} 'Unknown 11',
+      {0x00800} 'Sunlight Shadows',
+      {0x01000} 'Distant LOD only',
+      {0x02000} 'Player Followers Can''t Travel Here',
+      {0x04000} 'Unknown 15',
+      {0x08000} 'Unknown 16',
+      {0x10000} 'Unknown 17'
     ]);
 
   wbRecord(CELL, 'Cell',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000400}  7, 'No Pre Vis',
-      {0x00000400} 10, 'Persistent',
-      {0x00020000} 17, 'Off Limits',
-      {0x00040000} 18, 'Compressed',
-      {0x00080000} 19, 'Can''t Wait'
+      {0x0000040}  7, 'No Pre Vis',
+      {0x0000200} 10, 'Persistent',
+      {0x0002000} 17, 'Off Limits',
+      {0x0004000} 18, 'Compressed',
+      {0x0008000} 19, 'Can''t Wait'
     ]), [18]), [
     wbEDID,
     wbDURL,
@@ -10821,6 +10823,7 @@ begin
     wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
     wbFloat(XILS),
     wbUnknown(RDES),
+    wbUnknown(NAVH),
     wbFormIDCk(XCWT, 'Water', [WATR]),
     wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
     wbFormIDCk(XLCN, 'Location', [LCTN]),
@@ -16812,8 +16815,12 @@ begin
       wbFloat('Frequency'),
       wbFloat('Min Weak Distance'),
       wbFloat('Max Weak Distance'),
-      wbInteger('Flags', itU32, wbFlags(['Ignores Distance Checks']))
-    ]),
+//      wbInteger('Flags', itU32, wbFlags(['Ignores Distance Checks']))
+      wbInteger('Flags', itU32, wbFlags(wbRecordFlagsFlags, wbFlagsList([
+        {0x00000200}  1, 'Ignores Distance Checks',
+        {0x00000400}  8, 'Unknown',
+        {0x00000800} 16, 'Unknown'
+      ], True, True)))]),
     wbUnknown(XFLG),
     wbUnknown(XKPD),
     wbStruct(XBSD, 'Spline', [
