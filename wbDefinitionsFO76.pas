@@ -11793,7 +11793,14 @@ begin
     ]),
     wbString(XMRK, 'Marker Model'),
     wbSNAMMarkerParams,
-    wbUnknown(ZNAM),
+    wbArray(ZNAM, 'Unknown', wbStruct('Unknown', [
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFormIDCk('Keyword', [KYWD,NULL]),
+      wbByteArray('Unknown', 4)
+    ])),
     wbUnknown(CNAM),
     wbUnknown(LNAM),
     wbAPPR,
@@ -17653,6 +17660,7 @@ begin
     wbPTRN,
     wbOPDSs,
     wbSTCP,
+    wbXALG,
     wbFULL,
     wbMODL,
     wbICON,
