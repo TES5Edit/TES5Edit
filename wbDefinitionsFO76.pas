@@ -16815,7 +16815,6 @@ begin
       wbFloat('Frequency'),
       wbFloat('Min Weak Distance'),
       wbFloat('Max Weak Distance'),
-//      wbInteger('Flags', itU32, wbFlags(['Ignores Distance Checks']))
       wbInteger('Flags', itU32, wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00000200}  1, 'Ignores Distance Checks',
         {0x00000400}  8, 'Unknown',
