@@ -18464,7 +18464,7 @@ begin
     wbUnknown(AQIC),
     wbUnknown(UITE),
     wbUnknown(UITO),
-    wbUnknown(UITV),
+    wbFloat(UITV),
     wbUnknown(UIFL),
     wbUnknown(UIUS)
 
