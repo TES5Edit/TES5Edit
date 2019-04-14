@@ -3631,6 +3631,11 @@ begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 155);
 end;
 
+function wbDeciderFormVersion171(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 171);
+end;
+
 function wbDeciderFormVersion174(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 174);
@@ -12310,7 +12315,11 @@ begin
       wbFormIDCk('Impact Data Set', [IPDS, NULL]),
       wbFormID('Placed Object'),
       wbFormIDCk('Spawn Projectile', [PROJ, NULL]),
-      wbFloat('Force'),
+      wbUnion('Force', wbDeciderFormVersion171, [
+        wbFloat('Force'),
+        wbFormIDCk('Force Curve Table', [CURV, NULL])
+      ], cpNormal, True),
+
       wbFloat('Damage'),
       wbFloat('Inner Radius'),
       wbFloat('Outer Radius'),
@@ -12365,7 +12374,8 @@ begin
         {0x0000020000000000} 'Unknown 42',
         {0x0000040000000000} 'Unknown 43',
         {0x0000080000000000} 'Unknown 44',
-        {0x0000100000000000} 'Unknown 45'
+        {0x0000100000000000} 'Unknown 45',
+        {0x0000200000000000} 'Unknown 46'
       ])),
       wbInteger('Sound Level', itU32, wbSoundLevelEnum),
       wbFloat('Placed Object AutoFade Delay'),
