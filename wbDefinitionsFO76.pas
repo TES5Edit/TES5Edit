@@ -52,7 +52,7 @@ var
     wbLocationEnum: IwbEnumDef;
     wbMiscStatEnum: IwbEnumDef;
     wbMusicEnum: IwbEnumDef;
-  wbObjectModProperties: IwbArrayDef;
+    wbObjectModProperties: IwbArrayDef;
     wbObjectTypeEnum: IwbEnumDef;
     wbPropTypeEnum: IwbEnumDef;
     wbQuadrantEnum: IwbEnumDef;
@@ -66,13 +66,13 @@ var
     wbWeaponAnimTypeEnum: IwbEnumDef;
     wbWeaponPropertyEnum: IwbEnumDef;
     wbZTestFuncEnum: IwbEnumDef;
-  wbKeywordTypeEnum: IwbEnumDef;
-  wbReverbClassEnum: IwbEnumDef;
-  wbHitBehaviourEnum: IwbEnumDef;
-  wbBoolEnum: IwbEnumDef;
-  wbSpecialTypeEnum: IwbEnumDef;
+    wbKeywordTypeEnum: IwbEnumDef;
+    wbReverbClassEnum: IwbEnumDef;
+    wbHitBehaviourEnum: IwbEnumDef;
+    wbBoolEnum: IwbEnumDef;
+    wbSpecialTypeEnum: IwbEnumDef;
 
-  wbLVLFFlags : IwbFlagsDef;
+    wbLVLFFlags : IwbFlagsDef;
 
 procedure DefineFO76;
 
@@ -10025,7 +10025,9 @@ begin
     {10} 'ActorValues',
     {11} 'Health',
     {12} 'ColorRemappingIndex',
-    {13} 'MaterialSwaps'
+    {13} 'MaterialSwaps',
+    {14} 'Unknown 14',
+    {15} 'Unknown 15'
   ]);
 
   wbActorPropertyEnum := wbEnum([
@@ -10132,7 +10134,10 @@ begin
     {91} 'FastEquipSound',
     {92} 'DisableShells',
     {93} 'HasChargingAttack',
-    {94} 'ActorValues'
+    {94} 'ActorValues',
+    {95} 'Unknown 95',
+    {96} 'Unknown 96',
+    {97} 'Unknown 97'
   ]);
 
   wbObjectModProperties :=
@@ -10173,7 +10178,7 @@ begin
         wbFloat('Value 2 - Float'),
         wbInteger('Value 2 - Bool', itU32, wbBoolEnum)
       ]),
-      wbFloat('Step')
+      wbFormIDCk('Curve Table', [CURV, NULL])
     ]), wbOMODDataPropertyCounter, cpNormal, False, nil, wbOMODpropertyAfterSet);
 
   wbOBTSReq := wbStruct(OBTS, 'Object Mod Template Item', [
@@ -18529,7 +18534,9 @@ begin
   wbRecord(OMOD, 'Object Modification',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000008} 4, 'Legendary Mod',
-      {0x00000040} 7, 'Mod Collection'
+      {0x00000020} 6, 'Unknown 6',
+      {0x00000040} 7, 'Mod Collection',
+      {0x00000080} 8, 'Unknown 8'
     ])), [
     wbEDID,
     wbDURL,
