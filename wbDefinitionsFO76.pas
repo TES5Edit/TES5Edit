@@ -131,35 +131,35 @@ const
   _53_IAD: TwbSignature = #$53'IAD';
   _54_IAD: TwbSignature = #$54'IAD';
 
-{00TX} _00_0TX: TwbSignature = #$30'0TX';
-{10TX} _10_0TX: TwbSignature = #$31'0TX';
-{20TX} _20_0TX: TwbSignature = #$32'0TX';
-{30TX} _30_0TX: TwbSignature = #$33'0TX';
-{40TX} _40_0TX: TwbSignature = #$34'0TX';
-{50TX} _50_0TX: TwbSignature = #$35'0TX';
-{60TX} _60_0TX: TwbSignature = #$36'0TX';
-{70TX} _70_0TX: TwbSignature = #$37'0TX';
-{80TX} _80_0TX: TwbSignature = #$38'0TX';
-{90TX} _90_0TX: TwbSignature = #$39'0TX';
-{:0TX} _3A_0TX: TwbSignature = #$3A'0TX';
-{;0TX} _3B_0TX: TwbSignature = #$3B'0TX';
-{<0TX} _3C_0TX: TwbSignature = #$3C'0TX';
-{=0TX} _3D_0TX: TwbSignature = #$3D'0TX';
-{>0TX} _3E_0TX: TwbSignature = #$3E'0TX';
-{?0TX} _3F_0TX: TwbSignature = #$3F'0TX';
-{@0TX} _40h_0TX: TwbSignature = #$40'0TX';
-{A0TX} A0TX: TwbSignature = 'A0TX';
-{B0TX} B0TX: TwbSignature = 'B0TX';
-{C0TX} C0TX: TwbSignature = 'C0TX';
-{D0TX} D0TX: TwbSignature = 'D0TX';
-{E0TX} E0TX: TwbSignature = 'E0TX';
-{F0TX} F0TX: TwbSignature = 'F0TX';
-{G0TX} G0TX: TwbSignature = 'G0TX';
-{H0TX} H0TX: TwbSignature = 'H0TX';
-{I0TX} I0TX: TwbSignature = 'I0TX';
-{J0TX} J0TX: TwbSignature = 'J0TX';
-{K0TX} K0TX: TwbSignature = 'K0TX';
-{L0TX} L0TX: TwbSignature = 'L0TX';
+  _30_0TX: TwbSignature = #$30'0TX'; {00TX}
+  _31_0TX: TwbSignature = #$31'0TX'; {10TX}
+  _32_0TX: TwbSignature = #$32'0TX'; {20TX}
+  _33_0TX: TwbSignature = #$33'0TX'; {30TX}
+  _34_0TX: TwbSignature = #$34'0TX'; {40TX}
+  _35_0TX: TwbSignature = #$35'0TX'; {50TX}
+  _36_0TX: TwbSignature = #$36'0TX'; {60TX}
+  _37_0TX: TwbSignature = #$37'0TX'; {70TX}
+  _38_0TX: TwbSignature = #$38'0TX'; {80TX}
+  _39_0TX: TwbSignature = #$39'0TX'; {90TX}
+  _3A_0TX: TwbSignature = #$3A'0TX'; {:0TX}
+  _3B_0TX: TwbSignature = #$3B'0TX'; {;0TX}
+  _3C_0TX: TwbSignature = #$3C'0TX'; {<0TX}
+  _3D_0TX: TwbSignature = #$3D'0TX'; {=0TX}
+  _3E_0TX: TwbSignature = #$3E'0TX'; {>0TX}
+  _3F_0TX: TwbSignature = #$3F'0TX'; {?0TX}
+  _40_0TX: TwbSignature = #$40'0TX'; {@0TX}
+  A0TX: TwbSignature = 'A0TX';       {A0TX}
+  B0TX: TwbSignature = 'B0TX';       {B0TX}
+  C0TX: TwbSignature = 'C0TX';       {C0TX}
+  D0TX: TwbSignature = 'D0TX';       {D0TX}
+  E0TX: TwbSignature = 'E0TX';       {E0TX}
+  F0TX: TwbSignature = 'F0TX';       {F0TX}
+  G0TX: TwbSignature = 'G0TX';       {G0TX}
+  H0TX: TwbSignature = 'H0TX';       {H0TX}
+  I0TX: TwbSignature = 'I0TX';       {I0TX}
+  J0TX: TwbSignature = 'J0TX';       {J0TX}
+  K0TX: TwbSignature = 'K0TX';       {K0TX}
+  L0TX: TwbSignature = 'L0TX';       {L0TX}
 
   AAAP : TwbSignature = 'AAAP'; { New To Fallout 76 }
   AACT : TwbSignature = 'AACT';
@@ -269,6 +269,7 @@ const
   CAMS : TwbSignature = 'CAMS';
   CDIX : TwbSignature = 'CDIX'; { New to Fallout 4 }
   CELL : TwbSignature = 'CELL';
+  CENT : TwbSignature = 'CENT'; { New To Fallout 76 }
   CHAL : TwbSignature = 'CHAL'; { New To Fallout 76 }
   CIFK : TwbSignature = 'CIFK'; { New to Fallout 76 }
   CIS1 : TwbSignature = 'CIS1'; { New to Skyrim }
@@ -278,6 +279,7 @@ const
   CLFM : TwbSignature = 'CLFM';
   CLMT : TwbSignature = 'CLMT';
   CLSZ : TwbSignature = 'CLSZ'; { New to Fallout 4 }
+  CMIC : TwbSignature = 'CMIC'; { New To Fallout 76 }
   CMPO : TwbSignature = 'CMPO'; { New to Fallout 4 }
   CNAM : TwbSignature = 'CNAM';
   CNCY : TwbSignature = 'CNCY'; { New To Fallout 76 }
@@ -363,6 +365,7 @@ const
   DTGT : TwbSignature = 'DTGT'; { New To Fallout 4 }
   DTID : TwbSignature = 'DTID'; { New To Fallout 4 }
   DUAL : TwbSignature = 'DUAL';
+  DURG : TwbSignature = 'DURG'; { New To Fallout 76 }
   DURL : TwbSignature = 'DURL'; { New To Fallout 76 }
   EAMT : TwbSignature = 'EAMT';
   ECAT : TwbSignature = 'ECAT'; { New To Fallout 76 }
@@ -406,17 +409,23 @@ const
   FEVA : TwbSignature = 'FEVA'; { New To Fallout 76 }
   FFFF : TwbSignature = 'FFFF';
   FIMD : TwbSignature = 'FIMD'; { New To Fallout 4 }
+  FLFG : TwbSignature = 'FLFG'; { New To Fallout 76 }
   FLMV : TwbSignature = 'FLMV'; { New to Skyrim }
   FLOR : TwbSignature = 'FLOR';
   FLST : TwbSignature = 'FLST';
   FLTR : TwbSignature = 'FLTR'; { New to Skyrim }
   FLTV : TwbSignature = 'FLTV';
+  FMAG : TwbSignature = 'FMAG'; { New To Fallout 76 }
+  FMAH : TwbSignature = 'FMAH'; { New To Fallout 76 }
+  FMIG : TwbSignature = 'FMIG'; { New To Fallout 76 }
+  FMIH : TwbSignature = 'FMIH'; { New To Fallout 76 }
   FMIN : TwbSignature = 'FMIN'; { New To Fallout 4 }
   FMRI : TwbSignature = 'FMRI'; { New To Fallout 4 }
   FMRN : TwbSignature = 'FMRN'; { New To Fallout 4 }
   FMRS : TwbSignature = 'FMRS'; { New To Fallout 4 }
   FNAM : TwbSignature = 'FNAM';
   FNMK : TwbSignature = 'FNMK'; { New to Skyrim }
+  FNMU : TwbSignature = 'FNMU'; { New To Fallout 76 }
   FNPR : TwbSignature = 'FNPR'; { New to Skyrim }
   FPRT : TwbSignature = 'FPRT'; { New to Skyrim }
   FSTP : TwbSignature = 'FSTP';
@@ -488,7 +497,10 @@ const
   KSSM : TwbSignature = 'KSSM'; { New To Fallout 4 }
   KWDA : TwbSignature = 'KWDA';
   KYWD : TwbSignature = 'KYWD';
+  LAMN : TwbSignature = 'LAMN'; { New To Fallout 76 }
+  LAMX : TwbSignature = 'LAMX'; { New To Fallout 76 }
   LAND : TwbSignature = 'LAND';
+  LAVT : TwbSignature = 'LAVT'; { New To Fallout 76 }
   LAYR : TwbSignature = 'LAYR'; { New to Fallout 4 }
   LCEC : TwbSignature = 'LCEC'; { New to Skyrim }
   LCEP : TwbSignature = 'LCEP'; { New to Skyrim }
@@ -501,8 +513,8 @@ const
   LENS : TwbSignature = 'LENS'; { New to Fallout 4 }
   LFSD : TwbSignature = 'LFSD'; { New to Fallout 4 }
   LFSP : TwbSignature = 'LFSP'; { New to Fallout 4 }
-  LGTM : TwbSignature = 'LGTM';
   LGDI : TwbSignature = 'LGDI'; { New To Fallout 76 }
+  LGTM : TwbSignature = 'LGTM';
   LIGH : TwbSignature = 'LIGH';
   LILS : TwbSignature = 'LILS'; { New To Fallout 76 }
   LIMC : TwbSignature = 'LIMC'; { New To Fallout 76 }
@@ -518,9 +530,9 @@ const
   LTMP : TwbSignature = 'LTMP';
   LTPC : TwbSignature = 'LTPC'; { New to Fallout 4 }
   LTPT : TwbSignature = 'LTPT'; { New to Fallout 4 }
-  LVCV : TwbSignature = 'LVCV'; { New To Fallout 76 }
-  LVCT : TwbSignature = 'LVCT'; { New To Fallout 76 }
   LVCL : TwbSignature = 'LVCL'; { New To Fallout 76 }
+  LVCT : TwbSignature = 'LVCT'; { New To Fallout 76 }
+  LVCV : TwbSignature = 'LVCV'; { New To Fallout 76 }
   LVIG : TwbSignature = 'LVIG'; { New To Fallout 76 }
   LVIV : TwbSignature = 'LVIV'; { New To Fallout 76 }
   LVLC : TwbSignature = 'LVLC';
@@ -545,6 +557,9 @@ const
   LVSG : TwbSignature = 'LVSG'; { New to Fallout 4 }
   LVSP : TwbSignature = 'LVSP';
   LVUO : TwbSignature = 'LVUO'; { New To Fallout 76 }
+  MAGA : TwbSignature = 'MAGA'; { New To Fallout 76 }
+  MAGF : TwbSignature = 'MAGF'; { New To Fallout 76 }
+  MAGG : TwbSignature = 'MAGG'; { New To Fallout 76 }
   MASE : TwbSignature = 'MASE'; { New To Fallout 4 }
   MAST : TwbSignature = 'MAST';
   MATO : TwbSignature = 'MATO';
@@ -559,6 +574,7 @@ const
   MIC2 : TwbSignature = 'MIC2';
   MICN : TwbSignature = 'MICN'; { New to Fallout 4 }
   MICO : TwbSignature = 'MICO';
+  MIID : TwbSignature = 'MIID'; { New To Fallout 76 }
   MISC : TwbSignature = 'MISC';
   MLSI : TwbSignature = 'MLSI'; { New to Fallout 4 }
   MNAM : TwbSignature = 'MNAM';
@@ -630,6 +646,7 @@ const
   NAM9 : TwbSignature = 'NAM9';
   NAMA : TwbSignature = 'NAMA'; { New to Skyrim }
   NAME : TwbSignature = 'NAME';
+  NAVH : TwbSignature = 'NAVH'; { New To Fallout 76 }
   NAVI : TwbSignature = 'NAVI';
   NAVM : TwbSignature = 'NAVM';
   NETO : TwbSignature = 'NETO'; { New to Fallout 4 }
@@ -665,7 +682,6 @@ const
   OMOD : TwbSignature = 'OMOD'; { New to Fallout 4 }
   ONAM : TwbSignature = 'ONAM';
   OPDS : TwbSignature = 'OPDS'; { New To Fallout 76 }
-  CMIC : TwbSignature = 'CMIC'; { New To Fallout 76 }
   OTFT : TwbSignature = 'OTFT';
   OVIS : TwbSignature = 'OVIS'; { New to Fallout 4 }
   PACH : TwbSignature = 'PACH'; { New To Fallout 76 }
@@ -750,9 +766,6 @@ const
   RADR : TwbSignature = 'RADR'; { New To Fallout 4 }
   RBPC : TwbSignature = 'RBPC'; { New To Fallout 4 }
   RCBN : TwbSignature = 'RCBN'; { New To Fallout 76 }
-  LAVT : TwbSignature = 'LAVT'; { New To Fallout 76 }
-  LAMN : TwbSignature = 'LAMN'; { New To Fallout 76 }
-  LAMX : TwbSignature = 'LAMX'; { New To Fallout 76 }
   RCEC : TwbSignature = 'RCEC'; { New To Skyrim }
   RCLR : TwbSignature = 'RCLR';
   RCPR : TwbSignature = 'RCPR'; { New to Dawnguard }
@@ -824,6 +837,7 @@ const
   SNCT : TwbSignature = 'SNCT';
   SNDD : TwbSignature = 'SNDD';
   SNDR : TwbSignature = 'SNDR';
+  SNFG : TwbSignature = 'SNFG'; { New To Fallout 76 }
   SNMV : TwbSignature = 'SNMV'; { New to Skyrim }
   SNST : TwbSignature = 'SNST'; { New To Fallout 76 }
   SNTP : TwbSignature = 'SNTP'; { New To Fallout 76 }
@@ -854,7 +868,6 @@ const
   STOL : TwbSignature = 'STOL'; { New to Skyrim }
   STOP : TwbSignature = 'STOP'; { New to Fallout 4 }
   STPT : TwbSignature = 'STPT'; { New To Fallout 76 }
-  SNFG : TwbSignature = 'SNFG'; { New To Fallout 76 }
   STSC : TwbSignature = 'STSC'; { New to Fallout 4 }
   SWFI : TwbSignature = 'SWFI'; { New To Fallout 76 }
   SWMV : TwbSignature = 'SWMV'; { New to Skyrim }
@@ -908,6 +921,11 @@ const
   TX09 : TwbSignature = 'TX09'; { New To Fallout 76 }
   TX10 : TwbSignature = 'TX10'; { New To Fallout 76 }
   TXST : TwbSignature = 'TXST';
+  UIFL : TwbSignature = 'UIFL'; { New To Fallout 76 }
+  UITE : TwbSignature = 'UITE'; { New To Fallout 76 }
+  UITO : TwbSignature = 'UITO'; { New To Fallout 76 }
+  UITV : TwbSignature = 'UITV'; { New To Fallout 76 }
+  UIUS : TwbSignature = 'UIUS'; { New To Fallout 76 }
   UNAM : TwbSignature = 'UNAM';
   UNES : TwbSignature = 'UNES'; { New To Skyrim }
   UNWP : TwbSignature = 'UNWP'; { New To Fallout 4 }
@@ -947,6 +965,7 @@ const
   WOOP : TwbSignature = 'WOOP';
   WRLD : TwbSignature = 'WRLD';
   WSPR : TwbSignature = 'WSPR'; { New To Fallout 76 }
+  WTFG : TwbSignature = 'WTFG'; { New To Fallout 76 }
   WTHR : TwbSignature = 'WTHR';
   WTMX : TwbSignature = 'WTMX'; { New To Fallout 76 }
   WZMD : TwbSignature = 'WZMD'; { New To Fallout 4 }
@@ -972,9 +991,9 @@ const
   XCMD : TwbSignature = 'XCMD'; { New To Fallout 76 }
   XCMO : TwbSignature = 'XCMO';
   XCNT : TwbSignature = 'XCNT';
+  XCPF : TwbSignature = 'XCPF'; { New To Fallout 76 }
   XCRI : TwbSignature = 'XCRI'; { New To Fallout 4 }
   XCRP : TwbSignature = 'XCRP'; { New To Fallout 76 }
-  XCPF : TwbSignature = 'XCPF'; { New To Fallout 76 }
   XCVL : TwbSignature = 'XCVL'; { New To Skyrim }
   XCVR : TwbSignature = 'XCVR'; { New To Fallout 4 }
   XCWT : TwbSignature = 'XCWT';
@@ -1059,27 +1078,6 @@ const
   YNAM : TwbSignature = 'YNAM';
   ZNAM : TwbSignature = 'ZNAM';
   ZOOM : TwbSignature = 'ZOOM'; { New To Fallout 4 }
-
-  MIID : TwbSignature = 'MIID'; { New To Fallout 76 }
-  MAGF : TwbSignature = 'MAGF'; { New To Fallout 76 }
-  MAGA : TwbSignature = 'MAGA'; { New To Fallout 76 }
-  DURG : TwbSignature = 'DURG'; { New To Fallout 76 }
-  MAGG : TwbSignature = 'MAGG'; { New To Fallout 76 }
-  FLFG : TwbSignature = 'FLFG'; { New To Fallout 76 }
-  FMAH : TwbSignature = 'FMAH'; { New To Fallout 76 }
-  FMIH : TwbSignature = 'FMIH'; { New To Fallout 76 }
-  FMAG : TwbSignature = 'FMAG'; { New To Fallout 76 }
-  FMIG : TwbSignature = 'FMIG'; { New To Fallout 76 }
-  FNMU : TwbSignature = 'FNMU'; { New To Fallout 76 }
-
-  UITE : TwbSignature = 'UITE'; { New To Fallout 76 }
-  UITO : TwbSignature = 'UITO'; { New To Fallout 76 }
-  UITV : TwbSignature = 'UITV'; { New To Fallout 76 }
-  UIFL : TwbSignature = 'UIFL'; { New To Fallout 76 }
-  UIUS : TwbSignature = 'UIUS'; { New To Fallout 76 }
-  CENT : TwbSignature = 'CENT'; { New To Fallout 76 }
-  WTFG : TwbSignature = 'WTFG'; { New To Fallout 76 }
-  NAVH : TwbSignature = 'NAVH'; { New To Fallout 76 }
 
     // signatures of reference records
   sigReferences : TwbSignatures = [
@@ -17974,23 +17972,23 @@ begin
     ])), [
     wbEDID,
     wbKeywords,
-    wbString(_00_0TX, 'Cloud Texture Layer #0'),
-    wbString(_10_0TX, 'Cloud Texture Layer #1'),
-    wbString(_20_0TX, 'Cloud Texture Layer #2'),
-    wbString(_30_0TX, 'Cloud Texture Layer #3'),
-    wbString(_40_0TX, 'Cloud Texture Layer #4'),
-    wbString(_50_0TX, 'Cloud Texture Layer #5'),
-    wbString(_60_0TX, 'Cloud Texture Layer #6'),
-    wbString(_70_0TX, 'Cloud Texture Layer #7'),
-    wbString(_80_0TX, 'Cloud Texture Layer #8'),
-    wbString(_90_0TX, 'Cloud Texture Layer #9'),
+    wbString(_30_0TX, 'Cloud Texture Layer #0'),
+    wbString(_31_0TX, 'Cloud Texture Layer #1'),
+    wbString(_32_0TX, 'Cloud Texture Layer #2'),
+    wbString(_33_0TX, 'Cloud Texture Layer #3'),
+    wbString(_34_0TX, 'Cloud Texture Layer #4'),
+    wbString(_35_0TX, 'Cloud Texture Layer #5'),
+    wbString(_36_0TX, 'Cloud Texture Layer #6'),
+    wbString(_37_0TX, 'Cloud Texture Layer #7'),
+    wbString(_38_0TX, 'Cloud Texture Layer #8'),
+    wbString(_39_0TX, 'Cloud Texture Layer #9'),
     wbString(_3A_0TX, 'Cloud Texture Layer #10'),
     wbString(_3B_0TX, 'Cloud Texture Layer #11'),
     wbString(_3C_0TX, 'Cloud Texture Layer #12'),
     wbString(_3D_0TX, 'Cloud Texture Layer #13'),
     wbString(_3E_0TX, 'Cloud Texture Layer #14'),
     wbString(_3F_0TX, 'Cloud Texture Layer #15'),
-    wbString(_40h_0TX, 'Cloud Texture Layer #16'),
+    wbString(_40_0TX, 'Cloud Texture Layer #16'),
     wbString(A0TX, 'Cloud Texture Layer #17'),
     wbString(B0TX, 'Cloud Texture Layer #18'),
     wbString(C0TX, 'Cloud Texture Layer #19'),
