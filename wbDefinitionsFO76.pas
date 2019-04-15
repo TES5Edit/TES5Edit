@@ -3687,6 +3687,11 @@ begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 182);
 end;
 
+function wbDeciderFormVersion192(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 192);
+end;
+
 function wbAECHDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container  : IwbContainer;
@@ -9783,7 +9788,8 @@ begin
         {11} 'My Killer',
         {12} 'Unknown 12',
         {13} 'Unknown 13',
-        {14} 'Unknown 14'
+        {14} 'Unknown 14',
+        {15} 'Photo Subject'
       ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
       wbUnion('Reference', wbCTDAReferenceDecider, [
         wbInteger('Unused', itU32, nil, cpIgnore),
@@ -10176,7 +10182,10 @@ begin
         wbFloat('Value 2 - Float'),
         wbInteger('Value 2 - Bool', itU32, wbBoolEnum)
       ]),
-      wbFormIDCk('Curve Table', [CURV, NULL])
+      wbUnion('Step', wbDeciderFormVersion192, [
+        wbFloat('Step'),
+        wbFormIDCk('Curve Table', [CURV, NULL])
+      ])
     ]), wbOMODDataPropertyCounter, cpNormal, False, nil, wbOMODpropertyAfterSet);
 
   wbOBTSReq := wbStruct(OBTS, 'Object Mod Template Item', [
