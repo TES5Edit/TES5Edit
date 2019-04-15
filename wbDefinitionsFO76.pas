@@ -18387,7 +18387,10 @@ begin
     ]))
   ]);
 
-  wbRecord(LAYR, 'Layer', [
+  wbRecord(LAYR, 'Layer',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x08000000} 27, 'Unknown 27'
+    ])), [
     wbEDID,
     wbFormIDCk(PNAM, 'Parent', [LAYR]),
     wbUnknown(XCLP)
