@@ -18280,7 +18280,10 @@ begin
     wbFormIDCk(GNAM, 'Mod Scrap Scalar', [GLOB]),
     wbCVPA,
     wbArray(ILAC, 'Unknown', wbStruct('Unknown', [
-      wbByteArray('Unknown', 4),
+      wbInteger('Record Signature', itU32, wbEnum([], [
+        $4F4D5241, 'ARMO',
+        $50414557, 'WEAP'
+      ])),
       wbFormIDCk('Curve Table', [CURV])
     ]))
   ]);
