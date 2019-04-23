@@ -10314,7 +10314,9 @@ begin
       'Ignored by Sandbox',
       'Unknown 2',
       'Unknown 3',
-      'Is a Radio'
+      'Is a Radio',
+      'Unknown 5',
+      'Unknown 6'
     ])),
     wbUnknown(LAVT),
     wbUnknown(LAMN),
