@@ -17148,7 +17148,8 @@ begin
 
   wbRecord(REGN, 'Region',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000040} 6, 'Border Region'
+      {0x00000040}  6, 'Border Region',
+      {0x00000400} 10, 'Unknown 10'
     ])), [
     wbEDID,
     wbStruct(RCLR, 'Map Color', [
