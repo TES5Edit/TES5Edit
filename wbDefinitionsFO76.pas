@@ -12515,7 +12515,10 @@ begin
   ]);
 
 
-  wbRecord(IMAD, 'Image Space Adapter', [
+  wbRecord(IMAD, 'Image Space Adapter',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+          {0x00000800} 11, 'Unknown' // something to do with Photo Mode
+        ])), [
     wbEDID,
     wbStruct(DNAM, 'Data Count', [
       wbInteger('Flags', itU32, wbFlags(['Animatable'])),
