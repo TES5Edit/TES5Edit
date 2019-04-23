@@ -18469,6 +18469,8 @@ begin
     wbXALG,
     wbFULL,
     wbMODL,
+    wbYNAM,
+    wbZNAM,
     wbKeywords,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
@@ -18479,11 +18481,11 @@ begin
     wbUnknown(UITO),
     wbFloat(UITV),
     wbUnknown(UIFL),
-    wbUnknown(UIUS)
+    wbFormIDCk(UIUS, 'Sound - Consume', [SNDR])
 
   ]);
 
-  wbRecord(LGDI, 'LGDI', [
+  wbRecord(LGDI, 'Legendary Identifier', [
     wbEDID,
     wbFULL,
     wbFormID(ANAM),
