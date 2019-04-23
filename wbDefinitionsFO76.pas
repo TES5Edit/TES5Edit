@@ -16006,7 +16006,8 @@ begin
           {0x04} 'Run On Stop',
           {0x08} 'Keep Instance Data From Here On',
           {0x10} 'Unknown 4',
-          {0x20} 'Unknown 5'
+          {0x20} 'Unknown 5',
+          {0x40} 'Unknown 6'
         ])),
         wbInteger('Unknown', itU8)
       ]),
@@ -16017,7 +16018,7 @@ begin
         ])),
         wbCTDAs,
         wbString(NAM2, 'Note'),
-        wbUnknown(SCFC),
+        wbString(SCFC),
         wbLStringKC(CNAM, 'Log Entry', 0, cpTranslate),
         wbFormIDCk(NAM0, 'Next Quest', [QUST]),
         wbRArray('Rewards', wbRStruct('Reward', [
