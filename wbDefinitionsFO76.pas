@@ -1274,6 +1274,8 @@ var
   wbAUUV: IwbSubRecordDef;
   wbSNTP: IwbSubRecordDef;
   wbXALG: IwbRecordMemberDef;
+  wbXEZN: IwbRecordMemberDef;
+  wbXLCN: IwbRecordMemberDef;
   wbNAM1: IwbSubRecordDef;
   wbLODP: IwbSubRecordDef;
   wbNAM1LODP: IwbSubRecordStructDef;
@@ -7854,6 +7856,8 @@ begin
   ]);
   wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
   wbXALG := wbUnknown(XALG).IncludeFlag(dfNoReport);
+  wbXEZN := wbFormIDCk(XEZN, 'Encounter Zone', [LCTN]); // Encounter zones in FO76 are locations
+  wbXLCN := wbFormIDCk(XLCN, 'Location', [LCTN]);
 
   wbNAM1 := wbUnknown(NAM1);
   wbLODP := wbUnknown(LODP);
@@ -8805,7 +8809,7 @@ begin
     wbVMAD,
     wbXALG,
     wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbXEZN,
 
     {--- Ragdoll ---}
     wbXRGD,
@@ -10635,7 +10639,7 @@ procedure DefineFO76c;
       wbVMAD,
       wbXALG,
       wbFormIDCk(NAME, 'Projectile', [PROJ, HAZD]),
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+      wbXEZN,
       wbFloat(XHTW, 'Head-Tracking Weight'),
       wbFloat(XFVC, 'Favor Cost'),
       wbRArrayS('Reflected/Refracted By',
@@ -10843,7 +10847,7 @@ begin
     wbUnknown(NAVH),
     wbFormIDCk(XCWT, 'Water', [WATR]),
     wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
-    wbFormIDCk(XLCN, 'Location', [LCTN]),
+    wbXLCN,
     wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
     wbStruct(XWCU, 'Water Velocity', [
       wbFloat('X Offset'),
@@ -10871,7 +10875,7 @@ begin
     wbString(XWEM, 'Water Environment Map'),
     wbFormIDCk(XCCM, 'Sky/Weather from Region', [REGN]),
     wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbXEZN,
     wbFormIDCk(XCMO, 'Music Type', [MUSC]),
     wbFormIDCk(XCIM, 'Image Space', [IMGS]),
     wbFormIDCk(XGDR, 'God Rays', [GDRY]),
@@ -12293,7 +12297,8 @@ begin
     wbRecord(NAVM, 'Navigation Mesh',
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed',
-        {0x04000000} 26, 'AutoGen'
+        {0x04000000} 26, 'AutoGen',
+        {0x80000000} 31, 'Unknown 31'
       ]), [18]), [
       wbEDID,
       wbNVNM,
@@ -16899,9 +16904,10 @@ begin
         50, 'Advanced',
         75, 'Expert',
        100, 'Master',
-       253, 'Requires Terminal',
+       250, 'Unknown',
        251, 'Barred',
        252, 'Chained',
+       253, 'Requires Terminal',
        254, 'Inaccessible',
        255, 'Requires Key'
       ])),
@@ -16912,7 +16918,7 @@ begin
       wbUnknown
     ], cpNormal, False, nil, 4),
 
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbXEZN,
 
     {--- Generated Data ---}
     wbStruct(XNDP, 'Navigation Door Link', [
@@ -17875,8 +17881,8 @@ begin
       wbInteger('Y', itS16)
     ]),
     wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
-    wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
+    wbXEZN,
+    wbXLCN,
     wbRStruct('Parent', [
       wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
       wbStruct(PNAM, '', [
