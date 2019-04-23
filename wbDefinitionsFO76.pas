@@ -18554,10 +18554,11 @@ begin
 
   wbRecord(OMOD, 'Object Modification',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000008} 4, 'Legendary Mod',
-      {0x00000020} 6, 'Unknown 6',
-      {0x00000040} 7, 'Mod Collection',
-      {0x00000080} 8, 'Unknown 8'
+      {0x00000010} 4, 'Legendary Mod',
+      {0x00000040} 6, 'Unknown 6',
+      {0x00000080} 7, 'Mod Collection',
+      {0x00000100} 8, 'Unknown 8',
+      {0x00000200} 9, 'Unknown 9'
     ])), [
     wbEDID,
     wbDURL,
