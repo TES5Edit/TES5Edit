@@ -10332,10 +10332,19 @@ begin
     wbCNDCs,
     wbUnknown(MNAM),
     wbNVNM,
-    wbArray(VEND, 'Unknown', wbStruct('Unknown', [
-      wbFormID('Unknown'),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4)
+
+    wbArray(VEND, 'Unknown', wbUnion('VendItems', wbDeciderFormVersion192, [
+      wbStruct('ItemsAllowed', [
+        wbFormID('Item'),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4)
+      ]),
+      wbStruct('ItemsAllowed', [
+        wbFormID('AllowedItemList'),
+        wbByteArray('Unknown', 4),
+        wbInteger('Unknown', itU32),
+        wbInteger('MaxAmount', itU32)
+      ])
     ])),
     wbNAM1LODP
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
@@ -10395,20 +10404,20 @@ begin
         {0x00000004} 'Unknown 3',
         {0x00000008} 'Unknown 4',
         {0x00000010} 'Unknown 5',
-                {0x00000020} 'Unknown 6',
-                {0x00000040} 'Unknown 7',
-                {0x00000080} 'Unknown 8',
-                {0x00000100} 'Unknown 9',
-                {0x00000200} 'Unknown 10',
-                {0x00000400} 'Unknown 11',
-                {0x00000800} 'Unknown 12',
-                {0x00001000} 'Unknown 13',
-                {0x00002000} 'Unknown 14',
-                {0x00004000} 'Unknown 15',
-                {0x00008000} 'Unknown 16',
-                {0x00010000} 'Medicine',
-                {0x00020000} 'Poison',
-                {0x00040000} 'Unknown 19'
+        {0x00000020} 'Unknown 6',
+        {0x00000040} 'Unknown 7',
+        {0x00000080} 'Unknown 8',
+        {0x00000100} 'Unknown 9',
+        {0x00000200} 'Unknown 10',
+        {0x00000400} 'Unknown 11',
+        {0x00000800} 'Unknown 12',
+        {0x00001000} 'Unknown 13',
+        {0x00002000} 'Unknown 14',
+        {0x00004000} 'Unknown 15',
+        {0x00008000} 'Unknown 16',
+        {0x00010000} 'Medicine',
+        {0x00020000} 'Poison',
+        {0x00040000} 'Unknown 19'
       ])),
       wbFormIDCk('Addiction', [SPEL, NULL]),
       wbFloat('Addiction Chance'),
