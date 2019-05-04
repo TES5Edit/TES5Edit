@@ -10336,8 +10336,8 @@ begin
     wbArray(VEND, 'Unknown', wbUnion('VendItems', wbDeciderFormVersion192, [
       wbStruct('ItemsAllowed', [
         wbFormID('Item'),
-        wbByteArray('Unknown', 4),
-        wbByteArray('Unknown', 4)
+        wbInteger('Unknown', itU32),
+        wbInteger('MaxAmount', itU32)
       ]),
       wbStruct('ItemsAllowed', [
         wbFormID('AllowedItemList'),
