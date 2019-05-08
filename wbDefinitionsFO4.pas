@@ -12775,12 +12775,12 @@ begin
     ])),
     wbRArray('Phases',
       wbRStruct('Phase', [
-        wbEmpty(HNAM, 'Marker Phase Start'),
+        wbEmpty(HNAM, 'Marker Phase Start', cpNormal, True),
         wbString(NAM0, 'Name'),
         wbRStruct('Start Conditions', [wbCTDAs], []),
-        wbEmpty(NEXT, 'Marker Start Conditions'),
+        wbEmpty(NEXT, 'Marker Start Conditions', cpNormal, True),
         wbRStruct('Completion Conditions', [wbCTDAs], []),
-        wbEmpty(NEXT, 'Marker Completion Conditions'),
+        wbEmpty(NEXT, 'Marker Completion Conditions', cpNormal, True),
         wbInteger(WNAM, 'Editor Width', itU32),
         wbInteger(FNAM, 'Flags', itU16, wbFlags([
           {0x0001} 'Start - WalkAway Phase',
@@ -12791,7 +12791,7 @@ begin
           wbInteger('On Start', itS16),
           wbInteger('On Completion', itS16)
         ]),
-        wbEmpty(HNAM, 'Marker Phase End')
+        wbEmpty(HNAM, 'Marker Phase End', cpNormal, True)
       ], [])
     ),
     wbRArray('Actors', wbRStruct('Actor', [
@@ -12822,7 +12822,7 @@ begin
         {4} 'Start Scene',
         {5} 'NPC Response Dialogue',
         {6} 'Radio'
-      ])),
+      ]), cpNormal, True),
       wbString(NAM0, 'Name'),
       wbInteger(ALID, 'Alias ID', itS32),
       wbInteger(INAM, 'Index', itU32),
@@ -12902,7 +12902,7 @@ begin
       wbFormIDCk(VENC, 'Dialogue Subtype', [KYWD]),
       wbFormIDCk(PNAM, 'AnimArchType', [KYWD]),
       wbFormIDCk(ONAM, 'Audio Output Override', [SOPM]),
-      wbEmpty(ANAM, 'End Marker')
+      wbEmpty(ANAM, 'End Marker', cpNormal, True)
     ], [])),
     wbFormIDCk(PNAM, 'Quest', [QUST]),
     wbInteger(INAM, 'Last Action Index', itU32),
