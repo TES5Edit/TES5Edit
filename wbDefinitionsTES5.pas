@@ -10503,7 +10503,7 @@ begin
     wbRArray('Phases',
       wbRStruct('Phase', [
         wbEmpty(HNAM, 'Marker Phase Start', cpNormal, True),
-        wbString(NAM0, 'Name'),
+        wbString(NAM0, 'Name', 0, cpNormal, True),
         // CTDA before or after next
         //wbEmpty(NEXT, 'Marker'),
         wbRStruct('Start Conditions', [wbCTDAs], []),
@@ -10526,16 +10526,16 @@ begin
           wbUnknown(SCRO)
         ], [], cpIgnore, false, wbNeverShow),
         {>>> END leftover from earlier CK versions begin <<<}
-        wbInteger(WNAM, 'Editor Width', itU32),
+        wbInteger(WNAM, 'Editor Width', itU32, nil, cpNormal, True, false, nil, nil, 200),
         wbEmpty(HNAM, 'Marker Phase End', cpNormal, True)
       ], [])
     ),
     wbRArray('Actors', wbRStruct('Actor', [
-      wbInteger(ALID, 'Actor ID', itU32),
+      wbInteger(ALID, 'Actor ID', itU32, nil, cpNormal, True),
       wbInteger(LNAM, 'Flags', itU32, wbFlags([
         'No Player Activation',
         'Optional'
-      ])),
+      ]), cpNormal, True),
       wbInteger(DNAM, 'Behaviour Flags', itU32, wbFlags([
         'Death Pause (unsused)',
         'Death End',
@@ -10545,7 +10545,7 @@ begin
         'Dialogue End',
         'OBS_COM Pause',
         'OBS_COM End'
-      ]))
+      ]), cpNormal, True, false, nil, nil, 26)
     ], [])),
     wbRArray('Actions', wbRStruct('Action', [
       wbInteger(ANAM, 'Type', itU16, wbEnum([

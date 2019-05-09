@@ -12776,12 +12776,12 @@ begin
     wbRArray('Phases',
       wbRStruct('Phase', [
         wbEmpty(HNAM, 'Marker Phase Start', cpNormal, True),
-        wbString(NAM0, 'Name'),
+        wbString(NAM0, 'Name', 0, cpNormal, True),
         wbRStruct('Start Conditions', [wbCTDAs], []),
         wbEmpty(NEXT, 'Marker Start Conditions', cpNormal, True),
         wbRStruct('Completion Conditions', [wbCTDAs], []),
         wbEmpty(NEXT, 'Marker Completion Conditions', cpNormal, True),
-        wbInteger(WNAM, 'Editor Width', itU32),
+        wbInteger(WNAM, 'Editor Width', itU32, nil, cpNormal, True, false, nil, nil, 350),
         wbInteger(FNAM, 'Flags', itU16, wbFlags([
           {0x0001} 'Start - WalkAway Phase',
           {0x0002} 'Don''t Run End Scripts on Scene Jump',
@@ -12795,13 +12795,13 @@ begin
       ], [])
     ),
     wbRArray('Actors', wbRStruct('Actor', [
-      wbInteger(ALID, 'Alias ID', itS32),
+      wbInteger(ALID, 'Alias ID', itS32, nil, cpNormal, True),
       wbInteger(LNAM, 'Flags', itU32, wbFlags([
         'No Player Activation',
         'Optional',
         'Run Only Scene Packages',
         'No Command State'
-      ])),
+      ]), cpNormal, True),
       wbInteger(DNAM, 'Behaviour Flags', itU32, wbFlags([
         'Death Pause',
         'Death End',
@@ -12811,7 +12811,7 @@ begin
         'Dialogue End',
         'OBS_COM Pause',
         'OBS_COM End'
-      ]))
+      ]), cpNormal, True, false, nil, nil, 26)
     ], [])),
     wbRArray('Actions', wbRStruct('Action', [
       wbInteger(ANAM, 'Type', itU16, wbEnum([
