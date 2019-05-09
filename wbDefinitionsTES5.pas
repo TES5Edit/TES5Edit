@@ -10502,12 +10502,12 @@ begin
     ])),
     wbRArray('Phases',
       wbRStruct('Phase', [
-        wbEmpty(HNAM, 'Marker Phase Start'),
+        wbEmpty(HNAM, 'Marker Phase Start', cpNormal, True),
         wbString(NAM0, 'Name'),
         // CTDA before or after next
         //wbEmpty(NEXT, 'Marker'),
         wbRStruct('Start Conditions', [wbCTDAs], []),
-        wbEmpty(NEXT, 'Marker'),
+        wbEmpty(NEXT, 'Marker', cpNormal, True),
         wbRStruct('Completion Conditions', [wbCTDAs], []),
         {>>> BEGIN leftover from earlier CK versions <<<}
         wbRStruct('Unused', [
@@ -10517,7 +10517,7 @@ begin
           wbUnknown(QNAM),
           wbUnknown(SCRO)
         ], [], cpIgnore, false, wbNeverShow),
-        wbEmpty(NEXT, 'Marker'),
+        wbEmpty(NEXT, 'Marker', cpNormal, True),
         wbRStruct('Unused', [
           wbUnknown(SCHR),
           wbUnknown(SCDA),
@@ -10527,7 +10527,7 @@ begin
         ], [], cpIgnore, false, wbNeverShow),
         {>>> END leftover from earlier CK versions begin <<<}
         wbInteger(WNAM, 'Editor Width', itU32),
-        wbEmpty(HNAM, 'Marker Phase End')
+        wbEmpty(HNAM, 'Marker Phase End', cpNormal, True)
       ], [])
     ),
     wbRArray('Actors', wbRStruct('Actor', [
@@ -10552,7 +10552,7 @@ begin
         'Dialogue',
         'Package',
         'Timer'
-      ])),
+      ]), cpNormal, True),
       wbString(NAM0, 'Name'),
       wbInteger(ALID, 'Actor ID', itS32),
       wbUnknown(LNAM),
@@ -10596,7 +10596,7 @@ begin
         wbUnknown(SCRO)
       ], [], cpIgnore, false, wbNeverShow),
       {>>> END leftover from earlier CK versions <<<}
-      wbEmpty(ANAM, 'End Marker')
+      wbEmpty(ANAM, 'End Marker', cpNormal, True)
     ], [])),
     {>>> BEGIN leftover from earlier CK versions <<<}
     wbRStruct('Unused', [
