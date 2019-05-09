@@ -14516,7 +14516,7 @@ begin
       {0x00400000} 'Can Apply Data To Non-Aliased Refs',
       {0x00800000} 'Is Companion',
       {0x01000000} 'Optional All Scenes'
-    ]));
+    ]), cpNormal, True);
 
   wbRecord(QUST, 'Quest',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -14620,8 +14620,8 @@ begin
 
         // Reference Alias
         wbRStructSK([0], 'Alias', [
-          wbInteger(ALST, 'Reference Alias ID', itU32),
-          wbString(ALID, 'Alias Name'),
+          wbInteger(ALST, 'Reference Alias ID', itU32, nil, cpNormal, True),
+          wbString(ALID, 'Alias Name', 0, cpNormal, True),
           wbQUSTAliasFlags,
           wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
           //wbFormIDCk(ALFL, 'Specific Location', [LCTN]),

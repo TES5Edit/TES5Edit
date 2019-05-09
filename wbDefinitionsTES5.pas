@@ -12098,7 +12098,7 @@ begin
         {0x0001}'Allow Cleared',
         {0x0002}'Clear Names When Removed'
       ]))
-    ], cpNormal, False, nil, 1);
+    ], cpNormal, True, nil, 1);
 
   wbRecord(QUST, 'Quest', [
     wbEDID,
@@ -12178,8 +12178,8 @@ begin
 
         // Reference Alias
         wbRStructSK([0], 'Alias', [
-          wbInteger(ALST, 'Reference Alias ID', itU32),
-          wbString(ALID, 'Alias Name'),
+          wbInteger(ALST, 'Reference Alias ID', itU32, nil, cpNormal, True),
+          wbString(ALID, 'Alias Name', 0, cpNormal, True),
           wbQUSTAliasFlags,
           wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
           wbFormIDCk(ALFL, 'Specific Location', [LCTN]),

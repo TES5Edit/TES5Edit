@@ -1225,6 +1225,7 @@ var
   wbPHWT: IwbSubRecordStructDef;
   wbHeadPart: IwbSubRecordStructDef;
   wbQUSTAliasFlags: IwbSubRecordDef;
+  wbQUSTAliasFlagsActual: IwbFlagsDef;
   wbPDTO: IwbSubRecordDef;
   wbPDTOs: IwbSubRecordArrayDef;
   wbUNAMs: IwbSubRecordArrayDef;
@@ -15901,44 +15902,48 @@ begin
     ], [])
   ], False, nil, cpNormal, False, nil {wbPACKAfterLoad});
 
+  wbQUSTAliasFlagsActual := wbFlags([
+    {0x0000000001} { 1} 'Reserves Location/Reference',
+    {0x0000000002} { 2} 'Optional',
+    {0x0000000004} { 3} 'Quest Object',
+    {0x0000000008} { 4} 'Allow Reuse in Quest',
+    {0x0000000010} { 5} 'Allow Dead',
+    {0x0000000020} { 6} 'Matching Ref - In Loaded Area',
+    {0x0000000040} { 7} 'Essential',
+    {0x0000000080} { 8} 'Allow Disabled',
+    {0x0000000100} { 9} 'Stores Text',
+    {0x0000000200} {10} 'Allow Reserved',
+    {0x0000000400} {11} 'Protected',
+    {0x0000000800} {12} 'Forced by Aliases',
+    {0x0000001000} {13} 'Allow Destroyed',
+    {0x0000002000} {14} 'Matching Ref - Closest',
+    {0x0000004000} {15} 'Uses Stored Text',
+    {0x0000008000} {16} 'Initially Disabled',
+    {0x0000010000} {17} 'Allow Cleared',
+    {0x0000020000} {18} 'Clear Names When Removed',
+    {0x0000040000} {19} 'Matching Ref - Actors Only',
+    {0x0000080000} {20} 'Create Ref - Temp',
+    {0x0000100000} {21} 'External Alias - Linked',
+    {0x0000200000} {22} 'No Pickpocket',
+    {0x0000400000} {23} 'Can Apply Data To Non-Aliased Refs',
+    {0x0000800000} {24} 'Is Companion',
+    {0x0001000000} {25} 'Optional All Scenes',
+    {0x0002000000} {26} 'Unknown 26',
+    {0x0004000000} {27} 'Unknown 27',
+    {0x0008000000} {28} 'Unknown 28',
+    {0x0010000000} {29} 'Unknown 29',
+    {0x0020000000} {30} 'Unknown 30',
+    {0x0040000000} {31} 'Unknown 31',
+    {0x0080000000} {32} 'Unknown 32',
+    {0x0100000000} {33} 'Unknown 33',
+    {0x0200000000} {34} 'Unknown 34'
+  ]);
+
   wbQUSTAliasFlags :=
-    wbStruct(FNAM, 'Flags', [
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} { 1} 'Reserves Location/Reference',
-        {0x00000002} { 2} 'Optional',
-        {0x00000004} { 3} 'Quest Object',
-        {0x00000008} { 4} 'Allow Reuse in Quest',
-        {0x00000010} { 5} 'Allow Dead',
-        {0x00000020} { 6} 'Matching Ref - In Loaded Area',
-        {0x00000040} { 7} 'Essential',
-        {0x00000080} { 8} 'Allow Disabled',
-        {0x00000100} { 9} 'Stores Text',
-        {0x00000200} {10} 'Allow Reserved',
-        {0x00000400} {11} 'Protected',
-        {0x00000800} {12} 'Forced by Aliases',
-        {0x00001000} {13} 'Allow Destroyed',
-        {0x00002000} {14} 'Matching Ref - Closest',
-        {0x00004000} {15} 'Uses Stored Text',
-        {0x00008000} {16} 'Initially Disabled',
-        {0x00010000} {17} 'Allow Cleared',
-        {0x00020000} {18} 'Clear Names When Removed',
-        {0x00040000} {19} 'Matching Ref - Actors Only',
-        {0x00080000} {20} 'Create Ref - Temp',
-        {0x00100000} {21} 'External Alias - Linked',
-        {0x00200000} {22} 'No Pickpocket',
-        {0x00400000} {23} 'Can Apply Data To Non-Aliased Refs',
-        {0x00800000} {24} 'Is Companion',
-        {0x01000000} {25} 'Optional All Scenes',
-        {0x02000000} {26} 'Unknown 26',
-        {0x04000000} {27} 'Unknown 27',
-        {0x08000000} {28} 'Unknown 28',
-        {0x10000000} {29} 'Unknown 29',
-        {0x20000000} {30} 'Unknown 30',
-        {0x40000000} {31} 'Unknown 31',
-        {0x80000000} {32} 'Unknown 32'
-      ])),
-      wbUnknown
-    ]);
+    wbUnion(FNAM, 'Flags', wbDeciderFormVersion192, [
+      wbInteger('Flags', itU32, wbQUSTAliasFlagsActual),
+      wbInteger('Flags', itU64, wbQUSTAliasFlagsActual)
+    ], cpNormal, True);
 
   wbRecord(QUST, 'Quest',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -16080,8 +16085,8 @@ begin
 
         // Reference Alias
         wbRStructSK([0], 'Alias', [
-          wbInteger(ALST, 'Reference Alias ID', itU32),
-          wbString(ALID, 'Alias Name'),
+          wbInteger(ALST, 'Reference Alias ID', itU32, nil, cpNormal, True),
+          wbString(ALID, 'Alias Name', 0, cpNormal, True),
           wbQUSTAliasFlags,
           wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
           //wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
