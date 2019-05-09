@@ -165,6 +165,7 @@ const
   AACT : TwbSignature = 'AACT';
   AAPD : TwbSignature = 'AAPD'; { New To Fallout 76 }
   AAPS : TwbSignature = 'AAPS'; { New To Fallout 76 }
+  ABPO : TwbSignature = 'ABPO'; { New To Fallout 76 }
   ACBS : TwbSignature = 'ACBS';
   ACEC : TwbSignature = 'ACEC'; { New To Dawnguard }
   ACEP : TwbSignature = 'ACEP'; { New To Dawnguard }
@@ -297,6 +298,7 @@ const
   CRGR : TwbSignature = 'CRGR'; { New to Skyrim }
   CRIF : TwbSignature = 'CRIF'; { New to Skyrim }
   CRIS : TwbSignature = 'CRIS'; { New to Fallout 4 }
+  CRTY : TwbSignature = 'CRTY'; { New To Fallout 76 }
   CRVA : TwbSignature = 'CRVA'; { New to Skyrim }
   CRVE : TwbSignature = 'CRVE'; { New To Fallout 76 }
   CS2D : TwbSignature = 'CS2D'; { New To Fallout 4 }
@@ -743,12 +745,14 @@ const
   PTDA : TwbSignature = 'PTDA'; { New to Skyrim }
   PTOP : TwbSignature = 'PTOP'; { New to Fallout 4 }
   PTRN : TwbSignature = 'PTRN'; { New to Fallout 4 }
+  QECV : TwbSignature = 'QECV'; { New To Fallout 76 }
   QETE : TwbSignature = 'QETE'; { New To Fallout 76 }
   QETL : TwbSignature = 'QETL'; { New To Fallout 76 }
   QMCI : TwbSignature = 'QMCI'; { New To Fallout 76 }
   QNAM : TwbSignature = 'QNAM';
   QOBJ : TwbSignature = 'QOBJ';
   QOTM : TwbSignature = 'QOTM'; { New To Fallout 76 }
+  QRCO : TwbSignature = 'QRCO'; { New To Fallout 76 }
   QSDD : TwbSignature = 'QSDD'; { New To Fallout 76 }
   QSDT : TwbSignature = 'QSDT';
   QSLC : TwbSignature = 'QSLC'; { New To Fallout 76 }
@@ -931,10 +935,13 @@ const
   UNWP : TwbSignature = 'UNWP'; { New To Fallout 4 }
   UTIL : TwbSignature = 'UTIL'; { New To Fallout 76 }
   VATS : TwbSignature = 'VATS';
+  VBCY : TwbSignature = 'VBCY'; { New To Fallout 76 }
   VCLR : TwbSignature = 'VCLR';
+  VCRY : TwbSignature = 'VCRY'; { New To Fallout 76 }
   VENC : TwbSignature = 'VENC'; { New To Skyrim }
   VEND : TwbSignature = 'VEND'; { New To Skyrim }
   VENG : TwbSignature = 'VENG'; { New To Fallout 76 }
+  VENP : TwbSignature = 'VENP'; { New To Fallout 76 }
   VENR : TwbSignature = 'VENR'; { New To Fallout 76 }
   VENV : TwbSignature = 'VENV'; { New To Skyrim }
   VHGT : TwbSignature = 'VHGT';
@@ -1297,6 +1304,9 @@ var
   wbLVOC: IwbSubRecordDef;
   wbLVIG: IwbSubRecordDef;
   wbXPCK: IwbSubRecordDef;
+  wbVCRY: IwbSubRecordDef;
+  wbQRCO: IwbSubRecordDef;
+
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -7863,6 +7873,9 @@ begin
   wbNAM1 := wbUnknown(NAM1);
   wbLODP := wbUnknown(LODP);
 
+  wbVCRY := wbFormIDCk(VCRY, 'Virtual Currency', [NULL, CNCY]);
+  wbQRCO := wbFormIDCk(QRCO, 'Quest Reward Currency Object', [NULL, CNCY]);
+
   wbNAM1LODP := wbRStruct('Unknown', [
     wbNAM1,
     wbLODP
@@ -10292,7 +10305,7 @@ begin
     wbFULL,
     wbMODL,
     wbDEST,
-    wbDOFA,
+    wbRArray('Factions', wbDOFA, cpNormal),
     wbKeywords,
     wbPRPS,
     wbNTRM,
@@ -10342,7 +10355,7 @@ begin
       ]),
       wbStruct('ItemsAllowed', [
         wbFormID('AllowedItemList'),
-        wbByteArray('Unknown', 4),
+        wbFormID('ExcludedItemList'),
         wbInteger('Unknown', itU32),
         wbInteger('MaxAmount', itU32)
       ])
@@ -10384,6 +10397,7 @@ begin
     wbOBNDReq,
     wbOPDSs,
     wbPTRN,
+    wbSNTP,
     wbXALG,
     wbFULL,
     wbKeywords,
@@ -10439,6 +10453,7 @@ begin
     wbOBNDReq,
     wbOPDSs,
     wbPTRN,
+    wbSNTP,
     wbPHST,
     wbFULL,
     wbMODL,
@@ -10447,6 +10462,7 @@ begin
     wbZNAM,
     wbDESC,
     wbKeywords,
+    wbVCRY,
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
@@ -10541,7 +10557,9 @@ begin
     wbFormIDCk(CVT0, 'DR', [CURV]),
     wbFormIDCk(CVT1, 'Durability Min', [CURV]),
     wbFormIDCk(CVT2, 'ConditionDamageScaleFactor', [CURV]),
-    wbFormIDCk(CVT3, 'Durability Max', [CURV])
+    wbFormIDCk(CVT3, 'Durability Max', [CURV]),
+    wbFormIDCk(ABPO, 'Armor Backpack Position Offset', [NULL, TRNS]),
+    wbVCRY
   ], False, nil, cpNormal, False, wbARMOAfterLoad, wbKeywordsAfterSet);
 
   wbRecord(ARMA, 'Armor Addon',
@@ -10591,6 +10609,7 @@ begin
     wbOBNDReq,
     wbOPDSs,
     wbPTRN,
+    wbSNTP,
     wbDEFL,
     wbXALG,
     wbFULL,
@@ -10603,6 +10622,7 @@ begin
     wbZNAM,
     wbKeywords,
     wbFormIDCk(FIMD, 'Featured Item Message', [MESG]),
+    wbVCRY,
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
@@ -11734,6 +11754,8 @@ begin
     wbFormIDCk(VENC, 'Merchant Container', [REFR]),
     wbFormIDCk(VENR, 'Vendor Reset', [GLOB]),
     wbFormIDCk(VENG, 'Vendor CapsBalance', [AVIF]),
+    wbFormIDCk(VBCY, 'Vendor Buy Currency', [NULL, CNCY]),
+    wbUnknown(VENP),
     wbStruct(VENV, 'Vendor Values', [
       wbInteger('Start Hour', itU16),
       wbInteger('End Hour', itU16),
@@ -14643,6 +14665,7 @@ begin
     wbETYP,
     wbYNAM,
     wbZNAM,
+    wbVCRY,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -14684,6 +14707,7 @@ begin
     wbYNAM,
     wbZNAM,
     wbKeywords,
+    wbVCRY,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -14811,6 +14835,7 @@ begin
     wbFULL,
     wbICON,
     wbMICO,
+    wbVCRY,
     wbStruct(DATA, '', [
       wbInteger('Time', itS32),
       wbInteger('Radius', itU32),
@@ -14885,7 +14910,7 @@ begin
     wbDESCReq,
     wbCTDAs,
     wbString(BNAM, 'Background Image'),
-    wbFormIDCk(NNAM, 'Loading Screen NIF', [STAT, SCOL, NULL], False, cpNormal, True),
+    wbFormIDCk(NNAM, 'Loading Screen NIF', [STAT, SCOL, NULL], False, cpNormal),
     wbFormIDCk(TNAM, 'Transform', [TRNS]),
     wbStruct(ONAM, 'Rotation', [
       wbInteger('Min', itS16),
@@ -14910,7 +14935,7 @@ begin
       wbInteger('Restitution', itU8)
     ], cpNormal, True),
     wbInteger(SNAM, 'Unused', itU8, nil, cpIgnore, False),
-    wbRArray('Unused', wbFormIDCk(GNAM, 'Unused', [GRAS], False, cpIgnore).IncludeFlag(dfNoReport), cpIgnore)
+    wbRArray('Unused', wbFormIDCk(GNAM, 'Unused', [GRAS,REFR], False, cpIgnore).IncludeFlag(dfNoReport), cpIgnore)
   ]);
 
   wbLeveledListEntryItem :=
@@ -15285,6 +15310,7 @@ begin
     wbOPDSs,
     wbOPDSs,
     wbPTRN,
+    wbSNTP,
     wbPHST,
     wbOPDSs,
     wbXALG,
@@ -15297,6 +15323,7 @@ begin
     wbZNAM,
     wbKeywords,
     wbFormIDCk(FIMD, 'Featured Item Message', [MESG]),
+    wbVCRY,
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -15394,6 +15421,7 @@ begin
     wbSNTP,
     wbDEFL,
     wbPHST,
+    wbXALG,
     wbStruct(ACBS, 'Configuration', [
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Female',
@@ -15512,7 +15540,7 @@ begin
     wbKeywords,
     wbAPPR,
     wbObjectTemplate,
-    wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
+    wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal),
     wbFULL,
     wbLStringKC(SHRT, 'Short Name', 0, cpTranslate),
     wbEmpty(DATA, 'Marker'),
@@ -16001,6 +16029,7 @@ begin
     wbFormIDCk(QETL, 'Unknown', [GLOB, NULL]),
     wbFormIDCk(QSSK, 'Start Keyword', [KYWD]),
     wbUnknown(QSLC),
+    wbFormIDCk(QECV, 'Enable Keyword', [KYWD]),
     wbUnknown(QSDD),
     wbUnknown(QETE),
     wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
@@ -16040,6 +16069,7 @@ begin
         wbRArray('Rewards', wbRStruct('Reward', [
           wbFormIDCk(NAM7, 'XP', [GLOB, NULL]),
           wbFormIDCk(NAM8, 'Caps', [GLOB, NULL]),
+          wbQRCO,
           wbUnknown(NAM9),
           wbRArray('Items', wbStruct(QSRD, 'Item', [
             wbFormIDCk('Item', sigBaseObjects),
@@ -17597,6 +17627,7 @@ begin
     wbSNTP,
     wbOPDSs,
     wbDEFL,
+    wbXALG,
     wbFULL,
     wbMODL,
     wbDEST,
@@ -17874,6 +17905,7 @@ begin
       ])
     ])),
     wbFLTR,
+    wbVCRY,
     wbFormIDCk(CVT0, '', [CURV]),
     wbFormIDCk(CVT1, '', [CURV]),
     wbFormIDCk(CVT2, '', [CURV]),
@@ -18302,6 +18334,7 @@ begin
     wbOBND,
     wbFULL,
     wbCUSD,
+    wbVCRY,
     wbInteger(DATA, 'Auto Calc Value', itU32),
     wbFormIDCk(MNAM, 'Scrap Item', [MISC]),
     wbFormIDCk(GNAM, 'Mod Scrap Scalar', [GLOB]),
@@ -18499,6 +18532,7 @@ begin
     wbYNAM,
     wbZNAM,
     wbKeywords,
+    wbVCRY,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -18512,25 +18546,30 @@ begin
 
   ]);
 
-  wbRecord(LGDI, 'Legendary Identifier', [
+  wbRecord(LGDI, 'Legendary Item', [
     wbEDID,
+    wbOBND,
+    wbENLT,
+    wbENLS,
+    wbAUUV,
     wbFULL,
-    wbFormID(ANAM),
-
-    wbArray(BNAM, 'OMODs', wbStruct('Unknown', [
-      wbByteArray('Unknown', 4), // could be integer/flag.
-      wbFormID('Unknown')
+    wbVCRY,
+    wbInteger(DATA, 'Scrip Cost', itU32),
+    wbFormID(ANAM, 'Applicable Item List'),
+    wbArray(BNAM, 'Legendary Mods', wbStruct('Legendary Mod', [
+      wbInteger('Star level', itU32), // could be integer/flag.
+      wbFormID('Legendary Modifier')
     ])),
 
     wbArray(CNAM, 'Unknown', wbStruct('Unknown', [
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
+      wbInteger('Unknown', itU32),
+      wbInteger('Unknown', itU32),
       wbFormIDCk('Keyword', [KYWD])
     ])),
 
     wbArray(DNAM, 'Unknown', wbStruct('Unknown', [
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
+      wbInteger('Unknown', itU32),
+      wbInteger('Unknown', itU32),
       wbFormIDCk('Keyword', [KYWD])
     ]))
   ]);
@@ -18546,6 +18585,7 @@ begin
     wbVMAD,
     wbOBND,
     wbPTRN,
+    wbSNTP,
     wbXALG,
     wbFULL,
     wbMODL,
@@ -18553,6 +18593,7 @@ begin
     wbYNAM,
     wbZNAM,
     wbKeywords,
+    wbVCRY,
     wbInteger(DNAM, 'Type', itU8, wbEnum([
       'Sound',
       'Voice',
@@ -18587,6 +18628,7 @@ begin
     wbFULL,
     wbDESC,
     wbMODL,
+    wbInteger(INDX, 'Unknown', itU8),
     wbStruct(DATA, 'Data', [
       wbInteger('Include Count', itU32),
       wbInteger('Property Count', itU32),
@@ -18650,6 +18692,7 @@ begin
     wbOPDSs,
     wbVMAD,
     wbPTRN,
+    wbXALG,
     wbFLTR,
     wbOPDSs,
     wbFormIDCk(CNAM, 'Cell', [CELL]),
@@ -18697,7 +18740,7 @@ begin
     wbRStruct('Part', [
       wbStruct(ONAM, 'Static', [
         wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, CNCY, SCOL]),
-        wbFormIDCk('Material Swap', [MSWP])
+        wbFormIDCk('Material Swap', [MSWP, NULL])
       ]),
       wbUnknown(ONAM),
       wbArrayS(DATA, 'Placements', wbStruct('Placement', [
@@ -18713,7 +18756,7 @@ begin
         ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
         wbFloat('Scale')
       ]), 0, cpNormal, True)
-    ], [], cpNormal, True);
+    ], [], cpNormal);
 
   wbRecord(SCOL, 'Static Collection',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -18781,6 +18824,7 @@ begin
     wbOPDSs,
     wbPTRN,
     wbSNTP,
+    wbXALG,
     wbLStringKC(NAM0, 'Header Text'),
     wbLStringKC(WNAM, 'Welcome Text'),
     wbFULL,
@@ -19000,10 +19044,12 @@ begin
     wbYNAM,
     wbZNAM,
     wbKeywords,
+    wbVCRY,
     wbUnknown(DATA),
     wbUnknown(AQIC),
-    wbUnknown(MXCT),
-    wbLString(SNAM)
+    wbInteger(MXCT, 'Max Currency', itU32),
+    wbLString(SNAM),
+    wbUnknown(CRTY)
   ]);
 
   wbRecord(PPAK, 'Perk Card Pack', [
@@ -19017,6 +19063,7 @@ begin
     wbFULL,
     wbMODL,
     wbDESC,
+    wbVCRY,
     wbFormIDCk(PPRL, 'Roll Chances', [FLST]),
     wbFormIDCk(PPFC, 'Gold Roll Chances', [FLST]),
     wbFormIDCk(PPCL, 'Rarity Tables', [FLST]),
@@ -19031,6 +19078,7 @@ begin
       wbFloat('Weight')
     ], cpNormal, True, nil, 1),
     wbFULL,
+    wbVCRY,
     wbFormIDCk(PAEQ, 'Unknown', [LVLI])
   ]);
 
@@ -19298,13 +19346,16 @@ begin
     wbCTDAs,
     wbUnknown(NAM7),
     wbUnknown(NAM8),
+    wbQRCO,
     wbUnknown(NAM9),
     wbStruct(QSRD, 'Completion Reward', [
       wbFormID('Item'),
       wbInteger('Count', itU32)
     ]),
     wbString(JASF),
-    wbFormIDCk(SCFL, 'SubChallenge Completion List', [FLST])
+    wbFormIDCk(SCFL, 'SubChallenge Completion List', [FLST]),
+    wbString(MNAM),
+    wbString(RNAM)
   ]);
 
   wbRecord(AVTR, 'Avatar', [
