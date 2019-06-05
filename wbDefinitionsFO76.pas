@@ -237,6 +237,7 @@ const
   ATTX : TwbSignature = 'ATTX'; { New To Fallout 4 }
   ATXT : TwbSignature = 'ATXT';
   AUUV : TwbSignature = 'AUUV'; { New To Fallout 76 }
+  AUVF : TwbSignature = 'AUVF'; { New To Fallout 76. Found in EXE GRUP order }
   AVFL : TwbSignature = 'AVFL'; { New To Fallout 4 }
   AVIF : TwbSignature = 'AVIF';
   AVMG : TwbSignature = 'AVMG'; { New To Fallout 76 }
@@ -347,6 +348,7 @@ const
   DIQO : TwbSignature = 'DIQO'; { New To Fallout 76 }
   DLBR : TwbSignature = 'DLBR';
   DLVW : TwbSignature = 'DLVW';
+  DLYR : TwbSignature = 'DLYR'; { New to Fallout 76. Found in EXE GRUP order }
   DMAX : TwbSignature = 'DMAX'; { New to Skyrim }
   DMDC : TwbSignature = 'DMDC'; { New to Fallout 4 }
   DMDL : TwbSignature = 'DMDL';
@@ -440,7 +442,7 @@ const
   FURN : TwbSignature = 'FURN';
   FVPA : TwbSignature = 'FVPA'; { New To Fallout 4 }
   GCVR : TwbSignature = 'GCVR'; { New To Fallout 76 }
-  GDRY : TwbSignature = 'GDRY'; { New to Fallout 4 }
+  GDRY : TwbSignature = 'GDRY'; { New to Fallout 4; Unused in Fallout 76 but exists in SeventySix.esm }
   GLOB : TwbSignature = 'GLOB';
   GMST : TwbSignature = 'GMST';
   GNAM : TwbSignature = 'GNAM';
@@ -520,7 +522,7 @@ const
   LIGH : TwbSignature = 'LIGH';
   LILS : TwbSignature = 'LILS'; { New To Fallout 76 }
   LIMC : TwbSignature = 'LIMC'; { New To Fallout 76 }
-  LLCT : TwbSignature = 'LLCT'; {New to Skyrim, part of LVLI 'Count'}
+  LLCT : TwbSignature = 'LLCT'; { New to Skyrim, part of LVLI 'Count' }
   LLKC : TwbSignature = 'LLKC'; { New to Fallout 4 }
   LNAM : TwbSignature = 'LNAM';
   LODP : TwbSignature = 'LODP'; { New To Fallout 76 }
@@ -578,6 +580,7 @@ const
   MICO : TwbSignature = 'MICO';
   MIID : TwbSignature = 'MIID'; { New To Fallout 76 }
   MISC : TwbSignature = 'MISC';
+  MISI : TwbSignature = 'MISI'; { New to Fallout 76. Found in EXE GRUP order }
   MLSI : TwbSignature = 'MLSI'; { New to Fallout 4 }
   MNAM : TwbSignature = 'MNAM';
   MO2C : TwbSignature = 'MO2C'; { New to Fallout 4 }
@@ -4202,7 +4205,7 @@ type
     {48} ptShout,              // SHOU
     {49} ptVariableName,       // Integer
     {50} ptVATSValueFunction,  //
-    {51} ptVATSValueParam,
+    {51} ptVATSValueParam,     //
     {52} ptVoiceType,          // VTYP
     {53} ptWardState,          // enum
     {54} ptWeather,            // WTHR
@@ -4215,7 +4218,8 @@ type
     {61} ptCurrency,           // CNCY
     {62} ptConstructibleObject,// COBJ
     {63} ptRegionOpt,          // REGN optional
-    {64} ptActorValueEnum      // Enum: wbActorValue
+    {64} ptActorValueEnum,     // Enum: wbActorValue
+    {65} ptChallenge           // CHAL 
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -4229,7 +4233,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..537] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..557] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
@@ -4238,15 +4242,15 @@ const
     (Index:  10; Name: 'GetStartingPos'; ParamType1: ptAxis),
     (Index:  11; Name: 'GetStartingAngle'; ParamType1: ptAxis),
     (Index:  12; Name: 'GetSecondsPassed'),
-    (Index:  14; Name: 'GetValue'; ParamType1: ptActorValue{Enum}),
+	  (Index:  14; Name: 'GetValue'; Desc: 'Get a reference''s value for the given property. [player.getvalue luck]'; ParamType1: ptActorValue{Enum}),
     (Index:  18; Name: 'GetCurrentTime'),
     (Index:  24; Name: 'GetScale'),
-    (Index:  25; Name: 'IsMoving'),
-    (Index:  26; Name: 'IsTurning'),
+    (Index:  25; Name: 'IsMoving'; Desc: 'Is the actor moving?'),
+    (Index:  26; Name: 'IsTurning'; Desc: 'Is the actor turning?'),
     (Index:  27; Name: 'GetLineOfSight'; ParamType1: ptObjectReference),
     (Index:  32; Name: 'GetInSameCell'; ParamType1: ptObjectReference),
     (Index:  35; Name: 'GetDisabled'),
-    (Index:  36; Name: 'MenuMode'; ParamType1: ptInteger),
+	  (Index:  36; Name: 'MenuPaused'),
     (Index:  39; Name: 'GetDisease'),
     (Index:  41; Name: 'GetClothingValue'),
     (Index:  42; Name: 'SameFaction'; ParamType1: ptActor),
@@ -4283,11 +4287,12 @@ const
     (Index:  81; Name: 'IsRotating'),
     (Index:  84; Name: 'GetDeadCount'; ParamType1: ptActorBase),
     (Index:  91; Name: 'GetIsAlerted'),
-    (Index:  98; Name: 'GetPlayerControlsDisabled'; ParamType1: ptInteger; Paramtype2: ptInteger; Paramtype3: ptInteger),
+	  (Index:  98; Name: 'GetPlayerControlsDisabled'; Desc: '10 optional (0/1) values. movement|fighting|pov|looking|sneaking|menu|activate|journal|vats'; ParamType1: ptInteger; Paramtype2: ptInteger; Paramtype3: ptInteger),
     (Index:  99; Name: 'GetHeadingAngle'; ParamType1: ptObjectReference),
     (Index: 101; Name: 'IsWeaponMagicOut'),
     (Index: 102; Name: 'IsTorchOut'),
     (Index: 103; Name: 'IsShieldOut'),
+    (Index: 105; Name: 'IsActionRef'; ParamType1: ptObjectReference),
     (Index: 106; Name: 'IsFacingUp'),
     (Index: 107; Name: 'GetKnockedState'),
     (Index: 108; Name: 'GetWeaponAnimType'),
@@ -4376,6 +4381,7 @@ const
     (Index: 266; Name: 'IsPleasant'; ParamType1: ptRegionOpt),
     (Index: 267; Name: 'IsCloudy'; ParamType1: ptRegionOpt),
     (Index: 274; Name: 'IsSmallBump'),
+    (Index: 276; Name: 'IsInInteriorAcousticSpace'),
     (Index: 277; Name: 'GetBaseValue'; ParamType1: ptActorValue),
     (Index: 278; Name: 'IsOwner'; ParamType1: ptOwner),
     (Index: 280; Name: 'IsCellOwner'; ParamType1: ptCell; ParamType2: ptOwner),
@@ -4602,7 +4608,7 @@ const
     (Index: 683; Name: 'GetPathingCurrentSpeed'),
     (Index: 684; Name: 'GetPathingCurrentSpeedAngle'; ParamType1: ptAxis),
     (Index: 691; Name: 'GetWorkshopObjectCount'; ParamType1: ptReferencableObject),
-//    (Index: 692; Name: '??? HasKeyword'; ParamType1: ptKeyword),
+    (Index: 692; Name: 'GetStrongestEnemyHasKeyword'; ParamType1: ptKeyword),
     (Index: 693; Name: 'EPMagic_SpellHasKeyword'; ParamType1: ptKeyword),
     (Index: 694; Name: 'GetNoBleedoutRecovery'),
     (Index: 696; Name: 'EPMagic_SpellHasSkill'; ParamType1: ptActorValue),
@@ -4635,6 +4641,7 @@ const
     (Index: 726; Name: 'DoesNotExist'),
     (Index: 728; Name: 'GetPlayerWalkAwayFromDialogueScene'),
     (Index: 729; Name: 'GetActorStance'),
+    (Index: 730; Name: 'HasAnyMutatedTeammates'),
     (Index: 734; Name: 'CanProduceForWorkshop'),
     (Index: 735; Name: 'CanFlyHere'),
     (Index: 736; Name: 'EPIsDamageType'; ParamType1: ptDamageType),
@@ -4768,7 +4775,23 @@ const
     (Index: 887; Name: 'GetLastHitLethal'),
     (Index: 888; Name: 'IsPlayerTeammate'),
     (Index: 889; Name: 'IsPlayerCombatOpponent'),
-    (Index: 890; Name: 'HasPerkCardEquipped'; ParamType1: ptPerkCard; ParamType2: ptInteger)
+    (Index: 890; Name: 'HasPerkCardEquipped'; ParamType1: ptPerkCard; ParamType2: ptInteger),
+    (Index: 891; Name: 'HasPerkCardFromListEquipped'; ParamType1: ptFormList),
+    (Index: 892; Name: 'GetLastCompletedCheckpointStage'),
+    (Index: 893; Name: 'IsPreviousMeleeAttackEvent'), //Has data that I still need to figure out
+    (Index: 894; Name: 'HasCompletedCheckpointStage'; ParamType1: ptQuestStage),
+    (Index: 895; Name: 'DoesRecipeContainObject'; ParamType1: ptReferencableObject),
+    (Index: 896; Name: 'IsDailyCooldownExpired'; ParamType1: ptActorValue),
+    (Index: 897; Name: 'GetRandomUInt'; ParamType1: ptInteger),
+    (Index: 898; Name: 'GetWorldType'),
+    (Index: 899; Name: 'IsEngagedInPvP'),
+    (Index: 900; Name: 'IsAggresive'),
+    (Index: 901; Name: 'IsInWorkshopPublic'),
+    (Index: 902; Name: 'IsPlayerInCampOwned'),
+    (Index: 903; Name: 'IsPlayerInCampTeam'),
+    (Index: 904; Name: 'CHAL_IsTargetWorkshopRecipe'; ParamType1: ptConstructibleObject),
+    (Index: 905; Name: 'DoesModApplyKeyword'; ParamType1: ptKeyword),
+    (Index: 906; Name: 'HasCompletedChallenge'; ParamType1: ptChallenge)
   );
 
 var
@@ -7632,7 +7655,7 @@ begin
    {114} 'Set VATS Gun-Fu',
    {115} 'Mod Outgoing Limb Damage',
    {116} 'Mod Restore Action Cost Value',
-   {117} 'Null Function',
+   {117} 'Apply Attacker Combat Hit Spell',
    {118} 'Mod Incoming Battery Damage',
    {119} 'Mod VATS Critical Charge',
    {120} 'Mod Exp Location',
@@ -7670,7 +7693,7 @@ begin
    {152} 'Set VATS Blitz Max Dmg Mult',
    {153} 'Mod VATS Blitz Dmg Bonus Dist',
    {154} 'Mod Bash Critical Chance',
-   {155} 'Null Function',
+   {155} 'Mod Evasion Chance',
    {156} 'Mod Fatigue for Fatigue AP Max',
    {157} 'Set Fatigue to AP Mult',
    {158} 'Mod Item Weight',
@@ -8166,7 +8189,7 @@ begin
   ]);
 
   wbObjectTypeEnum := wbEnum([
-    { 0} ' NONE',
+    { 0} 'NONE',
     { 1} 'Activators',
     { 2} 'Armor',
     { 3} 'Books',
@@ -8195,7 +8218,8 @@ begin
     {26} 'Furniture: Beds',
     {27} 'Furniture: Chairs',
     {28} 'Shouts',
-    {29} 'Headtrack Markers'
+    {29} 'Headtrack Markers',
+    {30} 'Players: Any'
   ]);
 
   wbPLDT := wbStruct(PLDT, 'Location', [
@@ -8937,38 +8961,38 @@ begin
     {03} 'Morality',
     {04} 'Mood',
     {05} 'Assistance',
-    {06} 'One-Handed',
-    {07} 'Two-Handed',
-    {08} 'Archery',
-    {09} 'Block',
-    {10} 'Smithing',
-    {11} 'Heavy Armor',
-    {12} 'Light Armor',
-    {13} 'Pickpocket',
-    {14} 'Lockpicking',
-    {15} 'Sneak',
-    {16} 'Alchemy',
-    {17} 'Speech',
+    {06} 'Strength',
+    {07} 'Perception',
+    {08} 'Endurance',
+    {09} 'Charisma',
+    {10} 'Intelligence',
+    {11} 'Agility',
+    {12} 'Luck',
+    {13} 'Experience',
+    {14} 'AttackConditionAlt1',
+    {15} 'AttackConditionAlt2',
+    {16} 'IdleChatterTimeMin',
+    {17} 'IdleChatterTimeMax',
     {18} 'Alteration',
-    {19} 'Conjuration',
-    {20} 'Destruction',
-    {21} 'Illusion',
-    {22} 'Restoration',
-    {23} 'Enchanting',
+    {19} 'AttackConditionAlt3',
+    {20} 'Workshop Power Connection',
+    {21} 'WorkshopID',
+    {22} 'Animation Mult',
+    {23} 'Weap Reload Speed Mult',
     {24} 'Health',
-    {25} 'Magicka',
-    {26} 'Stamina',
+    {25} 'Action Points',
+    {26} 'Unused Stamina',
     {27} 'Heal Rate',
-    {28} 'Magicka Rate',
-    {29} 'Stamina Rate',
+    {28} 'Action Points Rate',
+    {29} 'Condition Rate',
     {30} 'Speed Mult',
-    {31} 'Inventory Weight',
+    {31} 'Rads Rate',
     {32} 'Carry Weight',
     {33} 'Critical Chance',
     {34} 'Melee Damage',
     {35} 'Unarmed Damage',
     {36} 'Mass',
-    {37} 'Voice Points',
+    {37} 'Rads',
     {38} 'Voice Rate',
     {39} 'Damage Resist',
     {40} 'Poison Resist',
@@ -8976,125 +9000,173 @@ begin
     {42} 'Resist Shock',
     {43} 'Resist Frost',
     {44} 'Resist Magic',
-    {45} 'Resist Disease',
-    {46} 'Unknown 46',
-    {47} 'Unknown 47',
-    {48} 'Unknown 48',
-    {49} 'Unknown 49',
-    {50} 'Unknown 50',
-    {51} 'Unknown 51',
-    {52} 'Unknown 52',
-    {53} 'Paralysis',
-    {54} 'Invisibility',
-    {55} 'Night Eye',
-    {56} 'Detect Life Range',
-    {57} 'Water Breathing',
-    {58} 'Water Walking',
-    {59} 'Unknown 59',
-    {60} 'Fame',
-    {61} 'Infamy',
-    {62} 'Jumping Bonus',
-    {63} 'Ward Power',
-    {64} 'Right Item Charge',
-    {65} 'Armor Perks',
-    {66} 'Shield Perks',
-    {67} 'Ward Deflection',
-    {68} 'Variable01',
-    {69} 'Variable02',
-    {70} 'Variable03',
-    {71} 'Variable04',
-    {72} 'Variable05',
-    {73} 'Variable06',
-    {74} 'Variable07',
-    {75} 'Variable08',
-    {76} 'Variable09',
-    {77} 'Variable10',
-    {78} 'Bow Speed Bonus',
-    {79} 'Favor Active',
-    {80} 'Favors Per Day',
-    {81} 'Favors Per Day Timer',
-    {82} 'Left Item Charge',
-    {83} 'Absorb Chance',
-    {84} 'Blindness',
-    {85} 'Weapon Speed Mult',
-    {86} 'Shout Recovery Mult',
-    {87} 'Bow Stagger Bonus',
-    {88} 'Telekinesis',
-    {89} 'Favor Points Bonus',
-    {90} 'Last Bribed Intimidated',
-    {91} 'Last Flattered',
-    {92} 'Movement Noise Mult',
-    {93} 'Bypass Vendor Stolen Check',
-    {94} 'Bypass Vendor Keyword Check',
-    {95} 'Waiting For Player',
-    {96} 'One-Handed Modifier',
-    {97} 'Two-Handed Modifier',
-    {98} 'Marksman Modifier',
-    {99} 'Block Modifier',
-   {100} 'Smithing Modifier',
-   {101} 'Heavy Armor Modifier',
-   {102} 'Light Armor Modifier',
-   {103} 'Pickpocket Modifier',
-   {104} 'Lockpicking Modifier',
-   {105} 'Sneaking Modifier',
-   {106} 'Alchemy Modifier',
-   {107} 'Speechcraft Modifier',
-   {108} 'Alteration Modifier',
-   {109} 'Conjuration Modifier',
-   {110} 'Destruction Modifier',
-   {111} 'Illusion Modifier',
-   {112} 'Restoration Modifier',
-   {113} 'Enchanting Modifier',
-   {114} 'One-Handed Skill Advance',
-   {115} 'Two-Handed Skill Advance',
-   {116} 'Marksman Skill Advance',
-   {117} 'Block Skill Advance',
-   {118} 'Smithing Skill Advance',
-   {119} 'Heavy Armor Skill Advance',
-   {120} 'Light Armor Skill Advance',
-   {121} 'Pickpocket Skill Advance',
-   {122} 'Lockpicking Skill Advance',
-   {123} 'Sneaking Skill Advance',
-   {124} 'Alchemy Skill Advance',
-   {125} 'Speechcraft Skill Advance',
-   {126} 'Alteration Skill Advance',
-   {127} 'Conjuration Skill Advance',
-   {128} 'Destruction Skill Advance',
-   {129} 'Illusion Skill Advance',
-   {130} 'Restoration Skill Advance',
-   {131} 'Enchanting Skill Advance',
-   {132} 'Left Weapon Speed Multiply',
-   {133} 'Dragon Souls',
-   {134} 'Combat Health Regen Multiply',
-   {135} 'One-Handed Power Modifier',
+    {45} 'Resist Rad Ingestion',
+    {46} 'Resist Rad Exposure',
+    {47} 'Resist Energy',
+    {48} 'Suspicious',
+    {49} 'BloodyMess',
+    {50} 'RadHealthMax',
+    {51} 'Power Armor Head Condition',
+    {52} 'Power Armor Torso Condition',
+    {53} 'Power Armor Left Arm Condition',
+    {54} 'Paralysis',
+    {55} 'Invisibility',
+    {56} 'Night Eye',
+    {57} 'Workshop State',
+    {58} 'Water Breathing',
+    {59} 'Water Walking',
+    {60} 'IgnoreCrippledLimbs',
+    {61} 'Fame',
+    {62} 'Infamy',
+    {63} 'Workshop State Transition',
+    {64} 'Ward Power',
+    {65} 'Right Item Charge',
+    {66} 'Armor Perks',
+    {67} 'Shield Perks',
+    {68} 'Workshop State Timeout',
+    {69} 'Variable01',
+    {70} 'Variable02',
+    {71} 'Variable03',
+    {72} 'Variable04',
+    {73} 'Variable05',
+    {74} 'Variable06',
+    {75} 'Variable07',
+    {76} 'Variable08',
+    {77} 'Variable09',
+    {78} 'Variable10',
+    {79} 'Bow Speed Bonus',
+    {80} 'Favor Active',
+    {81} 'Favors Per Day',
+    {82} 'Favors Per Day Timer',
+    {83} 'Left Item Charge',
+    {84} 'Absorb Chance',
+    {85} 'Blindness',
+    {86} 'Weapon Speed Mult',
+    {87} 'Shout Recovery Mult',
+    {88} 'Free Camp Placement',
+    {89} 'Fall Speed Mult',
+    {90} 'Favor Points Bonus',
+    {91} 'Last Bribed Intimidated',
+    {92} 'Last Flattered',
+    {93} 'Movement Noise Mult',
+    {94} 'Bypass Vendor Stolen Check',
+    {95} 'Bypass Vendor Keyword Check',
+    {96} 'Waiting For Player',
+    {97} 'SkillMagAV01',
+    {98} 'SkillMagAV02',
+    {99} 'SkillMagAV03',
+   {100} 'SkillMagAV04',
+   {101} 'SkillMagAV05',
+   {102} 'SkillMagAV06',
+   {103} 'SkillMagAV07',
+   {104} 'SkillMagAV08',
+   {105} 'SkillMagAV09',
+   {106} 'SkillMagAV10',
+   {107} 'SkillMagAV11',
+   {108} 'SkillMagAV12',
+   {109} 'SkillMagAV13',
+   {110} 'SkillMagAV14',
+   {111} 'SkillMagAV15',
+   {112} 'Player Level',
+   {113} 'Deafness',
+   {114} 'Power Generated',
+   {115} 'Power Radiation',
+   {116} 'Power Required',
+   {117} 'Food',
+   {118} 'Water',
+   {119} 'Safety',
+   {120} 'Bed',
+   {121} 'Happiness',
+   {122} 'Artillery',
+   {123} 'Workshop Item Overlap',
+   {124} 'Logic Operation',
+   {125} 'Workshop Item Clamp Direction',
+   {126} 'Workshop Item Z Offset',
+   {127} 'Workshop Actor Wounded',
+   {128} 'Workshop Player Owned',
+   {129} 'Workshop Stackable Item',
+   {130} 'Workshop Snap Point Radius',
+   {131} 'Workshop Anything Is Ground',
+   {132} 'Ignore Player While Frenzied',
+   {133} 'Left Weapon Speed Multiply',
+   {134} 'Produce Uses',
+   {135} 'Combat Health Regen Mult',
    {136} 'Two-Handed Power Modifier',
    {137} 'Marksman Power Modifier',
    {138} 'Block Power Modifier',
    {139} 'Smithing Power Modifier',
-   {140} 'Heavy Armor Power Modifier',
-   {141} 'Light Armor Power Modifier',
-   {142} 'Pickpocket Power Modifier',
-   {143} 'Lockpicking Power Modifier',
+   {140} 'Workshop Current Triangles',
+   {141} 'Workshop Max Triangles',
+   {142} 'Workshop Current Draws',
+   {143} 'Workshop Max Draws',
    {144} 'Sneaking Power Modifier',
-   {145} 'Alchemy Power Modifier',
-   {146} 'Speechcraft Power Modifier',
-   {147} 'Alteration Power Modifier',
-   {148} 'Conjuration Power Modifier',
-   {149} 'Destruction Power Modifier',
-   {150} 'Illusion Power Modifier',
-   {151} 'Restoration Power Modifier',
-   {152} 'Enchanting Power Modifier',
-   {153} 'Dragon Rend',
-   {154} 'Attack Damage Mult',
-   {155} 'Heal Rate Mult',
-   {156} 'Magicka Rate Mult',
-   {157} 'Stamina Rate Mult',
-   {158} 'Werewolf Perks',
-   {159} 'Vampire Perks',
-   {160} 'Grab Actor Offset',
-   {161} 'Grabbed',
-   {162} 'Unknown 162',
-   {163} 'Reflect Damage'
+   {145} 'Workshop Ignore Simple Intersections',
+   {146} 'Workshop Allow Unsupported Stacking',
+   {147} 'Fatigue',
+   {148} 'Fatigue AP Max',
+   {149} 'Fatigue Rate',
+   {150} 'Fatigue Rate Mult',
+   {151} 'Logic Output',
+   {152} 'Workshop Snap Transmits Power',
+   {153} 'Rads Rate Mult',
+   {154} 'Dragon Rend',
+   {155} 'Attack Damage Mult',
+   {156} 'Heal Rate Mult',
+   {157} 'Action Points Rate Mult',
+   {158} 'Condition Rate Mult',
+   {159} 'Aim Stability',
+   {160} 'Power Armor Battery',
+   {161} 'Power Armor Right Arm Condition',
+   {162} 'Power Armor Left Leg Condition',
+   {163} 'Reflect Damage',
+   {164} 'Crafting Ability General',
+   {165} 'Crafting Ability Explosives',
+   {166} 'Crafting Ability Guns',
+   {167} 'Crafting Ability Mechanics',
+   {168} 'Crafting Ability Medicine',
+   {169} 'Crafting Ability Melee',
+   {170} 'Crafting Ability Science',
+   {171} 'Crafting Ability Survival',
+   {172} 'Component Usage Mult Chemical',
+   {173} 'Component Usage Mult Metallic',
+   {174} 'Component Usage Mult Organic',
+   {175} 'Component Usage Mult Technical',
+   {176} 'Perception Condition',
+   {177} 'Endurance Condition',
+   {178} 'Left Attack Condition',
+   {179} 'Right Attack Condition',
+   {180} 'Left Mobility Condition',
+   {181} 'Right Mobility Condition',
+   {182} 'Brain Condition',
+   {183} 'AvailableCondition1',
+   {184} 'AvailableCondition2',
+   {185} 'AvailableCondition3',
+   {186} 'One Handed Weapons',
+   {187} 'Two Handed Weapons',
+   {188} 'Marksman',
+   {189} 'Block',
+   {190} 'Smithing',
+   {191} 'Heavy Armor',
+   {192} 'Light Armor',
+   {193} 'PickPocket',
+   {194} 'Lockpicking',
+   {195} 'Sneak',
+   {196} 'Alchemy',
+   {197} 'Speechcraft',
+   {198} 'Alteration',
+   {199} 'Conjuration',
+   {200} 'Destruction',
+   {201} 'Illusion',
+   {202} 'Restoration',
+   {203} 'Enchanting',
+   {204} 'Power Armor Right Leg Condition',
+   {205} 'VANSPerk',
+   {206} 'Workshop Level Object',
+   {207} 'Workshop Level',
+   {208} 'Workshop Level Health Percent',
+   {209} 'Workshop Current Budget',
+   {210} 'Workshop Flag Status',
+   {211} 'Damage Resist PVP'
       ], [
         -1, 'None'
       ]);
@@ -9138,7 +9210,7 @@ begin
 
   wbTargetEnum := wbEnum([
     {0} 'Self',
-    {1} 'Touch',
+    {1} 'Contact',
     {2} 'Aimed',
     {3} 'Target Actor',
     {4} 'Target Location'
@@ -9158,8 +9230,7 @@ begin
       'Trespass',
       'Attack',
       'Murder',
-      'Escape Jail',
-      'Werewolf Transformation'
+      'Escape Jail'
     ], [
       -1, 'None'
     ]);
@@ -9612,7 +9683,9 @@ begin
         {63 ptRegionOpt}
         wbFormIDCkNoReach('Region', [REGN, NULL]),
         {64 ptActorValueEnum}
-        wbInteger('Actor Value', itS32, wbActorValueEnum)
+        wbInteger('Actor Value', itS32, wbActorValueEnum),
+        {65 ptChallenge}
+        wbFormIDCkNoReach('Challenge', [CHAL, NULL])
       ]),
 
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
@@ -9726,7 +9799,7 @@ begin
          { 1} wbFormIDCkNoReach('Weapon List', [FLST], [WEAP]),
          { 2} wbFormIDCkNoReach('Target', [NPC_]),
          { 3} wbFormIDCkNoReach('Target List', [FLST], [NPC_]),
-         { 4} wbByteArray('Unknown', 4, cpIgnore),
+         { 4} wbInteger('Target Distance', itU32),
          { 5} wbInteger('Target Part', itS32, wbActorValueEnum),
          { 6} wbInteger('VATS Action', itU32, wbEnum([
                 'Unarmed Attack',
@@ -9742,17 +9815,17 @@ begin
                 'Heal',
                 'Player Death'
           ])),
-         { 7} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
-         { 8} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         { 7} wbByteArray('Is Success', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         { 8} wbByteArray('Is Critical', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
          { 9} wbFormIDCkNoReach('Critical Effect', [SPEL]),
          {10} wbFormIDCkNoReach('Critical Effect List', [FLST], [SPEL]),
-         {11} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
-         {12} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
-         {13} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
-         {14} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         {11} wbByteArray('Is Fatal', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         {12} wbByteArray('Explode Part', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         {13} wbByteArray('Dismember Part', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         {14} wbByteArray('Cripple Part', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
          {15} wbInteger('Weapon Type', itU32, wbWeaponAnimTypeEnum),
-         {16} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
-         {17} wbByteArray('Unknown', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         {16} wbByteArray('Is Stranger', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+         {17} wbByteArray('Is Paralyzing Palm', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
          {18} wbInteger('Projectile Type', itU32, wbEnum([
                 'Missile',
                 'Lobber',
@@ -9804,10 +9877,10 @@ begin
         { 9} 'Command Target',
         {10} 'Event Camera Ref',
         {11} 'My Killer',
-        {12} 'Unknown 12',
-        {13} 'Unknown 13',
-        {14} 'Unknown 14',
-        {15} 'Photo Subject'
+        {12} 'Active Players',
+        {13} 'Potential Players',
+        {14} 'Player Teammates',
+        {15} 'Target List'
       ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
       wbUnion('Reference', wbCTDAReferenceDecider, [
         wbInteger('Unused', itU32, nil, cpIgnore),
@@ -12758,7 +12831,7 @@ begin
         wbStructSK([0, 1], 'Entry Point', [
           wbInteger('Entry Point', itU8, wbEntryPointsEnum, cpNormal, True, nil{, wbPERKEntryPointAfterSet}),
           wbInteger('Function', itU8, wbEnum([
-            {0} 'Unknown 0',
+            {0} 'Null Function',
             {1} 'Set Value', // EPFT=1
             {2} 'Add Value', // EPFT=1
             {3} 'Multiply Value', // EPFT=1
@@ -12774,7 +12847,7 @@ begin
            {13} 'Multiply Actor Value Mult', // EPFT=2
            {14} 'Multiply 1 + Actor Value Mult', // EPFT=2
            {15} 'Set Text', // EPFT=7
-           {16} 'Unknown 16', // EPFT=?
+           {16} 'Select Item', // EPFT=?
            {17} 'Unknown 17' // EPFT=?
           ])),
           wbInteger('Perk Condition Tab Count', itU8, nil, cpIgnore),
@@ -13018,7 +13091,8 @@ begin
       'Int Value',
       'Variable',
       'Resource',
-      'Unknown 10'
+      'Aggregate',
+	    'Unknown'
     ])),
     wbUnknown(NAM2),
     wbFormIDCk(NAM3, 'Unknown', [KYWD]), // always a KYWD
@@ -15787,8 +15861,37 @@ begin
     wbStruct(PKDT, 'Pack Data', [
       wbInteger('General Flags', itU32, wbPKDTFlags),
       wbInteger('Type', itU8, wbEnum ([], [
+         1, 'Follow',
+         6, 'Travel',
+        10, 'Flee Not Combat',
+        14, 'Guard',
+        15, 'Dialogue',
         18, 'Package',
-        19, 'Package Template'
+        19, 'Package Template',
+        20, 'Activate',
+        21, 'Alarm',
+        22, 'Flee',
+        23, 'Trespass',
+        24, 'Spectator',
+        25, 'ReactToDead',
+        26, 'GetUp from Chair/Bed',
+        27, 'Do Nothing',
+        28, 'In Game Dialogue',
+        29, 'Surface',
+        30, 'Search For Attacker',
+        31, 'Avoid Player',
+        32, 'Bump Reaction',
+        33, 'React to Grenade or Mine',
+        34, 'Steal Warning',
+        35, 'Pickpocket Warning',
+        36, 'Movement Blocked',
+        37, 'Feed',
+        38, 'Cannibal',
+        39, 'Land',
+        41, 'Mount Actor',
+        42, 'Dismount Actor',
+        43, 'Clear Mount Position',
+        44, 'Clear Power Armor Exit'
       ])),
       wbInteger('Interrupt Override', itU8, wbEnum([
         {0} 'None',
@@ -16033,7 +16136,7 @@ begin
     wbUnknown(QSDD),
     wbUnknown(QETE),
     wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
-    wbRArray('Unknown', wbString(QTVR)),
+    wbRArray('Quest Variables', wbString(QTVR, 'Quest Variable')),
     wbFLTR,
     wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, False),
     wbEmpty(NEXT, 'Marker'),
@@ -19375,26 +19478,35 @@ procedure DefineFO76Groups;
 begin
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(KYWD);
+  wbAddGroupOrder(ENTM); //new in Fallout 76
+  wbAddGroupOrder(COEN); //new in Fallout 76
+  wbAddGroupOrder(CSEN); //new in Fallout 76
+  wbAddGroupOrder(ECAT); //new in Fallout 76
+  wbAddGroupOrder(EMOT); //new in Fallout 76
+  wbAddGroupOrder(AVTR); //new in Fallout 76
   wbAddGroupOrder(LCRT);
   wbAddGroupOrder(AACT);
   wbAddGroupOrder(TRNS);
   wbAddGroupOrder(CMPO);
   wbAddGroupOrder(TXST);
+  wbAddGroupOrder(MICN); //new in Fallout 76. Currently unused in esm
   wbAddGroupOrder(GLOB);
   wbAddGroupOrder(DMGT);
   wbAddGroupOrder(CLAS);
   wbAddGroupOrder(FACT);
   wbAddGroupOrder(HDPT);
-  wbAddGroupOrder(EYES);
+  wbAddGroupOrder(EYES); //Unused in ESM. Used in EXE
   wbAddGroupOrder(RACE);
   wbAddGroupOrder(SOUN);
   wbAddGroupOrder(SECH); //new in Fallout 76
   wbAddGroupOrder(ASPC);
   wbAddGroupOrder(RESO); //new in Fallout 76
   wbAddGroupOrder(MGEF);
+  wbAddGroupOrder(SCPT); //new in Fallout 76. Currently unused in ESM
   wbAddGroupOrder(LTEX);
   wbAddGroupOrder(ENCH);
   wbAddGroupOrder(SPEL);
+  wbAddGroupOrder(SCRL); //new in Fallout 76. Currently unused in ESM
   wbAddGroupOrder(ACTI);
   wbAddGroupOrder(TACT);
   wbAddGroupOrder(CURV); //new in Fallout 76
@@ -19406,18 +19518,18 @@ begin
   wbAddGroupOrder(LIGH);
   wbAddGroupOrder(MISC);
   wbAddGroupOrder(MSCS); //new in Fallout 76
+  wbAddGroupOrder(MISI); //new in Fallout 76. Currently unused in ESM
   wbAddGroupOrder(CNCY); //new in Fallout 76
   wbAddGroupOrder(STAT);
   wbAddGroupOrder(SCOL);
   wbAddGroupOrder(MSTT);
   wbAddGroupOrder(GRAS);
-  wbAddGroupOrder(TREE);
+  wbAddGroupOrder(TREE); // Currently an empty GRUP record
   wbAddGroupOrder(FLOR);
   wbAddGroupOrder(FURN);
   wbAddGroupOrder(WEAP);
   wbAddGroupOrder(AMMO);
   wbAddGroupOrder(NPC_);
-  wbAddGroupOrder(PLYR);
   wbAddGroupOrder(LVLN);
   wbAddGroupOrder(LVLP); //new in Fallout 76
   wbAddGroupOrder(KEYM);
@@ -19428,6 +19540,7 @@ begin
   wbAddGroupOrder(PROJ);
   wbAddGroupOrder(HAZD);
   wbAddGroupOrder(BNDS);
+  wbAddGroupOrder(SLGM); //new in Fallout 76. Currently unused in ESM
   wbAddGroupOrder(TERM);
   wbAddGroupOrder(PPAK); //new in Fallout 76
   wbAddGroupOrder(PACH); //new in Fallout 76
@@ -19439,16 +19552,32 @@ begin
   wbAddGroupOrder(REGN);
   wbAddGroupOrder(NAVI);
   wbAddGroupOrder(CELL);
+  wbAddGroupOrder(REFR); //new in Fallout 76
+  wbAddGroupOrder(ACHR); //new in Fallout 76
+  wbAddGroupOrder(PMIS); //new in Fallout 76
+  wbAddGroupOrder(PARW); //new in Fallout 76. Currently unused in ESM
+  wbAddGroupOrder(PGRE); //new in Fallout 76
+  wbAddGroupOrder(PBEA); //new in Fallout 76. Currently unused in ESM
+  wbAddGroupOrder(PFLA); //new in Fallout 76. Currently unused in ESM
+  wbAddGroupOrder(PCON); //new in Fallout 76. Currently unused in ESM
+  wbAddGroupOrder(PBAR); //new in Fallout 76. Currently unused in ESM
+  wbAddGroupOrder(PHZD); //new in Fallout 76
   wbAddGroupOrder(WRLD);
+  wbAddGroupOrder(LAND); //new in Fallout 76. Currently unused in ESM
+  wbAddGroupOrder(NAVM); //new in Fallout 76
+  wbAddGroupOrder(TLOD); //new in Fallout 76. Currently unused in ESM
+  wbAddGroupOrder(DIAL); //new in Fallout 76
+  wbAddGroupOrder(INFO); //new in Fallout 76
   wbAddGroupOrder(QUST);
   wbAddGroupOrder(IDLE);
   wbAddGroupOrder(PACK);
   wbAddGroupOrder(CSTY);
   wbAddGroupOrder(LSCR);
-  //wbAddGroupOrder(LVSP); not contained in SeventySix.esm
+  wbAddGroupOrder(LVSP); //not contained in ESM but exists in exe load order
   wbAddGroupOrder(ANIO);
   wbAddGroupOrder(WATR);
   wbAddGroupOrder(EFSH);
+  wbAddGroupOrder(TOFT); //new in Fallout 76. Currently unused in ESM
   wbAddGroupOrder(EXPL);
   wbAddGroupOrder(DEBR);
   wbAddGroupOrder(IMGS);
@@ -19467,9 +19596,10 @@ begin
   wbAddGroupOrder(IPCT);
   wbAddGroupOrder(IPDS);
   wbAddGroupOrder(ARMA);
-  wbAddGroupOrder(ECZN); //not contained in SeventySix.esm
+  wbAddGroupOrder(ECZN); //not contained in ESM but exists in exe load order
   wbAddGroupOrder(LCTN);
   wbAddGroupOrder(MESG);
+  wbAddGroupOrder(RGDL); //new in Fallout 76. Currently unused in ESM
   wbAddGroupOrder(DOBJ);
   wbAddGroupOrder(DFOB);
   wbAddGroupOrder(LGTM);
@@ -19479,19 +19609,21 @@ begin
   wbAddGroupOrder(SMBN);
   wbAddGroupOrder(SMQN);
   wbAddGroupOrder(SMEN);
-  //wbAddGroupOrder(DLBR); not contained in SeventySix.esm
+  wbAddGroupOrder(DLBR);
   wbAddGroupOrder(MUST);
-  wbAddGroupOrder(DLVW);
+  wbAddGroupOrder(DLVW); // Currently an empty GRUP record
+  wbAddGroupOrder(WOOP); //new in Fallout 76. Currently unused in ESM
+  wbAddGroupOrder(SHOU); //new in Fallout 76. Currently unused in ESM
   wbAddGroupOrder(EQUP);
   wbAddGroupOrder(RELA);
-  //wbAddGroupOrder(SCEN); not contained in SeventySix.esm
+  wbAddGroupOrder(SCEN);
   wbAddGroupOrder(ASTP);
   wbAddGroupOrder(OTFT);
   wbAddGroupOrder(ARTO);
   wbAddGroupOrder(MATO);
   wbAddGroupOrder(MOVT);
   wbAddGroupOrder(SNDR);
-  //wbAddGroupOrder(DUAL); not contained in SeventySix.esm
+  wbAddGroupOrder(DUAL); //not contained in ESM but exists in exe load order
   wbAddGroupOrder(SNCT);
   wbAddGroupOrder(SOPM);
   wbAddGroupOrder(COLL);
@@ -19514,26 +19646,23 @@ begin
   wbAddGroupOrder(STAG);
   wbAddGroupOrder(NOCM);
   wbAddGroupOrder(LENS);
-  wbAddGroupOrder(GDRY);
+  wbAddGroupOrder(LSPR); //Currently unused in ESM
+  wbAddGroupOrder(GDRY); //Currently empty GRUP in ESM and unused in exe load order
   wbAddGroupOrder(OVIS);
+  wbAddGroupOrder(DLYR); //new in Fallout 76. Currently unused in ESM
   wbAddGroupOrder(STND); //new in Fallout 76
   wbAddGroupOrder(STMP); //new in Fallout 76
   wbAddGroupOrder(GCVR); //new in Fallout 76
-  wbAddGroupOrder(EMOT); //new in Fallout 76
+  wbAddGroupOrder(PLYR); //Currently unused in ESM
   wbAddGroupOrder(STHD); //new in Fallout 76
   wbAddGroupOrder(VOLI); //new in Fallout 76
-  wbAddGroupOrder(ECAT); //new in Fallout 76
   wbAddGroupOrder(WSPR); //new in Fallout 76
-  wbAddGroupOrder(ENTM); //new in Fallout 76
-  wbAddGroupOrder(PCEN); //new in Fallout 76
-  wbAddGroupOrder(COEN); //new in Fallout 76
-  wbAddGroupOrder(CSEN); //new in Fallout 76
   wbAddGroupOrder(WAVE); //new in Fallout 76
   wbAddGroupOrder(AAPD); //new in Fallout 76
   wbAddGroupOrder(PMFT); //new in Fallout 76
   wbAddGroupOrder(CHAL); //new in Fallout 76
-  wbAddGroupOrder(AVTR); //new in Fallout 76
   wbAddGroupOrder(CNDF); //new in Fallout 76
+  wbAddGroupOrder(AUVF); //new in Fallout 76. Currently unused in ESM
   wbAddGroupOrder(LGDI); //new in Fallout 76
 end;
 
