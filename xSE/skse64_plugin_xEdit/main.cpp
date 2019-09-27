@@ -180,21 +180,19 @@ bool xEditCommand()
 
 	// create the list of condition commands for WB
 	i = 0;
-	j = 0;
-	_MESSAGE("conditionFunctionData = ( #--0: no param; 1: int param; 2: formid param");
+	_MESSAGE("# 0: no param; 1: int param; 2: formid param; 3: float param");
+	_MESSAGE("condition_function_data = {");
 	for (ObScriptCommand * iter = g_firstObScriptCommand; iter->opcode < (kObScript_NumObScriptCommands + kObScript_ScriptOpBase); ++iter, i++)
 	{
 		if (iter->eval)
 		{
-			_MESSAGE("    (%3d, '%s'%d, %d, %d),", i, iter->longName,
+			_MESSAGE("    %4d: ('%s', %d, %d, %d),", i, iter->longName,
 				CheckParam(iter, 0) ? WBEncode(iter->params[0]) : 0,
 				CheckParam(iter, 1) ? WBEncode(iter->params[1]) : 0,
-				CheckParam(iter, 2) ? WBEncode(iter->params[2]) : 0,
-				j);
-			j++;
+				CheckParam(iter, 2) ? WBEncode(iter->params[2]) : 0);
 		}
 	}
-	_MESSAGE("    )");	// Don't forget to add SKSE64 functions
+	_MESSAGE("}");	// Don't forget to add SKSE64 functions
 
 	_MESSAGE("");
 
