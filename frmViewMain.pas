@@ -12570,7 +12570,7 @@ begin
                 MainRecord := NodeData.Element as IwbMainRecord;
 
                 if FilterConflictOnly then
-                  if MainRecord.MasterOrSelf.OverrideCount < 2 then begin
+                  if (MainRecord.MasterOrSelf.OverrideCount < 2) and (Node.ChildCount = 0) then begin
                     //filter early, can't possibly have a conflict
                     vstNav.DeleteNode(Node);
                     Node := NextNode;
