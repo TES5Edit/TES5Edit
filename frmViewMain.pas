@@ -2426,8 +2426,9 @@ begin
         and ((DefTypes - [dtEmpty, dtString..dtInteger, dtFloat, dtArray, dtStruct]).Count = 0) then begin
 
         for i := 0 to Pred(aNodeCount) do
-          if not aNodeDatas[i].Element.ContentIsAllZero then
-            Exit;
+          if Assigned(aNodeDatas[i].Element) then
+            if not aNodeDatas[i].Element.ContentIsAllZero then
+              Exit;
 
         Result := caNoConflict;
 
