@@ -8,6 +8,7 @@
 * (reported on Discord) - cleaning Dragonborn.esm can make Boars non-aggressive
 * (reported on Discord) - crash in NAVM when triangle edge is flagged as edge link, but the number stored in the edge field can't look up a valid external NAVM via the Edge Links table
 * (found by developer) - Quick [Auto] Clean allows selecting the game master (which makes no sense)
+* (found by developer) - [FO4] incorrect subrecord order in CELL
 
 ## Minor changes
 
