@@ -180,6 +180,9 @@ var
   wbCollapseConditions     : Boolean  = True;
   wbCollapseBenignArray    : Boolean  = True;
 
+  wbAutoMarkModified       : Boolean  = True;
+  wbForceMarkModified      : Boolean  = False;
+
   wbGlobalModifedGeneration : UInt64;
 
   wbPluginsFileName    : String;
