@@ -7,6 +7,10 @@
 * (reported on Discord) - cleaning Dragonborn.esm can make Boars non-aggressive
 * (found by developer) - Quick [Auto] Clean allows selecting the game master (which makes no sense)
 
+## Minor changes
+
+* [FO3/FNV] Flag 0 in BOOK means "Scroll"
+
 ## Shortened Parameters
 
 Some parameters can be specified in a shortened way now:

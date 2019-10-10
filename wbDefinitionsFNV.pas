@@ -6083,7 +6083,7 @@ begin
     wbZNAM,
     wbStruct(DATA, 'Data', [
       wbInteger('Flags', itU8, wbFlags([
-        '',
+        'Scroll',
         'Can''t be Taken'
       ])),
       wbInteger('Skill', itS8, wbSkillEnum),
