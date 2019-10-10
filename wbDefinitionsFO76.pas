@@ -10610,11 +10610,15 @@ begin
     wbStruct(XCLC, 'Grid', [
       wbInteger('X', itS32),
       wbInteger('Y', itS32),
-      wbInteger('Force Hide Land', itU32, wbFlags([
-        'Quad 1',
-        'Quad 2',
-        'Quad 3',
-        'Quad 4'
+      wbInteger('Land Flags', itU32, wbFlags([
+        'Hide - Quad 1',
+        'Hide - Quad 2',
+        'Hide - Quad 3',
+        'Hide - Quad 4',
+        'No Collision - Quad 1',
+        'No Collision - Quad 2',
+        'No Collision - Quad 3',
+        'No Collision - Quad 4'
       ], True))
     ], cpNormal, False, nil, 2),
 
