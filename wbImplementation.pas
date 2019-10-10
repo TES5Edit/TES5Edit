@@ -4344,7 +4344,7 @@ begin
       Assert(not Assigned(flRecordProcessing));
 
       if (Length(flRecords) < 1) or not FindFormID(aRecord.FormID, i, True) then
-        raise Exception.Create('Can''t remove FormID ['+aRecord.FormID.ToString(True)+'] from file '+GetName+': FormID not registered');
+        raise Exception.Create('Can''t remove FormID ['+aRecord.FormID.ToString(True)+'] from file ' + GetName + ': FormID not registered');
 
       flRecords[i] := nil;
       if i < High(flRecords) then begin
@@ -10496,33 +10496,33 @@ var
 
     if GetSignature = wbHeaderSignature then begin
       if not Supports(GetContainer, IwbFile, _File) then
-        raise Exception.Create('File Header record '+GetName+' must be contained directly in the file.');
+        raise Exception.Create('File Header record "' + GetFullPath + '" must be contained directly in the file.');
       if not GetFormID.IsNull then
-        raise Exception.Create('File Header record '+GetName+' can not have a FormID.');
+        raise Exception.Create('File Header record "' + GetFullPath + '" can not have a FormID.');
     end else begin
       if GetFormID.IsNull then
-        raise Exception.Create('Record '+GetName+' must have a FormID.');
+        raise Exception.Create('Record "' + GetFullPath + '" must have a FormID.');
       if not Supports(GetContainer, IwbGroupRecord, GroupRecord) then
-        raise Exception.Create('Record '+GetName+' is not contained in a group.');
+        raise Exception.Create('Record "' + GetFullPath + '" is not contained in a group.');
       case GroupRecord.GroupType of
         0: begin {top level}
           if TwbSignature(GroupRecord.GroupLabel) <> GetSignature then
-            raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
+            raise Exception.Create('Record "' + GetFullPath + '" can not be contained in ' + GroupRecord.Name);
         end;
         1: begin {World Children}
           if (GetSignature <> 'CELL') and (GetSignature <> 'ROAD') then
-            raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
+            raise Exception.Create('Record "' + GetFullPath + '" can not be contained in ' + GroupRecord.Name);
         end;
         2, 4, 6: begin {interior and exterior block and cell children}
-          raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
+          raise Exception.Create('Record "' + GetFullPath + '" can not be contained in ' + GroupRecord.Name);
         end;
         3, 5: begin {interior and exterior sub-block}
           if (GetSignature <> 'CELL') then
-            raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
+            raise Exception.Create('Record "' + GetFullPath + '" can not be contained in ' + GroupRecord.Name);
         end;
         7: begin {topic children}
           if (GetSignature <> 'INFO') then
-            raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
+            raise Exception.Create('Record "' + GetFullPath + '" can not be contained in ' + GroupRecord.Name);
         end;
         8, 10: begin {Persistent and Visible when Distant/Quest Children}
           if (GetSignature <> 'REFR') and
@@ -10538,18 +10538,18 @@ var
              (GetSignature <> 'PHZD')     {>>> Skyrim <<<}
           then
             if not (wbVWDAsQuestChildren and ((GetSignature = 'DLBR') or (GetSignature = 'DIAL') or (GetSignature = 'SCEN'))) then
-              raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
+              raise Exception.Create('Record "' + GetFullPath + '" can not be contained in ' + GroupRecord.Name);
 
           case GroupRecord.GroupType of
             8:begin
               if not mrStruct.mrsFlags.IsPersistent then
-                raise Exception.Create('Record ' + GetName + ' needs to have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
+                raise Exception.Create('Record "' + GetFullPath + '" needs to have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
             end;
             10: if not wbVWDAsQuestChildren then begin
               if not mrStruct.mrsFlags.IsVisibleWhenDistant then
-                raise Exception.Create('Record ' + GetName + ' needs to have it''s Visible when Distant flag set to be contained in ' + GroupRecord.Name);
+                raise Exception.Create('Record "' + GetFullPath + '" needs to have it''s Visible when Distant flag set to be contained in ' + GroupRecord.Name);
               if mrStruct.mrsFlags.IsPersistent then
-                raise Exception.Create('Record ' + GetName + ' can not have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
+                raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
             end;
           end;
         end;
@@ -10569,11 +10569,11 @@ var
              (GetSignature <> 'PBAR') and {>>> Skyrim <<<}
              (GetSignature <> 'PHZD')     {>>> Skyrim <<<}
           then
-            raise Exception.Create('Record ' + GetName + ' can not be contained in ' + GroupRecord.Name);
+            raise Exception.Create('Record "' + GetFullPath + '" can not be contained in ' + GroupRecord.Name);
           if mrStruct.mrsFlags.IsPersistent then
-            raise Exception.Create('Record ' + GetName + ' can not have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
+            raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
           if mrStruct.mrsFlags.IsVisibleWhenDistant and not wbVWDInTemporary then
-            raise Exception.Create('Record ' + GetName + ' can not have it''s Visible when Distant flag set to be contained in ' + GroupRecord.Name);
+            raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Visible when Distant flag set to be contained in ' + GroupRecord.Name);
         end;
       end;
     end;
