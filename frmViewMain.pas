@@ -19789,6 +19789,7 @@ var
   NewFile   : IwbFile;
   MasterFile: IwbFile;
   WasUnsaved: Boolean;
+  DoMarkModified: Boolean;
 begin
   try
     wbLoaderDone := True;
@@ -19898,8 +19899,12 @@ begin
         if wbQuickClean then begin
           pnlNavContent.Visible := False;
           try
-            with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
+            with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do begin
               BuildOrLoadRef(False);
+              DoMarkModified :=
+                    wbForceMarkModified
+                or (wbAutoMarkModified and SameText(FileName, 'Dawnguard.esm'));
+            end;
 
             mniNavFilterForCleaning.Click;
             JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
@@ -19914,7 +19919,11 @@ begin
             WasUnsaved := False;
             with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
               if esUnsaved in ElementStates then begin
-                MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
+
+                if DoMarkModified then begin
+                  wbProgress('Marking all groups and records as modified');
+                  MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
+                end;
                 WasUnsaved := True;
               end;
 
@@ -19941,7 +19950,10 @@ begin
                 WasUnsaved := False;
                 with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
                   if esUnsaved in ElementStates then begin
-                    MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
+                    if DoMarkModified then begin
+                      wbProgress('Marking all groups and records as modified');
+                      MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
+                    end;
                     WasUnsaved := True;
                   end;
 

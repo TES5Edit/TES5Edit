@@ -197,6 +197,9 @@ var
   wbNoFullInShortName      : Boolean  = True;
   wbNoIndexInAliasSummary  : Boolean  = True;
 
+  wbAutoMarkModified       : Boolean  = True;
+  wbForceMarkModified      : Boolean  = False;
+
   wbGlobalModifedGeneration : UInt64;
 
   wbPluginsFileName    : String;

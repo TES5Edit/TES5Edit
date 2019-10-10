@@ -4,6 +4,7 @@
 
 * #669 - CELL at 0,0 may be spuriously added to worldspaces during cleaning.
 * #674 - Invalid ITMs may be reported in rare cases when form versions differ
+* (reported on Discord) - cleaning Dragonborn.esm can make Boars non-aggressive
 * (found by developer) - Quick [Auto] Clean allows selecting the game master (which makes no sense)
 
 ## Shortened Parameters
@@ -14,6 +15,18 @@ Some parameters can be specified in a shortened way now:
 * `-autogamelink` as `-agl`
 * `-quickclean` as `-qc`
 * `-quickautoclean` as `-qac`
+
+## Changes to QuickAutoClean
+
+As a fix for a problem in Dawnguard.esm (see details below in previous version) QAC was marking all records in a to be cleaned file as modified, which made xEdit assemble these records from parsed data instead of just writing out the bytes that were read when the file was loaded.
+
+This resulted in problems when cleaning Dragonborn.esm (and possibly other files).
+
+xEdit is now only marking all records as modified in `Dawnguard.esm`
+
+This behaviour can be controlled with 2 parameters:
+* `-NoAutoMarkModified` prevents mark modified from being applied to `Dawnguard.esm` (resulting in the Soul Cairn error described below)
+* `-ForceMarkModified` always applies mark modified to the cleaned file (if there was anything to clean)
 
 # What's new in xEdit 4.0.2?
 

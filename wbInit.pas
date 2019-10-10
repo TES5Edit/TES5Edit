@@ -1257,6 +1257,17 @@ begin
   else if FindCmdLineSwitch('NoFixPersistence') then
     wbMasterUpdateFixPersistence := False;
 
+  if FindCmdLineSwitch('AutoMarkModified') then
+    wbAutoMarkModified := True;
+  if FindCmdLineSwitch('NoAutoMarkModified') then
+    wbAutoMarkModified := False;
+
+  if FindCmdLineSwitch('ForceMarkModified') then
+    wbForceMarkModified := True;
+  if FindCmdLineSwitch('NoForceMarkModified') then
+    wbForceMarkModified := False;
+
+
   if wbVeryQuickShowConflicts then
     wbSubMode := 'Very Quick Show Conflicts'
   else if wbQuickShowConflicts then
