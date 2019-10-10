@@ -4997,6 +4997,7 @@ begin
               if wbQuickClean then begin
                 MinSelect := 1;
                 MaxSelect := 1;
+                HideFlag := mfIsGameMaster;
                 AllModules := wbModulesByLoadOrder(False).FilteredByFlag(mfValid);
                 Caption := 'Please check or double click the module that you want to ' + wbSubMode;
               end else

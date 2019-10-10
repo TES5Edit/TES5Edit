@@ -101,6 +101,7 @@ type
 
     SelectFlag      : TwbModuleFlag;
     FilterFlag      : TwbModuleFlag;
+    HideFlag        : TwbModuleFlag;
     MaxSelect       : Integer;
     MinSelect       : Integer;
 
@@ -914,8 +915,12 @@ begin
         Include(InitialStates, ivsHasChildren);
       if not (FilterFlag in mndModule.miFlags) then
         Include(InitialStates, ivsDisabled);
-     if mfMastersMissing in mndModule.miFlags then
+      if mfMastersMissing in mndModule.miFlags then
         Include(InitialStates, ivsDisabled);
+      if HideFlag in mndModule.miFlags then begin
+        Include(InitialStates, ivsHidden);
+        Include(InitialStates, ivsDisabled);
+      end;
     end else
       Include(InitialStates, ivsDisabled);
   end;

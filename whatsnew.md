@@ -1,3 +1,10 @@
+# What's new in xEdit 4.0.3?
+
+## Bugfixes
+* #669 - CELL at 0,0 may be spuriously added to worldspaces during cleaning.
+* #674 - Invalid ITMs may be reported in rare cases when form versions differ
+* (found by developer) - Quick [Auto] Clean allows selecting the game master (which makes no sense)
+
 # What's new in xEdit 4.0.2?
 
 ## Ko-Fi
