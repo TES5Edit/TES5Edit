@@ -13997,7 +13997,7 @@ begin
     else
       mniNavLocalizationSwitch.Caption := 'Localize plugin';
 
-  mniNavLogAnalyzer.Visible := (wbGameMode = gmTES4) or wbIsSkyrim;
+  mniNavLogAnalyzer.Visible := (wbGameMode in [gmTES4, gmFO3, gmFNV]) or wbIsSkyrim;
   mniNavLogAnalyzer.Clear;
   if wbIsSkyrim then begin
     MenuItem := TMenuItem.Create(mniNavLogAnalyzer);
@@ -14006,10 +14006,10 @@ begin
     MenuItem.Tag := Integer(ltTES5Papyrus);
     mniNavLogAnalyzer.Add(MenuItem);
   end else
-  if wbGameMode = gmTES4 then begin
+  if wbGameMode in [gmTES4, gmFO3, gmFNV] then begin
     MenuItem := TMenuItem.Create(mniNavLogAnalyzer);
     MenuItem.OnClick := mniNavLogAnalyzerClick;
-    MenuItem.Caption := 'RuntimeScriptProfiler OBSE Extension Log';
+    MenuItem.Caption := 'RuntimeScriptProfiler xSE Extension Log';
     MenuItem.Tag := Integer(ltTES4RuntimeScriptProfiler);
     mniNavLogAnalyzer.Add(MenuItem);
   end;
