@@ -9721,6 +9721,11 @@ begin
       {0x4000} 'Unknown 15',
       {0x8000} 'Unknown 16'
     ]), cpNormal, True, False, nil, wbCELLDATAAfterSet),
+
+    wbByteArray(VISI, 'PreVis Files Timestamp', 2),
+    wbFormIDCk(RVIS, 'In PreVis File Of', [CELL]),
+    wbByteArray(PCMB, 'PreCombined Files Timestamp', 2),
+
     wbStruct(XCLC, 'Grid', [
       wbInteger('X', itS32),
       wbInteger('Y', itS32),
@@ -9735,10 +9740,6 @@ begin
         'No Collision - Quad 4'
       ], True))
     ], cpNormal, False, nil, 2),
-
-    wbByteArray(VISI, 'PreVis Files Timestamp', 2),
-    wbFormIDCk(RVIS, 'In PreVis File Of', [CELL]),
-    wbByteArray(PCMB, 'PreCombined Files Timestamp', 2),
 
     wbStruct(XCLL, 'Lighting', [
       wbByteColors('Ambient Color'),
@@ -15231,7 +15232,6 @@ begin
     wbXRGB,
 
     wbFloat(XRDS, 'Radius'),
-    wbXSCL,
 
     {--- Emittance ---}
     wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
@@ -15549,8 +15549,8 @@ begin
     wbUnknown(XCZA),
     wbFormIDCk(XCZC, 'Unknown', [CELL, NULL]),
 
+    wbXSCL,
     wbXLOD, // not seen in FO4 vanilla files
-
     wbDataPosRot,
     wbString(MNAM, 'Comments')
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
