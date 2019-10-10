@@ -5,6 +5,7 @@
 * #669 - CELL at 0,0 may be spuriously added to worldspaces during cleaning.
 * #674 - Invalid ITMs may be reported in rare cases when form versions differ
 * (reported on Discord) - cleaning Dragonborn.esm can make Boars non-aggressive
+* (reported on Discord) - crash in NAVM when triangle edge is flagged as edge link, but the number stored in the edge field can't look up a valid external NAVM via the Edge Links table
 * (found by developer) - Quick [Auto] Clean allows selecting the game master (which makes no sense)
 
 ## Minor changes
