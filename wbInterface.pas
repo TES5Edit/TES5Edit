@@ -1506,6 +1506,8 @@ type
     procedure Add(const aMainRecord: IwbMainRecord);
   end;
 
+  EwbSkipLoad = class(EAbort);
+
   IwbMainRecordDef = interface;
   IwbMainRecord = interface(IwbRecord)
     ['{F06FD5E2-621D-4422-BA00-CB3CA72B3691}']

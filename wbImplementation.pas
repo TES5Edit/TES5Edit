@@ -664,6 +664,7 @@ type
     flRecordsCount           : Integer; {only used during loading}
     flRecordProcessing       : IwbMainRecord;
     flRecordNeedCompactFrom  : Integer;
+    flRecordBits             : array of array of array of set of Byte;
 
     flRecordsByEditorID      : array of IwbMainRecord;
     flRecordsByEditorIDCount : Integer; {only used during loading}
@@ -684,6 +685,8 @@ type
     procedure flOpenFile; virtual;
     procedure flCloseFile; virtual;
     procedure flProgress(const aStatus: string);
+
+    function flSetContainsLoadOrderID(const aFormID: TwbFormID): Boolean;
 
     function Reached: Boolean; override;
 
@@ -2169,6 +2172,9 @@ begin
 
     end else begin
 
+      if flSetContainsLoadOrderID(aRecord.LoadOrderFormID) then
+        raise EwbSkipLoad.Create('Duplicate Record "' + aRecord.ShortName + '"');
+
       if flRecordsCount >= Length(flRecords) then
         SetLength(flRecords, Succ(flRecordsCount));
 
@@ -3340,6 +3346,27 @@ procedure TwbFile.flProgress(const aStatus: string);
 begin
   if wbHasProgressCallback then
     wbProgressCallback('['+GetFileName+'] ' + aStatus);
+end;
+
+function TwbFile.flSetContainsLoadOrderID(const aFormID: TwbFormID): Boolean;
+begin
+  var ID := aFormID.ToCardinal;
+
+  var i1 := (ID and $FF000000) shr 24;
+  if Length(flRecordBits) <= i1 then
+    SetLength(flRecordBits, Succ(i1));
+
+  var i2 := (ID and $00FF0000) shr 16;
+  if Length(flRecordBits[i1]) <= i2 then
+    SetLength(flRecordBits[i1], Succ(i2));
+
+  var i3 := (ID and $0000FF00) shr 8;
+  if Length(flRecordBits[i1, i2]) <= i3 then
+    SetLength(flRecordBits[i1, i2], Succ(i3));
+
+  var i4 := ID and $000000FF;
+  Result := i4 in flRecordBits[i1, i2, i3];
+  Include(flRecordBits[i1, i2, i3], i4);
 end;
 
 procedure TwbFile.ForceClosed;
@@ -4721,6 +4748,7 @@ begin
   if flRecordsCount < Length(flRecords) then
     SetLength(flRecords, flRecordsCount);
   SortRecords;
+  flRecordBits := nil;
   flProgress('FormID index built');
 
   flProgress('Building EditorID index');
@@ -7215,17 +7243,26 @@ class function TwbRecord.CreateForPtr(var aPtr            : Pointer;
                                     const aPrevMainRecord : IwbMainRecord)
                                                           : IwbRecord;
 begin
-  if Assigned(aContainer) and (aContainer.ElementType = etMainRecord) then
-    Result := TwbSubRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord)
-  else
-    if PwbSignature(aPtr)^ = 'GRUP' then
-      Result := TwbGroupRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord)
-    else begin
-      if (wbGameMode = gmTES3) and (PwbSignature(aPtr)^ = 'NAM0') then
-        Result := TwbSubRecord.Create(nil, aPtr, aEndPtr, nil)
-      else
-        Result := TwbMainRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord);
+  try
+    if Assigned(aContainer) and (aContainer.ElementType = etMainRecord) then
+      Result := TwbSubRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord)
+    else
+      if PwbSignature(aPtr)^ = 'GRUP' then
+        Result := TwbGroupRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord)
+      else begin
+        if (wbGameMode = gmTES3) and (PwbSignature(aPtr)^ = 'NAM0') then
+          Result := TwbSubRecord.Create(nil, aPtr, aEndPtr, nil)
+        else
+          Result := TwbMainRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord);
+      end;
+
+    wbTick;
+  except
+    on E: EwbSkipLoad do begin
+      wbProgress('Skipped Load: ' + E.Message);
+      Result := nil;
     end;
+  end;
 end;
 
 function TwbRecord.GetName: string;
@@ -8252,6 +8289,8 @@ var
 begin
   inherited Create(aContainer, aBasePtr, aEndPtr, aPrevMainRecord);
   try
+    if Assigned(aPrevMainRecord) and (aPrevMainRecord.LoadOrderFormID = GetLoadOrderFormID) then
+      raise EwbSkipLoad.Create('Duplicate Record "' + GetShortName + '"');
     _File := GetFile as IwbFileInternal;
     if Assigned(_File) then begin
       _File.AddMainRecord(Self);
