@@ -1690,6 +1690,7 @@ type
   IwbGroupRecordInternal = interface(IwbGroupRecord)
     ['{0BDDCF46-DFF6-4771-8FBB-0BC78828999B}']
     procedure SetModified(aValue: Boolean);
+    procedure IsDuplicateOf(const aGroup: IwbGroupRecord);
   end;
 
   TwbGroupState = (
@@ -1703,7 +1704,8 @@ type
 
   TwbGroupRecord = class(TwbRecord, IwbGroupRecord, IwbGroupRecordInternal, IwbContainedIn)
   protected {private}
-    grStates: TwbGroupStates;
+    grStates      : TwbGroupStates;
+    grDuplicateOf : IwbGroupRecord;
   protected
     constructor Create(const aContainer  : IwbContainer;
                        const aSignature  : TwbSignature); overload;
@@ -1714,6 +1716,7 @@ type
                              aType       : Integer;
                              aLabel      : Cardinal); overload;
     destructor Destroy; override;
+    procedure AfterConstruction; override;
 
     function grStruct: PwbGroupRecordStruct; inline;
 
@@ -1768,6 +1771,8 @@ type
     procedure AddElement(const aElement: IwbElement); override;
 
     procedure ContainerChanged;
+
+    procedure IsDuplicateOf(const aGroup: IwbGroupRecord);
   end;
 
   IwbSubRecordArrayInternal = interface(IwbSubRecordArray)
@@ -11438,13 +11443,18 @@ begin
 
   if Assigned(aGroup) then begin
     if not (not Assigned(mrGroup) or (mrGroup.Equals(aGroup))) then begin
+      (aGroup as IwbGroupRecordInternal).IsDuplicateOf(mrGroup);
       wbProgress('<Error: Found additional ' + mrGroup.Name + ' for ' + Self.GetName +'>');
       Exit;
     end;
     if Assigned(eContainer) then
-      IwbContainer(eContainer).Equals(aGroup.Container);
+      if not IwbContainer(eContainer).Equals(aGroup.Container) then begin
+        wbProgress('<Error: Group "' + mrGroup.Name + '" has not the same container as record "' + Self.GetName +'">');
+        Exit;
+      end;
   end else
     Assert(Assigned(mrGroup));
+
   mrGroup := aGroup;
 end;
 
@@ -14333,6 +14343,75 @@ begin
   end;
 end;
 
+procedure TwbGroupRecord.AfterConstruction;
+begin
+  if Assigned(grDuplicateOf) then try
+    if wbBeginInternalEdit(True) then try
+      var s := grDuplicateOf.ShortName;
+      var Container := GetContainer;
+      if GetElementCount = 0 then begin
+        if Assigned(Container) then
+          Container.RemoveElement(Self, True);
+        raise EwbSkipLoad.Create('Skipped empty duplicate group "' + s + '"');
+      end else begin
+        var j := 0;
+        grDuplicateOf.BeginUpdate;
+        try
+          BeginUpdate;
+          try
+            while GetElementCount > 0 do begin
+              var SrcGrp: IwbGroupRecord;
+              if Supports(GetElement(0), IwbGroupRecord, SrcGrp) then begin
+                var TrgGrp := grDuplicateOf.FindChildGroup(SrcGrp.GroupType, SrcGrp.GroupLabel);
+                if Assigned(TrgGrp) then begin
+                  SrcGrp.BeginUpdate;
+                  try
+                    TrgGrp.BeginUpdate;
+                    try
+                      while SrcGrp.ElementCount > 0 do begin
+                        TrgGrp.AddElement(SrcGrp.RemoveElement(0, True));
+                        Inc(j);
+                      end;
+                    finally
+                      TrgGrp.EndUpdate;
+                    end;
+                  finally
+                    SrcGrp.EndUpdate;
+                  end;
+                  RemoveElement(0, True);
+                  SrcGrp := nil;
+                  (TrgGrp as IwbGroupRecordInternal).Sort;
+                  (TrgGrp as IwbGroupRecordInternal).SetModified(True);
+                  TrgGrp := nil;
+                  Continue;
+                end;
+                Inc(j, SrcGrp.ElementCount);
+                SrcGrp := nil;
+              end else
+                Inc(j);
+              grDuplicateOf.AddElement(RemoveElement(0, True));
+            end;
+          finally
+            EndUpdate;
+          end;
+        finally
+          grDuplicateOf.EndUpdate;
+        end;
+        if Assigned(Container) then
+          Container.RemoveElement(Self, True);
+        (grDuplicateOf as IwbGroupRecordInternal).Sort;
+        (grDuplicateOf as IwbGroupRecordInternal).SetModified(True);
+        raise EwbSkipLoad.Create('Merged ' + j.ToString + ' elements from duplicate group into "' + s + '"');
+      end;
+    finally
+      wbEndInternalEdit;
+    end;
+  finally
+    grDuplicateOf := nil;
+  end;
+  inherited;
+end;
+
 procedure TwbGroupRecord.BuildRef;
 var
   Rec: IwbMainRecord;
@@ -14758,6 +14837,11 @@ begin
       if grStruct.grsGroupType = 0 then
         recSkipped := GroupToSkip.Find(PwbSignature(@grStruct.grsLabel)^, Dummy);
   end;
+end;
+
+procedure TwbGroupRecord.IsDuplicateOf(const aGroup: IwbGroupRecord);
+begin
+  grDuplicateOf := aGroup;
 end;
 
 function TwbGroupRecord.IsElementRemoveable(const aElement: IwbElement): Boolean;
