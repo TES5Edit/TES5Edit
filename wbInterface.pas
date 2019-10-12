@@ -1105,7 +1105,8 @@ type
     csAsCreatedEmpty,
     csSortedBySortOrder,
     csCollapsed,
-    csExpanded
+    csExpanded,
+    csConstructionCompleted
   );
 
   TwbContainerStates = set of TwbContainerState;

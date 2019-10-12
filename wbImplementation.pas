@@ -5265,6 +5265,7 @@ begin
     lock dec dword ptr [eax + cntElementRefs]
   end;
   {$ENDIF WIN32}
+  Include(cntStates, csConstructionCompleted);
 end;
 
 function TwbContainer.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
@@ -5392,17 +5393,24 @@ end;
 
 procedure TwbContainer.BeforeDestruction;
 begin
-  Assert(cntElementRefs = 0);
+  if csConstructionCompleted in cntStates then
+    Assert(cntElementRefs = 0)
+  else
+    Assert(cntElementRefs = 1);
+
   inherited BeforeDestruction;
-  {$IFDEF WIN64}
-  LockedInc(cntElementRefs);
-  {$ENDIF WIN64}
-  {$IFDEF WIN32}
-  asm
-         mov eax, [Self]
-    lock inc dword ptr [eax + cntElementRefs]
+
+  if csConstructionCompleted in cntStates then begin
+    {$IFDEF WIN64}
+    LockedInc(cntElementRefs);
+    {$ENDIF WIN64}
+    {$IFDEF WIN32}
+    asm
+           mov eax, [Self]
+      lock inc dword ptr [eax + cntElementRefs]
+    end;
+    {$ENDIF WIN32}
   end;
-  {$ENDIF WIN32}
 end;
 
 procedure TwbContainer.BuildRef;
@@ -15661,22 +15669,32 @@ end;
 
 procedure TwbElement.BeforeDestruction;
 begin
-  Assert(eExternalRefs = 0);
+  if esConstructionComplete in eStates then
+    Assert(eExternalRefs = 0)
+  else
+    Assert(eExternalRefs = 1);
+
   if (FRefCount and $7FFFFFFF) <> 0 then
-    Assert(FRefCount = 0);
+    if esConstructionComplete in eStates then
+      Assert(FRefCount = 0)
+    else
+      Assert(FRefCount = 1);
+
   Include(eStates, esDestroying);
-  inherited BeforeDestruction;
-  {$IFDEF WIN64}
-  LockedInc(eExternalRefs);
-  LockedInc(FRefCount);
-  {$ENDIF WIN64}
-  {$IFDEF WIN32}
-  asm
-         mov eax, [Self]
-    lock inc dword ptr [eax + eExternalRefs]
-    lock inc dword ptr [eax + FRefCount]
+  if esConstructionComplete in eStates then begin
+    inherited BeforeDestruction;
+    {$IFDEF WIN64}
+    LockedInc(eExternalRefs);
+    LockedInc(FRefCount);
+    {$ENDIF WIN64}
+    {$IFDEF WIN32}
+    asm
+           mov eax, [Self]
+      lock inc dword ptr [eax + eExternalRefs]
+      lock inc dword ptr [eax + FRefCount]
+    end;
+    {$ENDIF WIN64}
   end;
-  {$ENDIF WIN64}
 end;
 
 function TwbElement.BeginResolve: Boolean;
@@ -19473,6 +19491,21 @@ end;
 
 { TwbDataContainer }
 
+procedure TwbDataContainer.AfterConstruction;
+var
+  Def: IwbDef;
+begin
+  Def := GetDef;
+  if Assigned(Def) and (dfDontSave in Def.DefFlags) then
+    Include(dcFlags, dcfDontSave);{
+  else begin
+    Def := GetValueDef;
+    if Assigned(Def) and (dfDontSave in Def.DefFlags) then
+      Include(dcFlags, dcfDontSave);
+  end;}
+  inherited;
+end;
+
 function TwbDataContainer.ContentIsAllZero: Boolean;
 var
   Run: PByte;
@@ -19488,21 +19521,6 @@ begin
     end;
   end;
   Result := True;
-end;
-
-procedure TwbDataContainer.AfterConstruction;
-var
-  Def: IwbDef;
-begin
-  Def := GetDef;
-  if Assigned(Def) and (dfDontSave in Def.DefFlags) then
-    Include(dcFlags, dcfDontSave);{
-  else begin
-    Def := GetValueDef;
-    if Assigned(Def) and (dfDontSave in Def.DefFlags) then
-      Include(dcFlags, dcfDontSave);
-  end;}
-  inherited;
 end;
 
 constructor TwbDataContainer.Create(const aContainer: IwbContainer; var aBasePtr: Pointer; var aEndPtr: Pointer; const aPrevMainRecord : IwbMainRecord);
