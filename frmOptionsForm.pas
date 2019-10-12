@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, ExtCtrls, wbInterface,
   Vcl.Styles.Utils.SystemMenu, Vcl.Samples.Spin, Vcl.Themes,
-  System.Generics.Collections, Vcl.Styles.Ext;
+  System.Generics.Collections, Vcl.Styles.Ext, Vcl.Styles.Preview;
 
 type
   TfrmOptions = class(TForm)
@@ -109,7 +109,7 @@ type
     procedure rbThemeClick(Sender: TObject);
     procedure cbThemeSystemSelect(Sender: TObject);
   private
-    vspThemePreview: TVclStylesPreview;
+    vspThemePreview: TVisualStylePreview;
     procedure UpdateThemePreview;
   public
     { Public declarations }
@@ -180,8 +180,9 @@ begin
       MenuCaption := 'Theme';
     end;
 
-   vspThemePreview := TVclStylesPreview.Create(Self);
+   vspThemePreview := TVisualStylePreview.Create(Self);
    with vspThemePreview do begin
+     PreviewType := ptTabs;
      Parent:= pnlThemePreview;
      Align := alClient;
    end;
