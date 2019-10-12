@@ -10715,6 +10715,11 @@ begin
       wbInteger('', itU16, wbCELLFlags),
       wbInteger('', itU32, wbCELLFlags)
     ], cpNormal, True).SetAfterSet(wbCELLDATAAfterSet),
+
+    wbByteArray(VISI, 'PreVis Files Timestamp'{, 2}),
+    wbFormIDCk(RVIS, 'In PreVis File Of', [CELL]),
+    wbByteArray(PCMB, 'PreCombined Files Timestamp', 2),
+
     wbStruct(XCLC, 'Grid', [
       wbInteger('X', itS32),
       wbInteger('Y', itS32),
@@ -10729,10 +10734,6 @@ begin
         'No Collision - Quad 4'
       ], True))
     ], cpNormal, False, nil, 2),
-
-    wbByteArray(VISI, 'PreVis Files Timestamp'{, 2}),
-    wbFormIDCk(RVIS, 'In PreVis File Of', [CELL]),
-    wbByteArray(PCMB, 'PreCombined Files Timestamp', 2),
 
     wbStruct(XCLL, 'Lighting', [
       wbByteColors('Ambient Color'),
