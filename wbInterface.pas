@@ -581,7 +581,8 @@ type
     dfUseLoadOrder,
     dfSummaryMembersNoName,
     dfSummaryNoName,
-    dfSummaryNoSortKey
+    dfSummaryNoSortKey,
+    dfUnionStaticResolve
   );
 
   TwbDefFlags = set of TwbDefFlag;
@@ -1211,7 +1212,7 @@ type
     procedure Bar;
   end;
 
-  IwbContainerElementRef= interface(IwbContainerBase)
+  IwbContainerElementRef = interface(IwbContainerBase)
     ['{4066BCCF-01AA-4638-9C3D-3475CD8D5749}']
     function ReleaseKeepAlive: IwbContainerElementRef;
   end;
@@ -10018,10 +10019,6 @@ begin
   end;
 
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
-  {
-  if srsAllowUnordered and not FoundRequired then
-    raise Exception.Create(GetPath + ' must contain at least one required element');
-  }
 end;
 
 destructor TwbSubRecordStructDef.Destroy;
@@ -19424,11 +19421,9 @@ end;
 { TwbDefTypesHelper }
 
 function TwbDefTypesHelper.Count: Integer;
-var
-  i: TwbDefType;
 begin
   Result := 0;
-  for i := Low(TwbDefType) to High(TwbDefType) do
+  for var i:= Low(TwbDefType) to High(TwbDefType) do
     if i in Self then
       Inc(Result);
 end;
@@ -19436,11 +19431,9 @@ end;
 { TwbElementTypesHelper }
 
 function TwbElementTypesHelper.Count: Integer;
-var
-  i: TwbElementType;
 begin
   Result := 0;
-  for i := Low(TwbElementType) to High(TwbElementType) do
+  for var i:= Low(TwbElementType) to High(TwbElementType) do
     if i in Self then
       Inc(Result);
 end;

@@ -12431,6 +12431,8 @@ begin
             ValueDef := ArrayDef.Element;
             if ValueDef.DefType = dtResolvable then
               ValueDef := Resolve(ValueDef, nil, nil, aElement);
+            if dfUnionStaticResolve in ValueDef.DefFlags then
+              ValueDef := Resolve(ValueDef, nil, nil, aElement);
             case ValueDef.DefType of
               dtArray: Result := TwbArray.Create(Self, ValueDef, aElement, not aDeepCopy, s);
               dtStruct: Result := TwbStruct.Create(Self, ValueDef, aElement, not aDeepCopy, s);
@@ -12558,6 +12560,8 @@ begin
                 if not Supports(aElement, IwbStringListTerminator) then begin
                   ValueDef := ArrayDef.Element;
                   if ValueDef.DefType = dtResolvable then
+                    ValueDef := Resolve(ValueDef, nil, nil, aElement);
+                  if dfUnionStaticResolve in ValueDef.DefFlags then
                     ValueDef := Resolve(ValueDef, nil, nil, aElement);
                   case ValueDef.DefType of
                     dtArray: Element := TwbArray.Create(Self, ValueDef, aElement, aOnlySK, s);
@@ -17981,6 +17985,8 @@ begin
   ValueDef := ArrayDef.Element;
   if ValueDef.DefType = dtResolvable then
     ValueDef := Resolve(ValueDef, nil, nil, aContainer);
+  if dfUnionStaticResolve in ValueDef.DefFlags then
+    ValueDef := Resolve(ValueDef, nil, nil, aContainer);
 
   VarSize := ArrayDef.IsVariableSize;
   ArrSize := ArrayDef.ElementCount;
@@ -18094,7 +18100,8 @@ begin
     ValueDef := ArrayDef.Element;
     if ValueDef.DefType = dtResolvable then
       ValueDef := Resolve(ValueDef, nil, nil, aElement);
-
+    if dfUnionStaticResolve in ValueDef.DefFlags then
+      ValueDef := Resolve(ValueDef, nil, nil, aElement);
     case ValueDef.DefType of
       dtArray: Result := TwbArray.Create(Self, ValueDef, aElement, not aDeepCopy, s);
       dtStruct: Result := TwbStruct.Create(Self, ValueDef, aElement, not aDeepCopy, s);
@@ -18186,6 +18193,8 @@ begin
       if not Supports(aElement, IwbStringListTerminator) then
         ValueDef := ArrayDef.Element;
         if ValueDef.DefType = dtResolvable then
+          ValueDef := Resolve(ValueDef, nil, nil, aElement);
+        if dfUnionStaticResolve in ValueDef.DefFlags then
           ValueDef := Resolve(ValueDef, nil, nil, aElement);
         case ValueDef.DefType of
           dtArray: Element := TwbArray.Create(Self, ValueDef, aElement, aOnlySK, s);
@@ -18423,6 +18432,8 @@ begin
     ValueDef := StructDef.Members[i];
     if ValueDef.DefType = dtResolvable then
       ValueDef := Resolve(ValueDef, nil, nil, aContainer);
+    if dfUnionStaticResolve in ValueDef.DefFlags then
+      ValueDef := Resolve(ValueDef, nil, nil, aContainer);
 
     Over := False;
     if Assigned(aBasePtr) and (i >= OptionalFromElement) then begin
@@ -18559,8 +18570,12 @@ begin
 
   ValueDef := ResolvableDef.ResolveDef(aBasePtr, aEndPtr, aContainer);
 
-  if Assigned(ValueDef) and (ValueDef.DefType = dtResolvable) then
-    ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
+  if Assigned(ValueDef) then begin
+    if ValueDef.DefType = dtResolvable then
+      ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
+    if dfUnionStaticResolve in ValueDef.DefFlags then
+      ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
+  end;
 
   if Assigned(ValueDef) then // I had one case. Most likely due to an error in wbXXXXDefinitions
     case ValueDef.DefType of
@@ -20974,6 +20989,8 @@ begin
 
     ValueDef := wbFileChapters.Members[i];
     if ValueDef.DefType = dtResolvable then
+      ValueDef := Resolve(ValueDef, currentPtr, flEndPtr, Self);
+    if dfUnionStaticResolve in ValueDef.DefFlags then
       ValueDef := Resolve(ValueDef, currentPtr, flEndPtr, Self);
 
     case ValueDef.DefType of
