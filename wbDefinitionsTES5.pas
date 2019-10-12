@@ -13488,7 +13488,8 @@ begin
         'Level 3'
       ],
       cpNormal, False
-    )
+    ),
+    wbUnknown(ENAM)
   ]);
 
   wbRecord(TES4, 'Main File Header',
