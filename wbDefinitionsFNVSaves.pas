@@ -31,6 +31,7 @@ uses
   wbSaveInterface,
   wbImplementation,
   wbLocalization,
+  wbDefinitionsCommon,
   wbDefinitionsFNV;
 
 var

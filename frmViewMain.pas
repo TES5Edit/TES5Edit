@@ -5214,6 +5214,8 @@ begin
   wbCollapseBenignArray := Settings.ReadBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
   wbCollapseRGBA := Settings.ReadBool('Options', 'CollapseRGBA', wbCollapseRGBA);
   wbCollapseVec3 := Settings.ReadBool('Options', 'CollapseVec3', wbCollapseVec3);
+  wbCollapseHeadParts := Settings.ReadBool('Options', 'CollapseHeadParts', wbCollapseHeadParts);
+  wbCollapseBodyParts := Settings.ReadBool('Options', 'CollapseBodyParts', wbCollapseBodyParts);
   wbShrinkButtons := Settings.ReadBool('Options', 'ShrinkButtons', wbShrinkButtons);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
@@ -13358,6 +13360,8 @@ begin
     Settings.WriteBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
     Settings.WriteBool('Options', 'CollapseRGBA', wbCollapseRGBA);
     Settings.WriteBool('Options', 'CollapseVec3', wbCollapseVec3);
+    Settings.WriteBool('Options', 'CollapseHeadParts', wbCollapseHeadParts);
+    Settings.WriteBool('Options', 'CollapseBodyParts', wbCollapseBodyParts);
     Settings.WriteBool('Options', 'ShrinkButtons', wbShrinkButtons);
     Settings.WriteInteger('Options', 'ColumnWidth', ColumnWidth);
     Settings.WriteInteger('Options', 'RowHeight', RowHeight);
