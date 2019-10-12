@@ -157,6 +157,9 @@ const
 {J0TX} J0TX: TwbSignature = 'J0TX';
 {K0TX} K0TX: TwbSignature = 'K0TX';
 {L0TX} L0TX: TwbSignature = 'L0TX';
+{M0TX} M0TX: TwbSignature = 'M0TX';
+{N0TX} N0TX: TwbSignature = 'N0TX';
+{O0TX} O0TX: TwbSignature = 'O0TX';
 
   AACT : TwbSignature = 'AACT';
   ACBS : TwbSignature = 'ACBS';
@@ -3242,6 +3245,11 @@ begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 99);
 end;
 
+function wbDeciderFormVersion111(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 111);
+end;
+
 function wbAECHDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container  : IwbContainer;
@@ -6006,18 +6014,41 @@ begin
   ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
 end;
 
-function wbWeatherColors(const aName: string): IwbStructDef;
+function wbWeatherColors(const aName: string): IwbValueDef;
 begin
   Result := wbStruct(aName, [
-    wbByteColors('Sunrise'),
-    wbByteColors('Day'),
-    wbByteColors('Sunset'),
-    wbByteColors('Night'),
-    wbByteColors('EarlySunrise'),
-    wbByteColors('LateSunrise'),
-    wbByteColors('EarlySunset'),
-    wbByteColors('LateSunset')
-  ], cpNormal, True, nil, 4);
+    wbByteColors('Sunrise'),      //0
+    wbByteColors('Day'),          //1
+    wbByteColors('Sunset'),       //2
+    wbByteColors('Night'),        //3
+    wbUnion('EarlySunrise', wbDeciderFormVersion111, [
+      wbEmpty('Unused'),
+      wbByteColors('EarlySunrise') //4
+    ]).IncludeFlag(dfUnionStaticResolve),
+    wbUnion('LateSunrise', wbDeciderFormVersion111, [
+      wbEmpty('Unused'),
+      wbByteColors('LateSunrise')  //5
+    ]).IncludeFlag(dfUnionStaticResolve),
+    wbUnion('EarlySunset', wbDeciderFormVersion111, [
+      wbEmpty('Unused'),
+      wbByteColors('EarlySunset')  //6
+    ]).IncludeFlag(dfUnionStaticResolve),
+    wbUnion('LateSunset', wbDeciderFormVersion111, [
+      wbEmpty('Unused'),
+      wbByteColors('LateSunset')   //7
+    ]).IncludeFlag(dfUnionStaticResolve)
+  ], cpNormal, True, nil, 4)
+    .SetSummaryKey([4, 0, 5, 1, 6, 2, 7, 3])
+    .SetSummaryMemberPrefixSuffix(4, 'ESR:', '')
+    .SetSummaryMemberPrefixSuffix(0, 'SR:', '')
+    .SetSummaryMemberPrefixSuffix(5, 'LSR:', '')
+    .SetSummaryMemberPrefixSuffix(1, 'D:', '')
+    .SetSummaryMemberPrefixSuffix(6, 'ESS:', '')
+    .SetSummaryMemberPrefixSuffix(2, 'SS:', '')
+    .SetSummaryMemberPrefixSuffix(7, 'LSS:', '')
+    .SetSummaryMemberPrefixSuffix(3, 'N:', '')
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfHideText);
 end;
 
 function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'): IwbSubRecordDef; overload;
@@ -16405,6 +16436,9 @@ begin
     wbString(J0TX, 'Cloud Texture Layer #26'),
     wbString(K0TX, 'Cloud Texture Layer #27'),
     wbString(L0TX, 'Cloud Texture Layer #28'),
+    wbString(M0TX, 'Cloud Texture Layer #29'),
+    wbString(N0TX, 'Cloud Texture Layer #30'),
+    wbString(O0TX, 'Cloud Texture Layer #31'),
     wbUnknown(LNAM),
     wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
     wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
@@ -16413,17 +16447,29 @@ begin
       wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable),
       wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable)
     ], []),
-    wbArray(PNAM, 'Cloud Colors', wbWeatherColors('Layer')).IncludeFlag(dfNotAlignable),
+    wbArray(PNAM, 'Cloud Colors', wbWeatherColors('Layer'), 32).IncludeFlag(dfNotAlignable),
     wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
       wbFloat('Sunrise'),
       wbFloat('Day'),
       wbFloat('Sunset'),
       wbFloat('Night'),
-      wbFloat('EarlySunrise'),
-      wbFloat('LateSunrise'),
-      wbFloat('EarlySunset'),
-      wbFloat('LateSunset')
-    ])).IncludeFlag(dfNotAlignable),
+      wbUnion('EarlySunrise', wbDeciderFormVersion111, [
+        wbEmpty('Unused'),
+        wbFloat('EarlySunrise')
+      ]).IncludeFlag(dfUnionStaticResolve),
+      wbUnion('LateSunrise', wbDeciderFormVersion111, [
+        wbEmpty('Unused'),
+        wbFloat('LateSunrise')
+      ]).IncludeFlag(dfUnionStaticResolve),
+      wbUnion('EarlySunset', wbDeciderFormVersion111, [
+        wbEmpty('Unused'),
+        wbFloat('EarlySunset')
+      ]).IncludeFlag(dfUnionStaticResolve),
+      wbUnion('EarlySunrise', wbDeciderFormVersion111, [
+        wbEmpty('Unused'),
+        wbFloat('LateSunset')
+      ]).IncludeFlag(dfUnionStaticResolve)
+    ]), 32).IncludeFlag(dfNotAlignable),
     wbStruct(NAM0, 'Weather Colors', [
       wbWeatherColors('Sky-Upper'),
       wbWeatherColors('Fog Near'),
