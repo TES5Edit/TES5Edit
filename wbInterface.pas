@@ -582,7 +582,8 @@ type
     dfSummaryMembersNoName,
     dfSummaryNoName,
     dfSummaryNoSortKey,
-    dfUnionStaticResolve
+    dfUnionStaticResolve,
+    dfHideText
   );
 
   TwbDefFlags = set of TwbDefFlag;

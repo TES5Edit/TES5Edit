@@ -542,6 +542,9 @@ type
     procedure vstViewResize(Sender: TObject);
     procedure vstViewCreateEditor(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
     procedure vstViewKeyPress(Sender: TObject; var Key: Char);
+    procedure vstViewDrawText(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; const Text: string; var CellRect: TRect; var DefaultDraw: Boolean);
+    procedure vstViewMeasureTextWidth(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; const Text: string; var Extent: Integer);
+    procedure vstViewShortenString(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;  Column: TColumnIndex; const S: string; TextSpace: Integer; var Result: string; var Done: Boolean);
 
     {--- pmuViewPopup ---}
     procedure pmuViewPopup(Sender: TObject);
@@ -837,6 +840,8 @@ type
 
     procedure LoadModGroupsSelection(const aModGroups: TwbModGroupPtrs);
     procedure SaveModGroupsSelection(const aModGroups: TwbModGroupPtrs);
+
+    function FindColors(const s: string; out aColors: TArray<TColor>): Boolean;
   private
     procedure WMUser(var Message: TMessage); message WM_USER;
     procedure WMUser1(var Message: TMessage); message WM_USER + 1;
@@ -4726,6 +4731,9 @@ begin
   vstView.OnGetEditText := vstViewGetEditText;
   vstView.OnCheckHotTrack := vstViewCheckHotTrack;
   vstView.OnHeaderDropped := vstViewHeaderDropped;
+  vstView.OnDrawText := vstViewDrawText;
+  vstView.OnMeasureTextWidth := vstViewMeasureTextWidth;
+  vstView.OnShortenString := vstViewShortenString;
 
   vstSpreadSheetWeapon.OnGetEditText := vstSpreadSheetGetEditText;
   vstSpreadSheetWeapon.OnCheckHotTrack := vstSpreadSheetCheckHotTrack;
@@ -5721,6 +5729,55 @@ begin
     Result := -90
   else
     Result := s;
+end;
+
+var
+  _ColorsCache : record
+    ccString  : String;
+    ccColors : TArray<TColor>;
+  end;
+
+function TfrmMain.FindColors(const s: string; out aColors: TArray<TColor>): Boolean;
+type
+  TColorBytes = array[0..2] of Integer;
+begin
+  with _ColorsCache do
+  if ccString = s then
+    aColors := ccColors
+  else begin
+    aColors := nil;
+    var i := Pos('RGB', s);
+    while i > 0 do begin
+      Inc(i, 3);
+      var j := Pos('(', s, i);
+      if j > 0 then begin
+        if (j = i) or ((j = Succ(i)) and (s[i] = 'A')) then begin
+          i := Pos(')', s, j);
+          if i > 0 then begin
+            var Elements := Copy(s, Succ(j), Pred(i - j)).Split([',']).ForEach(Trim);
+            if Length(Elements) in [3, 4] then begin
+              var Valid := False;
+              var ColorBytes: TColorBytes;
+              for var k := 0 to 2 do begin
+                Valid := TryStrToInt(Elements[k], ColorBytes[k]) and InRange(ColorBytes[k], 0, 255);
+                if not Valid then
+                  Break;
+              end;
+              if Valid then begin
+                SetLength(aColors, Succ(Length(aColors)));
+                aColors[High(aColors)] := RGB(ColorBytes[0], ColorBytes[1], ColorBytes[2]);
+              end;
+            end;
+          end;
+        end;
+        i := Pos('RGB', s, i);
+      end else
+        i := 0;
+    end;
+    ccString := s;
+    ccColors := aColors;
+  end;
+  Result := Length(aColors) > 0;
 end;
 
 function TfrmMain.FindNodeForElement(const aElement: IwbElement): PVirtualNode;
@@ -16918,6 +16975,51 @@ begin
     TargetElement.CanAssign(TargetIndex, SourceElement, True);
 end;
 
+procedure TfrmMain.vstViewDrawText(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; const Text: string; var CellRect: TRect; var DefaultDraw: Boolean);
+var
+  Colors : TArray<TColor>;
+begin
+  Dec(Column);
+  if InRange(Column, Low(ActiveRecords), High(ActiveRecords)) then begin
+    if FindColors(Text, Colors) then begin
+      var OldBrushColor := TargetCanvas.Brush.Color;
+      try
+        var r := CellRect;
+        var Width := Min(CellRect.Width div Length(Colors), Node.NodeHeight);
+        r.Width := Width;
+        InflateRect(r, 0, -vstView.TextMargin);
+        for var i := Low(Colors) to High(Colors) do begin
+          if r.Right > CellRect.Right then
+            r.Right := CellRect.Right;
+          TargetCanvas.Brush.Color := Colors[i];
+          TargetCanvas.FillRect(r);
+          Inc(CellRect.Left, Width);
+          OffsetRect(r, Width, 0);
+          if r.Left >= CellRect.Right then begin
+            DefaultDraw := False;
+            Break;
+          end;
+        end;
+      finally
+        TargetCanvas.Brush.Color := OldBrushColor;
+      end;
+      Inc(CellRect.Left, vstView.TextMargin);
+
+      if TargetCanvas.TextFlags and ETO_OPAQUE = 0 then
+        SetBkMode(TargetCanvas.Handle, TRANSPARENT)
+      else
+        SetBkMode(TargetCanvas.Handle, OPAQUE);
+    end;
+
+    if DefaultDraw then begin
+      var NodeDatas : PViewNodeDatas := vstView.GetNodeData(Node);
+      with NodeDatas[Column] do
+        if Assigned(Element) and (dfHideText in Element.Def.DefFlags) then
+          DefaultDraw := False;
+    end;
+  end;
+end;
+
 procedure TfrmMain.vstViewEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
 var
   NodeDatas                   : PViewNodeDatas;
@@ -17407,6 +17509,20 @@ begin
   end;
 end;
 
+procedure TfrmMain.vstViewMeasureTextWidth(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; const Text: string; var Extent: Integer);
+begin
+  Dec(Column);
+  if InRange(Column, Low(ActiveRecords), High(ActiveRecords)) then begin
+    var NodeDatas : PViewNodeDatas := vstView.GetNodeData(Node);
+    with NodeDatas[Column] do
+      if Assigned(Element) and (dfHideText in Element.Def.DefFlags) then
+        Extent := 0;
+    var Colors : TArray<TColor>;
+    if FindColors(Text, Colors) then
+      Inc(Extent, (Length(Colors) * Node.NodeHeight) + vstView.TextMargin );
+  end;
+end;
+
 procedure TfrmMain.vstViewNewText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; NewText: string);
 var
@@ -17542,6 +17658,22 @@ begin
       tmrUpdateColumnWidths.Enabled := False;
       tmrUpdateColumnWidths.Enabled := True;
     end;
+end;
+
+procedure TfrmMain.vstViewShortenString(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; const S: string; TextSpace: Integer; var Result: string; var Done: Boolean);
+begin
+  Result := s;
+  Dec(Column);
+  if InRange(Column, Low(ActiveRecords), High(ActiveRecords)) then begin
+    var NodeDatas : PViewNodeDatas := vstView.GetNodeData(Node);
+    with NodeDatas[Column] do
+      if Assigned(Element) and (dfHideText in Element.Def.DefFlags) then
+        Done := True;
+    if not Done then begin
+      var Colors: TArray<TColor>;
+      Done := FindColors(s, Colors);
+    end;
+  end;
 end;
 
 procedure TfrmMain.vstNavBeforeItemErase(Sender: TBaseVirtualTree;
