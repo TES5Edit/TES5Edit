@@ -9016,8 +9016,6 @@ constructor TwbMainRecordDef.Create(aPriority        : TwbConflictPriority;
                                     aAfterSet        : TwbAfterSetCallback;
                                     aIsReference     : Boolean);
 var
-  i, j : Integer;
-  Sig  : TwbSignature;
   sRec : IwbSubRecordDef;
   iDef : IwbIntegerDef;
 begin
@@ -9048,47 +9046,53 @@ begin
     recSignatures.Duplicates := dupError;
 
   SetLength(recMembers, Length(aMembers));
-  for i := Low(recMembers) to High(recMembers) do begin
-    recMembers[i] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
-    if aMembers[i].CanContainFormIDs then
-      Include(recDefFlags, rdfCanContainFormIDs);
-    for j := 0 to Pred(aMembers[i].SignatureCount) do begin
-      Sig := aMembers[i].Signatures[j];
-      if (Sig = recKnownSRs[ksrsEditorID]) or
-         (Sig = recKnownSRs[ksrsFullName]) or
-         (Sig = recKnownSRs[ksrsGridCell]) or
-         (
-           (Sig = recKnownSRs[ksrsBaseRecord]) and
-           (rdfIsReference in recDefFlags)
-         ) then begin
+  var NewLength : Integer := 0;
+  for var i := Low(aMembers) to High(aMembers) do begin
+    if Assigned(aMembers[i]) then begin
+      recMembers[NewLength] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
+      if aMembers[i].CanContainFormIDs then
+        Include(recDefFlags, rdfCanContainFormIDs);
+      for var j := 0 to Pred(aMembers[i].SignatureCount) do begin
+        var Sig := aMembers[i].Signatures[j];
+        if (Sig = recKnownSRs[ksrsEditorID]) or
+           (Sig = recKnownSRs[ksrsFullName]) or
+           (Sig = recKnownSRs[ksrsGridCell]) or
+           (
+             (Sig = recKnownSRs[ksrsBaseRecord]) and
+             (rdfIsReference in recDefFlags)
+           ) then begin
 
-        recQuickInitLimit := i;
-        if Sig = recKnownSRs[ksrsEditorID] then
-          Include(recDefFlags, rdfContainsEditorID);
-        if Sig = recKnownSRs[ksrsFullName] then
-          Include(recDefFlags, rdfContainsFullName);
-        if Sig = recKnownSRs[ksrsBaseRecord] then begin
-          Include(recDefFlags, rdfContainsBaseRecord);
-          if not Supports(aMembers[i], IwbSubRecordDef, sRec) then
-            Assert(False);
-          if not Supports(sRec.Value, IwbIntegerDef, iDef) then
-            Assert(False);
-          if iDef.FormaterCanChange then
-            Assert(False);
-          if not Supports(iDef.Formater[nil], IwbFormIDChecked, recBaseRecordFormID) then
-            Assert(False);
+          recQuickInitLimit := NewLength;
+          if Sig = recKnownSRs[ksrsEditorID] then
+            Include(recDefFlags, rdfContainsEditorID);
+          if Sig = recKnownSRs[ksrsFullName] then
+            Include(recDefFlags, rdfContainsFullName);
+          if Sig = recKnownSRs[ksrsBaseRecord] then begin
+            Include(recDefFlags, rdfContainsBaseRecord);
+            if not Supports(aMembers[i], IwbSubRecordDef, sRec) then
+              Assert(False);
+            if not Supports(sRec.Value, IwbIntegerDef, iDef) then
+              Assert(False);
+            if iDef.FormaterCanChange then
+              Assert(False);
+            if not Supports(iDef.Formater[nil], IwbFormIDChecked, recBaseRecordFormID) then
+              Assert(False);
+          end;
+          if Sig = recKnownSRs[ksrsGridCell] then
+            Include(recDefFlags, rdfContainsGridCell);
         end;
-        if Sig = recKnownSRs[ksrsGridCell] then
-          Include(recDefFlags, rdfContainsGridCell);
+        try
+          recSignatures.AddObject(Sig, Pointer(NewLength) );
+        except
+          on E: Exception do
+            raise Exception.Create('Duplicate definition ' + Sig + ' in allow unordered record ' + aSignature);
+        end;
       end;
-      try
-        recSignatures.AddObject(Sig, Pointer(i) );
-      except
-        on E: Exception do
-          raise Exception.Create('Duplicate definition ' + Sig + ' in allow unordered record ' + aSignature);
-      end;
+      Inc(NewLength);
     end;
   end;
+  SetLength(recMembers, NewLength);
+
 
   if aIsReference and not Assigned(recBaseRecordFormID) then
     raise Exception.Create('Reference MainRecord must have BaseRecordFormID');
@@ -9996,7 +10000,6 @@ constructor TwbSubRecordStructDef.Create(aPriority       : TwbConflictPriority;
                                          aAfterSet       : TwbAfterSetCallback;
                                          aGetCP          : TwbGetConflictPriority);
 var
-  i,j: Integer;
   FoundRequired : Boolean;
 begin
   srsSummaryDelimiter := ' ';
@@ -10005,17 +10008,21 @@ begin
 
   FoundRequired := False;
   SetLength(srsMembers, Length(aMembers));
-  for i := Low(srsMembers) to High(srsMembers) do begin
-    srsMembers[i] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
-    srsCanContainFormIDs := srsCanContainFormIDs or aMembers[i].CanContainFormIDs;
-    FoundRequired := FoundRequired or srsMembers[i].Required;
-    for j := 0 to Pred(aMembers[i].SignatureCount) do
-      srsSignatures.AddObject(aMembers[i].Signatures[j], Pointer(i) );
-  end;
+  var NewLength := 0;
+  for var i := Low(aMembers) to High(aMembers) do
+    if Assigned(aMembers[i]) then begin
+      srsMembers[NewLength] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
+      srsCanContainFormIDs := srsCanContainFormIDs or aMembers[i].CanContainFormIDs;
+      FoundRequired := FoundRequired or srsMembers[i].Required;
+      for var j := 0 to Pred(aMembers[i].SignatureCount) do
+        srsSignatures.AddObject(aMembers[i].Signatures[j], Pointer(NewLength) );
+      Inc(NewLength);
+    end;
+  SetLength(srsMembers, NewLength);
 
   if Length(aSkipSigs) > 0 then begin
     srsSkipSignatures := TwbFastStringListCS.CreateSorted(dupIgnore);
-    for i := Low(aSkipSigs) to High(aSkipSigs) do
+    for var i := Low(aSkipSigs) to High(aSkipSigs) do
       srsSkipSignatures.Add(aSkipSigs[i]);
   end;
 
@@ -12071,12 +12078,17 @@ var
           var MemberCER: IwbContainerElementRef;
           if Supports(Element, IwbContainerElementRef, MemberCER) and Supports(Element, IwbDataContainer, DC) and (Element.ConflictPriority > cpIgnore) then begin
             var MemberDef := stMembers[SortMember];
-            Assert(MemberDef.Equals(DC.Def));
+            if not MemberDef.Equals(DC.Def) then
+              if MemberDef.DefType = dtUnion then
+                MemberDef := DC.Def as IwbValueDef
+              else
+                Assert(MemberDef.Equals(DC.Def));
             var s:= MemberDef.ToSummary(Succ(aDepth), DC.DataBasePtr, DC.DataEndPtr, DC).Trim;
             if s <> '' then begin
               var Prefix := TFromArray<string>.Get(stSummaryPrefix, SortMember);
               var Suffix := TFromArray<string>.Get(stSummarySuffix, SortMember);
               var HasFix := (Prefix <> '') or (Suffix <> '');
+              var NoName := MembersNoName or (dfSummaryNoName in MemberDef.DefFlags);
 
               if Result <> '' then begin
                 if DelayedName <> '' then begin
@@ -12090,7 +12102,7 @@ var
               if (MemberCER.ElementType = etArray) and (MemberCER.ElementCount = 1) then
                 t := MemberDef.GetSingularName;
 
-              if MembersNoName or HasFix or s.StartsWith(t + ':(', True) then
+              if NoName or HasFix or s.StartsWith(t + ':(', True) then
                 Result := Result + Prefix + s + Suffix
               else begin
                 if Result = '' then begin
