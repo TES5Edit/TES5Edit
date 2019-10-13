@@ -12298,13 +12298,13 @@ begin
     ])),
     wbRArray('Phases',
       wbRStruct('Phase', [
-        wbEmpty(HNAM, 'Marker Phase Start'),
-        wbString(NAM0, 'Name'),
+        wbEmpty(HNAM, 'Marker Phase Start', cpNormal, True),
+        wbString(NAM0, 'Name', 0, cpNormal, True),
         wbRStruct('Start Conditions', [wbCTDAs], []),
-        wbEmpty(NEXT, 'Marker Start Conditions'),
+        wbEmpty(NEXT, 'Marker Start Conditions', cpNormal, True),
         wbRStruct('Completion Conditions', [wbCTDAs], []),
-        wbEmpty(NEXT, 'Marker Completion Conditions'),
-        wbInteger(WNAM, 'Editor Width', itU32),
+        wbEmpty(NEXT, 'Marker Completion Conditions', cpNormal, True),
+        wbInteger(WNAM, 'Editor Width', itU32, nil, cpNormal, True, false, nil, nil, 350),
         wbInteger(FNAM, 'Flags', itU16, wbFlags([
           {0x0001} 'Start - WalkAway Phase',
           {0x0002} 'Don''t Run End Scripts on Scene Jump',
@@ -12314,17 +12314,17 @@ begin
           wbInteger('On Start', itS16),
           wbInteger('On Completion', itS16)
         ]),
-        wbEmpty(HNAM, 'Marker Phase End')
+        wbEmpty(HNAM, 'Marker Phase End', cpNormal, True)
       ], [])
     ),
     wbRArray('Actors', wbRStruct('Actor', [
-      wbInteger(ALID, 'Alias ID', itS32),
+      wbInteger(ALID, 'Alias ID', itS32, nil, cpNormal, True),
       wbInteger(LNAM, 'Flags', itU32, wbFlags([
         'No Player Activation',
         'Optional',
         'Run Only Scene Packages',
         'No Command State'
-      ])),
+      ]), cpNormal, True),
       wbInteger(DNAM, 'Behaviour Flags', itU32, wbFlags([
         'Death Pause',
         'Death End',
@@ -12334,7 +12334,7 @@ begin
         'Dialogue End',
         'OBS_COM Pause',
         'OBS_COM End'
-      ]))
+      ]), cpNormal, True, false, nil, nil, 26)
     ], [])),
     wbRArray('Actions', wbRStruct('Action', [
       wbInteger(ANAM, 'Type', itU16, wbEnum([
@@ -12345,7 +12345,7 @@ begin
         {4} 'Start Scene',
         {5} 'NPC Response Dialogue',
         {6} 'Radio'
-      ])),
+      ]), cpNormal, True),
       wbString(NAM0, 'Name'),
       wbInteger(ALID, 'Alias ID', itS32),
       wbInteger(INAM, 'Index', itU32),
@@ -12425,7 +12425,7 @@ begin
       wbFormIDCk(VENC, 'Dialogue Subtype', [KYWD]),
       wbFormIDCk(PNAM, 'AnimArchType', [KYWD]),
       wbFormIDCk(ONAM, 'Audio Output Override', [SOPM]),
-      wbEmpty(ANAM, 'End Marker')
+      wbEmpty(ANAM, 'End Marker', cpNormal, True)
     ], [])),
     wbFormIDCk(PNAM, 'Quest', [QUST]),
     wbInteger(INAM, 'Last Action Index', itU32),
@@ -13936,7 +13936,7 @@ begin
       {0x00400000} 'Can Apply Data To Non-Aliased Refs',
       {0x00800000} 'Is Companion',
       {0x01000000} 'Optional All Scenes'
-    ]));
+    ]), cpNormal, True);
 
   wbRecord(QUST, 'Quest',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -14040,8 +14040,8 @@ begin
 
         // Reference Alias
         wbRStructSK([0], 'Alias', [
-          wbInteger(ALST, 'Reference Alias ID', itU32),
-          wbString(ALID, 'Alias Name'),
+          wbInteger(ALST, 'Reference Alias ID', itU32, nil, cpNormal, True),
+          wbString(ALID, 'Alias Name', 0, cpNormal, True),
           wbQUSTAliasFlags,
           wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
           //wbFormIDCk(ALFL, 'Specific Location', [LCTN]),

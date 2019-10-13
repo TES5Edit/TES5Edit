@@ -9935,12 +9935,12 @@ begin
     ])),
     wbRArray('Phases',
       wbRStruct('Phase', [
-        wbEmpty(HNAM, 'Marker Phase Start'),
-        wbString(NAM0, 'Name'),
+        wbEmpty(HNAM, 'Marker Phase Start', cpNormal, True),
+        wbString(NAM0, 'Name', 0, cpNormal, True),
         // CTDA before or after next
         //wbEmpty(NEXT, 'Marker'),
         wbRStruct('Start Conditions', [wbCTDAs], []),
-        wbEmpty(NEXT, 'Marker'),
+        wbEmpty(NEXT, 'Marker', cpNormal, True),
         wbRStruct('Completion Conditions', [wbCTDAs], []),
         {>>> BEGIN leftover from earlier CK versions <<<}
         wbRStruct('Unused', [
@@ -9950,7 +9950,7 @@ begin
           wbUnknown(QNAM),
           wbUnknown(SCRO)
         ], [], cpIgnore, false, wbNeverShow),
-        wbEmpty(NEXT, 'Marker'),
+        wbEmpty(NEXT, 'Marker', cpNormal, True),
         wbRStruct('Unused', [
           wbUnknown(SCHR),
           wbUnknown(SCDA),
@@ -9959,16 +9959,16 @@ begin
           wbUnknown(SCRO)
         ], [], cpIgnore, false, wbNeverShow),
         {>>> END leftover from earlier CK versions begin <<<}
-        wbInteger(WNAM, 'Editor Width', itU32),
-        wbEmpty(HNAM, 'Marker Phase End')
+        wbInteger(WNAM, 'Editor Width', itU32, nil, cpNormal, True, false, nil, nil, 200),
+        wbEmpty(HNAM, 'Marker Phase End', cpNormal, True)
       ], [])
     ),
     wbRArray('Actors', wbRStruct('Actor', [
-      wbInteger(ALID, 'Actor ID', itU32),
+      wbInteger(ALID, 'Actor ID', itU32, nil, cpNormal, True),
       wbInteger(LNAM, 'Flags', itU32, wbFlags([
         'No Player Activation',
         'Optional'
-      ])),
+      ]), cpNormal, True),
       wbInteger(DNAM, 'Behaviour Flags', itU32, wbFlags([
         'Death Pause (unsused)',
         'Death End',
@@ -9978,14 +9978,14 @@ begin
         'Dialogue End',
         'OBS_COM Pause',
         'OBS_COM End'
-      ]))
+      ]), cpNormal, True, false, nil, nil, 26)
     ], [])),
     wbRArray('Actions', wbRStruct('Action', [
       wbInteger(ANAM, 'Type', itU16, wbEnum([
         'Dialogue',
         'Package',
         'Timer'
-      ])),
+      ]), cpNormal, True),
       wbString(NAM0, 'Name'),
       wbInteger(ALID, 'Actor ID', itS32),
       wbUnknown(LNAM),
@@ -10029,7 +10029,7 @@ begin
         wbUnknown(SCRO)
       ], [], cpIgnore, false, wbNeverShow),
       {>>> END leftover from earlier CK versions <<<}
-      wbEmpty(ANAM, 'End Marker')
+      wbEmpty(ANAM, 'End Marker', cpNormal, True)
     ], [])),
     {>>> BEGIN leftover from earlier CK versions <<<}
     wbRStruct('Unused', [
@@ -11442,7 +11442,7 @@ begin
         {0x0001}'Allow Cleared',
         {0x0002}'Clear Names When Removed'
       ]))
-    ], cpNormal, False, nil, 1);
+    ], cpNormal, True, nil, 1);
 
   wbRecord(QUST, 'Quest', [
     wbEDID,
@@ -11522,8 +11522,8 @@ begin
 
         // Reference Alias
         wbRStructSK([0], 'Alias', [
-          wbInteger(ALST, 'Reference Alias ID', itU32),
-          wbString(ALID, 'Alias Name'),
+          wbInteger(ALST, 'Reference Alias ID', itU32, nil, cpNormal, True),
+          wbString(ALID, 'Alias Name', 0, cpNormal, True),
           wbQUSTAliasFlags,
           wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
           wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
