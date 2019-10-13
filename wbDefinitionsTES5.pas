@@ -899,17 +899,12 @@ var
   EditInfos: TStringList;
   Stage, Stages: IwbContainerElementRef;
 begin
+  Result := False;
   if not Assigned(aParam1) then
-  begin
-    Result := False;
     Exit;
-  end;
 
   if not Supports(aParam1.LinksTo, IwbMainRecord, MainRecord) then
-  begin
     Result := False;
-    Exit;
-  end;
 
   MainRecord := MainRecord.WinningOverride;
 
@@ -932,8 +927,7 @@ begin
     ctEditType:
     begin
       aResult := 'ComboBox';
-      Result := True;
-      Exit;
+      Exit(True);
     end;
 
     ctEditInfo:

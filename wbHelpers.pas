@@ -21,6 +21,7 @@ interface
 uses
   Classes,
   Windows,
+  System.UITypes,
   SysUtils,
   Graphics,
   Forms,

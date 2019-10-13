@@ -66,7 +66,7 @@ type
     function Count: Integer;
     function IndexToID(Index: Integer): Cardinal;
     function IDExists(ID: Cardinal): Boolean;
-    function AddString(ID: Integer; const S: string): Boolean;
+    function AddString(ID: Cardinal; const S: string): Boolean;
     function Find(ID: Cardinal; out s: string): Boolean;
     procedure WriteToStream(const aStream: TStream);
     procedure ExportToFile(const aFileName: string);
@@ -237,7 +237,6 @@ function TwbLocalizationFile.Find(ID: Cardinal; out s: string): Boolean;
 var
   idx: integer;
 begin
-  Result := False;
   s := '';
   idx := fStrings.IndexOfObject(Pointer(ID));
   Result := idx >= 0;
@@ -280,7 +279,7 @@ function TwbLocalizationFile.ReadLenZString(aStream: TMemoryStream): string;
 var
   Position : Integer;
   p: PByte;
-  i, j: Integer;
+  i: Integer;
   b: TBytes;
 begin
   Position := aStream.Position;
@@ -439,7 +438,7 @@ begin
     end;
 end;
 
-function TwbLocalizationFile.AddString(ID: Integer; const S: string): Boolean;
+function TwbLocalizationFile.AddString(ID: Cardinal; const S: string): Boolean;
 begin
   Result := false;
   if ID < NextID then
@@ -638,7 +637,7 @@ procedure TwbLocalizationHandler.LoadForFile(aFileName: string);
 var
   ls   : TwbLStringType;
   i    : Integer;
-  s, t : string;
+  s    : string;
   res  : TDynResources;
 begin
   if not Assigned(wbContainerHandler) then

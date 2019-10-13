@@ -17,7 +17,7 @@ unit frmModuleSelectForm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, UITypes, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, CheckLst, Menus,
   Vcl.Styles.Utils.SystemMenu, VirtualTrees, VirtualEditTree,
   wbInterface, wbLoadOrder, Vcl.ExtCtrls, System.Actions, Vcl.ActnList;
@@ -464,8 +464,6 @@ begin
 end;
 
 procedure TfrmModuleSelect.FormShow(Sender: TObject);
-var
-  Node: PVirtualNode;
 begin
   if wbIsDarkMode then
     vstModules.Colors.TreeLineColor := Darker(clWindowText)
