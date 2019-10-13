@@ -141,10 +141,10 @@ const
 
 type
   TwbMainRecordEntryHeader = record
-    mrehGeneration : Cardinal;
+    mrehGeneration : Integer;
     mrehHead       : Pointer;
     mrehTail       : Pointer;
-    mrehCount      : Cardinal;
+    mrehCount      : Integer;
     mrehInUse      : Boolean;
 
     procedure BeginUse;
@@ -1232,7 +1232,7 @@ type
     function GetFormVCS2: Cardinal;
     procedure SetFormVCS2(aVCS: Cardinal);
     procedure ChangeFormSignature(aSignature: TwbSignature);
-    procedure ClampFormID(aIndex: Cardinal);
+    procedure ClampFormID(aIndex: Byte);
 
     function ContentEquals(const aMainRecord: IwbMainRecord): Boolean;
 
@@ -2368,11 +2368,10 @@ threadvar
 
 function TwbFile.BuildOrLoadRef(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
 var
-  CachePath     : string;
   CacheFileName : string;
   FileStream    : TBufferedFileStream;
   MemoryStream  : TMemoryStream;
-  i, j          : Integer;
+  i             : Integer;
   StartTime,
   EndTime       : TDateTime;
 begin
@@ -2470,12 +2469,10 @@ var
   Group    : IwbGroupRecord;
   i        : Integer;
   Rec      : IwbMainRecord;
-  Rec2     : IwbMainRecord;
   Cnt      : IwbContainerElementRef;
   Cnt2     : IwbContainerElementRef;
   Flg      : IwbElement;
   s        : string;
-  FoundAny : Boolean;
 begin
   if Length(cntElements) < 1 then
     Exit;
@@ -3323,7 +3320,7 @@ begin
     end else begin
       with TFileStream.Create(flFileNameOnDisk, fmOpenRead or fmShareDenyWrite) do try
         flSize := Size;
-        flView := VirtualAlloc(0, flSize, MEM_COMMIT, PAGE_READWRITE);
+        flView := VirtualAlloc(nil, flSize, MEM_COMMIT, PAGE_READWRITE);
         if not Assigned(flView) then
           RaiseLastOSError;
         Read(flView^, flSize);
@@ -3357,19 +3354,19 @@ function TwbFile.flSetContainsLoadOrderID(const aFormID: TwbFormID): Boolean;
 begin
   var ID := aFormID.ToCardinal;
 
-  var i1 := (ID and $FF000000) shr 24;
+  var i1: Byte := (ID and $FF000000) shr 24;
   if Length(flRecordBits) <= i1 then
     SetLength(flRecordBits, Succ(i1));
 
-  var i2 := (ID and $00FF0000) shr 16;
+  var i2: Byte := (ID and $00FF0000) shr 16;
   if Length(flRecordBits[i1]) <= i2 then
     SetLength(flRecordBits[i1], Succ(i2));
 
-  var i3 := (ID and $0000FF00) shr 8;
+  var i3: Byte := (ID and $0000FF00) shr 8;
   if Length(flRecordBits[i1, i2]) <= i3 then
     SetLength(flRecordBits[i1, i2], Succ(i3));
 
-  var i4 := ID and $000000FF;
+  var i4: Byte := ID and $000000FF;
   Result := i4 in flRecordBits[i1, i2, i3];
   Include(flRecordBits[i1, i2, i3], i4);
 end;
@@ -3816,8 +3813,6 @@ begin
 end;
 
 function TwbFile.GetName: string;
-var
-  s: string;
 begin
   Result := GetFileName;
   if fsIsHardcoded in flStates then
@@ -4110,7 +4105,6 @@ var
   NewONAM: IwbElement;
   Current: IwbMainRecord;
   FormID: TwbFormID;
-  FileID: Cardinal;
   Signature : TwbSignature;
   Master : IwbMainRecord;
   FileFileID: TwbFileID;
@@ -4176,7 +4170,7 @@ begin
               while j <= High(flRecords) do begin
                 Current := flRecords[j];
                 FormID := Current.FixedFormID;
-                FileID := FormID.FileID.FullSlot;
+                var FileID := FormID.FileID.FullSlot;
                 if FileID > i then
                   Break;
                 Assert(FileID = i);
@@ -4644,6 +4638,7 @@ begin
     Rec := nil;
 
     EndPtr := flEndPtr;
+    GroupType := 0;
     while NativeUInt(CurrentPtr) < NativeUInt(flEndPtr) do begin
       if wbGameMode = gmTES3 then begin
         Signature := PwbSignature(CurrentPtr)^;
@@ -6391,7 +6386,6 @@ var
   i       : Integer;
   SelfRef : IwbContainerElementRef;
 begin
-  Result := False;
   SelfRef := Self as IwbContainerElementRef;
   BeginUpdate;
   try
@@ -7481,7 +7475,7 @@ var
 
 procedure TwbMainRecord.AddReferencedBy(const aMainRecord : IwbMainRecord);
 var
-  i, j: Integer;
+  i : Integer;
 begin
   if Assigned(mrMaster) then begin
     IwbMainRecord(mrMasteR).AddReferencedBy(aMainRecord);
@@ -7849,7 +7843,6 @@ end;
 
 function TwbMainRecord.DoGetFixedFormID: TwbFormID;
 var
-  MasterCount: Cardinal;
   _File: IwbFile;
 begin
   if wbGameMode = gmTES3 then
@@ -8051,8 +8044,6 @@ procedure TwbMainRecord.CollapseStorage(aKAR: PwbKeepAliveRoot; aForce: Boolean)
 var
   Stream      : TMemoryStream;
   KAR         : IwbKeepAliveRoot;
-  i           : Integer;
-  cnt         : IwbContainer;
   WasInternal : Boolean;
 begin
   if (esModified in eStates) then begin
@@ -9397,7 +9388,7 @@ begin
   mrStruct.mrsSignature := aSignature;
 end;
 
-procedure TwbMainRecord.ClampFormID(aIndex: Cardinal);
+procedure TwbMainRecord.ClampFormID(aIndex: Byte);
 begin
   if wbGameMode = gmTES3 then
     Exit;
@@ -10717,7 +10708,6 @@ var
         FoundOne := False;
         if csRefsBuild in cntStates then begin
 
-          FoundOne := False;
           for i := Low(mrReferences) to High(mrReferences) do begin
             OldFormID := mrReferences[i];
             NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount);
@@ -11666,7 +11656,6 @@ end;
 procedure TwbMainRecord.SetLoadOrderFormID(aFormID: TwbFormID);
 var
   _File: IwbFileInternal;
-  i : Integer;
   Master: IwbMainRecord;
 begin
   if GetLoadOrderFormID = aFormID then
@@ -11862,10 +11851,7 @@ var
   OldChildGroup     : IwbGroupRecord;
   OldCellOwnerGroup : IwbGroupRecord;
   NewTypeGroup      : IwbGroupRecord;
-  TempGroup         : IwbGroupRecord;
-  TempGroup2        : IwbGroupRecord;
   NewChildGroup     : IwbGroupRecord;
-  NewCellOwnerGroup : IwbGroupRecord;
   CorrectGroupType  : Integer;
   i                 : Integer;
   OldCell           : IwbMainRecord;
@@ -11875,11 +11861,7 @@ var
   SelfRef           : IwbElement;
   Position          : TwbVector;
   GridCell          : TwbGridCell;
-  SubBlock          : TwbGridCell;
-  Block             : TwbGridCell;
   TempGridCell      : TwbGridCell;
-  SubBlockLabel     : Cardinal;
-  BlockLabel        : Cardinal;
 begin
   SelfRef := Self as IwbElement;
 
@@ -12009,8 +11991,8 @@ var
   i: Integer;
   s            : string;
 
-  Block        : Integer;
-  SubBlock     : Integer;
+  Block        : Word;
+  SubBlock     : Word;
 
   SelfRef      : IwbElement;
 begin
@@ -12724,7 +12706,7 @@ end;
 
 procedure TwbSubRecord.CheckCount;
 var
-  Count       : Cardinal;
+  Count       : Int64;
   i           : Integer;
   UpdateCount : Integer;
 begin
@@ -13026,7 +13008,7 @@ begin
 
   if not Assigned(dcDataBasePtr) and Assigned(srValueDef) and not (dcfStorageInvalid in dcFlags) then begin
     Result := srValueDef.DefaultSize[nil, nil, Self];
-    Assert(Result <> Cardinal(High(Integer)));
+    Assert(Result <> High(Integer));
   end else
     Result := inherited GetDataSize;
 end;
@@ -13714,7 +13696,6 @@ var
   GrpType   : Integer;
   GrpLabel  : Cardinal;
   ChildGroup: IwbGroupRecord;
-  Cell      : IwbMainRecord;
 
   SelfRef   : IwbContainerElementRef;
 begin
@@ -14879,13 +14860,9 @@ var
   SelfPtr     : IwbContainerElementRef;
   OldFormID   : TwbFormID;
   NewFormID   : TwbFormID;
-  ContainedIn : IwbContainedIn;
   Changed     : Boolean;
-  i           : Integer;
   IsInternal  : Boolean;
 begin
-  Result := False;
-
   SelfPtr := Self as IwbContainerElementRef;
 
   BeginUpdate;
@@ -15235,8 +15212,10 @@ threadvar
   ElementRefsCount : Integer;
 
 procedure TwbGroupRecord.Sort(aForce: Boolean = False);
+{$IFDEF USE_CODESITE}
 var
   ShouldLog: Boolean;
+{$ENDIF}
 
 type
   PInsertStackEntry = ^TInsertStackEntry;
@@ -15554,12 +15533,16 @@ begin
       try
         Inc(ElementRefsCount);
         try
+          {$IFDEF USE_CODESITE}
           ShouldLog := (ChildrenOf.LoadOrderFormID.ToCardinal = $00039F6C) and (ChildrenOf._File.LoadOrderFileID = TwbFileID.Create(4, 0));
+          {$ENDIF}
 
           if wbFillINOA then
             ProcessDIAL(False);
 
+          {$IFDEF USE_CODESITE}
           ShouldLog := False;
+          {$ENDIF}
 
           ProcessDIAL(True);
         finally
@@ -15773,7 +15756,6 @@ end;
 function TwbElement.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
 var
   TargetValueDef: IwbValueDef;
-  SourceValueDef: IwbValueDef;
 begin
   if not wbIsInternalEdit then
     if (not wbEditAllowed) {or (not GetIsEditable)} then
@@ -17952,11 +17934,6 @@ var
   SelfRef    : IwbContainerElementRef;
   Def        : IwbDef;
   RMD        : IwbRecordMemberDef;
-
-  HasSortKey : IwbHasSortKeyDef;
-  SortMember : Integer;
-  Element    : IwbElement;
-  i          : Integer;
 begin
   if wbReportMode then begin
     Def := GetValueDef;
@@ -18390,7 +18367,7 @@ end;
 
 procedure TwbArray.CheckCount;
 var
-  Count       : Cardinal;
+  Count       : Int64;
   i           : Integer;
   UpdateCount : Integer;
   ArrayDef    : IwbArrayDef;
@@ -18560,7 +18537,7 @@ var
   Element             : IwbElementInternal;
   IntegerDef          : IwbIntegerDef;
   OptionalFromElement : Integer;
-  Size                : Integer;
+  Size                : Cardinal;
   over                : Boolean;
 begin
   StructDef := aValueDef as IwbStructDef;
@@ -18581,7 +18558,7 @@ begin
       over := (NativeUInt(aBasePtr) >= NativeUInt(aEndPtr));
       if not over then begin
         Size := ValueDef.Size[aBasePtr, aEndPtr, aContainer];
-        over := (Size<High(Integer)) and  //Intercept multiple calls to Size[ during initialisation
+        over := (Size<Cardinal(High(Integer))) and  //Intercept multiple calls to Size[ during initialisation
                 ((NativeUInt(aBasePtr) + Size) > NativeUInt(aEndPtr));
       end;
       if over then begin
@@ -18791,8 +18768,6 @@ var
   SelfRef    : IwbContainerElementRef;
   ResolvedDef : IwbValueDef;
 begin
-  Result := False;
-
   SelfRef := Self as IwbContainerElementRef;
 
   BeginUpdate;
@@ -19024,8 +18999,6 @@ var
   SelfRef    : IwbContainerElementRef;
   ResolvedDef : IwbValueDef;
 begin
-  Result := False;
-
   SelfRef := Self as IwbContainerElementRef;
 
   BeginUpdate;
@@ -19811,17 +19784,18 @@ end;
 function TwbDataContainer.IsValidOffset(aBasePtr, aEndPtr: Pointer; anOffset: Integer): Boolean;
 begin
   Result := False;
-  if NativeUInt(aBasePtr) >= NativeUInt(dcBasePtr) then
-    if NativeUInt(aBasePtr) < NativeUInt(dcEndPtr) then
-      if NativeUInt(aEndPtr) > NativeUInt(dcBasePtr) then
-        if NativeUInt(aEndPtr) <= NativeUInt(dcEndPtr) then
-          if NativeUInt(aBasePtr) + anOffset < NativeUInt(dcEndPtr) then
-            Result := True;
+  if anOffset >= 0 then
+    if NativeUInt(aBasePtr) >= NativeUInt(dcBasePtr) then
+      if NativeUInt(aBasePtr) < NativeUInt(dcEndPtr) then
+        if NativeUInt(aEndPtr) > NativeUInt(dcBasePtr) then
+          if NativeUInt(aEndPtr) <= NativeUInt(dcEndPtr) then
+            if NativeUInt(aBasePtr) + NativeUInt(anOffset) < NativeUInt(dcEndPtr) then
+              Result := True;
 end;
 
 function TwbDataContainer.IsLocalOffset(anOffset: Integer): Boolean;
 begin
-  if NativeUInt(dcDataBasePtr) + anOffset < NativeUInt(dcDataEndPtr) then
+  if (anOffset >= 0) and (NativeUInt(dcDataBasePtr) + NativeUInt(anOffset) < NativeUInt(dcDataEndPtr)) then
     Result := True
   else
     Result := False;
@@ -21357,7 +21331,6 @@ var
 function wbFormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
 var
   i: Cardinal;
-  s: string;
 begin
   Assert(wbGameMode = gmTES3);
   aIdentity := aIdentity.ToLowerInvariant;

@@ -38,6 +38,7 @@ uses
   wbHelpers,
   wbLoadOrder,
   wbHardcoded,
+  wbDefinitionsCommon,
   wbDefinitionsFNV,
   wbDefinitionsFNVSaves,
   wbDefinitionsFO3,
@@ -805,7 +806,7 @@ const
   sSureAIRegKey           = '\Software\SureAI\';
 
 var
-  s, regPath, regKey, client: string;
+  regPath, regKey, client: string;
   ProgramPath : String;
   DataPath    : String;
 begin
@@ -1015,6 +1016,8 @@ begin
       tms := [tmDump, tmExport];
 
       wbLanguage := 'English';
+
+      DefineCommon;
 
       wbGameExeName := '';
       case wbGameMode of

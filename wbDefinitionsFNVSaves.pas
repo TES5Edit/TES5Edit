@@ -31,6 +31,7 @@ uses
   wbSaveInterface,
   wbImplementation,
   wbLocalization,
+  wbDefinitionsCommon,
   wbDefinitionsFNV;
 
 var
@@ -310,11 +311,11 @@ var
   Container : IwbContainer;
 begin
   Result := MaxInt;
-  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aBasePtr)<=Cardinal(aEndPtr)) then begin
+  if Assigned(aBasePtr) and Assigned(aEndPtr) and (NativeUInt(aBasePtr)<=NativeUInt(aEndPtr)) then begin
     Assert(anOffset>0); // Offset needs to be a positive number
     case aSize of
       4 : Result := (PCardinal(Cardinal(aBasePtr)-anOffset)^);
-      3 : Result := wbReadInteger24(PCardinal(Cardinal(aBasePtr)-anOffset));
+      3 : Result := wbReadInteger24(PCardinal(NativeUInt(aBasePtr)-anOffset));
       2 : Result := (PWord(Cardinal(aBasePtr)-anOffset)^);
     else
       Result := (PByte(Cardinal(aBasePtr)-anOffset)^);

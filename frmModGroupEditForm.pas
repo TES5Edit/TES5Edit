@@ -91,8 +91,6 @@ begin
 end;
 
 procedure TfrmModGroupEdit.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-var
-  Node: PVirtualNode;
 begin
   if Key = VK_RETURN then begin
     if edName.Focused then begin

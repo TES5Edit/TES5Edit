@@ -2499,7 +2499,6 @@ var
   LeveledListEntry     : IwbContainerElementRef;
   CopiedElement        : IwbElement;
   Container            : IwbContainer;
-  IsESL                : Boolean;
   PrevOverwriteResult  : TModalResult;
   PrevDeleteResult     : TModalResult;
   lResult              : TDynElements;
@@ -3986,9 +3985,6 @@ end;
 
 procedure TfrmMain.mniNavDeleteModGroupsClick(Sender: TObject);
 var
-  pModGroup    : PwbModGroup;
-  lModGroup    : TwbModGroup;
-  ModGroupFile : TMemIniFile;
   i            : Integer;
 begin
   wbReloadModGroups;
@@ -4028,7 +4024,6 @@ procedure TfrmMain.mniNavEditModGroupClick(Sender: TObject);
 var
   pModGroup    : PwbModGroup;
   lModGroup    : TwbModGroup;
-  ModGroupFile : TMemIniFile;
   sl           : TStringList;
 begin
   wbReloadModGroups;
@@ -4251,7 +4246,7 @@ end;
 procedure TfrmMain.NavCleanupCollapsedNodeChildren;
 var
   Node     : PVirtualNode;
-  NodeData : PNavNodeData;
+  //NodeData : PNavNodeData;
 begin
   if not (toAutoFreeOnCollapse in vstNav.TreeOptions.AutoOptions) then
     Exit;
@@ -4260,7 +4255,7 @@ begin
     Node := vstNav.GetFirstInitialized;
     while Assigned(Node) do begin
       if (Node.ChildCount > 0) and not vstNav.Expanded[Node] then begin
-        NodeData := vstNav.GetNodeData(Node);
+        //NodeData := vstNav.GetNodeData(Node);
         vstNav.DeleteChildren(Node);
       end;
       Node := vstNav.GetNextInitialized(Node);
@@ -4306,7 +4301,6 @@ var
   Files : TStringDynArray
   ;
   i     : Integer;
-  Size  : Int64;
 begin
   if not wbBuildRefs then
     Exit;
@@ -4323,7 +4317,6 @@ begin
   if Length(TDirectory.GetFiles(wbCachePath, IntToHex64(wbCRC32App, 8) + '_*' + wbRefCacheExt)) > 0 then
     Exit;
 
-  Size := 0;
   Files := TDirectory.GetFiles(wbCachePath, '*' + wbRefCacheExt);
 
   i := Length(Files);
@@ -5214,6 +5207,8 @@ begin
   wbCollapseBenignArray := Settings.ReadBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
   wbCollapseRGBA := Settings.ReadBool('Options', 'CollapseRGBA', wbCollapseRGBA);
   wbCollapseVec3 := Settings.ReadBool('Options', 'CollapseVec3', wbCollapseVec3);
+  wbCollapseHeadParts := Settings.ReadBool('Options', 'CollapseHeadParts', wbCollapseHeadParts);
+  wbCollapseBodyParts := Settings.ReadBool('Options', 'CollapseBodyParts', wbCollapseBodyParts);
   wbShrinkButtons := Settings.ReadBool('Options', 'ShrinkButtons', wbShrinkButtons);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
   wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
@@ -5784,7 +5779,6 @@ end;
 
 function TfrmMain.FindNodeForElement(const aElement: IwbElement): PVirtualNode;
 var
-  Container                   : IwbContainer;
   Node                        : PVirtualNode;
   NodeData                    : PNavNodeData;
 
@@ -5849,7 +5843,6 @@ function TfrmMain.FindNodeOrAncestorForElement(const aElement: IwbElement): PVir
 var
   Container                   : IwbContainer;
   Node                        : PVirtualNode;
-  NodeData                    : PNavNodeData;
 begin
   if not Assigned(aElement) then
     Exit(nil);
@@ -6403,8 +6396,6 @@ begin
 end;
 
 procedure TfrmMain.FormShow(Sender: TObject);
-var
-  i: Integer;
 begin
   tmrStartup.Enabled := True;
 end;
@@ -6454,7 +6445,6 @@ end;
 function TfrmMain.GetTargetElement(Target: TBaseVirtualTree;
   var TargetNode: PVirtualNode; TargetColumn: Integer; out TargetIndex: Integer; out TargetElement: IwbElement): Boolean;
 var
-  SourceTree                  : TVirtualEditTree;
   NodeDatas                   : PViewNodeDatas;
   Container                   : IwbContainerElementRef;
 begin
@@ -7123,7 +7113,6 @@ var
   Node                        : PVirtualNode;
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
-  i                           : Integer;
 begin
   Node := vstNav.GetLastInitialized;
   while Assigned(Node) do begin
@@ -7697,7 +7686,6 @@ procedure TfrmMain.mniNavAddMastersClick(Sender: TObject);
 var
   NodeData                    : PNavNodeData;
   _File                       : IwbFile;
-  i, j                        : Integer;
   sl                          : TStringList;
   s                           : string;
 begin
@@ -7766,11 +7754,9 @@ var
   StartNode, Node, NextNode   : PVirtualNode;
   NodeData                    : PNavNodeData;
   Count                       : Cardinal;
-  StartTick                   : UInt64;
   jvi                         : TJvInterpreterProgram;
   i, p                        : Integer;
   s                           : string;
-  bCheckUnsaved               : Boolean;
   bShowMessages               : Boolean;
   regexp                      : TPerlRegEx;
   PrevMaxMessageInterval      : UInt64;
@@ -7956,7 +7942,6 @@ end;
 procedure TfrmMain.ApplyViewFilter;
 var
   Node         : PVirtualNode;
-  ParentNode   : PVirtualNode;
   Unfiltered   : array of PVirtualNode;
   i            : Integer;
 begin
@@ -8428,8 +8413,6 @@ var
   i                           : Integer;
   lActiveRecord               : IwbMainRecord;
   Container                   : IwbContainerElementRef;
-  NextContainer               : IwbContainerElementRef;
-  NodeData                    : PNavNodeData;
   Node                        : PVirtualNode;
   DialogResult                : Integer;
 begin
@@ -8606,7 +8589,6 @@ end;
 procedure TfrmMain.mniNavAddClick(Sender: TObject);
 var
   FocusedNode                 : PVirtualNode;
-  Node                        : PVirtualNode;
   NodeData                    : PNavNodeData;
   Container                   : IwbContainerElementRef;
   Element                     : IwbElement;
@@ -13358,6 +13340,8 @@ begin
     Settings.WriteBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
     Settings.WriteBool('Options', 'CollapseRGBA', wbCollapseRGBA);
     Settings.WriteBool('Options', 'CollapseVec3', wbCollapseVec3);
+    Settings.WriteBool('Options', 'CollapseHeadParts', wbCollapseHeadParts);
+    Settings.WriteBool('Options', 'CollapseBodyParts', wbCollapseBodyParts);
     Settings.WriteBool('Options', 'ShrinkButtons', wbShrinkButtons);
     Settings.WriteInteger('Options', 'ColumnWidth', ColumnWidth);
     Settings.WriteInteger('Options', 'RowHeight', RowHeight);

@@ -2335,6 +2335,7 @@ var
   Len  : Integer;
   i, j : Integer;
 begin
+  Len := 0;
   case fType of
     baTES3:
       for i := Low(fFilesTES3) to High(fFilesTES3) do
