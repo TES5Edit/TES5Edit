@@ -1281,20 +1281,18 @@ begin
     .IncludeFlag(dfAllowAnyMember);
 end;
 
-function wbTexturedModel(aSubRecordName: string; aSignatures: TwbSignatures; aTextureSubRecords: array of IwbSubRecordDef): IwbRecordMemberDef;
+function wbTexturedModel(aSubRecordName: string; const aSignatures: TwbSignatures; const aTextureSubRecords: array of IwbSubRecordDef): IwbRecordMemberDef;
+var
+  Members: array of IwbRecordMemberDef;
 begin
+  SetLength(Members, Length(aTextureSubRecords) + 2);
+  Members[0] := wbString(aSignatures[0], 'Model FileName', 0, cpNormal, True);
+  Members[1] := wbByteArray(aSignatures[1], 'Texture Files Hashes', 0, cpIgnore, False, False, wbNeverShow);
+  for var i := Low(aTextureSubRecords) to High(aTextureSubRecords) do
+    Members[2 + i] := aTextureSubRecords[i];
+
   Result :=
-    wbRStruct(aSubRecordName, [
-      wbString(aSignatures[0], 'Model FileName', 0, cpNormal, True),
-      wbByteArray(aSignatures[1], 'Texture Files Hashes', 0, cpIgnore, False, False, wbNeverShow),
-      aTextureSubRecords[0],
-      aTextureSubRecords[1],
-      aTextureSubRecords[2],
-      aTextureSubRecords[3],
-      aTextureSubRecords[4],
-      aTextureSubRecords[5],
-      aTextureSubRecords[6]
-    ], [], cpNormal, False, nil, True)
+    wbRStruct(aSubRecordName, Members, [], cpNormal, False, nil, True)
     .SetSummaryKey([0])
     .IncludeFlag(dfSummaryMembersNoName)
     .IncludeFlag(dfSummaryNoSortKey)

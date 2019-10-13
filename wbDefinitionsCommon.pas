@@ -442,7 +442,7 @@ begin
   wbFaction :=
     wbStructSK(SNAM, [0], 'Faction', [
       wbFormIDCk('Faction', [FACT]),
-      wbInteger('Rank', itU8),
+      wbInteger('Rank', itS8),
       IfThen(wbGameMode in [gmFO4, gmFO76], nil, wbByteArray('Unused', 3))
     ])
     .SetSummaryKeyOnValue([0, 1])

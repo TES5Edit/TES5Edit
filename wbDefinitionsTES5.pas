@@ -891,7 +891,7 @@ begin
   Result := AsCardinal;
 end;
 
-function wbGetQuestStageAsStr(aInt: Int64; aParam1: IwbElement; aType: TwbCallbackType; out aResult: string): Boolean;
+function wbGetQuestStageAsStr(aInt: Int64; aParam1: IwbElement; aType: TwbCallbackType; var aResult: string): Boolean;
 var
   MainRecord: IwbMainRecord;
   EditInfos: TStringList;
@@ -902,7 +902,7 @@ begin
     Exit;
 
   if not Supports(aParam1.LinksTo, IwbMainRecord, MainRecord) then
-    Result := False;
+    Exit;
 
   MainRecord := MainRecord.WinningOverride;
 
@@ -11985,7 +11985,7 @@ begin
   ], []);
 
   var wbHeadParts :=
-    wbRArrayS('Parts', wbHeadPart, cpNormal, True);
+    wbRArrayS('Head Parts', wbHeadPart, cpNormal, True);
 
   var wbBodyParts :=
     wbRArrayS('Parts',
