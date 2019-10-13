@@ -174,7 +174,6 @@ const
   NIFT : TwbSignature = 'NIFT';
   NIFZ : TwbSignature = 'NIFZ';
   NPC_ : TwbSignature = 'NPC_';
-  OFST : TwbSignature = 'OFST';
   OBME : TwbSignature = 'OBME';
   ONAM : TwbSignature = 'ONAM';
   PACK : TwbSignature = 'PACK';
@@ -1802,44 +1801,6 @@ begin
   _File := aElement._File;
   if Assigned(_File) and SameText(_File.FileName, 'Oblivion.esm') then
     Result := True;
-end;
-
-function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-var
-  Container : IwbDataContainer;
-  Element   : IwbElement;
-  fResult   : Extended;
-begin
-  Result := 0;
-
-  if not Supports(aElement.Container, IwbDataContainer, Container) then
-    Exit;
-
-  if not (Container.Name = 'OFST - Offset Data') then
-    Exit;
-
-  if not Supports(Container.Container, IwbDataContainer, Container) then
-    Exit;
-
-  Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
-  if not Assigned(Element) then
-    Exit;
-
-  fResult :=  Element.NativeValue;
-  if fResult >= MaxInt then
-    Result := 0
-  else
-    Result := Trunc(fResult);
-
-  Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
-  if not Assigned(Element) then
-    Exit;
-
-  fResult :=  Element.NativeValue;
-  if fResult >= MaxInt then
-    Result := 1
-  else
-    Result := Trunc(fResult) - Result + 1;
 end;
 
 procedure DefineTES4;
@@ -4688,7 +4649,7 @@ begin
       //wbArray(NAM9, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
       wbWorldspaceOBND,
       wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
-      wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0)
+      wbOFST
     ], False, nil, cpNormal, False, wbRemoveOFST);
 
   wbRecord(WTHR, 'Weather', [

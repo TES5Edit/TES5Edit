@@ -350,7 +350,6 @@ const
   NVTR : TwbSignature = 'NVTR';
   NVVX : TwbSignature = 'NVVX';
   OBND : TwbSignature = 'OBND';
-  OFST : TwbSignature = 'OFST';
   ONAM : TwbSignature = 'ONAM';
   PACK : TwbSignature = 'PACK';
   PBEA : TwbSignature = 'PBEA';
@@ -4181,45 +4180,6 @@ begin
     wbEndInternalEdit;
   end;
 end;
-
-function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-var
-  Container : IwbDataContainer;
-  Element   : IwbElement;
-  fResult   : Extended;
-begin
-  Result := 0;
-
-  if not Supports(aElement.Container, IwbDataContainer, Container) then
-    Exit;
-
-  if not (Container.Name = 'OFST - Offset Data') then
-    Exit;
-
-  if not Supports(Container.Container, IwbDataContainer, Container) then
-    Exit;
-
-  Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
-  if not Assigned(Element) then
-    Exit;
-
-  fResult :=  Element.NativeValue;
-  if fResult >= MaxInt then
-    Result := 0
-  else
-    Result := Trunc(fResult);
-
-  Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
-  if not Assigned(Element) then
-    Exit;
-
-  fResult :=  Element.NativeValue;
-  if fResult >= MaxInt then
-    Result := 1
-  else
-    Result := Trunc(fResult) - Result + 1;
-end;
-
 
 procedure DefineFNVa;
 begin
@@ -10774,7 +10734,7 @@ begin
         'Grass',
         'Water'
       ]),
-      wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0) // cannot be saved by GECK
+      wbOFST
     ], False, nil, cpNormal, False, wbRemoveOFST);
 
   wbRecord(WTHR, 'Weather', [

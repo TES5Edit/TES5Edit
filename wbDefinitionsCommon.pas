@@ -8,8 +8,62 @@ uses
   wbInterface;
 
 const
-  SCDA : TwbSignature = 'SCDA';
-  SCTX : TwbSignature = 'SCTX';
+  ANAM: TwbSignature = 'ANAM';
+  ATXT: TwbSignature = 'ATXT';
+  BTXT: TwbSignature = 'BTXT';
+  CNAM: TwbSignature = 'CNAM';
+  CS2D: TwbSignature = 'CS2D';
+  CS2K: TwbSignature = 'CS2K';
+  CSDC: TwbSignature = 'CSDC';
+  CSDI: TwbSignature = 'CSDI';
+  CTDA: TwbSignature = 'CTDA';
+  DATA: TwbSignature = 'DATA';
+  FACT: TwbSignature = 'FACT';
+  GLOB: TwbSignature = 'GLOB';
+  HDPT: TwbSignature = 'HDPT';
+  HEAD: TwbSignature = 'HEAD';
+  HEDR: TwbSignature = 'HEDR';
+  ICON: TwbSignature = 'ICON';
+  INDX: TwbSignature = 'INDX';
+  KYWD: TwbSignature = 'KYWD';
+  LTEX: TwbSignature = 'LTEX';
+  MDOB: TwbSignature = 'MDOB';
+  MICO: TwbSignature = 'MICO';
+  MODL: TwbSignature = 'MODL';
+  MODT: TwbSignature = 'MODT';
+  NAM0: TwbSignature = 'NAM0';
+  NAM9: TwbSignature = 'NAM9';
+  NULL: TwbSignature = 'NULL';
+  OBND: TwbSignature = 'OBND';
+  OFST: TwbSignature = 'OFST';
+  PFPC: TwbSignature = 'PFPC';
+  RACE: TwbSignature = 'RACE';
+  RDSA: TwbSignature = 'RDSA';
+  RDSD: TwbSignature = 'RDSD';
+  SCDA: TwbSignature = 'SCDA';
+  SCTX: TwbSignature = 'SCTX';
+  SNAM: TwbSignature = 'SNAM';
+  SNDD: TwbSignature = 'SNDD';
+  SNDR: TwbSignature = 'SNDR';
+  SOUN: TwbSignature = 'SOUN';
+  TNAM: TwbSignature = 'TNAM';
+  TXST: TwbSignature = 'TXST';
+  VCLR: TwbSignature = 'VCLR';
+  VHGT: TwbSignature = 'VHGT';
+  VNML: TwbSignature = 'VNML';
+  VTXT: TwbSignature = 'VTXT';
+  XACT: TwbSignature = 'XACT';
+  XCLC: TwbSignature = 'XCLC';
+  XGLB: TwbSignature = 'XGLB';
+  XLOD: TwbSignature = 'XLOD';
+  XNAM: TwbSignature = 'XNAM';
+  XRNK: TwbSignature = 'XRNK';
+  _11_IAD: TwbSignature = #$11'IAD';
+  _12_IAD: TwbSignature = #$12'IAD';
+  _13_IAD: TwbSignature = #$13'IAD';
+  _51_IAD: TwbSignature = #$51'IAD';
+  _52_IAD: TwbSignature = #$52'IAD';
+  _53_IAD: TwbSignature = #$53'IAD';
 
 var
   wbActionFlag: IwbSubRecordDef;
@@ -38,6 +92,7 @@ var
   wbVertexHeightMap: IwbRecordMemberDef;
   wbWorldspaceOBND: IwbRecordMemberDef;
   wbXLOD: IwbSubRecordDef;
+  wbOFST: IwbSubRecordDef;
 
 procedure DefineCommon;
 
@@ -202,61 +257,6 @@ uses
   SysUtils,
   wbHelpers;
 
-const
-  _11_IAD: TwbSignature = #$11'IAD';
-  _51_IAD: TwbSignature = #$51'IAD';
-  _12_IAD: TwbSignature = #$12'IAD';
-  _52_IAD: TwbSignature = #$52'IAD';
-  _13_IAD: TwbSignature = #$13'IAD';
-  _53_IAD: TwbSignature = #$53'IAD';
-  NULL: TwbSignature = 'NULL';
-  ANAM: TwbSignature = 'ANAM';
-  ATXT: TwbSignature = 'ATXT';
-  BTXT: TwbSignature = 'BTXT';
-  CNAM: TwbSignature = 'CNAM';
-  CS2D: TwbSignature = 'CS2D';
-  CS2K: TwbSignature = 'CS2K';
-  CSDC: TwbSignature = 'CSDC';
-  CSDI: TwbSignature = 'CSDI';
-  CTDA: TwbSignature = 'CTDA';
-  DATA: TwbSignature = 'DATA';
-  FACT: TwbSignature = 'FACT';
-  GLOB: TwbSignature = 'GLOB';
-  HDPT: TwbSignature = 'HDPT';
-  HEAD: TwbSignature = 'HEAD';
-  HEDR: TwbSignature = 'HEDR';
-  ICON: TwbSignature = 'ICON';
-  INDX: TwbSignature = 'INDX';
-  KYWD: TwbSignature = 'KYWD';
-  LTEX: TwbSignature = 'LTEX';
-  MDOB: TwbSignature = 'MDOB';
-  MICO: TwbSignature = 'MICO';
-  MODL: TwbSignature = 'MODL';
-  MODT: TwbSignature = 'MODT';
-  NAM0: TwbSignature = 'NAM0';
-  NAM9: TwbSignature = 'NAM9';
-  OBND: TwbSignature = 'OBND';
-  PFPC: TwbSignature = 'PFPC';
-  RACE: TwbSignature = 'RACE';
-  RDSA: TwbSignature = 'RDSA';
-  RDSD: TwbSignature = 'RDSD';
-  SNAM: TwbSignature = 'SNAM';
-  SNDD: TwbSignature = 'SNDD';
-  SNDR: TwbSignature = 'SNDR';
-  SOUN: TwbSignature = 'SOUN';
-  TNAM: TwbSignature = 'TNAM';
-  TXST: TwbSignature = 'TXST';
-  VCLR: TwbSignature = 'VCLR';
-  VHGT: TwbSignature = 'VHGT';
-  VNML: TwbSignature = 'VNML';
-  VTXT: TwbSignature = 'VTXT';
-  XACT: TwbSignature = 'XACT';
-  XCLC: TwbSignature = 'XCLC';
-  XGLB: TwbSignature = 'XGLB';
-  XLOD: TwbSignature = 'XLOD';
-  XNAM: TwbSignature = 'XNAM';
-  XRNK: TwbSignature = 'XRNK';
-
 function IfThen(aBoolean: Boolean; const aTrue: TwbSignature; const aFalse: TwbSignature): TwbSignature; overload;
 begin
   Result := aFalse;
@@ -276,6 +276,44 @@ begin
   Result := aFalse;
   if aBoolean then
     Result := aTrue;
+end;
+
+function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+var
+  Container : IwbDataContainer;
+  Element   : IwbElement;
+  fResult   : Extended;
+begin
+  Result := 0;
+
+  if not Supports(aElement.Container, IwbDataContainer, Container) then
+    Exit;
+
+  if not (Container.Name = 'OFST - Offset Data') then
+    Exit;
+
+  if not Supports(Container.Container, IwbDataContainer, Container) then
+    Exit;
+
+  Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
+  if not Assigned(Element) then
+    Exit;
+
+  fResult :=  Element.NativeValue;
+  if (fResult >= MaxInt) or (fResult <= 0) then
+    Result := 0
+  else
+    Result := Trunc(fResult);
+
+  Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
+  if not Assigned(Element) then
+    Exit;
+
+  fResult :=  Element.NativeValue;
+  if (fResult >= (MaxInt - Result + 1)) or (fResult <= 1) then
+    Result := 1
+  else
+    Result := Trunc(fResult) - Result + 1;
 end;
 
 procedure DefineCommon;
@@ -607,6 +645,11 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
 
   wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
+
+  if wbSimpleRecords then
+    wbOFST := wbByteArray(OFST, 'Offset Data')
+  else
+    wbOFST := wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0);
 end;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;

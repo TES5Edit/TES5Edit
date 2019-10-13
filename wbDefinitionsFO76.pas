@@ -656,7 +656,6 @@ const
   OBTF : TwbSignature = 'OBTF'; { New to Fallout 4 }
   OBTS : TwbSignature = 'OBTS'; { New to Fallout 4 }
   OCOR : TwbSignature = 'OCOR'; { New to Skyrim }
-  OFST : TwbSignature = 'OFST';
   OMOD : TwbSignature = 'OMOD'; { New to Fallout 4 }
   ONAM : TwbSignature = 'ONAM';
   OPDS : TwbSignature = 'OPDS'; { New To Fallout 76 }
@@ -1232,7 +1231,6 @@ var
   wbMNAMNAVM: IwbSubRecordDef;
   wbMaxHeightDataCELL: IwbSubRecordDef;
   wbMaxHeightDataWRLD: IwbSubRecordDef;
-  wbOFST: IwbSubRecordDef;
   wbENLM: IwbSubRecordDef;
   wbENLT: IwbSubRecordDef;
   wbENLS: IwbSubRecordDef;
@@ -5998,44 +5996,6 @@ begin
   end;
 end;
 
-function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-var
-  Container : IwbDataContainer;
-  Element   : IwbElement;
-  fResult   : Extended;
-begin
-  Result := 0;
-
-  if not Supports(aElement.Container, IwbDataContainer, Container) then
-    Exit;
-
-  if not (Container.Name = 'OFST - Offset Data') then
-    Exit;
-
-  if not Supports(Container.Container, IwbDataContainer, Container) then
-    Exit;
-
-  Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
-  if not Assigned(Element) then
-    Exit;
-
-  fResult :=  Element.NativeValue;
-  if (fResult >= MaxInt) or (fResult <= 0) then
-    Result := 0
-  else
-    Result := Trunc(fResult);
-
-  Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
-  if not Assigned(Element) then
-    Exit;
-
-  fResult :=  Element.NativeValue;
-  if (fResult >= (MaxInt - Result + 1)) or (fResult <= 1) then
-    Result := 1
-  else
-    Result := Trunc(fResult) - Result + 1;
-end;
-
 procedure wbOMODpropertyAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   wbCounterAfterSet('Property Count', aElement);
@@ -8181,11 +8141,6 @@ begin
       ]))}
     ]);
   end;
-
-  if wbSimpleRecords then
-    wbOFST := wbByteArray(OFST, 'Offset Data')
-  else
-    wbOFST := wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0);
 
   wbXOWN := wbStruct(XOWN, 'Owner', [
     wbFormIDCkNoReach('Owner', [FACT, ACHR, NPC_]),

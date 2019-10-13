@@ -319,7 +319,6 @@ const
   NVTR : TwbSignature = 'NVTR';
   NVVX : TwbSignature = 'NVVX';
   OBND : TwbSignature = 'OBND';
-  OFST : TwbSignature = 'OFST';
   ONAM : TwbSignature = 'ONAM';
   PACK : TwbSignature = 'PACK';
   PBEA : TwbSignature = 'PBEA';
@@ -3973,41 +3972,6 @@ begin
   finally
     wbEndInternalEdit;
   end;
-end;
-
-function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-var
-  Container : IwbDataContainer;
-  Element   : IwbElement;
-  fResult   : Extended;
-  i         : Int64;
-begin
-  i := 0;
-
-  if Supports(aElement.Container, IwbDataContainer, Container) and (Container.Name = 'OFST - Offset Data') and
-     Supports(Container.Container, IwbDataContainer, Container) then begin
-    Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
-    if Assigned(Element) then begin
-      fResult :=  Element.NativeValue;
-      if (fResult >= High(Integer)) or (fResult < Low(Integer))  then
-        i := 0
-      else
-        i := Trunc(fResult);
-      Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
-      if Assigned(Element) then begin
-        fResult :=  Element.NativeValue;
-        if (fResult >= High(Integer)) or (fResult < Low(Integer))  then
-          i := 0
-        else
-          i := Trunc(fResult) - Result + 1;
-      end;
-    end;
-  end;
-
-  if (i < 1) or (i > 100000) then
-    i := 1;
-
-  Result := i;
 end;
 
 procedure DefineFO3a;
@@ -10105,7 +10069,7 @@ begin
         'Grass',
         'Water'
       ]),
-      wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0)
+      wbOFST
     ], False, nil, cpNormal, False, wbRemoveOFST);
 
   wbRecord(WTHR, 'Weather', [
