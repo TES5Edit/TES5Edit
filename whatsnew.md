@@ -20,6 +20,7 @@
 * [FO3/FNV] Flag 0 in BOOK means "Scroll"
 * [FO3/FNV] make "RuntimeScriptProfiler xSE Extension Log" available
 * Report error records in PrepareSave with full path instead of just their name
+* Show tooltip hint for View column headers
 
 ## Shortened Parameters
 
