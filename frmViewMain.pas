@@ -1698,6 +1698,7 @@ end;
 function TfrmMain.AddNewFileName(aFileName: string; aTemplate: PwbModuleInfo): IwbFile;
 var
   LoadOrder : Integer;
+  i: Integer;
 begin
   Result := nil;
 
@@ -1707,8 +1708,12 @@ begin
   end;
 
   LoadOrder := 0;
-  if Length(Files) > 0 then
-    LoadOrder := Succ(Files[High(Files)].LoadOrder);
+  if Length(Files) > 0 then begin
+    for i := Low(Files) to High(Files) do
+      if Files[i].LoadOrder > LoadOrder then
+        LoadOrder := Files[i].LoadOrder;
+    LoadOrder := Succ(LoadOrder);
+  end;
 
   Result := wbNewFile(wbDataPath + aFileName, LoadOrder, aTemplate);
   SetLength(Files, Succ(Length(Files)));

@@ -10,6 +10,7 @@
 * (reported on Discord) - crash in NAVM when triangle edge is flagged as edge link, but the number stored in the edge field can't look up a valid external NAVM via the Edge Links table
 * (reported on Discord) - VeryQuickShowConflicts may very rarely not show certain conflicts
 * (reported on Discord) - Hardcoded (FormID < 800) records are not handled correctly in modules that don't have the game master as a master
+* (reported on Discord) - adding a new module after having performed a "Compare To" puts the new module at the wrong load order
 * (found by developer) - Quick [Auto] Clean allows selecting the game master (which makes no sense)
 * (found by developer) - [FO4] incorrect subrecord order in CELL
 * (found by developer) - injected records are not showing up in drop down of FormID in-place editor
