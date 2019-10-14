@@ -15078,10 +15078,13 @@ begin
           ActiveRecords[0].Container := ActiveContainer as IwbContainerElementRef;
         end;
 
+        vstView.ShowHint := True;
+        vstView.Header.Options := vstView.Header.Options + [hoShowHint];
         with vstView.Header.Columns do begin
           BeginUpdate;
           try
             Clear;
+
             with Add do begin
               Text := '';
               Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
@@ -15091,6 +15094,7 @@ begin
             for I := Low(ActiveRecords) to High(ActiveRecords) do
               with Add do begin
                 Text := ActiveRecords[i].Element._File.Name;
+                Hint := ActiveRecords[i].Element._File.Name;
                 Style := vsOwnerDraw;
                 Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
                 MinWidth := Width div 2;
@@ -15189,6 +15193,8 @@ begin
           Container := aMainRecords[i] as IwbContainerElementRef;
         end;
 
+      vstView.ShowHint := True;
+      vstView.Header.Options := vstView.Header.Options + [hoShowHint];
       with vstView.Header.Columns do begin
         BeginUpdate;
         try
@@ -15202,6 +15208,7 @@ begin
           for I := Low(ActiveRecords) to High(ActiveRecords) do
             with Add do begin
               Text := (ActiveRecords[i].Element as IwbMainRecord).EditorID;
+              Hint := (ActiveRecords[i].Element as IwbMainRecord).EditorID;
               Style := vsOwnerDraw;
               Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
               MinWidth := Width div 2;
@@ -15460,6 +15467,8 @@ begin
           ActiveRecords[0].Container := ActiveRecord as IwbContainerElementRef;
         end;
 
+        vstView.ShowHint := True;
+        vstView.Header.Options := vstView.Header.Options + [hoShowHint];
         with vstView.Header.Columns do begin
           BeginUpdate;
           try
@@ -15473,6 +15482,7 @@ begin
             for I := Low(ActiveRecords) to High(ActiveRecords) do
               with Add do begin
                 Text := ActiveRecords[i].Element._File.Name;
+                Hint := ActiveRecords[i].Element._File.Name;
                 Style := vsOwnerDraw;
                 Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
                 MinWidth := Width div 2;
