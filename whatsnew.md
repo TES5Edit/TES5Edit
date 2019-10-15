@@ -6,6 +6,7 @@
 * #674 - Invalid ITMs may be reported in rare cases when form versions differ
 * #678 - AccessViolation while generating conflict status in rare cases
 * #691 - [FO4/FO76] Copying CELL data into a file can cause landscape collision to be re-enabled when it shouldn't
+* #720 - wrong order for FNAM and LNAM in MUST 
 * #721 - The MTNM field in RACE record is written with unneccesary terminating 0 byte
 * #729 - LODGen can fail with references that have NULL or unresolvable Base FormIDs
 * (reported on Discord) - cleaning Dragonborn.esm can make Boars non-aggressive
