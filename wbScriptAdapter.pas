@@ -663,7 +663,7 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
-      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], '', '', '', False);
+      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], '', '', '', '', False);
 end;
 
 procedure _wbCopyElementToFileWithPrefix(var Value: Variant; Args: TJvInterpreterArgs);
@@ -673,8 +673,19 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
-      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], Args.Values[4], Args.Values[5], Args.Values[6], False);
+      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], Args.Values[4], '', Args.Values[5], Args.Values[6], False);
 end;
+
+procedure _wbCopyElementToFileWithPrefixAndSuffix(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+  _File: IwbFile;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
+      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], Args.Values[4], Args.Values[5], Args.Values[6], Args.Values[7], False);
+end;
+
 
 procedure _wbCopyElementToRecord(var Value: Variant; Args: TJvInterpreterArgs);
 var
@@ -1925,6 +1936,7 @@ begin
     AddFunction(cUnit, 'MoveDown', IwbElement_MoveDown, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbCopyElementToFile', _wbCopyElementToFile, 4, [varEmpty, varEmpty, varBoolean, varBoolean], varEmpty);
     AddFunction(cUnit, 'wbCopyElementToFileWithPrefix', _wbCopyElementToFileWithPrefix, 7, [varEmpty, varEmpty, varBoolean, varBoolean, varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbCopyElementToFileWithPrefixAndSuffix', _wbCopyElementToFileWithPrefixAndSuffix, 8, [varEmpty, varEmpty, varBoolean, varBoolean, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbCopyElementToRecord', _wbCopyElementToRecord, 4, [varEmpty, varEmpty, varBoolean, varBoolean], varEmpty);
     AddFunction(cUnit, 'ClearElementState', IwbElement_ClearElementState, 2, [varEmpty, varEmpty], varBoolean);
     AddFunction(cUnit, 'SetElementState', IwbElement_SetElementState, 2, [varEmpty, varEmpty], varBoolean);

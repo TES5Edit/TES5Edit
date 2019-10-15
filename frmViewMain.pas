@@ -2487,11 +2487,12 @@ var
   MainRecord2          : IwbMainRecord;
   Master               : IwbMainRecord;
   GroupRecord          : IwbGroupRecord;
-  TargetFile        : IwbFile;
+  TargetFile           : IwbFile;
   sl                   : TStringList;
   i, j                 : Integer;
   EditorID             : string;
   EditorIDPrefixRemove : string;
+  EditorIDSuffixRemove : string;
   EditorIDPrefix       : string;
   EditorIDSuffix       : string;
   Multiple             : Boolean;
@@ -2664,6 +2665,7 @@ begin
         Multiple := (Length(Elements) > 1) or (Elements[0].ElementType <> etMainRecord);
         EditorID := '';
         EditorIDPrefixRemove := '';
+        EditorIDSuffixRemove := '';
         EditorIDPrefix := '';
         EditorIDSuffix := '';
 
@@ -2719,6 +2721,8 @@ begin
           if AsNew or AsWrapper then
             repeat
               if not InputQuery('EditorID Prefix', 'Please enter the prefix that should be removed from the EditorIDs if present', EditorIDPrefixRemove) then
+                Exit;
+              if not InputQuery('EditorID Suffix', 'Please enter the suffix that should be removed from the EditorIDs if present', EditorIDSuffixRemove) then
                 Exit;
               if not InputQuery('EditorID Prefix', 'Please enter the prefix that should be added to EditorIDs', EditorIDPrefix) then
                 Exit;
@@ -2821,7 +2825,7 @@ begin
                     wbCurrentProgress := Format('[%s] into [%s]', [MainRecord.FullPath, TargetFile.FullPath]);
                     wbProgress(Operation + ' ' + wbCurrentProgress);
 
-                    MainRecord2 := wbCopyElementToFile(MainRecord, TargetFile, True, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix, False) as IwbMainRecord;
+                    MainRecord2 := wbCopyElementToFile(MainRecord, TargetFile, True, True, EditorIDPrefixRemove, EditorIDSuffixRemove, EditorIDPrefix, EditorIDSuffix, False) as IwbMainRecord;
                     wbProgress('');
 
                     Assert(Assigned(MainRecord2));
@@ -2829,7 +2833,7 @@ begin
                       MainRecord2.EditorID := EditorID;
 
                     EditorID := MainRecord.EditorID;
-                    MainRecord := wbCopyElementToFile(MainRecord, TargetFile, False, False, '', '', '', AllowOverwrite) as IwbMainRecord;
+                    MainRecord := wbCopyElementToFile(MainRecord, TargetFile, False, False, '', '', '', '', AllowOverwrite) as IwbMainRecord;
                     wbProgress('');
                     Assert(Assigned(MainRecord));
                     MainRecord.Assign(Low(Integer), nil, False);
@@ -2852,12 +2856,12 @@ begin
                     try
                       if DeepCopy and Supports(Elements[j], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
                         wbProgress(Operation + ' ' + wbCurrentProgress);
-                        lResult[j] := wbCopyElementToFile(MainRecord.ChildGroup, TargetFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix, AllowOverwrite);
+                        lResult[j] := wbCopyElementToFile(MainRecord.ChildGroup, TargetFile, AsNew, True, EditorIDPrefixRemove, EditorIDSuffixRemove, EditorIDPrefix, EditorIDSuffix, AllowOverwrite);
                         wbProgress('');
                       end else begin
                         wbCurrentProgress := Format('[%s] into [%s]', [Elements[j].FullPath, TargetFile.FullPath]);
                         wbProgress(Operation + ' ' + wbCurrentProgress);
-                        CopiedElement := wbCopyElementToFile(Elements[j], TargetFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix, AllowOverwrite);
+                        CopiedElement := wbCopyElementToFile(Elements[j], TargetFile, AsNew, True, EditorIDPrefixRemove, EditorIDSuffixRemove, EditorIDPrefix, EditorIDSuffix, AllowOverwrite);
                         wbProgress('');
                         if Assigned(CopiedElement) then begin
                           if Assigned(aAfterCopyCallback) then
@@ -2877,12 +2881,12 @@ begin
                   if DeepCopy and Supports(Elements[0], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
                     wbCurrentProgress := Format('[%s] into [%s]', [MainRecord.ChildGroup.FullPath, TargetFile.FullPath]);
                     wbProgress(Operation + ' ' + wbCurrentProgress);
-                    lResult[0] := wbCopyElementToFile(MainRecord.ChildGroup, TargetFile, AsNew, True, '', '', '', AllowOverwrite);
+                    lResult[0] := wbCopyElementToFile(MainRecord.ChildGroup, TargetFile, AsNew, True, '', '', '', '', AllowOverwrite);
                     wbProgress('');
                   end else begin
                     wbCurrentProgress := Format('[%s] into [%s]', [Elements[0].FullPath, TargetFile.FullPath]);
                     wbProgress(Operation + ' ' + wbCurrentProgress);
-                    CopiedElement := wbCopyElementToFile(Elements[0], TargetFile, AsNew, True, '', '', '', AllowOverwrite);
+                    CopiedElement := wbCopyElementToFile(Elements[0], TargetFile, AsNew, True, '', '', '', '', AllowOverwrite);
                     wbProgress('');
                     if Assigned(CopiedElement) then begin
                       if Assigned(aAfterCopyCallback) then
@@ -3650,7 +3654,7 @@ var
             if Assigned(TargetLists[l]) and Assigned(WinningLists[l]) then
               if not ListsEqual(TargetLists[l], WinningLists[l]) then begin
                 if not Assigned(TargetRecord) then
-                  TargetRecord := wbCopyElementToFile(MainRecord, TargetFile, False, True, '', '', '', False) as IwbMainRecord;
+                  TargetRecord := wbCopyElementToFile(MainRecord, TargetFile, False, True, '', '', '', '', False) as IwbMainRecord;
 
                 TargetRecord.RemoveElement(aListNames[l]);
                 for j := 0 to Pred(TargetLists[l].Count) do
@@ -4136,7 +4140,7 @@ begin
 
     if AddRequiredMasters(sl, ReferenceFile) then
       for j := Low(Elements) to High(Elements) do begin
-        wbCopyElementToFile(Elements[j], ReferenceFile, False, True, '', '', '', False);
+        wbCopyElementToFile(Elements[j], ReferenceFile, False, True, '', '', '', '', False);
         if Elements[j].RemoveInjected(False) then begin
           pgMain.ActivePage := tbsMessages;
           AddMessage('Injected references in '+Elements[j].Name+' could not all be removed automatically.');
@@ -19874,7 +19878,7 @@ begin
                   if MainRecord.Signature <> 'TES4' then
                     if not MainRecord.IsDeleted then
                       if NodeData.ConflictThis = ctOnlyOne then
-                        if Supports(wbCopyElementToFile(NodeData.Element, NewFile, False, False, '', '', '', False), IwbMainRecord, MainRecord) then
+                        if Supports(wbCopyElementToFile(NodeData.Element, NewFile, False, False, '', '', '', '', False), IwbMainRecord, MainRecord) then
                           MainRecord.IsDeleted := True;
               Node := vstNav.GetNext(Node);
             end;
