@@ -1096,19 +1096,31 @@ begin
 end;
 
 procedure TdfElement.LoadFromResource(const aContainerName, aFileName: string);
+var
+  data: TBytes;
 begin
   if not Assigned(dfResourceGetDataCallback) then
     DoException('Resource data handler is not initialized');
 
-  LoadFromData(dfResourceGetDataCallback(aContainerName, aFileName));
+  data := dfResourceGetDataCallback(aContainerName, aFileName);
+  if Length(data) > 0 then
+    LoadFromData(data)
+  else
+    raise Exception.CreateFmt('Resource not found (File "%s" in container "%s")', [aFileName, aContainerName]);
 end;
 
 procedure TdfElement.LoadFromResource(const aFileName: string);
+var
+  data: TBytes;
 begin
   if not Assigned(dfResourceGetDataCallback) then
     DoException('Resource data handler is not initialized');
 
-  LoadFromData(dfResourceGetDataCallback('', aFileName));
+  data := dfResourceGetDataCallback('', aFileName);
+  if Length(data) > 0 then
+    LoadFromData(data)
+  else
+    raise Exception.CreateFmt('Resource not found (File "%s")', [aFileName]);
 end;
 
 procedure TdfElement.SaveToData(var aData: TBytes);
@@ -2232,7 +2244,7 @@ end;
 procedure TdfArray.SetCount(NewCount: Integer);
 begin
   if FDef.Size > 0 then
-    DoException('Can not change size of a fixed array');
+    Exit;
 
   inherited;
 
