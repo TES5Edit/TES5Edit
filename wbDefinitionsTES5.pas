@@ -9837,16 +9837,16 @@ begin
     wbFloat(DNAM, 'Fade-Out'),
     wbString(ANAM, 'Track FileName'),
     wbString(BNAM, 'Finale FileName'),
-    wbArray(FNAM, 'Cue Points', wbFloat('Point')).IncludeFlag(dfNotAlignable),
     wbStruct(LNAM, 'Loop Data', [
       wbFloat('Loop Begins'),
       wbFloat('Loop Ends'),
       wbInteger('Loop Count', itU32)
     ]),
+    wbArray(FNAM, 'Cue Points', wbFloat('Point')).IncludeFlag(dfNotAlignable),
     wbCITC,
     wbCTDAsCount,
     wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
-  ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
+  ], True, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
   wbRecord(DLVW, 'Dialog View', [
     wbEDID,
