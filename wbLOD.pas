@@ -3295,7 +3295,10 @@ var
       if e.Flags.IsDeleted then
         Exit;
 
-      StatRec := e.BaseRecord.WinningOverride;
+      StatRec := e.BaseRecord;
+      if not Assigned(StatRec) then
+        Exit;
+      StatRec := StatRec.WinningOverride;
       if not Assigned(StatRec) then
         Exit;
 
@@ -3417,7 +3420,16 @@ var
           Entry := Entries[n] as IwbContainer;
           if Assigned(Entry.ElementLinksTo['Keyword/Ref']) and ((Entry.ElementLinksTo['Keyword/Ref'] as IwbMainRecord).EditorID = 'MultirefLOD') then begin
             // get the base record of the linked reference
-            StatMultiRefLOD := (Entry.ElementLinksTo['Ref'] as IwbMainRecord).WinningOverride.BaseRecord.WinningOverride;
+            StatMultiRefLOD := Entry.ElementLinksTo['Ref'] as IwbMainRecord;
+            if not Assigned(StatMultiRefLOD) then
+              Break;
+            StatMultiRefLOD := StatMultiRefLOD.WinningOverride;
+            if not Assigned(StatMultiRefLOD) then
+              Break;
+            StatMultiRefLOD := StatMultiRefLOD.BaseRecord;
+            if not Assigned(StatMultiRefLOD) then
+              Break;
+            StatMultiRefLOD := StatMultiRefLOD.WinningOverride;
             Break;
           end;
         end;
