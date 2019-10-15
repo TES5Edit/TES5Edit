@@ -16205,7 +16205,7 @@ begin
     wbString(ANAM, 'Female Skeletal Model'),
     wbMODT,
     wbEmpty(NAM2, 'Marker NAM2 #1'),
-    wbRArrayS('Movement Type Names', wbString(MTNM, 'Name')),
+    wbRArrayS('Movement Type Names', wbString(MTNM, 'Name', 4)),
     wbArray(VTCK, 'Voices', wbFormIDCk('Voice', [VTYP]), ['Male', 'Female'], cpNormal, True),
     //wbArray(DNAM, 'Decapitate Armors', wbFormIDCk('Decapitate Armor', [NULL, ARMO]), ['Male', 'Female'], cpNormal, False),
     wbArray(HCLF, 'Default Hair Colors', wbFormIDCk('Default Hair Color', [NULL, CLFM]), ['Male', 'Female'], cpNormal, False),
