@@ -6,6 +6,7 @@
 * #674 - Invalid ITMs may be reported in rare cases when form versions differ
 * #678 - AccessViolation while generating conflict status in rare cases
 * #691 - [FO4/FO76] Copying CELL data into a file can cause landscape collision to be re-enabled when it shouldn't
+* #729 - LODGen can fail with references that have NULL or unresolvable Base FormIDs
 * (reported on Discord) - cleaning Dragonborn.esm can make Boars non-aggressive
 * (reported on Discord) - crash in NAVM when triangle edge is flagged as edge link, but the number stored in the edge field can't look up a valid external NAVM via the Edge Links table
 * (reported on Discord) - VeryQuickShowConflicts may very rarely not show certain conflicts
