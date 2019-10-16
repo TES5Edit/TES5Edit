@@ -7,6 +7,7 @@
 * #676 - Ghosted ESPs and Modgroups
 * #678 - AccessViolation while generating conflict status in rare cases
 * #691 - [FO4/FO76] Copying CELL data into a file can cause landscape collision to be re-enabled when it shouldn't
+* #694 - scheduled save from save failure not removed on subsequent successes
 * #695 - Typo in Weap>DNAM>Animation Type: Balistic -> Ballistic 
 * #682 - The path bar covers the forward and back buttons if the window is too small
 * #708 - "Clean masters" function doesn't remove all masters at first use
