@@ -4,6 +4,7 @@
 
 * #669 - CELL at 0,0 may be spuriously added to worldspaces during cleaning.
 * #674 - Invalid ITMs may be reported in rare cases when form versions differ
+* #676 - Ghosted ESPs and Modgroups
 * #678 - AccessViolation while generating conflict status in rare cases
 * #691 - [FO4/FO76] Copying CELL data into a file can cause landscape collision to be re-enabled when it shouldn't
 * #695 - Typo in Weap>DNAM>Animation Type: Balistic -> Ballistic 
