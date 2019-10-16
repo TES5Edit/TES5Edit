@@ -16108,11 +16108,22 @@ begin
 end;
 
 procedure TwbElement.Remove;
+var
+  SelfRef : IwbElement;
+  lContainer: IwbContainerElementRef;
 begin
   if Assigned(eContainer) then begin
-    SetModified(True);
-    InvalidateParentStorage;
-    IwbContainer(eContainer).RemoveElement(Self as IwbElement);
+    SelfRef := Self as IwbElement;
+    lContainer := IwbContainer(eContainer) as IwbContainerElementRef;
+
+    lContainer.BeginUpdate;
+    try
+      SetModified(True);
+      InvalidateParentStorage;
+      lContainer.RemoveElement(SelfRef);
+    finally
+      lContainer.EndUpdate;
+    end;
   end;
 end;
 
