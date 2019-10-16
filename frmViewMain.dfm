@@ -1468,12 +1468,12 @@ object frmMain: TfrmMain
       AlignWithMargins = True
       Left = 30
       Top = 5
-      Width = 730
+      Width = 769
       Height = 20
       Margins.Left = 0
       Margins.Top = 5
       Margins.Bottom = 5
-      Align = alLeft
+      Align = alClient
       AutoSize = False
       BevelInner = bvNone
       BevelKind = bkTile
