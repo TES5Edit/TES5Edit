@@ -14741,9 +14741,10 @@ begin
             end;
 
             if NeedsRename and TryDirectRename then try
-              if not DoRenameModule(s, u, True) then
-                AnyErrors := True
-              else
+              if not DoRenameModule(s, u, True) then begin
+                AnyErrors := True;
+                wbProgress('Direct save failed. Will queue save for renaming on shutdown.');
+              end else
                 NeedsRename := False;
             except end;
 
@@ -14753,6 +14754,17 @@ begin
               // s - rename from, relative to DataPath
               // u - rename to, relative to DataPath
               FilesToRename.AddPair(u, s);
+              wbProgress('Queued renaming of save "' + wbDataPath + s + '" to "' + wbDataPath + u + '" on shutdown.');
+            end else begin
+              if Assigned(FilesToRename) then
+                for j := Pred(FilesToRename.Count) downto 0 do begin
+                  if SameText(u, FilesToRename.KeyNames[j]) then begin
+                    s := FilesToRename.ValueFromIndex[j];
+                    wbProgress('Removing previously queued save "' + wbDataPath + s + '" as a direct save to "' + wbDataPath + u + '" has succeeded.');
+                    DeleteFile(wbDataPath + s);
+                    FilesToRename.Delete(j);
+                  end;
+                end;
             end;
 
             DoProcessMessages;
