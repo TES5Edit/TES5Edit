@@ -7411,23 +7411,28 @@ begin
     if not EditWarn then
       Exit;
 
-    //    vstView.BeginUpdate;
+    LockProcessMessages;
     try
-      NewElement := TargetElement.Assign(TargetIndex, nil, False);
-      if Assigned(NewElement) then
-        NewElement.SetToDefaultIfAsCreatedEmpty;
+      //    vstView.BeginUpdate;
+      try
+        NewElement := TargetElement.Assign(TargetIndex, nil, False);
+        if Assigned(NewElement) then
+          NewElement.SetToDefaultIfAsCreatedEmpty;
 
-      ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
-      TargetElement := nil;
-      Control := GetKeyState(VK_CONTROL) < 0;
-      if wbFocusAddedElement xor Control then
-        ViewFocusedElement := NewElement;
-      PostResetActiveTree;
+        ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
+        TargetElement := nil;
+        Control := GetKeyState(VK_CONTROL) < 0;
+        if wbFocusAddedElement xor Control then
+          ViewFocusedElement := NewElement;
+        PostResetActiveTree;
+      finally
+        //      vstView.EndUpdate;
+      end;
+
+      InvalidateElementsTreeView(NoNodes);
     finally
-      //      vstView.EndUpdate;
+      UnLockProcessMessages;
     end;
-
-    InvalidateElementsTreeView(NoNodes);
   end;
 end;
 
@@ -11162,35 +11167,39 @@ begin
     Exit;
   if wbTranslationMode then
     Exit;
+    if not EditWarn then
+      Exit;
 
-  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
-  NextNode := vstView.GetNextVisibleSibling(vstView.FocusedNode);
-  if not Assigned(NextNode) then
-    NextNode := vstView.GetPreviousVisibleSibling(vstView.FocusedNode);
-  if not Assigned(NextNode) then begin
-    NextNode := vstView.FocusedNode.Parent;
-    if vstView.RootNode = NextNode then
-      NextNode := nil;
-  end;
-
-  if Assigned(NodeDatas) then begin
-    Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
-    if Assigned(Element) then begin
-
-      if not EditWarn then
-        Exit;
-
-      if Assigned(NextNode) then begin
-        NodeDatas := vstView.GetNodeData(NextNode);
-        ViewFocusedElement := NodeDatas[Pred(vstView.FocusedColumn)].Element;
-      end;
-
-      Element.Remove;
-      ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
-      Element := nil;
-      PostResetActiveTree;
-      InvalidateElementsTreeView(NoNodes);
+  LockProcessMessages;
+  try
+    NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+    NextNode := vstView.GetNextVisibleSibling(vstView.FocusedNode);
+    if not Assigned(NextNode) then
+      NextNode := vstView.GetPreviousVisibleSibling(vstView.FocusedNode);
+    if not Assigned(NextNode) then begin
+      NextNode := vstView.FocusedNode.Parent;
+      if vstView.RootNode = NextNode then
+        NextNode := nil;
     end;
+
+    if Assigned(NodeDatas) then begin
+      Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+      if Assigned(Element) then begin
+
+        if Assigned(NextNode) then begin
+          NodeDatas := vstView.GetNodeData(NextNode);
+          ViewFocusedElement := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+        end;
+
+        Element.Remove;
+        ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
+        Element := nil;
+        PostResetActiveTree;
+        InvalidateElementsTreeView(NoNodes);
+      end;
+    end;
+  finally
+    UnLockProcessMessages;
   end;
 end;
 
