@@ -33,6 +33,7 @@
 * [FO3/FNV] make "RuntimeScriptProfiler xSE Extension Log" available
 * Report error records in PrepareSave with full path instead of just their name
 * Show tooltip hint for View column headers
+* Show indices for unsorted SubRecord Arrays
 
 ## Shortened Parameters
 

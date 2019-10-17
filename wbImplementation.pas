@@ -262,7 +262,7 @@ type
 
   TwbElement = class(TInterfacedObject, IInterface, IwbElement, IwbElementInternal)
   protected
-    eContainer         : Pointer{IwbContainer}; //weak reference
+    eContainer         : Pointer{IwbContainerInternal}; //weak reference
     eSortOrder         : Integer;
     eMemoryOrder       : Integer;
     eStates            : TwbElementStates;
@@ -276,6 +276,8 @@ type
 
     eGeneration        : Integer;
     eMastersGeneration : Integer;
+
+    eNameSuffix        : string;
 
     {---IInterface---}
     function _AddRef: Integer; virtual; stdcall;
@@ -461,6 +463,8 @@ type
 
     function ChangeElementMember(const aElement: IwbElement; aPrevious: Boolean): IwbElement;
     function CanChangeElementMember(const aElement: IwbElement): Boolean;
+
+    procedure UpdateNameSuffixes;
   end;
 
   TwbContainer = class(TwbElement, IwbContainerElementRef, IwbContainer, IwbContainerInternal)
@@ -595,6 +599,8 @@ type
 
     function ChangeElementMember(const aElement: IwbElement; aPrevious: Boolean): IwbElement;
     function CanChangeElementMember(const aElement: IwbElement): Boolean;
+
+    procedure UpdateNameSuffixes; virtual;
 
     function FindBySortKey(const aSortKey: string; aExtended: Boolean; out aIndex: Integer): Boolean;
     function FindBySortOrder(const aSortOrder: Integer; out aIndex: Integer): Boolean;
@@ -1383,7 +1389,6 @@ type
   TwbValueBase = class(TwbDataContainer)
   protected
     vbValueDef   : IwbValueDef;
-    vbNameSuffix : string;
   protected
     procedure InitDataPtr; override;
 
@@ -1393,9 +1398,6 @@ type
     function GetName: string; override;
     function GetBaseName: string; override;
     function GetDisplayName(aUseSuffix: Boolean): string; override;
-
-    procedure SetNameSuffix(const aSuffix: string); override;
-    function GetNameSuffix: string; override;
 
     function GetCheck: string; override;
     function GetValue: string; override;
@@ -1751,6 +1753,7 @@ type
     arcDef         : IwbSubRecordArrayDef;
     arcSorted      : Boolean;
     arcSortInvalid : Boolean;
+    arcNameGen     : Integer;
   protected
     constructor Create(const aOwner     : IwbContainer;
                        const aContainer : IwbContainer;
@@ -1777,6 +1780,8 @@ type
     function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
 
     function CanMoveElement: Boolean; override;
+
+    procedure UpdateNameSuffixes; override;
 
     {---IwbSortableContainer---}
     function GetSorted: Boolean;
@@ -6986,6 +6991,11 @@ begin
     wbMergeSortPtr(@aMemoryOrderElements[0], l, CompareMemoryOrder);
     Result := True;
   end;
+end;
+
+procedure TwbContainer.UpdateNameSuffixes;
+begin
+  {can be overridden}
 end;
 
 procedure TwbContainer.WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified);
@@ -12690,6 +12700,9 @@ begin
     Exit;
 
   Result := Result + ' - ' + srDef.GetName;
+
+  if aUseSuffix and (GetNameSuffix <> '') then
+    Result := Result + ' ' + eNameSuffix;
 end;
 
 function TwbSubRecord.GetEditValue: string;
@@ -15557,6 +15570,8 @@ end;
 function TwbElement.GetDisplayName(aUseSuffix: Boolean): string;
 begin
   Result := GetName;
+  if aUseSuffix and (GetNameSuffix <> '') then
+    Result := Result + ' ' + eNameSuffix;
 end;
 
 function TwbElement.GetDontShow: Boolean;
@@ -15747,7 +15762,9 @@ end;
 
 function TwbElement.GetNameSuffix: string;
 begin
-  Result := '';
+  if Assigned(eContainer) then
+    IwbContainerInternal(eContainer).UpdateNameSuffixes;
+  Result := eNameSuffix;
 end;
 
 function TwbElement.GetNativeValue: Variant;
@@ -16292,7 +16309,7 @@ end;
 
 procedure TwbElement.SetNameSuffix(const aSuffix: string);
 begin
-  {can be overriden}
+  eNameSuffix := aSuffix;
 end;
 
 procedure TwbElement.SetNativeValue(const aValue: Variant);
@@ -16851,6 +16868,21 @@ begin
   inherited;
   if aValue and arcSorted then
     arcSortInvalid := True;
+end;
+
+procedure TwbSubRecordArray.UpdateNameSuffixes;
+var
+  i: Integer;
+begin
+  if arcSorted then
+    Exit;
+  if arcNameGen >= eGeneration then
+    Exit;
+
+  arcNameGen := eGeneration;
+
+  for i := Low(cntElements) to High(cntElements) do
+    cntElements[i].NameSuffix := '#' + i.ToString;
 end;
 
 { TwbSubRecordStruct }
@@ -19358,7 +19390,7 @@ begin
   if aDontCompare then
     Include(dcFlags, dcfDontCompare);
   vbValueDef := aValueDef;
-  vbNameSuffix := aNameSuffix;
+  eNameSuffix := aNameSuffix;
   inherited Create(aContainer, aBasePtr, aEndPtr, nil);
 end;
 
@@ -19457,8 +19489,8 @@ begin
     if (Resolved.DefType = dtArray) and (wbDumpOffset>1) and Supports(Self, IwbDataContainer, Container) then
       Result := Result + ' [' + IntToStr(Container.GetElementCount) + ']';
   end;
-  if aUseSuffix and (vbNameSuffix <> '') then
-    Result := Result + ' ' + vbNameSuffix;
+  if aUseSuffix and (GetNameSuffix <> '') then
+    Result := Result + ' ' + eNameSuffix;
 end;
 
 function TwbValueBase.GetEditValue: string;
@@ -19518,13 +19550,8 @@ end;
 function TwbValueBase.GetName: string;
 begin
   Result := vbValueDef.Name;
-  if vbNameSuffix <> '' then
-    Result := Result + ' ' + vbNameSuffix;
-end;
-
-function TwbValueBase.GetNameSuffix: string;
-begin
-  Result := vbNameSuffix;
+  if GetNameSuffix <> '' then
+    Result := Result + ' ' + eNameSuffix;
 end;
 
 function TwbValueBase.GetNativeValue: Variant;
@@ -19615,12 +19642,6 @@ begin
   finally
     EndUpdate;
   end;
-end;
-
-
-procedure TwbValueBase.SetNameSuffix(const aSuffix: string);
-begin
-  vbNameSuffix := aSuffix;
 end;
 
 procedure TwbValueBase.SetNativeValue(const aValue: Variant);
