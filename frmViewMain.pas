@@ -16918,9 +16918,7 @@ begin
       end;
 
     if Assigned(Element) then begin
-      Def := Element.Def;
-      if Supports(Def, IwbSubRecordDef, SubRecordDef) then
-        Def := SubRecordDef.Value;
+      Def := Element.ResolvedValueDef;
 
       if Assigned(ViewFocusedElement) and Assigned(Def) and ViewFocusedElement.IsEditable then
         if Def.DefType in [dtInteger, dtFlag, dtFloat] then begin
