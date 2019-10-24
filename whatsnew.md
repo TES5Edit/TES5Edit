@@ -28,6 +28,7 @@
 
 ## Minor changes
 
+* #679 - [FO4/FO76] VISI and PCMB subrecords decoding
 * #722 - suffix removal during formid copying
 * [FO3/FNV] Flag 0 in BOOK means "Scroll"
 * [FO3/FNV] make "RuntimeScriptProfiler xSE Extension Log" available
