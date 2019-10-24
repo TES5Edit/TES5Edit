@@ -9370,9 +9370,9 @@ begin
       {0x8000} 'Unknown 16'
     ]), cpNormal, True, False, nil, wbCELLDATAAfterSet),
 
-    wbByteArray(VISI, 'PreVis Files Timestamp', 2),
+    wbByteArray(VISI, 'PreVis Files Timestamp', 2).SetToStr(wbTimeStampToString),
     wbFormIDCk(RVIS, 'In PreVis File Of', [CELL]),
-    wbByteArray(PCMB, 'PreCombined Files Timestamp', 2),
+    wbByteArray(PCMB, 'PreCombined Files Timestamp', 2).SetToStr(wbTimeStampToString),
 
     wbCellGrid,
 

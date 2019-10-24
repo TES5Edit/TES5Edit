@@ -4233,6 +4233,7 @@ function wbMBCSEncoding(s: string): TEncoding; overload;
 
 procedure wbVCI1ToStrBeforeFO4(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbVCI1ToStrAfterFO4(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbTimeStampToString(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 implementation
 
@@ -9734,7 +9735,10 @@ end;
 function TwbSubRecordDef.SetToStr(const aToStr: TwbToStrCallback): IwbRecordMemberDef;
 begin
   Result := Self;
-  ndToStr := aToStr;
+  if Assigned(srValue) then
+    srValue.SetToStr(aToStr)
+  else
+    ndToStr := aToStr;
 end;
 
 function TwbSubRecordDef.ToSummary(aDepth: Integer; const aElement: IwbElement): string;
@@ -19484,6 +19488,33 @@ begin
       Index := c and $FF;
 
       aValue := Format('%.4d-%.2d-%.2d User: %d Index: %d', [Year, Month, Day, User, Index]);
+    end else
+      aValue := 'None';
+  end;
+end;
+
+procedure wbTimeStampToString(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  c       : Cardinal;
+  Day,
+  Month,
+  Year    : Integer;
+begin
+  if aType = ctToStr then begin
+    c := PWord(aBasePtr)^;
+
+    if c <> 0 then begin
+      Day := c and $1F;
+      c := c shr 5;
+
+      Month := c and $0F;
+      c := c shr 4;
+
+      Year := c and $7F;
+      Inc(Year, 2000);
+      c := c shr 7;
+
+      aValue := Format('%.4d-%.2d-%.2d', [Year, Month, Day]);
     end else
       aValue := 'None';
   end;
