@@ -16138,9 +16138,9 @@ function TwbElement.EndUpdate: Integer;
 
 begin
   Result := Pred(eUpdateCount);
-  eUpdateCount := Result;
   if Result = 0 then
     UpdatedEnded;
+  eUpdateCount := Result;
 end;
 
 function TwbElement.Equals(const aElement: IwbElement): Boolean;
@@ -17089,9 +17089,9 @@ procedure TwbElement.UpdatedEnded;
 var
   IsInternal: Boolean;
 begin
-  if esChangeNotified in eStates then begin
+  while esChangeNotified in eStates do begin
     Exclude(eStates, esChangeNotified);
-    NotifyChanged(eContainer);
+    NotifyChangedInternal(eContainer);
   end;
   if esModifiedUpdated in eStates then begin
     Exclude(eStates, esModifiedUpdated);
