@@ -27,6 +27,7 @@
 * (found by developer) - Quick [Auto] Clean allows selecting the game master (which makes no sense)
 * (found by developer) - [FO4] incorrect subrecord order in CELL
 * (found by developer) - injected records are not showing up in drop down of FormID in-place editor
+* (found by developer) - orphaned "Children of" groups can cause Asserts when trying to display them in the nav tree view
 
 ## Minor changes
 

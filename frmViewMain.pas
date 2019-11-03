@@ -17976,6 +17976,7 @@ begin
                     LongRecSmall(GroupRecord1.GroupLabel).Lo,
                     LongRecSmall(GroupRecord2.GroupLabel).Lo);
               end;
+            1, 6..10: Result := CmpW32(GroupRecord1.GroupLabel, GroupRecord2.GroupLabel);
           else
             Assert(False);
           end;
