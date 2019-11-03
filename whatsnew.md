@@ -23,6 +23,7 @@
 * (reported on Discord) - error when copying nif blocks with skinning
 * (reported on Discord) - double click on integer and float elements does not show in-place editor if they are inside a union
 * (reported on Discord) - in very rare cases, a change might not result in the file being marked as having unsaved changes
+* (reported on Discord) - changing the FormID of a record might not always update the FormID of the "Children of" group for that record
 * (found by developer) - TdfElement.LoadFromResource does not report if the resource can't be found
 * (found by developer) - Quick [Auto] Clean allows selecting the game master (which makes no sense)
 * (found by developer) - [FO4] incorrect subrecord order in CELL

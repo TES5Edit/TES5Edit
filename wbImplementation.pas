@@ -9142,11 +9142,11 @@ begin
   if mrStruct.mrsFormID.FileID.FullSlot > aIndex then begin
     MakeHeaderWriteable;
     mrStruct.mrsFormID.FileID := TwbFileID.Create(aIndex);
-    if Assigned(mrGroup) then
+    if Assigned(mrGroup) or (GetChildGroup <> nil) then
       mrGroup.GroupLabel := mrStruct.mrsFormID.ToCardinal;
   end else
     if mrStruct.mrsFormID.FileID.FullSlot = aIndex then
-      if Assigned(mrGroup) then
+      if Assigned(mrGroup) or (GetChildGroup <> nil) then
         mrGroup.GroupLabel := mrStruct.mrsFormID.ToCardinal;
 end;
 
@@ -10768,7 +10768,7 @@ begin
                 for i := 0 to Pred(GetOverrideCount) do
                   (GetOverride(i) as IwbElementInternal).Reached;
 
-              if Assigned(mrGroup) then
+              if Assigned(mrGroup) or (GetChildGroup <> nil) then
                 (mrGroup as IwbElementInternal).Reached;
             end;
           end;
@@ -10821,7 +10821,7 @@ end;
 
 procedure TwbMainRecord.RemoveChildGroup(const aGroup: IwbGroupRecord);
 begin
-  if Assigned(mrGroup) and mrGroup.Equals(aGroup) then begin
+  if (Assigned(mrGroup) or (GetChildGroup <> nil)) and mrGroup.Equals(aGroup) then begin
     mrGroup := nil;
     mrGroupSearchGen := -1;
   end;
@@ -11339,14 +11339,14 @@ begin
   if GetFormID.ObjectID = aFormID.ObjectID then
     if (GetFormID.FileID.FullSlot >= _File.MasterCount[GetMastersUpdated]) and (aFormID.FileID.FullSlot >= _File.MasterCount[True]) then begin
       // we can do this relatively quietly and quickly...
-      if Assigned(mrGroup) then
+      if Assigned(mrGroup) or (GetChildGroup <> nil) then
         Assert(mrGroup.GroupLabel = mrStruct.mrsFormID.ToCardinal);
       MakeHeaderWriteable;
       mrStruct.mrsFormID := aFormID;
       mrFixedFormID := TwbFormID.Null;
       mrLoadOrderFormID := TwbFormID.Null;
       SetMastersUpdated(True);
-      if Assigned(mrGroup) then
+      if Assigned(mrGroup) or (GetChildGroup <> nil) then
         mrGroup.GroupLabel := aFormID.ToCardinal;
       UpdateInteriorCellGroup;
       Exit;
@@ -11373,14 +11373,14 @@ begin
   mrConflictAll := caUnknown;
   mrConflictThis := ctUnknown;
 
-  if Assigned(mrGroup) then
+  if Assigned(mrGroup) or (GetChildGroup <> nil) then
     Assert(mrGroup.GroupLabel = mrStruct.mrsFormID.ToCardinal);
   MakeHeaderWriteable;
   mrStruct.mrsFormID := aFormID;
   mrFixedFormID := TwbFormID.Null;
   mrLoadOrderFormID := TwbFormID.Null;
   Exclude(mrStates, mrsIsInjectedChecked);
-  if Assigned(mrGroup) then
+  if Assigned(mrGroup) or (GetChildGroup <> nil) then
     mrGroup.GroupLabel := aFormID.ToCardinal;
   UpdateInteriorCellGroup;
 
