@@ -11356,6 +11356,10 @@ begin
   if Assigned(Master) and ((Master._File as IwbFileInternal).Equals(_File)) then
     raise Exception.Create('FormID ['+aFormID.ToString(True)+'] is already present in file ' + _File.Name);
 
+  Master := _File.RecordByFormID[aFormID, True, True];
+  if Assigned(Master) then
+    Master := Master.MasterOrSelf;
+
   _File.RemoveMainRecord(Self);
 
   if Assigned(mrMaster) then
@@ -11385,6 +11389,11 @@ begin
   UpdateInteriorCellGroup;
 
   _File.AddMainRecord(Self);
+
+  if Assigned(Master) and Master.IsInjected and not Assigned(mrMaster) then
+    (Master as IwbMainRecordInternal).YouGotAMaster(Self);
+
+  ResetConflict;
 end;
 
 procedure TwbMainRecord.SetMaster(const aMaster: IwbMainRecord);

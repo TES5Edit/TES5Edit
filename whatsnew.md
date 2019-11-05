@@ -15,6 +15,7 @@
 * #720 - wrong order for FNAM and LNAM in MUST 
 * #721 - The MTNM field in RACE record is written with unneccesary terminating 0 byte
 * #729 - LODGen can fail with references that have NULL or unresolvable Base FormIDs
+* #733 - changing the form id of an overriden record doesn't update the link between original and override until restart
 * (reported on Discord) - cleaning Dragonborn.esm can make Boars non-aggressive
 * (reported on Discord) - crash in NAVM when triangle edge is flagged as edge link, but the number stored in the edge field can't look up a valid external NAVM via the Edge Links table
 * (reported on Discord) - VeryQuickShowConflicts may very rarely not show certain conflicts
