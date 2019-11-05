@@ -8702,6 +8702,7 @@ var
   RequiredCount: Integer;
   Element: IwbElement;
   Def: IwbNamedDef;
+  SigDef: IwbSignatureDef;
   FoundIt: Boolean;
   SelfRef : IwbContainerElementRef;
 begin
@@ -8719,8 +8720,11 @@ begin
     for i := GetAdditionalElementCount to Pred(GetElementCount) do begin
       Element := cntElements[i];
       Def := Element.Def;
-      if Assigned(Def) then
+      if Assigned(Def) then begin
+        if mrDef.IsReference and Supports(Def, IwbSignatureDef, SigDef) and (SigDef.DefaultSignature = 'NAME') then
+          Continue;
         Result := Result + Def.Name + ', ';
+      end;
     end;
     SetLength(Result, Length(Result) - 2);
 
