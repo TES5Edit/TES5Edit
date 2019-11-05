@@ -20474,11 +20474,6 @@ begin
   end;
 end;
 
-procedure TwbValueBase.SetNameSuffix(const aSuffix: string);
-begin
-  vbNameSuffix := aSuffix;
-end;
-
 procedure TwbValueBase.SetNativeValue(const aValue: Variant);
 var
   OldValue, NewValue: Variant;
