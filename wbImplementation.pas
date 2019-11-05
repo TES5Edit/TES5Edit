@@ -12160,7 +12160,10 @@ var
           DataSize := MemoryStream.Size;
           Stream.WriteBuffer(DataSize, SizeOf(DataSize));
           MemoryStream.Position := 0;
-          ZCompressStream(MemoryStream, Stream);
+          if (wbGameMode = gmFO76) then
+            ZCompressStream(MemoryStream, Stream, zcLevel9)
+          else
+            ZCompressStream(MemoryStream, Stream);
         finally
           FreeAndNil(MemoryStream);
         end;

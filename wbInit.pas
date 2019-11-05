@@ -230,6 +230,7 @@ begin
     try
       wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
       wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
+      wbDecodeTextureHashes := Settings.ReadBool('Options', 'DecodeTextureHashes', wbDecodeTextureHashes);
       wbShowFlagEnumValue := Settings.ReadBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
       wbTrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
       wbAllowDirectSave := Settings.ReadBool('Options', 'AllowDirectSave', wbAllowDirectSave);
@@ -853,7 +854,6 @@ begin
     wbArchiveExtension := '.ba2';
     ToolModes := wbAlwaysMode;
     ToolSources := [tsPlugins];
-    VersionString.Title := 'EXPERIMENTAL';
   end
 
   else begin
