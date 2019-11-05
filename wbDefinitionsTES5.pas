@@ -3074,7 +3074,7 @@ type
     ptWardState,          // enum
     ptEvent,              // Struct
     ptEventData,          // LCTN, KYWD or FLST
-    ptKnowable            // MGEF, WOOP
+    ptKnowable            // MGEF, WOOP, ENCH
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -6956,7 +6956,7 @@ begin
         wbInteger('Ward State', itU32, wbWardStateEnum),
         wbInteger('Event', itU32, wbEventFunctionAndMemberToStr, wbEventFunctionAndMemberToInt),
         wbFormID('Event Data'),
-        wbFormIDCk('Knowable', [MGEF, WOOP])
+        wbFormIDCk('Knowable', [MGEF, WOOP, ENCH])
       ]),
    {6}wbUnion('Parameter #2', wbCTDAParam2Decider, [
         wbByteArray('Unknown', 4),
@@ -7058,7 +7058,7 @@ begin
         wbInteger('Ward State', itU32, wbWardStateEnum),
         wbInteger('Event', itU32, wbEventFunctionAndMemberToStr, wbEventFunctionAndMemberToInt),
         wbFormID('Event Data'),
-        wbFormIDCk('Knowable', [MGEF, WOOP])
+        wbFormIDCk('Knowable', [MGEF, WOOP, ENCH])
       ]),
    {7}wbInteger('Run On', itU32, wbEnum([
         {0} 'Subject',

@@ -39,6 +39,7 @@
 * Report error records in PrepareSave with full path instead of just their name
 * Show tooltip hint for View column headers
 * Show indices for unsorted SubRecord Arrays
+* [TES5/SSE] added ENCH to Knowable Forms
 
 ## Shortened Parameters
 
