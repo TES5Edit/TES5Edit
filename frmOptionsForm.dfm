@@ -203,6 +203,14 @@ object frmOptions: TfrmOptions
         Caption = 'Hide Manual Cleaning functions'
         TabOrder = 18
       end
+      object cbDecodeTexture: TCheckBox
+        Left = 16
+        Top = 273
+        Width = 233
+        Height = 24
+        Caption = 'Decode Texture Hashes (requires restart)'
+        TabOrder = 19
+      end
     end
     object tsViewSettings: TTabSheet
       Caption = 'View'

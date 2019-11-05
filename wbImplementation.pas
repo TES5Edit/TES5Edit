@@ -4133,8 +4133,11 @@ begin
     ONAMs := nil;
     if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 then begin
       Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
-      while FileHeader.RemoveElement('ONAM') <> nil do
-        ;
+      if not wbIsFallout76 then begin
+
+        while FileHeader.RemoveElement('ONAM') <> nil do
+          ;
+      end;
 
       if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
         for i := 0 to Pred(MasterFiles.ElementCount) do begin
@@ -4152,7 +4155,8 @@ begin
 
                 Signature := Current.Signature;
 
-                if (Signature = 'NAVM') or
+                if Not wbIsFallout76 and
+                   ((Signature = 'NAVM') or
                    (Signature = 'LAND') or
                    (Signature = 'REFR') or
                    (Signature = 'PGRE') or
@@ -4171,7 +4175,7 @@ begin
                      (Signature = 'DLBR') or
                      (Signature = 'DIAL') or
                      (Signature = 'INFO')
-                   ))
+                   )))
                 then begin
 
                   if (not wbMasterUpdateFilterONAM) or Current.IsWinningOverride then begin
@@ -12121,7 +12125,10 @@ var
           DataSize := MemoryStream.Size;
           Stream.WriteBuffer(DataSize, SizeOf(DataSize));
           MemoryStream.Position := 0;
-          ZCompressStream(MemoryStream, Stream);
+          if (wbGameMode = gmFO76) then
+            ZCompressStream(MemoryStream, Stream, zcLevel9)
+          else
+            ZCompressStream(MemoryStream, Stream);
         finally
           FreeAndNil(MemoryStream);
         end;
@@ -14815,7 +14822,8 @@ begin
   inherited;
   if Length(cntElements) = 0 then
     Remove
-  else if esModified in eStates then begin
+  else
+  if esModified in eStates then begin
     Exclude(grStates, gsSorted);
     Sort;
   end;

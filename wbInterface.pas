@@ -51,9 +51,9 @@ var
   VersionString : TwbVersion = (
     Major   : 4;
     Minor   : 1;
-    Release : 2;
-    Build   : 'b';
-    Title   : 'EXTREMELY EXPERIMENTAL';
+    Release : 3;
+    Build   : 'c3';
+    Title   : 'Update 1.2.4.10';
   );
 
 const
@@ -76,6 +76,7 @@ const
   csDotEsl   = '.esl';
   csDotEsp   = '.esp';
   csDotEsu   = '.esu';
+  csDotEsx   = '.esx';
 
 type
   TwbProgressCallback = procedure(const aStatus: string);
@@ -19480,11 +19481,12 @@ initialization
 
   wbProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
 
-  SetLength(wbPluginExtensions, 4);
+  SetLength(wbPluginExtensions, 5);
   wbPluginExtensions[0] := csDotEsp;
   wbPluginExtensions[1] := csDotEsm;
   wbPluginExtensions[2] := csDotEsl;
   wbPluginExtensions[3] := csDotEsu;
+  wbPluginExtensions[4] := csDotEsx;
 
 finalization
   FreeAndNil(wbIgnoreRecords);

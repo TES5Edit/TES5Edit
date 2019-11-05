@@ -98,6 +98,7 @@ type
     lblTypesToCollapse: TLabel;
     cbCollapseRGBA: TCheckBox;
     cbCollapseVec3: TCheckBox;
+    cbDecodeTexture: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);

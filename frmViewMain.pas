@@ -13140,6 +13140,7 @@ begin
     sedAutoCompareSelectedLimit.Value := wbAutoCompareSelectedLimit;
     sedNavChangeDelay.Value := tmrPendingSetActive.Interval;
     cbSimpleRecords.Checked := wbSimpleRecords;
+    cbDecodeTexture.Checked := wbDecodeTextureHashes;
     cbClampFormID.Checked := wbClampFormID;
     cbResetModifiedOnSave.Checked := wbResetModifiedOnSave;
     cbAlwaysSaveOnam.Checked := wbAlwaysSaveOnam or wbAlwaysSaveOnamForce;
@@ -13211,6 +13212,7 @@ begin
     wbAutoCompareSelectedLimit := sedAutoCompareSelectedLimit.Value;
     tmrPendingSetActive.Interval := sedNavChangeDelay.Value;
     wbSimpleRecords := cbSimpleRecords.Checked;
+    wbDecodeTextureHashes := cbDecodeTexture.Checked;
     wbClampFormID := cbClampFormID.Checked;
     wbResetModifiedOnSave := cbResetModifiedOnSave.Checked;
     wbAlwaysSaveOnam := cbAlwaysSaveOnam.Checked or wbAlwaysSaveOnamForce;
@@ -13279,6 +13281,7 @@ begin
     Settings.WriteInteger('Options', 'AutoCompareSelectedLimit', wbAutoCompareSelectedLimit);
     Settings.WriteInteger('Options', 'NavChangeDelay', tmrPendingSetActive.Interval);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
+    Settings.WriteBool('Options', 'DecodeTextureHashes', wbDecodeTextureHashes);
     Settings.WriteBool('Options', 'ClampFormID', wbClampFormID);
     Settings.WriteBool('Options', 'ResetModifiedOnSave', wbResetModifiedOnSave);
     Settings.WriteBool('Options', 'AlwaysSaveOnam', wbAlwaysSaveOnam or wbAlwaysSaveOnamForce);
@@ -19050,6 +19053,10 @@ begin
   end
   else if SameText(Identifier, 'wbSimpleRecords') and (Args.Count = 0) then begin
     Value := wbSimpleRecords;
+    Done := True;
+  end
+  else if SameText(Identifier, 'wbDecodeTextureHashes') and (Args.Count = 0) then begin
+    Value := wbDecodeTextureHashes;
     Done := True;
   end
   else if SameText(Identifier, 'wbTrackAllEditorID') and (Args.Count = 0) then begin
