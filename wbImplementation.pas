@@ -65,6 +65,8 @@ function wbCopyElementToRecord(const aSource: IwbElement; aMainRecord: IwbMainRe
 function wbFindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string): IwbMainRecord;
 function wbFormListToArray(const aFormList: IwbMainRecord; const aSignatures: string): TDynMainRecords;
 
+function wbGetGameMasterFile: IwbFile;
+
 function wbCreateKeepAliveRoot: IwbKeepAliveRoot;
 
 function wbBeginKeepAlive: Integer;
@@ -743,6 +745,8 @@ type
     function GetCRC32: TwbCRC32;
     function GetRecord(aIndex: Integer): IwbMainRecord; inline;
     function GetRecordCount: Integer; inline;
+    function GetInjectedRecord(aIndex: Integer): IwbMainRecord; inline;
+    function GetInjectedRecordCount: Integer; inline;
     function GetHighObjectID: Cardinal;
     function GetHeader: IwbMainRecord;
 
@@ -2189,7 +2193,7 @@ begin
     end;
 
     FileID := FormID.FileID.FullSlot;
-    if (FileID >= Cardinal(GetMasterCount(True))) and not (fsIsCompareLoad in flStates) then begin
+    if (FileID >= Cardinal(GetMasterCount(True))) and not (fsIsCompareLoad in flStates) and not (FormID.IsHardcoded and not (fsIsGameMaster in flStates))  then begin
 
       if (FormID.ToCardinal and $00FFF000) <> 0 then begin
         Exclude(flStates, fsESLCompatible);
@@ -2203,8 +2207,12 @@ begin
       Master := GetMasterRecordByFormID(FormID, True, True);
       if Assigned(Master) then
         (Master as IwbMainRecordInternal).AddOverride(aRecord)
-      else
-        (GetMaster(FileID, True) as IwbFileInternal).InjectMainRecord(aRecord);
+      else begin
+        if FormID.IsHardcoded and not (fsIsGameMaster in flStates) then
+          (wbGetGameMasterFile as IwbFileInternal).InjectMainRecord(aRecord)
+        else
+          (GetMaster(FileID, True) as IwbFileInternal).InjectMainRecord(aRecord);
+      end;
     except
       on E: Exception do
         if wbHasProgressCallback then
@@ -3077,7 +3085,7 @@ end;
 function TwbFile.FileFormIDtoLoadOrderFormID(aFormID: TwbFormID; aNew: Boolean): TwbFormID;
 begin
   Result := aFormID;
-  if aFormID.IsNull then
+  if aFormID.IsHardcoded then
     Exit;
   Result.FileID := FileFileIDtoLoadOrderFileID(Result.FileID, aNew);
 end;
@@ -3629,6 +3637,16 @@ begin
   end;
 end;
 
+function TwbFile.GetInjectedRecord(aIndex: Integer): IwbMainRecord;
+begin
+  Result := flInjectedRecords[aIndex];
+end;
+
+function TwbFile.GetInjectedRecordCount: Integer;
+begin
+  Result := Length(flInjectedRecords);
+end;
+
 function TwbFile.GetIsEditable: Boolean;
 begin
   Result := wbIsInternalEdit or (
@@ -3762,16 +3780,20 @@ var
   MasterCount : Integer;
   Master      : IwbFile;
 begin
-  FileID := aFormID.FileID.FullSlot;
+  if aFormID.IsHardcoded then
+    Master := wbGetGameMasterFile
+  else begin
+    FileID := aFormID.FileID.FullSlot;
 
-  MasterCount := GetMasterCount(aNewMasters);
-  if FileID >= MasterCount then
-    if fsIsCompareLoad in flStates then
-      Master := GetMaster(Pred(MasterCount), aNewMasters)
+    MasterCount := GetMasterCount(aNewMasters);
+    if FileID >= MasterCount then
+      if fsIsCompareLoad in flStates then
+        Master := GetMaster(Pred(MasterCount), aNewMasters)
+      else
+        Master := nil
     else
-      Master := nil
-  else
-    Master := GetMaster(FileID, aNewMasters);
+      Master := GetMaster(FileID, aNewMasters);
+  end;
 
   if Assigned(Master) then
     Result := Master.RecordByFormID[aFormID.ChangeFileID(Master.FileFileID[aNewMasters]), aAllowInjected, aNewMasters]
@@ -3853,7 +3875,11 @@ begin
     Exit;
   end;
 
-  Result := GetMasterRecordByFormID(aFormID, aAllowInjected, aNewMasters);
+  if not (fsIsGameMaster in flStates) then
+    Result := GetMasterRecordByFormID(aFormID, aAllowInjected, aNewMasters)
+  else
+    Result := nil;
+
   if Assigned(Result) then
     Result := Result.HighestOverrideVisibleForFile[Self];
 end;
@@ -3986,7 +4012,7 @@ end;
 function TwbFile.LoadOrderFormIDtoFileFormID(aFormID: TwbFormID; aNew: Boolean): TwbFormID;
 begin
   Result := aFormID;
-  if aFormID.IsNull then
+  if aFormID.IsHardcoded then
     Exit;
   Result.FileID := LoadOrderFileIDtoFileFileID(Result.FileID, aNew);
 end;
@@ -19333,6 +19359,17 @@ begin
   finally
     Signatures.Free;
   end;
+end;
+
+function wbGetGameMasterFile: IwbFile;
+var
+  i     : Integer;
+  Group : IwbGroupRecord;
+begin
+  for i := Low(Files) to High(Files) do
+    if fsIsGameMaster in  Files[i].FileStates then
+      Exit(Files[i]);
+  Result := nil;
 end;
 
 { TwbFlag }

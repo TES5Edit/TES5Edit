@@ -1313,6 +1313,8 @@ type
 
     function GetRecord(aIndex: Integer): IwbMainRecord;
     function GetRecordCount: Integer;
+    function GetInjectedRecord(aIndex: Integer): IwbMainRecord;
+    function GetInjectedRecordCount: Integer;
     function GetHighObjectID: Cardinal;
     function GetHeader: IwbMainRecord;
 
@@ -1374,6 +1376,10 @@ type
       read GetRecord;
     property RecordCount: Integer
       read GetRecordCount;
+    property InjectedRecords[aIndex: Integer]: IwbMainRecord
+      read GetInjectedRecord;
+    property InjectedRecordCount: Integer
+      read GetInjectedRecordCount;
     property HighObjectID: Cardinal
       read GetHighObjectID;
 
@@ -14327,8 +14333,10 @@ var
   CheckAll    : Boolean;
   Wait        : IwbWaitForm;
   FilesProg   : IwbProgress;
+  ProcessedGM : Boolean;
+  PlayerAdded : Boolean;
 
-  procedure Process(const aFile: IwbFile);
+  procedure Process(const aFile: IwbFile; aHardcodedOnly: Boolean);
   var
     i, j        : Integer;
     s           : string;
@@ -14337,9 +14345,14 @@ var
     GroupsProg  : IwbProgress;
     RecordsProg : IwbProgress;
   begin
-    if CheckAll then begin
+    ProcessedGM := ProcessedGM or (fsIsGameMaster in aFile.FileStates);
+
+    if aHardcodedOnly or CheckAll then begin
       for i := 0 to Pred(aFile.RecordCount) do begin
         MainRecord := aFile.Records[i];
+        if aHardcodedOnly and not MainRecord.FixedFormID.IsHardcoded then
+          Break;
+
         if IsValid(MainRecord.Signature) and IsValidMainRecord(MainRecord) then begin
           if MainRecord.CanHaveEditorID and (MainRecord.EditorID = '') then
             Continue;
@@ -14352,8 +14365,10 @@ var
             if s[1] = '<' then
               Delete(s, 1, 1);
 
-            if CheckFlst(MainRecord) then
+            if CheckFlst(MainRecord) then begin
+              PlayerAdded := PlayerAdded or MainRecord.FixedFormID.IsPlayer;
               Strings.Add(s);
+            end;
 
             if not Assigned(RecordsProg) then
               RecordsProg := Wait.CreateProgress('Records', s, Pred(aFile.RecordCount) )
@@ -14391,8 +14406,10 @@ var
                       if s[1] = '<' then
                         Delete(s, 1, 1);
 
-                      if CheckFlst(MainRecord) then
+                      if CheckFlst(MainRecord) then begin
+                        PlayerAdded := PlayerAdded or MainRecord.FixedFormID.IsPlayer;
                         Strings.Add(s);
+                      end;
 
                       if not Assigned(RecordsProg) then
                         RecordsProg := Wait.CreateProgress('Records', s, Pred(GroupRecord.ElementCount) )
@@ -14410,6 +14427,39 @@ var
         if Wait.IsCanceled then
           Exit;
       end;
+
+    for i := 0 to Pred(aFile.InjectedRecordCount) do begin
+      MainRecord := aFile.InjectedRecords[i];
+      if aHardcodedOnly and not MainRecord.FixedFormID.IsHardcoded then
+        Break;
+
+      if IsValid(MainRecord.Signature) and IsValidMainRecord(MainRecord) then begin
+        if MainRecord.CanHaveEditorID and (MainRecord.EditorID = '') then
+          Continue;
+
+        if wbEditInfoUseShortName then
+          s := Trim(MainRecord.ShortName)
+        else
+          s := Trim(MainRecord.Name);
+        if s <> '' then begin
+          if s[1] = '<' then
+            Delete(s, 1, 1);
+
+          if CheckFlst(MainRecord) then begin
+            PlayerAdded := PlayerAdded or MainRecord.FixedFormID.IsPlayer;
+            Strings.Add(s);
+          end;
+
+          if not Assigned(RecordsProg) then
+            RecordsProg := Wait.CreateProgress('Injected Records', s, Pred(aFile.InjectedRecordCount) )
+          else
+            RecordsProg.UpdateStatus(i, s);
+        end;
+      end;
+
+      if Wait.IsCanceled then
+        Exit;
+    end;
   end;
 
 var
@@ -14452,12 +14502,16 @@ begin
 
         Wait := wbCreateWaitForm('Building DropDownList', 'The DropDown list is being built. Please Wait...', True, 2000, 500);
 
+        ProcessedGM := False;
+        PlayerAdded := False;
         FilesProg := Wait.CreateProgress('Files', _File.Name, _File.MasterCount[aElement.MastersUpdated]);
-        Process(_File);
+        Process(_File, False);
         for i := Pred(_File.MasterCount[aElement.MastersUpdated]) downto 0 do if not Wait.IsCanceled then begin
           FilesProg.UpdateStatus( _File.MasterCount[aElement.MastersUpdated] - i, _File.Masters[i, aElement.MastersUpdated].Name );
-          Process(_File.Masters[i, aElement.MastersUpdated]);
+          Process(_File.Masters[i, aElement.MastersUpdated], False);
         end;
+        if not ProcessedGM then
+          Process(wbGetGameMasterFile, True);
 
         Wait := nil;
         FilesProg := nil;
@@ -14474,7 +14528,7 @@ begin
             Strings.Add('FFFF - None Reference [FFFFFFFF]');
           if IsValid('TRGT') then
             Strings.Add('TARGET - Target Reference [00000000]');
-          if IsValid('PLYR') then
+          if not PlayerAdded and IsValid('PLYR') then
             Strings.Add('PlayerRef [00000014]');
         end;
 
@@ -17837,9 +17891,10 @@ end;
 
 function GetContainerRefFromUnionOrValue(const aElement: IwbElement): IwbContainerElementRef;
 begin
+  Result := nil;
   if (aElement.ElementType = etUnion) or (aElement.ElementType = etValue) then begin
     Supports(aElement.Container, IwbContainerElementRef, Result);
-    while Result.ElementType = etUnion do
+    while Assigned(Result) and (Result.ElementType = etUnion) do
       Supports(Result.Container, IwbContainerElementRef, Result);
   end else
     Supports(aElement, IwbContainerElementRef, Result);
@@ -17849,7 +17904,7 @@ function GetElementFromUnion(const aElement: IwbElement): IwbElement;
 begin
   if (aElement.ElementType = etUnion) then begin
     Result := aElement.Container;
-    while Result.ElementType = etUnion do
+    while Assigned(Result) and (Result.ElementType = etUnion) do
       Result := Result.Container;
   end else
     Result := aElement;
