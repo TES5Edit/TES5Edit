@@ -2158,6 +2158,7 @@ var
   Master    : IwbMainRecord;
   FileID    : Byte;
   Signature : TwbSignature;
+  GameMasterFile : IwbFileInternal;
 begin
   if not Assigned(aRecord) then
     Exit;
@@ -2213,9 +2214,10 @@ begin
       if Assigned(Master) then
         (Master as IwbMainRecordInternal).AddOverride(aRecord)
       else begin
-        if FormID.IsHardcoded and not (fsIsGameMaster in flStates) then
-          (wbGetGameMasterFile as IwbFileInternal).InjectMainRecord(aRecord)
-        else
+        if FormID.IsHardcoded and not (fsIsGameMaster in flStates) then begin
+          if Supports(wbGetGameMasterFile, IwbFileInternal, GameMasterFile) then
+            GameMasterFile.InjectMainRecord(aRecord);
+        end else
           (GetMaster(FileID, True) as IwbFileInternal).InjectMainRecord(aRecord);
       end;
     except
