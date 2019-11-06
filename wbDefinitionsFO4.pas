@@ -14156,6 +14156,8 @@ end;
 
 
 procedure DefineFO4n;
+var
+  wbBlendOperationEnum: IwbEnumDef;
 
   function wbTintTemplateGroups(const aName: string): IwbSubRecordArrayDef;
   begin
@@ -14202,18 +14204,12 @@ procedure DefineFO4n;
           ])),
           wbCTDAs,
           wbRArray('Textures', wbString(TTET, 'Texture')),
-          wbUnknown(TTEB),
+          wbInteger(TTEB, 'Blend Operation', itU32, wbBlendOperationEnum),
           wbArray(TTEC, 'Template Colors', wbStruct('Template Color', [
             wbFormIDCk('Color', [CLFM]),
             wbFloat('Alpha'),
             wbInteger('Template Index', itU16),
-            wbInteger('Blend Operation', itU32, wbEnum([
-              'Default',
-              'Multiply',
-              'Overlay',
-              'Soft Light',
-              'Hard Light'
-            ]))
+            wbInteger('Blend Operation', itU32, wbBlendOperationEnum)
           ])),
           wbFloat(TTED, 'Default')
         ], []),
@@ -14256,6 +14252,14 @@ procedure DefineFO4n;
   end;
 
 begin
+  wbBlendOperationEnum := wbEnum([
+            'Default',
+            'Multiply',
+            'Overlay',
+            'Soft Light',
+            'Hard Light'
+          ]);
+
   wbUNAMs := wbRArray('Data Inputs', wbRStruct('Data Input', [
     wbInteger(UNAM, 'Index', itS8),
     wbString(BNAM, 'Name'),

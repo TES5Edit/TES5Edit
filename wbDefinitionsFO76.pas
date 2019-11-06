@@ -15455,6 +15455,8 @@ end;
 
 
 procedure DefineFO76n;
+var
+  wbBlendOperationEnum: IwbEnumDef;
 
   function wbTintTemplateGroups(const aName: string): IwbSubRecordArrayDef;
   begin
@@ -15463,23 +15465,54 @@ procedure DefineFO76n;
         wbLString(TTGP, 'Group Name', 0, cpTranslate),
         wbRStructs('Options', 'Option', [
           wbStruct(TETI, 'Index', [
-            wbByteArray('Unknown', 2),
+            wbInteger('Slot', itU16, wbEnum([
+              'Forehead Mask',
+              'Eyes Mask',
+              'Nose Mask',
+              'Ears Mask',
+              'Cheeks Mask',
+              'Mouth Mask',
+              'Neck Mask',
+              'Lip Color',
+              'Cheek Color',
+              'Eyeliner',
+              'Eye Socket Upper',
+              'Eye Socket Lower',
+              'Skin Tone',
+              'Paint',
+              'Laugh Lines',
+              'Cheek Color Lower',
+              'Nose',
+              'Chin',
+              'Neck',
+              'Forehead',
+              'Dirt',
+              'Scars',
+              'Face Detail',
+              'Brows',
+              'Wrinkles',
+              'Beards'
+            ])),
             wbInteger('Index', itU16)
           ]),
           wbLString(TTGP, 'Name', 0, cpTranslate),
-          wbUnknown(TTEF),
+          wbInteger(TTEF, 'Flags', itU16, wbFlags([
+            'On/Off only',
+            'Chargen Detail',
+            'Takes Skin Tone'
+          ])),
           wbCTDAs,
           wbRArray('Textures', wbString(TTET, 'Texture')),
-          wbUnknown(TTEB),
+          wbInteger(TTEB, 'Blend Operation', itU32, wbBlendOperationEnum),
           wbArray(TTEC, 'Template Colors', wbStruct('Template Color', [
             wbFormIDCk('Color', [CLFM]),
             wbFloat('Alpha'),
             wbInteger('Template Index', itU16),
-            wbByteArray('Unknown', 4)
+            wbInteger('Blend Operation', itU32, wbBlendOperationEnum)
           ])),
-          wbFloat(TTED, 'Unknown')
+          wbFloat(TTED, 'Default')
         ], []),
-        wbByteArray(TTGE, 'Group End', 4)
+        wbInteger(TTGE, 'Category Index', itU32)
       ], []);
   end;
 
@@ -15518,6 +15551,14 @@ procedure DefineFO76n;
   end;
 
 begin
+  wbBlendOperationEnum := wbEnum([
+            'Default',
+            'Multiply',
+            'Overlay',
+            'Soft Light',
+            'Hard Light'
+          ]);
+
   wbUNAMs := wbRArray('Data Inputs', wbRStruct('Data Input', [
     wbInteger(UNAM, 'Index', itS8),
     wbString(BNAM, 'Name'),
