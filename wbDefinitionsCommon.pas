@@ -1049,7 +1049,7 @@ begin
       wbInteger('Red', itU8),
       wbInteger('Green', itU8),
       wbInteger('Blue', itU8),
-      wbByteArray('Unknown', 1)
+      wbInteger('Alpha', itU8)
     ], cpNormal, aRequired)
     .SetToStr(wbRGBAToStr)
     .IncludeFlag(dfCollapsed, wbCollapseRGBA);
