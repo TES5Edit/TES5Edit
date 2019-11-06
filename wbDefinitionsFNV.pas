@@ -4866,7 +4866,7 @@ begin
       {12} 'Split Beam',
       {13} 'VATS Bonus',
       {14} 'Increase Zoom',
-      {15} 'Decrease Equip Time',
+      {15} 'Unknown 15',
       {16} 'Suppressor'
     ]);
 
