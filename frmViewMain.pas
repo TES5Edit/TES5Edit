@@ -726,6 +726,8 @@ type
     ReachableBuild: Boolean;
     ReferencedBySortColumn: TListColumn;
 
+    FocusedColumnOverride : Integer;
+
     EditInfoCacheLGeneration: Integer;
     EditInfoCache: TArray<string>;
     EditInfoCacheID: Pointer;
@@ -6084,6 +6086,8 @@ var
   i, j, k, l: Integer;
   Rect: TRect;
 begin
+  FocusedColumnOverride := -1;
+
   wbVarPointer := varPointer;
 
   if wbThemesSupported then try
@@ -7166,13 +7170,24 @@ var
   function FoundName: Boolean;
   var
     CellText    : string;
+    i           : Integer;
   begin
     if NameFilter = '' then
       Exit(True);
 
-    CellText := '';
-    vstViewGetText(vstView, aNode, 0, ttNormal, CellText);
-    Result := CellText.ToLowerInvariant.Contains(NameFilter);
+    Result := False;
+    try
+      for i := 1 to Pred(vstView.Header.Columns.Count) do begin
+        CellText := '';
+        FocusedColumnOverride := i;
+        vstViewGetText(vstView, aNode, 0, ttNormal, CellText);
+        Result := CellText.ToLowerInvariant.Contains(NameFilter);
+        if Result then
+          Break;
+      end;
+    finally
+      FocusedColumnOverride := -1;
+    end;
   end;
 
   function FoundValue: Boolean;
@@ -17202,6 +17217,7 @@ var
   ElementCount : Integer;
   i,j          : Integer;
   UseSuffix    : Boolean;
+  FocusedColumn: TColumnIndex;
 begin
   CellText := '';
   NodeDatas := Sender.GetNodeData(Node);
@@ -17214,8 +17230,14 @@ begin
 
   if Column < 1 then begin
 
-    if (vstView.FocusedColumn > 0) and (Pred(vstView.FocusedColumn) <= High(ActiveRecords)) then
-      Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+    FocusedColumn := FocusedColumnOverride;
+    if FocusedColumn < 0 then
+      FocusedColumn := vstView.FocusedColumn;
+    if Length(ActiveRecords) = 1 then
+      FocusedColumn := 1;
+
+    if (FocusedColumn > 0) and (Pred(FocusedColumn) <= High(ActiveRecords)) then
+      Element := NodeDatas[Pred(FocusedColumn)].Element;
 
     UseSuffix := Assigned(Element);
 
