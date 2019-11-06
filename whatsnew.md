@@ -3,6 +3,7 @@
 ## Bugfixes
 
 * #649 - Right pane filter bug
+* #654 - [FO4] Check for Errors: reports error when a region / object list has SCOL entries 
 * #659 - When comparing records, right-clicking to Expand All produces a contextual menu that hangs the Expand All functionality
 * #669 - CELL at 0,0 may be spuriously added to worldspaces during cleaning.
 * #670 - [FO4] Damage magic effects mislabeled subrecord
