@@ -9121,7 +9121,8 @@ begin
       {25} 'Atomic Shop Category',
       {26} 'Photomode Category',
       {27} 'Atomic Shop Filter',
-      {28} 'Event Header'
+      {28} 'Event Header',
+      {29} 'Loot Bag'
     ]);
 
   wbETYP := wbFormIDCk(ETYP, 'Equipment Type', [EQUP, NULL]);
@@ -11139,7 +11140,8 @@ begin
             wbInteger('Attack', itU32)
           ]),
           wbUnion('', wbDeciderFormVersion29, [
-            wbByteArray('Unknown', 4)
+            wbByteArray('Unknown', 4),
+            wbEmpty('Unused')
           ])
     ], cpNormal, True, nil{wbActorTemplateUseAIData});
 
@@ -15000,7 +15002,7 @@ begin
     wbOBND(True),
     wbOPDSs,
     wbLVLD,
-    wbStringKC(ONAM, 'Display Name', 0, cpOverride),
+    wbLStringKC(ONAM, 'Display Name', 0, cpTranslate),
     wbLVMV,
     wbLVCV,
     wbInteger(LVLM, 'Max Count', itU8), { Always 00 } {Unavailable}
@@ -15505,7 +15507,8 @@ begin
       wbStructSK(PRKR, [0], 'Perk', [
         wbFormIDCk('Perk', [PERK]),
         wbUnion('', wbDeciderFormVersion181, [
-          wbInteger('Rank', itU8)
+          wbInteger('Rank', itU8),
+          wbEmpty('Unused')
         ])
       ]), cpNormal, False, nil, wbPRKRsAfterSet
     ),
