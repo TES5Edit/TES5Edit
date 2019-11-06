@@ -36,6 +36,7 @@
 
 ## Minor changes
 
+* #637 - [FO4/FO76] TTEB - Unknown in RACE record is "Blend Operation"
 * #679 - [FO4/FO76] VISI and PCMB subrecords decoding
 * #722 - suffix removal during formid copying
 * #731 - [FO4] "Unknown 11" in the "Data-Flags" subrecord of CELL records is "Hidden from Interior Cell List"
