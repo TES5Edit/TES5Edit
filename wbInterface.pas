@@ -19512,7 +19512,7 @@ begin
 
       Year := c and $7F;
       Inc(Year, 2000);
-      c := c shr 7;
+      //c := c shr 7;
 
       aValue := Format('%.4d-%.2d-%.2d', [Year, Month, Day]);
     end else

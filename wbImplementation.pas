@@ -8976,6 +8976,7 @@ var
   RequiredCount: Integer;
   Element: IwbElement;
   Def: IwbNamedDef;
+  SigDef: IwbSignatureDef;
   FoundIt: Boolean;
   SelfRef : IwbContainerElementRef;
 begin
@@ -8993,8 +8994,11 @@ begin
     for i := GetAdditionalElementCount to Pred(GetElementCount) do begin
       Element := cntElements[i];
       Def := Element.Def;
-      if Assigned(Def) then
+      if Assigned(Def) then begin
+        if mrDef.IsReference and Supports(Def, IwbSignatureDef, SigDef) and (SigDef.DefaultSignature = 'NAME') then
+          Continue;
         Result := Result + Def.Name + ', ';
+      end;
     end;
     SetLength(Result, Length(Result) - 2);
 
@@ -11742,6 +11746,10 @@ begin
     if Assigned(Master) and ((Master._File as IwbFileInternal).Equals(_File)) then
       raise Exception.Create('FormID ['+aFormID.ToString(True)+'] is already present in file ' + _File.Name);
 
+    Master := _File.RecordByFormID[aFormID, True, True];
+    if Assigned(Master) then
+      Master := Master.MasterOrSelf;
+
     _File.RemoveMainRecord(Self);
 
     if Assigned(mrMaster) then
@@ -11771,6 +11779,11 @@ begin
     UpdateInteriorCellGroup;
 
     _File.AddMainRecord(Self);
+  
+    if Assigned(Master) and Master.IsInjected and not Assigned(mrMaster) then
+      (Master as IwbMainRecordInternal).YouGotAMaster(Self);
+
+    ResetConflict;
   end;
 end;
 
@@ -19435,7 +19448,6 @@ end;
 function wbGetGameMasterFile: IwbFile;
 var
   i     : Integer;
-  Group : IwbGroupRecord;
 begin
   for i := Low(Files) to High(Files) do
     if fsIsGameMaster in  Files[i].FileStates then

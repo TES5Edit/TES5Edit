@@ -2854,6 +2854,7 @@ begin
     36: Result := 6; // Werewolf
     39: Result := 7; // Enhance Weapon
     40: Result := 4; // Spawn Hazard
+    45: Result := 9; // Damage Type
     46: Result := 6; // Vampire Lord
   end;
 end;
@@ -9362,7 +9363,7 @@ begin
       {0x0080} 'Show Sky',
       {0x0100} 'Use Sky Lighting',
       {0x0200} 'Unknown 10',
-      {0x0400} 'Unknown 11',
+      {0x0400} 'Hidden from Interior Cell List',
       {0x0800} 'Sunlight Shadows',
       {0x1000} 'Distant LOD only',
       {0x2000} 'Player Followers Can''t Travel Here',
@@ -13251,7 +13252,8 @@ begin
         wbFormIDCk('Assoc. Item', [SPEL, NULL]),
         wbFormIDCk('Assoc. Item', [RACE, NULL]),
         wbFormIDCk('Assoc. Item', [ENCH, NULL]),
-        wbFormIDCk('Assoc. Item', [KYWD, NULL])
+        wbFormIDCk('Assoc. Item', [KYWD, NULL]),
+        wbFormIDCk('Assoc. Item', [DMGT, NULL])
       ], cpNormal, False, nil, wbMGEFAssocItemAfterSet),
       wbByteArray('Magic Skill (unused)', 4),
       wbFormIDCk('Resist Value', [AVIF, NULL]),
@@ -13644,6 +13646,9 @@ end;
 
 
 procedure DefineFO4n;
+var
+  wbBlendOperationEnum: IwbEnumDef;
+
   function wbTintTemplateGroups(const aName: string): IwbSubRecordArrayDef;
   var
     wbTintTemplateGroup: IwbSubRecordStructDef;
@@ -13651,60 +13656,54 @@ procedure DefineFO4n;
   begin
     wbTintTemplateOption :=
       wbRStruct('Option', [
-          wbStruct(TETI, 'Index', [
-            wbInteger('Slot', itU16, wbEnum([
-              'Forehead Mask',
-              'Eyes Mask',
-              'Nose Mask',
-              'Ears Mask',
-              'Cheeks Mask',
-              'Mouth Mask',
-              'Neck Mask',
-              'Lip Color',
-              'Cheek Color',
-              'Eyeliner',
-              'Eye Socket Upper',
-              'Eye Socket Lower',
-              'Skin Tone',
-              'Paint',
-              'Laugh Lines',
-              'Cheek Color Lower',
-              'Nose',
-              'Chin',
-              'Neck',
-              'Forehead',
-              'Dirt',
-              'Scars',
-              'Face Detail',
-              'Brows',
-              'Wrinkles',
-              'Beards'
-            ])),
-            wbInteger('Index', itU16)
-          ]),
-          wbLString(TTGP, 'Name', 0, cpTranslate),
-          wbInteger(TTEF, 'Flags', itU16, wbFlags([
-            'On/Off only',
-            'Chargen Detail',
-            'Takes Skin Tone'
+        wbStruct(TETI, 'Index', [
+          wbInteger('Slot', itU16, wbEnum([
+            'Forehead Mask',
+            'Eyes Mask',
+            'Nose Mask',
+            'Ears Mask',
+            'Cheeks Mask',
+            'Mouth Mask',
+            'Neck Mask',
+            'Lip Color',
+            'Cheek Color',
+            'Eyeliner',
+            'Eye Socket Upper',
+            'Eye Socket Lower',
+            'Skin Tone',
+            'Paint',
+            'Laugh Lines',
+            'Cheek Color Lower',
+            'Nose',
+            'Chin',
+            'Neck',
+            'Forehead',
+            'Dirt',
+            'Scars',
+            'Face Detail',
+            'Brows',
+            'Wrinkles',
+            'Beards'
           ])),
-          wbCTDAs,
-          wbRArray('Textures', wbString(TTET, 'Texture')),
-          wbUnknown(TTEB),
-          wbArray(TTEC, 'Template Colors', wbStruct('Template Color', [
-            wbFormIDCk('Color', [CLFM]),
-            wbFloat('Alpha'),
-            wbInteger('Template Index', itU16),
-            wbInteger('Blend Operation', itU32, wbEnum([
-              'Default',
-              'Multiply',
-              'Overlay',
-              'Soft Light',
-              'Hard Light'
-            ]))
-          ])),
-          wbFloat(TTED, 'Default')
-        ], []);
+          wbInteger('Index', itU16)
+        ]),
+        wbLString(TTGP, 'Name', 0, cpTranslate),
+        wbInteger(TTEF, 'Flags', itU16, wbFlags([
+          'On/Off only',
+          'Chargen Detail',
+          'Takes Skin Tone'
+        ])),
+        wbCTDAs,
+        wbRArray('Textures', wbString(TTET, 'Texture')),
+        wbInteger(TTEB, 'Blend Operation', itU32, wbBlendOperationEnum),
+        wbArray(TTEC, 'Template Colors', wbStruct('Template Color', [
+          wbFormIDCk('Color', [CLFM]),
+          wbFloat('Alpha'),
+          wbInteger('Template Index', itU16),
+          wbInteger('Blend Operation', itU32, wbBlendOperationEnum)
+        ])),
+        wbFloat(TTED, 'Default')
+      ], []);
 
     wbTintTemplateGroup :=
       wbRStruct('Group', [
@@ -13751,6 +13750,14 @@ procedure DefineFO4n;
   end;
 
 begin
+  wbBlendOperationEnum := wbEnum([
+            'Default',
+            'Multiply',
+            'Overlay',
+            'Soft Light',
+            'Hard Light'
+          ]);
+
   wbUNAMs := wbRArray('Data Inputs', wbRStruct('Data Input', [
     wbInteger(UNAM, 'Index', itS8),
     wbString(BNAM, 'Name'),

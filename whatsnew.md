@@ -3,6 +3,7 @@
 ## Bugfixes
 
 * #669 - CELL at 0,0 may be spuriously added to worldspaces during cleaning.
+* #670 - [FO4] Damage magic effects mislabeled subrecord
 * #674 - Invalid ITMs may be reported in rare cases when form versions differ
 * #676 - Ghosted ESPs and Modgroups
 * #678 - AccessViolation while generating conflict status in rare cases
@@ -10,11 +11,14 @@
 * #694 - scheduled save from save failure not removed on subsequent successes
 * #695 - Typo in Weap>DNAM>Animation Type: Balistic -> Ballistic 
 * #682 - The path bar covers the forward and back buttons if the window is too small
+* #696 - Double Listing of "Decrease Equip Time" in Weapon Mod Effect
 * #708 - "Clean masters" function doesn't remove all masters at first use
 * #718 - access violation when holding delete 
 * #720 - wrong order for FNAM and LNAM in MUST 
 * #721 - The MTNM field in RACE record is written with unneccesary terminating 0 byte
 * #729 - LODGen can fail with references that have NULL or unresolvable Base FormIDs
+* #732 - New CK leaves Base record listed for deleted REFRs, should not be marked as error
+* #733 - changing the form id of an overriden record doesn't update the link between original and override until restart
 * (reported on Discord) - cleaning Dragonborn.esm can make Boars non-aggressive
 * (reported on Discord) - crash in NAVM when triangle edge is flagged as edge link, but the number stored in the edge field can't look up a valid external NAVM via the Edge Links table
 * (reported on Discord) - VeryQuickShowConflicts may very rarely not show certain conflicts
@@ -32,8 +36,10 @@
 
 ## Minor changes
 
+* #637 - [FO4/FO76] TTEB - Unknown in RACE record is "Blend Operation"
 * #679 - [FO4/FO76] VISI and PCMB subrecords decoding
 * #722 - suffix removal during formid copying
+* #731 - [FO4] "Unknown 11" in the "Data-Flags" subrecord of CELL records is "Hidden from Interior Cell List"
 * [FO3/FNV] Flag 0 in BOOK means "Scroll"
 * [FO3/FNV] make "RuntimeScriptProfiler xSE Extension Log" available
 * Report error records in PrepareSave with full path instead of just their name
