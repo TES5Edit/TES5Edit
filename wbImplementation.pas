@@ -19448,7 +19448,6 @@ end;
 function wbGetGameMasterFile: IwbFile;
 var
   i     : Integer;
-  Group : IwbGroupRecord;
 begin
   for i := Low(Files) to High(Files) do
     if fsIsGameMaster in  Files[i].FileStates then
