@@ -36,6 +36,7 @@
 
 * #679 - [FO4/FO76] VISI and PCMB subrecords decoding
 * #722 - suffix removal during formid copying
+* #731 - [FO4] "Unknown 11" in the "Data-Flags" subrecord of CELL records is "Hidden from Interior Cell List"
 * [FO3/FNV] Flag 0 in BOOK means "Scroll"
 * [FO3/FNV] make "RuntimeScriptProfiler xSE Extension Log" available
 * Report error records in PrepareSave with full path instead of just their name

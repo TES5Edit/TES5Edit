@@ -9362,7 +9362,7 @@ begin
       {0x0080} 'Show Sky',
       {0x0100} 'Use Sky Lighting',
       {0x0200} 'Unknown 10',
-      {0x0400} 'Unknown 11',
+      {0x0400} 'Hidden from Interior Cell List',
       {0x0800} 'Sunlight Shadows',
       {0x1000} 'Distant LOD only',
       {0x2000} 'Player Followers Can''t Travel Here',
