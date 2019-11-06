@@ -534,6 +534,8 @@ type
     procedure vstViewHeaderClick(Sender: TVTHeader; HitInfo: TVTHeaderHitInfo);
     procedure vstViewHeaderDropped(Sender: TVTHeader; SourceColumn, TargetColumn: TColumnIndex; var Handled: Boolean);
     procedure vstViewHeaderDrawQueryElements(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo; var Elements: THeaderPaintElements);
+    procedure vstViewHeaderMouseDown(Sender: TVTHeader; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure vstViewHeaderMouseMove(Sender: TVTHeader; Shift: TShiftState; X, Y: Integer);
     procedure vstViewInitChildren(Sender: TBaseVirtualTree; Node: PVirtualNode; var ChildCount: Cardinal);
     procedure vstViewInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure vstViewKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -696,8 +698,6 @@ type
     procedure mniMainSaveClick(Sender: TObject);
     procedure jbhSaveBalloonClick(Sender: TObject);
     procedure jbhSaveCloseBtnClick(Sender: TObject; var CanClose: Boolean);
-    procedure vstViewHeaderMouseDown(Sender: TVTHeader; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure vstNavFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex);
     procedure tmrShutdownTimer(Sender: TObject);
@@ -17387,6 +17387,18 @@ begin
       JumpTo(MainRecord, True);
     end;
   end;
+end;
+
+procedure TfrmMain.vstViewHeaderMouseMove(Sender: TVTHeader; Shift: TShiftState; X, Y: Integer);
+var
+  Column     : Integer;
+begin
+  Column := vstView.Header.Columns.ColumnFromPosition(Point(X, Y));
+  Dec(Column);
+  if (Column >= Low(ActiveRecords)) and (Column <= High(ActiveRecords)) then
+    vstView.Header.PopupMenu := pmuViewHeader
+  else
+    vstView.Header.PopupMenu := nil;
 end;
 
 procedure TfrmMain.vstViewHeaderDrawQueryElements(Sender: TVTHeader;
