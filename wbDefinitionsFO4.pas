@@ -2891,6 +2891,7 @@ begin
       36: Result := 6; // Werewolf
       39: Result := 7; // Enhance Weapon
       40: Result := 4; // Spawn Hazard
+      45: Result := 9; // Damage Type
       46: Result := 6; // Vampire Lord
     end;
 end;
@@ -13743,7 +13744,8 @@ begin
         wbFormIDCk('Assoc. Item', [SPEL, NULL]),
         wbFormIDCk('Assoc. Item', [RACE, NULL]),
         wbFormIDCk('Assoc. Item', [ENCH, NULL]),
-        wbFormIDCk('Assoc. Item', [KYWD, NULL])
+        wbFormIDCk('Assoc. Item', [KYWD, NULL]),
+        wbFormIDCk('Assoc. Item', [DMGT, NULL])
       ], cpNormal, False, nil, wbMGEFAssocItemAfterSet),
       wbByteArray('Magic Skill (unused)', 4),
       wbFormIDCk('Resist Value', [AVIF, NULL]),
