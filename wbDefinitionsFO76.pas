@@ -10805,7 +10805,7 @@ begin
       {0x00080} 'Show Sky',
       {0x00100} 'Use Sky Lighting',
       {0x00200} 'Unknown 10',
-      {0x00400} 'Unknown 11',
+      {0x00400} 'Hidden from Interior Cell List',
       {0x00800} 'Sunlight Shadows',
       {0x01000} 'Distant LOD only',
       {0x02000} 'Player Followers Can''t Travel Here',
