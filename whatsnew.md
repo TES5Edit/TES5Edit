@@ -10,6 +10,7 @@
 * #694 - scheduled save from save failure not removed on subsequent successes
 * #695 - Typo in Weap>DNAM>Animation Type: Balistic -> Ballistic 
 * #682 - The path bar covers the forward and back buttons if the window is too small
+* #696 - Double Listing of "Decrease Equip Time" in Weapon Mod Effect
 * #708 - "Clean masters" function doesn't remove all masters at first use
 * #718 - access violation when holding delete 
 * #720 - wrong order for FNAM and LNAM in MUST 
