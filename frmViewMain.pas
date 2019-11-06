@@ -5618,6 +5618,8 @@ begin
     UpdateColumnWidths;
   finally
     vstView.EndUpdate;
+    if vstView.FocusedColumn > NoColumn then
+      vstView.ScrollIntoView(vstView.FocusedColumn, False);
     RebuildingViewTree := False;
   end;
 end;
@@ -14492,6 +14494,8 @@ begin
     ViewFocusedElement := nil;
     NodeForViewFocusedElement := nil;
     vstView.EndUpdate;
+    if vstView.FocusedColumn > NoColumn then
+      vstView.ScrollIntoView(vstView.FocusedColumn, False);
     LockWindowUpdate(0);
   end;
   sw.Stop;
@@ -15093,6 +15097,8 @@ begin
       end;
     finally
       vstView.EndUpdate;
+      if vstView.FocusedColumn > NoColumn then
+        vstView.ScrollIntoView(vstView.FocusedColumn, False);
     end;
 
     tbsReferencedBy.TabVisible := wbLoaderDone and (lvReferencedBy.Items.Count > 0);
@@ -15185,6 +15191,8 @@ begin
       UpdateColumnWidths;
     finally
       vstView.EndUpdate;
+      if vstView.FocusedColumn > NoColumn then
+        vstView.ScrollIntoView(vstView.FocusedColumn, False);
     end;
     pgMain.ActivePage := tbsView;
     tbsReferencedBy.TabVisible := False;
@@ -15464,6 +15472,9 @@ begin
         if (vstView.FocusedColumn < 1) and (ColumnForViewFocusedElement < 1) and (ActiveIndex > NoColumn) then
           vstView.FocusedColumn := ActiveIndex + 1;
         UpdateColumnWidths;
+        if vstView.FocusedColumn > NoColumn then
+          vstView.ScrollIntoView(vstView.FocusedColumn, False);
+
         if pgMain.ActivePage <> tbsReferencedBy then
           pgMain.ActivePage := tbsView;
       end
@@ -15484,6 +15495,8 @@ begin
       end;
     finally
       vstView.EndUpdate;
+      if vstView.FocusedColumn > NoColumn then
+        vstView.ScrollIntoView(vstView.FocusedColumn, False);
     end;
 
     if wbLoaderDone and Assigned(ActiveMaster) and not wbBuildingRefsParallel then begin
