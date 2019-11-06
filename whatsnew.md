@@ -3,6 +3,7 @@
 ## Bugfixes
 
 * #649 - Right pane filter bug
+* #659 - When comparing records, right-clicking to Expand All produces a contextual menu that hangs the Expand All functionality
 * #669 - CELL at 0,0 may be spuriously added to worldspaces during cleaning.
 * #670 - [FO4] Damage magic effects mislabeled subrecord
 * #674 - Invalid ITMs may be reported in rare cases when form versions differ
