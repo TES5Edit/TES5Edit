@@ -921,6 +921,8 @@ begin
         Include(InitialStates, ivsHidden);
         Include(InitialStates, ivsDisabled);
       end;
+      if InitialStates * [ivsHidden, ivsDisabled] <> [] then
+        Exclude(mndModule.miFlags, SelectFlag);
     end else
       Include(InitialStates, ivsDisabled);
   end;
