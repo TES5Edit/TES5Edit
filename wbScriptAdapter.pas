@@ -1362,6 +1362,21 @@ begin
     _File.IsESM := Args.Values[1];
 end;
 
+procedure IwbFile_CanBeESL(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  Value := False;
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    if (_File.LoadOrderFileID.IsLightSlot = true) then
+        Value :=  true;
+end;
+
+procedure Misc_wbIsPseudoESLMode(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbIsEslSupported and wbPseudoESL;
+end;
+
 procedure IwbFile_GetIsESL(var Value: Variant; Args: TJvInterpreterArgs);
 var
   _File: IwbFile;
@@ -2047,6 +2062,7 @@ begin
     AddFunction(cUnit, 'SetIsESM', IwbFile_SetIsESM, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'GetIsESL', IwbFile_GetIsESL, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetIsESL', IwbFile_SetIsESL, 2, [varEmpty, varBoolean], varEmpty);
+    AddFunction(cUnit, 'CanBeESL', IwbFile_CanBeESL, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SortMasters', IwbFile_SortMasters, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'CleanMasters', IwbFile_CleanMasters, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'MasterCount', IwbFile_MasterCount, 1, [varEmpty], varEmpty);
@@ -2110,6 +2126,8 @@ begin
     AddFunction(cUnit, 'LocalizationGetStringsFromFile', Misc_LocalizationGetStringsFromFile, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbFormIDErrorCheckLock', Misc_wbFormIDErrorCheckLock, 0, [], varEmpty);
     AddFunction(cUnit, 'wbFormIDErrorCheckUnlock', Misc_wbFormIDErrorCheckUnlock, 0, [], varEmpty);
+    AddFunction(cUnit, 'wbIsPseudoESLMode', Misc_wbIsPseudoESLMode, 0, [], varEmpty);
+
   end;
 end;
 
