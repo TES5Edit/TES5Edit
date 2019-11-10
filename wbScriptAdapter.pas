@@ -1362,6 +1362,23 @@ begin
     _File.IsESM := Args.Values[1];
 end;
 
+procedure IwbFile_GetIsESL(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  Value := False;
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    Value := _File.IsESL;
+end;
+
+procedure IwbFile_SetIsESL(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    _File.IsESL := Args.Values[1];
+end;
+
 procedure IwbFile_SortMasters(var Value: Variant; Args: TJvInterpreterArgs);
 var
   _File: IwbFile;
@@ -2028,6 +2045,8 @@ begin
     AddFunction(cUnit, 'GetNewFormID', IwbFile_GetNewFormID, 0, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetIsESM', IwbFile_GetIsESM, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetIsESM', IwbFile_SetIsESM, 2, [varEmpty, varBoolean], varEmpty);
+    AddFunction(cUnit, 'GetIsESL', IwbFile_GetIsESL, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'SetIsESL', IwbFile_SetIsESL, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'SortMasters', IwbFile_SortMasters, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'CleanMasters', IwbFile_CleanMasters, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'MasterCount', IwbFile_MasterCount, 1, [varEmpty], varEmpty);
