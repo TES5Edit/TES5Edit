@@ -12938,7 +12938,7 @@ begin
 		wbStruct(XLIG, 'Light Data', [
       wbFloat('FOV 90+/-'),
       wbFloat('Fade 1.35+/-'),
-      wbByteArray('Unknown', 4),
+      wbFloat('End Distance Cap'),
       wbFloat('Shadow Depth Bias'),
       wbByteArray('Unknown', 4) // optional
     ], cpNormal, False, nil, 4),
