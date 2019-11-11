@@ -30,6 +30,7 @@ var
   wbSMNodeFlags: IwbFlagsDef;
   wbXALGFlags: IwbFlagsDef;
   wbPHSTFlags: IwbFlagsDef;
+  wbXFLGFlags: IwbFlagsDef;
 
   wbActorPropertyEnum: IwbEnumDef;
   wbAdvanceActionEnum: IwbEnumDef;
@@ -2226,6 +2227,89 @@ begin
   Result := wbEdgeToInt(2, aString, aElement);
 end;
 
+function wbLGDIFiltersLinksTo(const aElement: IwbElement): IwbElement;
+var
+  LegendaryIndex : Integer;
+  Filter         : IwbContainerElementRef;
+  MainRecord     : IwbMainRecord;
+  LegendaryMods  : IwbContainerElementRef;
+  LegendaryMod   : IwbContainerElementRef;
+  BaseStarSlot   : Integer;
+  ModIndex       : Integer;
+begin
+  Result := nil;
+  if not Assigned(aElement) then
+    Exit;
+
+  Filter := aElement.Container as IwbContainerElementRef;
+  if not Assigned(Filter) then
+    Exit;
+
+  MainRecord := aElement.ContainingMainRecord;
+  if not Assigned(MainRecord) then
+    Exit;
+
+  if not Supports(MainRecord.ElementBySignature[BNAM], IwbContainerElementRef, LegendaryMods) then
+    Exit;
+
+  BaseStarSlot := Filter.Elements[0].NativeValue;
+  ModIndex := aElement.NativeValue;
+
+  for var i := 0 to LegendaryMods.ElementCount do
+  begin
+    LegendaryMod := LegendaryMods.Elements[i] as IwbContainerElementRef;
+    if LegendaryMod[0].NativeValue = BaseStarSlot then
+    begin
+       LegendaryIndex := i + ModIndex;
+       Break;
+    end
+  end;
+
+  Result := LegendaryMods.Elements[LegendaryIndex];
+end;
+
+function wbLGDIFiltersToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  LegendaryIndex : Integer;
+  Filter         : IwbContainerElementRef;
+  MainRecord     : IwbMainRecord;
+  LegendaryMods  : IwbContainerElementRef;
+  LegendaryMod   : IwbContainerElementRef;
+  BaseStarSlot   : Integer;
+  ModIndex       : Integer;
+begin
+  Result := 'Unknown Ref';
+  if not Assigned(aElement) then
+    Exit;
+
+  Filter := aElement.Container as IwbContainerElementRef;
+  if not Assigned(Filter) then
+    Exit;
+
+  MainRecord := aElement.ContainingMainRecord;
+  if not Assigned(MainRecord) then
+    Exit;
+
+  if not Supports(MainRecord.ElementBySignature[BNAM], IwbContainerElementRef, LegendaryMods) then
+    Exit;
+
+  BaseStarSlot := Filter.Elements[0].NativeValue;
+  ModIndex := aElement.NativeValue;
+
+  for var i := 0 to LegendaryMods.ElementCount do
+  begin
+    LegendaryMod := LegendaryMods.Elements[i] as IwbContainerElementRef;
+    if LegendaryMod[0].NativeValue = BaseStarSlot then
+    begin
+       LegendaryIndex := i + ModIndex;
+       Break;
+    end
+  end;
+
+  LegendaryMod := LegendaryMods.Elements[LegendaryIndex] as IwbContainerElementRef;
+
+  Result := LegendaryMod[1].EditValue;
+end;
 
 
 { Alias to string conversion, requires quest reference or quest record specific to record that references alias }
@@ -17226,9 +17310,9 @@ begin
       wbUnknown(INAM),
       wbUnknown(XWPK)
     ], []),
-    wbUnknown(XPPS),
+    wbArrayS(XPPS, 'Property Sheet', wbObjectProperty),
     wbRArray('Resources',
-      wbStruct(XWRC, '', [
+      wbStruct(XWRC, 'Resource', [
         wbFormIDCk('Resource', [RESO]),
         wbFloat('Count')
       ])
@@ -18625,13 +18709,13 @@ begin
 
     wbArray(CNAM, 'Include Filters', wbStruct('Include Filter', [
       wbInteger('Star Slot', itU32, wbLGDIStarSlot),
-      wbInteger('Unknown', itU32),
+      wbInteger('Referenced Mod', itU32, wbLGDIFiltersToStr).SetLinksToCallback(wbLGDIFiltersLinksTo),
       wbFormIDCk('Keyword', [KYWD])
     ])),
 
     wbArray(DNAM, 'Exclude Filters', wbStruct('Exclude Filter', [
       wbInteger('Star Slot', itU32, wbLGDIStarSlot),
-      wbInteger('Unknown', itU32),
+      wbInteger('Referenced Mod', itU32, wbLGDIFiltersToStr).SetLinksToCallback(wbLGDIFiltersLinksTo),
       wbFormIDCk('Keyword', [KYWD])
     ]))
   ]);
@@ -19339,7 +19423,7 @@ begin
     wbOBND,
     wbFULL,
     wbFormID(RENT, 'Required Entitlement'),
-    wbString(SNAM),
+    wbString(SNAM, 'Swf Class Name'),
     wbUnknown(XFLG),
     wbFormID(CNAM, 'Category'),
     wbFormID(DNAM, 'Animation')
@@ -19424,10 +19508,10 @@ begin
   wbRecord(WAVE, 'Wave Encounter', [
     wbEDID,
     wbKeywords,
-    wbArray(WAVD, 'Unknown', wbStruct('Unknown', [
-      wbByteArray('Unknown', 4),
-      wbFormID('Unknown'),
-      wbByteArray('Unknown', 4)
+    wbArray(WAVD, 'Wave Encounter Definitions', wbStruct('Wave Encounter Definition', [
+      wbInteger('Spawn Order', itU32),
+      wbFormID('Spawn Reference'),
+      wbInteger('Unknown', itU32)
     ])),
     wbUnknown(DNAM)
   ]);
