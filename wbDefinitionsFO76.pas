@@ -1291,7 +1291,7 @@ var
   wbSNTP: IwbSubRecordDef;
   wbXALG: IwbRecordMemberDef;
   wbXFLG: IwbRecordMemberDef;
-  wbModelXFLG: IwbRecordMemberDef;
+  wbModelXFLG: IwbSubRecordDef;
   wbXFLGLong: IwbRecordMemberDef;
   wbXEZN: IwbRecordMemberDef;
   wbXLCN: IwbRecordMemberDef;
@@ -3739,9 +3739,24 @@ begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 29);
 end;
 
+function wbDeciderFormVersion70(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 70);
+end;
+
 function wbDeciderFormVersion77(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 77);
+end;
+
+function wbDeciderFormVersion91(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 91);
+end;
+
+function wbDeciderFormVersion97(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 97);
 end;
 
 function wbDeciderFormVersion99(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -3749,9 +3764,19 @@ begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 99);
 end;
 
+function wbDeciderFormVersion112(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 112);
+end;
+
 function wbDeciderFormVersion134(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 134);
+end;
+
+function wbDeciderFormVersion150(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 150);
 end;
 
 function wbDeciderFormVersion152(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -3774,6 +3799,11 @@ begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 171);
 end;
 
+function wbDeciderFormVersion173(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 173);
+end;
+
 function wbDeciderFormVersion174(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 174);
@@ -3784,14 +3814,44 @@ begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 181);
 end;
 
-function wbDeciderFormVersion188(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbDeciderFormVersion182(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 188);
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 182);
+end;
+
+function wbDeciderFormVersion183(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 183);
+end;
+
+function wbDeciderFormVersion184(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 184);
+end;
+
+function wbDeciderFormVersion185(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 185);
+end;
+
+function wbDeciderFormVersion186(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 186);
 end;
 
 function wbDeciderFormVersion187(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 187);
+end;
+
+function wbDeciderFormVersion188(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 188);
+end;
+
+function wbDeciderFormVersion192(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 192);
 end;
 
 function wbDeciderCELLFlags(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -3800,36 +3860,6 @@ begin
     Result := 0
   else
     Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 187);
-end;
-
-function wbDeciderFormVersion186(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 186);
-end;
-
-function wbDeciderFormVersion185(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 185);
-end;
-
-function wbDeciderFormVersion184(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 184);
-end;
-
-function wbDeciderFormVersion183(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 183);
-end;
-
-function wbDeciderFormVersion182(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 182);
-end;
-
-function wbDeciderFormVersion192(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 192);
 end;
 
 function wbAECHDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -6668,8 +6698,8 @@ begin
       wbByteColors('Z-')
     ]),
     wbByteColors('Specular'),
-    wbUnknown
-    //wbFloat('Scale')
+    wbFloat('Scale')
+    //wbUnknown
   ])
 end;
 
@@ -12530,8 +12560,8 @@ begin
       wbFormIDCk('Impact Data Set', [IPDS, NULL]),
       wbFormID('Placed Object'),
       wbFormIDCk('Spawn Projectile', [PROJ, NULL]),
-      wbUnion('Force', wbDeciderFormVersion171, [
-        wbFloat('Force'),
+      wbUnion('Force', wbDeciderFormVersion150, [
+        wbEmpty('Unused'),
         wbFormIDCk('Force Curve Table', [CURV, NULL])
       ], cpNormal, True),
 
@@ -12539,8 +12569,8 @@ begin
       wbFloat('Inner Radius'),
       wbFloat('Outer Radius'),
       wbFloat('IS Radius'),
-      wbUnion('Vertical Offset Mult', wbDeciderFormVersion99, [
-        wbByteArray('Unknown', 4),
+      wbUnion('Vertical Offset Mult', wbDeciderFormVersion97, [
+        wbEmpty('Unused'),
         wbFloat('Vertical Offset Mult')
       ]),
       wbInteger('Flags1', itU64, wbFlags([
@@ -12610,27 +12640,38 @@ begin
         {0x4000000000000000} 'Unknown 63',
         {0x8000000000000000} 'Unknown 64'
       ])),
-      wbInteger('Sound Level', itU32, wbSoundLevelEnum),
-      wbFloat('Placed Object AutoFade Delay'),
-      wbInteger('Stagger', itU32, wbEnum([
-        'None',
-        'Small',
-        'Medium',
-        'Large',
-        'Extra Large'
-      ])),
-      wbByteArray('Unknown', 4),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbUnknown
-//      wbStruct('Spawn', [
-//        wbFloat('X'),
-//        wbFloat('Y'),
-//        wbFloat('Z'),
-//        wbFloat('Spread Degrees'),
-//        wbInteger('Count', itU32)
-//      ])
+      wbUnion('Sound Level', wbDeciderFormVersion70, [
+        wbEmpty('Unused'),
+        wbInteger('Sound Level', itU32, wbSoundLevelEnum)
+      ]),
+      wbUnion('Placed Object AutoFade Delay', wbDeciderFormVersion91, [
+        wbEmpty('Unused'),
+        wbFloat('Placed Object AutoFade Delay')
+      ]),
+      wbUnion('Stagger', wbDeciderFormVersion112, [
+        wbEmpty('Unused'),
+        wbInteger('Stagger', itU32, wbEnum([
+          'None',
+          'Small',
+          'Medium',
+          'Large',
+          'Extra Large'
+        ]))
+      ]),
+      wbUnion('Unknown', wbDeciderFormVersion112, [
+        wbEmpty('Unused'),
+        wbStruct('Unknown', [
+          wbFloat('Unknown'),
+          wbFloat('Unknown'),
+          wbFloat('Unknown'),
+          wbFloat('Unknown'),
+          wbByteArray('Unknown', 4)
+        ])
+      ]),
+      wbUnion('Base Weapon Damage Mult', wbDeciderFormVersion173, [
+        wbEmpty('Unused'),
+        wbFloat('Base Weapon Damage Mult')
+      ])
     ], cpNormal, True, nil, 13)
   ]);
 
@@ -15694,7 +15735,7 @@ begin
     wbLStringKC(SHRT, 'Short Name', 0, cpTranslate),
     wbEmpty(DATA, 'Marker'),
     wbStruct(DNAM, '', [
-      wbInteger('Unknown', itU16),
+      wbInteger('Base Health', itU16),
       wbInteger('Unknown', itU16),
       wbInteger('Far Away Model Distance', itU16),
       wbInteger('Geared Up Weapons', itU16)
@@ -17758,8 +17799,8 @@ begin
     ], False), True), [
     wbHEDR,
     wbUnknown(MMSB),
-    wbByteArray(OFST, 'Unknown', 0, cpIgnore),            // If possible then ignored by the runtime. Neither from the CK
-    wbByteArray(DELE, 'Unknown', 0, cpIgnore),            // If possible then ignored by the runtime. Neither from the CK
+    //wbByteArray(OFST, 'Unknown', 0, cpIgnore), {unused in FO76}
+    //wbByteArray(DELE, 'Unknown', 0, cpIgnore), {unused in FO76}
     wbString(CNAM, 'Author', 0, cpTranslate, True),
     wbString(SNAM, 'Description', 0, cpTranslate),
     wbRArray('Master Files', wbRStruct('Master File', [
@@ -17770,7 +17811,7 @@ begin
     wbArray(ONAM, 'Overridden Forms',                     // Valid in CK
       wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, DLBR, DIAL, INFO, SCEN]),
       0, nil, nil, cpNormal, False{, wbTES4ONAMDontShow}),
-    wbByteArray(SCRN, 'Screenshot'),                      // If possible then ignored by the runtime. Neither from the CK
+    //wbByteArray(SCRN, 'Screenshot'), {unused in FO76}
     wbRArray('Transient Types (CK only)', wbStruct(TNAM, 'Transient Type', [
       wbInteger('FormType', itU32, wbFormTypeEnum), // seen TESTopic 78 (array of DIAL) and BGSScene 126 (array of SCEN)
       wbArray('References', wbFormIDCk('Reference', [DIAL, SCEN]))
