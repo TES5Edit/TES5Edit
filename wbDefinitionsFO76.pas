@@ -1290,6 +1290,9 @@ var
   wbAUUV: IwbSubRecordDef;
   wbSNTP: IwbSubRecordDef;
   wbXALG: IwbRecordMemberDef;
+  wbXFLG: IwbRecordMemberDef;
+  wbModelXFLG: IwbRecordMemberDef;
+  wbXFLGLong: IwbRecordMemberDef;
   wbXEZN: IwbRecordMemberDef;
   wbXLCN: IwbRecordMemberDef;
   wbNAM1: IwbSubRecordDef;
@@ -1331,7 +1334,7 @@ begin
       wbMODS,
       wbMODF,
       wbENLM,
-      wbUnknown(XFLG),
+      wbModelXFLG,
       wbENLT,
       wbENLS,
       wbAUUV,
@@ -7925,9 +7928,77 @@ begin
     {0x20000000} 'Unknown 30',
     {0x40000000} 'Unknown 31',
     {0x80000000} 'Unknown 32'
-  ], True);
+  ]);
 
-
+  wbXFLGFlags := wbFlags([
+    {0x0000000000000001} 'Unknown 1',
+    {0x0000000000000002} 'Unknown 2',
+    {0x0000000000000004} 'Unknown 3',
+    {0x0000000000000008} 'Unknown 4',
+    {0x0000000000000010} 'Unknown 5',
+    {0x0000000000000020} 'Unknown 6',
+    {0x0000000000000040} 'Unknown 7',
+    {0x0000000000000080} 'Unknown 8',
+    {0x0000000000000100} 'Unknown 9',
+    {0x0000000000000200} 'Unknown 10',
+    {0x0000000000000400} 'Unknown 11',
+    {0x0000000000000800} 'Unknown 12',
+    {0x0000000000001000} 'Unknown 13',
+    {0x0000000000002000} 'Unknown 14',
+    {0x0000000000004000} 'Unknown 15',
+    {0x0000000000008000} 'Unknown 16',
+    {0x0000000000010000} 'Unknown 17',
+    {0x0000000000020000} 'Unknown 18',
+    {0x0000000000040000} 'Unknown 19',
+    {0x0000000000080000} 'Unknown 20',
+    {0x0000000000100000} 'Unknown 21',
+    {0x0000000000200000} 'Unknown 22',
+    {0x0000000000400000} 'Unknown 23',
+    {0x0000000000800000} 'Unknown 24',
+    {0x0000000001000000} 'Unknown 25',
+    {0x0000000002000000} 'Unknown 26',
+    {0x0000000004000000} 'Unknown 27',
+    {0x0000000008000000} 'Unknown 28',
+    {0x0000000010000000} 'Unknown 29',
+    {0x0000000020000000} 'Unknown 30',
+    {0x0000000040000000} 'Unknown 31',
+    {0x0000000080000000} 'Unknown 32',
+    {0x0000000100000000} 'Unknown 33',
+    {0x0000000200000000} 'Unknown 34',
+    {0x0000000400000000} 'Unknown 35',
+    {0x0000000800000000} 'Unknown 36',
+    {0x0000001000000000} 'Unknown 37',
+    {0x0000002000000000} 'Unknown 38',
+    {0x0000004000000000} 'Unknown 39',
+    {0x0000008000000000} 'Unknown 40',
+    {0x0000010000000000} 'Unknown 41',
+    {0x0000020000000000} 'Unknown 42',
+    {0x0000040000000000} 'Unknown 43',
+    {0x0000080000000000} 'Unknown 44',
+    {0x0000100000000000} 'Unknown 45',
+    {0x0000200000000000} 'Unknown 46',
+    {0x0000400000000000} 'Unknown 47',
+    {0x0000800000000000} 'Unknown 48',
+    {0x0001000000000000} 'Unknown 49',
+    {0x0002000000000000} 'Unknown 50',
+    {0x0004000000000000} 'Unknown 51',
+    {0x0008000000000000} 'Unknown 52',
+    {0x0010000000000000} 'Unknown 53',
+    {0x0020000000000000} 'Unknown 54',
+    {0x0040000000000000} 'Unknown 55',
+    {0x0080000000000000} 'Unknown 56',
+    {0x0100000000000000} 'Unknown 57',
+    {0x0200000000000000} 'Unknown 58',
+    {0x0400000000000000} 'Unknown 59',
+    {0x0800000000000000} 'Unknown 60',
+    {0x1000000000000000} 'Unknown 61',
+    {0x2000000000000000} 'Unknown 62',
+    {0x4000000000000000} 'Unknown 63',
+    {0x8000000000000000} 'Unknown 64'
+  ]);
+  wbModelXFLG := wbInteger(XFLG, 'Flags', itU8, wbXFLGFlags);
+  wbXFLG := wbInteger(XFLG, 'Flags', itU32, wbXFLGFlags);
+  wbXFLGLong := wbInteger(XFLG, 'Flags', itU64, wbXFLGFlags);
   wbXALG := wbInteger(XALG, 'Flags', itU64, wbXALGFlags);
   wbXEZN := wbFormIDCk(XEZN, 'Encounter Zone', [LCTN]); // Encounter zones in FO76 are locations
   wbXLCN := wbFormIDCk(XLCN, 'Location', [LCTN]);
@@ -10714,8 +10785,8 @@ begin
       wbByteArray('Unknown', 1),
       wbFloat('Weapon Adjust')
     ], cpNormal, True),
-    wbTexturedModel('Male world model', [MOD2, MO2T], [wbMO2C, wbMO2S, wbUnknown(XFLG), wbENLT, wbENLS, wbAUUV, wbMO2F]),
-    wbTexturedModel('Female world model', [MOD3, MO3T], [wbMO3C, wbMO3S, wbUnknown(XFLG), wbENLT, wbENLS, wbAUUV, wbMO3F]),
+    wbTexturedModel('Male world model', [MOD2, MO2T], [wbMO2C, wbMO2S, wbModelXFLG, wbENLT, wbENLS, wbAUUV, wbMO2F]),
+    wbTexturedModel('Female world model', [MOD3, MO3T], [wbMO3C, wbMO3S, wbModelXFLG, wbENLT, wbENLS, wbAUUV, wbMO3F]),
     wbTexturedModel('Male 1st person', [MOD4, MO4T], [wbMO4C, wbMO4S, wbENLT, wbENLS, wbAUUV, wbMO4F]),
     wbTexturedModel('Female 1st person', [MOD5, MO5T], [wbMO5C, wbMO5S, wbENLT, wbENLS, wbAUUV, wbMO5F]),
     wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),
@@ -12472,7 +12543,7 @@ begin
         wbByteArray('Unknown', 4),
         wbFloat('Vertical Offset Mult')
       ]),
-      wbInteger('Flags1', itU32, wbFlags([
+      wbInteger('Flags1', itU64, wbFlags([
         {0x0000000000000001} 'Unknown 0',
         {0x0000000000000002} 'Always Uses World Orientation',
         {0x0000000000000004} 'Knock Down - Always',
@@ -12505,27 +12576,39 @@ begin
         {0x0000000010000000} 'Unknown 29',
         {0x0000000020000000} 'Unknown 30',
         {0x0000000040000000} 'Unknown 31',
-        {0x0000000080000000} 'Unknown 32'
-     ])),
-     wbInteger('Flags2', itU32, wbFlags([
-        {0x00000001} 'Unknown 33',
-        {0x00000002} 'Unknown 34',
-        {0x00000004} 'Unknown 35',
-        {0x00000008} 'Unknown 36',
-        {0x00000010} 'Unknown 37',
-        {0x00000020} 'Unknown 38',
-        {0x00000040} 'Unknown 39',
-        {0x00000080} 'Unknown 40',
-        {0x00000100} 'Unknown 41',
-        {0x00000200} 'Unknown 42',
-        {0x00000400} 'Unknown 43',
-        {0x00000800} 'Unknown 44',
-        {0x00001000} 'Unknown 45',
-        {0x00002000} 'Unknown 46',
-        {0x00004000} 'Unknown 47',
-        {0x00008000} 'Unknown 48',
-        {0x00010000} 'Unknown 49',
-        {0x00020000} 'Unknown 50'
+        {0x0000000080000000} 'Unknown 32',
+        {0x0000000100000000} 'Unknown 33',
+        {0x0000000200000000} 'Unknown 34',
+        {0x0000000400000000} 'Unknown 35',
+        {0x0000000800000000} 'Unknown 36',
+        {0x0000001000000000} 'Unknown 37',
+        {0x0000002000000000} 'Unknown 38',
+        {0x0000004000000000} 'Unknown 39',
+        {0x0000008000000000} 'Unknown 40',
+        {0x0000010000000000} 'Unknown 41',
+        {0x0000020000000000} 'Unknown 42',
+        {0x0000040000000000} 'Unknown 43',
+        {0x0000080000000000} 'Unknown 44',
+        {0x0000100000000000} 'Unknown 45',
+        {0x0000200000000000} 'Unknown 46',
+        {0x0000400000000000} 'Unknown 47',
+        {0x0000800000000000} 'Unknown 48',
+        {0x0001000000000000} 'Unknown 49',
+        {0x0002000000000000} 'Unknown 50',
+        {0x0004000000000000} 'Unknown 51',
+        {0x0008000000000000} 'Unknown 52',
+        {0x0010000000000000} 'Unknown 53',
+        {0x0020000000000000} 'Unknown 54',
+        {0x0040000000000000} 'Unknown 55',
+        {0x0080000000000000} 'Unknown 56',
+        {0x0100000000000000} 'Unknown 57',
+        {0x0200000000000000} 'Unknown 58',
+        {0x0400000000000000} 'Unknown 59',
+        {0x0800000000000000} 'Unknown 60',
+        {0x1000000000000000} 'Unknown 61',
+        {0x2000000000000000} 'Unknown 62',
+        {0x4000000000000000} 'Unknown 63',
+        {0x8000000000000000} 'Unknown 64'
       ])),
       wbInteger('Sound Level', itU32, wbSoundLevelEnum),
       wbFloat('Placed Object AutoFade Delay'),
@@ -13447,7 +13530,7 @@ begin
       'Message Box',
       'Delay Initial Display'
     ]), cpNormal, True, False, nil, wbMESGDNAMAfterSet),
-    wbUnknown(XFLG),
+    wbXFLGLong,
     wbInteger(TNAM, 'Display Time', itU32, nil, cpNormal, False, False, wbMESGTNAMDontShow),
     wbString(SNAM, 'SWF'),
     wbLStringKC(NNAM, 'Short Title', 0, cpTranslate),
@@ -17033,7 +17116,7 @@ begin
         {0x00000400}  8, 'Unknown',
         {0x00000800} 16, 'Unknown'
       ], True, True)))]),
-    wbUnknown(XFLG),
+    wbXFLG,
     wbUnknown(XKPD),
     wbStruct(XBSD, 'Spline', [
       wbFloat('Slack'),
@@ -18142,7 +18225,7 @@ begin
     ]), cpNormal, True),
     {>>> Object Bounds doesn't show up in CK <<<}
     wbWorldspaceOBND,
-    wbRArray('Unknown', wbFormIDCk(LNAM, 'Landscape Texture', [LTEX])),
+    wbRArray('Landscape Textures', wbFormIDCk(LNAM, 'Landscape Texture', [LTEX])),
     wbString(NAM5, 'Map Image'),
     wbUnknown(NAM6),
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
@@ -19424,7 +19507,7 @@ begin
     wbFULL,
     wbFormID(RENT, 'Required Entitlement'),
     wbString(SNAM, 'Swf Class Name'),
-    wbUnknown(XFLG),
+    wbXFLG,
     wbFormID(CNAM, 'Category'),
     wbFormID(DNAM, 'Animation')
   ]);
@@ -19577,7 +19660,7 @@ begin
       {0x40000000} 'Unknown 30',
       {0x80000000} 'Unknown 31'
     ])),
-    wbUnknown(XFLG), //Unused?
+    wbXFLGLong, //Unused?
     wbFormIDCk(HNAM, 'Required Count', [GLOB]),
     wbInteger(CNAM, 'Challenge Frequency', itU32, wbEnum([
       'Daily',
