@@ -2257,8 +2257,9 @@ begin
 
   BaseStarSlot := Filter.Elements[0].NativeValue;
   ModIndex := aElement.NativeValue;
+  LegendaryIndex := -1;
 
-  for var i := 0 to LegendaryMods.ElementCount do
+  for var i := 0 to Pred(LegendaryMods.ElementCount) do
   begin
     LegendaryMod := LegendaryMods.Elements[i] as IwbContainerElementRef;
     if LegendaryMod[0].NativeValue = BaseStarSlot then
@@ -2267,6 +2268,9 @@ begin
        Break;
     end
   end;
+
+  if LegendaryIndex = -1 then
+    Exit;
 
   Result := LegendaryMods.Elements[LegendaryIndex];
 end;
@@ -2298,8 +2302,9 @@ begin
 
   BaseStarSlot := Filter.Elements[0].NativeValue;
   ModIndex := aElement.NativeValue;
+  LegendaryIndex := -1;
 
-  for var i := 0 to LegendaryMods.ElementCount do
+  for var i := 0 to Pred(LegendaryMods.ElementCount) do
   begin
     LegendaryMod := LegendaryMods.Elements[i] as IwbContainerElementRef;
     if LegendaryMod[0].NativeValue = BaseStarSlot then
@@ -2308,6 +2313,8 @@ begin
        Break;
     end
   end;
+  if LegendaryIndex = -1 then
+    Exit;
 
   LegendaryMod := LegendaryMods.Elements[LegendaryIndex] as IwbContainerElementRef;
 
