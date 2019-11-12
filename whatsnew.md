@@ -2,6 +2,9 @@
 
 ## Bugfixes
 
+* #649 - Right pane filter bug
+* #654 - [FO4] Check for Errors: reports error when a region / object list has SCOL entries 
+* #659 - When comparing records, right-clicking to Expand All produces a contextual menu that hangs the Expand All functionality
 * #669 - CELL at 0,0 may be spuriously added to worldspaces during cleaning.
 * #670 - [FO4] Damage magic effects mislabeled subrecord
 * #674 - Invalid ITMs may be reported in rare cases when form versions differ
@@ -19,6 +22,8 @@
 * #729 - LODGen can fail with references that have NULL or unresolvable Base FormIDs
 * #732 - New CK leaves Base record listed for deleted REFRs, should not be marked as error
 * #733 - changing the form id of an overriden record doesn't update the link between original and override until restart
+* #734 - right side window's record overrides don't focus on currently selected mod
+* #737 - Ambiguity in Skyrim's QUST definition
 * (reported on Discord) - cleaning Dragonborn.esm can make Boars non-aggressive
 * (reported on Discord) - crash in NAVM when triangle edge is flagged as edge link, but the number stored in the edge field can't look up a valid external NAVM via the Edge Links table
 * (reported on Discord) - VeryQuickShowConflicts may very rarely not show certain conflicts
@@ -28,6 +33,7 @@
 * (reported on Discord) - double click on integer and float elements does not show in-place editor if they are inside a union
 * (reported on Discord) - in very rare cases, a change might not result in the file being marked as having unsaved changes
 * (reported on Discord) - changing the FormID of a record might not always update the FormID of the "Children of" group for that record
+* (reported on Discord) - Module selection misbehaves for modules with missing masters
 * (found by developer) - TdfElement.LoadFromResource does not report if the resource can't be found
 * (found by developer) - Quick [Auto] Clean allows selecting the game master (which makes no sense)
 * (found by developer) - [FO4] incorrect subrecord order in CELL

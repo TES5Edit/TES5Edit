@@ -11468,12 +11468,12 @@ begin
       wbInteger('Form Version', itU8, nil, cpIgnore),
       wbByteArray('Unknown', 4),
       wbInteger('Type', itU32, wbQuestTypeEnum)
-    ]),
+    ], cpNormal, True),
     wbString(ENAM, 'Event', 4),
     wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
     wbString(FLTR, 'Object Window Filter', 0, cpTranslate),
     wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, False),
-    wbEmpty(NEXT, 'Marker'),
+    wbEmpty(NEXT, 'Marker', cpNormal, True),
     wbCTDAs, {>>> Unknown, doesn't show up in CK <<<}
     wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
       wbStructSK(INDX, [0], 'Stage Index', [
@@ -11516,7 +11516,7 @@ begin
         wbCTDAs
       ], []))
     ], [])),
-    wbInteger(ANAM, 'Next Alias ID', itU32),
+    wbInteger(ANAM, 'Next Alias ID', itU32, nil, cpNormal, True),
     wbRArray('Aliases',
       wbRUnion('Alias', [
 

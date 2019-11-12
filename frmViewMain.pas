@@ -534,6 +534,8 @@ type
     procedure vstViewHeaderClick(Sender: TVTHeader; HitInfo: TVTHeaderHitInfo);
     procedure vstViewHeaderDropped(Sender: TVTHeader; SourceColumn, TargetColumn: TColumnIndex; var Handled: Boolean);
     procedure vstViewHeaderDrawQueryElements(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo; var Elements: THeaderPaintElements);
+    procedure vstViewHeaderMouseDown(Sender: TVTHeader; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure vstViewHeaderMouseMove(Sender: TVTHeader; Shift: TShiftState; X, Y: Integer);
     procedure vstViewInitChildren(Sender: TBaseVirtualTree; Node: PVirtualNode; var ChildCount: Cardinal);
     procedure vstViewInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure vstViewKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -696,8 +698,6 @@ type
     procedure mniMainSaveClick(Sender: TObject);
     procedure jbhSaveBalloonClick(Sender: TObject);
     procedure jbhSaveCloseBtnClick(Sender: TObject; var CanClose: Boolean);
-    procedure vstViewHeaderMouseDown(Sender: TVTHeader; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure vstNavFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex);
     procedure tmrShutdownTimer(Sender: TObject);
@@ -725,6 +725,8 @@ type
     RateNoticeGiven: Integer;
     ReachableBuild: Boolean;
     ReferencedBySortColumn: TListColumn;
+
+    FocusedColumnOverride : Integer;
 
     EditInfoCacheLGeneration: Integer;
     EditInfoCache: TArray<string>;
@@ -5631,6 +5633,8 @@ begin
     UpdateColumnWidths;
   finally
     vstView.EndUpdate;
+    if vstView.FocusedColumn > NoColumn then
+      vstView.ScrollIntoView(vstView.FocusedColumn, False);
     RebuildingViewTree := False;
   end;
 end;
@@ -6084,6 +6088,8 @@ var
   i, j, k, l: Integer;
   Rect: TRect;
 begin
+  FocusedColumnOverride := -1;
+
   wbVarPointer := varPointer;
 
   if wbThemesSupported then try
@@ -7166,13 +7172,24 @@ var
   function FoundName: Boolean;
   var
     CellText    : string;
+    i           : Integer;
   begin
     if NameFilter = '' then
       Exit(True);
 
-    CellText := '';
-    vstViewGetText(vstView, aNode, 0, ttNormal, CellText);
-    Result := CellText.ToLowerInvariant.Contains(NameFilter);
+    Result := False;
+    try
+      for i := 1 to Pred(vstView.Header.Columns.Count) do begin
+        CellText := '';
+        FocusedColumnOverride := i;
+        vstViewGetText(vstView, aNode, 0, ttNormal, CellText);
+        Result := CellText.ToLowerInvariant.Contains(NameFilter);
+        if Result then
+          Break;
+      end;
+    finally
+      FocusedColumnOverride := -1;
+    end;
   end;
 
   function FoundValue: Boolean;
@@ -14569,6 +14586,8 @@ begin
     ViewFocusedElement := nil;
     NodeForViewFocusedElement := nil;
     vstView.EndUpdate;
+    if vstView.FocusedColumn > NoColumn then
+      vstView.ScrollIntoView(vstView.FocusedColumn, False);
     LockWindowUpdate(0);
   end;
   sw.Stop;
@@ -15170,6 +15189,8 @@ begin
       end;
     finally
       vstView.EndUpdate;
+      if vstView.FocusedColumn > NoColumn then
+        vstView.ScrollIntoView(vstView.FocusedColumn, False);
     end;
 
     tbsReferencedBy.TabVisible := wbLoaderDone and (lvReferencedBy.Items.Count > 0);
@@ -15262,6 +15283,8 @@ begin
       UpdateColumnWidths;
     finally
       vstView.EndUpdate;
+      if vstView.FocusedColumn > NoColumn then
+        vstView.ScrollIntoView(vstView.FocusedColumn, False);
     end;
     pgMain.ActivePage := tbsView;
     tbsReferencedBy.TabVisible := False;
@@ -15541,6 +15564,9 @@ begin
         if (vstView.FocusedColumn < 1) and (ColumnForViewFocusedElement < 1) and (ActiveIndex > NoColumn) then
           vstView.FocusedColumn := ActiveIndex + 1;
         UpdateColumnWidths;
+        if vstView.FocusedColumn > NoColumn then
+          vstView.ScrollIntoView(vstView.FocusedColumn, False);
+
         if pgMain.ActivePage <> tbsReferencedBy then
           pgMain.ActivePage := tbsView;
       end
@@ -15561,6 +15587,8 @@ begin
       end;
     finally
       vstView.EndUpdate;
+      if vstView.FocusedColumn > NoColumn then
+        vstView.ScrollIntoView(vstView.FocusedColumn, False);
     end;
 
     if wbLoaderDone and Assigned(ActiveMaster) and not wbBuildingRefsParallel then begin
@@ -17202,6 +17230,7 @@ var
   ElementCount : Integer;
   i,j          : Integer;
   UseSuffix    : Boolean;
+  FocusedColumn: TColumnIndex;
 begin
   CellText := '';
   NodeDatas := Sender.GetNodeData(Node);
@@ -17214,8 +17243,14 @@ begin
 
   if Column < 1 then begin
 
-    if (vstView.FocusedColumn > 0) and (Pred(vstView.FocusedColumn) <= High(ActiveRecords)) then
-      Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+    FocusedColumn := FocusedColumnOverride;
+    if FocusedColumn < 0 then
+      FocusedColumn := vstView.FocusedColumn;
+    if Length(ActiveRecords) = 1 then
+      FocusedColumn := 1;
+
+    if (FocusedColumn > 0) and (Pred(FocusedColumn) <= High(ActiveRecords)) then
+      Element := NodeDatas[Pred(FocusedColumn)].Element;
 
     UseSuffix := Assigned(Element);
 
@@ -17365,6 +17400,18 @@ begin
       JumpTo(MainRecord, True);
     end;
   end;
+end;
+
+procedure TfrmMain.vstViewHeaderMouseMove(Sender: TVTHeader; Shift: TShiftState; X, Y: Integer);
+var
+  Column     : Integer;
+begin
+  Column := vstView.Header.Columns.ColumnFromPosition(Point(X, Y));
+  Dec(Column);
+  if (Column >= Low(ActiveRecords)) and (Column <= High(ActiveRecords)) then
+    vstView.Header.PopupMenu := pmuViewHeader
+  else
+    vstView.Header.PopupMenu := nil;
 end;
 
 procedure TfrmMain.vstViewHeaderDrawQueryElements(Sender: TVTHeader;

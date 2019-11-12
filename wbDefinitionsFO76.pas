@@ -8083,7 +8083,7 @@ begin
 
   wbDOFA := wbStruct(DOFA, 'Destructible Object Faction', [
     wbFormIDCk('Faction', [FACT]),
-    wbByteArray('Unknown', 1)
+    wbInteger('Rank', itS8)
   ]);
 
   wbQSTI := wbFormIDCk(QSTI, 'Quest', [QUST]);

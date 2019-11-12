@@ -694,7 +694,7 @@ type
     procedure flCloseFile; virtual;
     procedure flProgress(const aStatus: string);
 
-    function flSetContainsLoadOrderID(const aFormID: TwbFormID): Boolean;
+    function flSetContainsFixedFormID(const aFormID: TwbFormID): Boolean;
 
     function Reached: Boolean; override;
 
@@ -2174,7 +2174,7 @@ begin
 
       if Length(flRecords) > 0 then begin
         if FindFormID(FormID, i, True) then
-          raise Exception.Create('Duplicate FormID ['+FormID.ToString(True)+'] in file ' + GetName);
+          raise Exception.Create('Duplicate FormID [' + FormID.ToString(True) + '] in file ' + GetName);
       end else
         i := 0;
 
@@ -2187,8 +2187,9 @@ begin
 
     end else begin
 
-      if flSetContainsLoadOrderID(aRecord.LoadOrderFormID) then
-        raise EwbSkipLoad.Create('Duplicate Record "' + aRecord.ShortName + '"');
+      var lFixedFormID := aRecord.FixedFormID;
+      if flSetContainsFixedFormID(lFixedFormID) then
+        raise EwbSkipLoad.Create('Duplicate FormID [' + lFixedFormID.ToString(True) + '] in file ' + GetName);
 
       if flRecordsCount >= Length(flRecords) then
         SetLength(flRecords, Succ(flRecordsCount));
@@ -2298,8 +2299,7 @@ var
     IsNew := False;
     MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
     if not Assigned(MasterFiles) then begin
-      Header.Assign(5, nil, False);
-      MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
+      MasterFiles := Header.Add('Master Files') as IwbContainerElementRef;
       Assert(Assigned(MasterFiles), '[AddMasters] not Assigned(MasterFiles)');
       IsNew := True;
     end;
@@ -3365,7 +3365,7 @@ begin
     wbProgressCallback('['+GetFileName+'] ' + aStatus);
 end;
 
-function TwbFile.flSetContainsLoadOrderID(const aFormID: TwbFormID): Boolean;
+function TwbFile.flSetContainsFixedFormID(const aFormID: TwbFormID): Boolean;
 begin
   var ID := aFormID.ToCardinal;
 
@@ -8323,9 +8323,14 @@ var
 begin
   inherited Create(aContainer, aBasePtr, aEndPtr, aPrevMainRecord);
   try
-    if Assigned(aPrevMainRecord) and (aPrevMainRecord.LoadOrderFormID = GetLoadOrderFormID) then
-      raise EwbSkipLoad.Create('Duplicate Record "' + GetShortName + '"');
+    var lFixedFormID := GetFixedFormID;
     _File := GetFile as IwbFileInternal;
+    if Assigned(aPrevMainRecord) and (aPrevMainRecord.FixedFormID = lFixedFormID) then begin
+      var lFileName := '<unknown file>';
+      if Assigned(_File) then
+        lFileName := _File.Name;
+      raise EwbSkipLoad.Create('Duplicate FormID [' + lFixedFormID.ToString(True) + '] in file ' + lFileName);
+    end;
     if Assigned(_File) then begin
       _File.AddMainRecord(Self);
       if fsIsDeltaPatch in _File.FileStates then
