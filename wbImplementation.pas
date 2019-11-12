@@ -2299,8 +2299,7 @@ var
     IsNew := False;
     MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
     if not Assigned(MasterFiles) then begin
-      Header.Assign(5, nil, False);
-      MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
+      MasterFiles := Header.Add('Master Files') as IwbContainerElementRef;
       Assert(Assigned(MasterFiles), '[AddMasters] not Assigned(MasterFiles)');
       IsNew := True;
     end;
