@@ -19607,12 +19607,21 @@ type
   end;
 
 procedure HasUnitProc(const Name: string; NameType: TNameType; Flags: Byte; Param: Pointer);
+var
+  s: string;
 begin
   case NameType of
     ntContainsUnit:
-      with PUnitInfo(Param)^ do
-        if SameText(Name, UnitName) then
+      with PUnitInfo(Param)^ do begin
+        s := Name;
+        s := StringReplace(s, 'system.', '', [rfReplaceAll, rfIgnoreCase]);
+        s := StringReplace(s, 'vcl.',    '', [rfReplaceAll, rfIgnoreCase]);
+        s := StringReplace(s, 'winapi.', '', [rfReplaceAll, rfIgnoreCase]);
+        s := StringReplace(s, 'data.',   '', [rfReplaceAll, rfIgnoreCase]);
+        s := StringReplace(s, 'web.',    '', [rfReplaceAll, rfIgnoreCase]);
+        if SameText(s, UnitName) then
           Found^ := True;
+      end;
   end;
 end;
 
