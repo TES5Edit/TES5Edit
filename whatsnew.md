@@ -6,7 +6,7 @@
 * #654 - [FO4] Check for Errors: reports error when a region / object list has SCOL entries 
 * #659 - When comparing records, right-clicking to Expand All produces a contextual menu that hangs the Expand All functionality
 * #669 - CELL at 0,0 may be spuriously added to worldspaces during cleaning.
-* #670 - [FO4] Damage magic effects mislabeled subrecord
+* #670 - [FO4] Damage magic effects mislabelled subrecord
 * #674 - Invalid ITMs may be reported in rare cases when form versions differ
 * #676 - Ghosted ESPs and Modgroups
 * #678 - AccessViolation while generating conflict status in rare cases
@@ -19,10 +19,10 @@
 * #708 - "Clean masters" function doesn't remove all masters at first use
 * #718 - access violation when holding delete 
 * #720 - wrong order for FNAM and LNAM in MUST 
-* #721 - The MTNM field in RACE record is written with unneccesary terminating 0 byte
+* #721 - The MTNM field in RACE record is written with unnecessary terminating 0 byte
 * #729 - LODGen can fail with references that have NULL or unresolvable Base FormIDs
 * #732 - New CK leaves Base record listed for deleted REFRs, should not be marked as error
-* #733 - changing the form id of an overriden record doesn't update the link between original and override until restart
+* #733 - changing the form id of an overridden record doesn't update the link between original and override until restart
 * #734 - right side window's record overrides don't focus on currently selected mod
 * #737 - Ambiguity in Skyrim's QUST definition
 * (reported on Discord) - cleaning Dragonborn.esm can make Boars non-aggressive
