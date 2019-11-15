@@ -7358,7 +7358,8 @@ begin
     raise Exception.Create(GetName + ' can not be assigned.');
 
   if GetIsDeleted then
-    Exit;
+    if aIndex <> Low(Integer) then
+      Exit;
 
   if Assigned(mrDef) then begin
 
@@ -7757,7 +7758,8 @@ begin
       Exit;
 
   if GetIsDeleted then
-    Exit;
+    if aIndex <> Low(Integer) then
+      Exit;
 
   if Assigned(eContainer) then
     if not IwbContainer(eContainer).IsElementEditable(Self) then

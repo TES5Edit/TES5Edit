@@ -52,6 +52,7 @@
 * Show tooltip hint for View column headers
 * Show indices for unsorted SubRecord Arrays
 * [TES5/SSE] added ENCH to Knowable Forms
+* Allow assigning to deleted records
 
 ## Shortened Parameters
 
