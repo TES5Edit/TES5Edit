@@ -7834,7 +7834,7 @@ begin
       wbEmbeddedScriptReq
     ], [], cpNormal, True),
     wbRStruct('Script (End)', [
-      wbEmpty(NEXT, 'Marker'),
+      wbEmpty(NEXT, 'Marker', cpNormal, True),
       wbEmbeddedScriptReq
     ], [], cpNormal, True),
     wbFormIDCk(SNDD, 'Unused', [SOUN]),

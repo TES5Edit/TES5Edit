@@ -15740,7 +15740,7 @@ begin
     wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal),
     wbFULL,
     wbLStringKC(SHRT, 'Short Name', 0, cpTranslate),
-    wbEmpty(DATA, 'Marker'),
+    wbEmpty(DATA, 'Marker', cpNormal, True),
     wbStruct(DNAM, '', [
       wbInteger('Base Health', itU16),
       wbInteger('Unknown', itU16),
@@ -16050,7 +16050,7 @@ begin
         42, 'Dismount Actor',
         43, 'Clear Mount Position',
         44, 'Clear Power Armor Exit'
-      ])),
+      ])).SetDefaultEditValue('Package'),
       wbInteger('Interrupt Override', itU8, wbEnum([
         {0} 'None',
         {1} 'Spectator',
@@ -16137,7 +16137,7 @@ begin
       ], [], cpNormal, False)),
       wbUNAMs
     ], []),
-    wbByteArray(XNAM, 'Marker'),
+    wbByteArray(XNAM, 'Marker', 0, cpNormal, True),
 
     wbRStruct('Procedure Tree', [
       wbRArray('Branches', wbRStruct('Branch', [
@@ -16178,17 +16178,17 @@ begin
       wbEmpty(POBA, 'OnBegin Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbPDTOs
-    ], []),
+    ], [], cpNormal, True),
     wbRStruct('OnEnd', [
       wbEmpty(POEA, 'OnEnd Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbPDTOs
-    ], []),
+    ], [], cpNormal, True),
     wbRStruct('OnChange', [
       wbEmpty(POCA, 'OnChange Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbPDTOs
-    ], [])
+    ], [], cpNormal, True)
   ], False, nil, cpNormal, False, nil {wbPACKAfterLoad});
 
   wbQUSTAliasFlagsActual := wbFlags([
@@ -16304,11 +16304,11 @@ begin
     wbRArray('Quest Variables', wbString(QTVR, 'Quest Variable')),
     wbFLTR,
     wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, False),
-    wbEmpty(NEXT, 'Marker'),
+    wbEmpty(NEXT, 'Marker', cpNormal, True),
     wbCTDAs,
-    wbEmpty(NEXT, 'Marker'),
+    wbEmpty(NEXT, 'Marker', cpNormal, True),
     wbCTDAs,
-    wbEmpty(NEXT, 'Marker'),
+    wbEmpty(NEXT, 'Marker', cpNormal, True),
     wbCTDAs,
     wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
       wbStructSK(INDX, [0], 'Stage Index', [

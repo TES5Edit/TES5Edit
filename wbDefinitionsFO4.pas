@@ -13502,7 +13502,7 @@ begin
     wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
     wbFULL,
     wbLStringKC(SHRT, 'Short Name', 0, cpTranslate),
-    wbByteArray(DATA, 'Marker'),
+    wbEmpty(DATA, 'Marker', cpNormal, True),
     wbStruct(DNAM, '', [
       wbInteger('Unknown', itU16),
       wbInteger('Unknown', itU16),
@@ -13775,7 +13775,7 @@ begin
       wbInteger('Type', itU8, wbEnum ([], [
         18, 'Package',
         19, 'Package Template'
-      ])),
+      ])).SetDefaultEditValue('Package'),
       wbInteger('Interrupt Override', itU8, wbEnum([
         {0} 'None',
         {1} 'Spectator',
@@ -13862,7 +13862,7 @@ begin
       ], [], cpNormal, False)),
       wbUNAMs
     ], []),
-    wbByteArray(XNAM, 'Marker'),
+    wbByteArray(XNAM, 'Marker', 0, cpNormal, True),
 
     wbRStruct('Procedure Tree', [
       wbRArray('Branches', wbRStruct('Branch', [
@@ -13903,17 +13903,17 @@ begin
       wbEmpty(POBA, 'OnBegin Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbPDTOs
-    ], []),
+    ], [], cpNormal, True),
     wbRStruct('OnEnd', [
       wbEmpty(POEA, 'OnEnd Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbPDTOs
-    ], []),
+    ], [], cpNormal, True),
     wbRStruct('OnChange', [
       wbEmpty(POCA, 'OnChange Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbPDTOs
-    ], [])
+    ], [], cpNormal, True)
   ], False, nil, cpNormal, False, nil {wbPACKAfterLoad});
 
   wbQUSTAliasFlags :=
@@ -13995,7 +13995,7 @@ begin
     wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
     wbFLTR,
     wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, False),
-    wbEmpty(NEXT, 'Marker'),
+    wbEmpty(NEXT, 'Marker', cpNormal, True),
     wbCTDAs, {>>> Unknown, doesn't show up in CK <<<}
     wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
       wbStructSK(INDX, [0], 'Stage Index', [
