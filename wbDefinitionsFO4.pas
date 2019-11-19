@@ -5641,6 +5641,25 @@ begin
   end;
 end;
 
+procedure wbPackageDataInputValueTypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainerElementRef;
+  Value     : IwbElement;
+begin
+  if aOldValue <> aNewValue then
+    if Supports(aElement.Container, IwbContainerElementRef, Container) then begin
+      Value := Container.ElementByPath['CNAM'];
+      if Assigned(Value) then
+        if (aNewValue = 'Bool') or (aNewValue = 'Int') or (aNewValue = 'Float') or (aNewValue = 'ObjectList') then
+          Value.SetToDefault
+        else
+          Value.Remove
+      else
+        if (aNewValue = 'Bool') or (aNewValue = 'Int') or (aNewValue = 'Float') or (aNewValue = 'ObjectList') then
+          Container.Add('CNAM');
+    end;
+end;
+
 function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   Container : IwbDataContainer;
@@ -14349,7 +14368,7 @@ begin
 
     wbRStruct('Package Data', [
       wbRArray('Data Input Values', wbRStruct('Value', [
-        wbString(ANAM, 'Type'),
+        wbString(ANAM, 'Type').SetAfterSet(wbPackageDataInputValueTypeAfterSet),
         wbUnion(CNAM, 'Value', wbPubPackCNAMDecider, [
           {0} wbByteArray('Unknown'),
           {1} wbInteger('Bool', itU8, wbBoolEnum),
