@@ -25,6 +25,7 @@
 * #733 - changing the form id of an overridden record doesn't update the link between original and override until restart
 * #734 - right side window's record overrides don't focus on currently selected mod
 * #737 - Ambiguity in Skyrim's QUST definition
+* #747 - Ambiguity in Skyrim's PACK definition
 * (reported on Discord) - cleaning Dragonborn.esm can make Boars non-aggressive
 * (reported on Discord) - crash in NAVM when triangle edge is flagged as edge link, but the number stored in the edge field can't look up a valid external NAVM via the Edge Links table
 * (reported on Discord) - VeryQuickShowConflicts may very rarely not show certain conflicts
