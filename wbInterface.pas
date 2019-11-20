@@ -179,6 +179,7 @@ var
   wbShrinkButtons          : Boolean  = False;
   wbCollapseConditions     : Boolean  = True;
   wbCollapseBenignArray    : Boolean  = True;
+  wbExtendedESL            : Boolean  = False;
 
   wbAutoMarkModified       : Boolean  = True;
   wbForceMarkModified      : Boolean  = False;

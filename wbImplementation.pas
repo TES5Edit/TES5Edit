@@ -8507,6 +8507,8 @@ begin
   if not mrStruct.mrsFormID.IsNull then begin
     FileID := mrStruct.mrsFormID.FileID.FullSlot;
     aMasters[FileID] := True;
+    if mrStruct.mrsFormID.ObjectID < $800 then
+      aMasters[0] := True;
   end;
 
   if (csRefsBuild in cntStates) and (cntRefsBuildAt >= eGeneration) then begin
@@ -8514,6 +8516,8 @@ begin
     for i := High(mrReferences) downto Low(mrReferences) do begin
       FileID := mrReferences[i].FileID.FullSlot;
       aMasters[FileID] := True;
+      if mrReferences[i].ObjectID < $800 then
+        aMasters[0] := True;
     end;
 
   end else
@@ -11333,38 +11337,46 @@ end;
 
 procedure TwbMainRecord.SetLoadOrderFormID(aFormID: TwbFormID);
 var
-  _File: IwbFileInternal;
-  i : Integer;
-  Master: IwbMainRecord;
+  _File      : IwbFileInternal;
+  i          : Integer;
+  Master     : IwbMainRecord;
+  FileFormID : TwbFormID;
 begin
   if GetLoadOrderFormID = aFormID then
     Exit;
 
   _File := GetFile as IwbFileInternal;
+  if not Assigned(_File) then
+    Exit;
 
-  aFormID := _File.LoadOrderFormIDtoFileFormID(aFormID, True);
+  if (aFormID.ObjectID < $800) and not aFormID.IsHardcoded then begin
+    if _File.MasterCount[True] < 1 then
+      raise Exception.Create('Using FormID ['+aFormID.ToString(True)+'] requires "' + _File.Name + '" to have at least 1 master' );
+  end;
 
-  if GetFormID.ObjectID = aFormID.ObjectID then
-    if (GetFormID.FileID.FullSlot >= _File.MasterCount[GetMastersUpdated]) and (aFormID.FileID.FullSlot >= _File.MasterCount[True]) then begin
+  FileFormID := _File.LoadOrderFormIDtoFileFormID(aFormID, True);
+
+  if GetFormID.ObjectID = FileFormID.ObjectID then
+    if (GetFormID.FileID.FullSlot >= _File.MasterCount[GetMastersUpdated]) and (FileFormID.FileID.FullSlot >= _File.MasterCount[True]) then begin
       // we can do this relatively quietly and quickly...
       if Assigned(mrGroup) or (GetChildGroup <> nil) then
         Assert(mrGroup.GroupLabel = mrStruct.mrsFormID.ToCardinal);
       MakeHeaderWriteable;
-      mrStruct.mrsFormID := aFormID;
+      mrStruct.mrsFormID := FileFormID;
       mrFixedFormID := TwbFormID.Null;
       mrLoadOrderFormID := TwbFormID.Null;
       SetMastersUpdated(True);
       if Assigned(mrGroup) or (GetChildGroup <> nil) then
-        mrGroup.GroupLabel := aFormID.ToCardinal;
+        mrGroup.GroupLabel := FileFormID.ToCardinal;
       UpdateInteriorCellGroup;
       Exit;
     end;
 
-  Master := _File.RecordByFormID[aFormID, False, True];
+  Master := _File.RecordByFormID[FileFormID, False, True];
   if Assigned(Master) and ((Master._File as IwbFileInternal).Equals(_File)) then
     raise Exception.Create('FormID ['+aFormID.ToString(True)+'] is already present in file ' + _File.Name);
 
-  Master := _File.RecordByFormID[aFormID, True, True];
+  Master := _File.RecordByFormID[FileFormID, True, True];
   if Assigned(Master) then
     Master := Master.MasterOrSelf;
 
@@ -11388,12 +11400,12 @@ begin
   if Assigned(mrGroup) or (GetChildGroup <> nil) then
     Assert(mrGroup.GroupLabel = mrStruct.mrsFormID.ToCardinal);
   MakeHeaderWriteable;
-  mrStruct.mrsFormID := aFormID;
+  mrStruct.mrsFormID := FileFormID;
   mrFixedFormID := TwbFormID.Null;
   mrLoadOrderFormID := TwbFormID.Null;
   Exclude(mrStates, mrsIsInjectedChecked);
   if Assigned(mrGroup) or (GetChildGroup <> nil) then
-    mrGroup.GroupLabel := aFormID.ToCardinal;
+    mrGroup.GroupLabel := FileFormID.ToCardinal;
   UpdateInteriorCellGroup;
 
   _File.AddMainRecord(Self);
@@ -14107,6 +14119,8 @@ begin
       FormID := TwbFormID.FromCardinal(GetGroupLabel);
       FileID := FormID.FileID.FullSlot;
       aMasters[FileID] := True;
+      if FormID.ObjectID < $800 then
+        aMasters[0] := True;
     end;
   end;
 end;

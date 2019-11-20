@@ -56,6 +56,7 @@
 * Show indices for unsorted SubRecord Arrays
 * [TES5/SSE] added ENCH to Knowable Forms
 * Allow assigning to deleted records
+* Experts can activate an option which enables an extended FormID space (`001`-`FFF` instead of `800`-`FFF`) when compacting for ESL
 
 ## Shortened Parameters
 
