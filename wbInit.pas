@@ -234,6 +234,7 @@ begin
       wbShowFlagEnumValue := Settings.ReadBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
       wbTrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
       wbAllowDirectSave := Settings.ReadBool('Options', 'AllowDirectSave', wbAllowDirectSave);
+      wbExtendedESL := Settings.ReadBool('Options', 'ExtendedESL', wbExtendedESL);
       wbSortINFO := Settings.ReadBool('Options', 'SortINFO', wbSortINFO);
       wbFillPNAM := Settings.ReadBool('Options', 'FillPNAM', wbFillPNAM);
       wbCollapseRecordHeader := Settings.ReadBool('Options', 'CollapseRecordHeader', wbCollapseRecordHeader);
@@ -1006,6 +1007,9 @@ begin
   end else
     if FindCmdLineSwitch('AllowDirectSaves') then
       wbAllowDirectSave := True;
+
+    if FindCmdLineSwitch('ExtendedESL') then
+      wbExtendedESL := True;
 
   if FindCmdLineSwitch('IKnowWhatImDoing') then
     wbIKnowWhatImDoing := True;

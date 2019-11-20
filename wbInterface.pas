@@ -199,6 +199,7 @@ var
   wbReportInjected         : Boolean  = True;
   wbNoFullInShortName      : Boolean  = True;
   wbNoIndexInAliasSummary  : Boolean  = True;
+  wbExtendedESL            : Boolean  = False;
 
   wbAutoMarkModified       : Boolean  = True;
   wbForceMarkModified      : Boolean  = False;
