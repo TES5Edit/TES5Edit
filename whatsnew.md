@@ -27,6 +27,7 @@
 * #737 - Ambiguity in Skyrim's QUST definition
 * #747 - Ambiguity in Skyrim's PACK definition
 * #748 - Changing ANAM in Skyrim's PACK does not update the CNAM prompt
+* #750 - form id override's id changes while the original fails in case id number's changed to an existing id
 * (reported on Discord) - cleaning Dragonborn.esm can make Boars non-aggressive
 * (reported on Discord) - crash in NAVM when triangle edge is flagged as edge link, but the number stored in the edge field can't look up a valid external NAVM via the Edge Links table
 * (reported on Discord) - VeryQuickShowConflicts may very rarely not show certain conflicts
