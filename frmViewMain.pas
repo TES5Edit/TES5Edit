@@ -9240,10 +9240,10 @@ begin
     for i := 0 to Pred(Master.ReferencedByCount) do
       ReferencedBy[i] := Master.ReferencedBy[i];
 
+    k := -1;
     AddMessage('Record is referenced by '+IntToStr(Length(ReferencedBy))+' other record(s)');
     try
       if Master.OverrideCount <> 0 then begin
-        k := -1;
         // store overrides since they change on the go when renumbering FormIDs
         SetLength(Overrides, Master.OverrideCount);
         for i := 0 to Pred(Master.OverrideCount) do begin
@@ -9255,16 +9255,25 @@ begin
         if (k < Pred(Length(Overrides))) and (MessageDlg('Record '+MainRecord.Name+' has later overrides, update them too?', mtConfirmation, [mbYes, mbNo], 0) = mrYes) then begin
           // happens when master record is selected which is not in the list of overrides, renumber all overrides
           if k = -1 then k := 0;
-          // change this record and all later overrides
-          for i := k to Pred(Length(Overrides)) do begin
-            //AddMessage('Renumbering ' + Overrides[i].FullPath);
-            Overrides[i].LoadOrderFormID := NewFormID;
-          end;
-        end;
+        end else
+          k := -1;
       end;
 
-      if MainRecord.LoadOrderFormID <> NewFormID then
+      if MainRecord.LoadOrderFormID <> NewFormID then begin
         MainRecord.LoadOrderFormID := NewFormID;
+        AddMessage('Renumbered ' + MainRecord.FullPath);
+
+        if k >= 0 then
+          for i := k to Pred(Length(Overrides)) do try
+             Overrides[i].LoadOrderFormID := NewFormID;
+             AddMessage('Renumbered ' + Overrides[i].FullPath);
+          except
+            on E: Exception do begin
+              AddMessage('Error renumbering ' + Overrides[i].FullPath + ': ' + E.Message);
+              AnyErrors := True;
+            end;
+          end;
+      end;
 
       NodeData.ConflictAll := caUnknown;
       NodeData.ConflictThis := ctUnknown;

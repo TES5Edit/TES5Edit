@@ -1028,7 +1028,8 @@ type
     mrsBasePtrAllocated,
     mrsOverridesSorted,
     mrsEditorIDFromCache,
-    mrsFullNameFromCache
+    mrsFullNameFromCache,
+    mrsResettingConflict
   );
 
   TwbMainRecordStates = set of TwbMainRecordState;
@@ -11390,17 +11391,20 @@ procedure TwbMainRecord.ResetConflict;
 var
   i: Integer;
 begin
-  inherited;
-  if Assigned(mrMaster) then
-    IwbElement(mrMaster).ResetConflict
-  else begin
+  if mrsResettingConflict in mrStates then
+    Exit;
+  Include(mrStates, mrsResettingConflict);
+  try
+    inherited;
     mrConflictAll := caUnknown;
     mrConflictThis := ctUnknown;
-    for i := Low(mrOverrides) to High(mrOverrides) do
-      with mrOverrides[i] do begin
-        ConflictAll := caUnknown;
-        ConflictThis := ctUnknown;
-      end;
+    if Assigned(mrMaster) then
+      IwbElement(mrMaster).ResetConflict
+    else
+      for i := Low(mrOverrides) to High(mrOverrides) do
+        mrOverrides[i].ResetConflict;
+  finally
+    Exclude(mrStates, mrsResettingConflict);
   end;
 end;
 
@@ -16897,6 +16901,8 @@ procedure TwbElement.ResetConflict;
 begin
   Exclude(eStates, esParentHiddenChecked);
   Exclude(eStates, esParentHidden);
+  Exclude(eStates, esSortKeyValid);
+  Exclude(eStates, esExtendedSortKeyValid);
 end;
 
 procedure TwbElement.ResetReachable;
