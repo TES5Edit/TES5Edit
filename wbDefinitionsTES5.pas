@@ -4495,6 +4495,25 @@ begin
   end;
 end;
 
+procedure wbPackageDataInputValueTypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainerElementRef;
+  Value     : IwbElement;
+begin
+  if aOldValue <> aNewValue then
+    if Supports(aElement.Container, IwbContainerElementRef, Container) then begin
+      Value := Container.ElementByPath['CNAM'];
+      if Assigned(Value) then
+        if (aNewValue = 'Bool') or (aNewValue = 'Int') or (aNewValue = 'Float') or (aNewValue = 'ObjectList') then
+          Value.SetToDefault
+        else
+          Value.Remove
+      else
+        if (aNewValue = 'Bool') or (aNewValue = 'Int') or (aNewValue = 'Float') or (aNewValue = 'ObjectList') then
+          Container.Add('CNAM');
+    end;
+end;
+
 function wbREFRRecordFlagsDecider(const aElement: IwbElement): Integer;
 var
   MainRecord : IwbMainRecord;
@@ -10039,7 +10058,7 @@ begin
       wbUnknown(QNAM),
       wbUnknown(SCRO)
     ], [], cpIgnore, false, wbNeverShow),
-    wbEmpty(NEXT, 'Marker'),
+    wbEmpty(NEXT, 'Marker', cpNormal, True),
     wbRStruct('Unused', [
       wbUnknown(SCHR),
       wbUnknown(SCDA),
@@ -10428,7 +10447,7 @@ begin
       wbRStruct('Unknown', [
         wbUnknown(SCHR),
         wbFormID(QNAM, 'Unknown'),
-        wbEmpty(NEXT, 'Marker')
+        wbEmpty(NEXT, 'Marker', cpNormal, True)
       ], []), cpIgnore, false, nil, nil, wbNeverShow
     ),
     {>>> END leftover from earlier CK versions <<<}
@@ -11037,7 +11056,7 @@ begin
     wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
     wbFULL,
     wbLString(SHRT, 'Short Name', 0, cpTranslate),
-    wbByteArray(DATA, 'Marker'),
+    wbEmpty(DATA, 'Marker', cpNormal, True),
     wbStruct(DNAM, 'Player Skills', [
       wbArray('Skill Values', wbInteger('Skill', itU8), [
         'OneHanded',
@@ -11259,7 +11278,7 @@ begin
       wbInteger('Type', itU8, wbEnum ([], [
         18, 'Package',
         19, 'Package Template'
-      ])),
+      ])).SetDefaultEditValue('Package'),
       wbInteger('Interrupt Override', itU8, wbEnum([
         'None',
         'Spectator',
@@ -11330,7 +11349,7 @@ begin
 
     wbRStruct('Package Data', [
       wbRArray('Data Input Values', wbRStruct('Value', [
-        wbString(ANAM, 'Type'),
+        wbString(ANAM, 'Type').SetAfterSet(wbPackageDataInputValueTypeAfterSet),
         wbUnion(CNAM, 'Value', wbPubPackCNAMDecider, [
           {0} wbByteArray('Unknown'),
           {1} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
@@ -11345,7 +11364,7 @@ begin
       ], [], cpNormal, False)),
       wbUNAMs
     ], []),
-    wbByteArray(XNAM, 'Marker'),
+    wbByteArray(XNAM, 'Marker', 0, cpNormal, True),
 
     wbRStruct('Procedure Tree', [
       wbRArray('Branches', wbRStruct('Branch', [
@@ -11392,7 +11411,7 @@ begin
       wbByteArray(TNAM, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
       {>>> END leftover from earlier CK versions <<<}
       wbPDTOs
-    ], []),
+    ], [], cpNormal, True),
     wbRStruct('OnEnd', [
       wbEmpty(POEA, 'OnEnd Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
@@ -11403,7 +11422,7 @@ begin
       wbByteArray(TNAM, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
       {>>> END leftover from earlier CK versions <<<}
       wbPDTOs
-    ], []),
+    ], [], cpNormal, True),
     wbRStruct('OnChange', [
       wbEmpty(POCA, 'OnChange Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
@@ -11415,7 +11434,7 @@ begin
       wbByteArray(TNAM, 'Unused', 0, cpIgnore, false, false, wbNeverShow),
       {>>> END leftover from earlier CK versions <<<}
       wbPDTOs
-    ], [])
+    ], [], cpNormal, True)
   ], False, nil, cpNormal, False, nil {wbPACKAfterLoad});
 
   wbQUSTAliasFlags :=
@@ -12378,7 +12397,7 @@ begin
 		wbStruct(XLIG, 'Light Data', [
       wbFloat('FOV 90+/-'),
       wbFloat('Fade 1.35+/-'),
-      wbByteArray('Unknown', 4),
+      wbFloat('End Distance Cap'),
       wbFloat('Shadow Depth Bias'),
       wbByteArray('Unknown', 4) // optional
     ], cpNormal, False, nil, 4),
