@@ -1366,6 +1366,29 @@ begin
     .IncludeFlag(dfAllowAnyMember);
 end;
 
+{ function wbACTIBase(aRequired: Boolean = False; aDontShow: TwbDontShowCallback = nil): IwbRecordMemberDef;
+begin
+  Result :=
+    wbRStructSK([0], 'Model', [
+      wbString(MODL, 'Model FileName', 0, cpNormal, True),
+      wbMODT,
+      wbMODC,
+      wbMODS,
+      wbMODF,
+      wbENLM,
+      wbModelXFLG,
+      wbENLT,
+      wbENLS,
+      wbAUUV,
+      wbMODD
+    ], [], cpNormal, aRequired, aDontShow, True)
+    .SetSummaryKey([0])
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfSummaryNoSortKey)
+    .IncludeFlag(dfCollapsed, wbCollapseModels)
+    .IncludeFlag(dfAllowAnyMember);
+end; //WIP }
+
 function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   AsCardinal : Cardinal;
@@ -1402,6 +1425,8 @@ var
   EditInfos  : TStringList;
   Stages     : IwbContainerElementRef;
   Stage      : IwbContainerElementRef;
+  Objectives : IwbContainerElementRef;
+  Objective  : IwbContainerElementRef;
   i, j       : Integer;
   s, t       : string;
 begin
@@ -1479,13 +1504,35 @@ begin
         end;
     end;
 
+    if Supports(MainRecord.ElementByName['Objectives'], IwbContainerElementRef, Objectives) then begin
+      for i := 0 to Pred(Objectives.ElementCount) do
+        if Supports(Objectives.Elements[i], IwbContainerElementRef, Objective) then begin
+          j := Objective.ElementNativeValues['QOBJ'];
+          s := Trim(Objective.ElementValues['NNAM']);
+          t := IntToStr(j);
+          while Length(t) < 3 do
+            t := '0' + t;
+          if s <> '' then
+            t := t + ' ' + s;
+          if Assigned(EditInfos) then
+            EditInfos.AddObject(t, TObject(j))
+          else if j = aInt then begin
+            case aType of
+              ctToStr, ctToSummary, ctToEditValue: Result := t;
+              ctCheck: Result := '';
+            end;
+            Exit;
+          end;
+        end;
+    end;
+
     case aType of
       ctToStr, ctToSummary: begin
         Result := aInt.ToString;
         if aType = ctToStr then
-          Result := Result + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+          Result := Result + ' <Warning: Quest Stage/Objective not found in "' + MainRecord.Name + '">';
       end;
-      ctCheck: Result := '<Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+      ctCheck: Result := '<Warning: Quest Stage/Objective not found in "' + MainRecord.Name + '">';
       ctEditInfo: begin
         EditInfos.Sort;
         Result := EditInfos.CommaText;
@@ -1615,9 +1662,9 @@ begin
       ctToStr, ctToSummary: begin
         Result := aInt.ToString;
         if aType = ctToStr then
-          Result := Result + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+          Result := Result + ' <Warning: Quest Stage/Objective not found in "' + MainRecord.Name + '">';
       end;
-      ctCheck: Result := '<Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+      ctCheck: Result := '<Warning: Quest Stage not/Objective found in "' + MainRecord.Name + '">';
       ctEditInfo: begin
         EditInfos.Sort;
         Result := EditInfos.CommaText;
@@ -1636,6 +1683,8 @@ var
   EditInfos  : TStringList;
   Stages     : IwbContainerElementRef;
   Stage      : IwbContainerElementRef;
+  Objectives : IwbContainerElementRef;
+  Objective  : IwbContainerElementRef;
   i, j       : Integer;
   s, t       : string;
 begin
@@ -1713,13 +1762,33 @@ begin
         end;
     end;
 
+    if Supports(MainRecord.ElementByName['Objectives'], IwbContainerElementRef, Objectives) then begin
+      for i := 0 to Pred(Objectives.ElementCount) do
+        if Supports(Objectives.Elements[i], IwbContainerElementRef, Objective) then begin
+          j := Objective.ElementNativeValues['QOBJ'];
+          s := Trim(Objective.ElementValues['NNAM']);
+          t := IntToStr(j).PadLeft(3,'0');
+          if s <> '' then
+            t := t + ' ' + s;
+          if Assigned(EditInfos) then
+            EditInfos.AddObject(t, TObject(j))
+          else if j = aInt then begin
+            case aType of
+              ctToStr, ctToSummary, ctToEditValue: Result := t;
+              ctCheck: Result := '';
+            end;
+            Exit;
+          end;
+        end;
+    end;
+
     case aType of
       ctToStr, ctToSummary: begin
         Result := aInt.ToString;
         if aType = ctToStr then
-          Result := Result + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+          Result := Result + ' <Warning: Quest Stage/Objective not found in "' + MainRecord.Name + '">';
       end;
-      ctCheck: Result := '<Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+      ctCheck: Result := '<Warning: Quest Stage/Objective not found in "' + MainRecord.Name + '">';
       ctEditInfo: begin
         EditInfos.Sort;
         Result := EditInfos.CommaText;
@@ -3119,6 +3188,20 @@ begin
   Exit;
 end;
 
+{procedure wbLVLOAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  MainRecord: IwbMainRecord;
+begin
+
+  if not Supports(aElement, IwbMainRecord, MainRecord) then
+    Exit;
+
+  if MainRecord.FixedFormID.ToCardinal < 69 then
+    aElement.NativeValue := 0;
+
+  Exit;
+end; // WIP }
+
 {>>> Needs revision for Skyrim <<<}
 //function wbIdleAnam(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 //begin
@@ -3564,6 +3647,21 @@ begin
     Result := 1;
 end;
 
+function wbSCOLONAMSizeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  SubRecord : IwbSubRecord;
+begin
+  Result := 0;
+  if not Assigned(aElement) then
+    Exit;
+
+  if not Supports(aElement, IwbSubRecord, SubRecord) then
+    Exit;
+
+  if SubRecord.DataSize < 8 then
+    Result := 1;
+end;
+
 function wbCOEDOwnerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container  : IwbContainer;
@@ -3744,6 +3842,11 @@ end;
 function wbDeciderFormVersion29(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 29);
+end;
+
+function wbDeciderFormVersion69(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 69);
 end;
 
 function wbDeciderFormVersion70(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -6954,14 +7057,14 @@ function wbFaceMorphToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCal
   end;
 
 var
-  Actor, Race       : IwbMainRecord;
-  Element           : IwbElement;
-  Container, Entry  : IwbContainerElementRef;
-  Female, Female2   : Boolean;
-  RaceID, EntryName : string;
-  Cache             : PFaceGenFeature;
-  Index             : Cardinal;
-  i, j              : integer;
+  Actor, Race           : IwbMainRecord;
+  Element               : IwbElement;
+  Container, Entry      : IwbContainerElementRef;
+  Female, Female2       : Boolean;
+  RaceID, EntryName     : string;
+  Cache, SecondaryCache : PFaceGenFeature;
+  Index                 : Cardinal;
+  i, j                  : integer;
 begin
   // defaults
   case aType of
@@ -7037,6 +7140,21 @@ begin
         EntryName := Cache.Entries[i].Name;
         Break;
       end;
+
+  if EntryName = '' then
+  begin
+    Cache := GetCached(RaceID, (not Female));
+
+    if not Assigned(Cache) then
+      Exit;
+
+    if Length(Cache.Entries) <> 0 then
+      for i := Low(Cache.Entries) to High(Cache.Entries) do
+        if Cache.Entries[i].Index = Index then begin
+          EntryName := Cache.Entries[i].Name;
+          Break;
+        end;
+  end;
 
   case aType of
     ctToStr, ctToSummary: begin
@@ -10540,12 +10658,7 @@ begin
     wbFTYP,
     wbUnknown(MNAM),
     wbNAM1LODP,
-    wbStruct(PNAM, 'Marker Color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbInteger('Alpha', itU8)
-    ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+    wbByteRGBA(PNAM, 'Marker Color'),
     wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
     wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
@@ -10554,15 +10667,15 @@ begin
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       'No Displacement',
       'Ignored by Sandbox',
-      'Unknown 2',
-      'Unknown 3',
+      'Unknown 2', {Only used on DefaultProceduralWater [ACTI:00000019]}
+      'Unknown 3', {Currently Unused}
       'Is a Radio',
-      'Unknown 5',
-      'Unknown 6'
+      'Is a Lookat Trigger',
+      'Unknown 6' {Currently Unused}
     ])),
-    wbUnknown(LAVT),
-    wbUnknown(LAMN),
-    wbUnknown(LAMX),
+    wbInteger(LAVT, 'Lookat Value', itU32),
+    wbInteger(LAMN, 'Lookat Minimum', itU32),
+    wbInteger(LAMX, 'Lookat Maximum', itU32),
     wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
     wbStruct(RADR, 'Radio Receiver', [
       wbFormIDCk('Sound Model', [SOPM, NULL]),
@@ -10572,28 +10685,28 @@ begin
       wbInteger('No Signal Static', itU8, wbBoolEnum)
     ], cpNormal, False, nil, 4),
     wbCNDCs,
-    wbUnknown(GCDA),
+    wbFormIDCk(GCDA, 'Clobal Cooldown Timer', [GLOB]),
     wbFloat(PAHD, 'Unknown Float'),
     wbUnknown(MNAM),
     wbNVNM,
-
-    wbArray(VEND, 'Unknown', wbUnion('VendItems', wbDeciderFormVersion192, [
-      wbStruct('ItemsAllowed', [
+    wbArray(VEND, 'Vendable Items', wbUnion('Vendable Items', wbDeciderFormVersion192, [
+      wbStruct('Items Allowed', [
         wbFormID('Item'),
         wbInteger('Unknown', itU32),
-        wbInteger('MaxAmount', itU32)
+        wbInteger('Max Amount', itU32)
       ]),
-      wbStruct('ItemsAllowed', [
-        wbFormID('AllowedItemList'),
-        wbFormID('ExcludedItemList'),
+      wbStruct('Items Allowed', [
+        wbFormID('Allowed Item List'),
+        wbFormID('Excluded Item List'),
         wbInteger('Unknown', itU32),
-        wbInteger('MaxAmount', itU32)
+        wbInteger('Max Amount', itU32)
       ])
     ])),
-    wbUnknown(PAHD),
+    wbFloat(PAHD, 'Unknown Float'),
     wbNAM1LODP
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
+  { Inherits from ACTI }
   wbRecord(TACT, 'Talking Activator',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Hidden From Local Map',
@@ -10608,15 +10721,23 @@ begin
     wbGenericModel,
     wbDEST,
     wbKeywords,
-    wbLStringKC(PNAM, 'Activate Text Override'),
+    wbByteRGBA(PNAM, 'Marker Color'),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
     wbQSTI,
-    wbUnknown(FNAM),
+    wbInteger(FNAM, 'Flags', itU16, wbFlags([
+      'No Displacement',
+      'Ignored by Sandbox',
+      'Unknown 2', {Only used on DefaultProceduralWater [ACTI:00000019]}
+      'Unknown 3', {Currently Unused}
+      'Is a Radio',
+      'Is a Lookat Trigger',
+      'Unknown 6' {Currently Unused}
+    ])),
     wbCNDCs,
-    wbFormIDCk(FNAM, 'Faction', [FACT]),
-    wbUnknown(PAHD),
+    wbFloat(PAHD, 'Unknown Float'),
+    wbFormIDCk(GCDA, 'Clobal Cooldown Timer', [GLOB]),
     wbFormIDCk(VNAM, 'Voice Type', [VTYP]),
-    wbUnknown(FNAM)
+    wbFormIDCk(FNAM, 'Faction', [FACT])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbMIID := wbInteger(MIID, 'Max Item ID', itU32);
@@ -11003,7 +11124,9 @@ begin
       {0x02000} 'Player Followers Can''t Travel Here',
       {0x04000} 'Unknown 15',
       {0x08000} 'Is Instanced',
-      {0x10000} 'Unknown 17'
+      {0x10000} 'Unknown 17',
+      {0x20000} 'Unknown 18',
+      {0x40000} 'Unknown 19'
     ]);
 
   wbRecord(CELL, 'Cell',
@@ -12007,42 +12130,39 @@ begin
     wbFULL,
     wbGenericModel,
     wbDEST,
-    wbDOFA,
+    wbRArray('Factions', wbDOFA, cpNormal),
     wbKeywords,
     wbPRPS,
-    wbNAM1LODP,
+    wbNAM1LODP,               
     wbNTRM,
     wbFTYP,
-    wbStruct(PNAM, 'Marker Color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbInteger('Unused', itU8)
-    ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-    wbFormIDCk(WNAM, 'Drinking Water Type', [WATR]),
+    wbByteRGBA(PNAM, 'Marker Color'),
+    wbFormIDCk(WNAM, 'Water Type', [WATR]),
     wbATTX,
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
-      {0x0001} 'Unknown 0',
-      {0x0002} 'Ignored By Sandbox',
-      {0x0004} 'Unknown 2',
-      {0x0008} 'Unknown 3',
-      {0x0010} 'Unknown 4',
-      {0x0020} 'Unknown 5',
-      {0x0040} 'Unknown 6'
+      'No Displacement',
+      'Ignored by Sandbox',
+      'Unknown 2', {Only used on DefaultProceduralWater [ACTI:00000019]}
+      'Unknown 3', {Currently Unused}
+      'Is a Radio',
+      'Is a Lookat Trigger',
+      'Unknown 6' {Currently Unused}
     ])),
     wbCNDCs,
-    wbUnknown(PAHD),
+    wbFloat(PAHD, 'Unknown Float'),
     wbCOCT,
     wbCNTOs,
-    wbStruct(RADR, 'Unknown', [
-      wbByteArray('Unknown', 8),
-      wbFloat('Unknown'),
-      wbUnknown
-    ]),
-    wbUnknown(LAVT),
-    wbUnknown(LAMN),
-    wbUnknown(LAMX),
-    wbFloat(PAHD),
+    wbStruct(RADR, 'Radio Receiver', [
+      wbFormIDCk('Sound Model', [SOPM, NULL]),
+      wbFloat('Frequency'),
+      wbFloat('Volume'),
+      wbInteger('Starts Active', itU8, wbBoolEnum),
+      wbInteger('No Signal Static', itU8, wbBoolEnum)
+    ], cpNormal, False, nil, 4),
+    wbInteger(LAVT, 'Lookat Value', itU32),
+    wbInteger(LAMN, 'Lookat Minimum', itU32),
+    wbInteger(LAMX, 'Lookat Maximum', itU32),                    
+    wbFloat(PAHD, 'Unknown Float'),
     wbMNAMFurnitureMarker,
     wbStruct(WBDT, 'Workbench Data', [
       wbInteger('Bench Type', itU8, wbEnum([
@@ -12125,6 +12245,7 @@ begin
     wbCNAM,
     wbString(DNAM, 'Notes'),
     wbInteger(TNAM, 'Type', itU32, wbKeywordTypeEnum),
+    wbString(ENAM, 'Unknown String'),
     wbFormIDCk(DATA, 'Attraction Rule', [AORU]),
     wbNTWK,
     wbFULL,
@@ -12568,10 +12689,9 @@ begin
       wbFormID('Placed Object'),
       wbFormIDCk('Spawn Projectile', [PROJ, NULL]),
       wbUnion('Force', wbDeciderFormVersion150, [
-        wbEmpty('Unused'),
+        wbFloat('Force'),
         wbFormIDCk('Force Curve Table', [CURV, NULL])
       ], cpNormal, True),
-
       wbFloat('Damage'),
       wbFloat('Inner Radius'),
       wbFloat('Outer Radius'),
@@ -15109,20 +15229,35 @@ begin
   var wbLeveledListEntryItem :=
     wbRStruct('Leveled List Entry', [
       wbUnion(LVLO, '', wbDeciderFormVersion174, [
-        wbStructExSK([0, 2], [3], 'Base Data', [
-          wbInteger('Level', itU16),
-          wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
-          wbFormIDCk('Reference', sigBaseObjects),
-          wbInteger('Count', itS16),
-          wbInteger('Chance None', itU8),
-          wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
-        ])
-        .SetSummaryKey([0, 3, 2, 4])
-        .SetSummaryMemberPrefixSuffix(0, '[', ']')
-        .SetSummaryMemberPrefixSuffix(3, '', 'x')
-        .SetSummaryMemberPrefixSuffix(2, '', '')
-        .SetSummaryMemberPrefixSuffix(4, '{Chance None = ', '%}')
-        .IncludeFlag(dfSummaryMembersNoName),
+        wbUnion('', wbDeciderFormVersion69, [
+          wbStructExSK([0, 2], [3], 'Base Data', [
+            wbInteger('Level', itU16),
+            wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
+            wbFormIDCk('Reference', sigBaseObjects),
+            wbInteger('Count', itU16),
+            wbEmpty('Chance None'),
+            wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow)
+          ])
+          .SetSummaryKey([0, 3, 2])
+          .SetSummaryMemberPrefixSuffix(0, '[', ']')
+          .SetSummaryMemberPrefixSuffix(3, '', 'x')
+          .SetSummaryMemberPrefixSuffix(2, '', '')
+          .IncludeFlag(dfSummaryMembersNoName),
+          wbStructExSK([0, 2], [3], 'Base Data', [
+            wbInteger('Level', itU16),
+            wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
+            wbFormIDCk('Reference', sigBaseObjects),
+            wbInteger('Count', itU16),
+            wbInteger('Chance None', itU8),
+            wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
+          ])
+          .SetSummaryKey([0, 3, 2, 4])
+          .SetSummaryMemberPrefixSuffix(0, '[', ']')
+          .SetSummaryMemberPrefixSuffix(3, '', 'x')
+          .SetSummaryMemberPrefixSuffix(2, '', '')
+          .SetSummaryMemberPrefixSuffix(4, '{Chance None = ', '%}')
+          .IncludeFlag(dfSummaryMembersNoName)
+        ]),
         wbFormIDCk('Reference', sigBaseObjects)
       ]),
       wbCOED,
@@ -15196,7 +15331,7 @@ begin
       {0x00000008} 'Unknown 3',
       {0x00000010} 'Unknown 4',
       {0x00000020} 'Unknown 5',
-      {0x00000040} 'Unknown 6',
+      {0x00000040} 'Use first object that matches all conditions',
       {0x00000080} 'Unknown 7',
       {0x00000100} 'Unknown 8'
     ]);
@@ -15579,13 +15714,13 @@ begin
     wbByteArray(NAM2, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
     wbByteArray(NAM3, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
     wbFormIDCk(ANAM, 'Menu Art Object', [ARTO]),
-    wbFormIDCk(GNAM, 'Learn Recipe from', [ALCH,AMMO,ARMO,BOOK,MISC,WEAP]), //inventory objects?
+    wbFormIDCk(GNAM, 'Learn Recipe from', [ALCH,AMMO,ARMO,BOOK,MISC,WEAP]),
     wbFormIDCk(INAM, 'Camp Maximum', [GLOB]),
     wbFormIDCk(JNAM, 'Workshop Maximum', [GLOB]),
     wbFormIDCk(CVT0, 'Curve Table', [CURV]),
     wbFormIDCk(LRNC, 'Learn Chance', [GLOB]),
     wbArrayS(FNAM, 'Category', wbFormIDCk('Keyword', [KYWD])),
-    wbLString(HNAM, 'Object Name'),
+    wbLString(HNAM, 'Build Group Name'),
     wbStruct(DNAM, 'Data', [
       wbFloat('Unknown'),
       wbInteger('Created Object Count', itU16),
@@ -15937,7 +16072,8 @@ var
         wbInteger(TTEF, 'Flags', itU16, wbFlags([
           'On/Off only',
           'Chargen Detail',
-          'Takes Skin Tone'
+          'Takes Skin Tone',
+          'Unknown 3' { Added in patch 1.2.5.8 }
         ])),
         wbCTDAs,
         wbRArray('Textures', wbString(TTET, 'Texture')),
@@ -16225,7 +16361,8 @@ begin
     {0x0040000000} {31} 'Unknown 31',
     {0x0080000000} {32} 'Unknown 32',
     {0x0100000000} {33} 'Unknown 33',
-    {0x0200000000} {34} 'Unknown 34'
+    {0x0200000000} {34} 'Unknown 34',
+    {0x0400000000} {34} 'Unknown 35'
   ]);
 
   wbQUSTAliasFlags :=
@@ -16922,7 +17059,7 @@ begin
     wbString(HLTX, 'Hair Color Extended Lookup Texture'),
     wbFormIDCk(QSTI, 'Dialogue Quest', [QUST]),
     wbBSMPSequence,
-    wbLString(SNAM)
+    wbLString(SNAM, 'Comments')
   ], False, nil, cpNormal, False, nil, wbRACEAfterSet);
 
 
@@ -17887,11 +18024,19 @@ begin
     wbKeywords,
     wbPRPS,
     wbNAM1LODP,
-    wbUnknown(PNAM),
+    wbByteRGBA(PNAM, 'Marker Color'),
     wbATTX,
     wbLStringKC(RNAM, 'Activate Text Override', 0, cpTranslate),
-    wbUnknown(FNAM),
-    wbLString(PAHD, 'Unknown Text'),
+    wbInteger(FNAM, 'Flags', itU16, wbFlags([
+      'No Displacement',
+      'Ignored by Sandbox',
+      'Unknown 2', {Only used on DefaultProceduralWater [ACTI:00000019]}
+      'Unknown 3', {Currently Unused}
+      'Is a Radio',
+      'Is a Lookat Trigger',
+      'Unknown 6' {Currently Unused}
+    ])),
+    wbFloat(PAHD, 'Unknown Float'),
     wbFormIDCk(PFIG, 'Ingredient', sigBaseObjects),
     wbFormIDCK(SNAM, 'Harvest Sound', [SNDR]),
     wbStruct(PFPC, 'Ingredient Production', [
@@ -17901,7 +18046,7 @@ begin
       wbInteger('Winter', itU8)
     ], cpNormal),
     wbUnknown(CITC),
-    wbInteger(FLFG, 'Flags', itU32, wbFlags([
+    wbInteger(FLFG, 'Flora Flags', itU32, wbFlags([
       {0x00000001} 'Unknown 0'
     ]), cpNormal),
     wbFloat(FMAH, 'Max Harvest'),
@@ -18646,7 +18791,7 @@ var
 begin
   wbRecord(INNR, 'Instance Naming Rules', [
     wbEDID,
-    wbUnknown(INRF),
+    wbString(INRF, 'Instance Naming Filter'),
     wbInteger(UNAM, 'Target', itU32, wbEnum([], [
         0, 'None',
       $1D, 'Armor',
@@ -18716,7 +18861,7 @@ begin
     ])), [
     wbEDID,
     wbFormIDCk(PNAM, 'Parent', [LAYR]),
-    wbUnknown(XCLP)
+    wbByteRGBA(XCLP, 'Color')
   ]);
 
   wbRecord(LENS, 'Lens Flare', [
@@ -18985,11 +19130,13 @@ begin
     wbFormIDCk(CNAM, 'Cell', [CELL]),
     wbInteger(VNAM, 'Version', itU32),
     wbUnknown(FNAM),
-    wbUnknown(GNAM).IncludeFlag(dfNoReport),
-    wbFormIDCk(HNAM, 'Unknown', [PKIN]),
-    wbArray(INAM, 'References', wbFormIDCk('Reference', [REFR])),
+    wbStruct('Child Pack-In', [
+      wbInteger(GNAM, 'Child Pack-In Count', itU32),
+      wbFormIDCk(HNAM, 'Child Pack-In', [PKIN]),
+      wbArray(INAM, 'References', wbFormIDCk('Reference', [REFR]))
+    ]),
     wbKeywordsNoReq,
-    wbLString(FULL)
+    wbLString(FULL, 'Name')
   ]);
 
   wbRecord(RFGP, 'Reference Group', [
@@ -19026,11 +19173,17 @@ begin
 
   var wbStaticPart :=
     wbRStruct('Part', [
-      wbStruct(ONAM, 'Static', [
-        wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, CNCY, SCOL]),
-        wbFormIDCk('Material Swap', [MSWP, NULL])
+      wbUnion(ONAM, 'Static', wbSCOLONAMSizeDecider, [
+        wbStruct('Static', [
+          wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, CNCY, SCOL]),
+          wbFormIDCk('Material Swap', [MSWP, REFR, NULL])
+        ]),
+        wbStruct('Static', [
+          wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, CNCY, SCOL]),
+          wbEmpty('Unused')
+        ])
       ]),
-      wbUnknown(ONAM),
+      //wbUnknown(ONAM), { Replaced by above? }
       wbArrayS(DATA, 'Placements', wbStruct('Placement', [
         wbStruct('Position', [
           wbFloat('X'),
@@ -19123,10 +19276,18 @@ begin
     wbDEST,
     wbKeywords,
     wbPRPS,
-    wbUnknown(PNAM),
+    wbByteRGBA(PNAM, 'Marker Color'),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
-    wbUnknown(FNAM),
-    wbUnknown(PAHD),
+    wbInteger(FNAM, 'Flags', itU16, wbFlags([
+      'Unknown 0',
+      'Unknown 1',
+      'Unknown 2',
+      'Unknown 3', {Currently Unused}
+      'Unknown 4',
+      'Unknown 5',
+      'Unknown 6' {Currently Unused}
+    ])),
+    wbFloat(PAHD, 'Unknown Float'),
     wbInteger(COCT, 'Holds Holotape (Count)', itU32),
     wbRArray('Holotapes',
       wbStruct(CNTO, 'Holotape', [
