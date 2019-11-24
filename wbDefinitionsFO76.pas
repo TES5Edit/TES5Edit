@@ -19149,11 +19149,11 @@ begin
     wbFormIDCk(CNAM, 'Cell', [CELL]),
     wbInteger(VNAM, 'Version', itU32),
     wbUnknown(FNAM),
-    wbStruct('Child Pack-In', [
+    wbRStruct('Child Pack-In', [
       wbInteger(GNAM, 'Child Pack-In Count', itU32),
       wbFormIDCk(HNAM, 'Child Pack-In', [PKIN]),
       wbArray(INAM, 'References', wbFormIDCk('Reference', [REFR]))
-    ]),
+    ], []),
     wbKeywordsNoReq,
     wbLString(FULL, 'Name')
   ]);
