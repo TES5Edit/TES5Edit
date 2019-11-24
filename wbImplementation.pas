@@ -8991,6 +8991,9 @@ var
   SigDef: IwbSignatureDef;
   FoundIt: Boolean;
   SelfRef : IwbContainerElementRef;
+  _File: IwbFile;
+  FormID : TwbFormID;
+  FixedFormID : TwbFormID;
 begin
   SelfRef := Self as IwbContainerElementRef;
   Result := '';
@@ -8999,6 +9002,21 @@ begin
     Exit;
   if recSkipped then
     Exit;
+
+  _File := GetFile;
+  if Assigned(_File) then begin
+    FormID := GetFormID;
+    FixedFormID := GetFixedFormID;
+    if _File.IsESL and (FormID.ObjectID > $FFF) and (FixedFormID.FileID = _File.FileFileID[True]) then
+      Result := 'ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' is invalid for a light module.'
+    else begin
+      if FormID <> FixedFormID then
+        Result := 'Warning: internal file FormID is a HITME: ' + FormID.ToString(True) + ' (should be ' + FixedFormID.ToString(True) + ' )';
+    end;
+
+    if Result <> '' then
+      Exit;
+  end;
 
   if mrStruct.mrsFlags.IsDeleted then begin
     Result := '';

@@ -38,6 +38,7 @@
 * (reported on Discord) - in very rare cases, a change might not result in the file being marked as having unsaved changes
 * (reported on Discord) - changing the FormID of a record might not always update the FormID of the "Children of" group for that record
 * (reported on Discord) - Module selection misbehaves for modules with missing masters
+* (reported on Discord) - [TES5/SSE] BOOKs teaching SPELs should not allow NULL
 * (found by developer) - TdfElement.LoadFromResource does not report if the resource can't be found
 * (found by developer) - Quick [Auto] Clean allows selecting the game master (which makes no sense)
 * (found by developer) - [FO4] incorrect subrecord order in CELL
@@ -58,6 +59,7 @@
 * [TES5/SSE] added ENCH to Knowable Forms
 * Allow assigning to deleted records
 * Experts can activate an option which enables an extended FormID space (`001`-`FFF` instead of `800`-`FFF`) when compacting for ESL
+* Check for Errors now reports invalid ObjectID in light modules and HITMEs
 
 ## Shortened Parameters
 

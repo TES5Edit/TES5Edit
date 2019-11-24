@@ -19255,7 +19255,7 @@ begin
       wbInteger(GNAM, 'Child Pack-In Count', itU32),
       wbFormIDCk(HNAM, 'Child Pack-In', [PKIN]),
       wbArray(INAM, 'References', wbFormIDCk('Reference', [REFR]))
-    ],[]),
+    ], []),
     wbKeywordsNoReq,
     wbLString(FULL, 'Name')
   ]);
