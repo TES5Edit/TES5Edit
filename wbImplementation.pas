@@ -8729,10 +8729,10 @@ begin
   _File := GetFile;
   if Assigned(_File) then begin
     FormID := GetFormID;
-    if _File.IsESL and (FormID.ObjectID > $FFF) then
+    FixedFormID := GetFixedFormID;
+    if _File.IsESL and (FormID.ObjectID > $FFF) and (FixedFormID.FileID = _File.FileFileID[True]) then
       Result := 'ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' is invalid for a light module.'
     else begin
-      FixedFormID := GetFixedFormID;
       if FormID <> FixedFormID then
         Result := 'Warning: internal file FormID is a HITME: ' + FormID.ToString(True) + ' (should be ' + FixedFormID.ToString(True) + ' )';
     end;
