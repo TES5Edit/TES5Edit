@@ -52,12 +52,12 @@ var
     Major   : 4;
     Minor   : 0;
     Release : 2;
-    Build   : 'o';
-    Title   : 'RC3 for 4.0.3';
+    Build   : 'p';
+    Title   : 'RC4 for 4.0.3';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04000215;
+  wbWhatsNewVersion : Integer = 04000216;
   wbDeveloperMessageVersion : Integer = 04000200;
   wbDevCRC32App : Cardinal = $FFFFFFEB;
 
