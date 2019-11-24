@@ -6905,7 +6905,7 @@ begin
       wbByteArray('Unused', 2),
       wbUnion('Teaches', wbBOOKTeachesDecider, [
         wbInteger('Skill', itS32, wbSkillEnum),
-        wbFormIDCk('Spell', [SPEL, NULL])
+        wbFormIDCk('Spell', [SPEL])
       ]),
       wbInteger('Value', itU32),
       wbFloat('Weight')
