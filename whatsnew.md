@@ -59,6 +59,7 @@
 * [TES5/SSE] added ENCH to Knowable Forms
 * Allow assigning to deleted records
 * Experts can activate an option which enables an extended FormID space (`001`-`FFF` instead of `800`-`FFF`) when compacting for ESL
+* Check for Errors now reports invalid ObjectID in light modules and HITMEs
 
 ## Shortened Parameters
 
