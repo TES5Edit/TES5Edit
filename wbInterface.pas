@@ -52,12 +52,12 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 2;
-    Build   : 'b';
+    Build   : 'o';
     Title   : 'EXTREMELY EXPERIMENTAL';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04010200;
+  wbWhatsNewVersion : Integer = 04010215;
   wbDeveloperMessageVersion : Integer = 04000001;
   wbDevCRC32App : Cardinal = $FFFFFFE8;
 
