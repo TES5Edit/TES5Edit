@@ -13988,9 +13988,9 @@ begin
         {0x1000} 'Unknown 13'
       ])),
       wbInteger('Priority', itU8),
-      wbInteger('Form Version', itU8, nil, cpIgnore),
-      wbByteArray('Unknown', 4),
-      wbInteger('Type', itU32, wbEnum([
+      wbByteArray('Unused', 1),
+      wbInteger('Form Version', itU32, nil, cpIgnore),
+      wbInteger('Type', itU8, wbEnum([
         {0} 'None',
         {1} 'Main Quest',
         {2} 'Brotherhood of Steel',
@@ -14006,7 +14006,8 @@ begin
        {12} 'DLC05',
        {13} 'DLC06',
        {14} 'DLC07'
-      ]))
+      ])),
+      wbByteArray('Unused', 3)
     ]),
     wbString(ENAM, 'Event', 4),
     wbFormIDCk(LNAM, 'Location', [LCTN]),
