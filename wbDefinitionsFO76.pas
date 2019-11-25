@@ -16486,7 +16486,7 @@ begin
           {0x4000} 'Unknown 15',
           {0x8000} 'Unknown 16'
         ])),
-        wbInteger('Unknown',itU8), //0xE8
+        wbInteger('Priority',itU8), //0xE8
         wbByteArray('Unused',3),
         wbInteger('Unknown',itU32), //0xE0
         wbInteger('Quest Type',itU8, wbEnum([
@@ -16518,8 +16518,8 @@ begin
           {0x0800} 'Unknown 12',
           {0x1000} 'Unknown 13'
         ])),
-        wbInteger('Unknown', itU8),
-        wbByteArray('Unused', 3),
+        wbInteger('Priority', itU8),
+        wbByteArray('Unused', 5),
         wbInteger('Quest Type',itU8, wbEnum([
           'None',
           'Primary',
