@@ -9658,46 +9658,46 @@ begin
 ], []);
 
   wbQuestEventEnum := wbEnum( [], [
-    Int64($54524553), 'Trespass Actor Event',         //TRES
-    Int64($544D4545), 'Trigger Mine Explosion Event', //TMEE
-    Int64($5354494A), 'Served Time',                  //STIJ
-    Int64($53435054), 'Script Event',                 //SCPT
-    Int64($52454D50), 'Player Remove Item',           //REMP
-    Int64($51535452), 'Quest Start',                  //QSTR
-    Int64($51504D54), 'QuickPlay Match Event',        //QPMT
-    Int64($50524656), 'Player Recieves Favor',        //PRFV
-    Int64($5046494E), 'Pay Fine Event',               //PFIN
-    Int64($50434F4E), 'Player Connect',               //PCON
-    Int64($4F414154), 'On Actor Attach',              //OAAT
-    Int64($4E565045), 'New Voice Power',              //NVPE
-    Int64($4C4F434B), 'Lock Pick',                    //LOCK
-    Int64($4C45564C), 'Increase Level',               //LEVL
-    Int64($4C435047), 'LCP Global Value Event',       //LCPG
-    Int64($4C434C44), 'Location Loaded',              //LCLD
-    Int64($4B494C4C), 'Kill Actor Event',             //KILL
-    Int64($4A41494C), 'Jail Event',                   //JAIL
-    Int64($49524F4E), 'Iron Sights',                  //IRON
-    Int64($494E544D), 'Intimidate',                   //INTM
-    Int64($494E4643), 'Player Infected',              //INFC
-    Int64($4841434B), 'Hack Computer',                //HACK
-    Int64($464C4154), 'Flatter',                      //FLAT
-    Int64($45534A41), 'Escape Jail',                  //ESJA
-    Int64($44454144), 'Dead Body',                    //DEAD
-    Int64($43555245), 'Player Cured',                 //CURE
-    Int64($43524654), 'Craft Item',                   //CRFT
-    Int64($434C524C), 'Clear Location Event',         //CLRL
-    Int64($434C4F43), 'Change Location Event',        //CLOC
-    Int64($43485252), 'Change Relationship Rank',     //CHRR
-    Int64($43415354), 'Cast Magic Event',             //CAST
-    Int64($42524942), 'Bribe',                        //BRIB
-    Int64($41535355), 'Assault Actor Event',          //ASSU
-    Int64($41525254), 'Arrest Event',                 //ARRT
-    Int64($414F424A), 'Attraction Object Event',      //AOBJ
-    Int64($4149504C), 'Player Add Item',              //AIPL
-    Int64($4148454C), 'Actor Hello Event',            //AHEL
-    Int64($41464156), 'Player Activate Actor',        //AFAV
-    Int64($41444941), 'Actor Dialogue Event',         //ADIA
-    Int64($4144424F), 'Bounty Event'                  //ADBO
+    Int64($53455254), 'Trespass Actor Event',         //TRES
+    Int64($45454D54), 'Trigger Mine Explosion Event', //TMEE
+    Int64($4A495453), 'Served Time',                  //STIJ
+    Int64($54504353), 'Script Event',                 //SCPT
+    Int64($504D4552), 'Player Remove Item',           //REMP
+    Int64($52545351), 'Quest Start',                  //QSTR
+    Int64($544D5051), 'QuickPlay Match Event',        //QPMT
+    Int64($56465250), 'Player Recieves Favor',        //PRFV
+    Int64($4E494650), 'Pay Fine Event',               //PFIN
+    Int64($4E4F4350), 'Player Connect',               //PCON
+    Int64($5441414F), 'On Actor Attach',              //OAAT
+    Int64($4550564E), 'New Voice Power',              //NVPE
+    Int64($4B434F4C), 'Lock Pick',                    //LOCK
+    Int64($4C56454C), 'Increase Level',               //LEVL
+    Int64($4750434C), 'LCP Global Value Event',       //LCPG
+    Int64($444C434C), 'Location Loaded',              //LCLD
+    Int64($4C4C494B), 'Kill Actor Event',             //KILL
+    Int64($4C49414A), 'Jail Event',                   //JAIL
+    Int64($4E4F5249), 'Iron Sights',                  //IRON
+    Int64($4D544E49), 'Intimidate',                   //INTM
+    Int64($43464E49), 'Player Infected',              //INFC
+    Int64($4B434148), 'Hack Computer',                //HACK
+    Int64($54414C46), 'Flatter',                      //FLAT
+    Int64($414A5345), 'Escape Jail',                  //ESJA
+    Int64($44414544), 'Dead Body',                    //DEAD
+    Int64($45525543), 'Player Cured',                 //CURE
+    Int64($54465243), 'Craft Item',                   //CRFT
+    Int64($4C524C43), 'Clear Location Event',         //CLRL
+    Int64($434F4C43), 'Change Location Event',        //CLOC
+    Int64($52524843), 'Change Relationship Rank',     //CHRR
+    Int64($54534143), 'Cast Magic Event',             //CAST
+    Int64($42495242), 'Bribe',                        //BRIB
+    Int64($55535341), 'Assault Actor Event',          //ASSU
+    Int64($54525241), 'Arrest Event',                 //ARRT
+    Int64($4A424F41), 'Attraction Object Event',      //AOBJ
+    Int64($4C504941), 'Player Add Item',              //AIPL
+    Int64($4C454841), 'Actor Hello Event',            //AHEL
+    Int64($56414641), 'Player Activate Actor',        //AFAV
+    Int64($41494441), 'Actor Dialogue Event',         //ADIA
+    Int64($4F424441), 'Bounty Event'                  //ADBO
   ]);
 
   wbMiscStatEnum := wbEnum([], [
