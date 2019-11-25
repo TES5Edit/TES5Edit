@@ -65,6 +65,7 @@ var
   wbWeaponAnimTypeEnum: IwbEnumDef;
   wbWeaponPropertyEnum: IwbEnumDef;
   wbZTestFuncEnum: IwbEnumDef;
+  wbQuestEventEnum: IwbEnumDef;
   wbStatNameEnum: IwbEnumDef;
   wbKeywordTypeEnum: IwbEnumDef;
   wbReverbClassEnum: IwbEnumDef;
@@ -3879,6 +3880,11 @@ begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 112);
 end;
 
+function wbDeciderFormVersion131(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 131);
+end;
+
 function wbDeciderFormVersion134(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 134);
@@ -7081,7 +7087,7 @@ var
   Container, Entry      : IwbContainerElementRef;
   Female, Female2       : Boolean;
   RaceID, EntryName     : string;
-  Cache, SecondaryCache : PFaceGenFeature;
+  Cache                 : PFaceGenFeature;
   Index                 : Cardinal;
   i, j                  : integer;
 begin
@@ -9473,7 +9479,7 @@ begin
     'Transform',
     'Component',
     'Texture Set',
-    'Unknown - MICN',
+    'Menu Icon',
     'Global',
     'Damage Type',
     'Class',
@@ -9486,7 +9492,7 @@ begin
     'Acoustic Space',
     'Resource',
     'Magic Effect',
-    'Unknown - SCPT',
+    'Script',
     'Landscape Texture',
     'Enchantment',
     'Spell',
@@ -9502,7 +9508,7 @@ begin
     'Light',
     'Misc Item',
     'Misc Item Spawner',
-    'Unknown - MISI',
+    'Misc Item Spawner Instance',
     'Currency',
     'Static',
     'Static Collection',
@@ -9538,14 +9544,14 @@ begin
     'Call',
     'Refrence',
     'Placed NPC',
-    'Placed Missile',
-    'Placed Arrow',
-    'Placed Projectile',
-    'Placed Beam',
-    'Placed Flame',
-    'Placed Cone/Voice',
-    'Placed Barrier',
-    'Placed Hazard',
+    'Projectile Missile',
+    'Projectile Arrow',
+    'Projectile Projectile',
+    'Projectile Beam',
+    'Projectile Flame',
+    'Projectile Cone/Voice',
+    'Projectile Barrier',
+    'Projectile Hazard',
     'Worldspace',
     'Landscape',
     'Navigation Mesh',
@@ -9648,8 +9654,51 @@ begin
     'Condition Form',
     'Unknown - AUVF',
     'Legendary Item',
-    'Unknown - EQWG'
+    'Event Quest Widget'
 ], []);
+
+  wbQuestEventEnum := wbEnum( [], [
+    Int64($53455254), 'Trespass Actor Event',         //TRES
+    Int64($45454D54), 'Trigger Mine Explosion Event', //TMEE
+    Int64($4A495453), 'Served Time',                  //STIJ
+    Int64($54504353), 'Script Event',                 //SCPT
+    Int64($504D4552), 'Player Remove Item',           //REMP
+    Int64($52545351), 'Quest Start',                  //QSTR
+    Int64($544D5051), 'QuickPlay Match Event',        //QPMT
+    Int64($56465250), 'Player Recieves Favor',        //PRFV
+    Int64($4E494650), 'Pay Fine Event',               //PFIN
+    Int64($4E4F4350), 'Player Connect',               //PCON
+    Int64($5441414F), 'On Actor Attach',              //OAAT
+    Int64($4550564E), 'New Voice Power',              //NVPE
+    Int64($4B434F4C), 'Lock Pick',                    //LOCK
+    Int64($4C56454C), 'Increase Level',               //LEVL
+    Int64($4750434C), 'LCP Global Value Event',       //LCPG
+    Int64($444C434C), 'Location Loaded',              //LCLD
+    Int64($4C4C494B), 'Kill Actor Event',             //KILL
+    Int64($4C49414A), 'Jail Event',                   //JAIL
+    Int64($4E4F5249), 'Iron Sights',                  //IRON
+    Int64($4D544E49), 'Intimidate',                   //INTM
+    Int64($43464E49), 'Player Infected',              //INFC
+    Int64($4B434148), 'Hack Computer',                //HACK
+    Int64($54414C46), 'Flatter',                      //FLAT
+    Int64($414A5345), 'Escape Jail',                  //ESJA
+    Int64($44414544), 'Dead Body',                    //DEAD
+    Int64($45525543), 'Player Cured',                 //CURE
+    Int64($54465243), 'Craft Item',                   //CRFT
+    Int64($4C524C43), 'Clear Location Event',         //CLRL
+    Int64($434F4C43), 'Change Location Event',        //CLOC
+    Int64($52524843), 'Change Relationship Rank',     //CHRR
+    Int64($54534143), 'Cast Magic Event',             //CAST
+    Int64($42495242), 'Bribe',                        //BRIB
+    Int64($55535341), 'Assault Actor Event',          //ASSU
+    Int64($54525241), 'Arrest Event',                 //ARRT
+    Int64($4A424F41), 'Attraction Object Event',      //AOBJ
+    Int64($4C504941), 'Player Add Item',              //AIPL
+    Int64($4C454841), 'Actor Hello Event',            //AHEL
+    Int64($56414641), 'Player Activate Actor',        //AFAV
+    Int64($41494441), 'Actor Dialogue Event',         //ADIA
+    Int64($4F424441), 'Bounty Event'                  //ADBO
+  ]);
 
   wbMiscStatEnum := wbEnum([], [
     Int64($1EE71DBC), 'Animals Friended',
@@ -11150,6 +11199,7 @@ begin
 
   wbRecord(CELL, 'Cell',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x0000002}  2, 'Unknown 2',
       {0x0000040}  7, 'No Pre Vis',
       {0x0000200} 10, 'Persistent',
       {0x0002000} 17, 'Off Limits',
@@ -11380,7 +11430,23 @@ begin
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Rotate to Face Target',
         {0x00000002} 'Attach to Camera',
-        {0x00000004} 'Inherit Rotation'
+        {0x00000004} 'Inherit Rotation',
+        {0x00000008} 'Unknown 4',
+        {0x00000010} 'Unknown 5',
+        {0x00000020} 'Unknown 6',
+        {0x00000040} 'Unknown 7',
+        {0x00000080} 'Unknown 8',
+        {0x00000100} 'Unknown 9',
+        {0x00000200} 'Unknown 10',
+        {0x00000400} 'Unknown 11',
+        {0x00000800} 'Unknown 12',
+        {0x00001000} 'Unknown 13',
+        {0x00002000} 'Unknown 14',
+        {0x00004000} 'Unknown 15',
+        {0x00008000} 'Unknown 14',
+        {0x00010000} 'Unknown 17',
+        {0x00020000} 'Unknown 18',
+        {0x00040000} 'Unknown 19'
       ]))
     ], cpNormal, True)
   ]);
@@ -16401,8 +16467,8 @@ begin
     wbDESC,
     wbPRPS,
     wbRUnion('General', [
-      wbStruct(DATA, 'General', [
-        wbInteger('Flags', itU16, wbFlags([
+      wbStruct(DATA, 'General', [  //0xE4
+        wbInteger('Flags', itU32, wbFlags([
           {0x0001} 'Start Game Enabled',
           {0x0002} 'Unknown 2',
           {0x0004} 'Add Idle Topic To Hello',
@@ -16420,11 +16486,21 @@ begin
           {0x4000} 'Unknown 15',
           {0x8000} 'Unknown 16'
         ])),
-        wbByteArray('Unused',1),
-        wbInteger('Unknown',itU8),
-        wbInteger('Unknown',itU16),
-        wbInteger('Unknown',itU8),
-        wbUnknown()
+        wbInteger('Unknown',itU8), //0xE8
+        wbByteArray('Unused',3),
+        wbInteger('Unknown',itU32), //0xE0
+        wbInteger('Quest Type',itU8, wbEnum([
+          'None',
+          'Primary',
+          'Secondary',
+          'Side Quest',
+          'Server',
+          'Daily',
+          'Public Event',
+          'Miscellaneous',
+          'Event'
+        ])),  //0xE9
+        wbByteArray('Unused',3)
       ]),
       wbStruct(DNAM, 'General', [
         wbInteger('Flags', itU16, wbFlags([
@@ -16442,10 +16518,23 @@ begin
           {0x0800} 'Unknown 12',
           {0x1000} 'Unknown 13'
         ])),
-        wbUnknown
+        wbInteger('Unknown', itU8),
+        wbByteArray('Unused', 3),
+        wbInteger('Quest Type',itU8, wbEnum([
+          'None',
+          'Primary',
+          'Secondary',
+          'Side Quest',
+          'Server',
+          'Daily',
+          'Public Event',
+          'Miscellaneous',
+          'Event'
+        ])),  //0xE9
+        wbByteArray('Unused',3)
       ])
     ], []),
-    wbString(ENAM, 'Event', 4),
+    wbInteger(ENAM, 'Event', itU32, wbQuestEventEnum),
     wbFormIDCk(LNAM, 'Location', [LCTN]),
     wbFormIDCk(XNAM, 'Quest Completion XP', [GLOB]),
     wbUnknown(QMCI),
@@ -17322,15 +17411,28 @@ begin
       ], True, True)))]),
     wbXFLG,
     wbUnknown(XKPD),
-    wbStruct(XBSD, 'Spline', [
-      wbFloat('Slack'),
-      wbFloat('Thickness'),
-      wbFloat('Unknown'), // not shown in editor
-      wbFloat('Unknown'), // not shown in editor
-      wbFloat('Unknown'), // not shown in editor
-      wbInteger('Wind - Detached End', itU8, wbBoolEnum),
-      wbByteArray('Unused', 0) // junk data?
-    ], cpNormal, False, nil, 5),
+    wbUnion(XBSD, 'Spline', wbDeciderFormVersion131 ,[
+      wbStruct('Spline', [
+        wbFloat('Slack'),
+        wbFloat('Thickness'),
+        wbFloat('Unknown'), // not shown in editor
+        wbFloat('Unknown'), // not shown in editor
+        wbFloat('Unknown'), // not shown in editor
+        wbFloat('Unknown'), // not shown in editor
+        wbFloat('Unknown'), // not shown in editor
+        wbInteger('Wind - Detached End', itU8, wbBoolEnum),
+        wbByteArray('Unused', 3) // junk data?
+      ], cpNormal, False, nil, 5),
+      wbStruct('Spline', [
+        wbFloat('Slack'),
+        wbFloat('Thickness'),
+        wbFloat('Unknown'), // not shown in editor
+        wbFloat('Unknown'), // not shown in editor
+        wbFloat('Unknown'), // not shown in editor
+        wbInteger('Wind - Detached End', itU8, wbBoolEnum),
+        wbByteArray('Unused', 3) // junk data?
+      ], cpNormal, False, nil, 5)
+    ]),
     wbStruct(XPDD, 'Projected Decal', [
       wbFloat('Width Scale'),
       wbFloat('Height Scale'),
@@ -18913,9 +19015,9 @@ begin
     wbEDID
   ]);
 
-  wbRecord(MICN, 'MICN', [
+  wbRecord(MICN, 'Menu Icon', [
     wbEDID
-  ]);}
+  ]); }
 
   wbRecord(MSWP, 'Material Swap',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -19972,6 +20074,9 @@ begin
       wbString(BNAM, 'Initial Model'),
       wbString(SNAM, 'New Model')
     ],[]))
+  ]);
+
+  wbRecord(EQWG, 'Event Quest Widget', [
   ]);
 end;
 
