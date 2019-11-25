@@ -3840,6 +3840,19 @@ begin
   end;
 end;
 
+function wbSPEDFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  if wbFormVerDecider(aBasePtr, aEndPtr, aElement, 28) = 0 then begin
+      Result := 0;
+  end else if wbFormVerDecider(aBasePtr, aEndPtr, aElement, 60) = 0 then begin
+      Result := 1;
+  end else if wbFormVerDecider(aBasePtr, aEndPtr, aElement, 104) = 0 then begin
+      Result := 2;
+  end else begin
+      Result := 3;
+  end;
+end;
+
 function wbDeciderFormVersion29(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 29);
@@ -13357,8 +13370,10 @@ begin
     wbOBND(True),
     wbOPDSs,
     wbGenericModel,
-    wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
-    wbUnknown(IKEK),
+    wbRUnion('Node Index', [
+      wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
+      wbInteger(IKEK, 'Node Index', itS32, nil, cpNormal, True),
+    ], []),
     wbFormIDCk(SNAM, 'Sound', [SNDR]),
     wbFormIDCk(LNAM, 'Light', [LIGH]),
     wbStruct(DNAM, 'Data', [
@@ -14636,36 +14651,79 @@ end;
 procedure DefineFO76k;
 begin
 
-  wbSPED := wbStruct(SPED, 'Movement Data', [
-    wbFloat('Unknown'),
-    wbFloat('Walk - Left'),
-    wbFloat('Run - Left'),
-    wbFloat('Unknown'),
-    wbFloat('Unknown'),
-    wbFloat('Walk - Right'),
-    wbFloat('Run - Right'),
-    wbFloat('Unknown'),
-    wbFloat('Unknown'),
-    wbFloat('Walk - Forward'),
-    wbFloat('Run - Forward'),
-    wbFloat('Sprint - Forward'),
-    wbFloat('Unknown'),
-    wbFloat('Walk - Back'),
-    wbFloat('Run - Back'),
-    wbFloat('Unknown'),
-    wbFloat('Standing - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-    wbFloat('Walk - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-    wbFloat('Run - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-    wbFloat('Sprint - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-    wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-    wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-    wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-    wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-    wbFloat('Standing - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-    wbFloat('Walk - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-    wbFloat('Run - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-    wbFloat('Sprint - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-  ], cpNormal, True, nil, 10);
+  wbSPED := wbUnion('MovementData', wbSPEDFormatDecider, [
+    wbStruct(SPED, 'Movement Data', [
+      wbFloat('Walk - Left'),
+      wbFloat('Run - Left'),
+      wbFloat('Walk - Right'),
+      wbFloat('Run - Right'),
+      wbFloat('Walk - Forward'),
+      wbFloat('Run - Forward'),
+      wbFloat('Walk - Back'),
+      wbFloat('Run - Back'),
+      wbFloat('Walk - Pitch,Roll,Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Run - Pitch,Roll,Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+    ], cpNormal, True, nil, 10),
+    wbStruct(SPED, 'Movement Data', [
+      wbFloat('Walk - Left'),
+      wbFloat('Run - Left'),
+      wbFloat('Walk - Right'),
+      wbFloat('Run - Right'),
+      wbFloat('Walk - Forward'),
+      wbFloat('Run - Forward'),
+      wbFloat('Walk - Back'),
+      wbFloat('Run - Back'),
+      wbFloat('Walk - Pitch,Roll,Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Run - Pitch,Roll,Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Unused', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+    ], cpNormal, True, nil, 10),
+    wbStruct(SPED, 'Movement Data', [
+      wbFloat('Walk - Left'),
+      wbFloat('Run - Left'),
+      wbFloat('Walk - Right'),
+      wbFloat('Run - Right'),
+      wbFloat('Walk - Forward'),
+      wbFloat('Run - Forward'),
+      wbFloat('Walk - Back'),
+      wbFloat('Run - Back'),
+      wbFloat('Walk - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Run - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Walk - Roll', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Run - Roll', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Walk - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Run - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+    ], cpNormal, True, nil, 10),
+    wbStruct(SPED, 'Movement Data', [
+      wbFloat('Standing - Left'),
+      wbFloat('Walk - Left'),
+      wbFloat('Run - Left'),
+      wbFloat('Sprint - Left'),
+      wbFloat('Standing - Right'),
+      wbFloat('Walk - Right'),
+      wbFloat('Run - Right'),
+      wbFloat('Sprint - Right'),
+      wbFloat('Standing - Forward'),
+      wbFloat('Walk - Forward'),
+      wbFloat('Run - Forward'),
+      wbFloat('Sprint - Forward'),
+      wbFloat('Standing - Back'),
+      wbFloat('Walk - Back'),
+      wbFloat('Run - Back'),
+      wbFloat('Sprint - Back'),
+      wbFloat('Standing - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Walk - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Run - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Sprint - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Standing - Roll', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Walk - Roll', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Run - Roll', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Sprint - Roll', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Standing - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Walk - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Run - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Sprint - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+    ], cpNormal, True, nil, 10)
+  ]);
 
   wbRecord(OTFT, 'Outfit', [
     wbEDID,
@@ -16551,9 +16609,9 @@ begin
     wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, False),
     wbEmpty(NEXT, 'Marker', cpNormal, True),
     wbCTDAs,
-    wbEmpty(NEXT, 'Marker', cpNormal, True),
+    wbEmpty(NEXT, 'Marker', cpNormal),
     wbCTDAs,
-    wbEmpty(NEXT, 'Marker', cpNormal, True),
+    wbEmpty(NEXT, 'Marker', cpNormal),
     wbCTDAs,
     wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
       wbStructSK(INDX, [0], 'Stage Index', [
