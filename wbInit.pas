@@ -232,6 +232,7 @@ begin
       wbShowFlagEnumValue := Settings.ReadBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
       wbTrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
       wbAllowDirectSave := Settings.ReadBool('Options', 'AllowDirectSave', wbAllowDirectSave);
+      wbExtendedESL := Settings.ReadBool('Options', 'ExtendedESL', wbExtendedESL);
       wbSortINFO := Settings.ReadBool('Options', 'SortINFO', wbSortINFO);
       wbFillPNAM := Settings.ReadBool('Options', 'FillPNAM', wbFillPNAM);
       wbCollapseConditions := Settings.ReadBool('Options', 'CollapseConditions', wbCollapseConditions);
@@ -962,6 +963,9 @@ begin
     if FindCmdLineSwitch('AllowDirectSaves') then
       wbAllowDirectSave := True;
 
+    if FindCmdLineSwitch('ExtendedESL') then
+      wbExtendedESL := True;
+
   if FindCmdLineSwitch('IKnowWhatImDoing') then
     wbIKnowWhatImDoing := True;
 
@@ -972,10 +976,12 @@ begin
     wbStripEmptyMasters := True;
 
   if wbToolMode = tmEdit then begin
-    if FindCmdLineSwitch('quickshowconflicts') or ExeName.Contains('quickshowconflicts') or ExeName.Contains('qsc') then
+    if   FindCmdLineSwitch('quickshowconflicts') or FindCmdLineSwitch('qsc')
+      or ExeName.Contains('quickshowconflicts') or ExeName.Contains('qsc') then
       wbQuickShowConflicts := True;
 
-    if FindCmdLineSwitch('veryquickshowconflicts') or ExeName.Contains('veryquickshowconflicts') or ExeName.Contains('vqsc') then begin
+    if   FindCmdLineSwitch('veryquickshowconflicts') or FindCmdLineSwitch('vqsc')
+      or ExeName.Contains('veryquickshowconflicts') or ExeName.Contains('vqsc') then begin
       wbQuickShowConflicts := True;
       wbVeryQuickShowConflicts := True;
       wbAutoLoad := True;
@@ -987,7 +993,8 @@ begin
     if FindCmdLineSwitch('autoexit') then
       wbAutoExit := True;
 
-    if FindCmdLineSwitch('autogamelink') or ExeName.Contains('autogamelink') or ExeName.Contains('agl') then begin
+    if   FindCmdLineSwitch('autogamelink') or FindCmdLineSwitch('agl')
+      or ExeName.Contains('autogamelink') or ExeName.Contains('agl') then begin
       wbAutoLoad := True;
       wbAutoGameLink := True;
     end;
@@ -996,10 +1003,12 @@ begin
       if wbQuickShowConflicts then
         wbVeryQuickShowConflicts := True;
 
-    if (FindCmdLineSwitch('quickclean') or ExeName.Contains('quickclean') or ExeName.Contains('qc')) and (wbToolSource in [tsPlugins]) then
+    if (FindCmdLineSwitch('quickclean') or FindCmdLineSwitch('qc')
+      or ExeName.Contains('quickclean') or ExeName.Contains('qc')) and (wbToolSource in [tsPlugins]) then
       wbQuickClean := True;
 
-    if (FindCmdLineSwitch('quickautoclean') or ExeName.Contains('quickautoclean') or ExeName.Contains('qac')) and (wbToolSource in [tsPlugins]) then begin
+    if (FindCmdLineSwitch('quickautoclean') or FindCmdLineSwitch('qac')
+      or ExeName.Contains('quickautoclean') or ExeName.Contains('qac')) and (wbToolSource in [tsPlugins]) then begin
       wbQuickClean := True;
       wbQuickCleanAutoSave := wbQuickClean;
     end;
@@ -1204,6 +1213,17 @@ begin
     wbMasterUpdateFixPersistence := True
   else if FindCmdLineSwitch('NoFixPersistence') then
     wbMasterUpdateFixPersistence := False;
+
+  if FindCmdLineSwitch('AutoMarkModified') then
+    wbAutoMarkModified := True;
+  if FindCmdLineSwitch('NoAutoMarkModified') then
+    wbAutoMarkModified := False;
+
+  if FindCmdLineSwitch('ForceMarkModified') then
+    wbForceMarkModified := True;
+  if FindCmdLineSwitch('NoForceMarkModified') then
+    wbForceMarkModified := False;
+
 
   if wbVeryQuickShowConflicts then
     wbSubMode := 'Very Quick Show Conflicts'

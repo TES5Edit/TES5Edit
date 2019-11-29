@@ -180,7 +180,7 @@ begin
         if i > High(Modules) then
           ModGroupFileName := wbModGroupFileName
         else
-          ModGroupFileName := wbExpandFileName(ChangeFileExt(Modules[i].miOriginalName, '.modgroups'));
+          ModGroupFileName := wbExpandFileName(ChangeFileExt(Modules[i].miName, '.modgroups'));
 
         ModGroupFile := nil;
         if ModGroupFilesByName.Find(ModGroupFileName, k) then

@@ -59,6 +59,7 @@ uses
   ImagingFormats,
   ImagingCanvases,
   Imaging,
+  wbDataFormat,
   wbInterface,
   wbImplementation,
   wbLoadOrder,
@@ -68,7 +69,6 @@ uses
   wbHelpers,
   wbInit,
   wbLocalization,
-  wbDataFormat,
   wbModGroups,
   wbHardcoded,
   Vcl.Themes,
@@ -534,6 +534,8 @@ type
     procedure vstViewHeaderClick(Sender: TVTHeader; HitInfo: TVTHeaderHitInfo);
     procedure vstViewHeaderDropped(Sender: TVTHeader; SourceColumn, TargetColumn: TColumnIndex; var Handled: Boolean);
     procedure vstViewHeaderDrawQueryElements(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo; var Elements: THeaderPaintElements);
+    procedure vstViewHeaderMouseDown(Sender: TVTHeader; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure vstViewHeaderMouseMove(Sender: TVTHeader; Shift: TShiftState; X, Y: Integer);
     procedure vstViewInitChildren(Sender: TBaseVirtualTree; Node: PVirtualNode; var ChildCount: Cardinal);
     procedure vstViewInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure vstViewKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -693,8 +695,6 @@ type
     procedure mniMainSaveClick(Sender: TObject);
     procedure jbhSaveBalloonClick(Sender: TObject);
     procedure jbhSaveCloseBtnClick(Sender: TObject; var CanClose: Boolean);
-    procedure vstViewHeaderMouseDown(Sender: TVTHeader; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure vstNavFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex);
     procedure tmrShutdownTimer(Sender: TObject);
@@ -722,6 +722,8 @@ type
     RateNoticeGiven: Integer;
     ReachableBuild: Boolean;
     ReferencedBySortColumn: TListColumn;
+
+    FocusedColumnOverride : Integer;
 
     EditInfoCacheLGeneration: Integer;
     EditInfoCache: TArray<string>;
@@ -1693,6 +1695,7 @@ end;
 function TfrmMain.AddNewFileName(aFileName: string; aTemplate: PwbModuleInfo): IwbFile;
 var
   LoadOrder : Integer;
+  i: Integer;
 begin
   Result := nil;
 
@@ -1702,8 +1705,12 @@ begin
   end;
 
   LoadOrder := 0;
-  if Length(Files) > 0 then
-    LoadOrder := Succ(Files[High(Files)].LoadOrder);
+  if Length(Files) > 0 then begin
+    for i := Low(Files) to High(Files) do
+      if Files[i].LoadOrder > LoadOrder then
+        LoadOrder := Files[i].LoadOrder;
+    LoadOrder := Succ(LoadOrder);
+  end;
 
   Result := wbNewFile(wbDataPath + aFileName, LoadOrder, aTemplate);
   SetLength(Files, Succ(Length(Files)));
@@ -2194,6 +2201,10 @@ var
   Priority               : TwbConflictPriority;
   ThisPriority           : TwbConflictPriority;
   FoundAny               : Boolean;
+
+  ElementTypes           : TwbElementTypes;
+  DefTypes               : TwbDefTypes;
+  OptionalAndMissing     : Boolean;
 begin
 //  if aSiblingCompare then
 //    Priority := cpBenign
@@ -2264,13 +2275,26 @@ begin
       else
         FirstElementNotIgnored := FirstElement;
 
+      ElementTypes := [];
+      DefTypes := [];
+      OptionalAndMissing := False;
+
       for i := 0 to Pred(aNodeCount) do begin
         Element := aNodeDatas[i].Element;
         if Assigned(Element) then begin
+
+          Include(ElementTypes, Element.ElementType);
+          if Assigned(Element.ValueDef) then
+            Include(DefTypes, Element.ValueDef.DefType)
+          else
+            Include(DefTypes, dtEmpty);
+          OptionalAndMissing := OptionalAndMissing or (esOptionalAndMissing in Element.ElementStates);
+
           ThisPriority := Element.ConflictPriority;
           if ThisPriority <> cpIgnore then
             UniqueValues.Add(Element.SortKey[True]);
         end else begin
+          Include(DefTypes, dtEmpty);
           ThisPriority := Priority;
           if not (vnfIgnore in aNodeDatas[i].ViewNodeFlags) then
             if Priority <> cpNormalIgnoreEmpty then
@@ -2396,6 +2420,29 @@ begin
             Break;
           end;
 
+      if    (Result > caNoConflict)
+        and OptionalAndMissing
+        and (ElementTypes <= [etArray, etStruct, etValue])
+        and (dtEmpty in DefTypes)
+        and ((DefTypes - [dtEmpty]).Count = 1)
+        and ((DefTypes - [dtEmpty, dtString..dtInteger, dtFloat, dtArray, dtStruct]).Count = 0) then begin
+
+        for i := 0 to Pred(aNodeCount) do
+          if Assigned(aNodeDatas[i].Element) then
+            if not aNodeDatas[i].Element.ContentIsAllZero then
+              Exit;
+
+        Result := caNoConflict;
+
+        for i := 0 to Pred(aNodeCount) do begin
+          if aNodeDatas[i].ConflictThis > ctIdenticalToMaster then
+            aNodeDatas[i].ConflictThis := ctIdenticalToMaster;
+          if aNodeDatas[i].ConflictAll > caNoConflict then
+            aNodeDatas[i].ConflictAll := caNoConflict;
+        end;
+
+      end;
+
     finally
       FreeAndNil(UniqueValues);
     end;
@@ -2442,11 +2489,12 @@ var
   MainRecord2          : IwbMainRecord;
   Master               : IwbMainRecord;
   GroupRecord          : IwbGroupRecord;
-  TargetFile        : IwbFile;
+  TargetFile           : IwbFile;
   sl                   : TStringList;
   i, j                 : Integer;
   EditorID             : string;
   EditorIDPrefixRemove : string;
+  EditorIDSuffixRemove : string;
   EditorIDPrefix       : string;
   EditorIDSuffix       : string;
   Multiple             : Boolean;
@@ -2619,6 +2667,7 @@ begin
         Multiple := (Length(Elements) > 1) or (Elements[0].ElementType <> etMainRecord);
         EditorID := '';
         EditorIDPrefixRemove := '';
+        EditorIDSuffixRemove := '';
         EditorIDPrefix := '';
         EditorIDSuffix := '';
 
@@ -2674,6 +2723,8 @@ begin
           if AsNew or AsWrapper then
             repeat
               if not InputQuery('EditorID Prefix', 'Please enter the prefix that should be removed from the EditorIDs if present', EditorIDPrefixRemove) then
+                Exit;
+              if not InputQuery('EditorID Suffix', 'Please enter the suffix that should be removed from the EditorIDs if present', EditorIDSuffixRemove) then
                 Exit;
               if not InputQuery('EditorID Prefix', 'Please enter the prefix that should be added to EditorIDs', EditorIDPrefix) then
                 Exit;
@@ -2776,7 +2827,7 @@ begin
                     wbCurrentProgress := Format('[%s] into [%s]', [MainRecord.FullPath, TargetFile.FullPath]);
                     wbProgress(Operation + ' ' + wbCurrentProgress);
 
-                    MainRecord2 := wbCopyElementToFile(MainRecord, TargetFile, True, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix, False) as IwbMainRecord;
+                    MainRecord2 := wbCopyElementToFile(MainRecord, TargetFile, True, True, EditorIDPrefixRemove, EditorIDSuffixRemove, EditorIDPrefix, EditorIDSuffix, False) as IwbMainRecord;
                     wbProgress('');
 
                     Assert(Assigned(MainRecord2));
@@ -2784,7 +2835,7 @@ begin
                       MainRecord2.EditorID := EditorID;
 
                     EditorID := MainRecord.EditorID;
-                    MainRecord := wbCopyElementToFile(MainRecord, TargetFile, False, False, '', '', '', AllowOverwrite) as IwbMainRecord;
+                    MainRecord := wbCopyElementToFile(MainRecord, TargetFile, False, False, '', '', '', '', AllowOverwrite) as IwbMainRecord;
                     wbProgress('');
                     Assert(Assigned(MainRecord));
                     MainRecord.Assign(Low(Integer), nil, False);
@@ -2807,12 +2858,12 @@ begin
                     try
                       if DeepCopy and Supports(Elements[j], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
                         wbProgress(Operation + ' ' + wbCurrentProgress);
-                        lResult[j] := wbCopyElementToFile(MainRecord.ChildGroup, TargetFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix, AllowOverwrite);
+                        lResult[j] := wbCopyElementToFile(MainRecord.ChildGroup, TargetFile, AsNew, True, EditorIDPrefixRemove, EditorIDSuffixRemove, EditorIDPrefix, EditorIDSuffix, AllowOverwrite);
                         wbProgress('');
                       end else begin
                         wbCurrentProgress := Format('[%s] into [%s]', [Elements[j].FullPath, TargetFile.FullPath]);
                         wbProgress(Operation + ' ' + wbCurrentProgress);
-                        CopiedElement := wbCopyElementToFile(Elements[j], TargetFile, AsNew, True, EditorIDPrefixRemove, EditorIDPrefix, EditorIDSuffix, AllowOverwrite);
+                        CopiedElement := wbCopyElementToFile(Elements[j], TargetFile, AsNew, True, EditorIDPrefixRemove, EditorIDSuffixRemove, EditorIDPrefix, EditorIDSuffix, AllowOverwrite);
                         wbProgress('');
                         if Assigned(CopiedElement) then begin
                           if Assigned(aAfterCopyCallback) then
@@ -2832,12 +2883,12 @@ begin
                   if DeepCopy and Supports(Elements[0], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
                     wbCurrentProgress := Format('[%s] into [%s]', [MainRecord.ChildGroup.FullPath, TargetFile.FullPath]);
                     wbProgress(Operation + ' ' + wbCurrentProgress);
-                    lResult[0] := wbCopyElementToFile(MainRecord.ChildGroup, TargetFile, AsNew, True, '', '', '', AllowOverwrite);
+                    lResult[0] := wbCopyElementToFile(MainRecord.ChildGroup, TargetFile, AsNew, True, '', '', '', '', AllowOverwrite);
                     wbProgress('');
                   end else begin
                     wbCurrentProgress := Format('[%s] into [%s]', [Elements[0].FullPath, TargetFile.FullPath]);
                     wbProgress(Operation + ' ' + wbCurrentProgress);
-                    CopiedElement := wbCopyElementToFile(Elements[0], TargetFile, AsNew, True, '', '', '', AllowOverwrite);
+                    CopiedElement := wbCopyElementToFile(Elements[0], TargetFile, AsNew, True, '', '', '', '', AllowOverwrite);
                     wbProgress('');
                     if Assigned(CopiedElement) then begin
                       if Assigned(aAfterCopyCallback) then
@@ -3605,7 +3656,7 @@ var
             if Assigned(TargetLists[l]) and Assigned(WinningLists[l]) then
               if not ListsEqual(TargetLists[l], WinningLists[l]) then begin
                 if not Assigned(TargetRecord) then
-                  TargetRecord := wbCopyElementToFile(MainRecord, TargetFile, False, True, '', '', '', False) as IwbMainRecord;
+                  TargetRecord := wbCopyElementToFile(MainRecord, TargetFile, False, True, '', '', '', '', False) as IwbMainRecord;
 
                 TargetRecord.RemoveElement(aListNames[l]);
                 for j := 0 to Pred(TargetLists[l].Count) do
@@ -4091,7 +4142,7 @@ begin
 
     if AddRequiredMasters(sl, ReferenceFile) then
       for j := Low(Elements) to High(Elements) do begin
-        wbCopyElementToFile(Elements[j], ReferenceFile, False, True, '', '', '', False);
+        wbCopyElementToFile(Elements[j], ReferenceFile, False, True, '', '', '', '', False);
         if Elements[j].RemoveInjected(False) then begin
           pgMain.ActivePage := tbsMessages;
           AddMessage('Injected references in '+Elements[j].Name+' could not all be removed automatically.');
@@ -4958,6 +5009,7 @@ begin
               if wbQuickClean then begin
                 MinSelect := 1;
                 MaxSelect := 1;
+                HideFlag := mfIsGameMaster;
                 AllModules := wbModulesByLoadOrder(False).FilteredByFlag(mfValid);
                 Caption := 'Please check or double click the module that you want to ' + wbSubMode;
               end else
@@ -5138,6 +5190,7 @@ begin
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST2', wbSortFLST);
   //wbSortINFO := Settings.ReadBool('Options', 'SortINFO', wbSortINFO); read in wbInit
   //wbFillPNAM := Settings.ReadBool('Options', 'FillPNAM', wbFillPNAM); read in wbInit
+  //wbExtendedESL := Settings.ReadBool('Options', 'ExtendedESL', wbExtendedESL); read in wbInit
   wbFocusAddedElement := Settings.ReadBool('Options', 'FocusAddedElement', wbFocusAddedElement);
   wbRequireCtrlForDblClick := Settings.ReadBool('Options', 'RequireCtrlForDblClick', wbRequireCtrlForDblClick);
   wbRemoveOffsetData := Settings.ReadBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
@@ -5566,6 +5619,8 @@ begin
     UpdateColumnWidths;
   finally
     vstView.EndUpdate;
+    if vstView.FocusedColumn > NoColumn then
+      vstView.ScrollIntoView(vstView.FocusedColumn, False);
     RebuildingViewTree := False;
   end;
 end;
@@ -5972,6 +6027,8 @@ var
   i, j, k, l: Integer;
   Rect: TRect;
 begin
+  FocusedColumnOverride := -1;
+
   wbVarPointer := varPointer;
 
   if wbThemesSupported then try
@@ -7058,13 +7115,24 @@ var
   function FoundName: Boolean;
   var
     CellText    : string;
+    i           : Integer;
   begin
     if NameFilter = '' then
       Exit(True);
 
-    CellText := '';
-    vstViewGetText(vstView, aNode, 0, ttNormal, CellText);
-    Result := CellText.ToLowerInvariant.Contains(NameFilter);
+    Result := False;
+    try
+      for i := 1 to Pred(vstView.Header.Columns.Count) do begin
+        CellText := '';
+        FocusedColumnOverride := i;
+        vstViewGetText(vstView, aNode, 0, ttNormal, CellText);
+        Result := CellText.ToLowerInvariant.Contains(NameFilter);
+        if Result then
+          Break;
+      end;
+    finally
+      FocusedColumnOverride := -1;
+    end;
   end;
 
   function FoundValue: Boolean;
@@ -7303,23 +7371,28 @@ begin
     if not EditWarn then
       Exit;
 
-    //    vstView.BeginUpdate;
+    LockProcessMessages;
     try
-      NewElement := TargetElement.Assign(TargetIndex, nil, False);
-      if Assigned(NewElement) then
-        NewElement.SetToDefaultIfAsCreatedEmpty;
+      //    vstView.BeginUpdate;
+      try
+        NewElement := TargetElement.Assign(TargetIndex, nil, False);
+        if Assigned(NewElement) then
+          NewElement.SetToDefaultIfAsCreatedEmpty;
 
-      ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
-      TargetElement := nil;
-      Control := GetKeyState(VK_CONTROL) < 0;
-      if wbFocusAddedElement xor Control then
-        ViewFocusedElement := NewElement;
-      PostResetActiveTree;
+        ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
+        TargetElement := nil;
+        Control := GetKeyState(VK_CONTROL) < 0;
+        if wbFocusAddedElement xor Control then
+          ViewFocusedElement := NewElement;
+        PostResetActiveTree;
+      finally
+        //      vstView.EndUpdate;
+      end;
+
+      InvalidateElementsTreeView(NoNodes);
     finally
-      //      vstView.EndUpdate;
+      UnLockProcessMessages;
     end;
-
-    InvalidateElementsTreeView(NoNodes);
   end;
 end;
 
@@ -9116,10 +9189,10 @@ begin
     for i := 0 to Pred(Master.ReferencedByCount) do
       ReferencedBy[i] := Master.ReferencedBy[i];
 
+    k := -1;
     AddMessage('Record is referenced by '+IntToStr(Length(ReferencedBy))+' other record(s)');
     try
       if Master.OverrideCount <> 0 then begin
-        k := -1;
         // store overrides since they change on the go when renumbering FormIDs
         SetLength(Overrides, Master.OverrideCount);
         for i := 0 to Pred(Master.OverrideCount) do begin
@@ -9131,16 +9204,25 @@ begin
         if (k < Pred(Length(Overrides))) and (MessageDlg('Record '+MainRecord.Name+' has later overrides, update them too?', mtConfirmation, [mbYes, mbNo], 0) = mrYes) then begin
           // happens when master record is selected which is not in the list of overrides, renumber all overrides
           if k = -1 then k := 0;
-          // change this record and all later overrides
-          for i := k to Pred(Length(Overrides)) do begin
-            //AddMessage('Renumbering ' + Overrides[i].FullPath);
-            Overrides[i].LoadOrderFormID := NewFormID;
-          end;
-        end;
+        end else
+          k := -1;
       end;
 
-      if MainRecord.LoadOrderFormID <> NewFormID then
+      if MainRecord.LoadOrderFormID <> NewFormID then begin
         MainRecord.LoadOrderFormID := NewFormID;
+        AddMessage('Renumbered ' + MainRecord.FullPath);
+
+        if k >= 0 then
+          for i := k to Pred(Length(Overrides)) do try
+             Overrides[i].LoadOrderFormID := NewFormID;
+             AddMessage('Renumbered ' + Overrides[i].FullPath);
+          except
+            on E: Exception do begin
+              AddMessage('Error renumbering ' + Overrides[i].FullPath + ': ' + E.Message);
+              AnyErrors := True;
+            end;
+          end;
+      end;
 
       NodeData.ConflictAll := caUnknown;
       NodeData.ConflictThis := ctUnknown;
@@ -11061,35 +11143,39 @@ begin
     Exit;
   if wbTranslationMode then
     Exit;
+    if not EditWarn then
+      Exit;
 
-  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
-  NextNode := vstView.GetNextVisibleSibling(vstView.FocusedNode);
-  if not Assigned(NextNode) then
-    NextNode := vstView.GetPreviousVisibleSibling(vstView.FocusedNode);
-  if not Assigned(NextNode) then begin
-    NextNode := vstView.FocusedNode.Parent;
-    if vstView.RootNode = NextNode then
-      NextNode := nil;
-  end;
-
-  if Assigned(NodeDatas) then begin
-    Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
-    if Assigned(Element) then begin
-
-      if not EditWarn then
-        Exit;
-
-      if Assigned(NextNode) then begin
-        NodeDatas := vstView.GetNodeData(NextNode);
-        ViewFocusedElement := NodeDatas[Pred(vstView.FocusedColumn)].Element;
-      end;
-
-      Element.Remove;
-      ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
-      Element := nil;
-      PostResetActiveTree;
-      InvalidateElementsTreeView(NoNodes);
+  LockProcessMessages;
+  try
+    NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+    NextNode := vstView.GetNextVisibleSibling(vstView.FocusedNode);
+    if not Assigned(NextNode) then
+      NextNode := vstView.GetPreviousVisibleSibling(vstView.FocusedNode);
+    if not Assigned(NextNode) then begin
+      NextNode := vstView.FocusedNode.Parent;
+      if vstView.RootNode = NextNode then
+        NextNode := nil;
     end;
+
+    if Assigned(NodeDatas) then begin
+      Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+      if Assigned(Element) then begin
+
+        if Assigned(NextNode) then begin
+          NodeDatas := vstView.GetNodeData(NextNode);
+          ViewFocusedElement := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+        end;
+
+        Element.Remove;
+        ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
+        Element := nil;
+        PostResetActiveTree;
+        InvalidateElementsTreeView(NoNodes);
+      end;
+    end;
+  finally
+    UnLockProcessMessages;
   end;
 end;
 
@@ -11563,7 +11649,10 @@ var
     PreservedCount   : Integer;
 
     Signatures       : TStringList;
+
+    LowestFormID     : Cardinal;
   begin
+    LowestFormID := $800;
     Signatures := nil;
 
     Result := False;
@@ -11630,8 +11719,17 @@ var
     end else
       TargetFile := SourceFile;
 
+    if wbExtendedESL and
+       (TargetFile.MasterCount[True] > 0) and
+       ((Sender = mniNavCompactFormIDs) or TargetFile.IsESL) and
+       (TargetFile.LoadOrderFileID.IsLightSlot or (TargetFile.LoadOrderFileID.FullSlot > 0)) then begin
+
+      if MessageDlg('Do you want to extend the FormID space from 800-FFF to 001-FFF?', mtConfirmation, mbYesNo, 0) = mrYes then
+        LowestFormID := 1;
+    end;
+
     if AllOrNothing or (Sender = mniNavCompactFormIDs) then
-      StartFormID := TwbFormID.FromCardinal($800)
+      StartFormID := TwbFormID.FromCardinal(LowestFormID)
     else begin
       s := '';
       TargetIsESL := TargetFile.IsESL or TargetFile.LoadOrderFileID.IsLightSlot;
@@ -11642,8 +11740,8 @@ var
           c := TargetFile.NextObjectID and $FFFFFF;
           if TargetIsESL then
             c := c and $FFF;
-          if c < $800 then
-            c := $800;
+          if c < LowestFormID then
+            c := LowestFormID;
           if TargetIsESL then
             s := IntToHex(c, 3)
           else
@@ -11659,7 +11757,7 @@ var
         end;
 
         StartFormID := TwbFormID.FromStrDef(s, 0);
-      until (StartFormID.FileID.FullSlot = 0) and not StartFormID.IsHardcoded and (not TargetIsESL or (StartFormID.ObjectID <= $FFF));
+      until (StartFormID.FileID.FullSlot = 0) and not (StartFormID.ToCardinal < LowestFormID) and (not TargetIsESL or (StartFormID.ObjectID <= $FFF));
     end;
 
     SetLength(MainRecords, SourceFile.RecordCount);
@@ -12530,7 +12628,7 @@ begin
                 MainRecord := NodeData.Element as IwbMainRecord;
 
                 if FilterConflictOnly then
-                  if MainRecord.MasterOrSelf.OverrideCount < 2 then begin
+                  if (MainRecord.MasterOrSelf.OverrideCount < 2) and (Node.ChildCount = 0) then begin
                     //filter early, can't possibly have a conflict
                     vstNav.DeleteNode(Node);
                     Node := NextNode;
@@ -13078,6 +13176,7 @@ begin
     cbActorTemplateHide.Checked := wbActorTemplateHide;
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
+    cbExtendedESL.Checked := wbExtendedESL;
     cbSortINFO.Checked := wbSortINFO;
     cbFillPNAM.Checked := wbFillPNAM;
     cbFocusAddedElement.Checked := wbFocusAddedElement;
@@ -13137,6 +13236,7 @@ begin
     wbActorTemplateHide := cbActorTemplateHide.Checked;
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
+    wbExtendedESL := cbExtendedESL.Checked;
     wbSortINFO := cbSortINFO.Checked;
     wbFillPNAM := cbFillPNAM.Checked;
     wbFocusAddedElement := cbFocusAddedElement.Checked;
@@ -13193,6 +13293,7 @@ begin
     Settings.WriteBool('Options', 'ActorTemplateHide', wbActorTemplateHide);
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST2', wbSortFLST);
+    Settings.WriteBool('Options', 'ExtendedESL', wbExtendedESL);
     Settings.WriteBool('Options', 'SortINFO', wbSortINFO);
     Settings.WriteBool('Options', 'FillPNAM', wbFillPNAM);
     Settings.WriteBool('Options', 'FocusAddedElement', wbFocusAddedElement);
@@ -13957,7 +14058,7 @@ begin
     else
       mniNavLocalizationSwitch.Caption := 'Localize plugin';
 
-  mniNavLogAnalyzer.Visible := (wbGameMode = gmTES4) or wbIsSkyrim;
+  mniNavLogAnalyzer.Visible := (wbGameMode in [gmTES4, gmFO3, gmFNV]) or wbIsSkyrim;
   mniNavLogAnalyzer.Clear;
   if wbIsSkyrim then begin
     MenuItem := TMenuItem.Create(mniNavLogAnalyzer);
@@ -13966,10 +14067,10 @@ begin
     MenuItem.Tag := Integer(ltTES5Papyrus);
     mniNavLogAnalyzer.Add(MenuItem);
   end else
-  if wbGameMode = gmTES4 then begin
+  if wbGameMode in [gmTES4, gmFO3, gmFNV] then begin
     MenuItem := TMenuItem.Create(mniNavLogAnalyzer);
     MenuItem.OnClick := mniNavLogAnalyzerClick;
-    MenuItem.Caption := 'RuntimeScriptProfiler OBSE Extension Log';
+    MenuItem.Caption := 'RuntimeScriptProfiler xSE Extension Log';
     MenuItem.Tag := Integer(ltTES4RuntimeScriptProfiler);
     mniNavLogAnalyzer.Add(MenuItem);
   end;
@@ -14418,6 +14519,8 @@ begin
     ViewFocusedElement := nil;
     NodeForViewFocusedElement := nil;
     vstView.EndUpdate;
+    if vstView.FocusedColumn > NoColumn then
+      vstView.ScrollIntoView(vstView.FocusedColumn, False);
     LockWindowUpdate(0);
   end;
   sw.Stop;
@@ -14682,9 +14785,10 @@ begin
             end;
 
             if NeedsRename and TryDirectRename then try
-              if not DoRenameModule(s, u, True) then
-                AnyErrors := True
-              else
+              if not DoRenameModule(s, u, True) then begin
+                AnyErrors := True;
+                wbProgress('Direct save failed. Will queue save for renaming on shutdown.');
+              end else
                 NeedsRename := False;
             except end;
 
@@ -14694,6 +14798,17 @@ begin
               // s - rename from, relative to DataPath
               // u - rename to, relative to DataPath
               FilesToRename.AddPair(u, s);
+              wbProgress('Queued renaming of save "' + wbDataPath + s + '" to "' + wbDataPath + u + '" on shutdown.');
+            end else begin
+              if Assigned(FilesToRename) then
+                for j := Pred(FilesToRename.Count) downto 0 do begin
+                  if SameText(u, FilesToRename.KeyNames[j]) then begin
+                    s := FilesToRename.ValueFromIndex[j];
+                    wbProgress('Removing previously queued save "' + wbDataPath + s + '" as a direct save to "' + wbDataPath + u + '" has succeeded.');
+                    DeleteFile(wbDataPath + s);
+                    FilesToRename.Delete(j);
+                  end;
+                end;
             end;
 
             DoProcessMessages;
@@ -14940,10 +15055,13 @@ begin
           ActiveRecords[0].Container := ActiveContainer as IwbContainerElementRef;
         end;
 
+        vstView.ShowHint := True;
+        vstView.Header.Options := vstView.Header.Options + [hoShowHint];
         with vstView.Header.Columns do begin
           BeginUpdate;
           try
             Clear;
+
             with Add do begin
               Text := '';
               Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
@@ -14953,6 +15071,7 @@ begin
             for I := Low(ActiveRecords) to High(ActiveRecords) do
               with Add do begin
                 Text := ActiveRecords[i].Element._File.Name;
+                Hint := ActiveRecords[i].Element._File.Name;
                 Style := vsOwnerDraw;
                 Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
                 MinWidth := Width div 2;
@@ -15003,6 +15122,8 @@ begin
       end;
     finally
       vstView.EndUpdate;
+      if vstView.FocusedColumn > NoColumn then
+        vstView.ScrollIntoView(vstView.FocusedColumn, False);
     end;
 
     tbsReferencedBy.TabVisible := wbLoaderDone and (lvReferencedBy.Items.Count > 0);
@@ -15051,6 +15172,8 @@ begin
           Container := aMainRecords[i] as IwbContainerElementRef;
         end;
 
+      vstView.ShowHint := True;
+      vstView.Header.Options := vstView.Header.Options + [hoShowHint];
       with vstView.Header.Columns do begin
         BeginUpdate;
         try
@@ -15064,6 +15187,7 @@ begin
           for I := Low(ActiveRecords) to High(ActiveRecords) do
             with Add do begin
               Text := (ActiveRecords[i].Element as IwbMainRecord).EditorID;
+              Hint := (ActiveRecords[i].Element as IwbMainRecord).EditorID;
               Style := vsOwnerDraw;
               Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
               MinWidth := Width div 2;
@@ -15092,6 +15216,8 @@ begin
       UpdateColumnWidths;
     finally
       vstView.EndUpdate;
+      if vstView.FocusedColumn > NoColumn then
+        vstView.ScrollIntoView(vstView.FocusedColumn, False);
     end;
     pgMain.ActivePage := tbsView;
     tbsReferencedBy.TabVisible := False;
@@ -15322,6 +15448,8 @@ begin
           ActiveRecords[0].Container := ActiveRecord as IwbContainerElementRef;
         end;
 
+        vstView.ShowHint := True;
+        vstView.Header.Options := vstView.Header.Options + [hoShowHint];
         with vstView.Header.Columns do begin
           BeginUpdate;
           try
@@ -15335,6 +15463,7 @@ begin
             for I := Low(ActiveRecords) to High(ActiveRecords) do
               with Add do begin
                 Text := ActiveRecords[i].Element._File.Name;
+                Hint := ActiveRecords[i].Element._File.Name;
                 Style := vsOwnerDraw;
                 Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
                 MinWidth := Width div 2;
@@ -15368,6 +15497,9 @@ begin
         if (vstView.FocusedColumn < 1) and (ColumnForViewFocusedElement < 1) and (ActiveIndex > NoColumn) then
           vstView.FocusedColumn := ActiveIndex + 1;
         UpdateColumnWidths;
+        if vstView.FocusedColumn > NoColumn then
+          vstView.ScrollIntoView(vstView.FocusedColumn, False);
+
         if pgMain.ActivePage <> tbsReferencedBy then
           pgMain.ActivePage := tbsView;
       end
@@ -15388,6 +15520,8 @@ begin
       end;
     finally
       vstView.EndUpdate;
+      if vstView.FocusedColumn > NoColumn then
+        vstView.ScrollIntoView(vstView.FocusedColumn, False);
     end;
 
     if wbLoaderDone and Assigned(ActiveMaster) and not wbBuildingRefsParallel then begin
@@ -16743,9 +16877,7 @@ begin
       end;
 
     if Assigned(Element) then begin
-      Def := Element.Def;
-      if Supports(Def, IwbSubRecordDef, SubRecordDef) then
-        Def := SubRecordDef.Value;
+      Def := Element.ResolvedValueDef;
 
       if Assigned(ViewFocusedElement) and Assigned(Def) and ViewFocusedElement.IsEditable then
         if Def.DefType in [dtInteger, dtFlag, dtFloat] then begin
@@ -16982,6 +17114,7 @@ var
   ElementCount : Integer;
   i,j          : Integer;
   UseSuffix    : Boolean;
+  FocusedColumn: TColumnIndex;
 begin
   CellText := '';
   NodeDatas := Sender.GetNodeData(Node);
@@ -16994,8 +17127,14 @@ begin
 
   if Column < 1 then begin
 
-    if (vstView.FocusedColumn > 0) and (Pred(vstView.FocusedColumn) <= High(ActiveRecords)) then
-      Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+    FocusedColumn := FocusedColumnOverride;
+    if FocusedColumn < 0 then
+      FocusedColumn := vstView.FocusedColumn;
+    if Length(ActiveRecords) = 1 then
+      FocusedColumn := 1;
+
+    if (FocusedColumn > 0) and (Pred(FocusedColumn) <= High(ActiveRecords)) then
+      Element := NodeDatas[Pred(FocusedColumn)].Element;
 
     UseSuffix := Assigned(Element);
 
@@ -17142,6 +17281,18 @@ begin
       JumpTo(MainRecord, True);
     end;
   end;
+end;
+
+procedure TfrmMain.vstViewHeaderMouseMove(Sender: TVTHeader; Shift: TShiftState; X, Y: Integer);
+var
+  Column     : Integer;
+begin
+  Column := vstView.Header.Columns.ColumnFromPosition(Point(X, Y));
+  Dec(Column);
+  if (Column >= Low(ActiveRecords)) and (Column <= High(ActiveRecords)) then
+    vstView.Header.PopupMenu := pmuViewHeader
+  else
+    vstView.Header.PopupMenu := nil;
 end;
 
 procedure TfrmMain.vstViewHeaderDrawQueryElements(Sender: TVTHeader;
@@ -17723,6 +17874,7 @@ begin
                     LongRecSmall(GroupRecord1.GroupLabel).Lo,
                     LongRecSmall(GroupRecord2.GroupLabel).Lo);
               end;
+            1, 6..10: Result := CmpW32(GroupRecord1.GroupLabel, GroupRecord2.GroupLabel);
           else
             Assert(False);
           end;
@@ -19480,12 +19632,21 @@ type
   end;
 
 procedure HasUnitProc(const Name: string; NameType: TNameType; Flags: Byte; Param: Pointer);
+var
+  s: string;
 begin
   case NameType of
     ntContainsUnit:
-      with PUnitInfo(Param)^ do
-        if SameText(Name, UnitName) then
+      with PUnitInfo(Param)^ do begin
+        s := Name;
+        s := StringReplace(s, 'system.', '', [rfReplaceAll, rfIgnoreCase]);
+        s := StringReplace(s, 'vcl.',    '', [rfReplaceAll, rfIgnoreCase]);
+        s := StringReplace(s, 'winapi.', '', [rfReplaceAll, rfIgnoreCase]);
+        s := StringReplace(s, 'data.',   '', [rfReplaceAll, rfIgnoreCase]);
+        s := StringReplace(s, 'web.',    '', [rfReplaceAll, rfIgnoreCase]);
+        if SameText(s, UnitName) then
           Found^ := True;
+      end;
   end;
 end;
 
@@ -19562,6 +19723,7 @@ var
   NewFile   : IwbFile;
   MasterFile: IwbFile;
   WasUnsaved: Boolean;
+  DoMarkModified: Boolean;
 begin
   try
     wbLoaderDone := True;
@@ -19671,8 +19833,12 @@ begin
         if wbQuickClean then begin
           pnlNavContent.Visible := False;
           try
-            with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
+            with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do begin
               BuildOrLoadRef(False);
+              DoMarkModified :=
+                    wbForceMarkModified
+                or (wbAutoMarkModified and SameText(FileName, 'Dawnguard.esm'));
+            end;
 
             mniNavFilterForCleaning.Click;
             JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
@@ -19687,7 +19853,11 @@ begin
             WasUnsaved := False;
             with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
               if esUnsaved in ElementStates then begin
-                MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
+
+                if DoMarkModified then begin
+                  wbProgress('Marking all groups and records as modified');
+                  MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
+                end;
                 WasUnsaved := True;
               end;
 
@@ -19714,7 +19884,10 @@ begin
                 WasUnsaved := False;
                 with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
                   if esUnsaved in ElementStates then begin
-                    MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
+                    if DoMarkModified then begin
+                      wbProgress('Marking all groups and records as modified');
+                      MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
+                    end;
                     WasUnsaved := True;
                   end;
 
@@ -19806,7 +19979,7 @@ begin
                   if MainRecord.Signature <> 'TES4' then
                     if not MainRecord.IsDeleted then
                       if NodeData.ConflictThis = ctOnlyOne then
-                        if Supports(wbCopyElementToFile(NodeData.Element, NewFile, False, False, '', '', '', False), IwbMainRecord, MainRecord) then
+                        if Supports(wbCopyElementToFile(NodeData.Element, NewFile, False, False, '', '', '', '', False), IwbMainRecord, MainRecord) then
                           MainRecord.IsDeleted := True;
               Node := vstNav.GetNext(Node);
             end;

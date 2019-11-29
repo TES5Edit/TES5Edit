@@ -2024,7 +2024,7 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  LinksTo := Container.ElementByName['Owner'].LinksTo;
+  LinksTo := Container.ElementLinksTo['Owner'];
 
   if Supports(LinksTo, IwbMainRecord, MainRecord) then
     if MainRecord.Signature = 'NPC_' then
@@ -4324,9 +4324,9 @@ begin
     {00} 'Hand to Hand',
     {01} 'Melee (1 Hand)',
     {02} 'Melee (2 Hand)',
-    {03} 'Pistol - Balistic (1 Hand)',
+    {03} 'Pistol - Ballistic (1 Hand)',
     {04} 'Pistol - Energy (1 Hand)',
-    {05} 'Rifle - Balistic (2 Hand)',
+    {05} 'Rifle - Ballistic (2 Hand)',
     {06} 'Rifle - Automatic (2 Hand)',
     {07} 'Rifle - Energy (2 Hand)',
     {08} 'Handle (2 Hand)',
@@ -5648,7 +5648,7 @@ begin
     wbZNAM,
     wbStruct(DATA, 'Data', [
       wbInteger('Flags', itU8, wbFlags([
-        '',
+        'Scroll',
         'Can''t be Taken'
       ])),
       wbInteger('Skill', itS8, wbSkillEnum),
@@ -8321,7 +8321,7 @@ begin
       wbEmbeddedScriptReq
     ], [], cpNormal, True),
     wbRStruct('Script (End)', [
-      wbEmpty(NEXT, 'Marker'),
+      wbEmpty(NEXT, 'Marker', cpNormal, True),
       wbEmbeddedScriptReq
     ], [], cpNormal, True),
     wbFormIDCk(SNDD, 'Unused', [SOUN]),

@@ -1,3 +1,87 @@
+# What's new in xEdit 4.0.3?
+
+## Bugfixes
+
+* #649 - Right pane filter bug
+* #654 - [FO4] Check for Errors: reports error when a region / object list has SCOL entries 
+* #659 - When comparing records, right-clicking to Expand All produces a contextual menu that hangs the Expand All functionality
+* #669 - CELL at 0,0 may be spuriously added to worldspaces during cleaning.
+* #670 - [FO4] Damage magic effects mislabelled subrecord
+* #674 - Invalid ITMs may be reported in rare cases when form versions differ
+* #676 - Ghosted ESPs and Modgroups
+* #678 - AccessViolation while generating conflict status in rare cases
+* #691 - [FO4/FO76] Copying CELL data into a file can cause landscape collision to be re-enabled when it shouldn't
+* #694 - scheduled save from save failure not removed on subsequent successes
+* #695 - Typo in Weap>DNAM>Animation Type: Balistic -> Ballistic 
+* #682 - The path bar covers the forward and back buttons if the window is too small
+* #696 - Double Listing of "Decrease Equip Time" in Weapon Mod Effect
+* #697 - Cannot apply scripts using Classes, SysUtils, StrUtils or Windows units
+* #708 - "Clean masters" function doesn't remove all masters at first use
+* #718 - access violation when holding delete 
+* #720 - wrong order for FNAM and LNAM in MUST 
+* #721 - The MTNM field in RACE record is written with unnecessary terminating 0 byte
+* #729 - LODGen can fail with references that have NULL or unresolvable Base FormIDs
+* #732 - New CK leaves Base record listed for deleted REFRs, should not be marked as error
+* #733 - changing the form id of an overridden record doesn't update the link between original and override until restart
+* #734 - right side window's record overrides don't focus on currently selected mod
+* #737 - Ambiguity in Skyrim's QUST definition
+* #747 - Ambiguity in Skyrim's PACK definition
+* #748 - Changing ANAM in Skyrim's PACK does not update the CNAM prompt
+* #750 - form id override's id changes while the original fails in case id number's changed to an existing id
+* (reported on Discord) - cleaning Dragonborn.esm can make Boars non-aggressive
+* (reported on Discord) - crash in NAVM when triangle edge is flagged as edge link, but the number stored in the edge field can't look up a valid external NAVM via the Edge Links table
+* (reported on Discord) - VeryQuickShowConflicts may very rarely not show certain conflicts
+* (reported on Discord) - Hardcoded (FormID < 800) records are not handled correctly in modules that don't have the game master as a master
+* (reported on Discord) - adding a new module after having performed a "Compare To" puts the new module at the wrong load order
+* (reported on Discord) - error when copying nif blocks with skinning
+* (reported on Discord) - double click on integer and float elements does not show in-place editor if they are inside a union
+* (reported on Discord) - in very rare cases, a change might not result in the file being marked as having unsaved changes
+* (reported on Discord) - changing the FormID of a record might not always update the FormID of the "Children of" group for that record
+* (reported on Discord) - Module selection misbehaves for modules with missing masters
+* (reported on Discord) - [TES5/SSE] BOOKs teaching SPELs should not allow NULL
+* (found by developer) - TdfElement.LoadFromResource does not report if the resource can't be found
+* (found by developer) - Quick [Auto] Clean allows selecting the game master (which makes no sense)
+* (found by developer) - [FO4] incorrect subrecord order in CELL
+* (found by developer) - injected records are not showing up in drop down of FormID in-place editor
+* (found by developer) - orphaned "Children of" groups can cause Asserts when trying to display them in the nav tree view
+
+## Minor changes
+
+* #637 - [FO4/FO76] TTEB - Unknown in RACE record is "Blend Operation"
+* #679 - [FO4/FO76] VISI and PCMB subrecords decoding
+* #722 - suffix removal during formid copying
+* #731 - [FO4] "Unknown 11" in the "Data-Flags" subrecord of CELL records is "Hidden from Interior Cell List"
+* [FO3/FNV] Flag 0 in BOOK means "Scroll"
+* [FO3/FNV] make "RuntimeScriptProfiler xSE Extension Log" available
+* Report error records in PrepareSave with full path instead of just their name
+* Show tooltip hint for View column headers
+* Show indices for unsorted SubRecord Arrays
+* [TES5/SSE] added ENCH to Knowable Forms
+* Allow assigning to deleted records
+* Experts can activate an option which enables an extended FormID space (`001`-`FFF` instead of `800`-`FFF`) when compacting for ESL
+* Check for Errors now reports invalid ObjectID in light modules and HITMEs
+
+## Shortened Parameters
+
+Some parameters can be specified in a shortened way now:
+* `-quickshowconflicts` as `-qsc`
+* `-veryquickshowconflicts` as `-vqsc`
+* `-autogamelink` as `-agl`
+* `-quickclean` as `-qc`
+* `-quickautoclean` as `-qac`
+
+## Changes to QuickAutoClean
+
+As a fix for a problem in Dawnguard.esm (see details below in previous version) QAC was marking all records in a to be cleaned file as modified, which made xEdit assemble these records from parsed data instead of just writing out the bytes that were read when the file was loaded.
+
+This resulted in problems when cleaning Dragonborn.esm (and possibly other files).
+
+xEdit is now only marking all records as modified in `Dawnguard.esm`
+
+This behaviour can be controlled with 2 parameters:
+* `-NoAutoMarkModified` prevents mark modified from being applied to `Dawnguard.esm` (resulting in the Soul Cairn error described below)
+* `-ForceMarkModified` always applies mark modified to the cleaned file (if there was anything to clean)
+
 # What's new in xEdit 4.0.2?
 
 ## Ko-Fi

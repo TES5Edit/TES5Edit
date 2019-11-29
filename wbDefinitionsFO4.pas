@@ -1417,7 +1417,7 @@ begin
         EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
 
         MainRecord := nil;
-        if not Supports(EdgeLink.ElementByPath['Mesh'].LinksTo, IwbMainRecord, MainRecord) then
+        if not Supports(EdgeLink.ElementLinksTo['Mesh'], IwbMainRecord, MainRecord) then
           Exit;
         aInt := EdgeLink.ElementNativeValues['Triangle'];
 
@@ -1444,10 +1444,14 @@ begin
           Exit;
         if aInt >= EdgeLinks.ElementCount then
           Exit;
+        if aInt < 0 then
+          Exit;
         EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
+        if not Assigned(EdgeLink) then
+          Exit;
 
         MainRecord := nil;
-        if not Supports(EdgeLink.ElementByPath['Mesh'].LinksTo, IwbMainRecord, MainRecord) then
+        if not Supports(EdgeLink.ElementLinksTo['Mesh'], IwbMainRecord, MainRecord) then
           Exit;
         if Assigned(MainRecord) then
           FormID := MainRecord.LoadOrderFormID
@@ -1502,7 +1506,7 @@ begin
     EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
 
     MainRecord := nil;
-    if not Supports(EdgeLink.ElementByPath['Mesh'].LinksTo, IwbMainRecord, MainRecord) then
+    if not Supports(EdgeLink.ElementLinksTo['Mesh'], IwbMainRecord, MainRecord) then
       Exit;
     aInt := EdgeLink.ElementNativeValues['Triangle'];
   end;
@@ -2388,7 +2392,7 @@ begin
         for i := 0 to Pred(Includes.ElementCount) do begin
           if not Supports(Includes.Elements[i], IwbContainer, Include) then
             Continue;
-          if not Supports(Include.ElementByName['Mod'].LinksTo, IwbMainRecord, OMOD) then
+          if not Supports(Include.ElementLinksTo['Mod'], IwbMainRecord, OMOD) then
             Continue;
           if not Supports(OMOD.ElementByPath['DATA\Properties'], IwbContainerElementRef, Entries) then
             Continue;
@@ -2887,6 +2891,7 @@ begin
       36: Result := 6; // Werewolf
       39: Result := 7; // Enhance Weapon
       40: Result := 4; // Spawn Hazard
+      45: Result := 9; // Damage Type
       46: Result := 6; // Vampire Lord
     end;
 end;
@@ -3124,7 +3129,7 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  LinksTo := Container.ElementByName['Owner'].LinksTo;
+  LinksTo := Container.ElementLinksTo['Owner'];
 
   if Supports(LinksTo, IwbMainRecord, MainRecord) then
     if MainRecord.Signature = 'NPC_' then
@@ -5634,6 +5639,25 @@ begin
   finally
     wbEndInternalEdit;
   end;
+end;
+
+procedure wbPackageDataInputValueTypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainerElementRef;
+  Value     : IwbElement;
+begin
+  if aOldValue <> aNewValue then
+    if Supports(aElement.Container, IwbContainerElementRef, Container) then begin
+      Value := Container.ElementByPath['CNAM'];
+      if Assigned(Value) then
+        if (aNewValue = 'Bool') or (aNewValue = 'Int') or (aNewValue = 'Float') or (aNewValue = 'ObjectList') then
+          Value.SetToDefault
+        else
+          Value.Remove
+      else
+        if (aNewValue = 'Bool') or (aNewValue = 'Int') or (aNewValue = 'Float') or (aNewValue = 'ObjectList') then
+          Container.Add('CNAM');
+    end;
 end;
 
 function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
@@ -9710,27 +9734,32 @@ begin
       {0x0080} 'Show Sky',
       {0x0100} 'Use Sky Lighting',
       {0x0200} 'Unknown 10',
-      {0x0400} 'Unknown 11',
+      {0x0400} 'Hidden from Interior Cell List',
       {0x0800} 'Sunlight Shadows',
       {0x1000} 'Distant LOD only',
       {0x2000} 'Player Followers Can''t Travel Here',
       {0x4000} 'Unknown 15',
       {0x8000} 'Unknown 16'
     ]), cpNormal, True, False, nil, wbCELLDATAAfterSet),
+
+    wbByteArray(VISI, 'PreVis Files Timestamp', 2).SetToStr(wbTimeStampToString),
+    wbFormIDCk(RVIS, 'In PreVis File Of', [CELL]),
+    wbByteArray(PCMB, 'PreCombined Files Timestamp', 2).SetToStr(wbTimeStampToString),
+
     wbStruct(XCLC, 'Grid', [
       wbInteger('X', itS32),
       wbInteger('Y', itS32),
-      wbInteger('Force Hide Land', itU32, wbFlags([
-        'Quad 1',
-        'Quad 2',
-        'Quad 3',
-        'Quad 4'
+      wbInteger('Land Flags', itU32, wbFlags([
+        'Hide - Quad 1',
+        'Hide - Quad 2',
+        'Hide - Quad 3',
+        'Hide - Quad 4',
+        'No Collision - Quad 1',
+        'No Collision - Quad 2',
+        'No Collision - Quad 3',
+        'No Collision - Quad 4'
       ], True))
     ], cpNormal, False, nil, 2),
-
-    wbByteArray(VISI, 'PreVis Files Timestamp', 2),
-    wbFormIDCk(RVIS, 'In PreVis File Of', [CELL]),
-    wbByteArray(PCMB, 'PreCombined Files Timestamp', 2),
 
     wbStruct(XCLL, 'Lighting', [
       wbByteColors('Ambient Color'),
@@ -13734,7 +13763,8 @@ begin
         wbFormIDCk('Assoc. Item', [SPEL, NULL]),
         wbFormIDCk('Assoc. Item', [RACE, NULL]),
         wbFormIDCk('Assoc. Item', [ENCH, NULL]),
-        wbFormIDCk('Assoc. Item', [KYWD, NULL])
+        wbFormIDCk('Assoc. Item', [KYWD, NULL]),
+        wbFormIDCk('Assoc. Item', [DMGT, NULL])
       ], cpNormal, False, nil, wbMGEFAssocItemAfterSet),
       wbByteArray('Magic Skill (unused)', 4),
       wbFormIDCk('Resist Value', [AVIF, NULL]),
@@ -13995,7 +14025,7 @@ begin
     wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
     wbFULL,
     wbLStringKC(SHRT, 'Short Name', 0, cpTranslate),
-    wbByteArray(DATA, 'Marker'),
+    wbEmpty(DATA, 'Marker', cpNormal, True),
     wbStruct(DNAM, '', [
       wbInteger('Unknown', itU16),
       wbInteger('Unknown', itU16),
@@ -14145,6 +14175,8 @@ end;
 
 
 procedure DefineFO4n;
+var
+  wbBlendOperationEnum: IwbEnumDef;
 
   function wbTintTemplateGroups(const aName: string): IwbSubRecordArrayDef;
   begin
@@ -14191,18 +14223,12 @@ procedure DefineFO4n;
           ])),
           wbCTDAs,
           wbRArray('Textures', wbString(TTET, 'Texture')),
-          wbUnknown(TTEB),
+          wbInteger(TTEB, 'Blend Operation', itU32, wbBlendOperationEnum),
           wbArray(TTEC, 'Template Colors', wbStruct('Template Color', [
             wbFormIDCk('Color', [CLFM]),
             wbFloat('Alpha'),
             wbInteger('Template Index', itU16),
-            wbInteger('Blend Operation', itU32, wbEnum([
-              'Default',
-              'Multiply',
-              'Overlay',
-              'Soft Light',
-              'Hard Light'
-            ]))
+            wbInteger('Blend Operation', itU32, wbBlendOperationEnum)
           ])),
           wbFloat(TTED, 'Default')
         ], []),
@@ -14245,6 +14271,14 @@ procedure DefineFO4n;
   end;
 
 begin
+  wbBlendOperationEnum := wbEnum([
+            'Default',
+            'Multiply',
+            'Overlay',
+            'Soft Light',
+            'Hard Light'
+          ]);
+
   wbUNAMs := wbRArray('Data Inputs', wbRStruct('Data Input', [
     wbInteger(UNAM, 'Index', itS8),
     wbString(BNAM, 'Name'),
@@ -14262,7 +14296,7 @@ begin
       wbInteger('Type', itU8, wbEnum ([], [
         18, 'Package',
         19, 'Package Template'
-      ])),
+      ])).SetDefaultEditValue('Package'),
       wbInteger('Interrupt Override', itU8, wbEnum([
         {0} 'None',
         {1} 'Spectator',
@@ -14334,7 +14368,7 @@ begin
 
     wbRStruct('Package Data', [
       wbRArray('Data Input Values', wbRStruct('Value', [
-        wbString(ANAM, 'Type'),
+        wbString(ANAM, 'Type').SetAfterSet(wbPackageDataInputValueTypeAfterSet),
         wbUnion(CNAM, 'Value', wbPubPackCNAMDecider, [
           {0} wbByteArray('Unknown'),
           {1} wbInteger('Bool', itU8, wbBoolEnum),
@@ -14349,7 +14383,7 @@ begin
       ], [], cpNormal, False)),
       wbUNAMs
     ], []),
-    wbByteArray(XNAM, 'Marker'),
+    wbByteArray(XNAM, 'Marker', 0, cpNormal, True),
 
     wbRStruct('Procedure Tree', [
       wbRArray('Branches', wbRStruct('Branch', [
@@ -14390,17 +14424,17 @@ begin
       wbEmpty(POBA, 'OnBegin Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbPDTOs
-    ], []),
+    ], [], cpNormal, True),
     wbRStruct('OnEnd', [
       wbEmpty(POEA, 'OnEnd Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbPDTOs
-    ], []),
+    ], [], cpNormal, True),
     wbRStruct('OnChange', [
       wbEmpty(POCA, 'OnChange Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbPDTOs
-    ], [])
+    ], [], cpNormal, True)
   ], False, nil, cpNormal, False, nil {wbPACKAfterLoad});
 
   wbQUSTAliasFlags :=
@@ -14482,7 +14516,7 @@ begin
     wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
     wbFLTR,
     wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, False),
-    wbEmpty(NEXT, 'Marker'),
+    wbEmpty(NEXT, 'Marker', cpNormal, True),
     wbCTDAs, {>>> Unknown, doesn't show up in CK <<<}
     wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
       wbStructSK(INDX, [0], 'Stage Index', [
@@ -14869,7 +14903,7 @@ begin
     wbString(ANAM, 'Female Skeletal Model'),
     wbMODT,
     wbEmpty(NAM2, 'Marker NAM2 #1'),
-    wbRArrayS('Movement Type Names', wbString(MTNM, 'Name')),
+    wbRArrayS('Movement Type Names', wbString(MTNM, 'Name', 4)),
     wbArray(VTCK, 'Voices', wbFormIDCk('Voice', [VTYP]), ['Male', 'Female'], cpNormal, True),
     //wbArray(DNAM, 'Decapitate Armors', wbFormIDCk('Decapitate Armor', [NULL, ARMO]), ['Male', 'Female'], cpNormal, False),
     wbArray(HCLF, 'Default Hair Colors', wbFormIDCk('Default Hair Color', [NULL, CLFM]), ['Male', 'Female'], cpNormal, False),
@@ -15223,7 +15257,6 @@ begin
     wbXRGB,
 
     wbFloat(XRDS, 'Radius'),
-    wbXSCL,
 
     {--- Emittance ---}
     wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
@@ -15541,8 +15574,8 @@ begin
     wbUnknown(XCZA),
     wbFormIDCk(XCZC, 'Unknown', [CELL, NULL]),
 
+    wbXSCL,
     wbXLOD, // not seen in FO4 vanilla files
-
     wbDataPosRot,
     wbString(MNAM, 'Comments')
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
@@ -15618,7 +15651,7 @@ begin
 
       {--- Objects ---}
       wbArray(RDOT, 'Objects', wbStruct('Object', [
-        wbFormIDCk('Object', [TREE, FLOR, STAT, LTEX, MSTT]),
+        wbFormIDCk('Object', [TREE, FLOR, STAT, LTEX, MSTT, SCOL]),
         wbInteger('Parent Index', itU16, wbHideFFFF),
         wbByteArray('Unknown', 2),
         wbFloat('Density'),

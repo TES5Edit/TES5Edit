@@ -1731,6 +1731,8 @@ begin
         if aInt < 0 then
           Exit;
         EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
+        if not Assigned(EdgeLink) then
+          Exit;
 
         MainRecord := nil;
         if not Supports(EdgeLink.ElementByPath['Mesh'].LinksTo, IwbMainRecord, MainRecord) then
@@ -1763,7 +1765,7 @@ begin
         EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
 
         MainRecord := nil;
-        if not Supports(EdgeLink.ElementByPath['Mesh'].LinksTo, IwbMainRecord, MainRecord) then
+        if not Supports(EdgeLink.ElementLinksTo['Mesh'], IwbMainRecord, MainRecord) then
           Exit;
         if Assigned(MainRecord) then
           FormID := MainRecord.LoadOrderFormID
@@ -1818,7 +1820,7 @@ begin
     EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
 
     MainRecord := nil;
-    if not Supports(EdgeLink.ElementByPath['Mesh'].LinksTo, IwbMainRecord, MainRecord) then
+    if not Supports(EdgeLink.ElementLinksTo['Mesh'], IwbMainRecord, MainRecord) then
       Exit;
     aInt := EdgeLink.ElementNativeValues['Triangle'];
   end;
@@ -2704,7 +2706,7 @@ begin
         for i := 0 to Pred(Includes.ElementCount) do begin
           if not Supports(Includes.Elements[i], IwbContainer, Include) then
             Continue;
-          if not Supports(Include.ElementByName['Mod'].LinksTo, IwbMainRecord, OMOD) then
+          if not Supports(Include.ElementLinksTo['Mod'], IwbMainRecord, OMOD) then
             Continue;
           if not Supports(OMOD.ElementByPath['DATA\Properties'], IwbContainerElementRef, Entries) then
             Continue;
@@ -3461,7 +3463,7 @@ begin
   Container := GetContainerFromUnion(aElement);
   if not Assigned(Container) then Exit;
 
-  LinksTo := Container.ElementByName['Owner'].LinksTo;
+  LinksTo := Container.ElementLinksTo['Owner'];
 
   if Supports(LinksTo, IwbMainRecord, MainRecord) then
     if MainRecord.Signature = 'NPC_' then
@@ -6167,6 +6169,25 @@ begin
   finally
     wbEndInternalEdit;
   end;
+end;
+
+procedure wbPackageDataInputValueTypeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainerElementRef;
+  Value     : IwbElement;
+begin
+  if aOldValue <> aNewValue then
+    if Supports(aElement.Container, IwbContainerElementRef, Container) then begin
+      Value := Container.ElementByPath['CNAM'];
+      if Assigned(Value) then
+        if (aNewValue = 'Bool') or (aNewValue = 'Int') or (aNewValue = 'Float') or (aNewValue = 'ObjectList') then
+          Value.SetToDefault
+        else
+          Value.Remove
+      else
+        if (aNewValue = 'Bool') or (aNewValue = 'Int') or (aNewValue = 'Float') or (aNewValue = 'ObjectList') then
+          Container.Add('CNAM');
+    end;
 end;
 
 function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
@@ -10608,11 +10629,15 @@ begin
     wbStruct(XCLC, 'Grid', [
       wbInteger('X', itS32),
       wbInteger('Y', itS32),
-      wbInteger('Force Hide Land', itU32, wbFlags([
-        'Quad 1',
-        'Quad 2',
-        'Quad 3',
-        'Quad 4'
+      wbInteger('Land Flags', itU32, wbFlags([
+        'Hide - Quad 1',
+        'Hide - Quad 2',
+        'Hide - Quad 3',
+        'Hide - Quad 4',
+        'No Collision - Quad 1',
+        'No Collision - Quad 2',
+        'No Collision - Quad 3',
+        'No Collision - Quad 4'
       ], True))
     ], cpNormal, False, nil, 2),
 
@@ -15291,7 +15316,7 @@ begin
     wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
     wbFULL,
     wbLStringKC(SHRT, 'Short Name', 0, cpTranslate),
-    wbEmpty(DATA, 'Marker'),
+    wbEmpty(DATA, 'Marker', cpNormal, True),
     wbStruct(DNAM, '', [
       wbInteger('Unknown', itU16),
       wbInteger('Unknown', itU16),
@@ -15449,6 +15474,8 @@ end;
 
 
 procedure DefineFO76n;
+var
+  wbBlendOperationEnum: IwbEnumDef;
 
   function wbTintTemplateGroups(const aName: string): IwbSubRecordArrayDef;
   begin
@@ -15457,23 +15484,54 @@ procedure DefineFO76n;
         wbLString(TTGP, 'Group Name', 0, cpTranslate),
         wbRStructs('Options', 'Option', [
           wbStruct(TETI, 'Index', [
-            wbByteArray('Unknown', 2),
+            wbInteger('Slot', itU16, wbEnum([
+              'Forehead Mask',
+              'Eyes Mask',
+              'Nose Mask',
+              'Ears Mask',
+              'Cheeks Mask',
+              'Mouth Mask',
+              'Neck Mask',
+              'Lip Color',
+              'Cheek Color',
+              'Eyeliner',
+              'Eye Socket Upper',
+              'Eye Socket Lower',
+              'Skin Tone',
+              'Paint',
+              'Laugh Lines',
+              'Cheek Color Lower',
+              'Nose',
+              'Chin',
+              'Neck',
+              'Forehead',
+              'Dirt',
+              'Scars',
+              'Face Detail',
+              'Brows',
+              'Wrinkles',
+              'Beards'
+            ])),
             wbInteger('Index', itU16)
           ]),
           wbLString(TTGP, 'Name', 0, cpTranslate),
-          wbUnknown(TTEF),
+          wbInteger(TTEF, 'Flags', itU16, wbFlags([
+            'On/Off only',
+            'Chargen Detail',
+            'Takes Skin Tone'
+          ])),
           wbCTDAs,
           wbRArray('Textures', wbString(TTET, 'Texture')),
-          wbUnknown(TTEB),
+          wbInteger(TTEB, 'Blend Operation', itU32, wbBlendOperationEnum),
           wbArray(TTEC, 'Template Colors', wbStruct('Template Color', [
             wbFormIDCk('Color', [CLFM]),
             wbFloat('Alpha'),
             wbInteger('Template Index', itU16),
-            wbByteArray('Unknown', 4)
+            wbInteger('Blend Operation', itU32, wbBlendOperationEnum)
           ])),
-          wbFloat(TTED, 'Unknown')
+          wbFloat(TTED, 'Default')
         ], []),
-        wbByteArray(TTGE, 'Group End', 4)
+        wbInteger(TTGE, 'Category Index', itU32)
       ], []);
   end;
 
@@ -15512,6 +15570,14 @@ procedure DefineFO76n;
   end;
 
 begin
+  wbBlendOperationEnum := wbEnum([
+            'Default',
+            'Multiply',
+            'Overlay',
+            'Soft Light',
+            'Hard Light'
+          ]);
+
   wbUNAMs := wbRArray('Data Inputs', wbRStruct('Data Input', [
     wbInteger(UNAM, 'Index', itS8),
     wbString(BNAM, 'Name'),
@@ -15529,7 +15595,7 @@ begin
       wbInteger('Type', itU8, wbEnum ([], [
         18, 'Package',
         19, 'Package Template'
-      ])),
+      ])).SetDefaultEditValue('Package'),
       wbInteger('Interrupt Override', itU8, wbEnum([
         {0} 'None',
         {1} 'Spectator',
@@ -15601,7 +15667,7 @@ begin
 
     wbRStruct('Package Data', [
       wbRArray('Data Input Values', wbRStruct('Value', [
-        wbString(ANAM, 'Type'),
+        wbString(ANAM, 'Type').SetAfterSet(wbPackageDataInputValueTypeAfterSet),
         wbUnion(CNAM, 'Value', wbPubPackCNAMDecider, [
           {0} wbByteArray('Unknown'),
           {1} wbInteger('Bool', itU8, wbBoolEnum),
@@ -15616,7 +15682,7 @@ begin
       ], [], cpNormal, False)),
       wbUNAMs
     ], []),
-    wbByteArray(XNAM, 'Marker'),
+    wbByteArray(XNAM, 'Marker', 0, cpNormal, True),
 
     wbRStruct('Procedure Tree', [
       wbRArray('Branches', wbRStruct('Branch', [
@@ -15657,17 +15723,17 @@ begin
       wbEmpty(POBA, 'OnBegin Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbPDTOs
-    ], []),
+    ], [], cpNormal, True),
     wbRStruct('OnEnd', [
       wbEmpty(POEA, 'OnEnd Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbPDTOs
-    ], []),
+    ], [], cpNormal, True),
     wbRStruct('OnChange', [
       wbEmpty(POCA, 'OnChange Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbPDTOs
-    ], [])
+    ], [], cpNormal, True)
   ], False, nil, cpNormal, False, nil {wbPACKAfterLoad});
 
   wbQUSTAliasFlags :=
@@ -15771,9 +15837,9 @@ begin
     wbRArray('Unknown', wbString(QTVR)),
     wbFLTR,
     wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, False),
-    wbEmpty(NEXT, 'Marker'),
+    wbEmpty(NEXT, 'Marker', cpNormal, True),
     wbCTDAs, {>>> Unknown, doesn't show up in CK <<<}
-    wbEmpty(NEXT, 'Marker'),
+    wbEmpty(NEXT, 'Marker', cpNormal, True),
     wbCTDAs, {>>> Unknown, doesn't show up in CK <<<}
     wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
       wbStructSK(INDX, [0], 'Stage Index', [
@@ -16199,7 +16265,7 @@ begin
     wbString(ANAM, 'Female Skeletal Model'),
     wbMODT,
     wbEmpty(NAM2, 'Marker NAM2 #1'),
-    wbRArrayS('Movement Type Names', wbString(MTNM, 'Name')),
+    wbRArrayS('Movement Type Names', wbString(MTNM, 'Name', 4)),
     wbArray(VTCK, 'Voices', wbFormIDCk('Voice', [VTYP]), ['Male', 'Female'], cpNormal, True),
     //wbArray(DNAM, 'Decapitate Armors', wbFormIDCk('Decapitate Armor', [NULL, ARMO]), ['Male', 'Female'], cpNormal, False),
     wbArray(HCLF, 'Default Hair Colors', wbFormIDCk('Default Hair Color', [NULL, CLFM]), ['Male', 'Female'], cpNormal, False),
