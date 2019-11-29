@@ -68,6 +68,7 @@ uses
   wbInterface,
   wbImplementation,
   wbLocalization,
+  wbDefinitionsCommon,
   wbDefinitionsFNV,
   wbDefinitionsFNVSaves,
   wbDefinitionsFO3,
@@ -229,13 +230,29 @@ begin
     try
       wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
       wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
+      wbDecodeTextureHashes := Settings.ReadBool('Options', 'DecodeTextureHashes', wbDecodeTextureHashes);
       wbShowFlagEnumValue := Settings.ReadBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
       wbTrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
       wbAllowDirectSave := Settings.ReadBool('Options', 'AllowDirectSave', wbAllowDirectSave);
+      wbExtendedESL := Settings.ReadBool('Options', 'ExtendedESL', wbExtendedESL);
       wbSortINFO := Settings.ReadBool('Options', 'SortINFO', wbSortINFO);
       wbFillPNAM := Settings.ReadBool('Options', 'FillPNAM', wbFillPNAM);
+      wbCollapseRecordHeader := Settings.ReadBool('Options', 'CollapseRecordHeader', wbCollapseRecordHeader);
+      wbCollapseObjectBounds := Settings.ReadBool('Options', 'CollapseObjectBounds', wbCollapseObjectBounds);
+      wbCollapseModels := Settings.ReadBool('Options', 'CollapseModels', wbCollapseModels);
+      wbCollapseFactions := Settings.ReadBool('Options', 'CollapseFactions', wbCollapseFactions);
+      wbCollapseFactionRelations := Settings.ReadBool('Options', 'CollapseFactionRelations', wbCollapseFactionRelations);
+      wbCollapseItems := Settings.ReadBool('Options', 'CollapseItems', wbCollapseItems);
+      wbCollapseLeveledItems := Settings.ReadBool('Options', 'CollapseLeveledItems', wbCollapseLeveledItems);
+      wbCollapseEquipSlots := Settings.ReadBool('Options', 'CollapseEquipSlots', wbCollapseEquipSlots);
+      wbCollapseObjectProperties := Settings.ReadBool('Options', 'CollapseObjectProperties', wbCollapseObjectProperties);
+      wbCollapseScriptProperties := Settings.ReadBool('Options', 'CollapseScriptProperties', wbCollapseScriptProperties);
       wbCollapseConditions := Settings.ReadBool('Options', 'CollapseConditions', wbCollapseConditions);
       wbCollapseBenignArray := Settings.ReadBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
+      wbCollapseRGBA := Settings.ReadBool('Options', 'CollapseRGBA', wbCollapseRGBA);
+      wbCollapseVec3 := Settings.ReadBool('Options', 'CollapseVec3', wbCollapseVec3);
+      wbCollapseHeadParts := Settings.ReadBool('Options', 'CollapseHeadParts', wbCollapseHeadParts);
+      wbCollapseBodyParts := Settings.ReadBool('Options', 'CollapseBodyParts', wbCollapseBodyParts);
       sl := TStringList.Create;
       try
         Settings.ReadSection('cpoverride', sl);
@@ -273,18 +290,38 @@ begin
     Result := IncludeTrailingBackslash(Result);
 end;
 
+const
+  DataName : array[Boolean] of string = (
+    'Data',
+    'Data Files'   // gmTES3
+  );
+
 function CheckAppPath: string;
-var
-  s: string;
-begin
-  Result := '';
-  s := ExtractFilePath(ParamStr(0));
-  while Length(s) > 3 do begin
-    if FileExists(s + wbGameExeName) and DirectoryExists(s + 'Data') then begin
-      Result := s;
-      Exit;
+
+  function CheckPath(const aStartFrom: string): string;
+  var
+    s: string;
+  begin
+    Result := '';
+    s := aStartFrom;
+    while Length(s) > 3 do begin
+      if FileExists(s + wbGameExeName) and DirectoryExists(s + DataName[wbGameMode = gmTES3]) then begin
+        Result := s;
+        Exit;
+      end;
+      s := ExtractFilePath(ExcludeTrailingPathDelimiter(s));
     end;
-    s := ExtractFilePath(ExcludeTrailingPathDelimiter(s));
+  end;
+
+var
+  CurrentDir, ExeDir: string;
+begin
+  CurrentDir := IncludeTrailingPathDelimiter(GetCurrentDir);
+  Result := CheckPath(CurrentDir);
+  if (Result = '') then begin
+    ExeDir := ExtractFilePath(ParamStr(0));
+    if not SameText(CurrentDir, ExeDir) then
+      Result := CheckPath(ExeDir);
   end;
 end;
 
@@ -428,10 +465,8 @@ begin
     finally
       Free;
     end;
-
-    if (wbDataPath <> '') then
-      wbDataPath := IncludeTrailingPathDelimiter(wbDataPath) + 'Data\';
-
+    if wbDataPath <> '' then
+      wbDataPath := IncludeTrailingPathDelimiter(wbDataPath) + DataName[wbGameMode = gmTES3] + '\';
   end else
     wbDataPath := IncludeTrailingPathDelimiter(wbDataPath);
 
@@ -453,10 +488,14 @@ begin
       Exit;
     end;
 
-    if wbGameMode in [gmFO76] then
-      wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameNameReg + '\'
+    case wbGameMode of
+      gmTES3:
+        wbMyGamesTheGamePath := IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)));
+      gmFO76:
+        wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameNameReg + '\';
     else
       wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameName2 + '\';
+    end;
 
     if wbGameMode in [gmFO3, gmFNV] then
       wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
@@ -533,12 +572,12 @@ var
 
 procedure DetectAppMode;
 const
-  SourceModes : array [1..2] of string = ('plugins', 'saves');
-  GameModes: array [1..10] of string = ('tes5vr', 'fo4vr', 'tes4', 'tes5', 'enderal', 'sse', 'fo3', 'fnv', 'fo4', 'fo76');
-  ToolModes: array [1..15] of string = (
+  SourceModes : array of string = ['plugins', 'saves'];
+  GameModes: array of string = ['tes5vr', 'fo4vr', 'tes3', 'tes4', 'tes5', 'enderal', 'sse', 'fo3', 'fnv', 'fo4', 'fo76'];
+  ToolModes: array of string = [
     'edit', 'view', 'lodgen', 'script', 'translate', 'onamupdate', 'masterupdate', 'masterrestore',
     'setesm', 'clearesm', 'sortandclean', 'sortandcleanmasters',
-    'checkforerrors', 'checkforitm', 'checkfordr');
+    'checkforerrors', 'checkforitm', 'checkfordr'];
 var
   s, p: string;
 begin
@@ -729,8 +768,10 @@ begin
     wbGameMode := gmTES3;
     wbAppName := 'TES3';
     wbGameName := 'Morrowind';
-    ToolModes := [];
-    ToolSources := [];
+    (**)
+    ToolModes := (**)[tmView];(** )wbAlwaysMode - [tmLODgen];(**)
+    ToolSources := [tsPlugins];
+    (**)
   end
 
   else if isMode('TES4') then begin
@@ -814,7 +855,6 @@ begin
     wbArchiveExtension := '.ba2';
     ToolModes := wbAlwaysMode;
     ToolSources := [tsPlugins];
-    VersionString.Title := 'EXPERIMENTAL';
   end
 
   else begin
@@ -858,9 +898,9 @@ begin
 
   if FindCmdLineSwitch('DontCache') then
     wbDontCache := True;
-  if FindCmdLineSwitch('DontCacheLoad') then
+  if wbDontCache or FindCmdLineSwitch('DontCacheLoad') then
     wbDontCacheLoad := True;
-  if FindCmdLineSwitch('DontCacheSave') then
+  if wbDontCache or FindCmdLineSwitch('DontCacheSave') then
     wbDontCacheSave := True;
   if wbDontCacheLoad and wbDontCacheSave then
     wbDontCache := True;
@@ -882,6 +922,12 @@ begin
     gmTES3: begin
       wbLoadBSAs := False;
       wbAllowInternalEdit := false;
+      wbDontCache := True;
+      wbDontCacheLoad := True;
+      wbDontCacheSave := True;
+      wbBuildRefs := False;
+      wbVWDInTemporary := True;
+      wbCreateContainedIn := False;
     end;
     gmTES4: begin
       wbLoadBSAs := True;
@@ -962,6 +1008,9 @@ begin
     if FindCmdLineSwitch('AllowDirectSaves') then
       wbAllowDirectSave := True;
 
+    if FindCmdLineSwitch('ExtendedESL') then
+      wbExtendedESL := True;
+
   if FindCmdLineSwitch('IKnowWhatImDoing') then
     wbIKnowWhatImDoing := True;
 
@@ -972,10 +1021,12 @@ begin
     wbStripEmptyMasters := True;
 
   if wbToolMode = tmEdit then begin
-    if FindCmdLineSwitch('quickshowconflicts') or ExeName.Contains('quickshowconflicts') or ExeName.Contains('qsc') then
+    if   FindCmdLineSwitch('quickshowconflicts') or FindCmdLineSwitch('qsc')
+      or ExeName.Contains('quickshowconflicts') or ExeName.Contains('qsc') then
       wbQuickShowConflicts := True;
 
-    if FindCmdLineSwitch('veryquickshowconflicts') or ExeName.Contains('veryquickshowconflicts') or ExeName.Contains('vqsc') then begin
+    if   FindCmdLineSwitch('veryquickshowconflicts') or FindCmdLineSwitch('vqsc')
+      or ExeName.Contains('veryquickshowconflicts') or ExeName.Contains('vqsc') then begin
       wbQuickShowConflicts := True;
       wbVeryQuickShowConflicts := True;
       wbAutoLoad := True;
@@ -987,7 +1038,8 @@ begin
     if FindCmdLineSwitch('autoexit') then
       wbAutoExit := True;
 
-    if FindCmdLineSwitch('autogamelink') or ExeName.Contains('autogamelink') or ExeName.Contains('agl') then begin
+    if   FindCmdLineSwitch('autogamelink') or FindCmdLineSwitch('agl')
+      or ExeName.Contains('autogamelink') or ExeName.Contains('agl') then begin
       wbAutoLoad := True;
       wbAutoGameLink := True;
     end;
@@ -996,10 +1048,12 @@ begin
       if wbQuickShowConflicts then
         wbVeryQuickShowConflicts := True;
 
-    if (FindCmdLineSwitch('quickclean') or ExeName.Contains('quickclean') or ExeName.Contains('qc')) and (wbToolSource in [tsPlugins]) then
+    if (FindCmdLineSwitch('quickclean') or FindCmdLineSwitch('qc')
+      or ExeName.Contains('quickclean') or ExeName.Contains('qc')) and (wbToolSource in [tsPlugins]) then
       wbQuickClean := True;
 
-    if (FindCmdLineSwitch('quickautoclean') or ExeName.Contains('quickautoclean') or ExeName.Contains('qac')) and (wbToolSource in [tsPlugins]) then begin
+    if (FindCmdLineSwitch('quickautoclean') or FindCmdLineSwitch('qac')
+      or ExeName.Contains('quickautoclean') or ExeName.Contains('qac')) and (wbToolSource in [tsPlugins]) then begin
       wbQuickClean := True;
       wbQuickCleanAutoSave := wbQuickClean;
     end;
@@ -1080,6 +1134,8 @@ begin
   if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
     wbEncodingTrans :=  wbMBCSEncoding(s);
 
+  DefineCommon;
+
   // definitions
   case wbGameMode of
     gmFNV: case wbToolSource of
@@ -1117,6 +1173,11 @@ begin
       tsPlugins: DefineTES5;
     end
   end;
+
+  if FindCmdLineSwitch('reportinjected') then
+    wbReportInjected := True;
+  if FindCmdLineSwitch('noreportinjected') then
+    wbReportInjected := False;
 
   if FindCmdLineSwitch('speed') then
     wbSpeedOverMemory := True;
@@ -1204,6 +1265,17 @@ begin
     wbMasterUpdateFixPersistence := True
   else if FindCmdLineSwitch('NoFixPersistence') then
     wbMasterUpdateFixPersistence := False;
+
+  if FindCmdLineSwitch('AutoMarkModified') then
+    wbAutoMarkModified := True;
+  if FindCmdLineSwitch('NoAutoMarkModified') then
+    wbAutoMarkModified := False;
+
+  if FindCmdLineSwitch('ForceMarkModified') then
+    wbForceMarkModified := True;
+  if FindCmdLineSwitch('NoForceMarkModified') then
+    wbForceMarkModified := False;
+
 
   if wbVeryQuickShowConflicts then
     wbSubMode := 'Very Quick Show Conflicts'

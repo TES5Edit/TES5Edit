@@ -39,6 +39,7 @@
 
 
 unit lz4io;
+{$HINTS OFF}
 {$POINTERMATH ON}
 {$Q-}
 {$R-}

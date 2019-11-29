@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ComCtrls, ExtCtrls, wbInterface,
   Vcl.Styles.Utils.SystemMenu, Vcl.Samples.Spin, Vcl.Themes,
-  System.Generics.Collections, Vcl.Styles.Ext;
+  System.Generics.Collections, Vcl.Styles.Ext, Vcl.Styles.Preview;
 
 type
   TfrmOptions = class(TForm)
@@ -81,8 +81,25 @@ type
     cbManualCleaningHide: TCheckBox;
     cbManualCleaningAllow: TCheckBox;
     cbShrinkButtons: TCheckBox;
+    cbCollapseRecordHeader: TCheckBox;
+    cbCollapseObjectBounds: TCheckBox;
+    cbCollapseModels: TCheckBox;
+    cbCollapseFactionRelations: TCheckBox;
+    cbCollapseItems: TCheckBox;
+    cbCollapseScriptProperties: TCheckBox;
     cbCollapseConditions: TCheckBox;
     cbCollapseBenignArray: TCheckBox;
+    cbExtendedESL: TCheckBox;
+    tsViewSettings: TTabSheet;
+    lblFieldsToCollapse: TLabel;
+    cbCollapseLeveledItems: TCheckBox;
+    cbCollapseObjectProperties: TCheckBox;
+    cbCollapseEquipSlots: TCheckBox;
+    cbCollapseFactions: TCheckBox;
+    lblTypesToCollapse: TLabel;
+    cbCollapseRGBA: TCheckBox;
+    cbCollapseVec3: TCheckBox;
+    cbDecodeTexture: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);
@@ -94,7 +111,7 @@ type
     procedure rbThemeClick(Sender: TObject);
     procedure cbThemeSystemSelect(Sender: TObject);
   private
-    vspThemePreview: TVclStylesPreview;
+    vspThemePreview: TVisualStylePreview;
     procedure UpdateThemePreview;
   public
     { Public declarations }
@@ -165,8 +182,9 @@ begin
       MenuCaption := 'Theme';
     end;
 
-   vspThemePreview := TVclStylesPreview.Create(Self);
+   vspThemePreview := TVisualStylePreview.Create(Self);
    with vspThemePreview do begin
+     PreviewType := ptTabs;
      Parent:= pnlThemePreview;
      Align := alClient;
    end;

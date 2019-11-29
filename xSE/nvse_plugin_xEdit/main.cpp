@@ -296,21 +296,19 @@ bool DoTheWork()
 
 	// create the list of condition commands for WB
 	UInt32 i = 0;
-	UInt32 j = 0;
-	_MESSAGE("conditionFunctionData = ( #--0: no param; 1: int param; 2: formid param; 3: float param");
+	_MESSAGE("# 0: no param; 1: int param; 2: formid param; 3: float param");
+	_MESSAGE("condition_function_data = {");
 	for (const CommandInfo * CI = SaveCT->Start(); CI < SaveCT->End(); CI++)
 	{
 		if (CI->eval)
 		{
-			_MESSAGE("    (%3d, '%s', %d, %d), # %3d", i, CI->longName,
+			_MESSAGE("    %4d: ('%s', %d, %d),", i, CI->longName,
 				CheckParam(CI, 0) ? WBEncode(CI->params[0]) : 0,
-				CheckParam(CI, 1) ? WBEncode(CI->params[1]) : 0,
-				j);
-			j++;
+				CheckParam(CI, 1) ? WBEncode(CI->params[1]) : 0);
 		}
 		i++;
 	}
-	_MESSAGE("    )");	// Don't forget to add xSE functions
+	_MESSAGE("}");	// Don't forget to add xSE functions
 
 	_MESSAGE("");
 

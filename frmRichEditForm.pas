@@ -76,10 +76,7 @@ var
   TD       : ITextDocument;
   TR       : ITextRange;
   i        : Integer;
-  s        : string;
-  Size     : Single;
   LastEnd  : Integer;
-  Style    : Integer;
   LastNode : PVirtualNode;
   LastTR   : ITextRange;
   NewNode : PVirtualNode;

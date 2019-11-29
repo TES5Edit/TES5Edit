@@ -67,6 +67,7 @@ uses
   frmModuleSelectForm in 'frmModuleSelectForm.pas',
   frmModGroupSelectForm in 'frmModGroupSelectForm.pas',
   frmModGroupEditForm in 'frmModGroupEditForm.pas',
+  wbDefinitionsCommon in 'wbDefinitionsCommon.pas',
   wbDefinitionsFNV in 'wbDefinitionsFNV.pas',
   wbDefinitionsFNVSaves in 'wbDefinitionsFNVSaves.pas',
   wbDefinitionsFO3 in 'wbDefinitionsFO3.pas',

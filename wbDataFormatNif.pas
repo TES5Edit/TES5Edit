@@ -4856,7 +4856,7 @@ begin
     dfBytes('Unused 1', 4),
     wbBroadPhaseType('Broad Phase Type', 'BROAD_PHASE_ENTITY', []),
     dfBytes('Unused 2', 3),
-    wbhkWorldObjCinfoProperty('Cinfo Prpperty', [])
+    wbhkWorldObjCinfoProperty('Cinfo Property', [])
   ]), 'bhkSerializable', True);
 end;
 
@@ -5491,7 +5491,7 @@ begin
     dfFloat('Dimmer', '1.0'),
     wbColor3('Ambient Color', '#000000', []),
     wbColor3('Diffuse Color', '#000000', []),
-    wbColor3('Speculat Color', '#000000', [])
+    wbColor3('Specular Color', '#000000', [])
   ]), 'NiDynamicEffect', True);
 end;
 
@@ -7099,9 +7099,9 @@ begin
     dfArray('Particle Descriptions', dfStruct('Particle Descriptions', [
       wbVector3('Translation'),
       dfArray('Unknown Floats 1', dfFloat('Unknown Floats 1'), 3, '', [DF_OnGetEnabled, @EnBefore10401]),
-      dfFloat('Uknown Float 1', '0.9'),
-      dfFloat('Uknown Float 2', '0.9'),
-      dfFloat('Uknown Float 3', '3.0'),
+      dfFloat('Unknown Float 1', '0.9'),
+      dfFloat('Unknown Float 2', '0.9'),
+      dfFloat('Unknown Float 3', '3.0'),
       dfInteger('Unknown Int', dtS32)
     ]), 0, 'Num Vertices', [DF_OnGetEnabled, @NiPSysData_EnDescriptions]),
     wbBool('Has Rotation Speeds', [DF_OnGetEnabled, @EnSince20004]),

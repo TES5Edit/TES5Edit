@@ -43,7 +43,7 @@
         <DCC_Namespace>System;System.Win;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <DCC_SYMBOL_DEPRECATED>false</DCC_SYMBOL_DEPRECATED>
         <DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
-        <DCC_UnitSearchPath>..\..\;..\..\zlib;..\..\lz4;..\..\Imaging;..\..\Imaging\ZLib;..\..\FileContainer;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\;..\..\zlib;..\..\lz4;..\..\Imaging;..\..\Imaging\ZLib;..\..\FileContainer;..\BSArchive;..\BSArchive\TForge;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_WIDECHAR_REDUCED>false</DCC_WIDECHAR_REDUCED>
         <Icon_MainIcon>..\..\TES5Edit_Icon.ico</Icon_MainIcon>
         <VerInfo_Locale>3081</VerInfo_Locale>

@@ -17,7 +17,7 @@ unit frmModuleSelectForm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Windows, Messages, UITypes, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, CheckLst, Menus,
   Vcl.Styles.Utils.SystemMenu, VirtualTrees, VirtualEditTree,
   wbInterface, wbLoadOrder, Vcl.ExtCtrls, System.Actions, Vcl.ActnList;
@@ -101,6 +101,7 @@ type
 
     SelectFlag      : TwbModuleFlag;
     FilterFlag      : TwbModuleFlag;
+    HideFlag        : TwbModuleFlag;
     MaxSelect       : Integer;
     MinSelect       : Integer;
 
@@ -463,8 +464,6 @@ begin
 end;
 
 procedure TfrmModuleSelect.FormShow(Sender: TObject);
-var
-  Node: PVirtualNode;
 begin
   if wbIsDarkMode then
     vstModules.Colors.TreeLineColor := Darker(clWindowText)
@@ -914,8 +913,14 @@ begin
         Include(InitialStates, ivsHasChildren);
       if not (FilterFlag in mndModule.miFlags) then
         Include(InitialStates, ivsDisabled);
-     if mfMastersMissing in mndModule.miFlags then
+      if mfMastersMissing in mndModule.miFlags then
         Include(InitialStates, ivsDisabled);
+      if HideFlag in mndModule.miFlags then begin
+        Include(InitialStates, ivsHidden);
+        Include(InitialStates, ivsDisabled);
+      end;
+      if InitialStates * [ivsHidden, ivsDisabled] <> [] then
+        Exclude(mndModule.miFlags, SelectFlag);
     end else
       Include(InitialStates, ivsDisabled);
   end;

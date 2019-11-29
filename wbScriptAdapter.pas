@@ -427,7 +427,7 @@ begin
 
       for i := 0 to Pred(Flags.FlagCount) do begin
         if i > 0 then s := s + #13#10;
-        s := s + Flags.Flags[i];
+        s := s + Flags.Flags[i, False];
       end;
 
       Value := s;
@@ -663,7 +663,7 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
-      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], '', '', '', False);
+      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], '', '', '', '', False);
 end;
 
 procedure _wbCopyElementToFileWithPrefix(var Value: Variant; Args: TJvInterpreterArgs);
@@ -673,8 +673,19 @@ var
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
-      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], Args.Values[4], Args.Values[5], Args.Values[6], False);
+      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], Args.Values[4], '', Args.Values[5], Args.Values[6], False);
 end;
+
+procedure _wbCopyElementToFileWithPrefixAndSuffix(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+  _File: IwbFile;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
+      Value := wbCopyElementToFile(Element, _File, Args.Values[2], Args.Values[3], Args.Values[4], Args.Values[5], Args.Values[6], Args.Values[7], False);
+end;
+
 
 procedure _wbCopyElementToRecord(var Value: Variant; Args: TJvInterpreterArgs);
 var
@@ -1351,6 +1362,38 @@ begin
     _File.IsESM := Args.Values[1];
 end;
 
+procedure IwbFile_CanBeESL(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  Value := False;
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    if (_File.LoadOrderFileID.IsLightSlot = true) then
+        Value :=  true;
+end;
+
+procedure Misc_wbIsPseudoESLMode(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbIsEslSupported and wbPseudoESL;
+end;
+
+procedure IwbFile_GetIsESL(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  Value := False;
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    Value := _File.IsESL;
+end;
+
+procedure IwbFile_SetIsESL(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    _File.IsESL := Args.Values[1];
+end;
+
 procedure IwbFile_SortMasters(var Value: Variant; Args: TJvInterpreterArgs);
 var
   _File: IwbFile;
@@ -1925,6 +1968,7 @@ begin
     AddFunction(cUnit, 'MoveDown', IwbElement_MoveDown, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbCopyElementToFile', _wbCopyElementToFile, 4, [varEmpty, varEmpty, varBoolean, varBoolean], varEmpty);
     AddFunction(cUnit, 'wbCopyElementToFileWithPrefix', _wbCopyElementToFileWithPrefix, 7, [varEmpty, varEmpty, varBoolean, varBoolean, varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction(cUnit, 'wbCopyElementToFileWithPrefixAndSuffix', _wbCopyElementToFileWithPrefixAndSuffix, 8, [varEmpty, varEmpty, varBoolean, varBoolean, varEmpty, varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbCopyElementToRecord', _wbCopyElementToRecord, 4, [varEmpty, varEmpty, varBoolean, varBoolean], varEmpty);
     AddFunction(cUnit, 'ClearElementState', IwbElement_ClearElementState, 2, [varEmpty, varEmpty], varBoolean);
     AddFunction(cUnit, 'SetElementState', IwbElement_SetElementState, 2, [varEmpty, varEmpty], varBoolean);
@@ -2016,6 +2060,9 @@ begin
     AddFunction(cUnit, 'GetNewFormID', IwbFile_GetNewFormID, 0, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetIsESM', IwbFile_GetIsESM, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetIsESM', IwbFile_SetIsESM, 2, [varEmpty, varBoolean], varEmpty);
+    AddFunction(cUnit, 'GetIsESL', IwbFile_GetIsESL, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'SetIsESL', IwbFile_SetIsESL, 2, [varEmpty, varBoolean], varEmpty);
+    AddFunction(cUnit, 'CanBeESL', IwbFile_CanBeESL, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SortMasters', IwbFile_SortMasters, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'CleanMasters', IwbFile_CleanMasters, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'MasterCount', IwbFile_MasterCount, 1, [varEmpty], varEmpty);
@@ -2079,6 +2126,8 @@ begin
     AddFunction(cUnit, 'LocalizationGetStringsFromFile', Misc_LocalizationGetStringsFromFile, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbFormIDErrorCheckLock', Misc_wbFormIDErrorCheckLock, 0, [], varEmpty);
     AddFunction(cUnit, 'wbFormIDErrorCheckUnlock', Misc_wbFormIDErrorCheckUnlock, 0, [], varEmpty);
+    AddFunction(cUnit, 'wbIsPseudoESLMode', Misc_wbIsPseudoESLMode, 0, [], varEmpty);
+
   end;
 end;
 

@@ -30,6 +30,7 @@ uses
   Registry,
   Math,
   RegularExpressionsCore,
+  RegularExpressionsConsts,
   JsonDataObjects,
   wbInterface;
 
