@@ -778,19 +778,38 @@ begin
 end;
 {==============================================================================}
 
+const
+  DataName : array[Boolean] of string = (
+    'Data',
+    'Data Files'   // gmTES3
+  );
+
 function CheckAppPath: string;
-var
-  s: string;
-begin
-  Result := '';
-  s := ParamStr(0);
-  s := ExtractFilePath(s);
-  while Length(s) > 3 do begin
-    if FileExists(s + wbGameExeName) and DirectoryExists(s + 'Data') then begin
-      Result := s;
-      Exit;
+
+  function CheckPath(const aStartFrom: string): string;
+  var
+    s: string;
+  begin
+    Result := '';
+    s := aStartFrom;
+    while Length(s) > 3 do begin
+      if FileExists(s + wbGameExeName) and DirectoryExists(s + DataName[wbGameMode = gmTES3]) then begin
+        Result := s;
+        Exit;
+      end;
+      s := ExtractFilePath(ExcludeTrailingPathDelimiter(s));
     end;
-    s := ExtractFilePath(ExcludeTrailingPathDelimiter(s));
+  end;
+
+var
+  CurrentDir, ExeDir: string;
+begin
+  CurrentDir := IncludeTrailingPathDelimiter(GetCurrentDir);
+  Result := CheckPath(CurrentDir);
+  if (Result = '') then begin
+    ExeDir := ExtractFilePath(ParamStr(0));
+    if not SameText(CurrentDir, ExeDir) then
+      Result := CheckPath(ExeDir);
   end;
 end;
 
