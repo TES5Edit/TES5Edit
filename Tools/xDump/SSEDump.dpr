@@ -72,6 +72,8 @@ var
   DumpCount       : Integer;
   DumpMax         : Integer;
   DumpCheckReport : Boolean = False;
+  DumpSize        : Boolean = False;
+  DumpHidden      : Boolean = False;
 
 procedure ReportProgress(const aStatus: string);
 begin
@@ -667,12 +669,19 @@ begin
   if DumpCheckReport then
     Error := aElement.Check;
 
-  if (aElement.Name <> 'Unused') and (Name <> 'Unused') then begin
+  if DumpHidden or ((aElement.Name <> 'Unused') and (Name <> 'Unused')) then begin
     if (Name <> '') and ((not wbReportMode) or DumpCheckReport) then
       Write(aIndent, Name);
-    if (Name <> '') or (Value <> '') then
+    if (Name <> '') or (Value <> '') then begin
       aIndent := aIndent + '  ';
-    if (Value <> '') and (Pos('Hidden: ', Name)<>1) then begin
+      if DumpSize then
+        if (not wbReportMode) or DumpCheckReport then begin
+          if Name <> '' then
+            Write(' ');
+          Write('[', aElement.DataSize, ']');
+        end;
+    end;
+    if (Value <> '') and (DumpHidden or (Pos('Hidden: ', Name)<>1)) then begin
       if ((not wbReportMode) or DumpCheckReport) then
         WriteLn(': ', Value);
     end else begin
@@ -684,7 +693,7 @@ begin
   if DumpCheckReport and (Error <> '') then
     WriteLn(aIndent, '[ERROR: ', Error ,']');
 
-  if Supports(aElement, IwbContainer, Container) and (Pos('Hidden: ', Name)<>1) then
+  if Supports(aElement, IwbContainer, Container) and (DumpHidden or (Pos('Hidden: ', Name)<>1)) then
     WriteContainer(Container, aIndent);
 end;
 
@@ -1161,6 +1170,14 @@ begin
         DumpCheckReport := True;
       end;
 
+      if FindCmdLineSwitch('es') then begin
+        DumpSize := True;
+      end;
+
+      if FindCmdLineSwitch('dh') then begin
+        DumpHidden := True;
+      end;
+	  
       if wbReportMode then
         wbShowFlagEnumValue := True;
 
@@ -1411,6 +1428,8 @@ begin
         WriteLn(ErrOutput, '-top:N       ', 'If specified, only dump the first N records');
         WriteLn(ErrOutput, '-check       ', 'Performs "Check for Errors" instead of dumping content');
         WriteLn(ErrOutput, '-dcr         ', 'Dumps record content while performing "Check for Errors" on each element and generates a report');
+        WriteLn(ErrOutput, '-es          ', 'Dumps size for all elements');
+        WriteLn(ErrOutput, '-dh          ', 'Dumps normally hidden elements');
         WriteLn(ErrOutput, '             ', '');
         WriteLn(ErrOutput, 'Saves mode ONLY');
         WriteLn(ErrOutput, '-df:list     ', 'If specified, only dump the listed ChangedForm type');
