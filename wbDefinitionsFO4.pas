@@ -3151,6 +3151,19 @@ begin
     Result := 1;
 end;
 
+function wbSPEDFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  if wbFormVerDecider(aBasePtr, aEndPtr, aElement, 28) = 0 then begin
+    Result := 0;
+  end else if wbFormVerDecider(aBasePtr, aEndPtr, aElement, 60) = 0 then begin
+    Result := 1;
+  end else if wbFormVerDecider(aBasePtr, aEndPtr, aElement, 104) = 0 then begin
+    Result := 2;
+  end else begin
+    Result := 3;
+  end;
+end;
+
 function wbDeciderFormVersion99(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 99);
@@ -12479,36 +12492,215 @@ end;
 
 procedure DefineFO4k;
 begin
-  wbSPED := wbStruct(SPED, 'Movement Data', [
-    wbFloat('Unknown'),
-    wbFloat('Walk - Left'),
-    wbFloat('Run - Left'),
-    wbFloat('Unknown'),
-    wbFloat('Unknown'),
-    wbFloat('Walk - Right'),
-    wbFloat('Run - Right'),
-    wbFloat('Unknown'),
-    wbFloat('Unknown'),
-    wbFloat('Walk - Forward'),
-    wbFloat('Run - Forward'),
-    wbFloat('Sprint - Forward'),
-    wbFloat('Unknown'),
-    wbFloat('Walk - Back'),
-    wbFloat('Run - Back'),
-    wbFloat('Unknown'),
-    wbFloat('Standing - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-    wbFloat('Walk - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-    wbFloat('Run - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-    wbFloat('Sprint - Pitch', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-    wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-    wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-    wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-    wbFloat('Unknown'{, cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize}),
-    wbFloat('Standing - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-    wbFloat('Walk - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-    wbFloat('Run - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-    wbFloat('Sprint - Yaw', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-  ], cpNormal, True, nil, 10);
+  wbSPED := wbUnion(SPED, 'Movement Data', wbSPEDFormatDecider, [
+ {0}wbStruct('', [
+      wbStruct('Left', [
+        wbEmpty('Unused'),
+        wbFloat('Walk'),
+        wbFloat('Run'),
+        wbEmpty('Unused')
+      ]),
+      wbStruct('Right', [
+        wbEmpty('Unused'),
+        wbFloat('Walk'),
+        wbFloat('Run'),
+        wbEmpty('Unused')
+      ]),
+      wbStruct('Forward', [
+        wbEmpty('Unused'),
+        wbFloat('Walk'),
+        wbFloat('Run'),
+        wbEmpty('Unused')
+      ]),
+      wbStruct('Back', [
+        wbEmpty('Unused'),
+        wbFloat('Walk'),
+        wbFloat('Run'),
+        wbEmpty('Unused')
+      ]),
+
+      wbStruct('Pitch, Roll, Yaw', [
+        wbEmpty('Unused'),
+        wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbEmpty('Unused')
+      ]),
+
+      wbStruct('Unused', [
+        wbEmpty('Unused'),
+        wbEmpty('Unused'),
+        wbEmpty('Unused'),
+        wbEmpty('Unused')
+      ]),
+
+      wbStruct('Unused', [
+        wbEmpty('Unused'),
+        wbEmpty('Unused'),
+        wbEmpty('Unused'),
+        wbEmpty('Unused')
+      ]),
+
+      wbEmpty('Unused'),
+      wbEmpty('Unused'),
+      wbEmpty('Unused')
+    ], cpNormal, True),
+ {1}wbStruct('', [
+      wbStruct('Left', [
+        wbEmpty('Unused'),
+        wbFloat('Walk'),
+        wbFloat('Run'),
+        wbEmpty('Unused')
+      ]),
+      wbStruct('Right', [
+        wbEmpty('Unused'),
+        wbFloat('Walk'),
+        wbFloat('Run'),
+        wbEmpty('Unused')
+      ]),
+      wbStruct('Forward', [
+        wbEmpty('Unused'),
+        wbFloat('Walk'),
+        wbFloat('Run'),
+        wbEmpty('Unused')
+      ]),
+      wbStruct('Back', [
+        wbEmpty('Unused'),
+        wbFloat('Walk'),
+        wbFloat('Run'),
+        wbEmpty('Unused')
+      ]),
+
+      wbStruct('Pitch, Roll, Yaw', [
+        wbEmpty('Unused'),
+        wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbEmpty('Unused')
+      ]),
+
+      wbStruct('Unused', [
+        wbEmpty('Unused'),
+        wbEmpty('Unused'),
+        wbEmpty('Unused'),
+        wbEmpty('Unused')
+      ]),
+
+      wbStruct('Unused', [
+        wbEmpty('Unused'),
+        wbEmpty('Unused'),
+        wbEmpty('Unused'),
+        wbEmpty('Unused')
+      ]),
+
+      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbEmpty('Unused'),
+      wbEmpty('Unused')
+    ], cpNormal, True),
+ {2}wbStruct('', [
+      wbStruct('Left', [
+        wbEmpty('Unused'),
+        wbFloat('Walk'),
+        wbFloat('Run'),
+        wbEmpty('Unused')
+      ]),
+      wbStruct('Right', [
+        wbEmpty('Unused'),
+        wbFloat('Walk'),
+        wbFloat('Run'),
+        wbEmpty('Unused')
+      ]),
+      wbStruct('Forward', [
+        wbEmpty('Unused'),
+        wbFloat('Walk'),
+        wbFloat('Run'),
+        wbEmpty('Unused')
+      ]),
+      wbStruct('Back', [
+        wbEmpty('Unused'),
+        wbFloat('Walk'),
+        wbFloat('Run'),
+        wbEmpty('Unused')
+      ]),
+
+      wbStruct('Pitch', [
+        wbEmpty('Unused'),
+        wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbEmpty('Unused')
+      ]),
+
+      wbStruct('Roll', [
+        wbEmpty('Unused'),
+        wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbEmpty('Unused')
+      ]),
+
+      wbStruct('Yaw', [
+        wbEmpty('Unused'),
+        wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbEmpty('Unused')
+      ]),
+
+      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+    ], cpNormal, True),
+ {3}wbStruct('', [
+      wbStruct('Left', [
+        wbFloat('Standing'),
+        wbFloat('Walk'),
+        wbFloat('Run'),
+        wbFloat('Sprint')
+      ]),
+
+      wbStruct('Right', [
+        wbFloat('Standing'),
+        wbFloat('Walk'),
+        wbFloat('Run'),
+        wbFloat('Sprint')
+      ]),
+
+      wbStruct('Forward', [
+        wbFloat('Standing'),
+        wbFloat('Walk'),
+        wbFloat('Run'),
+        wbFloat('Sprint')
+      ]),
+
+      wbStruct('Back', [
+        wbFloat('Standing'),
+        wbFloat('Walk'),
+        wbFloat('Run'),
+        wbFloat('Sprint')
+      ]),
+
+      wbStruct('Pitch', [
+        wbFloat('Standing', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Sprint', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+      ]),
+
+      wbStruct('Roll', [
+        wbFloat('Standing', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Sprint', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+      ]),
+
+      wbStruct('Yaw', [
+        wbFloat('Standing', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloat('Sprint', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+      ]),
+
+      wbEmpty('Unused'),
+      wbEmpty('Unused'),
+      wbEmpty('Unused')
+    ], cpNormal, True)
+  ]);
 
   wbRecord(OTFT, 'Outfit', [
     wbEDID,
