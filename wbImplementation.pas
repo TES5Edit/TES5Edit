@@ -5439,6 +5439,9 @@ begin
                           end;
                         Exit;
                       end;
+
+                  //source is a wbEmpty, target is something else, just reset target
+                  cntElements[j].SetToDefault;
                 end;
               end;
             end;
@@ -12663,7 +12666,6 @@ begin
           Container := aElement as IwbContainer;
 
           if ArrayDef.IsVariableSize then begin
-            Assert(ArrayDef.ElementCount <= 0);
             SetModified(True);
             InvalidateStorage;
             ReleaseElements;
@@ -12672,10 +12674,19 @@ begin
             dcDataEndPtr := @EmptyPtr;
             Exclude(dcFlags, dcfStorageInvalid);
             if ArrayDef.ElementCount < 0 then
-              RequestStorageChange(p, q, 4);
+              RequestStorageChange(p, q, 4)
+            else if ArrayDef.ElementCount > 0 then
+              SetToDefaultInternal;
 
-            for i := 0 to Pred(Container.ElementCount) do
-              Assign(i, Container.Elements[i], aOnlySK);
+            var CopyCount := Container.ElementCount;
+            if (ArrayDef.ElementCount > 0) and (CopyCount > ArrayDef.ElementCount) then
+              CopyCount := ArrayDef.ElementCount;
+
+            for i := 0 to Pred(CopyCount) do
+              if i < Length(cntElements) then
+                cntElements[i].Assign(Low(Integer), Container.Elements[i], aOnlySK)
+              else
+                Assign(i, Container.Elements[i], aOnlySK);
           end else begin
             Assert(Container.ElementCount = ArrayDef.ElementCount);
             Assert(GetElementCount = ArrayDef.ElementCount);
@@ -12999,7 +13010,7 @@ begin
   srArraySizePrefix := 0;
 
   if Assigned(ValueDef) then
-    if ValueDef.Name = '' then begin
+    if (ValueDef.Name = '') or (dfUnionStaticResolve in srDef.Value.DefFlags) then begin
       srValueDef := ValueDef;
       case ValueDef.DefType of
         dtArray: begin
@@ -18271,8 +18282,12 @@ begin
   end else
     if (ArrSize < 1) and Assigned(ArrayDef.CountCallback) then
       ArrSize := ArrayDef.CountCallback(aBasePtr, aEndPtr, aContainer)
-    else if VarSize then
-      ArrSize := High(Integer);
+    else if VarSize then begin
+      if (ArrSize > 0) and not Assigned(aBasePtr) then
+        VarSize := False //the array is static in size, even if the elements aren't...
+      else
+        ArrSize := High(Integer);
+    end;
 
   if Assigned(aBasePtr) then
     Inc(PByte(aBasePtr), SizePrefix);

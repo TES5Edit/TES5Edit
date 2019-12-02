@@ -2910,11 +2910,6 @@ begin
   if i and $00000004 <> 0 then Result := 1;
 end;
 
-function wbDeciderFormVersion44(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 44);
-end;
-
 type
   TCTDAFunctionParamType = (
     ptNone,
@@ -4942,7 +4937,7 @@ begin
           {0x00000040}'Unknown 7',
           {0x00000080}'Unknown 8'
         ], True)),
-        wbEmpty('Unused'),
+        wbUnused,
         wbInteger('Armor Type', itU32, wbArmorTypeEnum)
       ], cpNormal, False),
       wbStruct(BODT, 'Body Template', [
@@ -5096,7 +5091,7 @@ begin
     wbInteger('Data Size', itU32, nil, cpIgnore),
     wbRecordFlags,
     wbFormID('FormID', cpFormID),
-    wbUnion('Version Control Info 1', wbFormVer44Decider, [
+    wbUnion('Version Control Info 1', wbFormVersionDecider(44), [
       wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4),
       wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrAfterFO4)
     ]),

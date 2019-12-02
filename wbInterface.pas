@@ -1850,7 +1850,7 @@ type
   TwbIntOverlayCallback = function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): Int64;
   TwbStrToIntCallback = function(const aString: string; const aElement: IwbElement): Int64;
   TwbAddInfoCallback = function(const aMainRecord: IwbMainRecord): string;
-  TwbUnionDecider = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+  TwbUnionDecider = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
   TwbIntegerDefFormaterUnionDecider = function(const aElement: IwbElement): Integer;
   TwbIsSortedCallback = function(const aContainer: IwbContainer): Boolean;
   TwbCountCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
@@ -11566,33 +11566,37 @@ begin
         KnownSize := False;
 
       Index := 0;
-      if not KnownSize then
-        while (Count > Index) and (NativeUInt(BasePtr) < NativeUInt(aEndPtr)) do begin
-          Element := ArrayContainer.Elements[Index];
-          if not Assigned(Element) then begin
-            if wbMoreInfoForIndex and (DebugHook <> 0) and wbHasProgressCallback then
-              wbProgressCallback('Debug: ['+ ArrayContainer.Path +'] Index ' + IntToStr(Index) + ' of ' + IntToStr(Count) + ' greater than max '+
-                IntToStr(ArrayContainer.ElementCount-1));
-            Element := aElement; // If it is too soon, revert to previous way of doing things
+      if not KnownSize then begin
+        if not Assigned(BasePtr) or (NativeUInt(BasePtr) = NativeUInt(aEndPtr)) and (ArrayContainer.ElementCount < 1) and (Count > 0) then begin
+          // we have a variable sized array, with a static count of elements, and no existing data to read. Assume all elements are their default size
+          Result := arElement.DefaultSize[nil, nil, aElement] * Count
+        end else
+          while (Count > Index) and (NativeUInt(BasePtr) < NativeUInt(aEndPtr)) do begin
+            Element := ArrayContainer.Elements[Index];
+            if not Assigned(Element) then begin
+              if wbMoreInfoForIndex and (DebugHook <> 0) and wbHasProgressCallback then
+                wbProgressCallback('Debug: ['+ ArrayContainer.Path +'] Index ' + IntToStr(Index) + ' of ' + IntToStr(Count) + ' greater than max '+
+                  IntToStr(ArrayContainer.ElementCount-1));
+              Element := aElement; // If it is too soon, revert to previous way of doing things
+            end;
+            Size := arElement.Size[BasePtr, aEndPtr, Element];
+            if Size = High(Integer) then begin
+              Result := High(Integer);
+              Exit;
+            end;
+            Inc(Result, Size);
+            if Assigned(aBasePtr) and Assigned(aEndPtr) and (NativeUInt(aEndPtr) < NativeUInt(aBasePtr) + Result) then begin
+  //            if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
+  //              wbProgressCallback('Found an array with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
+  //                ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+ndName);
+              Result := NativeUInt(aEndPtr) - NativeUInt(aBasePtr) + Result;
+              Exit;
+            end;
+            if Assigned(BasePtr) then
+              Inc(PByte(BasePtr), Size);
+            Inc(Index);
           end;
-          Size := arElement.Size[BasePtr, aEndPtr, Element];
-          if Size = High(Integer) then begin
-            Result := High(Integer);
-            Exit;
-          end;
-          Inc(Result, Size);
-          if Assigned(aBasePtr) and Assigned(aEndPtr) and (NativeUInt(aEndPtr) < NativeUInt(aBasePtr) + Result) then begin
-//            if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
-//              wbProgressCallback('Found an array with a negative size! (2) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+
-//                ' > '+IntToHex64(Cardinal(aEndPtr), 8)+'  for '+ndName);
-            Result := NativeUInt(aEndPtr) - NativeUInt(aBasePtr) + Result;
-            Exit;
-          end;
-          if Assigned(BasePtr) then
-            Inc(PByte(BasePtr), Size);
-          Inc(Index);
-        end;
-
+      end;
     end else begin
 
       Element := nil;
@@ -19586,7 +19590,6 @@ initialization
   wbPluginExtensions[1] := csDotEsm;
   wbPluginExtensions[2] := csDotEsl;
   wbPluginExtensions[3] := csDotEsu;
-
 finalization
   FreeAndNil(wbIgnoreRecords);
   FreeAndNil(wbGroupOrder);

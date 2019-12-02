@@ -1213,7 +1213,7 @@ var
   wbTargetData: IwbStructDef;
   wbAttackData: IwbSubRecordStructDef;
   wbLLCT: IwbSubRecordDef;
-  wbLVLD: IwbSubRecordDef;
+  wbLVLD: IwbRecordMemberDef;
   wbVMAD: IwbSubRecordDef;
   wbVMADFragmentedPERK: IwbSubRecordDef;
   wbVMADFragmentedPACK: IwbSubRecordDef;
@@ -3792,12 +3792,6 @@ begin
     if Container.ElementNativeValues['EPFT'] = 8 then Result := 1;
 end;
 
-function wbEPF3ActivateDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-    Result := 0;
-    if (wbFormVerDecider(aBasePtr, aEndPtr, aElement, 127) = 0) and (wbFormVerDecider(aBasePtr, aEndPtr, aElement, 34) = 1) then Result := 1;
-end;
-
 function wbSceneActionSoundDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container: IwbContainerElementRef;
@@ -3813,182 +3807,13 @@ begin
     Result := 1;
 end;
 
-function wbEFSHFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  MainRecord: IwbMainRecord;
-begin
-  Result := 0;
-  if not Assigned(aElement) then
-    Exit;
-
-  if not Supports(aElement.Container, IwbMainRecord, MainRecord) then
-    Exit;
-  if MainRecord.Version < 106 then
-    Result := 1;
-end;
-
-function wbEFITFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  if wbFormVerDecider(aBasePtr, aEndPtr, aElement, 154) = 0 then begin
-      Result := 0;
-  end else if wbFormVerDecider(aBasePtr, aEndPtr, aElement, 166) = 0 then begin
-      Result := 1;
-  end else if wbFormVerDecider(aBasePtr, aEndPtr, aElement, 183) = 0 then begin
-      Result := 2;
-  end else begin
-      Result := 3;
-  end;
-end;
-
-function wbSPEDFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  if wbFormVerDecider(aBasePtr, aEndPtr, aElement, 28) = 0 then begin
-      Result := 0;
-  end else if wbFormVerDecider(aBasePtr, aEndPtr, aElement, 60) = 0 then begin
-      Result := 1;
-  end else if wbFormVerDecider(aBasePtr, aEndPtr, aElement, 104) = 0 then begin
-      Result := 2;
-  end else begin
-      Result := 3;
-  end;
-end;
-
-function wbDeciderFormVersion29(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 29);
-end;
-
-function wbDeciderFormVersion69(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 69);
-end;
-
-function wbDeciderFormVersion70(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 70);
-end;
-
-function wbDeciderFormVersion77(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 77);
-end;
-
-function wbDeciderFormVersion91(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 91);
-end;
-
-function wbDeciderFormVersion97(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 97);
-end;
-
-function wbDeciderFormVersion99(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 99);
-end;
-
-function wbDeciderFormVersion112(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 112);
-end;
-
-function wbDeciderFormVersion131(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 131);
-end;
-
-function wbDeciderFormVersion134(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 134);
-end;
-
-function wbDeciderFormVersion150(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 150);
-end;
-
-function wbDeciderFormVersion152(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 152);
-end;
-
-function wbDeciderFormVersion154(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 154);
-end;
-
-function wbDeciderFormVersion155(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 155);
-end;
-
-function wbDeciderFormVersion171(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 171);
-end;
-
-function wbDeciderFormVersion173(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 173);
-end;
-
-function wbDeciderFormVersion174(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 174);
-end;
-
-function wbDeciderFormVersion181(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 181);
-end;
-
-function wbDeciderFormVersion182(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 182);
-end;
-
-function wbDeciderFormVersion183(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 183);
-end;
-
-function wbDeciderFormVersion184(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 184);
-end;
-
-function wbDeciderFormVersion185(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 185);
-end;
-
-function wbDeciderFormVersion186(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 186);
-end;
-
-function wbDeciderFormVersion187(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 187);
-end;
-
-function wbDeciderFormVersion188(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 188);
-end;
-
-function wbDeciderFormVersion192(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 192);
-end;
 
 function wbDeciderCELLFlags(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   if (NativeUInt(aEndPtr) - NativeUInt(aBasePtr)) = 2 then
     Result := 0
   else
-    Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 187);
+    Result := wbFormVersionDecider(187)(aBasePtr, aEndPtr, aElement);
 end;
 
 function wbAECHDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -6308,7 +6133,7 @@ var
 begin
   if wbBeginInternalEdit then try
     // zero entries' Chance None if Form Version < 69
-    if wbFormVerDecider(nil, nil, aElement, 69) = 1 then
+    if wbFormVersionDecider(69)(nil, nil, aElement) = 1 then
       Exit;
 
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -7384,10 +7209,7 @@ begin
   wbCITC := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign);
   wbCITCReq := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign, True);
   wbDIQO := wbFormIDCk(DIQO, 'Quest', [QUST]);
-  wbLVLD := wbUnion(LVLD, 'Chance None', wbDeciderFormVersion174, [
-    wbInteger('Value', itU8, nil, cpNormal, True),
-    wbEmpty('Unused')
-  ]);
+  wbLVLD := wbBelowVersion(174, LVLD, wbInteger('Chance None', itU8, nil, cpNormal, True));
 
   wbLVMV  := wbFloat(LVMV, 'Max Value');
   wbLVMG  := wbFormIDCk(LVMG, 'Max Global', [GLOB]);
@@ -7430,7 +7252,7 @@ begin
   ], []);
 
   //wbActorValue := wbInteger('Actor Value', itS32, wbActorValueEnum);
-  wbActorValue := wbUnion('Actor Value', wbDeciderFormVersion77, [
+  wbActorValue := wbUnion('Actor Value', wbFormVersionDecider(77), [
     wbInteger('Actor Value', itU32, wbActorValueEnum),
     wbFormIDCkNoReach('Actor Value', [AVIF, NULL])
   ]);
@@ -8700,10 +8522,7 @@ begin
     wbArrayS(DAMC, 'Resistances', wbStructSK([0], 'Resistance', [
       wbFormIDCk('Damage Type', [DMGT]),
       wbInteger('Value', itU32),
-      wbUnion('Curve Table', wbDeciderFormVersion152, [
-        wbEmpty('Unused'),
-        wbFormIDCk('Curve Table', [CURV, NULL])
-      ])
+      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
     ])),
     wbRArray('Stages',
       wbRStruct('Stage', [
@@ -9852,30 +9671,34 @@ begin
   wbEFID := wbFormIDCk(EFID, 'Base Effect', [MGEF]);
 
   wbEFIT :=
-    wbUnion(EFIT, '', wbEFITFormatDecider, [
+    wbUnion(EFIT, '', wbFormVersionDecider([154, 166, 183]), [
       wbStruct('', [
+        wbUnused,
         wbFloat('Magnitude'),
         wbInteger('Area', itU32),
-        wbInteger('Duration', itU32)
+        wbInteger('Duration', itU32),
+        wbUnused
       ], cpNormal, True, nil, -1, wbEFITAfterLoad),
       wbStruct('', [
+        wbUnused,
         wbFloat('Magnitude'),
         wbInteger('Area', itU32),
         wbInteger('Duration', itU32),
-        wbByteArray('Unknown', 12)
+        wbByteArray('Unknown', 12) //Unused?
       ], cpNormal, True),
       wbStruct('', [
         wbInteger('Effect ID', itU32),
         wbFloat('Magnitude'),
         wbInteger('Area', itU32),
         wbInteger('Duration', itU32),
-        wbByteArray('Unknown', 8)
+        wbByteArray('Unknown', 8) //Unused?
       ], cpNormal, True),
-            wbStruct('', [
+      wbStruct('', [
         wbInteger('Effect ID', itU32),
         wbFloat('Magnitude'),
         wbInteger('Area', itU32),
-        wbInteger('Duration', itU32)
+        wbInteger('Duration', itU32),
+        wbUnused
       ], cpNormal, True)
     ], cpNormal, True);
 
@@ -10305,10 +10128,7 @@ begin
       wbFloat('Recovery Time'),
       wbFloat('Action Points Mult'),
       wbInteger('Stagger Offset', itS32),
-      wbUnion('Unknown', wbDeciderFormVersion188, [
-        wbEmpty('Unused'),
-        wbFloat('Unknown')
-      ])
+      wbFromVersion(188, wbFloat('Unknown'))
     ]),
     wbString(ATKE, 'Attack Event'),
     wbFormIDCk(ATKW, 'Weapon Slot', [EQUP]),
@@ -10342,10 +10162,7 @@ begin
     wbStructSK([0], 'Property', [
       wbActorValue,
       wbFloat('Value'),
-      wbUnion('Curve Table', wbDeciderFormVersion152, [
-        wbEmpty('Unused'),
-        wbFormIDCk('Curve Table', [CURV, NULL])
-      ])
+      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
     ]).SetToStr(wbObjectPropertyToStr).IncludeFlag(dfCollapsed, wbCollapseObjectProperties);
 
   wbPRPS := wbArrayS(PRPS, 'Properties', wbObjectProperty);
@@ -10353,46 +10170,31 @@ begin
   wbCVPA := wbArrayS(CVPA, 'Unknown', wbStructSK([0], 'Unknown', [
     wbFormIDCk('Scrap Count Keyword', [KYWD]),
     wbInteger('Scrap Component Count', itU32),
-    wbUnion('Curve Table', wbDeciderFormVersion152, [
-      wbEmpty('Unused'),
-      wbFormIDCk('Curve Table', [CURV, NULL])
-    ])
+      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
   ]));
 
   wbESCR := wbArrayS(ESCR, 'Scrap Recieved', wbStructSK([0], 'Scrap Recieved', [
     wbFormID('Item Type'),
     wbInteger('Count', itU32),
-    wbUnion('Curve Table', wbDeciderFormVersion152, [
-      wbEmpty('Unused'),
-      wbFormIDCk('Curve Table', [CURV, NULL])
-    ])
+    wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
   ]));
 
   wbREPR := wbArrayS(REPR, 'Repair', wbStructSK([0], 'Component', [
     wbFormIDCkNoReach('Component', sigBaseObjects),
     wbInteger('Count', itU32),
-    wbUnion('Curve Table', wbDeciderFormVersion152, [
-      wbEmpty('Unused'),
-      wbFormIDCk('Curve Table', [CURV, NULL])
-    ])
+    wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
   ]));
 
   wbAVMG := wbArrayS(AVMG, 'Unknown', wbStructSK([0], 'Unknown', [
     wbFormID('Unknown'),
     wbByteArray('Unknown', 4),
-    wbUnion('Curve Table', wbDeciderFormVersion152, [
-      wbEmpty('Unused'),
-      wbFormIDCk('Curve Table', [CURV, NULL])
-    ])
+    wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
   ]));
 
   wbDAMS := wbArrayS(DAMS, 'Damage Type Condition Scalings', wbStructSK([0], 'Damage Type Condition Scaling', [
     wbFormIDCk('Type', [DMGT]),
     wbInteger('Amount', itU32),
-    wbUnion('Curve Table', wbDeciderFormVersion152, [
-      wbEmpty('Unused'),
-      wbFormIDCk('Curve Table', [CURV, NULL])
-    ])
+    wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
   ]));
   wbFLTR := wbString(FLTR, 'Filter');
   wbAPPR := wbArray(APPR, 'Attach Parent Slots', wbFormIDCk('Keyword', [KYWD]));
@@ -10627,7 +10429,7 @@ begin
         wbFloat('Value 2 - Float'),
         wbInteger('Value 2 - Bool', itU32, wbBoolEnum)
       ]),
-      wbUnion('Step', wbDeciderFormVersion192, [
+      wbUnion('Step', wbFormVersionDecider(192), [
         wbFloat('Step'),
         wbFormIDCk('Curve Table', [CURV, NULL])
       ])
@@ -10770,7 +10572,7 @@ begin
     wbFloat(PAHD, 'Unknown Float'),
     wbUnknown(MNAM),
     wbNVNM,
-    wbArray(VEND, 'Vendable Items', wbUnion('Vendable Items', wbDeciderFormVersion192, [
+    wbArray(VEND, 'Vendable Items', wbUnion('Vendable Items', wbFormVersionDecider(192), [
       wbStruct('Items Allowed', [
         wbFormID('Item'),
         wbInteger('Unknown', itU32),
@@ -10981,10 +10783,7 @@ begin
     wbArrayS(DAMA, 'Resistances', wbStructSK([0], 'Resistance', [
       wbFormIDCk('Damage Type', [DMGT]),
       wbInteger('Value', itU32),
-      wbUnion('Curve Table', wbDeciderFormVersion152, [
-        wbEmpty('Unused'),
-        wbFormIDCk('Curve Table', [CURV, NULL])
-      ])
+      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
     ])),
     wbFormIDCk(TNAM, 'Template Armor', [ARMO]),
     wbAPPR,
@@ -11436,10 +11235,7 @@ begin
     wbEDID,
     wbStruct(DATA, 'Effect Data', [
       wbFormIDCK('Effect Art', [ARTO, NULL]),
-      wbUnion('Unused', wbDeciderFormVersion134, [
-        wbFormIDCK('Unused', [EFSH, NULL]),
-        wbEmpty('Unused')
-      ]),
+      wbBelowVersion(134, wbFormIDCK('Unused', [EFSH, NULL])),
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Rotate to Face Target',
         {0x00000002} 'Attach to Camera',
@@ -11552,10 +11348,7 @@ begin
             wbInteger('Warn/Attack', itU32),
             wbInteger('Attack', itU32)
           ]),
-          wbUnion('', wbDeciderFormVersion29, [
-            wbEmpty('Unused'),
-            wbByteArray('Unknown', 4)
-          ])
+          wbFromVersion(29, wbByteArray('Unknown', 4))
     ], cpNormal, True, nil{wbActorTemplateUseAIData});
 
   wbRecord(CSTY, 'Combat Style',
@@ -11878,77 +11671,7 @@ begin
     wbString(NAM9, 'Particle Palette Texture'),
     wbUnknown(DATA),  // if form version < 62, ignored otherwise
     // format depends on Form Version (appear with form version 62, changed in form version 106), different for older records starting from the first field
-    wbUnion(DNAM, '', wbEFSHFormatDecider, [
-      wbStruct('Data', [
-        wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
-        wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
-        wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
-        wbByteColors('Fill/Texture Effect - Color Key 1'),
-        wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
-        wbFloat('Fill/Texture Effect - Full Alpha Time'),
-        wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
-        wbFloat('Fill/Texture Effect - Presistent Alpha Ratio'),
-        wbFloat('Fill/Texture Effect - Alpha Pulse Amplitude'),
-        wbFloat('Fill/Texture Effect - Alpha Pulse Frequency'),
-        wbFloat('Fill/Texture Effect - Texture Animation Speed (U)'),
-        wbFloat('Fill/Texture Effect - Texture Animation Speed (V)'),
-        wbFloat('Edge Effect - Fall Off'),
-        wbByteColors('Edge Effect - Color'),
-        wbFloat('Edge Effect - Alpha Fade In Time'),
-        wbFloat('Edge Effect - Full Alpha Time'),
-        wbFloat('Edge Effect - Alpha Fade Out Time'),
-        wbFloat('Edge Effect - Persistent Alpha Ratio'),
-        wbFloat('Edge Effect - Alpha Pulse Amplitude'),
-        wbFloat('Edge Effect - Alpha Pulse Frequency'),
-        wbFloat('Fill/Texture Effect - Full Alpha Ratio'),
-        wbFloat('Edge Effect - Full Alpha Ratio'),
-        wbInteger('Membrane Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
-        wbFloat('Holes Animation - Start Time'),
-        wbFloat('Holes Animation - End Time'),
-        wbFloat('Holes Animation - Start Value'),
-        wbFloat('Holes Animation - End Value'),
-        wbFormIDCk('Ambient Sound', [SNDR, NULL]),
-        wbByteColors('Fill/Texture Effect - Color Key 2'),
-        wbByteColors('Fill/Texture Effect - Color Key 3'),
-        wbInteger('Unknown', itU8),
-        wbStruct('Fill/Texture Effect - Color Key Scale/Time', [
-          wbFloat('Color Key 1 - Scale'),
-          wbFloat('Color Key 2 - Scale'),
-          wbFloat('Color Key 3 - Scale'),
-          wbFloat('Color Key 1 - Time'),
-          wbFloat('Color Key 2 - Time'),
-          wbFloat('Color Key 3 - Time')
-        ]),
-        wbInteger('Flags', itU32, wbFlags([
-          'No Membrane Shader',
-          'Membrane Grayscale Color',
-          'Membrane Grayscale Alpha',
-          'No Particle Shader',
-          'Edge Effect - Inverse',
-          'Affect Skin Only',
-          'Texture Effect - Ignore Alpha',
-          'Texture Effect - Project UVs',
-          'Ignore Base Geometry Alpha',
-          'Texture Effect - Lighting',
-          'Texture Effect - No Weapons',
-          'Use Alpha Sorting',
-          'Prefer Dismembered Limbs',
-          'Unknown 13',
-          'Unknown 14',
-          'Particle Animated',
-          'Particle Grayscale Color',
-          'Particle Grayscale Alpha',
-          'Unknown 18',
-          'Unknown 19',
-          'Unknown 20',
-          'Unknown 21',
-          'Unknown 22',
-          'Unknown 23',
-          'Use Blood Geometry (Weapons Only)'
-        ])),
-        wbFloat('Fill/Texture Effect - Texture Scale (U)'),
-        wbFloat('Fill/Texture Effect - Texture Scale (V)')
-      ]),
+    wbUnion(DNAM, '', wbFormVersionDecider(106), [
       wbStruct('Data (old format)', [
         wbByteArray('Unknown', 1),
         wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
@@ -12080,6 +11803,76 @@ begin
         wbFloat('Fill/Texture Effect - Texture Scale (U)'),
         wbFloat('Fill/Texture Effect - Texture Scale (V)'),
         wbInteger('Scene Graph Emit Depth Limit (unused)', itU16)
+      ]),
+      wbStruct('Data', [
+        wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
+        wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
+        wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
+        wbByteColors('Fill/Texture Effect - Color Key 1'),
+        wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
+        wbFloat('Fill/Texture Effect - Full Alpha Time'),
+        wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
+        wbFloat('Fill/Texture Effect - Presistent Alpha Ratio'),
+        wbFloat('Fill/Texture Effect - Alpha Pulse Amplitude'),
+        wbFloat('Fill/Texture Effect - Alpha Pulse Frequency'),
+        wbFloat('Fill/Texture Effect - Texture Animation Speed (U)'),
+        wbFloat('Fill/Texture Effect - Texture Animation Speed (V)'),
+        wbFloat('Edge Effect - Fall Off'),
+        wbByteColors('Edge Effect - Color'),
+        wbFloat('Edge Effect - Alpha Fade In Time'),
+        wbFloat('Edge Effect - Full Alpha Time'),
+        wbFloat('Edge Effect - Alpha Fade Out Time'),
+        wbFloat('Edge Effect - Persistent Alpha Ratio'),
+        wbFloat('Edge Effect - Alpha Pulse Amplitude'),
+        wbFloat('Edge Effect - Alpha Pulse Frequency'),
+        wbFloat('Fill/Texture Effect - Full Alpha Ratio'),
+        wbFloat('Edge Effect - Full Alpha Ratio'),
+        wbInteger('Membrane Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
+        wbFloat('Holes Animation - Start Time'),
+        wbFloat('Holes Animation - End Time'),
+        wbFloat('Holes Animation - Start Value'),
+        wbFloat('Holes Animation - End Value'),
+        wbFormIDCk('Ambient Sound', [SNDR, NULL]),
+        wbByteColors('Fill/Texture Effect - Color Key 2'),
+        wbByteColors('Fill/Texture Effect - Color Key 3'),
+        wbInteger('Unknown', itU8),
+        wbStruct('Fill/Texture Effect - Color Key Scale/Time', [
+          wbFloat('Color Key 1 - Scale'),
+          wbFloat('Color Key 2 - Scale'),
+          wbFloat('Color Key 3 - Scale'),
+          wbFloat('Color Key 1 - Time'),
+          wbFloat('Color Key 2 - Time'),
+          wbFloat('Color Key 3 - Time')
+        ]),
+        wbInteger('Flags', itU32, wbFlags([
+          'No Membrane Shader',
+          'Membrane Grayscale Color',
+          'Membrane Grayscale Alpha',
+          'No Particle Shader',
+          'Edge Effect - Inverse',
+          'Affect Skin Only',
+          'Texture Effect - Ignore Alpha',
+          'Texture Effect - Project UVs',
+          'Ignore Base Geometry Alpha',
+          'Texture Effect - Lighting',
+          'Texture Effect - No Weapons',
+          'Use Alpha Sorting',
+          'Prefer Dismembered Limbs',
+          'Unknown 13',
+          'Unknown 14',
+          'Particle Animated',
+          'Particle Grayscale Color',
+          'Particle Grayscale Alpha',
+          'Unknown 18',
+          'Unknown 19',
+          'Unknown 20',
+          'Unknown 21',
+          'Unknown 22',
+          'Unknown 23',
+          'Use Blood Geometry (Weapons Only)'
+        ])),
+        wbFloat('Fill/Texture Effect - Texture Scale (U)'),
+        wbFloat('Fill/Texture Effect - Texture Scale (V)')
       ])
     ], cpNormal, True),
     wbGenericModel
@@ -12786,7 +12579,7 @@ begin
       wbFormIDCk('Impact Data Set', [IPDS, NULL]),
       wbFormID('Placed Object'),
       wbFormIDCk('Spawn Projectile', [PROJ, NULL]),
-      wbUnion('Force', wbDeciderFormVersion150, [
+      wbUnion('Force', wbFormVersionDecider(150), [
         wbFloat('Force'),
         wbFormIDCk('Force Curve Table', [CURV, NULL])
       ], cpNormal, True),
@@ -12794,10 +12587,7 @@ begin
       wbFloat('Inner Radius'),
       wbFloat('Outer Radius'),
       wbFloat('IS Radius'),
-      wbUnion('Vertical Offset Mult', wbDeciderFormVersion97, [
-        wbEmpty('Unused'),
-        wbFloat('Vertical Offset Mult')
-      ]),
+      wbFromVersion(97, wbFloat('Vertical Offset Mult')),
       wbInteger('Flags1', itU64, wbFlags([
         {0x0000000000000001} 'Unknown 0',
         {0x0000000000000002} 'Always Uses World Orientation',
@@ -12865,38 +12655,23 @@ begin
         {0x4000000000000000} 'Unknown 63',
         {0x8000000000000000} 'Unknown 64'
       ])),
-      wbUnion('Sound Level', wbDeciderFormVersion70, [
-        wbEmpty('Unused'),
-        wbInteger('Sound Level', itU32, wbSoundLevelEnum)
-      ]),
-      wbUnion('Placed Object AutoFade Delay', wbDeciderFormVersion91, [
-        wbEmpty('Unused'),
-        wbFloat('Placed Object AutoFade Delay')
-      ]),
-      wbUnion('Stagger', wbDeciderFormVersion112, [
-        wbEmpty('Unused'),
-        wbInteger('Stagger', itU32, wbEnum([
-          'None',
-          'Small',
-          'Medium',
-          'Large',
-          'Extra Large'
-        ]))
-      ]),
-      wbUnion('Unknown', wbDeciderFormVersion112, [
-        wbEmpty('Unused'),
-        wbStruct('Unknown', [
-          wbFloat('Unknown'),
-          wbFloat('Unknown'),
-          wbFloat('Unknown'),
-          wbFloat('Unknown'),
-          wbByteArray('Unknown', 4)
-        ])
-      ]),
-      wbUnion('Base Weapon Damage Mult', wbDeciderFormVersion173, [
-        wbEmpty('Unused'),
-        wbFloat('Base Weapon Damage Mult')
-      ])
+      wbFromVersion(70, wbInteger('Sound Level', itU32, wbSoundLevelEnum)),
+      wbFromVersion(91, wbFloat('Placed Object AutoFade Delay')),
+      wbFromVersion(112, wbInteger('Stagger', itU32, wbEnum([
+        'None',
+        'Small',
+        'Medium',
+        'Large',
+        'Extra Large'
+      ]))),
+      wbFromVersion(112, wbStruct('Unknown', [
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbByteArray('Unknown', 4)
+      ])),
+      wbFromVersion(173, wbFloat('Base Weapon Damage Mult'))
     ], cpNormal, True, nil, 13)
   ]);
 
@@ -13210,9 +12985,9 @@ begin
               'Run Immediately',
               'Replace Default'
             ])),
-            wbUnion('', wbEPF3ActivateDecider, [
-              wbEmpty('Unused'),
-              wbByteArray('Unknown',2)
+            wbUnion('Unused', wbFormVersionDecider(34, 126), [
+              wbUnused,
+              wbByteArray('Unused', 2)
             ])
           ]),
           wbActorValue
@@ -14418,7 +14193,7 @@ begin
       'Parents Optional',
       'Item Slot'
     ])),
-    wbUnion(ANAM, '', wbFormVer78Decider, [
+    wbUnion(ANAM, '', wbFormVersionDecider(78), [
       wbInteger('Condition Actor Value', itS32, wbActorValueEnum),
       wbFormIDCk('Condition Actor Value', [AVIF, NULL, FFFF])
     ])
@@ -14646,155 +14421,154 @@ end;
 
 procedure DefineFO76k;
 begin
-
-  wbSPED := wbUnion(SPED, 'Movement Data', wbSPEDFormatDecider, [
+  wbSPED := wbUnion(SPED, 'Movement Data', wbFormVersionDecider([28, 60, 104]), [
  {0}wbStruct('', [
       wbStruct('Left', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Right', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Forward', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Back', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
 
       wbStruct('Pitch, Roll, Yaw', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbEmpty('Unused')
+        wbUnused
       ]),
 
       wbStruct('Unused', [
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused')
+        wbUnused,
+        wbUnused,
+        wbUnused,
+        wbUnused
       ]),
 
       wbStruct('Unused', [
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused')
+        wbUnused,
+        wbUnused,
+        wbUnused,
+        wbUnused
       ]),
 
-      wbEmpty('Unused'),
-      wbEmpty('Unused'),
-      wbEmpty('Unused')
+      wbUnused,
+      wbUnused,
+      wbUnused
     ], cpNormal, True),
  {1}wbStruct('', [
       wbStruct('Left', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Right', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Forward', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Back', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
 
       wbStruct('Pitch, Roll, Yaw', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbEmpty('Unused')
+        wbUnused
       ]),
 
       wbStruct('Unused', [
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused')
+        wbUnused,
+        wbUnused,
+        wbUnused,
+        wbUnused
       ]),
 
       wbStruct('Unused', [
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused')
+        wbUnused,
+        wbUnused,
+        wbUnused,
+        wbUnused
       ]),
 
       wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbEmpty('Unused'),
-      wbEmpty('Unused')
+      wbUnused,
+      wbUnused
     ], cpNormal, True),
  {2}wbStruct('', [
       wbStruct('Left', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Right', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Forward', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Back', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
 
       wbStruct('Pitch', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbEmpty('Unused')
+        wbUnused
       ]),
 
       wbStruct('Roll', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbEmpty('Unused')
+        wbUnused
       ]),
 
       wbStruct('Yaw', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbEmpty('Unused')
+        wbUnused
       ]),
 
       wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
@@ -14851,9 +14625,9 @@ begin
         wbFloat('Sprint', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
       ]),
 
-      wbEmpty('Unused'),
-      wbEmpty('Unused'),
-      wbEmpty('Unused')
+      wbUnused,
+      wbUnused,
+      wbUnused
     ], cpNormal, True)
   ]);
 
@@ -15503,8 +15277,8 @@ begin
 
   var wbLeveledListEntryItem :=
     wbRStruct('Leveled List Entry', [
-      wbUnion(LVLO, '', wbDeciderFormVersion174, [
-        wbUnion('', wbDeciderFormVersion69, [
+      wbUnion(LVLO, '', wbFormVersionDecider(174), [
+        wbUnion('', wbFormVersionDecider(69), [
           wbStructExSK([0, 2], [3], 'Base Data', [
             wbInteger('Level', itU16),
             wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
@@ -15552,7 +15326,7 @@ begin
 
   var wbLeveledListEntryNPC :=
     wbRStruct('Leveled List Entry', [
-      wbUnion(LVLO, '', wbDeciderFormVersion174, [
+      wbUnion(LVLO, '', wbFormVersionDecider(174), [
         wbStructExSK([0, 2], [3], 'Base Data', [
           wbInteger('Level', itU16),
           wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
@@ -15632,7 +15406,7 @@ begin
     wbLVCV,
     wbInteger(LVLM, 'Max Count', itU8), { Always 00 } {Unavailable}
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
-    wbUnion(LVLF, 'Flags', wbDeciderFormVersion185, [
+    wbUnion(LVLF, 'Flags', wbFormVersionDecider(185), [
       wbInteger('', itU8, wbLVLNLVLFFlags),
       wbInteger('', itU16, wbLVLNLVLFFlags)
     ], cpNormal, True),
@@ -15643,10 +15417,7 @@ begin
       wbStructSK([0], 'Filter', [
         wbFormIDCk('Keyword', [KYWD]),
         wbInteger('Chance', itU32),
-        wbUnion('Curve Table', wbDeciderFormVersion152, [
-          wbEmpty('Unused'),
-          wbFormIDCk('Curve Table', [CURV, NULL])
-        ])
+        wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
       ])
     ),
     wbGenericModel
@@ -15667,7 +15438,7 @@ begin
     wbLVCV,
     wbLVLG,
     wbLVCT,
-    wbUnion(LVLF, 'Flags', wbDeciderFormVersion185, [
+    wbUnion(LVLF, 'Flags', wbFormVersionDecider(185), [
       wbInteger('', itU8, wbLVLFFlags),
       wbInteger('', itU16, wbLVLFFlags)
     ], cpNormal, True),
@@ -15678,10 +15449,7 @@ begin
       wbStructSK([0], 'Filter', [
         wbFormIDCk('Keyword', [KYWD]),
         wbInteger('Chance', itU32),
-        wbUnion('Curve Table', wbDeciderFormVersion152, [
-          wbEmpty('Unused'),
-          wbFormIDCk('Curve Table', [CURV, NULL])
-        ])
+        wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
       ])
     ),
     wbFormIDCk(LVSG, 'Epic Loot Chance', [GLOB]),
@@ -15704,7 +15472,7 @@ begin
     //wbInteger(LVLM, 'Max Count', itU8), { Always 00 }
     //wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     //wbLVCT,
-    wbUnion(LVLF, 'Flags', wbDeciderFormVersion185, [
+    wbUnion(LVLF, 'Flags', wbFormVersionDecider(185), [
       wbInteger('', itU8, wbLVLFFlags),
       wbInteger('', itU16, wbLVLFFlags)
     ], cpNormal, True),
@@ -15717,10 +15485,7 @@ begin
       wbStructSK([0], 'Filter', [
         wbFormIDCk('Keyword', [KYWD]),
         wbInteger('Chance', itU32),
-        wbUnion('Curve Table', wbDeciderFormVersion152, [
-          wbEmpty('Unused'),
-          wbFormIDCk('Curve Table', [CURV, NULL])
-        ])
+        wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
       ])
     ),
     }
@@ -15939,10 +15704,7 @@ begin
     wbStructs(CVPA, 'Components', 'Component', [
       wbFormIDCk('Component', sigBaseObjects), // CK allows only CMPO
       wbInteger('Count', itU32),
-      wbUnion('Curve Table', wbDeciderFormVersion152, [
-        wbEmpty('Unused'),
-        wbFormIDCk('Curve Table', [CURV, NULL])
-      ])
+      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
     ]),
     wbArray(CDIX, 'Component Display Indices', wbInteger('Display Index', itU8))
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
@@ -15951,10 +15713,7 @@ begin
     wbStructSK([0], 'Component', [
       wbFormIDCkNoReach('Component', sigBaseObjects),
       wbInteger('Count', itU32),
-      wbUnion('Curve Table', wbDeciderFormVersion152, [
-        wbEmpty('Unused'),
-        wbFormIDCk('Curve Table', [CURV, NULL])
-      ])
+      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
     ]).SetToStr(wbItemToStr).IncludeFlag(dfCollapsed, wbCollapseItems);
 
   wbComponents := wbArrayS(FVPA, 'Components', wbComponent);
@@ -16131,10 +15890,7 @@ begin
     wbRArrayS('Perks',
       wbStructSK(PRKR, [0], 'Perk', [
         wbFormIDCk('Perk', [PERK]),
-        wbUnion('', wbDeciderFormVersion181, [
-          wbInteger('Rank', itU8),
-          wbEmpty('Unused')
-        ])
+        wbBelowVersion(181, wbInteger('Rank', itU8))
       ]), cpNormal, False, nil, wbPRKRsAfterSet
     ),
     wbPRPS,
@@ -16641,7 +16397,7 @@ begin
   ]);
 
   wbQUSTAliasFlags :=
-    wbUnion(FNAM, 'Flags', wbDeciderFormVersion192, [
+    wbUnion(FNAM, 'Flags', wbFormVersionDecider(192), [
       wbInteger('Flags', itU32, wbQUSTAliasFlagsActual),
       wbInteger('Flags', itU64, wbQUSTAliasFlagsActual)
     ], cpNormal, True);
@@ -17026,13 +16782,13 @@ begin
 
   wbRaceRBPC :=
     wbArray(RBPC, 'Biped Object Conditions',
-      wbUnion('Slot 30+', wbFormVer78Decider, [
+      wbUnion('Slot 30+', wbFormVersionDecider(78), [
         wbInteger('Slot 30+', itU32),
         wbFormIDCk('Slot 30+', [AVIF, NULL])
       ])
     );
     // since version 78: array of pair of AVIF FormID, before array of AVIF index. Similar to DamageType (and MGEF also somehow).
-    {wbUnion(RBPC, 'Biped Object Conditions', wbFormVer78Decider, [
+    {wbUnion(RBPC, 'Biped Object Conditions', wbFormVersionDecider(78), [
       wbArray('Biped Object Conditions', wbInteger('Condition AV', itU32)),
       wbArray('Biped Object Conditions', wbStruct('Condition AV', [
         wbFormIDck('AVIF 1', [AVIF, NULL]),
@@ -17208,10 +16964,7 @@ begin
       wbFormIDCk('Explodable - Subsegment Explosion', [EXPL, NULL]),
       wbFloat('Orientation Limits - Pitch'),
       wbFloat('Orientation Limits - Roll'),
-      wbUnion('Unknown', wbDeciderFormVersion188, [
-        wbEmpty('Unused'),
-        wbByteArray('Unknown', 4)
-      ])
+      wbFromVersion(188, wbByteArray('Unknown', 4))
     ], cpNormal, True),
 
     wbEmpty(MNAM, 'Male Marker'),
@@ -17608,7 +17361,7 @@ begin
       ], True, True)))]),
     wbXFLG,
     wbUnknown(XKPD),
-    wbUnion(XBSD, 'Spline', wbDeciderFormVersion131 ,[
+    wbUnion(XBSD, 'Spline', wbFormVersionDecider(131) ,[
       wbStruct('Spline', [
         wbFloat('Slack'),
         wbFloat('Thickness'),
@@ -18639,10 +18392,7 @@ begin
     wbArrayS(DAMA, 'Damage Types', wbStructSK([0], 'Damage Type', [
       wbFormIDCk('Type', [DMGT]),
       wbInteger('Amount', itU32),
-      wbUnion('Curve Table', wbDeciderFormVersion152, [
-        wbEmpty('Unused'),
-        wbFormIDCk('Curve Table', [CURV, NULL])
-      ])
+      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
     ])),
     wbFLTR,
     wbVCRY,
@@ -19077,7 +18827,7 @@ begin
   wbRecord(DMGT, 'Damage Type', [
     wbEDID,
     // Before form version 78, it was an array of AVIF index, since then array of AVIF formID, coupled with a SPEL formID
-    wbUnion(DNAM, 'Data', wbFormVer78Decider, [
+    wbUnion(DNAM, 'Data', wbFormVersionDecider(78), [
       wbArray('Damage Types', wbInteger('Actor Value Index', itU32)),
       wbArray('Damage Types', wbStruct('Damage Type', [
         wbFormIDck('Actor Value', [AVIF, NULL]),
@@ -19498,7 +19248,7 @@ begin
         ]),
         wbStruct('Static', [
           wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, CNCY, SCOL]),
-          wbEmpty('Unused')
+          wbUnused
         ])
       ]),
       //wbUnknown(ONAM), { Replaced by above? }
@@ -19724,14 +19474,8 @@ begin
         wbFloat('Y'),
         wbFloat('Z')
       ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-      wbUnion('FOVMultB', wbDeciderFormVersion187, [
-        wbEmpty('Unused'),
-        wbFloat('FOVMultB')
-      ]),
-      wbUnion('FOVMultB', wbDeciderFormVersion187, [
-        wbEmpty('Unused'),
-        wbFloat('FOVMultC')
-      ])
+      wbFromVersion(187, wbFloat('FOVMultB')),
+      wbFromVersion(187, wbFloat('FOVMultC'))
     ])
   ]);
 
@@ -19900,7 +19644,7 @@ begin
 
   var wbLeveledListEntryPerkCard :=
     wbRStructExSK([0], [1], 'Leveled List Entry', [
-      wbUnion(LVLO, '', wbDeciderFormVersion174, [
+      wbUnion(LVLO, '', wbFormVersionDecider(174), [
         wbStructExSK([0, 2], [3], 'Base Data', [
           wbInteger('Level', itU16),
           wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
@@ -19933,7 +19677,7 @@ begin
     wbLVLD,
     wbLVMV,
     wbLVCV,
-    wbUnion(LVLF, 'Flags', wbDeciderFormVersion185, [
+    wbUnion(LVLF, 'Flags', wbFormVersionDecider(185), [
       wbInteger('', itU8, wbLVLFFlags),
       wbInteger('', itU16, wbLVLFFlags)
     ], cpNormal, True),
@@ -19996,18 +19740,9 @@ begin
       wbInteger('Node ID', itU32),
       wbFormIDCk('Node', [STND]),
       wbArray('Unknown', wbFloat('Unknown'), 4),
-      wbUnion('Unknown', wbDeciderFormVersion187, [
-        wbEmpty('Unused'),
-        wbFloat('Unknown')
-      ]),
-      wbUnion('Unknown', wbDeciderFormVersion187, [
-        wbEmpty('Unused'),
-        wbFloat('Unknown')
-      ]),
-      wbUnion('Unknown', wbDeciderFormVersion187, [
-        wbEmpty('Unused'),
-        wbInteger('Unknown', itU32)
-      ])
+      wbFromVersion(187, wbFloat('Unknown')),
+      wbFromVersion(187, wbFloat('Unknown')),
+      wbFromVersion(187, wbInteger('Unknown', itU32))
    ])),
     wbRArray('Unknown', wbRStruct('Unknown', [
       wbInteger(ONAM, 'Node ID', itU32),

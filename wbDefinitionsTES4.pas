@@ -4101,7 +4101,7 @@ begin
       wbByteArray('Unused', 3),
       wbFormIDCk('Key', [KEYM, NULL]),
       wbUnion('Unused', wbXLOCFillerDecider, [
-        wbEmpty('Unused'),
+        wbUnused,
         wbByteArray('Unused', 4)
       ]),
       wbInteger('Flags', itU8, wbFlags(['', '', 'Leveled Lock'])),
@@ -4395,9 +4395,9 @@ begin
           {0x0080} '360 LFE'
         ])),
         wbByteArray('Unused', 2),
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused')
+        wbUnused,
+        wbUnused,
+        wbUnused
       ], cpNormal, True)
     ], [], cpNormal, True)
   ]).SetSummaryKey([1]);

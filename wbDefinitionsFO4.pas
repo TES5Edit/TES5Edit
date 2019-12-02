@@ -3136,44 +3136,6 @@ begin
     Result := 1;
 end;
 
-function wbEFSHFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  MainRecord: IwbMainRecord;
-begin
-  Result := 0;
-  if not Assigned(aElement) then
-    Exit;
-
-  if not Supports(aElement.Container, IwbMainRecord, MainRecord) then
-    Exit;
-
-  if MainRecord.Version < 102 then
-    Result := 1;
-end;
-
-function wbSPEDFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  if wbFormVerDecider(aBasePtr, aEndPtr, aElement, 28) = 0 then begin
-    Result := 0;
-  end else if wbFormVerDecider(aBasePtr, aEndPtr, aElement, 60) = 0 then begin
-    Result := 1;
-  end else if wbFormVerDecider(aBasePtr, aEndPtr, aElement, 104) = 0 then begin
-    Result := 2;
-  end else begin
-    Result := 3;
-  end;
-end;
-
-function wbDeciderFormVersion99(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 99);
-end;
-
-function wbDeciderFormVersion111(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-begin
-  Result := wbFormVerDecider(aBasePtr, aEndPtr, aElement, 111);
-end;
-
 function wbAECHDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container  : IwbContainer;
@@ -5323,7 +5285,7 @@ var
 begin
   if wbBeginInternalEdit then try
     // zero entries' Chance None if Form Version < 69
-    if wbFormVerDecider(nil, nil, aElement, 69) = 1 then
+    if wbFormVersionDecider(69)(nil, nil, aElement) = 1 then
       Exit;
 
     if not Supports(aElement, IwbContainerElementRef, Container) then
@@ -5810,23 +5772,11 @@ begin
     wbByteColors('Day'),          //1
     wbByteColors('Sunset'),       //2
     wbByteColors('Night'),        //3
-    wbUnion('EarlySunrise', wbDeciderFormVersion111, [
-      wbEmpty('Unused'),
-      wbByteColors('EarlySunrise') //4
-    ]).IncludeFlag(dfUnionStaticResolve),
-    wbUnion('LateSunrise', wbDeciderFormVersion111, [
-      wbEmpty('Unused'),
-      wbByteColors('LateSunrise')  //5
-    ]).IncludeFlag(dfUnionStaticResolve),
-    wbUnion('EarlySunset', wbDeciderFormVersion111, [
-      wbEmpty('Unused'),
-      wbByteColors('EarlySunset')  //6
-    ]).IncludeFlag(dfUnionStaticResolve),
-    wbUnion('LateSunset', wbDeciderFormVersion111, [
-      wbEmpty('Unused'),
-      wbByteColors('LateSunset')   //7
-    ]).IncludeFlag(dfUnionStaticResolve)
-  ], cpNormal, True, nil, 4)
+    wbFromVersion(111, wbByteColors('EarlySunrise')), //4
+    wbFromVersion(111, wbByteColors('LateSunrise')),  //5
+    wbFromVersion(111, wbByteColors('EarlySunset')),  //6
+    wbFromVersion(111, wbByteColors('LateSunset'))    //7
+  ], cpNormal, True)
     .SetSummaryKey([4, 0, 5, 1, 6, 2, 7, 3])
     .SetSummaryMemberPrefixSuffix(4, 'ESR:', '')
     .SetSummaryMemberPrefixSuffix(0, 'SR:', '')
@@ -5838,22 +5788,6 @@ begin
     .SetSummaryMemberPrefixSuffix(3, 'N:', '')
     .IncludeFlag(dfSummaryMembersNoName)
     .IncludeFlag(dfHideText);
-end;
-
-function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'): IwbSubRecordDef; overload;
-begin
-  Result := wbStruct(aSignature, aName, [
-    wbStruct('Directional', [
-      wbByteColors('X+'),
-      wbByteColors('X-'),
-      wbByteColors('Y+'),
-      wbByteColors('Y-'),
-      wbByteColors('Z+'),
-      wbByteColors('Z-')
-    ]),
-    wbByteColors('Specular'),
-    wbFloat('Scale')
-  ])
 end;
 
 function wbAmbientColors(const aName: string = 'Directional Ambient Lighting Colors'): IwbStructDef; overload;
@@ -5868,8 +5802,14 @@ begin
       wbByteColors('Z-')
     ]),
     wbByteColors('Specular'),
-    wbFloat('Scale', cpIgnore)
+    wbFloat('Scale', cpIgnore).SetDefaultNativeValue(1.0)
   ]);
+end;
+
+
+function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'): IwbSubRecordDef; overload;
+begin
+  Result := wbSubRecord(aSignature, aName, wbAmbientColors(aName));
 end;
 
 function wbIntToHexStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -9975,77 +9915,7 @@ begin
     wbString(NAM9, 'Particle Palette Texture'),
     wbUnknown(DATA),  // if form version < 62, ignored otherwise
     // format depends on Form Version (appear with form version 62, changed in form version 106), different for older records starting from the first field
-    wbUnion(DNAM, '', wbEFSHFormatDecider, [
-      wbStruct('Data', [
-        wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
-        wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
-        wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
-        wbByteColors('Fill/Texture Effect - Color Key 1'),
-        wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
-        wbFloat('Fill/Texture Effect - Full Alpha Time'),
-        wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
-        wbFloat('Fill/Texture Effect - Presistent Alpha Ratio'),
-        wbFloat('Fill/Texture Effect - Alpha Pulse Amplitude'),
-        wbFloat('Fill/Texture Effect - Alpha Pulse Frequency'),
-        wbFloat('Fill/Texture Effect - Texture Animation Speed (U)'),
-        wbFloat('Fill/Texture Effect - Texture Animation Speed (V)'),
-        wbFloat('Edge Effect - Fall Off'),
-        wbByteColors('Edge Effect - Color'),
-        wbFloat('Edge Effect - Alpha Fade In Time'),
-        wbFloat('Edge Effect - Full Alpha Time'),
-        wbFloat('Edge Effect - Alpha Fade Out Time'),
-        wbFloat('Edge Effect - Persistent Alpha Ratio'),
-        wbFloat('Edge Effect - Alpha Pulse Amplitude'),
-        wbFloat('Edge Effect - Alpha Pulse Frequency'),
-        wbFloat('Fill/Texture Effect - Full Alpha Ratio'),
-        wbFloat('Edge Effect - Full Alpha Ratio'),
-        wbInteger('Membrane Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
-        wbFloat('Holes Animation - Start Time'),
-        wbFloat('Holes Animation - End Time'),
-        wbFloat('Holes Animation - Start Value'),
-        wbFloat('Holes Animation - End Value'),
-        wbFormIDCk('Ambient Sound', [SNDR, NULL]),
-        wbByteColors('Fill/Texture Effect - Color Key 2'),
-        wbByteColors('Fill/Texture Effect - Color Key 3'),
-        wbInteger('Unknown', itU8),
-        wbStruct('Fill/Texture Effect - Color Key Scale/Time', [
-          wbFloat('Color Key 1 - Scale'),
-          wbFloat('Color Key 2 - Scale'),
-          wbFloat('Color Key 3 - Scale'),
-          wbFloat('Color Key 1 - Time'),
-          wbFloat('Color Key 2 - Time'),
-          wbFloat('Color Key 3 - Time')
-        ]),
-        wbInteger('Flags', itU32, wbFlags([
-          'No Membrane Shader',
-          'Membrane Grayscale Color',
-          'Membrane Grayscale Alpha',
-          'No Particle Shader',
-          'Edge Effect - Inverse',
-          'Affect Skin Only',
-          'Texture Effect - Ignore Alpha',
-          'Texture Effect - Project UVs',
-          'Ignore Base Geometry Alpha',
-          'Texture Effect - Lighting',
-          'Texture Effect - No Weapons',
-          'Use Alpha Sorting',
-          'Prefer Dismembered Limbs',
-          'Unknown 13',
-          'Unknown 14',
-          'Particle Animated',
-          'Particle Grayscale Color',
-          'Particle Grayscale Alpha',
-          'Unknown 18',
-          'Unknown 19',
-          'Unknown 20',
-          'Unknown 21',
-          'Unknown 22',
-          'Unknown 23',
-          'Use Blood Geometry (Weapons Only)'
-        ])),
-        wbFloat('Fill/Texture Effect - Texture Scale (U)'),
-        wbFloat('Fill/Texture Effect - Texture Scale (V)')
-      ]),
+    wbUnion(DNAM, '', wbFormVersionDecider(106), [
       wbStruct('Data (old format)', [
         wbByteArray('Unknown', 1),
         wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
@@ -10177,6 +10047,76 @@ begin
         wbFloat('Fill/Texture Effect - Texture Scale (U)'),
         wbFloat('Fill/Texture Effect - Texture Scale (V)'),
         wbInteger('Scene Graph Emit Depth Limit (unused)', itU16)
+      ]),
+      wbStruct('Data', [
+        wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
+        wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
+        wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
+        wbByteColors('Fill/Texture Effect - Color Key 1'),
+        wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
+        wbFloat('Fill/Texture Effect - Full Alpha Time'),
+        wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
+        wbFloat('Fill/Texture Effect - Presistent Alpha Ratio'),
+        wbFloat('Fill/Texture Effect - Alpha Pulse Amplitude'),
+        wbFloat('Fill/Texture Effect - Alpha Pulse Frequency'),
+        wbFloat('Fill/Texture Effect - Texture Animation Speed (U)'),
+        wbFloat('Fill/Texture Effect - Texture Animation Speed (V)'),
+        wbFloat('Edge Effect - Fall Off'),
+        wbByteColors('Edge Effect - Color'),
+        wbFloat('Edge Effect - Alpha Fade In Time'),
+        wbFloat('Edge Effect - Full Alpha Time'),
+        wbFloat('Edge Effect - Alpha Fade Out Time'),
+        wbFloat('Edge Effect - Persistent Alpha Ratio'),
+        wbFloat('Edge Effect - Alpha Pulse Amplitude'),
+        wbFloat('Edge Effect - Alpha Pulse Frequency'),
+        wbFloat('Fill/Texture Effect - Full Alpha Ratio'),
+        wbFloat('Edge Effect - Full Alpha Ratio'),
+        wbInteger('Membrane Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
+        wbFloat('Holes Animation - Start Time'),
+        wbFloat('Holes Animation - End Time'),
+        wbFloat('Holes Animation - Start Value'),
+        wbFloat('Holes Animation - End Value'),
+        wbFormIDCk('Ambient Sound', [SNDR, NULL]),
+        wbByteColors('Fill/Texture Effect - Color Key 2'),
+        wbByteColors('Fill/Texture Effect - Color Key 3'),
+        wbInteger('Unknown', itU8),
+        wbStruct('Fill/Texture Effect - Color Key Scale/Time', [
+          wbFloat('Color Key 1 - Scale'),
+          wbFloat('Color Key 2 - Scale'),
+          wbFloat('Color Key 3 - Scale'),
+          wbFloat('Color Key 1 - Time'),
+          wbFloat('Color Key 2 - Time'),
+          wbFloat('Color Key 3 - Time')
+        ]),
+        wbInteger('Flags', itU32, wbFlags([
+          'No Membrane Shader',
+          'Membrane Grayscale Color',
+          'Membrane Grayscale Alpha',
+          'No Particle Shader',
+          'Edge Effect - Inverse',
+          'Affect Skin Only',
+          'Texture Effect - Ignore Alpha',
+          'Texture Effect - Project UVs',
+          'Ignore Base Geometry Alpha',
+          'Texture Effect - Lighting',
+          'Texture Effect - No Weapons',
+          'Use Alpha Sorting',
+          'Prefer Dismembered Limbs',
+          'Unknown 13',
+          'Unknown 14',
+          'Particle Animated',
+          'Particle Grayscale Color',
+          'Particle Grayscale Alpha',
+          'Unknown 18',
+          'Unknown 19',
+          'Unknown 20',
+          'Unknown 21',
+          'Unknown 22',
+          'Unknown 23',
+          'Use Blood Geometry (Weapons Only)'
+        ])),
+        wbFloat('Fill/Texture Effect - Texture Scale (U)'),
+        wbFloat('Fill/Texture Effect - Texture Scale (V)')
       ])
     ], cpNormal, True),
     wbGenericModel
@@ -10809,7 +10749,7 @@ begin
       wbFloat('Inner Radius'),
       wbFloat('Outer Radius'),
       wbFloat('IS Radius'),
-      wbUnion('Vertical Offset Mult', wbDeciderFormVersion99, [
+      wbUnion('Vertical Offset Mult', wbFormVersionDecider(99), [
         wbByteArray('Unknown', 4),
         wbFloat('Vertical Offset Mult')
       ]),
@@ -12492,154 +12432,154 @@ end;
 
 procedure DefineFO4k;
 begin
-  wbSPED := wbUnion(SPED, 'Movement Data', wbSPEDFormatDecider, [
+  wbSPED := wbUnion(SPED, 'Movement Data', wbFormVersionDecider([28, 60, 104]), [
  {0}wbStruct('', [
       wbStruct('Left', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Right', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Forward', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Back', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
 
       wbStruct('Pitch, Roll, Yaw', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbEmpty('Unused')
+        wbUnused
       ]),
 
       wbStruct('Unused', [
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused')
+        wbUnused,
+        wbUnused,
+        wbUnused,
+        wbUnused
       ]),
 
       wbStruct('Unused', [
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused')
+        wbUnused,
+        wbUnused,
+        wbUnused,
+        wbUnused
       ]),
 
-      wbEmpty('Unused'),
-      wbEmpty('Unused'),
-      wbEmpty('Unused')
+      wbUnused,
+      wbUnused,
+      wbUnused
     ], cpNormal, True),
  {1}wbStruct('', [
       wbStruct('Left', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Right', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Forward', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Back', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
 
       wbStruct('Pitch, Roll, Yaw', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbEmpty('Unused')
+        wbUnused
       ]),
 
       wbStruct('Unused', [
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused')
+        wbUnused,
+        wbUnused,
+        wbUnused,
+        wbUnused
       ]),
 
       wbStruct('Unused', [
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused'),
-        wbEmpty('Unused')
+        wbUnused,
+        wbUnused,
+        wbUnused,
+        wbUnused
       ]),
 
       wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbEmpty('Unused'),
-      wbEmpty('Unused')
+      wbUnused,
+      wbUnused
     ], cpNormal, True),
  {2}wbStruct('', [
       wbStruct('Left', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Right', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Forward', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
       wbStruct('Back', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk'),
         wbFloat('Run'),
-        wbEmpty('Unused')
+        wbUnused
       ]),
 
       wbStruct('Pitch', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbEmpty('Unused')
+        wbUnused
       ]),
 
       wbStruct('Roll', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbEmpty('Unused')
+        wbUnused
       ]),
 
       wbStruct('Yaw', [
-        wbEmpty('Unused'),
+        wbUnused,
         wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
         wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbEmpty('Unused')
+        wbUnused
       ]),
 
       wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
@@ -12696,9 +12636,9 @@ begin
         wbFloat('Sprint', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
       ]),
 
-      wbEmpty('Unused'),
-      wbEmpty('Unused'),
-      wbEmpty('Unused')
+      wbUnused,
+      wbUnused,
+      wbUnused
     ], cpNormal, True)
   ]);
 
@@ -14433,13 +14373,13 @@ begin
 
   wbRaceRBPC :=
     wbArray(RBPC, 'Biped Object Conditions',
-      wbUnion('Slot 30+', wbFormVer78Decider, [
+      wbUnion('Slot 30+', wbFormVersionDecider(78), [
         wbInteger('Slot 30+', itU32),
         wbFormIDCk('Slot 30+', [AVIF, NULL])
       ])
     );
     // since version 78: array of pair of AVIF FormID, before array of AVIF index. Similar to DamageType (and MGEF also somehow).
-    {wbUnion(RBPC, 'Biped Object Conditions', wbFormVer78Decider, [
+    {wbUnion(RBPC, 'Biped Object Conditions', wbFormVersionDecider(78), [
       wbArray('Biped Object Conditions', wbInteger('Condition AV', itU32)),
       wbArray('Biped Object Conditions', wbStruct('Condition AV', [
         wbFormIDck('AVIF 1', [AVIF, NULL]),
@@ -16008,26 +15948,14 @@ begin
     ], []),
     wbArray(PNAM, 'Cloud Colors', wbWeatherColors('Layer'), 32).IncludeFlag(dfNotAlignable),
     wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
-      wbFloat('Sunrise'),
-      wbFloat('Day'),
-      wbFloat('Sunset'),
-      wbFloat('Night'),
-      wbUnion('EarlySunrise', wbDeciderFormVersion111, [
-        wbEmpty('Unused'),
-        wbFloat('EarlySunrise')
-      ]).IncludeFlag(dfUnionStaticResolve),
-      wbUnion('LateSunrise', wbDeciderFormVersion111, [
-        wbEmpty('Unused'),
-        wbFloat('LateSunrise')
-      ]).IncludeFlag(dfUnionStaticResolve),
-      wbUnion('EarlySunset', wbDeciderFormVersion111, [
-        wbEmpty('Unused'),
-        wbFloat('EarlySunset')
-      ]).IncludeFlag(dfUnionStaticResolve),
-      wbUnion('EarlySunrise', wbDeciderFormVersion111, [
-        wbEmpty('Unused'),
-        wbFloat('LateSunset')
-      ]).IncludeFlag(dfUnionStaticResolve)
+      wbFloat('Sunrise').SetDefaultNativeValue(1.0),
+      wbFloat('Day').SetDefaultNativeValue(1.0),
+      wbFloat('Sunset').SetDefaultNativeValue(1.0),
+      wbFloat('Night').SetDefaultNativeValue(1.0),
+      wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0)),
+      wbFromVersion(111, wbFloat('LateSunrise').SetDefaultNativeValue(1.0)),
+      wbFromVersion(111, wbFloat('EarlySunset').SetDefaultNativeValue(1.0)),
+      wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0))
     ]), 32).IncludeFlag(dfNotAlignable),
     wbStruct(NAM0, 'Weather Colors', [
       wbWeatherColors('Sky-Upper'),
@@ -16047,10 +15975,10 @@ begin
       wbWeatherColors('Water Multiplier'),
       wbWeatherColors('Sun Glare'),
       wbWeatherColors('Moon Glare'),
-      wbWeatherColors('Fog Near High'),
-      wbWeatherColors('Fog Far High')
-    ], cpNormal, True, nil, 8),
-    wbArray(NAM4, 'Unknown', wbFloat('Unknown')).IncludeFlag(dfNotAlignable),
+      wbFromVersion(119, wbWeatherColors('Fog Near High')),
+      wbFromVersion(119, wbWeatherColors('Fog Far High'))
+    ], cpNormal, True),
+    wbArray(NAM4, 'Unknown', wbFloat('Unknown').SetDefaultNativeValue(1.0), 32).IncludeFlag(dfNotAlignable),
     wbStruct(FNAM, 'Fog Distance', [
       wbFloat('Day - Near'),
       wbFloat('Day - Far'),
@@ -16060,17 +15988,17 @@ begin
       wbFloat('Night - Power'),
       wbFloat('Day - Max'),
       wbFloat('Night - Max'),
-      wbFloat('Day - Near Height Mid'),
-      wbFloat('Day - Near Height Range'),
-      wbFloat('Night - Near Height Mid'),
-      wbFloat('Night - Near Height Range'),
-      wbFloat('Day - High Density Scale'),
-      wbFloat('Night - High Density Scale'),
-      wbFloat('Day - Far Height Mid'),
-      wbFloat('Day - Far Height Range'),
-      wbFloat('Night - Far Height Mid'),
-      wbFloat('Night - Far Height Range')
-    ], cpNormal, True, nil, 8),
+      wbFromVersion(119, wbFloat('Day - Near Height Mid').SetDefaultNativeValue(0.0)),
+      wbFromVersion(119, wbFloat('Day - Near Height Range').SetDefaultNativeValue(10000.0)),
+      wbFromVersion(119, wbFloat('Night - Near Height Mid').SetDefaultNativeValue(0.0)),
+      wbFromVersion(119, wbFloat('Night - Near Height Range').SetDefaultNativeValue(10000.0)),
+      wbFromVersion(119, wbFloat('Day - High Density Scale').SetDefaultNativeValue(1.0)),
+      wbFromVersion(119, wbFloat('Night - High Density Scale').SetDefaultNativeValue(1.0)),
+      wbFromVersion(120, wbFloat('Day - Far Height Mid').SetDefaultNativeValue(0.0)),
+      wbFromVersion(120, wbFloat('Day - Far Height Range').SetDefaultNativeValue(10000.0)),
+      wbFromVersion(120, wbFloat('Night - Far Height Mid').SetDefaultNativeValue(0.0)),
+      wbFromVersion(120, wbFloat('Night - Far Height Range').SetDefaultNativeValue(10000.0))
+    ], cpNormal, True),
     wbStruct(DATA, 'Data', [
       wbInteger('Wind Speed', itU8), // scaled 0..1
       wbByteArray('Unknown', 2),
@@ -16101,8 +16029,8 @@ begin
       wbInteger('Visual Effect - End', itU8), // scaled 0..1
       wbInteger('Wind Direction', itU8), // scaled 0..360
       wbInteger('Wind Direction Range', itU8), // scaled 0..180
-      wbInteger('Unknown', itU8)
-    ], cpNormal, True, nil, 16),
+      wbFromVersion(119, wbInteger('Unknown', itU8).SetDefaultNativeValue(51))
+    ], cpNormal, True),
     wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
     wbWeatherSounds,
     wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
@@ -16111,12 +16039,12 @@ begin
       wbFormIDCK('Day', [IMGS, NULL]),
       wbFormIDCK('Sunset', [IMGS, NULL]),
       wbFormIDCK('Night', [IMGS, NULL]),
-      wbFormIDCK('EarlySunrise', [IMGS, NULL]),
-      wbFormIDCK('LateSunrise', [IMGS, NULL]),
-      wbFormIDCK('EarlySunset', [IMGS, NULL]),
-      wbFormIDCK('LateSunset', [IMGS, NULL])
-    ], cpNormal, True, nil, 4),
-    wbStruct(WGDR, 'God Rays', [
+      wbFromVersion(111, wbFormIDCK('EarlySunrise', [IMGS, NULL])),
+      wbFromVersion(111, wbFormIDCK('LateSunrise', [IMGS, NULL])),
+      wbFromVersion(111, wbFormIDCK('EarlySunset', [IMGS, NULL])),
+      wbFromVersion(111, wbFormIDCK('EarlySunrise', [IMGS, NULL]))
+    ], cpNormal, True),
+    wbStruct(WGDR, 'God Rays', [ //Form Version 120+
       wbFormIDCK('Sunrise', [GDRY, NULL]),
       wbFormIDCK('Day', [GDRY, NULL]),
       wbFormIDCK('Sunset', [GDRY, NULL]),
@@ -16131,10 +16059,10 @@ begin
       wbAmbientColors(DALC, 'Day'),
       wbAmbientColors(DALC, 'Sunset'),
       wbAmbientColors(DALC, 'Night'),
-      wbAmbientColors(DALC, 'EarlySunrise'),
-      wbAmbientColors(DALC, 'LateSunrise'),
-      wbAmbientColors(DALC, 'EarlySunset'),
-      wbAmbientColors(DALC, 'LateSunset')
+      wbAmbientColors(DALC, 'EarlySunrise'), //Form Version 111+
+      wbAmbientColors(DALC, 'LateSunrise'),  //Form Version 111+
+      wbAmbientColors(DALC, 'EarlySunset'),  //Form Version 111+
+      wbAmbientColors(DALC, 'LateSunset')    //Form Version 111+
     ], [], cpNormal, True),
     wbRStruct('Aurora', [wbGenericModel], []),
     wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
@@ -16142,12 +16070,12 @@ begin
       wbFormIDCk('On Lightning Strike - Spell', [SPEL, NULL]),
       wbFloat('On Lightning Strike - Threshold'),
       wbFormIDCk('On Weather Activate - Spell', [SPEL, NULL]),
-      wbFloat('On Weather Activate - Threshold'),
-      wbByteArray('Unknown', 4), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
-      wbFloat('Unknown')
-    ], cpNormal, False, nil, 3),
-    wbFloat(VNAM, 'Volatility Mult'),
-    wbFloat(WNAM, 'Visibility Mult')
+      wbFromVersion(130, wbFloat('On Weather Activate - Threshold')),
+      wbFromVersion(130, wbByteArray('Unknown', 4)), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
+      wbFromVersion(130, wbFloat('Unknown'))
+    ], cpNormal, False),
+    wbFloat(VNAM, 'Volatility Mult'), //Form Version 126+
+    wbFloat(WNAM, 'Visibility Mult')  //Form Version 126+
   ]);
 end;
 
@@ -16267,7 +16195,7 @@ begin
   wbRecord(DMGT, 'Damage Type', [
     wbEDID,
     // Before form version 78, it was an array of AVIF index, since then array of AVIF formID, coupled with a SPEL formID
-    wbUnion(DNAM, 'Data', wbFormVer78Decider, [
+    wbUnion(DNAM, 'Data', wbFormVersionDecider(78), [
       wbArray('Damage Types', wbInteger('Actor Value Index', itU32)),
       wbArray('Damage Types', wbStruct('Damage Type', [
         wbFormIDck('Actor Value', [AVIF, NULL]),

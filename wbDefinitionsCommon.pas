@@ -93,6 +93,7 @@ var
   wbWorldspaceOBND: IwbRecordMemberDef;
   wbXLOD: IwbSubRecordDef;
   wbOFST: IwbSubRecordDef;
+  wbUnused: IwbValueDef;
 
 procedure DefineCommon;
 
@@ -248,6 +249,17 @@ function wbTryGetContainingMainRecord(const aElement: IwbElement; out aMainRecor
 
 function wbTryGetMainRecord(const aElement: IwbElement; out aMainRecord: IwbMainRecord; aSignature: string = ''): Boolean;
 
+function wbFormVersionDecider(aVersion: Integer): TwbUnionDecider; overload;
+function wbFormVersionDecider(aMinVersion, aMaxVersion: Integer): TwbUnionDecider; overload;
+function wbFormVersionDecider(const aVersions: array of Integer): TwbUnionDecider; overload;
+
+function wbFromVersion(aVersion: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef): IwbRecordMemberDef; overload;
+function wbFromVersion(aVersion: Integer; const aValue: IwbValueDef): IwbValueDef; overload;
+
+function wbBelowVersion(aVersion: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef): IwbRecordMemberDef; overload;
+function wbBelowVersion(aVersion: Integer; const aValue: IwbValueDef): IwbValueDef; overload;
+
+
 implementation
 
 uses
@@ -318,6 +330,8 @@ end;
 
 procedure DefineCommon;
 begin
+  wbUnused := wbEmpty('Unused');
+
   wbHEDR :=
     wbStruct(HEDR, 'Header', [
       wbFloat('Version'),
@@ -1855,6 +1869,125 @@ begin
     Free;
   end;
 end;
+
+var
+  _FormVersionDeciders : array of TwbUnionDecider;
+
+function wbFormVersionDecider(aVersion: Integer): TwbUnionDecider;
+begin
+  if aVersion > High(_FormVersionDeciders) then
+    SetLength(_FormVersionDeciders, aVersion);
+
+  if not Assigned(_FormVersionDeciders[aVersion]) then
+    _FormVersionDeciders[aVersion] :=
+      function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer
+      var
+        MainRecord : IwbMainRecord;
+      begin
+        if not Assigned(aElement) then
+          Exit(0);
+
+        MainRecord := aElement.GetContainingMainRecord;
+        if not Assigned(MainRecord) then
+          Exit(0);
+
+        if MainRecord.Version >= aVersion then
+          Exit(1);
+
+        Exit(0);
+      end;
+
+  Result := _FormVersionDeciders[aVersion];
+end;
+
+function wbFormVersionDecider(aMinVersion, aMaxVersion: Integer): TwbUnionDecider; overload;
+begin
+  Result :=
+    function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer
+    var
+      MainRecord : IwbMainRecord;
+    begin
+      if not Assigned(aElement) then
+        Exit(0);
+
+      MainRecord := aElement.GetContainingMainRecord;
+      if not Assigned(MainRecord) then
+        Exit(0);
+
+      if not ((MainRecord.Version < aMinVersion) or (MainRecord.Version > aMaxVersion)) then
+        Exit(1);
+
+      Exit(0);
+    end;
+end;
+
+function wbFormVersionDecider(const aVersions: array of Integer): TwbUnionDecider; overload;
+var
+  Versions : TArray<Integer>;
+begin
+  SetLength(Versions, Length(aVersions));
+  for var i := Low(aVersions) to High(aVersions) do
+    Versions[i] := aVersions[i];
+
+  Result :=
+    function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer
+    var
+      MainRecord : IwbMainRecord;
+    begin
+      if not Assigned(aElement) then
+        Exit(0);
+
+      MainRecord := aElement.GetContainingMainRecord;
+      if not Assigned(MainRecord) then
+        Exit(0);
+
+      var FormVersion := MainRecord.Version;
+
+      for var i := Low(Versions) to High(Versions) do
+        if FormVersion < Versions[i] then
+          Exit(i);
+
+      Exit(Length(Versions));
+    end;
+end;
+
+function wbFromVersion(aVersion: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef): IwbRecordMemberDef; overload;
+begin
+  Result :=
+    wbUnion(aSignature, aValue.Name, wbFormVersionDecider(aVersion), [
+      wbUnused,
+      aValue
+    ]).IncludeFlagOnValue(dfUnionStaticResolve);
+end;
+
+function wbFromVersion(aVersion: Integer; const aValue: IwbValueDef): IwbValueDef;
+begin
+  Result :=
+    wbUnion(aValue.Name, wbFormVersionDecider(aVersion), [
+      wbUnused,
+      aValue
+    ]).IncludeFlag(dfUnionStaticResolve);
+end;
+
+function wbBelowVersion(aVersion: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef): IwbRecordMemberDef; overload;
+begin
+  Result :=
+    wbUnion(aSignature, aValue.Name, wbFormVersionDecider(aVersion), [
+      aValue,
+      wbUnused
+    ]).IncludeFlagOnValue(dfUnionStaticResolve);
+end;
+
+function wbBelowVersion(aVersion: Integer; const aValue: IwbValueDef): IwbValueDef;
+begin
+  Result :=
+    wbUnion(aValue.Name, wbFormVersionDecider(aVersion), [
+      aValue,
+      wbUnused
+    ]).IncludeFlag(dfUnionStaticResolve);
+end;
+
+
 
 end.
 
