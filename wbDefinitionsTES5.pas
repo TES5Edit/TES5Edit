@@ -751,16 +751,16 @@ var
   wbBODT: IwbSubRecordDef;
   wbBOD2: IwbSubRecordDef;
   wbBODTBOD2: IwbSubRecordUnionDef;
-  wbScriptEntry: IwbStructDef;
+  wbScriptEntry: IwbValueDef;
   wbScriptFlags: IwbIntegerDef;
   wbScriptPropertyObject: IwbUnionDef;
   wbScriptProperty: IwbValueDef;
 	wbScriptProperties: IwbArrayDef;
-  wbScriptFragments: IwbStructDef;
+  wbScriptFragments: IwbValueDef;
   wbScriptFragmentsQuest: IwbValueDef;
-  wbScriptFragmentsInfo: IwbStructDef;
-  wbScriptFragmentsPack: IwbStructDef;
-  wbScriptFragmentsScen: IwbStructDef;
+  wbScriptFragmentsInfo: IwbValueDef;
+  wbScriptFragmentsPack: IwbValueDef;
+  wbScriptFragmentsScen: IwbValueDef;
   wbPLDT: IwbSubRecordDef;
   wbPLVD: IwbSubRecordDef;
   wbTargetData: IwbStructDef;
@@ -4926,7 +4926,10 @@ begin
   wbBOD2 := wbStruct(BOD2, 'Biped Body Template', [
     wbFirstPersonFlagsU32,
     wbInteger('Armor Type', itU32, wbArmorTypeEnum)
-  ], cpNormal, False);
+  ], cpNormal, False)
+  .SetSummaryKeyOnValue([1, 0])
+  .SetSummaryPrefixSuffixOnValue(0, '(', ')')
+  .IncludeFlagOnValue(dfSummaryMembersNoName);
 
   wbBODTBOD2 :=
     wbRUnion('Biped Body Template', [
@@ -4944,7 +4947,10 @@ begin
         ], True)),
         wbEmpty('Unused'),
         wbInteger('Armor Type', itU32, wbArmorTypeEnum)
-      ], cpNormal, False),
+      ], cpNormal, False)
+        .SetSummaryKeyOnValue([3, 0])
+        .SetSummaryPrefixSuffixOnValue(0, '(', ')')
+        .IncludeFlagOnValue(dfSummaryMembersNoName),
       wbStruct(BODT, 'Body Template', [
         wbFirstPersonFlagsU32,
         wbInteger('General Flags', itU8, wbFlags([
@@ -4960,6 +4966,9 @@ begin
         wbByteArray('Unused', 3, cpIgnore),
         wbInteger('Armor Type', itU32, wbArmorTypeEnum)
       ], cpNormal, False, nil, 3)
+        .SetSummaryKeyOnValue([3, 0])
+        .SetSummaryPrefixSuffixOnValue(0, '(', ')')
+        .IncludeFlagOnValue(dfSummaryMembersNoName)
     ], []);
 
   wbDODT := wbStruct(DODT, 'Decal Data', [
@@ -5362,6 +5371,10 @@ begin
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
       wbInteger('Unused', itU16, nil, cpIgnore)
     ])
+      .SetSummaryKey([1])
+      .SetSummaryMemberPrefixSuffix(1, '.Alias[', ']')
+      .SetSummaryDelimiter('')
+      .IncludeFlag(dfSummaryMembersNoName)
   ]);
 
   wbScriptProperty :=
@@ -5388,21 +5401,26 @@ begin
        {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1)
       ])
     ])
-    //.SetToStr(wbScriptPropertyToStr)
     .SetSummaryKey([1, 3])
     .SetSummaryMemberPrefixSuffix(0, '', ':')
-    .SetSummaryMemberPrefixSuffix(3, ':= ', '')
+    .SetSummaryMemberPrefixSuffix(3, '= ', '')
     .IncludeFlag(dfSummaryMembersNoName)
     .IncludeFlag(dfCollapsed, wbCollapseScriptProperties);
 
   wbScriptProperties :=
-    wbArrayS('Properties', wbScriptProperty, -2, cpNormal, False, nil, nil, nil, wbCanAddScriptProperties);
+    wbArrayS('Properties', wbScriptProperty, -2, cpNormal, False, nil, nil, nil, wbCanAddScriptProperties)
+    .SetSummaryPassthroughMaxLength(80)
+    .SetSummaryPassthroughMaxDepth(1);
 
   wbScriptEntry := wbStructSK([0], 'Script', [
     wbLenString('ScriptName', 2),
     wbScriptFlags,
     wbScriptProperties
-  ]);
+  ])
+  .SetSummaryKey([2])
+  .SetSummaryMemberPrefixSuffix(2, '(', ')')
+  .SetSummaryDelimiter('')
+  .IncludeFlag(dfSummaryMembersNoName);
 
   wbScriptFragmentsInfo := wbStruct('Script Fragments', [
     wbInteger('Unknown', itS8),
@@ -5416,8 +5434,15 @@ begin
         wbInteger('Unknown', itS8),
         wbLenString('ScriptName', 2),
         wbLenString('FragmentName', 2)
-      ]), [], wbScriptFragmentsInfoCounter)
-  ]);
+      ])
+      .SetSummaryKey([1, 2])
+      .SetSummaryMemberPrefixSuffix(1, '', ':')
+      .SetSummaryDelimiter('')
+      .IncludeFlag(dfSummaryMembersNoName)
+    , [], wbScriptFragmentsInfoCounter)
+  ])
+  .SetSummaryKey([1, 2, 3])
+  .IncludeFlag(dfSummaryMembersNoName);
 
   wbScriptFragmentsPack := wbStruct('Script Fragments', [
     wbInteger('Unknown', itS8),
@@ -5432,8 +5457,15 @@ begin
         wbInteger('Unknown', itS8),
         wbLenString('ScriptName', 2),
         wbLenString('FragmentName', 2)
-      ]), [], wbScriptFragmentsPackCounter)
-  ]);
+      ])
+      .SetSummaryKey([1, 2])
+      .SetSummaryMemberPrefixSuffix(1, '', ':')
+      .SetSummaryDelimiter('')
+      .IncludeFlag(dfSummaryMembersNoName)
+    , [], wbScriptFragmentsPackCounter)
+  ])
+  .SetSummaryKey([1, 2, 3])
+  .IncludeFlag(dfSummaryMembersNoName);
 
   wbScriptFragmentsQuest := wbStruct('Script Fragments', [
     wbInteger('Unknown', itS8),
@@ -5447,8 +5479,18 @@ begin
         wbInteger('Unknown', itS8),
         wbLenString('ScriptName', 2),
         wbLenString('FragmentName', 2)
-      ]), wbScriptFragmentsQuestCounter).SetAfterSet(wbScriptFragmentsQuestFragmentsAfterSet)
-  ]).SetAfterSet(wbScriptFragmentsQuestAfterSet);
+      ])
+      .SetSummaryKey([4, 5])
+      .SetSummaryMemberPrefixSuffix(0, '[', '/')
+      .SetSummaryMemberPrefixSuffix(2, '', ']')
+      .SetSummaryMemberPrefixSuffix(4, ' ', ':')
+      .SetSummaryDelimiter('')
+      .IncludeFlag(dfSummaryMembersNoName)
+    , wbScriptFragmentsQuestCounter).SetAfterSet(wbScriptFragmentsQuestFragmentsAfterSet)
+  ])
+  .SetSummaryKey([2, 3])
+  .IncludeFlag(dfSummaryMembersNoName)
+  .SetAfterSet(wbScriptFragmentsQuestAfterSet);
 
   wbScriptFragmentsScen := wbStruct('Script Fragments', [
     wbInteger('Unknown', itS8),
@@ -5462,7 +5504,12 @@ begin
         wbInteger('Unknown', itS8),
         wbLenString('ScriptName', 2),
         wbLenString('FragmentName', 2)
-      ]), [], wbScriptFragmentsSceneCounter),
+      ])
+      .SetSummaryKey([1, 2])
+      .SetSummaryMemberPrefixSuffix(1, '', ':')
+      .SetSummaryDelimiter('')
+      .IncludeFlag(dfSummaryMembersNoName)
+    , [], wbScriptFragmentsSceneCounter),
     wbArray('Phase Fragments',
       wbStructSK([0, 1], 'Phase Fragment', [
         wbInteger('Phase Flag', itU8, wbFlags([
@@ -5475,8 +5522,17 @@ begin
         wbInteger('Unknown', itS8),
         wbLenString('ScriptName', 2),
         wbLenString('FragmentName', 2)
-      ]), -2)
-  ]);
+      ])
+      .SetSummaryKey([5, 6])
+      .SetSummaryMemberPrefixSuffix(0, '[', ':')
+      .SetSummaryMemberPrefixSuffix(1, '', ']')
+      .SetSummaryMemberPrefixSuffix(5, ' ', ':')
+      .SetSummaryDelimiter('')
+      .IncludeFlag(dfSummaryMembersNoName)
+    , -2)
+  ])
+  .SetSummaryKey([1, 2, 3, 4])
+  .IncludeFlag(dfSummaryMembersNoName);
 
   wbScriptFragments := wbStruct('Script Fragments', [
     wbInteger('Unknown', itS8),
@@ -5488,58 +5544,79 @@ begin
         wbInteger('Unknown', itS8),
         wbLenString('ScriptName', 2),
         wbLenString('FragmentName', 2)
-      ]), -2)
-  ]);
+      ])
+      .SetSummaryKey([3, 4])
+      .SetSummaryMemberPrefixSuffix(0, '[', ']')
+      .SetSummaryMemberPrefixSuffix(3, ' ', ':')
+      .SetSummaryDelimiter('')
+      .IncludeFlag(dfSummaryMembersNoName)
+    , -2)
+  ])
+  .SetSummaryKey([1, 2])
+  .IncludeFlag(dfSummaryMembersNoName);
 
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
+  var wbVMADScripts :=
+    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, wbCanAddScripts)
+    .SetSummaryPassthroughMaxLength(100);
+
+  var wbVMADVersion :=
+    wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(5);
+  var wbVMADObjectFormat :=
+    wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2);
 
   wbVMAD := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(5),
-    wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, wbCanAddScripts)
-  ]);
+    wbVMADVersion,
+    wbVMADObjectFormat,
+    wbVMADScripts
+  ])
+  .SetSummaryKeyOnValue([2]);
 
   wbVMADFragmentedPERK := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(5),
-    wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, wbCanAddScripts),
+    wbVMADVersion,
+    wbVMADObjectFormat,
+    wbVMADScripts,
     wbScriptFragments
-  ], cpNormal, False, nil, 3);
+  ], cpNormal, False, nil, 3)
+  .SetSummaryKeyOnValue([2, 3]);
 
   wbVMADFragmentedPACK := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(5),
-    wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, wbCanAddScripts),
+    wbVMADVersion,
+    wbVMADObjectFormat,
+    wbVMADScripts,
     wbScriptFragmentsPack
-  ], cpNormal, False, nil, 3);
+  ], cpNormal, False, nil, 3)
+  .SetSummaryKeyOnValue([2, 3]);
 
   wbVMADFragmentedQUST := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(5),
-    wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, wbCanAddScripts),
+    wbVMADVersion,
+    wbVMADObjectFormat,
+    wbVMADScripts,
     wbScriptFragmentsQuest,
     wbArrayS('Aliases', wbStructSK([0], 'Alias', [
       wbScriptPropertyObject,
-      wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(5),
-      wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2),
+      wbVMADVersion,
+      wbVMADObjectFormat,
       wbArrayS('Alias Scripts', wbScriptEntry, -2)
     ]), -2)
-  ], cpNormal, False, nil, 3);
+  ], cpNormal, False, nil, 3)
+  .SetSummaryKeyOnValue([2, 3, 4]);
 
   wbVMADFragmentedSCEN := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(5),
-    wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, wbCanAddScripts),
+    wbVMADVersion,
+    wbVMADObjectFormat,
+    wbVMADScripts,
     wbScriptFragmentsScen
-  ], cpNormal, False, nil, 3);
+  ], cpNormal, False, nil, 3)
+  .SetSummaryKeyOnValue([2, 3]);
 
   wbVMADFragmentedINFO := wbStruct(VMAD, 'Virtual Machine Adapter', [
-    wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(5),
-    wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2),
-    wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, wbCanAddScripts),
+    wbVMADVersion,
+    wbVMADObjectFormat,
+    wbVMADScripts,
     wbScriptFragmentsInfo
-  ], cpNormal, False, nil, 3);
-
+  ], cpNormal, False, nil, 3)
+  .SetSummaryKeyOnValue([2, 3]);
 
   wbAttackData := wbRStructSK([1], 'Attack', [
     wbStruct(ATKD, 'Attack Data', [
@@ -7985,14 +8062,14 @@ begin
       wbString(TX05,'Environment'),
       wbString(TX06,'Multilayer'),
       wbString(TX07,'Backlight Mask/Specular')
-    ], []),
+    ], []).SetSummaryKey([0]),
     wbDODT,
     wbInteger(DNAM, 'Flags', itU16, wbFlags([
       {0x0001}'No Specular Map',
       {0x0002}'Facegen Textures',
       {0x0004}'Has Model Space Normal Map'
     ]), cpNormal, False)
-  ]);
+  ]).SetSummaryKey([2, 3]);
 
   wbRecord(HDPT, 'Head Part',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
