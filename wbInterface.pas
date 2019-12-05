@@ -589,6 +589,7 @@ type
     dfSummaryMembersNoName,
     dfSummaryNoName,
     dfSummaryNoSortKey,
+    dfSummaryNoPassthrough,
     dfUnionStaticResolve,
     dfHideText
   );
@@ -2257,6 +2258,11 @@ type
     function GetPrefixLength(aBasePtr: Pointer): Integer;
     function GetPrefixCount(aBasePtr: Pointer): Cardinal;
     procedure SetPrefixCount(aBasePtr: Pointer; aCount: Cardinal);
+
+    function SetSummaryPassthroughMaxCount(aCount: Integer): IwbArrayDef;
+    function SetSummaryPassthroughMaxLength(aLength: Integer): IwbArrayDef;
+    function SetSummaryPassthroughMaxDepth(aDepth: Integer): IwbArrayDef;
+    function SetSummaryDelimiter(const aDelimiter: string): IwbArrayDef;
 
     property Element: IwbValueDef
       read GetElement;
@@ -5920,6 +5926,11 @@ type
     arSorted        : Boolean;
     arCanAddTo      : Boolean;
     arTerminated    : Boolean;
+
+    arSummaryDelimiter            : string;
+    arSummaryPassthroughMaxCount  : Integer;
+    arSummaryPassthroughMaxLength : Integer;
+    arSummaryPassthroughMaxDepth  : Integer;
   protected
     constructor Clone(const aSource: TwbDef); override;
 
@@ -5952,6 +5963,7 @@ type
                        aCanAddTo      : Boolean;
                        aTerminator    : Boolean;
                        aTerminated    : Boolean); reintroduce; overload;
+    procedure AfterClone(const aSource: TwbDef); override;
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -5979,6 +5991,11 @@ type
     function GetPrefixLength(aBasePtr: Pointer): Integer;
     function GetPrefixCount(aBasePtr: Pointer): Cardinal;
     procedure SetPrefixCount(aBasePtr: Pointer; aValue: Cardinal);
+
+    function SetSummaryPassthroughMaxCount(aCount: Integer): IwbArrayDef;
+    function SetSummaryPassthroughMaxLength(aLength: Integer): IwbArrayDef;
+    function SetSummaryDelimiter(const aDelimiter: string): IwbArrayDef;
+    function SetSummaryPassthroughMaxDepth(aCount: Integer): IwbArrayDef;
   end;
 
   TwbStructDef = class(TwbValueDef, IwbStructDef)
@@ -11288,6 +11305,11 @@ constructor TwbArrayDef.Create(aPriority   : TwbConflictPriority;
 var
   i: Integer;
 begin
+  arSummaryPassthroughMaxCount := -1;
+  arSummaryPassthroughMaxLength := -1;
+  arSummaryPassthroughMaxDepth := -1;
+  arSummaryDelimiter := ', ';
+
   Assert((not aSorted) or (Length(aLabels) < 1));
 
   SetLength(arLabels, Length(aLabels));
@@ -11301,6 +11323,17 @@ begin
   arCanAddTo := aCanAddTo;
   arTerminated := aTerminated;
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
+end;
+
+procedure TwbArrayDef.AfterClone(const aSource: TwbDef);
+begin
+  inherited AfterClone(aSource);
+  with aSource as TwbArrayDef do begin
+    Self.arSummaryDelimiter := arSummaryDelimiter;
+    Self.arSummaryPassthroughMaxCount := arSummaryPassthroughMaxCount;
+    Self.arSummaryPassthroughMaxLength := arSummaryPassthroughMaxLength;
+    Self.arSummaryPassthroughMaxDepth := arSummaryPassthroughMaxDepth;
+  end;
 end;
 
 function TwbArrayDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
@@ -11672,6 +11705,30 @@ begin
     end;
 end;
 
+function TwbArrayDef.SetSummaryDelimiter(const aDelimiter: string): IwbArrayDef;
+begin
+  Result := Self;
+  arSummaryDelimiter := aDelimiter;
+end;
+
+function TwbArrayDef.SetSummaryPassthroughMaxCount(aCount: Integer): IwbArrayDef;
+begin
+  Result := Self;
+  arSummaryPassthroughMaxCount := aCount;
+end;
+
+function TwbArrayDef.SetSummaryPassthroughMaxDepth(aCount: Integer): IwbArrayDef;
+begin
+  Result := Self;
+  arSummaryPassthroughMaxDepth := aCount;
+end;
+
+function TwbArrayDef.SetSummaryPassthroughMaxLength(aLength: Integer): IwbArrayDef;
+begin
+  Result := Self;
+  arSummaryPassthroughMaxLength := aLength;
+end;
+
 function TwbArrayDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
   Result := '';
@@ -11692,18 +11749,70 @@ begin
       if l > 0 then begin
         if Supports(CER.Elements[Pred(l)], IwbStringListTerminator) then
           Dec(l);
+
+        var MaxCount := arSummaryPassthroughMaxCount;
+        var MaxLength := arSummaryPassthroughMaxLength;
+
+        if (l = 1) and (MaxCount < 0) then
+          MaxCount := 1;
+
+        if (MaxCount < 0) and (MaxLength > 0) then
+          MaxCount := l;
+        if MaxLength = 0 then
+          MaxCount := 0;
+
+        if (dfSummaryNoPassthrough in defFlags) or
+           ((arSummaryPassthroughMaxDepth >= 0) and (aDepth >= arSummaryPassthroughMaxDepth)) then begin
+          MaxCount := 0;
+          MaxLength := 0;
+        end;
+
+        var CurrentCount := 0;
+
+        while (l > 0) and (CurrentCount < MaxCount) do begin
+          var Element := CER.Elements[CurrentCount];
+          var DC: IwbDataContainer;
+          var MemberCER: IwbContainerElementRef;
+          if Supports(Element, IwbContainerElementRef, MemberCER) and Supports(Element, IwbDataContainer, DC) and (Element.ConflictPriority > cpIgnore) then begin
+            var s := DC.ValueDef.ToSummary(Succ(aDepth), DC.DataBasePtr, DC.DataEndPtr, DC).Trim;
+            if s <> '' then begin
+
+              var NeedDelimiter := Length(Result) > 0;
+              var Len := Length(Result) + Length(s);
+              if NeedDelimiter then
+                Inc(Len, Length(arSummaryDelimiter));
+
+              if (MaxLength > 0) and (Len > MaxLength) then
+                Break;
+
+              if NeedDelimiter then
+                Result := Result + arSummaryDelimiter;
+
+              Result := Result + s;
+            end;
+          end;
+          Inc(CurrentCount);
+          Dec(l);
+        end;
+
         if l > 0 then begin
-          var s: string;
-          if l = 1 then
-            s := GetSingularName
+          var Glue := ' more ';
+          if Result = '' then
+            Glue := ' '
           else
-            s := GetName;
-          if s = '' then
+            Result := Result + arSummaryDelimiter;
+
+          var Name: string;
+          if l = 1 then
+            Name := GetSingularName
+          else
+            Name := GetName;
+          if Name = '' then
             if l = 1 then
-              s := aElement.Def.GetSingularName
+              Name := aElement.Def.GetSingularName
             else
-              s := aElement.Def.GetName;
-          Result := '<'+ l.ToString + ' ' + s.ToLower + '>';
+              Name := aElement.Def.GetName;
+          Result := Result + '<'+ l.ToString + Glue + Name.ToLower + '>';
         end;
       end;
     end;
@@ -12102,6 +12211,8 @@ var
             var MemberDef := stMembers[SortMember];
             if not MemberDef.Equals(DC.Def) then
               if MemberDef.DefType = dtUnion then
+                MemberDef := DC.Def as IwbValueDef
+              else if DC.Def.DefType = dtEmpty then
                 MemberDef := DC.Def as IwbValueDef
               else
                 Assert(MemberDef.Equals(DC.Def));
