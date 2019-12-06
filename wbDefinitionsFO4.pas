@@ -6896,7 +6896,7 @@ begin
       .SetSummaryMemberPrefixSuffix(1, '.Alias[', ']')
       .SetSummaryDelimiter('')
       .IncludeFlag(dfSummaryMembersNoName),
-    wbStructSK([1], 'Object v1', [
+    wbStructSK([0], 'Object v1', [
       wbFormID('FormID'),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
       wbInteger('Unused', itU16, nil, cpIgnore)
