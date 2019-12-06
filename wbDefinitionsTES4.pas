@@ -3476,7 +3476,14 @@ begin
       wbFormIDCk('Reference', [NPC_, CREA, LVLC]),
       wbInteger('Count', itS16),
       wbByteArray('Unused', 2)
-    ], cpNormal, False, nil, 3).SetToStr(wbLeveledListEntryToStr).IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
+    ], cpNormal, False, nil, 3)
+    .SetSummaryKeyOnValue([0, 3, 2])
+    .SetSummaryPrefixSuffixOnValue(0, '[Lv', ']')
+    .SetSummaryPrefixSuffixOnValue(3, '', 'x')
+    .SetSummaryDelimiterOnValue(' ')
+    .IncludeFlagOnValue(dfSummaryMembersNoName)
+    .IncludeFlagOnValue(dfSummaryNoSortKey)
+    .IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
 
   wbLeveledListEntryItem :=
     wbStructExSK(LVLO, [0, 2], [3], 'Leveled List Entry', [
@@ -3485,7 +3492,14 @@ begin
       wbFormIDCk('Reference', [ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, LVLI, KEYM, CLOT, ALCH, APPA, LIGH]),
       wbInteger('Count', itS16),
       wbByteArray('Unused', 2)
-    ], cpNormal, False, nil, 3).SetToStr(wbLeveledListEntryToStr).IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
+    ], cpNormal, False, nil, 3)
+    .SetSummaryKeyOnValue([0, 3, 2])
+    .SetSummaryPrefixSuffixOnValue(0, '[Lv', ']')
+    .SetSummaryPrefixSuffixOnValue(3, '', 'x')
+    .SetSummaryDelimiterOnValue(' ')
+    .IncludeFlagOnValue(dfSummaryMembersNoName)
+    .IncludeFlagOnValue(dfSummaryNoSortKey)
+    .IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
 
   wbLeveledListEntrySpell :=
     wbStructExSK(LVLO, [0, 2], [3], 'Leveled List Entry', [
@@ -3494,7 +3508,14 @@ begin
       wbFormIDCk('Reference', [SPEL, LVSP]),
       wbInteger('Count', itS16),
       wbByteArray('Unused', 2)
-    ], cpNormal, False, nil, 3).SetToStr(wbLeveledListEntryToStr).IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
+    ], cpNormal, False, nil, 3)
+    .SetSummaryKeyOnValue([0, 3, 2])
+    .SetSummaryPrefixSuffixOnValue(0, '[Lv', ']')
+    .SetSummaryPrefixSuffixOnValue(3, '', 'x')
+    .SetSummaryDelimiterOnValue(' ')
+    .IncludeFlagOnValue(dfSummaryMembersNoName)
+    .IncludeFlagOnValue(dfSummaryNoSortKey)
+    .IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
 
   wbRecord(LVLC, 'Leveled Creature', [
     wbEDID,

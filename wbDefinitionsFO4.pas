@@ -13327,9 +13327,18 @@ begin
         wbInteger('Count', itU16),
         wbInteger('Chance None', itU8),
         wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
-      ]),
-      wbCOED
-    ], []).SetToStr(wbLeveledListEntryToStr).IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
+      ])
+      .SetSummaryKeyOnValue([0, 3, 2, 4])
+      .SetSummaryPrefixSuffixOnValue(0, '[Lv', ']')
+      .SetSummaryPrefixSuffixOnValue(3, '', 'x')
+      .SetSummaryPrefixSuffixOnValue(4, '{Chance None:', '%}')
+      .SetSummaryDelimiterOnValue(' ')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlagOnValue(dfSummaryNoSortKey)
+      , wbCOED
+    ], [])
+    .SetSummaryMemberMaxDepth(0, 1)
+    .IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
 
   var wbLeveledListEntryNPC :=
     wbRStructExSK([0], [1], 'Leveled List Entry', [
@@ -13340,9 +13349,18 @@ begin
         wbInteger('Count', itS16),
         wbInteger('Chance None', itU8),
         wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
-      ]),
-      wbCOED
-    ], []).SetToStr(wbLeveledListEntryToStr).IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
+      ])
+      .SetSummaryKeyOnValue([0, 3, 2, 4])
+      .SetSummaryPrefixSuffixOnValue(0, '[Lv', ']')
+      .SetSummaryPrefixSuffixOnValue(3, '', 'x')
+      .SetSummaryPrefixSuffixOnValue(4, '{Chance None:', '%}')
+      .SetSummaryDelimiterOnValue(' ')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlagOnValue(dfSummaryNoSortKey)
+      , wbCOED
+    ], [])
+    .SetSummaryMemberMaxDepth(0, 1)
+    .IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
 
   var wbFilterKeywordChances :=
     wbArrayS(LLKC, 'Filter Keyword Chances',

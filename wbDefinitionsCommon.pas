@@ -155,8 +155,6 @@ procedure wbFactionRelationToStr(var aValue: string; aBasePtr: Pointer; aEndPtr:
 
 procedure wbItemToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-procedure wbLeveledListEntryToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-
 procedure wbRecordHeaderToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 procedure wbRGBAToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -1622,35 +1620,6 @@ begin
     Exit;
 
   aValue := ItemString;
-end;
-
-procedure wbLeveledListEntryToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  Container, LeveledObject: IwbContainerElementRef; // Leveled List Entry
-  Level, Ref, Count, ChanceNone: IwbElement;
-  MainRecord: IwbMainRecord;
-begin
-  if not wbTrySetContainer(aElement, aType, Container) then
-    Exit;
-
-  LeveledObject := Container.ElementBySignature['LVLO'] as IwbContainerElementRef;
-  if Assigned(LeveledObject) then
-    Container := LeveledObject;
-
-  Ref := Container.ElementByName['Reference'];
-  if not wbTryGetMainRecord(Ref, MainRecord) then
-    Exit;
-
-  Level := Container.ElementByName['Level'];
-  Count := Container.ElementByName['Count'];
-
-  // Fallout Only
-  ChanceNone := Container.ElementByName['Chance None'];
-
-  aValue := '[Lv' + Level.Value + '] ' + Count.Value + 'x ' + MainRecord.ShortName;
-
-  if Assigned(ChanceNone) and (ChanceNone.NativeValue > 0) then
-    aValue := aValue + ' {Chance None: ' + IntToStr(ChanceNone.NativeValue) + '%}';
 end;
 
 procedure wbRecordHeaderToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
