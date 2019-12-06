@@ -10741,9 +10741,17 @@ begin
         wbFormIDCk('Reference', [ARMO, AMMO, APPA, MISC, WEAP, BOOK, LVLI, KEYM, ALCH, LIGH, INGR, SLGM, SCRL]),
         wbInteger('Count', itU16),
         wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
-      ]),
-      wbCOED
-    ], []).SetToStr(wbLeveledListEntryToStr).IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
+      ])
+      .SetSummaryKeyOnValue([0, 3, 2])
+      .SetSummaryPrefixSuffixOnValue(0, '[Lv', ']')
+      .SetSummaryPrefixSuffixOnValue(3, '', 'x')
+      .SetSummaryDelimiterOnValue(' ')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlagOnValue(dfSummaryNoSortKey)
+      , wbCOED
+    ], [])
+    .SetSummaryMemberMaxDepth(0, 1)
+    .IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
 
   wbLeveledListEntryNPC :=
     wbRStructExSK([0], [1], 'Leveled List Entry', [
@@ -10753,9 +10761,17 @@ begin
         wbFormIDCk('Reference', [NPC_, LVLN]),
         wbInteger('Count', itS16),
         wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
-      ]),
-      wbCOED
-    ], []).SetToStr(wbLeveledListEntryToStr).IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
+      ])
+      .SetSummaryKeyOnValue([0, 3, 2])
+      .SetSummaryPrefixSuffixOnValue(0, '[Lv', ']')
+      .SetSummaryPrefixSuffixOnValue(3, '', 'x')
+      .SetSummaryDelimiterOnValue(' ')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlagOnValue(dfSummaryNoSortKey)
+      , wbCOED
+    ], [])
+    .SetSummaryMemberMaxDepth(0, 1)
+    .IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
 
   wbLeveledListEntrySpell :=
     wbRStructSK([0], 'Leveled List Entry', [
@@ -10766,7 +10782,15 @@ begin
         wbInteger('Count', itU16),
         wbByteArray('Unknown', 2, cpIgnore, false, wbNeverShow)
       ])
-    ], []).SetToStr(wbLeveledListEntryToStr).IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
+      .SetSummaryKeyOnValue([0, 3, 2])
+      .SetSummaryPrefixSuffixOnValue(0, '[Lv', ']')
+      .SetSummaryPrefixSuffixOnValue(3, '', 'x')
+      .SetSummaryDelimiterOnValue(' ')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlagOnValue(dfSummaryNoSortKey)
+    ], [])
+    .SetSummaryMemberMaxDepth(0, 1)
+    .IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
 
   wbRecord(LVLN, 'Leveled NPC', [
     wbEDID,
