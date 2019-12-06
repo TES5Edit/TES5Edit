@@ -5434,6 +5434,7 @@ begin
       .SetSummaryMemberPrefixSuffix(1, '', ':')
       .SetSummaryDelimiter('')
       .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseFragments)
     , [], wbScriptFragmentsInfoCounter)
   ])
   .SetSummaryKey([1, 2, 3])
@@ -5457,6 +5458,7 @@ begin
       .SetSummaryMemberPrefixSuffix(1, '', ':')
       .SetSummaryDelimiter('')
       .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseFragments)
     , [], wbScriptFragmentsPackCounter)
   ])
   .SetSummaryKey([1, 2, 3])
@@ -5481,6 +5483,7 @@ begin
       .SetSummaryMemberPrefixSuffix(4, ' ', ':')
       .SetSummaryDelimiter('')
       .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseFragments)
     , wbScriptFragmentsQuestCounter).SetAfterSet(wbScriptFragmentsQuestFragmentsAfterSet)
   ])
   .SetSummaryKey([2, 3])
@@ -5504,6 +5507,7 @@ begin
       .SetSummaryMemberPrefixSuffix(1, '', ':')
       .SetSummaryDelimiter('')
       .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseFragments)
     , [], wbScriptFragmentsSceneCounter),
     wbArray('Phase Fragments',
       wbStructSK([0, 1], 'Phase Fragment', [
@@ -5524,6 +5528,7 @@ begin
       .SetSummaryMemberPrefixSuffix(5, ' ', ':')
       .SetSummaryDelimiter('')
       .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseFragments)
     , -2)
   ])
   .SetSummaryKey([1, 2, 3, 4])
@@ -5545,6 +5550,7 @@ begin
       .SetSummaryMemberPrefixSuffix(3, ' ', ':')
       .SetSummaryDelimiter('')
       .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseFragments)
     , -2)
   ])
   .SetSummaryKey([1, 2])
