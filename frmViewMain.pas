@@ -5210,6 +5210,7 @@ begin
   wbCollapseModels := Settings.ReadBool('Options', 'CollapseModels', wbCollapseModels);
   wbCollapseFactions := Settings.ReadBool('Options', 'CollapseFactions', wbCollapseFactions);
   wbCollapseFactionRelations := Settings.ReadBool('Options', 'CollapseFactionRelations', wbCollapseFactionRelations);
+  wbCollapseFragments := Settings.ReadBool('Options', 'CollapseFragments', wbCollapseFragments);
   wbCollapseItems := Settings.ReadBool('Options', 'CollapseItems', wbCollapseItems);
   wbCollapseLeveledItems := Settings.ReadBool('Options', 'CollapseLeveledItems', wbCollapseLeveledItems);
   wbCollapseEquipSlots := Settings.ReadBool('Options', 'CollapseEquipSlots', wbCollapseEquipSlots);
@@ -13394,6 +13395,7 @@ begin
     Settings.WriteBool('Options', 'CollapseModels', wbCollapseModels);
     Settings.WriteBool('Options', 'CollapseFactions', wbCollapseFactions);
     Settings.WriteBool('Options', 'CollapseFactionRelations', wbCollapseFactionRelations);
+    Settings.WriteBool('Options', 'CollapseFragments', wbCollapseFragments);
     Settings.WriteBool('Options', 'CollapseItems', wbCollapseItems);
     Settings.WriteBool('Options', 'CollapseLeveledItems', wbCollapseLeveledItems);
     Settings.WriteBool('Options', 'CollapseEquipSlots', wbCollapseEquipSlots);

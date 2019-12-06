@@ -184,6 +184,7 @@ var
   wbCollapseModels         : Boolean  = True;
   wbCollapseFactions       : Boolean  = True;
   wbCollapseFactionRelations : Boolean  = True;
+  wbCollapseFragments      : Boolean  = True;
   wbCollapseItems          : Boolean  = True;
   wbCollapseLeveledItems   : Boolean  = True;
   wbCollapseEquipSlots     : Boolean  = True;
