@@ -18077,7 +18077,7 @@ end;
 function TwbRefID.ToString(aInt: Int64; const aElement: IwbElement; aForSummary: Boolean): string;
 var
   key        : Integer;
-  val        : Integer;
+  val        : Int64;
 begin
   // First two bits are the key:
   key := aInt shr 22;
