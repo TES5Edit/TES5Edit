@@ -21260,13 +21260,13 @@ begin
     for i := 0 to Pred(MasterFiles.ElementCount) do begin
       fPath := wbDataPath + MasterFiles[i].EditValue;
       if FileExists(fPath) then
-        AddMaster(fPath)
+        AddMaster(fPath, False, True)
       else if wbUseFalsePlugins then begin
         fPath := wbDataPath + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
         if not FileExists(fPath) then
           fPath := ExtractFilePath(wbProgramPath) + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
         if FileExists(fPath) then
-          AddMaster(SelectTemporaryCopy(fPath, MasterFiles[i].EditValue), True);
+          AddMaster(SelectTemporaryCopy(fPath, MasterFiles[i].EditValue), True, True);
       end;
     end;
 
