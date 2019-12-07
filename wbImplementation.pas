@@ -88,6 +88,9 @@ uses
 const
   EmptyPtr: AnsiChar = #0;
 
+Type
+  EFileNoSlotExecption = class(Exception);  // helper type, to ignore this exception during debugging sessions.
+
 type
   PwbKeepAliveContext = ^TwbKeepAliveContext;
   TwbKeepAliveContext = record
@@ -3084,7 +3087,7 @@ begin
       Result := flLoadOrderFileID;
 
     if Result.FullSlot < 0 then
-      raise Exception.Create('File has no slot assigned');
+      raise EFileNoSlotExecption.Create('File has no slot assigned');
 
   end else
     Result := GetMaster(aFileID.FullSlot, aNew).LoadOrderFileID;
@@ -3555,7 +3558,7 @@ function TwbFile.GetLoadOrderFileID: TwbFileID;
 begin
   Result := flLoadOrderFileID;
   if Result.FullSlot < 0 then
-    raise Exception.Create('File has no slot assigned');
+    raise EFileNoSlotExecption.Create('File has no slot assigned');
 end;
 
 function TwbFile.GetFileFileID(aNewMasters : Boolean): TwbFileID;
