@@ -12246,7 +12246,7 @@ var
   begin
     KAR := wbCreateKeepAliveRoot;
 
-  if (esModified in eStates) or wbTestWrite then begin
+    if (esModified in eStates) or wbTestWrite then begin
       SelfRef := Self as IwbContainerElementRef;
       DoInit(True);
 
@@ -18261,7 +18261,7 @@ var
   i        : Integer;
   t        : string;
   VarSize  : Boolean;
-  ArrSize  : Integer;
+  ArrSize  : Int64;
 begin
   ArrayDef := aValueDef as IwbArrayDef;
   Result := wbSortSubRecords and ArrayDef.Sorted;
@@ -20339,13 +20339,21 @@ begin
   if Assigned(Resolved) then
   begin
     if (Resolved.DefType in dtNonValues) and (wbDumpOffset=1) then // simply display starting offset.
-      Result := Result + ' {' + IntToHex64(NativeUInt(GetDataBasePtr) - wbBaseOffset, 8) + '}';
+      if wbBaseOffset <= NativeUInt(GetDataBasePtr) then
+        Result := Result + ' {' + IntToHex64(NativeUInt(GetDataBasePtr) - wbBaseOffset, 8) + '}'
+      else
+        Result := Result + ' {{' + IntToHex64(NativeUInt(GetDataBasePtr), 8) + '}}';
     // something for Dump: Displaying the size in {} and the array count in []
     //  Triggers a lot of pre calculations
     if (Resolved.DefType in dtNonValues) and (wbDumpOffset>2) then
-      Result := Result + ' {' + IntToHex64(NativeUInt(GetDataEndPtr) - wbBaseOffset, 8) +
-        '-' + IntToHex64(NativeUInt(GetDataBasePtr) - wbBaseOffset, 8) +
-        ' = ' +IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}';
+      if wbBaseOffset <= NativeUInt(GetDataBasePtr) then
+        Result := Result + ' {' + IntToHex64(NativeUInt(GetDataEndPtr) - wbBaseOffset, 8) +
+          '-' + IntToHex64(NativeUInt(GetDataBasePtr) - wbBaseOffset, 8) +
+          ' = ' +IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}'
+      else
+        Result := Result + ' {{' + IntToHex64(NativeUInt(GetDataEndPtr), 8) +
+          '-' + IntToHex64(NativeUInt(GetDataBasePtr), 8) +
+          ' = ' +IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}}';
     if (Resolved.DefType = dtArray) and (wbDumpOffset>1) and Supports(Self, IwbDataContainer, Container) then
       Result := Result + ' [' + IntToStr(Container.GetElementCount) + ']';
   end;

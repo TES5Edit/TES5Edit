@@ -11514,9 +11514,9 @@ end;
 function TwbArrayDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Prefix           : Integer;
-  Count            : Integer;
+  Count            : Int64;
   Index            : Integer; // Used instead of count for easier debugging output.
-  Size             : Integer;
+  Size             : Int64;
   BasePtr          : Pointer;
   CheckedContainer : Boolean;
   ArrayContainer   : IwbContainerElementRef;
@@ -11642,11 +11642,17 @@ begin
         Element := aElement;
 
       Size := arElement.Size[BasePtr, aEndPtr, Element];
-      if Size = High(Integer) then begin
+      if Size >= High(Integer) then begin
         Result := High(Integer);
         Exit;
       end;
-      Result := (Count * Size) + Prefix;
+      // I am assuming size greater than High(Integer) come from decoding errors
+      Size  := (Count * Size) + Prefix;
+      if Size >= High(Integer) then begin
+        Result := High(Integer);
+        Exit;
+      end;
+      Result := Size;
       if Assigned(aBasePtr) and Assigned(aEndPtr) and (NativeUInt(aEndPtr) < NativeUInt(aBasePtr) + Result) then begin
 //        if Assigned(aBasePtr) and Assigned(aEndPtr) and (aEndPtr<>aBasePtr) then
 //          wbProgressCallback('Found a static array with a negative size! (3) '+IntToHex64(Cardinal(aBasePtr)+Result, 8)+

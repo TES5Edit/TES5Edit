@@ -1845,7 +1845,7 @@ var
 function wbFormVersionDecider(aVersion: Integer): TwbUnionDecider;
 begin
   if aVersion > High(_FormVersionDeciders) then
-    SetLength(_FormVersionDeciders, aVersion);
+    SetLength(_FormVersionDeciders, Succ(aVersion));
 
   if not Assigned(_FormVersionDeciders[aVersion]) then
     _FormVersionDeciders[aVersion] :=
