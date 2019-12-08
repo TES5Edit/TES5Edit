@@ -29,28 +29,28 @@ uses
   IniFiles,
   Zlibex,
   lz4,
-  wbBSA,
-  wbSort,
-  wbInterface,
-  wbSaveInterface,
-  wbImplementation,
-  wbLocalization,
-  wbHelpers,
-  wbLoadOrder,
-  wbHardcoded,
-  wbDefinitionsCommon,
-  wbDefinitionsFNV,
-  wbDefinitionsFNVSaves,
-  wbDefinitionsFO3,
-  wbDefinitionsFO3Saves,
-  wbDefinitionsFO4,
-  wbDefinitionsFO4Saves,
-  wbDefinitionsFO76,
-  wbDefinitionsTES3,
-  wbDefinitionsTES4,
-  wbDefinitionsTES4Saves,
-  wbDefinitionsTES5,
-  wbDefinitionsTES5Saves;
+  wbBSA in '..\..\wbBSA.pas',
+  wbSort in '..\..\wbSort.pas',
+  wbInterface in '..\..\wbInterface.pas',
+  wbSaveInterface in '..\..\wbSaveInterface.pas',
+  wbImplementation in '..\..\wbImplementation.pas',
+  wbLocalization in '..\..\wbLocalization.pas',
+  wbHelpers in '..\..\wbHelpers.pas',
+  wbLoadOrder in '..\..\wbLoadOrder.pas',
+  wbHardcoded in '..\..\wbHardcoded.pas',
+  wbDefinitionsCommon in '..\..\wbDefinitionsCommon.pas',
+  wbDefinitionsFNV in '..\..\wbDefinitionsFNV.pas',
+  wbDefinitionsFNVSaves in '..\..\wbDefinitionsFNVSaves.pas',
+  wbDefinitionsFO3 in '..\..\wbDefinitionsFO3.pas',
+  wbDefinitionsFO3Saves in '..\..\wbDefinitionsFO3Saves.pas',
+  wbDefinitionsFO4 in '..\..\wbDefinitionsFO4.pas',
+  wbDefinitionsFO4Saves in '..\..\wbDefinitionsFO4Saves.pas',
+  wbDefinitionsFO76 in '..\..\wbDefinitionsFO76.pas',
+  wbDefinitionsTES3 in '..\..\wbDefinitionsTES3.pas',
+  wbDefinitionsTES4 in '..\..\wbDefinitionsTES4.pas',
+  wbDefinitionsTES4Saves in '..\..\wbDefinitionsTES4Saves.pas',
+  wbDefinitionsTES5 in '..\..\wbDefinitionsTES5.pas',
+  wbDefinitionsTES5Saves in '..\..\wbDefinitionsTES5Saves.pas';
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
@@ -67,8 +67,8 @@ var
   StartTime       : TDateTime;
   DumpGroups      : TStringList;
   SkipChildGroups : TStringList;
-  DumpChapters : TStringList;
-  DumpForms    : TStringList;
+  DumpChapters    : TStringList;
+  DumpForms       : TStringList;
   DumpCount       : Integer;
   DumpMax         : Integer;
   DumpCheckReport : Boolean = False;
@@ -664,29 +664,33 @@ begin
   if (DumpMax > 0) and (DumpCount > DumpMax) then
     Exit;
 
-  Name := aElement.Name;
-  Value := aElement.Value;
   if DumpCheckReport then
     Error := aElement.Check;
 
-  if DumpHidden or ((aElement.Name <> 'Unused') and (Name <> 'Unused')) then begin
-    if (Name <> '') and ((not wbReportMode) or DumpCheckReport) then
-      Write(aIndent, Name);
-    if (Name <> '') or (Value <> '') then begin
-      aIndent := aIndent + '  ';
-      if DumpSize then
-        if (not wbReportMode) or DumpCheckReport then begin
-          if Name <> '' then
-            Write(' ');
-          Write('[', aElement.DataSize, ']');
-        end;
-    end;
-    if (Value <> '') and (DumpHidden or (Pos('Hidden: ', Name)<>1)) then begin
-      if ((not wbReportMode) or DumpCheckReport) then
-        WriteLn(': ', Value);
-    end else begin
+  if wbToolMode in [tmDump] then begin
+
+    Name := aElement.DisplayName[True];
+    Value := aElement.Value;
+
+    if DumpHidden or ((aElement.Name <> 'Unused') and (Name <> 'Unused')) then begin
       if (Name <> '') and ((not wbReportMode) or DumpCheckReport) then
-        WriteLn;
+        Write(aIndent, Name);
+      if (Name <> '') or (Value <> '') then begin
+        aIndent := aIndent + '  ';
+        if DumpSize then
+          if (not wbReportMode) or DumpCheckReport then begin
+            if Name <> '' then
+              Write(' ');
+            Write('[', aElement.DataSize, ']');
+          end;
+      end;
+      if (Value <> '') and (DumpHidden or (Pos('Hidden: ', Name)<>1)) then begin
+        if ((not wbReportMode) or DumpCheckReport) then
+          WriteLn(': ', Value);
+      end else begin
+        if (Name <> '') and ((not wbReportMode) or DumpCheckReport) then
+          WriteLn;
+      end;
     end;
   end;
 
@@ -1469,10 +1473,11 @@ begin
         Exit;
       end;
 
-      if wbToolMode = tmExport then begin
+      if wbToolMode in [tmExport] then begin
         wbLoadBSAs := False;
         wbReportMode := False;
         wbMoreInfoForUnknown:= False;
+        DumpCheckReport := False;
       end;
 
       if not Assigned(wbContainerHandler) then
@@ -1499,121 +1504,39 @@ begin
       if wbDumpOffset>0 then
         ReportProgress('['+s+']   Dump Offset mode : '+IntToStr(wbDumpOffset));
 
-      Masters := TStringList.Create;
-      try
-        IsLocalized := False;
-        wbMastersForFile(s, Masters, nil, nil, @IsLocalized);
-        if not IsLocalized then
-          for i := 0 to Pred(Masters.Count) do begin
-            wbMastersForFile(Masters[i], nil, nil, nil, @IsLocalized);
-            if IsLocalized then
-              Break;
-          end;
-        Masters.Add(ExtractFileName(s));
-        if IsLocalized and not wbLoadBSAs and not FindCmdLineSwitch('nobsa') then begin
-          for i := 0 to Pred(Masters.Count) do begin
-            t := ExtractFilePath(s) + 'Strings\' + ChangeFileExt(Masters[i], '') + '_' + wbLanguage + '.STRINGS';
-            if not FileExists(t) then begin
-              wbLoadBSAs := True;
-              Break;
-            end;
-          end;
-        end;
-        if wbLoadBSAs then begin
+      if wbToolMode in [tmDump] then begin
 
-          if wbLoadAllBSAs then begin
-            n := TStringList.Create;
-            try
-              m := TStringList.Create;
-              try
-                if (Length(wbTheGameIniFileName)>0) and (FindBSAs(wbTheGameIniFileName, wbDataPath, n, m)>0) then begin
-                  for i := 0 to Pred(n.Count) do begin
-                    ReportProgress('[' + n[i] + '] Loading Resources.');
-                    wbContainerHandler.AddBSA(MakeDataFileName(n[i], wbDataPath));
-                  end;
-                end;
-              finally
-                FreeAndNil(m);
+        Masters := TStringList.Create;
+        try
+          IsLocalized := False;
+          wbMastersForFile(s, Masters, nil, nil, @IsLocalized);
+          if not IsLocalized then
+            for i := 0 to Pred(Masters.Count) do begin
+              wbMastersForFile(Masters[i], nil, nil, nil, @IsLocalized);
+              if IsLocalized then
+                Break;
+            end;
+          Masters.Add(ExtractFileName(s));
+          if IsLocalized and not wbLoadBSAs and not FindCmdLineSwitch('nobsa') then begin
+            for i := 0 to Pred(Masters.Count) do begin
+              t := ExtractFilePath(s) + 'Strings\' + ChangeFileExt(Masters[i], '') + '_' + wbLanguage + '.STRINGS';
+              if not FileExists(t) then begin
+                wbLoadBSAs := True;
+                Break;
               end;
-            finally
-              FreeAndNil(n);
             end;
           end;
+          if wbLoadBSAs then begin
 
-          for i := 0 to Pred(Masters.Count) do begin
             if wbLoadAllBSAs then begin
-    //          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
-    //            s2 := ChangeFileExt(Masters[i], '');
-    //            if FindFirst(wbDataPath + s2 + '*.bsa', faAnyFile, F) = 0 then try
-    //              repeat
-    //                ReportProgress('[' + F.Name + '] Loading Resources.');
-    //                wbContainerHandler.AddBSA(wbDataPath + F.Name);
-    //              until FindNext(F) <> 0;
-    //            finally
-    //              SysUtils.FindClose(F);
-    //            end;
-    //          end;
               n := TStringList.Create;
               try
                 m := TStringList.Create;
                 try
-                  if HasBSAs(ChangeFileExt(Masters[i], ''), wbDataPath,
-                      wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], n, m)>0 then begin
-                    for j := 0 to Pred(n.Count) do begin
-                      ReportProgress('[' + n[j] + '] Loading Resources.');
-                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
-                    end;
-                  end;
-                finally
-                  FreeAndNil(m);
-                end;
-              finally
-                FreeAndNil(n);
-              end;
-            end else begin
-    //          if (ExtractFileExt(Masters[i]) = '.esp') or (wbGameMode in [gmFO3, gmFNV, gmTES5]) then begin
-    //            s2 := ChangeFileExt(Masters[i], '');
-    //            if FindFirst(wbDataPath + s2 + '.bsa', faAnyFile, F) = 0 then try
-    //              repeat
-    //                ReportProgress('[' + F.Name + '] Loading Resources.');
-    //                wbContainerHandler.AddBSA(wbDataPath + F.Name);
-    //              until FindNext(F) <> 0;
-    //            finally
-    //              SysUtils.FindClose(F);
-    //            end;
-    //            if FindFirst(wbDataPath + s2 + ' - Interface.bsa', faAnyFile, F) = 0 then try
-    //              repeat
-    //                ReportProgress('[' + F.Name + '] Loading Resources.');
-    //                wbContainerHandler.AddBSA(wbDataPath + F.Name);
-    //              until FindNext(F) <> 0;
-    //            finally
-    //              SysUtils.FindClose(F);
-    //            end;
-    //          end;
-              n := TStringList.Create;
-              try
-                m := TStringList.Create;
-                try
-                  if HasBSAs(ChangeFileExt(Masters[i], ''), wbDataPath, true, false, n, m)>0 then begin
-                    for j := 0 to Pred(n.Count) do begin
-                      ReportProgress('[' + n[j] + '] Loading Resources.');
-                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
-                    end;
-                  end;
-                  m.Clear;
-                  n.Clear;
-                  if HasBSAs(ChangeFileExt(Masters[i], '')+' - Interface', wbDataPath, true, false, n, m)>0 then begin
-                    for j := 0 to Pred(n.Count) do begin
-                      ReportProgress('[' + n[j] + '] Loading Resources.');
-                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
-                    end;
-                  end;
-                  m.Clear;
-                  n.Clear;
-                  if HasBSAs(ChangeFileExt(Masters[i], '')+' - Localization', wbDataPath, true, false, n, m)>0 then begin
-                    for j := 0 to Pred(n.Count) do begin
-                      ReportProgress('[' + n[j] + '] Loading Resources.');
-                      wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                  if (Length(wbTheGameIniFileName)>0) and (FindBSAs(wbTheGameIniFileName, wbDataPath, n, m)>0) then begin
+                    for i := 0 to Pred(n.Count) do begin
+                      ReportProgress('[' + n[i] + '] Loading Resources.');
+                      wbContainerHandler.AddBSA(MakeDataFileName(n[i], wbDataPath));
                     end;
                   end;
                 finally
@@ -1623,10 +1546,65 @@ begin
                 FreeAndNil(n);
               end;
             end;
+
+            for i := 0 to Pred(Masters.Count) do begin
+              if wbLoadAllBSAs then begin
+                n := TStringList.Create;
+                try
+                  m := TStringList.Create;
+                  try
+                    if HasBSAs(ChangeFileExt(Masters[i], ''), wbDataPath,
+                        wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], n, m)>0 then begin
+                      for j := 0 to Pred(n.Count) do begin
+                        ReportProgress('[' + n[j] + '] Loading Resources.');
+                        wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                      end;
+                    end;
+                  finally
+                    FreeAndNil(m);
+                  end;
+                finally
+                  FreeAndNil(n);
+                end;
+              end else begin
+                n := TStringList.Create;
+                try
+                  m := TStringList.Create;
+                  try
+                    if HasBSAs(ChangeFileExt(Masters[i], ''), wbDataPath, true, false, n, m)>0 then begin
+                      for j := 0 to Pred(n.Count) do begin
+                        ReportProgress('[' + n[j] + '] Loading Resources.');
+                        wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                      end;
+                    end;
+                    m.Clear;
+                    n.Clear;
+                    if HasBSAs(ChangeFileExt(Masters[i], '')+' - Interface', wbDataPath, true, false, n, m)>0 then begin
+                      for j := 0 to Pred(n.Count) do begin
+                        ReportProgress('[' + n[j] + '] Loading Resources.');
+                        wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                      end;
+                    end;
+                    m.Clear;
+                    n.Clear;
+                    if HasBSAs(ChangeFileExt(Masters[i], '')+' - Localization', wbDataPath, true, false, n, m)>0 then begin
+                      for j := 0 to Pred(n.Count) do begin
+                        ReportProgress('[' + n[j] + '] Loading Resources.');
+                        wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                      end;
+                    end;
+                  finally
+                    FreeAndNil(m);
+                  end;
+                finally
+                  FreeAndNil(n);
+                end;
+              end;
+            end;
           end;
+        finally
+          FreeAndNil(Masters);
         end;
-      finally
-        FreeAndNil(Masters);
       end;
 
       ReportProgress('[' + wbDataPath + '] Setting Resource Path.');

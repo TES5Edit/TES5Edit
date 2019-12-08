@@ -5,22 +5,34 @@
         <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>None</FrameworkType>
         <MainSource>SSEDump.dpr</MainSource>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <ProjectGuid>{8CD0A7C7-3B98-4D5D-892F-E91C7E50D144}</ProjectGuid>
-        <ProjectVersion>18.4</ProjectVersion>
-        <TargetedPlatforms>1</TargetedPlatforms>
+        <ProjectVersion>18.8</ProjectVersion>
+        <TargetedPlatforms>3</TargetedPlatforms>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
-        <Base_Win32>true</Base_Win32>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
+        <Base_Win64>true</Base_Win64>
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
         <Cfg_1>true</Cfg_1>
         <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Cfg_1_Win32>true</Cfg_1_Win32>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win64)'!=''">
+        <Cfg_1_Win64>true</Cfg_1_Win64>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
@@ -30,6 +42,12 @@
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
         <Cfg_2_Win32>true</Cfg_2_Win32>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win64)'!=''">
+        <Cfg_2_Win64>true</Cfg_2_Win64>
         <CfgParent>Cfg_2</CfgParent>
         <Cfg_2>true</Cfg_2>
         <Base>true</Base>
@@ -48,14 +66,30 @@
         <Icon_MainIcon>..\..\TES5Edit_Icon.ico</Icon_MainIcon>
         <VerInfo_Locale>3081</VerInfo_Locale>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <Manifest_File>(None)</Manifest_File>
+    <PropertyGroup Condition="'$(Base_Win64)'!=''">
+        <Icon_MainIcon>..\..\TES5Edit_Icon.ico</Icon_MainIcon>
+        <DCC_Namespace>Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
+        <BT_BuildType>Debug</BT_BuildType>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_DebugInformation>0</DCC_DebugInformation>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <DCC_ExeOutput>..\..\Win32\</DCC_ExeOutput>
+        <DCC_DcuOutput>..\..\Win32\</DCC_DcuOutput>
+        <Manifest_File>(None)</Manifest_File>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
+        <DCC_ExeOutput>..\..\Win64\</DCC_ExeOutput>
+        <Icon_MainIcon>..\..\TES5Edit_Icon.ico</Icon_MainIcon>
+        <Manifest_File>(None)</Manifest_File>
+        <DCC_DcuOutput>..\..\Win64</DCC_DcuOutput>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -66,21 +100,57 @@
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
         <DCC_MapFile>3</DCC_MapFile>
         <DCC_RangeChecking>true</DCC_RangeChecking>
-        <Debugger_RunParams>-dg:REGN -report -fo76 -xr:TES4 -xg:NAVI,CELL,WRLD &quot;D:\program files (x86)\bethesda.net launcher\games\Fallout76\Data\SeventySix.esm&quot;</Debugger_RunParams>
+        <Manifest_File>(None)</Manifest_File>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <DCC_ExeOutput>..\..\Debug32</DCC_ExeOutput>
+        <DCC_DcuOutput>..\..\Debug32</DCC_DcuOutput>
+        <Debugger_RunParams> -SSE -Saves -xcbloat &quot;P:\Shares\devel\DELPHI\xxEdit\TestSaves\SSE.ess&quot;</Debugger_RunParams>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
+        <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+        <DCC_MapFile>3</DCC_MapFile>
+        <DCC_RangeChecking>true</DCC_RangeChecking>
+        <DCC_ExeOutput>..\..\Debug64</DCC_ExeOutput>
+        <Icon_MainIcon>..\..\TES5Edit_Icon.ico</Icon_MainIcon>
+        <Manifest_File>(None)</Manifest_File>
+        <DCC_DcuOutput>..\..\Debug64</DCC_DcuOutput>
+        <Debugger_RunParams>-FNV -Saves -Decompress -do:3 -xcbloat -df:1 &quot;P:\Shares\devel\DELPHI\xxEdit\TestSaves\FNVh.bin&quot; &quot;P:\Shares\devel\DELPHI\xxEdit\TestSaves\FNV.fos&quot;</Debugger_RunParams>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="..\..\wbBSA.pas"/>
+        <DCCReference Include="..\..\wbSort.pas"/>
+        <DCCReference Include="..\..\wbInterface.pas"/>
+        <DCCReference Include="..\..\wbSaveInterface.pas"/>
+        <DCCReference Include="..\..\wbImplementation.pas"/>
+        <DCCReference Include="..\..\wbLocalization.pas"/>
+        <DCCReference Include="..\..\wbHelpers.pas"/>
+        <DCCReference Include="..\..\wbLoadOrder.pas"/>
+        <DCCReference Include="..\..\wbHardcoded.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsCommon.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsFNV.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsFNVSaves.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsFO3.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsFO3Saves.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsFO4.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsFO4Saves.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsFO76.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsTES3.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsTES4.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsTES4Saves.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsTES5.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsTES5Saves.pas"/>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
         <BuildConfiguration Include="Release">
             <Key>Cfg_1</Key>
-            <CfgParent>Base</CfgParent>
-        </BuildConfiguration>
-        <BuildConfiguration Include="Debug">
-            <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
     </ItemGroup>
@@ -95,9 +165,8 @@
                 <Excluded_Packages/>
             </Delphi.Personality>
             <Platforms>
-                <Platform value="Linux64">False</Platform>
                 <Platform value="Win32">True</Platform>
-                <Platform value="Win64">False</Platform>
+                <Platform value="Win64">True</Platform>
             </Platforms>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
