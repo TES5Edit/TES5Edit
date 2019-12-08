@@ -5106,7 +5106,13 @@ begin
     ]),
     wbInteger('Form Version', itU16, nil, cpIgnore),
     wbByteArray('Version Control Info 2', 2, cpIgnore)
-  ]).SetToStr(wbRecordHeaderToStr).IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
+  ])
+  .SetSummaryKey([5, 3])
+  .SetSummaryMemberPrefixSuffix(5, '[v', ']')
+  .SetSummaryDelimiter(' ')
+  .IncludeFlag(dfSummaryMembersNoName)
+  .IncludeFlag(dfSummaryNoSortKey)
+  .IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
 
   wbSizeOfMainRecordStruct := 24;
 
